@@ -1,0 +1,1200 @@
+<ui version="4.0" >
+ <author></author>
+ <comment></comment>
+ <exportmacro></exportmacro>
+ <class>RoomEditAttrDlg</class>
+ <widget class="QWidget" name="RoomEditAttrDlg" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>560</height>
+   </rect>
+  </property>
+  <property name="minimumSize" >
+   <size>
+    <width>400</width>
+    <height>560</height>
+   </size>
+  </property>
+  <property name="maximumSize" >
+   <size>
+    <width>400</width>
+    <height>560</height>
+   </size>
+  </property>
+  <property name="windowTitle" >
+   <string>Room properties</string>
+  </property>
+  <layout class="QGridLayout" >
+   <property name="margin" >
+    <number>9</number>
+   </property>
+   <property name="spacing" >
+    <number>6</number>
+   </property>
+   <item row="1" column="0" >
+    <spacer>
+     <property name="orientation" >
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" >
+      <size>
+       <width>40</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="0" column="0" colspan="2" >
+    <widget class="QTabWidget" name="tabWidget" >
+     <widget class="QWidget" name="selectionTab" >
+      <attribute name="title" >
+       <string>Selection</string>
+      </attribute>
+      <layout class="QGridLayout" >
+       <property name="margin" >
+        <number>9</number>
+       </property>
+       <property name="spacing" >
+        <number>6</number>
+       </property>
+       <item row="1" column="0" colspan="2" >
+        <widget class="QTextEdit" name="roomDescriptionTextEdit" >
+         <property name="lineWrapMode" >
+          <enum>QTextEdit::NoWrap</enum>
+         </property>
+         <property name="lineWrapColumnOrWidth" >
+          <number>0</number>
+         </property>
+         <property name="readOnly" >
+          <bool>true</bool>
+         </property>
+         <property name="acceptRichText" >
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" >
+        <widget class="QComboBox" name="roomListComboBox" >
+         <property name="minimumSize" >
+          <size>
+           <width>201</width>
+           <height>22</height>
+          </size>
+         </property>
+         <property name="duplicatesEnabled" >
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1" >
+        <spacer>
+         <property name="orientation" >
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" >
+          <size>
+           <width>171</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="2" column="0" >
+        <widget class="QLabel" name="updatedLabel" >
+         <property name="text" >
+          <string>Room has not been updated yet!</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="attributesTab" >
+      <attribute name="title" >
+       <string>Attributes</string>
+      </attribute>
+      <layout class="QGridLayout" >
+       <property name="margin" >
+        <number>9</number>
+       </property>
+       <property name="spacing" >
+        <number>6</number>
+       </property>
+       <item row="2" column="0" >
+        <widget class="QListWidget" name="loadFlagsListWidget" >
+         <property name="sizePolicy" >
+          <sizepolicy>
+           <hsizetype>0</hsizetype>
+           <vsizetype>7</vsizetype>
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize" >
+          <size>
+           <width>100</width>
+           <height>100</height>
+          </size>
+         </property>
+         <property name="selectionMode" >
+          <enum>QAbstractItemView::MultiSelection</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1" >
+        <widget class="QListWidget" name="mobFlagsListWidget" >
+         <property name="sizePolicy" >
+          <sizepolicy>
+           <hsizetype>0</hsizetype>
+           <vsizetype>7</vsizetype>
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize" >
+          <size>
+           <width>100</width>
+           <height>100</height>
+          </size>
+         </property>
+         <property name="selectionMode" >
+          <enum>QAbstractItemView::MultiSelection</enum>
+         </property>
+        </widget>
+       </item>
+       <item rowspan="2" row="0" column="2" >
+        <widget class="QGroupBox" name="alignGroupBox" >
+         <property name="sizePolicy" >
+          <sizepolicy>
+           <hsizetype>0</hsizetype>
+           <vsizetype>0</vsizetype>
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize" >
+          <size>
+           <width>94</width>
+           <height>128</height>
+          </size>
+         </property>
+         <property name="title" >
+          <string>Align</string>
+         </property>
+         <layout class="QVBoxLayout" >
+          <property name="margin" >
+           <number>9</number>
+          </property>
+          <property name="spacing" >
+           <number>6</number>
+          </property>
+          <item>
+           <widget class="QRadioButton" name="alignUndefRadioButton" >
+            <property name="text" >
+             <string>Undefined</string>
+            </property>
+            <property name="checked" >
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="neutralRadioButton" >
+            <property name="text" >
+             <string>Neutral</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="goodRadioButton" >
+            <property name="text" >
+             <string>Good</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="evilRadioButton" >
+            <property name="text" >
+             <string>Evil</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="1" >
+        <widget class="QGroupBox" name="lightGroupBox" >
+         <property name="sizePolicy" >
+          <sizepolicy>
+           <hsizetype>0</hsizetype>
+           <vsizetype>0</vsizetype>
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize" >
+          <size>
+           <width>94</width>
+           <height>103</height>
+          </size>
+         </property>
+         <property name="title" >
+          <string>Light</string>
+         </property>
+         <layout class="QVBoxLayout" >
+          <property name="margin" >
+           <number>9</number>
+          </property>
+          <property name="spacing" >
+           <number>6</number>
+          </property>
+          <item>
+           <widget class="QRadioButton" name="lightUndefRadioButton" >
+            <property name="text" >
+             <string>Undefined</string>
+            </property>
+            <property name="checked" >
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="darkRadioButton" >
+            <property name="text" >
+             <string>Dark</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="litRadioButton" >
+            <property name="text" >
+             <string>Lit</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0" >
+        <widget class="QLabel" name="label_21" >
+         <property name="text" >
+          <string>Load flags</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1" >
+        <widget class="QLabel" name="label_22" >
+         <property name="text" >
+          <string>Mob flags</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" >
+        <widget class="QGroupBox" name="teleportGroupBox" >
+         <property name="sizePolicy" >
+          <sizepolicy>
+           <hsizetype>0</hsizetype>
+           <vsizetype>0</vsizetype>
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize" >
+          <size>
+           <width>94</width>
+           <height>103</height>
+          </size>
+         </property>
+         <property name="title" >
+          <string>Teleport</string>
+         </property>
+         <property name="alignment" >
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="flat" >
+          <bool>false</bool>
+         </property>
+         <property name="checkable" >
+          <bool>false</bool>
+         </property>
+         <property name="checked" >
+          <bool>false</bool>
+         </property>
+         <layout class="QVBoxLayout" >
+          <property name="margin" >
+           <number>9</number>
+          </property>
+          <property name="spacing" >
+           <number>6</number>
+          </property>
+          <item>
+           <widget class="QRadioButton" name="portUndefRadioButton" >
+            <property name="text" >
+             <string>Undefined</string>
+            </property>
+            <property name="checked" >
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="portableRadioButton" >
+            <property name="text" >
+             <string>Portable</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="noPortRadioButton" >
+            <property name="text" >
+             <string>No-Port</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="2" >
+        <widget class="QFrame" name="frame" >
+         <property name="frameShape" >
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+         <property name="frameShadow" >
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QGridLayout" >
+          <property name="margin" >
+           <number>9</number>
+          </property>
+          <property name="spacing" >
+           <number>6</number>
+          </property>
+          <item row="1" column="0" >
+           <widget class="QLabel" name="terrainLabel" >
+            <property name="frameShape" >
+             <enum>QFrame::WinPanel</enum>
+            </property>
+            <property name="frameShadow" >
+             <enum>QFrame::Sunken</enum>
+            </property>
+            <property name="text" >
+             <string/>
+            </property>
+            <property name="pixmap" >
+             <pixmap resource="..\resources\mmapper2.qrc" >:/pixmaps/terrain5.png</pixmap>
+            </property>
+            <property name="scaledContents" >
+             <bool>false</bool>
+            </property>
+            <property name="alignment" >
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="3" column="0" colspan="3" >
+        <widget class="QFrame" name="exitsFrame" >
+         <property name="frameShape" >
+          <enum>QFrame::Box</enum>
+         </property>
+         <property name="frameShadow" >
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QGridLayout" >
+          <property name="margin" >
+           <number>9</number>
+          </property>
+          <property name="spacing" >
+           <number>6</number>
+          </property>
+          <item row="0" column="0" >
+           <widget class="QGroupBox" name="selectExitGroupBox" >
+            <property name="minimumSize" >
+             <size>
+              <width>110</width>
+              <height>115</height>
+             </size>
+            </property>
+            <property name="title" >
+             <string>Select exit:</string>
+            </property>
+            <widget class="QPushButton" name="exitUButton" >
+             <property name="geometry" >
+              <rect>
+               <x>73</x>
+               <y>40</y>
+               <width>26</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="sizePolicy" >
+              <sizepolicy>
+               <hsizetype>0</hsizetype>
+               <vsizetype>0</vsizetype>
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text" >
+              <string>U</string>
+             </property>
+             <property name="checkable" >
+              <bool>true</bool>
+             </property>
+             <property name="autoExclusive" >
+              <bool>true</bool>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="exitNButton" >
+             <property name="geometry" >
+              <rect>
+               <x>40</x>
+               <y>40</y>
+               <width>26</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="sizePolicy" >
+              <sizepolicy>
+               <hsizetype>0</hsizetype>
+               <vsizetype>0</vsizetype>
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text" >
+              <string>N</string>
+             </property>
+             <property name="checkable" >
+              <bool>true</bool>
+             </property>
+             <property name="checked" >
+              <bool>true</bool>
+             </property>
+             <property name="autoExclusive" >
+              <bool>true</bool>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="exitWButton" >
+             <property name="geometry" >
+              <rect>
+               <x>10</x>
+               <y>90</y>
+               <width>26</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="sizePolicy" >
+              <sizepolicy>
+               <hsizetype>0</hsizetype>
+               <vsizetype>0</vsizetype>
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text" >
+              <string>W</string>
+             </property>
+             <property name="checkable" >
+              <bool>true</bool>
+             </property>
+             <property name="autoExclusive" >
+              <bool>true</bool>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="exitEButton" >
+             <property name="geometry" >
+              <rect>
+               <x>74</x>
+               <y>90</y>
+               <width>26</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="sizePolicy" >
+              <sizepolicy>
+               <hsizetype>0</hsizetype>
+               <vsizetype>0</vsizetype>
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text" >
+              <string>E</string>
+             </property>
+             <property name="checkable" >
+              <bool>true</bool>
+             </property>
+             <property name="autoExclusive" >
+              <bool>true</bool>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="exitSButton" >
+             <property name="geometry" >
+              <rect>
+               <x>42</x>
+               <y>137</y>
+               <width>26</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="sizePolicy" >
+              <sizepolicy>
+               <hsizetype>0</hsizetype>
+               <vsizetype>0</vsizetype>
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text" >
+              <string>S</string>
+             </property>
+             <property name="checkable" >
+              <bool>true</bool>
+             </property>
+             <property name="checked" >
+              <bool>false</bool>
+             </property>
+             <property name="autoExclusive" >
+              <bool>true</bool>
+             </property>
+            </widget>
+            <widget class="QPushButton" name="exitDButton" >
+             <property name="geometry" >
+              <rect>
+               <x>10</x>
+               <y>137</y>
+               <width>26</width>
+               <height>41</height>
+              </rect>
+             </property>
+             <property name="sizePolicy" >
+              <sizepolicy>
+               <hsizetype>0</hsizetype>
+               <vsizetype>0</vsizetype>
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text" >
+              <string>D</string>
+             </property>
+             <property name="checkable" >
+              <bool>true</bool>
+             </property>
+             <property name="autoExclusive" >
+              <bool>true</bool>
+             </property>
+            </widget>
+           </widget>
+          </item>
+          <item row="0" column="1" >
+           <widget class="QFrame" name="frame_4" >
+            <property name="frameShape" >
+             <enum>QFrame::NoFrame</enum>
+            </property>
+            <property name="frameShadow" >
+             <enum>QFrame::Raised</enum>
+            </property>
+            <layout class="QGridLayout" >
+             <property name="margin" >
+              <number>9</number>
+             </property>
+             <property name="spacing" >
+              <number>6</number>
+             </property>
+             <item row="2" column="1" >
+              <widget class="QLabel" name="label_26" >
+               <property name="text" >
+                <string>Door flags:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0" >
+              <widget class="QLabel" name="label_29" >
+               <property name="text" >
+                <string>Door name:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0" >
+              <widget class="QLabel" name="label_27" >
+               <property name="text" >
+                <string>Exit flags:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1" >
+              <widget class="QListWidget" name="doorFlagsListWidget" >
+               <property name="selectionMode" >
+                <enum>QAbstractItemView::NoSelection</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0" colspan="2" >
+              <widget class="QLineEdit" name="doorNameLineEdit" />
+             </item>
+             <item row="3" column="0" >
+              <widget class="QListWidget" name="exitFlagsListWidget" >
+               <property name="selectionMode" >
+                <enum>QAbstractItemView::NoSelection</enum>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="terrainTab" >
+      <attribute name="title" >
+       <string>Terrain</string>
+      </attribute>
+      <layout class="QGridLayout" >
+       <property name="margin" >
+        <number>9</number>
+       </property>
+       <property name="spacing" >
+        <number>6</number>
+       </property>
+       <item row="0" column="0" >
+        <widget class="QGroupBox" name="groupBox_2" >
+         <property name="title" >
+          <string>Select terrain type:</string>
+         </property>
+         <property name="checkable" >
+          <bool>false</bool>
+         </property>
+         <layout class="QGridLayout" >
+          <property name="margin" >
+           <number>9</number>
+          </property>
+          <property name="spacing" >
+           <number>6</number>
+          </property>
+          <item row="4" column="0" >
+           <widget class="QToolButton" name="toolButton08" >
+            <property name="text" >
+             <string>...</string>
+            </property>
+            <property name="icon" >
+             <iconset resource="..\resources\mmapper2.qrc" >:/pixmaps/terrain8.png</iconset>
+            </property>
+            <property name="iconSize" >
+             <size>
+              <width>64</width>
+              <height>64</height>
+             </size>
+            </property>
+            <property name="checkable" >
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive" >
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1" >
+           <widget class="QToolButton" name="toolButton09" >
+            <property name="text" >
+             <string>...</string>
+            </property>
+            <property name="icon" >
+             <iconset resource="..\resources\mmapper2.qrc" >:/pixmaps/terrain9.png</iconset>
+            </property>
+            <property name="iconSize" >
+             <size>
+              <width>64</width>
+              <height>64</height>
+             </size>
+            </property>
+            <property name="checkable" >
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive" >
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="3" >
+           <widget class="QToolButton" name="toolButton11" >
+            <property name="text" >
+             <string>...</string>
+            </property>
+            <property name="icon" >
+             <iconset resource="..\resources\mmapper2.qrc" >:/pixmaps/road7.png</iconset>
+            </property>
+            <property name="iconSize" >
+             <size>
+              <width>64</width>
+              <height>64</height>
+             </size>
+            </property>
+            <property name="checkable" >
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive" >
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2" >
+           <widget class="QToolButton" name="toolButton10" >
+            <property name="text" >
+             <string>...</string>
+            </property>
+            <property name="icon" >
+             <iconset resource="..\resources\mmapper2.qrc" >:/pixmaps/terrain10.png</iconset>
+            </property>
+            <property name="iconSize" >
+             <size>
+              <width>64</width>
+              <height>64</height>
+             </size>
+            </property>
+            <property name="checkable" >
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive" >
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="3" >
+           <widget class="QLabel" name="label_17" >
+            <property name="text" >
+             <string>Road</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="2" >
+           <widget class="QLabel" name="label_12" >
+            <property name="text" >
+             <string>Underwater</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1" >
+           <widget class="QLabel" name="label_11" >
+            <property name="text" >
+             <string>Rapids</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="2" >
+           <widget class="QToolButton" name="toolButton14" >
+            <property name="text" >
+             <string>...</string>
+            </property>
+            <property name="icon" >
+             <iconset resource="..\resources\mmapper2.qrc" >:/pixmaps/terrain14.png</iconset>
+            </property>
+            <property name="iconSize" >
+             <size>
+              <width>64</width>
+              <height>64</height>
+             </size>
+            </property>
+            <property name="checkable" >
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive" >
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="3" >
+           <widget class="QToolButton" name="toolButton07" >
+            <property name="text" >
+             <string>...</string>
+            </property>
+            <property name="icon" >
+             <iconset resource="..\resources\mmapper2.qrc" >:/pixmaps/terrain7.png</iconset>
+            </property>
+            <property name="iconSize" >
+             <size>
+              <width>64</width>
+              <height>64</height>
+             </size>
+            </property>
+            <property name="checkable" >
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive" >
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="3" >
+           <widget class="QToolButton" name="toolButton15" >
+            <property name="text" >
+             <string>Random</string>
+            </property>
+            <property name="icon" >
+             <iconset resource="..\resources\mmapper2.qrc" >:/pixmaps/terrain15.png</iconset>
+            </property>
+            <property name="iconSize" >
+             <size>
+              <width>64</width>
+              <height>64</height>
+             </size>
+            </property>
+            <property name="checkable" >
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive" >
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0" >
+           <widget class="QToolButton" name="toolButton12" >
+            <property name="text" >
+             <string>...</string>
+            </property>
+            <property name="icon" >
+             <iconset resource="..\resources\mmapper2.qrc" >:/pixmaps/terrain12.png</iconset>
+            </property>
+            <property name="iconSize" >
+             <size>
+              <width>64</width>
+              <height>64</height>
+             </size>
+            </property>
+            <property name="checkable" >
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive" >
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2" >
+           <widget class="QToolButton" name="toolButton02" >
+            <property name="text" >
+             <string>...</string>
+            </property>
+            <property name="icon" >
+             <iconset resource="..\resources\mmapper2.qrc" >:/pixmaps/terrain2.png</iconset>
+            </property>
+            <property name="iconSize" >
+             <size>
+              <width>64</width>
+              <height>64</height>
+             </size>
+            </property>
+            <property name="checkable" >
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive" >
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1" >
+           <widget class="QToolButton" name="toolButton13" >
+            <property name="text" >
+             <string>...</string>
+            </property>
+            <property name="icon" >
+             <iconset resource="..\resources\mmapper2.qrc" >:/pixmaps/terrain13.png</iconset>
+            </property>
+            <property name="iconSize" >
+             <size>
+              <width>64</width>
+              <height>64</height>
+             </size>
+            </property>
+            <property name="checkable" >
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive" >
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3" >
+           <widget class="QToolButton" name="toolButton03" >
+            <property name="text" >
+             <string>...</string>
+            </property>
+            <property name="icon" >
+             <iconset resource="..\resources\mmapper2.qrc" >:/pixmaps/terrain3.png</iconset>
+            </property>
+            <property name="iconSize" >
+             <size>
+              <width>64</width>
+              <height>64</height>
+             </size>
+            </property>
+            <property name="checkable" >
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive" >
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2" >
+           <widget class="QToolButton" name="toolButton06" >
+            <property name="text" >
+             <string>...</string>
+            </property>
+            <property name="icon" >
+             <iconset resource="..\resources\mmapper2.qrc" >:/pixmaps/terrain6.png</iconset>
+            </property>
+            <property name="iconSize" >
+             <size>
+              <width>64</width>
+              <height>64</height>
+             </size>
+            </property>
+            <property name="checkable" >
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive" >
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1" >
+           <widget class="QToolButton" name="toolButton05" >
+            <property name="text" >
+             <string>...</string>
+            </property>
+            <property name="icon" >
+             <iconset resource="..\resources\mmapper2.qrc" >:/pixmaps/terrain5.png</iconset>
+            </property>
+            <property name="iconSize" >
+             <size>
+              <width>64</width>
+              <height>64</height>
+             </size>
+            </property>
+            <property name="checkable" >
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive" >
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0" >
+           <widget class="QToolButton" name="toolButton04" >
+            <property name="text" >
+             <string>...</string>
+            </property>
+            <property name="icon" >
+             <iconset resource="..\resources\mmapper2.qrc" >:/pixmaps/terrain4.png</iconset>
+            </property>
+            <property name="iconSize" >
+             <size>
+              <width>64</width>
+              <height>64</height>
+             </size>
+            </property>
+            <property name="checkable" >
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive" >
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="3" >
+           <widget class="QLabel" name="label_15" >
+            <property name="text" >
+             <string>DeathTrap</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="2" >
+           <widget class="QLabel" name="label_14" >
+            <property name="text" >
+             <string>Cavern</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0" >
+           <widget class="QLabel" name="label_18" >
+            <property name="text" >
+             <string>Brush</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="1" >
+           <widget class="QLabel" name="label_16" >
+            <property name="text" >
+             <string>Tunnel</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0" >
+           <widget class="QLabel" name="label_5" >
+            <property name="text" >
+             <string>Water</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="3" >
+           <widget class="QLabel" name="label_7" >
+            <property name="text" >
+             <string>Shallow</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2" >
+           <widget class="QLabel" name="label_6" >
+            <property name="text" >
+             <string>Mountains</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1" >
+           <widget class="QLabel" name="label_13" >
+            <property name="text" >
+             <string>Hills</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0" >
+           <widget class="QLabel" name="label_4" >
+            <property name="text" >
+             <string>Forest</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3" >
+           <widget class="QLabel" name="label_3" >
+            <property name="text" >
+             <string>Field</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2" >
+           <widget class="QLabel" name="label_2" >
+            <property name="text" >
+             <string>City</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" >
+           <widget class="QLabel" name="label_9" >
+            <property name="text" >
+             <string>Undefined</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1" >
+           <widget class="QLabel" name="label" >
+            <property name="text" >
+             <string>Indoors</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0" >
+           <widget class="QToolButton" name="toolButton00" >
+            <property name="text" >
+             <string>...</string>
+            </property>
+            <property name="icon" >
+             <iconset resource="..\resources\mmapper2.qrc" >:/pixmaps/terrain0.png</iconset>
+            </property>
+            <property name="iconSize" >
+             <size>
+              <width>64</width>
+              <height>64</height>
+             </size>
+            </property>
+            <property name="checkable" >
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive" >
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1" >
+           <widget class="QToolButton" name="toolButton01" >
+            <property name="text" >
+             <string>...</string>
+            </property>
+            <property name="icon" >
+             <iconset resource="..\resources\mmapper2.qrc" >:/pixmaps/terrain1.png</iconset>
+            </property>
+            <property name="iconSize" >
+             <size>
+              <width>64</width>
+              <height>64</height>
+             </size>
+            </property>
+            <property name="checkable" >
+             <bool>true</bool>
+            </property>
+            <property name="autoExclusive" >
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="noteTab" >
+      <attribute name="title" >
+       <string>Note</string>
+      </attribute>
+      <layout class="QVBoxLayout" >
+       <property name="margin" >
+        <number>9</number>
+       </property>
+       <property name="spacing" >
+        <number>6</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="label_8" >
+         <property name="text" >
+          <string>Type your note to the current room or area:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTextEdit" name="roomNoteTextEdit" >
+         <property name="documentTitle" >
+          <string>Note</string>
+         </property>
+         <property name="readOnly" >
+          <bool>false</bool>
+         </property>
+         <property name="acceptRichText" >
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item row="1" column="1" >
+    <widget class="QPushButton" name="closeButton" >
+     <property name="text" >
+      <string>Close</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <pixmapfunction></pixmapfunction>
+ <resources>
+  <include location="../resources/mmapper2.qrc" />
+ </resources>
+ <connections/>
+</ui>

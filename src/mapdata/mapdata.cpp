@@ -1,0 +1,286 @@
+/************************************************************************
+**
+** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve), 
+**            Marek Krejza <krejza@gmail.com> (Caligor)
+**
+** This file is part of the MMapper2 project. 
+** Maintained by Marek Krejza <krejza@gmail.com>
+**
+** Copyright: See COPYING file that comes with this distribution
+**
+** This file may be used under the terms of the GNU General Public
+** License version 2.0 as published by the Free Software Foundation
+** and appearing in the file COPYING included in the packaging of
+** this file.  
+**
+** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+** EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+** MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+** NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+** LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+** OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+** WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+**
+*************************************************************************/
+
+#include "mapdata.h"
+#include "roomfactory.h"
+#include "drawstream.h"
+#include <assert.h>
+
+using namespace std;
+
+MapData::MapData() :
+    MapFrontend(new RoomFactory),
+    m_dataChanged(false)
+{}
+
+QString MapData::getDoorName(const Coordinate & pos, uint dir)
+{
+  QMutexLocker locker(&mapLock);
+  Room * room = map.get(pos);
+  if (room && dir < 7)
+  {
+    return ::getDoorName(room->exit(dir));
+  }
+  else return "exit";
+}
+
+void MapData::setDoorName(const Coordinate & pos, uint dir, const QString & name)
+{
+  QMutexLocker locker(&mapLock);
+  Room * room = map.get(pos);
+  if (room && dir < 7)
+  {
+    MapAction * action = new SingleRoomAction(new UpdateExitField(name, dir, E_DOORNAME), room->getId());
+    scheduleAction(action);
+  }
+}
+
+QList<Coordinate> MapData::getPath(const QList<CommandIdType> dirs)
+{
+  QMutexLocker locker(&mapLock);
+  QList<Coordinate> ret;
+  Room * room = map.get(m_position);
+  if (room)
+  {
+    QListIterator<CommandIdType> iter(dirs);
+    while (iter.hasNext())
+    {
+      uint dir = iter.next();
+      if (dir > 5) break;
+      Exit & e = room->exit(dir);
+      if (e.outBegin() == e.outEnd() || ++e.outBegin() != e.outEnd()) break;
+      room = roomIndex[*e.outBegin()];
+      if (!room) break;
+      ret.append(room->getPosition());
+    }
+  }
+  return ret;
+}
+
+const RoomSelection * MapData::select(const Coordinate & ulf, const Coordinate & lrb)
+{
+  QMutexLocker locker(&mapLock);
+  RoomSelection * selection = new RoomSelection(this);
+  selections[selection] = selection;
+  lookingForRooms(selection, ulf, lrb);
+  return selection;
+}
+// updates a selection created by the mapdata
+const RoomSelection * MapData::select(const Coordinate & ulf, const Coordinate & lrb, const RoomSelection * in)
+{
+  QMutexLocker locker(&mapLock);
+  RoomSelection * selection = selections[in];
+  assert(selection);
+  lookingForRooms(selection, ulf, lrb);
+  return selection;
+}
+// creates and registers a selection with one room
+const RoomSelection * MapData::select(const Coordinate & pos)
+{
+  QMutexLocker locker(&mapLock);
+  RoomSelection * selection = new RoomSelection(this);
+  selections[selection] = selection;
+  lookingForRooms(selection, pos);
+  return selection;
+}
+// creates and registers an empty selection
+const RoomSelection * MapData::select()
+{
+  QMutexLocker locker(&mapLock);
+  RoomSelection * selection = new RoomSelection(this);
+  selections[selection] = selection;
+  return selection;
+}
+// removes the selection from the internal structures and deletes it
+void MapData::unselect(const RoomSelection * in)
+{
+  QMutexLocker locker(&mapLock);
+  RoomSelection * selection = selections[in];
+  assert(selection);
+  selections.erase(in);
+  QMap<uint, const Room *>::iterator i =selection->begin();
+  while(i != selection->end())
+  {
+    keepRoom(selection, (i++).key());
+  }
+  delete selection;
+}
+
+// the room will be inserted in the given selection. the selection must have been created by mapdata
+const Room * MapData::getRoom(const Coordinate & pos, const RoomSelection * in)
+{
+  QMutexLocker locker(&mapLock);
+  RoomSelection * selection = selections[in];
+  assert(selection);
+  Room * room = map.get(pos);
+  if (room)
+  {
+    uint id = room->getId();
+    locks[id].insert(selection);
+    selection->insert(id, room);
+  }
+  return room;
+}
+
+const Room * MapData::getRoom(uint id, const RoomSelection * in)
+{
+  QMutexLocker locker(&mapLock);
+  RoomSelection * selection = selections[in];
+  assert(selection);
+  Room * room = roomIndex[id];
+  if (room)
+  {
+    uint id = room->getId();
+    locks[id].insert(selection);
+    selection->insert(id, room);
+  }
+  return room;
+}
+
+void MapData::draw (const Coordinate & ulf, const Coordinate & lrb, MapCanvas & screen)
+{
+  QMutexLocker locker(&mapLock);
+  DrawStream drawer(screen, roomIndex, locks);
+  map.getRooms(drawer, ulf, lrb);
+}
+
+bool MapData::isOccupied(const Coordinate & position)
+{
+  QMutexLocker locker(&mapLock);
+  return map.get(position);
+}
+
+bool MapData::isMovable(const Coordinate & offset, const RoomSelection * selection)
+{
+  QMutexLocker locker(&mapLock);
+  QMap<uint, const Room *>::const_iterator i = selection->begin();
+  const Room * other = 0;
+  while(i != selection->end())
+  {
+    Coordinate target = (*(i++))->getPosition() + offset;
+    other = map.get(target);
+    if (other && !selection->contains(other->getId())) return false;
+  }
+  return true;
+}
+
+void MapData::unselect(uint id, const RoomSelection * in)
+{
+  QMutexLocker locker(&mapLock);
+  RoomSelection * selection = selections[in];
+  assert(selection);
+  keepRoom(selection, id);
+  selection->remove(id);
+}
+
+// selects the rooms given in "other" for "into"
+const RoomSelection * MapData::select(const RoomSelection * other, const RoomSelection * in)
+{
+  QMutexLocker locker(&mapLock);
+  RoomSelection * into = selections[in];
+  assert(into);
+  QMapIterator<uint, const Room *> i(*other);
+  while(i.hasNext())
+  {
+    locks[i.key()].insert(into);
+    into->insert(i.key(), i.value());
+  }
+  return into;
+}
+
+// removes the subset from the superset and unselects
+void MapData::unselect(const RoomSelection * subset, const RoomSelection * in)
+{
+  QMutexLocker locker(&mapLock);
+  RoomSelection * superset = selections[in];
+  assert(superset);
+  QMapIterator<uint, const Room *> i(*subset);
+  while(i.hasNext())
+  {
+    keepRoom(superset, i.key());
+    superset->remove(i.key());
+  }
+}
+
+bool MapData::execute(MapAction * action)
+{
+  QMutexLocker locker(&mapLock);
+  action->schedule(this);
+  bool executable = isExecutable(action);
+  if (executable) executeAction(action);
+  return executable;
+}
+
+bool MapData::execute(MapAction * action, const RoomSelection * unlock)
+{
+  QMutexLocker locker(&mapLock);
+  action->schedule(this);
+  list<uint> selectedIds;
+
+  RoomSelection * selection = selections[unlock];
+  assert(selection);
+
+  QMap<uint, const Room *>::iterator i = selection->begin();
+  while(i != selection->end())
+  {
+    const Room * room = *(i++);
+    uint id = room->getId();
+    locks[id].erase(selection);
+    selectedIds.push_back(id);
+  }
+  selection->clear();
+
+  bool executable = isExecutable(action);
+  if (executable) executeAction(action);
+
+  for(list<uint>::const_iterator i =  selectedIds.begin(); i != selectedIds.end(); ++i)
+  {
+    uint id = (*i);
+    Room * room = roomIndex[id];
+    if (room)
+    {
+      locks[id].insert(selection);
+      selection->insert(id, room);
+    }
+  }
+  delete action;
+  return executable;
+}
+
+
+void MapData::clear()
+{
+  MapFrontend::clear();
+  while (!m_markers.isEmpty())
+    delete m_markers.takeFirst();
+  emit log("MapData", "cleared MapData");
+}
+
+MapData::~MapData()
+{
+  while (!m_markers.isEmpty())
+    delete m_markers.takeFirst();
+}
+

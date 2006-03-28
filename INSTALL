@@ -1,0 +1,32 @@
+                 INSTALLING MMapper2 Version 2.0
+
+1.  You can get latest version of MMapper2 on http://mmapper.czechian.net web page.
+  
+2.  Uncompress the archive you downloaded into any directory,
+    e.g. C:\mmapper2\ or ~/mmapper2
+
+3.  Building
+    To create makefiles for your machine type and OS:
+
+        C:
+        cd \mmapper2\src
+        qmake
+        
+        or 
+        
+        cd ~\mmapper2\src
+        qmake
+
+    You need Qt >= 4.1 to be installed first of course.
+
+    To build all type:
+    
+        make
+    
+
+4.  That's all. MMapper2 is now installed.
+
+    MMapper2 exacutable will be built in mmapper2/bin/[debug|release] directory.]. 
+    You dont need any other files to run programm.
+    
+We hope you will enjoy using MMapper2. Good luck!
