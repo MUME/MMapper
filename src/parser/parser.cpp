@@ -301,7 +301,7 @@ bool Parser::isStaticRoomDescriptionLine(QString& str)
 
 bool Parser::isEndOfRoomDescription(QString& str) {
 
-	if (str.isEmpty()) return false;
+	if (str.isEmpty()) return true;//false;
 
 	if (Patterns::matchExitsPatterns(str)) {
 		m_exitsFlags = EXITS_FLAGS_VALID;
@@ -737,16 +737,6 @@ void Parser::parseNewMudInput(TelnetIncomingDataQueue& que)
 	{
 		data = que.dequeue();
 
-/*
-	if (data.line.contains("Valinor Street"))
-	{
-		//QByteArray ba = str.toAscii();
-		(*debugStream) << "\"";
-		(*debugStream) << data.line;
-		(*debugStream) << "\"";
-		(*debugStream) << "\r\n";
-	}
-*/
 		staticLine = false;
 		
 		//dline = (quint8 *)data.line.data();
@@ -758,10 +748,20 @@ void Parser::parseNewMudInput(TelnetIncomingDataQueue& que)
 			case TDT_TELNET:
 			case TDT_SPLIT:
 			case TDT_UNKNOWN:			
+#ifdef PARSER_STREAM_DEBUG_INPUT_TO_FILE
+		(*debugStream) << "***STYPE***";
+		(*debugStream) << "Other";
+		(*debugStream) << "***ETYPE***";
+#endif
 				emit sendToUser(data.line);
 				break;			
 
 			case TDT_PROMPT:
+#ifdef PARSER_STREAM_DEBUG_INPUT_TO_FILE
+		(*debugStream) << "***STYPE***";
+		(*debugStream) << "Prompt";
+		(*debugStream) << "***ETYPE***";
+#endif
 				if (!m_briefAutoconfigDone)
 				{  
 					m_briefAutoconfigDone = true;
@@ -814,6 +814,11 @@ void Parser::parseNewMudInput(TelnetIncomingDataQueue& que)
 				break;
 
 			case TDT_CRLF:
+#ifdef PARSER_STREAM_DEBUG_INPUT_TO_FILE
+		(*debugStream) << "***STYPE***";
+		(*debugStream) << "CRLF";
+		(*debugStream) << "***ETYPE***";
+#endif			
 				m_stringBuffer = QString::fromAscii(data.line.constData(), data.line.size());
 				m_stringBuffer = m_stringBuffer.simplified();
 								
@@ -870,7 +875,44 @@ void Parser::parseNewMudInput(TelnetIncomingDataQueue& que)
 				} 
 				else 
 				if (!m_readingRoomDesc && m_descriptionReady) //read betwen Exits and Prompt (track for example)
-				{	  
+				{
+					//*****************					
+					if ( isRoomName(m_stringBuffer) ) //Room name arrived
+					{ 
+						
+						
+						if	(m_descriptionReady)
+						{			
+							m_descriptionReady = false;
+		
+							if (!queue.isEmpty())
+							{
+								CommandIdType c = queue.dequeue();
+								if ( c != CID_SCOUT ){
+									emit showPath(queue, false);
+									characterMoved(c, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags, m_promptFlags);
+								}
+							}
+							else
+							{	
+								emit showPath(queue, false);
+								characterMoved(CID_NONE, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags, m_promptFlags);
+							}    
+						}					
+						
+						
+						m_readingRoomDesc = true; //start of read desc mode
+						m_descriptionReady = false;										
+						m_roomName=m_stringBuffer;
+						m_dynamicRoomDesc="";
+						m_staticRoomDesc="";
+						m_roomDescLines = 0;
+						m_readingStaticDescLines = true;
+						m_exitsFlags = 0;
+					} 
+					else
+					if (!m_stringBuffer.isEmpty()) parseMudCommands(m_stringBuffer);					
+						  
 				} 
 				else 
 				if ( isRoomName(m_stringBuffer) ) //Room name arrived
@@ -929,6 +971,11 @@ void Parser::parseNewMudInput(TelnetIncomingDataQueue& que)
 				break;
 
 			case TDT_LFCR: 
+#ifdef PARSER_STREAM_DEBUG_INPUT_TO_FILE
+		(*debugStream) << "***STYPE***";
+		(*debugStream) << "LFCR";
+		(*debugStream) << "***ETYPE***";
+#endif			
 				m_stringBuffer = QString::fromAscii(data.line.constData(), data.line.size());
 				m_stringBuffer = m_stringBuffer.simplified();
 
@@ -942,11 +989,24 @@ void Parser::parseNewMudInput(TelnetIncomingDataQueue& que)
 				break;
 
 			case TDT_LF:
+#ifdef PARSER_STREAM_DEBUG_INPUT_TO_FILE
+		(*debugStream) << "***STYPE***";
+		(*debugStream) << "LF";
+		(*debugStream) << "***ETYPE***";
+#endif			
 				m_stringBuffer = QString::fromAscii(data.line.constData(), data.line.size());
 				emit sendToUser(data.line);
 				break;			
 		}
-	}	
+		
+#ifdef PARSER_STREAM_DEBUG_INPUT_TO_FILE
+		(*debugStream) << "***S***";
+		(*debugStream) << data.line;
+		(*debugStream) << "***E***";
+#endif
+		
+	}
+		
 }
 
 void Parser::parseNewUserInput(TelnetIncomingDataQueue& que)
