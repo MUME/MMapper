@@ -55,14 +55,7 @@ void AddTwoWayExit::exec() {
 	AddOneWayExit::exec();
 }
 
-void RemoveOneWayExit::exec() {
-	Room * rfrom = tryExec();
-	if (rfrom) {
-		Exit & e = rfrom->exit(dir);
-		if (e.outBegin() == e.outEnd())
-			nandExitFlags(e, EF_EXIT);
-	}
-}
+
 
 void RemoveTwoWayExit::exec() {
 	if (room2Dir == UINT_MAX) room2Dir = opposite(dir);

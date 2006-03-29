@@ -49,13 +49,7 @@ class AddTwoWayExit : public AddOneWayExit {
 		uint room2Dir;
 };
 
-class RemoveOneWayExit : public RemoveExit {
-	public:
-		RemoveOneWayExit(uint room1Id, uint room2Id, uint room1Dir) :
-			RemoveExit(room1Id, room2Id, room1Dir) {}
-	protected:
-		virtual void exec();
-};
+typedef RemoveExit RemoveOneWayExit;
 
 class RemoveTwoWayExit : public RemoveOneWayExit {
 	public:
