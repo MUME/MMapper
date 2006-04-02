@@ -94,7 +94,7 @@ void Configuration::read()
 		m_moveForcePatternsList.append("#=You flee head over heels.");
 		m_moveForcePatternsList.append("#=You are borne along by a strong current.");
 		m_moveForcePatternsList.append("#?leads you out");
-		m_moveForcePatternsList.append("#=You are dead! Sorry...");
+		//m_moveForcePatternsList.append("#=You are dead! Sorry...");
 		m_moveForcePatternsList.append("#<Your feet slip, making you fall to the");
 		m_moveForcePatternsList.append("#<Suddenly an explosion of ancient rhymes");
 	}
@@ -128,7 +128,8 @@ void Configuration::read()
 		m_moveCancelPatternsList.append("#=You don't control your mount!");
 		m_moveCancelPatternsList.append("#=Your mount is too sensible to attempt such a feat.");
 		m_moveCancelPatternsList.append("#?* prevents you from going *.");
-		//m_moveCancelPatternsList.append("#=You were not able to keep your concentration while moving.");
+		m_moveCancelPatternsList.append("#=Scouting in that direction is impossible.");		
+		m_moveCancelPatternsList.append("#<You stop moving towards");		
 	}
 	
 	if (m_noDescriptionPatternsList.isEmpty())

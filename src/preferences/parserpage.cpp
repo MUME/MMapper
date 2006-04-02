@@ -28,14 +28,12 @@
 #include "configuration.h"
 
 ParserPage::ParserPage(QWidget *parent)
-        : QDialog(parent)
+        : QWidget(parent)
 {
     setupUi(this);
 
    	IACPromptCheckBox->setChecked(Config().m_IAC_prompt_parser);	
 
-	roomNameAnsiColor->setText( Config().m_roomNameColor );
-	roomDescAnsiColor->setText( Config().m_roomDescColor );
 	forcePatternsList->clear();
 	forcePatternsList->addItems( Config().m_moveForcePatternsList );
 	cancelPatternsList->clear();
@@ -65,8 +63,23 @@ ParserPage::ParserPage(QWidget *parent)
 		SLOT(roomNameAnsiColorTextChanged(const QString&)));
 	connect ( roomDescAnsiColor, SIGNAL(textChanged(const QString&)),
 		SLOT(roomDescAnsiColorTextChanged(const QString&)));
+	connect ( roomNameAnsiColor, SIGNAL(textChanged(const QString&)),
+		SLOT(roomNameColorChanged(const QString&)));
+	connect ( roomDescAnsiColor, SIGNAL(textChanged(const QString&)),
+		SLOT(roomDescColorChanged(const QString&)));
+	connect ( roomNameAnsiColor, SIGNAL(activated(const QString&)),
+		SLOT(roomNameColorChanged(const QString&)));
+	connect ( roomDescAnsiColor, SIGNAL(activated(const QString&)),
+		SLOT(roomDescColorChanged(const QString&)));
+	connect ( roomNameAnsiColor, SIGNAL(highlighted(const QString&)),
+		SLOT(roomNameColorChanged(const QString&)));
+	connect ( roomDescAnsiColor, SIGNAL(highlighted(const QString&)),
+		SLOT(roomDescColorChanged(const QString&)));
 		
 	connect( IACPromptCheckBox, SIGNAL(stateChanged(int)),SLOT(IACPromptCheckBoxStateChanged(int)));	
+
+	roomNameAnsiColor->setText( Config().m_roomNameColor );
+	roomDescAnsiColor->setText( Config().m_roomDescColor );
 }
 
 void ParserPage::roomNameAnsiColorTextChanged(const QString& str)
@@ -212,3 +225,17 @@ void ParserPage::addEndDescPatternClicked(){
 	savePatterns();
 }
 
+void ParserPage::roomDescColorChanged(const QString& s)
+{
+	comboChanged(s, labelRoomDesc);
+}
+
+void ParserPage::roomNameColorChanged(const QString& s)
+{
+	comboChanged(s, labelRoomColor);
+}
+
+void ParserPage::comboChanged(const QString& colString, QLabel *p)
+{
+	AnsiCombo::makeWidgetColoured(p, colString);
+}

@@ -8,8 +8,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>446</width>
-    <height>466</height>
+    <width>443</width>
+    <height>494</height>
    </rect>
   </property>
   <property name="sizePolicy" >
@@ -45,27 +45,10 @@
       <property name="spacing" >
        <number>6</number>
       </property>
-      <item row="1" column="1" >
-       <widget class="QLineEdit" name="roomDescAnsiColor" >
-        <property name="sizePolicy" >
-         <sizepolicy>
-          <hsizetype>5</hsizetype>
-          <vsizetype>0</vsizetype>
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1" >
-       <widget class="QLineEdit" name="roomNameAnsiColor" >
-        <property name="sizePolicy" >
-         <sizepolicy>
-          <hsizetype>5</hsizetype>
-          <vsizetype>0</vsizetype>
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
+      <item row="1" column="0" >
+       <widget class="QLabel" name="textLabel1_7" >
+        <property name="text" >
+         <string>Descriptions ANSI color:</string>
         </property>
        </widget>
       </item>
@@ -76,32 +59,82 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="0" >
-       <widget class="QLabel" name="textLabel1_7" >
+      <item row="0" column="2" >
+       <widget class="QLabel" name="labelRoomColor" >
+        <property name="sizePolicy" >
+         <sizepolicy>
+          <hsizetype>4</hsizetype>
+          <vsizetype>5</vsizetype>
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize" >
+         <size>
+          <width>75</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="font" >
+         <font>
+          <family>MS Shell Dlg</family>
+          <pointsize>8</pointsize>
+          <weight>75</weight>
+          <italic>false</italic>
+          <bold>true</bold>
+          <underline>false</underline>
+          <strikeout>false</strikeout>
+         </font>
+        </property>
         <property name="text" >
-         <string>Descriptions ANSI color:</string>
+         <string>roomname</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="0" colspan="2" >
+      <item row="1" column="2" >
+       <widget class="QLabel" name="labelRoomDesc" >
+        <property name="sizePolicy" >
+         <sizepolicy>
+          <hsizetype>4</hsizetype>
+          <vsizetype>5</vsizetype>
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize" >
+         <size>
+          <width>75</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="font" >
+         <font>
+          <family>MS Shell Dlg</family>
+          <pointsize>8</pointsize>
+          <weight>75</weight>
+          <italic>false</italic>
+          <bold>true</bold>
+          <underline>false</underline>
+          <strikeout>false</strikeout>
+         </font>
+        </property>
+        <property name="text" >
+         <string>roomdesc</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="3" >
        <widget class="QCheckBox" name="IACPromptCheckBox" >
         <property name="text" >
          <string>IAC-GA prompt recognition (changes needs reconnect with client!!!)</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="2" >
-       <spacer>
-        <property name="orientation" >
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" >
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
+      <item row="0" column="1" >
+       <widget class="AnsiCombo" name="roomNameAnsiColor" />
+      </item>
+      <item row="1" column="1" >
+       <widget class="AnsiCombo" name="roomDescAnsiColor" />
       </item>
      </layout>
     </widget>
@@ -148,6 +181,12 @@
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="minimumSize" >
+         <size>
+          <width>0</width>
+          <height>25</height>
+         </size>
         </property>
         <property name="text" >
          <string>Remove pattern</string>
@@ -205,6 +244,12 @@
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="minimumSize" >
+         <size>
+          <width>0</width>
+          <height>25</height>
+         </size>
         </property>
         <property name="text" >
          <string>Remove pattern</string>
@@ -316,6 +361,12 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="minimumSize" >
+         <size>
+          <width>0</width>
+          <height>25</height>
+         </size>
+        </property>
         <property name="text" >
          <string>Remove pattern</string>
         </property>
@@ -358,6 +409,12 @@
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="minimumSize" >
+         <size>
+          <width>0</width>
+          <height>25</height>
+         </size>
         </property>
         <property name="text" >
          <string>Test pattern</string>
@@ -454,8 +511,8 @@
      </property>
      <property name="sizeHint" >
       <size>
-       <width>20</width>
-       <height>40</height>
+       <width>341</width>
+       <height>25</height>
       </size>
      </property>
     </spacer>
@@ -464,6 +521,34 @@
  </widget>
  <layoutdefault spacing="6" margin="11" />
  <pixmapfunction>qPixmapFromMimeSource</pixmapfunction>
+ <customwidgets>
+  <customwidget>
+   <class>AnsiCombo</class>
+   <extends>QWidget</extends>
+   <header>ansicombo.h</header>
+   <container>1</container>
+   <pixmap></pixmap>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>roomNameAnsiColor</tabstop>
+  <tabstop>roomDescAnsiColor</tabstop>
+  <tabstop>IACPromptCheckBox</tabstop>
+  <tabstop>cancelPatternsList</tabstop>
+  <tabstop>removeCancelPattern</tabstop>
+  <tabstop>addCancelPattern</tabstop>
+  <tabstop>forcePatternsList</tabstop>
+  <tabstop>removeForcePattern</tabstop>
+  <tabstop>addForcePattern</tabstop>
+  <tabstop>endDescPatternsList</tabstop>
+  <tabstop>addEndDescPattern</tabstop>
+  <tabstop>removeEndDescPattern</tabstop>
+  <tabstop>testPattern</tabstop>
+  <tabstop>validPattern</tabstop>
+  <tabstop>newPattern</tabstop>
+  <tabstop>testString</tabstop>
+  <tabstop>resetPatterns</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

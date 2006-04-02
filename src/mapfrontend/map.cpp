@@ -68,7 +68,23 @@ void Map::getRooms(RoomOutStream & stream, const Coordinate & ulf, const Coordin
   //cout << "rendering took " << start.msecsTo(QTime::currentTime()) << " msecs for " << checks << " checks" << endl;
 }
 
-
+void Map::fillArea(AbstractRoomFactory * factory, const Coordinate & ulf, const Coordinate & lrb) {
+  int xmin = ulf.x < lrb.x ? ulf.x : lrb.x;
+  int xmax = ulf.x > lrb.x ? ulf.x : lrb.x;
+  int ymin = ulf.y < lrb.y ? ulf.y : lrb.y;
+  int ymax = ulf.y > lrb.y ? ulf.y : lrb.y;
+  int zmin = ulf.z < lrb.z ? ulf.z : lrb.z;
+  int zmax = ulf.z > lrb.z ? ulf.z : lrb.z;
+  
+  for (int z = zmin; z <= zmax; ++z) {
+    for (int y = ymin; y <= ymax; ++y) {
+      for (int x = xmin; x <= xmax; ++x) {
+	Room * & room = m_map[z][y][x];
+	if (!room) room = factory->createRoom();
+      }
+    }
+  }
+}
 
 /**
  * doesn't modify c

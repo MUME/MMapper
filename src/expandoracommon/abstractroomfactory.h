@@ -41,6 +41,7 @@ public:
   virtual void update(Room * target, const Room * source) const = 0;
   virtual uint opposite(uint dir) const = 0;
   virtual const Coordinate & exitDir(uint dir) const = 0;
+  virtual uint numKnownDirs() const = 0;
   virtual ~AbstractRoomFactory() {}
 };
 

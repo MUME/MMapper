@@ -120,7 +120,7 @@ protected:
     void alphaOverlayTexture(const QString &texture);
 	void alphaOverlayTexture(QPixmap *pix);
 
-    void drawConnection( const Room *leftRoom, const Room *rightRoom, ExitDirection connectionStartDirection, ExitDirection connectionEndDirection, bool oneway );
+    void drawConnection( const Room *leftRoom, const Room *rightRoom, ExitDirection connectionStartDirection, ExitDirection connectionEndDirection, bool oneway, bool inExitFlags = true );
     void drawInfoMark(InfoMark*);
 	void drawPathStart(const Coordinate&);
 	bool drawPath(const Coordinate& sc, const Coordinate& dc, double &dx, double &dy, double &dz);

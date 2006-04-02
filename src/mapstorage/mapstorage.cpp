@@ -37,11 +37,11 @@
 
 using namespace std;
 
-MapStorage::MapStorage(MapData& mapdata, const QString& filename, QFile* file) :
+apStorage::MapStorage(MapData& mapdata, const QString& filename, QFile* file) :
     AbstractMapStorage(mapdata, filename, file)
 {}
 
-MapStorage::MapStorage(MapData& mapdata, const QString& filename) :
+apStorage::MapStorage(MapData& mapdata, const QString& filename) :
     AbstractMapStorage(mapdata, filename)
 {}
 

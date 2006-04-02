@@ -26,10 +26,10 @@
 #ifndef GENERALPAGE_H
 #define GENERALPAGE_H
 
-#include <QDialog>
+#include <QWidget>
 #include "ui_generalpage.h"
 
-class GeneralPage : public QDialog, private Ui::GeneralPage
+class GeneralPage : public QWidget, private Ui::GeneralPage
 {
     Q_OBJECT
 

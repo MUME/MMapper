@@ -21,6 +21,7 @@
     <file>icons/roommovedown.png</file>
     <file>icons/roommergeup.png</file>
     <file>icons/roommergedown.png</file>
+    <file>icons/roomconnecttoneighbours.png</file>
     <file>icons/connectionselection.png</file>
     <file>icons/connectionedit.png</file>
     <file>icons/infomarksedit.png</file>

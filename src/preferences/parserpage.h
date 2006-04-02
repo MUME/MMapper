@@ -26,10 +26,10 @@
 #ifndef PARSERPAGE_H
 #define PARSERPAGE_H
 
-#include <QDialog>
+#include <QWidget>
 #include "ui_parserpage.h"
 
-class ParserPage : public QDialog, private Ui::ParserPage
+class ParserPage : public QWidget, private Ui::ParserPage
 {
     Q_OBJECT
 
@@ -55,10 +55,15 @@ public slots:
 public:
     ParserPage(QWidget *parent = 0);
 
+protected slots:
+	void roomDescColorChanged(const QString&);
+	void roomNameColorChanged(const QString&);
+
 private:
     void savePatterns(); 
-
+	void comboChanged(const QString& colString, QLabel *);
 };
 
 
 #endif
+

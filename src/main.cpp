@@ -29,43 +29,33 @@
 
 #define WITH_SPLASH
 
-
 #include "mainwindow.h"
 #include "coordinate.h"
 #include "pathmachine.h"
 #include "mapfrontend.h"
 #include "configuration.h"
-
 int main(int argc, char **argv)
 {
   QApplication    app(argc, argv);
   Config().read();
-  
 #ifdef WITH_SPLASH
   QPixmap pixmap(":/pixmaps/splash20.png");
   QSplashScreen *splash = new QSplashScreen(pixmap);
   splash->show();
   for (quint32 i=0; i<300000000; i++);	
 #endif
-	  
   MainWindow     mw;  
-  
   if (Config().m_autoLoadWorld && Config().m_autoLoadFileName!="")
   {
 	mw.loadFile(Config().m_autoLoadFileName);
   }
-
   mw.show();
-
 #ifdef WITH_SPLASH
   splash->finish(&mw);
   delete splash;
 #endif
- 	
   int ret = app.exec();
- 
   Config().write(); 
   return ret;
-  
 }
 

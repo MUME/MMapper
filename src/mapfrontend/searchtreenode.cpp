@@ -30,11 +30,12 @@ using namespace std;
 
 
 SearchTreeNode::SearchTreeNode(ParseEvent * event, TinyList<SearchTreeNode *> * in_children) : ownerOfChars(true) {
-  myChars = new char[strlen(event->current()->rest())];
-  strcpy(myChars, event->current()->rest()+1); 	// we copy the string so that we can remove rooms independetly of tree nodes
+  const char * rest = event->current()->rest();
+  
+  myChars = new char[strlen(rest)];
+  strcpy(myChars, rest+1); 	// we copy the string so that we can remove rooms independently of tree nodes
   if (in_children == 0) children = new TinyList<SearchTreeNode *>();
   else children = in_children;
-
 }
 
 SearchTreeNode::~SearchTreeNode() {
@@ -54,16 +55,18 @@ SearchTreeNode::SearchTreeNode(char * in_myChars, TinyList<SearchTreeNode *> * i
 
 void SearchTreeNode::getRooms(RoomOutStream & stream, ParseEvent * event) {
   SearchTreeNode * selectedChild = 0;
+  Property * currentProperty = event->current();
+  
   for (int i = 0; myChars[i] != 0; i++) {
-    if (event->current()->next() != myChars[i]) {
-      for(; i > 0 ; i--) event->current()->prev();
+    if (currentProperty->next() != myChars[i]) {
+      for(; i > 0 ; i--) currentProperty->prev();
       return;
     }
   }
-  selectedChild = children->get(event->current()->next());
+  selectedChild = children->get(currentProperty->next());
 
   if(selectedChild == 0) {
-    for (int i = 1; i < myChars[i] != 0; i++) event->current()->prev();
+    for (int i = 1; i < myChars[i] != 0; i++) currentProperty->prev();
     return; // no such room
   }
   else selectedChild->getRooms(stream, event);	// the last character of name is 0, 
@@ -71,17 +74,15 @@ void SearchTreeNode::getRooms(RoomOutStream & stream, ParseEvent * event) {
   // else there is 0, so name[depth] should work.
 }
 
-
-
 void SearchTreeNode::setChild(char position, SearchTreeNode * node) {
   children->put(position, node);
 }
 
-
-
 RoomCollection * SearchTreeNode::insertRoom(ParseEvent * event) {
   SearchTreeNode * selectedChild = 0;
-  char c = event->current()->next();
+  Property * currentProperty = event->current();
+  char c = currentProperty->next();
+
   for (int i = 0; myChars[i] != 0; i++) {
     if (c != myChars[i]) {
       // we have to split, as we encountered a difference in the strings ...	
@@ -97,7 +98,7 @@ RoomCollection * SearchTreeNode::insertRoom(ParseEvent * event) {
 		
       return selectedChild->insertRoom(event);
     }
-    else c = event->current()->next();
+    else c = currentProperty->next();
   }
 	
   // we reached the end of our string and can pass the event to the next node (or create it)

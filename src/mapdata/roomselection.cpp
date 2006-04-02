@@ -33,7 +33,6 @@ void RoomSelection::receiveRoom(RoomAdmin * admin, const Room * aRoom)
   assert(admin == m_admin);
   insert(aRoom->getId(), aRoom);
 }
-
 bool RoomSelection::containsAll(const RoomSelection * other) const
 {
   QMapIterator<uint, const Room*> i(*other);

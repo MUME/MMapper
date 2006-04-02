@@ -170,11 +170,14 @@ void PathMachine::tryExits(const Room * room, RoomRecipient * recipient, ParseEv
   else
   {
     emit lookingForRooms(recipient, room->getId());
-    const ExitsList & eList = room->getExitsList();
-    for (int listit = 0; listit < eList.size(); ++listit)
+    if (move >= factory->numKnownDirs())
     {
-      const Exit & possible = eList[listit];
-      tryExit(possible, recipient, out);
+      const ExitsList & eList = room->getExitsList();
+      for (int listit = 0; listit < eList.size(); ++listit)
+      {
+        const Exit & possible = eList[listit];
+        tryExit(possible, recipient, out);
+      }
     }
   }
 }
@@ -203,14 +206,17 @@ void PathMachine::tryExit(const Exit & possible, RoomRecipient * recipient, bool
 void PathMachine::tryCoordinate(const Room * room, RoomRecipient * recipient, ParseEvent * event)
 {
   uint moveCode = event->getMoveType();
-  uint size = room->getExitsList().size();
-  if (size > moveCode) {
+  uint size = factory->numKnownDirs();
+  if (size > moveCode)
+  {
     Coordinate c = room->getPosition() + factory->exitDir(moveCode);
     emit lookingForRooms(recipient, c);
   }
-  else {
+  else
+  {
     Coordinate roomPos = room->getPosition();
-    for (uint i = 0; i < size; ++i) {
+    for (uint i = 0; i < size; ++i)
+    {
       emit lookingForRooms(recipient, roomPos + factory->exitDir(i));
     }
   }

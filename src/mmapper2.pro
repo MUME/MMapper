@@ -21,6 +21,7 @@ HEADERS += ./global/defs.h \
           ./preferences/generalpage.h \
           ./preferences/parserpage.h \
           ./preferences/pathmachinepage.h \
+          ./preferences/ansicombo.h \
           ./mainwindow/mainwindow.h \
           ./mainwindow/roomeditattrdlg.h \
           ./mainwindow/infomarkseditdlg.h \
@@ -85,6 +86,7 @@ SOURCES += main.cpp \
           ./preferences/generalpage.cpp \
           ./preferences/parserpage.cpp \
           ./preferences/pathmachinepage.cpp \
+          ./preferences/ansicombo.cpp \
           ./configuration/configuration.cpp \
           ./proxy/connectionlistener.cpp \
           ./proxy/telnetfilter.cpp \

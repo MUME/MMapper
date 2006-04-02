@@ -57,10 +57,10 @@ Path * Path::fork(const Room * in_room, Coordinate & expectedCoordinate, RoomAdm
   uint size = room->getExitsList().size();
   
   if (dist < 0.5) {
-    if (direction < size)
+    if (direction < factory->numKnownDirs())
       dist = 1.0/p.correctPositionBonus;
     else
-      dist = 1.0;
+      dist = p.multipleConnectionsPenalty;
   }
   else
   {
@@ -78,7 +78,7 @@ Path * Path::fork(const Room * in_room, Coordinate & expectedCoordinate, RoomAdm
 	  dist *= p.multipleConnectionsPenalty;
       }
     }
-    else
+    else if (direction < factory->numKnownDirs())
     {
       for (uint d = 0; d < size; ++d)
       {

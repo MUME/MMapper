@@ -108,6 +108,7 @@ public slots:
     void onMoveDownRoomSelection();
     void onMergeUpRoomSelection();
     void onMergeDownRoomSelection();
+    void onConnectToNeighboursRoomSelection();
  	void onPreferences();
     
     void newRoomSelection(const RoomSelection*);
@@ -189,6 +190,7 @@ private:
     QAction *moveDownRoomSelectionAct;
     QAction *mergeUpRoomSelectionAct;
     QAction *mergeDownRoomSelectionAct;
+    QAction *connectToNeighboursRoomSelectionAct;
 	
 	QAction *releaseAllPathsAct;
 	

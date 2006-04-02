@@ -29,6 +29,7 @@
 #include "coordinate.h"
 #include "room.h"
 #include "roomcollection.h"
+#include "abstractroomfactory.h"
 #include <map>
 #include "roomoutstream.h"
 
@@ -46,6 +47,7 @@ public:
   void remove(const Coordinate & c);
   void clear();
   void getRooms(RoomOutStream & stream, const Coordinate & ulf, const Coordinate & lrb);
+  void fillArea(AbstractRoomFactory * factory, const Coordinate & ulf, const Coordinate & lrb);
 private:
 
   void set(const Coordinate &c, Room *room);

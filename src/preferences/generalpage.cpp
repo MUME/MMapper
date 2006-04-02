@@ -28,7 +28,7 @@
 #include "configuration.h"
 
 GeneralPage::GeneralPage(QWidget *parent)
-        : QDialog(parent)
+        : QWidget(parent)
 {
     setupUi(this);
 	connect( remoteName, SIGNAL( textChanged(const QString&) ), this, SLOT( remoteNameTextChanged(const QString&) )  );

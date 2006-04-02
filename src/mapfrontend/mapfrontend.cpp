@@ -32,13 +32,13 @@ using namespace Qt;
 using namespace std;
 
 
-MapFrontend::MapFrontend(AbstractRoomFactory * in_factory) :
+apFrontend::MapFrontend(AbstractRoomFactory * in_factory) :
     greatestUsedId(UINT_MAX),
     mapLock(QMutex::Recursive),
     factory(in_factory)
 {}
 
-MapFrontend::~MapFrontend()
+apFrontend::~MapFrontend()
 {
   QMutexLocker locker(&mapLock);
   emit clearingMap();
@@ -282,7 +282,9 @@ void MapFrontend::checkSize(const Coordinate & c)
 
 }
 
-
+void MapFrontend::createEmptyRooms(const Coordinate & ulf,const Coordinate & lrb) {
+  map.fillArea(factory, ulf, lrb);
+}
 
 void MapFrontend::createRoom(ParseEvent * event, const Coordinate & expectedPosition)
 {

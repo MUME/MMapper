@@ -6,7 +6,7 @@
 ** This file is part of the MMapper2 project. 
 ** Maintained by Marek Krejza <krejza@gmail.com>
 **
-** Copyright: See COPYING file that comes with this distribution
+** Copyright: See COPYING file that comes with this distributione
 **
 ** This file may be used under the terms of the GNU General Public
 ** License version 2.0 as published by the Free Software Foundation
@@ -716,7 +716,7 @@ bool Parser::parseUserCommands(QString& command) {
 		return true;
 	}
 	if (str=="exa" || str=="examine"){
-		queue.enqueue(CID_EXAMINE);
+		queue.enqueue(CID_LOOK);
 		return true;
 	}
 	if (str.startsWith("scout")) {

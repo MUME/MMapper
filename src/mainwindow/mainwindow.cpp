@@ -69,7 +69,7 @@ QSize DockWidget::sizeHint() const
 	return QSize(500, 130); 
 };
 
-MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
+ainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
         : QMainWindow(parent, flags)
 {
     setObjectName("MainWindow");
@@ -139,7 +139,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 	readSettings();
 }
 
-MainWindow::~MainWindow()
+ainWindow::~MainWindow()
 {
 	writeSettings();
 }
@@ -257,6 +257,7 @@ void MainWindow::createActions()
     //connect(pasteAct, SIGNAL(triggered()), textEdit, SLOT(paste()));
 
     preferencesAct = new QAction(QIcon(":/icons/preferences.png"), tr("MMapper2 configuration"), this);
+    preferencesAct->setShortcut(tr("Ctrl+P"));
     preferencesAct->setStatusTip(tr("MMapper2 configuration"));
 	connect(preferencesAct, SIGNAL(triggered()), this, SLOT(onPreferences()));
 
@@ -350,6 +351,9 @@ void MainWindow::createActions()
 	mergeDownRoomSelectionAct = new QAction(QIcon(":/icons/roommergedown.png"), tr("Merge Down Selected Rooms"), this);
     mergeDownRoomSelectionAct->setStatusTip(tr("Merge Down Selected Rooms"));
 	connect(mergeDownRoomSelectionAct, SIGNAL(triggered()), this, SLOT(onMergeDownRoomSelection()));
+	connectToNeighboursRoomSelectionAct = new QAction(QIcon(":/icons/roomconnecttoneighbours.png"), tr("Connect room(s) to its neighbour rooms"), this);
+    connectToNeighboursRoomSelectionAct->setStatusTip(tr("Connect room(s) to its neighbour rooms"));
+	connect(connectToNeighboursRoomSelectionAct, SIGNAL(triggered()), this, SLOT(onConnectToNeighboursRoomSelection()));
 
 	releaseAllPathsAct = new QAction(QIcon(":/icons/cancel.png"), tr("Release All Paths"), this);
     releaseAllPathsAct->setStatusTip(tr("Release All Paths"));
@@ -364,6 +368,7 @@ void MainWindow::createActions()
     roomActGroup->addAction(moveDownRoomSelectionAct);
     roomActGroup->addAction(mergeUpRoomSelectionAct);
     roomActGroup->addAction(mergeDownRoomSelectionAct);
+    roomActGroup->addAction(connectToNeighboursRoomSelectionAct);
     roomActGroup->setEnabled(FALSE);
 
     //editConnectionSelectionAct = new QAction(QIcon(":/icons/connectionedit.png"), tr("Edit Selected Connection"), this);
@@ -442,6 +447,7 @@ void MainWindow::setupMenuBar()
     roomMenu->addAction(moveDownRoomSelectionAct);
     roomMenu->addAction(mergeUpRoomSelectionAct);
     roomMenu->addAction(mergeDownRoomSelectionAct);
+    roomMenu->addAction(connectToNeighboursRoomSelectionAct);
 
     connectionMenu = menuBar()->addMenu(tr("&Connections"));
     connectionMenu->addAction(createConnectionAct);
@@ -518,6 +524,7 @@ void MainWindow::setupToolBars()
     roomToolBar->addAction(moveDownRoomSelectionAct);
     roomToolBar->addAction(mergeUpRoomSelectionAct);
     roomToolBar->addAction(mergeDownRoomSelectionAct);
+    roomToolBar->addAction(connectToNeighboursRoomSelectionAct);
 
     connectionToolBar = addToolBar(tr("Connections"));
     connectionToolBar->setObjectName("ConnectionsToolBar");
@@ -805,7 +812,7 @@ QString MainWindow::strippedName(const QString &fullFileName)
     return QFileInfo(fullFileName).fileName();
 }
 
-MapWindow *MainWindow::getCurrentMapWindow()
+apWindow *MainWindow::getCurrentMapWindow()
 {
     return ((MapWindow*)(m_stackedWidget->widget(m_stackedWidget->currentIndex())));
 }
@@ -954,5 +961,12 @@ void MainWindow::onMergeDownRoomSelection()
 	m_mapData->execute(new GroupAction(new MergeRelative(moverel), m_roomSelection), m_roomSelection);
 	onLayerDown();		
 	onModeRoomSelect();
+}
+
+void MainWindow::onConnectToNeighboursRoomSelection()
+{
+    if (!m_roomSelection) return;
+	m_mapData->execute(new GroupAction(new ConnectToNeighbours, m_roomSelection), m_roomSelection);
+	getCurrentMapWindow()->getCanvas()->update();		
 }
 

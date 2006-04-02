@@ -80,7 +80,7 @@ GLubyte quadtone[] = {
       0x88, 0x88, 0x88, 0x88, 0x22, 0x22, 0x22, 0x22}; 
 
 
-MapCanvas::MapCanvas( MapData *mapData, PrespammedPath* prespammedPath, const QGLFormat & fmt, QWidget * parent )
+apCanvas::MapCanvas( MapData *mapData, PrespammedPath* prespammedPath, const QGLFormat & fmt, QWidget * parent )
     : QGLWidget(fmt, parent)
 {
     m_scrollX = 0;
@@ -111,6 +111,7 @@ MapCanvas::MapCanvas( MapData *mapData, PrespammedPath* prespammedPath, const QG
 
     m_glFont = new QFont(QFont(),this);
     m_glFont->setStyleHint(QFont::Helvetica, QFont::OpenGLCompatible);
+
     m_glFont->setStretch(QFont::Unstretched);
 
     m_glFontMetrics = new QFontMetrics(*m_glFont);
@@ -141,7 +142,7 @@ void MapCanvas::onInfoMarksEditDlgClose()
 	updateGL();
 }
 
-MapCanvas::~MapCanvas()
+apCanvas::~MapCanvas()
 {
 	for (int i=0; i<16; i++)
 	{
@@ -393,8 +394,8 @@ void MapCanvas::mousePressEvent(QMouseEvent *event)
 			{
 				//Room * r = new Room(m_data);
 				Coordinate c = Coordinate(GLtoMap(m_selX1), GLtoMap(m_selY1), m_currentLayer);
-				uint id = m_data->createEmptyRoom(c);
-				m_data->execute(new SingleRoomAction(new ConnectToNeighbours, id));
+				m_data->createEmptyRoom(c);
+				//m_data->execute(new SingleRoomAction(new ConnectToNeighbours, id));
 			}
 			m_data->unselect(tmpSel);
 		}
@@ -870,7 +871,8 @@ void MapCanvas::paintGL()
 	  				*this);
 
 		if (m_scaleFactor >= 0.25)
-		{
+		{	        renderText ( 0.0f, 0.0f, 0.0f, "", *m_glFont );
+
 	        MarkerListIterator m(m_data->getMarkersList());
 	        while (m.hasNext())
 	            drawInfoMark(m.next());
@@ -1247,9 +1249,11 @@ void MapCanvas::drawInfoMark(InfoMark* marker)
             glVertex3d(0.2+width, 0.0, 1.0);
          glEnd();
          glDisable(GL_BLEND);
-         glEnable(GL_DEPTH_TEST);
-         qglColor(Qt::white);         
+         //glEnable(GL_DEPTH_TEST);
+         qglColor(Qt::white);                  glColor4d(1.0, 1.0, 1.0, 1.0);
+
          renderText ( 0.1, 0.25, 1.2f, marker->getText(), *m_glFont );
+         glEnable(GL_DEPTH_TEST);
          break;
     case MT_LINE:
          glColor4d(1.0f, 1.0f, 1.0f, 0.70);
@@ -1474,7 +1478,18 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
 
     //wall n
     if (ISNOTSET(ef_north, EF_EXIT) || ISSET(ef_north, EF_DOOR))
-        glCallList(m_wall_north_gllist);
+	{
+        if (ISNOTSET(ef_north, EF_DOOR) && room->exit(ED_NORTH).outBegin() != room->exit(ED_NORTH).outEnd())
+        {
+	 		glEnable(GL_LINE_STIPPLE);
+	    	glColor4d(0.2, 0.0, 0.0, 0.0);	
+        	glCallList(m_wall_north_gllist);
+	    	glColor4d(0.0, 0.0, 0.0, 0.0);	
+	 		glDisable(GL_LINE_STIPPLE);        	
+        }
+        else
+            glCallList(m_wall_north_gllist);        
+    }
     else if (Config().m_drawNotMappedExits && room->exit(ED_NORTH).outBegin() == room->exit(ED_NORTH).outEnd()) // zero outgoing connections
     {
 	 	glEnable(GL_LINE_STIPPLE);
@@ -1509,7 +1524,18 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
 
     //wall s
     if (ISNOTSET(ef_south, EF_EXIT) || ISSET(ef_south, EF_DOOR))
-        glCallList(m_wall_south_gllist);
+	{
+        if (ISNOTSET(ef_south, EF_DOOR) && room->exit(ED_SOUTH).outBegin() != room->exit(ED_SOUTH).outEnd())
+        {
+	 		glEnable(GL_LINE_STIPPLE);
+	    	glColor4d(0.2, 0.0, 0.0, 0.0);	
+        	glCallList(m_wall_south_gllist);
+	    	glColor4d(0.0, 0.0, 0.0, 0.0);	
+	 		glDisable(GL_LINE_STIPPLE);        	
+        }
+        else
+            glCallList(m_wall_south_gllist);
+    }
     else if (Config().m_drawNotMappedExits && room->exit(ED_SOUTH).outBegin() == room->exit(ED_SOUTH).outEnd()) // zero outgoing connections
     {
 	 	glEnable(GL_LINE_STIPPLE);
@@ -1544,7 +1570,18 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
 
     //wall e
     if (ISNOTSET(ef_east, EF_EXIT) || ISSET(ef_east, EF_DOOR))
-        glCallList(m_wall_east_gllist);
+    {
+        if (ISNOTSET(ef_east, EF_DOOR) && room->exit(ED_EAST).outBegin() != room->exit(ED_EAST).outEnd())
+        {
+	 		glEnable(GL_LINE_STIPPLE);
+	    	glColor4d(0.2, 0.0, 0.0, 0.0);	
+        	glCallList(m_wall_east_gllist);
+	    	glColor4d(0.0, 0.0, 0.0, 0.0);	
+	 		glDisable(GL_LINE_STIPPLE);        	
+        }
+        else
+            glCallList(m_wall_east_gllist);
+    }
     else if (Config().m_drawNotMappedExits && room->exit(ED_EAST).outBegin() == room->exit(ED_EAST).outEnd()) // zero outgoing connections
     {
 	 	glEnable(GL_LINE_STIPPLE);
@@ -1579,7 +1616,18 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
 
     //wall w
     if (ISNOTSET(ef_west, EF_EXIT) || ISSET(ef_west, EF_DOOR))
-        glCallList(m_wall_west_gllist);
+    {
+        if (ISNOTSET(ef_west, EF_DOOR) && room->exit(ED_WEST).outBegin() != room->exit(ED_WEST).outEnd())
+        {
+	 		glEnable(GL_LINE_STIPPLE);
+	    	glColor4d(0.2, 0.0, 0.0, 0.0);	
+        	glCallList(m_wall_west_gllist);
+	    	glColor4d(0.0, 0.0, 0.0, 0.0);	
+	 		glDisable(GL_LINE_STIPPLE);        	
+        }
+        else
+	        glCallList(m_wall_west_gllist);
+    }
     else if (Config().m_drawNotMappedExits && room->exit(ED_WEST).outBegin() == room->exit(ED_WEST).outEnd()) // zero outgoing connections
     {
 	 	glEnable(GL_LINE_STIPPLE);
@@ -1746,7 +1794,10 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
 	                       }
 	                   }
 	               }
-	               drawConnection( room, targetRoom, (ExitDirection)i, (ExitDirection)targetDir, oneway);
+	               if (oneway)
+	               		drawConnection( room, targetRoom, (ExitDirection)i, (ExitDirection)targetDir, true, ISSET(getFlags(room->exit(i)),EF_EXIT) );
+					else
+	               		drawConnection( room, targetRoom, (ExitDirection)i, (ExitDirection)targetDir, false, ISSET(getFlags(room->exit(i)),EF_EXIT) && ISSET(getFlags(targetRoom->exit(targetDir)),EF_EXIT) );
 	           }  else if (!sourceExit.containsIn(targetId)) { // ... or if they are outgoing oneways
 	               oneway = true;
 	               for (int j = 0; j < 7; ++j) {
@@ -1757,7 +1808,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
 	                   }
 	               }
 	               if (oneway)
-	                   drawConnection( room, targetRoom, (ExitDirection)i, (ExitDirection)targetDir, oneway);
+	                   drawConnection( room, targetRoom, (ExitDirection)i, (ExitDirection)(opposite(i)), true, ISSET(getFlags(sourceExit),EF_EXIT) );
 	           }
 	           itOut++;
 	       }
@@ -1776,7 +1827,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
 				{
 					if ( !targetRoom->exit(opposite(i)).containsIn(sourceId) )
 					{
-						drawConnection( targetRoom, room, (ExitDirection)(opposite(i)), (ExitDirection)i, true);
+						drawConnection( targetRoom, room, (ExitDirection)(opposite(i)), (ExitDirection)i, true, ISSET(getFlags(targetRoom->exit(opposite(i))),EF_EXIT) );
 					}
 				}
 				itIn++;
@@ -1785,7 +1836,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
 	}
 }
 
-void MapCanvas::drawConnection( const Room *leftRoom, const Room *rightRoom, ExitDirection connectionStartDirection, ExitDirection connectionEndDirection, bool oneway )
+void MapCanvas::drawConnection( const Room *leftRoom, const Room *rightRoom, ExitDirection connectionStartDirection, ExitDirection connectionEndDirection, bool oneway, bool inExitFlags )
 {
 	assert(leftRoom != NULL);
 	assert(rightRoom != NULL);
@@ -1837,13 +1888,16 @@ void MapCanvas::drawConnection( const Room *leftRoom, const Room *rightRoom, Exi
     glPushMatrix();
     glTranslated(leftX-0.5, leftY-0.5, 0.0);
 
-    glColor4d(1.0f, 1.0f, 1.0f, 0.70);
+	if (inExitFlags)
+    	glColor4d(1.0f, 1.0f, 1.0f, 0.70);
+    else	
+    	glColor4d(1.0f, 0.0f, 0.0f, 0.70);
+    	
     glEnable(GL_BLEND);
     glPointSize (2.0);
     glLineWidth (2.0);
 
 	double srcZ = ROOM_Z_DISTANCE*leftLayer+0.3;
-	//glColor4d(1.0f, 0.0f, 0.0f, 0.70);
 	
     switch (connectionStartDirection)
     {
@@ -1932,7 +1986,6 @@ void MapCanvas::drawConnection( const Room *leftRoom, const Room *rightRoom, Exi
     }
 
     double dstZ = ROOM_Z_DISTANCE*rightLayer+0.3;
-	//glColor4d(0.0f, 1.0f, 0.0f, 0.70);
 
     switch (connectionEndDirection)
     {
@@ -2087,6 +2140,7 @@ void MapCanvas::drawConnection( const Room *leftRoom, const Room *rightRoom, Exi
     }
 
     glDisable(GL_BLEND);
+   	glColor4d(1.0f, 1.0f, 1.0f, 0.70);
 
     glPopMatrix();
 }

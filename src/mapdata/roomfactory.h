@@ -41,6 +41,7 @@ public:
   virtual void update(Room * target, const Room * source) const;
   virtual uint opposite(uint dir) const;
   virtual const Coordinate & exitDir(uint dir) const;
+  virtual uint numKnownDirs() const {return 8;}
   virtual ~RoomFactory() {}
 private:
   QVector<Coordinate> exitDirs;

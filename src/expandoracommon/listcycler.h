@@ -47,20 +47,25 @@ class ListCycler : public C {
 
 template <class T, class C>
 T ListCycler<T,C>::next() {
-  if (pos >= (uint)C::size()) pos = 0;
-  else if (++pos == (uint)C::size()) return 0;
-  if (pos < (uint)C::size()) return C::operator[](pos);
+  const uint nSize = (uint) C::size();
+  
+  if (pos >= nSize) pos = 0;
+  else if (++pos == nSize) return 0;
+
+  if (pos < nSize) return C::operator[](pos);
   else return 0;
 }
 
 template <class T, class C>
 T ListCycler<T,C>::prev() {
+  const uint nSize = (uint) C::size();
+
   if (pos == 0) {
-    pos = C::size();
+    pos = nSize;
     return 0;
   }
   else {
-    if (pos >= (uint)C::size()) pos = (uint)C::size();
+    if (pos >= nSize) pos = nSize;
     pos--;
     return C::operator[](pos);
   }

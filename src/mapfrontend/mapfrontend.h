@@ -112,6 +112,7 @@ public slots:
   // createRoom creates a room without a lock
   // it will get deleted if no one looks for it for a certain time
   virtual void createRoom(ParseEvent *, const Coordinate &);  
+  virtual void createEmptyRooms(const Coordinate &,const Coordinate &);
 
   virtual void scheduleAction(MapAction * action);
   
