@@ -129,7 +129,8 @@ void Configuration::read()
 		m_moveCancelPatternsList.append("#=Your mount is too sensible to attempt such a feat.");
 		m_moveCancelPatternsList.append("#?* prevents you from going *.");
 		m_moveCancelPatternsList.append("#=Scouting in that direction is impossible.");		
-		m_moveCancelPatternsList.append("#<You stop moving towards");		
+		m_moveCancelPatternsList.append("#<You stop moving towards");	
+		m_moveCancelPatternsList.append("#>is too difficult.");				
 	}
 	
 	if (m_noDescriptionPatternsList.isEmpty())

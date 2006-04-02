@@ -871,7 +871,8 @@ void MapCanvas::paintGL()
 	  				*this);
 
 		if (m_scaleFactor >= 0.25)
-		{	        renderText ( 0.0f, 0.0f, 0.0f, "", *m_glFont );
+		{	        
+			renderText ( 0.0f, 0.0f, 0.0f, "", *m_glFont );
 
 	        MarkerListIterator m(m_data->getMarkersList());
 	        while (m.hasNext())
@@ -1250,7 +1251,7 @@ void MapCanvas::drawInfoMark(InfoMark* marker)
          glEnd();
          glDisable(GL_BLEND);
          //glEnable(GL_DEPTH_TEST);
-         qglColor(Qt::white);                  glColor4d(1.0, 1.0, 1.0, 1.0);
+         glColor4d(1.0, 1.0, 1.0, 1.0);
 
          renderText ( 0.1, 0.25, 1.2f, marker->getText(), *m_glFont );
          glEnable(GL_DEPTH_TEST);
