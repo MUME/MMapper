@@ -30,7 +30,7 @@
 
 using namespace std;
 
-apData::MapData() :
+MapData::MapData() :
     MapFrontend(new RoomFactory),
     m_dataChanged(false)
 {}
@@ -278,7 +278,7 @@ void MapData::clear()
   emit log("MapData", "cleared MapData");
 }
 
-apData::~MapData()
+MapData::~MapData()
 {
   while (!m_markers.isEmpty())
     delete m_markers.takeFirst();

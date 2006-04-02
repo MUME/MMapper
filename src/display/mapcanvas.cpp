@@ -80,7 +80,7 @@ GLubyte quadtone[] = {
       0x88, 0x88, 0x88, 0x88, 0x22, 0x22, 0x22, 0x22}; 
 
 
-apCanvas::MapCanvas( MapData *mapData, PrespammedPath* prespammedPath, const QGLFormat & fmt, QWidget * parent )
+MapCanvas::MapCanvas( MapData *mapData, PrespammedPath* prespammedPath, const QGLFormat & fmt, QWidget * parent )
     : QGLWidget(fmt, parent)
 {
     m_scrollX = 0;
@@ -142,7 +142,7 @@ void MapCanvas::onInfoMarksEditDlgClose()
 	updateGL();
 }
 
-apCanvas::~MapCanvas()
+MapCanvas::~MapCanvas()
 {
 	for (int i=0; i<16; i++)
 	{

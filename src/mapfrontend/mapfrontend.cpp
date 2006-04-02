@@ -32,13 +32,13 @@ using namespace Qt;
 using namespace std;
 
 
-apFrontend::MapFrontend(AbstractRoomFactory * in_factory) :
+MapFrontend::MapFrontend(AbstractRoomFactory * in_factory) :
     greatestUsedId(UINT_MAX),
     mapLock(QMutex::Recursive),
     factory(in_factory)
 {}
 
-apFrontend::~MapFrontend()
+MapFrontend::~MapFrontend()
 {
   QMutexLocker locker(&mapLock);
   emit clearingMap();

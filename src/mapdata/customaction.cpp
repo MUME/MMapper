@@ -89,7 +89,7 @@ void GroupAction::exec()
   }
 }
 
-oveRelative::MoveRelative(const Coordinate & in_move) :
+MoveRelative::MoveRelative(const Coordinate & in_move) :
     move(in_move)
 {}
 
@@ -114,7 +114,7 @@ void MoveRelative::preExec(uint id)
 }
 
 
-ergeRelative::MergeRelative(const Coordinate & in_move) :
+MergeRelative::MergeRelative(const Coordinate & in_move) :
     move(in_move)
 {}
 
@@ -298,7 +298,7 @@ void UpdateRoomField::exec(uint id)
   }
 }
 
-odifyRoomFlags::ModifyRoomFlags(uint in_flags, uint in_fieldNum, FlagModifyMode in_mode) :
+ModifyRoomFlags::ModifyRoomFlags(uint in_flags, uint in_fieldNum, FlagModifyMode in_mode) :
 flags(in_flags), fieldNum(in_fieldNum), mode(in_mode) {}
 
 void modifyFlags(uint & roomFlags, uint flags, FlagModifyMode mode)
@@ -340,7 +340,7 @@ void UpdateExitField::exec(uint id)
   }
 }
 
-odifyExitFlags::ModifyExitFlags(uint in_flags, uint in_dir, uint in_fieldNum, FlagModifyMode in_mode) :
+ModifyExitFlags::ModifyExitFlags(uint in_flags, uint in_dir, uint in_fieldNum, FlagModifyMode in_mode) :
 flags(in_flags), fieldNum(in_fieldNum), mode(in_mode), dir(in_dir) {}
 
 void ModifyExitFlags::exec(uint id)

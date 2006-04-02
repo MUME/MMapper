@@ -60,6 +60,6 @@ void Mmapper2PathMachine::event(ParseEvent * event)
   emit log(me, stringState);
 }
 
-mapper2PathMachine::Mmapper2PathMachine() : PathMachine(new RoomFactory, false), config(Config())
+Mmapper2PathMachine::Mmapper2PathMachine() : PathMachine(new RoomFactory, false), config(Config())
 {}
 

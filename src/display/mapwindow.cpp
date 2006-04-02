@@ -26,7 +26,7 @@
 #include "mapwindow.h"
 #include "mapcanvas.h"
 
-apWindow::MapWindow(MapData *mapData, PrespammedPath* pp,  QWidget * parent)
+MapWindow::MapWindow(MapData *mapData, PrespammedPath* pp,  QWidget * parent)
     : QWidget(parent)
 {
 	m_verticalScrollStep = 0;
@@ -73,7 +73,7 @@ apWindow::MapWindow(MapData *mapData, PrespammedPath* pp,  QWidget * parent)
   connect( this, SIGNAL(setScroll(int, int)), m_canvas, SLOT(setScroll(int, int)));
 }
 
-apWindow::~MapWindow()
+MapWindow::~MapWindow()
 {
 	if (m_canvas) delete m_canvas;
 	if (m_gridLayout) delete m_gridLayout;

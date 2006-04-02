@@ -69,7 +69,7 @@ QSize DockWidget::sizeHint() const
 	return QSize(500, 130); 
 };
 
-ainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
+MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
         : QMainWindow(parent, flags)
 {
     setObjectName("MainWindow");
@@ -139,7 +139,7 @@ ainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 	readSettings();
 }
 
-ainWindow::~MainWindow()
+MainWindow::~MainWindow()
 {
 	writeSettings();
 }
@@ -812,7 +812,7 @@ QString MainWindow::strippedName(const QString &fullFileName)
     return QFileInfo(fullFileName).fileName();
 }
 
-apWindow *MainWindow::getCurrentMapWindow()
+MapWindow *MainWindow::getCurrentMapWindow()
 {
     return ((MapWindow*)(m_stackedWidget->widget(m_stackedWidget->currentIndex())));
 }
