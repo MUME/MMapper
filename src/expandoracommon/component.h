@@ -77,7 +77,7 @@ public:
 
   virtual ~Component();
   virtual Qt::ConnectionType requiredConnectionType(const QString &) {return Qt::AutoCompatConnection;}
-  Component::Component(bool threaded = false);
+  /*Component::*/Component(bool threaded = false);
   void setOption(const QString & key, const QVariant & value) {options[key] = value;}
 
 
