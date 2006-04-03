@@ -94,7 +94,7 @@ private:
 	void disconnectAll();
 
 	const Room* getSelectedRoom();	
-	uint RoomEditAttrDlg::getSelectedExit();
+	uint getSelectedExit();
 	void updateDialog(const Room *r);
 	
 	QListWidgetItem* loadListItems[20];
