@@ -128,7 +128,7 @@ protected:
    bool isEndOfRoomDescription(QString& str);
    void parsePrompt(QString& prompt);
 	
-   const char * Parser::q2c(QString & s);	
+   const char * q2c(QString & s);	
    bool isStaticRoomDescriptionLine(QString& str);
 
    void parseMudCommands(QString& str);
