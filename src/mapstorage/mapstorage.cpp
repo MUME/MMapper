@@ -370,9 +370,15 @@ bool MapStorage::mergeData()
     
     baseId = m_mapData.getMaxId() + 1;
     basePosition = m_mapData.getLrb();
-    basePosition.y++;
-    basePosition.x = 0;
-    basePosition.z = 0;
+    if (basePosition.x + basePosition.y + basePosition.z != 0)
+    {
+	    //basePosition.y++;
+	    //basePosition.x = 0;
+	    //basePosition.z = 0;
+	    basePosition.y = 0;
+	    basePosition.x = 0;
+	    basePosition.z = -1;
+    }
     
     emit log ("MapStorage", "Loading data ...");
     quint32 percentage = 0;

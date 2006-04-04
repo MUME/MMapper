@@ -55,7 +55,15 @@ public slots:
 	void layerValueChanged(int);
 	void createClicked();
 	void modifyClicked();
-	void deleteClicked();
+	void deleteClicked();	
+	void onMoveNorthClicked();
+	void onMoveSouthClicked();
+	void onMoveEastClicked();
+	void onMoveWestClicked();
+	void onMoveUpClicked();
+	void onMoveDownClicked();
+	void onDeleteAllClicked();
+	
 	 
 public:
     InfoMarksEditDlg(MapData* mapData, QWidget *parent = 0);
