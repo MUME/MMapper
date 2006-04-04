@@ -426,15 +426,6 @@ bool MapStorage::mergeData()
     
     m_mapData.setPosition(pos);
 
-    MarkerList& markerList = m_mapData.getMarkersList();
-
-    // create all pointers to items
-    for(index = 0; index<marksCount; index++)
-    {
-      mark = new InfoMark();
-      markerList.append(mark);
-    }
-
     emit log ("MapStorage", QString("Number of rooms: %1").arg(roomsCount) );
 
     ConnectionList connectionList;
@@ -491,13 +482,15 @@ bool MapStorage::mergeData()
 
     emit log ("MapStorage", QString("Number of info items: %1").arg(marksCount) );
 
-    MarkerListIterator m(markerList);
-    while (m.hasNext())
+
+    MarkerList& markerList = m_mapData.getMarkersList();
+    // create all pointers to items
+    for(index = 0; index<marksCount; index++)
     {
-      mark = m.next();
-
-      loadMark(mark, stream, version);
-
+      mark = new InfoMark();
+      loadMark(mark, stream, version);      
+      markerList.append(mark);
+      
       percentageCounter++;
       if (((quint32)(percentageBase * percentageCounter)) != percentage)
       {
@@ -528,9 +521,16 @@ void MapStorage::loadMark(InfoMark * mark, QDataStream & stream, qint32 version)
   quint32 vquint32;
   qint32  vqint32;
 
+  qint32 postfix = basePosition.x + basePosition.y + basePosition.z;
+
   if (version < 020) // OLD VERSIONS SUPPORT CODE
   {
-    stream >> vqstr; mark->setName(vqstr);
+    stream >> vqstr; 
+    if (postfix != 0 && postfix != 1)
+    {
+    	vqstr += QString("_m%1").arg(postfix);
+    }
+    mark->setName(vqstr);
     stream >> vqstr; mark->setText(vqstr);
     stream >> vquint16; mark->setType((InfoMarkType)vquint16);
 
@@ -539,14 +539,20 @@ void MapStorage::loadMark(InfoMark * mark, QDataStream & stream, qint32 version)
     pos.x = pos.x*100/48-40;
     stream >> vquint32; pos.y = (qint32) vquint32;
     pos.y = pos.y*100/48-55;
-    pos += basePosition;
+    //pos += basePosition;
+    pos.x += basePosition.x*100;
+    pos.y += basePosition.y*100;
+    pos.z += basePosition.z;
     mark->setPosition1(pos);
 
     stream >> vquint32; pos.x = (qint32) vquint32;
     pos.x = pos.x*100/48-40;
     stream >> vquint32; pos.y = (qint32) vquint32;
     pos.y = pos.y*100/48-55;
-    pos += basePosition;
+    //pos += basePosition;
+    pos.x += basePosition.x*100;
+    pos.y += basePosition.y*100;
+    pos.z += basePosition.z;
     mark->setPosition2(pos);
   }
   else
@@ -555,7 +561,12 @@ void MapStorage::loadMark(InfoMark * mark, QDataStream & stream, qint32 version)
     QDateTime vdatetime;
     quint8 vquint8;
 
-    stream >> vqba; mark->setName(vqba);
+    stream >> vqba; 
+    if (postfix != 0 && postfix != 1)
+    {
+    	vqba += QString("_m%1").arg(postfix).toAscii();
+    }   
+    mark->setName(vqba);
     stream >> vqba; mark->setText(vqba);
     stream >> vdatetime; mark->setTimeStamp(vdatetime);
     stream >> vquint8; mark->setType((InfoMarkType)vquint8);
@@ -564,13 +575,19 @@ void MapStorage::loadMark(InfoMark * mark, QDataStream & stream, qint32 version)
     stream >> vqint32; pos.x = vqint32/*-40*/;
     stream >> vqint32; pos.y = vqint32/*-55*/;
     stream >> vqint32; pos.z = vqint32;
-    pos += basePosition;
+    pos.x += basePosition.x*100;
+    pos.y += basePosition.y*100;
+    pos.z += basePosition.z;
+    //pos += basePosition;
     mark->setPosition1(pos);
 
     stream >> vqint32; pos.x = vqint32/*-40*/;
     stream >> vqint32; pos.y = vqint32/*-55*/;
     stream >> vqint32; pos.z = vqint32;
-    pos += basePosition;
+    pos.x += basePosition.x*100;
+    pos.y += basePosition.y*100;
+    pos.z += basePosition.z;
+    //pos += basePosition;
     mark->setPosition2(pos);
   }
 }
@@ -635,7 +652,7 @@ void MapStorage::loadOldConnection(Connection * connection, QDataStream & stream
   QString vqstr;
   quint32 vquint32;
 
-  Room *r1 = 0, *r2 = 0;
+  Room *r1, *r2;
 
   ConnectionFlags cf = 0;
   ConnectionType ct = CT_UNDEFINED;
