@@ -78,6 +78,7 @@ public:
 public slots:
     void newFile();
     void open();
+    void merge();
     bool save();
     bool saveAs();
     void about();
@@ -154,6 +155,7 @@ private:
 
     QAction *newAct;
     QAction *openAct;
+    QAction *mergeAct;
     QAction *saveAct;
     QAction *saveAsAct;
     QAction *exitAct;

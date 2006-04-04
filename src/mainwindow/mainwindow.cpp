@@ -242,6 +242,11 @@ void MainWindow::createActions()
     openAct->setStatusTip(tr("Open an existing file"));
     connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
 
+    mergeAct = new QAction(QIcon(":/icons/merge.png"), tr("&Merge..."), this);
+    mergeAct->setShortcut(tr("Ctrl+M"));
+    mergeAct->setStatusTip(tr("Merge an existing file into current map"));
+    connect(mergeAct, SIGNAL(triggered()), this, SLOT(merge()));
+
     saveAct = new QAction(QIcon(":/icons/save.png"), tr("&Save"), this);
     saveAct->setShortcut(tr("Ctrl+S"));
     saveAct->setStatusTip(tr("Save the document to disk"));
@@ -441,6 +446,7 @@ void MainWindow::disableActions(bool value)
 {
     newAct->setDisabled(value);
     openAct->setDisabled(value);
+    mergeAct->setDisabled(value);
     saveAct->setDisabled(value);
     saveAsAct->setDisabled(value);
     exitAct->setDisabled(value);
@@ -472,6 +478,7 @@ void MainWindow::setupMenuBar()
     fileMenu = menuBar()->addMenu(tr("&File"));
     fileMenu->addAction(newAct);
     fileMenu->addAction(openAct);
+	fileMenu->addAction(mergeAct);
     fileMenu->addAction(saveAct);
     fileMenu->addAction(saveAsAct);
     fileMenu->addSeparator();
@@ -543,6 +550,7 @@ void MainWindow::setupToolBars()
     fileToolBar->setObjectName("FileToolBar");
     fileToolBar->addAction(newAct);
     fileToolBar->addAction(openAct);
+	fileToolBar->addAction(mergeAct);
     fileToolBar->addAction(saveAct);
 /*
     editToolBar = addToolBar(tr("Edit"));
@@ -675,6 +683,61 @@ void MainWindow::newFile()
         delete(storage);
         setCurrentFile("");
     }
+}
+
+void MainWindow::merge()
+{
+        QString fileName = QFileDialog::getOpenFileName(this,"Choose map file ...","","MMapper2 (*.mm2);;MMapper (*.map)");
+        if (!fileName.isEmpty())
+        {
+		    QFile *file = new QFile(fileName);
+		
+		    if (!file->open(QFile::ReadOnly)) {
+		        QMessageBox::warning(this, tr("Application"),
+		                             tr("Cannot read file %1:\n%2.")
+		                             .arg(fileName)
+		                             .arg(file->errorString()));
+		        
+		        getCurrentMapWindow()->getCanvas()->setEnabled(true);                     
+		        delete file;
+		        return;
+		    }
+		
+		    //MERGE
+		    progressDlg = new QProgressDialog(this);
+		    QPushButton *cb = new QPushButton("Abort ...");
+		    cb->setEnabled(false);
+		    progressDlg->setCancelButton ( cb );
+		    progressDlg->setLabelText("Importing map...");
+		    progressDlg->setCancelButtonText("Abort");
+		    progressDlg->setMinimum(0);
+		    progressDlg->setMaximum(100);
+		    progressDlg->setValue(0);
+		    progressDlg->show();    
+		
+			getCurrentMapWindow()->getCanvas()->clearRoomSelection();
+			getCurrentMapWindow()->getCanvas()->clearConnectionSelection();
+		        
+		    AbstractMapStorage *storage = (AbstractMapStorage*) new MapStorage(*m_mapData , fileName, file);
+		    connect(storage, SIGNAL(onDataLoaded()), getCurrentMapWindow()->getCanvas(), SLOT(dataLoaded()));
+		    connect(storage, SIGNAL(onPercentageChanged(quint32)), this, SLOT(percentageChanged(quint32)));
+		    connect(storage, SIGNAL(log(const QString&, const QString&)), this, SLOT(log(const QString&, const QString&)));
+		
+		    disableActions(true);   
+		    getCurrentMapWindow()->getCanvas()->hide();
+		    if (storage->canLoad()) storage->mergeData();
+		    getCurrentMapWindow()->getCanvas()->show();
+		    disableActions(false);   
+		    cutAct->setEnabled(false);
+		    copyAct->setEnabled(false);
+		    pasteAct->setEnabled(false);
+		    
+		    delete(storage);
+		    delete progressDlg;    
+		
+		    statusBar()->showMessage(tr("File merged"), 2000);
+		    delete file;
+        }
 }
 
 void MainWindow::open()
