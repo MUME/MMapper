@@ -38,6 +38,8 @@ class Configuration {
     
     bool m_firstRun;
 
+	int m_mapMode; //0 play, 1 map
+
     QString   m_remoteServerName;         /// Remote host and port settings
     quint32   m_remotePort;
     quint32   m_localPort;         /// Port to bind to on local machine

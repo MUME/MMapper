@@ -137,6 +137,19 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 	//update connections
 	currentMapWindowChanged();
 	readSettings();
+	
+	if (Config().m_mapMode == 0) 
+	{
+		playModeAct->setChecked(true);
+		onPlayMode();
+	}
+	else
+	if (Config().m_mapMode == 1) 
+	{
+		mapModeAct->setChecked(true);
+		onMapMode();
+	}
+	
 }
 
 MainWindow::~MainWindow()
@@ -172,8 +185,11 @@ void MainWindow::currentMapWindowChanged()
 {
 	//m_pathMachine->disconnect();	
     QObject::connect(m_pathMachine, SIGNAL(log( const QString&, const QString& )), this, SLOT(log( const QString&, const QString& )));
-	QObject::connect(m_pathMachine, SIGNAL(scheduleAction(MapAction *)), m_mapData, SLOT(scheduleAction(MapAction *)));
-	QObject::connect(m_pathMachine, SIGNAL(createRoom(ParseEvent*, const Coordinate & )), m_mapData, SLOT(createRoom(ParseEvent*, const Coordinate & )));
+
+	//handled by: onMapMode, onPlayMode
+	//QObject::connect(m_pathMachine, SIGNAL(createRoom(ParseEvent*, const Coordinate & )), m_mapData, SLOT(createRoom(ParseEvent*, const Coordinate & )));
+	//QObject::connect(m_pathMachine, SIGNAL(scheduleAction(MapAction *)), m_mapData, SLOT(scheduleAction(MapAction *)));
+	
 	QObject::connect(m_pathMachine, SIGNAL(lookingForRooms(RoomRecipient*, const Coordinate & )), m_mapData, SLOT(lookingForRooms(RoomRecipient*, const Coordinate & )));
 	QObject::connect(m_pathMachine, SIGNAL(lookingForRooms(RoomRecipient*, ParseEvent* )), m_mapData, SLOT(lookingForRooms(RoomRecipient*, ParseEvent* )));
 	QObject::connect(m_pathMachine, SIGNAL(lookingForRooms(RoomRecipient*, uint )), m_mapData, SLOT(lookingForRooms(RoomRecipient*, uint )));
@@ -385,8 +401,40 @@ void MainWindow::createActions()
     connectionActGroup->addAction(deleteConnectionSelectionAct);
     connectionActGroup->setEnabled(FALSE);	
 	
+    playModeAct = new QAction(QIcon(":/icons/play.png"), tr("Switch to play mode"), this);
+    playModeAct->setStatusTip(tr("Switch to play mode - no new rooms are created"));
+	playModeAct->setCheckable(true);
+	connect(playModeAct, SIGNAL(triggered()), this, SLOT(onPlayMode()));
+
+    mapModeAct = new QAction(QIcon(":/icons/map.png"), tr("Switch to mapping mode"), this);
+    mapModeAct->setStatusTip(tr("Switch to mapping mode - new rooms are created when moving"));
+	mapModeAct->setCheckable(true);
+	connect(mapModeAct, SIGNAL(triggered()), this, SLOT(onMapMode()));
+
+    mapModeActGroup = new QActionGroup(this);
+    mapModeActGroup->setExclusive(true);
+    mapModeActGroup->addAction(playModeAct);
+    mapModeActGroup->addAction(mapModeAct);
+    mapModeActGroup->setEnabled(true);
+	
     cutAct->setEnabled(false);
     copyAct->setEnabled(false);
+}
+
+void MainWindow::onPlayMode()
+{
+	log("MainWindow","Play mode selected - no new rooms are created.");
+	QObject::disconnect(m_pathMachine, SIGNAL(createRoom(ParseEvent*, const Coordinate & )), m_mapData, SLOT(createRoom(ParseEvent*, const Coordinate & )));
+	QObject::disconnect(m_pathMachine, SIGNAL(scheduleAction(MapAction *)), m_mapData, SLOT(scheduleAction(MapAction *)));
+	Config().m_mapMode = 0;
+}
+
+void MainWindow::onMapMode()
+{
+	log("MainWindow","Map mode selected - new rooms are created when entering not mapped area.");
+	QObject::connect(m_pathMachine, SIGNAL(createRoom(ParseEvent*, const Coordinate & )), m_mapData, SLOT(createRoom(ParseEvent*, const Coordinate & )));	
+	QObject::connect(m_pathMachine, SIGNAL(scheduleAction(MapAction *)), m_mapData, SLOT(scheduleAction(MapAction *)));	
+	Config().m_mapMode = 1;
 }
 
 void MainWindow::disableActions(bool value)
@@ -405,6 +453,8 @@ void MainWindow::disableActions(bool value)
 //    prevWindowAct->setDisabled(value);
     zoomInAct->setDisabled(value);
     zoomOutAct->setDisabled(value);
+    playModeAct->setDisabled(value);
+    mapModeAct->setDisabled(value);
     modeRoomSelectAct->setDisabled(value);
     modeConnectionSelectAct->setDisabled(value);
     modeMoveSelectAct->setDisabled(value);
@@ -431,11 +481,15 @@ void MainWindow::setupMenuBar()
     //editMenu->addAction(cutAct);
     //editMenu->addAction(copyAct);
     //editMenu->addAction(pasteAct);
-    //editMenu->addSeparator();
+
+    editMenu->addAction(playModeAct);
+    editMenu->addAction(mapModeAct);
+    editMenu->addSeparator();
     editMenu->addAction(modeRoomSelectAct);
     editMenu->addAction(modeConnectionSelectAct);
     editMenu->addAction(modeMoveSelectAct);
     editMenu->addAction(modeInfoMarkEditAct);
+    
     //editMenu->addAction(createRoomAct);
     //editMenu->addAction(createConnectionAct);
     
@@ -497,7 +551,12 @@ void MainWindow::setupToolBars()
     editToolBar->addAction(pasteAct);
 */  
 
-    modeToolBar = addToolBar(tr("Mode"));
+    mapModeToolBar = addToolBar(tr("Map Mode"));
+    mapModeToolBar->setObjectName("MapModeToolBar");
+    mapModeToolBar->addAction(playModeAct);
+    mapModeToolBar->addAction(mapModeAct);
+
+    modeToolBar = addToolBar(tr("Mouse Mode"));
     modeToolBar->setObjectName("ModeToolBar");
     modeToolBar->addAction(modeMoveSelectAct);
     modeToolBar->addAction(modeRoomSelectAct);
@@ -531,7 +590,7 @@ void MainWindow::setupToolBars()
     //connectionToolBar->addAction(editConnectionSelectionAct);
     connectionToolBar->addAction(deleteConnectionSelectionAct);
 
-    settingsToolBar = addToolBar(tr("Connections"));
+    settingsToolBar = addToolBar(tr("Preferences"));
 	settingsToolBar->addAction(preferencesAct);
 }
 

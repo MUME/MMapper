@@ -110,7 +110,9 @@ public slots:
     void onMergeDownRoomSelection();
     void onConnectToNeighboursRoomSelection();
  	void onPreferences();
-    
+ 	void onPlayMode();
+	void onMapMode();
+ 	
     void newRoomSelection(const RoomSelection*);
 	void newConnectionSelection(ConnectionSelection*);
     
@@ -135,6 +137,7 @@ private:
     QToolBar *fileToolBar;
     QToolBar *editToolBar;
     QToolBar *modeToolBar;
+    QToolBar *mapModeToolBar;
     QToolBar *viewToolBar;
     QToolBar *roomToolBar;
     QToolBar *connectionToolBar;
@@ -177,6 +180,10 @@ private:
 	QAction *createConnectionAct;
     QAction *createOnewayConnectionAct;
 
+	QAction *playModeAct;
+	QAction *mapModeAct;
+
+	QActionGroup *mapModeActGroup;
 	QActionGroup *modeActGroup;
 	QActionGroup *roomActGroup;
 	QActionGroup *connectionActGroup;

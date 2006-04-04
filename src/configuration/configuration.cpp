@@ -38,6 +38,7 @@ void Configuration::read()
 	
 	conf.beginGroup("General");
 	m_firstRun = conf.value("Run first time", TRUE).toBool();
+	m_mapMode = conf.value("Map Mode", 0).toInt(); //0 play, 1 map	
 	conf.endGroup();
 
 	// read general options
@@ -173,6 +174,7 @@ void Configuration::write() const {
 
 	conf.beginGroup("General");
 	conf.setValue("Run first time", FALSE);
+	conf.setValue("Map Mode", m_mapMode);
 	conf.endGroup();
 
 	// write general options

@@ -1,5 +1,7 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
+    <file>icons/play.png</file>
+    <file>icons/map.png</file>
     <file>icons/preferences.png</file>
     <file>icons/cancel.png</file>
     <file>icons/generalcfg.png</file>
