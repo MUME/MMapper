@@ -635,7 +635,7 @@ void MapStorage::loadOldConnection(Connection * connection, QDataStream & stream
   QString vqstr;
   quint32 vquint32;
 
-  Room *r1, *r2;
+  Room *r1 = 0, *r2 = 0;
 
   ConnectionFlags cf = 0;
   ConnectionType ct = CT_UNDEFINED;
