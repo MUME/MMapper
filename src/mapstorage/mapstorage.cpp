@@ -216,7 +216,7 @@ Room * MapStorage::loadOldRoom(QDataStream & stream, ConnectionList & connection
   stream >> (quint32 &)pos.x;
   stream >> (quint32 &)pos.y;
 
-  room->setPosition(pos);
+  room->setPosition(pos + basePosition);
 
   Connection *c;
 
@@ -296,7 +296,7 @@ Room * MapStorage::loadRoom(QDataStream & stream)
   room->replace(R_DESC, vqba);
   stream >> vqba;
   room->replace(R_DYNAMICDESC, vqba);
-  stream >> vquint32; room->setId(vquint32);
+  stream >> vquint32; room->setId(vquint32+baseId);
   stream >> vqba;
   room->replace(R_NOTE, vqba);
   stream >> vquint8;
@@ -317,7 +317,8 @@ Room * MapStorage::loadRoom(QDataStream & stream)
   stream >> (qint32 &)c.x;
   stream >> (qint32 &)c.y;
   stream >> (qint32 &)c.z;
-  room->setPosition(c);
+  
+  room->setPosition(c + basePosition);
   loadExits(room, stream);
   return room;
 }
@@ -345,11 +346,11 @@ void MapStorage::loadExits(Room * room, QDataStream & stream)
     quint32 connection;
     for (stream >> connection; connection != UINT_MAX; stream >> connection)
     {
-      e.addIn(connection);
+      e.addIn(connection+baseId);
     }
     for (stream >> connection; connection != UINT_MAX; stream >> connection)
     {
-      e.addOut(connection);
+      e.addOut(connection+baseId);
     }
   }
 }
@@ -358,8 +359,21 @@ bool MapStorage::loadData()
 {
   //clear previous map
   m_mapData.clear();
+  return mergeData();
+}
+
+
+bool MapStorage::mergeData()
+{
   {
     MapFrontendBlocker blocker(m_mapData);
+    
+    baseId = m_mapData.getMaxId() + 1;
+    basePosition = m_mapData.getLrb();
+    basePosition.y++;
+    basePosition.x = 0;
+    basePosition.z = 0;
+    
     emit log ("MapStorage", "Loading data ...");
     quint32 percentage = 0;
     emit onPercentageChanged(0);
@@ -408,6 +422,8 @@ bool MapStorage::loadData()
       stream >> (qint32 &)pos.z;
     }
 
+    pos += basePosition;
+    
     m_mapData.setPosition(pos);
 
     MarkerList& markerList = m_mapData.getMarkersList();
@@ -435,7 +451,7 @@ bool MapStorage::loadData()
       if (version < 020) // OLD VERSIONS SUPPORT CODE
       {
         room = loadOldRoom(stream, connectionList);
-        room->setId(i);
+        room->setId(i + baseId);
         roomList[i] = room;
       }
       else
@@ -504,6 +520,7 @@ bool MapStorage::loadData()
 }
 
 
+
 void MapStorage::loadMark(InfoMark * mark, QDataStream & stream, qint32 version)
 {
   QString vqstr;
@@ -517,18 +534,20 @@ void MapStorage::loadMark(InfoMark * mark, QDataStream & stream, qint32 version)
     stream >> vqstr; mark->setText(vqstr);
     stream >> vquint16; mark->setType((InfoMarkType)vquint16);
 
-	Coordinate pos;
-	stream >> vquint32; pos.x = (qint32) vquint32;
-	pos.x = pos.x*100/48-40;
-	stream >> vquint32; pos.y = (qint32) vquint32;
-	pos.y = pos.y*100/48-55;
-	mark->setPosition1(pos);
-	
-	stream >> vquint32; pos.x = (qint32) vquint32;
-	pos.x = pos.x*100/48-40;
-	stream >> vquint32; pos.y = (qint32) vquint32;
-	pos.y = pos.y*100/48-55;
-	mark->setPosition2(pos);
+    Coordinate pos;
+    stream >> vquint32; pos.x = (qint32) vquint32;
+    pos.x = pos.x*100/48-40;
+    stream >> vquint32; pos.y = (qint32) vquint32;
+    pos.y = pos.y*100/48-55;
+    pos += basePosition;
+    mark->setPosition1(pos);
+
+    stream >> vquint32; pos.x = (qint32) vquint32;
+    pos.x = pos.x*100/48-40;
+    stream >> vquint32; pos.y = (qint32) vquint32;
+    pos.y = pos.y*100/48-55;
+    pos += basePosition;
+    mark->setPosition2(pos);
   }
   else
   {
@@ -541,16 +560,18 @@ void MapStorage::loadMark(InfoMark * mark, QDataStream & stream, qint32 version)
     stream >> vdatetime; mark->setTimeStamp(vdatetime);
     stream >> vquint8; mark->setType((InfoMarkType)vquint8);
 
-	Coordinate pos;
-	stream >> vqint32; pos.x = vqint32/*-40*/;
-	stream >> vqint32; pos.y = vqint32/*-55*/;
-	stream >> vqint32; pos.z = vqint32;
-	mark->setPosition1(pos);
-	
-	stream >> vqint32; pos.x = vqint32/*-40*/;
-	stream >> vqint32; pos.y = vqint32/*-55*/;
-	stream >> vqint32; pos.z = vqint32;
-	mark->setPosition2(pos);
+    Coordinate pos;
+    stream >> vqint32; pos.x = vqint32/*-40*/;
+    stream >> vqint32; pos.y = vqint32/*-55*/;
+    stream >> vqint32; pos.z = vqint32;
+    pos += basePosition;
+    mark->setPosition1(pos);
+
+    stream >> vqint32; pos.x = vqint32/*-40*/;
+    stream >> vqint32; pos.y = vqint32/*-55*/;
+    stream >> vqint32; pos.z = vqint32;
+    pos += basePosition;
+    mark->setPosition2(pos);
   }
 }
 

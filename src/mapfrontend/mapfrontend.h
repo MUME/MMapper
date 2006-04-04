@@ -101,6 +101,11 @@ public:
 
   virtual void insertPredefinedRoom(Room *);
 
+  virtual uint getMaxId() {return greatestUsedId;}
+  
+  virtual const Coordinate & getUlf() {return ulf;}
+  
+  virtual const Coordinate & getLrb() {return lrb;}
 public slots:
   // looking for rooms leads to a bunch of foundRoom() signals
   virtual void lookingForRooms(RoomRecipient *,ParseEvent *);

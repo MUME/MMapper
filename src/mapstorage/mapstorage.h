@@ -47,6 +47,7 @@ public:
     virtual void newData ();
     virtual bool loadData();
     virtual bool saveData();
+    bool mergeData();
     
 private:
     RoomFactory factory;
@@ -59,6 +60,9 @@ private:
     void translateOldConnection(Connection *);
     void saveRoom(const Room * room, QDataStream & stream);
     void saveExits(const Room * room, QDataStream & stream);
+    
+    uint baseId;
+    Coordinate basePosition;
 };
 
 class MapFrontendBlocker {
