@@ -622,6 +622,49 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *event)
 						qint32 x = r->getPosition().x;
 						qint32 y = r->getPosition().y;
 						emit log( "MapCanvas", QString("Selected Room Coordinates: %1 %2").arg(x).arg(y) );	
+					
+						QString etmp = "Exits:";
+			            for (int j = 0; j < 7; j++) {
+			            	
+			            	bool door = false;
+			            	if (ISSET(getFlags(r->exit(j)),EF_DOOR)) 
+			            	{
+			            		door = true;
+			            		etmp += " (";	
+			            	}
+			            		
+			                if (ISSET(getFlags(r->exit(j)),EF_EXIT)) {
+			            		if (!door) etmp += " ";
+			            		
+			                	switch(j)
+			                	{
+			                		case 0: etmp += "north"; break;
+			                		case 1: etmp += "south"; break;
+			                		case 2: etmp += "east"; break;
+			                		case 3: etmp += "west"; break;
+			                		case 4: etmp += "up"; break;
+			                		case 5: etmp += "down"; break;
+			                		case 6: etmp += "unknown"; break;
+			                	}
+			                }
+			                
+			                if (door)
+			                {
+			                	if (getDoorName(r->exit(j))!="")
+			                		etmp += "/"+getDoorName(r->exit(j))+")";	
+			                	else
+			                		etmp += ")";				                		
+			                }
+			            }
+	                	etmp += ".\n";							
+						emit log( "MapCanvas", "\n\n"+getName(r)+"\n"+getDescription(r)+getDynamicDescription(r)+etmp);
+						
+/*						
+						if (r->isUpToDate()) 
+							emit log( "MapCanvas", "Room is Online Updated ...");
+						else 
+							emit log( "MapCanvas", "Room is not Online Updated ...");
+*/
 					}
 				}
 				emit newRoomSelection(m_roomSelection);				    	
