@@ -65,7 +65,7 @@ ComparisonResult RoomFactory::compare(const Room * room, const ParseEvent * even
   RoomTerrainType m_terrainType = getTerrainType(room);
   bool updated = room->isUpToDate();
 
-  if (m_name.isNull() && m_desc.isNull() && (!updated))
+  if (m_name.isEmpty() && m_desc.isEmpty() && (!updated))
   {
     // user-created
     return CR_TOLERANCE;
