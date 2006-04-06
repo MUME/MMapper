@@ -93,7 +93,7 @@ void Configuration::read()
 			
 	if (m_moveForcePatternsList.isEmpty())
 	{
-		m_moveForcePatternsList.append("#=You flee head over heels.");
+		//m_moveForcePatternsList.append("#=You flee head over heels.");
 		m_moveForcePatternsList.append("#=You are borne along by a strong current.");
 		m_moveForcePatternsList.append("#?leads you out");
 		//m_moveForcePatternsList.append("#=You are dead! Sorry...");

@@ -473,7 +473,21 @@ void Parser::parseMudCommands(QString& str) {
 	}
 
 
-	if (Config().m_useXmlParser) return;
+	if (str.startsWith("You flee"))
+	{
+			if (str.contains("north")) queue.enqueue(CID_NORTH);
+			else
+			if (str.contains("south")) queue.enqueue(CID_SOUTH);
+			else
+			if (str.contains("east"))  queue.enqueue(CID_EAST);
+			else
+			if (str.contains("west"))  queue.enqueue(CID_WEST);
+			else
+			if (str.contains("up"))    queue.enqueue(CID_UP);  
+			else
+			if (str.contains("down"))  queue.enqueue(CID_DOWN);
+	}
+
 
 
 	if (str.startsWith("You now follow")){
@@ -518,6 +532,8 @@ void Parser::parseMudCommands(QString& str) {
 			return;
 		}
 	}
+
+	if (Config().m_useXmlParser) return;
 
 	// parse regexps which cancel last char move
 	if (Patterns::matchMoveCancelPatterns(str))
@@ -1105,11 +1121,15 @@ enum XmlMovement    {XMLM_NORTH, XMLM_SOUTH, XMLM_EAST, XMLM_WEST, XMLM_UP, XMLM
 					queue.dequeue(); 
 				else 
 					return;
-				if (queue.isEmpty()) queue.enqueue((CommandIdType)m_xmlMovement);
+				if (queue.isEmpty()) 
+				{
+					queue.enqueue((CommandIdType)m_xmlMovement);
+					return;
+				}
 				break;
 			case XMLM_UNKNOWN:
-				break;
 			case XMLM_NONE:
+				return;
 				break;
 		}
 	}
@@ -1201,6 +1221,9 @@ void Parser::parseNewXmlMudInput(TelnetIncomingDataQueue& que)
 
 					m_stringBuffer = QString::fromAscii(data.line.constData(), data.line.size());
 					m_stringBuffer = m_stringBuffer.simplified();
+					
+					if (m_stringBuffer.startsWith("You flee"))
+					printf("*");
 					
 					switch (m_xmlMode)
 					{
@@ -1317,7 +1340,7 @@ void Parser::parseNewXmlMudInput(TelnetIncomingDataQueue& que)
 							{
 								if (!queue.isEmpty())
 								{
-									CommandIdType c = queue.dequeue();
+									queue.dequeue();
 									emit showPath(queue, true);
 								}
 							}
