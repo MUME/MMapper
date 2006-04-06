@@ -32,6 +32,10 @@
 #include "mmapper2room.h"
 
 const QChar Parser::escChar('\x1B');
+const QByteArray Parser::greatherThanChar(">");
+const QByteArray Parser::lessThanChar("<");
+const QByteArray Parser::greatherThanTemplate("&gt;");
+const QByteArray Parser::lessThanTemplate("&lt;");
 
 Parser::Parser(MapData* md, QObject *parent)
 : QObject(parent)
@@ -49,6 +53,9 @@ Parser::Parser(MapData* md, QObject *parent)
    m_staticRoomDesc = "";
    m_exitsFlags = 0;
    m_promptFlags = 0;
+   
+   m_xmlMode = XML_NONE;
+   m_xmlMovement = XMLM_NONE;
    
    m_briefAutoconfigDone = false;
    m_IACPromptAutoconfigDone = false;
@@ -727,7 +734,6 @@ bool Parser::parseUserCommands(QString& command) {
 	return true;
 }
 
-
 void Parser::parseNewMudInput(TelnetIncomingDataQueue& que)
 {
 	IncomingData data; 	
@@ -876,7 +882,6 @@ void Parser::parseNewMudInput(TelnetIncomingDataQueue& que)
 				else 
 				if (!m_readingRoomDesc && m_descriptionReady) //read betwen Exits and Prompt (track for example)
 				{
-					//*****************					
 					if ( isRoomName(m_stringBuffer) ) //Room name arrived
 					{ 
 						
@@ -1009,6 +1014,8 @@ void Parser::parseNewMudInput(TelnetIncomingDataQueue& que)
 		
 }
 
+
+
 void Parser::parseNewUserInput(TelnetIncomingDataQueue& que)
 {
 	IncomingData data; 
@@ -1059,4 +1066,212 @@ void Parser::parseNewUserInput(TelnetIncomingDataQueue& que)
 }
 
 
+/******************************** XML RELATED CODE START ************************************/
+void Parser::switchXmlMode(QByteArray& line)
+{
+	switch (m_xmlMode)
+	{
+		case XML_NONE:
+			if (line.startsWith("<prompt")) m_xmlMode = XML_PROMPT; break;						
+			if (line.startsWith("<exits")) m_xmlMode = XML_EXITS; break;
+			if (line.startsWith("<room")) m_xmlMode = XML_ROOM; break;
+			if (line.startsWith("<movement dir=north/>")) 	m_xmlMovement = XMLM_NORTH; break;
+			if (line.startsWith("<movement dir=south/>")) 	m_xmlMovement = XMLM_SOUTH; break;
+			if (line.startsWith("<movement dir=east/>")) 	m_xmlMovement = XMLM_EAST; break;
+			if (line.startsWith("<movement dir=west/>")) 	m_xmlMovement = XMLM_WEST; break;
+			if (line.startsWith("<movement dir=up/>")) 		m_xmlMovement = XMLM_UP; break;
+			if (line.startsWith("<movement dir=down/>")) 	m_xmlMovement = XMLM_DOWN; break;
+			if (line.startsWith("<movement/>")) 			m_xmlMovement = XMLM_UNKNOWN; break;
+			break;
+		case XML_ROOM:
+			if (line.startsWith("<name")) m_xmlMode = XML_NAME; break;						
+			if (line.startsWith("<description")) m_xmlMode = XML_DESCRIPTION; break;
+			if (line.startsWith("</room")) m_xmlMode = XML_NONE; break;
+			break;		
+		case XML_NAME:
+			if (line.startsWith("</name")) m_xmlMode = XML_ROOM; break;						
+			break;
+		case XML_DESCRIPTION:
+			if (line.startsWith("</description")) m_xmlMode = XML_ROOM; break;
+			break;
+		case XML_EXITS:
+			if (line.startsWith("</exits")) m_xmlMode = XML_NONE; break;
+			break;
+		case XML_PROMPT:
+			if (line.startsWith("</prompt")) m_xmlMode = XML_NONE; break;
+			break;
+	}	
+}
+
+bool Parser::isXmlTag(QByteArray& line)
+{
+	if (line.startsWith('<'))
+	 	return true;
+	return false;
+}
+
+void Parser::parseNewXmlMudInput(TelnetIncomingDataQueue& que)
+{
+	IncomingData data; 	
+	bool staticLine;
+	
+	while ( !que.isEmpty() )
+	{
+		data = que.dequeue();
+
+		staticLine = false;
+		
+		//dline = (quint8 *)data.line.data();
+		switch (data.type)
+		{
+			case TDT_MENU_PROMPT: 
+			case TDT_LOGIN: 
+			case TDT_LOGIN_PASSWORD: 
+			case TDT_TELNET:
+			case TDT_SPLIT:
+			case TDT_UNKNOWN:
+			case TDT_LF:
+			case TDT_LFCR:			
+			case TDT_PROMPT:
+				emit sendToUser(data.line);
+				break;			
+
+			case TDT_CRLF:										
+				if (isXmlTag(data.line))
+				{
+					switchXmlMode(data.line);
+				}
+				else
+				{
+					// replace > and < chars
+					data.line.replace(greatherThanTemplate, greatherThanChar);
+					data.line.replace(lessThanTemplate, lessThanChar);
+
+					m_stringBuffer = QString::fromAscii(data.line.constData(), data.line.size());
+					m_stringBuffer = m_stringBuffer.simplified();
+					
+					switch (m_xmlMode)
+					{
+						case XML_NONE:	//non room info
+							if (m_stringBuffer.isEmpty()) // standard end of description parsed
+							{  
+								if (m_readingRoomDesc == true)
+								{
+									m_readingRoomDesc = false; // we finished read desc mode
+									m_descriptionReady = true;
+								}
+							}
+							else
+							{ 						
+								//str=removeAnsiMarks(m_stringBuffer);
+								parseMudCommands(m_stringBuffer);
+							}
+							sendToUser(data.line);				
+							break;
+						case XML_ROOM: // dynamic line
+							m_dynamicRoomDesc += m_stringBuffer+"\n";
+							sendToUser(data.line);				
+							break;
+						case XML_NAME:
+							isRoomName(m_stringBuffer); //Remove room color marks
+							m_readingRoomDesc = true;
+							m_descriptionReady = false;											
+
+							if	(m_descriptionReady)
+							{			
+								m_descriptionReady = false;
+
+								if (Patterns::matchNoDescriptionPatterns(m_roomName)) // non standard end of description parsed (fog, dark or so ...)
+								{ 
+									m_roomName="";
+									m_dynamicRoomDesc="";
+									m_staticRoomDesc="";
+								} 
+			
+								if (!queue.isEmpty())
+								{
+									CommandIdType c = queue.dequeue();
+									if ( c != CID_SCOUT ){
+										emit showPath(queue, false);
+										characterMoved(c, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags, m_promptFlags);
+									}
+								}
+								else
+								{	
+									emit showPath(queue, false);
+									characterMoved(CID_NONE, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags, m_promptFlags);
+								}    
+							}					
+							
+							m_readingRoomDesc = true; //start of read desc mode
+							m_descriptionReady = false;										
+							m_roomName=m_stringBuffer;
+							m_dynamicRoomDesc="";
+							m_staticRoomDesc="";
+							m_roomDescLines = 0;
+							m_readingStaticDescLines = true;
+							m_exitsFlags = 0;
+
+							sendToUser(data.line);				
+							break;
+						case XML_DESCRIPTION: // static line
+							isStaticRoomDescriptionLine(m_stringBuffer) ; //remove color marks
+							m_staticRoomDesc += m_stringBuffer+"\n";
+							if (!Config().m_brief) 
+								emit sendToUser(data.line);				
+							break;
+						case XML_EXITS:
+							isEndOfRoomDescription(m_stringBuffer); //parse exits
+							if (m_readingRoomDesc)
+							{
+								m_readingRoomDesc = false;
+								m_descriptionReady = true;											
+							}
+							sendToUser(data.line);				
+							break;
+						case XML_PROMPT:
+							if (!m_briefAutoconfigDone)
+							{  
+								m_briefAutoconfigDone = true;
+								emit sendToMud((QByteArray)"brief\n");
+							}
+							
+							if	(m_descriptionReady)
+							{			
+								m_descriptionReady = false;
+
+								if (Patterns::matchNoDescriptionPatterns(m_roomName)) // non standard end of description parsed (fog, dark or so ...)
+								{ 
+									m_roomName="";
+									m_dynamicRoomDesc="";
+									m_staticRoomDesc="";
+								} 
+								
+								parsePrompt(m_stringBuffer);
+			
+								if (!queue.isEmpty())
+								{
+									CommandIdType c = queue.dequeue();
+									if ( c != CID_SCOUT ){
+										emit showPath(queue, false);
+										characterMoved(c, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags, m_promptFlags);
+									}
+								}
+								else
+								{	
+									emit showPath(queue, false);
+									characterMoved(CID_NONE, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags, m_promptFlags);
+								}    
+							}
+							
+							sendToUser(data.line);				
+							break;
+					}
+
+				}
+		}
+	}
+}
+
+/******************************** XML RELATED CODE END ************************************/
 

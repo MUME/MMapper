@@ -41,6 +41,9 @@ enum CommandIdType   { CID_NORTH = 0, CID_SOUTH, CID_EAST, CID_WEST, CID_UP, CID
 
 enum DoorActionType { DAT_OPEN, DAT_CLOSE, DAT_LOCK, DAT_UNLOCK, DAT_PICK, DAT_ROCK, DAT_BASH, DAT_BREAK, DAT_BLOCK };
 
+enum XmlMode 		{XML_NONE, XML_ROOM, XML_NAME, XML_DESCRIPTION, XML_EXITS, XML_PROMPT};
+enum XmlMovement    {XMLM_NONE, XMLM_NORTH, XMLM_SOUTH, XMLM_EAST, XMLM_WEST, XMLM_UP, XMLM_DOWN, XMLM_UNKNOWN};
+
 #define ROAD_N bit3
 #define ROAD_S bit6
 #define ROAD_E bit9
@@ -61,6 +64,15 @@ enum DoorActionType { DAT_OPEN, DAT_CLOSE, DAT_LOCK, DAT_UNLOCK, DAT_PICK, DAT_R
 #define DOOR_W bit11
 #define DOOR_U bit14
 #define DOOR_D bit17
+
+/*
+#define LIGHT_N bit20
+#define LIGHT_S bit21
+#define LIGHT_E bit22
+#define LIGHT_W bit23
+#define LIGHT_U bit24
+#define LIGHT_D bit25
+*/
 
 #define EXITS_FLAGS_VALID bit19
 typedef quint32 ExitsFlagsType;
@@ -83,7 +95,11 @@ public:
     
 public slots:
   	void parseNewMudInput(TelnetIncomingDataQueue&);
+  	void parseNewXmlMudInput(TelnetIncomingDataQueue&);
   	void parseNewUserInput(TelnetIncomingDataQueue&);
+
+	void switchXmlMode(QByteArray&);
+	bool isXmlTag(QByteArray&);
 
     void emptyQueue();
     
@@ -117,7 +133,12 @@ protected:
 	QFile* file;
 #endif
 
-	static const QChar escChar;
+	static const QChar escChar;	
+	static const QByteArray greatherThanChar;
+	static const QByteArray lessThanChar;
+	static const QByteArray greatherThanTemplate;
+	static const QByteArray lessThanTemplate;
+	
 	MapData* m_mapData;
 
     //for main move/search algorithm
@@ -156,6 +177,9 @@ protected:
    bool m_IACPromptAutoconfigDone;
    
    CommandQueue queue;
+   
+   XmlMode m_xmlMode;
+   XmlMovement m_xmlMovement;
 };
 
 
