@@ -32,19 +32,20 @@
 #include "roomrecipient.h"
 #include "roomsignalhandler.h"
 
-class Syncing : public RoomRecipient {
- private:
-   bool valid;
-   const Room * room;
-   RoomAdmin * owner;
- public:
-   Syncing();
-   void receiveRoom(RoomAdmin *, const Room *);
-   const Room * evaluate();
-   ~Syncing();
+class Syncing : public RoomRecipient
+{
+private:
+  RoomSignalHandler * signaler;
+  uint numPaths;
+  PathParameters & params;
+  std::list<Path *> * paths;
+  Path * parent;
+public:
+  Syncing(PathParameters & p, std::list<Path *> * paths, RoomSignalHandler * signaler);
+  void receiveRoom(RoomAdmin *, const Room *);
+  std::list<Path *> * evaluate();
+  ~Syncing();
 };
-#ifdef DMALLOC
-#include <mpatrol.h>
+
 #endif
-#endif
-   
+

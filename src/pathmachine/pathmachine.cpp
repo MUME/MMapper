@@ -286,15 +286,11 @@ void PathMachine::approved(ParseEvent * event)
 
 void PathMachine::syncing(ParseEvent * event)
 {
-  Syncing sync;
-  emit lookingForRooms(&sync, event);
-  const Room * room = sync.evaluate();
-  if (room)
-  {
-    mostLikelyRoom = *room;
-    emit playerMoved(mostLikelyRoom.getPosition());
-    state = APPROVED;
-  }
+  Syncing sync(params, paths, &signaler);
+  if (event->getNumSkipped() <= params.maxSkipped) 
+    emit lookingForRooms(&sync, event);
+  paths = sync.evaluate();
+  evaluatePaths();
 }
 
 

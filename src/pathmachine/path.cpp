@@ -52,11 +52,12 @@ Path * Path::fork(const Room * in_room, Coordinate & expectedCoordinate, RoomAdm
 
   ret->setParent(this);
   children.insert(ret);
-  
+
   double dist = expectedCoordinate.distance(in_room->getPosition());
   uint size = room->getExitsList().size();
-  
-  if (dist < 0.5) {
+
+  if (dist < 0.5)
+  {
     if (direction < factory->numKnownDirs())
       dist = 1.0/p.correctPositionBonus;
     else
@@ -72,10 +73,11 @@ Path * Path::fork(const Room * in_room, Coordinate & expectedCoordinate, RoomAdm
         dist = 1.0/p.correctPositionBonus;
       else if (e.outBegin() != e.outEnd() || oid == room->getId())
         dist *= p.multipleConnectionsPenalty;
-      else {
-	const Exit & oe = in_room->exit(factory->opposite(direction));
-	if (oe.inBegin() != oe.inEnd())
-	  dist *= p.multipleConnectionsPenalty;
+      else
+      {
+        const Exit & oe = in_room->exit(factory->opposite(direction));
+        if (oe.inBegin() != oe.inEnd())
+          dist *= p.multipleConnectionsPenalty;
       }
     }
     else if (direction < factory->numKnownDirs())
@@ -83,7 +85,8 @@ Path * Path::fork(const Room * in_room, Coordinate & expectedCoordinate, RoomAdm
       for (uint d = 0; d < size; ++d)
       {
         const Exit & e = room->exit(d);
-        if (e.containsOut(in_room->getId())) {
+        if (e.containsOut(in_room->getId()))
+        {
           dist = 1.0/p.correctPositionBonus;
           break;
         }
@@ -106,7 +109,13 @@ void Path::approve()
 {
   if (parent)
   {
-    signaler->keep(room, dir, parent->getRoom()->getId());
+    uint pId = UINT_MAX;
+    const Room * proom = parent->getRoom();
+    if (proom)
+    {
+      pId = proom->getId();
+    }
+    signaler->keep(room, dir, pId);
     parent->removeChild(this);
     parent->approve();
   }
@@ -143,7 +152,10 @@ void Path::deny()
 
 
 
-
+void Path::insertChild(Path * p)
+{
+  children.insert(p);
+}
 
 
 void Path::removeChild(Path * p)

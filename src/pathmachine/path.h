@@ -39,6 +39,7 @@ class Path
 
 public:
   Path(const Room * room, RoomAdmin * owner, RoomRecipient * locker, RoomSignalHandler * signaler, uint direction = UINT_MAX);
+  void insertChild(Path * p);
   void removeChild(Path * p);
   void setParent(Path * p);
   bool hasChildren() {return (!children.empty());}

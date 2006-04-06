@@ -157,12 +157,12 @@ void Configuration::read()
 	}
 	
 	conf.beginGroup("Path Machine");
-	m_acceptBestRelative = conf.value("relative path acceptance", 10).toDouble();
-	m_acceptBestAbsolute = conf.value("absolute path acceptance", 3).toDouble();
+	m_acceptBestRelative = conf.value("relative path acceptance", 25).toDouble();
+	m_acceptBestAbsolute = conf.value("absolute path acceptance", 6).toDouble();
 	m_newRoomPenalty = conf.value("room creation penalty", 5).toDouble();
-	m_correctPositionBonus = conf.value("correct position bonus", 5.1).toDouble();
+	m_correctPositionBonus = conf.value("correct position bonus", 5).toDouble();
 	m_multipleConnectionsPenalty = conf.value("multiple connections penalty", 2.0).toDouble();
-	m_maxPaths = conf.value("maximum number of paths", 500).toInt();
+	m_maxPaths = conf.value("maximum number of paths", 1000).toInt();
 	m_matchingTolerance = conf.value("room matching tolerance", 5).toInt();
 	
 	conf.endGroup();

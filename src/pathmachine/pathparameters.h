@@ -29,17 +29,19 @@
 /**
 @author alve,,,
 */
-class PathParameters{
+class PathParameters
+{
 public:
-    PathParameters();
-    double acceptBestRelative;
-    double acceptBestAbsolute;
-    double newRoomPenalty;
-		double multipleConnectionsPenalty;
-    double correctPositionBonus;
-    double maxPaths;
-    int matchingTolerance;
-		~PathParameters() {}
-};
+  PathParameters();
+  double acceptBestRelative;
+  double acceptBestAbsolute;
+  double newRoomPenalty;
+  double multipleConnectionsPenalty;
+  double correctPositionBonus;
+  double maxPaths;
+  int matchingTolerance;
+  int maxSkipped;
+  ~PathParameters() {}}
+;
 
 #endif

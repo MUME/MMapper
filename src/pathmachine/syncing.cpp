@@ -27,36 +27,42 @@
 
 using namespace std;
 
-Syncing::Syncing() :
-  valid(true),
-  room(0),
-  owner(0)
+Syncing::Syncing(PathParameters & in_p, std::list<Path *> * in_paths, RoomSignalHandler * in_signaler) :
+    signaler(in_signaler),
+    numPaths(0),
+    params(in_p),
+    paths(in_paths),
+    parent(new Path(0,0,this,signaler))
+{}
+
+void Syncing::receiveRoom(RoomAdmin * sender, const Room * in_room)
 {
+  if (++numPaths > params.maxPaths)
+  {
+    if(!paths->empty())
+    {
+      for (list<Path *>::iterator i = paths->begin(); i != paths->end(); ++i)
+      {
+        (*i)->deny();
+      }
+      paths->clear();
+      parent = 0;
+    }
+  }
+  else
+  {
+    Path * p = new Path(in_room, sender, this, signaler, UINT_MAX - 1);
+    p->setParent(parent);
+    parent->insertChild(p);
+    paths->push_back(p);
+  }
 }
 
-void Syncing::receiveRoom(RoomAdmin * sender, const Room * in_room) {
-  if (valid) {
-    if(!room) {
-      room = in_room;
-      owner = sender;
-    }
-    else {
-      sender->releaseRoom(this, in_room->getId());
-      owner->releaseRoom(this, room->getId());
-      room = 0;
-      owner = 0;
-      valid = false;
-    }
-  }
-  else {
-    sender->releaseRoom(this, in_room->getId());
-  }
-}
-  
-const Room * Syncing::evaluate() {
-  return room;
+list<Path *> * Syncing::evaluate()
+{
+  return paths;
 }
 
 Syncing::~Syncing() {
-  if (room) owner->keepRoom(this, room->getId());
+  parent->deny();
 }
