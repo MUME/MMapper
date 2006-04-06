@@ -162,7 +162,7 @@ ComparisonResult RoomFactory::compareWeakProps(const Room * room, const ParseEve
       {
         ExitsFlagsType eThisExit = eFlags >> (dir * 3);
         ExitsFlagsType diff = (eThisExit ^ mFlags);
-        if (diff & (EF_EXIT | EF_DOOR | EF_ROAD))
+        if (diff & (EF_EXIT | EF_DOOR))
         {
           if (exitsValid)
           {
