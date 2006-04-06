@@ -1313,6 +1313,14 @@ void Parser::parseNewXmlMudInput(TelnetIncomingDataQueue& que)
 									characterMoved(CID_NONE, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags, m_promptFlags);
 								}    
 							}
+							else
+							{
+								if (!queue.isEmpty())
+								{
+									CommandIdType c = queue.dequeue();
+									emit showPath(queue, true);
+								}
+							}
 							
 							data.line = data.line.trimmed();
 							sendToUser(data.line);				
