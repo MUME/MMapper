@@ -95,7 +95,6 @@ public:
     
 public slots:
   	void parseNewMudInput(TelnetIncomingDataQueue&);
-  	void parseNewXmlMudInput(TelnetIncomingDataQueue&);
   	void parseNewUserInput(TelnetIncomingDataQueue&);
 
 	void switchXmlMode(QByteArray&);
@@ -143,6 +142,9 @@ protected:
 
     //for main move/search algorithm
    void	characterMoved(CommandIdType, const QString&, const QString&, const QString&, ExitsFlagsType, PromptFlagsType);
+
+   void parseNewNormalMudInput(TelnetIncomingDataQueue&);
+   void parseNewXmlMudInput(TelnetIncomingDataQueue&);
 
    QString& removeAnsiMarks(QString& str);
    bool isRoomName(QString& str);

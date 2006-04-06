@@ -736,6 +736,14 @@ bool Parser::parseUserCommands(QString& command) {
 
 void Parser::parseNewMudInput(TelnetIncomingDataQueue& que)
 {
+	if (Config().m_useXmlParser)
+		parseNewXmlMudInput(que);
+	else
+		parseNewNormalMudInput(que);
+}
+
+void Parser::parseNewNormalMudInput(TelnetIncomingDataQueue& que)
+{
 	IncomingData data; 	
 	bool staticLine;
 	

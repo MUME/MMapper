@@ -61,6 +61,8 @@ class Configuration {
     quint16  m_minimumStaticLines;
     
     bool m_IAC_prompt_parser;
+    bool m_useXmlParser;
+    
     
     QStringList m_moveCancelPatternsList; // string wildcart patterns, that cancel last move command
     QStringList m_moveForcePatternsList;  // string wildcart patterns, that force new move command

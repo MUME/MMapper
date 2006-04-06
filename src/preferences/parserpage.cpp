@@ -23,9 +23,11 @@
 **
 *************************************************************************/
 
+
 #include <QtGui>
 #include "parserpage.h"
 #include "configuration.h"
+#include "defs.h"
 
 ParserPage::ParserPage(QWidget *parent)
         : QWidget(parent)
@@ -33,6 +35,15 @@ ParserPage::ParserPage(QWidget *parent)
     setupUi(this);
 
    	IACPromptCheckBox->setChecked(Config().m_IAC_prompt_parser);	
+
+#ifdef ALLOW_XML_PARSER	
+   	xmlParserCheckBox->setChecked(Config().m_useXmlParser);		
+	xmlParserCheckBox->setEnabled(true);
+#else
+	Config().m_useXmlParser = false;
+   	xmlParserCheckBox->setChecked(false);		
+	xmlParserCheckBox->setEnabled(false);
+#endif
 
 	forcePatternsList->clear();
 	forcePatternsList->addItems( Config().m_moveForcePatternsList );
@@ -77,6 +88,7 @@ ParserPage::ParserPage(QWidget *parent)
 		SLOT(roomDescColorChanged(const QString&)));
 		
 	connect( IACPromptCheckBox, SIGNAL(stateChanged(int)),SLOT(IACPromptCheckBoxStateChanged(int)));	
+	connect( xmlParserCheckBox, SIGNAL(stateChanged(int)),SLOT(xmlParserCheckBoxCheckBoxStateChanged(int)));	
 
 	roomNameAnsiColor->setText( Config().m_roomNameColor );
 	roomDescAnsiColor->setText( Config().m_roomDescColor );
@@ -92,6 +104,11 @@ void ParserPage::roomDescAnsiColorTextChanged(const QString& str)
 {
 	if (str.startsWith("[") && str.endsWith("m"))
 		Config().m_roomDescColor = str;	
+}
+
+void ParserPage::xmlParserCheckBoxCheckBoxStateChanged(int)
+{
+	Config().m_useXmlParser = xmlParserCheckBox->isChecked();		
 }
 
 void ParserPage::IACPromptCheckBoxStateChanged(int)

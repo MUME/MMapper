@@ -23,10 +23,15 @@
 **
 *************************************************************************/
 
+
 #ifndef DEFS_H
 #define DEFS_H
 
 #include <QString>
+
+//development switches
+//#define ALLOW_XML_PARSER	
+
 
 #ifndef TRUE
 enum { TRUE = 1, FALSE = 0 };
