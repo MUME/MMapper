@@ -464,6 +464,18 @@ void Parser::parseMudCommands(QString& str) {
 		}
 	}
 
+	if (str.startsWith("You are dead! Sorry..."))
+	{
+		queue.clear();
+		emit showPath(queue, true);			
+		emit releaseAllPaths();
+		return;
+	}
+
+
+	if (Config().m_useXmlParser) return;
+
+
 	if (str.startsWith("You now follow")){
 		m_following = true;   
 		emit sendToUser((QByteArray)"----> follow mode on.\n");
@@ -522,14 +534,6 @@ void Parser::parseMudCommands(QString& str) {
 		emit showPath(queue, true);
 		return;   
 	}	
-	
-	if (str.startsWith("You are dead! Sorry..."))
-	{
-		queue.clear();
-		emit showPath(queue, true);			
-		emit releaseAllPaths();
-		return;
-	}
 }
 
 bool Parser::parseUserCommands(QString& command) {
@@ -1075,6 +1079,44 @@ void Parser::parseNewUserInput(TelnetIncomingDataQueue& que)
 
 
 /******************************** XML RELATED CODE START ************************************/
+
+void Parser::checkqueue()
+{
+/*	
+enum CommandIdType   { CID_NORTH = 0, CID_SOUTH, CID_EAST, CID_WEST, CID_UP, CID_DOWN, 
+						CID_UNKNOWN, CID_LOOK, CID_FLEE, CID_SCOUT, CID_SYNC, CID_RESET, CID_NONE };
+enum XmlMovement    {XMLM_NORTH, XMLM_SOUTH, XMLM_EAST, XMLM_WEST, XMLM_UP, XMLM_DOWN, XMLM_UNKNOWN, XMLM_NONE};
+*/
+	CommandIdType cid;
+
+	while (!queue.isEmpty())
+	{		
+		cid = queue.head();
+
+		switch (m_xmlMovement)
+		{
+			case XMLM_NORTH:
+			case XMLM_SOUTH:
+			case XMLM_EAST:
+			case XMLM_WEST:
+			case XMLM_UP:
+			case XMLM_DOWN:
+				if ((int)cid != (int)m_xmlMovement)
+					queue.dequeue(); 
+				else 
+					return;
+				if (queue.isEmpty()) queue.enqueue((CommandIdType)m_xmlMovement);
+				break;
+			case XMLM_UNKNOWN:
+				break;
+			case XMLM_NONE:
+				break;
+		}
+	}
+
+	m_xmlMovement = XMLM_NONE;	
+}
+
 void Parser::switchXmlMode(QByteArray& line)
 {
 	switch (m_xmlMode)
@@ -1083,13 +1125,13 @@ void Parser::switchXmlMode(QByteArray& line)
 			if (line.startsWith("<prompt")) m_xmlMode = XML_PROMPT; break;						
 			if (line.startsWith("<exits")) m_xmlMode = XML_EXITS; break;
 			if (line.startsWith("<room")) m_xmlMode = XML_ROOM; break;
-			if (line.startsWith("<movement dir=north/>")) 	m_xmlMovement = XMLM_NORTH; break;
-			if (line.startsWith("<movement dir=south/>")) 	m_xmlMovement = XMLM_SOUTH; break;
-			if (line.startsWith("<movement dir=east/>")) 	m_xmlMovement = XMLM_EAST; break;
-			if (line.startsWith("<movement dir=west/>")) 	m_xmlMovement = XMLM_WEST; break;
-			if (line.startsWith("<movement dir=up/>")) 		m_xmlMovement = XMLM_UP; break;
-			if (line.startsWith("<movement dir=down/>")) 	m_xmlMovement = XMLM_DOWN; break;
-			if (line.startsWith("<movement/>")) 			m_xmlMovement = XMLM_UNKNOWN; break;
+			if (line.startsWith("<movement dir=north/>")) 	m_xmlMovement = XMLM_NORTH; checkqueue(); break;
+			if (line.startsWith("<movement dir=south/>")) 	m_xmlMovement = XMLM_SOUTH; checkqueue(); break;
+			if (line.startsWith("<movement dir=east/>")) 	m_xmlMovement = XMLM_EAST; checkqueue(); break;
+			if (line.startsWith("<movement dir=west/>")) 	m_xmlMovement = XMLM_WEST; checkqueue(); break;
+			if (line.startsWith("<movement dir=up/>")) 		m_xmlMovement = XMLM_UP; checkqueue(); break;
+			if (line.startsWith("<movement dir=down/>")) 	m_xmlMovement = XMLM_DOWN; checkqueue(); break;
+			if (line.startsWith("<movement/>")) 			m_xmlMovement = XMLM_UNKNOWN; checkqueue(); break;
 			break;
 		case XML_ROOM:
 			if (line.startsWith("<name")) m_xmlMode = XML_NAME; break;						

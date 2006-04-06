@@ -37,12 +37,12 @@
 class ParseEvent;
 
 enum CommandIdType   { CID_NORTH = 0, CID_SOUTH, CID_EAST, CID_WEST, CID_UP, CID_DOWN, 
-						CID_UNKNOWN, CID_LOOK, CID_FLEE, CID_SCOUT, CID_SYNC, CID_RESET, CID_NONE };
+						CID_UNKNOWN, CID_LOOK, CID_FLEE, CID_SCOUT, /*CID_SYNC, CID_RESET, */CID_NONE };
 
 enum DoorActionType { DAT_OPEN, DAT_CLOSE, DAT_LOCK, DAT_UNLOCK, DAT_PICK, DAT_ROCK, DAT_BASH, DAT_BREAK, DAT_BLOCK };
 
 enum XmlMode 		{XML_NONE, XML_ROOM, XML_NAME, XML_DESCRIPTION, XML_EXITS, XML_PROMPT};
-enum XmlMovement    {XMLM_NONE, XMLM_NORTH, XMLM_SOUTH, XMLM_EAST, XMLM_WEST, XMLM_UP, XMLM_DOWN, XMLM_UNKNOWN};
+enum XmlMovement    {XMLM_NORTH, XMLM_SOUTH, XMLM_EAST, XMLM_WEST, XMLM_UP, XMLM_DOWN, XMLM_UNKNOWN, XMLM_NONE};
 
 #define ROAD_N bit3
 #define ROAD_S bit6
@@ -180,6 +180,7 @@ protected:
    
    CommandQueue queue;
    
+   void checkqueue();
    XmlMode m_xmlMode;
    XmlMovement m_xmlMovement;
 };
