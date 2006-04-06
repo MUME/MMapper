@@ -64,5 +64,5 @@ list<Path *> * Syncing::evaluate()
 }
 
 Syncing::~Syncing() {
-  parent->deny();
+  if (parent) parent->deny();
 }

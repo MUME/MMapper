@@ -286,10 +286,12 @@ void PathMachine::approved(ParseEvent * event)
 
 void PathMachine::syncing(ParseEvent * event)
 {
-  Syncing sync(params, paths, &signaler);
-  if (event->getNumSkipped() <= params.maxSkipped) 
-    emit lookingForRooms(&sync, event);
-  paths = sync.evaluate();
+  {
+    Syncing sync(params, paths, &signaler);
+    if (event->getNumSkipped() <= params.maxSkipped)
+      emit lookingForRooms(&sync, event);
+    paths = sync.evaluate();
+  }
   evaluatePaths();
 }
 
