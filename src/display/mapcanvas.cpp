@@ -110,7 +110,7 @@ MapCanvas::MapCanvas( MapData *mapData, PrespammedPath* prespammedPath, const QG
     m_scaleFactor = 1.0f;  //scale rooms
 
     m_glFont = new QFont(QFont(),this);
-    m_glFont->setStyleHint(QFont::Helvetica, QFont::OpenGLCompatible);
+    m_glFont->setStyleHint(QFont::System, QFont::OpenGLCompatible);
 
     m_glFont->setStretch(QFont::Unstretched);
 
