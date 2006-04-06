@@ -1122,33 +1122,33 @@ void Parser::switchXmlMode(QByteArray& line)
 	switch (m_xmlMode)
 	{
 		case XML_NONE:
-			if (line.startsWith("<prompt")) m_xmlMode = XML_PROMPT; break;						
-			if (line.startsWith("<exits")) m_xmlMode = XML_EXITS; break;
-			if (line.startsWith("<room")) m_xmlMode = XML_ROOM; break;
-			if (line.startsWith("<movement dir=north/>")) 	m_xmlMovement = XMLM_NORTH; checkqueue(); break;
-			if (line.startsWith("<movement dir=south/>")) 	m_xmlMovement = XMLM_SOUTH; checkqueue(); break;
-			if (line.startsWith("<movement dir=east/>")) 	m_xmlMovement = XMLM_EAST; checkqueue(); break;
-			if (line.startsWith("<movement dir=west/>")) 	m_xmlMovement = XMLM_WEST; checkqueue(); break;
-			if (line.startsWith("<movement dir=up/>")) 		m_xmlMovement = XMLM_UP; checkqueue(); break;
-			if (line.startsWith("<movement dir=down/>")) 	m_xmlMovement = XMLM_DOWN; checkqueue(); break;
-			if (line.startsWith("<movement/>")) 			m_xmlMovement = XMLM_UNKNOWN; checkqueue(); break;
+			if (line.startsWith("<prompt")) {m_xmlMode = XML_PROMPT; break;}						
+			if (line.startsWith("<exits")) {m_xmlMode = XML_EXITS; break;}
+			if (line.startsWith("<room")) {m_xmlMode = XML_ROOM; break;}
+			if (line.startsWith("<movement dir=north/>")) 	{m_xmlMovement = XMLM_NORTH; checkqueue(); break;}
+			if (line.startsWith("<movement dir=south/>")) 	{m_xmlMovement = XMLM_SOUTH; checkqueue(); break;}
+			if (line.startsWith("<movement dir=east/>")) 	{m_xmlMovement = XMLM_EAST; checkqueue(); break;}
+			if (line.startsWith("<movement dir=west/>")) 	{m_xmlMovement = XMLM_WEST; checkqueue(); break;}
+			if (line.startsWith("<movement dir=up/>")) 		{m_xmlMovement = XMLM_UP; checkqueue(); break;}
+			if (line.startsWith("<movement dir=down/>")) 	{m_xmlMovement = XMLM_DOWN; checkqueue(); break;}
+			if (line.startsWith("<movement/>")) 			{m_xmlMovement = XMLM_UNKNOWN; checkqueue(); break;}
 			break;
 		case XML_ROOM:
-			if (line.startsWith("<name")) m_xmlMode = XML_NAME; break;						
-			if (line.startsWith("<description")) m_xmlMode = XML_DESCRIPTION; break;
-			if (line.startsWith("</room")) m_xmlMode = XML_NONE; break;
+			if (line.startsWith("<name")) {m_xmlMode = XML_NAME; break;}						
+			if (line.startsWith("<description")) {m_xmlMode = XML_DESCRIPTION; break;}
+			if (line.startsWith("</room")) {m_xmlMode = XML_NONE; break;}
 			break;		
 		case XML_NAME:
-			if (line.startsWith("</name")) m_xmlMode = XML_ROOM; break;						
+			if (line.startsWith("</name")) {m_xmlMode = XML_ROOM; break;}						
 			break;
 		case XML_DESCRIPTION:
-			if (line.startsWith("</description")) m_xmlMode = XML_ROOM; break;
+			if (line.startsWith("</description")) {m_xmlMode = XML_ROOM; break;}
 			break;
 		case XML_EXITS:
-			if (line.startsWith("</exits")) m_xmlMode = XML_NONE; break;
+			if (line.startsWith("</exits")) {m_xmlMode = XML_NONE; break;}
 			break;
 		case XML_PROMPT:
-			if (line.startsWith("</prompt")) m_xmlMode = XML_NONE; break;
+			if (line.startsWith("</prompt")) {m_xmlMode = XML_NONE; break;}
 			break;
 	}	
 }
@@ -1164,6 +1164,7 @@ void Parser::parseNewXmlMudInput(TelnetIncomingDataQueue& que)
 {
 	IncomingData data; 	
 	bool staticLine;
+	quint8* dline;
 	
 	while ( !que.isEmpty() )
 	{
@@ -1187,6 +1188,7 @@ void Parser::parseNewXmlMudInput(TelnetIncomingDataQueue& que)
 				break;			
 
 			case TDT_CRLF:										
+				dline = (quint8 *)data.line.data();
 				if (isXmlTag(data.line))
 				{
 					switchXmlMode(data.line);
@@ -1223,10 +1225,6 @@ void Parser::parseNewXmlMudInput(TelnetIncomingDataQueue& que)
 							sendToUser(data.line);				
 							break;
 						case XML_NAME:
-							isRoomName(m_stringBuffer); //Remove room color marks
-							m_readingRoomDesc = true;
-							m_descriptionReady = false;											
-
 							if	(m_descriptionReady)
 							{			
 								m_descriptionReady = false;
@@ -1253,6 +1251,8 @@ void Parser::parseNewXmlMudInput(TelnetIncomingDataQueue& que)
 								}    
 							}					
 							
+							isRoomName(m_stringBuffer); //Remove room color marks
+
 							m_readingRoomDesc = true; //start of read desc mode
 							m_descriptionReady = false;										
 							m_roomName=m_stringBuffer;
@@ -1314,6 +1314,7 @@ void Parser::parseNewXmlMudInput(TelnetIncomingDataQueue& que)
 								}    
 							}
 							
+							data.line = data.line.trimmed();
 							sendToUser(data.line);				
 							break;
 					}
