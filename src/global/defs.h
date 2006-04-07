@@ -29,10 +29,6 @@
 
 #include <QString>
 
-//development switches
-//#define ALLOW_XML_PARSER	
-
-
 #ifndef TRUE
 enum { TRUE = 1, FALSE = 0 };
 #endif

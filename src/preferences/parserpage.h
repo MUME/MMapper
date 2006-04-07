@@ -51,7 +51,7 @@ public slots:
 	void roomDescAnsiColorTextChanged(const QString&);
 	
 	void IACPromptCheckBoxStateChanged(int);
-	void xmlParserCheckBoxCheckBoxStateChanged(int);
+	void suppressXmlTagsCheckBoxStateChanged(int);
 
 public:
     ParserPage(QWidget *parent = 0);

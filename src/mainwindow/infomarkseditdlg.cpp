@@ -292,7 +292,7 @@ void InfoMarksEditDlg::onMoveWestClicked()
 
 void InfoMarksEditDlg::onMoveUpClicked()
 {
-	InfoMark *m;
+	InfoMark *m = NULL;
 	Coordinate c;
 	
 	for (int i = 0; i < objectsList->count(); i++)
@@ -315,11 +315,12 @@ void InfoMarksEditDlg::onMoveUpClicked()
 
 void InfoMarksEditDlg::onMoveDownClicked()
 {
-	InfoMark *m;
+	InfoMark *m = NULL;
 	Coordinate c;
 	
 	for (int i = 0; i < objectsList->count(); i++)
 	{
+		m = getInfoMark(objectsList->itemText(i));
 		if (m)
 		{
 			m = getInfoMark(objectsList->itemText(i));

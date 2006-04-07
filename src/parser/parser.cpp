@@ -57,8 +57,12 @@ Parser::Parser(MapData* md, QObject *parent)
    m_xmlMode = XML_NONE;
    m_xmlMovement = XMLM_NONE;
    
-   m_briefAutoconfigDone = false;
+   m_miscAutoconfigDone = false;
    m_IACPromptAutoconfigDone = false;
+   m_xmlAutoConfigDone = false;
+   
+	m_useXmlParser = false;   	
+   
    
 #ifdef PARSER_STREAM_DEBUG_INPUT_TO_FILE
     QString fileName = "parser_debug.dat";
@@ -281,9 +285,6 @@ bool Parser::isStaticRoomDescriptionLine(QString& str)
 	qint16 index;
 	bool ret = false;
 
-	//QByteArray ba = str.toAscii();
-	//quint8* dline = (quint8*) ba.data(); 
-
 	QString col= escChar + Config().m_roomDescColor;
 	if ((index=str.indexOf(col)) != -1) {
 		ret = true;
@@ -291,18 +292,10 @@ bool Parser::isStaticRoomDescriptionLine(QString& str)
 		
 		str.remove(0,index);
 
-	//ba = str.toAscii();
-	//dline = (quint8*) ba.data(); 
-
 		if((index=str.indexOf(escChar)) != -1) {
 			str.remove(index,str.length()-index);
 		}
-
-	//ba = str.toAscii();
-	//dline = (quint8*) ba.data(); 
 	}
-
-
 	return ret;
 }
 
@@ -318,7 +311,6 @@ bool Parser::isEndOfRoomDescription(QString& str) {
 		bool road=FALSE;
 
 		for (int i=7; i<str.length(); i++){
-			//switch ((int)(data[i])){
 			switch ((int)(str.at(i).toAscii())){
 			  case 40: doors=true;break;	// (   
 			  case 91: doors=true;break;	// [
@@ -453,28 +445,36 @@ void Parser::parsePrompt(QString& prompt){
 
 void Parser::parseMudCommands(QString& str) {
 
-	if (str.startsWith("Brief")){
-		if (str.startsWith("Brief mode on")){
-			emit sendToMud((QByteArray)"brief\n");
+	if (str.at(0)=='B' && str.startsWith("Brief mode on")){
+		emit sendToMud((QByteArray)"brief\n");
+	}
+
+	if (!m_xmlAutoConfigDone && (str.startsWith("<movement/>") || str.startsWith("<prompt>"))) //we are in xml mode
+	{
+		m_xmlAutoConfigDone = true;
+	   	m_useXmlParser = true;
+		emit sendToUser((QByteArray)"[MMapper] Mode ---> xml\n");
+	   	return;
+	}   		
+		
+	if (str.at(0)=='<' && str.startsWith("<xml>")){
+	   	m_useXmlParser = true;
+		emit sendToUser((QByteArray)"[MMapper] Mode ---> xml\n");
+	}
+
+	if (str.at(0)=='Y')
+	{
+		if (str.startsWith("You are dead!"))
+		{
+			queue.clear();
+			emit showPath(queue, true);			
+			emit releaseAllPaths();
 			return;
 		}
 	
-		if (str.startsWith("Brief mode off")){
-			return;
-		}
-	}
-
-	if (str.startsWith("You are dead! Sorry..."))
-	{
-		queue.clear();
-		emit showPath(queue, true);			
-		emit releaseAllPaths();
-		return;
-	}
-
-
-	if (str.startsWith("You flee"))
-	{
+	
+		if (str.startsWith("You flee"))
+		{
 			if (str.contains("north")) queue.enqueue(CID_NORTH);
 			else
 			if (str.contains("south")) queue.enqueue(CID_SOUTH);
@@ -486,24 +486,40 @@ void Parser::parseMudCommands(QString& str) {
 			if (str.contains("up"))    queue.enqueue(CID_UP);  
 			else
 			if (str.contains("down"))  queue.enqueue(CID_DOWN);
-	}
-
-
-
-	if (str.startsWith("You now follow")){
-		m_following = true;   
-		emit sendToUser((QByteArray)"----> follow mode on.\n");
-		return;
-	}
-
-	if (m_following) {
-		if (str=="You will not follow anyone else now."){
-			m_following = false;   
-			emit sendToUser((QByteArray)"----> follow mode off.\n");
 			return;
 		}
 
-		if (str.contains("leave"))
+		if (str.startsWith("You now follow")){
+			m_following = true;   
+			emit sendToUser((QByteArray)"----> follow mode on.\n");
+			return;
+		}
+
+		if (m_following) {
+			if (str=="You will not follow anyone else now.")
+			{
+				m_following = false;   
+				emit sendToUser((QByteArray)"----> follow mode off.\n");
+				return;
+			}
+			if (str.startsWith("You follow"))
+			{
+				switch (m_followDir) {
+				  case NORTH:   queue.enqueue(CID_NORTH);break;     
+				  case SOUTH:   queue.enqueue(CID_SOUTH);break;     
+				  case EAST:    queue.enqueue(CID_EAST);break;     
+				  case WEST:    queue.enqueue(CID_WEST);break;     
+				  case UP:      queue.enqueue(CID_UP);break;     
+				  case DOWN:    queue.enqueue(CID_DOWN);break;     				  
+				  case UNKNOWN: queue.enqueue(CID_NONE);break;     
+				}
+				return;
+			}
+		}			
+	}
+
+	if (m_following) {
+		if(str.contains("leave"))
 		{		
 			if ((str.contains("leaves north")) || (str.contains("leave north"))) m_followDir = NORTH;
 			else
@@ -517,23 +533,7 @@ void Parser::parseMudCommands(QString& str) {
 			else
 			if ((str.contains("leaves down"))  || (str.contains("leave down")))  m_followDir = DOWN;
 		}
-
-		if (str.startsWith("You follow"))
-		{
-			switch (m_followDir) {
-			  case NORTH:   queue.enqueue(CID_NORTH);break;     
-			  case SOUTH:   queue.enqueue(CID_SOUTH);break;     
-			  case EAST:    queue.enqueue(CID_EAST);break;     
-			  case WEST:    queue.enqueue(CID_WEST);break;     
-			  case UP:      queue.enqueue(CID_UP);break;     
-			  case DOWN:    queue.enqueue(CID_DOWN);break;     				  
-			  case UNKNOWN: queue.enqueue(CID_NONE);break;     
-			}
-			return;
-		}
 	}
-
-	if (Config().m_useXmlParser) return;
 
 	// parse regexps which cancel last char move
 	if (Patterns::matchMoveCancelPatterns(str))
@@ -552,10 +552,53 @@ void Parser::parseMudCommands(QString& str) {
 	}	
 }
 
+/******************************** XML RELATED CODE START ************************************/
+void Parser::parseMudCommandsXml(QString& str) {
+
+	if (!m_xmlAutoConfigDone && str.startsWith("Reconnecting.")) //we are in normal mode
+	{
+		m_xmlAutoConfigDone = true;
+	   	m_useXmlParser = false;
+		emit sendToUser((QByteArray)"[MMapper] Mode ---> normal\n");
+	}   		
+
+	if (str.at(0)=='B' && str.startsWith("Brief mode on"))
+	{
+		emit sendToMud((QByteArray)"brief\n");
+		return;
+	}
+
+	if (str.at(0)=='Y')
+	{
+		if (str.startsWith("You are dead!"))
+		{
+			queue.clear();
+			emit showPath(queue, true);			
+			emit releaseAllPaths();
+			return;
+		}
+		
+		
+		if (str.startsWith("You flee"))
+		{
+			queue.enqueue((CommandIdType)m_xmlMovement);			
+		}
+	
+		if (str.startsWith("You follow"))
+		{
+			queue.enqueue((CommandIdType)m_xmlMovement);			
+			return;
+		}
+		
+	}
+}
+/******************************** XML RELATED CODE END ************************************/
+
+
 bool Parser::parseUserCommands(QString& command) {
 	QString str = command;
 
-	DoorActionType daction;
+	DoorActionType daction = DAT_NONE;
 	bool dooraction = FALSE;
 
 	if (str.contains("$$DOOR"))
@@ -575,7 +618,7 @@ bool Parser::parseUserCommands(QString& command) {
 		if (str.contains("$$DOOR$$"))  {genericDoorCommand(command, UNKNOWN); return false;}
 	}
 
-	if (str.startsWith("_"))
+	if (str.at(0) == '_')
 	{
 		if (str.startsWith("_brief")){
 			if (Config().m_brief == TRUE){
@@ -756,7 +799,7 @@ bool Parser::parseUserCommands(QString& command) {
 
 void Parser::parseNewMudInput(TelnetIncomingDataQueue& que)
 {
-	if (Config().m_useXmlParser)
+	if (m_useXmlParser)
 		parseNewXmlMudInput(que);
 	else
 		parseNewNormalMudInput(que);
@@ -796,10 +839,11 @@ void Parser::parseNewNormalMudInput(TelnetIncomingDataQueue& que)
 		(*debugStream) << "Prompt";
 		(*debugStream) << "***ETYPE***";
 #endif
-				if (!m_briefAutoconfigDone)
+				if (!m_miscAutoconfigDone)
 				{  
-					m_briefAutoconfigDone = true;
+					m_miscAutoconfigDone = true;
 					emit sendToMud((QByteArray)"brief\n");
+					emit sendToMud((QByteArray)"cha prompt all\n");
 				}
 				
 				if (!m_IACPromptAutoconfigDone && Config().m_IAC_prompt_parser)
@@ -1098,11 +1142,6 @@ void Parser::parseNewUserInput(TelnetIncomingDataQueue& que)
 
 void Parser::checkqueue()
 {
-/*	
-enum CommandIdType   { CID_NORTH = 0, CID_SOUTH, CID_EAST, CID_WEST, CID_UP, CID_DOWN, 
-						CID_UNKNOWN, CID_LOOK, CID_FLEE, CID_SCOUT, CID_SYNC, CID_RESET, CID_NONE };
-enum XmlMovement    {XMLM_NORTH, XMLM_SOUTH, XMLM_EAST, XMLM_WEST, XMLM_UP, XMLM_DOWN, XMLM_UNKNOWN, XMLM_NONE};
-*/
 	CommandIdType cid;
 
 	while (!queue.isEmpty())
@@ -1122,12 +1161,15 @@ enum XmlMovement    {XMLM_NORTH, XMLM_SOUTH, XMLM_EAST, XMLM_WEST, XMLM_UP, XMLM
 				else 
 					return;
 				if (queue.isEmpty()) 
-				{
+				{	
 					queue.enqueue((CommandIdType)m_xmlMovement);
 					return;
 				}
 				break;
 			case XMLM_UNKNOWN:
+				queue.prepend(CID_NONE);
+				//queue.enqueue(CID_NONE);
+				//intentional fall through ...
 			case XMLM_NONE:
 				return;
 				break;
@@ -1142,6 +1184,41 @@ void Parser::switchXmlMode(QByteArray& line)
 	switch (m_xmlMode)
 	{
 		case XML_NONE:
+			switch (line.at(1))
+			{
+				case '/': 
+					if (line.startsWith("</xml"))
+					{ 
+						m_useXmlParser = false;
+						emit sendToUser((QByteArray)"[MMapper] Mode ---> normal\n");
+					} 
+					break;
+				case 'p': 
+					if (line.startsWith("<prompt")) m_xmlMode = XML_PROMPT; break;						
+				case 'e': 
+					if (line.startsWith("<exits")) m_xmlMode = XML_EXITS; break;
+				case 'r': 
+					if (line.startsWith("<room")) m_xmlMode = XML_ROOM; break;
+				case 'm': 
+					switch (line.at(9))
+					{
+						case ' ':
+							switch (line.at(14))
+							{
+								case 'n': m_xmlMovement = XMLM_NORTH; 	checkqueue(); break;
+								case 's': m_xmlMovement = XMLM_SOUTH; 	checkqueue(); break;
+								case 'e': m_xmlMovement = XMLM_EAST; 	checkqueue(); break;
+								case 'w': m_xmlMovement = XMLM_WEST; 	checkqueue(); break;
+								case 'u': m_xmlMovement = XMLM_UP; 		checkqueue(); break;
+								case 'd': m_xmlMovement = XMLM_DOWN; 	checkqueue(); break;
+							}
+							break;						
+						case '/': m_xmlMovement = XMLM_UNKNOWN; checkqueue(); break;
+					}
+					break;
+			};
+						
+			/*if (line.startsWith("</xml")){ emit sendToMud((QByteArray)"cha xml\n"); break;}
 			if (line.startsWith("<prompt")) {m_xmlMode = XML_PROMPT; break;}						
 			if (line.startsWith("<exits")) {m_xmlMode = XML_EXITS; break;}
 			if (line.startsWith("<room")) {m_xmlMode = XML_ROOM; break;}
@@ -1152,30 +1229,51 @@ void Parser::switchXmlMode(QByteArray& line)
 			if (line.startsWith("<movement dir=up/>")) 		{m_xmlMovement = XMLM_UP; checkqueue(); break;}
 			if (line.startsWith("<movement dir=down/>")) 	{m_xmlMovement = XMLM_DOWN; checkqueue(); break;}
 			if (line.startsWith("<movement/>")) 			{m_xmlMovement = XMLM_UNKNOWN; checkqueue(); break;}
+			*/
 			break;
 		case XML_ROOM:
+			switch (line.at(1))
+			{
+				case 'n': if (line.startsWith("<name")) m_xmlMode = XML_NAME; break;
+				case 'd': if (line.startsWith("<description")) m_xmlMode = XML_DESCRIPTION; break;
+				case '/': if (line.startsWith("</room")) m_xmlMode = XML_NONE; break;
+			} 
+			/*
 			if (line.startsWith("<name")) {m_xmlMode = XML_NAME; break;}						
 			if (line.startsWith("<description")) {m_xmlMode = XML_DESCRIPTION; break;}
 			if (line.startsWith("</room")) {m_xmlMode = XML_NONE; break;}
+			*/
 			break;		
 		case XML_NAME:
 			if (line.startsWith("</name")) {m_xmlMode = XML_ROOM; break;}						
 			break;
 		case XML_DESCRIPTION:
-			if (line.startsWith("</description")) {m_xmlMode = XML_ROOM; break;}
+			switch (line.at(1))
+			{
+				case '/': if (line.startsWith("</description")) m_xmlMode = XML_ROOM; break;
+			}
+			//if (line.startsWith("</description")) {m_xmlMode = XML_ROOM; break;}
 			break;
 		case XML_EXITS:
-			if (line.startsWith("</exits")) {m_xmlMode = XML_NONE; break;}
+			switch (line.at(1))
+			{
+				case '/': if (line.startsWith("</exits")) m_xmlMode = XML_NONE; break;
+			}
+			//if (line.startsWith("</exits")) {m_xmlMode = XML_NONE; break;}
 			break;
 		case XML_PROMPT:
-			if (line.startsWith("</prompt")) {m_xmlMode = XML_NONE; break;}
+			switch (line.at(1))
+			{
+				case '/': if (line.startsWith("</prompt")) m_xmlMode = XML_NONE; break;
+			}
+			//if (line.startsWith("</prompt")) {m_xmlMode = XML_NONE; break;}
 			break;
 	}	
 }
 
 bool Parser::isXmlTag(QByteArray& line)
 {
-	if (line.startsWith('<'))
+	if (line.at(0) == '<')
 	 	return true;
 	return false;
 }
@@ -1212,6 +1310,10 @@ void Parser::parseNewXmlMudInput(TelnetIncomingDataQueue& que)
 				if (isXmlTag(data.line))
 				{
 					switchXmlMode(data.line);
+					if (!Config().m_removeXmlTags)
+					{
+						emit sendToUser(data.line);
+					}
 				}
 				else
 				{
@@ -1222,8 +1324,10 @@ void Parser::parseNewXmlMudInput(TelnetIncomingDataQueue& que)
 					m_stringBuffer = QString::fromAscii(data.line.constData(), data.line.size());
 					m_stringBuffer = m_stringBuffer.simplified();
 					
+					/*
 					if (m_stringBuffer.startsWith("You flee"))
 					printf("*");
+					*/
 					
 					switch (m_xmlMode)
 					{
@@ -1239,7 +1343,7 @@ void Parser::parseNewXmlMudInput(TelnetIncomingDataQueue& que)
 							else
 							{ 						
 								//str=removeAnsiMarks(m_stringBuffer);
-								parseMudCommands(m_stringBuffer);
+								parseMudCommandsXml(m_stringBuffer);
 							}
 							sendToUser(data.line);				
 							break;
@@ -1303,9 +1407,9 @@ void Parser::parseNewXmlMudInput(TelnetIncomingDataQueue& que)
 							sendToUser(data.line);				
 							break;
 						case XML_PROMPT:
-							if (!m_briefAutoconfigDone)
+							if (!m_miscAutoconfigDone)
 							{  
-								m_briefAutoconfigDone = true;
+								m_miscAutoconfigDone = true;
 								emit sendToMud((QByteArray)"brief\n");
 							}
 							

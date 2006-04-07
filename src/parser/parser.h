@@ -39,10 +39,10 @@ class ParseEvent;
 enum CommandIdType   { CID_NORTH = 0, CID_SOUTH, CID_EAST, CID_WEST, CID_UP, CID_DOWN, 
 						CID_UNKNOWN, CID_LOOK, CID_FLEE, CID_SCOUT, /*CID_SYNC, CID_RESET, */CID_NONE };
 
-enum DoorActionType { DAT_OPEN, DAT_CLOSE, DAT_LOCK, DAT_UNLOCK, DAT_PICK, DAT_ROCK, DAT_BASH, DAT_BREAK, DAT_BLOCK };
+enum DoorActionType { DAT_OPEN, DAT_CLOSE, DAT_LOCK, DAT_UNLOCK, DAT_PICK, DAT_ROCK, DAT_BASH, DAT_BREAK, DAT_BLOCK, DAT_NONE };
 
 enum XmlMode 		{XML_NONE, XML_ROOM, XML_NAME, XML_DESCRIPTION, XML_EXITS, XML_PROMPT};
-enum XmlMovement    {XMLM_NORTH, XMLM_SOUTH, XMLM_EAST, XMLM_WEST, XMLM_UP, XMLM_DOWN, XMLM_UNKNOWN, XMLM_NONE};
+enum XmlMovement    {XMLM_NORTH, XMLM_SOUTH, XMLM_EAST, XMLM_WEST, XMLM_UP, XMLM_DOWN, XMLM_UNKNOWN, XMLM_NONE=10};
 
 #define ROAD_N bit3
 #define ROAD_S bit6
@@ -155,6 +155,8 @@ protected:
    bool isStaticRoomDescriptionLine(QString& str);
 
    void parseMudCommands(QString& str);
+   void parseMudCommandsXml(QString& str);
+   
    bool parseUserCommands(QString& str);
    
    bool m_readingRoomDesc;
@@ -175,14 +177,17 @@ protected:
    QString m_stringBuffer;
    QByteArray m_byteBuffer;
    
-   bool m_briefAutoconfigDone;
+   bool m_miscAutoconfigDone;
    bool m_IACPromptAutoconfigDone;
-   
+   bool m_xmlAutoConfigDone;
+
    CommandQueue queue;
    
    void checkqueue();
+   bool m_useXmlParser;
    XmlMode m_xmlMode;
    XmlMovement m_xmlMovement;
+   
 };
 
 

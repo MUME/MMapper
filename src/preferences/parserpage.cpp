@@ -36,14 +36,8 @@ ParserPage::ParserPage(QWidget *parent)
 
    	IACPromptCheckBox->setChecked(Config().m_IAC_prompt_parser);	
 
-#ifdef ALLOW_XML_PARSER	
-   	xmlParserCheckBox->setChecked(Config().m_useXmlParser);		
-	xmlParserCheckBox->setEnabled(true);
-#else
-	Config().m_useXmlParser = false;
-   	xmlParserCheckBox->setChecked(false);		
-	xmlParserCheckBox->setEnabled(false);
-#endif
+	suppressXmlTagsCheckBox->setChecked(Config().m_removeXmlTags);
+	suppressXmlTagsCheckBox->setEnabled(true);
 
 	forcePatternsList->clear();
 	forcePatternsList->addItems( Config().m_moveForcePatternsList );
@@ -88,7 +82,7 @@ ParserPage::ParserPage(QWidget *parent)
 		SLOT(roomDescColorChanged(const QString&)));
 		
 	connect( IACPromptCheckBox, SIGNAL(stateChanged(int)),SLOT(IACPromptCheckBoxStateChanged(int)));	
-	connect( xmlParserCheckBox, SIGNAL(stateChanged(int)),SLOT(xmlParserCheckBoxCheckBoxStateChanged(int)));	
+	connect( suppressXmlTagsCheckBox, SIGNAL(stateChanged(int)),SLOT(suppressXmlTagsCheckBoxStateChanged(int)));	
 
 	roomNameAnsiColor->setText( Config().m_roomNameColor );
 	roomDescAnsiColor->setText( Config().m_roomDescColor );
@@ -106,9 +100,9 @@ void ParserPage::roomDescAnsiColorTextChanged(const QString& str)
 		Config().m_roomDescColor = str;	
 }
 
-void ParserPage::xmlParserCheckBoxCheckBoxStateChanged(int)
+void ParserPage::suppressXmlTagsCheckBoxStateChanged(int)
 {
-	Config().m_useXmlParser = xmlParserCheckBox->isChecked();		
+	Config().m_removeXmlTags = suppressXmlTagsCheckBox->isChecked();		
 }
 
 void ParserPage::IACPromptCheckBoxStateChanged(int)
