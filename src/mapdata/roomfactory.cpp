@@ -57,26 +57,13 @@ ParseEvent * RoomFactory::getEvent(const Room * room) const
   return event;
 }
 
-
-ComparisonResult RoomFactory::compare(const Room * room, const ParseEvent * event, int tolerance) const
+ComparisonResult RoomFactory::compareStrings(const QString & room, const QString & event, int tolerance, bool updated) const
 {
-  QString m_name = getName(room);
-  QString m_desc = getDescription(room);
-  RoomTerrainType m_terrainType = getTerrainType(room);
-  bool updated = room->isUpToDate();
-
-  if (m_name.isEmpty() && m_desc.isEmpty() && (!updated))
-  {
-    // user-created
-    return CR_TOLERANCE;
-  }
-
-  if (!m_name.startsWith(getRoomName(event))) return CR_DIFFERENT;
-
-  tolerance *= m_desc.size();
+  tolerance *= room.size();
   tolerance /= 100;
-  QStringList descWords = m_desc.split(QRegExp("\\s+"), QString::SkipEmptyParts);
-  QStringList eventWords = getParsedRoomDesc(event).split(QRegExp("\\s+"), QString::SkipEmptyParts);
+
+  QStringList descWords = room.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+  QStringList eventWords = event.split(QRegExp("\\s+"), QString::SkipEmptyParts);
 
   int prevTolerance = tolerance;
   if (!eventWords.isEmpty()) // if event is empty we don't compare
@@ -116,22 +103,54 @@ ComparisonResult RoomFactory::compare(const Room * room, const ParseEvent * even
 
   if (tolerance < 0)
     return CR_DIFFERENT;
-  else if (prevTolerance != tolerance) updated = false;
+  else if (prevTolerance != tolerance) return CR_TOLERANCE;
+  else return CR_EQUAL;
 
-  switch (compareWeakProps(room, event))
+}
+
+ComparisonResult RoomFactory::compare(const Room * room, const ParseEvent * event, uint tolerance) const
+{
+  QString m_name = getName(room);
+  QString m_desc = getDescription(room);
+  RoomTerrainType m_terrainType = getTerrainType(room);
+  bool updated = room->isUpToDate();
+  bool toleranceUsed = false;
+
+  if (m_name.isEmpty() && m_desc.isEmpty() && (!updated))
   {
-  case CR_DIFFERENT: return CR_DIFFERENT;
-  case CR_TOLERANCE: if (prevTolerance == tolerance) updated = false; else return CR_DIFFERENT; break;
-  case CR_EQUAL: break;
+    // user-created
+    return CR_TOLERANCE;
   }
 
   PromptFlagsType pf = getPromptFlags(event);
   if (pf & PROMPT_FLAGS_VALID)
   {
-    if ((pf & (bit1 + bit2 + bit3 + bit4)) != m_terrainType) {
+    if ((pf & (bit1 + bit2 + bit3 + bit4)) != m_terrainType)
+    {
       if (room->isUpToDate())
-	return CR_DIFFERENT;
+        return CR_DIFFERENT;
     }
+  }
+
+  switch (compareStrings(m_name, getRoomName(event), tolerance))
+  {
+  case CR_TOLERANCE: updated = false; toleranceUsed = true;break;
+  case CR_DIFFERENT: return CR_DIFFERENT;
+  case CR_EQUAL: break;
+  }
+
+  switch (compareStrings(m_desc, getParsedRoomDesc(event), tolerance, updated))
+  {
+  case CR_TOLERANCE: updated = false; toleranceUsed = true;break;
+  case CR_DIFFERENT: return CR_DIFFERENT;
+  case CR_EQUAL: break;
+  }
+
+  switch (compareWeakProps(room, event))
+  {
+  case CR_DIFFERENT: return CR_DIFFERENT;
+  case CR_TOLERANCE: if (!toleranceUsed) updated = false; else return CR_DIFFERENT; break;
+  case CR_EQUAL: break;
   }
 
   if (updated)
@@ -140,7 +159,7 @@ ComparisonResult RoomFactory::compare(const Room * room, const ParseEvent * even
     return CR_TOLERANCE;
 }
 
-ComparisonResult RoomFactory::compareWeakProps(const Room * room, const ParseEvent * event, int) const
+ComparisonResult RoomFactory::compareWeakProps(const Room * room, const ParseEvent * event, uint) const
 {
   bool exitsValid = room->isUpToDate();
   bool different = false;

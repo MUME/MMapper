@@ -34,8 +34,8 @@ class RoomFactory : public AbstractRoomFactory
 public:
   RoomFactory();
   virtual Room * createRoom(const ParseEvent * event = 0) const;
-  virtual ComparisonResult compare(const Room *, const ParseEvent * props, int tolerance = 0) const;
-  virtual ComparisonResult compareWeakProps(const Room *, const ParseEvent * props, int tolerance = 0) const;
+  virtual ComparisonResult compare(const Room *, const ParseEvent * props, uint tolerance = 0) const;
+  virtual ComparisonResult compareWeakProps(const Room *, const ParseEvent * props, uint tolerance = 0) const;
   virtual ParseEvent * getEvent(const Room *) const;
   virtual void update(Room *, const ParseEvent * event) const;
   virtual void update(Room * target, const Room * source) const;
@@ -45,6 +45,7 @@ public:
   virtual ~RoomFactory() {}
 private:
   QVector<Coordinate> exitDirs;
+  ComparisonResult compareStrings(const QString & room, const QString & event, int tolerance, bool updated = true) const;
 };
 
 #endif

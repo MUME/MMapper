@@ -34,8 +34,8 @@ class AbstractRoomFactory
 {
 public:
   virtual Room * createRoom(const ParseEvent * event = 0) const = 0;
-  virtual ComparisonResult compare(const Room *, const ParseEvent * props, int tolerance = 0) const = 0;
-  virtual ComparisonResult compareWeakProps(const Room *, const ParseEvent * props, int tolerance = 0) const = 0;
+  virtual ComparisonResult compare(const Room *, const ParseEvent * props, uint tolerance = 0) const = 0;
+  virtual ComparisonResult compareWeakProps(const Room *, const ParseEvent * props, uint tolerance = 0) const = 0;
   virtual ParseEvent * getEvent(const Room *) const = 0;
   virtual void update(Room *, const ParseEvent * event) const = 0;
   virtual void update(Room * target, const Room * source) const = 0;

@@ -25,10 +25,8 @@
 
 #ifndef PATHPARAMETERS_H
 #define PATHPARAMETERS_H
+typedef unsigned int uint;
 
-/**
-@author alve,,,
-*/
 class PathParameters
 {
 public:
@@ -39,8 +37,8 @@ public:
   double multipleConnectionsPenalty;
   double correctPositionBonus;
   double maxPaths;
-  int matchingTolerance;
-  int maxSkipped;
+  uint matchingTolerance;
+  uint maxSkipped;
   ~PathParameters() {}}
 ;
 

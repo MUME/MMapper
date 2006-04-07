@@ -162,8 +162,8 @@ void Configuration::read()
 	m_newRoomPenalty = conf.value("room creation penalty", 5).toDouble();
 	m_correctPositionBonus = conf.value("correct position bonus", 5).toDouble();
 	m_multipleConnectionsPenalty = conf.value("multiple connections penalty", 2.0).toDouble();
-	m_maxPaths = conf.value("maximum number of paths", 1000).toInt();
-	m_matchingTolerance = conf.value("room matching tolerance", 5).toInt();
+	m_maxPaths = conf.value("maximum number of paths", 1000).toUInt();
+	m_matchingTolerance = conf.value("room matching tolerance", 5).toUInt();
 	
 	conf.endGroup();
 };
