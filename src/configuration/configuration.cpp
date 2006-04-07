@@ -69,7 +69,7 @@ void Configuration::read()
 	m_roomDescColor = conf.value("Room desc ansi color", "[30m").toString();    
 	
 	m_IAC_prompt_parser = conf.value("Use IAC-GA prompt", TRUE).toBool();
-	m_useXmlParser = conf.value("Use XML parser", FALSE).toBool();
+	m_removeXmlTags = conf.value("Remove XML tags", TRUE).toBool();
 
 	m_moveForcePatternsList = conf.value("Move force patterns").toStringList();
 	m_moveCancelPatternsList = conf.value("Move cancel patterns").toStringList();
@@ -207,7 +207,7 @@ void Configuration::write() const {
 	conf.setValue("Room desc ansi color", m_roomDescColor);
 
 	conf.setValue("Use IAC-GA prompt", m_IAC_prompt_parser);
-	conf.setValue("Use XML parser", m_useXmlParser);
+	conf.setValue("Remove XML tags", m_removeXmlTags);
 
 	conf.setValue("Move force patterns", m_moveForcePatternsList);
 	conf.setValue("Move cancel patterns", m_moveCancelPatternsList);
