@@ -57,15 +57,15 @@ ParseEvent * RoomFactory::getEvent(const Room * room) const
   return event;
 }
 
-ComparisonResult RoomFactory::compareStrings(const QString & room, const QString & event, int tolerance, bool updated) const
+ComparisonResult RoomFactory::compareStrings(const QString & room, const QString & event, uint prevTolerance, bool updated) const
 {
-  tolerance *= room.size();
-  tolerance /= 100;
+  prevTolerance *= room.size();
+  prevTolerance /= 100;
 
   QStringList descWords = room.split(QRegExp("\\s+"), QString::SkipEmptyParts);
   QStringList eventWords = event.split(QRegExp("\\s+"), QString::SkipEmptyParts);
 
-  int prevTolerance = tolerance;
+  int tolerance = prevTolerance;
   if (!eventWords.isEmpty()) // if event is empty we don't compare
   {
     while (tolerance >= 0)
@@ -73,12 +73,12 @@ ComparisonResult RoomFactory::compareStrings(const QString & room, const QString
       if (descWords.isEmpty())
       {
         if (updated) // if notUpdated the desc is allowed to be shorter than the event
-          tolerance -= eventWords.join("").size();
+          tolerance -= eventWords.join(" ").size();
         break;
       }
       else if (eventWords.isEmpty()) // if we get here the event isn't empty
       {
-        tolerance -= descWords.join("").size();
+        tolerance -= descWords.join(" ").size();
         break;
       }
 
@@ -103,8 +103,10 @@ ComparisonResult RoomFactory::compareStrings(const QString & room, const QString
 
   if (tolerance < 0)
     return CR_DIFFERENT;
-  else if (prevTolerance != tolerance) return CR_TOLERANCE;
-  else return CR_EQUAL;
+  else if ((int)prevTolerance != tolerance) 
+    return CR_TOLERANCE;
+  else 
+    return CR_EQUAL;
 
 }
 

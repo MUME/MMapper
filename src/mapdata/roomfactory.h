@@ -45,7 +45,7 @@ public:
   virtual ~RoomFactory() {}
 private:
   QVector<Coordinate> exitDirs;
-  ComparisonResult compareStrings(const QString & room, const QString & event, int tolerance, bool updated = true) const;
+  ComparisonResult compareStrings(const QString & room, const QString & event, uint tolerance, bool updated = true) const;
 };
 
 #endif
