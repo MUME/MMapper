@@ -64,17 +64,17 @@ ParserPage::ParserPage(QWidget *parent)
 	connect( endDescPatternsList,SIGNAL(activated(const QString&)),
 		SLOT(endDescPatternsListActivated(const QString&)));
 
-	connect ( roomNameAnsiColor, SIGNAL(textChanged(const QString&)),
+	connect ( roomNameAnsiColor, SIGNAL(editTextChanged(const QString&)), 
 		SLOT(roomNameAnsiColorTextChanged(const QString&)));
-	connect ( roomDescAnsiColor, SIGNAL(textChanged(const QString&)),
+	connect ( roomDescAnsiColor, SIGNAL(editTextChanged(const QString&)), 
 		SLOT(roomDescAnsiColorTextChanged(const QString&)));
-	connect ( roomNameAnsiColor, SIGNAL(textChanged(const QString&)),
+	connect ( roomNameAnsiColor, SIGNAL(editTextChanged(const QString&)), 
 		SLOT(roomNameColorChanged(const QString&)));
-	connect ( roomDescAnsiColor, SIGNAL(textChanged(const QString&)),
+	connect ( roomDescAnsiColor, SIGNAL(editTextChanged(const QString&)), 
 		SLOT(roomDescColorChanged(const QString&)));
-	connect ( roomNameAnsiColor, SIGNAL(activated(const QString&)),
+	connect ( roomNameAnsiColor, SIGNAL(activated(const QString&)), 
 		SLOT(roomNameColorChanged(const QString&)));
-	connect ( roomDescAnsiColor, SIGNAL(activated(const QString&)),
+	connect ( roomDescAnsiColor, SIGNAL(activated(const QString&)), 
 		SLOT(roomDescColorChanged(const QString&)));
 	connect ( roomNameAnsiColor, SIGNAL(highlighted(const QString&)),
 		SLOT(roomNameColorChanged(const QString&)));
