@@ -799,13 +799,20 @@ bool MainWindow::save()
 
 bool MainWindow::saveAs()
 {
-  QString fileName = QFileDialog::getSaveFileName(this,"Choose map file name ...","","MMapper2 (*.mm2)");
-  if (fileName.isEmpty())
+  QFileDialog save(this, "Choose map file name ...");
+  save.setFileMode(QFileDialog::AnyFile);
+  save.setDirectory(QDir::current());
+  save.setFilter("MMapper2 (*.mm2)");
+  save.setDefaultSuffix("mm2");
+  save.setAcceptMode(QFileDialog::AcceptSave);
+  save.exec();
+  QStringList fileNames = save.selectedFiles();
+  
+  if (fileNames.isEmpty())
     return false;
-
-  if (!fileName.endsWith(".mm2")) fileName.append(".mm2");
-  return saveFile(fileName);
-}
+  
+  return saveFile(fileNames[0]);
+}  
 
 void MainWindow::about()
 {
