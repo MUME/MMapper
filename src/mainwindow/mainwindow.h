@@ -113,6 +113,7 @@ public slots:
  	void onPreferences();
  	void onPlayMode();
 	void onMapMode();
+    void alwaysOnTop();
  	
     void newRoomSelection(const RoomSelection*);
 	void newConnectionSelection(ConnectionSelection*);
