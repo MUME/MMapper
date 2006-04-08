@@ -300,6 +300,10 @@ void MainWindow::createActions()
       connect(prevWindowAct, SIGNAL(triggered()), this, SLOT(prevWindow()));
   */
   zoomInAct = new QAction(QIcon(":/icons/viewmag+.png"), tr("Zoom In"), this);
+  alwaysOnTopAct = new QAction(tr("Always on top"), this);
+  alwaysOnTopAct->setCheckable(true);
+  connect(alwaysOnTopAct, SIGNAL(triggered()), this, SLOT(alwaysOnTop()));
+  
   zoomInAct->setStatusTip(tr("Zooms In current map"));
   zoomOutAct = new QAction(QIcon(":/icons/viewmag-.png"), tr("Zoom Out"), this);
   zoomOutAct->setStatusTip(tr("Zooms Out current map"));
@@ -472,6 +476,7 @@ void MainWindow::disableActions(bool value)
   createConnectionAct->setDisabled(value);
   createOnewayConnectionAct->setDisabled(value);
   releaseAllPathsAct->setDisabled(value);
+  alwaysOnTopAct->setDisabled(value);
 }
 
 void MainWindow::setupMenuBar()
@@ -521,6 +526,7 @@ void MainWindow::setupMenuBar()
 
   viewMenu = menuBar()->addMenu(tr("&View"));
   viewMenu->addAction(m_dockDialog->toggleViewAction());
+  viewMenu->addAction(alwaysOnTopAct);
   viewMenu->addSeparator();
   viewMenu->addAction(zoomInAct);
   viewMenu->addAction(zoomOutAct);
@@ -535,8 +541,7 @@ void MainWindow::setupMenuBar()
   settingsMenu = menuBar()->addMenu(tr("&Preferences"));
   settingsMenu->addAction(preferencesAct);
   
-  QAction * always_on_top_id = settingsMenu->addAction( tr("Always on top"), this, SLOT( alwaysOnTop()));
-  always_on_top_id->setCheckable(true);
+  
 
 
   helpMenu = menuBar()->addMenu(tr("&Help"));

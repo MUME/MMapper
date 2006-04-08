@@ -36,185 +36,186 @@ class CommandEvaluator;
 class PrespammedPath;
 class MapData;
 class RoomSelection;
-class ConnectionSelection;	
-	
+class ConnectionSelection;
+
 class DockWidget : public QDockWidget
 {
-    Q_OBJECT
+  Q_OBJECT
 public:
-	DockWidget ( const QString & title, QWidget * parent = 0, Qt::WFlags flags = 0 );
+  DockWidget ( const QString & title, QWidget * parent = 0, Qt::WFlags flags = 0 );
 
-	virtual QSize minimumSizeHint() const;
-	virtual QSize sizeHint() const;
-	
+  virtual QSize minimumSizeHint() const;
+  virtual QSize sizeHint() const;
+
 };
 
 class StackedWidget : public QStackedWidget
 {
-    Q_OBJECT
+  Q_OBJECT
 public:
-	StackedWidget ( QWidget * parent = 0 );
+  StackedWidget ( QWidget * parent = 0 );
 
-	virtual QSize minimumSizeHint() const;	
-	virtual QSize sizeHint() const;
+  virtual QSize minimumSizeHint() const;
+  virtual QSize sizeHint() const;
 };
 
 class MainWindow : public QMainWindow
 {
-    Q_OBJECT
+  Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = 0, Qt::WFlags flags = 0);
-    ~MainWindow();
+  MainWindow(QWidget *parent = 0, Qt::WFlags flags = 0);
+  ~MainWindow();
 
-    MapWindow *getCurrentMapWindow();
-    
-    Mmapper2PathMachine *getPathMachine(){return m_pathMachine;};
+  MapWindow *getCurrentMapWindow();
 
-    void loadFile(const QString &fileName);
-    bool saveFile(const QString &fileName);
-    void setCurrentFile(const QString &fileName);
+  Mmapper2PathMachine *getPathMachine(){return m_pathMachine;};
+
+  void loadFile(const QString &fileName);
+  bool saveFile(const QString &fileName);
+  void setCurrentFile(const QString &fileName);
 
 public slots:
-    void newFile();
-    void open();
-    void merge();
-    bool save();
-    bool saveAs();
-    void about();
+  void newFile();
+  void open();
+  void merge();
+  bool save();
+  bool saveAs();
+  void about();
 
-    void nextWindow();
-    void prevWindow();
-    
-    void percentageChanged(quint32);
-    
-    void log(const QString&, const QString&);
-    
-    void currentMapWindowChanged();
-    
-    void onModeConnectionSelect();
-    void onModeRoomSelect();
-    void onModeMoveSelect();
-    void onModeInfoMarkEdit();
-    void onModeCreateRoomSelect();
-    void onModeCreateConnectionSelect();
-    void onModeCreateOnewayConnectionSelect();
-    void onLayerUp();
-    void onLayerDown();
-    void onEditRoomSelection();
-    void onEditConnectionSelection();
-    void onDeleteRoomSelection();
-    void onDeleteConnectionSelection();
-    void onMoveUpRoomSelection();
-    void onMoveDownRoomSelection();
-    void onMergeUpRoomSelection();
-    void onMergeDownRoomSelection();
-    void onConnectToNeighboursRoomSelection();
- 	void onPreferences();
- 	void onPlayMode();
-	void onMapMode();
-    void alwaysOnTop();
- 	
-    void newRoomSelection(const RoomSelection*);
-	void newConnectionSelection(ConnectionSelection*);
-    
+  void nextWindow();
+  void prevWindow();
+
+  void percentageChanged(quint32);
+
+  void log(const QString&, const QString&);
+
+  void currentMapWindowChanged();
+
+  void onModeConnectionSelect();
+  void onModeRoomSelect();
+  void onModeMoveSelect();
+  void onModeInfoMarkEdit();
+  void onModeCreateRoomSelect();
+  void onModeCreateConnectionSelect();
+  void onModeCreateOnewayConnectionSelect();
+  void onLayerUp();
+  void onLayerDown();
+  void onEditRoomSelection();
+  void onEditConnectionSelection();
+  void onDeleteRoomSelection();
+  void onDeleteConnectionSelection();
+  void onMoveUpRoomSelection();
+  void onMoveDownRoomSelection();
+  void onMergeUpRoomSelection();
+  void onMergeDownRoomSelection();
+  void onConnectToNeighboursRoomSelection();
+  void onPreferences();
+  void onPlayMode();
+  void onMapMode();
+  void alwaysOnTop();
+
+  void newRoomSelection(const RoomSelection*);
+  void newConnectionSelection(ConnectionSelection*);
+
 protected:
-    void closeEvent(QCloseEvent *event);
+  void closeEvent(QCloseEvent *event);
 
 private:
-    StackedWidget *m_stackedWidget;
-    QTextBrowser   *logWindow;
-    DockWidget *m_dockDialog;
-    
-    Mmapper2PathMachine *m_pathMachine;
-    MapData *m_mapData;
-	CommandEvaluator *m_commandEvaluator;
-    PrespammedPath *m_prespammedPath;
-    
-	const RoomSelection* m_roomSelection;
-	ConnectionSelection* m_connectionSelection;
+  StackedWidget *m_stackedWidget;
+  QTextBrowser   *logWindow;
+  DockWidget *m_dockDialog;
 
-    QProgressDialog *progressDlg;
+  Mmapper2PathMachine *m_pathMachine;
+  MapData *m_mapData;
+  CommandEvaluator *m_commandEvaluator;
+  PrespammedPath *m_prespammedPath;
 
-    QToolBar *fileToolBar;
-    QToolBar *editToolBar;
-    QToolBar *modeToolBar;
-    QToolBar *mapModeToolBar;
-    QToolBar *viewToolBar;
-    QToolBar *roomToolBar;
-    QToolBar *connectionToolBar;
-    QToolBar *settingsToolBar;
+  const RoomSelection* m_roomSelection;
+  ConnectionSelection* m_connectionSelection;
 
-    QMenu *fileMenu;
-    QMenu *editMenu;
-    QMenu *roomMenu;
-    QMenu *connectionMenu;    
-    QMenu *viewMenu;
-    QMenu *searchMenu;
-    QMenu *settingsMenu;
-    QMenu *helpMenu;
+  QProgressDialog *progressDlg;
 
-    QAction *newAct;
-    QAction *openAct;
-    QAction *mergeAct;
-    QAction *saveAct;
-    QAction *saveAsAct;
-    QAction *exitAct;
-    QAction *cutAct;
-    QAction *copyAct;
-    QAction *pasteAct;
-    QAction *aboutAct;
-    QAction *aboutQtAct;
-    QAction *prevWindowAct;
-    QAction *nextWindowAct;
-    QAction *zoomInAct;
-    QAction *zoomOutAct;
-    QAction *preferencesAct;
+  QToolBar *fileToolBar;
+  QToolBar *editToolBar;
+  QToolBar *modeToolBar;
+  QToolBar *mapModeToolBar;
+  QToolBar *viewToolBar;
+  QToolBar *roomToolBar;
+  QToolBar *connectionToolBar;
+  QToolBar *settingsToolBar;
 
-    QAction *layerUpAct;
-    QAction *layerDownAct;
+  QMenu *fileMenu;
+  QMenu *editMenu;
+  QMenu *roomMenu;
+  QMenu *connectionMenu;
+  QMenu *viewMenu;
+  QMenu *searchMenu;
+  QMenu *settingsMenu;
+  QMenu *helpMenu;
 
-    QAction *modeConnectionSelectAct;
-    QAction *modeRoomSelectAct;
-    QAction *modeMoveSelectAct;
-    QAction *modeInfoMarkEditAct;
+  QAction *newAct;
+  QAction *openAct;
+  QAction *mergeAct;
+  QAction *saveAct;
+  QAction *saveAsAct;
+  QAction *exitAct;
+  QAction *cutAct;
+  QAction *copyAct;
+  QAction *pasteAct;
+  QAction *aboutAct;
+  QAction *aboutQtAct;
+  QAction *prevWindowAct;
+  QAction *nextWindowAct;
+  QAction *zoomInAct;
+  QAction *zoomOutAct;
+  QAction *alwaysOnTopAct;
+  QAction *preferencesAct;
 
-    QAction *createRoomAct;
-	QAction *createConnectionAct;
-    QAction *createOnewayConnectionAct;
+  QAction *layerUpAct;
+  QAction *layerDownAct;
 
-	QAction *playModeAct;
-	QAction *mapModeAct;
+  QAction *modeConnectionSelectAct;
+  QAction *modeRoomSelectAct;
+  QAction *modeMoveSelectAct;
+  QAction *modeInfoMarkEditAct;
 
-	QActionGroup *mapModeActGroup;
-	QActionGroup *modeActGroup;
-	QActionGroup *roomActGroup;
-	QActionGroup *connectionActGroup;
-	
-	QAction *editRoomSelectionAct;
-	QAction *editConnectionSelectionAct;	
-    QAction *deleteRoomSelectionAct;
-    QAction *deleteConnectionSelectionAct;
+  QAction *createRoomAct;
+  QAction *createConnectionAct;
+  QAction *createOnewayConnectionAct;
 
-    QAction *moveUpRoomSelectionAct;
-    QAction *moveDownRoomSelectionAct;
-    QAction *mergeUpRoomSelectionAct;
-    QAction *mergeDownRoomSelectionAct;
-    QAction *connectToNeighboursRoomSelectionAct;
-	
-	QAction *releaseAllPathsAct;
-	
-    void createActions();
-    void disableActions(bool value);
-    void setupMenuBar();
-    void setupToolBars();
-    void setupStatusBar();
+  QAction *playModeAct;
+  QAction *mapModeAct;
 
-    void readSettings();
-    void writeSettings();
+  QActionGroup *mapModeActGroup;
+  QActionGroup *modeActGroup;
+  QActionGroup *roomActGroup;
+  QActionGroup *connectionActGroup;
 
-    QString strippedName(const QString &fullFileName);
-    bool maybeSave();
+  QAction *editRoomSelectionAct;
+  QAction *editConnectionSelectionAct;
+  QAction *deleteRoomSelectionAct;
+  QAction *deleteConnectionSelectionAct;
+
+  QAction *moveUpRoomSelectionAct;
+  QAction *moveDownRoomSelectionAct;
+  QAction *mergeUpRoomSelectionAct;
+  QAction *mergeDownRoomSelectionAct;
+  QAction *connectToNeighboursRoomSelectionAct;
+
+  QAction *releaseAllPathsAct;
+
+  void createActions();
+  void disableActions(bool value);
+  void setupMenuBar();
+  void setupToolBars();
+  void setupStatusBar();
+
+  void readSettings();
+  void writeSettings();
+
+  QString strippedName(const QString &fullFileName);
+  bool maybeSave();
 };
 
 #endif
