@@ -117,6 +117,8 @@ void Parser::performDoorCommand(DirectionType direction, DoorActionType action)
     case DAT_BLOCK:
         cn = "cast 'block door' ";
         break;
+    default:
+    	break;
     }
 
 	Coordinate c;
@@ -445,24 +447,25 @@ void Parser::parsePrompt(QString& prompt){
 
 void Parser::parseMudCommands(QString& str) {
 
-	if (str.at(0)=='B' && str.startsWith("Brief mode on")){
+	if (str.startsWith('B') && str.startsWith("Brief mode on")){
 		emit sendToMud((QByteArray)"brief\n");
 	}
 
-	if (!m_xmlAutoConfigDone && (str.startsWith("<movement/>") || str.startsWith("<prompt>"))) //we are in xml mode
+	if (!m_xmlAutoConfigDone && (str.startsWith("<movement/>") || str.startsWith("<prompt>") || str.startsWith("<room>"))) //we are in xml mode
 	{
 		m_xmlAutoConfigDone = true;
 	   	m_useXmlParser = true;
 		emit sendToUser((QByteArray)"[MMapper] Mode ---> xml\n");
+		parseMudCommandsXml(str);
 	   	return;
 	}   		
 		
-	if (str.at(0)=='<' && str.startsWith("<xml>")){
+	if (str.startsWith('<') && str.startsWith("<xml>")){
 	   	m_useXmlParser = true;
 		emit sendToUser((QByteArray)"[MMapper] Mode ---> xml\n");
 	}
 
-	if (str.at(0)=='Y')
+	if (str.startsWith('Y'))
 	{
 		if (str.startsWith("You are dead!"))
 		{
@@ -560,15 +563,16 @@ void Parser::parseMudCommandsXml(QString& str) {
 		m_xmlAutoConfigDone = true;
 	   	m_useXmlParser = false;
 		emit sendToUser((QByteArray)"[MMapper] Mode ---> normal\n");
+		parseMudCommands(str);
 	}   		
 
-	if (str.at(0)=='B' && str.startsWith("Brief mode on"))
+	if (str.startsWith('B') && str.startsWith("Brief mode on"))
 	{
 		emit sendToMud((QByteArray)"brief\n");
 		return;
 	}
 
-	if (str.at(0)=='Y')
+	if (str.startsWith('Y'))
 	{
 		if (str.startsWith("You are dead!"))
 		{
@@ -618,7 +622,7 @@ bool Parser::parseUserCommands(QString& command) {
 		if (str.contains("$$DOOR$$"))  {genericDoorCommand(command, UNKNOWN); return false;}
 	}
 
-	if (str.at(0) == '_')
+	if (str.startsWith('_'))
 	{
 		if (str.startsWith("_brief")){
 			if (Config().m_brief == TRUE){
@@ -1273,7 +1277,7 @@ void Parser::switchXmlMode(QByteArray& line)
 
 bool Parser::isXmlTag(QByteArray& line)
 {
-	if (line.at(0) == '<')
+	if (line.startsWith('<'))
 	 	return true;
 	return false;
 }
