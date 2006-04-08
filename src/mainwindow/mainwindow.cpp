@@ -803,6 +803,7 @@ bool MainWindow::saveAs()
   if (fileName.isEmpty())
     return false;
 
+  if (!fileName.endsWith(".mm2")) fileName.append(".mm2");
   return saveFile(fileName);
 }
 
