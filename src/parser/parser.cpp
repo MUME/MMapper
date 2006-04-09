@@ -847,7 +847,7 @@ void Parser::parseNewNormalMudInput(TelnetIncomingDataQueue& que)
 				{  
 					m_miscAutoconfigDone = true;
 					emit sendToMud((QByteArray)"brief\n");
-					emit sendToMud((QByteArray)"cha prompt all\n");
+					emit sendToMud((QByteArray)"prompt all\n");
 				}
 				
 				if (!m_IACPromptAutoconfigDone && Config().m_IAC_prompt_parser)
