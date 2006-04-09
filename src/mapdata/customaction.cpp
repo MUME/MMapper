@@ -246,11 +246,11 @@ void ConnectToNeighbours::connectRooms(Room * center, Coordinate & otherPos, uin
   {
     uint oid = room->getId();
     Exit & oexit = room->exit(opposite(dir));
-    oexit[E_FLAGS] = getFlags(oexit) | EF_EXIT;
+//    oexit[E_FLAGS] = getFlags(oexit) | EF_EXIT;
     oexit.addIn(cid);
     oexit.addOut(cid);
     Exit & cexit = center->exit(dir);
-    cexit[E_FLAGS] = getFlags(cexit) | EF_EXIT;
+//    cexit[E_FLAGS] = getFlags(cexit) | EF_EXIT;
     cexit.addIn(oid);
     cexit.addOut(oid);
   }
