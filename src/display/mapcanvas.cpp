@@ -931,20 +931,20 @@ void MapCanvas::paintGL()
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     	glColor4d(0.0f, 0.0f, 0.0f, 0.5f);
         glBegin(GL_POLYGON);
-           glVertex3d(m_selX1, m_selY1, 0.002);
-           glVertex3d(m_selX2, m_selY1, 0.002);
-           glVertex3d(m_selX2, m_selY2, 0.002);
-           glVertex3d(m_selX1, m_selY2, 0.002);
+           glVertex3d(m_selX1, m_selY1, 0.005);
+           glVertex3d(m_selX2, m_selY1, 0.005);
+           glVertex3d(m_selX2, m_selY2, 0.005);
+           glVertex3d(m_selX1, m_selY2, 0.005);
         glEnd();
 	 	qglColor(Qt::white);
 	 	
 	 	glLineStipple(4, 43690); 	 	
 	 	glEnable(GL_LINE_STIPPLE);
         glBegin(GL_LINE_LOOP);
-            glVertex3d(m_selX1, m_selY1, 0.002);
-            glVertex3d(m_selX2, m_selY1, 0.002);
-            glVertex3d(m_selX2, m_selY2, 0.002);
-            glVertex3d(m_selX1, m_selY2, 0.002);
+            glVertex3d(m_selX1, m_selY1, 0.005);
+            glVertex3d(m_selX2, m_selY1, 0.005);
+            glVertex3d(m_selX2, m_selY2, 0.005);
+            glVertex3d(m_selX1, m_selY2, 0.005);
         glEnd();
 	 	glDisable(GL_LINE_STIPPLE);
         glDisable(GL_BLEND);
@@ -959,8 +959,8 @@ void MapCanvas::paintGL()
 		glLineWidth (3.0);
 
 	    glBegin(GL_LINES);
-	        glVertex3d(m_selX1, m_selY1, 0.001);
-	        glVertex3d(m_selX2, m_selY2, 0.001);
+	        glVertex3d(m_selX1, m_selY1, 0.005);
+	        glVertex3d(m_selX2, m_selY2, 0.005);
 	    glEnd();    	
     }
     
@@ -1039,19 +1039,19 @@ void MapCanvas::paintGL()
         qglColor(Qt::red);         
 	    glPointSize (10.0);
         glBegin(GL_POINTS);
-            glVertex3d(x1p, y1p, 0.001);
-            glVertex3d(x2p, y2p, 0.001);
+            glVertex3d(x1p, y1p, 0.005);
+            glVertex3d(x2p, y2p, 0.005);
         glEnd();	    
 	    glPointSize (1.0);
 				
         glBegin(GL_LINES);
-            glVertex3d(x1p, y1p, 0.001);
-            glVertex3d(x2p, y2p, 0.001);
+            glVertex3d(x1p, y1p, 0.005);
+            glVertex3d(x2p, y2p, 0.005);
         glEnd();	    
 
 		/*
 	    glPushMatrix();
-	    glTranslated(x2p, y2p, 0.001);
+	    glTranslated(x2p, y2p, 0.005);
 		glRotated(0.0,0.0,1.0,180);
         glBegin(GL_TRIANGLES);
             glVertex3d(0.0, 0.0, 0.0);
@@ -1090,24 +1090,24 @@ void MapCanvas::paintGL()
 
 			qglColor(Qt::red);
 	        glBegin(GL_LINE_STRIP);
-	            glVertex3d(0+len, 0, 0.001);
-	            glVertex3d(0, 0, 0.001);
-	            glVertex3d(0, 0+len, 0.001);
+	            glVertex3d(0+len, 0, 0.005);
+	            glVertex3d(0, 0, 0.005);
+	            glVertex3d(0, 0+len, 0.005);
 	        glEnd();
 	        glBegin(GL_LINE_STRIP);
-	            glVertex3d(0+len, 1, 0.001);
-	            glVertex3d(0, 1, 0.001);
-	            glVertex3d(0, 1-len, 0.001);
+	            glVertex3d(0+len, 1, 0.005);
+	            glVertex3d(0, 1, 0.005);
+	            glVertex3d(0, 1-len, 0.005);
 	        glEnd();
 	        glBegin(GL_LINE_STRIP);
-	            glVertex3d(1-len, 1, 0.001);
-	            glVertex3d(1, 1, 0.001);
-	            glVertex3d(1, 1-len, 0.001);
+	            glVertex3d(1-len, 1, 0.005);
+	            glVertex3d(1, 1, 0.005);
+	            glVertex3d(1, 1-len, 0.005);
 	        glEnd();
 	        glBegin(GL_LINE_STRIP);
-	            glVertex3d(1-len, 0, 0.001);
-	            glVertex3d(1, 0, 0.001);
-	            glVertex3d(1, 0+len, 0.001);
+	            glVertex3d(1-len, 0, 0.005);
+	            glVertex3d(1, 0, 0.005);
+	            glVertex3d(1, 0+len, 0.005);
 	        glEnd();
 	        
 	        if (m_roomSelectionMove)
@@ -1416,7 +1416,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
 	    //RMF_RENT, RMF_SHOP, RMF_WEAPONSHOP, RMF_ARMOURSHOP, RMF_FOODSHOP, RMF_PETSHOP,
 	    //RMF_GUILD, RMF_SCOUTGUILD, RMF_MAGEGUILD, RMF_CLERICGUILD, RMF_WARRIORGUILD,
 	    //RMF_RANGERGUILD, RMF_SMOB, RMF_QUEST, RMF_ANY
-	    glTranslated(0, 0, 0.0001);
+	    glTranslated(0, 0, 0.005);
 	    if (ISSET(mf,RMF_RENT))
 	       alphaOverlayTexture(m_mobPixmaps[0]);
 	    if (ISSET(mf,RMF_SHOP))
@@ -1451,7 +1451,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
 	    //RLF_TREASURE, RLF_ARMOUR, RLF_WEAPON, RLF_WATER, RLF_FOOD, RLF_HERB
 	    //RLF_KEY, RLF_MULE, RLF_HORSE, RLF_PACKHORSE, RLF_TRAINEDHORSE
 	    //RLF_ROHIRRIM, RLF_WARG, RLF_BOAT
-	    glTranslated(0, 0, 0.0001);
+	    glTranslated(0, 0, 0.005);
 	    if (ISSET(lf,RLF_TREASURE))
 	       alphaOverlayTexture(m_loadPixmaps[0]);
 	    if (ISSET(lf,RLF_ARMOUR))
@@ -1481,17 +1481,16 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
 	    if (ISSET(lf,RLF_BOAT))
 	       alphaOverlayTexture(m_loadPixmaps[13]);
 
-	    glTranslated(0, 0, 0.0001);
+	    glTranslated(0, 0, 0.005);
 	    if (ISSET(lf,RLF_ATTENTION))
 	       alphaOverlayTexture(m_loadPixmaps[14]);
 	    if (ISSET(lf,RLF_TOWER))
 	       alphaOverlayTexture(m_loadPixmaps[15]);
 	    
 	    //UPDATED?
-	    glTranslated(0, 0, 0.0001);
+	    glTranslated(0, 0, 0.005);
 	    if (Config().m_showUpdated && !room->isUpToDate())
 	       alphaOverlayTexture(m_updatePixmap[0]);
-	
 	    glDisable(GL_BLEND);
 	    glDisable(GL_TEXTURE_2D);
 	}
@@ -1504,7 +1503,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
 	
 	    
 	//walls
-    glTranslated(0, 0, 0.0001);
+    glTranslated(0, 0, 0.005);
 
 	if (layer > 0)
 	{
@@ -1785,7 +1784,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
     	glDisable(GL_BLEND);
     }
     
-	if (/*layer == 0 && */!locks[room->getId()].empty()) //---> room is locked
+	if (!locks[room->getId()].empty()) //---> room is locked
 	{
 	    glEnable(GL_BLEND);
 	    glDisable(GL_DEPTH_TEST);
@@ -1797,7 +1796,6 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
 	}
 
     glPopMatrix();
-  
   
 	if (m_scaleFactor >= 0.15)
 	{
