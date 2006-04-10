@@ -46,6 +46,8 @@
 #define TC_DONT  254  //Indicates the demand that the other party stop performing, or confirmation that you are no longer expecting the other party to perform, the indicated option.  
 #define TC_IAC  255 
 
+#define ASCII_DEL 8
+
 #define ASCII_CR 13
 #define ASCII_LF 10
 
@@ -105,7 +107,7 @@ void TelnetFilter::dispatchTelnetStream(QByteArray& stream, IncomingData &m_inco
    	quint16 index = 0; //Here br
 
 #ifdef TELNET_STREAM_DEBUG_INPUT_TO_FILE
-	if (stream.contains(">"))
+	if (stream.contains("<"))
 	{	
 		(*debugStream) << "***S***";
 		(*debugStream) << stream;
@@ -121,7 +123,19 @@ void TelnetFilter::dispatchTelnetStream(QByteArray& stream, IncomingData &m_inco
 		val1 = (quint8) stream.at(index);
 		switch (val1)
 		{
+		case ASCII_DEL:
+			m_incomingData.line.append(QChar::fromAscii((char)ASCII_DEL));
 
+			if(m_incomingData.type != TDT_TELNET)
+			{
+				m_incomingData.type = TDT_DELAY;
+				que.enqueue(m_incomingData);
+				m_incomingData.line.clear();
+				m_incomingData.type = TDT_SPLIT;
+			}
+			index++; 
+			break;
+			
 		case ESCAPE: //check for prompt before color character (bugfixes some loose of room names)
 			if(!m_incomingData.line.isEmpty() && m_incomingData.type != TDT_TELNET)
 			{

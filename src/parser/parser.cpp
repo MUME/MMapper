@@ -823,6 +823,7 @@ void Parser::parseNewNormalMudInput(TelnetIncomingDataQueue& que)
 		//dline = (quint8 *)data.line.data();
 		switch (data.type)
 		{
+			case TDT_DELAY:
 			case TDT_MENU_PROMPT: 
 			case TDT_LOGIN: 
 			case TDT_LOGIN_PASSWORD: 
@@ -1104,6 +1105,7 @@ void Parser::parseNewUserInput(TelnetIncomingDataQueue& que)
 		dline = (quint8 *)data.line.data();
 		switch (data.type)
 		{
+			case TDT_DELAY:
 			case TDT_PROMPT:
 			case TDT_MENU_PROMPT: 
 			case TDT_LOGIN: 
@@ -1297,6 +1299,7 @@ void Parser::parseNewXmlMudInput(TelnetIncomingDataQueue& que)
 		//dline = (quint8 *)data.line.data();
 		switch (data.type)
 		{
+			case TDT_DELAY:
 			case TDT_MENU_PROMPT: 
 			case TDT_LOGIN: 
 			case TDT_LOGIN_PASSWORD: 
@@ -1306,10 +1309,20 @@ void Parser::parseNewXmlMudInput(TelnetIncomingDataQueue& que)
 			case TDT_LF:
 			case TDT_LFCR:			
 			case TDT_PROMPT:
+#ifdef PARSER_STREAM_DEBUG_INPUT_TO_FILE
+		(*debugStream) << "***STYPE***";
+		(*debugStream) << "OTHER";
+		(*debugStream) << "***ETYPE***";
+#endif			
 				emit sendToUser(data.line);
 				break;			
 
 			case TDT_CRLF:										
+#ifdef PARSER_STREAM_DEBUG_INPUT_TO_FILE
+		(*debugStream) << "***STYPE***";
+		(*debugStream) << "CRLF";
+		(*debugStream) << "***ETYPE***";
+#endif			
 				dline = (quint8 *)data.line.data();
 				if (isXmlTag(data.line))
 				{
@@ -1460,6 +1473,13 @@ void Parser::parseNewXmlMudInput(TelnetIncomingDataQueue& que)
 
 				}
 		}
+#ifdef PARSER_STREAM_DEBUG_INPUT_TO_FILE
+		(*debugStream) << "***S***";
+		(*debugStream) << data.line;
+		(*debugStream) << "***E***";
+#endif
+		
+		
 	}
 }
 
