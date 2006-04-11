@@ -455,14 +455,14 @@ void Parser::parseMudCommands(QString& str) {
 	{
 		m_xmlAutoConfigDone = true;
 	   	m_useXmlParser = true;
-		emit sendToUser((QByteArray)"[MMapper] Mode ---> xml\n");
+		emit sendToUser((QByteArray)"[MMapper] Mode ---> XML\n");
 		parseMudCommandsXml(str);
 	   	return;
 	}   		
 		
 	if (str.startsWith('<') && str.startsWith("<xml>")){
 	   	m_useXmlParser = true;
-		emit sendToUser((QByteArray)"[MMapper] Mode ---> xml\n");
+		emit sendToUser((QByteArray)"[MMapper] Mode ---> XML\n");
 	}
 
 	if (str.startsWith('Y'))
@@ -562,7 +562,7 @@ void Parser::parseMudCommandsXml(QString& str) {
 	{
 		m_xmlAutoConfigDone = true;
 	   	m_useXmlParser = false;
-		emit sendToUser((QByteArray)"[MMapper] Mode ---> normal\n");
+		emit sendToUser((QByteArray)"[MMapper] Mode ---> NORMAL\n");
 		parseMudCommands(str);
 	}   		
 
@@ -1187,6 +1187,13 @@ void Parser::checkqueue()
 			case XMLM_WEST:
 			case XMLM_UP:
 			case XMLM_DOWN:
+				if (cid == CID_FLEE)
+				{
+					queue.dequeue();
+					queue.enqueue((CommandIdType)m_xmlMovement);
+					return;
+				}
+					
 				if ((int)cid != (int)m_xmlMovement)
 					queue.dequeue(); 
 				else 
@@ -1212,39 +1219,68 @@ void Parser::checkqueue()
 
 void Parser::switchXmlMode(QByteArray& line)
 {
+	int length = line.length();
+
 	switch (m_xmlMode)
 	{
 		case XML_NONE:
+			if (length > 1)
 			switch (line.at(1))
 			{
 				case '/': 
 					if (line.startsWith("</xml"))
 					{ 
 						m_useXmlParser = false;
-						emit sendToUser((QByteArray)"[MMapper] Mode ---> normal\n");
+						emit sendToUser((QByteArray)"[MMapper] Mode ---> NORMAL\n");
 					} 
 					break;
 				case 'p': 
-					if (line.startsWith("<prompt")) m_xmlMode = XML_PROMPT; break;						
+					if (line.startsWith("<prompt")) m_xmlMode = XML_PROMPT; 
+					break;						
 				case 'e': 
-					if (line.startsWith("<exits")) m_xmlMode = XML_EXITS; break;
+					if (line.startsWith("<exits")) m_xmlMode = XML_EXITS; 
+					break;
 				case 'r': 
-					if (line.startsWith("<room")) m_xmlMode = XML_ROOM; break;
+					if (line.startsWith("<room")) m_xmlMode = XML_ROOM; 
+					break;
 				case 'm': 
+					if (length > 9)
 					switch (line.at(9))
 					{
 						case ' ':
+							if (length > 14)
 							switch (line.at(14))
 							{
-								case 'n': m_xmlMovement = XMLM_NORTH; 	checkqueue(); break;
-								case 's': m_xmlMovement = XMLM_SOUTH; 	checkqueue(); break;
-								case 'e': m_xmlMovement = XMLM_EAST; 	checkqueue(); break;
-								case 'w': m_xmlMovement = XMLM_WEST; 	checkqueue(); break;
-								case 'u': m_xmlMovement = XMLM_UP; 		checkqueue(); break;
-								case 'd': m_xmlMovement = XMLM_DOWN; 	checkqueue(); break;
+								case 'n': 
+									m_xmlMovement = XMLM_NORTH; 	
+									checkqueue(); 
+									break;
+								case 's': 
+									m_xmlMovement = XMLM_SOUTH; 	
+									checkqueue();
+									break;
+								case 'e': 
+									m_xmlMovement = XMLM_EAST; 	
+									checkqueue();
+									break;
+								case 'w': 
+									m_xmlMovement = XMLM_WEST; 	
+									checkqueue();
+									break;
+								case 'u': 
+									m_xmlMovement = XMLM_UP; 		
+									checkqueue();
+									break;
+								case 'd': 
+									m_xmlMovement = XMLM_DOWN; 	
+									checkqueue();
+									break;
 							}
 							break;						
-						case '/': m_xmlMovement = XMLM_UNKNOWN; checkqueue(); break;
+						case '/': 
+							m_xmlMovement = XMLM_UNKNOWN; 
+							checkqueue(); 
+							break;
 					}
 					break;
 			};
@@ -1263,41 +1299,46 @@ void Parser::switchXmlMode(QByteArray& line)
 			*/
 			break;
 		case XML_ROOM:
+			if (length > 1)
 			switch (line.at(1))
 			{
-				case 'n': if (line.startsWith("<name")) m_xmlMode = XML_NAME; break;
-				case 'd': if (line.startsWith("<description")) m_xmlMode = XML_DESCRIPTION; break;
-				case '/': if (line.startsWith("</room")) m_xmlMode = XML_NONE; break;
+				case 'n': 
+					if (line.startsWith("<name")) m_xmlMode = XML_NAME; 
+					break;
+				case 'd': 
+					if (line.startsWith("<description")) m_xmlMode = XML_DESCRIPTION; 
+					break;
+				case '/': 
+					if (line.startsWith("</room")) m_xmlMode = XML_NONE; 
+					break;
 			} 
-			/*
-			if (line.startsWith("<name")) {m_xmlMode = XML_NAME; break;}						
-			if (line.startsWith("<description")) {m_xmlMode = XML_DESCRIPTION; break;}
-			if (line.startsWith("</room")) {m_xmlMode = XML_NONE; break;}
-			*/
 			break;		
 		case XML_NAME:
-			if (line.startsWith("</name")) {m_xmlMode = XML_ROOM; break;}						
+			if (line.startsWith("</name")) m_xmlMode = XML_ROOM;						
 			break;
 		case XML_DESCRIPTION:
+			if (length > 1)
 			switch (line.at(1))
 			{
-				case '/': if (line.startsWith("</description")) m_xmlMode = XML_ROOM; break;
+				case '/': if (line.startsWith("</description")) m_xmlMode = XML_ROOM; 
+					break;
 			}
-			//if (line.startsWith("</description")) {m_xmlMode = XML_ROOM; break;}
 			break;
 		case XML_EXITS:
+			if (length > 1)
 			switch (line.at(1))
 			{
-				case '/': if (line.startsWith("</exits")) m_xmlMode = XML_NONE; break;
+				case '/': if (line.startsWith("</exits")) m_xmlMode = XML_NONE;
+					break;
 			}
-			//if (line.startsWith("</exits")) {m_xmlMode = XML_NONE; break;}
 			break;
 		case XML_PROMPT:
+			if (length > 1)
 			switch (line.at(1))
 			{
-				case '/': if (line.startsWith("</prompt")) m_xmlMode = XML_NONE; break;
+				case '/': if (line.startsWith("</prompt")) m_xmlMode = XML_NONE;
+					break;
 			}
-			//if (line.startsWith("</prompt")) {m_xmlMode = XML_NONE; break;}
 			break;
 	}	
 }
