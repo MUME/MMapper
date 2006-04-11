@@ -803,6 +803,31 @@ bool Parser::parseUserCommands(QString& command) {
 
 void Parser::parseNewMudInput(TelnetIncomingDataQueue& que)
 {
+	if (!m_xmlAutoConfigDone) //we have to setup right parser
+	{
+		QByteArray str;
+		for (int i = 0; i < que.size(); ++i) {
+			str = que.at(i).line;
+			if (que.at(i).type == TDT_CRLF)
+			{
+				if (str.startsWith("<movement/>") || str.startsWith("<prompt>") || str.startsWith("<room>"))
+				{
+					m_xmlAutoConfigDone = true;
+				   	m_useXmlParser = true;
+					emit sendToUser((QByteArray)"[MMapper] Mode ---> XML\n");
+					break;
+				}
+				else if (str.startsWith("Reconnecting."))
+				{		
+					m_xmlAutoConfigDone = true;
+				   	m_useXmlParser = false;
+					emit sendToUser((QByteArray)"[MMapper] Mode ---> NORMAL\n");
+					break;
+				}
+			}
+		}
+	}   		
+	
 	if (m_useXmlParser)
 		parseNewXmlMudInput(que);
 	else
