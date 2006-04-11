@@ -33,6 +33,16 @@ ParserPage::ParserPage(QWidget *parent)
         : QWidget(parent)
 {
     setupUi(this);
+    
+    //Config().m_roomNameColor = "[36;45;4m";
+    //Config().m_roomDescColor = "[32;41;1m";
+    
+    roomNameAnsiColor->initColours(ANSI_FG);
+    roomNameAnsiColorBG->initColours(ANSI_BG);
+	roomDescAnsiColor->initColours(ANSI_FG);
+	roomDescAnsiColorBG->initColours(ANSI_BG);
+
+	updateColors();
 
    	IACPromptCheckBox->setChecked(Config().m_IAC_prompt_parser);	
 
@@ -64,40 +74,37 @@ ParserPage::ParserPage(QWidget *parent)
 	connect( endDescPatternsList,SIGNAL(activated(const QString&)),
 		SLOT(endDescPatternsListActivated(const QString&)));
 
-	connect ( roomNameAnsiColor, SIGNAL(editTextChanged(const QString&)), 
-		SLOT(roomNameAnsiColorTextChanged(const QString&)));
-	connect ( roomDescAnsiColor, SIGNAL(editTextChanged(const QString&)), 
-		SLOT(roomDescAnsiColorTextChanged(const QString&)));
-	connect ( roomNameAnsiColor, SIGNAL(editTextChanged(const QString&)), 
-		SLOT(roomNameColorChanged(const QString&)));
-	connect ( roomDescAnsiColor, SIGNAL(editTextChanged(const QString&)), 
-		SLOT(roomDescColorChanged(const QString&)));
+//	connect ( roomNameAnsiColor, SIGNAL(editTextChanged(const QString&)), 
+//		SLOT(roomNameAnsiColorTextChanged(const QString&)));
+//	connect ( roomDescAnsiColor, SIGNAL(editTextChanged(const QString&)), 
+//		SLOT(roomDescAnsiColorTextChanged(const QString&)));
+//	connect ( roomNameAnsiColor, SIGNAL(editTextChanged(const QString&)), 
+//		SLOT(roomNameColorChanged(const QString&)));
+//	connect ( roomDescAnsiColor, SIGNAL(editTextChanged(const QString&)), 
+//		SLOT(roomDescColorChanged(const QString&)));
+//	connect ( roomNameAnsiColor, SIGNAL(highlighted(const QString&)),
+//		SLOT(roomNameColorChanged(const QString&)));
+//	connect ( roomDescAnsiColor, SIGNAL(highlighted(const QString&)),
+//		SLOT(roomDescColorChanged(const QString&)));
 	connect ( roomNameAnsiColor, SIGNAL(activated(const QString&)), 
 		SLOT(roomNameColorChanged(const QString&)));
 	connect ( roomDescAnsiColor, SIGNAL(activated(const QString&)), 
 		SLOT(roomDescColorChanged(const QString&)));
-	connect ( roomNameAnsiColor, SIGNAL(highlighted(const QString&)),
-		SLOT(roomNameColorChanged(const QString&)));
-	connect ( roomDescAnsiColor, SIGNAL(highlighted(const QString&)),
-		SLOT(roomDescColorChanged(const QString&)));
+
+	connect ( roomNameAnsiColorBG, SIGNAL(activated(const QString&)), 
+		SLOT(roomNameColorBGChanged(const QString&)));
+	connect ( roomDescAnsiColorBG, SIGNAL(activated(const QString&)), 
+		SLOT(roomDescColorBGChanged(const QString&)));
+		
+	connect (roomNameAnsiBold	,SIGNAL(toggled(bool)), this, SLOT(anyColorToggleButtonToggled(bool)) );	
+	connect (roomNameAnsiUnderline	,SIGNAL(toggled(bool)), this, SLOT(anyColorToggleButtonToggled(bool)) );	
+	connect (roomDescAnsiBold	,SIGNAL(toggled(bool)), this, SLOT(anyColorToggleButtonToggled(bool)) );	
+	connect (roomDescAnsiUnderline	,SIGNAL(toggled(bool)), this, SLOT(anyColorToggleButtonToggled(bool)) );	
 		
 	connect( IACPromptCheckBox, SIGNAL(stateChanged(int)),SLOT(IACPromptCheckBoxStateChanged(int)));	
 	connect( suppressXmlTagsCheckBox, SIGNAL(stateChanged(int)),SLOT(suppressXmlTagsCheckBoxStateChanged(int)));	
 
-	roomNameAnsiColor->setText( Config().m_roomNameColor );
-	roomDescAnsiColor->setText( Config().m_roomDescColor );
-}
 
-void ParserPage::roomNameAnsiColorTextChanged(const QString& str)
-{
-	if (str.startsWith("[") && str.endsWith("m"))
-		Config().m_roomNameColor = str;
-}
-
-void ParserPage::roomDescAnsiColorTextChanged(const QString& str)
-{
-	if (str.startsWith("[") && str.endsWith("m"))
-		Config().m_roomDescColor = str;	
 }
 
 void ParserPage::suppressXmlTagsCheckBoxStateChanged(int)
@@ -236,17 +243,126 @@ void ParserPage::addEndDescPatternClicked(){
 	savePatterns();
 }
 
-void ParserPage::roomDescColorChanged(const QString& s)
+
+void ParserPage::updateColors()
 {
-	comboChanged(s, labelRoomDesc);
+	QColor colFg;
+	QColor colBg;
+	int ansiCodeFg;
+	int ansiCodeBg;
+	QString intelligibleNameFg;
+	QString intelligibleNameBg;
+	bool bold;
+	bool underline;
+
+    
+    // room name color
+	if (Config().m_roomNameColor.isEmpty())
+		roomNameColorLabel->setText("ERROR - no color!!!");
+	else
+	    roomNameColorLabel->setText(Config().m_roomNameColor);
+    
+	AnsiCombo::makeWidgetColoured(labelRoomColor, Config().m_roomNameColor);
+
+	AnsiCombo::colorFromString(Config().m_roomNameColor, 
+								colFg, ansiCodeFg, intelligibleNameFg, 
+								colBg, ansiCodeBg, intelligibleNameBg, 
+								bold, underline);
+
+	roomNameAnsiBold->setChecked(bold);
+	roomNameAnsiUnderline->setChecked(underline);
+	
+	roomNameAnsiColor->setEditable(false);
+	roomNameAnsiColorBG->setEditable(false);
+	roomNameAnsiColor->setText( QString("%1").arg(ansiCodeFg) );
+	roomNameAnsiColorBG->setText( QString("%1").arg(ansiCodeBg) );
+
+
+    // room desc color
+	if (Config().m_roomDescColor.isEmpty())
+		roomDescColorLabel->setText("ERROR - no color!!!");		
+	else
+	    roomDescColorLabel->setText(Config().m_roomDescColor);
+    
+	AnsiCombo::makeWidgetColoured(labelRoomDesc, Config().m_roomDescColor);
+
+	AnsiCombo::colorFromString(Config().m_roomDescColor, 
+								colFg, ansiCodeFg, intelligibleNameFg, 
+								colBg, ansiCodeBg, intelligibleNameBg, 
+								bold, underline);
+	
+	roomDescAnsiBold->setChecked(bold);
+	roomDescAnsiUnderline->setChecked(underline);
+	
+	roomDescAnsiColor->setEditable(false);
+	roomDescAnsiColorBG->setEditable(false);
+	roomDescAnsiColor->setText( QString("%1").arg(ansiCodeFg) );
+	roomDescAnsiColorBG->setText( QString("%1").arg(ansiCodeBg) );
+		
 }
 
-void ParserPage::roomNameColorChanged(const QString& s)
+
+void ParserPage::generateNewAnsiColor()
 {
-	comboChanged(s, labelRoomColor);
+	QString result = "";	
+	if (roomNameAnsiColor->text() != "none") result.append(roomNameAnsiColor->text());
+	if (roomNameAnsiColorBG->text() != "none") result.append(";"+roomNameAnsiColorBG->text());
+	if (roomNameAnsiBold->isChecked()) result.append(";1");
+	if (roomNameAnsiUnderline->isChecked()) result.append(";4");
+
+	if (result != "") 
+	{
+		if (result.startsWith(';')) result.remove(0,1);
+		result.prepend("[");
+		result.append("m");
+	}
+
+    Config().m_roomNameColor = result;
+	
+	result = "";	
+	if (roomDescAnsiColor->text() != "none") result.append(roomDescAnsiColor->text());
+	if (roomDescAnsiColorBG->text() != "none") result.append(";"+roomDescAnsiColorBG->text());
+	if (roomDescAnsiBold->isChecked()) result.append(";1");
+	if (roomDescAnsiUnderline->isChecked()) result.append(";4");
+
+	if (result != "") 
+	{
+		if (result.startsWith(';')) result.remove(0,1);
+		result.prepend("[");
+		result.append("m");
+	}
+
+    Config().m_roomDescColor = result;
 }
 
-void ParserPage::comboChanged(const QString& colString, QLabel *p)
+
+void ParserPage::roomDescColorChanged(const QString&)
 {
-	AnsiCombo::makeWidgetColoured(p, colString);
+	generateNewAnsiColor();
+	updateColors();
 }
+
+void ParserPage::roomNameColorChanged(const QString&)
+{
+	generateNewAnsiColor();
+	updateColors();
+}
+
+void ParserPage::roomDescColorBGChanged(const QString&)
+{
+	generateNewAnsiColor();
+	updateColors();
+}
+
+void ParserPage::roomNameColorBGChanged(const QString&)
+{
+	generateNewAnsiColor();
+	updateColors();
+}
+
+void ParserPage::anyColorToggleButtonToggled(bool)
+{
+	generateNewAnsiColor();
+	updateColors();
+}
+

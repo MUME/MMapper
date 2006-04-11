@@ -29,27 +29,14 @@
   <property name="windowTitle" >
    <string>Form1</string>
   </property>
-  <layout class="QGridLayout" >
+  <layout class="QVBoxLayout" >
    <property name="margin" >
     <number>9</number>
    </property>
    <property name="spacing" >
     <number>6</number>
    </property>
-   <item row="4" column="0" >
-    <spacer>
-     <property name="orientation" >
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" >
-      <size>
-       <width>341</width>
-       <height>25</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="0" column="0" >
+   <item>
     <widget class="QFrame" name="frame_4" >
      <property name="frameShape" >
       <enum>QFrame::StyledPanel</enum>
@@ -64,14 +51,47 @@
       <property name="spacing" >
        <number>6</number>
       </property>
-      <item row="3" column="0" colspan="3" >
+      <item row="2" column="3" colspan="2" >
+       <widget class="QLabel" name="roomDescColorLabel" >
+        <property name="text" >
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3" colspan="2" >
+       <widget class="QLabel" name="roomNameColorLabel" >
+        <property name="text" >
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" >
+       <widget class="AnsiCombo" name="roomNameAnsiColorBG" />
+      </item>
+      <item row="3" column="1" >
+       <widget class="AnsiCombo" name="roomDescAnsiColorBG" />
+      </item>
+      <item row="5" column="0" colspan="5" >
        <widget class="QCheckBox" name="suppressXmlTagsCheckBox" >
         <property name="text" >
          <string>Suppress XML tags - valid for XML mode only</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="2" >
+      <item row="4" column="0" colspan="5" >
+       <widget class="QCheckBox" name="IACPromptCheckBox" >
+        <property name="text" >
+         <string>IAC-GA prompt recognition (changes needs reconnect with client!!!)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" >
+       <widget class="AnsiCombo" name="roomNameAnsiColor" />
+      </item>
+      <item row="3" column="0" >
+       <widget class="AnsiCombo" name="roomDescAnsiColor" />
+      </item>
+      <item row="3" column="4" >
        <widget class="QLabel" name="labelRoomDesc" >
         <property name="sizePolicy" >
          <sizepolicy>
@@ -103,7 +123,72 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="2" >
+      <item row="2" column="0" colspan="3" >
+       <widget class="QLabel" name="textLabel1_7" >
+        <property name="minimumSize" >
+         <size>
+          <width>280</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text" >
+         <string>&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;/head>&lt;body style=" white-space: pre-wrap; font-family:MS Shell Dlg; font-size:8.25pt; font-weight:400; font-style:normal; text-decoration:none;">&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;">Descriptions color: fg/bg/attr&lt;/p>&lt;/body>&lt;/html></string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2" >
+       <widget class="QCheckBox" name="roomNameAnsiBold" >
+        <property name="maximumSize" >
+         <size>
+          <width>38</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text" >
+         <string>B</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3" >
+       <widget class="QCheckBox" name="roomNameAnsiUnderline" >
+        <property name="maximumSize" >
+         <size>
+          <width>38</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text" >
+         <string>U</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3" >
+       <widget class="QCheckBox" name="roomDescAnsiUnderline" >
+        <property name="maximumSize" >
+         <size>
+          <width>38</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text" >
+         <string>U</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2" >
+       <widget class="QCheckBox" name="roomDescAnsiBold" >
+        <property name="maximumSize" >
+         <size>
+          <width>38</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text" >
+         <string>B</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="4" >
        <widget class="QLabel" name="labelRoomColor" >
         <property name="sizePolicy" >
          <sizepolicy>
@@ -135,37 +220,23 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="1" >
-       <widget class="AnsiCombo" name="roomDescAnsiColor" />
-      </item>
-      <item row="0" column="1" >
-       <widget class="AnsiCombo" name="roomNameAnsiColor" />
-      </item>
-      <item row="0" column="0" >
+      <item row="0" column="0" colspan="3" >
        <widget class="QLabel" name="textLabel1_3" >
-        <property name="text" >
-         <string>Room name ANSI color:</string>
+        <property name="minimumSize" >
+         <size>
+          <width>280</width>
+          <height>0</height>
+         </size>
         </property>
-       </widget>
-      </item>
-      <item row="1" column="0" >
-       <widget class="QLabel" name="textLabel1_7" >
         <property name="text" >
-         <string>Descriptions ANSI color:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0" colspan="3" >
-       <widget class="QCheckBox" name="IACPromptCheckBox" >
-        <property name="text" >
-         <string>IAC-GA prompt recognition (changes needs reconnect with client!!!)</string>
+         <string>Room name color: fg/bg/attr</string>
         </property>
        </widget>
       </item>
      </layout>
     </widget>
    </item>
-   <item row="1" column="0" >
+   <item>
     <widget class="QFrame" name="frame_3" >
      <property name="frameShape" >
       <enum>QFrame::StyledPanel</enum>
@@ -320,7 +391,7 @@
      </layout>
     </widget>
    </item>
-   <item row="2" column="0" >
+   <item>
     <widget class="QFrame" name="frame_2" >
      <property name="frameShape" >
       <enum>QFrame::StyledPanel</enum>
@@ -411,7 +482,7 @@
      </layout>
     </widget>
    </item>
-   <item row="3" column="0" >
+   <item>
     <widget class="QFrame" name="frame" >
      <property name="frameShape" >
       <enum>QFrame::StyledPanel</enum>
@@ -529,6 +600,19 @@
       </item>
      </layout>
     </widget>
+   </item>
+   <item>
+    <spacer>
+     <property name="orientation" >
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" >
+      <size>
+       <width>341</width>
+       <height>31</height>
+      </size>
+     </property>
+    </spacer>
    </item>
   </layout>
  </widget>

@@ -1,11 +1,12 @@
 /************************************************************************
 **
 ** Authors:   Jan 'Kovis' Struhar <kovis@sourceforge.net> (Kovis)
+** 			  Marek Krejza <krejza@gmail.com> (Caligor)
 **
 ** This file is part of the MMapper2 project. 
 ** Maintained by Marek Krejza <krejza@gmail.com>
 **
-** Copyright: See COPYING file that comes with this distribution
+** Copyright: See COPYING file that comes with this distributione
 **
 ** This file may be used under the terms of the GNU General Public
 ** License version 2.0 as published by the Free Software Foundation
@@ -28,6 +29,8 @@
 #include<QComboBox>
 #include<QVector>
 
+enum AnsiMode {ANSI_FG, ANSI_BG};
+
 class AnsiCombo : public QComboBox
 {
 	typedef QComboBox super;
@@ -37,6 +40,7 @@ public:
 
 	AnsiCombo(QWidget *parent);
 
+	void initColours(AnsiMode mode);
 	/// populate the list with ANSI codes and coloured boxes
 	void fillAnsiList();
 
@@ -45,17 +49,19 @@ public:
 
 	void setText(const QString&);
 
+	///\return true if string is valid ANSI color code
+	static bool colorFromString(const QString& colString, 
+								QColor& colFg, int& ansiCodeFg, QString& intelligibleNameFg, 
+								QColor& colBg, int& ansiCodeBg, QString& intelligibleNameBg, 
+								bool& bold, bool& underline);
+
+	///\return true, if index is valid color code
+	static bool colorFromNumber(int numColor, QColor& col, QString& intelligibleName);
+
 protected slots:
 	void afterEdit(const QString&);
 
 protected:
-	///\return true if string is valid ANSI color code
-	static bool colorFromString(const QString& colString, /* out */ QColor& col, 
-		/* out */ QString& intelligibleName, /* out */ bool* bg = NULL);
-
-	///\return true, if index is valid color code
-	static bool colorFromNumber(int numColor, /* out */ QColor& col, 
-	/* out */ QString& intelligibleName, /* out */ bool* bg = NULL);
 
 	class AnsiItem
 	{
@@ -70,7 +76,6 @@ protected:
 
 	AnsiItemVector colours;
 
-	void initColours();
 };
 
 #endif

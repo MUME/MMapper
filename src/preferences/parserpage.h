@@ -47,8 +47,7 @@ public slots:
     void cancelPatternsListActivated(const QString&);
     void endDescPatternsListActivated(const QString&);
     
-	void roomNameAnsiColorTextChanged(const QString&);
-	void roomDescAnsiColorTextChanged(const QString&);
+	void anyColorToggleButtonToggled(bool);
 	
 	void IACPromptCheckBoxStateChanged(int);
 	void suppressXmlTagsCheckBoxStateChanged(int);
@@ -59,10 +58,14 @@ public:
 protected slots:
 	void roomDescColorChanged(const QString&);
 	void roomNameColorChanged(const QString&);
+	void roomDescColorBGChanged(const QString&);
+	void roomNameColorBGChanged(const QString&);
 
 private:
+	void generateNewAnsiColor();
+	void updateColors();
+	
     void savePatterns(); 
-	void comboChanged(const QString& colString, QLabel *);
 };
 
 
