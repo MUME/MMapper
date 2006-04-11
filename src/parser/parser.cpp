@@ -927,6 +927,8 @@ void Parser::parseNewNormalMudInput(TelnetIncomingDataQueue& que)
 		(*debugStream) << "CRLF";
 		(*debugStream) << "***ETYPE***";
 #endif			
+				if (data.line.contains("null)>")) break;								
+
 				m_stringBuffer = QString::fromAscii(data.line.constData(), data.line.size());
 				m_stringBuffer = m_stringBuffer.simplified();
 								
