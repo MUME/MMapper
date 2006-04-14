@@ -26,6 +26,7 @@
 #include "proxy.h"
 #include "telnetfilter.h"
 #include "parser.h"
+#include "mumexmlparser.h"
 #include "mainwindow.h"
 #include "parseevent.h"
 #include "mmapper2pathmachine.h"
@@ -128,18 +129,32 @@ bool Proxy::init()
     m_filter = new TelnetFilter(this);
     connect(this, SIGNAL(analyzeUserStream( const char*, int )), m_filter, SLOT(analyzeUserStream( const char*, int )));
     connect(this, SIGNAL(analyzeMudStream( const char*, int )), m_filter, SLOT(analyzeMudStream( const char*, int )));
+    connect(m_filter, SIGNAL(sendToMud(const QByteArray&)), this, SLOT(sendToMud(const QByteArray&)));
+    connect(m_filter, SIGNAL(sendToUser(const QByteArray&)), this, SLOT(sendToUser(const QByteArray&)));    
 
 	m_parser = new Parser(m_mapData, this);
-    connect(m_filter, SIGNAL(parseNewMudInput(TelnetIncomingDataQueue&)), m_parser, SLOT(parseNewMudInput(TelnetIncomingDataQueue&)));
-    connect(m_filter, SIGNAL(parseNewUserInput(TelnetIncomingDataQueue&)), m_parser, SLOT(parseNewUserInput(TelnetIncomingDataQueue&)));
+    connect(m_filter, SIGNAL(parseNewMudInput(IncomingData&)), m_parser, SLOT(parseNewMudInput(IncomingData&)));
+    connect(m_filter, SIGNAL(parseNewUserInput(IncomingData&)), m_parser, SLOT(parseNewUserInput(IncomingData&)));
     connect(m_parser, SIGNAL(sendToMud(const QByteArray&)), this, SLOT(sendToMud(const QByteArray&)));
     connect(m_parser, SIGNAL(sendToUser(const QByteArray&)), this, SLOT(sendToUser(const QByteArray&)));
-	
+    connect(m_parser, SIGNAL(setXmlMode()), m_filter, SLOT(setXmlMode()));
+
 	//connect(m_parser, SIGNAL(event(ParseEvent* )), (QObject*)(Mmapper2PathMachine*)((MainWindow*)(m_parent->parent()))->getPathMachine(), SLOT(event(ParseEvent* )), Qt::QueuedConnection);
 	connect(m_parser, SIGNAL(event(ParseEvent* )), m_pathMachine, SLOT(event(ParseEvent* )), Qt::QueuedConnection);
 	connect(m_parser, SIGNAL(releaseAllPaths()), m_pathMachine, SLOT(releaseAllPaths()), Qt::QueuedConnection);
-
 	connect(m_parser, SIGNAL(showPath(CommandQueue, bool)), m_prespammedPath, SLOT(setPath(CommandQueue, bool)), Qt::QueuedConnection);
+	
+	m_parserXml = new MumeXmlParser(m_mapData, this);
+    connect(m_filter, SIGNAL(parseNewMudInputXml(IncomingData&)), m_parserXml, SLOT(parseNewMudInput(IncomingData&)));
+    connect(m_filter, SIGNAL(parseNewUserInputXml(IncomingData&)), m_parserXml, SLOT(parseNewUserInput(IncomingData&)));
+    connect(m_parserXml, SIGNAL(sendToMud(const QByteArray&)), this, SLOT(sendToMud(const QByteArray&)));
+    connect(m_parserXml, SIGNAL(sendToUser(const QByteArray&)), this, SLOT(sendToUser(const QByteArray&)));    
+    connect(m_parserXml, SIGNAL(setNormalMode()), m_filter, SLOT(setNormalMode()));
+    
+	//connect(m_parserXml, SIGNAL(event(ParseEvent* )), (QObject*)(Mmapper2PathMachine*)((MainWindow*)(m_parent->parent()))->getPathMachine(), SLOT(event(ParseEvent* )), Qt::QueuedConnection);
+	connect(m_parserXml, SIGNAL(event(ParseEvent* )), m_pathMachine, SLOT(event(ParseEvent* )), Qt::QueuedConnection);
+	connect(m_parserXml, SIGNAL(releaseAllPaths()), m_pathMachine, SLOT(releaseAllPaths()), Qt::QueuedConnection);
+	connect(m_parserXml, SIGNAL(showPath(CommandQueue, bool)), m_prespammedPath, SLOT(setPath(CommandQueue, bool)), Qt::QueuedConnection);
 
     //m_userSocket->write("Connection to client established ...\r\n", 38);
     emit log("Proxy", "Connection to client established ...");

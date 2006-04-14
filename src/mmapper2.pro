@@ -17,6 +17,8 @@ HEADERS += ./global/defs.h \
           ./proxy/connectionlistener.h \
           ./parser/patterns.h \
           ./parser/parser.h \
+          ./parser/mumexmlparser.h \
+          ./parser/abstractparser.h \
           ./preferences/configdialog.h \
           ./preferences/generalpage.h \
           ./preferences/parserpage.h \
@@ -92,6 +94,8 @@ SOURCES += main.cpp \
           ./proxy/telnetfilter.cpp \
           ./proxy/proxy.cpp \
           ./parser/parser.cpp \
+          ./parser/mumexmlparser.cpp \
+          ./parser/abstractparser.cpp \
           ./parser/patterns.cpp \
           ./expandoracommon/component.cpp \
           ./expandoracommon/coordinate.cpp \

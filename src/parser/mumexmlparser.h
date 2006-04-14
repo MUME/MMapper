@@ -6,7 +6,7 @@
 ** This file is part of the MMapper2 project. 
 ** Maintained by Marek Krejza <krejza@gmail.com>
 **
-** Copyright: See COPYING file that comes with this distribution
+** Copyright: See COPYING file that comes with this distributione
 **
 ** This file may be used under the terms of the GNU General Public
 ** License version 2.0 as published by the Free Software Foundation
@@ -23,53 +23,62 @@
 **
 *************************************************************************/
 
-#ifndef PARSER_H
-#define PARSER_H
 
-//#define PARSER_STREAM_DEBUG_INPUT_TO_FILE
+#ifndef MUMEXMLPARSER_H
+#define MUMEXMLPARSER_H
 
-#include <QtGui>
 #include <QtCore>
 #include "abstractparser.h"
 
-class Parser : public AbstractParser
+//#define XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
+
+enum XmlMode 		{XML_NONE, XML_ROOM, XML_NAME, XML_DESCRIPTION, XML_EXITS, XML_PROMPT};
+enum XmlMovement    {XMLM_NORTH, XMLM_SOUTH, XMLM_EAST, XMLM_WEST, XMLM_UP, XMLM_DOWN, XMLM_UNKNOWN, XMLM_NONE=10};
+
+class MumeXmlParser : public AbstractParser
 {
-Q_OBJECT
+  Q_OBJECT
 public:
-    Parser(MapData*, QObject *parent = 0);
-    ~Parser();
-    
+
+  MumeXmlParser(MapData*, QObject *parent = 0);
+  ~MumeXmlParser();
+  
+
+  void parse(const QByteArray& );
+  
 public slots:
-  	void parseNewMudInput(IncomingData&);
+	void parseNewMudInput(IncomingData& que);
     
 protected:
 
-#ifdef PARSER_STREAM_DEBUG_INPUT_TO_FILE
+#ifdef XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
 	QDataStream *debugStream;
 	QFile* file;
 #endif
 
-   bool isRoomName(QString& str);
-   bool isEndOfRoomDescription(QString& str);	
-   bool isStaticRoomDescriptionLine(QString& str);
+  static const QByteArray greatherThanChar;
+  static const QByteArray lessThanChar;
+  static const QByteArray greatherThanTemplate;
+  static const QByteArray lessThanTemplate;
 
-   void parseMudCommands(QString& str);
-   
+  void parseMudCommands(QString& str);
+
+
+  bool characters( QByteArray& );
+  bool element( const QByteArray& );
+
    quint32 m_roomDescLines;
    bool m_readingStaticDescLines;
-      
-   bool m_following;
-   quint16 m_followDir;
-   
-   QString m_stringBuffer;
-   QByteArray m_byteBuffer;
-   
-   bool m_miscAutoconfigDone;
-   bool m_IACPromptAutoconfigDone;
-   bool m_xmlAutoConfigDone;
-   
+
+  void checkqueue();
+ 
+  QByteArray m_tempCharacters;
+  QByteArray m_tempTag;
+  bool m_readingTag;
+  
+  XmlMode m_xmlMode;
+  XmlMovement m_xmlMovement;
+  
 };
-
-
 
 #endif

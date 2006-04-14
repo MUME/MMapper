@@ -39,7 +39,8 @@
 #include "configdialog.h"
 #include "customaction.h"
 #include "prespammedpath.h"
-#include "parser.h"
+//#include "parser.h"
+//#include "mumexmlparser.h"
 
 DockWidget::DockWidget ( const QString & title, QWidget * parent, Qt::WFlags flags )
     :QDockWidget(title, parent, flags)
@@ -75,6 +76,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
   setObjectName("MainWindow");
   setWindowTitle("MMapper2: Caligors MUME Mapper");
 
+  qRegisterMetaType<IncomingData>("IncomingData");
   qRegisterMetaType<CommandQueue>("CommandQueue");
   qRegisterMetaType<DirectionType>("DirectionType");
   qRegisterMetaType<DoorActionType>("DoorActionType");

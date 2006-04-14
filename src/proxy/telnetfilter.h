@@ -52,10 +52,19 @@ class TelnetFilter : public QObject {
 	public slots:
 		void analyzeMudStream( const char * input, int length );
 		void analyzeUserStream( const char * input, int length );
+		
+		void setNormalMode();
+		void setXmlMode();
 
 	signals:
-	  	void parseNewMudInput(TelnetIncomingDataQueue&);
-	  	void parseNewUserInput(TelnetIncomingDataQueue&);
+	  	void parseNewMudInput(IncomingData&);
+	  	void parseNewUserInput(IncomingData&);
+	  	void parseNewMudInputXml(IncomingData&);
+	  	void parseNewUserInputXml(IncomingData&);
+
+		//telnet
+		void sendToMud(const QByteArray&);
+		void sendToUser(const QByteArray&);
 		
 	private:
 
@@ -74,6 +83,9 @@ class TelnetFilter : public QObject {
         TelnetIncomingDataQueue m_mudIncomingQue;        
         TelnetIncomingDataQueue m_userIncomingQue;        
         
+       bool m_reconnecting;
+       bool m_xmlModeAutoconfigured;
+       bool m_xmlMode; 
         
 };
 

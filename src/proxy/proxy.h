@@ -34,6 +34,7 @@
 
 class TelnetFilter;
 class Parser;
+class MumeXmlParser;
 class Proxy;
 
 class MapData;
@@ -106,6 +107,7 @@ private:
 	
 	TelnetFilter *m_filter;
 	Parser *m_parser;
+	MumeXmlParser *m_parserXml;
 
 	MapData* m_mapData;
 	Mmapper2PathMachine* m_pathMachine;

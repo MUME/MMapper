@@ -57,6 +57,11 @@ const QChar TelnetFilter::escChar('\x1B');
 TelnetFilter::TelnetFilter(QObject *parent)
 : QObject(parent)
 {
+	
+    m_xmlModeAutoconfigured = false;
+    m_xmlMode = false; 
+	m_reconnecting = false;
+	
 #ifdef TELNET_STREAM_DEBUG_INPUT_TO_FILE
     QString fileName = "telnet_debug.dat";
 
@@ -82,9 +87,110 @@ void TelnetFilter::analyzeMudStream(const char * input, int length)
   QByteArray ba = QByteArray::fromRawData(input, length);
   dispatchTelnetStream(ba, m_mudIncomingData, m_mudIncomingQue);
 
-  //parse incoming lines in que
-  emit parseNewMudInput(m_mudIncomingQue);
- 
+/*		
+  if(!m_xmlModeAutoconfigured)
+  {
+  	 QByteArray line;
+  	 TelnetDataType type;  	
+	 
+	 for (int i = 0; i < m_mudIncomingQue.size(); ++i) 
+     {
+	  	line = m_mudIncomingQue.at(i).line;
+		type = m_mudIncomingQue.at(i).type;
+		
+		if (type == TDT_CRLF || type == TDT_LF || type == TDT_LFCR || type == TDT_PROMPT)
+		{
+			  //QByteArray ba = line.toAscii();
+  			//quint8* dataline = (quint8*) line.data();
+			
+			if (line.contains("Reconnecting."))
+				m_reconnecting = true;
+				
+	        if (line.contains("<xml>") || line.contains("room>") || line.contains("prompt>") || line.contains("<movement"))
+	        {
+	        	m_xmlMode = true;
+	        	m_xmlModeAutoconfigured = true;
+
+				emit sendToMud((QByteArray)"brief\n");
+				emit sendToMud((QByteArray)"prompt all\n");
+				if (Config().m_IAC_prompt_parser)
+				{				
+					//send IAC-GA prompt request
+					QByteArray idprompt("~$#EP2\nG\n");
+    				emit sendToMud(idprompt); 
+				}
+	        	
+		       	break;
+	        }
+	        else if (m_reconnecting && (line.contains(">")) || line.contains("Exits"))
+		    {
+		      	m_xmlMode = false;
+		       	m_xmlModeAutoconfigured = true;
+
+				emit sendToMud((QByteArray)"brief\n");
+				emit sendToMud((QByteArray)"prompt all\n");
+				if (Config().m_IAC_prompt_parser)
+				{				
+					//send IAC-GA prompt request
+					QByteArray idprompt("~$#EP2\nG\n");
+    				emit sendToMud(idprompt); 
+				}
+		       	break;
+		    }
+	  	}
+     }
+  }
+*/
+
+  IncomingData data; 	
+  while ( !m_mudIncomingQue.isEmpty() )
+  {
+	data = m_mudIncomingQue.dequeue();
+
+    if(!m_xmlModeAutoconfigured && (data.type == TDT_CRLF || data.type == TDT_LF || data.type == TDT_LFCR || data.type == TDT_PROMPT))
+    {
+		if (data.line.contains("Reconnecting."))
+			m_reconnecting = true;
+				
+        if (data.line.contains("<xml>") || data.line.contains("room>") || data.line.contains("prompt>") || data.line.contains("<movement"))
+        {
+        	m_xmlMode = true;
+        	m_xmlModeAutoconfigured = true;
+
+			emit sendToMud((QByteArray)"brief\n");
+			emit sendToMud((QByteArray)"prompt all\n");
+			if (Config().m_IAC_prompt_parser)
+			{				
+				//send IAC-GA prompt request
+				QByteArray idprompt("~$#EP2\nG\n");
+   				emit sendToMud(idprompt); 
+			}
+        	
+	       	break;
+        }
+        else if (m_reconnecting && (data.line.contains(">")) || data.line.contains("Exits"))
+	    {
+	      	m_xmlMode = false;
+	       	m_xmlModeAutoconfigured = true;
+			emit sendToMud((QByteArray)"brief\n");
+			emit sendToMud((QByteArray)"prompt all\n");
+			if (Config().m_IAC_prompt_parser)
+			{				
+				//send IAC-GA prompt request
+				QByteArray idprompt("~$#EP2\nG\n");
+   				emit sendToMud(idprompt); 
+			}
+	       	break;
+	    }
+    }
+
+    //parse incoming lines in que
+    if (m_xmlMode)
+      emit parseNewMudInputXml(data/*m_mudIncomingQue*/);
+    else
+      emit parseNewMudInput(data/*m_mudIncomingQue*/);
+      
+  }
   return;
 }
 
@@ -95,7 +201,16 @@ void TelnetFilter::analyzeUserStream(const char * input, int length)
   dispatchTelnetStream(ba, m_userIncomingData, m_userIncomingQue);
   
   //parse incoming lines in que
-  emit parseNewUserInput(m_userIncomingQue);
+  IncomingData data; 	
+  while ( !m_userIncomingQue.isEmpty() )
+  {
+	data = m_userIncomingQue.dequeue();
+
+    if (m_xmlMode)
+	  emit parseNewUserInputXml(data);
+    else
+  	  emit parseNewUserInput(data);
+  }
   
   return;
 }
@@ -158,7 +273,7 @@ void TelnetFilter::dispatchTelnetStream(QByteArray& stream, IncomingData &m_inco
 				m_incomingData.line.append(escChar);
 			index++; 
 			break;
-
+			
 		case TC_IAC: //IAC IAC  - should not happen tho, we use ASCII chars only!!!
 
 			if ( m_incomingData.type != TDT_TELNET && !m_incomingData.line.isEmpty()) 
@@ -316,12 +431,17 @@ void TelnetFilter::dispatchTelnetStream(QByteArray& stream, IncomingData &m_inco
 		}
    	}
 
-	if ( !m_incomingData.line.isEmpty() ) 
+	if ( !m_incomingData.line.isEmpty() && m_incomingData.type == TDT_SPLIT) 
 	{
-				
-		
-		if (m_incomingData.type == TDT_SPLIT)
 		{
+			if (m_incomingData.line.endsWith("prompt>"))
+			{
+				m_incomingData.type = TDT_PROMPT;
+				que.enqueue(m_incomingData);
+				m_incomingData.line.clear();
+				m_incomingData.type = TDT_SPLIT;
+			}
+			else
 			if (m_incomingData.line.endsWith(char(ASCII_LF)))
 			{
 				m_incomingData.type = TDT_LF;
@@ -367,4 +487,14 @@ void TelnetFilter::dispatchTelnetStream(QByteArray& stream, IncomingData &m_inco
 			}			
 		}
 	}				
+}
+
+void TelnetFilter::setNormalMode()
+{
+  m_xmlMode = false;
+}
+
+void TelnetFilter::setXmlMode()
+{
+  m_xmlMode = true;
 }
