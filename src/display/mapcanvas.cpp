@@ -897,8 +897,8 @@ void MapCanvas::moveMarker(const Coordinate & c) {
   m_data->setPosition(c);
   m_currentLayer = c.z;
   updateGL();
-  //emit onCenter(c.x, c.y);
-  emit onEnsureVisible(c.x, c.y);
+  emit onCenter(c.x, c.y);
+  //emit onEnsureVisible(c.x, c.y);
 }
 
 

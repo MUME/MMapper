@@ -119,15 +119,16 @@ void AbstractParser::parseExits(QString& str)
 	//const char* data = str.toAscii().data();
 	bool doors=FALSE;
 	bool road=FALSE;
+	int length = str.length();
 
-	for (int i=7; i<str.length(); i++){
+	for (int i=7; i<length; i++){
 		switch ((int)(str.at(i).toAscii())){
 		  case 40: doors=true;break;	// (   
 		  case 91: doors=true;break;	// [
 		  case 61: road=true;break;	   	// =
 
 		  case 110:  // n 
-			  if ((str.at(i+2).toAscii()) == 'r') //north
+			  if ( (i+2)<length && (str.at(i+2).toAscii()) == 'r') //north
 			  {
 				  i+=5;
 				  if (doors){
