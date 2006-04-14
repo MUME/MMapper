@@ -152,7 +152,7 @@ void TelnetFilter::analyzeMudStream(const char * input, int length)
 		if (data.line.contains("Reconnecting."))
 			m_reconnecting = true;
 				
-        if (data.line.contains("<xml>") || data.line.contains("room>") || data.line.contains("prompt>") || data.line.contains("<movement"))
+        if (data.line.contains("<xml>") || data.line.contains("name>") || data.line.contains("room>") || data.line.contains("prompt>") || data.line.contains("movement"))
         {
         	m_xmlMode = true;
         	m_xmlModeAutoconfigured = true;
@@ -165,8 +165,6 @@ void TelnetFilter::analyzeMudStream(const char * input, int length)
 				QByteArray idprompt("~$#EP2\nG\n");
    				emit sendToMud(idprompt); 
 			}
-        	
-	       	break;
         }
         else if (m_reconnecting && (data.line.contains(">")) || data.line.contains("Exits"))
 	    {
@@ -180,7 +178,6 @@ void TelnetFilter::analyzeMudStream(const char * input, int length)
 				QByteArray idprompt("~$#EP2\nG\n");
    				emit sendToMud(idprompt); 
 			}
-	       	break;
 	    }
     }
 
