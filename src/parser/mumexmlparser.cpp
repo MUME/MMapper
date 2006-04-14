@@ -496,12 +496,20 @@ void MumeXmlParser::parseMudCommands(QString& str) {
 			emit releaseAllPaths();
 			return;
 		}
-		
+		else
+		if (str.startsWith("You failed to climb"))
+		{
+			if(!queue.isEmpty()) queue.dequeue(); 
+			queue.prepend(CID_NONE); 
+			emit showPath(queue, true);
+			return;   
+		}
+		else		
 		if (str.startsWith("You flee head"))
 		{
 			queue.enqueue((CommandIdType)m_xmlMovement);			
 		}
-	
+		else
 		if (str.startsWith("You follow"))
 		{
 			queue.enqueue((CommandIdType)m_xmlMovement);			
