@@ -70,6 +70,7 @@ QList<Coordinate> MapData::getPath(const QList<CommandIdType> dirs)
       uint dir = iter.next();
       if (dir > 5) break;
       Exit & e = room->exit(dir);
+      if (!(getFlags(e) & EF_EXIT)) continue;
       if (e.outBegin() == e.outEnd() || ++e.outBegin() != e.outEnd()) break;
       room = roomIndex[*e.outBegin()];
       if (!room) break;
