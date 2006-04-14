@@ -126,18 +126,23 @@ void AbstractParser::parseExits(QString& str)
 		  case 91: doors=true;break;	// [
 		  case 61: road=true;break;	   	// =
 
-		  case 110:  // n
-			  i+=5;
-			  if (doors){
-				  SET(m_exitsFlags,DOOR_N);
-				  SET(m_exitsFlags,EXIT_N);
-				  doors=false;
-			  }else 
-				  SET(m_exitsFlags,EXIT_N);
-			  if (road){
-				  SET(m_exitsFlags,ROAD_N);
-				  road=false;
+		  case 110:  // n 
+			  if ((str.at(i+2).toAscii()) == 'r') //north
+			  {
+				  i+=5;
+				  if (doors){
+					  SET(m_exitsFlags,DOOR_N);
+					  SET(m_exitsFlags,EXIT_N);
+					  doors=false;
+				  }else 
+					  SET(m_exitsFlags,EXIT_N);
+				  if (road){
+					  SET(m_exitsFlags,ROAD_N);
+					  road=false;
+				  }
 			  }		    
+			  else
+				  i+=4;  //none
 			  break;
 
 		  case 115:  // s
