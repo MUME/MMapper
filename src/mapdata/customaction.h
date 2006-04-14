@@ -32,13 +32,7 @@ enum FlagModifyMode {FMM_SET, FMM_UNSET, FMM_TOGGLE};
 
 class MapData;
 
-class AddOneWayExit : public AddExit {
-	public:
-		AddOneWayExit(uint room1Id, uint room2Id, uint room1Dir) :
-			AddExit(room1Id, room2Id, room1Dir) {}
-	protected:
-		virtual void exec();
-};
+typedef AddExit AddOneWayExit;
 
 class AddTwoWayExit : public AddOneWayExit {
 	public:
