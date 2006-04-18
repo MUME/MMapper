@@ -68,7 +68,8 @@ HEADERS += ./global/defs.h \
           ./mapstorage/oldroom.h \
           ./mapstorage/olddoor.h \
           ./mapstorage/roomsaver.h \
-          ./mapstorage/oldconnection.h
+          ./mapstorage/oldconnection.h \
+	  ./mapfrontend/tinylist.h
 SOURCES += main.cpp \
           ./mapdata/mapdata.cpp \
           ./mapdata/mmapper2room.cpp \
