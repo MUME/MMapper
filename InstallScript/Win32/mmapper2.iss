@@ -56,6 +56,6 @@ Filename: {app}\mmapper2.exe; Description: {cm:LaunchProgram,MMapper}; Flags: no
 [Dirs]
 Name: {app}\Doc; Components: doc
 [Components]
-Name: doc; Description: Advice, tips and tricks; Types: custom full
 Name: app; Description: The mapper application; Flags: fixed; Types: custom compact full
+Name: doc; Description: Advice, tips and tricks; Types: custom full
 Name: map; Description: Basic map skeleton; Types: custom full
