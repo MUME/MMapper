@@ -60,9 +60,10 @@ Q_OBJECT
   virtual void deleteMostLikelyRoom();
   virtual void releaseAllPaths();
   virtual void retry();
+  virtual void setCurrentRoom(uint id);
+  virtual void setCurrentRoom(const Coordinate & pos);
 
  signals:
-  
   void lookingForRooms(RoomRecipient *,ParseEvent *);
   void lookingForRooms(RoomRecipient *,uint);
   void lookingForRooms(RoomRecipient *,const Coordinate &);

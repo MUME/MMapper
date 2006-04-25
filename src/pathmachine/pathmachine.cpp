@@ -41,6 +41,26 @@ PathMachine::PathMachine(AbstractRoomFactory * in_factory, bool threaded) :
     paths(new list<Path *>)
 {}
 
+void PathMachine::setCurrentRoom(uint id)
+{
+  {
+    Approved app(factory, lastEvent, params.matchingTolerance);
+    emit lookingForRooms(&app, id);
+  }
+  retry();
+}
+
+void PathMachine::setCurrentRoom(const Coordinate & pos)
+{
+  {
+    Approved app(factory, lastEvent, params.matchingTolerance);
+    emit lookingForRooms(&app, pos);
+  }
+  retry();
+}
+
+
+
 void PathMachine::init()
 {
   QObject::connect(&signaler, SIGNAL(scheduleAction(MapAction *)), this, SIGNAL(scheduleAction(MapAction *)));
