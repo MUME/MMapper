@@ -104,6 +104,7 @@ signals:
 	void newRoomSelection(const RoomSelection*);
 	void newConnectionSelection(ConnectionSelection*);
 	
+	void setCurrentRoom(uint id);
 	void roomPositionChanged();
 	    
 protected:

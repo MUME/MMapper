@@ -296,6 +296,24 @@ void MapCanvas::mousePressEvent(QMouseEvent *event)
 		break;
 		
 	case CMM_SELECT_ROOMS:
+	
+		if ((event->buttons() & Qt::LeftButton) && 
+			(event->modifiers() & Qt::CTRL ) &&
+			(event->modifiers() & Qt::ALT ) )
+		{	
+	    	m_ctrlPressed = true;
+	    	m_altPressed = true;
+	    		
+			const RoomSelection *tmpSel = m_data->select(Coordinate(GLtoMap(m_selX1), GLtoMap(m_selY1), m_selLayer1));				
+			if(tmpSel->size() > 0)
+			{    		
+		    	emit setCurrentRoom(tmpSel->keys().front());	
+			}
+			m_data->unselect(tmpSel);
+		    updateGL();
+			break;	
+		}
+			
 		if (event->buttons() & Qt::RightButton) {	
 		   	m_selectedArea = false;
 	    	if (m_roomSelection != NULL) m_data->unselect(m_roomSelection);
@@ -571,6 +589,9 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *event)
 	case CMM_MOVE:				
 		break;
 	case CMM_SELECT_ROOMS:	
+	
+		if ( m_ctrlPressed && m_altPressed ) break;
+
 	    if ( m_mouseLeftPressed == true ) {
 			m_mouseLeftPressed = false;    	
 	

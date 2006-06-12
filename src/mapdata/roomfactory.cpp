@@ -118,6 +118,12 @@ ComparisonResult RoomFactory::compare(const Room * room, const ParseEvent * even
   bool updated = room->isUpToDate();
   bool toleranceUsed = false;
 
+  if (event == NULL) 
+  {
+  	//return CR_DIFFERENT;
+    return CR_EQUAL;
+  }
+
   if (m_name.isEmpty() && m_desc.isEmpty() && (!updated))
   {
     // user-created
