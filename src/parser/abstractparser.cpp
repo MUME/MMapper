@@ -27,6 +27,7 @@
 #include "abstractparser.h"
 #include "mmapper2event.h"
 #include "mmapper2room.h"
+#include "mmapper2exit.h"
 #include "configuration.h"
 
 const QChar AbstractParser::escChar('\x1B');
@@ -275,6 +276,9 @@ void AbstractParser::parseNewUserInput(IncomingData& data)
 bool AbstractParser::parseUserCommands(QString& command) {
 	QString str = command;
 
+
+	// if (Config().m_mapMode == 2)  // offline mode
+
 	DoorActionType daction = DAT_NONE;
 	bool dooraction = FALSE;
 
@@ -300,12 +304,12 @@ bool AbstractParser::parseUserCommands(QString& command) {
 		if (str.startsWith("_brief")){
 			if (Config().m_brief == TRUE){
 				Config().m_brief = FALSE;
-				emit sendToUser((QByteArray)"[MMapper] brief mode off.\n");
+				emit sendToUser((QByteArray)"[MMapper] brief mode off.\r\n");
 				return false;
 			}		
 			if (Config().m_brief == FALSE){
 				Config().m_brief = TRUE;
-				emit sendToUser((QByteArray)"[MMapper] brief mode on.\n");
+				emit sendToUser((QByteArray)"[MMapper] brief mode on.\r\n");
 				return false;
 			}
 		}
@@ -343,63 +347,67 @@ bool AbstractParser::parseUserCommands(QString& command) {
 		if (str=="_back") {
 			//while (!queue.isEmpty()) queue.dequeue();
 			queue.clear();
-			emit sendToUser((QByteArray)"OK.\n");
+			emit sendToUser((QByteArray)"OK.\r\n");
 			emit showPath(queue, true);			
+			if (Config().m_mapMode == 2) emit sendToUser("\r\n>");
 			return false;
 		}
 		if (str=="_pdynamic") {
 			emit sendToUser(m_dynamicRoomDesc.toAscii());
-			emit sendToUser((QByteArray)"OK.\n");
+			emit sendToUser((QByteArray)"OK.\r\n");
+			if (Config().m_mapMode == 2) emit sendToUser("\r\n>");
 			return false;
 		}
 		if (str=="_pstatic") {
 			emit sendToUser(m_staticRoomDesc.toAscii());
-			emit sendToUser((QByteArray)"OK.\n");
+			emit sendToUser((QByteArray)"OK.\r\n");
+			if (Config().m_mapMode == 2) emit sendToUser("\r\n>");
 			return false;
 		}
 		if (str=="_help") {
-			emit sendToUser((QByteArray)"\nMMapper help:\n-------------\n");
+			emit sendToUser((QByteArray)"\r\nMMapper help:\r\n-------------\r\n");
 	
-			emit sendToUser((QByteArray)"\nStandard MUD commands:\n");
-			emit sendToUser((QByteArray)"  Move commands: [n,s,...] or [north,south,...]\n");
-			emit sendToUser((QByteArray)"  Sync commands: [exa,l] or [examine,look]\n");
+			emit sendToUser((QByteArray)"\r\nStandard MUD commands:\r\n");
+			emit sendToUser((QByteArray)"  Move commands: [n,s,...] or [north,south,...]\r\n");
+			emit sendToUser((QByteArray)"  Sync commands: [exa,l] or [examine,look]\r\n");
 	
-			emit sendToUser((QByteArray)"\nManage prespammed command que:\n");
-			emit sendToUser((QByteArray)"  _back        - delete prespammed commands from que\n");
+			emit sendToUser((QByteArray)"\r\nManage prespammed command que:\r\n");
+			emit sendToUser((QByteArray)"  _back        - delete prespammed commands from que\r\n");
 	
-			emit sendToUser((QByteArray)"\nDescription commands:\n");
-			emit sendToUser((QByteArray)"  _pdynamic    - prints current room description\n");
-			emit sendToUser((QByteArray)"  _pstatic     - the same as previous, but without moveable items\n");
-			emit sendToUser((QByteArray)"  _brief       - emulate brief mode on/off\n");
+			emit sendToUser((QByteArray)"\r\nDescription commands:\r\n");
+			emit sendToUser((QByteArray)"  _pdynamic    - prints current room description\r\n");
+			emit sendToUser((QByteArray)"  _pstatic     - the same as previous, but without moveable items\r\n");
+			emit sendToUser((QByteArray)"  _brief       - emulate brief mode on/off\r\n");
 	
-			emit sendToUser((QByteArray)"\nDoor commands:\n");
-			emit sendToUser((QByteArray)"  _open   [n,s,e,w,u,d]   - open door [dir]\n");
-			emit sendToUser((QByteArray)"  _close  [n,s,e,w,u,d]   - close door [dir]\n");
-			emit sendToUser((QByteArray)"  _lock   [n,s,e,w,u,d]   - lock door [dir]\n");
-			emit sendToUser((QByteArray)"  _unlock [n,s,e,w,u,d]   - unlock door [dir]\n");
-			emit sendToUser((QByteArray)"  _pick   [n,s,e,w,u,d]   - pick door [dir]\n");
-			emit sendToUser((QByteArray)"  _rock   [n,s,e,w,u,d]   - throw rock door [dir]\n");
-			emit sendToUser((QByteArray)"  _bash   [n,s,e,w,u,d]   - bash door [dir]\n");
-			emit sendToUser((QByteArray)"  _break  [n,s,e,w,u,d]   - cast 'break door' door [dir]\n");
-			emit sendToUser((QByteArray)"  _block  [n,s,e,w,u,d]   - cast 'block door' door [dir]\n");
+			emit sendToUser((QByteArray)"\r\nDoor commands:\r\n");
+			emit sendToUser((QByteArray)"  _open   [n,s,e,w,u,d]   - open door [dir]\r\n");
+			emit sendToUser((QByteArray)"  _close  [n,s,e,w,u,d]   - close door [dir]\r\n");
+			emit sendToUser((QByteArray)"  _lock   [n,s,e,w,u,d]   - lock door [dir]\r\n");
+			emit sendToUser((QByteArray)"  _unlock [n,s,e,w,u,d]   - unlock door [dir]\r\n");
+			emit sendToUser((QByteArray)"  _pick   [n,s,e,w,u,d]   - pick door [dir]\r\n");
+			emit sendToUser((QByteArray)"  _rock   [n,s,e,w,u,d]   - throw rock door [dir]\r\n");
+			emit sendToUser((QByteArray)"  _bash   [n,s,e,w,u,d]   - bash door [dir]\r\n");
+			emit sendToUser((QByteArray)"  _break  [n,s,e,w,u,d]   - cast 'break door' door [dir]\r\n");
+			emit sendToUser((QByteArray)"  _block  [n,s,e,w,u,d]   - cast 'block door' door [dir]\r\n");
 	
-			emit sendToUser((QByteArray)"\n");
-			emit sendToUser((QByteArray)"  _setdoor [n,s,e,w,u,d] doorname   - sets door name in direction [dir]\n");
+			emit sendToUser((QByteArray)"\r\n");
+			emit sendToUser((QByteArray)"  _setdoor [n,s,e,w,u,d] doorname   - sets door name in direction [dir]\r\n");
 	
-			emit sendToUser((QByteArray)"\nDoor variables:\n");
-			emit sendToUser((QByteArray)"  $$DOOR_N$$   - secret name of door leading north\n");
-			emit sendToUser((QByteArray)"  $$DOOR_S$$   - secret name of door leading south\n");
-			emit sendToUser((QByteArray)"  $$DOOR_E$$   - secret name of door leading east\n");
-			emit sendToUser((QByteArray)"  $$DOOR_W$$   - secret name of door leading west\n");
-			emit sendToUser((QByteArray)"  $$DOOR_U$$   - secret name of door leading up\n");
-			emit sendToUser((QByteArray)"  $$DOOR_D$$   - secret name of door leading down\n");
-			emit sendToUser((QByteArray)"  $$DOOR$$     - the same as 'exit'\n");
+			emit sendToUser((QByteArray)"\r\nDoor variables:\r\n");
+			emit sendToUser((QByteArray)"  $$DOOR_N$$   - secret name of door leading north\r\n");
+			emit sendToUser((QByteArray)"  $$DOOR_S$$   - secret name of door leading south\r\n");
+			emit sendToUser((QByteArray)"  $$DOOR_E$$   - secret name of door leading east\r\n");
+			emit sendToUser((QByteArray)"  $$DOOR_W$$   - secret name of door leading west\r\n");
+			emit sendToUser((QByteArray)"  $$DOOR_U$$   - secret name of door leading up\r\n");
+			emit sendToUser((QByteArray)"  $$DOOR_D$$   - secret name of door leading down\r\n");
+			emit sendToUser((QByteArray)"  $$DOOR$$     - the same as 'exit'\r\n");
 	
-			emit sendToUser((QByteArray)"\nHelp commands:\n");
-			emit sendToUser((QByteArray)"  _help   - this help text\n");
+			emit sendToUser((QByteArray)"\r\nHelp commands:\n");
+			emit sendToUser((QByteArray)"  _help   - this help text\r\n");
 	
-			emit sendToUser((QByteArray)"\n");
-	
+			emit sendToUser((QByteArray)"\r\n");
+
+			if (Config().m_mapMode == 2) emit sendToUser("\r\n>");
 			return false;
 		}
 	}
@@ -424,54 +432,203 @@ bool AbstractParser::parseUserCommands(QString& command) {
 			performDoorCommand(DOWN, daction);
 		else
 			performDoorCommand(UNKNOWN, daction);
-
         return false;
 	}
 
 	if (str=="n" || str=="north"){
 		queue.enqueue(CID_NORTH);
 		emit showPath(queue, true);
-		return true;
+		if (Config().m_mapMode != 2) 
+			return true; 
+		else
+		{ 
+			offlineCharacterMove(CID_NORTH);
+			return false; //do not send command to mud server for offline mode
+		}
 	}
 	if (str=="s" || str=="south"){
 		queue.enqueue(CID_SOUTH);
 		emit showPath(queue, true);
-		return true;
+		if (Config().m_mapMode != 2) 
+			return true; 
+		else 
+		{
+			offlineCharacterMove(CID_SOUTH);
+			return false; //do not send command to mud server for offline mode
+		}
 	}
 	if (str=="e" || str=="east"){
 		queue.enqueue(CID_EAST);
 		emit showPath(queue, true);
-		return true;
+		if (Config().m_mapMode != 2) 
+			return true; 
+		else 
+		{
+			offlineCharacterMove(CID_EAST);
+			return false; //do not send command to mud server for offline mode
+		}
 	}
 	if (str=="w" || str=="west"){
 		queue.enqueue(CID_WEST);
 		emit showPath(queue, true);
-		return true;
+		if (Config().m_mapMode != 2) 
+			return true; 
+		else 
+		{
+			offlineCharacterMove(CID_WEST);
+			return false; //do not send command to mud server for offline mode
+		}
 	}
 	if (str=="u" || str=="up"){
 		queue.enqueue(CID_UP);
 		emit showPath(queue, true);
-		return true;
+		if (Config().m_mapMode != 2) 
+			return true; 
+		else 
+		{
+			offlineCharacterMove(CID_UP);
+			return false; //do not send command to mud server for offline mode
+		}
 	}
 	if (str=="d" || str=="down"){
 		queue.enqueue(CID_DOWN);
 		emit showPath(queue, true);
-		return true;
+		if (Config().m_mapMode != 2) 
+			return true; 
+		else 
+		{
+			offlineCharacterMove(CID_DOWN);
+			return false; //do not send command to mud server for offline mode
+		}
 	}
 	if (str=="l" || str=="look"){
 		queue.enqueue(CID_LOOK);
-		return true;
+		if (Config().m_mapMode != 2) 
+			return true; 
+		else 
+		{
+			offlineCharacterMove(CID_LOOK);
+			return false; //do not send command to mud server for offline mode
+		}
 	}
 	if (str=="exa" || str=="examine"){
 		queue.enqueue(CID_LOOK);
-		return true;
+		if (Config().m_mapMode != 2) 
+			return true; 
+		else 
+		{
+			offlineCharacterMove(CID_LOOK);
+			return false; //do not send command to mud server for offline mode
+		}
 	}
 	if (str.startsWith("scout")) {
 		queue.enqueue(CID_SCOUT);
-		return true;
+		if (Config().m_mapMode != 2) 
+			return true; 
+	}
+	if ((str=="f" || str=="flee") && Config().m_mapMode == 2){
+		offlineCharacterMove(CID_FLEE);
+		return false; //do not send command to mud server for offline mode
 	}
 
-	return true;
+	if (Config().m_mapMode != 2) 
+		return true;
+	else
+	{
+		emit sendToUser("\r\n>");
+		return false; //do not send command to mud server for offline mode
+	}
+}
+
+void AbstractParser::offlineCharacterMove(CommandIdType direction)
+{	
+	bool flee = false;
+	if (direction == CID_FLEE)
+	{
+		flee = true;
+		emit sendToUser((QByteArray)"You fleed over heels!\r\n");
+		direction = (CommandIdType) (rand() % 6);
+	}
+
+	if (!flee) queue.dequeue();
+
+	Coordinate c;
+	c = m_mapData->getPosition();
+	const RoomSelection * rs1 = m_mapData->select(c);
+	const Room *rb = rs1->values().front();
+
+	if (direction == CID_LOOK)
+	{
+		sendRoomInfoToUser(rb);
+	}
+	else
+	{
+		const Exit &e = rb->exit((uint)direction);
+		if ((getFlags(e) & EF_EXIT) && (e.outBegin() != e.outEnd()))
+		{
+			const RoomSelection * rs2 = m_mapData->select();
+			const Room *r = m_mapData->getRoom(*e.outBegin(), rs2);
+			
+			sendRoomInfoToUser(r);
+			characterMoved( direction, getName(r), getDynamicDescription(r), getDescription(r), 0, 0);
+			emit showPath(queue, true);
+			m_mapData->unselect(rs2);
+		}
+		else
+		{
+			if (!flee)
+				emit sendToUser((QByteArray)"You cannot go that way...");
+			else
+				emit sendToUser((QByteArray)"You cannot flee!!!");
+			emit sendToUser("\r\n>");
+		}
+	}
+	m_mapData->unselect(rs1);
+}
+
+void AbstractParser::sendRoomInfoToUser(const Room* r)
+{
+	emit sendToUser((QByteArray)"\r\n"+getName(r).toAscii()+(QByteArray)"\r\n");
+	emit sendToUser(getDescription(r).toAscii().replace("\n","\r\n"));
+	emit sendToUser(getDynamicDescription(r).toAscii().replace("\n","\r\n"));
+
+	QString etmp = "Exits:";
+    for (int j = 0; j < 7; j++) {
+    	
+    	bool door = false;
+    	if (ISSET(getFlags(r->exit(j)),EF_DOOR)) 
+    	{
+    		door = true;
+    		etmp += " (";	
+    	}
+    		
+        if (ISSET(getFlags(r->exit(j)),EF_EXIT)) {
+    		if (!door) etmp += " ";
+    		
+        	switch(j)
+        	{
+        		case 0: etmp += "north"; break;
+        		case 1: etmp += "south"; break;
+        		case 2: etmp += "east"; break;
+        		case 3: etmp += "west"; break;
+        		case 4: etmp += "up"; break;
+        		case 5: etmp += "down"; break;
+        		case 6: etmp += "unknown"; break;
+        	}
+        }
+        
+        if (door)
+        {
+        	if (getDoorName(r->exit(j))!="")
+        		etmp += "/"+getDoorName(r->exit(j))+")";	
+        	else
+        		etmp += ")";				                		
+        }
+    }
+	etmp += ".";							
+	emit sendToUser(etmp.toAscii());
+
+	emit sendToUser("\r\n>");
 }
 
 void AbstractParser::performDoorCommand(DirectionType direction, DoorActionType action)
@@ -547,8 +704,16 @@ void AbstractParser::performDoorCommand(DirectionType direction, DoorActionType 
 			break;		
 	}
 
-    emit sendToMud(cn);
-    emit sendToUser("--->" + cn);
+	if (Config().m_mapMode != 2)  // online mode
+	{
+	    emit sendToMud(cn);
+	    emit sendToUser("--->" + cn);
+	}
+	else
+	{
+	    emit sendToUser("--->" + cn);
+	    emit sendToUser("OK.\r\n");		
+	}
 }
 
 void AbstractParser::genericDoorCommand(QString command, DirectionType direction)
@@ -599,8 +764,16 @@ void AbstractParser::genericDoorCommand(QString command, DirectionType direction
 			break;		
 	}
 
-    emit sendToMud(command.toAscii());
-    emit sendToUser("--->" + command.toAscii());
+	if (Config().m_mapMode != 2)  // online mode
+	{
+	    emit sendToMud(command.toAscii());
+	    emit sendToUser("--->" + command.toAscii());
+	}
+	else
+	{
+	    emit sendToUser("--->" + command.toAscii());
+	    emit sendToUser("OK.\r\n");		
+	}
 }
 
 void AbstractParser::setDoorCommand(QString doorname, DirectionType direction)

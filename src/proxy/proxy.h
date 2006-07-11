@@ -105,6 +105,8 @@ private:
 	QTcpSocket *m_userSocket;
 	char m_buffer[ 8192 ];
 	
+	bool m_serverConnected;
+	
 	TelnetFilter *m_filter;
 	Parser *m_parser;
 	MumeXmlParser *m_parserXml;

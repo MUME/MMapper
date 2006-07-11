@@ -113,6 +113,7 @@ public slots:
   void onPreferences();
   void onPlayMode();
   void onMapMode();
+  void onOfflineMode();
   void alwaysOnTop();
 
   void newRoomSelection(const RoomSelection*);
@@ -186,6 +187,7 @@ private:
 
   QAction *playModeAct;
   QAction *mapModeAct;
+  QAction *offlineModeAct;
 
   QActionGroup *mapModeActGroup;
   QActionGroup *modeActGroup;

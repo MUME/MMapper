@@ -30,6 +30,7 @@
 #include <QtCore>
 #include "telnetfilter.h"
 #include "defs.h"
+#include "room.h"
 
 class ParseEvent;
 class MapData;
@@ -105,7 +106,9 @@ public slots:
   
 protected:  
     //for main move/search algorithm
-   void	characterMoved(CommandIdType, const QString&, const QString&, const QString&, ExitsFlagsType, PromptFlagsType);
+    void characterMoved(CommandIdType, const QString&, const QString&, const QString&, ExitsFlagsType, PromptFlagsType);
+	void offlineCharacterMove(CommandIdType direction);
+	void sendRoomInfoToUser(const Room*);
 
     //command handling 
 	void performDoorCommand(DirectionType direction, DoorActionType action);

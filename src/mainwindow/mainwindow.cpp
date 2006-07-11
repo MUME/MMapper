@@ -152,6 +152,12 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
       mapModeAct->setChecked(true);
       onMapMode();
     }
+  else
+    if (Config().m_mapMode == 2)
+    {
+      offlineModeAct->setChecked(true);
+      onOfflineMode();
+    }
 
 }
 
@@ -415,7 +421,7 @@ void MainWindow::createActions()
   connectionActGroup->addAction(deleteConnectionSelectionAct);
   connectionActGroup->setEnabled(FALSE);
 
-  playModeAct = new QAction(QIcon(":/icons/play.png"), tr("Switch to play mode"), this);
+  playModeAct = new QAction(QIcon(":/icons/online.png"), tr("Switch to play mode"), this);
   playModeAct->setStatusTip(tr("Switch to play mode - no new rooms are created"));
   playModeAct->setCheckable(true);
   connect(playModeAct, SIGNAL(triggered()), this, SLOT(onPlayMode()));
@@ -425,10 +431,16 @@ void MainWindow::createActions()
   mapModeAct->setCheckable(true);
   connect(mapModeAct, SIGNAL(triggered()), this, SLOT(onMapMode()));
 
+  offlineModeAct = new QAction(QIcon(":/icons/play.png"), tr("Switch to offline emulation mode"), this);
+  offlineModeAct->setStatusTip(tr("Switch to offline emulation mode - you can learn areas offline"));
+  offlineModeAct->setCheckable(true);
+  connect(offlineModeAct, SIGNAL(triggered()), this, SLOT(onOfflineMode()));
+
   mapModeActGroup = new QActionGroup(this);
   mapModeActGroup->setExclusive(true);
   mapModeActGroup->addAction(playModeAct);
   mapModeActGroup->addAction(mapModeAct);
+  mapModeActGroup->addAction(offlineModeAct);
   mapModeActGroup->setEnabled(true);
 
   cutAct->setEnabled(false);
@@ -449,6 +461,14 @@ void MainWindow::onMapMode()
   QObject::connect(m_pathMachine, SIGNAL(createRoom(ParseEvent*, const Coordinate & )), m_mapData, SLOT(createRoom(ParseEvent*, const Coordinate & )));
   QObject::connect(m_pathMachine, SIGNAL(scheduleAction(MapAction *)), m_mapData, SLOT(scheduleAction(MapAction *)));
   Config().m_mapMode = 1;
+}
+
+void MainWindow::onOfflineMode()
+{
+  log("MainWindow","Offline emulation mode selected - you can learn areas 'safe' way.");
+  QObject::disconnect(m_pathMachine, SIGNAL(createRoom(ParseEvent*, const Coordinate & )), m_mapData, SLOT(createRoom(ParseEvent*, const Coordinate & )));
+  QObject::disconnect(m_pathMachine, SIGNAL(scheduleAction(MapAction *)), m_mapData, SLOT(scheduleAction(MapAction *)));
+  Config().m_mapMode = 2;
 }
 
 void MainWindow::disableActions(bool value)
@@ -501,6 +521,7 @@ void MainWindow::setupMenuBar()
 
   editMenu->addAction(playModeAct);
   editMenu->addAction(mapModeAct);
+  editMenu->addAction(offlineModeAct);
   editMenu->addSeparator();
   editMenu->addAction(modeRoomSelectAct);
   editMenu->addAction(modeConnectionSelectAct);
@@ -597,6 +618,7 @@ void MainWindow::setupToolBars()
   mapModeToolBar->setObjectName("MapModeToolBar");
   mapModeToolBar->addAction(playModeAct);
   mapModeToolBar->addAction(mapModeAct);
+  mapModeToolBar->addAction(offlineModeAct);
 
   modeToolBar = addToolBar(tr("Mouse Mode"));
   modeToolBar->setObjectName("ModeToolBar");

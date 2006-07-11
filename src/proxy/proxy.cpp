@@ -62,6 +62,7 @@ Proxy::Proxy(MapData* md, Mmapper2PathMachine* pm, CommandEvaluator* ce, Prespam
     m_remotePort(port),
     m_mudSocket(NULL),
     m_userSocket(NULL),
+	m_serverConnected(false),
     m_mapData(md),    
     m_pathMachine(pm),
     m_commandEvaluator(ce),
@@ -169,14 +170,23 @@ bool Proxy::init()
     {
         //m_userSocket->write("Server not responding!!!\r\n", 26);
         emit log("Proxy", "Server not responding!!!");
+        
+        sendToUser("\r\nServer not responging!!!\r\n\r\nYou can explore world map offline or try to reconnect again...\r\n");
+  		sendToUser("\r\n>");
         //m_userSocket->flush();
 
         emit error(m_mudSocket->error());
+		m_mudSocket->close();
+		delete m_mudSocket;
+		m_mudSocket = NULL;
+		
+        return TRUE;
 
     }
     else
     {
-        //m_userSocket->write("Connection to server established ...\r\n", 38);
+		m_serverConnected = true;
+       //m_userSocket->write("Connection to server established ...\r\n", 38);
         emit log("Proxy", "Connection to server established ...");
         //m_userSocket->flush();
 
@@ -237,7 +247,7 @@ void Proxy::processMudStream() {
 
 void Proxy::sendToMud(const QByteArray& ba)
 {
-  if (m_mudSocket) 
+  if (m_mudSocket && m_serverConnected) 
   {
       m_mudSocket->write(ba.data(), ba.size());
       m_mudSocket->flush();
