@@ -30,7 +30,7 @@
 
 Room * RoomFactory::createRoom(const ParseEvent * ev) const
 {
-  Room * room = new Room(10, 7, 3);
+  Room * room = new Room(11, 7, 3);
   if (ev) update(room, ev);
   return room;
 }
@@ -287,6 +287,7 @@ void RoomFactory::update(Room * target, const Room * source) const
   if (getAlignType(target) == RAT_UNDEFINED) target->replace(R_ALIGNTYPE, getAlignType(source));
   if (getLightType(target) == RLT_UNDEFINED) target->replace(R_LIGHTTYPE, getLightType(source));
   if (getPortableType(target) == RPT_UNDEFINED) target->replace(R_PORTABLETYPE, getPortableType(source));
+  if (getRidableType(target) == RRT_UNDEFINED) target->replace(R_RIDABLETYPE, getRidableType(source));
   if (getTerrainType(source) != RTT_UNDEFINED) target->replace(R_TERRAINTYPE, getTerrainType(source));
 
   target->replace(R_NOTE, getNote(target).append(getNote(source)));

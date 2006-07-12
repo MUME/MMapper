@@ -158,6 +158,10 @@ void RoomEditAttrDlg::connectAll()
     connect(portableRadioButton, SIGNAL(toggled(bool)), this, SLOT(portableRadioButtonToggled(bool)));	
     connect(portUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(portUndefRadioButtonToggled(bool)));	
 	
+    connect(noRideRadioButton, SIGNAL(toggled(bool)), this, SLOT(noRideRadioButtonToggled(bool)));	
+    connect(ridableRadioButton, SIGNAL(toggled(bool)), this, SLOT(ridableRadioButtonToggled(bool)));	
+    connect(rideUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(rideUndefRadioButtonToggled(bool)));	
+
     connect(litRadioButton, SIGNAL(toggled(bool)), this, SLOT(litRadioButtonToggled(bool)));	
     connect(darkRadioButton, SIGNAL(toggled(bool)), this, SLOT(darkRadioButtonToggled(bool)));	
     connect(lightUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(lightUndefRadioButtonToggled(bool)));	
@@ -208,6 +212,10 @@ void RoomEditAttrDlg::disconnectAll()
     disconnect(portableRadioButton, SIGNAL(toggled(bool)), this, SLOT(portableRadioButtonToggled(bool)));	
     disconnect(portUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(portUndefRadioButtonToggled(bool)));	
 	
+    disconnect(noRideRadioButton, SIGNAL(toggled(bool)), this, SLOT(noRideRadioButtonToggled(bool)));	
+    disconnect(ridableRadioButton, SIGNAL(toggled(bool)), this, SLOT(ridableRadioButtonToggled(bool)));	
+    disconnect(rideUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(rideUndefRadioButtonToggled(bool)));	
+
     disconnect(litRadioButton, SIGNAL(toggled(bool)), this, SLOT(litRadioButtonToggled(bool)));	
     disconnect(darkRadioButton, SIGNAL(toggled(bool)), this, SLOT(darkRadioButtonToggled(bool)));	
     disconnect(lightUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(lightUndefRadioButtonToggled(bool)));	
@@ -667,6 +675,19 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
 				break;
 		}	
 	
+		switch (getRidableType(r))
+		{
+			case RRT_RIDABLE: 
+				ridableRadioButton->setChecked(TRUE); 
+				break;
+			case RRT_NOTRIDABLE: 
+				noRideRadioButton->setChecked(TRUE);
+				break;
+			case RRT_UNDEFINED:	
+				rideUndefRadioButton->setChecked(TRUE);
+				break;
+		}	
+
 		switch (getLightType(r))
 		{
 			case RLT_DARK: 
@@ -800,6 +821,50 @@ void RoomEditAttrDlg::portUndefRadioButtonToggled(bool val)
 	}  										
 }
 
+void RoomEditAttrDlg::noRideRadioButtonToggled(bool val)
+{
+	if (val)
+	{
+		const Room* r = getSelectedRoom();
+		if (r)	
+			m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RRT_NOTRIDABLE, R_RIDABLETYPE), r->getId()), m_roomSelection);
+		else
+			m_mapData->execute(new GroupAction(new UpdateRoomField(RRT_NOTRIDABLE, R_RIDABLETYPE), m_roomSelection), m_roomSelection);		
+	
+		emit mapChanged();		  										
+		updateDialog( getSelectedRoom() );		
+	}  										
+}
+
+void RoomEditAttrDlg::ridableRadioButtonToggled(bool val)
+{
+	if (val)
+	{
+		const Room* r = getSelectedRoom();
+		if (r)	
+			m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RRT_RIDABLE, R_RIDABLETYPE), r->getId()), m_roomSelection);
+		else
+			m_mapData->execute(new GroupAction(new UpdateRoomField(RRT_RIDABLE, R_RIDABLETYPE), m_roomSelection), m_roomSelection);		
+	
+		emit mapChanged();		  										
+		updateDialog( getSelectedRoom() );		
+	}  										
+}
+
+void RoomEditAttrDlg::rideUndefRadioButtonToggled(bool val)
+{
+	if (val)
+	{
+		const Room* r = getSelectedRoom();
+		if (r)	
+			m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RRT_UNDEFINED, R_RIDABLETYPE), r->getId()), m_roomSelection);
+		else
+			m_mapData->execute(new GroupAction(new UpdateRoomField(RRT_UNDEFINED, R_RIDABLETYPE), m_roomSelection), m_roomSelection);		
+	
+		emit mapChanged();		  									
+		updateDialog( getSelectedRoom() );		
+	}  										
+}
 		
 void RoomEditAttrDlg::litRadioButtonToggled(bool val)
 {

@@ -56,6 +56,10 @@ public slots:
 	void noPortRadioButtonToggled(bool);
 	void portableRadioButtonToggled(bool);
 	void portUndefRadioButtonToggled(bool);
+
+	void noRideRadioButtonToggled(bool);
+	void ridableRadioButtonToggled(bool);
+	void rideUndefRadioButtonToggled(bool);
 		
 	void litRadioButtonToggled(bool);
 	void darkRadioButtonToggled(bool);

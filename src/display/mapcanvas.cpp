@@ -1515,6 +1515,21 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
 	       alphaOverlayTexture(m_loadPixmaps[14]);
 	    if (ISSET(lf,RLF_TOWER))
 	       alphaOverlayTexture(m_loadPixmaps[15]);
+		if (getRidableType(room)==RRT_NOTRIDABLE)
+		{
+	    	glColor4d(0.1f, 0.0f, 0.0f, 0.2f);
+	    
+	        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glCallList(m_room_gllist);
+
+			qglColor(Qt::red);
+	        glBegin(GL_LINES);
+	            glVertex3d(0.7, 0.1, 0.005);
+	            glVertex3d(0.9, 0.3, 0.005);
+	            glVertex3d(0.9, 0.1, 0.005);
+	            glVertex3d(0.7, 0.3, 0.005);
+	        glEnd();
+		}
 	    
 	    //UPDATED?
 	    glTranslated(0, 0, 0.005);

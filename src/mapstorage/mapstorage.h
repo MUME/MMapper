@@ -51,8 +51,8 @@ public:
     
 private:
     RoomFactory factory;
-    Room * loadRoom(QDataStream & stream);
-    void loadExits(Room * room, QDataStream & stream);
+    Room * loadRoom(QDataStream & stream, qint32 version);
+    void loadExits(Room * room, QDataStream & stream, qint32 version);
     Room * loadOldRoom(QDataStream & stream, ConnectionList & connectionList);
     void loadOldConnection(Connection *, QDataStream & stream, RoomList & roomList);
     void loadMark(InfoMark * mark, QDataStream & stream, qint32 version);

@@ -55,4 +55,6 @@ RoomLightType getLightType(const Room * room)
 RoomAlignType getAlignType(const Room * room) 
   { return (RoomAlignType)(*room)[R_ALIGNTYPE].toUInt(); }
 
+RoomRidableType getRidableType(const Room * room) 
+  { return (RoomRidableType)(*room)[R_RIDABLETYPE].toUInt(); }
 

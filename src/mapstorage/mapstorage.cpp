@@ -67,6 +67,7 @@ Room * MapStorage::loadOldRoom(QDataStream & stream, ConnectionList & connection
   // set default values
   RoomTerrainType     terrainType = RTT_UNDEFINED;
   RoomPortableType    portableType = RPT_UNDEFINED;
+  RoomRidableType     ridableType = RRT_UNDEFINED;
   RoomLightType       lightType = RLT_UNDEFINED;
   RoomAlignType       alignType = RAT_UNDEFINED;
   RoomMobFlags        mobFlags = 0;
@@ -274,6 +275,7 @@ Room * MapStorage::loadOldRoom(QDataStream & stream, ConnectionList & connection
   room->replace(R_LIGHTTYPE, lightType);
   room->replace(R_ALIGNTYPE, alignType);
   room->replace(R_PORTABLETYPE, portableType);
+  room->replace(R_RIDABLETYPE, ridableType);
   room->replace(R_MOBFLAGS, mobFlags);
   room->replace(R_LOADFLAGS, loadFlags);
 
@@ -281,7 +283,7 @@ Room * MapStorage::loadOldRoom(QDataStream & stream, ConnectionList & connection
 }
 
 
-Room * MapStorage::loadRoom(QDataStream & stream)
+Room * MapStorage::loadRoom(QDataStream & stream, qint32 version)
 {
   QString vqba;
   quint32 vquint32;
@@ -304,7 +306,12 @@ Room * MapStorage::loadRoom(QDataStream & stream)
   stream >> vquint8; room->replace(R_LIGHTTYPE, vquint8);
   stream >> vquint8; room->replace(R_ALIGNTYPE, vquint8);
   stream >> vquint8;
-  room->replace(R_PORTABLETYPE, vquint8);
+  room->replace(R_PORTABLETYPE, vquint8);  
+  if (version >= 030)
+	  stream >> vquint8;
+  else
+	  vquint8 = 0;
+  room->replace(R_RIDABLETYPE, vquint8);
   stream >> vquint16; room->replace(R_MOBFLAGS, vquint16);
   stream >> vquint16; room->replace(R_LOADFLAGS, vquint16);
 
@@ -319,11 +326,11 @@ Room * MapStorage::loadRoom(QDataStream & stream)
   stream >> (qint32 &)c.z;
   
   room->setPosition(c + basePosition);
-  loadExits(room, stream);
+  loadExits(room, stream, version);
   return room;
 }
 
-void MapStorage::loadExits(Room * room, QDataStream & stream)
+void MapStorage::loadExits(Room * room, QDataStream & stream, qint32 version)
 {
   ExitsList & eList = room->getExitsList();
   for (int i = 0; i < 7; ++i)
@@ -402,7 +409,7 @@ bool MapStorage::mergeData()
     stream >> magic;
     if ( magic != 0xFFB2AF01 ) return false;
     stream >> version;
-    if ( version != 020 && version != 021 && version != 007 ) return false;
+    if ( version != 030 && version != 020 && version != 021 && version != 007 ) return false;
 
     stream >> roomsCount;
     if (version < 020) stream >> connectionsCount;
@@ -453,7 +460,7 @@ bool MapStorage::mergeData()
       }
       else
       {
-        room = loadRoom(stream);
+        room = loadRoom(stream, version);
       }
 
       percentageCounter++;
@@ -799,6 +806,7 @@ void MapStorage::saveRoom(const Room * room, QDataStream & stream)
   stream << (quint8)getLightType(room);
   stream << (quint8)getAlignType(room);
   stream << (quint8)getPortableType(room);
+  stream << (quint8)getRidableType(room);
   stream << (quint16)getMobFlags(room);
   stream << (quint16)getLoadFlags(room);
 
@@ -867,7 +875,7 @@ bool MapStorage::saveData()
 
   // Write a header with a "magic number" and a version
   stream << (quint32)0xFFB2AF01;
-  stream << (qint32)021;
+  stream << (qint32)030;
 
   //write counters
   stream << (quint32)roomsCount;

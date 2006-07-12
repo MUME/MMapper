@@ -40,6 +40,7 @@ enum RoomTerrainType    { RTT_UNDEFINED = 0, RTT_INDOORS, RTT_CITY, RTT_FIELD, R
 enum RoomPortableType   { RPT_UNDEFINED = 0, RPT_PORTABLE, RPT_NOTPORTABLE };
 enum RoomLightType      { RLT_UNDEFINED = 0, RLT_DARK, RLT_LIT };
 enum RoomAlignType      { RAT_UNDEFINED = 0, RAT_GOOD, RAT_NEUTRAL, RAT_EVIL };
+enum RoomRidableType    { RRT_UNDEFINED = 0, RRT_RIDABLE, RRT_NOTRIDABLE };
 
 #define RMF_RENT            bit1
 #define RMF_SHOP            bit2
@@ -77,7 +78,7 @@ typedef quint16 RoomMobFlags;
 #define RLF_TOWER     		bit16
 typedef quint16 RoomLoadFlags;
 
-enum RoomField {R_NAME, R_DESC, R_TERRAINTYPE, R_DYNAMICDESC, R_NOTE, R_MOBFLAGS, R_LOADFLAGS, R_PORTABLETYPE, R_LIGHTTYPE, R_ALIGNTYPE};
+enum RoomField {R_NAME, R_DESC, R_TERRAINTYPE, R_DYNAMICDESC, R_NOTE, R_MOBFLAGS, R_LOADFLAGS, R_PORTABLETYPE, R_LIGHTTYPE, R_ALIGNTYPE, R_RIDABLETYPE};
 
 RoomName getName(const Room * room);
   
@@ -98,5 +99,7 @@ RoomPortableType getPortableType(const Room * room);
 RoomLightType getLightType(const Room * room); 
   
 RoomAlignType getAlignType(const Room * room); 
+
+RoomRidableType getRidableType(const Room * room); 
 
 #endif
