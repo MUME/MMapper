@@ -43,6 +43,7 @@ class InfoMark;
 class InfoMarksEditDlg;
 class RoomSelection;
 class ConnectionSelection;
+class ParseEvent;
 
 class PrespammedPath;
 
@@ -106,6 +107,9 @@ signals:
 	
 	void setCurrentRoom(uint id);
 	void roomPositionChanged();
+	    
+	//for main move/search algorithm
+    void charMovedEvent(ParseEvent* );
 	    
 protected:
 	//void closeEvent(QCloseEvent *event);

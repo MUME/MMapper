@@ -207,6 +207,7 @@ void MainWindow::currentMapWindowChanged()
   QObject::connect(m_pathMachine, SIGNAL(playerMoved(const Coordinate & )),getCurrentMapWindow()->getCanvas(), SLOT(moveMarker(const Coordinate &)));
 
   QObject::connect(getCurrentMapWindow()->getCanvas(), SIGNAL(setCurrentRoom(uint)),m_pathMachine, SLOT(setCurrentRoom(uint)));
+  QObject::connect(getCurrentMapWindow()->getCanvas(), SIGNAL(charMovedEvent(ParseEvent*)),m_pathMachine, SLOT(event(ParseEvent*)));
 
   //moved to mapwindow
   QObject::connect(m_mapData, SIGNAL(mapSizeChanged(const Coordinate &, const Coordinate &)), getCurrentMapWindow(), SLOT(setScrollBars(const Coordinate &, const Coordinate &)));

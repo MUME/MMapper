@@ -30,11 +30,13 @@
 #include "room.h"
 #include "mmapper2room.h"
 #include "mmapper2exit.h"
+#include "mmapper2event.h"
 #include "coordinate.h"
 #include "roomselection.h"
 #include "connectionselection.h"
 #include "infomarkseditdlg.h"
 #include "configuration.h"
+#include "abstractparser.h"
 #include <assert.h>
 
 #define ROOM_Z_DISTANCE (7.0f)
@@ -307,7 +309,13 @@ void MapCanvas::mousePressEvent(QMouseEvent *event)
 			const RoomSelection *tmpSel = m_data->select(Coordinate(GLtoMap(m_selX1), GLtoMap(m_selY1), m_selLayer1));				
 			if(tmpSel->size() > 0)
 			{    		
-		    	emit setCurrentRoom(tmpSel->keys().front());	
+				if (Config().m_mapMode == 2)
+				{
+					const Room *r = tmpSel->values().front();
+					emit charMovedEvent(createEvent( CID_UNKNOWN, getName(r), getDynamicDescription(r), getDescription(r), 0, 0));
+				}
+				else
+		    		emit setCurrentRoom(tmpSel->keys().front());	
 			}
 			m_data->unselect(tmpSel);
 		    updateGL();
