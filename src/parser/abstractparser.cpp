@@ -676,28 +676,58 @@ void AbstractParser::performDoorCommand(DirectionType direction, DoorActionType 
 		c = m_mapData->getPosition();
 
 	dn = m_mapData->getDoorName(c, direction).toAscii();
-	if (dn == "") 
-		dn = "exit";
 		
+	bool needdir = false;
+
+	if (dn == "") 
+	{
+		dn = "exit";
+		needdir = true;
+	}
+	else
+	for (int i=0; i<6; i++)
+	{
+		if ( (((DirectionType)i) != direction) && (m_mapData->getDoorName(c, (DirectionType)i).toAscii() == dn) ) 
+			needdir = true;
+	}
+
 	switch (direction)
 	{
 		case NORTH:
-			cn += dn+" n\r\n";
+			if (needdir)
+				cn += dn+" n\r\n";
+			else
+				cn += dn+"\r\n";
 			break;
 		case SOUTH:
-			cn += dn+" s\r\n";
+			if (needdir)
+				cn += dn+" s\r\n";
+			else
+				cn += dn+"\r\n";
 			break;
 		case EAST:
-			cn += dn+" e\r\n";
+			if (needdir)
+				cn += dn+" e\r\n";
+			else
+				cn += dn+"\r\n";
 			break;
 		case WEST:
-			cn += dn+" w\r\n";
+			if (needdir)
+				cn += dn+" w\r\n";
+			else
+				cn += dn+"\r\n";
 			break;
 		case UP:
-			cn += dn+" u\r\n";
+			if (needdir)
+				cn += dn+" u\r\n";
+			else
+				cn += dn+"\r\n";
 			break;
 		case DOWN:
-			cn += dn+" d\r\n";
+			if (needdir)
+				cn += dn+" d\r\n";
+			else
+				cn += dn+"\r\n";
 			break;
 		default:
 			cn += dn+"\r\n";
@@ -729,33 +759,63 @@ void AbstractParser::genericDoorCommand(QString command, DirectionType direction
 		c = m_mapData->getPosition();
 
 	dn = m_mapData->getDoorName(c, direction).toAscii();
+
+	bool needdir = false;
+
 	if (dn == "") 
+	{
 		dn = "exit";
+		needdir = true;
+	}
+	else
+	for (int i=0; i<6; i++)
+	{
+		if ( (((DirectionType)i) != direction) && (m_mapData->getDoorName(c, (DirectionType)i).toAscii() == dn) ) 
+			needdir = true;
+	}
 
 	switch (direction)
 	{
 		case NORTH:
-			cn += dn+" n\r\n";
+			if (needdir)
+				cn += dn+" n\r\n";
+			else
+				cn += dn+"\r\n";
 			command = command.replace("$$DOOR_N$$",cn);
 			break;
 		case SOUTH:
-			cn += dn+" s\r\n";
+			if (needdir)
+				cn += dn+" s\r\n";
+			else
+				cn += dn+"\r\n";
 			command = command.replace("$$DOOR_S$$",cn);
 			break;
 		case EAST:
-			cn += dn+" e\r\n";
+			if (needdir)
+				cn += dn+" e\r\n";
+			else
+				cn += dn+"\r\n";
 			command = command.replace("$$DOOR_E$$",cn);
 			break;
 		case WEST:
-			cn += dn+" w\r\n";
+			if (needdir)
+				cn += dn+" w\r\n";
+			else
+				cn += dn+"\r\n";
 			command = command.replace("$$DOOR_W$$",cn);
 			break;
 		case UP:
-			cn += dn+" u\r\n";
+			if (needdir)
+				cn += dn+" u\r\n";
+			else
+				cn += dn+"\r\n";
 			command = command.replace("$$DOOR_U$$",cn);
 			break;
 		case DOWN:
-			cn += dn+" d\r\n";
+			if (needdir)
+				cn += dn+" d\r\n";
+			else
+				cn += dn+"\r\n";
 			command = command.replace("$$DOOR_D$$",cn);
 			break;
 		default:
