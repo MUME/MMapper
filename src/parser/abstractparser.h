@@ -109,7 +109,9 @@ protected:
     void characterMoved(CommandIdType, const QString&, const QString&, const QString&, ExitsFlagsType, PromptFlagsType);
 	void offlineCharacterMove(CommandIdType direction);
 	void sendRoomInfoToUser(const Room*);
-
+	void sendPromptSimulationToUser();
+	void sendRoomExitsInfoToUser(const Room* r);
+	
     //command handling 
 	void performDoorCommand(DirectionType direction, DoorActionType action);
 	void genericDoorCommand(QString command, DirectionType direction);
@@ -117,6 +119,8 @@ protected:
 
 	//utility functions   
    QString& removeAnsiMarks(QString& str);
+   
+   void emulateExits();
    
    void parseExits(QString& str);
    void parsePrompt(QString& prompt);

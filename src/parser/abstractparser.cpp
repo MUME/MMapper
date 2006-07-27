@@ -219,7 +219,144 @@ void AbstractParser::parseExits(QString& str)
 		  default:;
 		}
 	}
+	
+	Coordinate c;
+    QByteArray dn = "";
+    QByteArray cn = " -";
+    
+	CommandQueue tmpqueue;
+	bool noDoors = true;
+	
+	if (!queue.isEmpty())
+		tmpqueue.enqueue(queue.head());
+	
+	QList<Coordinate> cl = m_mapData->getPath(tmpqueue);
+	if (!cl.isEmpty())
+		c = cl.at(cl.size()-1);
+	else
+		c = m_mapData->getPosition();
+
+	for (uint i=0;i<6;i++)
+	{
+	  dn = m_mapData->getDoorName(c, i).toAscii();
+	  if ( dn != "" )
+	  {
+		  noDoors = false;
+		  switch (i)
+		  {
+		  	case 0: 
+		  		cn += " n:"+dn;
+		  		break;
+		  	case 1: 
+		  		cn += " s:"+dn;
+		  		break;
+		  	case 2: 
+		  		cn += " e:"+dn;
+		  		break;
+		  	case 3: 
+		  		cn += " w:"+dn;
+		  		break;
+		  	case 4: 
+		  		cn += " u:"+dn;
+		  		break;
+		  	case 5: 
+		  		cn += " d:"+dn;
+		  		break;
+		  	default:
+		  	break;
+		  }
+	  }
+	}
+	
+	if (noDoors)
+	{
+		cn = "\r\n";	
+	}
+	else
+	{
+		cn += ".\r\n";	
+		
+	}
+	
+	emit sendToUser(str.toAscii()+cn);
+	//emit sendToUser(str.toAscii()+QByteArray("\r\n"));
+	//emit sendToUser(cn);
 }
+
+void AbstractParser::emulateExits()
+{
+	Coordinate c;
+//    QByteArray dn = "";
+//    QByteArray cn = "Exits: ";
+    
+	CommandQueue tmpqueue;
+//	bool noDoors = true;
+	
+	if (!queue.isEmpty())
+		tmpqueue.enqueue(queue.head());
+	
+	QList<Coordinate> cl = m_mapData->getPath(tmpqueue);
+	if (!cl.isEmpty())
+		c = cl.at(cl.size()-1);
+	else
+		c = m_mapData->getPosition();
+
+	const RoomSelection * rs = m_mapData->select();
+	const Room *r = m_mapData->getRoom(c, rs);
+
+	sendRoomExitsInfoToUser(r);
+
+	m_mapData->unselect(rs);
+	
+	/*
+	for (uint i=0;i<6;i++)
+	{
+	  dn = m_mapData->getDoorName(c, i).toAscii();
+	  if ( dn != "" )
+	  {
+		  noDoors = false;
+		  switch (i)
+		  {
+		  	case 0: 
+		  		cn += " n:"+dn;
+		  		break;
+		  	case 1: 
+		  		cn += " s:"+dn;
+		  		break;
+		  	case 2: 
+		  		cn += " e:"+dn;
+		  		break;
+		  	case 3: 
+		  		cn += " w:"+dn;
+		  		break;
+		  	case 4: 
+		  		cn += " u:"+dn;
+		  		break;
+		  	case 5: 
+		  		cn += " d:"+dn;
+		  		break;
+		  	default:
+		  	break;
+		  }
+	  }
+	}
+	
+	if (noDoors)
+	{
+		cn = "\r\n";	
+	}
+	else
+	{
+		cn += ".\r\n";	
+		
+	}
+	
+	emit sendToUser(str.toAscii()+cn);
+	//emit sendToUser(str.toAscii()+QByteArray("\r\n"));
+	//emit sendToUser(cn);	*/
+	
+}
+
 
 void AbstractParser::parseNewUserInput(IncomingData& data)
 {
@@ -560,6 +697,8 @@ void AbstractParser::offlineCharacterMove(CommandIdType direction)
 	if (direction == CID_LOOK)
 	{
 		sendRoomInfoToUser(rb);
+		sendRoomExitsInfoToUser(rb);
+		sendPromptSimulationToUser();
 	}
 	else
 	{
@@ -570,6 +709,8 @@ void AbstractParser::offlineCharacterMove(CommandIdType direction)
 			const Room *r = m_mapData->getRoom(*e.outBegin(), rs2);
 			
 			sendRoomInfoToUser(r);
+			sendRoomExitsInfoToUser(rb);
+			sendPromptSimulationToUser();
 			characterMoved( direction, getName(r), getDynamicDescription(r), getDescription(r), 0, 0);
 			emit showPath(queue, true);
 			m_mapData->unselect(rs2);
@@ -591,18 +732,34 @@ void AbstractParser::sendRoomInfoToUser(const Room* r)
 	emit sendToUser((QByteArray)"\r\n"+getName(r).toAscii()+(QByteArray)"\r\n");
 	emit sendToUser(getDescription(r).toAscii().replace("\n","\r\n"));
 	emit sendToUser(getDynamicDescription(r).toAscii().replace("\n","\r\n"));
+}
 
-	QString etmp = "Exits:";
-    for (int j = 0; j < 7; j++) {
+void AbstractParser::sendRoomExitsInfoToUser(const Room* r)
+{
+    QByteArray dn = "";
+    QByteArray cn = " -";
+    bool noDoors = true;
+
+	QString etmp = "Exits/emulated:";
+	int j;
+    for (int jj = 0; jj < 7; jj++) {
+    	switch (jj)
+    	{
+    	case 1: j=2;break;
+    	case 2: j=1;break;
+    	default: j=jj;break;    	
+    	}
     	
     	bool door = false;
+    	bool exit = false;
     	if (ISSET(getFlags(r->exit(j)),EF_DOOR)) 
     	{
     		door = true;
-    		etmp += " (";	
+    		etmp += " {";	
     	}
     		
         if (ISSET(getFlags(r->exit(j)),EF_EXIT)) {
+        	exit = true;
     		if (!door) etmp += " ";
     		
         	switch(j)
@@ -619,15 +776,67 @@ void AbstractParser::sendRoomInfoToUser(const Room* r)
         
         if (door)
         {
-        	if (getDoorName(r->exit(j))!="")
-        		etmp += "/"+getDoorName(r->exit(j))+")";	
-        	else
-        		etmp += ")";				                		
+        	/*if (getDoorName(r->exit(j))!="")
+        		etmp += "/"+getDoorName(r->exit(j))+"}";	
+        	else*/
+        		etmp += "},";				                		
+        }
+        else
+        {
+        	if (exit)
+      			etmp += ",";				                		
         }
     }
+    etmp = etmp.left(etmp.length()-1);
 	etmp += ".";							
-	emit sendToUser(etmp.toAscii());
 
+	for (uint i=0;i<6;i++)
+	{
+	  dn = m_mapData->getDoorName(r->getPosition(), i).toAscii();
+	  if ( dn != "" )
+	  {
+		  noDoors = false;
+		  switch (i)
+		  {
+		  	case 0: 
+		  		cn += " n:"+dn;
+		  		break;
+		  	case 1: 
+		  		cn += " s:"+dn;
+		  		break;
+		  	case 2: 
+		  		cn += " e:"+dn;
+		  		break;
+		  	case 3: 
+		  		cn += " w:"+dn;
+		  		break;
+		  	case 4: 
+		  		cn += " u:"+dn;
+		  		break;
+		  	case 5: 
+		  		cn += " d:"+dn;
+		  		break;
+		  	default:
+		  	break;
+		  }
+	  }
+	}
+	
+	if (noDoors)
+	{
+		cn = "\r\n";	
+	}
+	else
+	{
+		cn += ".\r\n";	
+		
+	}
+	
+	emit sendToUser(etmp.toAscii()+cn);
+}
+
+void AbstractParser::sendPromptSimulationToUser()
+{
 	emit sendToUser("\r\n>");
 }
 

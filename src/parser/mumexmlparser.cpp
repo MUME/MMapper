@@ -361,6 +361,7 @@ bool MumeXmlParser::characters(QByteArray& ch)
 				{
 					m_readingRoomDesc = false; // we finished read desc mode
 					m_descriptionReady = true;
+					emulateExits();
 				}
 			}
 			else
@@ -431,7 +432,7 @@ bool MumeXmlParser::characters(QByteArray& ch)
 				m_readingRoomDesc = false;
 				m_descriptionReady = true;											
 			}
-			emit sendToUser(ch);				
+			//emit sendToUser(ch);				
 			break;
 
 		case XML_PROMPT:

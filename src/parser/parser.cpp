@@ -68,6 +68,7 @@ Parser::~Parser()
 void Parser::parseNewMudInput(IncomingData& data /*TelnetIncomingDataQueue& que*/)
 {
 	bool staticLine = false;
+	bool dontSendToUser = false;
 	/*IncomingData data; 	
 	bool staticLine;
 	
@@ -154,6 +155,13 @@ void Parser::parseNewMudInput(IncomingData& data /*TelnetIncomingDataQueue& que*
 					{  
 						m_readingRoomDesc = false; // we finished read desc mode
 						m_descriptionReady = true;
+						dontSendToUser = true;
+					} 
+					if (m_stringBuffer.isEmpty())  // standard end of description parsed
+					{  
+						m_readingRoomDesc = false; // we finished read desc mode
+						m_descriptionReady = true;
+						emulateExits();
 					} 
 					else // reading room description line 
 					{ 
@@ -292,7 +300,7 @@ void Parser::parseNewMudInput(IncomingData& data /*TelnetIncomingDataQueue& que*
 					if (!m_stringBuffer.isEmpty()) parseMudCommands(m_stringBuffer);
 				}
 										
-				if (!(staticLine && Config().m_brief)) emit sendToUser(data.line);				
+				if (!dontSendToUser && !(staticLine && Config().m_brief)) emit sendToUser(data.line);				
 				break;
 
 			case TDT_LFCR: 
@@ -474,8 +482,6 @@ bool Parser::isStaticRoomDescriptionLine(QString& str)
 }
 
 bool Parser::isEndOfRoomDescription(QString& str) {
-
-	if (str.isEmpty()) return true;//false;
 
 	if (Patterns::matchExitsPatterns(str)) {
 		parseExits(str);
