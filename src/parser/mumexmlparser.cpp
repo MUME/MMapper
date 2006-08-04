@@ -463,7 +463,7 @@ bool MumeXmlParser::characters(QByteArray& ch)
 					characterMoved(CID_NONE, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags, m_promptFlags);
 				}    
 			}
-/*			else
+			else
 			{
 				if (!queue.isEmpty())
 				{
@@ -471,7 +471,7 @@ bool MumeXmlParser::characters(QByteArray& ch)
 					emit showPath(queue, true);
 				}
 			}
-*/
+
 			
 			ch = ch.trimmed();
 			emit sendToUser(ch);				
