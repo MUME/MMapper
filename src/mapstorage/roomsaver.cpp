@@ -33,8 +33,13 @@ roomsCount(0), roomList(list), admin(in_admin) {}
 void RoomSaver::receiveRoom(RoomAdmin * in_admin, const Room * room)
 {
   assert(in_admin == admin);
-  roomList.append(room);
-  roomsCount++;
+  if (room->isTemporary()) {
+	admin->releaseRoom(this, room->getId());
+  }
+  else {
+  	roomList.append(room);
+  	roomsCount++;
+  }
 }
 
 quint32 RoomSaver::getRoomsCount()
