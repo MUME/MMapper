@@ -41,8 +41,8 @@ const QByteArray MumeXmlParser::lessThanTemplate("&lt;");
 MumeXmlParser::MumeXmlParser(MapData* md, QObject *parent) : 
     AbstractParser(md, parent),
 	m_readingTag(false),
-	m_xmlMode(XML_NONE), 
-	m_xmlMovement(XMLM_NONE)
+	m_xmlMode(XML_NONE)
+//	m_xmlMovement(XMLM_NONE)
 {
 #ifdef XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
     QString fileName = "xmlparser_debug.dat";
@@ -198,34 +198,29 @@ bool MumeXmlParser::element( const QByteArray& line  )
 							switch (line.at(13))
 							{
 								case 'n': 
-									m_xmlMovement = XMLM_NORTH; 	
-									checkqueue(); 
+									m_move = CID_NORTH; 	
 									break;
 								case 's': 
-									m_xmlMovement = XMLM_SOUTH; 	
-									checkqueue();
+									m_move = CID_SOUTH; 	
 									break;
 								case 'e': 
-									m_xmlMovement = XMLM_EAST; 	
-									checkqueue();
+									m_move = CID_EAST; 	
 									break;
 								case 'w': 
-									m_xmlMovement = XMLM_WEST; 	
-									checkqueue();
+									m_move = CID_WEST; 
 									break;
 								case 'u': 
-									m_xmlMovement = XMLM_UP; 		
-									checkqueue();
+									m_move = CID_UP; 		
 									break;
 								case 'd': 
-									m_xmlMovement = XMLM_DOWN; 	
-									checkqueue();
+									m_move = CID_DOWN; 	
 									break;
 							}
+							checkqueue(m_move);
 							break;						
 						case '/': 
-							m_xmlMovement = XMLM_UNKNOWN; 
-							checkqueue(); 
+							m_move = CID_NONE; 
+							checkqueue(m_move); 
 							break;
 					}
 					break;
@@ -295,7 +290,7 @@ bool MumeXmlParser::element( const QByteArray& line  )
 	return true;
 }
 
-void MumeXmlParser::checkqueue()
+void MumeXmlParser::checkqueue(CommandIdType m_xmlMovement)
 {
 	CommandIdType cid;
 
@@ -305,40 +300,38 @@ void MumeXmlParser::checkqueue()
 
 		switch (m_xmlMovement)
 		{
-			case XMLM_NORTH:
-			case XMLM_SOUTH:
-			case XMLM_EAST:
-			case XMLM_WEST:
-			case XMLM_UP:
-			case XMLM_DOWN:
+			case CID_NORTH:
+			case CID_SOUTH:
+			case CID_EAST:
+			case CID_WEST:
+			case CID_UP:
+			case CID_DOWN:
 				if (cid == CID_FLEE)
 				{
 					queue.dequeue();
-					queue.enqueue((CommandIdType)m_xmlMovement);
+					queue.enqueue(m_xmlMovement);
 					return;
 				}
 					
-				if ((int)cid != (int)m_xmlMovement)
+				if (cid != m_xmlMovement)
 					queue.dequeue(); 
 				else 
 					return;
 				if (queue.isEmpty()) 
 				{	
-					queue.enqueue((CommandIdType)m_xmlMovement);
+					queue.enqueue(m_xmlMovement);
 					return;
 				}
 				break;
-			case XMLM_UNKNOWN:
+			case CID_NONE:
 				queue.prepend(CID_NONE);
 				//queue.enqueue(CID_NONE);
 				//intentional fall through ...
-			case XMLM_NONE:
+			default:
 				return;
 				break;
 		}
-	}
-
-	m_xmlMovement = XMLM_NONE;	
+	}	
 }
 
 bool MumeXmlParser::characters(QByteArray& ch)
@@ -400,7 +393,7 @@ bool MumeXmlParser::characters(QByteArray& ch)
 				else
 				{	
 					emit showPath(queue, false);
-					characterMoved(CID_NONE, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags, m_promptFlags);
+					characterMoved(m_move, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags, m_promptFlags);
 				}    
 			}					
 			
@@ -460,7 +453,7 @@ bool MumeXmlParser::characters(QByteArray& ch)
 				else
 				{	
 					emit showPath(queue, false);
-					characterMoved(CID_NONE, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags, m_promptFlags);
+					characterMoved(m_move, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags, m_promptFlags);
 				}    
 			}
 			else
@@ -509,12 +502,12 @@ void MumeXmlParser::parseMudCommands(QString& str) {
 		else		
 		if (str.startsWith("You flee head"))
 		{
-			queue.enqueue((CommandIdType)m_xmlMovement);			
+			queue.enqueue(m_move);			
 		}
 		else
 		if (str.startsWith("You follow"))
 		{
-			queue.enqueue((CommandIdType)m_xmlMovement);			
+			queue.enqueue(m_move);			
 			return;
 		}
 	}

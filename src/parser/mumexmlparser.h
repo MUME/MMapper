@@ -33,7 +33,7 @@
 //#define XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
 
 enum XmlMode 		{XML_NONE, XML_ROOM, XML_NAME, XML_DESCRIPTION, XML_EXITS, XML_PROMPT};
-enum XmlMovement    {XMLM_NORTH, XMLM_SOUTH, XMLM_EAST, XMLM_WEST, XMLM_UP, XMLM_DOWN, XMLM_UNKNOWN, XMLM_NONE=10};
+//enum XmlMovement    {XMLM_NORTH, XMLM_SOUTH, XMLM_EAST, XMLM_WEST, XMLM_UP, XMLM_DOWN, XMLM_UNKNOWN, XMLM_NONE=10};
 
 class MumeXmlParser : public AbstractParser
 {
@@ -70,14 +70,14 @@ protected:
    quint32 m_roomDescLines;
    bool m_readingStaticDescLines;
 
-  void checkqueue();
+  void checkqueue(CommandIdType dir = CID_UNKNOWN);
  
   QByteArray m_tempCharacters;
   QByteArray m_tempTag;
   bool m_readingTag;
-  
+  CommandIdType m_move;
+
   XmlMode m_xmlMode;
-  XmlMovement m_xmlMovement;
   
 };
 
