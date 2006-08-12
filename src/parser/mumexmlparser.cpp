@@ -41,6 +41,7 @@ const QByteArray MumeXmlParser::lessThanTemplate("&lt;");
 MumeXmlParser::MumeXmlParser(MapData* md, QObject *parent) : 
     AbstractParser(md, parent),
 	m_readingTag(false),
+	m_move(CID_LOOK),
 	m_xmlMode(XML_NONE)
 //	m_xmlMovement(XMLM_NONE)
 {
