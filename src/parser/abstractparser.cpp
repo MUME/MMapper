@@ -729,6 +729,7 @@ void AbstractParser::offlineCharacterMove(CommandIdType direction)
 
 void AbstractParser::sendRoomInfoToUser(const Room* r)
 {
+	if (!r) return;
 	emit sendToUser((QByteArray)"\r\n"+getName(r).toAscii()+(QByteArray)"\r\n");
 	emit sendToUser(getDescription(r).toAscii().replace("\n","\r\n"));
 	emit sendToUser(getDynamicDescription(r).toAscii().replace("\n","\r\n"));
@@ -736,6 +737,7 @@ void AbstractParser::sendRoomInfoToUser(const Room* r)
 
 void AbstractParser::sendRoomExitsInfoToUser(const Room* r)
 {
+	if (!r) return;
     QByteArray dn = "";
     QByteArray cn = " -";
     bool noDoors = true;
