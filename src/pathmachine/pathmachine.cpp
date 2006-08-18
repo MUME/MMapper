@@ -325,8 +325,7 @@ void PathMachine::experimenting(ParseEvent * event)
   // the move coordinate is not 0,0,0
   if (event->getNumSkipped() == 0 && (moveCode < (uint)mostLikelyRoom.getExitsList().size()))
   {
-    uint dirCode = event->getMoveType();
-    exp = new Crossover(paths, dirCode, params, factory);
+    exp = new Crossover(paths, moveCode, params, factory);
     set<const Room *> pathEnds;
     for (list<Path *>::iterator i = paths->begin(); i != paths->end(); ++i)
     {

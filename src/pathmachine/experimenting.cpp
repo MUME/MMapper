@@ -87,7 +87,7 @@ list<Path *> * Experimenting::evaluate()
 	// distinguishable from best. Don't keep paths with equal
 	// probability at the front, for we need to find a unique
 	// best path eventually.
-        if ( best->getProb() > working->getProb()*params.maxPaths/numPaths || (!(best->getProb() > working->getProb())))
+        if ( best->getProb() > working->getProb()*params.maxPaths/numPaths || ((!(best->getProb() > working->getProb())) && best->getRoom() == working->getRoom()))
         {
           working->deny();
         }
