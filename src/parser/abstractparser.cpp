@@ -742,7 +742,8 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room* r)
     QByteArray cn = " -";
     bool noDoors = true;
 
-	QString etmp = "Exits/emulated:";
+	
+		QString etmp = "Exits/emulated:";
 	int j;
     for (int jj = 0; jj < 7; jj++) {
     	switch (jj)
@@ -835,6 +836,7 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room* r)
 	}
 	
 	emit sendToUser(etmp.toAscii()+cn);
+	
 }
 
 void AbstractParser::sendPromptSimulationToUser()

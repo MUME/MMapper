@@ -48,6 +48,7 @@ public slots:
 	void matchingToleranceSpinBoxValueChanged(int);
 
 	void briefStateChanged(int);
+	void emulatedExitsStateChanged(int);
 	void updatedStateChanged(int);
 	void drawNotMappedExitsStateChanged(int);
 	void drawUpperLayersTexturedStateChanged(int);

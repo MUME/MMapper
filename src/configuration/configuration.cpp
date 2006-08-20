@@ -89,6 +89,7 @@ void Configuration::read()
 
 	conf.beginGroup("Mume native");
 	m_brief = conf.value("Brief mode", FALSE).toBool();
+	m_emulatedExits = conf.value("Emulated Exits", TRUE).toBool();
 	conf.endGroup();
 			
 	if (m_moveForcePatternsList.isEmpty())
@@ -226,6 +227,7 @@ void Configuration::write() const {
 
 	conf.beginGroup("Mume native");
 	conf.setValue("Brief mode", m_brief);
+	conf.setValue("Emulated Exits", m_emulatedExits);
 	conf.endGroup();
 	
 	conf.beginGroup("Path Machine");

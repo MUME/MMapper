@@ -355,7 +355,8 @@ bool MumeXmlParser::characters(QByteArray& ch)
 				{
 					m_readingRoomDesc = false; // we finished read desc mode
 					m_descriptionReady = true;
-					emulateExits();
+					if (Config().m_emulatedExits)
+						emulateExits();
 				}
 			}
 			else

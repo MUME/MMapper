@@ -45,6 +45,7 @@ GeneralPage::GeneralPage(QWidget *parent)
 	connect ( matchingToleranceSpinBox, SIGNAL(valueChanged(int)), this, SLOT(matchingToleranceSpinBoxValueChanged(int)) );
 
 	connect ( brief, SIGNAL(stateChanged(int)),SLOT(briefStateChanged(int)));
+	connect ( emulatedExits, SIGNAL(stateChanged(int)),SLOT(emulatedExitsStateChanged(int)));
 	connect ( updated, SIGNAL(stateChanged(int)),SLOT(updatedStateChanged(int)));
 	connect ( drawNotMappedExits, SIGNAL(stateChanged(int)),SLOT(drawNotMappedExitsStateChanged(int)));
 	connect ( drawUpperLayersTextured, SIGNAL(stateChanged(int)),SLOT(drawUpperLayersTexturedStateChanged(int)));
@@ -70,6 +71,7 @@ GeneralPage::GeneralPage(QWidget *parent)
 	multipleConnectionsPenaltyDoubleSpinBox->setValue(Config().m_multipleConnectionsPenalty);
 
 	brief->setChecked( Config().m_brief );
+	emulatedExits->setChecked( Config().m_emulatedExits );
 	updated->setChecked( Config().m_showUpdated );
 	drawNotMappedExits->setChecked( Config().m_drawNotMappedExits );
 	drawUpperLayersTextured->setChecked( Config().m_drawUpperLayersTextured );
@@ -162,10 +164,18 @@ void GeneralPage::briefStateChanged(int)
 	Config().m_brief = brief->isChecked();
 }
 
+void GeneralPage::emulatedExitsStateChanged(int)
+{
+	Config().m_emulatedExits = emulatedExits->isChecked();
+}
+
+
 void GeneralPage::updatedStateChanged(int)
 {
 	Config().m_showUpdated = updated->isChecked();
 }
+
+
 
 void GeneralPage::drawNotMappedExitsStateChanged(int)
 {

@@ -161,7 +161,8 @@ void Parser::parseNewMudInput(IncomingData& data /*TelnetIncomingDataQueue& que*
 					{  
 						m_readingRoomDesc = false; // we finished read desc mode
 						m_descriptionReady = true;
-						emulateExits();
+						if (Config().m_emulatedExits)
+							emulateExits();
 					} 
 					else // reading room description line 
 					{ 
