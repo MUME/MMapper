@@ -390,11 +390,13 @@ bool MumeXmlParser::characters(QByteArray& ch)
 						emit showPath(queue, false);
 						characterMoved(c, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags, m_promptFlags);
 					}
+					m_move = CID_LOOK;
 				}
 				else
 				{	
 					emit showPath(queue, false);
 					characterMoved(m_move, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags, m_promptFlags);
+					m_move = CID_LOOK;
 				}    
 			}					
 			
@@ -450,11 +452,13 @@ bool MumeXmlParser::characters(QByteArray& ch)
 						emit showPath(queue, false);
 						characterMoved(c, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags, m_promptFlags);
 					}
+					m_move = CID_LOOK;
 				}
 				else
 				{	
 					emit showPath(queue, false);
 					characterMoved(m_move, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags, m_promptFlags);
+					m_move = CID_LOOK;
 				}    
 			}
 			else
