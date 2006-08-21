@@ -62,7 +62,6 @@ HEADERS += ./global/defs.h \
           ./mapfrontend/roomlocker.h \
           ./mapfrontend/roomoutstream.h \
           ./mapfrontend/searchtreenode.h \
-          ./mapfrontend/mapaction.h \
           ./mapstorage/abstractmapstorage.h \
           ./mapstorage/mapstorage.h \
           ./mapstorage/oldroom.h \
