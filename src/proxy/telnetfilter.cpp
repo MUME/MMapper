@@ -157,7 +157,7 @@ void TelnetFilter::analyzeMudStream(const char * input, int length)
         	m_xmlMode = true;
         	m_xmlModeAutoconfigured = true;
 
-			emit sendToMud((QByteArray)"brief\n");
+			//emit sendToMud((QByteArray)"brief\n");
 			emit sendToMud((QByteArray)"prompt all\n");
 			if (Config().m_IAC_prompt_parser)
 			{				
@@ -170,7 +170,7 @@ void TelnetFilter::analyzeMudStream(const char * input, int length)
 	    {
 	      	m_xmlMode = false;
 	       	m_xmlModeAutoconfigured = true;
-			emit sendToMud((QByteArray)"brief\n");
+			//emit sendToMud((QByteArray)"brief\n");
 			emit sendToMud((QByteArray)"prompt all\n");
 			if (Config().m_IAC_prompt_parser)
 			{				

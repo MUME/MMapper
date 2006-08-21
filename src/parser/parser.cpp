@@ -345,9 +345,9 @@ void Parser::parseNewMudInput(IncomingData& data /*TelnetIncomingDataQueue& que*
 
 void Parser::parseMudCommands(QString& str) {
 
-	if (str.startsWith('B') && str.startsWith("Brief mode on")){
+	/*if (str.startsWith('B') && str.startsWith("Brief mode on")){
 		emit sendToMud((QByteArray)"brief\n");
-	}
+	}*/
 	
 	if (str.startsWith('<') && str.startsWith("<xml>")) //we are in xml mode
 	{	emit setXmlMode();
