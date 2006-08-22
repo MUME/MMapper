@@ -156,7 +156,8 @@ void Parser::parseNewMudInput(IncomingData& data /*TelnetIncomingDataQueue& que*
 						m_readingRoomDesc = false; // we finished read desc mode
 						m_descriptionReady = true;
 						dontSendToUser = true;
-					} 
+					}
+					else 
 					if (m_stringBuffer.isEmpty())  // standard end of description parsed
 					{  
 						m_readingRoomDesc = false; // we finished read desc mode
