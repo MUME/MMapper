@@ -158,7 +158,7 @@ void TelnetFilter::analyzeMudStream(const char * input, int length)
         	m_xmlModeAutoconfigured = true;
 
 			//emit sendToMud((QByteArray)"brief\n");
-			emit sendToMud((QByteArray)"prompt all\n");
+			//emit sendToMud((QByteArray)"prompt all\n");
 			if (Config().m_IAC_prompt_parser)
 			{				
 				//send IAC-GA prompt request
