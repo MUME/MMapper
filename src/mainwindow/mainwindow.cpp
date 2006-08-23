@@ -843,7 +843,7 @@ bool MainWindow::saveAs()
 
 void MainWindow::about()
 {
-  QMessageBox::about(this, tr("About MMapper2 v 2.0.0"),
+  QMessageBox::about(this, tr("About MMapper2 v 2.0.2"),
                      tr("The <b>MMapper2</b> application is specially designed "
                         "for MUME (fire.pvv.org:4242)<br><br>"
                         "Author: Caligor (krejza@gmail.com)<br><br>"

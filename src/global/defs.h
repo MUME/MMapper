@@ -36,7 +36,7 @@ enum { TRUE = 1, FALSE = 0 };
 enum { LEFT = 0, RIGHT };
 enum { SOURCE = 0, DESTINATION };
 
-const QString version = "2.0";
+const QString version = "2.0.2";
 
 #define bit1 1
 #define bit2 2
