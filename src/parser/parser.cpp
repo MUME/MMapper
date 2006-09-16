@@ -387,7 +387,11 @@ void Parser::parseMudCommands(QString& str) {
 			emit sendToUser((QByteArray)"----> follow mode on.\n");
 			return;
 		}
-
+		else if (str.startsWith("You quietly scout"))
+    		{
+      			queue.prepend(CID_SCOUT);
+      			return;
+    		}
 		if (m_following) {
 			if (str=="You will not follow anyone else now.")
 			{
