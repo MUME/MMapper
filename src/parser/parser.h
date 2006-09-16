@@ -52,6 +52,7 @@ protected:
    bool isRoomName(QString& str);
    bool isEndOfRoomDescription(QString& str);	
    bool isStaticRoomDescriptionLine(QString& str);
+   virtual bool parseUserCommands(QString& command);
 
    void parseMudCommands(QString& str);
    

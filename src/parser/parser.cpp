@@ -65,6 +65,16 @@ Parser::~Parser()
 #endif
 }
 
+bool Parser::parseUserCommands(QString& command) {
+	if (AbstractParser::parseUserCommands(command)) {
+		if (command.startsWith("scout")) {
+			queue.enqueue(CID_SCOUT);
+		}
+		return true;
+	}
+	else return false;
+}
+
 void Parser::parseNewMudInput(IncomingData& data /*TelnetIncomingDataQueue& que*/)
 {
 	bool staticLine = false;
@@ -125,6 +135,8 @@ void Parser::parseNewMudInput(IncomingData& data /*TelnetIncomingDataQueue& que*
 							emit showPath(queue, false);
 							characterMoved(c, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags, m_promptFlags);
 						}
+						//additional scout move needs to be removed when scout was successful
+						else queue.dequeue();
 					}
 					else
 					{	
@@ -227,6 +239,8 @@ void Parser::parseNewMudInput(IncomingData& data /*TelnetIncomingDataQueue& que*
 									emit showPath(queue, false);
 									characterMoved(c, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags, m_promptFlags);
 								}
+								//additional scout move needs to be removed when scout was successful
+								else queue.dequeue();
 							}
 							else
 							{	
@@ -265,6 +279,8 @@ void Parser::parseNewMudInput(IncomingData& data /*TelnetIncomingDataQueue& que*
 								emit showPath(queue, false);
 								characterMoved(c, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags, m_promptFlags);
 							}
+							//additional scout move needs to be removed when scout was successful
+							else queue.dequeue();
 						}
 						else
 						{	

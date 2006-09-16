@@ -124,7 +124,7 @@ protected:
    
    void parseExits(QString& str);
    void parsePrompt(QString& prompt);
-   bool parseUserCommands(QString& command);
+   virtual bool parseUserCommands(QString& command);
    
    static const QChar escChar;	
 	  
