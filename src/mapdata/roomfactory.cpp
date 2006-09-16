@@ -61,11 +61,12 @@ ComparisonResult RoomFactory::compareStrings(const QString & room, const QString
 {
   prevTolerance *= room.size();
   prevTolerance /= 100;
+  int tolerance = prevTolerance;
 
+  
   QStringList descWords = room.split(QRegExp("\\s+"), QString::SkipEmptyParts);
   QStringList eventWords = event.split(QRegExp("\\s+"), QString::SkipEmptyParts);
 
-  int tolerance = prevTolerance;
   if (!eventWords.isEmpty()) // if event is empty we don't compare
   {
     while (tolerance >= 0)
@@ -104,6 +105,8 @@ ComparisonResult RoomFactory::compareStrings(const QString & room, const QString
   if (tolerance < 0)
     return CR_DIFFERENT;
   else if ((int)prevTolerance != tolerance) 
+    return CR_TOLERANCE;
+  else if (event.size() != room.size()) // differences in amount of whitespace
     return CR_TOLERANCE;
   else 
     return CR_EQUAL;
