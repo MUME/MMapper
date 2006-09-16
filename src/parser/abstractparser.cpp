@@ -658,11 +658,11 @@ bool AbstractParser::parseUserCommands(QString& command) {
 			return false; //do not send command to mud server for offline mode
 		}
 	}
-	if (str.startsWith("scout")) {
+	/*if (str.startsWith("scout")) {
 		queue.enqueue(CID_SCOUT);
 		if (Config().m_mapMode != 2) 
 			return true; 
-	}
+	}*/
 	if ((str=="f" || str=="flee") && Config().m_mapMode == 2){
 		offlineCharacterMove(CID_FLEE);
 		return false; //do not send command to mud server for offline mode

@@ -42,18 +42,18 @@ public:
 
   MumeXmlParser(MapData*, QObject *parent = 0);
   ~MumeXmlParser();
-  
+
 
   void parse(const QByteArray& );
-  
+
 public slots:
-	void parseNewMudInput(IncomingData& que);
-    
+  void parseNewMudInput(IncomingData& que);
+
 protected:
 
 #ifdef XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
-	QDataStream *debugStream;
-	QFile* file;
+  QDataStream *debugStream;
+  QFile* file;
 #endif
 
   static const QByteArray greatherThanChar;
@@ -67,18 +67,18 @@ protected:
   bool characters( QByteArray& );
   bool element( const QByteArray& );
 
-   quint32 m_roomDescLines;
-   bool m_readingStaticDescLines;
+  quint32 m_roomDescLines;
+  bool m_readingStaticDescLines;
 
-  void checkqueue(CommandIdType dir = CID_UNKNOWN);
- 
+  //void checkqueue(CommandIdType dir = CID_UNKNOWN);
+  void move();
   QByteArray m_tempCharacters;
   QByteArray m_tempTag;
   bool m_readingTag;
   CommandIdType m_move;
 
   XmlMode m_xmlMode;
-  
+
 };
 
 #endif

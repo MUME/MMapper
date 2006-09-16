@@ -330,7 +330,7 @@ Room * MapStorage::loadRoom(QDataStream & stream, qint32 version)
   return room;
 }
 
-void MapStorage::loadExits(Room * room, QDataStream & stream, qint32 version)
+void MapStorage::loadExits(Room * room, QDataStream & stream, qint32 /*version*/)
 {
   ExitsList & eList = room->getExitsList();
   for (int i = 0; i < 7; ++i)
