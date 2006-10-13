@@ -843,8 +843,13 @@ bool MainWindow::saveAs()
 
 void MainWindow::about()
 {
-  QMessageBox::about(this, tr("About MMapper2 v 2.0.2"),
-                     tr("The <b>MMapper2</b> application is specially designed "
+#ifdef SVN_REVISION
+QString version = tr("<b>MMapper2 Subversion Revision ") + QString::number(SVN_REVISION) + tr("</b><br><br>");
+#else
+QString version = tr("<b>MMapper2 Release 2.0.2</b><br><br>");
+#endif
+  QMessageBox::about(this, tr("About MMapper2"), version +
+                     tr("The MMapper2 application is specially designed "
                         "for MUME (fire.pvv.org:4242)<br><br>"
                         "Author: Caligor (krejza@gmail.com)<br><br>"
                         "Special thanks to:<br>"
