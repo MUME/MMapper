@@ -128,7 +128,11 @@ SOURCES += main.cpp \
           ./mapstorage/oldconnection.cpp
 
 TARGET = mmapper2
-DEFINES += SVN_REVISION=$$system("svn info | grep Revision | sed s/Revision:\ //")
+
+SVN_REVISION=$$system("svn info | grep Revision | sed s/Revision:\ //")
+!isEmpty(SVN_REVISION) {
+	DEFINES += SVN_REVISION=$$SVN_REVISION
+}
 RESOURCES += resources/mmapper2.qrc
 TEMPLATE = app
 DEPENDPATH += .
