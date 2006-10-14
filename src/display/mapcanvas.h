@@ -69,7 +69,10 @@ public:
 
     void drawRoom(const Room* room, const std::vector<Room *> & rooms, const std::vector<std::set<RoomRecipient *> > & locks);
 
+	
+
 public slots:
+	void forceMapperToRoom();
 	void onInfoMarksEditDlgClose();
 		
 	void setCanvasMouseMode(CanvasMouseMode);

@@ -41,24 +41,31 @@ PathMachine::PathMachine(AbstractRoomFactory * in_factory, bool threaded) :
     paths(new list<Path *>)
 {}
 
-void PathMachine::setCurrentRoom(uint id)
+void PathMachine::setCurrentRoom(Approved * app)
 {
+  releaseAllPaths();
+  const Room * perhaps = app->oneMatch();
+  if (perhaps)
   {
-    Approved app(factory, lastEvent, params.matchingTolerance);
-    emit lookingForRooms(&app, id);
+    mostLikelyRoom = *perhaps;
+    emit playerMoved(mostLikelyRoom.getPosition());
+    state = APPROVED;
   }
-  retry();
 }
 
 void PathMachine::setCurrentRoom(const Coordinate & pos)
 {
-  {
-    Approved app(factory, lastEvent, params.matchingTolerance);
-    emit lookingForRooms(&app, pos);
-  }
-  retry();
+  Approved app(factory, lastEvent, 100);
+  emit lookingForRooms(&app, pos);
+  setCurrentRoom(&app);
 }
 
+void PathMachine::setCurrentRoom(uint id)
+{
+  Approved app(factory, lastEvent, 100);
+  emit lookingForRooms(&app, id);
+  setCurrentRoom(&app);
+}
 
 
 void PathMachine::init()
@@ -103,24 +110,7 @@ void PathMachine::retry()
     state = SYNCING;
     break;
   case EXPERIMENTING:
-    set<Path *> prevPaths;
-    list<Path *> * newPaths = new list<Path *>;
-    for (list<Path*>::iterator i = paths->begin(); i != paths->end(); ++i)
-    {
-      Path * working = *i;
-      Path * previous = working->getParent();
-      previous->removeChild(working);
-      working->setParent(0);
-      working->deny();
-      if (previous && (prevPaths.find(previous) == prevPaths.end()))
-      {
-        newPaths->push_back(previous);
-        prevPaths.insert(previous);
-      }
-    }
-    delete paths;
-    paths = newPaths;
-    if (paths->empty()) state = SYNCING;
+    releaseAllPaths();
     break;
   }
   if (lastEvent) event(lastEvent);

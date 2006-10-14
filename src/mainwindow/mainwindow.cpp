@@ -397,6 +397,11 @@ void MainWindow::createActions()
   releaseAllPathsAct->setCheckable(false);
   connect(releaseAllPathsAct, SIGNAL(triggered()), m_pathMachine, SLOT(releaseAllPaths()));
 
+  forceRoomAct = new QAction(QIcon(":/icons/force.png"), tr("Force Path Machine to selected Room"), this);
+  forceRoomAct->setStatusTip(tr("Force Path Machine to selected Room"));
+  forceRoomAct->setCheckable(false);
+  connect(forceRoomAct, SIGNAL(triggered()), getCurrentMapWindow()->getCanvas(), SLOT(forceMapperToRoom()));
+
   roomActGroup = new QActionGroup(this);
   roomActGroup->setExclusive(false);
   roomActGroup->addAction(editRoomSelectionAct);
@@ -637,7 +642,11 @@ void MainWindow::setupToolBars()
   viewToolBar->addAction(zoomOutAct);
   viewToolBar->addAction(layerUpAct);
   viewToolBar->addAction(layerDownAct);
-  viewToolBar->addAction(releaseAllPathsAct);
+
+  pathMachineToolBar = addToolBar(tr("Path Machine"));
+  pathMachineToolBar->setObjectName("PathMachineToolBar");
+  pathMachineToolBar->addAction(releaseAllPathsAct);
+  pathMachineToolBar->addAction(forceRoomAct);
   //viewToolBar->addAction(m_dockDialog->toggleViewAction());
 
   roomToolBar = addToolBar(tr("Rooms"));
@@ -656,6 +665,7 @@ void MainWindow::setupToolBars()
   connectionToolBar->addAction(deleteConnectionSelectionAct);
 
   settingsToolBar = addToolBar(tr("Preferences"));
+  settingsToolBar->setObjectName("PreferencesToolBar");
   settingsToolBar->addAction(preferencesAct);
 }
 

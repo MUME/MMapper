@@ -261,6 +261,28 @@ void MapCanvas::wheelEvent ( QWheelEvent * event )
 	
 }
 
+void MapCanvas::forceMapperToRoom() {
+const RoomSelection *tmpSel = NULL;
+if (m_roomSelection) {
+	tmpSel = m_roomSelection;
+	m_roomSelection = 0;
+}
+else {
+	tmpSel = m_data->select(Coordinate(GLtoMap(m_selX1), GLtoMap(m_selY1), m_selLayer1));	
+}			
+			if(tmpSel->size() == 1)
+			{    		
+				if (Config().m_mapMode == 2)
+				{
+					const Room *r = tmpSel->values().front();
+					emit charMovedEvent(createEvent( CID_UNKNOWN, getName(r), getDynamicDescription(r), getDescription(r), 0, 0));
+				}
+				else
+		    		emit setCurrentRoom(tmpSel->keys().front());	
+			}
+			m_data->unselect(tmpSel);
+		    updateGL();
+}
 
 void MapCanvas::mousePressEvent(QMouseEvent *event)
 {
@@ -302,23 +324,14 @@ void MapCanvas::mousePressEvent(QMouseEvent *event)
 		if ((event->buttons() & Qt::LeftButton) && 
 			(event->modifiers() & Qt::CTRL ) &&
 			(event->modifiers() & Qt::ALT ) )
-		{	
-	    	m_ctrlPressed = true;
-	    	m_altPressed = true;
-	    		
-			const RoomSelection *tmpSel = m_data->select(Coordinate(GLtoMap(m_selX1), GLtoMap(m_selY1), m_selLayer1));				
-			if(tmpSel->size() > 0)
-			{    		
-				if (Config().m_mapMode == 2)
-				{
-					const Room *r = tmpSel->values().front();
-					emit charMovedEvent(createEvent( CID_UNKNOWN, getName(r), getDynamicDescription(r), getDescription(r), 0, 0));
-				}
-				else
-		    		emit setCurrentRoom(tmpSel->keys().front());	
+		{
+			if (m_roomSelection) {
+				m_data->unselect(m_roomSelection);
+				m_roomSelection = 0;
 			}
-			m_data->unselect(tmpSel);
-		    updateGL();
+	    		m_ctrlPressed = true;
+	    		m_altPressed = true;
+	    		forceMapperToRoom();
 			break;	
 		}
 			

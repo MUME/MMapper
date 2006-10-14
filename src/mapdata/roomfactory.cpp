@@ -127,9 +127,9 @@ ComparisonResult RoomFactory::compare(const Room * room, const ParseEvent * even
     return CR_EQUAL;
   }
 
-  if (m_name.isEmpty() && m_desc.isEmpty() && (!updated))
+  if (tolerance >= 100 || (m_name.isEmpty() && m_desc.isEmpty() && (!updated)))
   {
-    // user-created
+    // user-created oder explicit update
     return CR_TOLERANCE;
   }
 

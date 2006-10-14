@@ -53,9 +53,10 @@ class Approved;
  * and decides if rooms have to be added (and where) and where the player is
  * the results are published via signals
  */
-class PathMachine : public Component {
-Q_OBJECT
- public slots:
+class PathMachine : public Component
+{
+  Q_OBJECT
+public slots:
   virtual void event(ParseEvent *);
   virtual void deleteMostLikelyRoom();
   virtual void releaseAllPaths();
@@ -63,7 +64,7 @@ Q_OBJECT
   virtual void setCurrentRoom(uint id);
   virtual void setCurrentRoom(const Coordinate & pos);
 
- signals:
+signals:
   void lookingForRooms(RoomRecipient *,ParseEvent *);
   void lookingForRooms(RoomRecipient *,uint);
   void lookingForRooms(RoomRecipient *,const Coordinate &);
@@ -71,17 +72,18 @@ Q_OBJECT
   void createRoom(ParseEvent *, const Coordinate &);
   void scheduleAction(MapAction *);
 
- public:
+public:
   PathMachine(AbstractRoomFactory * factory, bool threaded = true);
   virtual void init();
   virtual Qt::ConnectionType requiredConnectionType(const QString &);
-  
- protected:
+
+protected:
   PathParameters params;
   void experimenting(ParseEvent * event);
   void syncing(ParseEvent * event);
   void approved(ParseEvent * event);
   void evaluatePaths();
+  void setCurrentRoom(Approved * app);
   void tryExits(const Room *, RoomRecipient *, ParseEvent *, bool out);
   void tryExit(const Exit & possible, RoomRecipient * recipient, bool out);
   void tryCoordinate(const Room *, RoomRecipient *, ParseEvent *);
@@ -94,7 +96,8 @@ Q_OBJECT
   char state;
   std::list<Path *> * paths;
 
-};	
+}
+;
 
 
 #endif

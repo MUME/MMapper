@@ -142,6 +142,7 @@ private:
   QToolBar *modeToolBar;
   QToolBar *mapModeToolBar;
   QToolBar *viewToolBar;
+  QToolBar *pathMachineToolBar;
   QToolBar *roomToolBar;
   QToolBar *connectionToolBar;
   QToolBar *settingsToolBar;
@@ -205,6 +206,7 @@ private:
   QAction *mergeDownRoomSelectionAct;
   QAction *connectToNeighboursRoomSelectionAct;
 
+  QAction *forceRoomAct;
   QAction *releaseAllPathsAct;
 
   void createActions();
