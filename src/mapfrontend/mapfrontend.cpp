@@ -1,9 +1,9 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve), 
+** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper2 project. 
+** This file is part of the MMapper2 project.
 ** Maintained by Marek Krejza <krejza@gmail.com>
 **
 ** Copyright: See COPYING file that comes with this distribution
@@ -11,7 +11,7 @@
 ** This file may be used under the terms of the GNU General Public
 ** License version 2.0 as published by the Free Software Foundation
 ** and appearing in the file COPYING included in the packaging of
-** this file.  
+** this file.
 **
 ** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 ** EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -187,7 +187,6 @@ void MapFrontend::clear()
   emit mapSizeChanged(ulf, lrb);
 }
 
-
 void MapFrontend::lookingForRooms(RoomRecipient * recipient, uint id)
 {
   QMutexLocker locker(&mapLock);
@@ -244,7 +243,7 @@ void MapFrontend::insertPredefinedRoom(Room * room)
   ParseEvent * event = factory->getEvent(room);
 
   assert (roomIndex.size() <= id || !roomIndex[id]);
-    
+
   RoomCollection * roomHome = treeRoot.insertRoom(event);
   map.setNearest(c, room);
   checkSize(room->getPosition());

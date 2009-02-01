@@ -38,7 +38,7 @@
 class IntermediateNode : public SearchTreeNode {
  public:
   virtual ~IntermediateNode() {delete rooms;}
-  IntermediateNode() : SearchTreeNode("") {rooms = 0;}
+  IntermediateNode() : SearchTreeNode((char*)"") {rooms = 0;}
   IntermediateNode(ParseEvent * event);
   RoomCollection * insertRoom(ParseEvent * event); 
   void getRooms(RoomOutStream & stream, ParseEvent * event);

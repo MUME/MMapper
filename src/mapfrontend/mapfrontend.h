@@ -1,9 +1,9 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve), 
+** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper2 project. 
+** This file is part of the MMapper2 project.
 ** Maintained by Marek Krejza <krejza@gmail.com>
 **
 ** Copyright: See COPYING file that comes with this distribution
@@ -11,7 +11,7 @@
 ** This file may be used under the terms of the GNU General Public
 ** License version 2.0 as published by the Free Software Foundation
 ** and appearing in the file COPYING included in the packaging of
-** this file.  
+** this file.
 **
 ** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 ** EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -45,7 +45,7 @@
 /**
  * The MapFrontend organizes rooms and their relations to each other.
  */
- 
+
 class MapAction;
 
 
@@ -55,7 +55,7 @@ Q_OBJECT
 friend class FrontendAccessor;
 
 protected:
-  
+
   IntermediateNode treeRoot;
   Map map;
   std::vector<Room *> roomIndex;
@@ -63,7 +63,7 @@ protected:
   std::map<uint, std::set<MapAction *> > actionSchedule;
   std::vector<RoomCollection *> roomHomes;
   std::vector<std::set<RoomRecipient *> > locks;
-  
+
   uint greatestUsedId;
   QMutex mapLock;
   Coordinate ulf;
@@ -77,12 +77,13 @@ protected:
 
   virtual uint assignId(Room * room, RoomCollection * roomHome);
   virtual void checkSize(const Coordinate &);
-  
-  
+
+
 public:
   MapFrontend(AbstractRoomFactory * factory);
   virtual ~MapFrontend();
   virtual void clear();
+  void removeSecretDoorNames();
   void block();
   void unblock();
   virtual void checkSize();
@@ -102,9 +103,9 @@ public:
   virtual void insertPredefinedRoom(Room *);
 
   virtual uint getMaxId() {return greatestUsedId;}
-  
+
   virtual const Coordinate & getUlf() {return ulf;}
-  
+
   virtual const Coordinate & getLrb() {return lrb;}
 public slots:
   // looking for rooms leads to a bunch of foundRoom() signals
@@ -116,11 +117,11 @@ public slots:
 
   // createRoom creates a room without a lock
   // it will get deleted if no one looks for it for a certain time
-  virtual void createRoom(ParseEvent *, const Coordinate &);  
+  virtual void createRoom(ParseEvent *, const Coordinate &);
   virtual void createEmptyRooms(const Coordinate &,const Coordinate &);
 
   virtual void scheduleAction(MapAction * action);
-  
+
 signals:
 
   // this signal is sent out if a room is deleted. So any clients still

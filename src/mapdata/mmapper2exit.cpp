@@ -75,3 +75,17 @@ void updateExit(Exit & e, ExitFlags flags ) {
     e[E_FLAGS] = flags;
   }
 }
+
+
+ExitDirection dirForChar(char dir) {
+	switch (dir) {
+		case 'n': return ED_NORTH;
+		case 's': return ED_SOUTH;
+		case 'e': return ED_EAST;
+		case 'w': return ED_WEST;
+		case 'u': return ED_UP;
+		case 'd': return ED_DOWN;
+		default: return ED_UNKNOWN;
+	}
+}
+

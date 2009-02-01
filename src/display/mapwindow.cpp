@@ -1,9 +1,9 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve), 
+** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper2 project. 
+** This file is part of the MMapper2 project.
 ** Maintained by Marek Krejza <krejza@gmail.com>
 **
 ** Copyright: See COPYING file that comes with this distribution
@@ -11,7 +11,7 @@
 ** This file may be used under the terms of the GNU General Public
 ** License version 2.0 as published by the Free Software Foundation
 ** and appearing in the file COPYING included in the packaging of
-** this file.  
+** this file.
 **
 ** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 ** EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -26,13 +26,13 @@
 #include "mapwindow.h"
 #include "mapcanvas.h"
 
-MapWindow::MapWindow(MapData *mapData, PrespammedPath* pp,  QWidget * parent)
+MapWindow::MapWindow(MapData *mapData, PrespammedPath* pp, CGroup* gm,  QWidget * parent)
     : QWidget(parent)
 {
 	m_verticalScrollStep = 0;
 	m_horizontalScrollStep = 0;
 	scrollTimer = NULL;
-	
+
   m_gridLayout = new QGridLayout(this);
   m_gridLayout->setSpacing(0);
   m_gridLayout->setMargin(0);
@@ -56,7 +56,7 @@ MapWindow::MapWindow(MapData *mapData, PrespammedPath* pp,  QWidget * parent)
   fmt.setDirectRendering( TRUE );
   fmt.setRgba( TRUE );
   fmt.setDepth( TRUE );
-  m_canvas = new MapCanvas(mapData, pp, fmt, NULL); 
+  m_canvas = new MapCanvas(mapData, pp, gm, fmt, NULL);
 
   m_gridLayout->addWidget(m_canvas, 0, 0, 1, 1);
 
@@ -84,7 +84,7 @@ void MapWindow::mapMove(int dx, int dy)
 {
 	int hValue = m_horizontalScrollBar->value() + dx;
 	int vValue = m_verticalScrollBar->value() + dy;
-	
+
     disconnect(m_horizontalScrollBar, SIGNAL(valueChanged(int)), m_canvas, SLOT(setHorizontalScroll(int)));
     disconnect(m_verticalScrollBar, SIGNAL(valueChanged(int)), m_canvas, SLOT(setVerticalScroll(int)));
 
@@ -96,7 +96,7 @@ void MapWindow::mapMove(int dx, int dy)
     connect(m_horizontalScrollBar, SIGNAL(valueChanged(int)), m_canvas, SLOT(setHorizontalScroll(int)));
     connect(m_verticalScrollBar, SIGNAL(valueChanged(int)), m_canvas, SLOT(setVerticalScroll(int)));
 }
-	
+
 void MapWindow::continuousScroll(qint8 hStep, qint8 vStep)
 {
 	m_horizontalScrollStep = hStep;
@@ -109,7 +109,7 @@ void MapWindow::continuousScroll(qint8 hStep, qint8 vStep)
 		delete scrollTimer;
 		scrollTimer = NULL;
 	}
-	
+
 	//start
 	if (!scrollTimer && (hStep!=0 || vStep!=0) )
 	{
@@ -125,7 +125,7 @@ void MapWindow::scrollTimerTimeout()
 {
 	qint32 vValue = m_verticalScrollBar->value() + m_verticalScrollStep;
 	qint32 hValue = m_horizontalScrollBar->value() + m_horizontalScrollStep;
-	
+
     disconnect(m_horizontalScrollBar, SIGNAL(valueChanged(int)), m_canvas, SLOT(setHorizontalScroll(int)));
     disconnect(m_verticalScrollBar, SIGNAL(valueChanged(int)), m_canvas, SLOT(setVerticalScroll(int)));
 
@@ -163,7 +163,7 @@ void MapWindow::ensureVisible( qint32 x, qint32 y )
   qint32 Y1 = (qint32)(m_verticalScrollBar->value()* SCROLLFACTOR - 5);
   qint32 X2 = (qint32)(m_horizontalScrollBar->value()* SCROLLFACTOR + 5);
   qint32 Y2 = (qint32)(m_verticalScrollBar->value()* SCROLLFACTOR + 5);
-  
+
   if (x > X2 - 1 )
   {
     m_horizontalScrollBar->setValue( (qint32)((x - 2)/ SCROLLFACTOR) );
@@ -173,7 +173,7 @@ void MapWindow::ensureVisible( qint32 x, qint32 y )
   {
     m_horizontalScrollBar->setValue( (qint32)((x + 2)/ SCROLLFACTOR) );
   }
-  
+
   if (y > Y2 - 1 )
   {
     m_verticalScrollBar->setValue( (qint32)((y - 2)/ SCROLLFACTOR) );
@@ -186,26 +186,26 @@ void MapWindow::ensureVisible( qint32 x, qint32 y )
 
   bool scrollsNeedsUpdate = false;
   if (x < m_scrollBarMinimumVisible.x)
-  { 
+  {
   	m_scrollBarMinimumVisible.x = x;
   	scrollsNeedsUpdate = true;
   }
-  if (x > m_scrollBarMaximumVisible.x) 
-  { 
+  if (x > m_scrollBarMaximumVisible.x)
+  {
   	m_scrollBarMaximumVisible.x = x;
   	scrollsNeedsUpdate = true;
   }
-  if (y < m_scrollBarMinimumVisible.y) 
-  { 
+  if (y < m_scrollBarMinimumVisible.y)
+  {
   	m_scrollBarMinimumVisible.y = y;
   	scrollsNeedsUpdate = true;
   }
-  if (y > m_scrollBarMaximumVisible.y) 	
-  { 
+  if (y > m_scrollBarMaximumVisible.y)
+  {
   	m_scrollBarMaximumVisible.y = y;
   	scrollsNeedsUpdate = true;
   }
-  
+
   if(scrollsNeedsUpdate)
 	setScrollBars(m_scrollBarMinimumVisible, m_scrollBarMaximumVisible);
 }

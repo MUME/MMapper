@@ -2,7 +2,9 @@ FORMS += ./preferences/generalpage.ui \
         ./preferences/parserpage.ui \
         ./preferences/pathmachinepage.ui \
         ./mainwindow/roomeditattrdlg.ui \
-        ./mainwindow/infomarkseditdlg.ui
+        ./mainwindow/infomarkseditdlg.ui \
+        ./mainwindow/findroomsdlg.ui \
+        ./preferences/groupmanagerpage.ui
 HEADERS += ./global/defs.h \
           ./mapdata/roomselection.h \
           ./mapdata/mapdata.h \
@@ -27,6 +29,7 @@ HEADERS += ./global/defs.h \
           ./mainwindow/mainwindow.h \
           ./mainwindow/roomeditattrdlg.h \
           ./mainwindow/infomarkseditdlg.h \
+          ./mainwindow/findroomsdlg.h \
           ./configuration/configuration.h \
           ./display/mapcanvas.h \
           ./display/mapwindow.h \
@@ -68,7 +71,15 @@ HEADERS += ./global/defs.h \
           ./mapstorage/olddoor.h \
           ./mapstorage/roomsaver.h \
           ./mapstorage/oldconnection.h \
-	  ./mapfrontend/tinylist.h
+	  ./mapfrontend/tinylist.h \
+	  ./parser/roompropertysetter.h \
+	  ./pandoragroup/CGroup.h \
+	  ./pandoragroup/CGroupChar.h \
+	  ./pandoragroup/CGroupClient.h \
+	  ./pandoragroup/CGroupCommunicator.h \
+	  ./pandoragroup/CGroupServer.h \
+	  ./pandoragroup/CGroupStatus.h \
+          ./preferences/groupmanagerpage.h
 SOURCES += main.cpp \
           ./mapdata/mapdata.cpp \
           ./mapdata/mmapper2room.cpp \
@@ -80,6 +91,7 @@ SOURCES += main.cpp \
           ./mainwindow/mainwindow.cpp \
           ./mainwindow/roomeditattrdlg.cpp \
           ./mainwindow/infomarkseditdlg.cpp \
+          ./mainwindow/findroomsdlg.cpp \
           ./display/mapwindow.cpp \
           ./display/mapcanvas.cpp \
           ./display/connectionselection.cpp \
@@ -97,6 +109,7 @@ SOURCES += main.cpp \
           ./parser/mumexmlparser.cpp \
           ./parser/abstractparser.cpp \
           ./parser/patterns.cpp \
+	  ./parser/roompropertysetter.cpp \
           ./expandoracommon/component.cpp \
           ./expandoracommon/coordinate.cpp \
           ./expandoracommon/frustum.cpp \
@@ -125,30 +138,37 @@ SOURCES += main.cpp \
           ./mapstorage/roomsaver.cpp \
           ./mapstorage/abstractmapstorage.cpp \
           ./mapstorage/mapstorage.cpp \
-          ./mapstorage/oldconnection.cpp
+          ./mapstorage/oldconnection.cpp \
+	  ./pandoragroup/CGroup.cpp \
+	  ./pandoragroup/CGroupChar.cpp \
+	  ./pandoragroup/CGroupClient.cpp \
+	  ./pandoragroup/CGroupCommunicator.cpp \
+	  ./pandoragroup/CGroupServer.cpp \
+	  ./pandoragroup/CGroupStatus.cpp \
+          ./preferences/groupmanagerpage.cpp
 
 TARGET = mmapper2
 
-SVN_REVISION=$$system("svn info | grep Revision | sed s/Revision:\ //")
-!isEmpty(SVN_REVISION) {
-	DEFINES += SVN_REVISION=$$SVN_REVISION
+SVN_REVISION =$$system("svn info | grep Revision | sed 's/Revision: //'")
+!isEmpty(SVN_REVISION){
+    DEFINES += SVN_REVISION=$$SVN_REVISION
 }
 RESOURCES += resources/mmapper2.qrc
 TEMPLATE = app
 DEPENDPATH += .
-INCLUDEPATH += . ./global ./mapstorage ./mapdata ./proxy ./parser ./preferences ./configuration ./display ./mainwindow ./expandoracommon ./pathmachine ./mapfrontend
+INCLUDEPATH += . ./global ./mapstorage ./mapdata ./proxy ./parser ./preferences ./configuration ./display ./mainwindow ./expandoracommon ./pathmachine ./mapfrontend ./pandoragroup
 LIBS +=
-QT += opengl network
-CONFIG -= release
-CONFIG += debug
+QT += opengl network xml gui
+CONFIG += release opengl network xml gui
+CONFIG -= debug
 RCC_DIR = ../build/resources
 UI_DIR = ../build/ui
 MOC_DIR = ../build/moc
-debug{
- DESTDIR = ../bin/debug
- OBJECTS_DIR = ../build/debug-obj
+debug {
+    DESTDIR = ../bin/debug
+    OBJECTS_DIR = ../build/debug-obj
 }
-release{
- DESTDIR = ../bin/release
- OBJECTS_DIR = ../build/release-obj
+release {
+    DESTDIR = ../bin/release
+    OBJECTS_DIR = ../build/release-obj
 }

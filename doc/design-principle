@@ -1,0 +1,65 @@
+The design principle for mmapper2
+
+When designing mmapper2 we tried to strictly build it around a component 
+architecture. Each functional component should have a strictly defined
+external interface and components should be exchangeable. Like this we
+thought we'd be able to exchange parts of the mapper when we'd see fit
+later on. For example we were quite sure that the parser component wasn't
+the best implementation of a parser already early in the implementation,
+but we kept it around "for now". 
+
+The interfaces between components were defined using QT signals and slots.
+Each component should have its "main" class, where those are defined. The
+main advantage of this approach is that external interfaces can be easily 
+recognized and that components can be reconfigured (reconnected) at runtime.
+Another advantage is that signals can be sent across thread boundaries. So
+the parser running in one thread can effortlessly send signals to the path
+machine running in a different thread - there is no need for explicit 
+synchronization. This especially proved to be very practical during the
+implementation. Unfortunately this approach also has a major drawback: 
+Signals and slots are "one-way", nothing can be returned, and they are 
+slower than functions. In reaction to that we introduced functional objects.
+Functional objects belong to one component, but are passed on to another
+via a slot in order to receive a number of function calls. For example the
+states of the path machine (Approved, Experimenting, Syncing) are 
+RoomRecipients, which means they are given to the mapdata component which
+feeds rooms into them via function calls. A similar construction is the 
+DrawStream, which handles the rendering (although it is formally part of
+mapdata, and doesn't get passed across component boundaries). In the end
+a lot of strange hacks have been introduced to circumvent the limitations
+of the signal/slot and component design, but the general principle is still
+recognizable.
+
+Most of the subdirectories of src constitute a components. Some components 
+are derived by inheritence. For example mmapper2pathmachine is a specialization 
+of pathmachine for mmapper2. The global, expandoracommon, configuration
+and resources directories aren't components.
+
+In order to avoid concurrent modification of rooms by various components a
+locking mechanism was introduced in the mapdata/mapfrontend component 
+(mapdata is a specialization of the more general mapfrontend for mmapper).
+Rooms are generally not writable for any component but the mapdata itself.
+They can be read though. When any of the lookingForRooms methods is called
+the mapdata remembers who called this method and "locks" the room for that
+component, so that it can't be modified. The lock is removed as soon as
+releaseRoom or keepRoom is called. releaseRoom means "I don't need the room
+anymore and I don't care about it being deleted", keepRoom means "I don't 
+need the room anymore right now, but it mustn't be deleted". Modifications
+of rooms are implemented via "MapAction". A component may schedule a 
+MapAction via scheduleAction and the mapdata will execute it as soon as
+there are no conflicting read locks on the respective rooms anymore. As a
+second alternative the execute methods can be used which will either 
+execute the action immediately or never and return the result (this is 
+obviously a breach of the signal/slot principle, you get the idea ...).
+
+Rooms are basically arrays of QVariant, so that they are easily extended
+or ported as needed. The specialization for mmapper2 isn't done via 
+inheritance here (that proved to be cumbersome) but via various 
+getXYZ(Room *) helper functions. That means their constructor is mostly
+useless and have to be constructed via a RoomFactory, especially the 
+Mmapper2RoomFactory.
+
+This should give you a general idea on how mmapper2 works. If you have
+further questions, please mail me: ulfonk_mennhar@gmx.de.
+
+alve

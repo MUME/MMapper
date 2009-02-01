@@ -278,18 +278,6 @@ void DisconnectFromNeighbours::exec(uint id)
   }
 }
 
-UpdateRoomField::UpdateRoomField(const QVariant & in_update, uint in_fieldNum) :
-update(in_update), fieldNum(in_fieldNum) {}
-
-void UpdateRoomField::exec(uint id)
-{
-  Room * room = roomIndex()[id];
-  if (room)
-  {
-    (*room)[fieldNum] = update;
-  }
-}
-
 ModifyRoomFlags::ModifyRoomFlags(uint in_flags, uint in_fieldNum, FlagModifyMode in_mode) :
 flags(in_flags), fieldNum(in_fieldNum), mode(in_mode) {}
 

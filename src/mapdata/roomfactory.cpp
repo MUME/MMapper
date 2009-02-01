@@ -160,7 +160,7 @@ ComparisonResult RoomFactory::compare(const Room * room, const ParseEvent * even
   switch (compareWeakProps(room, event))
   {
   case CR_DIFFERENT: return CR_DIFFERENT;
-  case CR_TOLERANCE: if (!toleranceUsed) updated = false; else return CR_DIFFERENT; break;
+  case CR_TOLERANCE: updated = false; break;
   case CR_EQUAL: break;
   }
 
@@ -262,6 +262,9 @@ void RoomFactory::update(Room * room, const ParseEvent * event) const
   {
     rt &= (bit1 + bit2 + bit3 + bit4);
     (*room)[R_TERRAINTYPE] = (RoomTerrainType)rt;
+    if (rt & SUN_ROOM) {
+      (*room)[R_LIGHTTYPE] = RLT_LIT;
+    }
   }
   else
   {

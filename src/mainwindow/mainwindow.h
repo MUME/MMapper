@@ -1,9 +1,9 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve), 
+** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper2 project. 
+** This file is part of the MMapper2 project.
 ** Maintained by Marek Krejza <krejza@gmail.com>
 **
 ** Copyright: See COPYING file that comes with this distribution
@@ -11,7 +11,7 @@
 ** This file may be used under the terms of the GNU General Public
 ** License version 2.0 as published by the Free Software Foundation
 ** and appearing in the file COPYING included in the packaging of
-** this file.  
+** this file.
 **
 ** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 ** EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -37,6 +37,10 @@ class PrespammedPath;
 class MapData;
 class RoomSelection;
 class ConnectionSelection;
+class RoomPropertySetter;
+class FindRoomsDlg;
+class CGroup;
+class CGroupCommunicator;
 
 class DockWidget : public QDockWidget
 {
@@ -70,6 +74,7 @@ public:
   MapWindow *getCurrentMapWindow();
 
   Mmapper2PathMachine *getPathMachine(){return m_pathMachine;};
+  CGroup *getGroupManager() {return m_groupManager;};
 
   void loadFile(const QString &fileName);
   bool saveFile(const QString &fileName);
@@ -78,6 +83,7 @@ public:
 public slots:
   void newFile();
   void open();
+  void reload();
   void merge();
   bool save();
   bool saveAs();
@@ -110,6 +116,7 @@ public slots:
   void onMergeUpRoomSelection();
   void onMergeDownRoomSelection();
   void onConnectToNeighboursRoomSelection();
+  void onFindRoom();
   void onPreferences();
   void onPlayMode();
   void onMapMode();
@@ -119,18 +126,30 @@ public slots:
   void newRoomSelection(const RoomSelection*);
   void newConnectionSelection(ConnectionSelection*);
 
+  void groupOff(bool);
+  void groupClient(bool);
+  void groupServer(bool);
+  void groupManagerTypeChanged(int);
+
 protected:
   void closeEvent(QCloseEvent *event);
 
 private:
   StackedWidget *m_stackedWidget;
   QTextBrowser   *logWindow;
-  DockWidget *m_dockDialog;
+  DockWidget *m_dockDialogLog;
+  DockWidget *m_dockDialogGroup;
 
   Mmapper2PathMachine *m_pathMachine;
   MapData *m_mapData;
+  RoomPropertySetter * m_propertySetter;
   CommandEvaluator *m_commandEvaluator;
   PrespammedPath *m_prespammedPath;
+
+  // Pandora Ported
+  FindRoomsDlg *m_findRoomsDlg;
+  CGroup *m_groupManager;
+  CGroupCommunicator *m_groupCommunicator;
 
   const RoomSelection* m_roomSelection;
   ConnectionSelection* m_connectionSelection;
@@ -145,6 +164,7 @@ private:
   QToolBar *pathMachineToolBar;
   QToolBar *roomToolBar;
   QToolBar *connectionToolBar;
+  QToolBar *groupToolBar;
   QToolBar *settingsToolBar;
 
   QMenu *fileMenu;
@@ -155,10 +175,18 @@ private:
   QMenu *searchMenu;
   QMenu *settingsMenu;
   QMenu *helpMenu;
+  QMenu *groupMenu;
+
+  QAction               *groupOffAct;
+  QAction               *groupClientAct;
+  QAction               *groupServerAct;
+  QAction               *groupShowHideAct;
+  QAction               *groupSettingsAct;
 
   QAction *newAct;
   QAction *openAct;
   QAction *mergeAct;
+  QAction *reloadAct;
   QAction *saveAct;
   QAction *saveAsAct;
   QAction *exitAct;
@@ -194,6 +222,7 @@ private:
   QActionGroup *modeActGroup;
   QActionGroup *roomActGroup;
   QActionGroup *connectionActGroup;
+  QActionGroup *groupManagerGroup;
 
   QAction *editRoomSelectionAct;
   QAction *editConnectionSelectionAct;
@@ -205,6 +234,8 @@ private:
   QAction *mergeUpRoomSelectionAct;
   QAction *mergeDownRoomSelectionAct;
   QAction *connectToNeighboursRoomSelectionAct;
+
+  QAction *findRoomsAct;
 
   QAction *forceRoomAct;
   QAction *releaseAllPathsAct;

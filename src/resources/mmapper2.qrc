@@ -26,6 +26,7 @@
     <file>icons/roommergeup.png</file>
     <file>icons/roommergedown.png</file>
     <file>icons/roomconnecttoneighbours.png</file>
+    <file>icons/roomfind.png</file>
     <file>icons/connectionselection.png</file>
     <file>icons/connectionedit.png</file>
     <file>icons/infomarksedit.png</file>
@@ -36,6 +37,12 @@
     <file>icons/layerup.png</file>
     <file>icons/layerdown.png</file>
     <file>icons/force.png</file>
+    <file>icons/groupoff.png</file>
+    <file>icons/groupclient.png</file>
+    <file>icons/groupserver.png</file>
+    <file>icons/groupcfg.png</file>
+    <file>icons/groupmanager.png</file>
+    <file>icons/reload.png</file>
     <file>pixmaps/splash20.png</file>
     <file>pixmaps/terrain0.png</file>
     <file>pixmaps/terrain1.png</file>
@@ -101,5 +108,21 @@
     <file>pixmaps/mob13.png</file>
     <file>pixmaps/mob14.png</file>
     <file>pixmaps/update0.png</file>
+    <file>pixmaps/trail0.png</file>
+    <file>pixmaps/trail1.png</file>
+    <file>pixmaps/trail2.png</file>
+    <file>pixmaps/trail3.png</file>
+    <file>pixmaps/trail4.png</file>
+    <file>pixmaps/trail5.png</file>
+    <file>pixmaps/trail6.png</file>
+    <file>pixmaps/trail7.png</file>
+    <file>pixmaps/trail8.png</file>
+    <file>pixmaps/trail9.png</file>
+    <file>pixmaps/trail10.png</file>
+    <file>pixmaps/trail11.png</file>
+    <file>pixmaps/trail12.png</file>
+    <file>pixmaps/trail13.png</file>
+    <file>pixmaps/trail14.png</file>
+    <file>pixmaps/trail15.png</file>
 </qresource>
 </RCC>

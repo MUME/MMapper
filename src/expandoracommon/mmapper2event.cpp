@@ -35,7 +35,7 @@ ParseEvent * createEvent(const CommandIdType & c, const QString & roomName, cons
   ParseEvent * event = new ParseEvent(c);
   deque<QVariant> & optional = event->getOptional();
 
-  if (roomName.isEmpty())
+  if (roomName.isNull())
   {
     event->push_back(new Property(true));
   }
@@ -45,7 +45,7 @@ ParseEvent * createEvent(const CommandIdType & c, const QString & roomName, cons
   optional.push_back(roomName);
   optional.push_back(roomDesc);
   
-  if (parsedRoomDesc.isEmpty())
+  if (parsedRoomDesc.isNull())
   {
     event->push_back(new Property(true));
   }

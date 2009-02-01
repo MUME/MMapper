@@ -1,7 +1,8 @@
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve), 
-**            Marek Krejza <krejza@gmail.com> (Caligor)
+**            Marek Krejza <krejza@gmail.com> (Caligor),
+**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
 ** This file is part of the MMapper2 project. 
 ** Maintained by Marek Krejza <krejza@gmail.com>
@@ -113,11 +114,13 @@ void Parser::parseNewMudInput(IncomingData& data /*TelnetIncomingDataQueue& que*
 #endif
 				m_stringBuffer = QString::fromAscii(data.line.constData(), data.line.size());
 				m_stringBuffer = m_stringBuffer.simplified();
+				latinToAscii(m_stringBuffer);
 				
 				if (m_readingRoomDesc)
 				{
 					m_readingRoomDesc = false; // we finished read desc mode
 					m_descriptionReady = true;
+					if (m_examine) m_examine = false; // stop showing bypassing brief-mode
 				}
 				
 				if	(m_descriptionReady)
@@ -160,6 +163,7 @@ void Parser::parseNewMudInput(IncomingData& data /*TelnetIncomingDataQueue& que*
 
 				m_stringBuffer = QString::fromAscii(data.line.constData(), data.line.size());
 				m_stringBuffer = m_stringBuffer.simplified();
+				latinToAscii(m_stringBuffer);
 								
 				if (m_readingRoomDesc) 
 				{					
@@ -253,8 +257,8 @@ void Parser::parseNewMudInput(IncomingData& data /*TelnetIncomingDataQueue& que*
 						m_readingRoomDesc = true; //start of read desc mode
 						m_descriptionReady = false;										
 						m_roomName=m_stringBuffer;
-						m_dynamicRoomDesc="";
-						m_staticRoomDesc="";
+						m_dynamicRoomDesc=nullString;
+						m_staticRoomDesc=nullString;
 						m_roomDescLines = 0;
 						m_readingStaticDescLines = true;
 						m_exitsFlags = 0;
@@ -293,8 +297,8 @@ void Parser::parseNewMudInput(IncomingData& data /*TelnetIncomingDataQueue& que*
 					m_readingRoomDesc = true; //start of read desc mode
 					m_descriptionReady = false;										
 					m_roomName=m_stringBuffer;
-					m_dynamicRoomDesc="";
-					m_staticRoomDesc="";
+					m_dynamicRoomDesc=nullString;
+					m_staticRoomDesc=nullString;
 					m_roomDescLines = 0;
 					m_readingStaticDescLines = true;
 					m_exitsFlags = 0;
@@ -304,9 +308,9 @@ void Parser::parseNewMudInput(IncomingData& data /*TelnetIncomingDataQueue& que*
 				{ 
 					m_readingRoomDesc = false; // we finished read desc mode
 					m_descriptionReady = true;
-					m_roomName="";
-					m_dynamicRoomDesc="";
-					m_staticRoomDesc="";
+					m_roomName=nullString;
+					m_dynamicRoomDesc=nullString;
+					m_staticRoomDesc=nullString;
 					m_roomDescLines = 0;
 					m_readingStaticDescLines = false;
 					m_exitsFlags = 0;
@@ -318,7 +322,7 @@ void Parser::parseNewMudInput(IncomingData& data /*TelnetIncomingDataQueue& que*
 					if (!m_stringBuffer.isEmpty()) parseMudCommands(m_stringBuffer);
 				}
 										
-				if (!dontSendToUser && !(staticLine && Config().m_brief)) emit sendToUser(data.line);				
+				if (!dontSendToUser && !(staticLine && (m_examine || Config().m_brief))) emit sendToUser(data.line);
 				break;
 
 			case TDT_LFCR: 
@@ -329,6 +333,8 @@ void Parser::parseNewMudInput(IncomingData& data /*TelnetIncomingDataQueue& que*
 #endif			
 				m_stringBuffer = QString::fromAscii(data.line.constData(), data.line.size());
 				m_stringBuffer = m_stringBuffer.simplified();
+				latinToAscii(m_stringBuffer);
+
 
 				if (m_readingRoomDesc && (Config().m_roomDescriptionsParserType == Configuration::RDPT_LINEBREAK) )
 				{
@@ -336,7 +342,7 @@ void Parser::parseNewMudInput(IncomingData& data /*TelnetIncomingDataQueue& que*
 					m_staticRoomDesc += m_stringBuffer+"\n";
 					m_roomDescLines++;
 				}
-				if (!(staticLine && Config().m_brief)) emit sendToUser(data.line);
+				if (!(staticLine && (m_examine || Config().m_brief))) emit sendToUser(data.line);
 				break;
 
 			case TDT_LF:
@@ -511,9 +517,4 @@ bool Parser::isEndOfRoomDescription(QString& str) {
 	}
 	return false;
 }
-
-
-
-
-
 

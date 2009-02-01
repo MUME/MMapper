@@ -1,9 +1,9 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve), 
+** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper2 project. 
+** This file is part of the MMapper2 project.
 ** Maintained by Marek Krejza <krejza@gmail.com>
 **
 ** Copyright: See COPYING file that comes with this distribution
@@ -11,7 +11,7 @@
 ** This file may be used under the terms of the GNU General Public
 ** License version 2.0 as published by the Free Software Foundation
 ** and appearing in the file COPYING included in the packaging of
-** this file.  
+** this file.
 **
 ** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 ** EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -26,6 +26,7 @@
 #include <stack>
 
 #include "pathmachine.h"
+#include "configuration.h"
 
 using namespace std;
 using namespace Qt;
@@ -74,7 +75,7 @@ void PathMachine::init()
 }
 
 /**
- * the signals - apart from playerMoved have to be DirectConnections because we want to 
+ * the signals - apart from playerMoved have to be DirectConnections because we want to
  * be sure to find all available rooms and we also want to make sure a room is actually
  * inserted into the map before we search for it
  * The slots need to be queued because we want to make sure all data is only accessed
@@ -282,6 +283,7 @@ void PathMachine::approved(ParseEvent * event)
     }
     mostLikelyRoom = *perhaps;
     emit playerMoved(mostLikelyRoom.getPosition());
+    if (Config().m_groupManagerState != 2) emit setCharPosition(mostLikelyRoom.getId()); // GroupManager
   }
   else
   { // couldn't match, give up

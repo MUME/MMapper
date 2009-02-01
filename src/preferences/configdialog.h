@@ -27,6 +27,7 @@
 #define CONFIGDIALOG_H
 
 #include <QDialog>
+#include "CGroup.h"
 
 class QListWidget;
 class QListWidgetItem;
@@ -37,7 +38,8 @@ class ConfigDialog : public QDialog
     Q_OBJECT
 
 public:
-    ConfigDialog();
+    ConfigDialog(CGroup*);
+    CGroup* m_groupManager;
 
 public slots:
     void changePage(QListWidgetItem *current, QListWidgetItem *previous);

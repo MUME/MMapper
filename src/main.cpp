@@ -1,9 +1,9 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve), 
+** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper2 project. 
+** This file is part of the MMapper2 project.
 ** Maintained by Marek Krejza <krejza@gmail.com>
 **
 ** Copyright: See COPYING file that comes with this distribution
@@ -11,7 +11,7 @@
 ** This file may be used under the terms of the GNU General Public
 ** License version 2.0 as published by the Free Software Foundation
 ** and appearing in the file COPYING included in the packaging of
-** this file.  
+** this file.
 **
 ** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 ** EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -22,7 +22,7 @@
 ** WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 **
 *************************************************************************/
- 
+
 #include <QApplication>
 #include <QtGui>
 #include <QtCore>
@@ -42,9 +42,8 @@ int main(int argc, char **argv)
   QPixmap pixmap(":/pixmaps/splash20.png");
   QSplashScreen *splash = new QSplashScreen(pixmap);
   splash->show();
-  for (quint32 i=0; i<300000000; i++);	
 #endif
-  MainWindow     mw;  
+  MainWindow     mw;
   if (Config().m_autoLoadWorld && Config().m_autoLoadFileName!="")
   {
 	mw.loadFile(Config().m_autoLoadFileName);
@@ -55,7 +54,7 @@ int main(int argc, char **argv)
   delete splash;
 #endif
   int ret = app.exec();
-  Config().write(); 
+  Config().write();
   return ret;
 }
 

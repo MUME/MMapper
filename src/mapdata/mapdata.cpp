@@ -1,9 +1,9 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve), 
+** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper2 project. 
+** This file is part of the MMapper2 project.
 ** Maintained by Marek Krejza <krejza@gmail.com>
 **
 ** Copyright: See COPYING file that comes with this distribution
@@ -11,7 +11,7 @@
 ** This file may be used under the terms of the GNU General Public
 ** License version 2.0 as published by the Free Software Foundation
 ** and appearing in the file COPYING included in the packaging of
-** this file.  
+** this file.
 **
 ** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 ** EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -46,15 +46,94 @@ QString MapData::getDoorName(const Coordinate & pos, uint dir)
   else return "exit";
 }
 
-void MapData::setDoorName(const Coordinate & pos, uint dir, const QString & name)
+void MapData::setDoorName(const Coordinate & pos, const QString & name, uint dir)
 {
   QMutexLocker locker(&mapLock);
   Room * room = map.get(pos);
   if (room && dir < 7)
   {
+    /*
+    // Is the Door there? If not, add it.
+    if (!getExitFlag(pos, dir, EF_DOOR)) {
+      MapAction * action_setdoor = new SingleRoomAction(new ModifyExitFlags(EF_DOOR, dir, E_FLAGS, FMM_SET), room->getId());
+      scheduleAction(action_setdoor);
+    }
+    */
     MapAction * action = new SingleRoomAction(new UpdateExitField(name, dir, E_DOORNAME), room->getId());
     scheduleAction(action);
+    setDataChanged();
   }
+}
+
+bool MapData::getExitFlag(const Coordinate & pos, uint flag, uint dir, uint field)
+{
+  QMutexLocker locker(&mapLock);
+  Room * room = map.get(pos);
+  if (room && dir < 7)
+  {
+    //ExitFlags ef = ::getFlags(room->exit(dir));
+    ExitFlags ef = room->exit(dir)[field].toUInt();
+    if (ISSET(ef, flag)) return true;
+  }
+  return false;
+}
+
+void MapData::toggleExitFlag(const Coordinate & pos, uint flag, uint dir, uint field)
+{
+  QMutexLocker locker(&mapLock);
+  Room * room = map.get(pos);
+  if (room && dir < 7)
+  {
+    setDataChanged();
+    MapAction * action = new SingleRoomAction(new ModifyExitFlags(flag, dir, field, FMM_TOGGLE), room->getId());
+    scheduleAction(action);
+  }
+}
+
+void MapData::toggleRoomFlag(const Coordinate & pos, uint flag, uint field)
+{
+  QMutexLocker locker(&mapLock);
+  Room * room = map.get(pos);
+  if (room && field < 10)
+  {
+    setDataChanged();
+    MapAction * action = new SingleRoomAction(new ModifyRoomFlags(flag, field, FMM_TOGGLE), room->getId());
+    scheduleAction(action);
+  }
+}
+
+bool MapData::getRoomFlag(const Coordinate & pos, uint flag, uint field)
+{
+  QMutexLocker locker(&mapLock);
+  Room * room = map.get(pos);
+  if (room && field < 10)
+  {
+    if (ISSET((*room)[field].toUInt(), flag)) return true;
+  }
+  return false;
+}
+
+void MapData::setRoomField(const Coordinate & pos, uint flag, uint field)
+{
+  QMutexLocker locker(&mapLock);
+  Room * room = map.get(pos);
+  if (room && field < 10)
+  {
+    setDataChanged();
+    MapAction * action = new SingleRoomAction(new UpdateRoomField(flag, field), room->getId());
+    scheduleAction(action);
+  }
+}
+
+uint MapData::getRoomField(const Coordinate & pos, uint field)
+{
+  QMutexLocker locker(&mapLock);
+  Room * room = map.get(pos);
+  if (room && field < 10)
+  {
+    return (*room)[field].toUInt();
+  }
+  return 0;
 }
 
 QList<Coordinate> MapData::getPath(const QList<CommandIdType> dirs)
@@ -277,6 +356,87 @@ void MapData::clear()
   while (!m_markers.isEmpty())
     delete m_markers.takeFirst();
   emit log("MapData", "cleared MapData");
+}
+
+void MapData::removeDoorNames()
+{
+  QMutexLocker locker(&mapLock);
+
+  Room * r = 0;
+
+  for(vector<Room *>::iterator i = roomIndex.begin(); i != roomIndex.end(); ++i)  
+  {
+    r = *i;
+    if (r)
+    {
+      for (uint dir = 0; dir <= 6; dir++)
+      {
+        MapAction * action = new SingleRoomAction(new UpdateExitField("", dir, E_DOORNAME), r->getId());
+        scheduleAction(action);
+      }
+    }
+  setDataChanged();
+  }
+}
+
+void MapData::searchDescriptions(RoomRecipient * recipient, QString s, Qt::CaseSensitivity cs)
+{
+  QMutexLocker locker(&mapLock);
+  Room * r = 0;
+
+  for(vector<Room *>::iterator i = roomIndex.begin(); i != roomIndex.end(); ++i)
+  {
+    r = *i;
+    if (r) {
+      if (QString((*r)[1].toString()).contains(s, cs))
+      {
+        locks[r->getId()].insert(recipient);
+        recipient->receiveRoom(this, r);
+      }
+    }
+  }
+}
+
+void MapData::searchNames(RoomRecipient * recipient, QString s, Qt::CaseSensitivity cs)
+{
+  QMutexLocker locker(&mapLock);
+  Room * r = 0;
+
+  for(vector<Room *>::iterator i = roomIndex.begin(); i != roomIndex.end(); ++i)
+  {
+    r = *i;
+    if (r) {
+      if (QString((*r)[0].toString()).contains(s, cs))
+      {
+        locks[r->getId()].insert(recipient);
+        recipient->receiveRoom(this, r);
+      }
+    }
+  }
+}
+
+void MapData::searchDoorNames(RoomRecipient * recipient, QString s, Qt::CaseSensitivity cs)
+{
+  QMutexLocker locker(&mapLock);
+  Room * r = 0;
+
+  for(vector<Room *>::iterator i = roomIndex.begin(); i != roomIndex.end(); ++i)
+  {
+    r = *i;
+    if (r) {
+      ExitsList exits = r->getExitsList();
+      for(ExitsList::const_iterator exitIter = exits.begin(); exitIter != exits.end(); ++exitIter)
+      {
+        const Exit & e = *exitIter;
+        if (QString((e)[0].toString()).contains(s, cs))
+        {
+          locks[r->getId()].insert(recipient);
+          recipient->receiveRoom(this, r);
+          break;
+        }
+      }
+    }
+  }
 }
 
 MapData::~MapData()

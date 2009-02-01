@@ -106,15 +106,7 @@ public:
   virtual void exec(uint id);
 };
 
-class UpdateRoomField : public AbstractAction
-{
-public:
-  UpdateRoomField(const QVariant & update, uint fieldNum);
-  virtual void exec(uint id);
-protected:
-  const QVariant update;
-  const uint fieldNum;
-};
+
 
 class ModifyRoomFlags : public AbstractAction
 {

@@ -85,9 +85,32 @@ void MakePermanent::exec(uint id) {
   if (room) room->setPermanent();
 }
 
+UpdateRoomField::UpdateRoomField(const QVariant & in_update, uint in_fieldNum) :
+update(in_update), fieldNum(in_fieldNum) {}
+
+void UpdateRoomField::exec(uint id)
+{
+  Room * room = roomIndex()[id];
+  if (room)
+  {
+    (*room)[fieldNum] = update;
+  }
+}
+
 Update::Update(ParseEvent * in_props) :
   props(*in_props) {
-  assert(props.getNumSkipped() == 0);
+  //assert(props.getNumSkipped() == 0);
+}
+
+UpdatePartial::UpdatePartial(const QVariant & in_val, uint in_pos) : Update(0), UpdateRoomField(in_val, in_pos)  {}
+
+void UpdatePartial::exec(uint id) {
+	Room * room = roomIndex()[id];
+	if (room) {
+		UpdateRoomField::exec(id);
+		props = *(factory()->getEvent(room));
+		Update::exec(id);
+	}
 }
 
 void Update::exec(uint id) {

@@ -46,7 +46,7 @@ class FrontendAccessor {
     AbstractRoomFactory * factory() {return frontend->factory;}
 };
 
-class AbstractAction : public FrontendAccessor {
+class AbstractAction : public virtual FrontendAccessor {
   public:
     virtual void preExec(uint) {}
     virtual void exec(uint id) = 0;
@@ -108,12 +108,28 @@ class MakePermanent: public AbstractAction {
     virtual void exec(uint id);
 };
 
-class Update : public AbstractAction {
+class UpdateRoomField : public virtual AbstractAction
+{
+public:
+  UpdateRoomField(const QVariant & update, uint fieldNum);
+  virtual void exec(uint id);
+protected:
+  const QVariant update;
+  const uint fieldNum;
+};
+
+class Update : public virtual AbstractAction {
   public:
     Update(ParseEvent * props);
     virtual void exec(uint id);
   protected:
     ParseEvent props;
+};
+
+class UpdatePartial :  public virtual Update,  public virtual UpdateRoomField {
+	public:
+		UpdatePartial(const QVariant & in_val, uint in_pos);
+		virtual void exec(uint id);
 };
 
 class ExitsAffecter : public AbstractAction {

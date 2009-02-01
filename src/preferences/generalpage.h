@@ -51,6 +51,7 @@ public slots:
 	void emulatedExitsStateChanged(int);
 	void updatedStateChanged(int);
 	void drawNotMappedExitsStateChanged(int);
+        void drawDoorNamesStateChanged(int);
 	void drawUpperLayersTexturedStateChanged(int);
 
 	void autoLoadFileNameTextChanged(const QString&);

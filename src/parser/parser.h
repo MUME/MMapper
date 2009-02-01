@@ -1,7 +1,8 @@
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve), 
-**            Marek Krejza <krejza@gmail.com> (Caligor)
+**            Marek Krejza <krejza@gmail.com> (Caligor),
+**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
 ** This file is part of the MMapper2 project. 
 ** Maintained by Marek Krejza <krejza@gmail.com>
@@ -55,10 +56,10 @@ protected:
    virtual bool parseUserCommands(QString& command);
 
    void parseMudCommands(QString& str);
-   
+
    quint32 m_roomDescLines;
    bool m_readingStaticDescLines;
-      
+   
    bool m_following;
    quint16 m_followDir;
    
@@ -68,7 +69,7 @@ protected:
    bool m_miscAutoconfigDone;
    bool m_IACPromptAutoconfigDone;
    bool m_xmlAutoConfigDone;
-   
+ 
 };
 
 
