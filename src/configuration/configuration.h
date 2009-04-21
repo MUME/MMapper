@@ -35,10 +35,19 @@ class Configuration {
   public:
     void read();
     void write() const;
+    bool isChanged() { return configurationChanged; }
 
     bool m_firstRun;
-
+    QPoint windowPosition;
+    QSize windowSize;
+    QByteArray windowState;
+    bool alwaysOnTop;
     int m_mapMode; //0 play, 1 map
+    void setFirstRun(bool value) { m_firstRun = value; change(); }
+    void setWindowPosition(QPoint pos) {windowPosition = pos; change(); }
+    void setWindowSize(QSize size) { windowSize = size; change(); }
+    void setWindowState(QByteArray state) { windowState = state; change(); }
+    void setAlwaysOnTop(bool b) { alwaysOnTop = b; change(); }
 
     QString   m_remoteServerName;         /// Remote host and port settings
     quint32   m_remotePort;
@@ -57,7 +66,7 @@ class Configuration {
     bool m_drawNotMappedExits;
     bool m_drawUpperLayersTextured;
     bool m_drawDoorNames;
-
+    
     enum RoomDescriptionsParserType {RDPT_COLOR, RDPT_PARSER, RDPT_LINEBREAK};
     RoomDescriptionsParserType           m_roomDescriptionsParserType;
     quint16  m_minimumStaticLines;
@@ -97,6 +106,9 @@ class Configuration {
   private:
     Configuration();
     Configuration(const Configuration&);
+
+    bool configurationChanged;
+    void change() { configurationChanged = true; }
 
     friend Configuration& Config();
 };

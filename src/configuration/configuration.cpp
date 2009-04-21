@@ -34,14 +34,18 @@ void Configuration::read()
 {
   QSettings conf("Caligor soft", "MMapper2");
 
-        //conf.setPath( QSettings::NativeFormat, QSettings::UserScope, "$HOME/.mmapper2-config" );
+  //conf.setPath( QSettings::NativeFormat, QSettings::UserScope, "$HOME/.mmapper2-config" );
 
   conf.beginGroup("General");
   m_firstRun = conf.value("Run first time", TRUE).toBool();
+  windowPosition = conf.value("Window Position", QPoint(200, 200)).toPoint();
+  windowSize = conf.value("Window Size", QSize(400, 400)).toSize();
+  windowState = conf.value("Window State", "").toByteArray();
+  alwaysOnTop = conf.value("Always On Top", FALSE).toBool();
   m_mapMode = conf.value("Map Mode", 0).toInt(); //0 play, 1 map
   conf.endGroup();
 
-        // read general options
+  // read general options
   conf.beginGroup("Connection");
   m_remoteServerName = conf.value("Server name", "fire.pvv.org").toString();
   m_remotePort = conf.value("Remote port number", 4242).toInt();
@@ -52,7 +56,7 @@ void Configuration::read()
   m_showUpdated = conf.value("Show updated rooms", TRUE).toBool();
   m_drawNotMappedExits = conf.value("Draw not mapped exits", TRUE).toBool();
   m_drawUpperLayersTextured = conf.value("Draw upper layers textured", FALSE).toBool();
-  m_drawDoorNames = conf.value("Draw door names", FALSE).toBool();
+  m_drawDoorNames = conf.value("Draw door names", TRUE).toBool();
   conf.endGroup();
 
   conf.beginGroup("Debug");
@@ -192,6 +196,10 @@ void Configuration::write() const {
 
   conf.beginGroup("General");
   conf.setValue("Run first time", FALSE);
+  conf.setValue("Window Position", windowPosition);
+  conf.setValue("Window Size", windowSize);
+  conf.setValue("Window State", windowState);
+  conf.setValue("Always On Top", alwaysOnTop);
   conf.setValue("Map Mode", m_mapMode);
   conf.endGroup();
 

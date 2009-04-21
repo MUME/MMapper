@@ -183,36 +183,31 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 }
 
 MainWindow::~MainWindow()
-{
-  writeSettings();
-}
+{}
 
 void MainWindow::readSettings()
 {
-  QSettings settings("Caligor soft", "MMapper2");
-  settings.beginGroup("MainWindow");
-  QPoint pos = settings.value("pos", QPoint(200, 200)).toPoint();
-  QSize size = settings.value("size", QSize(400, 400)).toSize();
-  restoreState(settings.value("state", "").toByteArray() );
-  resize(size);
-  move(pos);
-  if (settings.value("alwaysontop", false).toBool())
-  {
-    alwaysOnTopAct->setChecked(true);
+  resize(Config().windowSize);
+  move(Config().windowPosition);
+  restoreState(Config().windowState);
+  alwaysOnTopAct->setChecked(Config().alwaysOnTop);
+  if (Config().alwaysOnTop) {
     alwaysOnTop();
   }
-  settings.endGroup();
+  else
+  {
+    if (pos().x() < 0) pos().setX(0);
+    if (pos().y() < 0) pos().setY(0);
+    move(pos());
+  }
 }
 
 void MainWindow::writeSettings()
 {
-  QSettings settings("Caligor soft", "MMapper2");
-  settings.beginGroup("MainWindow");
-  settings.setValue("pos", pos());
-  settings.setValue("size", size());
-  settings.setValue("state", saveState() );
-  settings.setValue("alwaysontop", alwaysOnTopAct->isChecked() );
-  settings.endGroup();
+  Config().setWindowPosition(pos() );
+  Config().setWindowSize(size() );
+  Config().setWindowState(saveState() );
+  Config().setAlwaysOnTop((bool)(windowFlags() & Qt::WindowStaysOnTopHint));
 }
 
 
@@ -802,9 +797,9 @@ void MainWindow::prevWindow()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+  writeSettings();
   if (maybeSave())
   {
-    writeSettings();
     event->accept();
   }
   else
@@ -964,7 +959,7 @@ bool MainWindow::maybeSave()
 {
   if ( m_mapData->dataChanged() )
   {
-    int ret = QMessageBox::warning(this, tr("Application"),
+    int ret = QMessageBox::warning(this, tr("mmapper"),
                                    tr("The document has been modified.\n"
                                       "Do you want to save your changes?"),
                                    QMessageBox::Yes | QMessageBox::Default,
