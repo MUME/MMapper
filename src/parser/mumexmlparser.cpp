@@ -93,7 +93,13 @@ void MumeXmlParser::parseNewMudInput(IncomingData& data)
       (*debugStream) << "OTHER";
       (*debugStream) << "***ETYPE***";
 #endif
-      emit sendToUser(data.line);
+
+      /* Jahara Apr-30-09
+       * Fixed prompt bug, not sure why it occured
+       */
+      //emit sendToUser(data.line); 
+
+      parse(data.line);
       break;
 
     case TDT_PROMPT:
