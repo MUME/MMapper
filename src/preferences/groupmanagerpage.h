@@ -37,16 +37,13 @@ class GroupManagerPage : public QWidget, private Ui::GroupManagerPage
 
   public slots:
 
-    void colorNameTextChanged(const QString&);
+    void colorNameTextChanged();
     void changeColorClicked();
-    void charNameTextChanged(const QString&);
-    void acceptCharClicked();
+    void charNameTextChanged();
 
-    void remoteHostTextChanged(const QString&);
+    void remoteHostTextChanged();
     void remotePortValueChanged(int);
     void localPortValueChanged(int);
-    void acceptClientClicked();
-    void acceptServerClicked();
 
     void rulesWarningChanged(int);
 

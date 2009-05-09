@@ -34,17 +34,14 @@ GroupManagerPage::GroupManagerPage(CGroup* gm, QWidget *parent)
   m_groupManager = gm;
 
   // Character Section
-  connect( charName, SIGNAL( textChanged(const QString&) ), SLOT( charNameTextChanged(const QString&) )  );
+  connect( charName, SIGNAL( editingFinished() ), SLOT( charNameTextChanged() )  );
   connect( changeColor, SIGNAL(clicked()),SLOT(changeColorClicked()));
-  connect( colorName, SIGNAL( textChanged(const QString&) ), SLOT( colorNameTextChanged(const QString&) )  );
-  connect( acceptChar, SIGNAL( clicked() ), SLOT( acceptCharClicked() ) );
+  connect( colorName, SIGNAL( editingFinished() ), SLOT( colorNameTextChanged() )  );
   // Client Section
   connect( localPort, SIGNAL( valueChanged(int) ), SLOT( localPortValueChanged(int) )  );
-  connect( acceptClient, SIGNAL( clicked() ), SLOT( acceptClientClicked() )  );
   // Server Section
-  connect( remoteHost, SIGNAL( textChanged(const QString&) ), SLOT( remoteHostTextChanged(const QString&) )  );
+  connect( remoteHost, SIGNAL( editingFinished() ), SLOT( remoteHostTextChanged() )  );
   connect( remotePort, SIGNAL( valueChanged(int) ), SLOT( remotePortValueChanged(int) )  );
-  connect( acceptServer, SIGNAL( clicked() ), SLOT( acceptServerClicked() )  );
   // Checkbox Section
   connect( rulesWarning, SIGNAL(stateChanged(int)), SLOT(rulesWarningChanged(int)));
 
@@ -58,91 +55,64 @@ GroupManagerPage::GroupManagerPage(CGroup* gm, QWidget *parent)
   rulesWarning->setChecked( Config().m_groupManagerRulesWarning );
 }
 
-void GroupManagerPage::charNameTextChanged(const QString&)
+void GroupManagerPage::charNameTextChanged()
 {
-  if (!m_groupManager->isNamePresent(QString(charName->text()).toAscii()))
-    acceptChar->setEnabled(TRUE);
-  else
-    acceptChar->setEnabled(FALSE);
-}
-
-void GroupManagerPage::acceptCharClicked()
-{
-  if (Config().m_groupManagerCharName != QString(charName->text()).toAscii())
-  {
-    Config().m_groupManagerCharName = QString(charName->text()).toAscii();
+  const QString newName = charName->text();
+  if (!m_groupManager->isNamePresent(newName.toAscii()) &&
+      Config().m_groupManagerCharName != newName) {
+    Config().m_groupManagerCharName = newName.toAscii();
     m_groupManager->resetName();
   }
-  QColor newColor = QColor(colorName->text());
-  if (newColor != Config().m_groupManagerColor)
-  {
-    Config().m_groupManagerColor = QColor(colorName->text());
-    m_groupManager->resetColor();
-  }
-  acceptChar->setEnabled(FALSE);
 }
 
-void GroupManagerPage::colorNameTextChanged(const QString&)
+void GroupManagerPage::colorNameTextChanged()
 {
-  QColor newColor = QColor(colorName->text());
+  const QColor newColor = QColor(colorName->text());
   if (newColor.isValid() && newColor != Config().m_groupManagerColor) {
     colorLabel->setPalette(QPalette(newColor));
     colorLabel->setAutoFillBackground(true);
-    acceptChar->setEnabled(TRUE);
+    Config().m_groupManagerColor = newColor;
+    m_groupManager->resetColor();
   }
-  else
-    acceptChar->setEnabled(FALSE);
 }
 
 void GroupManagerPage::changeColorClicked()
 {
-  QColor newColor = QColorDialog::getColor(Config().m_groupManagerColor, this);
+  const QColor newColor = QColorDialog::getColor(Config().m_groupManagerColor, this);
   if (newColor.isValid() && newColor != Config().m_groupManagerColor) {
     colorName->setText(newColor.name());
     colorLabel->setPalette(QPalette(newColor));
     colorLabel->setAutoFillBackground(true);
+    Config().m_groupManagerColor = newColor;
     m_groupManager->resetColor();
-    acceptChar->setEnabled(TRUE);
   }
-  else
-    acceptChar->setEnabled(FALSE);
 }
 
-void GroupManagerPage::remoteHostTextChanged(const QString&)
+void GroupManagerPage::remoteHostTextChanged()
 {
-  if (QString(remoteHost->text()).toAscii() != Config().m_groupManagerHost)
-    acceptClient->setEnabled(TRUE);
+  if (remotePort->value() != Config().m_groupManagerRemotePort) {
+    Config().m_groupManagerHost = QString(remoteHost->text()).toAscii();
+  }
+
+  if (m_groupManager->isConnected() && m_groupManager->getType() == CGroupCommunicator::Client)
+    m_groupManager->reconnect();
 }
 
 void GroupManagerPage::remotePortValueChanged(int)
 {
-  if (remotePort->value() != Config().m_groupManagerRemotePort)
-    acceptClient->setEnabled(TRUE);
-}
-
-void GroupManagerPage::acceptClientClicked()
-{
-  acceptClient->setEnabled(FALSE);
-  Config().m_groupManagerRemotePort = remotePort->value();
-  Config().m_groupManagerHost = QString(remoteHost->text()).toAscii();
-
-  if (m_groupManager->isConnected())
+  if (QString(remoteHost->text()).toAscii() != Config().m_groupManagerHost) {
+    Config().m_groupManagerRemotePort = remotePort->value();
+  }
+  
+  if (m_groupManager->isConnected() && m_groupManager->getType() == CGroupCommunicator::Client)
     m_groupManager->reconnect();
 }
 
 void GroupManagerPage::localPortValueChanged(int)
 {
   if (localPort->value() != Config().m_groupManagerLocalPort && localPort->value() != int(Config().m_localPort))
-    acceptServer->setEnabled(TRUE);
-  else
-    acceptServer->setEnabled(FALSE);
-}
-
-void GroupManagerPage::acceptServerClicked()
-{
-  acceptServer->setEnabled(FALSE);
-  Config().m_groupManagerLocalPort = localPort->value();
-
+    Config().m_groupManagerLocalPort = localPort->value();
+  
   if (m_groupManager->getType() == CGroupCommunicator::Server)
     m_groupManager->reconnect();
 }
