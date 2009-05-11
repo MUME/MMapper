@@ -7,4 +7,4 @@ echo Going to run with $JFLAG jobs
 echo If you have problems make sure you have all the required dependencies
 echo \(i.e. libqt4-dev, libqt4-opengl-dev\)
 echo 
-cd src && make clean && qmake && make -j$JFLAG
+cd src && qmake && make clean && make -j$JFLAG
