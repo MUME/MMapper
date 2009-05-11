@@ -41,8 +41,10 @@
 int main(int argc, char **argv)
 {
 #if QT_VERSION >= 0x0040500
-  // Improve Rendering Speed
-  QApplication::setGraphicsSystem("opengl");
+  /* Experimental:
+   * This might improve rendering speed... but its problematic
+   */
+   //QApplication::setGraphicsSystem("opengl");
 #endif
   QApplication    app(argc, argv);
 
