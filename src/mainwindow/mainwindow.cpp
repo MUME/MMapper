@@ -1,27 +1,31 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
-**            Marek Krejza <krejza@gmail.com> (Caligor)
+** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve), 
+**            Marek Krejza <krejza@gmail.com> (Caligor),
+**            Nils Schimmelmann <nschimme@gmail.com> (Jahara),
+**            Anonymous <lachupe@gmail.com> (Azazello)
 **
-** This file is part of the MMapper2 project.
-** Maintained by Marek Krejza <krejza@gmail.com>
+** This file is part of the MMapper project. 
+** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** Copyright: See COPYING file that comes with this distribution
 **
-** This file may be used under the terms of the GNU General Public
-** License version 2.0 as published by the Free Software Foundation
-** and appearing in the file COPYING included in the packaging of
-** this file.
+** This program is free software; you can redistribute it and/or
+** modify it under the terms of the GNU General Public License
+** as published by the Free Software Foundation; either version 2
+** of the License, or (at your option) any later version.
 **
-** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-** EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-** MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-** NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-** LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-** OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-** WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
 **
-*************************************************************************/
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the:
+** Free Software Foundation, Inc.
+** 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+**
+************************************************************************/
 
 #include <QtGui>
 
@@ -78,6 +82,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
 {
   setObjectName("MainWindow");
   setWindowTitle("MMapper2: Caligors MUME Mapper");
+  setWindowIcon(QIcon(":/icons/m.png"));
 
   qRegisterMetaType<IncomingData>("IncomingData");
   qRegisterMetaType<CommandQueue>("CommandQueue");
@@ -935,23 +940,27 @@ bool MainWindow::saveAs()
 void MainWindow::about()
 {
 #ifdef SVN_REVISION
-QString version = tr("<b>MMapper2 Subversion Revision ") + QString::number(SVN_REVISION) + tr("</b><br><br>");
+QString version = tr("<b>MMapper Subversion Revision ") + QString::number(SVN_REVISION) + tr("</b><br><br>");
 #else
-QString version = tr("<b>MMapper2 Release 2.0.4</b><br><br>");
+ QString version = tr("<b>MMapper Release ") + QString(MMAPPER_VERSION)+ tr("</b><br><br>");
 #endif
-  QMessageBox::about(this, tr("About MMapper2"), version +
-                     tr("The MMapper2 application is specially designed "
-                        "for <a href=\"http://mume.pvv.org\">MUME</a> (fire.pvv.org:4242)<br><br>"
+  QMessageBox::about(this, tr("About MMapper"), version +
+                     tr("The MMapper application is specially designed "
+                        "for <a href=\"http://mume.pvv.org\">MUME</a> "
+			"(fire.pvv.org:4242)<br><br>"
                         "Maintainer: Jahara (nschimme@gmail.com)<br><br>"
                          "<u>Special thanks to:</u><br>"
                         "Alve for his great map engine<br>"
                         "Caligor for starting the mmapper project<br>"
-                        "Porien for his work with the Group Manager protocol<br><br>"
+                        "Azazelo for his work with the Group Manager protocol"
+			"<br><br>"
                          "<u>Contributors to previous versions:</u><br>"
-                        "Jahara, Kalev, Porien, Alve, Caligor, Kovis, Krush, and Korir<br><br>"
-                        "For help regarding on how to set up MMapper2 with your client of choice<br>"
-                        "<a href=\"http://mume.org/wiki/index.php/Guide_to_install_mmapper2_on_Windows\">"
-                        "read the installation guide</a> on the MUME Wiki<br>"
+                        "Jahara, Kalev, Azazelo, Alve, Caligor, Kovis, Krush, "
+			"and Korir<br><br>"
+                        "For help regarding on how to set up MMapper with "
+			"your client of choice read the "
+			"<a href=\"http://mume.org/wiki/index.php/Guide_to_install_mmapper2_on_Windows\">"
+                        "installation guide</a> on the MUME Wiki<br>"
                        ));
 }
 

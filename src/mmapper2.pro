@@ -154,6 +154,7 @@ SVN_REVISION =$$system("svn info | grep Revision | sed 's/Revision: //'")
     DEFINES += SVN_REVISION=$$SVN_REVISION
 }
 RESOURCES += resources/mmapper2.qrc
+RC_FILE = ./resources/mmapper2.rc
 TEMPLATE = app
 DEPENDPATH += .
 INCLUDEPATH += . ./global ./mapstorage ./mapdata ./proxy ./parser ./preferences ./configuration ./display ./mainwindow ./expandoracommon ./pathmachine ./mapfrontend ./pandoragroup
