@@ -69,9 +69,15 @@ set(mmapper_SRCS
 
 set(mmapper_RCS resources/mmapper2.qrc)
 
-if(WIN32)
-    set(mmapper_SRCS ${mmapper_SRCS} resources/mmapper2.rc)
-endif(WIN32)
+if (MINGW)
+    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/mmapper2_rc.o
+                       COMMAND windres.exe -I ${CMAKE_CURRENT_SOURCE_DIR}
+                                           -i ${CMAKE_CURRENT_SOURCE_DIR}/resources/mmapper2.rc
+                                           -o ${CMAKE_CURRENT_BINARY_DIR}/mmapper2_rc.o)
+    set(mmapper_WINRC ${CMAKE_CURRENT_BINARY_DIR}/mmapper2_rc.o)
+else (MINGW)
+    set(mmapper_WINRC resources/mmapper2.rc)
+endif (MINGW)
 
 set(mmapper_MOC_HDRS
     display/connectionselection.h
@@ -146,6 +152,7 @@ add_executable(mmapper WIN32
     ${mmapper_MOC_SRCS}
     ${mmapper_UIS_H}
     ${mmapper_RCC_SRCS}
+    ${mmapper_WINRC}
 )
 
 target_link_libraries(mmapper
