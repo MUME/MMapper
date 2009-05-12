@@ -1,35 +1,27 @@
-                 INSTALLING MMapper2 Version 2.0
+                 INSTALLING MMapper Version 2.0
 
-1.  You can get latest version of MMapper2 on http://sourceforge.net/projects/mmapper web page.
+1.  You can get latest version of MMapper on http://sourceforge.net/projects/mmapper web page.
   
 2.  Uncompress the archive you downloaded into any directory,
-    e.g. C:\mmapper2\ or ~/mmapper2
+    e.g. C:\mmapper\ or ~/mmapper
 
 3.  Building
     To create makefiles for your machine type and OS:
 
         C:
-        cd \mmapper2\src
-        qmake
+        cd \mmapper
+        winbuild.bat
         
         or 
         
-        cd ~\mmapper2\src
-        qmake
+        cd ~\mmapper
+        ./build.sh
 
-    You need Qt >= 4.1 to be installed first of course.
+    You need Qt >= 4.1 to be installed along with CMake >= 2.6
 
-    To build all type:
-    
-        make
-    
-
-4.  That's all. MMapper2 is now installed.
-
-    MMapper2 exacutable will be built in mmapper2/bin/[debug|release] directory.]. 
-    You dont need any other files to run programm.
+4.  That's all. MMapper is now installed.
     
 5.  Set up your client according to the wiki instructions at:
     http://mume.org/wiki/index.php/Guide_to_install_mmapper2_on_Windows
 
-We hope you will enjoy using MMapper2. Good luck!
+We hope you will enjoy using MMapper. Good luck!

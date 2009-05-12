@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=MMapper
+GenericName=MUME Mapper
+Exec=mmapper
+Icon=mmapper
+Terminal=false
+Type=Application
+Categories=Qt;Game;RolePlaying;

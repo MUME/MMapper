@@ -7,4 +7,13 @@ echo Going to run with $JFLAG jobs
 echo If you have problems make sure you have all the required dependencies
 echo \(i.e. libqt4-dev, libqt4-opengl-dev\)
 echo 
-cd src && qmake && make clean && make -j$JFLAG
+
+if [ -d build ]; then
+    cd build
+    make clean
+else
+    mkdir build
+    cd build
+fi
+
+cmake ../ -DCMAKE_INSTALL_REFIX=. && make -j$JFLAG && make install
