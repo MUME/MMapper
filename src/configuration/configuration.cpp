@@ -1,4 +1,4 @@
-/************************************************************************
+sa/************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve), 
 **            Marek Krejza <krejza@gmail.com> (Caligor),
@@ -51,10 +51,15 @@ void Configuration::read()
 
   // read general options
   conf.beginGroup("Connection");
-  m_remoteServerName = conf.value("Server name", "fire.pvv.org").toString();
+  m_remoteServerName = conf.value("Server name", "mume.org").toString();
   m_remotePort = conf.value("Remote port number", 4242).toInt();
   m_localPort = conf.value("Local port number", 4242).toInt();
   conf.endGroup();
+
+  // News 2340, changing domain from fire.pvv.org to mume.org:
+  if (m_remoteServerName.contains("pvv.org")) {
+    m_remoteServerName = "mume.org";
+  }
 
   conf.beginGroup("Canvas");
   m_showUpdated = conf.value("Show updated rooms", TRUE).toBool();
