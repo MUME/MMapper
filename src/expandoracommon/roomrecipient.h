@@ -34,6 +34,10 @@
 
 class RoomAdmin;
 
+/*! \brief Interface giving briefly access to a mutex-protected room.
+ *
+ * See MapFrontend::lookingForRooms().
+ */
 class RoomRecipient {
   public:
     virtual void receiveRoom(RoomAdmin * admin, const Room * room) = 0;

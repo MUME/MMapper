@@ -81,7 +81,7 @@ public:
   CGroup *getGroupManager() {return m_groupManager;};
 
   void loadFile(const QString &fileName);
-  bool saveFile(const QString &fileName);
+  bool saveFile(const QString &fileName, bool baseMapOnly );
   void setCurrentFile(const QString &fileName);
 
 public slots:
@@ -91,6 +91,7 @@ public slots:
   void merge();
   bool save();
   bool saveAs();
+  bool exportBaseMap();
   void about();
 
   void nextWindow();
@@ -193,6 +194,7 @@ private:
   QAction *reloadAct;
   QAction *saveAct;
   QAction *saveAsAct;
+  QAction *exportBaseMapAct;
   QAction *exitAct;
   QAction *cutAct;
   QAction *copyAct;
@@ -255,6 +257,7 @@ private:
 
   QString strippedName(const QString &fullFileName);
   bool maybeSave();
+  QPointer<QFileDialog> defaultSaveDialog();
 };
 
 #endif

@@ -29,6 +29,7 @@
 
 #include <QtGui>
 #include <QtCore>
+#include <QShortcut>
 #include "roomeditattrdlg.h"
 #include "mapdata.h"
 #include "mapcanvas.h"
@@ -124,6 +125,8 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
 		doorFlagsListWidget->addItem(doorListItems[i]);
 	}
 
+  m_hiddenShortcut = new QShortcut( QKeySequence( tr( "Ctrl+H", "Room edit > hidden flag" ) ), this );
+
 	updatedLabel->setText("Room has not been online updated yet!!!");
 		
 	readSettings();	
@@ -202,7 +205,9 @@ void RoomEditAttrDlg::connectAll()
 	connect(toolButton14, SIGNAL(toggled(bool)), this, SLOT(terrainToolButtonToggled(bool)));
 	connect(toolButton15, SIGNAL(toggled(bool)), this, SLOT(terrainToolButtonToggled(bool)));
 
-    connect(roomNoteTextEdit, SIGNAL(textChanged()), this, SLOT(roomNoteChanged()));	
+    connect(roomNoteTextEdit, SIGNAL(textChanged()), this, SLOT(roomNoteChanged()));
+
+    connect(m_hiddenShortcut, SIGNAL(activated()), this, SLOT(toggleHiddenDoor()));
 }
 
 void RoomEditAttrDlg::disconnectAll()
@@ -257,6 +262,8 @@ void RoomEditAttrDlg::disconnectAll()
 	disconnect(toolButton15, SIGNAL(toggled(bool)), this, SLOT(terrainToolButtonToggled(bool)));
 
     disconnect(roomNoteTextEdit, SIGNAL(textChanged()), this, SLOT(roomNoteChanged()));	
+
+    disconnect(m_hiddenShortcut, SIGNAL(activated()), this, SLOT(toggleHiddenDoor()));
 }
 
 const Room* RoomEditAttrDlg::getSelectedRoom()
@@ -1036,6 +1043,11 @@ void RoomEditAttrDlg::doorFlagsListItemChanged(QListWidgetItem* item)
 	emit mapChanged();		  				
 }
 
+void RoomEditAttrDlg::toggleHiddenDoor()
+{
+  if ( doorFlagsListWidget->isEnabled() )  
+    doorListItems[0]->setCheckState( doorListItems[0]->checkState() == Qt::Unchecked ? Qt::Checked : Qt::Unchecked );
+}
 
 //terrain tab	
 void RoomEditAttrDlg::terrainToolButtonToggled(bool val)

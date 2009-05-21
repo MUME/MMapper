@@ -22,6 +22,10 @@ if (UNIX)
         "${CMAKE_INSTALL_PREFIX}/share"
         CACHE PATH "Base directory for files which go to share/"
     )
+
+    SET(CMAKE_CXX_FLAGS_DEBUG 
+      "-g -Wall -g3 -ggdb -gdwarf-2 -Wunused-variable -Wno-long-long -Wno-unknown-pragmas -Wno-system-headers"
+      CACHE STRING "Debug builds CMAKE CXX flags " FORCE )
 endif (UNIX)
 
 add_subdirectory(src)

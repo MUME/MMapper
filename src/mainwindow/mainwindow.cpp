@@ -48,6 +48,8 @@
 #include "roompropertysetter.h"
 #include "findroomsdlg.h"
 #include "CGroup.h"
+#include "progresscounter.h"
+#include "mapstorage/filesaver.h"
 
 DockWidget::DockWidget ( const QString & title, QWidget * parent, Qt::WFlags flags )
     :QDockWidget(title, parent, flags)
@@ -155,12 +157,13 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
   if (!server->listen(QHostAddress::Any, Config().m_localPort))
   {
     QMessageBox::critical(this, tr("MMapper2"),
-                          tr("Unable to start the server: %1.")
+                          tr("Unable to start the server (switching to offline mode): %1.")
                           .arg(server->errorString()));
-    close();
-    return;
   }
-  log("ConnectionListener", tr("Server bound on localhost to port: %2.").arg(Config().m_localPort));
+  else
+  {
+    log("ConnectionListener", tr("Server bound on localhost to port: %2.").arg(Config().m_localPort));
+  }
 
 
   //update connections
@@ -297,6 +300,10 @@ void MainWindow::createActions()
   saveAsAct->setStatusTip(tr("Save the document under a new name"));
   connect(saveAsAct, SIGNAL(triggered()), this, SLOT(saveAs()));
 
+  exportBaseMapAct = new QAction(tr("Export &Base Map As..."), this);
+  exportBaseMapAct->setStatusTip(tr("Save a copy of the map with no secrets"));
+  connect(exportBaseMapAct, SIGNAL(triggered()), this, SLOT(exportBaseMap()));
+
   mergeAct = new QAction(QIcon(":/icons/merge.png"), tr("&Merge..."), this);
   //mergeAct->setShortcut(tr("Ctrl+M"));
   mergeAct->setStatusTip(tr("Merge an existing file into current map"));
@@ -403,6 +410,7 @@ void MainWindow::createActions()
 
   editRoomSelectionAct = new QAction(QIcon(":/icons/roomedit.png"), tr("Edit Selected Rooms"), this);
   editRoomSelectionAct->setStatusTip(tr("Edit Selected Rooms"));
+  editRoomSelectionAct->setShortcut(tr("Ctrl+E"));
   connect(editRoomSelectionAct, SIGNAL(triggered()), this, SLOT(onEditRoomSelection()));
 
   deleteRoomSelectionAct = new QAction(QIcon(":/icons/roomdelete.png"), tr("Delete Selected Rooms"), this);
@@ -550,6 +558,7 @@ void MainWindow::disableActions(bool value)
   reloadAct->setDisabled(value);
   saveAct->setDisabled(value);
   saveAsAct->setDisabled(value);
+  exportBaseMapAct->setDisabled(value);
   exitAct->setDisabled(value);
   cutAct->setDisabled(value);
   copyAct->setDisabled(value);
@@ -583,6 +592,7 @@ void MainWindow::setupMenuBar()
   fileMenu->addAction(reloadAct);
   fileMenu->addAction(saveAct);
   fileMenu->addAction(saveAsAct);
+  fileMenu->addAction(exportBaseMapAct);
   fileMenu->addAction(mergeAct);
   fileMenu->addSeparator();
   fileMenu->addAction(exitAct);
@@ -864,9 +874,9 @@ void MainWindow::merge()
     getCurrentMapWindow()->getCanvas()->clearRoomSelection();
     getCurrentMapWindow()->getCanvas()->clearConnectionSelection();
 
-    AbstractMapStorage *storage = (AbstractMapStorage*) new MapStorage(*m_mapData , fileName, file);
+    AbstractMapStorage *storage = new MapStorage(*m_mapData , fileName, file);
     connect(storage, SIGNAL(onDataLoaded()), getCurrentMapWindow()->getCanvas(), SLOT(dataLoaded()));
-    connect(storage, SIGNAL(onPercentageChanged(quint32)), this, SLOT(percentageChanged(quint32)));
+    connect(storage->progressCounter(), SIGNAL(onPercentageChanged(quint32)), this, SLOT(percentageChanged(quint32)));
     connect(storage, SIGNAL(log(const QString&, const QString&)), this, SLOT(log(const QString&, const QString&)));
 
     disableActions(true);
@@ -912,21 +922,28 @@ bool MainWindow::save()
   }
   else
   {
-    return saveFile(m_mapData->getFileName());
+    return saveFile( m_mapData->getFileName(), false );
   }
+}
+
+QPointer<QFileDialog> MainWindow::defaultSaveDialog()
+{
+  QPointer<QFileDialog> save = new QFileDialog( this, "Choose map file name ..." );
+  save->setFileMode(QFileDialog::AnyFile);
+  save->setDirectory(QDir::current());
+  save->setFilter("MMapper2 (*.mm2)");
+  save->setDefaultSuffix("mm2");
+  save->setAcceptMode(QFileDialog::AcceptSave);
+
+  return save;
 }
 
 bool MainWindow::saveAs()
 {
-  QFileDialog save(this, "Choose map file name ...");
-  save.setFileMode(QFileDialog::AnyFile);
-  save.setDirectory(QDir::current());
-  save.setFilter("MMapper2 (*.mm2)");
-  save.setDefaultSuffix("mm2");
-  save.setAcceptMode(QFileDialog::AcceptSave);
+  QPointer<QFileDialog> save = defaultSaveDialog();
   QStringList fileNames;
-  if (save.exec()) {
-	fileNames = save.selectedFiles();
+  if (save->exec()) {
+    fileNames = save->selectedFiles();
   }
 
   if (fileNames.isEmpty()) {
@@ -934,7 +951,32 @@ bool MainWindow::saveAs()
     return false;
   }
 
-  return saveFile(fileNames[0]);
+  return saveFile(fileNames[0], false);
+}
+
+bool MainWindow::exportBaseMap()
+{
+  QPointer<QFileDialog> save = defaultSaveDialog();
+
+  QFileInfo currentFile( m_mapData->getFileName() );
+  if ( currentFile.exists() )
+  {
+    save->setDirectory( currentFile.absoluteDir() );
+    QString fileName = currentFile.fileName();
+    save->selectFile( fileName.replace( QRegExp( "\\.mm2$" ), "-base.mm2" ) );
+  }
+
+  QStringList fileNames;
+  if (save->exec()) {
+    fileNames = save->selectedFiles();
+  }
+
+  if (fileNames.isEmpty()) {
+    statusBar()->showMessage(tr("No filename provided"), 2000);
+    return false;
+  }
+
+  return saveFile(fileNames[0], true);
 }
 
 void MainWindow::about()
@@ -1018,7 +1060,7 @@ void MainWindow::loadFile(const QString &fileName)
 
   AbstractMapStorage *storage = (AbstractMapStorage*) new MapStorage(*m_mapData , fileName, file);
   connect(storage, SIGNAL(onDataLoaded()), getCurrentMapWindow()->getCanvas(), SLOT(dataLoaded()));
-  connect(storage, SIGNAL(onPercentageChanged(quint32)), this, SLOT(percentageChanged(quint32)));
+  connect(storage->progressCounter(), SIGNAL(onPercentageChanged(quint32)), this, SLOT(percentageChanged(quint32)));
   connect(storage, SIGNAL(log(const QString&, const QString&)), this, SLOT(log(const QString&, const QString&)));
 
   disableActions(true);
@@ -1048,19 +1090,21 @@ void MainWindow::percentageChanged(quint32 p)
   //qApp->processEvents();
 }
 
-bool MainWindow::saveFile(const QString &fileName)
+bool MainWindow::saveFile(const QString &fileName, bool baseMapOnly )
 {
   getCurrentMapWindow()->getCanvas()->setEnabled(false);
 
-  //QIODevice *file = KFilterDev::deviceForFile( filename, "application/x-gzip", TRUE );
-  QFile *file = new QFile( fileName );
-  if (!file->open(QFile::WriteOnly))
+  FileSaver saver;
+  try
+  {
+    saver.open( fileName );
+  }
+  catch ( std::exception &e )
   {
     QMessageBox::warning(NULL, tr("Application"),
                          tr("Cannot write file %1:\n%2.")
                          .arg(fileName)
-                         .arg(file->errorString()));
-    delete file;
+                         .arg(e.what()));
     getCurrentMapWindow()->getCanvas()->setEnabled(true);
     return false;
   }
@@ -1078,25 +1122,38 @@ bool MainWindow::saveFile(const QString &fileName)
   progressDlg->setValue(0);
   progressDlg->show();
 
-  AbstractMapStorage *storage = (AbstractMapStorage*) new MapStorage(*m_mapData , fileName, file);
-  connect(storage, SIGNAL(onPercentageChanged(quint32)), this, SLOT(percentageChanged(quint32)));
-  connect(storage, SIGNAL(log(const QString&, const QString&)), this, SLOT(log(const QString&, const QString&)));
+  std::auto_ptr<AbstractMapStorage> storage( new MapStorage(*m_mapData , fileName, &saver.file()) );
+  connect(storage->progressCounter(), SIGNAL(onPercentageChanged(quint32)), this, SLOT(percentageChanged(quint32)));
+  connect(storage.get(), SIGNAL(log(const QString&, const QString&)), this, SLOT(log(const QString&, const QString&)));
 
   disableActions(true);
   //getCurrentMapWindow()->getCanvas()->hide();
-  if (storage->canSave()) storage->saveData();
+  if (storage->canSave()) storage->saveData( baseMapOnly );
   //getCurrentMapWindow()->getCanvas()->show();
   disableActions(false);
   cutAct->setEnabled(false);
   copyAct->setEnabled(false);
   pasteAct->setEnabled(false);
 
-  delete(storage);
   delete progressDlg;
 
-  setCurrentFile(fileName);
+  try
+  {
+    saver.close();
+  }
+  catch ( std::exception &e )
+  {
+    QMessageBox::warning(NULL, tr("Application"),
+                         tr("Cannot write file %1:\n%2.")
+                         .arg(fileName)
+                         .arg(e.what()));
+    getCurrentMapWindow()->getCanvas()->setEnabled(true);
+    return false;
+  }
+
+  if ( !baseMapOnly )
+    setCurrentFile(fileName);
   statusBar()->showMessage(tr("File saved"), 2000);
-  delete file;
   getCurrentMapWindow()->getCanvas()->setEnabled(true);
 
   return true;

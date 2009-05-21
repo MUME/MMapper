@@ -45,10 +45,14 @@ FindRoomsDlg::FindRoomsDlg(MapData* md, QWidget *parent)
   m_admin = NULL;
   adjustResultTable();
 
+  m_showSelectedRoom = new QShortcut( QKeySequence( tr( "Space", "Select result item" ) ), resultTable );
+  m_showSelectedRoom->setContext( Qt::WidgetShortcut );
+
   connect(lineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(enableFindButton(const QString &)));
   connect(findButton, SIGNAL(clicked()), this, SLOT(findClicked()));
   connect(closeButton, SIGNAL(clicked()), this, SLOT(close()));
   connect(resultTable, SIGNAL(itemDoubleClicked(QTreeWidgetItem *, int)), this, SLOT(itemDoubleClicked(QTreeWidgetItem *)));
+  connect(m_showSelectedRoom, SIGNAL(activated()), this, SLOT(showSelectedRoom()));
 }
 
 void FindRoomsDlg::findClicked()
@@ -81,6 +85,23 @@ void FindRoomsDlg::receiveRoom(RoomAdmin * sender, const Room * room)
   m_admin = sender;
   m_mapData->select(m_mapData->select(room->getId()), m_roomSelection);
 
+//#define HACK_FIX_THE_HIDDEN_NAMELESS_EXITS
+#ifdef HACK_FIX_THE_HIDDEN_NAMELESS_EXITS
+  // Remember to also alter the way searching works to match the exits you want
+  // to fix
+  ExitsList exits = room->getExitsList();
+  for(uint dir = 0; dir < exits.size(); ++dir)
+  {
+    const Exit & e = room->exit( dir );
+    bool isSecret = ISSET( getFlags( e ), EF_DOOR ) && ISSET( getDoorFlags( e ), DF_HIDDEN );
+    if (isSecret && QString((e)[0].toString()).isEmpty())
+    {
+      // I can't get MapActions to work here
+      nandDoorFlags( const_cast<Room*>( room )->exit( dir ), DF_HIDDEN );
+    }
+  }
+#endif
+
   QString id;
   id.setNum(room->getId());
   QString roomName = QString(getName(room));
@@ -91,6 +112,11 @@ void FindRoomsDlg::receiveRoom(RoomAdmin * sender, const Room * room)
   item->setText(0, id);
   item->setText(1, roomName);
   roomsFoundLabel->setText(tr("%1 room(s) found").arg( resultTable->topLevelItemCount() ));
+}
+
+void FindRoomsDlg::showSelectedRoom()
+{
+  itemDoubleClicked( resultTable->currentItem() );
 }
 
 void FindRoomsDlg::itemDoubleClicked(QTreeWidgetItem *item)
@@ -246,7 +272,7 @@ QString& FindRoomsDlg::latinToAscii(QString& str) {
   unsigned char ch;
   int pos;
 
-  for (pos = 0; pos <= str.length(); pos++) {
+  for (pos = 0; pos < str.length(); pos++) {
     ch = str.at(pos).toLatin1();
     if (ch > 128) {
       if (ch < 192)

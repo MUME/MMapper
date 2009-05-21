@@ -44,16 +44,16 @@ class MapStorage : public AbstractMapStorage {
 public:
     MapStorage(MapData&, const QString&, QFile*);
     MapStorage(MapData&, const QString&);
-
+    bool mergeData();
+    
+private:
     virtual bool canLoad() {return TRUE;};
     virtual bool canSave() {return TRUE;};
 
     virtual void newData ();
     virtual bool loadData();
-    virtual bool saveData();
-    bool mergeData();
-    
-private:
+    virtual bool saveData( bool baseMapOnly );
+
     RoomFactory factory;
     Room * loadRoom(QDataStream & stream, qint32 version);
     void loadExits(Room * room, QDataStream & stream, qint32 version);

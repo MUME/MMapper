@@ -30,12 +30,16 @@
 #ifndef ABSTRACTMAPSTORAGE_H
 #define ABSTRACTMAPSTORAGE_H
 
+#include <memory>
 #include <QtGui>
+#include <QPointer>
 #include "defs.h"
 
 class Room;
 class InfoMark;
 class MapData;
+class RoomSaveFilter;
+class ProgressCounter;
 
 class AbstractMapStorage : public QObject {
 
@@ -52,20 +56,20 @@ public:
     virtual void newData () = 0;
     virtual bool loadData() = 0;
     virtual bool mergeData() = 0;
-    virtual bool saveData() = 0;
-
+    virtual bool saveData( bool baseMapOnly = false ) = 0;
+    const ProgressCounter *progressCounter() const;
 
 signals:
     void log( const QString&, const QString& );
     void onDataLoaded();
     void onDataSaved();
     void onNewData();
-    void onPercentageChanged(quint32);
 
 protected:
-     QFile *m_file;
-     MapData &m_mapData;
-     QString m_fileName;        
+    QFile *m_file;
+    MapData &m_mapData;
+    QString m_fileName;
+    QPointer<ProgressCounter> m_progressCounter;
 
 private:
 };

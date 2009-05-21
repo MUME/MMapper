@@ -1716,7 +1716,7 @@ QString& AbstractParser::latinToAscii(QString& str) {
   unsigned char ch;
   int pos;
 
-  for (pos = 0; pos <= str.length(); pos++) {
+  for (pos = 0; pos < str.length(); pos++) {
     ch = str.at(pos).toLatin1();
     if (ch > 128) {
       if (ch < 192)

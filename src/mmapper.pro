@@ -66,9 +66,12 @@ HEADERS += ./global/defs.h \
           ./mapfrontend/roomoutstream.h \
           ./mapfrontend/searchtreenode.h \
           ./mapstorage/abstractmapstorage.h \
+          ./mapstorage/filesaver.h \
           ./mapstorage/mapstorage.h \
+          ./mapstorage/basemapsavefilter.h \
           ./mapstorage/oldroom.h \
           ./mapstorage/olddoor.h \
+          ./mapstorage/progresscounter.h \
           ./mapstorage/roomsaver.h \
           ./mapstorage/oldconnection.h \
 	  ./mapfrontend/tinylist.h \
@@ -136,9 +139,12 @@ SOURCES += main.cpp \
           ./pathmachine/onebyone.cpp \
           ./pathmachine/crossover.cpp \
           ./mapstorage/roomsaver.cpp \
+          ./mapstorage/filesaver.cpp \
           ./mapstorage/abstractmapstorage.cpp \
+          ./mapstorage/basemapsavefilter.cpp \
           ./mapstorage/mapstorage.cpp \
           ./mapstorage/oldconnection.cpp \
+          ./mapstorage/progresscounter.cpp \
 	  ./pandoragroup/CGroup.cpp \
 	  ./pandoragroup/CGroupChar.cpp \
 	  ./pandoragroup/CGroupClient.cpp \
@@ -169,7 +175,11 @@ debug {
     DESTDIR = ../bin/debug
     OBJECTS_DIR = ../build/debug-obj
 }
-release {
+!debug {
     DESTDIR = ../bin/release
     OBJECTS_DIR = ../build/release-obj
+}
+
+unix {
+    QMAKE_CXXFLAGS_DEBUG += -O0 -ggdb
 }

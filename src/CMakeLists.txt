@@ -35,6 +35,9 @@ set(mmapper_SRCS
     mapstorage/mapstorage.cpp
     mapstorage/oldconnection.cpp
     mapstorage/roomsaver.cpp
+    mapstorage/filesaver.cpp
+    mapstorage/basemapsavefilter.cpp
+    mapstorage/progresscounter.cpp
     pandoragroup/CGroupChar.cpp
     pandoragroup/CGroupClient.cpp
     pandoragroup/CGroupCommunicator.cpp
@@ -93,6 +96,7 @@ set(mmapper_MOC_HDRS
     mapfrontend/mapfrontend.h
     mapstorage/abstractmapstorage.h
     mapstorage/mapstorage.h
+    mapstorage/progresscounter.h
     pandoragroup/CGroupClient.h
     pandoragroup/CGroupCommunicator.h
     pandoragroup/CGroup.h

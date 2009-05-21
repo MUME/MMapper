@@ -57,6 +57,7 @@
 
 class MapData;
 class MapCanvas;
+class QShortcut;
 
 typedef quint32 ExitsFlagsType;
 typedef quint16 PromptFlagsType;
@@ -81,6 +82,7 @@ public:
 private:
   MapData* m_mapData;
   QTreeWidgetItem* item;
+  QShortcut *m_showSelectedRoom;
 
   void adjustResultTable();
   QString& latinToAscii(QString& str);
@@ -94,6 +96,7 @@ private slots:
   void findClicked();
   void enableFindButton(const QString &text);
   void itemDoubleClicked(QTreeWidgetItem *item);
+  void showSelectedRoom();
 };
 
 #endif

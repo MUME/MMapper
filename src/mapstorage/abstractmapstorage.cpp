@@ -29,23 +29,31 @@
 
 #include "abstractmapstorage.h"
 #include "mapdata.h"
+#include "progresscounter.h"
 
 AbstractMapStorage::AbstractMapStorage(MapData& mapdata, const QString& filename, QFile* file) : 
 m_file(file),
 m_mapData(mapdata),
-m_fileName(filename)
+m_fileName(filename),
+m_progressCounter( new ProgressCounter( this ) )
 {
-};
+}
 
 AbstractMapStorage::AbstractMapStorage(MapData& mapdata, const QString& filename) : 
 m_file(NULL),
 m_mapData(mapdata),
-m_fileName(filename)
+m_fileName(filename),
+m_progressCounter( new ProgressCounter( this ) )
 {
    
-};
+}
 
 AbstractMapStorage::~AbstractMapStorage()
 {
-};
+}
+
+const ProgressCounter *AbstractMapStorage::progressCounter() const
+{
+  return m_progressCounter;
+}
 

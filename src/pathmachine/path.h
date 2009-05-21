@@ -47,7 +47,7 @@ public:
   void removeChild(Path * p);
   void setParent(Path * p);
   bool hasChildren() {return (!children.empty());}
-  const Room * const getRoom() {return room;}
+  const Room * getRoom() {return room;}
 
   //new Path is created, distance between rooms is calculated and probability is set accordingly
   Path * fork(const Room * room, Coordinate & expectedCoordinate, RoomAdmin * owner, PathParameters params, RoomRecipient * locker, uint dir, AbstractRoomFactory * factory);

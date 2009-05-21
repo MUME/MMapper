@@ -170,7 +170,9 @@ void TelnetFilter::analyzeMudStream(const char * input, int length)
    				emit sendToMud(idprompt); 
 			}
         }
-        else if (m_reconnecting && (data.line.contains(">")) || data.line.contains("Exits"))
+        // XXX: fixed (I think) the logic in the line below. Not sure it's right.
+        // Alternative: ( recon && > ) || exits
+        else if (m_reconnecting && ( data.line.contains(">") || data.line.contains("Exits") ) )
 	    {
 	      	m_xmlMode = false;
 	       	m_xmlModeAutoconfigured = true;

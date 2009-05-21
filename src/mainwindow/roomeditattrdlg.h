@@ -33,6 +33,7 @@
 #include <QDialog>
 #include "ui_roomeditattrdlg.h"
 
+class QShortcut;
 class MapData;
 class MapCanvas;
 class RoomSelection;
@@ -79,6 +80,8 @@ public slots:
 	void doorNameLineEditTextChanged(QString);
 	void doorFlagsListItemChanged(QListWidgetItem*);
 
+  void toggleHiddenDoor();
+
 	//terrain tab	
 	void terrainToolButtonToggled(bool);
 	
@@ -114,6 +117,7 @@ private:
 	const RoomSelection* 	m_roomSelection;
 	MapData* 		m_mapData;
 	MapCanvas* 		m_mapCanvas;
+  QShortcut *m_hiddenShortcut;
 };
 
 
