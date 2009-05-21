@@ -1,4 +1,4 @@
 mkdir build
 cd build
 cmake ../ -DCMAKE_INSTALL_PREFIX=. -G "MinGW Makefiles"
-make clean && make && make install
+mingw32-make clean && mingw32-make && mingw32-make install

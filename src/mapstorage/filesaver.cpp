@@ -42,9 +42,11 @@ namespace
 
   void throw_sys_error()
   {
+#ifdef UNIX_SAFETY
     char error[1024] = "";
     strerror_r( errno, error, sizeof( error ) );
     throw std::runtime_error( error );
+#endif
   }
 
 }

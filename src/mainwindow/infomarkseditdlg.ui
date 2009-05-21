@@ -44,9 +44,6 @@
   <property name="windowTitle" >
    <string>Edit Markers</string>
   </property>
-  <property name="windowIcon" >
-   <iconset/>
-  </property>
   <property name="sizeGripEnabled" >
    <bool>false</bool>
   </property>

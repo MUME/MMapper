@@ -164,23 +164,161 @@ target_link_libraries(mmapper
     ${QT_LIBRARIES}
 )
 
-install(TARGETS mmapper DESTINATION bin)
+# Begin CPack Settings
+include(InstallRequiredSystemLibraries)
 
-if (UNIX)
-    install(FILES mmapper.desktop DESTINATION ${SHARE_INSTALL_PREFIX}/applications)
+# Linux Install Settings
+if (UNIX AND NOT APPLE)
+    # Install Executables
+    install(
+        TARGETS mmapper
+	RUNTIME DESTINATION bin
+	COMPONENT applications
+    )
+
+    # Install Map
+    install(
+        FILES ${PROJECT_SOURCE_DIR}/map/arda.mm2.zip # Needs to be unzipped
+	DESTINATION share/games/mmapper
+	COMPONENT map
+    )
+
+    # Linux Desktop Integration
+
+    install(FILES mmapper.desktop
+            DESTINATION share/applications
+            COMPONENT desktopintegration
+    )
   
     # Install icons
     foreach(RES 16 32 48)
         install(
 	    FILES resources/icons/hi${RES}-app-mmapper.png
-	    DESTINATION ${SHARE_INSTALL_PREFIX}/icons/hicolor/${RES}x${RES}/apps/
+	    DESTINATION share/icons/hicolor/${RES}x${RES}/apps/
+	    COMPONENT desktopintegration
 	    RENAME mmapper.png
 	)
     endforeach(RES)
   
     install(
         FILES resources/icons/m.png
-	DESTINATION ${SHARE_INSTALL_PREFIX}/icons/hicolor/128x128/apps/
+	DESTINATION share/icons/hicolor/128x128/apps/
+	COMPONENT desktopintegration
 	RENAME mmapper.png
     )
-endif (UNIX)
+
+    set(CPACK_GENERATOR "DEB;TGZ") # Others: RPM, STGZ
+    set(CPACK_SOURCE_GENERATOR "TGZ")
+
+    # Debian
+    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "nschimme@gmail.com")
+    set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}")
+    set(CPACK_DEBIAN_PACKAGE_NAME "mmapper")
+
+endif (UNIX AND NOT APPLE)
+
+# Windows Install Settings
+if (WIN32)
+    # Install Executables
+    install(
+        TARGETS mmapper
+	RUNTIME DESTINATION .
+	COMPONENT applications
+    )
+
+    # Install Map
+    install(
+        FILES resources/arda.mm2
+	DESTINATION .
+	COMPONENT map
+    )
+
+    # Install Library Files
+    set(QT_BINARY_DIR "${QT_LIBRARY_DIR}/../bin")
+    # ^^ DLL files are found here? ^^
+    install(FILES
+        "${QT_BINARY_DIR}/QtCore${QT_VERSION_MAJOR}.dll"
+        "${QT_BINARY_DIR}/QtGui${QT_VERSION_MAJOR}.dll"
+        "${QT_BINARY_DIR}/QtNetwork${QT_VERSION_MAJOR}.dll"
+        "${QT_BINARY_DIR}/QtXml${QT_VERSION_MAJOR}.dll"
+        "${QT_BINARY_DIR}/QtOpenGL${QT_VERSION_MAJOR}.dll"
+        DESTINATION .
+	COMPONENT libraries
+    )
+    if (MINGW)
+        install(FILES 
+            "${QT_BINARY_DIR}/mingwm10.dll"
+	    DESTINATION .
+	    COMPONENT libraries
+	)
+    endif (MINGW)
+
+    # Install Help Documentation
+    install(FILES
+        "${PROJECT_SOURCE_DIR}/Installation Guide.URL"
+	DESTINATION .
+	COMPONENT help
+    )
+
+    # Windows (NSIS) Settings
+    set(CPACK_PACKAGE_EXECUTABLES "" "") # Broken in CMake (prefixes bin/)
+    set(CPACK_NSIS_MENU_LINKS "mmapper.exe;Run MMapper;Installation Guide.URL;Installation Guide")
+    set(CPACK_NSIS_INSTALLED_ICON_NAME "mmapper.exe")
+    set(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} Install MMapper")
+    set(CPACK_NSIS_HELP_LINK "http:\\\\\\\\www.mume.org")
+    #set(CPACK_NSIS_MODIFY_PATH OFF)
+    set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\m.ico")
+    set(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\m.png")
+    set(CPACK_NSIS_INSTALLED_ICON_NAME "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\m.png")
+
+endif (WIN32)
+
+# More General CPack Settings
+set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
+set(CPACK_RESOURCE_FILE_README  "${PROJECT_SOURCE_DIR}/INSTALL")
+set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
+set(CPACK_PACKAGE_VENDOR "Nils Schimmelmann")
+set(CPACK_PACKAGE_CONTACT "nschimme@gmail.com")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MMapper")
+if (EXISTS ${PROJECT_WC_REVISION})
+    set(CPACK_PACKAGE_VERSION "svn-build-${PROJECT_WC_REVISION}")
+else (EXISTS ${PROJECT_WC_REVISION})
+    set(CPACK_PACKAGE_VERSION "2.0.4-beta8")
+endif (EXISTS ${PROJECT_WC_REVISION})
+set(CPACK_PACKAGE_VERSION_MAJOR "2")
+set(CPACK_PACKAGE_VERSION_MINOR "0")
+set(CPACK_PACKAGE_VERSION_PATCH "4")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "MMapper")
+
+# Components:
+# Applications Component
+set(CPACK_COMPONENTS_ALL applications map libraries help)
+set(CPACK_COMPONENT_APPLICATIONS_DISPLAY_NAME "MMapper")
+set(CPACK_COMPONENT_APPLICATIONS_DESCRIPTION "A mud mapper especially written for the mud MUME")
+set(CPACK_COMPONENT_APPLICATIONS_REQUIRED TRUE)
+
+# Map Component
+set(CPACK_COMPONENT_MAP_DISPLAY_NAME "Included Map")
+set(CPACK_COMPONENT_MAP_DESCRIPTION "A map of Arda (without secret exits)")
+
+# Libraries Component
+set(CPACK_COMPONENT_LIBRARIES_DISPLAY_NAME "Libraries")
+set(CPACK_COMPONENT_LIBRARIES_DESCRIPTION "Qt/MingW Libraries for running MMapper")
+
+# Help Component
+set(CPACK_COMPONENT_HELP_DISPLAY_NAME "Documentation")
+set(CPACK_COMPONENT_HELP_DESCRIPTION "Guide on how to set up your client")
+set(CPACK_COMPONENT_HELP_HIDDEN TRUE)
+
+set(CPACK_INSTALL_CMAKE_PROJECTS "${CMAKE_CURRENT_BINARY_DIR};applications;ALL;/")
+
+# Source Package
+set(CPACK_SOURCE_IGNORE_FILES
+    "~$"
+    "/\\\\.svn/"
+    "/build/"
+)
+set(CPACK_SOURCE_PACKAGE_FILE_NAME
+    "${PROJECT_NAME}-${CPACK_PACKAGE_VERSION}-source"
+)
+include(CPack)
