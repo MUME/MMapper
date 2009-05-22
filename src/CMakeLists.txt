@@ -215,7 +215,7 @@ if (UNIX AND NOT APPLE)
 
     # Debian
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "nschimme@gmail.com")
-    set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}")
+    #set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}")
     set(CPACK_DEBIAN_PACKAGE_NAME "mmapper")
     set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqtcore4 (>= 4.1.0), libqtgui4 (>= 4.1.0), libqt4-opengl (>= 4.1.0), libqt4-network (>= 4.1.0), libqt4-xml (>= 4.1.0)")
 
