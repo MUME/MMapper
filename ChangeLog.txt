@@ -1,0 +1,190 @@
+2009-05-21 11:20  jahara/kalev/waba
+	* CMake is now used as the default builder (Kalev/Jahara)
+	* Added new base map function and map recovery on crash (Waba)
+	* Map files are now compressed with zlib (Jahara)
+	* Fixed lots of bugs related to the Group Manager (Jahara)
+
+2008-10-20 16:37  jahara
+	* src/preferences/generalpage.cpp: fixed draw door names checked bug
+	* src/mainwindow/mainwindow.cpp: fixed resize/reposition bug
+
+2008-08-23 23:30  jahara
+	
+	* src/configuration/configuration.cpp, .h: added beta draw door names
+	functionality similar to Pandora (feature request by Timodeus)
+	* src/display/mapcanvas.cpp, .h: ""
+	* src/preferences/generalpage.*: ""
+	* src/groupmanagerpage.ui: renamed setting
+	* src/proxy/proxy.cpp: fixed typo
+
+2008-08-20 13:00  jahara
+	
+	* src/mainwindow/findroomsdlg.h: fixed minor header file typo
+
+2008-08-20 12:49  jahara
+
+	* src/parser/abstractparser.cpp: fixed _doorhelp internal alias
+	* src/pandoragroup/CGroup.cpp: changed default room to 0
+	* src/pandoragroup/CGroupCommunicator.cpp: removed printfs
+	* src/mainwindow/findroomsdlg.cpp, .h: added latin1 removal, still
+	needs rewrite
+
+2008-07-24 19:07  jahara
+
+	* src/configuration/configuration.cpp: fixed typos
+	* src/pandoragroup/CGroupClient.cpp: added a socket timeout to the
+	client
+
+2008-07-24 12:01  jahara
+
+	* src/configuration/configuration.cpp: registry cleanup
+	* src/mainwindow/mainwindow.cpp: saving alwaysOnTop setting
+	* NOTE: Build using Qt4.3 to prevent lag on Windows. Qt4.4 is bugged.
+
+2008-07-24 04:10  kalev
+
+	* src/mmapper2.pro: fixed sed
+	* src/expandora/coordinate.cpp: added stdlib.h for gcc 4.3
+
+2008-07-24 02:42  jahara
+
+	* src/display/mapcanvas.cpp: removed unnecessary gltranslate from
+	alphapixmaps trails
+	* src/abstractparser.cpp, mumexmlparser.cpp: fixed console commands
+	and ansi colored scores parsing
+	* src/preferences/groupmanager.*: fixed various input problems that
+	would invariable affect the stability of the groupmanager server
+
+2008-07-23 19:10  jahara
+
+	* src/pandoragroup/CGroup.cpp: prompt fix for grouptell
+	* src/parser/abstractparser.cpp: console command fix for _grouphelp
+
+2008-07-23 18:32  jahara
+
+	* src/mainwindow/findroomsdlg.cpp: fixed label not being cleared bug
+	* src/mainwindow/mainwindow.cpp: updated about() dialog box
+	* src/groupmanagerpage.cpp, ui: added more text from MUME rules
+
+2008-07-23 17:08  jahara
+
+	* src/mainwindow/mainwindow.cpp, .h: added support for several dock
+	windows
+	* src/pandoragroup/CGroup.c, .h: switched from a QDialog to a
+	QTreeWidget for better integration.
+	* src/pandoragroup/CGroupCommunicator.cpp: removed old qDebug message
+	* src/pandoragroup/CGroupChar.c, .h: added support for colored text
+	* src/preferences/configdialog.cpp, groupamangerpage.cpp: added
+	new icon, some extra logic to prevent crashes
+
+2008-07-23 02:30  jahara
+
+	* src/configuration/configuration.*: added a warning dialog for the
+	group manager
+	* src/mapcanvas/mapcanvas.cpp: allowed the user to use the color
+	selected for his box instead of yellow
+	* src/mainwindow/mainwindow.cpp, .h: cleaned up groupmanager code
+	* src/mainwindow/findroomsdlg.cpp, .h: added closedevent
+	* src/pandoragroup/CGroup.*, CGroupChar.*, CGroupCommunicator.cpp:
+	cleaned up the display window, added a warning dialog box, fixed
+	a reconnect bug
+	* src/pandoragroup/CGroupSettingsDialog.*: replaced by a preferences
+	page and therefore the files were removed
+	* src/parser/abstractparser.cpp, mumexmlparser.cpp: minor bug fix
+	for the groupmanager
+	* src/pathmachine/pathmachine.cpp: minor bug fix for the group
+	manager
+	* src/preferences/configdialog.*: added a hook to the groupmanager
+	* src/preferences/groupmanagerpage.*: preferences page for the
+	groupmanager
+
+
+2008-07-21 21:04  jahara
+
+	* src/configuration/configuration.cpp: finalized saving of
+	GroupManager window boundaries
+	* src/display/mapcanvas.cpp, .h: code cleanup
+	* src/mainwindow/mainwindow.cpp, .h: code cleanup
+	* src/mapdata/mapdata.cpp, .h: added support for sane roomflags
+	altering for the console commands
+	* src/pandoragroup/*: major code cleanup, polish
+	* src/parser/abstractparser.cpp, .h: added more console commands,
+	see _help for more details
+	* src/proxy/proxy.cpp, .h: code cleanup
+
+2008-07-20 21:44  jahara
+
+	* src/display/mapcanvas.cpp, .h, mapwindow.cpp, .h: added hooks for
+	drawing GroupManager characters
+	* src/mainwindow/mainwindow.cpp, .h: added hooks for GroupManager,
+	FindRooms, connects between various parts
+	* src/pandoragroup/*: This is the GroupManager that I ported from
+	Pandora, use it with caution! It is NOT STABLE
+	* src/parser/abstractparser.cpp, .h, mumexmlparser.cpp, .h: added
+	more connects and functions for the GroupManager
+	* src/pathmachine/pathmachine.cpp, .h: hooks for grabbing the
+	character's position for the GroupManager
+	* src/proxy/connectionlistening.cpp, .h, proxy.cpp, proxy.h: added
+	hooks for grouptells in the GroupManager.
+
+2008-07-19 08:00 jahara
+
+	* resources/mmapper2.qrc, resources/pixmaps/trail*.png: added images
+	for trail support. Also added a new image for FindRooms.
+	* src/display/mapcanvas.cpp, .h: added hooks for trails/centering
+	* src/mainwindow/findroomdlg.cpp, .h, .ui: ported the FindRooms
+	function from Pandora
+	* src/mainwindow/mainwindow.cpp, .h: fixed SaveAs bug
+	* src/parser/abstractparser.cpp, .h: fixed briefmode+examine bug,
+	added more console commands, ported latin2ascii function from
+	pandora
+	* src/mapdata/mapdata.cpp, .h: added hooks for searching for names,
+	exits, descriptions and toggling flags.
+
+2006-09-16 21:21  alve
+
+	* src/mapdata/roomfactory.cpp: trigger update if different amounts
+	  of whitespace are found when comparing rooms
+
+2006-09-16 15:55  alve
+
+	* src/parser/abstractparser.h, src/parser/parser.cpp,
+	  src/parser/parser.h: fixed scout problem in non-XML mode
+
+2006-09-16 13:33  alve
+
+	* src/parser/parser.cpp: ported new scout handling to none-xml
+	  parser
+
+2006-09-16 13:18  alve
+
+	* src/mapstorage/mapstorage.cpp, src/parser/abstractparser.cpp,
+	  src/parser/mumexmlparser.cpp, src/parser/mumexmlparser.h: fixed
+	  scout and river bugs in parser, removed warning about unused
+	  variable in mapstorage
+
+2006-08-23 13:24  caligor
+
+	* map/basemap.mm2, src/global/defs.h,
+	  src/mainwindow/mainwindow.cpp: updated version string
+
+2006-08-22 18:49  caligor
+
+	* src/proxy/telnetfilter.cpp: removed prompt all command
+
+2006-08-22 18:39  caligor
+
+	* src/parser/parser.cpp: bugfix: maping in normal mode - Exits line
+	  is appended to dynamic description
+
+2006-08-21 20:28  alve
+
+	* src/parser/mumexmlparser.cpp, src/parser/parser.cpp,
+	  src/proxy/telnetfilter.cpp: remove forcing the user to non-brief
+	  mode
+
+2006-08-21 08:24  alve
+
+	* src/mmapper2.pro: removed duplicate entry for mapaction.h
+
+

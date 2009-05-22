@@ -28,6 +28,7 @@
 ************************************************************************/
 
 #include <QHostAddress>
+#include <QDebug>
 
 #include "CGroupClient.h"
 #include "CGroupCommunicator.h"
@@ -36,44 +37,30 @@ void CGroupClient::linkSignals()
 {
   connect(this, SIGNAL(disconnected()), this, SLOT(lostConnection() ) );
   connect(this, SIGNAL(connected()), this, SLOT(connectionEstablished() ) );
-
-  connect(this, SIGNAL(error(QAbstractSocket::SocketError )), this, SLOT(errorHandler(QAbstractSocket::SocketError) ) );
-  connect(this, SIGNAL(readyRead()), this, SLOT( dataIncoming() )   );
+  connect(this, SIGNAL(error(QAbstractSocket::SocketError )),
+	  this, SLOT(errorHandler(QAbstractSocket::SocketError) ) );
+  connect(this, SIGNAL(readyRead()), this, SLOT( dataIncoming() ) );
 
   buffer = "";
   currentMessageLen = 0;
 }
 
 CGroupClient::CGroupClient(QByteArray host, int remotePort, QObject *parent) :
-    QTcpSocket(parent)
+  _host(host), _remotePort(remotePort), QTcpSocket(parent)
 {
-  qDebug( "Connecting to remote host...");
-  setConnectionState(Connecting);
-  qDebug( "NOW issuing the connect command...");
-  connectToHost(host, remotePort);
-  protocolState = AwaitingLogin;
   linkSignals();
-
-  if (!waitForConnected(5000))
-  {
-    connectionState = CGroupClient::Quiting;
-    close();
-    getParent()->sendLog("Server not responding!");
-    errorHandler(QAbstractSocket::ConnectionRefusedError);
-    getParent()->changeType(CGroupCommunicator::Off);
-    return;
-  }
+  setConnectionState(Connecting);
+  protocolState = AwaitingLogin;
+  connectToHost(host, remotePort);
 }
 
 CGroupClient::CGroupClient(QObject *parent) :
     QTcpSocket(parent)
 {
   connectionState = Closed;
-
-  linkSignals();
   protocolState = Idle;
+  linkSignals();
 }
-
 
 void CGroupClient::setSocket(int socketDescriptor)
 {
@@ -117,7 +104,7 @@ void CGroupClient::connectionEstablished()
 void CGroupClient::errorHandler ( QAbstractSocket::SocketError socketError )
 {
   CGroupCommunicator *comm = (CGroupCommunicator *)parent();
-  comm->errorInConnection(this);
+  comm->errorInConnection(this, errorString() );
 }
 
 void CGroupClient::dataIncoming()

@@ -38,6 +38,7 @@ set(mmapper_SRCS
     mapstorage/filesaver.cpp
     mapstorage/basemapsavefilter.cpp
     mapstorage/progresscounter.cpp
+    3rdparty/qtiocompressor.cpp
     pandoragroup/CGroupChar.cpp
     pandoragroup/CGroupClient.cpp
     pandoragroup/CGroupCommunicator.cpp
@@ -97,6 +98,7 @@ set(mmapper_MOC_HDRS
     mapstorage/abstractmapstorage.h
     mapstorage/mapstorage.h
     mapstorage/progresscounter.h
+    3rdparty/qtiocompressor.h
     pandoragroup/CGroupClient.h
     pandoragroup/CGroupCommunicator.h
     pandoragroup/CGroup.h
@@ -145,6 +147,7 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/pathmachine
     ${CMAKE_CURRENT_SOURCE_DIR}/preferences
     ${CMAKE_CURRENT_SOURCE_DIR}/proxy
+    ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty
 )
 
 QT4_WRAP_CPP(mmapper_MOC_SRCS ${mmapper_MOC_HDRS})
@@ -178,7 +181,7 @@ if (UNIX AND NOT APPLE)
 
     # Install Map
     install(
-        FILES ${PROJECT_SOURCE_DIR}/map/arda.mm2.zip # Needs to be unzipped
+        FILES ${PROJECT_SOURCE_DIR}/map/arda.mm2
 	DESTINATION share/games/mmapper
 	COMPONENT map
     )
@@ -214,6 +217,7 @@ if (UNIX AND NOT APPLE)
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "nschimme@gmail.com")
     set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}")
     set(CPACK_DEBIAN_PACKAGE_NAME "mmapper")
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqtcore4 (>= 4.1.0), libqtgui4 (>= 4.1.0), libqt4-opengl (>= 4.1.0), libqt4-network (>= 4.1.0), libqt4-xml (>= 4.1.0)")
 
 endif (UNIX AND NOT APPLE)
 
@@ -228,7 +232,7 @@ if (WIN32)
 
     # Install Map
     install(
-        FILES resources/arda.mm2
+        FILES ${PROJECT_SOURCE_DIR}/map/arda.mm2
 	DESTINATION .
 	COMPONENT map
     )
@@ -255,42 +259,47 @@ if (WIN32)
 
     # Install Help Documentation
     install(FILES
-        "${PROJECT_SOURCE_DIR}/Installation Guide.URL"
+        "${PROJECT_SOURCE_DIR}/doc/Installation Guide.URL"
+	"${PROJECT_SOURCE_DIR}/doc/mapping_advice.txt"
 	DESTINATION .
 	COMPONENT help
     )
 
+    set(CPACK_GENERATOR "NSIS;ZIP")
+    set(CPACK_SOURCE_GENERATOR "ZIP")
+
     # Windows (NSIS) Settings
     set(CPACK_PACKAGE_EXECUTABLES "" "") # Broken in CMake (prefixes bin/)
-    set(CPACK_NSIS_MENU_LINKS "mmapper.exe;Run MMapper;Installation Guide.URL;Installation Guide")
+    set(CPACK_NSIS_MENU_LINKS "mmapper.exe;MMapper;Installation Guide.URL;Installation Guide")
     set(CPACK_NSIS_INSTALLED_ICON_NAME "mmapper.exe")
     set(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} Install MMapper")
-    set(CPACK_NSIS_HELP_LINK "http:\\\\\\\\www.mume.org")
-    #set(CPACK_NSIS_MODIFY_PATH OFF)
+    set(CPACK_NSIS_HELP_LINK "http:\\\\\\\\sourceforge.net\\\\projects\\\\mmapper")
     set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\m.ico")
     set(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\m.png")
-    set(CPACK_NSIS_INSTALLED_ICON_NAME "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\m.png")
+    set(CPACK_NSIS_INSTALLED_ICON_NAME "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\m.ico")
+    set(CPACK_NSIS_COMPRESSOR "/SOLID lzma")
 
 endif (WIN32)
 
 # More General CPack Settings
-set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
-set(CPACK_RESOURCE_FILE_README  "${PROJECT_SOURCE_DIR}/INSTALL")
+set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE.txt")
+set(CPACK_RESOURCE_FILE_README  "${PROJECT_SOURCE_DIR}/INSTALL.txt")
 set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
 set(CPACK_PACKAGE_VENDOR "Nils Schimmelmann")
 set(CPACK_PACKAGE_CONTACT "nschimme@gmail.com")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MMapper")
-if (EXISTS ${PROJECT_WC_REVISION})
-    set(CPACK_PACKAGE_VERSION "svn-build-${PROJECT_WC_REVISION}")
-else (EXISTS ${PROJECT_WC_REVISION})
-    set(CPACK_PACKAGE_VERSION "2.0.4-beta8")
-endif (EXISTS ${PROJECT_WC_REVISION})
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A mud mapper especially written for the mud MUME")
+if (EXISTS ${SVN_BUILD})
+    set(CPACK_PACKAGE_VERSION "svn-build-${SVN_BUILD}")
+else (EXISTS ${SVN_BUILD})
+    set(CPACK_PACKAGE_VERSION "2.0.4-final")
+endif (EXISTS ${SVN_BUILD})
 set(CPACK_PACKAGE_VERSION_MAJOR "2")
 set(CPACK_PACKAGE_VERSION_MINOR "0")
 set(CPACK_PACKAGE_VERSION_PATCH "4")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "MMapper")
 
 # Components:
+set(CPACK_STRIP_FILES TRUE)
 # Applications Component
 set(CPACK_COMPONENTS_ALL applications map libraries help)
 set(CPACK_COMPONENT_APPLICATIONS_DISPLAY_NAME "MMapper")
@@ -302,8 +311,8 @@ set(CPACK_COMPONENT_MAP_DISPLAY_NAME "Included Map")
 set(CPACK_COMPONENT_MAP_DESCRIPTION "A map of Arda (without secret exits)")
 
 # Libraries Component
-set(CPACK_COMPONENT_LIBRARIES_DISPLAY_NAME "Libraries")
-set(CPACK_COMPONENT_LIBRARIES_DESCRIPTION "Qt/MingW Libraries for running MMapper")
+set(CPACK_COMPONENT_LIBRARIES_DISPLAY_NAME "Runtime Libraries")
+set(CPACK_COMPONENT_LIBRARIES_DESCRIPTION "Qt/MingW libraries for running MMapper")
 
 # Help Component
 set(CPACK_COMPONENT_HELP_DISPLAY_NAME "Documentation")
@@ -317,6 +326,7 @@ set(CPACK_SOURCE_IGNORE_FILES
     "~$"
     "/\\\\.svn/"
     "/build/"
+    "LICENSE.txt"
 )
 set(CPACK_SOURCE_PACKAGE_FILE_NAME
     "${PROJECT_NAME}-${CPACK_PACKAGE_VERSION}-source"

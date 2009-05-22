@@ -83,7 +83,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
     : QMainWindow(parent, flags)
 {
   setObjectName("MainWindow");
-  setWindowTitle("MMapper2: Caligors MUME Mapper");
+  setWindowTitle("MMapper: MUME Mapper");
   setWindowIcon(QIcon(":/icons/m.png"));
 
   qRegisterMetaType<IncomingData>("IncomingData");
@@ -330,12 +330,12 @@ void MainWindow::createActions()
                             "selection"));
   //connect(pasteAct, SIGNAL(triggered()), textEdit, SLOT(paste()));
 
-  preferencesAct = new QAction(QIcon(":/icons/preferences.png"), tr("MMapper2 configuration"), this);
+  preferencesAct = new QAction(QIcon(":/icons/preferences.png"), tr("MMapper configuration"), this);
   preferencesAct->setShortcut(tr("Ctrl+P"));
   preferencesAct->setStatusTip(tr("MMapper2 configuration"));
   connect(preferencesAct, SIGNAL(triggered()), this, SLOT(onPreferences()));
 
-  aboutAct = new QAction(tr("&About"), this);
+  aboutAct = new QAction(QIcon(":/icons/m.png"), tr("&About"), this);
   aboutAct->setStatusTip(tr("Show the application's About box"));
   connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
   aboutQtAct = new QAction(tr("About &Qt"), this);
@@ -750,7 +750,7 @@ void MainWindow::setupToolBars()
 
 void MainWindow::setupStatusBar()
 {
-  statusBar()->showMessage(tr("Welcome to MMapper2 ..."));
+  statusBar()->showMessage(tr("Welcome to MMapper ..."));
 }
 
 void MainWindow::onPreferences()
@@ -1166,7 +1166,6 @@ void MainWindow::onFindRoom()
 
 void MainWindow::groupManagerTypeChanged(int type)
 {
-  //qDebug("Action: signal received groupManager type changed");
   Config().m_groupManagerState = type;
   if (type == CGroupCommunicator::Server)
   {
@@ -1183,30 +1182,28 @@ void MainWindow::groupManagerTypeChanged(int type)
     groupOffAct->setChecked(true);
     m_groupManager->hide();
   }
+
 }
 
 
 void MainWindow::groupOff(bool b)
 {
-  if (b)
+  if (b && m_groupCommunicator->getType() != CGroupCommunicator::Off)
     m_groupManager->setType(CGroupCommunicator::Off);
-  //qDebug("Done.");
 }
 
 
 void MainWindow::groupClient(bool b)
 {
-  if (b)
+  if (b && m_groupCommunicator->getType() != CGroupCommunicator::Client)
     m_groupManager->setType(CGroupCommunicator::Client);
-  //qDebug("Done.");
 }
 
 
 void MainWindow::groupServer(bool b)
 {
-  if (b)
+  if (b && m_groupCommunicator->getType() != CGroupCommunicator::Server)
     m_groupManager->setType(CGroupCommunicator::Server);
-  //qDebug("Done.");
 }
 
 void MainWindow::setCurrentFile(const QString &fileName)
@@ -1217,7 +1214,7 @@ void MainWindow::setCurrentFile(const QString &fileName)
   else
     shownName = strippedName(fileName);
 
-  setWindowTitle(tr("%1[*] - %2").arg(shownName).arg(tr("MMapper2")));
+  setWindowTitle(tr("%1[*] - %2").arg(shownName).arg(tr("MMapper")));
 }
 
 QString MainWindow::strippedName(const QString &fullFileName)

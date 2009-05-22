@@ -141,11 +141,11 @@ bool CGroup::addChar(QDomNode node)
   newChar = new CGroupChar(m_mapData, this);
   newChar->updateFromXML(node);
   if ( isNamePresent(newChar->getName()) == true || newChar->getName() == "") {
-    qDebug("Adding new char failed. The name %s already existed.", (const char *)newChar->getName());
+    qDebug("Adding new char failed. The name %s already existed.", newChar->getName().constData());
     delete newChar;
     return false;
   } else {
-    emit log("GroupManager", QString("Added new char. Name %1.").arg((const char *)newChar->getName()));
+    emit log("GroupManager", QString("Added new char. Name %1.").arg(newChar->getName().constData()));
     chars.append(newChar);
     return true;
   }
@@ -159,7 +159,7 @@ void CGroup::removeChar(QByteArray name)
 
   for (int i = 0; i < chars.size(); i++)
     if (chars[i]->getName() == name) {
-    emit log("GroupManager", QString("Removing char %1 from the list.").arg((const char *)chars[i]->getName()));
+    emit log("GroupManager", QString("Removing char %1 from the list.").arg(chars[i]->getName().constData()));
     ch = chars[i];
     chars.remove(i);
     delete ch;
@@ -180,7 +180,7 @@ bool CGroup::isNamePresent(QByteArray name)
 {
   for (int i = 0; i < chars.size(); i++)
     if (chars[i]->getName() == name) {
-    emit log("GroupManager", QString("The name %1 is already present").arg((const char *) name));
+    emit log("GroupManager", QString("The name %1 is already present").arg(name.constData()));
     return true;
     }
 
@@ -218,31 +218,32 @@ void CGroup::updateChar(QDomNode blob)
 
 void CGroup::connectionRefused(QString message)
 {
-  emit log("GroupManager", QString("Connection refused: %1").arg((const char *) message.toAscii()));
+  emit log("GroupManager", QString("Connection refused: %1").arg(message.toAscii().constData()));
   QMessageBox::information(this, "groupManager", QString("Connection refused: %1.").arg(message));
+
 }
 
 void CGroup::connectionFailed(QString message)
 {
-  emit log("GroupManager", QString("Failed to connect: %1").arg((const char *) message.toAscii()));
+  emit log("GroupManager", QString("Failed to connect: %1").arg(message.toAscii().constData()));
   QMessageBox::information(this, "groupManager", QString("Failed to connect: %1.").arg(message));
 }
 
 void CGroup::connectionClosed(QString message)
 {
-  emit log("GroupManager", QString("Connection closed: %1").arg((const char *) message.toAscii()));
+  emit log("GroupManager", QString("Connection closed: %1").arg(message.toAscii().constData()));
   QMessageBox::information(this, "groupManager", QString("Connection closed: %1.").arg(message));
 }
 
 void CGroup::connectionError(QString message)
 {
-  emit log("GroupManager", QString("Connection error: %1.").arg((const char *) message.toAscii()));
+  emit log("GroupManager", QString("Connection error: %1.").arg(message.toAscii().constData()));
   QMessageBox::information(this, "groupManager", QString("Connection error: %1.").arg(message));
 }
 
 void CGroup::serverStartupFailed(QString message)
 {
-  emit log("GroupManager", QString("Failed to start the Group server: %1").arg((const char *) message.toAscii()));
+  emit log("GroupManager", QString("Failed to start the Group server: %1").arg(message.toAscii().constData()));
   QMessageBox::information(this, "groupManager", QString("Failed to start the groupManager server: %1.").arg(message));
 }
 
@@ -262,7 +263,7 @@ void CGroup::gotKicked(QDomNode message)
   }
 
   QDomElement text = e.toElement();
-  emit log("GroupManager", QString("You got kicked! Reason [nodename %1] : %2").arg((const char *) text.nodeName().toAscii()).arg((const char *) text.text().toAscii()));
+  emit log("GroupManager", QString("You got kicked! Reason [nodename %1] : %2").arg(text.nodeName().toAscii().constData()).arg(text.text().toAscii().constData()));
 //      QMessageBox::critical(this, "groupManager", QString("You got kicked! Reason: %1.").arg(text.text()));
 }
 
@@ -286,11 +287,11 @@ void CGroup::gTellArrived(QDomNode node)
   }
 
   QDomElement text = e.toElement();
-  emit log("GroupManager", QString("GTell from %1, Arrived : %2").arg((const char *) from.toAscii()).arg((const char *) text.text().toAscii()));
+  emit log("GroupManager", QString("GTell from %1, Arrived : %2").arg(from.toAscii().constData()).arg(text.text().toAscii().constData()));
 
-  QByteArray tell = (const char *)QString("\r\n" + from + " tells you [GT] '" + text.text() + "'\r\n\r\n>").toAscii();
+  QByteArray tell = QString("\r\n" + from + " tells you [GT] '" + text.text() + "'\r\n\r\n>").toAscii();
 
-  emit displayGroupTellEvent(tell);
+  emit displayGroupTellEvent(tell.constData());
 }
 
 void CGroup::sendGTell(QByteArray tell)
@@ -326,7 +327,7 @@ void CGroup::renameChar(QDomNode blob)
   QString oldname = e.toElement().attribute("oldname");
   QString newname = e.toElement().attribute("newname");
 
-  emit log("GroupManager", QString("Renaming a char from %1 to %2").arg((const char *)  oldname.toAscii()).arg((const char *) newname.toAscii()));
+  emit log("GroupManager", QString("Renaming a char from %1 to %2").arg(oldname.toAscii().constData()).arg(newname.toAscii().constData()));
 
   CGroupChar *ch;
   ch = getCharByName(oldname.toAscii());
@@ -340,7 +341,7 @@ void CGroup::renameChar(QDomNode blob)
 
 void CGroup::parseScoreInformation(QByteArray score)
 {
-  emit log("GroupManager", QString("Caught a score line: %1").arg((const char *) score));
+  emit log("GroupManager", QString("Caught a score line: %1").arg(score.constData()));
 
   if (score.contains("mana, ") == true) {
     score.replace(" hits, ", "/");

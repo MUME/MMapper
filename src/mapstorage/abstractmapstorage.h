@@ -34,6 +34,7 @@
 #include <QtGui>
 #include <QPointer>
 #include "defs.h"
+#include "qtiocompressor.h"
 
 class Room;
 class InfoMark;
@@ -67,6 +68,7 @@ signals:
 
 protected:
     QFile *m_file;
+    QtIOCompressor *m_compressor;
     MapData &m_mapData;
     QString m_fileName;
     QPointer<ProgressCounter> m_progressCounter;

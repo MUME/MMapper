@@ -41,9 +41,11 @@ GroupManagerPage::GroupManagerPage(CGroup* gm, QWidget *parent)
   connect( charName, SIGNAL( editingFinished() ), SLOT( charNameTextChanged() )  );
   connect( changeColor, SIGNAL(clicked()),SLOT(changeColorClicked()));
   connect( colorName, SIGNAL( editingFinished() ), SLOT( colorNameTextChanged() )  );
-  // Client Section
+  // Host Section
+  connect( localHost, SIGNAL( linkActivated (const QString&) ),
+	   SLOT( localHostLinkActivated(const QString&) ));
   connect( localPort, SIGNAL( valueChanged(int) ), SLOT( localPortValueChanged(int) )  );
-  // Server Section
+  // Client Section
   connect( remoteHost, SIGNAL( editingFinished() ), SLOT( remoteHostTextChanged() )  );
   connect( remotePort, SIGNAL( valueChanged(int) ), SLOT( remotePortValueChanged(int) )  );
   // Checkbox Section
@@ -94,7 +96,7 @@ void GroupManagerPage::changeColorClicked()
 
 void GroupManagerPage::remoteHostTextChanged()
 {
-  if (remotePort->value() != Config().m_groupManagerRemotePort) {
+  if (QString(remoteHost->text()).toAscii() != Config().m_groupManagerHost) {
     Config().m_groupManagerHost = QString(remoteHost->text()).toAscii();
   }
 
@@ -104,12 +106,16 @@ void GroupManagerPage::remoteHostTextChanged()
 
 void GroupManagerPage::remotePortValueChanged(int)
 {
-  if (QString(remoteHost->text()).toAscii() != Config().m_groupManagerHost) {
+  if (remotePort->value() != Config().m_groupManagerRemotePort) {
     Config().m_groupManagerRemotePort = remotePort->value();
   }
   
   if (m_groupManager->isConnected() && m_groupManager->getType() == CGroupCommunicator::Client)
     m_groupManager->reconnect();
+}
+
+void GroupManagerPage::localHostLinkActivated(const QString &link) {
+  QDesktopServices::openUrl(QUrl::fromEncoded(link.toAscii()));
 }
 
 void GroupManagerPage::localPortValueChanged(int)

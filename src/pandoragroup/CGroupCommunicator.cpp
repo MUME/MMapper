@@ -123,8 +123,9 @@ void CGroupCommunicator::connectionClosed(CGroupClient *connection)
 
 }
 
-void CGroupCommunicator::errorInConnection(CGroupClient *connection)
+void CGroupCommunicator::errorInConnection(CGroupClient *connection, const QString& errorString)
 {
+  qDebug() << "errorInConnection:" << errorString;
   QString str;
 
   switch(connection->error()) {
@@ -136,8 +137,12 @@ void CGroupCommunicator::errorInConnection(CGroupClient *connection)
       changeType(Off);
       break;
     case QAbstractSocket::RemoteHostClosedError:
-      if (type == Server)
+      if (type == Server) {
         connectionClosed(connection);
+      } else {
+	getGroup()->connectionError( errorString );
+	changeType(Off);
+      }
       break;
     case QAbstractSocket::HostNotFoundError:
       str = QString("Host %1 not found ").arg(connection->peerName());
@@ -145,32 +150,15 @@ void CGroupCommunicator::errorInConnection(CGroupClient *connection)
       changeType(Off);
       break;
     case QAbstractSocket::SocketAccessError:
-      getGroup()->connectionError("Socket Access Error");
-      break;
-    case QAbstractSocket::SocketResourceError:
-      getGroup()->connectionError("Socket Resource Error");
-      break;
-    case QAbstractSocket::SocketTimeoutError:
-      getGroup()->connectionError("Socket Timeout Error");
-      break;
-    case QAbstractSocket::DatagramTooLargeError:
-      getGroup()->connectionError("Diagram Too Large Error");
-      break;
-    case QAbstractSocket::NetworkError:
-      getGroup()->connectionError("Network Error");
-      break;
-    case QAbstractSocket::AddressInUseError:
-    case QAbstractSocket::SocketAddressNotAvailableError:
-      getGroup()->connectionRefused("Network Error");
-      break;
     case QAbstractSocket::UnsupportedSocketOperationError:
     case QAbstractSocket::ProxyAuthenticationRequiredError:
     case QAbstractSocket::UnknownSocketError:
     case QAbstractSocket::UnfinishedSocketOperationError:
-      getGroup()->connectionError("Network Error ");
+  default:
+      getGroup()->connectionError( errorString );
+      changeType(Off);
       break;
   }
-
 }
 
 void CGroupCommunicator::serverStartupFailed()
@@ -241,7 +229,7 @@ void CGroupCommunicator::incomingData(CGroupClient *conn, QByteArray buff)
   QDomDocument doc("datagram");
   if (!doc.setContent(data, &error, &errLine, &errColumn)) {
     qDebug( "Failed to parse the datagram. Error in line %i, column %i: %s",
-            errLine, errColumn, (const char *) error.toAscii());
+            errLine, errColumn, error.toAscii().constData());
     return;
   }
 
@@ -672,9 +660,9 @@ void CGroupCommunicator::changeType(int newState) {
     peer->deleteLater();
 
   if (type == Server)  {
-    CGroupServer *serv = (CGroupServer *) peer;
+    CGroupServer *serv = static_cast<CGroupServer*>(peer);
     serv->closeAll();
-    delete peer;
+    peer->deleteLater();
   }
 
   type = newState;
@@ -693,10 +681,10 @@ void CGroupCommunicator::changeType(int newState) {
     default:
       break;
   }
-  emit typeChanged(type);
+  emit typeChanged(type); // Tell MainWindow
   if (type == Off)
   {
-    getGroup()->close();
+    getGroup()->hide();
     sendLog("Off mode has been selected");
   }
 }

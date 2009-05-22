@@ -37,6 +37,7 @@ m_mapData(mapdata),
 m_fileName(filename),
 m_progressCounter( new ProgressCounter( this ) )
 {
+  m_compressor = new QtIOCompressor(file);
 }
 
 AbstractMapStorage::AbstractMapStorage(MapData& mapdata, const QString& filename) : 
@@ -45,7 +46,7 @@ m_mapData(mapdata),
 m_fileName(filename),
 m_progressCounter( new ProgressCounter( this ) )
 {
-   
+  m_compressor = new QtIOCompressor(NULL);   
 }
 
 AbstractMapStorage::~AbstractMapStorage()

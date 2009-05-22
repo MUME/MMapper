@@ -74,6 +74,7 @@ HEADERS += ./global/defs.h \
           ./mapstorage/progresscounter.h \
           ./mapstorage/roomsaver.h \
           ./mapstorage/oldconnection.h \
+          ./3rdparty/qtiocompressor.h \
 	  ./mapfrontend/tinylist.h \
 	  ./parser/roompropertysetter.h \
 	  ./pandoragroup/CGroup.h \
@@ -145,6 +146,7 @@ SOURCES += main.cpp \
           ./mapstorage/mapstorage.cpp \
           ./mapstorage/oldconnection.cpp \
           ./mapstorage/progresscounter.cpp \
+          ./3rdparty/qtiocompressor.cpp \
 	  ./pandoragroup/CGroup.cpp \
 	  ./pandoragroup/CGroupChar.cpp \
 	  ./pandoragroup/CGroupClient.cpp \
@@ -163,7 +165,7 @@ RESOURCES += resources/mmapper2.qrc
 RC_FILE = ./resources/mmapper2.rc
 TEMPLATE = app
 DEPENDPATH += .
-INCLUDEPATH += . ./global ./mapstorage ./mapdata ./proxy ./parser ./preferences ./configuration ./display ./mainwindow ./expandoracommon ./pathmachine ./mapfrontend ./pandoragroup
+INCLUDEPATH += . ./global ./mapstorage ./mapdata ./proxy ./parser ./preferences ./configuration ./display ./mainwindow ./expandoracommon ./pathmachine ./mapfrontend ./pandoragroup ./3rdparty
 LIBS +=
 QT += opengl network xml gui
 CONFIG += release opengl network xml gui

@@ -5,7 +5,7 @@ declare -i JFLAG
 JFLAG=$PROCESSORS+1
 echo Going to run with $JFLAG jobs
 echo If you have problems make sure you have all the required dependencies
-echo \(i.e. libqt4-dev, libqt4-opengl-dev\)
+echo \(i.e. libqt4-dev, libqt4-opengl-dev, zlib1g-dev\)
 echo 
 
 if [ -d build ]; then

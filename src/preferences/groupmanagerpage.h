@@ -48,6 +48,7 @@ class GroupManagerPage : public QWidget, private Ui::GroupManagerPage
     void remoteHostTextChanged();
     void remotePortValueChanged(int);
     void localPortValueChanged(int);
+    void localHostLinkActivated(const QString&);
 
     void rulesWarningChanged(int);
 

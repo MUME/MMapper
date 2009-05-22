@@ -414,7 +414,14 @@ bool MapStorage::mergeData()
     stream >> magic;
     if ( magic != 0xFFB2AF01 ) return false;
     stream >> version;
-    if ( version != 030 && version != 020 && version != 021 && version != 007 ) return false;
+    if ( version != 031 && version != 030 &&
+	 version != 020 && version != 021 && version != 007 ) return false;
+
+    // QtIOCompressor
+    if (version >= 031) {
+      m_compressor->open(QIODevice::ReadOnly);
+      stream.setDevice(m_compressor);
+    }
 
     stream >> roomsCount;
     if (version < 020) stream >> connectionsCount;
@@ -505,7 +512,12 @@ bool MapStorage::mergeData()
 
     m_mapData.setFileName(m_fileName);
     m_mapData.unsetDataChanged();
+
+    if (version >= 031)
+      m_compressor->close();
+
   }
+
   m_mapData.checkSize();
   emit onDataLoaded();
   return true;
@@ -831,6 +843,7 @@ void MapStorage::saveExits(const Room * room, QDataStream & stream)
 bool MapStorage::saveData( bool baseMapOnly )
 {
   emit log ("MapStorage", "Writing data to file ...");
+
   QDataStream stream (m_file);
 
   // Collect the room and marker lists. The room list can't be acquired
@@ -861,7 +874,11 @@ bool MapStorage::saveData( bool baseMapOnly )
 
   // Write a header with a "magic number" and a version
   stream << (quint32)0xFFB2AF01;
-  stream << (qint32)030;
+  stream << (qint32)031;
+
+  // QtIOCompressor
+  m_compressor->open(QIODevice::WriteOnly);
+  stream.setDevice(m_compressor);
 
   //write counters
   stream << (quint32)roomsCount;
@@ -911,7 +928,9 @@ bool MapStorage::saveData( bool baseMapOnly )
 
     m_progressCounter->step();
   }
-
+  
+  m_compressor->close();
+  
   emit log ("MapStorage", "Writting data finished.");
 
   m_mapData.unsetDataChanged();

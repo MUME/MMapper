@@ -14,6 +14,7 @@ if (Subversion_FOUND)
         Subversion_WC_INFO(${PROJECT_SOURCE_DIR} PROJECT)
         message(STATUS "Current SVN revision is ${PROJECT_WC_REVISION}")
         add_definitions(-DSVN_REVISION=${PROJECT_WC_REVISION})
+	set(SVN_BUILD ${PROJECT_WC_REVISION})
     endif (EXISTS ${PROJECT_SOURCE_DIR}/.svn)
 endif (Subversion_FOUND)
 
