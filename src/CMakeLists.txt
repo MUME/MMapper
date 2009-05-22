@@ -281,6 +281,31 @@ if (WIN32)
 
 endif (WIN32)
 
+# Apple Install Settings
+if (APPLE)
+    # Install Executables
+    install(
+        TARGETS mmapper
+	RUNTIME DESTINATION bin
+	COMPONENT applications
+    )
+
+    # Install Map
+    install(
+        FILES ${PROJECT_SOURCE_DIR}/map/arda.mm2
+	DESTINATION bin
+	COMPONENT map
+    )
+
+    # Install Help Documentation
+    install(FILES
+        "${PROJECT_SOURCE_DIR}/doc/Installation Guide.URL"
+	"${PROJECT_SOURCE_DIR}/doc/mapping_advice.txt"
+	DESTINATION bin
+	COMPONENT help
+    )
+endif (APPLE)
+
 # More General CPack Settings
 set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE.txt")
 set(CPACK_RESOURCE_FILE_README  "${PROJECT_SOURCE_DIR}/INSTALL.txt")
