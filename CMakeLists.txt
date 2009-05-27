@@ -7,6 +7,12 @@ set(QT_USE_QTXML TRUE)
 set(QT_USE_QTOPENGL TRUE)
 include(${QT_USE_FILE})
 
+if (NOT MINGW)
+    find_package(ZLIB REQUIRED)
+else (NOT MINGW)
+    message(STATUS "Warning: MingW requires zlib to be installed manually")
+endif (NOT MINGW)
+
 # Get SVN revision number
 find_package(Subversion)
 if (Subversion_FOUND)
@@ -28,5 +34,12 @@ if (UNIX)
       "-g -Wall -g3 -ggdb -gdwarf-2 -Wunused-variable -Wno-long-long -Wno-unknown-pragmas -Wno-system-headers"
       CACHE STRING "Debug builds CMAKE CXX flags " FORCE )
 endif (UNIX)
+
+if (APPLE)
+    # In order to build a universal binary we need the following two lines:
+    add_definitions(-DCMAKE_OSX_SYSROOT="/Developer/SDKs/MacOSX10.4u.sdk")
+    add_definitions(-DCMAKE_OSX_ARCHITECTURES="ppc;i386")
+    message(STATUS "Warning: For deployment you should have compiled Qt statically")
+endif (APPLE)
 
 add_subdirectory(src)

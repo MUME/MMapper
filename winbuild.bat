@@ -1,8 +1,9 @@
-echo off
-echo If you have problems finding zlib.h then you need to add it to Qt's
-echo MingW installation under mingw/include
-echo 
-echo on
+@echo off
+echo.
+echo If you have problems finding zlib.h, zconf.h then you need to add it to the
+echo MingW installation under include/
+echo.
+@echo on
 mkdir build
 cd build
 cmake ../ -DCMAKE_INSTALL_PREFIX=. -G "MinGW Makefiles"

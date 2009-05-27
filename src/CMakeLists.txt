@@ -215,7 +215,6 @@ if (UNIX AND NOT APPLE)
 
     # Debian
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "nschimme@gmail.com")
-    #set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}")
     set(CPACK_DEBIAN_PACKAGE_NAME "mmapper")
     set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqtcore4 (>= 4.1.0), libqtgui4 (>= 4.1.0), libqt4-opengl (>= 4.1.0), libqt4-network (>= 4.1.0), libqt4-xml (>= 4.1.0)")
 
@@ -238,20 +237,26 @@ if (WIN32)
     )
 
     # Install Library Files
-    set(QT_BINARY_DIR "${QT_LIBRARY_DIR}/../bin")
-    # ^^ DLL files are found here? ^^
+    # Note: this is not necessary if Qt is compiled statically
+    message(STATUS "Qt libraries are at ${QT_LIBRARY_DIR}")
     install(FILES
-        "${QT_BINARY_DIR}/QtCore${QT_VERSION_MAJOR}.dll"
-        "${QT_BINARY_DIR}/QtGui${QT_VERSION_MAJOR}.dll"
-        "${QT_BINARY_DIR}/QtNetwork${QT_VERSION_MAJOR}.dll"
-        "${QT_BINARY_DIR}/QtXml${QT_VERSION_MAJOR}.dll"
-        "${QT_BINARY_DIR}/QtOpenGL${QT_VERSION_MAJOR}.dll"
+        "${QT_LIBRARY_DIR}/QtCore${QT_VERSION_MAJOR}.dll"
+        "${QT_LIBRARY_DIR}/QtGui${QT_VERSION_MAJOR}.dll"
+        "${QT_LIBRARY_DIR}/QtNetwork${QT_VERSION_MAJOR}.dll"
+        "${QT_LIBRARY_DIR}/QtXml${QT_VERSION_MAJOR}.dll"
+        "${QT_LIBRARY_DIR}/QtOpenGL${QT_VERSION_MAJOR}.dll"
         DESTINATION .
 	COMPONENT libraries
     )
     if (MINGW)
+	string(REGEX REPLACE "[\\|/][^\\/]+exe$" ""
+	       MINGW_LIBRARY_DIR
+	       ${CMAKE_CXX_COMPILER}
+        )
+        message(STATUS "MingW library is at ${MINGW_LIBRARY_DIR}")
+
         install(FILES 
-            "${QT_BINARY_DIR}/mingwm10.dll"
+            "${MINGW_LIBRARY_DIR}/mingwm10.dll"
 	    DESTINATION .
 	    COMPONENT libraries
 	)
@@ -265,7 +270,7 @@ if (WIN32)
 	COMPONENT help
     )
 
-    set(CPACK_GENERATOR "NSIS;ZIP")
+    set(CPACK_GENERATOR "NSIS;ZIP") # ZIP requires 7-zip, NSIS requires NSIS
     set(CPACK_SOURCE_GENERATOR "ZIP")
 
     # Windows (NSIS) Settings
@@ -313,11 +318,11 @@ set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
 set(CPACK_PACKAGE_VENDOR "Nils Schimmelmann")
 set(CPACK_PACKAGE_CONTACT "nschimme@gmail.com")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A mud mapper especially written for the mud MUME")
-if (EXISTS ${SVN_BUILD})
+if (SVN_BUILD)
     set(CPACK_PACKAGE_VERSION "svn-build-${SVN_BUILD}")
-else (EXISTS ${SVN_BUILD})
-    set(CPACK_PACKAGE_VERSION "2.0.4-final")
-endif (EXISTS ${SVN_BUILD})
+else (SVN_BUILD)
+    set(CPACK_PACKAGE_VERSION "2.0.4-final2")
+endif (SVN_BUILD)
 set(CPACK_PACKAGE_VERSION_MAJOR "2")
 set(CPACK_PACKAGE_VERSION_MINOR "0")
 set(CPACK_PACKAGE_VERSION_PATCH "4")
@@ -354,5 +359,8 @@ set(CPACK_SOURCE_IGNORE_FILES
 )
 set(CPACK_SOURCE_PACKAGE_FILE_NAME
     "${PROJECT_NAME}-${CPACK_PACKAGE_VERSION}-source"
+)
+set(CPACK_PACKAGE_FILE_NAME
+    "${PROJECT_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}"
 )
 include(CPack)
