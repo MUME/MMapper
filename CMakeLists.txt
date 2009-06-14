@@ -13,6 +13,9 @@ else (NOT MINGW)
     message(STATUS "Warning: MingW requires zlib to be installed manually")
 endif (NOT MINGW)
 
+# Version
+set(VERSION "2.0.4-final2")
+
 # Get SVN revision number
 find_package(Subversion)
 if (Subversion_FOUND)
@@ -36,10 +39,21 @@ if (UNIX)
 endif (UNIX)
 
 if (APPLE)
-    # In order to build a universal binary we need the following two lines:
-    add_definitions(-DCMAKE_OSX_SYSROOT="/Developer/SDKs/MacOSX10.4u.sdk")
-    add_definitions(-DCMAKE_OSX_ARCHITECTURES="ppc;i386")
-    message(STATUS "Warning: For deployment you should have compiled Qt statically")
+    # This is bundle metadata to create "bundles" and "Universal Binaries" on
+    # Mac OS X
+    # http://www.cmake.org/Wiki/CMake_FAQ#How_do_I_build_universal_binaries_on_Mac_OS_X.3F
+    # By the way, there is a bug in the cross-compilation SDKs for
+    # Tiger in Leopard, so you need to follow these instructions:
+    # http://groups.google.com/group/vim_mac/browse_thread/thread/064da55ec412e768
+    # which means typing the following command in Terminal.app:
+    # $ sudo ln -s /Developer/SDKs/MacOSX10.4u.sdk/usr/lib/crt1.o  /Developer/SDKs/MacOSX10.4u.sdk/usr/lib/crt1.10.5.o
+
+    # In order to build a universal binary we need the following line:
+    set(CMAKE_OSX_ARCHITECTURES ppc;i386)
+
+    # To support much older OSX machines we need the following lines:
+    #set(CMAKE_OSX_SYSROOT /Developer/SDKs/MacOSX10.4u.sdk)
+    #set(CMAKE_FIND_ROOT_PATH /Developer/SDKs/MacOSX10.4u.sdk)
 endif (APPLE)
 
 add_subdirectory(src)

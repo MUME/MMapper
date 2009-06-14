@@ -154,7 +154,7 @@ QT4_WRAP_CPP(mmapper_MOC_SRCS ${mmapper_MOC_HDRS})
 QT4_WRAP_UI(mmapper_UIS_H ${mmapper_UIS})
 QT4_ADD_RESOURCES(mmapper_RCC_SRCS ${mmapper_RCS})
 
-add_executable(mmapper WIN32
+add_executable(mmapper WIN32 MACOSX_BUNDLE
     ${mmapper_SRCS}
     ${mmapper_MOC_SRCS}
     ${mmapper_UIS_H}
@@ -288,17 +288,26 @@ endif (WIN32)
 
 # Apple Install Settings
 if (APPLE)
+    # Bundle the libraries with the binary (requires Qt 4.5)
+    add_custom_command(
+        TARGET mmapper
+	POST_BUILD
+        COMMAND macdeployqt ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app
+	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+	COMMENT "Deploying the Qt Framework onto the bundle"
+    )
+    
     # Install Executables
     install(
         TARGETS mmapper
-	RUNTIME DESTINATION bin
+	BUNDLE DESTINATION ../Applications/MMapper
 	COMPONENT applications
     )
 
     # Install Map
     install(
         FILES ${PROJECT_SOURCE_DIR}/map/arda.mm2
-	DESTINATION bin
+	DESTINATION ../Applications/MMapper
 	COMPONENT map
     )
 
@@ -306,14 +315,32 @@ if (APPLE)
     install(FILES
         "${PROJECT_SOURCE_DIR}/doc/Installation Guide.URL"
 	"${PROJECT_SOURCE_DIR}/doc/mapping_advice.txt"
-	DESTINATION bin
+	DESTINATION ../Applications/MMapper
 	COMPONENT help
     )
+
+    # If we are supporting older machines, use the following
+    set(CPACK_OSX_PACKAGE_VERSION 10.5)
+
+    # Package Settings
+    set(CPACK_GENERATOR "PackageMaker")
+    set(CPACK_SOURCE_GENERATOR "TGZ")
+
+    # Libraries are bundled directly
+    set(CPACK_COMPONENT_LIBRARIES_HIDDEN TRUE)
+
+    # Bundle Properties
+    #SET(MACOSX_BUNDLE_ICON_FILE icon.icns)
+    SET(MACOSX_BUNDLE_BUNDLE_NAME MMapper)
+    SET(MACOSX_BUNDLE_BUNDLE_VERSION ${VERSION})
+    SET(MACOSX_BUNDLE_SHORT_VERSION_STRING ${VERSION})
+    SET(MACOSX_BUNDLE_LONG_VERSION_STRING "Version ${VERSION}")
+
 endif (APPLE)
 
 # More General CPack Settings
 set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE.txt")
-set(CPACK_RESOURCE_FILE_README  "${PROJECT_SOURCE_DIR}/INSTALL.txt")
+#set(CPACK_RESOURCE_FILE_README  "${PROJECT_SOURCE_DIR}/INSTALL.txt")
 set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
 set(CPACK_PACKAGE_VENDOR "Nils Schimmelmann")
 set(CPACK_PACKAGE_CONTACT "nschimme@gmail.com")
@@ -321,7 +348,7 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A mud mapper especially written for the m
 if (SVN_BUILD)
     set(CPACK_PACKAGE_VERSION "svn-build-${SVN_BUILD}")
 else (SVN_BUILD)
-    set(CPACK_PACKAGE_VERSION "2.0.4-final2")
+    set(CPACK_PACKAGE_VERSION ${VERSION})
 endif (SVN_BUILD)
 set(CPACK_PACKAGE_VERSION_MAJOR "2")
 set(CPACK_PACKAGE_VERSION_MINOR "0")

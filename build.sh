@@ -16,4 +16,4 @@ else
     cd build
 fi
 
-cmake ../ -DCMAKE_INSTALL_REFIX=. && make -j$JFLAG && make install
+cmake ../ -DCMAKE_INSTALL_REFIX=. && make -j$JFLAG && make package
