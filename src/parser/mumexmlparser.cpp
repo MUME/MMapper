@@ -97,7 +97,6 @@ MumeXmlParser::~MumeXmlParser()
 #endif
 }
 
-
 void MumeXmlParser::parseNewMudInput(IncomingData& data)
 {
   /*IncomingData data;
@@ -263,20 +262,8 @@ bool MumeXmlParser::element( const QByteArray& line  )
           }
           break;
       };
-
-    /*if (line.startsWith("/xml")){ emit sendToMud((QByteArray)"cha xml\n"); break;}
-      if (line.startsWith("prompt")) {m_xmlMode = XML_PROMPT; break;}
-      if (line.startsWith("exits")) {m_xmlMode = XML_EXITS; break;}
-      if (line.startsWith("room")) {m_xmlMode = XML_ROOM; break;}
-      if (line.startsWith("movement dir=north/"))         {m_xmlMovement = XMLM_NORTH; checkqueue(); break;}
-      if (line.startsWith("movement dir=south/"))         {m_xmlMovement = XMLM_SOUTH; checkqueue(); break;}
-      if (line.startsWith("movement dir=east/"))  {m_xmlMovement = XMLM_EAST; checkqueue(); break;}
-      if (line.startsWith("movement dir=west/"))  {m_xmlMovement = XMLM_WEST; checkqueue(); break;}
-      if (line.startsWith("movement dir=up/"))            {m_xmlMovement = XMLM_UP; checkqueue(); break;}
-      if (line.startsWith("movement dir=down/"))  {m_xmlMovement = XMLM_DOWN; checkqueue(); break;}
-      if (line.startsWith("movement/"))                   {m_xmlMovement = XMLM_UNKNOWN; checkqueue(); break;}
-    */
       break;
+
     case XML_ROOM:
       if (length > 0)
         switch (line.at(0))
@@ -293,6 +280,10 @@ bool MumeXmlParser::element( const QByteArray& line  )
             m_staticRoomDesc = emptyString; // might be empty but valid description
           }
           break;
+        case 't': // terrain tag only comes up in blindness or fog
+	  if (line.startsWith("terrain")) m_xmlMode = XML_TERRAIN;
+	  break;
+
         case '/':
           if (line.startsWith("/room")) m_xmlMode = XML_NONE;
           break;
@@ -325,6 +316,17 @@ bool MumeXmlParser::element( const QByteArray& line  )
         break;
       }
       break;
+    case XML_TERRAIN:
+      if (length > 0)
+        switch (line.at(0))
+      {
+        case '/': if (line.startsWith("/terrain")) {
+	  m_xmlMode = XML_ROOM;
+	  m_readingRoomDesc = true;
+	}
+	break;
+      }
+      break;
   }
 
   if (!Config().m_removeXmlTags)
@@ -336,7 +338,7 @@ bool MumeXmlParser::element( const QByteArray& line  )
 
 
 bool MumeXmlParser::characters(QByteArray& ch)
-{
+  {
   //quint8* dataline = (quint8*) ch.data();
 
   // replace > and < chars
@@ -430,6 +432,12 @@ bool MumeXmlParser::characters(QByteArray& ch)
       ch = ch.trimmed();
       emit sendToUser(ch);
       break;
+
+  case XML_TERRAIN:
+  default:
+    emit sendToUser(ch);
+    break;
+    
   }
 
   return true;
@@ -439,7 +447,8 @@ void MumeXmlParser::move()
 {
   m_descriptionReady = false;
 
-  if (Patterns::matchNoDescriptionPatterns(m_roomName)) // non standard end of description parsed (fog, dark or so ...)
+  if (m_roomName == emptyString || // blindness
+      Patterns::matchNoDescriptionPatterns(m_roomName)) // non standard end of description parsed (fog, dark or so ...)
   {
     m_roomName=nullString;
     m_dynamicRoomDesc=nullString;
