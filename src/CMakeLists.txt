@@ -12,6 +12,7 @@ set(mmapper_SRCS
     expandoracommon/mmapper2event.cpp
     expandoracommon/parseevent.cpp
     expandoracommon/property.cpp
+    mainwindow/aboutdialog.cpp
     mainwindow/findroomsdlg.cpp
     mainwindow/infomarkseditdlg.cpp
     mainwindow/mainwindow.cpp
@@ -87,6 +88,7 @@ set(mmapper_MOC_HDRS
     display/mapwindow.h
     display/prespammedpath.h
     expandoracommon/component.h
+    mainwindow/aboutdialog.h
     mainwindow/findroomsdlg.h
     mainwindow/infomarkseditdlg.h
     mainwindow/mainwindow.h
@@ -120,6 +122,7 @@ set(mmapper_MOC_HDRS
 )
 
 set(mmapper_UIS
+    mainwindow/aboutdialog.ui
     mainwindow/findroomsdlg.ui
     mainwindow/infomarkseditdlg.ui
     mainwindow/roomeditattrdlg.ui

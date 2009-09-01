@@ -43,6 +43,7 @@
 //#include "parser.h"
 //#include "mumexmlparser.h"
 #include "roompropertysetter.h"
+#include "aboutdialog.h"
 #include "findroomsdlg.h"
 #include "CGroup.h"
 #include "progresscounter.h"
@@ -995,29 +996,8 @@ bool MainWindow::exportBaseMap()
 
 void MainWindow::about()
 {
-#ifdef SVN_REVISION
-QString version = tr("<b>MMapper Subversion Revision ") + QString::number(SVN_REVISION) + tr("</b><br><br>");
-#else
- QString version = tr("<b>MMapper Release ") + QString(MMAPPER_VERSION)+ tr("</b><br><br>");
-#endif
-  QMessageBox::about(this, tr("About MMapper"), version +
-                     tr("The MMapper application is specially designed "
-                        "for <a href=\"http://mume.pvv.org\">MUME</a> "
-			"(fire.pvv.org:4242)<br><br>"
-                        "Maintainer: Jahara (nschimme@gmail.com)<br><br>"
-                         "<u>Special thanks to:</u><br>"
-                        "Alve for his great map engine<br>"
-                        "Caligor for starting the mmapper project<br>"
-                        "Azazelo for his work with the Group Manager protocol"
-			"<br><br>"
-                         "<u>Contributors to previous versions:</u><br>"
-                        "Jahara, Kalev, Azazelo, Alve, Caligor, Kovis, Krush, "
-			"and Korir<br><br>"
-                        "For help regarding on how to set up MMapper with "
-			"your client of choice read the "
-			"<a href=\"http://mume.org/wiki/index.php/Guide_to_install_mmapper2_on_Windows\">"
-                        "installation guide</a> on the MUME Wiki<br>"
-                       ));
+  AboutDialog about(this);
+  about.exec();
 }
 
 bool MainWindow::maybeSave()
