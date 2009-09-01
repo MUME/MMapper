@@ -89,7 +89,6 @@ SOURCES += main.cpp \
           ./mapdata/mmapper2room.cpp \
           ./mapdata/mmapper2exit.cpp \
           ./mapdata/roomfactory.cpp \
-          ./mapdata/drawstream.cpp \
           ./mapdata/roomselection.cpp \
           ./mapdata/customaction.cpp \
           ./mainwindow/mainwindow.cpp \
@@ -117,7 +116,6 @@ SOURCES += main.cpp \
           ./expandoracommon/component.cpp \
           ./expandoracommon/coordinate.cpp \
           ./expandoracommon/frustum.cpp \
-          ./expandoracommon/abstractroomfactory.cpp \
           ./expandoracommon/init.cpp \
           ./expandoracommon/property.cpp \
           ./expandoracommon/mmapper2event.cpp \

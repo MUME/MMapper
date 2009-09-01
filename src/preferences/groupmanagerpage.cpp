@@ -1,14 +1,9 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve), 
-**            Marek Krejza <krejza@gmail.com> (Caligor),
-**            Nils Schimmelmann <nschimme@gmail.com> (Jahara),
-**            Anonymous <lachupe@gmail.com> (Azazello)
+** Authors:   Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
 ** This file is part of the MMapper project. 
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
-**
-** Copyright: See COPYING file that comes with this distribution
 **
 ** This program is free software; you can redistribute it and/or
 ** modify it under the terms of the GNU General Public License

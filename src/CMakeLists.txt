@@ -5,7 +5,6 @@ set(mmapper_SRCS
     display/mapcanvas.cpp
     display/mapwindow.cpp
     display/prespammedpath.cpp
-    expandoracommon/abstractroomfactory.cpp
     expandoracommon/component.cpp
     expandoracommon/coordinate.cpp
     expandoracommon/frustum.cpp
@@ -18,7 +17,6 @@ set(mmapper_SRCS
     mainwindow/mainwindow.cpp
     mainwindow/roomeditattrdlg.cpp
     mapdata/customaction.cpp
-    mapdata/drawstream.cpp
     mapdata/mapdata.cpp
     mapdata/mmapper2exit.cpp
     mapdata/mmapper2room.cpp
