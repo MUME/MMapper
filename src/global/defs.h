@@ -36,8 +36,6 @@ enum { TRUE = 1, FALSE = 0 };
 enum { LEFT = 0, RIGHT };
 enum { SOURCE = 0, DESTINATION };
 
-#define MMAPPER_VERSION "2.0.4 Final"
-
 #define bit1 1
 #define bit2 2
 #define bit3 4
