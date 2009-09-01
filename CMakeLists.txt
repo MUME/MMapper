@@ -15,7 +15,7 @@ endif (NOT MINGW)
 
 # Version
 set(VERSION "2.1.0")
-add_definitions(-DMMAPPER_VERSION=${VERSION})
+add_definitions(-DMMAPPER_VERSION="${VERSION}")
 
 # Get SVN revision number
 find_package(Subversion)
