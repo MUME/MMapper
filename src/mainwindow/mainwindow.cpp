@@ -332,7 +332,17 @@ void MainWindow::createActions()
   preferencesAct->setStatusTip(tr("MMapper2 configuration"));
   connect(preferencesAct, SIGNAL(triggered()), this, SLOT(onPreferences()));
 
-  aboutAct = new QAction(QIcon(":/icons/m.png"), tr("&About"), this);
+  mmapperHomePageAct = new QAction(tr("MMapper &Homepage"), this);
+  connect(mmapperHomePageAct, SIGNAL(triggered()), this, SLOT(openMmapperHomepage()));
+  mumeWebsiteAct = new QAction(tr("MUME &Website"), this);
+  connect(mumeWebsiteAct, SIGNAL(triggered()), this, SLOT(openMumeWebsite()));
+  mumeForumAct = new QAction(tr("MUME &Forum"), this);
+  connect(mumeForumAct, SIGNAL(triggered()), this, SLOT(openMumeForum()));
+  mumeWikiAct = new QAction(tr("MUME &Wiki"), this);
+  connect(mumeWikiAct, SIGNAL(triggered()), this, SLOT(openMumeWiki()));
+  settingUpMmapperAct = new QAction(tr("&Setting up MMapper"), this);
+  connect(settingUpMmapperAct, SIGNAL(triggered()), this, SLOT(openSettingUpMmapper()));
+  aboutAct = new QAction(tr("About &MMapper"), this);
   aboutAct->setStatusTip(tr("Show the application's About box"));
   connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
   aboutQtAct = new QAction(tr("About &Qt"), this);
@@ -656,6 +666,13 @@ void MainWindow::setupMenuBar()
   settingsMenu->addAction(preferencesAct);
 
   helpMenu = menuBar()->addMenu(tr("&Help"));
+  helpMenu->addAction(mmapperHomePageAct);
+  helpMenu->addAction(mumeWebsiteAct);
+  helpMenu->addAction(mumeForumAct);
+  helpMenu->addAction(mumeWikiAct);
+  onlineTutorialsMenu = helpMenu->addMenu(tr("Online &Tutorials"));
+  onlineTutorialsMenu->addAction(settingUpMmapperAct);
+  helpMenu->addSeparator();
   helpMenu->addAction(aboutAct);
   helpMenu->addAction(aboutQtAct);
 
@@ -1377,3 +1394,27 @@ void MainWindow::onConnectToNeighboursRoomSelection()
   getCurrentMapWindow()->getCanvas()->update();
 }
 
+void MainWindow::openMmapperHomepage()
+{
+        QDesktopServices::openUrl(QUrl("http://sourceforge.net/projects/mmapper/"));
+}
+
+void MainWindow::openMumeWebsite()
+{
+        QDesktopServices::openUrl(QUrl("http://mume.org/"));
+}
+
+void MainWindow::openMumeForum()
+{
+        QDesktopServices::openUrl(QUrl("http://mume.org/forum/"));
+}
+
+void MainWindow::openMumeWiki()
+{
+        QDesktopServices::openUrl(QUrl("http://mume.org/wiki/"));
+}
+
+void MainWindow::openSettingUpMmapper()
+{
+        QDesktopServices::openUrl(QUrl("http://mume.org/wiki/index.php/Guide_to_install_mmapper2_on_Windows"));
+}

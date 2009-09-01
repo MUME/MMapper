@@ -133,6 +133,12 @@ public slots:
   void groupServer(bool);
   void groupManagerTypeChanged(int);
 
+  void openMmapperHomepage();
+  void openMumeWebsite();
+  void openMumeForum();
+  void openMumeWiki();
+  void openSettingUpMmapper();
+
 protected:
   void closeEvent(QCloseEvent *event);
 
@@ -177,6 +183,7 @@ private:
   QMenu *searchMenu;
   QMenu *settingsMenu;
   QMenu *helpMenu;
+  QMenu *onlineTutorialsMenu;
   QMenu *groupMenu;
 
   QAction               *groupOffAct;
@@ -196,6 +203,11 @@ private:
   QAction *cutAct;
   QAction *copyAct;
   QAction *pasteAct;
+  QAction *mmapperHomePageAct;
+  QAction *mumeWebsiteAct;
+  QAction *mumeForumAct;
+  QAction *mumeWikiAct;
+  QAction *settingUpMmapperAct;
   QAction *aboutAct;
   QAction *aboutQtAct;
   QAction *prevWindowAct;
