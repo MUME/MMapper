@@ -386,6 +386,11 @@ bool MumeXmlParser::characters(QByteArray& ch)
       if  (m_descriptionReady)
       {
         if (m_examine) m_examine = false; // stop bypassing brief-mode
+
+	// Append the IAC GA
+	m_stringBuffer += (unsigned char) 255; // IAC
+	m_stringBuffer += (unsigned char) 249; // GA
+
         parsePrompt(m_stringBuffer);
         move();
       }
