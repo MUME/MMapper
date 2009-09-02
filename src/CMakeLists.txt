@@ -1,5 +1,6 @@
 set(mmapper_SRCS
     main.cpp
+    3rdparty/qtiocompressor.cpp
     configuration/configuration.cpp
     display/connectionselection.cpp
     display/mapcanvas.cpp
@@ -31,13 +32,12 @@ set(mmapper_SRCS
     mapfrontend/roomlocker.cpp
     mapfrontend/searchtreenode.cpp
     mapstorage/abstractmapstorage.cpp
+    mapstorage/basemapsavefilter.cpp
+    mapstorage/filesaver.cpp
     mapstorage/mapstorage.cpp
     mapstorage/oldconnection.cpp
-    mapstorage/roomsaver.cpp
-    mapstorage/filesaver.cpp
-    mapstorage/basemapsavefilter.cpp
     mapstorage/progresscounter.cpp
-    3rdparty/qtiocompressor.cpp
+    mapstorage/roomsaver.cpp
     pandoragroup/CGroupChar.cpp
     pandoragroup/CGroupClient.cpp
     pandoragroup/CGroupCommunicator.cpp
@@ -83,6 +83,7 @@ else (MINGW)
 endif (MINGW)
 
 set(mmapper_MOC_HDRS
+    3rdparty/qtiocompressor.h
     display/connectionselection.h
     display/mapcanvas.h
     display/mapwindow.h
@@ -98,7 +99,6 @@ set(mmapper_MOC_HDRS
     mapstorage/abstractmapstorage.h
     mapstorage/mapstorage.h
     mapstorage/progresscounter.h
-    3rdparty/qtiocompressor.h
     pandoragroup/CGroupClient.h
     pandoragroup/CGroupCommunicator.h
     pandoragroup/CGroup.h
@@ -135,6 +135,7 @@ set(mmapper_UIS
 include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty
     ${CMAKE_CURRENT_SOURCE_DIR}/configuration
     ${CMAKE_CURRENT_SOURCE_DIR}/display
     ${CMAKE_CURRENT_SOURCE_DIR}/expandoracommon
@@ -148,7 +149,6 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/pathmachine
     ${CMAKE_CURRENT_SOURCE_DIR}/preferences
     ${CMAKE_CURRENT_SOURCE_DIR}/proxy
-    ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty
 )
 
 QT4_WRAP_CPP(mmapper_MOC_SRCS ${mmapper_MOC_HDRS})
