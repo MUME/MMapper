@@ -35,20 +35,18 @@
 #include "pathmachine.h"
 #include "mapfrontend.h"
 #include "configuration.h"
+
 int main(int argc, char **argv)
 {
-#if QT_VERSION >= 0x0040500
-  /* Experimental:
-   * This might improve rendering speed... but its problematic
-   */
-   //QApplication::setGraphicsSystem("opengl");
-#endif
   QApplication    app(argc, argv);
 
   Config().read();
 #ifdef WITH_SPLASH
   QPixmap pixmap(":/pixmaps/splash20.png");
   QSplashScreen *splash = new QSplashScreen(pixmap);
+  splash->showMessage(QString("%1").arg(MMAPPER_VERSION, -9),
+                      Qt::AlignBottom | Qt::AlignRight,
+                      Qt::yellow);
   splash->show();
 #endif
   MainWindow     mw;

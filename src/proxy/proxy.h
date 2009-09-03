@@ -32,6 +32,7 @@
 #include <QtGui>
 #include <QtCore>
 #include <QtNetwork>
+#include <QPointer>
 
 class TelnetFilter;
 class Parser;
@@ -102,8 +103,7 @@ class Proxy : public QObject
     int m_socketDescriptor;
     QString m_remoteHost;
     int m_remotePort;
-    QTcpSocket *m_mudSocket;
-    QTcpSocket *m_userSocket;
+    QPointer<QTcpSocket> m_mudSocket, m_userSocket;
     char m_buffer[ 8192 ];
 
     bool m_serverConnected;

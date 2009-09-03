@@ -23,7 +23,6 @@
 ************************************************************************/
 
 #include "aboutdialog.h"
-#include "defs.h"
 
 #include <QFile>
 #include <QTextStream>
@@ -31,6 +30,7 @@
 AboutDialog::AboutDialog(QWidget *parent)
     : QDialog(parent)
 {
+    setWindowIcon(QIcon(":/icons/m.png"));
     setupUi(this);
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
     aboutTabLayout->setAlignment(Qt::AlignHCenter);

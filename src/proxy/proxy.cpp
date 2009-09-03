@@ -95,9 +95,19 @@ Proxy::~Proxy()
 #ifdef PROXY_STREAM_DEBUG_INPUT_TO_FILE
   file->close();
 #endif
-  m_userSocket->disconnectFromHost();
-  m_userSocket->waitForDisconnected();
+  if (m_userSocket) {
+    m_userSocket->disconnectFromHost();
+    m_userSocket->waitForDisconnected();
+    m_userSocket->deleteLater();
+  }
+  if (m_mudSocket) {
+    m_mudSocket->disconnectFromHost();
+    m_mudSocket->waitForDisconnected();
+    m_mudSocket->deleteLater();
+  }
   delete m_filter;
+  delete m_parser;
+  delete m_parserXml;
   connect (this, SIGNAL(doAcceptNewConnections()), m_parent, SLOT(doAcceptNewConnections()));
   emit doAcceptNewConnections();
 }
