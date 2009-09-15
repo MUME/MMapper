@@ -29,7 +29,7 @@ if (Subversion_FOUND)
     endif (EXISTS ${PROJECT_SOURCE_DIR}/.svn)
 endif (Subversion_FOUND)
 
-if (UNIX)
+if (UNIX AND NOT APPLE)
     SET(SHARE_INSTALL_PREFIX
         "${CMAKE_INSTALL_PREFIX}/share"
         CACHE PATH "Base directory for files which go to share/"
@@ -38,7 +38,7 @@ if (UNIX)
     SET(CMAKE_CXX_FLAGS_DEBUG 
       "-g -Wall -g3 -ggdb -gdwarf-2 -Wunused-variable -Wno-long-long -Wno-unknown-pragmas -Wno-system-headers"
       CACHE STRING "Debug builds CMAKE CXX flags " FORCE )
-endif (UNIX)
+endif (UNIX AND NOT APPLE)
 
 if (APPLE)
     # This is bundle metadata to create "bundles" and "Universal Binaries" on

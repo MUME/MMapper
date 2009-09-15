@@ -72,6 +72,7 @@ set(mmapper_SRCS
 
 set(mmapper_RCS resources/mmapper2.qrc)
 
+# Application Icon
 if (MINGW)
     add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/mmapper2_rc.o
                        COMMAND windres.exe -I ${CMAKE_CURRENT_SOURCE_DIR}
@@ -81,6 +82,12 @@ if (MINGW)
 else (MINGW)
     set(mmapper_WINRC resources/mmapper2.rc)
 endif (MINGW)
+if (APPLE)
+    set(mmapper_SRCS ${mmapper_SRCS} resources/macosx/m.icns)
+   set_source_files_properties(resources/macosx/m.icns PROPERTIES
+    MACOSX_PACKAGE_LOCATION Resources)
+    set(MACOSX_BUNDLE_ICON_FILE m.icns)
+ endif (APPLE)
 
 set(mmapper_MOC_HDRS
     3rdparty/qtiocompressor.h
@@ -281,9 +288,9 @@ if (WIN32)
     set(CPACK_NSIS_INSTALLED_ICON_NAME "mmapper.exe")
     set(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} Install MMapper")
     set(CPACK_NSIS_HELP_LINK "http:\\\\\\\\sourceforge.net\\\\projects\\\\mmapper")
-    set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\m.ico")
+    set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/win32\\\\m.ico")
     set(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\m.png")
-    set(CPACK_NSIS_INSTALLED_ICON_NAME "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\m.ico")
+    set(CPACK_NSIS_INSTALLED_ICON_NAME "${CMAKE_CURRENT_SOURCE_DIR}/resources/win32\\\\m.ico")
     set(CPACK_NSIS_COMPRESSOR "/SOLID lzma")
 
 endif (WIN32)
@@ -298,18 +305,18 @@ if (APPLE)
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	COMMENT "Deploying the Qt Framework onto the bundle"
     )
-    
+   
     # Install Executables
     install(
         TARGETS mmapper
-	BUNDLE DESTINATION ../Applications/MMapper
+	BUNDLE DESTINATION MMapper
 	COMPONENT applications
     )
 
     # Install Map
     install(
         FILES ${PROJECT_SOURCE_DIR}/map/arda.mm2
-	DESTINATION ../Applications/MMapper
+	DESTINATION MMapper
 	COMPONENT map
     )
 
@@ -317,27 +324,25 @@ if (APPLE)
     install(FILES
         "${PROJECT_SOURCE_DIR}/doc/Installation Guide.URL"
 	"${PROJECT_SOURCE_DIR}/doc/mapping_advice.txt"
-	DESTINATION ../Applications/MMapper
+	DESTINATION MMapper
 	COMPONENT help
     )
-
+    
     # If we are supporting older machines, use the following
     set(CPACK_OSX_PACKAGE_VERSION 10.5)
 
     # Package Settings
-    set(CPACK_GENERATOR "PackageMaker")
+    set(CPACK_GENERATOR "DragNDrop")
     set(CPACK_SOURCE_GENERATOR "TGZ")
 
     # Libraries are bundled directly
     set(CPACK_COMPONENT_LIBRARIES_HIDDEN TRUE)
 
     # Bundle Properties
-    #SET(MACOSX_BUNDLE_ICON_FILE icon.icns)
-    SET(MACOSX_BUNDLE_BUNDLE_NAME MMapper)
+   SET(MACOSX_BUNDLE_BUNDLE_NAME MMapper)
     SET(MACOSX_BUNDLE_BUNDLE_VERSION ${VERSION})
     SET(MACOSX_BUNDLE_SHORT_VERSION_STRING ${VERSION})
     SET(MACOSX_BUNDLE_LONG_VERSION_STRING "Version ${VERSION}")
-
 endif (APPLE)
 
 # More General CPack Settings
@@ -390,7 +395,6 @@ set(CPACK_SOURCE_IGNORE_FILES
 set(CPACK_SOURCE_PACKAGE_FILE_NAME
     "${PROJECT_NAME}-${CPACK_PACKAGE_VERSION}-source"
 )
-set(CPACK_PACKAGE_FILE_NAME
-    "${PROJECT_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}"
+set(CPACK_PACKAGE_FILE_NAME    "${PROJECT_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}"
 )
 include(CPack)
