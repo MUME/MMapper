@@ -149,6 +149,7 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/pathmachine
     ${CMAKE_CURRENT_SOURCE_DIR}/preferences
     ${CMAKE_CURRENT_SOURCE_DIR}/proxy
+    ${ZLIB_INCLUDE_DIR}
 )
 
 QT4_WRAP_CPP(mmapper_MOC_SRCS ${mmapper_MOC_HDRS})
@@ -352,8 +353,8 @@ else (SVN_BUILD)
     set(CPACK_PACKAGE_VERSION ${VERSION})
 endif (SVN_BUILD)
 set(CPACK_PACKAGE_VERSION_MAJOR "2")
-set(CPACK_PACKAGE_VERSION_MINOR "0")
-set(CPACK_PACKAGE_VERSION_PATCH "4")
+set(CPACK_PACKAGE_VERSION_MINOR "1")
+set(CPACK_PACKAGE_VERSION_PATCH "0")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "MMapper")
 
 # Components:
@@ -384,6 +385,7 @@ set(CPACK_SOURCE_IGNORE_FILES
     "~$"
     "/\\\\.svn/"
     "/build/"
+    "/winbuild/"
 )
 set(CPACK_SOURCE_PACKAGE_FILE_NAME
     "${PROJECT_NAME}-${CPACK_PACKAGE_VERSION}-source"

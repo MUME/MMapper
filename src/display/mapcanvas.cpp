@@ -1625,12 +1625,14 @@ GLubyte halftone[] = {
         glColor4d(oldcolour[0], oldcolour[1], oldcolour[2], oldcolour[3]);
       }
 
+      // Only display at a certain scale
+      if (m_scaleFactor >= 0.15) {
       // Trail Support
       glTranslated(0, 0, 0.005);
       if (roadindex > 0 && (getTerrainType(room)) != RTT_ROAD) {
         alphaOverlayTexture(m_trailPixmaps[roadindex]);
+        glTranslated(0, 0, 0.005);
       }
-      glTranslated(0, 0, 0.005);
       //RMF_RENT, RMF_SHOP, RMF_WEAPONSHOP, RMF_ARMOURSHOP, RMF_FOODSHOP, RMF_PETSHOP,
       //RMF_GUILD, RMF_SCOUTGUILD, RMF_MAGEGUILD, RMF_CLERICGUILD, RMF_WARRIORGUILD,
       //RMF_RANGERGUILD, RMF_SMOB, RMF_QUEST, RMF_ANY
@@ -1710,6 +1712,7 @@ GLubyte halftone[] = {
         alphaOverlayTexture(m_updatePixmap[0]);
       glDisable(GL_BLEND);
       glDisable(GL_TEXTURE_2D);
+  }
     }
     else
     {
