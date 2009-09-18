@@ -208,6 +208,8 @@ ComparisonResult RoomFactory::compareWeakProps(const Room * room, const ParseEve
           }
           else different = true;
         }
+	else if (diff & EF_ROAD)
+	  tolerance = true;
       }
     }
   }

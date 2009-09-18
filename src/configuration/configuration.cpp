@@ -81,6 +81,7 @@ void Configuration::read()
 
   m_IAC_prompt_parser = conf.value("Use IAC-GA prompt", TRUE).toBool();
   m_removeXmlTags = conf.value("Remove XML tags", TRUE).toBool();
+  m_mpi = conf.value("Use MUME XML MPI", true).toBool();
 
   m_moveForcePatternsList = conf.value("Move force patterns").toStringList();
   m_moveCancelPatternsList = conf.value("Move cancel patterns").toStringList();
@@ -240,6 +241,8 @@ void Configuration::write() const {
 
   conf.setValue("Use IAC-GA prompt", m_IAC_prompt_parser);
   conf.setValue("Remove XML tags", m_removeXmlTags);
+  conf.setValue("Use MUME XML MPI", m_mpi);
+
 
   conf.setValue("Move force patterns", m_moveForcePatternsList);
   conf.setValue("Move cancel patterns", m_moveCancelPatternsList);

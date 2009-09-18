@@ -37,7 +37,7 @@ class Configuration {
     void write() const;
     bool isChanged() { return configurationChanged; }
 
-    bool m_firstRun;
+    bool m_firstRun, m_mpi;
     QPoint windowPosition;
     QSize windowSize;
     QByteArray windowState;

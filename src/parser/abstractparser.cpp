@@ -88,13 +88,13 @@ void AbstractParser::parsePrompt(QString& prompt){
 
   emit sendPromptLineEvent(m_stringBuffer.toAscii());
 
-  switch (sv=(int)((prompt[index]).toAscii()))
-  {
-    case 42: index++;m_promptFlags=SUN_ROOM;break; // *  // sunlight
-    case 33: index++;break; // !  // artifical light
-    case 41: index++;m_promptFlags=SUN_ROOM;break; // )  // moonlight
-    case 111:index++;break; // o  // darkness
-    default:;
+  switch (sv=(int)((prompt[index]).toAscii())) {
+  case 64: index++;m_promptFlags=SUN_ROOM;break; // @  direct sunlight
+  case 42: index++;m_promptFlags=SUN_ROOM;break; // *  indoor/cloudy sun
+  case 33: index++;break;                        // !  artifical light
+  case 41: index++;m_promptFlags=SUN_ROOM;break; // )  moonlight
+  case 111:index++;break;                        // o  darkness
+  default:;
   }
 
   switch ( sv = (int)(prompt[index]).toAscii() )
@@ -129,9 +129,10 @@ void AbstractParser::parseExits(QString& str)
 
   for (int i=7; i<length; i++){
     switch ((int)(str.at(i).toAscii())){
-      case 40: doors=true;break;    // (
-      case 91: doors=true;break;    // [
-      case 61: road=true;break;             // =
+    case 40: doors=true;break;    // (
+    case 91: doors=true;break;    // [
+    case 61: road=true;break;     // =
+    case 45: road=true;break;     // -
 
       case 110:  // n
         if ( (i+2)<length && (str.at(i+2).toAscii()) == 'r') //north

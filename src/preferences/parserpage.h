@@ -51,6 +51,7 @@ public slots:
 	
 	void IACPromptCheckBoxStateChanged(int);
 	void suppressXmlTagsCheckBoxStateChanged(int);
+        void mpiCheckBoxStateChanged(int);
 
 public:
     ParserPage(QWidget *parent = 0);

@@ -44,6 +44,7 @@ ParserPage::ParserPage(QWidget *parent)
 	updateColors();
 
    	IACPromptCheckBox->setChecked(Config().m_IAC_prompt_parser);	
+        mpiCheckBox->setChecked(Config().m_mpi);
 
 	suppressXmlTagsCheckBox->setChecked(Config().m_removeXmlTags);
 	suppressXmlTagsCheckBox->setEnabled(true);
@@ -102,9 +103,16 @@ ParserPage::ParserPage(QWidget *parent)
 		
 	connect( IACPromptCheckBox, SIGNAL(stateChanged(int)),SLOT(IACPromptCheckBoxStateChanged(int)));	
 	connect( suppressXmlTagsCheckBox, SIGNAL(stateChanged(int)),SLOT(suppressXmlTagsCheckBoxStateChanged(int)));	
+        connect( mpiCheckBox, SIGNAL(stateChanged(int)),SLOT(mpiCheckBoxStateChanged(int)));
 
 
 }
+
+void ParserPage::mpiCheckBoxStateChanged(int)
+{
+        Config().m_mpi = mpiCheckBox->isChecked();
+}
+
 
 void ParserPage::suppressXmlTagsCheckBoxStateChanged(int)
 {

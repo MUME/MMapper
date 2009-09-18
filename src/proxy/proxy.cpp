@@ -211,6 +211,11 @@ bool Proxy::init()
     emit log("Proxy", "Connection to server established ...");
         //m_userSocket->flush();
 
+    if (Config().m_mpi) {
+      emit sendToMud(QByteArray("~$#EX\nJahara\n"));
+      emit log("Proxy", "Sent MUME MPI XML request");
+    }
+
     return TRUE;
   }
 //return TRUE;
@@ -228,7 +233,9 @@ void Proxy::userTerminatedConnection()
 void Proxy::mudTerminatedConnection()
 {
   emit log("Proxy", "Mud terminated connection ...");
-  m_thread->exit();
+  sendToUser("\r\nServer closed the connection\r\n\r\nYou can explore world map offline or try to reconnect again...\r\n");
+  sendToUser("\r\n>");
+  //m_thread->exit();
 }
 
 void Proxy::processUserStream() {

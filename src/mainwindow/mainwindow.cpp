@@ -335,14 +335,17 @@ void MainWindow::createActions()
 
   mmapperHomePageAct = new QAction(tr("MMapper &Homepage"), this);
   connect(mmapperHomePageAct, SIGNAL(triggered()), this, SLOT(openMmapperHomepage()));
-  mumeWebsiteAct = new QAction(tr("MUME &Website"), this);
+  mumeWebsiteAct = new QAction(tr("&Website"), this);
   connect(mumeWebsiteAct, SIGNAL(triggered()), this, SLOT(openMumeWebsite()));
-  mumeForumAct = new QAction(tr("MUME &Forum"), this);
+  mumeForumAct = new QAction(tr("&Forum"), this);
   connect(mumeForumAct, SIGNAL(triggered()), this, SLOT(openMumeForum()));
-  mumeWikiAct = new QAction(tr("MUME &Wiki"), this);
+  mumeWikiAct = new QAction(tr("W&iki"), this);
   connect(mumeWikiAct, SIGNAL(triggered()), this, SLOT(openMumeWiki()));
   settingUpMmapperAct = new QAction(tr("&Setting up MMapper"), this);
   connect(settingUpMmapperAct, SIGNAL(triggered()), this, SLOT(openSettingUpMmapper()));
+  newbieAct = new QAction(tr("&Information for Newcomers"), this);
+  newbieAct->setStatusTip("Newbie help on the MUME website");
+  connect(newbieAct, SIGNAL(triggered()), this, SLOT(openNewbieHelp()));
   aboutAct = new QAction(tr("About &MMapper"), this);
   aboutAct->setStatusTip(tr("Show the application's About box"));
   connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
@@ -668,10 +671,12 @@ void MainWindow::setupMenuBar()
 
   helpMenu = menuBar()->addMenu(tr("&Help"));
   helpMenu->addAction(mmapperHomePageAct);
-  helpMenu->addAction(mumeWebsiteAct);
-  helpMenu->addAction(mumeForumAct);
-  helpMenu->addAction(mumeWikiAct);
+  mumeMenu = helpMenu->addMenu(tr("M&UME"));
+  mumeMenu->addAction(mumeWebsiteAct);
+  mumeMenu->addAction(mumeForumAct);
+  mumeMenu->addAction(mumeWikiAct);
   onlineTutorialsMenu = helpMenu->addMenu(tr("Online &Tutorials"));
+  onlineTutorialsMenu->addAction(newbieAct);
   onlineTutorialsMenu->addAction(settingUpMmapperAct);
   helpMenu->addSeparator();
   helpMenu->addAction(aboutAct);
@@ -1397,4 +1402,8 @@ void MainWindow::openMumeWiki()
 void MainWindow::openSettingUpMmapper()
 {
         QDesktopServices::openUrl(QUrl("http://mume.org/wiki/index.php/Guide_to_install_mmapper2_on_Windows"));
+}
+
+void MainWindow::openNewbieHelp() {
+  QDesktopServices::openUrl(QUrl("http://mume.org/newbie.php"));
 }

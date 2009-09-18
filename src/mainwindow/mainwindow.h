@@ -138,6 +138,7 @@ public slots:
   void openMumeForum();
   void openMumeWiki();
   void openSettingUpMmapper();
+  void openNewbieHelp();
 
 protected:
   void closeEvent(QCloseEvent *event);
@@ -183,6 +184,7 @@ private:
   QMenu *searchMenu;
   QMenu *settingsMenu;
   QMenu *helpMenu;
+  QMenu *mumeMenu;
   QMenu *onlineTutorialsMenu;
   QMenu *groupMenu;
 
@@ -208,6 +210,7 @@ private:
   QAction *mumeForumAct;
   QAction *mumeWikiAct;
   QAction *settingUpMmapperAct;
+  QAction *newbieAct;
   QAction *aboutAct;
   QAction *aboutQtAct;
   QAction *prevWindowAct;

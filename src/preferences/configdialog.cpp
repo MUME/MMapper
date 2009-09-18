@@ -45,7 +45,7 @@ ConfigDialog::ConfigDialog(CGroup* gm)
 
   pagesWidget = new QStackedWidget;
   pagesWidget->setMinimumWidth(400);    
-  pagesWidget->setMinimumHeight(480);    
+  pagesWidget->setMinimumHeight(540);    
 
   QPushButton *closeButton = new QPushButton(tr("Close"));
 
