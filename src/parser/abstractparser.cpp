@@ -1185,15 +1185,27 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room* r)
 
     bool door = false;
     bool exit = false;
-    if (ISSET(getFlags(r->exit(j)),EF_DOOR))
-    {
-      door = true;
-      etmp += " {";
-    }
-
+    bool road = false;
+    bool trail = false;
     if (ISSET(getFlags(r->exit(j)),EF_EXIT)) {
       exit = true;
-      if (!door) etmp += " ";
+      
+      if (ISSET(getFlags(r->exit(j)), EF_ROAD))
+	if (getTerrainType(r) == RTT_ROAD) {
+	  road = true;
+	  etmp += " =";
+	}
+	else {
+	  trail = true;
+	  etmp += " -";
+	}
+      else etmp += " ";
+      
+    
+      if (ISSET(getFlags(r->exit(j)),EF_DOOR)) {
+	door = true;
+	etmp += "{";
+      }
 
       switch(j)
       {
@@ -1207,18 +1219,10 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room* r)
       }
     }
 
-    if (door)
-    {
-                /*if (getDoorName(r->exit(j))!="")
-      etmp += "/"+getDoorName(r->exit(j))+"}";
-      else*/
-      etmp += "},";
-    }
-    else
-    {
-      if (exit)
-        etmp += ",";
-    }
+    if (door) etmp += "}";
+    if (road) etmp += "=";
+    else if (trail) etmp += "-";
+    if (exit) etmp += ",";
   }
   etmp = etmp.left(etmp.length()-1);
   etmp += ".";
@@ -1266,7 +1270,6 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room* r)
   }
 
   emit sendToUser(etmp.toAscii()+cn);
-
 }
 
 void AbstractParser::sendPromptSimulationToUser()
