@@ -7,6 +7,8 @@ set(QT_USE_QTXML TRUE)
 set(QT_USE_QTOPENGL TRUE)
 include(${QT_USE_FILE})
 
+find_package(OpenGL REQUIRED)
+
 if (NOT MINGW)
     find_package(ZLIB REQUIRED)
 else (NOT MINGW)

@@ -156,6 +156,7 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/pathmachine
     ${CMAKE_CURRENT_SOURCE_DIR}/preferences
     ${CMAKE_CURRENT_SOURCE_DIR}/proxy
+    ${OPENGL_INCLUDE_DIR}
     ${ZLIB_INCLUDE_DIR}
 )
 
@@ -174,6 +175,8 @@ add_executable(mmapper WIN32 MACOSX_BUNDLE
 target_link_libraries(mmapper
     ${QT_QTMAIN_LIBRARY}
     ${QT_LIBRARIES}
+    ${OPENGL_gl_LIBRARY}
+    ${ZLIB_LIBRARIES}
 )
 
 # Begin CPack Settings
