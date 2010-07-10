@@ -1,19 +1,21 @@
 #!/bin/bash
-PROCESSORS=`grep processor /proc/cpuinfo | wc -l`
-echo Found $PROCESSORS processors
-declare -i JFLAG
-JFLAG=$PROCESSORS+1
-echo Going to run with $JFLAG jobs
 echo If you have problems make sure you have all the required dependencies
 echo \(i.e. libqt4-dev, libqt4-opengl-dev, zlib1g-dev\)
 echo 
 
-if [ -d build ]; then
-    cd build
-    make clean
+declare -i JFLAG
+if [ -e /proc/cpuinfo ]; then
+    PROCESSORS=`grep '^processor\s*:' /proc/cpuinfo | wc -l`
+    JFLAG=$PROCESSORS+1
 else
-    mkdir build
-    cd build
+    JFLAG=2
 fi
 
-cmake ../ -DCMAKE_INSTALL_REFIX=. && make -j$JFLAG && make package
+[ -d build ] && rm -r build
+
+mkdir -p build && cd build || exit 1
+
+cmake ../ -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=. \
+-DMCLIENT_BIN_DIR=. -DMCLIENT_PLUGINS_DIR=plugins &&        \
+make -j$JFLAG && make install
+ln -sf ../config config

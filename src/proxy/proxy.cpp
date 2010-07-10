@@ -180,6 +180,12 @@ bool Proxy::init()
 
   //m_userSocket->write("Connection to client established ...\r\n", 38);
   emit log("Proxy", "Connection to client established ...");
+
+  QByteArray ba("\033[1;37;41m"
+		" Welcome to MMapper!\r\n"
+		"\r\n\033[0m"
+		"\033[37;41m Type \033[1m_help\033[0m\033[37;41m for help.\r\n\033[0m");
+  m_userSocket->write(ba);
   m_userSocket->flush();
 
   m_mudSocket = new QTcpSocket(this);
