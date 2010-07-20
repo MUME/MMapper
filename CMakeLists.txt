@@ -17,7 +17,7 @@ endif (NOT MINGW)
 
 # Version
 set(VERSION "2.1.0")
-add_definitions(-DMMAPPER_VERSION="${VERSION}")
+add_definitions(-DMMAPPER_VERSION="${VERSION}" -DWITH_SPLASH)
 message(STATUS "MMapper version ${VERSION} (${CMAKE_BUILD_TYPE} distribution)")
 
 # Get SVN revision number
@@ -53,18 +53,11 @@ if (APPLE)
     # $ sudo ln -s /Developer/SDKs/MacOSX10.4u.sdk/usr/lib/crt1.o  /Developer/SDKs/MacOSX10.4u.sdk/usr/lib/crt1.10.5.o
 
     # In order to build a universal binary we need the following line:
-    set(CMAKE_OSX_ARCHITECTURES ppc;i386)
+    #set(CMAKE_OSX_ARCHITECTURES ppc;i386)
 
     # To support much older OSX machines we need the following lines:
     #set(CMAKE_OSX_SYSROOT /Developer/SDKs/MacOSX10.4u.sdk)
     #set(CMAKE_FIND_ROOT_PATH /Developer/SDKs/MacOSX10.4u.sdk)
 endif (APPLE)
-
-# Visual C++ Parallel Builds
-if ("$ENV{QMAKESPEC}" MATCHES "win32-msvc")
-    message(STATUS "Enabling parallel builds with the -MP CFLAG")
-    SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -MP")
-    SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -MP")
-endif ("$ENV{QMAKESPEC}" MATCHES "win32-msvc")
 
 add_subdirectory(src)

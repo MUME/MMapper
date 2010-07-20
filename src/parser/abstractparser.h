@@ -40,28 +40,35 @@ enum CommandIdType   { CID_NORTH = 0, CID_SOUTH, CID_EAST, CID_WEST, CID_UP, CID
 
 enum DoorActionType { DAT_OPEN, DAT_CLOSE, DAT_LOCK, DAT_UNLOCK, DAT_PICK, DAT_ROCK, DAT_BASH, DAT_BREAK, DAT_BLOCK, DAT_NONE };
 
-#define ROAD_N bit3
-#define ROAD_S bit6
-#define ROAD_E bit9
-#define ROAD_W bit12
-#define ROAD_U bit15
-#define ROAD_D bit18
-
 #define EXIT_N bit1
-#define EXIT_S bit4
-#define EXIT_E bit7
-#define EXIT_W bit10
-#define EXIT_U bit13
-#define EXIT_D bit16
+#define EXIT_S bit5
+#define EXIT_E bit9
+#define EXIT_W bit13
+#define EXIT_U bit17
+#define EXIT_D bit21
 
 #define DOOR_N bit2
-#define DOOR_S bit5
-#define DOOR_E bit8
-#define DOOR_W bit11
-#define DOOR_U bit14
-#define DOOR_D bit17
+#define DOOR_S bit6
+#define DOOR_E bit10
+#define DOOR_W bit14
+#define DOOR_U bit18
+#define DOOR_D bit22
 
-#define EXITS_FLAGS_VALID bit19
+#define ROAD_N bit3
+#define ROAD_S bit7
+#define ROAD_E bit11
+#define ROAD_W bit15
+#define ROAD_U bit19
+#define ROAD_D bit23
+
+#define CLIMB_N bit4
+#define CLIMB_S bit8
+#define CLIMB_E bit12
+#define CLIMB_W bit16
+#define CLIMB_U bit20
+#define CLIMB_D bit24
+
+#define EXITS_FLAGS_VALID bit25
 typedef quint32 ExitsFlagsType;
 
 // 0-3 terrain type

@@ -28,8 +28,6 @@
 #include <QtGui>
 #include <QtCore>
 
-#define WITH_SPLASH
-
 #include "mainwindow.h"
 #include "coordinate.h"
 #include "pathmachine.h"

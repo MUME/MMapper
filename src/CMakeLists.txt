@@ -9,8 +9,7 @@ set(mmapper_SRCS
     expandoracommon/component.cpp
     expandoracommon/coordinate.cpp
     expandoracommon/frustum.cpp
-    expandoracommon/init.cpp
-    expandoracommon/mmapper2event.cpp
+   expandoracommon/mmapper2event.cpp
     expandoracommon/parseevent.cpp
     expandoracommon/property.cpp
     mainwindow/aboutdialog.cpp
@@ -170,7 +169,12 @@ QT4_WRAP_CPP(mmapper_MOC_SRCS ${mmapper_MOC_HDRS})
 QT4_WRAP_UI(mmapper_UIS_H ${mmapper_UIS})
 QT4_ADD_RESOURCES(mmapper_RCC_SRCS ${mmapper_RCS})
 
-add_executable(mmapper WIN32 MACOSX_BUNDLE
+# Build the executable
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(EXECUTABLE_FLAGS WIN32 MACOSX_BUNDLE)
+endif (CMAKE_BUILD_TYPE STREQUAL "Release")
+
+add_executable(mmapper ${EXECUTABLE_FLAGS}
     ${mmapper_SRCS}
     ${mmapper_MOC_SRCS}
     ${mmapper_UIS_H}
@@ -295,7 +299,7 @@ if (WIN32)
     set(CPACK_PACKAGE_EXECUTABLES "" "") # Broken in CMake (prefixes bin/)
     set(CPACK_NSIS_MENU_LINKS "mmapper.exe;MMapper;Installation Guide.URL;Installation Guide")
     set(CPACK_NSIS_INSTALLED_ICON_NAME "mmapper.exe")
-    set(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} Install MMapper")
+    set(CPACK_NSIS_DISPLAY_NAME "MMapper")
     set(CPACK_NSIS_HELP_LINK "http:\\\\\\\\sourceforge.net\\\\projects\\\\mmapper")
     set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/win32\\\\m.ico")
     set(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\m.png")
@@ -318,14 +322,15 @@ if (APPLE)
     # Install Executables
     install(
         TARGETS mmapper
-	BUNDLE DESTINATION MMapper
+	BUNDLE DESTINATION . #MMapper
+	RUNTIME DESTINATION .
 	COMPONENT applications
     )
 
     # Install Map
     install(
         FILES ${PROJECT_SOURCE_DIR}/map/arda.mm2
-	DESTINATION MMapper
+	DESTINATION . #MMapper
 	COMPONENT map
     )
 
@@ -333,7 +338,7 @@ if (APPLE)
     install(FILES
         "${PROJECT_SOURCE_DIR}/doc/Installation Guide.URL"
 	"${PROJECT_SOURCE_DIR}/doc/mapping_advice.txt"
-	DESTINATION MMapper
+	DESTINATION . #MMapper
 	COMPONENT help
     )
     

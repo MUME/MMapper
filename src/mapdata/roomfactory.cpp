@@ -190,7 +190,7 @@ ComparisonResult RoomFactory::compareWeakProps(const Room * room, const ParseEve
       if (mFlags & EF_NO_MATCH) continue;
       else
       {
-        ExitsFlagsType eThisExit = eFlags >> (dir * 3);
+        ExitsFlagsType eThisExit = eFlags >> (dir * 4);
         ExitsFlagsType diff = (eThisExit ^ mFlags);
         if (diff & (EF_EXIT | EF_DOOR))
         {
@@ -198,10 +198,10 @@ ComparisonResult RoomFactory::compareWeakProps(const Room * room, const ParseEve
           {
             if (!tolerance)
             {
-              if (!(mFlags & EF_EXIT) && (eThisExit & EF_DOOR))
-                tolerance = true;
-              else if (mFlags & EF_DOOR)
-                tolerance = true;
+              if (!(mFlags & EF_EXIT) && (eThisExit & EF_DOOR)) // We have no exit on record and there is a secret door
+		tolerance = true;
+	      else if (mFlags & EF_DOOR) // We have a secret door on record
+		tolerance = true;
               else return CR_DIFFERENT;
             }
             else return CR_DIFFERENT;
@@ -209,6 +209,8 @@ ComparisonResult RoomFactory::compareWeakProps(const Room * room, const ParseEve
           else different = true;
         }
 	else if (diff & EF_ROAD)
+	  tolerance = true;
+	else if (diff & EF_CLIMB)
 	  tolerance = true;
       }
     }
@@ -231,15 +233,15 @@ void RoomFactory::update(Room * room, const ParseEvent * event) const
       for (int dir = 0; dir < 6; ++dir)
       {
 
-        ExitFlags mFlags = (eFlags >> (dir * 3) & (EF_EXIT | EF_DOOR | EF_ROAD));
+        ExitFlags mFlags = (eFlags >> (dir * 4) & (EF_EXIT | EF_DOOR | EF_ROAD | EF_CLIMB));
 
         Exit & e = room->exit(dir);
-        if (getFlags(e) & EF_DOOR && !(mFlags & EF_DOOR))
+        if (getFlags(e) & EF_DOOR && !(mFlags & EF_DOOR)) // We have a secret door on record
         {
           mFlags |= EF_DOOR;
           mFlags |= EF_EXIT;
         }
-        if ((mFlags & EF_DOOR) && (mFlags & EF_ROAD))
+        if ((mFlags & EF_DOOR) && (mFlags & EF_ROAD)) // TODO: Door and road is confusing??
         {
           mFlags |= EF_NO_MATCH;
         }
@@ -251,7 +253,7 @@ void RoomFactory::update(Room * room, const ParseEvent * event) const
       for (int dir = 0; dir < 6; ++dir)
       {
         Exit & e = room->exit(dir);
-        ExitFlags mFlags = (eFlags >> (dir * 3) & (EF_EXIT | EF_DOOR | EF_ROAD));
+        ExitFlags mFlags = (eFlags >> (dir * 4) & (EF_EXIT | EF_DOOR | EF_ROAD | EF_CLIMB));
         updateExit(e, mFlags);
       }
     }

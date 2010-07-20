@@ -5,7 +5,7 @@ REM ####
 IF /i "%QMAKESPEC%" == "" GOTO :noqmakespec
 FOR /f %%j in ("qmake.exe") DO SET QMAKE_EXISTS=%%~dp$PATH:j
 IF /i "%QMAKE_EXISTS%" == "" GOTO :noqmake
-IF /i "%1" == "" GOTO :release
+IF /i "%1" == "" GOTO :debug
 IF /i "%1" == "Debug" GOTO :debug
 IF /i "%1" == "Release" GOTO :release
 GOTO :help
@@ -21,7 +21,7 @@ GOTO :start
 :start
 IF NOT EXIST winbuild MKDIR winbuild
 CD winbuild
-SET DFLAGS=-DZLIB_LIBRARY=%ZLIB_LIBRARY% -DZLIB_INCLUDE_DIR=%ZLIB_INCLUDE_DIR% -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DCMAKE_INSTALL_PREFIX=.
+SET DFLAGS=-DZLIB_LIBRARY=%ZLIB_LIBRARY% -DZLIB_INCLUDE_DIR=%ZLIB_INCLUDE_DIR% -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DCMAKE_INSTALL_PREFIX=. -DMCLIENT_BIN_DIR=. -DMCLIENT_PLUGINS_DIR=plugins
 
 REM ####
 REM #### COMPILER SELECTION
@@ -51,6 +51,11 @@ REM ####
 :msvc
 ECHO -- Microsoft Visual C++ compiler found
 cmake ../ %DFLAGS% -G "NMake Makefiles"
+FOR /f %%j in ("jom.exe") DO SET JOM_EXISTS=%%~dp$PATH:j
+IF /i "%JOM_EXISTS%" == "" GOTO :nojom
+jom && jom install
+GOTO :success
+:nojom
 nmake /NOLOGO && nmake /NOLOGO install
 GOTO :success
 

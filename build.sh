@@ -1,17 +1,18 @@
 #!/bin/bash
-echo If you have problems make sure you have all the required dependencies
-echo \(i.e. libqt4-dev, libqt4-opengl-dev, zlib1g-dev\)
-echo 
-
 declare -i JFLAG
 if [ -e /proc/cpuinfo ]; then
+    # Linux
     PROCESSORS=`grep '^processor\s*:' /proc/cpuinfo | wc -l`
+    JFLAG=$PROCESSORS+1
+elif [ -e /usr/sbin/system_profiler ]; then
+    # Mac OS X
+    PROCESSORS=`system_profiler SPHardwareDataType -detailLevel mini | grep "Total Number Of Cores:" | cut -d : -f 2`
     JFLAG=$PROCESSORS+1
 else
     JFLAG=2
 fi
 
-[ -d build ] && rm -r build
+#[ -d build ] && rm -r build
 
 mkdir -p build && cd build || exit 1
 
