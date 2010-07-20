@@ -314,7 +314,7 @@ if (APPLE)
     add_custom_command(
         TARGET mmapper
 	POST_BUILD
-        COMMAND macdeployqt ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app
+        COMMAND macdeployqt-4.6 ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	COMMENT "Deploying the Qt Framework onto the bundle"
     )
@@ -322,7 +322,7 @@ if (APPLE)
     # Install Executables
     install(
         TARGETS mmapper
-	BUNDLE DESTINATION . #MMapper
+	BUNDLE DESTINATION MMapper
 	RUNTIME DESTINATION .
 	COMPONENT applications
     )
@@ -330,7 +330,7 @@ if (APPLE)
     # Install Map
     install(
         FILES ${PROJECT_SOURCE_DIR}/map/arda.mm2
-	DESTINATION . #MMapper
+	DESTINATION MMapper
 	COMPONENT map
     )
 
@@ -338,7 +338,7 @@ if (APPLE)
     install(FILES
         "${PROJECT_SOURCE_DIR}/doc/Installation Guide.URL"
 	"${PROJECT_SOURCE_DIR}/doc/mapping_advice.txt"
-	DESTINATION . #MMapper
+	DESTINATION MMapper
 	COMPONENT help
     )
     
