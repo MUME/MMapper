@@ -133,8 +133,8 @@ void AbstractParser::parseExits(QString& str)
     case 35: doors=true;break;    // #
     case 61: road=true;break;     // =
     case 45: road=true;break;     // -
-    case 47: climb=true;break;    // //
-    case 92: climb=true;break;    // \
+    case 47: climb=true;break;    // /
+    case 92: climb=true;break;    // \\
     case 123: portal=true;break;  // {
 
     case 110:  // n

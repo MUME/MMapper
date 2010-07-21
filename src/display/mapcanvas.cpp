@@ -1480,8 +1480,8 @@ GLubyte halftone[] = {
       together = true;
 
       // no need for duplicating names (its spammy)
-      QString sourceName = getDoorName(sourceRoom->exit(sourceDir));
-      QString targetName = getDoorName(targetRoom->exit(targetDir));
+      const QString &sourceName = getDoorName(sourceRoom->exit(sourceDir));
+      const QString &targetName = getDoorName(targetRoom->exit(targetDir));
       if (sourceName != targetName)
         name =  sourceName + "/" + targetName;
       else
@@ -1535,6 +1535,7 @@ GLubyte halftone[] = {
     // text
     glColor4d(1.0, 1.0, 1.0, 1.0);
     renderText (0.1, 0.25, 1.2f, name, *m_glFont );
+    glEnable(GL_DEPTH_TEST);
 
     glPopMatrix();
   }
