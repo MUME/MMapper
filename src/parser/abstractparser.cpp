@@ -120,6 +120,7 @@ void AbstractParser::parsePrompt(QString& prompt){
 
 void AbstractParser::parseExits(QString& str)
 {
+  m_exitsFlags = 0;
   bool doors=FALSE;
   bool road=FALSE;
   bool climb=FALSE;
@@ -128,14 +129,14 @@ void AbstractParser::parseExits(QString& str)
   int length = str.length();
   for (int i=7; i<length; i++){
     switch ((int)(str.at(i).toAscii())){
-    case 40: doors=true;break;    // (
-    case 91: doors=true;break;    // [
-    case 35: doors=true;break;    // #
-    case 61: road=true;break;     // =
-    case 45: road=true;break;     // -
-    case 47: climb=true;break;    // /
-    case 92: climb=true;break;    // \\
-    case 123: portal=true;break;  // {
+    case 40: doors=true;break;    /* ( */
+    case 91: doors=true;break;    /* [ */
+    case 35: doors=true;break;    /* # */
+    case 61: road=true;break;     /* = */
+    case 45: road=true;break;     /* - */
+    case 47: climb=true;break;    /* / */
+    case 92: climb=true;break;    /* \ */
+    case 123: portal=true;break;  /* { */
 
     case 110:  // n
       if ( (i+2)<length && (str.at(i+2).toAscii()) == 'r') //north
