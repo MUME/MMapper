@@ -1,3 +1,8 @@
+2010-08-22 12:04  jahara
+	* Added MUME MPI XML command
+	* Support for new climbable exits
+	* Fixed various bugs (OpenGL, parser, etc)
+
 2009-05-21 11:20  jahara/kalev/waba
 	* CMake is now used as the default builder (Kalev/Jahara)
 	* Added new base map function and map recovery on crash (Waba)

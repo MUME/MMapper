@@ -128,15 +128,11 @@ void MumeXmlParser::parse(const QByteArray& line)
   //quint8* dataline = (quint8*) line.data();
 
   int index;
-  for (index = 0; index < line.size(); index++)
-  {
-    if (m_readingTag)
-    {
-      if (line.at(index) == '>')
-      {
+  for (index = 0; index < line.size(); index++) {
+    if (m_readingTag) {
+      if (line.at(index) == '>') {
         //send tag
-        if (!m_tempTag.isEmpty())
-          element( m_tempTag );
+        if (!m_tempTag.isEmpty()) element( m_tempTag );
 
         m_tempTag.clear();
 
@@ -144,14 +140,11 @@ void MumeXmlParser::parse(const QByteArray& line)
         continue;
       }
       m_tempTag.append(line.at(index));
-    }
-    else
-    {
-      if (line.at(index) == '<')
-      {
+	  
+    } else {
+      if (line.at(index) == '<') {
         //send characters
-        if (!m_tempCharacters.isEmpty())
-          characters( m_tempCharacters );
+        if (!m_tempCharacters.isEmpty()) characters( m_tempCharacters );
         m_tempCharacters.clear();
 
         m_readingTag = true;
@@ -161,11 +154,9 @@ void MumeXmlParser::parse(const QByteArray& line)
     }
   }
 
-  if (!m_readingTag)
-  {
+  if (!m_readingTag) {
     //send characters
-    if (!m_tempCharacters.isEmpty())
-      characters( m_tempCharacters );
+    if (!m_tempCharacters.isEmpty()) characters( m_tempCharacters );
     m_tempCharacters.clear();
   }
 }
@@ -315,8 +306,7 @@ bool MumeXmlParser::characters(QByteArray& ch)
   ch.replace(greatherThanTemplate, greatherThanChar);
   ch.replace(lessThanTemplate, lessThanChar);
 
-  m_stringBuffer = QString::fromAscii(ch.constData(), ch.size());
-  m_stringBuffer = m_stringBuffer.simplified();
+  m_stringBuffer = QString(ch).simplified();
   latinToAscii(m_stringBuffer);
 
   switch (m_xmlMode)
@@ -383,13 +373,12 @@ bool MumeXmlParser::characters(QByteArray& ch)
       break;
 
     case XML_PROMPT:
-      if  (m_descriptionReady)
-      {
-        if (m_examine) m_examine = false; // stop bypassing brief-mode
+      if  (m_descriptionReady) {
+        m_examine = false; // stop bypassing brief-mode
 
-	// Append the IAC GA
-	m_stringBuffer += (unsigned char) 255; // IAC
-	m_stringBuffer += (unsigned char) 249; // GA
+		// Append the IAC GA
+		m_stringBuffer += (unsigned char) 255; // IAC
+		m_stringBuffer += (unsigned char) 249; // GA
 
         parsePrompt(m_stringBuffer);
         move();
@@ -403,8 +392,7 @@ bool MumeXmlParser::characters(QByteArray& ch)
         }
       }
 
-
-      ch = ch.trimmed();
+      //ch = ch.trimmed();
       emit sendToUser(ch);
       break;
 

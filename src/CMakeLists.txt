@@ -190,7 +190,7 @@ target_link_libraries(mmapper
 )
 
 # Begin CPack Settings
-include(InstallRequiredSystemLibraries)
+#include(InstallRequiredSystemLibraries)
 
 # Linux Install Settings
 if (UNIX AND NOT APPLE)
@@ -282,6 +282,14 @@ if (WIN32)
 	    DESTINATION .
 	    COMPONENT libraries
 	)
+    else (MINGW)
+	# VC++ Redistributable
+	install(FILES
+		${CMAKE_CURRENT_SOURCE_DIR}/resources/win32/vcredist_x86.exe
+	        DESTINATION .
+	        COMPONENT libraries
+	)
+	set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "ExecWait '\\\"$INSTDIR\\\\vcredist_x86.exe\\\" /q:a'")
     endif (MINGW)
 
     # Install Help Documentation
@@ -305,6 +313,7 @@ if (WIN32)
     set(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\m.png")
     set(CPACK_NSIS_INSTALLED_ICON_NAME "${CMAKE_CURRENT_SOURCE_DIR}/resources/win32\\\\m.ico")
     set(CPACK_NSIS_COMPRESSOR "/SOLID lzma")
+    set(CPACK_NSIS_MODIFY_PATH "ON")
 
 endif (WIN32)
 
