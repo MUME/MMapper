@@ -1,6 +1,5 @@
 set(mmapper_SRCS
     main.cpp
-    3rdparty/qtiocompressor.cpp
     configuration/configuration.cpp
     display/connectionselection.cpp
     display/mapcanvas.cpp
@@ -95,7 +94,6 @@ if (APPLE)
  endif (APPLE)
 
 set(mmapper_MOC_HDRS
-    3rdparty/qtiocompressor.h
     display/connectionselection.h
     display/mapcanvas.h
     display/mapwindow.h
@@ -147,7 +145,6 @@ set(mmapper_UIS
 include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty
     ${CMAKE_CURRENT_SOURCE_DIR}/configuration
     ${CMAKE_CURRENT_SOURCE_DIR}/display
     ${CMAKE_CURRENT_SOURCE_DIR}/expandoracommon
@@ -163,6 +160,7 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/proxy
     ${OPENGL_INCLUDE_DIR}
     ${ZLIB_INCLUDE_DIR}
+    ${QTIOCOMPRESSOR_INCLUDE_DIRS}
 )
 
 QT4_WRAP_CPP(mmapper_MOC_SRCS ${mmapper_MOC_HDRS})
@@ -187,6 +185,7 @@ target_link_libraries(mmapper
     ${QT_LIBRARIES}
     ${OPENGL_gl_LIBRARY}
     ${ZLIB_LIBRARIES}
+    ${QTIOCOMPRESSOR_LIBRARIES}
 )
 
 # Begin CPack Settings
