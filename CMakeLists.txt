@@ -9,10 +9,17 @@ include(${QT_USE_FILE})
 
 find_package(OpenGL REQUIRED)
 
-# Use bundled copy of qtiocompressor
-set(QTIOCOMPRESSOR_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/3rdparty/qtiocompressor)
-set(QTIOCOMPRESSOR_LIBRARIES qtiocompressor)
-add_subdirectory(3rdparty/qtiocompressor)
+# try to find system copy of qtiocompressor
+find_path(QTIOCOMPRESSOR_INCLUDE_DIRS qtiocompressor.h PATH_SUFFIXES QtSolutions)
+find_library(QTIOCOMPRESSOR_LIBRARIES QtSolutions_IOCompressor-2.3)
+if (QTIOCOMPRESSOR_INCLUDE_DIRS AND QTIOCOMPRESSOR_LIBRARIES)
+    message(STATUS "Found QtIOCompressor: ${QTIOCOMPRESSOR_LIBRARIES}")
+else()
+    message(STATUS "QtIOCompressor not found; using bundled copy.")
+    add_subdirectory(3rdparty/qtiocompressor)
+    set(QTIOCOMPRESSOR_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/3rdparty/qtiocompressor)
+    set(QTIOCOMPRESSOR_LIBRARIES qtiocompressor)
+endif()
 
 if (NOT MINGW)
     find_package(ZLIB REQUIRED)
