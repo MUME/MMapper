@@ -191,12 +191,10 @@ bool MumeXmlParser::element( const QByteArray& line  )
           break;
         case 'm':
           if (length > 8)
-            switch (line.at(8))
-          {
+            switch (line.at(8)) {
             case ' ':
-              if (length > 13)
-                switch (line.at(13))
-              {
+              if (length > 14)
+                switch (line.at(14)) {
                 case 'n':
                   m_move = CID_NORTH;
                   break;
@@ -215,12 +213,12 @@ bool MumeXmlParser::element( const QByteArray& line  )
                 case 'd':
                   m_move = CID_DOWN;
                   break;
-              }
+		};
               break;
             case '/':
               m_move = CID_NONE;
               break;
-          }
+	    }
           break;
       };
       break;

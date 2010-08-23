@@ -322,7 +322,7 @@ if (APPLE)
     add_custom_command(
         TARGET mmapper
 	POST_BUILD
-        COMMAND macdeployqt-4.6 ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app
+        COMMAND macdeployqt ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	COMMENT "Deploying the Qt Framework onto the bundle"
     )
