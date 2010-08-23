@@ -10,9 +10,9 @@ include(${QT_USE_FILE})
 find_package(OpenGL REQUIRED)
 
 # Use bundled copy of qtiocompressor
-set(QTIOCOMPRESSOR_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/src/3rdparty)
+set(QTIOCOMPRESSOR_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/3rdparty/qtiocompressor)
 set(QTIOCOMPRESSOR_LIBRARIES qtiocompressor)
-add_subdirectory(src/3rdparty)
+add_subdirectory(3rdparty/qtiocompressor)
 
 if (NOT MINGW)
     find_package(ZLIB REQUIRED)
