@@ -306,7 +306,8 @@ bool MumeXmlParser::characters(QByteArray& ch)
   ch.replace(greatherThanTemplate, greatherThanChar);
   ch.replace(lessThanTemplate, lessThanChar);
 
-  m_stringBuffer = QString(ch).simplified();
+  m_stringBuffer = QString::fromAscii(ch.constData(), ch.size());
+  m_stringBuffer = m_stringBuffer.simplified();
   latinToAscii(m_stringBuffer);
 
   switch (m_xmlMode)
