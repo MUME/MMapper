@@ -57,10 +57,12 @@ class MumeXmlParser : public AbstractParser
     QFile* file;
 #endif
 
-    static const QByteArray greatherThanChar;
+    static const QByteArray greaterThanChar;
     static const QByteArray lessThanChar;
-    static const QByteArray greatherThanTemplate;
+    static const QByteArray greaterThanTemplate;
     static const QByteArray lessThanTemplate;
+    static const QByteArray ampersand;
+    static const QByteArray ampersandTemplate;
 
     void parseMudCommands(QString& str);
 

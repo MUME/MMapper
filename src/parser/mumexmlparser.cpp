@@ -35,10 +35,12 @@
 
 #include <qregexp.h>
 
-const QByteArray MumeXmlParser::greatherThanChar(">");
+const QByteArray MumeXmlParser::greaterThanChar(">");
 const QByteArray MumeXmlParser::lessThanChar("<");
-const QByteArray MumeXmlParser::greatherThanTemplate("&gt;");
+const QByteArray MumeXmlParser::greaterThanTemplate("&gt;");
 const QByteArray MumeXmlParser::lessThanTemplate("&lt;");
+const QByteArray MumeXmlParser::ampersand("&");
+const QByteArray MumeXmlParser::ampersandTemplate("&amp;");
 
 
 MumeXmlParser::MumeXmlParser(MapData* md, QObject *parent) :
@@ -303,8 +305,9 @@ bool MumeXmlParser::characters(QByteArray& ch)
   //quint8* dataline = (quint8*) ch.data();
 
   // replace > and < chars
-  ch.replace(greatherThanTemplate, greatherThanChar);
+  ch.replace(greaterThanTemplate, greaterThanChar);
   ch.replace(lessThanTemplate, lessThanChar);
+  ch.replace(ampersandTemplate, ampersand);
 
   m_stringBuffer = QString::fromAscii(ch.constData(), ch.size());
   m_stringBuffer = m_stringBuffer.simplified();
