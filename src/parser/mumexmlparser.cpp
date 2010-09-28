@@ -318,12 +318,10 @@ bool MumeXmlParser::characters(QByteArray& ch)
     case XML_NONE:        //non room info
       if (m_stringBuffer.isEmpty()) // standard end of description parsed
       {
-        if (m_readingRoomDesc == true)
-        {
+        if (m_readingRoomDesc) {
           m_readingRoomDesc = false; // we finished read desc mode
           m_descriptionReady = true;
-          if (Config().m_emulatedExits)
-            emulateExits();
+          if (Config().m_emulatedExits) emulateExits();
         }
       }
       else {
@@ -374,14 +372,19 @@ bool MumeXmlParser::characters(QByteArray& ch)
       break;
 
     case XML_PROMPT:
+      if (m_readingRoomDesc) { // fixes compact mode
+          m_readingRoomDesc = false; // we finished read desc mode
+          m_descriptionReady = true;
+          if (Config().m_emulatedExits) emulateExits();
+      }
       if  (m_descriptionReady) {
         m_examine = false; // stop bypassing brief-mode
 
         removeAnsiMarks(m_stringBuffer); // remove color marks
 
-		// Append the IAC GA
-		m_stringBuffer += (unsigned char) 255; // IAC
-		m_stringBuffer += (unsigned char) 249; // GA
+	// Append the IAC GA
+	m_stringBuffer += (unsigned char) 255; // IAC
+	m_stringBuffer += (unsigned char) 249; // GA
 
         parsePrompt(m_stringBuffer);
         move();
