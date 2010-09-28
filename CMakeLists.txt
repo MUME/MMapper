@@ -9,6 +9,12 @@ include(${QT_USE_FILE})
 
 find_package(OpenGL REQUIRED)
 
+if (NOT MINGW)
+    find_package(ZLIB REQUIRED)
+else (NOT MINGW)
+    message(STATUS "Warning: MingW requires zlib to be installed manually")
+endif (NOT MINGW)
+
 # try to find system copy of qtiocompressor
 find_path(QTIOCOMPRESSOR_INCLUDE_DIRS qtiocompressor.h PATH_SUFFIXES QtSolutions)
 find_library(QTIOCOMPRESSOR_LIBRARIES QtSolutions_IOCompressor-2.3)
@@ -21,14 +27,8 @@ else()
     set(QTIOCOMPRESSOR_LIBRARIES qtiocompressor)
 endif()
 
-if (NOT MINGW)
-    find_package(ZLIB REQUIRED)
-else (NOT MINGW)
-    message(STATUS "Warning: MingW requires zlib to be installed manually")
-endif (NOT MINGW)
-
 # Version
-set(VERSION "2.1.0")
+set(VERSION "2.1.1")
 add_definitions(-DMMAPPER_VERSION="${VERSION}" -DWITH_SPLASH)
 message(STATUS "MMapper version ${VERSION} (${CMAKE_BUILD_TYPE} distribution)")
 

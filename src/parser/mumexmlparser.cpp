@@ -193,34 +193,34 @@ bool MumeXmlParser::element( const QByteArray& line  )
           if (length > 8)
             switch (line.at(8)) {
             case ' ':
-	      if (length > 13) {
-		int pos = (line.at(13) != '"') ? 13 : 14;
-                switch (line.at(pos)) {
-                case 'n':
-                  m_move = CID_NORTH;
-                  break;
-                case 's':
-                  m_move = CID_SOUTH;
-                  break;
-                case 'e':
-                  m_move = CID_EAST;
-                  break;
-                case 'w':
-                  m_move = CID_WEST;
-                  break;
-                case 'u':
-                  m_move = CID_UP;
-                  break;
-                case 'd':
-                  m_move = CID_DOWN;
-                  break;
-		};
-	      }
+			  if (length > 13) {
+			        int pos = (line.at(13) == '"') ? 14 : 13;
+					switch (line.at(13)) {
+					case 'n':
+					  m_move = CID_NORTH;
+					  break;
+					case 's':
+					  m_move = CID_SOUTH;
+					  break;
+					case 'e':
+					  m_move = CID_EAST;
+					  break;
+					case 'w':
+					  m_move = CID_WEST;
+					  break;
+					case 'u':
+					  m_move = CID_UP;
+					  break;
+					case 'd':
+					  m_move = CID_DOWN;
+					  break;
+				};
+			  }
               break;
             case '/':
               m_move = CID_NONE;
               break;
-	    }
+			};
           break;
       };
       break;
@@ -323,8 +323,7 @@ bool MumeXmlParser::characters(QByteArray& ch)
             emulateExits();
         }
       }
-      else
-      {
+      else {
       //str=removeAnsiMarks(m_stringBuffer);
         parseMudCommands(m_stringBuffer);
       }
@@ -337,8 +336,7 @@ bool MumeXmlParser::characters(QByteArray& ch)
         break;
 
     case XML_NAME:
-      if  (m_descriptionReady)
-      {
+      if  (m_descriptionReady) {
         move();
       }
 
@@ -358,24 +356,25 @@ bool MumeXmlParser::characters(QByteArray& ch)
 
       case XML_DESCRIPTION: // static line
         removeAnsiMarks(m_stringBuffer) ; //remove color marks
-    //isStaticRoomDescriptionLine(m_stringBuffer) ; //remove color marks
         m_staticRoomDesc += m_stringBuffer+"\n";
         if (m_examine || !Config().m_brief)
           emit sendToUser(ch);
         break;
+		
     case XML_EXITS:
+	  removeAnsiMarks(m_stringBuffer); // remove color marks
       parseExits(m_stringBuffer); //parse exits
-      if (m_readingRoomDesc)
-      {
+      if (m_readingRoomDesc) {
         m_readingRoomDesc = false;
         m_descriptionReady = true;
       }
-    //emit sendToUser(ch);
       break;
 
     case XML_PROMPT:
       if  (m_descriptionReady) {
         m_examine = false; // stop bypassing brief-mode
+
+        removeAnsiMarks(m_stringBuffer); // remove color marks
 
 		// Append the IAC GA
 		m_stringBuffer += (unsigned char) 255; // IAC

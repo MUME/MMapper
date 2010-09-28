@@ -8,7 +8,7 @@ set(mmapper_SRCS
     expandoracommon/component.cpp
     expandoracommon/coordinate.cpp
     expandoracommon/frustum.cpp
-   expandoracommon/mmapper2event.cpp
+    expandoracommon/mmapper2event.cpp
     expandoracommon/parseevent.cpp
     expandoracommon/property.cpp
     mainwindow/aboutdialog.cpp
@@ -88,7 +88,7 @@ else (MINGW)
 endif (MINGW)
 if (APPLE)
     set(mmapper_SRCS ${mmapper_SRCS} resources/macosx/m.icns)
-   set_source_files_properties(resources/macosx/m.icns PROPERTIES
+    set_source_files_properties(resources/macosx/m.icns PROPERTIES
     MACOSX_PACKAGE_LOCATION Resources)
     set(MACOSX_BUNDLE_ICON_FILE m.icns)
  endif (APPLE)
@@ -158,9 +158,9 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/pathmachine
     ${CMAKE_CURRENT_SOURCE_DIR}/preferences
     ${CMAKE_CURRENT_SOURCE_DIR}/proxy
-    ${OPENGL_INCLUDE_DIR}
     ${ZLIB_INCLUDE_DIR}
-    ${QTIOCOMPRESSOR_INCLUDE_DIRS}
+    ${OPENGL_INCLUDE_DIR}
+	${QTIOCOMPRESSOR_INCLUDE_DIRS}
 )
 
 QT4_WRAP_CPP(mmapper_MOC_SRCS ${mmapper_MOC_HDRS})
@@ -381,7 +381,7 @@ else (SVN_BUILD)
 endif (SVN_BUILD)
 set(CPACK_PACKAGE_VERSION_MAJOR "2")
 set(CPACK_PACKAGE_VERSION_MINOR "1")
-set(CPACK_PACKAGE_VERSION_PATCH "0")
+set(CPACK_PACKAGE_VERSION_PATCH "1")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "MMapper")
 
 # Components:

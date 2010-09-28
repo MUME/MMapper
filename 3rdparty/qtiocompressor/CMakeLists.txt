@@ -12,3 +12,7 @@ ADD_LIBRARY(qtiocompressor STATIC
     ${qtiocompressor_SRCS}
     ${qtiocompressor_MOC_SRCS}
 )
+
+include_directories(
+    ${ZLIB_INCLUDE_DIR}
+)
