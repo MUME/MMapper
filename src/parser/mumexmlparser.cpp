@@ -379,13 +379,7 @@ bool MumeXmlParser::characters(QByteArray& ch)
       }
       if  (m_descriptionReady) {
         m_examine = false; // stop bypassing brief-mode
-
         removeAnsiMarks(m_stringBuffer); // remove color marks
-
-	// Append the IAC GA
-	m_stringBuffer += (unsigned char) 255; // IAC
-	m_stringBuffer += (unsigned char) 249; // GA
-
         parsePrompt(m_stringBuffer);
         move();
       }
@@ -398,7 +392,9 @@ bool MumeXmlParser::characters(QByteArray& ch)
         }
       }
 
-      //ch = ch.trimmed();
+      // Append the IAC GA
+	  ch += (unsigned char) 255; // IAC
+	  ch += (unsigned char) 249; // GA
       emit sendToUser(ch);
       break;
 
