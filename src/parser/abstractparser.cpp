@@ -470,8 +470,6 @@ bool AbstractParser::parseUserCommands(QString& command)
         //qDebug( "Sending a G-tell from local user: %s", (const char *) data);
         emit sendGroupTellEvent(data);
       }
-      emit sendToUser("Ok.\r\n");
-      sendPromptSimulationToUser();
       return false;
     }
     else if (str.startsWith("_brief"))

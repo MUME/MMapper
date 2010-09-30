@@ -309,8 +309,7 @@ bool MumeXmlParser::characters(QByteArray& ch)
   ch.replace(lessThanTemplate, lessThanChar);
   ch.replace(ampersandTemplate, ampersand);
 
-  m_stringBuffer = QString::fromAscii(ch.constData(), ch.size());
-  m_stringBuffer = m_stringBuffer.simplified();
+  m_stringBuffer = ch.simplified();
   latinToAscii(m_stringBuffer);
 
   switch (m_xmlMode)

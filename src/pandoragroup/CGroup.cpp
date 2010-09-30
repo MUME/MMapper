@@ -285,7 +285,7 @@ void CGroup::gTellArrived(QDomNode node)
   QDomElement text = e.toElement();
   emit log("GroupManager", QString("GTell from %1, Arrived : %2").arg(from.toAscii().constData()).arg(text.text().toAscii().constData()));
 
-  QByteArray tell = QString("\r\n" + from + " tells you [GT] '" + text.text() + "'\r\n\r\n>").toAscii();
+  QByteArray tell = QString("\r\n" + from + " tells you [GT] '" + text.text() + "'\r\n").toAscii();
 
   emit displayGroupTellEvent(tell.constData());
 }
