@@ -72,17 +72,11 @@ set(mmapper_RCS resources/mmapper2.qrc)
 
 # Application Icon
 if (MINGW)
-    # Query qmake for windres executable name
-    QT_QUERY_QMAKE(WINDRES_EXECUTABLE "QMAKE_RC")
-    if (WINDRES_EXECUTABLE)
-        message(STATUS "Found windres: ${WINDRES_EXECUTABLE}")
-        add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/mmapper2_rc.o
-                           COMMAND ${WINDRES_EXECUTABLE}
-                                           -I ${CMAKE_CURRENT_SOURCE_DIR}
+    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/mmapper2_rc.o
+                       COMMAND windres.exe -I ${CMAKE_CURRENT_SOURCE_DIR}
                                            -i ${CMAKE_CURRENT_SOURCE_DIR}/resources/mmapper2.rc
                                            -o ${CMAKE_CURRENT_BINARY_DIR}/mmapper2_rc.o)
-        set(mmapper_WINRC ${CMAKE_CURRENT_BINARY_DIR}/mmapper2_rc.o)
-    endif (WINDRES_EXECUTABLE)
+    set(mmapper_WINRC ${CMAKE_CURRENT_BINARY_DIR}/mmapper2_rc.o)
 else (MINGW)
     set(mmapper_WINRC resources/mmapper2.rc)
 endif (MINGW)
