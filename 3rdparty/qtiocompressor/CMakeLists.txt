@@ -8,11 +8,15 @@ set(qtiocompressor_MOC_HDRS
 
 QT4_WRAP_CPP(qtiocompressor_MOC_SRCS ${qtiocompressor_MOC_HDRS})
 
-ADD_LIBRARY(qtiocompressor STATIC
+include_directories(
+    ${ZLIB_INCLUDE_DIR}
+)
+
+add_library(qtiocompressor STATIC
     ${qtiocompressor_SRCS}
     ${qtiocompressor_MOC_SRCS}
 )
 
-include_directories(
-    ${ZLIB_INCLUDE_DIR}
+target_link_libraries(qtiocompressor
+    ${ZLIB_LIBRARIES}
 )
