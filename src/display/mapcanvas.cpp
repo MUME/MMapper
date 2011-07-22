@@ -2706,7 +2706,7 @@ GLubyte halftone[] = {
     m_room_gllist = glGenLists(1);
     glNewList(m_room_gllist, GL_COMPILE);
     glBegin(GL_QUADS);
-#if QT_VERSION < 0x040700
+#if (QT_VERSION < 0x040700 || QT_VERSION >= 0x040800)
     glTexCoord2d(0, 1);
     glVertex3d(0.0, 0.0, 0.0);
     glTexCoord2d(0, 0);
