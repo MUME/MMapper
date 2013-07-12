@@ -66,7 +66,7 @@ class MumeXmlParser : public AbstractParser
 
     void parseMudCommands(QString& str);
 
-    bool characters( QByteArray& );
+    QByteArray characters(QByteArray& ch);
     bool element( const QByteArray& );
 
     quint32 m_roomDescLines;

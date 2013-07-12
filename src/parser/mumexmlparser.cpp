@@ -127,7 +127,9 @@ void MumeXmlParser::parseNewMudInput(IncomingData& data)
 
 void MumeXmlParser::parse(const QByteArray& line)
 {
+  QByteArray lineToUser;
   int index;
+
   for (index = 0; index < line.size(); index++) {
     if (m_readingTag) {
       if (line.at(index) == '>') {
@@ -143,8 +145,7 @@ void MumeXmlParser::parse(const QByteArray& line)
 	  
     } else {
       if (line.at(index) == '<') {
-        //send characters
-        if (!m_tempCharacters.isEmpty()) characters( m_tempCharacters );
+        lineToUser.append(characters(m_tempCharacters));
         m_tempCharacters.clear();
 
         m_readingTag = true;
@@ -155,10 +156,11 @@ void MumeXmlParser::parse(const QByteArray& line)
   }
 
   if (!m_readingTag) {
-    //send characters
-    if (!m_tempCharacters.isEmpty()) characters( m_tempCharacters );
+    lineToUser.append(characters(m_tempCharacters));
     m_tempCharacters.clear();
   }
+
+  emit sendToUser(lineToUser);
 }
 
 bool MumeXmlParser::element( const QByteArray& line  )
@@ -297,8 +299,13 @@ bool MumeXmlParser::element( const QByteArray& line  )
 }
 
 
-bool MumeXmlParser::characters(QByteArray& ch)
-  {
+QByteArray MumeXmlParser::characters(QByteArray& ch)
+{
+  QByteArray toUser;
+
+  if (ch.isEmpty())
+      return toUser;
+
   // replace > and < chars
   ch.replace(greaterThanTemplate, greaterThanChar);
   ch.replace(lessThanTemplate, lessThanChar);
@@ -322,12 +329,12 @@ bool MumeXmlParser::characters(QByteArray& ch)
       //str=removeAnsiMarks(m_stringBuffer);
         parseMudCommands(m_stringBuffer);
       }
-      emit sendToUser(ch);
+      toUser.append(ch);
       break;
 
       case XML_ROOM: // dynamic line
         m_dynamicRoomDesc += m_stringBuffer+"\n";
-        emit sendToUser(ch);
+        toUser.append(ch);
         break;
 
     case XML_NAME:
@@ -346,14 +353,14 @@ bool MumeXmlParser::characters(QByteArray& ch)
       m_readingStaticDescLines = true;
       m_exitsFlags = 0;
 
-      emit sendToUser(ch);
+      toUser.append(ch);
       break;
 
       case XML_DESCRIPTION: // static line
         removeAnsiMarks(m_stringBuffer) ; //remove color marks
         m_staticRoomDesc += m_stringBuffer+"\n";
         if (m_examine || !Config().m_brief)
-          emit sendToUser(ch);
+          toUser.append(ch);
         break;
 		
     case XML_EXITS:
@@ -389,17 +396,17 @@ bool MumeXmlParser::characters(QByteArray& ch)
       // Append the IAC GA
 	  ch += (unsigned char) 255; // IAC
 	  ch += (unsigned char) 249; // GA
-      emit sendToUser(ch);
+      toUser.append(ch);
       break;
 
   case XML_TERRAIN:
   default:
-    emit sendToUser(ch);
+    toUser.append(ch);
     break;
     
   }
 
-  return true;
+  return toUser;
 }
 
 void MumeXmlParser::move()
