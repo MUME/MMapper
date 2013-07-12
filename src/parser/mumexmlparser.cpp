@@ -127,8 +127,6 @@ void MumeXmlParser::parseNewMudInput(IncomingData& data)
 
 void MumeXmlParser::parse(const QByteArray& line)
 {
-  //quint8* dataline = (quint8*) line.data();
-
   int index;
   for (index = 0; index < line.size(); index++) {
     if (m_readingTag) {
@@ -165,9 +163,8 @@ void MumeXmlParser::parse(const QByteArray& line)
 
 bool MumeXmlParser::element( const QByteArray& line  )
 {
-  //quint8* dataline = (quint8*) line.data();
-
   int length = line.length();
+
   switch (m_xmlMode)
   {
     case XML_NONE:
@@ -302,8 +299,6 @@ bool MumeXmlParser::element( const QByteArray& line  )
 
 bool MumeXmlParser::characters(QByteArray& ch)
   {
-  //quint8* dataline = (quint8*) ch.data();
-
   // replace > and < chars
   ch.replace(greaterThanTemplate, greaterThanChar);
   ch.replace(lessThanTemplate, lessThanChar);
