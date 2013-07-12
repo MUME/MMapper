@@ -1,0 +1,15 @@
+=============================
+MMapper 2.2.0 (July 13, 2013)
+=============================
+
+Changes:
+ - Compatibility fixes with latest MUME server
+ - Build fixes
+ - Minor crasher fixes
+ - Add links to MMapper and MUME related websites in Help menu
+ - Help->About redesign
+ - Portions of the code relicensed under GPLv2+ (was GPLv2 before)
+ - Show the MMapper version on the splash screen
+ - Use telnet sequences for detecting prompt
+ - Automatically switch on the xml mode
+ - Initial support for trails and climb exits
