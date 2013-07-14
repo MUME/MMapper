@@ -220,6 +220,12 @@ bool Proxy::init()
       m_filter->setXmlMode();
     }
 
+    if (Config().m_IAC_prompt_parser) {
+      //send IAC-GA prompt request
+      QByteArray idprompt("~$#EP2\nG\n");
+      emit sendToMud(idprompt);
+    }
+
     return TRUE;
   }
 //return TRUE;

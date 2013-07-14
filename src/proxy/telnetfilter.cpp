@@ -160,12 +160,6 @@ void TelnetFilter::analyzeMudStream(const char * input, int length)
 
 			//emit sendToMud((QByteArray)"brief\n");
 			//emit sendToMud((QByteArray)"prompt all\n");
-			if (Config().m_IAC_prompt_parser)
-			{				
-				//send IAC-GA prompt request
-				QByteArray idprompt("~$#EP2\nG\n");
-   				emit sendToMud(idprompt); 
-			}
         }
         // XXX: fixed (I think) the logic in the line below. Not sure it's right.
         // Alternative: ( recon && > ) || exits
@@ -175,12 +169,6 @@ void TelnetFilter::analyzeMudStream(const char * input, int length)
 	       	m_xmlModeAutoconfigured = true;
 			//emit sendToMud((QByteArray)"brief\n");
 			emit sendToMud((QByteArray)"prompt all\n");
-			if (Config().m_IAC_prompt_parser)
-			{				
-				//send IAC-GA prompt request
-				QByteArray idprompt("~$#EP2\nG\n");
-   				emit sendToMud(idprompt); 
-			}
 	    }
     }
 
