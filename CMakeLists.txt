@@ -26,7 +26,7 @@ else()
 endif()
 
 # Version
-set(VERSION "2.2.0")
+set(VERSION "2.2.1")
 add_definitions(-DMMAPPER_VERSION="${VERSION}" -DWITH_SPLASH)
 message(STATUS "MMapper version ${VERSION} (${CMAKE_BUILD_TYPE} distribution)")
 

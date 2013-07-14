@@ -1,4 +1,13 @@
 =============================
+MMapper 2.2.1 (July 14, 2013)
+=============================
+
+Changes:
+ - Build fixes
+ - Fix issues with XML mode in the account menu
+ - Make _name and _noride commands work (thanks Waba!)
+
+=============================
 MMapper 2.2.0 (July 13, 2013)
 =============================
 
