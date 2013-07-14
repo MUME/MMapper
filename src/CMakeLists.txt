@@ -165,6 +165,7 @@ add_executable(mmapper ${EXECUTABLE_FLAGS}
     ${mmapper_UIS_H}
     ${mmapper_RCC_SRCS}
     ${mmapper_WINRC}
+    ${QTIOCOMPRESSOR_INTERNAL}
 )
 
 target_link_libraries(mmapper
