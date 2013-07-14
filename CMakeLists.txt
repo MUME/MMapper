@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.8)
+cmake_minimum_required(VERSION 2.6)
 project(mmapper)
 
 find_package(Qt4 REQUIRED)
@@ -14,14 +14,15 @@ find_path(QTIOCOMPRESSOR_INCLUDE_DIRS qtiocompressor.h PATH_SUFFIXES QtSolutions
 find_library(QTIOCOMPRESSOR_LIBRARIES QtSolutions_IOCompressor-2.3)
 if (QTIOCOMPRESSOR_INCLUDE_DIRS AND QTIOCOMPRESSOR_LIBRARIES)
     message(STATUS "Found QtIOCompressor: ${QTIOCOMPRESSOR_LIBRARIES}")
-    set(QTIOCOMPRESSOR_INTERNAL "")
+    set(qtiocompressor_SRCS "")
+    set(qtiocompressor_MOC_HDRS "")
 else()
     message(STATUS "QtIOCompressor not found; using bundled copy.")
     find_package(ZLIB REQUIRED)
-    add_subdirectory(3rdparty/qtiocompressor)
     set(QTIOCOMPRESSOR_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/3rdparty/qtiocompressor)
     set(QTIOCOMPRESSOR_LIBRARIES "")
-    set(QTIOCOMPRESSOR_INTERNAL $<TARGET_OBJECTS:qtiocompressor>)
+    set(qtiocompressor_SRCS     ${PROJECT_SOURCE_DIR}/3rdparty/qtiocompressor/qtiocompressor.cpp)
+    set(qtiocompressor_MOC_HDRS ${PROJECT_SOURCE_DIR}/3rdparty/qtiocompressor/qtiocompressor.h)
 endif()
 
 # Version

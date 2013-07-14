@@ -150,7 +150,7 @@ include_directories(
     ${QTIOCOMPRESSOR_INCLUDE_DIRS}
 )
 
-QT4_WRAP_CPP(mmapper_MOC_SRCS ${mmapper_MOC_HDRS})
+QT4_WRAP_CPP(mmapper_MOC_SRCS ${mmapper_MOC_HDRS} ${qtiocompressor_MOC_HDRS})
 QT4_WRAP_UI(mmapper_UIS_H ${mmapper_UIS})
 QT4_ADD_RESOURCES(mmapper_RCC_SRCS ${mmapper_RCS})
 
@@ -165,7 +165,7 @@ add_executable(mmapper ${EXECUTABLE_FLAGS}
     ${mmapper_UIS_H}
     ${mmapper_RCC_SRCS}
     ${mmapper_WINRC}
-    ${QTIOCOMPRESSOR_INTERNAL}
+    ${qtiocompressor_SRCS}
 )
 
 target_link_libraries(mmapper
