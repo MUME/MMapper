@@ -27,6 +27,7 @@
 #include "mapdata.h"
 #include "roomfactory.h"
 #include "drawstream.h"
+#include "mmapper2room.h"
 #include <assert.h>
 
 using namespace std;
@@ -95,7 +96,7 @@ void MapData::toggleRoomFlag(const Coordinate & pos, uint flag, uint field)
 {
   QMutexLocker locker(&mapLock);
   Room * room = map.get(pos);
-  if (room && field < 10)
+  if (room && field < ROOMFIELD_LAST )
   {
     setDataChanged();
     MapAction * action = new SingleRoomAction(new ModifyRoomFlags(flag, field, FMM_TOGGLE), room->getId());
@@ -107,7 +108,7 @@ bool MapData::getRoomFlag(const Coordinate & pos, uint flag, uint field)
 {
   QMutexLocker locker(&mapLock);
   Room * room = map.get(pos);
-  if (room && field < 10)
+  if (room && field < ROOMFIELD_LAST )
   {
     if (ISSET((*room)[field].toUInt(), flag)) return true;
   }
@@ -118,7 +119,7 @@ void MapData::setRoomField(const Coordinate & pos, uint flag, uint field)
 {
   QMutexLocker locker(&mapLock);
   Room * room = map.get(pos);
-  if (room && field < 10)
+  if (room && field < ROOMFIELD_LAST )
   {
     setDataChanged();
     MapAction * action = new SingleRoomAction(new UpdateRoomField(flag, field), room->getId());
@@ -130,7 +131,7 @@ uint MapData::getRoomField(const Coordinate & pos, uint field)
 {
   QMutexLocker locker(&mapLock);
   Room * room = map.get(pos);
-  if (room && field < 10)
+  if (room && field < ROOMFIELD_LAST )
   {
     return (*room)[field].toUInt();
   }
