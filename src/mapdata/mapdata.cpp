@@ -60,9 +60,9 @@ void MapData::setDoorName(const Coordinate & pos, const QString & name, uint dir
       scheduleAction(action_setdoor);
     }
     */
+    setDataChanged();
     MapAction * action = new SingleRoomAction(new UpdateExitField(name, dir, E_DOORNAME), room->getId());
     scheduleAction(action);
-    setDataChanged();
   }
 }
 
