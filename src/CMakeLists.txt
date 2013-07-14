@@ -71,15 +71,9 @@ set(mmapper_SRCS
 set(mmapper_RCS resources/mmapper2.qrc)
 
 # Application Icon
-if (MINGW)
-    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/mmapper2_rc.o
-                       COMMAND windres.exe -I ${CMAKE_CURRENT_SOURCE_DIR}
-                                           -i ${CMAKE_CURRENT_SOURCE_DIR}/resources/mmapper2.rc
-                                           -o ${CMAKE_CURRENT_BINARY_DIR}/mmapper2_rc.o)
-    set(mmapper_WINRC ${CMAKE_CURRENT_BINARY_DIR}/mmapper2_rc.o)
-else (MINGW)
+if (WIN32)
     set(mmapper_WINRC resources/mmapper2.rc)
-endif (MINGW)
+endif (WIN32)
 if (APPLE)
     set(mmapper_SRCS ${mmapper_SRCS} resources/macosx/m.icns)
     set_source_files_properties(resources/macosx/m.icns PROPERTIES
