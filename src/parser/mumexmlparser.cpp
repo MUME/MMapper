@@ -393,9 +393,6 @@ QByteArray MumeXmlParser::characters(QByteArray& ch)
         }
       }
 
-      // Append the IAC GA
-	  ch += (unsigned char) 255; // IAC
-	  ch += (unsigned char) 249; // GA
       toUser.append(ch);
       break;
 
