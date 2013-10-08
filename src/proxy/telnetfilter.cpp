@@ -239,29 +239,6 @@ void TelnetFilter::dispatchTelnetStream(QByteArray& stream, IncomingData &m_inco
 			index++; 
 			break;
 			
-		case ESCAPE: //check for prompt before color character (bugfixes some loose of room names)
-			if(!m_incomingData.line.isEmpty() && m_incomingData.type != TDT_TELNET)
-			{
-				val2 = m_incomingData.line.right(1).at(0); //get last char
-				switch (val2)
-				{
-				case '>':
-					m_incomingData.type = TDT_PROMPT;
-					que.enqueue(m_incomingData);
-					m_incomingData.line.clear();
-					m_incomingData.type = TDT_SPLIT;
-					m_incomingData.line.append(escChar);
-					break;
-				default:
-					m_incomingData.line.append(escChar);											
-					break;
-				}
-			}
-			else
-				m_incomingData.line.append(escChar);
-			index++; 
-			break;
-			
 		case TC_IAC: //IAC IAC  - should not happen tho, we use ASCII chars only!!!
 
 			if ( m_incomingData.type != TDT_TELNET && !m_incomingData.line.isEmpty()) 
