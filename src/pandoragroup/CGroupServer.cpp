@@ -26,6 +26,7 @@
 #include <QHostAddress>
 
 #include "CGroupServer.h"
+#include "CGroupCommunicator.h"
 
 CGroupServer::CGroupServer(int localPort, QObject *parent) :
         QTcpServer(parent)

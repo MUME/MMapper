@@ -119,7 +119,6 @@ ComparisonResult RoomFactory::compare(const Room * room, const ParseEvent * even
   QString m_desc = getDescription(room);
   RoomTerrainType m_terrainType = getTerrainType(room);
   bool updated = room->isUpToDate();
-  bool toleranceUsed = false;
 
   if (event == NULL) 
   {
@@ -145,14 +144,14 @@ ComparisonResult RoomFactory::compare(const Room * room, const ParseEvent * even
 
   switch (compareStrings(m_name, getRoomName(event), tolerance))
   {
-  case CR_TOLERANCE: updated = false; toleranceUsed = true;break;
+  case CR_TOLERANCE: updated = false; break;
   case CR_DIFFERENT: return CR_DIFFERENT;
   case CR_EQUAL: break;
   }
 
   switch (compareStrings(m_desc, getParsedRoomDesc(event), tolerance, updated))
   {
-  case CR_TOLERANCE: updated = false; toleranceUsed = true;break;
+  case CR_TOLERANCE: updated = false; break;
   case CR_DIFFERENT: return CR_DIFFERENT;
   case CR_EQUAL: break;
   }

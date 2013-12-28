@@ -1223,7 +1223,7 @@ QString MainWindow::strippedName(const QString &fullFileName)
 
 MapWindow *MainWindow::getCurrentMapWindow()
 {
-  return ((MapWindow*)(m_stackedWidget->widget(m_stackedWidget->currentIndex())));
+  return (dynamic_cast<MapWindow*>(m_stackedWidget->widget(m_stackedWidget->currentIndex())));
 }
 
 void MainWindow::onLayerUp()

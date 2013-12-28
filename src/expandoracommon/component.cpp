@@ -69,6 +69,6 @@ void ComponentThreader::run() {
     exec();
   } catch (char const * error) {
 	    cerr << error << endl;
-	    throw error;
+	    throw;
   }
 }

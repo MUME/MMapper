@@ -41,7 +41,7 @@ ParseEvent & ParseEvent::operator=(const ParseEvent & other) {
   pos = other.pos;
   optional = other.optional;
   numSkipped = other.numSkipped;
-  for (deque<Property *>::iterator i = begin(); i < end(); ++i)
+  for (deque<Property *>::iterator i = begin(); i != end(); ++i)
     delete *i;
   for (unsigned int i = 0; i < other.size(); ++i)
     push_back(new Property(*other[i]));
@@ -49,13 +49,13 @@ ParseEvent & ParseEvent::operator=(const ParseEvent & other) {
 }
 
 ParseEvent::~ParseEvent() {
-  for (deque<Property *>::iterator i = begin(); i < end(); ++i)
+  for (deque<Property *>::iterator i = begin(); i != end(); ++i)
     delete *i;
 }
 
 void ParseEvent::reset() {
   ListCycler<Property *, deque<Property *> >::reset();
-  for (deque<Property *>::iterator i = begin(); i < end(); ++i)
+  for (deque<Property *>::iterator i = begin(); i != end(); ++i)
     (*i)->reset();
 }
 

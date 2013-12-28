@@ -51,7 +51,7 @@ void ProxyThreader::run() {
     exec();
   } catch (char const * error) {
 //          cerr << error << endl;
-    throw error;
+    throw;
   }
 }
 
@@ -65,6 +65,7 @@ Proxy::Proxy(MapData* md, Mmapper2PathMachine* pm, CommandEvaluator* ce, Prespam
                                                 m_mudSocket(NULL),
                                                     m_userSocket(NULL),
                                                         m_serverConnected(false),
+                                                        m_filter(NULL), m_parser(NULL), m_parserXml(NULL),
                                                             m_mapData(md),
                                                                 m_pathMachine(pm),
                                                                     m_commandEvaluator(ce),

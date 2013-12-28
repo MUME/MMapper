@@ -55,18 +55,18 @@ class CGroupChar
     CGroupChar(MapData*, QTreeWidget*);
     virtual ~CGroupChar();
 
-    QByteArray getName() { return name; }
+    const QByteArray& getName() const { return name; }
     void setName(QByteArray _name) { name = _name; }
     void setColor(QColor col) { color = col; updateLabels(); }
-    QColor getColor() { return color; }
+    const QColor& getColor() const { return color; }
     QDomNode toXML();
     bool updateFromXML(QDomNode blob);
-    QTreeWidgetItem *getCharItem() { return charItem; }
+    QTreeWidgetItem *getCharItem() const { return charItem; }
 
     void setLastMovement(QByteArray move) { lastMovement = move; }
     void setPosition(unsigned int id) { pos = id; }
-    unsigned int getPosition() { return pos; }
-    QByteArray getLastMovement() { return lastMovement; }
+    unsigned int getPosition() const { return pos; }
+    const QByteArray& getLastMovement() const { return lastMovement; }
     static QByteArray getNameFromXML(QDomNode node);
 
     void draw(int x, int y);
@@ -85,6 +85,9 @@ class CGroupChar
     }
 
   private:
+    CGroupChar(const CGroupChar&); // prevent copying with pointer data on board
+    CGroupChar& operator=(const CGroupChar&);
+    
     MapData* m_mapData;
     QTreeWidget* charTable;
 

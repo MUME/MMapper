@@ -35,6 +35,9 @@
 enum TelnetDataType { TDT_PROMPT, TDT_MENU_PROMPT, TDT_LOGIN, TDT_LOGIN_PASSWORD, TDT_CRLF, TDT_LFCR, TDT_LF, TDT_TELNET, TDT_DELAY, TDT_SPLIT, TDT_UNKNOWN };
 
 struct IncomingData {
+    IncomingData() {
+        type = TDT_PROMPT;
+    }
     QByteArray line;
     TelnetDataType type;
 };

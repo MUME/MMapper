@@ -38,23 +38,23 @@ typedef QDateTime MarkerTimeStamp;
 class InfoMark {
 
 public:
-    InfoMark(){};
+    InfoMark(){ m_type = MT_TEXT; }
     ~InfoMark(){};
 
-    InfoMarkName getName(){ return m_name; };
-    InfoMarkText getText(){ return m_text; };
-    InfoMarkType getType() { return m_type; };
-    Coordinate & getPosition1() {return m_pos1;}
-    Coordinate & getPosition2() {return m_pos2;}
-    MarkerTimeStamp getTimeStamp() { return m_timeStamp; };
+    const InfoMarkName& getName() const { return m_name; }
+    const InfoMarkText& getText() const { return m_text; }
+    InfoMarkType getType() const { return m_type; }
+    const Coordinate& getPosition1() const {return m_pos1;}
+    const Coordinate& getPosition2() const {return m_pos2;}
+    const MarkerTimeStamp& getTimeStamp() const { return m_timeStamp; }
 
     void setPosition1(Coordinate & pos) {m_pos1 = pos;}
     void setPosition2(Coordinate & pos) {m_pos2 = pos;}
-    void setName(InfoMarkName name) { m_name = name; };
-    void setText(InfoMarkText text) { m_text = text; };
-    void setType(InfoMarkType type ){ m_type = type; };
+    void setName(InfoMarkName name) { m_name = name; }
+    void setText(InfoMarkText text) { m_text = text; }
+    void setType(InfoMarkType type ){ m_type = type; }
     
-    void setTimeStamp(MarkerTimeStamp timeStamp) { m_timeStamp = timeStamp; };
+    void setTimeStamp(MarkerTimeStamp timeStamp) { m_timeStamp = timeStamp; }
 
 private:
     InfoMarkName m_name;

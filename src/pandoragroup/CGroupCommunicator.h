@@ -54,7 +54,7 @@ class CGroupCommunicator : public QObject
     ADD_CHAR, REMOVE_CHAR, UPDATE_CHAR, RENAME_CHAR };
 
     QObject *peer;  // server or client
-    CGroup *getGroup() { return (CGroup *) parent(); }
+    CGroup *getGroup() { return reinterpret_cast<CGroup*>( parent() ); }
 
     void connectionClosed(CGroupClient *connection);
     void connectionEstablished(CGroupClient *connection);

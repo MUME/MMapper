@@ -99,7 +99,7 @@ void CGroupClient::connectionEstablished()
 
 void CGroupClient::errorHandler ( QAbstractSocket::SocketError socketError )
 {
-  CGroupCommunicator *comm = (CGroupCommunicator *)parent();
+  CGroupCommunicator *comm = dynamic_cast<CGroupCommunicator *>( parent() );
   comm->errorInConnection(this, errorString() );
 }
 
@@ -169,6 +169,10 @@ void CGroupClient::sendData(QByteArray data)
   buff += data;
 
   write(buff);
+}
+
+CGroupCommunicator* CGroupClient::getParent() {
+    return dynamic_cast<CGroupCommunicator *>( parent() );
 }
 
 

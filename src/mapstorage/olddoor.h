@@ -42,7 +42,7 @@ class Door {
 public:
     Door (DoorName name = "", DoorFlags flags = 0){ m_name = name; m_flags = flags; }
     DoorFlags getFlags() const { return m_flags; };
-    DoorName getName() const { return m_name; };
+    const DoorName& getName() const { return m_name; };
     void setFlags(DoorFlags flags) { m_flags = flags; };
     void setName(const DoorName & name) { m_name = name; };
 

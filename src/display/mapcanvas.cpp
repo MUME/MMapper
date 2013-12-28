@@ -1278,7 +1278,7 @@ GLubyte halftone[] = {
         c2 = *it;
         if (!drawPath(c1, c2, dx, dy, dz))
           break;
-        it++;
+        ++it;
       }
       if (anypath) drawPathEnd(dx, dy, dz);
     }
@@ -2158,7 +2158,7 @@ GLubyte halftone[] = {
               drawConnection( targetRoom, room, (ExitDirection)(opposite(i)), (ExitDirection)i, true, ISSET(getFlags(targetRoom->exit(opposite(i))),EF_EXIT) );
             }
           }
-          itIn++;
+          ++itIn;
         }
 
          // draw door names
@@ -2181,7 +2181,7 @@ GLubyte halftone[] = {
           drawRoomDoorName(room, i, targetRoom, targetDir);
         }
 
-        itOut++;
+        ++itOut;
         }
       }
     }

@@ -27,8 +27,8 @@
 #define CGROUPCLIENT_H_
 
 #include <QTcpSocket>
-#include "CGroupCommunicator.h"
 
+class CGroupCommunicator;
 
 class CGroupClient : public QTcpSocket
 {
@@ -37,7 +37,7 @@ class CGroupClient : public QTcpSocket
   int connectionState;
   int protocolState;
 
-  CGroupCommunicator* getParent() { return (CGroupCommunicator *) parent(); }
+  CGroupCommunicator* getParent();
   void linkSignals();
 
   QByteArray buffer;

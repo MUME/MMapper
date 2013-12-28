@@ -59,18 +59,18 @@ public:
     Connection();
     ~Connection();
     
-    ConnectionNote getNote(){ return m_note; };
-    quint32 getIndex() { return m_index; };
-    Room* getRoom(quint8 idx){ return m_rooms[idx]; };
-    Room* getTargetRoom(Room* r){ Room* tmp; r == m_rooms[FIRST] ? tmp = m_rooms[SECOND] : tmp = m_rooms[FIRST]; return tmp; };
-    Door* getDoor(Room* r){ Door* tmp; r == m_rooms[FIRST] ? tmp = m_doors[FIRST] : tmp = m_doors[SECOND]; return tmp; };
-    Door* getDoor(quint8 idx){ return m_doors[idx]; };
-    ConnectionDirection getDirection(Room* r){ConnectionDirection tmp; r == m_rooms[FIRST] ? tmp = m_directions[FIRST] : tmp = m_directions[SECOND]; return tmp; };
-    ConnectionDirection getTargetDirection(Room* r){ConnectionDirection tmp; r == m_rooms[FIRST] ? tmp = m_directions[SECOND] : tmp = m_directions[FIRST]; return tmp; };
-    ConnectionDirection getDirection(quint8 idx){ return m_directions[idx]; };
-    ConnectionType getType() { return m_type; };
-    ConnectionFlags getFlags() { return m_flags; };
-    ConnectionTimeStamp getTimeStamp() { return m_timeStamp; };
+    const ConnectionNote& getNote() const { return m_note; };
+    quint32 getIndex() const { return m_index; };
+    Room* getRoom(quint8 idx) const { return m_rooms[idx]; };
+    Room* getTargetRoom(Room* r) const { Room* tmp; r == m_rooms[FIRST] ? tmp = m_rooms[SECOND] : tmp = m_rooms[FIRST]; return tmp; };
+    Door* getDoor(Room* r) const { Door* tmp; r == m_rooms[FIRST] ? tmp = m_doors[FIRST] : tmp = m_doors[SECOND]; return tmp; };
+    Door* getDoor(quint8 idx) const { return m_doors[idx]; };
+    ConnectionDirection getDirection(Room* r) const {ConnectionDirection tmp; r == m_rooms[FIRST] ? tmp = m_directions[FIRST] : tmp = m_directions[SECOND]; return tmp; };
+    ConnectionDirection getTargetDirection(Room* r) const {ConnectionDirection tmp; r == m_rooms[FIRST] ? tmp = m_directions[SECOND] : tmp = m_directions[FIRST]; return tmp; };
+    ConnectionDirection getDirection(quint8 idx) const { return m_directions[idx]; };
+    ConnectionType getType() const { return m_type; };
+    ConnectionFlags getFlags() const { return m_flags; };
+    const ConnectionTimeStamp& getTimeStamp() const { return m_timeStamp; };
 
 //    void setID(ConnectionID id) { m_ID = id; };
     void setNote(ConnectionNote note) { m_note = note; };

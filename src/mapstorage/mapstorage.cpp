@@ -663,12 +663,11 @@ void MapStorage::loadOldConnection(Connection * connection, QDataStream & stream
   Room *r1 = 0, *r2 = 0;
 
   ConnectionFlags cf = 0;
-  ConnectionType ct = CT_UNDEFINED;
 
   connection->setNote("");
 
   stream >> vquint16;
-  ct = (ConnectionType)(vquint16 & (bit1 + bit2));
+  ConnectionType ct = (ConnectionType)(vquint16 & (bit1 + bit2));
   cf = (vquint16 >> 2);
   /*
   switch (vquint16)
@@ -943,8 +942,8 @@ void MapStorage::saveMark(InfoMark * mark, QDataStream & stream)
   stream << (QString)mark->getText();
   stream << (QDateTime)mark->getTimeStamp();
   stream << (quint8)mark->getType();
-  Coordinate & c1 = mark->getPosition1();
-  Coordinate & c2 = mark->getPosition2();
+  const Coordinate & c1 = mark->getPosition1();
+  const Coordinate & c2 = mark->getPosition2();
   stream << (qint32)c1.x;
   stream << (qint32)c1.y;
   stream << (qint32)c1.z;

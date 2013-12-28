@@ -139,7 +139,7 @@ void ExitsAffecter::insertAffected(uint id, std::set<uint> & affected) {
 	affected.insert(*i);
       for (set<uint>::const_iterator i = e.outBegin(); i != e.outEnd(); ++i) 
 	affected.insert(*i);
-      exitIter++;
+      ++exitIter;
     }
   }
 }
