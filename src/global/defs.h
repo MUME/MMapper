@@ -27,8 +27,6 @@
 #ifndef DEFS_H
 #define DEFS_H
 
-#include <QString>
-
 #ifndef TRUE
 enum { TRUE = 1, FALSE = 0 };
 #endif

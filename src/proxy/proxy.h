@@ -29,11 +29,12 @@
 
 //#define PROXY_STREAM_DEBUG_INPUT_TO_FILE
 
-#include <QtGui>
-#include <QtCore>
-#include <QtNetwork>
+#include <QThread>
 #include <QPointer>
+#include <QTcpSocket>
 
+class QFile;
+class QDataStream;
 class TelnetFilter;
 class Parser;
 class MumeXmlParser;
@@ -89,8 +90,6 @@ class Proxy : public QObject
     void analyzeUserStream( const char *, int );
     void analyzeMudStream( const char *, int );
     void terminate();
-
-
 
   private:
     bool init();

@@ -26,20 +26,16 @@
 #ifndef ROOM_H
 #define ROOM_H
 
-#include <QList>
 #include <QVariant>
 #include <QVector>
 #include "coordinate.h"
-#include "parseevent.h"
 #include "exit.h"
-
 
 typedef QVector<Exit> ExitsList;
 typedef QVectorIterator<Exit> ExitsListIterator;
 
 class Room : public QVector<QVariant>
 {
-
 protected:
   uint id;
   Coordinate position;

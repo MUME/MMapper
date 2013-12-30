@@ -29,11 +29,11 @@
 #include <QDialog>
 #include "ui_findroomsdlg.h"
 #include "roomrecipient.h"
-#include "roomselection.h"
 
 class MapData;
 class MapCanvas;
 class QShortcut;
+class RoomSelection;
 
 typedef quint32 ExitsFlagsType;
 typedef quint16 PromptFlagsType;

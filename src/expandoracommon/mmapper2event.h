@@ -26,9 +26,10 @@
 #ifndef MMAPPER2EVENT_H
 #define MMAPPER2EVENT_H
 
-#include <QString>
-#include "parser.h"
-#include "parseevent.h"
+#include "abstractparser.h"
+
+class QString;
+class ParseEvent;
 
 #define EV_NAME 0
 #define EV_DESC 1
@@ -36,7 +37,9 @@
 #define EV_EXITS 3
 #define EV_PROMPT 4
 
-ParseEvent * createEvent(const CommandIdType & c, const QString & roomName, const QString & roomDesc, const QString & parsedRoomDesc, const ExitsFlagsType & exitFlags, const PromptFlagsType & promptFlags);
+ParseEvent * createEvent(const CommandIdType & c, const QString & roomName, const QString & roomDesc, 
+                         const QString & parsedRoomDesc, const ExitsFlagsType & exitFlags, 
+                         const PromptFlagsType & promptFlags);
 
 QString getRoomName(const ParseEvent * e);
 

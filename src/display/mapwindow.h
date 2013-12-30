@@ -27,10 +27,11 @@
 #ifndef MAPWINDOW_H
 #define MAPWINDOW_H
 
-#include <QtGui>
-#include <QtOpenGL>
+#include <QWidget>
 #include "coordinate.h"
 
+class QScrollBar;
+class QGridLayout;
 class QKeyEvent;
 class QMouseEvent;
 class MapCanvas;
@@ -48,7 +49,7 @@ public:
 
 	void resizeEvent (QResizeEvent * event);
 
-    MapCanvas* getCanvas(){return m_canvas;};
+    MapCanvas* getCanvas() const;
 
 signals:
 

@@ -23,12 +23,13 @@
 **
 ************************************************************************/
 
-#include <QtGui>
-#include <QCloseEvent>
 #include "findroomsdlg.h"
-//#include "mmapper2event.h" //createEvent
 #include "mmapper2room.h"  //getName
 #include "mmapper2exit.h"  //getExit
+#include "mapdata.h"
+
+#include <QCloseEvent>
+#include <QShortcut>
 
 const QString FindRoomsDlg::nullString;
 

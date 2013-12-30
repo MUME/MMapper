@@ -27,7 +27,7 @@
 #ifndef ROOMRECIPIENT_H
 #define ROOMRECIPIENT_H
 
-#include "room.h"
+class Room;
 
 class RoomAdmin;
 

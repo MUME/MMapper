@@ -27,8 +27,8 @@
 
 #include <QWidget>
 #include "ui_groupmanagerpage.h"
-#include "CGroup.h"
-#include "configdialog.h"
+
+class CGroup;
 
 class GroupManagerPage : public QWidget, private Ui::GroupManagerPage
 {
@@ -52,7 +52,6 @@ class GroupManagerPage : public QWidget, private Ui::GroupManagerPage
 
   private:
     CGroup* m_groupManager;
-
 };
 
 

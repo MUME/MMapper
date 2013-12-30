@@ -30,6 +30,7 @@
 #include "CGroup.h"
 #include "CGroupServer.h"
 #include "CGroupClient.h"
+#include "CGroupChar.h"
 
 #include "configuration.h"
 

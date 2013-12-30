@@ -24,7 +24,8 @@
 **
 ************************************************************************/
 
-#include <configuration.h>
+#include "configuration.h"
+#include <QSettings>
 
 Configuration::Configuration()
 {
@@ -295,3 +296,7 @@ Configuration& Config() {
   static Configuration conf;
   return conf;
 };
+
+bool Configuration::isChanged() const {
+    return configurationChanged;
+}

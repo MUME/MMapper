@@ -29,6 +29,8 @@
 #include "mmapper2room.h"
 #include "mmapper2exit.h"
 #include "configuration.h"
+#include "roomselection.h"
+#include "mapdata.h"
 
 const QChar AbstractParser::escChar('\x1B');
 const QString AbstractParser::nullString;

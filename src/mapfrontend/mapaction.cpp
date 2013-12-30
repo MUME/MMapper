@@ -24,6 +24,12 @@
 ************************************************************************/
 
 #include "mapaction.h"
+#include "room.h"
+#include "abstractroomfactory.h"
+#include "intermediatenode.h"
+#include "roomcollection.h"
+#include "map.h"
+#include "mapfrontend.h"
 #include <assert.h>
 
 using namespace std;
@@ -168,6 +174,31 @@ void Remove::exec(uint id) {
     }
   }
   delete room;
+}
+void FrontendAccessor::setFrontend(MapFrontend* in) {
+    m_frontend = in;
+}
+Map& FrontendAccessor::map() {
+    return m_frontend->map;
+}
+IntermediateNode& FrontendAccessor::treeRoot() {
+    return m_frontend->treeRoot;
+}
+
+std::vector<Room *> & FrontendAccessor::roomIndex() {
+    return m_frontend->roomIndex;
+}
+
+std::vector<RoomCollection *> & FrontendAccessor::roomHomes() {
+    return m_frontend->roomHomes;
+}
+
+std::stack<uint> & FrontendAccessor::unusedIds() {
+    return m_frontend->unusedIds;
+}
+
+AbstractRoomFactory* FrontendAccessor::factory() {
+    return m_frontend->factory;
 }
 
 

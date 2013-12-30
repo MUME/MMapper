@@ -29,7 +29,6 @@
 #include <QDialog>
 #include "ui_infomarkseditdlg.h"
 #include "infomark.h"
-#include "coordinate.h"
 
 class MapData;
 class MapCanvas;

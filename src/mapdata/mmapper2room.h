@@ -25,9 +25,13 @@
 
 #ifndef MMAPPER2ROOM_H
 #define MMAPPER2ROOM_H
-#include "room.h"
-#include "exit.h"
-#include "mapdata.h"
+//#include "room.h"
+//#include "exit.h"
+//#include "mapdata.h"
+
+#include <QtGlobal>
+
+class Room;
 
 typedef class QString RoomName;
 typedef class QString RoomDescription;

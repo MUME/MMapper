@@ -23,16 +23,15 @@
 **
 ************************************************************************/
 
-//#include <QApplication>
-//#include <QDesktopWidget>
-#include <QMessageBox>
-#include <QtGui>
-#include <QAction>
-
 #include "configuration.h"
 
 #include "CGroup.h"
 #include "CGroupCommunicator.h"
+#include "CGroupChar.h"
+
+#include <QMessageBox>
+#include <QAction>
+#include <QCloseEvent>
 
 CGroup::CGroup(QByteArray name, MapData* md, QWidget *parent) : QTreeWidget(parent)
 {
@@ -428,5 +427,24 @@ void CGroup::parseStateChangeLine(int message, QByteArray line)
 void CGroup::sendLog(const QString& text)
 {
   emit log("GroupManager", text);
+}
+QByteArray CGroup::getName() const {
+    return self->getName();
+}
+int CGroup::getType() const {
+    return network->getType();
+}
+bool CGroup::isConnected() const {
+    return network->isConnected();
+}
+void CGroup::reconnect() {
+    resetChars();
+    network->reconnect();
+}
+QDomNode CGroup::getLocalCharData() {
+    return self->toXML();
+}
+void CGroup::closeEvent(QCloseEvent* event) {
+    event->accept();
 }
 

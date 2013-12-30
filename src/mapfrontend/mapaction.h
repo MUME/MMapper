@@ -25,25 +25,38 @@
 
 #ifndef MAPACTION_H
 #define MAPACTION_H
-#include "roomselection.h"
-#include <set>
-#include "map.h"
-#include "intermediatenode.h"
-#include "mapfrontend.h"
+//#include "roomselection.h"
+//#include "map.h"
+//#include "intermediatenode.h"
+//#include "mapfrontend.h"
+#include "parseevent.h"
 
+#include <QtGlobal>
+#include <QVariant>
+
+#include <set>
+#include <vector>
+#include <stack>
+
+class Map;
+class MapFrontend;
+class AbstractRoomFactory;
+class IntermediateNode;
+class RoomCollection;
+class Room;
 
 class FrontendAccessor {
   public:
     virtual ~FrontendAccessor() {}
-    virtual void setFrontend(MapFrontend * in) {frontend = in;}
+    virtual void setFrontend(MapFrontend * in) ;
   protected:
-    MapFrontend * frontend;
-    Map & map() {return frontend->map;}
-    IntermediateNode & treeRoot() {return frontend->treeRoot;}
-    std::vector<Room *> & roomIndex() {return frontend->roomIndex;}
-    std::vector<RoomCollection *> & roomHomes() {return frontend->roomHomes;}
-    std::stack<uint> & unusedIds() {return frontend->unusedIds;}
-    AbstractRoomFactory * factory() {return frontend->factory;}
+    MapFrontend * m_frontend;
+    Map & map() ;
+    IntermediateNode & treeRoot() ;
+    std::vector<Room *> & roomIndex() ;
+    std::vector<RoomCollection *> & roomHomes() ;
+    std::stack<uint> & unusedIds() ;
+    AbstractRoomFactory * factory() ;
 };
 
 class AbstractAction : public virtual FrontendAccessor {

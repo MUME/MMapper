@@ -26,6 +26,8 @@
 #include "mmapper2pathmachine.h"
 #include "mmapper2event.h"
 #include "roomfactory.h"
+//#include "parser.h"
+#include "configuration.h"
 
 #ifdef MODULAR
 extern "C" MY_EXPORT Component * createComponent()

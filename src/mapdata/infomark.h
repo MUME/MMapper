@@ -27,7 +27,7 @@
 #define INFOMARK_H
 
 #include "coordinate.h"
-#include <QtCore>
+#include <QDateTime>
 
 typedef class QString InfoMarkName;
 typedef class QString InfoMarkText;

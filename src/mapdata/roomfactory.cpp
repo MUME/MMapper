@@ -27,6 +27,11 @@
 #include "mmapper2exit.h"
 #include "mmapper2room.h"
 #include "mmapper2event.h"
+#include "coordinate.h"
+#include "room.h"
+
+#include <QStringList>
+#include <QRegExp>
 
 Room * RoomFactory::createRoom(const ParseEvent * ev) const
 {

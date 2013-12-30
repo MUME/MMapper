@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -29,16 +29,20 @@
 #include "roomoutstream.h"
 #include "mapcanvas.h"
 
+//class MapCanvas;
+
 class DrawStream : public RoomOutStream {
-  public:
-		DrawStream(MapCanvas & in, const std::vector<Room *> & in_rooms, const std::vector<std::set<RoomRecipient *> > & in_locks) : canvas(in), rooms(in_rooms), locks(in_locks) {}
+public:
+    DrawStream(MapCanvas & in, const std::vector<Room *> & in_rooms, 
+               const std::vector<std::set<RoomRecipient *> > & in_locks) : canvas(in), rooms(in_rooms), locks(in_locks) {}
     virtual RoomOutStream & operator<<(const Room * room) {
-      canvas.drawRoom(room, rooms, locks);
-      return *this;
+        canvas.drawRoom(room, rooms, locks);
+        return *this;
     }
-  private:
-    MapCanvas & canvas;
-		const std::vector<Room *> & rooms;
-		const std::vector<std::set<RoomRecipient *> > & locks;
+private:
+    MapCanvas& canvas;
+    const std::vector<Room *> & rooms;
+    const std::vector<std::set<RoomRecipient *> > & locks;
 };
+
 #endif

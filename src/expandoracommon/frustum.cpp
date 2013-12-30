@@ -24,6 +24,7 @@
 ************************************************************************/
 
 #include "frustum.h"
+#include "coordinate.h"
 #include <cmath>
 
 Frustum::Frustum()

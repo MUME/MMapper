@@ -24,7 +24,10 @@
 ************************************************************************/
 
 #include "mmapper2exit.h"
+#include "defs.h"
+#include "exit.h"
 
+#include <QString>
 
 ExitFlags getFlags(const Exit & e) 
   {return e[E_FLAGS].toUInt();}

@@ -26,8 +26,7 @@
 #ifndef COMPONENT
 #define COMPONENT
 
-#include <qobject.h>
-#include <qthread.h>
+#include <QThread>
 #include <QVariant>
 #include <iostream>
 #include <map>
@@ -38,9 +37,8 @@
 # define MY_EXPORT
 #endif
 
-
-
 class Component;
+
 class ComponentThreader : public QThread
 {
 private:
@@ -78,9 +76,7 @@ public:
   virtual ~Component();
   virtual Qt::ConnectionType requiredConnectionType(const QString &) {return Qt::AutoCompatConnection;}
   Component(bool threaded = false);
-  void setOption(const QString & key, const QVariant & value) {options[key] = value;}
-
-
+  void setOption(const QString & key, const QVariant & value);
 };
 
 /**

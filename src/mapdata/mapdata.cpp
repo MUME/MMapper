@@ -28,6 +28,10 @@
 #include "roomfactory.h"
 #include "drawstream.h"
 #include "mmapper2room.h"
+#include "customaction.h"
+#include "roomselection.h"
+#include "infomark.h"
+
 #include <assert.h>
 
 using namespace std;
@@ -445,5 +449,15 @@ MapData::~MapData()
 {
   while (!m_markers.isEmpty())
     delete m_markers.takeFirst();
+}
+bool MapData::execute(AbstractAction* action, const RoomSelection* unlock) {
+    return execute(new GroupAction(action, unlock), unlock);
+}
+void MapData::removeMarker(InfoMark* im) {
+    m_markers.removeAll(im);
+    delete im;
+}
+void MapData::addMarker(InfoMark* im) {
+    m_markers.append(im);
 }
 

@@ -25,11 +25,8 @@
 
 #ifndef OLDROOM
 #define OLDROOM
-#include "room.h"
+
 #include "oldconnection.h"
-#include "mapdata.h"
-
-
 
 #define RSF_ROAD_N    	bit1 //road
 #define RSF_ROAD_S    	bit2
@@ -61,7 +58,6 @@ typedef quint32 RoomSpecialFlags;
 
 typedef quint32 RoomID;
 typedef QDateTime RoomTimeStamp;
-
 
 typedef QList<Connection *> ConnectionList;
 typedef QListIterator<Connection *> ConnectionListIterator;

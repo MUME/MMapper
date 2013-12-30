@@ -28,11 +28,11 @@
 #define MAP
 
 #include "coordinate.h"
-#include "room.h"
-#include "roomcollection.h"
-#include "abstractroomfactory.h"
 #include <map>
-#include "roomoutstream.h"
+
+class Room;
+class RoomOutStream;
+class AbstractRoomFactory;
 
 /**
  * The Map stores the geographic relations of rooms to each other

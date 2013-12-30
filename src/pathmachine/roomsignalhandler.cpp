@@ -24,6 +24,10 @@
 ************************************************************************/
 
 #include "roomsignalhandler.h"
+#include "roomadmin.h"
+#include "room.h"
+#include "customaction.h"
+
 #include <assert.h>
 
 using namespace Qt;

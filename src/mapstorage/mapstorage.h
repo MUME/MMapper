@@ -27,10 +27,8 @@
 #ifndef MAPSTORAGE_H
 #define MAPSTORAGE_H
 
-#include <QtGui>
-#include "defs.h"
+#include "mapdata.h"
 #include "abstractmapstorage.h"
-#include "oldconnection.h"
 #include "oldroom.h"
 #include "roomfactory.h"
 

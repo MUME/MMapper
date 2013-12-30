@@ -26,8 +26,10 @@
 #ifndef _PATTERNS_H_
 #define _PATTERNS_H_
 
-#include <QtGui>
-#include <QtCore>
+#include <QRegExp>
+
+class QString;
+class QByteArray;
 
 class Patterns {
 	

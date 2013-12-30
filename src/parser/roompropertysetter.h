@@ -27,12 +27,13 @@
 #define FLAGSETTER
 
 #include <QMap>
-#include <QByteArray>
-#include "coordinate.h"
+
 #include "component.h"
 #include "roomrecipient.h"
-#include "roomadmin.h"
-#include "mapaction.h"
+
+class AbstractAction;
+class Coordinate;
+class RoomAdmin;
 
 class RoomPropertySetterSlave : public RoomRecipient
 {

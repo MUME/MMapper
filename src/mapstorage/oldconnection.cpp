@@ -24,6 +24,7 @@
 ************************************************************************/
 
 #include "oldconnection.h"
+#include "olddoor.h"
 
 Connection::Connection() : 
   m_type(CT_NORMAL),

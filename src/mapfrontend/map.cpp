@@ -24,6 +24,9 @@
 ************************************************************************/
 
 #include "map.h"
+#include "abstractroomfactory.h"
+#include "room.h"
+#include "roomoutstream.h"
 #include <iostream>
 #include <QTime>
 

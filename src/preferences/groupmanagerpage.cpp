@@ -22,9 +22,15 @@
 **
 ************************************************************************/
 
-#include <QtGui>
 #include "groupmanagerpage.h"
 #include "configuration.h"
+
+#include "CGroupCommunicator.h"
+#include "CGroup.h"
+
+#include <QColorDialog>
+#include <QDesktopServices>
+#include <QUrl>
 
 GroupManagerPage::GroupManagerPage(CGroup* gm, QWidget *parent)
   : QWidget(parent)

@@ -24,6 +24,12 @@
 ************************************************************************/
 
 #include "syncing.h"
+#include "pathparameters.h"
+#include "path.h"
+#include "roomadmin.h"
+#include "roomsignalhandler.h"
+
+#include <limits.h>
 
 using namespace std;
 

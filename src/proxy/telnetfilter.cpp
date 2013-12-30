@@ -24,8 +24,6 @@
 **
 ************************************************************************/
 
-#include <QtGui>
-
 #include "telnetfilter.h"
 #include "patterns.h"
 #include "configuration.h"

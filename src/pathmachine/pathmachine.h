@@ -26,29 +26,35 @@
 
 #ifndef PARSER
 #define PARSER
-#include <queue>
-#include <list>
-#include <queue>
-#include <qobject.h>
 
-#include "parseevent.h"
-#include "property.h"
-#include "path.h"
+//#include "parseevent.h"
+//#include "property.h"
+//#include "path.h"
 #include "room.h"
-#include "coordinate.h"
-#include "crossover.h"
-#include "onebyone.h"
-#include "approved.h"
-#include "syncing.h"
+//#include "coordinate.h"
+//#include "crossover.h"
+//#include "onebyone.h"
+//#include "approved.h"
+//#include "syncing.h"
 #include "component.h"
 #include "roomsignalhandler.h"
-#include "abstractroomfactory.h"
+//#include "abstractroomfactory.h"
+#include "pathparameters.h"
+
+//#include <queue>
+//#include <list>
+//#include <queue>
+//#include <qobject.h>
 
 #define APPROVED 0
 #define EXPERIMENTING 1
 #define SYNCING 2
 
 class Approved;
+class Path;
+class ParseEvent;
+class AbstractRoomFactory;
+
 /**
  * the parser determines the relations between incoming move- and room-events
  * and decides if rooms have to be added (and where) and where the player is

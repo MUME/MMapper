@@ -23,10 +23,11 @@
 **
 ************************************************************************/
 
-#include <QtGui>
 #include "parserpage.h"
 #include "configuration.h"
 #include "defs.h"
+
+#include <QMessageBox>
 
 ParserPage::ParserPage(QWidget *parent)
         : QWidget(parent)

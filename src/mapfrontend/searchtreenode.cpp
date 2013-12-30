@@ -25,9 +25,12 @@
 
 #include "searchtreenode.h"
 #include "intermediatenode.h"
-#include <string>
-using namespace std;
+#include "property.h"
+#include "parseevent.h"
 
+#include <string>
+
+using namespace std;
 
 SearchTreeNode::SearchTreeNode(ParseEvent * event, TinyList<SearchTreeNode *> * in_children) : ownerOfChars(true) {
   const char * rest = event->current()->rest();

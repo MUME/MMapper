@@ -27,10 +27,10 @@
 #define PARSEEVENT
 
 #include <deque>
-#include "property.h"
 #include "listcycler.h"
-#include "coordinate.h"
 #include <QVariant>
+
+class Property;
 
 /**
  * the ParseEvents will walk around in the SearchTree

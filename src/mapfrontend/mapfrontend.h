@@ -27,28 +27,21 @@
 #ifndef MAPFRONTEND_H
 #define MAPFRONTEND_H
 
-#include <qmutex.h>
-#include <vector>
-#include <stack>
-#include <set>
-#include <list>
-#include <map>
+#include "roomadmin.h"
+#include "component.h"
 
 #include "intermediatenode.h"
-#include "component.h"
-#include "frustum.h"
-#include "room.h"
 #include "map.h"
-#include "roomrecipient.h"
-#include "roomadmin.h"
-#include "abstractroomfactory.h"
+
+#include <QMutex>
+#include <stack>
 
 /**
  * The MapFrontend organizes rooms and their relations to each other.
  */
 
 class MapAction;
-
+class Frustum;
 
 class MapFrontend : public Component, public RoomAdmin
 {

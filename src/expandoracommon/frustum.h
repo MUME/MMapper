@@ -26,7 +26,7 @@
 #ifndef FRUSTUM_H
 #define FRUSTUM_H
 
-#include "coordinate.h"
+class Coordinate;
 
 /**
 represents a viewable Frustum in the coordinate system

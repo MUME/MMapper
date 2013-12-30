@@ -27,7 +27,7 @@
 
 #include <memory>
 
-#include "expandoracommon/roomrecipient.h"
+#include "roomrecipient.h"
 
 class MapData;
 class Room;

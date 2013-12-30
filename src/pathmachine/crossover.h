@@ -27,7 +27,8 @@
 #define CROSSOVER_H
 
 #include "experimenting.h"
-#include "abstractroomfactory.h"
+
+class AbstractRoomFactory;
 
 class Crossover : public Experimenting {
   public:

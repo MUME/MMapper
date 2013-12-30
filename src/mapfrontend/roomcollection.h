@@ -26,9 +26,8 @@
 #ifndef ROOMCOLLECTION
 #define ROOMCOLLECTION
 #include <set>
-#include "room.h"
-#include "parseevent.h"
 
+class Room;
 
 class RoomCollection : public std::set<Room *> {
 	public:

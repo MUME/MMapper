@@ -27,13 +27,16 @@
 #ifndef ABSTRACTPARSER_H
 #define ABSTRACTPARSER_H
 
-#include <QtCore>
 #include "telnetfilter.h"
 #include "defs.h"
-#include "room.h"
+
+#include <QQueue>
+#include <QObject>
 
 class ParseEvent;
 class MapData;
+class Room;
+class Coordinate;
 
 enum CommandIdType   { CID_NORTH = 0, CID_SOUTH, CID_EAST, CID_WEST, CID_UP, CID_DOWN,
 						CID_UNKNOWN, CID_LOOK, CID_FLEE, CID_SCOUT, /*CID_SYNC, CID_RESET, */CID_NONE };
@@ -78,7 +81,6 @@ typedef quint16 PromptFlagsType;
 
 typedef QQueue<CommandIdType> CommandQueue;
 
-
 class AbstractParser : public QObject
 {
   Q_OBJECT
@@ -113,7 +115,7 @@ signals:
   void sendGroupTellEvent(QByteArray);
 
 public slots:
-  virtual void parseNewMudInput(IncomingData&) = 0;;
+  virtual void parseNewMudInput(IncomingData&) = 0;
   void parseNewUserInput(IncomingData&);
 
   void emptyQueue();
@@ -169,7 +171,6 @@ protected:
   static const QByteArray emptyByteArray;
 
   QString& latinToAscii(QString& str);
-
 };
 
 #endif

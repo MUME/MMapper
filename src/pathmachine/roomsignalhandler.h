@@ -26,13 +26,19 @@
 #ifndef ROOMSIGNALHANDLER
 #define ROOMSIGNALHANDLER
 
+//#include "room.h"
+//#include "roomrecipient.h"
+//#include "roomadmin.h"
+//#include "mapaction.h"
+
+#include <QObject>
 #include <map>
 #include <set>
-#include <qobject.h>
-#include "room.h"
-#include "roomrecipient.h"
-#include "roomadmin.h"
-#include "mapaction.h"
+
+class Room;
+class RoomAdmin;
+class RoomRecipient;
+class MapAction;
 
 class RoomSignalHandler : public QObject
 {
@@ -42,7 +48,6 @@ private:
   std::map<const Room *, RoomAdmin *> owners;
   std::map<const Room *, std::set<RoomRecipient *> > lockers;
   std::map<const Room *, int> holdCount;
-
 
 public:
 RoomSignalHandler(QObject * parent) : QObject(parent) {}

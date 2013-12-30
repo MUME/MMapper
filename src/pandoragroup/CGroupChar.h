@@ -28,11 +28,11 @@
 
 #include <QByteArray>
 #include <QPixmap>
-#include <QDomNode>
-#include <QLabel>
-#include <QGridLayout>
-#include <QFrame>
-#include "mapdata.h"
+
+class QTreeWidget;
+class QTreeWidgetItem;
+class MapData;
+class QDomNode;
 
 class CGroupChar
 {

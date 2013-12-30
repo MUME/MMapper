@@ -27,15 +27,17 @@
 #ifndef _CONFIGURATION_H_
 #define _CONFIGURATION_H_
 
-#include <QtGui>
-#include <QtCore>
 #include "defs.h"
+#include <QStringList>
+#include <QRect>
+#include <QSize>
+#include <QColor>
 
 class Configuration {
   public:
     void read();
     void write() const;
-    bool isChanged() { return configurationChanged; }
+    bool isChanged() const;
 
     bool m_firstRun, m_mpi;
     QPoint windowPosition;

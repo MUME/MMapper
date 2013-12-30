@@ -26,13 +26,12 @@
 #ifndef APPROVED_H
 #define APPROVED_H
 
-#include <qobject.h>
-#include "pathmachine.h"
-#include "room.h"
-#include "parseevent.h"
-#include "roomadmin.h"
 #include "roomrecipient.h"
-#include "abstractroomfactory.h"
+
+class Room;
+class RoomAdmin;
+class AbstractRoomFactory;
+class ParseEvent;
 
 class Approved : public RoomRecipient {
  private:

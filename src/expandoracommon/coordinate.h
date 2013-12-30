@@ -25,12 +25,6 @@
 
 #ifndef COORDINATE
 #define COORDINATE
-#include <vector>
-#include <map>
-#include <qstring.h>
-
-
-
 
 class Coordinate
 {
@@ -51,8 +45,6 @@ public:
   int y;
   int z;
 };
-
-
 
 #ifdef DMALLOC
 #include <mpatrol.h>

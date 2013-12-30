@@ -26,23 +26,16 @@
 #ifndef CGROUP_H_
 #define CGROUP_H_
 
-#include <QDialog>
-#include <QString>
-#include <QDomNode>
 #include <QVector>
-//#include <QGridLayout>
-#include <QCloseEvent>
-//#include <QFrame>
-#include <QHash>
 #include <QTreeWidget>
-
-#include "CGroupCommunicator.h"
-#include "CGroupChar.h"
-//#include "ui_groupmanager.h"
+#include <QDomNode>
 
 class MapData;
+class CGroupCommunicator;
+class CGroupChar;
+class CGroupClient;
 
-class CGroup : public QTreeWidget//, private Ui::GroupManager
+class CGroup : public QTreeWidget
 {
   Q_OBJECT
 
@@ -69,13 +62,13 @@ class CGroup : public QTreeWidget//, private Ui::GroupManager
     CGroup(QByteArray name, MapData * md, QWidget *parent);
     virtual ~CGroup();
 
-    QByteArray getName() { return self->getName(); }
+    QByteArray getName() const ;
     CGroupChar* getCharByName(QByteArray name);
 
     void setType(int newState);
-    int getType() {return network->getType(); }
-    bool isConnected() { return network->isConnected(); }
-    void reconnect() { resetChars();  network->reconnect(); }
+    int getType() const ;
+    bool isConnected() const ;
+    void reconnect() ;
 
     bool addChar(QDomNode blob);
     void removeChar(QByteArray name);
@@ -91,7 +84,7 @@ class CGroup : public QTreeWidget//, private Ui::GroupManager
     void resetName();
     void resetColor();
 
-    QDomNode getLocalCharData() { return self->toXML(); }
+    QDomNode getLocalCharData() ;
     void sendAllCharsData(CGroupClient *conn);
     void issueLocalCharUpdate();
 
@@ -112,7 +105,7 @@ class CGroup : public QTreeWidget//, private Ui::GroupManager
     void gotKicked(QDomNode message);
     void setCharPosition(unsigned int pos);
 
-    void closeEvent( QCloseEvent * event ) {event->accept();}
+    void closeEvent( QCloseEvent * event ) ;
     void sendGTell(QByteArray tell); // sends gtell from local user
     void parseScoreInformation(QByteArray score);
     void parsePromptInformation(QByteArray prompt);

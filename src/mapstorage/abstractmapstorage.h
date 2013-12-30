@@ -27,17 +27,16 @@
 #ifndef ABSTRACTMAPSTORAGE_H
 #define ABSTRACTMAPSTORAGE_H
 
-#include <memory>
-#include <QtGui>
+#include <QObject>
 #include <QPointer>
-#include "defs.h"
-#include "qtiocompressor.h"
 
 class Room;
 class InfoMark;
 class MapData;
 class RoomSaveFilter;
 class ProgressCounter;
+class QFile;
+class QtIOCompressor;
 
 class AbstractMapStorage : public QObject {
 
@@ -69,8 +68,6 @@ protected:
     MapData &m_mapData;
     QString m_fileName;
     QPointer<ProgressCounter> m_progressCounter;
-
-private:
 };
 
 

@@ -26,10 +26,10 @@
 #ifndef SEARCHTREENODE
 #define SEARCHTREENODE
 #include "tinylist.h"
-#include "roomcollection.h"
-#include "roomoutstream.h"
 
-
+class ParseEvent;
+class RoomCollection;
+class RoomOutStream;
 
 /**
  * keeps a substring of the properties, and a table of other RoomSearchNodes pointing to the possible following characters

@@ -25,11 +25,11 @@
 
 #ifndef MMAPPER2EXIT_H
 #define MMAPPER2EXIT_H
-#include "defs.h"
-#include "parser.h"
-#include "exit.h"
+
+#include <QtGlobal>
 
 class Room;
+class Exit;
 
 enum ExitType { ET_NORMAL, ET_LOOP, ET_ONEWAY, ET_UNDEFINED };
 

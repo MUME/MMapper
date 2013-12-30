@@ -26,7 +26,11 @@
 #ifndef ABSTRACTROOMFACTORY_H
 #define ABSTRACTROOMFACTORY_H
 
-#include "room.h"
+#include <QtGlobal>
+
+class Room;
+class ParseEvent;
+class Coordinate;
 
 enum ComparisonResult {CR_DIFFERENT = 0, CR_EQUAL, CR_TOLERANCE};
 

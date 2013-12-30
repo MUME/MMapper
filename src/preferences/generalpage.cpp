@@ -24,9 +24,10 @@
 **
 ************************************************************************/
 
-#include <QtGui>
 #include "generalpage.h"
 #include "configuration.h"
+
+#include <QFileDialog>
 
 GeneralPage::GeneralPage(QWidget *parent)
   : QWidget(parent)

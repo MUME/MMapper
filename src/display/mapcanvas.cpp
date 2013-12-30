@@ -24,7 +24,6 @@
 **
 ************************************************************************/
 
-#include <math.h>
 #include "mapcanvas.h"
 #include "mapdata.h"
 #include "prespammedpath.h"
@@ -38,13 +37,19 @@
 #include "infomarkseditdlg.h"
 #include "configuration.h"
 #include "abstractparser.h"
-#include <assert.h>
 #include "CGroup.h"
 #include "CGroupChar.h"
+#include "customaction.h"
+
+#include <assert.h>
+#include <math.h>
+
+#include <QWheelEvent>
 
 #define ROOM_Z_DISTANCE (7.0f)
 #define ROOM_WALL_ALIGN (0.008f)
-
+#define BASESIZEX 528       // base canvas size
+#define BASESIZEY 528
 
 GLubyte halftone[] = {
   0xAA, 0xAA, 0xAA, 0xAA, 0x55, 0x55, 0x55, 0x55,
@@ -85,7 +90,7 @@ GLubyte halftone[] = {
     0x88, 0x88, 0x88, 0x88, 0x22, 0x22, 0x22, 0x22};
 
 
-    MapCanvas::MapCanvas( MapData *mapData, PrespammedPath* prespammedPath, CGroup* groupManager, const QGLFormat & fmt, QWidget * parent )
+MapCanvas::MapCanvas( MapData *mapData, PrespammedPath* prespammedPath, CGroup* groupManager, const QGLFormat & fmt, QWidget * parent )
   : QGLWidget(fmt, parent)
   {
     m_scrollX = 0;
@@ -174,6 +179,12 @@ GLubyte halftone[] = {
 }
 }
 */
+
+float MapCanvas::SCROLLFACTOR()
+{
+    return 0.2f;
+}
+
   void MapCanvas::layerUp()
   {
     m_currentLayer++;
@@ -492,13 +503,13 @@ GLubyte halftone[] = {
       case CMM_MOVE:
         if (event->buttons() & Qt::LeftButton && m_mouseLeftPressed) {
 
-          int idx = (int)((m_selX2 - m_moveX1backup)/SCROLLFACTOR);
-          int idy = (int)((m_selY2 - m_moveY1backup)/SCROLLFACTOR);
+          int idx = (int)((m_selX2 - m_moveX1backup)/SCROLLFACTOR());
+          int idy = (int)((m_selY2 - m_moveY1backup)/SCROLLFACTOR());
 
           emit mapMove(-idx, -idy);
 
-          if (idx != 0) m_moveX1backup = m_selX2 - idx*SCROLLFACTOR;
-          if (idy != 0) m_moveY1backup = m_selY2 - idy*SCROLLFACTOR;
+          if (idx != 0) m_moveX1backup = m_selX2 - idx*SCROLLFACTOR();
+          if (idy != 0) m_moveY1backup = m_selY2 - idy*SCROLLFACTOR();
         }
         break;
 
@@ -919,7 +930,7 @@ GLubyte halftone[] = {
     glFrustum(-0.5, +0.5, +0.5, -0.5, 5.0, 80.0);
     glScaled(swp, shp, 1.0f);
 
-    glTranslated( -(float)SCROLLFACTOR * (float)(m_scrollX), -(float)SCROLLFACTOR * (float)(m_scrollY), -60.0f );
+    glTranslated( -SCROLLFACTOR() * (float)(m_scrollX), -SCROLLFACTOR() * (float)(m_scrollY), -60.0f );
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -2923,3 +2934,11 @@ GLubyte halftone[] = {
   {
     updateGL();
   }
+  
+float MapCanvas::getDW() const {
+    return ((float)(((float)width() / ((float)BASESIZEX / 12.0f)) ) / (float)m_scaleFactor);
+}
+
+float MapCanvas::getDH() const {
+    return ((float)(((float)height() / ((float)BASESIZEY / 12.0f)) ) / (float)m_scaleFactor);
+}

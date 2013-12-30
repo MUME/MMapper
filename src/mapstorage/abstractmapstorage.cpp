@@ -27,6 +27,9 @@
 #include "abstractmapstorage.h"
 #include "mapdata.h"
 #include "progresscounter.h"
+#include "qtiocompressor.h"
+
+#include <QFile>
 
 AbstractMapStorage::AbstractMapStorage(MapData& mapdata, const QString& filename, QFile* file) : 
 m_file(file),

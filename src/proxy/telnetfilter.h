@@ -28,11 +28,12 @@
 
 //#define TELNET_STREAM_DEBUG_INPUT_TO_FILE
 
-#include <QtGui>
-#include <QtCore>
-#include <QtNetwork>
+#include <QByteArray>
+#include <QObject>
+#include <QQueue>
 
-enum TelnetDataType { TDT_PROMPT, TDT_MENU_PROMPT, TDT_LOGIN, TDT_LOGIN_PASSWORD, TDT_CRLF, TDT_LFCR, TDT_LF, TDT_TELNET, TDT_DELAY, TDT_SPLIT, TDT_UNKNOWN };
+enum TelnetDataType { TDT_PROMPT, TDT_MENU_PROMPT, TDT_LOGIN, TDT_LOGIN_PASSWORD, 
+    TDT_CRLF, TDT_LFCR, TDT_LF, TDT_TELNET, TDT_DELAY, TDT_SPLIT, TDT_UNKNOWN };
 
 struct IncomingData {
     IncomingData() {

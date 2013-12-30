@@ -24,8 +24,6 @@
 **
 ************************************************************************/
 
-#include <QtGui>
-
 #include "mainwindow.h"
 #include "mapwindow.h"
 #include "mapcanvas.h"
@@ -40,14 +38,22 @@
 #include "configdialog.h"
 #include "customaction.h"
 #include "prespammedpath.h"
-//#include "parser.h"
-//#include "mumexmlparser.h"
 #include "roompropertysetter.h"
 #include "aboutdialog.h"
 #include "findroomsdlg.h"
 #include "CGroup.h"
+#include "CGroupCommunicator.h"
 #include "progresscounter.h"
 #include "mapstorage/filesaver.h"
+
+#include <QMessageBox>
+#include <QMenuBar>
+#include <QStatusBar>
+#include <QToolBar>
+#include <QDesktopServices>
+#include <QCloseEvent>
+
+#include <memory>
 
 DockWidget::DockWidget ( const QString & title, QWidget * parent, Qt::WFlags flags )
     :QDockWidget(title, parent, flags)

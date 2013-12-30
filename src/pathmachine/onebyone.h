@@ -28,6 +28,12 @@
 
 #include "experimenting.h"
 
+class AbstractRoomFactory;
+class ParseEvent;
+class RoomSignalHandler;
+class Room;
+class RoomAdmin;
+
 class OneByOne: public Experimenting {
   public:
     OneByOne(AbstractRoomFactory * factory, ParseEvent * event, PathParameters & in_params, RoomSignalHandler * handler);

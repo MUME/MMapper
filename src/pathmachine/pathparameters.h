@@ -39,7 +39,7 @@ public:
   double maxPaths;
   uint matchingTolerance;
   uint maxSkipped;
-  ~PathParameters() {}}
-;
+  ~PathParameters() {}
+};
 
 #endif

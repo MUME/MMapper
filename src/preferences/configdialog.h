@@ -28,11 +28,11 @@
 #define CONFIGDIALOG_H
 
 #include <QDialog>
-#include "CGroup.h"
 
 class QListWidget;
 class QListWidgetItem;
 class QStackedWidget;
+class CGroup;
 
 class ConfigDialog : public QDialog
 {

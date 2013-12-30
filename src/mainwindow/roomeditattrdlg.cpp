@@ -24,17 +24,19 @@
 **
 ************************************************************************/
 
-#include <QtGui>
-#include <QtCore>
-#include <QShortcut>
 #include "roomeditattrdlg.h"
 #include "mapdata.h"
 #include "mapcanvas.h"
 #include "roomselection.h"
 #include "room.h"
 #include "mmapper2room.h"
+#include "customaction.h"
 #include "defs.h"
-#include "math.h"
+
+#include <QShortcut>
+#include <QSettings>
+
+#include <math.h>
 
 RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
         : QDialog(parent)
@@ -721,7 +723,6 @@ void RoomEditAttrDlg::exitButtonToggled(bool)
 {
 	updateDialog( getSelectedRoom() );	
 }
-
 
 void RoomEditAttrDlg::neutralRadioButtonToggled(bool val)
 {

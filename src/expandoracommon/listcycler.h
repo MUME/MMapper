@@ -27,6 +27,7 @@
 #define LISTCYCLER
 
 #include <climits>
+#include <QtGlobal>
 
 template <class T, class C>
 class ListCycler : public C {

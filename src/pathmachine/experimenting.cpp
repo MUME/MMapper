@@ -25,6 +25,8 @@
 
 #include "pathmachine.h"
 #include "experimenting.h"
+#include "abstractroomfactory.h"
+#include "path.h"
 
 using namespace std;
 

@@ -33,6 +33,7 @@
 #include "mmapper2pathmachine.h"
 #include "prespammedpath.h"
 #include "CGroup.h"
+#include "configuration.h"
 
 #include <qvariant.h>
 

@@ -24,9 +24,9 @@
 ************************************************************************/
 
 #include "parseevent.h"
+#include "property.h"
 
 using namespace std;
-
 
 ParseEvent::ParseEvent(const ParseEvent & other) : ListCycler<Property *, deque<Property *> >(), optional(other.optional), moveType(other.moveType), numSkipped(other.numSkipped) {
   for (unsigned int i = 0; i < other.size(); ++i)

@@ -25,6 +25,12 @@
 
 #include "customaction.h"
 #include "mmapper2exit.h"
+#include "roomselection.h"
+#include "room.h"
+#include "map.h"
+#include "abstractroomfactory.h"
+#include "intermediatenode.h"
+#include "roomcollection.h"
 
 using namespace std;
 

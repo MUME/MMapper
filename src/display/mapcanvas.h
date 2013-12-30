@@ -27,16 +27,12 @@
 #ifndef MAPCANVAS_H
 #define MAPCANVAS_H
 
-#include <QtGui>
-#include <QtOpenGL>
-#include "roomrecipient.h"
 #include "mmapper2exit.h"
+#include "coordinate.h"
 
-#define BASESIZEX 528       // base canvas size
-#define BASESIZEY 528
-
-#define SCROLLFACTOR  (0.2f) //5 times scroll per one room
-//#define SCROLLFACTOR  (1.0f) //5 times scroll per one room
+#include <QGLWidget>
+#include <vector>
+#include <set>
 
 class MapData;
 class Room;
@@ -47,8 +43,9 @@ class ConnectionSelection;
 class ParseEvent;
 class CGroup;
 class CGroupCharacter;
-
+class RoomRecipient;
 class PrespammedPath;
+class Coordinate;
 
 class MapCanvas : public QGLWidget//, public RoomRecipient
 {
@@ -61,8 +58,9 @@ class MapCanvas : public QGLWidget//, public RoomRecipient
     QSize minimumSizeHint() const;
     QSize sizeHint() const;
 
-    float getDW() { return ((float)(((float)width() / ((float)BASESIZEX / 12.0f)) ) / (float)m_scaleFactor); };
-    float getDH() { return ((float)(((float)height() / ((float)BASESIZEY / 12.0f)) ) / (float)m_scaleFactor); };
+    static float SCROLLFACTOR();
+    float getDW() const;
+    float getDH() const;
 
     MapData* getData (){ return m_data;};
     //void receiveRoom(RoomAdmin * admin, AbstractRoom * room);

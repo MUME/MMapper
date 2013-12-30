@@ -27,11 +27,14 @@
 #include "mapfrontend.h"
 #include "mapaction.h"
 #include "roomlocker.h"
+#include "frustum.h"
+#include "roomrecipient.h"
+#include "abstractroomfactory.h"
+
 #include <assert.h>
 
 using namespace Qt;
 using namespace std;
-
 
 MapFrontend::MapFrontend(AbstractRoomFactory * in_factory) :
     greatestUsedId(UINT_MAX),

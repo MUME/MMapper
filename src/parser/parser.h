@@ -29,8 +29,6 @@
 
 //#define PARSER_STREAM_DEBUG_INPUT_TO_FILE
 
-#include <QtGui>
-#include <QtCore>
 #include "abstractparser.h"
 
 class Parser : public AbstractParser
@@ -63,15 +61,9 @@ protected:
    bool m_following;
    quint16 m_followDir;
    
-   QString m_stringBuffer;
-   QByteArray m_byteBuffer;
-   
    bool m_miscAutoconfigDone;
    bool m_IACPromptAutoconfigDone;
    bool m_xmlAutoConfigDone;
- 
 };
-
-
 
 #endif

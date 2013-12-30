@@ -24,15 +24,14 @@
 **
 ************************************************************************/
 
-#include <QApplication>
-#include <QtGui>
-#include <QtCore>
-
 #include "mainwindow.h"
 #include "coordinate.h"
 #include "pathmachine.h"
 #include "mapfrontend.h"
 #include "configuration.h"
+
+#include <QApplication>
+#include <QSplashScreen>
 
 int main(int argc, char **argv)
 {

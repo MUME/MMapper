@@ -27,19 +27,21 @@
 
 using namespace std;
 
-
-
 Property::Property(const QByteArray & in_data) : 
   ListCycler<char, QByteArray>(in_data),
-  skipped(false) 
+  m_skipped(false) 
   {}
 
-const char * Property::rest()
+const char * Property::rest() const
 {
-  if (skipped)
-    throw "can't get a string from a SKIP property";
+  if (m_skipped)
+    throw "can't get a string from a SKIPPED property";
   if (pos >= (uint)size()) return "";
   else return constData() + pos;
+}
+
+bool Property::isSkipped() const {
+    return m_skipped;
 }
 
 

@@ -26,13 +26,22 @@
 #ifndef EXPERIMENTING_H
 #define EXPERIMENTING_H
 
-#include "room.h"
-#include "path.h"
-#include "roomadmin.h"
+//#include "room.h"
+//#include "path.h"
+//#include "roomadmin.h"
+//#include "pathparameters.h"
+
+#include "coordinate.h"
 #include "roomrecipient.h"
-#include "pathparameters.h"
+#include <QtGlobal>
+#include <list>
 
 class PathMachine;
+class PathParameters;
+class Path;
+class AbstractRoomFactory;
+class Room;
+class RoomAdmin;
 
 class Experimenting : public RoomRecipient {
  protected:
@@ -46,13 +55,11 @@ class Experimenting : public RoomRecipient {
   PathParameters & params;
   double numPaths;
   AbstractRoomFactory * factory;
-  
 
  public:
   Experimenting(std::list<Path *> * paths, uint dirCode, PathParameters & params, AbstractRoomFactory * factory);
   std::list<Path *> * evaluate();
   virtual void receiveRoom(RoomAdmin *, const Room *) = 0;
-
 };
 
 #endif

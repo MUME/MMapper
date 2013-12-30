@@ -25,6 +25,8 @@
 
 #include "roomlocker.h"
 #include "mapfrontend.h"
+#include "abstractroomfactory.h"
+#include "roomrecipient.h"
 
 RoomLocker::RoomLocker(RoomRecipient * forward, MapFrontend * frontend, AbstractRoomFactory * in_factory, ParseEvent * compare) :
         recipient(forward),

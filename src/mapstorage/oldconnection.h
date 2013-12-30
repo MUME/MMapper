@@ -25,13 +25,14 @@
 
 #ifndef OLDCONNECTION_H
 #define OLDCONNECTION_H
-#include <QDateTime>
-#include "exit.h"
+
 #include "defs.h"
-#include "olddoor.h"
-#include "parser.h"
+
+#include <QDateTime>
 
 class Room;
+class Door;
+
 typedef class QString ConnectionNote;
 
 enum ConnectionType { CT_NORMAL = 0, CT_LOOP, CT_ONEWAY, CT_UNDEFINED };

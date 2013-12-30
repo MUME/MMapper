@@ -24,6 +24,13 @@
 ************************************************************************/
 
 #include "path.h"
+#include "roomsignalhandler.h"
+#include "pathparameters.h"
+#include "abstractroomfactory.h"
+#include "coordinate.h"
+#include "room.h"
+#include "parseevent.h"
+
 #include <iostream>
 #include <assert.h>
 

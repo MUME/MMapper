@@ -27,8 +27,9 @@
 #define MMAPPER2PARSER_H
 
 #include "pathmachine.h"
-#include "parser.h"
-#include "configuration.h"
+
+class Configuration;
+class ParseEvent;
 
 /**
 @author alve,,,

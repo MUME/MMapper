@@ -25,6 +25,10 @@
 
 #include "approved.h"
 #include "mapaction.h"
+#include "room.h"
+#include "parseevent.h"
+#include "roomadmin.h"
+#include "abstractroomfactory.h"
 
 void Approved::receiveRoom(RoomAdmin * sender, const Room * perhaps)
 {

@@ -26,6 +26,9 @@
 #include "roompropertysetter.h"
 #include "mmapper2room.h"
 #include "mmapper2exit.h"
+#include "customaction.h"
+#include "room.h"
+#include "roomadmin.h"
 
 void RoomPropertySetterSlave::receiveRoom(RoomAdmin * admin, const Room * room)
 {

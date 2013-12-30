@@ -24,10 +24,18 @@
 **
 ************************************************************************/
 
-#include <stack>
-
 #include "pathmachine.h"
 #include "configuration.h"
+#include "approved.h"
+#include "path.h"
+#include "abstractroomfactory.h"
+#include "crossover.h"
+#include "syncing.h"
+#include "onebyone.h"
+#include "parseevent.h"
+#include "customaction.h"
+
+#include <stack>
 
 using namespace std;
 using namespace Qt;

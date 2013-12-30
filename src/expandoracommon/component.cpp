@@ -72,3 +72,6 @@ void ComponentThreader::run() {
 	    throw;
   }
 }
+void Component::setOption(const QString& key, const QVariant& value) {
+    options[key] = value;
+}

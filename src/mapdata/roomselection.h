@@ -26,19 +26,14 @@
 #ifndef ROOMSELECTION_H
 #define ROOMSELECTION_H
 
-#include <QtGui>
-#include <QtOpenGL>
-#include "roomadmin.h"
+#include <QMap>
 #include "roomrecipient.h"
-#include "room.h"
-#include "coordinate.h"
 
-
-
+class Room;
+class RoomAdmin;
 
 class RoomSelection : public QMap<uint, const Room *>, public RoomRecipient
 {
-
 public:
     RoomSelection(RoomAdmin * admin) : m_admin(admin) {}
     void receiveRoom(RoomAdmin * admin,const Room * room);
@@ -47,6 +42,5 @@ public:
 private:
     RoomAdmin * m_admin;
 };
-
 
 #endif

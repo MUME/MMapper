@@ -25,6 +25,10 @@
 
 #include "CGroupChar.h"
 #include "roomselection.h"
+#include "mapdata.h"
+
+#include <QDomNode>
+#include <QTreeWidgetItem>
 
 CGroupChar::CGroupChar(MapData* md, QTreeWidget* qtw)
 {

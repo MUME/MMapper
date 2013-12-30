@@ -27,17 +27,27 @@
 #ifndef PATH
 #define PATH
 
+#include <QtGlobal>
 #include <set>
-#include "roomsignalhandler.h"
-#include "room.h"
-#include "roomrecipient.h"
-#include "roomadmin.h"
-#include "pathparameters.h"
-#include "abstractroomfactory.h"
+#include <limits.h>
+
+//#include "roomsignalhandler.h"
+//#include "room.h"
+//#include "roomrecipient.h"
+//#include "roomadmin.h"
+//#include "pathparameters.h"
+//#include "abstractroomfactory.h"
+
+class Room;
+class RoomSignalHandler;
+class RoomRecipient;
+class RoomAdmin;
+class Coordinate;
+class PathParameters;
+class AbstractRoomFactory;
 
 class Path
 {
-
 public:
   Path(const Room * room, RoomAdmin * owner, RoomRecipient * locker, RoomSignalHandler * signaler, uint direction = UINT_MAX);
   void insertChild(Path * p);
@@ -47,7 +57,9 @@ public:
   const Room * getRoom() const {return room;}
 
   //new Path is created, distance between rooms is calculated and probability is set accordingly
-  Path * fork(const Room * room, Coordinate & expectedCoordinate, RoomAdmin * owner, PathParameters params, RoomRecipient * locker, uint dir, AbstractRoomFactory * factory);
+  Path * fork(const Room * room, Coordinate & expectedCoordinate, 
+              RoomAdmin * owner, PathParameters params, RoomRecipient * locker, 
+              uint dir, AbstractRoomFactory * factory);
   double getProb() const {return probability;}
   void approve();
 
@@ -64,9 +76,8 @@ private:
   const Room * room; // in fact a path only has one room, one parent and some children (forks).
   RoomSignalHandler * signaler;
   uint dir;
-  ~Path() {}}
-;
-
+  ~Path() {}
+};
 
 #endif
 

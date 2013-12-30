@@ -23,13 +23,14 @@
 **
 ************************************************************************/
 
-#include <QtGui>
-#include <QtCore>
 #include "infomarkseditdlg.h"
 #include "mapdata.h"
 #include "mapcanvas.h"
 #include "defs.h"
 #include "math.h"
+
+#include <QSettings>
+#include <QMessageBox>
 
 InfoMarksEditDlg::InfoMarksEditDlg(MapData* mapData, QWidget *parent)
         : QDialog(parent)

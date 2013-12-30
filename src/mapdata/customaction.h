@@ -26,11 +26,14 @@
 #ifndef CUSTOMACTION_H
 #define CUSTOMACTION_H
 #include "mapaction.h"
+#include "coordinate.h"
 #include <list>
 
 enum FlagModifyMode {FMM_SET, FMM_UNSET, FMM_TOGGLE};
 
 class MapData;
+class ParseEvent;
+class RoomSelection;
 
 typedef AddExit AddOneWayExit;
 

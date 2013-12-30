@@ -27,7 +27,6 @@
 #ifndef MUMEXMLPARSER_H
 #define MUMEXMLPARSER_H
 
-#include <QtCore>
 #include "abstractparser.h"
 
 //#define XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE

@@ -24,13 +24,14 @@
 **
 ************************************************************************/
 
-#include <QtGui>
-
 #include "configdialog.h"
 #include "generalpage.h"
 #include "parserpage.h"
 #include "pathmachinepage.h"
 #include "groupmanagerpage.h"
+
+#include <QListWidget>
+#include <QStackedWidget>
 
 ConfigDialog::ConfigDialog(CGroup* gm)
 {

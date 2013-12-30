@@ -27,7 +27,9 @@
 #define ROOMSAVER_H
 
 #include "roomrecipient.h"
-#include "mapdata.h"
+//#include "mapdata.h"
+
+#include <QList>
 
 class RoomSaver : public RoomRecipient {
   public:
@@ -39,8 +41,6 @@ class RoomSaver : public RoomRecipient {
     quint32 roomsCount;
     QList<const Room *> & roomList;
     RoomAdmin * admin;
-
 };
-
 
 #endif

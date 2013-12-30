@@ -24,8 +24,6 @@
 **
 ************************************************************************/
 
-#include <cassert>
-#include <iostream>
 #include "mapstorage.h"
 #include "mapdata.h"
 #include "roomsaver.h"
@@ -37,6 +35,14 @@
 #include "mmapper2exit.h"
 #include "progresscounter.h"
 #include "basemapsavefilter.h"
+#include "infomark.h"
+#include "qtiocompressor.h"
+#include "olddoor.h"
+
+#include <QFile>
+
+#include <cassert>
+#include <iostream>
 
 using namespace std;
 

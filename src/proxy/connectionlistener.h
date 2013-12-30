@@ -27,8 +27,6 @@
 #ifndef CONNECTIONLISTENER
 #define CONNECTIONLISTENER
 
-#include <QtGui>
-#include <QtCore>
 #include <QTcpServer>
 #include <QTcpSocket>
 

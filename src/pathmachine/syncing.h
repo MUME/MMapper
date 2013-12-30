@@ -26,11 +26,15 @@
 #ifndef SYNCING_H
 #define SYNCING_H
 
-#include <list>
-#include "path.h"
-#include "roomadmin.h"
 #include "roomrecipient.h"
-#include "roomsignalhandler.h"
+
+#include <QtGlobal>
+#include <list>
+
+class RoomSignalHandler;
+class PathParameters;
+class Path;
+class RoomAdmin;
 
 class Syncing : public RoomRecipient
 {

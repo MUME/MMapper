@@ -24,6 +24,8 @@
 ************************************************************************/
 
 #include "intermediatenode.h"
+#include "property.h"
+#include "parseevent.h"
 
 using namespace std;
 

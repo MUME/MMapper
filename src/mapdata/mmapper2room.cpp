@@ -24,6 +24,9 @@
 ************************************************************************/
 
 #include "mmapper2room.h"
+#include "room.h"
+
+#include <QString>
 
 RoomName getName(const Room * room)
   { return (*room)[R_NAME].toString(); }

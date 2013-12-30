@@ -26,14 +26,12 @@
 #ifndef CONNECTIONSELECTION_H
 #define CONNECTIONSELECTION_H
 
-#include <QtGui>
-#include <QtOpenGL>
+#include <QObject>
 #include "roomrecipient.h"
-#include "room.h"
-#include "exit.h"
-#include "coordinate.h"
-#include "mapfrontend.h"
 #include "mmapper2exit.h"
+
+class MapFrontend;
+class Room;
 
 class ConnectionSelection : public QObject, public RoomRecipient
 {

@@ -27,7 +27,14 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QtGui>
+#include <QDockWidget>
+#include <QStackedWidget>
+#include <QMainWindow>
+#include <QTextBrowser>
+#include <QProgressDialog>
+#include <QFileDialog>
+#include <QPointer>
+#include <QActionGroup>
 
 class QMenu;
 class MapWindow;

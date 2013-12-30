@@ -26,6 +26,8 @@
 #ifndef DOOR_H
 #define DOOR_H
 
+#include <QString>
+
 #define DF_HIDDEN     bit1
 #define DF_NEEDKEY    bit2
 #define DF_NOBLOCK    bit3

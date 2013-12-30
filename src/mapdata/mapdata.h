@@ -27,19 +27,15 @@
 #ifndef MAPDATA_H
 #define MAPDATA_H
 
-#include <QtGui>
-#include "defs.h"
-#include "room.h"
-#include "exit.h"
-
-#include "infomark.h"
 #include "mapfrontend.h"
-#include "roomselection.h"
-#include "customaction.h"
-#include "parser.h"
-#include <map>
+#include "abstractparser.h"
+
+#include <QLinkedList>
 
 class MapCanvas;
+class InfoMark;
+class RoomSelection;
+class AbstractAction;
 
 typedef QVector<Room*> RoomList;
 typedef QVectorIterator<Room*> RoomListIterator;
@@ -85,16 +81,15 @@ public:
 
   bool execute(MapAction * action);
   bool execute(MapAction * action, const RoomSelection * unlock);
-  bool execute(AbstractAction * action, const RoomSelection * unlock)
-    {return execute(new GroupAction(action, unlock), unlock);}
-
+  bool execute(AbstractAction * action, const RoomSelection * unlock);
+    
   Coordinate & getPosition() {return m_position;}
   MarkerList& getMarkersList(){ return m_markers; };
   uint getRoomsCount(){ return greatestUsedId == UINT_MAX ? 0 : greatestUsedId+1; };
   int getMarkersCount(){ return m_markers.count(); };
 
-  void addMarker(InfoMark* im){ m_markers.append(im); };
-  void removeMarker(InfoMark* im){ m_markers.removeAll(im); delete im; };
+  void addMarker(InfoMark* im);
+  void removeMarker(InfoMark* im);
 
   bool isEmpty(){return (greatestUsedId == UINT_MAX && m_markers.isEmpty());};
   bool dataChanged(){return m_dataChanged;};
