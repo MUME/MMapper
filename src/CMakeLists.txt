@@ -150,9 +150,9 @@ include_directories(
     ${QTIOCOMPRESSOR_INCLUDE_DIRS}
 )
 
-QT4_WRAP_CPP(mmapper_MOC_SRCS ${mmapper_MOC_HDRS} ${qtiocompressor_MOC_HDRS})
-QT4_WRAP_UI(mmapper_UIS_H ${mmapper_UIS})
-QT4_ADD_RESOURCES(mmapper_RCC_SRCS ${mmapper_RCS})
+#QT5_WRAP_CPP(mmapper_MOC_SRCS ${mmapper_MOC_HDRS} ${qtiocompressor_MOC_HDRS})
+QT5_WRAP_UI(mmapper_UIS_H ${mmapper_UIS})
+QT5_ADD_RESOURCES(mmapper_RCC_SRCS ${mmapper_RCS})
 
 # Build the executable
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -169,8 +169,11 @@ add_executable(mmapper ${EXECUTABLE_FLAGS}
 )
 
 target_link_libraries(mmapper
-    ${QT_QTMAIN_LIBRARY}
-    ${QT_LIBRARIES}
+    Qt5::Core
+    Qt5::Widgets
+    Qt5::OpenGL
+    Qt5::Xml
+    Qt5::Network
     ${OPENGL_gl_LIBRARY}
     ${ZLIB_LIBRARIES}
     ${QTIOCOMPRESSOR_LIBRARIES}
@@ -225,7 +228,7 @@ if (UNIX AND NOT APPLE)
     # Debian
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "nschimme@gmail.com")
     set(CPACK_DEBIAN_PACKAGE_NAME "mmapper")
-    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqtcore4 (>= 4.1.0), libqtgui4 (>= 4.1.0), libqt4-opengl (>= 4.1.0), libqt4-network (>= 4.1.0), libqt4-xml (>= 4.1.0)")
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqtcore5 (>= 5.2.0), libqtgui5 (>= 5.2.0), libqt5-opengl (>= 5.2.0), libqt5-network (>= 5.2.0), libqt5-xml (>= 5.2.0)")
 
 endif (UNIX AND NOT APPLE)
 
@@ -247,13 +250,15 @@ if (WIN32)
 
     # Install Library Files
     # Note: this is not necessary if Qt is compiled statically
+    get_target_property(QT_CORE_LIBRARY_DIR Qt5::Core LOCATION)
+    string(REPLACE "Qt5Core.dll" "" QT_LIBRARY_DIR ${QT_CORE_LIBRARY_DIR})
     message(STATUS "Qt libraries are at ${QT_LIBRARY_DIR}")
     install(FILES
-        "${QT_LIBRARY_DIR}/QtCore${QT_VERSION_MAJOR}.dll"
-        "${QT_LIBRARY_DIR}/QtGui${QT_VERSION_MAJOR}.dll"
-        "${QT_LIBRARY_DIR}/QtNetwork${QT_VERSION_MAJOR}.dll"
-        "${QT_LIBRARY_DIR}/QtXml${QT_VERSION_MAJOR}.dll"
-        "${QT_LIBRARY_DIR}/QtOpenGL${QT_VERSION_MAJOR}.dll"
+        "${QT_LIBRARY_DIR}/Qt5Core.dll"
+        "${QT_LIBRARY_DIR}/Qt5Gui.dll"
+        "${QT_LIBRARY_DIR}/Qt5Network.dll"
+        "${QT_LIBRARY_DIR}/Qt5Xml.dll"
+        "${QT_LIBRARY_DIR}/Qt5OpenGL.dll"
         DESTINATION .
 	COMPONENT libraries
     )
@@ -264,11 +269,13 @@ if (WIN32)
         )
         message(STATUS "MingW library is at ${MINGW_LIBRARY_DIR}")
 
-        install(FILES 
-            "${MINGW_LIBRARY_DIR}/mingwm10.dll"
-	    DESTINATION .
-	    COMPONENT libraries
-	)
+	if (EXISTS "${MINGW_LIBRARY_DIR}/mingw10.dll")
+		install(FILES 
+		    "${MINGW_LIBRARY_DIR}/mingwm10.dll"
+		    DESTINATION .
+		    COMPONENT libraries
+		)
+	endif (EXISTS "${MINGW_LIBRARY_DIR}/mingw10.dll")
     else (MINGW)
 	# VC++ Redistributable
 	install(FILES
@@ -295,7 +302,7 @@ if (WIN32)
     set(CPACK_NSIS_MENU_LINKS "mmapper.exe;MMapper;Installation Guide.URL;Installation Guide")
     set(CPACK_NSIS_INSTALLED_ICON_NAME "mmapper.exe")
     set(CPACK_NSIS_DISPLAY_NAME "MMapper")
-    set(CPACK_NSIS_HELP_LINK "http:\\\\\\\\sourceforge.net\\\\projects\\\\mmapper")
+    set(CPACK_NSIS_HELP_LINK "http:\\\\\\\\github.com\\\\mume\\\\mmapper")
     set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/win32\\\\m.ico")
     set(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\m.png")
     set(CPACK_NSIS_INSTALLED_ICON_NAME "${CMAKE_CURRENT_SOURCE_DIR}/resources/win32\\\\m.ico")
@@ -339,7 +346,7 @@ if (APPLE)
     )
     
     # If we are supporting older machines, use the following
-    set(CPACK_OSX_PACKAGE_VERSION 10.5)
+    #set(CPACK_OSX_PACKAGE_VERSION 10.5)
 
     # Package Settings
     set(CPACK_GENERATOR "DragNDrop")
@@ -349,27 +356,27 @@ if (APPLE)
     set(CPACK_COMPONENT_LIBRARIES_HIDDEN TRUE)
 
     # Bundle Properties
-   SET(MACOSX_BUNDLE_BUNDLE_NAME MMapper)
+    SET(MACOSX_BUNDLE_BUNDLE_NAME MMapper)
     SET(MACOSX_BUNDLE_BUNDLE_VERSION ${VERSION})
     SET(MACOSX_BUNDLE_SHORT_VERSION_STRING ${VERSION})
     SET(MACOSX_BUNDLE_LONG_VERSION_STRING "Version ${VERSION}")
 endif (APPLE)
 
 # More General CPack Settings
-set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE.txt")
+set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING.txt")
 #set(CPACK_RESOURCE_FILE_README  "${PROJECT_SOURCE_DIR}/INSTALL.txt")
 set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
 set(CPACK_PACKAGE_VENDOR "Nils Schimmelmann")
 set(CPACK_PACKAGE_CONTACT "nschimme@gmail.com")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A mud mapper especially written for the mud MUME")
-if (SVN_BUILD)
-    set(CPACK_PACKAGE_VERSION "svn-build-${SVN_BUILD}")
-else (SVN_BUILD)
+if (GIT_BUILD)
+    set(CPACK_PACKAGE_VERSION "${VERSION}-${GIT_BRANCH}-${GIT_COMMIT_HASH}")
+else (GIT_BUILD)
     set(CPACK_PACKAGE_VERSION ${VERSION})
-endif (SVN_BUILD)
+endif (GIT_BUILD)
 set(CPACK_PACKAGE_VERSION_MAJOR "2")
-set(CPACK_PACKAGE_VERSION_MINOR "1")
-set(CPACK_PACKAGE_VERSION_PATCH "1")
+set(CPACK_PACKAGE_VERSION_MINOR "3")
+set(CPACK_PACKAGE_VERSION_PATCH "0")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "MMapper")
 
 # Components:
@@ -398,6 +405,7 @@ set(CPACK_INSTALL_CMAKE_PROJECTS "${CMAKE_CURRENT_BINARY_DIR};applications;ALL;/
 # Source Package
 set(CPACK_SOURCE_IGNORE_FILES
     "~$"
+    "/\\\\.git/"
     "/\\\\.svn/"
     "/build/"
     "/winbuild/"

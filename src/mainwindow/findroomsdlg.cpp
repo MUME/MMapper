@@ -172,7 +172,7 @@ void FindRoomsDlg::adjustResultTable()
 {
   resultTable->setColumnCount(2);
   resultTable->setHeaderLabels(QStringList() << tr("Room ID") << tr("Room Name"));
-  resultTable->header()->setResizeMode(1, QHeaderView::Stretch);
+  resultTable->header()->setSectionResizeMode(QHeaderView::Stretch);
   resultTable->setRootIsDecorated(false);
   resultTable->setAlternatingRowColors(true);
 }

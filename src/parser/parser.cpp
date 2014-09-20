@@ -112,7 +112,7 @@ void Parser::parseNewMudInput(IncomingData& data /*TelnetIncomingDataQueue& que*
 		(*debugStream) << "Prompt";
 		(*debugStream) << "***ETYPE***";
 #endif
-				m_stringBuffer = QString::fromAscii(data.line.constData(), data.line.size());
+                m_stringBuffer = QString::fromLatin1(data.line.constData(), data.line.size());
 				m_stringBuffer = m_stringBuffer.simplified();
 				latinToAscii(m_stringBuffer);
 				
@@ -161,7 +161,7 @@ void Parser::parseNewMudInput(IncomingData& data /*TelnetIncomingDataQueue& que*
 #endif			
 				if (data.line.contains("null)>")) break;								
 
-				m_stringBuffer = QString::fromAscii(data.line.constData(), data.line.size());
+                m_stringBuffer = QString::fromLatin1(data.line.constData(), data.line.size());
 				m_stringBuffer = m_stringBuffer.simplified();
 				latinToAscii(m_stringBuffer);
 								
@@ -331,7 +331,7 @@ void Parser::parseNewMudInput(IncomingData& data /*TelnetIncomingDataQueue& que*
 		(*debugStream) << "LFCR";
 		(*debugStream) << "***ETYPE***";
 #endif			
-				m_stringBuffer = QString::fromAscii(data.line.constData(), data.line.size());
+                m_stringBuffer = QString::fromLatin1(data.line.constData(), data.line.size());
 				m_stringBuffer = m_stringBuffer.simplified();
 				latinToAscii(m_stringBuffer);
 
@@ -351,7 +351,7 @@ void Parser::parseNewMudInput(IncomingData& data /*TelnetIncomingDataQueue& que*
 		(*debugStream) << "LF";
 		(*debugStream) << "***ETYPE***";
 #endif			
-				m_stringBuffer = QString::fromAscii(data.line.constData(), data.line.size());
+                m_stringBuffer = QString::fromLatin1(data.line.constData(), data.line.size());
 				emit sendToUser(data.line);
 				break;			
 		}

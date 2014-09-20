@@ -54,7 +54,7 @@ class DockWidget : public QDockWidget
 {
   Q_OBJECT
 public:
-  DockWidget ( const QString & title, QWidget * parent = 0, Qt::WFlags flags = 0 );
+  DockWidget ( const QString & title, QWidget * parent = 0, Qt::WindowFlags flags = 0 );
 
   virtual QSize minimumSizeHint() const;
   virtual QSize sizeHint() const;
@@ -76,7 +76,7 @@ class MainWindow : public QMainWindow
   Q_OBJECT
 
 public:
-  MainWindow(QWidget *parent = 0, Qt::WFlags flags = 0);
+  MainWindow(QWidget *parent = 0, Qt::WindowFlags flags = 0);
   ~MainWindow();
 
   MapWindow *getCurrentMapWindow();

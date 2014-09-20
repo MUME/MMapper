@@ -33,7 +33,7 @@ bool Patterns::matchPattern(QString pattern, QString& str)
 	if (pattern.at(0) != '#')
 		return false;
 	
-	switch ((int)(pattern.at(1)).toAscii())
+    switch ((int)(pattern.at(1)).toLatin1())
 	{
 	case 33:  // !
 		m_rx.setPattern(pattern.remove(0,2));

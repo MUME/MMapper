@@ -162,40 +162,40 @@ bool CGroupChar::updateFromXML(QDomNode node)
   }
 
 
-  str = e.attribute("name").toAscii();
+  str = e.attribute("name").toLatin1();
   if (str != name) {
     updated = true;
     name = str;
   }
 
-  str = e.attribute("lastMovement").toAscii();
+  str = e.attribute("lastMovement").toLatin1();
   if (str != lastMovement) {
     updated = true;
     lastMovement = str;
   }
 
 
-  str = e.attribute("color").toAscii();
-  if (str != color.name().toAscii()) {
+  str = e.attribute("color").toLatin1();
+  if (str != color.name().toLatin1()) {
     updated = true;
     color = QColor(QString(str) );
   }
 
 //  printf(" 6.\r\n");
 
-  str = e.attribute("textHP").toAscii();
+  str = e.attribute("textHP").toLatin1();
   if (s != textHP) {
     updated = true;
     textHP = str;
   }
 
-  str = e.attribute("textMana").toAscii();
+  str = e.attribute("textMana").toLatin1();
   if (s != textMana) {
     updated = true;
     textMana = str;
   }
 
-  str = e.attribute("textMoves").toAscii();
+  str = e.attribute("textMoves").toLatin1();
   if (s != textMoves) {
     updated = true;
     textMoves = str;
@@ -262,6 +262,6 @@ QByteArray CGroupChar::getNameFromXML(QDomNode node)
 
   QDomElement e = node.toElement();
 
-  return e.attribute("name").toAscii();
+  return e.attribute("name").toLatin1();
 }
 

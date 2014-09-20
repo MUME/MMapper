@@ -109,7 +109,7 @@ void CGroupClient::dataIncoming()
   QByteArray rest;
 
 //      qDebug( "Incoming Data [conn %i, IP: %s]", socketDescriptor(),
-//                      (const char *) peerAddress().toString().toAscii() );
+//                      (const char *) peerAddress().toString().toLatin1() );
 
   QByteArray tmp = readAll();
 
@@ -165,7 +165,7 @@ void CGroupClient::sendData(QByteArray data)
 
 //      sprintf(len, "%i ", data.size());
 
-  buff = len.toAscii();
+  buff = len.toLatin1();
   buff += data;
 
   write(buff);

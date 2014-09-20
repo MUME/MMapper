@@ -130,7 +130,7 @@ void CGroupCommunicator::errorInConnection(CGroupClient *connection, const QStri
       str = QString("Tried to connect to %1 on port %2")
           .arg(connection->peerName())
           .arg(Config().m_groupManagerRemotePort) ;
-      getGroup()->connectionRefused( str.toAscii() );
+      getGroup()->connectionRefused( str.toLatin1() );
       changeType(Off);
       break;
     case QAbstractSocket::RemoteHostClosedError:
@@ -143,7 +143,7 @@ void CGroupCommunicator::errorInConnection(CGroupClient *connection, const QStri
       break;
     case QAbstractSocket::HostNotFoundError:
       str = QString("Host %1 not found ").arg(connection->peerName());
-      getGroup()->connectionRefused( str.toAscii() );
+      getGroup()->connectionRefused( str.toLatin1() );
       changeType(Off);
       break;
     case QAbstractSocket::SocketAccessError:
@@ -186,7 +186,7 @@ QByteArray CGroupCommunicator::formMessageBlock(int message, QDomNode data)
   dataElem.appendChild( doc.importNode(data, true) );
   root.appendChild(dataElem);
 
-  block = doc.toString().toAscii();
+  block = doc.toString().toLatin1();
   //NOTE: VERY Spammy
   //qDebug( "Message: %s", (const char *) block);
 
@@ -219,14 +219,14 @@ void CGroupCommunicator::incomingData(CGroupClient *conn, QByteArray buff)
   data = buff;
 
   // NOTE: Very spammy
-  //qDebug( "Raw data received: %s", (const char *) data.toAscii());
+  //qDebug( "Raw data received: %s", (const char *) data.toLatin1());
 
   QString error;
   int errLine, errColumn;
   QDomDocument doc("datagram");
   if (!doc.setContent(data, &error, &errLine, &errColumn)) {
     qDebug( "Failed to parse the datagram. Error in line %i, column %i: %s",
-            errLine, errColumn, error.toAscii().constData());
+            errLine, errColumn, error.toLatin1().constData());
     return;
   }
 
@@ -234,7 +234,7 @@ void CGroupCommunicator::incomingData(CGroupClient *conn, QByteArray buff)
   while(!n.isNull()) {
     QDomElement e = n.toElement();
 
-    //qDebug( "Cycle Element name: %s", (const char *) e.nodeName().toAscii());
+    //qDebug( "Cycle Element name: %s", (const char *) e.nodeName().toLatin1());
 
     if (e.nodeName() == "datagram") {
       int message;
@@ -250,7 +250,7 @@ void CGroupCommunicator::incomingData(CGroupClient *conn, QByteArray buff)
 //              QString blob;
 //              QTextStream stream(&blob);
 //              stream << dataElement;
-//              qDebug( "Datagram arrived. Message : %i, Blob: %s", message, (const char *) blob.toAscii());
+//              qDebug( "Datagram arrived. Message : %i, Blob: %s", message, (const char *) blob.toLatin1());
 
       if (type == Client)
         retrieveDataClient(conn, message, dataElement);

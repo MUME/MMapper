@@ -97,7 +97,7 @@ ConnectionType PathMachine::requiredConnectionType(const QString & str)
       str == SLOT(deleteMostLikelyRoom()))
     return QueuedConnection;
   else if (str == SIGNAL(playerMoved(Coordinate, Coordinate)))
-    return AutoCompatConnection;
+    return AutoConnection;
   else
     return DirectConnection;
 }

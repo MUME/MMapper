@@ -65,9 +65,9 @@ GroupManagerPage::GroupManagerPage(CGroup* gm, QWidget *parent)
 void GroupManagerPage::charNameTextChanged()
 {
   const QString newName = charName->text();
-  if (!m_groupManager->isNamePresent(newName.toAscii()) &&
+  if (!m_groupManager->isNamePresent(newName.toLatin1()) &&
       Config().m_groupManagerCharName != newName) {
-    Config().m_groupManagerCharName = newName.toAscii();
+    Config().m_groupManagerCharName = newName.toLatin1();
     m_groupManager->resetName();
   }
 }
@@ -97,8 +97,8 @@ void GroupManagerPage::changeColorClicked()
 
 void GroupManagerPage::remoteHostTextChanged()
 {
-  if (QString(remoteHost->text()).toAscii() != Config().m_groupManagerHost) {
-    Config().m_groupManagerHost = QString(remoteHost->text()).toAscii();
+  if (QString(remoteHost->text()).toLatin1() != Config().m_groupManagerHost) {
+    Config().m_groupManagerHost = QString(remoteHost->text()).toLatin1();
   }
 
   if (m_groupManager->isConnected() && m_groupManager->getType() == CGroupCommunicator::Client)
@@ -116,7 +116,7 @@ void GroupManagerPage::remotePortValueChanged(int)
 }
 
 void GroupManagerPage::localHostLinkActivated(const QString &link) {
-  QDesktopServices::openUrl(QUrl::fromEncoded(link.toAscii()));
+  QDesktopServices::openUrl(QUrl::fromEncoded(link.toLatin1()));
 }
 
 void GroupManagerPage::localPortValueChanged(int)

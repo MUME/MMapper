@@ -225,7 +225,7 @@ void TelnetFilter::dispatchTelnetStream(QByteArray& stream, IncomingData &m_inco
 		switch (val1)
 		{
 		case ASCII_DEL:
-			m_incomingData.line.append(QChar::fromAscii((char)ASCII_DEL));
+            m_incomingData.line.append(QChar::fromLatin1((char)ASCII_DEL));
 
 			if(m_incomingData.type != TDT_TELNET)
 			{
@@ -252,7 +252,7 @@ void TelnetFilter::dispatchTelnetStream(QByteArray& stream, IncomingData &m_inco
 			}				
 			//start incoming telnet command
 			m_incomingData.type = TDT_TELNET;
-			m_incomingData.line.append(QChar::fromAscii((char)val1));
+            m_incomingData.line.append(QChar::fromLatin1((char)val1));
 			index++;
 			break;
 
@@ -270,7 +270,7 @@ void TelnetFilter::dispatchTelnetStream(QByteArray& stream, IncomingData &m_inco
 			if (m_incomingData.type == TDT_TELNET)
 			{
 				//end incoming telnet command
-				m_incomingData.line.append(QChar::fromAscii((char)val1));
+                m_incomingData.line.append(QChar::fromLatin1((char)val1));
 				que.enqueue(m_incomingData);
 				m_incomingData.line.clear();
 //				if (val1 == TC_GA && Config().m_IAC_prompt_parser)
@@ -291,7 +291,7 @@ void TelnetFilter::dispatchTelnetStream(QByteArray& stream, IncomingData &m_inco
 				switch (val2)
 				{
 					case ASCII_LF:
-						m_incomingData.line.append(QChar::fromAscii((char)ASCII_CR));
+                        m_incomingData.line.append(QChar::fromLatin1((char)ASCII_CR));
 						m_incomingData.type = TDT_LFCR;						
 						{
 						que.enqueue(m_incomingData);
@@ -302,14 +302,14 @@ void TelnetFilter::dispatchTelnetStream(QByteArray& stream, IncomingData &m_inco
 						break;
 					
 					default:
-						m_incomingData.line.append(QChar::fromAscii((char)ASCII_CR));
+                        m_incomingData.line.append(QChar::fromLatin1((char)ASCII_CR));
 						index++;														
 						break;
 				}									
 			}
 			else
 			{
-				m_incomingData.line.append(QChar::fromAscii((char)ASCII_CR));
+                m_incomingData.line.append(QChar::fromLatin1((char)ASCII_CR));
 				index++;	
 				break;										
 			}
@@ -323,7 +323,7 @@ void TelnetFilter::dispatchTelnetStream(QByteArray& stream, IncomingData &m_inco
 				switch (val2)
 				{
 					case ASCII_CR:
-						m_incomingData.line.append(QChar::fromAscii((char)ASCII_LF));
+                        m_incomingData.line.append(QChar::fromLatin1((char)ASCII_LF));
 						m_incomingData.type = TDT_CRLF;						
 						{
 						que.enqueue(m_incomingData);
@@ -334,14 +334,14 @@ void TelnetFilter::dispatchTelnetStream(QByteArray& stream, IncomingData &m_inco
 						break;
 					
 					default:
-						m_incomingData.line.append(QChar::fromAscii((char)ASCII_LF));
+                        m_incomingData.line.append(QChar::fromLatin1((char)ASCII_LF));
 						index++;														
 						break;
 				}									
 			}
 			else
 			{
-				m_incomingData.line.append(QChar::fromAscii((char)ASCII_LF));
+                m_incomingData.line.append(QChar::fromLatin1((char)ASCII_LF));
 				index++;											
 				break;
 			}
@@ -360,7 +360,7 @@ void TelnetFilter::dispatchTelnetStream(QByteArray& stream, IncomingData &m_inco
 						case TC_WONT:
 						case TC_WILL:
 							//end incoming telnet command						
-							m_incomingData.line.append(QChar::fromAscii((char)val1));
+                            m_incomingData.line.append(QChar::fromLatin1((char)val1));
 							{
 							que.enqueue(m_incomingData);
 							}
@@ -386,7 +386,7 @@ void TelnetFilter::dispatchTelnetStream(QByteArray& stream, IncomingData &m_inco
 					m_incomingData.type = TDT_SPLIT;										
 				}
 				
-				m_incomingData.line.append(QChar::fromAscii((char)val1));
+                m_incomingData.line.append(QChar::fromLatin1((char)val1));
 				index++; 
 				break;
 			}

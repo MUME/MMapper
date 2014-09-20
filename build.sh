@@ -19,4 +19,3 @@ mkdir -p build && cd build || exit 1
 cmake ../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=. \
 -DMCLIENT_BIN_DIR=. -DMCLIENT_PLUGINS_DIR=plugins &&        \
 make -j$JFLAG && make install
-ln -sf ../config config

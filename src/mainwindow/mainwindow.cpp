@@ -55,7 +55,7 @@
 
 #include <memory>
 
-DockWidget::DockWidget ( const QString & title, QWidget * parent, Qt::WFlags flags )
+DockWidget::DockWidget ( const QString & title, QWidget * parent, Qt::WindowFlags flags )
     :QDockWidget(title, parent, flags)
 {}
 
@@ -83,7 +83,7 @@ QSize DockWidget::sizeHint() const
   return QSize(500, 130);
 };
 
-MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags)
+MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     : QMainWindow(parent, flags)
 {
   setObjectName("MainWindow");
@@ -957,7 +957,7 @@ QPointer<QFileDialog> MainWindow::defaultSaveDialog()
   QPointer<QFileDialog> save = new QFileDialog( this, "Choose map file name ..." );
   save->setFileMode(QFileDialog::AnyFile);
   save->setDirectory(QDir::current());
-  save->setFilter("MMapper2 (*.mm2)");
+  save->setNameFilter("MMapper2 (*.mm2)");
   save->setDefaultSuffix("mm2");
   save->setAcceptMode(QFileDialog::AcceptSave);
 
@@ -1387,7 +1387,7 @@ void MainWindow::onConnectToNeighboursRoomSelection()
 
 void MainWindow::openMmapperHomepage()
 {
-        QDesktopServices::openUrl(QUrl("http://sourceforge.net/projects/mmapper/"));
+        QDesktopServices::openUrl(QUrl("http://github.com/mume/mmapper"));
 }
 
 void MainWindow::openMumeWebsite()

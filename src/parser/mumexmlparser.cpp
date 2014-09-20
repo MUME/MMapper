@@ -495,7 +495,7 @@ void MumeXmlParser::parseMudCommands(QString& str)
 
     // inform groupManager
     if (scoreExp.exactMatch(str) || scoreTrollExp.exactMatch(str))
-      emit sendScoreLineEvent(str.toAscii());
+      emit sendScoreLineEvent(str.toLatin1());
   }
 }
 

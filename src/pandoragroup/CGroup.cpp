@@ -213,32 +213,32 @@ void CGroup::updateChar(QDomNode blob)
 
 void CGroup::connectionRefused(QString message)
 {
-  emit log("GroupManager", QString("Connection refused: %1").arg(message.toAscii().constData()));
+  emit log("GroupManager", QString("Connection refused: %1").arg(message.toLatin1().constData()));
   QMessageBox::information(this, "groupManager", QString("Connection refused: %1.").arg(message));
 
 }
 
 void CGroup::connectionFailed(QString message)
 {
-  emit log("GroupManager", QString("Failed to connect: %1").arg(message.toAscii().constData()));
+  emit log("GroupManager", QString("Failed to connect: %1").arg(message.toLatin1().constData()));
   QMessageBox::information(this, "groupManager", QString("Failed to connect: %1.").arg(message));
 }
 
 void CGroup::connectionClosed(QString message)
 {
-  emit log("GroupManager", QString("Connection closed: %1").arg(message.toAscii().constData()));
+  emit log("GroupManager", QString("Connection closed: %1").arg(message.toLatin1().constData()));
   QMessageBox::information(this, "groupManager", QString("Connection closed: %1.").arg(message));
 }
 
 void CGroup::connectionError(QString message)
 {
-  emit log("GroupManager", QString("Connection error: %1.").arg(message.toAscii().constData()));
+  emit log("GroupManager", QString("Connection error: %1.").arg(message.toLatin1().constData()));
   QMessageBox::information(this, "groupManager", QString("Connection error: %1.").arg(message));
 }
 
 void CGroup::serverStartupFailed(QString message)
 {
-  emit log("GroupManager", QString("Failed to start the Group server: %1").arg(message.toAscii().constData()));
+  emit log("GroupManager", QString("Failed to start the Group server: %1").arg(message.toLatin1().constData()));
   QMessageBox::information(this, "groupManager", QString("Failed to start the groupManager server: %1.").arg(message));
 }
 
@@ -258,7 +258,7 @@ void CGroup::gotKicked(QDomNode message)
   }
 
   QDomElement text = e.toElement();
-  emit log("GroupManager", QString("You got kicked! Reason [nodename %1] : %2").arg(text.nodeName().toAscii().constData()).arg(text.text().toAscii().constData()));
+  emit log("GroupManager", QString("You got kicked! Reason [nodename %1] : %2").arg(text.nodeName().toLatin1().constData()).arg(text.text().toLatin1().constData()));
 //      QMessageBox::critical(this, "groupManager", QString("You got kicked! Reason: %1.").arg(text.text()));
 }
 
@@ -282,9 +282,9 @@ void CGroup::gTellArrived(QDomNode node)
   }
 
   QDomElement text = e.toElement();
-  emit log("GroupManager", QString("GTell from %1, Arrived : %2").arg(from.toAscii().constData()).arg(text.text().toAscii().constData()));
+  emit log("GroupManager", QString("GTell from %1, Arrived : %2").arg(from.toLatin1().constData()).arg(text.text().toLatin1().constData()));
 
-  QByteArray tell = QString("\r\n" + from + " tells you [GT] '" + text.text() + "'\r\n").toAscii();
+  QByteArray tell = QString("\r\n" + from + " tells you [GT] '" + text.text() + "'\r\n").toLatin1();
 
   emit displayGroupTellEvent(tell.constData());
 }
@@ -322,14 +322,14 @@ void CGroup::renameChar(QDomNode blob)
   QString oldname = e.toElement().attribute("oldname");
   QString newname = e.toElement().attribute("newname");
 
-  emit log("GroupManager", QString("Renaming a char from %1 to %2").arg(oldname.toAscii().constData()).arg(newname.toAscii().constData()));
+  emit log("GroupManager", QString("Renaming a char from %1 to %2").arg(oldname.toLatin1().constData()).arg(newname.toLatin1().constData()));
 
   CGroupChar *ch;
-  ch = getCharByName(oldname.toAscii());
+  ch = getCharByName(oldname.toLatin1());
   if (ch == NULL)
     return;
 
-  ch->setName(newname.toAscii());
+  ch->setName(newname.toLatin1());
   ch->updateLabels();
 }
 
@@ -347,12 +347,12 @@ void CGroup::parseScoreInformation(QByteArray score)
     QStringList list = temp.split('/');
 
     /*
-    qDebug( "Hp: %s", (const char *) list[0].toAscii());
-    qDebug( "Hp max: %s", (const char *) list[1].toAscii());
-    qDebug( "Mana: %s", (const char *) list[2].toAscii());
-    qDebug( "Max Mana: %s", (const char *) list[3].toAscii());
-    qDebug( "Moves: %s", (const char *) list[4].toAscii());
-    qDebug( "Max Moves: %s", (const char *) list[5].toAscii());
+    qDebug( "Hp: %s", (const char *) list[0].toLatin1());
+    qDebug( "Hp max: %s", (const char *) list[1].toLatin1());
+    qDebug( "Mana: %s", (const char *) list[2].toLatin1());
+    qDebug( "Max Mana: %s", (const char *) list[3].toLatin1());
+    qDebug( "Moves: %s", (const char *) list[4].toLatin1());
+    qDebug( "Max Moves: %s", (const char *) list[5].toLatin1());
     */
 
     self->setScore(list[0].toInt(), list[1].toInt(), list[2].toInt(), list[3].toInt(),
@@ -369,10 +369,10 @@ void CGroup::parseScoreInformation(QByteArray score)
     QStringList list = temp.split('/');
 
     /*
-    qDebug( "Hp: %s", (const char *) list[0].toAscii());
-    qDebug( "Hp max: %s", (const char *) list[1].toAscii());
-    qDebug( "Moves: %s", (const char *) list[2].toAscii());
-    qDebug( "Max Moves: %s", (const char *) list[3].toAscii());
+    qDebug( "Hp: %s", (const char *) list[0].toLatin1());
+    qDebug( "Hp max: %s", (const char *) list[1].toLatin1());
+    qDebug( "Moves: %s", (const char *) list[2].toLatin1());
+    qDebug( "Max Moves: %s", (const char *) list[3].toLatin1());
 */
     self->setScore(list[0].toInt(), list[1].toInt(), 0, 0,
                    list[2].toInt(), list[3].toInt()                        );

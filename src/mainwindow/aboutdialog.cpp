@@ -46,10 +46,10 @@ AboutDialog::AboutDialog(QWidget *parent)
           "<p align=\"center\"><b>" + tr("MMapper Version %1").arg(QString(MMAPPER_VERSION))
         + "</b></p>"
         + "<p align=\"center\">"
-#ifdef SVN_REVISION
-        + tr("SVN revision %1").arg(QString::number(SVN_REVISION))
-        + "<br>"
+#ifdef GIT_BRANCH
+        + tr("Built on branch %1 and revision %2").arg(QString(GIT_BRANCH), QString(GIT_COMMIT_HASH))
 #endif
+        + "<br>"
         + tr("Based on Qt %1 (%2 bit)").arg(QLatin1String(QT_VERSION_STR),
                                             QString::number(QSysInfo::WordSize))
         + "<br>"
