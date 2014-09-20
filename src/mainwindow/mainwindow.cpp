@@ -463,7 +463,7 @@ void MainWindow::createActions()
   forceRoomAct = new QAction(QIcon(":/icons/force.png"), tr("Force Path Machine to selected Room"), this);
   forceRoomAct->setStatusTip(tr("Force Path Machine to selected Room"));
   forceRoomAct->setCheckable(false);
-  forceRoomAct->setEnabled(FALSE);
+  forceRoomAct->setEnabled(false);
   connect(forceRoomAct, SIGNAL(triggered()), getCurrentMapWindow()->getCanvas(), SLOT(forceMapperToRoom()));
 
   roomActGroup = new QActionGroup(this);
@@ -475,7 +475,7 @@ void MainWindow::createActions()
   roomActGroup->addAction(mergeUpRoomSelectionAct);
   roomActGroup->addAction(mergeDownRoomSelectionAct);
   roomActGroup->addAction(connectToNeighboursRoomSelectionAct);
-  roomActGroup->setEnabled(FALSE);
+  roomActGroup->setEnabled(false);
 
   //editConnectionSelectionAct = new QAction(QIcon(":/icons/connectionedit.png"), tr("Edit Selected Connection"), this);
   //editConnectionSelectionAct->setStatusTip(tr("Edit Selected Connection"));
@@ -489,7 +489,7 @@ void MainWindow::createActions()
   connectionActGroup->setExclusive(false);
   //connectionActGroup->addAction(editConnectionSelectionAct);
   connectionActGroup->addAction(deleteConnectionSelectionAct);
-  connectionActGroup->setEnabled(FALSE);
+  connectionActGroup->setEnabled(false);
 
   playModeAct = new QAction(QIcon(":/icons/online.png"), tr("Switch to play mode"), this);
   playModeAct->setStatusTip(tr("Switch to play mode - no new rooms are created"));
@@ -787,18 +787,18 @@ void MainWindow::onPreferences()
 
 void MainWindow::newRoomSelection(const RoomSelection* rs)
 {
-  forceRoomAct->setEnabled(FALSE);
+  forceRoomAct->setEnabled(false);
   m_roomSelection = rs;
   if (m_roomSelection)
   {
-    roomActGroup->setEnabled(TRUE);
+    roomActGroup->setEnabled(true);
     if (m_roomSelection->size() == 1) {
-	forceRoomAct->setEnabled(TRUE);
+	forceRoomAct->setEnabled(true);
     }
   }
   else
   {
-    roomActGroup->setEnabled(FALSE);
+    roomActGroup->setEnabled(false);
   }
 }
 
@@ -807,11 +807,11 @@ void MainWindow::newConnectionSelection(ConnectionSelection* cs)
   m_connectionSelection = cs;
   if (m_connectionSelection)
   {
-    connectionActGroup->setEnabled(TRUE);
+    connectionActGroup->setEnabled(true);
   }
   else
   {
-    connectionActGroup->setEnabled(FALSE);
+    connectionActGroup->setEnabled(false);
   }
 }
 
@@ -1034,7 +1034,7 @@ void MainWindow::loadFile(const QString &fileName)
   //getCurrentMapWindow()->getCanvas()->setEnabled(false);
 
   QFile *file = new QFile(fileName);
-  //QIODevice *file = KFilterDev::deviceForFile( filename, "application/x-gzip", TRUE );
+  //QIODevice *file = KFilterDev::deviceForFile( filename, "application/x-gzip", true );
 
   if (!file->open(QFile::ReadOnly))
   {

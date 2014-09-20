@@ -150,7 +150,6 @@ include_directories(
     ${QTIOCOMPRESSOR_INCLUDE_DIRS}
 )
 
-#QT5_WRAP_CPP(mmapper_MOC_SRCS ${mmapper_MOC_HDRS} ${qtiocompressor_MOC_HDRS})
 QT5_WRAP_UI(mmapper_UIS_H ${mmapper_UIS})
 QT5_ADD_RESOURCES(mmapper_RCC_SRCS ${mmapper_RCS})
 
@@ -321,7 +320,7 @@ if (APPLE)
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	COMMENT "Deploying the Qt Framework onto the bundle"
     )
-   
+
     # Install Executables
     install(
         TARGETS mmapper
@@ -344,12 +343,9 @@ if (APPLE)
 	DESTINATION MMapper
 	COMPONENT help
     )
-    
-    # If we are supporting older machines, use the following
-    #set(CPACK_OSX_PACKAGE_VERSION 10.5)
 
     # Package Settings
-    set(CPACK_GENERATOR "DragNDrop")
+    set(CPACK_GENERATOR "DragNDrop;ZIP")
     set(CPACK_SOURCE_GENERATOR "TGZ")
 
     # Libraries are bundled directly

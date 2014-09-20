@@ -938,7 +938,7 @@ bool MapStorage::saveData( bool baseMapOnly )
   m_mapData.unsetDataChanged();
   emit onDataSaved();
 
-  return TRUE;
+  return true;
 }
 
 

@@ -57,10 +57,10 @@ MapWindow::MapWindow(MapData *mapData, PrespammedPath* pp, CGroup* gm,  QWidget 
   m_gridLayout->addWidget(m_horizontalScrollBar, 1, 0, 1, 1);
 
   QGLFormat fmt;
-  fmt.setDoubleBuffer( TRUE );
-  fmt.setDirectRendering( TRUE );
-  fmt.setRgba( TRUE );
-  fmt.setDepth( TRUE );
+  fmt.setDoubleBuffer( true );
+  fmt.setDirectRendering( true );
+  fmt.setRgba( true );
+  fmt.setDepth( true );
   m_canvas = new MapCanvas(mapData, pp, gm, fmt, NULL);
 
   m_gridLayout->addWidget(m_canvas, 0, 0, 1, 1);

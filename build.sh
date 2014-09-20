@@ -16,6 +16,11 @@ fi
 
 mkdir -p build && cd build || exit 1
 
-cmake ../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=. \
--DMCLIENT_BIN_DIR=. -DMCLIENT_PLUGINS_DIR=plugins &&        \
+cmake ../ -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=.
 make -j$JFLAG && make install
+
+if [ -e MMapper/mmapper.app/Contents/Info.plist ]; then
+    # Mac OS X Retina support
+    perl -pi -e 's#<dict>#<dict>\n\t<key>NSPrincipalClass</key>\n\t<string>NSApplication</string>\n\t<key>NSHighResolutionCapable</key>\n\t<string>True</string>#' MMapper/mmapper.app/Contents/Info.plist
+    make package
+fi

@@ -51,8 +51,8 @@ if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
     )
 
     message(STATUS "Building from branch ${GIT_BRANCH} on commit ${GIT_COMMIT_HASH}")
-    add_definitions("-DGIT_COMMIT_HASH=${GIT_COMMIT_HASH}")
-    add_definitions("-DGIT_BRANCH=${GIT_BRANCH}")
+    add_definitions(-DGIT_COMMIT_HASH="${GIT_COMMIT_HASH}")
+    add_definitions(-DGIT_BRANCH="${GIT_BRANCH}")
 endif()
 
 if (UNIX AND NOT APPLE)

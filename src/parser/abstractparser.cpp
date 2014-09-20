@@ -65,15 +65,15 @@ void AbstractParser::emptyQueue()
 QString& AbstractParser::removeAnsiMarks(QString& str) {
   static const QChar colorEndMark('m');
   QString out=emptyString;
-  bool started=FALSE;
+  bool started=false;
 
   for ( int i=0; i< str.length(); i++ ){
     if ( started && (str.at(i) == colorEndMark)){
-      started = FALSE;
+      started = false;
       continue;
     }
     if (str.at(i) == escChar){
-      started = TRUE;
+      started = true;
       continue;
     }
     if (started) continue;
@@ -123,10 +123,10 @@ void AbstractParser::parsePrompt(QString& prompt){
 void AbstractParser::parseExits(QString& str)
 {
   m_exitsFlags = 0;
-  bool doors=FALSE;
-  bool road=FALSE;
-  bool climb=FALSE;
-  bool portal=FALSE;
+  bool doors=false;
+  bool road=false;
+  bool climb=false;
+  bool portal=false;
 
   int length = str.length();
   for (int i=7; i<length; i++){
@@ -444,7 +444,7 @@ bool AbstractParser::parseUserCommands(QString& command)
   QString str = command;
 
   DoorActionType daction = DAT_NONE;
-  bool dooraction = FALSE;
+  bool dooraction = false;
 
   if (str.contains("$$DOOR"))
   {
@@ -476,15 +476,15 @@ bool AbstractParser::parseUserCommands(QString& command)
     }
     else if (str.startsWith("_brief"))
     {
-      if (Config().m_brief == TRUE)
+      if (Config().m_brief == true)
       {
-        Config().m_brief = FALSE;
+        Config().m_brief = false;
         emit sendToUser((QByteArray)"[MMapper] brief mode off.\r\n");
         return false;
       }
-      if (Config().m_brief == FALSE)
+      if (Config().m_brief == false)
       {
-        Config().m_brief = TRUE;
+        Config().m_brief = true;
         emit sendToUser((QByteArray)"[MMapper] brief mode on.\r\n");
         return false;
       }
@@ -825,23 +825,23 @@ bool AbstractParser::parseUserCommands(QString& command)
       return false;
     }
 
-    if (str.startsWith("_open"))   {dooraction = TRUE; daction = DAT_OPEN;}
+    if (str.startsWith("_open"))   {dooraction = true; daction = DAT_OPEN;}
     else
-      if (str.startsWith("_close"))  {dooraction = TRUE; daction = DAT_CLOSE;}
+      if (str.startsWith("_close"))  {dooraction = true; daction = DAT_CLOSE;}
     else
-      if (str.startsWith("_lock"))   {dooraction = TRUE; daction = DAT_LOCK;}
+      if (str.startsWith("_lock"))   {dooraction = true; daction = DAT_LOCK;}
     else
-      if (str.startsWith("_unlock")) {dooraction = TRUE; daction = DAT_UNLOCK;}
+      if (str.startsWith("_unlock")) {dooraction = true; daction = DAT_UNLOCK;}
     else
-      if (str.startsWith("_pick"))   {dooraction = TRUE; daction = DAT_PICK;}
+      if (str.startsWith("_pick"))   {dooraction = true; daction = DAT_PICK;}
     else
-      if (str.startsWith("_rock"))   {dooraction = TRUE; daction = DAT_ROCK;}
+      if (str.startsWith("_rock"))   {dooraction = true; daction = DAT_ROCK;}
     else
-      if (str.startsWith("_bash"))   {dooraction = TRUE; daction = DAT_BASH;}
+      if (str.startsWith("_bash"))   {dooraction = true; daction = DAT_BASH;}
     else
-      if (str.startsWith("_break"))   {dooraction = TRUE; daction = DAT_BREAK;}
+      if (str.startsWith("_break"))   {dooraction = true; daction = DAT_BREAK;}
     else
-      if (str.startsWith("_block"))   {dooraction = TRUE; daction = DAT_BLOCK;}
+      if (str.startsWith("_block"))   {dooraction = true; daction = DAT_BLOCK;}
 
 
     if (str=="_removedoornames") {

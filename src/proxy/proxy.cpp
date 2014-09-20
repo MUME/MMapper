@@ -136,7 +136,7 @@ bool Proxy::init()
     emit error(m_userSocket->error());
     delete m_userSocket;
     m_userSocket = NULL;
-    return FALSE;
+    return false;
   }
 
   connect(m_userSocket, SIGNAL(disconnected()), this, SLOT(userTerminatedConnection()) );
@@ -206,7 +206,7 @@ bool Proxy::init()
     delete m_mudSocket;
     m_mudSocket = NULL;
 
-    return TRUE;
+    return true;
 
   }
   else
@@ -228,10 +228,10 @@ bool Proxy::init()
       emit sendToMud(idprompt);
     }
 
-    return TRUE;
+    return true;
   }
-//return TRUE;
-  return FALSE;
+//return true;
+  return false;
 }
 
 

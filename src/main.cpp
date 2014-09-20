@@ -37,6 +37,10 @@ int main(int argc, char **argv)
 {
   QApplication    app(argc, argv);
 
+#if QT_VERSION >= 0x050100
+    app.setAttribute(Qt::AA_UseHighDpiPixmaps);
+#endif
+
   Config().read();
 #ifdef WITH_SPLASH
   QPixmap pixmap(":/pixmaps/splash20.png");

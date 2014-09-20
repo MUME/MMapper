@@ -159,7 +159,7 @@ void ParserPage::removeEndDescPatternClicked(){
 void ParserPage::testPatternClicked(){
 	QString pattern=newPattern->text();
 	QString str=testString->text();
-	bool matches = FALSE;
+	bool matches = false;
 	QRegExp rx; 
 
 	if ((pattern)[0] != '#') {
@@ -168,19 +168,19 @@ void ParserPage::testPatternClicked(){
         switch ((int)(pattern[1]).toLatin1()){
 		case 33:  // !
 			rx.setPattern((pattern).remove(0,2));
-			if(rx.exactMatch(str)) matches = TRUE;
+			if(rx.exactMatch(str)) matches = true;
 			break;
 		case 60:  // <
-			if(str.startsWith((pattern).remove(0,2))) matches = TRUE;
+			if(str.startsWith((pattern).remove(0,2))) matches = true;
 			break;
 		case 61:  // =
-			if( str==((pattern).remove(0,2)) ) matches = TRUE;
+			if( str==((pattern).remove(0,2)) ) matches = true;
 			break;
 		case 62:  // >
-			if(str.endsWith((pattern).remove(0,2))) matches = TRUE;
+			if(str.endsWith((pattern).remove(0,2))) matches = true;
 			break;
 		case 63:  // ?
-			if(str.contains((pattern).remove(0,2))) matches = TRUE;
+			if(str.contains((pattern).remove(0,2))) matches = true;
 			break;
 		default:;
 		}

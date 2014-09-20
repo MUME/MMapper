@@ -288,9 +288,9 @@ uint RoomEditAttrDlg::getSelectedExit()
 void RoomEditAttrDlg::roomListCurrentIndexChanged(int)
 {
 	disconnectAll();
-	alignUndefRadioButton->setChecked(TRUE);
-	portUndefRadioButton->setChecked(TRUE);
-	lightUndefRadioButton->setChecked(TRUE);
+	alignUndefRadioButton->setChecked(true);
+	portUndefRadioButton->setChecked(true);
+	lightUndefRadioButton->setChecked(true);
 	connectAll();
 
 	updateDialog( getSelectedRoom() );
@@ -311,9 +311,9 @@ void RoomEditAttrDlg::setRoomSelection(const RoomSelection* rs, MapData* md, Map
     	updateDialog(NULL);    	    	
     	
 		disconnectAll();
-		alignUndefRadioButton->setChecked(TRUE);
-		portUndefRadioButton->setChecked(TRUE);
-		lightUndefRadioButton->setChecked(TRUE);
+		alignUndefRadioButton->setChecked(true);
+		portUndefRadioButton->setChecked(true);
+		lightUndefRadioButton->setChecked(true);
 		connectAll();
     }
     else if (rs->size() == 1) 
@@ -659,55 +659,55 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
 		switch (getAlignType(r))
 		{
 			case RAT_GOOD: 
-				goodRadioButton->setChecked(TRUE); 
+				goodRadioButton->setChecked(true); 
 				break;
 			case RAT_NEUTRAL: 
-				neutralRadioButton->setChecked(TRUE); 
+				neutralRadioButton->setChecked(true); 
 				break;
 			case RAT_EVIL: 
-				evilRadioButton->setChecked(TRUE); 
+				evilRadioButton->setChecked(true); 
 				break;
 			case RAT_UNDEFINED:	
-				alignUndefRadioButton->setChecked(TRUE);
+				alignUndefRadioButton->setChecked(true);
 				break;
 		}	
 	
 		switch (getPortableType(r))
 		{
 			case RPT_PORTABLE: 
-				portableRadioButton->setChecked(TRUE); 
+				portableRadioButton->setChecked(true); 
 				break;
 			case RPT_NOTPORTABLE: 
-				noPortRadioButton->setChecked(TRUE);
+				noPortRadioButton->setChecked(true);
 				break;
 			case RPT_UNDEFINED:	
-				portUndefRadioButton->setChecked(TRUE);
+				portUndefRadioButton->setChecked(true);
 				break;
 		}	
 	
 		switch (getRidableType(r))
 		{
 			case RRT_RIDABLE: 
-				ridableRadioButton->setChecked(TRUE); 
+				ridableRadioButton->setChecked(true); 
 				break;
 			case RRT_NOTRIDABLE: 
-				noRideRadioButton->setChecked(TRUE);
+				noRideRadioButton->setChecked(true);
 				break;
 			case RRT_UNDEFINED:	
-				rideUndefRadioButton->setChecked(TRUE);
+				rideUndefRadioButton->setChecked(true);
 				break;
 		}	
 
 		switch (getLightType(r))
 		{
 			case RLT_DARK: 
-				darkRadioButton->setChecked(TRUE); 
+				darkRadioButton->setChecked(true); 
 				break;
 			case RLT_LIT: 
-				litRadioButton->setChecked(TRUE); 
+				litRadioButton->setChecked(true); 
 				break;
 			case RLT_UNDEFINED:	
-				lightUndefRadioButton->setChecked(TRUE);
+				lightUndefRadioButton->setChecked(true);
 				break;
 		}	
 	}

@@ -39,11 +39,11 @@ void Configuration::read()
   //conf.setPath( QSettings::NativeFormat, QSettings::UserScope, "$HOME/.mmapper2-config" );
 
   conf.beginGroup("General");
-  m_firstRun = conf.value("Run first time", TRUE).toBool();
+  m_firstRun = conf.value("Run first time", true).toBool();
   windowPosition = conf.value("Window Position", QPoint(200, 200)).toPoint();
   windowSize = conf.value("Window Size", QSize(400, 400)).toSize();
   windowState = conf.value("Window State", "").toByteArray();
-  alwaysOnTop = conf.value("Always On Top", FALSE).toBool();
+  alwaysOnTop = conf.value("Always On Top", false).toBool();
   m_mapMode = conf.value("Map Mode", 0).toInt(); //0 play, 1 map
   conf.endGroup();
 
@@ -60,19 +60,19 @@ void Configuration::read()
   }
 
   conf.beginGroup("Canvas");
-  m_showUpdated = conf.value("Show updated rooms", TRUE).toBool();
-  m_drawNotMappedExits = conf.value("Draw not mapped exits", TRUE).toBool();
-  m_drawUpperLayersTextured = conf.value("Draw upper layers textured", FALSE).toBool();
-  m_drawDoorNames = conf.value("Draw door names", TRUE).toBool();
+  m_showUpdated = conf.value("Show updated rooms", true).toBool();
+  m_drawNotMappedExits = conf.value("Draw not mapped exits", true).toBool();
+  m_drawUpperLayersTextured = conf.value("Draw upper layers textured", false).toBool();
+  m_drawDoorNames = conf.value("Draw door names", true).toBool();
   conf.endGroup();
 
   conf.beginGroup("Debug");
-  m_autoLog = conf.value("Enable log", FALSE).toBool();
+  m_autoLog = conf.value("Enable log", false).toBool();
   m_logFileName = conf.value("Log file name", "~/mmapper.log").toString();
   conf.endGroup();
 
   conf.beginGroup("Auto load world");
-  m_autoLoadWorld = conf.value("Auto load", FALSE ).toBool();
+  m_autoLoadWorld = conf.value("Auto load", false ).toBool();
   m_autoLoadFileName = conf.value("File name", "arda.mm2").toString();
   conf.endGroup();
 
@@ -80,9 +80,9 @@ void Configuration::read()
   m_roomNameColor = conf.value("Room name ansi color", "[32m").toString();
   m_roomDescColor = conf.value("Room desc ansi color", "[30m").toString();
 
-  m_IAC_prompt_parser = conf.value("Use IAC-GA prompt", TRUE).toBool();
-  m_removeXmlTags = conf.value("Remove XML tags", TRUE).toBool();
-  m_mpi = conf.value("Use MUME XML MPI", TRUE).toBool();
+  m_IAC_prompt_parser = conf.value("Use IAC-GA prompt", true).toBool();
+  m_removeXmlTags = conf.value("Remove XML tags", true).toBool();
+  m_mpi = conf.value("Use MUME XML MPI", true).toBool();
 
   m_moveForcePatternsList = conf.value("Move force patterns").toStringList();
   m_moveCancelPatternsList = conf.value("Move cancel patterns").toStringList();
@@ -101,8 +101,8 @@ void Configuration::read()
   conf.endGroup();
 
   conf.beginGroup("Mume native");
-  m_brief = conf.value("Brief mode", FALSE).toBool();
-  m_emulatedExits = conf.value("Emulated Exits", TRUE).toBool();
+  m_brief = conf.value("Brief mode", false).toBool();
+  m_emulatedExits = conf.value("Emulated Exits", true).toBool();
   conf.endGroup();
 
   if (m_moveForcePatternsList.isEmpty())
@@ -203,7 +203,7 @@ void Configuration::write() const {
 //      conf.setPath( QSettings::NativeFormat, QSettings::UserScope, "$HOME/.mmapper2-config" );
 
   conf.beginGroup("General");
-  conf.setValue("Run first time", FALSE);
+  conf.setValue("Run first time", false);
   conf.setValue("Window Position", windowPosition);
   conf.setValue("Window Size", windowSize);
   conf.setValue("Window State", windowState);
