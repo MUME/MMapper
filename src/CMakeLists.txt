@@ -255,6 +255,7 @@ if (WIN32)
     install(FILES
         "${QT_LIBRARY_DIR}/Qt5Core.dll"
         "${QT_LIBRARY_DIR}/Qt5Gui.dll"
+	"${QT_LIBRARY_DIR}/Qt5Widgets.dll"
         "${QT_LIBRARY_DIR}/Qt5Network.dll"
         "${QT_LIBRARY_DIR}/Qt5Xml.dll"
         "${QT_LIBRARY_DIR}/Qt5OpenGL.dll"
@@ -268,13 +269,18 @@ if (WIN32)
         )
         message(STATUS "MingW library is at ${MINGW_LIBRARY_DIR}")
 
-	if (EXISTS "${MINGW_LIBRARY_DIR}/mingw10.dll")
-		install(FILES 
-		    "${MINGW_LIBRARY_DIR}/mingwm10.dll"
-		    DESTINATION .
-		    COMPONENT libraries
-		)
-	endif (EXISTS "${MINGW_LIBRARY_DIR}/mingw10.dll")
+	# http://qt-project.org/doc/qt-5/windows-deployment.html
+	install(FILES 
+	    "${MINGW_LIBRARY_DIR}/libgcc_s_dw2-1.dll"
+	    "${MINGW_LIBRARY_DIR}/libstdc++-6.dll"
+	    "${MINGW_LIBRARY_DIR}/libwinpthread-1.dll"
+	    # https://qt-project.org/wiki/Compiling-ICU-with-MinGW
+	    "${QT_LIBRARY_DIR}/icudt52.dll"
+	    "${QT_LIBRARY_DIR}/icuuc52.dll"
+	    "${QT_LIBRARY_DIR}/icuin52.dll"
+	    DESTINATION .
+	    COMPONENT libraries
+	)
     else (MINGW)
 	# VC++ Redistributable
 	install(FILES
