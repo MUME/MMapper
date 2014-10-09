@@ -445,6 +445,24 @@ void MapData::searchDoorNames(RoomRecipient * recipient, QString s, Qt::CaseSens
   }
 }
 
+void MapData::searchNotes(RoomRecipient * recipient, QString s, Qt::CaseSensitivity cs)
+{
+  QMutexLocker locker(&mapLock);
+  Room * r = 0;
+
+  for(vector<Room *>::iterator i = roomIndex.begin(); i != roomIndex.end(); ++i)
+  {
+    r = *i;
+    if (r) {
+      if (QString((*r)[4].toString()).contains(s, cs))
+      {
+        locks[r->getId()].insert(recipient);
+        recipient->receiveRoom(this, r);
+      }
+    }
+  }
+}
+
 MapData::~MapData()
 {
   while (!m_markers.isEmpty())
