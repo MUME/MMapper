@@ -263,25 +263,32 @@ if (WIN32)
 	COMPONENT libraries
     )
     if (MINGW)
-	string(REGEX REPLACE "[\\|/][^\\/]+exe$" ""
-	       MINGW_LIBRARY_DIR
-	       ${CMAKE_CXX_COMPILER}
-        )
-        message(STATUS "MingW library is at ${MINGW_LIBRARY_DIR}")
-
-	# http://qt-project.org/doc/qt-5/windows-deployment.html
-	install(FILES 
-	    "${MINGW_LIBRARY_DIR}/libgcc_s_dw2-1.dll"
-	    "${MINGW_LIBRARY_DIR}/libstdc++-6.dll"
-	    "${MINGW_LIBRARY_DIR}/libwinpthread-1.dll"
-	    # https://qt-project.org/wiki/Compiling-ICU-with-MinGW
-	    "${QT_LIBRARY_DIR}/icudt52.dll"
-	    "${QT_LIBRARY_DIR}/icuuc52.dll"
-	    "${QT_LIBRARY_DIR}/icuin52.dll"
-	    DESTINATION .
-	    COMPONENT libraries
-	)
-    else (MINGW)
+		if (CMAKE_BUILD_TYPE STREQUAL "Release")
+			set(BINARY_ARGUMENT "-release")
+		else (CMAKE_BUILD_TYPE STREQUAL "Release")
+			set(BINARY_ARGUMENT "-debug")
+		endif (CMAKE_BUILD_TYPE STREQUAL "Release")
+		add_custom_command(
+			TARGET mmapper
+		POST_BUILD
+			COMMAND windeployqt ${BINARY_ARGUMENT} ${CMAKE_CURRENT_BINARY_DIR} -libdir ${CMAKE_CURRENT_BINARY_DIR}/lib --compiler-runtime
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		COMMENT "Finding the Qt framework dependencies"
+		)
+		file(GLOB DEPENDENCIES ${CMAKE_CURRENT_BINARY_DIR}/lib/*)
+		foreach (dependency ${DEPENDENCIES})
+		install(FILES
+			${dependency}
+				DESTINATION .
+				COMPONENT libraries
+		)
+		endforeach()
+		install(DIRECTORY
+			${CMAKE_CURRENT_BINARY_DIR}/platforms
+				DESTINATION .
+				COMPONENT libraries
+		)
+		else (MINGW)
 	# VC++ Redistributable
 	install(FILES
 		${CMAKE_CURRENT_SOURCE_DIR}/resources/win32/vcredist_x86.exe
