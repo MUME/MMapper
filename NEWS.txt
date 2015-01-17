@@ -1,13 +1,12 @@
 =============================
-MMapper 2.3.0 (Sept 20, 2014)
-=============================
-
+MMapper 2.3.0 (January 17, 2015)
 Changes:
  - Build now requires Qt5.2 and CMake 2.8.11 (nschimme)
  - Moved source to GitHub (nschimme)
  - Bug fixes and build improvements (kovis)
  - Property window can be resized (kovis)
  - Prompt detection fixes (kalev)
+ - New note search feature (Arfang)
 
 =============================
 MMapper 2.2.1 (July 14, 2013)
