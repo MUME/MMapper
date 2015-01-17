@@ -101,6 +101,7 @@ public:
   void searchDescriptions(RoomRecipient * recipient, QString s, Qt::CaseSensitivity cs);
   void searchNames(RoomRecipient * recipient, QString s, Qt::CaseSensitivity cs);
   void searchDoorNames(RoomRecipient * recipient, QString s, Qt::CaseSensitivity cs);
+  void searchNotes(RoomRecipient * recipient, QString s, Qt::CaseSensitivity cs);
 
   // Used in Console Commands
   void removeDoorNames();

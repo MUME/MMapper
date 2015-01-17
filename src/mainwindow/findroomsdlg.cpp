@@ -75,6 +75,8 @@ void FindRoomsDlg::findClicked()
     m_mapData->searchDescriptions(this, text, cs);
   else if (exitsRadioButton->isChecked())
     m_mapData->searchDoorNames(this, text, cs);
+  else if (notesRadioButton->isChecked())
+    m_mapData->searchNotes(this, text, cs);
 }
 
 void FindRoomsDlg::receiveRoom(RoomAdmin * sender, const Room * room)
