@@ -420,6 +420,11 @@ bool MapStorage::mergeData()
     if ( version != 031 && version != 030 &&
 	 version != 020 && version != 021 && version != 007 ) return false;
 
+    // We currently force serialization to Qt4.8 since Qt5 broke QDateTime serialization
+    // http://doc.qt.io/qt-5/sourcebreaks.html#changes-to-qdate-qtime-and-qdatetime
+    // http://doc.qt.io/qt-5/qdatastream.html#versioning
+    stream.setVersion(QDataStream::Qt_4_8);
+
     // QtIOCompressor
     if (version >= 031) {
       m_compressor->open(QIODevice::ReadOnly);
@@ -877,6 +882,7 @@ bool MapStorage::saveData( bool baseMapOnly )
   // Write a header with a "magic number" and a version
   stream << (quint32)0xFFB2AF01;
   stream << (qint32)031;
+  stream.setVersion(QDataStream::Qt_4_8);
 
   // QtIOCompressor
   m_compressor->open(QIODevice::WriteOnly);
