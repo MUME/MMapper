@@ -67,7 +67,7 @@ class Proxy : public QObject
     Q_OBJECT
 
   public:
-    Proxy(MapData*, Mmapper2PathMachine*, CommandEvaluator*, PrespammedPath*, CGroup*, int & socketDescriptor, QString & host, int & port, bool threaded, QObject *parent);
+    Proxy(MapData*, Mmapper2PathMachine*, CommandEvaluator*, PrespammedPath*, CGroup*, qintptr & socketDescriptor, QString & host, int & port, bool threaded, QObject *parent);
     ~Proxy();
 
     void start();

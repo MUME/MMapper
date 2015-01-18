@@ -58,7 +58,7 @@ void ProxyThreader::run() {
 
 
 
-Proxy::Proxy(MapData* md, Mmapper2PathMachine* pm, CommandEvaluator* ce, PrespammedPath* pp, CGroup* gm, int & socketDescriptor, QString & host, int & port, bool threaded, QObject *parent)
+Proxy::Proxy(MapData* md, Mmapper2PathMachine* pm, CommandEvaluator* ce, PrespammedPath* pp, CGroup* gm, qintptr & socketDescriptor, QString & host, int & port, bool threaded, QObject *parent)
   : QObject(NULL),
             m_socketDescriptor(socketDescriptor),
                                m_remoteHost(host),

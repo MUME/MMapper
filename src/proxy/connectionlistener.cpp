@@ -42,7 +42,7 @@ ConnectionListener::ConnectionListener(MapData* md, Mmapper2PathMachine* pm, Com
 }
 
 
-void ConnectionListener::incomingConnection(int socketDescriptor)
+void ConnectionListener::incomingConnection(qintptr socketDescriptor)
 {
   if (m_accept)
   {
