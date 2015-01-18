@@ -1,4 +1,9 @@
 =============================
+MMapper 2.3.2 (January 17, 2015)
+Changes:
+ - Fixed critical bug that allows Mac and Linux users to connect to MMapper (nschimme)
+ 
+=============================
 MMapper 2.3.1 (January 17, 2015)
 Changes:
  - Telnet characters now parsed correctly (nschimme)
