@@ -170,7 +170,7 @@ void MumeXmlParser::parse(const QByteArray& line)
 
           // inform groupManager
           if (scoreExp.exactMatch(str) || scoreTrollExp.exactMatch(str)) {
-            emit sendScoreLineEvent(lineToUser);
+            emit sendScoreLineEvent(str.toLatin1());
           }
         }
       m_readStatusTag = false;
