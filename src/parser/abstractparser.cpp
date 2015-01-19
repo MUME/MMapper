@@ -904,7 +904,6 @@ bool AbstractParser::parseUserCommands(QString& command)
       emit sendToUser((QByteArray)"  _doorhelp  - help for door console commands\r\n");
       emit sendToUser((QByteArray)"  _grouphelp - help for group manager console commands\r\n");
 
-      emit sendToUser((QByteArray)"\r\n");
       emit sendToUser((QByteArray)"\r\nOther commands:\n");
       emit sendToUser((QByteArray)("  _vote     - vote for MUME on TMC!"));
       emit sendToUser((QByteArray)"\r\n");
