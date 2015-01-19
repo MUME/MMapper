@@ -125,7 +125,7 @@ protected:
   void characterMoved(CommandIdType, const QString&, const QString&, const QString&, ExitsFlagsType, PromptFlagsType);
   void offlineCharacterMove(CommandIdType direction);
   void sendRoomInfoToUser(const Room*);
-  void sendPromptSimulationToUser();
+  void sendPromptToUser();
   void sendRoomExitsInfoToUser(const Room* r);
 
   //command handling
@@ -161,6 +161,7 @@ protected:
   QString m_dynamicRoomDesc;
   ExitsFlagsType m_exitsFlags;
   PromptFlagsType m_promptFlags;
+  QString m_lastPrompt;
 
   CommandQueue queue;
 
