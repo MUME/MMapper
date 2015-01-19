@@ -28,6 +28,7 @@
 #define MUMEXMLPARSER_H
 
 #include "abstractparser.h"
+#include <QRegExp>
 
 //#define XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
 
@@ -63,6 +64,10 @@ class MumeXmlParser : public AbstractParser
     static const QByteArray ampersand;
     static const QByteArray ampersandTemplate;
 
+    // Taken from Pandora
+    static const QRegExp scoreExp;
+    static const QRegExp scoreTrollExp;
+
     void parseMudCommands(QString& str);
 
     QByteArray characters(QByteArray& ch);
@@ -76,6 +81,7 @@ class MumeXmlParser : public AbstractParser
     QByteArray m_tempCharacters;
     QByteArray m_tempTag;
     bool m_readingTag;
+    bool m_readStatusTag;
     CommandIdType m_move;
 
     XmlMode m_xmlMode;

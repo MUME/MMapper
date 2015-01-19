@@ -33,8 +33,6 @@
 #include "mmapper2room.h"
 #include "CGroupCommunicator.h"
 
-#include <qregexp.h>
-
 const QByteArray MumeXmlParser::greaterThanChar(">");
 const QByteArray MumeXmlParser::lessThanChar("<");
 const QByteArray MumeXmlParser::greaterThanTemplate("&gt;");
@@ -42,6 +40,9 @@ const QByteArray MumeXmlParser::lessThanTemplate("&lt;");
 const QByteArray MumeXmlParser::ampersand("&");
 const QByteArray MumeXmlParser::ampersandTemplate("&amp;");
 
+// Taken from Pandora
+const QRegExp MumeXmlParser::scoreExp("[0-9]*/* hits, */* mana, and */* moves.", Qt::CaseSensitive, QRegExp::Wildcard);
+const QRegExp MumeXmlParser::scoreTrollExp("[0-9]*/* hits and */* moves.", Qt::CaseSensitive, QRegExp::Wildcard);
 
 MumeXmlParser::MumeXmlParser(MapData* md, QObject *parent) :
     AbstractParser(md, parent),
@@ -161,6 +162,20 @@ void MumeXmlParser::parse(const QByteArray& line)
     m_tempCharacters.clear();
   }
 
+  if (m_readStatusTag) {
+      if (Config().m_groupManagerState !=  CGroupCommunicator::Off)
+        {
+          QString str = QString(lineToUser).trimmed();
+          removeAnsiMarks(str);
+
+          // inform groupManager
+          if (scoreExp.exactMatch(str) || scoreTrollExp.exactMatch(str)) {
+            emit sendScoreLineEvent(lineToUser);
+          }
+        }
+      m_readStatusTag = false;
+  }
+
   emit sendToUser(lineToUser);
 }
 
@@ -224,6 +239,12 @@ bool MumeXmlParser::element( const QByteArray& line  )
               break;
 			};
           break;
+        case 's':
+            if (line.startsWith("status")) {
+                m_readStatusTag = true;
+                m_xmlMode = XML_NONE;
+            }
+            break;
       };
       break;
 
@@ -286,8 +307,8 @@ bool MumeXmlParser::element( const QByteArray& line  )
         case '/': if (line.startsWith("/terrain")) {
 	  m_xmlMode = XML_ROOM;
 	  m_readingRoomDesc = true;
-	}
-	break;
+    }
+    break;
       }
       break;
   }
@@ -479,23 +500,6 @@ void MumeXmlParser::parseMudCommands(QString& str)
       queue.prepend(CID_SCOUT);
       return;
     }
-  }
-  else if (Config().m_groupManagerState !=  CGroupCommunicator::Off)
-  {
-    if (str.startsWith(escChar))
-      removeAnsiMarks(str);
-
-    // Taken from Pandora
-    QRegExp scoreExp("[0-9]*/* hits, */* mana, and */* moves.");
-    scoreExp.setPatternSyntax(QRegExp::Wildcard);
-        // 399/529 hits and 121/133 moves.
-
-    QRegExp scoreTrollExp("[0-9]*/* hits and */* moves.");
-    scoreTrollExp.setPatternSyntax(QRegExp::Wildcard);
-
-    // inform groupManager
-    if (scoreExp.exactMatch(str) || scoreTrollExp.exactMatch(str))
-      emit sendScoreLineEvent(str.toLatin1());
   }
 }
 

@@ -69,30 +69,30 @@ void CGroupChar::setItemText(uint itemNumber, const QString& text)
 void CGroupChar::updateLabels()
 {
   setItemText(0, name);
+  setItemText(1,textHP);
+  setItemText(2, textMana);
+  setItemText(3, textMoves);
+
+  setItemText(4, QString("%1/%2").arg(hp).arg(maxhp) );
+  setItemText(5, QString("%1/%2").arg(mana).arg(maxmana) );
+  setItemText(6, QString("%1/%2").arg(moves).arg(maxmoves) );
+
   if (pos == 0 || m_mapData->isEmpty()) {
-    setItemText(1, "Unknown");
+    setItemText(7, "Unknown");
   } else {
 
     const RoomSelection* selection = m_mapData->select();
     const Room* r = m_mapData->getRoom(pos, selection);
 
     if (r == NULL)
-      setItemText(1, "Unknown");
-    else 
+      setItemText(7, "Unknown");
+    else
     {
       //setItemText(1, QString("%1:%2").arg(r->getId()).arg( QString((*r)[0].toString()) ));
-      setItemText(1, QString((*r)[0].toString()));
+      setItemText(7, QString((*r)[0].toString()));
     }
     m_mapData->unselect(pos, selection);
   }
-
-  setItemText(2,textHP);
-  setItemText(3, textMana);
-  setItemText(4, textMoves);
-
-  setItemText(5, QString("%1/%2").arg(hp).arg(maxhp) );
-  setItemText(6, QString("%1/%2").arg(mana).arg(maxmana) );
-  setItemText(7, QString("%1/%2").arg(moves).arg(maxmoves) );
 
   /*
   switch (state) {
@@ -118,7 +118,6 @@ QDomNode CGroupChar::toXML()
   QDomDocument doc("charinfo");
 
   QDomElement root = doc.createElement("playerData");
-  root.setAttribute("room", pos );
   root.setAttribute("name", QString(name) );
   root.setAttribute("color", color.name() );
   root.setAttribute("textHP", QString(textHP) );
@@ -132,7 +131,7 @@ QDomNode CGroupChar::toXML()
   root.setAttribute("maxmoves", maxmoves );
   root.setAttribute("state", state );
   root.setAttribute("lastMovement", QString(lastMovement));
-
+  root.setAttribute("room", pos );
   doc.appendChild(root);
 
   return root;

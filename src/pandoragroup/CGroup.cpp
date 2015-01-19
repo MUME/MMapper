@@ -38,7 +38,7 @@ CGroup::CGroup(QByteArray name, MapData* md, QWidget *parent) : QTreeWidget(pare
   m_mapData = md;
 
   setColumnCount(8);
-  setHeaderLabels(QStringList() << tr("Name") << tr("Room Name") << tr("HP") << tr("Mana") << tr("Moves") << tr("HP") << tr("Mana") << tr("Moves"));
+  setHeaderLabels(QStringList() << tr("Name") << tr("HP") << tr("Mana") << tr("Moves") << tr("HP") << tr("Mana") << tr("Moves") << tr("Room Name"));
   setRootIsDecorated(false);
   setAlternatingRowColors(true);
   setSelectionMode(QAbstractItemView::NoSelection);
