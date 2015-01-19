@@ -343,6 +343,10 @@ void MainWindow::createActions()
   connect(mmapperHomePageAct, SIGNAL(triggered()), this, SLOT(openMmapperHomepage()));
   mumeWebsiteAct = new QAction(tr("&Website"), this);
   connect(mumeWebsiteAct, SIGNAL(triggered()), this, SLOT(openMumeWebsite()));
+  voteAct = new QAction(tr("&Vote for MUME!"), this);
+  connect(voteAct, SIGNAL(triggered()), this, SLOT(voteForMUMEOnTMC()));
+  mumeWebsiteAct = new QAction(tr("&Website"), this);
+  connect(mumeWebsiteAct, SIGNAL(triggered()), this, SLOT(openMumeWebsite()));
   mumeForumAct = new QAction(tr("&Forum"), this);
   connect(mumeForumAct, SIGNAL(triggered()), this, SLOT(openMumeForum()));
   mumeWikiAct = new QAction(tr("W&iki"), this);
@@ -687,6 +691,8 @@ void MainWindow::setupMenuBar()
   helpMenu->addSeparator();
   helpMenu->addAction(aboutAct);
   helpMenu->addAction(aboutQtAct);
+
+  menuBar()->addAction(voteAct);
 
   /*
   searchMenu = menuBar()->addMenu(tr("Sea&rch"));
@@ -1388,6 +1394,11 @@ void MainWindow::onConnectToNeighboursRoomSelection()
 void MainWindow::openMmapperHomepage()
 {
         QDesktopServices::openUrl(QUrl("http://github.com/mume/mmapper"));
+}
+
+void MainWindow::voteForMUMEOnTMC()
+ {
+        QDesktopServices::openUrl(QUrl("http://www.mudconnect.com/cgi-bin/vote_rank.cgi?mud=MUME+-+Multi+Users+In+Middle+Earth"));
 }
 
 void MainWindow::openMumeWebsite()

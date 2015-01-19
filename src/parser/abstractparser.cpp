@@ -32,6 +32,9 @@
 #include "roomselection.h"
 #include "mapdata.h"
 
+#include <QDesktopServices>
+#include <QUrl>
+
 const QChar AbstractParser::escChar('\x1B');
 const QString AbstractParser::nullString;
 const QString AbstractParser::emptyString("");
@@ -466,7 +469,14 @@ bool AbstractParser::parseUserCommands(QString& command)
 
   if (str.startsWith('_'))
   {
-    if (str.startsWith("_gt")) // grouptell
+    if (str.startsWith("_vote"))
+    {
+        QDesktopServices::openUrl(QUrl("http://www.mudconnect.com/cgi-bin/vote_rank.cgi?mud=MUME+-+Multi+Users+In+Middle+Earth"));
+        emit sendToUser("Thanks for voting! :-)\r\n");
+        sendPromptToUser();
+        return false;
+    }
+    else if (str.startsWith("_gt")) // grouptell
     {
       if (!str.section(" ",1,1).toLatin1().isEmpty()) {
         QByteArray data = str.remove(0, 4).toLatin1(); // 3 is length of "_gt "
@@ -895,7 +905,9 @@ bool AbstractParser::parseUserCommands(QString& command)
       emit sendToUser((QByteArray)"  _grouphelp - help for group manager console commands\r\n");
 
       emit sendToUser((QByteArray)"\r\n");
-
+      emit sendToUser((QByteArray)"\r\nOther commands:\n");
+      emit sendToUser((QByteArray)("  _vote     - vote for MUME on TMC!"));
+      emit sendToUser((QByteArray)"\r\n");
       sendPromptToUser();
       return false;
     }

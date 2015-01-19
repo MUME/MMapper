@@ -141,6 +141,7 @@ public slots:
   void groupManagerTypeChanged(int);
 
   void openMmapperHomepage();
+  void voteForMUMEOnTMC();
   void openMumeWebsite();
   void openMumeForum();
   void openMumeWiki();
@@ -212,6 +213,7 @@ private:
   QAction *cutAct;
   QAction *copyAct;
   QAction *pasteAct;
+  QAction *voteAct;
   QAction *mmapperHomePageAct;
   QAction *mumeWebsiteAct;
   QAction *mumeForumAct;
