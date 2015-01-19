@@ -5,6 +5,7 @@ MMapper 2.3.3 (January 18, 2015)
 Changes:
   - [GroupManager] Player's hp, mana, and moves are now correctly updated (nschimme)
   - [GroupManager] Player's room name has been moved into the far right column (nschimme)
+  - [GroupManager] Linux and Mac hosts can now accept incoming connections (nschimme)
   - Prompts should not be displayed after an internal command like _help is run (nschimme)
   - Added new _vote command and menu action to vote for MUME on TMC (nschimme)
 

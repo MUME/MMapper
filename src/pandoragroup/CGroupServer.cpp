@@ -31,7 +31,7 @@
 CGroupServer::CGroupServer(int localPort, QObject *parent) :
         QTcpServer(parent)
 {
-  printf("Creating the GroupManager Server.\r\n");
+  qDebug("Creating the GroupManager Server.\r\n");
   if (listen(QHostAddress::Any, localPort) != true) {
     getCommunicator()->sendLog("Failed to start a group Manager server!");
     getCommunicator()->serverStartupFailed();
@@ -45,7 +45,7 @@ CGroupServer::~CGroupServer()
 
 }
 
-void CGroupServer::incomingConnection(int socketDescriptor)
+void CGroupServer::incomingConnection(qintptr socketDescriptor)
 {
   getCommunicator()->sendLog("Incoming connection");
         // connect the client straight to the Communicator, as he handles all the state changes
@@ -85,10 +85,9 @@ void CGroupServer::sendToAllExceptOne(CGroupClient *conn, QByteArray message)
 
 void CGroupServer::closeAll()
 {
-
-  printf("Closing connections\r\n");
+  qDebug("Closing connections\r\n");
   for (int i = 0; i < connections.size(); i++) {
-    printf("Closing connections %i\r\n", connections[i]->socketDescriptor());
+    qDebug("Closing connections ", connections[i]->socketDescriptor(), "\r\n");
     connections[i]->deleteLater();
   }
 }
