@@ -178,7 +178,7 @@ bool Proxy::init()
   connect(m_parserXml, SIGNAL(sendPromptLineEvent(QByteArray)), m_groupManager, SLOT(parsePromptInformation(QByteArray)), Qt::QueuedConnection);
   connect(m_parserXml, SIGNAL(sendGroupTellEvent(QByteArray)), m_groupManager, SLOT(sendGTell(QByteArray)), Qt::QueuedConnection);
   // Group Tell
-  connect(m_groupManager, SIGNAL(displayGroupTellEvent(const QByteArray&)), this, SLOT(sendToUser(const QByteArray&)), Qt::QueuedConnection);
+  connect(m_groupManager, SIGNAL(displayGroupTellEvent(const QByteArray&)), m_parserXml, SLOT(sendGTellToUser(const QByteArray&)), Qt::QueuedConnection);
 
   //m_userSocket->write("Connection to client established ...\r\n", 38);
   emit log("Proxy", "Connection to client established ...");

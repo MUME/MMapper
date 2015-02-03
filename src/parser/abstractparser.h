@@ -119,6 +119,7 @@ public slots:
   void parseNewUserInput(IncomingData&);
 
   void emptyQueue();
+  void sendGTellToUser(const QByteArray& );
 
 protected:
   //for main move/search algorithm

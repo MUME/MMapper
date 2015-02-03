@@ -1681,6 +1681,12 @@ void AbstractParser::toggleRoomFlagCommand(uint flag, uint field)
   emit sendToUser("--->Room flag " + toggle.toLatin1() + "\n\r");
   sendPromptToUser();
 }
+
+void AbstractParser::sendGTellToUser(const QByteArray& ba) {
+  emit sendToUser(ba);
+  sendPromptToUser();
+}
+
 QString& AbstractParser::latinToAscii(QString& str) {
     // latin1 to 7-bit Ascii
     // taken from Pandora
