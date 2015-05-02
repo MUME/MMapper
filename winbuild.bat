@@ -1,4 +1,9 @@
 @ECHO OFF
+REM set PATH=C:\Qt\5.4\mingw491_32\bin;C:\Qt\Tools\mingw491_32\bin;C:\Program Files\7-Zip;C:\Program Files (x86)\NSIS;C:\Program Files (x86)\CMake\bin;C:\MinGW\bin
+REM set ZLIB_LIBRARY=C:\Qt\Tools\mingw491_32\bin\libz.a
+REM set ZLIB_INCLUDE_DIR=C:\Qt\Tools\mingw491_32\include
+REM set QMAKESPEC=win32-g++
+
 REM ####
 REM #### START
 REM ####

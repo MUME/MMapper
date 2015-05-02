@@ -248,47 +248,32 @@ if (WIN32)
     )
 
     # Install Library Files
-    # Note: this is not necessary if Qt is compiled statically
-    get_target_property(QT_CORE_LIBRARY_DIR Qt5::Core LOCATION)
-    string(REPLACE "Qt5Core.dll" "" QT_LIBRARY_DIR ${QT_CORE_LIBRARY_DIR})
-    message(STATUS "Qt libraries are at ${QT_LIBRARY_DIR}")
-    install(FILES
-        "${QT_LIBRARY_DIR}/Qt5Core.dll"
-        "${QT_LIBRARY_DIR}/Qt5Gui.dll"
-	"${QT_LIBRARY_DIR}/Qt5Widgets.dll"
-        "${QT_LIBRARY_DIR}/Qt5Network.dll"
-        "${QT_LIBRARY_DIR}/Qt5Xml.dll"
-        "${QT_LIBRARY_DIR}/Qt5OpenGL.dll"
-        DESTINATION .
-	COMPONENT libraries
+    if (CMAKE_BUILD_TYPE STREQUAL "Release")
+            set(BINARY_ARGUMENT "-release")
+    else (CMAKE_BUILD_TYPE STREQUAL "Release")
+            set(BINARY_ARGUMENT "-debug")
+    endif (CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_custom_command(
+            TARGET mmapper
+    POST_BUILD
+            COMMAND windeployqt ${BINARY_ARGUMENT} ${CMAKE_CURRENT_BINARY_DIR} -libdir ${CMAKE_CURRENT_BINARY_DIR}/lib --compiler-runtime
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT "Finding the Qt framework dependencies"
     )
-    if (MINGW)
-		if (CMAKE_BUILD_TYPE STREQUAL "Release")
-			set(BINARY_ARGUMENT "-release")
-		else (CMAKE_BUILD_TYPE STREQUAL "Release")
-			set(BINARY_ARGUMENT "-debug")
-		endif (CMAKE_BUILD_TYPE STREQUAL "Release")
-		add_custom_command(
-			TARGET mmapper
-		POST_BUILD
-			COMMAND windeployqt ${BINARY_ARGUMENT} ${CMAKE_CURRENT_BINARY_DIR} -libdir ${CMAKE_CURRENT_BINARY_DIR}/lib --compiler-runtime
-		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-		COMMENT "Finding the Qt framework dependencies"
-		)
-		file(GLOB DEPENDENCIES ${CMAKE_CURRENT_BINARY_DIR}/lib/*)
-		foreach (dependency ${DEPENDENCIES})
-		install(FILES
-			${dependency}
-				DESTINATION .
-				COMPONENT libraries
-		)
-		endforeach()
-		install(DIRECTORY
-			${CMAKE_CURRENT_BINARY_DIR}/platforms
-				DESTINATION .
-				COMPONENT libraries
-		)
-		else (MINGW)
+    file(GLOB DEPENDENCIES ${CMAKE_CURRENT_BINARY_DIR}/lib/*)
+    foreach (dependency ${DEPENDENCIES})
+        install(FILES
+                ${dependency}
+                        DESTINATION .
+                        COMPONENT libraries
+        )
+    endforeach()
+    install(DIRECTORY
+            ${CMAKE_CURRENT_BINARY_DIR}/platforms
+                    DESTINATION .
+                    COMPONENT libraries
+    )
+    if (NOT MINGW)
 	# VC++ Redistributable
 	install(FILES
 		${CMAKE_CURRENT_SOURCE_DIR}/resources/win32/vcredist_x86.exe
@@ -296,7 +281,7 @@ if (WIN32)
 	        COMPONENT libraries
 	)
 	set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "ExecWait '\\\"$INSTDIR\\\\vcredist_x86.exe\\\" /q:a'")
-    endif (MINGW)
+    endif (NOT MINGW)
 
     # Install Help Documentation
     install(FILES
@@ -325,7 +310,7 @@ endif (WIN32)
 
 # Apple Install Settings
 if (APPLE)
-    # Bundle the libraries with the binary (requires Qt 4.5)
+    # Bundle the libraries with the binary (requires Qt 5)
     add_custom_command(
         TARGET mmapper
 	POST_BUILD
@@ -385,7 +370,7 @@ else (GIT_BUILD)
 endif (GIT_BUILD)
 set(CPACK_PACKAGE_VERSION_MAJOR "2")
 set(CPACK_PACKAGE_VERSION_MINOR "3")
-set(CPACK_PACKAGE_VERSION_PATCH "3")
+set(CPACK_PACKAGE_VERSION_PATCH "4")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "MMapper")
 
 # Components:

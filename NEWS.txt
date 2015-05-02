@@ -1,4 +1,13 @@
 =============================
+MMapper 2.3.4 (May 1, 2015)
+=============================
+
+Changes:
+  - All connections now utilize TCP KeepAlive to help with dropped connections (nschimme)
+  - Prompts are now correctly identified and remembered for internal commands (nschimme)
+  - Cleaned up vote and Windows build code (nschimme)
+
+=============================
 MMapper 2.3.3 (January 18, 2015)
 =============================
 
