@@ -131,6 +131,7 @@ bool Proxy::init()
   connect (this, SIGNAL(log(const QString&, const QString&)), m_parent->parent(), SLOT(log(const QString&, const QString&)));
 
   m_userSocket = new QTcpSocket(this);
+  m_userSocket->socketOption(QAbstractSocket::KeepAliveOption);
   if (!m_userSocket->setSocketDescriptor(m_socketDescriptor))
   {
     emit error(m_userSocket->error());
@@ -183,11 +184,12 @@ bool Proxy::init()
   //m_userSocket->write("Connection to client established ...\r\n", 38);
   emit log("Proxy", "Connection to client established ...");
 
-  QByteArray ba("\033[1;37;41mWelcome to MMapper!\033[0;37;41m   Type \033[1m_help\033[0m\033[37;41m for help or \033[1m_vote\033[0m\033[37;41m to vote for MUME on TMC!\033[0m\r\n");
+  QByteArray ba("\033[1;37;41mWelcome to MMapper!\033[0;37;41m   Type \033[1m_help\033[0m\033[37;41m for help or \033[1m_vote\033[0m\033[37;41m to vote!\033[0m\r\n");
   m_userSocket->write(ba);
   m_userSocket->flush();
 
   m_mudSocket = new QTcpSocket(this);
+  m_mudSocket->socketOption(QAbstractSocket::KeepAliveOption);
   connect(m_mudSocket, SIGNAL(disconnected()), this, SLOT(mudTerminatedConnection()) );
   connect(m_mudSocket, SIGNAL(readyRead()), this, SLOT(processMudStream()) );
 

@@ -343,7 +343,7 @@ void MainWindow::createActions()
   connect(mmapperHomePageAct, SIGNAL(triggered()), this, SLOT(openMmapperHomepage()));
   mumeWebsiteAct = new QAction(tr("&Website"), this);
   connect(mumeWebsiteAct, SIGNAL(triggered()), this, SLOT(openMumeWebsite()));
-  voteAct = new QAction(tr("&Vote for MUME!"), this);
+  voteAct = new QAction(tr("V&ote for MUME!"), this);
   connect(voteAct, SIGNAL(triggered()), this, SLOT(voteForMUMEOnTMC()));
   mumeWebsiteAct = new QAction(tr("&Website"), this);
   connect(mumeWebsiteAct, SIGNAL(triggered()), this, SLOT(openMumeWebsite()));
