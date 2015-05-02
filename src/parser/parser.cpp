@@ -113,7 +113,11 @@ void Parser::parseNewMudInput(IncomingData& data /*TelnetIncomingDataQueue& que*
 		(*debugStream) << "***ETYPE***";
 #endif
                 m_stringBuffer = QString::fromLatin1(data.line.constData(), data.line.size());
-				m_stringBuffer = m_stringBuffer.simplified();
+
+                // Store prompts in case an internal command is executed
+                m_lastPrompt = m_stringBuffer;
+
+                m_stringBuffer = m_stringBuffer.simplified();
 				latinToAscii(m_stringBuffer);
 				
 				if (m_readingRoomDesc)

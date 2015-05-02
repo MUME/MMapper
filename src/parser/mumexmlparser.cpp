@@ -333,6 +333,11 @@ QByteArray MumeXmlParser::characters(QByteArray& ch)
   ch.replace(lessThanTemplate, lessThanChar);
   ch.replace(ampersandTemplate, ampersand);
 
+  // Store prompts in case an internal command is executed
+  if (m_xmlMode == XML_PROMPT) {
+      m_lastPrompt = ch;
+  }
+
   m_stringBuffer = ch.simplified();
   latinToAscii(m_stringBuffer);
 

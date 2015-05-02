@@ -91,8 +91,7 @@ void AbstractParser::parsePrompt(QString& prompt){
   quint8 index = 0;
   int sv;
 
-  m_lastPrompt = prompt;
-  emit sendPromptLineEvent(m_stringBuffer.toLatin1());
+  sendPromptLineEvent(m_stringBuffer.toLatin1());
 
   switch (sv=(int)((prompt[index]).toLatin1())) {
   case 64: index++;m_promptFlags=SUN_ROOM;break; // @  direct sunlight
