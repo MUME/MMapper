@@ -131,7 +131,7 @@ bool Proxy::init()
   connect (this, SIGNAL(log(const QString&, const QString&)), m_parent->parent(), SLOT(log(const QString&, const QString&)));
 
   m_userSocket = new QTcpSocket(this);
-  m_userSocket->socketOption(QAbstractSocket::KeepAliveOption);
+  m_userSocket->setSocketOption(QAbstractSocket::KeepAliveOption, true);
   if (!m_userSocket->setSocketDescriptor(m_socketDescriptor))
   {
     emit error(m_userSocket->error());
@@ -189,7 +189,7 @@ bool Proxy::init()
   m_userSocket->flush();
 
   m_mudSocket = new QTcpSocket(this);
-  m_mudSocket->socketOption(QAbstractSocket::KeepAliveOption);
+  m_mudSocket->setSocketOption(QAbstractSocket::KeepAliveOption, true);
   connect(m_mudSocket, SIGNAL(disconnected()), this, SLOT(mudTerminatedConnection()) );
   connect(m_mudSocket, SIGNAL(readyRead()), this, SLOT(processMudStream()) );
 
