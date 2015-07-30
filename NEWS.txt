@@ -1,4 +1,12 @@
 =============================
+MMapper 2.3.5 July 29, 2015)
+=============================
+
+Changes:
+  - Fixed bug that prevented connections from having TCP KeepAlive (nschimme)
+  - Updated base map to include new zones; thanks Ortansia! (nschimme)
+
+=============================
 MMapper 2.3.4 (May 1, 2015)
 =============================
 
