@@ -236,14 +236,14 @@ if (WIN32)
     # Install Executables
     install(
         TARGETS mmapper
-	RUNTIME DESTINATION .
+        RUNTIME DESTINATION bin
 	COMPONENT applications
     )
 
     # Install Map
     install(
         FILES ${PROJECT_SOURCE_DIR}/map/arda.mm2
-	DESTINATION .
+        DESTINATION bin
 	COMPONENT map
     )
 
@@ -256,28 +256,25 @@ if (WIN32)
     add_custom_command(
             TARGET mmapper
     POST_BUILD
-            COMMAND windeployqt ${BINARY_ARGUMENT} ${CMAKE_CURRENT_BINARY_DIR} -libdir ${CMAKE_CURRENT_BINARY_DIR}/lib --compiler-runtime
+            COMMAND windeployqt ${BINARY_ARGUMENT} ${CMAKE_CURRENT_BINARY_DIR} -libdir ${CMAKE_CURRENT_BINARY_DIR}/bin --compiler-runtime
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Finding the Qt framework dependencies"
     )
-    file(GLOB DEPENDENCIES ${CMAKE_CURRENT_BINARY_DIR}/lib/*)
-    foreach (dependency ${DEPENDENCIES})
-        install(FILES
-                ${dependency}
-                        DESTINATION .
-                        COMPONENT libraries
-        )
-    endforeach()
+    install(DIRECTORY
+            ${CMAKE_CURRENT_BINARY_DIR}/bin
+                    DESTINATION .
+                    COMPONENT libraries
+    )
     install(DIRECTORY
             ${CMAKE_CURRENT_BINARY_DIR}/platforms
-                    DESTINATION .
+                    DESTINATION bin
                     COMPONENT libraries
     )
     if (NOT MINGW)
 	# VC++ Redistributable
 	install(FILES
 		${CMAKE_CURRENT_SOURCE_DIR}/resources/win32/vcredist_x86.exe
-	        DESTINATION .
+                DESTINATION bin
 	        COMPONENT libraries
 	)
 	set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "ExecWait '\\\"$INSTDIR\\\\vcredist_x86.exe\\\" /q:a'")
@@ -296,7 +293,7 @@ if (WIN32)
 
     # Windows (NSIS) Settings
     set(CPACK_PACKAGE_EXECUTABLES "" "") # Broken in CMake (prefixes bin/)
-    set(CPACK_NSIS_MENU_LINKS "mmapper.exe;MMapper;Installation Guide.URL;Installation Guide")
+    set(CPACK_NSIS_MENU_LINKS "bin/mmapper.exe;MMapper;Installation Guide.URL;Installation Guide")
     set(CPACK_NSIS_INSTALLED_ICON_NAME "mmapper.exe")
     set(CPACK_NSIS_DISPLAY_NAME "MMapper")
     set(CPACK_NSIS_HELP_LINK "http:\\\\\\\\github.com\\\\mume\\\\mmapper")
@@ -329,7 +326,8 @@ if (APPLE)
 
     # Install Map
     install(
-        FILES ${PROJECT_SOURCE_DIR}/map/arda.mm2
+        FILES ${PROJECT_SOURCE_DIR}/map/
+m2
 	DESTINATION MMapper
 	COMPONENT map
     )
@@ -368,9 +366,6 @@ if (GIT_BUILD)
 else (GIT_BUILD)
     set(CPACK_PACKAGE_VERSION ${VERSION})
 endif (GIT_BUILD)
-set(CPACK_PACKAGE_VERSION_MAJOR "2")
-set(CPACK_PACKAGE_VERSION_MINOR "3")
-set(CPACK_PACKAGE_VERSION_PATCH "4")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "MMapper")
 
 # Components:
@@ -383,7 +378,7 @@ set(CPACK_COMPONENT_APPLICATIONS_REQUIRED TRUE)
 
 # Map Component
 set(CPACK_COMPONENT_MAP_DISPLAY_NAME "Included Map")
-set(CPACK_COMPONENT_MAP_DESCRIPTION "A map of Arda (without secret exits)")
+set(CPACK_COMPONENT_MAP_DESCRIPTION "A base map of Arda")
 
 # Libraries Component
 set(CPACK_COMPONENT_LIBRARIES_DISPLAY_NAME "Runtime Libraries")
@@ -407,6 +402,7 @@ set(CPACK_SOURCE_IGNORE_FILES
 set(CPACK_SOURCE_PACKAGE_FILE_NAME
     "${PROJECT_NAME}-${CPACK_PACKAGE_VERSION}-source"
 )
-set(CPACK_PACKAGE_FILE_NAME    "${PROJECT_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}"
+set(CPACK_PACKAGE_FILE_NAME
+    "${PROJECT_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}"
 )
 include(CPack)

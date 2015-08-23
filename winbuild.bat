@@ -4,6 +4,8 @@ REM set ZLIB_LIBRARY=C:\Qt\Tools\mingw491_32\bin\libz.a
 REM set ZLIB_INCLUDE_DIR=C:\Qt\Tools\mingw491_32\include
 REM set QMAKESPEC=win32-g++
 
+REM -DZLIB_LIBRARY=C:\Qt\Tools\mingw491_32\bin\zlib1.dll -DZLIB_INCLUDE_DIR=C:\Qt\Tools\mingw491_32\include -DCMAKE_BUILD_TYPE=Release
+
 REM ####
 REM #### START
 REM ####

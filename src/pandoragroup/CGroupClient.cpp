@@ -45,7 +45,7 @@ CGroupClient::CGroupClient(QByteArray host, int remotePort, QObject *parent) :
   _host(host), _remotePort(remotePort), QTcpSocket(parent)
 {
   linkSignals();
-  socketOption(QAbstractSocket::KeepAliveOption);
+  setSocketOption(QAbstractSocket::KeepAliveOption, true);
   setConnectionState(Connecting);
   protocolState = AwaitingLogin;
   connectToHost(host, remotePort);
@@ -56,7 +56,7 @@ CGroupClient::CGroupClient(QObject *parent) :
 {
   connectionState = Closed;
   protocolState = Idle;
-  socketOption(QAbstractSocket::KeepAliveOption);
+  setSocketOption(QAbstractSocket::KeepAliveOption, true);
   linkSignals();
 }
 
