@@ -326,8 +326,7 @@ if (APPLE)
 
     # Install Map
     install(
-        FILES ${PROJECT_SOURCE_DIR}/map/
-m2
+        FILES ${PROJECT_SOURCE_DIR}/map/arda.m2
 	DESTINATION MMapper
 	COMPONENT map
     )
