@@ -30,7 +30,9 @@
 #include "mmapper2exit.h"
 #include "coordinate.h"
 
-#include <QGLWidget>
+#include <QOpenGLWidget>
+#include <QOpenGLFunctions>
+#include <QOpenGLTexture>
 #include <vector>
 #include <set>
 
@@ -47,12 +49,12 @@ class RoomRecipient;
 class PrespammedPath;
 class Coordinate;
 
-class MapCanvas : public QGLWidget//, public RoomRecipient
+class MapCanvas : public QOpenGLWidget, protected QOpenGLFunctions
 {
   Q_OBJECT
 
   public:
-    MapCanvas( MapData *mapData, PrespammedPath* prespammedPath, CGroup* groupManager, const QGLFormat & fmt, QWidget * parent = 0 );
+    MapCanvas( MapData *mapData, PrespammedPath* prespammedPath, CGroup* groupManager, QWidget * parent = 0 );
     ~MapCanvas();
 
     QSize minimumSizeHint() const;
@@ -62,7 +64,7 @@ class MapCanvas : public QGLWidget//, public RoomRecipient
     float getDW() const;
     float getDH() const;
 
-    MapData* getData (){ return m_data;};
+    MapData* getData () { return m_data;}
     //void receiveRoom(RoomAdmin * admin, AbstractRoom * room);
 
     enum CanvasMouseMode { CMM_NONE, CMM_MOVE, CMM_SELECT_ROOMS, CMM_SELECT_CONNECTIONS,
@@ -90,7 +92,6 @@ class MapCanvas : public QGLWidget//, public RoomRecipient
     void clearConnectionSelection();
 
         //void worldChanged();
-    void update();
 
     void dataLoaded();
     void moveMarker(const Coordinate &);
@@ -128,8 +129,7 @@ class MapCanvas : public QGLWidget//, public RoomRecipient
     void mouseMoveEvent(QMouseEvent *event);
     void wheelEvent ( QWheelEvent * event );
 
-    void alphaOverlayTexture(const QString &texture);
-    void alphaOverlayTexture(QPixmap *pix);
+    void alphaOverlayTexture(QOpenGLTexture *texture);
 
     void drawConnection( const Room *leftRoom, const Room *rightRoom, ExitDirection connectionStartDirection, ExitDirection connectionEndDirection, bool oneway, bool inExitFlags = true );
     void drawInfoMark(InfoMark*);
@@ -137,18 +137,22 @@ class MapCanvas : public QGLWidget//, public RoomRecipient
     bool drawPath(const Coordinate& sc, const Coordinate& dc, double &dx, double &dy, double &dz);
     void drawPathEnd(double dx, double dy, double dz);
 
+    // QGLWidget backwards compatability
+    void qglColor(QColor color);
+    void qglClearColor(QColor color);
+    void renderText(double x, double y, const QString & str);
   private:
 
     GLint    m_viewport[4];
     GLdouble m_modelview[16];
     GLdouble m_projection[16];
 
-    QPixmap *m_terrainPixmaps[16];
-    QPixmap *m_roadPixmaps[16];
-    QPixmap *m_loadPixmaps[16];
-    QPixmap *m_mobPixmaps[16];
-    QPixmap *m_updatePixmap[1];
-    QPixmap *m_trailPixmaps[16]; // trail support
+    QOpenGLTexture *m_terrainTextures[16];
+    QOpenGLTexture *m_roadTextures[16];
+    QOpenGLTexture *m_loadTextures[16];
+    QOpenGLTexture *m_mobTextures[15];
+    QOpenGLTexture *m_updateTextures;
+    QOpenGLTexture *m_trailTextures[16];
 
     void moveSelection(const RoomSelection* sel, int dx, int dy);
 
@@ -218,10 +222,7 @@ class MapCanvas : public QGLWidget//, public RoomRecipient
 
     InfoMarksEditDlg *m_infoMarksEditDlg;
 
-    QPixmap *m_roomShadowPixmap;
-
     int tmpx,tmpy;
-    bool m_firstDraw;
 
     int GLtoMap(double arg);
 
