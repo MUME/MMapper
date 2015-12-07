@@ -40,6 +40,7 @@
 #include "olddoor.h"
 
 #include <QFile>
+#include <QDataStream>
 
 #include <cassert>
 #include <iostream>

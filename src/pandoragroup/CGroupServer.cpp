@@ -87,7 +87,7 @@ void CGroupServer::closeAll()
 {
   qDebug("Closing connections\r\n");
   for (int i = 0; i < connections.size(); i++) {
-    qDebug("Closing connections ", connections[i]->socketDescriptor(), "\r\n");
+    qDebug() << "Closing connections " << connections[i]->socketDescriptor() << "\r\n";
     connections[i]->deleteLater();
   }
 }
