@@ -21,6 +21,6 @@ make -j$JFLAG && make install
 
 if [ -e MMapper/mmapper.app/Contents/Info.plist ]; then
     # Mac OS X Retina support
-    #perl -pi -e 's#<dict>#<dict>\n\t<key>NSPrincipalClass</key>\n\t<string>NSApplication</string>\n\t<key>NSHighResolutionCapable</key>\n\t<string>True</string>#' MMapper/mmapper.app/Contents/Info.plist
+    perl -pi -e 's#<dict>#<dict>\n\t<key>NSPrincipalClass</key>\n\t<string>NSApplication</string>\n\t<key>NSHighResolutionCapable</key>\n\t<string>True</string>#' MMapper/mmapper.app/Contents/Info.plist
     make package
 fi
