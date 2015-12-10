@@ -1,4 +1,11 @@
 =============================
+MMapper 2.3.6 December 9, 2015
+=============================
+
+Changes:
+  - High DPI displays are now supported such as Retina displays (nschimme)
+
+=============================
 MMapper 2.3.5 July 29, 2015)
 =============================
 
