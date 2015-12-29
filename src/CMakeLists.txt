@@ -170,7 +170,6 @@ add_executable(mmapper ${EXECUTABLE_FLAGS}
 target_link_libraries(mmapper
     Qt5::Core
     Qt5::Widgets
-    Qt5::OpenGL
     Qt5::Xml
     Qt5::Network
     ${OPENGL_gl_LIBRARY}
@@ -227,7 +226,7 @@ if (UNIX AND NOT APPLE)
     # Debian
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "nschimme@gmail.com")
     set(CPACK_DEBIAN_PACKAGE_NAME "mmapper")
-    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqtcore5 (>= 5.2.0), libqtgui5 (>= 5.2.0), libqt5-opengl (>= 5.2.0), libqt5-network (>= 5.2.0), libqt5-xml (>= 5.2.0)")
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqtcore5 (>= 5.4.0), libqtgui5 (>= 5.4.0), libqt5-opengl (>= 5.4.0), libqt5-network (>= 5.4.0), libqt5-xml (>= 5.4.0)")
 
 endif (UNIX AND NOT APPLE)
 

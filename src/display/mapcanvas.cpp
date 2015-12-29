@@ -138,9 +138,6 @@ MapCanvas::MapCanvas( MapData *mapData, PrespammedPath* prespammedPath, CGroup* 
     m_updateTextures = 0;
 
     QSurfaceFormat format;
-    format.setDepthBufferSize(24);
-    format.setStencilBufferSize(8);
-    format.setVersion(3, 0);
     format.setProfile(QSurfaceFormat::CoreProfile);
     setFormat(format);
 }
@@ -916,6 +913,7 @@ void MapCanvas::initializeGL()
     m_updateTextures = new QOpenGLTexture(QImage(QString(":/pixmaps/update0.png")).mirrored());
     qDebug() << "Finished loading textures";
 
+    // Background Color
     qglClearColor(QColor(110,110,110));
     glShadeModel(GL_FLAT);
     glEnable(GL_DEPTH_TEST);
@@ -938,7 +936,7 @@ void MapCanvas::resizeGL(int width, int height)
         return;
     }
 
-    emit log( "MapCanvas", tr("resizeGL width %1, height %2").arg(width).arg(height));
+    qDebug() << "resizeGL width " << width << " height " << height;
 
     float swp = m_scaleFactor * (1.0f - ((float)(width - BASESIZEX) / width));
     float shp = m_scaleFactor * (1.0f - ((float)(height - BASESIZEY) / height));
@@ -2970,7 +2968,6 @@ void MapCanvas::qglColor(QColor color) {
 
 void MapCanvas::qglClearColor(QColor clearColor) {
     glClearColor(clearColor.redF(), clearColor.greenF(), clearColor.blueF(), clearColor.alphaF());
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void MapCanvas::renderText(double x, double y, const QString &text) {
