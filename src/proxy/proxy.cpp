@@ -214,9 +214,13 @@ bool Proxy::init()
   else
   {
     m_serverConnected = true;
-       //m_userSocket->write("Connection to server established ...\r\n", 38);
+#if __linux__
+    // Linux needs to have this option set after the server has established a connection
+    m_mudSocket->setSocketOption(QAbstractSocket::KeepAliveOption, true);
+#endif
+    //m_userSocket->write("Connection to server established ...\r\n", 38);
     emit log("Proxy", "Connection to server established ...");
-        //m_userSocket->flush();
+    //m_userSocket->flush();
 
     if (Config().m_mpi) {
       emit sendToMud(QByteArray("~$#EX1\n3\n"));
