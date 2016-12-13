@@ -1530,6 +1530,50 @@ void MapCanvas::drawRoomDoorName(const Room *sourceRoom, uint sourceDir, const R
     qint32 dX = srcX - tarX;
     qint32 dY = srcY - tarY;
 
+    // Look at door flags to code postfixes
+    DoorFlags sourceDoorFlags = getDoorFlags(sourceRoom->exit(sourceDir));
+    QString sourcePostFix;
+    if (ISSET(sourceDoorFlags, DF_HIDDEN))
+    {
+      sourcePostFix = "h";
+    }
+    if (ISSET(sourceDoorFlags, DF_NEEDKEY))
+    {
+      sourcePostFix += "L";
+    }
+    if (ISSET(sourceDoorFlags, DF_NOPICK))
+    {
+      sourcePostFix += "/NP";
+    }
+    if (ISSET(sourceDoorFlags, DF_DELAYED))
+    {
+      sourcePostFix += "d";
+    }
+    if (sourcePostFix.length() > 0) {
+      sourcePostFix = " [" + sourcePostFix + "]";
+    }
+    DoorFlags targetDoorFlags = getDoorFlags(targetRoom->exit(targetDir));
+    QString targetPostFix;
+    if (ISSET(targetDoorFlags, DF_HIDDEN))
+    {
+      targetPostFix = "h";
+    }
+    if (ISSET(targetDoorFlags, DF_NEEDKEY))
+    {
+      targetPostFix += "L";
+    }
+    if (ISSET(targetDoorFlags, DF_NOPICK))
+    {
+      targetPostFix += "/NP";
+    }
+    if (ISSET(targetDoorFlags, DF_DELAYED))
+    {
+      targetPostFix += "d";
+    }
+    if (targetPostFix.length() > 0) {
+      targetPostFix = " [" + targetPostFix + "]";
+    }
+
     QString name;
     bool together = false;
 
@@ -1544,8 +1588,8 @@ void MapCanvas::drawRoomDoorName(const Room *sourceRoom, uint sourceDir, const R
         together = true;
 
         // no need for duplicating names (its spammy)
-        const QString &sourceName = getDoorName(sourceRoom->exit(sourceDir));
-        const QString &targetName = getDoorName(targetRoom->exit(targetDir));
+        const QString &sourceName = getDoorName(sourceRoom->exit(sourceDir)) + sourcePostFix;
+        const QString &targetName = getDoorName(targetRoom->exit(targetDir)) + targetPostFix;
         if (sourceName != targetName)
             name =  sourceName + "/" + targetName;
         else
@@ -1633,10 +1677,10 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
     if (layer > 0)
     {
         if (Config().m_drawUpperLayersTextured)
-            glEnable (GL_POLYGON_STIPPLE);
+            glEnable(GL_POLYGON_STIPPLE);
         else
         {
-            glDisable (GL_POLYGON_STIPPLE);
+            glDisable(GL_POLYGON_STIPPLE);
             glColor4d(0.3, 0.3, 0.3, 0.6-0.2*layer);
             glEnable(GL_BLEND);
         }
