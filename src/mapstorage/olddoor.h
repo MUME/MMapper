@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -37,7 +37,7 @@
 #define DF_RESERVED1  bit7
 #define DF_RESERVED2  bit8
 typedef class QString DoorName;
-typedef quint8 DoorFlags;
+typedef quint16 DoorFlags;
 
 class Door {
 
