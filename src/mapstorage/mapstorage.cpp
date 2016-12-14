@@ -902,7 +902,7 @@ bool MapStorage::saveData( bool baseMapOnly )
 
   // Write a header with a "magic number" and a version
   stream << (quint32)0xFFB2AF01;
-  stream << (qint32)031;
+  stream << (qint32)040;
   stream.setVersion(QDataStream::Qt_4_8);
 
   // QtIOCompressor

@@ -56,8 +56,10 @@ typedef class QString DoorName;
 #define DF_NOBREAK    bit4
 #define DF_NOPICK     bit5
 #define DF_DELAYED    bit6
-#define DF_RESERVED1  bit7
-#define DF_RESERVED2  bit8
+#define DF_CALLABLE   bit7
+#define DF_KNOCKABLE  bit8
+#define DF_MAGIC      bit9
+#define DF_ACTION     bit10
 
 enum ExitField {E_DOORNAME = 0, E_FLAGS, E_DOORFLAGS};
 
