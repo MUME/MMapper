@@ -590,6 +590,10 @@ void MapStorage::loadMark(InfoMark * mark, QDataStream & stream, qint32 version)
     stream >> vqba; mark->setText(vqba);
     stream >> vdatetime; mark->setTimeStamp(vdatetime);
     stream >> vquint8; mark->setType((InfoMarkType)vquint8);
+    if (version >= 040)
+    {
+      stream >> vquint8; mark->setClass((InfoMarkClass)vquint8);
+    }
 
     Coordinate pos;
     stream >> vqint32; pos.x = vqint32/*-40*/;
@@ -955,6 +959,7 @@ void MapStorage::saveMark(InfoMark * mark, QDataStream & stream)
   stream << (QString)mark->getText();
   stream << (QDateTime)mark->getTimeStamp();
   stream << (quint8)mark->getType();
+  stream << (quint8)mark->getClass();
   const Coordinate & c1 = mark->getPosition1();
   const Coordinate & c2 = mark->getPosition2();
   stream << (qint32)c1.x;
