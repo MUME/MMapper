@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -44,7 +44,8 @@ signals:
 public slots:
 	void objectListCurrentIndexChanged(const QString&);
 	void objectTypeCurrentIndexChanged(const QString&);
-	 
+  void objectClassCurrentIndexChanged(const QString&);
+
 	void objectNameTextChanged(QString);
 	void objectTextChanged(QString);
 	void x1ValueChanged(double);
@@ -54,7 +55,7 @@ public slots:
 	void layerValueChanged(int);
 	void createClicked();
 	void modifyClicked();
-	void deleteClicked();	
+	void deleteClicked();
 	void onMoveNorthClicked();
 	void onMoveSouthClicked();
 	void onMoveEastClicked();
@@ -62,21 +63,21 @@ public slots:
 	void onMoveUpClicked();
 	void onMoveDownClicked();
 	void onDeleteAllClicked();
-	
-	 
+
+
 public:
     InfoMarksEditDlg(MapData* mapData, QWidget *parent = 0);
     ~InfoMarksEditDlg();
-    
+
     void setPoints(double x1, double y1, double x2, double y2, int layer);
-    
+
     void readSettings();
 	void writeSettings();
-	
+
 protected:
 	void closeEvent(QCloseEvent*);
 
-    
+
 private:
 
 	MapData* m_mapData;
@@ -88,6 +89,7 @@ private:
 	void disconnectAll();
 
 	InfoMarkType getType();
+  InfoMarkClass getClass();
 	InfoMark* getInfoMark(QString name);
 	InfoMark* getCurrentInfoMark();
 	void setCurrentInfoMark(InfoMark* m);
