@@ -1,5 +1,4 @@
 ================================
-<<<<<<< HEAD
 MMapper 2.4.0 (Not released)
 ================================
 
@@ -52,7 +51,7 @@ MMapper 2.3.2 (January 17, 2015)
 
 Changes:
  - Fixed critical bug that disallowed Mac and Linux users to connect to MMapper (nschimme)
- 
+
 ================================
 MMapper 2.3.1 (January 17, 2015)
 ================================
