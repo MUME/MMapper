@@ -1404,23 +1404,25 @@ void MapCanvas::drawInfoMark(InfoMark* marker)
       color = Qt::white;
       break;
     case MC_HERB:
-      color = Qt::green;
+      color = QColor(0,200,0); // Dark green
       break;
     case MC_RIVER:
-      color = Qt::blue;
+      color = QColor(76,216,255); // Cyan-like
       break;
     case MC_PLACE:
       color = Qt::white;
       break;
     case MC_MOB:
-      color = Qt::white;
+      color = QColor(177,27,27); // Dark red
       break;
     case MC_COMMENT:
-      color = Qt::yellow;
+      color = Qt::lightGray;
       break;
     case MC_ROAD:
-      color = Qt::red;
+      color = QColor(140,83,58); // Maroonish
       break;
+    case MC_OBJECT:
+      color = Qt::yellow;
     }
 
     if (marker->getType() == MT_TEXT)
@@ -1446,7 +1448,7 @@ void MapCanvas::drawInfoMark(InfoMark* marker)
     {
     case MT_TEXT:
         // Render background
-        glColor4d(0, 0, 0, 0.3);
+        /*glColor4d(0, 0, 0, 0.3);
         glEnable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
         //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1456,15 +1458,15 @@ void MapCanvas::drawInfoMark(InfoMark* marker)
         glVertex3d(0.2+width, 0.25+height, 1.0);
         glVertex3d(0.2+width, 0.0, 1.0);
         glEnd();
-        glDisable(GL_BLEND);
+        glDisable(GL_BLEND);*/
 
         // Render text proper
         glTranslated(-x1 / 2, -y1 / 2, 0);
-        renderText(x1 + 0.1, y1 + 0.25, marker->getText(), color);
+        renderText(x1 + 0.1, y1 + 0.25, marker->getText(), color, marker->getRotation());
         glEnable(GL_DEPTH_TEST);
         break;
     case MT_LINE:
-        glColor4d(1.0f, 1.0f, 1.0f, 0.70);
+        glColor4d(color.redF(), color.greenF(), color.blueF(), 0.70);
         glEnable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
         glPointSize (devicePixelRatio() * 2.0);
@@ -1477,7 +1479,7 @@ void MapCanvas::drawInfoMark(InfoMark* marker)
         glEnable(GL_DEPTH_TEST);
         break;
     case MT_ARROW:
-        glColor4d(1.0f, 1.0f, 1.0f, 0.70);
+        glColor4d(color.redF(), color.greenF(), color.blueF(), 0.70);
         glEnable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
         glPointSize (devicePixelRatio() * 2.0);
@@ -2999,19 +3001,20 @@ void MapCanvas::qglClearColor(QColor clearColor) {
     glClearColor(clearColor.redF(), clearColor.greenF(), clearColor.blueF(), clearColor.alphaF());
 }
 
-void MapCanvas::renderText(double x, double y, const QString &text, QColor color) {
+void MapCanvas::renderText(double x, double y, const QString &text, QColor color, double rotation) {
     // http://stackoverflow.com/questions/28216001/how-to-render-text-with-qopenglwidget/28517897
     int height = this->height();
 
     GLdouble textPosX = 0, textPosY = 0, textPosZ = 0;
-    Project(x, y, 1.2f, &textPosX, &textPosY, &textPosZ);
+    Project(x, y, 0.0f, &textPosX, &textPosY, &textPosZ);
 
     textPosY = height - textPosY; // y is inverted
 
     QPainter painter(this);
+    painter.translate(textPosX, textPosY);
+    painter.rotate(rotation);
     painter.setPen(color);
     painter.setFont(*m_glFont);
-    painter.drawText(textPosX, textPosY, text); // z = pointT4.z + distOverOp / 4
-    //qDebug() << "Drawing " << textPosX << " " << textPosY << " " << text;
+    painter.drawText(0, 0, text);
     painter.end();
 }
