@@ -1,6 +1,12 @@
-=============================
-MMapper 2.3.6 December 9, 2015
-=============================
+===============================
+MMapper 2.3.7 (Not published)
+===============================
+Changes:  
+  - Fixed wall color when a special exit was present (was white instead of black) (teoli)
+
+================================
+MMapper 2.3.6 (December 9, 2015)
+================================
 
 Changes:
   - High DPI displays are now supported such as Retina displays (nschimme)
@@ -39,7 +45,7 @@ MMapper 2.3.2 (January 17, 2015)
 
 Changes:
  - Fixed critical bug that disallowed Mac and Linux users to connect to MMapper (nschimme)
- 
+
 =============================
 MMapper 2.3.1 (January 17, 2015)
 =============================

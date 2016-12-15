@@ -1793,7 +1793,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
         glEnable(GL_LINE_STIPPLE);
         glColor4d(1.0, 0.5, 0.0, 0.0);
         glCallList(m_wall_north_gllist);
-        glColor4d(0.0, 0.0, 0.0, 0.0);
+        qglColor(Qt::black);
         glDisable(GL_LINE_STIPPLE);
     }
     else
@@ -1803,7 +1803,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.7, 0.7, 0.7, 0.0);
             glCallList(m_wall_north_gllist);
-            glColor4d(0.0, 0.0, 0.0, 0.0);
+            qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
         }
         if ( ISSET(getFlags(room->exit(ED_NORTH)), EF_RANDOM))
@@ -1811,7 +1811,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
             glEnable(GL_LINE_STIPPLE);
             glColor4d(1.0, 0.0, 0.0, 0.0);
             glCallList(m_wall_north_gllist);
-            glColor4d(0.0, 0.0, 0.0, 0.0);
+            qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
         }
         if ( ISSET(getFlags(room->exit(ED_NORTH)), EF_SPECIAL))
@@ -1819,7 +1819,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.8, 0.1, 0.8, 0.0);
             glCallList(m_wall_north_gllist);
-            glColor4d(0.0, 0.0, 0.0, 0.0);
+            qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
         }
     }
@@ -1831,7 +1831,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.2, 0.0, 0.0, 0.0);
             glCallList(m_wall_north_gllist);
-            glColor4d(0.0, 0.0, 0.0, 0.0);
+            qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
         }
         else
@@ -1848,7 +1848,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
         glEnable(GL_LINE_STIPPLE);
         glColor4d(1.0, 0.5, 0.0, 0.0);
         glCallList(m_wall_south_gllist);
-        glColor4d(0.0, 0.0, 0.0, 0.0);
+        qglColor(Qt::black);
         glDisable(GL_LINE_STIPPLE);
     }
     else
@@ -1858,7 +1858,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.7, 0.7, 0.7, 0.0);
             glCallList(m_wall_south_gllist);
-            glColor4d(0.0, 0.0, 0.0, 0.0);
+            qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
         }
         if ( ISSET(getFlags(room->exit(ED_SOUTH)), EF_RANDOM))
@@ -1866,7 +1866,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
             glEnable(GL_LINE_STIPPLE);
             glColor4d(1.0, 0.0, 0.0, 0.0);
             glCallList(m_wall_south_gllist);
-            glColor4d(0.0, 0.0, 0.0, 0.0);
+            qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
         }
         if ( ISSET(getFlags(room->exit(ED_SOUTH)), EF_SPECIAL))
@@ -1874,7 +1874,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.8, 0.1, 0.8, 0.0);
             glCallList(m_wall_south_gllist);
-            glColor4d(0.0, 0.0, 0.0, 0.0);
+            qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
         }
     }
@@ -1886,7 +1886,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.2, 0.0, 0.0, 0.0);
             glCallList(m_wall_south_gllist);
-            glColor4d(0.0, 0.0, 0.0, 0.0);
+            qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
         }
         else
@@ -1904,7 +1904,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
         glEnable(GL_LINE_STIPPLE);
         glColor4d(1.0, 0.5, 0.0, 0.0);
         glCallList(m_wall_east_gllist);
-        glColor4d(0.0, 0.0, 0.0, 0.0);
+        qglColor(Qt::black);
         glDisable(GL_LINE_STIPPLE);
     }
     else
@@ -1914,7 +1914,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.7, 0.7, 0.7, 0.0);
             glCallList(m_wall_east_gllist);
-            glColor4d(0.0, 0.0, 0.0, 0.0);
+            qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
         }
         if ( ISSET(getFlags(room->exit(ED_EAST)), EF_RANDOM))
@@ -1922,7 +1922,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
             glEnable(GL_LINE_STIPPLE);
             glColor4d(1.0, 0.0, 0.0, 0.0);
             glCallList(m_wall_east_gllist);
-            glColor4d(0.0, 0.0, 0.0, 0.0);
+            qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
         }
         if ( ISSET(getFlags(room->exit(ED_EAST)), EF_SPECIAL))
@@ -1930,7 +1930,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.8, 0.1, 0.8, 0.0);
             glCallList(m_wall_east_gllist);
-            glColor4d(0.0, 0.0, 0.0, 0.0);
+            qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
         }
     }
@@ -1942,7 +1942,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.2, 0.0, 0.0, 0.0);
             glCallList(m_wall_east_gllist);
-            glColor4d(0.0, 0.0, 0.0, 0.0);
+            qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
         }
         else
@@ -1960,7 +1960,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
         glEnable(GL_LINE_STIPPLE);
         glColor4d(1.0, 0.5, 0.0, 0.0);
         glCallList(m_wall_west_gllist);
-        glColor4d(0.0, 0.0, 0.0, 0.0);
+        qglColor(Qt::black);
         glDisable(GL_LINE_STIPPLE);
     }
     else
@@ -1970,7 +1970,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.7, 0.7, 0.7, 0.0);
             glCallList(m_wall_west_gllist);
-            glColor4d(0.0, 0.0, 0.0, 0.0);
+            qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
         }
         if ( ISSET(getFlags(room->exit(ED_WEST)), EF_RANDOM))
@@ -1978,7 +1978,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
             glEnable(GL_LINE_STIPPLE);
             glColor4d(1.0, 0.0, 0.0, 0.0);
             glCallList(m_wall_west_gllist);
-            glColor4d(0.0, 0.0, 0.0, 0.0);
+            qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
         }
         if ( ISSET(getFlags(room->exit(ED_WEST)), EF_SPECIAL))
@@ -1986,7 +1986,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.8, 0.1, 0.8, 0.0);
             glCallList(m_wall_west_gllist);
-            glColor4d(0.0, 0.0, 0.0, 0.0);
+            qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
         }
     }
@@ -1998,7 +1998,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.2, 0.0, 0.0, 0.0);
             glCallList(m_wall_west_gllist);
-            glColor4d(0.0, 0.0, 0.0, 0.0);
+            qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
         }
         else
