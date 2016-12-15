@@ -1396,6 +1396,33 @@ void MapCanvas::drawInfoMark(InfoMark* marker)
 
     if (layer != m_currentLayer) return;
 
+    // Color depends of the class of the InfoMark
+    QColor color = Qt::white; // Default color
+    switch (marker->getClass())
+    {
+    case MC_GENERIC:
+      color = Qt::white;
+      break;
+    case MC_HERB:
+      color = Qt::green;
+      break;
+    case MC_RIVER:
+      color = Qt::blue;
+      break;
+    case MC_PLACE:
+      color = Qt::white;
+      break;
+    case MC_MOB:
+      color = Qt::white;
+      break;
+    case MC_COMMENT:
+      color = Qt::yellow;
+      break;
+    case MC_ROAD:
+      color = Qt::red;
+      break;
+    }
+
     if (marker->getType() == MT_TEXT)
     {
         width = m_glFontMetrics->width(marker->getText()) * 0.022f / m_scaleFactor;
@@ -1418,6 +1445,7 @@ void MapCanvas::drawInfoMark(InfoMark* marker)
     switch (marker->getType())
     {
     case MT_TEXT:
+        // Render background
         glColor4d(0, 0, 0, 0.3);
         glEnable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
@@ -1430,8 +1458,9 @@ void MapCanvas::drawInfoMark(InfoMark* marker)
         glEnd();
         glDisable(GL_BLEND);
 
+        // Render text proper
         glTranslated(-x1 / 2, -y1 / 2, 0);
-        renderText(x1 + 0.1, y1 + 0.25, marker->getText());
+        renderText(x1 + 0.1, y1 + 0.25, marker->getText(), color);
         glEnable(GL_DEPTH_TEST);
         break;
     case MT_LINE:
@@ -2970,7 +2999,7 @@ void MapCanvas::qglClearColor(QColor clearColor) {
     glClearColor(clearColor.redF(), clearColor.greenF(), clearColor.blueF(), clearColor.alphaF());
 }
 
-void MapCanvas::renderText(double x, double y, const QString &text) {
+void MapCanvas::renderText(double x, double y, const QString &text, QColor color) {
     // http://stackoverflow.com/questions/28216001/how-to-render-text-with-qopenglwidget/28517897
     int height = this->height();
 
@@ -2980,7 +3009,7 @@ void MapCanvas::renderText(double x, double y, const QString &text) {
     textPosY = height - textPosY; // y is inverted
 
     QPainter painter(this);
-    painter.setPen(Qt::white);
+    painter.setPen(color);
     painter.setFont(*m_glFont);
     painter.drawText(textPosX, textPosY, text); // z = pointT4.z + distOverOp / 4
     //qDebug() << "Drawing " << textPosX << " " << textPosY << " " << text;

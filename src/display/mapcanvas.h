@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -140,7 +140,7 @@ class MapCanvas : public QOpenGLWidget, protected QOpenGLFunctions
     // QGLWidget backwards compatability
     void qglColor(QColor color);
     void qglClearColor(QColor color);
-    void renderText(double x, double y, const QString & str);
+    void renderText(double x, double y, const QString & str, QColor color = Qt::white);
   private:
 
     GLint    m_viewport[4];
