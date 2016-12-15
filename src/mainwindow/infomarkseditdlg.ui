@@ -8,7 +8,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>321</width>
+    <width>395</width>
     <height>510</height>
    </rect>
   </property>
@@ -22,13 +22,13 @@
   </property>
   <property name="minimumSize" >
    <size>
-    <width>321</width>
+    <width>395</width>
     <height>510</height>
    </size>
   </property>
   <property name="baseSize" >
    <size>
-    <width>321</width>
+    <width>395</width>
     <height>510</height>
    </size>
   </property>
@@ -249,13 +249,13 @@
                <widget class="QGroupBox" name="positionGroupBox">
                  <property name="minimumSize">
                   <size>
-                   <width>261</width>
+                   <width>340</width>
                    <height>115</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>261</width>
+                   <width>340</width>
                    <height>115</height>
                   </size>
                  </property>
@@ -292,19 +292,6 @@
                       </property>
                       <property name="text" >
                        <string>End</string>
-                      </property>
-                     </widget>
-                   </item>
-                   <item row="0" column="4">
-                     <widget class="QLabel" name="textLabel4_3_4" >
-                      <property name="geometry" >
-                       <rect>
-                        <width>41</width>
-                        <height>20</height>
-                       </rect>
-                      </property>
-                      <property name="text" >
-                       <string>Layer</string>
                       </property>
                      </widget>
                    </item>
@@ -373,10 +360,23 @@
                      </widget>
                    </item>
                    <item row="1" column="4">
+                     <widget class="QLabel" name="textLabel4_3_4" >
+                      <property name="geometry" >
+                       <rect>
+                        <width>41</width>
+                        <height>20</height>
+                       </rect>
+                      </property>
+                      <property name="text" >
+                       <string>Layer:</string>
+                      </property>
+                     </widget>
+                   </item>
+                   <item row="1" column="5">
                      <widget class="QSpinBox" name="m_layer" >
                       <property name="geometry" >
                        <rect>
-                         <width>44</width>
+                         <width>64</width>
                         <height>22</height>
                        </rect>
                       </property>
@@ -449,6 +449,38 @@
                       </property>
                       <property name="singleStep" >
                        <double>0.01</double>
+                      </property>
+                     </widget>
+                   </item>
+                   <item row="2" column="4">
+                     <widget class="QLabel" name="textLabel4_3_5" >
+                      <property name="geometry" >
+                       <rect>
+                        <width>41</width>
+                        <height>20</height>
+                       </rect>
+                      </property>
+                      <property name="text" >
+                       <string>Rot (°):</string>
+                      </property>
+                     </widget>
+                   </item>
+                   <item row="2" column="5">
+                     <widget class="QDoubleSpinBox" name="m_rot" >
+                      <property name="geometry" >
+                       <rect>
+                        <width>91</width>
+                        <height>22</height>
+                       </rect>
+                      </property>
+                      <property name="maximum" >
+                       <double>360</double>
+                      </property>
+                      <property name="minimum" >
+                       <double>0</double>
+                      </property>
+                      <property name="singleStep" >
+                       <double>1</double>
                       </property>
                      </widget>
                    </item>

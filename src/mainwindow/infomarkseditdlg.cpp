@@ -35,7 +35,7 @@
 InfoMarksEditDlg::InfoMarksEditDlg(MapData* mapData, QWidget *parent)
         : QDialog(parent)
 {
-    setupUi(this);
+  setupUi(this);
 	readSettings();
 
 	m_selX1 = 0;
@@ -97,6 +97,7 @@ void InfoMarksEditDlg::connectAll()
 	connect(m_y1, SIGNAL(valueChanged(double)), this, SLOT(y1ValueChanged(double)));
 	connect(m_x2, SIGNAL(valueChanged(double)), this, SLOT(x2ValueChanged(double)));
 	connect(m_y2, SIGNAL(valueChanged(double)), this, SLOT(y2ValueChanged(double)));
+  connect(m_rot, SIGNAL(valueChanged(double)), this, SLOT(rotValueChanged(double)));
 	connect(m_layer, SIGNAL(valueChanged(int)), this, SLOT(layerValueChanged(int)));
 	connect(objectCreate, SIGNAL(clicked()), this, SLOT(createClicked()));
 	connect(objectModify, SIGNAL(clicked()), this, SLOT(modifyClicked()));
@@ -152,6 +153,11 @@ void InfoMarksEditDlg::x2ValueChanged(double)
 }
 
 void InfoMarksEditDlg::y2ValueChanged(double)
+{
+
+}
+
+void InfoMarksEditDlg::rotValueChanged(double)
 {
 
 }
@@ -375,6 +381,7 @@ void InfoMarksEditDlg::createClicked()
 	Coordinate pos2( (int)(m_x2->value()*100.0f), (int)(m_y2->value()*100.0f), m_layer->value() );
 	im->setPosition1(pos1);
 	im->setPosition2(pos2);
+  im->setRotation(m_rot->value());
 
 	m_mapData->addMarker(im);
 
@@ -396,6 +403,7 @@ void InfoMarksEditDlg::modifyClicked()
 	Coordinate pos2( (int)(m_x2->value()*100.0f), (int)(m_y2->value()*100.0f), m_layer->value() );
 	im->setPosition1(pos1);
 	im->setPosition2(pos2);
+  im->setRotation(m_rot->value());
 
 	emit mapChanged();
 }
@@ -425,6 +433,7 @@ void InfoMarksEditDlg::disconnectAll()
 	disconnect(m_y1, SIGNAL(valueChanged(double)), this, SLOT(y1ValueChanged(double)));
 	disconnect(m_x2, SIGNAL(valueChanged(double)), this, SLOT(x2ValueChanged(double)));
 	disconnect(m_y2, SIGNAL(valueChanged(double)), this, SLOT(y2ValueChanged(double)));
+  disconnect(m_rot, SIGNAL(valueChanged(double)), this, SLOT(rotValueChanged(double)));
 	disconnect(m_layer, SIGNAL(valueChanged(int)), this, SLOT(layerValueChanged(int)));
 	disconnect(objectCreate, SIGNAL(clicked()), this, SLOT(createClicked()));
 	disconnect(objectModify, SIGNAL(clicked()), this, SLOT(modifyClicked()));
@@ -516,16 +525,19 @@ void InfoMarksEditDlg::updateDialog()
 	case MT_TEXT:
 		m_x2->setEnabled(false);
 		m_y2->setEnabled(false);
+    m_rot->setEnabled(true);
 		objectText->setEnabled(true);
 		break;
 	case MT_LINE:
 		m_x2->setEnabled(true);
 		m_y2->setEnabled(true);
+    m_rot->setEnabled(false);
 		objectText->setEnabled(false);
 		break;
 	case MT_ARROW:
 		m_x2->setEnabled(true);
 		m_y2->setEnabled(true);
+    m_rot->setEnabled(false);
 		objectText->setEnabled(false);
     break;
 	}
@@ -540,6 +552,7 @@ void InfoMarksEditDlg::updateDialog()
 		m_y1->setValue(m_selY1);
 		m_x2->setValue(m_selX2);
 		m_y2->setValue(m_selY2);
+    m_rot->setValue(0.0f);
 		m_layer->setValue(m_selLayer);
 
 		objectCreate->setEnabled(true);
@@ -554,6 +567,7 @@ void InfoMarksEditDlg::updateDialog()
 		m_y1->setValue(marker->getPosition1().y/100.0f);
 		m_x2->setValue(marker->getPosition2().x/100.0f);
 		m_y2->setValue(marker->getPosition2().y/100.0f);
+    m_rot->setValue(marker->getRotation());
 		m_layer->setValue(marker->getPosition1().z);
 
 		objectCreate->setEnabled(false);

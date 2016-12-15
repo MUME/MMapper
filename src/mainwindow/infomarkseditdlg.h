@@ -52,6 +52,7 @@ public slots:
 	void y1ValueChanged(double);
 	void x2ValueChanged(double);
 	void y2ValueChanged(double);
+  void rotValueChanged(double);
 	void layerValueChanged(int);
 	void createClicked();
 	void modifyClicked();

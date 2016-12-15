@@ -574,6 +574,8 @@ void MapStorage::loadMark(InfoMark * mark, QDataStream & stream, qint32 version)
     pos.y += basePosition.y*100;
     pos.z += basePosition.z;
     mark->setPosition2(pos);
+
+    mark->setRotation(0.0);
   }
   else
   {
@@ -593,6 +595,7 @@ void MapStorage::loadMark(InfoMark * mark, QDataStream & stream, qint32 version)
     if (version >= 040)
     {
       stream >> vquint8; mark->setClass((InfoMarkClass)vquint8);
+      stream >> vquint32; mark->setRotation(vquint32/100);
     }
 
     Coordinate pos;
@@ -960,6 +963,7 @@ void MapStorage::saveMark(InfoMark * mark, QDataStream & stream)
   stream << (QDateTime)mark->getTimeStamp();
   stream << (quint8)mark->getType();
   stream << (quint8)mark->getClass();
+  stream << (qint32)(mark->getRotation()*100);
   const Coordinate & c1 = mark->getPosition1();
   const Coordinate & c2 = mark->getPosition2();
   stream << (qint32)c1.x;

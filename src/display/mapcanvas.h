@@ -140,7 +140,7 @@ class MapCanvas : public QOpenGLWidget, protected QOpenGLFunctions
     // QGLWidget backwards compatability
     void qglColor(QColor color);
     void qglClearColor(QColor color);
-    void renderText(double x, double y, const QString & str, QColor color = Qt::white);
+    void renderText(double x, double y, const QString & str, QColor color = Qt::white, double rotation = 0.0f);
   private:
 
     GLint    m_viewport[4];
