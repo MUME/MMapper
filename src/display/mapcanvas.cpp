@@ -1398,6 +1398,7 @@ void MapCanvas::drawInfoMark(InfoMark* marker)
 
     // Color depends of the class of the InfoMark
     QColor color = Qt::white; // Default color
+    uint fontFormatFlag = FFF_NONE;
     switch (marker->getClass())
     {
     case MC_GENERIC:
@@ -1423,6 +1424,14 @@ void MapCanvas::drawInfoMark(InfoMark* marker)
       break;
     case MC_OBJECT:
       color = Qt::yellow;
+      break;
+    case MC_ACTION:
+      color = Qt::white;
+      fontFormatFlag = FFF_ITALICS;
+      break;
+    case MC_LOCALITY:
+      color = Qt::white;
+      fontFormatFlag = FFF_UNDERLINE;
     }
 
     if (marker->getType() == MT_TEXT)
@@ -1462,7 +1471,7 @@ void MapCanvas::drawInfoMark(InfoMark* marker)
 
         // Render text proper
         glTranslated(-x1 / 2, -y1 / 2, 0);
-        renderText(x1 + 0.1, y1 + 0.25, marker->getText(), color, marker->getRotation());
+        renderText(x1 + 0.1, y1 + 0.25, marker->getText(), color, fontFormatFlag, marker->getRotation());
         glEnable(GL_DEPTH_TEST);
         break;
     case MT_LINE:
@@ -3001,7 +3010,7 @@ void MapCanvas::qglClearColor(QColor clearColor) {
     glClearColor(clearColor.redF(), clearColor.greenF(), clearColor.blueF(), clearColor.alphaF());
 }
 
-void MapCanvas::renderText(double x, double y, const QString &text, QColor color, double rotation) {
+void MapCanvas::renderText(double x, double y, const QString &text, QColor color, uint fontFormatFlag, double rotation) {
     // http://stackoverflow.com/questions/28216001/how-to-render-text-with-qopenglwidget/28517897
     int height = this->height();
 
@@ -3014,7 +3023,17 @@ void MapCanvas::renderText(double x, double y, const QString &text, QColor color
     painter.translate(textPosX, textPosY);
     painter.rotate(rotation);
     painter.setPen(color);
+    if (ISSET(fontFormatFlag, FFF_ITALICS))
+    {
+      m_glFont->setItalic(true);
+    }
+    if (ISSET(fontFormatFlag, FFF_UNDERLINE))
+    {
+      m_glFont->setUnderline(true);
+    }
     painter.setFont(*m_glFont);
     painter.drawText(0, 0, text);
+    m_glFont->setItalic(false);
+    m_glFont->setUnderline(false);
     painter.end();
 }

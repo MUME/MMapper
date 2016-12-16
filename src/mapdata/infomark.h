@@ -32,7 +32,7 @@
 typedef class QString InfoMarkName;
 typedef class QString InfoMarkText;
 enum InfoMarkType { MT_TEXT, MT_LINE, MT_ARROW };
-enum InfoMarkClass { MC_GENERIC, MC_HERB, MC_RIVER, MC_PLACE, MC_MOB, MC_COMMENT, MC_ROAD, MC_OBJECT };
+enum InfoMarkClass { MC_GENERIC, MC_HERB, MC_RIVER, MC_PLACE, MC_MOB, MC_COMMENT, MC_ROAD, MC_OBJECT, MC_ACTION, MC_LOCALITY };
 
 typedef QDateTime MarkerTimeStamp;
 

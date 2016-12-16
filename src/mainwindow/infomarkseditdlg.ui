@@ -243,6 +243,16 @@
                    <string>Object</string>
                   </property>
                  </item>
+                 <item>
+                  <property name="text" >
+                   <string>Action</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text" >
+                   <string>Locality</string>
+                  </property>
+                 </item>
                </widget>
              </item>
              <item row="6" column="0" colspan="3">
