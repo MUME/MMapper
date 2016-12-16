@@ -49,6 +49,7 @@ typedef class QString DoorName;
 #define EF_RANDOM     bit5
 #define EF_SPECIAL    bit6
 #define EF_NO_MATCH   bit7
+#define EF_FLOW       bit8
 
 #define DF_HIDDEN     bit1
 #define DF_NEEDKEY    bit2

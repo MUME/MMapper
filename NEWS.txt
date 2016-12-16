@@ -9,6 +9,7 @@ Changes:
   - Added support for classes of info marks, with different colors and font decorations (teoli)
   - Added ability to rotate info marks (teoli)
   - Fixed wall color when a special exit was present (was white instead of black) (teoli)
+  - Added ability to store direction of river flows and display it on the map (telling)
 
 ================================
 MMapper 2.3.6 (December 9, 2015)

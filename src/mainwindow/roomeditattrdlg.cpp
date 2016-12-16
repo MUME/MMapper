@@ -100,10 +100,11 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
 	exitListItems[4] = (QListWidgetItem*) new QListWidgetItem("Random");
 	exitListItems[5] = (QListWidgetItem*) new QListWidgetItem("Special");
 	exitListItems[6] = (QListWidgetItem*) new QListWidgetItem("No match");
-	exitListItems[7] = NULL;
+	exitListItems[7] = (QListWidgetItem*) new QListWidgetItem("Flow dir"); // Added in schema 040
+  exitListItems[8] = NULL; // Don't add an item here: file schema doesn't support value > 7
 
 	exitFlagsListWidget->clear();
-	for (int i=0; i<7; i++)
+	for (int i=0; i<8; i++)
 	{
 		exitListItems[i]->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
 		exitFlagsListWidget->addItem(exitListItems[i]);
@@ -491,6 +492,11 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
 			exitListItems[6]->setCheckState(Qt::Checked);
 		else
 			exitListItems[6]->setCheckState(Qt::Unchecked);
+
+    if (ISSET(ef, EF_FLOW))
+			exitListItems[7]->setCheckState(Qt::Checked);
+		else
+			exitListItems[7]->setCheckState(Qt::Unchecked);
 
 		roomNoteTextEdit->clear();
 		roomNoteTextEdit->setEnabled(false);
