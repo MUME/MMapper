@@ -38,32 +38,32 @@ class InfoMarksEditDlg : public QDialog, private Ui::InfoMarksEditDlg
     Q_OBJECT
 
 signals:
-	void mapChanged();
-	void closeEventReceived();
+    void mapChanged();
+    void closeEventReceived();
 
 public slots:
-	void objectListCurrentIndexChanged(const QString&);
-	void objectTypeCurrentIndexChanged(const QString&);
-  void objectClassCurrentIndexChanged(const QString&);
+    void objectListCurrentIndexChanged(const QString&);
+    void objectTypeCurrentIndexChanged(const QString&);
+    void objectClassCurrentIndexChanged(const QString&);
 
-	void objectNameTextChanged(QString);
-	void objectTextChanged(QString);
-	void x1ValueChanged(double);
-	void y1ValueChanged(double);
-	void x2ValueChanged(double);
-	void y2ValueChanged(double);
-  void rotValueChanged(double);
-	void layerValueChanged(int);
-	void createClicked();
-	void modifyClicked();
-	void deleteClicked();
-	void onMoveNorthClicked();
-	void onMoveSouthClicked();
-	void onMoveEastClicked();
-	void onMoveWestClicked();
-	void onMoveUpClicked();
-	void onMoveDownClicked();
-	void onDeleteAllClicked();
+    void objectNameTextChanged(QString);
+    void objectTextChanged(QString);
+    void x1ValueChanged(double);
+    void y1ValueChanged(double);
+    void x2ValueChanged(double);
+    void y2ValueChanged(double);
+    void rotValueChanged(double);
+    void layerValueChanged(int);
+    void createClicked();
+    void modifyClicked();
+    void deleteClicked();
+    void onMoveNorthClicked();
+    void onMoveSouthClicked();
+    void onMoveEastClicked();
+    void onMoveWestClicked();
+    void onMoveUpClicked();
+    void onMoveDownClicked();
+    void onDeleteAllClicked();
 
 
 public:
@@ -73,30 +73,30 @@ public:
     void setPoints(double x1, double y1, double x2, double y2, int layer);
 
     void readSettings();
-	void writeSettings();
+    void writeSettings();
 
 protected:
-	void closeEvent(QCloseEvent*);
+    void closeEvent(QCloseEvent*);
 
 
 private:
 
-	MapData* m_mapData;
+    MapData* m_mapData;
 
-	double m_selX1, m_selY1, m_selX2, m_selY2;
-	int m_selLayer;
+    double m_selX1, m_selY1, m_selX2, m_selY2;
+    int m_selLayer;
 
-	void connectAll();
-	void disconnectAll();
+    void connectAll();
+    void disconnectAll();
 
-	InfoMarkType getType();
-  InfoMarkClass getClass();
-	InfoMark* getInfoMark(QString name);
-	InfoMark* getCurrentInfoMark();
-	void setCurrentInfoMark(InfoMark* m);
+    InfoMarkType getType();
+    InfoMarkClass getClass();
+    InfoMark* getInfoMark(QString name);
+    InfoMark* getCurrentInfoMark();
+    void setCurrentInfoMark(InfoMark* m);
 
-	void updateMarkers();
-	void updateDialog();
+    void updateMarkers();
+    void updateDialog();
 };
 
 
