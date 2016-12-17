@@ -39,7 +39,7 @@ typedef QDateTime MarkerTimeStamp;
 class InfoMark {
 
 public:
-    InfoMark(){ m_type = MT_TEXT; m_class = MC_GENERIC; m_rotation = 0.0f; }
+    InfoMark(){ m_type = MT_TEXT; m_class = MC_GENERIC; m_rotationAngle = 0.0f; }
     ~InfoMark(){};
 
     const InfoMarkName& getName() const { return m_name; }
@@ -48,12 +48,12 @@ public:
     InfoMarkClass getClass() const {return m_class; }
     const Coordinate& getPosition1() const {return m_pos1;}
     const Coordinate& getPosition2() const {return m_pos2;}
-    double getRotation() const {return m_rotation;}
+    double getRotationAngle() const {return m_rotationAngle;}
     const MarkerTimeStamp& getTimeStamp() const { return m_timeStamp; }
 
     void setPosition1(Coordinate & pos) {m_pos1 = pos;}
     void setPosition2(Coordinate & pos) {m_pos2 = pos;}
-    void setRotation(double rot) {m_rotation = rot;}
+    void setRotationAngle(double rotationAngle) {m_rotationAngle = rotationAngle;}
     void setName(InfoMarkName name) { m_name = name; }
     void setText(InfoMarkText text) { m_text = text; }
     void setType(InfoMarkType type) { m_type = type; }
@@ -71,7 +71,7 @@ private:
 
     Coordinate m_pos1;
     Coordinate m_pos2;
-    double m_rotation; // in degrees
+    double m_rotationAngle; // in degrees
 };
 
 #endif

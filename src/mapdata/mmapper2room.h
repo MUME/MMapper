@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -82,28 +82,28 @@ typedef quint16 RoomMobFlags;
 #define RLF_TOWER     		bit16
 typedef quint16 RoomLoadFlags;
 
-enum RoomField {R_NAME, R_DESC, R_TERRAINTYPE, R_DYNAMICDESC, R_NOTE, R_MOBFLAGS, R_LOADFLAGS, R_PORTABLETYPE, R_LIGHTTYPE, R_ALIGNTYPE, R_RIDABLETYPE, ROOMFIELD_LAST};
+enum RoomField {R_NAME, R_DESC, R_TERRAINTYPE, R_DYNAMICDESC, R_NOTE, R_MOBFLAGS, R_LOADFLAGS, R_PORTABLETYPE, R_LIGHTTYPE, R_ALIGNTYPE, R_RIDABLETYPE, R_KEYWORDS, ROOMFIELD_LAST};
 
 RoomName getName(const Room * room);
-  
+
 RoomDescription getDescription(const Room * room);
-  
+
 RoomDescription getDynamicDescription(const Room * room);
-  
+
 RoomNote getNote(const Room * room);
 
 RoomMobFlags getMobFlags(const Room * room);
-  
-RoomLoadFlags getLoadFlags(const Room * room); 
-  
-RoomTerrainType getTerrainType(const Room * room); 
-  
-RoomPortableType getPortableType(const Room * room); 
-  
-RoomLightType getLightType(const Room * room); 
-  
-RoomAlignType getAlignType(const Room * room); 
 
-RoomRidableType getRidableType(const Room * room); 
+RoomLoadFlags getLoadFlags(const Room * room);
+
+RoomTerrainType getTerrainType(const Room * room);
+
+RoomPortableType getPortableType(const Room * room);
+
+RoomLightType getLightType(const Room * room);
+
+RoomAlignType getAlignType(const Room * room);
+
+RoomRidableType getRidableType(const Room * room);
 
 #endif

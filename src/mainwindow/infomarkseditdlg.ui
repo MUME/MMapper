@@ -476,7 +476,7 @@
                      </widget>
                    </item>
                    <item row="2" column="5">
-                     <widget class="QDoubleSpinBox" name="m_rot" >
+                     <widget class="QDoubleSpinBox" name="m_rotationAngle" >
                       <property name="geometry" >
                        <rect>
                         <width>91</width>

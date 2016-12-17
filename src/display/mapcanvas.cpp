@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -1471,7 +1471,7 @@ void MapCanvas::drawInfoMark(InfoMark* marker)
 
         // Render text proper
         glTranslated(-x1 / 2, -y1 / 2, 0);
-        renderText(x1 + 0.1, y1 + 0.25, marker->getText(), color, fontFormatFlag, marker->getRotation());
+        renderText(x1 + 0.1, y1 + 0.25, marker->getText(), color, fontFormatFlag, marker->getRotationAngle());
         glEnable(GL_DEPTH_TEST);
         break;
     case MT_LINE:
@@ -3010,7 +3010,7 @@ void MapCanvas::qglClearColor(QColor clearColor) {
     glClearColor(clearColor.redF(), clearColor.greenF(), clearColor.blueF(), clearColor.alphaF());
 }
 
-void MapCanvas::renderText(double x, double y, const QString &text, QColor color, uint fontFormatFlag, double rotation) {
+void MapCanvas::renderText(double x, double y, const QString &text, QColor color, uint fontFormatFlag, double rotationAngle) {
     // http://stackoverflow.com/questions/28216001/how-to-render-text-with-qopenglwidget/28517897
     int height = this->height();
 
@@ -3021,7 +3021,7 @@ void MapCanvas::renderText(double x, double y, const QString &text, QColor color
 
     QPainter painter(this);
     painter.translate(textPosX, textPosY);
-    painter.rotate(rotation);
+    painter.rotate(rotationAngle);
     painter.setPen(color);
     if (ISSET(fontFormatFlag, FFF_ITALICS))
     {

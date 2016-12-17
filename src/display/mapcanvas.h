@@ -143,7 +143,7 @@ class MapCanvas : public QOpenGLWidget, protected QOpenGLFunctions
     void qglClearColor(QColor color);
 
     enum FontFormatFlags {FFF_NONE = 0, FFF_ITALICS = 1, FFF_UNDERLINE = 2};
-    void renderText(double x, double y, const QString & str, QColor color = Qt::white, uint fontFormatFlags = FFF_NONE, double rotation = 0.0f);
+    void renderText(double x, double y, const QString & str, QColor color = Qt::white, uint fontFormatFlags = FFF_NONE, double rotationAngle = 0.0f);
   private:
 
     GLint    m_viewport[4];
