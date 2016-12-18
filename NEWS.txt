@@ -9,6 +9,7 @@ Changes:
   - Added extra door flags (teoli)
   - Added support for classes of info marks, with different colors and font decorations (teoli)
   - Added ability to rotate info marks (teoli)
+  - Fixed wall color when a special exit was present (was white instead of black) (teoli)
 
 ================================
 MMapper 2.3.6 (December 9, 2015)
@@ -51,7 +52,7 @@ MMapper 2.3.2 (January 17, 2015)
 
 Changes:
  - Fixed critical bug that disallowed Mac and Linux users to connect to MMapper (nschimme)
- 
+
 =============================
 MMapper 2.3.1 (January 17, 2015)
 =============================
