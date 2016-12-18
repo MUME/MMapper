@@ -1,6 +1,18 @@
-=============================
-MMapper 2.3.6 December 9, 2015
-=============================
+================================
+MMapper 2.4.0 (Not released)
+================================
+
+Note:
+  - The .mm2 file format changed. Old files can be read, but files saved
+    with this version can't be used with MMapper 2.3.x or older.
+Changes:
+  - Added extra door flags (teoli)
+  - Added support for classes of info marks, with different colors and font decorations (teoli)
+  - Added ability to rotate info marks (teoli)
+
+================================
+MMapper 2.3.6 (December 9, 2015)
+================================
 
 Changes:
   - High DPI displays are now supported such as Retina displays (nschimme)

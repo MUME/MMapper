@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -68,9 +68,10 @@ class MapCanvas : public QOpenGLWidget, protected QOpenGLFunctions
     //void receiveRoom(RoomAdmin * admin, AbstractRoom * room);
 
     enum CanvasMouseMode { CMM_NONE, CMM_MOVE, CMM_SELECT_ROOMS, CMM_SELECT_CONNECTIONS,
-      CMM_CREATE_ROOMS, CMM_CREATE_CONNECTIONS, CMM_CREATE_ONEWAY_CONNECTIONS, CMM_EDIT_INFOMARKS};
+                           CMM_CREATE_ROOMS, CMM_CREATE_CONNECTIONS, CMM_CREATE_ONEWAY_CONNECTIONS,
+                           CMM_EDIT_INFOMARKS};
 
-      void drawRoom(const Room* room, const std::vector<Room *> & rooms, const std::vector<std::set<RoomRecipient *> > & locks);
+    void drawRoom(const Room* room, const std::vector<Room *> & rooms, const std::vector<std::set<RoomRecipient *> > & locks);
 
 
 
@@ -140,7 +141,9 @@ class MapCanvas : public QOpenGLWidget, protected QOpenGLFunctions
     // QGLWidget backwards compatability
     void qglColor(QColor color);
     void qglClearColor(QColor color);
-    void renderText(double x, double y, const QString & str);
+
+    enum FontFormatFlags {FFF_NONE = 0, FFF_ITALICS = 1, FFF_UNDERLINE = 2};
+    void renderText(double x, double y, const QString & str, QColor color = Qt::white, uint fontFormatFlags = FFF_NONE, double rotationAngle = 0.0f);
   private:
 
     GLint    m_viewport[4];

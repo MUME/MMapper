@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -316,7 +316,7 @@ Room * MapStorage::loadRoom(QDataStream & stream, qint32 version)
   stream >> vquint8; room->replace(R_LIGHTTYPE, vquint8);
   stream >> vquint8; room->replace(R_ALIGNTYPE, vquint8);
   stream >> vquint8;
-  room->replace(R_PORTABLETYPE, vquint8);  
+  room->replace(R_PORTABLETYPE, vquint8);
   if (version >= 030)
 	  stream >> vquint8;
   else
@@ -334,7 +334,7 @@ Room * MapStorage::loadRoom(QDataStream & stream, qint32 version)
   stream >> (qint32 &)c.x;
   stream >> (qint32 &)c.y;
   stream >> (qint32 &)c.z;
-  
+
   room->setPosition(c + basePosition);
   loadExits(room, stream, version);
   return room;
@@ -384,7 +384,7 @@ bool MapStorage::mergeData()
 {
   {
     MapFrontendBlocker blocker(m_mapData);
-    
+
     baseId = m_mapData.getMaxId() + 1;
     basePosition = m_mapData.getLrb();
     if (basePosition.x + basePosition.y + basePosition.z != 0)
@@ -396,7 +396,7 @@ bool MapStorage::mergeData()
 	    basePosition.x = 0;
 	    basePosition.z = -1;
     }
-    
+
     emit log ("MapStorage", "Loading data ...");
     m_progressCounter->reset();
 
@@ -454,7 +454,7 @@ bool MapStorage::mergeData()
     }
 
     pos += basePosition;
-    
+
     m_mapData.setPosition(pos);
 
     emit log ("MapStorage", QString("Number of rooms: %1").arg(roomsCount) );
@@ -509,9 +509,9 @@ bool MapStorage::mergeData()
     for(index = 0; index<marksCount; index++)
     {
       mark = new InfoMark();
-      loadMark(mark, stream, version);      
+      loadMark(mark, stream, version);
       markerList.append(mark);
-      
+
       m_progressCounter->step();
     }
 
@@ -545,7 +545,7 @@ void MapStorage::loadMark(InfoMark * mark, QDataStream & stream, qint32 version)
 
   if (version < 020) // OLD VERSIONS SUPPORT CODE
   {
-    stream >> vqstr; 
+    stream >> vqstr;
     if (postfix != 0 && postfix != 1)
     {
     	vqstr += QString("_m%1").arg(postfix);
@@ -574,6 +574,8 @@ void MapStorage::loadMark(InfoMark * mark, QDataStream & stream, qint32 version)
     pos.y += basePosition.y*100;
     pos.z += basePosition.z;
     mark->setPosition2(pos);
+
+    mark->setRotationAngle(0.0);
   }
   else
   {
@@ -581,15 +583,20 @@ void MapStorage::loadMark(InfoMark * mark, QDataStream & stream, qint32 version)
     QDateTime vdatetime;
     quint8 vquint8;
 
-    stream >> vqba; 
+    stream >> vqba;
     if (postfix != 0 && postfix != 1)
     {
         vqba += QString("_m%1").arg(postfix).toLatin1();
-    }   
+    }
     mark->setName(vqba);
     stream >> vqba; mark->setText(vqba);
     stream >> vdatetime; mark->setTimeStamp(vdatetime);
     stream >> vquint8; mark->setType((InfoMarkType)vquint8);
+    if (version >= 040)
+    {
+      stream >> vquint8; mark->setClass((InfoMarkClass)vquint8);
+      stream >> vquint32; mark->setRotationAngle(vquint32/100);
+    }
 
     Coordinate pos;
     stream >> vqint32; pos.x = vqint32/*-40*/;
@@ -937,9 +944,9 @@ bool MapStorage::saveData( bool baseMapOnly )
 
     m_progressCounter->step();
   }
-  
+
   m_compressor->close();
-  
+
   emit log ("MapStorage", "Writting data finished.");
 
   m_mapData.unsetDataChanged();
@@ -955,6 +962,8 @@ void MapStorage::saveMark(InfoMark * mark, QDataStream & stream)
   stream << (QString)mark->getText();
   stream << (QDateTime)mark->getTimeStamp();
   stream << (quint8)mark->getType();
+  stream << (quint8)mark->getClass();
+  stream << (qint32)(mark->getRotationAngle()*100);
   const Coordinate & c1 = mark->getPosition1();
   const Coordinate & c2 = mark->getPosition2();
   stream << (qint32)c1.x;
@@ -964,4 +973,3 @@ void MapStorage::saveMark(InfoMark * mark, QDataStream & stream)
   stream << (qint32)c2.y;
   stream << (qint32)c2.z;
 }
-
