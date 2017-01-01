@@ -34,6 +34,7 @@ set(mmapper_SRCS
     mapstorage/abstractmapstorage.cpp
     mapstorage/basemapsavefilter.cpp
     mapstorage/filesaver.cpp
+    mapstorage/jsonmapstorage.cpp
     mapstorage/mapstorage.cpp
     mapstorage/oldconnection.cpp
     mapstorage/progresscounter.cpp
