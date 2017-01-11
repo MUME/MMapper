@@ -110,7 +110,7 @@ public:
   bool getExitFlag(const Coordinate & pos, uint flag, uint dir, uint field);
   void toggleExitFlag(const Coordinate & pos, uint flag, uint dir, uint field);
   void setRoomField(const Coordinate & pos, const QVariant & field, uint flag);
-  uint getRoomField(const Coordinate & pos, uint flag);
+  QVariant getRoomField(const Coordinate & pos, uint flag);
   void toggleRoomFlag(const Coordinate & pos, uint flag, uint field);
   bool getRoomFlag(const Coordinate & pos, uint flag, uint field);
 

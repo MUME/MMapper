@@ -138,6 +138,8 @@ protected:
   void setRoomFieldCommand(const QVariant & flag, uint field);
   void toggleRoomFlagCommand(uint flag, uint field);
 
+  void printRoomInfo(uint fieldset);
+
   //utility functions
   QString& removeAnsiMarks(QString& str);
 
