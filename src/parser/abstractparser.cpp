@@ -837,6 +837,11 @@ bool AbstractParser::parseUserCommands(QString& command)
       toggleRoomFlagCommand(RLF_TOWER, R_LOADFLAGS);
       return false;
     }
+    else if (str.startsWith("_note"))
+    {
+      setRoomFieldCommand(str.section(' ', 1), R_NOTE);
+      return false;
+    }
 
     if (str.startsWith("_open"))   {dooraction = true; daction = DAT_OPEN;}
     else
@@ -974,6 +979,9 @@ bool AbstractParser::parseUserCommands(QString& command)
       emit sendToUser((QByteArray)"  _boat         - toggle a boat in the room\r\n");
       emit sendToUser((QByteArray)"  _attention    - toggle an attention flag in the room\r\n");
       emit sendToUser((QByteArray)"  _watch        - toggle a watchable spot in the room\r\n"); 
+
+      emit sendToUser((QByteArray)"\r\nMiscellaneous commands:\r\n");
+      emit sendToUser((QByteArray)"  _note [note]         - set a note in the room\r\n");
 
       emit sendToUser((QByteArray)"\r\n");
 
@@ -1645,7 +1653,7 @@ void AbstractParser::toggleDoorFlagCommand(uint flag, DirectionType direction)
   sendPromptToUser();
 }
 
-void AbstractParser::setRoomFieldCommand(uint flag, uint field)
+void AbstractParser::setRoomFieldCommand(const QVariant & flag, uint field)
 {
   Coordinate c;
   QList<Coordinate> cl = m_mapData->getPath(queue);

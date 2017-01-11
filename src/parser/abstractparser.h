@@ -135,7 +135,7 @@ protected:
   void nameDoorCommand(QString doorname, DirectionType direction);
   void toggleDoorFlagCommand(uint flag, DirectionType direction);
   void toggleExitFlagCommand(uint flag, DirectionType direction);
-  void setRoomFieldCommand(uint flag, uint field);
+  void setRoomFieldCommand(const QVariant & flag, uint field);
   void toggleRoomFlagCommand(uint flag, uint field);
 
   //utility functions

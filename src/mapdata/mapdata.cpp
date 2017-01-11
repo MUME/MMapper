@@ -119,7 +119,7 @@ bool MapData::getRoomFlag(const Coordinate & pos, uint flag, uint field)
   return false;
 }
 
-void MapData::setRoomField(const Coordinate & pos, uint flag, uint field)
+void MapData::setRoomField(const Coordinate & pos, const QVariant & flag, uint field)
 {
   QMutexLocker locker(&mapLock);
   Room * room = map.get(pos);
