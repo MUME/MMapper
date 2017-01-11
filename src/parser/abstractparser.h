@@ -30,6 +30,7 @@
 #include "telnetfilter.h"
 #include "defs.h"
 #include "roomfilter.h"
+#include "roomselection.h"
 
 #include <QQueue>
 #include <QObject>
@@ -88,7 +89,9 @@ class AbstractParser : public QObject
 public:
 
    AbstractParser(MapData*, QObject *parent = 0);
+   ~AbstractParser();
 
+   const RoomSelection *search_rs;
 signals:
   //telnet
   void sendToMud(const QByteArray&);
@@ -177,6 +180,7 @@ protected:
 
   QString& latinToAscii(QString& str);
 
+  void search_command(RoomFilter f);
   void dirs_command(RoomFilter f);
 };
 

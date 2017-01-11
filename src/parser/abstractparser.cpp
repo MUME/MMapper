@@ -55,6 +55,13 @@ AbstractParser::AbstractParser(MapData* md, QObject *parent)
   m_staticRoomDesc = "";*/
   m_exitsFlags = 0;
   m_promptFlags = 0;
+
+  search_rs = NULL;
+}
+
+AbstractParser::~AbstractParser(){
+  if (search_rs != NULL)
+    m_mapData->unselect(search_rs);
 }
 
 void AbstractParser::characterMoved(CommandIdType c, const QString& roomName, const QString& dynamicRoomDesc, const QString& staticRoomDesc, ExitsFlagsType exits, PromptFlagsType prompt)
@@ -496,6 +503,17 @@ public:
 };
 
 
+void AbstractParser::search_command(RoomFilter f)
+{
+  if (search_rs != NULL)
+    m_mapData->unselect(search_rs);
+  search_rs = m_mapData->select();
+  m_mapData->genericSearch(search_rs, f);
+  emit m_mapData->updateCanvas();
+  emit sendToUser((QString::number(search_rs->size()) + " rooms found.\r\n").toLatin1());
+  sendPromptToUser();
+}
+
 void AbstractParser::dirs_command(RoomFilter f)
 {
   ShortestPathEmitter sp_emitter(*this);
@@ -930,6 +948,21 @@ bool AbstractParser::parseUserCommands(QString& command)
     else
       if (str.startsWith("_block"))   {dooraction = true; daction = DAT_BLOCK;}
 
+    if (str.startsWith("_search"))
+    {
+      QString pattern_str = str.section(' ', 1).trimmed();
+      if(pattern_str.size() == 0)
+      {
+        emit sendToUser("Usage: _search [-(name|desc|note|exits|all)] pattern\r\n");
+        return false;
+      }
+      RoomFilter f;
+      if (!RoomFilter::parseRoomFilter(pattern_str, f))
+        emit sendToUser(RoomFilter::parse_help);
+      else
+        search_command(f);
+      return false;
+    }
     if (str.startsWith("_dirs"))
     {
       QString pattern_str = str.section(' ', 1).trimmed();
@@ -994,8 +1027,9 @@ bool AbstractParser::parseUserCommands(QString& command)
       emit sendToUser((QByteArray)"  _grouphelp - help for group manager console commands\r\n");
 
       emit sendToUser((QByteArray)"\r\nOther commands:\n");
-      emit sendToUser((QByteArray)("  _vote                    - vote for MUME on TMC!\r\n"));
-      emit sendToUser((QByteArray)("  _dirs [-options] pattern - directions to matching rooms\r\n"));
+      emit sendToUser((QByteArray)("  _vote                      - vote for MUME on TMC!\r\n"));
+      emit sendToUser((QByteArray)("  _dirs [-options] pattern   - directions to matching rooms\r\n"));
+      emit sendToUser((QByteArray)("  _search [-options] pattern - highlight matching rooms\r\n"));
       sendPromptToUser();
       return false;
     }
