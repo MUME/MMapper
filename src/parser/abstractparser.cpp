@@ -32,6 +32,8 @@
 #include "roomselection.h"
 #include "mapdata.h"
 
+#include <unistd.h>
+
 #include <QDesktopServices>
 #include <QUrl>
 
@@ -1283,6 +1285,7 @@ void AbstractParser::offlineCharacterMove(CommandIdType direction)
     }
   }
   m_mapData->unselect(rs1);
+  usleep(40000);
 }
 
 void AbstractParser::sendRoomInfoToUser(const Room* r)
