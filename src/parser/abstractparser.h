@@ -29,6 +29,7 @@
 
 #include "telnetfilter.h"
 #include "defs.h"
+#include "roomfilter.h"
 
 #include <QQueue>
 #include <QObject>
@@ -173,6 +174,8 @@ protected:
   static const QByteArray emptyByteArray;
 
   QString& latinToAscii(QString& str);
+
+  void dirs_command(RoomFilter f);
 };
 
 #endif

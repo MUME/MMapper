@@ -39,6 +39,7 @@ enum ExitDirection { ED_NORTH=0, ED_SOUTH, ED_EAST, ED_WEST, ED_UP,
 ExitDirection opposite(ExitDirection in);
 uint opposite(uint in);
 ExitDirection dirForChar(char dir);
+char charForDir(ExitDirection dir);
 
 typedef class QString DoorName;
 

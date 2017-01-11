@@ -30,6 +30,7 @@
 #include "mapfrontend.h"
 #include "abstractparser.h"
 #include "roomfilter.h"
+#include "shortestpath.h"
 
 #include <QLinkedList>
 
@@ -101,6 +102,8 @@ public:
   // search for matches
   void genericSearch(RoomRecipient * recipient, const RoomFilter &f);
   void genericSearch(const RoomSelection * in, const RoomFilter &f);
+
+  void shortestPathSearch(const Room *origin, ShortestPathRecipient * recipient, const RoomFilter &f, int max_hits=-1, double max_dist=0);
 
   // Used in Console Commands
   void removeDoorNames();

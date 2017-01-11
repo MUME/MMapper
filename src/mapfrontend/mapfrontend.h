@@ -30,6 +30,7 @@
 #include "roomadmin.h"
 #include "component.h"
 
+#include "shortestpath.h"
 #include "intermediatenode.h"
 #include "map.h"
 
