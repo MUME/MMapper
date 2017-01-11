@@ -17,6 +17,7 @@ set(mmapper_SRCS
     mainwindow/mainwindow.cpp
     mainwindow/roomeditattrdlg.cpp
     mapdata/customaction.cpp
+    mapdata/roomfilter.cpp
     mapdata/mapdata.cpp
     mapdata/mmapper2exit.cpp
     mapdata/mmapper2room.cpp
@@ -93,6 +94,7 @@ set(mmapper_MOC_HDRS
     mainwindow/mainwindow.h
     mainwindow/roomeditattrdlg.h
     mapdata/mapdata.h
+    mapdata/roomfilter.h
     mapfrontend/mapfrontend.h
     mapstorage/abstractmapstorage.h
     mapstorage/mapstorage.h

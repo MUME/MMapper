@@ -29,6 +29,7 @@
 
 #include "mapfrontend.h"
 #include "abstractparser.h"
+#include "roomfilter.h"
 
 #include <QLinkedList>
 
@@ -98,10 +99,8 @@ public:
   virtual void clear();
 
   // search for matches
-  void searchDescriptions(RoomRecipient * recipient, QString s, Qt::CaseSensitivity cs);
-  void searchNames(RoomRecipient * recipient, QString s, Qt::CaseSensitivity cs);
-  void searchDoorNames(RoomRecipient * recipient, QString s, Qt::CaseSensitivity cs);
-  void searchNotes(RoomRecipient * recipient, QString s, Qt::CaseSensitivity cs);
+  void genericSearch(RoomRecipient * recipient, const RoomFilter &f);
+  void genericSearch(const RoomSelection * in, const RoomFilter &f);
 
   // Used in Console Commands
   void removeDoorNames();

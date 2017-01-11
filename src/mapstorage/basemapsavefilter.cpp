@@ -128,7 +128,7 @@ void BaseMapSaveFilter::prepare( ProgressCounter *counter )
   set<uint> considered;
 
   // Seed room
-  m_impl->mapData->searchNames( this, "The Fountain Square", Qt::CaseSensitive );
+  m_impl->mapData->genericSearch( this, RoomFilter("The Fountain Square", Qt::CaseSensitive, PAT_NAME) );
 
   // Walk the whole map through non-hidden exits without recursing
   while ( !m_impl->roomsTodo.empty() )
