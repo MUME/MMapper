@@ -837,6 +837,11 @@ bool AbstractParser::parseUserCommands(QString& command)
       toggleRoomFlagCommand(RLF_TOWER, R_LOADFLAGS);
       return false;
     }
+    else if (str.startsWith("_note"))
+    {
+      setRoomFieldCommand(str.section(' ', 1), R_NOTE);
+      return false;
+    }
 
     if (str.startsWith("_open"))   {dooraction = true; daction = DAT_OPEN;}
     else
@@ -871,15 +876,15 @@ bool AbstractParser::parseUserCommands(QString& command)
       return false;
     }
     if (str=="_pdynamic") {
-      emit sendToUser(m_dynamicRoomDesc.toLatin1());
-      emit sendToUser((QByteArray)"OK.\r\n");
-      sendPromptToUser();
+      printRoomInfo((1<<R_NAME)|(1<<R_DYNAMICDESC) | (1 << R_DESC));
       return false;
     }
     if (str=="_pstatic") {
-      emit sendToUser(m_staticRoomDesc.toLatin1());
-      emit sendToUser((QByteArray)"OK.\r\n");
-      sendPromptToUser();
+      printRoomInfo((1<<R_NAME)|(1<<R_DESC));
+      return false;
+    }
+    if (str=="_pnote") {
+      printRoomInfo(1<<R_NOTE);
       return false;
     }
     if (str=="_help") {
@@ -895,6 +900,7 @@ bool AbstractParser::parseUserCommands(QString& command)
       emit sendToUser((QByteArray)"\r\nDescription commands:\r\n");
       emit sendToUser((QByteArray)"  _pdynamic    - prints current room description\r\n");
       emit sendToUser((QByteArray)"  _pstatic     - the same as previous, but without moveable items\r\n");
+      emit sendToUser((QByteArray)"  _pnote       - print the note in the current room\r\n");
       emit sendToUser((QByteArray)"  _brief       - emulate brief mode on/off\r\n");
 
       emit sendToUser((QByteArray)"\r\nHelp commands:\n");
@@ -974,6 +980,9 @@ bool AbstractParser::parseUserCommands(QString& command)
       emit sendToUser((QByteArray)"  _boat         - toggle a boat in the room\r\n");
       emit sendToUser((QByteArray)"  _attention    - toggle an attention flag in the room\r\n");
       emit sendToUser((QByteArray)"  _watch        - toggle a watchable spot in the room\r\n"); 
+
+      emit sendToUser((QByteArray)"\r\nMiscellaneous commands:\r\n");
+      emit sendToUser((QByteArray)"  _note [note]         - set a note in the room\r\n");
 
       emit sendToUser((QByteArray)"\r\n");
 
@@ -1645,7 +1654,7 @@ void AbstractParser::toggleDoorFlagCommand(uint flag, DirectionType direction)
   sendPromptToUser();
 }
 
-void AbstractParser::setRoomFieldCommand(uint flag, uint field)
+void AbstractParser::setRoomFieldCommand(const QVariant & flag, uint field)
 {
   Coordinate c;
   QList<Coordinate> cl = m_mapData->getPath(queue);
@@ -1679,6 +1688,30 @@ void AbstractParser::toggleRoomFlagCommand(uint flag, uint field)
 
   emit sendToUser("--->Room flag " + toggle.toLatin1() + "\n\r");
   sendPromptToUser();
+}
+
+void AbstractParser::printRoomInfo(uint fieldset)
+{
+  Coordinate c;
+  QList<Coordinate> cl = m_mapData->getPath(queue);
+  if (!cl.isEmpty())
+    c = cl.at(cl.size()-1);
+  else
+    c = m_mapData->getPosition();
+
+  const RoomSelection * rs = m_mapData->select(c);
+  const Room *r = rs->values().front();
+
+  QString result;
+
+  if (fieldset & (1 << R_NAME)) result = result + (*r)[R_NAME].toString() + "\r\n";
+  if (fieldset & (1 << R_DESC)) result = result + (*r)[R_DESC].toString();
+  if (fieldset & (1 << R_DYNAMICDESC)) result = result + (*r)[R_DYNAMICDESC].toString();
+  if (fieldset & (1 << R_NOTE)) result = result + "Note: " + (*r)[R_NOTE].toString() + "\r\n";
+
+  emit sendToUser(result.toLatin1());
+  sendPromptToUser();
+  m_mapData->unselect(rs);
 }
 
 void AbstractParser::sendGTellToUser(const QByteArray& ba) {

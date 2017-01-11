@@ -110,16 +110,12 @@ void MapData::toggleRoomFlag(const Coordinate & pos, uint flag, uint field)
 
 bool MapData::getRoomFlag(const Coordinate & pos, uint flag, uint field)
 {
-  QMutexLocker locker(&mapLock);
-  Room * room = map.get(pos);
-  if (room && field < ROOMFIELD_LAST )
-  {
-    if (ISSET((*room)[field].toUInt(), flag)) return true;
-  }
-  return false;
+  const QVariant val = getRoomField(pos, field);
+  if (val.isNull()) return false;
+  return ISSET(val.toUInt(), flag);
 }
 
-void MapData::setRoomField(const Coordinate & pos, uint flag, uint field)
+void MapData::setRoomField(const Coordinate & pos, const QVariant & flag, uint field)
 {
   QMutexLocker locker(&mapLock);
   Room * room = map.get(pos);
@@ -131,15 +127,15 @@ void MapData::setRoomField(const Coordinate & pos, uint flag, uint field)
   }
 }
 
-uint MapData::getRoomField(const Coordinate & pos, uint field)
+QVariant MapData::getRoomField(const Coordinate & pos, uint field)
 {
   QMutexLocker locker(&mapLock);
   Room * room = map.get(pos);
   if (room && field < ROOMFIELD_LAST )
   {
-    return (*room)[field].toUInt();
+    return (*room)[field];
   }
-  return 0;
+  return QVariant();
 }
 
 QList<Coordinate> MapData::getPath(const QList<CommandIdType> dirs)
