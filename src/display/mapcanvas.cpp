@@ -937,8 +937,6 @@ void MapCanvas::resizeGL(int width, int height)
         return;
     }
 
-    qDebug() << "resizeGL width " << width << " height " << height;
-
     float swp = m_scaleFactor * (1.0f - ((float)(width - BASESIZEX) / width));
     float shp = m_scaleFactor * (1.0f - ((float)(height - BASESIZEY) / height));
 
