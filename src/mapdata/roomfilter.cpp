@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <errno.h>
 
-const char * RoomFilter::parse_help = "Parse error; format is: [-(name|desc|note|exits|all)] text\r\n";
+const char * RoomFilter::parse_help = "Parse error; format is: [-(name|desc|note|exits|all)] pattern\r\n";
 
 
 bool RoomFilter::parseRoomFilter(const QString & line, RoomFilter &output)

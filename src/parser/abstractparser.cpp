@@ -930,7 +930,7 @@ bool AbstractParser::parseUserCommands(QString& command)
       QString pattern_str = str.section(' ', 1).trimmed();
       if(pattern_str.size() == 0)
       {
-        emit sendToUser("Usage: _search <pattern in quotes> [section to search]\r\n");
+        emit sendToUser("Usage: _dirs [-(name|desc|note|exits|all)] pattern\r\n");
         return false;
       }
       RoomFilter f;
@@ -988,8 +988,8 @@ bool AbstractParser::parseUserCommands(QString& command)
       emit sendToUser((QByteArray)"  _grouphelp - help for group manager console commands\r\n");
 
       emit sendToUser((QByteArray)"\r\nOther commands:\n");
-      emit sendToUser((QByteArray)("  _vote     - vote for MUME on TMC!"));
-      emit sendToUser((QByteArray)"\r\n");
+      emit sendToUser((QByteArray)("  _vote                    - vote for MUME on TMC!\r\n"));
+      emit sendToUser((QByteArray)("  _dirs [-options] pattern - directions to matching rooms\r\n"));
       sendPromptToUser();
       return false;
     }
