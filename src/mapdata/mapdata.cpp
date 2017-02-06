@@ -381,17 +381,14 @@ void MapData::removeDoorNames()
   }
 }
 
-void MapData::searchDescriptions(RoomRecipient * recipient, QString s, Qt::CaseSensitivity cs)
-{
+void MapData::genericSearch(RoomRecipient * recipient, const RoomFilter &f){
   QMutexLocker locker(&mapLock);
   Room * r = 0;
-
   for(vector<Room *>::iterator i = roomIndex.begin(); i != roomIndex.end(); ++i)
   {
     r = *i;
     if (r) {
-      if (QString((*r)[1].toString()).contains(s, cs))
-      {
+      if (f.filter(r)) {
         locks[r->getId()].insert(recipient);
         recipient->receiveRoom(this, r);
       }
@@ -399,64 +396,11 @@ void MapData::searchDescriptions(RoomRecipient * recipient, QString s, Qt::CaseS
   }
 }
 
-void MapData::searchNames(RoomRecipient * recipient, QString s, Qt::CaseSensitivity cs)
-{
+void MapData::genericSearch(const RoomSelection * in, const RoomFilter &f){
   QMutexLocker locker(&mapLock);
-  Room * r = 0;
-
-  for(vector<Room *>::iterator i = roomIndex.begin(); i != roomIndex.end(); ++i)
-  {
-    r = *i;
-    if (r) {
-      if (QString((*r)[0].toString()).contains(s, cs))
-      {
-        locks[r->getId()].insert(recipient);
-        recipient->receiveRoom(this, r);
-      }
-    }
-  }
-}
-
-void MapData::searchDoorNames(RoomRecipient * recipient, QString s, Qt::CaseSensitivity cs)
-{
-  QMutexLocker locker(&mapLock);
-  Room * r = 0;
-
-  for(vector<Room *>::iterator i = roomIndex.begin(); i != roomIndex.end(); ++i)
-  {
-    r = *i;
-    if (r) {
-      ExitsList exits = r->getExitsList();
-      for(ExitsList::const_iterator exitIter = exits.begin(); exitIter != exits.end(); ++exitIter)
-      {
-        const Exit & e = *exitIter;
-        if (QString((e)[0].toString()).contains(s, cs))
-        {
-          locks[r->getId()].insert(recipient);
-          recipient->receiveRoom(this, r);
-          break;
-        }
-      }
-    }
-  }
-}
-
-void MapData::searchNotes(RoomRecipient * recipient, QString s, Qt::CaseSensitivity cs)
-{
-  QMutexLocker locker(&mapLock);
-  Room * r = 0;
-
-  for(vector<Room *>::iterator i = roomIndex.begin(); i != roomIndex.end(); ++i)
-  {
-    r = *i;
-    if (r) {
-      if (QString((*r)[4].toString()).contains(s, cs))
-      {
-        locks[r->getId()].insert(recipient);
-        recipient->receiveRoom(this, r);
-      }
-    }
-  }
+  RoomSelection * selection = selections[in];
+  assert(selection);
+  genericSearch((RoomRecipient *)selection, f);
 }
 
 MapData::~MapData()

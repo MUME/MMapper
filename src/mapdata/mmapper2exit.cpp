@@ -92,3 +92,15 @@ ExitDirection dirForChar(char dir) {
 	}
 }
 
+char charForDir(ExitDirection dir) {
+  switch (dir) {
+  case ED_NORTH: return 'n';
+  case ED_SOUTH: return 's';
+  case ED_EAST: return 'e';
+  case ED_WEST: return 'w';
+  case ED_UP: return 'u';
+  case ED_DOWN: return 'd';
+  default: return '?';
+  }
+}
+

@@ -69,14 +69,16 @@ void FindRoomsDlg::findClicked()
   m_mapData->lookingForRooms(this, createEvent(CID_UNKNOWN, text, nullString, nullString, 0, 0));
   */
 
+  char kind = PAT_UNK;
   if (nameRadioButton->isChecked())
-    m_mapData->searchNames(this, text, cs);
+    kind = PAT_NAME;
   else if (descRadioButton->isChecked())
-    m_mapData->searchDescriptions(this, text, cs);
+    kind = PAT_DESC;
   else if (exitsRadioButton->isChecked())
-    m_mapData->searchDoorNames(this, text, cs);
+    kind = PAT_EXITS;
   else if (notesRadioButton->isChecked())
-    m_mapData->searchNotes(this, text, cs);
+    kind = PAT_NOTE;
+  m_mapData->genericSearch(this, RoomFilter(text, cs, kind));
 }
 
 void FindRoomsDlg::receiveRoom(RoomAdmin * sender, const Room * room)

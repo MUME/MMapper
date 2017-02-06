@@ -32,6 +32,8 @@
 #include "roomselection.h"
 #include "mapdata.h"
 
+#include <unistd.h>
+
 #include <QDesktopServices>
 #include <QUrl>
 
@@ -439,6 +441,73 @@ void AbstractParser::parseNewUserInput(IncomingData& data)
                                         //emit sendToMud(QByteArray("\r\n"));
       break;
   }
+}
+
+QString compressDirections(QString original) {
+  QString ans;
+  int curnum = 0;
+  QChar curval;
+  for(auto c: original) {
+    if (curnum == 0) {
+      curnum = 1;
+      curval = c;
+    } else {
+      if (curval == c)
+        curnum++;
+      else {
+        if (curnum > 1)
+          ans.append(QString::number(curnum));
+        ans.append(curval);
+        curnum = 1;
+        curval = c;
+      }
+    }
+  }
+  if (curnum > 1)
+    ans.append(QString::number(curnum));
+  ans.append(curval);
+  return ans;
+}
+
+
+class ShortestPathEmitter : public ShortestPathRecipient
+{
+  AbstractParser &parser;
+public:
+  ShortestPathEmitter(AbstractParser &parser) : parser(parser) {}
+  void receiveShortestPath(RoomAdmin * admin, QVector<SPNode> spnodes, int endpoint) {
+
+    const SPNode * spnode = &spnodes[endpoint];
+    QString ss = (*spnode->r)[0].toString();
+    QByteArray s = ("Distance " + QString::number(spnode->dist) + ": "  + ss + "\r\n").toLatin1();
+    emit parser.sendToUser(s);
+    QString dirs;
+    while (spnode->parent >= 0) {
+      if (&spnodes[spnode->parent] == spnode){
+        emit parser.sendToUser(("ERROR: loop\r\n"));
+        break;
+      }
+      dirs.append(charForDir(spnode->lastdir));
+      spnode = &spnodes[spnode->parent];
+    }
+    std::reverse(dirs.begin(), dirs.end());
+    emit parser.sendToUser(("dirs: " + compressDirections(dirs) + "\r\n").toLatin1());
+  }
+};
+
+
+void AbstractParser::dirs_command(RoomFilter f)
+{
+  ShortestPathEmitter sp_emitter(*this);
+
+  Coordinate c = m_mapData->getPosition();
+  const RoomSelection * rs = m_mapData->select(c);
+  const Room *r = rs->values().front();
+
+  m_mapData->shortestPathSearch(r, &sp_emitter, f, 10, 0);
+  sendPromptToUser();
+
+  m_mapData->unselect(rs);
 }
 
 
@@ -861,6 +930,21 @@ bool AbstractParser::parseUserCommands(QString& command)
     else
       if (str.startsWith("_block"))   {dooraction = true; daction = DAT_BLOCK;}
 
+    if (str.startsWith("_dirs"))
+    {
+      QString pattern_str = str.section(' ', 1).trimmed();
+      if(pattern_str.size() == 0)
+      {
+        emit sendToUser("Usage: _dirs [-(name|desc|note|exits|all)] pattern\r\n");
+        return false;
+      }
+      RoomFilter f;
+      if (!RoomFilter::parseRoomFilter(pattern_str, f))
+        emit sendToUser(RoomFilter::parse_help);
+      else
+        dirs_command(f);
+      return false;
+    }
 
     if (str=="_removedoornames") {
       m_mapData->removeDoorNames();
@@ -910,8 +994,8 @@ bool AbstractParser::parseUserCommands(QString& command)
       emit sendToUser((QByteArray)"  _grouphelp - help for group manager console commands\r\n");
 
       emit sendToUser((QByteArray)"\r\nOther commands:\n");
-      emit sendToUser((QByteArray)("  _vote     - vote for MUME on TMC!"));
-      emit sendToUser((QByteArray)"\r\n");
+      emit sendToUser((QByteArray)("  _vote                    - vote for MUME on TMC!\r\n"));
+      emit sendToUser((QByteArray)("  _dirs [-options] pattern - directions to matching rooms\r\n"));
       sendPromptToUser();
       return false;
     }
@@ -1210,6 +1294,7 @@ void AbstractParser::offlineCharacterMove(CommandIdType direction)
     }
   }
   m_mapData->unselect(rs1);
+  usleep(40000);
 }
 
 void AbstractParser::sendRoomInfoToUser(const Room* r)
