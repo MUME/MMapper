@@ -1529,6 +1529,50 @@ void MapCanvas::drawRoomDoorName(const Room *sourceRoom, uint sourceDir, const R
     qint32 dX = srcX - tarX;
     qint32 dY = srcY - tarY;
 
+    // Look at door flags to code postfixes
+    DoorFlags sourceDoorFlags = getDoorFlags(sourceRoom->exit(sourceDir));
+    QString sourcePostFix;
+    if (ISSET(sourceDoorFlags, DF_HIDDEN))
+    {
+      sourcePostFix = "h";
+    }
+    if (ISSET(sourceDoorFlags, DF_NEEDKEY))
+    {
+      sourcePostFix += "L";
+    }
+    if (ISSET(sourceDoorFlags, DF_NOPICK))
+    {
+      sourcePostFix += "/NP";
+    }
+    if (ISSET(sourceDoorFlags, DF_DELAYED))
+    {
+      sourcePostFix += "d";
+    }
+    if (sourcePostFix.length() > 0) {
+      sourcePostFix = " [" + sourcePostFix + "]";
+    }
+    DoorFlags targetDoorFlags = getDoorFlags(targetRoom->exit(targetDir));
+    QString targetPostFix;
+    if (ISSET(targetDoorFlags, DF_HIDDEN))
+    {
+      targetPostFix = "h";
+    }
+    if (ISSET(targetDoorFlags, DF_NEEDKEY))
+    {
+      targetPostFix += "L";
+    }
+    if (ISSET(targetDoorFlags, DF_NOPICK))
+    {
+      targetPostFix += "/NP";
+    }
+    if (ISSET(targetDoorFlags, DF_DELAYED))
+    {
+      targetPostFix += "d";
+    }
+    if (targetPostFix.length() > 0) {
+      targetPostFix = " [" + targetPostFix + "]";
+    }
+
     QString name;
     bool together = false;
 
@@ -1543,8 +1587,8 @@ void MapCanvas::drawRoomDoorName(const Room *sourceRoom, uint sourceDir, const R
         together = true;
 
         // no need for duplicating names (its spammy)
-        const QString &sourceName = getDoorName(sourceRoom->exit(sourceDir));
-        const QString &targetName = getDoorName(targetRoom->exit(targetDir));
+        const QString &sourceName = getDoorName(sourceRoom->exit(sourceDir)) + sourcePostFix;
+        const QString &targetName = getDoorName(targetRoom->exit(targetDir)) + targetPostFix;
         if (sourceName != targetName)
             name =  sourceName + "/" + targetName;
         else
@@ -1608,6 +1652,58 @@ void MapCanvas::drawRoomDoorName(const Room *sourceRoom, uint sourceDir, const R
     glPopMatrix();
 }
 
+void MapCanvas::drawFlow(const Room* room, const std::vector<Room *> & rooms, ExitDirection exitDirection)
+{
+  // Start drawing
+  glPushMatrix();
+
+  // Prepare pen
+  qglColor(QColor(76,216,255));
+  glEnable(GL_BLEND);
+  glPointSize (devicePixelRatio() * 4.0);
+  glLineWidth (devicePixelRatio() * 1.0);
+
+  // Draw part in this room
+  if (room->getPosition().z == m_currentLayer)
+  {
+    glCallList(m_flow_begin_gllist[exitDirection]);
+  }
+
+  // Draw part in adjacent room
+  uint targetDir = opposite(exitDirection);
+  uint targetId;
+  const Room *targetRoom;
+  const ExitsList & exitslist = room->getExitsList();
+  int rx;
+  int ry;
+  const Exit & sourceExit = exitslist[exitDirection];
+
+  //For each outgoing connections
+  std::set<uint>::const_iterator itOut = sourceExit.outBegin();
+  while (itOut != sourceExit.outEnd()) {
+      targetId = *itOut;
+      targetRoom = rooms[targetId];
+      rx = targetRoom->getPosition().x;
+      ry = targetRoom->getPosition().y;
+      if (targetRoom->getPosition().z == m_currentLayer)
+      {
+        glLoadIdentity();
+        glTranslated(rx, ry, 0.0);
+        glCallList(m_flow_end_gllist[targetDir]);
+      }
+      ++itOut;
+  }
+
+  // Finish pen
+  glLineWidth (devicePixelRatio() * 2.0);
+  glPointSize (devicePixelRatio() * 2.0);
+  glDisable(GL_BLEND);
+
+  // Termite drawing
+  qglColor(Qt::black);
+  glPopMatrix();
+}
+
 void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, const std::vector<std::set<RoomRecipient *> > & locks)
 {
     if (!room) return;
@@ -1632,10 +1728,10 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
     if (layer > 0)
     {
         if (Config().m_drawUpperLayersTextured)
-            glEnable (GL_POLYGON_STIPPLE);
+            glEnable(GL_POLYGON_STIPPLE);
         else
         {
-            glDisable (GL_POLYGON_STIPPLE);
+            glDisable(GL_POLYGON_STIPPLE);
             glColor4d(0.3, 0.3, 0.3, 0.6-0.2*layer);
             glEnable(GL_BLEND);
         }
@@ -1861,6 +1957,10 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
             qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
         }
+        if ( ISSET(getFlags(room->exit(ED_NORTH)), EF_FLOW))
+        {
+            drawFlow(room, rooms, ED_NORTH);
+        }
     }
     //wall n
     if (ISNOTSET(ef_north, EF_EXIT) || ISSET(ef_north, EF_DOOR))
@@ -1915,6 +2015,10 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
             glCallList(m_wall_south_gllist);
             qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
+        }
+        if ( ISSET(getFlags(room->exit(ED_SOUTH)), EF_FLOW))
+        {
+            drawFlow(room, rooms, ED_SOUTH);
         }
     }
     //wall s
@@ -1972,6 +2076,10 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
             qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
         }
+        if ( ISSET(getFlags(room->exit(ED_EAST)), EF_FLOW))
+        {
+            drawFlow(room, rooms, ED_EAST);
+        }
     }
     //wall e
     if (ISNOTSET(ef_east, EF_EXIT) || ISSET(ef_east, EF_DOOR))
@@ -2028,6 +2136,10 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
             qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
         }
+        if ( ISSET(getFlags(room->exit(ED_WEST)), EF_FLOW))
+        {
+            drawFlow(room, rooms, ED_WEST);
+        }
     }
     //wall w
     if (ISNOTSET(ef_west, EF_EXIT) || ISSET(ef_west, EF_DOOR))
@@ -2081,6 +2193,11 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
 
             if (ISSET(ef_up, EF_DOOR))
                 glCallList(m_door_up_gllist);
+
+            if ( ISSET(getFlags(room->exit(ED_UP)), EF_FLOW))
+            {
+                drawFlow(room, rooms, ED_UP);
+            }
         }
     }
 
@@ -2114,6 +2231,11 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
 
             if (ISSET(ef_down, EF_DOOR))
                 glCallList(m_door_down_gllist);
+
+            if ( ISSET(getFlags(room->exit(ED_DOWN)), EF_FLOW))
+            {
+                drawFlow(room, rooms, ED_DOWN);
+            }
         }
     }
 
@@ -2819,6 +2941,132 @@ void MapCanvas::makeGlLists()
     glVertex3d(-0.2, 1.2, 0.0);
     glVertex3d(1.2, 1.2, 0.0);
     glVertex3d(1.2, -0.2, 0.0);
+    glEnd();
+    glEndList();
+
+    m_flow_begin_gllist[ED_NORTH] = glGenLists(1);
+    glNewList(m_flow_begin_gllist[ED_NORTH], GL_COMPILE);
+    glBegin(GL_LINE_STRIP);
+    glVertex3d(0.5, 0.5, 0.1);
+    glVertex3d(0.5, 0.0, 0.1);
+    glEnd();
+    glBegin(GL_TRIANGLES);
+    glVertex3d(0.44, +0.20, 0.1);
+    glVertex3d(0.50, +0.00, 0.1);
+    glVertex3d(0.56, +0.20, 0.1);
+    glEnd();
+    glEndList();
+
+    m_flow_begin_gllist[ED_SOUTH] = glGenLists(1);
+    glNewList(m_flow_begin_gllist[ED_SOUTH], GL_COMPILE);
+    glBegin(GL_LINE_STRIP);
+    glVertex3d(0.5, 0.5, 0.1);
+    glVertex3d(0.5, 1.0, 0.1);
+    glEnd();
+    glBegin(GL_TRIANGLES);
+    glVertex3d(0.44, +0.80, 0.1);
+    glVertex3d(0.50, +1.00, 0.1);
+    glVertex3d(0.56, +0.80, 0.1);
+    glEnd();
+    glEndList();
+
+    m_flow_begin_gllist[ED_EAST] = glGenLists(1);
+    glNewList(m_flow_begin_gllist[ED_EAST], GL_COMPILE);
+    glBegin(GL_LINE_STRIP);
+    glVertex3d(0.5, 0.5, 0.1);
+    glVertex3d(1.0, 0.5, 0.1);
+    glEnd();
+    glBegin(GL_TRIANGLES);
+    glVertex3d(0.80, +0.44, 0.1);
+    glVertex3d(1.00, +0.50, 0.1);
+    glVertex3d(0.80, +0.56, 0.1);
+    glEnd();
+    glEndList();
+
+    m_flow_begin_gllist[ED_WEST] = glGenLists(1);
+    glNewList(m_flow_begin_gllist[ED_WEST], GL_COMPILE);
+    glBegin(GL_LINE_STRIP);
+    glVertex3d(0.5, 0.5, 0.1);
+    glVertex3d(0.0, 0.5, 0.1);
+    glEnd();
+    glBegin(GL_TRIANGLES);
+    glVertex3d(0.20, +0.44, 0.1);
+    glVertex3d(0.00, +0.50, 0.1);
+    glVertex3d(0.20, +0.56, 0.1);
+    glEnd();
+    glEndList();
+
+    m_flow_begin_gllist[ED_UP] = glGenLists(1);
+    glNewList(m_flow_begin_gllist[ED_UP], GL_COMPILE);
+    glBegin(GL_LINE_STRIP);
+    glVertex3d(0.5, 0.5, 0.1);
+    glVertex3d(0.75, 0.25, 0.1);
+    glEnd();
+    glBegin(GL_TRIANGLES);
+    glVertex3d(0.51, 0.42, 0.1);
+    glVertex3d(0.64, 0.37, 0.1);
+    glVertex3d(0.60, 0.48, 0.1);
+    glEnd();
+    glEndList();
+
+    m_flow_begin_gllist[ED_DOWN] = glGenLists(1);
+    glNewList(m_flow_begin_gllist[ED_DOWN], GL_COMPILE);
+    glBegin(GL_LINE_STRIP);
+    glVertex3d(0.5, 0.5, 0.1);
+    glVertex3d(0.25, 0.75, 0.1);
+    glEnd();
+    glBegin(GL_TRIANGLES);
+    glVertex3d(0.36, 0.57, 0.1);
+    glVertex3d(0.33, 0.67, 0.1);
+    glVertex3d(0.44, 0.63, 0.1);
+    glEnd();
+    glEndList();
+
+    m_flow_end_gllist[ED_SOUTH] = glGenLists(1);
+    glNewList(m_flow_end_gllist[ED_SOUTH], GL_COMPILE);
+    glBegin(GL_LINE_STRIP);
+    glVertex3d(0.0, 0.0, 0.1);
+    glVertex3d(0.0,  0.5, 0.1);
+    glEnd();
+    glEndList();
+
+    m_flow_end_gllist[ED_NORTH] = glGenLists(1);
+    glNewList(m_flow_end_gllist[ED_NORTH], GL_COMPILE);
+    glBegin(GL_LINE_STRIP);
+    glVertex3d(0.0, -0.5, 0.1);
+    glVertex3d(0.0, 0.0, 0.1);
+    glEnd();
+    glEndList();
+
+    m_flow_end_gllist[ED_WEST] = glGenLists(1);
+    glNewList(m_flow_end_gllist[ED_WEST], GL_COMPILE);
+    glBegin(GL_LINE_STRIP);
+    glVertex3d(-0.5, 0.0, 0.1);
+    glVertex3d( 0.0, 0.0, 0.1);
+    glEnd();
+    glEndList();
+
+    m_flow_end_gllist[ED_EAST] = glGenLists(1);
+    glNewList(m_flow_end_gllist[ED_EAST], GL_COMPILE);
+    glBegin(GL_LINE_STRIP);
+    glVertex3d(0.5, 0.0, 0.1);
+    glVertex3d(0.0, 0.0, 0.1);
+    glEnd();
+    glEndList();
+
+    m_flow_end_gllist[ED_DOWN] = glGenLists(1);
+    glNewList(m_flow_end_gllist[ED_DOWN], GL_COMPILE);
+    glBegin(GL_LINE_STRIP);
+    glVertex3d(-0.25, 0.25, 0.1);
+    glVertex3d(0.0, 0.0, 0.1);
+    glEnd();
+    glEndList();
+
+    m_flow_end_gllist[ED_UP] = glGenLists(1);
+    glNewList(m_flow_end_gllist[ED_UP], GL_COMPILE);
+    glBegin(GL_LINE_STRIP);
+    glVertex3d(0.25, -0.25, 0.1);
+    glVertex3d(0.0, 0.0, 0.1);
     glEnd();
     glEndList();
 

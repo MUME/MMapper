@@ -6,10 +6,10 @@ Note:
   - The .mm2 file format changed. Old files can be read, but files saved
     with this version can't be used with MMapper 2.3.x or older.
 Changes:
-  - Added extra door flags (teoli)
   - Added support for classes of info marks, with different colors and font decorations (teoli)
   - Added ability to rotate info marks (teoli)
   - Fixed wall color when a special exit was present (was white instead of black) (teoli)
+  - Added ability to store direction of river flows and display it on the map (teoli)
 
 ================================
 MMapper 2.3.6 (December 9, 2015)
@@ -18,26 +18,26 @@ MMapper 2.3.6 (December 9, 2015)
 Changes:
   - High DPI displays are now supported such as Retina displays (nschimme)
 
-=============================
-MMapper 2.3.5 July 29, 2015)
-=============================
+=================================
+MMapper 2.3.5 (July 29, 2015)
+=================================
 
 Changes:
   - Fixed bug that prevented connections from having TCP KeepAlive (nschimme)
   - Updated base map to include new zones; thanks Ortansia! (nschimme)
 
-=============================
+================================
 MMapper 2.3.4 (May 1, 2015)
-=============================
+================================
 
 Changes:
   - All connections now utilize TCP KeepAlive to help with dropped connections (nschimme)
   - Prompts are now correctly identified and remembered for internal commands (nschimme)
   - Cleaned up vote and Windows build code (nschimme)
 
-=============================
+================================
 MMapper 2.3.3 (January 18, 2015)
-=============================
+================================
 
 Changes:
   - [GroupManager] Player's hp, mana, and moves are now correctly updated (nschimme)
@@ -46,25 +46,25 @@ Changes:
   - Prompts should not be displayed after an internal command like _help is run (nschimme)
   - Added new _vote command and menu action to vote for MUME on TMC (nschimme)
 
-=============================
+================================
 MMapper 2.3.2 (January 17, 2015)
-=============================
+================================
 
 Changes:
  - Fixed critical bug that disallowed Mac and Linux users to connect to MMapper (nschimme)
 
-=============================
+================================
 MMapper 2.3.1 (January 17, 2015)
-=============================
+================================
 
 Changes:
  - Telnet characters now parsed correctly (nschimme)
  - Info marks load correctly (nschimme)
  - Updated base map with the new zones (nschimme)
 
-=============================
+================================
 MMapper 2.3.0 (January 17, 2015)
-=============================
+================================
 
 Changes:
  - Build now requires Qt5.2 and CMake 2.8.11 (nschimme)
@@ -74,18 +74,18 @@ Changes:
  - Prompt detection fixes (kalev)
  - New note search feature (Arfang)
 
-=============================
+================================
 MMapper 2.2.1 (July 14, 2013)
-=============================
+================================
 
 Changes:
  - Build fixes
  - Fix issues with XML mode in the account menu
  - Make _name and _noride commands work (thanks Waba!)
 
-=============================
+================================
 MMapper 2.2.0 (July 13, 2013)
-=============================
+================================
 
 Changes:
  - Compatibility fixes with latest MUME server

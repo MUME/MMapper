@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -44,9 +44,9 @@ signals:
 	void mapChanged();
 
 public slots:
-    void setRoomSelection(const RoomSelection*, MapData*, MapCanvas*);   
+    void setRoomSelection(const RoomSelection*, MapData*, MapCanvas*);
 
-	//selection page    
+	//selection page
     void roomListCurrentIndexChanged(int);
 
 	//attributes page
@@ -54,7 +54,7 @@ public slots:
 	void goodRadioButtonToggled(bool);
 	void evilRadioButtonToggled(bool);
 	void alignUndefRadioButtonToggled(bool);
-	
+
 	void noPortRadioButtonToggled(bool);
 	void portableRadioButtonToggled(bool);
 	void portUndefRadioButtonToggled(bool);
@@ -62,14 +62,14 @@ public slots:
 	void noRideRadioButtonToggled(bool);
 	void ridableRadioButtonToggled(bool);
 	void rideUndefRadioButtonToggled(bool);
-		
+
 	void litRadioButtonToggled(bool);
 	void darkRadioButtonToggled(bool);
 	void lightUndefRadioButtonToggled(bool);
-	
+
 	void mobFlagsListItemChanged(QListWidgetItem*);
 	void loadFlagsListItemChanged(QListWidgetItem*);
-        
+
 	void exitButtonToggled(bool);
 
 	void exitFlagsListItemChanged(QListWidgetItem*);
@@ -79,42 +79,42 @@ public slots:
 
   void toggleHiddenDoor();
 
-	//terrain tab	
+	//terrain tab
 	void terrainToolButtonToggled(bool);
-	
+
 	//note tab
 	void roomNoteChanged();
-	
+
 	//all tabs
 	void closeClicked();
-	    
+
 public:
     RoomEditAttrDlg(QWidget *parent = 0);
     ~RoomEditAttrDlg();
-    
+
     void readSettings();
 	void writeSettings();
-    
-    
+
+
 private:
 
 	void connectAll();
 	void disconnectAll();
 
-	const Room* getSelectedRoom();	
+	const Room* getSelectedRoom();
 	uint getSelectedExit();
 	void updateDialog(const Room *r);
-	
+
 	QListWidgetItem* loadListItems[20];
 	QListWidgetItem* mobListItems[20];
-	
+
 	QListWidgetItem* exitListItems[20];
 	QListWidgetItem* doorListItems[20];
 
 	const RoomSelection* 	m_roomSelection;
-	MapData* 		m_mapData;
-	MapCanvas* 		m_mapCanvas;
-  QShortcut *m_hiddenShortcut;
+	MapData* 		          m_mapData;
+	MapCanvas* 		        m_mapCanvas;
+  QShortcut*            m_hiddenShortcut;
 };
 
 

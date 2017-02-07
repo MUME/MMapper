@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -43,7 +43,7 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
 {
     setupUi(this);
 	roomDescriptionTextEdit->setLineWrapMode(QTextEdit::NoWrap);
-		
+
 	mobListItems[0] = (QListWidgetItem*) new QListWidgetItem("Rent place");
 	mobListItems[1] = (QListWidgetItem*) new QListWidgetItem("Generic shop");
 	mobListItems[2] = (QListWidgetItem*) new QListWidgetItem("Weapon shop");
@@ -58,12 +58,12 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
 	mobListItems[11] = (QListWidgetItem*) new QListWidgetItem("Ranger guild");
 	mobListItems[12] = (QListWidgetItem*) new QListWidgetItem("SMOB");
 	mobListItems[13] = (QListWidgetItem*) new QListWidgetItem("Quest mob");
-	mobListItems[14] = (QListWidgetItem*) new QListWidgetItem("Any mob"); 
+	mobListItems[14] = (QListWidgetItem*) new QListWidgetItem("Any mob");
 	mobListItems[15] = NULL;
 
 	mobFlagsListWidget->clear();
 	for (int i=0; i<15; i++)
-	{	
+	{
 		mobListItems[i]->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsTristate);
 		mobFlagsListWidget->addItem(mobListItems[i]);
 	}
@@ -80,12 +80,12 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
 	loadListItems[9] = (QListWidgetItem*) new QListWidgetItem("Pack horse");
 	loadListItems[10] = (QListWidgetItem*) new QListWidgetItem("Trained horse");
 	loadListItems[11] = (QListWidgetItem*) new QListWidgetItem("Rohirrim");
-	loadListItems[12] = (QListWidgetItem*) new QListWidgetItem("Warg"); 
-	loadListItems[13] = (QListWidgetItem*) new QListWidgetItem("Boat"); 
+	loadListItems[12] = (QListWidgetItem*) new QListWidgetItem("Warg");
+	loadListItems[13] = (QListWidgetItem*) new QListWidgetItem("Boat");
 	loadListItems[14] = (QListWidgetItem*) new QListWidgetItem("Attention");
-	loadListItems[15] = (QListWidgetItem*) new QListWidgetItem("Tower"); 
+	loadListItems[15] = (QListWidgetItem*) new QListWidgetItem("Tower");
 	loadListItems[16] = NULL;
-		
+
 	loadFlagsListWidget->clear();
 	for (int i=0; i<16; i++)
 	{
@@ -100,25 +100,35 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
 	exitListItems[4] = (QListWidgetItem*) new QListWidgetItem("Random");
 	exitListItems[5] = (QListWidgetItem*) new QListWidgetItem("Special");
 	exitListItems[6] = (QListWidgetItem*) new QListWidgetItem("No match");
-	exitListItems[7] = NULL;
+	exitListItems[7] = (QListWidgetItem*) new QListWidgetItem("Flow dir"); // Added in schema 040
+  exitListItems[8] = NULL; // Don't add an item here: file schema doesn't support value > 7
 
 	exitFlagsListWidget->clear();
-	for (int i=0; i<7; i++)
-	{	
+	for (int i=0; i<8; i++)
+	{
 		exitListItems[i]->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
 		exitFlagsListWidget->addItem(exitListItems[i]);
 	}
-	
+
 	doorListItems[0] = (QListWidgetItem*) new QListWidgetItem("Hidden");
 	doorListItems[1] = (QListWidgetItem*) new QListWidgetItem("Need key");
 	doorListItems[2] = (QListWidgetItem*) new QListWidgetItem("No block");
 	doorListItems[3] = (QListWidgetItem*) new QListWidgetItem("No break");
 	doorListItems[4] = (QListWidgetItem*) new QListWidgetItem("No pick");
 	doorListItems[5] = (QListWidgetItem*) new QListWidgetItem("Delayed");
-	doorListItems[6] = NULL;
+	doorListItems[6] = (QListWidgetItem*) new QListWidgetItem("Callable"); // Added in schema 040
+  doorListItems[7] = (QListWidgetItem*) new QListWidgetItem("Knockable"); // Added in schema 040
+  doorListItems[8] = (QListWidgetItem*) new QListWidgetItem("Magic"); // Added in schema 040
+  doorListItems[9] = (QListWidgetItem*) new QListWidgetItem("Action-controlled"); // Added in schema 040
+  doorListItems[10] = NULL;
+  doorListItems[11] = NULL;
+  doorListItems[12] = NULL;
+  doorListItems[13] = NULL;
+  doorListItems[14] = NULL;
+  doorListItems[15] = NULL;
 
 	doorFlagsListWidget->clear();
-	for (int i=0; i<6; i++)
+	for (int i=0; i<10; i++)
 	{
 		doorListItems[i]->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
 		doorFlagsListWidget->addItem(doorListItems[i]);
@@ -127,8 +137,8 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
   m_hiddenShortcut = new QShortcut( QKeySequence( tr( "Ctrl+H", "Room edit > hidden flag" ) ), this );
 
 	updatedLabel->setText("Room has not been online updated yet!!!");
-		
-	readSettings();	
+
+	readSettings();
 }
 
 RoomEditAttrDlg::~RoomEditAttrDlg()
@@ -155,32 +165,32 @@ void RoomEditAttrDlg::writeSettings()
 
 void RoomEditAttrDlg::connectAll()
 {
-    connect(neutralRadioButton, SIGNAL(toggled(bool)), this, SLOT(neutralRadioButtonToggled(bool)));	
-    connect(goodRadioButton, SIGNAL(toggled(bool)), this, SLOT(goodRadioButtonToggled(bool)));	
-    connect(evilRadioButton, SIGNAL(toggled(bool)), this, SLOT(evilRadioButtonToggled(bool)));	
-    connect(alignUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(alignUndefRadioButtonToggled(bool)));	
+    connect(neutralRadioButton, SIGNAL(toggled(bool)), this, SLOT(neutralRadioButtonToggled(bool)));
+    connect(goodRadioButton, SIGNAL(toggled(bool)), this, SLOT(goodRadioButtonToggled(bool)));
+    connect(evilRadioButton, SIGNAL(toggled(bool)), this, SLOT(evilRadioButtonToggled(bool)));
+    connect(alignUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(alignUndefRadioButtonToggled(bool)));
 
-    connect(noPortRadioButton, SIGNAL(toggled(bool)), this, SLOT(noPortRadioButtonToggled(bool)));	
-    connect(portableRadioButton, SIGNAL(toggled(bool)), this, SLOT(portableRadioButtonToggled(bool)));	
-    connect(portUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(portUndefRadioButtonToggled(bool)));	
-	
-    connect(noRideRadioButton, SIGNAL(toggled(bool)), this, SLOT(noRideRadioButtonToggled(bool)));	
-    connect(ridableRadioButton, SIGNAL(toggled(bool)), this, SLOT(ridableRadioButtonToggled(bool)));	
-    connect(rideUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(rideUndefRadioButtonToggled(bool)));	
+    connect(noPortRadioButton, SIGNAL(toggled(bool)), this, SLOT(noPortRadioButtonToggled(bool)));
+    connect(portableRadioButton, SIGNAL(toggled(bool)), this, SLOT(portableRadioButtonToggled(bool)));
+    connect(portUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(portUndefRadioButtonToggled(bool)));
 
-    connect(litRadioButton, SIGNAL(toggled(bool)), this, SLOT(litRadioButtonToggled(bool)));	
-    connect(darkRadioButton, SIGNAL(toggled(bool)), this, SLOT(darkRadioButtonToggled(bool)));	
-    connect(lightUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(lightUndefRadioButtonToggled(bool)));	
-	
+    connect(noRideRadioButton, SIGNAL(toggled(bool)), this, SLOT(noRideRadioButtonToggled(bool)));
+    connect(ridableRadioButton, SIGNAL(toggled(bool)), this, SLOT(ridableRadioButtonToggled(bool)));
+    connect(rideUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(rideUndefRadioButtonToggled(bool)));
+
+    connect(litRadioButton, SIGNAL(toggled(bool)), this, SLOT(litRadioButtonToggled(bool)));
+    connect(darkRadioButton, SIGNAL(toggled(bool)), this, SLOT(darkRadioButtonToggled(bool)));
+    connect(lightUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(lightUndefRadioButtonToggled(bool)));
+
 	connect(mobFlagsListWidget, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(mobFlagsListItemChanged(QListWidgetItem*)));
 	connect(loadFlagsListWidget, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(loadFlagsListItemChanged(QListWidgetItem*)));
 
-    connect(exitNButton, SIGNAL(toggled(bool)), this, SLOT(exitButtonToggled(bool)));	
-    connect(exitSButton, SIGNAL(toggled(bool)), this, SLOT(exitButtonToggled(bool)));	
-    connect(exitEButton, SIGNAL(toggled(bool)), this, SLOT(exitButtonToggled(bool)));	
-    connect(exitWButton, SIGNAL(toggled(bool)), this, SLOT(exitButtonToggled(bool)));	
-    connect(exitUButton, SIGNAL(toggled(bool)), this, SLOT(exitButtonToggled(bool)));	
-    connect(exitDButton, SIGNAL(toggled(bool)), this, SLOT(exitButtonToggled(bool)));	
+    connect(exitNButton, SIGNAL(toggled(bool)), this, SLOT(exitButtonToggled(bool)));
+    connect(exitSButton, SIGNAL(toggled(bool)), this, SLOT(exitButtonToggled(bool)));
+    connect(exitEButton, SIGNAL(toggled(bool)), this, SLOT(exitButtonToggled(bool)));
+    connect(exitWButton, SIGNAL(toggled(bool)), this, SLOT(exitButtonToggled(bool)));
+    connect(exitUButton, SIGNAL(toggled(bool)), this, SLOT(exitButtonToggled(bool)));
+    connect(exitDButton, SIGNAL(toggled(bool)), this, SLOT(exitButtonToggled(bool)));
 
 	connect(exitFlagsListWidget, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(exitFlagsListItemChanged(QListWidgetItem*)));
 	connect(doorFlagsListWidget, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(doorFlagsListItemChanged(QListWidgetItem*)));
@@ -211,32 +221,32 @@ void RoomEditAttrDlg::connectAll()
 
 void RoomEditAttrDlg::disconnectAll()
 {
-    disconnect(neutralRadioButton, SIGNAL(toggled(bool)), this, SLOT(neutralRadioButtonToggled(bool)));	
-    disconnect(goodRadioButton, SIGNAL(toggled(bool)), this, SLOT(goodRadioButtonToggled(bool)));	
-    disconnect(evilRadioButton, SIGNAL(toggled(bool)), this, SLOT(evilRadioButtonToggled(bool)));	
-    disconnect(alignUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(alignUndefRadioButtonToggled(bool)));	
+    disconnect(neutralRadioButton, SIGNAL(toggled(bool)), this, SLOT(neutralRadioButtonToggled(bool)));
+    disconnect(goodRadioButton, SIGNAL(toggled(bool)), this, SLOT(goodRadioButtonToggled(bool)));
+    disconnect(evilRadioButton, SIGNAL(toggled(bool)), this, SLOT(evilRadioButtonToggled(bool)));
+    disconnect(alignUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(alignUndefRadioButtonToggled(bool)));
 
-    disconnect(noPortRadioButton, SIGNAL(toggled(bool)), this, SLOT(noPortRadioButtonToggled(bool)));	
-    disconnect(portableRadioButton, SIGNAL(toggled(bool)), this, SLOT(portableRadioButtonToggled(bool)));	
-    disconnect(portUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(portUndefRadioButtonToggled(bool)));	
-	
-    disconnect(noRideRadioButton, SIGNAL(toggled(bool)), this, SLOT(noRideRadioButtonToggled(bool)));	
-    disconnect(ridableRadioButton, SIGNAL(toggled(bool)), this, SLOT(ridableRadioButtonToggled(bool)));	
-    disconnect(rideUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(rideUndefRadioButtonToggled(bool)));	
+    disconnect(noPortRadioButton, SIGNAL(toggled(bool)), this, SLOT(noPortRadioButtonToggled(bool)));
+    disconnect(portableRadioButton, SIGNAL(toggled(bool)), this, SLOT(portableRadioButtonToggled(bool)));
+    disconnect(portUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(portUndefRadioButtonToggled(bool)));
 
-    disconnect(litRadioButton, SIGNAL(toggled(bool)), this, SLOT(litRadioButtonToggled(bool)));	
-    disconnect(darkRadioButton, SIGNAL(toggled(bool)), this, SLOT(darkRadioButtonToggled(bool)));	
-    disconnect(lightUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(lightUndefRadioButtonToggled(bool)));	
-	
+    disconnect(noRideRadioButton, SIGNAL(toggled(bool)), this, SLOT(noRideRadioButtonToggled(bool)));
+    disconnect(ridableRadioButton, SIGNAL(toggled(bool)), this, SLOT(ridableRadioButtonToggled(bool)));
+    disconnect(rideUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(rideUndefRadioButtonToggled(bool)));
+
+    disconnect(litRadioButton, SIGNAL(toggled(bool)), this, SLOT(litRadioButtonToggled(bool)));
+    disconnect(darkRadioButton, SIGNAL(toggled(bool)), this, SLOT(darkRadioButtonToggled(bool)));
+    disconnect(lightUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(lightUndefRadioButtonToggled(bool)));
+
 	disconnect(mobFlagsListWidget, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(mobFlagsListItemChanged(QListWidgetItem*)));
 	disconnect(loadFlagsListWidget, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(loadFlagsListItemChanged(QListWidgetItem*)));
 
-    disconnect(exitNButton, SIGNAL(toggled(bool)), this, SLOT(exitButtonToggled(bool)));	
-    disconnect(exitSButton, SIGNAL(toggled(bool)), this, SLOT(exitButtonToggled(bool)));	
-    disconnect(exitEButton, SIGNAL(toggled(bool)), this, SLOT(exitButtonToggled(bool)));	
-    disconnect(exitWButton, SIGNAL(toggled(bool)), this, SLOT(exitButtonToggled(bool)));	
-    disconnect(exitUButton, SIGNAL(toggled(bool)), this, SLOT(exitButtonToggled(bool)));	
-    disconnect(exitDButton, SIGNAL(toggled(bool)), this, SLOT(exitButtonToggled(bool)));	
+    disconnect(exitNButton, SIGNAL(toggled(bool)), this, SLOT(exitButtonToggled(bool)));
+    disconnect(exitSButton, SIGNAL(toggled(bool)), this, SLOT(exitButtonToggled(bool)));
+    disconnect(exitEButton, SIGNAL(toggled(bool)), this, SLOT(exitButtonToggled(bool)));
+    disconnect(exitWButton, SIGNAL(toggled(bool)), this, SLOT(exitButtonToggled(bool)));
+    disconnect(exitUButton, SIGNAL(toggled(bool)), this, SLOT(exitButtonToggled(bool)));
+    disconnect(exitDButton, SIGNAL(toggled(bool)), this, SLOT(exitButtonToggled(bool)));
 
 	disconnect(exitFlagsListWidget, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(exitFlagsListItemChanged(QListWidgetItem*)));
 	disconnect(doorFlagsListWidget, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(doorFlagsListItemChanged(QListWidgetItem*)));
@@ -260,7 +270,7 @@ void RoomEditAttrDlg::disconnectAll()
 	disconnect(toolButton14, SIGNAL(toggled(bool)), this, SLOT(terrainToolButtonToggled(bool)));
 	disconnect(toolButton15, SIGNAL(toggled(bool)), this, SLOT(terrainToolButtonToggled(bool)));
 
-    disconnect(roomNoteTextEdit, SIGNAL(textChanged()), this, SLOT(roomNoteChanged()));	
+    disconnect(roomNoteTextEdit, SIGNAL(textChanged()), this, SLOT(roomNoteChanged()));
 
     disconnect(m_hiddenShortcut, SIGNAL(activated()), this, SLOT(toggleHiddenDoor()));
 }
@@ -268,9 +278,9 @@ void RoomEditAttrDlg::disconnectAll()
 const Room* RoomEditAttrDlg::getSelectedRoom()
 {
 	if ( m_roomSelection->size() == 0 ) return NULL;
-	if ( m_roomSelection->size() == 1 ) 
+	if ( m_roomSelection->size() == 1 )
 		return (m_roomSelection->values().front());
-	else	
+	else
 		return (m_roomSelection->value((roomListComboBox->itemData(roomListComboBox->currentIndex()).toInt())));
 }
 
@@ -298,48 +308,48 @@ void RoomEditAttrDlg::roomListCurrentIndexChanged(int)
 
 void RoomEditAttrDlg::setRoomSelection(const RoomSelection* rs, MapData* md, MapCanvas* mc)
 {
-	m_roomSelection = rs; 
+	m_roomSelection = rs;
 	m_mapData=md;
 	m_mapCanvas=mc;
-	
+
 	roomListComboBox->clear();
-	
-    if (rs->size() > 1) 
+
+    if (rs->size() > 1)
     {
     	tabWidget->setCurrentWidget(selectionTab);
     	roomListComboBox->addItem("All", 0);
-    	updateDialog(NULL);    	    	
-    	
+    	updateDialog(NULL);
+
 		disconnectAll();
 		alignUndefRadioButton->setChecked(true);
 		portUndefRadioButton->setChecked(true);
 		lightUndefRadioButton->setChecked(true);
 		connectAll();
     }
-    else if (rs->size() == 1) 
+    else if (rs->size() == 1)
     {
     	tabWidget->setCurrentWidget(attributesTab);
-    	updateDialog(m_roomSelection->values().front());    	
+    	updateDialog(m_roomSelection->values().front());
     }
-    
-    
+
+
    RoomSelection::const_iterator i = m_roomSelection->constBegin();
     while (i != m_roomSelection->constEnd()) {
     	roomListComboBox->addItem(getName(i.value()), i.value()->getId());
         ++i;
     }
-        
-    connect(roomListComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(roomListCurrentIndexChanged(int)) );	
-    connect(closeButton, SIGNAL(clicked()), this, SLOT(closeClicked()));	
-    connect(this, SIGNAL(mapChanged()), m_mapCanvas, SLOT(update()));	
+
+    connect(roomListComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(roomListCurrentIndexChanged(int)) );
+    connect(closeButton, SIGNAL(clicked()), this, SLOT(closeClicked()));
+    connect(this, SIGNAL(mapChanged()), m_mapCanvas, SLOT(update()));
 }
 
 
 void RoomEditAttrDlg::updateDialog(const Room *r)
 {
 	disconnectAll();
-	
-	if (r == NULL) 
+
+	if (r == NULL)
 	{
 		roomDescriptionTextEdit->clear();
 		roomDescriptionTextEdit->setEnabled(false);
@@ -350,23 +360,23 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
 		roomNoteTextEdit->setEnabled(false);
 
 		terrainLabel->setPixmap(QPixmap(QString(":/pixmaps/terrain%1.png").arg(0)));
-		
-		exitsFrame->setEnabled(false);                                
+
+		exitsFrame->setEnabled(false);
 
 		int index = 0;
 		while(loadListItems[index]!=NULL)
 		{
 			loadListItems[index]->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsTristate);
 			loadListItems[index]->setCheckState(Qt::PartiallyChecked);
-			index++;		
+			index++;
 		}
-	
+
 		index = 0;
 		while(mobListItems[index]!=NULL)
 		{
 			mobListItems[index]->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsTristate);
-			mobListItems[index]->setCheckState(Qt::PartiallyChecked);		
-			index++;		
+			mobListItems[index]->setCheckState(Qt::PartiallyChecked);
+			index++;
 		}
 	}
 	else
@@ -374,94 +384,119 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
 		roomDescriptionTextEdit->clear();
 		roomDescriptionTextEdit->setEnabled(true);
 
-		if (r->isUpToDate()) 
+		if (r->isUpToDate())
 			updatedLabel->setText("Room has been online updated.");
-		else	
+		else
 			updatedLabel->setText("Room has not been online updated yet!!!");
 
-		exitsFrame->setEnabled(true);          
-		
+		exitsFrame->setEnabled(true);
+
 		const Exit &e = r->exit(getSelectedExit());
-		ExitFlags ef = getFlags(e);                      
-				
-		if (ISSET(ef, EF_EXIT))	
+		ExitFlags ef = getFlags(e);
+
+		if (ISSET(ef, EF_EXIT))
 			exitListItems[0]->setCheckState(Qt::Checked);
 		else
 			exitListItems[0]->setCheckState(Qt::Unchecked);
-		
+
 		if (ISSET(ef, EF_DOOR))
 		{
 			doorNameLineEdit->setEnabled(true);
-			doorFlagsListWidget->setEnabled(true);	
-						
-			exitListItems[1]->setCheckState(Qt::Checked);			
-			doorNameLineEdit->setText(getDoorName(e));		
-				
+			doorFlagsListWidget->setEnabled(true);
+
+			exitListItems[1]->setCheckState(Qt::Checked);
+			doorNameLineEdit->setText(getDoorName(e));
+
 			DoorFlags df = getDoorFlags(e);
-			
-			if (ISSET(df, DF_HIDDEN))	
+
+			if (ISSET(df, DF_HIDDEN))
 				doorListItems[0]->setCheckState(Qt::Checked);
 			else
 				doorListItems[0]->setCheckState(Qt::Unchecked);
-				
-			if (ISSET(df, DF_NEEDKEY))	
+
+			if (ISSET(df, DF_NEEDKEY))
 				doorListItems[1]->setCheckState(Qt::Checked);
 			else
 				doorListItems[1]->setCheckState(Qt::Unchecked);
-	
-			if (ISSET(df, DF_NOBLOCK))	
+
+			if (ISSET(df, DF_NOBLOCK))
 				doorListItems[2]->setCheckState(Qt::Checked);
 			else
 				doorListItems[2]->setCheckState(Qt::Unchecked);
-	
-			if (ISSET(df, DF_NOBREAK))	
+
+			if (ISSET(df, DF_NOBREAK))
 				doorListItems[3]->setCheckState(Qt::Checked);
 			else
 				doorListItems[3]->setCheckState(Qt::Unchecked);
-	
-			if (ISSET(df, DF_NOPICK))	
+
+			if (ISSET(df, DF_NOPICK))
 				doorListItems[4]->setCheckState(Qt::Checked);
 			else
 				doorListItems[4]->setCheckState(Qt::Unchecked);
-	
-			if (ISSET(df, DF_DELAYED))	
+
+			if (ISSET(df, DF_DELAYED))
 				doorListItems[5]->setCheckState(Qt::Checked);
 			else
 				doorListItems[5]->setCheckState(Qt::Unchecked);
+
+      if (ISSET(df, DF_CALLABLE))
+        doorListItems[6]->setCheckState(Qt::Checked);
+      else
+        doorListItems[6]->setCheckState(Qt::Unchecked);
+
+      if (ISSET(df, DF_KNOCKABLE))
+        doorListItems[7]->setCheckState(Qt::Checked);
+      else
+        doorListItems[7]->setCheckState(Qt::Unchecked);
+
+      if (ISSET(df, DF_MAGIC))
+        doorListItems[8]->setCheckState(Qt::Checked);
+      else
+        doorListItems[8]->setCheckState(Qt::Unchecked);
+
+      if (ISSET(df, DF_ACTION))
+        doorListItems[9]->setCheckState(Qt::Checked);
+      else
+        doorListItems[9]->setCheckState(Qt::Unchecked);
 		}
 		else
 		{
 			doorNameLineEdit->clear();
 			doorNameLineEdit->setEnabled(false);
-			doorFlagsListWidget->setEnabled(false);				
+			doorFlagsListWidget->setEnabled(false);
 
 			exitListItems[1]->setCheckState(Qt::Unchecked);
 		}
 
-		if (ISSET(ef, EF_ROAD))	
+		if (ISSET(ef, EF_ROAD))
 			exitListItems[2]->setCheckState(Qt::Checked);
 		else
 			exitListItems[2]->setCheckState(Qt::Unchecked);
 
-		if (ISSET(ef, EF_CLIMB))	
+		if (ISSET(ef, EF_CLIMB))
 			exitListItems[3]->setCheckState(Qt::Checked);
 		else
 			exitListItems[3]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(ef, EF_RANDOM))	
+
+		if (ISSET(ef, EF_RANDOM))
 			exitListItems[4]->setCheckState(Qt::Checked);
 		else
 			exitListItems[4]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(ef, EF_SPECIAL))	
+
+		if (ISSET(ef, EF_SPECIAL))
 			exitListItems[5]->setCheckState(Qt::Checked);
 		else
 			exitListItems[5]->setCheckState(Qt::Unchecked);
 
-		if (ISSET(ef, EF_NO_MATCH))	
+		if (ISSET(ef, EF_NO_MATCH))
 			exitListItems[6]->setCheckState(Qt::Checked);
 		else
 			exitListItems[6]->setCheckState(Qt::Unchecked);
+
+    if (ISSET(ef, EF_FLOW))
+			exitListItems[7]->setCheckState(Qt::Checked);
+		else
+			exitListItems[7]->setCheckState(Qt::Unchecked);
 
 		roomNoteTextEdit->clear();
 		roomNoteTextEdit->setEnabled(false);
@@ -471,245 +506,245 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
 		while(loadListItems[index]!=NULL)
 		{
 			loadListItems[index]->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
-			index++;		
+			index++;
 		}
-	
+
 		index = 0;
 		while(mobListItems[index]!=NULL)
 		{
 			mobListItems[index]->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
-			index++;		
+			index++;
 		}
 
-		
-		if (ISSET(getMobFlags(r),RMF_RENT)) 
+
+		if (ISSET(getMobFlags(r),RMF_RENT))
 			mobListItems[0]->setCheckState(Qt::Checked);
-		else 
+		else
 			mobListItems[0]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getMobFlags(r),RMF_SHOP))	
+
+		if (ISSET(getMobFlags(r),RMF_SHOP))
 			mobListItems[1]->setCheckState(Qt::Checked);
 		else
 			mobListItems[1]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getMobFlags(r),RMF_WEAPONSHOP))	
+
+		if (ISSET(getMobFlags(r),RMF_WEAPONSHOP))
 			mobListItems[2]->setCheckState(Qt::Checked);
 		else
 			mobListItems[2]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getMobFlags(r),RMF_ARMOURSHOP))	
+
+		if (ISSET(getMobFlags(r),RMF_ARMOURSHOP))
 			mobListItems[3]->setCheckState(Qt::Checked);
 		else
 			mobListItems[3]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getMobFlags(r),RMF_FOODSHOP))	
+
+		if (ISSET(getMobFlags(r),RMF_FOODSHOP))
 			mobListItems[4]->setCheckState(Qt::Checked);
 		else
 			mobListItems[4]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getMobFlags(r),RMF_PETSHOP))	
+
+		if (ISSET(getMobFlags(r),RMF_PETSHOP))
 			mobListItems[5]->setCheckState(Qt::Checked);
 		else
 			mobListItems[5]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getMobFlags(r),RMF_GUILD))	
+
+		if (ISSET(getMobFlags(r),RMF_GUILD))
 			mobListItems[6]->setCheckState(Qt::Checked);
 		else
 			mobListItems[6]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getMobFlags(r),RMF_SCOUTGUILD))	
+
+		if (ISSET(getMobFlags(r),RMF_SCOUTGUILD))
 			mobListItems[7]->setCheckState(Qt::Checked);
 		else
 			mobListItems[7]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getMobFlags(r),RMF_MAGEGUILD))	
+
+		if (ISSET(getMobFlags(r),RMF_MAGEGUILD))
 			mobListItems[8]->setCheckState(Qt::Checked);
 		else
 			mobListItems[8]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getMobFlags(r),RMF_CLERICGUILD))	
+
+		if (ISSET(getMobFlags(r),RMF_CLERICGUILD))
 			mobListItems[9]->setCheckState(Qt::Checked);
 		else
 			mobListItems[9]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getMobFlags(r),RMF_WARRIORGUILD))	
+
+		if (ISSET(getMobFlags(r),RMF_WARRIORGUILD))
 			mobListItems[10]->setCheckState(Qt::Checked);
 		else
 			mobListItems[10]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getMobFlags(r),RMF_RANGERGUILD))	
+
+		if (ISSET(getMobFlags(r),RMF_RANGERGUILD))
 			mobListItems[11]->setCheckState(Qt::Checked);
 		else
 			mobListItems[11]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getMobFlags(r),RMF_SMOB))	
+
+		if (ISSET(getMobFlags(r),RMF_SMOB))
 			mobListItems[12]->setCheckState(Qt::Checked);
 		else
 			mobListItems[12]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getMobFlags(r),RMF_QUEST))	
+
+		if (ISSET(getMobFlags(r),RMF_QUEST))
 			mobListItems[13]->setCheckState(Qt::Checked);
 		else
 			mobListItems[13]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getMobFlags(r),RMF_ANY))	
+
+		if (ISSET(getMobFlags(r),RMF_ANY))
 			mobListItems[14]->setCheckState(Qt::Checked);
 		else
 			mobListItems[14]->setCheckState(Qt::Unchecked);
-	
-	
-		if (ISSET(getLoadFlags(r),RLF_TREASURE))	
+
+
+		if (ISSET(getLoadFlags(r),RLF_TREASURE))
 			loadListItems[0]->setCheckState(Qt::Checked);
 		else
 			loadListItems[0]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getLoadFlags(r),RLF_ARMOUR))	
+
+		if (ISSET(getLoadFlags(r),RLF_ARMOUR))
 			loadListItems[1]->setCheckState(Qt::Checked);
 		else
 			loadListItems[1]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getLoadFlags(r),RLF_WEAPON))	
+
+		if (ISSET(getLoadFlags(r),RLF_WEAPON))
 			loadListItems[2]->setCheckState(Qt::Checked);
 		else
 			loadListItems[2]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getLoadFlags(r),RLF_WATER))	
+
+		if (ISSET(getLoadFlags(r),RLF_WATER))
 			loadListItems[3]->setCheckState(Qt::Checked);
 		else
 			loadListItems[3]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getLoadFlags(r),RLF_FOOD))	
+
+		if (ISSET(getLoadFlags(r),RLF_FOOD))
 			loadListItems[4]->setCheckState(Qt::Checked);
 		else
 			loadListItems[4]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getLoadFlags(r),RLF_HERB))	
+
+		if (ISSET(getLoadFlags(r),RLF_HERB))
 			loadListItems[5]->setCheckState(Qt::Checked);
 		else
 			loadListItems[5]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getLoadFlags(r),RLF_KEY))	
+
+		if (ISSET(getLoadFlags(r),RLF_KEY))
 			loadListItems[6]->setCheckState(Qt::Checked);
 		else
 			loadListItems[6]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getLoadFlags(r),RLF_MULE))	
+
+		if (ISSET(getLoadFlags(r),RLF_MULE))
 			loadListItems[7]->setCheckState(Qt::Checked);
 		else
 			loadListItems[7]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getLoadFlags(r),RLF_HORSE))	
+
+		if (ISSET(getLoadFlags(r),RLF_HORSE))
 			loadListItems[8]->setCheckState(Qt::Checked);
 		else
 			loadListItems[8]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getLoadFlags(r),RLF_PACKHORSE))	
+
+		if (ISSET(getLoadFlags(r),RLF_PACKHORSE))
 			loadListItems[9]->setCheckState(Qt::Checked);
 		else
 			loadListItems[9]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getLoadFlags(r),RLF_TRAINEDHORSE))	
+
+		if (ISSET(getLoadFlags(r),RLF_TRAINEDHORSE))
 			loadListItems[10]->setCheckState(Qt::Checked);
 		else
 			loadListItems[10]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getLoadFlags(r),RLF_ROHIRRIM))	
+
+		if (ISSET(getLoadFlags(r),RLF_ROHIRRIM))
 			loadListItems[11]->setCheckState(Qt::Checked);
 		else
 			loadListItems[11]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getLoadFlags(r),RLF_WARG))	
+
+		if (ISSET(getLoadFlags(r),RLF_WARG))
 			loadListItems[12]->setCheckState(Qt::Checked);
 		else
 			loadListItems[12]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getLoadFlags(r),RLF_BOAT))	
+
+		if (ISSET(getLoadFlags(r),RLF_BOAT))
 			loadListItems[13]->setCheckState(Qt::Checked);
 		else
 			loadListItems[13]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getLoadFlags(r),RLF_ATTENTION))	
+
+		if (ISSET(getLoadFlags(r),RLF_ATTENTION))
 			loadListItems[14]->setCheckState(Qt::Checked);
 		else
 			loadListItems[14]->setCheckState(Qt::Unchecked);
-	
-		if (ISSET(getLoadFlags(r),RLF_TOWER))	
+
+		if (ISSET(getLoadFlags(r),RLF_TOWER))
 			loadListItems[15]->setCheckState(Qt::Checked);
 		else
 			loadListItems[15]->setCheckState(Qt::Unchecked);
-	
-	
+
+
 		roomDescriptionTextEdit->setEnabled(true);
 		roomNoteTextEdit->setEnabled(true);
-				
+
 		roomDescriptionTextEdit->clear();
 		roomDescriptionTextEdit->setFontItalic(false);
 		QString str = getDescription(r);
 		str = str.left(str.length()-1);
-		roomDescriptionTextEdit->append(str);	
-		roomDescriptionTextEdit->setFontItalic(true);			
-		roomDescriptionTextEdit->append(getDynamicDescription(r));	
+		roomDescriptionTextEdit->append(str);
+		roomDescriptionTextEdit->setFontItalic(true);
+		roomDescriptionTextEdit->append(getDynamicDescription(r));
 		roomDescriptionTextEdit->scroll(-100,-100);
-		
+
 		roomNoteTextEdit->clear();
 		roomNoteTextEdit->append(getNote(r));
-		
+
 		terrainLabel->setPixmap(QPixmap(QString(":/pixmaps/terrain%1.png").arg(getTerrainType(r))));
-	
+
 		switch (getAlignType(r))
 		{
-			case RAT_GOOD: 
-				goodRadioButton->setChecked(true); 
+			case RAT_GOOD:
+				goodRadioButton->setChecked(true);
 				break;
-			case RAT_NEUTRAL: 
-				neutralRadioButton->setChecked(true); 
+			case RAT_NEUTRAL:
+				neutralRadioButton->setChecked(true);
 				break;
-			case RAT_EVIL: 
-				evilRadioButton->setChecked(true); 
+			case RAT_EVIL:
+				evilRadioButton->setChecked(true);
 				break;
-			case RAT_UNDEFINED:	
+			case RAT_UNDEFINED:
 				alignUndefRadioButton->setChecked(true);
 				break;
-		}	
-	
+		}
+
 		switch (getPortableType(r))
 		{
-			case RPT_PORTABLE: 
-				portableRadioButton->setChecked(true); 
+			case RPT_PORTABLE:
+				portableRadioButton->setChecked(true);
 				break;
-			case RPT_NOTPORTABLE: 
+			case RPT_NOTPORTABLE:
 				noPortRadioButton->setChecked(true);
 				break;
-			case RPT_UNDEFINED:	
+			case RPT_UNDEFINED:
 				portUndefRadioButton->setChecked(true);
 				break;
-		}	
-	
+		}
+
 		switch (getRidableType(r))
 		{
-			case RRT_RIDABLE: 
-				ridableRadioButton->setChecked(true); 
+			case RRT_RIDABLE:
+				ridableRadioButton->setChecked(true);
 				break;
-			case RRT_NOTRIDABLE: 
+			case RRT_NOTRIDABLE:
 				noRideRadioButton->setChecked(true);
 				break;
-			case RRT_UNDEFINED:	
+			case RRT_UNDEFINED:
 				rideUndefRadioButton->setChecked(true);
 				break;
-		}	
+		}
 
 		switch (getLightType(r))
 		{
-			case RLT_DARK: 
-				darkRadioButton->setChecked(true); 
+			case RLT_DARK:
+				darkRadioButton->setChecked(true);
 				break;
-			case RLT_LIT: 
-				litRadioButton->setChecked(true); 
+			case RLT_LIT:
+				litRadioButton->setChecked(true);
 				break;
-			case RLT_UNDEFINED:	
+			case RLT_UNDEFINED:
 				lightUndefRadioButton->setChecked(true);
 				break;
-		}	
+		}
 	}
 
 	connectAll();
@@ -721,7 +756,7 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
 //attributes page
 void RoomEditAttrDlg::exitButtonToggled(bool)
 {
-	updateDialog( getSelectedRoom() );	
+	updateDialog( getSelectedRoom() );
 }
 
 void RoomEditAttrDlg::neutralRadioButtonToggled(bool val)
@@ -729,14 +764,14 @@ void RoomEditAttrDlg::neutralRadioButtonToggled(bool val)
 	if (val)
 	{
 		const Room* r = getSelectedRoom();
-		if (r)	
+		if (r)
 			m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RAT_NEUTRAL, R_ALIGNTYPE), r->getId()), m_roomSelection);
 		else
-			m_mapData->execute(new GroupAction(new UpdateRoomField(RAT_NEUTRAL, R_ALIGNTYPE), m_roomSelection), m_roomSelection);		
-	
-		emit mapChanged();		
-		updateDialog( getSelectedRoom() );		
-	}  										
+			m_mapData->execute(new GroupAction(new UpdateRoomField(RAT_NEUTRAL, R_ALIGNTYPE), m_roomSelection), m_roomSelection);
+
+		emit mapChanged();
+		updateDialog( getSelectedRoom() );
+	}
 }
 
 void RoomEditAttrDlg::goodRadioButtonToggled(bool val)
@@ -744,14 +779,14 @@ void RoomEditAttrDlg::goodRadioButtonToggled(bool val)
 	if (val)
 	{
 		const Room* r = getSelectedRoom();
-		if (r)	
+		if (r)
 			m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RAT_GOOD, R_ALIGNTYPE), r->getId()), m_roomSelection);
 		else
-			m_mapData->execute(new GroupAction(new UpdateRoomField(RAT_GOOD, R_ALIGNTYPE), m_roomSelection), m_roomSelection);		
-	
-		emit mapChanged();		  										
-		updateDialog( getSelectedRoom() );		
-	}  										
+			m_mapData->execute(new GroupAction(new UpdateRoomField(RAT_GOOD, R_ALIGNTYPE), m_roomSelection), m_roomSelection);
+
+		emit mapChanged();
+		updateDialog( getSelectedRoom() );
+	}
 }
 
 void RoomEditAttrDlg::evilRadioButtonToggled(bool val)
@@ -759,14 +794,14 @@ void RoomEditAttrDlg::evilRadioButtonToggled(bool val)
 	if (val)
 	{
 		const Room* r = getSelectedRoom();
-		if (r)	
+		if (r)
 			m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RAT_EVIL, R_ALIGNTYPE), r->getId()), m_roomSelection);
 		else
-			m_mapData->execute(new GroupAction(new UpdateRoomField(RAT_EVIL, R_ALIGNTYPE), m_roomSelection), m_roomSelection);		
-	
-		emit mapChanged();		  										
-		updateDialog( getSelectedRoom() );		
-	}  										
+			m_mapData->execute(new GroupAction(new UpdateRoomField(RAT_EVIL, R_ALIGNTYPE), m_roomSelection), m_roomSelection);
+
+		emit mapChanged();
+		updateDialog( getSelectedRoom() );
+	}
 }
 
 void RoomEditAttrDlg::alignUndefRadioButtonToggled(bool val)
@@ -774,30 +809,30 @@ void RoomEditAttrDlg::alignUndefRadioButtonToggled(bool val)
 	if (val)
 	{
 		const Room* r = getSelectedRoom();
-		if (r)	
+		if (r)
 			m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RAT_UNDEFINED, R_ALIGNTYPE), r->getId()), m_roomSelection);
 		else
-			m_mapData->execute(new GroupAction(new UpdateRoomField(RAT_UNDEFINED, R_ALIGNTYPE), m_roomSelection), m_roomSelection);		
-	
-		emit mapChanged();		  										
-		updateDialog( getSelectedRoom() );		
-	}  										
+			m_mapData->execute(new GroupAction(new UpdateRoomField(RAT_UNDEFINED, R_ALIGNTYPE), m_roomSelection), m_roomSelection);
+
+		emit mapChanged();
+		updateDialog( getSelectedRoom() );
+	}
 }
 
-	
+
 void RoomEditAttrDlg::noPortRadioButtonToggled(bool val)
 {
 	if (val)
 	{
 		const Room* r = getSelectedRoom();
-		if (r)	
+		if (r)
 			m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RPT_NOTPORTABLE, R_PORTABLETYPE), r->getId()), m_roomSelection);
 		else
-			m_mapData->execute(new GroupAction(new UpdateRoomField(RPT_NOTPORTABLE, R_PORTABLETYPE), m_roomSelection), m_roomSelection);		
-	
-		emit mapChanged();		  										
-		updateDialog( getSelectedRoom() );		
-	}  										
+			m_mapData->execute(new GroupAction(new UpdateRoomField(RPT_NOTPORTABLE, R_PORTABLETYPE), m_roomSelection), m_roomSelection);
+
+		emit mapChanged();
+		updateDialog( getSelectedRoom() );
+	}
 }
 
 void RoomEditAttrDlg::portableRadioButtonToggled(bool val)
@@ -805,14 +840,14 @@ void RoomEditAttrDlg::portableRadioButtonToggled(bool val)
 	if (val)
 	{
 		const Room* r = getSelectedRoom();
-		if (r)	
+		if (r)
 			m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RPT_PORTABLE, R_PORTABLETYPE), r->getId()), m_roomSelection);
 		else
-			m_mapData->execute(new GroupAction(new UpdateRoomField(RPT_PORTABLE, R_PORTABLETYPE), m_roomSelection), m_roomSelection);		
-	
-		emit mapChanged();		  										
-		updateDialog( getSelectedRoom() );		
-	}  										
+			m_mapData->execute(new GroupAction(new UpdateRoomField(RPT_PORTABLE, R_PORTABLETYPE), m_roomSelection), m_roomSelection);
+
+		emit mapChanged();
+		updateDialog( getSelectedRoom() );
+	}
 }
 
 void RoomEditAttrDlg::portUndefRadioButtonToggled(bool val)
@@ -820,14 +855,14 @@ void RoomEditAttrDlg::portUndefRadioButtonToggled(bool val)
 	if (val)
 	{
 		const Room* r = getSelectedRoom();
-		if (r)	
+		if (r)
 			m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RPT_UNDEFINED, R_PORTABLETYPE), r->getId()), m_roomSelection);
 		else
-			m_mapData->execute(new GroupAction(new UpdateRoomField(RPT_UNDEFINED, R_PORTABLETYPE), m_roomSelection), m_roomSelection);		
-	
-		emit mapChanged();		  									
-		updateDialog( getSelectedRoom() );		
-	}  										
+			m_mapData->execute(new GroupAction(new UpdateRoomField(RPT_UNDEFINED, R_PORTABLETYPE), m_roomSelection), m_roomSelection);
+
+		emit mapChanged();
+		updateDialog( getSelectedRoom() );
+	}
 }
 
 void RoomEditAttrDlg::noRideRadioButtonToggled(bool val)
@@ -835,14 +870,14 @@ void RoomEditAttrDlg::noRideRadioButtonToggled(bool val)
 	if (val)
 	{
 		const Room* r = getSelectedRoom();
-		if (r)	
+		if (r)
 			m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RRT_NOTRIDABLE, R_RIDABLETYPE), r->getId()), m_roomSelection);
 		else
-			m_mapData->execute(new GroupAction(new UpdateRoomField(RRT_NOTRIDABLE, R_RIDABLETYPE), m_roomSelection), m_roomSelection);		
-	
-		emit mapChanged();		  										
-		updateDialog( getSelectedRoom() );		
-	}  										
+			m_mapData->execute(new GroupAction(new UpdateRoomField(RRT_NOTRIDABLE, R_RIDABLETYPE), m_roomSelection), m_roomSelection);
+
+		emit mapChanged();
+		updateDialog( getSelectedRoom() );
+	}
 }
 
 void RoomEditAttrDlg::ridableRadioButtonToggled(bool val)
@@ -850,14 +885,14 @@ void RoomEditAttrDlg::ridableRadioButtonToggled(bool val)
 	if (val)
 	{
 		const Room* r = getSelectedRoom();
-		if (r)	
+		if (r)
 			m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RRT_RIDABLE, R_RIDABLETYPE), r->getId()), m_roomSelection);
 		else
-			m_mapData->execute(new GroupAction(new UpdateRoomField(RRT_RIDABLE, R_RIDABLETYPE), m_roomSelection), m_roomSelection);		
-	
-		emit mapChanged();		  										
-		updateDialog( getSelectedRoom() );		
-	}  										
+			m_mapData->execute(new GroupAction(new UpdateRoomField(RRT_RIDABLE, R_RIDABLETYPE), m_roomSelection), m_roomSelection);
+
+		emit mapChanged();
+		updateDialog( getSelectedRoom() );
+	}
 }
 
 void RoomEditAttrDlg::rideUndefRadioButtonToggled(bool val)
@@ -865,29 +900,29 @@ void RoomEditAttrDlg::rideUndefRadioButtonToggled(bool val)
 	if (val)
 	{
 		const Room* r = getSelectedRoom();
-		if (r)	
+		if (r)
 			m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RRT_UNDEFINED, R_RIDABLETYPE), r->getId()), m_roomSelection);
 		else
-			m_mapData->execute(new GroupAction(new UpdateRoomField(RRT_UNDEFINED, R_RIDABLETYPE), m_roomSelection), m_roomSelection);		
-	
-		emit mapChanged();		  									
-		updateDialog( getSelectedRoom() );		
-	}  										
+			m_mapData->execute(new GroupAction(new UpdateRoomField(RRT_UNDEFINED, R_RIDABLETYPE), m_roomSelection), m_roomSelection);
+
+		emit mapChanged();
+		updateDialog( getSelectedRoom() );
+	}
 }
-		
+
 void RoomEditAttrDlg::litRadioButtonToggled(bool val)
 {
 	if (val)
 	{
 		const Room* r = getSelectedRoom();
-		if (r)	
+		if (r)
 			m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RLT_LIT, R_LIGHTTYPE), r->getId()), m_roomSelection);
 		else
-			m_mapData->execute(new GroupAction(new UpdateRoomField(RLT_LIT, R_LIGHTTYPE), m_roomSelection), m_roomSelection);		
-	
-		emit mapChanged();		  								
-		updateDialog( getSelectedRoom() );		
-	}  										
+			m_mapData->execute(new GroupAction(new UpdateRoomField(RLT_LIT, R_LIGHTTYPE), m_roomSelection), m_roomSelection);
+
+		emit mapChanged();
+		updateDialog( getSelectedRoom() );
+	}
 }
 
 void RoomEditAttrDlg::darkRadioButtonToggled(bool val)
@@ -895,14 +930,14 @@ void RoomEditAttrDlg::darkRadioButtonToggled(bool val)
 	if (val)
 	{
 		const Room* r = getSelectedRoom();
-		if (r)	
+		if (r)
 			m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RLT_DARK, R_LIGHTTYPE), r->getId()), m_roomSelection);
 		else
-			m_mapData->execute(new GroupAction(new UpdateRoomField(RLT_DARK, R_LIGHTTYPE), m_roomSelection), m_roomSelection);		
-	
-		emit mapChanged();		  								
-		updateDialog( getSelectedRoom() );		
-	}  										
+			m_mapData->execute(new GroupAction(new UpdateRoomField(RLT_DARK, R_LIGHTTYPE), m_roomSelection), m_roomSelection);
+
+		emit mapChanged();
+		updateDialog( getSelectedRoom() );
+	}
 }
 
 void RoomEditAttrDlg::lightUndefRadioButtonToggled(bool val)
@@ -910,17 +945,17 @@ void RoomEditAttrDlg::lightUndefRadioButtonToggled(bool val)
 	if (val)
 	{
 		const Room* r = getSelectedRoom();
-		if (r)	
+		if (r)
 			m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RLT_UNDEFINED, R_LIGHTTYPE), r->getId()), m_roomSelection);
 		else
-			m_mapData->execute(new GroupAction(new UpdateRoomField(RLT_UNDEFINED, R_LIGHTTYPE), m_roomSelection), m_roomSelection);		
-	
-		emit mapChanged();		  							
-		updateDialog( getSelectedRoom() );		
-	}  										
+			m_mapData->execute(new GroupAction(new UpdateRoomField(RLT_UNDEFINED, R_LIGHTTYPE), m_roomSelection), m_roomSelection);
+
+		emit mapChanged();
+		updateDialog( getSelectedRoom() );
+	}
 }
 
-	
+
 void RoomEditAttrDlg::mobFlagsListItemChanged(QListWidgetItem* item)
 {
 	int index = 0;
@@ -932,22 +967,22 @@ void RoomEditAttrDlg::mobFlagsListItemChanged(QListWidgetItem* item)
 	switch (item->checkState())
 	{
 	case Qt::Unchecked:
-		if (r)	
+		if (r)
 			m_mapData->execute(new SingleRoomAction(new ModifyRoomFlags((uint)pow(2.0, index), R_MOBFLAGS, FMM_UNSET), r->getId()), m_roomSelection);
 		else
 			m_mapData->execute(new GroupAction(new ModifyRoomFlags((uint)pow(2.0, index), R_MOBFLAGS, FMM_UNSET), m_roomSelection), m_roomSelection);
-		break;		
+		break;
 	case Qt::PartiallyChecked:
 		break;
 	case Qt::Checked:
-		if (r)	
+		if (r)
 			m_mapData->execute(new SingleRoomAction(new ModifyRoomFlags((uint)pow(2.0, index), R_MOBFLAGS, FMM_SET), r->getId()), m_roomSelection);
 		else
-			m_mapData->execute(new GroupAction(new ModifyRoomFlags((uint)pow(2.0, index), R_MOBFLAGS, FMM_SET), m_roomSelection), m_roomSelection);		
-		break;		
+			m_mapData->execute(new GroupAction(new ModifyRoomFlags((uint)pow(2.0, index), R_MOBFLAGS, FMM_SET), m_roomSelection), m_roomSelection);
+		break;
 	}
-	
-	emit mapChanged();		  						
+
+	emit mapChanged();
 }
 
 void RoomEditAttrDlg::loadFlagsListItemChanged(QListWidgetItem* item)
@@ -961,22 +996,22 @@ void RoomEditAttrDlg::loadFlagsListItemChanged(QListWidgetItem* item)
 	switch (item->checkState())
 	{
 	case Qt::Unchecked:
-		if (r)	
+		if (r)
 			m_mapData->execute(new SingleRoomAction(new ModifyRoomFlags((uint)pow(2.0, index), R_LOADFLAGS, FMM_UNSET), r->getId()), m_roomSelection);
 		else
 			m_mapData->execute(new GroupAction(new ModifyRoomFlags((uint)pow(2.0, index), R_LOADFLAGS, FMM_UNSET), m_roomSelection), m_roomSelection);
-		break;		
+		break;
 	case Qt::PartiallyChecked:
 		break;
 	case Qt::Checked:
-		if (r)	
+		if (r)
 			m_mapData->execute(new SingleRoomAction(new ModifyRoomFlags((uint)pow(2.0, index), R_LOADFLAGS, FMM_SET), r->getId()), m_roomSelection);
 		else
-			m_mapData->execute(new GroupAction(new ModifyRoomFlags((uint)pow(2.0, index), R_LOADFLAGS, FMM_SET), m_roomSelection), m_roomSelection);		
-		break;		
+			m_mapData->execute(new GroupAction(new ModifyRoomFlags((uint)pow(2.0, index), R_LOADFLAGS, FMM_SET), m_roomSelection), m_roomSelection);
+		break;
 	}
-	
-	emit mapChanged();		  							
+
+	emit mapChanged();
 }
 
 void RoomEditAttrDlg::exitFlagsListItemChanged(QListWidgetItem* item)
@@ -990,32 +1025,32 @@ void RoomEditAttrDlg::exitFlagsListItemChanged(QListWidgetItem* item)
 	switch (item->checkState())
 	{
 	case Qt::Unchecked:
-		if (r)	
+		if (r)
 			m_mapData->execute(new SingleRoomAction(new ModifyExitFlags((uint)pow(2.0, index), getSelectedExit(), E_FLAGS, FMM_UNSET), r->getId()), m_roomSelection);
 		else
 			m_mapData->execute(new GroupAction(new ModifyExitFlags((uint)pow(2.0, index), getSelectedExit(), E_FLAGS, FMM_UNSET), m_roomSelection), m_roomSelection);
-		break;		
+		break;
 	case Qt::PartiallyChecked:
 		break;
 	case Qt::Checked:
-		if (r)	
+		if (r)
 			m_mapData->execute(new SingleRoomAction(new ModifyExitFlags((uint)pow(2.0, index), getSelectedExit(), E_FLAGS, FMM_SET), r->getId()), m_roomSelection);
 		else
-			m_mapData->execute(new GroupAction(new ModifyExitFlags((uint)pow(2.0, index), getSelectedExit(), E_FLAGS, FMM_SET), m_roomSelection), m_roomSelection);		
-		break;		
+			m_mapData->execute(new GroupAction(new ModifyExitFlags((uint)pow(2.0, index), getSelectedExit(), E_FLAGS, FMM_SET), m_roomSelection), m_roomSelection);
+		break;
 	}
-	
-	updateDialog( getSelectedRoom() );		
-	emit mapChanged();		  					
+
+	updateDialog( getSelectedRoom() );
+	emit mapChanged();
 }
 
 
 void RoomEditAttrDlg::doorNameLineEditTextChanged(QString)
 {
 	const Room* r = getSelectedRoom();
-	
+
 	m_mapData->execute(new SingleRoomAction(new UpdateExitField(doorNameLineEdit->text(), getSelectedExit(), E_DOORNAME), r->getId()), m_roomSelection);
-		
+
 }
 
 void RoomEditAttrDlg::doorFlagsListItemChanged(QListWidgetItem* item)
@@ -1030,30 +1065,30 @@ void RoomEditAttrDlg::doorFlagsListItemChanged(QListWidgetItem* item)
 	{
 	case Qt::Unchecked:
 		m_mapData->execute(new SingleRoomAction(new ModifyExitFlags((uint)pow(2.0, index), getSelectedExit(), E_DOORFLAGS, FMM_UNSET), r->getId()), m_roomSelection);
-		break;		
+		break;
 	case Qt::PartiallyChecked:
 		break;
 	case Qt::Checked:
 		m_mapData->execute(new SingleRoomAction(new ModifyExitFlags((uint)pow(2.0, index), getSelectedExit(), E_DOORFLAGS, FMM_SET), r->getId()), m_roomSelection);
-		break;		
+		break;
 	}
-			
-	emit mapChanged();		  				
+
+	emit mapChanged();
 }
 
 void RoomEditAttrDlg::toggleHiddenDoor()
 {
-  if ( doorFlagsListWidget->isEnabled() )  
+  if ( doorFlagsListWidget->isEnabled() )
     doorListItems[0]->setCheckState( doorListItems[0]->checkState() == Qt::Unchecked ? Qt::Checked : Qt::Unchecked );
 }
 
-//terrain tab	
+//terrain tab
 void RoomEditAttrDlg::terrainToolButtonToggled(bool val)
 {
 	if (val)
 	{
 		const Room* r = getSelectedRoom();
-		
+
 		uint index = 0;
 		if (toolButton00->isChecked()) index = 0;
 		if (toolButton01->isChecked()) index = 1;
@@ -1071,35 +1106,34 @@ void RoomEditAttrDlg::terrainToolButtonToggled(bool val)
 		if (toolButton13->isChecked()) index = 13;
 		if (toolButton14->isChecked()) index = 14;
 		if (toolButton15->isChecked()) index = 15;
-		
+
 		terrainLabel->setPixmap(QPixmap(QString(":/pixmaps/terrain%1.png").arg(index)));
-	
-		if (r)	
+
+		if (r)
 			m_mapData->execute(new SingleRoomAction(new UpdateRoomField(index, R_TERRAINTYPE), r->getId()), m_roomSelection);
 		else
 			m_mapData->execute(new GroupAction(new UpdateRoomField(index, R_TERRAINTYPE), m_roomSelection), m_roomSelection);
-	
-		emit mapChanged();		  				
+
+		emit mapChanged();
 	}
 }
-	
+
 //note tab
 void RoomEditAttrDlg::roomNoteChanged()
 {
 	const Room* r = getSelectedRoom();
-	
-	if (r)
-		m_mapData->execute(new SingleRoomAction(new UpdateRoomField( roomNoteTextEdit->document()->toPlainText(), R_NOTE), r->getId()), m_roomSelection);	
-	else
-		m_mapData->execute(new GroupAction(new UpdateRoomField( roomNoteTextEdit->document()->toPlainText(), R_NOTE), m_roomSelection), m_roomSelection);	
 
-	emit mapChanged();		  				
+	if (r)
+		m_mapData->execute(new SingleRoomAction(new UpdateRoomField( roomNoteTextEdit->document()->toPlainText(), R_NOTE), r->getId()), m_roomSelection);
+	else
+		m_mapData->execute(new GroupAction(new UpdateRoomField( roomNoteTextEdit->document()->toPlainText(), R_NOTE), m_roomSelection), m_roomSelection);
+
+	emit mapChanged();
 }
 
-	
+
 //all tabs
 void RoomEditAttrDlg::closeClicked()
 {
-	accept();	
+	accept();
 }
-

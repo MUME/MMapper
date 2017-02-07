@@ -28,8 +28,8 @@ endif()
 
 # Version
 set(CPACK_PACKAGE_VERSION_MAJOR "2")
-set(CPACK_PACKAGE_VERSION_MINOR "3")
-set(CPACK_PACKAGE_VERSION_PATCH "7")
+set(CPACK_PACKAGE_VERSION_MINOR "4")
+set(CPACK_PACKAGE_VERSION_PATCH "0")
 set(VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 add_definitions(-DMMAPPER_VERSION="${VERSION}" -DWITH_SPLASH)
 message(STATUS "MMapper version ${VERSION} (${CMAKE_BUILD_TYPE} distribution)")
@@ -63,7 +63,7 @@ if (UNIX AND NOT APPLE)
         CACHE PATH "Base directory for files which go to share/"
     )
 
-    SET(CMAKE_CXX_FLAGS_DEBUG 
+    SET(CMAKE_CXX_FLAGS_DEBUG
       "-g -Wall -g3 -ggdb -gdwarf-2 -Wunused-variable -Wno-long-long -Wno-unknown-pragmas -Wno-system-headers"
       CACHE STRING "Debug builds CMAKE CXX flags " FORCE )
 endif (UNIX AND NOT APPLE)

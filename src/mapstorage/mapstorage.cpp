@@ -340,21 +340,34 @@ Room * MapStorage::loadRoom(QDataStream & stream, qint32 version)
   return room;
 }
 
-void MapStorage::loadExits(Room * room, QDataStream & stream, qint32 /*version*/)
+void MapStorage::loadExits(Room * room, QDataStream & stream, qint32 version)
 {
+  quint8 vquint8; // To read generic 8-bit value
+
   ExitsList & eList = room->getExitsList();
   for (int i = 0; i < 7; ++i)
   {
     Exit & e = eList[i];
 
+    // Read the exit flags
     ExitFlags flags;
     stream >> flags;
     if (ISSET(flags, EF_DOOR)) SET(flags, EF_EXIT);
     e[E_FLAGS] = flags;
 
     DoorFlags dFlags;
-    stream >> dFlags;
-    e[E_DOORFLAGS] = dFlags;
+    if (version >= 040)
+    {
+      // Door flags are stored with 16 bits in version >= 040
+      stream >> dFlags;
+      e[E_DOORFLAGS] = dFlags;
+    }
+    else
+    {
+      // Door flags were stored with 8 bits in version < 040
+      stream >> vquint8;
+      e[E_DOORFLAGS] = vquint8;
+    }
 
     DoorName dName;
     stream >> dName;
@@ -418,7 +431,7 @@ bool MapStorage::mergeData()
     stream >> magic;
     if ( magic != 0xFFB2AF01 ) return false;
     stream >> version;
-    if ( version != 031 && version != 030 &&
+    if ( version != 040 && version != 031 && version != 030 &&
 	 version != 020 && version != 021 && version != 007 ) return false;
 
     // We currently force serialization to Qt4.8 since Qt5 broke QDateTime serialization
@@ -889,7 +902,7 @@ bool MapStorage::saveData( bool baseMapOnly )
 
   // Write a header with a "magic number" and a version
   stream << (quint32)0xFFB2AF01;
-  stream << (qint32)031;
+  stream << (qint32)040;
   stream.setVersion(QDataStream::Qt_4_8);
 
   // QtIOCompressor

@@ -137,6 +137,7 @@ class MapCanvas : public QOpenGLWidget, protected QOpenGLFunctions
     void drawPathStart(const Coordinate&);
     bool drawPath(const Coordinate& sc, const Coordinate& dc, double &dx, double &dy, double &dz);
     void drawPathEnd(double dx, double dy, double dz);
+    void drawFlow( const Room *room, const std::vector<Room *> & rooms, ExitDirection exitDirection);
 
     // QGLWidget backwards compatability
     void qglColor(QColor color);
@@ -219,6 +220,9 @@ class MapCanvas : public QOpenGLWidget, protected QOpenGLFunctions
     GLuint m_room_gllist;
     GLuint m_room_selection_gllist;
     GLuint m_room_selection_inner_gllist;
+
+    GLuint m_flow_begin_gllist[6];
+    GLuint m_flow_end_gllist[6];
 
     QFont *m_glFont;
     QFontMetrics *m_glFontMetrics;

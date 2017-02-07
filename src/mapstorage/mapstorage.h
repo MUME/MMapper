@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -40,7 +40,7 @@ public:
     MapStorage(MapData&, const QString&, QFile*);
     MapStorage(MapData&, const QString&);
     bool mergeData();
-    
+
 private:
     virtual bool canLoad() {return TRUE;};
     virtual bool canSave() {return TRUE;};
@@ -59,7 +59,7 @@ private:
     void translateOldConnection(Connection *);
     void saveRoom(const Room * room, QDataStream & stream);
     void saveExits(const Room * room, QDataStream & stream);
-    
+
     uint baseId;
     Coordinate basePosition;
 };

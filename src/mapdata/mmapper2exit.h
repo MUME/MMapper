@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -33,7 +33,7 @@ class Exit;
 
 enum ExitType { ET_NORMAL, ET_LOOP, ET_ONEWAY, ET_UNDEFINED };
 
-enum ExitDirection { ED_NORTH=0, ED_SOUTH, ED_EAST, ED_WEST, ED_UP, 
+enum ExitDirection { ED_NORTH=0, ED_SOUTH, ED_EAST, ED_WEST, ED_UP,
 			   ED_DOWN, ED_UNKNOWN, ED_NONE };
 
 ExitDirection opposite(ExitDirection in);
@@ -50,6 +50,7 @@ typedef class QString DoorName;
 #define EF_RANDOM     bit5
 #define EF_SPECIAL    bit6
 #define EF_NO_MATCH   bit7
+#define EF_FLOW       bit8
 
 #define DF_HIDDEN     bit1
 #define DF_NEEDKEY    bit2
@@ -57,13 +58,15 @@ typedef class QString DoorName;
 #define DF_NOBREAK    bit4
 #define DF_NOPICK     bit5
 #define DF_DELAYED    bit6
-#define DF_RESERVED1  bit7
-#define DF_RESERVED2  bit8
+#define DF_CALLABLE   bit7
+#define DF_KNOCKABLE  bit8
+#define DF_MAGIC      bit9
+#define DF_ACTION     bit10
 
 enum ExitField {E_DOORNAME = 0, E_FLAGS, E_DOORFLAGS};
 
 typedef quint8 ExitFlags;
-typedef quint8 DoorFlags;
+typedef quint16 DoorFlags;
 
 ExitFlags getFlags(const Exit & e);
 
@@ -74,11 +77,11 @@ DoorFlags getDoorFlags(const Exit & e);
 void updateExit(Exit & e, ExitFlags flags);
 
 void orExitFlags(Exit & e, ExitFlags flags);
-  
+
 void nandExitFlags(Exit & e, ExitFlags flags);
 
 void orDoorFlags(Exit & e, DoorFlags flags);
-  
+
 void nandDoorFlags(Exit & e, DoorFlags flags);
-  
+
 #endif
