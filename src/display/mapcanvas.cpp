@@ -129,6 +129,7 @@ MapCanvas::MapCanvas( MapData *mapData, PrespammedPath* prespammedPath, CGroup* 
     m_infoMarksEditDlg = new InfoMarksEditDlg(mapData, this);
     connect(m_infoMarksEditDlg, SIGNAL(mapChanged()), this, SLOT(update()));
     connect(m_infoMarksEditDlg, SIGNAL(closeEventReceived()), this, SLOT(onInfoMarksEditDlgClose()));
+    connect(m_data, SIGNAL(updateCanvas()), this, SLOT(update()));
 
     memset(m_terrainTextures, 0, sizeof(m_terrainTextures));
     memset(m_roadTextures, 0, sizeof(m_roadTextures));
@@ -935,8 +936,6 @@ void MapCanvas::resizeGL(int width, int height)
         qDebug() << "resizeGL called but initializeGL was not called yet";
         return;
     }
-
-    qDebug() << "resizeGL width " << width << " height " << height;
 
     float swp = m_scaleFactor * (1.0f - ((float)(width - BASESIZEX) / width));
     float shp = m_scaleFactor * (1.0f - ((float)(height - BASESIZEY) / height));
