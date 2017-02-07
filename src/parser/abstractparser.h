@@ -144,7 +144,7 @@ protected:
   //utility functions
   QString& removeAnsiMarks(QString& str);
 
-  void emulateExits();
+  void emulateExits(CommandIdType dir=CID_NONE);
 
   void parseExits(QString& str);
   void parsePrompt(QString& prompt);

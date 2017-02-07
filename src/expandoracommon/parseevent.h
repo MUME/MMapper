@@ -29,6 +29,7 @@
 #include <deque>
 #include "listcycler.h"
 #include <QVariant>
+#include <QMutex>
 
 class Property;
 
@@ -38,7 +39,7 @@ class Property;
 class ParseEvent : public ListCycler<Property *, std::deque<Property *> >
 {
 public:
-  ParseEvent(uint move) : moveType(move), numSkipped(0) {}
+  ParseEvent(uint move) : moveType(move), numSkipped(0) {parsedMutex.lock();}
   ParseEvent(const ParseEvent & other);
   virtual ~ParseEvent();
   ParseEvent & operator=(const ParseEvent & other);
@@ -49,12 +50,16 @@ public:
   const std::deque<QVariant> & getOptional() const {return optional;}
   uint getMoveType() const {return moveType;}
   uint getNumSkipped() const {return numSkipped;}
-  
+
+  void setParsed();
+  bool waitForParsed(int timeout=-1);
+
 private:
   std::deque<QVariant> optional;
   uint moveType;
   uint numSkipped;
-  
+  QMutex parsedMutex;
+
 };
 
 #endif

@@ -179,6 +179,19 @@ void MumeXmlParser::parse(const QByteArray& line)
   emit sendToUser(lineToUser);
 }
 
+inline CommandIdType cidFromChar(const char &c)
+{
+  switch (c) {
+  case 'n': return CID_NORTH;
+  case 's': return CID_SOUTH;
+  case 'e': return CID_EAST;
+  case 'w': return CID_WEST;
+  case 'u': return CID_UP;
+  case 'd': return CID_DOWN;
+  };
+  return CID_NONE;
+}
+
 bool MumeXmlParser::element( const QByteArray& line  )
 {
   int length = line.length();
@@ -210,34 +223,15 @@ bool MumeXmlParser::element( const QByteArray& line  )
           if (length > 8)
             switch (line.at(8)) {
             case ' ':
-			  if (length > 13) {
-			        int pos = (line.at(13) == '"') ? 14 : 13;
-					switch (line.at(13)) {
-					case 'n':
-					  m_move = CID_NORTH;
-					  break;
-					case 's':
-					  m_move = CID_SOUTH;
-					  break;
-					case 'e':
-					  m_move = CID_EAST;
-					  break;
-					case 'w':
-					  m_move = CID_WEST;
-					  break;
-					case 'u':
-					  m_move = CID_UP;
-					  break;
-					case 'd':
-					  m_move = CID_DOWN;
-					  break;
-				};
-			  }
+              if (length > 13) {
+                int pos = (line.at(13) == '"') ? 14 : 13;
+                m_move = cidFromChar(line.at(pos));
+              }
               break;
             case '/':
               m_move = CID_NONE;
               break;
-			};
+            };
           break;
         case 's':
             if (line.startsWith("status")) {
@@ -341,18 +335,26 @@ QByteArray MumeXmlParser::characters(QByteArray& ch)
   m_stringBuffer = ch.simplified();
   latinToAscii(m_stringBuffer);
 
+  // Two ways to finish reading a room description, depending on compact setting.
+  if (m_readingRoomDesc && (m_xmlMode == XML_NONE && m_stringBuffer.isEmpty() ||
+                            m_xmlMode == XML_PROMPT))
+  {
+    m_readingRoomDesc = false;
+    m_descriptionReady = true;
+
+    CommandIdType exits_dir = CID_NONE;
+    if (queue.size() && queue.head() == CID_SCOUT)
+      exits_dir = m_move;
+    move(); // Move blocks till the location is updated, but scouting doesn't update location
+
+    if (Config().m_emulatedExits) emulateExits(exits_dir);
+  }
+
   switch (m_xmlMode)
   {
     case XML_NONE:        //non room info
-      if (m_stringBuffer.isEmpty()) // standard end of description parsed
+      if (!m_stringBuffer.isEmpty())
       {
-        if (m_readingRoomDesc) {
-          m_readingRoomDesc = false; // we finished read desc mode
-          m_descriptionReady = true;
-          if (Config().m_emulatedExits) emulateExits();
-        }
-      }
-      else {
       //str=removeAnsiMarks(m_stringBuffer);
         parseMudCommands(m_stringBuffer);
       }
@@ -400,11 +402,6 @@ QByteArray MumeXmlParser::characters(QByteArray& ch)
       break;
 
     case XML_PROMPT:
-      if (m_readingRoomDesc) { // fixes compact mode
-          m_readingRoomDesc = false; // we finished read desc mode
-          m_descriptionReady = true;
-          if (Config().m_emulatedExits) emulateExits();
-      }
       if  (m_descriptionReady) {
         m_examine = false; // stop bypassing brief-mode
         removeAnsiMarks(m_stringBuffer); // remove color marks
@@ -502,6 +499,7 @@ void MumeXmlParser::parseMudCommands(QString& str)
     }
     else if (str.startsWith("You quietly scout"))
     {
+      m_move = cidFromChar(str[18].toLatin1());
       queue.prepend(CID_SCOUT);
       return;
     }

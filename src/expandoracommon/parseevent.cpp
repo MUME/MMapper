@@ -66,3 +66,12 @@ void ParseEvent::countSkipped() {
   }
 }
 
+void ParseEvent::setParsed() {
+  parsedMutex.unlock();
+}
+
+bool ParseEvent::waitForParsed(int timeout) {
+  bool result = parsedMutex.tryLock(timeout);
+  if (result) parsedMutex.unlock();
+  return result;
+}
