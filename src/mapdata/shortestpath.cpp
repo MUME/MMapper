@@ -4,8 +4,6 @@
 #include "mapdata.h"
 #include<queue>
 
-#include<queue>
-
 // Movement costs per terrain type.
 // Same order as the RoomTerrainType enum.
 // Values taken from https://github.com/nstockton/tintin-mume/blob/master/mapperproxy/mapper/constants.py
@@ -60,20 +58,21 @@ void MapData::shortestPathSearch(const Room *origin, ShortestPathRecipient * rec
   {
     int spindex = future_paths.top().second;
     future_paths.pop();
-    SPNode * spnode = &sp_nodes[spindex];
-    int room_id = spnode->r->getId();
+    const Room *thisr = sp_nodes[spindex].r;
+    float thisdist = sp_nodes[spindex].dist;
+    int room_id = thisr->getId();
     if (visited.contains(room_id))
       continue;
     visited.insert(room_id);
-    if(f.filter(spnode->r))
+    if(f.filter(thisr))
     {
       recipient->receiveShortestPath(this, sp_nodes, spindex);
       if (--max_hits == 0)
         return;
     }
-    if (max_dist && spnode->dist > max_dist)
+    if (max_dist && thisdist > max_dist)
       return;
-    ExitsList exits = spnode->r->getExitsList();
+    ExitsList exits = thisr->getExitsList();
     for(int dir = 0; dir < exits.size(); dir++)
     {
       const Exit & e = exits[dir];
@@ -89,9 +88,9 @@ void MapData::shortestPathSearch(const Room *origin, ShortestPathRecipient * rec
       const Room * nextr = roomIndex[*e.outBegin()];
       if (visited.contains(nextr->getId()))
         continue;
-      double length = getLength(e, spnode->r, nextr);
-      sp_nodes.push_back(SPNode(nextr, spindex, spnode->dist + length, (ExitDirection)dir));
-      future_paths.push(std::make_pair(-(spnode->dist + length), sp_nodes.size()-1));
+      double length = getLength(e, thisr, nextr);
+      sp_nodes.push_back(SPNode(nextr, spindex, thisdist + length, (ExitDirection)dir));
+      future_paths.push(std::make_pair(-(thisdist + length), sp_nodes.size()-1));
     }
   }
 }
