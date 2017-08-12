@@ -1020,24 +1020,21 @@ bool MainWindow::exportBaseMap()
 
 bool MainWindow::exportWebMap()
 {
-  QPointer<QFileDialog> save = defaultSaveDialog();
-  save->setNameFilter("JSON files (*.json)");
-  save->setDefaultSuffix("json");
+  QPointer<QFileDialog> save = new QFileDialog( this, "Choose map file name ...", QDir::current().absolutePath() );
+  save->setFileMode( QFileDialog::Directory );
+  save->setOption( QFileDialog::ShowDirsOnly, true );
+  save->setAcceptMode( QFileDialog::AcceptSave );
 
   QFileInfo currentFile( m_mapData->getFileName() );
   if ( currentFile.exists() )
-  {
     save->setDirectory( currentFile.absoluteDir() );
-    QString fileName = currentFile.fileName();
-    save->selectFile( fileName.replace( QRegExp( "\\.mm2$" ), ".json" ) );
-  }
 
   QStringList fileNames;
-  if (save->exec()) {
+  if ( save->exec() ) {
     fileNames = save->selectedFiles();
   }
 
-  if (fileNames.isEmpty()) {
+  if ( fileNames.isEmpty() ) {
     statusBar()->showMessage(tr("No filename provided"), 2000);
     return false;
   }
@@ -1140,20 +1137,22 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode )
   getCurrentMapWindow()->getCanvas()->setEnabled(false);
 
   FileSaver saver;
-  try
+  if ( mode != SAVE_WEB ) // Web uses a whole directory
   {
-    saver.open( fileName );
+    try
+    {
+      saver.open( fileName );
+    }
+    catch ( std::exception &e )
+    {
+      QMessageBox::warning(NULL, tr("Application"),
+                           tr("Cannot write file %1:\n%2.")
+                           .arg(fileName)
+                           .arg(e.what()));
+      getCurrentMapWindow()->getCanvas()->setEnabled(true);
+      return false;
+    }
   }
-  catch ( std::exception &e )
-  {
-    QMessageBox::warning(NULL, tr("Application"),
-                         tr("Cannot write file %1:\n%2.")
-                         .arg(fileName)
-                         .arg(e.what()));
-    getCurrentMapWindow()->getCanvas()->setEnabled(true);
-    return false;
-  }
-
 
   //SAVE
   progressDlg = new QProgressDialog(this);
@@ -1169,7 +1168,7 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode )
 
   std::auto_ptr<AbstractMapStorage> storage;
   if ( mode == SAVE_WEB )
-    storage.reset( new JsonMapStorage(*m_mapData , fileName, &saver.file()) );
+    storage.reset( new JsonMapStorage(*m_mapData , fileName ) );
   else
     storage.reset( new MapStorage(*m_mapData , fileName, &saver.file()) );
 
@@ -1178,14 +1177,24 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode )
 
   disableActions(true);
   //getCurrentMapWindow()->getCanvas()->hide();
-  if (storage->canSave()) storage->saveData( mode );
+  if (storage->canSave())
+  {
+    bool baseMapOnly = mode != SAVE_FULL;
+    if ( !storage->saveData( baseMapOnly ) )
+    {
+      getCurrentMapWindow()->getCanvas()->setEnabled(true);
+      progressDlg->hide();
+      disableActions(true);
+      return false;
+    }
+  }
   //getCurrentMapWindow()->getCanvas()->show();
   disableActions(false);
   cutAct->setEnabled(false);
   copyAct->setEnabled(false);
   pasteAct->setEnabled(false);
 
-  delete progressDlg;
+  progressDlg->hide();
 
   try
   {
