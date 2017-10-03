@@ -123,7 +123,7 @@ private:
 public:
   void addRoom( const Room &room )
   {
-    m_hasher.add( getName( &room ) );
+    m_hasher.add( getName( &room ) + "\n" );
     m_hasher.add( getDescription( &room ) );
     m_index.insert( m_hasher.result().toHex(), room.getPosition() );
     m_hasher.reset();
