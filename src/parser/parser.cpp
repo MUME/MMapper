@@ -31,6 +31,9 @@
 #include "mapdata.h"
 #include "mmapper2event.h"
 #include "mmapper2room.h"
+#include "parserutils.h"
+
+using ParserUtils::latinToAscii;
 
 Parser::Parser(MapData* md, QObject *parent)
 : AbstractParser(md, parent)
