@@ -38,6 +38,7 @@
 #include "infomark.h"
 #include "qtiocompressor.h"
 #include "olddoor.h"
+#include "parserutils.h"
 
 #include <QFile>
 #include <QDir>
@@ -49,6 +50,7 @@
 #include <QMap>
 #include <QMultiMap>
 #include <QCryptographicHash>
+#include <QRegularExpression>
 
 #include <cassert>
 #include <iostream>
@@ -66,9 +68,9 @@ const int c_roomIndexFileNameSize = 2;
 // Split the world into 20x20 zones
 const int c_zoneWidth = 20;
 
-/* Performs MD5 hashing on the string with its non-ASCII chars removed. This
- * was the simplest scheme that could be implemented in the JavaScript
- * counterpart.
+/* Performs MD5 hashing on ASCII-transliterated, whitespace-normalized name+descs.
+ * MD5 is for convenience (easily available in all languages), the rest makes
+ * the hash resilient to trivial typo fixes by the builders.
  */
 class WebHasher
 {
@@ -82,14 +84,18 @@ public:
 
   void add( QString str )
   {
-    QByteArray bytes;
-    for ( int i = 0; i < str.length(); ++i )
-    {
-      if ( str[i] < 128 )
-        bytes.append( str[i].toLatin1() );
-    }
+    // This is most likely unnecessary because the parser did it for us...
+    // We need plain ASCII so that accentuation changes do not affect the
+    // hashes and because MD5 is defined on bytes, not encoded chars.
+    ParserUtils::latinToAscii( str );
+    // Roomdescs may see whitespacing fixes over the year (ex: removing double
+    // spaces after periods). MM2 ignores such changes when comparing rooms,
+    // but the web mapper may only look up rooms by hash. Normalizing the
+    // whitespaces make the hash resilient.
+    str.replace( QRegularExpression( " +" ), " " );
+    str.replace( QRegularExpression( " *\r?\n" ), "\n" );
 
-    m_hash.addData(bytes);
+    m_hash.addData( str.toLatin1() );
   }
 
   QByteArray result() const
