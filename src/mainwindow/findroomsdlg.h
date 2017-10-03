@@ -61,7 +61,6 @@ private:
   QShortcut *m_showSelectedRoom;
 
   void adjustResultTable();
-  QString& latinToAscii(QString& str);
 
   static const QString nullString;
   RoomAdmin* m_admin;

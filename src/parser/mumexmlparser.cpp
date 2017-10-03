@@ -32,6 +32,7 @@
 #include "mmapper2event.h"
 #include "mmapper2room.h"
 #include "CGroupCommunicator.h"
+#include "parserutils.h"
 
 const QByteArray MumeXmlParser::greaterThanChar(">");
 const QByteArray MumeXmlParser::lessThanChar("<");
@@ -339,7 +340,7 @@ QByteArray MumeXmlParser::characters(QByteArray& ch)
   }
 
   m_stringBuffer = ch.simplified();
-  latinToAscii(m_stringBuffer);
+  ParserUtils::latinToAscii(m_stringBuffer);
 
   switch (m_xmlMode)
   {

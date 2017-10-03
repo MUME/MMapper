@@ -178,8 +178,6 @@ protected:
   static const QString emptyString;
   static const QByteArray emptyByteArray;
 
-  QString& latinToAscii(QString& str);
-
   void search_command(RoomFilter f);
   void dirs_command(RoomFilter f);
 };

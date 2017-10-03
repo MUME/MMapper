@@ -27,6 +27,7 @@
 #include "mmapper2room.h"  //getName
 #include "mmapper2exit.h"  //getExit
 #include "mapdata.h"
+#include "parserutils.h"
 
 #include <QCloseEvent>
 #include <QShortcut>
@@ -61,7 +62,7 @@ void FindRoomsDlg::findClicked()
   Qt::CaseSensitivity cs = caseCheckBox->isChecked() ? Qt::CaseSensitive : Qt::CaseInsensitive;
   QString text = lineEdit->text();
   // remove latin1
-  text = latinToAscii(text);
+  text = ParserUtils::latinToAscii(text);
   resultTable->clear();
   roomsFoundLabel->clear();
 
@@ -199,89 +200,4 @@ void FindRoomsDlg::closeEvent( QCloseEvent * event )
 void FindRoomsDlg::on_lineEdit_textChanged()
 {
   findButton->setEnabled(lineEdit->hasAcceptableInput());
-}
-
-QString& FindRoomsDlg::latinToAscii(QString& str) {
-    // latin1 to 7-bit Ascii
-    // taken from Pandora
-  const unsigned char table[] = {
-/*192*/   'A',
-          'A',
-          'A',
-          'A',
-          'A',
-          'A',
-          'A',
-          'C',
-          'E',
-          'E',
-          'E',
-          'E',
-          'I',
-          'I',
-          'I',
-          'I',
-          'D',
-          'N',
-          'O',
-          'O',
-          'O',
-          'O',
-          'O',
-          'x',
-          'O',
-          'U',
-          'U',
-          'U',
-          'U',
-          'Y',
-          'b',
-          'B',
-          'a',
-          'a',
-          'a',
-          'a',
-          'a',
-          'a',
-          'a',
-          'c',
-          'e',
-          'e',
-          'e',
-          'e',
-          'i',
-          'i',
-          'i',
-          'i',
-          'o',
-          'n',
-          'o',
-          'o',
-          'o',
-          'o',
-          'o',
-          ':',
-          'o',
-          'u',
-          'u',
-          'u',
-          'u',
-          'y',
-          'b',
-          'y'
-  };
-  unsigned char ch;
-  int pos;
-
-  for (pos = 0; pos < str.length(); pos++) {
-    ch = str.at(pos).toLatin1();
-    if (ch > 128) {
-      if (ch < 192)
-        ch = 'z';
-      else
-        ch = table[ ch - 192 ];
-      str[pos] = ch;
-    }
-  }
-  return str;
 }
