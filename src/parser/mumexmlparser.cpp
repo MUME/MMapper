@@ -339,7 +339,12 @@ QByteArray MumeXmlParser::characters(QByteArray& ch)
       m_lastPrompt = ch;
   }
 
-  m_stringBuffer = ch.simplified();
+  if (Config().m_utf8Charset)
+      m_stringBuffer = QString::fromUtf8(ch);
+  else
+      m_stringBuffer = QString::fromLatin1(ch);
+
+  m_stringBuffer = m_stringBuffer.simplified();
   ParserUtils::latinToAscii(m_stringBuffer);
 
   switch (m_xmlMode)

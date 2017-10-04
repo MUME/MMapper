@@ -115,7 +115,10 @@ void Parser::parseNewMudInput(IncomingData& data /*TelnetIncomingDataQueue& que*
 		(*debugStream) << "Prompt";
 		(*debugStream) << "***ETYPE***";
 #endif
-                m_stringBuffer = QString::fromLatin1(data.line.constData(), data.line.size());
+                if (Config().m_utf8Charset)
+                    m_stringBuffer = QString::fromUtf8(data.line);
+                else
+                    m_stringBuffer = QString::fromLatin1(data.line);
 
                 // Store prompts in case an internal command is executed
                 m_lastPrompt = m_stringBuffer;
