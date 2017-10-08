@@ -220,6 +220,7 @@ public:
     QJsonArray jCoords;
     jCoords.push_back( coords.x );
     jCoords.push_back( coords.y );
+    jCoords.push_back( coords.z );
 
     QJsonObject::iterator collision = m_hashes.find( hash );
     if ( collision == m_hashes.end() )
