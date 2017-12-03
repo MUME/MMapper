@@ -98,6 +98,10 @@ void Configuration::read()
   m_roomDescriptionsParserType = (RoomDescriptionsParserType) conf.value("Static room description parser type", (int)(RDPT_COLOR)).toInt();
   m_minimumStaticLines = conf.value("Minimum static lines in room description", 1).toInt();
 
+  // XML mode used UTF-8, non-XML used Latin1.
+  m_utf8Charset = conf.value("MUME charset is UTF-8", true).toBool();
+
+
   conf.endGroup();
 
   conf.beginGroup("Mume native");
@@ -258,6 +262,8 @@ void Configuration::write() const {
 
   conf.setValue("Static room description parser type", (int)m_roomDescriptionsParserType);
   conf.setValue("Minimum static lines in room description", m_minimumStaticLines);
+
+  conf.setValue("MUME charset is UTF-8", m_utf8Charset);
   conf.endGroup();
 
   conf.beginGroup("Mume native");

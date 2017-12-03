@@ -34,6 +34,7 @@ set(mmapper_SRCS
     mapstorage/abstractmapstorage.cpp
     mapstorage/basemapsavefilter.cpp
     mapstorage/filesaver.cpp
+    mapstorage/jsonmapstorage.cpp
     mapstorage/mapstorage.cpp
     mapstorage/oldconnection.cpp
     mapstorage/progresscounter.cpp
@@ -47,6 +48,7 @@ set(mmapper_SRCS
     parser/abstractparser.cpp
     parser/mumexmlparser.cpp
     parser/parser.cpp
+    parser/parserutils.cpp
     parser/patterns.cpp
     parser/roompropertysetter.cpp
     pathmachine/approved.cpp
@@ -108,6 +110,7 @@ set(mmapper_MOC_HDRS
     parser/abstractparser.h
     parser/mumexmlparser.h
     parser/parser.h
+    parser/parserutils.h
     parser/roompropertysetter.h
     pathmachine/mmapper2pathmachine.h
     pathmachine/pathmachine.h

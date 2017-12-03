@@ -30,6 +30,7 @@
 #include "mapdata.h"
 #include "roomeditattrdlg.h"
 #include "mapstorage.h"
+#include "jsonmapstorage.h"
 #include "connectionlistener.h"
 #include "configuration.h"
 #include "mmapper2pathmachine.h"
@@ -308,6 +309,10 @@ void MainWindow::createActions()
   exportBaseMapAct->setStatusTip(tr("Save a copy of the map with no secrets"));
   connect(exportBaseMapAct, SIGNAL(triggered()), this, SLOT(exportBaseMap()));
 
+  exportWebMapAct = new QAction(tr("Export &Web Map As..."), this);
+  exportWebMapAct->setStatusTip(tr("Save a copy of the map for webclients"));
+  connect(exportWebMapAct, SIGNAL(triggered()), this, SLOT(exportWebMap()));
+
   mergeAct = new QAction(QIcon(":/icons/merge.png"), tr("&Merge..."), this);
   //mergeAct->setShortcut(tr("Ctrl+M"));
   mergeAct->setStatusTip(tr("Merge an existing file into current map"));
@@ -580,6 +585,7 @@ void MainWindow::disableActions(bool value)
   saveAct->setDisabled(value);
   saveAsAct->setDisabled(value);
   exportBaseMapAct->setDisabled(value);
+  exportWebMapAct->setDisabled(value);
   exitAct->setDisabled(value);
   cutAct->setDisabled(value);
   copyAct->setDisabled(value);
@@ -614,6 +620,7 @@ void MainWindow::setupMenuBar()
   fileMenu->addAction(saveAct);
   fileMenu->addAction(saveAsAct);
   fileMenu->addAction(exportBaseMapAct);
+  fileMenu->addAction(exportWebMapAct);
   fileMenu->addAction(mergeAct);
   fileMenu->addSeparator();
   fileMenu->addAction(exitAct);
@@ -954,7 +961,7 @@ bool MainWindow::save()
   }
   else
   {
-    return saveFile( m_mapData->getFileName(), false );
+    return saveFile( m_mapData->getFileName(), SAVE_FULL );
   }
 }
 
@@ -983,7 +990,7 @@ bool MainWindow::saveAs()
     return false;
   }
 
-  return saveFile(fileNames[0], false);
+  return saveFile(fileNames[0], SAVE_FULL);
 }
 
 bool MainWindow::exportBaseMap()
@@ -1008,7 +1015,31 @@ bool MainWindow::exportBaseMap()
     return false;
   }
 
-  return saveFile(fileNames[0], true);
+  return saveFile(fileNames[0], SAVE_BASEMAP);
+}
+
+bool MainWindow::exportWebMap()
+{
+  QPointer<QFileDialog> save = new QFileDialog( this, "Choose map file name ...", QDir::current().absolutePath() );
+  save->setFileMode( QFileDialog::Directory );
+  save->setOption( QFileDialog::ShowDirsOnly, true );
+  save->setAcceptMode( QFileDialog::AcceptSave );
+
+  QFileInfo currentFile( m_mapData->getFileName() );
+  if ( currentFile.exists() )
+    save->setDirectory( currentFile.absoluteDir() );
+
+  QStringList fileNames;
+  if ( save->exec() ) {
+    fileNames = save->selectedFiles();
+  }
+
+  if ( fileNames.isEmpty() ) {
+    statusBar()->showMessage(tr("No filename provided"), 2000);
+    return false;
+  }
+
+  return saveFile(fileNames[0], SAVE_WEB);
 }
 
 void MainWindow::about()
@@ -1101,25 +1132,27 @@ void MainWindow::percentageChanged(quint32 p)
   //qApp->processEvents();
 }
 
-bool MainWindow::saveFile(const QString &fileName, bool baseMapOnly )
+bool MainWindow::saveFile(const QString &fileName, SaveMode mode )
 {
   getCurrentMapWindow()->getCanvas()->setEnabled(false);
 
   FileSaver saver;
-  try
+  if ( mode != SAVE_WEB ) // Web uses a whole directory
   {
-    saver.open( fileName );
+    try
+    {
+      saver.open( fileName );
+    }
+    catch ( std::exception &e )
+    {
+      QMessageBox::warning(NULL, tr("Application"),
+                           tr("Cannot write file %1:\n%2.")
+                           .arg(fileName)
+                           .arg(e.what()));
+      getCurrentMapWindow()->getCanvas()->setEnabled(true);
+      return false;
+    }
   }
-  catch ( std::exception &e )
-  {
-    QMessageBox::warning(NULL, tr("Application"),
-                         tr("Cannot write file %1:\n%2.")
-                         .arg(fileName)
-                         .arg(e.what()));
-    getCurrentMapWindow()->getCanvas()->setEnabled(true);
-    return false;
-  }
-
 
   //SAVE
   progressDlg = new QProgressDialog(this);
@@ -1133,20 +1166,35 @@ bool MainWindow::saveFile(const QString &fileName, bool baseMapOnly )
   progressDlg->setValue(0);
   progressDlg->show();
 
-  std::auto_ptr<AbstractMapStorage> storage( new MapStorage(*m_mapData , fileName, &saver.file()) );
+  std::auto_ptr<AbstractMapStorage> storage;
+  if ( mode == SAVE_WEB )
+    storage.reset( new JsonMapStorage(*m_mapData , fileName ) );
+  else
+    storage.reset( new MapStorage(*m_mapData , fileName, &saver.file()) );
+
   connect(storage->progressCounter(), SIGNAL(onPercentageChanged(quint32)), this, SLOT(percentageChanged(quint32)));
   connect(storage.get(), SIGNAL(log(const QString&, const QString&)), this, SLOT(log(const QString&, const QString&)));
 
   disableActions(true);
   //getCurrentMapWindow()->getCanvas()->hide();
-  if (storage->canSave()) storage->saveData( baseMapOnly );
+  if (storage->canSave())
+  {
+    bool baseMapOnly = mode != SAVE_FULL;
+    if ( !storage->saveData( baseMapOnly ) )
+    {
+      getCurrentMapWindow()->getCanvas()->setEnabled(true);
+      progressDlg->hide();
+      disableActions(true);
+      return false;
+    }
+  }
   //getCurrentMapWindow()->getCanvas()->show();
   disableActions(false);
   cutAct->setEnabled(false);
   copyAct->setEnabled(false);
   pasteAct->setEnabled(false);
 
-  delete progressDlg;
+  progressDlg->hide();
 
   try
   {
@@ -1162,7 +1210,7 @@ bool MainWindow::saveFile(const QString &fileName, bool baseMapOnly )
     return false;
   }
 
-  if ( !baseMapOnly )
+  if ( mode == SAVE_FULL )
     setCurrentFile(fileName);
   statusBar()->showMessage(tr("File saved"), 2000);
   getCurrentMapWindow()->getCanvas()->setEnabled(true);
