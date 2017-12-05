@@ -1134,8 +1134,6 @@ void MainWindow::percentageChanged(quint32 p)
 
 bool MainWindow::saveFile(const QString &fileName, SaveMode mode, SaveFormat format)
 {
-  getCurrentMapWindow()->getCanvas()->setEnabled(false);
-
   FileSaver saver;
   if (format != SAVEF_WEB) // Web uses a whole directory
   {
@@ -1154,6 +1152,17 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode, SaveFormat for
     }
   }
 
+  std::auto_ptr<AbstractMapStorage> storage;
+  if (format == SAVEF_WEB)
+    storage.reset(new JsonMapStorage(*m_mapData , fileName));
+  else
+    storage.reset(new MapStorage(*m_mapData , fileName, &saver.file()));
+
+  if (!storage->canSave())
+    return false;
+
+  getCurrentMapWindow()->getCanvas()->setEnabled(false);
+
   //SAVE
   progressDlg = new QProgressDialog(this);
   QPushButton *cb = new QPushButton("Abort ...");
@@ -1166,27 +1175,12 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode, SaveFormat for
   progressDlg->setValue(0);
   progressDlg->show();
 
-  std::auto_ptr<AbstractMapStorage> storage;
-  if (format == SAVEF_WEB)
-    storage.reset(new JsonMapStorage(*m_mapData , fileName));
-  else
-    storage.reset(new MapStorage(*m_mapData , fileName, &saver.file()));
-
   connect(storage->progressCounter(), SIGNAL(onPercentageChanged(quint32)), this, SLOT(percentageChanged(quint32)));
   connect(storage.get(), SIGNAL(log(const QString&, const QString&)), this, SLOT(log(const QString&, const QString&)));
 
   disableActions(true);
   //getCurrentMapWindow()->getCanvas()->hide();
-  if (storage->canSave())
-  {
-    if (!storage->saveData(mode == SAVEM_BASEMAP))
-    {
-      getCurrentMapWindow()->getCanvas()->setEnabled(true);
-      progressDlg->hide();
-      disableActions(true);
-      return false;
-    }
-  }
+  const bool saveOk = storage->saveData(mode == SAVEM_BASEMAP);
   //getCurrentMapWindow()->getCanvas()->show();
   disableActions(false);
   cutAct->setEnabled(false);
@@ -1209,9 +1203,17 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode, SaveFormat for
     return false;
   }
 
-  if (mode == SAVEM_FULL && format == SAVEF_MM2)
-    setCurrentFile(fileName);
-  statusBar()->showMessage(tr("File saved"), 2000);
+  if (saveOk)
+  {
+    if (mode == SAVEM_FULL && format == SAVEF_MM2)
+      setCurrentFile(fileName);
+    statusBar()->showMessage(tr("File saved"), 2000);
+  }
+  else
+  {
+    QMessageBox::warning(NULL, tr("Application"), tr("Error while saving (see log)."));
+  }
+
   getCurrentMapWindow()->getCanvas()->setEnabled(true);
 
   return true;
