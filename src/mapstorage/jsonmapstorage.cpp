@@ -60,8 +60,6 @@ using namespace std;
 namespace
 {
 
-typedef QList<const Room *> RoomList2;
-
 // These settings have to be shared with the JS code:
 // Group all rooms with the same 2 first hash bytes into the same file
 const int c_roomIndexFileNameSize = 2;
@@ -139,7 +137,7 @@ public:
 class ZoneIndex
 {
 public:
-  typedef QMap<QString, RoomList2> Index;
+  typedef QMap<QString, ConstRoomList> Index;
 
 private:
   Index m_index;
@@ -155,7 +153,7 @@ public:
     Index::iterator iter = m_index.find( zone );
     if ( iter == m_index.end() )
     {
-      RoomList2 list;
+      ConstRoomList list;
       list.push_back( room );
       m_index.insert( zone, list );
     }
@@ -299,7 +297,7 @@ class JsonWorld
 public:
   JsonWorld();
   ~JsonWorld();
-  void addRooms( const RoomList2 &roomList, BaseMapSaveFilter &filter,
+  void addRooms( const ConstRoomList &roomList, BaseMapSaveFilter &filter,
     QPointer<ProgressCounter> progressCounter, bool baseMapOnly );
   void writeMetadata( const QFileInfo &path, const MapData &mapData ) const;
   void writeRoomIndex( const QDir &dir ) const;
@@ -315,10 +313,10 @@ JsonWorld::~JsonWorld()
 {
 }
 
-void JsonWorld::addRooms( const RoomList2 &roomList, BaseMapSaveFilter &filter,
+void JsonWorld::addRooms( const ConstRoomList &roomList, BaseMapSaveFilter &filter,
   QPointer<ProgressCounter> progressCounter, bool baseMapOnly )
 {
-  for ( RoomList2::const_iterator roomIter = roomList.begin();
+  for ( ConstRoomList::const_iterator roomIter = roomList.begin();
     roomIter != roomList.end(); ++roomIter )
   {
     progressCounter->step();
@@ -448,9 +446,9 @@ void JsonWorld::writeZones( const QDir &dir, BaseMapSaveFilter &filter,
 
   for ( ZoneIterT zIter = index.cbegin(); zIter != index.cend(); ++zIter )
   {
-    const RoomList2 &rooms = zIter.value();
+    const ConstRoomList &rooms = zIter.value();
     QJsonArray jRooms;
-    for ( RoomList2::const_iterator rIter = rooms.cbegin(); rIter != rooms.cend(); ++rIter )
+    for ( ConstRoomList::const_iterator rIter = rooms.cbegin(); rIter != rooms.cend(); ++rIter )
     {
       if ( baseMapOnly )
       {
@@ -513,7 +511,7 @@ bool JsonMapStorage::saveData( bool baseMapOnly )
   // directly apparently and we have to go through a RoomSaver which receives
   // them from a sort of callback function.
   // The RoomSaver acts as a lock on the rooms.
-  RoomList2 roomList;
+  ConstRoomList roomList;
   MarkerList& markerList = m_mapData.getMarkersList();
   RoomSaver saver(&m_mapData, roomList);
   for (uint i = 0; i < m_mapData.getRoomsCount(); ++i)

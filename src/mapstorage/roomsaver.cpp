@@ -28,7 +28,7 @@
 #include "roomadmin.h"
 #include <assert.h>
 
-RoomSaver::RoomSaver(RoomAdmin * in_admin, QList<const Room *> & list) :
+RoomSaver::RoomSaver(RoomAdmin * in_admin, ConstRoomList & list) :
 roomsCount(0), roomList(list), admin(in_admin) {}
 
 

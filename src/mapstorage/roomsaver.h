@@ -27,19 +27,19 @@
 #define ROOMSAVER_H
 
 #include "roomrecipient.h"
-//#include "mapdata.h"
+#include "mapdata.h"
 
 #include <QList>
 
 class RoomSaver : public RoomRecipient {
   public:
-    RoomSaver(RoomAdmin * in_admin, QList<const Room *> & roomList);
+    RoomSaver(RoomAdmin * in_admin, ConstRoomList & roomList);
     ~RoomSaver();
     void receiveRoom(RoomAdmin * admin, const Room * room);
     quint32 getRoomsCount();
   private:
     quint32 roomsCount;
-    QList<const Room *> & roomList;
+    ConstRoomList & roomList;
     RoomAdmin * admin;
 };
 
