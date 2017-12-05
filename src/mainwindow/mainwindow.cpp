@@ -56,11 +56,11 @@
 
 #include <memory>
 
-DockWidget::DockWidget ( const QString & title, QWidget * parent, Qt::WindowFlags flags )
+DockWidget::DockWidget(const QString & title, QWidget * parent, Qt::WindowFlags flags)
     :QDockWidget(title, parent, flags)
 {}
 
-StackedWidget::StackedWidget ( QWidget * parent )
+StackedWidget::StackedWidget(QWidget * parent)
     :QStackedWidget(parent)
 {}
 
@@ -217,9 +217,9 @@ void MainWindow::readSettings()
 
 void MainWindow::writeSettings()
 {
-  Config().setWindowPosition(pos() );
-  Config().setWindowSize(size() );
-  Config().setWindowState(saveState() );
+  Config().setWindowPosition(pos());
+  Config().setWindowSize(size());
+  Config().setWindowState(saveState());
   Config().setAlwaysOnTop((bool)(windowFlags() & Qt::WindowStaysOnTopHint));
 }
 
@@ -550,7 +550,7 @@ void MainWindow::createActions()
 
   // Group Manager/Communicator
   connect(m_groupCommunicator, SIGNAL(typeChanged(int)), this, SLOT(groupManagerTypeChanged(int)), Qt::QueuedConnection);
-  groupManagerTypeChanged( Config().m_groupManagerState );
+  groupManagerTypeChanged(Config().m_groupManagerState);
 }
 
 void MainWindow::onPlayMode()
@@ -677,7 +677,7 @@ void MainWindow::setupMenuBar()
   //    viewMenu->addAction(prevWindowAct);
   //    viewMenu->addSeparator();
 
-  groupMenu = menuBar()->addMenu(tr("&Group") );
+  groupMenu = menuBar()->addMenu(tr("&Group"));
   groupMenu->addAction(groupOffAct);
   groupMenu->addAction(groupClientAct);
   groupMenu->addAction(groupServerAct);
@@ -748,7 +748,7 @@ void MainWindow::setupToolBars()
   modeToolBar->addAction(createOnewayConnectionAct);
   modeToolBar->addAction(modeInfoMarkEditAct);
 
-  groupToolBar = addToolBar(tr("Group Mode") );
+  groupToolBar = addToolBar(tr("Group Mode"));
   groupToolBar->setObjectName("GroupManagerToolBar");
   groupToolBar->addAction(groupOffAct);
   groupToolBar->addAction(groupClientAct);
@@ -902,7 +902,7 @@ void MainWindow::merge()
     progressDlg = new QProgressDialog(this);
     QPushButton *cb = new QPushButton("Abort ...");
     cb->setEnabled(false);
-    progressDlg->setCancelButton ( cb );
+    progressDlg->setCancelButton(cb);
     progressDlg->setLabelText("Importing map...");
     progressDlg->setCancelButtonText("Abort");
     progressDlg->setMinimum(0);
@@ -961,13 +961,13 @@ bool MainWindow::save()
   }
   else
   {
-    return saveFile( m_mapData->getFileName(), SAVE_FULL );
+    return saveFile(m_mapData->getFileName(), SAVE_FULL);
   }
 }
 
 QPointer<QFileDialog> MainWindow::defaultSaveDialog()
 {
-  QPointer<QFileDialog> save = new QFileDialog( this, "Choose map file name ..." );
+  QPointer<QFileDialog> save = new QFileDialog(this, "Choose map file name ...");
   save->setFileMode(QFileDialog::AnyFile);
   save->setDirectory(QDir::current());
   save->setNameFilter("MMapper2 (*.mm2)");
@@ -997,12 +997,12 @@ bool MainWindow::exportBaseMap()
 {
   QPointer<QFileDialog> save = defaultSaveDialog();
 
-  QFileInfo currentFile( m_mapData->getFileName() );
-  if ( currentFile.exists() )
+  QFileInfo currentFile(m_mapData->getFileName());
+  if (currentFile.exists())
   {
-    save->setDirectory( currentFile.absoluteDir() );
+    save->setDirectory(currentFile.absoluteDir());
     QString fileName = currentFile.fileName();
-    save->selectFile( fileName.replace( QRegExp( "\\.mm2$" ), "-base.mm2" ) );
+    save->selectFile(fileName.replace(QRegExp("\\.mm2$"), "-base.mm2"));
   }
 
   QStringList fileNames;
@@ -1020,21 +1020,21 @@ bool MainWindow::exportBaseMap()
 
 bool MainWindow::exportWebMap()
 {
-  QPointer<QFileDialog> save = new QFileDialog( this, "Choose map file name ...", QDir::current().absolutePath() );
-  save->setFileMode( QFileDialog::Directory );
-  save->setOption( QFileDialog::ShowDirsOnly, true );
-  save->setAcceptMode( QFileDialog::AcceptSave );
+  QPointer<QFileDialog> save = new QFileDialog(this, "Choose map file name ...", QDir::current().absolutePath());
+  save->setFileMode(QFileDialog::Directory);
+  save->setOption(QFileDialog::ShowDirsOnly, true);
+  save->setAcceptMode(QFileDialog::AcceptSave);
 
-  QFileInfo currentFile( m_mapData->getFileName() );
-  if ( currentFile.exists() )
-    save->setDirectory( currentFile.absoluteDir() );
+  QFileInfo currentFile(m_mapData->getFileName());
+  if (currentFile.exists())
+    save->setDirectory(currentFile.absoluteDir());
 
   QStringList fileNames;
-  if ( save->exec() ) {
+  if (save->exec()) {
     fileNames = save->selectedFiles();
   }
 
-  if ( fileNames.isEmpty() ) {
+  if (fileNames.isEmpty()) {
     statusBar()->showMessage(tr("No filename provided"), 2000);
     return false;
   }
@@ -1050,7 +1050,7 @@ void MainWindow::about()
 
 bool MainWindow::maybeSave()
 {
-  if ( m_mapData->dataChanged() )
+  if (m_mapData->dataChanged())
   {
     int ret = QMessageBox::warning(this, tr("mmapper"),
                                    tr("The document has been modified.\n"
@@ -1089,7 +1089,7 @@ void MainWindow::loadFile(const QString &fileName)
   progressDlg = new QProgressDialog(this);
   QPushButton *cb = new QPushButton("Abort ...");
   cb->setEnabled(false);
-  progressDlg->setCancelButton ( cb );
+  progressDlg->setCancelButton(cb);
   progressDlg->setLabelText("Loading map...");
   progressDlg->setCancelButtonText("Abort");
   progressDlg->setMinimum(0);
@@ -1137,13 +1137,13 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode )
   getCurrentMapWindow()->getCanvas()->setEnabled(false);
 
   FileSaver saver;
-  if ( mode != SAVE_WEB ) // Web uses a whole directory
+  if (mode != SAVE_WEB) // Web uses a whole directory
   {
     try
     {
-      saver.open( fileName );
+      saver.open(fileName);
     }
-    catch ( std::exception &e )
+    catch (std::exception &e)
     {
       QMessageBox::warning(NULL, tr("Application"),
                            tr("Cannot write file %1:\n%2.")
@@ -1158,7 +1158,7 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode )
   progressDlg = new QProgressDialog(this);
   QPushButton *cb = new QPushButton("Abort ...");
   cb->setEnabled(false);
-  progressDlg->setCancelButton ( cb );
+  progressDlg->setCancelButton(cb);
   progressDlg->setLabelText("Saving map...");
   progressDlg->setCancelButtonText("Abort");
   progressDlg->setMinimum(0);
@@ -1167,10 +1167,10 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode )
   progressDlg->show();
 
   std::auto_ptr<AbstractMapStorage> storage;
-  if ( mode == SAVE_WEB )
-    storage.reset( new JsonMapStorage(*m_mapData , fileName ) );
+  if (mode == SAVE_WEB)
+    storage.reset(new JsonMapStorage(*m_mapData , fileName));
   else
-    storage.reset( new MapStorage(*m_mapData , fileName, &saver.file()) );
+    storage.reset(new MapStorage(*m_mapData , fileName, &saver.file()));
 
   connect(storage->progressCounter(), SIGNAL(onPercentageChanged(quint32)), this, SLOT(percentageChanged(quint32)));
   connect(storage.get(), SIGNAL(log(const QString&, const QString&)), this, SLOT(log(const QString&, const QString&)));
@@ -1180,7 +1180,7 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode )
   if (storage->canSave())
   {
     bool baseMapOnly = mode != SAVE_FULL;
-    if ( !storage->saveData( baseMapOnly ) )
+    if (!storage->saveData(baseMapOnly))
     {
       getCurrentMapWindow()->getCanvas()->setEnabled(true);
       progressDlg->hide();
@@ -1200,7 +1200,7 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode )
   {
     saver.close();
   }
-  catch ( std::exception &e )
+  catch (std::exception &e)
   {
     QMessageBox::warning(NULL, tr("Application"),
                          tr("Cannot write file %1:\n%2.")
@@ -1210,7 +1210,7 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode )
     return false;
   }
 
-  if ( mode == SAVE_FULL )
+  if (mode == SAVE_FULL)
     setCurrentFile(fileName);
   statusBar()->showMessage(tr("File saved"), 2000);
   getCurrentMapWindow()->getCanvas()->setEnabled(true);
