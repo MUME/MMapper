@@ -53,7 +53,7 @@ private:
     Room * loadRoom(QDataStream & stream, qint32 version);
     void loadExits(Room * room, QDataStream & stream, qint32 version);
     Room * loadOldRoom(QDataStream & stream, ConnectionList & connectionList);
-    void loadOldConnection(Connection *, QDataStream & stream, RoomList & roomList);
+    void loadOldConnection(Connection *, QDataStream & stream, RoomVector & roomList);
     void loadMark(InfoMark * mark, QDataStream & stream, qint32 version);
     void saveMark(InfoMark * mark, QDataStream & stream);
     void translateOldConnection(Connection *);

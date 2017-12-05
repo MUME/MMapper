@@ -39,8 +39,7 @@ class InfoMark;
 class RoomSelection;
 class AbstractAction;
 
-typedef QVector<Room*> RoomList;
-typedef QVectorIterator<Room*> RoomListIterator;
+typedef QVector<Room*> RoomVector;
 typedef QLinkedList<InfoMark*> MarkerList;
 typedef QLinkedListIterator<InfoMark*> MarkerListIterator;
 
