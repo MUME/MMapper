@@ -84,8 +84,9 @@ public:
   Mmapper2PathMachine *getPathMachine(){return m_pathMachine;};
   CGroup *getGroupManager() {return m_groupManager;};
 
-  enum SaveMode { SAVE_FULL, SAVE_BASEMAP, SAVE_WEB };
-  bool saveFile(const QString &fileName, SaveMode mode );
+  enum SaveMode { SAVEM_FULL, SAVEM_BASEMAP };
+  enum SaveFormat { SAVEF_MM2, SAVEF_WEB };
+  bool saveFile(const QString &fileName, SaveMode mode, SaveFormat format);
   void loadFile(const QString &fileName);
   void setCurrentFile(const QString &fileName);
 

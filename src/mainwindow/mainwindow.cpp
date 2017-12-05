@@ -961,7 +961,7 @@ bool MainWindow::save()
   }
   else
   {
-    return saveFile(m_mapData->getFileName(), SAVE_FULL);
+    return saveFile(m_mapData->getFileName(), SAVEM_FULL, SAVEF_MM2);
   }
 }
 
@@ -990,7 +990,7 @@ bool MainWindow::saveAs()
     return false;
   }
 
-  return saveFile(fileNames[0], SAVE_FULL);
+  return saveFile(fileNames[0], SAVEM_FULL, SAVEF_MM2);
 }
 
 bool MainWindow::exportBaseMap()
@@ -1015,7 +1015,7 @@ bool MainWindow::exportBaseMap()
     return false;
   }
 
-  return saveFile(fileNames[0], SAVE_BASEMAP);
+  return saveFile(fileNames[0], SAVEM_BASEMAP, SAVEF_MM2);
 }
 
 bool MainWindow::exportWebMap()
@@ -1039,7 +1039,7 @@ bool MainWindow::exportWebMap()
     return false;
   }
 
-  return saveFile(fileNames[0], SAVE_WEB);
+  return saveFile(fileNames[0], SAVEM_BASEMAP, SAVEF_WEB);
 }
 
 void MainWindow::about()
@@ -1132,12 +1132,12 @@ void MainWindow::percentageChanged(quint32 p)
   //qApp->processEvents();
 }
 
-bool MainWindow::saveFile(const QString &fileName, SaveMode mode )
+bool MainWindow::saveFile(const QString &fileName, SaveMode mode, SaveFormat format)
 {
   getCurrentMapWindow()->getCanvas()->setEnabled(false);
 
   FileSaver saver;
-  if (mode != SAVE_WEB) // Web uses a whole directory
+  if (format != SAVEF_WEB) // Web uses a whole directory
   {
     try
     {
@@ -1167,7 +1167,7 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode )
   progressDlg->show();
 
   std::auto_ptr<AbstractMapStorage> storage;
-  if (mode == SAVE_WEB)
+  if (format == SAVEF_WEB)
     storage.reset(new JsonMapStorage(*m_mapData , fileName));
   else
     storage.reset(new MapStorage(*m_mapData , fileName, &saver.file()));
@@ -1179,8 +1179,7 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode )
   //getCurrentMapWindow()->getCanvas()->hide();
   if (storage->canSave())
   {
-    bool baseMapOnly = mode != SAVE_FULL;
-    if (!storage->saveData(baseMapOnly))
+    if (!storage->saveData(mode == SAVEM_BASEMAP))
     {
       getCurrentMapWindow()->getCanvas()->setEnabled(true);
       progressDlg->hide();
@@ -1210,7 +1209,7 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode )
     return false;
   }
 
-  if (mode == SAVE_FULL)
+  if (mode == SAVEM_FULL && format == SAVEF_MM2)
     setCurrentFile(fileName);
   statusBar()->showMessage(tr("File saved"), 2000);
   getCurrentMapWindow()->getCanvas()->setEnabled(true);
