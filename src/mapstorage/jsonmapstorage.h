@@ -1,7 +1,8 @@
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
-**            Marek Krejza <krejza@gmail.com> (Caligor)
+**            Marek Krejza <krejza@gmail.com> (Caligor),
+**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
 ** This file is part of the MMapper project. 
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
@@ -23,24 +24,40 @@
 **
 ************************************************************************/
 
-#ifndef ROOMSAVER_H
-#define ROOMSAVER_H
+#ifndef JSONMAPSTORAGE_H
+#define JSONMAPSTORAGE_H
 
-#include "roomrecipient.h"
-#include "mapdata.h"
+#include "abstractmapstorage.h"
 
-#include <QList>
+class QJsonArray;
+class QJsonObject;
 
-class RoomSaver : public RoomRecipient {
-  public:
-    RoomSaver(RoomAdmin * in_admin, ConstRoomList & roomList);
-    ~RoomSaver();
-    void receiveRoom(RoomAdmin * admin, const Room * room);
-    quint32 getRoomsCount();
-  private:
-    quint32 roomsCount;
-    ConstRoomList & roomList;
-    RoomAdmin * admin;
+/*! \brief JSON export for web clients.
+ *
+ * This saves to a directory the following files:
+ * - v1/arda.json (global metadata like map size).
+ * - v1/roomindex/ss.json (room sums -> zone coords).
+ * - v1/zone/xx-yy.json (full info on the NxN rooms zone at coords xx,yy).
+ */
+class JsonMapStorage : public AbstractMapStorage {
+
+    Q_OBJECT
+
+public:
+    JsonMapStorage(MapData&, const QString&);
+    ~JsonMapStorage();
+
+private:
+    JsonMapStorage(); // Disabled
+    virtual bool canLoad() {return false;};
+    virtual bool canSave() {return true;};
+
+    virtual void newData ();
+    virtual bool loadData();
+    virtual bool saveData( bool baseMapOnly );
+    virtual bool mergeData();
+
+    //void saveMark(InfoMark * mark, QJsonObject &jRoom, const JsonRoomIdsCache &jRoomIds);
 };
 
 #endif

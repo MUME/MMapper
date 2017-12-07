@@ -29,6 +29,12 @@
 
 #include <QMessageBox>
 
+enum
+{
+    UiCharsetAsciiOrLatin1,
+    UiCharsetUTF8
+};
+
 ParserPage::ParserPage(QWidget *parent)
         : QWidget(parent)
 {
@@ -46,6 +52,11 @@ ParserPage::ParserPage(QWidget *parent)
 
    	IACPromptCheckBox->setChecked(Config().m_IAC_prompt_parser);	
         mpiCheckBox->setChecked(Config().m_mpi);
+
+        if (Config().m_utf8Charset)
+            charset->setCurrentIndex(UiCharsetUTF8);
+        else
+            charset->setCurrentIndex(UiCharsetAsciiOrLatin1);
 
 	suppressXmlTagsCheckBox->setChecked(Config().m_removeXmlTags);
 	suppressXmlTagsCheckBox->setEnabled(true);
@@ -105,8 +116,14 @@ ParserPage::ParserPage(QWidget *parent)
 	connect( IACPromptCheckBox, SIGNAL(stateChanged(int)),SLOT(IACPromptCheckBoxStateChanged(int)));	
 	connect( suppressXmlTagsCheckBox, SIGNAL(stateChanged(int)),SLOT(suppressXmlTagsCheckBoxStateChanged(int)));	
         connect( mpiCheckBox, SIGNAL(stateChanged(int)),SLOT(mpiCheckBoxStateChanged(int)));
+        connect( charset, SIGNAL(currentIndexChanged(int)),SLOT(charsetChanged(int)));
 
 
+}
+
+void ParserPage::charsetChanged(int index)
+{
+        Config().m_utf8Charset = (index == UiCharsetUTF8);
 }
 
 void ParserPage::mpiCheckBoxStateChanged(int)

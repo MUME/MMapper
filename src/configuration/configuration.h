@@ -73,6 +73,8 @@ class Configuration {
     RoomDescriptionsParserType           m_roomDescriptionsParserType;
     quint16  m_minimumStaticLines;
 
+    bool m_utf8Charset;
+
     bool m_IAC_prompt_parser;
     bool m_removeXmlTags;
 

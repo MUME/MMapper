@@ -480,7 +480,7 @@ bool MapStorage::mergeData()
       connectionList.append(connection);
     }
 
-    RoomList roomList(roomsCount);
+    RoomVector roomList(roomsCount);
     for (uint i = 0; i < roomsCount; ++i)
     {
       if (version < 020) // OLD VERSIONS SUPPORT CODE
@@ -686,7 +686,7 @@ void MapStorage::translateOldConnection(Connection * c)
 }
 
 
-void MapStorage::loadOldConnection(Connection * connection, QDataStream & stream, RoomList & roomList)
+void MapStorage::loadOldConnection(Connection * connection, QDataStream & stream, RoomVector & roomList)
 {
   quint16 vquint16;
   QString vqstr;
@@ -877,7 +877,7 @@ bool MapStorage::saveData( bool baseMapOnly )
   // Collect the room and marker lists. The room list can't be acquired
   // directly apparently and we have to go through a RoomSaver which receives
   // them from a sort of callback function.
-  QList<const Room *> roomList;
+  ConstRoomList roomList;
   MarkerList& markerList = m_mapData.getMarkersList();
   RoomSaver saver(&m_mapData, roomList);
   for (uint i = 0; i < m_mapData.getRoomsCount(); ++i)

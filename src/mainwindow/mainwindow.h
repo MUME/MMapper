@@ -84,8 +84,10 @@ public:
   Mmapper2PathMachine *getPathMachine(){return m_pathMachine;};
   CGroup *getGroupManager() {return m_groupManager;};
 
+  enum SaveMode { SAVEM_FULL, SAVEM_BASEMAP };
+  enum SaveFormat { SAVEF_MM2, SAVEF_WEB };
+  bool saveFile(const QString &fileName, SaveMode mode, SaveFormat format);
   void loadFile(const QString &fileName);
-  bool saveFile(const QString &fileName, bool baseMapOnly );
   void setCurrentFile(const QString &fileName);
 
 public slots:
@@ -96,6 +98,7 @@ public slots:
   bool save();
   bool saveAs();
   bool exportBaseMap();
+  bool exportWebMap();
   void about();
 
   void nextWindow();
@@ -209,6 +212,7 @@ private:
   QAction *saveAct;
   QAction *saveAsAct;
   QAction *exportBaseMapAct;
+  QAction *exportWebMapAct;
   QAction *exitAct;
   QAction *cutAct;
   QAction *copyAct;

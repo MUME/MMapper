@@ -1,7 +1,8 @@
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
-**            Marek Krejza <krejza@gmail.com> (Caligor)
+**            Marek Krejza <krejza@gmail.com> (Caligor),
+**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
 ** This file is part of the MMapper project. 
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
@@ -23,24 +24,14 @@
 **
 ************************************************************************/
 
-#ifndef ROOMSAVER_H
-#define ROOMSAVER_H
+#ifndef PARSERUTILS_H
+#define PARSERUTILS_H
 
-#include "roomrecipient.h"
-#include "mapdata.h"
+#include <QString>
 
-#include <QList>
-
-class RoomSaver : public RoomRecipient {
-  public:
-    RoomSaver(RoomAdmin * in_admin, ConstRoomList & roomList);
-    ~RoomSaver();
-    void receiveRoom(RoomAdmin * admin, const Room * room);
-    quint32 getRoomsCount();
-  private:
-    quint32 roomsCount;
-    ConstRoomList & roomList;
-    RoomAdmin * admin;
-};
+namespace ParserUtils
+{
+  QString& latinToAscii(QString& str);
+}
 
 #endif
