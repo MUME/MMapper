@@ -223,7 +223,7 @@ bool Proxy::init()
     //m_userSocket->flush();
 
     if (Config().m_mpi) {
-      emit sendToMud(QByteArray("~$#EX1\n3\n"));
+      emit sendToMud(QByteArray("~$#EX2\n3G\n"));
       emit log("Proxy", "Sent MUME Protocol Initiator XML request");
       m_filter->setXmlMode();
     }

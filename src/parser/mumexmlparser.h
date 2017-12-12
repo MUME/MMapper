@@ -82,6 +82,7 @@ class MumeXmlParser : public AbstractParser
     QByteArray m_tempTag;
     bool m_readingTag;
     bool m_readStatusTag;
+    bool m_gratuitous;
     CommandIdType m_move;
 
     XmlMode m_xmlMode;
