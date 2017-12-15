@@ -189,7 +189,7 @@ bool MumeXmlParser::element( const QByteArray& line  )
         case '/':
           if (line.startsWith("/xml"))
           {
-            emit sendToUser((QByteArray)"[MMapper] Mapper cannot function without XML mode\n");
+            emit sendToUser("[MMapper] Mapper cannot function without XML mode\n");
             emptyQueue();
           }
           break;
@@ -473,13 +473,6 @@ void MumeXmlParser::move()
 
 void MumeXmlParser::parseMudCommands(QString& str)
 {
-
-  /*if (str.startsWith('B') && str.startsWith("Brief mode on"))
-  {
-  emit sendToMud((QByteArray)"brief\n");
-  return;
-}*/
-
   if (str.startsWith('Y'))
   {
     if (str.startsWith("You are dead!"))

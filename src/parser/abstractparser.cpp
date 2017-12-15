@@ -427,24 +427,18 @@ void AbstractParser::parseNewUserInput(IncomingData& data)
       m_stringBuffer = m_stringBuffer.simplified();
       if (parseUserCommands(m_stringBuffer))
         emit sendToMud(data.line);
-                                //else
-                                        //emit sendToMud(QByteArray("\r\n"));
       break;
     case TDT_LFCR:
       m_stringBuffer = QString::fromLatin1(data.line.constData(), data.line.size());
       m_stringBuffer = m_stringBuffer.simplified();
       if (parseUserCommands(m_stringBuffer))
         emit sendToMud(data.line);
-                                //else
-                                        //emit sendToMud(QByteArray("\r\n"));
       break;
     case TDT_LF:
       m_stringBuffer = QString::fromLatin1(data.line.constData(), data.line.size());
       m_stringBuffer = m_stringBuffer.simplified();
       if ( parseUserCommands(m_stringBuffer))
         emit sendToMud(data.line);
-                                //else
-                                        //emit sendToMud(QByteArray("\r\n"));
       break;
   }
 }
@@ -969,7 +963,7 @@ bool AbstractParser::parseUserCommands(QString& command)
     if (str=="_back") {
                         //while (!queue.isEmpty()) queue.dequeue();
       queue.clear();
-      emit sendToUser((QByteArray)"OK.\r\n");
+      emit sendToUser("OK.\r\n");
       emit showPath(queue, true);
       sendPromptToUser();
       return false;
@@ -987,145 +981,145 @@ bool AbstractParser::parseUserCommands(QString& command)
       return false;
     }
     if (str=="_help") {
-      emit sendToUser((QByteArray)"\r\nMMapper help:\r\n-------------\r\n");
+      emit sendToUser("\r\nMMapper help:\r\n-------------\r\n");
 
-      emit sendToUser((QByteArray)"\r\nStandard MUD commands:\r\n");
-      emit sendToUser((QByteArray)"  Move commands: [n,s,...] or [north,south,...]\r\n");
-      emit sendToUser((QByteArray)"  Sync commands: [exa,l] or [examine,look]\r\n");
+      emit sendToUser("\r\nStandard MUD commands:\r\n");
+      emit sendToUser("  Move commands: [n,s,...] or [north,south,...]\r\n");
+      emit sendToUser("  Sync commands: [exa,l] or [examine,look]\r\n");
 
-      emit sendToUser((QByteArray)"\r\nManage prespammed command queue:\r\n");
-      emit sendToUser((QByteArray)"  _back        - delete prespammed commands from queue\r\n");
+      emit sendToUser("\r\nManage prespammed command queue:\r\n");
+      emit sendToUser("  _back        - delete prespammed commands from queue\r\n");
 
-      emit sendToUser((QByteArray)"\r\nDescription commands:\r\n");
-      emit sendToUser((QByteArray)"  _pdynamic    - prints current room description\r\n");
-      emit sendToUser((QByteArray)"  _pstatic     - the same as previous, but without moveable items\r\n");
-      emit sendToUser((QByteArray)"  _pnote       - print the note in the current room\r\n");
+      emit sendToUser("\r\nDescription commands:\r\n");
+      emit sendToUser("  _pdynamic    - prints current room description\r\n");
+      emit sendToUser("  _pstatic     - the same as previous, but without moveable items\r\n");
+      emit sendToUser("  _pnote       - print the note in the current room\r\n");
 
-      emit sendToUser((QByteArray)"\r\nHelp commands:\n");
-      emit sendToUser((QByteArray)"  _help      - this help text\r\n");
-      emit sendToUser((QByteArray)"  _maphelp   - help for mapping console commands\r\n");
-      emit sendToUser((QByteArray)"  _doorhelp  - help for door console commands\r\n");
-      emit sendToUser((QByteArray)"  _grouphelp - help for group manager console commands\r\n");
+      emit sendToUser("\r\nHelp commands:\n");
+      emit sendToUser("  _help      - this help text\r\n");
+      emit sendToUser("  _maphelp   - help for mapping console commands\r\n");
+      emit sendToUser("  _doorhelp  - help for door console commands\r\n");
+      emit sendToUser("  _grouphelp - help for group manager console commands\r\n");
 
-      emit sendToUser((QByteArray)"\r\nOther commands:\n");
-      emit sendToUser((QByteArray)("  _vote                      - vote for MUME on TMC!\r\n"));
-      emit sendToUser((QByteArray)("  _dirs [-options] pattern   - directions to matching rooms\r\n"));
-      emit sendToUser((QByteArray)("  _search [-options] pattern - highlight matching rooms\r\n"));
+      emit sendToUser("\r\nOther commands:\n");
+      emit sendToUser(("  _vote                      - vote for MUME on TMC!\r\n"));
+      emit sendToUser(("  _dirs [-options] pattern   - directions to matching rooms\r\n"));
+      emit sendToUser(("  _search [-options] pattern - highlight matching rooms\r\n"));
       sendPromptToUser();
       return false;
     }
     else if (str=="_maphelp")
     {
-      emit sendToUser((QByteArray)"\r\nMMapper mapping help:\r\n-------------\r\n");
-      emit sendToUser((QByteArray)"\r\nExit commands:\r\n");
-      emit sendToUser((QByteArray)"  _name    [n,s,e,w,u,d] [name] - name a door in direction [dir] with [name]\r\n");
-      emit sendToUser((QByteArray)"  _door    [n,s,e,w,u,d]        - toggle a door in direction [dir]\r\n");
-      emit sendToUser((QByteArray)"  _hidden  [n,s,e,w,u,d]        - toggle a hidden door in direction [dir]\r\n");
-      emit sendToUser((QByteArray)"  _needkey [n,s,e,w,u,d]        - toggle a need key door in direction [dir]\r\n");
-      emit sendToUser((QByteArray)"  _noblock [n,s,e,w,u,d]        - toggle a no block door in direction [dir]\r\n");
-      emit sendToUser((QByteArray)"  _nobreak [n,s,e,w,u,d]        - toggle a no break door in direction [dir]\r\n");
-      emit sendToUser((QByteArray)"  _nopick  [n,s,e,w,u,d]        - toggle a no pick door in direction [dir]\r\n");
-      emit sendToUser((QByteArray)"  _delayed [n,s,e,w,u,d]        - toggle a delayed door in direction [dir]\r\n");
+      emit sendToUser("\r\nMMapper mapping help:\r\n-------------\r\n");
+      emit sendToUser("\r\nExit commands:\r\n");
+      emit sendToUser("  _name    [n,s,e,w,u,d] [name] - name a door in direction [dir] with [name]\r\n");
+      emit sendToUser("  _door    [n,s,e,w,u,d]        - toggle a door in direction [dir]\r\n");
+      emit sendToUser("  _hidden  [n,s,e,w,u,d]        - toggle a hidden door in direction [dir]\r\n");
+      emit sendToUser("  _needkey [n,s,e,w,u,d]        - toggle a need key door in direction [dir]\r\n");
+      emit sendToUser("  _noblock [n,s,e,w,u,d]        - toggle a no block door in direction [dir]\r\n");
+      emit sendToUser("  _nobreak [n,s,e,w,u,d]        - toggle a no break door in direction [dir]\r\n");
+      emit sendToUser("  _nopick  [n,s,e,w,u,d]        - toggle a no pick door in direction [dir]\r\n");
+      emit sendToUser("  _delayed [n,s,e,w,u,d]        - toggle a delayed door in direction [dir]\r\n");
 
-      emit sendToUser((QByteArray)"\r\n");
-      emit sendToUser((QByteArray)"  _exit    [n,s,e,w,u,d]    - toggle a exit in direction [dir]\r\n");
-      emit sendToUser((QByteArray)"  _road    [n,s,e,w,u,d]    - toggle a road/trail exit in direction [dir]\r\n");
-      emit sendToUser((QByteArray)"  _climb   [n,s,e,w,u,d]    - toggle a climb exit in direction [dir]\r\n");
-      emit sendToUser((QByteArray)"  _random  [n,s,e,w,u,d]    - toggle a random exit in direction [dir]\r\n");
-      emit sendToUser((QByteArray)"  _special [n,s,e,w,u,d]    - toggle a special exit in direction [dir]\r\n");
+      emit sendToUser("\r\n");
+      emit sendToUser("  _exit    [n,s,e,w,u,d]    - toggle a exit in direction [dir]\r\n");
+      emit sendToUser("  _road    [n,s,e,w,u,d]    - toggle a road/trail exit in direction [dir]\r\n");
+      emit sendToUser("  _climb   [n,s,e,w,u,d]    - toggle a climb exit in direction [dir]\r\n");
+      emit sendToUser("  _random  [n,s,e,w,u,d]    - toggle a random exit in direction [dir]\r\n");
+      emit sendToUser("  _special [n,s,e,w,u,d]    - toggle a special exit in direction [dir]\r\n");
 
-      emit sendToUser((QByteArray)"\r\nRoom flag commands:\r\n");
-      emit sendToUser((QByteArray)"  _port         - set the room to portable\r\n");
-      emit sendToUser((QByteArray)"  _noport       - set the room to not portable\r\n");
-      emit sendToUser((QByteArray)"  _dark         - set the room lighting to dark\r\n");
-      emit sendToUser((QByteArray)"  _lit          - set the room lighting to lit\r\n");
-      emit sendToUser((QByteArray)"  _ride         - set the room to ridable\r\n");
-      emit sendToUser((QByteArray)"  _noride       - set the room to not ridable\r\n");
-      emit sendToUser((QByteArray)"  _good         - set the room alignment to good\r\n");
-      emit sendToUser((QByteArray)"  _neutral      - set the room alignment to neutral\r\n");
-      emit sendToUser((QByteArray)"  _evil         - set the room alignment to evil\r\n");
+      emit sendToUser("\r\nRoom flag commands:\r\n");
+      emit sendToUser("  _port         - set the room to portable\r\n");
+      emit sendToUser("  _noport       - set the room to not portable\r\n");
+      emit sendToUser("  _dark         - set the room lighting to dark\r\n");
+      emit sendToUser("  _lit          - set the room lighting to lit\r\n");
+      emit sendToUser("  _ride         - set the room to ridable\r\n");
+      emit sendToUser("  _noride       - set the room to not ridable\r\n");
+      emit sendToUser("  _good         - set the room alignment to good\r\n");
+      emit sendToUser("  _neutral      - set the room alignment to neutral\r\n");
+      emit sendToUser("  _evil         - set the room alignment to evil\r\n");
 
-      emit sendToUser((QByteArray)"\r\n");
-      emit sendToUser((QByteArray)"  _rent         - toggle a rent mob in the room\r\n");
-      emit sendToUser((QByteArray)"  _shop         - toggle a shop in the room\r\n");
-      emit sendToUser((QByteArray)"  _weaponshop   - toggle a weapon shop in the room\r\n");
-      emit sendToUser((QByteArray)"  _armourshop   - toggle a armour shop in the room\r\n");
-      emit sendToUser((QByteArray)"  _foodshop     - toggle a food shop in the room\r\n");
-      emit sendToUser((QByteArray)"  _petshop      - toggle a pet shop in the room\r\n");
-      emit sendToUser((QByteArray)"  _guild        - toggle a guild in the room\r\n");
-      emit sendToUser((QByteArray)"  _scoutguild   - toggle a scout guild in the room\r\n");
-      emit sendToUser((QByteArray)"  _mageguild    - toggle a mage guild in the room\r\n");
-      emit sendToUser((QByteArray)"  _clericguild  - toggle a cleric guild in the room\r\n");
-      emit sendToUser((QByteArray)"  _warriorguild - toggle a warrior guild in the room\r\n");
-      emit sendToUser((QByteArray)"  _rangerguild  - toggle a ranger guild in the room\r\n");
-      emit sendToUser((QByteArray)"  _smob         - toggle a smob in the room\r\n");
-      emit sendToUser((QByteArray)"  _quest        - toggle a quest in the room\r\n");
-      emit sendToUser((QByteArray)"  _mob          - toggle a mob in the room\r\n");
+      emit sendToUser("\r\n");
+      emit sendToUser("  _rent         - toggle a rent mob in the room\r\n");
+      emit sendToUser("  _shop         - toggle a shop in the room\r\n");
+      emit sendToUser("  _weaponshop   - toggle a weapon shop in the room\r\n");
+      emit sendToUser("  _armourshop   - toggle a armour shop in the room\r\n");
+      emit sendToUser("  _foodshop     - toggle a food shop in the room\r\n");
+      emit sendToUser("  _petshop      - toggle a pet shop in the room\r\n");
+      emit sendToUser("  _guild        - toggle a guild in the room\r\n");
+      emit sendToUser("  _scoutguild   - toggle a scout guild in the room\r\n");
+      emit sendToUser("  _mageguild    - toggle a mage guild in the room\r\n");
+      emit sendToUser("  _clericguild  - toggle a cleric guild in the room\r\n");
+      emit sendToUser("  _warriorguild - toggle a warrior guild in the room\r\n");
+      emit sendToUser("  _rangerguild  - toggle a ranger guild in the room\r\n");
+      emit sendToUser("  _smob         - toggle a smob in the room\r\n");
+      emit sendToUser("  _quest        - toggle a quest in the room\r\n");
+      emit sendToUser("  _mob          - toggle a mob in the room\r\n");
 
-      emit sendToUser((QByteArray)"\r\n");
-      emit sendToUser((QByteArray)"  _treasure     - toggle a treasure in the room\r\n");
-      emit sendToUser((QByteArray)"  _armour       - toggle some armour in the room\r\n");
-      emit sendToUser((QByteArray)"  _weapon       - toggle some weapon in the room\r\n");
-      emit sendToUser((QByteArray)"  _water        - toggle some water in the room\r\n");
-      emit sendToUser((QByteArray)"  _food         - toggle some food in the room\r\n");
-      emit sendToUser((QByteArray)"  _herb         - toggle an herb in the room\r\n");
-      emit sendToUser((QByteArray)"  _key          - toggle a key in the room\r\n");
-      emit sendToUser((QByteArray)"  _mule         - toggle a mule in the room\r\n");
-      emit sendToUser((QByteArray)"  _horse        - toggle a horse in the room\r\n");
-      emit sendToUser((QByteArray)"  _pack         - toggle a packhorse in the room\r\n");
-      emit sendToUser((QByteArray)"  _trained      - toggle a trained horse in the room\r\n");
-      emit sendToUser((QByteArray)"  _rohirrim     - toggle a rohirrim horse in the room\r\n");
-      emit sendToUser((QByteArray)"  _warg         - toggle a warg in the room\r\n");
-      emit sendToUser((QByteArray)"  _boat         - toggle a boat in the room\r\n");
-      emit sendToUser((QByteArray)"  _attention    - toggle an attention flag in the room\r\n");
-      emit sendToUser((QByteArray)"  _watch        - toggle a watchable spot in the room\r\n"); 
+      emit sendToUser("\r\n");
+      emit sendToUser("  _treasure     - toggle a treasure in the room\r\n");
+      emit sendToUser("  _armour       - toggle some armour in the room\r\n");
+      emit sendToUser("  _weapon       - toggle some weapon in the room\r\n");
+      emit sendToUser("  _water        - toggle some water in the room\r\n");
+      emit sendToUser("  _food         - toggle some food in the room\r\n");
+      emit sendToUser("  _herb         - toggle an herb in the room\r\n");
+      emit sendToUser("  _key          - toggle a key in the room\r\n");
+      emit sendToUser("  _mule         - toggle a mule in the room\r\n");
+      emit sendToUser("  _horse        - toggle a horse in the room\r\n");
+      emit sendToUser("  _pack         - toggle a packhorse in the room\r\n");
+      emit sendToUser("  _trained      - toggle a trained horse in the room\r\n");
+      emit sendToUser("  _rohirrim     - toggle a rohirrim horse in the room\r\n");
+      emit sendToUser("  _warg         - toggle a warg in the room\r\n");
+      emit sendToUser("  _boat         - toggle a boat in the room\r\n");
+      emit sendToUser("  _attention    - toggle an attention flag in the room\r\n");
+      emit sendToUser("  _watch        - toggle a watchable spot in the room\r\n");
 
-      emit sendToUser((QByteArray)"\r\nMiscellaneous commands:\r\n");
-      emit sendToUser((QByteArray)"  _note [note]         - set a note in the room\r\n");
+      emit sendToUser("\r\nMiscellaneous commands:\r\n");
+      emit sendToUser("  _note [note]         - set a note in the room\r\n");
 
-      emit sendToUser((QByteArray)"\r\n");
+      emit sendToUser("\r\n");
 
       sendPromptToUser();
       return false;
     }
     else if (str=="_doorhelp")
     {
-      emit sendToUser((QByteArray)"\r\nMMapper door help:\r\n-------------\r\n");
-      emit sendToUser((QByteArray)"\r\nDoor commands:\r\n");
-      emit sendToUser((QByteArray)"  _open   [n,s,e,w,u,d]   - open door [dir]\r\n");
-      emit sendToUser((QByteArray)"  _close  [n,s,e,w,u,d]   - close door [dir]\r\n");
-      emit sendToUser((QByteArray)"  _lock   [n,s,e,w,u,d]   - lock door [dir]\r\n");
-      emit sendToUser((QByteArray)"  _unlock [n,s,e,w,u,d]   - unlock door [dir]\r\n");
-      emit sendToUser((QByteArray)"  _pick   [n,s,e,w,u,d]   - pick door [dir]\r\n");
-      emit sendToUser((QByteArray)"  _rock   [n,s,e,w,u,d]   - throw rock door [dir]\r\n");
-      emit sendToUser((QByteArray)"  _bash   [n,s,e,w,u,d]   - bash door [dir]\r\n");
-      emit sendToUser((QByteArray)"  _break  [n,s,e,w,u,d]   - cast 'break door' door [dir]\r\n");
-      emit sendToUser((QByteArray)"  _block  [n,s,e,w,u,d]   - cast 'block door' door [dir]\r\n");
+      emit sendToUser("\r\nMMapper door help:\r\n-------------\r\n");
+      emit sendToUser("\r\nDoor commands:\r\n");
+      emit sendToUser("  _open   [n,s,e,w,u,d]   - open door [dir]\r\n");
+      emit sendToUser("  _close  [n,s,e,w,u,d]   - close door [dir]\r\n");
+      emit sendToUser("  _lock   [n,s,e,w,u,d]   - lock door [dir]\r\n");
+      emit sendToUser("  _unlock [n,s,e,w,u,d]   - unlock door [dir]\r\n");
+      emit sendToUser("  _pick   [n,s,e,w,u,d]   - pick door [dir]\r\n");
+      emit sendToUser("  _rock   [n,s,e,w,u,d]   - throw rock door [dir]\r\n");
+      emit sendToUser("  _bash   [n,s,e,w,u,d]   - bash door [dir]\r\n");
+      emit sendToUser("  _break  [n,s,e,w,u,d]   - cast 'break door' door [dir]\r\n");
+      emit sendToUser("  _block  [n,s,e,w,u,d]   - cast 'block door' door [dir]\r\n");
 
-      emit sendToUser((QByteArray)"\r\nDoor variables:\r\n");
-      emit sendToUser((QByteArray)"  $$DOOR_N$$   - secret name of door leading north\r\n");
-      emit sendToUser((QByteArray)"  $$DOOR_S$$   - secret name of door leading south\r\n");
-      emit sendToUser((QByteArray)"  $$DOOR_E$$   - secret name of door leading east\r\n");
-      emit sendToUser((QByteArray)"  $$DOOR_W$$   - secret name of door leading west\r\n");
-      emit sendToUser((QByteArray)"  $$DOOR_U$$   - secret name of door leading up\r\n");
-      emit sendToUser((QByteArray)"  $$DOOR_D$$   - secret name of door leading down\r\n");
-      emit sendToUser((QByteArray)"  $$DOOR$$     - the same as 'exit'\r\n");
+      emit sendToUser("\r\nDoor variables:\r\n");
+      emit sendToUser("  $$DOOR_N$$   - secret name of door leading north\r\n");
+      emit sendToUser("  $$DOOR_S$$   - secret name of door leading south\r\n");
+      emit sendToUser("  $$DOOR_E$$   - secret name of door leading east\r\n");
+      emit sendToUser("  $$DOOR_W$$   - secret name of door leading west\r\n");
+      emit sendToUser("  $$DOOR_U$$   - secret name of door leading up\r\n");
+      emit sendToUser("  $$DOOR_D$$   - secret name of door leading down\r\n");
+      emit sendToUser("  $$DOOR$$     - the same as 'exit'\r\n");
 
-      emit sendToUser((QByteArray)"\r\nDestructive commands:\r\n");
-      emit sendToUser((QByteArray)"  _removedoornames   - removes all secret door names from the current map\r\n");
+      emit sendToUser("\r\nDestructive commands:\r\n");
+      emit sendToUser("  _removedoornames   - removes all secret door names from the current map\r\n");
 
-      emit sendToUser((QByteArray)"\r\n");
+      emit sendToUser("\r\n");
 
       sendPromptToUser();
       return false; 
     }
     else if (str=="_grouphelp")
     {
-      emit sendToUser((QByteArray)"\r\nMMapper group manager help:\r\n-------------\r\n");
-      emit sendToUser((QByteArray)"\r\nGroup commands:\r\n");
-      emit sendToUser((QByteArray)"  _gt [message]     - send a grouptell with the [message]\r\n");
+      emit sendToUser("\r\nMMapper group manager help:\r\n-------------\r\n");
+      emit sendToUser("\r\nGroup commands:\r\n");
+      emit sendToUser("  _gt [message]     - send a grouptell with the [message]\r\n");
 
-      emit sendToUser((QByteArray)"\r\n");
+      emit sendToUser("\r\n");
 
       sendPromptToUser();
       return false; 
@@ -1266,7 +1260,7 @@ void AbstractParser::offlineCharacterMove(CommandIdType direction)
   if (direction == CID_FLEE)
   {
     flee = true;
-    emit sendToUser((QByteArray)"You flee head over heels!\r\n");
+    emit sendToUser("You flee head over heels!\r\n");
     direction = (CommandIdType) (rand() % 6);
   }
 
@@ -1301,9 +1295,9 @@ void AbstractParser::offlineCharacterMove(CommandIdType direction)
     else
     {
       if (!flee)
-        emit sendToUser((QByteArray)"You cannot go that way...");
+        emit sendToUser("You cannot go that way...");
       else
-        emit sendToUser((QByteArray)"You cannot flee!!!");
+        emit sendToUser("You cannot flee!!!");
       sendPromptToUser();
     }
   }
