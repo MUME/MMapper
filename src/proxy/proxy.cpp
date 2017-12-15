@@ -209,6 +209,7 @@ bool Proxy::init()
     if (Config().m_IAC_prompt_parser) {
       //send IAC-GA prompt request
       QByteArray idprompt("~$#EP2\nG\n");
+      emit log("Proxy", "Sent MUME Protocol Initiator IAC-GA prompt request");
       emit sendToMud(idprompt);
     }
 

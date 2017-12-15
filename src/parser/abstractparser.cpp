@@ -37,7 +37,7 @@
 #include <QDesktopServices>
 #include <QUrl>
 
-const QChar AbstractParser::escChar('\x1B');
+const QChar AbstractParser::escChar('\033');
 const QString AbstractParser::nullString;
 const QString AbstractParser::emptyString("");
 const QByteArray AbstractParser::emptyByteArray("");
@@ -47,7 +47,6 @@ AbstractParser::AbstractParser(MapData* md, QObject *parent)
 {
   m_readingRoomDesc = false;
   m_descriptionReady = false;
-  m_examine = false;
 
   m_mapData = md;
    /*m_roomName = "";
@@ -1234,7 +1233,6 @@ bool AbstractParser::parseUserCommands(QString& command)
   }
   if (str=="exa" || str=="examine"){
     queue.enqueue(CID_LOOK);
-    m_examine = true;
     if (Config().m_mapMode != 2)
       return true;
     else
@@ -1316,8 +1314,8 @@ void AbstractParser::offlineCharacterMove(CommandIdType direction)
 void AbstractParser::sendRoomInfoToUser(const Room* r)
 {
   if (!r) return;
-  emit sendToUser((QByteArray)"\r\n\x1B"+Config().m_roomNameColor.toLatin1()+getName(r).toLatin1()+(QByteArray)"\x1B[0m\r\n");
-  emit sendToUser("\x1B"+Config().m_roomDescColor.toLatin1()+getDescription(r).toLatin1().replace("\n","\r\n")+"\x1B[0m");
+  emit sendToUser("\r\n\033"+Config().m_roomNameColor.toLatin1()+getName(r).toLatin1()+"\033[0m\r\n");
+  emit sendToUser("\033"+Config().m_roomDescColor.toLatin1()+getDescription(r).toLatin1().replace("\n","\r\n")+"\033[0m");
   emit sendToUser(getDynamicDescription(r).toLatin1().replace("\n","\r\n"));
 }
 

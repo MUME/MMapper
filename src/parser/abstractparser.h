@@ -97,9 +97,6 @@ signals:
   void sendToMud(const QByteArray&);
   void sendToUser(const QByteArray&);
 
-  void setNormalMode();
-  void setXmlMode();
-
   void releaseAllPaths();
 
   //used to log
@@ -160,8 +157,6 @@ protected:
 
   bool m_readingRoomDesc;
   bool m_descriptionReady;
-
-  bool m_examine;
 
   QString m_roomName;
   QString m_staticRoomDesc;

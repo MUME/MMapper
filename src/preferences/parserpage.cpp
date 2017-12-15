@@ -50,6 +50,8 @@ ParserPage::ParserPage(QWidget *parent)
 
 	updateColors();
 
+    IACPromptCheckBox->setChecked(Config().m_IAC_prompt_parser);
+
         if (Config().m_utf8Charset)
             charset->setCurrentIndex(UiCharsetUTF8);
         else
