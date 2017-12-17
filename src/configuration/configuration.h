@@ -39,7 +39,7 @@ class Configuration {
     void write() const;
     bool isChanged() const;
 
-    bool m_firstRun, m_mpi;
+    bool m_firstRun;
     QPoint windowPosition;
     QSize windowSize;
     QByteArray windowState;
@@ -62,7 +62,6 @@ class Configuration {
 
     QString m_roomNameColor; // ANSI room name color
     QString m_roomDescColor; // ANSI room descriptions color
-    bool m_brief;
     bool m_emulatedExits;
     bool m_showUpdated;
     bool m_drawNotMappedExits;

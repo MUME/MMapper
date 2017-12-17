@@ -88,7 +88,7 @@
       <item row="5" column="0" colspan="5">
        <widget class="QCheckBox" name="suppressXmlTagsCheckBox">
         <property name="text">
-         <string>Suppress XML tags - valid for XML mode only</string>
+         <string>Suppress XML tags</string>
         </property>
        </widget>
       </item>
@@ -243,17 +243,7 @@
         </property>
        </widget>
       </item>
-      <item row="6" column="0" colspan="5">
-       <widget class="QCheckBox" name="mpiCheckBox">
-        <property name="text">
-         <string>Send MUME XML MPI request (automatically enables XML mode)</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="2" colspan="3">
+      <item row="6" column="2" colspan="3">
        <widget class="QComboBox" name="charset">
         <item>
          <property name="text">
@@ -267,7 +257,7 @@
         </item>
        </widget>
       </item>
-      <item row="7" column="0" colspan="2">
+      <item row="6" column="0" colspan="2">
        <widget class="QLabel" name="label">
         <property name="text">
          <string>&quot;change charset&quot; is:</string>

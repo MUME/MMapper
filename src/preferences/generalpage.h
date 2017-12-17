@@ -48,11 +48,10 @@ public slots:
 	void maxPathsValueChanged(int);
 	void matchingToleranceSpinBoxValueChanged(int);
 
-	void briefStateChanged(int);
 	void emulatedExitsStateChanged(int);
 	void updatedStateChanged(int);
 	void drawNotMappedExitsStateChanged(int);
-        void drawDoorNamesStateChanged(int);
+    void drawDoorNamesStateChanged(int);
 	void drawUpperLayersTexturedStateChanged(int);
 
 	void autoLoadFileNameTextChanged(const QString&);

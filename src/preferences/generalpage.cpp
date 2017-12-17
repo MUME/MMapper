@@ -46,7 +46,6 @@ GeneralPage::GeneralPage(QWidget *parent)
   connect ( maxPaths, SIGNAL(valueChanged(int)), this, SLOT(maxPathsValueChanged(int)) );
   connect ( matchingToleranceSpinBox, SIGNAL(valueChanged(int)), this, SLOT(matchingToleranceSpinBoxValueChanged(int)) );
 
-  connect ( brief, SIGNAL(stateChanged(int)),SLOT(briefStateChanged(int)));
   connect ( emulatedExits, SIGNAL(stateChanged(int)),SLOT(emulatedExitsStateChanged(int)));
   connect ( updated, SIGNAL(stateChanged(int)),SLOT(updatedStateChanged(int)));
   connect ( drawNotMappedExits, SIGNAL(stateChanged(int)),SLOT(drawNotMappedExitsStateChanged(int)));
@@ -73,7 +72,6 @@ GeneralPage::GeneralPage(QWidget *parent)
   matchingToleranceSpinBox->setValue(Config().m_matchingTolerance);
   multipleConnectionsPenaltyDoubleSpinBox->setValue(Config().m_multipleConnectionsPenalty);
 
-  brief->setChecked( Config().m_brief );
   emulatedExits->setChecked( Config().m_emulatedExits );
   updated->setChecked( Config().m_showUpdated );
   drawNotMappedExits->setChecked( Config().m_drawNotMappedExits );
@@ -161,11 +159,6 @@ void GeneralPage::maxPathsValueChanged(int val)
 void GeneralPage::matchingToleranceSpinBoxValueChanged(int val)
 {
   Config().m_matchingTolerance = val;     
-}
-
-void GeneralPage::briefStateChanged(int)
-{
-  Config().m_brief = brief->isChecked();
 }
 
 void GeneralPage::emulatedExitsStateChanged(int)

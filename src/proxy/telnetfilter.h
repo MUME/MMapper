@@ -57,12 +57,8 @@ class TelnetFilter : public QObject {
 		void analyzeMudStream( const char * input, int length );
 		void analyzeUserStream( const char * input, int length );
 		
-		void setNormalMode();
-		void setXmlMode();
 
 	signals:
-	  	void parseNewMudInput(IncomingData&);
-	  	void parseNewUserInput(IncomingData&);
 	  	void parseNewMudInputXml(IncomingData&);
 	  	void parseNewUserInputXml(IncomingData&);
 
@@ -85,12 +81,7 @@ class TelnetFilter : public QObject {
    		IncomingData m_userIncomingData;
    		IncomingData m_mudIncomingData;
         TelnetIncomingDataQueue m_mudIncomingQue;        
-        TelnetIncomingDataQueue m_userIncomingQue;        
-        
-       bool m_reconnecting;
-       bool m_xmlModeAutoconfigured;
-       bool m_xmlMode; 
-        
+        TelnetIncomingDataQueue m_userIncomingQue;
 };
 
 #endif

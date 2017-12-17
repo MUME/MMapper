@@ -33,7 +33,6 @@
 //#define XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
 
 enum XmlMode            {XML_NONE, XML_ROOM, XML_NAME, XML_DESCRIPTION, XML_EXITS, XML_PROMPT, XML_TERRAIN};
-//enum XmlMovement    {XMLM_NORTH, XMLM_SOUTH, XMLM_EAST, XMLM_WEST, XMLM_UP, XMLM_DOWN, XMLM_UNKNOWN, XMLM_NONE=10};
 
 class MumeXmlParser : public AbstractParser
 {
@@ -64,10 +63,6 @@ class MumeXmlParser : public AbstractParser
     static const QByteArray ampersand;
     static const QByteArray ampersandTemplate;
 
-    // Taken from Pandora
-    static const QRegExp scoreExp;
-    static const QRegExp scoreTrollExp;
-
     void parseMudCommands(QString& str);
 
     QByteArray characters(QByteArray& ch);
@@ -82,6 +77,7 @@ class MumeXmlParser : public AbstractParser
     QByteArray m_tempTag;
     bool m_readingTag;
     bool m_readStatusTag;
+    bool m_gratuitous;
     CommandIdType m_move;
 
     XmlMode m_xmlMode;

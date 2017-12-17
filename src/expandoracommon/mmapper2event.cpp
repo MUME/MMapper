@@ -24,7 +24,6 @@
 ************************************************************************/
 
 #include "defs.h"
-#include "parser.h"
 #include "mmapper2event.h"
 #include "property.h"
 #include "parseevent.h"

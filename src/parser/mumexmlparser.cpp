@@ -41,27 +41,23 @@ const QByteArray MumeXmlParser::lessThanTemplate("&lt;");
 const QByteArray MumeXmlParser::ampersand("&");
 const QByteArray MumeXmlParser::ampersandTemplate("&amp;");
 
-// Taken from Pandora
-const QRegExp MumeXmlParser::scoreExp("[0-9]*/* hits, */* mana, and */* moves.", Qt::CaseSensitive, QRegExp::Wildcard);
-const QRegExp MumeXmlParser::scoreTrollExp("[0-9]*/* hits and */* moves.", Qt::CaseSensitive, QRegExp::Wildcard);
-
 MumeXmlParser::MumeXmlParser(MapData* md, QObject *parent) :
     AbstractParser(md, parent),
     m_roomDescLines(0), m_readingStaticDescLines(false),
-                   m_readingTag(false),
-                                m_move(CID_LOOK),
-                                       m_xmlMode(XML_NONE)
-    //  m_xmlMovement(XMLM_NONE)
+    m_readingTag(false),
+    m_move(CID_LOOK),
+    m_xmlMode(XML_NONE),
+    m_gratuitous(false)
 {
 #ifdef XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
-  QString fileName = "xmlparser_debug.dat";
+    QString fileName = "xmlparser_debug.dat";
 
-  file = new QFile(fileName);
+    file = new QFile(fileName);
 
-  if (!file->open(QFile::WriteOnly))
-    return;
+    if (!file->open(QFile::WriteOnly))
+        return;
 
-  debugStream = new QDataStream(file);
+    debugStream = new QDataStream(file);
 #endif
 }
 
@@ -170,7 +166,7 @@ void MumeXmlParser::parse(const QByteArray& line)
           removeAnsiMarks(str);
 
           // inform groupManager
-          if (scoreExp.exactMatch(str) || scoreTrollExp.exactMatch(str)) {
+          if (Patterns::scoreExp.exactMatch(str) || Patterns::scoreTrollExp.exactMatch(str)) {
             emit sendScoreLineEvent(str.toLatin1());
           }
         }
@@ -193,8 +189,7 @@ bool MumeXmlParser::element( const QByteArray& line  )
         case '/':
           if (line.startsWith("/xml"))
           {
-            emit setNormalMode();
-            emit sendToUser((QByteArray)"[MMapper] Mode ---> NORMAL\n");
+            emit sendToUser("[MMapper] Mapper cannot function without XML mode\n");
             emptyQueue();
           }
           break;
@@ -251,28 +246,32 @@ bool MumeXmlParser::element( const QByteArray& line  )
 
     case XML_ROOM:
       if (length > 0)
-        switch (line.at(0))
-      {
-        case 'n':
-          if (line.startsWith("name")) {
-            m_xmlMode = XML_NAME;
-            m_roomName = emptyString; // might be empty but valid room name
-          }
-          break;
-        case 'd':
-          if (line.startsWith("description")) {
-            m_xmlMode = XML_DESCRIPTION;
-            m_staticRoomDesc = emptyString; // might be empty but valid description
-          }
-          break;
-        case 't': // terrain tag only comes up in blindness or fog
-	  if (line.startsWith("terrain")) m_xmlMode = XML_TERRAIN;
-	  break;
+          switch (line.at(0))
+          {
+          case 'g':
+              if (line.startsWith("gratuitous")) m_gratuitous = true;
+              break;
+          case 'n':
+              if (line.startsWith("name")) {
+                  m_xmlMode = XML_NAME;
+                  m_roomName = emptyString; // might be empty but valid room name
+              }
+              break;
+          case 'd':
+              if (line.startsWith("description")) {
+                  m_xmlMode = XML_DESCRIPTION;
+                  m_staticRoomDesc = emptyString; // might be empty but valid description
+              }
+              break;
+          case 't': // terrain tag only comes up in blindness or fog
+              if (line.startsWith("terrain")) m_xmlMode = XML_TERRAIN;
+              break;
 
-        case '/':
-          if (line.startsWith("/room")) m_xmlMode = XML_NONE;
-          break;
-      }
+          case '/':
+              if (line.startsWith("/room")) m_xmlMode = XML_NONE;
+              else if (line.startsWith("/gratuitous")) m_gratuitous = false;
+              break;
+          }
       break;
     case XML_NAME:
       if (line.startsWith("/name")) m_xmlMode = XML_ROOM;
@@ -389,12 +388,13 @@ QByteArray MumeXmlParser::characters(QByteArray& ch)
       toUser.append(ch);
       break;
 
-      case XML_DESCRIPTION: // static line
-        removeAnsiMarks(m_stringBuffer) ; //remove color marks
-        m_staticRoomDesc += m_stringBuffer+"\n";
-        if (m_examine || !Config().m_brief)
+  case XML_DESCRIPTION: // static line
+      removeAnsiMarks(m_stringBuffer) ; //remove color marks
+      m_staticRoomDesc += m_stringBuffer+"\n";
+      if (!m_gratuitous) {
           toUser.append(ch);
-        break;
+      }
+      break;
 		
     case XML_EXITS:
 	  removeAnsiMarks(m_stringBuffer); // remove color marks
@@ -412,7 +412,6 @@ QByteArray MumeXmlParser::characters(QByteArray& ch)
           if (Config().m_emulatedExits) emulateExits();
       }
       if  (m_descriptionReady) {
-        m_examine = false; // stop bypassing brief-mode
         removeAnsiMarks(m_stringBuffer); // remove color marks
         parsePrompt(m_stringBuffer);
         move();
@@ -474,13 +473,6 @@ void MumeXmlParser::move()
 
 void MumeXmlParser::parseMudCommands(QString& str)
 {
-
-  /*if (str.startsWith('B') && str.startsWith("Brief mode on"))
-  {
-  emit sendToMud((QByteArray)"brief\n");
-  return;
-}*/
-
   if (str.startsWith('Y'))
   {
     if (str.startsWith("You are dead!"))

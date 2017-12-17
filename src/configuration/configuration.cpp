@@ -82,7 +82,6 @@ void Configuration::read()
 
   m_IAC_prompt_parser = conf.value("Use IAC-GA prompt", true).toBool();
   m_removeXmlTags = conf.value("Remove XML tags", true).toBool();
-  m_mpi = conf.value("Use MUME XML MPI", true).toBool();
 
   m_moveForcePatternsList = conf.value("Move force patterns").toStringList();
   m_moveCancelPatternsList = conf.value("Move cancel patterns").toStringList();
@@ -105,7 +104,6 @@ void Configuration::read()
   conf.endGroup();
 
   conf.beginGroup("Mume native");
-  m_brief = conf.value("Brief mode", false).toBool();
   m_emulatedExits = conf.value("Emulated Exits", true).toBool();
   conf.endGroup();
 
@@ -246,8 +244,6 @@ void Configuration::write() const {
 
   conf.setValue("Use IAC-GA prompt", m_IAC_prompt_parser);
   conf.setValue("Remove XML tags", m_removeXmlTags);
-  conf.setValue("Use MUME XML MPI", m_mpi);
-
 
   conf.setValue("Move force patterns", m_moveForcePatternsList);
   conf.setValue("Move cancel patterns", m_moveCancelPatternsList);
@@ -267,7 +263,6 @@ void Configuration::write() const {
   conf.endGroup();
 
   conf.beginGroup("Mume native");
-  conf.setValue("Brief mode", m_brief);
   conf.setValue("Emulated Exits", m_emulatedExits);
   conf.endGroup();
 
