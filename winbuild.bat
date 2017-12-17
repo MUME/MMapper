@@ -1,18 +1,10 @@
 @ECHO OFF
-REM set PATH=C:\Qt\5.4\mingw491_32\bin;C:\Qt\Tools\mingw491_32\bin;C:\Program Files\7-Zip;C:\Program Files (x86)\NSIS;C:\Program Files (x86)\CMake\bin;C:\MinGW\bin
-REM set ZLIB_LIBRARY=C:\Qt\Tools\mingw491_32\bin\libz.a
-REM set ZLIB_INCLUDE_DIR=C:\Qt\Tools\mingw491_32\include
-REM set QMAKESPEC=win32-g++
-
-REM -DZLIB_LIBRARY=C:\Qt\Tools\mingw491_32\bin\zlib1.dll -DZLIB_INCLUDE_DIR=C:\Qt\Tools\mingw491_32\include -DCMAKE_BUILD_TYPE=Release
-
 REM ####
 REM #### START
 REM ####
-IF /i "%QMAKESPEC%" == "" GOTO :noqmakespec
 FOR /f %%j in ("qmake.exe") DO SET QMAKE_EXISTS=%%~dp$PATH:j
 IF /i "%QMAKE_EXISTS%" == "" GOTO :noqmake
-IF /i "%1" == "" GOTO :debug
+IF /i "%1" == "" GOTO :release
 IF /i "%1" == "Debug" GOTO :debug
 IF /i "%1" == "Release" GOTO :release
 GOTO :help
@@ -26,27 +18,27 @@ SET BUILD_TYPE=Release
 GOTO :start
 
 :start
-IF NOT EXIST winbuild MKDIR winbuild
-CD winbuild
-SET DFLAGS=-DZLIB_LIBRARY=%ZLIB_LIBRARY% -DZLIB_INCLUDE_DIR=%ZLIB_INCLUDE_DIR% -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DCMAKE_INSTALL_PREFIX=. 
 REM ####
 REM #### COMPILER SELECTION
 REM ####
+FOR /f %%j in ("mingw32-make") DO SET QMAKESPEC=win32-g++
+FOR /f %%j in ("mingw64-make") DO SET QMAKESPEC=win64-g++
 IF /i "%QMAKESPEC%" == "win32-g++" GOTO :mingw
-ECHO %QMAKESPEC% | findstr /i "win32-msvc" > nul
-IF %ERRORLEVEL% EQU 0 GOTO :msvc
+IF /i "%QMAKESPEC%" == "win64-g++" GOTO :mingw
+IF /i "%QMAKESPEC%" == "win32-msvc" GOTO :msvc
+IF /i "%QMAKESPEC%" == "win64-msvc" GOTO :msvc
 
-ECHO -- No compiler found
+IF /i "%QMAKESPEC%" == "" GOTO :noqmakespec
 GOTO :end
-
-
 
 REM ####
 REM #### BUILD FOR MINGW
 REM ####
 :mingw
 ECHO -- MingW compiler found
-cmake ../ %DFLAGS% -G "MinGW Makefiles"
+IF NOT EXIST winbuild MKDIR winbuild
+CD winbuild
+cmake ../ -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DCMAKE_INSTALL_PREFIX=. -G "MinGW Makefiles"
 mingw32-make --jobs=%NUMBER_OF_PROCESSORS%  &&  mingw32-make install
 GOTO :success
 
@@ -56,7 +48,9 @@ REM #### BUILD FOR MS VISUAL C++
 REM ####
 :msvc
 ECHO -- Microsoft Visual C++ compiler found
-cmake ../ %DFLAGS% -G "NMake Makefiles"
+IF NOT EXIST winbuild MKDIR winbuild
+CD winbuild
+cmake ../ -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DCMAKE_INSTALL_PREFIX=. -G "NMake Makefiles"
 FOR /f %%j in ("jom.exe") DO SET JOM_EXISTS=%%~dp$PATH:j
 IF /i "%JOM_EXISTS%" == "" GOTO :nojom
 jom && jom install
@@ -94,8 +88,10 @@ REM ####
 REM #### SUCCESS
 REM ####
 :success
+cpack
+ECHO Done!
 CD ..
 @ECHO ON
-
+GOTO :end
 
 :end
