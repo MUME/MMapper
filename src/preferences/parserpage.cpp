@@ -50,9 +50,6 @@ ParserPage::ParserPage(QWidget *parent)
 
 	updateColors();
 
-   	IACPromptCheckBox->setChecked(Config().m_IAC_prompt_parser);	
-        mpiCheckBox->setChecked(Config().m_mpi);
-
         if (Config().m_utf8Charset)
             charset->setCurrentIndex(UiCharsetUTF8);
         else
@@ -115,7 +112,6 @@ ParserPage::ParserPage(QWidget *parent)
 		
 	connect( IACPromptCheckBox, SIGNAL(stateChanged(int)),SLOT(IACPromptCheckBoxStateChanged(int)));	
 	connect( suppressXmlTagsCheckBox, SIGNAL(stateChanged(int)),SLOT(suppressXmlTagsCheckBoxStateChanged(int)));	
-        connect( mpiCheckBox, SIGNAL(stateChanged(int)),SLOT(mpiCheckBoxStateChanged(int)));
         connect( charset, SIGNAL(currentIndexChanged(int)),SLOT(charsetChanged(int)));
 
 
@@ -125,12 +121,6 @@ void ParserPage::charsetChanged(int index)
 {
         Config().m_utf8Charset = (index == UiCharsetUTF8);
 }
-
-void ParserPage::mpiCheckBoxStateChanged(int)
-{
-        Config().m_mpi = mpiCheckBox->isChecked();
-}
-
 
 void ParserPage::suppressXmlTagsCheckBoxStateChanged(int)
 {

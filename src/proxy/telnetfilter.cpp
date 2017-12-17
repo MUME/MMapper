@@ -55,12 +55,7 @@ const QChar TelnetFilter::escChar('\x1B');
 
 TelnetFilter::TelnetFilter(QObject *parent)
 : QObject(parent)
-{
-	
-    m_xmlModeAutoconfigured = false;
-    m_xmlMode = false; 
-	m_reconnecting = false;
-	
+{	
 #ifdef TELNET_STREAM_DEBUG_INPUT_TO_FILE
     QString fileName = "telnet_debug.dat";
 
@@ -82,107 +77,20 @@ TelnetFilter::~TelnetFilter()
 
 void TelnetFilter::analyzeMudStream(const char * input, int length) 
 {
-  //QByteArray ba(input, length);
   QByteArray ba = QByteArray::fromRawData(input, length);
   dispatchTelnetStream(ba, m_mudIncomingData, m_mudIncomingQue);
-
-/*		
-  if(!m_xmlModeAutoconfigured)
-  {
-  	 QByteArray line;
-  	 TelnetDataType type;  	
-	 
-	 for (int i = 0; i < m_mudIncomingQue.size(); ++i) 
-     {
-	  	line = m_mudIncomingQue.at(i).line;
-		type = m_mudIncomingQue.at(i).type;
-		
-		if (type == TDT_CRLF || type == TDT_LF || type == TDT_LFCR || type == TDT_PROMPT)
-		{
-			  //QByteArray ba = line.toAscii();
-  			//quint8* dataline = (quint8*) line.data();
-			
-			if (line.contains("Reconnecting."))
-				m_reconnecting = true;
-				
-	        if (line.contains("<xml>") || line.contains("room>") || line.contains("prompt>") || line.contains("<movement"))
-	        {
-	        	m_xmlMode = true;
-	        	m_xmlModeAutoconfigured = true;
-
-				emit sendToMud((QByteArray)"brief\n");
-                emit sendToMud((QByteArray)"cha prompt all\n");
-				if (Config().m_IAC_prompt_parser)
-				{				
-					//send IAC-GA prompt request
-					QByteArray idprompt("~$#EP2\nG\n");
-    				emit sendToMud(idprompt); 
-				}
-	        	
-		       	break;
-	        }
-	        else if (m_reconnecting && (line.contains(">")) || line.contains("Exits"))
-		    {
-		      	m_xmlMode = false;
-		       	m_xmlModeAutoconfigured = true;
-
-				emit sendToMud((QByteArray)"brief\n");
-                emit sendToMud((QByteArray)"cha prompt all\n");
-				if (Config().m_IAC_prompt_parser)
-				{				
-					//send IAC-GA prompt request
-					QByteArray idprompt("~$#EP2\nG\n");
-    				emit sendToMud(idprompt); 
-				}
-		       	break;
-		    }
-	  	}
-     }
-  }
-*/
-
   IncomingData data; 	
   while ( !m_mudIncomingQue.isEmpty() )
   {
 	data = m_mudIncomingQue.dequeue();
-
-    if(!m_xmlModeAutoconfigured && (data.type == TDT_CRLF || data.type == TDT_LF || data.type == TDT_LFCR || data.type == TDT_PROMPT))
-    {
-		if (data.line.contains("Reconnecting."))
-			m_reconnecting = true;
-				
-        if (data.line.contains("<xml>") || data.line.contains("name>") || data.line.contains("room>") || data.line.contains("prompt>") || data.line.contains("movement"))
-        {
-        	m_xmlMode = true;
-        	m_xmlModeAutoconfigured = true;
-
-			//emit sendToMud((QByteArray)"brief\n");
-            //emit sendToMud((QByteArray)"cha prompt all\n");
-        }
-        // XXX: fixed (I think) the logic in the line below. Not sure it's right.
-        // Alternative: ( recon && > ) || exits
-        else if (m_reconnecting && ( data.line.contains(">") || data.line.contains("Exits") ) )
-	    {
-	      	m_xmlMode = false;
-	       	m_xmlModeAutoconfigured = true;
-			//emit sendToMud((QByteArray)"brief\n");
-            emit sendToMud((QByteArray)"cha prompt all\n");
-	    }
-    }
-
     //parse incoming lines in que
-    if (m_xmlMode)
-      emit parseNewMudInputXml(data/*m_mudIncomingQue*/);
-    else
-      emit parseNewMudInput(data/*m_mudIncomingQue*/);
-      
+    emit parseNewMudInputXml(data/*m_mudIncomingQue*/);
   }
   return;
 }
 
 void TelnetFilter::analyzeUserStream(const char * input, int length) 
 {
-  //QByteArray ba(input, length);
   QByteArray ba = QByteArray::fromRawData(input, length);
   dispatchTelnetStream(ba, m_userIncomingData, m_userIncomingQue);
   
@@ -192,10 +100,7 @@ void TelnetFilter::analyzeUserStream(const char * input, int length)
   {
 	data = m_userIncomingQue.dequeue();
 
-    if (m_xmlMode)
-	  emit parseNewUserInputXml(data);
-    else
-  	  emit parseNewUserInput(data);
+    emit parseNewUserInputXml(data);
   }
   
   return;
@@ -216,9 +121,6 @@ void TelnetFilter::dispatchTelnetStream(QByteArray& stream, IncomingData &m_inco
 	}
 #endif
 
-	//QByteArray ba = str.toAscii();
-	//quint8* dline = (quint8*) stream.data(); 
-   
    	while (index < stream.size()) 
    	{
 		val1 = (quint8) stream.at(index);
@@ -274,9 +176,9 @@ void TelnetFilter::dispatchTelnetStream(QByteArray& stream, IncomingData &m_inco
 				que.enqueue(m_incomingData);
 				m_incomingData.line.clear();
 //				if (val1 == TC_GA && Config().m_IAC_prompt_parser)
-//					m_incomingData.type = TDT_PROMPT;					
+//					m_incomingData.type = TDT_PROMPT;
 //				else
-					m_incomingData.type = TDT_SPLIT;
+                    m_incomingData.type = TDT_SPLIT;
 				
 			}
 			else
@@ -414,7 +316,6 @@ void TelnetFilter::dispatchTelnetStream(QByteArray& stream, IncomingData &m_inco
 			}
 			else
 			if (Patterns::matchPromptPatterns(m_incomingData.line))
-			//if (m_incomingData.line.endsWith('>'))
 			{
 				m_incomingData.type = TDT_PROMPT;
 				que.enqueue(m_incomingData);
@@ -423,7 +324,6 @@ void TelnetFilter::dispatchTelnetStream(QByteArray& stream, IncomingData &m_inco
 			}
 			else
 			if (Patterns::matchPasswordPatterns(m_incomingData.line))
-			//if (m_incomingData.line.endsWith("pass phrase: "))
 			{
 				m_incomingData.type = TDT_LOGIN_PASSWORD;
 				que.enqueue(m_incomingData);
@@ -432,7 +332,6 @@ void TelnetFilter::dispatchTelnetStream(QByteArray& stream, IncomingData &m_inco
 			}
 			else
 			if (Patterns::matchMenuPromptPatterns(m_incomingData.line))
-			//if (m_incomingData.line.endsWith("> "))
 			{
 				m_incomingData.type = TDT_MENU_PROMPT;
 				que.enqueue(m_incomingData);
@@ -441,7 +340,6 @@ void TelnetFilter::dispatchTelnetStream(QByteArray& stream, IncomingData &m_inco
 			}			
 			else
 			if (Patterns::matchLoginPatterns(m_incomingData.line))
-			//if (m_incomingData.line.endsWith("known? "))
 			{
 				m_incomingData.type = TDT_LOGIN;
 				que.enqueue(m_incomingData);
@@ -450,14 +348,4 @@ void TelnetFilter::dispatchTelnetStream(QByteArray& stream, IncomingData &m_inco
 			}			
 		}
 	}				
-}
-
-void TelnetFilter::setNormalMode()
-{
-  m_xmlMode = false;
-}
-
-void TelnetFilter::setXmlMode()
-{
-  m_xmlMode = true;
 }

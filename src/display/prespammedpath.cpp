@@ -24,7 +24,6 @@
 ************************************************************************/
 
 #include "prespammedpath.h"
-#include "parser.h"
 
 //#define TEST
 

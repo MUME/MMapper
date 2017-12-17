@@ -41,10 +41,6 @@ const QByteArray MumeXmlParser::lessThanTemplate("&lt;");
 const QByteArray MumeXmlParser::ampersand("&");
 const QByteArray MumeXmlParser::ampersandTemplate("&amp;");
 
-// Taken from Pandora
-const QRegExp MumeXmlParser::scoreExp("[0-9]*/* hits, */* mana, and */* moves.", Qt::CaseSensitive, QRegExp::Wildcard);
-const QRegExp MumeXmlParser::scoreTrollExp("[0-9]*/* hits and */* moves.", Qt::CaseSensitive, QRegExp::Wildcard);
-
 MumeXmlParser::MumeXmlParser(MapData* md, QObject *parent) :
     AbstractParser(md, parent),
     m_roomDescLines(0), m_readingStaticDescLines(false),
@@ -170,7 +166,7 @@ void MumeXmlParser::parse(const QByteArray& line)
           removeAnsiMarks(str);
 
           // inform groupManager
-          if (scoreExp.exactMatch(str) || scoreTrollExp.exactMatch(str)) {
+          if (Patterns::scoreExp.exactMatch(str) || Patterns::scoreTrollExp.exactMatch(str)) {
             emit sendScoreLineEvent(str.toLatin1());
           }
         }
@@ -193,8 +189,7 @@ bool MumeXmlParser::element( const QByteArray& line  )
         case '/':
           if (line.startsWith("/xml"))
           {
-            emit setNormalMode();
-            emit sendToUser((QByteArray)"[MMapper] Mode ---> NORMAL\n");
+            emit sendToUser((QByteArray)"[MMapper] Mapper cannot function without XML mode\n");
             emptyQueue();
           }
           break;

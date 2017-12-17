@@ -28,6 +28,10 @@
 
 QRegExp Patterns::m_rx;
 
+// Taken from Pandora
+const QRegExp Patterns::scoreExp("[0-9]*/* hits, */* mana, and */* moves.", Qt::CaseSensitive, QRegExp::Wildcard);
+const QRegExp Patterns::scoreTrollExp("[0-9]*/* hits and */* moves.", Qt::CaseSensitive, QRegExp::Wildcard);
+
 bool Patterns::matchPattern(QString pattern, QString& str)
 {
 	if (pattern.at(0) != '#')

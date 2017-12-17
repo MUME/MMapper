@@ -36,7 +36,6 @@
 class QFile;
 class QDataStream;
 class TelnetFilter;
-class Parser;
 class MumeXmlParser;
 class Proxy;
 
@@ -108,7 +107,6 @@ class Proxy : public QObject
     bool m_serverConnected;
 
     TelnetFilter *m_filter;
-    Parser *m_parser;
     MumeXmlParser *m_parserXml;
 
     MapData* m_mapData;

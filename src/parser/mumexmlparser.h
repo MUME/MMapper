@@ -64,10 +64,6 @@ class MumeXmlParser : public AbstractParser
     static const QByteArray ampersand;
     static const QByteArray ampersandTemplate;
 
-    // Taken from Pandora
-    static const QRegExp scoreExp;
-    static const QRegExp scoreTrollExp;
-
     void parseMudCommands(QString& str);
 
     QByteArray characters(QByteArray& ch);

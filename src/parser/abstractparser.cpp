@@ -572,23 +572,6 @@ bool AbstractParser::parseUserCommands(QString& command)
       }
       return false;
     }
-    else if (str.startsWith("_brief"))
-    {
-      if (Config().m_brief == true)
-      {
-        Config().m_brief = false;
-        emit sendToUser((QByteArray)"[MMapper] brief mode off.\r\n");
-        sendPromptToUser();
-        return false;
-      }
-      if (Config().m_brief == false)
-      {
-        Config().m_brief = true;
-        emit sendToUser((QByteArray)"[MMapper] brief mode on.\r\n");
-        sendPromptToUser();
-        return false;
-      }
-    }
     else if (str.startsWith("_name"))
     {
       if (str.section(" ",1,1)=="n") nameDoorCommand(str.section(" ",2,2), NORTH);
@@ -1018,7 +1001,6 @@ bool AbstractParser::parseUserCommands(QString& command)
       emit sendToUser((QByteArray)"  _pdynamic    - prints current room description\r\n");
       emit sendToUser((QByteArray)"  _pstatic     - the same as previous, but without moveable items\r\n");
       emit sendToUser((QByteArray)"  _pnote       - print the note in the current room\r\n");
-      emit sendToUser((QByteArray)"  _brief       - emulate brief mode on/off\r\n");
 
       emit sendToUser((QByteArray)"\r\nHelp commands:\n");
       emit sendToUser((QByteArray)"  _help      - this help text\r\n");
@@ -1334,8 +1316,8 @@ void AbstractParser::offlineCharacterMove(CommandIdType direction)
 void AbstractParser::sendRoomInfoToUser(const Room* r)
 {
   if (!r) return;
-  emit sendToUser((QByteArray)"\r\n"+getName(r).toLatin1()+(QByteArray)"\r\n");
-  emit sendToUser(getDescription(r).toLatin1().replace("\n","\r\n"));
+  emit sendToUser((QByteArray)"\r\n\x1B"+Config().m_roomNameColor.toLatin1()+getName(r).toLatin1()+(QByteArray)"\x1B[0m\r\n");
+  emit sendToUser("\x1B"+Config().m_roomDescColor.toLatin1()+getDescription(r).toLatin1().replace("\n","\r\n")+"\x1B[0m");
   emit sendToUser(getDynamicDescription(r).toLatin1().replace("\n","\r\n"));
 }
 

@@ -49,6 +49,10 @@ public:
 
     static bool matchPattern(QString pattern, QString& str);
     static bool matchPattern(QByteArray pattern, QByteArray& str);
+
+    // Taken from Pandora
+    static const QRegExp scoreExp;
+    static const QRegExp scoreTrollExp;
 };
 
 #endif

@@ -51,7 +51,6 @@ public slots:
 	
 	void IACPromptCheckBoxStateChanged(int);
 	void suppressXmlTagsCheckBoxStateChanged(int);
-        void mpiCheckBoxStateChanged(int);
 
 private slots:
         void charsetChanged(int);

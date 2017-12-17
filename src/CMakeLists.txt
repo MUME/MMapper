@@ -47,7 +47,6 @@ SET(mmapper_SRCS
     pandoragroup/CGroupStatus.cpp
     parser/abstractparser.cpp
     parser/mumexmlparser.cpp
-    parser/parser.cpp
     parser/parserutils.cpp
     parser/patterns.cpp
     parser/roompropertysetter.cpp
