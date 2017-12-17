@@ -23,28 +23,24 @@
 **
 ************************************************************************/
 
-#ifndef PROPERTY
-#define PROPERTY
-
+#ifndef PROPERTYH
+#define PROPERTYH
 
 #include <QByteArray>
 #include "listcycler.h"
 
 class Property : public ListCycler<char, QByteArray> {
- public:	
+public:
 
-  Property(bool in_skipped = false) : m_skipped(in_skipped){}
-  Property(const QByteArray &); 
-		
-  const char * rest() const;
-  bool isSkipped() const ;
+    Property(bool in_skipped = false) : m_skipped(in_skipped) {}
+    Property(const QByteArray & in_data);
 
- private:
-  bool m_skipped;
+    const char * rest() const;
+    bool isSkipped() const ;
+
+private:
+    bool m_skipped;
 };
-
-
-
 
 #ifdef DMALLOC
 #include <mpatrol.h>

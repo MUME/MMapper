@@ -1,0 +1,5 @@
+FILE(GLOB_RECURSE expandoracommon_SRCS ../expandoracommon/*.cpp)
+SET(TestExpandoraCommon_SRCS testexpandoracommon.cpp)
+ADD_EXECUTABLE(TestExpandoraCommon ${TestExpandoraCommon_SRCS} ${expandoracommon_SRCS})
+TARGET_LINK_LIBRARIES(TestExpandoraCommon Qt5::Test)
+ADD_TEST(NAME TestExpandoraCommon COMMAND TestExpandoraCommon)

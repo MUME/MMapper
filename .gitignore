@@ -1,8 +1,12 @@
 winbuild/
 build/
-*CMakeFiles/
-*.bak
+**CMakeFiles/
+**.bak
 *.user
 *~
 *.autosave
 *Thumbs.db
+Makefile
+.qmake.stash
+map/arda.mm2
+**/.DS_Store
