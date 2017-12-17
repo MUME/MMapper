@@ -180,6 +180,18 @@ ComparisonResult RoomFactory::compareWeakProps(const Room * room, const ParseEve
   bool different = false;
   bool tolerance = false;
   ExitsFlagsType eFlags = getExitFlags(event);
+  PromptFlagsType pFlags = getPromptFlags(event);
+
+  if (pFlags & PROMPT_FLAGS_VALID)
+  {
+      const RoomLightType lightType = getLightType(room);
+      if ((pFlags & SUN_ROOM) && lightType != RLT_LIT) {
+          tolerance = true;
+      }
+      else if ((pFlags & DARK_ROOM) && lightType != RLT_DARK) {
+          tolerance = true;
+      }
+  }
   if (eFlags & EXITS_FLAGS_VALID)
   {
     for (uint dir = 0; dir < 6; ++dir)
@@ -228,7 +240,7 @@ void RoomFactory::update(Room * room, const ParseEvent * event) const
   (*room)[R_DYNAMICDESC] = getRoomDesc(event);
 
   ExitsFlagsType eFlags = getExitFlags(event);
-  PromptFlagsType rt = getPromptFlags(event);
+  PromptFlagsType pFlags = getPromptFlags(event);
   if (eFlags & EXITS_FLAGS_VALID)
   {
     eFlags ^= EXITS_FLAGS_VALID;
@@ -266,12 +278,16 @@ void RoomFactory::update(Room * room, const ParseEvent * event) const
   else
     room->setOutDated();
 
-  if (rt & PROMPT_FLAGS_VALID)
+  if (pFlags & PROMPT_FLAGS_VALID)
   {
+    PromptFlagsType rt = pFlags;
     rt &= (bit1 + bit2 + bit3 + bit4);
     (*room)[R_TERRAINTYPE] = (RoomTerrainType)rt;
-    if (rt & SUN_ROOM) {
+    if (pFlags & SUN_ROOM) {
       (*room)[R_LIGHTTYPE] = RLT_LIT;
+    }
+    else if (pFlags & DARK_ROOM) {
+      (*room)[R_LIGHTTYPE] = RLT_DARK;
     }
   }
   else
