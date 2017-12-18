@@ -151,6 +151,13 @@ void AbstractParser::parseExits(QString& str)
     case 92: climb=true;break;    /* \ */
     case 123: portal=true;break;  /* { */
 
+    case 32: // empty space means reset for next exit
+        doors=false;
+        road=false;
+        climb=false;
+        portal=false;
+        break;
+
     case 110:  // n
       if ( (i+2)<length && (str.at(i+2).toLatin1()) == 'r') //north
         {
