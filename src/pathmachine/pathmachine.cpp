@@ -145,6 +145,7 @@ void PathMachine::event(ParseEvent * ev)
     syncing(ev);
     break;
   }
+  ev->setParsed();
 }
 
 void PathMachine::deleteMostLikelyRoom()

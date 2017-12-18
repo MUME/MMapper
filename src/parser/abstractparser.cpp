@@ -31,6 +31,7 @@
 #include "configuration.h"
 #include "roomselection.h"
 #include "mapdata.h"
+#include "parseevent.h"
 
 #include <unistd.h>
 
@@ -65,7 +66,9 @@ AbstractParser::~AbstractParser(){
 
 void AbstractParser::characterMoved(CommandIdType c, const QString& roomName, const QString& dynamicRoomDesc, const QString& staticRoomDesc, ExitsFlagsType exits, PromptFlagsType prompt)
 {
-  emit event(createEvent(c, roomName, dynamicRoomDesc, staticRoomDesc, exits, prompt));
+  ParseEvent *ev = createEvent(c, roomName, dynamicRoomDesc, staticRoomDesc, exits, prompt);
+  emit event(ev);
+  ev->waitForParsed();
 }
 
 void AbstractParser::emptyQueue()
@@ -338,7 +341,7 @@ void AbstractParser::parseExits(QString& str)
   emit sendToUser(str.toLatin1()+cn);
 }
 
-void AbstractParser::emulateExits()
+void AbstractParser::emulateExits(CommandIdType dir)
 {
   Coordinate c;
 //    QByteArray dn = "";
@@ -347,8 +350,8 @@ void AbstractParser::emulateExits()
   CommandQueue tmpqueue;
 //      bool noDoors = true;
 
-  if (!queue.isEmpty())
-    tmpqueue.enqueue(queue.head());
+  if (dir != CID_NONE)
+    tmpqueue.enqueue(dir);
 
   QList<Coordinate> cl = m_mapData->getPath(tmpqueue);
   if (!cl.isEmpty())
