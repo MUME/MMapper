@@ -58,7 +58,7 @@ ParseEvent * createEvent(const CommandIdType & c, const QString & roomName, cons
   if (promptFlags & PROMPT_FLAGS_VALID)
   {
     char terrain = 0;
-    terrain += (promptFlags & 15); //bit0-3 -> char representation of RoomTerrainType
+    terrain += (promptFlags & (bit1 + bit2 + bit3 + bit4)); //bit0-3 -> char representation of RoomTerrainType
     event->push_back(new Property(QByteArray(1, terrain)));
   }
   else

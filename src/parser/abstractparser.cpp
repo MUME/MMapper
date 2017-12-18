@@ -106,26 +106,26 @@ void AbstractParser::parsePrompt(QString& prompt){
   case 42: index++;m_promptFlags=SUN_ROOM;break; // *  indoor/cloudy sun
   case 33: index++;break;                        // !  artifical light
   case 41: index++;m_promptFlags=SUN_ROOM;break; // )  moonlight
-  case 111:index++;break;                        // o  darkness
+  case 111:index++;m_promptFlags=DARK_ROOM;break;// o  darkness
   default:;
   }
 
   switch ( sv = (int)(prompt[index]).toLatin1() )
   {
-    case 91: SET(m_promptFlags,RTT_INDOORS); break; // [  // indoors
-    case 35: SET(m_promptFlags,RTT_CITY); break; // #  // city
-    case 46: SET(m_promptFlags,RTT_FIELD); break; // .  // field
-    case 102: SET(m_promptFlags,RTT_FOREST); break; // f  // forest
-    case 40: SET(m_promptFlags,RTT_HILLS); break; // (  // hills
+    case 91: SET(m_promptFlags,RTT_INDOORS); break;   // [  // indoors
+    case 35: SET(m_promptFlags,RTT_CITY); break;      // #  // city
+    case 46: SET(m_promptFlags,RTT_FIELD); break;     // .  // field
+    case 102: SET(m_promptFlags,RTT_FOREST); break;   // f  // forest
+    case 40: SET(m_promptFlags,RTT_HILLS); break;     // (  // hills
     case 60: SET(m_promptFlags,RTT_MOUNTAINS); break; // <  // mountains
-    case 37: SET(m_promptFlags,RTT_SHALLOW); break; // %  // shallow
-    case 126:SET(m_promptFlags,RTT_WATER); break; // ~w  // water
-    case 87: SET(m_promptFlags,RTT_RAPIDS); break; // W  // rapids
-    case 85: SET(m_promptFlags,RTT_UNDERWATER); break; // U  // underwater
-    case 43: SET(m_promptFlags,RTT_ROAD); break; // +  // road
-    case 61: SET(m_promptFlags,RTT_TUNNEL); break; // =  // tunnel
-    case 79: SET(m_promptFlags,RTT_CAVERN); break; // O  // cavern
-    case 58: SET(m_promptFlags,RTT_BRUSH); break; // :  // brush
+    case 37: SET(m_promptFlags,RTT_SHALLOW); break;   // %  // shallow
+    case 126:SET(m_promptFlags,RTT_WATER); break;     // ~  // water
+    case 87: SET(m_promptFlags,RTT_RAPIDS); break;    // W  // rapids
+    case 85: SET(m_promptFlags,RTT_UNDERWATER); break;// U  // underwater
+    case 43: SET(m_promptFlags,RTT_ROAD); break;      // +  // road
+    case 61: SET(m_promptFlags,RTT_TUNNEL); break;    // =  // tunnel
+    case 79: SET(m_promptFlags,RTT_CAVERN); break;    // O  // cavern
+    case 58: SET(m_promptFlags,RTT_BRUSH); break;     // :  // brush
     default:;
   }
   SET(m_promptFlags,PROMPT_FLAGS_VALID);
@@ -151,6 +151,13 @@ void AbstractParser::parseExits(QString& str)
     case 92: climb=true;break;    /* \ */
     case 123: portal=true;break;  /* { */
 
+    case 32: // empty space means reset for next exit
+        doors=false;
+        road=false;
+        climb=false;
+        portal=false;
+        break;
+
     case 110:  // n
       if ( (i+2)<length && (str.at(i+2).toLatin1()) == 'r') //north
         {
@@ -168,7 +175,7 @@ void AbstractParser::parseExits(QString& str)
 	  if (road){
 	    SET(m_exitsFlags,ROAD_N);
 	    road=false;
-	  }
+         }
         }
       else
 	i+=4;  //none
@@ -329,8 +336,6 @@ void AbstractParser::parseExits(QString& str)
     }
 
   emit sendToUser(str.toLatin1()+cn);
-  //emit sendToUser(str.toLatin1()+QByteArray("\r\n"));
-  //emit sendToUser(cn);
 }
 
 void AbstractParser::emulateExits()

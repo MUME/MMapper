@@ -76,10 +76,11 @@ enum DoorActionType { DAT_OPEN, DAT_CLOSE, DAT_LOCK, DAT_UNLOCK, DAT_PICK, DAT_R
 #define EXITS_FLAGS_VALID bit25
 typedef quint32 ExitsFlagsType;
 
-// 0-3 terrain type
-#define PROMPT_FLAGS_VALID bit8
-#define SUN_ROOM bit9
-typedef quint16 PromptFlagsType;
+// 0-3 terrain type (bit1 through bit4)
+#define SUN_ROOM bit5
+#define DARK_ROOM bit6
+#define PROMPT_FLAGS_VALID bit7
+typedef quint8 PromptFlagsType;
 
 typedef QQueue<CommandIdType> CommandQueue;
 
