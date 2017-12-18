@@ -36,7 +36,7 @@ void TestExpandoraCommon::stringPropertyTest()
     const QByteArray ba("hello world");
     Property property(ba);
     QVERIFY(property.isSkipped() == false);
-    QVERIFY(property.rest() == "");
+    QVERIFY2(QString(property.rest()).isEmpty(), "Expected empty string");
 
     // Test changing position
     QVERIFY(property.current() == '\0');
