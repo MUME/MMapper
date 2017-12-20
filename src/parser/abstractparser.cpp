@@ -63,11 +63,6 @@ AbstractParser::~AbstractParser(){
     m_mapData->unselect(search_rs);
 }
 
-void AbstractParser::characterMoved(CommandIdType c, const QString& roomName, const QString& dynamicRoomDesc, const QString& staticRoomDesc, ExitsFlagsType exits, PromptFlagsType prompt)
-{
-  emit event(createEvent(c, roomName, dynamicRoomDesc, staticRoomDesc, exits, prompt));
-}
-
 void AbstractParser::emptyQueue()
 {
   queue.clear();
@@ -1007,9 +1002,9 @@ bool AbstractParser::parseUserCommands(QString& command)
       emit sendToUser("  _grouphelp - help for group manager console commands\r\n");
 
       emit sendToUser("\r\nOther commands:\n");
-      emit sendToUser(("  _vote                      - vote for MUME on TMC!\r\n"));
-      emit sendToUser(("  _dirs [-options] pattern   - directions to matching rooms\r\n"));
-      emit sendToUser(("  _search [-options] pattern - highlight matching rooms\r\n"));
+      emit sendToUser("  _vote                      - vote for MUME on TMC!\r\n");
+      emit sendToUser("  _dirs [-options] pattern   - directions to matching rooms\r\n");
+      emit sendToUser("  _search [-options] pattern - highlight matching rooms\r\n");
       sendPromptToUser();
       return false;
     }
@@ -1280,7 +1275,7 @@ void AbstractParser::offlineCharacterMove(CommandIdType direction)
   {
     sendRoomInfoToUser(rb);
     sendRoomExitsInfoToUser(rb);
-    sendPromptToUser();
+    sendPromptToUser(rb);
   }
   else
   {
@@ -1292,8 +1287,9 @@ void AbstractParser::offlineCharacterMove(CommandIdType direction)
 
       sendRoomInfoToUser(r);
       sendRoomExitsInfoToUser(r);
-      sendPromptToUser();
-      characterMoved( direction, getName(r), getDynamicDescription(r), getDescription(r), 0, 0);
+      sendPromptToUser(r);
+      // Create character move event for main move/search algorithm
+      emit event(createEvent(direction, getName(r), getDynamicDescription(r), getDescription(r), 0, 0));
       emit showPath(queue, true);
       m_mapData->unselect(rs2);
     }
@@ -1303,7 +1299,7 @@ void AbstractParser::offlineCharacterMove(CommandIdType direction)
         emit sendToUser("You cannot go that way...");
       else
         emit sendToUser("You cannot flee!!!");
-      sendPromptToUser();
+      sendPromptToUser(rb);
     }
   }
   m_mapData->unselect(rs1);
@@ -1313,8 +1309,23 @@ void AbstractParser::offlineCharacterMove(CommandIdType direction)
 void AbstractParser::sendRoomInfoToUser(const Room* r)
 {
   if (!r) return;
-  emit sendToUser("\r\n\033"+Config().m_roomNameColor.toLatin1()+getName(r).toLatin1()+"\033[0m\r\n");
-  emit sendToUser("\033"+Config().m_roomDescColor.toLatin1()+getDescription(r).toLatin1().replace("\n","\r\n")+"\033[0m");
+  QByteArray roomName("\r\n");
+  if (!Config().m_roomNameColor.isEmpty())
+  {
+      roomName += "\033" + Config().m_roomNameColor.toLatin1();
+  }
+  roomName += getName(r).toLatin1() + "\033[0m\r\n";
+  emit sendToUser(roomName);
+
+  QByteArray roomDescription;
+  if (!Config().m_roomDescColor.isEmpty())
+  {
+      roomDescription += "\033" + Config().m_roomDescColor.toLatin1();
+  }
+  roomDescription += getDescription(r).toLatin1() + "\033[0m";
+  roomDescription.replace("\n","\r\n");
+  emit sendToUser(roomDescription);
+
   emit sendToUser(getDynamicDescription(r).toLatin1().replace("\n","\r\n"));
 }
 
@@ -1431,11 +1442,58 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room* r)
 
 void AbstractParser::sendPromptToUser()
 {
-  if (Config().m_mapMode != 2) {
+  if (!m_lastPrompt.isEmpty() && Config().m_mapMode != 2) {
       emit sendToUser(m_lastPrompt.toLatin1());
   } else {
-      emit sendToUser("\r\n>");
+      Coordinate c;
+      CommandQueue tmpqueue;
+      if (!queue.isEmpty())
+        tmpqueue.enqueue(queue.head());
+
+      QList<Coordinate> cl = m_mapData->getPath(tmpqueue);
+      if (!cl.isEmpty())
+        c = cl.at(cl.size()-1);
+      else
+        c = m_mapData->getPosition();
+
+      const RoomSelection * rs = m_mapData->select();
+      const Room *r = m_mapData->getRoom(c, rs);
+
+      sendPromptToUser(r);
+
+      m_mapData->unselect(rs);
+
   }
+}
+
+void AbstractParser::sendPromptToUser(const Room* r)
+{
+    char light = (getLightType(r)==RLT_DARK) ? 'o' : '*';
+
+    char terrain = ' ';
+    switch (getTerrainType(r))
+    {
+    case RTT_INDOORS: terrain='[';break;   // [  // indoors
+    case RTT_CITY: terrain='#';break;      // #  // city
+    case RTT_FIELD: terrain='.';break;     // .  // field
+    case RTT_FOREST: terrain='f';break;    // f  // forest
+    case RTT_HILLS: terrain='(';break;     // (  // hills
+    case RTT_MOUNTAINS: terrain='<';break; // <  // mountains
+    case RTT_SHALLOW: terrain='%';break;   // %  // shallow
+    case RTT_WATER: terrain='~';break;     // ~  // water
+    case RTT_RAPIDS: terrain='W';break;    // W  // rapids
+    case RTT_UNDERWATER: terrain='U';break;// U  // underwater
+    case RTT_ROAD: terrain='+';break;      // +  // road
+    case RTT_TUNNEL: terrain='=';break;    // =  // tunnel
+    case RTT_CAVERN: terrain='O';break;    // O  // cavern
+    case RTT_BRUSH: terrain=':';break;     // :  // brush
+    };
+
+    QByteArray prompt("\r\n");
+    prompt += light;
+    prompt += terrain;
+    prompt += ">";
+    emit sendToUser(prompt);
 }
 
 void AbstractParser::performDoorCommand(DirectionType direction, DoorActionType action)
