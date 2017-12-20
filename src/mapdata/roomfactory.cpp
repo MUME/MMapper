@@ -179,9 +179,10 @@ ComparisonResult RoomFactory::compareWeakProps(const Room * room, const ParseEve
   bool exitsValid = room->isUpToDate();
   bool different = false;
   bool tolerance = false;
-  ExitsFlagsType eFlags = getExitFlags(event);
-  PromptFlagsType pFlags = getPromptFlags(event);
 
+  /*
+  // Disable until we can identify day/night/blindness
+  PromptFlagsType pFlags = getPromptFlags(event);
   if (pFlags & PROMPT_FLAGS_VALID)
   {
       const RoomLightType lightType = getLightType(room);
@@ -192,6 +193,9 @@ ComparisonResult RoomFactory::compareWeakProps(const Room * room, const ParseEve
           tolerance = true;
       }
   }
+  */
+
+  ExitsFlagsType eFlags = getExitFlags(event);
   if (eFlags & EXITS_FLAGS_VALID)
   {
     for (uint dir = 0; dir < 6; ++dir)
