@@ -78,7 +78,7 @@ void Configuration::read()
 
   conf.beginGroup("Parser");
   m_roomNameColor = conf.value("Room name ansi color", "[32m").toString();
-  m_roomDescColor = conf.value("Room desc ansi color", "[30m").toString();
+  m_roomDescColor = conf.value("Room desc ansi color", "[0m").toString();
 
   m_IAC_prompt_parser = conf.value("Use IAC-GA prompt", true).toBool();
   m_removeXmlTags = conf.value("Remove XML tags", true).toBool();

@@ -124,11 +124,10 @@ public slots:
   void sendGTellToUser(const QByteArray& );
 
 protected:
-  //for main move/search algorithm
-  void characterMoved(CommandIdType, const QString&, const QString&, const QString&, ExitsFlagsType, PromptFlagsType);
   void offlineCharacterMove(CommandIdType direction);
   void sendRoomInfoToUser(const Room*);
   void sendPromptToUser();
+  void sendPromptToUser(const Room* r);
   void sendRoomExitsInfoToUser(const Room* r);
 
   //command handling

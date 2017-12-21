@@ -456,7 +456,7 @@ void MumeXmlParser::move()
     if ( c != CID_SCOUT )
     {
       emit showPath(queue, false);
-      characterMoved(m_move, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags, m_promptFlags);
+      emit event(createEvent(m_move, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags, m_promptFlags));
       if (c != m_move)
         queue.clear();
       m_move = CID_LOOK;
@@ -465,7 +465,7 @@ void MumeXmlParser::move()
   else
   {
     //emit showPath(queue, false);
-    characterMoved(m_move, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags, m_promptFlags);
+      emit event(createEvent(m_move, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags, m_promptFlags));
     m_move = CID_LOOK;
   }
 }
