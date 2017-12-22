@@ -28,9 +28,22 @@
 
 QRegExp Patterns::m_rx;
 
-// Taken from Pandora
-const QRegExp Patterns::scoreExp("[0-9]*/* hits, */* mana, and */* moves.", Qt::CaseSensitive, QRegExp::Wildcard);
-const QRegExp Patterns::scoreTrollExp("[0-9]*/* hits and */* moves.", Qt::CaseSensitive, QRegExp::Wildcard);
+const QRegExp Patterns::m_score("\\d+/\\d+ hits(?:, \\d+/\\d+ mana,)? and \\d+/\\d+ moves.");
+
+// Used for oldRoom loading only
+QStringList Patterns::m_dynamicDescriptionPatternsList(
+        QStringList()
+        << "#!(?:A|An|The)[^.]*\\."
+        << "#![^.]*(?:sit(?:s|ting)?|rest(?:s|ing)?|stand(?:s|ing)|sleep(?:s|ing)?|swim(?:s|ming)?|walk(?:s|ing)?|wander(?:s|ing)?|grow(?:s|ing)?|lies?|lying)[^.]*"
+        << "#!.*(?:\\(glowing\\)|\\(shrouded\\)|\\(hidden\\))\\.?"
+        << "#![^.]*(in|on) the ground\\."
+        << "#?*"
+        << "#<You have found"
+        << "#<You have revealed"
+        << "#>whip all around you."
+        << "#<Clusters of"
+        << "#<Prickly"
+        << "#!.*arrived from.*\\.");
 
 bool Patterns::matchPattern(QString pattern, QString& str)
 {
@@ -95,12 +108,9 @@ bool Patterns::matchPattern(QByteArray pattern, QByteArray& str)
 	return false;	
 }
 
-bool Patterns::matchMoveCancelPatterns(QString& str)
+bool Patterns::matchScore(QString& str)
 {
-	for ( QStringList::iterator it = Config().m_moveCancelPatternsList.begin(); 
-		it != Config().m_moveCancelPatternsList.end(); ++it ) 
-		if (matchPattern(*it, str)) return true;
-	return false;
+    return m_score.exactMatch(str);
 }
 
 bool Patterns::matchMoveForcePatterns(QString& str)
@@ -121,22 +131,10 @@ bool Patterns::matchNoDescriptionPatterns(QString& str)
 
 bool Patterns::matchDynamicDescriptionPatterns(QString& str)
 {
-	for ( QStringList::iterator it = Config().m_dynamicDescriptionPatternsList.begin(); 
-		it != Config().m_dynamicDescriptionPatternsList.end(); ++it ) 
+    for (QStringList::iterator it = m_dynamicDescriptionPatternsList.begin();
+        it != m_dynamicDescriptionPatternsList.end(); ++it )
 		if (matchPattern(*it, str)) return true;
-	return false;	
-}
-
-bool Patterns::matchExitsPatterns(QString& str)
-{
-	if (matchPattern(Config().m_exitsPattern, str)) return true;
-	return false;
-}
-
-bool Patterns::matchScoutPatterns(QString& str)
-{
-	if (matchPattern(Config().m_scoutPattern, str)) return true;
-	return false;
+    return false;
 }
 
 bool Patterns::matchPasswordPatterns(QByteArray& str)

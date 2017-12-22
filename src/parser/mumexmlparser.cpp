@@ -166,7 +166,7 @@ void MumeXmlParser::parse(const QByteArray& line)
           removeAnsiMarks(str);
 
           // inform groupManager
-          if (Patterns::scoreExp.exactMatch(str) || Patterns::scoreTrollExp.exactMatch(str)) {
+          if (Patterns::matchScore(str)) {
             emit sendScoreLineEvent(str.toLatin1());
           }
         }
@@ -504,5 +504,12 @@ void MumeXmlParser::parseMudCommands(QString& str)
       return;
     }
   }
-}
 
+  // parse regexps which force new char move
+  if (Patterns::matchMoveForcePatterns(str))
+  {
+      queue.enqueue(CID_NONE);
+      emit showPath(queue, true);
+      return;
+  }
+}

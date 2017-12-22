@@ -36,15 +36,12 @@ class ParserPage : public QWidget, private Ui::ParserPage
 public slots:
 
     void removeForcePatternClicked();
-    void removeCancelPatternClicked();
     void removeEndDescPatternClicked();
     void addForcePatternClicked();
-    void addCancelPatternClicked();
     void addEndDescPatternClicked();
     void testPatternClicked();
     void validPatternClicked();
     void forcePatternsListActivated(const QString&);
-    void cancelPatternsListActivated(const QString&);
     void endDescPatternsListActivated(const QString&);
     
 	void anyColorToggleButtonToggled(bool);

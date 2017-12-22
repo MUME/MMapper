@@ -54,11 +54,8 @@ GeneralPage::GeneralPage(QWidget *parent)
 
   connect( autoLoadFileName, SIGNAL( textChanged(const QString&) ), this, SLOT( autoLoadFileNameTextChanged(const QString&) )  );
   connect( autoLoadCheck, SIGNAL(stateChanged(int)),SLOT(autoLoadCheckStateChanged(int)));
-  connect( logFileName, SIGNAL( textChanged(const QString&) ), this, SLOT( logFileNameTextChanged(const QString&) )  );
-  connect( logCheck, SIGNAL(stateChanged(int)),SLOT(logCheckStateChanged(int)));
 
-  connect( sellectWorldFileButton, SIGNAL(clicked()), this, SLOT(sellectWorldFileButtonClicked()));
-  connect( sellectLogFileButton, SIGNAL(clicked()), this, SLOT(sellectLogFileButtonClicked()));
+  connect( sellectWorldFileButton, SIGNAL(clicked()), this, SLOT(selectWorldFileButtonClicked()));
 
   remoteName->setText( Config().m_remoteServerName );
   remotePort->setValue( Config().m_remotePort );
@@ -80,34 +77,18 @@ GeneralPage::GeneralPage(QWidget *parent)
 
   autoLoadCheck->setChecked( Config().m_autoLoadWorld ); 
   autoLoadFileName->setText( Config().m_autoLoadFileName );
-  logCheck->setChecked( Config().m_autoLog ); 
-  logFileName->setText( Config().m_logFileName );
-
 }
 
 
-void GeneralPage::sellectWorldFileButtonClicked()
+void GeneralPage::selectWorldFileButtonClicked()
 {
   QString fileName = QFileDialog::getOpenFileName(this,"Choose map file ...","","MMapper2 (*.mm2);;MMapper (*.map)");
   if (!fileName.isEmpty())
   {
     autoLoadFileName->setText( fileName );
-    Config().m_logFileName = fileName;   
     Config().m_autoLoadFileName = fileName;  
     autoLoadCheck->setChecked(true);        
     Config().m_autoLoadWorld = true;
-  }
-}
-
-void GeneralPage::sellectLogFileButtonClicked()
-{
-  QString fileName = QFileDialog::getOpenFileName(this,"Choose log file ...","","Log (*.log);;All (*.*)");
-  if (!fileName.isEmpty())
-  {
-    logFileName->setText( fileName );
-    Config().m_logFileName = fileName;  
-    logCheck->setChecked(true);
-    Config().m_autoLog = true;      
   }
 }
 
@@ -199,13 +180,4 @@ void GeneralPage::autoLoadCheckStateChanged(int)
   Config().m_autoLoadWorld = autoLoadCheck->isChecked(); 
 }
 
-void GeneralPage::logFileNameTextChanged(const QString&)
-{
-  Config().m_logFileName = logFileName->text();
-}
-
-void GeneralPage::logCheckStateChanged(int)
-{
-  Config().m_autoLog = logCheck->isChecked(); 
-}
 

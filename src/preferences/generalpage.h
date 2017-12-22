@@ -56,12 +56,8 @@ public slots:
 
 	void autoLoadFileNameTextChanged(const QString&);
 	void autoLoadCheckStateChanged(int);
-	void logFileNameTextChanged(const QString&);
-	void logCheckStateChanged(int);
 	
-	void sellectWorldFileButtonClicked();
-	void sellectLogFileButtonClicked();
-	
+	void selectWorldFileButtonClicked();	
 
 public:
     GeneralPage(QWidget *parent = 0);
