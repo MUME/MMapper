@@ -40,13 +40,7 @@ public slots:
 	void remotePortValueChanged(int);
 	void localPortValueChanged(int);
 
-	void acceptBestRelativeDoubleSpinBoxValueChanged(double);
-	void acceptBestAbsoluteDoubleSpinBoxValueChanged(double);
-	void newRoomPenaltyDoubleSpinBoxValueChanged(double);
-	void correctPositionBonusDoubleSpinBoxValueChanged(double);
-	void multipleConnectionsPenaltyDoubleSpinBoxValueChanged(double);
-	void maxPathsValueChanged(int);
-	void matchingToleranceSpinBoxValueChanged(int);
+    void changeColorClicked();
 
 	void emulatedExitsStateChanged(int);
 	void updatedStateChanged(int);
@@ -56,12 +50,8 @@ public slots:
 
 	void autoLoadFileNameTextChanged(const QString&);
 	void autoLoadCheckStateChanged(int);
-	void logFileNameTextChanged(const QString&);
-	void logCheckStateChanged(int);
 	
-	void sellectWorldFileButtonClicked();
-	void sellectLogFileButtonClicked();
-	
+	void selectWorldFileButtonClicked();	
 
 public:
     GeneralPage(QWidget *parent = 0);

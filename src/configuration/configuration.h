@@ -55,6 +55,8 @@ class Configuration {
     quint32   m_remotePort;
     quint32   m_localPort;         /// Port to bind to on local machine
 
+    QColor m_backgroundColor;
+
     bool m_autoLog;         // enables log to file
     QString m_logFileName;  // file name to log
     bool m_autoLoadWorld;
@@ -68,21 +70,13 @@ class Configuration {
     bool m_drawUpperLayersTextured;
     bool m_drawDoorNames;
     
-    enum RoomDescriptionsParserType {RDPT_COLOR, RDPT_PARSER, RDPT_LINEBREAK};
-    RoomDescriptionsParserType           m_roomDescriptionsParserType;
-    quint16  m_minimumStaticLines;
-
     bool m_utf8Charset;
 
     bool m_IAC_prompt_parser;
     bool m_removeXmlTags;
 
-    QStringList m_moveCancelPatternsList; // string wildcart patterns, that cancel last move command
     QStringList m_moveForcePatternsList;  // string wildcart patterns, that force new move command
     QStringList m_noDescriptionPatternsList;
-    QStringList m_dynamicDescriptionPatternsList;
-    QString         m_exitsPattern;
-    QString     m_scoutPattern;
     QByteArray  m_promptPattern;
     QByteArray  m_loginPattern;
     QByteArray  m_passwordPattern;

@@ -47,6 +47,8 @@
 
 using namespace std;
 
+#define MINUMUM_STATIC_LINES 1
+
 MapStorage::MapStorage(MapData& mapdata, const QString& filename, QFile* file) :
     AbstractMapStorage(mapdata, filename, file)
 {}
@@ -103,7 +105,7 @@ Room * MapStorage::loadOldRoom(QDataStream & stream, ConnectionList & connection
   {
     if ( (*i) != "" )
     {
-      if ((lineCount >= Config().m_minimumStaticLines) &&
+      if ((lineCount >= MINUMUM_STATIC_LINES) &&
           ((readingStaticDescLines == false) ||
            Patterns::matchDynamicDescriptionPatterns(*i)))
       {

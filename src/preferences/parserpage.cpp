@@ -61,17 +61,13 @@ ParserPage::ParserPage(QWidget *parent)
 	suppressXmlTagsCheckBox->setEnabled(true);
 
 	forcePatternsList->clear();
-	forcePatternsList->addItems( Config().m_moveForcePatternsList );
-	cancelPatternsList->clear();
-	cancelPatternsList->addItems( Config().m_moveCancelPatternsList );
+    forcePatternsList->addItems( Config().m_moveForcePatternsList );
 	endDescPatternsList->clear();
 	endDescPatternsList->addItems( Config().m_noDescriptionPatternsList );
     
-    connect( removeCancelPattern, SIGNAL(clicked()),SLOT(removeCancelPatternClicked()));
 	connect( removeForcePattern, SIGNAL(clicked()),SLOT(removeForcePatternClicked()));
 	connect( removeEndDescPattern, SIGNAL(clicked()),SLOT(removeEndDescPatternClicked()));
 
-	connect( addCancelPattern, SIGNAL(clicked()),SLOT(addCancelPatternClicked()));
 	connect( addForcePattern, SIGNAL(clicked()),SLOT(addForcePatternClicked()));
 	connect( addEndDescPattern, SIGNAL(clicked()),SLOT(addEndDescPatternClicked()));
 
@@ -79,9 +75,7 @@ ParserPage::ParserPage(QWidget *parent)
 	connect( validPattern, SIGNAL(clicked()),SLOT(validPatternClicked()));
 
 	connect( forcePatternsList,SIGNAL(activated(const QString&)),
-		SLOT(forcePatternsListActivated(const QString&)));
-	connect( cancelPatternsList,SIGNAL(activated(const QString&)),
-		SLOT(cancelPatternsListActivated(const QString&)));
+        SLOT(forcePatternsListActivated(const QString&)));
 	connect( endDescPatternsList,SIGNAL(activated(const QString&)),
 		SLOT(endDescPatternsListActivated(const QString&)));
 
@@ -141,10 +135,6 @@ void ParserPage::savePatterns()
 	for ( int i=0; i<forcePatternsList->count(); i++)
 		Config().m_moveForcePatternsList.append( forcePatternsList->itemText(i) );
 
-	Config().m_moveCancelPatternsList.clear();
-	for ( int i=0; i<cancelPatternsList->count(); i++)
-		Config().m_moveCancelPatternsList.append( cancelPatternsList->itemText(i) );
-
 	Config().m_noDescriptionPatternsList.clear();
 	for ( int i=0; i<endDescPatternsList->count(); i++)
 		Config().m_noDescriptionPatternsList.append( endDescPatternsList->itemText(i) );
@@ -152,11 +142,6 @@ void ParserPage::savePatterns()
 
 void ParserPage::removeForcePatternClicked(){
 	forcePatternsList->removeItem(forcePatternsList->currentIndex());
-	savePatterns();
-}
-
-void ParserPage::removeCancelPatternClicked(){
-	cancelPatternsList->removeItem(cancelPatternsList->currentIndex());
 	savePatterns();
 }
 
@@ -225,10 +210,6 @@ void ParserPage::forcePatternsListActivated(const QString& str){
 	newPattern->setText(str);
 }
 
-void ParserPage::cancelPatternsListActivated(const QString& str){
-	newPattern->setText(str);
-}
-
 void ParserPage::endDescPatternsListActivated(const QString& str){
 	newPattern->setText(str);
 }
@@ -238,15 +219,6 @@ void ParserPage::addForcePatternClicked(){
 	if((str=newPattern->text())!="") {
 		forcePatternsList->addItem(str);
 		forcePatternsList->setCurrentIndex(forcePatternsList->count()-1);
-	}
-	savePatterns();
-}
-
-void ParserPage::addCancelPatternClicked(){
-	QString str;
-	if((str=newPattern->text())!=""){
-		cancelPatternsList->addItem(str);
-		cancelPatternsList->setCurrentIndex(cancelPatternsList->count()-1);
 	}
 	savePatterns();
 }

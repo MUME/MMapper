@@ -27,32 +27,30 @@
 #define _PATTERNS_H_
 
 #include <QRegExp>
+#include <QStringList>
 
 class QString;
 class QByteArray;
+class QStringList;
 
 class Patterns {
 	
     static QRegExp m_rx;
+    static QStringList m_dynamicDescriptionPatternsList;
+    static const QRegExp m_score;
     
 public:
-	static bool matchMoveCancelPatterns(QString&);
+    static bool matchScore(QString&str);
 	static bool matchMoveForcePatterns(QString&);
 	static bool matchNoDescriptionPatterns(QString&);
 	static bool matchDynamicDescriptionPatterns(QString&);
 	static bool matchPasswordPatterns(QByteArray&);
-	static bool matchExitsPatterns(QString&);
-    static bool matchScoutPatterns(QString&);
     static bool matchPromptPatterns(QByteArray&);
     static bool matchLoginPatterns(QByteArray&);
     static bool matchMenuPromptPatterns(QByteArray&);
 
     static bool matchPattern(QString pattern, QString& str);
     static bool matchPattern(QByteArray pattern, QByteArray& str);
-
-    // Taken from Pandora
-    static const QRegExp scoreExp;
-    static const QRegExp scoreTrollExp;
 };
 
 #endif

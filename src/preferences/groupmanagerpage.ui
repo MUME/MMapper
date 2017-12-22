@@ -29,7 +29,16 @@
    <property name="spacing">
     <number>6</number>
    </property>
-   <property name="margin">
+   <property name="leftMargin">
+    <number>9</number>
+   </property>
+   <property name="topMargin">
+    <number>9</number>
+   </property>
+   <property name="rightMargin">
+    <number>9</number>
+   </property>
+   <property name="bottomMargin">
     <number>9</number>
    </property>
    <item>
@@ -38,15 +47,15 @@
       <string>Character Settings</string>
      </property>
      <layout class="QGridLayout">
+      <item row="0" column="1" colspan="3">
+       <widget class="QLineEdit" name="charName"/>
+      </item>
       <item row="0" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
          <string>Character Name:</string>
         </property>
        </widget>
-      </item>
-      <item row="0" column="1" colspan="4">
-       <widget class="QLineEdit" name="charName"/>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label_5">
@@ -55,27 +64,17 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="3">
+      <item row="1" column="1">
        <widget class="QLabel" name="colorLabel">
         <property name="text">
          <string/>
         </property>
        </widget>
       </item>
-      <item row="1" column="4">
+      <item row="1" column="2">
        <widget class="QPushButton" name="changeColor">
         <property name="text">
          <string>Change Color</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1" colspan="2">
-       <widget class="QLineEdit" name="colorName">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
         </property>
        </widget>
       </item>

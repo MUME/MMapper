@@ -72,7 +72,6 @@ ConfigDialog::ConfigDialog(CGroup* gm)
   setWindowTitle(tr("Config Dialog"));
 
   pagesWidget->addWidget(new GeneralPage);
-    //contentsWidget->setCurrentRow(0);
   pagesWidget->setCurrentIndex(0);
 }
 
@@ -96,13 +95,11 @@ void ConfigDialog::createIcons()
   groupButton->setTextAlignment(Qt::AlignHCenter);
   groupButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
-/*
-  QListWidgetItem *queryButton = new QListWidgetItem(contentsWidget);
-  queryButton->setIcon(QIcon(":/icons/pathmachinecfg.png"));
-  queryButton->setText(tr("Pathmachine"));
-  queryButton->setTextAlignment(Qt::AlignHCenter);
-  queryButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
-*/
+  QListWidgetItem *pathButton = new QListWidgetItem(contentsWidget);
+  pathButton->setIcon(QIcon(":/icons/pathmachinecfg.png"));
+  pathButton->setText(tr("Path\nMachine"));
+  pathButton->setTextAlignment(Qt::AlignHCenter);
+  pathButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
   connect(contentsWidget,
           SIGNAL(currentItemChanged(QListWidgetItem *, QListWidgetItem *)),
@@ -116,8 +113,9 @@ void ConfigDialog::changePage(QListWidgetItem *current, QListWidgetItem *previou
 
   if (pagesWidget->count()<=1)
   {
-    pagesWidget->addWidget(new ParserPage);
-    pagesWidget->addWidget(new GroupManagerPage(m_groupManager));
+    pagesWidget->addWidget(new ParserPage(this));
+    pagesWidget->addWidget(new GroupManagerPage(m_groupManager, this));
+    pagesWidget->addWidget(new PathmachinePage(this));
   }
 
   pagesWidget->setCurrentIndex(contentsWidget->row(current));

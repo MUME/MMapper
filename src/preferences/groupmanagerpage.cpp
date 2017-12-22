@@ -41,7 +41,6 @@ GroupManagerPage::GroupManagerPage(CGroup* gm, QWidget *parent)
   // Character Section
   connect( charName, SIGNAL( editingFinished() ), SLOT( charNameTextChanged() )  );
   connect( changeColor, SIGNAL(clicked()),SLOT(changeColorClicked()));
-  connect( colorName, SIGNAL( editingFinished() ), SLOT( colorNameTextChanged() )  );
   // Host Section
   connect( localHost, SIGNAL( linkActivated (const QString&) ),
 	   SLOT( localHostLinkActivated(const QString&) ));
@@ -53,7 +52,6 @@ GroupManagerPage::GroupManagerPage(CGroup* gm, QWidget *parent)
   connect( rulesWarning, SIGNAL(stateChanged(int)), SLOT(rulesWarningChanged(int)));
 
   charName->setText( Config().m_groupManagerCharName );
-  colorName->setText( Config().m_groupManagerColor.name() );
   colorLabel->setPalette(QPalette(Config().m_groupManagerColor));
   colorLabel->setAutoFillBackground(true);
   localPort->setValue( Config().m_groupManagerLocalPort );
@@ -72,22 +70,10 @@ void GroupManagerPage::charNameTextChanged()
   }
 }
 
-void GroupManagerPage::colorNameTextChanged()
-{
-  const QColor newColor = QColor(colorName->text());
-  if (newColor.isValid() && newColor != Config().m_groupManagerColor) {
-    colorLabel->setPalette(QPalette(newColor));
-    colorLabel->setAutoFillBackground(true);
-    Config().m_groupManagerColor = newColor;
-    m_groupManager->resetColor();
-  }
-}
-
 void GroupManagerPage::changeColorClicked()
 {
   const QColor newColor = QColorDialog::getColor(Config().m_groupManagerColor, this);
   if (newColor.isValid() && newColor != Config().m_groupManagerColor) {
-    colorName->setText(newColor.name());
     colorLabel->setPalette(QPalette(newColor));
     colorLabel->setAutoFillBackground(true);
     Config().m_groupManagerColor = newColor;

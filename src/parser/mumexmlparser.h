@@ -46,6 +46,9 @@ class MumeXmlParser : public AbstractParser
 
     void parse(const QByteArray& );
 
+signals:
+    void suggestTime(const QString&, const QString&);
+
   public slots:
     void parseNewMudInput(IncomingData& que);
 
@@ -75,6 +78,7 @@ class MumeXmlParser : public AbstractParser
     void move();
     QByteArray m_tempCharacters;
     QByteArray m_tempTag;
+    QString m_mumeTime;
     bool m_readingTag;
     bool m_readStatusTag;
     bool m_gratuitous;

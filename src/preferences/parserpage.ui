@@ -144,7 +144,7 @@
          </size>
         </property>
         <property name="text">
-         <string>&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;/head&gt;&lt;body style=&quot; white-space: pre-wrap; font-family:MS Shell Dlg; font-size:8.25pt; font-weight:400; font-style:normal; text-decoration:none;&quot;&gt;&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;&quot;&gt;Descriptions color: fg/bg/attr&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>Descriptions color: fg/bg/attr</string>
         </property>
        </widget>
       </item>
@@ -291,95 +291,10 @@
       <property name="spacing">
        <number>6</number>
       </property>
-      <item row="3" column="0" colspan="3">
-       <widget class="QComboBox" name="cancelPatternsList">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="editable">
-         <bool>false</bool>
-        </property>
-        <property name="duplicatesEnabled">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="2">
-       <widget class="QPushButton" name="removeCancelPattern">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>25</height>
-         </size>
-        </property>
+      <item row="0" column="0">
+       <widget class="QLabel" name="textLabel1_4">
         <property name="text">
-         <string>Remove pattern</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QPushButton" name="addCancelPattern">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>25</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>Add pattern</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0" colspan="3">
-       <widget class="QComboBox" name="forcePatternsList">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="focusPolicy">
-         <enum>Qt::StrongFocus</enum>
-        </property>
-        <property name="editable">
-         <bool>false</bool>
-        </property>
-        <property name="duplicatesEnabled">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QPushButton" name="removeForcePattern">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>25</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>Remove pattern</string>
+         <string>Move force patterns:</string>
         </property>
        </widget>
       </item>
@@ -402,17 +317,41 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="textLabel1_4">
+      <item row="0" column="2">
+       <widget class="QPushButton" name="removeForcePattern">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>25</height>
+         </size>
+        </property>
         <property name="text">
-         <string>Move force patterns:</string>
+         <string>Remove pattern</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="textLabel1_5">
-        <property name="text">
-         <string>Move cancel patterns:</string>
+      <item row="1" column="0" colspan="3">
+       <widget class="QComboBox" name="forcePatternsList">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="focusPolicy">
+         <enum>Qt::StrongFocus</enum>
+        </property>
+        <property name="editable">
+         <bool>false</bool>
+        </property>
+        <property name="duplicatesEnabled">
+         <bool>false</bool>
         </property>
        </widget>
       </item>
@@ -660,9 +599,6 @@
   <tabstop>roomNameAnsiColor</tabstop>
   <tabstop>roomDescAnsiColor</tabstop>
   <tabstop>IACPromptCheckBox</tabstop>
-  <tabstop>cancelPatternsList</tabstop>
-  <tabstop>removeCancelPattern</tabstop>
-  <tabstop>addCancelPattern</tabstop>
   <tabstop>forcePatternsList</tabstop>
   <tabstop>removeForcePattern</tabstop>
   <tabstop>addForcePattern</tabstop>
