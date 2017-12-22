@@ -62,6 +62,7 @@ void Configuration::read()
   m_drawNotMappedExits = conf.value("Draw not mapped exits", true).toBool();
   m_drawUpperLayersTextured = conf.value("Draw upper layers textured", false).toBool();
   m_drawDoorNames = conf.value("Draw door names", true).toBool();
+  m_backgroundColor = QColor(conf.value("Background color", QColor(110,110,110).name()).toString());
   conf.endGroup();
 
   conf.beginGroup("Auto load world");
@@ -157,6 +158,7 @@ void Configuration::write() const {
   conf.setValue("Draw not mapped exits", m_drawNotMappedExits);
   conf.setValue("Draw upper layers textured", m_drawUpperLayersTextured);
   conf.setValue("Draw door names", m_drawDoorNames);
+  conf.setValue("Background color", m_backgroundColor.name());
   conf.endGroup();
 
   conf.beginGroup("Auto load world");

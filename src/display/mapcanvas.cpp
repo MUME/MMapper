@@ -915,7 +915,7 @@ void MapCanvas::initializeGL()
     qDebug() << "Finished loading textures";
 
     // Background Color
-    qglClearColor(QColor(110,110,110));
+    qglClearColor(Config().m_backgroundColor);
     glShadeModel(GL_FLAT);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_NORMALIZE);

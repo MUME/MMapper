@@ -55,6 +55,8 @@ class Configuration {
     quint32   m_remotePort;
     quint32   m_localPort;         /// Port to bind to on local machine
 
+    QColor m_backgroundColor;
+
     bool m_autoLog;         // enables log to file
     QString m_logFileName;  // file name to log
     bool m_autoLoadWorld;

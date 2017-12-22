@@ -26,15 +26,24 @@
 #ifndef PATHMACHINEPAGE_H
 #define PATHMACHINEPAGE_H
 
-#include <QDialog>
+#include <QWidget>
 #include "ui_pathmachinepage.h"
 
-class PathmachinePage : public QDialog, private Ui::PathmachinePage
+class PathmachinePage : public QWidget, private Ui::PathmachinePage
 {
     Q_OBJECT
 
 public:
     PathmachinePage(QWidget *parent = 0);
+
+public slots:
+    void acceptBestRelativeDoubleSpinBoxValueChanged(double);
+    void acceptBestAbsoluteDoubleSpinBoxValueChanged(double);
+    void newRoomPenaltyDoubleSpinBoxValueChanged(double);
+    void correctPositionBonusDoubleSpinBoxValueChanged(double);
+    void multipleConnectionsPenaltyDoubleSpinBoxValueChanged(double);
+    void maxPathsValueChanged(int);
+    void matchingToleranceSpinBoxValueChanged(int);
 };
 
 

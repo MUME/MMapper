@@ -28,6 +28,7 @@
 #include "configuration.h"
 
 #include <QFileDialog>
+#include <QColorDialog>
 
 GeneralPage::GeneralPage(QWidget *parent)
   : QWidget(parent)
@@ -37,14 +38,7 @@ GeneralPage::GeneralPage(QWidget *parent)
   connect( remotePort, SIGNAL( valueChanged(int) ), this, SLOT( remotePortValueChanged(int) )  );
   connect( localPort, SIGNAL( valueChanged(int) ), this, SLOT( localPortValueChanged(int) )  );
 
-  connect ( acceptBestRelativeDoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(acceptBestRelativeDoubleSpinBoxValueChanged(double)) );
-  connect ( acceptBestAbsoluteDoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(acceptBestAbsoluteDoubleSpinBoxValueChanged(double)) );
-  connect ( newRoomPenaltyDoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(newRoomPenaltyDoubleSpinBoxValueChanged(double)) );
-  connect ( correctPositionBonusDoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(correctPositionBonusDoubleSpinBoxValueChanged(double)) );
-  connect ( multipleConnectionsPenaltyDoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(multipleConnectionsPenaltyDoubleSpinBoxValueChanged(double)) );
-        
-  connect ( maxPaths, SIGNAL(valueChanged(int)), this, SLOT(maxPathsValueChanged(int)) );
-  connect ( matchingToleranceSpinBox, SIGNAL(valueChanged(int)), this, SLOT(matchingToleranceSpinBoxValueChanged(int)) );
+  connect( changeColor, SIGNAL(clicked()),SLOT(changeColorClicked()));
 
   connect ( emulatedExits, SIGNAL(stateChanged(int)),SLOT(emulatedExitsStateChanged(int)));
   connect ( updated, SIGNAL(stateChanged(int)),SLOT(updatedStateChanged(int)));
@@ -61,13 +55,8 @@ GeneralPage::GeneralPage(QWidget *parent)
   remotePort->setValue( Config().m_remotePort );
   localPort->setValue( Config().m_localPort );
 
-  acceptBestRelativeDoubleSpinBox->setValue(Config().m_acceptBestRelative);
-  acceptBestAbsoluteDoubleSpinBox->setValue(Config().m_acceptBestAbsolute);
-  newRoomPenaltyDoubleSpinBox->setValue(Config().m_newRoomPenalty);
-  correctPositionBonusDoubleSpinBox->setValue(Config().m_correctPositionBonus);
-  maxPaths->setValue(Config().m_maxPaths);
-  matchingToleranceSpinBox->setValue(Config().m_matchingTolerance);
-  multipleConnectionsPenaltyDoubleSpinBox->setValue(Config().m_multipleConnectionsPenalty);
+  colorLabel->setPalette(QPalette(Config().m_backgroundColor));
+  colorLabel->setAutoFillBackground(true);
 
   emulatedExits->setChecked( Config().m_emulatedExits );
   updated->setChecked( Config().m_showUpdated );
@@ -79,6 +68,15 @@ GeneralPage::GeneralPage(QWidget *parent)
   autoLoadFileName->setText( Config().m_autoLoadFileName );
 }
 
+void GeneralPage::changeColorClicked()
+{
+  const QColor newColor = QColorDialog::getColor(Config().m_backgroundColor, this);
+  if (newColor.isValid() && newColor != Config().m_backgroundColor) {
+    colorLabel->setPalette(QPalette(newColor));
+    colorLabel->setAutoFillBackground(true);
+    Config().m_backgroundColor = newColor;
+  }
+}
 
 void GeneralPage::selectWorldFileButtonClicked()
 {
@@ -107,53 +105,15 @@ void GeneralPage::localPortValueChanged(int)
   Config().m_localPort = localPort->value();
 }
 
-void GeneralPage::acceptBestRelativeDoubleSpinBoxValueChanged(double val)
-{
-  Config().m_acceptBestRelative = val;
-}
-
-void GeneralPage::acceptBestAbsoluteDoubleSpinBoxValueChanged(double val)
-{
-  Config().m_acceptBestAbsolute = val;    
-}
-
-void GeneralPage::newRoomPenaltyDoubleSpinBoxValueChanged(double val)
-{
-  Config().m_newRoomPenalty = val;        
-}
-
-void GeneralPage::correctPositionBonusDoubleSpinBoxValueChanged(double val)
-{
-  Config().m_correctPositionBonus = val;  
-}
-
-void GeneralPage::multipleConnectionsPenaltyDoubleSpinBoxValueChanged(double val)
-{
-  Config().m_multipleConnectionsPenalty = val;                    
-}
-
-void GeneralPage::maxPathsValueChanged(int val)
-{
-  Config().m_maxPaths = val;      
-}
-
-void GeneralPage::matchingToleranceSpinBoxValueChanged(int val)
-{
-  Config().m_matchingTolerance = val;     
-}
-
 void GeneralPage::emulatedExitsStateChanged(int)
 {
   Config().m_emulatedExits = emulatedExits->isChecked();
 }
 
-
 void GeneralPage::updatedStateChanged(int)
 {
   Config().m_showUpdated = updated->isChecked();
 }
-
-
 
 void GeneralPage::drawNotMappedExitsStateChanged(int)
 {

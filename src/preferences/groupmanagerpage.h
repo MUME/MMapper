@@ -36,7 +36,6 @@ class GroupManagerPage : public QWidget, private Ui::GroupManagerPage
 
   public slots:
 
-    void colorNameTextChanged();
     void changeColorClicked();
     void charNameTextChanged();
 
