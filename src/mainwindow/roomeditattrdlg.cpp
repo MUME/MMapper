@@ -182,6 +182,10 @@ void RoomEditAttrDlg::connectAll()
     connect(darkRadioButton, SIGNAL(toggled(bool)), this, SLOT(darkRadioButtonToggled(bool)));
     connect(lightUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(lightUndefRadioButtonToggled(bool)));
 
+    connect(sundeathRadioButton, SIGNAL(toggled(bool)), this, SLOT(sundeathRadioButtonToggled(bool)));
+    connect(noSundeathRadioButton, SIGNAL(toggled(bool)), this, SLOT(noSundeathRadioButtonToggled(bool)));
+    connect(sundeathUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(sundeathUndefRadioButtonToggled(bool)));
+
 	connect(mobFlagsListWidget, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(mobFlagsListItemChanged(QListWidgetItem*)));
 	connect(loadFlagsListWidget, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(loadFlagsListItemChanged(QListWidgetItem*)));
 
@@ -745,6 +749,19 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
 				lightUndefRadioButton->setChecked(true);
 				break;
 		}
+
+        switch (getSundeathType(r))
+        {
+            case RST_NOSUNDEATH:
+                noSundeathRadioButton->setChecked(true);
+                break;
+            case RST_SUNDEATH:
+                sundeathRadioButton->setChecked(true);
+                break;
+            case RST_UNDEFINED:
+                sundeathUndefRadioButton->setChecked(true);
+                break;
+        }
 	}
 
 	connectAll();
@@ -955,6 +972,51 @@ void RoomEditAttrDlg::lightUndefRadioButtonToggled(bool val)
 	}
 }
 
+
+void RoomEditAttrDlg::sundeathRadioButtonToggled(bool val)
+{
+    if (val)
+    {
+        const Room* r = getSelectedRoom();
+        if (r)
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RST_SUNDEATH, R_SUNDEATHTYPE), r->getId()), m_roomSelection);
+        else
+            m_mapData->execute(new GroupAction(new UpdateRoomField(RST_SUNDEATH, R_SUNDEATHTYPE), m_roomSelection), m_roomSelection);
+
+        emit mapChanged();
+        updateDialog( getSelectedRoom() );
+    }
+}
+
+void RoomEditAttrDlg::noSundeathRadioButtonToggled(bool val)
+{
+    if (val)
+    {
+        const Room* r = getSelectedRoom();
+        if (r)
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RST_NOSUNDEATH, R_SUNDEATHTYPE), r->getId()), m_roomSelection);
+        else
+            m_mapData->execute(new GroupAction(new UpdateRoomField(RST_NOSUNDEATH, R_SUNDEATHTYPE), m_roomSelection), m_roomSelection);
+
+        emit mapChanged();
+        updateDialog( getSelectedRoom() );
+    }
+}
+
+void RoomEditAttrDlg::sundeathUndefRadioButtonToggled(bool val)
+{
+    if (val)
+    {
+        const Room* r = getSelectedRoom();
+        if (r)
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RST_UNDEFINED, R_SUNDEATHTYPE), r->getId()), m_roomSelection);
+        else
+            m_mapData->execute(new GroupAction(new UpdateRoomField(RST_UNDEFINED, R_SUNDEATHTYPE), m_roomSelection), m_roomSelection);
+
+        emit mapChanged();
+        updateDialog( getSelectedRoom() );
+    }
+}
 
 void RoomEditAttrDlg::mobFlagsListItemChanged(QListWidgetItem* item)
 {

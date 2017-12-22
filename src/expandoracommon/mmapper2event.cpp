@@ -30,7 +30,7 @@
 
 using namespace std;
 
-ParseEvent * createEvent(const CommandIdType & c, const QString & roomName, const QString & roomDesc, const QString & parsedRoomDesc, const ExitsFlagsType & exitFlags, const PromptFlagsType & promptFlags)
+ParseEvent * createEvent(const CommandIdType & c, const QString & roomName, const QString & roomDesc, const QString & parsedRoomDesc, const ExitsFlagsType & exitFlags, const PromptFlagsType & promptFlags, const ConnectedRoomFlagsType & connectedRoomFlags)
 {
   
   ParseEvent * event = new ParseEvent(c);
@@ -66,6 +66,7 @@ ParseEvent * createEvent(const CommandIdType & c, const QString & roomName, cons
     event->push_back(new Property(true));
   }
   optional.push_back((uint)promptFlags);
+  optional.push_back((uint)connectedRoomFlags);
   event->countSkipped();
   return event;
 }
@@ -81,5 +82,7 @@ ExitsFlagsType getExitFlags(const ParseEvent * e)
   {return e->getOptional()[EV_EXITS].toUInt();}
 PromptFlagsType getPromptFlags(const ParseEvent * e)
   {return e->getOptional()[EV_PROMPT].toUInt();}
+ConnectedRoomFlagsType getConnectedRoomFlags(const ParseEvent * e)
+  {return e->getOptional()[EV_CROOM].toUInt();}
 
 

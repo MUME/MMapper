@@ -80,6 +80,7 @@ Room * MapStorage::loadOldRoom(QDataStream & stream, ConnectionList & connection
   RoomTerrainType     terrainType = RTT_UNDEFINED;
   RoomPortableType    portableType = RPT_UNDEFINED;
   RoomRidableType     ridableType = RRT_UNDEFINED;
+  RoomSundeathType    sundeathType = RST_UNDEFINED;
   RoomLightType       lightType = RLT_UNDEFINED;
   RoomAlignType       alignType = RAT_UNDEFINED;
   RoomMobFlags        mobFlags = 0;
@@ -288,6 +289,7 @@ Room * MapStorage::loadOldRoom(QDataStream & stream, ConnectionList & connection
   room->replace(R_ALIGNTYPE, alignType);
   room->replace(R_PORTABLETYPE, portableType);
   room->replace(R_RIDABLETYPE, ridableType);
+  room->replace(R_SUNDEATHTYPE, sundeathType);
   room->replace(R_MOBFLAGS, mobFlags);
   room->replace(R_LOADFLAGS, loadFlags);
 
@@ -324,6 +326,11 @@ Room * MapStorage::loadRoom(QDataStream & stream, qint32 version)
   else
 	  vquint8 = 0;
   room->replace(R_RIDABLETYPE, vquint8);
+  if (version >= 041)
+      stream >> vquint8;
+  else
+      vquint8 = 0;
+  room->replace(R_SUNDEATHTYPE, vquint8);
   stream >> vquint16; room->replace(R_MOBFLAGS, vquint16);
   stream >> vquint16; room->replace(R_LOADFLAGS, vquint16);
 
@@ -433,7 +440,7 @@ bool MapStorage::mergeData()
     stream >> magic;
     if ( magic != 0xFFB2AF01 ) return false;
     stream >> version;
-    if ( version != 040 && version != 031 && version != 030 &&
+    if ( version != 041 && version != 040 && version != 031 && version != 030 &&
 	 version != 020 && version != 021 && version != 007 ) return false;
 
     // We currently force serialization to Qt4.8 since Qt5 broke QDateTime serialization
@@ -835,6 +842,7 @@ void MapStorage::saveRoom(const Room * room, QDataStream & stream)
   stream << (quint8)getAlignType(room);
   stream << (quint8)getPortableType(room);
   stream << (quint8)getRidableType(room);
+  stream << (quint8)getSundeathType(room);
   stream << (quint16)getMobFlags(room);
   stream << (quint16)getLoadFlags(room);
 
@@ -904,7 +912,7 @@ bool MapStorage::saveData( bool baseMapOnly )
 
   // Write a header with a "magic number" and a version
   stream << (quint32)0xFFB2AF01;
-  stream << (qint32)040;
+  stream << (qint32)041;
   stream.setVersion(QDataStream::Qt_4_8);
 
   // QtIOCompressor

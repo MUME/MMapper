@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -42,43 +42,25 @@ class Room;
 class Coordinate;
 
 enum CommandIdType   { CID_NORTH = 0, CID_SOUTH, CID_EAST, CID_WEST, CID_UP, CID_DOWN,
-						CID_UNKNOWN, CID_LOOK, CID_FLEE, CID_SCOUT, /*CID_SYNC, CID_RESET, */CID_NONE };
+                        CID_UNKNOWN, CID_LOOK, CID_FLEE, CID_SCOUT, /*CID_SYNC, CID_RESET, */CID_NONE };
 
 enum DoorActionType { DAT_OPEN, DAT_CLOSE, DAT_LOCK, DAT_UNLOCK, DAT_PICK, DAT_ROCK, DAT_BASH, DAT_BREAK, DAT_BLOCK, DAT_NONE };
 
-#define EXIT_N bit1
-#define EXIT_S bit5
-#define EXIT_E bit9
-#define EXIT_W bit13
-#define EXIT_U bit17
-#define EXIT_D bit21
-
-#define DOOR_N bit2
-#define DOOR_S bit6
-#define DOOR_E bit10
-#define DOOR_W bit14
-#define DOOR_U bit18
-#define DOOR_D bit22
-
-#define ROAD_N bit3
-#define ROAD_S bit7
-#define ROAD_E bit11
-#define ROAD_W bit15
-#define ROAD_U bit19
-#define ROAD_D bit23
-
-#define CLIMB_N bit4
-#define CLIMB_S bit8
-#define CLIMB_E bit12
-#define CLIMB_W bit16
-#define CLIMB_U bit20
-#define CLIMB_D bit24
-
-#define EXITS_FLAGS_VALID bit25
+// bit1 through bit24
+// EF_EXIT, EF_DOOR, EF_ROAD, EF_CLIMB
+#define EXITS_FLAGS_VALID bit31
 typedef quint32 ExitsFlagsType;
 
+// bit1 through bit12
+#define DIRECT_SUN_ROOM bit1
+#define INDIRECT_SUN_ROOM bit2
+
+#define ANY_DIRECT_SUNLIGHT (bit1 + bit3 + bit5 + bit9 + bit11)
+#define CONNECTED_ROOM_FLAGS_VALID bit15
+typedef quint16 ConnectedRoomFlagsType;
+
 // 0-3 terrain type (bit1 through bit4)
-#define SUN_ROOM bit5
+#define LIT_ROOM bit5
 #define DARK_ROOM bit6
 #define PROMPT_FLAGS_VALID bit7
 typedef quint8 PromptFlagsType;
@@ -102,7 +84,7 @@ signals:
   void releaseAllPaths();
 
   //used to log
-  void logText( const QString& );
+  void log(const QString&, const QString&);
 
   //for main move/search algorithm
   void event(ParseEvent* );
@@ -121,6 +103,7 @@ public slots:
   virtual void parseNewMudInput(IncomingData&) = 0;
   void parseNewUserInput(IncomingData&);
 
+  void reset();
   void emptyQueue();
   void sendGTellToUser(const QByteArray& );
 
@@ -130,6 +113,7 @@ protected:
   void sendPromptToUser();
   void sendPromptToUser(const Room* r);
   void sendRoomExitsInfoToUser(const Room* r);
+  const Coordinate getPosition();
 
   //command handling
   void performDoorCommand(DirectionType direction, DoorActionType action);
@@ -159,7 +143,9 @@ protected:
   QString m_dynamicRoomDesc;
   ExitsFlagsType m_exitsFlags;
   PromptFlagsType m_promptFlags;
+  ConnectedRoomFlagsType m_connectedRoomFlags;
   QString m_lastPrompt;
+  bool m_trollExitMapping;
 
   CommandQueue queue;
   MumeClock* m_mumeClock;

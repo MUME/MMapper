@@ -158,6 +158,8 @@ bool Proxy::init()
   connect(m_parserXml, SIGNAL(event(ParseEvent* )), m_pathMachine, SLOT(event(ParseEvent* )), Qt::QueuedConnection);
   connect(m_parserXml, SIGNAL(releaseAllPaths()), m_pathMachine, SLOT(releaseAllPaths()), Qt::QueuedConnection);
   connect(m_parserXml, SIGNAL(showPath(CommandQueue, bool)), m_prespammedPath, SLOT(setPath(CommandQueue, bool)), Qt::QueuedConnection);
+  connect(m_parserXml, SIGNAL(log(const QString&, const QString&)), m_parent->parent(), SLOT(log(const QString&, const QString&)));
+  connect(m_userSocket, SIGNAL(disconnected()), m_parserXml, SLOT(reset()) );
 
   //Group Manager Support
   connect(m_parserXml, SIGNAL(sendScoreLineEvent(QByteArray)), m_groupManager, SLOT(parseScoreInformation(QByteArray)), Qt::QueuedConnection);
@@ -175,6 +177,7 @@ bool Proxy::init()
   m_mudSocket = new QTcpSocket(this);
   m_mudSocket->setSocketOption(QAbstractSocket::KeepAliveOption, true);
   connect(m_mudSocket, SIGNAL(disconnected()), this, SLOT(mudTerminatedConnection()) );
+  connect(m_mudSocket, SIGNAL(disconnected()), m_parserXml, SLOT(reset()) );
   connect(m_mudSocket, SIGNAL(readyRead()), this, SLOT(processMudStream()) );
 
   m_mudSocket->connectToHost(m_remoteHost, m_remotePort, QIODevice::ReadWrite);

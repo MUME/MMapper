@@ -67,6 +67,10 @@ public slots:
 	void darkRadioButtonToggled(bool);
 	void lightUndefRadioButtonToggled(bool);
 
+    void noSundeathRadioButtonToggled(bool);
+    void sundeathRadioButtonToggled(bool);
+    void sundeathUndefRadioButtonToggled(bool);
+
 	void mobFlagsListItemChanged(QListWidgetItem*);
 	void loadFlagsListItemChanged(QListWidgetItem*);
 
@@ -77,7 +81,7 @@ public slots:
 	void doorNameLineEditTextChanged(QString);
 	void doorFlagsListItemChanged(QListWidgetItem*);
 
-  void toggleHiddenDoor();
+    void toggleHiddenDoor();
 
 	//terrain tab
 	void terrainToolButtonToggled(bool);
@@ -112,9 +116,9 @@ private:
 	QListWidgetItem* doorListItems[20];
 
 	const RoomSelection* 	m_roomSelection;
-	MapData* 		          m_mapData;
+    MapData* 		        m_mapData;
 	MapCanvas* 		        m_mapCanvas;
-  QShortcut*            m_hiddenShortcut;
+    QShortcut*              m_hiddenShortcut;
 };
 
 

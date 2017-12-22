@@ -27,24 +27,10 @@
 #ifndef PARSER
 #define PARSER
 
-//#include "parseevent.h"
-//#include "property.h"
-//#include "path.h"
 #include "room.h"
-//#include "coordinate.h"
-//#include "crossover.h"
-//#include "onebyone.h"
-//#include "approved.h"
-//#include "syncing.h"
 #include "component.h"
 #include "roomsignalhandler.h"
-//#include "abstractroomfactory.h"
 #include "pathparameters.h"
-
-//#include <queue>
-//#include <list>
-//#include <queue>
-//#include <qobject.h>
 
 #define APPROVED 0
 #define EXPERIMENTING 1

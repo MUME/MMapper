@@ -25,9 +25,6 @@
 
 #ifndef MMAPPER2ROOM_H
 #define MMAPPER2ROOM_H
-//#include "room.h"
-//#include "exit.h"
-//#include "mapdata.h"
 
 #include <QtGlobal>
 
@@ -45,6 +42,8 @@ enum RoomPortableType   { RPT_UNDEFINED = 0, RPT_PORTABLE, RPT_NOTPORTABLE };
 enum RoomLightType      { RLT_UNDEFINED = 0, RLT_DARK, RLT_LIT };
 enum RoomAlignType      { RAT_UNDEFINED = 0, RAT_GOOD, RAT_NEUTRAL, RAT_EVIL };
 enum RoomRidableType    { RRT_UNDEFINED = 0, RRT_RIDABLE, RRT_NOTRIDABLE };
+enum RoomSundeathType   { RST_UNDEFINED = 0, RST_SUNDEATH, RST_NOSUNDEATH };
+#define NUM_ROOM_PROPS      12
 
 #define RMF_RENT            bit1
 #define RMF_SHOP            bit2
@@ -82,7 +81,7 @@ typedef quint16 RoomMobFlags;
 #define RLF_TOWER     		bit16
 typedef quint16 RoomLoadFlags;
 
-enum RoomField {R_NAME, R_DESC, R_TERRAINTYPE, R_DYNAMICDESC, R_NOTE, R_MOBFLAGS, R_LOADFLAGS, R_PORTABLETYPE, R_LIGHTTYPE, R_ALIGNTYPE, R_RIDABLETYPE, R_KEYWORDS, ROOMFIELD_LAST};
+enum RoomField {R_NAME, R_DESC, R_TERRAINTYPE, R_DYNAMICDESC, R_NOTE, R_MOBFLAGS, R_LOADFLAGS, R_PORTABLETYPE, R_LIGHTTYPE, R_ALIGNTYPE, R_RIDABLETYPE, R_SUNDEATHTYPE, R_KEYWORDS, ROOMFIELD_LAST};
 
 RoomName getName(const Room * room);
 
@@ -105,5 +104,7 @@ RoomLightType getLightType(const Room * room);
 RoomAlignType getAlignType(const Room * room);
 
 RoomRidableType getRidableType(const Room * room);
+
+RoomSundeathType getSundeathType(const Room * room);
 
 #endif

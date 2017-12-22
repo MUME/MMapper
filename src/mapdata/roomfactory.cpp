@@ -35,7 +35,7 @@
 
 Room * RoomFactory::createRoom(const ParseEvent * ev) const
 {
-  Room * room = new Room(11, 7, 3);
+  Room * room = new Room(NUM_ROOM_PROPS, NUM_EXITS, NUM_EXIT_PROPS);
   if (ev) update(room, ev);
   return room;
 }
@@ -58,7 +58,7 @@ ParseEvent * RoomFactory::getEvent(const Room * room) const
 
   CommandIdType c = CID_UNKNOWN;
 
-  ParseEvent * event = createEvent(c, getName(room), getDynamicDescription(room) , getDescription(room), exitFlags, promptFlags);
+  ParseEvent * event = createEvent(c, getName(room), getDynamicDescription(room) , getDescription(room), exitFlags, promptFlags, 0);
   return event;
 }
 
@@ -127,7 +127,6 @@ ComparisonResult RoomFactory::compare(const Room * room, const ParseEvent * even
 
   if (event == NULL) 
   {
-  	//return CR_DIFFERENT;
     return CR_EQUAL;
   }
 
@@ -180,20 +179,23 @@ ComparisonResult RoomFactory::compareWeakProps(const Room * room, const ParseEve
   bool different = false;
   bool tolerance = false;
 
-  /*
-  // Disable until we can identify day/night/blindness
   PromptFlagsType pFlags = getPromptFlags(event);
   if (pFlags & PROMPT_FLAGS_VALID)
   {
       const RoomLightType lightType = getLightType(room);
-      if ((pFlags & SUN_ROOM) && lightType != RLT_LIT) {
+      const RoomSundeathType sunType = getSundeathType(room);
+      if ((pFlags & LIT_ROOM) && lightType != RLT_LIT && sunType == RST_NOSUNDEATH)
+      {   // Allow prompt sunlight to override rooms with the DARK flag if we know the room
+          // is troll safe and obviously not in permanent darkness
           tolerance = true;
       }
+      /*
+      // Disable until we can identify day/night or blindness/darkness spell
       else if ((pFlags & DARK_ROOM) && lightType != RLT_DARK) {
           tolerance = true;
       }
+      */
   }
-  */
 
   ExitsFlagsType eFlags = getExitFlags(event);
   if (eFlags & EXITS_FLAGS_VALID)
@@ -287,7 +289,7 @@ void RoomFactory::update(Room * room, const ParseEvent * event) const
     PromptFlagsType rt = pFlags;
     rt &= (bit1 + bit2 + bit3 + bit4);
     (*room)[R_TERRAINTYPE] = (RoomTerrainType)rt;
-    if (pFlags & SUN_ROOM) {
+    if (pFlags & LIT_ROOM) {
       (*room)[R_LIGHTTYPE] = RLT_LIT;
     }
     else if (pFlags & DARK_ROOM) {
@@ -320,6 +322,7 @@ void RoomFactory::update(Room * target, const Room * source) const
 
   if (getAlignType(target) == RAT_UNDEFINED) target->replace(R_ALIGNTYPE, getAlignType(source));
   if (getLightType(target) == RLT_UNDEFINED) target->replace(R_LIGHTTYPE, getLightType(source));
+  if (getSundeathType(target) == RST_UNDEFINED) target->replace(R_SUNDEATHTYPE, getSundeathType(source));
   if (getPortableType(target) == RPT_UNDEFINED) target->replace(R_PORTABLETYPE, getPortableType(source));
   if (getRidableType(target) == RRT_UNDEFINED) target->replace(R_RIDABLETYPE, getRidableType(source));
   if (getTerrainType(source) != RTT_UNDEFINED) target->replace(R_TERRAINTYPE, getTerrainType(source));

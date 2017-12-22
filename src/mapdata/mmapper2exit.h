@@ -35,6 +35,7 @@ enum ExitType { ET_NORMAL, ET_LOOP, ET_ONEWAY, ET_UNDEFINED };
 
 enum ExitDirection { ED_NORTH=0, ED_SOUTH, ED_EAST, ED_WEST, ED_UP,
 			   ED_DOWN, ED_UNKNOWN, ED_NONE };
+#define NUM_EXITS 7
 
 ExitDirection opposite(ExitDirection in);
 uint opposite(uint in);
@@ -64,6 +65,7 @@ typedef class QString DoorName;
 #define DF_ACTION     bit10
 
 enum ExitField {E_DOORNAME = 0, E_FLAGS, E_DOORFLAGS};
+#define NUM_EXIT_PROPS 3
 
 typedef quint8 ExitFlags;
 typedef quint16 DoorFlags;

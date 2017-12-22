@@ -32,11 +32,13 @@
 #include "roomselection.h"
 #include "mapdata.h"
 #include "mumeclock.h"
+#include "mapaction.h"
 
 #include <unistd.h>
 
 #include <QDesktopServices>
 #include <QUrl>
+#include <QDebug>
 
 const QString AbstractParser::nullString;
 const QString AbstractParser::emptyString("");
@@ -49,6 +51,8 @@ AbstractParser::AbstractParser(MapData* md, MumeClock* mc, QObject *parent)
   m_descriptionReady = false;
   m_mumeClock = mc;
   m_mapData = md;
+  m_trollExitMapping = false;
+
   m_exitsFlags = 0;
   m_promptFlags = 0;
 
@@ -58,6 +62,13 @@ AbstractParser::AbstractParser(MapData* md, MumeClock* mc, QObject *parent)
 AbstractParser::~AbstractParser(){
   if (search_rs != NULL)
     m_mapData->unselect(search_rs);
+}
+
+void AbstractParser::reset()
+{
+    emit log("Parser", "Disabling troll exit mapping");
+    m_trollExitMapping = false;
+    queue.clear();
 }
 
 void AbstractParser::emptyQueue()
@@ -73,11 +84,13 @@ void AbstractParser::parsePrompt(QString& prompt){
   sendPromptLineEvent(m_stringBuffer.toLatin1());
 
   switch (sv=(int)((prompt[index]).toLatin1())) {
-  case 64: index++;m_promptFlags=SUN_ROOM;break; // @  direct sunlight
-  case 42: index++;m_promptFlags=SUN_ROOM;break; // *  indoor/cloudy sun
+  case 42: index++;m_promptFlags=LIT_ROOM;break; // *  indoor/sun (direct and indirect)
   case 33: index++;break;                        // !  artifical light
-  case 41: index++;m_promptFlags=SUN_ROOM;break; // )  moonlight
-  case 111:index++;m_promptFlags=DARK_ROOM;break;// o  darkness
+  case 41: index++;m_promptFlags=LIT_ROOM;break; // )  moon (direct and indirect)
+  case 111:index++;                              // o  darkness
+      // TODO: Enable when we know it is night only
+      //m_promptFlags=DARK_ROOM;
+      break;
   default:;
   }
 
@@ -104,166 +117,132 @@ void AbstractParser::parsePrompt(QString& prompt){
 
 void AbstractParser::parseExits(QString& str)
 {
-  m_exitsFlags = 0;
-  bool doors=false;
-  bool road=false;
-  bool climb=false;
-  bool portal=false;
+    m_connectedRoomFlags = 0;
+    m_exitsFlags = 0;
+    ExitsFlagsType closedDoorFlag = 0;
+    bool doors=false;
+    bool closed=false;
+    bool road=false;
+    bool climb=false;
+    bool portal=false;
+    bool directSun=false;
+    DirectionType dir = UNKNOWN;
 
-  int length = str.length();
-  for (int i=7; i<length; i++){
-    switch ((int)(str.at(i).toLatin1())){
-    case 40: doors=true;break;    /* ( */
-    case 91: doors=true;break;    /* [ */
-    case 35: doors=true;break;    /* # */
-    case 61: road=true;break;     /* = */
-    case 45: road=true;break;     /* - */
-    case 47: climb=true;break;    /* / */
-    case 92: climb=true;break;    /* \ */
-    case 123: portal=true;break;  /* { */
+    int length = str.length();
+    for (int i=7; i<length; i++){
+        switch ((int)(str.at(i).toLatin1())){
+        case 40: doors=true;break;              // (  // open door
+        case 91: doors=true;closed=true;break;  // [  // closed door
+        case 35: doors=true;break;              // #  // broken door
+        case 61: road=true;break;               // =  // road
+        case 45: road=true;break;               // -  // trail
+        case 47: climb=true;break;              // /  // upward climb
+        case 92: climb=true;break;              // \  // downward climb
+        case 123: portal=true;break;            // {  // portal
+        case 42: directSun=true;break;          // *  // sunlit room (troll/orc only)
+        case 94: directSun=true;                // ^  // outdoors room (troll only)
+            if (!m_trollExitMapping)
+                emit log("Parser", "Autoenabling troll exit mapping mode.");
+            m_trollExitMapping = true;
+            break;
 
-    case 32: // empty space means reset for next exit
-        doors=false;
-        road=false;
-        climb=false;
-        portal=false;
-        break;
-
-    case 110:  // n
-      if ( (i+2)<length && (str.at(i+2).toLatin1()) == 'r') //north
-        {
-          i+=5;
-	  if (climb) {
-	    SET(m_exitsFlags,CLIMB_N);
-            SET(m_exitsFlags,EXIT_N);
-	    climb=false;
-	  } else if (doors){
-            SET(m_exitsFlags,DOOR_N);
-            SET(m_exitsFlags,EXIT_N);
+        case 32: // empty space means reset for next exit
             doors=false;
-          }else
-            SET(m_exitsFlags,EXIT_N);
-	  if (road){
-	    SET(m_exitsFlags,ROAD_N);
-	    road=false;
-         }
+            closed=false;
+            road=false;
+            climb=false;
+            portal=false;
+            directSun=false;
+            dir = UNKNOWN;
+            break;
+
+        case 110:  // n
+            if ( (i+2)<length && (str.at(i+2).toLatin1()) == 'r') //north
+            {
+                i+= 5;
+                dir = NORTH;
+            }
+            else
+            {
+                i+=4;  //none
+                dir = NONE;
+            }
+            break;
+
+        case 115:  // s
+            i+=5;
+            dir = SOUTH;
+            break;
+
+        case 101:  // e
+            i+=4;
+            dir = EAST;
+            break;
+
+        case 119:  // w
+            i+=4;
+            dir = WEST;
+            break;
+
+        case 117:  // u
+            i+=2;
+            dir = UP;
+            break;
+
+        case 100:  // d
+            i+=4;
+            dir = DOWN;
+            break;
+        default:;
         }
-      else
-	i+=4;  //none
-      break;
-
-    case 115:  // s
-      i+=5;
-      if (climb) {
-	SET(m_exitsFlags,CLIMB_S);
-	SET(m_exitsFlags,EXIT_S);
-	climb=false;
-      } else if (doors){
-	SET(m_exitsFlags,DOOR_S);
-	SET(m_exitsFlags,EXIT_S);
-	doors=false;
-      }else
-	SET(m_exitsFlags,EXIT_S);
-      if (road){
-	SET(m_exitsFlags,ROAD_S);
-	road=false;
-      }
-      break;
-
-    case 101:  // e
-      i+=4;
-      if (climb) {
-	SET(m_exitsFlags,CLIMB_E);
-	SET(m_exitsFlags,EXIT_E);
-	climb=false;
-      } else if (doors){
-	SET(m_exitsFlags,DOOR_E);
-	SET(m_exitsFlags,EXIT_E);
-	doors=false;
-      }else
-	SET(m_exitsFlags,EXIT_E);
-      if (road){
-	SET(m_exitsFlags,ROAD_E);
-	road=false;
-      }
-      break;
-
-    case 119:  // w
-      i+=4;
-      if (climb) {
-	SET(m_exitsFlags,CLIMB_W);
-	SET(m_exitsFlags,EXIT_W);
-	climb=false;
-      } else if (doors){
-	SET(m_exitsFlags,DOOR_W);
-	SET(m_exitsFlags,EXIT_W);
-	doors=false;
-      }else
-	SET(m_exitsFlags,EXIT_W);
-      if (road){
-	SET(m_exitsFlags,ROAD_W);
-	road=false;
-      }
-      break;
-
-    case 117:  // u
-      i+=2;
-      if (climb) {
-	SET(m_exitsFlags,CLIMB_U);
-	SET(m_exitsFlags,EXIT_U);
-	climb=false;
-      } else if (doors){
-	SET(m_exitsFlags,DOOR_U);
-	SET(m_exitsFlags,EXIT_U);
-	doors=false;
-      }else
-	SET(m_exitsFlags,EXIT_U);
-      if (road){
-	SET(m_exitsFlags,ROAD_U);
-	road=false;
-      }
-      break;
-
-    case 100:  // d
-      i+=4;
-      if (climb) {
-	SET(m_exitsFlags,CLIMB_D);
-	SET(m_exitsFlags,EXIT_D);
-	climb=false;
-      } else if (doors){
-	SET(m_exitsFlags,DOOR_D);
-	SET(m_exitsFlags,EXIT_D);
-	doors=false;
-      }else
-	SET(m_exitsFlags,EXIT_D);
-      if (road){
-	SET(m_exitsFlags,ROAD_D);
-	road=false;
-      }
-      break;
-    default:;
+        if (dir < NONE)
+        {
+            SET(m_exitsFlags, (EF_EXIT << (dir * 4)));
+            if (climb)
+                SET(m_exitsFlags, (EF_CLIMB << (dir * 4)));
+            if (doors)
+            {
+                SET(m_exitsFlags, (EF_DOOR << (dir * 4)));
+                if (closed)
+                    SET(closedDoorFlag, (EF_DOOR << (dir * 4)));
+            }
+            if (road)
+                SET(m_exitsFlags, (EF_ROAD << (dir * 4)));
+            if (directSun)
+                SET(m_connectedRoomFlags, (DIRECT_SUN_ROOM << (dir * 2)));
+        }
     }
-  }
 
   // If there is't a portal then we can trust the exits
-  if (!portal) SET(m_exitsFlags, EXITS_FLAGS_VALID);
+  if (!portal)
+  {
+      SET(m_exitsFlags, EXITS_FLAGS_VALID);
+      SET(m_connectedRoomFlags, CONNECTED_ROOM_FLAGS_VALID);
 
-  Coordinate c;
+      // Orcs and trolls can detect exits with direct sunlight
+      bool foundDirectSunlight = m_connectedRoomFlags & ANY_DIRECT_SUNLIGHT;
+      if (foundDirectSunlight || m_trollExitMapping)
+      {
+          for(uint dir = 0; dir < 6; ++dir)
+          {
+              ExitsFlagsType eThisExit = m_exitsFlags >> (dir * 4);
+              ExitsFlagsType eThisClosed = closedDoorFlag >> (dir * 4);
+              ConnectedRoomFlagsType cOtherRoom = m_connectedRoomFlags >> (dir * 2);
+
+              // Do not flag indirect sunlight if there was a closed door, no exit, or we saw direct sunlight
+              if (!(eThisExit & EF_EXIT) || (eThisClosed & EF_DOOR) || (cOtherRoom & DIRECT_SUN_ROOM) ) continue;
+
+              // Flag indirect sun
+              SET(m_connectedRoomFlags, (INDIRECT_SUN_ROOM << (dir * 2)));
+          }
+      }
+  }
+
   QByteArray dn = emptyByteArray;
   QByteArray cn = " -";
-
-  CommandQueue tmpqueue;
   bool noDoors = true;
 
-  if (!queue.isEmpty())
-    tmpqueue.enqueue(queue.head());
-
-  QList<Coordinate> cl = m_mapData->getPath(tmpqueue);
-  if (!cl.isEmpty())
-    c = cl.at(cl.size()-1);
-  else
-    c = m_mapData->getPosition();
-
+  Coordinate c = getPosition();
   for (uint i=0;i<6;i++)
     {
       dn = m_mapData->getDoorName(c, i).toLatin1();
@@ -309,78 +288,31 @@ void AbstractParser::parseExits(QString& str)
   emit sendToUser(str.toLatin1()+cn);
 }
 
+const Coordinate AbstractParser::getPosition()
+{
+    Coordinate c;
+    CommandQueue tmpqueue;
+
+    if (!queue.isEmpty())
+        tmpqueue.enqueue(queue.head());
+
+    QList<Coordinate> cl = m_mapData->getPath(tmpqueue);
+    if (!cl.isEmpty())
+        c = cl.at(cl.size()-1);
+    else
+        c = m_mapData->getPosition();
+    return c;
+}
+
 void AbstractParser::emulateExits()
 {
-  Coordinate c;
-//    QByteArray dn = "";
-//    QByteArray cn = "Exits: ";
-
-  CommandQueue tmpqueue;
-//      bool noDoors = true;
-
-  if (!queue.isEmpty())
-    tmpqueue.enqueue(queue.head());
-
-  QList<Coordinate> cl = m_mapData->getPath(tmpqueue);
-  if (!cl.isEmpty())
-    c = cl.at(cl.size()-1);
-  else
-    c = m_mapData->getPosition();
-
+  Coordinate c = getPosition();
   const RoomSelection * rs = m_mapData->select();
   const Room *r = m_mapData->getRoom(c, rs);
 
   sendRoomExitsInfoToUser(r);
 
   m_mapData->unselect(rs);
-
-        /*
-  for (uint i=0;i<6;i++)
-  {
-  dn = m_mapData->getDoorName(c, i).toLatin1();
-  if ( dn != "" )
-  {
-  noDoors = false;
-  switch (i)
-  {
-  case 0:
-  cn += " n:"+dn;
-  break;
-  case 1:
-  cn += " s:"+dn;
-  break;
-  case 2:
-  cn += " e:"+dn;
-  break;
-  case 3:
-  cn += " w:"+dn;
-  break;
-  case 4:
-  cn += " u:"+dn;
-  break;
-  case 5:
-  cn += " d:"+dn;
-  break;
-  default:
-  break;
-}
-}
-}
-
-  if (noDoors)
-  {
-  cn = "\r\n";
-}
-  else
-  {
-  cn += ".\r\n";
-
-}
-
-  emit sendToUser(str.toLatin1()+cn);
-        //emit sendToUser(str.toLatin1()+QByteArray("\r\n"));
-  //emit sendToUser(cn);  */
-
 }
 
 
@@ -710,6 +642,16 @@ bool AbstractParser::parseUserCommands(QString& command)
       setRoomFieldCommand(RLT_DARK, R_LIGHTTYPE);
       return false;
     }
+    else if (str.startsWith("_nosundeath"))
+    {
+      setRoomFieldCommand(RST_NOSUNDEATH, R_SUNDEATHTYPE);
+      return false;
+    }
+    else if (str.startsWith("_sundeath"))
+    {
+      setRoomFieldCommand(RST_SUNDEATH, R_SUNDEATHTYPE);
+      return false;
+    }
     else if (str.startsWith("_port"))
     {
       setRoomFieldCommand(RPT_PORTABLE, R_PORTABLETYPE);
@@ -900,6 +842,14 @@ bool AbstractParser::parseUserCommands(QString& command)
       toggleRoomFlagCommand(RLF_TOWER, R_LOADFLAGS);
       return false;
     }
+    else if (str.startsWith("_trollexit"))
+    {
+        m_trollExitMapping = !m_trollExitMapping;
+        QByteArray toggleText = m_trollExitMapping ? "enabled" : "disabled";
+        emit sendToUser("OK. Troll exit mapping is now " + toggleText + ".\r\n");
+        sendPromptToUser();
+        return false;
+    }
     else if (str.startsWith("_note"))
     {
       setRoomFieldCommand(str.section(' ', 1), R_NOTE);
@@ -1034,6 +984,8 @@ bool AbstractParser::parseUserCommands(QString& command)
       emit sendToUser("  _noport       - set the room to not portable\r\n");
       emit sendToUser("  _dark         - set the room lighting to dark\r\n");
       emit sendToUser("  _lit          - set the room lighting to lit\r\n");
+      emit sendToUser("  _nosundeath   - set the room to not cause troll/orc maluses\r\n");
+      emit sendToUser("  _sundeath     - set the room to cause troll/orc maluses\r\n");
       emit sendToUser("  _ride         - set the room to ridable\r\n");
       emit sendToUser("  _noride       - set the room to not ridable\r\n");
       emit sendToUser("  _good         - set the room alignment to good\r\n");
@@ -1077,6 +1029,7 @@ bool AbstractParser::parseUserCommands(QString& command)
 
       emit sendToUser("\r\nMiscellaneous commands:\r\n");
       emit sendToUser("  _note [note]         - set a note in the room\r\n");
+      emit sendToUser("  _trollexit           - toggle troll-only exit mapping for direct sunlight\r\n");
 
       emit sendToUser("\r\n");
 
@@ -1290,7 +1243,7 @@ void AbstractParser::offlineCharacterMove(CommandIdType direction)
       sendRoomExitsInfoToUser(r);
       sendPromptToUser(r);
       // Create character move event for main move/search algorithm
-      emit event(createEvent(direction, getName(r), getDynamicDescription(r), getDescription(r), 0, 0));
+      emit event(createEvent(direction, getName(r), getDynamicDescription(r), getDescription(r), 0, 0, 0));
       emit showPath(queue, true);
       m_mapData->unselect(rs2);
     }
@@ -1353,6 +1306,7 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room* r)
     bool road = false;
     bool trail = false;
     bool climb = false;
+
     if (ISSET(getFlags(r->exit(j)),EF_EXIT)) {
       exit = true;
       
@@ -1443,32 +1397,25 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room* r)
 
 void AbstractParser::sendPromptToUser()
 {
-  if (!m_lastPrompt.isEmpty() && Config().m_mapMode != 2) {
-      emit sendToUser(m_lastPrompt.toLatin1());
-  } else {
-      Coordinate c;
-      CommandQueue tmpqueue;
-      if (!queue.isEmpty())
-        tmpqueue.enqueue(queue.head());
+    if (!m_lastPrompt.isEmpty() && Config().m_mapMode != 2) {
+        emit sendToUser(m_lastPrompt.toLatin1());
+        return ;
+    }
 
-      QList<Coordinate> cl = m_mapData->getPath(tmpqueue);
-      if (!cl.isEmpty())
-        c = cl.at(cl.size()-1);
-      else
-        c = m_mapData->getPosition();
+    // Emulate prompt mode
+    Coordinate c = getPosition();
+    const RoomSelection * rs = m_mapData->select();
+    const Room *r = m_mapData->getRoom(c, rs);
 
-      const RoomSelection * rs = m_mapData->select();
-      const Room *r = m_mapData->getRoom(c, rs);
+    sendPromptToUser(r);
 
-      sendPromptToUser(r);
-
-      m_mapData->unselect(rs);
-
-  }
+    m_mapData->unselect(rs);
 }
 
 void AbstractParser::sendPromptToUser(const Room* r)
 {
+
+
     char light = (getLightType(r)==RLT_DARK) ? 'o' : '*';
 
     char terrain = ' ';
@@ -1534,12 +1481,7 @@ void AbstractParser::performDoorCommand(DirectionType direction, DoorActionType 
       break;
   }
 
-  Coordinate c;
-  QList<Coordinate> cl = m_mapData->getPath(queue);
-  if (!cl.isEmpty())
-    c = cl.at(cl.size()-1);
-  else
-    c = m_mapData->getPosition();
+  Coordinate c = getPosition();
 
   dn = m_mapData->getDoorName(c, direction).toLatin1();
 
@@ -1618,12 +1560,7 @@ void AbstractParser::genericDoorCommand(QString command, DirectionType direction
   QByteArray cn = emptyByteArray;
   QByteArray dn = emptyByteArray;
 
-  Coordinate c;
-  QList<Coordinate> cl = m_mapData->getPath(queue);
-  if (!cl.isEmpty())
-    c = cl.at(cl.size()-1);
-  else
-    c = m_mapData->getPosition();
+  Coordinate c = getPosition();
 
   dn = m_mapData->getDoorName(c, direction).toLatin1();
 
@@ -1706,12 +1643,7 @@ void AbstractParser::genericDoorCommand(QString command, DirectionType direction
 
 void AbstractParser::nameDoorCommand(QString doorname, DirectionType direction)
 {
-  Coordinate c;
-  QList<Coordinate> cl = m_mapData->getPath(queue);
-  if (!cl.isEmpty())
-    c = cl.at(cl.size()-1);
-  else
-    c = m_mapData->getPosition();
+  Coordinate c = getPosition();
 
   //if (doorname.isEmpty()) toggleExitFlagCommand(EF_DOOR, direction);
   m_mapData->setDoorName(c, doorname, direction);
@@ -1721,12 +1653,7 @@ void AbstractParser::nameDoorCommand(QString doorname, DirectionType direction)
 
 void AbstractParser::toggleExitFlagCommand(uint flag, DirectionType direction)
 {
-  Coordinate c;
-  QList<Coordinate> cl = m_mapData->getPath(queue);
-  if (!cl.isEmpty())
-    c = cl.at(cl.size()-1);
-  else
-    c = m_mapData->getPosition();
+  Coordinate c = getPosition();
 
   m_mapData->toggleExitFlag(c, flag, direction, E_FLAGS);
 
@@ -1767,12 +1694,7 @@ void AbstractParser::toggleExitFlagCommand(uint flag, DirectionType direction)
 
 void AbstractParser::toggleDoorFlagCommand(uint flag, DirectionType direction)
 {
-  Coordinate c;
-  QList<Coordinate> cl = m_mapData->getPath(queue);
-  if (!cl.isEmpty())
-    c = cl.at(cl.size()-1);
-  else
-    c = m_mapData->getPosition();
+  Coordinate c = getPosition();
 
   m_mapData->toggleExitFlag(c, flag, direction, E_DOORFLAGS);
 
@@ -1813,12 +1735,7 @@ void AbstractParser::toggleDoorFlagCommand(uint flag, DirectionType direction)
 
 void AbstractParser::setRoomFieldCommand(const QVariant & flag, uint field)
 {
-  Coordinate c;
-  QList<Coordinate> cl = m_mapData->getPath(queue);
-  if (!cl.isEmpty())
-    c = cl.at(cl.size()-1);
-  else
-    c = m_mapData->getPosition();
+  Coordinate c = getPosition();
 
   m_mapData->setRoomField(c, flag, field);
 
@@ -1828,12 +1745,7 @@ void AbstractParser::setRoomFieldCommand(const QVariant & flag, uint field)
 
 void AbstractParser::toggleRoomFlagCommand(uint flag, uint field)
 {
-  Coordinate c;
-  QList<Coordinate> cl = m_mapData->getPath(queue);
-  if (!cl.isEmpty())
-    c = cl.at(cl.size()-1);
-  else
-    c = m_mapData->getPosition();
+  Coordinate c = getPosition();
 
   m_mapData->toggleRoomFlag(c, flag, field);
 
@@ -1849,12 +1761,7 @@ void AbstractParser::toggleRoomFlagCommand(uint flag, uint field)
 
 void AbstractParser::printRoomInfo(uint fieldset)
 {
-  Coordinate c;
-  QList<Coordinate> cl = m_mapData->getPath(queue);
-  if (!cl.isEmpty())
-    c = cl.at(cl.size()-1);
-  else
-    c = m_mapData->getPosition();
+  Coordinate c = getPosition();
 
   const RoomSelection * rs = m_mapData->select(c);
   const Room *r = rs->values().front();
