@@ -40,9 +40,6 @@ ParserPage::ParserPage(QWidget *parent)
 {
     setupUi(this);
     
-    //Config().m_roomNameColor = "[36;45;4m";
-    //Config().m_roomDescColor = "[32;41;1m";
-    
     roomNameAnsiColor->initColours(ANSI_FG);
     roomNameAnsiColorBG->initColours(ANSI_BG);
 	roomDescAnsiColor->initColours(ANSI_FG);
@@ -79,18 +76,6 @@ ParserPage::ParserPage(QWidget *parent)
 	connect( endDescPatternsList,SIGNAL(activated(const QString&)),
 		SLOT(endDescPatternsListActivated(const QString&)));
 
-//	connect ( roomNameAnsiColor, SIGNAL(editTextChanged(const QString&)), 
-//		SLOT(roomNameAnsiColorTextChanged(const QString&)));
-//	connect ( roomDescAnsiColor, SIGNAL(editTextChanged(const QString&)), 
-//		SLOT(roomDescAnsiColorTextChanged(const QString&)));
-//	connect ( roomNameAnsiColor, SIGNAL(editTextChanged(const QString&)), 
-//		SLOT(roomNameColorChanged(const QString&)));
-//	connect ( roomDescAnsiColor, SIGNAL(editTextChanged(const QString&)), 
-//		SLOT(roomDescColorChanged(const QString&)));
-//	connect ( roomNameAnsiColor, SIGNAL(highlighted(const QString&)),
-//		SLOT(roomNameColorChanged(const QString&)));
-//	connect ( roomDescAnsiColor, SIGNAL(highlighted(const QString&)),
-//		SLOT(roomDescColorChanged(const QString&)));
 	connect ( roomNameAnsiColor, SIGNAL(activated(const QString&)), 
 		SLOT(roomNameColorChanged(const QString&)));
 	connect ( roomDescAnsiColor, SIGNAL(activated(const QString&)), 
@@ -247,7 +232,7 @@ void ParserPage::updateColors()
     
     // room name color
 	if (Config().m_roomNameColor.isEmpty())
-		roomNameColorLabel->setText("ERROR - no color!!!");
+        roomNameColorLabel->setText("[0m");
 	else
 	    roomNameColorLabel->setText(Config().m_roomNameColor);
     
@@ -269,7 +254,7 @@ void ParserPage::updateColors()
 
     // room desc color
 	if (Config().m_roomDescColor.isEmpty())
-		roomDescColorLabel->setText("ERROR - no color!!!");		
+        roomDescColorLabel->setText("[0m");
 	else
 	    roomDescColorLabel->setText(Config().m_roomDescColor);
     

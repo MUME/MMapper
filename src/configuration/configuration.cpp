@@ -77,7 +77,7 @@ void Configuration::read()
   m_IAC_prompt_parser = conf.value("Use IAC-GA prompt", true).toBool();
   m_removeXmlTags = conf.value("Remove XML tags", true).toBool();
 
-  m_moveForcePatternsList = conf.value("Move force patterns").toStringList();
+  m_moveForcePatternsList = conf.value("Move force patterns for XML").toStringList();
   m_noDescriptionPatternsList = conf.value("Non-standard room description patterns").toStringList();
   m_promptPattern = conf.value("Prompt pattern", "#>>").toByteArray();
   m_loginPattern = conf.value("Login pattern", "#>known? ").toByteArray();
@@ -173,7 +173,7 @@ void Configuration::write() const {
   conf.setValue("Use IAC-GA prompt", m_IAC_prompt_parser);
   conf.setValue("Remove XML tags", m_removeXmlTags);
 
-  conf.setValue("Move force patterns", m_moveForcePatternsList);
+  conf.setValue("Move force patterns for XML", m_moveForcePatternsList);
   conf.setValue("No room description patterns", m_noDescriptionPatternsList);
   conf.setValue("Prompt pattern", m_promptPattern);
   conf.setValue("Login pattern", m_loginPattern);
