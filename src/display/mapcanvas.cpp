@@ -914,8 +914,6 @@ void MapCanvas::initializeGL()
     m_updateTextures = new QOpenGLTexture(QImage(QString(":/pixmaps/update0.png")).mirrored());
     qDebug() << "Finished loading textures";
 
-    // Background Color
-    qglClearColor(Config().m_backgroundColor);
     glShadeModel(GL_FLAT);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_NORMALIZE);
@@ -1035,6 +1033,9 @@ void MapCanvas::drawGroupCharacters()
 
 void MapCanvas::paintGL()
 {
+    // Background Color
+    qglClearColor(Config().m_backgroundColor);
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (!m_data->isEmpty())
