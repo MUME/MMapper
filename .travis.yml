@@ -2,6 +2,7 @@ language: cpp
 
 dist: trusty
 
+# https://docs.travis-ci.com/user/languages/cpp/
 matrix:
   include:
     - os: osx
@@ -15,9 +16,39 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
+            - g++-4.9
+      env:
+        - QT=59 PPA=beineri/opt-qt591-trusty MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+      env:
+        - QT=59 PPA=beineri/opt-qt591-trusty MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
             - g++-6
       env:
         - QT=59 PPA=beineri/opt-qt591-trusty MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+      env:
+        - QT=59 PPA=beineri/opt-qt591-trusty MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 
 before_install:
   - eval "${MATRIX_EVAL}"
@@ -48,5 +79,4 @@ before_script:
 script:
   - make -j2
   - ctest -V
-
 
