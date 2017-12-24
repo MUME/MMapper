@@ -56,6 +56,7 @@ class Configuration {
     quint32   m_localPort;         /// Port to bind to on local machine
 
     QColor m_backgroundColor;
+    int    m_antialiasingSamples;
 
     bool m_autoLog;         // enables log to file
     QString m_logFileName;  // file name to log

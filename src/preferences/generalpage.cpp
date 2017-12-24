@@ -39,6 +39,7 @@ GeneralPage::GeneralPage(QWidget *parent)
   connect( localPort, SIGNAL( valueChanged(int) ), this, SLOT( localPortValueChanged(int) )  );
 
   connect( changeColor, SIGNAL(clicked()),SLOT(changeColorClicked()));
+  connect( antialiasingSamplesSpinBox, SIGNAL( valueChanged(int) ), this, SLOT( antialiasingSamplesValueChanged(int) )  );
 
   connect ( emulatedExits, SIGNAL(stateChanged(int)),SLOT(emulatedExitsStateChanged(int)));
   connect ( updated, SIGNAL(stateChanged(int)),SLOT(updatedStateChanged(int)));
@@ -57,6 +58,7 @@ GeneralPage::GeneralPage(QWidget *parent)
 
   colorLabel->setPalette(QPalette(Config().m_backgroundColor));
   colorLabel->setAutoFillBackground(true);
+  antialiasingSamplesSpinBox->setValue(Config().m_antialiasingSamples);
 
   emulatedExits->setChecked( Config().m_emulatedExits );
   updated->setChecked( Config().m_showUpdated );
@@ -77,6 +79,12 @@ void GeneralPage::changeColorClicked()
     Config().m_backgroundColor = newColor;
   }
 }
+
+void GeneralPage::antialiasingSamplesValueChanged(int)
+{
+    Config().m_antialiasingSamples = antialiasingSamplesSpinBox->value();
+}
+
 
 void GeneralPage::selectWorldFileButtonClicked()
 {

@@ -86,16 +86,16 @@ public:
   bool execute(AbstractAction * action, const RoomSelection * unlock);
     
   Coordinate & getPosition() {return m_position;}
-  MarkerList& getMarkersList(){ return m_markers; };
-  uint getRoomsCount(){ return greatestUsedId == UINT_MAX ? 0 : greatestUsedId+1; };
-  int getMarkersCount(){ return m_markers.count(); };
+  MarkerList& getMarkersList(){ return m_markers; }
+  uint getRoomsCount(){ return greatestUsedId == UINT_MAX ? 0 : greatestUsedId+1; }
+  int getMarkersCount(){ return m_markers.count(); }
 
   void addMarker(InfoMark* im);
   void removeMarker(InfoMark* im);
 
-  bool isEmpty(){return (greatestUsedId == UINT_MAX && m_markers.isEmpty());};
-  bool dataChanged(){return m_dataChanged;};
-  QString getFileName(){ return m_fileName; };
+  bool isEmpty(){return (greatestUsedId == UINT_MAX && m_markers.isEmpty());}
+  bool dataChanged(){return m_dataChanged;}
+  QString getFileName(){ return m_fileName; }
   QList<Coordinate> getPath(const QList<CommandIdType> dirs);
   virtual void clear();
 
@@ -123,9 +123,9 @@ signals:
   void updateCanvas();
 
 public slots:
-  void setFileName(QString filename){ m_fileName = filename; };
-  void unsetDataChanged(){m_dataChanged = false;};
-  void setDataChanged(){m_dataChanged = true;};
+  void setFileName(QString filename){ m_fileName = filename; }
+  void unsetDataChanged(){m_dataChanged = false;}
+  void setDataChanged(){m_dataChanged = true;}
   void setPosition(const Coordinate & pos) {m_position = pos;}
 
 protected:

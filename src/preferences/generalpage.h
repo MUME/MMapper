@@ -41,6 +41,7 @@ public slots:
 	void localPortValueChanged(int);
 
     void changeColorClicked();
+    void antialiasingSamplesValueChanged(int);
 
 	void emulatedExitsStateChanged(int);
 	void updatedStateChanged(int);
