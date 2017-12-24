@@ -45,7 +45,6 @@
 #include <math.h>
 
 #include <QWheelEvent>
-#include <QDebug>
 #include <QPainter>
 
 #define ROOM_Z_DISTANCE (7.0f)
@@ -138,8 +137,10 @@ MapCanvas::MapCanvas( MapData *mapData, PrespammedPath* prespammedPath, CGroup* 
     memset(m_trailTextures, 0, sizeof(m_trailTextures));
     m_updateTextures = 0;
 
+    int samples = Config().m_antialiasingSamples;
+    if (samples <= 0) samples = 1;
     QSurfaceFormat format;
-    format.setProfile(QSurfaceFormat::CoreProfile);
+    format.setSamples(samples);
     setFormat(format);
 }
 
@@ -896,9 +897,10 @@ void MapCanvas::zoomOut()
 
 void MapCanvas::initializeGL()
 {
-    qDebug() << "Starting initializeGL";
     initializeOpenGLFunctions();
-    qDebug() << "Finished initializeOpenGLFunctions";
+
+    if (Config().m_antialiasingSamples > 0)
+        glEnable(GL_MULTISAMPLE);
 
     // Load textures
     for (int i=0; i<16; i++)
@@ -912,26 +914,23 @@ void MapCanvas::initializeGL()
         }
     }
     m_updateTextures = new QOpenGLTexture(QImage(QString(":/pixmaps/update0.png")).mirrored());
-    qDebug() << "Finished loading textures";
 
     glShadeModel(GL_FLAT);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_NORMALIZE);
 
-    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glPolygonStipple(halftone);
     //glPolygonStipple(quadtone);
 
     makeGlLists();
-
-    qDebug() << "Finished initializeGL";
 }
 
 void MapCanvas::resizeGL(int width, int height)
 {
     if (m_updateTextures == 0) {
-        qDebug() << "resizeGL called but initializeGL was not called yet";
+        // resizeGL called but initializeGL was not called yet
         return;
     }
 
@@ -977,6 +976,7 @@ void MapCanvas::resizeGL(int width, int height)
 
 void MapCanvas::dataLoaded()
 {
+    m_currentLayer = m_data->getPosition().z;
     emit onCenter( m_data->getPosition().x, m_data->getPosition().y );
     update();
 }
@@ -1017,7 +1017,7 @@ void MapCanvas::drawGroupCharacters()
 
                 glEnable(GL_BLEND);
                 glDisable(GL_DEPTH_TEST);
-                //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                 glCallList(m_room_selection_inner_gllist);
                 glDisable(GL_BLEND);
 
@@ -1040,11 +1040,14 @@ void MapCanvas::paintGL()
 
     if (!m_data->isEmpty())
     {
+
+        // Draw room tiles
         m_data->draw(
                     Coordinate((int)(m_visibleX1), (int)(m_visibleY1), m_currentLayer-10 ),
                     Coordinate((int)(m_visibleX2+1), (int)(m_visibleY2+1), m_currentLayer+10),
                     *this);
 
+        // Draw infomarks
         if (m_scaleFactor >= 0.25)
         {
             MarkerListIterator m(m_data->getMarkersList());
@@ -1058,7 +1061,7 @@ void MapCanvas::paintGL()
     {
         glEnable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
-        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glColor4d(0.0f, 0.0f, 0.0f, 0.5f);
         glBegin(GL_POLYGON);
         glVertex3d(m_selX1, m_selY1, 0.005);
@@ -1216,7 +1219,7 @@ void MapCanvas::paintGL()
 
             glEnable(GL_BLEND);
             glDisable(GL_DEPTH_TEST);
-            //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glCallList(m_room_gllist);
 
             qglColor(Qt::red);
@@ -1279,7 +1282,7 @@ void MapCanvas::paintGL()
 
         glEnable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
-        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glCallList(m_room_selection_inner_gllist);
         glDisable(GL_BLEND);
 
@@ -1457,17 +1460,17 @@ void MapCanvas::drawInfoMark(InfoMark* marker)
     {
     case MT_TEXT:
         // Render background
-        /*glColor4d(0, 0, 0, 0.3);
+        glColor4d(0, 0, 0, 0.3);
         glEnable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
-        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glBegin(GL_POLYGON);
         glVertex3d(0.0, 0.0, 1.0);
         glVertex3d(0.0, 0.25+height, 1.0);
         glVertex3d(0.2+width, 0.25+height, 1.0);
         glVertex3d(0.2+width, 0.0, 1.0);
         glEnd();
-        glDisable(GL_BLEND);*/
+        glDisable(GL_BLEND);
 
         // Render text proper
         glTranslated(-x1 / 2, -y1 / 2, 0);
@@ -1525,10 +1528,14 @@ void MapCanvas::drawRoomDoorName(const Room *sourceRoom, uint sourceDir, const R
 
     qint32 srcX = sourceRoom->getPosition().x;
     qint32 srcY = sourceRoom->getPosition().y;
+    qint32 srcZ = sourceRoom->getPosition().z;
     qint32 tarX = targetRoom->getPosition().x;
     qint32 tarY = targetRoom->getPosition().y;
+    qint32 tarZ = targetRoom->getPosition().z;
     qint32 dX = srcX - tarX;
     qint32 dY = srcY - tarY;
+
+    if (srcZ != m_currentLayer && tarZ != m_currentLayer) return;
 
     // Look at door flags to code postfixes
     DoorFlags sourceDoorFlags = getDoorFlags(sourceRoom->exit(sourceDir));
@@ -1598,46 +1605,58 @@ void MapCanvas::drawRoomDoorName(const Room *sourceRoom, uint sourceDir, const R
     else
         name = getDoorName(sourceRoom->exit(sourceDir));
 
-    glPushMatrix();
-
-    // box
     qreal width = m_glFontMetrics->width(name) * 0.022f / m_scaleFactor;
     qreal height = m_glFontMetrics->height() * 0.007f / m_scaleFactor;
 
     qreal boxX = 0, boxY = 0;
-    if (together) {
-        boxX = srcX-(width/2.0)-(dX*0.5);
-        boxY = srcY-0.5-(dY*0.5);
-    }
-    else
-    {
-        boxX = srcX-(width/2.0);
-        switch (sourceDir)
+        if (together) {
+            boxX = srcX-(width/2.0)-(dX*0.5);
+            boxY = srcY-0.5-(dY*0.5);
+        }
+        else
         {
-        case ED_NORTH:
-            boxY = srcY-0.65;
-            break;
-        case ED_SOUTH:
-            boxY = srcY-0.15;
-            break;
-        case ED_WEST:
-            boxY = srcY-0.5;
-            break;
-        case ED_EAST:
-            boxY = srcY-0.35;
-            break;
-        case ED_UP:
-            boxY = srcY-0.85;
-            break;
-        case ED_DOWN:
-            boxY = srcY;
-        };
+            boxX = srcX-(width/2.0);
+            switch (sourceDir)
+            {
+            case ED_NORTH:
+                boxY = srcY-0.65;
+                break;
+            case ED_SOUTH:
+                boxY = srcY-0.15;
+                break;
+            case ED_WEST:
+                boxY = srcY-0.5;
+                break;
+            case ED_EAST:
+                boxY = srcY-0.35;
+                break;
+            case ED_UP:
+                boxY = srcY-0.85;
+                break;
+            case ED_DOWN:
+                boxY = srcY;
+            };
     }
-    glTranslated(boxX, boxY, 0.0);
 
+    qreal boxX2 = boxX + width;
+    qreal boxY2 = boxY + height;
+
+    //check if box is visible
+    if ( ( (boxX+1 < m_visibleX1) || (boxX-1 > m_visibleX2+1) ) &&
+         ((boxX2+1 < m_visibleX1) || (boxX2-1 > m_visibleX2+1) ) )
+        return;
+    if ( ( (boxY+1 < m_visibleY1) || (boxY-1 > m_visibleY2+1) ) &&
+         ((boxY2+1 < m_visibleY1) || (boxY2-1 > m_visibleY2+1) ) )
+        return;
+
+    glPushMatrix();
+
+    glTranslated(boxX/*-0.5*/, boxY/*-0.5*/, 0);
+
+    // Render background
     glColor4d(0, 0, 0, 0.3);
     glEnable(GL_BLEND);
-    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBegin(GL_POLYGON);
     glVertex3d(0.0, 0.0, 1.0);
     glVertex3d(0.0, 0.25+height, 1.0);
@@ -1647,10 +1666,12 @@ void MapCanvas::drawRoomDoorName(const Room *sourceRoom, uint sourceDir, const R
     glDisable(GL_BLEND);
 
     // text
+    glTranslated(-boxX / 2, -boxY / 2, 0);
     renderText(boxX + 0.1, boxY + 0.25, name);
     glEnable(GL_DEPTH_TEST);
 
     glPopMatrix();
+
 }
 
 void MapCanvas::drawFlow(const Room* room, const std::vector<Room *> & rooms, ExitDirection exitDirection)
@@ -1783,7 +1804,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
             qglColor(Qt::lightGray);
             //glColor4d(0.1f, 0.0f, 0.0f, 0.2f);
 
-            //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glCallList(m_room_gllist);
 
             glColor4d(oldcolour[0], oldcolour[1], oldcolour[2], oldcolour[3]);
@@ -2250,7 +2271,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
     {
         glEnable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
-        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glColor4d(0.0, 0.0, 0.0, 0.5-0.03*layer);
         glCallList(m_room_gllist);
         glEnable(GL_DEPTH_TEST);
@@ -2263,7 +2284,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
 
             glEnable(GL_BLEND);
             glDisable(GL_DEPTH_TEST);
-            //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glColor4d(1.0, 1.0, 1.0, 0.1);
             glCallList(m_room_gllist);
             glEnable(GL_DEPTH_TEST);
@@ -2274,7 +2295,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
     {
         glEnable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
-        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glColor4d(0.6, 0.0, 0.0, 0.2);
         glCallList(m_room_gllist);
         glEnable(GL_DEPTH_TEST);
@@ -3280,6 +3301,8 @@ void MapCanvas::renderText(double x, double y, const QString &text, QColor color
       m_glFont->setUnderline(true);
     }
     painter.setFont(*m_glFont);
+    if (Config().m_antialiasingSamples > 0)
+        painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
     painter.drawText(0, 0, text);
     m_glFont->setItalic(false);
     m_glFont->setUnderline(false);

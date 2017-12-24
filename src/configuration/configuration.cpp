@@ -63,6 +63,7 @@ void Configuration::read()
   m_drawUpperLayersTextured = conf.value("Draw upper layers textured", false).toBool();
   m_drawDoorNames = conf.value("Draw door names", true).toBool();
   m_backgroundColor = QColor(conf.value("Background color", QColor(110,110,110).name()).toString());
+  m_antialiasingSamples = conf.value("Number of anti-aliasing samples", 1).toInt();
   conf.endGroup();
 
   conf.beginGroup("Auto load world");
@@ -159,6 +160,7 @@ void Configuration::write() const {
   conf.setValue("Draw upper layers textured", m_drawUpperLayersTextured);
   conf.setValue("Draw door names", m_drawDoorNames);
   conf.setValue("Background color", m_backgroundColor.name());
+  conf.setValue("Number of anti-aliasing samples", m_antialiasingSamples);
   conf.endGroup();
 
   conf.beginGroup("Auto load world");
