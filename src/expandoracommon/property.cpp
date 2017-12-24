@@ -23,6 +23,7 @@
 **
 ************************************************************************/
 
+#include <stdexcept>
 #include "property.h"
 
 using namespace std;
