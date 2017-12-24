@@ -57,7 +57,7 @@ ELSE()
 
     # Linux needs an additional relative path for bundling the library
     IF(UNIX AND NOT APPLE)
-        SET(QTIOCOMPRESSOR_LIBRARIES -Wl,-rpath,../lib/mmapper ${QTIOCOMPRESSOR_LIBRARY})
+        SET(QTIOCOMPRESSOR_LIBRARIES -Wl,-rpath,../lib ${QTIOCOMPRESSOR_LIBRARY})
     ENDIF()
 ENDIF()
 

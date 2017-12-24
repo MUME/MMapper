@@ -151,7 +151,7 @@ IF(UNIX AND NOT APPLE)
         MESSAGE(STATUS "Bundling QtIOCompressor: ${QTIOCOMPRESSOR_LIBRARY}")
         INSTALL(
             FILES ${QTIOCOMPRESSOR_LIBRARY}
-            DESTINATION lib/mmapper
+            DESTINATION lib
             COMPONENT applications
         )
     ENDIF()
@@ -185,7 +185,7 @@ IF(UNIX AND NOT APPLE)
     # Debian
     SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "nschimme@gmail.com")
     SET(CPACK_DEBIAN_PACKAGE_NAME "mmapper")
-    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libqtcore5 (>= 5.4.0), libqtgui5 (>= 5.4.0), libqt5-opengl (>= 5.4.0), libqt5-network (>= 5.4.0), libqt5-xml (>= 5.4.0)")
+    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt5core5a (>= 5.4.0), libqt5gui5 (>= 5.4.0), libqt5opengl5 (>= 5.4.0), libqt5network5 (>= 5.4.0), libqt5xml5 (>= 5.4.0)")
 
 ENDIF(UNIX AND NOT APPLE)
 
