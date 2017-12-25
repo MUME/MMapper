@@ -2971,26 +2971,15 @@ void MapCanvas::makeGlLists()
 
     m_room_gllist = glGenLists(1);
     glNewList(m_room_gllist, GL_COMPILE);
-    glBegin(GL_QUADS);
-#if (QT_VERSION < 0x040700 || QT_VERSION >= 0x040800)
-    glTexCoord2d(0, 1);
-    glVertex3d(0.0, 0.0, 0.0);
+    glBegin(GL_TRIANGLE_STRIP);
     glTexCoord2d(0, 0);
     glVertex3d(0.0, 1.0, 0.0);
+    glTexCoord2d(0, 1);
+    glVertex3d(0.0, 0.0, 0.0);
     glTexCoord2d(1, 0);
     glVertex3d(1.0, 1.0, 0.0);
     glTexCoord2d(1, 1);
     glVertex3d(1.0, 0.0, 0.0);
-#else
-    glTexCoord2d(0, 1);
-    glVertex3d(0.0, 1.0, 0.0);
-    glTexCoord2d(0, 0);
-    glVertex3d(0.0, 0.0, 0.0);
-    glTexCoord2d(1, 0);
-    glVertex3d(1.0, 0.0, 0.0);
-    glTexCoord2d(1, 1);
-    glVertex3d(1.0, 1.0, 0.0);
-#endif
     glEnd();
     glEndList();
 
@@ -3006,9 +2995,9 @@ void MapCanvas::makeGlLists()
 
     m_room_selection_inner_gllist = glGenLists(1);
     glNewList(m_room_selection_inner_gllist, GL_COMPILE);
-    glBegin(GL_QUADS);
-    glVertex3d(-0.2, -0.2, 0.0);
+    glBegin(GL_TRIANGLE_STRIP);
     glVertex3d(-0.2, 1.2, 0.0);
+    glVertex3d(-0.2, -0.2, 0.0);
     glVertex3d(1.2, 1.2, 0.0);
     glVertex3d(1.2, -0.2, 0.0);
     glEnd();
