@@ -1019,31 +1019,82 @@ void MapCanvas::drawGroupCharacters()
         {
             const RoomSelection* selection = m_data->select();
             const Room* r = m_data->getRoom(id, selection);
-            if (r)
-            {
-                qint32 x = r->getPosition().x;
-                qint32 y = r->getPosition().y;
-                qint32 z = r->getPosition().z;
-                qint32 layer = z - m_currentLayer;
-
-                glPushMatrix();
-                glTranslated(x-0.5, y-0.5, ROOM_Z_DISTANCE*layer+0.1);
-                glColor4d(0.0f, 0.0f, 0.0f, 0.4f);
-
-                glEnable(GL_BLEND);
-                glDisable(GL_DEPTH_TEST);
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                glCallList(m_room_selection_inner_gllist);
-                glDisable(GL_BLEND);
-
-                qglColor(chars[charIndex]->getColor());
-                glCallList(m_room_selection_gllist);
-                glEnable(GL_DEPTH_TEST);
-                glPopMatrix();
+            if (r) {
+                drawCharacter(r->getPosition(), chars[charIndex]->getColor());
             }
             m_data->unselect(id, selection);
         }
     }
+}
+
+void MapCanvas::drawCharacter(const Coordinate &c, QColor color)
+{
+    qint32 x = c.x;
+    qint32 y = c.y;
+    qint32 z = c.z;
+    qint32 layer = z - m_currentLayer;
+
+    glPushMatrix();
+    glColor4d(0.0f, 0.0f, 0.0f, 0.4f);
+    glEnable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    if ( ( ( x < m_visibleX1-1) || (x > m_visibleX2+1) ) ||
+         ( ( y < m_visibleY1-1) || (y > m_visibleY2+1) ) )
+    {
+        // Player is distant
+        double cameraCenterX = (m_visibleX1 + m_visibleX2) / 2;
+        double cameraCenterY = (m_visibleY1 + m_visibleY2) / 2;
+
+        // Calculate degrees from camera center to character
+        double adjacent = cameraCenterY - y;
+        double opposite = cameraCenterX - x;
+        double radians = atan2(adjacent, opposite);
+        double degrees = radians * 180 / M_PI;
+
+        // Identify character hint coordinates using an elipse to represent the screen
+        double radiusX = ((m_visibleX2 - m_visibleX1) / 2) - 0.75f;
+        double radiusY = ((m_visibleY2 - m_visibleY1) / 2) - 0.75f;
+        double characterHintX = cameraCenterX + (cos(radians) * radiusX * -1);
+        double characterHintY = cameraCenterY + (sin(radians) * radiusY * -1);
+
+        // Draw character and rotate according to angle
+        glTranslated(characterHintX, characterHintY, m_currentLayer+0.1);
+        glRotatef(degrees, 0, 0, 1);
+
+        glCallList(m_character_hint_inner_gllist);
+        glDisable(GL_BLEND);
+
+        qglColor(color);
+        glCallList(m_character_hint_gllist);
+
+    }
+    else if (z != m_currentLayer)
+    {
+        // Player is not on the same layer
+        glTranslated(x, y-0.5, m_currentLayer+0.1);
+        glRotatef(270, 0, 0, 1);
+
+        glCallList(m_character_hint_inner_gllist);
+        glDisable(GL_BLEND);
+
+        qglColor(color);
+        glCallList(m_character_hint_gllist);
+    }
+    else
+    {
+        // Player is on the same layer and visible
+        glTranslated(x-0.5, y-0.5, ROOM_Z_DISTANCE*layer+0.1);
+
+        glCallList(m_room_selection_inner_gllist);
+        glDisable(GL_BLEND);
+
+        qglColor(color);
+        glCallList(m_room_selection_gllist);
+    }
+    glEnable(GL_DEPTH_TEST);
+    glPopMatrix();
 }
 
 void MapCanvas::paintGL()
@@ -1285,27 +1336,9 @@ void MapCanvas::paintGL()
     //paint char current position
     if (!m_data->isEmpty())
     {
-        qint32 x = m_data->getPosition().x;
-        qint32 y = m_data->getPosition().y;
-        qint32 z = m_data->getPosition().z;
-        qint32 layer = z - m_currentLayer;
-
-        glPushMatrix();
-        glTranslated(x-0.5, y-0.5, ROOM_Z_DISTANCE*layer+0.01);
-
-        glColor4d(0.0f, 0.0f, 0.0f, 0.4f);
-
-        glEnable(GL_BLEND);
-        glDisable(GL_DEPTH_TEST);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glCallList(m_room_selection_inner_gllist);
-        glDisable(GL_BLEND);
-
         // Use the player's selected color
-        qglColor(Config().m_groupManagerColor);
-        glCallList(m_room_selection_gllist);
-        glEnable(GL_DEPTH_TEST);
-        glPopMatrix();
+        QColor color = Config().m_groupManagerColor;
+        drawCharacter(m_data->getPosition(), color);
     }
 
     if (!m_prespammedPath->isEmpty())
@@ -2978,6 +3011,26 @@ void MapCanvas::makeGlLists()
     glVertex3d(-0.2, 1.2, 0.0);
     glVertex3d(1.2, 1.2, 0.0);
     glVertex3d(1.2, -0.2, 0.0);
+    glEnd();
+    glEndList();
+
+    m_character_hint_gllist = glGenLists(1);
+    glNewList(m_character_hint_gllist, GL_COMPILE);
+    glBegin(GL_LINE_LOOP);
+    glVertex3d(-0.5, 0.0, 0.0);
+    glVertex3d(0.75, 0.5, 0.0);
+    glVertex3d(0.25, 0.0, 0.0);
+    glVertex3d(0.75, -0.5, 0.0);
+    glEnd();
+    glEndList();
+
+    m_character_hint_inner_gllist = glGenLists(1);
+    glNewList(m_character_hint_inner_gllist, GL_COMPILE);
+    glBegin(GL_TRIANGLE_STRIP);
+    glVertex3d(0.75, 0.5, 0.0);
+    glVertex3d(-0.5, 0.0, 0.0);
+    glVertex3d(0.25, 0.0, 0.0);
+    glVertex3d(0.75, -0.5, 0.0);
     glEnd();
     glEndList();
 
