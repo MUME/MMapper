@@ -123,6 +123,7 @@ class MapCanvas : public QOpenGLWidget, protected QOpenGLFunctions
     void initializeGL();
     void paintGL();
     void drawGroupCharacters();
+    void drawCharacter(const Coordinate& c, QColor color);
     void drawRoomDoorName(const Room *sourceRoom, uint sourceDir, const Room *targetRoom, uint targetDir);
     void resizeGL(int width, int height);
     void mousePressEvent(QMouseEvent *event);
@@ -220,6 +221,8 @@ class MapCanvas : public QOpenGLWidget, protected QOpenGLFunctions
     GLuint m_room_gllist;
     GLuint m_room_selection_gllist;
     GLuint m_room_selection_inner_gllist;
+    GLuint m_character_hint_gllist;
+    GLuint m_character_hint_inner_gllist;
 
     GLuint m_flow_begin_gllist[6];
     GLuint m_flow_end_gllist[6];
