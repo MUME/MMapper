@@ -162,6 +162,7 @@ MapCanvas::~MapCanvas()
         if (m_terrainTextures[i]) delete m_terrainTextures[i];
         if (m_roadTextures[i]) delete m_roadTextures[i];
         if (m_loadTextures[i]) delete m_loadTextures[i];
+        if (m_trailTextures[i]) delete m_trailTextures[i];
         if (i < 15) {
             if (m_mobTextures[i]) delete m_mobTextures[i];
         }
