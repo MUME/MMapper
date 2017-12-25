@@ -52,7 +52,7 @@ ELSE()
     ADD_LIBRARY(QtSolutions_IOCompressor-2.3 SHARED IMPORTED)
     SET_TARGET_PROPERTIES(QtSolutions_IOCompressor-2.3 PROPERTIES IMPORTED_LOCATION ${QTIOCOMPRESSOR_LIBRARY})
 
-    SET(QTIOCOMPRESSOR_SRC_DIR ${CMAKE_BINARY_DIR}/QtIOCompressor-src)
+    SET(QTIOCOMPRESSOR_SRC_DIR ${CMAKE_BINARY_DIR}/QtIOCompressor-src/src)
     SET(QTIOCOMPRESSOR_INCLUDE_DIRS ${QTIOCOMPRESSOR_SRC_DIR} ${CMAKE_BINARY_DIR}/QtIOCompressor-build)
 
     # Linux needs an additional relative path for bundling the library
