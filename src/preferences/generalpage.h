@@ -41,7 +41,8 @@ public slots:
 	void localPortValueChanged(int);
 
     void changeColorClicked();
-    void antialiasingSamplesValueChanged(int);
+    void antialiasingSamplesTextChanged(const QString&);
+    void trilinearFilteringStateChanged(int);
 
 	void emulatedExitsStateChanged(int);
 	void updatedStateChanged(int);

@@ -42,7 +42,7 @@
     <number>9</number>
    </property>
    <item>
-    <widget class="QFrame" name="frame_3">
+    <widget class="QFrame" name="frame_2">
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
      </property>
@@ -168,8 +168,8 @@
       <property name="spacing">
        <number>6</number>
       </property>
-      <item row="1" column="3">
-       <spacer name="horizontalSpacer">
+      <item row="0" column="4">
+       <spacer name="horizontalSpacer_2">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
@@ -180,13 +180,6 @@
          </size>
         </property>
        </spacer>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Background color</string>
-        </property>
-       </widget>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label_2">
@@ -202,6 +195,42 @@
         </property>
        </widget>
       </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Background color</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QComboBox" name="antialiasingSamplesComboBox">
+        <item>
+         <property name="text">
+          <string>0</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>2</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>4</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>8</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>16</string>
+         </property>
+        </item>
+       </widget>
+      </item>
       <item row="0" column="3">
        <widget class="QPushButton" name="changeColor">
         <property name="text">
@@ -209,31 +238,18 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="2">
-       <widget class="QSpinBox" name="antialiasingSamplesSpinBox">
-        <property name="maximum">
-         <number>16</number>
+      <item row="2" column="0">
+       <widget class="QCheckBox" name="trilinearFilteringCheckBox">
+        <property name="text">
+         <string>Trilinear filtering</string>
         </property>
        </widget>
-      </item>
-      <item row="0" column="4">
-       <spacer name="horizontalSpacer_2">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
       </item>
      </layout>
     </widget>
    </item>
    <item>
-    <widget class="QFrame" name="frame_2">
+    <widget class="QFrame" name="frame_1">
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
      </property>

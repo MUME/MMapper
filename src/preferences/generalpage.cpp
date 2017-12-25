@@ -39,7 +39,8 @@ GeneralPage::GeneralPage(QWidget *parent)
   connect( localPort, SIGNAL( valueChanged(int) ), this, SLOT( localPortValueChanged(int) )  );
 
   connect( changeColor, SIGNAL(clicked()),SLOT(changeColorClicked()));
-  connect( antialiasingSamplesSpinBox, SIGNAL( valueChanged(int) ), this, SLOT( antialiasingSamplesValueChanged(int) )  );
+  connect( antialiasingSamplesComboBox, SIGNAL( currentTextChanged(const QString &) ), this, SLOT( antialiasingSamplesTextChanged(const QString&) )  );
+  connect( trilinearFilteringCheckBox, SIGNAL(stateChanged(int)),SLOT(trilinearFilteringStateChanged(int)));
 
   connect ( emulatedExits, SIGNAL(stateChanged(int)),SLOT(emulatedExitsStateChanged(int)));
   connect ( updated, SIGNAL(stateChanged(int)),SLOT(updatedStateChanged(int)));
@@ -58,7 +59,10 @@ GeneralPage::GeneralPage(QWidget *parent)
 
   colorLabel->setPalette(QPalette(Config().m_backgroundColor));
   colorLabel->setAutoFillBackground(true);
-  antialiasingSamplesSpinBox->setValue(Config().m_antialiasingSamples);
+  int index = antialiasingSamplesComboBox->findText(QString::number(Config().m_antialiasingSamples));
+  if (index < 0) index = 0;
+  antialiasingSamplesComboBox->setCurrentIndex(index);
+  trilinearFilteringCheckBox->setChecked(Config().m_trilinearFiltering);
 
   emulatedExits->setChecked( Config().m_emulatedExits );
   updated->setChecked( Config().m_showUpdated );
@@ -80,11 +84,15 @@ void GeneralPage::changeColorClicked()
   }
 }
 
-void GeneralPage::antialiasingSamplesValueChanged(int)
+void GeneralPage::antialiasingSamplesTextChanged(const QString&)
 {
-    Config().m_antialiasingSamples = antialiasingSamplesSpinBox->value();
+    Config().m_antialiasingSamples = antialiasingSamplesComboBox->currentText().toInt();
 }
 
+void GeneralPage::trilinearFilteringStateChanged(int)
+{
+    Config().m_trilinearFiltering = trilinearFilteringCheckBox->isChecked();
+}
 
 void GeneralPage::selectWorldFileButtonClicked()
 {

@@ -138,7 +138,7 @@ MapCanvas::MapCanvas( MapData *mapData, PrespammedPath* prespammedPath, CGroup* 
     m_updateTextures = 0;
 
     int samples = Config().m_antialiasingSamples;
-    if (samples <= 0) samples = 1;
+    if (samples <= 0) samples = 2; // Default to 2 samples to prevent restart
     QSurfaceFormat format;
     format.setSamples(samples);
     setFormat(format);
@@ -914,6 +914,21 @@ void MapCanvas::initializeGL()
         }
     }
     m_updateTextures = new QOpenGLTexture(QImage(QString(":/pixmaps/update0.png")).mirrored());
+
+    if (Config().m_trilinearFiltering)
+    {
+        for (int i=0; i<16; i++)
+        {
+            m_terrainTextures[i]->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
+            m_roadTextures[i]->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
+            m_loadTextures[i]->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
+            m_trailTextures[i]->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
+            if (i < 15) {
+                m_mobTextures[i]->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
+            }
+        }
+        m_updateTextures->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
+    }
 
     glShadeModel(GL_FLAT);
     glEnable(GL_DEPTH_TEST);
