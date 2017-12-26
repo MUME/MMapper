@@ -38,7 +38,6 @@
 
 #include <QDesktopServices>
 #include <QUrl>
-#include <QDebug>
 
 const QString AbstractParser::nullString;
 const QString AbstractParser::emptyString("");

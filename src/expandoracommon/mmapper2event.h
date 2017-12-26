@@ -40,7 +40,7 @@ class ParseEvent;
 
 ParseEvent * createEvent(const CommandIdType & c, const QString & roomName, const QString & roomDesc, 
                          const QString & parsedRoomDesc, const ExitsFlagsType & exitFlags, 
-                         const PromptFlagsType & promptFlags, const ConnectedRoomFlagsType & connectedRoomFlagsb);
+                         const PromptFlagsType & promptFlags, const ConnectedRoomFlagsType & connectedRoomFlags);
 
 QString getRoomName(const ParseEvent * e);
 

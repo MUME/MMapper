@@ -331,8 +331,16 @@ Room * MapStorage::loadRoom(QDataStream & stream, qint32 version)
   else
       vquint8 = 0;
   room->replace(R_SUNDEATHTYPE, vquint8);
-  stream >> vquint16; room->replace(R_MOBFLAGS, vquint16);
-  stream >> vquint16; room->replace(R_LOADFLAGS, vquint16);
+  if (version >= 041)
+  {
+      stream >> vquint32; room->replace(R_MOBFLAGS, vquint32);
+      stream >> vquint32; room->replace(R_LOADFLAGS, vquint32);
+  }
+  else
+  {
+      stream >> vquint16; room->replace(R_MOBFLAGS, vquint16);
+      stream >> vquint16; room->replace(R_LOADFLAGS, vquint16);
+  }
 
   stream >> vquint8; //roomUpdated
   if (vquint8)
@@ -360,9 +368,18 @@ void MapStorage::loadExits(Room * room, QDataStream & stream, qint32 version)
 
     // Read the exit flags
     ExitFlags flags;
-    stream >> flags;
-    if (ISSET(flags, EF_DOOR)) SET(flags, EF_EXIT);
-    e[E_FLAGS] = flags;
+    if (version >= 041)
+    {
+      // Exit flags are stored with 16 bits in version >= 041
+      stream >> flags;
+      e[E_FLAGS] = flags;
+    }
+    else
+    {
+        stream >> vquint8;
+        if (ISSET(vquint8, EF_DOOR)) SET(vquint8, EF_EXIT);
+        e[E_FLAGS] = vquint8;
+    }
 
     DoorFlags dFlags;
     if (version >= 040)
@@ -843,8 +860,8 @@ void MapStorage::saveRoom(const Room * room, QDataStream & stream)
   stream << (quint8)getPortableType(room);
   stream << (quint8)getRidableType(room);
   stream << (quint8)getSundeathType(room);
-  stream << (quint16)getMobFlags(room);
-  stream << (quint16)getLoadFlags(room);
+  stream << (quint32)getMobFlags(room);
+  stream << (quint32)getLoadFlags(room);
 
   stream << (quint8)room->isUpToDate();
 

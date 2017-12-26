@@ -67,7 +67,7 @@ typedef class QString DoorName;
 enum ExitField {E_DOORNAME = 0, E_FLAGS, E_DOORFLAGS};
 #define NUM_EXIT_PROPS 3
 
-typedef quint8 ExitFlags;
+typedef quint16 ExitFlags;
 typedef quint16 DoorFlags;
 
 ExitFlags getFlags(const Exit & e);

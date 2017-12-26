@@ -109,11 +109,11 @@ private:
 	uint getSelectedExit();
 	void updateDialog(const Room *r);
 
-	QListWidgetItem* loadListItems[20];
-	QListWidgetItem* mobListItems[20];
+    QListWidgetItem* loadListItems[31];
+    QListWidgetItem* mobListItems[31];
 
-	QListWidgetItem* exitListItems[20];
-	QListWidgetItem* doorListItems[20];
+    QListWidgetItem* exitListItems[15];
+    QListWidgetItem* doorListItems[15];
 
 	const RoomSelection* 	m_roomSelection;
     MapData* 		        m_mapData;

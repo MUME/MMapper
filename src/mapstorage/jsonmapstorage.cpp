@@ -398,8 +398,8 @@ void JsonWorld::addRoom( QJsonArray &jRooms, const Room *room ) const
   jr["portable"]  = (quint8)getPortableType(room);
   jr["rideable"]  = (quint8)getRidableType(room);
   jr["sundeath"]  = (quint8)getSundeathType(room);
-  jr["mobflags"]  = (quint16)getMobFlags(room);
-  jr["loadflags"] = (quint16)getLoadFlags(room);
+  jr["mobflags"]  = (qint64)getMobFlags(room);
+  jr["loadflags"] = (qint64)getLoadFlags(room);
 
   addExits( room, jr );
 

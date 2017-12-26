@@ -61,7 +61,7 @@ enum RoomSundeathType   { RST_UNDEFINED = 0, RST_SUNDEATH, RST_NOSUNDEATH };
 #define RMF_QUEST           bit14
 #define RMF_ANY             bit15
 #define RMF_RESERVED2       bit16
-typedef quint16 RoomMobFlags;
+typedef quint32 RoomMobFlags;
 
 #define RLF_TREASURE        bit1
 #define RLF_ARMOUR          bit2
@@ -79,7 +79,7 @@ typedef quint16 RoomMobFlags;
 #define RLF_BOAT            bit14
 #define RLF_ATTENTION 		bit15
 #define RLF_TOWER     		bit16
-typedef quint16 RoomLoadFlags;
+typedef quint32 RoomLoadFlags;
 
 enum RoomField {R_NAME, R_DESC, R_TERRAINTYPE, R_DYNAMICDESC, R_NOTE, R_MOBFLAGS, R_LOADFLAGS, R_PORTABLETYPE, R_LIGHTTYPE, R_ALIGNTYPE, R_RIDABLETYPE, R_SUNDEATHTYPE, R_KEYWORDS, ROOMFIELD_LAST};
 
