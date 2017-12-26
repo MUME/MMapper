@@ -35,10 +35,11 @@ class Mmapper2PathMachine;
 class CommandEvaluator;
 class PrespammedPath;
 class CGroup;
+class MumeClock;
 
 class ConnectionListener : public QTcpServer {
   public:
-    ConnectionListener(MapData*, Mmapper2PathMachine*, CommandEvaluator*, PrespammedPath*, CGroup*, QObject *parent);
+    ConnectionListener(MapData*, Mmapper2PathMachine*, CommandEvaluator*, PrespammedPath*, CGroup*, MumeClock*, QObject *parent);
 
     QString getRemoteHost() const {return m_remoteHost;}
     void setRemoteHost(QString i) {m_remoteHost = i;}
@@ -66,6 +67,7 @@ class ConnectionListener : public QTcpServer {
     CommandEvaluator* m_commandEvaluator;
     PrespammedPath* m_prespammedPath;
     CGroup* m_groupManager;
+    MumeClock* m_mumeClock;
 
         bool m_accept;
 };

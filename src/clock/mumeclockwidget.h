@@ -1,10 +1,8 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
-**            Marek Krejza <krejza@gmail.com> (Caligor),
-**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
+** Authors:   Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -24,15 +22,33 @@
 **
 ************************************************************************/
 
-#ifndef PARSERUTILS_H
-#define PARSERUTILS_H
+#ifndef MUMECLOCKWIDGET_H
+#define MUMECLOCKWIDGET_H
 
-#include <QString>
+#include <QWidget>
+#include "ui_mumeclockwidget.h"
+#include "mumemoment.h"
 
-namespace ParserUtils
+class QTimer;
+class MumeClock;
+
+class MumeClockWidget : public QWidget, private Ui::MumeClockWidget
 {
-  QString& removeAnsiMarks(QString& str);
-  QString& latinToAscii(QString& str);
-}
+    Q_OBJECT
+public:
+    MumeClockWidget(MumeClock* clock = 0, QWidget *parent = 0);
+    ~MumeClockWidget();
+
+public slots:
+    void updateLabel();
+
+private:
+    MumeClock* m_clock;
+    QTimer* m_timer;
+
+    MumeTime m_lastTime;
+    MumeSeason m_lastSeason;
+};
+
 
 #endif

@@ -32,7 +32,7 @@
 
 //#define XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
 
-enum XmlMode            {XML_NONE, XML_ROOM, XML_NAME, XML_DESCRIPTION, XML_EXITS, XML_PROMPT, XML_TERRAIN};
+enum XmlMode            {XML_NONE, XML_ROOM, XML_NAME, XML_DESCRIPTION, XML_EXITS, XML_PROMPT, XML_TERRAIN, XML_WEATHER};
 
 class MumeXmlParser : public AbstractParser
 {
@@ -40,14 +40,10 @@ class MumeXmlParser : public AbstractParser
 
   public:
 
-    MumeXmlParser(MapData*, QObject *parent = 0);
+    MumeXmlParser(MapData*, MumeClock*, QObject *parent = 0);
     ~MumeXmlParser();
 
-
     void parse(const QByteArray& );
-
-signals:
-    void suggestTime(const QString&, const QString&);
 
   public slots:
     void parseNewMudInput(IncomingData& que);
@@ -81,6 +77,7 @@ signals:
     QString m_mumeTime;
     bool m_readingTag;
     bool m_readStatusTag;
+    bool m_readWeatherTag;
     bool m_gratuitous;
     CommandIdType m_move;
 
@@ -88,6 +85,7 @@ signals:
 
   signals:
     void sendScoreLineEvent(QByteArray);
+    void mumeTime(QString);
 };
 
 #endif

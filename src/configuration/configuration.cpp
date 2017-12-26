@@ -124,13 +124,13 @@ void Configuration::read()
   m_groupManagerHost = conf.value("host", "localhost").toByteArray();
   m_groupManagerCharName = conf.value("character name", "MMapper").toByteArray();
   m_showGroupManager = conf.value("show", false).toBool();
-  m_showGroupManager = false;
   m_groupManagerColor = (QColor) conf.value("color", "#ffff00").toString();
-  m_groupManagerRect.setRect(conf.value("rectangle x", 0).toInt(),
-                             conf.value("rectangle y", 0).toInt(),
-                             conf.value("rectangle width", 0).toInt(),
-                             conf.value("rectangle height", 0).toInt());
   m_groupManagerRulesWarning = conf.value("rules warning", true).toBool();
+  conf.endGroup();
+
+  conf.beginGroup("Mume Clock");
+  m_mumeStartEpoch = conf.value("Mume start epoch", 1420070400).toInt();
+  m_displayMumeClock =conf.value("Display clock", true).toBool();
   conf.endGroup();
 }
 
@@ -209,11 +209,12 @@ void Configuration::write() const {
   conf.setValue("character name", m_groupManagerCharName);
   conf.setValue("show", m_showGroupManager);
   conf.setValue("color", m_groupManagerColor.name());
-  conf.setValue("rectangle x", m_groupManagerRect.x());
-  conf.setValue("rectangle y", m_groupManagerRect.y());
-  conf.setValue("rectangle width", m_groupManagerRect.width());
-  conf.setValue("rectangle height", m_groupManagerRect.height());
   conf.setValue("rules warning", m_groupManagerRulesWarning);
+  conf.endGroup();
+
+  conf.beginGroup("Mume Clock");
+  conf.setValue("Mume start epoch", m_mumeStartEpoch);
+  conf.setValue("Display clock", m_displayMumeClock);
   conf.endGroup();
 }
 

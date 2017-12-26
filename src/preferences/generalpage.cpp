@@ -53,6 +53,8 @@ GeneralPage::GeneralPage(QWidget *parent)
 
   connect( sellectWorldFileButton, SIGNAL(clicked()), this, SLOT(selectWorldFileButtonClicked()));
 
+  connect( displayMumeClockCheckBox, SIGNAL(stateChanged(int)),SLOT(displayMumeClockStateChanged(int)));
+
   remoteName->setText( Config().m_remoteServerName );
   remotePort->setValue( Config().m_remotePort );
   localPort->setValue( Config().m_localPort );
@@ -72,6 +74,8 @@ GeneralPage::GeneralPage(QWidget *parent)
 
   autoLoadCheck->setChecked( Config().m_autoLoadWorld ); 
   autoLoadFileName->setText( Config().m_autoLoadFileName );
+
+  displayMumeClockCheckBox->setChecked(Config().m_displayMumeClock);
 }
 
 void GeneralPage::changeColorClicked()
@@ -156,4 +160,7 @@ void GeneralPage::autoLoadCheckStateChanged(int)
   Config().m_autoLoadWorld = autoLoadCheck->isChecked(); 
 }
 
-
+void GeneralPage::displayMumeClockStateChanged(int)
+{
+  Config().m_displayMumeClock = displayMumeClockCheckBox->isChecked();
+}

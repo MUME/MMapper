@@ -44,6 +44,7 @@ class Mmapper2PathMachine;
 class CommandEvaluator;
 class PrespammedPath;
 class CGroup;
+class MumeClock;
 
 class ProxyThreader: public QThread
 {
@@ -66,7 +67,7 @@ class Proxy : public QObject
     Q_OBJECT
 
   public:
-    Proxy(MapData*, Mmapper2PathMachine*, CommandEvaluator*, PrespammedPath*, CGroup*, qintptr & socketDescriptor, QString & host, int & port, bool threaded, QObject *parent);
+    Proxy(MapData*, Mmapper2PathMachine*, CommandEvaluator*, PrespammedPath*, CGroup*, MumeClock*, qintptr & socketDescriptor, QString & host, int & port, bool threaded, QObject *parent);
     ~Proxy();
 
     void start();
@@ -114,6 +115,7 @@ class Proxy : public QObject
     CommandEvaluator* m_commandEvaluator;
     PrespammedPath* m_prespammedPath;
     CGroup* m_groupManager;
+    MumeClock* m_mumeClock;
 
     ProxyThreader *m_thread;
     bool m_threaded;

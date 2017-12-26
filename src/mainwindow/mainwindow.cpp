@@ -46,6 +46,8 @@
 #include "CGroupCommunicator.h"
 #include "progresscounter.h"
 #include "mapstorage/filesaver.h"
+#include "mumeclockwidget.h"
+#include "mumeclock.h"
 
 #include <QMessageBox>
 #include <QMenuBar>
@@ -142,6 +144,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
   m_findRoomsDlg = new FindRoomsDlg(m_mapData, this);
   m_findRoomsDlg->setObjectName("FindRoomsDlg");
 
+  m_mumeClock = new MumeClock(Config().m_mumeStartEpoch);
+
   createActions();
   setupMenuBar();
   setupToolBars();
@@ -153,7 +157,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
   setCorner(Qt::BottomRightCorner, Qt::BottomDockWidgetArea);
 
 
-  ConnectionListener* server = new ConnectionListener(m_mapData, m_pathMachine, m_commandEvaluator, m_prespammedPath, m_groupManager, this);
+  ConnectionListener* server = new ConnectionListener(m_mapData, m_pathMachine, m_commandEvaluator, m_prespammedPath, m_groupManager, m_mumeClock, this);
   server->setMaxPendingConnections (1);
   server->setRemoteHost(Config().m_remoteServerName);
   server->setRemotePort(Config().m_remotePort);
@@ -269,6 +273,8 @@ void MainWindow::currentMapWindowChanged()
   connect(m_groupManager, SIGNAL(log(const QString&, const QString&)), this, SLOT(log(const QString&, const QString&)));
   connect(m_pathMachine, SIGNAL(setCharPosition(uint)), m_groupManager, SLOT(setCharPosition(uint)));
   connect(m_groupManager, SIGNAL(drawCharacters()), getCurrentMapWindow()->getCanvas(), SLOT(update()));
+
+  QObject::connect(m_mumeClock, SIGNAL(log( const QString&, const QString& )), this, SLOT(log( const QString&, const QString& )));
 }
 
 
@@ -790,6 +796,7 @@ void MainWindow::setupToolBars()
 void MainWindow::setupStatusBar()
 {
   statusBar()->showMessage(tr("Welcome to MMapper ..."));
+  statusBar()->insertPermanentWidget(0, new MumeClockWidget(m_mumeClock));
 }
 
 void MainWindow::onPreferences()

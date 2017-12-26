@@ -35,6 +35,7 @@
 #include <QQueue>
 #include <QObject>
 
+class MumeClock;
 class ParseEvent;
 class MapData;
 class Room;
@@ -89,7 +90,7 @@ class AbstractParser : public QObject
   Q_OBJECT
 public:
 
-   AbstractParser(MapData*, QObject *parent = 0);
+   AbstractParser(MapData*, MumeClock*, QObject *parent = 0);
    ~AbstractParser();
 
    const RoomSelection *search_rs;
@@ -141,16 +142,11 @@ protected:
 
   void printRoomInfo(uint fieldset);
 
-  //utility functions
-  QString& removeAnsiMarks(QString& str);
-
   void emulateExits();
 
   void parseExits(QString& str);
   void parsePrompt(QString& prompt);
   virtual bool parseUserCommands(QString& command);
-
-  static const QChar escChar;
 
   QString m_stringBuffer;
   QByteArray m_byteBuffer;
@@ -166,7 +162,7 @@ protected:
   QString m_lastPrompt;
 
   CommandQueue queue;
-
+  MumeClock* m_mumeClock;
   MapData* m_mapData;
 
   static const QString nullString;
