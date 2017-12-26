@@ -60,6 +60,7 @@ void Configuration::read()
   conf.beginGroup("Canvas");
   m_showUpdated = conf.value("Show updated rooms", true).toBool();
   m_drawNotMappedExits = conf.value("Draw not mapped exits", true).toBool();
+  m_drawNoMatchExits = conf.value("Draw no match exits", false).toBool();
   m_drawUpperLayersTextured = conf.value("Draw upper layers textured", false).toBool();
   m_drawDoorNames = conf.value("Draw door names", true).toBool();
   m_backgroundColor = QColor(conf.value("Background color", QColor(110,110,110).name()).toString());
@@ -158,6 +159,7 @@ void Configuration::write() const {
   conf.beginGroup("Canvas");
   conf.setValue("Show updated rooms", m_showUpdated);
   conf.setValue("Draw not mapped exits", m_drawNotMappedExits);
+  conf.setValue("Draw no match exits", m_drawNoMatchExits);
   conf.setValue("Draw upper layers textured", m_drawUpperLayersTextured);
   conf.setValue("Draw door names", m_drawDoorNames);
   conf.setValue("Background color", m_backgroundColor.name());

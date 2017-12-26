@@ -70,6 +70,7 @@ class Configuration {
     bool m_emulatedExits;
     bool m_showUpdated;
     bool m_drawNotMappedExits;
+    bool m_drawNoMatchExits;
     bool m_drawUpperLayersTextured;
     bool m_drawDoorNames;
     
