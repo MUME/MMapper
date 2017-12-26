@@ -61,3 +61,5 @@ RoomAlignType getAlignType(const Room * room)
 RoomRidableType getRidableType(const Room * room) 
   { return (RoomRidableType)(*room)[R_RIDABLETYPE].toUInt(); }
 
+RoomSundeathType getSundeathType(const Room * room)
+  { return (RoomSundeathType)(*room)[R_SUNDEATHTYPE].toUInt(); }

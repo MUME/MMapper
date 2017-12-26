@@ -65,46 +65,6 @@
       <property name="spacing">
        <number>6</number>
       </property>
-      <item row="2" column="3" colspan="2">
-       <widget class="QLabel" name="roomDescColorLabel">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="3" colspan="2">
-       <widget class="QLabel" name="roomNameColorLabel">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="AnsiCombo" name="roomNameAnsiColorBG" native="true"/>
-      </item>
-      <item row="3" column="1">
-       <widget class="AnsiCombo" name="roomDescAnsiColorBG" native="true"/>
-      </item>
-      <item row="5" column="0" colspan="5">
-       <widget class="QCheckBox" name="suppressXmlTagsCheckBox">
-        <property name="text">
-         <string>Suppress XML tags</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0" colspan="5">
-       <widget class="QCheckBox" name="IACPromptCheckBox">
-        <property name="text">
-         <string>IAC-GA prompt recognition (changes needs reconnect with client!!!)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="AnsiCombo" name="roomNameAnsiColor" native="true"/>
-      </item>
-      <item row="3" column="0">
-       <widget class="AnsiCombo" name="roomDescAnsiColor" native="true"/>
-      </item>
       <item row="3" column="4">
        <widget class="QLabel" name="labelRoomDesc">
         <property name="sizePolicy">
@@ -135,55 +95,27 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="0" colspan="3">
-       <widget class="QLabel" name="textLabel1_7">
-        <property name="minimumSize">
-         <size>
-          <width>280</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>Descriptions color: fg/bg/attr</string>
-        </property>
+      <item row="6" column="2" colspan="3">
+       <widget class="QComboBox" name="charset">
+        <item>
+         <property name="text">
+          <string notr="true">ASCII or Latin1</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string notr="true">UTF-8</string>
+         </property>
+        </item>
        </widget>
       </item>
-      <item row="1" column="2">
-       <widget class="QCheckBox" name="roomNameAnsiBold">
-        <property name="maximumSize">
-         <size>
-          <width>38</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>B</string>
-        </property>
-       </widget>
+      <item row="1" column="0">
+       <widget class="AnsiCombo" name="roomNameAnsiColor" native="true"/>
       </item>
-      <item row="1" column="3">
-       <widget class="QCheckBox" name="roomNameAnsiUnderline">
-        <property name="maximumSize">
-         <size>
-          <width>38</width>
-          <height>16777215</height>
-         </size>
-        </property>
+      <item row="0" column="3" colspan="2">
+       <widget class="QLabel" name="roomNameColorLabel">
         <property name="text">
-         <string>U</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="3">
-       <widget class="QCheckBox" name="roomDescAnsiUnderline">
-        <property name="maximumSize">
-         <size>
-          <width>38</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>U</string>
+         <string/>
         </property>
        </widget>
       </item>
@@ -197,6 +129,65 @@
         </property>
         <property name="text">
          <string>B</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0" colspan="5">
+       <widget class="QCheckBox" name="suppressXmlTagsCheckBox">
+        <property name="text">
+         <string>Suppress XML tags</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="AnsiCombo" name="roomNameAnsiColorBG" native="true"/>
+      </item>
+      <item row="3" column="1">
+       <widget class="AnsiCombo" name="roomDescAnsiColorBG" native="true"/>
+      </item>
+      <item row="2" column="0" colspan="3">
+       <widget class="QLabel" name="textLabel1_7">
+        <property name="minimumSize">
+         <size>
+          <width>280</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Descriptions color: fg/bg/attr</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3" colspan="2">
+       <widget class="QLabel" name="roomDescColorLabel">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="3">
+       <widget class="QLabel" name="textLabel1_3">
+        <property name="minimumSize">
+         <size>
+          <width>280</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Room name color: fg/bg/attr</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3">
+       <widget class="QCheckBox" name="roomDescAnsiUnderline">
+        <property name="maximumSize">
+         <size>
+          <width>38</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>U</string>
         </property>
        </widget>
       </item>
@@ -230,37 +221,46 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="0" colspan="3">
-       <widget class="QLabel" name="textLabel1_3">
-        <property name="minimumSize">
+      <item row="1" column="2">
+       <widget class="QCheckBox" name="roomNameAnsiBold">
+        <property name="maximumSize">
          <size>
-          <width>280</width>
-          <height>0</height>
+          <width>38</width>
+          <height>16777215</height>
          </size>
         </property>
         <property name="text">
-         <string>Room name color: fg/bg/attr</string>
+         <string>B</string>
         </property>
-       </widget>
-      </item>
-      <item row="6" column="2" colspan="3">
-       <widget class="QComboBox" name="charset">
-        <item>
-         <property name="text">
-          <string notr="true">ASCII or Latin1</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string notr="true">UTF-8</string>
-         </property>
-        </item>
        </widget>
       </item>
       <item row="6" column="0" colspan="2">
        <widget class="QLabel" name="label">
         <property name="text">
          <string>&quot;change charset&quot; is:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QCheckBox" name="roomNameAnsiUnderline">
+        <property name="maximumSize">
+         <size>
+          <width>38</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>U</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="AnsiCombo" name="roomDescAnsiColor" native="true"/>
+      </item>
+      <item row="4" column="0" colspan="5">
+       <widget class="QCheckBox" name="IACPromptCheckBox">
+        <property name="text">
+         <string>IAC-GA prompt recognition (changes needs reconnect with client!!!)</string>
         </property>
        </widget>
       </item>

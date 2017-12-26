@@ -34,6 +34,8 @@
 #include "onebyone.h"
 #include "parseevent.h"
 #include "customaction.h"
+#include "mmapper2room.h"
+#include "mmapper2event.h"
 
 #include <stack>
 
@@ -285,12 +287,38 @@ void PathMachine::approved(ParseEvent * event)
   }
   if (perhaps)
   {
+    // Update the exit from the previous room to the current room
     uint move = event->getMoveType();
     if ((uint)mostLikelyRoom.getExitsList().size() > move)
     {
       emit scheduleAction(new AddExit(mostLikelyRoom.getId(), perhaps->getId(), move));
     }
+
+    // Update most likely room with player's current location
     mostLikelyRoom = *perhaps;
+
+    // Update rooms behind exits now that we are certain about our current location
+    ConnectedRoomFlagsType bFlags = getConnectedRoomFlags(event);
+    if (bFlags & CONNECTED_ROOM_FLAGS_VALID)
+    {
+        for(uint dir = 0; dir < 6; ++dir)
+        {
+            const Exit & e = mostLikelyRoom.exit(dir);
+            if (e.outBegin() == e.outEnd() || ++e.outBegin() != e.outEnd()) continue;
+            uint connectedRoomId = *e.outBegin();
+            ConnectedRoomFlagsType bThisRoom = bFlags >> (dir * 2);
+            if (bThisRoom & DIRECT_SUN_ROOM)
+            {
+                emit scheduleAction(new SingleRoomAction(new UpdateRoomField(RST_SUNDEATH, R_SUNDEATHTYPE), connectedRoomId));
+            }
+            else if (bThisRoom & INDIRECT_SUN_ROOM)
+            {
+                emit scheduleAction(new SingleRoomAction(new UpdateRoomField(RST_NOSUNDEATH, R_SUNDEATHTYPE), connectedRoomId));
+            }
+        }
+    }
+
+    // Send updates
     emit playerMoved(mostLikelyRoom.getPosition());
     if (Config().m_groupManagerState != 2) emit setCharPosition(mostLikelyRoom.getId()); // GroupManager
   }

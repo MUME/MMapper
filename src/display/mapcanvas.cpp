@@ -296,7 +296,7 @@ void MapCanvas::forceMapperToRoom() {
         if (Config().m_mapMode == 2)
         {
             const Room *r = tmpSel->values().front();
-            emit charMovedEvent(createEvent( CID_UNKNOWN, getName(r), getDynamicDescription(r), getDescription(r), 0, 0));
+            emit charMovedEvent(createEvent( CID_UNKNOWN, getName(r), getDynamicDescription(r), getDescription(r), 0, 0, 0));
         }
         else
             emit setCurrentRoom(tmpSel->keys().front());
@@ -1842,15 +1842,18 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> & rooms, co
         RoomMobFlags mf = getMobFlags(room);
         RoomLoadFlags lf = getLoadFlags(room);
 
-        // Make dark rooms look dark
-        if (getLightType(room)==RLT_DARK)
+        // Make dark and troll safe rooms look dark
+        if (getSundeathType(room)==RST_NOSUNDEATH || getLightType(room)==RLT_DARK)
         {
             GLdouble oldcolour[4];
             glGetDoublev(GL_CURRENT_COLOR, oldcolour);
 
             glTranslated(0, 0, 0.005);
 
-            qglColor(Qt::lightGray);
+            if (getLightType(room)==RLT_DARK)
+                qglColor(Qt::darkGray);
+            else
+                qglColor(Qt::lightGray);
             //glColor4d(0.1f, 0.0f, 0.0f, 0.2f);
 
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

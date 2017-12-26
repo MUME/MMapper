@@ -60,7 +60,22 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
 	mobListItems[13] = (QListWidgetItem*) new QListWidgetItem("Quest mob");
 	mobListItems[14] = (QListWidgetItem*) new QListWidgetItem("Any mob");
 	mobListItems[15] = NULL;
-
+    mobListItems[16] = NULL;
+    mobListItems[17] = NULL;
+    mobListItems[18] = NULL;
+    mobListItems[19] = NULL;
+    mobListItems[20] = NULL;
+    mobListItems[21] = NULL;
+    mobListItems[22] = NULL;
+    mobListItems[23] = NULL;
+    mobListItems[24] = NULL;
+    mobListItems[25] = NULL;
+    mobListItems[26] = NULL;
+    mobListItems[27] = NULL;
+    mobListItems[28] = NULL;
+    mobListItems[29] = NULL;
+    mobListItems[30] = NULL;
+    mobListItems[31] = NULL;
 	mobFlagsListWidget->clear();
 	for (int i=0; i<15; i++)
 	{
@@ -85,7 +100,21 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
 	loadListItems[14] = (QListWidgetItem*) new QListWidgetItem("Attention");
 	loadListItems[15] = (QListWidgetItem*) new QListWidgetItem("Tower");
 	loadListItems[16] = NULL;
-
+    loadListItems[17] = NULL;
+    loadListItems[18] = NULL;
+    loadListItems[19] = NULL;
+    loadListItems[20] = NULL;
+    loadListItems[21] = NULL;
+    loadListItems[22] = NULL;
+    loadListItems[23] = NULL;
+    loadListItems[24] = NULL;
+    loadListItems[25] = NULL;
+    loadListItems[26] = NULL;
+    loadListItems[27] = NULL;
+    loadListItems[28] = NULL;
+    loadListItems[29] = NULL;
+    loadListItems[30] = NULL;
+    loadListItems[31] = NULL;
 	loadFlagsListWidget->clear();
 	for (int i=0; i<16; i++)
 	{
@@ -101,10 +130,16 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
 	exitListItems[5] = (QListWidgetItem*) new QListWidgetItem("Special");
 	exitListItems[6] = (QListWidgetItem*) new QListWidgetItem("No match");
 	exitListItems[7] = (QListWidgetItem*) new QListWidgetItem("Flow dir"); // Added in schema 040
-  exitListItems[8] = NULL; // Don't add an item here: file schema doesn't support value > 7
-
+    exitListItems[8] = NULL;
+    exitListItems[9] = NULL;
+    exitListItems[10] = NULL;
+    exitListItems[11] = NULL;
+    exitListItems[12] = NULL;
+    exitListItems[13] = NULL;
+    exitListItems[14] = NULL;
+    exitListItems[15] = NULL;
 	exitFlagsListWidget->clear();
-	for (int i=0; i<8; i++)
+    for (int i=0; i<8; i++)
 	{
 		exitListItems[i]->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
 		exitFlagsListWidget->addItem(exitListItems[i]);
@@ -181,6 +216,10 @@ void RoomEditAttrDlg::connectAll()
     connect(litRadioButton, SIGNAL(toggled(bool)), this, SLOT(litRadioButtonToggled(bool)));
     connect(darkRadioButton, SIGNAL(toggled(bool)), this, SLOT(darkRadioButtonToggled(bool)));
     connect(lightUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(lightUndefRadioButtonToggled(bool)));
+
+    connect(sundeathRadioButton, SIGNAL(toggled(bool)), this, SLOT(sundeathRadioButtonToggled(bool)));
+    connect(noSundeathRadioButton, SIGNAL(toggled(bool)), this, SLOT(noSundeathRadioButtonToggled(bool)));
+    connect(sundeathUndefRadioButton, SIGNAL(toggled(bool)), this, SLOT(sundeathUndefRadioButtonToggled(bool)));
 
 	connect(mobFlagsListWidget, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(mobFlagsListItemChanged(QListWidgetItem*)));
 	connect(loadFlagsListWidget, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(loadFlagsListItemChanged(QListWidgetItem*)));
@@ -498,9 +537,8 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
 		else
 			exitListItems[7]->setCheckState(Qt::Unchecked);
 
-		roomNoteTextEdit->clear();
-		roomNoteTextEdit->setEnabled(false);
-
+        roomNoteTextEdit->clear();
+        roomNoteTextEdit->setEnabled(false);
 
 		int index = 0;
 		while(loadListItems[index]!=NULL)
@@ -745,6 +783,19 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
 				lightUndefRadioButton->setChecked(true);
 				break;
 		}
+
+        switch (getSundeathType(r))
+        {
+            case RST_NOSUNDEATH:
+                noSundeathRadioButton->setChecked(true);
+                break;
+            case RST_SUNDEATH:
+                sundeathRadioButton->setChecked(true);
+                break;
+            case RST_UNDEFINED:
+                sundeathUndefRadioButton->setChecked(true);
+                break;
+        }
 	}
 
 	connectAll();
@@ -955,6 +1006,51 @@ void RoomEditAttrDlg::lightUndefRadioButtonToggled(bool val)
 	}
 }
 
+
+void RoomEditAttrDlg::sundeathRadioButtonToggled(bool val)
+{
+    if (val)
+    {
+        const Room* r = getSelectedRoom();
+        if (r)
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RST_SUNDEATH, R_SUNDEATHTYPE), r->getId()), m_roomSelection);
+        else
+            m_mapData->execute(new GroupAction(new UpdateRoomField(RST_SUNDEATH, R_SUNDEATHTYPE), m_roomSelection), m_roomSelection);
+
+        emit mapChanged();
+        updateDialog( getSelectedRoom() );
+    }
+}
+
+void RoomEditAttrDlg::noSundeathRadioButtonToggled(bool val)
+{
+    if (val)
+    {
+        const Room* r = getSelectedRoom();
+        if (r)
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RST_NOSUNDEATH, R_SUNDEATHTYPE), r->getId()), m_roomSelection);
+        else
+            m_mapData->execute(new GroupAction(new UpdateRoomField(RST_NOSUNDEATH, R_SUNDEATHTYPE), m_roomSelection), m_roomSelection);
+
+        emit mapChanged();
+        updateDialog( getSelectedRoom() );
+    }
+}
+
+void RoomEditAttrDlg::sundeathUndefRadioButtonToggled(bool val)
+{
+    if (val)
+    {
+        const Room* r = getSelectedRoom();
+        if (r)
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RST_UNDEFINED, R_SUNDEATHTYPE), r->getId()), m_roomSelection);
+        else
+            m_mapData->execute(new GroupAction(new UpdateRoomField(RST_UNDEFINED, R_SUNDEATHTYPE), m_roomSelection), m_roomSelection);
+
+        emit mapChanged();
+        updateDialog( getSelectedRoom() );
+    }
+}
 
 void RoomEditAttrDlg::mobFlagsListItemChanged(QListWidgetItem* item)
 {

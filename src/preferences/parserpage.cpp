@@ -93,9 +93,7 @@ ParserPage::ParserPage(QWidget *parent)
 		
 	connect( IACPromptCheckBox, SIGNAL(stateChanged(int)),SLOT(IACPromptCheckBoxStateChanged(int)));	
 	connect( suppressXmlTagsCheckBox, SIGNAL(stateChanged(int)),SLOT(suppressXmlTagsCheckBoxStateChanged(int)));	
-        connect( charset, SIGNAL(currentIndexChanged(int)),SLOT(charsetChanged(int)));
-
-
+    connect( charset, SIGNAL(currentIndexChanged(int)),SLOT(charsetChanged(int)));
 }
 
 void ParserPage::charsetChanged(int index)

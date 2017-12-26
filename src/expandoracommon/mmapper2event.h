@@ -36,10 +36,11 @@ class ParseEvent;
 #define EV_PDESC 2
 #define EV_EXITS 3
 #define EV_PROMPT 4
+#define EV_CROOM 5
 
 ParseEvent * createEvent(const CommandIdType & c, const QString & roomName, const QString & roomDesc, 
                          const QString & parsedRoomDesc, const ExitsFlagsType & exitFlags, 
-                         const PromptFlagsType & promptFlags);
+                         const PromptFlagsType & promptFlags, const ConnectedRoomFlagsType & connectedRoomFlags);
 
 QString getRoomName(const ParseEvent * e);
 
@@ -50,6 +51,7 @@ QString getParsedRoomDesc(const ParseEvent * e);
 ExitsFlagsType getExitFlags(const ParseEvent * e);
   
 PromptFlagsType getPromptFlags(const ParseEvent * e);
-  
+
+ConnectedRoomFlagsType getConnectedRoomFlags(const ParseEvent * e);
 
 #endif
