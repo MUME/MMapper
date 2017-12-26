@@ -27,11 +27,12 @@
 #ifndef _CONFIGURATION_H_
 #define _CONFIGURATION_H_
 
-#include "defs.h"
 #include <QStringList>
-#include <QRect>
+#include <QPoint>
 #include <QSize>
 #include <QColor>
+
+#include "defs.h"
 
 class Configuration {
   public:
@@ -98,9 +99,11 @@ class Configuration {
     QByteArray m_groupManagerHost;
     QByteArray m_groupManagerCharName;
     bool m_showGroupManager;
-    QRect m_groupManagerRect;
     QColor m_groupManagerColor;
     bool m_groupManagerRulesWarning;
+
+    int m_mumeStartEpoch;
+    bool m_displayMumeClock;
 
   private:
     Configuration();

@@ -1,10 +1,8 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
-**            Marek Krejza <krejza@gmail.com> (Caligor),
-**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
+** Authors:   Nils Schimmelmann <nschimme@gmail.com>
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -24,15 +22,24 @@
 **
 ************************************************************************/
 
-#ifndef PARSERUTILS_H
-#define PARSERUTILS_H
+#ifndef TESTPARSER_H
+#define TESTPARSER_H
 
-#include <QString>
+#include <QObject>
 
-namespace ParserUtils
+class TestParser : public QObject
 {
-  QString& removeAnsiMarks(QString& str);
-  QString& latinToAscii(QString& str);
-}
+    Q_OBJECT
+public:
+    TestParser();
+    ~TestParser() override;
+
+private:
+
+private Q_SLOTS:
+    // ParserUtils
+    void removeAnsiMarksTest();
+    void latinToAsciiTest();
+};
 
 #endif

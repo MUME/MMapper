@@ -1,10 +1,8 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
-**            Marek Krejza <krejza@gmail.com> (Caligor),
-**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
+** Authors:   Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -24,15 +22,32 @@
 **
 ************************************************************************/
 
-#ifndef PARSERUTILS_H
-#define PARSERUTILS_H
+#ifndef MUMEMOMENT_H
+#define MUMEMOMENT_H
 
-#include <QString>
+#define MUME_START_YEAR 2850
 
-namespace ParserUtils
+enum MumeTime {TIME_UNKNOWN = 0, TIME_DAWN, TIME_DAY, TIME_DUSK, TIME_NIGHT};
+enum MumeSeason {SEASON_UNKNOWN = 0, SEASON_WINTER, SEASON_SPRING, SEASON_SUMMER, SEASON_AUTUMN};
+
+class QString;
+
+class MumeMoment
 {
-  QString& removeAnsiMarks(QString& str);
-  QString& latinToAscii(QString& str);
-}
+public:
+    MumeMoment(int year, int month, int day, int hour, int minute);
+    MumeMoment(int secsSinceMumeStartEpoch);
 
-#endif
+    int toSeconds();
+
+    MumeSeason toSeason();
+    MumeTime toTimeOfDay();
+
+    int m_year = 0;
+    int m_month = 0;
+    int m_day = 0;
+    int m_hour = 0;
+    int m_minute = 0;
+};
+
+#endif // MUMEMOMENT_H

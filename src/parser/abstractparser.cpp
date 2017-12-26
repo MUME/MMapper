@@ -31,27 +31,24 @@
 #include "configuration.h"
 #include "roomselection.h"
 #include "mapdata.h"
+#include "mumeclock.h"
 
 #include <unistd.h>
 
 #include <QDesktopServices>
 #include <QUrl>
 
-const QChar AbstractParser::escChar('\033');
 const QString AbstractParser::nullString;
 const QString AbstractParser::emptyString("");
 const QByteArray AbstractParser::emptyByteArray("");
 
-AbstractParser::AbstractParser(MapData* md, QObject *parent)
+AbstractParser::AbstractParser(MapData* md, MumeClock* mc, QObject *parent)
   : QObject(parent)
 {
   m_readingRoomDesc = false;
   m_descriptionReady = false;
-
+  m_mumeClock = mc;
   m_mapData = md;
-   /*m_roomName = "";
-  m_dynamicRoomDesc = "";
-  m_staticRoomDesc = "";*/
   m_exitsFlags = 0;
   m_promptFlags = 0;
 
@@ -66,27 +63,6 @@ AbstractParser::~AbstractParser(){
 void AbstractParser::emptyQueue()
 {
   queue.clear();
-}
-
-QString& AbstractParser::removeAnsiMarks(QString& str) {
-  static const QChar colorEndMark('m');
-  QString out=emptyString;
-  bool started=false;
-
-  for ( int i=0; i< str.length(); i++ ){
-    if ( started && (str.at(i) == colorEndMark)){
-      started = false;
-      continue;
-    }
-    if (str.at(i) == escChar){
-      started = true;
-      continue;
-    }
-    if (started) continue;
-    out.append((str.at(i).toLatin1()));
-  }
-  str = out;
-  return str;
 }
 
 void AbstractParser::parsePrompt(QString& prompt){
@@ -565,6 +541,30 @@ bool AbstractParser::parseUserCommands(QString& command)
       }
       return false;
     }
+    else if (str.startsWith("_time"))
+    {
+        MumeMoment moment = m_mumeClock->getMumeMoment();
+        QByteArray data = m_mumeClock->toMumeTime(moment).toLatin1() + "\r\n";
+        MumeClockPrecision precision = m_mumeClock->getPrecision();
+        if (precision > MUMECLOCK_DAY)
+        {
+            MumeTime time = moment.toTimeOfDay();
+            data += "It is currently ";
+            if (time == TIME_DAWN)
+                data += "\033[31mdawn\033[0m";
+            else if (time == TIME_DUSK)
+                data += "\033[34mdusk\033[0m";
+            else if (time == TIME_NIGHT)
+                data += "\033[34mnight\033[0m";
+            else
+                data += "\033[33mday\033[0m";
+
+            data += " for " + m_mumeClock->toCountdown(moment).toLatin1() + " more ticks.\r\n";
+        }
+        emit sendToUser(data + "\r\n");
+        sendPromptToUser();
+        return false;
+    }
     else if (str.startsWith("_name"))
     {
       if (str.section(" ",1,1)=="n") nameDoorCommand(str.section(" ",2,2), NORTH);
@@ -1005,6 +1005,7 @@ bool AbstractParser::parseUserCommands(QString& command)
       emit sendToUser("  _vote                      - vote for MUME on TMC!\r\n");
       emit sendToUser("  _dirs [-options] pattern   - directions to matching rooms\r\n");
       emit sendToUser("  _search [-options] pattern - highlight matching rooms\r\n");
+      emit sendToUser("  _time                      - display current MUME time\r\n");
       sendPromptToUser();
       return false;
     }

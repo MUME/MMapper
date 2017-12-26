@@ -33,6 +33,7 @@
 #include "prespammedpath.h"
 #include "CGroup.h"
 #include "configuration.h"
+#include "mumeclock.h"
 
 #include <qvariant.h>
 
@@ -57,7 +58,7 @@ void ProxyThreader::run() {
 
 
 
-Proxy::Proxy(MapData* md, Mmapper2PathMachine* pm, CommandEvaluator* ce, PrespammedPath* pp, CGroup* gm, qintptr & socketDescriptor, QString & host, int & port, bool threaded, QObject *parent)
+Proxy::Proxy(MapData* md, Mmapper2PathMachine* pm, CommandEvaluator* ce, PrespammedPath* pp, CGroup* gm, MumeClock* mc, qintptr & socketDescriptor, QString & host, int & port, bool threaded, QObject *parent)
   : QObject(NULL),
             m_socketDescriptor(socketDescriptor),
                                m_remoteHost(host),
@@ -71,6 +72,7 @@ Proxy::Proxy(MapData* md, Mmapper2PathMachine* pm, CommandEvaluator* ce, Prespam
                                                                     m_commandEvaluator(ce),
                                                                         m_prespammedPath(pp),
                                                                             m_groupManager(gm),
+                                                                            m_mumeClock(mc),
                                                                                 m_threaded(threaded),
                                                                                 m_parent(parent)
 {
@@ -147,7 +149,7 @@ bool Proxy::init()
   connect(m_filter, SIGNAL(sendToMud(const QByteArray&)), this, SLOT(sendToMud(const QByteArray&)));
   connect(m_filter, SIGNAL(sendToUser(const QByteArray&)), this, SLOT(sendToUser(const QByteArray&)));
 
-  m_parserXml = new MumeXmlParser(m_mapData, this);
+  m_parserXml = new MumeXmlParser(m_mapData, m_mumeClock, this);
   connect(m_filter, SIGNAL(parseNewMudInputXml(IncomingData&)), m_parserXml, SLOT(parseNewMudInput(IncomingData&)));
   connect(m_filter, SIGNAL(parseNewUserInputXml(IncomingData&)), m_parserXml, SLOT(parseNewUserInput(IncomingData&)));
   connect(m_parserXml, SIGNAL(sendToMud(const QByteArray&)), this, SLOT(sendToMud(const QByteArray&)));

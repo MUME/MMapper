@@ -27,7 +27,7 @@
 #include "connectionlistener.h"
 #include "proxy.h"
 
-ConnectionListener::ConnectionListener(MapData* md, Mmapper2PathMachine* pm, CommandEvaluator* ce, PrespammedPath* pp, CGroup* gm, QObject *parent)
+ConnectionListener::ConnectionListener(MapData* md, Mmapper2PathMachine* pm, CommandEvaluator* ce, PrespammedPath* pp, CGroup* gm, MumeClock* mc, QObject *parent)
   : QTcpServer(parent)
 {
   m_accept = true;
@@ -37,6 +37,7 @@ ConnectionListener::ConnectionListener(MapData* md, Mmapper2PathMachine* pm, Com
   m_commandEvaluator = ce;
   m_prespammedPath = pp;
   m_groupManager = gm;
+  m_mumeClock = mc;
 
   connect(this, SIGNAL(log(const QString&, const QString&)), parent, SLOT(log(const QString&, const QString&)));
 }
@@ -48,7 +49,7 @@ void ConnectionListener::incomingConnection(qintptr socketDescriptor)
   {
     emit log ("Listener", "New connection: accepted.");
     doNotAcceptNewConnections();
-    Proxy *proxy = new Proxy(m_mapData, m_pathMachine, m_commandEvaluator, m_prespammedPath, m_groupManager, socketDescriptor, m_remoteHost, m_remotePort, true, this);
+    Proxy *proxy = new Proxy(m_mapData, m_pathMachine, m_commandEvaluator, m_prespammedPath, m_groupManager, m_mumeClock, socketDescriptor, m_remoteHost, m_remotePort, true, this);
     proxy->start();
   }
   else

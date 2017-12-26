@@ -1,10 +1,8 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
-**            Marek Krejza <krejza@gmail.com> (Caligor),
-**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
+** Authors:   Nils Schimmelmann <nschimme@gmail.com>
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -24,15 +22,27 @@
 **
 ************************************************************************/
 
-#ifndef PARSERUTILS_H
-#define PARSERUTILS_H
+#ifndef TESTCLOCK_H
+#define TESTCLOCK_H
 
-#include <QString>
+#include <QObject>
 
-namespace ParserUtils
+class TestClock : public QObject
 {
-  QString& removeAnsiMarks(QString& str);
-  QString& latinToAscii(QString& str);
-}
+    Q_OBJECT
+public:
+    TestClock();
+    ~TestClock() override;
+
+private:
+
+private Q_SLOTS:
+    // MumeClock
+    void mumeClockTest();
+    void parseMumeTimeTest();
+    void tickSyncTest();
+    void partOfDayTickSyncTest();
+    void parseClockTimeTest();
+};
 
 #endif

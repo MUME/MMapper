@@ -1,5 +1,8 @@
 SET(mmapper_SRCS
     main.cpp
+    clock/mumemoment.cpp
+    clock/mumeclock.cpp
+    clock/mumeclockwidget.cpp
     configuration/configuration.cpp
     display/connectionselection.cpp
     display/mapcanvas.cpp
@@ -82,6 +85,7 @@ SET(mmapper_UIS
     mainwindow/findroomsdlg.ui
     mainwindow/infomarkseditdlg.ui
     mainwindow/roomeditattrdlg.ui
+    clock/mumeclockwidget.ui
     preferences/generalpage.ui
     preferences/groupmanagerpage.ui
     preferences/parserpage.ui
@@ -89,6 +93,7 @@ SET(mmapper_UIS
 )
 
 INCLUDE_DIRECTORIES(
+    ${CMAKE_CURRENT_SOURCE_DIR}/clock
     ${CMAKE_CURRENT_SOURCE_DIR}/configuration
     ${CMAKE_CURRENT_SOURCE_DIR}/display
     ${CMAKE_CURRENT_SOURCE_DIR}/expandoracommon

@@ -113,6 +113,7 @@ bool Patterns::matchScore(QString& str)
     return m_score.exactMatch(str);
 }
 
+
 bool Patterns::matchMoveForcePatterns(QString& str)
 {
 	for ( QStringList::iterator it = Config().m_moveForcePatternsList.begin(); 

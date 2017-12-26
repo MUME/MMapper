@@ -49,6 +49,7 @@ class RoomPropertySetter;
 class FindRoomsDlg;
 class CGroup;
 class CGroupCommunicator;
+class MumeClock;
 
 class DockWidget : public QDockWidget
 {
@@ -165,6 +166,7 @@ private:
   RoomPropertySetter * m_propertySetter;
   CommandEvaluator *m_commandEvaluator;
   PrespammedPath *m_prespammedPath;
+  MumeClock *m_mumeClock;
 
   // Pandora Ported
   FindRoomsDlg *m_findRoomsDlg;

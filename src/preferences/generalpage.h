@@ -55,6 +55,8 @@ public slots:
 	
 	void selectWorldFileButtonClicked();	
 
+    void displayMumeClockStateChanged(int);
+
 public:
     GeneralPage(QWidget *parent = 0);
 };

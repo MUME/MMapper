@@ -33,6 +33,7 @@
 #include "mmapper2room.h"
 #include "CGroupCommunicator.h"
 #include "parserutils.h"
+#include "mumeclock.h"
 
 const QByteArray MumeXmlParser::greaterThanChar(">");
 const QByteArray MumeXmlParser::lessThanChar("<");
@@ -41,8 +42,8 @@ const QByteArray MumeXmlParser::lessThanTemplate("&lt;");
 const QByteArray MumeXmlParser::ampersand("&");
 const QByteArray MumeXmlParser::ampersandTemplate("&amp;");
 
-MumeXmlParser::MumeXmlParser(MapData* md, QObject *parent) :
-    AbstractParser(md, parent),
+MumeXmlParser::MumeXmlParser(MapData* md, MumeClock* mc, QObject *parent) :
+    AbstractParser(md, mc, parent),
     m_roomDescLines(0), m_readingStaticDescLines(false),
     m_readingTag(false),
     m_move(CID_LOOK),
@@ -159,18 +160,20 @@ void MumeXmlParser::parse(const QByteArray& line)
     m_tempCharacters.clear();
   }
 
-  if (m_readStatusTag) {
-      if (Config().m_groupManagerState !=  CGroupCommunicator::Off)
-        {
-          QString str = QString(lineToUser).trimmed();
-          removeAnsiMarks(str);
 
-          // inform groupManager
-          if (Patterns::matchScore(str)) {
-            emit sendScoreLineEvent(str.toLatin1());
-          }
-        }
+  if (m_readStatusTag)
+  {
       m_readStatusTag = false;
+      if (Config().m_groupManagerState != CGroupCommunicator::Off)
+      {
+          QString temp(lineToUser.trimmed());
+          ParserUtils::removeAnsiMarks(temp);
+          if (Patterns::matchScore(temp))
+          {
+              // inform groupManager
+              emit sendScoreLineEvent(temp.toLatin1());
+          }
+      }
   }
 
   emit sendToUser(lineToUser);
@@ -235,6 +238,12 @@ bool MumeXmlParser::element( const QByteArray& line  )
               break;
 			};
           break;
+        case 'w':
+            if (line.startsWith("weather")) {
+                m_readWeatherTag = true;
+                m_xmlMode = XML_WEATHER;
+            }
+            break;
         case 's':
             if (line.startsWith("status")) {
                 m_readStatusTag = true;
@@ -300,6 +309,13 @@ bool MumeXmlParser::element( const QByteArray& line  )
         break;
       }
       break;
+    case XML_WEATHER:
+      if (length > 0)
+        switch (line.at(0))
+      {
+        case '/': if (line.startsWith("/weather")) m_xmlMode = XML_NONE;
+      }
+      break;
     case XML_TERRAIN:
       if (length > 0)
         switch (line.at(0))
@@ -345,6 +361,7 @@ QByteArray MumeXmlParser::characters(QByteArray& ch)
 
   m_stringBuffer = m_stringBuffer.simplified();
   ParserUtils::latinToAscii(m_stringBuffer);
+  ParserUtils::removeAnsiMarks(m_stringBuffer); //Remove room color marks
 
   switch (m_xmlMode)
   {
@@ -358,7 +375,6 @@ QByteArray MumeXmlParser::characters(QByteArray& ch)
         }
       }
       else {
-      //str=removeAnsiMarks(m_stringBuffer);
         parseMudCommands(m_stringBuffer);
       }
       toUser.append(ch);
@@ -374,8 +390,6 @@ QByteArray MumeXmlParser::characters(QByteArray& ch)
         move();
       }
 
-      removeAnsiMarks(m_stringBuffer); //Remove room color marks
-
       m_readingRoomDesc = true; //start of read desc mode
       m_descriptionReady = false;
       m_roomName=m_stringBuffer;
@@ -389,7 +403,6 @@ QByteArray MumeXmlParser::characters(QByteArray& ch)
       break;
 
   case XML_DESCRIPTION: // static line
-      removeAnsiMarks(m_stringBuffer) ; //remove color marks
       m_staticRoomDesc += m_stringBuffer+"\n";
       if (!m_gratuitous) {
           toUser.append(ch);
@@ -397,7 +410,6 @@ QByteArray MumeXmlParser::characters(QByteArray& ch)
       break;
 		
     case XML_EXITS:
-	  removeAnsiMarks(m_stringBuffer); // remove color marks
       parseExits(m_stringBuffer); //parse exits
       if (m_readingRoomDesc) {
         m_readingRoomDesc = false;
@@ -412,7 +424,6 @@ QByteArray MumeXmlParser::characters(QByteArray& ch)
           if (Config().m_emulatedExits) emulateExits();
       }
       if  (m_descriptionReady) {
-        removeAnsiMarks(m_stringBuffer); // remove color marks
         parsePrompt(m_stringBuffer);
         move();
       }
@@ -473,7 +484,7 @@ void MumeXmlParser::move()
 
 void MumeXmlParser::parseMudCommands(QString& str)
 {
-  if (str.startsWith('Y'))
+  if (str.at(0) == ('Y'))
   {
     if (str.startsWith("You are dead!"))
     {
@@ -503,6 +514,63 @@ void MumeXmlParser::parseMudCommands(QString& str)
       queue.prepend(CID_SCOUT);
       return;
     }
+  }
+  else if (str.at(0) == 'T')
+  {
+      if (str.startsWith("The current time is"))
+      {
+          m_mumeClock->parseClockTime(str);
+      }
+  }
+  if (str.endsWith("of the Third Age."))
+  {
+      m_mumeClock->parseMumeTime(str);
+  }
+
+  // Weather events happen on ticks
+  if (m_readWeatherTag)
+  {
+      m_readWeatherTag = false;
+      if (str.at(0) == 'T')
+      {
+          if (str.startsWith("The day has begun."))
+          {
+              m_mumeClock->tickSync(TIME_DAY);
+          }
+          else if (str.startsWith("The night has begun."))
+          {
+              m_mumeClock->tickSync(TIME_NIGHT);
+          }
+          else if (str.startsWith("The deepening gloom announces another sunset outside."))
+          {   // Indoors
+              m_mumeClock->tickSync(TIME_DUSK);
+          }
+          else if (str.startsWith("The last ray of light fades, and all is swallowed up in darkness."))
+          {   // Indoors
+              m_mumeClock->tickSync(TIME_NIGHT);
+          }
+      }
+      else if (str.at(0) == 'I')
+      {
+          if (str.startsWith("It seems as if the night has begun."))
+          {
+              m_mumeClock->tickSync(TIME_NIGHT);
+          }
+          else if (str.startsWith("It seems as if the day has begun."))
+          {
+              m_mumeClock->tickSync(TIME_DAY);
+          }
+      }
+      else if (str.at(0) == 'L')
+      {
+          if (str.startsWith("Light gradually filters in, proclaiming a new sunrise outside."))
+          {   // Indoors
+              m_mumeClock->tickSync(TIME_DAWN);
+          }
+      }
+      else {
+          m_mumeClock->tickSync();
+      }
   }
 
   // parse regexps which force new char move
