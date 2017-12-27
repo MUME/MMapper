@@ -402,19 +402,18 @@ public:
   }
 };
 
-
-void AbstractParser::search_command(RoomFilter f)
+void AbstractParser::searchCommand(RoomFilter f)
 {
-  if (search_rs != NULL)
-    m_mapData->unselect(search_rs);
-  search_rs = m_mapData->select();
-  m_mapData->genericSearch(search_rs, f);
-  emit m_mapData->updateCanvas();
-  emit sendToUser((QString::number(search_rs->size()) + " rooms found.\r\n").toLatin1());
-  sendPromptToUser();
+    if (search_rs != NULL)
+        m_mapData->unselect(search_rs);
+    search_rs = m_mapData->select();
+    m_mapData->genericSearch(search_rs, f);
+    emit m_mapData->updateCanvas();
+    emit sendToUser((QString::number(search_rs->size()) + " rooms found.\r\n").toLatin1());
+    sendPromptToUser();
 }
 
-void AbstractParser::dirs_command(RoomFilter f)
+void AbstractParser::dirsCommand(RoomFilter f)
 {
   ShortestPathEmitter sp_emitter(*this);
 
@@ -428,6 +427,15 @@ void AbstractParser::dirs_command(RoomFilter f)
   m_mapData->unselect(rs);
 }
 
+void AbstractParser::markCurrentCommand()
+{
+    if (search_rs != NULL)
+        m_mapData->unselect(search_rs);
+    search_rs = m_mapData->select();
+    Coordinate c = getPosition();
+    m_mapData->select(c);
+    emit m_mapData->updateCanvas();
+}
 
 bool AbstractParser::parseUserCommands(QString& command)
 {
@@ -458,7 +466,7 @@ bool AbstractParser::parseUserCommands(QString& command)
     if (str.startsWith("_vote"))
     {
         QDesktopServices::openUrl(QUrl("http://www.mudconnect.com/cgi-bin/vote_rank.cgi?mud=MUME+-+Multi+Users+In+Middle+Earth"));
-        emit sendToUser("Thanks for voting! :-)\r\n");
+        emit sendToUser("--->Thank you kindly for voting!\r\n\r\n");
         sendPromptToUser();
         return false;
     }
@@ -484,7 +492,7 @@ bool AbstractParser::parseUserCommands(QString& command)
             if (time == TIME_DAWN)
                 data += "\033[31mdawn\033[0m";
             else if (time == TIME_DUSK)
-                data += "\033[34mdusk\033[0m";
+                data += "\033[34mdusk\033[0m and will be night";
             else if (time == TIME_NIGHT)
                 data += "\033[34mnight\033[0m";
             else
@@ -885,7 +893,7 @@ bool AbstractParser::parseUserCommands(QString& command)
       if (!RoomFilter::parseRoomFilter(pattern_str, f))
         emit sendToUser(RoomFilter::parse_help);
       else
-        search_command(f);
+        searchCommand(f);
       return false;
     }
     if (str.startsWith("_dirs"))
@@ -900,8 +908,15 @@ bool AbstractParser::parseUserCommands(QString& command)
       if (!RoomFilter::parseRoomFilter(pattern_str, f))
         emit sendToUser(RoomFilter::parse_help);
       else
-        dirs_command(f);
+        dirsCommand(f);
       return false;
+    }
+    if (str.startsWith("_markcurrent"))
+    {
+        markCurrentCommand();
+        emit sendToUser("--->Current room marked temporarily on the map.\r\n");
+        sendPromptToUser();
+        return false;
     }
 
     if (str=="_removedoornames") {
@@ -954,6 +969,7 @@ bool AbstractParser::parseUserCommands(QString& command)
       emit sendToUser("  _vote                      - vote for MUME on TMC!\r\n");
       emit sendToUser("  _dirs [-options] pattern   - directions to matching rooms\r\n");
       emit sendToUser("  _search [-options] pattern - highlight matching rooms\r\n");
+      emit sendToUser("  _markcurrent               - highlight the room you are currently in\r\n");
       emit sendToUser("  _time                      - display current MUME time\r\n");
       sendPromptToUser();
       return false;
@@ -1064,7 +1080,7 @@ bool AbstractParser::parseUserCommands(QString& command)
       emit sendToUser("\r\n");
 
       sendPromptToUser();
-      return false; 
+      return false;
     }
     else if (str=="_grouphelp")
     {
@@ -1075,7 +1091,7 @@ bool AbstractParser::parseUserCommands(QString& command)
       emit sendToUser("\r\n");
 
       sendPromptToUser();
-      return false; 
+      return false;
     }
   }
 
