@@ -155,8 +155,9 @@ protected:
   static const QString emptyString;
   static const QByteArray emptyByteArray;
 
-  void search_command(RoomFilter f);
-  void dirs_command(RoomFilter f);
+  void searchCommand(RoomFilter f);
+  void dirsCommand(RoomFilter f);
+  void markCurrentCommand();
 };
 
 #endif

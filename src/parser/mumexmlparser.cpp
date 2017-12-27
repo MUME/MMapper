@@ -491,6 +491,7 @@ void MumeXmlParser::parseMudCommands(QString& str)
       queue.clear();
       emit showPath(queue, true);
       emit releaseAllPaths();
+      markCurrentCommand();
       return;
     }
     else if (str.startsWith("You failed to climb"))
