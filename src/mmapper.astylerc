@@ -1,0 +1,15 @@
+# MMapper follows the Qt Coding Style: https://wiki.qt.io/Qt_Coding_Style
+#
+# Apply the style using Artistic Style
+# astyle --options=src/mmapper.astylerc -n -R *.cpp *.h 
+#
+--style=kr 
+--indent=spaces=4 
+--align-pointer=name 
+--align-reference=name 
+--convert-tabs 
+--attach-namespaces
+--max-code-length=100 
+--max-instatement-indent=120 
+--pad-header
+--pad-oper

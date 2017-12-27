@@ -78,6 +78,10 @@ SET(mmapper_RCS
     resources/mmapper2.qrc
     resources/mmapper2.rc
     resources/macosx/m.icns
+    resources/win32/m.ico
+    resources/icons/hi16-app-mmapper.png
+    resources/icons/hi32-app-mmapper.png
+    resources/icons/hi48-app-mmapper.png
 )
 
 SET(mmapper_UIS
@@ -90,6 +94,12 @@ SET(mmapper_UIS
     preferences/groupmanagerpage.ui
     preferences/parserpage.ui
     preferences/pathmachinepage.ui
+)
+
+set(mmapper_DATA
+    mmapper.desktop
+    mmapper.astylerc
+    MacOSXBundleInfo.plist.in
 )
 
 INCLUDE_DIRECTORIES(
@@ -116,6 +126,7 @@ ADD_EXECUTABLE(mmapper WIN32 MACOSX_BUNDLE
     ${mmapper_SRCS}
     ${mmapper_UIS}
     ${mmapper_RCS}
+    ${mmapper_DATA}
 )
 
 TARGET_LINK_LIBRARIES(mmapper
