@@ -82,8 +82,8 @@ public:
 
   MapWindow *getCurrentMapWindow();
 
-  Mmapper2PathMachine *getPathMachine(){return m_pathMachine;};
-  CGroup *getGroupManager() {return m_groupManager;};
+  Mmapper2PathMachine *getPathMachine(){return m_pathMachine;}
+  CGroup *getGroupManager() {return m_groupManager;}
 
   enum SaveMode { SAVEM_FULL, SAVEM_BASEMAP };
   enum SaveFormat { SAVEF_MM2, SAVEF_WEB };
@@ -163,7 +163,7 @@ private:
 
   Mmapper2PathMachine *m_pathMachine;
   MapData *m_mapData;
-  RoomPropertySetter * m_propertySetter;
+  //RoomPropertySetter * m_propertySetter;
   CommandEvaluator *m_commandEvaluator;
   PrespammedPath *m_prespammedPath;
   MumeClock *m_mumeClock;
@@ -180,7 +180,7 @@ private:
 
   QToolBar *fileToolBar;
   QToolBar *editToolBar;
-  QToolBar *modeToolBar;
+  QToolBar *mouseModeToolBar;
   QToolBar *mapModeToolBar;
   QToolBar *viewToolBar;
   QToolBar *pathMachineToolBar;
@@ -216,9 +216,9 @@ private:
   QAction *exportBaseMapAct;
   QAction *exportWebMapAct;
   QAction *exitAct;
-  QAction *cutAct;
-  QAction *copyAct;
-  QAction *pasteAct;
+  //QAction *cutAct;
+  //QAction *copyAct;
+  //QAction *pasteAct;
   QAction *voteAct;
   QAction *mmapperHomePageAct;
   QAction *mumeWebsiteAct;

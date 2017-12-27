@@ -106,6 +106,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
   m_mapData->start();
 
   m_prespammedPath = new PrespammedPath(this);
+
   m_groupManager = new CGroup(Config().m_groupManagerCharName, m_mapData, this);
   m_groupManager->setObjectName("GroupManager");
 
@@ -118,26 +119,31 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
   m_pathMachine->setObjectName("Mmapper2PathMachine");
   m_pathMachine->start();
 
+  // TODO: What is this for? Delete it?
+  /*
   m_propertySetter = new RoomPropertySetter();
   m_propertySetter->setObjectName("RoomPropertySetter");
   m_propertySetter->start();
+  */
 
   m_dockDialogLog = new DockWidget(tr("Log View"), this);
   m_dockDialogLog->setObjectName("DockWidgetLog");
   m_dockDialogLog->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
-  m_dockDialogLog->setFeatures(QDockWidget::AllDockWidgetFeatures);
+  m_dockDialogLog->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
   addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogLog);
 
   logWindow = new QTextBrowser(m_dockDialogLog);
   logWindow->setObjectName("LogWindow");
   m_dockDialogLog->setWidget(logWindow);
+  m_dockDialogLog->hide();
 
-  m_dockDialogGroup = new DockWidget(tr("Group Manager View"), this);
+  m_dockDialogGroup = new DockWidget(tr("Group Manager"), this);
   m_dockDialogGroup->setObjectName("DockWidgetGroup");
   m_dockDialogGroup->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
-  m_dockDialogGroup->setFeatures(QDockWidget::AllDockWidgetFeatures);
+  m_dockDialogGroup->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
   addDockWidget(Qt::TopDockWidgetArea, m_dockDialogGroup);
   m_dockDialogGroup->setWidget(m_groupManager);
+  m_dockDialogGroup->hide();
 
   m_groupCommunicator = m_groupManager->getCommunicator();
   m_groupCommunicator->setObjectName("CCommunicator");
@@ -147,8 +153,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
   m_mumeClock = new MumeClock(Config().m_mumeStartEpoch);
 
   createActions();
-  setupMenuBar();
   setupToolBars();
+  setupMenuBar();
   setupStatusBar();
 
   setCorner(Qt::TopLeftCorner, Qt::TopDockWidgetArea);
@@ -287,31 +293,31 @@ void MainWindow::log(const QString& module, const QString& message)
 
 void MainWindow::createActions()
 {
-  newAct = new QAction(QIcon(":/icons/new.png"), tr("&New"), this);
+  newAct = new QAction(QIcon::fromTheme("document-new", QIcon(":/icons/new.png")), tr("&New"), this);
   newAct->setShortcut(tr("Ctrl+N"));
   newAct->setStatusTip(tr("Create a new file"));
   connect(newAct, SIGNAL(triggered()), this, SLOT(newFile()));
 
-  openAct = new QAction(QIcon(":/icons/open.png"), tr("&Open..."), this);
+  openAct = new QAction(QIcon::fromTheme("document-open", QIcon(":/icons/open.png")), tr("&Open..."), this);
   openAct->setShortcut(tr("Ctrl+O"));
   openAct->setStatusTip(tr("Open an existing file"));
   connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
 
-  reloadAct = new QAction(QIcon(":/icons/reload.png"), tr("&Reload"), this);
+  reloadAct = new QAction(QIcon::fromTheme("document-open-recent", QIcon(":/icons/reload.png")), tr("&Reload"), this);
   reloadAct->setShortcut(tr("Ctrl+R"));
   reloadAct->setStatusTip(tr("Reload the current map"));
   connect(reloadAct, SIGNAL(triggered()), this, SLOT(reload()));
 
-  saveAct = new QAction(QIcon(":/icons/save.png"), tr("&Save"), this);
+  saveAct = new QAction(QIcon::fromTheme("document-save", QIcon(":/icons/save.png")), tr("&Save"), this);
   saveAct->setShortcut(tr("Ctrl+S"));
   saveAct->setStatusTip(tr("Save the document to disk"));
   connect(saveAct, SIGNAL(triggered()), this, SLOT(save()));
 
-  saveAsAct = new QAction(tr("Save &As..."), this);
+  saveAsAct = new QAction(QIcon::fromTheme("document-save-as"), tr("Save &As..."), this);
   saveAsAct->setStatusTip(tr("Save the document under a new name"));
   connect(saveAsAct, SIGNAL(triggered()), this, SLOT(saveAs()));
 
-  exportBaseMapAct = new QAction(tr("Export &Base Map As..."), this);
+  exportBaseMapAct = new QAction(QIcon::fromTheme("document-send"), tr("Export &Base Map As..."), this);
   exportBaseMapAct->setStatusTip(tr("Save a copy of the map with no secrets"));
   connect(exportBaseMapAct, SIGNAL(triggered()), this, SLOT(exportBaseMap()));
 
@@ -324,11 +330,12 @@ void MainWindow::createActions()
   mergeAct->setStatusTip(tr("Merge an existing file into current map"));
   connect(mergeAct, SIGNAL(triggered()), this, SLOT(merge()));
 
-  exitAct = new QAction(tr("E&xit"), this);
+  exitAct = new QAction(QIcon::fromTheme("application-exit"), tr("E&xit"), this);
   exitAct->setShortcut(tr("Ctrl+Q"));
   exitAct->setStatusTip(tr("Exit the application"));
   connect(exitAct, SIGNAL(triggered()), this, SLOT(close()));
 
+  /*
   cutAct = new QAction(QIcon(":/icons/cut.png"), tr("Cu&t"), this);
   cutAct->setShortcut(tr("Ctrl+X"));
   cutAct->setStatusTip(tr("Cut the current selection's contents to the "
@@ -344,17 +351,19 @@ void MainWindow::createActions()
   pasteAct->setStatusTip(tr("Paste the clipboard's contents into the current "
                             "selection"));
   //connect(pasteAct, SIGNAL(triggered()), textEdit, SLOT(paste()));
+  */
 
-  preferencesAct = new QAction(QIcon(":/icons/preferences.png"), tr("MMapper configuration"), this);
+  preferencesAct = new QAction(QIcon::fromTheme("preferences-desktop", QIcon(":/icons/preferences.png")), tr("&Preferences"), this);
   preferencesAct->setShortcut(tr("Ctrl+P"));
   preferencesAct->setStatusTip(tr("MMapper2 configuration"));
   connect(preferencesAct, SIGNAL(triggered()), this, SLOT(onPreferences()));
 
-  mmapperHomePageAct = new QAction(tr("MMapper &Homepage"), this);
+  mmapperHomePageAct = new QAction(QIcon(":/icons/m.png"), tr("Check for &update"), this);
   connect(mmapperHomePageAct, SIGNAL(triggered()), this, SLOT(openMmapperHomepage()));
   mumeWebsiteAct = new QAction(tr("&Website"), this);
   connect(mumeWebsiteAct, SIGNAL(triggered()), this, SLOT(openMumeWebsite()));
-  voteAct = new QAction(tr("V&ote for MUME!"), this);
+  voteAct = new QAction(QIcon::fromTheme("applications-games"), tr("V&ote for Mume"), this);
+  voteAct->setStatusTip(tr("Please vote for MUME on \"The Mud Connector\""));
   connect(voteAct, SIGNAL(triggered()), this, SLOT(voteForMUMEOnTMC()));
   mumeWebsiteAct = new QAction(tr("&Website"), this);
   connect(mumeWebsiteAct, SIGNAL(triggered()), this, SLOT(openMumeWebsite()));
@@ -367,7 +376,7 @@ void MainWindow::createActions()
   newbieAct = new QAction(tr("&Information for Newcomers"), this);
   newbieAct->setStatusTip("Newbie help on the MUME website");
   connect(newbieAct, SIGNAL(triggered()), this, SLOT(openNewbieHelp()));
-  aboutAct = new QAction(tr("About &MMapper"), this);
+  aboutAct = new QAction(QIcon::fromTheme("help-about"), tr("About &MMapper"), this);
   aboutAct->setStatusTip(tr("Show the application's About box"));
   connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
   aboutQtAct = new QAction(tr("About &Qt"), this);
@@ -382,18 +391,22 @@ void MainWindow::createActions()
       prevWindowAct->setStatusTip(tr("Show the Previous Window"));
       connect(prevWindowAct, SIGNAL(triggered()), this, SLOT(prevWindow()));
   */
-  zoomInAct = new QAction(QIcon(":/icons/viewmag+.png"), tr("Zoom In"), this);
+  zoomInAct = new QAction(QIcon::fromTheme("zoom-in", QIcon(":/icons/viewmag+.png")), tr("Zoom In"), this);
   alwaysOnTopAct = new QAction(tr("Always on top"), this);
   alwaysOnTopAct->setCheckable(true);
   connect(alwaysOnTopAct, SIGNAL(triggered()), this, SLOT(alwaysOnTop()));
 
   zoomInAct->setStatusTip(tr("Zooms In current map"));
-  zoomOutAct = new QAction(QIcon(":/icons/viewmag-.png"), tr("Zoom Out"), this);
+  zoomInAct->setShortcut(tr("Ctrl++"));
+  zoomOutAct = new QAction(QIcon::fromTheme("zoom-out", QIcon(":/icons/viewmag-.png")), tr("Zoom Out"), this);
+  zoomOutAct->setShortcut(tr("Ctrl+-"));
   zoomOutAct->setStatusTip(tr("Zooms Out current map"));
-  layerUpAct = new QAction(QIcon(":/icons/layerup.png"), tr("Layer Up"), this);
+  layerUpAct = new QAction(QIcon::fromTheme("go-up", QIcon(":/icons/layerup.png")), tr("Layer Up"), this);
+  layerUpAct->setShortcut(tr("Ctrl+Tab"));
   layerUpAct->setStatusTip(tr("Layer Up"));
   connect(layerUpAct, SIGNAL(triggered()), this, SLOT(onLayerUp()));
-  layerDownAct = new QAction(QIcon(":/icons/layerdown.png"), tr("Layer Down"), this);
+  layerDownAct = new QAction(QIcon::fromTheme("go-down", QIcon(":/icons/layerdown.png")), tr("Layer Down"), this);
+  layerDownAct->setShortcut(tr("Ctrl+Shift+Tab"));
   layerDownAct->setStatusTip(tr("Layer Down"));
   connect(layerDownAct, SIGNAL(triggered()), this, SLOT(onLayerDown()));
 
@@ -466,7 +479,7 @@ void MainWindow::createActions()
   connect(connectToNeighboursRoomSelectionAct, SIGNAL(triggered()), this, SLOT(onConnectToNeighboursRoomSelection()));
 
   findRoomsAct = new QAction(QIcon(":/icons/roomfind.png"), tr("&Find Rooms"), this);
-  findRoomsAct->setStatusTip(tr("Find Matching Rooms"));
+  findRoomsAct->setStatusTip(tr("Find matching rooms"));
   findRoomsAct->setShortcut(tr("Ctrl+F"));
   connect(findRoomsAct, SIGNAL(triggered()), this, SLOT(onFindRoom()));
 
@@ -528,24 +541,24 @@ void MainWindow::createActions()
   mapModeActGroup->addAction(offlineModeAct);
   mapModeActGroup->setEnabled(true);
 
-  cutAct->setEnabled(false);
-  copyAct->setEnabled(false);
+  //cutAct->setEnabled(false);
+  //copyAct->setEnabled(false);
 
     // Find Room Dialog Connections
   connect(m_findRoomsDlg, SIGNAL(center(qint32, qint32)), getCurrentMapWindow(), SLOT(center(qint32, qint32)));
   connect(m_findRoomsDlg, SIGNAL(log( const QString&, const QString& )), this, SLOT(log( const QString&, const QString& )));
 
       // group Manager
-  groupOffAct = new QAction(QIcon(":/icons/groupoff.png"), tr("Switch to &Off mode"), this );
+  groupOffAct = new QAction(QIcon(":/icons/groupoff.png"), tr("&Off"), this );
   groupOffAct->setShortcut(tr("Ctrl+G"));
   groupOffAct->setCheckable(true);
   connect(groupOffAct, SIGNAL(toggled(bool)), this, SLOT(groupOff(bool)), Qt::QueuedConnection);
 
-  groupClientAct = new QAction(QIcon(":/icons/groupclient.png"),tr("Switch to &Client mode"), this );
+  groupClientAct = new QAction(QIcon(":/icons/groupclient.png"),tr("&Connect to a friend's map"), this );
   groupClientAct->setCheckable(true);
   connect(groupClientAct, SIGNAL(toggled(bool)), this, SLOT(groupClient(bool)), Qt::QueuedConnection);
 
-  groupServerAct = new QAction(QIcon(":/icons/groupserver.png"),tr("Switch to &Server mode"), this );
+  groupServerAct = new QAction(QIcon(":/icons/groupserver.png"),tr("&Host your map with friends"), this );
   groupServerAct->setCheckable(true);
   connect(groupServerAct, SIGNAL(toggled(bool)), this, SLOT(groupServer(bool)), Qt::QueuedConnection);
 
@@ -593,9 +606,9 @@ void MainWindow::disableActions(bool value)
   exportBaseMapAct->setDisabled(value);
   exportWebMapAct->setDisabled(value);
   exitAct->setDisabled(value);
-  cutAct->setDisabled(value);
-  copyAct->setDisabled(value);
-  pasteAct->setDisabled(value);
+  //cutAct->setDisabled(value);
+  //copyAct->setDisabled(value);
+  //pasteAct->setDisabled(value);
   aboutAct->setDisabled(value);
   aboutQtAct->setDisabled(value);
   //    nextWindowAct->setDisabled(value);
@@ -625,6 +638,7 @@ void MainWindow::setupMenuBar()
   fileMenu->addAction(reloadAct);
   fileMenu->addAction(saveAct);
   fileMenu->addAction(saveAsAct);
+  fileMenu->addSeparator();
   fileMenu->addAction(exportBaseMapAct);
   fileMenu->addAction(exportWebMapAct);
   fileMenu->addAction(mergeAct);
@@ -635,21 +649,17 @@ void MainWindow::setupMenuBar()
   //editMenu->addAction(cutAct);
   //editMenu->addAction(copyAct);
   //editMenu->addAction(pasteAct);
-
-  editMenu->addAction(playModeAct);
-  editMenu->addAction(mapModeAct);
-  editMenu->addAction(offlineModeAct);
+  QMenu* modeMenu = editMenu->addMenu(QIcon(":/icons/online.png"), tr("&Mode"));
+  modeMenu->addAction(playModeAct);
+  modeMenu->addAction(mapModeAct);
+  modeMenu->addAction(offlineModeAct);
   editMenu->addSeparator();
-  editMenu->addAction(modeRoomSelectAct);
-  editMenu->addAction(modeConnectionSelectAct);
-  editMenu->addAction(modeMoveSelectAct);
+
   editMenu->addAction(modeInfoMarkEditAct);
 
-  //editMenu->addAction(createRoomAct);
-  //editMenu->addAction(createConnectionAct);
 
-  roomMenu = menuBar()->addMenu(tr("&Rooms"));
-  roomMenu->addAction(findRoomsAct);
+  roomMenu = editMenu->addMenu(QIcon(":/icons/roomselection.png"), tr("&Rooms"));
+  roomMenu->addAction(modeRoomSelectAct);
   roomMenu->addSeparator();
   roomMenu->addAction(createRoomAct);
   roomMenu->addAction(editRoomSelectionAct);
@@ -660,52 +670,74 @@ void MainWindow::setupMenuBar()
   roomMenu->addAction(mergeDownRoomSelectionAct);
   roomMenu->addAction(connectToNeighboursRoomSelectionAct);
 
-  connectionMenu = menuBar()->addMenu(tr("&Connections"));
+  connectionMenu = editMenu->addMenu(QIcon(":/icons/connectionselection.png"), tr("&Connections"));
+  connectionMenu->addAction(modeConnectionSelectAct);
+  connectionMenu->addSeparator();
   connectionMenu->addAction(createConnectionAct);
   connectionMenu->addAction(createOnewayConnectionAct);
   //connectionMenu->addAction(editConnectionSelectionAct);
   connectionMenu->addAction(deleteConnectionSelectionAct);
 
-  menuBar()->addSeparator();
+  editMenu->addSeparator();
+  editMenu->addAction(findRoomsAct);
+  editMenu->addAction(preferencesAct);
+
+  //editMenu->addAction(createRoomAct);
+  //editMenu->addAction(createConnectionAct);
 
   viewMenu = menuBar()->addMenu(tr("&View"));
-  viewMenu->addAction(m_dockDialogLog->toggleViewAction());
-  viewMenu->addAction(m_dockDialogGroup->toggleViewAction());
-  viewMenu->addAction(alwaysOnTopAct);
+  viewMenu->addAction(modeMoveSelectAct);
+  QMenu* toolbars = viewMenu->addMenu(tr("&Toolbars"));
+  toolbars->addAction(fileToolBar->toggleViewAction());
+  //toolbars->addAction(editToolBar->toggleViewAction());
+  toolbars->addAction(mapModeToolBar->toggleViewAction());
+  toolbars->addAction(mouseModeToolBar->toggleViewAction());
+  toolbars->addAction(viewToolBar->toggleViewAction());
+  toolbars->addAction(pathMachineToolBar->toggleViewAction());
+  toolbars->addAction(roomToolBar->toggleViewAction());
+  toolbars->addAction(connectionToolBar->toggleViewAction());
+  toolbars->addAction(groupToolBar->toggleViewAction());
+  toolbars->addAction(settingsToolBar->toggleViewAction());
   viewMenu->addSeparator();
   viewMenu->addAction(zoomInAct);
   viewMenu->addAction(zoomOutAct);
   viewMenu->addSeparator();
   viewMenu->addAction(layerUpAct);
   viewMenu->addAction(layerDownAct);
-  viewMenu->addAction(releaseAllPathsAct);
-  //    viewMenu->addAction(nextWindowAct);
-  //    viewMenu->addAction(prevWindowAct);
-  //    viewMenu->addSeparator();
+  viewMenu->addSeparator();
+  viewMenu->addAction(alwaysOnTopAct);
 
-  groupMenu = menuBar()->addMenu(tr("&Group"));
+  //    windowMenu->addAction(nextWindowAct);
+  //    windowMenu->addAction(prevWindowAct);
+  //    windowMenu->addSeparator();
+
+  settingsMenu = menuBar()->addMenu(tr("&Tools"));
+  groupMenu = settingsMenu->addMenu(QIcon(":/icons/groupclient.png"), tr("&Group Manager"));
   groupMenu->addAction(groupOffAct);
   groupMenu->addAction(groupClientAct);
   groupMenu->addAction(groupServerAct);
-
-
-  settingsMenu = menuBar()->addMenu(tr("&Preferences"));
-  settingsMenu->addAction(preferencesAct);
+  QMenu* pathMachineMenu = settingsMenu->addMenu(QIcon(":/icons/force.png"), tr("&Path Machine"));
+  pathMachineMenu->addAction(modeRoomSelectAct);
+  pathMachineMenu->addSeparator();
+  pathMachineMenu->addAction(forceRoomAct);
+  pathMachineMenu->addAction(releaseAllPathsAct);
+  settingsMenu->addSeparator();
+  settingsMenu->addAction(m_dockDialogLog->toggleViewAction());
 
   helpMenu = menuBar()->addMenu(tr("&Help"));
+  helpMenu->addAction(voteAct);
+  helpMenu->addSeparator();
   helpMenu->addAction(mmapperHomePageAct);
-  mumeMenu = helpMenu->addMenu(tr("M&UME"));
+  mumeMenu = helpMenu->addMenu(QIcon::fromTheme("help-contents"), tr("M&UME"));
   mumeMenu->addAction(mumeWebsiteAct);
   mumeMenu->addAction(mumeForumAct);
   mumeMenu->addAction(mumeWikiAct);
-  onlineTutorialsMenu = helpMenu->addMenu(tr("Online &Tutorials"));
+  onlineTutorialsMenu = helpMenu->addMenu(QIcon::fromTheme("help-faq"), tr("Online &Tutorials"));
   onlineTutorialsMenu->addAction(newbieAct);
   onlineTutorialsMenu->addAction(settingUpMmapperAct);
   helpMenu->addSeparator();
   helpMenu->addAction(aboutAct);
   helpMenu->addAction(aboutQtAct);
-
-  menuBar()->addAction(voteAct);
 
   /*
   searchMenu = menuBar()->addMenu(tr("Sea&rch"));
@@ -730,6 +762,7 @@ void MainWindow::setupToolBars()
 //  fileToolBar->addAction(mergeAct);
 //  fileToolBar->addAction(reloadAct);
   fileToolBar->addAction(saveAct);
+  fileToolBar->hide();
   /*
       editToolBar = addToolBar(tr("Edit"));
       editToolBar->addAction(cutAct);
@@ -742,23 +775,25 @@ void MainWindow::setupToolBars()
   mapModeToolBar->addAction(playModeAct);
   mapModeToolBar->addAction(mapModeAct);
   mapModeToolBar->addAction(offlineModeAct);
+  mapModeToolBar->hide();
 
-  modeToolBar = addToolBar(tr("Mouse Mode"));
-  modeToolBar->setObjectName("ModeToolBar");
-  modeToolBar->addAction(modeMoveSelectAct);
-  modeToolBar->addAction(modeRoomSelectAct);
-  modeToolBar->addAction(findRoomsAct);
-  modeToolBar->addAction(modeConnectionSelectAct);
-  modeToolBar->addAction(createRoomAct);
-  modeToolBar->addAction(createConnectionAct);
-  modeToolBar->addAction(createOnewayConnectionAct);
-  modeToolBar->addAction(modeInfoMarkEditAct);
+  mouseModeToolBar = addToolBar(tr("Mouse Mode"));
+  mouseModeToolBar->setObjectName("ModeToolBar");
+  mouseModeToolBar->addAction(modeMoveSelectAct);
+  mouseModeToolBar->addAction(modeRoomSelectAct);
+  mouseModeToolBar->addAction(modeConnectionSelectAct);
+  mouseModeToolBar->addAction(createRoomAct);
+  mouseModeToolBar->addAction(createConnectionAct);
+  mouseModeToolBar->addAction(createOnewayConnectionAct);
+  mouseModeToolBar->addAction(modeInfoMarkEditAct);
+  mouseModeToolBar->hide();
 
-  groupToolBar = addToolBar(tr("Group Mode"));
+  groupToolBar = addToolBar(tr("Group Manager"));
   groupToolBar->setObjectName("GroupManagerToolBar");
   groupToolBar->addAction(groupOffAct);
   groupToolBar->addAction(groupClientAct);
   groupToolBar->addAction(groupServerAct);
+  groupToolBar->hide();
 
   viewToolBar = addToolBar(tr("View"));
   viewToolBar->setObjectName("ViewToolBar");
@@ -766,15 +801,18 @@ void MainWindow::setupToolBars()
   viewToolBar->addAction(zoomOutAct);
   viewToolBar->addAction(layerUpAct);
   viewToolBar->addAction(layerDownAct);
+  viewToolBar->hide();
 
   pathMachineToolBar = addToolBar(tr("Path Machine"));
   pathMachineToolBar->setObjectName("PathMachineToolBar");
   pathMachineToolBar->addAction(releaseAllPathsAct);
   pathMachineToolBar->addAction(forceRoomAct);
+  pathMachineToolBar->hide();
   //viewToolBar->addAction(m_dockDialog->toggleViewAction());
 
   roomToolBar = addToolBar(tr("Rooms"));
   roomToolBar->setObjectName("RoomsToolBar");
+  roomToolBar->addAction(findRoomsAct);
   roomToolBar->addAction(editRoomSelectionAct);
   roomToolBar->addAction(deleteRoomSelectionAct);
   roomToolBar->addAction(moveUpRoomSelectionAct);
@@ -782,15 +820,18 @@ void MainWindow::setupToolBars()
   roomToolBar->addAction(mergeUpRoomSelectionAct);
   roomToolBar->addAction(mergeDownRoomSelectionAct);
   roomToolBar->addAction(connectToNeighboursRoomSelectionAct);
+  roomToolBar->hide();
 
   connectionToolBar = addToolBar(tr("Connections"));
   connectionToolBar->setObjectName("ConnectionsToolBar");
   //connectionToolBar->addAction(editConnectionSelectionAct);
   connectionToolBar->addAction(deleteConnectionSelectionAct);
+  connectionToolBar->hide();
 
   settingsToolBar = addToolBar(tr("Preferences"));
   settingsToolBar->setObjectName("PreferencesToolBar");
   settingsToolBar->addAction(preferencesAct);
+  settingsToolBar->hide();
 }
 
 void MainWindow::setupStatusBar()
@@ -930,9 +971,9 @@ void MainWindow::merge()
     if (storage->canLoad()) storage->mergeData();
     getCurrentMapWindow()->getCanvas()->show();
     disableActions(false);
-    cutAct->setEnabled(false);
-    copyAct->setEnabled(false);
-    pasteAct->setEnabled(false);
+    //cutAct->setEnabled(false);
+    //copyAct->setEnabled(false);
+    //pasteAct->setEnabled(false);
 
     delete(storage);
     delete progressDlg;
@@ -1117,9 +1158,9 @@ void MainWindow::loadFile(const QString &fileName)
   if (storage->canLoad()) storage->loadData();
   getCurrentMapWindow()->getCanvas()->show();
   disableActions(false);
-  cutAct->setEnabled(false);
-  copyAct->setEnabled(false);
-  pasteAct->setEnabled(false);
+  //cutAct->setEnabled(false);
+  //copyAct->setEnabled(false);
+  //pasteAct->setEnabled(false);
 
   delete(storage);
   delete progressDlg;
@@ -1190,9 +1231,9 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode, SaveFormat for
   const bool saveOk = storage->saveData(mode == SAVEM_BASEMAP);
   //getCurrentMapWindow()->getCanvas()->show();
   disableActions(false);
-  cutAct->setEnabled(false);
-  copyAct->setEnabled(false);
-  pasteAct->setEnabled(false);
+  //cutAct->setEnabled(false);
+  //copyAct->setEnabled(false);
+  //pasteAct->setEnabled(false);
 
   delete progressDlg;
 
@@ -1237,28 +1278,29 @@ void MainWindow::groupManagerTypeChanged(int type)
   if (type == CGroupCommunicator::Server)
   {
     groupServerAct->setChecked(true);
+    m_dockDialogGroup->show();
     m_groupManager->show();
   }
   if (type == CGroupCommunicator::Client)
   {
     groupClientAct->setChecked(true);
+    m_dockDialogGroup->show();
     m_groupManager->show();
   }
   if (type == CGroupCommunicator::Off)
   {
     groupOffAct->setChecked(true);
+    m_dockDialogGroup->hide();
     m_groupManager->hide();
   }
 
 }
-
 
 void MainWindow::groupOff(bool b)
 {
   if (b && m_groupCommunicator->getType() != CGroupCommunicator::Off)
     m_groupManager->setType(CGroupCommunicator::Off);
 }
-
 
 void MainWindow::groupClient(bool b)
 {
