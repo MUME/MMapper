@@ -1,5 +1,5 @@
 ================================
-MMapper 2.4.0 (Not released)
+MMapper 2.4.0 (December 26, 2017)
 ================================
 
 Note:
@@ -10,6 +10,21 @@ Changes:
   - Added ability to rotate info marks (teoli)
   - Fixed wall color when a special exit was present (was white instead of black) (teoli)
   - Added ability to store direction of river flows and display it on the map (teoli)
+  - Added no_flee exit flag (nschimme)
+  - More exit flags are now shown on the UI (nschimme)
+  - Added support for trolls to automatically map rooms that cause sundeath (nschimme)
+  - Added built in mume clock (nschimme)
+  - Distant player's location is now hinted (nschimme)
+  - Anti-aliasing and trilinear filtering can now be enabled (nschimme)
+  - Configuration panel has a new path machine tab (nschimme)
+  - Custom background colors can now be selected (nschimme)
+  - Emulated prompts now show the current terrain and lighting (nschimme)
+  - Web maps can now be exported (waba)
+  - MMapper only support XML mode now and uses gratuitous flags (nschimme)
+  - Added new _search and _dirs commands to find rooms and their paths (ethorondil)
+  - Notes can now be printed from the command line (ethorondil)
+  - GNOME and KDE integration improved (kalev)
+  - Menus standardized and first time use improved (nschimme)
 
 ================================
 MMapper 2.3.6 (December 9, 2015)
