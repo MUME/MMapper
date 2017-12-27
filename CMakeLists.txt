@@ -55,9 +55,13 @@ ELSE()
     SET(QTIOCOMPRESSOR_SRC_DIR ${CMAKE_BINARY_DIR}/QtIOCompressor-src/src)
     SET(QTIOCOMPRESSOR_INCLUDE_DIRS ${QTIOCOMPRESSOR_SRC_DIR} ${CMAKE_BINARY_DIR}/QtIOCompressor-build)
 
-    # Linux needs an additional relative path for bundling the library
-    IF(UNIX AND NOT APPLE)
-        SET(QTIOCOMPRESSOR_LIBRARIES -Wl,-rpath,../lib ${QTIOCOMPRESSOR_LIBRARY})
+    # Linux/Apple needs an additional relative path for bundling the library
+    IF(UNIX)
+        IF(APPLE)
+            SET(QTIOCOMPRESSOR_LIBRARIES -Wl,-install_name,@rpath/ ${QTIOCOMPRESSOR_LIBRARY})
+        ELSE()
+            SET(QTIOCOMPRESSOR_LIBRARIES -Wl,-rpath,../lib ${QTIOCOMPRESSOR_LIBRARY})
+        ENDIF()
     ENDIF()
 ENDIF()
 

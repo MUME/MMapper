@@ -276,6 +276,18 @@ IF(APPLE)
     SET_TARGET_PROPERTIES(mmapper PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/MacOSXBundleInfo.plist.in )
 
     # Bundle the libraries with the binary
+    ADD_CUSTOM_COMMAND(
+        TARGET mmapper
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+        ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app/Contents/Frameworks/)
+    ADD_CUSTOM_COMMAND(
+        TARGET mmapper
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${QTIOCOMPRESSOR_LIBRARY}
+        ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app/Contents/Frameworks/
+    )
     FIND_PROGRAM(MACDEPLOYQT_APP macdeployqt)
     MESSAGE(" - macdeployqt path: ${MACDEPLOYQT_APP}")
     ADD_CUSTOM_COMMAND(
