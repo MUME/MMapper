@@ -1123,6 +1123,10 @@ void MapCanvas::paintGL()
                 drawInfoMark(m.next());
         }
     }
+    else
+    {
+        renderText(0, 0, "No map loaded");
+    }
 
     GLdouble len = 0.2f;
     if (m_selectedArea || m_infoMarkSelection)
