@@ -298,15 +298,19 @@
         <property name="text">
          <string>Draw not mapped exits</string>
         </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
        </widget>
       </item>
       <item row="1" column="0">
        <widget class="QCheckBox" name="updated">
         <property name="text">
          <string>Show non updated rooms</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QCheckBox" name="drawNoMatchExits">
+        <property name="text">
+         <string>Draw &quot;no match&quot; exits</string>
         </property>
        </widget>
       </item>

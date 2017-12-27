@@ -140,13 +140,14 @@ class MapCanvas : public QOpenGLWidget, protected QOpenGLFunctions
     void drawPathEnd(double dx, double dy, double dz);
     void drawFlow( const Room *room, const std::vector<Room *> & rooms, ExitDirection exitDirection);
 
-    // QGLWidget backwards compatability
-    void qglColor(QColor color);
-    void qglClearColor(QColor color);
-
+    // QGLWidget backwards comptability
+    void inline qglColor(QColor c) { glColor4f(c.redF(), c.greenF(), c.blueF(), c.alphaF()); }
+    void inline qglClearColor(QColor c) { glClearColor(c.redF(), c.greenF(), c.blueF(), c.alphaF()); }
     enum FontFormatFlags {FFF_NONE = 0, FFF_ITALICS = 1, FFF_UNDERLINE = 2};
     void renderText(double x, double y, const QString & str, QColor color = Qt::white, uint fontFormatFlags = FFF_NONE, double rotationAngle = 0.0f);
+
   private:
+    static QColor m_noFleeColor;
 
     GLint    m_viewport[4];
     GLdouble m_modelview[16];

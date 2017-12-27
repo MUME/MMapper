@@ -45,6 +45,7 @@ GeneralPage::GeneralPage(QWidget *parent)
   connect ( emulatedExits, SIGNAL(stateChanged(int)),SLOT(emulatedExitsStateChanged(int)));
   connect ( updated, SIGNAL(stateChanged(int)),SLOT(updatedStateChanged(int)));
   connect ( drawNotMappedExits, SIGNAL(stateChanged(int)),SLOT(drawNotMappedExitsStateChanged(int)));
+  connect ( drawNoMatchExits, SIGNAL(stateChanged(int)),SLOT(drawNoMatchExitsStateChanged(int)));
   connect ( drawDoorNames, SIGNAL(stateChanged(int)),SLOT(drawDoorNamesStateChanged(int)));
   connect ( drawUpperLayersTextured, SIGNAL(stateChanged(int)),SLOT(drawUpperLayersTexturedStateChanged(int)));
 
@@ -69,6 +70,7 @@ GeneralPage::GeneralPage(QWidget *parent)
   emulatedExits->setChecked( Config().m_emulatedExits );
   updated->setChecked( Config().m_showUpdated );
   drawNotMappedExits->setChecked( Config().m_drawNotMappedExits );
+  drawNoMatchExits->setChecked( Config().m_drawNoMatchExits );
   drawUpperLayersTextured->setChecked( Config().m_drawUpperLayersTextured );
   drawDoorNames->setChecked( Config().m_drawDoorNames );
 
@@ -138,6 +140,11 @@ void GeneralPage::updatedStateChanged(int)
 void GeneralPage::drawNotMappedExitsStateChanged(int)
 {
   Config().m_drawNotMappedExits = drawNotMappedExits->isChecked();
+}
+
+void GeneralPage::drawNoMatchExitsStateChanged(int)
+{
+  Config().m_drawNoMatchExits = drawNoMatchExits->isChecked();
 }
 
 void GeneralPage::drawDoorNamesStateChanged(int)

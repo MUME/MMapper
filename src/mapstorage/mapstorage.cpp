@@ -376,6 +376,7 @@ void MapStorage::loadExits(Room * room, QDataStream & stream, qint32 version)
     }
     else
     {
+        // Exit flags were stored with 8 bits in version < 041
         stream >> vquint8;
         if (ISSET(vquint8, EF_DOOR)) SET(vquint8, EF_EXIT);
         e[E_FLAGS] = vquint8;

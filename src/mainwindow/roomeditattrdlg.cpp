@@ -129,8 +129,8 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
 	exitListItems[4] = (QListWidgetItem*) new QListWidgetItem("Random");
 	exitListItems[5] = (QListWidgetItem*) new QListWidgetItem("Special");
 	exitListItems[6] = (QListWidgetItem*) new QListWidgetItem("No match");
-	exitListItems[7] = (QListWidgetItem*) new QListWidgetItem("Flow dir"); // Added in schema 040
-    exitListItems[8] = NULL;
+    exitListItems[7] = (QListWidgetItem*) new QListWidgetItem("Flow dir");
+    exitListItems[8] = (QListWidgetItem*) new QListWidgetItem("No flee");
     exitListItems[9] = NULL;
     exitListItems[10] = NULL;
     exitListItems[11] = NULL;
@@ -139,7 +139,7 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
     exitListItems[14] = NULL;
     exitListItems[15] = NULL;
 	exitFlagsListWidget->clear();
-    for (int i=0; i<8; i++)
+    for (int i=0; i<9; i++)
 	{
 		exitListItems[i]->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
 		exitFlagsListWidget->addItem(exitListItems[i]);
@@ -151,16 +151,16 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
 	doorListItems[3] = (QListWidgetItem*) new QListWidgetItem("No break");
 	doorListItems[4] = (QListWidgetItem*) new QListWidgetItem("No pick");
 	doorListItems[5] = (QListWidgetItem*) new QListWidgetItem("Delayed");
-	doorListItems[6] = (QListWidgetItem*) new QListWidgetItem("Callable"); // Added in schema 040
-  doorListItems[7] = (QListWidgetItem*) new QListWidgetItem("Knockable"); // Added in schema 040
-  doorListItems[8] = (QListWidgetItem*) new QListWidgetItem("Magic"); // Added in schema 040
-  doorListItems[9] = (QListWidgetItem*) new QListWidgetItem("Action-controlled"); // Added in schema 040
-  doorListItems[10] = NULL;
-  doorListItems[11] = NULL;
-  doorListItems[12] = NULL;
-  doorListItems[13] = NULL;
-  doorListItems[14] = NULL;
-  doorListItems[15] = NULL;
+    doorListItems[6] = (QListWidgetItem*) new QListWidgetItem("Callable");
+    doorListItems[7] = (QListWidgetItem*) new QListWidgetItem("Knockable");
+    doorListItems[8] = (QListWidgetItem*) new QListWidgetItem("Magic");
+    doorListItems[9] = (QListWidgetItem*) new QListWidgetItem("Action-controlled");
+    doorListItems[10] = NULL;
+    doorListItems[11] = NULL;
+    doorListItems[12] = NULL;
+    doorListItems[13] = NULL;
+    doorListItems[14] = NULL;
+    doorListItems[15] = NULL;
 
 	doorFlagsListWidget->clear();
 	for (int i=0; i<10; i++)
@@ -532,13 +532,18 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
 		else
 			exitListItems[6]->setCheckState(Qt::Unchecked);
 
-    if (ISSET(ef, EF_FLOW))
-			exitListItems[7]->setCheckState(Qt::Checked);
-		else
-			exitListItems[7]->setCheckState(Qt::Unchecked);
+        if (ISSET(ef, EF_FLOW))
+            exitListItems[7]->setCheckState(Qt::Checked);
+        else
+            exitListItems[7]->setCheckState(Qt::Unchecked);
 
-        roomNoteTextEdit->clear();
-        roomNoteTextEdit->setEnabled(false);
+        if (ISSET(ef, EF_NO_FLEE))
+            exitListItems[8]->setCheckState(Qt::Checked);
+        else
+            exitListItems[8]->setCheckState(Qt::Unchecked);
+
+		roomNoteTextEdit->clear();
+		roomNoteTextEdit->setEnabled(false);
 
 		int index = 0;
 		while(loadListItems[index]!=NULL)
