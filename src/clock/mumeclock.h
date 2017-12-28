@@ -30,6 +30,7 @@ enum MumeClockPrecision { MUMECLOCK_UNSET = -1, MUMECLOCK_DAY, MUMECLOCK_HOUR, M
 #include <QObject>
 #include <QList>
 #include <QMetaEnum>
+#include <QHash>
 
 #include "mumemoment.h"
 
@@ -60,10 +61,11 @@ public:
     enum SindarinMonthNames { UnknownSindarinMonth = -1, Narwain, Ninui, Gwaeron, Gwirith, Lothron, Norui, Cerveth, Urui, Ivanneth, Narbeleth, Hithui, Girithron };
     Q_ENUM(SindarinMonthNames)
 
-    static QList<int> m_dawnHour;
-    static QList<int> m_duskHour;
-    static QMetaEnum m_westronMonthNames;
-    static QMetaEnum m_sindarinMonthNames;
+    static const QList<int> m_dawnHour;
+    static const QList<int> m_duskHour;
+    static const QMetaEnum m_westronMonthNames;
+    static const QMetaEnum m_sindarinMonthNames;
+    static const QHash<QString, MumeTime> m_stringTimeHash;
 
 signals:
     void log(const QString &, const QString &);
@@ -71,7 +73,7 @@ signals:
 public slots:
     void parseMumeTime(const QString &mumeTime);
     void parseClockTime(const QString &clockTime);
-    void tickSync(MumeTime time = TIME_UNKNOWN);
+    void parseWeather(const QString &str);
 
 protected:
     void setPrecision(MumeClockPrecision state)
@@ -80,9 +82,11 @@ protected:
     }
     void parseMumeTime(const QString &mumeString, int secsSinceUnixEpoch);
     void parseClockTime(const QString &clockTime, int secsSinceUnixEpoch);
-    void tickSync(int secsSinceEpoch);
+    void parseWeather(const QString &str, int secsSinceEpoch);
 
 private:
+    MumeMoment &unknownTimeTick(MumeMoment &time);
+
     int m_mumeStartEpoch;
     int m_clockTolerance;
     MumeClockPrecision m_precision;

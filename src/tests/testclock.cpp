@@ -96,7 +96,7 @@ void TestClock::parseMumeTimeTest()
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedSindarin);
 }
 
-void TestClock::tickSyncTest()
+void TestClock::parseWeatherClockSkewTest()
 {
     MumeClock clock;
 
@@ -108,36 +108,36 @@ void TestClock::tickSyncTest()
 
     // First sync
     int timeOccuredAt = 1;
-    QString expectedTime = "4:00pm on the 18th of Halimath, Year 3030 of the Third Age.";
-    clock.tickSync(realTime1 + timeOccuredAt);
+    QString expectedTime = "6:00am on the 18th of Halimath, Year 3030 of the Third Age.";
+    clock.parseWeather("The day has begun.", realTime1 + timeOccuredAt);
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1 + timeOccuredAt)), expectedTime);
 
     // Mume running on time
     timeOccuredAt = 1 + 60;
-    expectedTime = "5:00pm on the 18th of Halimath, Year 3030 of the Third Age.";
-    clock.tickSync(realTime1 + timeOccuredAt);
+    expectedTime = "7:00am on the 18th of Halimath, Year 3030 of the Third Age.";
+    clock.parseWeather("The evil power begins to regress...", realTime1 + timeOccuredAt);
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1 + timeOccuredAt)), expectedTime);
 
     // Mume running fast
     timeOccuredAt = 1 + 60 + 58;
-    expectedTime = "6:00pm on the 18th of Halimath, Year 3030 of the Third Age.";
-    clock.tickSync(realTime1 + timeOccuredAt);
+    expectedTime = "8:00am on the 18th of Halimath, Year 3030 of the Third Age.";
+    clock.parseWeather("The evil power begins to regress...", realTime1 + timeOccuredAt);
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1 + timeOccuredAt)), expectedTime);
 
     // Mume running on time
     timeOccuredAt = 1 + 60 + 58 + 60;
-    expectedTime = "7:00pm on the 18th of Halimath, Year 3030 of the Third Age.";
-    clock.tickSync(realTime1 + timeOccuredAt);
+    expectedTime = "9:00am on the 18th of Halimath, Year 3030 of the Third Age.";
+    clock.parseWeather("The evil power begins to regress...", realTime1 + timeOccuredAt);
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1 + timeOccuredAt)), expectedTime);
 
     // Mume running slow
     timeOccuredAt = 1 + 60 + 58 + 60 + 65;
-    expectedTime = "8:00pm on the 18th of Halimath, Year 3030 of the Third Age.";
-    clock.tickSync(realTime1 + timeOccuredAt);
+    expectedTime = "10:00am on the 18th of Halimath, Year 3030 of the Third Age.";
+    clock.parseWeather("The evil power begins to regress...", realTime1 + timeOccuredAt);
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1 + timeOccuredAt)), expectedTime);
 }
 
-void TestClock::partOfDayTickSyncTest()
+void TestClock::parseWeatherTest()
 {
     MumeClock clock;
 
@@ -147,19 +147,19 @@ void TestClock::partOfDayTickSyncTest()
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
 
     expectedTime = "5:00am on the 18th of Halimath, Year 3030 of the Third Age.";
-    clock.tickSync(TIME_DAWN);
+    clock.parseWeather("Light gradually filters in, proclaiming a new sunrise outside.");
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
 
     expectedTime = "6:00am on the 18th of Halimath, Year 3030 of the Third Age.";
-    clock.tickSync(TIME_DAY);
+    clock.parseWeather("It seems as if the day has begun.");
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
 
     expectedTime = "9:00pm on the 18th of Halimath, Year 3030 of the Third Age.";
-    clock.tickSync(TIME_DUSK);
+    clock.parseWeather("The deepening gloom announces another sunset outside.");
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
 
     expectedTime = "10:00pm on the 18th of Halimath, Year 3030 of the Third Age.";
-    clock.tickSync(TIME_NIGHT);
+    clock.parseWeather("It seems as if the night has begun.");
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expectedTime);
 }
 
@@ -174,8 +174,8 @@ void TestClock::parseClockTimeTest()
     clock.parseMumeTime(snapShot1);
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), expected1);
 
-    QString afternoon = "3:34pm on the 18th of Halimath, Year 3030 of the Third Age.";
-    clock.parseClockTime("The current time is 3:34 pm.");
+    QString afternoon = "12:34pm on the 18th of Halimath, Year 3030 of the Third Age.";
+    clock.parseClockTime("The current time is 12:34 pm.");
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), afternoon);
 
     QString midnight = "12:51am on the 18th of Halimath, Year 3030 of the Third Age.";

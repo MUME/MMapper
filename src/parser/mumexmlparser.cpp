@@ -485,35 +485,10 @@ void MumeXmlParser::parseMudCommands(QString &str)
         m_mumeClock->parseMumeTime(str);
     }
 
-    // Weather events happen on ticks
+    // Certain weather events happen on ticks
     if (m_readWeatherTag) {
         m_readWeatherTag = false;
-        if (str.at(0) == 'T') {
-            if (str.startsWith("The day has begun.")) {
-                m_mumeClock->tickSync(TIME_DAY);
-            } else if (str.startsWith("The night has begun.")) {
-                m_mumeClock->tickSync(TIME_NIGHT);
-            } else if (str.startsWith("The deepening gloom announces another sunset outside.")) {
-                // Indoors
-                m_mumeClock->tickSync(TIME_DUSK);
-            } else if (str.startsWith("The last ray of light fades, and all is swallowed up in darkness.")) {
-                // Indoors
-                m_mumeClock->tickSync(TIME_NIGHT);
-            }
-        } else if (str.at(0) == 'I') {
-            if (str.startsWith("It seems as if the night has begun.")) {
-                m_mumeClock->tickSync(TIME_NIGHT);
-            } else if (str.startsWith("It seems as if the day has begun.")) {
-                m_mumeClock->tickSync(TIME_DAY);
-            }
-        } else if (str.at(0) == 'L') {
-            if (str.startsWith("Light gradually filters in, proclaiming a new sunrise outside.")) {
-                // Indoors
-                m_mumeClock->tickSync(TIME_DAWN);
-            }
-        } else {
-            m_mumeClock->tickSync();
-        }
+        m_mumeClock->parseWeather(str);
     }
 
     // parse regexps which force new char move

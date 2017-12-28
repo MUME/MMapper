@@ -40,8 +40,8 @@ private Q_SLOTS:
     // MumeClock
     void mumeClockTest();
     void parseMumeTimeTest();
-    void tickSyncTest();
-    void partOfDayTickSyncTest();
+    void parseWeatherTest();
+    void parseWeatherClockSkewTest();
     void parseClockTimeTest();
 };
 

@@ -37,7 +37,7 @@ class Patterns
 {
 
     static QRegExp m_rx;
-    static QStringList m_dynamicDescriptionPatternsList;
+    static const QStringList m_dynamicDescriptionPatternsList;
     static const QRegExp m_score;
 
 public:
