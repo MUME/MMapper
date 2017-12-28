@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -44,16 +44,16 @@ class MapWindow : public QWidget
     Q_OBJECT
 
 public:
-    MapWindow(MapData *mapData, PrespammedPath* pp, CGroup* gm, QWidget * parent = 0);
+    MapWindow(MapData *mapData, PrespammedPath *pp, CGroup *gm, QWidget *parent = 0);
     ~MapWindow();
 
-	void resizeEvent (QResizeEvent * event);
+    void resizeEvent (QResizeEvent *event);
 
-    MapCanvas* getCanvas() const;
+    MapCanvas *getCanvas() const;
 
 signals:
 
-	void setScroll(int, int);
+    void setScroll(int, int);
 
 public slots:
     void setScrollBars(const Coordinate &, const Coordinate &);
@@ -61,21 +61,21 @@ public slots:
     void ensureVisible( qint32 x, qint32 y );
     void center( qint32 x, qint32 y );
 
-	void mapMove(int, int);
-	void continuousScroll(qint8, qint8);
+    void mapMove(int, int);
+    void continuousScroll(qint8, qint8);
 
-	void verticalScroll(qint8);
-	void horizontalScroll(qint8);
+    void verticalScroll(qint8);
+    void horizontalScroll(qint8);
 
-	void scrollTimerTimeout();
+    void scrollTimerTimeout();
 
 protected:
- //   void resizeEvent ( QResizeEvent * event );
- //   void paintEvent ( QPaintEvent * event );
+//   void resizeEvent ( QResizeEvent * event );
+//   void paintEvent ( QPaintEvent * event );
 
-	QTimer *scrollTimer;
-	qint8 m_verticalScrollStep;
-	qint8 m_horizontalScrollStep;
+    QTimer *scrollTimer;
+    qint8 m_verticalScrollStep;
+    qint8 m_horizontalScrollStep;
 
     QGridLayout *m_gridLayout;
     QScrollBar *m_horizontalScrollBar;

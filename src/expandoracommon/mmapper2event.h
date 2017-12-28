@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -38,20 +38,20 @@ class ParseEvent;
 #define EV_PROMPT 4
 #define EV_CROOM 5
 
-ParseEvent * createEvent(const CommandIdType & c, const QString & roomName, const QString & roomDesc, 
-                         const QString & parsedRoomDesc, const ExitsFlagsType & exitFlags, 
-                         const PromptFlagsType & promptFlags, const ConnectedRoomFlagsType & connectedRoomFlags);
+ParseEvent *createEvent(const CommandIdType &c, const QString &roomName, const QString &roomDesc,
+                        const QString &parsedRoomDesc, const ExitsFlagsType &exitFlags,
+                        const PromptFlagsType &promptFlags, const ConnectedRoomFlagsType &connectedRoomFlags);
 
-QString getRoomName(const ParseEvent * e);
+QString getRoomName(const ParseEvent *e);
 
-QString getRoomDesc(const ParseEvent * e);
-  
-QString getParsedRoomDesc(const ParseEvent * e);
-  
-ExitsFlagsType getExitFlags(const ParseEvent * e);
-  
-PromptFlagsType getPromptFlags(const ParseEvent * e);
+QString getRoomDesc(const ParseEvent *e);
 
-ConnectedRoomFlagsType getConnectedRoomFlags(const ParseEvent * e);
+QString getParsedRoomDesc(const ParseEvent *e);
+
+ExitsFlagsType getExitFlags(const ParseEvent *e);
+
+PromptFlagsType getPromptFlags(const ParseEvent *e);
+
+ConnectedRoomFlagsType getConnectedRoomFlags(const ParseEvent *e);
 
 #endif

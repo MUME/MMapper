@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -28,36 +28,33 @@
 #include "roomadmin.h"
 #include <assert.h>
 
-RoomSaver::RoomSaver(RoomAdmin * in_admin, ConstRoomList & list) :
-roomsCount(0), roomList(list), admin(in_admin) {}
+RoomSaver::RoomSaver(RoomAdmin *in_admin, ConstRoomList &list) :
+    roomsCount(0), roomList(list), admin(in_admin) {}
 
 
-void RoomSaver::receiveRoom(RoomAdmin * in_admin, const Room * room)
+void RoomSaver::receiveRoom(RoomAdmin *in_admin, const Room *room)
 {
-  assert(in_admin == admin);
-  if (room->isTemporary()) {
-	admin->releaseRoom(this, room->getId());
-  }
-  else {
-  	roomList.append(room);
-  	roomsCount++;
-  }
+    assert(in_admin == admin);
+    if (room->isTemporary()) {
+        admin->releaseRoom(this, room->getId());
+    } else {
+        roomList.append(room);
+        roomsCount++;
+    }
 }
 
 quint32 RoomSaver::getRoomsCount()
 {
-  return roomsCount;
+    return roomsCount;
 }
 
 RoomSaver::~RoomSaver()
 {
-  for(int i = 0; i < roomList.size(); ++i)
-  {
-    const Room * room = roomList[i];
-    if (room)
-    {
-      admin->releaseRoom(this, room->getId());
-      roomList[i] = 0;
+    for (int i = 0; i < roomList.size(); ++i) {
+        const Room *room = roomList[i];
+        if (room) {
+            admin->releaseRoom(this, room->getId());
+            roomList[i] = 0;
+        }
     }
-  }
 }

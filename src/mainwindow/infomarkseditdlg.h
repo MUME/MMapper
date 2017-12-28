@@ -42,9 +42,9 @@ signals:
     void closeEventReceived();
 
 public slots:
-    void objectListCurrentIndexChanged(const QString&);
-    void objectTypeCurrentIndexChanged(const QString&);
-    void objectClassCurrentIndexChanged(const QString&);
+    void objectListCurrentIndexChanged(const QString &);
+    void objectTypeCurrentIndexChanged(const QString &);
+    void objectClassCurrentIndexChanged(const QString &);
 
     void objectNameTextChanged(QString);
     void objectTextChanged(QString);
@@ -67,7 +67,7 @@ public slots:
 
 
 public:
-    InfoMarksEditDlg(MapData* mapData, QWidget *parent = 0);
+    InfoMarksEditDlg(MapData *mapData, QWidget *parent = 0);
     ~InfoMarksEditDlg();
 
     void setPoints(double x1, double y1, double x2, double y2, int layer);
@@ -76,12 +76,12 @@ public:
     void writeSettings();
 
 protected:
-    void closeEvent(QCloseEvent*);
+    void closeEvent(QCloseEvent *);
 
 
 private:
 
-    MapData* m_mapData;
+    MapData *m_mapData;
 
     double m_selX1, m_selY1, m_selX2, m_selY2;
     int m_selLayer;
@@ -91,9 +91,9 @@ private:
 
     InfoMarkType getType();
     InfoMarkClass getClass();
-    InfoMark* getInfoMark(QString name);
-    InfoMark* getCurrentInfoMark();
-    void setCurrentInfoMark(InfoMark* m);
+    InfoMark *getInfoMark(QString name);
+    InfoMark *getCurrentInfoMark();
+    void setCurrentInfoMark(InfoMark *m);
 
     void updateMarkers();
     void updateDialog();

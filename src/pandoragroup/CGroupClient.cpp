@@ -3,7 +3,7 @@
 ** Authors:   Azazello <lachupe@gmail.com>,
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -31,56 +31,56 @@
 
 void CGroupClient::linkSignals()
 {
-  connect(this, SIGNAL(disconnected()), this, SLOT(lostConnection() ) );
-  connect(this, SIGNAL(connected()), this, SLOT(connectionEstablished() ) );
-  connect(this, SIGNAL(error(QAbstractSocket::SocketError )),
-	  this, SLOT(errorHandler(QAbstractSocket::SocketError) ) );
-  connect(this, SIGNAL(readyRead()), this, SLOT( dataIncoming() ) );
+    connect(this, SIGNAL(disconnected()), this, SLOT(lostConnection() ) );
+    connect(this, SIGNAL(connected()), this, SLOT(connectionEstablished() ) );
+    connect(this, SIGNAL(error(QAbstractSocket::SocketError )),
+            this, SLOT(errorHandler(QAbstractSocket::SocketError) ) );
+    connect(this, SIGNAL(readyRead()), this, SLOT( dataIncoming() ) );
 
-  buffer = "";
-  currentMessageLen = 0;
+    buffer = "";
+    currentMessageLen = 0;
 }
 
 CGroupClient::CGroupClient(QByteArray host, int remotePort, QObject *parent) :
-  _host(host), _remotePort(remotePort), QTcpSocket(parent)
+    _host(host), _remotePort(remotePort), QTcpSocket(parent)
 {
-  linkSignals();
-  setSocketOption(QAbstractSocket::KeepAliveOption, true);
-  setConnectionState(Connecting);
-  protocolState = AwaitingLogin;
-  connectToHost(host, remotePort);
+    linkSignals();
+    setSocketOption(QAbstractSocket::KeepAliveOption, true);
+    setConnectionState(Connecting);
+    protocolState = AwaitingLogin;
+    connectToHost(host, remotePort);
 }
 
 CGroupClient::CGroupClient(QObject *parent) :
     QTcpSocket(parent)
 {
-  connectionState = Closed;
-  protocolState = Idle;
-  setSocketOption(QAbstractSocket::KeepAliveOption, true);
-  linkSignals();
+    connectionState = Closed;
+    protocolState = Idle;
+    setSocketOption(QAbstractSocket::KeepAliveOption, true);
+    linkSignals();
 }
 
 void CGroupClient::setSocket(qintptr socketDescriptor)
 {
-  if (setSocketDescriptor(socketDescriptor) == false) {
-                // failure ... what to do?
-    qDebug( "Connection failed. Native socket not recognized by CGroupClient.");
-  }
+    if (setSocketDescriptor(socketDescriptor) == false) {
+        // failure ... what to do?
+        qDebug( "Connection failed. Native socket not recognized by CGroupClient.");
+    }
 
-  setConnectionState(Connected);
+    setConnectionState(Connected);
 }
 
 void CGroupClient::setProtocolState(int val)
 {
 //  qDebug( "Protocol state: %i", val);
-  protocolState = val;
+    protocolState = val;
 }
 
 void CGroupClient::setConnectionState(int val)
 {
 //  qDebug( "Connection state: %i", val);
-  connectionState = val;
-  getParent()->connectionStateChanged(this);
+    connectionState = val;
+    getParent()->connectionStateChanged(this);
 }
 
 
@@ -91,89 +91,90 @@ CGroupClient::~CGroupClient()
 
 void CGroupClient::lostConnection()
 {
-  setConnectionState(Closed);
+    setConnectionState(Closed);
 }
 
 void CGroupClient::connectionEstablished()
 {
-  setConnectionState(Connected);
+    setConnectionState(Connected);
 }
 
 void CGroupClient::errorHandler ( QAbstractSocket::SocketError socketError )
 {
-  CGroupCommunicator *comm = dynamic_cast<CGroupCommunicator *>( parent() );
-  comm->errorInConnection(this, errorString() );
+    CGroupCommunicator *comm = dynamic_cast<CGroupCommunicator *>( parent() );
+    comm->errorInConnection(this, errorString() );
 }
 
 void CGroupClient::dataIncoming()
 {
-  QByteArray message;
-  QByteArray rest;
+    QByteArray message;
+    QByteArray rest;
 
 //      qDebug( "Incoming Data [conn %i, IP: %s]", socketDescriptor(),
 //                      (const char *) peerAddress().toString().toLatin1() );
 
-  QByteArray tmp = readAll();
+    QByteArray tmp = readAll();
 
 
-  buffer += tmp;
+    buffer += tmp;
 
 //      qDebug( "RAW data buffer: %s", (const char *) buffer);
 
-  while ( currentMessageLen < buffer.size()) {
+    while ( currentMessageLen < buffer.size()) {
 //              qDebug( "in data-receiving cycle, buffer %s", (const char *) buffer);
-    cutMessageFromBuffer();
-  }
+        cutMessageFromBuffer();
+    }
 }
 
 void CGroupClient::cutMessageFromBuffer()
 {
-  QByteArray rest;
+    QByteArray rest;
 
-  if (currentMessageLen == 0) {
-    int index = buffer.indexOf(' ');
+    if (currentMessageLen == 0) {
+        int index = buffer.indexOf(' ');
 
-    QString len = buffer.left(index + 1);
-    currentMessageLen = len.toInt();
+        QString len = buffer.left(index + 1);
+        currentMessageLen = len.toInt();
 //              qDebug( "Incoming buffer length: %i, incoming message length %i",
 //                              buffer.size(), currentMessageLen);
 
-    rest = buffer.right( buffer.size() - index - 1);
-    buffer = rest;
+        rest = buffer.right( buffer.size() - index - 1);
+        buffer = rest;
 
-    if (buffer.size() == currentMessageLen)
-      cutMessageFromBuffer();
+        if (buffer.size() == currentMessageLen)
+            cutMessageFromBuffer();
 
-    //printf("returning from cutMessageFromBuffer\r\n");
-    return;
-  }
+        //printf("returning from cutMessageFromBuffer\r\n");
+        return;
+    }
 
 //      qDebug( "cutting off one message case");
-  getParent()->incomingData(this, buffer.left(currentMessageLen));
-  rest = buffer.right( buffer.size() - currentMessageLen);
-  buffer = rest;
-  currentMessageLen = 0;
+    getParent()->incomingData(this, buffer.left(currentMessageLen));
+    rest = buffer.right( buffer.size() - currentMessageLen);
+    buffer = rest;
+    currentMessageLen = 0;
 }
 
 
 void CGroupClient::sendData(QByteArray data)
 {
-  QByteArray buff;
-  QString len;
+    QByteArray buff;
+    QString len;
 
-  len = QString("%1 ").arg(data.size());
+    len = QString("%1 ").arg(data.size());
 
 //      char len[10];
 
 //      sprintf(len, "%i ", data.size());
 
-  buff = len.toLatin1();
-  buff += data;
+    buff = len.toLatin1();
+    buff += data;
 
-  write(buff);
+    write(buff);
 }
 
-CGroupCommunicator* CGroupClient::getParent() {
+CGroupCommunicator *CGroupClient::getParent()
+{
     return dynamic_cast<CGroupCommunicator *>( parent() );
 }
 

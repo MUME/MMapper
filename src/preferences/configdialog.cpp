@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -33,91 +33,90 @@
 #include <QListWidget>
 #include <QStackedWidget>
 
-ConfigDialog::ConfigDialog(CGroup* gm)
+ConfigDialog::ConfigDialog(CGroup *gm)
 {
-  m_groupManager = gm;
-  contentsWidget = new QListWidget;
-  contentsWidget->setViewMode(QListView::IconMode);
-  contentsWidget->setIconSize(QSize(70, 70));
-  contentsWidget->setMovement(QListView::Static);
-  contentsWidget->setMaximumWidth(90);
-  contentsWidget->setMinimumWidth(90);    
-  contentsWidget->setSpacing(9);
+    m_groupManager = gm;
+    contentsWidget = new QListWidget;
+    contentsWidget->setViewMode(QListView::IconMode);
+    contentsWidget->setIconSize(QSize(70, 70));
+    contentsWidget->setMovement(QListView::Static);
+    contentsWidget->setMaximumWidth(90);
+    contentsWidget->setMinimumWidth(90);
+    contentsWidget->setSpacing(9);
 
-  pagesWidget = new QStackedWidget;
-  pagesWidget->setMinimumWidth(400);    
-  pagesWidget->setMinimumHeight(640);
+    pagesWidget = new QStackedWidget;
+    pagesWidget->setMinimumWidth(400);
+    pagesWidget->setMinimumHeight(640);
 
-  QPushButton *closeButton = new QPushButton(tr("Close"));
+    QPushButton *closeButton = new QPushButton(tr("Close"));
 
-  createIcons();
+    createIcons();
 
-  connect(closeButton, SIGNAL(clicked()), this, SLOT(close()));
+    connect(closeButton, SIGNAL(clicked()), this, SLOT(close()));
 
-  QHBoxLayout *horizontalLayout = new QHBoxLayout;
-  horizontalLayout->addWidget(contentsWidget);
-  horizontalLayout->addWidget(pagesWidget, 1);
+    QHBoxLayout *horizontalLayout = new QHBoxLayout;
+    horizontalLayout->addWidget(contentsWidget);
+    horizontalLayout->addWidget(pagesWidget, 1);
 
-  QHBoxLayout *buttonsLayout = new QHBoxLayout;
-  buttonsLayout->addStretch(1);
-  buttonsLayout->addWidget(closeButton);
+    QHBoxLayout *buttonsLayout = new QHBoxLayout;
+    buttonsLayout->addStretch(1);
+    buttonsLayout->addWidget(closeButton);
 
-  QVBoxLayout *mainLayout = new QVBoxLayout;
-  mainLayout->addLayout(horizontalLayout);
-  mainLayout->addStretch(1);
-  mainLayout->addSpacing(12);
-  mainLayout->addLayout(buttonsLayout);
-  setLayout(mainLayout);
+    QVBoxLayout *mainLayout = new QVBoxLayout;
+    mainLayout->addLayout(horizontalLayout);
+    mainLayout->addStretch(1);
+    mainLayout->addSpacing(12);
+    mainLayout->addLayout(buttonsLayout);
+    setLayout(mainLayout);
 
-  setWindowTitle(tr("Config Dialog"));
+    setWindowTitle(tr("Config Dialog"));
 
-  pagesWidget->addWidget(new GeneralPage);
-  pagesWidget->setCurrentIndex(0);
+    pagesWidget->addWidget(new GeneralPage);
+    pagesWidget->setCurrentIndex(0);
 }
 
 void ConfigDialog::createIcons()
 {
-  QListWidgetItem *configButton = new QListWidgetItem(contentsWidget);
-  configButton->setIcon(QIcon(":/icons/generalcfg.png"));
-  configButton->setText(tr("General"));
-  configButton->setTextAlignment(Qt::AlignHCenter);
-  configButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+    QListWidgetItem *configButton = new QListWidgetItem(contentsWidget);
+    configButton->setIcon(QIcon(":/icons/generalcfg.png"));
+    configButton->setText(tr("General"));
+    configButton->setTextAlignment(Qt::AlignHCenter);
+    configButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
-  QListWidgetItem *updateButton = new QListWidgetItem(contentsWidget);
-  updateButton->setIcon(QIcon(":/icons/parsercfg.png"));
-  updateButton->setText(tr("Parser"));
-  updateButton->setTextAlignment(Qt::AlignHCenter);
-  updateButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+    QListWidgetItem *updateButton = new QListWidgetItem(contentsWidget);
+    updateButton->setIcon(QIcon(":/icons/parsercfg.png"));
+    updateButton->setText(tr("Parser"));
+    updateButton->setTextAlignment(Qt::AlignHCenter);
+    updateButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
-  QListWidgetItem *groupButton = new QListWidgetItem(contentsWidget);
-  groupButton->setIcon(QIcon(":/icons/groupcfg.png"));
-  groupButton->setText(tr("Group\nManager"));
-  groupButton->setTextAlignment(Qt::AlignHCenter);
-  groupButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+    QListWidgetItem *groupButton = new QListWidgetItem(contentsWidget);
+    groupButton->setIcon(QIcon(":/icons/groupcfg.png"));
+    groupButton->setText(tr("Group\nManager"));
+    groupButton->setTextAlignment(Qt::AlignHCenter);
+    groupButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
-  QListWidgetItem *pathButton = new QListWidgetItem(contentsWidget);
-  pathButton->setIcon(QIcon(":/icons/pathmachinecfg.png"));
-  pathButton->setText(tr("Path\nMachine"));
-  pathButton->setTextAlignment(Qt::AlignHCenter);
-  pathButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+    QListWidgetItem *pathButton = new QListWidgetItem(contentsWidget);
+    pathButton->setIcon(QIcon(":/icons/pathmachinecfg.png"));
+    pathButton->setText(tr("Path\nMachine"));
+    pathButton->setTextAlignment(Qt::AlignHCenter);
+    pathButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
-  connect(contentsWidget,
-          SIGNAL(currentItemChanged(QListWidgetItem *, QListWidgetItem *)),
-                 this, SLOT(changePage(QListWidgetItem *, QListWidgetItem*)));
+    connect(contentsWidget,
+            SIGNAL(currentItemChanged(QListWidgetItem *, QListWidgetItem *)),
+            this, SLOT(changePage(QListWidgetItem *, QListWidgetItem *)));
 }
 
 void ConfigDialog::changePage(QListWidgetItem *current, QListWidgetItem *previous)
 {
-  if (!current)
-    current = previous;
+    if (!current)
+        current = previous;
 
-  if (pagesWidget->count()<=1)
-  {
-    pagesWidget->addWidget(new ParserPage(this));
-    pagesWidget->addWidget(new GroupManagerPage(m_groupManager, this));
-    pagesWidget->addWidget(new PathmachinePage(this));
-  }
+    if (pagesWidget->count() <= 1) {
+        pagesWidget->addWidget(new ParserPage(this));
+        pagesWidget->addWidget(new GroupManagerPage(m_groupManager, this));
+        pagesWidget->addWidget(new PathmachinePage(this));
+    }
 
-  pagesWidget->setCurrentIndex(contentsWidget->row(current));
+    pagesWidget->setCurrentIndex(contentsWidget->row(current));
 }
 

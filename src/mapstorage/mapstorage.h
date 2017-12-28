@@ -32,44 +32,58 @@
 #include "oldroom.h"
 #include "roomfactory.h"
 
-class MapStorage : public AbstractMapStorage {
+class MapStorage : public AbstractMapStorage
+{
 
     Q_OBJECT
 
 public:
-    MapStorage(MapData&, const QString&, QFile*);
-    MapStorage(MapData&, const QString&);
+    MapStorage(MapData &, const QString &, QFile *);
+    MapStorage(MapData &, const QString &);
     bool mergeData();
 
 private:
-    virtual bool canLoad() {return TRUE;};
-    virtual bool canSave() {return TRUE;};
+    virtual bool canLoad()
+    {
+        return TRUE;
+    };
+    virtual bool canSave()
+    {
+        return TRUE;
+    };
 
     virtual void newData ();
     virtual bool loadData();
     virtual bool saveData( bool baseMapOnly );
 
     RoomFactory factory;
-    Room * loadRoom(QDataStream & stream, qint32 version);
-    void loadExits(Room * room, QDataStream & stream, qint32 version);
-    Room * loadOldRoom(QDataStream & stream, ConnectionList & connectionList);
-    void loadOldConnection(Connection *, QDataStream & stream, RoomVector & roomList);
-    void loadMark(InfoMark * mark, QDataStream & stream, qint32 version);
-    void saveMark(InfoMark * mark, QDataStream & stream);
+    Room *loadRoom(QDataStream &stream, qint32 version);
+    void loadExits(Room *room, QDataStream &stream, qint32 version);
+    Room *loadOldRoom(QDataStream &stream, ConnectionList &connectionList);
+    void loadOldConnection(Connection *, QDataStream &stream, RoomVector &roomList);
+    void loadMark(InfoMark *mark, QDataStream &stream, qint32 version);
+    void saveMark(InfoMark *mark, QDataStream &stream);
     void translateOldConnection(Connection *);
-    void saveRoom(const Room * room, QDataStream & stream);
-    void saveExits(const Room * room, QDataStream & stream);
+    void saveRoom(const Room *room, QDataStream &stream);
+    void saveExits(const Room *room, QDataStream &stream);
 
     uint baseId;
     Coordinate basePosition;
 };
 
-class MapFrontendBlocker {
-  public:
-    MapFrontendBlocker(MapFrontend & in_data) : data(in_data) {data.block();}
-    ~MapFrontendBlocker() {data.unblock();}
-  private:
-    MapFrontend & data;
+class MapFrontendBlocker
+{
+public:
+    MapFrontendBlocker(MapFrontend &in_data) : data(in_data)
+    {
+        data.block();
+    }
+    ~MapFrontendBlocker()
+    {
+        data.unblock();
+    }
+private:
+    MapFrontend &data;
 };
 
 

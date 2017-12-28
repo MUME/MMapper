@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -36,25 +36,25 @@ class GeneralPage : public QWidget, private Ui::GeneralPage
 
 public slots:
 
-	void remoteNameTextChanged(const QString&);
-	void remotePortValueChanged(int);
-	void localPortValueChanged(int);
+    void remoteNameTextChanged(const QString &);
+    void remotePortValueChanged(int);
+    void localPortValueChanged(int);
 
     void changeColorClicked();
-    void antialiasingSamplesTextChanged(const QString&);
+    void antialiasingSamplesTextChanged(const QString &);
     void trilinearFilteringStateChanged(int);
 
-	void emulatedExitsStateChanged(int);
-	void updatedStateChanged(int);
-	void drawNotMappedExitsStateChanged(int);
+    void emulatedExitsStateChanged(int);
+    void updatedStateChanged(int);
+    void drawNotMappedExitsStateChanged(int);
     void drawNoMatchExitsStateChanged(int);
     void drawDoorNamesStateChanged(int);
-	void drawUpperLayersTexturedStateChanged(int);
+    void drawUpperLayersTexturedStateChanged(int);
 
-	void autoLoadFileNameTextChanged(const QString&);
-	void autoLoadCheckStateChanged(int);
-	
-	void selectWorldFileButtonClicked();	
+    void autoLoadFileNameTextChanged(const QString &);
+    void autoLoadCheckStateChanged(int);
+
+    void selectWorldFileButtonClicked();
 
     void displayMumeClockStateChanged(int);
 

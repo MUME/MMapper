@@ -14,7 +14,7 @@ TestClock::~TestClock()
 {
 }
 
-int convertMumeRealTime(const QString& realTime)
+int convertMumeRealTime(const QString &realTime)
 {
     // Real time is Wed Dec 20 07:03:27 2017 UTC.
     QString dateString = realTime.mid(13, 24);
@@ -45,7 +45,7 @@ void TestClock::mumeClockTest()
     QCOMPARE(actualTime, oneTick);
 
     QString oneDay = "12am on the 2nd of Afteryule, Year 2850 of the Third Age.";
-    actualTime = testMumeStartEpochTime(clock, 60 *24);
+    actualTime = testMumeStartEpochTime(clock, 60 * 24);
     QCOMPARE(actualTime, oneDay);
 
     QString oneMonth = "12am on the 1st of Solmath, Year 2850 of the Third Age.";

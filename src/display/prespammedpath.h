@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -34,24 +34,36 @@ class MapCanvas;
 
 class PrespammedPath : public QObject
 {
-Q_OBJECT
+    Q_OBJECT
 public:
     PrespammedPath(QObject *parent = 0);
     ~PrespammedPath();
-    
-    bool isEmpty(){ return m_queue.isEmpty(); };    
-    CommandQueue::const_iterator begin() const {return m_queue.begin();}
-    CommandQueue::const_iterator end() const {return m_queue.end();}
-    CommandQueue& getQueue() { return m_queue; };
+
+    bool isEmpty()
+    {
+        return m_queue.isEmpty();
+    };
+    CommandQueue::const_iterator begin() const
+    {
+        return m_queue.begin();
+    }
+    CommandQueue::const_iterator end() const
+    {
+        return m_queue.end();
+    }
+    CommandQueue &getQueue()
+    {
+        return m_queue;
+    };
 signals:
-	void update();
+    void update();
 public slots:
     void setPath(CommandQueue, bool);
-        
+
 protected:
 
 private:
-	CommandQueue m_queue;
+    CommandQueue m_queue;
 };
 
 #endif

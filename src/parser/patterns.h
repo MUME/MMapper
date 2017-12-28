@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -33,24 +33,25 @@ class QString;
 class QByteArray;
 class QStringList;
 
-class Patterns {
-	
+class Patterns
+{
+
     static QRegExp m_rx;
     static QStringList m_dynamicDescriptionPatternsList;
     static const QRegExp m_score;
-    
-public:
-    static bool matchScore(QString&str);
-	static bool matchMoveForcePatterns(QString&);
-	static bool matchNoDescriptionPatterns(QString&);
-	static bool matchDynamicDescriptionPatterns(QString&);
-	static bool matchPasswordPatterns(QByteArray&);
-    static bool matchPromptPatterns(QByteArray&);
-    static bool matchLoginPatterns(QByteArray&);
-    static bool matchMenuPromptPatterns(QByteArray&);
 
-    static bool matchPattern(QString pattern, QString& str);
-    static bool matchPattern(QByteArray pattern, QByteArray& str);
+public:
+    static bool matchScore(QString &str);
+    static bool matchMoveForcePatterns(QString &);
+    static bool matchNoDescriptionPatterns(QString &);
+    static bool matchDynamicDescriptionPatterns(QString &);
+    static bool matchPasswordPatterns(QByteArray &);
+    static bool matchPromptPatterns(QByteArray &);
+    static bool matchLoginPatterns(QByteArray &);
+    static bool matchMenuPromptPatterns(QByteArray &);
+
+    static bool matchPattern(QString pattern, QString &str);
+    static bool matchPattern(QByteArray pattern, QByteArray &str);
 };
 
 #endif

@@ -3,7 +3,7 @@
 ** Authors:   Azazello <lachupe@gmail.com>,
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -37,33 +37,33 @@ class CGroupClient;
 
 class CGroup : public QTreeWidget
 {
-  Q_OBJECT
+    Q_OBJECT
 
-  CGroupCommunicator *network;
+    CGroupCommunicator *network;
 
-  QVector<CGroupChar *> chars;
-  CGroupChar      *self;
-  //QFrame        *status;
+    QVector<CGroupChar *> chars;
+    CGroupChar      *self;
+    //QFrame        *status;
 
 
-  //QGridLayout *layout;
+    //QGridLayout *layout;
 
-  void resetAllChars();
+    void resetAllChars();
 
-  signals:
-    void log( const QString&, const QString& );
-    void displayGroupTellEvent(const QByteArray& tell); // sends gtell from local user
+signals:
+    void log( const QString &, const QString & );
+    void displayGroupTellEvent(const QByteArray &tell); // sends gtell from local user
     void drawCharacters(); // redraw the opengl screen
 
-  public:
+public:
 
     enum StateMessages { NORMAL, FIGHTING, RESTING, SLEEPING, CASTING, INCAP, DEAD, BLIND, UNBLIND };
 
-    CGroup(QByteArray name, MapData * md, QWidget *parent);
+    CGroup(QByteArray name, MapData *md, QWidget *parent);
     virtual ~CGroup();
 
     QByteArray getName() const ;
-    CGroupChar* getCharByName(QByteArray name);
+    CGroupChar *getCharByName(QByteArray name);
 
     void setType(int newState);
     int getType() const ;
@@ -76,11 +76,17 @@ class CGroup : public QTreeWidget
     bool isNamePresent(QByteArray name);
     QByteArray getNameFromBlob(QDomNode blob);
     void updateChar(QDomNode blob); // updates given char from the blob
-    CGroupCommunicator *getCommunicator() { return network; }
+    CGroupCommunicator *getCommunicator()
+    {
+        return network;
+    }
 
     void resetChars();
-    QVector<CGroupChar *>  getChars() { return chars; }
-        // changing settings
+    QVector<CGroupChar *>  getChars()
+    {
+        return chars;
+    }
+    // changing settings
     void resetName();
     void resetColor();
 
@@ -90,13 +96,13 @@ class CGroup : public QTreeWidget
 
     void gTellArrived(QDomNode node);
 
-        // dispatcher/Engine hooks
+    // dispatcher/Engine hooks
     bool isGroupTell(QByteArray tell);
     void renameChar(QDomNode blob);
 
-    void sendLog(const QString&);
+    void sendLog(const QString &);
 
-  public slots:
+public slots:
     void connectionRefused(QString message);
     void connectionFailed(QString message);
     void connectionClosed(QString message);
@@ -105,14 +111,14 @@ class CGroup : public QTreeWidget
     void gotKicked(QDomNode message);
     void setCharPosition(unsigned int pos);
 
-    void closeEvent( QCloseEvent * event ) ;
+    void closeEvent( QCloseEvent *event ) ;
     void sendGTell(QByteArray tell); // sends gtell from local user
     void parseScoreInformation(QByteArray score);
     void parsePromptInformation(QByteArray prompt);
     void parseStateChangeLine(int message, QByteArray line);
 
-  private:
-    MapData* m_mapData;
+private:
+    MapData *m_mapData;
 };
 
 #endif /*CGROUP_H_*/

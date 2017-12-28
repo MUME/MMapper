@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -35,16 +35,23 @@
  * IntermediateNodes represent possible ends of a property
  * they hold a RoomSearchNode if this property can be the last one
  */
-class IntermediateNode : public SearchTreeNode {
- public:
-  virtual ~IntermediateNode() {delete rooms;}
-  IntermediateNode() : SearchTreeNode((char*)"") {rooms = 0;}
-  IntermediateNode(ParseEvent * event);
-  RoomCollection * insertRoom(ParseEvent * event); 
-  void getRooms(RoomOutStream & stream, ParseEvent * event);
-  void skipDown(RoomOutStream & stream, ParseEvent * event);
- private:
-  RoomCollection * rooms;
+class IntermediateNode : public SearchTreeNode
+{
+public:
+    virtual ~IntermediateNode()
+    {
+        delete rooms;
+    }
+    IntermediateNode() : SearchTreeNode((char *)"")
+    {
+        rooms = 0;
+    }
+    IntermediateNode(ParseEvent *event);
+    RoomCollection *insertRoom(ParseEvent *event);
+    void getRooms(RoomOutStream &stream, ParseEvent *event);
+    void skipDown(RoomOutStream &stream, ParseEvent *event);
+private:
+    RoomCollection *rooms;
 };
 
 #endif

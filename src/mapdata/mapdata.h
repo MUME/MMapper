@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -40,105 +40,139 @@ class RoomSelection;
 class AbstractAction;
 
 typedef QList<const Room *> ConstRoomList;
-typedef QVector<Room*> RoomVector;
-typedef QLinkedList<InfoMark*> MarkerList;
-typedef QLinkedListIterator<InfoMark*> MarkerListIterator;
+typedef QVector<Room *> RoomVector;
+typedef QLinkedList<InfoMark *> MarkerList;
+typedef QLinkedListIterator<InfoMark *> MarkerListIterator;
 
 
 class MapData : public MapFrontend
 {
 
-  Q_OBJECT
-  friend class CustomAction;
+    Q_OBJECT
+    friend class CustomAction;
 public:
-  MapData();
-  virtual ~MapData();
+    MapData();
+    virtual ~MapData();
 
 
-  const RoomSelection * select(const Coordinate & ulf, const Coordinate & lrb);
-  // updates a selection created by the mapdata
-  const RoomSelection * select(const Coordinate & ulf, const Coordinate & lrb, const RoomSelection * in);
-  // creates and registers a selection with one room
-  const RoomSelection * select(const Coordinate & pos);
-  // creates and registers an empty selection
-  const RoomSelection * select();
+    const RoomSelection *select(const Coordinate &ulf, const Coordinate &lrb);
+    // updates a selection created by the mapdata
+    const RoomSelection *select(const Coordinate &ulf, const Coordinate &lrb, const RoomSelection *in);
+    // creates and registers a selection with one room
+    const RoomSelection *select(const Coordinate &pos);
+    // creates and registers an empty selection
+    const RoomSelection *select();
 
-  // selects the rooms given in "other" for "into"
-  const RoomSelection * select(const RoomSelection * other, const RoomSelection * into);
-  // removes the subset from the superset and unselects it
-  void unselect(const RoomSelection * subset, const RoomSelection * superset);
-  // removes the selection from the internal structures and deletes it
-  void unselect(const RoomSelection * selection);
-  // unselects a room from a selection
-  void unselect(uint id, const RoomSelection * selection);
+    // selects the rooms given in "other" for "into"
+    const RoomSelection *select(const RoomSelection *other, const RoomSelection *into);
+    // removes the subset from the superset and unselects it
+    void unselect(const RoomSelection *subset, const RoomSelection *superset);
+    // removes the selection from the internal structures and deletes it
+    void unselect(const RoomSelection *selection);
+    // unselects a room from a selection
+    void unselect(uint id, const RoomSelection *selection);
 
-  // the room will be inserted in the given selection. the selection must have been created by mapdata
-  const Room * getRoom(const Coordinate & pos, const RoomSelection * selection);
-  const Room * getRoom(uint id, const RoomSelection * selection);
+    // the room will be inserted in the given selection. the selection must have been created by mapdata
+    const Room *getRoom(const Coordinate &pos, const RoomSelection *selection);
+    const Room *getRoom(uint id, const RoomSelection *selection);
 
-  void draw (const Coordinate & ulf, const Coordinate & lrb, MapCanvas & screen);
-  bool isOccupied(const Coordinate & position);
+    void draw (const Coordinate &ulf, const Coordinate &lrb, MapCanvas &screen);
+    bool isOccupied(const Coordinate &position);
 
-  bool isMovable(const Coordinate & offset, const RoomSelection * selection);
+    bool isMovable(const Coordinate &offset, const RoomSelection *selection);
 
-  bool execute(MapAction * action);
-  bool execute(MapAction * action, const RoomSelection * unlock);
-  bool execute(AbstractAction * action, const RoomSelection * unlock);
-    
-  Coordinate & getPosition() {return m_position;}
-  MarkerList& getMarkersList(){ return m_markers; }
-  uint getRoomsCount(){ return greatestUsedId == UINT_MAX ? 0 : greatestUsedId+1; }
-  int getMarkersCount(){ return m_markers.count(); }
+    bool execute(MapAction *action);
+    bool execute(MapAction *action, const RoomSelection *unlock);
+    bool execute(AbstractAction *action, const RoomSelection *unlock);
 
-  void addMarker(InfoMark* im);
-  void removeMarker(InfoMark* im);
+    Coordinate &getPosition()
+    {
+        return m_position;
+    }
+    MarkerList &getMarkersList()
+    {
+        return m_markers;
+    }
+    uint getRoomsCount()
+    {
+        return greatestUsedId == UINT_MAX ? 0 : greatestUsedId + 1;
+    }
+    int getMarkersCount()
+    {
+        return m_markers.count();
+    }
 
-  bool isEmpty(){return (greatestUsedId == UINT_MAX && m_markers.isEmpty());}
-  bool dataChanged(){return m_dataChanged;}
-  QString getFileName(){ return m_fileName; }
-  QList<Coordinate> getPath(const QList<CommandIdType> dirs);
-  virtual void clear();
+    void addMarker(InfoMark *im);
+    void removeMarker(InfoMark *im);
 
-  // search for matches
-  void genericSearch(RoomRecipient * recipient, const RoomFilter &f);
-  void genericSearch(const RoomSelection * in, const RoomFilter &f);
+    bool isEmpty()
+    {
+        return (greatestUsedId == UINT_MAX && m_markers.isEmpty());
+    }
+    bool dataChanged()
+    {
+        return m_dataChanged;
+    }
+    QString getFileName()
+    {
+        return m_fileName;
+    }
+    QList<Coordinate> getPath(const QList<CommandIdType> dirs);
+    virtual void clear();
 
-  void shortestPathSearch(const Room *origin, ShortestPathRecipient * recipient, const RoomFilter &f, int max_hits=-1, double max_dist=0);
+    // search for matches
+    void genericSearch(RoomRecipient *recipient, const RoomFilter &f);
+    void genericSearch(const RoomSelection *in, const RoomFilter &f);
 
-  // Used in Console Commands
-  void removeDoorNames();
-  QString getDoorName(const Coordinate & pos, uint dir);
-  void setDoorName(const Coordinate & pos, const QString & name, uint dir);
-  bool getExitFlag(const Coordinate & pos, uint flag, uint dir, uint field);
-  void toggleExitFlag(const Coordinate & pos, uint flag, uint dir, uint field);
-  void setRoomField(const Coordinate & pos, const QVariant & field, uint flag);
-  QVariant getRoomField(const Coordinate & pos, uint flag);
-  void toggleRoomFlag(const Coordinate & pos, uint flag, uint field);
-  bool getRoomFlag(const Coordinate & pos, uint flag, uint field);
+    void shortestPathSearch(const Room *origin, ShortestPathRecipient *recipient, const RoomFilter &f,
+                            int max_hits = -1, double max_dist = 0);
+
+    // Used in Console Commands
+    void removeDoorNames();
+    QString getDoorName(const Coordinate &pos, uint dir);
+    void setDoorName(const Coordinate &pos, const QString &name, uint dir);
+    bool getExitFlag(const Coordinate &pos, uint flag, uint dir, uint field);
+    void toggleExitFlag(const Coordinate &pos, uint flag, uint dir, uint field);
+    void setRoomField(const Coordinate &pos, const QVariant &field, uint flag);
+    QVariant getRoomField(const Coordinate &pos, uint flag);
+    void toggleRoomFlag(const Coordinate &pos, uint flag, uint field);
+    bool getRoomFlag(const Coordinate &pos, uint flag, uint field);
 
 signals:
-  void log( const QString&, const QString& );
-  void onDataLoaded();
-  void onDataChanged();
-  void updateCanvas();
+    void log( const QString &, const QString & );
+    void onDataLoaded();
+    void onDataChanged();
+    void updateCanvas();
 
 public slots:
-  void setFileName(QString filename){ m_fileName = filename; }
-  void unsetDataChanged(){m_dataChanged = false;}
-  void setDataChanged(){m_dataChanged = true;}
-  void setPosition(const Coordinate & pos) {m_position = pos;}
+    void setFileName(QString filename)
+    {
+        m_fileName = filename;
+    }
+    void unsetDataChanged()
+    {
+        m_dataChanged = false;
+    }
+    void setDataChanged()
+    {
+        m_dataChanged = true;
+    }
+    void setPosition(const Coordinate &pos)
+    {
+        m_position = pos;
+    }
 
 protected:
-  std::map<const RoomSelection*, RoomSelection *> selections;
+    std::map<const RoomSelection *, RoomSelection *> selections;
 
-  MarkerList m_markers;
+    MarkerList m_markers;
 
-  // changed data?
-  bool m_dataChanged;
+    // changed data?
+    bool m_dataChanged;
 
-  QString m_fileName;
+    QString m_fileName;
 
-  Coordinate m_position;
+    Coordinate m_position;
 };
 
 

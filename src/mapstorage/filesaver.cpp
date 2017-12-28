@@ -2,7 +2,7 @@
 **
 ** Authors:   Thomas Equeter <waba@waba.be>
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -36,18 +36,17 @@
 #include <stdexcept>
 #include "mapstorage/filesaver.h"
 
-namespace
-{
-  const char *c_suffix = ".tmp";
+namespace {
+const char *c_suffix = ".tmp";
 
-  void throw_sys_error()
-  {
+void throw_sys_error()
+{
 #ifdef UNIX_SAFETY
     char error[1024] = "";
     strerror_r( errno, error, sizeof( error ) );
     throw std::runtime_error( error );
 #endif
-  }
+}
 
 }
 
@@ -57,46 +56,43 @@ FileSaver::FileSaver()
 
 FileSaver::~FileSaver()
 {
-  try
-  {
-    close();
-  }
-  catch ( ... )
-  {
-  }
+    try {
+        close();
+    } catch ( ... ) {
+    }
 }
 
 void FileSaver::open( QString filename )
 {
-  close();
-  
-  m_filename = filename;
-  
+    close();
+
+    m_filename = filename;
+
 #ifdef UNIX_SAFETY
-  m_file.setFileName( filename + c_suffix );
+    m_file.setFileName( filename + c_suffix );
 #else
-  m_file.setFileName( filename );
+    m_file.setFileName( filename );
 #endif
 
-  if ( !m_file.open( QFile::WriteOnly ) )
-    throw std::runtime_error( m_file.errorString().toStdString() );
+    if ( !m_file.open( QFile::WriteOnly ) )
+        throw std::runtime_error( m_file.errorString().toStdString() );
 }
 
 void FileSaver::close()
 {
-  if ( !m_file.isOpen() )
-    return;
+    if ( !m_file.isOpen() )
+        return;
 
-  m_file.flush();
+    m_file.flush();
 
 #ifdef UNIX_SAFETY
-  if ( fsync( m_file.handle() ) == -1 )
-    throw_sys_error();
+    if ( fsync( m_file.handle() ) == -1 )
+        throw_sys_error();
 
-  if ( rename( QFile::encodeName( m_filename + c_suffix ).data(),
-               QFile::encodeName( m_filename ).data() ) == -1 )
-    throw_sys_error();
+    if ( rename( QFile::encodeName( m_filename + c_suffix ).data(),
+                 QFile::encodeName( m_filename ).data() ) == -1 )
+        throw_sys_error();
 #endif
 
-  m_file.close();
+    m_file.close();
 }

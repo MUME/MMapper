@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -48,42 +48,43 @@ class MumeClock;
 
 class ProxyThreader: public QThread
 {
-  public:
-    ProxyThreader(Proxy*);
+public:
+    ProxyThreader(Proxy *);
     ~ProxyThreader();
 
     void run();
 
-  protected:
+protected:
     Q_OBJECT
-        Proxy *m_proxy;
+    Proxy *m_proxy;
 };
 
 
 class Proxy : public QObject
 {
 
-  protected:
+protected:
     Q_OBJECT
 
-  public:
-    Proxy(MapData*, Mmapper2PathMachine*, CommandEvaluator*, PrespammedPath*, CGroup*, MumeClock*, qintptr & socketDescriptor, QString & host, int & port, bool threaded, QObject *parent);
+public:
+    Proxy(MapData *, Mmapper2PathMachine *, CommandEvaluator *, PrespammedPath *, CGroup *, MumeClock *,
+          qintptr &socketDescriptor, QString &host, int &port, bool threaded, QObject *parent);
     ~Proxy();
 
     void start();
 
-  public slots:
+public slots:
     void processMudStream();
     void processUserStream();
     void userTerminatedConnection();
     void mudTerminatedConnection();
 
-    void sendToMud(const QByteArray&);
-    void sendToUser(const QByteArray&);
+    void sendToMud(const QByteArray &);
+    void sendToUser(const QByteArray &);
 
-  signals:
+signals:
     void error(QTcpSocket::SocketError socketError);
-    void log(const QString&, const QString&);
+    void log(const QString &, const QString &);
     void doNotAcceptNewConnections();
     void doAcceptNewConnections();
 
@@ -91,12 +92,12 @@ class Proxy : public QObject
     void analyzeMudStream( const char *, int );
     void terminate();
 
-  private:
+private:
     bool init();
 
 #ifdef PROXY_STREAM_DEBUG_INPUT_TO_FILE
     QDataStream *debugStream;
-    QFile* file;
+    QFile *file;
 #endif
 
     int m_socketDescriptor;
@@ -110,12 +111,12 @@ class Proxy : public QObject
     TelnetFilter *m_filter;
     MumeXmlParser *m_parserXml;
 
-    MapData* m_mapData;
-    Mmapper2PathMachine* m_pathMachine;
-    CommandEvaluator* m_commandEvaluator;
-    PrespammedPath* m_prespammedPath;
-    CGroup* m_groupManager;
-    MumeClock* m_mumeClock;
+    MapData *m_mapData;
+    Mmapper2PathMachine *m_pathMachine;
+    CommandEvaluator *m_commandEvaluator;
+    PrespammedPath *m_prespammedPath;
+    CGroup *m_groupManager;
+    MumeClock *m_mumeClock;
 
     ProxyThreader *m_thread;
     bool m_threaded;

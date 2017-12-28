@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -27,49 +27,57 @@
 #include <stdlib.h>
 #include "coordinate.h"
 
-bool Coordinate::operator== (const Coordinate & other) const {
-  return (other.x == x && other.y == y && other.z == z);
+bool Coordinate::operator== (const Coordinate &other) const
+{
+    return (other.x == x && other.y == y && other.z == z);
 }
 
-bool Coordinate::operator!= (const Coordinate & other) const {
-  return (other.x != x || other.y != y || other.z != z);
+bool Coordinate::operator!= (const Coordinate &other) const
+{
+    return (other.x != x || other.y != y || other.z != z);
 }
 
-int Coordinate::distance(const Coordinate & other) const {
-  int ret = abs(x - other.x);
-  ret += abs(y - other.y);
-  ret += abs(z - other.z);
-  return ret;
+int Coordinate::distance(const Coordinate &other) const
+{
+    int ret = abs(x - other.x);
+    ret += abs(y - other.y);
+    ret += abs(z - other.z);
+    return ret;
 }
 
-void Coordinate::clear() {
-  x = 0;
-  y = 0;
-  z = 0;
+void Coordinate::clear()
+{
+    x = 0;
+    y = 0;
+    z = 0;
 }
 
-void Coordinate::operator+=(const Coordinate & other) {
-  x += other.x;
-  y += other.y;
-  z += other.z;
+void Coordinate::operator+=(const Coordinate &other)
+{
+    x += other.x;
+    y += other.y;
+    z += other.z;
 }
 
-void Coordinate::operator-=(const Coordinate & other) {
-  x -= other.x;
-  y -= other.y;
-  z -= other.z;
+void Coordinate::operator-=(const Coordinate &other)
+{
+    x -= other.x;
+    y -= other.y;
+    z -= other.z;
 }
 
-Coordinate Coordinate::operator+(const Coordinate & other) const {
-  Coordinate ret;
-  ret += *this;
-  ret += other;
-  return ret;
+Coordinate Coordinate::operator+(const Coordinate &other) const
+{
+    Coordinate ret;
+    ret += *this;
+    ret += other;
+    return ret;
 }
 
-Coordinate Coordinate::operator-(const Coordinate & other) const {
-  Coordinate ret;
-  ret += *this;
-  ret -= other;
-  return ret;
+Coordinate Coordinate::operator-(const Coordinate &other) const
+{
+    Coordinate ret;
+    ret += *this;
+    ret -= other;
+    return ret;
 }

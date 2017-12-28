@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -28,24 +28,24 @@
 
 #include "oldconnection.h"
 
-#define RSF_ROAD_N    	bit1 //road
-#define RSF_ROAD_S    	bit2
-#define RSF_ROAD_E    	bit3
-#define RSF_ROAD_W    	bit4
-#define RSF_ROAD_U    	bit5
-#define RSF_ROAD_D    	bit6
-#define RSF_EXIT_N 		bit7 //exits WITHOUT doors
-#define RSF_EXIT_S 		bit8
-#define RSF_EXIT_E 		bit9
-#define RSF_EXIT_W 		bit10
-#define RSF_EXIT_U 		bit11
-#define RSF_EXIT_D 		bit12
-#define RSF_DOOR_N 		bit13 //exits WITH doors
-#define RSF_DOOR_S 		bit14
-#define RSF_DOOR_E 		bit15
-#define RSF_DOOR_W 		bit16
-#define RSF_DOOR_U 		bit17
-#define RSF_DOOR_D 		bit18
+#define RSF_ROAD_N      bit1 //road
+#define RSF_ROAD_S      bit2
+#define RSF_ROAD_E      bit3
+#define RSF_ROAD_W      bit4
+#define RSF_ROAD_U      bit5
+#define RSF_ROAD_D      bit6
+#define RSF_EXIT_N      bit7 //exits WITHOUT doors
+#define RSF_EXIT_S      bit8
+#define RSF_EXIT_E      bit9
+#define RSF_EXIT_W      bit10
+#define RSF_EXIT_U      bit11
+#define RSF_EXIT_D      bit12
+#define RSF_DOOR_N      bit13 //exits WITH doors
+#define RSF_DOOR_S      bit14
+#define RSF_DOOR_E      bit15
+#define RSF_DOOR_W      bit16
+#define RSF_DOOR_U      bit17
+#define RSF_DOOR_D      bit18
 #define RSF_NO_MATCH_N      bit19 //do not match exit [dir]
 #define RSF_NO_MATCH_S      bit20
 #define RSF_NO_MATCH_E      bit21

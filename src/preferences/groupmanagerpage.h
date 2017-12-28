@@ -2,7 +2,7 @@
 **
 ** Authors:   Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -32,9 +32,9 @@ class CGroup;
 
 class GroupManagerPage : public QWidget, private Ui::GroupManagerPage
 {
-  Q_OBJECT
+    Q_OBJECT
 
-  public slots:
+public slots:
 
     void changeColorClicked();
     void charNameTextChanged();
@@ -42,15 +42,15 @@ class GroupManagerPage : public QWidget, private Ui::GroupManagerPage
     void remoteHostTextChanged();
     void remotePortValueChanged(int);
     void localPortValueChanged(int);
-    void localHostLinkActivated(const QString&);
+    void localHostLinkActivated(const QString &);
 
     void rulesWarningChanged(int);
 
-  public:
-    GroupManagerPage(CGroup*, QWidget *parent = 0);
+public:
+    GroupManagerPage(CGroup *, QWidget *parent = 0);
 
-  private:
-    CGroup* m_groupManager;
+private:
+    CGroup *m_groupManager;
 };
 
 

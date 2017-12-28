@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -45,113 +45,144 @@ class IntermediateNode;
 class RoomCollection;
 class Room;
 
-class FrontendAccessor {
-  public:
+class FrontendAccessor
+{
+public:
     virtual ~FrontendAccessor() {}
-    virtual void setFrontend(MapFrontend * in) ;
-  protected:
-    MapFrontend * m_frontend;
-    Map & map() ;
-    IntermediateNode & treeRoot() ;
-    std::vector<Room *> & roomIndex() ;
-    std::vector<RoomCollection *> & roomHomes() ;
-    std::stack<uint> & unusedIds() ;
-    AbstractRoomFactory * factory() ;
+    virtual void setFrontend(MapFrontend *in) ;
+protected:
+    MapFrontend *m_frontend;
+    Map &map() ;
+    IntermediateNode &treeRoot() ;
+    std::vector<Room *> &roomIndex() ;
+    std::vector<RoomCollection *> &roomHomes() ;
+    std::stack<uint> &unusedIds() ;
+    AbstractRoomFactory *factory() ;
 };
 
-class AbstractAction : public virtual FrontendAccessor {
-  public:
+class AbstractAction : public virtual FrontendAccessor
+{
+public:
     virtual void preExec(uint) {}
     virtual void exec(uint id) = 0;
-    virtual void insertAffected(uint id, std::set<uint> & affected)
-      {affected.insert(id);}
+    virtual void insertAffected(uint id, std::set<uint> &affected)
+    {
+        affected.insert(id);
+    }
 };
 
-class MapAction {
-  friend class MapFrontend;
-  public:
-    virtual void schedule(MapFrontend * in) = 0;
+class MapAction
+{
+    friend class MapFrontend;
+public:
+    virtual void schedule(MapFrontend *in) = 0;
     virtual ~MapAction() {}
-  protected:
+protected:
     virtual void exec() = 0;
-    virtual const std::set<uint> & getAffectedRooms() 
-      {return affectedRooms;}
+    virtual const std::set<uint> &getAffectedRooms()
+    {
+        return affectedRooms;
+    }
     std::set<uint> affectedRooms;
 };
 
-class SingleRoomAction : public MapAction {
-  public: 
-    SingleRoomAction(AbstractAction * ex, uint id);
-    void schedule(MapFrontend * in) {executor->setFrontend(in);}
-    virtual ~SingleRoomAction() {delete executor;}
-  protected:
-    virtual void exec() {executor->preExec(id); executor->exec(id);}
-    virtual const std::set<uint> & getAffectedRooms();
-  private:
+class SingleRoomAction : public MapAction
+{
+public:
+    SingleRoomAction(AbstractAction *ex, uint id);
+    void schedule(MapFrontend *in)
+    {
+        executor->setFrontend(in);
+    }
+    virtual ~SingleRoomAction()
+    {
+        delete executor;
+    }
+protected:
+    virtual void exec()
+    {
+        executor->preExec(id);
+        executor->exec(id);
+    }
+    virtual const std::set<uint> &getAffectedRooms();
+private:
     uint id;
-    AbstractAction * executor;
+    AbstractAction *executor;
 };
 
-class AddExit: public MapAction, public FrontendAccessor {
-  public:
-    void schedule(MapFrontend * in) {setFrontend(in);}
+class AddExit: public MapAction, public FrontendAccessor
+{
+public:
+    void schedule(MapFrontend *in)
+    {
+        setFrontend(in);
+    }
     AddExit(uint in_from, uint in_to, uint in_dir);
-  protected:
+protected:
     virtual void exec();
-		Room * tryExec();
+    Room *tryExec();
     uint from;
     uint to;
     uint dir;
 };
 
-class RemoveExit: public MapAction, public FrontendAccessor {
-  public:
+class RemoveExit: public MapAction, public FrontendAccessor
+{
+public:
     RemoveExit(uint from, uint to, uint dir);
-    void schedule(MapFrontend * in) {setFrontend(in);}
-  protected:
+    void schedule(MapFrontend *in)
+    {
+        setFrontend(in);
+    }
+protected:
     virtual void exec();
-		Room * tryExec();
+    Room *tryExec();
     uint from;
     uint to;
     uint dir;
 };
 
-class MakePermanent: public AbstractAction {
-  public:
+class MakePermanent: public AbstractAction
+{
+public:
     virtual void exec(uint id);
 };
 
 class UpdateRoomField : public virtual AbstractAction
 {
 public:
-  UpdateRoomField(const QVariant & update, uint fieldNum);
-  virtual void exec(uint id);
+    UpdateRoomField(const QVariant &update, uint fieldNum);
+    virtual void exec(uint id);
 protected:
-  const QVariant update;
-  const uint fieldNum;
+    const QVariant update;
+    const uint fieldNum;
 };
 
-class Update : public virtual AbstractAction {
-  public:
-    Update(ParseEvent * props);
+class Update : public virtual AbstractAction
+{
+public:
+    Update(ParseEvent *props);
     virtual void exec(uint id);
-  protected:
+protected:
     ParseEvent props;
 };
 
-class UpdatePartial :  public virtual Update,  public virtual UpdateRoomField {
-	public:
-		UpdatePartial(const QVariant & in_val, uint in_pos);
-		virtual void exec(uint id);
+class UpdatePartial :  public virtual Update,  public virtual UpdateRoomField
+{
+public:
+    UpdatePartial(const QVariant &in_val, uint in_pos);
+    virtual void exec(uint id);
 };
 
-class ExitsAffecter : public AbstractAction {
-  public:
-    virtual void insertAffected(uint id, std::set<uint> & affected);
+class ExitsAffecter : public AbstractAction
+{
+public:
+    virtual void insertAffected(uint id, std::set<uint> &affected);
 };
 
-class Remove : public ExitsAffecter {
-  protected:
+class Remove : public ExitsAffecter
+{
+protected:
     virtual void exec(uint id);
 };
 

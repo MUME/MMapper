@@ -36,15 +36,15 @@ class MumeClockWidget : public QWidget, private Ui::MumeClockWidget
 {
     Q_OBJECT
 public:
-    MumeClockWidget(MumeClock* clock = 0, QWidget *parent = 0);
+    MumeClockWidget(MumeClock *clock = 0, QWidget *parent = 0);
     ~MumeClockWidget();
 
 public slots:
     void updateLabel();
 
 private:
-    MumeClock* m_clock;
-    QTimer* m_timer;
+    MumeClock *m_clock;
+    QTimer *m_timer;
 
     MumeTime m_lastTime;
     MumeSeason m_lastSeason;

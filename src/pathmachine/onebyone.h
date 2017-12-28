@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -34,14 +34,16 @@ class RoomSignalHandler;
 class Room;
 class RoomAdmin;
 
-class OneByOne: public Experimenting {
-  public:
-    OneByOne(AbstractRoomFactory * factory, ParseEvent * event, PathParameters & in_params, RoomSignalHandler * handler);
-    void receiveRoom(RoomAdmin * admin, const Room * room);
-    void addPath(Path * path);
-  private:
-    ParseEvent * event;
-    RoomSignalHandler * handler;
+class OneByOne: public Experimenting
+{
+public:
+    OneByOne(AbstractRoomFactory *factory, ParseEvent *event, PathParameters &in_params,
+             RoomSignalHandler *handler);
+    void receiveRoom(RoomAdmin *admin, const Room *room);
+    void addPath(Path *path);
+private:
+    ParseEvent *event;
+    RoomSignalHandler *handler;
 };
 
 #endif

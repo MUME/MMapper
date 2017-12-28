@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -32,11 +32,13 @@
 #include <QObject>
 #include <QQueue>
 
-enum TelnetDataType { TDT_PROMPT, TDT_MENU_PROMPT, TDT_LOGIN, TDT_LOGIN_PASSWORD, 
-    TDT_CRLF, TDT_LFCR, TDT_LF, TDT_TELNET, TDT_DELAY, TDT_SPLIT, TDT_UNKNOWN };
+enum TelnetDataType { TDT_PROMPT, TDT_MENU_PROMPT, TDT_LOGIN, TDT_LOGIN_PASSWORD,
+                      TDT_CRLF, TDT_LFCR, TDT_LF, TDT_TELNET, TDT_DELAY, TDT_SPLIT, TDT_UNKNOWN
+                    };
 
 struct IncomingData {
-    IncomingData() {
+    IncomingData()
+    {
         type = TDT_PROMPT;
     }
     QByteArray line;
@@ -47,41 +49,43 @@ typedef QQueue<IncomingData> TelnetIncomingDataQueue;
 
 
 
-class TelnetFilter : public QObject {
-	
-	public:
-           TelnetFilter(QObject *parent);
-           ~TelnetFilter();
+class TelnetFilter : public QObject
+{
 
-	public slots:
-		void analyzeMudStream( const char * input, int length );
-		void analyzeUserStream( const char * input, int length );
-		
+public:
+    TelnetFilter(QObject *parent);
+    ~TelnetFilter();
 
-	signals:
-	  	void parseNewMudInputXml(IncomingData&);
-	  	void parseNewUserInputXml(IncomingData&);
+public slots:
+    void analyzeMudStream( const char *input, int length );
+    void analyzeUserStream( const char *input, int length );
 
-		//telnet
-		void sendToMud(const QByteArray&);
-		void sendToUser(const QByteArray&);
-		
-	private:
+
+signals:
+    void parseNewMudInputXml(IncomingData &);
+    void parseNewUserInputXml(IncomingData &);
+
+    //telnet
+    void sendToMud(const QByteArray &);
+    void sendToUser(const QByteArray &);
+
+private:
 
 #ifdef TELNET_STREAM_DEBUG_INPUT_TO_FILE
-	QDataStream *debugStream;
-	QFile* file;
+    QDataStream *debugStream;
+    QFile *file;
 #endif
 
-		Q_OBJECT
-		void dispatchTelnetStream(QByteArray& stream, IncomingData &m_incomingData, TelnetIncomingDataQueue &que);
+    Q_OBJECT
+    void dispatchTelnetStream(QByteArray &stream, IncomingData &m_incomingData,
+                              TelnetIncomingDataQueue &que);
 
-		static const QChar escChar;
+    static const QChar escChar;
 
-   		IncomingData m_userIncomingData;
-   		IncomingData m_mudIncomingData;
-        TelnetIncomingDataQueue m_mudIncomingQue;        
-        TelnetIncomingDataQueue m_userIncomingQue;
+    IncomingData m_userIncomingData;
+    IncomingData m_mudIncomingData;
+    TelnetIncomingDataQueue m_mudIncomingQue;
+    TelnetIncomingDataQueue m_userIncomingQue;
 };
 
 #endif

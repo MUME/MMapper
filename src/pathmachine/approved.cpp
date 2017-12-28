@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -30,49 +30,39 @@
 #include "roomadmin.h"
 #include "abstractroomfactory.h"
 
-void Approved::receiveRoom(RoomAdmin * sender, const Room * perhaps)
+void Approved::receiveRoom(RoomAdmin *sender, const Room *perhaps)
 {
-  if (matchedRoom == 0)
-  {
-    ComparisonResult indicator = factory->compare(perhaps, myEvent, matchingTolerance);
-    if (indicator != CR_DIFFERENT)
-    {
-      matchedRoom = perhaps;
-      owner = sender;
-      if (indicator == CR_TOLERANCE && myEvent->getNumSkipped() == 0)
-	update = true;
+    if (matchedRoom == 0) {
+        ComparisonResult indicator = factory->compare(perhaps, myEvent, matchingTolerance);
+        if (indicator != CR_DIFFERENT) {
+            matchedRoom = perhaps;
+            owner = sender;
+            if (indicator == CR_TOLERANCE && myEvent->getNumSkipped() == 0)
+                update = true;
+        } else {
+            sender->releaseRoom(this, perhaps->getId());
+        }
+    } else {
+        moreThanOne = true;
+        sender->releaseRoom(this, perhaps->getId());
     }
-    else
-    {
-      sender->releaseRoom(this, perhaps->getId());
-    }
-  }
-  else
-  {
-    moreThanOne = true;
-    sender->releaseRoom(this, perhaps->getId());
-  }
 }
 
 Approved::~Approved()
 {
-  if(owner)
-  {
-    if (moreThanOne)
-    {
-      owner->releaseRoom(this, matchedRoom->getId());
+    if (owner) {
+        if (moreThanOne) {
+            owner->releaseRoom(this, matchedRoom->getId());
+        } else {
+            owner->keepRoom(this, matchedRoom->getId());
+            if (update)
+                owner->scheduleAction(new SingleRoomAction(new Update( myEvent), matchedRoom->getId()));
+        }
     }
-    else
-    {
-      owner->keepRoom(this, matchedRoom->getId());
-      if (update)
-	owner->scheduleAction(new SingleRoomAction(new Update( myEvent), matchedRoom->getId()));
-    }
-  }
 }
 
 
-Approved::Approved(AbstractRoomFactory * in_factory, ParseEvent * event, int tolerance) :
+Approved::Approved(AbstractRoomFactory *in_factory, ParseEvent *event, int tolerance) :
     matchedRoom(0),
     myEvent(event),
     matchingTolerance(tolerance),
@@ -83,32 +73,31 @@ Approved::Approved(AbstractRoomFactory * in_factory, ParseEvent * event, int tol
 {}
 
 
-const Room * Approved::oneMatch()
+const Room *Approved::oneMatch()
 {
-  if (moreThanOne)
-    return 0;
-  else
-    return matchedRoom;
+    if (moreThanOne)
+        return 0;
+    else
+        return matchedRoom;
 }
 
 void Approved::reset()
 {
-  if(matchedRoom)
-  {
-    owner->releaseRoom(this, matchedRoom->getId());
-  }
-  update = false;
-  matchedRoom = 0;
-  moreThanOne = false;
-  owner = 0;
+    if (matchedRoom) {
+        owner->releaseRoom(this, matchedRoom->getId());
+    }
+    update = false;
+    matchedRoom = 0;
+    moreThanOne = false;
+    owner = 0;
 }
 
 
 
-RoomAdmin * Approved::getOwner()
+RoomAdmin *Approved::getOwner()
 {
-  if (moreThanOne)
-    return 0;
-  else
-    return owner;
+    if (moreThanOne)
+        return 0;
+    else
+        return owner;
 }

@@ -36,30 +36,84 @@ enum InfoMarkClass { MC_GENERIC, MC_HERB, MC_RIVER, MC_PLACE, MC_MOB, MC_COMMENT
 
 typedef QDateTime MarkerTimeStamp;
 
-class InfoMark {
+class InfoMark
+{
 
 public:
-    InfoMark(){ m_type = MT_TEXT; m_class = MC_GENERIC; m_rotationAngle = 0.0f; }
-    ~InfoMark(){};
+    InfoMark()
+    {
+        m_type = MT_TEXT;
+        m_class = MC_GENERIC;
+        m_rotationAngle = 0.0f;
+    }
+    ~InfoMark() {};
 
-    const InfoMarkName& getName() const { return m_name; }
-    const InfoMarkText& getText() const { return m_text; }
-    InfoMarkType getType() const { return m_type; }
-    InfoMarkClass getClass() const {return m_class; }
-    const Coordinate& getPosition1() const {return m_pos1;}
-    const Coordinate& getPosition2() const {return m_pos2;}
-    double getRotationAngle() const {return m_rotationAngle;}
-    const MarkerTimeStamp& getTimeStamp() const { return m_timeStamp; }
+    const InfoMarkName &getName() const
+    {
+        return m_name;
+    }
+    const InfoMarkText &getText() const
+    {
+        return m_text;
+    }
+    InfoMarkType getType() const
+    {
+        return m_type;
+    }
+    InfoMarkClass getClass() const
+    {
+        return m_class;
+    }
+    const Coordinate &getPosition1() const
+    {
+        return m_pos1;
+    }
+    const Coordinate &getPosition2() const
+    {
+        return m_pos2;
+    }
+    double getRotationAngle() const
+    {
+        return m_rotationAngle;
+    }
+    const MarkerTimeStamp &getTimeStamp() const
+    {
+        return m_timeStamp;
+    }
 
-    void setPosition1(Coordinate & pos) {m_pos1 = pos;}
-    void setPosition2(Coordinate & pos) {m_pos2 = pos;}
-    void setRotationAngle(double rotationAngle) {m_rotationAngle = rotationAngle;}
-    void setName(InfoMarkName name) { m_name = name; }
-    void setText(InfoMarkText text) { m_text = text; }
-    void setType(InfoMarkType type) { m_type = type; }
-    void setClass(InfoMarkClass markClass) { m_class = markClass; }
+    void setPosition1(Coordinate &pos)
+    {
+        m_pos1 = pos;
+    }
+    void setPosition2(Coordinate &pos)
+    {
+        m_pos2 = pos;
+    }
+    void setRotationAngle(double rotationAngle)
+    {
+        m_rotationAngle = rotationAngle;
+    }
+    void setName(InfoMarkName name)
+    {
+        m_name = name;
+    }
+    void setText(InfoMarkText text)
+    {
+        m_text = text;
+    }
+    void setType(InfoMarkType type)
+    {
+        m_type = type;
+    }
+    void setClass(InfoMarkClass markClass)
+    {
+        m_class = markClass;
+    }
 
-    void setTimeStamp(MarkerTimeStamp timeStamp) { m_timeStamp = timeStamp; }
+    void setTimeStamp(MarkerTimeStamp timeStamp)
+    {
+        m_timeStamp = timeStamp;
+    }
 
 private:
     InfoMarkName m_name;

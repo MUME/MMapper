@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -42,33 +42,36 @@ class MapAction;
 
 class RoomSignalHandler : public QObject
 {
-  Q_OBJECT
+    Q_OBJECT
 private:
 
-  std::map<const Room *, RoomAdmin *> owners;
-  std::map<const Room *, std::set<RoomRecipient *> > lockers;
-  std::map<const Room *, int> holdCount;
+    std::map<const Room *, RoomAdmin *> owners;
+    std::map<const Room *, std::set<RoomRecipient *> > lockers;
+    std::map<const Room *, int> holdCount;
 
 public:
-RoomSignalHandler(QObject * parent) : QObject(parent) {}
-  /* receiving from our clients: */
-  // hold the room, we don't know yet what to do, overrides release, re-caches if room was un-cached
-  void hold(const Room * room, RoomAdmin * owner, RoomRecipient * locker);
-  // room isn't needed anymore and can be deleted if no one else is holding it and no one else uncached it
-  void release(const Room * room);
-  // keep the room but un-cache it - overrides both hold and release
-  // toId is negative if no exit should be added, else it's the id of
-  // the room where the exit should lead
-  void keep(const Room * room, uint dir, uint fromId);
+    RoomSignalHandler(QObject *parent) : QObject(parent) {}
+    /* receiving from our clients: */
+    // hold the room, we don't know yet what to do, overrides release, re-caches if room was un-cached
+    void hold(const Room *room, RoomAdmin *owner, RoomRecipient *locker);
+    // room isn't needed anymore and can be deleted if no one else is holding it and no one else uncached it
+    void release(const Room *room);
+    // keep the room but un-cache it - overrides both hold and release
+    // toId is negative if no exit should be added, else it's the id of
+    // the room where the exit should lead
+    void keep(const Room *room, uint dir, uint fromId);
 
-  /* Sending to the rooms' owners:
-     keepRoom: keep the room, but we don't need it anymore for now
-     releaseRoom: delete the room, if you like */
+    /* Sending to the rooms' owners:
+       keepRoom: keep the room, but we don't need it anymore for now
+       releaseRoom: delete the room, if you like */
 
-  int getNumLockers(const Room * room) {return lockers[room].size();}
+    int getNumLockers(const Room *room)
+    {
+        return lockers[room].size();
+    }
 
 signals:
-  void scheduleAction(MapAction *);
+    void scheduleAction(MapAction *);
 };
 #ifdef DMALLOC
 #include <mpatrol.h>

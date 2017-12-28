@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -31,66 +31,72 @@
 #include <QColorDialog>
 
 GeneralPage::GeneralPage(QWidget *parent)
-  : QWidget(parent)
+    : QWidget(parent)
 {
-  setupUi(this);
-  connect( remoteName, SIGNAL( textChanged(const QString&) ), this, SLOT( remoteNameTextChanged(const QString&) )  );
-  connect( remotePort, SIGNAL( valueChanged(int) ), this, SLOT( remotePortValueChanged(int) )  );
-  connect( localPort, SIGNAL( valueChanged(int) ), this, SLOT( localPortValueChanged(int) )  );
+    setupUi(this);
+    connect( remoteName, SIGNAL( textChanged(const QString &) ), this,
+             SLOT( remoteNameTextChanged(const QString &) )  );
+    connect( remotePort, SIGNAL( valueChanged(int) ), this, SLOT( remotePortValueChanged(int) )  );
+    connect( localPort, SIGNAL( valueChanged(int) ), this, SLOT( localPortValueChanged(int) )  );
 
-  connect( changeColor, SIGNAL(clicked()),SLOT(changeColorClicked()));
-  connect( antialiasingSamplesComboBox, SIGNAL( currentTextChanged(const QString &) ), this, SLOT( antialiasingSamplesTextChanged(const QString&) )  );
-  connect( trilinearFilteringCheckBox, SIGNAL(stateChanged(int)),SLOT(trilinearFilteringStateChanged(int)));
+    connect( changeColor, SIGNAL(clicked()), SLOT(changeColorClicked()));
+    connect( antialiasingSamplesComboBox, SIGNAL( currentTextChanged(const QString &) ), this,
+             SLOT( antialiasingSamplesTextChanged(const QString &) )  );
+    connect( trilinearFilteringCheckBox, SIGNAL(stateChanged(int)),
+             SLOT(trilinearFilteringStateChanged(int)));
 
-  connect ( emulatedExits, SIGNAL(stateChanged(int)),SLOT(emulatedExitsStateChanged(int)));
-  connect ( updated, SIGNAL(stateChanged(int)),SLOT(updatedStateChanged(int)));
-  connect ( drawNotMappedExits, SIGNAL(stateChanged(int)),SLOT(drawNotMappedExitsStateChanged(int)));
-  connect ( drawNoMatchExits, SIGNAL(stateChanged(int)),SLOT(drawNoMatchExitsStateChanged(int)));
-  connect ( drawDoorNames, SIGNAL(stateChanged(int)),SLOT(drawDoorNamesStateChanged(int)));
-  connect ( drawUpperLayersTextured, SIGNAL(stateChanged(int)),SLOT(drawUpperLayersTexturedStateChanged(int)));
+    connect ( emulatedExits, SIGNAL(stateChanged(int)), SLOT(emulatedExitsStateChanged(int)));
+    connect ( updated, SIGNAL(stateChanged(int)), SLOT(updatedStateChanged(int)));
+    connect ( drawNotMappedExits, SIGNAL(stateChanged(int)), SLOT(drawNotMappedExitsStateChanged(int)));
+    connect ( drawNoMatchExits, SIGNAL(stateChanged(int)), SLOT(drawNoMatchExitsStateChanged(int)));
+    connect ( drawDoorNames, SIGNAL(stateChanged(int)), SLOT(drawDoorNamesStateChanged(int)));
+    connect ( drawUpperLayersTextured, SIGNAL(stateChanged(int)),
+              SLOT(drawUpperLayersTexturedStateChanged(int)));
 
-  connect( autoLoadFileName, SIGNAL( textChanged(const QString&) ), this, SLOT( autoLoadFileNameTextChanged(const QString&) )  );
-  connect( autoLoadCheck, SIGNAL(stateChanged(int)),SLOT(autoLoadCheckStateChanged(int)));
+    connect( autoLoadFileName, SIGNAL( textChanged(const QString &) ), this,
+             SLOT( autoLoadFileNameTextChanged(const QString &) )  );
+    connect( autoLoadCheck, SIGNAL(stateChanged(int)), SLOT(autoLoadCheckStateChanged(int)));
 
-  connect( sellectWorldFileButton, SIGNAL(clicked()), this, SLOT(selectWorldFileButtonClicked()));
+    connect( sellectWorldFileButton, SIGNAL(clicked()), this, SLOT(selectWorldFileButtonClicked()));
 
-  connect( displayMumeClockCheckBox, SIGNAL(stateChanged(int)),SLOT(displayMumeClockStateChanged(int)));
+    connect( displayMumeClockCheckBox, SIGNAL(stateChanged(int)),
+             SLOT(displayMumeClockStateChanged(int)));
 
-  remoteName->setText( Config().m_remoteServerName );
-  remotePort->setValue( Config().m_remotePort );
-  localPort->setValue( Config().m_localPort );
+    remoteName->setText( Config().m_remoteServerName );
+    remotePort->setValue( Config().m_remotePort );
+    localPort->setValue( Config().m_localPort );
 
-  colorLabel->setPalette(QPalette(Config().m_backgroundColor));
-  colorLabel->setAutoFillBackground(true);
-  int index = antialiasingSamplesComboBox->findText(QString::number(Config().m_antialiasingSamples));
-  if (index < 0) index = 0;
-  antialiasingSamplesComboBox->setCurrentIndex(index);
-  trilinearFilteringCheckBox->setChecked(Config().m_trilinearFiltering);
+    colorLabel->setPalette(QPalette(Config().m_backgroundColor));
+    colorLabel->setAutoFillBackground(true);
+    int index = antialiasingSamplesComboBox->findText(QString::number(Config().m_antialiasingSamples));
+    if (index < 0) index = 0;
+    antialiasingSamplesComboBox->setCurrentIndex(index);
+    trilinearFilteringCheckBox->setChecked(Config().m_trilinearFiltering);
 
-  emulatedExits->setChecked( Config().m_emulatedExits );
-  updated->setChecked( Config().m_showUpdated );
-  drawNotMappedExits->setChecked( Config().m_drawNotMappedExits );
-  drawNoMatchExits->setChecked( Config().m_drawNoMatchExits );
-  drawUpperLayersTextured->setChecked( Config().m_drawUpperLayersTextured );
-  drawDoorNames->setChecked( Config().m_drawDoorNames );
+    emulatedExits->setChecked( Config().m_emulatedExits );
+    updated->setChecked( Config().m_showUpdated );
+    drawNotMappedExits->setChecked( Config().m_drawNotMappedExits );
+    drawNoMatchExits->setChecked( Config().m_drawNoMatchExits );
+    drawUpperLayersTextured->setChecked( Config().m_drawUpperLayersTextured );
+    drawDoorNames->setChecked( Config().m_drawDoorNames );
 
-  autoLoadCheck->setChecked( Config().m_autoLoadWorld ); 
-  autoLoadFileName->setText( Config().m_autoLoadFileName );
+    autoLoadCheck->setChecked( Config().m_autoLoadWorld );
+    autoLoadFileName->setText( Config().m_autoLoadFileName );
 
-  displayMumeClockCheckBox->setChecked(Config().m_displayMumeClock);
+    displayMumeClockCheckBox->setChecked(Config().m_displayMumeClock);
 }
 
 void GeneralPage::changeColorClicked()
 {
-  const QColor newColor = QColorDialog::getColor(Config().m_backgroundColor, this);
-  if (newColor.isValid() && newColor != Config().m_backgroundColor) {
-    colorLabel->setPalette(QPalette(newColor));
-    colorLabel->setAutoFillBackground(true);
-    Config().m_backgroundColor = newColor;
-  }
+    const QColor newColor = QColorDialog::getColor(Config().m_backgroundColor, this);
+    if (newColor.isValid() && newColor != Config().m_backgroundColor) {
+        colorLabel->setPalette(QPalette(newColor));
+        colorLabel->setAutoFillBackground(true);
+        Config().m_backgroundColor = newColor;
+    }
 }
 
-void GeneralPage::antialiasingSamplesTextChanged(const QString&)
+void GeneralPage::antialiasingSamplesTextChanged(const QString &)
 {
     Config().m_antialiasingSamples = antialiasingSamplesComboBox->currentText().toInt();
 }
@@ -102,72 +108,72 @@ void GeneralPage::trilinearFilteringStateChanged(int)
 
 void GeneralPage::selectWorldFileButtonClicked()
 {
-  QString fileName = QFileDialog::getOpenFileName(this,"Choose map file ...","","MMapper2 (*.mm2);;MMapper (*.map)");
-  if (!fileName.isEmpty())
-  {
-    autoLoadFileName->setText( fileName );
-    Config().m_autoLoadFileName = fileName;  
-    autoLoadCheck->setChecked(true);        
-    Config().m_autoLoadWorld = true;
-  }
+    QString fileName = QFileDialog::getOpenFileName(this, "Choose map file ...", "",
+                                                    "MMapper2 (*.mm2);;MMapper (*.map)");
+    if (!fileName.isEmpty()) {
+        autoLoadFileName->setText( fileName );
+        Config().m_autoLoadFileName = fileName;
+        autoLoadCheck->setChecked(true);
+        Config().m_autoLoadWorld = true;
+    }
 }
 
-void GeneralPage::remoteNameTextChanged(const QString&)
+void GeneralPage::remoteNameTextChanged(const QString &)
 {
-  Config().m_remoteServerName = remoteName->text();       
+    Config().m_remoteServerName = remoteName->text();
 }
 
 void GeneralPage::remotePortValueChanged(int)
 {
-  Config().m_remotePort = remotePort->value();
+    Config().m_remotePort = remotePort->value();
 }
 
 void GeneralPage::localPortValueChanged(int)
 {
-  Config().m_localPort = localPort->value();
+    Config().m_localPort = localPort->value();
 }
 
 void GeneralPage::emulatedExitsStateChanged(int)
 {
-  Config().m_emulatedExits = emulatedExits->isChecked();
+    Config().m_emulatedExits = emulatedExits->isChecked();
 }
 
 void GeneralPage::updatedStateChanged(int)
 {
-  Config().m_showUpdated = updated->isChecked();
+    Config().m_showUpdated = updated->isChecked();
 }
 
 void GeneralPage::drawNotMappedExitsStateChanged(int)
 {
-  Config().m_drawNotMappedExits = drawNotMappedExits->isChecked();
+    Config().m_drawNotMappedExits = drawNotMappedExits->isChecked();
 }
 
 void GeneralPage::drawNoMatchExitsStateChanged(int)
 {
-  Config().m_drawNoMatchExits = drawNoMatchExits->isChecked();
+    Config().m_drawNoMatchExits = drawNoMatchExits->isChecked();
 }
 
 void GeneralPage::drawDoorNamesStateChanged(int)
 {
-  Config().m_drawDoorNames = drawDoorNames->isChecked();
+    Config().m_drawDoorNames = drawDoorNames->isChecked();
 }
 
 void GeneralPage::drawUpperLayersTexturedStateChanged(int)
 {
-  Config().m_drawUpperLayersTextured = drawUpperLayersTextured->isChecked();      
+    Config().m_drawUpperLayersTextured = drawUpperLayersTextured->isChecked();
 }
 
-void GeneralPage::autoLoadFileNameTextChanged(const QString&)
+void GeneralPage::autoLoadFileNameTextChanged(const QString &)
 {
-  Config().m_autoLoadFileName = autoLoadFileName->text();
+    Config().m_autoLoadFileName = autoLoadFileName->text();
 }
 
 void GeneralPage::autoLoadCheckStateChanged(int)
 {
-  Config().m_autoLoadWorld = autoLoadCheck->isChecked(); 
+    Config().m_autoLoadWorld = autoLoadCheck->isChecked();
 }
 
 void GeneralPage::displayMumeClockStateChanged(int)
 {
-  Config().m_displayMumeClock = displayMumeClockCheckBox->isChecked();
+    Config().m_displayMumeClock = displayMumeClockCheckBox->isChecked();
 }

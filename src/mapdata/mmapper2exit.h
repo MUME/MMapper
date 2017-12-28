@@ -33,8 +33,9 @@ class Exit;
 
 enum ExitType { ET_NORMAL, ET_LOOP, ET_ONEWAY, ET_UNDEFINED };
 
-enum ExitDirection { ED_NORTH=0, ED_SOUTH, ED_EAST, ED_WEST, ED_UP,
-			   ED_DOWN, ED_UNKNOWN, ED_NONE };
+enum ExitDirection { ED_NORTH = 0, ED_SOUTH, ED_EAST, ED_WEST, ED_UP,
+                     ED_DOWN, ED_UNKNOWN, ED_NONE
+                   };
 #define NUM_EXITS 7
 
 ExitDirection opposite(ExitDirection in);
@@ -71,20 +72,20 @@ enum ExitField {E_DOORNAME = 0, E_FLAGS, E_DOORFLAGS};
 typedef quint16 ExitFlags;
 typedef quint16 DoorFlags;
 
-ExitFlags getFlags(const Exit & e);
+ExitFlags getFlags(const Exit &e);
 
-DoorName getDoorName(const Exit & e);
+DoorName getDoorName(const Exit &e);
 
-DoorFlags getDoorFlags(const Exit & e);
+DoorFlags getDoorFlags(const Exit &e);
 
-void updateExit(Exit & e, ExitFlags flags);
+void updateExit(Exit &e, ExitFlags flags);
 
-void orExitFlags(Exit & e, ExitFlags flags);
+void orExitFlags(Exit &e, ExitFlags flags);
 
-void nandExitFlags(Exit & e, ExitFlags flags);
+void nandExitFlags(Exit &e, ExitFlags flags);
 
-void orDoorFlags(Exit & e, DoorFlags flags);
+void orDoorFlags(Exit &e, DoorFlags flags);
 
-void nandDoorFlags(Exit & e, DoorFlags flags);
+void nandDoorFlags(Exit &e, DoorFlags flags);
 
 #endif

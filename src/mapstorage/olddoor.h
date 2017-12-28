@@ -39,14 +39,31 @@
 typedef class QString DoorName;
 typedef quint16 DoorFlags;
 
-class Door {
+class Door
+{
 
 public:
-    Door (DoorName name = "", DoorFlags flags = 0){ m_name = name; m_flags = flags; }
-    DoorFlags getFlags() const { return m_flags; };
-    const DoorName& getName() const { return m_name; };
-    void setFlags(DoorFlags flags) { m_flags = flags; };
-    void setName(const DoorName & name) { m_name = name; };
+    Door (DoorName name = "", DoorFlags flags = 0)
+    {
+        m_name = name;
+        m_flags = flags;
+    }
+    DoorFlags getFlags() const
+    {
+        return m_flags;
+    };
+    const DoorName &getName() const
+    {
+        return m_name;
+    };
+    void setFlags(DoorFlags flags)
+    {
+        m_flags = flags;
+    };
+    void setName(const DoorName &name)
+    {
+        m_name = name;
+    };
 
 private:
     DoorName  m_name;

@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -37,17 +37,17 @@ class ParseEvent;
 class Mmapper2PathMachine : public PathMachine
 {
 private:
-  Q_OBJECT
-  Configuration & config;
-  
+    Q_OBJECT
+    Configuration &config;
+
 public slots:
-  void event(ParseEvent *);
-  
+    void event(ParseEvent *);
+
 public:
-  Mmapper2PathMachine();
-  
+    Mmapper2PathMachine();
+
 signals:
-  void log( const QString&, const QString& );
+    void log( const QString &, const QString & );
 };
 
 #endif

@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -30,8 +30,9 @@
 class RoomRecipient;
 class MapAction;
 
-class RoomAdmin {
-  public:
+class RoomAdmin
+{
+public:
     // removes the lock on a room
     // after the last lock is removed, the room is deleted
     virtual void releaseRoom(RoomRecipient *, unsigned int) = 0;
@@ -39,9 +40,9 @@ class RoomAdmin {
     // makes a lock on a room permanent and anonymous.
     // Like that the room can't be deleted via releaseRoom anymore.
     virtual void keepRoom(RoomRecipient *, unsigned int) = 0;
-    
-    virtual void scheduleAction(MapAction * action) = 0;
-    
+
+    virtual void scheduleAction(MapAction *action) = 0;
+
     virtual ~RoomAdmin() {};
 };
 

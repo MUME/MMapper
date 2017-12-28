@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -30,7 +30,7 @@ class Coordinate;
 
 /**
 represents a viewable Frustum in the coordinate system
- 
+
 @author alve,,,
 */
 
@@ -43,7 +43,7 @@ enum FrustumSide {
     F_TOP     = 3,        // The TOP side of the frustum
     F_BACK    = 4,        // The BACK side of the frustum
     F_FRONT   = 5         // The FRONT side of the frustum
-}; 
+};
 
 // Like above, instead of saying a number for the ABC and D of the plane, we
 // want to be more descriptive.
@@ -62,18 +62,18 @@ enum PlaneData {
 class Frustum
 {
 public:
-  Frustum();
+    Frustum();
 
-  ~Frustum();
-  
-  
-  bool PointInFrustum(Coordinate & c);
-  void rebuild(float * clip);
-  float getDistance(Coordinate & c, int side = F_FRONT);
+    ~Frustum();
+
+
+    bool PointInFrustum(Coordinate &c);
+    void rebuild(float *clip);
+    float getDistance(Coordinate &c, int side = F_FRONT);
 private:
-  //Coordinate center;
-  void NormalizePlane(int side);
-  float frustum[6][4];
+    //Coordinate center;
+    void NormalizePlane(int side);
+    float frustum[6][4];
 
 };
 

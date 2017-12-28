@@ -3,7 +3,7 @@
 ** Authors:   Azazello <lachupe@gmail.com>,
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -34,11 +34,14 @@ class CGroupCommunicator;
 
 class CGroupServer: public QTcpServer
 {
-  Q_OBJECT
+    Q_OBJECT
 
-      CGroupCommunicator *getCommunicator() { return (CGroupCommunicator *) parent(); }
-      QList<CGroupClient *> connections;
-  public:
+    CGroupCommunicator *getCommunicator()
+    {
+        return (CGroupCommunicator *) parent();
+    }
+    QList<CGroupClient *> connections;
+public:
     CGroupServer(int localPort, QObject *parent);
     virtual ~CGroupServer();
     void addClient(CGroupClient *client);
@@ -46,13 +49,13 @@ class CGroupServer: public QTcpServer
     void sendToAllExceptOne(CGroupClient *conn, QByteArray);
     void closeAll();
 
-  protected:
+protected:
     void incomingConnection(qintptr socketDescriptor);
 
-  public slots:
+public slots:
     void connectionClosed(CGroupClient *connection);
 
-  private:
+private:
 
 
 };

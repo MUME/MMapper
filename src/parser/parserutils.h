@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -29,10 +29,9 @@
 
 #include <QString>
 
-namespace ParserUtils
-{
-  QString& removeAnsiMarks(QString& str);
-  QString& latinToAscii(QString& str);
+namespace ParserUtils {
+QString &removeAnsiMarks(QString &str);
+QString &latinToAscii(QString &str);
 }
 
 #endif

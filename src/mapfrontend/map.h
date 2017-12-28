@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -41,27 +41,27 @@ class AbstractRoomFactory;
  */
 class Map
 {
-  public:
+public:
     bool defined(const Coordinate &c);
     Coordinate setNearest(const Coordinate &c, Room *room);
-    Room * get(const Coordinate &c);
-    void remove(const Coordinate & c);
+    Room *get(const Coordinate &c);
+    void remove(const Coordinate &c);
     void clear();
-    void getRooms(RoomOutStream & stream, const Coordinate & ulf, const Coordinate & lrb);
-    void fillArea(AbstractRoomFactory * factory, const Coordinate & ulf, const Coordinate & lrb);
+    void getRooms(RoomOutStream &stream, const Coordinate &ulf, const Coordinate &lrb);
+    void fillArea(AbstractRoomFactory *factory, const Coordinate &ulf, const Coordinate &lrb);
 
-  private:
+private:
     void set(const Coordinate &c, Room *room);
-    Coordinate getNearestFree(const Coordinate & c);
+    Coordinate getNearestFree(const Coordinate &c);
     std::map<int, std::map<int, std::map<int, Room *> > > m_map;
 };
 
 class CoordinateIterator
 {
-  public:
+public:
     CoordinateIterator() : threshold(1), state(7) {}
-    Coordinate & next();
-  private:
+    Coordinate &next();
+private:
     Coordinate c;
     int threshold;
     int state;

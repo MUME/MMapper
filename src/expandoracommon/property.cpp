@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -28,13 +28,13 @@
 
 using namespace std;
 
-Property::Property(const QByteArray & in_data) :
+Property::Property(const QByteArray &in_data) :
     ListCycler<char, QByteArray>(in_data),
     m_skipped(false)
 {
 }
 
-const char * Property::rest() const
+const char *Property::rest() const
 {
     if (m_skipped)
         throw runtime_error("can't get a string from a SKIPPED property");
@@ -42,6 +42,7 @@ const char * Property::rest() const
     else return constData() + pos;
 }
 
-bool Property::isSkipped() const {
+bool Property::isSkipped() const
+{
     return m_skipped;
 }

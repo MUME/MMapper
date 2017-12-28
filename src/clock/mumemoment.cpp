@@ -43,7 +43,8 @@ MumeMoment::MumeMoment(int year, int month, int day, int hour, int minute)
 }
 
 MumeMoment::MumeMoment(int secsSinceMumeStartEpoch)
-{   // https://github.com/iheartdisraptor/mume/blob/master/mudlet/scrolls/Clock/lua/clock.lua
+{
+    // https://github.com/iheartdisraptor/mume/blob/master/mudlet/scrolls/Clock/lua/clock.lua
     int mumeTimeYears = (secsSinceMumeStartEpoch / MUME_MINUTES_PER_YEAR);
     m_year = MUME_START_YEAR + mumeTimeYears;
 
@@ -56,20 +57,22 @@ MumeMoment::MumeMoment(int secsSinceMumeStartEpoch)
     int mumeTimeMinusYearsMonthsAndDays = mumeTimeMinusYearsAndMonths - m_day * MUME_MINUTES_PER_DAY;
     m_hour = mumeTimeMinusYearsMonthsAndDays / MUME_MINUTES_PER_HOUR;
 
-    int mumeTimeMinusYearsMonthDaysAndMinutes = mumeTimeMinusYearsMonthsAndDays - m_hour * MUME_MINUTES_PER_HOUR;
+    int mumeTimeMinusYearsMonthDaysAndMinutes = mumeTimeMinusYearsMonthsAndDays - m_hour *
+                                                MUME_MINUTES_PER_HOUR;
     m_minute = mumeTimeMinusYearsMonthsAndDays <= 0 ? 0 : mumeTimeMinusYearsMonthDaysAndMinutes;
 }
 
 int MumeMoment::toSeconds()
 {
     return m_minute
-            + m_hour * MUME_MINUTES_PER_HOUR
-            + m_day * MUME_MINUTES_PER_DAY
-            + m_month * MUME_MINUTES_PER_MONTH
-            + (m_year - MUME_START_YEAR) * MUME_MINUTES_PER_YEAR;
+           + m_hour * MUME_MINUTES_PER_HOUR
+           + m_day * MUME_MINUTES_PER_DAY
+           + m_month * MUME_MINUTES_PER_MONTH
+           + (m_year - MUME_START_YEAR) * MUME_MINUTES_PER_YEAR;
 }
 
-MumeSeason MumeMoment::toSeason() {
+MumeSeason MumeMoment::toSeason()
+{
     switch (m_month) {
     case MumeClock::Afteryule:
     case MumeClock::Solmath:
@@ -92,7 +95,8 @@ MumeSeason MumeMoment::toSeason() {
     };
 }
 
-MumeTime MumeMoment::toTimeOfDay() {
+MumeTime MumeMoment::toTimeOfDay()
+{
     int dawn = MumeClock::m_dawnHour[m_month];
     int dusk = MumeClock::m_duskHour[m_month];
     if (m_hour == dawn)

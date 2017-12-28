@@ -3,7 +3,7 @@
 ** Authors:   Azazello <lachupe@gmail.com>,
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -36,25 +36,29 @@ class CGroupClient;
 // draft for no peer
 class CGroupDraftConnection : public QObject
 {
-  Q_OBJECT
-  public:
+    Q_OBJECT
+public:
     CGroupDraftConnection() {}
     virtual ~CGroupDraftConnection() {}
 };
 
 class CGroupCommunicator : public QObject
 {
-  Q_OBJECT
-      int type;
+    Q_OBJECT
+    int type;
 
-  enum Messages { NONE, ACK,
-    REQ_VERSION, REQ_ACK, REQ_LOGIN, REQ_INFO,
-    PROT_VERSION, GTELL,
-    STATE_LOGGED, STATE_KICKED,
-    ADD_CHAR, REMOVE_CHAR, UPDATE_CHAR, RENAME_CHAR };
+    enum Messages { NONE, ACK,
+                    REQ_VERSION, REQ_ACK, REQ_LOGIN, REQ_INFO,
+                    PROT_VERSION, GTELL,
+                    STATE_LOGGED, STATE_KICKED,
+                    ADD_CHAR, REMOVE_CHAR, UPDATE_CHAR, RENAME_CHAR
+                  };
 
     QObject *peer;  // server or client
-    CGroup *getGroup() { return reinterpret_cast<CGroup*>( parent() ); }
+    CGroup *getGroup()
+    {
+        return reinterpret_cast<CGroup *>( parent() );
+    }
 
     void connectionClosed(CGroupClient *connection);
     void connectionEstablished(CGroupClient *connection);
@@ -86,7 +90,10 @@ public:
     virtual ~CGroupCommunicator();
 
     void changeType(int newState);
-    int getType() {return type; }
+    int getType()
+    {
+        return type;
+    }
     void sendCharUpdate(CGroupClient *conn, QDomNode blob);
     void sendCharUpdate(QDomNode blob);
     bool isConnected();
@@ -95,17 +102,17 @@ public:
     void renameConnection(QByteArray oldName, QByteArray newName);
     void sendUpdateName(QByteArray oldName, QByteArray newName);
 
-    void sendLog(const QString&);
+    void sendLog(const QString &);
 
-  public slots:
+public slots:
     void connectionStateChanged(CGroupClient *connection);
-    void errorInConnection(CGroupClient *connection, const QString&);
+    void errorInConnection(CGroupClient *connection, const QString &);
     void serverStartupFailed();
     void incomingData(CGroupClient *connection, QByteArray data);
     void sendGTell(QByteArray tell);
     void relayMessage(CGroupClient *connection, int message, QDomNode node);
 
-  signals:
+signals:
     void typeChanged(int type);
 
 };

@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -38,30 +38,36 @@ class RoomAdmin;
 class RoomPropertySetterSlave : public RoomRecipient
 {
 private:
-	AbstractAction * action;
+    AbstractAction *action;
 public:
-	RoomPropertySetterSlave(AbstractAction * in_action) : action(in_action) {}
-	void receiveRoom(RoomAdmin *, const Room *);
-	bool getResult() {return !action;}
+    RoomPropertySetterSlave(AbstractAction *in_action) : action(in_action) {}
+    void receiveRoom(RoomAdmin *, const Room *);
+    bool getResult()
+    {
+        return !action;
+    }
 };
 
 class RoomPropertySetter : public Component
 {
 private:
-	Q_OBJECT
-	QMap<QByteArray, uint> propPositions;
-	QMap<QByteArray, uint> fieldValues;
+    Q_OBJECT
+    QMap<QByteArray, uint> propPositions;
+    QMap<QByteArray, uint> fieldValues;
 
 public:
-	RoomPropertySetter();
-	virtual Qt::ConnectionType requiredConnectionType(const QString &) {return Qt::DirectConnection;}
-	
+    RoomPropertySetter();
+    virtual Qt::ConnectionType requiredConnectionType(const QString &)
+    {
+        return Qt::DirectConnection;
+    }
+
 public slots:
-	void parseProperty(const QByteArray &, const Coordinate &);
-	
+    void parseProperty(const QByteArray &, const Coordinate &);
+
 signals:
-	void sendToUser(const QByteArray&);
-	void lookingForRooms(RoomRecipient *,const Coordinate &);
+    void sendToUser(const QByteArray &);
+    void lookingForRooms(RoomRecipient *, const Coordinate &);
 };
 
 #endif

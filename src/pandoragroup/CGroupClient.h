@@ -3,7 +3,7 @@
 ** Authors:   Azazello <lachupe@gmail.com>,
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -32,19 +32,19 @@ class CGroupCommunicator;
 
 class CGroupClient : public QTcpSocket
 {
-  Q_OBJECT
+    Q_OBJECT
 
-  int connectionState;
-  int protocolState;
+    int connectionState;
+    int protocolState;
 
-  CGroupCommunicator* getParent();
-  void linkSignals();
+    CGroupCommunicator *getParent();
+    void linkSignals();
 
-  QByteArray buffer;
-  int currentMessageLen;
+    QByteArray buffer;
+    int currentMessageLen;
 
-  void cutMessageFromBuffer();
-  public:
+    void cutMessageFromBuffer();
+public:
     enum ConnectionStates { Closed, Connecting, Connected, Quiting};
     enum ProtocolStates { Idle, AwaitingLogin, AwaitingInfo, Logged };
 
@@ -54,21 +54,27 @@ class CGroupClient : public QTcpSocket
 
     void setSocket(qintptr socketDescriptor);
 
-    int getConnectionState() {return connectionState; }
+    int getConnectionState()
+    {
+        return connectionState;
+    }
     void setConnectionState(int val);
     void setProtocolState(int val);
-    int getProtocolState() { return protocolState; }
+    int getProtocolState()
+    {
+        return protocolState;
+    }
     void sendData(QByteArray data);
 
-  protected slots:
+protected slots:
     void lostConnection();
     void connectionEstablished();
     void errorHandler ( QAbstractSocket::SocketError socketError );
     void dataIncoming();
 
-  signals:
+signals:
 
- private:
+private:
     QByteArray _host;
     int _remotePort;
 

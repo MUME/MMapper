@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -28,16 +28,16 @@
 #include "coordinate.h"
 #include <assert.h>
 
-void RoomSelection::receiveRoom(RoomAdmin * admin, const Room * aRoom) 
+void RoomSelection::receiveRoom(RoomAdmin *admin, const Room *aRoom)
 {
-  assert(admin == m_admin);
-  insert(aRoom->getId(), aRoom);
+    assert(admin == m_admin);
+    insert(aRoom->getId(), aRoom);
 }
-bool RoomSelection::containsAll(const RoomSelection * other) const
+bool RoomSelection::containsAll(const RoomSelection *other) const
 {
-  QMapIterator<uint, const Room*> i(*other);
-  while(i.hasNext()) {
-    if (!contains(i.key())) return false;
-  }
-  return true;
+    QMapIterator<uint, const Room *> i(*other);
+    while (i.hasNext()) {
+        if (!contains(i.key())) return false;
+    }
+    return true;
 }

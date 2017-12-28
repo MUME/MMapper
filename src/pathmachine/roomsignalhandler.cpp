@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -33,47 +33,43 @@
 using namespace Qt;
 using namespace std;
 
-void RoomSignalHandler::hold(const Room * room, RoomAdmin * owner, RoomRecipient * locker)
+void RoomSignalHandler::hold(const Room *room, RoomAdmin *owner, RoomRecipient *locker)
 {
-  owners[room] = owner;
-  if (lockers[room].empty()) holdCount[room] = 0;
-  lockers[room].insert(locker);
-  ++holdCount[room];
+    owners[room] = owner;
+    if (lockers[room].empty()) holdCount[room] = 0;
+    lockers[room].insert(locker);
+    ++holdCount[room];
 }
 
-void RoomSignalHandler::release(const Room * room)
+void RoomSignalHandler::release(const Room *room)
 {
-  assert(holdCount[room]);
-  if (--holdCount[room] == 0)
-  {
-    RoomAdmin * rcv = owners[room];
+    assert(holdCount[room]);
+    if (--holdCount[room] == 0) {
+        RoomAdmin *rcv = owners[room];
 
-    for(set<RoomRecipient *>::iterator i = lockers[room].begin(); i != lockers[room].end(); ++i)
-    {
-      if (*i) rcv->releaseRoom(*i, room->getId());
+        for (set<RoomRecipient *>::iterator i = lockers[room].begin(); i != lockers[room].end(); ++i) {
+            if (*i) rcv->releaseRoom(*i, room->getId());
+        }
+
+        lockers.erase(room);
+        owners.erase(room);
+    }
+}
+
+void RoomSignalHandler::keep(const Room *room, uint dir, uint fromId)
+{
+    assert(holdCount[room]);
+
+    RoomAdmin *rcv = owners[room];
+
+    if ((uint)room->getExitsList().size() > dir) {
+        emit scheduleAction(new AddExit(fromId, room->getId(), dir));
     }
 
-    lockers.erase(room);
-    owners.erase(room);
-  }
-}
-
-void RoomSignalHandler::keep(const Room * room, uint dir, uint fromId)
-{
-  assert(holdCount[room]);
-
-  RoomAdmin * rcv = owners[room];
-
-  if ((uint)room->getExitsList().size() > dir)
-  {
-    emit scheduleAction(new AddExit(fromId, room->getId(), dir));
-  }
-
-  if (!lockers[room].empty())
-  {
-    RoomRecipient * locker = *(lockers[room].begin());
-    rcv->keepRoom(locker, room->getId());
-    lockers[room].erase(locker);
-  }
-  release(room);
+    if (!lockers[room].empty()) {
+        RoomRecipient *locker = *(lockers[room].begin());
+        rcv->keepRoom(locker, room->getId());
+        lockers[room].erase(locker);
+    }
+    release(room);
 }

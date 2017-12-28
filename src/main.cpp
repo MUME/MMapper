@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -35,33 +35,32 @@
 
 int main(int argc, char **argv)
 {
-  QApplication    app(argc, argv);
+    QApplication    app(argc, argv);
 
 #if QT_VERSION >= 0x050100
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
 #endif
 
-  Config().read();
+    Config().read();
 #ifdef WITH_SPLASH
-  QPixmap pixmap(":/pixmaps/splash20.png");
-  QSplashScreen *splash = new QSplashScreen(pixmap);
-  splash->showMessage(QString("%1").arg(MMAPPER_VERSION, -9),
-                      Qt::AlignBottom | Qt::AlignRight,
-                      Qt::yellow);
-  splash->show();
+    QPixmap pixmap(":/pixmaps/splash20.png");
+    QSplashScreen *splash = new QSplashScreen(pixmap);
+    splash->showMessage(QString("%1").arg(MMAPPER_VERSION, -9),
+                        Qt::AlignBottom | Qt::AlignRight,
+                        Qt::yellow);
+    splash->show();
 #endif
-  MainWindow     mw;
-  if (Config().m_autoLoadWorld && Config().m_autoLoadFileName!="")
-  {
-	mw.loadFile(Config().m_autoLoadFileName);
-  }
-  mw.show();
+    MainWindow     mw;
+    if (Config().m_autoLoadWorld && Config().m_autoLoadFileName != "") {
+        mw.loadFile(Config().m_autoLoadFileName);
+    }
+    mw.show();
 #ifdef WITH_SPLASH
-  splash->finish(&mw);
-  delete splash;
+    splash->finish(&mw);
+    delete splash;
 #endif
-  int ret = app.exec();
-  Config().write();
-  return ret;
+    int ret = app.exec();
+    Config().write();
+    return ret;
 }
 

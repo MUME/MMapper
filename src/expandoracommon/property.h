@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -29,13 +29,14 @@
 #include <QByteArray>
 #include "listcycler.h"
 
-class Property : public ListCycler<char, QByteArray> {
+class Property : public ListCycler<char, QByteArray>
+{
 public:
 
     Property(bool in_skipped = false) : m_skipped(in_skipped) {}
-    Property(const QByteArray & in_data);
+    Property(const QByteArray &in_data);
 
-    const char * rest() const;
+    const char *rest() const;
     bool isSkipped() const ;
 
 private:

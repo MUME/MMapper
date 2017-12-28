@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -29,54 +29,46 @@
 
 using namespace std;
 
-IntermediateNode::IntermediateNode(ParseEvent * event)
+IntermediateNode::IntermediateNode(ParseEvent *event)
 {
-  Property * prop = event->next();
+    Property *prop = event->next();
 
-  if (prop == 0 || prop->isSkipped())
-  {
-    myChars = new char[1];
-    myChars[0] = 0;
-  }
-  else
-  {
-    myChars = new char[strlen(prop->rest()) + 1];
-    strcpy(myChars, prop->rest());
-  }
-  rooms = 0;
-  event->prev();
+    if (prop == 0 || prop->isSkipped()) {
+        myChars = new char[1];
+        myChars[0] = 0;
+    } else {
+        myChars = new char[strlen(prop->rest()) + 1];
+        strcpy(myChars, prop->rest());
+    }
+    rooms = 0;
+    event->prev();
 }
 
-RoomCollection * IntermediateNode::insertRoom(ParseEvent * event)
+RoomCollection *IntermediateNode::insertRoom(ParseEvent *event)
 {
 
-  if (event->next() == 0)
-  {
-    if (rooms == 0) rooms = new RoomCollection;
-    return rooms;
-  }
-  else if (event->current()->isSkipped()) return 0;
+    if (event->next() == 0) {
+        if (rooms == 0) rooms = new RoomCollection;
+        return rooms;
+    } else if (event->current()->isSkipped()) return 0;
 
-  return SearchTreeNode::insertRoom(event);
+    return SearchTreeNode::insertRoom(event);
 }
 
 
-void IntermediateNode::getRooms(RoomOutStream & stream, ParseEvent * event)
+void IntermediateNode::getRooms(RoomOutStream &stream, ParseEvent *event)
 {
-  if (event->next() == 0)
-  {
-    for (set<Room *>::iterator i = rooms->begin(); i != rooms->end(); ++i)
-      stream << *i;
-  }
-  else if (event->current()->isSkipped()) 
-    SearchTreeNode::skipDown(stream, event);
-  else
-  {
-    SearchTreeNode::getRooms(stream, event);
-  }
+    if (event->next() == 0) {
+        for (set<Room *>::iterator i = rooms->begin(); i != rooms->end(); ++i)
+            stream << *i;
+    } else if (event->current()->isSkipped())
+        SearchTreeNode::skipDown(stream, event);
+    else {
+        SearchTreeNode::getRooms(stream, event);
+    }
 }
 
-void IntermediateNode::skipDown(RoomOutStream & stream, ParseEvent * event)
+void IntermediateNode::skipDown(RoomOutStream &stream, ParseEvent *event)
 {
-  getRooms(stream, event);
+    getRooms(stream, event);
 }

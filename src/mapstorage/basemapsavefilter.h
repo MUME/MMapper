@@ -2,7 +2,7 @@
 **
 ** Authors:   Thomas Equeter <waba@waba.be>
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -33,45 +33,44 @@ class MapData;
 class Room;
 class ProgressCounter;
 
-/*! \brief Filters 
+/*! \brief Filters
  *
  */
 class BaseMapSaveFilter : public RoomRecipient
 {
 public:
-  enum Action
-  {
-    PASS,
-    ALTER,
-    REJECT
-  };
+    enum Action {
+        PASS,
+        ALTER,
+        REJECT
+    };
 
 private:
-  class Impl;
-  std::auto_ptr<Impl> m_impl;
+    class Impl;
+    std::auto_ptr<Impl> m_impl;
 
-  // Disallow copying because auto_ptr is used
-  BaseMapSaveFilter( const BaseMapSaveFilter & );
-  BaseMapSaveFilter & operator=( const BaseMapSaveFilter & );
+    // Disallow copying because auto_ptr is used
+    BaseMapSaveFilter( const BaseMapSaveFilter & );
+    BaseMapSaveFilter &operator=( const BaseMapSaveFilter & );
 
-  virtual void receiveRoom(RoomAdmin *, const Room * room);
+    virtual void receiveRoom(RoomAdmin *, const Room *room);
 
 public:
-  BaseMapSaveFilter();
-  virtual ~BaseMapSaveFilter();
+    BaseMapSaveFilter();
+    virtual ~BaseMapSaveFilter();
 
-  //! The map data to work on
-  void setMapData( MapData *mapData );
-  //! How much steps (rooms) to go through in prepare() (requires mapData)
-  uint prepareCount();
-  //! How much rooms will be accepted (PASS or ALTER)
-  uint acceptedRoomsCount();
-  //! First pass over the world's room (requires mapData)
-  void prepare( ProgressCounter *counter );
-  //! Determines the fate of this room (requires prepare())
-  Action filter( const Room *room );
-  //! Returns an altered Room (requires action == ALTER)
-  Room alteredRoom( const Room *room );
+    //! The map data to work on
+    void setMapData( MapData *mapData );
+    //! How much steps (rooms) to go through in prepare() (requires mapData)
+    uint prepareCount();
+    //! How much rooms will be accepted (PASS or ALTER)
+    uint acceptedRoomsCount();
+    //! First pass over the world's room (requires mapData)
+    void prepare( ProgressCounter *counter );
+    //! Determines the fate of this room (requires prepare())
+    Action filter( const Room *room );
+    //! Returns an altered Room (requires action == ALTER)
+    Room alteredRoom( const Room *room );
 };
 
 #endif /* INCLUDED_BASEMAPSAVEFILTER_H */
