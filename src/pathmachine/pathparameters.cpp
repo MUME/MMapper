@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -26,14 +26,14 @@
 #include "pathparameters.h"
 
 PathParameters::PathParameters() :
-  acceptBestRelative(10.0),
-  acceptBestAbsolute(3.0),
-  newRoomPenalty(5.0),
-  multipleConnectionsPenalty(2.0),
-  correctPositionBonus(5.1),
-  maxPaths(500.0),
-  matchingTolerance(5),
-  maxSkipped(1)
+    acceptBestRelative(10.0),
+    acceptBestAbsolute(3.0),
+    newRoomPenalty(5.0),
+    multipleConnectionsPenalty(2.0),
+    correctPositionBonus(5.1),
+    maxPaths(500.0),
+    matchingTolerance(5),
+    maxSkipped(1)
 {
 }
 

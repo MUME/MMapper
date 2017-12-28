@@ -3,7 +3,7 @@
 ** Authors:   Kalev Lember <kalev@smartlink.ee>,
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -41,35 +41,35 @@ class FindRoomsDlg : public QDialog, public RoomRecipient, private Ui::FindRooms
     Q_OBJECT
 
 signals:
-  //void lookingForRooms(RoomRecipient *,ParseEvent *);
-  void center(qint32 x, qint32 y);
-  void log( const QString&, const QString& );
-  //void newRoomSelection(const RoomSelection*);
+    //void lookingForRooms(RoomRecipient *,ParseEvent *);
+    void center(qint32 x, qint32 y);
+    void log( const QString &, const QString & );
+    //void newRoomSelection(const RoomSelection*);
 
 public slots:
-  void closeEvent( QCloseEvent * event );
+    void closeEvent( QCloseEvent *event );
 
 public:
-  FindRoomsDlg(MapData*, QWidget *parent = 0);
-  void receiveRoom(RoomAdmin* sender, const Room* room);
+    FindRoomsDlg(MapData *, QWidget *parent = 0);
+    void receiveRoom(RoomAdmin *sender, const Room *room);
 
 private:
-  MapData* m_mapData;
-  QTreeWidgetItem* item;
-  QShortcut *m_showSelectedRoom;
+    MapData *m_mapData;
+    QTreeWidgetItem *item;
+    QShortcut *m_showSelectedRoom;
 
-  void adjustResultTable();
+    void adjustResultTable();
 
-  static const QString nullString;
-  RoomAdmin* m_admin;
-  const RoomSelection* m_roomSelection;
+    static const QString nullString;
+    RoomAdmin *m_admin;
+    const RoomSelection *m_roomSelection;
 
 private slots:
-  void on_lineEdit_textChanged();
-  void findClicked();
-  void enableFindButton(const QString &text);
-  void itemDoubleClicked(QTreeWidgetItem *item);
-  void showSelectedRoom();
+    void on_lineEdit_textChanged();
+    void findClicked();
+    void enableFindButton(const QString &text);
+    void itemDoubleClicked(QTreeWidgetItem *item);
+    void showSelectedRoom();
 };
 
 #endif

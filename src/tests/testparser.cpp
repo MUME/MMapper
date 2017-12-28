@@ -14,7 +14,7 @@ TestParser::~TestParser()
 {
 }
 
-int convertMumeRealTime(const QString& realTime)
+int convertMumeRealTime(const QString &realTime)
 {
     // Real time is Wed Dec 20 07:03:27 2017 UTC.
     QString dateString = realTime.mid(13, 24);

@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -46,83 +46,96 @@ class Frustum;
 
 class MapFrontend : public Component, public RoomAdmin
 {
-Q_OBJECT
-friend class FrontendAccessor;
+    Q_OBJECT
+    friend class FrontendAccessor;
 
 protected:
 
-  IntermediateNode treeRoot;
-  Map map;
-  std::vector<Room *> roomIndex;
-  std::stack<uint>  unusedIds;
-  std::map<uint, std::set<MapAction *> > actionSchedule;
-  std::vector<RoomCollection *> roomHomes;
-  std::vector<std::set<RoomRecipient *> > locks;
+    IntermediateNode treeRoot;
+    Map map;
+    std::vector<Room *> roomIndex;
+    std::stack<uint>  unusedIds;
+    std::map<uint, std::set<MapAction *> > actionSchedule;
+    std::vector<RoomCollection *> roomHomes;
+    std::vector<std::set<RoomRecipient *> > locks;
 
-  uint greatestUsedId;
-  QMutex mapLock;
-  Coordinate ulf;
-  Coordinate lrb;
-  AbstractRoomFactory * factory;
+    uint greatestUsedId;
+    QMutex mapLock;
+    Coordinate ulf;
+    Coordinate lrb;
+    AbstractRoomFactory *factory;
 
-  void executeActions(uint roomId);
-  void executeAction(MapAction * action);
-  bool isExecutable(MapAction * action);
-  void removeAction(MapAction * action);
+    void executeActions(uint roomId);
+    void executeAction(MapAction *action);
+    bool isExecutable(MapAction *action);
+    void removeAction(MapAction *action);
 
-  virtual uint assignId(Room * room, RoomCollection * roomHome);
-  virtual void checkSize(const Coordinate &);
+    virtual uint assignId(Room *room, RoomCollection *roomHome);
+    virtual void checkSize(const Coordinate &);
 
 
 public:
-  MapFrontend(AbstractRoomFactory * factory);
-  virtual ~MapFrontend();
-  virtual void clear();
-  void removeSecretDoorNames();
-  void block();
-  void unblock();
-  virtual void checkSize();
-  virtual Qt::ConnectionType requiredConnectionType(const QString &) {return Qt::DirectConnection;}
-  // removes the lock on a room
-  // after the last lock is removed, the room is deleted
-  virtual void releaseRoom(RoomRecipient *, uint);
+    MapFrontend(AbstractRoomFactory *factory);
+    virtual ~MapFrontend();
+    virtual void clear();
+    void removeSecretDoorNames();
+    void block();
+    void unblock();
+    virtual void checkSize();
+    virtual Qt::ConnectionType requiredConnectionType(const QString &)
+    {
+        return Qt::DirectConnection;
+    }
+    // removes the lock on a room
+    // after the last lock is removed, the room is deleted
+    virtual void releaseRoom(RoomRecipient *, uint);
 
-  // makes a lock on a room permanent and anonymous.
-  // Like that the room can't be deleted via releaseRoom anymore.
-  virtual void keepRoom(RoomRecipient *, uint);
+    // makes a lock on a room permanent and anonymous.
+    // Like that the room can't be deleted via releaseRoom anymore.
+    virtual void keepRoom(RoomRecipient *, uint);
 
-  virtual void lockRoom(RoomRecipient *, uint);
+    virtual void lockRoom(RoomRecipient *, uint);
 
-  virtual uint createEmptyRoom(const Coordinate &);
+    virtual uint createEmptyRoom(const Coordinate &);
 
-  virtual void insertPredefinedRoom(Room *);
+    virtual void insertPredefinedRoom(Room *);
 
-  virtual uint getMaxId() {return greatestUsedId;}
+    virtual uint getMaxId()
+    {
+        return greatestUsedId;
+    }
 
-  virtual const Coordinate & getUlf() const {return ulf;}
+    virtual const Coordinate &getUlf() const
+    {
+        return ulf;
+    }
 
-  virtual const Coordinate & getLrb() const {return lrb;}
+    virtual const Coordinate &getLrb() const
+    {
+        return lrb;
+    }
 public slots:
-  // looking for rooms leads to a bunch of foundRoom() signals
-  virtual void lookingForRooms(RoomRecipient *,ParseEvent *);
-  virtual void lookingForRooms(RoomRecipient *,uint); // by id
-  virtual void lookingForRooms(RoomRecipient *,const Coordinate &);
-  virtual void lookingForRooms(RoomRecipient *,Frustum *);
-  virtual void lookingForRooms(RoomRecipient *,const Coordinate &,const Coordinate &); // by bounding box
+    // looking for rooms leads to a bunch of foundRoom() signals
+    virtual void lookingForRooms(RoomRecipient *, ParseEvent *);
+    virtual void lookingForRooms(RoomRecipient *, uint); // by id
+    virtual void lookingForRooms(RoomRecipient *, const Coordinate &);
+    virtual void lookingForRooms(RoomRecipient *, Frustum *);
+    virtual void lookingForRooms(RoomRecipient *, const Coordinate &,
+                                 const Coordinate &); // by bounding box
 
-  // createRoom creates a room without a lock
-  // it will get deleted if no one looks for it for a certain time
-  virtual void createRoom(ParseEvent *, const Coordinate &);
-  virtual void createEmptyRooms(const Coordinate &,const Coordinate &);
+    // createRoom creates a room without a lock
+    // it will get deleted if no one looks for it for a certain time
+    virtual void createRoom(ParseEvent *, const Coordinate &);
+    virtual void createEmptyRooms(const Coordinate &, const Coordinate &);
 
-  virtual void scheduleAction(MapAction * action);
+    virtual void scheduleAction(MapAction *action);
 
 signals:
 
-  // this signal is sent out if a room is deleted. So any clients still
-  // working on this room can start some emergency action.
-  void mapSizeChanged(const Coordinate &, const Coordinate &);
-  void clearingMap();
+    // this signal is sent out if a room is deleted. So any clients still
+    // working on this room can start some emergency action.
+    void mapSizeChanged(const Coordinate &, const Coordinate &);
+    void clearingMap();
 };
 
 

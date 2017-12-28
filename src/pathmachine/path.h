@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -49,34 +49,50 @@ class AbstractRoomFactory;
 class Path
 {
 public:
-  Path(const Room * room, RoomAdmin * owner, RoomRecipient * locker, RoomSignalHandler * signaler, uint direction = UINT_MAX);
-  void insertChild(Path * p);
-  void removeChild(Path * p);
-  void setParent(Path * p);
-  bool hasChildren() const {return (!children.empty());}
-  const Room * getRoom() const {return room;}
+    Path(const Room *room, RoomAdmin *owner, RoomRecipient *locker, RoomSignalHandler *signaler,
+         uint direction = UINT_MAX);
+    void insertChild(Path *p);
+    void removeChild(Path *p);
+    void setParent(Path *p);
+    bool hasChildren() const
+    {
+        return (!children.empty());
+    }
+    const Room *getRoom() const
+    {
+        return room;
+    }
 
-  //new Path is created, distance between rooms is calculated and probability is set accordingly
-  Path * fork(const Room * room, Coordinate & expectedCoordinate, 
-              RoomAdmin * owner, PathParameters params, RoomRecipient * locker, 
-              uint dir, AbstractRoomFactory * factory);
-  double getProb() const {return probability;}
-  void approve();
+    //new Path is created, distance between rooms is calculated and probability is set accordingly
+    Path *fork(const Room *room, Coordinate &expectedCoordinate,
+               RoomAdmin *owner, PathParameters params, RoomRecipient *locker,
+               uint dir, AbstractRoomFactory *factory);
+    double getProb() const
+    {
+        return probability;
+    }
+    void approve();
 
-  // deletes this path and all parents up to the next branch
-  void deny();
-  void setProb(double p) {probability = p;}
+    // deletes this path and all parents up to the next branch
+    void deny();
+    void setProb(double p)
+    {
+        probability = p;
+    }
 
-  Path * getParent() const {return parent;}
+    Path *getParent() const
+    {
+        return parent;
+    }
 
 private:
-  Path * parent;
-  std::set<Path *> children;
-  double probability;
-  const Room * room; // in fact a path only has one room, one parent and some children (forks).
-  RoomSignalHandler * signaler;
-  uint dir;
-  ~Path() {}
+    Path *parent;
+    std::set<Path *> children;
+    double probability;
+    const Room *room;  // in fact a path only has one room, one parent and some children (forks).
+    RoomSignalHandler *signaler;
+    uint dir;
+    ~Path() {}
 };
 
 #endif

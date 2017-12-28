@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -35,20 +35,21 @@ class RoomOutStream;
  * keeps a substring of the properties, and a table of other RoomSearchNodes pointing to the possible following characters
  */
 
-class SearchTreeNode {
-	protected:
-		bool ownerOfChars;
-		TinyList<SearchTreeNode *> * children; 
-		char * myChars;
-	public:
-		SearchTreeNode(ParseEvent * event, TinyList<SearchTreeNode *> * children = 0);
-		SearchTreeNode(char * string = 0, TinyList<SearchTreeNode *> * children = 0);
-		virtual ~SearchTreeNode();
-		virtual void getRooms(RoomOutStream & stream, ParseEvent * event);
-		virtual RoomCollection * insertRoom(ParseEvent * event);
-		
-		virtual void setChild(char, SearchTreeNode *);
-		virtual void skipDown(RoomOutStream & stream, ParseEvent * event);
+class SearchTreeNode
+{
+protected:
+    bool ownerOfChars;
+    TinyList<SearchTreeNode *> *children;
+    char *myChars;
+public:
+    SearchTreeNode(ParseEvent *event, TinyList<SearchTreeNode *> *children = 0);
+    SearchTreeNode(char *string = 0, TinyList<SearchTreeNode *> *children = 0);
+    virtual ~SearchTreeNode();
+    virtual void getRooms(RoomOutStream &stream, ParseEvent *event);
+    virtual RoomCollection *insertRoom(ParseEvent *event);
+
+    virtual void setChild(char, SearchTreeNode *);
+    virtual void skipDown(RoomOutStream &stream, ParseEvent *event);
 };
 
 

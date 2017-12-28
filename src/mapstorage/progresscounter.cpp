@@ -2,7 +2,7 @@
 **
 ** Authors:   Thomas Equeter <waba@waba.be>
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -26,13 +26,13 @@
 
 ProgressCounter::ProgressCounter()
 {
-  reset();
+    reset();
 }
 
 ProgressCounter::ProgressCounter( QObject *parent )
- : QObject( parent )
+    : QObject( parent )
 {
-  reset();
+    reset();
 }
 
 ProgressCounter::~ProgressCounter()
@@ -41,23 +41,22 @@ ProgressCounter::~ProgressCounter()
 
 void ProgressCounter::increaseTotalStepsBy( quint32 steps )
 {
-  m_totalSteps += steps;
-  step( 0 );
+    m_totalSteps += steps;
+    step( 0 );
 }
 
 void ProgressCounter::step( quint32 steps )
 {
-  m_steps += steps;
-  quint32 percentage = 100 * m_steps / m_totalSteps;
-  if ( percentage != m_percentage )
-  {
-    m_percentage = percentage;
-    emit onPercentageChanged( percentage );
-  }
+    m_steps += steps;
+    quint32 percentage = 100 * m_steps / m_totalSteps;
+    if ( percentage != m_percentage ) {
+        m_percentage = percentage;
+        emit onPercentageChanged( percentage );
+    }
 }
 
 void ProgressCounter::reset()
 {
-  m_totalSteps = m_steps = m_percentage = 0;
+    m_totalSteps = m_steps = m_percentage = 0;
 }
 

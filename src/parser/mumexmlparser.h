@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -36,23 +36,23 @@ enum XmlMode            {XML_NONE, XML_ROOM, XML_NAME, XML_DESCRIPTION, XML_EXIT
 
 class MumeXmlParser : public AbstractParser
 {
-  Q_OBJECT
+    Q_OBJECT
 
-  public:
+public:
 
-    MumeXmlParser(MapData*, MumeClock*, QObject *parent = 0);
+    MumeXmlParser(MapData *, MumeClock *, QObject *parent = 0);
     ~MumeXmlParser();
 
-    void parse(const QByteArray& );
+    void parse(const QByteArray & );
 
-  public slots:
-    void parseNewMudInput(IncomingData& que);
+public slots:
+    void parseNewMudInput(IncomingData &que);
 
-  protected:
+protected:
 
 #ifdef XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
     QDataStream *debugStream;
-    QFile* file;
+    QFile *file;
 #endif
 
     static const QByteArray greaterThanChar;
@@ -62,15 +62,15 @@ class MumeXmlParser : public AbstractParser
     static const QByteArray ampersand;
     static const QByteArray ampersandTemplate;
 
-    void parseMudCommands(QString& str);
+    void parseMudCommands(QString &str);
 
-    QByteArray characters(QByteArray& ch);
-    bool element( const QByteArray& );
+    QByteArray characters(QByteArray &ch);
+    bool element( const QByteArray & );
 
     quint32 m_roomDescLines;
     bool m_readingStaticDescLines;
 
-  //void checkqueue(CommandIdType dir = CID_UNKNOWN);
+    //void checkqueue(CommandIdType dir = CID_UNKNOWN);
     void move();
     QByteArray m_tempCharacters;
     QByteArray m_tempTag;
@@ -82,7 +82,7 @@ class MumeXmlParser : public AbstractParser
 
     XmlMode m_xmlMode;
 
-  signals:
+signals:
     void sendScoreLineEvent(QByteArray);
     void mumeTime(QString);
 };

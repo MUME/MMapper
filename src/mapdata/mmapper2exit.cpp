@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -29,78 +29,116 @@
 
 #include <QString>
 
-ExitFlags getFlags(const Exit & e) 
-  {return e[E_FLAGS].toUInt();}
+ExitFlags getFlags(const Exit &e)
+{
+    return e[E_FLAGS].toUInt();
+}
 
-DoorName getDoorName(const Exit & e)
-  {return e[E_DOORNAME].toString();}
+DoorName getDoorName(const Exit &e)
+{
+    return e[E_DOORNAME].toString();
+}
 
-DoorFlags getDoorFlags(const Exit & e)
-  {return e[E_DOORFLAGS].toUInt();}
+DoorFlags getDoorFlags(const Exit &e)
+{
+    return e[E_DOORFLAGS].toUInt();
+}
 
-void orExitFlags(Exit & e, ExitFlags flags)
-  {e[E_FLAGS] = getFlags(e) | flags;}
-  
-void nandExitFlags(Exit & e, ExitFlags flags)
-  {e[E_FLAGS] = getFlags(e) & ~flags;}
+void orExitFlags(Exit &e, ExitFlags flags)
+{
+    e[E_FLAGS] = getFlags(e) | flags;
+}
 
-void orDoorFlags(Exit & e, DoorFlags flags)
-  {e[E_DOORFLAGS] = getDoorFlags(e) | flags;}
-  
-void nandDoorFlags(Exit & e, DoorFlags flags)
-  {e[E_DOORFLAGS] = getDoorFlags(e) & ~flags;}
+void nandExitFlags(Exit &e, ExitFlags flags)
+{
+    e[E_FLAGS] = getFlags(e) & ~flags;
+}
+
+void orDoorFlags(Exit &e, DoorFlags flags)
+{
+    e[E_DOORFLAGS] = getDoorFlags(e) | flags;
+}
+
+void nandDoorFlags(Exit &e, DoorFlags flags)
+{
+    e[E_DOORFLAGS] = getDoorFlags(e) & ~flags;
+}
 
 
-uint opposite(uint in) {
-  return opposite((ExitDirection)in);
+uint opposite(uint in)
+{
+    return opposite((ExitDirection)in);
 }
 
 ExitDirection opposite(ExitDirection in)
 {
-  switch (in)
-  {
-  case ED_NORTH: return ED_SOUTH;
-  case ED_SOUTH: return ED_NORTH;
-  case ED_WEST: return ED_EAST;
-  case ED_EAST: return ED_WEST;
-  case ED_UP: return ED_DOWN;
-  case ED_DOWN: return ED_UP;
-  default: return ED_UNKNOWN;
-  }
-}
- 
-
-void updateExit(Exit & e, ExitFlags flags ) {
-  ExitFlags diff = flags ^ getFlags(e);
-  if (diff) {
-    flags |= EF_NO_MATCH;
-    flags |= diff;
-    e[E_FLAGS] = flags;
-  }
+    switch (in) {
+    case ED_NORTH:
+        return ED_SOUTH;
+    case ED_SOUTH:
+        return ED_NORTH;
+    case ED_WEST:
+        return ED_EAST;
+    case ED_EAST:
+        return ED_WEST;
+    case ED_UP:
+        return ED_DOWN;
+    case ED_DOWN:
+        return ED_UP;
+    default:
+        return ED_UNKNOWN;
+    }
 }
 
 
-ExitDirection dirForChar(char dir) {
-	switch (dir) {
-		case 'n': return ED_NORTH;
-		case 's': return ED_SOUTH;
-		case 'e': return ED_EAST;
-		case 'w': return ED_WEST;
-		case 'u': return ED_UP;
-		case 'd': return ED_DOWN;
-		default: return ED_UNKNOWN;
-	}
+void updateExit(Exit &e, ExitFlags flags )
+{
+    ExitFlags diff = flags ^ getFlags(e);
+    if (diff) {
+        flags |= EF_NO_MATCH;
+        flags |= diff;
+        e[E_FLAGS] = flags;
+    }
 }
 
-char charForDir(ExitDirection dir) {
-  switch (dir) {
-  case ED_NORTH: return 'n';
-  case ED_SOUTH: return 's';
-  case ED_EAST: return 'e';
-  case ED_WEST: return 'w';
-  case ED_UP: return 'u';
-  case ED_DOWN: return 'd';
-  default: return '?';
-  }
+
+ExitDirection dirForChar(char dir)
+{
+    switch (dir) {
+    case 'n':
+        return ED_NORTH;
+    case 's':
+        return ED_SOUTH;
+    case 'e':
+        return ED_EAST;
+    case 'w':
+        return ED_WEST;
+    case 'u':
+        return ED_UP;
+    case 'd':
+        return ED_DOWN;
+    default:
+        return ED_UNKNOWN;
+    }
+}
+
+char charForDir(ExitDirection dir)
+{
+    switch (dir) {
+    case ED_NORTH:
+        return 'n';
+    case ED_SOUTH:
+        return 's';
+    case ED_EAST:
+        return 'e';
+    case ED_WEST:
+        return 'w';
+    case ED_UP:
+        return 'u';
+    case ED_DOWN:
+        return 'd';
+    default:
+        return '?';
+    }
 }
 

@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -28,14 +28,16 @@
 #include "abstractroomfactory.h"
 #include "roomrecipient.h"
 
-RoomLocker::RoomLocker(RoomRecipient * forward, MapFrontend * frontend, AbstractRoomFactory * in_factory, ParseEvent * compare) :
-        recipient(forward),
-        data(frontend),
-        factory(in_factory),
-comparator(compare) {}
+RoomLocker::RoomLocker(RoomRecipient *forward, MapFrontend *frontend,
+                       AbstractRoomFactory *in_factory, ParseEvent *compare) :
+    recipient(forward),
+    data(frontend),
+    factory(in_factory),
+    comparator(compare) {}
 
 
-RoomOutStream & RoomLocker::operator<<(const Room * room) {
+RoomOutStream &RoomLocker::operator<<(const Room *room)
+{
     if (factory && comparator) {
         if (factory->compareWeakProps(room, comparator) != CR_DIFFERENT) {
             data->lockRoom(recipient, room->getId());

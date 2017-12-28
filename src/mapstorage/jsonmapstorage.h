@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -39,18 +39,25 @@ class QJsonObject;
  * - v1/roomindex/ss.json (room sums -> zone coords).
  * - v1/zone/xx-yy.json (full info on the NxN rooms zone at coords xx,yy).
  */
-class JsonMapStorage : public AbstractMapStorage {
+class JsonMapStorage : public AbstractMapStorage
+{
 
     Q_OBJECT
 
 public:
-    JsonMapStorage(MapData&, const QString&);
+    JsonMapStorage(MapData &, const QString &);
     ~JsonMapStorage();
 
 private:
     JsonMapStorage(); // Disabled
-    virtual bool canLoad() {return false;};
-    virtual bool canSave() {return true;};
+    virtual bool canLoad()
+    {
+        return false;
+    };
+    virtual bool canSave()
+    {
+        return true;
+    };
 
     virtual void newData ();
     virtual bool loadData();

@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -33,23 +33,24 @@ class RoomAdmin;
 class AbstractRoomFactory;
 class ParseEvent;
 
-class Approved : public RoomRecipient {
- private:
-   const Room * matchedRoom;
-   ParseEvent * myEvent;
-   int matchingTolerance;   
-   RoomAdmin * owner;
-   bool moreThanOne;
-   bool update;
-   AbstractRoomFactory * factory;
+class Approved : public RoomRecipient
+{
+private:
+    const Room *matchedRoom;
+    ParseEvent *myEvent;
+    int matchingTolerance;
+    RoomAdmin *owner;
+    bool moreThanOne;
+    bool update;
+    AbstractRoomFactory *factory;
 
- public:
-   Approved(AbstractRoomFactory * in_factory, ParseEvent * event, int tolerance);
-   ~Approved();
-   void receiveRoom(RoomAdmin *, const Room *);
-   const Room * oneMatch();
-   RoomAdmin * getOwner(); 
-   void reset();
+public:
+    Approved(AbstractRoomFactory *in_factory, ParseEvent *event, int tolerance);
+    ~Approved();
+    void receiveRoom(RoomAdmin *, const Room *);
+    const Room *oneMatch();
+    RoomAdmin *getOwner();
+    void reset();
 };
 
 #endif

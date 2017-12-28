@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -28,41 +28,47 @@
 
 using namespace std;
 
-ParseEvent::ParseEvent(const ParseEvent & other) : ListCycler<Property *, deque<Property *> >(), optional(other.optional), moveType(other.moveType), numSkipped(other.numSkipped) {
-  for (unsigned int i = 0; i < other.size(); ++i)
-    push_back(new Property(*other[i]));
-  pos = other.pos;
-  
-}
-  
-ParseEvent & ParseEvent::operator=(const ParseEvent & other) {
-  if (&other == this) return *this;
-  moveType = other.moveType;
-  pos = other.pos;
-  optional = other.optional;
-  numSkipped = other.numSkipped;
-  for (deque<Property *>::iterator i = begin(); i != end(); ++i)
-    delete *i;
-  for (unsigned int i = 0; i < other.size(); ++i)
-    push_back(new Property(*other[i]));
-  return *this;
+ParseEvent::ParseEvent(const ParseEvent &other) : ListCycler<Property *, deque<Property *> >(),
+    optional(other.optional), moveType(other.moveType), numSkipped(other.numSkipped)
+{
+    for (unsigned int i = 0; i < other.size(); ++i)
+        push_back(new Property(*other[i]));
+    pos = other.pos;
+
 }
 
-ParseEvent::~ParseEvent() {
-  for (deque<Property *>::iterator i = begin(); i != end(); ++i)
-    delete *i;
+ParseEvent &ParseEvent::operator=(const ParseEvent &other)
+{
+    if (&other == this) return *this;
+    moveType = other.moveType;
+    pos = other.pos;
+    optional = other.optional;
+    numSkipped = other.numSkipped;
+    for (deque<Property *>::iterator i = begin(); i != end(); ++i)
+        delete *i;
+    for (unsigned int i = 0; i < other.size(); ++i)
+        push_back(new Property(*other[i]));
+    return *this;
 }
 
-void ParseEvent::reset() {
-  ListCycler<Property *, deque<Property *> >::reset();
-  for (deque<Property *>::iterator i = begin(); i != end(); ++i)
-    (*i)->reset();
+ParseEvent::~ParseEvent()
+{
+    for (deque<Property *>::iterator i = begin(); i != end(); ++i)
+        delete *i;
 }
 
-void ParseEvent::countSkipped() {
-  numSkipped = 0;
-  for (deque<Property *>::iterator i = begin(); i != end(); ++i) {
-    if ((*i)->isSkipped()) numSkipped++;
-  }
+void ParseEvent::reset()
+{
+    ListCycler<Property *, deque<Property *> >::reset();
+    for (deque<Property *>::iterator i = begin(); i != end(); ++i)
+        (*i)->reset();
+}
+
+void ParseEvent::countSkipped()
+{
+    numSkipped = 0;
+    for (deque<Property *>::iterator i = begin(); i != end(); ++i) {
+        if ((*i)->isSkipped()) numSkipped++;
+    }
 }
 

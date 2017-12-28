@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -27,18 +27,24 @@
 #include "configuration.h"
 
 PathmachinePage::PathmachinePage(QWidget *parent)
-        : QWidget(parent)
+    : QWidget(parent)
 {
     setupUi(this);
 
-    connect ( acceptBestRelativeDoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(acceptBestRelativeDoubleSpinBoxValueChanged(double)) );
-    connect ( acceptBestAbsoluteDoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(acceptBestAbsoluteDoubleSpinBoxValueChanged(double)) );
-    connect ( newRoomPenaltyDoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(newRoomPenaltyDoubleSpinBoxValueChanged(double)) );
-    connect ( correctPositionBonusDoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(correctPositionBonusDoubleSpinBoxValueChanged(double)) );
-    connect ( multipleConnectionsPenaltyDoubleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(multipleConnectionsPenaltyDoubleSpinBoxValueChanged(double)) );
+    connect ( acceptBestRelativeDoubleSpinBox, SIGNAL(valueChanged(double)), this,
+              SLOT(acceptBestRelativeDoubleSpinBoxValueChanged(double)) );
+    connect ( acceptBestAbsoluteDoubleSpinBox, SIGNAL(valueChanged(double)), this,
+              SLOT(acceptBestAbsoluteDoubleSpinBoxValueChanged(double)) );
+    connect ( newRoomPenaltyDoubleSpinBox, SIGNAL(valueChanged(double)), this,
+              SLOT(newRoomPenaltyDoubleSpinBoxValueChanged(double)) );
+    connect ( correctPositionBonusDoubleSpinBox, SIGNAL(valueChanged(double)), this,
+              SLOT(correctPositionBonusDoubleSpinBoxValueChanged(double)) );
+    connect ( multipleConnectionsPenaltyDoubleSpinBox, SIGNAL(valueChanged(double)), this,
+              SLOT(multipleConnectionsPenaltyDoubleSpinBoxValueChanged(double)) );
 
     connect ( maxPaths, SIGNAL(valueChanged(int)), this, SLOT(maxPathsValueChanged(int)) );
-    connect ( matchingToleranceSpinBox, SIGNAL(valueChanged(int)), this, SLOT(matchingToleranceSpinBoxValueChanged(int)) );
+    connect ( matchingToleranceSpinBox, SIGNAL(valueChanged(int)), this,
+              SLOT(matchingToleranceSpinBoxValueChanged(int)) );
 
     acceptBestRelativeDoubleSpinBox->setValue(Config().m_acceptBestRelative);
     acceptBestAbsoluteDoubleSpinBox->setValue(Config().m_acceptBestAbsolute);
@@ -51,36 +57,36 @@ PathmachinePage::PathmachinePage(QWidget *parent)
 
 void PathmachinePage::acceptBestRelativeDoubleSpinBoxValueChanged(double val)
 {
-  Config().m_acceptBestRelative = val;
+    Config().m_acceptBestRelative = val;
 }
 
 void PathmachinePage::acceptBestAbsoluteDoubleSpinBoxValueChanged(double val)
 {
-  Config().m_acceptBestAbsolute = val;
+    Config().m_acceptBestAbsolute = val;
 }
 
 void PathmachinePage::newRoomPenaltyDoubleSpinBoxValueChanged(double val)
 {
-  Config().m_newRoomPenalty = val;
+    Config().m_newRoomPenalty = val;
 }
 
 void PathmachinePage::correctPositionBonusDoubleSpinBoxValueChanged(double val)
 {
-  Config().m_correctPositionBonus = val;
+    Config().m_correctPositionBonus = val;
 }
 
 void PathmachinePage::multipleConnectionsPenaltyDoubleSpinBoxValueChanged(double val)
 {
-  Config().m_multipleConnectionsPenalty = val;
+    Config().m_multipleConnectionsPenalty = val;
 }
 
 void PathmachinePage::maxPathsValueChanged(int val)
 {
-  Config().m_maxPaths = val;
+    Config().m_maxPaths = val;
 }
 
 void PathmachinePage::matchingToleranceSpinBoxValueChanged(int val)
 {
-  Config().m_matchingTolerance = val;
+    Config().m_matchingTolerance = val;
 }
 

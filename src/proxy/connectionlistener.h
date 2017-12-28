@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -37,39 +37,53 @@ class PrespammedPath;
 class CGroup;
 class MumeClock;
 
-class ConnectionListener : public QTcpServer {
-  public:
-    ConnectionListener(MapData*, Mmapper2PathMachine*, CommandEvaluator*, PrespammedPath*, CGroup*, MumeClock*, QObject *parent);
+class ConnectionListener : public QTcpServer
+{
+public:
+    ConnectionListener(MapData *, Mmapper2PathMachine *, CommandEvaluator *, PrespammedPath *, CGroup *,
+                       MumeClock *, QObject *parent);
 
-    QString getRemoteHost() const {return m_remoteHost;}
-    void setRemoteHost(QString i) {m_remoteHost = i;}
-    int getRemotePort() const {return m_remotePort;}
-    void setRemotePort(int i) {m_remotePort = i;}
+    QString getRemoteHost() const
+    {
+        return m_remoteHost;
+    }
+    void setRemoteHost(QString i)
+    {
+        m_remoteHost = i;
+    }
+    int getRemotePort() const
+    {
+        return m_remotePort;
+    }
+    void setRemotePort(int i)
+    {
+        m_remotePort = i;
+    }
 
-  public slots:
+public slots:
     void doNotAcceptNewConnections();
     void doAcceptNewConnections();
 
-  signals:
-    void log(const QString&, const QString&);
+signals:
+    void log(const QString &, const QString &);
 
-  protected:
+protected:
     void incomingConnection(qintptr socketDescriptor);
 
-  private:
+private:
     Q_OBJECT
 
-        QString m_remoteHost;
+    QString m_remoteHost;
     int m_remotePort;
 
-    MapData* m_mapData;
-    Mmapper2PathMachine* m_pathMachine;
-    CommandEvaluator* m_commandEvaluator;
-    PrespammedPath* m_prespammedPath;
-    CGroup* m_groupManager;
-    MumeClock* m_mumeClock;
+    MapData *m_mapData;
+    Mmapper2PathMachine *m_pathMachine;
+    CommandEvaluator *m_commandEvaluator;
+    PrespammedPath *m_prespammedPath;
+    CGroup *m_groupManager;
+    MumeClock *m_mumeClock;
 
-        bool m_accept;
+    bool m_accept;
 };
 
 #endif

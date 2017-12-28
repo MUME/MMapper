@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -35,12 +35,12 @@ class RoomAdmin;
 class RoomSelection : public QMap<uint, const Room *>, public RoomRecipient
 {
 public:
-    RoomSelection(RoomAdmin * admin) : m_admin(admin) {}
-    void receiveRoom(RoomAdmin * admin,const Room * room);
-    bool containsAll(const RoomSelection * other) const;
-    
+    RoomSelection(RoomAdmin *admin) : m_admin(admin) {}
+    void receiveRoom(RoomAdmin *admin, const Room *room);
+    bool containsAll(const RoomSelection *other) const;
+
 private:
-    RoomAdmin * m_admin;
+    RoomAdmin *m_admin;
 };
 
 #endif

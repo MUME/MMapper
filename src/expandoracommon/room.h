@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -37,34 +37,73 @@ typedef QVectorIterator<Exit> ExitsListIterator;
 class Room : public QVector<QVariant>
 {
 protected:
-  uint id;
-  Coordinate position;
-  bool temporary;
-  bool upToDate;
-  ExitsList exits;
+    uint id;
+    Coordinate position;
+    bool temporary;
+    bool upToDate;
+    ExitsList exits;
 
 public:
-  virtual Exit & exit(uint dir){return exits[dir];}
-  ExitsList & getExitsList(){return exits;}
-  const ExitsList & getExitsList() const {return exits;}
-  virtual ~Room() {}
-  virtual void setId(uint in) {id = in;}
-  virtual void setPosition(const Coordinate & in_c) {position = in_c;}
-  virtual uint getId() const {return id;}
-  virtual const Coordinate & getPosition() const {return position;}
-  virtual bool isTemporary() const {return temporary;} // room is new if no exits are present
-  virtual void setPermanent() {temporary = false;}
-  virtual bool isUpToDate() const {return upToDate;}
-  virtual const Exit & exit(uint dir) const {return exits[dir];}  
-  virtual void setUpToDate() {upToDate = true;}
-  virtual void setOutDated() {upToDate = false;}
-  Room(uint numProps, uint numExits, uint numExitProps) : 
-    QVector<QVariant>(numProps), 
-    id(UINT_MAX),
-    temporary(true),
-    upToDate(false),
-    exits(numExits, numExitProps)
-  {}
+    virtual Exit &exit(uint dir)
+    {
+        return exits[dir];
+    }
+    ExitsList &getExitsList()
+    {
+        return exits;
+    }
+    const ExitsList &getExitsList() const
+    {
+        return exits;
+    }
+    virtual ~Room() {}
+    virtual void setId(uint in)
+    {
+        id = in;
+    }
+    virtual void setPosition(const Coordinate &in_c)
+    {
+        position = in_c;
+    }
+    virtual uint getId() const
+    {
+        return id;
+    }
+    virtual const Coordinate &getPosition() const
+    {
+        return position;
+    }
+    virtual bool isTemporary() const
+    {
+        return temporary;   // room is new if no exits are present
+    }
+    virtual void setPermanent()
+    {
+        temporary = false;
+    }
+    virtual bool isUpToDate() const
+    {
+        return upToDate;
+    }
+    virtual const Exit &exit(uint dir) const
+    {
+        return exits[dir];
+    }
+    virtual void setUpToDate()
+    {
+        upToDate = true;
+    }
+    virtual void setOutDated()
+    {
+        upToDate = false;
+    }
+    Room(uint numProps, uint numExits, uint numExitProps) :
+        QVector<QVariant>(numProps),
+        id(UINT_MAX),
+        temporary(true),
+        upToDate(false),
+        exits(numExits, numExitProps)
+    {}
 };
 
 

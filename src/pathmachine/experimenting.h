@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -43,23 +43,25 @@ class AbstractRoomFactory;
 class Room;
 class RoomAdmin;
 
-class Experimenting : public RoomRecipient {
- protected:
-  void augmentPath(Path * path, RoomAdmin * map, const Room * room);
-  Coordinate direction;
-  uint dirCode;
-  std::list<Path *> * shortPaths;
-  std::list<Path *> * paths;
-  Path * best;
-  Path * second;
-  PathParameters & params;
-  double numPaths;
-  AbstractRoomFactory * factory;
+class Experimenting : public RoomRecipient
+{
+protected:
+    void augmentPath(Path *path, RoomAdmin *map, const Room *room);
+    Coordinate direction;
+    uint dirCode;
+    std::list<Path *> *shortPaths;
+    std::list<Path *> *paths;
+    Path *best;
+    Path *second;
+    PathParameters &params;
+    double numPaths;
+    AbstractRoomFactory *factory;
 
- public:
-  Experimenting(std::list<Path *> * paths, uint dirCode, PathParameters & params, AbstractRoomFactory * factory);
-  std::list<Path *> * evaluate();
-  virtual void receiveRoom(RoomAdmin *, const Room *) = 0;
+public:
+    Experimenting(std::list<Path *> *paths, uint dirCode, PathParameters &params,
+                  AbstractRoomFactory *factory);
+    std::list<Path *> *evaluate();
+    virtual void receiveRoom(RoomAdmin *, const Room *) = 0;
 };
 
 #endif

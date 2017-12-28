@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -38,13 +38,14 @@ class ProgressCounter;
 class QFile;
 class QtIOCompressor;
 
-class AbstractMapStorage : public QObject {
+class AbstractMapStorage : public QObject
+{
 
     Q_OBJECT
 
 public:
-    AbstractMapStorage(MapData&, const QString&, QFile*);
-    AbstractMapStorage(MapData&, const QString&);
+    AbstractMapStorage(MapData &, const QString &, QFile *);
+    AbstractMapStorage(MapData &, const QString &);
     ~AbstractMapStorage();
 
     virtual bool canLoad() = 0;
@@ -57,7 +58,7 @@ public:
     const ProgressCounter *progressCounter() const;
 
 signals:
-    void log( const QString&, const QString& );
+    void log( const QString &, const QString & );
     void onDataLoaded();
     void onDataSaved();
     void onNewData();

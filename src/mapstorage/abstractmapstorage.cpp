@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -31,22 +31,22 @@
 
 #include <QFile>
 
-AbstractMapStorage::AbstractMapStorage(MapData& mapdata, const QString& filename, QFile* file) : 
-m_file(file),
-m_mapData(mapdata),
-m_fileName(filename),
-m_progressCounter( new ProgressCounter( this ) )
+AbstractMapStorage::AbstractMapStorage(MapData &mapdata, const QString &filename, QFile *file) :
+    m_file(file),
+    m_mapData(mapdata),
+    m_fileName(filename),
+    m_progressCounter( new ProgressCounter( this ) )
 {
-  m_compressor = new QtIOCompressor(file);
+    m_compressor = new QtIOCompressor(file);
 }
 
-AbstractMapStorage::AbstractMapStorage(MapData& mapdata, const QString& filename) : 
-m_file(NULL),
-m_mapData(mapdata),
-m_fileName(filename),
-m_progressCounter( new ProgressCounter( this ) )
+AbstractMapStorage::AbstractMapStorage(MapData &mapdata, const QString &filename) :
+    m_file(NULL),
+    m_mapData(mapdata),
+    m_fileName(filename),
+    m_progressCounter( new ProgressCounter( this ) )
 {
-  m_compressor = new QtIOCompressor(NULL);   
+    m_compressor = new QtIOCompressor(NULL);
 }
 
 AbstractMapStorage::~AbstractMapStorage()
@@ -55,6 +55,6 @@ AbstractMapStorage::~AbstractMapStorage()
 
 const ProgressCounter *AbstractMapStorage::progressCounter() const
 {
-  return m_progressCounter;
+    return m_progressCounter;
 }
 

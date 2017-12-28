@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -38,23 +38,35 @@ class Property;
 class ParseEvent : public ListCycler<Property *, std::deque<Property *> >
 {
 public:
-  ParseEvent(uint move) : moveType(move), numSkipped(0) {}
-  ParseEvent(const ParseEvent & other);
-  virtual ~ParseEvent();
-  ParseEvent & operator=(const ParseEvent & other);
+    ParseEvent(uint move) : moveType(move), numSkipped(0) {}
+    ParseEvent(const ParseEvent &other);
+    virtual ~ParseEvent();
+    ParseEvent &operator=(const ParseEvent &other);
 
-  void reset();
-  void countSkipped();
-  std::deque<QVariant> & getOptional() {return optional;}
-  const std::deque<QVariant> & getOptional() const {return optional;}
-  uint getMoveType() const {return moveType;}
-  uint getNumSkipped() const {return numSkipped;}
-  
+    void reset();
+    void countSkipped();
+    std::deque<QVariant> &getOptional()
+    {
+        return optional;
+    }
+    const std::deque<QVariant> &getOptional() const
+    {
+        return optional;
+    }
+    uint getMoveType() const
+    {
+        return moveType;
+    }
+    uint getNumSkipped() const
+    {
+        return numSkipped;
+    }
+
 private:
-  std::deque<QVariant> optional;
-  uint moveType;
-  uint numSkipped;
-  
+    std::deque<QVariant> optional;
+    uint moveType;
+    uint numSkipped;
+
 };
 
 #endif

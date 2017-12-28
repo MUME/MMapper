@@ -3,7 +3,7 @@
 ** Authors:   Jan 'Kovis' Struhar <kovis@sourceforge.net> (Kovis)
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -33,48 +33,48 @@ enum AnsiMode {ANSI_FG, ANSI_BG};
 
 class AnsiCombo : public QComboBox
 {
-	typedef QComboBox super;
-	Q_OBJECT
+    typedef QComboBox super;
+    Q_OBJECT
 public:
-	static void makeWidgetColoured(QWidget*, const QString& ansiColor);
+    static void makeWidgetColoured(QWidget *, const QString &ansiColor);
 
-	AnsiCombo(QWidget *parent);
+    AnsiCombo(QWidget *parent);
 
-	void initColours(AnsiMode mode);
-	/// populate the list with ANSI codes and coloured boxes
-	void fillAnsiList();
+    void initColours(AnsiMode mode);
+    /// populate the list with ANSI codes and coloured boxes
+    void fillAnsiList();
 
-	/// get currently selected ANSI code like [32m for green colour
-	QString text() const;
+    /// get currently selected ANSI code like [32m for green colour
+    QString text() const;
 
-	void setText(const QString&);
+    void setText(const QString &);
 
-	///\return true if string is valid ANSI color code
-	static bool colorFromString(const QString& colString, 
-								QColor& colFg, int& ansiCodeFg, QString& intelligibleNameFg, 
-								QColor& colBg, int& ansiCodeBg, QString& intelligibleNameBg, 
-								bool& bold, bool& underline);
+    ///\return true if string is valid ANSI color code
+    static bool colorFromString(const QString &colString,
+                                QColor &colFg, int &ansiCodeFg, QString &intelligibleNameFg,
+                                QColor &colBg, int &ansiCodeBg, QString &intelligibleNameBg,
+                                bool &bold, bool &underline);
 
-	///\return true, if index is valid color code
-	static bool colorFromNumber(int numColor, QColor& col, QString& intelligibleName);
+    ///\return true, if index is valid color code
+    static bool colorFromNumber(int numColor, QColor &col, QString &intelligibleName);
 
 protected slots:
-	void afterEdit(const QString&);
+    void afterEdit(const QString &);
 
 protected:
 
-	class AnsiItem
-	{
-	public:
-		QString ansiCode;
-		QString description;
-		QIcon picture;
-	};
-	typedef QVector<AnsiItem> AnsiItemVector;
+    class AnsiItem
+    {
+    public:
+        QString ansiCode;
+        QString description;
+        QIcon picture;
+    };
+    typedef QVector<AnsiItem> AnsiItemVector;
 
-	static AnsiItem initAnsiItem(int index);
+    static AnsiItem initAnsiItem(int index);
 
-	AnsiItemVector colours;
+    AnsiItemVector colours;
 
 };
 

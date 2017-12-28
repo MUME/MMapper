@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -29,21 +29,24 @@
 class Coordinate
 {
 public:
-  bool operator== (const Coordinate & other) const;
-  bool operator!= (const Coordinate & other) const;
-  void operator+= (const Coordinate & other);
-  void operator-= (const Coordinate & other);
-  Coordinate operator+ (const Coordinate & other) const;
-  Coordinate operator- (const Coordinate & other) const;
+    bool operator== (const Coordinate &other) const;
+    bool operator!= (const Coordinate &other) const;
+    void operator+= (const Coordinate &other);
+    void operator-= (const Coordinate &other);
+    Coordinate operator+ (const Coordinate &other) const;
+    Coordinate operator- (const Coordinate &other) const;
 
-  int distance(const Coordinate & other) const;
-  void clear();
-  Coordinate(int in_x = 0, int in_y = 0, int in_z = 0) : x(in_x), y(in_y), z(in_z) {}
-  bool isNull() const {return (x == 0 && y == 0 && z == 0);}
+    int distance(const Coordinate &other) const;
+    void clear();
+    Coordinate(int in_x = 0, int in_y = 0, int in_z = 0) : x(in_x), y(in_y), z(in_z) {}
+    bool isNull() const
+    {
+        return (x == 0 && y == 0 && z == 0);
+    }
 
-  int x;
-  int y;
-  int z;
+    int x;
+    int y;
+    int z;
 };
 
 #ifdef DMALLOC

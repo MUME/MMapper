@@ -42,7 +42,8 @@ class Room;
 class Coordinate;
 
 enum CommandIdType   { CID_NORTH = 0, CID_SOUTH, CID_EAST, CID_WEST, CID_UP, CID_DOWN,
-                        CID_UNKNOWN, CID_LOOK, CID_FLEE, CID_SCOUT, /*CID_SYNC, CID_RESET, */CID_NONE };
+                       CID_UNKNOWN, CID_LOOK, CID_FLEE, CID_SCOUT, /*CID_SYNC, CID_RESET, */CID_NONE
+                     };
 
 enum DoorActionType { DAT_OPEN, DAT_CLOSE, DAT_LOCK, DAT_UNLOCK, DAT_PICK, DAT_ROCK, DAT_BASH, DAT_BREAK, DAT_BLOCK, DAT_NONE };
 
@@ -69,95 +70,95 @@ typedef QQueue<CommandIdType> CommandQueue;
 
 class AbstractParser : public QObject
 {
-  Q_OBJECT
+    Q_OBJECT
 public:
 
-   AbstractParser(MapData*, MumeClock*, QObject *parent = 0);
-   ~AbstractParser();
+    AbstractParser(MapData *, MumeClock *, QObject *parent = 0);
+    ~AbstractParser();
 
-   const RoomSelection *search_rs;
+    const RoomSelection *search_rs;
 signals:
-  //telnet
-  void sendToMud(const QByteArray&);
-  void sendToUser(const QByteArray&);
+    //telnet
+    void sendToMud(const QByteArray &);
+    void sendToUser(const QByteArray &);
 
-  void releaseAllPaths();
+    void releaseAllPaths();
 
-  //used to log
-  void log(const QString&, const QString&);
+    //used to log
+    void log(const QString &, const QString &);
 
-  //for main move/search algorithm
-  void event(ParseEvent* );
+    //for main move/search algorithm
+    void event(ParseEvent * );
 
-  //for map
-  void showPath(CommandQueue, bool);
+    //for map
+    void showPath(CommandQueue, bool);
 
-  //for user commands
-  void command(const QByteArray&, const Coordinate &);
+    //for user commands
+    void command(const QByteArray &, const Coordinate &);
 
-  //for group manager
-  void sendPromptLineEvent(QByteArray);
-  void sendGroupTellEvent(QByteArray);
+    //for group manager
+    void sendPromptLineEvent(QByteArray);
+    void sendGroupTellEvent(QByteArray);
 
 public slots:
-  virtual void parseNewMudInput(IncomingData&) = 0;
-  void parseNewUserInput(IncomingData&);
+    virtual void parseNewMudInput(IncomingData &) = 0;
+    void parseNewUserInput(IncomingData &);
 
-  void reset();
-  void emptyQueue();
-  void sendGTellToUser(const QByteArray& );
+    void reset();
+    void emptyQueue();
+    void sendGTellToUser(const QByteArray & );
 
 protected:
-  void offlineCharacterMove(CommandIdType direction);
-  void sendRoomInfoToUser(const Room*);
-  void sendPromptToUser();
-  void sendPromptToUser(const Room* r);
-  void sendRoomExitsInfoToUser(const Room* r);
-  const Coordinate getPosition();
+    void offlineCharacterMove(CommandIdType direction);
+    void sendRoomInfoToUser(const Room *);
+    void sendPromptToUser();
+    void sendPromptToUser(const Room *r);
+    void sendRoomExitsInfoToUser(const Room *r);
+    const Coordinate getPosition();
 
-  //command handling
-  void performDoorCommand(DirectionType direction, DoorActionType action);
-  void genericDoorCommand(QString command, DirectionType direction);
-  void nameDoorCommand(QString doorname, DirectionType direction);
-  void toggleDoorFlagCommand(uint flag, DirectionType direction);
-  void toggleExitFlagCommand(uint flag, DirectionType direction);
-  void setRoomFieldCommand(const QVariant & flag, uint field);
-  void toggleRoomFlagCommand(uint flag, uint field);
+    //command handling
+    void performDoorCommand(DirectionType direction, DoorActionType action);
+    void genericDoorCommand(QString command, DirectionType direction);
+    void nameDoorCommand(QString doorname, DirectionType direction);
+    void toggleDoorFlagCommand(uint flag, DirectionType direction);
+    void toggleExitFlagCommand(uint flag, DirectionType direction);
+    void setRoomFieldCommand(const QVariant &flag, uint field);
+    void toggleRoomFlagCommand(uint flag, uint field);
 
-  void printRoomInfo(uint fieldset);
+    void printRoomInfo(uint fieldset);
 
-  void emulateExits();
+    void emulateExits();
 
-  void parseExits(QString& str);
-  void parsePrompt(QString& prompt);
-  virtual bool parseUserCommands(QString& command);
+    void parseExits(QString &str);
+    void parsePrompt(QString &prompt);
+    virtual bool parseUserCommands(QString &command);
 
-  QString m_stringBuffer;
-  QByteArray m_byteBuffer;
+    QString m_stringBuffer;
+    QByteArray m_byteBuffer;
 
-  bool m_readingRoomDesc;
-  bool m_descriptionReady;
+    bool m_readingRoomDesc;
+    bool m_descriptionReady;
 
-  QString m_roomName;
-  QString m_staticRoomDesc;
-  QString m_dynamicRoomDesc;
-  ExitsFlagsType m_exitsFlags;
-  PromptFlagsType m_promptFlags;
-  ConnectedRoomFlagsType m_connectedRoomFlags;
-  QString m_lastPrompt;
-  bool m_trollExitMapping;
+    QString m_roomName;
+    QString m_staticRoomDesc;
+    QString m_dynamicRoomDesc;
+    ExitsFlagsType m_exitsFlags;
+    PromptFlagsType m_promptFlags;
+    ConnectedRoomFlagsType m_connectedRoomFlags;
+    QString m_lastPrompt;
+    bool m_trollExitMapping;
 
-  CommandQueue queue;
-  MumeClock* m_mumeClock;
-  MapData* m_mapData;
+    CommandQueue queue;
+    MumeClock *m_mumeClock;
+    MapData *m_mapData;
 
-  static const QString nullString;
-  static const QString emptyString;
-  static const QByteArray emptyByteArray;
+    static const QString nullString;
+    static const QString emptyString;
+    static const QByteArray emptyByteArray;
 
-  void searchCommand(RoomFilter f);
-  void dirsCommand(RoomFilter f);
-  void markCurrentCommand();
+    void searchCommand(RoomFilter f);
+    void dirsCommand(RoomFilter f);
+    void markCurrentCommand();
 };
 
 #endif

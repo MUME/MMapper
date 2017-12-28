@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -39,16 +39,16 @@ class RoomAdmin;
 class Syncing : public RoomRecipient
 {
 private:
-  RoomSignalHandler * signaler;
-  uint numPaths;
-  PathParameters & params;
-  std::list<Path *> * paths;
-  Path * parent;
+    RoomSignalHandler *signaler;
+    uint numPaths;
+    PathParameters &params;
+    std::list<Path *> *paths;
+    Path *parent;
 public:
-  Syncing(PathParameters & p, std::list<Path *> * paths, RoomSignalHandler * signaler);
-  void receiveRoom(RoomAdmin *, const Room *);
-  std::list<Path *> * evaluate();
-  ~Syncing();
+    Syncing(PathParameters &p, std::list<Path *> *paths, RoomSignalHandler *signaler);
+    void receiveRoom(RoomAdmin *, const Room *);
+    std::list<Path *> *evaluate();
+    ~Syncing();
 };
 
 #endif

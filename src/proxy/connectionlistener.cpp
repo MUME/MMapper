@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -27,52 +27,52 @@
 #include "connectionlistener.h"
 #include "proxy.h"
 
-ConnectionListener::ConnectionListener(MapData* md, Mmapper2PathMachine* pm, CommandEvaluator* ce, PrespammedPath* pp, CGroup* gm, MumeClock* mc, QObject *parent)
-  : QTcpServer(parent)
+ConnectionListener::ConnectionListener(MapData *md, Mmapper2PathMachine *pm, CommandEvaluator *ce,
+                                       PrespammedPath *pp, CGroup *gm, MumeClock *mc, QObject *parent)
+    : QTcpServer(parent)
 {
-  m_accept = true;
+    m_accept = true;
 
-  m_mapData = md;
-  m_pathMachine = pm;
-  m_commandEvaluator = ce;
-  m_prespammedPath = pp;
-  m_groupManager = gm;
-  m_mumeClock = mc;
+    m_mapData = md;
+    m_pathMachine = pm;
+    m_commandEvaluator = ce;
+    m_prespammedPath = pp;
+    m_groupManager = gm;
+    m_mumeClock = mc;
 
-  connect(this, SIGNAL(log(const QString&, const QString&)), parent, SLOT(log(const QString&, const QString&)));
+    connect(this, SIGNAL(log(const QString &, const QString &)), parent, SLOT(log(const QString &,
+                                                                                  const QString &)));
 }
 
 
 void ConnectionListener::incomingConnection(qintptr socketDescriptor)
 {
-  if (m_accept)
-  {
-    emit log ("Listener", "New connection: accepted.");
-    doNotAcceptNewConnections();
-    Proxy *proxy = new Proxy(m_mapData, m_pathMachine, m_commandEvaluator, m_prespammedPath, m_groupManager, m_mumeClock, socketDescriptor, m_remoteHost, m_remotePort, true, this);
-    proxy->start();
-  }
-  else
-  {
-    emit log ("Listener", "New connection: rejected.");
-    QTcpSocket tcpSocket;
-    if (tcpSocket.setSocketDescriptor(socketDescriptor)) {
-      tcpSocket.write("You can't connect more than once!!!\r\n",37);
-      tcpSocket.flush();
-      tcpSocket.disconnectFromHost();
-      tcpSocket.waitForDisconnected();
+    if (m_accept) {
+        emit log ("Listener", "New connection: accepted.");
+        doNotAcceptNewConnections();
+        Proxy *proxy = new Proxy(m_mapData, m_pathMachine, m_commandEvaluator, m_prespammedPath,
+                                 m_groupManager, m_mumeClock, socketDescriptor, m_remoteHost, m_remotePort, true, this);
+        proxy->start();
+    } else {
+        emit log ("Listener", "New connection: rejected.");
+        QTcpSocket tcpSocket;
+        if (tcpSocket.setSocketDescriptor(socketDescriptor)) {
+            tcpSocket.write("You can't connect more than once!!!\r\n", 37);
+            tcpSocket.flush();
+            tcpSocket.disconnectFromHost();
+            tcpSocket.waitForDisconnected();
+        }
     }
-  }
 }
 
 void ConnectionListener::doNotAcceptNewConnections()
 {
-  m_accept = false;
+    m_accept = false;
 }
 
 void ConnectionListener::doAcceptNewConnections()
 {
-  m_accept = true;
+    m_accept = true;
 }
 
 

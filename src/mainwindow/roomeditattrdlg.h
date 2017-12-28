@@ -41,84 +41,84 @@ class RoomEditAttrDlg : public QDialog, private Ui::RoomEditAttrDlg
     Q_OBJECT
 
 signals:
-	void mapChanged();
+    void mapChanged();
 
 public slots:
-    void setRoomSelection(const RoomSelection*, MapData*, MapCanvas*);
+    void setRoomSelection(const RoomSelection *, MapData *, MapCanvas *);
 
-	//selection page
+    //selection page
     void roomListCurrentIndexChanged(int);
 
-	//attributes page
-	void neutralRadioButtonToggled(bool);
-	void goodRadioButtonToggled(bool);
-	void evilRadioButtonToggled(bool);
-	void alignUndefRadioButtonToggled(bool);
+    //attributes page
+    void neutralRadioButtonToggled(bool);
+    void goodRadioButtonToggled(bool);
+    void evilRadioButtonToggled(bool);
+    void alignUndefRadioButtonToggled(bool);
 
-	void noPortRadioButtonToggled(bool);
-	void portableRadioButtonToggled(bool);
-	void portUndefRadioButtonToggled(bool);
+    void noPortRadioButtonToggled(bool);
+    void portableRadioButtonToggled(bool);
+    void portUndefRadioButtonToggled(bool);
 
-	void noRideRadioButtonToggled(bool);
-	void ridableRadioButtonToggled(bool);
-	void rideUndefRadioButtonToggled(bool);
+    void noRideRadioButtonToggled(bool);
+    void ridableRadioButtonToggled(bool);
+    void rideUndefRadioButtonToggled(bool);
 
-	void litRadioButtonToggled(bool);
-	void darkRadioButtonToggled(bool);
-	void lightUndefRadioButtonToggled(bool);
+    void litRadioButtonToggled(bool);
+    void darkRadioButtonToggled(bool);
+    void lightUndefRadioButtonToggled(bool);
 
     void noSundeathRadioButtonToggled(bool);
     void sundeathRadioButtonToggled(bool);
     void sundeathUndefRadioButtonToggled(bool);
 
-	void mobFlagsListItemChanged(QListWidgetItem*);
-	void loadFlagsListItemChanged(QListWidgetItem*);
+    void mobFlagsListItemChanged(QListWidgetItem *);
+    void loadFlagsListItemChanged(QListWidgetItem *);
 
-	void exitButtonToggled(bool);
+    void exitButtonToggled(bool);
 
-	void exitFlagsListItemChanged(QListWidgetItem*);
+    void exitFlagsListItemChanged(QListWidgetItem *);
 
-	void doorNameLineEditTextChanged(QString);
-	void doorFlagsListItemChanged(QListWidgetItem*);
+    void doorNameLineEditTextChanged(QString);
+    void doorFlagsListItemChanged(QListWidgetItem *);
 
     void toggleHiddenDoor();
 
-	//terrain tab
-	void terrainToolButtonToggled(bool);
+    //terrain tab
+    void terrainToolButtonToggled(bool);
 
-	//note tab
-	void roomNoteChanged();
+    //note tab
+    void roomNoteChanged();
 
-	//all tabs
-	void closeClicked();
+    //all tabs
+    void closeClicked();
 
 public:
     RoomEditAttrDlg(QWidget *parent = 0);
     ~RoomEditAttrDlg();
 
     void readSettings();
-	void writeSettings();
+    void writeSettings();
 
 
 private:
 
-	void connectAll();
-	void disconnectAll();
+    void connectAll();
+    void disconnectAll();
 
-	const Room* getSelectedRoom();
-	uint getSelectedExit();
-	void updateDialog(const Room *r);
+    const Room *getSelectedRoom();
+    uint getSelectedExit();
+    void updateDialog(const Room *r);
 
-    QListWidgetItem* loadListItems[32];
-    QListWidgetItem* mobListItems[32];
+    QListWidgetItem *loadListItems[32];
+    QListWidgetItem *mobListItems[32];
 
-    QListWidgetItem* exitListItems[16];
-    QListWidgetItem* doorListItems[16];
+    QListWidgetItem *exitListItems[16];
+    QListWidgetItem *doorListItems[16];
 
-	const RoomSelection* 	m_roomSelection;
-    MapData* 		        m_mapData;
-	MapCanvas* 		        m_mapCanvas;
-    QShortcut*              m_hiddenShortcut;
+    const RoomSelection    *m_roomSelection;
+    MapData                *m_mapData;
+    MapCanvas              *m_mapCanvas;
+    QShortcut              *m_hiddenShortcut;
 };
 
 

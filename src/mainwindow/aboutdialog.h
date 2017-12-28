@@ -2,7 +2,7 @@
 **
 ** Authors:   Kalev Lember <kalev@smartlink.ee>
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or

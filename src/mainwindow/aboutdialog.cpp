@@ -2,7 +2,7 @@
 **
 ** Authors:   Kalev Lember <kalev@smartlink.ee>
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -43,7 +43,7 @@ AboutDialog::AboutDialog(QWidget *parent)
     aboutText->setAlignment(Qt::AlignCenter);
     aboutText->setTextInteractionFlags(Qt::TextSelectableByMouse);
     aboutText->setText(
-          "<p align=\"center\"><b>" + tr("MMapper Version %1").arg(QString(MMAPPER_VERSION))
+        "<p align=\"center\"><b>" + tr("MMapper Version %1").arg(QString(MMAPPER_VERSION))
         + "</b></p>"
         + "<p align=\"center\">"
 #ifdef GIT_BRANCH
@@ -60,17 +60,17 @@ AboutDialog::AboutDialog(QWidget *parent)
     /* Authors tab */
     authorsView->setOpenExternalLinks(true);
     authorsView->setHtml(tr(
-        "Maintainer: Jahara (nschimme@gmail.com)<br>"
-        "<br>"
-        "<u>Special thanks to:</u><br>"
-        "Alve for his great map engine<br>"
-        "Caligor for starting the mmapper project<br>"
-        "Azazello for his work with the Group Manager protocol<br>"
-        "<br>"
-        "<u>Contributors:</u><br>"
-        "Jahara, Kalev, Azazello, Alve, Caligor, Kovis, Krush, and Korir<br>"
-        "<br>"
-        ));
+                             "Maintainer: Jahara (nschimme@gmail.com)<br>"
+                             "<br>"
+                             "<u>Special thanks to:</u><br>"
+                             "Alve for his great map engine<br>"
+                             "Caligor for starting the mmapper project<br>"
+                             "Azazello for his work with the Group Manager protocol<br>"
+                             "<br>"
+                             "<u>Contributors:</u><br>"
+                             "Jahara, Kalev, Azazello, Alve, Caligor, Kovis, Krush, and Korir<br>"
+                             "<br>"
+                         ));
 
     /* License tab */
     QFile f(":/COPYING");

@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -37,16 +37,18 @@ enum ComparisonResult {CR_DIFFERENT = 0, CR_EQUAL, CR_TOLERANCE};
 class AbstractRoomFactory
 {
 public:
-  virtual Room * createRoom(const ParseEvent * event = 0) const = 0;
-  virtual ComparisonResult compare(const Room *, const ParseEvent * props, uint tolerance = 0) const = 0;
-  virtual ComparisonResult compareWeakProps(const Room *, const ParseEvent * props, uint tolerance = 0) const = 0;
-  virtual ParseEvent * getEvent(const Room *) const = 0;
-  virtual void update(Room *, const ParseEvent * event) const = 0;
-  virtual void update(Room * target, const Room * source) const = 0;
-  virtual uint opposite(uint dir) const = 0;
-  virtual const Coordinate & exitDir(uint dir) const = 0;
-  virtual uint numKnownDirs() const = 0;
-  virtual ~AbstractRoomFactory() {}
+    virtual Room *createRoom(const ParseEvent *event = 0) const = 0;
+    virtual ComparisonResult compare(const Room *, const ParseEvent *props,
+                                     uint tolerance = 0) const = 0;
+    virtual ComparisonResult compareWeakProps(const Room *, const ParseEvent *props,
+                                              uint tolerance = 0) const = 0;
+    virtual ParseEvent *getEvent(const Room *) const = 0;
+    virtual void update(Room *, const ParseEvent *event) const = 0;
+    virtual void update(Room *target, const Room *source) const = 0;
+    virtual uint opposite(uint dir) const = 0;
+    virtual const Coordinate &exitDir(uint dir) const = 0;
+    virtual uint numKnownDirs() const = 0;
+    virtual ~AbstractRoomFactory() {}
 };
 
 #endif

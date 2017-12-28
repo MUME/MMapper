@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -30,27 +30,62 @@
 #include <QVector>
 #include <QVariant>
 
-class Exit : public QVector<QVariant> {
-  
-  protected:
+class Exit : public QVector<QVariant>
+{
+
+protected:
     std::set<uint> incoming;
     std::set<uint> outgoing;
-    
-  public:
+
+public:
     Exit(uint numProps = 0) : QVector<QVariant>(numProps) {}
-    std::set<uint>::const_iterator inBegin() const {return incoming.begin();}
-    std::set<uint>::const_iterator outBegin() const {return outgoing.begin();}
-    
-    std::set<uint>::const_iterator inEnd() const {return incoming.end();}
-    std::set<uint>::const_iterator outEnd() const {return outgoing.end();}
-    
-    void addIn(uint from) {incoming.insert(from);}
-    void addOut(uint to) {outgoing.insert(to);}
-    void removeIn(uint from) {incoming.erase(from);}
-    void removeOut(uint to) {outgoing.erase(to);}
-    bool containsIn(uint from) const {return incoming.find(from) != incoming.end();}
-    bool containsOut(uint to) const {return outgoing.find(to) != outgoing.end();}
-    void removeAll() {incoming.clear(); outgoing.clear();}
+    std::set<uint>::const_iterator inBegin() const
+    {
+        return incoming.begin();
+    }
+    std::set<uint>::const_iterator outBegin() const
+    {
+        return outgoing.begin();
+    }
+
+    std::set<uint>::const_iterator inEnd() const
+    {
+        return incoming.end();
+    }
+    std::set<uint>::const_iterator outEnd() const
+    {
+        return outgoing.end();
+    }
+
+    void addIn(uint from)
+    {
+        incoming.insert(from);
+    }
+    void addOut(uint to)
+    {
+        outgoing.insert(to);
+    }
+    void removeIn(uint from)
+    {
+        incoming.erase(from);
+    }
+    void removeOut(uint to)
+    {
+        outgoing.erase(to);
+    }
+    bool containsIn(uint from) const
+    {
+        return incoming.find(from) != incoming.end();
+    }
+    bool containsOut(uint to) const
+    {
+        return outgoing.find(to) != outgoing.end();
+    }
+    void removeAll()
+    {
+        incoming.clear();
+        outgoing.clear();
+    }
 };
 
 #endif

@@ -2,7 +2,7 @@
 **
 ** Authors:   Thomas Equeter <waba@waba.be>
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -34,23 +34,26 @@
  */
 class FileSaver
 {
-  QString m_filename;
-  QFile m_file; // disables copying
+    QString m_filename;
+    QFile m_file; // disables copying
 
 public:
-  FileSaver();
-  ~FileSaver();
+    FileSaver();
+    ~FileSaver();
 
-  QFile &file() { return m_file; }
+    QFile &file()
+    {
+        return m_file;
+    }
 
-  /*! \exception std::runtime_error if the file can't be opened or a currently
-   * open file can't be closed.
-   */
-  void open( QString filename );
+    /*! \exception std::runtime_error if the file can't be opened or a currently
+     * open file can't be closed.
+     */
+    void open( QString filename );
 
-  /*! \exception std::runtime_error if the file can't be safely closed.
-   */
-  void close();
+    /*! \exception std::runtime_error if the file can't be safely closed.
+     */
+    void close();
 };
 
 #endif /* INCLUDED_FILESAVER_H */

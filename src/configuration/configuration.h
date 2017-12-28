@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara),
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -34,8 +34,9 @@
 
 #include "defs.h"
 
-class Configuration {
-  public:
+class Configuration
+{
+public:
     void read();
     void write() const;
     bool isChanged() const;
@@ -46,11 +47,31 @@ class Configuration {
     QByteArray windowState;
     bool alwaysOnTop;
     int m_mapMode; //0 play, 1 map
-    void setFirstRun(bool value) { m_firstRun = value; change(); }
-    void setWindowPosition(QPoint pos) {windowPosition = pos; change(); }
-    void setWindowSize(QSize size) { windowSize = size; change(); }
-    void setWindowState(QByteArray state) { windowState = state; change(); }
-    void setAlwaysOnTop(bool b) { alwaysOnTop = b; change(); }
+    void setFirstRun(bool value)
+    {
+        m_firstRun = value;
+        change();
+    }
+    void setWindowPosition(QPoint pos)
+    {
+        windowPosition = pos;
+        change();
+    }
+    void setWindowSize(QSize size)
+    {
+        windowSize = size;
+        change();
+    }
+    void setWindowState(QByteArray state)
+    {
+        windowState = state;
+        change();
+    }
+    void setAlwaysOnTop(bool b)
+    {
+        alwaysOnTop = b;
+        change();
+    }
 
     QString   m_remoteServerName;         /// Remote host and port settings
     quint32   m_remotePort;
@@ -73,7 +94,7 @@ class Configuration {
     bool m_drawNoMatchExits;
     bool m_drawUpperLayersTextured;
     bool m_drawDoorNames;
-    
+
     bool m_utf8Charset;
 
     bool m_IAC_prompt_parser;
@@ -106,18 +127,21 @@ class Configuration {
     int m_mumeStartEpoch;
     bool m_displayMumeClock;
 
-  private:
+private:
     Configuration();
-    Configuration(const Configuration&);
+    Configuration(const Configuration &);
 
     bool configurationChanged;
-    void change() { configurationChanged = true; }
+    void change()
+    {
+        configurationChanged = true;
+    }
 
-    friend Configuration& Config();
+    friend Configuration &Config();
 };
 
 /// Returns a reference to the application configuration object.
-Configuration& Config();
+Configuration &Config();
 
 
 #endif

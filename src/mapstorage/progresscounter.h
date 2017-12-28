@@ -2,7 +2,7 @@
 **
 ** Authors:   Thomas Equeter <waba@waba.be>
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -29,21 +29,21 @@
 
 class ProgressCounter : public QObject
 {
-  Q_OBJECT
+    Q_OBJECT
 
-  quint32 m_totalSteps, m_steps, m_percentage;
+    quint32 m_totalSteps, m_steps, m_percentage;
 
 public:
-  ProgressCounter();
-  ProgressCounter( QObject *parent );
-  virtual ~ProgressCounter();
+    ProgressCounter();
+    ProgressCounter( QObject *parent );
+    virtual ~ProgressCounter();
 
-  void step( quint32 steps = 1 );
-  void increaseTotalStepsBy( quint32 steps );
-  void reset();
+    void step( quint32 steps = 1 );
+    void increaseTotalStepsBy( quint32 steps );
+    void reset();
 
 signals:
-  void onPercentageChanged( quint32 );
+    void onPercentageChanged( quint32 );
 };
 
 #endif /* INCLUDED_STEPCOUNTER_H */

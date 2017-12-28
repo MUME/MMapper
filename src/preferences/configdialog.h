@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -39,8 +39,8 @@ class ConfigDialog : public QDialog
     Q_OBJECT
 
 public:
-    ConfigDialog(CGroup*);
-    CGroup* m_groupManager;
+    ConfigDialog(CGroup *);
+    CGroup *m_groupManager;
 
 public slots:
     void changePage(QListWidgetItem *current, QListWidgetItem *previous);

@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -36,108 +36,96 @@
 
 using namespace std;
 
-Path::Path(const Room * in_room, RoomAdmin * owner, RoomRecipient * locker, RoomSignalHandler * in_signaler, uint direction) :
+Path::Path(const Room *in_room, RoomAdmin *owner, RoomRecipient *locker,
+           RoomSignalHandler *in_signaler, uint direction) :
     parent(0),
     probability(1.0),
     room(in_room),
     signaler(in_signaler),
     dir(direction)
 {
-  if (dir != UINT_MAX) signaler->hold(room, owner, locker);
+    if (dir != UINT_MAX) signaler->hold(room, owner, locker);
 }
 
 
 /**
- * new Path is created, 
- * distance between rooms is calculated 
+ * new Path is created,
+ * distance between rooms is calculated
  * and probability is updated accordingly
  */
-Path * Path::fork(const Room * in_room, Coordinate & expectedCoordinate, RoomAdmin * owner, PathParameters p, RoomRecipient * locker, uint direction, AbstractRoomFactory * factory)
+Path *Path::fork(const Room *in_room, Coordinate &expectedCoordinate, RoomAdmin *owner,
+                 PathParameters p, RoomRecipient *locker, uint direction, AbstractRoomFactory *factory)
 {
-  Path * ret = new Path(in_room, owner, locker, signaler, direction);
-  assert(ret != parent);
+    Path *ret = new Path(in_room, owner, locker, signaler, direction);
+    assert(ret != parent);
 
-  ret->setParent(this);
-  children.insert(ret);
+    ret->setParent(this);
+    children.insert(ret);
 
-  double dist = expectedCoordinate.distance(in_room->getPosition());
-  uint size = room->getExitsList().size();
+    double dist = expectedCoordinate.distance(in_room->getPosition());
+    uint size = room->getExitsList().size();
 
-  if (dist < 0.5)
-  {
-    if (direction < factory->numKnownDirs())
-      dist = 1.0/p.correctPositionBonus;
-    else
-      dist = p.multipleConnectionsPenalty;
-  }
-  else
-  {
-    if (direction < size)
-    {
-      const Exit & e = room->exit(direction);
-      uint oid = in_room->getId();
-      if (e.containsOut(oid))
-        dist = 1.0/p.correctPositionBonus;
-      else if (e.outBegin() != e.outEnd() || oid == room->getId())
-        dist *= p.multipleConnectionsPenalty;
-      else
-      {
-        const Exit & oe = in_room->exit(factory->opposite(direction));
-        if (oe.inBegin() != oe.inEnd())
-          dist *= p.multipleConnectionsPenalty;
-      }
-    }
-    else if (direction < factory->numKnownDirs())
-    {
-      for (uint d = 0; d < size; ++d)
-      {
-        const Exit & e = room->exit(d);
-        if (e.containsOut(in_room->getId()))
-        {
-          dist = 1.0/p.correctPositionBonus;
-          break;
+    if (dist < 0.5) {
+        if (direction < factory->numKnownDirs())
+            dist = 1.0 / p.correctPositionBonus;
+        else
+            dist = p.multipleConnectionsPenalty;
+    } else {
+        if (direction < size) {
+            const Exit &e = room->exit(direction);
+            uint oid = in_room->getId();
+            if (e.containsOut(oid))
+                dist = 1.0 / p.correctPositionBonus;
+            else if (e.outBegin() != e.outEnd() || oid == room->getId())
+                dist *= p.multipleConnectionsPenalty;
+            else {
+                const Exit &oe = in_room->exit(factory->opposite(direction));
+                if (oe.inBegin() != oe.inEnd())
+                    dist *= p.multipleConnectionsPenalty;
+            }
+        } else if (direction < factory->numKnownDirs()) {
+            for (uint d = 0; d < size; ++d) {
+                const Exit &e = room->exit(d);
+                if (e.containsOut(in_room->getId())) {
+                    dist = 1.0 / p.correctPositionBonus;
+                    break;
+                }
+            }
         }
-      }
     }
-  }
-  dist /= (signaler->getNumLockers(in_room));
-  if (in_room->isTemporary()) dist *= p.newRoomPenalty;
-  ret->setProb(probability / dist);
+    dist /= (signaler->getNumLockers(in_room));
+    if (in_room->isTemporary()) dist *= p.newRoomPenalty;
+    ret->setProb(probability / dist);
 
-  return ret;
+    return ret;
 }
 
-void Path::setParent(Path * p)
+void Path::setParent(Path *p)
 {
-  parent = p;
+    parent = p;
 }
 
 void Path::approve()
 {
-  if (parent)
-  {
-    uint pId = UINT_MAX;
-    const Room * proom = parent->getRoom();
-    if (proom)
-    {
-      pId = proom->getId();
+    if (parent) {
+        uint pId = UINT_MAX;
+        const Room *proom = parent->getRoom();
+        if (proom) {
+            pId = proom->getId();
+        }
+        signaler->keep(room, dir, pId);
+        parent->removeChild(this);
+        parent->approve();
+    } else {
+        assert(dir == UINT_MAX);
     }
-    signaler->keep(room, dir, pId);
-    parent->removeChild(this);
-    parent->approve();
-  }
-  else
-  {
-    assert(dir == UINT_MAX);
-  }
 
-  set<Path *>::iterator i = children.begin();
-  for(; i != children.end(); ++i)
-  {
-    (*i)->setParent(0);
-  }
+    set<Path *>::iterator i = children.begin();
+    for (; i != children.end(); ++i) {
+        (*i)->setParent(0);
+    }
 
-  delete this;
+    delete this;
 }
 
 
@@ -147,26 +135,25 @@ void Path::approve()
  */
 void Path::deny()
 {
-  if (!children.empty()) return;
-  if (dir != UINT_MAX) signaler->release(room);
-  if (parent)
-  {
-    parent->removeChild(this);
-    parent->deny();
-  }
-  delete this;
+    if (!children.empty()) return;
+    if (dir != UINT_MAX) signaler->release(room);
+    if (parent) {
+        parent->removeChild(this);
+        parent->deny();
+    }
+    delete this;
 }
 
 
 
-void Path::insertChild(Path * p)
+void Path::insertChild(Path *p)
 {
-  children.insert(p);
+    children.insert(p);
 }
 
 
-void Path::removeChild(Path * p)
+void Path::removeChild(Path *p)
 {
-  children.erase(p);
+    children.erase(p);
 }
 

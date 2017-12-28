@@ -43,15 +43,21 @@ public:
     MumeClock(QObject *parent = 0);
 
     MumeMoment getMumeMoment(int secsSinceUnixEpoch = -1);
-    MumeClockPrecision getPrecision() { return m_precision; }
+    MumeClockPrecision getPrecision()
+    {
+        return m_precision;
+    }
     const QString toMumeTime(const MumeMoment &moment);
     const QString toCountdown(const MumeMoment &moment);
-    int getMumeStartEpoch() { return m_mumeStartEpoch; }
+    int getMumeStartEpoch()
+    {
+        return m_mumeStartEpoch;
+    }
 
-    enum WestronMonthNames { UnknownWestronMonth=-1, Afteryule,Solmath,Rethe,Astron,Thrimidge,Forelithe,Afterlithe,Wedmath,Halimath,Winterfilth,Blotmath,Foreyule };
+    enum WestronMonthNames { UnknownWestronMonth = -1, Afteryule, Solmath, Rethe, Astron, Thrimidge, Forelithe, Afterlithe, Wedmath, Halimath, Winterfilth, Blotmath, Foreyule };
     Q_ENUM(WestronMonthNames)
 
-    enum SindarinMonthNames { UnknownSindarinMonth=-1, Narwain,Ninui,Gwaeron,Gwirith,Lothron,Norui,Cerveth,Urui,Ivanneth,Narbeleth,Hithui,Girithron };
+    enum SindarinMonthNames { UnknownSindarinMonth = -1, Narwain, Ninui, Gwaeron, Gwirith, Lothron, Norui, Cerveth, Urui, Ivanneth, Narbeleth, Hithui, Girithron };
     Q_ENUM(SindarinMonthNames)
 
     static QList<int> m_dawnHour;
@@ -60,17 +66,20 @@ public:
     static QMetaEnum m_sindarinMonthNames;
 
 signals:
-    void log(const QString&, const QString&);
+    void log(const QString &, const QString &);
 
 public slots:
-    void parseMumeTime(const QString& mumeTime);
-    void parseClockTime(const QString& clockTime);
+    void parseMumeTime(const QString &mumeTime);
+    void parseClockTime(const QString &clockTime);
     void tickSync(MumeTime time = TIME_UNKNOWN);
 
 protected:
-    void setPrecision(MumeClockPrecision state) { m_precision = state; }
-    void parseMumeTime(const QString& mumeString, int secsSinceUnixEpoch);
-    void parseClockTime(const QString& clockTime, int secsSinceUnixEpoch);
+    void setPrecision(MumeClockPrecision state)
+    {
+        m_precision = state;
+    }
+    void parseMumeTime(const QString &mumeString, int secsSinceUnixEpoch);
+    void parseClockTime(const QString &clockTime, int secsSinceUnixEpoch);
     void tickSync(int secsSinceEpoch);
 
 private:

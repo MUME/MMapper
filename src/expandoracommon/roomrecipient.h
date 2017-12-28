@@ -4,7 +4,7 @@
 **            Marek Krejza <krejza@gmail.com> (Caligor),
 **            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -35,9 +35,10 @@ class RoomAdmin;
  *
  * See MapFrontend::lookingForRooms().
  */
-class RoomRecipient {
-  public:
-    virtual void receiveRoom(RoomAdmin * admin, const Room * room) = 0;
+class RoomRecipient
+{
+public:
+    virtual void receiveRoom(RoomAdmin *admin, const Room *room) = 0;
     virtual ~RoomRecipient() {};
 };
 

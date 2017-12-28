@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -30,59 +30,67 @@
 
 using namespace std;
 
-ParseEvent * createEvent(const CommandIdType & c, const QString & roomName, const QString & roomDesc, const QString & parsedRoomDesc, const ExitsFlagsType & exitFlags, const PromptFlagsType & promptFlags, const ConnectedRoomFlagsType & connectedRoomFlags)
+ParseEvent *createEvent(const CommandIdType &c, const QString &roomName, const QString &roomDesc,
+                        const QString &parsedRoomDesc, const ExitsFlagsType &exitFlags, const PromptFlagsType &promptFlags,
+                        const ConnectedRoomFlagsType &connectedRoomFlags)
 {
-  
-  ParseEvent * event = new ParseEvent(c);
-  deque<QVariant> & optional = event->getOptional();
 
-  if (roomName.isNull())
-  {
-    event->push_back(new Property(true));
-  }
-  else {
-    event->push_back(new Property(roomName.toLatin1()));
-  }
-  optional.push_back(roomName);
-  optional.push_back(roomDesc);
-  
-  if (parsedRoomDesc.isNull())
-  {
-    event->push_back(new Property(true));
-  }
-  else 
-    event->push_back(new Property(parsedRoomDesc.toLatin1()));
-  optional.push_back(parsedRoomDesc);
-  optional.push_back((uint)exitFlags);
+    ParseEvent *event = new ParseEvent(c);
+    deque<QVariant> &optional = event->getOptional();
 
-  if (promptFlags & PROMPT_FLAGS_VALID)
-  {
-    char terrain = 0;
-    terrain += (promptFlags & (bit1 + bit2 + bit3 + bit4)); //bit0-3 -> char representation of RoomTerrainType
-    event->push_back(new Property(QByteArray(1, terrain)));
-  }
-  else
-  {
-    event->push_back(new Property(true));
-  }
-  optional.push_back((uint)promptFlags);
-  optional.push_back((uint)connectedRoomFlags);
-  event->countSkipped();
-  return event;
+    if (roomName.isNull()) {
+        event->push_back(new Property(true));
+    } else {
+        event->push_back(new Property(roomName.toLatin1()));
+    }
+    optional.push_back(roomName);
+    optional.push_back(roomDesc);
+
+    if (parsedRoomDesc.isNull()) {
+        event->push_back(new Property(true));
+    } else
+        event->push_back(new Property(parsedRoomDesc.toLatin1()));
+    optional.push_back(parsedRoomDesc);
+    optional.push_back((uint)exitFlags);
+
+    if (promptFlags & PROMPT_FLAGS_VALID) {
+        char terrain = 0;
+        terrain += (promptFlags & (bit1 + bit2 + bit3 +
+                                   bit4)); //bit0-3 -> char representation of RoomTerrainType
+        event->push_back(new Property(QByteArray(1, terrain)));
+    } else {
+        event->push_back(new Property(true));
+    }
+    optional.push_back((uint)promptFlags);
+    optional.push_back((uint)connectedRoomFlags);
+    event->countSkipped();
+    return event;
 }
 
 
-QString getRoomName(const ParseEvent * e) 
-  {return e->getOptional()[EV_NAME].toString();}
-QString getRoomDesc(const ParseEvent * e)
-  {return e->getOptional()[EV_DESC].toString();}
-QString getParsedRoomDesc(const ParseEvent * e)
-  {return e->getOptional()[EV_PDESC].toString();}
-ExitsFlagsType getExitFlags(const ParseEvent * e)
-  {return e->getOptional()[EV_EXITS].toUInt();}
-PromptFlagsType getPromptFlags(const ParseEvent * e)
-  {return e->getOptional()[EV_PROMPT].toUInt();}
-ConnectedRoomFlagsType getConnectedRoomFlags(const ParseEvent * e)
-  {return e->getOptional()[EV_CROOM].toUInt();}
+QString getRoomName(const ParseEvent *e)
+{
+    return e->getOptional()[EV_NAME].toString();
+}
+QString getRoomDesc(const ParseEvent *e)
+{
+    return e->getOptional()[EV_DESC].toString();
+}
+QString getParsedRoomDesc(const ParseEvent *e)
+{
+    return e->getOptional()[EV_PDESC].toString();
+}
+ExitsFlagsType getExitFlags(const ParseEvent *e)
+{
+    return e->getOptional()[EV_EXITS].toUInt();
+}
+PromptFlagsType getPromptFlags(const ParseEvent *e)
+{
+    return e->getOptional()[EV_PROMPT].toUInt();
+}
+ConnectedRoomFlagsType getConnectedRoomFlags(const ParseEvent *e)
+{
+    return e->getOptional()[EV_CROOM].toUInt();
+}
 
 

@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -38,50 +38,57 @@ class ConnectionSelection : public QObject, public RoomRecipient
     Q_OBJECT
 
 public:
-	
-	struct ConnectionDescriptor
-	{
-		const Room* room;	
-		ExitDirection direction;
-	};
 
-    ConnectionSelection(MapFrontend* , double mx, double my, int layer);
+    struct ConnectionDescriptor {
+        const Room *room;
+        ExitDirection direction;
+    };
+
+    ConnectionSelection(MapFrontend *, double mx, double my, int layer);
     ConnectionSelection();
     ~ConnectionSelection();
-    
-    void setFirst(MapFrontend* , double mx, double my, int layer);
-	void setFirst(MapFrontend* mf, uint id, ExitDirection dir);
-    void setSecond(MapFrontend* , double mx, double my, int layer);
-	void setSecond(MapFrontend* mf, uint id, ExitDirection dir);
-	
-	void removeFirst();
-	void removeSecond();
-	
-	ConnectionDescriptor getFirst();
-	ConnectionDescriptor getSecond();
 
-	bool isValid();
-	bool isFirstValid() { if(m_connectionDescriptor[0].room == NULL) return false; else return true; };
-	bool isSecondValid(){ if(m_connectionDescriptor[1].room == NULL) return false; else return true; };
-	
-	void receiveRoom(RoomAdmin * admin, const Room * aRoom);
-    
+    void setFirst(MapFrontend *, double mx, double my, int layer);
+    void setFirst(MapFrontend *mf, uint id, ExitDirection dir);
+    void setSecond(MapFrontend *, double mx, double my, int layer);
+    void setSecond(MapFrontend *mf, uint id, ExitDirection dir);
+
+    void removeFirst();
+    void removeSecond();
+
+    ConnectionDescriptor getFirst();
+    ConnectionDescriptor getSecond();
+
+    bool isValid();
+    bool isFirstValid()
+    {
+        if (m_connectionDescriptor[0].room == NULL) return false;
+        else return true;
+    };
+    bool isSecondValid()
+    {
+        if (m_connectionDescriptor[1].room == NULL) return false;
+        else return true;
+    };
+
+    void receiveRoom(RoomAdmin *admin, const Room *aRoom);
+
 public slots:
 
 signals:
 
 protected:
-	
+
 private:
 
-	ExitDirection ComputeDirection(double mouseX, double mouseY);
+    ExitDirection ComputeDirection(double mouseX, double mouseY);
 
-	int GLtoMap(double arg);
+    int GLtoMap(double arg);
 
-	ConnectionDescriptor m_connectionDescriptor[2];
+    ConnectionDescriptor m_connectionDescriptor[2];
 
-	bool m_first;
-	RoomAdmin * m_admin;
+    bool m_first;
+    RoomAdmin *m_admin;
 };
 
 

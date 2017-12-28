@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -41,31 +41,31 @@ public slots:
     void addEndDescPatternClicked();
     void testPatternClicked();
     void validPatternClicked();
-    void forcePatternsListActivated(const QString&);
-    void endDescPatternsListActivated(const QString&);
-    
-	void anyColorToggleButtonToggled(bool);
-	
-	void IACPromptCheckBoxStateChanged(int);
-	void suppressXmlTagsCheckBoxStateChanged(int);
+    void forcePatternsListActivated(const QString &);
+    void endDescPatternsListActivated(const QString &);
+
+    void anyColorToggleButtonToggled(bool);
+
+    void IACPromptCheckBoxStateChanged(int);
+    void suppressXmlTagsCheckBoxStateChanged(int);
 
 private slots:
-        void charsetChanged(int);
+    void charsetChanged(int);
 
 public:
     ParserPage(QWidget *parent = 0);
 
 protected slots:
-	void roomDescColorChanged(const QString&);
-	void roomNameColorChanged(const QString&);
-	void roomDescColorBGChanged(const QString&);
-	void roomNameColorBGChanged(const QString&);
+    void roomDescColorChanged(const QString &);
+    void roomNameColorChanged(const QString &);
+    void roomDescColorBGChanged(const QString &);
+    void roomNameColorBGChanged(const QString &);
 
 private:
-	void generateNewAnsiColor();
-	void updateColors();
-	
-    void savePatterns(); 
+    void generateNewAnsiColor();
+    void updateColors();
+
+    void savePatterns();
 };
 
 

@@ -3,7 +3,7 @@
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
 **            Marek Krejza <krejza@gmail.com> (Caligor)
 **
-** This file is part of the MMapper project. 
+** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This program is free software; you can redistribute it and/or
@@ -27,12 +27,12 @@
 
 using namespace std;
 
-Crossover::Crossover(std::list<Path *> * paths, uint dirCode, PathParameters & params, AbstractRoomFactory * in_factory) : Experimenting(paths, dirCode, params, in_factory) {}
+Crossover::Crossover(std::list<Path *> *paths, uint dirCode, PathParameters &params,
+                     AbstractRoomFactory *in_factory) : Experimenting(paths, dirCode, params, in_factory) {}
 
-void Crossover::receiveRoom(RoomAdmin * map, const Room * room)
+void Crossover::receiveRoom(RoomAdmin *map, const Room *room)
 {
-  for (list<Path *>::iterator i = shortPaths->begin(); i != shortPaths->end(); ++i)
-  {
-    augmentPath(*i, map, room);
-  }
+    for (list<Path *>::iterator i = shortPaths->begin(); i != shortPaths->end(); ++i) {
+        augmentPath(*i, map, room);
+    }
 }
