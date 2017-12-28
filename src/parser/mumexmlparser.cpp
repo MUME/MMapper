@@ -202,7 +202,6 @@ bool MumeXmlParser::element( const QByteArray &line  )
                     switch (line.at(8)) {
                     case ' ':
                         if (length > 13) {
-                            int pos = (line.at(13) == '"') ? 14 : 13;
                             switch (line.at(13)) {
                             case 'n':
                                 m_move = CID_NORTH;
@@ -231,10 +230,8 @@ bool MumeXmlParser::element( const QByteArray &line  )
                     };
                 break;
             case 'w':
-                if (line.startsWith("weather")) {
+                if (line.startsWith("weather"))
                     m_readWeatherTag = true;
-                    m_xmlMode = XML_WEATHER;
-                }
                 break;
             case 's':
                 if (line.startsWith("status")) {
@@ -298,13 +295,6 @@ bool MumeXmlParser::element( const QByteArray &line  )
             case '/':
                 if (line.startsWith("/prompt")) m_xmlMode = XML_NONE;
                 break;
-            }
-        break;
-    case XML_WEATHER:
-        if (length > 0)
-            switch (line.at(0)) {
-            case '/':
-                if (line.startsWith("/weather")) m_xmlMode = XML_NONE;
             }
         break;
     case XML_TERRAIN:
@@ -427,7 +417,6 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
     default:
         toUser.append(ch);
         break;
-
     }
 
     return toUser;
