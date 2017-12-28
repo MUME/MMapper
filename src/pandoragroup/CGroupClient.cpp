@@ -33,8 +33,6 @@ void CGroupClient::linkSignals()
 {
     connect(this, SIGNAL(disconnected()), this, SLOT(lostConnection() ) );
     connect(this, SIGNAL(connected()), this, SLOT(connectionEstablished() ) );
-    connect(this, SIGNAL(error(QAbstractSocket::SocketError )),
-            this, SLOT(errorHandler(QAbstractSocket::SocketError) ) );
     connect(this, SIGNAL(readyRead()), this, SLOT( dataIncoming() ) );
 
     buffer = "";
@@ -47,8 +45,21 @@ CGroupClient::CGroupClient(QByteArray host, int remotePort, QObject *parent) :
     linkSignals();
     setSocketOption(QAbstractSocket::KeepAliveOption, true);
     setConnectionState(Connecting);
-    protocolState = AwaitingLogin;
     connectToHost(host, remotePort);
+    protocolState = AwaitingLogin;
+    if (!waitForConnected(5000)) {
+        connectionState = CGroupClient::Quiting;
+        close();
+        errorHandler(QAbstractSocket::ConnectionRefusedError);
+        return;
+    } else {
+#if __linux__
+        // Linux needs to have this option set after the server has established a connection
+        setSocketOption(QAbstractSocket::KeepAliveOption, true);
+#endif
+        connect(this, SIGNAL(error(QAbstractSocket::SocketError )), this,
+                SLOT(errorHandler(QAbstractSocket::SocketError) ) );
+    }
 }
 
 CGroupClient::CGroupClient(QObject *parent) :
@@ -86,7 +97,9 @@ void CGroupClient::setConnectionState(int val)
 
 CGroupClient::~CGroupClient()
 {
-//  printf("in CGroupClient destructor!\r\n");
+    disconnectFromHost();
+    waitForDisconnected();
+    deleteLater();
 }
 
 void CGroupClient::lostConnection()

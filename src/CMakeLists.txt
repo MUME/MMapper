@@ -47,7 +47,6 @@ SET(mmapper_SRCS
     pandoragroup/CGroupCommunicator.cpp
     pandoragroup/CGroup.cpp
     pandoragroup/CGroupServer.cpp
-    pandoragroup/CGroupStatus.cpp
     parser/abstractparser.cpp
     parser/mumexmlparser.cpp
     parser/parserutils.cpp
