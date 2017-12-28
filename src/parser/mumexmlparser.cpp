@@ -48,7 +48,8 @@ MumeXmlParser::MumeXmlParser(MapData *md, MumeClock *mc, QObject *parent) :
     m_readingTag(false),
     m_move(CID_LOOK),
     m_xmlMode(XML_NONE),
-    m_gratuitous(false)
+    m_gratuitous(false),
+    m_readSnoopTag(false)
 {
 #ifdef XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
     QString fileName = "xmlparser_debug.dat";
@@ -237,6 +238,8 @@ bool MumeXmlParser::element( const QByteArray &line  )
                 if (line.startsWith("status")) {
                     m_readStatusTag = true;
                     m_xmlMode = XML_NONE;
+                } else if (line.startsWith("snoop")) {
+                    m_readSnoopTag = true;
                 }
                 break;
             };
@@ -343,6 +346,11 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
     ParserUtils::latinToAscii(m_stringBuffer);
     ParserUtils::removeAnsiMarks(m_stringBuffer); //Remove room color marks
 
+    if (m_readSnoopTag && m_stringBuffer.at(0) == '&' && m_stringBuffer.at(2) == ' ') {
+        // Remove snoop prefix (i.e. "&J Exits: north.")
+        m_stringBuffer = m_stringBuffer.mid(3);
+    }
+
     switch (m_xmlMode) {
     case XML_NONE:        //non room info
         if (m_stringBuffer.isEmpty()) { // standard end of description parsed
@@ -353,6 +361,15 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
             }
         } else {
             parseMudCommands(m_stringBuffer);
+        }
+        if (m_readSnoopTag) {
+            if  (m_descriptionReady) {
+                m_promptFlags = 0; // Don't trust god prompts
+                queue.enqueue(m_move);
+                emit showPath(queue, true);
+                move();
+                m_readSnoopTag = false;
+            }
         }
         toUser.append(ch);
         break;

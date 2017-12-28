@@ -77,6 +77,7 @@ protected:
     bool m_readingTag;
     bool m_readStatusTag;
     bool m_readWeatherTag;
+    bool m_readSnoopTag;
     bool m_gratuitous;
     CommandIdType m_move;
 
