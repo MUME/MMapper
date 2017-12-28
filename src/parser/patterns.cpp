@@ -31,7 +31,7 @@ QRegExp Patterns::m_rx;
 const QRegExp Patterns::m_score("\\d+/\\d+ hits(?:, \\d+/\\d+ mana,)? and \\d+/\\d+ moves.");
 
 // Used for oldRoom loading only
-QStringList Patterns::m_dynamicDescriptionPatternsList(
+const QStringList Patterns::m_dynamicDescriptionPatternsList(
     QStringList()
     << "#!(?:A|An|The)[^.]*\\."
     << "#![^.]*(?:sit(?:s|ting)?|rest(?:s|ing)?|stand(?:s|ing)|sleep(?:s|ing)?|swim(?:s|ming)?|walk(?:s|ing)?|wander(?:s|ing)?|grow(?:s|ing)?|lies?|lying)[^.]*"
@@ -43,7 +43,8 @@ QStringList Patterns::m_dynamicDescriptionPatternsList(
     << "#>whip all around you."
     << "#<Clusters of"
     << "#<Prickly"
-    << "#!.*arrived from.*\\.");
+    << "#!.*arrived from.*\\."
+);
 
 bool Patterns::matchPattern(QString pattern, QString &str)
 {
@@ -113,7 +114,6 @@ bool Patterns::matchScore(QString &str)
     return m_score.exactMatch(str);
 }
 
-
 bool Patterns::matchMoveForcePatterns(QString &str)
 {
     for ( QStringList::iterator it = Config().m_moveForcePatternsList.begin();
@@ -132,8 +132,8 @@ bool Patterns::matchNoDescriptionPatterns(QString &str)
 
 bool Patterns::matchDynamicDescriptionPatterns(QString &str)
 {
-    for (QStringList::iterator it = m_dynamicDescriptionPatternsList.begin();
-            it != m_dynamicDescriptionPatternsList.end(); ++it )
+    for (QStringList::const_iterator it = m_dynamicDescriptionPatternsList.constBegin();
+            it != m_dynamicDescriptionPatternsList.constEnd(); ++it )
         if (matchPattern(*it, str)) return true;
     return false;
 }
