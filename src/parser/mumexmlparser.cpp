@@ -145,7 +145,8 @@ void MumeXmlParser::parse(const QByteArray& line)
 	  
     } else {
       if (line.at(index) == '<') {
-        lineToUser.append(characters(m_tempCharacters));
+        emit sendToUser(characters(m_tempCharacters));
+        lineToUser.append(m_tempCharacters);
         m_tempCharacters.clear();
 
         m_readingTag = true;
@@ -156,17 +157,17 @@ void MumeXmlParser::parse(const QByteArray& line)
   }
 
   if (!m_readingTag) {
-    lineToUser.append(characters(m_tempCharacters));
-    m_tempCharacters.clear();
+      emit sendToUser(characters(m_tempCharacters));
+      lineToUser.append(m_tempCharacters);
+      m_tempCharacters.clear();
   }
-
 
   if (m_readStatusTag)
   {
       m_readStatusTag = false;
       if (Config().m_groupManagerState != CGroupCommunicator::Off)
       {
-          QString temp(lineToUser.trimmed());
+          QString temp(lineToUser.simplified());
           ParserUtils::removeAnsiMarks(temp);
           if (Patterns::matchScore(temp))
           {
@@ -175,8 +176,6 @@ void MumeXmlParser::parse(const QByteArray& line)
           }
       }
   }
-
-  emit sendToUser(lineToUser);
 }
 
 bool MumeXmlParser::element( const QByteArray& line  )
