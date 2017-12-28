@@ -74,7 +74,6 @@ class MumeXmlParser : public AbstractParser
     void move();
     QByteArray m_tempCharacters;
     QByteArray m_tempTag;
-    QString m_mumeTime;
     bool m_readingTag;
     bool m_readStatusTag;
     bool m_readWeatherTag;
