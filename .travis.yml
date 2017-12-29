@@ -5,10 +5,16 @@ dist: trusty
 # https://docs.travis-ci.com/user/languages/cpp/
 matrix:
   include:
+    #
+    # Mac
+    #
     - os: osx
       compiler: clang
       env:
         - MATRIX_EVAL="brew update"
+    #
+    # Linux GCC 4
+    #
     - os: linux
       compiler: gcc
       addons:
@@ -19,6 +25,9 @@ matrix:
             - g++-4.9
       env:
         - QT=59 PPA=beineri/opt-qt591-trusty MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+    #
+    # Linux GCC 5
+    #
     - os: linux
       compiler: gcc
       addons:
@@ -29,6 +38,9 @@ matrix:
             - g++-5
       env:
         - QT=59 PPA=beineri/opt-qt591-trusty MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+    #
+    # Linux GCC 6
+    #
     - os: linux
       compiler: gcc
       addons:
@@ -39,6 +51,9 @@ matrix:
             - g++-6
       env:
         - QT=59 PPA=beineri/opt-qt591-trusty MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+    #
+    # Linux GCC 7
+    #
     - os: linux
       compiler: gcc
       addons:
@@ -56,21 +71,31 @@ before_install:
   - '[ "$TRAVIS_OS_NAME" != linux ] || sudo apt-get -qy update'
 
 install:
-  - '[ "$TRAVIS_OS_NAME" != linux ] || sudo apt-get -qy install cmake'
+  - '[ "$TRAVIS_OS_NAME" != linux ] || sudo apt-get -qy install cmake astyle'
   - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" != */opt-* ]] || sudo apt-get -qy install qt${QT}base qt${QT}xmlpatterns'
   - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" == */opt-* ]] || sudo apt-get -qy install qt5-qmake qtbase5-dev libqt5xmlpatterns5-dev'
-  - '[ "$TRAVIS_OS_NAME" != osx ] || brew install qt5'
+  - '[ "$TRAVIS_OS_NAME" != osx ] || brew install qt5 astyle'
   - '[ "$TRAVIS_OS_NAME" != osx ] || brew link --force qt5'
   - '[ "$TRAVIS_OS_NAME" != osx ] || export PATH=/usr/local/opt/qt5/bin:$PATH'
   - qmake -v
 
 before_script:
+  # Linux
   - '[[ "$TRAVIS_OS_NAME" != linux || "$CXX" != clang++ ]] || export QMAKESPEC=linux-clang'
   - '[[ "$TRAVIS_OS_NAME" != linux || "$CXX" != g++     ]] || export QMAKESPEC=linux-g++'
-  - '[[ "$TRAVIS_OS_NAME" != osx   || "$CXX" != clang++ ]] || export QMAKESPEC=macx-clang'
-  - '[[ "$TRAVIS_OS_NAME" != osx   || "$CXX" != g++     ]] || export QMAKESPEC=macx-g++'
   - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" != */opt-* ]] || . /opt/qt$QT/bin/qt$QT-env.sh'
   - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" == */opt-* ]] || export QT_SELECT=qt5'
+  # Mac
+  - '[[ "$TRAVIS_OS_NAME" != osx   || "$CXX" != clang++ ]] || export QMAKESPEC=macx-clang'
+  - '[[ "$TRAVIS_OS_NAME" != osx   || "$CXX" != g++     ]] || export QMAKESPEC=macx-g++'
+  # Code style check
+  - astyle -V
+  - |
+    if  [[ -n $(astyle --options=src/mmapper.astylerc -R *.cpp *.h | grep Formatted) ]]; then
+      echo "You must run astyle before submitting a pull request"
+      exit -1
+    fi
+  # Prepare Makefile
   - mkdir build
   - cd build
   - cmake --version
@@ -78,5 +103,7 @@ before_script:
 
 script:
   - make -j2
-  - ctest -V
 
+after_success:
+  - ctest -V
+  - cpack
