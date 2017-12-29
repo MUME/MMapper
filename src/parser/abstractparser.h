@@ -27,10 +27,8 @@
 #ifndef ABSTRACTPARSER_H
 #define ABSTRACTPARSER_H
 
+#include "mmapper2event.h"
 #include "telnetfilter.h"
-#include "defs.h"
-#include "roomfilter.h"
-#include "roomselection.h"
 
 #include <QQueue>
 #include <QObject>
@@ -40,31 +38,9 @@ class ParseEvent;
 class MapData;
 class Room;
 class Coordinate;
-
-enum CommandIdType   { CID_NORTH = 0, CID_SOUTH, CID_EAST, CID_WEST, CID_UP, CID_DOWN,
-                       CID_UNKNOWN, CID_LOOK, CID_FLEE, CID_SCOUT, /*CID_SYNC, CID_RESET, */CID_NONE
-                     };
-
-enum DoorActionType { DAT_OPEN, DAT_CLOSE, DAT_LOCK, DAT_UNLOCK, DAT_PICK, DAT_ROCK, DAT_BASH, DAT_BREAK, DAT_BLOCK, DAT_NONE };
-
-// bit1 through bit24
-// EF_EXIT, EF_DOOR, EF_ROAD, EF_CLIMB
-#define EXITS_FLAGS_VALID bit31
-typedef quint32 ExitsFlagsType;
-
-// bit1 through bit12
-#define DIRECT_SUN_ROOM bit1
-#define INDIRECT_SUN_ROOM bit2
-
-#define ANY_DIRECT_SUNLIGHT (bit1 + bit3 + bit5 + bit9 + bit11)
-#define CONNECTED_ROOM_FLAGS_VALID bit15
-typedef quint16 ConnectedRoomFlagsType;
-
-// 0-3 terrain type (bit1 through bit4)
-#define LIT_ROOM bit5
-#define DARK_ROOM bit6
-#define PROMPT_FLAGS_VALID bit7
-typedef quint8 PromptFlagsType;
+class IncomingData;
+class RoomFilter;
+class RoomSelection;
 
 typedef QQueue<CommandIdType> CommandQueue;
 

@@ -447,7 +447,7 @@ public:
                 emit parser.sendToUser(("ERROR: loop\r\n"));
                 break;
             }
-            dirs.append(charForDir(spnode->lastdir));
+            dirs.append(Mmapper2Exit::charForDir(spnode->lastdir));
             spnode = &spnodes[spnode->parent];
         }
         std::reverse(dirs.begin(), dirs.end());
@@ -1172,7 +1172,7 @@ void AbstractParser::offlineCharacterMove(CommandIdType direction)
         sendPromptToUser(rb);
     } else {
         const Exit &e = rb->exit((uint)direction);
-        if ((getFlags(e) & EF_EXIT) && (e.outBegin() != e.outEnd())) {
+        if ((Mmapper2Exit::getFlags(e) & EF_EXIT) && (e.outBegin() != e.outEnd())) {
             const RoomSelection *rs2 = m_mapData->select();
             const Room *r = m_mapData->getRoom(*e.outBegin(), rs2);
 
@@ -1180,8 +1180,9 @@ void AbstractParser::offlineCharacterMove(CommandIdType direction)
             sendRoomExitsInfoToUser(r);
             sendPromptToUser(r);
             // Create character move event for main move/search algorithm
-            emit event(createEvent(direction, getName(r), getDynamicDescription(r), getDescription(r), 0, 0,
-                                   0));
+            emit event(Mmapper2Event::createEvent(direction, Mmapper2Room::getName(r),
+                                                  Mmapper2Room::getDynamicDescription(r),
+                                                  Mmapper2Room::getDescription(r), 0, 0, 0));
             emit showPath(queue, true);
             m_mapData->unselect(rs2);
         } else {
@@ -1203,18 +1204,18 @@ void AbstractParser::sendRoomInfoToUser(const Room *r)
     if (!Config().m_roomNameColor.isEmpty()) {
         roomName += "\033" + Config().m_roomNameColor.toLatin1();
     }
-    roomName += getName(r).toLatin1() + "\033[0m\r\n";
+    roomName += Mmapper2Room::getName(r).toLatin1() + "\033[0m\r\n";
     emit sendToUser(roomName);
 
     QByteArray roomDescription;
     if (!Config().m_roomDescColor.isEmpty()) {
         roomDescription += "\033" + Config().m_roomDescColor.toLatin1();
     }
-    roomDescription += getDescription(r).toLatin1() + "\033[0m";
+    roomDescription += Mmapper2Room::getDescription(r).toLatin1() + "\033[0m";
     roomDescription.replace("\n", "\r\n");
     emit sendToUser(roomDescription);
 
-    emit sendToUser(getDynamicDescription(r).toLatin1().replace("\n", "\r\n"));
+    emit sendToUser(Mmapper2Room::getDynamicDescription(r).toLatin1().replace("\n", "\r\n"));
 }
 
 void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
@@ -1246,11 +1247,11 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
         bool trail = false;
         bool climb = false;
 
-        if (ISSET(getFlags(r->exit(j)), EF_EXIT)) {
+        if (ISSET(Mmapper2Exit::getFlags(r->exit(j)), EF_EXIT)) {
             exit = true;
 
-            if (ISSET(getFlags(r->exit(j)), EF_ROAD))
-                if (getTerrainType(r) == RTT_ROAD) {
+            if (ISSET(Mmapper2Exit::getFlags(r->exit(j)), EF_ROAD))
+                if (Mmapper2Room::getTerrainType(r) == RTT_ROAD) {
                     road = true;
                     etmp += " =";
                 } else {
@@ -1258,10 +1259,10 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
                     etmp += " -";
                 } else etmp += " ";
 
-            if (ISSET(getFlags(r->exit(j)), EF_DOOR)) {
+            if (ISSET(Mmapper2Exit::getFlags(r->exit(j)), EF_DOOR)) {
                 door = true;
                 etmp += "{";
-            } else if (ISSET(getFlags(r->exit(j)), EF_CLIMB)) {
+            } else if (ISSET(Mmapper2Exit::getFlags(r->exit(j)), EF_CLIMB)) {
                 climb = true;
                 etmp += "|";
             }
@@ -1360,10 +1361,10 @@ void AbstractParser::sendPromptToUser(const Room *r)
 {
 
 
-    char light = (getLightType(r) == RLT_DARK) ? 'o' : '*';
+    char light = (Mmapper2Room::getLightType(r) == RLT_DARK) ? 'o' : '*';
 
     char terrain = ' ';
-    switch (getTerrainType(r)) {
+    switch (Mmapper2Room::getTerrainType(r)) {
     case RTT_INDOORS:
         terrain = '[';
         break;   // [  // indoors

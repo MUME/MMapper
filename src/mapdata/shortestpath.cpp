@@ -28,16 +28,16 @@ const double TERRAIN_COSTS[] = {1, // undef
 
 double getLength(const Exit &e, const Room *curr, const Room *nextr)
 {
-    double cost = TERRAIN_COSTS[getTerrainType(nextr)];
-    uint flags = getFlags(e);
+    double cost = TERRAIN_COSTS[Mmapper2Room::getTerrainType(nextr)];
+    uint flags = Mmapper2Exit::getFlags(e);
     if (ISSET(flags, EF_DOOR))
         cost += 1;
     if (ISSET(flags, EF_CLIMB))
         cost += 2;
-    if (getRidableType(nextr) == RRT_NOTRIDABLE) {
+    if (Mmapper2Room::getRidableType(nextr) == RRT_NOTRIDABLE) {
         cost += 3;
         // One non-ridable room means walking two rooms, plus dismount/mount.
-        if (getRidableType(curr) != RRT_NOTRIDABLE)
+        if (Mmapper2Room::getRidableType(curr) != RRT_NOTRIDABLE)
             cost += 4;
     }
     if (ISSET(flags, EF_ROAD)) // Not sure if this is appropriate.
@@ -81,7 +81,7 @@ void MapData::shortestPathSearch(const Room *origin, ShortestPathRecipient *reci
             ++outbegin;
             if (outbegin != outend) // Random, so no clear directions; skip it.
                 continue;
-            if (!(getFlags(e) & EF_EXIT))
+            if (!(Mmapper2Exit::getFlags(e) & EF_EXIT))
                 continue;
             const Room *nextr = roomIndex[*e.outBegin()];
             if (visited.contains(nextr->getId()))

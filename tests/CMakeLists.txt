@@ -1,3 +1,9 @@
+INCLUDE_DIRECTORIES(
+	${CMAKE_CURRENT_SOURCE_DIR}/../src/clock
+	${CMAKE_CURRENT_SOURCE_DIR}/../src/expandoracommon
+	${CMAKE_CURRENT_SOURCE_DIR}/../src/parser
+)
+
 # Clock
 SET(clock_SRCS ../src/clock/mumeclock.cpp ../src/clock/mumemoment.cpp)
 SET(TestClock_SRCS testclock.cpp)

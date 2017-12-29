@@ -294,8 +294,9 @@ void MapCanvas::forceMapperToRoom()
     if (tmpSel->size() == 1) {
         if (Config().m_mapMode == 2) {
             const Room *r = tmpSel->values().front();
-            emit charMovedEvent(createEvent( CID_UNKNOWN, getName(r), getDynamicDescription(r),
-                                             getDescription(r), 0, 0, 0));
+            emit charMovedEvent(Mmapper2Event::createEvent( CID_UNKNOWN, Mmapper2Room::getName(r),
+                                                            Mmapper2Room::getDynamicDescription(r),
+                                                            Mmapper2Room::getDescription(r), 0, 0, 0));
         } else
             emit setCurrentRoom(tmpSel->keys().front());
     }
@@ -648,12 +649,12 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *event)
                         for (int j = 0; j < 7; j++) {
 
                             bool door = false;
-                            if (ISSET(getFlags(r->exit(j)), EF_DOOR)) {
+                            if (ISSET(Mmapper2Exit::getFlags(r->exit(j)), EF_DOOR)) {
                                 door = true;
                                 etmp += " (";
                             }
 
-                            if (ISSET(getFlags(r->exit(j)), EF_EXIT)) {
+                            if (ISSET(Mmapper2Exit::getFlags(r->exit(j)), EF_EXIT)) {
                                 if (!door) etmp += " ";
 
                                 switch (j) {
@@ -682,15 +683,16 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *event)
                             }
 
                             if (door) {
-                                if (getDoorName(r->exit(j)) != "")
-                                    etmp += "/" + getDoorName(r->exit(j)) + ")";
+                                if (Mmapper2Exit::getDoorName(r->exit(j)) != "")
+                                    etmp += "/" + Mmapper2Exit::getDoorName(r->exit(j)) + ")";
                                 else
                                     etmp += ")";
                             }
                         }
                         etmp += ".\n";
                         QString ctemp = QString("Selected Room Coordinates: %1 %2").arg(x).arg(y);
-                        emit log( "MapCanvas", ctemp + "\n" + getName(r) + "\n" + getDescription(r) + getDynamicDescription(
+                        emit log( "MapCanvas", ctemp + "\n" + Mmapper2Room::getName(r) + "\n" +
+                                  Mmapper2Room::getDescription(r) + Mmapper2Room::getDynamicDescription(
                                       r) + etmp);
 
                         /*
@@ -1527,7 +1529,7 @@ void MapCanvas::drawRoomDoorName(const Room *sourceRoom, uint sourceDir, const R
     if (srcZ != m_currentLayer && tarZ != m_currentLayer) return;
 
     // Look at door flags to code postfixes
-    DoorFlags sourceDoorFlags = getDoorFlags(sourceRoom->exit(sourceDir));
+    DoorFlags sourceDoorFlags = Mmapper2Exit::getDoorFlags(sourceRoom->exit(sourceDir));
     QString sourcePostFix;
     if (ISSET(sourceDoorFlags, DF_HIDDEN)) {
         sourcePostFix = "h";
@@ -1544,7 +1546,7 @@ void MapCanvas::drawRoomDoorName(const Room *sourceRoom, uint sourceDir, const R
     if (sourcePostFix.length() > 0) {
         sourcePostFix = " [" + sourcePostFix + "]";
     }
-    DoorFlags targetDoorFlags = getDoorFlags(targetRoom->exit(targetDir));
+    DoorFlags targetDoorFlags = Mmapper2Exit::getDoorFlags(targetRoom->exit(targetDir));
     QString targetPostFix;
     if (ISSET(targetDoorFlags, DF_HIDDEN)) {
         targetPostFix = "h";
@@ -1565,8 +1567,9 @@ void MapCanvas::drawRoomDoorName(const Room *sourceRoom, uint sourceDir, const R
     QString name;
     bool together = false;
 
-    if (ISSET(getFlags(targetRoom->exit(targetDir)), EF_DOOR) && // the other room has a door?
-            !getDoorName(targetRoom->exit(targetDir)).isEmpty() && // has a door on both sides...
+    if (ISSET(Mmapper2Exit::getFlags(targetRoom->exit(targetDir)), EF_DOOR)
+            && // the other room has a door?
+            !Mmapper2Exit::getDoorName(targetRoom->exit(targetDir)).isEmpty() && // has a door on both sides...
             abs(dX) <= 1 && abs(dY) <= 1) { // the door is close by!
         // skip the other direction since we're printing these together
         if (sourceDir % 2 == 1)
@@ -1575,14 +1578,14 @@ void MapCanvas::drawRoomDoorName(const Room *sourceRoom, uint sourceDir, const R
         together = true;
 
         // no need for duplicating names (its spammy)
-        const QString &sourceName = getDoorName(sourceRoom->exit(sourceDir)) + sourcePostFix;
-        const QString &targetName = getDoorName(targetRoom->exit(targetDir)) + targetPostFix;
+        const QString &sourceName = Mmapper2Exit::getDoorName(sourceRoom->exit(sourceDir)) + sourcePostFix;
+        const QString &targetName = Mmapper2Exit::getDoorName(targetRoom->exit(targetDir)) + targetPostFix;
         if (sourceName != targetName)
             name =  sourceName + "/" + targetName;
         else
             name = sourceName;
     } else
-        name = getDoorName(sourceRoom->exit(sourceDir));
+        name = Mmapper2Exit::getDoorName(sourceRoom->exit(sourceDir));
 
     qreal width = m_glFontMetrics->width(name) * 0.022f / m_scaleFactor;
     qreal height = m_glFontMetrics->height() * 0.007f / m_scaleFactor;
@@ -1668,7 +1671,7 @@ void MapCanvas::drawFlow(const Room *room, const std::vector<Room *> &rooms,
     }
 
     // Draw part in adjacent room
-    uint targetDir = opposite(exitDirection);
+    uint targetDir = Mmapper2Exit::opposite(exitDirection);
     uint targetId;
     const Room *targetRoom;
     const ExitsList &exitslist = room->getExitsList();
@@ -1737,12 +1740,12 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
         glEnable(GL_BLEND);
     }
 
-    ExitFlags ef_north = getFlags(room->exit(ED_NORTH));
-    ExitFlags ef_south = getFlags(room->exit(ED_SOUTH));
-    ExitFlags ef_east  = getFlags(room->exit(ED_EAST));
-    ExitFlags ef_west  = getFlags(room->exit(ED_WEST));
-    ExitFlags ef_up    = getFlags(room->exit(ED_UP));
-    ExitFlags ef_down  = getFlags(room->exit(ED_DOWN));
+    ExitFlags ef_north = Mmapper2Exit::getFlags(room->exit(ED_NORTH));
+    ExitFlags ef_south = Mmapper2Exit::getFlags(room->exit(ED_SOUTH));
+    ExitFlags ef_east  = Mmapper2Exit::getFlags(room->exit(ED_EAST));
+    ExitFlags ef_west  = Mmapper2Exit::getFlags(room->exit(ED_WEST));
+    ExitFlags ef_up    = Mmapper2Exit::getFlags(room->exit(ED_UP));
+    ExitFlags ef_down  = Mmapper2Exit::getFlags(room->exit(ED_DOWN));
 
     quint32 roadindex = 0;
     if ( ISSET(ef_north, EF_ROAD)) SET(roadindex, bit1);
@@ -1751,27 +1754,28 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
     if ( ISSET(ef_west,  EF_ROAD)) SET(roadindex, bit4);
 
     if (layer <= 0 || Config().m_drawUpperLayersTextured) {
-        if ( (getTerrainType(room)) == RTT_ROAD)
+        if ( (Mmapper2Room::getTerrainType(room)) == RTT_ROAD)
             m_roadTextures[roadindex]->bind();
         else
-            m_terrainTextures[getTerrainType(room)]->bind();
+            m_terrainTextures[Mmapper2Room::getTerrainType(room)]->bind();
 
         glEnable(GL_TEXTURE_2D);
         glCallList(m_room_gllist);
 
         glEnable(GL_BLEND);
 
-        RoomMobFlags mf = getMobFlags(room);
-        RoomLoadFlags lf = getLoadFlags(room);
+        RoomMobFlags mf = Mmapper2Room::getMobFlags(room);
+        RoomLoadFlags lf = Mmapper2Room::getLoadFlags(room);
 
         // Make dark and troll safe rooms look dark
-        if (getSundeathType(room) == RST_NOSUNDEATH || getLightType(room) == RLT_DARK) {
+        if (Mmapper2Room::getSundeathType(room) == RST_NOSUNDEATH
+                || Mmapper2Room::getLightType(room) == RLT_DARK) {
             GLdouble oldcolour[4];
             glGetDoublev(GL_CURRENT_COLOR, oldcolour);
 
             glTranslated(0, 0, 0.005);
 
-            if (getLightType(room) == RLT_DARK)
+            if (Mmapper2Room::getLightType(room) == RLT_DARK)
                 qglColor(Qt::darkGray);
             else
                 qglColor(Qt::lightGray);
@@ -1784,7 +1788,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
         }
 
         // Draw a little red cross on noride rooms
-        if (getRidableType(room) == RRT_NOTRIDABLE) {
+        if (Mmapper2Room::getRidableType(room) == RRT_NOTRIDABLE) {
             GLdouble oldcolour[4];
             glGetDoublev(GL_CURRENT_COLOR, oldcolour);
 
@@ -1804,7 +1808,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
         if (m_scaleFactor >= 0.15) {
             // Trail Support
             glTranslated(0, 0, 0.005);
-            if (roadindex > 0 && (getTerrainType(room)) != RTT_ROAD) {
+            if (roadindex > 0 && (Mmapper2Room::getTerrainType(room)) != RTT_ROAD) {
                 alphaOverlayTexture(m_trailTextures[roadindex]);
                 glTranslated(0, 0, 0.005);
             }
@@ -2316,7 +2320,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
         int ry;
 
         for (int i = 0; i < 7; i++) {
-            uint targetDir = opposite(i);
+            uint targetDir = Mmapper2Exit::opposite(i);
             const Exit &sourceExit = exitslist[i];
             //outgoing connections
             std::set<uint>::const_iterator itOut = sourceExit.outBegin();
@@ -2342,10 +2346,11 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
                     }
                     if (oneway)
                         drawConnection( room, targetRoom, (ExitDirection)i, (ExitDirection)targetDir, true,
-                                        ISSET(getFlags(room->exit(i)), EF_EXIT) );
+                                        ISSET(Mmapper2Exit::getFlags(room->exit(i)), EF_EXIT) );
                     else
                         drawConnection( room, targetRoom, (ExitDirection)i, (ExitDirection)targetDir, false,
-                                        ISSET(getFlags(room->exit(i)), EF_EXIT) && ISSET(getFlags(targetRoom->exit(targetDir)), EF_EXIT) );
+                                        ISSET(Mmapper2Exit::getFlags(room->exit(i)), EF_EXIT)
+                                        && ISSET(Mmapper2Exit::getFlags(targetRoom->exit(targetDir)), EF_EXIT) );
                 }  else if (!sourceExit.containsIn(targetId)) { // ... or if they are outgoing oneways
                     oneway = true;
                     for (int j = 0; j < 7; ++j) {
@@ -2356,8 +2361,8 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
                         }
                     }
                     if (oneway)
-                        drawConnection( room, targetRoom, (ExitDirection)i, (ExitDirection)(opposite(i)), true,
-                                        ISSET(getFlags(sourceExit), EF_EXIT) );
+                        drawConnection( room, targetRoom, (ExitDirection)i, (ExitDirection)(Mmapper2Exit::opposite(i)),
+                                        true, ISSET(Mmapper2Exit::getFlags(sourceExit), EF_EXIT) );
                 }
 
                 //incoming connections (only for oneway connections from rooms, that are not visible)
@@ -2370,9 +2375,9 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
 
                     if ( ( ( rx < m_visibleX1 - 1) || (rx > m_visibleX2 + 1) ) ||
                             ( ( ry < m_visibleY1 - 1) || (ry > m_visibleY2 + 1) ) ) {
-                        if ( !targetRoom->exit(opposite(i)).containsIn(sourceId) ) {
-                            drawConnection( targetRoom, room, (ExitDirection)(opposite(i)), (ExitDirection)i, true,
-                                            ISSET(getFlags(targetRoom->exit(opposite(i))), EF_EXIT) );
+                        if ( !targetRoom->exit(Mmapper2Exit::opposite(i)).containsIn(sourceId) ) {
+                            drawConnection( targetRoom, room, (ExitDirection)(Mmapper2Exit::opposite(i)), (ExitDirection)i,
+                                            true, ISSET(Mmapper2Exit::getFlags(targetRoom->exit(Mmapper2Exit::opposite(i))), EF_EXIT) );
                         }
                     }
                     ++itIn;
@@ -2380,10 +2385,10 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
 
                 // draw door names
                 if (Config().m_drawDoorNames && m_scaleFactor >= 0.40 &&
-                        ISSET(getFlags(room->exit((ExitDirection)i)), EF_DOOR) &&
-                        !getDoorName(room->exit((ExitDirection)i)).isEmpty()) {
-                    if ( targetRoom->exit(opposite(i)).containsOut(sourceId))
-                        targetDir = opposite(i);
+                        ISSET(Mmapper2Exit::getFlags(room->exit((ExitDirection)i)), EF_DOOR) &&
+                        !Mmapper2Exit::getDoorName(room->exit((ExitDirection)i)).isEmpty()) {
+                    if ( targetRoom->exit(Mmapper2Exit::opposite(i)).containsOut(sourceId))
+                        targetDir = Mmapper2Exit::opposite(i);
                     else {
                         for (int j = 0; j < 7; ++j) {
                             if (targetRoom->exit(j).containsOut(sourceId)) {

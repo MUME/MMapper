@@ -11,7 +11,6 @@ SET(mmapper_SRCS
     expandoracommon/component.cpp
     expandoracommon/coordinate.cpp
     expandoracommon/frustum.cpp
-    expandoracommon/mmapper2event.cpp
     expandoracommon/parseevent.cpp
     expandoracommon/property.cpp
     mainwindow/aboutdialog.cpp
@@ -52,6 +51,7 @@ SET(mmapper_SRCS
     parser/parserutils.cpp
     parser/patterns.cpp
     parser/roompropertysetter.cpp
+    parser/mmapper2event.cpp
     pathmachine/approved.cpp
     pathmachine/crossover.cpp
     pathmachine/experimenting.cpp

@@ -46,7 +46,7 @@ GroupAction::GroupAction(AbstractAction *action, const RoomSelection *selection)
 
 void AddTwoWayExit::exec()
 {
-    if (room2Dir == UINT_MAX) room2Dir = opposite(dir);
+    if (room2Dir == UINT_MAX) room2Dir = Mmapper2Exit::opposite(dir);
     AddOneWayExit::exec();
     uint temp = to;
     to = from;
@@ -59,7 +59,7 @@ void AddTwoWayExit::exec()
 
 void RemoveTwoWayExit::exec()
 {
-    if (room2Dir == UINT_MAX) room2Dir = opposite(dir);
+    if (room2Dir == UINT_MAX) room2Dir = Mmapper2Exit::opposite(dir);
     RemoveOneWayExit::exec();
     uint temp = to;
     to = from;
@@ -163,7 +163,7 @@ void MergeRelative::exec(uint id)
                 uint oeid = *i;
                 Room *oe = rooms[oeid];
                 if (oe) {
-                    oe->exit(opposite(dir)).addOut(oid);
+                    oe->exit(Mmapper2Exit::opposite(dir)).addOut(oid);
                     target->exit(dir).addIn(oeid);
                 }
             }
@@ -171,7 +171,7 @@ void MergeRelative::exec(uint id)
                 uint oeid = *i;
                 Room *oe = rooms[oeid];
                 if (oe) {
-                    oe->exit(opposite(dir)).addIn(oid);
+                    oe->exit(Mmapper2Exit::opposite(dir)).addIn(oid);
                     target->exit(dir).addOut(oeid);
                 }
             }
@@ -227,7 +227,7 @@ void ConnectToNeighbours::connectRooms(Room *center, Coordinate &otherPos, uint 
     Room *room = map().get(otherPos);
     if (room) {
         uint oid = room->getId();
-        Exit &oexit = room->exit(opposite(dir));
+        Exit &oexit = room->exit(Mmapper2Exit::opposite(dir));
         oexit.addIn(cid);
         oexit.addOut(cid);
         Exit &cexit = center->exit(dir);
@@ -246,13 +246,13 @@ void DisconnectFromNeighbours::exec(uint id)
             for (set<uint>::const_iterator in = e.inBegin(); in != e.inEnd(); ++in) {
                 Room *other = roomIndex()[*in];
                 if (other) {
-                    other->exit(opposite(dir)).removeOut(id);
+                    other->exit(Mmapper2Exit::opposite(dir)).removeOut(id);
                 }
             }
             for (set<uint>::const_iterator out = e.outBegin(); out != e.outEnd(); ++out) {
                 Room *other = roomIndex()[*out];
                 if (other) {
-                    other->exit(opposite(dir)).removeIn(id);
+                    other->exit(Mmapper2Exit::opposite(dir)).removeIn(id);
                 }
             }
             e.removeAll();

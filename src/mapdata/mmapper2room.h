@@ -84,6 +84,7 @@ typedef quint32 RoomLoadFlags;
 
 enum RoomField {R_NAME, R_DESC, R_TERRAINTYPE, R_DYNAMICDESC, R_NOTE, R_MOBFLAGS, R_LOADFLAGS, R_PORTABLETYPE, R_LIGHTTYPE, R_ALIGNTYPE, R_RIDABLETYPE, R_SUNDEATHTYPE, R_KEYWORDS, ROOMFIELD_LAST};
 
+namespace Mmapper2Room {
 RoomName getName(const Room *room);
 
 RoomDescription getDescription(const Room *room);
@@ -107,5 +108,5 @@ RoomAlignType getAlignType(const Room *room);
 RoomRidableType getRidableType(const Room *room);
 
 RoomSundeathType getSundeathType(const Room *room);
-
+}
 #endif

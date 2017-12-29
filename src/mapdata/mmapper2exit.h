@@ -38,11 +38,6 @@ enum ExitDirection { ED_NORTH = 0, ED_SOUTH, ED_EAST, ED_WEST, ED_UP,
                    };
 #define NUM_EXITS 7
 
-ExitDirection opposite(ExitDirection in);
-uint opposite(uint in);
-ExitDirection dirForChar(char dir);
-char charForDir(ExitDirection dir);
-
 typedef class QString DoorName;
 
 #define EF_EXIT       bit1
@@ -72,6 +67,7 @@ enum ExitField {E_DOORNAME = 0, E_FLAGS, E_DOORFLAGS};
 typedef quint16 ExitFlags;
 typedef quint16 DoorFlags;
 
+namespace Mmapper2Exit {
 ExitFlags getFlags(const Exit &e);
 
 DoorName getDoorName(const Exit &e);
@@ -88,4 +84,12 @@ void orDoorFlags(Exit &e, DoorFlags flags);
 
 void nandDoorFlags(Exit &e, DoorFlags flags);
 
+ExitDirection opposite(ExitDirection in);
+
+uint opposite(uint in);
+
+ExitDirection dirForChar(char dir);
+
+char charForDir(ExitDirection dir);
+}
 #endif

@@ -29,6 +29,7 @@
 
 #include <QString>
 
+namespace Mmapper2Exit {
 ExitFlags getFlags(const Exit &e)
 {
     return e[E_FLAGS].toUInt();
@@ -140,5 +141,6 @@ char charForDir(ExitDirection dir)
     default:
         return '?';
     }
+}
 }
 

@@ -97,7 +97,8 @@ void FindRoomsDlg::receiveRoom(RoomAdmin *sender, const Room *room)
     ExitsList exits = room->getExitsList();
     for (uint dir = 0; dir < exits.size(); ++dir) {
         const Exit &e = room->exit( dir );
-        bool isSecret = ISSET( getFlags( e ), EF_DOOR ) && ISSET( getDoorFlags( e ), DF_HIDDEN );
+        bool isSecret = ISSET( Mmapper2Exit::getFlags( e ), EF_DOOR )
+                        && ISSET( Mmapper2Exit::Mmapper2Exit::getDoorFlags( e ), DF_HIDDEN );
         if (isSecret && QString((e)[0].toString()).isEmpty()) {
             // I can't get MapActions to work here
             nandDoorFlags( const_cast<Room *>( room )->exit( dir ), DF_HIDDEN );
@@ -107,7 +108,7 @@ void FindRoomsDlg::receiveRoom(RoomAdmin *sender, const Room *room)
 
     QString id;
     id.setNum(room->getId());
-    QString roomName = QString(getName(room));
+    QString roomName = QString(Mmapper2Room::getName(room));
 
     m_admin->releaseRoom(this, room->getId()); // When do I release rooms? Now? later?
 
@@ -139,12 +140,12 @@ void FindRoomsDlg::itemDoubleClicked(QTreeWidgetItem *item)
     for (int j = 0; j < 7; j++) {
 
         bool door = false;
-        if (ISSET(getFlags(r->exit(j)), EF_DOOR)) {
+        if (ISSET(Mmapper2Exit::getFlags(r->exit(j)), EF_DOOR)) {
             door = true;
             etmp += " (";
         }
 
-        if (ISSET(getFlags(r->exit(j)), EF_EXIT)) {
+        if (ISSET(Mmapper2Exit::getFlags(r->exit(j)), EF_EXIT)) {
             if (!door) etmp += " ";
 
             switch (j) {
@@ -173,16 +174,16 @@ void FindRoomsDlg::itemDoubleClicked(QTreeWidgetItem *item)
         }
 
         if (door) {
-            if (getDoorName(r->exit(j)) != "")
-                etmp += "/" + getDoorName(r->exit(j)) + ")";
+            if (Mmapper2Exit::getDoorName(r->exit(j)) != "")
+                etmp += "/" + Mmapper2Exit::getDoorName(r->exit(j)) + ")";
             else
                 etmp += ")";
         }
     }
     etmp += ".\n";
     QString idtemp = QString("Selected Room ID: %1").arg(id);
-    emit log( "FindRooms", idtemp + "\n" + getName(r) + "\n" + getDescription(
-                  r) + getDynamicDescription(r) + etmp);
+    emit log( "FindRooms", idtemp + "\n" + Mmapper2Room::getName(r) + "\n" +
+              Mmapper2Room::getDescription(r) + Mmapper2Room::getDynamicDescription(r) + etmp);
 //  emit newRoomSelection(m_roomSelection);
 }
 

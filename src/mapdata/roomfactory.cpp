@@ -47,18 +47,19 @@ ParseEvent *RoomFactory::getEvent(const Room *room) const
     for (uint dir = 0; dir < 6; ++dir) {
         const Exit &e = room->exit(dir);
 
-        ExitFlags eFlags = getFlags(e);
+        ExitFlags eFlags = Mmapper2Exit::getFlags(e);
         exitFlags |= (eFlags << (dir * 3));
     }
 
     exitFlags |= EXITS_FLAGS_VALID;
-    PromptFlagsType promptFlags = getTerrainType(room);
+    PromptFlagsType promptFlags = Mmapper2Room::getTerrainType(room);
     promptFlags |= PROMPT_FLAGS_VALID;
 
     CommandIdType c = CID_UNKNOWN;
 
-    ParseEvent *event = createEvent(c, getName(room), getDynamicDescription(room), getDescription(room),
-                                    exitFlags, promptFlags, 0);
+    ParseEvent *event = Mmapper2Event::createEvent(c, Mmapper2Room::getName(room),
+                                                   Mmapper2Room::getDynamicDescription(room),
+                                                   Mmapper2Room::getDescription(room), exitFlags, promptFlags, 0);
     return event;
 }
 
@@ -114,9 +115,9 @@ ComparisonResult RoomFactory::compareStrings(const QString &room, const QString 
 ComparisonResult RoomFactory::compare(const Room *room, const ParseEvent *event,
                                       uint tolerance) const
 {
-    QString m_name = getName(room);
-    QString m_desc = getDescription(room);
-    RoomTerrainType m_terrainType = getTerrainType(room);
+    QString m_name = Mmapper2Room::getName(room);
+    QString m_desc = Mmapper2Room::getDescription(room);
+    RoomTerrainType m_terrainType = Mmapper2Room::getTerrainType(room);
     bool updated = room->isUpToDate();
 
     if (event == NULL) {
@@ -128,7 +129,7 @@ ComparisonResult RoomFactory::compare(const Room *room, const ParseEvent *event,
         return CR_TOLERANCE;
     }
 
-    PromptFlagsType pf = getPromptFlags(event);
+    PromptFlagsType pf = Mmapper2Event::getPromptFlags(event);
     if (pf & PROMPT_FLAGS_VALID) {
         if ((pf & (bit1 + bit2 + bit3 + bit4)) != m_terrainType) {
             if (room->isUpToDate())
@@ -136,7 +137,7 @@ ComparisonResult RoomFactory::compare(const Room *room, const ParseEvent *event,
         }
     }
 
-    switch (compareStrings(m_name, getRoomName(event), tolerance)) {
+    switch (compareStrings(m_name, Mmapper2Event::getRoomName(event), tolerance)) {
     case CR_TOLERANCE:
         updated = false;
         break;
@@ -146,7 +147,7 @@ ComparisonResult RoomFactory::compare(const Room *room, const ParseEvent *event,
         break;
     }
 
-    switch (compareStrings(m_desc, getParsedRoomDesc(event), tolerance, updated)) {
+    switch (compareStrings(m_desc, Mmapper2Event::getParsedRoomDesc(event), tolerance, updated)) {
     case CR_TOLERANCE:
         updated = false;
         break;
@@ -179,10 +180,10 @@ ComparisonResult RoomFactory::compareWeakProps(const Room *room, const ParseEven
     bool different = false;
     bool tolerance = false;
 
-    PromptFlagsType pFlags = getPromptFlags(event);
+    PromptFlagsType pFlags = Mmapper2Event::getPromptFlags(event);
     if (pFlags & PROMPT_FLAGS_VALID) {
-        const RoomLightType lightType = getLightType(room);
-        const RoomSundeathType sunType = getSundeathType(room);
+        const RoomLightType lightType = Mmapper2Room::getLightType(room);
+        const RoomSundeathType sunType = Mmapper2Room::getSundeathType(room);
         if ((pFlags & LIT_ROOM) && lightType != RLT_LIT && sunType == RST_NOSUNDEATH) {
             // Allow prompt sunlight to override rooms with the DARK flag if we know the room
             // is troll safe and obviously not in permanent darkness
@@ -196,11 +197,11 @@ ComparisonResult RoomFactory::compareWeakProps(const Room *room, const ParseEven
         */
     }
 
-    ExitsFlagsType eFlags = getExitFlags(event);
+    ExitsFlagsType eFlags = Mmapper2Event::getExitFlags(event);
     if (eFlags & EXITS_FLAGS_VALID) {
         for (uint dir = 0; dir < 6; ++dir) {
             const Exit &e = room->exit(dir);
-            ExitFlags mFlags = getFlags(e);
+            ExitFlags mFlags = Mmapper2Exit::getFlags(e);
             if (mFlags) {
                 // exits are considered valid as soon as one exit is found (or if the room is updated
                 exitsValid = true;
@@ -234,10 +235,10 @@ ComparisonResult RoomFactory::compareWeakProps(const Room *room, const ParseEven
 
 void RoomFactory::update(Room *room, const ParseEvent *event) const
 {
-    (*room)[R_DYNAMICDESC] = getRoomDesc(event);
+    (*room)[R_DYNAMICDESC] = Mmapper2Event::getRoomDesc(event);
 
-    ExitsFlagsType eFlags = getExitFlags(event);
-    PromptFlagsType pFlags = getPromptFlags(event);
+    ExitsFlagsType eFlags = Mmapper2Event::getExitFlags(event);
+    PromptFlagsType pFlags = Mmapper2Event::getPromptFlags(event);
     if (eFlags & EXITS_FLAGS_VALID) {
         eFlags ^= EXITS_FLAGS_VALID;
         if (!room->isUpToDate()) {
@@ -246,7 +247,7 @@ void RoomFactory::update(Room *room, const ParseEvent *event) const
                 ExitFlags mFlags = (eFlags >> (dir * 4) & (EF_EXIT | EF_DOOR | EF_ROAD | EF_CLIMB));
 
                 Exit &e = room->exit(dir);
-                if (getFlags(e) & EF_DOOR && !(mFlags & EF_DOOR)) { // We have a secret door on record
+                if (Mmapper2Exit::getFlags(e) & EF_DOOR && !(mFlags & EF_DOOR)) { // We have a secret door on record
                     mFlags |= EF_DOOR;
                     mFlags |= EF_EXIT;
                 }
@@ -259,7 +260,7 @@ void RoomFactory::update(Room *room, const ParseEvent *event) const
             for (int dir = 0; dir < 6; ++dir) {
                 Exit &e = room->exit(dir);
                 ExitFlags mFlags = (eFlags >> (dir * 4) & (EF_EXIT | EF_DOOR | EF_ROAD | EF_CLIMB));
-                updateExit(e, mFlags);
+                Mmapper2Exit::updateExit(e, mFlags);
             }
         }
         room->setUpToDate();
@@ -279,11 +280,11 @@ void RoomFactory::update(Room *room, const ParseEvent *event) const
         room->setOutDated();
     }
 
-    QString desc = getParsedRoomDesc(event);
+    QString desc = Mmapper2Event::getParsedRoomDesc(event);
     if (!desc.isEmpty()) room->replace(R_DESC, desc);
     else room->setOutDated();
 
-    QString name = getRoomName(event);
+    QString name = Mmapper2Event::getRoomName(event);
     if (!name.isEmpty()) room->replace(R_NAME, name);
     else room->setOutDated();
 }
@@ -291,33 +292,38 @@ void RoomFactory::update(Room *room, const ParseEvent *event) const
 
 void RoomFactory::update(Room *target, const Room *source) const
 {
-    QString name = getName(source);
+    QString name = Mmapper2Room::getName(source);
     if (!name.isEmpty()) target->replace(R_NAME, name);
-    QString desc = getDescription(source);
+    QString desc = Mmapper2Room::getDescription(source);
     if (!desc.isEmpty()) target->replace(R_DESC, desc);
-    QString dynamic = getDynamicDescription(source);
+    QString dynamic = Mmapper2Room::getDynamicDescription(source);
     if (!dynamic.isEmpty()) target->replace(R_DYNAMICDESC, dynamic);
 
-    if (getAlignType(target) == RAT_UNDEFINED) target->replace(R_ALIGNTYPE, getAlignType(source));
-    if (getLightType(target) == RLT_UNDEFINED) target->replace(R_LIGHTTYPE, getLightType(source));
-    if (getSundeathType(target) == RST_UNDEFINED) target->replace(R_SUNDEATHTYPE,
-                                                                      getSundeathType(source));
-    if (getPortableType(target) == RPT_UNDEFINED) target->replace(R_PORTABLETYPE,
-                                                                      getPortableType(source));
-    if (getRidableType(target) == RRT_UNDEFINED) target->replace(R_RIDABLETYPE, getRidableType(source));
-    if (getTerrainType(source) != RTT_UNDEFINED) target->replace(R_TERRAINTYPE, getTerrainType(source));
+    if (Mmapper2Room::getAlignType(target) == RAT_UNDEFINED)
+        target->replace(R_ALIGNTYPE, Mmapper2Room::getAlignType(source));
+    if (Mmapper2Room::getLightType(target) == RLT_UNDEFINED)
+        target->replace(R_LIGHTTYPE, Mmapper2Room::getLightType(source));
+    if (Mmapper2Room::getSundeathType(target) == RST_UNDEFINED)
+        target->replace(R_SUNDEATHTYPE, Mmapper2Room::getSundeathType(source));
+    if (Mmapper2Room::getPortableType(target) == RPT_UNDEFINED)
+        target->replace(R_PORTABLETYPE, Mmapper2Room::getPortableType(source));
+    if (Mmapper2Room::getRidableType(target) == RRT_UNDEFINED)
+        target->replace(R_RIDABLETYPE, Mmapper2Room::getRidableType(source));
+    if (Mmapper2Room::getTerrainType(source) != RTT_UNDEFINED)\
+        target->replace(R_TERRAINTYPE, Mmapper2Room::getTerrainType(source));
 
-    target->replace(R_NOTE, getNote(target).append(getNote(source)));
+    target->replace(R_NOTE, Mmapper2Room::getNote(target).append(Mmapper2Room::getNote(source)));
 
-    target->replace(R_MOBFLAGS, getMobFlags(target) | getMobFlags(source));
-    target->replace(R_LOADFLAGS, getLoadFlags(target) | getLoadFlags(source));
+    target->replace(R_MOBFLAGS, Mmapper2Room::getMobFlags(target) | Mmapper2Room::getMobFlags(source));
+    target->replace(R_LOADFLAGS, Mmapper2Room::getLoadFlags(target) | Mmapper2Room::getLoadFlags(
+                        source));
 
     if (!target->isUpToDate()) {
         for (int dir = 0; dir < 6; ++dir) {
             const Exit &o = source->exit(dir);
             Exit &e = target->exit(dir);
-            ExitFlags mFlags = getFlags(o);
-            if (getFlags(e) & EF_DOOR && !(mFlags & EF_DOOR)) {
+            ExitFlags mFlags = Mmapper2Exit::getFlags(o);
+            if (Mmapper2Exit::getFlags(e) & EF_DOOR && !(mFlags & EF_DOOR)) {
                 mFlags |= EF_NO_MATCH;
                 mFlags |= EF_DOOR;
                 mFlags |= EF_EXIT;
@@ -334,16 +340,16 @@ void RoomFactory::update(Room *target, const Room *source) const
         for (int dir = 0; dir < 6; ++dir) {
             Exit &e = target->exit(dir);
             const Exit &o = source->exit(dir);
-            ExitFlags mFlags = getFlags(o);
-            ExitFlags eFlags = getFlags(e);
+            ExitFlags mFlags = Mmapper2Exit::getFlags(o);
+            ExitFlags eFlags = Mmapper2Exit::getFlags(e);
             if (eFlags != mFlags) {
                 e[E_FLAGS] = (eFlags | mFlags) | EF_NO_MATCH;
             }
-            const QString &door = getDoorName(o);
+            const QString &door = Mmapper2Exit::getDoorName(o);
             if (!door.isEmpty())
                 e[E_DOORNAME] = door;
-            DoorFlags doorFlags = getDoorFlags(o);
-            doorFlags |= getDoorFlags(e);
+            DoorFlags doorFlags = Mmapper2Exit::getDoorFlags(o);
+            doorFlags |= Mmapper2Exit::getDoorFlags(e);
             e[E_DOORFLAGS] = doorFlags;
         }
     }

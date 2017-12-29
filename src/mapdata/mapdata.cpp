@@ -46,7 +46,7 @@ QString MapData::getDoorName(const Coordinate &pos, uint dir)
     QMutexLocker locker(&mapLock);
     Room *room = map.get(pos);
     if (room && dir < 7) {
-        return ::getDoorName(room->exit(dir));
+        return Mmapper2Exit::getDoorName(room->exit(dir));
     } else return "exit";
 }
 
@@ -143,7 +143,7 @@ QList<Coordinate> MapData::getPath(const QList<CommandIdType> dirs)
             uint dir = iter.next();
             if (dir > 5) break;
             Exit &e = room->exit(dir);
-            if (!(getFlags(e) & EF_EXIT)) continue;
+            if (!(Mmapper2Exit::getFlags(e) & EF_EXIT)) continue;
             if (e.outBegin() == e.outEnd() || ++e.outBegin() != e.outEnd()) break;
             room = roomIndex[*e.outBegin()];
             if (!room) break;

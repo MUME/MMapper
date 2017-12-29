@@ -387,7 +387,7 @@ void RoomEditAttrDlg::setRoomSelection(const RoomSelection *rs, MapData *md, Map
 
     RoomSelection::const_iterator i = m_roomSelection->constBegin();
     while (i != m_roomSelection->constEnd()) {
-        roomListComboBox->addItem(getName(i.value()), i.value()->getId());
+        roomListComboBox->addItem(Mmapper2Room::getName(i.value()), i.value()->getId());
         ++i;
     }
 
@@ -440,7 +440,7 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         exitsFrame->setEnabled(true);
 
         const Exit &e = r->exit(getSelectedExit());
-        ExitFlags ef = getFlags(e);
+        ExitFlags ef = Mmapper2Exit::getFlags(e);
 
         if (ISSET(ef, EF_EXIT))
             exitListItems[0]->setCheckState(Qt::Checked);
@@ -452,9 +452,9 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
             doorFlagsListWidget->setEnabled(true);
 
             exitListItems[1]->setCheckState(Qt::Checked);
-            doorNameLineEdit->setText(getDoorName(e));
+            doorNameLineEdit->setText(Mmapper2Exit::getDoorName(e));
 
-            DoorFlags df = getDoorFlags(e);
+            DoorFlags df = Mmapper2Exit::getDoorFlags(e);
 
             if (ISSET(df, DF_HIDDEN))
                 doorListItems[0]->setCheckState(Qt::Checked);
@@ -564,158 +564,158 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         }
 
 
-        if (ISSET(getMobFlags(r), RMF_RENT))
+        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_RENT))
             mobListItems[0]->setCheckState(Qt::Checked);
         else
             mobListItems[0]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getMobFlags(r), RMF_SHOP))
+        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_SHOP))
             mobListItems[1]->setCheckState(Qt::Checked);
         else
             mobListItems[1]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getMobFlags(r), RMF_WEAPONSHOP))
+        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_WEAPONSHOP))
             mobListItems[2]->setCheckState(Qt::Checked);
         else
             mobListItems[2]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getMobFlags(r), RMF_ARMOURSHOP))
+        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_ARMOURSHOP))
             mobListItems[3]->setCheckState(Qt::Checked);
         else
             mobListItems[3]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getMobFlags(r), RMF_FOODSHOP))
+        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_FOODSHOP))
             mobListItems[4]->setCheckState(Qt::Checked);
         else
             mobListItems[4]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getMobFlags(r), RMF_PETSHOP))
+        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_PETSHOP))
             mobListItems[5]->setCheckState(Qt::Checked);
         else
             mobListItems[5]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getMobFlags(r), RMF_GUILD))
+        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_GUILD))
             mobListItems[6]->setCheckState(Qt::Checked);
         else
             mobListItems[6]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getMobFlags(r), RMF_SCOUTGUILD))
+        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_SCOUTGUILD))
             mobListItems[7]->setCheckState(Qt::Checked);
         else
             mobListItems[7]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getMobFlags(r), RMF_MAGEGUILD))
+        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_MAGEGUILD))
             mobListItems[8]->setCheckState(Qt::Checked);
         else
             mobListItems[8]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getMobFlags(r), RMF_CLERICGUILD))
+        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_CLERICGUILD))
             mobListItems[9]->setCheckState(Qt::Checked);
         else
             mobListItems[9]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getMobFlags(r), RMF_WARRIORGUILD))
+        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_WARRIORGUILD))
             mobListItems[10]->setCheckState(Qt::Checked);
         else
             mobListItems[10]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getMobFlags(r), RMF_RANGERGUILD))
+        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_RANGERGUILD))
             mobListItems[11]->setCheckState(Qt::Checked);
         else
             mobListItems[11]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getMobFlags(r), RMF_SMOB))
+        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_SMOB))
             mobListItems[12]->setCheckState(Qt::Checked);
         else
             mobListItems[12]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getMobFlags(r), RMF_QUEST))
+        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_QUEST))
             mobListItems[13]->setCheckState(Qt::Checked);
         else
             mobListItems[13]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getMobFlags(r), RMF_ANY))
+        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_ANY))
             mobListItems[14]->setCheckState(Qt::Checked);
         else
             mobListItems[14]->setCheckState(Qt::Unchecked);
 
 
-        if (ISSET(getLoadFlags(r), RLF_TREASURE))
+        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_TREASURE))
             loadListItems[0]->setCheckState(Qt::Checked);
         else
             loadListItems[0]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getLoadFlags(r), RLF_ARMOUR))
+        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_ARMOUR))
             loadListItems[1]->setCheckState(Qt::Checked);
         else
             loadListItems[1]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getLoadFlags(r), RLF_WEAPON))
+        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_WEAPON))
             loadListItems[2]->setCheckState(Qt::Checked);
         else
             loadListItems[2]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getLoadFlags(r), RLF_WATER))
+        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_WATER))
             loadListItems[3]->setCheckState(Qt::Checked);
         else
             loadListItems[3]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getLoadFlags(r), RLF_FOOD))
+        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_FOOD))
             loadListItems[4]->setCheckState(Qt::Checked);
         else
             loadListItems[4]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getLoadFlags(r), RLF_HERB))
+        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_HERB))
             loadListItems[5]->setCheckState(Qt::Checked);
         else
             loadListItems[5]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getLoadFlags(r), RLF_KEY))
+        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_KEY))
             loadListItems[6]->setCheckState(Qt::Checked);
         else
             loadListItems[6]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getLoadFlags(r), RLF_MULE))
+        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_MULE))
             loadListItems[7]->setCheckState(Qt::Checked);
         else
             loadListItems[7]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getLoadFlags(r), RLF_HORSE))
+        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_HORSE))
             loadListItems[8]->setCheckState(Qt::Checked);
         else
             loadListItems[8]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getLoadFlags(r), RLF_PACKHORSE))
+        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_PACKHORSE))
             loadListItems[9]->setCheckState(Qt::Checked);
         else
             loadListItems[9]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getLoadFlags(r), RLF_TRAINEDHORSE))
+        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_TRAINEDHORSE))
             loadListItems[10]->setCheckState(Qt::Checked);
         else
             loadListItems[10]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getLoadFlags(r), RLF_ROHIRRIM))
+        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_ROHIRRIM))
             loadListItems[11]->setCheckState(Qt::Checked);
         else
             loadListItems[11]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getLoadFlags(r), RLF_WARG))
+        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_WARG))
             loadListItems[12]->setCheckState(Qt::Checked);
         else
             loadListItems[12]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getLoadFlags(r), RLF_BOAT))
+        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_BOAT))
             loadListItems[13]->setCheckState(Qt::Checked);
         else
             loadListItems[13]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getLoadFlags(r), RLF_ATTENTION))
+        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_ATTENTION))
             loadListItems[14]->setCheckState(Qt::Checked);
         else
             loadListItems[14]->setCheckState(Qt::Unchecked);
 
-        if (ISSET(getLoadFlags(r), RLF_TOWER))
+        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_TOWER))
             loadListItems[15]->setCheckState(Qt::Checked);
         else
             loadListItems[15]->setCheckState(Qt::Unchecked);
@@ -726,19 +726,20 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
 
         roomDescriptionTextEdit->clear();
         roomDescriptionTextEdit->setFontItalic(false);
-        QString str = getDescription(r);
+        QString str = Mmapper2Room::getDescription(r);
         str = str.left(str.length() - 1);
         roomDescriptionTextEdit->append(str);
         roomDescriptionTextEdit->setFontItalic(true);
-        roomDescriptionTextEdit->append(getDynamicDescription(r));
+        roomDescriptionTextEdit->append(Mmapper2Room::getDynamicDescription(r));
         roomDescriptionTextEdit->scroll(-100, -100);
 
         roomNoteTextEdit->clear();
-        roomNoteTextEdit->append(getNote(r));
+        roomNoteTextEdit->append(Mmapper2Room::getNote(r));
 
-        terrainLabel->setPixmap(QPixmap(QString(":/pixmaps/terrain%1.png").arg(getTerrainType(r))));
+        terrainLabel->setPixmap(QPixmap(QString(":/pixmaps/terrain%1.png").arg(Mmapper2Room::getTerrainType(
+                                                                                   r))));
 
-        switch (getAlignType(r)) {
+        switch (Mmapper2Room::getAlignType(r)) {
         case RAT_GOOD:
             goodRadioButton->setChecked(true);
             break;
@@ -753,7 +754,7 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
             break;
         }
 
-        switch (getPortableType(r)) {
+        switch (Mmapper2Room::getPortableType(r)) {
         case RPT_PORTABLE:
             portableRadioButton->setChecked(true);
             break;
@@ -765,7 +766,7 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
             break;
         }
 
-        switch (getRidableType(r)) {
+        switch (Mmapper2Room::getRidableType(r)) {
         case RRT_RIDABLE:
             ridableRadioButton->setChecked(true);
             break;
@@ -777,7 +778,7 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
             break;
         }
 
-        switch (getLightType(r)) {
+        switch (Mmapper2Room::getLightType(r)) {
         case RLT_DARK:
             darkRadioButton->setChecked(true);
             break;
@@ -789,7 +790,7 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
             break;
         }
 
-        switch (getSundeathType(r)) {
+        switch (Mmapper2Room::getSundeathType(r)) {
         case RST_NOSUNDEATH:
             noSundeathRadioButton->setChecked(true);
             break;

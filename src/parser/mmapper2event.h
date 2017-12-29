@@ -26,18 +26,39 @@
 #ifndef MMAPPER2EVENT_H
 #define MMAPPER2EVENT_H
 
-#include "abstractparser.h"
+#include "defs.h"
+
+#include <QtGlobal>
 
 class QString;
 class ParseEvent;
 
-#define EV_NAME 0
-#define EV_DESC 1
-#define EV_PDESC 2
-#define EV_EXITS 3
-#define EV_PROMPT 4
-#define EV_CROOM 5
+enum CommandIdType   { CID_NORTH = 0, CID_SOUTH, CID_EAST, CID_WEST, CID_UP, CID_DOWN,
+                       CID_UNKNOWN, CID_LOOK, CID_FLEE, CID_SCOUT, /*CID_SYNC, CID_RESET, */CID_NONE
+                     };
 
+enum DoorActionType { DAT_OPEN, DAT_CLOSE, DAT_LOCK, DAT_UNLOCK, DAT_PICK, DAT_ROCK, DAT_BASH, DAT_BREAK, DAT_BLOCK, DAT_NONE };
+
+// bit1 through bit24
+// EF_EXIT, EF_DOOR, EF_ROAD, EF_CLIMB
+#define EXITS_FLAGS_VALID bit31
+typedef quint32 ExitsFlagsType;
+
+// bit1 through bit12
+#define DIRECT_SUN_ROOM bit1
+#define INDIRECT_SUN_ROOM bit2
+
+#define ANY_DIRECT_SUNLIGHT (bit1 + bit3 + bit5 + bit9 + bit11)
+#define CONNECTED_ROOM_FLAGS_VALID bit15
+typedef quint16 ConnectedRoomFlagsType;
+
+// 0-3 terrain type (bit1 through bit4)
+#define LIT_ROOM bit5
+#define DARK_ROOM bit6
+#define PROMPT_FLAGS_VALID bit7
+typedef quint8 PromptFlagsType;
+
+namespace Mmapper2Event {
 ParseEvent *createEvent(const CommandIdType &c, const QString &roomName, const QString &roomDesc,
                         const QString &parsedRoomDesc, const ExitsFlagsType &exitFlags,
                         const PromptFlagsType &promptFlags, const ConnectedRoomFlagsType &connectedRoomFlags);
@@ -53,5 +74,5 @@ ExitsFlagsType getExitFlags(const ParseEvent *e);
 PromptFlagsType getPromptFlags(const ParseEvent *e);
 
 ConnectedRoomFlagsType getConnectedRoomFlags(const ParseEvent *e);
-
+}
 #endif

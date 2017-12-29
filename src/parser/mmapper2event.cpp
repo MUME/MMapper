@@ -23,12 +23,20 @@
 **
 ************************************************************************/
 
-#include "defs.h"
 #include "mmapper2event.h"
 #include "property.h"
 #include "parseevent.h"
 
 using namespace std;
+
+#define EV_NAME 0
+#define EV_DESC 1
+#define EV_PDESC 2
+#define EV_EXITS 3
+#define EV_PROMPT 4
+#define EV_CROOM 5
+
+namespace Mmapper2Event {
 
 ParseEvent *createEvent(const CommandIdType &c, const QString &roomName, const QString &roomDesc,
                         const QString &parsedRoomDesc, const ExitsFlagsType &exitFlags, const PromptFlagsType &promptFlags,
@@ -93,4 +101,5 @@ ConnectedRoomFlagsType getConnectedRoomFlags(const ParseEvent *e)
     return e->getOptional()[EV_CROOM].toUInt();
 }
 
+}
 

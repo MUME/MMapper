@@ -120,8 +120,8 @@ private:
 public:
     void addRoom( const Room &room )
     {
-        m_hasher.add( getName( &room ) + "\n" );
-        m_hasher.add( getDescription( &room ) );
+        m_hasher.add( Mmapper2Room::getName( &room ) + "\n" );
+        m_hasher.add( Mmapper2Room::getDescription( &room ) );
         m_index.insert( m_hasher.result().toHex(), room.getPosition() );
         m_hasher.reset();
     }
@@ -379,15 +379,15 @@ void JsonWorld::addRoom( QJsonArray &jRooms, const Room *room ) const
 
     uint jsonId = m_jRoomIds[room->getId()];
     jr["id"]        = QString::number(jsonId);
-    jr["name"]      = getName(room);
-    jr["desc"]      = getDescription(room);
-    jr["sector"]    = (quint8)getTerrainType(room);
-    jr["light"]     = (quint8)getLightType(room);
-    jr["portable"]  = (quint8)getPortableType(room);
-    jr["rideable"]  = (quint8)getRidableType(room);
-    jr["sundeath"]  = (quint8)getSundeathType(room);
-    jr["mobflags"]  = (qint64)getMobFlags(room);
-    jr["loadflags"] = (qint64)getLoadFlags(room);
+    jr["name"]      = Mmapper2Room::getName(room);
+    jr["desc"]      = Mmapper2Room::getDescription(room);
+    jr["sector"]    = (quint8)Mmapper2Room::getTerrainType(room);
+    jr["light"]     = (quint8)Mmapper2Room::getLightType(room);
+    jr["portable"]  = (quint8)Mmapper2Room::getPortableType(room);
+    jr["rideable"]  = (quint8)Mmapper2Room::getRidableType(room);
+    jr["sundeath"]  = (quint8)Mmapper2Room::getSundeathType(room);
+    jr["mobflags"]  = (qint64)Mmapper2Room::getMobFlags(room);
+    jr["loadflags"] = (qint64)Mmapper2Room::getLoadFlags(room);
 
     addExits( room, jr );
 
@@ -402,9 +402,9 @@ void JsonWorld::addExits( const Room *room, QJsonObject &jr ) const
     while (el.hasNext()) {
         const Exit &e = el.next();
         QJsonObject je;
-        je["flags"]  = getFlags(e);
-        je["dflags"] = getDoorFlags(e);
-        je["name"]   = getDoorName(e);
+        je["flags"]  = Mmapper2Exit::getFlags(e);
+        je["dflags"] = Mmapper2Exit::getDoorFlags(e);
+        je["name"]   = Mmapper2Exit::getDoorName(e);
 
         QJsonArray jin;
         for (set<uint>::const_iterator i = e.inBegin(); i != e.inEnd(); ++i) {

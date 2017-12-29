@@ -67,7 +67,8 @@ public:
 
 bool isHiddenExit( const Exit &exit )
 {
-    return ISSET( getFlags( exit ), EF_DOOR ) && ISSET( getDoorFlags( exit ), DF_HIDDEN );
+    return ISSET( Mmapper2Exit::getFlags( exit ), EF_DOOR )
+           && ISSET( Mmapper2Exit::getDoorFlags( exit ), DF_HIDDEN );
 }
 
 struct RoomLink {

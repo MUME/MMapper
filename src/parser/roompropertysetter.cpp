@@ -63,7 +63,7 @@ void RoomPropertySetter::parseProperty(const QByteArray &command, const Coordina
     uint pos = propPositions[property];
     if (words.size() == 4) {
         //change exit property
-        ExitDirection dir = dirForChar(words[2][0]);
+        ExitDirection dir = Mmapper2Exit::dirForChar(words[2][0]);
         switch (pos) {
         case E_FLAGS:
         case E_DOORFLAGS:

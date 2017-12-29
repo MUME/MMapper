@@ -196,53 +196,53 @@ Room *MapStorage::loadOldRoom(QDataStream &stream, ConnectionList &connectionLis
 
 
     if (ISSET(vquint32, bit2))
-        orExitFlags(room->exit(ED_NORTH), EF_EXIT);
+        Mmapper2Exit::orExitFlags(room->exit(ED_NORTH), EF_EXIT);
     if (ISSET(vquint32, bit3))
-        orExitFlags(room->exit(ED_SOUTH), EF_EXIT);
+        Mmapper2Exit::orExitFlags(room->exit(ED_SOUTH), EF_EXIT);
     if (ISSET(vquint32, bit4))
-        orExitFlags(room->exit(ED_EAST), EF_EXIT);
+        Mmapper2Exit::orExitFlags(room->exit(ED_EAST), EF_EXIT);
     if (ISSET(vquint32, bit5))
-        orExitFlags(room->exit(ED_WEST), EF_EXIT);
+        Mmapper2Exit::orExitFlags(room->exit(ED_WEST), EF_EXIT);
     if (ISSET(vquint32, bit6))
-        orExitFlags(room->exit(ED_UP), EF_EXIT);
+        Mmapper2Exit::orExitFlags(room->exit(ED_UP), EF_EXIT);
     if (ISSET(vquint32, bit7))
-        orExitFlags(room->exit(ED_DOWN), EF_EXIT);
+        Mmapper2Exit::orExitFlags(room->exit(ED_DOWN), EF_EXIT);
     if (ISSET(vquint32, bit8)) {
-        orExitFlags(room->exit(ED_NORTH), EF_DOOR);
-        orExitFlags(room->exit(ED_NORTH), EF_NO_MATCH);
+        Mmapper2Exit::orExitFlags(room->exit(ED_NORTH), EF_DOOR);
+        Mmapper2Exit::orExitFlags(room->exit(ED_NORTH), EF_NO_MATCH);
     }
     if (ISSET(vquint32, bit9)) {
-        orExitFlags(room->exit(ED_SOUTH), EF_DOOR);
-        orExitFlags(room->exit(ED_SOUTH), EF_NO_MATCH);
+        Mmapper2Exit::orExitFlags(room->exit(ED_SOUTH), EF_DOOR);
+        Mmapper2Exit::orExitFlags(room->exit(ED_SOUTH), EF_NO_MATCH);
     }
     if (ISSET(vquint32, bit10)) {
-        orExitFlags(room->exit(ED_EAST), EF_DOOR);
-        orExitFlags(room->exit(ED_EAST), EF_NO_MATCH);
+        Mmapper2Exit::orExitFlags(room->exit(ED_EAST), EF_DOOR);
+        Mmapper2Exit::orExitFlags(room->exit(ED_EAST), EF_NO_MATCH);
     }
     if (ISSET(vquint32, bit11)) {
-        orExitFlags(room->exit(ED_WEST), EF_DOOR);
-        orExitFlags(room->exit(ED_WEST), EF_NO_MATCH);
+        Mmapper2Exit::orExitFlags(room->exit(ED_WEST), EF_DOOR);
+        Mmapper2Exit::orExitFlags(room->exit(ED_WEST), EF_NO_MATCH);
     }
     if (ISSET(vquint32, bit12)) {
-        orExitFlags(room->exit(ED_UP), EF_DOOR);
-        orExitFlags(room->exit(ED_UP), EF_NO_MATCH);
+        Mmapper2Exit::orExitFlags(room->exit(ED_UP), EF_DOOR);
+        Mmapper2Exit::orExitFlags(room->exit(ED_UP), EF_NO_MATCH);
     }
     if (ISSET(vquint32, bit13)) {
-        orExitFlags(room->exit(ED_DOWN), EF_DOOR);
-        orExitFlags(room->exit(ED_DOWN), EF_NO_MATCH);
+        Mmapper2Exit::orExitFlags(room->exit(ED_DOWN), EF_DOOR);
+        Mmapper2Exit::orExitFlags(room->exit(ED_DOWN), EF_NO_MATCH);
     }
     if (ISSET(vquint32, bit14))
-        orExitFlags(room->exit(ED_NORTH), EF_ROAD);
+        Mmapper2Exit::orExitFlags(room->exit(ED_NORTH), EF_ROAD);
     if (ISSET(vquint32, bit15))
-        orExitFlags(room->exit(ED_SOUTH), EF_ROAD);
+        Mmapper2Exit::orExitFlags(room->exit(ED_SOUTH), EF_ROAD);
     if (ISSET(vquint32, bit16))
-        orExitFlags(room->exit(ED_EAST), EF_ROAD);
+        Mmapper2Exit::orExitFlags(room->exit(ED_EAST), EF_ROAD);
     if (ISSET(vquint32, bit17))
-        orExitFlags(room->exit(ED_WEST), EF_ROAD);
+        Mmapper2Exit::orExitFlags(room->exit(ED_WEST), EF_ROAD);
     if (ISSET(vquint32, bit18))
-        orExitFlags(room->exit(ED_UP), EF_ROAD);
+        Mmapper2Exit::orExitFlags(room->exit(ED_UP), EF_ROAD);
     if (ISSET(vquint32, bit19))
-        orExitFlags(room->exit(ED_DOWN), EF_ROAD);
+        Mmapper2Exit::orExitFlags(room->exit(ED_DOWN), EF_ROAD);
 
     stream >> vqint8; //roomUpdated
 
@@ -679,7 +679,7 @@ void MapStorage::translateOldConnection(Connection *c)
     if (leftDir != CD_NONE) {
         Exit &e = left->exit(leftDir);
         e.addOut(right->getId());
-        ExitFlags eFlags = getFlags(e);
+        ExitFlags eFlags = Mmapper2Exit::getFlags(e);
         if (cFlags & CF_DOOR) {
             eFlags |= EF_NO_MATCH;
             eFlags |= EF_DOOR;
@@ -701,7 +701,7 @@ void MapStorage::translateOldConnection(Connection *c)
 
         Exit &e = right->exit(rightDir);
         e.addOut(left->getId());
-        ExitFlags eFlags = getFlags(e);
+        ExitFlags eFlags = Mmapper2Exit::getFlags(e);
         if (cFlags & CF_DOOR) {
             eFlags |= EF_DOOR;
             eFlags |= EF_NO_MATCH;
@@ -849,19 +849,19 @@ void MapStorage::loadOldConnection(Connection *connection, QDataStream &stream,
 
 void MapStorage::saveRoom(const Room *room, QDataStream &stream)
 {
-    stream << getName(room);
-    stream << getDescription(room);
-    stream << getDynamicDescription(room);
+    stream << Mmapper2Room::getName(room);
+    stream << Mmapper2Room::getDescription(room);
+    stream << Mmapper2Room::getDynamicDescription(room);
     stream << (quint32)room->getId();
-    stream << getNote(room);
-    stream << (quint8)getTerrainType(room);
-    stream << (quint8)getLightType(room);
-    stream << (quint8)getAlignType(room);
-    stream << (quint8)getPortableType(room);
-    stream << (quint8)getRidableType(room);
-    stream << (quint8)getSundeathType(room);
-    stream << (quint32)getMobFlags(room);
-    stream << (quint32)getLoadFlags(room);
+    stream << Mmapper2Room::getNote(room);
+    stream << (quint8)Mmapper2Room::getTerrainType(room);
+    stream << (quint8)Mmapper2Room::getLightType(room);
+    stream << (quint8)Mmapper2Room::getAlignType(room);
+    stream << (quint8)Mmapper2Room::getPortableType(room);
+    stream << (quint8)Mmapper2Room::getRidableType(room);
+    stream << (quint8)Mmapper2Room::getSundeathType(room);
+    stream << (quint32)Mmapper2Room::getMobFlags(room);
+    stream << (quint32)Mmapper2Room::getLoadFlags(room);
 
     stream << (quint8)room->isUpToDate();
 
@@ -878,9 +878,9 @@ void MapStorage::saveExits(const Room *room, QDataStream &stream)
     ExitsListIterator el(exitList);
     while (el.hasNext()) {
         const Exit &e = el.next();
-        stream << getFlags(e);
-        stream << getDoorFlags(e);
-        stream << getDoorName(e);
+        stream << Mmapper2Exit::getFlags(e);
+        stream << Mmapper2Exit::getDoorFlags(e);
+        stream << Mmapper2Exit::getDoorName(e);
         for (set<uint>::const_iterator i = e.inBegin(); i != e.inEnd(); ++i) {
             stream << (quint32)*i;
         }

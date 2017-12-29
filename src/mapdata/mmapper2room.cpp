@@ -28,6 +28,7 @@
 
 #include <QString>
 
+namespace Mmapper2Room {
 RoomName getName(const Room *room)
 {
     return (*room)[R_NAME].toString();
@@ -86,4 +87,5 @@ RoomRidableType getRidableType(const Room *room)
 RoomSundeathType getSundeathType(const Room *room)
 {
     return (RoomSundeathType)(*room)[R_SUNDEATHTYPE].toUInt();
+}
 }

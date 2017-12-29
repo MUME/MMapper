@@ -455,16 +455,16 @@ void MumeXmlParser::move()
         CommandIdType c = queue.dequeue();
         if ( c != CID_SCOUT ) {
             emit showPath(queue, false);
-            emit event(createEvent(m_move, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags,
-                                   m_promptFlags, m_connectedRoomFlags));
+            emit event(Mmapper2Event::createEvent(m_move, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc,
+                                                  m_exitsFlags, m_promptFlags, m_connectedRoomFlags));
             if (c != m_move)
                 queue.clear();
             m_move = CID_LOOK;
         }
     } else {
         //emit showPath(queue, false);
-        emit event(createEvent(m_move, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc, m_exitsFlags,
-                               m_promptFlags, m_connectedRoomFlags));
+        emit event(Mmapper2Event::createEvent(m_move, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc,
+                                              m_exitsFlags, m_promptFlags, m_connectedRoomFlags));
         m_move = CID_LOOK;
     }
 }

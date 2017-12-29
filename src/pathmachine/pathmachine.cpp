@@ -273,7 +273,7 @@ void PathMachine::approved(ParseEvent *event)
         mostLikelyRoom = *perhaps;
 
         // Update rooms behind exits now that we are certain about our current location
-        ConnectedRoomFlagsType bFlags = getConnectedRoomFlags(event);
+        ConnectedRoomFlagsType bFlags = Mmapper2Event::getConnectedRoomFlags(event);
         if (bFlags & CONNECTED_ROOM_FLAGS_VALID) {
             for (uint dir = 0; dir < 6; ++dir) {
                 const Exit &e = mostLikelyRoom.exit(dir);
