@@ -1227,7 +1227,7 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode, SaveFormat for
         }
     }
 
-    std::auto_ptr<AbstractMapStorage> storage;
+    std::unique_ptr<AbstractMapStorage> storage;
     if (format == SAVEF_WEB)
         storage.reset(new JsonMapStorage(*m_mapData, fileName));
     else

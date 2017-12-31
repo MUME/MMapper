@@ -47,9 +47,9 @@ public:
 
 private:
     class Impl;
-    std::auto_ptr<Impl> m_impl;
+    std::unique_ptr<Impl> m_impl;
 
-    // Disallow copying because auto_ptr is used
+    // Disallow copying because unique_ptr is used
     BaseMapSaveFilter( const BaseMapSaveFilter & );
     BaseMapSaveFilter &operator=( const BaseMapSaveFilter & );
 
