@@ -1,4 +1,14 @@
 ================================
+MMapper 2.4.1 (December 30, 2017)
+================================
+
+Changes:
+ - Resolved issues with QtIOCompressor library bundling by building it directly into MMapper
+ - Group Manager will only attempt to connect for up to 5 seconds before timing out
+ - MMapper's built in MumeClock will now only sync with known weather strings
+ - First attempt at getting Ainur exits and <snoop> tags working
+
+================================
 MMapper 2.4.0 (December 26, 2017)
 ================================
 
