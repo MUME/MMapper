@@ -32,10 +32,11 @@
 
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
-#include <QOpenGLTexture>
 #include <vector>
 #include <set>
 
+class QOpenGLTexture;
+class QOpenGLShaderProgram;
 class MapData;
 class Room;
 class InfoMark;
@@ -168,6 +169,8 @@ private:
     GLint    m_viewport[4];
     GLdouble m_modelview[16];
     GLdouble m_projection[16];
+
+    QOpenGLContext *m_context;
 
     QOpenGLTexture *m_terrainTextures[16];
     QOpenGLTexture *m_roadTextures[16];

@@ -46,6 +46,7 @@
 
 #include <QWheelEvent>
 #include <QPainter>
+#include <QOpenGLTexture>
 
 #define ROOM_Z_DISTANCE (7.0f)
 #define ROOM_WALL_ALIGN (0.008f)
@@ -859,6 +860,13 @@ void MapCanvas::zoomOut()
 void MapCanvas::initializeGL()
 {
     initializeOpenGLFunctions();
+
+    QByteArray version((const char *)glGetString(GL_VERSION));
+    QByteArray renderer((const char *)glGetString(GL_RENDERER));
+    QByteArray vendor((const char *)glGetString(GL_VENDOR));
+    emit log("MapCanvas", "OpenGL version: " + version);
+    emit log("MapCanvas", "OpenGL renderer: " + renderer);
+    emit log("MapCanvas", "OpenGL vendor: " + vendor);
 
     if (Config().m_antialiasingSamples > 0)
         glEnable(GL_MULTISAMPLE);
