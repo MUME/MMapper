@@ -212,7 +212,7 @@ IF(UNIX AND NOT APPLE)
     # Debian
     SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "nschimme@gmail.com")
     SET(CPACK_DEBIAN_PACKAGE_NAME "mmapper")
-    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt5core5a (>= 5.4.0), libqt5gui5 (>= 5.4.0), libqt5opengl5 (>= 5.4.0), libqt5network5 (>= 5.4.0), libqt5xml5 (>= 5.4.0)")
+    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt5core5a (>= 5.4.0), libqt5gui5 (>= 5.4.0), libqt5opengl5 (>= 5.4.0), libqt5network5 (>= 5.4.0), libqt5xml5 (>= 5.4.0), zlib1g")
 
     SET(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_FILE_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
 ENDIF(UNIX AND NOT APPLE)
@@ -267,7 +267,7 @@ IF(WIN32)
     )
 
     # ZIP requires 7-zip
-    SET(CPACK_GENERATOR "ZIP") # Others: NSIS
+    SET(CPACK_GENERATOR "ZIP;NSIS")
     SET(CPACK_SOURCE_GENERATOR "ZIP")
 
     # Windows (NSIS) Settings
