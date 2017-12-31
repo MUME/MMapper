@@ -55,6 +55,7 @@ const QHash<QString, MumeTime> MumeClock::m_stringTimeHash{
 
     // Necromancer Darkness
     {"Arda seems to wither as an evil power begins to grow...", TIME_UNKNOWN},
+    {"Shrouds of dark clouds roll in above you, blotting out the skies.", TIME_UNKNOWN},
     {"The evil power begins to regress...", TIME_UNKNOWN},
 
     // Bree
