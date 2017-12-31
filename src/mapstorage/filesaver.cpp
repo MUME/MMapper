@@ -42,9 +42,9 @@ const char *c_suffix = ".tmp";
 void throw_sys_error()
 {
 #ifdef UNIX_SAFETY
-    char buf[1024] = "";
-    char const *str = strerror_r( errno, buf, sizeof( buf ) );
-    throw std::runtime_error( str );
+    char error[1024] = "";
+    strerror_r( errno, error, sizeof( error ) );
+    throw std::runtime_error( error );
 #else
     return ;
 #endif
