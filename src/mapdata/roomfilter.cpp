@@ -45,6 +45,6 @@ const bool RoomFilter::filter(const Room *r) const
             if (QString((e)[0].toString()).contains(pattern, cs))
                 return 1;
         }
-        return 0;
     }
+    return 0;
 }

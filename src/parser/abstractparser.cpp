@@ -1407,6 +1407,8 @@ void AbstractParser::sendPromptToUser(const Room *r)
     case RTT_BRUSH:
         terrain = ':';
         break;     // :  // brush
+    default:
+        break;
     };
 
     QByteArray prompt("\r\n");

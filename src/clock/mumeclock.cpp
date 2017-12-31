@@ -291,6 +291,8 @@ const QString MumeClock::toMumeTime(const MumeMoment &moment)
         time = QString("%1:%2%3 on the ").arg(hour).arg(QString().sprintf("%02d",
                                                                           moment.m_minute)).arg(period);
         break;
+    default:
+        break;
     }
     int day = moment.m_day + 1;
     QString daySuffix;
