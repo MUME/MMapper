@@ -95,7 +95,12 @@ SET(mmapper_UIS
     preferences/pathmachinepage.ui
 )
 
-set(mmapper_DATA
+IF(NOT QTIOCOMPRESSOR_FOUND)
+    # Build QtIOCompressor embedded
+    SET(mmapper_SRCS ${mmapper_SRCS} ${QTIOCOMPRESSOR_INCLUDE_DIRS}/qtiocompressor.cpp)
+ENDIF()
+
+SET(mmapper_DATA
     mmapper.desktop
     mmapper.astylerc
     MacOSXBundleInfo.plist.in
@@ -117,6 +122,7 @@ INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_SOURCE_DIR}/preferences
     ${CMAKE_CURRENT_SOURCE_DIR}/proxy
     ${OPENGL_INCLUDE_DIR}
+    ${ZLIB_INCLUDE_DIRS}
     ${QTIOCOMPRESSOR_INCLUDE_DIRS}
 )
 
@@ -134,17 +140,25 @@ TARGET_LINK_LIBRARIES(mmapper
     Qt5::Xml
     Qt5::Network
     Qt5::OpenGL
-    ${QTIOCOMPRESSOR_LIBRARIES}
     ${OPENGL_gl_LIBRARY}
 )
 
-ADD_DEPENDENCIES(mmapper QtSolutions_IOCompressor-2.3)
+IF(QTIOCOMPRESSOR_FOUND)
+    TARGET_LINK_LIBRARIES(mmapper ${QTIOCOMPRESSOR_LIBRARIES})
+ELSE()
+    # Build QtIOCompressor embedded
+    IF (NOT ZLIB_FOUND)
+        # Assume we are building a static zlib
+        ADD_DEPENDENCIES(mmapper zlib)
+    ENDIF()
+    TARGET_LINK_LIBRARIES(mmapper ${ZLIB_LIBRARIES})
+ENDIF()
 
 # Begin CPack Settings
 SET(CPACK_SYSTEM_NAME ${CMAKE_SYSTEM_NAME})
 SET(CPACK_PACKAGE_VERSION ${MMAPPER_VERSION})
 STRING(REGEX REPLACE "[.-]" " " VERSION_NUMBERS ${MMAPPER_VERSION})
-separate_arguments(VERSION_NUMBERS)
+SEPARATE_ARGUMENTS(VERSION_NUMBERS)
 LIST(GET VERSION_NUMBERS 0 CPACK_PACKAGE_VERSION_MAJOR)
 LIST(REMOVE_AT VERSION_NUMBERS 0)
 LIST(GET VERSION_NUMBERS 0 CPACK_PACKAGE_VERSION_MINOR)
@@ -168,16 +182,6 @@ IF(UNIX AND NOT APPLE)
         DESTINATION share/games/mmapper
         COMPONENT map
     )
-
-    # Bundle Library Files
-    IF(DEFINED QTIOCOMPRESSOR_SRC_DIR)
-        MESSAGE(STATUS "Bundling QtIOCompressor: ${QTIOCOMPRESSOR_LIBRARY}")
-        INSTALL(
-            FILES ${QTIOCOMPRESSOR_LIBRARY}
-            DESTINATION lib
-            COMPONENT applications
-        )
-    ENDIF()
 
     # Linux Desktop Integration
     INSTALL(FILES mmapper.desktop
@@ -248,13 +252,6 @@ IF(WIN32)
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             COMMENT "Finding the Qt framework dependencies"
     )
-    ADD_CUSTOM_COMMAND(
-        TARGET mmapper
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${QTIOCOMPRESSOR_LIBRARY}
-        ${CMAKE_CURRENT_BINARY_DIR}/bin
-    )
     INSTALL(DIRECTORY
         ${CMAKE_CURRENT_BINARY_DIR}/bin
         DESTINATION .
@@ -295,18 +292,6 @@ IF(APPLE)
     SET_TARGET_PROPERTIES(mmapper PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/MacOSXBundleInfo.plist.in )
 
     # Bundle the libraries with the binary
-    ADD_CUSTOM_COMMAND(
-        TARGET mmapper
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory
-        ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app/Contents/Frameworks/)
-    ADD_CUSTOM_COMMAND(
-        TARGET mmapper
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${QTIOCOMPRESSOR_LIBRARY}
-        ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app/Contents/Frameworks/
-    )
     FIND_PROGRAM(MACDEPLOYQT_APP macdeployqt)
     MESSAGE(" - macdeployqt path: ${MACDEPLOYQT_APP}")
     ADD_CUSTOM_COMMAND(
