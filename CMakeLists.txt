@@ -28,49 +28,47 @@ SET(CMAKE_AUTOMOC ON)
 SET(CMAKE_AUTOUIC ON)
 SET(CMAKE_AUTORCC ON)
 
-# try to find system copy of qtiocompressor
+# Try to find the system copy of QtIOCompressor
 FIND_PATH(QTIOCOMPRESSOR_INCLUDE_DIRS qtiocompressor.h PATH_SUFFIXES QtSolutions)
 FIND_LIBRARY(QTIOCOMPRESSOR_LIBRARIES QtSolutions_IOCompressor-2.3)
 IF(QTIOCOMPRESSOR_INCLUDE_DIRS AND QTIOCOMPRESSOR_LIBRARIES)
+    SET(QTIOCOMPRESSOR_FOUND 1)
     MESSAGE(STATUS "Found QtIOCompressor: ${QTIOCOMPRESSOR_LIBRARIES}")
 ELSE()
-    MESSAGE(STATUS "QtIOCompressor not found; building embedded library.")
-    INCLUDE(ExternalProject)
-    ExternalProject_Add(
-      QtIOCompressor
+    SET(QTIOCOMPRESSOR_FOUND 0)
 
-      GIT_REPOSITORY "https://github.com/nschimme/QtIOCompressor.git"
-      GIT_TAG "master"
-
-      SOURCE_DIR "${CMAKE_BINARY_DIR}/QtIOCompressor-src"
-      BINARY_DIR "${CMAKE_BINARY_DIR}/QtIOCompressor-build"
-      CMAKE_ARGS "-DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}"
-      INSTALL_COMMAND ""
-    )
-    SET(QTIOCOMPRESSOR_LIBRARY ${CMAKE_BINARY_DIR}/QtIOCompressor-build/${CMAKE_SHARED_LIBRARY_PREFIX}QtSolutions_IOCompressor-2.3${CMAKE_SHARED_LIBRARY_SUFFIX})
-    SET(QTIOCOMPRESSOR_LIBRARIES ${QTIOCOMPRESSOR_LIBRARY})
-    ADD_LIBRARY(QtSolutions_IOCompressor-2.3 SHARED IMPORTED)
-    SET_TARGET_PROPERTIES(QtSolutions_IOCompressor-2.3 PROPERTIES IMPORTED_LOCATION ${QTIOCOMPRESSOR_LIBRARY})
-
-    SET(QTIOCOMPRESSOR_SRC_DIR ${CMAKE_BINARY_DIR}/QtIOCompressor-src/src)
-    SET(QTIOCOMPRESSOR_INCLUDE_DIRS ${QTIOCOMPRESSOR_SRC_DIR} ${CMAKE_BINARY_DIR}/QtIOCompressor-build)
-
-    # Linux/Apple needs an additional relative path for bundling the library
-    IF(UNIX)
-        IF(APPLE)
-            SET(QTIOCOMPRESSOR_LIBRARIES -Wl,-install_name,@rpath/ ${QTIOCOMPRESSOR_LIBRARY})
+    # QtIOCompressor requires zlib
+    FIND_PACKAGE(ZLIB QUIET)
+    IF(ZLIB_FOUND)
+        MESSAGE(STATUS "Found ZLIB: ${ZLIB_LIBRARIES} ${ZLIB_INCLUDE_DIRS}")
+    ELSE()
+        # QtIOCompressor will build a static zlib under zlib-build
+        IF(WIN32)
+            SET(ZLIB_STATIC_LIBRARY_NAME zlibstatic)
         ELSE()
-            SET(QTIOCOMPRESSOR_LIBRARIES -Wl,-rpath,../lib ${QTIOCOMPRESSOR_LIBRARY})
+            SET(ZLIB_STATIC_LIBRARY_NAME z)
         ENDIF()
+        SET(ZLIB_STATIC_LIBRARY ${CMAKE_BINARY_DIR}/zlib-build/${CMAKE_STATIC_LIBRARY_PREFIX}${ZLIB_STATIC_LIBRARY_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
+        SET(ZLIB_LIBRARIES ${ZLIB_STATIC_LIBRARY})
+        SET(ZLIB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/zlib-src ${CMAKE_BINARY_DIR}/zlib-build)
     ENDIF()
+
+    # Add QtIOCommpressor sources
+    CONFIGURE_FILE(CMakeLists.QtIOCompressor.in QtIOCompressor-download/CMakeLists.txt)
+    EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
+        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/QtIOCompressor-download" )
+    EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" --build .
+        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/QtIOCompressor-download" )
+    ADD_SUBDIRECTORY("${CMAKE_BINARY_DIR}/QtIOCompressor-src" "${CMAKE_BINARY_DIR}/QtIOCompressor-build")
+    SET(QTIOCOMPRESSOR_INCLUDE_DIRS "${CMAKE_BINARY_DIR}/QtIOCompressor-src/src")
 ENDIF()
 
 # Extract git branch and revision
-FIND_PACKAGE(Git)
+FIND_PACKAGE(Git QUIET)
 IF(EXISTS ${GIT_EXECUTABLE})
     IF(EXISTS "${PROJECT_SOURCE_DIR}/.git")
         # Get the current working branch
-        execute_process(
+        EXECUTE_PROCESS(
           COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
           WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
           OUTPUT_VARIABLE GIT_BRANCH
@@ -78,7 +76,7 @@ IF(EXISTS ${GIT_EXECUTABLE})
         )
 
         # Get the latest abbreviated commit hash of the working branch
-        execute_process(
+        EXECUTE_PROCESS(
           COMMAND ${GIT_EXECUTABLE} log -1 --format=%h
           WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
           OUTPUT_VARIABLE GIT_COMMIT_HASH
