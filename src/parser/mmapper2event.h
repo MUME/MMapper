@@ -52,7 +52,8 @@ typedef quint32 ExitsFlagsType;
 #define CONNECTED_ROOM_FLAGS_VALID bit15
 typedef quint16 ConnectedRoomFlagsType;
 
-// 0-3 terrain type (bit1 through bit4)
+// bit0-3 -> char representation of RoomTerrainType
+#define TERRAIN_TYPE (bit1 + bit2 + bit3 + bit4)
 #define LIT_ROOM bit5
 #define DARK_ROOM bit6
 #define PROMPT_FLAGS_VALID bit7
