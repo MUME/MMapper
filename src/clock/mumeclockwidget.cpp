@@ -108,7 +108,11 @@ void MumeClockWidget::updateLabel()
         // The current time is 12:15 am.
         QString styleSheet = "color:black";
         QString statusTip = "";
-        if (time == TIME_DAWN) {
+        if (precision <= MUMECLOCK_DAY) {
+            styleSheet = "color:black";
+            statusTip = "Please run \"time\" to sync the clock";
+
+        } else if (time == TIME_DAWN) {
             styleSheet = "color:white;background:red";
             statusTip = "Ticks left until day";
         } else if (time >= TIME_DUSK) {
@@ -123,8 +127,7 @@ void MumeClockWidget::updateLabel()
     }
     if (precision > MUMECLOCK_DAY) {
         timeLabel->setText(m_clock->toCountdown(moment));
-        timeLabel->show();
     } else {
-        timeLabel->hide();
+        timeLabel->setText(m_clock->toCountdown(moment));
     }
 }
