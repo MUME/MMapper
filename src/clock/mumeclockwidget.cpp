@@ -26,7 +26,6 @@
 #include <QTimer>
 
 #include "mumeclockwidget.h"
-#include "mumeclock.h"
 #include "configuration.h"
 
 MumeClockWidget::MumeClockWidget(MumeClock *clock, QWidget *parent)
@@ -37,6 +36,7 @@ MumeClockWidget::MumeClockWidget(MumeClock *clock, QWidget *parent)
 
     m_lastSeason = SEASON_UNKNOWN;
     m_lastTime = TIME_UNKNOWN;
+    m_lastPrecision = MUMECLOCK_UNSET;
 
     m_timer = new QTimer(this);
     connect(m_timer, SIGNAL(timeout()), this, SLOT(updateLabel()));
@@ -103,7 +103,7 @@ void MumeClockWidget::updateLabel()
     }
 
     MumeTime time = moment.toTimeOfDay();
-    if (time != m_lastTime) {
+    if (time != m_lastTime || precision != m_lastPrecision) {
         m_lastTime = time;
         // The current time is 12:15 am.
         QString styleSheet = "color:black";
@@ -125,9 +125,5 @@ void MumeClockWidget::updateLabel()
         timeLabel->setStyleSheet(styleSheet);
         timeLabel->setStatusTip(statusTip);
     }
-    if (precision > MUMECLOCK_DAY) {
-        timeLabel->setText(m_clock->toCountdown(moment));
-    } else {
-        timeLabel->setText(m_clock->toCountdown(moment));
-    }
+    timeLabel->setText(m_clock->toCountdown(moment));
 }

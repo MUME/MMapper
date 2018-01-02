@@ -28,9 +28,9 @@
 #include <QWidget>
 #include "ui_mumeclockwidget.h"
 #include "mumemoment.h"
+#include "mumeclock.h"
 
 class QTimer;
-class MumeClock;
 
 class MumeClockWidget : public QWidget, private Ui::MumeClockWidget
 {
@@ -48,6 +48,8 @@ private:
 
     MumeTime m_lastTime;
     MumeSeason m_lastSeason;
+    MumeClockPrecision m_lastPrecision;
+
 };
 
 
