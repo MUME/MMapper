@@ -32,15 +32,22 @@
 class Property : public ListCycler<char, QByteArray>
 {
 public:
-
-    Property(bool in_skipped = false) : m_skipped(in_skipped) {}
     Property(const QByteArray &in_data);
 
     const char *rest() const;
     bool isSkipped() const ;
 
+protected:
+    Property(bool in_skipped = false) : m_skipped(in_skipped) {}
+
 private:
     bool m_skipped;
+};
+
+class SkipProperty : public Property
+{
+public:
+    SkipProperty() : Property(true) {}
 };
 
 #ifdef DMALLOC

@@ -16,7 +16,7 @@ TestExpandoraCommon::~TestExpandoraCommon()
 
 void TestExpandoraCommon::skippablePropertyTest()
 {
-    Property property(true);
+    SkipProperty property;
     QVERIFY(property.isSkipped());
     QVERIFY(property.current() == 0);
     QVERIFY_EXCEPTION_THROWN(property.rest(), runtime_error);
@@ -42,13 +42,13 @@ void TestExpandoraCommon::stringPropertyTest()
     QVERIFY(property.current() == '\0');
     QVERIFY(property.getPos() == 11);
     QVERIFY(property.prev() == 'd');
-    QVERIFY(property.rest() == (ba.constData() + property.getPos()));
+    QVERIFY2(property.rest(), (ba.constData() + property.getPos()));
     QVERIFY(property.getPos() == 10);
     QVERIFY(property.next() == '\0');
     QVERIFY(property.getPos() == 11);
     QVERIFY(property.next() == 'h'); // Wraps around to beginning
     QVERIFY(property.getPos() == 0);
-    QVERIFY(property.rest() == ba);
+    QVERIFY2(property.rest(), ba);
 }
 
 QTEST_MAIN(TestExpandoraCommon)

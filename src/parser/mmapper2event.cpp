@@ -47,7 +47,7 @@ ParseEvent *createEvent(const CommandIdType &c, const QString &roomName, const Q
     deque<QVariant> &optional = event->getOptional();
 
     if (roomName.isNull()) {
-        event->push_back(new Property(true));
+        event->push_back(new SkipProperty());
     } else {
         event->push_back(new Property(roomName.toLatin1()));
     }
@@ -55,7 +55,7 @@ ParseEvent *createEvent(const CommandIdType &c, const QString &roomName, const Q
     optional.push_back(roomDesc);
 
     if (parsedRoomDesc.isNull()) {
-        event->push_back(new Property(true));
+        event->push_back(new SkipProperty());
     } else
         event->push_back(new Property(parsedRoomDesc.toLatin1()));
     optional.push_back(parsedRoomDesc);
@@ -66,7 +66,7 @@ ParseEvent *createEvent(const CommandIdType &c, const QString &roomName, const Q
         terrain += (promptFlags & TERRAIN_TYPE);
         event->push_back(new Property(QByteArray(1, terrain)));
     } else {
-        event->push_back(new Property(true));
+        event->push_back(new SkipProperty());
     }
     optional.push_back((uint)promptFlags);
     optional.push_back((uint)connectedRoomFlags);
