@@ -1,4 +1,15 @@
 ================================
+MMapper 2.4.2 (January 1, 2018)
+================================
+
+Changes:
+ - Fixed critical bug that prevented secret door names from being displayed
+ - The last folder you open a map in will be remembered
+ - The first time you open MMapper it will try to load a map automatically
+ - Mume Clock will now show you the time even if it isn't certain
+ - Fixed a 4 year old bug where no-ride rooms were not red
+
+================================
 MMapper 2.4.1 (December 30, 2017)
 ================================
 
