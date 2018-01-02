@@ -50,6 +50,7 @@
 
 #define ROOM_Z_DISTANCE (7.0f)
 #define ROOM_WALL_ALIGN (0.008f)
+#define CAMERA_Z_DISTANCE (0.978f)
 #define BASESIZEX 528       // base canvas size
 #define BASESIZEY 528
 
@@ -97,38 +98,28 @@ QColor MapCanvas::m_noFleeColor = QColor(123, 63, 0);
 
 MapCanvas::MapCanvas( MapData *mapData, PrespammedPath *prespammedPath, CGroup *groupManager,
                       QWidget *parent )
-    : QOpenGLWidget(parent)
+    : QOpenGLWidget(parent),
+      m_scrollX(0),
+      m_scrollY(0),
+      m_currentLayer(0),
+      m_selectedArea(false), //no area selected at start time
+      m_infoMarkSelection(false),
+      m_canvasMouseMode(CMM_MOVE),
+      m_roomSelection(NULL),
+      m_connectionSelection(NULL),
+      m_mouseRightPressed(false),
+      m_mouseLeftPressed(false),
+      m_altPressed(false),
+      m_ctrlPressed(false),
+      m_scaleFactor(1.0f), // scale rooms
+      m_data(mapData),
+      m_prespammedPath(prespammedPath),
+      m_groupManager(groupManager)
 {
-    m_scrollX = 0;
-    m_scrollY = 0;
-
-    m_currentLayer = 0;
-
-    //no area selected at start time
-    m_selectedArea = false;
-
-    m_infoMarkSelection = false;
-
-    m_canvasMouseMode = CMM_MOVE;
-
-    m_roomSelection = NULL;
-    m_connectionSelection = NULL;
-
-    m_mouseRightPressed = false;
-    m_mouseLeftPressed = false;
-    m_altPressed = false;
-    m_ctrlPressed = false;
-
-    m_scaleFactor = 1.0f;  //scale rooms
-
     m_glFont = new QFont(QFont(), this);
     m_glFont->setStyleHint(QFont::System, QFont::OpenGLCompatible);
 
     m_glFontMetrics = new QFontMetrics(*m_glFont);
-
-    m_data = mapData;
-    m_prespammedPath = prespammedPath;
-    m_groupManager = groupManager;
 
     m_infoMarksEditDlg = new InfoMarksEditDlg(mapData, this);
     connect(m_infoMarksEditDlg, SIGNAL(mapChanged()), this, SLOT(update()));
@@ -140,11 +131,13 @@ MapCanvas::MapCanvas( MapData *mapData, PrespammedPath *prespammedPath, CGroup *
     memset(m_loadTextures, 0, sizeof(m_loadTextures));
     memset(m_mobTextures, 0, sizeof(m_mobTextures));
     memset(m_trailTextures, 0, sizeof(m_trailTextures));
-    m_updateTextures = 0;
+    m_updateTexture = 0;
 
     int samples = Config().m_antialiasingSamples;
     if (samples <= 0) samples = 2; // Default to 2 samples to prevent restart
     QSurfaceFormat format;
+    format.setVersion(2, 1);
+    format.setRenderableType(QSurfaceFormat::OpenGL);
     format.setSamples(samples);
     setFormat(format);
 }
@@ -153,6 +146,7 @@ MapCanvas::MapCanvas( MapData *mapData, PrespammedPath *prespammedPath, CGroup *
 void MapCanvas::onInfoMarksEditDlgClose()
 {
     m_infoMarkSelection = false;
+    makeCurrent();
     update();
 }
 
@@ -171,7 +165,7 @@ MapCanvas::~MapCanvas()
             if (m_mobTextures[i]) delete m_mobTextures[i];
         }
     }
-    delete m_updateTextures;
+    delete m_updateTexture;
 
     if (m_roomSelection) m_data->unselect(m_roomSelection);
     if (m_connectionSelection) delete m_connectionSelection;
@@ -179,15 +173,16 @@ MapCanvas::~MapCanvas()
     if ( m_glFontMetrics ) delete m_glFontMetrics;
     doneCurrent();
 }
-/*
-  void MapCanvas::closeEvent(QCloseEvent *event){
-  if ( m_infoMarksEditDlg )
-  {
-  m_infoMarksEditDlg->hide();
-  delete m_infoMarksEditDlg;
+
+inline static void loadMatrix(const QMatrix4x4 &m)
+{
+    // static to prevent glLoadMatrixf to fail on certain drivers
+    static GLfloat mat[16];
+    const float *data = m.constData();
+    for (int index = 0; index < 16; ++index)
+        mat[index] = data[index];
+    glLoadMatrixf(mat);
 }
-}
-*/
 
 float MapCanvas::SCROLLFACTOR()
 {
@@ -307,12 +302,11 @@ void MapCanvas::forceMapperToRoom()
 
 void MapCanvas::mousePressEvent(QMouseEvent *event)
 {
-    GLdouble winX = (GLdouble)event->pos().x();
-    GLdouble winY = (GLdouble)m_viewport[3] - (GLdouble)event->pos().y();
-    GLdouble winZ = 0.978f;
-    GLdouble tmp;
-    UnProject((GLdouble) winX, (GLdouble) winY, (GLdouble) winZ,
-              &m_selX1, &m_selY1, &tmp);
+    QVector3D v = QVector3D(event->pos().x(), height() - event->pos().y(), CAMERA_Z_DISTANCE)
+                  .unproject(m_model, m_projection, this->rect());
+    m_selX1 = v.x();
+    m_selY1 = v.y();
+
     m_selX2 = m_selX1;
     m_selY2 = m_selY1;
     m_selLayer1 = m_currentLayer;
@@ -477,12 +471,10 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *event)
         continuousScroll(hScroll, vScroll);
     }
 
-    GLdouble winX = (GLdouble)event->pos().x();
-    GLdouble winY = (GLdouble)m_viewport[3] - (GLdouble)event->pos().y();
-    GLdouble winZ = 0.978f;
-    GLdouble tmp;
-    UnProject((GLdouble) winX, (GLdouble) winY, (GLdouble) winZ,
-              &m_selX2, &m_selY2, &tmp);
+    QVector3D v = QVector3D(event->pos().x(), height() - event->pos().y(), CAMERA_Z_DISTANCE)
+                  .unproject(m_model, m_projection, this->rect());
+    m_selX2 = v.x();
+    m_selY2 = v.y();
     m_selLayer2 = m_currentLayer;
 
     switch (m_canvasMouseMode) {
@@ -581,13 +573,10 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *event)
 void MapCanvas::mouseReleaseEvent(QMouseEvent *event)
 {
     continuousScroll(0, 0);
-
-    GLdouble winX = (GLdouble)event->pos().x();
-    GLdouble winY = (GLdouble)m_viewport[3] - (GLdouble)event->pos().y();
-    GLdouble winZ = 0.978f;
-    GLdouble tmp;
-    UnProject((GLdouble) winX, (GLdouble) winY, (GLdouble) winZ,
-              &m_selX2, &m_selY2, &tmp);
+    QVector3D v = QVector3D(event->pos().x(), height() - event->pos().y(), CAMERA_Z_DISTANCE)
+                  .unproject(m_model, m_projection, this->rect());
+    m_selX2 = v.x();
+    m_selY2 = v.y();
     m_selLayer2 = m_currentLayer;
 
     switch (m_canvasMouseMode) {
@@ -864,9 +853,12 @@ void MapCanvas::initializeGL()
     QByteArray version((const char *)glGetString(GL_VERSION));
     QByteArray renderer((const char *)glGetString(GL_RENDERER));
     QByteArray vendor((const char *)glGetString(GL_VENDOR));
-    emit log("MapCanvas", "OpenGL version: " + version);
-    emit log("MapCanvas", "OpenGL renderer: " + renderer);
-    emit log("MapCanvas", "OpenGL vendor: " + vendor);
+    qInfo() << "OpenGL Version: " << version;
+    qInfo() << "OpenGL Renderer: " << renderer;
+    qInfo() << "OpenGL Vendor: " << vendor;
+    emit log("MapCanvas", "OpenGL Version: " + version);
+    emit log("MapCanvas", "OpenGL Renderer: " + renderer);
+    emit log("MapCanvas", "OpenGL Vendor: " + vendor);
 
     if (Config().m_antialiasingSamples > 0)
         glEnable(GL_MULTISAMPLE);
@@ -882,7 +874,7 @@ void MapCanvas::initializeGL()
             m_mobTextures[i] = new QOpenGLTexture(QImage(QString(":/pixmaps/mob%1.png").arg(i)).mirrored());
         }
     }
-    m_updateTextures = new QOpenGLTexture(QImage(QString(":/pixmaps/update0.png")).mirrored());
+    m_updateTexture = new QOpenGLTexture(QImage(QString(":/pixmaps/update0.png")).mirrored());
 
     if (Config().m_trilinearFiltering) {
         for (int i = 0; i < 16; i++) {
@@ -894,24 +886,25 @@ void MapCanvas::initializeGL()
                 m_mobTextures[i]->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
             }
         }
-        m_updateTextures->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
+        m_updateTexture->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
     }
+    m_view.setToIdentity();
 
+    // <= OpenGL 3.0
+    makeGlLists(); // TODO: Convert these GlLists into shaders
     glShadeModel(GL_FLAT);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_NORMALIZE);
-
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
     glPolygonStipple(halftone);
     //glPolygonStipple(quadtone);
 
-    makeGlLists();
+    // >= OpenGL 3.0
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_NORMALIZE);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void MapCanvas::resizeGL(int width, int height)
 {
-    if (m_updateTextures == 0) {
+    if (m_updateTexture == 0) {
         // resizeGL called but initializeGL was not called yet
         return;
     }
@@ -921,38 +914,34 @@ void MapCanvas::resizeGL(int width, int height)
 
     makeCurrent();
     glViewport(0, 0, width, height);
+    m_view.setToIdentity();
+    m_projection.setToIdentity();
 
+    // >= OpenGL 3.1
+    m_projection.setToIdentity();
+    m_projection.frustum(-0.5, +0.5, +0.5, -0.5, 5.0, 80.0);
+    m_projection.scale(swp, shp, 1.0f);
+    m_projection.translate(-SCROLLFACTOR() * (float)(m_scrollX),
+                           -SCROLLFACTOR() * (float)(m_scrollY),
+                           -60.0f);
+    m_model.setToIdentity();
+
+    // <= OpenGL 3.0
     glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-
-    //glOrtho(-0.5, +0.5, +0.5, -0.5, 0.0, 160.0);
-    //glScaled(swp*0.081, shp*0.081, 1.0f);
-    glFrustum(-0.5, +0.5, +0.5, -0.5, 5.0, 80.0);
-    glScaled(swp, shp, 1.0f);
-
-    glTranslated( -SCROLLFACTOR() * (float)(m_scrollX), -SCROLLFACTOR() * (float)(m_scrollY), -60.0f );
-
+    loadMatrix(m_projection);
     glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+    loadMatrix(m_model);
 
-    //store matrices
-    glGetDoublev( GL_MODELVIEW_MATRIX, m_modelview );
-    glGetDoublev( GL_PROJECTION_MATRIX, m_projection );
-    glGetIntegerv( GL_VIEWPORT, m_viewport );
+    QVector3D v1 = QVector3D(0, height, CAMERA_Z_DISTANCE).unproject(m_model, m_projection,
+                                                                     this->rect());
+    m_visibleX1 = v1.x();
+    m_visibleY1 = v1.y();
+    QVector3D v2 = QVector3D(width, 0, CAMERA_Z_DISTANCE).unproject(m_model, m_projection,
+                                                                    this->rect());
+    m_visibleX2 = v2.x();
+    m_visibleY2 = v2.y();
 
-    GLdouble winX, winY, winZ, tmp;
-    winX = (GLdouble)0;
-    winY = (GLdouble)m_viewport[3];
-    winZ = 0.978f;
-    UnProject((GLdouble) winX, (GLdouble) winY, (GLdouble) winZ,
-              &m_visibleX1, &m_visibleY1, &tmp);
-
-    winX = (GLdouble)width;
-    winY = (GLdouble)m_viewport[3] - (GLdouble)height;
-    winZ = 0.978f;
-    UnProject((GLdouble) winX, (GLdouble) winY, (GLdouble) winZ,
-              &m_visibleX2, &m_visibleY2, &tmp);
-
+    // Render
     update();
 }
 
@@ -960,6 +949,7 @@ void MapCanvas::dataLoaded()
 {
     m_currentLayer = m_data->getPosition().z;
     emit onCenter( m_data->getPosition().x, m_data->getPosition().y );
+    makeCurrent();
     update();
 }
 
@@ -967,6 +957,7 @@ void MapCanvas::moveMarker(const Coordinate &c)
 {
     m_data->setPosition(c);
     m_currentLayer = c.z;
+    makeCurrent();
     update();
     emit onCenter(c.x, c.y);
     //emit onEnsureVisible(c.x, c.y);
@@ -1081,7 +1072,7 @@ void MapCanvas::paintGL()
                 drawInfoMark(m.next());
         }
     } else {
-        renderText(0, 0, "No map loaded");
+        renderText((m_visibleX1 + m_visibleX2) / 2, (m_visibleY1 + m_visibleY2) / 2, "No map loaded");
     }
 
     GLdouble len = 0.2f;
@@ -1272,7 +1263,6 @@ void MapCanvas::paintGL()
                 else
                     glColor4d(1.0f, 1.0f, 1.0f, 0.4f);
 
-                //glTranslated(m_roomSelectionMoveX, m_roomSelectionMoveY, ROOM_Z_DISTANCE*z);;
                 glTranslated(m_roomSelectionMoveX, m_roomSelectionMoveY, ROOM_Z_DISTANCE * layer);
                 glCallList(m_room_gllist);
             }
@@ -1683,8 +1673,6 @@ void MapCanvas::drawFlow(const Room *room, const std::vector<Room *> &rooms,
     uint targetId;
     const Room *targetRoom;
     const ExitsList &exitslist = room->getExitsList();
-    int rx;
-    int ry;
     const Exit &sourceExit = exitslist[exitDirection];
 
     //For each outgoing connections
@@ -1692,11 +1680,11 @@ void MapCanvas::drawFlow(const Room *room, const std::vector<Room *> &rooms,
     while (itOut != sourceExit.outEnd()) {
         targetId = *itOut;
         targetRoom = rooms[targetId];
-        rx = targetRoom->getPosition().x;
-        ry = targetRoom->getPosition().y;
         if (targetRoom->getPosition().z == m_currentLayer) {
-            glLoadIdentity();
-            glTranslated(rx, ry, 0.0);
+            QMatrix4x4 model;
+            model.setToIdentity();
+            model.translate((float)targetRoom->getPosition().x, (float)targetRoom->getPosition().y, 0);
+            loadMatrix(model);
             glCallList(m_flow_end_gllist[targetDir]);
         }
         ++itOut;
@@ -1707,7 +1695,7 @@ void MapCanvas::drawFlow(const Room *room, const std::vector<Room *> &rooms,
     glPointSize (devicePixelRatio() * 2.0);
     glDisable(GL_BLEND);
 
-    // Termite drawing
+    // Terminate drawing
     qglColor(Qt::black);
     glPopMatrix();
 }
@@ -1726,25 +1714,25 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
     glPushMatrix();
     glTranslated(x - 0.5, y - 0.5, ROOM_Z_DISTANCE * layer);
 
+    // TODO: https://stackoverflow.com/questions/6017176/gllinestipple-deprecated-in-opengl-3-1
     glLineStipple(2, 43690);
 
     //terrain texture
-    qglColor(Qt::white);
+    glColor4d(1.0f, 1.0f, 1.0f, 1.0f);
 
     // Enable blending for the textures
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     if (layer > 0) {
-        if (Config().m_drawUpperLayersTextured)
+        if (Config().m_drawUpperLayersTextured) {
             glEnable(GL_POLYGON_STIPPLE);
-        else {
+        } else {
             glDisable(GL_POLYGON_STIPPLE);
-            glColor4d(0.3, 0.3, 0.3, 0.6 - 0.2 * layer);
+            glColor4d(0.3f, 0.3f, 0.3f, 0.6f - 0.2f * layer);
             glEnable(GL_BLEND);
         }
     } else if (layer == 0) {
-        //glColor4d(1.0, 1.0, 1.0, 0.7);
-        glColor4d(1.0, 1.0, 1.0, 0.9);
+        glColor4d(1.0f, 1.0f, 1.0f, 0.9f);
         glEnable(GL_BLEND);
     }
 
@@ -1761,19 +1749,21 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
     if ( ISSET(ef_east,  EF_ROAD)) SET(roadindex, bit3);
     if ( ISSET(ef_west,  EF_ROAD)) SET(roadindex, bit4);
 
+    QOpenGLTexture *texture;
     if (layer <= 0 || Config().m_drawUpperLayersTextured) {
         if ( (Mmapper2Room::getTerrainType(room)) == RTT_ROAD)
-            m_roadTextures[roadindex]->bind();
+            texture = m_roadTextures[roadindex];
         else
-            m_terrainTextures[Mmapper2Room::getTerrainType(room)]->bind();
-
-        glEnable(GL_TEXTURE_2D);
-        glCallList(m_room_gllist);
+            texture = m_terrainTextures[Mmapper2Room::getTerrainType(room)];
 
         glEnable(GL_BLEND);
 
         RoomMobFlags mf = Mmapper2Room::getMobFlags(room);
         RoomLoadFlags lf = Mmapper2Room::getLoadFlags(room);
+
+        glEnable(GL_TEXTURE_2D);
+        texture->bind();
+        glCallList(m_room_gllist);
 
         // Make dark and troll safe rooms look dark
         if (Mmapper2Room::getSundeathType(room) == RST_NOSUNDEATH
@@ -1784,36 +1774,37 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
             glTranslated(0, 0, 0.005);
 
             if (Mmapper2Room::getLightType(room) == RLT_DARK)
-                qglColor(Qt::darkGray);
+                glColor4d(0.1f, 0.0f, 0.0f, 0.4f);
             else
-                qglColor(Qt::lightGray);
-            //glColor4d(0.1f, 0.0f, 0.0f, 0.2f);
+                glColor4d(0.1f, 0.0f, 0.0f, 0.2f);
 
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glCallList(m_room_gllist);
-
-            glColor4d(oldcolour[0], oldcolour[1], oldcolour[2], oldcolour[3]);
-        }
-
-        // Draw a little red cross on noride rooms
-        if (Mmapper2Room::getRidableType(room) == RRT_NOTRIDABLE) {
-            GLdouble oldcolour[4];
-            glGetDoublev(GL_CURRENT_COLOR, oldcolour);
-
-            qglColor(Qt::red);
-            glLineWidth(devicePixelRatio() * 3.0);
-            glBegin(GL_LINES);
-            glVertex3d(0.6, 0.2, 0.005);
-            glVertex3d(0.8, 0.4, 0.005);
-            glVertex3d(0.8, 0.2, 0.005);
-            glVertex3d(0.6, 0.4, 0.005);
-            glEnd();
 
             glColor4d(oldcolour[0], oldcolour[1], oldcolour[2], oldcolour[3]);
         }
 
         // Only display at a certain scale
         if (m_scaleFactor >= 0.15) {
+
+            // Draw a little red cross on noride rooms
+            if (Mmapper2Room::getRidableType(room) == RRT_NOTRIDABLE) {
+                GLdouble oldcolour[4];
+                glGetDoublev(GL_CURRENT_COLOR, oldcolour);
+                glDisable(GL_TEXTURE_2D);
+
+                glColor4d(1.0f, 0.0f, 0.0f, 0.9f);
+                glLineWidth(devicePixelRatio() * 3.0);
+                glBegin(GL_LINES);
+                glVertex3d(0.6, 0.2, 0.005);
+                glVertex3d(0.8, 0.4, 0.005);
+                glVertex3d(0.8, 0.2, 0.005);
+                glVertex3d(0.6, 0.4, 0.005);
+                glEnd();
+
+                glColor4d(oldcolour[0], oldcolour[1], oldcolour[2], oldcolour[3]);
+                glEnable(GL_TEXTURE_2D);
+            }
+
             // Trail Support
             glTranslated(0, 0, 0.005);
             if (roadindex > 0 && (Mmapper2Room::getTerrainType(room)) != RTT_ROAD) {
@@ -1896,7 +1887,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
             //UPDATED?
             glTranslated(0, 0, 0.005);
             if (Config().m_showUpdated && !room->isUpToDate())
-                alphaOverlayTexture(m_updateTextures);
+                alphaOverlayTexture(m_updateTexture);
             glDisable(GL_BLEND);
             glDisable(GL_TEXTURE_2D);
         }
@@ -1905,7 +1896,6 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
         glCallList(m_room_gllist);
         glDisable(GL_BLEND);
     }
-
 
     //walls
     glTranslated(0, 0, 0.005);
@@ -2289,7 +2279,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
         glEnable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glColor4d(0.0, 0.0, 0.0, 0.5 - 0.03 * layer);
+        glColor4d(0.0f, 0.0f, 0.0f, 0.5f - 0.03f * layer);
         glCallList(m_room_gllist);
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
@@ -2299,7 +2289,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
         glEnable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glColor4d(1.0, 1.0, 1.0, 0.1);
+        glColor4d(1.0f, 1.0f, 1.0f, 0.1f);
         glCallList(m_room_gllist);
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
@@ -2309,7 +2299,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
         glEnable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glColor4d(0.6, 0.0, 0.0, 0.2);
+        glColor4d(0.6f, 0.0f, 0.0f, 0.2f);
         glCallList(m_room_gllist);
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
@@ -2689,16 +2679,6 @@ void MapCanvas::drawConnection( const Room *leftRoom, const Room *rightRoom,
     glPopMatrix();
 }
 
-
-void MapCanvas::normalizeAngle(int *angle)
-{
-    while (*angle < 0)
-        *angle += 360 * 16;
-    while (*angle > 360 * 16)
-        *angle -= 360 * 16;
-}
-
-
 void MapCanvas::makeGlLists()
 {
     m_wall_north_gllist = glGenLists(1);
@@ -2895,7 +2875,6 @@ void MapCanvas::makeGlLists()
     glLineWidth (devicePixelRatio() * 2.0);
     glEndList();
 
-
     m_room_gllist = glGenLists(1);
     glNewList(m_room_gllist, GL_COMPILE);
     glBegin(GL_TRIANGLE_STRIP);
@@ -3079,188 +3058,6 @@ void MapCanvas::makeGlLists()
     return;
 }
 
-
-GLint MapCanvas::UnProject(GLdouble winx, GLdouble winy, GLdouble winz, GLdouble *objx,
-                           GLdouble *objy, GLdouble *objz)
-{
-    double finalMatrix[16];
-    double in[4];
-    double out[4];
-
-    MultMatricesd(m_modelview, m_projection, finalMatrix);
-    if (!InvertMatrixd(finalMatrix, finalMatrix)) return (GL_FALSE);
-
-    in[0] = winx;
-    in[1] = winy;
-    in[2] = winz;
-    in[3] = 1.0;
-
-    /* Map x and y from window coordinates */
-    in[0] = (in[0] - m_viewport[0]) / m_viewport[2];
-    in[1] = (in[1] - m_viewport[1]) / m_viewport[3];
-
-    /* Map to range -1 to 1 */
-    in[0] = in[0] * 2 - 1;
-    in[1] = in[1] * 2 - 1;
-    in[2] = in[2] * 2 - 1;
-
-    MultMatrixVecd(finalMatrix, in, out);
-    if (out[3] == 0.0) return (GL_FALSE);
-    out[0] /= out[3];
-    out[1] /= out[3];
-    out[2] /= out[3];
-    *objx = out[0];
-    *objy = out[1];
-    *objz = out[2];
-    return (GL_TRUE);
-}
-
-GLint MapCanvas::Project(GLdouble objx, GLdouble objy, GLdouble objz, GLdouble *winx,
-                         GLdouble *winy, GLdouble *winz)
-{
-    double in[4];
-    double out[4];
-
-    in[0] = objx;
-    in[1] = objy;
-    in[2] = objz;
-    in[3] = 1.0;
-    MultMatrixVecd(m_modelview, in, out);
-    MultMatrixVecd(m_projection, out, in);
-    if (in[3] == 0.0) return (GL_FALSE);
-    in[0] /= in[3];
-    in[1] /= in[3];
-    in[2] /= in[3];
-    /* Map x, y and z to range 0-1 */
-    in[0] = in[0] * 0.5 + 0.5;
-    in[1] = in[1] * 0.5 + 0.5;
-    in[2] = in[2] * 0.5 + 0.5;
-
-    /* Map x,y to viewport */
-    in[0] = in[0] * m_viewport[2] + m_viewport[0];
-    in[1] = in[1] * m_viewport[3] + m_viewport[1];
-
-    *winx = in[0];
-    *winy = in[1];
-    *winz = in[2];
-    return (GL_TRUE);
-}
-
-
-
-void MapCanvas::MultMatrixVecd(const GLdouble matrix[16], const GLdouble in[4], GLdouble out[4])
-{
-    int i;
-
-    for (i = 0; i < 4; i++) {
-        out[i] =
-            in[0] * matrix[0 * 4 + i] +
-            in[1] * matrix[1 * 4 + i] +
-            in[2] * matrix[2 * 4 + i] +
-            in[3] * matrix[3 * 4 + i];
-    }
-}
-
-void MapCanvas::MultMatricesd(const GLdouble a[16], const GLdouble b[16], GLdouble r[16])
-{
-    int i, j;
-
-    for (i = 0; i < 4; i++) {
-        for (j = 0; j < 4; j++) {
-            r[i * 4 + j] =
-                a[i * 4 + 0] * b[0 * 4 + j] +
-                a[i * 4 + 1] * b[1 * 4 + j] +
-                a[i * 4 + 2] * b[2 * 4 + j] +
-                a[i * 4 + 3] * b[3 * 4 + j];
-        }
-    }
-}
-
-void MapCanvas::MakeIdentityd(GLdouble m[16])
-{
-    m[0 + 4 * 0] = 1;
-    m[0 + 4 * 1] = 0;
-    m[0 + 4 * 2] = 0;
-    m[0 + 4 * 3] = 0;
-    m[1 + 4 * 0] = 0;
-    m[1 + 4 * 1] = 1;
-    m[1 + 4 * 2] = 0;
-    m[1 + 4 * 3] = 0;
-    m[2 + 4 * 0] = 0;
-    m[2 + 4 * 1] = 0;
-    m[2 + 4 * 2] = 1;
-    m[2 + 4 * 3] = 0;
-    m[3 + 4 * 0] = 0;
-    m[3 + 4 * 1] = 0;
-    m[3 + 4 * 2] = 0;
-    m[3 + 4 * 3] = 1;
-}
-
-int MapCanvas::InvertMatrixd(const GLdouble src[16], GLdouble inverse[16])
-{
-    int i, j, k, swap;
-    double t;
-    GLdouble temp[4][4];
-
-    for (i = 0; i < 4; i++) {
-        for (j = 0; j < 4; j++) {
-            temp[i][j] = src[i * 4 + j];
-        }
-    }
-    MakeIdentityd(inverse);
-
-    for (i = 0; i < 4; i++) {
-        /*
-        ** Look for largest element in column
-        */
-        swap = i;
-        for (j = i + 1; j < 4; j++) {
-            if (fabs(temp[j][i]) > fabs(temp[i][i])) {
-                swap = j;
-            }
-        }
-
-        if (swap != i) {
-            /*
-            ** Swap rows.
-            */
-            for (k = 0; k < 4; k++) {
-                t = temp[i][k];
-                temp[i][k] = temp[swap][k];
-                temp[swap][k] = t;
-
-                t = inverse[i * 4 + k];
-                inverse[i * 4 + k] = inverse[swap * 4 + k];
-                inverse[swap * 4 + k] = t;
-            }
-        }
-
-        if (temp[i][i] == 0) {
-            /*
-            ** No non-zero pivot.  The matrix is singular, which shouldn't
-            ** happen.  This means the user gave us a bad matrix.
-            */
-            return GL_FALSE;
-        }
-
-        t = temp[i][i];
-        for (k = 0; k < 4; k++) {
-            temp[i][k] /= t;
-            inverse[i * 4 + k] /= t;
-        }
-        for (j = 0; j < 4; j++) {
-            if (j != i) {
-                t = temp[j][i];
-                for (k = 0; k < 4; k++) {
-                    temp[j][k] -= temp[i][k] * t;
-                    inverse[j * 4 + k] -= inverse[i * 4 + k] * t;
-                }
-            }
-        }
-    }
-    return GL_TRUE;
-}
-
 float MapCanvas::getDW() const
 {
     return ((float)(((float)width() / ((float)BASESIZEX / 12.0f)) ) / (float)m_scaleFactor);
@@ -3271,16 +3068,14 @@ float MapCanvas::getDH() const
     return ((float)(((float)height() / ((float)BASESIZEY / 12.0f)) ) / (float)m_scaleFactor);
 }
 
-void MapCanvas::renderText(double x, double y, const QString &text, QColor color,
+void MapCanvas::renderText(float x, float y, const QString &text, QColor color,
                            uint fontFormatFlag, double rotationAngle)
 {
     // http://stackoverflow.com/questions/28216001/how-to-render-text-with-qopenglwidget/28517897
-    int height = this->height();
-
-    GLdouble textPosX = 0, textPosY = 0, textPosZ = 0;
-    Project(x, y, 0.0f, &textPosX, &textPosY, &textPosZ);
-
-    textPosY = height - textPosY; // y is inverted
+    QVector3D vectorIn = {x, y, 0.987f};
+    QVector3D projected = vectorIn.project(m_model, m_projection, this->rect());
+    float textPosX = projected.x();
+    float textPosY = height() - projected.y(); // y is inverted
 
     QPainter painter(this);
     painter.translate(textPosX, textPosY);

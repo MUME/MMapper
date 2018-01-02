@@ -30,13 +30,13 @@
 #include "mmapper2exit.h"
 #include "coordinate.h"
 
+#include <QMatrix4x4>
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
 #include <vector>
 #include <set>
 
 class QOpenGLTexture;
-class QOpenGLShaderProgram;
 class MapData;
 class Room;
 class InfoMark;
@@ -70,7 +70,6 @@ public:
     {
         return m_data;
     }
-    //void receiveRoom(RoomAdmin * admin, AbstractRoom * room);
 
     enum CanvasMouseMode { CMM_NONE, CMM_MOVE, CMM_SELECT_ROOMS, CMM_SELECT_CONNECTIONS,
                            CMM_CREATE_ROOMS, CMM_CREATE_CONNECTIONS, CMM_CREATE_ONEWAY_CONNECTIONS,
@@ -79,8 +78,6 @@ public:
 
     void drawRoom(const Room *room, const std::vector<Room *> &rooms,
                   const std::vector<std::set<RoomRecipient *> > &locks);
-
-
 
 public slots:
     void forceMapperToRoom();
@@ -129,6 +126,7 @@ protected:
 
     void initializeGL();
     void paintGL();
+
     void drawGroupCharacters();
     void drawCharacter(const Coordinate &c, QColor color);
     void drawRoomDoorName(const Room *sourceRoom, uint sourceDir, const Room *targetRoom,
@@ -160,34 +158,30 @@ protected:
         glClearColor(c.redF(), c.greenF(), c.blueF(), c.alphaF());
     }
     enum FontFormatFlags {FFF_NONE = 0, FFF_ITALICS = 1, FFF_UNDERLINE = 2};
-    void renderText(double x, double y, const QString &str, QColor color = Qt::white,
+    void renderText(float x, float y, const QString &str, QColor color = Qt::white,
                     uint fontFormatFlags = FFF_NONE, double rotationAngle = 0.0f);
 
 private:
+    QMatrix4x4 m_model, m_view, m_projection;
+
     static QColor m_noFleeColor;
-
-    GLint    m_viewport[4];
-    GLdouble m_modelview[16];
-    GLdouble m_projection[16];
-
-    QOpenGLContext *m_context;
 
     QOpenGLTexture *m_terrainTextures[16];
     QOpenGLTexture *m_roadTextures[16];
     QOpenGLTexture *m_loadTextures[16];
     QOpenGLTexture *m_mobTextures[15];
-    QOpenGLTexture *m_updateTextures;
+    QOpenGLTexture *m_updateTexture;
     QOpenGLTexture *m_trailTextures[16];
+    QOpenGLTexture *m_whiteTexture;
 
     void moveSelection(const RoomSelection *sel, int dx, int dy);
 
-    void normalizeAngle(int *angle);
     void makeGlLists();
 
     float m_scaleFactor;
     int m_scrollX, m_scrollY;
-    GLdouble m_visibleX1, m_visibleY1;
-    GLdouble m_visibleX2, m_visibleY2;
+    float m_visibleX1, m_visibleY1;
+    float m_visibleX2, m_visibleY2;
 
     bool m_mouseRightPressed;
     bool m_mouseLeftPressed;
@@ -197,7 +191,7 @@ private:
     CanvasMouseMode m_canvasMouseMode;
 
     //mouse selection
-    GLdouble m_selX1, m_selY1, m_selX2, m_selY2;
+    float m_selX1, m_selY1, m_selX2, m_selY2;
     int m_selLayer1, m_selLayer2;
 
     GLdouble m_moveX1backup, m_moveY1backup;
@@ -252,20 +246,7 @@ private:
 
     InfoMarksEditDlg *m_infoMarksEditDlg;
 
-    int tmpx, tmpy;
-
     int GLtoMap(double arg);
 
-    GLint UnProject(GLdouble winx, GLdouble winy, GLdouble winz, GLdouble *objx, GLdouble *objy,
-                    GLdouble *objz);
-    GLint Project(GLdouble objx, GLdouble objy, GLdouble objz, GLdouble *winx, GLdouble *winy,
-                  GLdouble *winz);
-
-    void MultMatrixVecd(const GLdouble matrix[16], const GLdouble in[4], GLdouble out[4]);
-    void MultMatricesd(const GLdouble a[16], const GLdouble b[16], GLdouble r[16]);
-    void MakeIdentityd(GLdouble m[16]);
-    int InvertMatrixd(const GLdouble src[16], GLdouble inverse[16]);
 };
-
-
 #endif
