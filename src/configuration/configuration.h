@@ -85,6 +85,7 @@ public:
     QString m_logFileName;  // file name to log
     bool m_autoLoadWorld;
     QString m_autoLoadFileName;
+    QString m_lastMapDirectory;
 
     QString m_roomNameColor; // ANSI room name color
     QString m_roomDescColor; // ANSI room descriptions color

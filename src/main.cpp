@@ -53,6 +53,13 @@ int main(int argc, char **argv)
     MainWindow     mw;
     if (Config().m_autoLoadWorld && Config().m_autoLoadFileName != "") {
         mw.loadFile(Config().m_autoLoadFileName);
+    } else if (Config().m_firstRun) {
+        QString fileName = QDir(Config().m_lastMapDirectory).filePath("arda.mm2");
+        if (QFile(fileName).exists()) {
+            mw.loadFile(fileName);
+            Config().m_autoLoadWorld = true;
+            Config().m_autoLoadFileName = fileName;
+        }
     }
     mw.show();
 #ifdef WITH_SPLASH

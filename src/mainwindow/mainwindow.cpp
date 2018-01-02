@@ -1021,10 +1021,14 @@ void MainWindow::merge()
 void MainWindow::open()
 {
     if (maybeSave()) {
-        QString fileName = QFileDialog::getOpenFileName(this, "Choose map file ...", "",
+        QString fileName = QFileDialog::getOpenFileName(this, "Choose map file ...",
+                                                        Config().m_lastMapDirectory,
                                                         "MMapper2 (*.mm2);;MMapper (*.map)");
-        if (!fileName.isEmpty())
+        if (!fileName.isEmpty()) {
+            QFileInfo file(fileName);
+            Config().m_lastMapDirectory = file.dir().absolutePath();
             loadFile(fileName);
+        }
     }
 }
 
@@ -1146,11 +1150,7 @@ bool MainWindow::maybeSave()
 
 void MainWindow::loadFile(const QString &fileName)
 {
-    //getCurrentMapWindow()->getCanvas()->setEnabled(false);
-
     QFile *file = new QFile(fileName);
-    //QIODevice *file = KFilterDev::deviceForFile( filename, "application/x-gzip", true );
-
     if (!file->open(QFile::ReadOnly)) {
         QMessageBox::warning(this, tr("Application"),
                              tr("Cannot read file %1:\n%2.")
@@ -1199,7 +1199,6 @@ void MainWindow::loadFile(const QString &fileName)
     setCurrentFile(fileName);
     statusBar()->showMessage(tr("File loaded"), 2000);
     delete file;
-    //getCurrentMapWindow()->getCanvas()->setEnabled(true);
 }
 
 void MainWindow::percentageChanged(quint32 p)
@@ -1208,7 +1207,6 @@ void MainWindow::percentageChanged(quint32 p)
     progressDlg->setValue(p);
 
     qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
-    //qApp->processEvents();
 }
 
 bool MainWindow::saveFile(const QString &fileName, SaveMode mode, SaveFormat format)

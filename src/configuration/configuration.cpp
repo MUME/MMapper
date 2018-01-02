@@ -71,6 +71,15 @@ void Configuration::read()
     conf.beginGroup("Auto load world");
     m_autoLoadWorld = conf.value("Auto load", false ).toBool();
     m_autoLoadFileName = conf.value("File name", "arda.mm2").toString();
+    m_lastMapDirectory = conf.value("Last map load directory",
+#if defined(Q_OS_LINUX)
+                                    "/usr/share/games/mmapper"
+#elif defined(Q_OS_WIN)
+                                    "C:\Program Files (x86)\MMapper"
+#else
+                                    ""
+#endif
+                                   ).toString();
     conf.endGroup();
 
     conf.beginGroup("Parser");
@@ -169,6 +178,7 @@ void Configuration::write() const
     conf.beginGroup("Auto load world");
     conf.setValue("Auto load", m_autoLoadWorld);
     conf.setValue("File name", m_autoLoadFileName);
+    conf.setValue("Last map load directory", m_lastMapDirectory);
     conf.endGroup();
 
     conf.beginGroup("Parser");
