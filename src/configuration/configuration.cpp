@@ -39,7 +39,7 @@ void Configuration::read()
     conf.beginGroup("General");
     m_firstRun = conf.value("Run first time", true).toBool();
     windowPosition = conf.value("Window Position", QPoint(200, 200)).toPoint();
-    windowSize = conf.value("Window Size", QSize(400, 400)).toSize();
+    windowSize = conf.value("Window Size", QSize(800, 600)).toSize();
     windowState = conf.value("Window State", "").toByteArray();
     alwaysOnTop = conf.value("Always On Top", false).toBool();
     m_mapMode = conf.value("Map Mode", 0).toInt(); //0 play, 1 map
@@ -75,7 +75,7 @@ void Configuration::read()
 #if defined(Q_OS_LINUX)
                                     "/usr/share/games/mmapper"
 #elif defined(Q_OS_WIN)
-                                    "C:\Program Files (x86)\MMapper"
+                                    "C:/Program Files (x86)/MMapper"
 #else
                                     ""
 #endif
