@@ -34,7 +34,8 @@ void CGroupClient::linkSignals()
     connect(this, SIGNAL(disconnected()), this, SLOT(lostConnection() ) );
     connect(this, SIGNAL(connected()), this, SLOT(connectionEstablished() ) );
     connect(this, SIGNAL(readyRead()), this, SLOT( dataIncoming() ) );
-
+    connect(this, SIGNAL(error(QAbstractSocket::SocketError )), this,
+            SLOT(errorHandler(QAbstractSocket::SocketError) ) );
     buffer = "";
     currentMessageLen = 0;
 }
@@ -57,8 +58,6 @@ CGroupClient::CGroupClient(QByteArray host, int remotePort, QObject *parent) :
         // Linux needs to have this option set after the server has established a connection
         setSocketOption(QAbstractSocket::KeepAliveOption, true);
 #endif
-        connect(this, SIGNAL(error(QAbstractSocket::SocketError )), this,
-                SLOT(errorHandler(QAbstractSocket::SocketError) ) );
     }
 }
 
