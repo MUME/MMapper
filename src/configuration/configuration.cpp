@@ -97,7 +97,7 @@ void Configuration::read()
     m_menuPromptPattern = conf.value("Menu prompt pattern", "#>> ").toByteArray();
 
     // XML mode used UTF-8, non-XML used Latin1.
-    m_utf8Charset = conf.value("MUME charset is UTF-8", true).toBool();
+    m_utf8Charset = conf.value("MUME charset is UTF-8", false).toBool();
 
     conf.endGroup();
 
