@@ -9,6 +9,9 @@ FILE(STRINGS "MMAPPER_VERSION" MMAPPER_VERSION)
 ADD_DEFINITIONS(-DMMAPPER_VERSION="${MMAPPER_VERSION}" -DWITH_SPLASH)
 MESSAGE(STATUS "MMapper version ${MMAPPER_VERSION} (${CMAKE_BUILD_TYPE} distribution)")
 
+# Options
+OPTION(WITH_QTIOCOMPRESSOR "QtIOCompressor old save backwards compatability" ON)
+
 # Apple users are most likely using brew
 IF(APPLE)
    SET(CMAKE_PREFIX_PATH /usr/local/opt/qt5/)
@@ -29,38 +32,49 @@ SET(CMAKE_AUTOUIC ON)
 SET(CMAKE_AUTORCC ON)
 
 # Try to find the system copy of QtIOCompressor
-FIND_PATH(QTIOCOMPRESSOR_INCLUDE_DIRS qtiocompressor.h PATH_SUFFIXES QtSolutions)
-FIND_LIBRARY(QTIOCOMPRESSOR_LIBRARIES QtSolutions_IOCompressor-2.3)
-IF(QTIOCOMPRESSOR_INCLUDE_DIRS AND QTIOCOMPRESSOR_LIBRARIES)
-    SET(QTIOCOMPRESSOR_FOUND 1)
-    MESSAGE(STATUS "Found QtIOCompressor: ${QTIOCOMPRESSOR_LIBRARIES}")
-ELSE()
-    SET(QTIOCOMPRESSOR_FOUND 0)
-
-    # QtIOCompressor requires zlib
-    FIND_PACKAGE(ZLIB QUIET)
-    IF(ZLIB_FOUND)
-        MESSAGE(STATUS "Found ZLIB: ${ZLIB_LIBRARIES} ${ZLIB_INCLUDE_DIRS}")
+IF(WITH_QTIOCOMPRESSOR)
+    FIND_PATH(QTIOCOMPRESSOR_INCLUDE_DIRS qtiocompressor.h PATH_SUFFIXES QtSolutions)
+    FIND_LIBRARY(QTIOCOMPRESSOR_LIBRARIES QtSolutions_IOCompressor-2.3)
+    IF(QTIOCOMPRESSOR_INCLUDE_DIRS AND QTIOCOMPRESSOR_LIBRARIES)
+        SET(QTIOCOMPRESSOR_FOUND 1)
+        SET(QTIOCOMPRESSOR_INTERNAL "")
+        MESSAGE(STATUS "Found QtIOCompressor: ${QTIOCOMPRESSOR_LIBRARIES}")
     ELSE()
-        # QtIOCompressor will build a static zlib under zlib-build
-        IF(WIN32)
-            SET(ZLIB_STATIC_LIBRARY_NAME zlibstatic)
-        ELSE()
-            SET(ZLIB_STATIC_LIBRARY_NAME z)
-        ENDIF()
-        SET(ZLIB_STATIC_LIBRARY ${CMAKE_BINARY_DIR}/zlib-build/${CMAKE_STATIC_LIBRARY_PREFIX}${ZLIB_STATIC_LIBRARY_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
-        SET(ZLIB_LIBRARIES ${ZLIB_STATIC_LIBRARY})
-        SET(ZLIB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/zlib-src ${CMAKE_BINARY_DIR}/zlib-build)
-    ENDIF()
+        SET(QTIOCOMPRESSOR_FOUND 0)
+        MESSAGE(STATUS "QtIOCompressor not found: use `-DWITH_QTIOCOMPRESSOR=OFF` to build without old map backwards compatability")
+        MESSAGE(STATUS "Building QtIOCompressor as an object library...")
 
-    # Add QtIOCommpressor sources
-    CONFIGURE_FILE(CMakeLists.QtIOCompressor.in QtIOCompressor-download/CMakeLists.txt)
-    EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/QtIOCompressor-download" )
-    EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" --build .
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/QtIOCompressor-download" )
-    ADD_SUBDIRECTORY("${CMAKE_BINARY_DIR}/QtIOCompressor-src" "${CMAKE_BINARY_DIR}/QtIOCompressor-build")
-    SET(QTIOCOMPRESSOR_INCLUDE_DIRS "${CMAKE_BINARY_DIR}/QtIOCompressor-src/src")
+        # QtIOCompressor requires zlib
+        FIND_PACKAGE(ZLIB QUIET)
+        IF(ZLIB_FOUND)
+            MESSAGE(STATUS "Found ZLIB: ${ZLIB_LIBRARIES} ${ZLIB_INCLUDE_DIRS}")
+        ELSE()
+            # QtIOCompressor will build a static zlib under zlib-build
+            IF(WIN32)
+                SET(ZLIB_STATIC_LIBRARY_NAME zlibstatic)
+            ELSE()
+                SET(ZLIB_STATIC_LIBRARY_NAME z)
+            ENDIF()
+            SET(ZLIB_STATIC_LIBRARY ${CMAKE_BINARY_DIR}/zlib-build/${CMAKE_STATIC_LIBRARY_PREFIX}${ZLIB_STATIC_LIBRARY_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
+            SET(ZLIB_LIBRARIES ${ZLIB_STATIC_LIBRARY})
+            SET(ZLIB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/zlib-src ${CMAKE_BINARY_DIR}/zlib-build)
+        ENDIF()
+
+        # Add QtIOCommpressor sources
+        OPTION(SKIP_INSTALL_ALL "Do not install QtIOCompressor libraries or headers" TRUE)
+        CONFIGURE_FILE(CMakeLists.QtIOCompressor.in QtIOCompressor-download/CMakeLists.txt)
+        EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
+            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/QtIOCompressor-download" )
+        EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" --build .
+            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/QtIOCompressor-download" )
+        ADD_SUBDIRECTORY("${CMAKE_BINARY_DIR}/QtIOCompressor-src" "${CMAKE_BINARY_DIR}/QtIOCompressor-build")
+        SET(QTIOCOMPRESSOR_INCLUDE_DIRS "${CMAKE_BINARY_DIR}/QtIOCompressor-src/src")
+
+        SET(QTIOCOMPRESSOR_OBJECTS $<TARGET_OBJECTS:qtiocompressorobj>)
+    ENDIF()
+ELSE()
+    MESSAGE(STATUS "Building without QtIOCompressor which provides old map backwards compatability")
+    ADD_DEFINITIONS(/DMMAPPER_NO_QTIOCOMPRESSOR)
 ENDIF()
 
 # Extract git branch and revision

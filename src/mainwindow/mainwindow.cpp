@@ -951,7 +951,7 @@ void MainWindow::newFile()
     getCurrentMapWindow()->getCanvas()->clearConnectionSelection();
 
     if (maybeSave()) {
-        AbstractMapStorage *storage = (AbstractMapStorage *) new MapStorage(*m_mapData, "");
+        AbstractMapStorage *storage = (AbstractMapStorage *) new MapStorage(*m_mapData, "", this);
         connect(storage, SIGNAL(onNewData()), getCurrentMapWindow()->getCanvas(), SLOT(dataLoaded()));
         connect(storage, SIGNAL(log(const QString &, const QString &)), this, SLOT(log(const QString &,
                                                                                        const QString &)));
@@ -994,7 +994,7 @@ void MainWindow::merge()
         getCurrentMapWindow()->getCanvas()->clearRoomSelection();
         getCurrentMapWindow()->getCanvas()->clearConnectionSelection();
 
-        AbstractMapStorage *storage = new MapStorage(*m_mapData, fileName, file);
+        AbstractMapStorage *storage = new MapStorage(*m_mapData, fileName, file, this);
         connect(storage, SIGNAL(onDataLoaded()), getCurrentMapWindow()->getCanvas(), SLOT(dataLoaded()));
         connect(storage->progressCounter(), SIGNAL(onPercentageChanged(quint32)), this,
                 SLOT(percentageChanged(quint32)));
@@ -1177,7 +1177,8 @@ void MainWindow::loadFile(const QString &fileName)
     getCurrentMapWindow()->getCanvas()->clearRoomSelection();
     getCurrentMapWindow()->getCanvas()->clearConnectionSelection();
 
-    AbstractMapStorage *storage = (AbstractMapStorage *) new MapStorage(*m_mapData, fileName, file);
+    AbstractMapStorage *storage = (AbstractMapStorage *) new MapStorage(*m_mapData, fileName, file,
+                                                                        this);
     connect(storage, SIGNAL(onDataLoaded()), getCurrentMapWindow()->getCanvas(), SLOT(dataLoaded()));
     connect(storage->progressCounter(), SIGNAL(onPercentageChanged(quint32)), this,
             SLOT(percentageChanged(quint32)));
@@ -1227,9 +1228,9 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode, SaveFormat for
 
     std::unique_ptr<AbstractMapStorage> storage;
     if (format == SAVEF_WEB)
-        storage.reset(new JsonMapStorage(*m_mapData, fileName));
+        storage.reset(new JsonMapStorage(*m_mapData, fileName, this));
     else
-        storage.reset(new MapStorage(*m_mapData, fileName, &saver.file()));
+        storage.reset(new MapStorage(*m_mapData, fileName, &saver.file(), this));
 
     if (!storage->canSave())
         return false;

@@ -45,7 +45,7 @@ class JsonMapStorage : public AbstractMapStorage
     Q_OBJECT
 
 public:
-    JsonMapStorage(MapData &, const QString &);
+    JsonMapStorage(MapData &, const QString &, QObject *parent = 0);
     ~JsonMapStorage();
 
 private:

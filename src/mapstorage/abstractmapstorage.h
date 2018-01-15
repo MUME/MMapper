@@ -36,7 +36,6 @@ class MapData;
 class RoomSaveFilter;
 class ProgressCounter;
 class QFile;
-class QtIOCompressor;
 
 class AbstractMapStorage : public QObject
 {
@@ -44,8 +43,8 @@ class AbstractMapStorage : public QObject
     Q_OBJECT
 
 public:
-    AbstractMapStorage(MapData &, const QString &, QFile *);
-    AbstractMapStorage(MapData &, const QString &);
+    AbstractMapStorage(MapData &, const QString &, QFile *, QObject *parent = 0);
+    AbstractMapStorage(MapData &, const QString &, QObject *parent = 0);
     ~AbstractMapStorage();
 
     virtual bool canLoad() = 0;
@@ -65,7 +64,6 @@ signals:
 
 protected:
     QFile *m_file;
-    QtIOCompressor *m_compressor;
     MapData &m_mapData;
     QString m_fileName;
     QPointer<ProgressCounter> m_progressCounter;
