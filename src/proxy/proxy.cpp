@@ -103,12 +103,10 @@ Proxy::~Proxy()
 #endif
     if (m_userSocket) {
         m_userSocket->disconnectFromHost();
-        m_userSocket->waitForDisconnected();
         m_userSocket->deleteLater();
     }
     if (m_mudSocket) {
         m_mudSocket->disconnectFromHost();
-        m_mudSocket->waitForDisconnected();
         m_mudSocket->deleteLater();
     }
     delete m_filter;
