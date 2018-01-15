@@ -1,13 +1,10 @@
 MMapper
 ============================
 
+![MMapper Screenshot](/../master/appdata/screenshot1.png?raw=true "MMapper")
+Download the [latest version of MMapper](https://github.com/MUME/MMapper/releases)
+
 [![Build Status](https://travis-ci.org/MUME/MMapper.svg?branch=master)](https://travis-ci.org/MUME/MMapper)
-
-## Setup
-1.  Download the [latest version of MMapper](https://github.com/MUME/MMapper/releases)
-
-2.  Uncompress the archive you downloaded into any directory.
-    e.g. `C:\mmapper\` or `~/mmapper`
 
 ## Features
 1.  Automatic room creation during mapping
@@ -20,36 +17,7 @@ MMapper
 8.  Group manager support to see other people on your map
 
 ## Usage
-Set up your client according to the wiki instructions at: http://mume.org/wiki/index.php/Guide_to_install_mmapper2_on_Windows
+Set up your client according to the [wiki instructions](https://github.com/MUME/MMapper/wiki).
 
-Mapping advice: https://github.com/MUME/MMapper/blob/master/doc/mapping_advice.txt
-
-## Building
-You need to have a C++ compiler, CMake, and Qt and zlib development packages installed.
-
-Change the directory to the unpackage source tree, and run:
-```
-	mkdir build
-	cd build
-	cmake .. -DCMAKE_BUILD_TYPE=Release
-	make -j4
-	sudo make install
-```
-
-Alternatively, you can use one of the wrappers:
-```
-	winbuild.bat
-	./build.sh
-```
-
-### Ubuntu 16.04
-```
-	sudo apt-get install build-essential qt5-qmake qt5-default qttools5-dev-tools libqt5opengl5-dev libqt5svg5-dev qtcreator cmake
-```
-
-### Apple
-```
-	brew install qt5 qt-creator cmake
-	brew link qt-creator
-	brew link qt5 --force
-```
+## Build
+Check out the wiki for Linux, Windows and Mac [build instructions](https://github.com/MUME/MMapper/wiki/Build).

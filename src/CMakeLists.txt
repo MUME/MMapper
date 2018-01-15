@@ -259,8 +259,8 @@ IF(WIN32)
 
     # Install Help Documentation
     INSTALL(FILES
-        "${PROJECT_SOURCE_DIR}/doc/Installation Guide.URL"
-        "${PROJECT_SOURCE_DIR}/doc/mapping_advice.txt"
+        "${PROJECT_SOURCE_DIR}/docs/Installation Guide.URL"
+        "${PROJECT_SOURCE_DIR}/docs/mapping_advice.txt"
         DESTINATION .
         COMPONENT help
     )
@@ -317,8 +317,8 @@ IF(APPLE)
 
     # Install Help Documentation
     INSTALL(FILES
-        "${PROJECT_SOURCE_DIR}/doc/Installation Guide.URL"
-        "${PROJECT_SOURCE_DIR}/doc/mapping_advice.txt"
+        "${PROJECT_SOURCE_DIR}/docs/Installation Guide.URL"
+        "${PROJECT_SOURCE_DIR}/docs/mapping_advice.txt"
         DESTINATION MMapper
         COMPONENT help
     )
