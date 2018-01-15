@@ -36,7 +36,6 @@
 #include "progresscounter.h"
 #include "basemapsavefilter.h"
 #include "infomark.h"
-#include "qtiocompressor.h"
 #include "olddoor.h"
 #include "parserutils.h"
 
@@ -457,8 +456,8 @@ void JsonWorld::writeZones( const QDir &dir, BaseMapSaveFilter &filter,
 } // ns
 
 
-JsonMapStorage::JsonMapStorage(MapData &mapdata, const QString &filename) :
-    AbstractMapStorage(mapdata, filename)
+JsonMapStorage::JsonMapStorage(MapData &mapdata, const QString &filename, QObject *parent) :
+    AbstractMapStorage(mapdata, filename, parent)
 {}
 
 JsonMapStorage::~JsonMapStorage()

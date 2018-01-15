@@ -38,19 +38,19 @@ class MapStorage : public AbstractMapStorage
     Q_OBJECT
 
 public:
-    MapStorage(MapData &, const QString &, QFile *);
-    MapStorage(MapData &, const QString &);
+    MapStorage(MapData &, const QString &, QFile *, QObject *parent = 0);
+    MapStorage(MapData &, const QString &, QObject *parent = 0);
     bool mergeData();
 
 private:
     virtual bool canLoad()
     {
         return TRUE;
-    };
+    }
     virtual bool canSave()
     {
         return TRUE;
-    };
+    }
 
     virtual void newData ();
     virtual bool loadData();

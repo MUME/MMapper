@@ -95,9 +95,12 @@ SET(mmapper_UIS
     preferences/pathmachinepage.ui
 )
 
-IF(NOT QTIOCOMPRESSOR_FOUND)
-    # Build QtIOCompressor embedded
-    SET(mmapper_SRCS ${mmapper_SRCS} ${QTIOCOMPRESSOR_INCLUDE_DIRS}/qtiocompressor.cpp)
+IF(WITH_QTIOCOMPRESSOR)
+    IF(NOT QTIOCOMPRESSOR_FOUND)
+        # Build QtIOCompressor as an object library
+        SET(mmapper_SRCS ${mmapper_SRCS} ${QTIOCOMPRESSOR_OBJECTS})
+    ENDIF()
+    INCLUDE_DIRECTORIES(${QTIOCOMPRESSOR_INCLUDE_DIRS})
 ENDIF()
 
 SET(mmapper_DATA
@@ -123,7 +126,6 @@ INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_SOURCE_DIR}/proxy
     ${OPENGL_INCLUDE_DIR}
     ${ZLIB_INCLUDE_DIRS}
-    ${QTIOCOMPRESSOR_INCLUDE_DIRS}
 )
 
 # Build the executable
@@ -143,15 +145,17 @@ TARGET_LINK_LIBRARIES(mmapper
     ${OPENGL_gl_LIBRARY}
 )
 
-IF(QTIOCOMPRESSOR_FOUND)
-    TARGET_LINK_LIBRARIES(mmapper ${QTIOCOMPRESSOR_LIBRARIES})
-ELSE()
-    # Build QtIOCompressor embedded
-    IF (NOT ZLIB_FOUND)
-        # Assume we are building a static zlib
-        ADD_DEPENDENCIES(mmapper zlib)
+IF(WITH_QTIOCOMPRESSOR)
+    IF(QTIOCOMPRESSOR_FOUND)
+        TARGET_LINK_LIBRARIES(mmapper ${QTIOCOMPRESSOR_LIBRARIES})
+    ELSE()
+        # Build QtIOCompressor as an object library
+        IF (NOT ZLIB_FOUND)
+            # Assume we are building a static zlib
+            ADD_DEPENDENCIES(mmapper zlib)
+        ENDIF()
+        TARGET_LINK_LIBRARIES(mmapper ${ZLIB_LIBRARIES})
     ENDIF()
-    TARGET_LINK_LIBRARIES(mmapper ${ZLIB_LIBRARIES})
 ENDIF()
 
 # Begin CPack Settings

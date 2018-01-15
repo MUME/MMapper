@@ -36,11 +36,15 @@
 #include "progresscounter.h"
 #include "basemapsavefilter.h"
 #include "infomark.h"
-#include "qtiocompressor.h"
 #include "olddoor.h"
+#ifndef MMAPPER_NO_QTIOCOMPRESSOR
+#include "qtiocompressor.h"
+#endif
 
 #include <QFile>
 #include <QDataStream>
+#include <QBuffer>
+#include <QMessageBox>
 
 #include <cassert>
 #include <iostream>
@@ -48,13 +52,14 @@
 using namespace std;
 
 #define MINUMUM_STATIC_LINES 1
+#define CURRENT_SCHEMA_VERSION 042
 
-MapStorage::MapStorage(MapData &mapdata, const QString &filename, QFile *file) :
-    AbstractMapStorage(mapdata, filename, file)
+MapStorage::MapStorage(MapData &mapdata, const QString &filename, QFile *file, QObject *parent) :
+    AbstractMapStorage(mapdata, filename, file, parent)
 {}
 
-MapStorage::MapStorage(MapData &mapdata, const QString &filename) :
-    AbstractMapStorage(mapdata, filename)
+MapStorage::MapStorage(MapData &mapdata, const QString &filename, QObject *parent) :
+    AbstractMapStorage(mapdata, filename, parent)
 {}
 
 void MapStorage::newData()
@@ -466,18 +471,51 @@ bool MapStorage::mergeData()
         stream >> magic;
         if ( magic != 0xFFB2AF01 ) return false;
         stream >> version;
-        if ( version != 041 && version != 040 && version != 031 && version != 030 &&
-                version != 020 && version != 021 && version != 007 ) return false;
+        if (version != 042 && version != 041 && version != 040 && version != 031 && version != 030 &&
+                version != 020 && version != 021 && version != 007) {
+            bool isNewer = version >= CURRENT_SCHEMA_VERSION;
+            QMessageBox::critical((QWidget *)parent(), "MapStorage Error",
+                                  QString("This map has schema version %1 which is too %2.\r\n\r\n"
+                                          "Please %3 MMapper.")
+                                  .arg(version, 0, 8)
+                                  .arg(isNewer ? "new" : "old")
+                                  .arg(isNewer ? "upgrade to the latest" : "try an older version of"));
+            return false;
+        }
 
-        // We currently force serialization to Qt4.8 since Qt5 broke QDateTime serialization
-        // http://doc.qt.io/qt-5/sourcebreaks.html#changes-to-qdate-qtime-and-qdatetime
-        // http://doc.qt.io/qt-5/qdatastream.html#versioning
-        stream.setVersion(QDataStream::Qt_4_8);
+        if (version >= 042) {
+            // Qt 5.6 and 5.9 LTS share the same serialization
+            stream.setVersion(QDataStream::Qt_5_6);
 
-        // QtIOCompressor
-        if (version >= 031) {
-            m_compressor->open(QIODevice::ReadOnly);
-            stream.setDevice(m_compressor);
+        } else if (version <= 041) {
+            // Force serialization to Qt4.8 because Qt5 has broke backwards compatability with QDateTime serialization
+            // http://doc.qt.io/qt-5/sourcebreaks.html#changes-to-qdate-qtime-and-qdatetime
+            // http://doc.qt.io/qt-5/qdatastream.html#versioning
+            stream.setVersion(QDataStream::Qt_4_8);
+        }
+
+        QBuffer buffer;
+        if (version >= 042) {
+            emit log ("MapStorage", "Uncompressing data");
+            QByteArray compressedData(stream.device()->readAll());
+            QByteArray uncompressedData = qUncompress(compressedData);
+            buffer.setData(uncompressedData);
+            buffer.open(QIODevice::ReadOnly);
+            stream.setDevice(&buffer);
+        }
+
+        if (version <= 041 && version >= 031) {
+#ifndef MMAPPER_NO_QTIOCOMPRESSOR
+            emit log ("MapStorage", "Uncompressing data");
+            QtIOCompressor *compressor = new QtIOCompressor(m_file);
+            compressor->open(QIODevice::ReadOnly);
+            stream.setDevice(compressor);
+#else
+            QMessageBox::critical((QWidget *)parent(), "MapStorage Error",
+                                  "MMapper could not load this map because it is too old.\r\n\r\n"
+                                  "Please recompile MMapper with QtIOCompressor support and try again.");
+            return false;
+#endif
         }
 
         stream >> roomsCount;
@@ -553,15 +591,21 @@ bool MapStorage::mergeData()
         }
 
         emit log ("MapStorage", "Finished loading.");
+        buffer.close();
+        m_file->close();
+
+#ifndef MMAPPER_NO_QTIOCOMPRESSOR
+        if (version <= 041 && version >= 031) {
+            QtIOCompressor *compressor = (QtIOCompressor *)stream.device();
+            compressor->close();
+            delete compressor;
+        }
+#endif
 
         if (m_mapData.getRoomsCount() < 1 ) return false;
 
         m_mapData.setFileName(m_fileName);
         m_mapData.unsetDataChanged();
-
-        if (version >= 031)
-            m_compressor->close();
-
     }
 
     m_mapData.checkSize();
@@ -896,7 +940,9 @@ bool MapStorage::saveData( bool baseMapOnly )
 {
     emit log ("MapStorage", "Writing data to file ...");
 
-    QDataStream stream (m_file);
+    QDataStream fileStream(m_file);
+
+    fileStream.setVersion(QDataStream::Qt_5_6);
 
     // Collect the room and marker lists. The room list can't be acquired
     // directly apparently and we have to go through a RoomSaver which receives
@@ -922,14 +968,17 @@ bool MapStorage::saveData( bool baseMapOnly )
         roomsCount = filter.acceptedRoomsCount();
     }
 
-    // Write a header with a "magic number" and a version
-    stream << (quint32)0xFFB2AF01;
-    stream << (qint32)041;
-    stream.setVersion(QDataStream::Qt_4_8);
+    // Compression step
+    m_progressCounter->increaseTotalStepsBy(1);
 
-    // QtIOCompressor
-    m_compressor->open(QIODevice::WriteOnly);
-    stream.setDevice(m_compressor);
+    // Write a header with a "magic number" and a version
+    fileStream << (quint32)0xFFB2AF01;
+    fileStream << (qint32)CURRENT_SCHEMA_VERSION;
+
+    // Serialize the data
+    QBuffer buffer;
+    buffer.open(QIODevice::WriteOnly);
+    QDataStream stream(&buffer);
 
     //write counters
     stream << (quint32)roomsCount;
@@ -971,9 +1020,17 @@ bool MapStorage::saveData( bool baseMapOnly )
         m_progressCounter->step();
     }
 
-    m_compressor->close();
+    buffer.close();
 
-    emit log ("MapStorage", "Writting data finished.");
+    QByteArray uncompressedData(buffer.data());
+    QByteArray compressedData = qCompress(uncompressedData);
+    m_progressCounter->step();
+    double compressionRatio = (double)uncompressedData.size() / (double)compressedData.size();
+    emit log ("MapStorage", QString("Map compressed (compression ratio of %1:1)")
+              .arg(QString::number(compressionRatio, 'f', 1)));
+
+    fileStream.writeRawData(compressedData.data(), compressedData.size());
+    emit log ("MapStorage", "Writing data finished.");
 
     m_mapData.unsetDataChanged();
     emit onDataSaved();
