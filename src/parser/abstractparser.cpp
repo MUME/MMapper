@@ -569,7 +569,7 @@ bool AbstractParser::parseUserCommands(QString &command)
             return false;
         } else if (str.startsWith("_door") && str != "_doorhelp") {
             if (!str.section(" ", 2, 2).toLatin1().isEmpty())
-                emit sendToUser("--->Incorrect Command. Perhaps you meant _name?\n\r");
+                emit sendToUser("--->Incorrect Command. Perhaps you meant _name?\r\n");
             else {
                 if (str.section(" ", 1, 1) == "n") toggleExitFlagCommand(EF_DOOR, NORTH);
                 if (str.section(" ", 1, 1) == "s") toggleExitFlagCommand(EF_DOOR, SOUTH);
@@ -1609,7 +1609,7 @@ void AbstractParser::nameDoorCommand(QString doorname, DirectionType direction)
 
     //if (doorname.isEmpty()) toggleExitFlagCommand(EF_DOOR, direction);
     m_mapData->setDoorName(c, doorname, direction);
-    emit sendToUser("--->Doorname set to: " + doorname.toLatin1() + "\n\r");
+    emit sendToUser("--->Doorname set to: " + doorname.toLatin1() + "\r\n");
     sendPromptToUser();
 }
 
@@ -1649,7 +1649,7 @@ void AbstractParser::toggleExitFlagCommand(uint flag, DirectionType direction)
         break;
     }
 
-    emit sendToUser("--->" + flagname.toLatin1() + " exit " + toggle.toLatin1() + "\n\r");
+    emit sendToUser("--->" + flagname.toLatin1() + " exit " + toggle.toLatin1() + "\r\n");
     sendPromptToUser();
 }
 
@@ -1689,7 +1689,7 @@ void AbstractParser::toggleDoorFlagCommand(uint flag, DirectionType direction)
         break;
     }
 
-    emit sendToUser("--->" + flagname.toLatin1() + " door " + toggle.toLatin1() + "\n\r");
+    emit sendToUser("--->" + flagname.toLatin1() + " door " + toggle.toLatin1() + "\r\n");
     sendPromptToUser();
 }
 
@@ -1699,7 +1699,7 @@ void AbstractParser::setRoomFieldCommand(const QVariant &flag, uint field)
 
     m_mapData->setRoomField(c, flag, field);
 
-    emit sendToUser("--->Room field set\n\r");
+    emit sendToUser("--->Room field set\r\n");
     sendPromptToUser();
 }
 
@@ -1715,7 +1715,7 @@ void AbstractParser::toggleRoomFlagCommand(uint flag, uint field)
     else
         toggle = "disabled";
 
-    emit sendToUser("--->Room flag " + toggle.toLatin1() + "\n\r");
+    emit sendToUser("--->Room flag " + toggle.toLatin1() + "\r\n");
     sendPromptToUser();
 }
 
