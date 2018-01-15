@@ -1,10 +1,8 @@
 MMapper
 ============================
-
-![MMapper Screenshot](/../master/appdata/screenshot1.png?raw=true "MMapper")
-Download the [latest version of MMapper](https://github.com/MUME/MMapper/releases)
-
 [![Build Status](https://travis-ci.org/MUME/MMapper.svg?branch=master)](https://travis-ci.org/MUME/MMapper)
+
+[![MMapper Screenshot](/../master/appdata/screenshot1.png?raw=true "MMapper")<br>Download the latest version of MMapper](https://github.com/MUME/MMapper/releases)
 
 ## Features
 1.  Automatic room creation during mapping
