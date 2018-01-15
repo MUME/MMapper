@@ -1786,13 +1786,13 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
         // Only display at a certain scale
         if (m_scaleFactor >= 0.15) {
 
-            // Draw a little red cross on noride rooms
+            // Draw a little dark red cross on noride rooms
             if (Mmapper2Room::getRidableType(room) == RRT_NOTRIDABLE) {
                 GLdouble oldcolour[4];
                 glGetDoublev(GL_CURRENT_COLOR, oldcolour);
                 glDisable(GL_TEXTURE_2D);
 
-                glColor4d(1.0f, 0.0f, 0.0f, 0.9f);
+                glColor4d(0.5f, 0.0f, 0.0f, 0.9f);
                 glLineWidth(devicePixelRatio() * 3.0);
                 glBegin(GL_LINES);
                 glVertex3d(0.6, 0.2, 0.005);
