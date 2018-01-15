@@ -61,6 +61,7 @@ IF(WITH_QTIOCOMPRESSOR)
         ENDIF()
 
         # Add QtIOCommpressor sources
+        OPTION(SKIP_INSTALL_ALL "Do not install QtIOCompressor libraries or headers" TRUE)
         CONFIGURE_FILE(CMakeLists.QtIOCompressor.in QtIOCompressor-download/CMakeLists.txt)
         EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
             WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/QtIOCompressor-download" )
