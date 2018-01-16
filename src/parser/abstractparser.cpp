@@ -167,7 +167,7 @@ void AbstractParser::parseExits(QString &str)
     bool directSun = false;
     DirectionType dir = UNKNOWN;
 
-    if (str.at(5).toLatin1() != ':') {
+    if (str.length() > 5 && str.at(5).toLatin1() != ':') {
         // Ainur exits
         emit sendToUser(str.toLatin1() + "\r\n");
         return ;
