@@ -126,7 +126,7 @@ void Configuration::read()
     conf.endGroup();
 
     conf.beginGroup("Group Manager");
-    m_groupManagerState = conf.value("state", 2).toInt(); // OFF
+    m_groupManagerState = conf.value("state", 0).toInt(); // OFF
     m_groupManagerLocalPort = conf.value("local port", 4243).toInt();
     m_groupManagerRemotePort = conf.value("remote port", 4243).toInt();
     m_groupManagerHost = conf.value("host", "localhost").toByteArray();

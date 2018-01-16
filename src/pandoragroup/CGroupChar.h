@@ -27,15 +27,23 @@
 #define CGROUPCHAR_H_
 
 #include <QByteArray>
-#include <QPixmap>
+#include <QColor>
 
-class QTreeWidget;
-class QTreeWidgetItem;
-class MapData;
 class QDomNode;
+
+/*
+ * TODO: Add Character Flags
+ * BLIND
+ * BASHED
+ * SLEPT
+ * POISONED
+ * BLEEDING
+ */
 
 class CGroupChar
 {
+public:
+
     unsigned int pos;
     QByteArray name;
     QByteArray textHP;
@@ -47,12 +55,10 @@ class CGroupChar
     int moves, maxmoves;
     int state;
     QColor color;
-    QPixmap pixmap;
 
-    QTreeWidgetItem *charItem;
-public:
-    enum Char_States { NORMAL, BASHED, INCAPACITATED, DEAD };
-    CGroupChar(MapData *, QTreeWidget *);
+    enum CharacterStates { NORMAL, FIGHTING, RESTING, SLEEPING, CASTING, INCAPACITATED, DEAD };
+
+    CGroupChar();
     virtual ~CGroupChar();
 
     const QByteArray &getName() const
@@ -66,7 +72,6 @@ public:
     void setColor(QColor col)
     {
         color = col;
-        updateLabels();
     }
     const QColor &getColor() const
     {
@@ -74,11 +79,6 @@ public:
     }
     QDomNode toXML();
     bool updateFromXML(QDomNode blob);
-    QTreeWidgetItem *getCharItem() const
-    {
-        return charItem;
-    }
-
     void setLastMovement(QByteArray move)
     {
         lastMovement = move;
@@ -96,9 +96,6 @@ public:
         return lastMovement;
     }
     static QByteArray getNameFromXML(QDomNode node);
-
-    void draw(int x, int y);
-    void updateLabels();
 
     // for local char only
     void setScore(int _hp, int _maxhp, int _mana, int _maxmana, int _moves, int _maxmoves)
@@ -121,12 +118,6 @@ public:
 private:
     CGroupChar(const CGroupChar &); // prevent copying with pointer data on board
     CGroupChar &operator=(const CGroupChar &);
-
-    MapData *m_mapData;
-    QTreeWidget *charTable;
-
-    void setItemText(uint itemNumber, const QString &);
-
 };
 
 #endif /*CGROUPCHAR_H_*/

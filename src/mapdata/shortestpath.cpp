@@ -52,7 +52,6 @@ void MapData::shortestPathSearch(const Room *origin, ShortestPathRecipient *reci
     QVector<SPNode> sp_nodes;
     QSet<uint> visited;
     std::priority_queue<std::pair<double, int> > future_paths;
-    int q = 0;
     sp_nodes.push_back(SPNode(origin, -1, 0, ED_UNKNOWN));
     future_paths.push(std::make_pair(0, 0));
     while (future_paths.size()) {

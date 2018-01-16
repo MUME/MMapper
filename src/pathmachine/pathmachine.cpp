@@ -25,7 +25,6 @@
 ************************************************************************/
 
 #include "pathmachine.h"
-#include "configuration.h"
 #include "approved.h"
 #include "path.h"
 #include "abstractroomfactory.h"
@@ -292,7 +291,8 @@ void PathMachine::approved(ParseEvent *event)
 
         // Send updates
         emit playerMoved(mostLikelyRoom.getPosition());
-        if (Config().m_groupManagerState != 2) emit setCharPosition(mostLikelyRoom.getId()); // GroupManager
+        // GroupManager
+        emit setCharPosition(mostLikelyRoom.getId());
     } else {
         // couldn't match, give up
         state = EXPERIMENTING;

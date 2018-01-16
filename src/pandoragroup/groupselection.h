@@ -22,39 +22,40 @@
 **
 ************************************************************************/
 
-#ifndef GROUPMANAGERPAGE_H
-#define GROUPMANAGERPAGE_H
+#ifndef GROUPSELECTION_H
+#define GROUPSELECTION_H
 
-#include <QWidget>
-#include "ui_groupmanagerpage.h"
+#include <QString>
+#include <QMap>
 
-class Mmapper2Group;
+#include <vector>
 
-class GroupManagerPage : public QWidget, private Ui::GroupManagerPage
+class CGroupChar;
+class GroupRecipient;
+
+class GroupAdmin
 {
-    Q_OBJECT
 public:
-    GroupManagerPage(Mmapper2Group *, QWidget *parent = 0);
+    virtual void releaseCharacters(GroupRecipient *) = 0;
 
-public slots:
-    void changeColorClicked();
-    void charNameTextChanged();
-
-    void remoteHostTextChanged();
-    void remotePortValueChanged(int);
-    void localPortValueChanged(int);
-    void localHostLinkActivated(const QString &);
-
-    void rulesWarningChanged(int);
-
-signals:
-    void setGroupManagerType(int);
-    void updatedSelf();
-
-private:
-    Mmapper2Group *m_groupManager;
+    virtual ~GroupAdmin() {}
 };
 
+class GroupRecipient
+{
+public:
+    virtual void receiveCharacters(GroupAdmin *, const std::vector<CGroupChar *>) = 0;
+    virtual ~GroupRecipient() {}
+};
 
-#endif
+class GroupSelection : public QMap<QString, CGroupChar *>, public GroupRecipient
+{
+public:
+    GroupSelection(GroupAdmin *admin) : m_admin(admin) {}
+    void receiveCharacters(GroupAdmin *, const std::vector<CGroupChar *>);
 
+private:
+    GroupAdmin *m_admin;
+};
+
+#endif // GROUPSELECTION_H

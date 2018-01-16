@@ -31,7 +31,7 @@
 #include <QScrollBar>
 #include <QTimer>
 
-MapWindow::MapWindow(MapData *mapData, PrespammedPath *pp, CGroup *gm,  QWidget *parent)
+MapWindow::MapWindow(MapData *mapData, PrespammedPath *pp, Mmapper2Group *gm,  QWidget *parent)
     : QWidget(parent)
 {
     m_verticalScrollStep = 0;

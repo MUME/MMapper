@@ -82,7 +82,7 @@ void AbstractParser::parsePrompt(QString &prompt)
     quint8 index = 0;
     int sv;
 
-    sendPromptLineEvent(m_stringBuffer.toLatin1());
+    emit sendPromptLineEvent(m_stringBuffer.toLatin1());
 
     switch (sv = (int)((prompt[index]).toLatin1())) {
     case 42:
@@ -526,7 +526,7 @@ bool AbstractParser::parseUserCommands(QString &command)
         if (str.startsWith("_vote")) {
             QDesktopServices::openUrl(
                 QUrl("http://www.mudconnect.com/cgi-bin/vote_rank.cgi?mud=MUME+-+Multi+Users+In+Middle+Earth"));
-            emit sendToUser("--->Thank you kindly for voting!\r\n\r\n");
+            emit sendToUser("--->Thank you kindly for voting!\r\n");
             sendPromptToUser();
             return false;
         } else if (str.startsWith("_gt")) { // grouptell

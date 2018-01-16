@@ -33,17 +33,6 @@ class CGroupCommunicator;
 class CGroupClient : public QTcpSocket
 {
     Q_OBJECT
-
-    int connectionState;
-    int protocolState;
-
-    CGroupCommunicator *getParent();
-    void linkSignals();
-
-    QByteArray buffer;
-    int currentMessageLen;
-
-    void cutMessageFromBuffer();
 public:
     enum ConnectionStates { Closed, Connecting, Connected, Quiting};
     enum ProtocolStates { Idle, AwaitingLogin, AwaitingInfo, Logged };
@@ -73,11 +62,21 @@ protected slots:
     void dataIncoming();
 
 signals:
+    void sendLog(const QString &);
+    void connectionClosed(CGroupClient *);
+    void errorInConnection(CGroupClient *, const QString &);
+    void incomingData(CGroupClient *, QByteArray);
+    void connectionEstablished(CGroupClient *);
 
 private:
-    QByteArray _host;
-    int _remotePort;
+    void linkSignals();
+    void cutMessageFromBuffer();
 
+    int connectionState;
+    int protocolState;
+
+    QByteArray buffer;
+    int currentMessageLen;
 };
 
 #endif /*CGROUPCLIENT_H_*/

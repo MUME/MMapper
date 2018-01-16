@@ -31,7 +31,7 @@
 #include "mapdata.h"
 #include "mmapper2event.h"
 #include "mmapper2room.h"
-#include "CGroupCommunicator.h"
+#include "mmapper2group.h"
 #include "parserutils.h"
 #include "mumeclock.h"
 
@@ -164,7 +164,7 @@ void MumeXmlParser::parse(const QByteArray &line)
 
     if (m_readStatusTag) {
         m_readStatusTag = false;
-        if (Config().m_groupManagerState != CGroupCommunicator::Off) {
+        if (Config().m_groupManagerState != Mmapper2Group::Off) {
             QString temp(lineToUser.simplified());
             ParserUtils::removeAnsiMarks(temp);
             if (Patterns::matchScore(temp)) {
@@ -344,9 +344,10 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
 
     m_stringBuffer = m_stringBuffer.simplified();
     ParserUtils::latinToAscii(m_stringBuffer);
-    ParserUtils::removeAnsiMarks(m_stringBuffer); //Remove room color marks
+    ParserUtils::removeAnsiMarks(m_stringBuffer);
 
-    if (m_readSnoopTag && m_stringBuffer.at(0) == '&' && m_stringBuffer.at(2) == ' ') {
+    if (m_readSnoopTag && m_stringBuffer.length() > 3
+            && m_stringBuffer.at(0) == '&' && m_stringBuffer.at(2) == ' ') {
         // Remove snoop prefix (i.e. "&J Exits: north.")
         m_stringBuffer = m_stringBuffer.mid(3);
     }
@@ -357,7 +358,9 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
             if (m_readingRoomDesc) {
                 m_readingRoomDesc = false; // we finished read desc mode
                 m_descriptionReady = true;
-                if (Config().m_emulatedExits) emulateExits();
+                if (Config().m_emulatedExits) {
+                    emulateExits();
+                }
             }
         } else {
             parseMudCommands(m_stringBuffer);

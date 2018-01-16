@@ -47,8 +47,8 @@ class RoomSelection;
 class ConnectionSelection;
 class RoomPropertySetter;
 class FindRoomsDlg;
-class CGroup;
-class CGroupCommunicator;
+class Mmapper2Group;
+class GroupWidget;
 class MumeClock;
 
 class DockWidget : public QDockWidget
@@ -86,7 +86,7 @@ public:
     {
         return m_pathMachine;
     }
-    CGroup *getGroupManager()
+    Mmapper2Group *getGroupManager()
     {
         return m_groupManager;
     }
@@ -96,6 +96,9 @@ public:
     bool saveFile(const QString &fileName, SaveMode mode, SaveFormat format);
     void loadFile(const QString &fileName);
     void setCurrentFile(const QString &fileName);
+
+signals:
+    void setGroupManagerType(int);
 
 public slots:
     void newFile();
@@ -145,10 +148,10 @@ public slots:
     void newRoomSelection(const RoomSelection *);
     void newConnectionSelection(ConnectionSelection *);
 
-    void groupOff(bool);
-    void groupClient(bool);
-    void groupServer(bool);
-    void groupManagerTypeChanged(int);
+    void groupOff();
+    void groupClient();
+    void groupServer();
+    void groupManagerOff();
 
     void openMmapperHomepage();
     void voteForMUMEOnTMC();
@@ -176,8 +179,8 @@ private:
 
     // Pandora Ported
     FindRoomsDlg *m_findRoomsDlg;
-    CGroup *m_groupManager;
-    CGroupCommunicator *m_groupCommunicator;
+    Mmapper2Group *m_groupManager;
+    GroupWidget *m_groupWidget;
 
     const RoomSelection *m_roomSelection;
     ConnectionSelection *m_connectionSelection;

@@ -44,7 +44,7 @@ class InfoMarksEditDlg;
 class RoomSelection;
 class ConnectionSelection;
 class ParseEvent;
-class CGroup;
+class Mmapper2Group;
 class CGroupCharacter;
 class RoomRecipient;
 class PrespammedPath;
@@ -55,7 +55,7 @@ class MapCanvas : public QOpenGLWidget, protected QOpenGLFunctions
     Q_OBJECT
 
 public:
-    MapCanvas( MapData *mapData, PrespammedPath *prespammedPath, CGroup *groupManager,
+    MapCanvas( MapData *mapData, PrespammedPath *prespammedPath, Mmapper2Group *groupManager,
                QWidget *parent = 0 );
     ~MapCanvas();
 
@@ -212,7 +212,7 @@ private:
 
     MapData *m_data;
     PrespammedPath *m_prespammedPath;
-    CGroup *m_groupManager;
+    Mmapper2Group *m_groupManager;
 
     qint16 m_currentLayer;
 

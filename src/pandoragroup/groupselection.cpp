@@ -22,39 +22,19 @@
 **
 ************************************************************************/
 
-#ifndef GROUPMANAGERPAGE_H
-#define GROUPMANAGERPAGE_H
+#include "groupselection.h"
+#include "CGroupChar.h"
+#include <assert.h>
 
-#include <QWidget>
-#include "ui_groupmanagerpage.h"
-
-class Mmapper2Group;
-
-class GroupManagerPage : public QWidget, private Ui::GroupManagerPage
+/**
+ * @brief CGroupSelection::receiveCharacters
+ * @param admin lock administrator
+ * @param chars characters to insert
+ */
+void GroupSelection::receiveCharacters(GroupAdmin *admin, const std::vector<CGroupChar *> chars)
 {
-    Q_OBJECT
-public:
-    GroupManagerPage(Mmapper2Group *, QWidget *parent = 0);
-
-public slots:
-    void changeColorClicked();
-    void charNameTextChanged();
-
-    void remoteHostTextChanged();
-    void remotePortValueChanged(int);
-    void localPortValueChanged(int);
-    void localHostLinkActivated(const QString &);
-
-    void rulesWarningChanged(int);
-
-signals:
-    void setGroupManagerType(int);
-    void updatedSelf();
-
-private:
-    Mmapper2Group *m_groupManager;
-};
-
-
-#endif
-
+    assert(admin == m_admin);
+    foreach (CGroupChar *aChar, chars) {
+        insert(aChar->getName(), aChar);
+    }
+}

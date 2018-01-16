@@ -28,7 +28,7 @@
 #include "proxy.h"
 
 ConnectionListener::ConnectionListener(MapData *md, Mmapper2PathMachine *pm, CommandEvaluator *ce,
-                                       PrespammedPath *pp, CGroup *gm, MumeClock *mc, QObject *parent)
+                                       PrespammedPath *pp, Mmapper2Group *gm, MumeClock *mc, QObject *parent)
     : QTcpServer(parent)
 {
     m_accept = true;

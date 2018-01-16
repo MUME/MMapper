@@ -30,34 +30,34 @@
 #include <QTcpServer>
 
 #include "CGroupClient.h"
-class CGroupCommunicator;
+class CGroupServerCommunicator;
 
 class CGroupServer: public QTcpServer
 {
     Q_OBJECT
 
-    CGroupCommunicator *getCommunicator()
-    {
-        return (CGroupCommunicator *) parent();
-    }
-    QList<CGroupClient *> connections;
 public:
     CGroupServer(int localPort, QObject *parent);
     virtual ~CGroupServer();
-    void addClient(CGroupClient *client);
+
     void sendToAll(QByteArray);
     void sendToAllExceptOne(CGroupClient *conn, QByteArray);
     void closeAll();
 
+protected slots:
+    void errorInConnection(CGroupClient *, const QString &);
+    void relayLog(const QString &);
+
 protected:
     void incomingConnection(qintptr socketDescriptor);
 
-public slots:
-    void connectionClosed(CGroupClient *connection);
+signals:
+    void sendLog(const QString &);
+    void serverStartupFailed();
+    void connectionClosed(CGroupClient *);
 
 private:
-
-
+    QList<CGroupClient *> connections;
 };
 
 #endif /*CGROUPSERVER_H_*/
