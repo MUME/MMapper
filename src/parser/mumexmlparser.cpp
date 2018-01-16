@@ -72,14 +72,6 @@ MumeXmlParser::~MumeXmlParser()
 
 void MumeXmlParser::parseNewMudInput(IncomingData &data)
 {
-    /*IncomingData data;
-    //quint8* dline;
-
-    while ( !que.isEmpty() )
-    {
-    data = que.dequeue();
-    */
-    //dline = (quint8 *)data.line.data();
     switch (data.type) {
     case TDT_DELAY:
     case TDT_MENU_PROMPT:
@@ -93,12 +85,7 @@ void MumeXmlParser::parseNewMudInput(IncomingData &data)
         (*debugStream) << "OTHER";
         (*debugStream) << "***ETYPE***";
 #endif
-
-        /* Jahara Apr-30-09
-         * Fixed prompt bug, not sure why it occured
-         */
-        //emit sendToUser(data.line);
-
+        // Login prompt and IAC-GA
         parse(data.line);
         break;
 
@@ -111,7 +98,7 @@ void MumeXmlParser::parseNewMudInput(IncomingData &data)
         (*debugStream) << "CRLF";
         (*debugStream) << "***ETYPE***";
 #endif
-        //dline = (quint8 *)data.line.data();
+        // XML and prompts
         parse(data.line);
         break;
     }
@@ -127,7 +114,7 @@ void MumeXmlParser::parseNewMudInput(IncomingData &data)
 
 void MumeXmlParser::parse(const QByteArray &line)
 {
-    QByteArray lineToUser;
+    m_lineToUser.clear();
     int index;
 
     for (index = 0; index < line.size(); index++) {
@@ -145,8 +132,7 @@ void MumeXmlParser::parse(const QByteArray &line)
 
         } else {
             if (line.at(index) == '<') {
-                emit sendToUser(characters(m_tempCharacters));
-                lineToUser.append(m_tempCharacters);
+                m_lineToUser.append(characters(m_tempCharacters));
                 m_tempCharacters.clear();
 
                 m_readingTag = true;
@@ -157,19 +143,22 @@ void MumeXmlParser::parse(const QByteArray &line)
     }
 
     if (!m_readingTag) {
-        emit sendToUser(characters(m_tempCharacters));
-        lineToUser.append(m_tempCharacters);
+        m_lineToUser.append(characters(m_tempCharacters));
         m_tempCharacters.clear();
     }
 
-    if (m_readStatusTag) {
-        m_readStatusTag = false;
-        if (Config().m_groupManagerState != Mmapper2Group::Off) {
-            QString temp(lineToUser.simplified());
-            ParserUtils::removeAnsiMarks(temp);
-            if (Patterns::matchScore(temp)) {
-                // inform groupManager
-                emit sendScoreLineEvent(temp.toLatin1());
+    if (!m_lineToUser.isEmpty()) {
+        emit sendToUser(m_lineToUser);
+
+        if (m_readStatusTag) {
+            m_readStatusTag = false;
+            if (Config().m_groupManagerState != Mmapper2Group::Off) {
+                QString temp(m_lineToUser.simplified());
+                ParserUtils::removeAnsiMarks(temp);
+                if (Patterns::matchScore(temp)) {
+                    // inform groupManager
+                    emit sendScoreLineEvent(temp.toLatin1());
+                }
             }
         }
     }
@@ -314,7 +303,7 @@ bool MumeXmlParser::element( const QByteArray &line  )
     }
 
     if (!Config().m_removeXmlTags) {
-        emit sendToUser("<" + line + ">");
+        m_lineToUser.append("<" + line + ">");
     }
     return true;
 }

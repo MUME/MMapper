@@ -72,6 +72,7 @@ protected:
 
     //void checkqueue(CommandIdType dir = CID_UNKNOWN);
     void move();
+    QByteArray m_lineToUser;
     QByteArray m_tempCharacters;
     QByteArray m_tempTag;
     bool m_readingTag;
