@@ -483,16 +483,10 @@ bool MapStorage::mergeData()
             return false;
         }
 
-        if (version >= 042) {
-            // Qt 5.6 and 5.9 LTS share the same serialization
-            stream.setVersion(QDataStream::Qt_5_6);
-
-        } else if (version <= 041) {
-            // Force serialization to Qt4.8 because Qt5 has broke backwards compatability with QDateTime serialization
-            // http://doc.qt.io/qt-5/sourcebreaks.html#changes-to-qdate-qtime-and-qdatetime
-            // http://doc.qt.io/qt-5/qdatastream.html#versioning
-            stream.setVersion(QDataStream::Qt_4_8);
-        }
+        // Force serialization to Qt4.8 because Qt5 has broke backwards compatability with QDateTime serialization
+        // http://doc.qt.io/qt-5/sourcebreaks.html#changes-to-qdate-qtime-and-qdatetime
+        // http://doc.qt.io/qt-5/qdatastream.html#versioning
+        stream.setVersion(QDataStream::Qt_4_8);
 
         QBuffer buffer;
         if (version >= 042) {
@@ -942,7 +936,7 @@ bool MapStorage::saveData( bool baseMapOnly )
 
     QDataStream fileStream(m_file);
 
-    fileStream.setVersion(QDataStream::Qt_5_6);
+    fileStream.setVersion(QDataStream::Qt_4_8);
 
     // Collect the room and marker lists. The room list can't be acquired
     // directly apparently and we have to go through a RoomSaver which receives
