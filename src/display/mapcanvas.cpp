@@ -37,6 +37,7 @@
 #include "infomarkseditdlg.h"
 #include "configuration.h"
 #include "abstractparser.h"
+#include "mmapper2group.h"
 #include "CGroup.h"
 #include "CGroupChar.h"
 #include "customaction.h"
@@ -96,7 +97,7 @@ GLubyte quadtone[] = {
 
 QColor MapCanvas::m_noFleeColor = QColor(123, 63, 0);
 
-MapCanvas::MapCanvas( MapData *mapData, PrespammedPath *prespammedPath, CGroup *groupManager,
+MapCanvas::MapCanvas( MapData *mapData, PrespammedPath *prespammedPath, Mmapper2Group *groupManager,
                       QWidget *parent )
     : QOpenGLWidget(parent),
       m_scrollX(0),
@@ -965,24 +966,23 @@ void MapCanvas::moveMarker(const Coordinate &c)
 
 void MapCanvas::drawGroupCharacters()
 {
-    QVector<CGroupChar *> chars;
-
-    chars = m_groupManager->getChars();
-    if (chars.isEmpty())
+    CGroup *group = m_groupManager->getGroup();
+    if (!group || Config().m_groupManagerState == Mmapper2Group::Off || m_data->isEmpty())
         return;
 
-    for (int charIndex = 0; charIndex < chars.size(); charIndex++) {
-        unsigned int id = chars[charIndex]->getPosition();
-
-        if (!m_data->isEmpty() && chars[charIndex]->getName() != Config().m_groupManagerCharName) {
+    GroupSelection *selection = group->selectAll();
+    foreach (CGroupChar *character, selection->values()) {
+        uint id = character->getPosition();
+        if (character->getName() != Config().m_groupManagerCharName) {
             const RoomSelection *selection = m_data->select();
             const Room *r = m_data->getRoom(id, selection);
             if (r) {
-                drawCharacter(r->getPosition(), chars[charIndex]->getColor());
+                drawCharacter(r->getPosition(), character->getColor());
             }
             m_data->unselect(id, selection);
         }
     }
+    group->unselect(selection);
 }
 
 void MapCanvas::drawCharacter(const Coordinate &c, QColor color)

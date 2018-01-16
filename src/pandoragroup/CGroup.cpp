@@ -26,146 +26,146 @@
 #include "configuration.h"
 
 #include "CGroup.h"
-#include "CGroupCommunicator.h"
 #include "CGroupChar.h"
+#include "groupaction.h"
 
-#include <QMessageBox>
-#include <QAction>
-#include <QCloseEvent>
+#include <assert.h>
+#include <QDebug>
 
-CGroup::CGroup(QByteArray name, MapData *md, QWidget *parent) : QTreeWidget(parent)
+CGroup::CGroup(QObject *parent) :
+    QObject(parent),
+    characterLock(QMutex::Recursive)
 {
-    m_mapData = md;
+    self = new CGroupChar();
+    self->setName(Config().m_groupManagerCharName);
+    self->setPosition(0);
+    self->setColor(Config().m_groupManagerColor);
+    charIndex.push_back(self);
 
-    setColumnCount(8);
-    setHeaderLabels(QStringList() << tr("Name") << tr("HP") << tr("Mana") << tr("Moves") << tr("HP") <<
-                    tr("Mana") << tr("Moves") << tr("Room Name"));
-    setRootIsDecorated(false);
-    setAlternatingRowColors(true);
-    setSelectionMode(QAbstractItemView::NoSelection);
-    clear();
-    hide();
-
-    CGroupChar *ch = new CGroupChar(m_mapData, this);
-    ch->setName(name);
-    ch->setPosition(0);
-    ch->setColor(Config().m_groupManagerColor);
-    chars.append(ch);
-    self = ch;
-
-    emit log("GroupManager", "Starting up the GroupManager.\r\n");
-
-    network = new CGroupCommunicator(CGroupCommunicator::Off, this);
-    network->changeType(Config().m_groupManagerState);
-}
-
-void CGroup::setType(int newState)
-{
-    if (newState != CGroupCommunicator::Off && Config().m_groupManagerRulesWarning)
-        QMessageBox::information(this, "Warning: MUME Rules",
-                                 QString("Using the GroupManager in PK situations is ILLEGAL according to RULES ACTIONS.\n\nBe sure to disable the GroupManager under such conditions."));
-    network->changeType(newState);
-}
-
-void CGroup::resetAllChars()
-{
-    for (int i = 0; i < chars.size(); ++i) {
-        delete chars[i];
-    }
-    chars.clear();
-}
-
-void CGroup::resetChars()
-{
-    for (int i = 0; i < chars.size(); ++i) {
-        if (chars[i] != self)
-            delete chars[i];
-    }
-    chars.clear();
-    chars.append(self);
+    connect(this, SIGNAL(log(const QString &)), parent, SLOT(sendLog(const QString &)));
 }
 
 CGroup::~CGroup()
 {
-    resetAllChars();
-    delete network;
+    // Delete all characters including self
+    for (uint i = 0; i < charIndex.size(); ++i) {
+        delete charIndex[i];
+    }
+    charIndex.clear();
 }
 
-
-
-void CGroup::resetColor()
+/**
+ * @brief CGroup::scheduleAction
+ * @param action to be scheduled once all locks are gone
+ */
+void CGroup::scheduleAction(GroupAction *action)
 {
-    if (self->getColor() == Config().m_groupManagerColor )
-        return;
-
-    self->setColor(Config().m_groupManagerColor);
-    issueLocalCharUpdate();
-}
-
-void CGroup::setCharPosition(unsigned int pos)
-{
-    if (self->getPosition() != pos) {
-        self->setPosition(pos);
-        issueLocalCharUpdate();
+    QMutexLocker locker(&characterLock);
+    action->schedule(this);
+    actionSchedule.push(action);
+    if (locks.empty()) {
+        executeActions();
     }
 }
 
-void CGroup::issueLocalCharUpdate()
+void CGroup::executeActions()
 {
-    QDomNode data = self->toXML();
-    self->updateFromXML(data);
-    network->sendCharUpdate(data);
+    while (!actionSchedule.empty()) {
+        GroupAction *action = actionSchedule.front();
+        action->exec();
+        delete action;
+        actionSchedule.pop();
+    }
 }
 
-QByteArray CGroup::getNameFromBlob(QDomNode blob)
+void CGroup::releaseCharacters(GroupRecipient *sender)
 {
-    CGroupChar *newChar;
-
-    newChar = new CGroupChar(m_mapData, this);
-    newChar->updateFromXML(blob);
-
-    QByteArray name = newChar->getName();
-    delete newChar;
-
-    return name;
+    QMutexLocker lock(&characterLock);
+    assert(sender);
+    locks.erase(sender);
+    if (locks.empty()) {
+        executeActions();
+    }
 }
 
+GroupSelection *CGroup::selectAll()
+{
+    QMutexLocker locker(&characterLock);
+    GroupSelection *selection = new GroupSelection(this);
+    locks.insert(selection);
+    selection->receiveCharacters(this, charIndex);
+    return selection;
+}
+
+GroupSelection *CGroup::selectByName(const QByteArray &name)
+{
+    QMutexLocker locker(&characterLock);
+    GroupSelection *selection = new GroupSelection(this);
+    locks.insert(selection);
+    CGroupChar *character = getCharByName(name);
+    if (character)
+        selection->receiveCharacters(this, {character});
+    return selection;
+}
+
+void CGroup::resetChars()
+{
+    QMutexLocker locker(&characterLock);
+
+    emit log("You have left the group.");
+
+    for (uint i = 0; i < charIndex.size(); ++i) {
+        if (charIndex[i] != self)
+            delete charIndex[i];
+    }
+    charIndex.clear();
+    charIndex.push_back(self);
+
+    emit characterChanged();
+}
 
 bool CGroup::addChar(QDomNode node)
 {
-    CGroupChar *newChar;
-
-    newChar = new CGroupChar(m_mapData, this);
+    QMutexLocker locker(&characterLock);
+    CGroupChar *newChar = new CGroupChar();
     newChar->updateFromXML(node);
-    if ( isNamePresent(newChar->getName()) == true || newChar->getName() == "") {
-        qDebug("Adding new char failed. The name %s already existed.", newChar->getName().constData());
+    if (isNamePresent(newChar->getName()) == true || newChar->getName() == "") {
+        emit log(QString("'%1' could not join the group because the name already existed.")
+                 .arg(newChar->getName().constData()));
         delete newChar;
         return false;
     } else {
-        emit log("GroupManager", QString("Added new char. Name %1.").arg(newChar->getName().constData()));
-        chars.append(newChar);
+        emit log(QString("'%1' joined the group.").arg(newChar->getName().constData()));
+        charIndex.push_back(newChar);
+        emit characterChanged();
         return true;
     }
 }
 
 void CGroup::removeChar(QByteArray name)
 {
-    CGroupChar *ch;
-    if (name == Config().m_groupManagerCharName)
-        return; // just in case... should never happen
+    QMutexLocker locker(&characterLock);
+    if (name == Config().m_groupManagerCharName) {
+        emit log("You cannot delete yourself from the group.");
+        return;
+    }
 
-    for (int i = 0; i < chars.size(); i++)
-        if (chars[i]->getName() == name) {
-            emit log("GroupManager", QString("Removing char %1 from the list.").arg(
-                         chars[i]->getName().constData()));
-            ch = chars[i];
-            chars.remove(i);
-            delete ch;
+    for (std::vector<CGroupChar *>::iterator it = charIndex.begin(); it != charIndex.end(); ++it) {
+        CGroupChar *character = *it;
+        if (character->getName() == name) {
+            emit log(QString("Removing '%1' from the group.").arg(
+                         character->getName().constData()));
+            charIndex.erase(it);
+            delete character;
+            emit characterChanged();
+            return;
         }
+    }
 }
 
 void CGroup::removeChar(QDomNode node)
 {
+    QMutexLocker locker(&characterLock);
     QByteArray name = CGroupChar::getNameFromXML(node);
     if (name == "")
         return;
@@ -173,12 +173,11 @@ void CGroup::removeChar(QDomNode node)
     removeChar(name);
 }
 
-
 bool CGroup::isNamePresent(QByteArray name)
 {
-    for (int i = 0; i < chars.size(); i++)
-        if (chars[i]->getName() == name) {
-            emit log("GroupManager", QString("The name %1 is already present").arg(name.constData()));
+    QMutexLocker locker(&characterLock);
+    for (uint i = 0; i < charIndex.size(); i++)
+        if (charIndex[i]->getName() == name) {
             return true;
         }
 
@@ -187,19 +186,13 @@ bool CGroup::isNamePresent(QByteArray name)
 
 CGroupChar *CGroup::getCharByName(QByteArray name)
 {
-    for (int i = 0; i < chars.size(); i++)
-        if (chars[i]->getName() == name)
-            return chars[i];
+    QMutexLocker locker(&characterLock);
+    for (uint i = 0; i < charIndex.size(); i++)
+        if (charIndex[i]->getName() == name)
+            return charIndex[i];
 
     return NULL;
 }
-
-void CGroup::sendAllCharsData(CGroupClient *conn)
-{
-    for (int i = 0; i < chars.size(); i++)
-        network->sendCharUpdate(conn, chars[i]->toXML());
-}
-
 
 void CGroup::updateChar(QDomNode blob)
 {
@@ -210,255 +203,29 @@ void CGroup::updateChar(QDomNode blob)
         return;
 
     if (ch->updateFromXML(blob) == true)
-        emit drawCharacters();
-}
-
-
-void CGroup::connectionRefused(QString message)
-{
-    emit log("GroupManager", QString("Connection refused: %1").arg(message.toLatin1().constData()));
-    QMessageBox::information(this, "groupManager", QString("Connection refused: %1.").arg(message));
-
-}
-
-void CGroup::connectionFailed(QString message)
-{
-    emit log("GroupManager", QString("Failed to connect: %1").arg(message.toLatin1().constData()));
-    QMessageBox::information(this, "groupManager", QString("Failed to connect: %1.").arg(message));
-}
-
-void CGroup::connectionClosed(QString message)
-{
-    emit log("GroupManager", QString("Connection closed: %1").arg(message.toLatin1().constData()));
-    QMessageBox::information(this, "groupManager", QString("Connection closed: %1.").arg(message));
-}
-
-void CGroup::connectionError(QString message)
-{
-    emit log("GroupManager", QString("Connection error: %1.").arg(message.toLatin1().constData()));
-    QMessageBox::information(this, "groupManager", QString("Connection error: %1.").arg(message));
-}
-
-void CGroup::serverStartupFailed(QString message)
-{
-    emit log("GroupManager", QString("Failed to start the Group server: %1").arg(
-                 message.toLatin1().constData()));
-    QMessageBox::information(this, "groupManager",
-                             QString("Failed to start the groupManager server: %1.").arg(message));
-}
-
-void CGroup::gotKicked(QDomNode message)
-{
-
-    if (message.nodeName() != "data") {
-        qDebug( "Called gotKicked with wrong node. No data node.");
-        return;
-    }
-
-    QDomNode e = message.firstChildElement();
-
-    if (e.nodeName() != "text") {
-        qDebug( "Called gotKicked with wrong node. No text node.");
-        return;
-    }
-
-    QDomElement text = e.toElement();
-    emit log("GroupManager", QString("You got kicked! Reason [nodename %1] : %2").arg(
-                 text.nodeName().toLatin1().constData()).arg(text.text().toLatin1().constData()));
-//      QMessageBox::critical(this, "groupManager", QString("You got kicked! Reason: %1.").arg(text.text()));
-}
-
-void CGroup::gTellArrived(QDomNode node)
-{
-
-    if (node.nodeName() != "data") {
-        qDebug( "Called gTellArrived with wrong node. No data node.");
-        return;
-    }
-
-    QDomNode e = node.firstChildElement();
-
-//      QDomElement root = node.toElement();
-    QString from = e.toElement().attribute("from");
-
-
-    if (e.nodeName() != "gtell") {
-        qDebug( "Called gTellArrived with wrong node. No text node.");
-        return;
-    }
-
-    QDomElement text = e.toElement();
-    emit log("GroupManager", QString("GTell from %1, Arrived : %2").arg(
-                 from.toLatin1().constData()).arg(text.text().toLatin1().constData()));
-
-    QByteArray tell = QString("\r\n" + from + " tells you [GT] '" + text.text() + "'\r\n").toLatin1();
-
-    emit displayGroupTellEvent(tell.constData());
-}
-
-void CGroup::sendGTell(QByteArray tell)
-{
-    network->sendGTell(tell);
-}
-
-void CGroup::resetName()
-{
-    if (self->getName() == Config().m_groupManagerCharName)
-        return;
-
-    QByteArray oldname = self->getName();
-    QByteArray newname = Config().m_groupManagerCharName;
-
-    //printf("Sending name update: %s, %s\r\n", (const char *) oldname, (const char *) newname);
-    network->sendUpdateName(oldname, newname);
-    network->renameConnection(oldname, newname);
-
-    self->setName(Config().m_groupManagerCharName);
+        emit characterChanged();
 }
 
 void CGroup::renameChar(QDomNode blob)
 {
-    if (blob.nodeName() != "data") {
-        qDebug( "Called renameChar with wrong node. No data node.");
+    QMutexLocker locker(&characterLock);
+    if (blob.nodeName() != "rename") {
+        qWarning() << "nodeName was '" << blob.nodeName() << "' and not 'rename'";
         return;
     }
 
-    QDomNode e = blob.firstChildElement();
+    QString oldname = blob.toElement().attribute("oldname");
+    QString newname = blob.toElement().attribute("newname");
 
-//      QDomElement root = node.toElement();
-    QString oldname = e.toElement().attribute("oldname");
-    QString newname = e.toElement().attribute("newname");
-
-    emit log("GroupManager", QString("Renaming a char from %1 to %2").arg(
-                 oldname.toLatin1().constData()).arg(newname.toLatin1().constData()));
+    emit log(QString("Renaming '%1' to '%2'").arg(oldname).arg(newname));
 
     CGroupChar *ch;
     ch = getCharByName(oldname.toLatin1());
-    if (ch == NULL)
+    if (ch == NULL) {
+        qWarning() << "Unable to find old name" << oldname;
         return;
+    }
 
     ch->setName(newname.toLatin1());
-    ch->updateLabels();
+    emit characterChanged();
 }
-
-
-void CGroup::parseScoreInformation(QByteArray score)
-{
-    emit log("GroupManager", QString("Caught a score line: %1").arg(score.constData()));
-
-    if (score.contains("mana, ") == true) {
-        score.replace(" hits, ", "/");
-        score.replace(" mana, and ", "/");
-        score.replace(" moves.", "");
-
-        QString temp = score;
-        QStringList list = temp.split('/');
-
-        /*
-        qDebug( "Hp: %s", (const char *) list[0].toLatin1());
-        qDebug( "Hp max: %s", (const char *) list[1].toLatin1());
-        qDebug( "Mana: %s", (const char *) list[2].toLatin1());
-        qDebug( "Max Mana: %s", (const char *) list[3].toLatin1());
-        qDebug( "Moves: %s", (const char *) list[4].toLatin1());
-        qDebug( "Max Moves: %s", (const char *) list[5].toLatin1());
-        */
-
-        self->setScore(list[0].toInt(), list[1].toInt(), list[2].toInt(), list[3].toInt(),
-                       list[4].toInt(), list[5].toInt()                        );
-
-        issueLocalCharUpdate();
-
-    } else {
-        // 399/529 hits and 121/133 moves.
-        score.replace(" hits and ", "/");
-        score.replace(" moves.", "");
-
-        QString temp = score;
-        QStringList list = temp.split('/');
-
-        /*
-        qDebug( "Hp: %s", (const char *) list[0].toLatin1());
-        qDebug( "Hp max: %s", (const char *) list[1].toLatin1());
-        qDebug( "Moves: %s", (const char *) list[2].toLatin1());
-        qDebug( "Max Moves: %s", (const char *) list[3].toLatin1());
-        */
-        self->setScore(list[0].toInt(), list[1].toInt(), 0, 0,
-                       list[2].toInt(), list[3].toInt()                        );
-
-        issueLocalCharUpdate();
-    }
-}
-
-void CGroup::parsePromptInformation(QByteArray prompt)
-{
-    QByteArray hp, mana, moves;
-
-    if (prompt.indexOf('>') == -1)
-        return; // false prompt
-
-    hp = "Healthy";
-    mana = "Full";
-    moves = "A lot";
-
-    int index = prompt.indexOf("HP:");
-    if (index != -1) {
-        hp = "";
-        int k = index + 3;
-        while (prompt[k] != ' ' && prompt[k] != '>' )
-            hp += prompt[k++];
-    }
-
-    index = prompt.indexOf("Mana:");
-    if (index != -1) {
-        mana = "";
-        int k = index + 5;
-        while (prompt[k] != ' ' && prompt[k] != '>' )
-            mana += prompt[k++];
-    }
-
-    index = prompt.indexOf("Move:");
-    if (index != -1) {
-        moves = "";
-        int k = index + 5;
-        while (prompt[k] != ' ' && prompt[k] != '>' )
-            moves += prompt[k++];
-    }
-
-    self->setTextScore(hp, mana, moves);
-}
-
-void CGroup::parseStateChangeLine(int message, QByteArray line)
-{
-
-}
-
-void CGroup::sendLog(const QString &text)
-{
-    emit log("GroupManager", text);
-}
-QByteArray CGroup::getName() const
-{
-    return self->getName();
-}
-int CGroup::getType() const
-{
-    return network->getType();
-}
-bool CGroup::isConnected() const
-{
-    return network->isConnected();
-}
-void CGroup::reconnect()
-{
-    resetChars();
-    network->reconnect();
-}
-QDomNode CGroup::getLocalCharData()
-{
-    return self->toXML();
-}
-void CGroup::closeEvent(QCloseEvent *event)
-{
-    event->accept();
-}
-

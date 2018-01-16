@@ -37,14 +37,14 @@ class QMouseEvent;
 class MapCanvas;
 class MapData;
 class PrespammedPath;
-class CGroup;
+class Mmapper2Group;
 
 class MapWindow : public QWidget
 {
     Q_OBJECT
 
 public:
-    MapWindow(MapData *mapData, PrespammedPath *pp, CGroup *gm, QWidget *parent = 0);
+    MapWindow(MapData *mapData, PrespammedPath *pp, Mmapper2Group *gm, QWidget *parent = 0);
     ~MapWindow();
 
     void resizeEvent (QResizeEvent *event);

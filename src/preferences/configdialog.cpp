@@ -33,7 +33,7 @@
 #include <QListWidget>
 #include <QStackedWidget>
 
-ConfigDialog::ConfigDialog(CGroup *gm)
+ConfigDialog::ConfigDialog(Mmapper2Group *gm)
 {
     m_groupManager = gm;
     contentsWidget = new QListWidget;

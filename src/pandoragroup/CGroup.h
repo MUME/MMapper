@@ -26,99 +26,80 @@
 #ifndef CGROUP_H_
 #define CGROUP_H_
 
-#include <QVector>
-#include <QTreeWidget>
-#include <QDomNode>
+#include "groupselection.h"
 
-class MapData;
+#include <QObject>
+#include <QMutex>
+#include <QDomNode>
+#include <queue>
+#include <set>
+#include <vector>
+
 class CGroupCommunicator;
 class CGroupChar;
 class CGroupClient;
+class GroupAction;
 
-class CGroup : public QTreeWidget
+class CGroup : public QObject, public GroupAdmin
 {
     Q_OBJECT
 
-    CGroupCommunicator *network;
-
-    QVector<CGroupChar *> chars;
-    CGroupChar      *self;
-    //QFrame        *status;
-
-
-    //QGridLayout *layout;
-
-    void resetAllChars();
-
-signals:
-    void log( const QString &, const QString & );
-    void displayGroupTellEvent(const QByteArray &tell); // sends gtell from local user
-    void drawCharacters(); // redraw the opengl screen
+    friend class AddCharacter;
+    friend class RemoveCharacter;
+    friend class RenameCharacter;
+    friend class UpdateCharacter;
+    friend class KickCharacter;
+    friend class ResetCharacters;
+    friend class CGroupClientCommunicator;
+    friend class CGroupServerCommunicator;
+    friend class Mmapper2Group;
 
 public:
-
-    enum StateMessages { NORMAL, FIGHTING, RESTING, SLEEPING, CASTING, INCAP, DEAD, BLIND, UNBLIND };
-
-    CGroup(QByteArray name, MapData *md, QWidget *parent);
+    CGroup(QObject *parent);
     virtual ~CGroup();
 
-    QByteArray getName() const ;
-    CGroupChar *getCharByName(QByteArray name);
-
-    void setType(int newState);
-    int getType() const ;
-    bool isConnected() const ;
-    void reconnect() ;
-
-    bool addChar(QDomNode blob);
-    void removeChar(QByteArray name);
-    void removeChar(QDomNode node);
     bool isNamePresent(QByteArray name);
-    QByteArray getNameFromBlob(QDomNode blob);
-    void updateChar(QDomNode blob); // updates given char from the blob
-    CGroupCommunicator *getCommunicator()
+
+    // Interactions with group characters should occur through CGroupSelection due to threading
+    void releaseCharacters(GroupRecipient *sender);
+    void unselect(GroupSelection *s)
     {
-        return network;
+        releaseCharacters(s);
+        delete s;
     }
-
-    void resetChars();
-    QVector<CGroupChar *>  getChars()
-    {
-        return chars;
-    }
-    // changing settings
-    void resetName();
-    void resetColor();
-
-    QDomNode getLocalCharData() ;
-    void sendAllCharsData(CGroupClient *conn);
-    void issueLocalCharUpdate();
-
-    void gTellArrived(QDomNode node);
-
-    // dispatcher/Engine hooks
-    bool isGroupTell(QByteArray tell);
-    void renameChar(QDomNode blob);
-
-    void sendLog(const QString &);
+    GroupSelection *selectAll();
+    GroupSelection *selectByName(const QByteArray &);
 
 public slots:
-    void connectionRefused(QString message);
-    void connectionFailed(QString message);
-    void connectionClosed(QString message);
-    void connectionError(QString message);
-    void serverStartupFailed(QString message);
-    void gotKicked(QDomNode message);
-    void setCharPosition(unsigned int pos);
+    void scheduleAction(GroupAction *action);
 
-    void closeEvent( QCloseEvent *event ) ;
-    void sendGTell(QByteArray tell); // sends gtell from local user
-    void parseScoreInformation(QByteArray score);
-    void parsePromptInformation(QByteArray prompt);
-    void parseStateChangeLine(int message, QByteArray line);
+signals:
+    void log(const QString &);
+    void characterChanged();
+
+protected:
+    void executeActions();
+
+    CGroupChar *getSelf()
+    {
+        return self;
+    }
+    void renameChar(QDomNode blob);
+    void resetChars();
+    void updateChar(QDomNode blob); // updates given char from the blob
+    void removeChar(QByteArray name);
+    void removeChar(QDomNode node);
+    bool addChar(QDomNode blob);
 
 private:
-    MapData *m_mapData;
+    CGroupChar *getCharByName(QByteArray name);
+
+    QMutex characterLock;
+    std::set<GroupRecipient *> locks;
+    std::queue<GroupAction *> actionSchedule;
+
+    std::vector<CGroupChar *> charIndex;
+    CGroupChar      *self;
 };
 
 #endif /*CGROUP_H_*/

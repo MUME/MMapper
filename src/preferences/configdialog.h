@@ -32,15 +32,15 @@
 class QListWidget;
 class QListWidgetItem;
 class QStackedWidget;
-class CGroup;
+class Mmapper2Group;
 
 class ConfigDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    ConfigDialog(CGroup *);
-    CGroup *m_groupManager;
+    ConfigDialog(Mmapper2Group *);
+    Mmapper2Group *m_groupManager;
 
 public slots:
     void changePage(QListWidgetItem *current, QListWidgetItem *previous);

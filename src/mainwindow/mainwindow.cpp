@@ -25,29 +25,28 @@
 ************************************************************************/
 
 #include "mainwindow.h"
-#include "mapwindow.h"
-#include "mapcanvas.h"
-#include "mapdata.h"
 #include "roomeditattrdlg.h"
-#include "mapstorage.h"
-#include "jsonmapstorage.h"
-#include "connectionlistener.h"
-#include "configuration.h"
-#include "mmapper2pathmachine.h"
-#include "roomselection.h"
-#include "connectionselection.h"
-#include "configdialog.h"
-#include "customaction.h"
-#include "prespammedpath.h"
-#include "roompropertysetter.h"
 #include "aboutdialog.h"
 #include "findroomsdlg.h"
-#include "CGroup.h"
-#include "CGroupCommunicator.h"
-#include "progresscounter.h"
+#include "display/mapwindow.h"
+#include "display/mapcanvas.h"
+#include "display/connectionselection.h"
+#include "display/prespammedpath.h"
+#include "mapstorage/mapstorage.h"
+#include "mapstorage/jsonmapstorage.h"
+#include "proxy/connectionlistener.h"
+#include "configuration/configuration.h"
+#include "pathmachine/mmapper2pathmachine.h"
+#include "mapdata/roomselection.h"
+#include "mapdata/mapdata.h"
+#include "mapdata/customaction.h"
+#include "preferences/configdialog.h"
+#include "pandoragroup/mmapper2group.h"
+#include "pandoragroup/groupwidget.h"
+#include "mapstorage/progresscounter.h"
 #include "mapstorage/filesaver.h"
-#include "mumeclockwidget.h"
-#include "mumeclock.h"
+#include "clock/mumeclockwidget.h"
+#include "clock/mumeclock.h"
 
 #include <QMessageBox>
 #include <QMenuBar>
@@ -69,22 +68,22 @@ StackedWidget::StackedWidget(QWidget *parent)
 QSize StackedWidget::minimumSizeHint() const
 {
     return QSize(200, 200);
-};
+}
 
 QSize StackedWidget::sizeHint() const
 {
     return QSize(500, 800);
-};
+}
 
 QSize DockWidget::minimumSizeHint() const
 {
     return QSize(200, 0);
-};
+}
 
 QSize DockWidget::sizeHint() const
 {
     return QSize(500, 130);
-};
+}
 
 MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     : QMainWindow(parent, flags)
@@ -107,8 +106,10 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
 
     m_prespammedPath = new PrespammedPath(this);
 
-    m_groupManager = new CGroup(Config().m_groupManagerCharName, m_mapData, this);
+    m_groupManager = new Mmapper2Group();
     m_groupManager->setObjectName("GroupManager");
+    m_groupManager->start();
+    m_groupWidget = new GroupWidget(m_groupManager, m_mapData, this);
 
     m_stackedWidget = new StackedWidget();
     m_stackedWidget->setObjectName("StackedWidget");
@@ -143,11 +144,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     m_dockDialogGroup->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
     m_dockDialogGroup->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
     addDockWidget(Qt::TopDockWidgetArea, m_dockDialogGroup);
-    m_dockDialogGroup->setWidget(m_groupManager);
+    m_dockDialogGroup->setWidget(m_groupWidget);
     m_dockDialogGroup->hide();
 
-    m_groupCommunicator = m_groupManager->getCommunicator();
-    m_groupCommunicator->setObjectName("CCommunicator");
     m_findRoomsDlg = new FindRoomsDlg(m_mapData, this);
     m_findRoomsDlg->setObjectName("FindRoomsDlg");
 
@@ -281,19 +280,28 @@ void MainWindow::currentMapWindowChanged()
 
     // Group
     connect(m_groupManager, SIGNAL(log(const QString &, const QString &)), this,
-            SLOT(log(const QString &, const QString &)));
-    connect(m_pathMachine, SIGNAL(setCharPosition(uint)), m_groupManager, SLOT(setCharPosition(uint)));
-    connect(m_groupManager, SIGNAL(drawCharacters()), getCurrentMapWindow()->getCanvas(),
-            SLOT(update()));
+            SLOT(log(const QString &, const QString &)),
+            Qt::QueuedConnection);
+    connect(m_pathMachine, SIGNAL(setCharPosition(uint)), m_groupManager,
+            SLOT(setCharPosition(uint)),
+            Qt::QueuedConnection);
+    connect(m_groupManager, SIGNAL(drawCharacters()),
+            getCurrentMapWindow()->getCanvas(), SLOT(update()),
+            Qt::QueuedConnection);
+    connect(this, SIGNAL(setGroupManagerType(int)), m_groupManager, SLOT(setType(int)),
+            Qt::QueuedConnection);
+    connect(m_groupManager, SIGNAL(groupManagerOff()), SLOT(groupManagerOff()),
+            Qt::QueuedConnection);
 
-    QObject::connect(m_mumeClock, SIGNAL(log( const QString &, const QString & )), this,
-                     SLOT(log( const QString &, const QString & )));
+    connect(m_mumeClock, SIGNAL(log( const QString &, const QString & )), this,
+            SLOT(log( const QString &, const QString & )));
 }
 
 
 void MainWindow::log(const QString &module, const QString &message)
 {
     logWindow->append("[" + module + "] " + message);
+    logWindow->ensureCursorVisible();
     logWindow->update();
 }
 
@@ -586,27 +594,24 @@ void MainWindow::createActions()
     groupOffAct = new QAction(QIcon(":/icons/groupoff.png"), tr("&Off"), this );
     groupOffAct->setShortcut(tr("Ctrl+G"));
     groupOffAct->setCheckable(true);
-    connect(groupOffAct, SIGNAL(toggled(bool)), this, SLOT(groupOff(bool)), Qt::QueuedConnection);
+    connect(groupOffAct, SIGNAL(triggered()), this, SLOT(groupOff()), Qt::QueuedConnection);
 
     groupClientAct = new QAction(QIcon(":/icons/groupclient.png"), tr("&Connect to a friend's map"),
                                  this );
     groupClientAct->setCheckable(true);
-    connect(groupClientAct, SIGNAL(toggled(bool)), this, SLOT(groupClient(bool)), Qt::QueuedConnection);
+    connect(groupClientAct, SIGNAL(triggered()), this, SLOT(groupClient()), Qt::QueuedConnection);
 
     groupServerAct = new QAction(QIcon(":/icons/groupserver.png"), tr("&Host your map with friends"),
                                  this );
     groupServerAct->setCheckable(true);
-    connect(groupServerAct, SIGNAL(toggled(bool)), this, SLOT(groupServer(bool)), Qt::QueuedConnection);
+    connect(groupServerAct, SIGNAL(triggered()), this, SLOT(groupServer()), Qt::QueuedConnection);
 
     groupManagerGroup = new QActionGroup(this);
+    groupManagerGroup->setExclusive(true);
     groupManagerGroup->addAction(groupOffAct);
     groupManagerGroup->addAction(groupClientAct);
     groupManagerGroup->addAction(groupServerAct);
-
-    // Group Manager/Communicator
-    connect(m_groupCommunicator, SIGNAL(typeChanged(int)), this, SLOT(groupManagerTypeChanged(int)),
-            Qt::QueuedConnection);
-    groupManagerTypeChanged(Config().m_groupManagerState);
+    groupManagerOff();
 }
 
 void MainWindow::onPlayMode()
@@ -936,13 +941,13 @@ void MainWindow::prevWindow()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+    groupOff();
     writeSettings();
     if (maybeSave()) {
         event->accept();
     } else {
         event->ignore();
     }
-    groupManagerTypeChanged(CGroupCommunicator::Off);
 }
 
 void MainWindow::newFile()
@@ -1294,44 +1299,41 @@ void MainWindow::onFindRoom()
     m_findRoomsDlg->show();
 }
 
-void MainWindow::groupManagerTypeChanged(int type)
+
+void MainWindow::groupManagerOff()
 {
-    Config().m_groupManagerState = type;
-    if (type == CGroupCommunicator::Server) {
-        groupServerAct->setChecked(true);
-        m_dockDialogGroup->show();
-        m_groupManager->show();
+    groupOffAct->setChecked(true);
+    m_dockDialogGroup->hide();
+    m_groupWidget->hide();
+}
+
+void MainWindow::groupOff()
+{
+    groupManagerOff();
+    if (m_groupManager->getType() != Mmapper2Group::Off && groupOffAct->isChecked()) {
+        emit setGroupManagerType(Mmapper2Group::Off);
     }
-    if (type == CGroupCommunicator::Client) {
+}
+
+void MainWindow::groupClient()
+{
+    if (m_groupManager->getType() != Mmapper2Group::Client && groupClientAct->isChecked()) {
+        emit setGroupManagerType(Mmapper2Group::Client);
         groupClientAct->setChecked(true);
         m_dockDialogGroup->show();
-        m_groupManager->show();
+        m_groupWidget->show();
     }
-    if (type == CGroupCommunicator::Off) {
-        groupOffAct->setChecked(true);
-        m_dockDialogGroup->hide();
-        m_groupManager->hide();
+}
+
+
+void MainWindow::groupServer()
+{
+    if (m_groupManager->getType() != Mmapper2Group::Server && groupServerAct->isChecked()) {
+        emit setGroupManagerType(Mmapper2Group::Server);
+        groupServerAct->setChecked(true);
+        m_dockDialogGroup->show();
+        m_groupWidget->show();
     }
-
-}
-
-void MainWindow::groupOff(bool b)
-{
-    if (b && m_groupCommunicator->getType() != CGroupCommunicator::Off)
-        m_groupManager->setType(CGroupCommunicator::Off);
-}
-
-void MainWindow::groupClient(bool b)
-{
-    if (b && m_groupCommunicator->getType() != CGroupCommunicator::Client)
-        m_groupManager->setType(CGroupCommunicator::Client);
-}
-
-
-void MainWindow::groupServer(bool b)
-{
-    if (b && m_groupCommunicator->getType() != CGroupCommunicator::Server)
-        m_groupManager->setType(CGroupCommunicator::Server);
 }
 
 void MainWindow::setCurrentFile(const QString &fileName)

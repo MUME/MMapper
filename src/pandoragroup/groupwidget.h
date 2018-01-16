@@ -22,39 +22,34 @@
 **
 ************************************************************************/
 
-#ifndef GROUPMANAGERPAGE_H
-#define GROUPMANAGERPAGE_H
+#ifndef GROUPWIDGET_H
+#define GROUPWIDGET_H
 
-#include <QWidget>
-#include "ui_groupmanagerpage.h"
+#include <QTreeWidget>
+#include <QHash>
+
+#include "groupselection.h"
 
 class Mmapper2Group;
+class MapData;
 
-class GroupManagerPage : public QWidget, private Ui::GroupManagerPage
+class GroupWidget : public QTreeWidget
 {
     Q_OBJECT
 public:
-    GroupManagerPage(Mmapper2Group *, QWidget *parent = 0);
+    GroupWidget(Mmapper2Group *groupManager, MapData *md, QWidget *parent = 0);
+    virtual ~GroupWidget();
+
+    void setItemText(QTreeWidgetItem *item, uint itemNumber, const QString &, const QColor &color);
 
 public slots:
-    void changeColorClicked();
-    void charNameTextChanged();
-
-    void remoteHostTextChanged();
-    void remotePortValueChanged(int);
-    void localPortValueChanged(int);
-    void localHostLinkActivated(const QString &);
-
-    void rulesWarningChanged(int);
-
-signals:
-    void setGroupManagerType(int);
-    void updatedSelf();
+    void updateLabels();
+    void messageBox(QString title, QString message);
 
 private:
-    Mmapper2Group *m_groupManager;
+    Mmapper2Group *m_group;
+    MapData *m_map;
+    QHash<QByteArray, QTreeWidgetItem *> m_nameItemHash;
 };
 
-
-#endif
-
+#endif // GROUPWIDGET_H

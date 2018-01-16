@@ -24,17 +24,12 @@
 ************************************************************************/
 
 #include "CGroupChar.h"
-#include "roomselection.h"
-#include "mapdata.h"
 
 #include <QDomNode>
-#include <QTreeWidgetItem>
+#include <QDebug>
 
-CGroupChar::CGroupChar(MapData *md, QTreeWidget *qtw)
+CGroupChar::CGroupChar()
 {
-    m_mapData = md;
-    charTable = qtw;
-
     name = "";
     pos = 0;
     hp = 0;
@@ -48,67 +43,10 @@ CGroupChar::CGroupChar(MapData *md, QTreeWidget *qtw)
     textMoves = "Full";
     textMana = "Full";
     lastMovement = "";
-    charItem = new QTreeWidgetItem(charTable);
 }
 
 CGroupChar::~CGroupChar()
 {
-    delete charItem;
-}
-
-void CGroupChar::setItemText(uint itemNumber, const QString &text)
-{
-    charItem->setText(itemNumber, text);
-    charItem->setBackgroundColor(itemNumber, color);
-    if (color.value() < 150)
-        charItem->setTextColor(itemNumber, Qt::white);
-    else
-        charItem->setTextColor(itemNumber, Qt::black);
-}
-
-void CGroupChar::updateLabels()
-{
-    setItemText(0, name);
-    setItemText(1, textHP);
-    setItemText(2, textMana);
-    setItemText(3, textMoves);
-
-    setItemText(4, QString("%1/%2").arg(hp).arg(maxhp) );
-    setItemText(5, QString("%1/%2").arg(mana).arg(maxmana) );
-    setItemText(6, QString("%1/%2").arg(moves).arg(maxmoves) );
-
-    if (pos == 0 || m_mapData->isEmpty()) {
-        setItemText(7, "Unknown");
-    } else {
-
-        const RoomSelection *selection = m_mapData->select();
-        const Room *r = m_mapData->getRoom(pos, selection);
-
-        if (r == NULL)
-            setItemText(7, "Unknown");
-        else {
-            //setItemText(1, QString("%1:%2").arg(r->getId()).arg( QString((*r)[0].toString()) ));
-            setItemText(7, QString((*r)[0].toString()));
-        }
-        m_mapData->unselect(pos, selection);
-    }
-
-    /*
-    switch (state) {
-      case BASHED:
-        setItemText(8, "BASHED");
-        break;
-      case INCAPACITATED:
-        setItemText(8, "INCAP");
-        break;
-      case DEAD:
-        setItemText(8, "DEAD");
-        break;
-      default:
-        setItemText(8, "Normal");
-        break;
-    }
-    */
 }
 
 QDomNode CGroupChar::toXML()
@@ -143,7 +81,7 @@ bool CGroupChar::updateFromXML(QDomNode node)
 
     updated = false;
     if (node.nodeName() != "playerData") {
-        qDebug( "Called updateFromXML with wrong node. The name does not fit.");
+        qWarning("Called updateFromXML with wrong node. The name does not fit.");
         return false;
     }
 
@@ -176,10 +114,8 @@ bool CGroupChar::updateFromXML(QDomNode node)
     str = e.attribute("color").toLatin1();
     if (str != color.name().toLatin1()) {
         updated = true;
-        color = QColor(QString(str) );
+        color = QColor(QString(str));
     }
-
-//  printf(" 6.\r\n");
 
     str = e.attribute("textHP").toLatin1();
     if (s != textHP) {
@@ -240,21 +176,13 @@ bool CGroupChar::updateFromXML(QDomNode node)
         updated = true;
         state = newval;
     }
-
-//  printf("Tut 6.\r\n");
-
-    if (updated == true)
-        updateLabels();
-
-//  printf("Tut 7.\r\n");
-
-    return updated; // hrmpf!
+    return updated;
 }
 
 QByteArray CGroupChar::getNameFromXML(QDomNode node)
 {
     if (node.nodeName() != "playerData") {
-        qDebug( "Called updateFromXML with wrong node. The name does not fit.");
+        qWarning("Called updateFromXML with wrong node. The name does not fit.");
         return QByteArray();
     }
 

@@ -25,14 +25,14 @@
 #include "groupmanagerpage.h"
 #include "configuration.h"
 
-#include "CGroupCommunicator.h"
+#include "mmapper2group.h"
 #include "CGroup.h"
 
 #include <QColorDialog>
 #include <QDesktopServices>
 #include <QUrl>
 
-GroupManagerPage::GroupManagerPage(CGroup *gm, QWidget *parent)
+GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
     : QWidget(parent)
 {
     setupUi(this);
@@ -51,6 +51,10 @@ GroupManagerPage::GroupManagerPage(CGroup *gm, QWidget *parent)
     // Checkbox Section
     connect( rulesWarning, SIGNAL(stateChanged(int)), SLOT(rulesWarningChanged(int)));
 
+    // Inform Group Manager of changes
+    connect( this, SIGNAL(setGroupManagerType(int)), m_groupManager, SLOT(setType(int)));
+    connect( this, SIGNAL(updatedSelf()), m_groupManager, SLOT(updateSelf()));
+
     charName->setText( Config().m_groupManagerCharName );
     colorLabel->setPalette(QPalette(Config().m_groupManagerColor));
     colorLabel->setAutoFillBackground(true);
@@ -63,10 +67,11 @@ GroupManagerPage::GroupManagerPage(CGroup *gm, QWidget *parent)
 void GroupManagerPage::charNameTextChanged()
 {
     const QString newName = charName->text();
-    if (!m_groupManager->isNamePresent(newName.toLatin1()) &&
+    if (!m_groupManager->getGroup()->isNamePresent(newName.toLatin1()) &&
             Config().m_groupManagerCharName != newName) {
         Config().m_groupManagerCharName = newName.toLatin1();
-        m_groupManager->resetName();
+
+        emit updatedSelf();
     }
 }
 
@@ -77,7 +82,8 @@ void GroupManagerPage::changeColorClicked()
         colorLabel->setPalette(QPalette(newColor));
         colorLabel->setAutoFillBackground(true);
         Config().m_groupManagerColor = newColor;
-        m_groupManager->resetColor();
+
+        emit updatedSelf();
     }
 }
 
@@ -85,20 +91,20 @@ void GroupManagerPage::remoteHostTextChanged()
 {
     if (QString(remoteHost->text()).toLatin1() != Config().m_groupManagerHost) {
         Config().m_groupManagerHost = QString(remoteHost->text()).toLatin1();
-    }
 
-    if (m_groupManager->isConnected() && m_groupManager->getType() == CGroupCommunicator::Client)
-        m_groupManager->reconnect();
+        if (m_groupManager->getType() == Mmapper2Group::Client)
+            emit setGroupManagerType(Mmapper2Group::Off);
+    }
 }
 
 void GroupManagerPage::remotePortValueChanged(int)
 {
     if (remotePort->value() != Config().m_groupManagerRemotePort) {
         Config().m_groupManagerRemotePort = remotePort->value();
-    }
 
-    if (m_groupManager->isConnected() && m_groupManager->getType() == CGroupCommunicator::Client)
-        m_groupManager->reconnect();
+        if (m_groupManager->getType() == Mmapper2Group::Client)
+            emit setGroupManagerType(Mmapper2Group::Off);
+    }
 }
 
 void GroupManagerPage::localHostLinkActivated(const QString &link)
@@ -108,12 +114,12 @@ void GroupManagerPage::localHostLinkActivated(const QString &link)
 
 void GroupManagerPage::localPortValueChanged(int)
 {
-    if (localPort->value() != Config().m_groupManagerLocalPort
-            && localPort->value() != int(Config().m_localPort))
+    if (localPort->value() != Config().m_groupManagerLocalPort) {
         Config().m_groupManagerLocalPort = localPort->value();
 
-    if (m_groupManager->getType() == CGroupCommunicator::Server)
-        m_groupManager->reconnect();
+        if (m_groupManager->getType() == Mmapper2Group::Server)
+            emit setGroupManagerType(Mmapper2Group::Off);
+    }
 }
 
 void GroupManagerPage::rulesWarningChanged(int)
