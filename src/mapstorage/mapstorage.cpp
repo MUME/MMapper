@@ -490,17 +490,15 @@ bool MapStorage::mergeData()
 
         QBuffer buffer;
         if (version >= 042) {
-            emit log ("MapStorage", "Uncompressing data");
             QByteArray compressedData(stream.device()->readAll());
             QByteArray uncompressedData = qUncompress(compressedData);
             buffer.setData(uncompressedData);
             buffer.open(QIODevice::ReadOnly);
             stream.setDevice(&buffer);
-        }
+            emit log ("MapStorage", "Uncompressed data");
 
-        if (version <= 041 && version >= 031) {
+        } else if (version <= 041 && version >= 031) {
 #ifndef MMAPPER_NO_QTIOCOMPRESSOR
-            emit log ("MapStorage", "Uncompressing data");
             QtIOCompressor *compressor = new QtIOCompressor(m_file);
             compressor->open(QIODevice::ReadOnly);
             stream.setDevice(compressor);
@@ -511,6 +509,7 @@ bool MapStorage::mergeData()
             return false;
 #endif
         }
+        emit log ("MapStorage", QString("Schema version: %1").arg(version, 0, 8));
 
         stream >> roomsCount;
         if (version < 020) stream >> connectionsCount;
