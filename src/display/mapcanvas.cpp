@@ -861,6 +861,13 @@ void MapCanvas::initializeGL()
     emit log("MapCanvas", "OpenGL Renderer: " + renderer);
     emit log("MapCanvas", "OpenGL Vendor: " + vendor);
 
+    QString contextStr = QString("%1.%2 ")
+                         .arg(context()->format().majorVersion())
+                         .arg(context()->format().minorVersion());
+    contextStr.append((context()->isValid() ? "(valid)" : "(invalid)"));
+    qInfo() << "Current OpenGL Context: " << contextStr;
+    emit log("MapCanvas", "Current OpenGL Context: " + contextStr);
+
     if (Config().m_antialiasingSamples > 0)
         glEnable(GL_MULTISAMPLE);
 
