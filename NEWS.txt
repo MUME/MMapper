@@ -1,4 +1,20 @@
 ================================
+MMapper 2.4.3 (January 16, 2018)
+================================
+
+Note:
+ - Maps saved with 2.4.3 are not compatible with previous versions
+Changes:
+ - Fixed bug where NO_RIDE rooms did not have a dark red cross
+ - Fixed 7 year old bug that prevented renaming characters
+ - Fix Ainur segfault that occurs in rooms with no exits
+ - Group Manager is now a multithreaded component
+ - QtIOCompressor is now optional for 2.4.3 saves
+ - Fixed warning "waitForDisconnected() is not allowed in UnconnectedState"
+ - Fixed typos where \n\r should have been \r\n
+ - The default "cha charset" setting is now Latin-1
+
+================================
 MMapper 2.4.2 (January 1, 2018)
 ================================
 
