@@ -35,6 +35,7 @@
 #include <QOpenGLFunctions>
 #include <vector>
 #include <set>
+#include <QOpenGLDebugMessage>
 
 class QOpenGLTexture;
 class MapData;
@@ -49,6 +50,7 @@ class CGroupCharacter;
 class RoomRecipient;
 class PrespammedPath;
 class Coordinate;
+class QOpenGLDebugLogger;
 
 class MapCanvas : public QOpenGLWidget, protected QOpenGLFunctions
 {
@@ -100,6 +102,8 @@ public slots:
 
     void dataLoaded();
     void moveMarker(const Coordinate &);
+
+    void onMessageLogged(QOpenGLDebugMessage message);
 
 signals:
     void onEnsureVisible( qint32 x, qint32 y );
@@ -163,6 +167,7 @@ protected:
 
 private:
     QMatrix4x4 m_model, m_view, m_projection;
+    QOpenGLDebugLogger *m_logger;
 
     static QColor m_noFleeColor;
 

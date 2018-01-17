@@ -48,6 +48,8 @@
 #include <QWheelEvent>
 #include <QPainter>
 #include <QOpenGLTexture>
+#include <QOpenGLDebugLogger>
+#include <QDebug>
 
 #define ROOM_Z_DISTANCE (7.0f)
 #define ROOM_WALL_ALIGN (0.008f)
@@ -867,6 +869,18 @@ void MapCanvas::initializeGL()
     contextStr.append((context()->isValid() ? "(valid)" : "(invalid)"));
     qInfo() << "Current OpenGL Context: " << contextStr;
     emit log("MapCanvas", "Current OpenGL Context: " + contextStr);
+
+    m_logger = new QOpenGLDebugLogger(this);
+    connect(m_logger, SIGNAL(messageLogged(QOpenGLDebugMessage)),
+            this, SLOT(onMessageLogged(QOpenGLDebugMessage)),
+            Qt::DirectConnection);
+    if (m_logger->initialize()) {
+        m_logger->startLogging(QOpenGLDebugLogger::SynchronousLogging);
+        m_logger->disableMessages();
+        m_logger->enableMessages(QOpenGLDebugMessage::AnySource,
+                                 (QOpenGLDebugMessage::ErrorType | QOpenGLDebugMessage::UndefinedBehaviorType),
+                                 QOpenGLDebugMessage::AnySeverity);
+    }
 
     if (Config().m_antialiasingSamples > 0)
         glEnable(GL_MULTISAMPLE);
@@ -2472,6 +2486,7 @@ void MapCanvas::drawConnection( const Room *leftRoom, const Room *rightRoom,
 
     double srcZ = ROOM_Z_DISTANCE * leftLayer + 0.3;
 
+    bool glBeginOpen = false;
     switch (connectionStartDirection) {
     case ED_NORTH:
         if ( !oneway ) {
@@ -2484,6 +2499,7 @@ void MapCanvas::drawConnection( const Room *leftRoom, const Room *rightRoom,
         glBegin(GL_LINE_STRIP);
         glVertex3d(0.75, 0.1, srcZ);
         glVertex3d(0.75, -0.1, srcZ);
+        glBeginOpen = true;
         break;
     case ED_SOUTH:
         if ( !oneway ) {
@@ -2496,6 +2512,7 @@ void MapCanvas::drawConnection( const Room *leftRoom, const Room *rightRoom,
         glBegin(GL_LINE_STRIP);
         glVertex3d(0.25, 0.9, srcZ);
         glVertex3d(0.25, 1.1, srcZ);
+        glBeginOpen = true;
         break;
     case ED_EAST:
         if ( !oneway ) {
@@ -2508,6 +2525,7 @@ void MapCanvas::drawConnection( const Room *leftRoom, const Room *rightRoom,
         glBegin(GL_LINE_STRIP);
         glVertex3d(0.9, 0.25, srcZ);
         glVertex3d(1.1, 0.25, srcZ);
+        glBeginOpen = true;
         break;
     case ED_WEST:
         if ( !oneway ) {
@@ -2520,6 +2538,7 @@ void MapCanvas::drawConnection( const Room *leftRoom, const Room *rightRoom,
         glBegin(GL_LINE_STRIP);
         glVertex3d(0.1, 0.75, srcZ);
         glVertex3d(-0.1, 0.75, srcZ);
+        glBeginOpen = true;
         break;
     case ED_UP:
         if (!neighbours) {
@@ -2530,6 +2549,7 @@ void MapCanvas::drawConnection( const Room *leftRoom, const Room *rightRoom,
             glBegin(GL_LINE_STRIP);
             glVertex3d(0.75, 0.25, srcZ);
         }
+        glBeginOpen = true;
         break;
     case ED_DOWN:
         if (!neighbours) {
@@ -2540,6 +2560,7 @@ void MapCanvas::drawConnection( const Room *leftRoom, const Room *rightRoom,
             glBegin(GL_LINE_STRIP);
             glVertex3d(0.25, 0.75, srcZ);
         }
+        glBeginOpen = true;
         break;
     case ED_UNKNOWN:
         break;
@@ -2552,18 +2573,22 @@ void MapCanvas::drawConnection( const Room *leftRoom, const Room *rightRoom,
     switch (connectionEndDirection) {
     case ED_NORTH:
         if (!oneway) {
-            glVertex3d(dX + 0.75, dY - 0.1, dstZ);
-            glVertex3d(dX + 0.75, dY + 0.1, dstZ);
-            glEnd();
+            if (glBeginOpen) {
+                glVertex3d(dX + 0.75, dY - 0.1, dstZ);
+                glVertex3d(dX + 0.75, dY + 0.1, dstZ);
+                glEnd();
+            }
             glBegin(GL_TRIANGLES);
             glVertex3d(dX + 0.68, dY + 0.1, dstZ);
             glVertex3d(dX + 0.82, dY + 0.1, dstZ);
             glVertex3d(dX + 0.75, dY + 0.3, dstZ);
             glEnd();
         } else {
-            glVertex3d(dX + 0.25, dY - 0.1, dstZ);
-            glVertex3d(dX + 0.25, dY + 0.1, dstZ);
-            glEnd();
+            if (glBeginOpen) {
+                glVertex3d(dX + 0.25, dY - 0.1, dstZ);
+                glVertex3d(dX + 0.25, dY + 0.1, dstZ);
+                glEnd();
+            }
             glBegin(GL_TRIANGLES);
             glVertex3d(dX + 0.18, dY + 0.1, dstZ);
             glVertex3d(dX + 0.32, dY + 0.1, dstZ);
@@ -2573,18 +2598,22 @@ void MapCanvas::drawConnection( const Room *leftRoom, const Room *rightRoom,
         break;
     case ED_SOUTH:
         if (!oneway) {
-            glVertex3d(dX + 0.25, dY + 1.1, dstZ);
-            glVertex3d(dX + 0.25, dY + 0.9, dstZ);
-            glEnd();
+            if (glBeginOpen) {
+                glVertex3d(dX + 0.25, dY + 1.1, dstZ);
+                glVertex3d(dX + 0.25, dY + 0.9, dstZ);
+                glEnd();
+            }
             glBegin(GL_TRIANGLES);
             glVertex3d(dX + 0.18, dY + 0.9, dstZ);
             glVertex3d(dX + 0.32, dY + 0.9, dstZ);
             glVertex3d(dX + 0.25, dY + 0.7, dstZ);
             glEnd();
         } else {
-            glVertex3d(dX + 0.75, dY + 1.1, dstZ);
-            glVertex3d(dX + 0.75, dY + 0.9, dstZ);
-            glEnd();
+            if (glBeginOpen) {
+                glVertex3d(dX + 0.75, dY + 1.1, dstZ);
+                glVertex3d(dX + 0.75, dY + 0.9, dstZ);
+                glEnd();
+            }
             glBegin(GL_TRIANGLES);
             glVertex3d(dX + 0.68, dY + 0.9, dstZ);
             glVertex3d(dX + 0.82, dY + 0.9, dstZ);
@@ -2594,18 +2623,22 @@ void MapCanvas::drawConnection( const Room *leftRoom, const Room *rightRoom,
         break;
     case ED_EAST:
         if (!oneway) {
-            glVertex3d(dX + 1.1, dY + 0.25, dstZ);
-            glVertex3d(dX + 0.9, dY + 0.25, dstZ);
-            glEnd();
+            if (glBeginOpen) {
+                glVertex3d(dX + 1.1, dY + 0.25, dstZ);
+                glVertex3d(dX + 0.9, dY + 0.25, dstZ);
+                glEnd();
+            }
             glBegin(GL_TRIANGLES);
             glVertex3d(dX + 0.9, dY + 0.18, dstZ);
             glVertex3d(dX + 0.9, dY + 0.32, dstZ);
             glVertex3d(dX + 0.7, dY + 0.25, dstZ);
             glEnd();
         } else {
-            glVertex3d(dX + 1.1, dY + 0.75, dstZ);
-            glVertex3d(dX + 0.9, dY + 0.75, dstZ);
-            glEnd();
+            if (glBeginOpen) {
+                glVertex3d(dX + 1.1, dY + 0.75, dstZ);
+                glVertex3d(dX + 0.9, dY + 0.75, dstZ);
+                glEnd();
+            }
             glBegin(GL_TRIANGLES);
             glVertex3d(dX + 0.9, dY + 0.68, dstZ);
             glVertex3d(dX + 0.9, dY + 0.82, dstZ);
@@ -2615,18 +2648,22 @@ void MapCanvas::drawConnection( const Room *leftRoom, const Room *rightRoom,
         break;
     case ED_WEST:
         if (!oneway) {
-            glVertex3d(dX - 0.1, dY + 0.75, dstZ);
-            glVertex3d(dX + 0.1, dY + 0.75, dstZ);
-            glEnd();
+            if (glBeginOpen) {
+                glVertex3d(dX - 0.1, dY + 0.75, dstZ);
+                glVertex3d(dX + 0.1, dY + 0.75, dstZ);
+                glEnd();
+            }
             glBegin(GL_TRIANGLES);
             glVertex3d(dX + 0.1, dY + 0.68, dstZ);
             glVertex3d(dX + 0.1, dY + 0.82, dstZ);
             glVertex3d(dX + 0.3, dY + 0.75, dstZ);
             glEnd();
         } else {
-            glVertex3d(dX - 0.1, dY + 0.25, dstZ);
-            glVertex3d(dX + 0.1, dY + 0.25, dstZ);
-            glEnd();
+            if (glBeginOpen) {
+                glVertex3d(dX - 0.1, dY + 0.25, dstZ);
+                glVertex3d(dX + 0.1, dY + 0.25, dstZ);
+                glEnd();
+            }
             glBegin(GL_TRIANGLES);
             glVertex3d(dX + 0.1, dY + 0.18, dstZ);
             glVertex3d(dX + 0.1, dY + 0.32, dstZ);
@@ -2635,7 +2672,7 @@ void MapCanvas::drawConnection( const Room *leftRoom, const Room *rightRoom,
         }
         break;
     case ED_UP:
-        if (!oneway) {
+        if (!oneway && glBeginOpen) {
             if (!neighbours) {
                 glVertex3d(dX + 0.55, dY + 0.25, dstZ);
                 glVertex3d(dX + 0.63, dY + 0.25, dstZ);
@@ -2647,7 +2684,7 @@ void MapCanvas::drawConnection( const Room *leftRoom, const Room *rightRoom,
             break;
         }
     case ED_DOWN:
-        if (!oneway) {
+        if (!oneway && glBeginOpen) {
             if (!neighbours) {
                 glVertex3d(dX + 0.45, dY + 0.75, dstZ);
                 glVertex3d(dX + 0.37, dY + 0.75, dstZ);
@@ -2659,9 +2696,11 @@ void MapCanvas::drawConnection( const Room *leftRoom, const Room *rightRoom,
             break;
         }
     case ED_UNKNOWN:
-        glVertex3d(dX + 0.75, dY + 0.75, dstZ);
-        glVertex3d(dX + 0.5, dY + 0.5, dstZ);
-        glEnd();
+        if (glBeginOpen) {
+            glVertex3d(dX + 0.75, dY + 0.75, dstZ);
+            glVertex3d(dX + 0.5, dY + 0.5, dstZ);
+            glEnd();
+        }
         glBegin(GL_TRIANGLES);
         glVertex3d(dX + 0.5, dY + 0.5, dstZ);
         glVertex3d(dX + 0.7, dY + 0.55, dstZ);
@@ -2669,9 +2708,11 @@ void MapCanvas::drawConnection( const Room *leftRoom, const Room *rightRoom,
         glEnd();
         break;
     case ED_NONE:
-        glVertex3d(dX + 0.75, dY + 0.75, dstZ);
-        glVertex3d(dX + 0.5, dY + 0.5, dstZ);
-        glEnd();
+        if (glBeginOpen) {
+            glVertex3d(dX + 0.75, dY + 0.75, dstZ);
+            glVertex3d(dX + 0.5, dY + 0.5, dstZ);
+            glEnd();
+        }
         glBegin(GL_TRIANGLES);
         glVertex3d(dX + 0.5, dY + 0.5, dstZ);
         glVertex3d(dX + 0.7, dY + 0.55, dstZ);
@@ -3101,4 +3142,9 @@ void MapCanvas::renderText(float x, float y, const QString &text, QColor color,
     m_glFont->setItalic(false);
     m_glFont->setUnderline(false);
     painter.end();
+}
+
+void MapCanvas::onMessageLogged(QOpenGLDebugMessage message)
+{
+    qWarning() << message;
 }
