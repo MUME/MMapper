@@ -251,7 +251,7 @@ private:
 
     InfoMarksEditDlg *m_infoMarksEditDlg;
 
-    int GLtoMap(double arg);
+    int inline GLtoMap(double arg);
 
 };
 #endif

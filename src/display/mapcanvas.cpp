@@ -204,7 +204,7 @@ void MapCanvas::layerDown()
     update();
 }
 
-int MapCanvas::GLtoMap(double arg)
+int inline MapCanvas::GLtoMap(double arg)
 {
     if (arg >= 0)
         return (int)(arg + 0.5f);
@@ -3108,19 +3108,19 @@ void MapCanvas::makeGlLists()
 
 float MapCanvas::getDW() const
 {
-    return ((float)(((float)width() / ((float)BASESIZEX / 12.0f)) ) / (float)m_scaleFactor);
+    return ((float)width() / (float)BASESIZEX / 12.0f / (float)m_scaleFactor);
 }
 
 float MapCanvas::getDH() const
 {
-    return ((float)(((float)height() / ((float)BASESIZEY / 12.0f)) ) / (float)m_scaleFactor);
+    return ((float)height() / (float)BASESIZEY / 12.0f / (float)m_scaleFactor);
 }
 
 void MapCanvas::renderText(float x, float y, const QString &text, QColor color,
                            uint fontFormatFlag, double rotationAngle)
 {
     // http://stackoverflow.com/questions/28216001/how-to-render-text-with-qopenglwidget/28517897
-    QVector3D vectorIn = {x, y, 0.987f};
+    QVector3D vectorIn = {x, y, CAMERA_Z_DISTANCE};
     QVector3D projected = vectorIn.project(m_model, m_projection, this->rect());
     float textPosX = projected.x();
     float textPosY = height() - projected.y(); // y is inverted
