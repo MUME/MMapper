@@ -1224,7 +1224,7 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
     QByteArray dn = emptyByteArray;
     QByteArray cn = " -";
     bool noDoors = true;
-
+    char sunCharacter = (m_mumeClock->getMumeMoment().toTimeOfDay() <= TIME_DAY) ? '*' : '^';
 
     QString etmp = "Exits/emulated:";
     int j;
@@ -1246,18 +1246,54 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
         bool road = false;
         bool trail = false;
         bool climb = false;
+        bool oneway = false;
+        bool deathtrap = false;
+        bool sundeath = false;
 
         if (ISSET(Mmapper2Exit::getFlags(r->exit(j)), EF_EXIT)) {
             exit = true;
+            etmp += " ";
 
-            if (ISSET(Mmapper2Exit::getFlags(r->exit(j)), EF_ROAD))
+            uint sourceId = r->getId();
+            uint targetDir = Mmapper2Exit::opposite(j);
+            const Exit &e = r->exit(j);
+            if (e.outBegin() != e.outEnd()) {
+                uint targetId = *e.outBegin();
+                const RoomSelection *rs = m_mapData->select();
+                const Room *targetRoom = m_mapData->getRoom(targetId, rs);
+                if (Mmapper2Room::getTerrainType(targetRoom) == RTT_DEATHTRAP) {
+                    deathtrap = true;
+                    etmp += "!!";
+
+                } else if (!targetRoom->exit(targetDir).containsOut(sourceId)) {
+                    oneway = true;
+                    for (int i = 0; i < 7; ++i) {
+                        if (targetRoom->exit(i).containsOut(sourceId)) {
+                            targetDir = i;
+                            oneway = false;
+                            break;
+                        }
+                    }
+                    if (oneway) {
+                        etmp += "?";
+                    }
+                }
+                if (Mmapper2Room::getSundeathType(targetRoom) == RST_SUNDEATH) {
+                    sundeath = true;
+                    etmp += sunCharacter;
+                }
+                m_mapData->unselect(rs);
+            }
+
+            if (ISSET(Mmapper2Exit::getFlags(r->exit(j)), EF_ROAD)) {
                 if (Mmapper2Room::getTerrainType(r) == RTT_ROAD) {
                     road = true;
-                    etmp += " =";
+                    etmp += "=";
                 } else {
                     trail = true;
-                    etmp += " -";
-                } else etmp += " ";
+                    etmp += "-";
+                }
+            }
 
             if (ISSET(Mmapper2Exit::getFlags(r->exit(j)), EF_DOOR)) {
                 door = true;
@@ -1292,10 +1328,13 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
             }
         }
 
-        if (door) etmp += "}";
+        if (deathtrap) etmp += "!!";
+        else if (door) etmp += "}";
         else if (climb) etmp += "|";
         if (road) etmp += "=";
         else if (trail) etmp += "-";
+        if (oneway) etmp += "?";
+        if (sundeath) etmp += sunCharacter;
         if (exit) etmp += ",";
     }
     etmp = etmp.left(etmp.length() - 1);
