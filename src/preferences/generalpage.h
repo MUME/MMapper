@@ -45,6 +45,8 @@ public slots:
     void trilinearFilteringStateChanged(int);
 
     void emulatedExitsStateChanged(int);
+    void showHiddenExitFlagsStateChanged(int);
+
     void updatedStateChanged(int);
     void drawNotMappedExitsStateChanged(int);
     void drawNoMatchExitsStateChanged(int);

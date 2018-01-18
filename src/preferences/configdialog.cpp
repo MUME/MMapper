@@ -46,7 +46,7 @@ ConfigDialog::ConfigDialog(Mmapper2Group *gm)
 
     pagesWidget = new QStackedWidget;
     pagesWidget->setMinimumWidth(400);
-    pagesWidget->setMinimumHeight(640);
+    pagesWidget->setMinimumHeight(400);
 
     QPushButton *closeButton = new QPushButton(tr("Close"));
 

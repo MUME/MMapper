@@ -345,65 +345,73 @@ QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
         const Exit &e = sourceRoom->exit(i);
         if (ISNOTSET(Mmapper2Exit::getFlags(e), EF_EXIT)) continue;
 
-        if (ISSET(Mmapper2Exit::getFlags(e), EF_NO_FLEE)) {
-            ef += "noflee";
-        }
-        if (ISSET(Mmapper2Exit::getFlags(e), EF_RANDOM)) {
-            if (!ef.isEmpty()) ef += ",";
-            ef += "random";
-        }
-
-        // Exit modifiers
-        if (e.containsOut(sourceId)) {
-            if (!ef.isEmpty()) ef += ",";
-            ef += "loop";
-
-        } else if (e.outBegin() != e.outEnd()) {
-            // Check target room for exit information
-            uint targetId = *e.outBegin();
-            const Room *targetRoom = m_mapData->getRoom(targetId, rs);
-
-            uint exitCount = 0;
-            bool oneWay = false;
-            bool hasNoFlee = false;
-            if (!targetRoom->exit(Mmapper2Exit::opposite(i)).containsOut(sourceId)) {
-                oneWay = true;
+        // Extract hidden exit flags
+        if (Config().m_showHiddenExitFlags) {
+            if (ISSET(Mmapper2Exit::getFlags(e), EF_NO_FLEE)) {
+                ef += "noflee";
             }
-            for (int j = 0; j < 6; ++j) {
-                const Exit &targetExit = targetRoom->exit(j);
-                if (ISNOTSET(Mmapper2Exit::getFlags(targetExit), EF_EXIT)) {
-                    continue;
-                }
-                exitCount++;
-                if (targetExit.containsOut(sourceId)) {
-                    // Technically rooms can point back in a different direction
-                    oneWay = false;
-                }
-                if (ISSET(Mmapper2Exit::getFlags(targetExit), EF_NO_FLEE)) {
-                    hasNoFlee = true;
-                }
-            }
-            if (oneWay) {
+            if (ISSET(Mmapper2Exit::getFlags(e), EF_RANDOM)) {
                 if (!ef.isEmpty()) ef += ",";
-                ef += "oneway";
+                ef += "random";
             }
-            if (hasNoFlee && exitCount == 1) {
-                // If there is only 1 exit out of this room add the 'hasnoflee' flag since its usually a mobtrap
+            if (ISSET(Mmapper2Exit::getFlags(e), EF_SPECIAL)) {
                 if (!ef.isEmpty()) ef += ",";
-                ef += "hasnoflee";
+                ef += "special";
             }
 
-            // Terrain type exit modifiers
-            RoomTerrainType targetRoomTerrainType = Mmapper2Room::getTerrainType(targetRoom);
-            if (targetRoomTerrainType == RTT_UNDERWATER) {
+            // Exit modifiers
+            if (e.containsOut(sourceId)) {
                 if (!ef.isEmpty()) ef += ",";
-                ef += "underwater";
-            } else if (targetRoomTerrainType == RTT_DEATHTRAP) {
-                // Override all previous flags
-                ef = "deathtrap";
+                ef += "loop";
+
+            } else if (e.outBegin() != e.outEnd()) {
+                // Check target room for exit information
+                uint targetId = *e.outBegin();
+                const Room *targetRoom = m_mapData->getRoom(targetId, rs);
+
+                uint exitCount = 0;
+                bool oneWay = false;
+                bool hasNoFlee = false;
+                if (!targetRoom->exit(Mmapper2Exit::opposite(i)).containsOut(sourceId)) {
+                    oneWay = true;
+                }
+                for (int j = 0; j < 6; ++j) {
+                    const Exit &targetExit = targetRoom->exit(j);
+                    if (ISNOTSET(Mmapper2Exit::getFlags(targetExit), EF_EXIT)) {
+                        continue;
+                    }
+                    exitCount++;
+                    if (targetExit.containsOut(sourceId)) {
+                        // Technically rooms can point back in a different direction
+                        oneWay = false;
+                    }
+                    if (ISSET(Mmapper2Exit::getFlags(targetExit), EF_NO_FLEE)) {
+                        hasNoFlee = true;
+                    }
+                }
+                if (oneWay) {
+                    if (!ef.isEmpty()) ef += ",";
+                    ef += "oneway";
+                }
+                if (hasNoFlee && exitCount == 1) {
+                    // If there is only 1 exit out of this room add the 'hasnoflee' flag since its usually a mobtrap
+                    if (!ef.isEmpty()) ef += ",";
+                    ef += "hasnoflee";
+                }
+
+                // Terrain type exit modifiers
+                RoomTerrainType targetTerrain = Mmapper2Room::getTerrainType(targetRoom);
+                if (targetTerrain == RTT_UNDERWATER) {
+                    if (!ef.isEmpty()) ef += ",";
+                    ef += "underwater";
+                } else if (targetTerrain == RTT_DEATHTRAP) {
+                    // Override all previous flags
+                    ef = "deathtrap";
+                }
             }
         }
 
+        // Extract door names
         QByteArray dn = Mmapper2Exit::getDoorName(e).toLatin1();
         if (!dn.isEmpty() || !ef.isEmpty()) {
             enhancedExits = true;
@@ -1374,7 +1382,8 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
 
         if (door) etmp += "}";
         else if (climb) etmp += "|";
-        if (road) etmp += "=";
+        if (swim) etmp += "~";
+        else if (road) etmp += "=";
         else if (trail) etmp += "-";
         if (directSun) etmp += sunCharacter;
         if (exit) etmp += ",";

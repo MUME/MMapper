@@ -260,7 +260,7 @@
       <item row="4" column="0" colspan="5">
        <widget class="QCheckBox" name="IACPromptCheckBox">
         <property name="text">
-         <string>IAC-GA prompt recognition (changes needs reconnect with client!!!)</string>
+         <string>IAC-GA prompts (reconnect required)</string>
         </property>
        </widget>
       </item>
