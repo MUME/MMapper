@@ -19,6 +19,7 @@ int convertMumeRealTime(const QString &realTime)
     // Real time is Wed Dec 20 07:03:27 2017 UTC.
     QString dateString = realTime.mid(13, 24);
     QDateTime parsedTime = QDateTime::fromString(dateString, "ddd MMM dd hh:mm:ss yyyy");
+    parsedTime.setTimeSpec(Qt::UTC);
     return parsedTime.toTime_t();
 }
 
