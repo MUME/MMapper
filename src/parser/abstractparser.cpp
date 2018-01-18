@@ -181,7 +181,7 @@ void AbstractParser::parseExits(QString &str)
         case 91:
             doors = true;
             closed = true;
-            break;  // [  // closed door
+            break;              // [  // closed door
         case 35:
             doors = true;
             break;              // #  // broken door
@@ -193,18 +193,18 @@ void AbstractParser::parseExits(QString &str)
             break;               // -  // trail
         case 47:
             climb = true;
-            break;              // /  // upward climb
+            break;               // /  // upward climb
         case 92:
             climb = true;
-            break;              // \  // downward climb
+            break;               // \  // downward climb
         case 123:
             portal = true;
-            break;            // {  // portal
+            break;               // {  // portal
         case 42:
             directSun = true;
-            break;          // *  // sunlit room (troll/orc only)
+            break;               // *  // sunlit room (troll/orc only)
         case 94:
-            directSun = true;              // ^  // outdoors room (troll only)
+            directSun = true;    // ^  // outdoors room (troll only)
             if (!m_trollExitMapping)
                 emit log("Parser", "Autoenabling troll exit mapping mode.");
             m_trollExitMapping = true;
@@ -295,46 +295,10 @@ void AbstractParser::parseExits(QString &str)
         }
     }
 
-    QByteArray dn = emptyByteArray;
-    QByteArray cn = " -";
-    bool noDoors = true;
-
-    Coordinate c = getPosition();
-    for (uint i = 0; i < 6; i++) {
-        dn = m_mapData->getDoorName(c, i).toLatin1();
-        if ( dn != emptyByteArray ) {
-            noDoors = false;
-            switch (i) {
-            case 0:
-                cn += " n:" + dn;
-                break;
-            case 1:
-                cn += " s:" + dn;
-                break;
-            case 2:
-                cn += " e:" + dn;
-                break;
-            case 3:
-                cn += " w:" + dn;
-                break;
-            case 4:
-                cn += " u:" + dn;
-                break;
-            case 5:
-                cn += " d:" + dn;
-                break;
-            default:
-                break;
-            }
-        }
-    }
-
-    if (noDoors) {
-        cn = "\r\n";
-    } else {
-        cn += ".\r\n";
-
-    }
+    const RoomSelection *rs = m_mapData->select();
+    const Room *room = m_mapData->getRoom(getPosition(), rs);
+    QByteArray cn = enhanceExits(room);
+    m_mapData->unselect(rs);
 
     emit sendToUser(str.toLatin1() + cn);
 }
@@ -366,6 +330,101 @@ void AbstractParser::emulateExits()
     m_mapData->unselect(rs);
 }
 
+QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
+{
+    QByteArray cn = " -";
+    bool enhancedExits = false;
+
+    const RoomSelection *rs = m_mapData->select();
+    uint sourceId = sourceRoom->getId();
+    for (uint i = 0; i < 6; i++) {
+        QByteArray ef = emptyByteArray;
+        const Exit &e = sourceRoom->exit(i);
+        if (!ISSET(Mmapper2Exit::getFlags(e), EF_EXIT)) continue;
+
+        if (ISSET(Mmapper2Exit::getFlags(e), EF_NO_FLEE)) {
+            ef += "noflee";
+        }
+        if (ISSET(Mmapper2Exit::getFlags(e), EF_RANDOM)) {
+            if (!ef.isEmpty()) ef += ",";
+            ef += "random";
+        }
+
+        // Exit modifiers
+        if (e.containsOut(sourceId)) {
+            if (!ef.isEmpty()) ef += ",";
+            ef += "loop";
+        } else if (e.outBegin() != e.outEnd()) {
+            // Check target room for exit information
+            uint targetId = *e.outBegin();
+            const Room *targetRoom = m_mapData->getRoom(targetId, rs);
+
+            int exitCount = 0;
+            bool oneway = false;
+            bool hasNoFlee = false;
+            if (!targetRoom->exit(Mmapper2Exit::opposite(i)).containsOut(sourceId)) {
+                oneway = true;
+            }
+            for (int j = 0; j < 6; ++j) {
+                const Exit &targetExit = targetRoom->exit(j);
+                if (ISSET(Mmapper2Exit::getFlags(targetExit), EF_EXIT)) {
+                    exitCount++;
+                } else {
+                    continue;
+                }
+                if (targetExit.containsOut(sourceId)) {
+                    // Technically rooms can point back in a different direction
+                    oneway = false;
+                }
+                if (ISSET(Mmapper2Exit::getFlags(targetExit), EF_NO_FLEE)) {
+                    hasNoFlee = true;
+                }
+            }
+            if (oneway) {
+                if (!ef.isEmpty()) ef += ",";
+                ef += "oneway";
+            }
+            if (hasNoFlee && exitCount == 1) {
+                if (!ef.isEmpty()) ef += ",";
+                ef += "hasnoflee";
+            }
+
+            // Terrain type exit modifiers
+            RoomTerrainType targetRoomTerrainType = Mmapper2Room::getTerrainType(targetRoom);
+            if (targetRoomTerrainType == RTT_UNDERWATER) {
+                if (!ef.isEmpty()) ef += ",";
+                ef += "underwater";
+            } else if (targetRoomTerrainType == RTT_DEATHTRAP) {
+                // Override all previous flags
+                ef = "deathtrap";
+            }
+        }
+
+        QByteArray dn = Mmapper2Exit::getDoorName(e).toLatin1();
+        if (!dn.isEmpty() || !ef.isEmpty()) {
+            enhancedExits = true;
+            cn += " ";
+            cn += Mmapper2Exit::charForDir((ExitDirection)i);
+            cn += ":";
+            if (!dn.isEmpty()) {
+                cn += dn;
+            }
+            if (!ef.isEmpty()) {
+                cn += "(" + ef + ")";
+            }
+        }
+    }
+    m_mapData->unselect(rs);
+
+    if (!enhancedExits) {
+        cn = "\r\n";
+    } else {
+        cn += ".\r\n";
+
+    }
+
+    return cn;
+}
 
 void AbstractParser::parseNewUserInput(IncomingData &data)
 {
@@ -1221,10 +1280,8 @@ void AbstractParser::sendRoomInfoToUser(const Room *r)
 void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
 {
     if (!r) return;
-    QByteArray dn = emptyByteArray;
-    QByteArray cn = " -";
-    bool noDoors = true;
     char sunCharacter = (m_mumeClock->getMumeMoment().toTimeOfDay() <= TIME_DAY) ? '*' : '^';
+    const RoomSelection *rs = m_mapData->select();
 
     QString etmp = "Exits/emulated:";
     int j;
@@ -1247,46 +1304,39 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
         bool trail = false;
         bool climb = false;
         bool oneway = false;
-        bool deathtrap = false;
         bool sundeath = false;
+        bool swim = false;
 
-        if (ISSET(Mmapper2Exit::getFlags(r->exit(j)), EF_EXIT)) {
+        const Exit &e = r->exit(j);
+        if (ISSET(Mmapper2Exit::getFlags(e), EF_EXIT)) {
             exit = true;
             etmp += " ";
 
-            uint sourceId = r->getId();
-            uint targetDir = Mmapper2Exit::opposite(j);
-            const Exit &e = r->exit(j);
+            RoomTerrainType sourceRoomTerrainType = Mmapper2Room::getTerrainType(r);
             if (e.outBegin() != e.outEnd()) {
                 uint targetId = *e.outBegin();
-                const RoomSelection *rs = m_mapData->select();
                 const Room *targetRoom = m_mapData->getRoom(targetId, rs);
-                if (Mmapper2Room::getTerrainType(targetRoom) == RTT_DEATHTRAP) {
-                    deathtrap = true;
-                    etmp += "!!";
+                RoomTerrainType targetRoomTerrainType = Mmapper2Room::getTerrainType(targetRoom);
 
-                } else if (!targetRoom->exit(targetDir).containsOut(sourceId)) {
-                    oneway = true;
-                    for (int i = 0; i < 7; ++i) {
-                        if (targetRoom->exit(i).containsOut(sourceId)) {
-                            targetDir = i;
-                            oneway = false;
-                            break;
-                        }
-                    }
-                    if (oneway) {
-                        etmp += "?";
-                    }
-                }
+                // Sundeath exit flag modifiers
                 if (Mmapper2Room::getSundeathType(targetRoom) == RST_SUNDEATH) {
                     sundeath = true;
                     etmp += sunCharacter;
                 }
-                m_mapData->unselect(rs);
+
+                // Terrain type exit modifiers
+                if (targetRoomTerrainType == RTT_RAPIDS || targetRoomTerrainType == RTT_UNDERWATER) {
+                    swim = true;
+                    etmp += "~";
+
+                } else if (targetRoomTerrainType == RTT_ROAD && sourceRoomTerrainType == RTT_ROAD) {
+                    road = true;
+                    etmp += "=";
+                }
             }
 
-            if (ISSET(Mmapper2Exit::getFlags(r->exit(j)), EF_ROAD)) {
-                if (Mmapper2Room::getTerrainType(r) == RTT_ROAD) {
+            if (!road && ISSET(Mmapper2Exit::getFlags(e), EF_ROAD)) {
+                if (sourceRoomTerrainType == RTT_ROAD) {
                     road = true;
                     etmp += "=";
                 } else {
@@ -1295,10 +1345,10 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
                 }
             }
 
-            if (ISSET(Mmapper2Exit::getFlags(r->exit(j)), EF_DOOR)) {
+            if (ISSET(Mmapper2Exit::getFlags(e), EF_DOOR)) {
                 door = true;
                 etmp += "{";
-            } else if (ISSET(Mmapper2Exit::getFlags(r->exit(j)), EF_CLIMB)) {
+            } else if (ISSET(Mmapper2Exit::getFlags(e), EF_CLIMB)) {
                 climb = true;
                 etmp += "|";
             }
@@ -1328,53 +1378,18 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
             }
         }
 
-        if (deathtrap) etmp += "!!";
-        else if (door) etmp += "}";
+        if (door) etmp += "}";
         else if (climb) etmp += "|";
         if (road) etmp += "=";
         else if (trail) etmp += "-";
-        if (oneway) etmp += "?";
         if (sundeath) etmp += sunCharacter;
         if (exit) etmp += ",";
     }
     etmp = etmp.left(etmp.length() - 1);
     etmp += ".";
 
-    for (uint i = 0; i < 6; i++) {
-        dn = m_mapData->getDoorName(r->getPosition(), i).toLatin1();
-        if ( dn != emptyByteArray ) {
-            noDoors = false;
-            switch (i) {
-            case 0:
-                cn += " n:" + dn;
-                break;
-            case 1:
-                cn += " s:" + dn;
-                break;
-            case 2:
-                cn += " e:" + dn;
-                break;
-            case 3:
-                cn += " w:" + dn;
-                break;
-            case 4:
-                cn += " u:" + dn;
-                break;
-            case 5:
-                cn += " d:" + dn;
-                break;
-            default:
-                break;
-            }
-        }
-    }
-
-    if (noDoors) {
-        cn = "\r\n";
-    } else {
-        cn += ".\r\n";
-
-    }
+    QByteArray cn = enhanceExits(r);
+    m_mapData->unselect(rs);
 
     emit sendToUser(etmp.toLatin1() + cn);
 }
