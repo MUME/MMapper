@@ -45,7 +45,10 @@ GeneralPage::GeneralPage(QWidget *parent)
     connect( trilinearFilteringCheckBox, SIGNAL(stateChanged(int)),
              SLOT(trilinearFilteringStateChanged(int)));
 
-    connect ( emulatedExits, SIGNAL(stateChanged(int)), SLOT(emulatedExitsStateChanged(int)));
+    connect ( emulatedExitsCheckBox, SIGNAL(stateChanged(int)), SLOT(emulatedExitsStateChanged(int)));
+    connect ( showHiddenExitFlagsCheckBox, SIGNAL(stateChanged(int)),
+              SLOT(showHiddenExitFlagsStateChanged(int)));
+
     connect ( updated, SIGNAL(stateChanged(int)), SLOT(updatedStateChanged(int)));
     connect ( drawNotMappedExits, SIGNAL(stateChanged(int)), SLOT(drawNotMappedExitsStateChanged(int)));
     connect ( drawNoMatchExits, SIGNAL(stateChanged(int)), SLOT(drawNoMatchExitsStateChanged(int)));
@@ -73,7 +76,9 @@ GeneralPage::GeneralPage(QWidget *parent)
     antialiasingSamplesComboBox->setCurrentIndex(index);
     trilinearFilteringCheckBox->setChecked(Config().m_trilinearFiltering);
 
-    emulatedExits->setChecked( Config().m_emulatedExits );
+    emulatedExitsCheckBox->setChecked( Config().m_emulatedExits );
+    showHiddenExitFlagsCheckBox->setChecked( Config().m_showHiddenExitFlags );
+
     updated->setChecked( Config().m_showUpdated );
     drawNotMappedExits->setChecked( Config().m_drawNotMappedExits );
     drawNoMatchExits->setChecked( Config().m_drawNoMatchExits );
@@ -135,7 +140,12 @@ void GeneralPage::localPortValueChanged(int)
 
 void GeneralPage::emulatedExitsStateChanged(int)
 {
-    Config().m_emulatedExits = emulatedExits->isChecked();
+    Config().m_emulatedExits = emulatedExitsCheckBox->isChecked();
+}
+
+void GeneralPage::showHiddenExitFlagsStateChanged(int)
+{
+    Config().m_showHiddenExitFlags = showHiddenExitFlagsCheckBox->isChecked();
 }
 
 void GeneralPage::updatedStateChanged(int)

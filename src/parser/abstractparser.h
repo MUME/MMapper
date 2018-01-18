@@ -104,6 +104,7 @@ protected:
     void printRoomInfo(uint fieldset);
 
     void emulateExits();
+    QByteArray enhanceExits(const Room *);
 
     void parseExits(QString &str);
     void parsePrompt(QString &prompt);

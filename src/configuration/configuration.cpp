@@ -103,6 +103,7 @@ void Configuration::read()
 
     conf.beginGroup("Mume native");
     m_emulatedExits = conf.value("Emulated Exits", true).toBool();
+    m_showHiddenExitFlags = conf.value("Show hidden exit flags", true).toBool();
     conf.endGroup();
 
     if (m_moveForcePatternsList.isEmpty()) {
@@ -200,6 +201,7 @@ void Configuration::write() const
 
     conf.beginGroup("Mume native");
     conf.setValue("Emulated Exits", m_emulatedExits);
+    conf.setValue("Show hidden exit flags", m_showHiddenExitFlags);
     conf.endGroup();
 
     conf.beginGroup("Path Machine");
