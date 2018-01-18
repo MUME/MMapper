@@ -89,7 +89,10 @@ public:
 
     QString m_roomNameColor; // ANSI room name color
     QString m_roomDescColor; // ANSI room descriptions color
+
     bool m_emulatedExits;
+    bool m_showHiddenExitFlags;
+
     bool m_showUpdated;
     bool m_drawNotMappedExits;
     bool m_drawNoMatchExits;
