@@ -28,7 +28,6 @@
 
 #include <QDialog>
 #include "ui_findroomsdlg.h"
-#include "roomrecipient.h"
 #include "abstractparser.h"
 
 class MapData;
@@ -36,7 +35,7 @@ class MapCanvas;
 class QShortcut;
 class RoomSelection;
 
-class FindRoomsDlg : public QDialog, public RoomRecipient, private Ui::FindRoomsDlg
+class FindRoomsDlg : public QDialog, private Ui::FindRoomsDlg
 {
     Q_OBJECT
 
@@ -51,7 +50,7 @@ public slots:
 
 public:
     FindRoomsDlg(MapData *, QWidget *parent = 0);
-    void receiveRoom(RoomAdmin *sender, const Room *room);
+    ~FindRoomsDlg();
 
 private:
     MapData *m_mapData;
@@ -61,10 +60,10 @@ private:
     void adjustResultTable();
 
     static const QString nullString;
-    RoomAdmin *m_admin;
     const RoomSelection *m_roomSelection;
 
 private slots:
+    QString constructToolTip(const Room *);
     void on_lineEdit_textChanged();
     void findClicked();
     void enableFindButton(const QString &text);

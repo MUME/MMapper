@@ -48,6 +48,7 @@ GeneralPage::GeneralPage(QWidget *parent)
     connect ( emulatedExitsCheckBox, SIGNAL(stateChanged(int)), SLOT(emulatedExitsStateChanged(int)));
     connect ( showHiddenExitFlagsCheckBox, SIGNAL(stateChanged(int)),
               SLOT(showHiddenExitFlagsStateChanged(int)));
+    connect ( showNotesCheckBox, SIGNAL(stateChanged(int)), SLOT(showNotesStateChanged(int)));
 
     connect ( updated, SIGNAL(stateChanged(int)), SLOT(updatedStateChanged(int)));
     connect ( drawNotMappedExits, SIGNAL(stateChanged(int)), SLOT(drawNotMappedExitsStateChanged(int)));
@@ -78,6 +79,7 @@ GeneralPage::GeneralPage(QWidget *parent)
 
     emulatedExitsCheckBox->setChecked( Config().m_emulatedExits );
     showHiddenExitFlagsCheckBox->setChecked( Config().m_showHiddenExitFlags );
+    showNotesCheckBox->setChecked( Config().m_showNotes );
 
     updated->setChecked( Config().m_showUpdated );
     drawNotMappedExits->setChecked( Config().m_drawNotMappedExits );
@@ -146,6 +148,11 @@ void GeneralPage::emulatedExitsStateChanged(int)
 void GeneralPage::showHiddenExitFlagsStateChanged(int)
 {
     Config().m_showHiddenExitFlags = showHiddenExitFlagsCheckBox->isChecked();
+}
+
+void GeneralPage::showNotesStateChanged(int)
+{
+    Config().m_showNotes = showNotesCheckBox->isChecked();
 }
 
 void GeneralPage::updatedStateChanged(int)

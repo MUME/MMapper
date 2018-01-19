@@ -43,7 +43,7 @@ public:
 
     virtual void scheduleAction(MapAction *action) = 0;
 
-    virtual ~RoomAdmin() {};
+    virtual ~RoomAdmin() {}
 };
 
 #endif

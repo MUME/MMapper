@@ -1,9 +1,11 @@
 #include "roomfilter.h"
+#include "mmapper2exit.h"
+#include "mmapper2room.h"
 #include <assert.h>
 #include <errno.h>
 
 const char *RoomFilter::parse_help =
-    "Parse error; format is: [-(name|desc|note|exits|all)] pattern\r\n";
+    "Parse error; format is: [-(name|desc|dyndesc|note|exits|all)] pattern\r\n";
 
 
 bool RoomFilter::parseRoomFilter(const QString &line, RoomFilter &output)
@@ -12,7 +14,8 @@ bool RoomFilter::parseRoomFilter(const QString &line, RoomFilter &output)
     char kind = PAT_NAME;
     if (line.size() >= 2 && line[0] == '-') {
         QString kindstr = line.section(" ", 0, 0);
-        if (kindstr == "-desc" || kindstr == "-d") kind = PAT_DESC;
+        if (kindstr == "-desc" || kindstr.startsWith("-d") ) kind = PAT_DESC;
+        else if (kindstr == "-dyndesc" || kindstr.startsWith("-dy") ) kind = PAT_DYNDESC;
         else if (kindstr == "-name") kind = PAT_NAME;
         else if (kindstr == "-exits" || kindstr == "-e") kind = PAT_EXITS;
         else if (kindstr == "-note" || kindstr == "-n") kind = PAT_NOTE;
@@ -20,6 +23,8 @@ bool RoomFilter::parseRoomFilter(const QString &line, RoomFilter &output)
         else return false;
 
         pattern = line.section(" ", 1);
+        if (pattern.isEmpty())
+            return false;
     }
     output = RoomFilter(pattern, Qt::CaseInsensitive, kind);
     return true;
@@ -27,22 +32,24 @@ bool RoomFilter::parseRoomFilter(const QString &line, RoomFilter &output)
 
 const bool RoomFilter::filter(const Room *r) const
 {
-    if (kind == PAT_DESC)
-        return QString((*r)[1].toString()).contains(pattern, cs);
-    else if (kind == PAT_ALL) {
+    if (kind == PAT_ALL) {
         for (auto elt : (*r))
             if (elt.toString().contains(pattern, cs))
                 return 1;
         return 0;
-    } else if (kind == PAT_NAME)
-        return QString((*r)[0].toString()).contains(pattern, cs);
+    } else if (kind == PAT_DESC)
+        return Mmapper2Room::getDescription(r).contains(pattern, cs);
+    else if (kind == PAT_DYNDESC)
+        return Mmapper2Room::getDynamicDescription(r).contains(pattern, cs);
+    else if (kind == PAT_NAME)
+        return Mmapper2Room::getName(r).contains(pattern, cs);
     else if (kind == PAT_NOTE)
-        return QString((*r)[4].toString()).contains(pattern, cs);
+        return Mmapper2Room::getNote(r).contains(pattern, cs);
     else if (kind == PAT_EXITS) {
         ExitsList exits = r->getExitsList();
         for (ExitsList::const_iterator exitIter = exits.begin(); exitIter != exits.end(); ++exitIter) {
             const Exit &e = *exitIter;
-            if (QString((e)[0].toString()).contains(pattern, cs))
+            if (Mmapper2Exit::getDoorName(e).contains(pattern, cs))
                 return 1;
         }
     }

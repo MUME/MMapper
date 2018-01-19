@@ -92,6 +92,7 @@ public:
 
     bool m_emulatedExits;
     bool m_showHiddenExitFlags;
+    bool m_showNotes;
 
     bool m_showUpdated;
     bool m_drawNotMappedExits;
