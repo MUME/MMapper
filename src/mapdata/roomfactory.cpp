@@ -115,29 +115,29 @@ ComparisonResult RoomFactory::compareStrings(const QString &room, const QString 
 ComparisonResult RoomFactory::compare(const Room *room, const ParseEvent *event,
                                       uint tolerance) const
 {
-    QString m_name = Mmapper2Room::getName(room);
+    QString name = Mmapper2Room::getName(room);
     QString m_desc = Mmapper2Room::getDescription(room);
-    RoomTerrainType m_terrainType = Mmapper2Room::getTerrainType(room);
+    RoomTerrainType terrainType = Mmapper2Room::getTerrainType(room);
     bool updated = room->isUpToDate();
 
     if (event == NULL) {
         return CR_EQUAL;
     }
 
-    if (tolerance >= 100 || (m_name.isEmpty() && m_desc.isEmpty() && (!updated))) {
+    if (tolerance >= 100 || (name.isEmpty() && m_desc.isEmpty() && (!updated))) {
         // user-created oder explicit update
         return CR_TOLERANCE;
     }
 
     PromptFlagsType pf = Mmapper2Event::getPromptFlags(event);
     if (pf & PROMPT_FLAGS_VALID) {
-        if ((pf & (bit1 + bit2 + bit3 + bit4)) != m_terrainType) {
+        if ((pf & TERRAIN_TYPE) != terrainType) {
             if (room->isUpToDate())
                 return CR_DIFFERENT;
         }
     }
 
-    switch (compareStrings(m_name, Mmapper2Event::getRoomName(event), tolerance)) {
+    switch (compareStrings(name, Mmapper2Event::getRoomName(event), tolerance)) {
     case CR_TOLERANCE:
         updated = false;
         break;
@@ -238,7 +238,6 @@ void RoomFactory::update(Room *room, const ParseEvent *event) const
     (*room)[R_DYNAMICDESC] = Mmapper2Event::getRoomDesc(event);
 
     ExitsFlagsType eFlags = Mmapper2Event::getExitFlags(event);
-    PromptFlagsType pFlags = Mmapper2Event::getPromptFlags(event);
     if (eFlags & EXITS_FLAGS_VALID) {
         eFlags ^= EXITS_FLAGS_VALID;
         if (!room->isUpToDate()) {
@@ -267,15 +266,16 @@ void RoomFactory::update(Room *room, const ParseEvent *event) const
     } else
         room->setOutDated();
 
+    PromptFlagsType pFlags = Mmapper2Event::getPromptFlags(event);
     if (pFlags & PROMPT_FLAGS_VALID) {
         PromptFlagsType rt = pFlags;
-        rt &= (bit1 + bit2 + bit3 + bit4);
+        rt &= TERRAIN_TYPE;
         (*room)[R_TERRAINTYPE] = (RoomTerrainType)rt;
         if (pFlags & LIT_ROOM) {
             (*room)[R_LIGHTTYPE] = RLT_LIT;
-        } else if (pFlags & DARK_ROOM) {
+        }/* else if (pFlags & DARK_ROOM) {
             (*room)[R_LIGHTTYPE] = RLT_DARK;
-        }
+        }*/
     } else {
         room->setOutDated();
     }
