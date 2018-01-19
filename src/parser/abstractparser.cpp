@@ -1395,9 +1395,18 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
     }
 
     QByteArray cn = enhanceExits(r);
+    emit sendToUser(etmp.toLatin1() + cn);
+
+    if (Config().m_showNotes) {
+        QString ns = Mmapper2Room::getNote(r);
+        if (!ns.isEmpty()) {
+            QByteArray note = "Note: " + ns.toLatin1() + "\r\n";
+            emit sendToUser(note);
+        }
+    }
+
     m_mapData->unselect(rs);
 
-    emit sendToUser(etmp.toLatin1() + cn);
 }
 
 void AbstractParser::sendPromptToUser()

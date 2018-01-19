@@ -46,6 +46,7 @@ public slots:
 
     void emulatedExitsStateChanged(int);
     void showHiddenExitFlagsStateChanged(int);
+    void showNotesStateChanged(int);
 
     void updatedStateChanged(int);
     void drawNotMappedExitsStateChanged(int);
