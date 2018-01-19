@@ -14,15 +14,6 @@ TestClock::~TestClock()
 {
 }
 
-int convertMumeRealTime(const QString &realTime)
-{
-    // Real time is Wed Dec 20 07:03:27 2017 UTC.
-    QString dateString = realTime.mid(13, 24);
-    QDateTime parsedTime = QDateTime::fromString(dateString, "ddd MMM dd hh:mm:ss yyyy");
-    parsedTime.setTimeSpec(Qt::UTC);
-    return parsedTime.toTime_t();
-}
-
 QString testMumeStartEpochTime(MumeClock &clock, int time)
 {
     return clock.toMumeTime(clock.getMumeMoment(clock.getMumeStartEpoch() + time));
@@ -103,7 +94,8 @@ void TestClock::parseWeatherClockSkewTest()
 
     QString snapShot1 = "3pm on Highday, the 18th of Halimath, Year 3030 of the Third Age.";
     QString expected1 = "3pm on the 18th of Halimath, Year 3030 of the Third Age.";
-    int realTime1 = convertMumeRealTime("Real time is Wed Dec 20 07:03:27 2017 UTC.");
+    // Real time is Wed Dec 20 07:03:27 2017 UTC.
+    int realTime1 = 1513753407;
     clock.parseMumeTime(snapShot1, realTime1);
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment(realTime1)), expected1);
 
