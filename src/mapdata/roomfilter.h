@@ -1,18 +1,14 @@
 #ifndef ROOMFILTER_H
 #define ROOMFILTER_H
 
-#include "roomadmin.h"
-#include "component.h"
+#include "room.h"
 
-#include "intermediatenode.h"
-#include "map.h"
-
-enum pattern_kinds {PAT_UNK, PAT_DESC, PAT_NAME, PAT_NOTE, PAT_EXITS, PAT_ALL};
+enum pattern_kinds {PAT_UNK, PAT_DESC, PAT_DYNDESC, PAT_NAME, PAT_NOTE, PAT_EXITS, PAT_ALL};
 
 class RoomFilter
 {
 public:
-    RoomFilter() {};
+    RoomFilter() {}
     RoomFilter(const QString &pattern, const Qt::CaseSensitivity &cs,
                const char kind) : pattern(pattern), cs(cs), kind(kind) { }
 

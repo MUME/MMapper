@@ -533,7 +533,10 @@ void AbstractParser::searchCommand(RoomFilter f)
     search_rs = m_mapData->select();
     m_mapData->genericSearch(search_rs, f);
     emit m_mapData->updateCanvas();
-    emit sendToUser((QString::number(search_rs->size()) + " rooms found.\r\n").toLatin1());
+    emit sendToUser(QString("%1 room%2 found.\r\n")
+                    .arg(search_rs->size())
+                    .arg((search_rs->size() == 1) ? "" : "s")
+                    .toLatin1());
     sendPromptToUser();
 }
 
@@ -907,7 +910,7 @@ bool AbstractParser::parseUserCommands(QString &command)
         if (str.startsWith("_search")) {
             QString pattern_str = str.section(' ', 1).trimmed();
             if (pattern_str.size() == 0) {
-                emit sendToUser("Usage: _search [-(name|desc|note|exits|all)] pattern\r\n");
+                emit sendToUser("Usage: _search [-(name|desc|dyncdesc|note|exits|all)] pattern\r\n");
                 return false;
             }
             RoomFilter f;
@@ -920,7 +923,7 @@ bool AbstractParser::parseUserCommands(QString &command)
         if (str.startsWith("_dirs")) {
             QString pattern_str = str.section(' ', 1).trimmed();
             if (pattern_str.size() == 0) {
-                emit sendToUser("Usage: _dirs [-(name|desc|note|exits|all)] pattern\r\n");
+                emit sendToUser("Usage: _dirs [-(name|desc|dyncdesc|note|exits|all)] pattern\r\n");
                 return false;
             }
             RoomFilter f;
