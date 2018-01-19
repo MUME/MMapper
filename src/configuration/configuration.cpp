@@ -30,7 +30,7 @@
 Configuration::Configuration()
 {
     read(); // read the settings or set them to the default values
-};
+}
 
 void Configuration::read()
 {
@@ -58,7 +58,7 @@ void Configuration::read()
     }
 
     conf.beginGroup("Canvas");
-    m_showUpdated = conf.value("Show updated rooms", true).toBool();
+    m_showUpdated = conf.value("Show updated rooms", false).toBool();
     m_drawNotMappedExits = conf.value("Draw not mapped exits", true).toBool();
     m_drawNoMatchExits = conf.value("Draw no match exits", false).toBool();
     m_drawUpperLayersTextured = conf.value("Draw upper layers textured", false).toBool();
@@ -103,6 +103,7 @@ void Configuration::read()
 
     conf.beginGroup("Mume native");
     m_emulatedExits = conf.value("Emulated Exits", true).toBool();
+    m_showHiddenExitFlags = conf.value("Show hidden exit flags", true).toBool();
     conf.endGroup();
 
     if (m_moveForcePatternsList.isEmpty()) {
@@ -200,6 +201,7 @@ void Configuration::write() const
 
     conf.beginGroup("Mume native");
     conf.setValue("Emulated Exits", m_emulatedExits);
+    conf.setValue("Show hidden exit flags", m_showHiddenExitFlags);
     conf.endGroup();
 
     conf.beginGroup("Path Machine");
