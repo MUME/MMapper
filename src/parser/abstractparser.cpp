@@ -349,28 +349,41 @@ QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
     const RoomSelection *rs = m_mapData->select();
     uint sourceId = sourceRoom->getId();
     for (uint i = 0; i < 6; i++) {
-        QByteArray ef = emptyByteArray;
+        QByteArray etmp = emptyByteArray;
         const Exit &e = sourceRoom->exit(i);
-        if (ISNOTSET(Mmapper2Exit::getFlags(e), EF_EXIT)) continue;
+        ExitFlags ef = Mmapper2Exit::getFlags(e);
+        if (ISNOTSET(ef, EF_EXIT)) continue;
 
         // Extract hidden exit flags
         if (Config().m_showHiddenExitFlags) {
-            if (ISSET(Mmapper2Exit::getFlags(e), EF_NO_FLEE)) {
-                ef += "noflee";
+            if (ISSET(ef, EF_NO_FLEE)) {
+                etmp += "noflee";
             }
-            if (ISSET(Mmapper2Exit::getFlags(e), EF_RANDOM)) {
-                if (!ef.isEmpty()) ef += ",";
-                ef += "random";
+            if (ISSET(ef, EF_RANDOM)) {
+                if (!etmp.isEmpty()) etmp += ",";
+                etmp += "random";
             }
-            if (ISSET(Mmapper2Exit::getFlags(e), EF_SPECIAL)) {
-                if (!ef.isEmpty()) ef += ",";
-                ef += "special";
+            if (ISSET(ef, EF_SPECIAL)) {
+                if (!etmp.isEmpty()) etmp += ",";
+                etmp += "special";
+            }
+            if (ISSET(ef, EF_DAMAGE)) {
+                if (!etmp.isEmpty()) etmp += ",";
+                etmp += "damage";
+            }
+            if (ISSET(ef, EF_FALL)) {
+                if (!etmp.isEmpty()) etmp += ",";
+                etmp += "fall";
+            }
+            if (ISSET(ef, EF_GUARDED)) {
+                if (!etmp.isEmpty()) etmp += ",";
+                etmp += "guarded";
             }
 
             // Exit modifiers
             if (e.containsOut(sourceId)) {
-                if (!ef.isEmpty()) ef += ",";
-                ef += "loop";
+                if (!etmp.isEmpty()) etmp += ",";
+                etmp += "loop";
 
             } else if (e.outBegin() != e.outEnd()) {
                 // Check target room for exit information
@@ -398,30 +411,30 @@ QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
                     }
                 }
                 if (oneWay) {
-                    if (!ef.isEmpty()) ef += ",";
-                    ef += "oneway";
+                    if (!etmp.isEmpty()) etmp += ",";
+                    etmp += "oneway";
                 }
                 if (hasNoFlee && exitCount == 1) {
                     // If there is only 1 exit out of this room add the 'hasnoflee' flag since its usually a mobtrap
-                    if (!ef.isEmpty()) ef += ",";
-                    ef += "hasnoflee";
+                    if (!etmp.isEmpty()) etmp += ",";
+                    etmp += "hasnoflee";
                 }
 
                 // Terrain type exit modifiers
                 RoomTerrainType targetTerrain = Mmapper2Room::getTerrainType(targetRoom);
                 if (targetTerrain == RTT_UNDERWATER) {
-                    if (!ef.isEmpty()) ef += ",";
-                    ef += "underwater";
+                    if (!etmp.isEmpty()) etmp += ",";
+                    etmp += "underwater";
                 } else if (targetTerrain == RTT_DEATHTRAP) {
                     // Override all previous flags
-                    ef = "deathtrap";
+                    etmp = "deathtrap";
                 }
             }
         }
 
         // Extract door names
         QByteArray dn = Mmapper2Exit::getDoorName(e).toLatin1();
-        if (!dn.isEmpty() || !ef.isEmpty()) {
+        if (!dn.isEmpty() || !etmp.isEmpty()) {
             enhancedExits = true;
             cn += " ";
             cn += Mmapper2Exit::charForDir((ExitDirection)i);
@@ -429,8 +442,8 @@ QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
             if (!dn.isEmpty()) {
                 cn += dn;
             }
-            if (!ef.isEmpty()) {
-                cn += "(" + ef + ")";
+            if (!etmp.isEmpty()) {
+                cn += "(" + etmp + ")";
             }
         }
     }
@@ -641,113 +654,65 @@ bool AbstractParser::parseUserCommands(QString &command)
             sendPromptToUser();
             return false;
         } else if (str.startsWith("_name")) {
-            if (str.section(" ", 1, 1) == "n") nameDoorCommand(str.section(" ", 2, 2), NORTH);
-            if (str.section(" ", 1, 1) == "s") nameDoorCommand(str.section(" ", 2, 2), SOUTH);
-            if (str.section(" ", 1, 1) == "e") nameDoorCommand(str.section(" ", 2, 2), EAST);
-            if (str.section(" ", 1, 1) == "w") nameDoorCommand(str.section(" ", 2, 2), WEST);
-            if (str.section(" ", 1, 1) == "u") nameDoorCommand(str.section(" ", 2, 2), UP);
-            if (str.section(" ", 1, 1) == "d") nameDoorCommand(str.section(" ", 2, 2), DOWN);
-            if (str.section(" ", 1, 1) == "s") nameDoorCommand(str.section(" ", 2, 2), SOUTH);
+            nameDoorCommand(str.section(" ", 2, 2), dirForChar(str.section(" ", 1, 1)));
             return false;
         } else if (str.startsWith("_door") && str != "_doorhelp") {
             if (!str.section(" ", 2, 2).toLatin1().isEmpty())
                 emit sendToUser("--->Incorrect Command. Perhaps you meant _name?\r\n");
             else {
-                if (str.section(" ", 1, 1) == "n") toggleExitFlagCommand(EF_DOOR, NORTH);
-                if (str.section(" ", 1, 1) == "s") toggleExitFlagCommand(EF_DOOR, SOUTH);
-                if (str.section(" ", 1, 1) == "e") toggleExitFlagCommand(EF_DOOR, EAST);
-                if (str.section(" ", 1, 1) == "w") toggleExitFlagCommand(EF_DOOR, WEST);
-                if (str.section(" ", 1, 1) == "u") toggleExitFlagCommand(EF_DOOR, UP);
-                if (str.section(" ", 1, 1) == "d") toggleExitFlagCommand(EF_DOOR, DOWN);
+                toggleExitFlagCommand(EF_DOOR, dirForChar(str.section(" ", 1, 1)));
             }
             return false;
         } else if (str.startsWith("_hidden")) {
-            if (str.section(" ", 1, 1) == "n") toggleDoorFlagCommand(DF_HIDDEN, NORTH);
-            if (str.section(" ", 1, 1) == "s") toggleDoorFlagCommand(DF_HIDDEN, SOUTH);
-            if (str.section(" ", 1, 1) == "e") toggleDoorFlagCommand(DF_HIDDEN, EAST);
-            if (str.section(" ", 1, 1) == "w") toggleDoorFlagCommand(DF_HIDDEN, WEST);
-            if (str.section(" ", 1, 1) == "u") toggleDoorFlagCommand(DF_HIDDEN, UP);
-            if (str.section(" ", 1, 1) == "d") toggleDoorFlagCommand(DF_HIDDEN, DOWN);
+            toggleDoorFlagCommand(DF_HIDDEN, dirForChar(str.section(" ", 1, 1)));
             return false;
         } else  if (str.startsWith("_needkey")) {
-            if (str.section(" ", 1, 1) == "n") toggleDoorFlagCommand(DF_NEEDKEY, NORTH);
-            if (str.section(" ", 1, 1) == "s") toggleDoorFlagCommand(DF_NEEDKEY, SOUTH);
-            if (str.section(" ", 1, 1) == "e") toggleDoorFlagCommand(DF_NEEDKEY, EAST);
-            if (str.section(" ", 1, 1) == "w") toggleDoorFlagCommand(DF_NEEDKEY, WEST);
-            if (str.section(" ", 1, 1) == "u") toggleDoorFlagCommand(DF_NEEDKEY, UP);
-            if (str.section(" ", 1, 1) == "d") toggleDoorFlagCommand(DF_NEEDKEY, DOWN);
+            toggleDoorFlagCommand(DF_NEEDKEY, dirForChar(str.section(" ", 1, 1)));
             return false;
         } else if (str.startsWith("_noblock")) {
-            if (str.section(" ", 1, 1) == "n") toggleDoorFlagCommand(DF_NOBLOCK, NORTH);
-            if (str.section(" ", 1, 1) == "s") toggleDoorFlagCommand(DF_NOBLOCK, SOUTH);
-            if (str.section(" ", 1, 1) == "e") toggleDoorFlagCommand(DF_NOBLOCK, EAST);
-            if (str.section(" ", 1, 1) == "w") toggleDoorFlagCommand(DF_NOBLOCK, WEST);
-            if (str.section(" ", 1, 1) == "u") toggleDoorFlagCommand(DF_NOBLOCK, UP);
-            if (str.section(" ", 1, 1) == "d") toggleDoorFlagCommand(DF_NOBLOCK, DOWN);
+            toggleDoorFlagCommand(DF_NOBLOCK, dirForChar(str.section(" ", 1, 1)));
             return false;
         } else if (str.startsWith("_nobreak")) {
-            if (str.section(" ", 1, 1) == "n") toggleDoorFlagCommand(DF_NOBREAK, NORTH);
-            if (str.section(" ", 1, 1) == "s") toggleDoorFlagCommand(DF_NOBREAK, SOUTH);
-            if (str.section(" ", 1, 1) == "e") toggleDoorFlagCommand(DF_NOBREAK, EAST);
-            if (str.section(" ", 1, 1) == "w") toggleDoorFlagCommand(DF_NOBREAK, WEST);
-            if (str.section(" ", 1, 1) == "u") toggleDoorFlagCommand(DF_NOBREAK, UP);
-            if (str.section(" ", 1, 1) == "d") toggleDoorFlagCommand(DF_NOBREAK, DOWN);
+            toggleDoorFlagCommand(DF_NOBREAK, dirForChar(str.section(" ", 1, 1)));
             return false;
         } else if (str.startsWith("_nopick")) {
-            if (str.section(" ", 1, 1) == "n") toggleDoorFlagCommand(DF_NOPICK, NORTH);
-            if (str.section(" ", 1, 1) == "s") toggleDoorFlagCommand(DF_NOPICK, SOUTH);
-            if (str.section(" ", 1, 1) == "e") toggleDoorFlagCommand(DF_NOPICK, EAST);
-            if (str.section(" ", 1, 1) == "w") toggleDoorFlagCommand(DF_NOPICK, WEST);
-            if (str.section(" ", 1, 1) == "u") toggleDoorFlagCommand(DF_NOPICK, UP);
-            if (str.section(" ", 1, 1) == "d") toggleDoorFlagCommand(DF_NOPICK, DOWN);
+            toggleDoorFlagCommand(DF_NOPICK, dirForChar(str.section(" ", 1, 1)));
             return false;
         } else if (str.startsWith("_delayed")) {
-            if (str.section(" ", 1, 1) == "n") toggleDoorFlagCommand(DF_DELAYED, NORTH);
-            if (str.section(" ", 1, 1) == "s") toggleDoorFlagCommand(DF_DELAYED, SOUTH);
-            if (str.section(" ", 1, 1) == "e") toggleDoorFlagCommand(DF_DELAYED, EAST);
-            if (str.section(" ", 1, 1) == "w") toggleDoorFlagCommand(DF_DELAYED, WEST);
-            if (str.section(" ", 1, 1) == "u") toggleDoorFlagCommand(DF_DELAYED, UP);
-            if (str.section(" ", 1, 1) == "d") toggleDoorFlagCommand(DF_DELAYED, DOWN);
+            toggleDoorFlagCommand(DF_DELAYED, dirForChar(str.section(" ", 1, 1)));
             return false;
         } else if (str.startsWith("_exit")) {
-            if (str.section(" ", 1, 1) == "n") toggleExitFlagCommand(EF_EXIT, NORTH);
-            if (str.section(" ", 1, 1) == "s") toggleExitFlagCommand(EF_EXIT, SOUTH);
-            if (str.section(" ", 1, 1) == "e") toggleExitFlagCommand(EF_EXIT, EAST);
-            if (str.section(" ", 1, 1) == "w") toggleExitFlagCommand(EF_EXIT, WEST);
-            if (str.section(" ", 1, 1) == "u") toggleExitFlagCommand(EF_EXIT, UP);
-            if (str.section(" ", 1, 1) == "d") toggleExitFlagCommand(EF_EXIT, DOWN);
+            toggleExitFlagCommand(EF_EXIT, dirForChar(str.section(" ", 1, 1)));
             return false;
         } else if (str.startsWith("_road")) {
-            if (str.section(" ", 1, 1) == "n") toggleExitFlagCommand(EF_ROAD, NORTH);
-            if (str.section(" ", 1, 1) == "s") toggleExitFlagCommand(EF_ROAD, SOUTH);
-            if (str.section(" ", 1, 1) == "e") toggleExitFlagCommand(EF_ROAD, EAST);
-            if (str.section(" ", 1, 1) == "w") toggleExitFlagCommand(EF_ROAD, WEST);
-            if (str.section(" ", 1, 1) == "u") toggleExitFlagCommand(EF_ROAD, UP);
-            if (str.section(" ", 1, 1) == "d") toggleExitFlagCommand(EF_ROAD, DOWN);
+            toggleExitFlagCommand(EF_ROAD, dirForChar(str.section(" ", 1, 1)));
             return false;
         } else if (str.startsWith("_climb")) {
-            if (str.section(" ", 1, 1) == "n") toggleExitFlagCommand(EF_CLIMB, NORTH);
-            if (str.section(" ", 1, 1) == "s") toggleExitFlagCommand(EF_CLIMB, SOUTH);
-            if (str.section(" ", 1, 1) == "e") toggleExitFlagCommand(EF_CLIMB, EAST);
-            if (str.section(" ", 1, 1) == "w") toggleExitFlagCommand(EF_CLIMB, WEST);
-            if (str.section(" ", 1, 1) == "u") toggleExitFlagCommand(EF_CLIMB, UP);
-            if (str.section(" ", 1, 1) == "d") toggleExitFlagCommand(EF_CLIMB, DOWN);
+            toggleExitFlagCommand(EF_CLIMB, dirForChar(str.section(" ", 1, 1)));
             return false;
         } else if (str.startsWith("_random")) {
-            if (str.section(" ", 1, 1) == "n") toggleExitFlagCommand(EF_RANDOM, NORTH);
-            if (str.section(" ", 1, 1) == "s") toggleExitFlagCommand(EF_RANDOM, SOUTH);
-            if (str.section(" ", 1, 1) == "e") toggleExitFlagCommand(EF_RANDOM, EAST);
-            if (str.section(" ", 1, 1) == "w") toggleExitFlagCommand(EF_RANDOM, WEST);
-            if (str.section(" ", 1, 1) == "u") toggleExitFlagCommand(EF_RANDOM, UP);
-            if (str.section(" ", 1, 1) == "d") toggleExitFlagCommand(EF_RANDOM, DOWN);
+            toggleExitFlagCommand(EF_RANDOM, dirForChar(str.section(" ", 1, 1)));
             return false;
         } else if (str.startsWith("_special")) {
-            if (str.section(" ", 1, 1) == "n") toggleExitFlagCommand(EF_SPECIAL, NORTH);
-            if (str.section(" ", 1, 1) == "s") toggleExitFlagCommand(EF_SPECIAL, SOUTH);
-            if (str.section(" ", 1, 1) == "e") toggleExitFlagCommand(EF_SPECIAL, EAST);
-            if (str.section(" ", 1, 1) == "w") toggleExitFlagCommand(EF_SPECIAL, WEST);
-            if (str.section(" ", 1, 1) == "u") toggleExitFlagCommand(EF_SPECIAL, UP);
-            if (str.section(" ", 1, 1) == "d") toggleExitFlagCommand(EF_SPECIAL, DOWN);
+            toggleExitFlagCommand(EF_SPECIAL, dirForChar(str.section(" ", 1, 1)));
+            return false;
+        } else if (str.startsWith("_nomatch")) {
+            toggleExitFlagCommand(EF_NO_MATCH, dirForChar(str.section(" ", 1, 1)));
+            return false;
+        } else if (str.startsWith("_flow")) {
+            toggleExitFlagCommand(EF_FLOW, dirForChar(str.section(" ", 1, 1)));
+            return false;
+        } else if (str.startsWith("_noflee")) {
+            toggleExitFlagCommand(EF_NO_FLEE, dirForChar(str.section(" ", 1, 1)));
+            return false;
+        } else if (str.startsWith("_damage")) {
+            toggleExitFlagCommand(EF_DAMAGE, dirForChar(str.section(" ", 1, 1)));
+            return false;
+        } else if (str.startsWith("_fall")) {
+            toggleExitFlagCommand(EF_FALL, dirForChar(str.section(" ", 1, 1)));
+            return false;
+        } else if (str.startsWith("_guarded")) {
+            toggleExitFlagCommand(EF_GUARDED, dirForChar(str.section(" ", 1, 1)));
             return false;
         } else if (str.startsWith("_lit")) {
             setRoomFieldCommand(RLT_LIT, R_LIGHTTYPE);
@@ -1020,6 +985,12 @@ bool AbstractParser::parseUserCommands(QString &command)
             emit sendToUser("  _climb   [n,s,e,w,u,d]    - toggle a climb exit in direction [dir]\r\n");
             emit sendToUser("  _random  [n,s,e,w,u,d]    - toggle a random exit in direction [dir]\r\n");
             emit sendToUser("  _special [n,s,e,w,u,d]    - toggle a special exit in direction [dir]\r\n");
+            emit sendToUser("  _nomatch [n,s,e,w,u,d]    - toggle a \"no match\" exit in direction [dir]\r\n");
+            emit sendToUser("  _flow    [n,s,e,w,u,d]    - toggle a water flow exit in direction [dir]\r\n");
+            emit sendToUser("  _noflee  [n,s,e,w,u,d]    - toggle a \"no flee\" exit in direction [dir]\r\n");
+            emit sendToUser("  _damage  [n,s,e,w,u,d]    - toggle a damage exit in direction [dir]\r\n");
+            emit sendToUser("  _fall    [n,s,e,w,u,d]    - toggle a fall damage exit in direction [dir]\r\n");
+            emit sendToUser("  _guarded [n,s,e,w,u,d]    - toggle a guarded exit in direction [dir]\r\n");
 
             emit sendToUser("\r\nRoom flag commands:\r\n");
             emit sendToUser("  _port         - set the room to portable\r\n");
@@ -1724,9 +1695,26 @@ void AbstractParser::toggleExitFlagCommand(uint flag, DirectionType direction)
     case EF_SPECIAL:
         flagname = "Special";
         break;
+    case EF_NO_MATCH:
+        flagname = "No match";
+        break;
+    case EF_FLOW:
+        flagname = "Water flow";
+        break;
+    case EF_NO_FLEE:
+        flagname = "No flee";
+        break;
+    case EF_DAMAGE:
+        flagname = "Damage";
+        break;
+    case EF_FALL:
+        flagname = "Fall";
+        break;
+    case EF_GUARDED:
+        flagname = "Guarded";
+        break;
     default:
         flagname = "Unknown";
-        break;
     }
 
     emit sendToUser("--->" + flagname.toLatin1() + " exit " + toggle.toLatin1() + "\r\n");
@@ -1824,3 +1812,8 @@ void AbstractParser::sendGTellToUser(const QByteArray &ba)
     sendPromptToUser();
 }
 
+DirectionType AbstractParser::dirForChar(const QString &dir)
+{
+    ExitDirection ed = Mmapper2Exit::dirForChar(dir.at(0).toLatin1());
+    return (DirectionType)((int)ed);
+}

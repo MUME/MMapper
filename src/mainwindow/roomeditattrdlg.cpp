@@ -127,17 +127,17 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
     exitListItems[4] = (QListWidgetItem *) new QListWidgetItem("Random");
     exitListItems[5] = (QListWidgetItem *) new QListWidgetItem("Special");
     exitListItems[6] = (QListWidgetItem *) new QListWidgetItem("No match");
-    exitListItems[7] = (QListWidgetItem *) new QListWidgetItem("Flow dir");
+    exitListItems[7] = (QListWidgetItem *) new QListWidgetItem("Water flow");
     exitListItems[8] = (QListWidgetItem *) new QListWidgetItem("No flee");
-    exitListItems[9] = NULL;
-    exitListItems[10] = NULL;
-    exitListItems[11] = NULL;
+    exitListItems[9] = (QListWidgetItem *) new QListWidgetItem("Damage");
+    exitListItems[10] = (QListWidgetItem *) new QListWidgetItem("Fall");
+    exitListItems[11] = (QListWidgetItem *) new QListWidgetItem("Guarded");
     exitListItems[12] = NULL;
     exitListItems[13] = NULL;
     exitListItems[14] = NULL;
     exitListItems[15] = NULL;
     exitFlagsListWidget->clear();
-    for (int i = 0; i < 9; i++) {
+    for (int i = 0; i < 12; i++) {
         exitListItems[i]->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
         exitFlagsListWidget->addItem(exitListItems[i]);
     }
@@ -547,6 +547,21 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
             exitListItems[8]->setCheckState(Qt::Checked);
         else
             exitListItems[8]->setCheckState(Qt::Unchecked);
+
+        if (ISSET(ef, EF_DAMAGE))
+            exitListItems[9]->setCheckState(Qt::Checked);
+        else
+            exitListItems[9]->setCheckState(Qt::Unchecked);
+
+        if (ISSET(ef, EF_FALL))
+            exitListItems[10]->setCheckState(Qt::Checked);
+        else
+            exitListItems[10]->setCheckState(Qt::Unchecked);
+
+        if (ISSET(ef, EF_GUARDED))
+            exitListItems[11]->setCheckState(Qt::Checked);
+        else
+            exitListItems[11]->setCheckState(Qt::Unchecked);
 
         roomNoteTextEdit->clear();
         roomNoteTextEdit->setEnabled(false);

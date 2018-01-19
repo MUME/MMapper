@@ -136,6 +136,8 @@ protected:
     void searchCommand(RoomFilter f);
     void dirsCommand(RoomFilter f);
     void markCurrentCommand();
+
+    DirectionType dirForChar(const QString &dir);
 };
 
 #endif

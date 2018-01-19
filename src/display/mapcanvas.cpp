@@ -1954,6 +1954,12 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
             glCallList(m_wall_north_gllist);
             qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
+        }  else if ( ISSET(ef_north, EF_FALL) || ISSET(ef_north, EF_DAMAGE)) {
+            glEnable(GL_LINE_STIPPLE);
+            glColor4d(0.0, 1.0, 1.0, 0.0);
+            glCallList(m_wall_north_gllist);
+            qglColor(Qt::black);
+            glDisable(GL_LINE_STIPPLE);
         } else if ( ISSET(ef_north, EF_SPECIAL)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.8, 0.1, 0.8, 0.0);
@@ -1963,6 +1969,12 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
         } else if ( ISSET(ef_north, EF_CLIMB)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.7, 0.7, 0.7, 0.0);
+            glCallList(m_wall_north_gllist);
+            qglColor(Qt::black);
+            glDisable(GL_LINE_STIPPLE);
+        } else if ( ISSET(ef_north, EF_GUARDED)) {
+            glEnable(GL_LINE_STIPPLE);
+            glColor4d(1.0, 1.0, 0.0, 0.0);
             glCallList(m_wall_north_gllist);
             qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
@@ -2014,6 +2026,12 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
             glCallList(m_wall_south_gllist);
             qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
+        } else if ( ISSET(ef_south, EF_FALL) || ISSET(ef_south, EF_DAMAGE)) {
+            glEnable(GL_LINE_STIPPLE);
+            glColor4d(0.0, 1.0, 1.0, 0.0);
+            glCallList(m_wall_south_gllist);
+            qglColor(Qt::black);
+            glDisable(GL_LINE_STIPPLE);
         } else if ( ISSET(ef_south, EF_SPECIAL)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.8, 0.1, 0.8, 0.0);
@@ -2023,6 +2041,12 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
         } else if ( ISSET(ef_south, EF_CLIMB)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.7, 0.7, 0.7, 0.0);
+            glCallList(m_wall_south_gllist);
+            qglColor(Qt::black);
+            glDisable(GL_LINE_STIPPLE);
+        } else if ( ISSET(ef_south, EF_GUARDED)) {
+            glEnable(GL_LINE_STIPPLE);
+            glColor4d(1.0, 1.0, 0.0, 0.0);
             glCallList(m_wall_south_gllist);
             qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
@@ -2075,6 +2099,12 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
             glCallList(m_wall_east_gllist);
             qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
+        } else if ( ISSET(ef_east, EF_FALL) || ISSET(ef_east, EF_DAMAGE)) {
+            glEnable(GL_LINE_STIPPLE);
+            glColor4d(0.0, 1.0, 1.0, 0.0);
+            glCallList(m_wall_east_gllist);
+            qglColor(Qt::black);
+            glDisable(GL_LINE_STIPPLE);
         } else if ( ISSET(ef_east, EF_SPECIAL)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.8, 0.1, 0.8, 0.0);
@@ -2084,6 +2114,12 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
         } else if ( ISSET(ef_east, EF_CLIMB)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.7, 0.7, 0.7, 0.0);
+            glCallList(m_wall_east_gllist);
+            qglColor(Qt::black);
+            glDisable(GL_LINE_STIPPLE);
+        } else if ( ISSET(ef_east, EF_GUARDED)) {
+            glEnable(GL_LINE_STIPPLE);
+            glColor4d(1.0, 1.0, 0.0, 0.0);
             glCallList(m_wall_east_gllist);
             qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
@@ -2135,6 +2171,12 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
             glCallList(m_wall_west_gllist);
             qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
+        } else if ( ISSET(ef_west, EF_FALL) || ISSET(ef_west, EF_DAMAGE)) {
+            glEnable(GL_LINE_STIPPLE);
+            glColor4d(0.0, 1.0, 1.0, 0.0);
+            glCallList(m_wall_west_gllist);
+            qglColor(Qt::black);
+            glDisable(GL_LINE_STIPPLE);
         } else if ( ISSET(ef_west, EF_SPECIAL)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.8, 0.1, 0.8, 0.0);
@@ -2144,6 +2186,12 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
         } else if ( ISSET(ef_west, EF_CLIMB)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.7, 0.7, 0.7, 0.0);
+            glCallList(m_wall_west_gllist);
+            qglColor(Qt::black);
+            glDisable(GL_LINE_STIPPLE);
+        } else if ( ISSET(ef_west, EF_GUARDED)) {
+            glEnable(GL_LINE_STIPPLE);
+            glColor4d(1.0, 1.0, 0.0, 0.0);
             glCallList(m_wall_west_gllist);
             qglColor(Qt::black);
             glDisable(GL_LINE_STIPPLE);
@@ -2200,6 +2248,12 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
                 glCallList(m_exit_up_transparent_gllist);
                 glColor4d(0.0, 0.0, 0.0, 0.0);
                 glDisable(GL_LINE_STIPPLE);
+            } else if ( ISSET(ef_up, EF_FALL) || ISSET(ef_west, EF_DAMAGE)) {
+                glEnable(GL_LINE_STIPPLE);
+                glColor4d(0.0, 1.0, 1.0, 0.0);
+                glCallList(m_exit_up_transparent_gllist);
+                glColor4d(0.0, 0.0, 0.0, 0.0);
+                glDisable(GL_LINE_STIPPLE);
             } else if ( ISSET(ef_up, EF_SPECIAL)) {
                 glEnable(GL_LINE_STIPPLE);
                 glColor4d(0.8, 0.1, 0.8, 0.0);
@@ -2209,6 +2263,12 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
             } else if ( ISSET(ef_up, EF_CLIMB)) {
                 glEnable(GL_LINE_STIPPLE);
                 glColor4d(0.5, 0.5, 0.5, 0.0);
+                glCallList(m_exit_up_transparent_gllist);
+                glColor4d(0.0, 0.0, 0.0, 0.0);
+                glDisable(GL_LINE_STIPPLE);
+            } else if ( ISSET(ef_up, EF_GUARDED)) {
+                glEnable(GL_LINE_STIPPLE);
+                glColor4d(1.0, 1.0, 0.0, 0.0);
                 glCallList(m_exit_up_transparent_gllist);
                 glColor4d(0.0, 0.0, 0.0, 0.0);
                 glDisable(GL_LINE_STIPPLE);
@@ -2257,6 +2317,12 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
                 glCallList(m_exit_down_transparent_gllist);
                 glColor4d(0.0, 0.0, 0.0, 0.0);
                 glDisable(GL_LINE_STIPPLE);
+            } else if ( ISSET(ef_down, EF_FALL) || ISSET(ef_west, EF_DAMAGE)) {
+                glEnable(GL_LINE_STIPPLE);
+                glColor4d(0.0, 1.0, 1.0, 0.0);
+                glCallList(m_exit_down_transparent_gllist);
+                glColor4d(0.0, 0.0, 0.0, 0.0);
+                glDisable(GL_LINE_STIPPLE);
             } else if ( ISSET(ef_down, EF_SPECIAL)) {
                 glEnable(GL_LINE_STIPPLE);
                 glColor4d(0.8, 0.1, 0.8, 0.0);
@@ -2266,6 +2332,12 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
             } else if ( ISSET(ef_down, EF_CLIMB)) {
                 glEnable(GL_LINE_STIPPLE);
                 glColor4d(0.5, 0.5, 0.5, 0.0);
+                glCallList(m_exit_down_transparent_gllist);
+                glColor4d(0.0, 0.0, 0.0, 0.0);
+                glDisable(GL_LINE_STIPPLE);
+            } else if ( ISSET(ef_down, EF_GUARDED)) {
+                glEnable(GL_LINE_STIPPLE);
+                glColor4d(1.0, 1.0, 0.0, 0.0);
                 glCallList(m_exit_down_transparent_gllist);
                 glColor4d(0.0, 0.0, 0.0, 0.0);
                 glDisable(GL_LINE_STIPPLE);
