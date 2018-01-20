@@ -425,12 +425,20 @@ void MainWindow::createActions()
     zoomOutAct->setStatusTip(tr("Zooms Out current map"));
     layerUpAct = new QAction(QIcon::fromTheme("go-up", QIcon(":/icons/layerup.png")), tr("Layer Up"),
                              this);
+#ifdef __APPLE__
+    layerUpAct->setShortcut(tr("Meta+Tab"));
+#else
     layerUpAct->setShortcut(tr("Ctrl+Tab"));
+#endif
     layerUpAct->setStatusTip(tr("Layer Up"));
     connect(layerUpAct, SIGNAL(triggered()), this, SLOT(onLayerUp()));
     layerDownAct = new QAction(QIcon::fromTheme("go-down", QIcon(":/icons/layerdown.png")),
                                tr("Layer Down"), this);
+#ifdef __APPLE__
+    layerDownAct->setShortcut(tr("Meta+Shift+Tab"));
+#else
     layerDownAct->setShortcut(tr("Ctrl+Shift+Tab"));
+#endif
     layerDownAct->setStatusTip(tr("Layer Down"));
     connect(layerDownAct, SIGNAL(triggered()), this, SLOT(onLayerDown()));
 
@@ -625,7 +633,7 @@ void MainWindow::onPlayMode()
 
 void MainWindow::onMapMode()
 {
-    log("MainWindow", "Map mode selected - new rooms are created when entering not mapped area.");
+    log("MainWindow", "Map mode selected - new rooms are created when entering unmapped areas.");
     QObject::connect(m_pathMachine, SIGNAL(createRoom(ParseEvent *, const Coordinate & )), m_mapData,
                      SLOT(createRoom(ParseEvent *, const Coordinate & )));
     QObject::connect(m_pathMachine, SIGNAL(scheduleAction(MapAction *)), m_mapData,
@@ -635,7 +643,7 @@ void MainWindow::onMapMode()
 
 void MainWindow::onOfflineMode()
 {
-    log("MainWindow", "Offline emulation mode selected - you can learn areas 'safe' way.");
+    log("MainWindow", "Offline emulation mode selected - learn new areas safely.");
     QObject::disconnect(m_pathMachine, SIGNAL(createRoom(ParseEvent *, const Coordinate & )), m_mapData,
                         SLOT(createRoom(ParseEvent *, const Coordinate & )));
     QObject::disconnect(m_pathMachine, SIGNAL(scheduleAction(MapAction *)), m_mapData,
@@ -1408,6 +1416,7 @@ void MainWindow::onEditRoomSelection()
         RoomEditAttrDlg m_roomEditDialog;
         m_roomEditDialog.setRoomSelection(m_roomSelection, m_mapData, getCurrentMapWindow()->getCanvas());
         m_roomEditDialog.exec();
+        m_roomEditDialog.show();
     }
 }
 
