@@ -2,7 +2,10 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0.0)
 PROJECT(mmapper CXX)
 
 SET(CMAKE_CXX_STANDARD 11)
-SET(default_build_type "Debug")
+IF(NOT CMAKE_BUILD_TYPE)
+    MESSAGE(STATUS "No build type selected, defaulting to Debug")
+    SET(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type (default Debug)" FORCE)
+ENDIF()
 
 # Version
 FILE(STRINGS "MMAPPER_VERSION" MMAPPER_VERSION)
