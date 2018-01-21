@@ -36,7 +36,8 @@ public:
     GroupAction() {}
     virtual ~GroupAction() {}
     virtual void exec() = 0;
-    void setGroup(CGroup *in) {
+    void setGroup(CGroup *in)
+    {
         this->group = in;
     }
     void schedule(CGroup *in)

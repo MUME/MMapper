@@ -47,7 +47,6 @@ CGroupCommunicator::CGroupCommunicator(int type, QObject *parent) :
             ((Mmapper2Group *)parent)->getGroup(), SLOT(scheduleAction(GroupAction *)));
 }
 
-
 //
 // Communication protocol switches and logic
 //
@@ -180,7 +179,11 @@ CGroupServerCommunicator::CGroupServerCommunicator(QObject *parent):
 
 CGroupServerCommunicator::~CGroupServerCommunicator()
 {
-    disconnect();
+    if (server) {
+        server->closeAll();
+        delete server;
+        server = NULL;
+    }
 }
 
 void CGroupServerCommunicator::connectionClosed(CGroupClient *connection)
@@ -394,12 +397,9 @@ void CGroupServerCommunicator::disconnect()
 {
     if (server) {
         server->closeAll();
-        server->deleteLater();
-        server = NULL;
     }
     clientsList.clear();
     emit scheduleAction(new ResetCharacters());
-//    qInfo("Server has been reset");
 }
 
 void CGroupServerCommunicator::reconnect()
@@ -423,7 +423,11 @@ CGroupClientCommunicator::CGroupClientCommunicator(QObject *parent):
 
 CGroupClientCommunicator::~CGroupClientCommunicator()
 {
-    disconnect();
+    if (client) {
+        client->disconnectFromHost();
+        delete client;
+        client = NULL;
+    }
 }
 
 void CGroupClientCommunicator::connectionClosed(CGroupClient *connection)
@@ -578,8 +582,6 @@ void CGroupClientCommunicator::disconnect()
 {
     if (client) {
         client->disconnectFromHost();
-        client->deleteLater();
-        client = NULL;
     }
     emit scheduleAction(new ResetCharacters());
 }

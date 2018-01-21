@@ -51,22 +51,29 @@ Mmapper2Group::Mmapper2Group() :
 
 Mmapper2Group::~Mmapper2Group()
 {
-    if (group) group->deleteLater();
-    if (network) network->deleteLater();
+    if (group) {
+        delete group;
+    }
+    if (network) {
+        network->disconnect();
+        delete network;
+    }
 }
 
 void Mmapper2Group::init()
 {
     group = new CGroup(this);
 
-    connect(group, SIGNAL(characterChanged()), SLOT(characterChanged()));
+    connect(group, SIGNAL(characterChanged()), SLOT(characterChanged()), Qt::QueuedConnection);
 
     emit log("GroupManager", "Starting up the GroupManager");
 }
 
 void Mmapper2Group::characterChanged()
 {
-    emit drawCharacters();
+    if (getType() != Off) {
+        emit drawCharacters();
+    }
 }
 
 void Mmapper2Group::updateSelf()
@@ -111,7 +118,7 @@ void Mmapper2Group::issueLocalCharUpdate()
     if (network) {
         QDomNode data = getGroup()->getSelf()->toXML();
         network->sendCharUpdate(data);
-        emit characterChanged();
+        emit drawCharacters();
     }
 }
 
@@ -278,13 +285,12 @@ void Mmapper2Group::sendLog(const QString &text)
 {
     emit log("GroupManager", text);
 }
+
 int Mmapper2Group::getType()
 {
     QMutexLocker locker(&networkLock);
-    if (network == NULL)
-        return 0;
-    else
-        return network->getType();
+    if (network != NULL) return network->getType();
+    return 0;
 }
 
 void Mmapper2Group::networkDown()
@@ -297,13 +303,10 @@ void Mmapper2Group::setType(int newState)
 {
     QMutexLocker locker(&networkLock);
 
-    qDebug() << "Network type set to" << newState;
-    Config().m_groupManagerState = newState;
-
     // Delete previous network and regenerate
     if (network) {
         network->disconnect();
-        network->deleteLater();
+        delete network;
         network = NULL;
     }
     switch ((GroupManagerState)newState) {
@@ -319,12 +322,15 @@ void Mmapper2Group::setType(int newState)
         break;
     }
 
+    qDebug() << "Network type set to" << newState;
+    Config().m_groupManagerState = newState;
+
     if (newState != Off) {
         if (Config().m_groupManagerRulesWarning)
             emit messageBox("Warning: MUME Rules",
                             "Using the GroupManager in PK situations is ILLEGAL "
                             "according to RULES ACTIONS.\n\nBe sure to disable the "
                             "GroupManager under such conditions.");
+        emit drawCharacters();
     }
-    emit drawCharacters();
 }
