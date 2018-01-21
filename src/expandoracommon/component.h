@@ -31,7 +31,7 @@
 #include <iostream>
 #include <map>
 
-#ifdef Q_WS_WIN
+#ifdef Q_OS_WIN
 # define MY_EXPORT __declspec(dllexport)
 #else
 # define MY_EXPORT
