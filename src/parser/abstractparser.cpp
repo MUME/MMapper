@@ -82,8 +82,6 @@ void AbstractParser::parsePrompt(QString &prompt)
     quint8 index = 0;
     int sv;
 
-    emit sendPromptLineEvent(m_stringBuffer.toLatin1());
-
     switch (sv = (int)((prompt[index]).toLatin1())) {
     case 42:
         index++;

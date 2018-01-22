@@ -404,6 +404,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         break;
 
     case XML_PROMPT:
+        emit sendPromptLineEvent(m_stringBuffer.toLatin1());
         if (m_readingRoomDesc) { // fixes compact mode
             m_readingRoomDesc = false; // we finished read desc mode
             m_descriptionReady = true;

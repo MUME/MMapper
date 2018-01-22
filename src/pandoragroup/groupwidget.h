@@ -25,7 +25,7 @@
 #ifndef GROUPWIDGET_H
 #define GROUPWIDGET_H
 
-#include <QTreeWidget>
+#include <QTableWidget>
 #include <QHash>
 
 #include "groupselection.h"
@@ -33,14 +33,14 @@
 class Mmapper2Group;
 class MapData;
 
-class GroupWidget : public QTreeWidget
+class GroupWidget : public QTableWidget
 {
     Q_OBJECT
 public:
     GroupWidget(Mmapper2Group *groupManager, MapData *md, QWidget *parent = 0);
     virtual ~GroupWidget();
 
-    void setItemText(QTreeWidgetItem *item, uint itemNumber, const QString &, const QColor &color);
+    void setItemText(QTableWidgetItem *item, const QString &, const QColor &color);
 
 public slots:
     void updateLabels();
@@ -49,7 +49,7 @@ public slots:
 private:
     Mmapper2Group *m_group;
     MapData *m_map;
-    QHash<QByteArray, QTreeWidgetItem *> m_nameItemHash;
+    QHash<QString, QList<QTableWidgetItem *>> m_nameItemHash;
 };
 
 #endif // GROUPWIDGET_H
