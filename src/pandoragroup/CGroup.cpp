@@ -115,8 +115,9 @@ void CGroup::resetChars()
     emit log("You have left the group.");
 
     for (uint i = 0; i < charIndex.size(); ++i) {
-        if (charIndex[i] != self)
+        if (charIndex[i] != self) {
             delete charIndex[i];
+        }
     }
     charIndex.clear();
     charIndex.push_back(self);
@@ -167,8 +168,10 @@ void CGroup::removeChar(QDomNode node)
 {
     QMutexLocker locker(&characterLock);
     QByteArray name = CGroupChar::getNameFromXML(node);
-    if (name == "")
+    if (name.isEmpty()) {
+        qWarning() << "Unable to extract character name from" << node.nodeName();
         return;
+    }
 
     removeChar(name);
 }

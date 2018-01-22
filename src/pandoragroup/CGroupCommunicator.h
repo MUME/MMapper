@@ -90,8 +90,8 @@ private:
 
 class CGroupServerCommunicator : public CGroupCommunicator
 {
-    friend class CGroupServer;
     Q_OBJECT
+    friend class CGroupServer;
 public:
     CGroupServerCommunicator(QObject *parent);
     ~CGroupServerCommunicator();
@@ -124,8 +124,8 @@ private:
 
 class CGroupClientCommunicator : public CGroupCommunicator
 {
-    friend class CGroupClient;
     Q_OBJECT
+    friend class CGroupClient;
 public:
     CGroupClientCommunicator(QObject *parent);
     ~CGroupClientCommunicator();

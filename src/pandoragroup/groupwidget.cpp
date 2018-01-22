@@ -46,7 +46,8 @@ GroupWidget::GroupWidget(Mmapper2Group *groupManager, MapData *md, QWidget *pare
     hide();
 
     connect(m_group, SIGNAL(drawCharacters()), SLOT(updateLabels()), Qt::QueuedConnection);
-    connect(m_group, SIGNAL(messageBox(QString, QString)), SLOT(messageBox(QString, QString)));
+    connect(m_group, SIGNAL(messageBox(QString, QString)), SLOT(messageBox(QString, QString)),
+            Qt::QueuedConnection);
 }
 
 GroupWidget::~GroupWidget()
