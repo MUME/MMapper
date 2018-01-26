@@ -471,21 +471,24 @@ void AbstractParser::parseNewUserInput(IncomingData &data)
         emit sendToMud(data.line);
         break;
     case TDT_CRLF:
+        m_newLineTerminator = "\r\n";
         m_stringBuffer = QString::fromLatin1(data.line.constData(), data.line.size());
         m_stringBuffer = m_stringBuffer.simplified();
         if (parseUserCommands(m_stringBuffer))
             emit sendToMud(data.line);
         break;
     case TDT_LFCR:
+        m_newLineTerminator = "\n\r";
         m_stringBuffer = QString::fromLatin1(data.line.constData(), data.line.size());
         m_stringBuffer = m_stringBuffer.simplified();
         if (parseUserCommands(m_stringBuffer))
             emit sendToMud(data.line);
         break;
     case TDT_LF:
+        m_newLineTerminator = "\n";
         m_stringBuffer = QString::fromLatin1(data.line.constData(), data.line.size());
         m_stringBuffer = m_stringBuffer.simplified();
-        if ( parseUserCommands(m_stringBuffer))
+        if (parseUserCommands(m_stringBuffer))
             emit sendToMud(data.line);
         break;
     }
@@ -1519,54 +1522,20 @@ void AbstractParser::performDoorCommand(DirectionType direction, DoorActionType 
     if (dn == emptyByteArray) {
         dn = "exit";
         needdir = true;
-    } else
+    } else {
         for (int i = 0; i < 6; i++) {
             if ( (((DirectionType)i) != direction)
                     && (m_mapData->getDoorName(c, (DirectionType)i).toLatin1() == dn) )
                 needdir = true;
         }
-
-    switch (direction) {
-    case NORTH:
-        if (needdir)
-            cn += dn + " n\r\n";
-        else
-            cn += dn + "\r\n";
-        break;
-    case SOUTH:
-        if (needdir)
-            cn += dn + " s\r\n";
-        else
-            cn += dn + "\r\n";
-        break;
-    case EAST:
-        if (needdir)
-            cn += dn + " e\r\n";
-        else
-            cn += dn + "\r\n";
-        break;
-    case WEST:
-        if (needdir)
-            cn += dn + " w\r\n";
-        else
-            cn += dn + "\r\n";
-        break;
-    case UP:
-        if (needdir)
-            cn += dn + " u\r\n";
-        else
-            cn += dn + "\r\n";
-        break;
-    case DOWN:
-        if (needdir)
-            cn += dn + " d\r\n";
-        else
-            cn += dn + "\r\n";
-        break;
-    default:
-        cn += dn + "\r\n";
-        break;
     }
+
+    cn += dn;
+    if (needdir && direction < NONE) {
+        cn += " ";
+        cn += Mmapper2Exit::charForDir((ExitDirection)direction);
+    }
+    cn += m_newLineTerminator;
 
     if (Config().m_mapMode != 2) { // online mode
         emit sendToMud(cn);
@@ -1588,64 +1557,28 @@ void AbstractParser::genericDoorCommand(QString command, DirectionType direction
     dn = m_mapData->getDoorName(c, direction).toLatin1();
 
     bool needdir = false;
-
     if (dn == emptyByteArray) {
         dn = "exit";
         needdir = true;
-    } else
+    } else {
         for (int i = 0; i < 6; i++) {
             if ( (((DirectionType)i) != direction)
                     && (m_mapData->getDoorName(c, (DirectionType)i).toLatin1() == dn) )
                 needdir = true;
         }
-
-    switch (direction) {
-    case NORTH:
-        if (needdir)
-            cn += dn + " n\r\n";
-        else
-            cn += dn + "\r\n";
-        command = command.replace("$$DOOR_N$$", cn);
-        break;
-    case SOUTH:
-        if (needdir)
-            cn += dn + " s\r\n";
-        else
-            cn += dn + "\r\n";
-        command = command.replace("$$DOOR_S$$", cn);
-        break;
-    case EAST:
-        if (needdir)
-            cn += dn + " e\r\n";
-        else
-            cn += dn + "\r\n";
-        command = command.replace("$$DOOR_E$$", cn);
-        break;
-    case WEST:
-        if (needdir)
-            cn += dn + " w\r\n";
-        else
-            cn += dn + "\r\n";
-        command = command.replace("$$DOOR_W$$", cn);
-        break;
-    case UP:
-        if (needdir)
-            cn += dn + " u\r\n";
-        else
-            cn += dn + "\r\n";
-        command = command.replace("$$DOOR_U$$", cn);
-        break;
-    case DOWN:
-        if (needdir)
-            cn += dn + " d\r\n";
-        else
-            cn += dn + "\r\n";
-        command = command.replace("$$DOOR_D$$", cn);
-        break;
-    default:
-        cn += dn + "\r\n";
-        command = cn;
-        break;
+    }
+    if (direction < NONE) {
+        QChar dirChar = Mmapper2Exit::charForDir((ExitDirection)direction);
+        cn += dn;
+        if (needdir) {
+            cn += " ";
+            cn += dirChar.toLatin1();
+        }
+        cn += m_newLineTerminator;
+        command = command.replace(QString("$$DOOR_%1$$").arg(dirChar.toUpper()), cn);
+    } else if (direction == UNKNOWN) {
+        cn += dn + m_newLineTerminator;
+        command = command.replace("$$DOOR$$", cn);
     }
 
     if (Config().m_mapMode != 2) { // online mode

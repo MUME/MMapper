@@ -110,6 +110,7 @@ protected:
     virtual bool parseUserCommands(QString &command);
 
     QString m_stringBuffer;
+    QByteArray m_newLineTerminator;
     QByteArray m_byteBuffer;
 
     bool m_readingRoomDesc;
