@@ -301,9 +301,17 @@ void AbstractParser::parseExits(QString &str)
     const RoomSelection *rs = m_mapData->select();
     const Room *room = m_mapData->getRoom(getPosition(), rs);
     QByteArray cn = enhanceExits(room);
-    m_mapData->unselect(rs);
-
     emit sendToUser(str.toLatin1() + cn);
+
+    if (Config().m_showNotes) {
+        QString ns = Mmapper2Room::getNote(room);
+        if (!ns.isEmpty()) {
+            QByteArray note = "Note: " + ns.toLatin1() + "\r\n";
+            emit sendToUser(note);
+        }
+    }
+
+    m_mapData->unselect(rs);
 }
 
 const Coordinate AbstractParser::getPosition()
