@@ -119,6 +119,8 @@ MapCanvas::MapCanvas( MapData *mapData, PrespammedPath *prespammedPath, Mmapper2
       m_prespammedPath(prespammedPath),
       m_groupManager(groupManager)
 {
+    setCursor(Qt::OpenHandCursor);
+
     m_glFont = new QFont(QFont(), this);
     m_glFont->setStyleHint(QFont::System, QFont::OpenGLCompatible);
 
@@ -223,6 +225,21 @@ void MapCanvas::setCanvasMouseMode(CanvasMouseMode mode)
     clearRoomSelection();
     clearConnectionSelection();
 
+    switch (m_canvasMouseMode) {
+    case CMM_MOVE:
+        setCursor(Qt::OpenHandCursor);
+        break;
+    default:
+    case CMM_EDIT_INFOMARKS:
+    case CMM_SELECT_ROOMS:
+    case CMM_SELECT_CONNECTIONS:
+    case CMM_CREATE_ROOMS:
+    case CMM_CREATE_CONNECTIONS:
+    case CMM_CREATE_ONEWAY_CONNECTIONS:
+        setCursor(Qt::ArrowCursor);
+        break;
+    }
+
     m_selectedArea = false;
     update();
 }
@@ -322,7 +339,6 @@ void MapCanvas::mousePressEvent(QMouseEvent *event)
         m_mouseRightPressed = true;
     }
 
-
     switch (m_canvasMouseMode) {
     case CMM_EDIT_INFOMARKS:
         m_infoMarkSelection = true;
@@ -331,13 +347,14 @@ void MapCanvas::mousePressEvent(QMouseEvent *event)
         break;
     case CMM_MOVE:
         if (event->buttons() & Qt::LeftButton) {
+            setCursor(Qt::ClosedHandCursor);
             m_moveX1backup = m_selX1;
             m_moveY1backup = m_selY1;
         }
         break;
 
     case CMM_SELECT_ROOMS:
-
+        // Force mapper to room shortcut
         if ((event->buttons() & Qt::LeftButton) &&
                 (event->modifiers() & Qt::CTRL ) &&
                 (event->modifiers() & Qt::ALT ) ) {
@@ -350,14 +367,14 @@ void MapCanvas::mousePressEvent(QMouseEvent *event)
             forceMapperToRoom();
             break;
         }
-
+        // Cancel
         if (event->buttons() & Qt::RightButton) {
             m_selectedArea = false;
             if (m_roomSelection != NULL) m_data->unselect(m_roomSelection);
             m_roomSelection = NULL;
             emit newRoomSelection(m_roomSelection);
         }
-
+        // Select rooms
         if (event->buttons() & Qt::LeftButton) {
 
             if (event->modifiers() != Qt::CTRL) {
@@ -385,6 +402,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *event)
 
     case CMM_CREATE_ONEWAY_CONNECTIONS:
     case CMM_CREATE_CONNECTIONS:
+        // Select connection
         if (event->buttons() & Qt::LeftButton) {
             if (m_connectionSelection != NULL) delete m_connectionSelection;
             m_connectionSelection = new ConnectionSelection(m_data, m_selX1, m_selY1, m_selLayer1);
@@ -394,7 +412,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *event)
             }
             emit newConnectionSelection(NULL);
         }
-
+        // Cancel
         if (event->buttons() & Qt::RightButton) {
             if (m_connectionSelection != NULL) delete m_connectionSelection;
             m_connectionSelection = NULL;
@@ -422,7 +440,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *event)
             }
             emit newConnectionSelection(NULL);
         }
-
+        // Cancel
         if (event->buttons() & Qt::RightButton) {
             if (m_connectionSelection != NULL) delete m_connectionSelection;
             m_connectionSelection = NULL;
@@ -445,7 +463,6 @@ void MapCanvas::mousePressEvent(QMouseEvent *event)
     }
     update();
     break;
-
 
     default:
         break;
@@ -505,10 +522,13 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *event)
                 m_roomSelectionMoveY = GLtoMap(m_selY2) - GLtoMap(m_selY1);
 
                 Coordinate c(m_roomSelectionMoveX, m_roomSelectionMoveY, 0);
-                if (m_data->isMovable(c, m_roomSelection))
+                if (m_data->isMovable(c, m_roomSelection)) {
                     m_roomSelectionMoveWrongPlace = false;
-                else
+                    setCursor(Qt::ClosedHandCursor);
+                } else {
                     m_roomSelectionMoveWrongPlace = true;
+                    setCursor(Qt::ForbiddenCursor);
+                }
             } else {
                 m_selectedArea = true;
             }
@@ -582,6 +602,10 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *event)
     m_selY2 = v.y();
     m_selLayer2 = m_currentLayer;
 
+    if (m_mouseRightPressed == true) {
+        m_mouseRightPressed = false;
+    }
+
     switch (m_canvasMouseMode) {
     case CMM_EDIT_INFOMARKS:
         if ( m_mouseLeftPressed == true ) {
@@ -594,6 +618,10 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *event)
         }
         break;
     case CMM_MOVE:
+        if (m_mouseLeftPressed) {
+            m_mouseLeftPressed = false;
+            setCursor(Qt::OpenHandCursor);
+        }
         break;
     case CMM_SELECT_ROOMS:
 
@@ -608,6 +636,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *event)
 
                     Coordinate moverel(m_roomSelectionMoveX, m_roomSelectionMoveY, 0);
                     m_data->execute(new GroupAction(new MoveRelative(moverel), m_roomSelection), m_roomSelection);
+                    setCursor(Qt::ArrowCursor);
                 }
             } else {
                 if (m_roomSelection == NULL) {
@@ -785,6 +814,9 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *event)
         break;
 
     case CMM_CREATE_ROOMS:
+        if ( m_mouseLeftPressed == true ) {
+            m_mouseLeftPressed = false;
+        }
         break;
 
 

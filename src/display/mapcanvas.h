@@ -68,11 +68,6 @@ public:
     float getDW() const;
     float getDH() const;
 
-    MapData *getData ()
-    {
-        return m_data;
-    }
-
     enum CanvasMouseMode { CMM_NONE, CMM_MOVE, CMM_SELECT_ROOMS, CMM_SELECT_CONNECTIONS,
                            CMM_CREATE_ROOMS, CMM_CREATE_CONNECTIONS, CMM_CREATE_ONEWAY_CONNECTIONS,
                            CMM_EDIT_INFOMARKS
@@ -177,7 +172,6 @@ private:
     QOpenGLTexture *m_mobTextures[15];
     QOpenGLTexture *m_updateTexture;
     QOpenGLTexture *m_trailTextures[16];
-    QOpenGLTexture *m_whiteTexture;
 
     void moveSelection(const RoomSelection *sel, int dx, int dy);
 
