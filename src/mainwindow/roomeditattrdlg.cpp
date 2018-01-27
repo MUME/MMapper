@@ -98,8 +98,8 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
     loadListItems[13] = (QListWidgetItem *) new QListWidgetItem("Boat");
     loadListItems[14] = (QListWidgetItem *) new QListWidgetItem("Attention");
     loadListItems[15] = (QListWidgetItem *) new QListWidgetItem("Tower");
-    loadListItems[16] = NULL;
-    loadListItems[17] = NULL;
+    loadListItems[16] = (QListWidgetItem *) new QListWidgetItem("Clock");
+    loadListItems[17] = (QListWidgetItem *) new QListWidgetItem("Mail");
     loadListItems[18] = NULL;
     loadListItems[19] = NULL;
     loadListItems[20] = NULL;
@@ -115,7 +115,7 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
     loadListItems[30] = NULL;
     loadListItems[31] = NULL;
     loadFlagsListWidget->clear();
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 18; i++) {
         loadListItems[i]->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsTristate);
         loadFlagsListWidget->addItem(loadListItems[i]);
     }
@@ -735,6 +735,15 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         else
             loadListItems[15]->setCheckState(Qt::Unchecked);
 
+        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_CLOCK))
+            loadListItems[16]->setCheckState(Qt::Checked);
+        else
+            loadListItems[16]->setCheckState(Qt::Unchecked);
+
+        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_MAIL))
+            loadListItems[17]->setCheckState(Qt::Checked);
+        else
+            loadListItems[17]->setCheckState(Qt::Unchecked);
 
         roomDescriptionTextEdit->setEnabled(true);
         roomNoteTextEdit->setEnabled(true);

@@ -161,11 +161,13 @@ MapCanvas::~MapCanvas()
     // destroy all underlying OpenGL resources.
     makeCurrent();
 
-    for (int i = 0; i < 16; i++) {
-        if (m_terrainTextures[i]) delete m_terrainTextures[i];
-        if (m_roadTextures[i]) delete m_roadTextures[i];
+    for (int i = 0; i < 18; i++) {
+        if (i < 16) {
+            if (m_terrainTextures[i]) delete m_terrainTextures[i];
+            if (m_roadTextures[i]) delete m_roadTextures[i];
+            if (m_trailTextures[i]) delete m_trailTextures[i];
+        }
         if (m_loadTextures[i]) delete m_loadTextures[i];
-        if (m_trailTextures[i]) delete m_trailTextures[i];
         if (i < 15) {
             if (m_mobTextures[i]) delete m_mobTextures[i];
         }
@@ -918,12 +920,14 @@ void MapCanvas::initializeGL()
         glEnable(GL_MULTISAMPLE);
 
     // Load textures
-    for (int i = 0; i < 16; i++) {
-        m_terrainTextures[i] = new QOpenGLTexture(QImage(QString(":/pixmaps/terrain%1.png").arg(
-                                                             i)).mirrored());
-        m_roadTextures[i] = new QOpenGLTexture(QImage(QString(":/pixmaps/road%1.png").arg(i)).mirrored());
+    for (int i = 0; i < 18; i++) {
+        if (i < 16) {
+            m_terrainTextures[i] = new QOpenGLTexture(QImage(QString(":/pixmaps/terrain%1.png").arg(
+                                                                 i)).mirrored());
+            m_roadTextures[i] = new QOpenGLTexture(QImage(QString(":/pixmaps/road%1.png").arg(i)).mirrored());
+            m_trailTextures[i] = new QOpenGLTexture(QImage(QString(":/pixmaps/trail%1.png").arg(i)).mirrored());
+        }
         m_loadTextures[i] = new QOpenGLTexture(QImage(QString(":/pixmaps/load%1.png").arg(i)).mirrored());
-        m_trailTextures[i] = new QOpenGLTexture(QImage(QString(":/pixmaps/trail%1.png").arg(i)).mirrored());
         if (i < 15) {
             m_mobTextures[i] = new QOpenGLTexture(QImage(QString(":/pixmaps/mob%1.png").arg(i)).mirrored());
         }
@@ -931,11 +935,13 @@ void MapCanvas::initializeGL()
     m_updateTexture = new QOpenGLTexture(QImage(QString(":/pixmaps/update0.png")).mirrored());
 
     if (Config().m_trilinearFiltering) {
-        for (int i = 0; i < 16; i++) {
-            m_terrainTextures[i]->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
-            m_roadTextures[i]->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
+        for (int i = 0; i < 18; i++) {
+            if (i < 16) {
+                m_terrainTextures[i]->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
+                m_roadTextures[i]->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
+                m_trailTextures[i]->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
+            }
             m_loadTextures[i]->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
-            m_trailTextures[i]->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
             if (i < 15) {
                 m_mobTextures[i]->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
             }
@@ -1930,6 +1936,10 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
                 alphaOverlayTexture(m_loadTextures[12]);
             if (ISSET(lf, RLF_BOAT))
                 alphaOverlayTexture(m_loadTextures[13]);
+            if (ISSET(lf, RLF_CLOCK))
+                alphaOverlayTexture(m_loadTextures[16]);
+            if (ISSET(lf, RLF_MAIL))
+                alphaOverlayTexture(m_loadTextures[17]);
 
             glTranslated(0, 0, 0.005);
             if (ISSET(lf, RLF_ATTENTION))
