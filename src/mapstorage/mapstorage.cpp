@@ -934,7 +934,6 @@ bool MapStorage::saveData( bool baseMapOnly )
     emit log ("MapStorage", "Writing data to file ...");
 
     QDataStream fileStream(m_file);
-
     fileStream.setVersion(QDataStream::Qt_4_8);
 
     // Collect the room and marker lists. The room list can't be acquired
@@ -972,6 +971,7 @@ bool MapStorage::saveData( bool baseMapOnly )
     QBuffer buffer;
     buffer.open(QIODevice::WriteOnly);
     QDataStream stream(&buffer);
+    stream.setVersion(QDataStream::Qt_4_8);
 
     //write counters
     stream << (quint32)roomsCount;
