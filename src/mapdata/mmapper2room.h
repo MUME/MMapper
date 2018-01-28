@@ -80,6 +80,8 @@ typedef quint32 RoomMobFlags;
 #define RLF_BOAT            bit14
 #define RLF_ATTENTION       bit15
 #define RLF_TOWER           bit16
+#define RLF_CLOCK           bit17
+#define RLF_MAIL            bit18
 typedef quint32 RoomLoadFlags;
 
 enum RoomField {R_NAME, R_DESC, R_TERRAINTYPE, R_DYNAMICDESC, R_NOTE, R_MOBFLAGS, R_LOADFLAGS, R_PORTABLETYPE, R_LIGHTTYPE, R_ALIGNTYPE, R_RIDABLETYPE, R_SUNDEATHTYPE, R_KEYWORDS, ROOMFIELD_LAST};

@@ -840,6 +840,12 @@ bool AbstractParser::parseUserCommands(QString &command)
         } else if (str.startsWith("_watch")) {
             toggleRoomFlagCommand(RLF_TOWER, R_LOADFLAGS);
             return false;
+        } else if (str.startsWith("_clock")) {
+            toggleRoomFlagCommand(RLF_CLOCK, R_LOADFLAGS);
+            return false;
+        } else if (str.startsWith("_mail")) {
+            toggleRoomFlagCommand(RLF_MAIL, R_LOADFLAGS);
+            return false;
         } else if (str.startsWith("_trollexit")) {
             m_trollExitMapping = !m_trollExitMapping;
             QByteArray toggleText = m_trollExitMapping ? "enabled" : "disabled";

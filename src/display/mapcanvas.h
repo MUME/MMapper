@@ -168,7 +168,7 @@ private:
 
     QOpenGLTexture *m_terrainTextures[16];
     QOpenGLTexture *m_roadTextures[16];
-    QOpenGLTexture *m_loadTextures[16];
+    QOpenGLTexture *m_loadTextures[18];
     QOpenGLTexture *m_mobTextures[15];
     QOpenGLTexture *m_updateTexture;
     QOpenGLTexture *m_trailTextures[16];
