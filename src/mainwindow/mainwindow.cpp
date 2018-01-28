@@ -277,6 +277,9 @@ void MainWindow::currentMapWindowChanged()
             SLOT(newRoomSelection(const RoomSelection *)));
     connect(getCurrentMapWindow()->getCanvas(), SIGNAL(newConnectionSelection(ConnectionSelection *)),
             this, SLOT(newConnectionSelection(ConnectionSelection *)));
+    connect(getCurrentMapWindow()->getCanvas(), SIGNAL(customContextMenuRequested(const QPoint &)),
+            this, SLOT(showContextMenu(const QPoint &)));
+
 
     // Group
     connect(m_groupManager, SIGNAL(log(const QString &, const QString &)), this,
@@ -460,22 +463,22 @@ void MainWindow::createActions()
     modeInfoMarkEditAct->setCheckable(true);
     connect(modeInfoMarkEditAct, SIGNAL(triggered()), this, SLOT(onModeInfoMarkEdit()));
 
-    createRoomAct = new QAction(QIcon(":/icons/roomcreate.png"), tr("Create New Rooms"), this);
-    createRoomAct->setStatusTip(tr("Create New Rooms"));
-    createRoomAct->setCheckable(true);
-    connect(createRoomAct, SIGNAL(triggered()), this, SLOT(onModeCreateRoomSelect()));
+    modeCreateRoomAct = new QAction(QIcon(":/icons/roomcreate.png"), tr("Create New Rooms"), this);
+    modeCreateRoomAct->setStatusTip(tr("Create New Rooms"));
+    modeCreateRoomAct->setCheckable(true);
+    connect(modeCreateRoomAct, SIGNAL(triggered()), this, SLOT(onModeCreateRoomSelect()));
 
-    createConnectionAct = new QAction(QIcon(":/icons/connectioncreate.png"),
-                                      tr("Create New Connection"), this);
-    createConnectionAct->setStatusTip(tr("Create New Connection"));
-    createConnectionAct->setCheckable(true);
-    connect(createConnectionAct, SIGNAL(triggered()), this, SLOT(onModeCreateConnectionSelect()));
+    modeCreateConnectionAct = new QAction(QIcon(":/icons/connectioncreate.png"),
+                                          tr("Create New Connection"), this);
+    modeCreateConnectionAct->setStatusTip(tr("Create New Connection"));
+    modeCreateConnectionAct->setCheckable(true);
+    connect(modeCreateConnectionAct, SIGNAL(triggered()), this, SLOT(onModeCreateConnectionSelect()));
 
-    createOnewayConnectionAct = new QAction(QIcon(":/icons/onewayconnectioncreate.png"),
-                                            tr("Create New Oneway Connection"), this);
-    createOnewayConnectionAct->setStatusTip(tr("Create New Oneway Connection"));
-    createOnewayConnectionAct->setCheckable(true);
-    connect(createOnewayConnectionAct, SIGNAL(triggered()), this,
+    modeCreateOnewayConnectionAct = new QAction(QIcon(":/icons/onewayconnectioncreate.png"),
+                                                tr("Create New Oneway Connection"), this);
+    modeCreateOnewayConnectionAct->setStatusTip(tr("Create New Oneway Connection"));
+    modeCreateOnewayConnectionAct->setCheckable(true);
+    connect(modeCreateOnewayConnectionAct, SIGNAL(triggered()), this,
             SLOT(onModeCreateOnewayConnectionSelect()));
 
     modeActGroup = new QActionGroup(this);
@@ -483,11 +486,15 @@ void MainWindow::createActions()
     modeActGroup->addAction(modeMoveSelectAct);
     modeActGroup->addAction(modeRoomSelectAct);
     modeActGroup->addAction(modeConnectionSelectAct);
-    modeActGroup->addAction(createRoomAct);
-    modeActGroup->addAction(createConnectionAct);
-    modeActGroup->addAction(createOnewayConnectionAct);
+    modeActGroup->addAction(modeCreateRoomAct);
+    modeActGroup->addAction(modeCreateConnectionAct);
+    modeActGroup->addAction(modeCreateOnewayConnectionAct);
     modeActGroup->addAction(modeInfoMarkEditAct);
     modeMoveSelectAct->setChecked(true);
+
+    createRoomAct = new QAction(QIcon(":/icons/roomcreate.png"), tr("Create New Room"), this);
+    createRoomAct->setStatusTip(tr("Create a new room under the cursor"));
+    connect(createRoomAct, SIGNAL(triggered()), this, SLOT(onCreateRoom()));
 
     editRoomSelectionAct = new QAction(QIcon(":/icons/roomedit.png"), tr("Edit Selected Rooms"), this);
     editRoomSelectionAct->setStatusTip(tr("Edit Selected Rooms"));
@@ -679,9 +686,9 @@ void MainWindow::disableActions(bool value)
     modeInfoMarkEditAct->setDisabled(value);
     layerUpAct->setDisabled(value);
     layerDownAct->setDisabled(value);
-    createRoomAct->setDisabled(value);
-    createConnectionAct->setDisabled(value);
-    createOnewayConnectionAct->setDisabled(value);
+    modeCreateRoomAct->setDisabled(value);
+    modeCreateConnectionAct->setDisabled(value);
+    modeCreateOnewayConnectionAct->setDisabled(value);
     releaseAllPathsAct->setDisabled(value);
     alwaysOnTopAct->setDisabled(value);
 }
@@ -717,7 +724,7 @@ void MainWindow::setupMenuBar()
     roomMenu = editMenu->addMenu(QIcon(":/icons/roomselection.png"), tr("&Rooms"));
     roomMenu->addAction(modeRoomSelectAct);
     roomMenu->addSeparator();
-    roomMenu->addAction(createRoomAct);
+    roomMenu->addAction(modeCreateRoomAct);
     roomMenu->addAction(editRoomSelectionAct);
     roomMenu->addAction(deleteRoomSelectionAct);
     roomMenu->addAction(moveUpRoomSelectionAct);
@@ -729,8 +736,8 @@ void MainWindow::setupMenuBar()
     connectionMenu = editMenu->addMenu(QIcon(":/icons/connectionselection.png"), tr("&Connections"));
     connectionMenu->addAction(modeConnectionSelectAct);
     connectionMenu->addSeparator();
-    connectionMenu->addAction(createConnectionAct);
-    connectionMenu->addAction(createOnewayConnectionAct);
+    connectionMenu->addAction(modeCreateConnectionAct);
+    connectionMenu->addAction(modeCreateOnewayConnectionAct);
     //connectionMenu->addAction(editConnectionSelectionAct);
     connectionMenu->addAction(deleteConnectionSelectionAct);
 
@@ -801,6 +808,28 @@ void MainWindow::setupMenuBar()
     */
 }
 
+void MainWindow::showContextMenu(const QPoint &pos)
+{
+    QMenu contextMenu(tr("Context menu"), this);
+    if (m_roomSelection) {
+        contextMenu.addAction(editRoomSelectionAct);
+        contextMenu.addAction(moveUpRoomSelectionAct);
+        contextMenu.addAction(moveDownRoomSelectionAct);
+        contextMenu.addAction(mergeUpRoomSelectionAct);
+        contextMenu.addAction(mergeDownRoomSelectionAct);
+        contextMenu.addAction(deleteRoomSelectionAct);
+        contextMenu.addAction(connectToNeighboursRoomSelectionAct);
+        contextMenu.addSeparator();
+        contextMenu.addAction(forceRoomAct);
+    } else if (!m_connectionSelection) {
+        contextMenu.addAction(createRoomAct);
+    } else if (m_connectionSelection) {
+        contextMenu.addAction(deleteConnectionSelectionAct);
+    }
+
+    contextMenu.exec(mapToGlobal(pos));
+}
+
 void MainWindow::alwaysOnTop()
 {
     setWindowFlags(windowFlags() ^ Qt::WindowStaysOnTopHint);
@@ -838,9 +867,9 @@ void MainWindow::setupToolBars()
     mouseModeToolBar->addAction(modeMoveSelectAct);
     mouseModeToolBar->addAction(modeRoomSelectAct);
     mouseModeToolBar->addAction(modeConnectionSelectAct);
-    mouseModeToolBar->addAction(createRoomAct);
-    mouseModeToolBar->addAction(createConnectionAct);
-    mouseModeToolBar->addAction(createOnewayConnectionAct);
+    mouseModeToolBar->addAction(modeCreateRoomAct);
+    mouseModeToolBar->addAction(modeCreateConnectionAct);
+    mouseModeToolBar->addAction(modeCreateOnewayConnectionAct);
     mouseModeToolBar->addAction(modeInfoMarkEditAct);
     mouseModeToolBar->hide();
 
@@ -1408,6 +1437,12 @@ void MainWindow::onModeCreateOnewayConnectionSelect()
 void MainWindow::onModeInfoMarkEdit()
 {
     getCurrentMapWindow()->getCanvas()->setCanvasMouseMode(MapCanvas::CMM_EDIT_INFOMARKS);
+}
+
+void MainWindow::onCreateRoom()
+{
+    getCurrentMapWindow()->getCanvas()->createRoom();
+    getCurrentMapWindow()->getCanvas()->update();
 }
 
 void MainWindow::onEditRoomSelection()

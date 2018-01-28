@@ -78,6 +78,7 @@ public:
 
 public slots:
     void forceMapperToRoom();
+    void createRoom();
     void onInfoMarksEditDlgClose();
 
     void setCanvasMouseMode(CanvasMouseMode);

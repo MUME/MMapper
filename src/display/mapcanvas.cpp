@@ -126,6 +126,8 @@ MapCanvas::MapCanvas( MapData *mapData, PrespammedPath *prespammedPath, Mmapper2
 
     m_glFontMetrics = new QFontMetrics(*m_glFont);
 
+    setContextMenuPolicy(Qt::CustomContextMenu);
+
     m_infoMarksEditDlg = new InfoMarksEditDlg(mapData, this);
     connect(m_infoMarksEditDlg, SIGNAL(mapChanged()), this, SLOT(update()));
     connect(m_infoMarksEditDlg, SIGNAL(closeEventReceived()), this, SLOT(onInfoMarksEditDlgClose()));
@@ -232,9 +234,11 @@ void MapCanvas::setCanvasMouseMode(CanvasMouseMode mode)
         setCursor(Qt::OpenHandCursor);
         break;
     default:
-    case CMM_EDIT_INFOMARKS:
-    case CMM_SELECT_ROOMS:
     case CMM_SELECT_CONNECTIONS:
+    case CMM_EDIT_INFOMARKS:
+        setCursor(Qt::CrossCursor);
+        break;
+    case CMM_SELECT_ROOMS:
     case CMM_CREATE_ROOMS:
     case CMM_CREATE_CONNECTIONS:
     case CMM_CREATE_ONEWAY_CONNECTIONS:
@@ -322,6 +326,18 @@ void MapCanvas::forceMapperToRoom()
     update();
 }
 
+void MapCanvas::createRoom()
+{
+    const RoomSelection *tmpSel = m_data->select(Coordinate(GLtoMap(m_selX1), GLtoMap(m_selY1),
+                                                            m_selLayer1));
+    if (tmpSel->isEmpty()) {
+        Coordinate c = Coordinate(GLtoMap(m_selX1), GLtoMap(m_selY1), m_currentLayer);
+        m_data->createEmptyRoom(c);
+    }
+    m_data->unselect(tmpSel);
+    update();
+}
+
 void MapCanvas::mousePressEvent(QMouseEvent *event)
 {
     QVector3D v = QVector3D(event->pos().x(), height() - event->pos().y(), CAMERA_Z_DISTANCE)
@@ -339,6 +355,27 @@ void MapCanvas::mousePressEvent(QMouseEvent *event)
     }
     if (event->buttons() & Qt::RightButton) {
         m_mouseRightPressed = true;
+    }
+
+    if (!m_mouseLeftPressed && m_mouseRightPressed) {
+        if (m_canvasMouseMode == CMM_MOVE || m_roomSelection == NULL) {
+            // Select the room under the cursor
+            Coordinate c = Coordinate(GLtoMap(m_selX1), GLtoMap(m_selY1), m_selLayer1);
+            if (m_roomSelection != NULL) {
+                m_data->unselect(m_roomSelection);
+                m_roomSelection = NULL;
+            }
+            m_roomSelection = m_data->select(c);
+            if (m_roomSelection->isEmpty()) {
+                m_data->unselect(m_roomSelection);
+                m_roomSelection = NULL;
+            }
+            emit newRoomSelection(m_roomSelection);
+            update();
+        }
+        m_mouseRightPressed = false;
+        event->accept();
+        return ;
     }
 
     switch (m_canvasMouseMode) {
@@ -452,19 +489,9 @@ void MapCanvas::mousePressEvent(QMouseEvent *event)
         update();
         break;
 
-    case CMM_CREATE_ROOMS: {
-        const RoomSelection *tmpSel = m_data->select(Coordinate(GLtoMap(m_selX1), GLtoMap(m_selY1),
-                                                                m_selLayer1));
-        if (tmpSel->size() == 0) {
-            //Room * r = new Room(m_data);
-            Coordinate c = Coordinate(GLtoMap(m_selX1), GLtoMap(m_selY1), m_currentLayer);
-            m_data->createEmptyRoom(c);
-            //m_data->execute(new SingleRoomAction(new ConnectToNeighbours, id));
-        }
-        m_data->unselect(tmpSel);
-    }
-    update();
-    break;
+    case CMM_CREATE_ROOMS:
+        createRoom();
+        break;
 
     default:
         break;
@@ -620,13 +647,13 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *event)
         }
         break;
     case CMM_MOVE:
+        setCursor(Qt::OpenHandCursor);
         if (m_mouseLeftPressed) {
             m_mouseLeftPressed = false;
-            setCursor(Qt::OpenHandCursor);
         }
         break;
     case CMM_SELECT_ROOMS:
-
+        setCursor(Qt::ArrowCursor);
         if ( m_ctrlPressed && m_altPressed ) break;
 
         if ( m_mouseLeftPressed == true ) {
@@ -638,7 +665,6 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *event)
 
                     Coordinate moverel(m_roomSelectionMoveX, m_roomSelectionMoveY, 0);
                     m_data->execute(new GroupAction(new MoveRelative(moverel), m_roomSelection), m_roomSelection);
-                    setCursor(Qt::ArrowCursor);
                 }
             } else {
                 if (m_roomSelection == NULL) {
