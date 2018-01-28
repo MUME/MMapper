@@ -246,28 +246,28 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
     QByteArray oldMana = self->textMana;
     QByteArray oldMoves = self->textMoves;
 
-    QByteArray hp, mana, moves;
-    hp = oldHP;
-    mana = oldMana;
-    moves = oldMoves;
+    QByteArray hp = oldHP, mana = oldMana, moves = oldMoves;
 
-    int index = prompt.indexOf("HP:");
+    int next = 0;
+    int index = prompt.indexOf("HP:", next);
     if (index != -1) {
         hp = "";
         int k = index + 3;
         while (prompt[k] != ' ' && prompt[k] != '>' )
             hp += prompt[k++];
+        next = k;
     }
 
-    index = prompt.indexOf("Mana:");
+    index = prompt.indexOf("Mana:", next);
     if (index != -1) {
         mana = "";
         int k = index + 5;
         while (prompt[k] != ' ' && prompt[k] != '>' )
             mana += prompt[k++];
+        next = k;
     }
 
-    index = prompt.indexOf("Move:");
+    index = prompt.indexOf("Move:", next);
     if (index != -1) {
         moves = "";
         int k = index + 5;
@@ -275,10 +275,74 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
             moves += prompt[k++];
     }
 
-    self->setTextScore(hp, mana, moves);
+    if (hp != oldHP || mana != oldMana || moves != oldMoves) {
+        self->setTextScore(hp, mana, moves);
 
-    if (hp != oldHP || mana != oldMana || moves != oldMoves)
+        // Estimate new numerical scores using prompt
+        double maxhp = self->maxhp;
+        double maxmoves = self->maxmoves;
+        double maxmana = self->maxmana;
+        if (!hp.isEmpty() && maxhp != 0) {
+            int newhp = self->hp;
+            if (hp == "Healthy") {
+                newhp = maxhp;
+            } else if (hp == "Fine") {
+                newhp = maxhp * 0.99;
+            } else if (hp == "Hurt") {
+                newhp = maxhp * 0.65;
+            } else if (hp == "Wounded") {
+                newhp = maxhp * 0.45;
+            } else if (hp == "Bad") {
+                newhp = maxhp * 0.25;
+            } else if (hp == "Awful") {
+                newhp = maxhp * 0.10;
+            } else {
+                // Incap
+                newhp = 0;
+            }
+            if (self->hp > newhp) {
+                self->hp = newhp;
+            }
+        }
+        if (!mana.isEmpty() && maxmana != 0) {
+            int newmana = self->mana;
+            if (mana == "Burning") {
+                newmana = maxmana * 0.99;
+            } else if (mana == "Hot") {
+                newmana = maxmana * 0.75;
+            } else if (mana == "Warm") {
+                newmana = maxmana * 0.45;
+            } else if (mana == "Cold") {
+                newmana = maxmana * 0.25;
+            } else if (mana == "Icy") {
+                newmana = maxmana * 0.10;
+            } else {
+                // Frozen
+                newmana = 0;
+            }
+            if (self->mana > newmana) {
+                self->mana = newmana;
+            }
+        }
+        if (!moves.isEmpty() && maxmoves != 0) {
+            int newmoves = self->moves;
+            if (moves == "Tired") {
+                newmoves = maxmoves * 0.42;
+            } else if (moves == "Slow") {
+                newmoves = maxmoves * 0.31;
+            } else if (moves == "Weak") {
+                newmoves = maxmoves * 0.12;
+            } else if (moves == "Fainting") {
+                newmoves = maxmoves * 0.05;
+            }
+            qInfo() << "moves" << moves << "newmoves" << newmoves;
+            if (self->moves > newmoves) {
+                self->moves = newmoves;
+            }
+        }
+
         emit issueLocalCharUpdate();
+    }
 }
 
 void Mmapper2Group::sendLog(const QString &text)

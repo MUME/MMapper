@@ -73,7 +73,6 @@ signals:
     void command(const QByteArray &, const Coordinate &);
 
     //for group manager
-    void sendPromptLineEvent(QByteArray);
     void sendGroupTellEvent(QByteArray);
 
 public slots:

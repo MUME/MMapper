@@ -39,9 +39,9 @@ CGroupChar::CGroupChar()
     mana = 0;
     maxmana = 0;
     state = NORMAL;
-    textHP = "Healthy";
-    textMoves = "Full";
-    textMana = "Full";
+    textHP = "";
+    textMoves = "";
+    textMana = "";
     lastMovement = "";
 }
 

@@ -27,22 +27,24 @@
 #include "CGroup.h"
 #include "CGroupChar.h"
 #include "mapdata/mapdata.h"
+#include "mmapper2room.h"
 
 #include <QMessageBox>
+#include <QHeaderView>
+#include <QList>
 #include <QDebug>
 
 GroupWidget::GroupWidget(Mmapper2Group *groupManager, MapData *md, QWidget *parent) :
-    QTreeWidget(parent),
+    QTableWidget(1, 5, parent),
     m_group(groupManager),
     m_map(md)
 {
-    setColumnCount(8);
-    setHeaderLabels(QStringList() << tr("Name") << tr("HP") << tr("Mana") << tr("Moves") << tr("HP") <<
-                    tr("Mana") << tr("Moves") << tr("Room Name"));
-    setRootIsDecorated(false);
+    setColumnCount(5);
+    setHorizontalHeaderLabels(QStringList() << tr("Name") << tr("HP") << tr("Mana") << tr("Moves") <<
+                              tr("Room Name"));
+    verticalHeader()->setVisible(false);
     setAlternatingRowColors(true);
     setSelectionMode(QAbstractItemView::NoSelection);
-    clear();
     hide();
 
     connect(m_group, SIGNAL(drawCharacters()), SLOT(updateLabels()), Qt::QueuedConnection);
@@ -52,58 +54,107 @@ GroupWidget::GroupWidget(Mmapper2Group *groupManager, MapData *md, QWidget *pare
 
 GroupWidget::~GroupWidget()
 {
-    foreach (QTreeWidgetItem *item, m_nameItemHash.values()) {
-        delete item;
+    foreach (QString name, m_nameItemHash.keys()) {
+        QList<QTableWidgetItem *> items = m_nameItemHash.take(name);
+        for (uint i = 0; i < items.length(); i++) {
+            delete items[i];
+        }
     }
     m_nameItemHash.clear();
 }
 
-void GroupWidget::setItemText(QTreeWidgetItem *item, uint itemNumber, const QString &text,
-                              const QColor &color)
+void GroupWidget::setItemText(QTableWidgetItem *item, const QString &text, const QColor &color)
 {
-    item->setText(itemNumber, text);
-    item->setBackgroundColor(itemNumber, color);
+    item->setText(text);
+    item->setBackgroundColor(color);
     if (color.value() < 150)
-        item->setTextColor(itemNumber, Qt::white);
+        item->setTextColor(Qt::white);
     else
-        item->setTextColor(itemNumber, Qt::black);
+        item->setTextColor(Qt::black);
 }
 
 void GroupWidget::updateLabels()
 {
-    QSet<QByteArray> seenCharacters = QSet<QByteArray>::fromList(m_nameItemHash.keys());
-
     GroupSelection *selection = m_group->getGroup()->selectAll();
-    foreach (CGroupChar *character, selection->values()) {
-        QByteArray name = character->getName();
-        seenCharacters.remove(name);
-        QTreeWidgetItem *item;
-        if (m_nameItemHash.contains(name)) {
-            item = m_nameItemHash[name];
-        } else {
-            item = new QTreeWidgetItem(this);
-            m_nameItemHash[name] = item;
-            qDebug() << "New item for character" << name;
+
+    // Clean up deleted characters
+    QSet<QString> previous = QSet<QString>::fromList(m_nameItemHash.keys());
+    QSet<QString> current = QSet<QString>::fromList(selection->keys());
+    previous.subtract(current);
+    if (!previous.empty()) {
+        foreach (QString name, previous) {
+            qDebug() << "Cleaning up item for character" << name;
+            QList<QTableWidgetItem *> items = m_nameItemHash.take(name);
+            if (!items.isEmpty()) {
+                int row = items[0]->row();
+                for (uint i = 0; i < items.length(); i++) {
+                    QTableWidgetItem *item = takeItem(row, i);
+                    delete item;
+                }
+            }
+            qDebug() << "Done cleaning up item for character" << name;
         }
+    }
+
+    // Render the existing and new characters
+    int row = 0;
+    setRowCount(current.size());
+    foreach (QString name, current) {
+        CGroupChar *character = selection->value(name);
+        QList<QTableWidgetItem *> items = m_nameItemHash[name];
+        bool newItem = items.isEmpty();
+        if (newItem) {
+            qDebug() << "New item for character" << name << row;
+            for (uint i = 0; i < 5; i++) {
+                items.append(new QTableWidgetItem("temp"));
+            }
+        }
+        int previousRow = items[0]->row();
+        bool moveItem = previousRow != row;
+        if (newItem || moveItem) {
+            for (uint i = 0; i < 5; i++) {
+                takeItem(previousRow, i);
+            }
+        }
+        QTableWidgetItem *nameItem, *hpItem, *manaItem, *movesItem, *roomNameItem;
+        nameItem = items[0];
+        hpItem = items[1];
+        manaItem = items[2];
+        movesItem = items[3];
+        roomNameItem = items[4];
 
         QColor color = character->getColor();
-        setItemText(item, 0, character->name, color);
-        setItemText(item, 1, character->textHP, color);
-        setItemText(item, 2, character->textMana, color);
-        setItemText(item, 3, character->textMoves, color);
+        setItemText(nameItem, character->name, color);
+        double hpPercentage = 100.0 * (double)character->hp / (double)character->maxhp;
+        double manaPercentage = 100.0 * (double)character->mana / (double)character->maxmana;
+        double movesPercentage = 100.0 * (double)character->moves / (double)character->maxmoves;
 
-        setItemText(item, 4, QString("%1/%2").arg(character->hp).arg(character->maxhp), color);
-        setItemText(item, 5, QString("%1/%2").arg(character->mana).arg(character->maxmana), color);
-        setItemText(item, 6, QString("%1/%2").arg(character->moves).arg(character->maxmoves), color);
+        QString hpStr = qIsNaN(hpPercentage) ? "" :
+                        QString("%1\% (%2/%3)").arg((int)hpPercentage).arg(character->hp).arg(character->maxhp);
+        setItemText(hpItem, hpStr, color);
+        QString manaStr = qIsNaN(manaPercentage) ? "" :
+                          QString("%1\% (%2/%3)").arg((int)manaPercentage).arg(character->mana).arg(character->maxmana);
+        setItemText(manaItem, manaStr, color);
+        QString movesStr = qIsNaN(movesPercentage) ? "" :
+                           QString("%1\% (%2/%3)").arg((int)movesPercentage).arg(character->moves).arg(character->maxmoves);
+        setItemText(movesItem, movesStr, color);
 
         QString roomName = "Unknown";
         if (character->pos != 0) {
             const RoomSelection *roomSelection = m_map->select();
             const Room *r = m_map->getRoom(character->pos, roomSelection);
-            if (r) roomName = QString((*r)[0].toString());
+            if (r) roomName = Mmapper2Room::getName(r);
             m_map->unselect(roomSelection);
         }
-        setItemText(item, 7, roomName, color);
+        setItemText(roomNameItem, roomName, color);
+
+        if (newItem || moveItem) {
+            setItem(row, 0, nameItem);
+            setItem(row, 1, hpItem);
+            setItem(row, 2, manaItem);
+            setItem(row, 3, movesItem);
+            setItem(row, 4, roomNameItem);
+        }
 
         /*
         switch (state) {
@@ -122,16 +173,17 @@ void GroupWidget::updateLabels()
         }
         */
 
+        // Increment current row
+        row++;
     }
     m_group->getGroup()->unselect(selection);
 
-    if (!seenCharacters.empty()) {
-        foreach (QByteArray name, seenCharacters) {
-            delete m_nameItemHash[name];
-            m_nameItemHash.remove(name);
-            qDebug() << "Cleaning up item for character" << name;
-        }
-    }
+    resizeColumnToContents(0);
+    resizeColumnToContents(1);
+    resizeColumnToContents(2);
+    resizeColumnToContents(3);
+    resizeColumnToContents(4);
+    horizontalHeader()->setStretchLastSection(true);
 }
 
 void GroupWidget::messageBox(QString title, QString message)

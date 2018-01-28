@@ -86,6 +86,7 @@ protected:
 
 signals:
     void sendScoreLineEvent(QByteArray);
+    void sendPromptLineEvent(QByteArray);
     void mumeTime(QString);
 };
 
