@@ -82,15 +82,6 @@ public:
 
     MapWindow *getCurrentMapWindow();
 
-    Mmapper2PathMachine *getPathMachine()
-    {
-        return m_pathMachine;
-    }
-    Mmapper2Group *getGroupManager()
-    {
-        return m_groupManager;
-    }
-
     enum SaveMode { SAVEM_FULL, SAVEM_BASEMAP };
     enum SaveFormat { SAVEF_MM2, SAVEF_WEB };
     bool saveFile(const QString &fileName, SaveMode mode, SaveFormat format);
@@ -129,6 +120,7 @@ public slots:
     void onModeCreateOnewayConnectionSelect();
     void onLayerUp();
     void onLayerDown();
+    void onCreateRoom();
     void onEditRoomSelection();
     void onEditConnectionSelection();
     void onDeleteRoomSelection();
@@ -147,6 +139,7 @@ public slots:
 
     void newRoomSelection(const RoomSelection *);
     void newConnectionSelection(ConnectionSelection *);
+    void showContextMenu(const QPoint &);
 
     void groupOff();
     void groupClient();
@@ -252,9 +245,9 @@ private:
     QAction *modeMoveSelectAct;
     QAction *modeInfoMarkEditAct;
 
-    QAction *createRoomAct;
-    QAction *createConnectionAct;
-    QAction *createOnewayConnectionAct;
+    QAction *modeCreateRoomAct;
+    QAction *modeCreateConnectionAct;
+    QAction *modeCreateOnewayConnectionAct;
 
     QAction *playModeAct;
     QAction *mapModeAct;
@@ -266,6 +259,7 @@ private:
     QActionGroup *connectionActGroup;
     QActionGroup *groupManagerGroup;
 
+    QAction *createRoomAct;
     QAction *editRoomSelectionAct;
     QAction *editConnectionSelectionAct;
     QAction *deleteRoomSelectionAct;
