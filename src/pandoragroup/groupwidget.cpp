@@ -34,14 +34,16 @@
 #include <QList>
 #include <QDebug>
 
+#define GROUP_COLUMN_COUNT 8
+
 GroupWidget::GroupWidget(Mmapper2Group *groupManager, MapData *md, QWidget *parent) :
-    QTableWidget(1, 5, parent),
+    QTableWidget(1, GROUP_COLUMN_COUNT, parent),
     m_group(groupManager),
     m_map(md)
 {
-    setColumnCount(5);
-    setHorizontalHeaderLabels(QStringList() << tr("Name") << tr("HP") << tr("Mana") << tr("Moves") <<
-                              tr("Room Name"));
+    setColumnCount(GROUP_COLUMN_COUNT);
+    setHorizontalHeaderLabels(QStringList() << tr("Name") << tr("HP %") << tr("Mana %") << tr("Moves %")
+                              << tr("HP") << tr("Mana") << tr("Moves") << tr("Room Name"));
     verticalHeader()->setVisible(false);
     setAlternatingRowColors(true);
     setSelectionMode(QAbstractItemView::NoSelection);
@@ -105,23 +107,29 @@ void GroupWidget::updateLabels()
         bool newItem = items.isEmpty();
         if (newItem) {
             qDebug() << "New item for character" << name << row;
-            for (uint i = 0; i < 5; i++) {
-                items.append(new QTableWidgetItem("temp"));
+            for (uint i = 0; i < GROUP_COLUMN_COUNT; i++) {
+                QTableWidgetItem *item = new QTableWidgetItem("temp");
+                item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+                items.append(item);
             }
         }
         int previousRow = items[0]->row();
         bool moveItem = previousRow != row;
         if (newItem || moveItem) {
-            for (uint i = 0; i < 5; i++) {
+            for (uint i = 0; i < GROUP_COLUMN_COUNT; i++) {
                 takeItem(previousRow, i);
             }
         }
-        QTableWidgetItem *nameItem, *hpItem, *manaItem, *movesItem, *roomNameItem;
+        QTableWidgetItem *nameItem, *hpItemPct, *manaItemPct, *movesItemPct,
+                         *hpItem, *manaItem, *movesItem, *roomNameItem;
         nameItem = items[0];
-        hpItem = items[1];
-        manaItem = items[2];
-        movesItem = items[3];
-        roomNameItem = items[4];
+        hpItemPct = items[1];
+        manaItemPct = items[2];
+        movesItemPct = items[3];
+        hpItem = items[4];
+        manaItem = items[5];
+        movesItem = items[6];
+        roomNameItem = items[7];
 
         QColor color = character->getColor();
         setItemText(nameItem, character->name, color);
@@ -129,14 +137,18 @@ void GroupWidget::updateLabels()
         double manaPercentage = 100.0 * (double)character->mana / (double)character->maxmana;
         double movesPercentage = 100.0 * (double)character->moves / (double)character->maxmoves;
 
-        QString hpStr = qIsNaN(hpPercentage) ? "" :
-                        QString("%1\% (%2/%3)").arg((int)hpPercentage).arg(character->hp).arg(character->maxhp);
+        QString hpStrPct = qIsNaN(hpPercentage) ? "" : QString("%1\%").arg((int)hpPercentage);
+        setItemText(hpItemPct, hpStrPct, color);
+        QString manaStrPct = qIsNaN(manaPercentage) ? "" : QString("%1\%").arg((int)manaPercentage);
+        setItemText(manaItemPct, manaStrPct, color);
+        QString movesStrPct = qIsNaN(movesPercentage) ? "" : QString("%1\%").arg((int)movesPercentage);
+        setItemText(movesItemPct, movesStrPct, color);
+
+        QString hpStr = QString("%1/%2").arg(character->hp).arg(character->maxhp);
         setItemText(hpItem, hpStr, color);
-        QString manaStr = qIsNaN(manaPercentage) ? "" :
-                          QString("%1\% (%2/%3)").arg((int)manaPercentage).arg(character->mana).arg(character->maxmana);
+        QString manaStr = QString("%1/%2").arg(character->mana).arg(character->maxmana);
         setItemText(manaItem, manaStr, color);
-        QString movesStr = qIsNaN(movesPercentage) ? "" :
-                           QString("%1\% (%2/%3)").arg((int)movesPercentage).arg(character->moves).arg(character->maxmoves);
+        QString movesStr = QString("%1/%2").arg(character->moves).arg(character->maxmoves);
         setItemText(movesItem, movesStr, color);
 
         QString roomName = "Unknown";
@@ -150,10 +162,13 @@ void GroupWidget::updateLabels()
 
         if (newItem || moveItem) {
             setItem(row, 0, nameItem);
-            setItem(row, 1, hpItem);
-            setItem(row, 2, manaItem);
-            setItem(row, 3, movesItem);
-            setItem(row, 4, roomNameItem);
+            setItem(row, 1, hpItemPct);
+            setItem(row, 2, manaItemPct);
+            setItem(row, 3, movesItemPct);
+            setItem(row, 4, hpItem);
+            setItem(row, 5, manaItem);
+            setItem(row, 6, movesItem);
+            setItem(row, 7, roomNameItem);
         }
 
         /*
@@ -178,11 +193,8 @@ void GroupWidget::updateLabels()
     }
     m_group->getGroup()->unselect(selection);
 
-    resizeColumnToContents(0);
-    resizeColumnToContents(1);
-    resizeColumnToContents(2);
-    resizeColumnToContents(3);
-    resizeColumnToContents(4);
+    for (int i = 0; i < GROUP_COLUMN_COUNT; i++)
+        resizeColumnToContents(i);
     horizontalHeader()->setStretchLastSection(true);
 }
 

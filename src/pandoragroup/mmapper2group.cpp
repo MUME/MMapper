@@ -335,7 +335,6 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
             } else if (moves == "Fainting") {
                 newmoves = maxmoves * 0.05;
             }
-            qInfo() << "moves" << moves << "newmoves" << newmoves;
             if (self->moves > newmoves) {
                 self->moves = newmoves;
             }
@@ -370,7 +369,7 @@ void Mmapper2Group::setType(int newState)
     // Delete previous network and regenerate
     if (network) {
         network->disconnect();
-        delete network;
+        network->deleteLater();
         network = NULL;
     }
     switch ((GroupManagerState)newState) {
