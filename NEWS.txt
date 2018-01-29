@@ -1,4 +1,28 @@
 ================================
+MMapper 2.4.4 (January 28, 2018)
+================================
+
+Changes:
+ - Fixed a critical storage bug that was corrupting InfoMarks. Please load a
+   pre-2.4.3 map to recover your data. Sorry :(
+ - Fixed regression that broke Powwow #prompt detection
+ - Squished minor regression where light rooms could incorrectly use "dark"
+   prompt information
+ - Hidden exit flags are now optionally displayed after exits
+ - Notes are now optionally displayed after exits
+ - The Find Rooms dialog along with the "_search" and "_dirs" commands are now
+   able to search through dynamic descriptions
+ - Fixed layer navigation shortcuts on Mac OS X
+ - Patched Group Manager crash on Mac
+ - "damage", "fall", and "guarded" exit flags have been introduced for mappers
+ - "clock" and "mail" load flags have been introduced for mappers
+ - Pixmaps were improved for guilds, boats, food, treasure, and armour
+ - Prompt text now influences group manager numerical scores
+ - Contextual menus and cursors have been introduced to the map canvas
+ - The parser will use the same newline terminator that the mud client is using
+
+
+================================
 MMapper 2.4.3 (January 16, 2018)
 ================================
 
