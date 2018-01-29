@@ -66,8 +66,10 @@ AbstractParser::~AbstractParser()
 
 void AbstractParser::reset()
 {
-    emit log("Parser", "Disabling troll exit mapping");
-    m_trollExitMapping = false;
+    if (m_trollExitMapping) {
+        emit log("Parser", "Disabling troll exit mapping");
+        m_trollExitMapping = false;
+    }
     queue.clear();
 }
 
