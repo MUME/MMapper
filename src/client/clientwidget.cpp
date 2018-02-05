@@ -42,6 +42,7 @@ ClientWidget::ClientWidget(QWidget *parent) : QDialog(parent),
     m_connected(false)
 {
     setWindowTitle("MMapper Client");
+    setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
 
     QVBoxLayout *layout = new QVBoxLayout(this);
     layout->setAlignment(Qt::AlignTop);

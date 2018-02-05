@@ -137,7 +137,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     m_dockWelcome = new DockWidget("", this);
     m_dockWelcome->setObjectName("DockWelcome");
     m_dockWelcome->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    m_dockWelcome->setFeatures(QDockWidget::NoDockWidgetFeatures);
+    m_dockWelcome->setFeatures(QDockWidget::DockWidgetClosable);
     addDockWidget(Qt::LeftDockWidgetArea, m_dockWelcome);
     m_dockWelcome->setWidget(m_welcomeWidget);
 
