@@ -1,0 +1,235 @@
+/************************************************************************
+**
+** Authors:   Nils Schimmelmann <nschimme@gmail.com>
+**
+** This file is part of the MMapper project.
+** Maintained by Nils Schimmelmann <nschimme@gmail.com>
+**
+** This program is free software; you can redistribute it and/or
+** modify it under the terms of the GNU General Public License
+** as published by the Free Software Foundation; either version 2
+** of the License, or (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the:
+** Free Software Foundation, Inc.
+** 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+**
+************************************************************************/
+
+#include "clientwidget.h"
+#include "stackedinputwidget.h"
+#include "displaywidget.h"
+#include "ctelnet.h"
+
+#include "configuration/configuration.h"
+#include "mainwindow/mainwindow.h"
+
+#include <QSplitter>
+#include <QVBoxLayout>
+#include <QMenuBar>
+#include <QDebug>
+#include <QSettings>
+#include <QCloseEvent>
+#include <QStatusBar>
+
+ClientWidget::ClientWidget(QWidget *parent) : QDialog(parent),
+    m_connected(false)
+{
+    setWindowTitle("MMapper Client");
+
+    QVBoxLayout *layout = new QVBoxLayout(this);
+    layout->setAlignment(Qt::AlignTop);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(0);
+
+    m_splitter = new QSplitter(this);
+    m_splitter->setOrientation(Qt::Vertical);
+    layout->addWidget(m_splitter);
+
+    // Add the primary widgets to the smart splitter
+    m_display = new DisplayWidget(this);
+    m_splitter->addWidget(m_display);
+    m_splitter->setCollapsible(m_splitter->indexOf(m_display), false);
+
+    m_input = new StackedInputWidget(this);
+    m_splitter->addWidget(m_input);
+    m_splitter->setCollapsible(m_splitter->indexOf(m_input), false);
+
+    m_statusBar = new QStatusBar(this);
+    m_statusBar->showMessage(tr("Ready"), 5000);
+    layout->addWidget(m_statusBar);
+
+    // Keyboard input on the display widget should be redirected to the input widget
+    m_display->installEventFilter(m_input);
+
+    // Focus should be on the input
+    m_input->setFocus();
+
+    // Connect the signals/slots
+    m_telnet = new cTelnet(this);
+    connect(m_telnet, SIGNAL(disconnected()), this, SLOT(onDisconnected()) );
+    connect(m_telnet, SIGNAL(connected()), this, SLOT(onConnected()) );
+    connect(m_telnet, SIGNAL(socketError(const QString &)), this,
+            SLOT(onSocketError(const QString &)) );
+
+    // Input
+    connect(m_input, SIGNAL(sendUserInput(const QByteArray &)),
+            this, SLOT(sendToMud(const QByteArray &)));
+    connect(m_telnet, SIGNAL(echoModeChanged(bool)),
+            m_input, SLOT(toggleEchoMode(bool)));
+
+    // Display
+    connect(m_input, SIGNAL(displayMessage(const QString &)), m_display,
+            SLOT(displayText(const QString &)));
+    connect(this, SIGNAL(sendToUser(const QString &)), m_display,
+            SLOT(displayText(const QString &)));
+    connect(m_telnet, SIGNAL(sendToUser(const QString &)), m_display,
+            SLOT(displayText(const QString &)));
+    connect(m_display, SIGNAL(dimensionsChanged(int, int)), m_telnet, SLOT(windowSizeChanged(int,
+                                                                                             int)));
+    readSettings();
+
+
+    // TODO: Plug memory leaks
+    QMenuBar *menuBar = new QMenuBar(this);
+    layout->setMenuBar(menuBar);
+
+    QMenu *fileMenu = menuBar->addMenu("&File");
+
+    QAction *connectAct = new QAction(QIcon(":/icons/online.png"), tr("Co&nnect"), 0);
+    connectAct->setShortcut(tr("Ctrl+N"));
+    connect(connectAct, SIGNAL(triggered()), this, SLOT(connectToHost()) );
+    connect(connectAct, &QAction::hovered, [this]() {
+        m_statusBar->showMessage(tr("Connect to the remote host"), 1000);
+    });
+
+    QAction *disconnectAct = new QAction(QIcon(":/icons/offline.png"), tr("&Disconnect"), 0);
+    disconnectAct->setShortcut(tr("Ctrl+D"));
+    connect(disconnectAct, SIGNAL(triggered()), this, SLOT(disconnectFromHost()) );
+    connect(disconnectAct, &QAction::hovered, [this]() {
+        m_statusBar->showMessage(tr("Disconnect from the remote host"), 1000);
+    });
+
+    QAction *closeAct = new QAction(QIcon(":/icons/exit.png"), tr("E&xit"), 0);
+    closeAct->setShortcut(tr("Ctrl+Q"));
+    connect(closeAct, SIGNAL(triggered()), this, SLOT(close()));
+    connect(closeAct, &QAction::hovered, [this]() {
+        m_statusBar->showMessage(tr("Quit the mud client"), 1000);
+    });
+
+    fileMenu->addAction(connectAct);
+    fileMenu->addAction(disconnectAct);
+    fileMenu->addAction(closeAct);
+
+    QMenu *editMenu = menuBar->addMenu("&Edit");
+    QAction *cutAct = new QAction(QIcon(":/icons/cut.png"), tr("Cu&t"), this);
+    cutAct->setShortcut(tr("Ctrl+X"));
+    cutAct->setStatusTip(tr("Cut the current selection's contents to the clipboard"));
+    editMenu->addAction(cutAct);
+    connect(cutAct, SIGNAL(triggered()), m_input, SLOT(cut()));
+
+    QAction *copyAct = new QAction(QIcon(":/icons/copy.png"), tr("&Copy"), this);
+    copyAct->setShortcut(tr("Ctrl+C"));
+    copyAct->setStatusTip(tr("Copy the current selection's contents to the clipboard"));
+    editMenu->addAction(copyAct);
+    connect(copyAct, SIGNAL(triggered()), m_input, SLOT(copy()));
+
+    QAction *pasteAct = new QAction(QIcon(":/icons/paste.png"), tr("&Paste"), this);
+    pasteAct->setShortcut(tr("Ctrl+V"));
+    pasteAct->setStatusTip(tr("Paste the clipboard's contents into the current selection"));
+    editMenu->addAction(pasteAct);
+    connect(pasteAct, SIGNAL(triggered()), m_input, SLOT(paste()));
+}
+
+ClientWidget::~ClientWidget()
+{
+    writeSettings();
+    delete m_display;
+    delete m_input;
+    delete m_splitter;
+    delete m_statusBar;
+}
+
+
+void ClientWidget::readSettings()
+{
+    QSettings settings("Caligor soft", "MMapper2");
+    settings.beginGroup("Integrated Mud Client");
+    QPoint pos = settings.value("pos", QPoint(200, 200)).toPoint();
+    settings.endGroup();
+    move(pos);
+}
+
+void ClientWidget::writeSettings()
+{
+    QSettings settings("Caligor soft", "MMapper2");
+    settings.beginGroup("Integrated Mud Client");
+    settings.setValue("pos", pos());
+    settings.endGroup();
+}
+
+void ClientWidget::closeEvent(QCloseEvent *event)
+{
+    disconnectFromHost();
+    emit sendToUser("\n\n\n");
+    event->accept();
+}
+
+void ClientWidget::connectToHost()
+{
+    if (m_connected) {
+        emit sendToUser("Disconnect first.\r\n");
+    } else {
+        emit sendToUser("\r\nTrying...");
+        m_telnet->connectToHost();
+    }
+}
+
+void ClientWidget::disconnectFromHost()
+{
+    if (m_connected) {
+        emit sendToUser("\r\nTrying...");
+    }
+    m_telnet->disconnectFromHost();
+}
+
+void ClientWidget::onDisconnected()
+{
+    emit sendToUser(" disconnected!\r\n");
+    m_connected = false;
+}
+
+void ClientWidget::onConnected()
+{
+    emit sendToUser(" connected!\r\n");
+    m_connected = true;
+}
+
+void ClientWidget::onSocketError(const QString &errorStr)
+{
+    emit sendToUser(QString(" error! %1\r\n").arg(errorStr));
+    m_connected = false;
+}
+
+void ClientWidget::sendToMud(const QByteArray &ba)
+{
+    if (m_connected) {
+        m_telnet->sendToMud(ba);
+    }
+}
+
+QSize ClientWidget::minimumSizeHint() const
+{
+    return QSize(500, 480);
+}
+
+QSize ClientWidget::sizeHint() const
+{
+    return QSize(500, 480);
+}

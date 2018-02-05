@@ -1,8 +1,6 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
-**            Marek Krejza <krejza@gmail.com> (Caligor),
-**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
+** Authors:   Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
@@ -24,33 +22,36 @@
 **
 ************************************************************************/
 
-#ifndef CONFIGDIALOG_H
-#define CONFIGDIALOG_H
+#include "welcomewidget.h"
+#include "ui_welcomewidget.h"
+#include "configuration/configuration.h"
 
-#include <QDialog>
+#include <QPixmap>
 
-class QListWidget;
-class QListWidgetItem;
-class QStackedWidget;
-class Mmapper2Group;
-
-class ConfigDialog : public QDialog
+WelcomeWidget::WelcomeWidget(QWidget *parent) :
+    QWidget(parent),
+    ui(new Ui::WelcomeWidget)
 {
-    Q_OBJECT
+    ui->setupUi(this);
 
-public:
-    ConfigDialog(Mmapper2Group *, QWidget *parent = 0);
+    // Picture
+    QPixmap mellon(":/pixmaps/mellon.png");
+    ui->pixmapLabel->setFixedSize(mellon.size());
+    ui->pixmapLabel->setPixmap(mellon);
 
-public slots:
-    void changePage(QListWidgetItem *current, QListWidgetItem *previous);
+    // Port
+    ui->port->setText(QString::number(Config().m_localPort));
 
-private:
-    void createIcons();
+    ui->playButton->setFocus();
+    connect(ui->playButton, SIGNAL(clicked(bool)), this, SLOT(onPlayButtonClicked(bool)));
+}
 
-    QListWidget *contentsWidget;
-    QStackedWidget *pagesWidget;
+WelcomeWidget::~WelcomeWidget()
+{
+    delete ui;
+}
 
-    Mmapper2Group *m_groupManager;
-};
-
-#endif
+void WelcomeWidget::onPlayButtonClicked(bool)
+{
+    emit playMumeClicked();
+}

@@ -50,6 +50,9 @@ class FindRoomsDlg;
 class Mmapper2Group;
 class GroupWidget;
 class MumeClock;
+class ConnectionListener;
+class ClientWidget;
+class WelcomeWidget;
 
 class DockWidget : public QDockWidget
 {
@@ -131,6 +134,7 @@ public slots:
     void onMergeDownRoomSelection();
     void onConnectToNeighboursRoomSelection();
     void onFindRoom();
+    void onClient();
     void onPreferences();
     void onPlayMode();
     void onMapMode();
@@ -162,7 +166,9 @@ private:
     QTextBrowser   *logWindow;
     DockWidget *m_dockDialogLog;
     DockWidget *m_dockDialogGroup;
+    DockWidget *m_dockWelcome;
 
+    ConnectionListener *m_listener;
     Mmapper2PathMachine *m_pathMachine;
     MapData *m_mapData;
     //RoomPropertySetter * m_propertySetter;
@@ -174,6 +180,9 @@ private:
     FindRoomsDlg *m_findRoomsDlg;
     Mmapper2Group *m_groupManager;
     GroupWidget *m_groupWidget;
+
+    ClientWidget *m_client;
+    WelcomeWidget *m_welcomeWidget;
 
     const RoomSelection *m_roomSelection;
     ConnectionSelection *m_connectionSelection;
@@ -272,6 +281,7 @@ private:
     QAction *connectToNeighboursRoomSelectionAct;
 
     QAction *findRoomsAct;
+    QAction *clientAct;
 
     QAction *forceRoomAct;
     QAction *releaseAllPathsAct;

@@ -67,6 +67,7 @@ void ConnectionListener::incomingConnection(qintptr socketDescriptor)
 
 void ConnectionListener::doNotAcceptNewConnections()
 {
+    emit clientSuccessfullyConnected();
     m_accept = false;
 }
 

@@ -31,6 +31,7 @@
 #include <QPoint>
 #include <QSize>
 #include <QColor>
+#include <QFont>
 
 #include "defs.h"
 
@@ -131,6 +132,14 @@ public:
 
     int m_mumeStartEpoch;
     bool m_displayMumeClock;
+
+    QFont m_clientFont;
+    QColor m_clientForegroundColor;
+    QColor m_clientBackgroundColor;
+    int m_clientColumns;
+    int m_clientRows;
+    int m_clientLinesOfScrollback;
+    bool m_clientClearInputOnEnter;
 
 private:
     Configuration();

@@ -29,19 +29,20 @@
 #include "parserpage.h"
 #include "pathmachinepage.h"
 #include "groupmanagerpage.h"
+#include "clientpage.h"
 
 #include <QListWidget>
 #include <QStackedWidget>
 
-ConfigDialog::ConfigDialog(Mmapper2Group *gm)
+ConfigDialog::ConfigDialog(Mmapper2Group *gm, QWidget *parent) : QDialog(parent)
 {
     m_groupManager = gm;
     contentsWidget = new QListWidget;
     contentsWidget->setViewMode(QListView::IconMode);
     contentsWidget->setIconSize(QSize(70, 70));
     contentsWidget->setMovement(QListView::Static);
-    contentsWidget->setMaximumWidth(90);
-    contentsWidget->setMinimumWidth(90);
+    contentsWidget->setMaximumWidth(100);
+    contentsWidget->setMinimumWidth(100);
     contentsWidget->setSpacing(9);
 
     pagesWidget = new QStackedWidget;
@@ -89,6 +90,12 @@ void ConfigDialog::createIcons()
     updateButton->setTextAlignment(Qt::AlignHCenter);
     updateButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
+    QListWidgetItem *clientButton = new QListWidgetItem(contentsWidget);
+    clientButton->setIcon(QIcon(":/icons/terminal.png"));
+    clientButton->setText(tr("Integrated\nMud Client"));
+    clientButton->setTextAlignment(Qt::AlignHCenter);
+    clientButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+
     QListWidgetItem *groupButton = new QListWidgetItem(contentsWidget);
     groupButton->setIcon(QIcon(":/icons/groupcfg.png"));
     groupButton->setText(tr("Group\nManager"));
@@ -113,6 +120,7 @@ void ConfigDialog::changePage(QListWidgetItem *current, QListWidgetItem *previou
 
     if (pagesWidget->count() <= 1) {
         pagesWidget->addWidget(new ParserPage(this));
+        pagesWidget->addWidget(new ClientPage(this));
         pagesWidget->addWidget(new GroupManagerPage(m_groupManager, this));
         pagesWidget->addWidget(new PathmachinePage(this));
     }

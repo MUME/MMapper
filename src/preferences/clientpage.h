@@ -1,8 +1,6 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
-**            Marek Krejza <krejza@gmail.com> (Caligor),
-**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
+** Authors:   Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
@@ -24,33 +22,37 @@
 **
 ************************************************************************/
 
-#ifndef CONFIGDIALOG_H
-#define CONFIGDIALOG_H
+#ifndef CLIENTPAGE_H
+#define CLIENTPAGE_H
 
-#include <QDialog>
+#include <QWidget>
 
-class QListWidget;
-class QListWidgetItem;
-class QStackedWidget;
-class Mmapper2Group;
+namespace Ui {
+class ClientPage;
+}
 
-class ConfigDialog : public QDialog
+class ClientPage : public QWidget
 {
     Q_OBJECT
 
 public:
-    ConfigDialog(Mmapper2Group *, QWidget *parent = 0);
+    explicit ClientPage(QWidget *parent = 0);
+    ~ClientPage();
+
+    void updateFontAndColors();
 
 public slots:
-    void changePage(QListWidgetItem *current, QListWidgetItem *previous);
+    void onChangeFont();
+    void onChangeBackgroundColor();
+    void onChangeForegroundColor();
+    void onChangeColumns(int);
+    void onChangeRows(int);
+    void onChangeLinesOfScrollback(int);
+
+signals:
 
 private:
-    void createIcons();
-
-    QListWidget *contentsWidget;
-    QStackedWidget *pagesWidget;
-
-    Mmapper2Group *m_groupManager;
+    Ui::ClientPage *ui;
 };
 
-#endif
+#endif // CLIENTPAGE_H

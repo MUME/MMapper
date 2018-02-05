@@ -3,6 +3,7 @@
     <file>COPYING</file>
     <file>icons/m.png</file>
     <file>icons/online.png</file>
+    <file>icons/offline.png</file>
     <file>icons/play.png</file>
     <file>icons/map.png</file>
     <file>icons/preferences.png</file>
@@ -45,7 +46,10 @@
     <file>icons/groupcfg.png</file>
     <file>icons/groupmanager.png</file>
     <file>icons/reload.png</file>
+    <file>icons/terminal.png</file>
+    <file>icons/exit.png</file>
     <file>pixmaps/splash20.png</file>
+    <file>pixmaps/mellon.png</file>
     <file>pixmaps/terrain0.png</file>
     <file>pixmaps/terrain1.png</file>
     <file>pixmaps/terrain2.png</file>

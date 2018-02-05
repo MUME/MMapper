@@ -193,7 +193,6 @@ bool Proxy::init()
     m_userSocket->flush();
 
     m_mudSocket = new QTcpSocket(this);
-    m_mudSocket->setSocketOption(QAbstractSocket::KeepAliveOption, true);
     connect(m_mudSocket, SIGNAL(disconnected()), this, SLOT(mudTerminatedConnection()) );
     connect(m_mudSocket, SIGNAL(disconnected()), m_parserXml, SLOT(reset()) );
     connect(m_mudSocket, SIGNAL(readyRead()), this, SLOT(processMudStream()) );

@@ -142,6 +142,18 @@ void Configuration::read()
     m_mumeStartEpoch = conf.value("Mume start epoch", 1517443173).toInt();
     m_displayMumeClock = conf.value("Display clock", true).toBool();
     conf.endGroup();
+
+    conf.beginGroup("Integrated Mud Client");
+    QFont defaultClientFont("Monospace", 12);
+    defaultClientFont.setStyleHint(QFont::Monospace, QFont::PreferAntialias);
+    m_clientFont = (QFont) conf.value("Font", defaultClientFont.toString()).toString();
+    m_clientBackgroundColor = conf.value("Background color", QColor(Qt::black).name()).toString();
+    m_clientForegroundColor = conf.value("Foreground color", QColor(Qt::lightGray).name()).toString();
+    m_clientColumns = conf.value("Columns", 80).toInt();
+    m_clientRows = conf.value("Rows", 24).toInt();
+    m_clientLinesOfScrollback = conf.value("Lines of scrollback", 10000).toInt();
+    m_clientClearInputOnEnter = conf.value("Clear input on enter", true).toBool();
+    conf.endGroup();
 }
 
 void Configuration::write() const
@@ -230,6 +242,16 @@ void Configuration::write() const
     conf.beginGroup("Mume Clock");
     conf.setValue("Mume start epoch", m_mumeStartEpoch);
     conf.setValue("Display clock", m_displayMumeClock);
+    conf.endGroup();
+
+    conf.beginGroup("Integrated Mud Client");
+    conf.setValue("Font", m_clientFont.toString());
+    conf.setValue("Background color", m_clientBackgroundColor.name());
+    conf.setValue("Foreground color", m_clientForegroundColor.name());
+    conf.setValue("Columns", m_clientColumns);
+    conf.setValue("Rows", m_clientRows);
+    conf.setValue("Lines of scrollback", m_clientLinesOfScrollback);
+    conf.setValue("Clear input on enter", m_clientClearInputOnEnter);
     conf.endGroup();
 }
 
