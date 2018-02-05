@@ -70,8 +70,9 @@ GeneralPage::GeneralPage(QWidget *parent)
     remotePort->setValue( Config().m_remotePort );
     localPort->setValue( Config().m_localPort );
 
-    colorLabel->setPalette(QPalette(Config().m_backgroundColor));
-    colorLabel->setAutoFillBackground(true);
+    QPixmap bgPix(16, 16);
+    bgPix.fill(Config().m_backgroundColor);
+    changeColor->setIcon(QIcon(bgPix));
     int index = antialiasingSamplesComboBox->findText(QString::number(Config().m_antialiasingSamples));
     if (index < 0) index = 0;
     antialiasingSamplesComboBox->setCurrentIndex(index);
@@ -97,8 +98,9 @@ void GeneralPage::changeColorClicked()
 {
     const QColor newColor = QColorDialog::getColor(Config().m_backgroundColor, this);
     if (newColor.isValid() && newColor != Config().m_backgroundColor) {
-        colorLabel->setPalette(QPalette(newColor));
-        colorLabel->setAutoFillBackground(true);
+        QPixmap bgPix(16, 16);
+        bgPix.fill(newColor);
+        changeColor->setIcon(QIcon(bgPix));
         Config().m_backgroundColor = newColor;
     }
 }

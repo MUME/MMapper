@@ -56,8 +56,9 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
     connect( this, SIGNAL(updatedSelf()), m_groupManager, SLOT(updateSelf()));
 
     charName->setText( Config().m_groupManagerCharName );
-    colorLabel->setPalette(QPalette(Config().m_groupManagerColor));
-    colorLabel->setAutoFillBackground(true);
+    QPixmap charColorPixmap(16, 16);
+    charColorPixmap.fill(Config().m_groupManagerColor);
+    changeColor->setIcon(QIcon(charColorPixmap));
     localPort->setValue( Config().m_groupManagerLocalPort );
     remoteHost->setText( Config().m_groupManagerHost );
     remotePort->setValue( Config().m_groupManagerRemotePort );
@@ -79,8 +80,9 @@ void GroupManagerPage::changeColorClicked()
 {
     const QColor newColor = QColorDialog::getColor(Config().m_groupManagerColor, this);
     if (newColor.isValid() && newColor != Config().m_groupManagerColor) {
-        colorLabel->setPalette(QPalette(newColor));
-        colorLabel->setAutoFillBackground(true);
+        QPixmap charColorPixmap(16, 16);
+        charColorPixmap.fill(newColor);
+        changeColor->setIcon(QIcon(charColorPixmap));
         Config().m_groupManagerColor = newColor;
 
         emit updatedSelf();
