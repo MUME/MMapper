@@ -139,7 +139,7 @@ void Configuration::read()
     conf.endGroup();
 
     conf.beginGroup("Mume Clock");
-    m_mumeStartEpoch = conf.value("Mume start epoch", 1420070400).toInt();
+    m_mumeStartEpoch = conf.value("Mume start epoch", 1517443173).toInt();
     m_displayMumeClock = conf.value("Display clock", true).toBool();
     conf.endGroup();
 }

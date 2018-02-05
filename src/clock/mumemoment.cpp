@@ -97,8 +97,8 @@ MumeSeason MumeMoment::toSeason()
 
 MumeTime MumeMoment::toTimeOfDay()
 {
-    int dawn = MumeClock::m_dawnHour[m_month];
-    int dusk = MumeClock::m_duskHour[m_month];
+    int dawn = MumeClock::s_dawnHour[m_month];
+    int dusk = MumeClock::s_duskHour[m_month];
     if (m_hour == dawn)
         return TIME_DAWN;
     else if (m_hour == dusk)

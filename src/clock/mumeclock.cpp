@@ -29,16 +29,16 @@
 #include "mumeclock.h"
 #include "mumemoment.h"
 
-#define DEFAULT_MUME_START_EPOCH 1420070400
+#define DEFAULT_MUME_START_EPOCH 1517443173
 #define DEFAULT_TOLERANCE_LIMIT 10
 
-const QList<int> MumeClock::m_dawnHour = QList<int>() << 8 << 9 << 8 << 7 << 7 << 6 << 5 << 4 << 5
+const QList<int> MumeClock::s_dawnHour = QList<int>() << 8 << 9 << 8 << 7 << 7 << 6 << 5 << 4 << 5
                                          << 6 << 7 << 7;
-const QList<int> MumeClock::m_duskHour = QList<int>() << 6 + 12 << 5 + 12 << 6 + 12 << 7 + 12 << 8 +
+const QList<int> MumeClock::s_duskHour = QList<int>() << 6 + 12 << 5 + 12 << 6 + 12 << 7 + 12 << 8 +
                                          12 << 8 + 12 << 9 + 12 << 10 + 12 << 9 + 12 << 8 + 12 << 8 + 12 << 7 + 12;
-const QMetaEnum MumeClock::m_westronMonthNames =
+const QMetaEnum MumeClock::s_westronMonthNames =
     QMetaEnum::fromType<MumeClock::WestronMonthNames>();
-const QMetaEnum MumeClock::m_sindarinMonthNames =
+const QMetaEnum MumeClock::s_sindarinMonthNames =
     QMetaEnum::fromType<MumeClock::SindarinMonthNames>();
 
 const QHash<QString, MumeTime> MumeClock::m_stringTimeHash{
@@ -125,9 +125,9 @@ void MumeClock::parseMumeTime(const QString &mumeTime, int secsSinceEpoch)
                 hour = 0;
             }
             day = rx.cap(3).toInt() - 1;
-            month = m_westronMonthNames.keyToValue(rx.cap(4).toLatin1().data());
+            month = s_westronMonthNames.keyToValue(rx.cap(4).toLatin1().data());
             if (month == UnknownWestronMonth) {
-                month = m_sindarinMonthNames.keyToValue(rx.cap(4).toLatin1().data());
+                month = s_sindarinMonthNames.keyToValue(rx.cap(4).toLatin1().data());
             }
             year = rx.cap(5).toInt();
             if (m_precision <= MUMECLOCK_DAY)
@@ -138,9 +138,9 @@ void MumeClock::parseMumeTime(const QString &mumeTime, int secsSinceEpoch)
         QRegExp rx("\\w+, the (\\d+).{2} of (\\w+), Year (\\d+) of the Third Age.");
         if (rx.indexIn(mumeTime) != -1) {
             day = rx.cap(1).toInt() - 1;
-            month = m_westronMonthNames.keyToValue(rx.cap(2).toLatin1().data());
+            month = s_westronMonthNames.keyToValue(rx.cap(2).toLatin1().data());
             if (month == UnknownWestronMonth) {
-                month = m_sindarinMonthNames.keyToValue(rx.cap(2).toLatin1().data());
+                month = s_sindarinMonthNames.keyToValue(rx.cap(2).toLatin1().data());
             }
             year = rx.cap(3).toInt();
             if (m_precision <= MUMECLOCK_UNSET)
@@ -173,8 +173,8 @@ void MumeClock::parseWeather(const QString &str, int secsSinceEpoch)
 
     MumeMoment moment(secsSinceEpoch - m_mumeStartEpoch);
     // Predict current hour given the month
-    int dawn = m_dawnHour[moment.m_month];
-    int dusk = m_duskHour[moment.m_month];
+    int dawn = s_dawnHour[moment.m_month];
+    int dusk = s_duskHour[moment.m_month];
     switch (time) {
     case TIME_DAWN:
         moment.m_hour = dawn;
@@ -307,7 +307,7 @@ const QString MumeClock::toMumeTime(const MumeMoment &moment)
         daySuffix = "th";
 
     // TODO: Figure out how to reverse engineer the day of the week
-    QString monthName = MumeClock::m_westronMonthNames.valueToKey((WestronMonthNames)moment.m_month);
+    QString monthName = MumeClock::s_westronMonthNames.valueToKey((WestronMonthNames)moment.m_month);
     return QString("%1%2%3 of %4, Year %5 of the Third Age.")
            .arg(time)
            .arg(day)
@@ -319,8 +319,8 @@ const QString MumeClock::toMumeTime(const MumeMoment &moment)
 
 const QString MumeClock::toCountdown(const MumeMoment &moment)
 {
-    int dawn = m_dawnHour[moment.m_month];
-    int dusk = m_duskHour[moment.m_month];
+    int dawn = s_dawnHour[moment.m_month];
+    int dusk = s_duskHour[moment.m_month];
 
     // Add seconds until night or day
     int secondsToCountdown = (m_precision == MUMECLOCK_MINUTE) ? 60 - moment.m_minute : 0;

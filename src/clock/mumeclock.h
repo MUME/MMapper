@@ -61,10 +61,10 @@ public:
     enum SindarinMonthNames { UnknownSindarinMonth = -1, Narwain, Ninui, Gwaeron, Gwirith, Lothron, Norui, Cerveth, Urui, Ivanneth, Narbeleth, Hithui, Girithron };
     Q_ENUM(SindarinMonthNames)
 
-    static const QList<int> m_dawnHour;
-    static const QList<int> m_duskHour;
-    static const QMetaEnum m_westronMonthNames;
-    static const QMetaEnum m_sindarinMonthNames;
+    static const QList<int> s_dawnHour;
+    static const QList<int> s_duskHour;
+    static const QMetaEnum s_westronMonthNames;
+    static const QMetaEnum s_sindarinMonthNames;
     static const QHash<QString, MumeTime> m_stringTimeHash;
 
 signals:
