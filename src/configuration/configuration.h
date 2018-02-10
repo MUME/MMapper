@@ -81,6 +81,7 @@ public:
     QColor m_backgroundColor;
     int    m_antialiasingSamples;
     bool   m_trilinearFiltering;
+    bool   m_softwareOpenGL;
 
     bool m_autoLog;         // enables log to file
     QString m_logFileName;  // file name to log

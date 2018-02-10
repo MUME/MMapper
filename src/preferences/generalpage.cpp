@@ -44,6 +44,8 @@ GeneralPage::GeneralPage(QWidget *parent)
              SLOT( antialiasingSamplesTextChanged(const QString &) )  );
     connect( trilinearFilteringCheckBox, SIGNAL(stateChanged(int)),
              SLOT(trilinearFilteringStateChanged(int)));
+    connect( softwareOpenGLCheckBox, SIGNAL(stateChanged(int)),
+             SLOT(softwareOpenGLStateChanged(int)));
 
     connect ( emulatedExitsCheckBox, SIGNAL(stateChanged(int)), SLOT(emulatedExitsStateChanged(int)));
     connect ( showHiddenExitFlagsCheckBox, SIGNAL(stateChanged(int)),
@@ -77,6 +79,7 @@ GeneralPage::GeneralPage(QWidget *parent)
     if (index < 0) index = 0;
     antialiasingSamplesComboBox->setCurrentIndex(index);
     trilinearFilteringCheckBox->setChecked(Config().m_trilinearFiltering);
+    softwareOpenGLCheckBox->setChecked(Config().m_softwareOpenGL);
 
     emulatedExitsCheckBox->setChecked( Config().m_emulatedExits );
     showHiddenExitFlagsCheckBox->setChecked( Config().m_showHiddenExitFlags );
@@ -113,6 +116,11 @@ void GeneralPage::antialiasingSamplesTextChanged(const QString &)
 void GeneralPage::trilinearFilteringStateChanged(int)
 {
     Config().m_trilinearFiltering = trilinearFilteringCheckBox->isChecked();
+}
+
+void GeneralPage::softwareOpenGLStateChanged(int)
+{
+    Config().m_softwareOpenGL = softwareOpenGLCheckBox->isChecked();
 }
 
 void GeneralPage::selectWorldFileButtonClicked()

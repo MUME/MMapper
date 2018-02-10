@@ -67,6 +67,7 @@ void Configuration::read()
     m_backgroundColor = QColor(conf.value("Background color", QColor(110, 110, 110).name()).toString());
     m_antialiasingSamples = conf.value("Number of anti-aliasing samples", 0).toInt();
     m_trilinearFiltering = conf.value("Use trilinear filtering", false).toBool();
+    m_softwareOpenGL = conf.value("Use software OpenGL", false).toBool();
     conf.endGroup();
 
     conf.beginGroup("Auto load world");
@@ -208,6 +209,7 @@ void Configuration::write() const
     conf.setValue("Background color", m_backgroundColor.name());
     conf.setValue("Number of anti-aliasing samples", m_antialiasingSamples);
     conf.setValue("Use trilinear filtering", m_trilinearFiltering);
+    conf.setValue("Use software OpenGL", m_softwareOpenGL);
     conf.endGroup();
 
     conf.beginGroup("Auto load world");

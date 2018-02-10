@@ -42,6 +42,10 @@ int main(int argc, char **argv)
 #endif
 
     Config().read();
+    if (Config().m_softwareOpenGL) {
+        app.setAttribute(Qt::AA_UseSoftwareOpenGL);
+    }
+
 #ifdef WITH_SPLASH
     QPixmap pixmap(":/pixmaps/splash20.png");
     QSplashScreen *splash = new QSplashScreen(pixmap);

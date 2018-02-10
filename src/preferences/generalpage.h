@@ -43,6 +43,7 @@ public slots:
     void changeColorClicked();
     void antialiasingSamplesTextChanged(const QString &);
     void trilinearFilteringStateChanged(int);
+    void softwareOpenGLStateChanged(int);
 
     void emulatedExitsStateChanged(int);
     void showHiddenExitFlagsStateChanged(int);
