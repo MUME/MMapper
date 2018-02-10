@@ -194,7 +194,7 @@ void ClientWidget::connectToHost()
     if (m_connected) {
         emit sendToUser("Disconnect first.\r\n");
     } else {
-        emit sendToUser("\r\nTrying...");
+        emit sendToUser("\r\nTrying... ");
         m_telnet->connectToHost();
     }
 }
@@ -202,26 +202,26 @@ void ClientWidget::connectToHost()
 void ClientWidget::disconnectFromHost()
 {
     if (m_connected) {
-        emit sendToUser("\r\nTrying...");
+        emit sendToUser("\r\nTrying... ");
     }
     m_telnet->disconnectFromHost();
 }
 
 void ClientWidget::onDisconnected()
 {
-    emit sendToUser(" disconnected!\r\n");
+    emit sendToUser("disconnected!\r\n");
     m_connected = false;
 }
 
 void ClientWidget::onConnected()
 {
-    emit sendToUser(" connected!\r\n");
+    emit sendToUser("connected!\r\n");
     m_connected = true;
 }
 
 void ClientWidget::onSocketError(const QString &errorStr)
 {
-    emit sendToUser(QString(" error! %1\r\n").arg(errorStr));
+    emit sendToUser(QString("error! %1\r\n").arg(errorStr));
     m_connected = false;
 }
 

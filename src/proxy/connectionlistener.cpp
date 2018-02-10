@@ -57,7 +57,9 @@ void ConnectionListener::incomingConnection(qintptr socketDescriptor)
         emit log ("Listener", "New connection: rejected.");
         QTcpSocket tcpSocket;
         if (tcpSocket.setSocketDescriptor(socketDescriptor)) {
-            tcpSocket.write("You can't connect more than once!!!\r\n", 37);
+            QByteArray ba("\033[1;37;41mYou can't connect to MMapper more than once!\r\n"
+                          "Please close the existing connection.\033[0m\r\n");
+            tcpSocket.write(ba);
             tcpSocket.flush();
             tcpSocket.disconnectFromHost();
             tcpSocket.waitForDisconnected();

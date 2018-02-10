@@ -111,8 +111,12 @@ void cTelnet::onDisconnected()
 }
 
 
-void cTelnet::onError(QAbstractSocket::SocketError)
+void cTelnet::onError(QAbstractSocket::SocketError error)
 {
+    if (error == QAbstractSocket::RemoteHostClosedError) {
+        // The connection closing isn't an error
+        return;
+    }
     QString err = socket.errorString();
     socket.abort();
     emit socketError(err);
