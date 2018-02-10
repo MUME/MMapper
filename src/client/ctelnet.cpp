@@ -75,7 +75,7 @@ void cTelnet::connectToHost()
     if (socket.state() != QAbstractSocket::UnconnectedState) {
         socket.abort();
     }
-    socket.connectToHost(QHostAddress::Any, Config().m_localPort);
+    socket.connectToHost(QHostAddress::LocalHost, Config().m_localPort);
     socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
     socket.waitForConnected(3000);
 }

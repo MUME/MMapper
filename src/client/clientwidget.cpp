@@ -43,6 +43,7 @@ ClientWidget::ClientWidget(QWidget *parent) : QDialog(parent),
 {
     setWindowTitle("MMapper Client");
     setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
+    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
     QVBoxLayout *layout = new QVBoxLayout(this);
     layout->setAlignment(Qt::AlignTop);
@@ -84,6 +85,8 @@ ClientWidget::ClientWidget(QWidget *parent) : QDialog(parent),
             this, SLOT(sendToMud(const QByteArray &)));
     connect(m_telnet, SIGNAL(echoModeChanged(bool)),
             m_input, SLOT(toggleEchoMode(bool)));
+    connect(m_input, SIGNAL(showMessage(const QString &, int)), m_statusBar,
+            SLOT(showMessage(const QString &, int)));
 
     // Display
     connect(m_input, SIGNAL(displayMessage(const QString &)), m_display,
@@ -94,10 +97,11 @@ ClientWidget::ClientWidget(QWidget *parent) : QDialog(parent),
             SLOT(displayText(const QString &)));
     connect(m_display, SIGNAL(dimensionsChanged(int, int)), m_telnet, SLOT(windowSizeChanged(int,
                                                                                              int)));
+    connect(m_display, SIGNAL(showMessage(const QString &, int)), m_statusBar,
+            SLOT(showMessage(const QString &, int)));
     readSettings();
 
 
-    // TODO: Plug memory leaks
     QMenuBar *menuBar = new QMenuBar(this);
     layout->setMenuBar(menuBar);
 
@@ -163,8 +167,10 @@ void ClientWidget::readSettings()
     QSettings settings("Caligor soft", "MMapper2");
     settings.beginGroup("Integrated Mud Client");
     QPoint pos = settings.value("pos", QPoint(200, 200)).toPoint();
+    QSize size = settings.value("size", QSize(400, 400)).toSize();
     settings.endGroup();
     move(pos);
+    resize(size);
 }
 
 void ClientWidget::writeSettings()
@@ -172,6 +178,7 @@ void ClientWidget::writeSettings()
     QSettings settings("Caligor soft", "MMapper2");
     settings.beginGroup("Integrated Mud Client");
     settings.setValue("pos", pos());
+    settings.setValue("size", size());
     settings.endGroup();
 }
 

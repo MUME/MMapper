@@ -32,6 +32,7 @@
 class QListWidget;
 class QListWidgetItem;
 class QStackedWidget;
+class QScrollArea;
 class Mmapper2Group;
 
 class ConfigDialog : public QDialog
@@ -40,6 +41,7 @@ class ConfigDialog : public QDialog
 
 public:
     ConfigDialog(Mmapper2Group *, QWidget *parent = 0);
+    QSize sizeHint() const;
 
 public slots:
     void changePage(QListWidgetItem *current, QListWidgetItem *previous);
@@ -49,6 +51,7 @@ private:
 
     QListWidget *contentsWidget;
     QStackedWidget *pagesWidget;
+    QScrollArea *pagesScrollArea;
 
     Mmapper2Group *m_groupManager;
 };

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>299</width>
-    <height>442</height>
+    <height>471</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -37,20 +37,17 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="0" colspan="6">
-       <widget class="QLineEdit" name="exampleLineEdit">
-        <property name="focusPolicy">
-         <enum>Qt::NoFocus</enum>
-        </property>
+      <item row="3" column="1" colspan="5">
+       <widget class="QPushButton" name="bgColorPushBotton">
         <property name="text">
-         <string>Arglebargle, glop-glyf!?!</string>
+         <string>Select</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="1" colspan="5">
-       <widget class="QPushButton" name="fontPushButton">
+      <item row="2" column="1" colspan="5">
+       <widget class="QPushButton" name="fgColorPushButton">
         <property name="text">
-         <string/>
+         <string>Select</string>
         </property>
        </widget>
       </item>
@@ -64,17 +61,33 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="1" colspan="5">
-       <widget class="QPushButton" name="fgColorPushButton">
+      <item row="2" column="6">
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="1" column="1" colspan="6">
+       <widget class="QPushButton" name="fontPushButton">
         <property name="text">
-         <string>Change color</string>
+         <string/>
         </property>
        </widget>
       </item>
-      <item row="3" column="1" colspan="5">
-       <widget class="QPushButton" name="bgColorPushBotton">
+      <item row="0" column="0" colspan="7">
+       <widget class="QLineEdit" name="exampleLineEdit">
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
         <property name="text">
-         <string>Change color</string>
+         <string>Arglebargle, glop-glyf!?!</string>
         </property>
        </widget>
       </item>
@@ -173,7 +186,7 @@
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QSpinBox" name="spinBox">
+       <widget class="QSpinBox" name="inputHistorySpinBox">
         <property name="showGroupSeparator" stdset="0">
          <bool>true</bool>
         </property>
@@ -181,7 +194,7 @@
          <number>0</number>
         </property>
         <property name="maximum">
-         <number>100000</number>
+         <number>1000</number>
         </property>
         <property name="value">
          <number>100</number>
@@ -189,7 +202,7 @@
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QSpinBox" name="spinBox_2">
+       <widget class="QSpinBox" name="tabDictionarySpinBox">
         <property name="showGroupSeparator" stdset="0">
          <bool>true</bool>
         </property>
@@ -197,7 +210,7 @@
          <number>0</number>
         </property>
         <property name="maximum">
-         <number>100000</number>
+         <number>1000</number>
         </property>
         <property name="value">
          <number>100</number>
@@ -217,7 +230,7 @@
       <item row="1" column="0">
        <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>Tab completion word count:</string>
+         <string>Tab word completion dictionary size:</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>

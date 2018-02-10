@@ -48,6 +48,8 @@ public slots:
     void onChangeColumns(int);
     void onChangeRows(int);
     void onChangeLinesOfScrollback(int);
+    void onChangeLinesOfInputHistory(int);
+    void onChangeTabCompletionDictionarySize(int);
 
 signals:
 

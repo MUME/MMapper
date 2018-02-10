@@ -312,7 +312,7 @@ void MainWindow::currentMapWindowChanged()
     connect(m_mumeClock, SIGNAL(log( const QString &, const QString & )), this,
             SLOT(log( const QString &, const QString & )));
 
-    connect(m_welcomeWidget, SIGNAL(playMumeClicked()), this, SLOT(onClient()));
+    connect(m_welcomeWidget, SIGNAL(playMumeClicked()), this, SLOT(onLaunchClient()));
     connect(m_listener, SIGNAL(clientSuccessfullyConnected()), m_welcomeWidget, SLOT(hide()));
     connect(m_listener, SIGNAL(clientSuccessfullyConnected()), m_dockWelcome, SLOT(hide()));
 }
@@ -398,8 +398,8 @@ void MainWindow::createActions()
     preferencesAct->setStatusTip(tr("MMapper2 configuration"));
     connect(preferencesAct, SIGNAL(triggered()), this, SLOT(onPreferences()));
 
-    mmapperHomePageAct = new QAction(QIcon(":/icons/m.png"), tr("Check for &update"), this);
-    connect(mmapperHomePageAct, SIGNAL(triggered()), this, SLOT(openMmapperHomepage()));
+    mmapperCheckForUpdateAct = new QAction(QIcon(":/icons/m.png"), tr("Check for &update"), this);
+    connect(mmapperCheckForUpdateAct, SIGNAL(triggered()), this, SLOT(onCheckForUpdate()));
     mumeWebsiteAct = new QAction(tr("&Website"), this);
     connect(mumeWebsiteAct, SIGNAL(triggered()), this, SLOT(openMumeWebsite()));
     voteAct = new QAction(QIcon::fromTheme("applications-games"), tr("V&ote for Mume"), this);
@@ -552,7 +552,7 @@ void MainWindow::createActions()
 
     clientAct = new QAction(QIcon(":/icons/terminal.png"), tr("Integrated Mud &Client"), this);
     clientAct->setStatusTip(tr("Launch the integrated mud client"));
-    connect(clientAct, SIGNAL(triggered()), this, SLOT(onClient()));
+    connect(clientAct, SIGNAL(triggered()), this, SLOT(onLaunchClient()));
 
     releaseAllPathsAct = new QAction(QIcon(":/icons/cancel.png"), tr("Release All Paths"), this);
     releaseAllPathsAct->setStatusTip(tr("Release All Paths"));
@@ -812,7 +812,7 @@ void MainWindow::setupMenuBar()
     helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(voteAct);
     helpMenu->addSeparator();
-    helpMenu->addAction(mmapperHomePageAct);
+    helpMenu->addAction(mmapperCheckForUpdateAct);
     mumeMenu = helpMenu->addMenu(QIcon::fromTheme("help-contents"), tr("M&UME"));
     mumeMenu->addAction(mumeWebsiteAct);
     mumeMenu->addAction(mumeForumAct);
@@ -1358,7 +1358,7 @@ void MainWindow::onFindRoom()
     m_findRoomsDlg->show();
 }
 
-void MainWindow::onClient()
+void MainWindow::onLaunchClient()
 {
     m_welcomeWidget->hide();
     m_dockWelcome->hide();
@@ -1581,9 +1581,9 @@ void MainWindow::onConnectToNeighboursRoomSelection()
     getCurrentMapWindow()->getCanvas()->update();
 }
 
-void MainWindow::openMmapperHomepage()
+void MainWindow::onCheckForUpdate()
 {
-    QDesktopServices::openUrl(QUrl("http://github.com/mume/mmapper"));
+    QDesktopServices::openUrl(QUrl("https://github.com/MUME/MMapper/releases"));
 }
 
 void MainWindow::voteForMUMEOnTMC()
@@ -1610,7 +1610,7 @@ void MainWindow::openMumeWiki()
 void MainWindow::openSettingUpMmapper()
 {
     QDesktopServices::openUrl(
-        QUrl("http://mume.org/wiki/index.php/Guide_to_install_mmapper2_on_Windows"));
+        QUrl("https://github.com/MUME/MMapper/wiki/Troubleshooting"));
 }
 
 void MainWindow::openNewbieHelp()

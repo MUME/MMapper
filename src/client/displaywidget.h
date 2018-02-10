@@ -64,6 +64,7 @@ private:
 
 signals:
     void dimensionsChanged(int, int);
+    void showMessage(const QString &, int);
 };
 
 #endif /* DISPLAYWIDGET_H */

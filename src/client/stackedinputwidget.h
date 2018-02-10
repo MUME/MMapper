@@ -46,6 +46,7 @@ public slots:
     void gotPasswordInput();
     void gotMultiLineInput(QString);
     void relayMessage(const QString &);
+    void relayMessage(const QString &, int);
     void cut();
     void copy();
     void paste();
@@ -53,6 +54,7 @@ public slots:
 signals:
     void sendUserInput(const QByteArray &);
     void displayMessage(const QString &);
+    void showMessage(const QString &, int);
 
 private:
     bool m_localEcho;

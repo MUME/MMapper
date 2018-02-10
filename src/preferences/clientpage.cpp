@@ -57,6 +57,10 @@ ClientPage::ClientPage(QWidget *parent) :
     connect(ui->scrollbackSpinBox, SIGNAL(valueChanged(int)), this,
             SLOT(onChangeLinesOfScrollback(int)));
 
+    connect(ui->inputHistorySpinBox, SIGNAL(valueChanged(int)), this,
+            SLOT(onChangeLinesOfInputHistory(int)));
+    connect(ui->tabDictionarySpinBox, SIGNAL(valueChanged(int)), this,
+            SLOT(onChangeTabCompletionDictionarySize(int)));
     connect(ui->clearInputCheckBox, &QCheckBox::toggled, [ = ] (bool isChecked) {
         Config().m_clientClearInputOnEnter = isChecked;
     });
@@ -73,7 +77,10 @@ void ClientPage::updateFontAndColors()
     ui->exampleLineEdit->setFont(font);
 
     QFontInfo fi(font);
-    ui->fontPushButton->setText(QString("%1, %2").arg(fi.styleName()).arg(fi.pointSize()));
+    ui->fontPushButton->setText(QString("%1 %2, %3")
+                                .arg(fi.family())
+                                .arg(fi.styleName())
+                                .arg(fi.pointSize()));
 
     QPixmap fgPix(16, 16);
     fgPix.fill(Config().m_clientForegroundColor);
@@ -129,4 +136,15 @@ void ClientPage::onChangeRows(int value)
 void ClientPage::onChangeLinesOfScrollback(int value)
 {
     Config().m_clientLinesOfScrollback = value;
+}
+
+
+void ClientPage::onChangeLinesOfInputHistory(int value)
+{
+    Config().m_clientLinesOfInputHistory = value;
+}
+
+void ClientPage::onChangeTabCompletionDictionarySize(int value)
+{
+    Config().m_clientTabCompletionDictionarySize = value;
 }

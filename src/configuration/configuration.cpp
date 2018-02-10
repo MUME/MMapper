@@ -144,14 +144,16 @@ void Configuration::read()
     conf.endGroup();
 
     conf.beginGroup("Integrated Mud Client");
-    QFont defaultClientFont("Monospace", 12);
+    QFont defaultClientFont("Monospace", 10);
     defaultClientFont.setStyleHint(QFont::Monospace, QFont::PreferAntialias);
-    m_clientFont = (QFont) conf.value("Font", defaultClientFont.toString()).toString();
+    m_clientFont.fromString(conf.value("Font", defaultClientFont.toString()).toString());
     m_clientBackgroundColor = conf.value("Background color", QColor(Qt::black).name()).toString();
     m_clientForegroundColor = conf.value("Foreground color", QColor(Qt::lightGray).name()).toString();
     m_clientColumns = conf.value("Columns", 80).toInt();
     m_clientRows = conf.value("Rows", 24).toInt();
     m_clientLinesOfScrollback = conf.value("Lines of scrollback", 10000).toInt();
+    m_clientLinesOfInputHistory = conf.value("Lines of input history", 100).toInt();
+    m_clientTabCompletionDictionarySize = conf.value("Tab completion dictionary size", 100).toInt();
     m_clientClearInputOnEnter = conf.value("Clear input on enter", true).toBool();
     conf.endGroup();
 }
@@ -251,6 +253,8 @@ void Configuration::write() const
     conf.setValue("Columns", m_clientColumns);
     conf.setValue("Rows", m_clientRows);
     conf.setValue("Lines of scrollback", m_clientLinesOfScrollback);
+    conf.setValue("Lines of input history", m_clientLinesOfInputHistory);
+    conf.setValue("Tab completion dictionary size", m_clientTabCompletionDictionarySize);
     conf.setValue("Clear input on enter", m_clientClearInputOnEnter);
     conf.endGroup();
 }

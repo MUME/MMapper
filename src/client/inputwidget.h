@@ -27,6 +27,12 @@
 
 #include <QPlainTextEdit>
 #include <QRegExp>
+#include <QLinkedList>
+
+typedef QString InputHistoryEntry;
+typedef QMutableLinkedListIterator<InputHistoryEntry> InputHistoryIterator;
+typedef QString WordHistoryEntry;
+typedef QMutableLinkedListIterator<WordHistoryEntry> TabCompletionIterator;
 
 class InputWidget : public QPlainTextEdit
 {
@@ -41,35 +47,32 @@ public:
 protected:
     void keyPressEvent(QKeyEvent *event);
 
-public slots:
-    void showCommandHistory();
-    void addTabHistory(const QStringList &);
-
 private:
     void gotInput();
     void wordHistory(int);
     void keypadMovement(int);
 
-    QMutableStringListIterator *m_lineIterator;
+    InputHistoryIterator *m_lineIterator;
     bool m_newInput;
-    QStringList m_lineHistory, m_wordHistory;
+    QLinkedList<QString> m_lineHistory;
+    QLinkedList<QString> m_tabCompletionDictionary;
 
-    void addLineHistory(const QString &);
+    void addLineHistory(const InputHistoryEntry &);
     void forwardHistory();
     void backwardHistory();
 
-    void tabWord();
+    void tabComplete();
 
-    enum TabState {NORMAL, TABBING};
     static const QRegExp s_whitespaceRx;
-    TabState m_tabState;
+    bool m_tabbing;
     QString m_tabFragment;
-    QMutableStringListIterator *m_tabIterator;
-    void addTabHistory(const QString &);
+    TabCompletionIterator *m_tabIterator;
+    void addTabHistory(const WordHistoryEntry &);
 
 signals:
     void sendUserInput(const QString &);
     void displayMessage(const QString &);
+    void showMessage(const QString &, int);
 };
 
 

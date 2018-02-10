@@ -134,7 +134,7 @@ public slots:
     void onMergeDownRoomSelection();
     void onConnectToNeighboursRoomSelection();
     void onFindRoom();
-    void onClient();
+    void onLaunchClient();
     void onPreferences();
     void onPlayMode();
     void onMapMode();
@@ -150,7 +150,7 @@ public slots:
     void groupServer();
     void groupManagerOff();
 
-    void openMmapperHomepage();
+    void onCheckForUpdate();
     void voteForMUMEOnTMC();
     void openMumeWebsite();
     void openMumeForum();
@@ -231,7 +231,7 @@ private:
     //QAction *copyAct;
     //QAction *pasteAct;
     QAction *voteAct;
-    QAction *mmapperHomePageAct;
+    QAction *mmapperCheckForUpdateAct;
     QAction *mumeWebsiteAct;
     QAction *mumeForumAct;
     QAction *mumeWikiAct;

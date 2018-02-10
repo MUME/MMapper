@@ -139,6 +139,8 @@ public:
     int m_clientColumns;
     int m_clientRows;
     int m_clientLinesOfScrollback;
+    int m_clientLinesOfInputHistory;
+    int m_clientTabCompletionDictionarySize;
     bool m_clientClearInputOnEnter;
 
 private:

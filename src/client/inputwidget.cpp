@@ -32,14 +32,9 @@
 #include <QFont>
 #include <QFontMetrics>
 #include <QTextCursor>
-
-// Smart Splitter
 #include <QSizePolicy>
 
-// Word History
-#include <QStringList>
-
-#define WORD_HISTORY_SIZE 200
+#define MIN_WORD_LENGTH 3
 
 const QRegExp InputWidget::s_whitespaceRx("\\W+");
 
@@ -51,19 +46,17 @@ InputWidget::InputWidget(QWidget *parent)
 
     // Minimum Size
     QFontMetrics fm(currentCharFormat().font());
-    int textHeight = fm.lineSpacing();
-    int documentMargin = document()->documentMargin() * 2;
-    int frameWidth = QFrame::frameWidth() * 2;
-    setMinimumSize(0, textHeight + documentMargin + frameWidth + contentsMargins().bottom() +
-                   contentsMargins().top());
-    setSizeIncrement(fm.averageCharWidth(), textHeight);
+    setMinimumSize(QSize(fm.averageCharWidth(),
+                         fm.lineSpacing() + (document()->documentMargin() + QFrame::frameWidth()) * 2 +
+                         contentsMargins().top() + contentsMargins().bottom()));
+    setSizeIncrement(fm.averageCharWidth(), fm.lineSpacing());
 
     // Line Wrapping
     setLineWrapMode(QPlainTextEdit::NoWrap);
 
     // Word History
-    m_lineIterator = new QMutableStringListIterator(m_lineHistory); // TODO: Replace with Vector
-    m_tabIterator = new QMutableStringListIterator(m_wordHistory); // TODO: Replace with Map
+    m_lineIterator = new InputHistoryIterator(m_lineHistory);
+    m_tabIterator = new TabCompletionIterator(m_tabCompletionDictionary);
     m_newInput = true;
 }
 
@@ -80,7 +73,7 @@ InputWidget::~InputWidget()
 
 void InputWidget::keyPressEvent(QKeyEvent *event)
 {
-    if (event->key() !=  Qt::Key_Tab) m_tabState = NORMAL;
+    if (event->key() != Qt::Key_Tab) m_tabbing = false;
 
     // Check for key bindings
     switch (event->key()) {
@@ -147,6 +140,7 @@ void InputWidget::keyPressEvent(QKeyEvent *event)
 
     /** All other keys */
     default:
+        m_newInput = true;
         QPlainTextEdit::keyPressEvent(event);
     };
 }
@@ -214,7 +208,7 @@ void InputWidget::wordHistory(int key)
         }
         break;
     case Qt::Key_Tab:
-        tabWord();
+        tabComplete();
         break;
     };
 }
@@ -233,40 +227,42 @@ void InputWidget::gotInput()
     m_lineIterator->toBack();
 }
 
-void InputWidget::addLineHistory(const QString &string)
+void InputWidget::addLineHistory(const InputHistoryEntry &string)
 {
-    if (!string.isEmpty()) {
-        qDebug() << "* adding line history:" << string;
+    if (!string.isEmpty() && (m_lineHistory.empty() || m_lineHistory.last() != string)) {
+        // Add to line history if it is a new entry
         m_lineHistory << string;
     }
 
-    if (m_lineHistory.size() > 100) m_lineHistory.removeFirst();
+    // Trim line history
+    if (m_lineHistory.size() > Config().m_clientLinesOfInputHistory) {
+        m_lineHistory.removeFirst();
+    }
 }
 
 
-void InputWidget::addTabHistory(const QString &string)
+void InputWidget::addTabHistory(const WordHistoryEntry &string)
 {
     QStringList list = string.split(s_whitespaceRx, QString::SkipEmptyParts);
-    addTabHistory(list);
-}
+    foreach (QString word, list) {
+        if (word.length() > MIN_WORD_LENGTH) {
+            // Adding this word to the dictionary
+            m_tabCompletionDictionary << word;
 
+            // Trim dictionary
+            if (m_tabCompletionDictionary.size() > Config().m_clientTabCompletionDictionarySize) {
+                m_tabCompletionDictionary.removeFirst();
 
-void InputWidget::addTabHistory(const QStringList &list)
-{
-    foreach (QString word, list)
-        if (word.length() > 3) {
-            qDebug() << "* adding word history:" << word;
-            m_wordHistory << word;
+            }
         }
-
-    while (m_wordHistory.size() > WORD_HISTORY_SIZE) m_wordHistory.removeFirst();
+    }
 }
 
 
 void InputWidget::forwardHistory()
 {
     if (!m_lineIterator->hasNext()) {
-        qDebug() << "* no newer word history to go to";
+        emit showMessage("Reached beginning of input history", 1000);
         clear();
         return ;
 
@@ -291,7 +287,7 @@ void InputWidget::forwardHistory()
 void InputWidget::backwardHistory()
 {
     if (!m_lineIterator->hasPrevious()) {
-        qDebug() << "* no older word history to go to";
+        emit showMessage("Reached end of input history", 1000);
         return ;
 
     }
@@ -312,50 +308,35 @@ void InputWidget::backwardHistory()
 
 }
 
-
-void InputWidget::showCommandHistory()
-{
-    QString message("#history:\r\n");
-    int i = 1;
-    foreach (QString s, m_lineHistory)
-        message.append(QString::number(i++) + " " + s + "\r\n");
-
-    qDebug() << "* showing history" << message;
-
-    emit displayMessage(message);
-
-}
-
-
-void InputWidget::tabWord()
+void InputWidget::tabComplete()
 {
     QTextCursor current = textCursor();
     current.select(QTextCursor::WordUnderCursor);
-    switch (m_tabState) {
-    case NORMAL:
-        qDebug() << "* in NORMAL state";
+    if (!m_tabbing) {
         m_tabFragment = current.selectedText();
         m_tabIterator->toBack();
-        m_tabState = TABBING;
-    case TABBING:
-        qDebug() << "* in TABBING state";
-        if (!m_tabIterator->hasPrevious() && !m_wordHistory.isEmpty()) {
-            qDebug() << "* Resetting tab iterator";
-            m_tabIterator->toBack();
+        m_tabbing = true;
+    }
+
+    // If we reach the end then loop back to the beginning
+    if (!m_tabIterator->hasPrevious() && !m_tabCompletionDictionary.isEmpty()) {
+        m_tabIterator->toBack();
+    }
+
+    // Iterate through all previous words
+    while (m_tabIterator->hasPrevious()) {
+        // TODO: Utilize a trie and store the search results?
+        if (m_tabIterator->peekPrevious().startsWith(m_tabFragment)) {
+            // Found a previous word to complete to
+            current.insertText(m_tabIterator->previous());
+            if (current.movePosition(QTextCursor::StartOfWord, QTextCursor::KeepAnchor)) {
+                current.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, m_tabFragment.size());
+                setTextCursor(current);
+            }
+            return ;
+        } else {
+            // Try the next word
+            m_tabIterator->previous();
         }
-        while (m_tabIterator->hasPrevious()) {
-            if (m_tabIterator->peekPrevious().startsWith(m_tabFragment)) {
-                current.insertText(m_tabIterator->previous());
-                if (current.movePosition(QTextCursor::StartOfWord,
-                                         QTextCursor::KeepAnchor)) {
-                    current.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor,
-                                         m_tabFragment.size());
-                    setTextCursor(current);
-                    qDebug() << "*it worked";
-                }
-                return ;
-            } else m_tabIterator->previous();
-        }
-        break;
-    };
+    }
 }

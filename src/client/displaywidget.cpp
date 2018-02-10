@@ -84,7 +84,8 @@ DisplayWidget::DisplayWidget(QWidget *parent) : QTextEdit(parent)
     QFontMetrics fm(m_serverOutputFont);
     int x = fm.averageCharWidth() * Config().m_clientColumns;
     int y = fm.lineSpacing() * Config().m_clientRows;
-    setMinimumSize(QSize(x, y));
+    setMinimumSize(QSize(x + contentsMargins().left() + contentsMargins().right(),
+                         y + contentsMargins().top() + contentsMargins().bottom()));
     setLineWrapMode(QTextEdit::FixedColumnWidth);
     setLineWrapColumnOrWidth(Config().m_clientColumns);
     setSizeIncrement(fm.averageCharWidth(), fm.lineSpacing());
@@ -102,11 +103,13 @@ DisplayWidget::~DisplayWidget()
 void DisplayWidget::resizeEvent(QResizeEvent *event)
 {
     QFontMetrics fm(m_serverOutputFont);
-    int x = size().width() / fm.averageCharWidth();
-    int y = size().height() / fm.lineSpacing();
+    int x = (size().width() - contentsMargins().left() - contentsMargins().right()) /
+            fm.averageCharWidth();
+    int y = (size().height() - contentsMargins().top() - contentsMargins().bottom()) / fm.lineSpacing();
     setLineWrapColumnOrWidth(x);
     verticalScrollBar()->setPageStep(y);
     emit dimensionsChanged(x, y);
+    emit showMessage(QString("Dimensions: %1x%2").arg(x).arg(y), 1000);
     QTextEdit::resizeEvent(event);
 }
 

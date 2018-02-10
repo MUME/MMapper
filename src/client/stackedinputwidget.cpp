@@ -37,6 +37,8 @@ StackedInputWidget::StackedInputWidget(QWidget *parent)
     addWidget(m_inputWidget);
     connect(m_inputWidget, SIGNAL(sendUserInput(QString)), SLOT(gotMultiLineInput(QString)));
     connect(m_inputWidget, SIGNAL(displayMessage(QString)), SLOT(relayMessage(QString)));
+    connect(m_inputWidget, SIGNAL(showMessage(const QString &, int)), SLOT(relayMessage(const QString &,
+                                                                                        int)));
 
     // Password Widget
     m_passwordWidget = new QLineEdit(this);
@@ -109,6 +111,11 @@ void StackedInputWidget::gotMultiLineInput(QString input)
 void StackedInputWidget::relayMessage(const QString &message)
 {
     emit displayMessage(message);
+}
+
+void StackedInputWidget::relayMessage(const QString &message, int timeout)
+{
+    emit showMessage(message, timeout);
 }
 
 void StackedInputWidget::cut()
