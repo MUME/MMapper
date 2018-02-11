@@ -2,14 +2,6 @@
 <ui version="4.0">
  <class>ParserPage</class>
  <widget class="QWidget" name="ParserPage">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>508</width>
-    <height>734</height>
-   </rect>
-  </property>
   <property name="sizePolicy">
    <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
     <horstretch>0</horstretch>

@@ -3,6 +3,11 @@ SET(mmapper_SRCS
     clock/mumemoment.cpp
     clock/mumeclock.cpp
     clock/mumeclockwidget.cpp
+    client/clientwidget.cpp
+    client/stackedinputwidget.cpp
+    client/inputwidget.cpp
+    client/displaywidget.cpp
+    client/ctelnet.cpp
     configuration/configuration.cpp
     display/connectionselection.cpp
     display/mapcanvas.cpp
@@ -18,6 +23,7 @@ SET(mmapper_SRCS
     mainwindow/infomarkseditdlg.cpp
     mainwindow/mainwindow.cpp
     mainwindow/roomeditattrdlg.cpp
+    mainwindow/welcomewidget.cpp
     mapdata/customaction.cpp
     mapdata/roomfilter.cpp
     mapdata/shortestpath.cpp
@@ -72,6 +78,7 @@ SET(mmapper_SRCS
     preferences/groupmanagerpage.cpp
     preferences/parserpage.cpp
     preferences/pathmachinepage.cpp
+    preferences/clientpage.cpp
     proxy/connectionlistener.cpp
     proxy/proxy.cpp
     proxy/telnetfilter.cpp
@@ -92,11 +99,13 @@ SET(mmapper_UIS
     mainwindow/findroomsdlg.ui
     mainwindow/infomarkseditdlg.ui
     mainwindow/roomeditattrdlg.ui
+    mainwindow/welcomewidget.ui
     clock/mumeclockwidget.ui
     preferences/generalpage.ui
     preferences/groupmanagerpage.ui
     preferences/parserpage.ui
     preferences/pathmachinepage.ui
+    preferences/clientpage.ui
 )
 
 IF(WITH_QTIOCOMPRESSOR)

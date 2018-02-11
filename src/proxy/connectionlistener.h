@@ -66,6 +66,7 @@ public slots:
 
 signals:
     void log(const QString &, const QString &);
+    void clientSuccessfullyConnected();
 
 protected:
     void incomingConnection(qintptr socketDescriptor);

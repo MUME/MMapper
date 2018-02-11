@@ -1,8 +1,6 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
-**            Marek Krejza <krejza@gmail.com> (Caligor),
-**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
+** Authors:   Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
@@ -24,36 +22,31 @@
 **
 ************************************************************************/
 
-#ifndef CONFIGDIALOG_H
-#define CONFIGDIALOG_H
+#ifndef WELCOMEWIDGET_H
+#define WELCOMEWIDGET_H
 
-#include <QDialog>
+#include <QWidget>
 
-class QListWidget;
-class QListWidgetItem;
-class QStackedWidget;
-class QScrollArea;
-class Mmapper2Group;
+namespace Ui {
+class WelcomeWidget;
+}
 
-class ConfigDialog : public QDialog
+class WelcomeWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    ConfigDialog(Mmapper2Group *, QWidget *parent = 0);
-    QSize sizeHint() const;
+    explicit WelcomeWidget(QWidget *parent = 0);
+    ~WelcomeWidget();
 
 public slots:
-    void changePage(QListWidgetItem *current, QListWidgetItem *previous);
+    void onPlayButtonClicked(bool);
+
+signals:
+    void playMumeClicked();
 
 private:
-    void createIcons();
-
-    QListWidget *contentsWidget;
-    QStackedWidget *pagesWidget;
-    QScrollArea *pagesScrollArea;
-
-    Mmapper2Group *m_groupManager;
+    Ui::WelcomeWidget *ui;
 };
 
-#endif
+#endif // WELCOMEWIDGET_H

@@ -1,8 +1,6 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
-**            Marek Krejza <krejza@gmail.com> (Caligor),
-**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
+** Authors:   Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
@@ -24,36 +22,53 @@
 **
 ************************************************************************/
 
-#ifndef CONFIGDIALOG_H
-#define CONFIGDIALOG_H
+#ifndef CLIENTWIDGET_H
+#define CLIENTWIDGET_H
 
 #include <QDialog>
 
-class QListWidget;
-class QListWidgetItem;
-class QStackedWidget;
-class QScrollArea;
-class Mmapper2Group;
+class StackedInputWidget;
+class DisplayWidget;
 
-class ConfigDialog : public QDialog
+class QCloseEvent;
+class QSplitter;
+class QStatusBar;
+class cTelnet;
+
+class ClientWidget : public QDialog
 {
     Q_OBJECT
 
 public:
-    ConfigDialog(Mmapper2Group *, QWidget *parent = 0);
+    ClientWidget(QWidget *parent = 0);
+    ~ClientWidget();
+
+    QSize minimumSizeHint() const;
     QSize sizeHint() const;
 
+signals:
+    void sendToUser(const QString &);
+
 public slots:
-    void changePage(QListWidgetItem *current, QListWidgetItem *previous);
+    void closeEvent(QCloseEvent *event);
+    void connectToHost();
+    void disconnectFromHost();
+    void onConnected();
+    void onDisconnected();
+    void onSocketError(const QString &errorStr);
+    void sendToMud(const QByteArray &);
 
 private:
-    void createIcons();
+    void readSettings();
+    void writeSettings();
 
-    QListWidget *contentsWidget;
-    QStackedWidget *pagesWidget;
-    QScrollArea *pagesScrollArea;
+    bool m_connected;
 
-    Mmapper2Group *m_groupManager;
+    QSplitter *m_splitter;
+    DisplayWidget *m_display;
+    StackedInputWidget *m_input;
+    cTelnet *m_telnet;
+    QStatusBar *m_statusBar;
 };
 
-#endif
+#endif /* CLIENTWIDGET_H */

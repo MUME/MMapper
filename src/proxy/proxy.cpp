@@ -187,24 +187,23 @@ bool Proxy::init()
 
     emit log("Proxy", "Connection to client established ...");
 
-    QByteArray
-    ba("\033[1;37;41mWelcome to MMapper!\033[0;37;41m   Type \033[1m_help\033[0m\033[37;41m for help or \033[1m_vote\033[0m\033[37;41m to vote!\033[0m\r\n");
+    QByteArray ba("\033[1;37;41mWelcome to MMapper!\033[0;37;41m"
+                  "   Type \033[1m_help\033[0m\033[37;41m for help or \033[1m_vote\033[0m\033[37;41m to vote!\033[0m\r\n");
     m_userSocket->write(ba);
     m_userSocket->flush();
 
     m_mudSocket = new QTcpSocket(this);
-    m_mudSocket->setSocketOption(QAbstractSocket::KeepAliveOption, true);
     connect(m_mudSocket, SIGNAL(disconnected()), this, SLOT(mudTerminatedConnection()) );
     connect(m_mudSocket, SIGNAL(disconnected()), m_parserXml, SLOT(reset()) );
     connect(m_mudSocket, SIGNAL(readyRead()), this, SLOT(processMudStream()) );
 
     m_mudSocket->connectToHost(m_remoteHost, m_remotePort, QIODevice::ReadWrite);
     if (!m_mudSocket->waitForConnected(5000)) {
-        emit log("Proxy", "Server not responding!!!");
+        emit log("Proxy", "MUME is not responding!");
 
-        sendToUser("\r\nServer not responding!!!\r\n\r\nYou can explore world map offline or try to reconnect again...\r\n");
+        sendToUser("\r\n\033[1;37;MUME is not responding!\033[0m\r\n\r\n"
+                   "\033[1;37;41mYou can explore world map offline or try to reconnect again...\033[0m\r\n");
         sendToUser("\r\n>");
-        //m_userSocket->flush();
 
         emit error(m_mudSocket->error());
         m_mudSocket->close();
@@ -244,7 +243,9 @@ void Proxy::userTerminatedConnection()
 void Proxy::mudTerminatedConnection()
 {
     emit log("Proxy", "Mud terminated connection ...");
-    sendToUser("\r\nServer closed the connection\r\n\r\nYou can explore world map offline or try to reconnect again...\r\n");
+
+    sendToUser("\r\n\033[1;37;MUME closed the connection.\033[0m\r\n\r\n"
+               "\033[1;37;41mYou can explore world map offline or reconnect again...\033[0m\r\n");
     sendToUser("\r\n>");
 }
 

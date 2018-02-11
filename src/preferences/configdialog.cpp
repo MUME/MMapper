@@ -29,50 +29,60 @@
 #include "parserpage.h"
 #include "pathmachinepage.h"
 #include "groupmanagerpage.h"
+#include "clientpage.h"
 
 #include <QListWidget>
+#include <QScrollArea>
 #include <QStackedWidget>
 
-ConfigDialog::ConfigDialog(Mmapper2Group *gm)
+ConfigDialog::ConfigDialog(Mmapper2Group *gm, QWidget *parent) : QDialog(parent),
+    m_groupManager(gm)
 {
-    m_groupManager = gm;
-    contentsWidget = new QListWidget;
+    setWindowTitle(tr("Config Dialog"));
+
+    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    setLayout(mainLayout);
+
+    QHBoxLayout *horizontalLayout = new QHBoxLayout(this);
+    mainLayout->addLayout(horizontalLayout);
+
+    contentsWidget = new QListWidget(this);
     contentsWidget->setViewMode(QListView::IconMode);
     contentsWidget->setIconSize(QSize(70, 70));
     contentsWidget->setMovement(QListView::Static);
-    contentsWidget->setMaximumWidth(90);
-    contentsWidget->setMinimumWidth(90);
+    contentsWidget->setMaximumWidth(110);
+    contentsWidget->setMinimumWidth(110);
     contentsWidget->setSpacing(9);
-
-    pagesWidget = new QStackedWidget;
-    pagesWidget->setMinimumWidth(400);
-    pagesWidget->setMinimumHeight(400);
-
-    QPushButton *closeButton = new QPushButton(tr("Close"));
+    horizontalLayout->addWidget(contentsWidget);
 
     createIcons();
 
-    connect(closeButton, SIGNAL(clicked()), this, SLOT(close()));
+    pagesWidget = new QStackedWidget(this);
+    pagesWidget->setMinimumWidth(500);
+    pagesWidget->setMinimumHeight(500);
+    pagesWidget->addWidget(new GeneralPage(this));
+    pagesWidget->setCurrentIndex(0);
 
-    QHBoxLayout *horizontalLayout = new QHBoxLayout;
-    horizontalLayout->addWidget(contentsWidget);
-    horizontalLayout->addWidget(pagesWidget, 1);
+    pagesScrollArea = new QScrollArea(this);
+    pagesScrollArea->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+    pagesScrollArea->setMinimumWidth(520);
+    pagesScrollArea->setWidget(pagesWidget);
+    horizontalLayout->addWidget(pagesScrollArea, 1);
 
-    QHBoxLayout *buttonsLayout = new QHBoxLayout;
+    QHBoxLayout *buttonsLayout = new QHBoxLayout(this);
     buttonsLayout->addStretch(1);
+
+    QPushButton *closeButton = new QPushButton(tr("Close"), this);
+    connect(closeButton, SIGNAL(clicked()), this, SLOT(close()));
     buttonsLayout->addWidget(closeButton);
 
-    QVBoxLayout *mainLayout = new QVBoxLayout;
-    mainLayout->addLayout(horizontalLayout);
-    mainLayout->addStretch(1);
     mainLayout->addSpacing(12);
     mainLayout->addLayout(buttonsLayout);
-    setLayout(mainLayout);
+}
 
-    setWindowTitle(tr("Config Dialog"));
-
-    pagesWidget->addWidget(new GeneralPage);
-    pagesWidget->setCurrentIndex(0);
+QSize ConfigDialog::sizeHint() const
+{
+    return QSize(400, 650);
 }
 
 void ConfigDialog::createIcons()
@@ -88,6 +98,12 @@ void ConfigDialog::createIcons()
     updateButton->setText(tr("Parser"));
     updateButton->setTextAlignment(Qt::AlignHCenter);
     updateButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+
+    QListWidgetItem *clientButton = new QListWidgetItem(contentsWidget);
+    clientButton->setIcon(QIcon(":/icons/terminal.png"));
+    clientButton->setText(tr("Integrated\nMud Client"));
+    clientButton->setTextAlignment(Qt::AlignHCenter);
+    clientButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
     QListWidgetItem *groupButton = new QListWidgetItem(contentsWidget);
     groupButton->setIcon(QIcon(":/icons/groupcfg.png"));
@@ -113,6 +129,7 @@ void ConfigDialog::changePage(QListWidgetItem *current, QListWidgetItem *previou
 
     if (pagesWidget->count() <= 1) {
         pagesWidget->addWidget(new ParserPage(this));
+        pagesWidget->addWidget(new ClientPage(this));
         pagesWidget->addWidget(new GroupManagerPage(m_groupManager, this));
         pagesWidget->addWidget(new PathmachinePage(this));
     }

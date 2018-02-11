@@ -28,6 +28,8 @@
 #include "roomeditattrdlg.h"
 #include "aboutdialog.h"
 #include "findroomsdlg.h"
+#include "welcomewidget.h"
+#include "client/clientwidget.h"
 #include "display/mapwindow.h"
 #include "display/mapcanvas.h"
 #include "display/connectionselection.h"
@@ -127,6 +129,18 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     m_propertySetter->start();
     */
 
+    m_client = new ClientWidget(this);
+    m_client->setObjectName("MMapper2Client");
+
+    m_welcomeWidget = new WelcomeWidget(this);
+    m_welcomeWidget->setObjectName("WelcomeWidget");
+    m_dockWelcome = new DockWidget("", this);
+    m_dockWelcome->setObjectName("DockWelcome");
+    m_dockWelcome->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    m_dockWelcome->setFeatures(QDockWidget::DockWidgetClosable);
+    addDockWidget(Qt::LeftDockWidgetArea, m_dockWelcome);
+    m_dockWelcome->setWidget(m_welcomeWidget);
+
     m_dockDialogLog = new DockWidget(tr("Log View"), this);
     m_dockDialogLog->setObjectName("DockWidgetLog");
     m_dockDialogLog->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
@@ -162,18 +176,16 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     setCorner(Qt::TopRightCorner, Qt::TopDockWidgetArea);
     setCorner(Qt::BottomRightCorner, Qt::BottomDockWidgetArea);
 
+    m_listener = new ConnectionListener(m_mapData, m_pathMachine, m_commandEvaluator,
+                                        m_prespammedPath, m_groupManager, m_mumeClock, this);
+    m_listener->setMaxPendingConnections (1);
+    m_listener->setRemoteHost(Config().m_remoteServerName);
+    m_listener->setRemotePort(Config().m_remotePort);
 
-    ConnectionListener *server = new ConnectionListener(m_mapData, m_pathMachine, m_commandEvaluator,
-                                                        m_prespammedPath, m_groupManager, m_mumeClock, this);
-    server->setMaxPendingConnections (1);
-    server->setRemoteHost(Config().m_remoteServerName);
-    server->setRemotePort(Config().m_remotePort);
-
-
-    if (!server->listen(QHostAddress::Any, Config().m_localPort)) {
+    if (!m_listener->listen(QHostAddress::Any, Config().m_localPort)) {
         QMessageBox::critical(this, tr("MMapper2"),
                               tr("Unable to start the server (switching to offline mode): %1.")
-                              .arg(server->errorString()));
+                              .arg(m_listener->errorString()));
     } else {
         log("ConnectionListener", tr("Server bound on localhost to port: %2.").arg(Config().m_localPort));
     }
@@ -182,6 +194,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     //update connections
     currentMapWindowChanged();
     readSettings();
+    m_dockWelcome->show();
 
     if (Config().m_mapMode == 0) {
         playModeAct->setChecked(true);
@@ -298,6 +311,10 @@ void MainWindow::currentMapWindowChanged()
 
     connect(m_mumeClock, SIGNAL(log( const QString &, const QString & )), this,
             SLOT(log( const QString &, const QString & )));
+
+    connect(m_welcomeWidget, SIGNAL(playMumeClicked()), this, SLOT(onLaunchClient()));
+    connect(m_listener, SIGNAL(clientSuccessfullyConnected()), m_welcomeWidget, SLOT(hide()));
+    connect(m_listener, SIGNAL(clientSuccessfullyConnected()), m_dockWelcome, SLOT(hide()));
 }
 
 
@@ -381,8 +398,8 @@ void MainWindow::createActions()
     preferencesAct->setStatusTip(tr("MMapper2 configuration"));
     connect(preferencesAct, SIGNAL(triggered()), this, SLOT(onPreferences()));
 
-    mmapperHomePageAct = new QAction(QIcon(":/icons/m.png"), tr("Check for &update"), this);
-    connect(mmapperHomePageAct, SIGNAL(triggered()), this, SLOT(openMmapperHomepage()));
+    mmapperCheckForUpdateAct = new QAction(QIcon(":/icons/m.png"), tr("Check for &update"), this);
+    connect(mmapperCheckForUpdateAct, SIGNAL(triggered()), this, SLOT(onCheckForUpdate()));
     mumeWebsiteAct = new QAction(tr("&Website"), this);
     connect(mumeWebsiteAct, SIGNAL(triggered()), this, SLOT(openMumeWebsite()));
     voteAct = new QAction(QIcon::fromTheme("applications-games"), tr("V&ote for Mume"), this);
@@ -532,6 +549,10 @@ void MainWindow::createActions()
     findRoomsAct->setStatusTip(tr("Find matching rooms"));
     findRoomsAct->setShortcut(tr("Ctrl+F"));
     connect(findRoomsAct, SIGNAL(triggered()), this, SLOT(onFindRoom()));
+
+    clientAct = new QAction(QIcon(":/icons/terminal.png"), tr("Integrated Mud &Client"), this);
+    clientAct->setStatusTip(tr("Launch the integrated mud client"));
+    connect(clientAct, SIGNAL(triggered()), this, SLOT(onLaunchClient()));
 
     releaseAllPathsAct = new QAction(QIcon(":/icons/cancel.png"), tr("Release All Paths"), this);
     releaseAllPathsAct->setStatusTip(tr("Release All Paths"));
@@ -775,6 +796,7 @@ void MainWindow::setupMenuBar()
     //    windowMenu->addSeparator();
 
     settingsMenu = menuBar()->addMenu(tr("&Tools"));
+    settingsMenu->addAction(clientAct);
     groupMenu = settingsMenu->addMenu(QIcon(":/icons/groupclient.png"), tr("&Group Manager"));
     groupMenu->addAction(groupOffAct);
     groupMenu->addAction(groupClientAct);
@@ -790,7 +812,7 @@ void MainWindow::setupMenuBar()
     helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(voteAct);
     helpMenu->addSeparator();
-    helpMenu->addAction(mmapperHomePageAct);
+    helpMenu->addAction(mmapperCheckForUpdateAct);
     mumeMenu = helpMenu->addMenu(QIcon::fromTheme("help-contents"), tr("M&UME"));
     mumeMenu->addAction(mumeWebsiteAct);
     mumeMenu->addAction(mumeForumAct);
@@ -927,7 +949,7 @@ void MainWindow::setupStatusBar()
 
 void MainWindow::onPreferences()
 {
-    ConfigDialog dialog(m_groupManager);
+    ConfigDialog dialog(m_groupManager, this);
     dialog.exec();
 }
 
@@ -1336,6 +1358,16 @@ void MainWindow::onFindRoom()
     m_findRoomsDlg->show();
 }
 
+void MainWindow::onLaunchClient()
+{
+    m_welcomeWidget->hide();
+    m_dockWelcome->hide();
+
+    m_client->show();
+    m_client->focusWidget();
+    m_client->connectToHost();
+}
+
 
 void MainWindow::groupManagerOff()
 {
@@ -1549,9 +1581,9 @@ void MainWindow::onConnectToNeighboursRoomSelection()
     getCurrentMapWindow()->getCanvas()->update();
 }
 
-void MainWindow::openMmapperHomepage()
+void MainWindow::onCheckForUpdate()
 {
-    QDesktopServices::openUrl(QUrl("http://github.com/mume/mmapper"));
+    QDesktopServices::openUrl(QUrl("https://github.com/MUME/MMapper/releases"));
 }
 
 void MainWindow::voteForMUMEOnTMC()
@@ -1578,7 +1610,7 @@ void MainWindow::openMumeWiki()
 void MainWindow::openSettingUpMmapper()
 {
     QDesktopServices::openUrl(
-        QUrl("http://mume.org/wiki/index.php/Guide_to_install_mmapper2_on_Windows"));
+        QUrl("https://github.com/MUME/MMapper/wiki/Troubleshooting"));
 }
 
 void MainWindow::openNewbieHelp()

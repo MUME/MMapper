@@ -1,8 +1,6 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
-**            Marek Krejza <krejza@gmail.com> (Caligor),
-**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
+** Authors:   Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
@@ -24,36 +22,45 @@
 **
 ************************************************************************/
 
-#ifndef CONFIGDIALOG_H
-#define CONFIGDIALOG_H
+#ifndef STACKEDINPUTWIDGET_H
+#define STACKEDINPUTWIDGET_H
 
-#include <QDialog>
+#include <QStackedWidget>
 
-class QListWidget;
-class QListWidgetItem;
-class QStackedWidget;
-class QScrollArea;
-class Mmapper2Group;
+class QLineEdit;
+class InputWidget;
 
-class ConfigDialog : public QDialog
+class StackedInputWidget : public QStackedWidget
 {
     Q_OBJECT
 
 public:
-    ConfigDialog(Mmapper2Group *, QWidget *parent = 0);
-    QSize sizeHint() const;
+    StackedInputWidget(QWidget *parent = 0);
+    ~StackedInputWidget();
+
+protected:
+    bool eventFilter(QObject *obj, QEvent *ev);
 
 public slots:
-    void changePage(QListWidgetItem *current, QListWidgetItem *previous);
+    void toggleEchoMode(bool);
+    void gotPasswordInput();
+    void gotMultiLineInput(QString);
+    void relayMessage(const QString &);
+    void relayMessage(const QString &, int);
+    void cut();
+    void copy();
+    void paste();
+
+signals:
+    void sendUserInput(const QByteArray &);
+    void displayMessage(const QString &);
+    void showMessage(const QString &, int);
 
 private:
-    void createIcons();
-
-    QListWidget *contentsWidget;
-    QStackedWidget *pagesWidget;
-    QScrollArea *pagesScrollArea;
-
-    Mmapper2Group *m_groupManager;
+    bool m_localEcho;
+    InputWidget *m_inputWidget;
+    QLineEdit *m_passwordWidget;
 };
 
-#endif
+
+#endif /* STACKEDINPUTWIDGET_H */
