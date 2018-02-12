@@ -26,14 +26,15 @@
 
 #include "proxy.h"
 #include "telnetfilter.h"
-#include "mumexmlparser.h"
-#include "mainwindow.h"
-#include "parseevent.h"
-#include "mmapper2pathmachine.h"
-#include "prespammedpath.h"
-#include "mmapper2group.h"
-#include "configuration.h"
-#include "mumeclock.h"
+#include "mpi/mpifilter.h"
+#include "mpi/remoteedit.h"
+#include "parser/mumexmlparser.h"
+#include "expandoracommon/parseevent.h"
+#include "pathmachine/mmapper2pathmachine.h"
+#include "display/prespammedpath.h"
+#include "pandoragroup/mmapper2group.h"
+#include "configuration/configuration.h"
+#include "clock/mumeclock.h"
 
 #include <qvariant.h>
 
@@ -69,7 +70,7 @@ Proxy::Proxy(MapData *md, Mmapper2PathMachine *pm, CommandEvaluator *ce, Prespam
       m_mudSocket(NULL),
       m_userSocket(NULL),
       m_serverConnected(false),
-      m_filter(NULL), m_parserXml(NULL),
+      m_telnetFilter(NULL), m_mpiFilter(NULL), m_parserXml(NULL),
       m_mapData(md),
       m_pathMachine(pm),
       m_commandEvaluator(ce),
@@ -83,6 +84,8 @@ Proxy::Proxy(MapData *md, Mmapper2PathMachine *pm, CommandEvaluator *ce, Prespam
         m_thread = new ProxyThreader(this);
     else
         m_thread = NULL;
+
+    m_remoteEdit = new RemoteEdit(m_parent->parent());
 
 #ifdef PROXY_STREAM_DEBUG_INPUT_TO_FILE
     QString fileName = "proxy_debug.dat";
@@ -109,7 +112,9 @@ Proxy::~Proxy()
         m_mudSocket->disconnectFromHost();
         m_mudSocket->deleteLater();
     }
-    delete m_filter;
+    delete m_remoteEdit;
+    delete m_telnetFilter;
+    delete m_mpiFilter;
     delete m_parserXml;
     connect (this, SIGNAL(doAcceptNewConnections()), m_parent, SLOT(doAcceptNewConnections()));
     emit doAcceptNewConnections();
@@ -145,19 +150,31 @@ bool Proxy::init()
     connect(m_userSocket, SIGNAL(disconnected()), this, SLOT(userTerminatedConnection()) );
     connect(m_userSocket, SIGNAL(readyRead()), this, SLOT(processUserStream()) );
 
-    m_filter = new TelnetFilter(this);
-    connect(this, SIGNAL(analyzeUserStream( const char *, int )), m_filter,
+    m_telnetFilter = new TelnetFilter(this);
+    connect(this, SIGNAL(analyzeUserStream( const char *, int )), m_telnetFilter,
             SLOT(analyzeUserStream( const char *, int )));
-    connect(this, SIGNAL(analyzeMudStream( const char *, int )), m_filter,
+    connect(this, SIGNAL(analyzeMudStream( const char *, int )), m_telnetFilter,
             SLOT(analyzeMudStream( const char *, int )));
-    connect(m_filter, SIGNAL(sendToMud(const QByteArray &)), this, SLOT(sendToMud(const QByteArray &)));
-    connect(m_filter, SIGNAL(sendToUser(const QByteArray &)), this,
+    connect(m_telnetFilter, SIGNAL(sendToMud(const QByteArray &)), this,
+            SLOT(sendToMud(const QByteArray &)));
+    connect(m_telnetFilter, SIGNAL(sendToUser(const QByteArray &)), this,
             SLOT(sendToUser(const QByteArray &)));
 
+    m_mpiFilter = new MpiFilter(this);
+    connect(m_telnetFilter, SIGNAL(parseNewMudInput(IncomingData &)), m_mpiFilter,
+            SLOT(analyzeNewMudInput(IncomingData &)));
+    connect(m_mpiFilter, SIGNAL(sendToMud(const QByteArray &)), this, SLOT(sendToMud(QByteArray)));
+    connect(m_mpiFilter, SIGNAL(editMessage(int, QString, QString)),
+            m_remoteEdit, SLOT(remoteEdit(int, QString, QString)), Qt::QueuedConnection);
+    connect(m_mpiFilter, SIGNAL(viewMessage(QString, QString)),
+            m_remoteEdit, SLOT(remoteView(QString, QString)), Qt::QueuedConnection);
+    connect(m_remoteEdit, SIGNAL(sendToSocket(QByteArray)), this, SLOT(sendToMud(QByteArray)),
+            Qt::QueuedConnection);
+
     m_parserXml = new MumeXmlParser(m_mapData, m_mumeClock, this);
-    connect(m_filter, SIGNAL(parseNewMudInputXml(IncomingData &)), m_parserXml,
+    connect(m_mpiFilter, SIGNAL(parseNewMudInput(IncomingData &)), m_parserXml,
             SLOT(parseNewMudInput(IncomingData &)));
-    connect(m_filter, SIGNAL(parseNewUserInputXml(IncomingData &)), m_parserXml,
+    connect(m_telnetFilter, SIGNAL(parseNewUserInput(IncomingData &)), m_parserXml,
             SLOT(parseNewUserInput(IncomingData &)));
     connect(m_parserXml, SIGNAL(sendToMud(const QByteArray &)), this,
             SLOT(sendToMud(const QByteArray &)));
@@ -201,9 +218,11 @@ bool Proxy::init()
     if (!m_mudSocket->waitForConnected(5000)) {
         emit log("Proxy", "MUME is not responding!");
 
-        sendToUser("\r\n\033[1;37;MUME is not responding!\033[0m\r\n\r\n"
-                   "\033[1;37;41mYou can explore world map offline or try to reconnect again...\033[0m\r\n");
-        sendToUser("\r\n>");
+        sendToUser("\r\n"
+                   "\033[1;37;41mMUME is not responding!\033[0m\r\n"
+                   "\r\n"
+                   "\033[1;37;41mYou can explore world map offline or try to reconnect again...\033[0m\r\n"
+                   "\r\n>");
 
         emit error(m_mudSocket->error());
         m_mudSocket->close();
@@ -218,15 +237,22 @@ bool Proxy::init()
 
         emit log("Proxy", "Connection to server established ...");
 
+        //send IAC-GA prompt request
+        if (Config().m_IAC_prompt_parser) {
+            QByteArray idPrompt("~$#EP2\nG\n");
+            emit log("Proxy", "Sent MUME Protocol Initiator IAC-GA prompt request");
+            emit sendToMud(idPrompt);
+        }
+
+        if (Config().m_remoteEditing) {
+            QByteArray idRemoteEditing("~$#EI\n");
+            emit log("Proxy", "Sent MUME Protocol Initiator remote editing request");
+            emit sendToMud(idRemoteEditing);
+        }
+
         emit sendToMud(QByteArray("~$#EX2\n3G\n"));
         emit log("Proxy", "Sent MUME Protocol Initiator XML request");
 
-        //send IAC-GA prompt request
-        if (Config().m_IAC_prompt_parser) {
-            QByteArray idprompt("~$#EP2\nG\n");
-            emit log("Proxy", "Sent MUME Protocol Initiator IAC-GA prompt request");
-            emit sendToMud(idprompt);
-        }
         return true;
     }
     return false;
@@ -244,9 +270,11 @@ void Proxy::mudTerminatedConnection()
 {
     emit log("Proxy", "Mud terminated connection ...");
 
-    sendToUser("\r\n\033[1;37;MUME closed the connection.\033[0m\r\n\r\n"
-               "\033[1;37;41mYou can explore world map offline or reconnect again...\033[0m\r\n");
-    sendToUser("\r\n>");
+    sendToUser("\r\n"
+               "\033[1;37;41mMUME closed the connection.\033[0m\r\n"
+               "\r\n"
+               "\033[1;37;41mYou can explore world map offline or reconnect again...\033[0m\r\n"
+               "\r\n>");
 }
 
 void Proxy::processUserStream()

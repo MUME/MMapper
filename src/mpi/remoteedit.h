@@ -1,8 +1,6 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
-**            Marek Krejza <krejza@gmail.com> (Caligor),
-**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
+** Authors:   Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
 ** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
@@ -24,38 +22,35 @@
 **
 ************************************************************************/
 
-#ifndef CONFIGDIALOG_H
-#define CONFIGDIALOG_H
+#ifndef REMOTEEDIT_H
+#define REMOTEEDIT_H
 
-#include <QDialog>
+#include <QObject>
+#include <QRegExp>
 
-class QListWidgetItem;
-class QStackedWidget;
-class Mmapper2Group;
+class RemoteEditWidget;
 
-namespace Ui {
-class ConfigDialog;
-}
-
-class ConfigDialog : public QDialog
+class RemoteEdit : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit ConfigDialog(Mmapper2Group *, QWidget *parent = 0);
-    ~ConfigDialog();
+    RemoteEdit(QObject *parent = 0);
+    ~RemoteEdit();
+
+    static const QRegExp s_lineFeedNewlineRx;
 
 public slots:
-    void changePage(QListWidgetItem *current, QListWidgetItem *previous);
+    void remoteView(QString, QString);
+    void remoteEdit(const int, QString, QString);
 
-private:
-    Ui::ConfigDialog *ui;
+protected slots:
+    void cancel(const int);
+    void save(const QString &, const int);
 
-    void createIcons();
-
-    QStackedWidget *pagesWidget;
-
-    Mmapper2Group *m_groupManager;
+signals:
+    void sendToSocket(const QByteArray &);
 };
 
-#endif
+
+#endif /* REMOTEEDIT_H */

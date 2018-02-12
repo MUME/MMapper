@@ -1,8 +1,6 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
-**            Marek Krejza <krejza@gmail.com> (Caligor),
-**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
+** Authors:   Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
 ** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
@@ -24,38 +22,35 @@
 **
 ************************************************************************/
 
-#ifndef CONFIGDIALOG_H
-#define CONFIGDIALOG_H
+#ifndef _EDITSESSIONPROCESS_H_
+#define _EDITSESSIONPROCESS_H_
 
-#include <QDialog>
+#include "viewsessionprocess.h"
 
-class QListWidgetItem;
-class QStackedWidget;
-class Mmapper2Group;
+#include <QDateTime>
 
-namespace Ui {
-class ConfigDialog;
-}
-
-class ConfigDialog : public QDialog
+class EditSessionProcess: public ViewSessionProcess
 {
     Q_OBJECT
 
 public:
-    explicit ConfigDialog(Mmapper2Group *, QWidget *parent = 0);
-    ~ConfigDialog();
+    EditSessionProcess(int key, const QString &title, const QString &body, QObject *parent = 0);
+    ~EditSessionProcess();
 
-public slots:
-    void changePage(QListWidgetItem *current, QListWidgetItem *previous);
+protected slots:
+    void onError(QProcess::ProcessError);
+    void onFinished(int, QProcess::ExitStatus);
+
+protected:
+    void cancelEdit();
+    void finishEdit();
 
 private:
-    Ui::ConfigDialog *ui;
+    QDateTime m_previousTime;
 
-    void createIcons();
-
-    QStackedWidget *pagesWidget;
-
-    Mmapper2Group *m_groupManager;
+signals:
+    void cancel(const int);
+    void save(const QString &, const int);
 };
 
-#endif
+#endif /* _EDITSESSIONPROCESS_H_ */

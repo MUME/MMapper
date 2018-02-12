@@ -33,7 +33,7 @@
 #include <QApplication>
 #include <QHostAddress>
 
-#define DEFAULT_ENCODING "ISO 8859-1"
+#define LATIN_1_ENCODING "ISO 8859-1"
 
 cTelnet::cTelnet(QObject *parent)
     : QObject(parent)
@@ -41,7 +41,6 @@ cTelnet::cTelnet(QObject *parent)
     /** MMapper Telnet */
     termType = QString("MMapper %1").arg(MMAPPER_VERSION);
     // set up encoding
-    codec = 0;
     inCoder = 0;
     outCoder = 0;
     iac = iac2 = insb = false;
@@ -50,7 +49,7 @@ cTelnet::cTelnet(QObject *parent)
     curX = 80;
     curY = 24;
     startupneg = false;
-    encoding = DEFAULT_ENCODING;
+    encoding = Config().m_utf8Charset ? "UTF-8" : LATIN_1_ENCODING;
     reset();
     setupEncoding();
 
@@ -127,12 +126,11 @@ void cTelnet::setupEncoding()
     delete inCoder;
     delete outCoder;
 
-    codec = QTextCodec::codecForName (encoding.toLatin1().data());
-    if (!codec) {  // unable to create codec - use latin1
-        codec = QTextCodec::codecForName (DEFAULT_ENCODING);
-    }
-    inCoder = codec->makeDecoder ();
-    outCoder = codec->makeEncoder ();
+    // MUME can output ASCII, Latin-1, or UTF-8
+    inCoder = QTextCodec::codecForName(encoding)->makeDecoder();
+
+    // MUME only understands Latin-1 input
+    outCoder = QTextCodec::codecForName(LATIN_1_ENCODING)->makeEncoder();
 }
 
 void cTelnet::reset()

@@ -86,7 +86,6 @@ void Configuration::read()
     m_roomNameColor = conf.value("Room name ansi color", "[32m").toString();
     m_roomDescColor = conf.value("Room desc ansi color", "[0m").toString();
 
-    m_IAC_prompt_parser = conf.value("Use IAC-GA prompt", true).toBool();
     m_removeXmlTags = conf.value("Remove XML tags", true).toBool();
 
     m_moveForcePatternsList = conf.value("Move force patterns for XML").toStringList();
@@ -99,6 +98,23 @@ void Configuration::read()
     // XML mode used UTF-8, non-XML used Latin1.
     m_utf8Charset = conf.value("MUME charset is UTF-8", false).toBool();
 
+    conf.endGroup();
+
+    conf.beginGroup("Mume client protocol");
+    m_IAC_prompt_parser = conf.value("Use Telnet IAC-GA prompts", true).toBool();
+    m_remoteEditing = conf.value("Remote editing and viewing", true).toBool();
+    m_internalRemoteEditor = conf.value("Use internal editor", true).toBool();
+    m_externalRemoteEditorCommand = conf.value("External editor command",
+#if defined(Q_OS_LINUX)
+                                               "gedit"
+#elif defined(Q_OS_WIN)
+                                               "notepad"
+#elif defined(Q_OS_MAC)
+                                               "open -t"
+#else
+                                               ""
+#endif
+                                              ).toString();
     conf.endGroup();
 
     conf.beginGroup("Mume native");
@@ -201,7 +217,6 @@ void Configuration::write() const
     conf.setValue("Room name ansi color", m_roomNameColor);
     conf.setValue("Room desc ansi color", m_roomDescColor);
 
-    conf.setValue("Use IAC-GA prompt", m_IAC_prompt_parser);
     conf.setValue("Remove XML tags", m_removeXmlTags);
 
     conf.setValue("Move force patterns for XML", m_moveForcePatternsList);
@@ -218,6 +233,13 @@ void Configuration::write() const
     conf.setValue("Emulated Exits", m_emulatedExits);
     conf.setValue("Show hidden exit flags", m_showHiddenExitFlags);
     conf.setValue("Show notes", m_showNotes);
+    conf.endGroup();
+
+    conf.beginGroup("Mume client protocol");
+    conf.setValue("Use Telnet IAC-GA prompts", m_IAC_prompt_parser);
+    conf.setValue("Remote editing and viewing", m_remoteEditing);
+    conf.setValue("Use internal editor", m_internalRemoteEditor);
+    conf.setValue("External editor command", m_externalRemoteEditorCommand);
     conf.endGroup();
 
     conf.beginGroup("Path Machine");

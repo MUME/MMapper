@@ -46,8 +46,6 @@ ParserPage::ParserPage(QWidget *parent)
 
     updateColors();
 
-    IACPromptCheckBox->setChecked(Config().m_IAC_prompt_parser);
-
     if (Config().m_utf8Charset)
         charset->setCurrentIndex(UiCharsetUTF8);
     else
@@ -92,7 +90,6 @@ ParserPage::ParserPage(QWidget *parent)
     connect (roomDescAnsiUnderline, SIGNAL(toggled(bool)), this,
              SLOT(anyColorToggleButtonToggled(bool)) );
 
-    connect( IACPromptCheckBox, SIGNAL(stateChanged(int)), SLOT(IACPromptCheckBoxStateChanged(int)));
     connect( suppressXmlTagsCheckBox, SIGNAL(stateChanged(int)),
              SLOT(suppressXmlTagsCheckBoxStateChanged(int)));
     connect( charset, SIGNAL(currentIndexChanged(int)), SLOT(charsetChanged(int)));
@@ -107,12 +104,6 @@ void ParserPage::suppressXmlTagsCheckBoxStateChanged(int)
 {
     Config().m_removeXmlTags = suppressXmlTagsCheckBox->isChecked();
 }
-
-void ParserPage::IACPromptCheckBoxStateChanged(int)
-{
-    Config().m_IAC_prompt_parser = IACPromptCheckBox->isChecked();
-}
-
 
 void ParserPage::savePatterns()
 {

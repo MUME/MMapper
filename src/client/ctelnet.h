@@ -211,9 +211,8 @@ private:
     QTcpSocket socket;
     char buffer[8192];
 
-    QString encoding;
+    QByteArray encoding;
 
-    QTextCodec *codec;
     QTextDecoder *inCoder;
     QTextEncoder *outCoder;
 

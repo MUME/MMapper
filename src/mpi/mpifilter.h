@@ -1,8 +1,6 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
-**            Marek Krejza <krejza@gmail.com> (Caligor),
-**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
+** Authors:   Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
 ** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
@@ -24,38 +22,41 @@
 **
 ************************************************************************/
 
-#ifndef CONFIGDIALOG_H
-#define CONFIGDIALOG_H
+#ifndef MPIFILTER_H
+#define MPIFILTER_H
 
-#include <QDialog>
+#include <QObject>
 
-class QListWidgetItem;
-class QStackedWidget;
-class Mmapper2Group;
+#include "proxy/telnetfilter.h"
 
-namespace Ui {
-class ConfigDialog;
-}
-
-class ConfigDialog : public QDialog
+class MpiFilter : public QObject
 {
     Q_OBJECT
-
 public:
-    explicit ConfigDialog(Mmapper2Group *, QWidget *parent = 0);
-    ~ConfigDialog();
+    MpiFilter(QObject *parent = nullptr);
+
+signals:
+    void sendToMud(const QByteArray &);
+    void parseNewMudInput(IncomingData &data);
+    void editMessage(int, QString, QString);
+    void viewMessage(QString, QString);
 
 public slots:
-    void changePage(QListWidgetItem *current, QListWidgetItem *previous);
+    void analyzeNewMudInput(IncomingData &data);
+
+protected:
+    void parseMessage(char command, QByteArray buffer);
+    void parseEditMessage(QByteArray buffer);
+    void parseViewMessage(QByteArray buffer);
 
 private:
-    Ui::ConfigDialog *ui;
+    TelnetDataType m_previousType;
+    bool m_parsingMpi;
 
-    void createIcons();
+    char m_command;
+    int m_remaining;
+    QByteArray m_buffer;
 
-    QStackedWidget *pagesWidget;
-
-    Mmapper2Group *m_groupManager;
 };
 
-#endif
+#endif // MPIFILTER_H

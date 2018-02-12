@@ -83,7 +83,7 @@ void TelnetFilter::analyzeMudStream(const char *input, int length)
     while ( !m_mudIncomingQue.isEmpty() ) {
         data = m_mudIncomingQue.dequeue();
         //parse incoming lines in que
-        emit parseNewMudInputXml(data/*m_mudIncomingQue*/);
+        emit parseNewMudInput(data/*m_mudIncomingQue*/);
     }
     return;
 }
@@ -98,7 +98,7 @@ void TelnetFilter::analyzeUserStream(const char *input, int length)
     while ( !m_userIncomingQue.isEmpty() ) {
         data = m_userIncomingQue.dequeue();
 
-        emit parseNewUserInputXml(data);
+        emit parseNewUserInput(data);
     }
 
     return;

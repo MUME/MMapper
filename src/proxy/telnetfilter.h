@@ -62,8 +62,8 @@ public slots:
 
 
 signals:
-    void parseNewMudInputXml(IncomingData &);
-    void parseNewUserInputXml(IncomingData &);
+    void parseNewMudInput(IncomingData &);
+    void parseNewUserInput(IncomingData &);
 
     //telnet
     void sendToMud(const QByteArray &);

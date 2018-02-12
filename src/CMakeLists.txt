@@ -62,6 +62,11 @@ SET(mmapper_SRCS
     parser/patterns.cpp
     parser/roompropertysetter.cpp
     parser/mmapper2event.cpp
+    mpi/remoteedit.cpp
+    mpi/mpifilter.cpp
+    mpi/viewsessionprocess.cpp
+    mpi/editsessionprocess.cpp
+    mpi/remoteeditwidget.cpp
     pathmachine/approved.cpp
     pathmachine/crossover.cpp
     pathmachine/experimenting.cpp
@@ -79,6 +84,7 @@ SET(mmapper_SRCS
     preferences/parserpage.cpp
     preferences/pathmachinepage.cpp
     preferences/clientpage.cpp
+    preferences/mumeprotocolpage.cpp
     proxy/connectionlistener.cpp
     proxy/proxy.cpp
     proxy/telnetfilter.cpp
@@ -101,11 +107,13 @@ SET(mmapper_UIS
     mainwindow/roomeditattrdlg.ui
     mainwindow/welcomewidget.ui
     clock/mumeclockwidget.ui
+    preferences/configdialog.ui
     preferences/generalpage.ui
     preferences/groupmanagerpage.ui
     preferences/parserpage.ui
     preferences/pathmachinepage.ui
     preferences/clientpage.ui
+    preferences/mumeprotocolpage.ui
 )
 
 IF(WITH_QTIOCOMPRESSOR)

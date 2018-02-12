@@ -104,6 +104,10 @@ public:
     bool m_utf8Charset;
 
     bool m_IAC_prompt_parser;
+    bool m_remoteEditing;
+    bool m_internalRemoteEditor;
+    QString m_externalRemoteEditorCommand;
+
     bool m_removeXmlTags;
 
     QStringList m_moveForcePatternsList;  // string wildcart patterns, that force new move command

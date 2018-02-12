@@ -1,8 +1,6 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
-**            Marek Krejza <krejza@gmail.com> (Caligor),
-**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
+** Authors:   Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
 ** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
@@ -24,38 +22,33 @@
 **
 ************************************************************************/
 
-#ifndef CONFIGDIALOG_H
-#define CONFIGDIALOG_H
+#ifndef _VIEWSESSIONPROCESS_H_
+#define _VIEWSESSIONPROCESS_H_
 
-#include <QDialog>
+#include <QProcess>
+#include <QTemporaryFile>
 
-class QListWidgetItem;
-class QStackedWidget;
-class Mmapper2Group;
-
-namespace Ui {
-class ConfigDialog;
-}
-
-class ConfigDialog : public QDialog
+class ViewSessionProcess: public QProcess
 {
     Q_OBJECT
 
 public:
-    explicit ConfigDialog(Mmapper2Group *, QWidget *parent = 0);
-    ~ConfigDialog();
+    ViewSessionProcess(int key, const QString &title, const QString &body, QObject *parent = 0);
+    virtual ~ViewSessionProcess();
 
-public slots:
-    void changePage(QListWidgetItem *current, QListWidgetItem *previous);
+protected slots:
+    virtual void onError(QProcess::ProcessError);
+    virtual void onFinished(int, QProcess::ExitStatus);
 
-private:
-    Ui::ConfigDialog *ui;
+protected:
+    QStringList splitCommandLine(const QString &cmdLine);
 
-    void createIcons();
+    int m_key;
+    QString m_title;
+    QString m_body;
 
-    QStackedWidget *pagesWidget;
+    QTemporaryFile m_file;
 
-    Mmapper2Group *m_groupManager;
 };
 
-#endif
+#endif /* _VIEWSESSIONPROCESS_H_ */
