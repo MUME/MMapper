@@ -1,8 +1,6 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
-**            Marek Krejza <krejza@gmail.com> (Caligor),
-**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
+** Authors:   Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
 ** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
@@ -24,38 +22,31 @@
 **
 ************************************************************************/
 
-#ifndef CONFIGDIALOG_H
-#define CONFIGDIALOG_H
+#ifndef MUMEPROTOCOLPAGE_H
+#define MUMEPROTOCOLPAGE_H
 
-#include <QDialog>
-
-class QListWidgetItem;
-class QStackedWidget;
-class Mmapper2Group;
+#include <QWidget>
 
 namespace Ui {
-class ConfigDialog;
+class MumeProtocolPage;
 }
 
-class ConfigDialog : public QDialog
+class MumeProtocolPage : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit ConfigDialog(Mmapper2Group *, QWidget *parent = 0);
-    ~ConfigDialog();
+    explicit MumeProtocolPage(QWidget *parent = 0);
+    ~MumeProtocolPage();
 
 public slots:
-    void changePage(QListWidgetItem *current, QListWidgetItem *previous);
+    void IACPromptCheckBoxStateChanged(int);
+    void remoteEditCheckBoxStateChanged(int);
+    void internalEditorRadioButtonChanged(bool);
+    void externalEditorCommandTextChanged(QString);
 
 private:
-    Ui::ConfigDialog *ui;
-
-    void createIcons();
-
-    QStackedWidget *pagesWidget;
-
-    Mmapper2Group *m_groupManager;
+    Ui::MumeProtocolPage *ui;
 };
 
-#endif
+#endif // MUMEPROTOCOLPAGE_H

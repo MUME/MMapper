@@ -38,7 +38,6 @@ class ParseEvent;
 class MapData;
 class Room;
 class Coordinate;
-class IncomingData;
 class RoomFilter;
 class RoomSelection;
 

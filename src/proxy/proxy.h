@@ -36,7 +36,9 @@
 class QFile;
 class QDataStream;
 class TelnetFilter;
+class MpiFilter;
 class MumeXmlParser;
+class RemoteEdit;
 class Proxy;
 
 class MapData;
@@ -108,8 +110,10 @@ private:
 
     bool m_serverConnected;
 
-    TelnetFilter *m_filter;
+    TelnetFilter *m_telnetFilter;
+    MpiFilter *m_mpiFilter;
     MumeXmlParser *m_parserXml;
+    RemoteEdit *m_remoteEdit;
 
     MapData *m_mapData;
     Mmapper2PathMachine *m_pathMachine;

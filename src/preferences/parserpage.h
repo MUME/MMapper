@@ -46,7 +46,6 @@ public slots:
 
     void anyColorToggleButtonToggled(bool);
 
-    void IACPromptCheckBoxStateChanged(int);
     void suppressXmlTagsCheckBoxStateChanged(int);
 
 private slots:

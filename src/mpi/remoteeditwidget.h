@@ -1,8 +1,6 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
-**            Marek Krejza <krejza@gmail.com> (Caligor),
-**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
+** Authors:   Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
 ** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
@@ -24,38 +22,44 @@
 **
 ************************************************************************/
 
-#ifndef CONFIGDIALOG_H
-#define CONFIGDIALOG_H
+#ifndef REMOTEEDITWIDGET_H
+#define REMOTEEDITWIDGET_H
 
 #include <QDialog>
+#include <QAction>
 
-class QListWidgetItem;
-class QStackedWidget;
-class Mmapper2Group;
+class QTextEdit;
 
-namespace Ui {
-class ConfigDialog;
-}
-
-class ConfigDialog : public QDialog
+class RemoteEditWidget : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit ConfigDialog(Mmapper2Group *, QWidget *parent = 0);
-    ~ConfigDialog();
+    RemoteEditWidget(int key, const QString &title, const QString &body, QWidget *parent = 0);
+    ~RemoteEditWidget();
 
-public slots:
-    void changePage(QListWidgetItem *current, QListWidgetItem *previous);
+    QSize minimumSizeHint() const;
+    QSize sizeHint() const;
+    void closeEvent(QCloseEvent *event);
+    bool isEditSession();
+
+protected slots:
+    void cancelEdit();
+    void finishEdit();
+    bool maybeCancel();
+    bool contentsChanged();
+
+signals:
+    void cancel(const int);
+    void save(const QString &, const int);
 
 private:
-    Ui::ConfigDialog *ui;
+    const int m_key;
+    const QString m_title;
+    const QString m_body;
+    bool m_submitted;
 
-    void createIcons();
-
-    QStackedWidget *pagesWidget;
-
-    Mmapper2Group *m_groupManager;
+    QTextEdit *m_textEdit;
 };
 
-#endif
+#endif // REMOTEEDITWIDGET_H
