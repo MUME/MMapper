@@ -269,7 +269,10 @@ void MapCanvas::wheelEvent ( QWheelEvent *event )
     if (event->delta() > 100) {
         switch (m_canvasMouseMode) {
         case CMM_MOVE:
-            zoomIn();
+            if (event->modifiers() & Qt::CTRL)
+                layerDown();
+            else
+                zoomIn();
             break;
         case CMM_EDIT_INFOMARKS:
         case CMM_SELECT_ROOMS:
@@ -287,7 +290,10 @@ void MapCanvas::wheelEvent ( QWheelEvent *event )
     if (event->delta() < -100) {
         switch (m_canvasMouseMode) {
         case CMM_MOVE:
-            zoomOut();
+            if (event->modifiers() & Qt::CTRL)
+                layerUp();
+            else
+                zoomOut();
             break;
         case CMM_EDIT_INFOMARKS:
         case CMM_SELECT_ROOMS:
