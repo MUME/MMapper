@@ -100,8 +100,8 @@ void GroupWidget::updateLabels()
 
     // Render the existing and new characters
     int row = 0;
-    setRowCount(current.size());
-    foreach (QString name, current) {
+    setRowCount(selection->keys().size());
+    foreach (QString name, selection->keys()) {
         CGroupChar *character = selection->value(name);
         QList<QTableWidgetItem *> items = m_nameItemHash[name];
         bool newItem = items.isEmpty();

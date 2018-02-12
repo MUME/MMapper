@@ -100,7 +100,7 @@
      <property name="title">
       <string>Remote Editing</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout">
+     <layout class="QGridLayout" name="gridLayout_1">
       <item row="2" column="0">
        <widget class="QRadioButton" name="internalEditorRadioButton">
         <property name="text">
