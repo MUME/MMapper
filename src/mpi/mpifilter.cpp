@@ -23,6 +23,7 @@
 ************************************************************************/
 
 #include "mpifilter.h"
+#include "configuration/configuration.h"
 
 #include <QDebug>
 
@@ -59,11 +60,13 @@ void MpiFilter::analyzeNewMudInput(IncomingData &data)
         case TDT_LF:
         case TDT_CRLF:
             if (!m_parsingMpi && data.line.length() >= 6 && data.line.startsWith("~$#E")) {
-                m_parsingMpi = true;
                 m_buffer.clear();
                 m_command = data.line.at(4);
                 m_remaining = data.line.mid(5).simplified().toInt();
-                break;
+                if (Config().m_remoteEditing && (m_command == 'V' || m_command == 'E')) {
+                    m_parsingMpi = true;
+                    break;
+                }
             }
         default:
             emit parseNewMudInput(data);
