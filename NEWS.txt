@@ -1,4 +1,15 @@
 ================================
+MMapper 2.4.5 (February 11, 2018)
+================================
+
+Changes:
+ - MMapper has a simple integrated mud client now
+ - Remote editing is now supported through MMapper
+ - Config Dialog has been overhauled
+ - Updated MUME clock because the Third Age has been reset for the 10th time
+ - Group Manager members are now displayed in sorted order
+
+================================
 MMapper 2.4.4 (January 28, 2018)
 ================================
 
@@ -20,7 +31,6 @@ Changes:
  - Prompt text now influences group manager numerical scores
  - Contextual menus and cursors have been introduced to the map canvas
  - The parser will use the same newline terminator that the mud client is using
-
 
 ================================
 MMapper 2.4.3 (January 16, 2018)

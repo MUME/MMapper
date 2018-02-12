@@ -13,6 +13,8 @@ MMapper
 6.  Pseudo 3D layers and drag and drop mouse operations
 7.  Multi platform support
 8.  Group manager support to see other people on your map
+9.  Integrated mud client
+10.  Remote editing support
 
 ## Usage
 Set up your client according to the [wiki instructions](https://github.com/MUME/MMapper/wiki).
