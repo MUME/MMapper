@@ -26,6 +26,7 @@
 
 #include "configuration.h"
 #include <QSettings>
+#include <QHostInfo>
 
 Configuration::Configuration()
 {
@@ -150,7 +151,7 @@ void Configuration::read()
     m_groupManagerLocalPort = conf.value("local port", 4243).toInt();
     m_groupManagerRemotePort = conf.value("remote port", 4243).toInt();
     m_groupManagerHost = conf.value("host", "localhost").toByteArray();
-    m_groupManagerCharName = conf.value("character name", "MMapper").toByteArray();
+    m_groupManagerCharName = conf.value("character name", QHostInfo::localHostName()).toByteArray();
     m_showGroupManager = conf.value("show", false).toBool();
     m_groupManagerColor = (QColor) conf.value("color", "#ffff00").toString();
     m_groupManagerRulesWarning = conf.value("rules warning", true).toBool();
