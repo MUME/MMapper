@@ -53,6 +53,7 @@ public slots:
     void closeEvent(QCloseEvent *event);
     void connectToHost();
     void disconnectFromHost();
+    void saveLog();
     void onConnected();
     void onDisconnected();
     void onSocketError(const QString &errorStr);

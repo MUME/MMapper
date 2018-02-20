@@ -107,21 +107,29 @@ ClientWidget::ClientWidget(QWidget *parent) : QDialog(parent),
 
     QMenu *fileMenu = menuBar->addMenu("&File");
 
-    QAction *connectAct = new QAction(QIcon(":/icons/online.png"), tr("Co&nnect"), 0);
+    QAction *connectAct = new QAction(QIcon(":/icons/online.png"), tr("Co&nnect"), this);
     connectAct->setShortcut(tr("Ctrl+N"));
     connect(connectAct, SIGNAL(triggered()), this, SLOT(connectToHost()) );
     connect(connectAct, &QAction::hovered, [this]() {
         m_statusBar->showMessage(tr("Connect to the remote host"), 1000);
     });
 
-    QAction *disconnectAct = new QAction(QIcon(":/icons/offline.png"), tr("&Disconnect"), 0);
+    QAction *disconnectAct = new QAction(QIcon(":/icons/offline.png"), tr("&Disconnect"), this);
     disconnectAct->setShortcut(tr("Ctrl+D"));
     connect(disconnectAct, SIGNAL(triggered()), this, SLOT(disconnectFromHost()) );
     connect(disconnectAct, &QAction::hovered, [this]() {
         m_statusBar->showMessage(tr("Disconnect from the remote host"), 1000);
     });
 
-    QAction *closeAct = new QAction(QIcon(":/icons/exit.png"), tr("E&xit"), 0);
+    QAction *saveLog = new QAction(QIcon::fromTheme("document-save", QIcon(":/icons/save.png")),
+                                   tr("&Save log as..."), this);
+    saveLog->setShortcut(tr("Ctrl+S"));
+    connect(saveLog, SIGNAL(triggered()), this, SLOT(saveLog()));
+    connect(saveLog, &QAction::hovered, [this]() {
+        m_statusBar->showMessage(tr("Save log as file"), 1000);
+    });
+
+    QAction *closeAct = new QAction(QIcon(":/icons/exit.png"), tr("E&xit"), this);
     closeAct->setShortcut(tr("Ctrl+Q"));
     connect(closeAct, SIGNAL(triggered()), this, SLOT(close()));
     connect(closeAct, &QAction::hovered, [this]() {
@@ -130,6 +138,7 @@ ClientWidget::ClientWidget(QWidget *parent) : QDialog(parent),
 
     fileMenu->addAction(connectAct);
     fileMenu->addAction(disconnectAct);
+    fileMenu->addAction(saveLog);
     fileMenu->addAction(closeAct);
 
     QMenu *editMenu = menuBar->addMenu("&Edit");
@@ -230,6 +239,41 @@ void ClientWidget::sendToMud(const QByteArray &ba)
     if (m_connected) {
         m_telnet->sendToMud(ba);
     }
+}
+
+void ClientWidget::saveLog()
+{
+    QPointer<QFileDialog> save = new QFileDialog(this, "Choose log file name ...");
+    save->setFileMode(QFileDialog::AnyFile);
+    save->setDirectory(QDir::current());
+    save->setNameFilters(QStringList() << "Text log (*.log *.txt)" << "HTML log (*.htm *.html)");
+    save->setDefaultSuffix("txt");
+    save->setAcceptMode(QFileDialog::AcceptSave);
+
+    QStringList fileNames;
+    if (save->exec()) {
+        fileNames = save->selectedFiles();
+    }
+
+    if (fileNames.isEmpty()) {
+        m_statusBar->showMessage(tr("No filename provided"), 2000);
+        return ;
+    }
+
+    QFile document(fileNames[0]);
+    if (!document.open(QFile::WriteOnly | QFile::Text)) {
+        m_statusBar->showMessage(QString("Error occur while opening %1").arg(document.fileName()), 2000);
+        return ;
+    }
+
+    QString nameFilter = save->selectedNameFilter();
+    if (nameFilter.contains("HTML")) {
+        document.write(m_display->document()->toHtml().toLocal8Bit());
+
+    } else {
+        document.write(m_display->document()->toPlainText().toLocal8Bit());
+    }
+    document.close();
 }
 
 QSize ClientWidget::minimumSizeHint() const
