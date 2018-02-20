@@ -126,6 +126,8 @@ void Configuration::read()
     if (m_moveForcePatternsList.isEmpty()) {
         m_moveForcePatternsList.append("#?leads you out");
         m_moveForcePatternsList.append("#<Suddenly an explosion of ancient rhymes");
+        m_moveForcePatternsList.append("#=You board the ferry."); // Grey Havens
+        m_moveForcePatternsList.append("#=You leave the ferry.");
     }
 
     if (m_noDescriptionPatternsList.isEmpty()) {
