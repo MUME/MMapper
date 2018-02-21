@@ -29,6 +29,8 @@
 #include "mapdata/mapdata.h"
 #include "mmapper2room.h"
 
+#include <QVBoxLayout>
+#include <QTableWidget>
 #include <QMessageBox>
 #include <QHeaderView>
 #include <QList>
@@ -37,16 +39,27 @@
 #define GROUP_COLUMN_COUNT 8
 
 GroupWidget::GroupWidget(Mmapper2Group *groupManager, MapData *md, QWidget *parent) :
-    QTableWidget(1, GROUP_COLUMN_COUNT, parent),
+    QWidget(parent),
     m_group(groupManager),
     m_map(md)
 {
-    setColumnCount(GROUP_COLUMN_COUNT);
-    setHorizontalHeaderLabels(QStringList() << tr("Name") << tr("HP %") << tr("Mana %") << tr("Moves %")
-                              << tr("HP") << tr("Mana") << tr("Moves") << tr("Room Name"));
-    verticalHeader()->setVisible(false);
-    setAlternatingRowColors(true);
-    setSelectionMode(QAbstractItemView::NoSelection);
+    QVBoxLayout *layout = new QVBoxLayout(this);
+    layout->setAlignment(Qt::AlignTop);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(0);
+
+    m_table = new QTableWidget(1, GROUP_COLUMN_COUNT, this);
+
+    m_table->setColumnCount(GROUP_COLUMN_COUNT);
+    m_table->setHorizontalHeaderLabels(QStringList() << tr("Name") << tr("HP %") << tr("Mana %") <<
+                                       tr("Moves %")
+                                       << tr("HP") << tr("Mana") << tr("Moves") << tr("Room Name"));
+    m_table->verticalHeader()->setVisible(false);
+    m_table->setAlternatingRowColors(true);
+    m_table->setSelectionMode(QAbstractItemView::NoSelection);
+    m_table->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+    layout->addWidget(m_table);
+
     hide();
 
     connect(m_group, SIGNAL(drawCharacters()), SLOT(updateLabels()), Qt::QueuedConnection);
@@ -63,6 +76,7 @@ GroupWidget::~GroupWidget()
         }
     }
     m_nameItemHash.clear();
+    delete m_table;
 }
 
 void GroupWidget::setItemText(QTableWidgetItem *item, const QString &text, const QColor &color)
@@ -90,7 +104,7 @@ void GroupWidget::updateLabels()
             if (!items.isEmpty()) {
                 int row = items[0]->row();
                 for (uint i = 0; i < items.length(); i++) {
-                    QTableWidgetItem *item = takeItem(row, i);
+                    QTableWidgetItem *item = m_table->takeItem(row, i);
                     delete item;
                 }
             }
@@ -100,7 +114,7 @@ void GroupWidget::updateLabels()
 
     // Render the existing and new characters
     int row = 0;
-    setRowCount(selection->keys().size());
+    m_table->setRowCount(selection->keys().size());
     foreach (QString name, selection->keys()) {
         CGroupChar *character = selection->value(name);
         QList<QTableWidgetItem *> items = m_nameItemHash[name];
@@ -117,7 +131,7 @@ void GroupWidget::updateLabels()
         bool moveItem = previousRow != row;
         if (newItem || moveItem) {
             for (uint i = 0; i < GROUP_COLUMN_COUNT; i++) {
-                takeItem(previousRow, i);
+                m_table->takeItem(previousRow, i);
             }
         }
         QTableWidgetItem *nameItem, *hpItemPct, *manaItemPct, *movesItemPct,
@@ -161,14 +175,14 @@ void GroupWidget::updateLabels()
         setItemText(roomNameItem, roomName, color);
 
         if (newItem || moveItem) {
-            setItem(row, 0, nameItem);
-            setItem(row, 1, hpItemPct);
-            setItem(row, 2, manaItemPct);
-            setItem(row, 3, movesItemPct);
-            setItem(row, 4, hpItem);
-            setItem(row, 5, manaItem);
-            setItem(row, 6, movesItem);
-            setItem(row, 7, roomNameItem);
+            m_table->setItem(row, 0, nameItem);
+            m_table->setItem(row, 1, hpItemPct);
+            m_table->setItem(row, 2, manaItemPct);
+            m_table->setItem(row, 3, movesItemPct);
+            m_table->setItem(row, 4, hpItem);
+            m_table->setItem(row, 5, manaItem);
+            m_table->setItem(row, 6, movesItem);
+            m_table->setItem(row, 7, roomNameItem);
         }
 
         /*
@@ -194,8 +208,8 @@ void GroupWidget::updateLabels()
     m_group->getGroup()->unselect(selection);
 
     for (int i = 0; i < GROUP_COLUMN_COUNT; i++)
-        resizeColumnToContents(i);
-    horizontalHeader()->setStretchLastSection(true);
+        m_table->resizeColumnToContents(i);
+    m_table->horizontalHeader()->setStretchLastSection(true);
 }
 
 void GroupWidget::messageBox(QString title, QString message)

@@ -152,7 +152,7 @@ void Configuration::read()
     m_groupManagerRemotePort = conf.value("remote port", 4243).toInt();
     m_groupManagerHost = conf.value("host", "localhost").toByteArray();
     m_groupManagerCharName = conf.value("character name", QHostInfo::localHostName()).toByteArray();
-    m_showGroupManager = conf.value("show", false).toBool();
+    m_groupManagerShareSelf = conf.value("share self", true).toBool();
     m_groupManagerColor = (QColor) conf.value("color", "#ffff00").toString();
     m_groupManagerRulesWarning = conf.value("rules warning", true).toBool();
     conf.endGroup();
@@ -261,7 +261,7 @@ void Configuration::write() const
     conf.setValue("remote port", m_groupManagerRemotePort);
     conf.setValue("host", m_groupManagerHost);
     conf.setValue("character name", m_groupManagerCharName);
-    conf.setValue("show", m_showGroupManager);
+    conf.setValue("share self", m_groupManagerShareSelf);
     conf.setValue("color", m_groupManagerColor.name());
     conf.setValue("rules warning", m_groupManagerRulesWarning);
     conf.endGroup();

@@ -46,6 +46,7 @@ public slots:
     void localHostLinkActivated(const QString &);
 
     void rulesWarningChanged(int);
+    void shareSelfChanged(int);
 
 signals:
     void setGroupManagerType(int);

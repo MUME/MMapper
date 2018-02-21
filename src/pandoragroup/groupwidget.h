@@ -25,15 +25,17 @@
 #ifndef GROUPWIDGET_H
 #define GROUPWIDGET_H
 
-#include <QTableWidget>
+#include <QWidget>
 #include <QHash>
 
 #include "groupselection.h"
 
 class Mmapper2Group;
 class MapData;
+class QTableWidget;
+class QTableWidgetItem;
 
-class GroupWidget : public QTableWidget
+class GroupWidget : public QWidget
 {
     Q_OBJECT
 public:
@@ -47,6 +49,7 @@ public slots:
     void messageBox(QString title, QString message);
 
 private:
+    QTableWidget *m_table;
     Mmapper2Group *m_group;
     MapData *m_map;
     QHash<QString, QList<QTableWidgetItem *>> m_nameItemHash;

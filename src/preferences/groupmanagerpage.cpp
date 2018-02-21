@@ -50,6 +50,7 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
     connect( remotePort, SIGNAL( valueChanged(int) ), SLOT( remotePortValueChanged(int) )  );
     // Checkbox Section
     connect( rulesWarning, SIGNAL(stateChanged(int)), SLOT(rulesWarningChanged(int)));
+    connect( shareSelfCheckBox, SIGNAL(stateChanged(int)), SLOT(shareSelfChanged(int)));
 
     // Inform Group Manager of changes
     connect( this, SIGNAL(setGroupManagerType(int)), m_groupManager, SLOT(setType(int)));
@@ -63,6 +64,7 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
     remoteHost->setText( Config().m_groupManagerHost );
     remotePort->setValue( Config().m_groupManagerRemotePort );
     rulesWarning->setChecked( Config().m_groupManagerRulesWarning );
+    shareSelfCheckBox->setChecked( Config().m_groupManagerShareSelf );
 }
 
 void GroupManagerPage::charNameTextChanged()
@@ -127,4 +129,9 @@ void GroupManagerPage::localPortValueChanged(int)
 void GroupManagerPage::rulesWarningChanged(int)
 {
     Config().m_groupManagerRulesWarning = rulesWarning->isChecked();
+}
+
+void GroupManagerPage::shareSelfChanged(int)
+{
+    Config().m_groupManagerShareSelf = shareSelfCheckBox->isChecked();
 }

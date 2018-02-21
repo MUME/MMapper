@@ -283,8 +283,10 @@ void CGroupServerCommunicator::retrieveData(CGroupClient *conn, int message, QDo
 
 void CGroupServerCommunicator::sendCharUpdate(QDomNode blob)
 {
-    QByteArray message = formMessageBlock(UPDATE_CHAR, blob);
-    server->sendToAll(message);
+    if (Config().m_groupManagerShareSelf) {
+        QByteArray message = formMessageBlock(UPDATE_CHAR, blob);
+        server->sendToAll(message);
+    }
 }
 
 void CGroupServerCommunicator::parseLoginInformation(CGroupClient *conn, QDomNode data)
@@ -346,6 +348,9 @@ void CGroupServerCommunicator::sendGroupInformation(CGroupClient *conn)
     foreach (CGroupChar *character, selection->values()) {
         // Only send group information for other characters
         if (clientsList.value(character->getName()) == conn->socketDescriptor())
+            continue;
+        // Only share self if we enabled it
+        if (getGroup()->getSelf() == character && !Config().m_groupManagerShareSelf)
             continue;
         CGroupCommunicator::sendCharUpdate(conn, character->toXML());
     }

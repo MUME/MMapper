@@ -130,7 +130,7 @@ public:
     int m_groupManagerRemotePort;
     QByteArray m_groupManagerHost;
     QByteArray m_groupManagerCharName;
-    bool m_showGroupManager;
+    bool m_groupManagerShareSelf;
     QColor m_groupManagerColor;
     bool m_groupManagerRulesWarning;
 
