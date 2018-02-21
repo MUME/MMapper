@@ -76,19 +76,22 @@ RemoteEditWidget::RemoteEditWidget(int key, const QString &title, const QString 
     connect(quitAction, SIGNAL(triggered()), SLOT(cancelEdit()));
 
     QMenu *editMenu = menuBar->addMenu("&Edit");
-    QAction *cutAct = new QAction(QIcon(":/icons/cut.png"), tr("Cu&t"), this);
+    QAction *cutAct = new QAction(QIcon::fromTheme("edit-cut", QIcon(":/icons/cut.png")), tr("Cu&t"),
+                                  this);
     cutAct->setShortcut(tr("Ctrl+X"));
     cutAct->setStatusTip(tr("Cut the current selection's contents to the clipboard"));
     editMenu->addAction(cutAct);
     connect(cutAct, SIGNAL(triggered()), m_textEdit, SLOT(cut()));
 
-    QAction *copyAct = new QAction(QIcon(":/icons/copy.png"), tr("&Copy"), this);
+    QAction *copyAct = new QAction(QIcon::fromTheme("edit-copy", QIcon(":/icons/copy.png")),
+                                   tr("&Copy"), this);
     copyAct->setShortcut(tr("Ctrl+C"));
     copyAct->setStatusTip(tr("Copy the current selection's contents to the clipboard"));
     editMenu->addAction(copyAct);
     connect(copyAct, SIGNAL(triggered()), m_textEdit, SLOT(copy()));
 
-    QAction *pasteAct = new QAction(QIcon(":/icons/paste.png"), tr("&Paste"), this);
+    QAction *pasteAct = new QAction(QIcon::fromTheme("edit-paste", QIcon(":/icons/paste.png")),
+                                    tr("&Paste"), this);
     pasteAct->setShortcut(tr("Ctrl+V"));
     pasteAct->setStatusTip(tr("Paste the clipboard's contents into the current selection"));
     editMenu->addAction(pasteAct);
