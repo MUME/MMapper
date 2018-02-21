@@ -129,11 +129,12 @@ ClientWidget::ClientWidget(QWidget *parent) : QDialog(parent),
         m_statusBar->showMessage(tr("Save log as file"), 1000);
     });
 
-    QAction *closeAct = new QAction(QIcon(":/icons/exit.png"), tr("E&xit"), this);
+    QAction *closeAct = new QAction(QIcon::fromTheme("window-close", QIcon(":/icons/exit.png")),
+                                    tr("E&xit"), this);
     closeAct->setShortcut(tr("Ctrl+Q"));
     connect(closeAct, SIGNAL(triggered()), this, SLOT(close()));
     connect(closeAct, &QAction::hovered, [this]() {
-        m_statusBar->showMessage(tr("Quit the mud client"), 1000);
+        m_statusBar->showMessage(tr("Close the mud client"), 1000);
     });
 
     fileMenu->addAction(connectAct);

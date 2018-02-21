@@ -69,7 +69,8 @@ RemoteEditWidget::RemoteEditWidget(int key, const QString &title, const QString 
         connect(saveAction, SIGNAL(triggered()), SLOT(finishEdit()));
     }
 
-    QAction *quitAction = new QAction(QIcon(":/icons/exit.png"), tr("&Quit"), this);
+    QAction *quitAction = new QAction(QIcon::fromTheme("window-close", QIcon(":/icons/exit.png")),
+                                      tr("E&xit"), this);
     quitAction->setShortcut(tr("Ctrl+Q"));
     fileMenu->addAction(quitAction);
     connect(quitAction, SIGNAL(triggered()), SLOT(cancelEdit()));
