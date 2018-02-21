@@ -848,8 +848,17 @@ void MainWindow::showContextMenu(const QPoint &pos)
     } else if (m_connectionSelection) {
         contextMenu.addAction(deleteConnectionSelectionAct);
     }
+    contextMenu.addSeparator();
+    QMenu *mouseMenu = contextMenu.addMenu(QIcon::fromTheme("input-mouse"), "Mouse Mode");
+    mouseMenu->addAction(modeMoveSelectAct);
+    mouseMenu->addAction(modeRoomSelectAct);
+    mouseMenu->addAction(modeConnectionSelectAct);
+    mouseMenu->addAction(modeCreateRoomAct);
+    mouseMenu->addAction(modeCreateConnectionAct);
+    mouseMenu->addAction(modeCreateOnewayConnectionAct);
+    mouseMenu->addAction(modeInfoMarkEditAct);
 
-    contextMenu.exec(mapToGlobal(pos));
+    contextMenu.exec(getCurrentMapWindow()->getCanvas()->mapToGlobal(pos));
 }
 
 void MainWindow::alwaysOnTop()
