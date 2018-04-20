@@ -110,8 +110,8 @@ void MumeClock::parseMumeTime(const QString &mumeTime, int secsSinceEpoch)
     int year = MUME_START_YEAR;
 
     if (mumeTime.at(0).isDigit()) {
-        // 3pm on Highday, the 18th of Halimath, Year 3030 of the Third Age.
-        QRegExp rx("(\\d+)(am|pm) on \\w+, the (\\d+).{2} of (\\w+), Year (\\d+) of the Third Age.");
+        // 3pm on Highday, the 18th of Halimath, year 3030 of the Third Age.
+        QRegExp rx("(\\d+)(am|pm) on \\w+, the (\\d+).{2} of (\\w+), year (\\d+) of the Third Age.");
         if (rx.indexIn(mumeTime) != -1) {
             hour = rx.cap(1).toInt();
             if (rx.cap(2).at(0) == 'p') {
@@ -134,8 +134,8 @@ void MumeClock::parseMumeTime(const QString &mumeTime, int secsSinceEpoch)
                 m_precision = MUMECLOCK_HOUR;
         }
     } else {
-        // "Highday, the 18th of Halimath, Year 3030 of the Third Age."
-        QRegExp rx("\\w+, the (\\d+).{2} of (\\w+), Year (\\d+) of the Third Age.");
+        // "Highday, the 18th of Halimath, year 3030 of the Third Age."
+        QRegExp rx("\\w+, the (\\d+).{2} of (\\w+), year (\\d+) of the Third Age.");
         if (rx.indexIn(mumeTime) != -1) {
             day = rx.cap(1).toInt() - 1;
             month = s_westronMonthNames.keyToValue(rx.cap(2).toLatin1().data());
@@ -241,8 +241,8 @@ void MumeClock::parseClockTime(const QString &clockTime)
 
 void MumeClock::parseClockTime(const QString &clockTime, int secsSinceEpoch)
 {
-    // The current time is 5:23 pm.
-    QRegExp rx("The current time is (\\d+):(\\d+) (am|pm).");
+    // The current time is 5:23pm.
+    QRegExp rx("The current time is (\\d+):(\\d+)(am|pm).");
     if (rx.indexIn(clockTime) != -1) {
         int hour = rx.cap(1).toInt();
         int minute = rx.cap(2).toInt();
@@ -308,7 +308,7 @@ const QString MumeClock::toMumeTime(const MumeMoment &moment)
 
     // TODO: Figure out how to reverse engineer the day of the week
     QString monthName = MumeClock::s_westronMonthNames.valueToKey((WestronMonthNames)moment.m_month);
-    return QString("%1%2%3 of %4, Year %5 of the Third Age.")
+    return QString("%1%2%3 of %4, year %5 of the Third Age.")
            .arg(time)
            .arg(day)
            .arg(daySuffix)
