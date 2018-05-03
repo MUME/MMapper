@@ -95,8 +95,6 @@ ClientWidget::ClientWidget(QWidget *parent) : QDialog(parent),
             SLOT(displayText(const QString &)));
     connect(m_telnet, SIGNAL(sendToUser(const QString &)), m_display,
             SLOT(displayText(const QString &)));
-    connect(m_display, SIGNAL(dimensionsChanged(int, int)), m_telnet, SLOT(windowSizeChanged(int,
-                                                                                             int)));
     connect(m_display, SIGNAL(showMessage(const QString &, int)), m_statusBar,
             SLOT(showMessage(const QString &, int)));
     readSettings();

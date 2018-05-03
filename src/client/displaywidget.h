@@ -63,7 +63,6 @@ private:
     void updateFormatBoldColor(QTextCharFormat &format);
 
 signals:
-    void dimensionsChanged(int, int);
     void showMessage(const QString &, int);
 };
 

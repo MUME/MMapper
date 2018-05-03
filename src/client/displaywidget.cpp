@@ -108,7 +108,6 @@ void DisplayWidget::resizeEvent(QResizeEvent *event)
     int y = (size().height() - contentsMargins().top() - contentsMargins().bottom()) / fm.lineSpacing();
     setLineWrapColumnOrWidth(x);
     verticalScrollBar()->setPageStep(y);
-    emit dimensionsChanged(x, y);
     emit showMessage(QString("Dimensions: %1x%2").arg(x).arg(y), 1000);
     QTextEdit::resizeEvent(event);
 }
