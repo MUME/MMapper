@@ -27,6 +27,7 @@
 #include "configuration.h"
 #include <QSettings>
 #include <QHostInfo>
+#include <QFontDatabase>
 
 Configuration::Configuration()
 {
@@ -164,7 +165,8 @@ void Configuration::read()
     conf.endGroup();
 
     conf.beginGroup("Integrated Mud Client");
-    QFont defaultClientFont("Monospace", 12);
+    QFont defaultClientFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    defaultClientFont.setPointSize(12);
     defaultClientFont.setStyleHint(QFont::Monospace, QFont::PreferAntialias);
     m_clientFont.fromString(conf.value("Font", defaultClientFont.toString()).toString());
     m_clientBackgroundColor = conf.value("Background color", QColor(Qt::black).name()).toString();
