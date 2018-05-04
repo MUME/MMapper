@@ -164,7 +164,7 @@ void Configuration::read()
     conf.endGroup();
 
     conf.beginGroup("Integrated Mud Client");
-    QFont defaultClientFont("Monospace", 10);
+    QFont defaultClientFont("Monospace", 12);
     defaultClientFont.setStyleHint(QFont::Monospace, QFont::PreferAntialias);
     m_clientFont.fromString(conf.value("Font", defaultClientFont.toString()).toString());
     m_clientBackgroundColor = conf.value("Background color", QColor(Qt::black).name()).toString();
