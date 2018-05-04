@@ -143,8 +143,7 @@ MapCanvas::MapCanvas( MapData *mapData, PrespammedPath *prespammedPath, Mmapper2
     int samples = Config().m_antialiasingSamples;
     if (samples <= 0) samples = 2; // Default to 2 samples to prevent restart
     QSurfaceFormat format;
-    format.setVersion(2, 1);
-    format.setRenderableType(QSurfaceFormat::OpenGL);
+    format.setVersion(1, 0);
     format.setSamples(samples);
     setFormat(format);
 }
@@ -190,7 +189,9 @@ inline static void loadMatrix(const QMatrix4x4 &m)
     const float *data = m.constData();
     for (int index = 0; index < 16; ++index)
         mat[index] = data[index];
-    glLoadMatrixf(mat);
+    QOpenGLFunctions_1_0 *f = QOpenGLContext::currentContext()->
+                              versionFunctions<QOpenGLFunctions_1_0>();
+    f->glLoadMatrixf(mat);
 }
 
 float MapCanvas::SCROLLFACTOR()
@@ -919,15 +920,18 @@ void MapCanvas::initializeGL()
 {
     initializeOpenGLFunctions();
 
-    QByteArray version((const char *)glGetString(GL_VERSION));
-    QByteArray renderer((const char *)glGetString(GL_RENDERER));
-    QByteArray vendor((const char *)glGetString(GL_VENDOR));
+    QByteArray version((const char * )glGetString(GL_VERSION));
+    QByteArray renderer((const char * )glGetString(GL_RENDERER));
+    QByteArray vendor((const char * )glGetString(GL_VENDOR));
+    QByteArray isOpenGLES((context()->isOpenGLES() ? "true" : "false"));
     qInfo() << "OpenGL Version: " << version;
     qInfo() << "OpenGL Renderer: " << renderer;
     qInfo() << "OpenGL Vendor: " << vendor;
+    qInfo() << "OpenGLES: " << isOpenGLES;
     emit log("MapCanvas", "OpenGL Version: " + version);
     emit log("MapCanvas", "OpenGL Renderer: " + renderer);
     emit log("MapCanvas", "OpenGL Vendor: " + vendor);
+    emit log("MapCanvas", "OpenGLES: " + isOpenGLES);
 
     QString contextStr = QString("%1.%2 ")
                          .arg(context()->format().majorVersion())
@@ -1114,7 +1118,7 @@ void MapCanvas::drawCharacter(const Coordinate &c, QColor color)
         glCallList(m_character_hint_inner_gllist);
         glDisable(GL_BLEND);
 
-        qglColor(color);
+        glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
         glCallList(m_character_hint_gllist);
 
     } else if (z != m_currentLayer) {
@@ -1125,7 +1129,7 @@ void MapCanvas::drawCharacter(const Coordinate &c, QColor color)
         glCallList(m_character_hint_inner_gllist);
         glDisable(GL_BLEND);
 
-        qglColor(color);
+        glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
         glCallList(m_character_hint_gllist);
     } else {
         // Player is on the same layer and visible
@@ -1134,7 +1138,7 @@ void MapCanvas::drawCharacter(const Coordinate &c, QColor color)
         glCallList(m_room_selection_inner_gllist);
         glDisable(GL_BLEND);
 
-        qglColor(color);
+        glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
         glCallList(m_room_selection_gllist);
     }
     glEnable(GL_DEPTH_TEST);
@@ -1144,7 +1148,8 @@ void MapCanvas::drawCharacter(const Coordinate &c, QColor color)
 void MapCanvas::paintGL()
 {
     // Background Color
-    qglClearColor(Config().m_backgroundColor);
+    glClearColor(Config().m_backgroundColor.redF(), Config().m_backgroundColor.greenF(),
+                 Config().m_backgroundColor.blueF(), Config().m_backgroundColor.alphaF());
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -1178,7 +1183,8 @@ void MapCanvas::paintGL()
         glVertex3d(m_selX2, m_selY2, 0.005);
         glVertex3d(m_selX1, m_selY2, 0.005);
         glEnd();
-        qglColor(Qt::white);
+        QColor color = Qt::white;
+        glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
 
         glLineStipple(4, 43690);
         glEnable(GL_LINE_STIPPLE);
@@ -1275,7 +1281,8 @@ void MapCanvas::paintGL()
             }
         }
 
-        qglColor(Qt::red);
+        QColor color = Qt::red;
+        glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
         glPointSize (devicePixelRatio() * 10.0);
         glBegin(GL_POINTS);
         glVertex3d(x1p, y1p, 0.005);
@@ -1326,7 +1333,8 @@ void MapCanvas::paintGL()
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glCallList(m_room_gllist);
 
-            qglColor(Qt::red);
+            QColor color = Qt::red;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glBegin(GL_LINE_STRIP);
             glVertex3d(0 + len, 0, 0.005);
             glVertex3d(0, 0, 0.005);
@@ -1409,9 +1417,9 @@ void MapCanvas::drawPathStart(const Coordinate &sc)
     glPushMatrix();
     glTranslated(x1, y1, 0);
 
-    // Instead of yellow use the player's color
-    //glColor4d(1.0f, 1.0f, 0.0f, 1.0f);
-    qglColor(Config().m_groupManagerColor);
+    // Use the player's color
+    QColor color = Config().m_groupManagerColor;
+    glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
     glEnable(GL_BLEND);
     glPointSize (devicePixelRatio() * 4.0);
     glLineWidth (devicePixelRatio() * 4.0);
@@ -1749,7 +1757,8 @@ void MapCanvas::drawFlow(const Room *room, const std::vector<Room *> &rooms,
     glPushMatrix();
 
     // Prepare pen
-    qglColor(QColor(76, 216, 255));
+    QColor color = QColor(76, 216, 255);
+    glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
     glEnable(GL_BLEND);
     glPointSize (devicePixelRatio() * 4.0);
     glLineWidth (devicePixelRatio() * 1.0);
@@ -1787,7 +1796,8 @@ void MapCanvas::drawFlow(const Room *room, const std::vector<Room *> &rooms,
     glDisable(GL_BLEND);
 
     // Terminate drawing
-    qglColor(Qt::black);
+    color = Qt::black;
+    glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
     glPopMatrix();
 }
 
@@ -2000,7 +2010,8 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
         glColor4d(0.3, 0.3, 0.3, 0.6);
         glEnable(GL_BLEND);
     } else {
-        qglColor(Qt::black);
+        QColor color = Qt::black;
+        glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
     }
 
     glPointSize (devicePixelRatio() * 3.0);
@@ -2013,50 +2024,60 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
         glEnable(GL_LINE_STIPPLE);
         glColor4d(1.0, 0.5, 0.0, 0.0);
         glCallList(m_wall_north_gllist);
-        qglColor(Qt::black);
+        QColor color = Qt::black;
+        glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
         glDisable(GL_LINE_STIPPLE);
     } else {
         if ( ISSET(ef_north, EF_NO_FLEE)) {
             glEnable(GL_LINE_STIPPLE);
-            qglColor(m_noFleeColor);
+            QColor color = m_noFleeColor;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glCallList(m_wall_north_gllist);
-            qglColor(Qt::black);
+            color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else if ( ISSET(ef_north, EF_RANDOM)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(1.0, 0.0, 0.0, 0.0);
             glCallList(m_wall_north_gllist);
-            qglColor(Qt::black);
+            QColor color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         }  else if ( ISSET(ef_north, EF_FALL) || ISSET(ef_north, EF_DAMAGE)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.0, 1.0, 1.0, 0.0);
             glCallList(m_wall_north_gllist);
-            qglColor(Qt::black);
+            QColor color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else if ( ISSET(ef_north, EF_SPECIAL)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.8, 0.1, 0.8, 0.0);
             glCallList(m_wall_north_gllist);
-            qglColor(Qt::black);
+            QColor color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else if ( ISSET(ef_north, EF_CLIMB)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.7, 0.7, 0.7, 0.0);
             glCallList(m_wall_north_gllist);
-            qglColor(Qt::black);
+            QColor color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else if ( ISSET(ef_north, EF_GUARDED)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(1.0, 1.0, 0.0, 0.0);
             glCallList(m_wall_north_gllist);
-            qglColor(Qt::black);
+            QColor color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else if (Config().m_drawNoMatchExits && ISSET(ef_north, EF_NO_MATCH)) {
             glEnable(GL_LINE_STIPPLE);
-            qglColor(Qt::blue);
+            QColor color = Qt::blue;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glCallList(m_wall_north_gllist);
-            qglColor(Qt::black);
+            color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         }
         if ( ISSET(ef_north, EF_FLOW)) {
@@ -2070,7 +2091,8 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.2, 0.0, 0.0, 0.0);
             glCallList(m_wall_north_gllist);
-            qglColor(Qt::black);
+            QColor color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else
             glCallList(m_wall_north_gllist);
@@ -2085,50 +2107,60 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
         glEnable(GL_LINE_STIPPLE);
         glColor4d(1.0, 0.5, 0.0, 0.0);
         glCallList(m_wall_south_gllist);
-        qglColor(Qt::black);
+        QColor color = Qt::black;
+        glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
         glDisable(GL_LINE_STIPPLE);
     } else {
         if ( ISSET(ef_south, EF_NO_FLEE)) {
             glEnable(GL_LINE_STIPPLE);
-            qglColor(m_noFleeColor);
+            QColor color = m_noFleeColor;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glCallList(m_wall_south_gllist);
-            qglColor(Qt::black);
+            color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else if ( ISSET(ef_south, EF_RANDOM)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(1.0, 0.0, 0.0, 0.0);
             glCallList(m_wall_south_gllist);
-            qglColor(Qt::black);
+            QColor color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else if ( ISSET(ef_south, EF_FALL) || ISSET(ef_south, EF_DAMAGE)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.0, 1.0, 1.0, 0.0);
             glCallList(m_wall_south_gllist);
-            qglColor(Qt::black);
+            QColor color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else if ( ISSET(ef_south, EF_SPECIAL)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.8, 0.1, 0.8, 0.0);
             glCallList(m_wall_south_gllist);
-            qglColor(Qt::black);
+            QColor color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else if ( ISSET(ef_south, EF_CLIMB)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.7, 0.7, 0.7, 0.0);
             glCallList(m_wall_south_gllist);
-            qglColor(Qt::black);
+            QColor color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else if ( ISSET(ef_south, EF_GUARDED)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(1.0, 1.0, 0.0, 0.0);
             glCallList(m_wall_south_gllist);
-            qglColor(Qt::black);
+            QColor color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else if (Config().m_drawNoMatchExits && ISSET(ef_south, EF_NO_MATCH)) {
             glEnable(GL_LINE_STIPPLE);
-            qglColor(Qt::blue);
+            QColor color = Qt::blue;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glCallList(m_wall_south_gllist);
-            qglColor(Qt::black);
+            color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         }
         if ( ISSET(ef_south, EF_FLOW)) {
@@ -2142,7 +2174,8 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.2, 0.0, 0.0, 0.0);
             glCallList(m_wall_south_gllist);
-            qglColor(Qt::black);
+            QColor color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else
             glCallList(m_wall_south_gllist);
@@ -2158,50 +2191,60 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
         glEnable(GL_LINE_STIPPLE);
         glColor4d(1.0, 0.5, 0.0, 0.0);
         glCallList(m_wall_east_gllist);
-        qglColor(Qt::black);
+        QColor color = Qt::black;
+        glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
         glDisable(GL_LINE_STIPPLE);
     } else {
         if ( ISSET(ef_east, EF_NO_FLEE)) {
             glEnable(GL_LINE_STIPPLE);
-            qglColor(m_noFleeColor);
+            QColor color = m_noFleeColor;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glCallList(m_wall_east_gllist);
-            qglColor(Qt::black);
+            color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else if ( ISSET(ef_east, EF_RANDOM)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(1.0, 0.0, 0.0, 0.0);
             glCallList(m_wall_east_gllist);
-            qglColor(Qt::black);
+            QColor color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else if ( ISSET(ef_east, EF_FALL) || ISSET(ef_east, EF_DAMAGE)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.0, 1.0, 1.0, 0.0);
             glCallList(m_wall_east_gllist);
-            qglColor(Qt::black);
+            QColor color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else if ( ISSET(ef_east, EF_SPECIAL)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.8, 0.1, 0.8, 0.0);
             glCallList(m_wall_east_gllist);
-            qglColor(Qt::black);
+            QColor color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else if ( ISSET(ef_east, EF_CLIMB)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.7, 0.7, 0.7, 0.0);
             glCallList(m_wall_east_gllist);
-            qglColor(Qt::black);
+            QColor color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else if ( ISSET(ef_east, EF_GUARDED)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(1.0, 1.0, 0.0, 0.0);
             glCallList(m_wall_east_gllist);
-            qglColor(Qt::black);
+            QColor color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else if (Config().m_drawNoMatchExits && ISSET(ef_east, EF_NO_MATCH)) {
             glEnable(GL_LINE_STIPPLE);
-            qglColor(Qt::blue);
+            QColor color = Qt::blue;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glCallList(m_wall_east_gllist);
-            qglColor(Qt::black);
+            color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         }
         if ( ISSET(ef_east, EF_FLOW)) {
@@ -2214,7 +2257,8 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.2, 0.0, 0.0, 0.0);
             glCallList(m_wall_east_gllist);
-            qglColor(Qt::black);
+            QColor color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else
             glCallList(m_wall_east_gllist);
@@ -2230,50 +2274,60 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
         glEnable(GL_LINE_STIPPLE);
         glColor4d(1.0, 0.5, 0.0, 0.0);
         glCallList(m_wall_west_gllist);
-        qglColor(Qt::black);
+        QColor color = Qt::black;
+        glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
         glDisable(GL_LINE_STIPPLE);
     } else {
         if ( ISSET(ef_west, EF_NO_FLEE)) {
             glEnable(GL_LINE_STIPPLE);
-            qglColor(m_noFleeColor);
+            QColor color = m_noFleeColor;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glCallList(m_wall_west_gllist);
-            qglColor(Qt::black);
+            color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else if ( ISSET(ef_west, EF_RANDOM)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(1.0, 0.0, 0.0, 0.0);
             glCallList(m_wall_west_gllist);
-            qglColor(Qt::black);
+            QColor color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else if ( ISSET(ef_west, EF_FALL) || ISSET(ef_west, EF_DAMAGE)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.0, 1.0, 1.0, 0.0);
             glCallList(m_wall_west_gllist);
-            qglColor(Qt::black);
+            QColor color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else if ( ISSET(ef_west, EF_SPECIAL)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.8, 0.1, 0.8, 0.0);
             glCallList(m_wall_west_gllist);
-            qglColor(Qt::black);
+            QColor color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else if ( ISSET(ef_west, EF_CLIMB)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.7, 0.7, 0.7, 0.0);
             glCallList(m_wall_west_gllist);
-            qglColor(Qt::black);
+            QColor color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else if ( ISSET(ef_west, EF_GUARDED)) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(1.0, 1.0, 0.0, 0.0);
             glCallList(m_wall_west_gllist);
-            qglColor(Qt::black);
+            QColor color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else if (Config().m_drawNoMatchExits && ISSET(ef_west, EF_NO_MATCH)) {
             glEnable(GL_LINE_STIPPLE);
-            qglColor(Qt::blue);
+            QColor color = Qt::blue;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glCallList(m_wall_west_gllist);
-            qglColor(Qt::black);
+            color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         }
         if ( ISSET(ef_west, EF_FLOW)) {
@@ -2286,7 +2340,8 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.2, 0.0, 0.0, 0.0);
             glCallList(m_wall_west_gllist);
-            qglColor(Qt::black);
+            QColor color = Qt::black;
+            glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
             glDisable(GL_LINE_STIPPLE);
         } else
             glCallList(m_wall_west_gllist);
@@ -2312,7 +2367,8 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
         } else {
             if ( ISSET(ef_up, EF_NO_FLEE)) {
                 glEnable(GL_LINE_STIPPLE);
-                qglColor(m_noFleeColor);
+                QColor color = m_noFleeColor;
+                glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
                 glCallList(m_exit_up_transparent_gllist);
                 glColor4d(0.0, 0.0, 0.0, 0.0);
                 glDisable(GL_LINE_STIPPLE);
@@ -2348,7 +2404,8 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
                 glDisable(GL_LINE_STIPPLE);
             } else if (Config().m_drawNoMatchExits && ISSET(ef_up, EF_NO_MATCH)) {
                 glEnable(GL_LINE_STIPPLE);
-                qglColor(Qt::blue);
+                QColor color = Qt::blue;
+                glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
                 glCallList(m_exit_up_transparent_gllist);
                 glColor4d(0.0, 0.0, 0.0, 0.0);
                 glDisable(GL_LINE_STIPPLE);
@@ -2381,7 +2438,8 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
         } else {
             if (ISSET(ef_down, EF_NO_FLEE)) {
                 glEnable(GL_LINE_STIPPLE);
-                qglColor(m_noFleeColor);
+                QColor color = m_noFleeColor;
+                glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
                 glCallList(m_exit_down_transparent_gllist);
                 glColor4d(0.0, 0.0, 0.0, 0.0);
                 glDisable(GL_LINE_STIPPLE);
@@ -2417,7 +2475,8 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
                 glDisable(GL_LINE_STIPPLE);
             } else if (Config().m_drawNoMatchExits && ISSET(ef_down, EF_NO_MATCH)) {
                 glEnable(GL_LINE_STIPPLE);
-                qglColor(Qt::blue);
+                QColor color = Qt::blue;
+                glColor4f(color.redF(), color.greenF(), color.blueF(), color.alphaF());
                 glCallList(m_exit_down_transparent_gllist);
                 glColor4d(0.0, 0.0, 0.0, 0.0);
                 glDisable(GL_LINE_STIPPLE);

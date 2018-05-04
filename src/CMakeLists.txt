@@ -145,7 +145,6 @@ INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_SOURCE_DIR}/pathmachine
     ${CMAKE_CURRENT_SOURCE_DIR}/preferences
     ${CMAKE_CURRENT_SOURCE_DIR}/proxy
-    ${OPENGL_INCLUDE_DIR}
     ${ZLIB_INCLUDE_DIRS}
 )
 
@@ -163,7 +162,6 @@ TARGET_LINK_LIBRARIES(mmapper
     Qt5::Xml
     Qt5::Network
     Qt5::OpenGL
-    ${OPENGL_gl_LIBRARY}
 )
 
 IF(WITH_QTIOCOMPRESSOR)

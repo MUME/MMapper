@@ -32,10 +32,10 @@
 
 #include <QMatrix4x4>
 #include <QOpenGLWidget>
-#include <QOpenGLFunctions>
 #include <vector>
 #include <set>
 #include <QOpenGLDebugMessage>
+#include <QOpenGLFunctions_1_0>
 
 class QOpenGLTexture;
 class MapData;
@@ -52,7 +52,7 @@ class PrespammedPath;
 class Coordinate;
 class QOpenGLDebugLogger;
 
-class MapCanvas : public QOpenGLWidget, protected QOpenGLFunctions
+class MapCanvas : public QOpenGLWidget, protected QOpenGLFunctions_1_0
 {
     Q_OBJECT
 
@@ -148,15 +148,6 @@ protected:
     void drawPathEnd(double dx, double dy, double dz);
     void drawFlow( const Room *room, const std::vector<Room *> &rooms, ExitDirection exitDirection);
 
-    // QGLWidget backwards comptability
-    void inline qglColor(QColor c)
-    {
-        glColor4f(c.redF(), c.greenF(), c.blueF(), c.alphaF());
-    }
-    void inline qglClearColor(QColor c)
-    {
-        glClearColor(c.redF(), c.greenF(), c.blueF(), c.alphaF());
-    }
     enum FontFormatFlags {FFF_NONE = 0, FFF_ITALICS = 1, FFF_UNDERLINE = 2};
     void renderText(float x, float y, const QString &str, QColor color = Qt::white,
                     uint fontFormatFlags = FFF_NONE, double rotationAngle = 0.0f);
