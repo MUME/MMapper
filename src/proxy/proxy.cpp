@@ -26,6 +26,7 @@
 
 #include "proxy.h"
 #include "telnetfilter.h"
+#include "mumesocket.h"
 #include "mpi/mpifilter.h"
 #include "mpi/remoteedit.h"
 #include "parser/mumexmlparser.h"
@@ -61,12 +62,9 @@ void ProxyThreader::run()
 
 
 Proxy::Proxy(MapData *md, Mmapper2PathMachine *pm, CommandEvaluator *ce, PrespammedPath *pp,
-             Mmapper2Group *gm, MumeClock *mc, qintptr &socketDescriptor, QString &host, int &port,
-             bool threaded, QObject *parent)
+             Mmapper2Group *gm, MumeClock *mc, qintptr &socketDescriptor, bool threaded, QObject *parent)
     : QObject(NULL),
       m_socketDescriptor(socketDescriptor),
-      m_remoteHost(host),
-      m_remotePort(port),
       m_mudSocket(NULL),
       m_userSocket(NULL),
       m_serverConnected(false),
@@ -140,7 +138,6 @@ bool Proxy::init()
 
     m_userSocket = new QTcpSocket(this);
     if (!m_userSocket->setSocketDescriptor(m_socketDescriptor)) {
-        emit error(m_userSocket->error());
         delete m_userSocket;
         m_userSocket = NULL;
         return false;
@@ -151,10 +148,8 @@ bool Proxy::init()
     connect(m_userSocket, SIGNAL(readyRead()), this, SLOT(processUserStream()) );
 
     m_telnetFilter = new TelnetFilter(this);
-    connect(this, SIGNAL(analyzeUserStream( const char *, int )), m_telnetFilter,
-            SLOT(analyzeUserStream( const char *, int )));
-    connect(this, SIGNAL(analyzeMudStream( const char *, int )), m_telnetFilter,
-            SLOT(analyzeMudStream( const char *, int )));
+    connect(this, SIGNAL(analyzeUserStream( const QByteArray & )), m_telnetFilter,
+            SLOT(analyzeUserStream( const QByteArray & )));
     connect(m_telnetFilter, SIGNAL(sendToMud(const QByteArray &)), this,
             SLOT(sendToMud(const QByteArray &)));
     connect(m_telnetFilter, SIGNAL(sendToUser(const QByteArray &)), this,
@@ -209,56 +204,58 @@ bool Proxy::init()
     m_userSocket->write(ba);
     m_userSocket->flush();
 
-    m_mudSocket = new QTcpSocket(this);
+    m_mudSocket = new MumeMudSocket(this);
+    connect(m_mudSocket, SIGNAL(connected()), this, SLOT(onMudConnected()));
+    connect(m_mudSocket, SIGNAL(socketError(QAbstractSocket::SocketError)),
+            this, SLOT(onMudError(QAbstractSocket::SocketError)));
     connect(m_mudSocket, SIGNAL(disconnected()), this, SLOT(mudTerminatedConnection()) );
     connect(m_mudSocket, SIGNAL(disconnected()), m_parserXml, SLOT(reset()) );
-    connect(m_mudSocket, SIGNAL(readyRead()), this, SLOT(processMudStream()) );
-
-    m_mudSocket->connectToHost(m_remoteHost, m_remotePort, QIODevice::ReadWrite);
-    if (!m_mudSocket->waitForConnected(5000)) {
-        emit log("Proxy", "MUME is not responding!");
-
-        sendToUser("\r\n"
-                   "\033[1;37;41mMUME is not responding!\033[0m\r\n"
-                   "\r\n"
-                   "\033[1;37;41mYou can explore world map offline or try to reconnect again...\033[0m\r\n"
-                   "\r\n>");
-
-        emit error(m_mudSocket->error());
-        m_mudSocket->close();
-        delete m_mudSocket;
-        m_mudSocket = NULL;
-
-        return true;
-
-    } else {
-        m_serverConnected = true;
-        m_mudSocket->setSocketOption(QAbstractSocket::KeepAliveOption, true);
-
-        emit log("Proxy", "Connection to server established ...");
-
-        //send IAC-GA prompt request
-        if (Config().m_IAC_prompt_parser) {
-            QByteArray idPrompt("~$#EP2\nG\n");
-            emit log("Proxy", "Sent MUME Protocol Initiator IAC-GA prompt request");
-            emit sendToMud(idPrompt);
-        }
-
-        if (Config().m_remoteEditing) {
-            QByteArray idRemoteEditing("~$#EI\n");
-            emit log("Proxy", "Sent MUME Protocol Initiator remote editing request");
-            emit sendToMud(idRemoteEditing);
-        }
-
-        emit sendToMud(QByteArray("~$#EX2\n3G\n"));
-        emit log("Proxy", "Sent MUME Protocol Initiator XML request");
-
-        return true;
-    }
-    return false;
+    connect(m_mudSocket, SIGNAL(processMudStream( const QByteArray & )),
+            m_telnetFilter, SLOT(analyzeMudStream( const QByteArray & )));
+    m_mudSocket->connectToHost();
+    return true;
 }
 
+void Proxy::onMudConnected()
+{
+    m_serverConnected = true;
 
+    emit log("Proxy", "Connection to server established ...");
+
+    //send IAC-GA prompt request
+    if (Config().m_IAC_prompt_parser) {
+        QByteArray idPrompt("~$#EP2\nG\n");
+        emit log("Proxy", "Sent MUME Protocol Initiator IAC-GA prompt request");
+        emit sendToMud(idPrompt);
+    }
+
+    if (Config().m_remoteEditing) {
+        QByteArray idRemoteEditing("~$#EI\n");
+        emit log("Proxy", "Sent MUME Protocol Initiator remote editing request");
+        emit sendToMud(idRemoteEditing);
+    }
+
+    emit sendToMud(QByteArray("~$#EX2\n3G\n"));
+    emit log("Proxy", "Sent MUME Protocol Initiator XML request");
+}
+
+void Proxy::onMudError(QAbstractSocket::SocketError error)
+{
+    if (error = QAbstractSocket::RemoteHostClosedError) {
+        // Handled by mudTerminatedConnection
+        return ;
+    }
+
+    m_serverConnected = false;
+
+    emit log("Proxy", "MUME is not responding!");
+
+    sendToUser("\r\n"
+               "\033[1;37;41mMUME is not responding!\033[0m\r\n"
+               "\r\n"
+               "\033[1;37;41mYou can explore world map offline or try to reconnect again...\033[0m\r\n"
+               "\r\n>");
+}
 
 void Proxy::userTerminatedConnection()
 {
@@ -268,6 +265,8 @@ void Proxy::userTerminatedConnection()
 
 void Proxy::mudTerminatedConnection()
 {
+    m_serverConnected = false;
+
     emit log("Proxy", "Mud terminated connection ...");
 
     sendToUser("\r\n"
@@ -284,29 +283,16 @@ void Proxy::processUserStream()
         read = m_userSocket->read(m_buffer, 8191);
         if (read != -1) {
             m_buffer[read] = 0;
-            emit analyzeUserStream(m_buffer, read);
+            QByteArray ba = QByteArray::fromRawData(m_buffer, read);
+            emit analyzeUserStream(ba);
         }
     }
 }
-
-void Proxy::processMudStream()
-{
-    int read;
-    while (m_mudSocket->bytesAvailable()) {
-        read = m_mudSocket->read(m_buffer, 8191);
-        if (read != -1) {
-            m_buffer[read] = 0;
-            emit analyzeMudStream(m_buffer, read);
-        }
-    }
-}
-
 
 void Proxy::sendToMud(const QByteArray &ba)
 {
     if (m_mudSocket && m_serverConnected) {
-        m_mudSocket->write(ba.data(), ba.size());
-        m_mudSocket->flush();
+        m_mudSocket->sendToMud(ba);
     }
 }
 
