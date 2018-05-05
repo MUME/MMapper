@@ -38,6 +38,8 @@ GeneralPage::GeneralPage(QWidget *parent)
              SLOT( remoteNameTextChanged(const QString &) )  );
     connect( remotePort, SIGNAL( valueChanged(int) ), this, SLOT( remotePortValueChanged(int) )  );
     connect( localPort, SIGNAL( valueChanged(int) ), this, SLOT( localPortValueChanged(int) )  );
+    connect( webSocketSecureCheckBox, SIGNAL(stateChanged(int)),
+             SLOT(webSocketSecureCheckBoxStateChanged(int)));
 
     connect( changeColor, SIGNAL(clicked()), SLOT(changeColorClicked()));
     connect( antialiasingSamplesComboBox, SIGNAL( currentTextChanged(const QString &) ), this,
@@ -71,6 +73,7 @@ GeneralPage::GeneralPage(QWidget *parent)
     remoteName->setText( Config().m_remoteServerName );
     remotePort->setValue( Config().m_remotePort );
     localPort->setValue( Config().m_localPort );
+    webSocketSecureCheckBox->setChecked( Config().m_webSocketSecure );
 
     QPixmap bgPix(16, 16);
     bgPix.fill(Config().m_backgroundColor);
@@ -148,6 +151,11 @@ void GeneralPage::remotePortValueChanged(int)
 void GeneralPage::localPortValueChanged(int)
 {
     Config().m_localPort = localPort->value();
+}
+
+void GeneralPage::webSocketSecureCheckBoxStateChanged(int)
+{
+    Config().m_webSocketSecure = webSocketSecureCheckBox->isChecked();
 }
 
 void GeneralPage::emulatedExitsStateChanged(int)

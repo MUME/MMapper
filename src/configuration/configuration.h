@@ -76,7 +76,8 @@ public:
 
     QString   m_remoteServerName;         /// Remote host and port settings
     quint32   m_remotePort;
-    quint32   m_localPort;         /// Port to bind to on local machine
+    quint32   m_localPort;                /// Port to bind to on local machine
+    bool      m_webSocketSecure;          /// Utilize WebSocket Secure to connect
 
     QColor m_backgroundColor;
     int    m_antialiasingSamples;

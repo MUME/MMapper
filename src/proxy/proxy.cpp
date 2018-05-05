@@ -37,8 +37,6 @@
 #include "configuration/configuration.h"
 #include "clock/mumeclock.h"
 
-#include <qvariant.h>
-
 ProxyThreader::ProxyThreader(Proxy *proxy):
     m_proxy(proxy)
 {
@@ -204,7 +202,9 @@ bool Proxy::init()
     m_userSocket->write(ba);
     m_userSocket->flush();
 
-    m_mudSocket = new MumeMudSocket(this);
+    m_mudSocket = Config().m_webSocketSecure
+                  ? (MumeSocket *)new MumeWebSocket(this)
+                  : (MumeSocket *)new MumeMudSocket(this);
     connect(m_mudSocket, SIGNAL(connected()), this, SLOT(onMudConnected()));
     connect(m_mudSocket, SIGNAL(socketError(QAbstractSocket::SocketError)),
             this, SLOT(onMudError(QAbstractSocket::SocketError)));
@@ -239,19 +239,32 @@ void Proxy::onMudConnected()
     emit log("Proxy", "Sent MUME Protocol Initiator XML request");
 }
 
-void Proxy::onMudError(QAbstractSocket::SocketError error)
+void Proxy::onMudError(QAbstractSocket::SocketError socketError)
 {
-    if (error = QAbstractSocket::RemoteHostClosedError) {
-        // Handled by mudTerminatedConnection
-        return ;
-    }
-
     m_serverConnected = false;
 
-    emit log("Proxy", "MUME is not responding!");
+    qWarning() << socketError;
+    QByteArray errorStr = "SocketError";
+
+    switch (socketError) {
+    case QAbstractSocket::ConnectionRefusedError:
+        errorStr = "Connection refused by server!";
+        break;
+    case QAbstractSocket::RemoteHostClosedError:
+        errorStr = "MUME is not responding!";
+        break;
+    case QAbstractSocket::SslHandshakeFailedError:
+        errorStr = "Server does not support Secure WebSockets.\r\n"
+                   "Consider unchecking this option under the MMapper preferences.";
+        break;
+    default:
+        break;
+    }
+
+    emit log("Proxy", errorStr);
 
     sendToUser("\r\n"
-               "\033[1;37;41mMUME is not responding!\033[0m\r\n"
+               "\033[1;37;41m" + errorStr + "\033[0m\r\n"
                "\r\n"
                "\033[1;37;41mYou can explore world map offline or try to reconnect again...\033[0m\r\n"
                "\r\n>");
@@ -265,6 +278,9 @@ void Proxy::userTerminatedConnection()
 
 void Proxy::mudTerminatedConnection()
 {
+    if (!m_serverConnected)
+        return;
+
     m_serverConnected = false;
 
     emit log("Proxy", "Mud terminated connection ...");
