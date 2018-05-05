@@ -179,8 +179,6 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     m_listener = new ConnectionListener(m_mapData, m_pathMachine, m_commandEvaluator,
                                         m_prespammedPath, m_groupManager, m_mumeClock, this);
     m_listener->setMaxPendingConnections (1);
-    m_listener->setRemoteHost(Config().m_remoteServerName);
-    m_listener->setRemotePort(Config().m_remotePort);
 
     if (!m_listener->listen(QHostAddress::Any, Config().m_localPort)) {
         QMessageBox::critical(this, tr("MMapper2"),

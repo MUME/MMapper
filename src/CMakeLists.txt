@@ -88,6 +88,7 @@ SET(mmapper_SRCS
     proxy/connectionlistener.cpp
     proxy/proxy.cpp
     proxy/telnetfilter.cpp
+    proxy/mumesocket.cpp
 )
 
 SET(mmapper_RCS

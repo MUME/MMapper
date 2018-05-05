@@ -57,9 +57,8 @@ public:
     ~TelnetFilter();
 
 public slots:
-    void analyzeMudStream( const char *input, int length );
-    void analyzeUserStream( const char *input, int length );
-
+    void analyzeMudStream( const QByteArray &ba );
+    void analyzeUserStream( const QByteArray &ba );
 
 signals:
     void parseNewMudInput(IncomingData &);
@@ -77,10 +76,10 @@ private:
 #endif
 
     Q_OBJECT
-    void dispatchTelnetStream(QByteArray &stream, IncomingData &m_incomingData,
+    void dispatchTelnetStream(const QByteArray &stream, IncomingData &m_incomingData,
                               TelnetIncomingDataQueue &que);
 
-    static const QChar escChar;
+    static const QChar s_escChar;
 
     IncomingData m_userIncomingData;
     IncomingData m_mudIncomingData;

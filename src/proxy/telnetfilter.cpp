@@ -51,7 +51,7 @@
 #define ASCII_LF 10
 
 #define ESCAPE '\x1B'
-const QChar TelnetFilter::escChar('\x1B');
+const QChar TelnetFilter::s_escChar('\x1B');
 
 TelnetFilter::TelnetFilter(QObject *parent)
     : QObject(parent)
@@ -75,9 +75,8 @@ TelnetFilter::~TelnetFilter()
 #endif
 }
 
-void TelnetFilter::analyzeMudStream(const char *input, int length)
+void TelnetFilter::analyzeMudStream(const QByteArray &ba)
 {
-    QByteArray ba = QByteArray::fromRawData(input, length);
     dispatchTelnetStream(ba, m_mudIncomingData, m_mudIncomingQue);
     IncomingData data;
     while ( !m_mudIncomingQue.isEmpty() ) {
@@ -88,9 +87,8 @@ void TelnetFilter::analyzeMudStream(const char *input, int length)
     return;
 }
 
-void TelnetFilter::analyzeUserStream(const char *input, int length)
+void TelnetFilter::analyzeUserStream(const QByteArray &ba)
 {
-    QByteArray ba = QByteArray::fromRawData(input, length);
     dispatchTelnetStream(ba, m_userIncomingData, m_userIncomingQue);
 
     //parse incoming lines in que
@@ -104,7 +102,7 @@ void TelnetFilter::analyzeUserStream(const char *input, int length)
     return;
 }
 
-void TelnetFilter::dispatchTelnetStream(QByteArray &stream, IncomingData &m_incomingData,
+void TelnetFilter::dispatchTelnetStream(const QByteArray &stream, IncomingData &m_incomingData,
                                         TelnetIncomingDataQueue &que)
 {
     quint8 val1 = 0;
