@@ -72,7 +72,7 @@ before_install:
 
 install:
   - '[ "$TRAVIS_OS_NAME" != linux ] || sudo apt-get -qy install cmake astyle'
-  - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" != */opt-* ]] || sudo apt-get -qy install qt${QT}base qt${QT}xmlpatterns'
+  - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" != */opt-* ]] || sudo apt-get -qy install qt${QT}base qt${QT}xmlpatterns qt${QT}websockets'
   - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" == */opt-* ]] || sudo apt-get -qy install qt5-qmake qtbase5-dev libqt5xmlpatterns5-dev libqt5websockets5-dev'
   - '[ "$TRAVIS_OS_NAME" != osx ] || brew install qt5 astyle'
   - '[ "$TRAVIS_OS_NAME" != osx ] || brew link --force qt5'
