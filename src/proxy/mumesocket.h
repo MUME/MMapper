@@ -52,7 +52,7 @@ signals:
     void connected();
     void disconnected();
     void socketError(QAbstractSocket::SocketError);
-    void processMudStream(const QByteArray& buffer);
+    void processMudStream(const QByteArray &buffer);
 
 };
 
@@ -75,7 +75,7 @@ protected slots:
 private:
     char m_buffer[ 8192 ];
 
-    QTcpSocket* m_socket;
+    QTcpSocket *m_socket;
 
 };
 
@@ -95,7 +95,7 @@ protected slots:
     void onBinaryMessageReceived(const QByteArray &);
 
 private:
-    QWebSocket* m_socket;
+    QWebSocket *m_socket;
 
 };
 
