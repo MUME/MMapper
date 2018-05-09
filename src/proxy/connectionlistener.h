@@ -43,23 +43,6 @@ public:
     ConnectionListener(MapData *, Mmapper2PathMachine *, CommandEvaluator *, PrespammedPath *,
                        Mmapper2Group *, MumeClock *, QObject *parent);
 
-    QString getRemoteHost() const
-    {
-        return m_remoteHost;
-    }
-    void setRemoteHost(QString i)
-    {
-        m_remoteHost = i;
-    }
-    int getRemotePort() const
-    {
-        return m_remotePort;
-    }
-    void setRemotePort(int i)
-    {
-        m_remotePort = i;
-    }
-
 public slots:
     void doNotAcceptNewConnections();
     void doAcceptNewConnections();
@@ -73,9 +56,6 @@ protected:
 
 private:
     Q_OBJECT
-
-    QString m_remoteHost;
-    int m_remotePort;
 
     MapData *m_mapData;
     Mmapper2PathMachine *m_pathMachine;

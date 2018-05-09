@@ -40,6 +40,7 @@ class MpiFilter;
 class MumeXmlParser;
 class RemoteEdit;
 class Proxy;
+class MumeSocket;
 
 class MapData;
 class Mmapper2PathMachine;
@@ -70,13 +71,12 @@ protected:
 
 public:
     Proxy(MapData *, Mmapper2PathMachine *, CommandEvaluator *, PrespammedPath *, Mmapper2Group *,
-          MumeClock *, qintptr &socketDescriptor, QString &host, int &port, bool threaded, QObject *parent);
+          MumeClock *, qintptr &socketDescriptor, bool threaded, QObject *parent);
     ~Proxy();
 
     void start();
 
 public slots:
-    void processMudStream();
     void processUserStream();
     void userTerminatedConnection();
     void mudTerminatedConnection();
@@ -84,14 +84,16 @@ public slots:
     void sendToMud(const QByteArray &);
     void sendToUser(const QByteArray &);
 
+    void onMudError(QAbstractSocket::SocketError);
+    void onMudConnected();
+
 signals:
-    void error(QTcpSocket::SocketError socketError);
     void log(const QString &, const QString &);
     void doNotAcceptNewConnections();
     void doAcceptNewConnections();
 
-    void analyzeUserStream( const char *, int );
-    void analyzeMudStream( const char *, int );
+    void analyzeUserStream( const QByteArray & );
+    void analyzeMudStream( const QByteArray & );
     void terminate();
 
 private:
@@ -105,11 +107,12 @@ private:
     int m_socketDescriptor;
     QString m_remoteHost;
     int m_remotePort;
-    QPointer<QTcpSocket> m_mudSocket, m_userSocket;
+    QPointer<QTcpSocket> m_userSocket;
     char m_buffer[ 8192 ];
 
     bool m_serverConnected;
 
+    MumeSocket *m_mudSocket;
     TelnetFilter *m_telnetFilter;
     MpiFilter *m_mpiFilter;
     MumeXmlParser *m_parserXml;

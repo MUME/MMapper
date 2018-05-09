@@ -39,6 +39,7 @@ public slots:
     void remoteNameTextChanged(const QString &);
     void remotePortValueChanged(int);
     void localPortValueChanged(int);
+    void webSocketSecureCheckBoxStateChanged(int);
 
     void changeColorClicked();
     void antialiasingSamplesTextChanged(const QString &);

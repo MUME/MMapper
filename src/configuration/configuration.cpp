@@ -52,6 +52,7 @@ void Configuration::read()
     m_remoteServerName = conf.value("Server name", "mume.org").toString();
     m_remotePort = conf.value("Remote port number", 4242).toInt();
     m_localPort = conf.value("Local port number", 4242).toInt();
+    m_webSocketSecure = conf.value("WebSocket Secure", false).toBool();
     conf.endGroup();
 
     // News 2340, changing domain from fire.pvv.org to mume.org:
@@ -199,6 +200,7 @@ void Configuration::write() const
     conf.setValue("Server name", m_remoteServerName);
     conf.setValue("Remote port number", (int) m_remotePort);
     conf.setValue("Local port number", (int) m_localPort);
+    conf.setValue("WebSocket Secure", m_webSocketSecure);
     conf.endGroup();
 
     // write style options

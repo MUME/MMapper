@@ -51,7 +51,7 @@ void ConnectionListener::incomingConnection(qintptr socketDescriptor)
         emit log ("Listener", "New connection: accepted.");
         doNotAcceptNewConnections();
         Proxy *proxy = new Proxy(m_mapData, m_pathMachine, m_commandEvaluator, m_prespammedPath,
-                                 m_groupManager, m_mumeClock, socketDescriptor, m_remoteHost, m_remotePort, true, this);
+                                 m_groupManager, m_mumeClock, socketDescriptor, true, this);
         proxy->start();
     } else {
         emit log ("Listener", "New connection: rejected.");
