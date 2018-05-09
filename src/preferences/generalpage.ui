@@ -141,6 +141,13 @@
         </property>
        </spacer>
       </item>
+      <item row="1" column="2">
+       <widget class="QCheckBox" name="sslEncryptedCheckBox">
+        <property name="text">
+         <string>SSL Encrypted</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
