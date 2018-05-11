@@ -1,4 +1,20 @@
 ================================
+MMapper 2.5.0 (May 13, 2018)
+================================
+
+Changes:
+ - MMapper now encrypts your connection to MUME using TLS
+ - Holding control and using the mouse wheel navigates layers
+ - Improved the right click context menu
+ - MMapper's clock can now parse the new MUME time format
+ - Group manager hosts can opt to not share themselves with clients
+ - Exposed option to force Software OpenGL on Windows and Linux
+ - Integrated mud client can now save logs
+ - Integrated mud client will not resize the terminal on window resize
+ - Remote edit is now be passed through when disabled
+ - Improved syncing when boarding/leaving the Grey Havens ferry
+
+================================
 MMapper 2.4.5 (February 11, 2018)
 ================================
 
