@@ -77,7 +77,7 @@ public:
     QString   m_remoteServerName;         /// Remote host and port settings
     quint32   m_remotePort;
     quint32   m_localPort;                /// Port to bind to on local machine
-    bool      m_sslEncrypted;
+    bool      m_tlsEncryption;
 
     QColor m_backgroundColor;
     int    m_antialiasingSamples;

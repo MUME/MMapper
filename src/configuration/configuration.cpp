@@ -52,7 +52,7 @@ void Configuration::read()
     m_remoteServerName = conf.value("Server name", "mume.org").toString();
     m_remotePort = conf.value("Remote port number", 4242).toInt();
     m_localPort = conf.value("Local port number", 4242).toInt();
-    m_sslEncrypted = conf.value("SSL Encrypted", false).toBool();
+    m_tlsEncryption = conf.value("TLS encryption", true).toBool();
     conf.endGroup();
 
     // News 2340, changing domain from fire.pvv.org to mume.org:
@@ -200,7 +200,7 @@ void Configuration::write() const
     conf.setValue("Server name", m_remoteServerName);
     conf.setValue("Remote port number", (int) m_remotePort);
     conf.setValue("Local port number", (int) m_localPort);
-    conf.setValue("SSL Encrypted", m_sslEncrypted);
+    conf.setValue("SSL Encrypted", m_tlsEncryption);
     conf.endGroup();
 
     // write style options

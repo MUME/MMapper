@@ -39,7 +39,7 @@ public slots:
     void remoteNameTextChanged(const QString &);
     void remotePortValueChanged(int);
     void localPortValueChanged(int);
-    void sslEncryptedCheckBoxStateChanged(int);
+    void tlsEncryptionCheckBoxStateChanged(int);
 
     void changeColorClicked();
     void antialiasingSamplesTextChanged(const QString &);

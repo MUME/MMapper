@@ -202,7 +202,7 @@ bool Proxy::init()
     m_userSocket->write(ba);
     m_userSocket->flush();
 
-    m_mudSocket = Config().m_sslEncrypted
+    m_mudSocket = Config().m_tlsEncryption
                   ? (MumeSocket *)new MumeSslSocket(this)
                   : (MumeSocket *)new MumeTcpSocket(this);
     connect(m_mudSocket, SIGNAL(connected()), this, SLOT(onMudConnected()));

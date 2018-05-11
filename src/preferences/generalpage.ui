@@ -49,7 +49,7 @@
      <property name="frameShadow">
       <enum>QFrame::Sunken</enum>
      </property>
-     <layout class="QGridLayout">
+     <layout class="QGridLayout" name="gridLayout_5">
       <property name="leftMargin">
        <number>9</number>
       </property>
@@ -142,9 +142,9 @@
        </spacer>
       </item>
       <item row="1" column="2">
-       <widget class="QCheckBox" name="sslEncryptedCheckBox">
+       <widget class="QCheckBox" name="tlsEncryptionCheckBox">
         <property name="text">
-         <string>SSL Encrypted</string>
+         <string>TLS encryption</string>
         </property>
        </widget>
       </item>
@@ -278,7 +278,7 @@
       <item row="1" column="1">
        <widget class="QCheckBox" name="softwareOpenGLCheckBox">
         <property name="text">
-         <string>Use software OpenGL</string>
+         <string>Software OpenGL</string>
         </property>
        </widget>
       </item>
@@ -293,7 +293,7 @@
      <property name="frameShadow">
       <enum>QFrame::Sunken</enum>
      </property>
-     <layout class="QGridLayout">
+     <layout class="QGridLayout" name="gridLayout_1">
       <property name="leftMargin">
        <number>9</number>
       </property>
@@ -355,7 +355,7 @@
      <property name="frameShadow">
       <enum>QFrame::Sunken</enum>
      </property>
-     <layout class="QGridLayout">
+     <layout class="QGridLayout" name="gridLayout_6">
       <property name="leftMargin">
        <number>9</number>
       </property>
@@ -403,7 +403,7 @@
      <property name="frameShadow">
       <enum>QFrame::Sunken</enum>
      </property>
-     <layout class="QGridLayout">
+     <layout class="QGridLayout" name="gridLayout_3">
       <property name="leftMargin">
        <number>9</number>
       </property>
@@ -472,7 +472,7 @@
      <property name="frameShadow">
       <enum>QFrame::Sunken</enum>
      </property>
-     <layout class="QGridLayout">
+     <layout class="QGridLayout" name="gridLayout_4">
       <property name="leftMargin">
        <number>9</number>
       </property>

@@ -45,7 +45,7 @@ int main(int argc, char **argv)
     if (Config().m_softwareOpenGL) {
         app.setAttribute(Qt::AA_UseSoftwareOpenGL);
 #ifdef Q_OS_LINUX
-        putenv("LIBGL_ALWAYS_SOFTWARE=1");
+        putenv((char *)"LIBGL_ALWAYS_SOFTWARE=1");
 #endif
     }
 
