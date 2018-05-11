@@ -24,7 +24,7 @@ matrix:
           packages:
             - g++-4.9
       env:
-        - QT=59 PPA=beineri/opt-qt591-trusty MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+        - QT=59 PPA=beineri/opt-qt595-trusty MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
     #
     # Linux GCC 5
     #
@@ -37,7 +37,7 @@ matrix:
           packages:
             - g++-5
       env:
-        - QT=59 PPA=beineri/opt-qt591-trusty MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+        - QT=59 PPA=beineri/opt-qt595-trusty MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
     #
     # Linux GCC 6
     #
@@ -50,7 +50,7 @@ matrix:
           packages:
             - g++-6
       env:
-        - QT=59 PPA=beineri/opt-qt591-trusty MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+        - QT=59 PPA=beineri/opt-qt595-trusty MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
     #
     # Linux GCC 7
     #
@@ -63,7 +63,7 @@ matrix:
           packages:
             - g++-7
       env:
-        - QT=59 PPA=beineri/opt-qt591-trusty MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+        - QT=59 PPA=beineri/opt-qt595-trusty MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
     #
     # Linux GCC 8
     #
@@ -76,7 +76,7 @@ matrix:
           packages:
             - g++-8
       env:
-        - QT=59 PPA=beineri/opt-qt591-trusty MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+        - QT=59 PPA=beineri/opt-qt595-trusty MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
 
 before_install:
   - eval "${MATRIX_EVAL}"
