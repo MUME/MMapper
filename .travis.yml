@@ -64,6 +64,19 @@ matrix:
             - g++-7
       env:
         - QT=59 PPA=beineri/opt-qt591-trusty MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+    #
+    # Linux GCC 8
+    #
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-8
+      env:
+        - QT=59 PPA=beineri/opt-qt591-trusty MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
 
 before_install:
   - eval "${MATRIX_EVAL}"
