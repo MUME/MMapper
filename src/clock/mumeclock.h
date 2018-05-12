@@ -88,8 +88,8 @@ private:
     MumeMoment &unknownTimeTick(MumeMoment &time);
 
     int m_mumeStartEpoch;
-    int m_clockTolerance;
     MumeClockPrecision m_precision;
+    int m_clockTolerance;
 };
 
 #endif // MUMECLOCK_H

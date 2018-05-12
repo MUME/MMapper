@@ -244,7 +244,7 @@ void InputWidget::addLineHistory(const InputHistoryEntry &string)
 void InputWidget::addTabHistory(const WordHistoryEntry &string)
 {
     QStringList list = string.split(s_whitespaceRx, QString::SkipEmptyParts);
-    foreach (QString word, list) {
+    for (QString word : list) {
         if (word.length() > MIN_WORD_LENGTH) {
             // Adding this word to the dictionary
             m_tabCompletionDictionary << word;

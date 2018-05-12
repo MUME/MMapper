@@ -171,6 +171,7 @@ private:
 
     float m_scaleFactor;
     int m_scrollX, m_scrollY;
+    qint16 m_currentLayer;
     float m_visibleX1, m_visibleY1;
     float m_visibleX2, m_visibleY2;
 
@@ -204,8 +205,6 @@ private:
     MapData *m_data;
     PrespammedPath *m_prespammedPath;
     Mmapper2Group *m_groupManager;
-
-    qint16 m_currentLayer;
 
     GLuint m_wall_north_gllist;
     GLuint m_wall_south_gllist;

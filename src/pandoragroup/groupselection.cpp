@@ -34,7 +34,7 @@
 void GroupSelection::receiveCharacters(GroupAdmin *admin, const std::vector<CGroupChar *> chars)
 {
     assert(admin == m_admin);
-    foreach (CGroupChar *aChar, chars) {
+    for (CGroupChar *aChar : chars) {
         insert(aChar->getName(), aChar);
     }
 }

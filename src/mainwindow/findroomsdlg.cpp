@@ -99,7 +99,7 @@ void FindRoomsDlg::findClicked()
         kind = PAT_NOTE;
     m_mapData->genericSearch(m_roomSelection, RoomFilter(text, cs, kind));
 
-    foreach (const Room *room, m_roomSelection->values()) {
+    for (const Room *room : m_roomSelection->values()) {
 //#define HACK_FIX_THE_HIDDEN_NAMELESS_EXITS
 #ifdef HACK_FIX_THE_HIDDEN_NAMELESS_EXITS
         // Remember to also alter the way searching works to match the exits you want

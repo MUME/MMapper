@@ -70,6 +70,9 @@ protected:
     quint32 m_roomDescLines;
     bool m_readingStaticDescLines;
 
+    CommandIdType m_move;
+    XmlMode m_xmlMode;
+
     //void checkqueue(CommandIdType dir = CID_UNKNOWN);
     void move();
     QByteArray m_lineToUser;
@@ -78,11 +81,8 @@ protected:
     bool m_readingTag;
     bool m_readStatusTag;
     bool m_readWeatherTag;
-    bool m_readSnoopTag;
     bool m_gratuitous;
-    CommandIdType m_move;
-
-    XmlMode m_xmlMode;
+    bool m_readSnoopTag;
 
 signals:
     void sendScoreLineEvent(QByteArray);

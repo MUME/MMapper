@@ -345,7 +345,7 @@ void CGroupServerCommunicator::parseLoginInformation(CGroupClient *conn, QDomNod
 void CGroupServerCommunicator::sendGroupInformation(CGroupClient *conn)
 {
     GroupSelection *selection = getGroup()->selectAll();
-    foreach (CGroupChar *character, selection->values()) {
+    for (CGroupChar *character : selection->values()) {
         // Only send group information for other characters
         if (clientsList.value(character->getName()) == conn->socketDescriptor())
             continue;

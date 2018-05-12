@@ -69,9 +69,9 @@ GroupWidget::GroupWidget(Mmapper2Group *groupManager, MapData *md, QWidget *pare
 
 GroupWidget::~GroupWidget()
 {
-    foreach (QString name, m_nameItemHash.keys()) {
+    for (QString name : m_nameItemHash.keys()) {
         QList<QTableWidgetItem *> items = m_nameItemHash.take(name);
-        for (uint i = 0; i < items.length(); i++) {
+        for (int i = 0; i < items.length(); i++) {
             delete items[i];
         }
     }
@@ -98,12 +98,12 @@ void GroupWidget::updateLabels()
     QSet<QString> current = QSet<QString>::fromList(selection->keys());
     previous.subtract(current);
     if (!previous.empty()) {
-        foreach (QString name, previous) {
+        for (QString name : previous) {
             qDebug() << "Cleaning up item for character" << name;
             QList<QTableWidgetItem *> items = m_nameItemHash.take(name);
             if (!items.isEmpty()) {
                 int row = items[0]->row();
-                for (uint i = 0; i < items.length(); i++) {
+                for (int i = 0; i < items.length(); i++) {
                     QTableWidgetItem *item = m_table->takeItem(row, i);
                     delete item;
                 }
@@ -115,7 +115,7 @@ void GroupWidget::updateLabels()
     // Render the existing and new characters
     int row = 0;
     m_table->setRowCount(selection->keys().size());
-    foreach (QString name, selection->keys()) {
+    for (QString name : selection->keys()) {
         CGroupChar *character = selection->value(name);
         QList<QTableWidgetItem *> items = m_nameItemHash[name];
         bool newItem = items.isEmpty();

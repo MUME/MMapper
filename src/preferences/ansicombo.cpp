@@ -39,7 +39,7 @@ void AnsiCombo::fillAnsiList()
     AnsiItem item;
     clear();
 
-    foreach (item, colours) {
+    for (AnsiItem item : colours) {
         addItem(item.picture, item.ansiCode);
     }
 }

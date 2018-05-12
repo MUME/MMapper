@@ -82,7 +82,7 @@ void CGroupServer::sendToAll(QByteArray message)
 
 void CGroupServer::sendToAllExceptOne(CGroupClient *conn, QByteArray message)
 {
-    for (uint i = 0; i < connections.size(); i++) {
+    for (int i = 0; i < connections.size(); i++) {
         if (connections[i] != conn) {
             connections[i]->sendData(message);
         }
@@ -92,7 +92,7 @@ void CGroupServer::sendToAllExceptOne(CGroupClient *conn, QByteArray message)
 void CGroupServer::closeAll()
 {
 //    qInfo() << "Closing connections";
-    for (uint i = 0; i < connections.size(); i++) {
+    for (int i = 0; i < connections.size(); i++) {
         if (connections[i]) {
             connections[i]->disconnectFromHost();
             connections[i]->deleteLater();

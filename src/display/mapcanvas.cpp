@@ -102,19 +102,19 @@ QColor MapCanvas::m_noFleeColor = QColor(123, 63, 0);
 MapCanvas::MapCanvas( MapData *mapData, PrespammedPath *prespammedPath, Mmapper2Group *groupManager,
                       QWidget *parent )
     : QOpenGLWidget(parent),
+      m_scaleFactor(1.0f), // scale rooms
       m_scrollX(0),
       m_scrollY(0),
       m_currentLayer(0),
-      m_selectedArea(false), //no area selected at start time
-      m_infoMarkSelection(false),
-      m_canvasMouseMode(CMM_MOVE),
-      m_roomSelection(NULL),
-      m_connectionSelection(NULL),
       m_mouseRightPressed(false),
       m_mouseLeftPressed(false),
       m_altPressed(false),
       m_ctrlPressed(false),
-      m_scaleFactor(1.0f), // scale rooms
+      m_canvasMouseMode(CMM_MOVE),
+      m_selectedArea(false), //no area selected at start time
+      m_roomSelection(NULL),
+      m_infoMarkSelection(false),
+      m_connectionSelection(NULL),
       m_data(mapData),
       m_prespammedPath(prespammedPath),
       m_groupManager(groupManager)
@@ -1066,7 +1066,7 @@ void MapCanvas::drawGroupCharacters()
         return;
 
     GroupSelection *selection = group->selectAll();
-    foreach (CGroupChar *character, selection->values()) {
+    for (CGroupChar *character : selection->values()) {
         uint id = character->getPosition();
         if (character->getName() != Config().m_groupManagerCharName) {
             const RoomSelection *selection = m_data->select();
