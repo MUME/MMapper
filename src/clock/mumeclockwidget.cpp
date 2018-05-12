@@ -105,13 +105,13 @@ void MumeClockWidget::updateLabel()
     MumeTime time = moment.toTimeOfDay();
     if (time != m_lastTime || precision != m_lastPrecision) {
         m_lastTime = time;
+        m_lastPrecision = precision;
         // The current time is 12:15 am.
         QString styleSheet = "color:black";
         QString statusTip = "";
         if (precision <= MUMECLOCK_DAY) {
             styleSheet = "color:black";
             statusTip = "Please run \"time\" to sync the clock";
-
         } else if (time == TIME_DAWN) {
             styleSheet = "color:white;background:red";
             statusTip = "Ticks left until day";
