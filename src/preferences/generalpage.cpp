@@ -65,7 +65,7 @@ GeneralPage::GeneralPage(QWidget *parent)
              SLOT( autoLoadFileNameTextChanged(const QString &) )  );
     connect( autoLoadCheck, SIGNAL(stateChanged(int)), SLOT(autoLoadCheckStateChanged(int)));
 
-    connect( sellectWorldFileButton, SIGNAL(clicked()), this, SLOT(selectWorldFileButtonClicked()));
+    connect( selectWorldFileButton, SIGNAL(clicked()), this, SLOT(selectWorldFileButtonClicked()));
 
     connect( displayMumeClockCheckBox, SIGNAL(stateChanged(int)),
              SLOT(displayMumeClockStateChanged(int)));

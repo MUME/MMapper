@@ -65,6 +65,10 @@ ConfigDialog::ConfigDialog(Mmapper2Group *gm, QWidget *parent)
     ui->pagesScrollArea->setMinimumWidth(520);
     ui->pagesScrollArea->setWidget(pagesWidget);
 
+    ui->contentsWidget->setCurrentItem(ui->contentsWidget->item(0));
+    connect(ui->contentsWidget,
+            SIGNAL(currentItemChanged(QListWidgetItem *, QListWidgetItem *)),
+            this, SLOT(changePage(QListWidgetItem *, QListWidgetItem *)));
     connect(ui->closeButton, SIGNAL(clicked()), this, SLOT(close()));
 }
 
@@ -110,10 +114,6 @@ void ConfigDialog::createIcons()
     pathButton->setText(tr("Path\nMachine"));
     pathButton->setTextAlignment(Qt::AlignHCenter);
     pathButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
-
-    connect(ui->contentsWidget,
-            SIGNAL(currentItemChanged(QListWidgetItem *, QListWidgetItem *)),
-            this, SLOT(changePage(QListWidgetItem *, QListWidgetItem *)));
 }
 
 void ConfigDialog::changePage(QListWidgetItem *current, QListWidgetItem *previous)
