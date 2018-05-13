@@ -106,6 +106,12 @@ void MumeSslSocket::onConnect()
     m_timer->start();
 }
 
+void MumeSslSocket::onError(QAbstractSocket::SocketError e)
+{
+    qWarning() << m_socket->errorString();
+    MumeSocket::onError(e);
+}
+
 void MumeSslSocket::onEncrypted()
 {
     m_timer->stop();
@@ -116,6 +122,7 @@ void MumeSslSocket::onEncrypted()
 void MumeSslSocket::onPeerVerifyError(const QSslError &error)
 {
     emit log("Proxy", "<b>WARNING:</b> " + error.errorString());
+    qWarning() << m_socket->errorString();
 
     if (m_socket->peerVerifyMode() >= QSslSocket::VerifyPeer) {
         m_socket->close();

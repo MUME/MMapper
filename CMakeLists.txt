@@ -14,6 +14,7 @@ MESSAGE(STATUS "MMapper version ${MMAPPER_VERSION} (${CMAKE_BUILD_TYPE} distribu
 
 # Options
 OPTION(WITH_QTIOCOMPRESSOR "QtIOCompressor old save backwards compatability" ON)
+OPTION(WITH_OPENSSL "Use OpenSSL for TLS encryption" ON)
 
 # Apple users are most likely using brew
 IF(APPLE)
@@ -76,6 +77,44 @@ IF(WITH_QTIOCOMPRESSOR)
 ELSE()
     MESSAGE(STATUS "Building without QtIOCompressor which provides old map backwards compatability")
     ADD_DEFINITIONS(/DMMAPPER_NO_QTIOCOMPRESSOR)
+ENDIF()
+
+IF(WITH_OPENSSL)
+    FIND_PACKAGE(OpenSSL)
+    IF(OPENSSL_FOUND)
+        MESSAGE(STATUS "OpenSSL found: ${OPENSSL_LIBRARIES}")
+    ELSE()
+        IF(WIN32)
+            MESSAGE(STATUS "OpenSSL NOT Found: download Win32 OpenSSL v1.0.2: https://slproweb.com/products/Win32OpenSSL.html")
+            MESSAGE(STATUS "     or")
+        ENDIF()
+        MESSAGE(FATAL_ERROR "OpenSSL NOT found: use `-DWITH_OPENSSL=OFF` to build without TLS encryption")
+    ENDIF()
+
+    # Ensure that we package OpenSSL DLLs with MMapper for Windows
+    IF(WIN32)
+        IF(NOT OPENSSL_ROOT_DIR)
+            SET(OPENSSL_ROOT_DIR "C:\\OpenSSL-Win32")
+        ENDIF()
+        FILE(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/src/bin)
+        FIND_LIBRARY(OPENSSL_LIBEAY32 NAMES libeay32 PATHS ${OPENSSL_ROOT_DIR})
+        IF(OPENSSL_LIBEAY32-NOTFOUND)
+            MESSAGE(FATAL_ERROR "OpenSSL libeay32.dll was NOT found")
+        ELSE()
+            CONFIGURE_FILE(${OPENSSL_LIBEAY32} ${CMAKE_CURRENT_BINARY_DIR}/src/bin/libeay32.dll COPYONLY)
+            MESSAGE(STATUS "   Copied ${OPENSSL_LIBEAY32} to src/bin/")
+        ENDIF()
+        FIND_LIBRARY(OPENSSL_SSLEAY32 NAMES ssleay32 PATHS ${OPENSSL_ROOT_DIR})
+        IF(OPENSSL_SSLEAY32-NOTFOUND)
+        MESSAGE(FATAL_ERROR "OpenSSL ssleay32.dll was NOT found")
+        ELSE()
+            CONFIGURE_FILE(${OPENSSL_SSLEAY32} ${CMAKE_CURRENT_BINARY_DIR}/src/bin/ssleay32.dll COPYONLY)
+            MESSAGE(STATUS "   Copied ${OPENSSL_SSLEAY32} to src/bin/")
+        ENDIF()
+    ENDIF()
+ELSE()
+    MESSAGE(STATUS "Building without OpenSSL TLS encryption")
+    ADD_DEFINITIONS(/DMMAPPER_NO_OPENSSL)
 ENDIF()
 
 # Extract git branch and revision

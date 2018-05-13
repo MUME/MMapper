@@ -202,9 +202,13 @@ bool Proxy::init()
     m_userSocket->write(ba);
     m_userSocket->flush();
 
+#if MMAPPER_NO_OPENSSL
+    m_mudSocket = (MumeSocket *)new MumeTcpSocket(this);
+#else
     m_mudSocket = Config().m_tlsEncryption
                   ? (MumeSocket *)new MumeSslSocket(this)
                   : (MumeSocket *)new MumeTcpSocket(this);
+#endif
     connect(m_mudSocket, SIGNAL(connected()), this, SLOT(onMudConnected()));
     connect(m_mudSocket, SIGNAL(socketError(QAbstractSocket::SocketError)),
             this, SLOT(onMudError(QAbstractSocket::SocketError)));

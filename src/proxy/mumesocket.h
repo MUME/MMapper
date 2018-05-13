@@ -73,6 +73,7 @@ public:
 
 protected slots:
     void onConnect();
+    void onError(QAbstractSocket::SocketError e);
     void onReadyRead();
     void onEncrypted();
     void onPeerVerifyError(const QSslError &error);

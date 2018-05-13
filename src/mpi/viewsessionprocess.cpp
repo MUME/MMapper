@@ -65,8 +65,11 @@ ViewSessionProcess::ViewSessionProcess(int key, const QString &title, const QStr
             qWarning() << "File does not exist!" << m_file.fileName();
         }
 
-        // Well, this might not hurt, might as well attempt it
-        setenv("TITLE", m_title.toLatin1().constData(), 1);
+        // Set the TITLE environmental variable
+        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+        if (env.contains("TITLE")) env.remove("TITLE");
+        env.insert("TITLE", m_title);
+        setProcessEnvironment(env);
 
         // Start the process!
         QStringList args = splitCommandLine(Config().m_externalRemoteEditorCommand);

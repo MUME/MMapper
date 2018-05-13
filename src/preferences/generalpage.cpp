@@ -57,7 +57,12 @@ GeneralPage::GeneralPage(QWidget *parent)
     remoteName->setText( Config().m_remoteServerName );
     remotePort->setValue( Config().m_remotePort );
     localPort->setValue( Config().m_localPort );
+#if MMAPPER_NO_OPENSSL
+    tlsEncryptionCheckBox->setEnabled(false);
+    tlsEncryptionCheckBox->setChecked(false);
+#else
     tlsEncryptionCheckBox->setChecked( Config().m_tlsEncryption );
+#endif
 
     emulatedExitsCheckBox->setChecked( Config().m_emulatedExits );
     showHiddenExitFlagsCheckBox->setChecked( Config().m_showHiddenExitFlags );
