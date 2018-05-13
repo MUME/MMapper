@@ -39,7 +39,7 @@ class RoomRecipient
 {
 public:
     virtual void receiveRoom(RoomAdmin *admin, const Room *room) = 0;
-    virtual ~RoomRecipient() {};
+    virtual ~RoomRecipient() {}
 };
 
 #endif

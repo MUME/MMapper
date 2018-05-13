@@ -30,7 +30,7 @@ bool RoomFilter::parseRoomFilter(const QString &line, RoomFilter &output)
     return true;
 }
 
-const bool RoomFilter::filter(const Room *r) const
+bool RoomFilter::filter(const Room *r) const
 {
     if (kind == PAT_ALL) {
         for (auto elt : (*r))

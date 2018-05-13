@@ -16,7 +16,7 @@ public:
     static bool parseRoomFilter(const QString &line, RoomFilter &output);
     static const char *parse_help;
 
-    const bool filter(const Room *r) const;
+    bool filter(const Room *r) const;
 
 protected:
     QString pattern;

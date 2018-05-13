@@ -111,7 +111,7 @@ IF(UNIX AND NOT APPLE)
     )
 
     SET(CMAKE_CXX_FLAGS_DEBUG
-      "-g -Wall -g3 -ggdb -gdwarf-2 -Wunused-variable -Wno-long-long -Wno-unknown-pragmas -Wno-system-headers -Wreorder -Wparentheses -Wsign-compare"
+      "-ggdb3 -Wunused-variable -Wno-long-long -Wno-unknown-pragmas -Wno-system-headers -Wreorder -Wparentheses -Wsign-compare"
       CACHE STRING "Debug builds CMAKE CXX flags " FORCE )
 ENDIF(UNIX AND NOT APPLE)
 

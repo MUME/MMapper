@@ -150,7 +150,7 @@ protected:
 
     enum FontFormatFlags {FFF_NONE = 0, FFF_ITALICS = 1, FFF_UNDERLINE = 2};
     void renderText(float x, float y, const QString &str, QColor color = Qt::white,
-                    uint fontFormatFlags = FFF_NONE, double rotationAngle = 0.0f);
+                    uint fontFormatFlags = FFF_NONE, double rotationAngle = 0.0);
 
 private:
     QMatrix4x4 m_model, m_view, m_projection;

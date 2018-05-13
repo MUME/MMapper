@@ -24,8 +24,8 @@
 **
 ************************************************************************/
 
-#ifndef _CONFIGURATION_H_
-#define _CONFIGURATION_H_
+#ifndef MMAPPER_CONFIGURATION_H
+#define MMAPPER_CONFIGURATION_H
 
 #include <QStringList>
 #include <QPoint>
@@ -75,8 +75,8 @@ public:
     }
 
     QString   m_remoteServerName;         /// Remote host and port settings
-    quint32   m_remotePort;
-    quint32   m_localPort;                /// Port to bind to on local machine
+    quint16   m_remotePort;
+    quint16   m_localPort;                /// Port to bind to on local machine
     bool      m_tlsEncryption;
 
     QColor m_backgroundColor;

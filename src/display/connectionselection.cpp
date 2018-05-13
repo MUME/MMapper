@@ -43,8 +43,8 @@ ConnectionSelection::ConnectionSelection(MapFrontend *mf, double mx, double my, 
 int ConnectionSelection::GLtoMap(double arg)
 {
     if (arg >= 0)
-        return (int)(arg + 0.5f);
-    return (int)(arg - 0.5f);
+        return static_cast<int>(arg + 0.5);
+    return static_cast<int>(arg - 0.5);
 }
 
 ConnectionSelection::ConnectionSelection()

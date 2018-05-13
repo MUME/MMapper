@@ -64,12 +64,12 @@ public:
     {
         if (m_connectionDescriptor[0].room == NULL) return false;
         else return true;
-    };
+    }
     bool isSecondValid()
     {
         if (m_connectionDescriptor[1].room == NULL) return false;
         else return true;
-    };
+    }
 
     void receiveRoom(RoomAdmin *admin, const Room *aRoom);
 

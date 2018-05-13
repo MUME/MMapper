@@ -48,7 +48,9 @@ void ProgressCounter::increaseTotalStepsBy( quint32 steps )
 void ProgressCounter::step( quint32 steps )
 {
     m_steps += steps;
-    quint32 percentage = 100 * m_steps / m_totalSteps;
+    quint32 percentage = (m_totalSteps == 0u)
+                         ? 0u
+                         : (100u * m_steps / m_totalSteps);
     if ( percentage != m_percentage ) {
         m_percentage = percentage;
         emit onPercentageChanged( percentage );

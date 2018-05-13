@@ -47,7 +47,7 @@ InputWidget::InputWidget(QWidget *parent)
     // Minimum Size
     QFontMetrics fm(currentCharFormat().font());
     setMinimumSize(QSize(fm.averageCharWidth(),
-                         fm.lineSpacing() + (document()->documentMargin() + QFrame::frameWidth()) * 2 +
+                         fm.lineSpacing() + (static_cast<int>(document()->documentMargin()) + QFrame::frameWidth()) * 2 +
                          contentsMargins().top() + contentsMargins().bottom()));
     setSizeIncrement(fm.averageCharWidth(), fm.lineSpacing());
 

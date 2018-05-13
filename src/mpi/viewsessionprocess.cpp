@@ -66,7 +66,7 @@ ViewSessionProcess::ViewSessionProcess(int key, const QString &title, const QStr
         }
 
         // Well, this might not hurt, might as well attempt it
-        putenv(QString("TITLE=%1").arg(m_title).toLatin1().data());
+        setenv("TITLE", m_title.toLatin1().constData(), 1);
 
         // Start the process!
         QStringList args = splitCommandLine(Config().m_externalRemoteEditorCommand);

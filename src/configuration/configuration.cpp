@@ -50,8 +50,8 @@ void Configuration::read()
     // read general options
     conf.beginGroup("Connection");
     m_remoteServerName = conf.value("Server name", "mume.org").toString();
-    m_remotePort = conf.value("Remote port number", 4242).toInt();
-    m_localPort = conf.value("Local port number", 4242).toInt();
+    m_remotePort = static_cast<quint16>(conf.value("Remote port number", 4242).toInt());
+    m_localPort = static_cast<quint16>(conf.value("Local port number", 4242).toInt());
     m_tlsEncryption = conf.value("TLS encryption", true).toBool();
     conf.endGroup();
 
@@ -156,7 +156,7 @@ void Configuration::read()
     m_groupManagerHost = conf.value("host", "localhost").toByteArray();
     m_groupManagerCharName = conf.value("character name", QHostInfo::localHostName()).toByteArray();
     m_groupManagerShareSelf = conf.value("share self", true).toBool();
-    m_groupManagerColor = (QColor) conf.value("color", "#ffff00").toString();
+    m_groupManagerColor = QColor(conf.value("color", "#ffff00").toString());
     m_groupManagerRulesWarning = conf.value("rules warning", true).toBool();
     conf.endGroup();
 
@@ -198,8 +198,8 @@ void Configuration::write() const
     // write general options
     conf.beginGroup("Connection");
     conf.setValue("Server name", m_remoteServerName);
-    conf.setValue("Remote port number", (int) m_remotePort);
-    conf.setValue("Local port number", (int) m_localPort);
+    conf.setValue("Remote port number", static_cast<int>(m_remotePort));
+    conf.setValue("Local port number", static_cast<int>(m_localPort));
     conf.setValue("SSL Encrypted", m_tlsEncryption);
     conf.endGroup();
 

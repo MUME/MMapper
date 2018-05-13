@@ -24,6 +24,7 @@
 
 #include <QSettings>
 #include <QTimer>
+#include <assert.h>
 
 #include "mumeclockwidget.h"
 #include "configuration.h"
@@ -33,6 +34,8 @@ MumeClockWidget::MumeClockWidget(MumeClock *clock, QWidget *parent)
       m_clock(clock)
 {
     setupUi(this);
+    setAttribute(Qt::WA_DeleteOnClose);
+    assert(testAttribute(Qt::WA_DeleteOnClose));
 
     m_lastSeason = SEASON_UNKNOWN;
     m_lastTime = TIME_UNKNOWN;

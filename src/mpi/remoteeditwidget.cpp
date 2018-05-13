@@ -31,12 +31,15 @@
 #include <QDebug>
 #include <QCloseEvent>
 #include <QMessageBox>
+#include <assert.h>
 
 RemoteEditWidget::RemoteEditWidget(int key, const QString &title, const QString &body,
                                    QWidget *parent)
     : QDialog(parent), m_key(key), m_title(title), m_body(body), m_submitted(false)
 {
     setAttribute(Qt::WA_DeleteOnClose);
+    assert(testAttribute(Qt::WA_DeleteOnClose));
+
     setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
     setWindowTitle(m_title + " - MMapper " + (isEditSession() ? "Editor" : "Viewer"));

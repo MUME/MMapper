@@ -38,7 +38,7 @@ protected:
     std::set<uint> outgoing;
 
 public:
-    Exit(uint numProps = 0) : QVector<QVariant>(numProps) {}
+    Exit(uint numProps = 0) : QVector<QVariant>(static_cast<int>(numProps)) {}
     std::set<uint>::const_iterator inBegin() const
     {
         return incoming.begin();

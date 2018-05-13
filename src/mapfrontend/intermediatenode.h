@@ -42,7 +42,7 @@ public:
     {
         delete rooms;
     }
-    IntermediateNode() : SearchTreeNode((char *)"")
+    IntermediateNode() : SearchTreeNode(const_cast<char *>(""))
     {
         rooms = 0;
     }
