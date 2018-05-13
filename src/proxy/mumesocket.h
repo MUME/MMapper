@@ -92,7 +92,7 @@ class MumeTcpSocket : public MumeSslSocket
 public:
     MumeTcpSocket(QObject *parent) : MumeSslSocket(parent) {}
 
-    void connectToHost();
+    void connectToHost() override;
 
 protected slots:
     void onConnect() override;

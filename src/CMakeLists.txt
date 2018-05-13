@@ -81,6 +81,7 @@ SET(mmapper_SRCS
     preferences/configdialog.cpp
     preferences/generalpage.cpp
     preferences/groupmanagerpage.cpp
+    preferences/graphicspage.cpp
     preferences/parserpage.cpp
     preferences/pathmachinepage.cpp
     preferences/clientpage.cpp
@@ -111,6 +112,7 @@ SET(mmapper_UIS
     preferences/configdialog.ui
     preferences/generalpage.ui
     preferences/groupmanagerpage.ui
+    preferences/graphicspage.ui
     preferences/parserpage.ui
     preferences/pathmachinepage.ui
     preferences/clientpage.ui

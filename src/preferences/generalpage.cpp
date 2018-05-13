@@ -25,10 +25,9 @@
 ************************************************************************/
 
 #include "generalpage.h"
-#include "configuration.h"
+#include "configuration/configuration.h"
 
 #include <QFileDialog>
-#include <QColorDialog>
 
 GeneralPage::GeneralPage(QWidget *parent)
     : QWidget(parent)
@@ -41,25 +40,10 @@ GeneralPage::GeneralPage(QWidget *parent)
     connect( tlsEncryptionCheckBox, SIGNAL(stateChanged(int)),
              SLOT(tlsEncryptionCheckBoxStateChanged(int)));
 
-    connect( changeColor, SIGNAL(clicked()), SLOT(changeColorClicked()));
-    connect( antialiasingSamplesComboBox, SIGNAL( currentTextChanged(const QString &) ), this,
-             SLOT( antialiasingSamplesTextChanged(const QString &) )  );
-    connect( trilinearFilteringCheckBox, SIGNAL(stateChanged(int)),
-             SLOT(trilinearFilteringStateChanged(int)));
-    connect( softwareOpenGLCheckBox, SIGNAL(stateChanged(int)),
-             SLOT(softwareOpenGLStateChanged(int)));
-
     connect ( emulatedExitsCheckBox, SIGNAL(stateChanged(int)), SLOT(emulatedExitsStateChanged(int)));
     connect ( showHiddenExitFlagsCheckBox, SIGNAL(stateChanged(int)),
               SLOT(showHiddenExitFlagsStateChanged(int)));
     connect ( showNotesCheckBox, SIGNAL(stateChanged(int)), SLOT(showNotesStateChanged(int)));
-
-    connect ( updated, SIGNAL(stateChanged(int)), SLOT(updatedStateChanged(int)));
-    connect ( drawNotMappedExits, SIGNAL(stateChanged(int)), SLOT(drawNotMappedExitsStateChanged(int)));
-    connect ( drawNoMatchExits, SIGNAL(stateChanged(int)), SLOT(drawNoMatchExitsStateChanged(int)));
-    connect ( drawDoorNames, SIGNAL(stateChanged(int)), SLOT(drawDoorNamesStateChanged(int)));
-    connect ( drawUpperLayersTextured, SIGNAL(stateChanged(int)),
-              SLOT(drawUpperLayersTexturedStateChanged(int)));
 
     connect( autoLoadFileName, SIGNAL( textChanged(const QString &) ), this,
              SLOT( autoLoadFileNameTextChanged(const QString &) )  );
@@ -75,55 +59,14 @@ GeneralPage::GeneralPage(QWidget *parent)
     localPort->setValue( Config().m_localPort );
     tlsEncryptionCheckBox->setChecked( Config().m_tlsEncryption );
 
-    QPixmap bgPix(16, 16);
-    bgPix.fill(Config().m_backgroundColor);
-    changeColor->setIcon(QIcon(bgPix));
-    int index = antialiasingSamplesComboBox->findText(QString::number(Config().m_antialiasingSamples));
-    if (index < 0) index = 0;
-    antialiasingSamplesComboBox->setCurrentIndex(index);
-    trilinearFilteringCheckBox->setChecked(Config().m_trilinearFiltering);
-    softwareOpenGLCheckBox->setChecked(Config().m_softwareOpenGL);
-
     emulatedExitsCheckBox->setChecked( Config().m_emulatedExits );
     showHiddenExitFlagsCheckBox->setChecked( Config().m_showHiddenExitFlags );
     showNotesCheckBox->setChecked( Config().m_showNotes );
-
-    updated->setChecked( Config().m_showUpdated );
-    drawNotMappedExits->setChecked( Config().m_drawNotMappedExits );
-    drawNoMatchExits->setChecked( Config().m_drawNoMatchExits );
-    drawUpperLayersTextured->setChecked( Config().m_drawUpperLayersTextured );
-    drawDoorNames->setChecked( Config().m_drawDoorNames );
 
     autoLoadCheck->setChecked( Config().m_autoLoadWorld );
     autoLoadFileName->setText( Config().m_autoLoadFileName );
 
     displayMumeClockCheckBox->setChecked(Config().m_displayMumeClock);
-}
-
-void GeneralPage::changeColorClicked()
-{
-    const QColor newColor = QColorDialog::getColor(Config().m_backgroundColor, this);
-    if (newColor.isValid() && newColor != Config().m_backgroundColor) {
-        QPixmap bgPix(16, 16);
-        bgPix.fill(newColor);
-        changeColor->setIcon(QIcon(bgPix));
-        Config().m_backgroundColor = newColor;
-    }
-}
-
-void GeneralPage::antialiasingSamplesTextChanged(const QString &)
-{
-    Config().m_antialiasingSamples = antialiasingSamplesComboBox->currentText().toInt();
-}
-
-void GeneralPage::trilinearFilteringStateChanged(int)
-{
-    Config().m_trilinearFiltering = trilinearFilteringCheckBox->isChecked();
-}
-
-void GeneralPage::softwareOpenGLStateChanged(int)
-{
-    Config().m_softwareOpenGL = softwareOpenGLCheckBox->isChecked();
 }
 
 void GeneralPage::selectWorldFileButtonClicked()
@@ -171,31 +114,6 @@ void GeneralPage::showHiddenExitFlagsStateChanged(int)
 void GeneralPage::showNotesStateChanged(int)
 {
     Config().m_showNotes = showNotesCheckBox->isChecked();
-}
-
-void GeneralPage::updatedStateChanged(int)
-{
-    Config().m_showUpdated = updated->isChecked();
-}
-
-void GeneralPage::drawNotMappedExitsStateChanged(int)
-{
-    Config().m_drawNotMappedExits = drawNotMappedExits->isChecked();
-}
-
-void GeneralPage::drawNoMatchExitsStateChanged(int)
-{
-    Config().m_drawNoMatchExits = drawNoMatchExits->isChecked();
-}
-
-void GeneralPage::drawDoorNamesStateChanged(int)
-{
-    Config().m_drawDoorNames = drawDoorNames->isChecked();
-}
-
-void GeneralPage::drawUpperLayersTexturedStateChanged(int)
-{
-    Config().m_drawUpperLayersTextured = drawUpperLayersTextured->isChecked();
 }
 
 void GeneralPage::autoLoadFileNameTextChanged(const QString &)

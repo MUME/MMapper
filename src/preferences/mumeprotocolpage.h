@@ -36,7 +36,7 @@ class MumeProtocolPage : public QWidget
     Q_OBJECT
 
 public:
-    explicit MumeProtocolPage(QWidget *parent = 0);
+    explicit MumeProtocolPage(QWidget *parent = nullptr);
     ~MumeProtocolPage();
 
 public slots:

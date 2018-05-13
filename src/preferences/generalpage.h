@@ -41,20 +41,9 @@ public slots:
     void localPortValueChanged(int);
     void tlsEncryptionCheckBoxStateChanged(int);
 
-    void changeColorClicked();
-    void antialiasingSamplesTextChanged(const QString &);
-    void trilinearFilteringStateChanged(int);
-    void softwareOpenGLStateChanged(int);
-
     void emulatedExitsStateChanged(int);
     void showHiddenExitFlagsStateChanged(int);
     void showNotesStateChanged(int);
-
-    void updatedStateChanged(int);
-    void drawNotMappedExitsStateChanged(int);
-    void drawNoMatchExitsStateChanged(int);
-    void drawDoorNamesStateChanged(int);
-    void drawUpperLayersTexturedStateChanged(int);
 
     void autoLoadFileNameTextChanged(const QString &);
     void autoLoadCheckStateChanged(int);

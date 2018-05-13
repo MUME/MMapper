@@ -27,6 +27,7 @@
 #include "configdialog.h"
 #include "ui_configdialog.h"
 #include "generalpage.h"
+#include "graphicspage.h"
 #include "parserpage.h"
 #include "pathmachinepage.h"
 #include "groupmanagerpage.h"
@@ -85,6 +86,12 @@ void ConfigDialog::createIcons()
     configButton->setTextAlignment(Qt::AlignHCenter);
     configButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
+    QListWidgetItem *graphicsButton = new QListWidgetItem(ui->contentsWidget);
+    graphicsButton->setIcon(QIcon(":/icons/graphicscfg.png"));
+    graphicsButton->setText(tr("Graphics"));
+    graphicsButton->setTextAlignment(Qt::AlignHCenter);
+    graphicsButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+
     QListWidgetItem *updateButton = new QListWidgetItem(ui->contentsWidget);
     updateButton->setIcon(QIcon(":/icons/parsercfg.png"));
     updateButton->setText(tr("Parser"));
@@ -122,6 +129,7 @@ void ConfigDialog::changePage(QListWidgetItem *current, QListWidgetItem *previou
         current = previous;
 
     if (pagesWidget->count() <= 1) {
+        pagesWidget->addWidget(new GraphicsPage(this));
         pagesWidget->addWidget(new ParserPage(this));
         pagesWidget->addWidget(new ClientPage(this));
         pagesWidget->addWidget(new GroupManagerPage(m_groupManager, this));
