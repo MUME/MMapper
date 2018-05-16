@@ -414,13 +414,12 @@ void cTelnet::processTelnetCommand (const QByteArray &command)
 
 void cTelnet::onReadyRead()
 {
-    int read;
-    while (socket.bytesAvailable()) {
-        read = socket.read(buffer, 8191);
-        if (read != -1) {
-            buffer[read] = 0;
-        }
-    }
+    int read = socket.read(buffer, 32768);
+    if (read != -1) {
+        buffer[read] = 0;
+    } else if (read == 0) return;
+    else
+        buffer[read] = '\0';
     QByteArray data = QByteArray::fromRawData(buffer, read);
     QByteArray cleanData;
 

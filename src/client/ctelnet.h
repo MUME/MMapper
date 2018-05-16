@@ -209,7 +209,7 @@ protected:
 
 private:
     QTcpSocket socket;
-    char buffer[8192];
+    char buffer[32769];
 
     QByteArray encoding;
 

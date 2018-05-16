@@ -37,9 +37,10 @@ SearchTreeNode::SearchTreeNode(ParseEvent *event,
 {
     const char *rest = event->current()->rest();
 
-    myChars = new char[strlen(rest)];
-    strcpy(myChars, rest +
-           1); // we copy the string so that we can remove rooms independently of tree nodes
+    int size = strlen(rest);
+    myChars = new char[size];
+    strncpy(myChars, rest + 1,
+            size); // we copy the string so that we can remove rooms independently of tree nodes
     if (in_children == 0) children = new TinyList<SearchTreeNode *>();
     else children = in_children;
 }
