@@ -167,6 +167,13 @@ TARGET_LINK_LIBRARIES(mmapper
     Qt5::OpenGL
 )
 
+set_target_properties(
+  mmapper PROPERTIES
+  CXX_STANDARD 14
+  CXX_STANDARD_REQUIRED ON
+  COMPILE_FLAGS "${WARNING_FLAGS}"
+)
+
 IF(WITH_QTIOCOMPRESSOR)
     IF(QTIOCOMPRESSOR_FOUND)
         TARGET_LINK_LIBRARIES(mmapper ${QTIOCOMPRESSOR_LIBRARIES})
@@ -179,6 +186,25 @@ IF(WITH_QTIOCOMPRESSOR)
         TARGET_LINK_LIBRARIES(mmapper ${ZLIB_LIBRARIES})
     ENDIF()
 ENDIF()
+
+# clang-tidy support
+find_program(
+  CLANG_TIDY_EXE
+  NAMES "clang-tidy-6.0"
+  DOC "Path to clang-tidy executable"
+  )
+if(NOT CLANG_TIDY_EXE)
+  message(STATUS "clang-tidy not found.")
+else()
+  message(STATUS "clang-tidy found: ${CLANG_TIDY_EXE}")
+  set(DO_CLANG_TIDY "${CLANG_TIDY_EXE}" ) #"-checks=*,-clang-analyzer-alpha.*")
+endif()
+if(CLANG_TIDY_EXE)
+  set_target_properties(
+    mmapper PROPERTIES
+    CXX_CLANG_TIDY "${DO_CLANG_TIDY}"
+  )
+endif()
 
 # Begin CPack Settings
 SET(CPACK_PACKAGE_VERSION ${MMAPPER_VERSION})
