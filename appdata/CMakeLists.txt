@@ -1,7 +1,7 @@
 # Linux Install Settings
-IF(UNIX AND NOT APPLE)
-    INSTALL(FILES mmapper.appdata.xml
+if(UNIX AND NOT APPLE)
+    install(FILES mmapper.appdata.xml
             DESTINATION share/metainfo
             COMPONENT desktopintegration
     )
-ENDIF(UNIX AND NOT APPLE)
+endif(UNIX AND NOT APPLE)
