@@ -37,8 +37,9 @@ IntermediateNode::IntermediateNode(ParseEvent *event)
         myChars = new char[1];
         myChars[0] = 0;
     } else {
-        myChars = new char[strlen(prop->rest()) + 1];
-        strcpy(myChars, prop->rest());
+        int size = strlen(prop->rest()) + 1;
+        myChars = new char[size];
+        strncpy(myChars, prop->rest(), size);
     }
     rooms = 0;
     event->prev();
