@@ -52,8 +52,9 @@ QString AnsiCombo::text() const
 void AnsiCombo::setText(const QString &t)
 {
     QString tmp = t;
-    if (t == "255" || t == "254")
+    if (t == "255" || t == "254") {
         tmp = "none";
+    }
 
     const int index = findText(tmp);
 
@@ -99,10 +100,11 @@ AnsiCombo::AnsiItem AnsiCombo::initAnsiItem(int index)
         pix.fill(col);
 
         retVal.picture = pix;
-        if (index != 254 && index != 255)
+        if (index != 254 && index != 255) {
             retVal.ansiCode = QString("%1").arg(index);
-        else
+        } else {
             retVal.ansiCode = QString("none");
+        }
     }
     return retVal;
 }
@@ -123,7 +125,7 @@ bool AnsiCombo::colorFromString(const QString &colString,
     bold = false;
     underline = false;
 
-    QRegExp re("^\\[((?:\\d+;)*\\d+)m$");
+    QRegExp re(R"(^\[((?:\d+;)*\d+)m$)");
 
     if (re.indexIn(colString) >= 0) {
         //matches
@@ -136,15 +138,27 @@ bool AnsiCombo::colorFromString(const QString &colString,
 
         switch (list.size()) {
         case 4:
-            if  (list.at(3) == "1") bold = true;
-            if  (list.at(3) == "4") underline = true;
+            if  (list.at(3) == "1") {
+                bold = true;
+            }
+            if  (list.at(3) == "4") {
+                underline = true;
+            }
         case 3:
-            if  (list.at(2) == "1") bold = true;
-            if  (list.at(2) == "4") underline = true;
+            if  (list.at(2) == "1") {
+                bold = true;
+            }
+            if  (list.at(2) == "4") {
+                underline = true;
+            }
         case 2:
             tmpInt = list.at(1).toInt();
-            if  (tmpInt == 1) bold = true;
-            if  (tmpInt == 4) underline = true;
+            if  (tmpInt == 1) {
+                bold = true;
+            }
+            if  (tmpInt == 4) {
+                underline = true;
+            }
             if (tmpInt >= 40 && tmpInt <= 47) {
                 ansiCodeBg = tmpInt;
                 colorFromNumber(ansiCodeBg, colBg, intelligibleNameBg);
@@ -155,8 +169,12 @@ bool AnsiCombo::colorFromString(const QString &colString,
             }
         case 1:
             tmpInt = list.at(0).toInt();
-            if  (tmpInt == 1) bold = true;
-            if  (tmpInt == 4) underline = true;
+            if  (tmpInt == 1) {
+                bold = true;
+            }
+            if  (tmpInt == 4) {
+                underline = true;
+            }
             if (tmpInt >= 40 && tmpInt <= 47) {
                 ansiCodeBg = tmpInt;
                 colorFromNumber(ansiCodeBg, colBg, intelligibleNameBg);
@@ -237,7 +255,7 @@ bool AnsiCombo::colorFromNumber(int numColor, QColor &col, QString &intelligible
 
 void AnsiCombo::makeWidgetColoured(QWidget *pWidget, const QString &ansiColor)
 {
-    if (pWidget) {
+    if (pWidget != nullptr) {
         QColor colFg;
         QColor colBg;
         int ansiCodeFg;
@@ -263,8 +281,8 @@ void AnsiCombo::makeWidgetColoured(QWidget *pWidget, const QString &ansiColor)
         pWidget->setPalette(palette);
         pWidget->setBackgroundRole(QPalette::Window);
 
-        QLabel *pLabel = qobject_cast<QLabel *>(pWidget);
-        if (pLabel) {
+        auto *pLabel = qobject_cast<QLabel *>(pWidget);
+        if (pLabel != nullptr) {
             pLabel->setText(intelligibleNameFg);
         }
     }

@@ -103,17 +103,19 @@ QString &removeAnsiMarks(QString &str)
 {
     QString out = "";
     bool started = false;
-    for ( int i = 0; i < str.length(); i++ ) {
-        if ( started && (str.at(i).toLatin1() == colorEndMark)) {
+    for (auto character : str) {
+        if ( started && (character.toLatin1() == colorEndMark)) {
             started = false;
             continue;
         }
-        if (str.at(i).toLatin1() == escChar) {
+        if (character.toLatin1() == escChar) {
             started = true;
             continue;
         }
-        if (started) continue;
-        out.append(str.at(i));
+        if (started) {
+            continue;
+        }
+        out.append(character);
     }
     str = out;
     return str;
@@ -126,14 +128,15 @@ QString &latinToAscii(QString &str)
     for (pos = 0; pos < str.length(); pos++) {
         ch = str.at(pos).toLatin1();
         if (ch > 128) {
-            if (ch < 192)
+            if (ch < 192) {
                 ch = 'z';
-            else
+            } else {
                 ch = latin1ToAscii[ ch - 192 ];
+            }
             str[pos] = ch;
         }
     }
     return str;
 }
 
-}
+}  // namespace ParserUtils

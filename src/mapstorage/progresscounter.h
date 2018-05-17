@@ -31,7 +31,7 @@ class ProgressCounter : public QObject
 {
     Q_OBJECT
 
-    quint32 m_totalSteps, m_steps, m_percentage;
+    quint32 m_totalSteps{0}, m_steps{0}, m_percentage{0};
 
 public:
     ProgressCounter();

@@ -25,9 +25,11 @@
 
 #include "prespammedpath.h"
 
+#include <utility>
+
 //#define TEST
 
-PrespammedPath::PrespammedPath(QObject *)
+PrespammedPath::PrespammedPath(QObject * /*unused*/)
 {
 #ifdef TEST
     m_queue.append(CID_DOWN);
@@ -41,13 +43,13 @@ PrespammedPath::PrespammedPath(QObject *)
 }
 
 PrespammedPath::~PrespammedPath()
-{
-
-}
+    = default;
 
 void PrespammedPath::setPath(CommandQueue queue, bool upd)
 {
-    m_queue = queue;
-    if (upd) emit update();
+    m_queue = std::move(queue);
+    if (upd) {
+        emit update();
+    }
 }
 

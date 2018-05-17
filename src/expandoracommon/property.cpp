@@ -23,23 +23,26 @@
 **
 ************************************************************************/
 
-#include <stdexcept>
 #include "property.h"
+#include <stdexcept>
 
 using namespace std;
 
-Property::Property(const QByteArray &in_data) :
-    ListCycler<char, QByteArray>(in_data),
+Property::Property(const QByteArray &data) :
+    ListCycler<char, QByteArray>(data),
     m_skipped(false)
 {
 }
 
 const char *Property::rest() const
 {
-    if (m_skipped)
+    if (m_skipped) {
         throw runtime_error("can't get a string from a SKIPPED property");
-    if (pos >= (uint)size()) return "";
-    else return constData() + pos;
+    }
+    if (pos >= static_cast<uint>(size())) {
+        return "";
+    }
+    return constData() + pos;
 }
 
 bool Property::isSkipped() const

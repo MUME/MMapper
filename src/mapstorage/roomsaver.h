@@ -34,14 +34,14 @@
 class RoomSaver : public RoomRecipient
 {
 public:
-    RoomSaver(RoomAdmin *in_admin, ConstRoomList &roomList);
+    RoomSaver(RoomAdmin *admin, ConstRoomList &list);
     ~RoomSaver();
     void receiveRoom(RoomAdmin *admin, const Room *room);
     quint32 getRoomsCount();
 private:
-    quint32 roomsCount;
-    ConstRoomList &roomList;
-    RoomAdmin *admin;
+    quint32 m_roomsCount;
+    ConstRoomList &m_roomList;
+    RoomAdmin *m_admin;
 };
 
 #endif

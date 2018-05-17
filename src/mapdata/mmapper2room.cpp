@@ -61,31 +61,31 @@ RoomLoadFlags getLoadFlags(const Room *room)
 
 RoomTerrainType getTerrainType(const Room *room)
 {
-    return (RoomTerrainType)(*room)[R_TERRAINTYPE].toUInt();
+    return static_cast<RoomTerrainType>((*room)[R_TERRAINTYPE].toUInt());
 }
 
 RoomPortableType getPortableType(const Room *room)
 {
-    return (RoomPortableType)(*room)[R_PORTABLETYPE].toUInt();
+    return static_cast<RoomPortableType>((*room)[R_PORTABLETYPE].toUInt());
 }
 
 RoomLightType getLightType(const Room *room)
 {
-    return (RoomLightType)(*room)[R_LIGHTTYPE].toUInt();
+    return static_cast<RoomLightType>((*room)[R_LIGHTTYPE].toUInt());
 }
 
 RoomAlignType getAlignType(const Room *room)
 {
-    return (RoomAlignType)(*room)[R_ALIGNTYPE].toUInt();
+    return static_cast<RoomAlignType>((*room)[R_ALIGNTYPE].toUInt());
 }
 
 RoomRidableType getRidableType(const Room *room)
 {
-    return (RoomRidableType)(*room)[R_RIDABLETYPE].toUInt();
+    return static_cast<RoomRidableType>((*room)[R_RIDABLETYPE].toUInt());
 }
 
 RoomSundeathType getSundeathType(const Room *room)
 {
-    return (RoomSundeathType)(*room)[R_SUNDEATHTYPE].toUInt();
+    return static_cast<RoomSundeathType>((*room)[R_SUNDEATHTYPE].toUInt());
 }
-}
+}  // namespace Mmapper2Room

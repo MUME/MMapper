@@ -31,10 +31,10 @@ Connection::Connection() :
     m_flags(0),
     m_index(0)
 {
-    m_rooms[LEFT] = NULL;
-    m_rooms[RIGHT] = NULL;
-    m_doors[LEFT] = NULL;
-    m_doors[RIGHT] = NULL;
+    m_rooms[LEFT] = nullptr;
+    m_rooms[RIGHT] = nullptr;
+    m_doors[LEFT] = nullptr;
+    m_doors[RIGHT] = nullptr;
     m_directions[LEFT] = CD_UNKNOWN;
     m_directions[RIGHT] = CD_UNKNOWN;
 }

@@ -99,7 +99,7 @@ public slots:
     void dataLoaded();
     void moveMarker(const Coordinate &);
 
-    void onMessageLogged(QOpenGLDebugMessage message);
+    void onMessageLogged(const QOpenGLDebugMessage &message);
 
 signals:
     void onEnsureVisible( qint32 x, qint32 y );
@@ -128,7 +128,7 @@ protected:
     void paintGL();
 
     void drawGroupCharacters();
-    void drawCharacter(const Coordinate &c, QColor color);
+    void drawCharacter(const Coordinate &c, const QColor &color);
     void drawRoomDoorName(const Room *sourceRoom, uint sourceDir, const Room *targetRoom,
                           uint targetDir);
     void resizeGL(int width, int height);
@@ -149,52 +149,52 @@ protected:
     void drawFlow( const Room *room, const std::vector<Room *> &rooms, ExitDirection exitDirection);
 
     enum FontFormatFlags {FFF_NONE = 0, FFF_ITALICS = 1, FFF_UNDERLINE = 2};
-    void renderText(float x, float y, const QString &str, QColor color = Qt::white,
-                    uint fontFormatFlags = FFF_NONE, double rotationAngle = 0.0);
+    void renderText(float x, float y, const QString &text, const QColor &color = Qt::white,
+                    uint fontFormatFlag = FFF_NONE, double rotationAngle = 0.0);
 
 private:
     QMatrix4x4 m_model, m_view, m_projection;
-    QOpenGLDebugLogger *m_logger;
+    QOpenGLDebugLogger *m_logger{};
 
     static QColor m_noFleeColor;
 
-    QOpenGLTexture *m_terrainTextures[16];
-    QOpenGLTexture *m_roadTextures[16];
-    QOpenGLTexture *m_loadTextures[18];
-    QOpenGLTexture *m_mobTextures[15];
+    QOpenGLTexture *m_terrainTextures[16] {};
+    QOpenGLTexture *m_roadTextures[16] {};
+    QOpenGLTexture *m_loadTextures[18] {};
+    QOpenGLTexture *m_mobTextures[15] {};
     QOpenGLTexture *m_updateTexture;
-    QOpenGLTexture *m_trailTextures[16];
+    QOpenGLTexture *m_trailTextures[16] {};
 
     void moveSelection(const RoomSelection *sel, int dx, int dy);
 
     void makeGlLists();
 
-    float m_scaleFactor;
-    int m_scrollX, m_scrollY;
-    qint16 m_currentLayer;
-    float m_visibleX1, m_visibleY1;
-    float m_visibleX2, m_visibleY2;
+    float m_scaleFactor {1.0f};
+    int m_scrollX {0}, m_scrollY {0};
+    qint16 m_currentLayer {0};
+    float m_visibleX1{}, m_visibleY1{};
+    float m_visibleX2{}, m_visibleY2{};
 
-    bool m_mouseRightPressed;
-    bool m_mouseLeftPressed;
-    bool m_altPressed;
-    bool m_ctrlPressed;
+    bool m_mouseRightPressed {false};
+    bool m_mouseLeftPressed {false};
+    bool m_altPressed {false};
+    bool m_ctrlPressed {false};
 
-    CanvasMouseMode m_canvasMouseMode;
+    CanvasMouseMode m_canvasMouseMode {CMM_MOVE};
 
     //mouse selection
-    float m_selX1, m_selY1, m_selX2, m_selY2;
-    int m_selLayer1, m_selLayer2;
+    float m_selX1{}, m_selY1{}, m_selX2{}, m_selY2{};
+    int m_selLayer1{}, m_selLayer2{};
 
-    GLdouble m_moveX1backup, m_moveY1backup;
+    GLdouble m_moveX1backup{}, m_moveY1backup{};
 
-    bool        m_selectedArea;
+    bool        m_selectedArea {false}; //no area selected at start time
     const RoomSelection *m_roomSelection;
 
-    bool m_roomSelectionMove;
-    bool m_roomSelectionMoveWrongPlace;
-    int m_roomSelectionMoveX;
-    int m_roomSelectionMoveY;
+    bool m_roomSelectionMove{};
+    bool m_roomSelectionMoveWrongPlace{};
+    int m_roomSelectionMoveX{};
+    int m_roomSelectionMoveY{};
 
     bool m_infoMarkSelection;
 
@@ -206,30 +206,30 @@ private:
     PrespammedPath *m_prespammedPath;
     Mmapper2Group *m_groupManager;
 
-    GLuint m_wall_north_gllist;
-    GLuint m_wall_south_gllist;
-    GLuint m_wall_east_gllist;
-    GLuint m_wall_west_gllist;
-    GLuint m_exit_up_gllist;
-    GLuint m_exit_down_gllist;
-    GLuint m_exit_up_transparent_gllist;
-    GLuint m_exit_down_transparent_gllist;
+    GLuint m_wall_north_gllist{};
+    GLuint m_wall_south_gllist{};
+    GLuint m_wall_east_gllist{};
+    GLuint m_wall_west_gllist{};
+    GLuint m_exit_up_gllist{};
+    GLuint m_exit_down_gllist{};
+    GLuint m_exit_up_transparent_gllist{};
+    GLuint m_exit_down_transparent_gllist{};
 
-    GLuint m_door_north_gllist;
-    GLuint m_door_south_gllist;
-    GLuint m_door_east_gllist;
-    GLuint m_door_west_gllist;
-    GLuint m_door_up_gllist;
-    GLuint m_door_down_gllist;
+    GLuint m_door_north_gllist{};
+    GLuint m_door_south_gllist{};
+    GLuint m_door_east_gllist{};
+    GLuint m_door_west_gllist{};
+    GLuint m_door_up_gllist{};
+    GLuint m_door_down_gllist{};
 
-    GLuint m_room_gllist;
-    GLuint m_room_selection_gllist;
-    GLuint m_room_selection_inner_gllist;
-    GLuint m_character_hint_gllist;
-    GLuint m_character_hint_inner_gllist;
+    GLuint m_room_gllist{};
+    GLuint m_room_selection_gllist{};
+    GLuint m_room_selection_inner_gllist{};
+    GLuint m_character_hint_gllist{};
+    GLuint m_character_hint_inner_gllist{};
 
-    GLuint m_flow_begin_gllist[6];
-    GLuint m_flow_end_gllist[6];
+    GLuint m_flow_begin_gllist[6] {};
+    GLuint m_flow_end_gllist[6] {};
 
     QFont *m_glFont;
     QFontMetrics *m_glFontMetrics;

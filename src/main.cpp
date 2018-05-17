@@ -25,18 +25,18 @@
 ************************************************************************/
 
 #include "mainwindow.h"
-#include "coordinate.h"
-#include "pathmachine.h"
-#include "mapfrontend.h"
 #include "configuration.h"
+#include "coordinate.h"
+#include "mapfrontend.h"
+#include "pathmachine.h"
 
 #include <QApplication>
 #include <QSplashScreen>
-#include <stdlib.h>
+#include <cstdlib>
 
 int main(int argc, char **argv)
 {
-    QApplication    app(argc, argv);
+    QApplication app(argc, argv);
 
 #if QT_VERSION >= 0x050100
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
@@ -52,11 +52,11 @@ int main(int argc, char **argv)
 
 #ifdef WITH_SPLASH
     QPixmap pixmap(":/pixmaps/splash20.png");
-    QSplashScreen *splash = new QSplashScreen(pixmap);
-    splash->showMessage(QString("%1").arg(MMAPPER_VERSION, -9),
-                        Qt::AlignBottom | Qt::AlignRight,
-                        Qt::yellow);
-    splash->show();
+    QSplashScreen splash(pixmap);
+    splash.showMessage(QString("%1").arg(MMAPPER_VERSION, -9),
+                       Qt::AlignBottom | Qt::AlignRight,
+                       Qt::yellow);
+    splash.show();
 #endif
     MainWindow     mw;
     if (Config().m_autoLoadWorld && Config().m_autoLoadFileName != "") {
@@ -71,8 +71,7 @@ int main(int argc, char **argv)
     }
     mw.show();
 #ifdef WITH_SPLASH
-    splash->finish(&mw);
-    delete splash;
+    splash.finish(&mw);
 #endif
     int ret = app.exec();
     Config().write();

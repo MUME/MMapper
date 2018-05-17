@@ -24,8 +24,8 @@
 **
 ************************************************************************/
 
-#include <stdlib.h>
 #include "coordinate.h"
+#include <cstdlib>
 
 bool Coordinate::operator== (const Coordinate &other) const
 {

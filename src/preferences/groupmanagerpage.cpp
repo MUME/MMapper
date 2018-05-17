@@ -25,8 +25,8 @@
 #include "groupmanagerpage.h"
 #include "configuration.h"
 
-#include "mmapper2group.h"
 #include "CGroup.h"
+#include "mmapper2group.h"
 
 #include <QColorDialog>
 #include <QDesktopServices>
@@ -96,18 +96,20 @@ void GroupManagerPage::remoteHostTextChanged()
     if (QString(remoteHost->text()).toLatin1() != Config().m_groupManagerHost) {
         Config().m_groupManagerHost = QString(remoteHost->text()).toLatin1();
 
-        if (m_groupManager->getType() == Mmapper2Group::Client)
+        if (m_groupManager->getType() == Mmapper2Group::Client) {
             emit setGroupManagerType(Mmapper2Group::Off);
+        }
     }
 }
 
-void GroupManagerPage::remotePortValueChanged(int)
+void GroupManagerPage::remotePortValueChanged(int /*unused*/)
 {
     if (remotePort->value() != Config().m_groupManagerRemotePort) {
         Config().m_groupManagerRemotePort = remotePort->value();
 
-        if (m_groupManager->getType() == Mmapper2Group::Client)
+        if (m_groupManager->getType() == Mmapper2Group::Client) {
             emit setGroupManagerType(Mmapper2Group::Off);
+        }
     }
 }
 
@@ -116,22 +118,23 @@ void GroupManagerPage::localHostLinkActivated(const QString &link)
     QDesktopServices::openUrl(QUrl::fromEncoded(link.toLatin1()));
 }
 
-void GroupManagerPage::localPortValueChanged(int)
+void GroupManagerPage::localPortValueChanged(int /*unused*/)
 {
     if (localPort->value() != Config().m_groupManagerLocalPort) {
         Config().m_groupManagerLocalPort = localPort->value();
 
-        if (m_groupManager->getType() == Mmapper2Group::Server)
+        if (m_groupManager->getType() == Mmapper2Group::Server) {
             emit setGroupManagerType(Mmapper2Group::Off);
+        }
     }
 }
 
-void GroupManagerPage::rulesWarningChanged(int)
+void GroupManagerPage::rulesWarningChanged(int /*unused*/)
 {
     Config().m_groupManagerRulesWarning = rulesWarning->isChecked();
 }
 
-void GroupManagerPage::shareSelfChanged(int)
+void GroupManagerPage::shareSelfChanged(int /*unused*/)
 {
     Config().m_groupManagerShareSelf = shareSelfCheckBox->isChecked();
 }

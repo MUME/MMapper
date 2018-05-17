@@ -32,7 +32,7 @@ Crossover::Crossover(std::list<Path *> *paths, uint dirCode, PathParameters &par
 
 void Crossover::receiveRoom(RoomAdmin *map, const Room *room)
 {
-    for (list<Path *>::iterator i = shortPaths->begin(); i != shortPaths->end(); ++i) {
-        augmentPath(*i, map, room);
+    for (auto &shortPath : *shortPaths) {
+        augmentPath(shortPath, map, room);
     }
 }

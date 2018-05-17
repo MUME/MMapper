@@ -54,7 +54,7 @@ public:
 
 private:
     MapData *m_mapData;
-    QTreeWidgetItem *item;
+    QTreeWidgetItem *item{};
     QShortcut *m_showSelectedRoom;
 
     void adjustResultTable();

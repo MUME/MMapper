@@ -24,11 +24,11 @@
 ************************************************************************/
 
 #include "roomsignalhandler.h"
-#include "roomadmin.h"
-#include "room.h"
 #include "customaction.h"
+#include "room.h"
+#include "roomadmin.h"
 
-#include <assert.h>
+#include <cassert>
 
 using namespace Qt;
 using namespace std;
@@ -36,7 +36,9 @@ using namespace std;
 void RoomSignalHandler::hold(const Room *room, RoomAdmin *owner, RoomRecipient *locker)
 {
     owners[room] = owner;
-    if (lockers[room].empty()) holdCount[room] = 0;
+    if (lockers[room].empty()) {
+        holdCount[room] = 0;
+    }
     lockers[room].insert(locker);
     ++holdCount[room];
 }
@@ -47,8 +49,10 @@ void RoomSignalHandler::release(const Room *room)
     if (--holdCount[room] == 0) {
         RoomAdmin *rcv = owners[room];
 
-        for (set<RoomRecipient *>::iterator i = lockers[room].begin(); i != lockers[room].end(); ++i) {
-            if (*i) rcv->releaseRoom(*i, room->getId());
+        for (auto i = lockers[room].begin(); i != lockers[room].end(); ++i) {
+            if (*i != nullptr) {
+                rcv->releaseRoom(*i, room->getId());
+            }
         }
 
         lockers.erase(room);
@@ -62,7 +66,7 @@ void RoomSignalHandler::keep(const Room *room, uint dir, uint fromId)
 
     RoomAdmin *rcv = owners[room];
 
-    if ((uint)room->getExitsList().size() > dir) {
+    if (static_cast<uint>(room->getExitsList().size()) > dir) {
         emit scheduleAction(new AddExit(fromId, room->getId(), dir));
     }
 

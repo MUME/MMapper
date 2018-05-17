@@ -56,7 +56,7 @@ private:
     QColor m_whiteColor, m_foregroundColor, m_backgroundColor;
     QFont m_serverOutputFont;
 
-    bool m_backspace;
+    bool m_backspace{};
 
     void setDefaultFormat(QTextCharFormat &format);
     void updateFormat(QTextCharFormat &format, int ansiCode);

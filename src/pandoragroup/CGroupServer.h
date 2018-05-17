@@ -40,8 +40,8 @@ public:
     CGroupServer(int localPort, QObject *parent);
     virtual ~CGroupServer();
 
-    void sendToAll(QByteArray);
-    void sendToAllExceptOne(CGroupClient *conn, QByteArray);
+    void sendToAll(const QByteArray &);
+    void sendToAllExceptOne(CGroupClient *exception, const QByteArray &);
     void closeAll();
 
 protected slots:

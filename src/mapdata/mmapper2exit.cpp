@@ -35,7 +35,7 @@ ExitFlags getFlags(const Exit &e)
     return e[E_FLAGS].toUInt();
 }
 
-DoorName getDoorName(const Exit &e)
+const DoorName getDoorName(const Exit &e)
 {
     return e[E_DOORNAME].toString();
 }
@@ -68,7 +68,7 @@ void nandDoorFlags(Exit &e, DoorFlags flags)
 
 uint opposite(uint in)
 {
-    return opposite((ExitDirection)in);
+    return opposite(static_cast<ExitDirection>(in));
 }
 
 ExitDirection opposite(ExitDirection in)
@@ -95,7 +95,7 @@ ExitDirection opposite(ExitDirection in)
 void updateExit(Exit &e, ExitFlags flags )
 {
     ExitFlags diff = flags ^ getFlags(e);
-    if (diff) {
+    if (diff != 0u) {
         flags |= EF_NO_MATCH;
         flags |= diff;
         e[E_FLAGS] = flags;
@@ -103,7 +103,7 @@ void updateExit(Exit &e, ExitFlags flags )
 }
 
 
-ExitDirection dirForChar(char dir)
+ExitDirection dirForChar(const char dir)
 {
     switch (dir) {
     case 'n':
@@ -123,7 +123,7 @@ ExitDirection dirForChar(char dir)
     }
 }
 
-char charForDir(ExitDirection dir)
+const char charForDir(ExitDirection dir)
 {
     switch (dir) {
     case ED_NORTH:
@@ -142,5 +142,5 @@ char charForDir(ExitDirection dir)
         return '?';
     }
 }
-}
+}  // namespace Mmapper2Exit
 

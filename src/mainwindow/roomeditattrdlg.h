@@ -78,7 +78,7 @@ public slots:
 
     void exitFlagsListItemChanged(QListWidgetItem *);
 
-    void doorNameLineEditTextChanged(QString);
+    void doorNameLineEditTextChanged(const QString &);
     void doorFlagsListItemChanged(QListWidgetItem *);
 
     void toggleHiddenDoor();
@@ -109,15 +109,15 @@ private:
     uint getSelectedExit();
     void updateDialog(const Room *r);
 
-    QListWidgetItem *loadListItems[32];
-    QListWidgetItem *mobListItems[32];
+    QListWidgetItem *loadListItems[32] {};
+    QListWidgetItem *mobListItems[32] {};
 
-    QListWidgetItem *exitListItems[16];
-    QListWidgetItem *doorListItems[16];
+    QListWidgetItem *exitListItems[16] {};
+    QListWidgetItem *doorListItems[16] {};
 
-    const RoomSelection    *m_roomSelection;
-    MapData                *m_mapData;
-    MapCanvas              *m_mapCanvas;
+    const RoomSelection    *m_roomSelection{};
+    MapData                *m_mapData{};
+    MapCanvas              *m_mapCanvas{};
     QShortcut              *m_hiddenShortcut;
 };
 

@@ -27,8 +27,8 @@
 #include "abstractroomfactory.h"
 #include "room.h"
 #include "roomoutstream.h"
-#include <iostream>
 #include <QTime>
+#include <iostream>
 
 using namespace std;
 
@@ -52,14 +52,14 @@ void Map::getRooms(RoomOutStream &stream, const Coordinate &ulf, const Coordinat
     int zmin = (ulf.z < lrb.z ? ulf.z : lrb.z) - 1;
     int zmax = (ulf.z > lrb.z ? ulf.z : lrb.z) + 1;
 
-    ZIter zUpper = m_map.lower_bound(zmax);
-    for (ZIter z = m_map.upper_bound(zmin); z != zUpper; ++z) {
+    auto zUpper = m_map.lower_bound(zmax);
+    for (auto z = m_map.upper_bound(zmin); z != zUpper; ++z) {
         map<int, map<int, Room *> > &ymap = (*z).second;
-        YIter yUpper = ymap.lower_bound(ymax);
-        for (YIter y = ymap.upper_bound(ymin); y != yUpper; ++y) {
+        auto yUpper = ymap.lower_bound(ymax);
+        for (auto y = ymap.upper_bound(ymin); y != yUpper; ++y) {
             map<int, Room *> &xmap = (*y).second;
-            XIter xUpper = xmap.lower_bound(xmax);
-            for (XIter x = xmap.upper_bound(xmin); x != xUpper; ++x) {
+            auto xUpper = xmap.lower_bound(xmax);
+            for (auto x = xmap.upper_bound(xmin); x != xUpper; ++x) {
                 stream << (*x).second;
                 //++checks;
             }
@@ -81,7 +81,9 @@ void Map::fillArea(AbstractRoomFactory *factory, const Coordinate &ulf, const Co
         for (int y = ymin; y <= ymax; ++y) {
             for (int x = xmin; x <= xmax; ++x) {
                 Room *&room = m_map[z][y][x];
-                if (!room) room = factory->createRoom();
+                if (room == nullptr) {
+                    room = factory->createRoom();
+                }
             }
         }
     }
@@ -92,13 +94,15 @@ void Map::fillArea(AbstractRoomFactory *factory, const Coordinate &ulf, const Co
  */
 bool Map::defined(const Coordinate &c)
 {
-    ZIter z = m_map.find(c.z);
+    auto z = m_map.find(c.z);
     if (z != m_map.end()) {
         map<int, map<int, Room *> > &ySeg = (*z).second;
-        YIter y = ySeg.find(c.y);
+        auto y = ySeg.find(c.y);
         if (y != ySeg.end()) {
             map<int, Room *> &xSeg = (*y).second;
-            if (xSeg.find(c.x) != xSeg.end()) return true;
+            if (xSeg.find(c.x) != xSeg.end()) {
+                return true;
+            }
         }
     }
     return false;
@@ -107,8 +111,10 @@ bool Map::defined(const Coordinate &c)
 
 Room *Map::get(const Coordinate &c)
 {
-    if (!defined(c)) return 0;
-    else return m_map[c.z][c.y][c.x];
+    if (!defined(c)) {
+        return nullptr;
+    }
+    return m_map[c.z][c.y][c.x];
 }
 
 void Map::remove(const Coordinate &c)
@@ -143,9 +149,14 @@ Coordinate Map::getNearestFree(const Coordinate &p)
     bool random = (sum1 == sum2);
     CoordinateIterator i;
     while (1) {
-        if (random) c = p + i.next();
-        else c = p - i.next();
-        if (!defined(c)) return c;
+        if (random) {
+            c = p + i.next();
+        } else {
+            c = p - i.next();
+        }
+        if (!defined(c)) {
+            return c;
+        }
     }
     return 0;
 }
@@ -184,16 +195,20 @@ Coordinate &CoordinateIterator::next()
         c.x *= -1;
         break;
     case 8:
-        if (c.z < threshold) ++c.z;
-        else {
+        if (c.z < threshold) {
+            ++c.z;
+        } else {
             c.z = 0;
-            if (c.y < threshold) ++c.y;
-            else {
+            if (c.y < threshold) {
+                ++c.y;
+            } else {
                 c.y = 0;
                 if (c.x >= threshold) {
                     ++threshold;
                     c.x = 0;
-                } else ++c.x;
+                } else {
+                    ++c.x;
+                }
             }
         }
         state = -1;

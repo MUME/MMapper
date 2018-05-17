@@ -25,14 +25,14 @@
 ************************************************************************/
 
 #include "mapdata.h"
-#include "roomfactory.h"
-#include "drawstream.h"
-#include "mmapper2room.h"
 #include "customaction.h"
-#include "roomselection.h"
+#include "drawstream.h"
 #include "infomark.h"
+#include "mmapper2room.h"
+#include "roomfactory.h"
+#include "roomselection.h"
 
-#include <assert.h>
+#include <cassert>
 
 using namespace std;
 
@@ -45,16 +45,17 @@ QString MapData::getDoorName(const Coordinate &pos, uint dir)
 {
     QMutexLocker locker(&mapLock);
     Room *room = map.get(pos);
-    if (room && dir < 7) {
+    if ((room != nullptr) && dir < 7) {
         return Mmapper2Exit::getDoorName(room->exit(dir));
-    } else return "exit";
+    }
+    return "exit";
 }
 
 void MapData::setDoorName(const Coordinate &pos, const QString &name, uint dir)
 {
     QMutexLocker locker(&mapLock);
     Room *room = map.get(pos);
-    if (room && dir < 7) {
+    if ((room != nullptr) && dir < 7) {
         /*
         // Is the Door there? If not, add it.
         if (!getExitFlag(pos, dir, EF_DOOR)) {
@@ -72,10 +73,12 @@ bool MapData::getExitFlag(const Coordinate &pos, uint flag, uint dir, uint field
 {
     QMutexLocker locker(&mapLock);
     Room *room = map.get(pos);
-    if (room && dir < 7) {
+    if ((room != nullptr) && dir < 7) {
         //ExitFlags ef = ::getFlags(room->exit(dir));
         ExitFlags ef = room->exit(dir)[field].toUInt();
-        if (ISSET(ef, flag)) return true;
+        if (ISSET(ef, flag)) {
+            return true;
+        }
     }
     return false;
 }
@@ -84,7 +87,7 @@ void MapData::toggleExitFlag(const Coordinate &pos, uint flag, uint dir, uint fi
 {
     QMutexLocker locker(&mapLock);
     Room *room = map.get(pos);
-    if (room && dir < 7) {
+    if ((room != nullptr) && dir < 7) {
         setDataChanged();
         MapAction *action = new SingleRoomAction(new ModifyExitFlags(flag, dir, field, FMM_TOGGLE),
                                                  room->getId());
@@ -96,7 +99,7 @@ void MapData::toggleRoomFlag(const Coordinate &pos, uint flag, uint field)
 {
     QMutexLocker locker(&mapLock);
     Room *room = map.get(pos);
-    if (room && field < ROOMFIELD_LAST ) {
+    if ((room != nullptr) && field < ROOMFIELD_LAST ) {
         setDataChanged();
         MapAction *action = new SingleRoomAction(new ModifyRoomFlags(flag, field, FMM_TOGGLE),
                                                  room->getId());
@@ -107,7 +110,9 @@ void MapData::toggleRoomFlag(const Coordinate &pos, uint flag, uint field)
 bool MapData::getRoomFlag(const Coordinate &pos, uint flag, uint field)
 {
     const QVariant val = getRoomField(pos, field);
-    if (val.isNull()) return false;
+    if (val.isNull()) {
+        return false;
+    }
     return ISSET(val.toUInt(), flag);
 }
 
@@ -115,7 +120,7 @@ void MapData::setRoomField(const Coordinate &pos, const QVariant &flag, uint fie
 {
     QMutexLocker locker(&mapLock);
     Room *room = map.get(pos);
-    if (room && field < ROOMFIELD_LAST ) {
+    if ((room != nullptr) && field < ROOMFIELD_LAST ) {
         setDataChanged();
         MapAction *action = new SingleRoomAction(new UpdateRoomField(flag, field), room->getId());
         scheduleAction(action);
@@ -126,27 +131,35 @@ QVariant MapData::getRoomField(const Coordinate &pos, uint field)
 {
     QMutexLocker locker(&mapLock);
     Room *room = map.get(pos);
-    if (room && field < ROOMFIELD_LAST ) {
+    if ((room != nullptr) && field < ROOMFIELD_LAST ) {
         return (*room)[field];
     }
     return QVariant();
 }
 
-QList<Coordinate> MapData::getPath(const QList<CommandIdType> dirs)
+QList<Coordinate> MapData::getPath(const QList<CommandIdType> &dirs)
 {
     QMutexLocker locker(&mapLock);
     QList<Coordinate> ret;
     Room *room = map.get(m_position);
-    if (room) {
+    if (room != nullptr) {
         QListIterator<CommandIdType> iter(dirs);
         while (iter.hasNext()) {
             uint dir = iter.next();
-            if (dir > 5) break;
+            if (dir > 5) {
+                break;
+            }
             Exit &e = room->exit(dir);
-            if (!(Mmapper2Exit::getFlags(e) & EF_EXIT)) continue;
-            if (e.outBegin() == e.outEnd() || ++e.outBegin() != e.outEnd()) break;
+            if ((Mmapper2Exit::getFlags(e) & EF_EXIT) == 0) {
+                continue;
+            }
+            if (e.outBegin() == e.outEnd() || ++e.outBegin() != e.outEnd()) {
+                break;
+            }
             room = roomIndex[*e.outBegin()];
-            if (!room) break;
+            if (room == nullptr) {
+                break;
+            }
             ret.append(room->getPosition());
         }
     }
@@ -156,7 +169,7 @@ QList<Coordinate> MapData::getPath(const QList<CommandIdType> dirs)
 const RoomSelection *MapData::select(const Coordinate &ulf, const Coordinate &lrb)
 {
     QMutexLocker locker(&mapLock);
-    RoomSelection *selection = new RoomSelection(this);
+    auto *selection = new RoomSelection(this);
     selections[selection] = selection;
     lookingForRooms(selection, ulf, lrb);
     return selection;
@@ -175,7 +188,7 @@ const RoomSelection *MapData::select(const Coordinate &ulf, const Coordinate &lr
 const RoomSelection *MapData::select(const Coordinate &pos)
 {
     QMutexLocker locker(&mapLock);
-    RoomSelection *selection = new RoomSelection(this);
+    auto *selection = new RoomSelection(this);
     selections[selection] = selection;
     lookingForRooms(selection, pos);
     return selection;
@@ -184,7 +197,7 @@ const RoomSelection *MapData::select(const Coordinate &pos)
 const RoomSelection *MapData::select()
 {
     QMutexLocker locker(&mapLock);
-    RoomSelection *selection = new RoomSelection(this);
+    auto *selection = new RoomSelection(this);
     selections[selection] = selection;
     return selection;
 }
@@ -209,7 +222,7 @@ const Room *MapData::getRoom(const Coordinate &pos, const RoomSelection *in)
     RoomSelection *selection = selections[in];
     assert(selection);
     Room *room = map.get(pos);
-    if (room) {
+    if (room != nullptr) {
         uint id = room->getId();
         locks[id].insert(selection);
         selection->insert(id, room);
@@ -223,7 +236,7 @@ const Room *MapData::getRoom(uint id, const RoomSelection *in)
     RoomSelection *selection = selections[in];
     assert(selection);
     Room *room = roomIndex[id];
-    if (room) {
+    if (room != nullptr) {
         uint id = room->getId();
         locks[id].insert(selection);
         selection->insert(id, room);
@@ -241,18 +254,20 @@ void MapData::draw (const Coordinate &ulf, const Coordinate &lrb, MapCanvas &scr
 bool MapData::isOccupied(const Coordinate &position)
 {
     QMutexLocker locker(&mapLock);
-    return map.get(position);
+    return map.get(position) != nullptr;
 }
 
 bool MapData::isMovable(const Coordinate &offset, const RoomSelection *selection)
 {
     QMutexLocker locker(&mapLock);
     QMap<uint, const Room *>::const_iterator i = selection->begin();
-    const Room *other = 0;
+    const Room *other = nullptr;
     while (i != selection->end()) {
         Coordinate target = (*(i++))->getPosition() + offset;
         other = map.get(target);
-        if (other && !selection->contains(other->getId())) return false;
+        if ((other != nullptr) && !selection->contains(other->getId())) {
+            return false;
+        }
     }
     return true;
 }
@@ -298,7 +313,9 @@ bool MapData::execute(MapAction *action)
     QMutexLocker locker(&mapLock);
     action->schedule(this);
     bool executable = isExecutable(action);
-    if (executable) executeAction(action);
+    if (executable) {
+        executeAction(action);
+    }
     return executable;
 }
 
@@ -321,12 +338,14 @@ bool MapData::execute(MapAction *action, const RoomSelection *unlock)
     selection->clear();
 
     bool executable = isExecutable(action);
-    if (executable) executeAction(action);
+    if (executable) {
+        executeAction(action);
+    }
 
     for (list<uint>::const_iterator i =  selectedIds.begin(); i != selectedIds.end(); ++i) {
         uint id = (*i);
         Room *room = roomIndex[id];
-        if (room) {
+        if (room != nullptr) {
             locks[id].insert(selection);
             selection->insert(id, room);
         }
@@ -339,8 +358,9 @@ bool MapData::execute(MapAction *action, const RoomSelection *unlock)
 void MapData::clear()
 {
     MapFrontend::clear();
-    while (!m_markers.isEmpty())
+    while (!m_markers.isEmpty()) {
         delete m_markers.takeFirst();
+    }
     emit log("MapData", "cleared MapData");
 }
 
@@ -348,13 +368,10 @@ void MapData::removeDoorNames()
 {
     QMutexLocker locker(&mapLock);
 
-    Room *r = 0;
-
-    for (vector<Room *>::iterator i = roomIndex.begin(); i != roomIndex.end(); ++i) {
-        r = *i;
-        if (r) {
+    for (auto &room : roomIndex) {
+        if (room != nullptr) {
             for (uint dir = 0; dir <= 6; dir++) {
-                MapAction *action = new SingleRoomAction(new UpdateExitField("", dir, E_DOORNAME), r->getId());
+                MapAction *action = new SingleRoomAction(new UpdateExitField("", dir, E_DOORNAME), room->getId());
                 scheduleAction(action);
             }
         }
@@ -365,13 +382,11 @@ void MapData::removeDoorNames()
 void MapData::genericSearch(RoomRecipient *recipient, const RoomFilter &f)
 {
     QMutexLocker locker(&mapLock);
-    Room *r = 0;
-    for (vector<Room *>::iterator i = roomIndex.begin(); i != roomIndex.end(); ++i) {
-        r = *i;
-        if (r) {
-            if (f.filter(r)) {
-                locks[r->getId()].insert(recipient);
-                recipient->receiveRoom(this, r);
+    for (auto &room : roomIndex) {
+        if (room != nullptr) {
+            if (f.filter(room)) {
+                locks[room->getId()].insert(recipient);
+                recipient->receiveRoom(this, room);
             }
         }
     }
@@ -382,13 +397,14 @@ void MapData::genericSearch(const RoomSelection *in, const RoomFilter &f)
     QMutexLocker locker(&mapLock);
     RoomSelection *selection = selections[in];
     assert(selection);
-    genericSearch((RoomRecipient *)selection, f);
+    genericSearch(dynamic_cast<RoomRecipient *>(selection), f);
 }
 
 MapData::~MapData()
 {
-    while (!m_markers.isEmpty())
+    while (!m_markers.isEmpty()) {
         delete m_markers.takeFirst();
+    }
 }
 bool MapData::execute(AbstractAction *action, const RoomSelection *unlock)
 {

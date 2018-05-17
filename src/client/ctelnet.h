@@ -209,7 +209,7 @@ protected:
 
 private:
     QTcpSocket socket;
-    char buffer[32769];
+    char buffer[32769] {};
 
     QByteArray encoding;
 
@@ -223,20 +223,20 @@ private:
     bool iac, iac2, insb;
 
     /** current state of options on our side and on server side */
-    bool myOptionState[256], hisOptionState[256];
+    bool myOptionState[256] {}, hisOptionState[256] {};
     /** whether we have announced WILL/WON'T for that option (if we have, we don't
         respond to DO/DON'T sent by the server -- see implementation and RFC 854
         for more information... */
-    bool announcedState[256];
+    bool announcedState[256] {};
     /** whether the server has already announced his WILL/WON'T */
-    bool heAnnouncedState[256];
+    bool heAnnouncedState[256] {};
     /** whether we have tried to enable this option */
-    bool triedToEnable[256];
+    bool triedToEnable[256] {};
     /** amount of bytes sent up to now */
     int sentbytes;
     /** have we received the GA signal? */
-    bool recvdGA;
-    bool echoMode;
+    bool recvdGA{};
+    bool echoMode{};
     bool startupneg;
     /** current dimensions */
     int curX, curY;

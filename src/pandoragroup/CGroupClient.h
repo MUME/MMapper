@@ -38,7 +38,7 @@ public:
     enum ProtocolStates { Idle, AwaitingLogin, AwaitingInfo, Logged };
 
     CGroupClient(QObject *parent);
-    CGroupClient(QByteArray host, int remotePort, QObject *parent);
+    CGroupClient(const QByteArray &host, int remotePort, QObject *parent);
     virtual ~CGroupClient();
 
     void setSocket(qintptr socketDescriptor);
@@ -53,7 +53,7 @@ public:
     {
         return protocolState;
     }
-    void sendData(QByteArray data);
+    void sendData(const QByteArray &data);
 
 protected slots:
     void lostConnection();
@@ -72,11 +72,11 @@ private:
     void linkSignals();
     void cutMessageFromBuffer();
 
-    int connectionState;
-    int protocolState;
+    int connectionState{Closed};
+    int protocolState{Idle};
 
-    QByteArray buffer;
-    int currentMessageLen;
+    QByteArray buffer{""};
+    int currentMessageLen{0};
 };
 
 #endif /*CGROUPCLIENT_H_*/

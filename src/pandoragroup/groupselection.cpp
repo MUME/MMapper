@@ -24,7 +24,7 @@
 
 #include "groupselection.h"
 #include "CGroupChar.h"
-#include <assert.h>
+#include <cassert>
 
 /**
  * @brief CGroupSelection::receiveCharacters

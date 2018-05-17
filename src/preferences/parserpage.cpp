@@ -46,10 +46,11 @@ ParserPage::ParserPage(QWidget *parent)
 
     updateColors();
 
-    if (Config().m_utf8Charset)
+    if (Config().m_utf8Charset) {
         charset->setCurrentIndex(UiCharsetUTF8);
-    else
+    } else {
         charset->setCurrentIndex(UiCharsetAsciiOrLatin1);
+    }
 
     suppressXmlTagsCheckBox->setChecked(Config().m_removeXmlTags);
     suppressXmlTagsCheckBox->setEnabled(true);
@@ -100,7 +101,7 @@ void ParserPage::charsetChanged(int index)
     Config().m_utf8Charset = (index == UiCharsetUTF8);
 }
 
-void ParserPage::suppressXmlTagsCheckBoxStateChanged(int)
+void ParserPage::suppressXmlTagsCheckBoxStateChanged(int /*unused*/)
 {
     Config().m_removeXmlTags = suppressXmlTagsCheckBox->isChecked();
 }
@@ -108,12 +109,14 @@ void ParserPage::suppressXmlTagsCheckBoxStateChanged(int)
 void ParserPage::savePatterns()
 {
     Config().m_moveForcePatternsList.clear();
-    for ( int i = 0; i < forcePatternsList->count(); i++)
+    for ( int i = 0; i < forcePatternsList->count(); i++) {
         Config().m_moveForcePatternsList.append( forcePatternsList->itemText(i) );
+    }
 
     Config().m_noDescriptionPatternsList.clear();
-    for ( int i = 0; i < endDescPatternsList->count(); i++)
+    for ( int i = 0; i < endDescPatternsList->count(); i++) {
         Config().m_noDescriptionPatternsList.append( endDescPatternsList->itemText(i) );
+    }
 }
 
 void ParserPage::removeForcePatternClicked()
@@ -137,22 +140,32 @@ void ParserPage::testPatternClicked()
 
     if ((pattern)[0] != '#') {
     } else {
-        switch ((int)(pattern[1]).toLatin1()) {
+        switch (static_cast<int>((pattern[1]).toLatin1())) {
         case 33:  // !
             rx.setPattern((pattern).remove(0, 2));
-            if (rx.exactMatch(str)) matches = true;
+            if (rx.exactMatch(str)) {
+                matches = true;
+            }
             break;
         case 60:  // <
-            if (str.startsWith((pattern).remove(0, 2))) matches = true;
+            if (str.startsWith((pattern).remove(0, 2))) {
+                matches = true;
+            }
             break;
         case 61:  // =
-            if ( str == ((pattern).remove(0, 2)) ) matches = true;
+            if ( str == ((pattern).remove(0, 2)) ) {
+                matches = true;
+            }
             break;
         case 62:  // >
-            if (str.endsWith((pattern).remove(0, 2))) matches = true;
+            if (str.endsWith((pattern).remove(0, 2))) {
+                matches = true;
+            }
             break;
         case 63:  // ?
-            if (str.contains((pattern).remove(0, 2))) matches = true;
+            if (str.contains((pattern).remove(0, 2))) {
+                matches = true;
+            }
             break;
         default:
             ;
@@ -175,15 +188,16 @@ void ParserPage::validPatternClicked()
         str = "Pattern must begin with '#t', where t means type of pattern (!?<>=)";
     } else if ((pattern)[1] == '!') {
         QRegExp rx(pattern.remove(0, 2));
-        if (!rx.isValid())
+        if (!rx.isValid()) {
             str = "Pattern '" + pattern + "' is not valid!!!";
+        }
     }
 
     QMessageBox::information( this, "Pattern match test",
                               str,
                               "&Discard",
-                              0,      // Enter == button 0
-                              0 );
+                              nullptr,      // Enter == button 0
+                              nullptr );
 }
 
 void ParserPage::forcePatternsListActivated(const QString &str)
@@ -230,10 +244,11 @@ void ParserPage::updateColors()
 
 
     // room name color
-    if (Config().m_roomNameColor.isEmpty())
+    if (Config().m_roomNameColor.isEmpty()) {
         roomNameColorLabel->setText("[0m");
-    else
+    } else {
         roomNameColorLabel->setText(Config().m_roomNameColor);
+    }
 
     AnsiCombo::makeWidgetColoured(labelRoomColor, Config().m_roomNameColor);
 
@@ -252,10 +267,11 @@ void ParserPage::updateColors()
 
 
     // room desc color
-    if (Config().m_roomDescColor.isEmpty())
+    if (Config().m_roomDescColor.isEmpty()) {
         roomDescColorLabel->setText("[0m");
-    else
+    } else {
         roomDescColorLabel->setText(Config().m_roomDescColor);
+    }
 
     AnsiCombo::makeWidgetColoured(labelRoomDesc, Config().m_roomDescColor);
 
@@ -278,13 +294,23 @@ void ParserPage::updateColors()
 void ParserPage::generateNewAnsiColor()
 {
     QString result = "";
-    if (roomNameAnsiColor->text() != "none") result.append(roomNameAnsiColor->text());
-    if (roomNameAnsiColorBG->text() != "none") result.append(";" + roomNameAnsiColorBG->text());
-    if (roomNameAnsiBold->isChecked()) result.append(";1");
-    if (roomNameAnsiUnderline->isChecked()) result.append(";4");
+    if (roomNameAnsiColor->text() != "none") {
+        result.append(roomNameAnsiColor->text());
+    }
+    if (roomNameAnsiColorBG->text() != "none") {
+        result.append(";" + roomNameAnsiColorBG->text());
+    }
+    if (roomNameAnsiBold->isChecked()) {
+        result.append(";1");
+    }
+    if (roomNameAnsiUnderline->isChecked()) {
+        result.append(";4");
+    }
 
     if (result != "") {
-        if (result.startsWith(';')) result.remove(0, 1);
+        if (result.startsWith(';')) {
+            result.remove(0, 1);
+        }
         result.prepend("[");
         result.append("m");
     }
@@ -292,13 +318,23 @@ void ParserPage::generateNewAnsiColor()
     Config().m_roomNameColor = result;
 
     result = "";
-    if (roomDescAnsiColor->text() != "none") result.append(roomDescAnsiColor->text());
-    if (roomDescAnsiColorBG->text() != "none") result.append(";" + roomDescAnsiColorBG->text());
-    if (roomDescAnsiBold->isChecked()) result.append(";1");
-    if (roomDescAnsiUnderline->isChecked()) result.append(";4");
+    if (roomDescAnsiColor->text() != "none") {
+        result.append(roomDescAnsiColor->text());
+    }
+    if (roomDescAnsiColorBG->text() != "none") {
+        result.append(";" + roomDescAnsiColorBG->text());
+    }
+    if (roomDescAnsiBold->isChecked()) {
+        result.append(";1");
+    }
+    if (roomDescAnsiUnderline->isChecked()) {
+        result.append(";4");
+    }
 
     if (result != "") {
-        if (result.startsWith(';')) result.remove(0, 1);
+        if (result.startsWith(';')) {
+            result.remove(0, 1);
+        }
         result.prepend("[");
         result.append("m");
     }
@@ -307,31 +343,31 @@ void ParserPage::generateNewAnsiColor()
 }
 
 
-void ParserPage::roomDescColorChanged(const QString &)
+void ParserPage::roomDescColorChanged(const QString & /*unused*/)
 {
     generateNewAnsiColor();
     updateColors();
 }
 
-void ParserPage::roomNameColorChanged(const QString &)
+void ParserPage::roomNameColorChanged(const QString & /*unused*/)
 {
     generateNewAnsiColor();
     updateColors();
 }
 
-void ParserPage::roomDescColorBGChanged(const QString &)
+void ParserPage::roomDescColorBGChanged(const QString & /*unused*/)
 {
     generateNewAnsiColor();
     updateColors();
 }
 
-void ParserPage::roomNameColorBGChanged(const QString &)
+void ParserPage::roomNameColorBGChanged(const QString & /*unused*/)
 {
     generateNewAnsiColor();
     updateColors();
 }
 
-void ParserPage::anyColorToggleButtonToggled(bool)
+void ParserPage::anyColorToggleButtonToggled(bool /*unused*/)
 {
     generateNewAnsiColor();
     updateColors();

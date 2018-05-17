@@ -28,11 +28,11 @@
 #include <QDebug>
 #include <QKeyEvent>
 
-#include <QTextCharFormat>
 #include <QFont>
 #include <QFontMetrics>
-#include <QTextCursor>
 #include <QSizePolicy>
+#include <QTextCharFormat>
+#include <QTextCursor>
 
 #define MIN_WORD_LENGTH 3
 
@@ -73,7 +73,9 @@ InputWidget::~InputWidget()
 
 void InputWidget::keyPressEvent(QKeyEvent *event)
 {
-    if (event->key() != Qt::Key_Tab) m_tabbing = false;
+    if (event->key() != Qt::Key_Tab) {
+        m_tabbing = false;
+    }
 
     // Check for key bindings
     switch (event->key()) {
@@ -130,7 +132,7 @@ void InputWidget::keyPressEvent(QKeyEvent *event)
             break;
         };
 #endif
-    // TODO, Implement these following keys
+    // TODO(nschimme): , Implement these following keys
     case Qt::Key_Delete:
     case Qt::Key_Plus:
     case Qt::Key_Minus:
@@ -244,7 +246,7 @@ void InputWidget::addLineHistory(const InputHistoryEntry &string)
 void InputWidget::addTabHistory(const WordHistoryEntry &string)
 {
     QStringList list = string.split(s_whitespaceRx, QString::SkipEmptyParts);
-    for (QString word : list) {
+    for (const QString &word : list) {
         if (word.length() > MIN_WORD_LENGTH) {
             // Adding this word to the dictionary
             m_tabCompletionDictionary << word;
@@ -325,7 +327,7 @@ void InputWidget::tabComplete()
 
     // Iterate through all previous words
     while (m_tabIterator->hasPrevious()) {
-        // TODO: Utilize a trie and store the search results?
+        // TODO(nschimme): Utilize a trie and store the search results?
         if (m_tabIterator->peekPrevious().startsWith(m_tabFragment)) {
             // Found a previous word to complete to
             current.insertText(m_tabIterator->previous());
@@ -334,9 +336,9 @@ void InputWidget::tabComplete()
                 setTextCursor(current);
             }
             return ;
-        } else {
-            // Try the next word
-            m_tabIterator->previous();
         }
+        // Try the next word
+        m_tabIterator->previous();
+
     }
 }

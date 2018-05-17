@@ -24,8 +24,8 @@
 ************************************************************************/
 
 #include "roomlocker.h"
-#include "mapfrontend.h"
 #include "abstractroomfactory.h"
+#include "mapfrontend.h"
 #include "roomrecipient.h"
 
 RoomLocker::RoomLocker(RoomRecipient *forward, MapFrontend *frontend,
@@ -38,7 +38,7 @@ RoomLocker::RoomLocker(RoomRecipient *forward, MapFrontend *frontend,
 
 RoomOutStream &RoomLocker::operator<<(const Room *room)
 {
-    if (factory && comparator) {
+    if ((factory != nullptr) && (comparator != nullptr)) {
         if (factory->compareWeakProps(room, comparator) != CR_DIFFERENT) {
             data->lockRoom(recipient, room->getId());
             recipient->receiveRoom(data, room);

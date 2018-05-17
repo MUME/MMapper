@@ -73,7 +73,7 @@ typedef quint16 DoorFlags;
 namespace Mmapper2Exit {
 ExitFlags getFlags(const Exit &e);
 
-DoorName getDoorName(const Exit &e);
+const DoorName getDoorName(const Exit &e);
 
 DoorFlags getDoorFlags(const Exit &e);
 
@@ -91,8 +91,8 @@ ExitDirection opposite(ExitDirection in);
 
 uint opposite(uint in);
 
-ExitDirection dirForChar(char dir);
+ExitDirection dirForChar(const char dir);
 
-char charForDir(ExitDirection dir);
+const char charForDir(ExitDirection dir);
 }
 #endif

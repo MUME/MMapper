@@ -26,35 +26,34 @@
 #include "roomsaver.h"
 #include "room.h"
 #include "roomadmin.h"
-#include <assert.h>
+#include <cassert>
 
-RoomSaver::RoomSaver(RoomAdmin *in_admin, ConstRoomList &list) :
-    roomsCount(0), roomList(list), admin(in_admin) {}
+RoomSaver::RoomSaver(RoomAdmin *admin, ConstRoomList &list) :
+    m_roomsCount(0), m_roomList(list), m_admin(admin) {}
 
 
-void RoomSaver::receiveRoom(RoomAdmin *in_admin, const Room *room)
+void RoomSaver::receiveRoom(RoomAdmin *admin, const Room *room)
 {
-    assert(in_admin == admin);
+    assert(admin == m_admin);
     if (room->isTemporary()) {
-        admin->releaseRoom(this, room->getId());
+        m_admin->releaseRoom(this, room->getId());
     } else {
-        roomList.append(room);
-        roomsCount++;
+        m_roomList.append(room);
+        m_roomsCount++;
     }
 }
 
 quint32 RoomSaver::getRoomsCount()
 {
-    return roomsCount;
+    return m_roomsCount;
 }
 
 RoomSaver::~RoomSaver()
 {
-    for (int i = 0; i < roomList.size(); ++i) {
-        const Room *room = roomList[i];
-        if (room) {
-            admin->releaseRoom(this, room->getId());
-            roomList[i] = 0;
+    for (auto &room : m_roomList) {
+        if (room != nullptr) {
+            m_admin->releaseRoom(this, room->getId());
+            room = nullptr;
         }
     }
 }

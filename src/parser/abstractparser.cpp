@@ -25,14 +25,14 @@
 ************************************************************************/
 
 #include "abstractparser.h"
-#include "mmapper2event.h"
-#include "mmapper2room.h"
-#include "mmapper2exit.h"
 #include "configuration.h"
-#include "roomselection.h"
-#include "mapdata.h"
-#include "mumeclock.h"
 #include "mapaction.h"
+#include "mapdata.h"
+#include "mmapper2event.h"
+#include "mmapper2exit.h"
+#include "mmapper2room.h"
+#include "mumeclock.h"
+#include "roomselection.h"
 
 #include <unistd.h>
 
@@ -55,13 +55,14 @@ AbstractParser::AbstractParser(MapData *md, MumeClock *mc, QObject *parent)
     m_exitsFlags = 0;
     m_promptFlags = 0;
 
-    search_rs = NULL;
+    search_rs = nullptr;
 }
 
 AbstractParser::~AbstractParser()
 {
-    if (search_rs != NULL)
+    if (search_rs != nullptr) {
         m_mapData->unselect(search_rs);
+    }
 }
 
 void AbstractParser::reset()
@@ -84,7 +85,7 @@ void AbstractParser::parsePrompt(QString &prompt)
     quint8 index = 0;
     int sv;
 
-    switch (sv = (int)((prompt[index]).toLatin1())) {
+    switch (sv = static_cast<int>((prompt[index]).toLatin1())) {
     case 42:
         index++;
         m_promptFlags = LIT_ROOM;
@@ -98,14 +99,14 @@ void AbstractParser::parsePrompt(QString &prompt)
         break; // )  moon (direct and indirect)
     case 111:
         index++;                              // o  darkness
-        // TODO: Enable when we know it is night only
+        // TODO(nschimme): Enable when we know it is night only
         //m_promptFlags=DARK_ROOM;
         break;
     default:
         ;
     }
 
-    switch ( sv = (int)(prompt[index]).toLatin1() ) {
+    switch ( sv = static_cast<int>((prompt[index]).toLatin1()) ) {
     case 91:
         SET(m_promptFlags, RTT_INDOORS);
         break;    // [  // indoors
@@ -174,7 +175,7 @@ void AbstractParser::parseExits(QString &str)
     }
     int length = str.length();
     for (int i = 7; i < length; i++) {
-        switch ((int)(str.at(i).toLatin1())) {
+        switch (static_cast<int>(str.at(i).toLatin1())) {
         case 40:
             doors = true;
             break;              // (  // open door
@@ -205,8 +206,9 @@ void AbstractParser::parseExits(QString &str)
             break;               // *  // sunlit room (troll/orc only)
         case 94:
             directSun = true;    // ^  // outdoors room (troll only)
-            if (!m_trollExitMapping)
+            if (!m_trollExitMapping) {
                 emit log("Parser", "Autoenabling troll exit mapping mode.");
+            }
             m_trollExitMapping = true;
             break;
 
@@ -259,17 +261,21 @@ void AbstractParser::parseExits(QString &str)
         }
         if (dir < NONE) {
             SET(m_exitsFlags, (EF_EXIT << (dir * 4)));
-            if (climb)
+            if (climb) {
                 SET(m_exitsFlags, (EF_CLIMB << (dir * 4)));
+            }
             if (doors) {
                 SET(m_exitsFlags, (EF_DOOR << (dir * 4)));
-                if (closed)
+                if (closed) {
                     SET(closedDoorFlag, (EF_DOOR << (dir * 4)));
+                }
             }
-            if (road)
+            if (road) {
                 SET(m_exitsFlags, (EF_ROAD << (dir * 4)));
-            if (directSun)
+            }
+            if (directSun) {
                 SET(m_connectedRoomFlags, (DIRECT_SUN_ROOM << (dir * 2)));
+            }
         }
     }
 
@@ -279,7 +285,7 @@ void AbstractParser::parseExits(QString &str)
         SET(m_connectedRoomFlags, CONNECTED_ROOM_FLAGS_VALID);
 
         // Orcs and trolls can detect exits with direct sunlight
-        bool foundDirectSunlight = m_connectedRoomFlags & ANY_DIRECT_SUNLIGHT;
+        bool foundDirectSunlight = (m_connectedRoomFlags & ANY_DIRECT_SUNLIGHT) != 0;
         if (foundDirectSunlight || m_trollExitMapping) {
             for (uint dir = 0; dir < 6; ++dir) {
                 ExitsFlagsType eThisExit = m_exitsFlags >> (dir * 4);
@@ -289,8 +295,9 @@ void AbstractParser::parseExits(QString &str)
                 // Do not flag indirect sunlight if there was a closed door, no exit, or we saw direct sunlight
                 if (ISNOTSET(eThisExit, EF_EXIT) ||
                         ISSET(eThisClosed, EF_DOOR) ||
-                        ISSET(cOtherRoom, DIRECT_SUN_ROOM) )
+                        ISSET(cOtherRoom, DIRECT_SUN_ROOM) ) {
                     continue;
+                }
 
                 // Flag indirect sun
                 SET(m_connectedRoomFlags, (INDIRECT_SUN_ROOM << (dir * 2)));
@@ -319,14 +326,16 @@ const Coordinate AbstractParser::getPosition()
     Coordinate c;
     CommandQueue tmpqueue;
 
-    if (!queue.isEmpty())
+    if (!queue.isEmpty()) {
         tmpqueue.enqueue(queue.head());
+    }
 
     QList<Coordinate> cl = m_mapData->getPath(tmpqueue);
-    if (!cl.isEmpty())
+    if (!cl.isEmpty()) {
         c = cl.at(cl.size() - 1);
-    else
+    } else {
         c = m_mapData->getPosition();
+    }
     return c;
 }
 
@@ -352,7 +361,9 @@ QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
         QByteArray etmp = emptyByteArray;
         const Exit &e = sourceRoom->exit(i);
         ExitFlags ef = Mmapper2Exit::getFlags(e);
-        if (ISNOTSET(ef, EF_EXIT)) continue;
+        if (ISNOTSET(ef, EF_EXIT)) {
+            continue;
+        }
 
         // Extract hidden exit flags
         if (Config().m_showHiddenExitFlags) {
@@ -360,29 +371,41 @@ QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
                 etmp += "noflee";
             }
             if (ISSET(ef, EF_RANDOM)) {
-                if (!etmp.isEmpty()) etmp += ",";
+                if (!etmp.isEmpty()) {
+                    etmp += ",";
+                }
                 etmp += "random";
             }
             if (ISSET(ef, EF_SPECIAL)) {
-                if (!etmp.isEmpty()) etmp += ",";
+                if (!etmp.isEmpty()) {
+                    etmp += ",";
+                }
                 etmp += "special";
             }
             if (ISSET(ef, EF_DAMAGE)) {
-                if (!etmp.isEmpty()) etmp += ",";
+                if (!etmp.isEmpty()) {
+                    etmp += ",";
+                }
                 etmp += "damage";
             }
             if (ISSET(ef, EF_FALL)) {
-                if (!etmp.isEmpty()) etmp += ",";
+                if (!etmp.isEmpty()) {
+                    etmp += ",";
+                }
                 etmp += "fall";
             }
             if (ISSET(ef, EF_GUARDED)) {
-                if (!etmp.isEmpty()) etmp += ",";
+                if (!etmp.isEmpty()) {
+                    etmp += ",";
+                }
                 etmp += "guarded";
             }
 
             // Exit modifiers
             if (e.containsOut(sourceId)) {
-                if (!etmp.isEmpty()) etmp += ",";
+                if (!etmp.isEmpty()) {
+                    etmp += ",";
+                }
                 etmp += "loop";
 
             } else if (e.outBegin() != e.outEnd()) {
@@ -411,19 +434,25 @@ QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
                     }
                 }
                 if (oneWay) {
-                    if (!etmp.isEmpty()) etmp += ",";
+                    if (!etmp.isEmpty()) {
+                        etmp += ",";
+                    }
                     etmp += "oneway";
                 }
                 if (hasNoFlee && exitCount == 1) {
                     // If there is only 1 exit out of this room add the 'hasnoflee' flag since its usually a mobtrap
-                    if (!etmp.isEmpty()) etmp += ",";
+                    if (!etmp.isEmpty()) {
+                        etmp += ",";
+                    }
                     etmp += "hasnoflee";
                 }
 
                 // Terrain type exit modifiers
                 RoomTerrainType targetTerrain = Mmapper2Room::getTerrainType(targetRoom);
                 if (targetTerrain == RTT_UNDERWATER) {
-                    if (!etmp.isEmpty()) etmp += ",";
+                    if (!etmp.isEmpty()) {
+                        etmp += ",";
+                    }
                     etmp += "underwater";
                 } else if (targetTerrain == RTT_DEATHTRAP) {
                     // Override all previous flags
@@ -437,7 +466,7 @@ QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
         if (!dn.isEmpty() || !etmp.isEmpty()) {
             enhancedExits = true;
             cn += " ";
-            cn += Mmapper2Exit::charForDir((ExitDirection)i);
+            cn += Mmapper2Exit::charForDir(static_cast<ExitDirection>(i));
             cn += ":";
             if (!dn.isEmpty()) {
                 cn += dn;
@@ -476,22 +505,25 @@ void AbstractParser::parseNewUserInput(IncomingData &data)
         m_newLineTerminator = "\r\n";
         m_stringBuffer = QString::fromLatin1(data.line.constData(), data.line.size());
         m_stringBuffer = m_stringBuffer.simplified();
-        if (parseUserCommands(m_stringBuffer))
+        if (parseUserCommands(m_stringBuffer)) {
             emit sendToMud(data.line);
+        }
         break;
     case TDT_LFCR:
         m_newLineTerminator = "\n\r";
         m_stringBuffer = QString::fromLatin1(data.line.constData(), data.line.size());
         m_stringBuffer = m_stringBuffer.simplified();
-        if (parseUserCommands(m_stringBuffer))
+        if (parseUserCommands(m_stringBuffer)) {
             emit sendToMud(data.line);
+        }
         break;
     case TDT_LF:
         m_newLineTerminator = "\n";
         m_stringBuffer = QString::fromLatin1(data.line.constData(), data.line.size());
         m_stringBuffer = m_stringBuffer.simplified();
-        if (parseUserCommands(m_stringBuffer))
+        if (parseUserCommands(m_stringBuffer)) {
             emit sendToMud(data.line);
+        }
         break;
     }
 }
@@ -506,19 +538,21 @@ QString compressDirections(QString original)
             curnum = 1;
             curval = c;
         } else {
-            if (curval == c)
+            if (curval == c) {
                 curnum++;
-            else {
-                if (curnum > 1)
+            } else {
+                if (curnum > 1) {
                     ans.append(QString::number(curnum));
+                }
                 ans.append(curval);
                 curnum = 1;
                 curval = c;
             }
         }
     }
-    if (curnum > 1)
+    if (curnum > 1) {
         ans.append(QString::number(curnum));
+    }
     ans.append(curval);
     return ans;
 }
@@ -528,8 +562,8 @@ class ShortestPathEmitter : public ShortestPathRecipient
 {
     AbstractParser &parser;
 public:
-    ShortestPathEmitter(AbstractParser &parser) : parser(parser) {}
-    void receiveShortestPath(RoomAdmin *admin, QVector<SPNode> spnodes, int endpoint)
+    explicit ShortestPathEmitter(AbstractParser &parser) : parser(parser) {}
+    void receiveShortestPath(RoomAdmin * /*admin*/, QVector<SPNode> spnodes, int endpoint) override
     {
 
         const SPNode *spnode = &spnodes[endpoint];
@@ -550,10 +584,11 @@ public:
     }
 };
 
-void AbstractParser::searchCommand(RoomFilter f)
+void AbstractParser::searchCommand(const RoomFilter &f)
 {
-    if (search_rs != NULL)
+    if (search_rs != nullptr) {
         m_mapData->unselect(search_rs);
+    }
     search_rs = m_mapData->select();
     m_mapData->genericSearch(search_rs, f);
     emit m_mapData->updateCanvas();
@@ -564,7 +599,7 @@ void AbstractParser::searchCommand(RoomFilter f)
     sendPromptToUser();
 }
 
-void AbstractParser::dirsCommand(RoomFilter f)
+void AbstractParser::dirsCommand(const RoomFilter &f)
 {
     ShortestPathEmitter sp_emitter(*this);
 
@@ -580,8 +615,9 @@ void AbstractParser::dirsCommand(RoomFilter f)
 
 void AbstractParser::markCurrentCommand()
 {
-    if (search_rs != NULL)
+    if (search_rs != nullptr) {
         m_mapData->unselect(search_rs);
+    }
     search_rs = m_mapData->select();
     Coordinate c = getPosition();
     m_mapData->select(c);
@@ -627,13 +663,11 @@ bool AbstractParser::parseUserCommands(QString &command)
             emit sendToUser("--->Thank you kindly for voting!\r\n");
             sendPromptToUser();
             return false;
-        } else if (str.startsWith("_gt")) { // grouptell
-            if (!str.section(" ", 1, 1).toLatin1().isEmpty()) {
-                QByteArray data = str.remove(0, 4).toLatin1(); // 3 is length of "_gt "
-                //qDebug( "Sending a G-tell from local user: %s", (const char *) data);
-                emit sendGroupTellEvent(data);
-                sendPromptToUser();
-            }
+        } else if (str.startsWith("_gt") && str.size() > 3) {
+            QByteArray data = str.remove(0, 4).toLatin1(); // Trim "_gt "
+            //qDebug( "Sending a G-tell from local user: %s", (const char *) data);
+            emit sendGroupTellEvent(data);
+            sendPromptToUser();
             return false;
         } else if (str.startsWith("_time")) {
             MumeMoment moment = m_mumeClock->getMumeMoment();
@@ -642,14 +676,15 @@ bool AbstractParser::parseUserCommands(QString &command)
             if (precision > MUMECLOCK_DAY) {
                 MumeTime time = moment.toTimeOfDay();
                 data += "It is currently ";
-                if (time == TIME_DAWN)
+                if (time == TIME_DAWN) {
                     data += "\033[31mdawn\033[0m";
-                else if (time == TIME_DUSK)
+                } else if (time == TIME_DUSK) {
                     data += "\033[34mdusk\033[0m and will be night";
-                else if (time == TIME_NIGHT)
+                } else if (time == TIME_NIGHT) {
                     data += "\033[34mnight\033[0m";
-                else
+                } else {
                     data += "\033[33mday\033[0m";
+                }
 
                 data += " for " + m_mumeClock->toCountdown(moment).toLatin1() + " more ticks.\r\n";
             }
@@ -660,9 +695,9 @@ bool AbstractParser::parseUserCommands(QString &command)
             nameDoorCommand(str.section(" ", 2, 2), dirForChar(str.section(" ", 1, 1)));
             return false;
         } else if (str.startsWith("_door") && str != "_doorhelp") {
-            if (!str.section(" ", 2, 2).toLatin1().isEmpty())
+            if (!str.section(" ", 2, 2).toLatin1().isEmpty()) {
                 emit sendToUser("--->Incorrect Command. Perhaps you meant _name?\r\n");
-            else {
+            } else {
                 toggleExitFlagCommand(EF_DOOR, dirForChar(str.section(" ", 1, 1)));
             }
             return false;
@@ -858,9 +893,7 @@ bool AbstractParser::parseUserCommands(QString &command)
         } else if (str.startsWith("_note")) {
             setRoomFieldCommand(str.section(' ', 1), R_NOTE);
             return false;
-        }
-
-        if (str.startsWith("_open"))   {
+        } else if (str.startsWith("_open"))   {
             dooraction = true;
             daction = DAT_OPEN;
         } else if (str.startsWith("_close"))  {
@@ -887,67 +920,58 @@ bool AbstractParser::parseUserCommands(QString &command)
         } else if (str.startsWith("_block"))   {
             dooraction = true;
             daction = DAT_BLOCK;
-        }
-
-        if (str.startsWith("_search")) {
+        } else if (str.startsWith("_search")) {
             QString pattern_str = str.section(' ', 1).trimmed();
             if (pattern_str.size() == 0) {
                 emit sendToUser("Usage: _search [-(name|desc|dyncdesc|note|exits|all)] pattern\r\n");
                 return false;
             }
             RoomFilter f;
-            if (!RoomFilter::parseRoomFilter(pattern_str, f))
+            if (!RoomFilter::parseRoomFilter(pattern_str, f)) {
                 emit sendToUser(RoomFilter::parse_help);
-            else
+            } else {
                 searchCommand(f);
+            }
             return false;
-        }
-        if (str.startsWith("_dirs")) {
+        } else if (str.startsWith("_dirs")) {
             QString pattern_str = str.section(' ', 1).trimmed();
             if (pattern_str.size() == 0) {
                 emit sendToUser("Usage: _dirs [-(name|desc|dyncdesc|note|exits|all)] pattern\r\n");
                 return false;
             }
             RoomFilter f;
-            if (!RoomFilter::parseRoomFilter(pattern_str, f))
+            if (!RoomFilter::parseRoomFilter(pattern_str, f)) {
                 emit sendToUser(RoomFilter::parse_help);
-            else
+            } else {
                 dirsCommand(f);
+            }
             return false;
-        }
-        if (str.startsWith("_markcurrent")) {
+        } else if (str.startsWith("_markcurrent")) {
             markCurrentCommand();
             emit sendToUser("--->Current room marked temporarily on the map.\r\n");
             sendPromptToUser();
             return false;
-        }
-
-        if (str == "_removedoornames") {
+        } else if (str == "_removedoornames") {
             m_mapData->removeDoorNames();
             emit sendToUser("OK. Secret exits purged.\r\n");
             sendPromptToUser();
-        }
-        if (str == "_back") {
+        } else if (str == "_back") {
             //while (!queue.isEmpty()) queue.dequeue();
             queue.clear();
             emit sendToUser("OK.\r\n");
             emit showPath(queue, true);
             sendPromptToUser();
             return false;
-        }
-        if (str == "_pdynamic") {
+        } else if (str == "_pdynamic") {
             printRoomInfo((1 << R_NAME) | (1 << R_DYNAMICDESC) | (1 << R_DESC));
             return false;
-        }
-        if (str == "_pstatic") {
+        } else if (str == "_pstatic") {
             printRoomInfo((1 << R_NAME) | (1 << R_DESC));
             return false;
-        }
-        if (str == "_pnote") {
+        } else if (str == "_pnote") {
             printRoomInfo(1 << R_NOTE);
             return false;
-        }
-        if (str == "_help") {
+        } else if (str == "_help") {
             emit sendToUser("\r\nMMapper help:\r\n-------------\r\n");
 
             emit sendToUser("\r\nStandard MUD commands:\r\n");
@@ -1096,120 +1120,112 @@ bool AbstractParser::parseUserCommands(QString &command)
             sendPromptToUser();
             return false;
         }
-    }
-
-    if (dooraction) {
-        if (str.endsWith(" n"))
-            performDoorCommand(NORTH, daction);
-        else if (str.endsWith(" s"))
-            performDoorCommand(SOUTH, daction);
-        else if (str.endsWith(" e"))
-            performDoorCommand(EAST, daction);
-        else if (str.endsWith(" w"))
-            performDoorCommand(WEST, daction);
-        else if (str.endsWith(" u"))
-            performDoorCommand(UP, daction);
-        else if (str.endsWith(" d"))
-            performDoorCommand(DOWN, daction);
-        else
-            performDoorCommand(UNKNOWN, daction);
-        return false;
-    }
-
-    if (str == "n" || str == "north") {
+    } else if (str == "n" || str == "north") {
         queue.enqueue(CID_NORTH);
         emit showPath(queue, true);
-        if (Config().m_mapMode != 2)
+        if (Config().m_mapMode != 2) {
             return true;
-        else {
-            offlineCharacterMove(CID_NORTH);
-            return false; //do not send command to mud server for offline mode
         }
-    }
-    if (str == "s" || str == "south") {
+        offlineCharacterMove(CID_NORTH);
+        return false; //do not send command to mud server for offline mode
+
+    } else if (str == "s" || str == "south") {
         queue.enqueue(CID_SOUTH);
         emit showPath(queue, true);
-        if (Config().m_mapMode != 2)
+        if (Config().m_mapMode != 2) {
             return true;
-        else {
-            offlineCharacterMove(CID_SOUTH);
-            return false; //do not send command to mud server for offline mode
         }
-    }
-    if (str == "e" || str == "east") {
+        offlineCharacterMove(CID_SOUTH);
+        return false; //do not send command to mud server for offline mode
+
+    } else if (str == "e" || str == "east") {
         queue.enqueue(CID_EAST);
         emit showPath(queue, true);
-        if (Config().m_mapMode != 2)
+        if (Config().m_mapMode != 2) {
             return true;
-        else {
-            offlineCharacterMove(CID_EAST);
-            return false; //do not send command to mud server for offline mode
         }
-    }
-    if (str == "w" || str == "west") {
+        offlineCharacterMove(CID_EAST);
+        return false; //do not send command to mud server for offline mode
+
+    } else if (str == "w" || str == "west") {
         queue.enqueue(CID_WEST);
         emit showPath(queue, true);
-        if (Config().m_mapMode != 2)
+        if (Config().m_mapMode != 2) {
             return true;
-        else {
-            offlineCharacterMove(CID_WEST);
-            return false; //do not send command to mud server for offline mode
         }
-    }
-    if (str == "u" || str == "up") {
+        offlineCharacterMove(CID_WEST);
+        return false; //do not send command to mud server for offline mode
+
+    } else if (str == "u" || str == "up") {
         queue.enqueue(CID_UP);
         emit showPath(queue, true);
-        if (Config().m_mapMode != 2)
+        if (Config().m_mapMode != 2) {
             return true;
-        else {
-            offlineCharacterMove(CID_UP);
-            return false; //do not send command to mud server for offline mode
         }
-    }
-    if (str == "d" || str == "down") {
+        offlineCharacterMove(CID_UP);
+        return false; //do not send command to mud server for offline mode
+
+    } else if (str == "d" || str == "down") {
         queue.enqueue(CID_DOWN);
         emit showPath(queue, true);
-        if (Config().m_mapMode != 2)
+        if (Config().m_mapMode != 2) {
             return true;
-        else {
-            offlineCharacterMove(CID_DOWN);
-            return false; //do not send command to mud server for offline mode
         }
-    }
-    if (str == "l" || str == "look") {
+        offlineCharacterMove(CID_DOWN);
+        return false; //do not send command to mud server for offline mode
+
+    } else if (str == "l" || str == "look") {
         queue.enqueue(CID_LOOK);
-        if (Config().m_mapMode != 2)
+        if (Config().m_mapMode != 2) {
             return true;
-        else {
-            offlineCharacterMove(CID_LOOK);
-            return false; //do not send command to mud server for offline mode
         }
-    }
-    if (str == "exa" || str == "examine") {
+        offlineCharacterMove(CID_LOOK);
+        return false; //do not send command to mud server for offline mode
+
+    } else if (str == "exa" || str == "examine") {
         queue.enqueue(CID_LOOK);
-        if (Config().m_mapMode != 2)
+        if (Config().m_mapMode != 2) {
             return true;
-        else {
-            offlineCharacterMove(CID_LOOK);
-            return false; //do not send command to mud server for offline mode
         }
+        offlineCharacterMove(CID_LOOK);
+        return false; //do not send command to mud server for offline mode
+
     }
     /*if (str.startsWith("scout")) {
     queue.enqueue(CID_SCOUT);
     if (Config().m_mapMode != 2)
     return true;
     }*/
-    if ((str == "f" || str == "flee") && Config().m_mapMode == 2) {
+    else if ((str == "f" || str == "flee") && Config().m_mapMode == 2) {
         offlineCharacterMove(CID_FLEE);
         return false; //do not send command to mud server for offline mode
     }
 
-    if (Config().m_mapMode != 2)
-        return true;
-    else {
-        sendPromptToUser();
-        return false; //do not send command to mud server for offline mode
+    if (dooraction) {
+        if (str.endsWith(" n")) {
+            performDoorCommand(NORTH, daction);
+        } else if (str.endsWith(" s")) {
+            performDoorCommand(SOUTH, daction);
+        } else if (str.endsWith(" e")) {
+            performDoorCommand(EAST, daction);
+        } else if (str.endsWith(" w")) {
+            performDoorCommand(WEST, daction);
+        } else if (str.endsWith(" u")) {
+            performDoorCommand(UP, daction);
+        } else if (str.endsWith(" d")) {
+            performDoorCommand(DOWN, daction);
+        } else {
+            performDoorCommand(UNKNOWN, daction);
+        }
+        return false;
     }
+
+    if (Config().m_mapMode != 2) {
+        return true;
+    }
+    sendPromptToUser();
+    return false; //do not send command to mud server for offline mode
+
 }
 
 void AbstractParser::offlineCharacterMove(CommandIdType direction)
@@ -1218,10 +1234,12 @@ void AbstractParser::offlineCharacterMove(CommandIdType direction)
     if (direction == CID_FLEE) {
         flee = true;
         emit sendToUser("You flee head over heels!\r\n");
-        direction = (CommandIdType) (rand() % 6);
+        direction = static_cast<CommandIdType>(rand() % 6);
     }
 
-    if (!flee) queue.dequeue();
+    if (!flee) {
+        queue.dequeue();
+    }
 
     Coordinate c;
     c = m_mapData->getPosition();
@@ -1233,8 +1251,8 @@ void AbstractParser::offlineCharacterMove(CommandIdType direction)
         sendRoomExitsInfoToUser(rb);
         sendPromptToUser(rb);
     } else {
-        const Exit &e = rb->exit((uint)direction);
-        if ((Mmapper2Exit::getFlags(e) & EF_EXIT) && (e.outBegin() != e.outEnd())) {
+        const Exit &e = rb->exit(static_cast<uint>(direction));
+        if (((Mmapper2Exit::getFlags(e) & EF_EXIT) != 0) && (e.outBegin() != e.outEnd())) {
             const RoomSelection *rs2 = m_mapData->select();
             const Room *r = m_mapData->getRoom(*e.outBegin(), rs2);
 
@@ -1248,10 +1266,11 @@ void AbstractParser::offlineCharacterMove(CommandIdType direction)
             emit showPath(queue, true);
             m_mapData->unselect(rs2);
         } else {
-            if (!flee)
+            if (!flee) {
                 emit sendToUser("You cannot go that way...");
-            else
+            } else {
                 emit sendToUser("You cannot flee!!!");
+            }
             sendPromptToUser(rb);
         }
     }
@@ -1261,7 +1280,9 @@ void AbstractParser::offlineCharacterMove(CommandIdType direction)
 
 void AbstractParser::sendRoomInfoToUser(const Room *r)
 {
-    if (!r) return;
+    if (r == nullptr) {
+        return;
+    }
     QByteArray roomName("\r\n");
     if (!Config().m_roomNameColor.isEmpty()) {
         roomName += "\033" + Config().m_roomNameColor.toLatin1();
@@ -1282,7 +1303,9 @@ void AbstractParser::sendRoomInfoToUser(const Room *r)
 
 void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
 {
-    if (!r) return;
+    if (r == nullptr) {
+        return;
+    }
     char sunCharacter = (m_mumeClock->getMumeMoment().toTimeOfDay() <= TIME_DAY) ? '*' : '^';
     const RoomSelection *rs = m_mapData->select();
 
@@ -1371,13 +1394,24 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
             }
         }
 
-        if (door) etmp += "}";
-        else if (climb) etmp += "|";
-        if (swim) etmp += "~";
-        else if (road) etmp += "=";
-        else if (trail) etmp += "-";
-        if (directSun) etmp += sunCharacter;
-        if (exit) etmp += ",";
+        if (door) {
+            etmp += "}";
+        } else if (climb) {
+            etmp += "|";
+        }
+        if (swim) {
+            etmp += "~";
+        } else if (road) {
+            etmp += "=";
+        } else if (trail) {
+            etmp += "-";
+        }
+        if (directSun) {
+            etmp += sunCharacter;
+        }
+        if (exit) {
+            etmp += ",";
+        }
     }
     if (exitCount == 0) {
         etmp += " none.";
@@ -1526,16 +1560,17 @@ void AbstractParser::performDoorCommand(DirectionType direction, DoorActionType 
         needdir = true;
     } else {
         for (int i = 0; i < 6; i++) {
-            if ( (((DirectionType)i) != direction)
-                    && (m_mapData->getDoorName(c, (DirectionType)i).toLatin1() == dn) )
+            if ( ((static_cast<DirectionType>(i)) != direction)
+                    && (m_mapData->getDoorName(c, static_cast<DirectionType>(i)).toLatin1() == dn) ) {
                 needdir = true;
+            }
         }
     }
 
     cn += dn;
     if (needdir && direction < NONE) {
         cn += " ";
-        cn += Mmapper2Exit::charForDir((ExitDirection)direction);
+        cn += Mmapper2Exit::charForDir(static_cast<ExitDirection>(direction));
     }
     cn += m_newLineTerminator;
 
@@ -1564,13 +1599,14 @@ void AbstractParser::genericDoorCommand(QString command, DirectionType direction
         needdir = true;
     } else {
         for (int i = 0; i < 6; i++) {
-            if ( (((DirectionType)i) != direction)
-                    && (m_mapData->getDoorName(c, (DirectionType)i).toLatin1() == dn) )
+            if ( ((static_cast<DirectionType>(i)) != direction)
+                    && (m_mapData->getDoorName(c, static_cast<DirectionType>(i)).toLatin1() == dn) ) {
                 needdir = true;
+            }
         }
     }
     if (direction < NONE) {
-        QChar dirChar = Mmapper2Exit::charForDir((ExitDirection)direction);
+        QChar dirChar = Mmapper2Exit::charForDir(static_cast<ExitDirection>(direction));
         cn += dn;
         if (needdir) {
             cn += " ";
@@ -1593,7 +1629,7 @@ void AbstractParser::genericDoorCommand(QString command, DirectionType direction
     sendPromptToUser();
 }
 
-void AbstractParser::nameDoorCommand(QString doorname, DirectionType direction)
+void AbstractParser::nameDoorCommand(const QString &doorname, DirectionType direction)
 {
     Coordinate c = getPosition();
 
@@ -1610,10 +1646,11 @@ void AbstractParser::toggleExitFlagCommand(uint flag, DirectionType direction)
     m_mapData->toggleExitFlag(c, flag, direction, E_FLAGS);
 
     QString toggle, flagname;
-    if (m_mapData->getExitFlag(c, flag, direction, E_FLAGS))
+    if (m_mapData->getExitFlag(c, flag, direction, E_FLAGS)) {
         toggle = "enabled";
-    else
+    } else {
         toggle = "disabled";
+    }
 
     switch (flag) {
     case EF_EXIT:
@@ -1667,10 +1704,11 @@ void AbstractParser::toggleDoorFlagCommand(uint flag, DirectionType direction)
     m_mapData->toggleExitFlag(c, flag, direction, E_DOORFLAGS);
 
     QString toggle, flagname;
-    if (m_mapData->getExitFlag(c, flag, direction, E_DOORFLAGS))
+    if (m_mapData->getExitFlag(c, flag, direction, E_DOORFLAGS)) {
         toggle = "enabled";
-    else
+    } else {
         toggle = "disabled";
+    }
 
     switch (flag) {
     case DF_HIDDEN:
@@ -1717,10 +1755,11 @@ void AbstractParser::toggleRoomFlagCommand(uint flag, uint field)
     m_mapData->toggleRoomFlag(c, flag, field);
 
     QString toggle;
-    if (m_mapData->getRoomFlag(c, flag, field))
+    if (m_mapData->getRoomFlag(c, flag, field)) {
         toggle = "enabled";
-    else
+    } else {
         toggle = "disabled";
+    }
 
     emit sendToUser("--->Room flag " + toggle.toLatin1() + "\r\n");
     sendPromptToUser();
@@ -1735,10 +1774,18 @@ void AbstractParser::printRoomInfo(uint fieldset)
 
     QString result;
 
-    if (fieldset & (1 << R_NAME)) result = result + (*r)[R_NAME].toString() + "\r\n";
-    if (fieldset & (1 << R_DESC)) result = result + (*r)[R_DESC].toString();
-    if (fieldset & (1 << R_DYNAMICDESC)) result = result + (*r)[R_DYNAMICDESC].toString();
-    if (fieldset & (1 << R_NOTE)) result = result + "Note: " + (*r)[R_NOTE].toString() + "\r\n";
+    if ((fieldset & (1 << R_NAME)) != 0u) {
+        result = result + (*r)[R_NAME].toString() + "\r\n";
+    }
+    if ((fieldset & (1 << R_DESC)) != 0u) {
+        result = result + (*r)[R_DESC].toString();
+    }
+    if ((fieldset & (1 << R_DYNAMICDESC)) != 0u) {
+        result = result + (*r)[R_DYNAMICDESC].toString();
+    }
+    if ((fieldset & (1 << R_NOTE)) != 0u) {
+        result = result + "Note: " + (*r)[R_NOTE].toString() + "\r\n";
+    }
 
     emit sendToUser(result.toLatin1());
     sendPromptToUser();
@@ -1754,5 +1801,5 @@ void AbstractParser::sendGTellToUser(const QByteArray &ba)
 DirectionType AbstractParser::dirForChar(const QString &dir)
 {
     ExitDirection ed = Mmapper2Exit::dirForChar(dir.at(0).toLatin1());
-    return (DirectionType)((int)ed);
+    return static_cast<DirectionType>(static_cast<int>(ed));
 }

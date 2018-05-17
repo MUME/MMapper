@@ -23,7 +23,9 @@
 ************************************************************************/
 
 #include "mumeprotocolpage.h"
+
 #include "ui_mumeprotocolpage.h"
+#include <utility>
 
 #include "configuration/configuration.h"
 
@@ -53,12 +55,12 @@ MumeProtocolPage::~MumeProtocolPage()
     delete ui;
 }
 
-void MumeProtocolPage::IACPromptCheckBoxStateChanged(int)
+void MumeProtocolPage::IACPromptCheckBoxStateChanged(int /*unused*/)
 {
     Config().m_IAC_prompt_parser = ui->IACPromptCheckBox->isChecked();
 }
 
-void MumeProtocolPage::remoteEditCheckBoxStateChanged(int)
+void MumeProtocolPage::remoteEditCheckBoxStateChanged(int /*unused*/)
 {
     Config().m_remoteEditing = ui->remoteEditCheckBox->isChecked();
     ui->externalEditorCommand->setEnabled(Config().m_remoteEditing);
@@ -66,12 +68,12 @@ void MumeProtocolPage::remoteEditCheckBoxStateChanged(int)
     ui->internalEditorRadioButton->setEnabled(Config().m_remoteEditing);
 }
 
-void MumeProtocolPage::internalEditorRadioButtonChanged(bool)
+void MumeProtocolPage::internalEditorRadioButtonChanged(bool /*unused*/)
 {
     Config().m_internalRemoteEditor = ui->internalEditorRadioButton->isChecked();
 }
 
 void MumeProtocolPage::externalEditorCommandTextChanged(QString text)
 {
-    Config().m_externalRemoteEditorCommand = text;
+    Config().m_externalRemoteEditorCommand = std::move(text);
 }

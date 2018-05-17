@@ -29,9 +29,9 @@
 #include "CGroupCommunicator.h"
 #include "configuration.h"
 
-#include <assert.h>
 #include <QDebug>
 #include <QMutex>
+#include <cassert>
 
 #ifdef MODULAR
 extern "C" MY_EXPORT Component *createComponent()
@@ -45,16 +45,14 @@ Initializer<Mmapper2Group> mmapper2Group("mmapper2Group");
 Mmapper2Group::Mmapper2Group() :
     Component(true),
     networkLock(QMutex::Recursive),
-    network(NULL),
-    group(NULL)
+    network(nullptr),
+    group(nullptr)
 {}
 
 Mmapper2Group::~Mmapper2Group()
 {
-    if (group) {
-        delete group;
-    }
-    if (network) {
+    delete group;
+    if (network != nullptr) {
         network->disconnect();
         delete network;
     }
@@ -79,13 +77,17 @@ void Mmapper2Group::characterChanged()
 void Mmapper2Group::updateSelf()
 {
     QMutexLocker locker(&networkLock);
-    if (!getGroup()) return;
+    if (getGroup() == nullptr) {
+        return;
+    }
 
     if (getGroup()->getSelf()->getName() != Config().m_groupManagerCharName) {
         QByteArray oldname = getGroup()->getSelf()->getName();
         QByteArray newname = Config().m_groupManagerCharName;
 
-        if (network) network->renameConnection(oldname, newname);
+        if (network != nullptr) {
+            network->renameConnection(oldname, newname);
+        }
         getGroup()->getSelf()->setName(newname);
 
     } else if (getGroup()->getSelf()->getColor() != Config().m_groupManagerColor ) {
@@ -95,14 +97,17 @@ void Mmapper2Group::updateSelf()
         return;
     }
 
-    if (getType() != Off)
+    if (getType() != Off) {
         issueLocalCharUpdate();
+    }
 }
 
 void Mmapper2Group::setCharPosition(unsigned int pos)
 {
     QMutexLocker locker(&networkLock);
-    if (!getGroup() || getType() == Off) return;
+    if ((getGroup() == nullptr) || getType() == Off) {
+        return;
+    }
 
     if (getGroup()->getSelf()->getPosition() != pos) {
         getGroup()->getSelf()->setPosition(pos);
@@ -113,28 +118,30 @@ void Mmapper2Group::setCharPosition(unsigned int pos)
 void Mmapper2Group::issueLocalCharUpdate()
 {
     QMutexLocker locker(&networkLock);
-    if (!getGroup() || getType() == Off) return;
+    if ((getGroup() == nullptr) || getType() == Off) {
+        return;
+    }
 
-    if (network) {
+    if (network != nullptr) {
         QDomNode data = getGroup()->getSelf()->toXML();
         network->sendCharUpdate(data);
         emit drawCharacters();
     }
 }
 
-void Mmapper2Group::relayMessageBox(QString message)
+void Mmapper2Group::relayMessageBox(const QString &message)
 {
     emit log("GroupManager", message.toLatin1());
     emit messageBox("Group Manager", message);
 }
 
-void Mmapper2Group::serverStartupFailed(QString message)
+void Mmapper2Group::serverStartupFailed(const QString &message)
 {
     relayMessageBox(QString("Failed to start the Group server: %1")
                     .arg(message.toLatin1().constData()));
 }
 
-void Mmapper2Group::gotKicked(QDomNode message)
+void Mmapper2Group::gotKicked(const QDomNode &message)
 {
     if (message.nodeName() != "data") {
         qWarning() << "Called gotKicked with wrong node. No data node but instead:" << message.nodeName();
@@ -156,7 +163,7 @@ void Mmapper2Group::gotKicked(QDomNode message)
 
 }
 
-void Mmapper2Group::gTellArrived(QDomNode node)
+void Mmapper2Group::gTellArrived(const QDomNode &node)
 {
     if (node.nodeName() != "data") {
         qWarning() << "Called gTellArrived with wrong node. No data node but instead:" << node.nodeName();
@@ -180,18 +187,22 @@ void Mmapper2Group::gTellArrived(QDomNode node)
     emit displayGroupTellEvent(tell);
 }
 
-void Mmapper2Group::sendGTell(QByteArray tell)
+void Mmapper2Group::sendGTell(const QByteArray &tell)
 {
     QMutexLocker locker(&networkLock);
-    if (network) network->sendGTell(tell);
+    if (network != nullptr) {
+        network->sendGTell(tell);
+    }
 }
 
 void Mmapper2Group::parseScoreInformation(QByteArray score)
 {
-    if (!getGroup() || getType() == Off) return;
+    if ((getGroup() == nullptr) || getType() == Off) {
+        return;
+    }
     emit log("GroupManager", QString("Caught a score line: %1").arg(score.constData()));
 
-    if (score.contains("mana, ") == true) {
+    if (score.contains("mana, ")) {
         score.replace(" hits, ", "/");
         score.replace(" mana, and ", "/");
         score.replace(" moves.", "");
@@ -236,10 +247,13 @@ void Mmapper2Group::parseScoreInformation(QByteArray score)
 
 void Mmapper2Group::parsePromptInformation(QByteArray prompt)
 {
-    if (!getGroup() || getType() == Off) return;
+    if ((getGroup() == nullptr) || getType() == Off) {
+        return;
+    }
 
-    if (!prompt.contains('>'))
+    if (!prompt.contains('>')) {
         return; // false prompt
+    }
 
     CGroupChar *self = getGroup()->getSelf();
     QByteArray oldHP = self->textHP;
@@ -253,8 +267,9 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
     if (index != -1) {
         hp = "";
         int k = index + 3;
-        while (prompt[k] != ' ' && prompt[k] != '>' )
+        while (prompt[k] != ' ' && prompt[k] != '>' ) {
             hp += prompt[k++];
+        }
         next = k;
     }
 
@@ -262,8 +277,9 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
     if (index != -1) {
         mana = "";
         int k = index + 5;
-        while (prompt[k] != ' ' && prompt[k] != '>' )
+        while (prompt[k] != ' ' && prompt[k] != '>' ) {
             mana += prompt[k++];
+        }
         next = k;
     }
 
@@ -271,8 +287,9 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
     if (index != -1) {
         moves = "";
         int k = index + 5;
-        while (prompt[k] != ' ' && prompt[k] != '>' )
+        while (prompt[k] != ' ' && prompt[k] != '>' ) {
             moves += prompt[k++];
+        }
     }
 
     if (hp != oldHP || mana != oldMana || moves != oldMoves) {
@@ -352,7 +369,9 @@ void Mmapper2Group::sendLog(const QString &text)
 int Mmapper2Group::getType()
 {
     QMutexLocker locker(&networkLock);
-    if (network != NULL) return network->getType();
+    if (network != nullptr) {
+        return network->getType();
+    }
     return 0;
 }
 
@@ -367,12 +386,12 @@ void Mmapper2Group::setType(int newState)
     QMutexLocker locker(&networkLock);
 
     // Delete previous network and regenerate
-    if (network) {
+    if (network != nullptr) {
         network->disconnect();
         network->deleteLater();
-        network = NULL;
+        network = nullptr;
     }
-    switch ((GroupManagerState)newState) {
+    switch (static_cast<GroupManagerState>(newState)) {
     case Server:
         network = new CGroupServerCommunicator(this);
         break;
@@ -389,11 +408,12 @@ void Mmapper2Group::setType(int newState)
     Config().m_groupManagerState = newState;
 
     if (newState != Off) {
-        if (Config().m_groupManagerRulesWarning)
+        if (Config().m_groupManagerRulesWarning) {
             emit messageBox("Warning: MUME Rules",
                             "Using the GroupManager in PK situations is ILLEGAL "
                             "according to RULES ACTIONS.\n\nBe sure to disable the "
                             "GroupManager under such conditions.");
+        }
         emit drawCharacters();
     }
 }

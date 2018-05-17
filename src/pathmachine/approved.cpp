@@ -24,21 +24,22 @@
 ************************************************************************/
 
 #include "approved.h"
-#include "mapaction.h"
-#include "room.h"
-#include "parseevent.h"
-#include "roomadmin.h"
 #include "abstractroomfactory.h"
+#include "mapaction.h"
+#include "parseevent.h"
+#include "room.h"
+#include "roomadmin.h"
 
 void Approved::receiveRoom(RoomAdmin *sender, const Room *perhaps)
 {
-    if (matchedRoom == 0) {
+    if (matchedRoom == nullptr) {
         ComparisonResult indicator = factory->compare(perhaps, myEvent, matchingTolerance);
         if (indicator != CR_DIFFERENT) {
             matchedRoom = perhaps;
             owner = sender;
-            if (indicator == CR_TOLERANCE && myEvent->getNumSkipped() == 0)
+            if (indicator == CR_TOLERANCE && myEvent->getNumSkipped() == 0) {
                 update = true;
+            }
         } else {
             sender->releaseRoom(this, perhaps->getId());
         }
@@ -50,23 +51,24 @@ void Approved::receiveRoom(RoomAdmin *sender, const Room *perhaps)
 
 Approved::~Approved()
 {
-    if (owner) {
+    if (owner != nullptr) {
         if (moreThanOne) {
             owner->releaseRoom(this, matchedRoom->getId());
         } else {
             owner->keepRoom(this, matchedRoom->getId());
-            if (update)
+            if (update) {
                 owner->scheduleAction(new SingleRoomAction(new Update( myEvent), matchedRoom->getId()));
+            }
         }
     }
 }
 
 
 Approved::Approved(AbstractRoomFactory *in_factory, ParseEvent *event, int tolerance) :
-    matchedRoom(0),
+    matchedRoom(nullptr),
     myEvent(event),
     matchingTolerance(tolerance),
-    owner(0),
+    owner(nullptr),
     moreThanOne(false),
     update(false),
     factory(in_factory)
@@ -75,29 +77,29 @@ Approved::Approved(AbstractRoomFactory *in_factory, ParseEvent *event, int toler
 
 const Room *Approved::oneMatch()
 {
-    if (moreThanOne)
-        return 0;
-    else
-        return matchedRoom;
+    if (moreThanOne) {
+        return nullptr;
+    }
+    return matchedRoom;
 }
 
 void Approved::reset()
 {
-    if (matchedRoom) {
+    if (matchedRoom != nullptr) {
         owner->releaseRoom(this, matchedRoom->getId());
     }
     update = false;
-    matchedRoom = 0;
+    matchedRoom = nullptr;
     moreThanOne = false;
-    owner = 0;
+    owner = nullptr;
 }
 
 
 
 RoomAdmin *Approved::getOwner()
 {
-    if (moreThanOne)
-        return 0;
-    else
-        return owner;
+    if (moreThanOne) {
+        return nullptr;
+    }
+    return owner;
 }

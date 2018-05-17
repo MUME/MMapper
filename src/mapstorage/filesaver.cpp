@@ -27,14 +27,14 @@
 #endif
 
 #ifdef UNIX_SAFETY
+# include <cerrno>
+# include <cstdio>
+# include <cstring>
 # include <unistd.h>
-# include <errno.h>
-# include <string.h>
-# include <stdio.h>
 #endif
 
-#include <stdexcept>
 #include "mapstorage/filesaver.h"
+#include <stdexcept>
 
 namespace {
 const char *c_suffix = ".tmp";
@@ -55,11 +55,10 @@ void throw_sys_error()
 #endif
 }
 
-}
+}  // namespace
 
 FileSaver::FileSaver()
-{
-}
+    = default;
 
 FileSaver::~FileSaver()
 {
@@ -69,7 +68,7 @@ FileSaver::~FileSaver()
     }
 }
 
-void FileSaver::open( QString filename )
+void FileSaver::open( const QString &filename )
 {
     close();
 
@@ -81,24 +80,28 @@ void FileSaver::open( QString filename )
     m_file.setFileName( filename );
 #endif
 
-    if ( !m_file.open( QFile::WriteOnly ) )
+    if ( !m_file.open( QFile::WriteOnly ) ) {
         throw std::runtime_error( m_file.errorString().toStdString() );
+    }
 }
 
 void FileSaver::close()
 {
-    if ( !m_file.isOpen() )
+    if ( !m_file.isOpen() ) {
         return;
+    }
 
     m_file.flush();
 
 #ifdef UNIX_SAFETY
-    if ( fsync( m_file.handle() ) == -1 )
+    if ( fsync( m_file.handle() ) == -1 ) {
         throw_sys_error();
+    }
 
     if ( rename( QFile::encodeName( m_filename + c_suffix ).data(),
-                 QFile::encodeName( m_filename ).data() ) == -1 )
+                 QFile::encodeName( m_filename ).data() ) == -1 ) {
         throw_sys_error();
+    }
 #endif
 
     m_file.close();

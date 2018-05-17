@@ -28,14 +28,14 @@
 
 QRegExp Patterns::m_rx;
 
-const QRegExp Patterns::m_score("\\d+/\\d+ hits(?:, \\d+/\\d+ mana,)? and \\d+/\\d+ moves.");
+const QRegExp Patterns::m_score(R"(\d+/\d+ hits(?:, \d+/\d+ mana,)? and \d+/\d+ moves.)");
 
 // Used for oldRoom loading only
 const QStringList Patterns::m_dynamicDescriptionPatternsList(
     QStringList()
     << "#!(?:A|An|The)[^.]*\\."
     << "#![^.]*(?:sit(?:s|ting)?|rest(?:s|ing)?|stand(?:s|ing)|sleep(?:s|ing)?|swim(?:s|ming)?|walk(?:s|ing)?|wander(?:s|ing)?|grow(?:s|ing)?|lies?|lying)[^.]*"
-    << "#!.*(?:\\(glowing\\)|\\(shrouded\\)|\\(hidden\\))\\.?"
+    << R"(#!.*(?:\(glowing\)|\(shrouded\)|\(hidden\))\.?)"
     << "#![^.]*(in|on) the ground\\."
     << "#?*"
     << "#<You have found"
@@ -48,30 +48,36 @@ const QStringList Patterns::m_dynamicDescriptionPatternsList(
 
 bool Patterns::matchPattern(QString pattern, QString &str)
 {
-    if (pattern.at(0) != '#')
+    if (pattern.at(0) != '#') {
         return false;
+    }
 
-    switch ((int)(pattern.at(1)).toLatin1()) {
+    switch (static_cast<int>((pattern.at(1)).toLatin1())) {
     case 33:  // !
         m_rx.setPattern(pattern.remove(0, 2));
-        if (m_rx.exactMatch(str))
+        if (m_rx.exactMatch(str)) {
             return true;
+        }
         break;
     case 60:;  // <
-        if (str.startsWith(pattern.remove(0, 2)))
+        if (str.startsWith(pattern.remove(0, 2))) {
             return true;
+        }
         break;
     case 61:;  // =
-        if ( str == (pattern.remove(0, 2)) )
+        if ( str == (pattern.remove(0, 2)) ) {
             return true;
+        }
         break;
     case 62:;  // >
-        if (str.endsWith(pattern.remove(0, 2)))
+        if (str.endsWith(pattern.remove(0, 2))) {
             return true;
+        }
         break;
     case 63:;  // ?
-        if (str.contains(pattern.remove(0, 2)))
+        if (str.contains(pattern.remove(0, 2))) {
             return true;
+        }
         break;
     default:
         ;
@@ -81,27 +87,32 @@ bool Patterns::matchPattern(QString pattern, QString &str)
 
 bool Patterns::matchPattern(QByteArray pattern, QByteArray &str)
 {
-    if (pattern.at(0) != '#')
+    if (pattern.at(0) != '#') {
         return false;
+    }
 
-    switch ((int)(pattern.at(1))) {
+    switch (static_cast<int>(pattern.at(1))) {
     case 33:  // !
         break;
     case 60:;  // <
-        if (str.startsWith(pattern.remove(0, 2)))
+        if (str.startsWith(pattern.remove(0, 2))) {
             return true;
+        }
         break;
     case 61:;  // =
-        if ( str == (pattern.remove(0, 2)) )
+        if ( str == (pattern.remove(0, 2)) ) {
             return true;
+        }
         break;
     case 62:;  // >
-        if (str.endsWith(pattern.remove(0, 2)))
+        if (str.endsWith(pattern.remove(0, 2))) {
             return true;
+        }
         break;
     case 63:;  // ?
-        if (str.contains(pattern.remove(0, 2)))
+        if (str.contains(pattern.remove(0, 2))) {
             return true;
+        }
         break;
     default:
         ;
@@ -116,49 +127,51 @@ bool Patterns::matchScore(QString &str)
 
 bool Patterns::matchMoveForcePatterns(QString &str)
 {
-    for ( QStringList::iterator it = Config().m_moveForcePatternsList.begin();
-            it != Config().m_moveForcePatternsList.end(); ++it )
-        if (matchPattern(*it, str)) return true;
+    for (auto &pattern : Config().m_moveForcePatternsList) {
+        if (matchPattern(pattern, str)) {
+            return true;
+        }
+    }
     return false;
 }
 
 bool Patterns::matchNoDescriptionPatterns(QString &str)
 {
-    for ( QStringList::iterator it = Config().m_noDescriptionPatternsList.begin();
-            it != Config().m_noDescriptionPatternsList.end(); ++it )
-        if (matchPattern(*it, str)) return true;
+    for (auto &pattern : Config().m_noDescriptionPatternsList) {
+        if (matchPattern(pattern, str)) {
+            return true;
+        }
+    }
     return false;
 }
 
 bool Patterns::matchDynamicDescriptionPatterns(QString &str)
 {
-    for (QStringList::const_iterator it = m_dynamicDescriptionPatternsList.constBegin();
-            it != m_dynamicDescriptionPatternsList.constEnd(); ++it )
-        if (matchPattern(*it, str)) return true;
+    for (auto &pattern : m_dynamicDescriptionPatternsList) {
+        if (matchPattern(pattern, str)) {
+            return true;
+        }
+    }
     return false;
 }
 
 bool Patterns::matchPasswordPatterns(QByteArray &str)
 {
-    if (matchPattern(Config().m_passwordPattern, str)) return true;
-    return false;
+    return matchPattern(Config().m_passwordPattern, str);
 }
 
 bool Patterns::matchPromptPatterns(QByteArray &str)
 {
-    if (matchPattern(Config().m_promptPattern, str)) return true;
-    return false;
+    return matchPattern(Config().m_promptPattern, str);
 }
 
 bool Patterns::matchLoginPatterns(QByteArray &str)
 {
-    if (matchPattern(Config().m_loginPattern, str)) return true;
-    return false;
+    return matchPattern(Config().m_loginPattern, str);
 }
 
 bool Patterns::matchMenuPromptPatterns(QByteArray &str)
 {
-    if (matchPattern(Config().m_menuPromptPattern, str)) return true;
-    return false;
+    return matchPattern(Config().m_menuPromptPattern, str);
 }
 

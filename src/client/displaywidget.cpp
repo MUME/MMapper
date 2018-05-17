@@ -25,17 +25,17 @@
 #include "displaywidget.h"
 #include "configuration/configuration.h"
 
+#include <QBrush>
 #include <QDebug>
 #include <QScrollBar>
+#include <QTextCharFormat>
 #include <QTextCursor>
 #include <QTextDocument>
 #include <QTextFrame>
-#include <QTextCharFormat>
-#include <QBrush>
 
 // ANSI codes are formatted as the following:
 // escape + [ + n1 (+ n2) + m
-const QRegExp DisplayWidget::s_ansiRx("\\0033\\[((?:\\d+;)*\\d+)m");
+const QRegExp DisplayWidget::s_ansiRx(R"(\0033\[((?:\d+;)*\d+)m)");
 
 DisplayWidget::DisplayWidget(QWidget *parent) : QTextEdit(parent)
 {
@@ -97,8 +97,7 @@ DisplayWidget::DisplayWidget(QWidget *parent) : QTextEdit(parent)
 }
 
 DisplayWidget::~DisplayWidget()
-{
-}
+    = default;
 
 void DisplayWidget::resizeEvent(QResizeEvent *event)
 {
@@ -353,20 +352,21 @@ void DisplayWidget::updateFormat(QTextCharFormat &format, int ansiCode)
 
 void DisplayWidget::updateFormatBoldColor(QTextCharFormat &format)
 {
-    if (format.foreground() == m_blackColor)
+    if (format.foreground() == m_blackColor) {
         format.setForeground(m_darkGrayColor);
-    else if (format.foreground() == m_redColor)
+    } else if (format.foreground() == m_redColor) {
         format.setForeground(m_brightRedColor);
-    else if (format.foreground() == m_greenColor)
+    } else if (format.foreground() == m_greenColor) {
         format.setForeground(m_brightGreenColor);
-    else if (format.foreground() == m_yellowColor)
+    } else if (format.foreground() == m_yellowColor) {
         format.setForeground(m_brightYellowColor);
-    else if (format.foreground() == m_blueColor)
+    } else if (format.foreground() == m_blueColor) {
         format.setForeground(m_brightBlueColor);
-    else if (format.foreground() == m_magentaColor)
+    } else if (format.foreground() == m_magentaColor) {
         format.setForeground(m_brightMagentaColor);
-    else if (format.foreground() == m_cyanColor)
+    } else if (format.foreground() == m_cyanColor) {
         format.setForeground(m_brightCyanColor);
-    else if (format.foreground() == m_grayColor)
+    } else if (format.foreground() == m_grayColor) {
         format.setForeground(m_whiteColor);
+    }
 }

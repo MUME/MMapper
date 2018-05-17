@@ -25,17 +25,19 @@
 #include "remoteeditwidget.h"
 #include "configuration/configuration.h"
 
+#include <QCloseEvent>
+#include <QDebug>
+#include <QMenuBar>
+#include <QMessageBox>
 #include <QTextEdit>
 #include <QVBoxLayout>
-#include <QMenuBar>
-#include <QDebug>
-#include <QCloseEvent>
-#include <QMessageBox>
-#include <assert.h>
+#include <cassert>
+#include <utility>
 
-RemoteEditWidget::RemoteEditWidget(int key, const QString &title, const QString &body,
+RemoteEditWidget::RemoteEditWidget(int key, QString title, QString body,
                                    QWidget *parent)
-    : QDialog(parent), m_key(key), m_title(title), m_body(body), m_submitted(false)
+    : QDialog(parent), m_key(key), m_title(std::move(title)), m_body(std::move(body)),
+      m_submitted(false)
 {
     setAttribute(Qt::WA_DeleteOnClose);
     assert(testAttribute(Qt::WA_DeleteOnClose));
@@ -44,7 +46,7 @@ RemoteEditWidget::RemoteEditWidget(int key, const QString &title, const QString 
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
     setWindowTitle(m_title + " - MMapper " + (isEditSession() ? "Editor" : "Viewer"));
 
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    auto *mainLayout = new QVBoxLayout(this);
     mainLayout->setAlignment(Qt::AlignTop);
     mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->setSpacing(0);
@@ -60,7 +62,7 @@ RemoteEditWidget::RemoteEditWidget(int key, const QString &title, const QString 
     m_textEdit->setMinimumSize(QSize(x, y));
     mainLayout->addWidget(m_textEdit);
 
-    QMenuBar *menuBar = new QMenuBar(this);
+    auto *menuBar = new QMenuBar(this);
     mainLayout->setMenuBar(menuBar);
 
     QMenu *fileMenu = menuBar->addMenu(tr("&File"));
@@ -110,17 +112,16 @@ RemoteEditWidget::RemoteEditWidget(int key, const QString &title, const QString 
 }
 
 RemoteEditWidget::~RemoteEditWidget()
-{
-}
+    = default;
 
 QSize RemoteEditWidget::minimumSizeHint() const
 {
-    return QSize(100, 100);
+    return {100, 100};
 }
 
 QSize RemoteEditWidget::sizeHint() const
 {
-    return QSize(640, 480);
+    return {640, 480};
 }
 
 void RemoteEditWidget::closeEvent(QCloseEvent *event)
@@ -157,7 +158,7 @@ bool RemoteEditWidget::maybeCancel()
 bool RemoteEditWidget::contentsChanged()
 {
     QString text = m_textEdit->toPlainText();
-    return QString::compare(text, m_body, Qt::CaseSensitive);
+    return QString::compare(text, m_body, Qt::CaseSensitive) != 0;
 }
 
 void RemoteEditWidget::cancelEdit()

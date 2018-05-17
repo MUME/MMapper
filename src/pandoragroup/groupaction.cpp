@@ -26,14 +26,15 @@
 #include "CGroup.h"
 #include "CGroupChar.h"
 
-#include <assert.h>
+#include <cassert>
+
+#include <utility>
 
 /**
  * @brief AddCharacter::AddCharacter
  * @param blob of XML representing the character
  */
-AddCharacter::AddCharacter(QDomNode blob) :
-    GroupAction(),
+AddCharacter::AddCharacter(const QDomNode &blob) :
     blob(blob)
 {
 }
@@ -48,7 +49,7 @@ void AddCharacter::exec()
  * @brief RemoveCharacter::RemoveCharacter
  * @param blob of XML representing which character to delete
  */
-RemoveCharacter::RemoveCharacter(QDomNode blob) :
+RemoveCharacter::RemoveCharacter(const QDomNode &blob) :
     RemoveCharacter(CGroupChar::getNameFromXML(blob))
 {
 }
@@ -57,9 +58,8 @@ RemoveCharacter::RemoveCharacter(QDomNode blob) :
  * @brief RemoveCharacter::RemoveCharacter
  * @param name of the character to delete
  */
-RemoveCharacter::RemoveCharacter(const QByteArray &name) :
-    GroupAction(),
-    name(name)
+RemoveCharacter::RemoveCharacter(QByteArray name) :
+    name(std::move(name))
 {
 }
 
@@ -73,8 +73,7 @@ void RemoveCharacter::exec()
  * @brief UpdateCharacter::UpdateCharacter
  * @param blob of XML with which to update the character with
  */
-UpdateCharacter::UpdateCharacter(QDomNode blob) :
-    GroupAction(),
+UpdateCharacter::UpdateCharacter(const QDomNode &blob) :
     blob(blob)
 {
 }
@@ -89,8 +88,7 @@ void UpdateCharacter::exec()
  * @brief RenameCharacter::RenameCharacter
  * @param blob of XML with the new name of the character
  */
-RenameCharacter::RenameCharacter(QDomNode blob) :
-    GroupAction(),
+RenameCharacter::RenameCharacter(const QDomNode &blob) :
     blob(blob)
 {
 }
@@ -104,10 +102,8 @@ void RenameCharacter::exec()
 /**
  * @brief ResetCharacters::ResetCharacters
  */
-ResetCharacters::ResetCharacters() :
-    GroupAction()
-{
-}
+ResetCharacters::ResetCharacters()
+    = default;
 
 void ResetCharacters::exec()
 {

@@ -45,15 +45,15 @@ public slots:
     void analyzeNewMudInput(IncomingData &data);
 
 protected:
-    void parseMessage(char command, QByteArray buffer);
-    void parseEditMessage(QByteArray buffer);
-    void parseViewMessage(QByteArray buffer);
+    void parseMessage(char command, const QByteArray &buffer);
+    void parseEditMessage(const QByteArray &buffer);
+    void parseViewMessage(const QByteArray &buffer);
 
 private:
     TelnetDataType m_previousType;
     bool m_parsingMpi;
 
-    char m_command;
+    char m_command{};
     int m_remaining;
     QByteArray m_buffer;
 

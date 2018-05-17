@@ -1,6 +1,6 @@
 #include "graphicspage.h"
-#include "ui_graphicspage.h"
 #include "configuration/configuration.h"
+#include "ui_graphicspage.h"
 
 #include <QColorDialog>
 
@@ -31,7 +31,9 @@ GraphicsPage::GraphicsPage(QWidget *parent) :
     ui->changeColor->setIcon(QIcon(bgPix));
     QString antiAliasingSamples = QString::number(Config().m_antialiasingSamples);
     int index = ui->antialiasingSamplesComboBox->findText(antiAliasingSamples);
-    if (index < 0) index = 0;
+    if (index < 0) {
+        index = 0;
+    }
     ui->antialiasingSamplesComboBox->setCurrentIndex(index);
     ui->trilinearFilteringCheckBox->setChecked(Config().m_trilinearFiltering);
     ui->softwareOpenGLCheckBox->setChecked(Config().m_softwareOpenGL);
@@ -55,43 +57,43 @@ void GraphicsPage::changeColorClicked()
     }
 }
 
-void GraphicsPage::antialiasingSamplesTextChanged(const QString &)
+void GraphicsPage::antialiasingSamplesTextChanged(const QString & /*unused*/)
 {
     Config().m_antialiasingSamples = ui->antialiasingSamplesComboBox->currentText().toInt();
 }
 
-void GraphicsPage::trilinearFilteringStateChanged(int)
+void GraphicsPage::trilinearFilteringStateChanged(int /*unused*/)
 {
     Config().m_trilinearFiltering = ui->trilinearFilteringCheckBox->isChecked();
 }
 
-void GraphicsPage::softwareOpenGLStateChanged(int)
+void GraphicsPage::softwareOpenGLStateChanged(int /*unused*/)
 {
     Config().m_softwareOpenGL = ui->softwareOpenGLCheckBox->isChecked();
 }
 
 
-void GraphicsPage::updatedStateChanged(int)
+void GraphicsPage::updatedStateChanged(int /*unused*/)
 {
     Config().m_showUpdated = ui->updated->isChecked();
 }
 
-void GraphicsPage::drawNotMappedExitsStateChanged(int)
+void GraphicsPage::drawNotMappedExitsStateChanged(int /*unused*/)
 {
     Config().m_drawNotMappedExits = ui->drawNotMappedExits->isChecked();
 }
 
-void GraphicsPage::drawNoMatchExitsStateChanged(int)
+void GraphicsPage::drawNoMatchExitsStateChanged(int /*unused*/)
 {
     Config().m_drawNoMatchExits = ui->drawNoMatchExits->isChecked();
 }
 
-void GraphicsPage::drawDoorNamesStateChanged(int)
+void GraphicsPage::drawDoorNamesStateChanged(int /*unused*/)
 {
     Config().m_drawDoorNames = ui->drawDoorNames->isChecked();
 }
 
-void GraphicsPage::drawUpperLayersTexturedStateChanged(int)
+void GraphicsPage::drawUpperLayersTexturedStateChanged(int /*unused*/)
 {
     Config().m_drawUpperLayersTextured = ui->drawUpperLayersTextured->isChecked();
 }

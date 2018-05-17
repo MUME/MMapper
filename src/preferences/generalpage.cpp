@@ -86,52 +86,52 @@ void GeneralPage::selectWorldFileButtonClicked()
     }
 }
 
-void GeneralPage::remoteNameTextChanged(const QString &)
+void GeneralPage::remoteNameTextChanged(const QString & /*unused*/)
 {
     Config().m_remoteServerName = remoteName->text();
 }
 
-void GeneralPage::remotePortValueChanged(int)
+void GeneralPage::remotePortValueChanged(int /*unused*/)
 {
     Config().m_remotePort = remotePort->value();
 }
 
-void GeneralPage::localPortValueChanged(int)
+void GeneralPage::localPortValueChanged(int /*unused*/)
 {
     Config().m_localPort = localPort->value();
 }
 
-void GeneralPage::tlsEncryptionCheckBoxStateChanged(int)
+void GeneralPage::tlsEncryptionCheckBoxStateChanged(int /*unused*/)
 {
     Config().m_tlsEncryption = tlsEncryptionCheckBox->isChecked();
 }
 
-void GeneralPage::emulatedExitsStateChanged(int)
+void GeneralPage::emulatedExitsStateChanged(int /*unused*/)
 {
     Config().m_emulatedExits = emulatedExitsCheckBox->isChecked();
 }
 
-void GeneralPage::showHiddenExitFlagsStateChanged(int)
+void GeneralPage::showHiddenExitFlagsStateChanged(int /*unused*/)
 {
     Config().m_showHiddenExitFlags = showHiddenExitFlagsCheckBox->isChecked();
 }
 
-void GeneralPage::showNotesStateChanged(int)
+void GeneralPage::showNotesStateChanged(int /*unused*/)
 {
     Config().m_showNotes = showNotesCheckBox->isChecked();
 }
 
-void GeneralPage::autoLoadFileNameTextChanged(const QString &)
+void GeneralPage::autoLoadFileNameTextChanged(const QString & /*unused*/)
 {
     Config().m_autoLoadFileName = autoLoadFileName->text();
 }
 
-void GeneralPage::autoLoadCheckStateChanged(int)
+void GeneralPage::autoLoadCheckStateChanged(int /*unused*/)
 {
     Config().m_autoLoadWorld = autoLoadCheck->isChecked();
 }
 
-void GeneralPage::displayMumeClockStateChanged(int)
+void GeneralPage::displayMumeClockStateChanged(int /*unused*/)
 {
     Config().m_displayMumeClock = displayMumeClockCheckBox->isChecked();
 }

@@ -23,8 +23,9 @@
 **
 ************************************************************************/
 
-#include <QHostAddress>
 #include <QDebug>
+#include <QHostAddress>
+#include <utility>
 
 #include "CGroupServer.h"
 
@@ -36,7 +37,7 @@ CGroupServer::CGroupServer(int localPort, QObject *parent) :
     connect(this, SIGNAL(connectionClosed(CGroupClient *)),
             parent, SLOT(connectionClosed(CGroupClient *)));
 
-    if (listen(QHostAddress::Any, localPort) != true) {
+    if (!listen(QHostAddress::Any, localPort)) {
         emit sendLog("Failed to start a group Manager server");
         emit serverStartupFailed();
     } else {
@@ -55,7 +56,7 @@ void CGroupServer::incomingConnection(qintptr socketDescriptor)
 
     // connect the client straight to the Communicator, as he handles all the state changes
     // data transfers and similar.
-    CGroupClient *client = new CGroupClient(this);
+    auto *client = new CGroupClient(this);
     connections.append(client);
 
     connect(client, SIGNAL(incomingData(CGroupClient *, QByteArray)),
@@ -66,7 +67,7 @@ void CGroupServer::incomingConnection(qintptr socketDescriptor)
     client->setSocket(socketDescriptor);
 }
 
-void CGroupServer::errorInConnection(CGroupClient *connection, const QString &errorMessage)
+void CGroupServer::errorInConnection(CGroupClient *connection, const QString & /*errorMessage*/)
 {
     emit connectionClosed(connection);
 //    qInfo() << "Removing and deleting the connection completely" << connection->socketDescriptor();
@@ -75,16 +76,16 @@ void CGroupServer::errorInConnection(CGroupClient *connection, const QString &er
     connection->deleteLater();
 }
 
-void CGroupServer::sendToAll(QByteArray message)
+void CGroupServer::sendToAll(const QByteArray &message)
 {
-    sendToAllExceptOne(NULL, message);
+    sendToAllExceptOne(nullptr, message);
 }
 
-void CGroupServer::sendToAllExceptOne(CGroupClient *conn, QByteArray message)
+void CGroupServer::sendToAllExceptOne(CGroupClient *exception, const QByteArray &message)
 {
-    for (int i = 0; i < connections.size(); i++) {
-        if (connections[i] != conn) {
-            connections[i]->sendData(message);
+    for (auto &connection : connections) {
+        if (connection != exception) {
+            connection->sendData(message);
         }
     }
 }
@@ -92,16 +93,16 @@ void CGroupServer::sendToAllExceptOne(CGroupClient *conn, QByteArray message)
 void CGroupServer::closeAll()
 {
 //    qInfo() << "Closing connections";
-    for (int i = 0; i < connections.size(); i++) {
-        if (connections[i]) {
-            connections[i]->disconnectFromHost();
-            connections[i]->deleteLater();
+    for (auto &connection : connections) {
+        if (connection != nullptr) {
+            connection->disconnectFromHost();
+            connection->deleteLater();
         }
     }
     connections.clear();
 }
 
-void CGroupServer::relayLog(const QString &str)
+void CGroupServer::relayLog(const QString & /*str*/)
 {
 //    qInfo() << "Client logged" << str;
 }

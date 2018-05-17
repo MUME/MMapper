@@ -28,10 +28,10 @@
 #include "ctelnet.h"
 #include "configuration/configuration.h"
 
-#include <QDebug>
-#include <QTextCodec>
 #include <QApplication>
+#include <QDebug>
 #include <QHostAddress>
+#include <QTextCodec>
 
 #define LATIN_1_ENCODING "ISO 8859-1"
 
@@ -41,8 +41,8 @@ cTelnet::cTelnet(QObject *parent)
     /** MMapper Telnet */
     termType = QString("MMapper %1").arg(MMAPPER_VERSION);
     // set up encoding
-    inCoder = 0;
-    outCoder = 0;
+    inCoder = nullptr;
+    outCoder = nullptr;
     iac = iac2 = insb = false;
     command.clear();
     sentbytes = 0;
@@ -155,18 +155,20 @@ void cTelnet::sendToMud(const QByteArray &data)
     // IAC byte must be doubled
     int len = outdata.length();
     bool gotIAC = false;
-    for (int i = 0; i < len; i++)
+    for (int i = 0; i < len; i++) {
         if ((unsigned char) outdata[i] == TN_IAC) {
             gotIAC = true;
             break;
         }
+    }
     if (gotIAC) {
         QByteArray d;
         // double IACs
         for (int i = 0; i < len; i++) {
             d.append(outdata.at(i));
-            if ((unsigned char) outdata.at(i) == TN_IAC)
+            if (static_cast<unsigned char>(outdata.at(i)) == TN_IAC) {
                 d.append(outdata.at(i));  //double IAC
+            }
         }
         outdata = d;
     }
@@ -195,23 +197,27 @@ void cTelnet::windowSizeChanged (int x, int y)
         s += TN_SB;
         s += OPT_NAWS;
         unsigned char x1, x2, y1, y2;
-        x1 = (unsigned char) x / 256;
-        x2 = (unsigned char) x % 256;
-        y1 = (unsigned char) y / 256;
-        y2 = (unsigned char) y % 256;
+        x1 = static_cast<unsigned char>(x) / 256;
+        x2 = static_cast<unsigned char>(x) % 256;
+        y1 = static_cast<unsigned char>(y) / 256;
+        y2 = static_cast<unsigned char>(y) % 256;
         //IAC must be doubled
         s += x1;
-        if (x1 == TN_IAC)
+        if (x1 == TN_IAC) {
             s += TN_IAC;
+        }
         s += x2;
-        if (x2 == TN_IAC)
+        if (x2 == TN_IAC) {
             s += TN_IAC;
+        }
         s += y1;
-        if (y1 == TN_IAC)
+        if (y1 == TN_IAC) {
             s += TN_IAC;
+        }
         s += y2;
-        if (y2 == TN_IAC)
+        if (y2 == TN_IAC) {
             s += TN_IAC;
+        }
 
         s += TN_IAC;
         s += TN_SE;
@@ -224,8 +230,8 @@ void cTelnet::sendTelnetOption (unsigned char type, unsigned char option)
     qDebug() << "* Sending Telnet Command: " << type << " " << option;
     QByteArray s;
     s += TN_IAC;
-    s += (unsigned char) type;
-    s += (unsigned char) option;
+    s += type;
+    s += option;
     sendRawData(s);
 }
 
@@ -331,8 +337,9 @@ void cTelnet::processTelnetCommand (const QByteArray &command)
                     announcedState[option] = true;
                 }
             }
-            if (option == OPT_NAWS)  //NAWS here - window size info must be sent
+            if (option == OPT_NAWS) {  //NAWS here - window size info must be sent
                 windowSizeChanged (curX, curY);
+            }
             break;
         case TN_DONT:
             //only respond if value changed or if this option has not been announced yet
@@ -371,11 +378,11 @@ void cTelnet::processTelnetCommand (const QByteArray &command)
                         for (int i = 0; i < 256; i++) {
                             if (myOptionState[i]) {
                                 s += TN_WILL;
-                                s += (unsigned char) i;
+                                s += static_cast<unsigned char>(i);
                             }
                             if (hisOptionState[i]) {
                                 s += TN_DO;
-                                s += (unsigned char) i;
+                                s += static_cast<unsigned char>(i);
                             }
                         }
                         s += TN_IAC;
@@ -417,9 +424,11 @@ void cTelnet::onReadyRead()
     int read = socket.read(buffer, 32768);
     if (read != -1) {
         buffer[read] = 0;
-    } else if (read == 0) return;
-    else
+    } else if (read == 0) {
+        return;
+    } else {
         buffer[read] = '\0';
+    }
     QByteArray data = QByteArray::fromRawData(buffer, read);
     QByteArray cleanData;
 
@@ -430,72 +439,73 @@ void cTelnet::onReadyRead()
     //because the data contains telnet commands
     //so we parse the text and process all telnet commands:
 
-    for (unsigned int i = 0; i < (unsigned int) data.length(); i++) {
+    for (char i : data) {
         if (iac || iac2 || insb ||
-                ((unsigned char) data.at(i) == TN_IAC)) {
+                (static_cast<unsigned char>(i) == TN_IAC)) {
             //there are many possibilities here:
             //1. this is IAC, previous character was regular data
             if (! (iac || iac2 || insb) &&
-                    ((unsigned char) data.at(i) == TN_IAC)) {
+                    (static_cast<unsigned char>(i) == TN_IAC)) {
                 iac = true;
-                command.append(data.at(i));
+                command.append(i);
             }
             //2. seq. of two IACs
-            else if (iac && ((unsigned char) data.at(i) == TN_IAC)
+            else if (iac && (static_cast<unsigned char>(i) == TN_IAC)
                      && (!insb)) {
                 iac = false;
-                cleanData.append(data.at(i));
+                cleanData.append(i);
                 command.clear();
             }
             //3. IAC DO/DONT/WILL/WONT
             else if (iac && (!insb) &&
-                     (((unsigned char) data.at(i) == TN_WILL) ||
-                      ((unsigned char) data.at(i) == TN_WONT) ||
-                      ((unsigned char) data.at(i) == TN_DO)   ||
-                      ((unsigned char) data.at(i) == TN_DONT))) {
+                     ((static_cast<unsigned char>(i) == TN_WILL) ||
+                      (static_cast<unsigned char>(i) == TN_WONT) ||
+                      (static_cast<unsigned char>(i) == TN_DO)   ||
+                      (static_cast<unsigned char>(i) == TN_DONT))) {
                 iac = false;
                 iac2 = true;
-                command.append(data.at(i));
+                command.append(i);
             }
             //4. IAC DO/DONT/WILL/WONT <command code>
             else if (iac2) {
                 iac2 = false;
-                command.append(data.at(i));
+                command.append(i);
                 processTelnetCommand (command);
                 command.clear();
             }
             //5. IAC SB
             else if (iac && (!insb) &&
-                     ((unsigned char) data.at(i) == TN_SB)) {
+                     (static_cast<unsigned char>(i) == TN_SB)) {
                 iac = false;
                 insb = true;
-                command.append(data.at(i));
+                command.append(i);
             }
             //6. IAC SE without IAC SB - error - ignored
             else if (iac && (!insb) &&
-                     ((unsigned char) data.at(i) == TN_SE)) {
+                     (static_cast<unsigned char>(i) == TN_SE)) {
                 command.clear();
                 iac = false;
             }
             //7. inside IAC SB
             else if (insb) {
-                command.append(data.at(i));
+                command.append(i);
                 if (iac && //IAC SE - end of subcommand
-                        ((unsigned char) data.at(i) == TN_SE)) {
+                        (static_cast<unsigned char>(i) == TN_SE)) {
                     processTelnetCommand (command);
                     command.clear();
                     iac = false;
                     insb = false;
                 }
-                if (iac)
+                if (iac) {
                     iac = false;
-                else if ((unsigned char) data.at(i) == TN_IAC)
+                } else if (static_cast<unsigned char>(i) == TN_IAC) {
                     iac = true;
+                }
             }
             //8. IAC fol. by something else than IAC, SB, SE, DO, DONT, WILL, WONT
             else {
                 iac = false;
-                command.append(data.at(i));
+                command.append(i);
                 processTelnetCommand (command);
                 //this could have set receivedGA to true; we'll handle that later
                 // (at the end of this function)
@@ -504,16 +514,16 @@ void cTelnet::onReadyRead()
         } else { //plaintext
             //everything except CRLF is okay; CRLF is replaced by LF(\n) (CR ignored)
 
-            switch (data.at(i)) {
+            switch (i) {
             case '\a': // BEL
                 QApplication::beep();
                 break;
             default:
-                cleanData.append(data.at(i));
+                cleanData.append(i);
             };
         }
 
-        // TODO: do something about all that code duplication ...
+        // TODO(nschimme): do something about all that code duplication ...
 
         //we've just received the GA signal - higher layers shall be informed about it
         if (recvdGA) {
