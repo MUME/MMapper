@@ -25,18 +25,18 @@
 ************************************************************************/
 
 #include "configdialog.h"
-#include "ui_configdialog.h"
+#include "clientpage.h"
 #include "generalpage.h"
 #include "graphicspage.h"
+#include "groupmanagerpage.h"
+#include "mumeprotocolpage.h"
 #include "parserpage.h"
 #include "pathmachinepage.h"
-#include "groupmanagerpage.h"
-#include "clientpage.h"
-#include "mumeprotocolpage.h"
+#include "ui_configdialog.h"
 
 #include <QListWidget>
-#include <QStackedWidget>
 #include <QScrollBar>
+#include <QStackedWidget>
 
 ConfigDialog::ConfigDialog(Mmapper2Group *gm, QWidget *parent)
     : QDialog(parent),
@@ -80,43 +80,43 @@ ConfigDialog::~ConfigDialog()
 
 void ConfigDialog::createIcons()
 {
-    QListWidgetItem *configButton = new QListWidgetItem(ui->contentsWidget);
+    auto *configButton = new QListWidgetItem(ui->contentsWidget);
     configButton->setIcon(QIcon(":/icons/generalcfg.png"));
     configButton->setText(tr("General"));
     configButton->setTextAlignment(Qt::AlignHCenter);
     configButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
-    QListWidgetItem *graphicsButton = new QListWidgetItem(ui->contentsWidget);
+    auto *graphicsButton = new QListWidgetItem(ui->contentsWidget);
     graphicsButton->setIcon(QIcon(":/icons/graphicscfg.png"));
     graphicsButton->setText(tr("Graphics"));
     graphicsButton->setTextAlignment(Qt::AlignHCenter);
     graphicsButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
-    QListWidgetItem *updateButton = new QListWidgetItem(ui->contentsWidget);
+    auto *updateButton = new QListWidgetItem(ui->contentsWidget);
     updateButton->setIcon(QIcon(":/icons/parsercfg.png"));
     updateButton->setText(tr("Parser"));
     updateButton->setTextAlignment(Qt::AlignHCenter);
     updateButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
-    QListWidgetItem *clientButton = new QListWidgetItem(ui->contentsWidget);
+    auto *clientButton = new QListWidgetItem(ui->contentsWidget);
     clientButton->setIcon(QIcon(":/icons/terminal.png"));
     clientButton->setText(tr("Integrated\nMud Client"));
     clientButton->setTextAlignment(Qt::AlignHCenter);
     clientButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
-    QListWidgetItem *groupButton = new QListWidgetItem(ui->contentsWidget);
+    auto *groupButton = new QListWidgetItem(ui->contentsWidget);
     groupButton->setIcon(QIcon(":/icons/groupcfg.png"));
     groupButton->setText(tr("Group\nManager"));
     groupButton->setTextAlignment(Qt::AlignHCenter);
     groupButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
-    QListWidgetItem *mpiButton = new QListWidgetItem(ui->contentsWidget);
+    auto *mpiButton = new QListWidgetItem(ui->contentsWidget);
     mpiButton->setIcon(QIcon(":/icons/mumeprotocolcfg.png"));
     mpiButton->setText(tr("Mume\nProtocol"));
     mpiButton->setTextAlignment(Qt::AlignHCenter);
     mpiButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
-    QListWidgetItem *pathButton = new QListWidgetItem(ui->contentsWidget);
+    auto *pathButton = new QListWidgetItem(ui->contentsWidget);
     pathButton->setIcon(QIcon(":/icons/pathmachinecfg.png"));
     pathButton->setText(tr("Path\nMachine"));
     pathButton->setTextAlignment(Qt::AlignHCenter);
@@ -125,8 +125,9 @@ void ConfigDialog::createIcons()
 
 void ConfigDialog::changePage(QListWidgetItem *current, QListWidgetItem *previous)
 {
-    if (!current)
+    if (current == nullptr) {
         current = previous;
+    }
 
     if (pagesWidget->count() <= 1) {
         pagesWidget->addWidget(new GraphicsPage(this));

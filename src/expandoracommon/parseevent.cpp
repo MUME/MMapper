@@ -31,44 +31,52 @@ using namespace std;
 ParseEvent::ParseEvent(const ParseEvent &other) : ListCycler<Property *, deque<Property *> >(),
     optional(other.optional), moveType(other.moveType), numSkipped(other.numSkipped)
 {
-    for (unsigned int i = 0; i < other.size(); ++i)
+    for (unsigned int i = 0; i < other.size(); ++i) {
         push_back(new Property(*other[i]));
+    }
     pos = other.pos;
-
 }
 
 ParseEvent &ParseEvent::operator=(const ParseEvent &other)
 {
-    if (&other == this) return *this;
+    if (&other == this) {
+        return *this;
+    }
     moveType = other.moveType;
     pos = other.pos;
     optional = other.optional;
     numSkipped = other.numSkipped;
-    for (deque<Property *>::iterator i = begin(); i != end(); ++i)
-        delete *i;
-    for (unsigned int i = 0; i < other.size(); ++i)
+    for (auto &property : *this) {
+        delete property;
+    }
+    for (unsigned int i = 0; i < other.size(); ++i) {
         push_back(new Property(*other[i]));
+    }
     return *this;
 }
 
 ParseEvent::~ParseEvent()
 {
-    for (deque<Property *>::iterator i = begin(); i != end(); ++i)
-        delete *i;
+    for (auto &property : *this) {
+        delete property;
+    }
 }
 
 void ParseEvent::reset()
 {
     ListCycler<Property *, deque<Property *> >::reset();
-    for (deque<Property *>::iterator i = begin(); i != end(); ++i)
-        (*i)->reset();
+    for (auto &property : *this) {
+        property->reset();
+    }
 }
 
 void ParseEvent::countSkipped()
 {
     numSkipped = 0;
-    for (deque<Property *>::iterator i = begin(); i != end(); ++i) {
-        if ((*i)->isSkipped()) numSkipped++;
+    for (auto &property : *this) {
+        if (property->isSkipped()) {
+            numSkipped++;
+        }
     }
 }
 

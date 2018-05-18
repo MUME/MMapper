@@ -36,7 +36,7 @@ class RoomSelection : public QMap<uint, const Room *>, public RoomRecipient
 {
 public:
     RoomSelection(RoomAdmin *admin) : m_admin(admin) {}
-    void receiveRoom(RoomAdmin *admin, const Room *room);
+    void receiveRoom(RoomAdmin *admin, const Room *aRoom);
     bool containsAll(const RoomSelection *other) const;
 
 private:

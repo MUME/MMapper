@@ -64,7 +64,7 @@ private:
     void tabComplete();
 
     static const QRegExp s_whitespaceRx;
-    bool m_tabbing;
+    bool m_tabbing{};
     QString m_tabFragment;
     TabCompletionIterator *m_tabIterator;
     void addTabHistory(const WordHistoryEntry &);

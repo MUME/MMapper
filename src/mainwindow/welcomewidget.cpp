@@ -23,8 +23,8 @@
 ************************************************************************/
 
 #include "welcomewidget.h"
-#include "ui_welcomewidget.h"
 #include "configuration/configuration.h"
+#include "ui_welcomewidget.h"
 
 #include <QPixmap>
 
@@ -51,7 +51,7 @@ WelcomeWidget::~WelcomeWidget()
     delete ui;
 }
 
-void WelcomeWidget::onPlayButtonClicked(bool)
+void WelcomeWidget::onPlayButtonClicked(bool /*unused*/)
 {
     emit playMumeClicked();
 }

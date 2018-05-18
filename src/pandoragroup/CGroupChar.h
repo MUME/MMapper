@@ -78,7 +78,7 @@ public:
         return color;
     }
     QDomNode toXML();
-    bool updateFromXML(QDomNode blob);
+    bool updateFromXML(const QDomNode &node);
     void setLastMovement(QByteArray move)
     {
         lastMovement = move;
@@ -95,7 +95,7 @@ public:
     {
         return lastMovement;
     }
-    static QByteArray getNameFromXML(QDomNode node);
+    static QByteArray getNameFromXML(const QDomNode &node);
 
     // for local char only
     void setScore(int _hp, int _maxhp, int _mana, int _maxmana, int _moves, int _maxmoves)

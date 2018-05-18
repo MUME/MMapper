@@ -164,15 +164,15 @@ private:
     //connection note
     ConnectionNote m_note;
 
-    ConnectionDirection m_directions[2];
+    ConnectionDirection m_directions[2] {};
 
     ConnectionTimeStamp m_timeStamp;
 
     //Index to rooms
-    Room *m_rooms[2];
+    Room *m_rooms[2] {};
 
     //doors (in case of exit with doors)
-    Door *m_doors[2];
+    Door *m_doors[2] {};
 
     //type of connections
     ConnectionType m_type;

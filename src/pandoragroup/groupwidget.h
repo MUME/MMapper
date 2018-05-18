@@ -46,7 +46,7 @@ public:
 
 public slots:
     void updateLabels();
-    void messageBox(QString title, QString message);
+    void messageBox(const QString &title, const QString &message);
 
 private:
     QTableWidget *m_table;

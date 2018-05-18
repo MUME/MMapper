@@ -27,10 +27,10 @@
 #include "mumesocket.h"
 #include "configuration/configuration.h"
 
-#include <QTcpSocket>
-#include <QSslSocket>
-#include <QTimer>
 #include <QDebug>
+#include <QSslSocket>
+#include <QTcpSocket>
+#include <QTimer>
 
 void MumeSocket::onConnect()
 {
@@ -72,16 +72,16 @@ MumeSslSocket::MumeSslSocket(QObject *parent) : MumeSocket(parent),
 
 MumeSslSocket::~MumeSslSocket()
 {
-    if (m_socket) {
+    if (m_socket != nullptr) {
         m_socket->disconnectFromHost();
         m_socket->deleteLater();
     }
-    m_socket = NULL;
-    if (m_timer) {
+    m_socket = nullptr;
+    if (m_timer != nullptr) {
         m_timer->stop();
         delete m_timer;
     }
-    m_timer = NULL;
+    m_timer = nullptr;
 }
 
 void MumeSslSocket::connectToHost()
@@ -133,7 +133,7 @@ void MumeSslSocket::onPeerVerifyError(const QSslError &error)
 void MumeSslSocket::onReadyRead()
 {
     int read;
-    while (m_socket->bytesAvailable()) {
+    while (m_socket->bytesAvailable() != 0) {
         read = m_socket->read(m_buffer, 8191);
         if (read != -1) {
             m_buffer[read] = 0;

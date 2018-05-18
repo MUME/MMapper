@@ -41,7 +41,7 @@ void RoomCollection::removeRoom(Room *room)
 
 RoomCollection *RoomCollection::merge(RoomCollection *other)
 {
-    if (other) {
+    if (other != nullptr) {
         insert(other->begin(), other->end());
     }
     return this;

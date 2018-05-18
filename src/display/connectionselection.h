@@ -62,12 +62,12 @@ public:
     bool isValid();
     bool isFirstValid()
     {
-        if (m_connectionDescriptor[0].room == NULL) return false;
+        if (m_connectionDescriptor[0].room == nullptr) return false;
         else return true;
     }
     bool isSecondValid()
     {
-        if (m_connectionDescriptor[1].room == NULL) return false;
+        if (m_connectionDescriptor[1].room == nullptr) return false;
         else return true;
     }
 
@@ -85,7 +85,7 @@ private:
 
     int GLtoMap(double arg);
 
-    ConnectionDescriptor m_connectionDescriptor[2];
+    ConnectionDescriptor m_connectionDescriptor[2] {};
 
     bool m_first;
     RoomAdmin *m_admin;

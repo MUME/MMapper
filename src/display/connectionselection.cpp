@@ -24,16 +24,16 @@
 ************************************************************************/
 
 #include "connectionselection.h"
-#include "mapdata.h"
 #include "coordinate.h"
+#include "mapdata.h"
 
 ConnectionSelection::ConnectionSelection(MapFrontend *mf, double mx, double my, int layer)
 {
-    m_admin = NULL;
+    m_admin = nullptr;
     m_first = true;
 
-    m_connectionDescriptor[0].room = NULL;
-    m_connectionDescriptor[1].room = NULL;
+    m_connectionDescriptor[0].room = nullptr;
+    m_connectionDescriptor[1].room = nullptr;
 
     Coordinate c(GLtoMap(mx), GLtoMap(my), layer);
     mf->lookingForRooms(this, c, c );
@@ -42,37 +42,38 @@ ConnectionSelection::ConnectionSelection(MapFrontend *mf, double mx, double my, 
 
 int ConnectionSelection::GLtoMap(double arg)
 {
-    if (arg >= 0)
+    if (arg >= 0) {
         return static_cast<int>(arg + 0.5);
+    }
     return static_cast<int>(arg - 0.5);
 }
 
 ConnectionSelection::ConnectionSelection()
 {
-    m_admin = NULL;
+    m_admin = nullptr;
     m_first = true;
 
-    m_connectionDescriptor[0].room = NULL;
-    m_connectionDescriptor[1].room = NULL;
+    m_connectionDescriptor[0].room = nullptr;
+    m_connectionDescriptor[1].room = nullptr;
 }
 
 ConnectionSelection::~ConnectionSelection()
 {
     //for all rooms remove them internaly and call release room
-    if (m_admin) {
-        if (m_connectionDescriptor[0].room) m_admin->releaseRoom(this,
-                                                                     m_connectionDescriptor[0].room->getId());
-        if (m_connectionDescriptor[1].room) m_admin->releaseRoom(this,
-                                                                     m_connectionDescriptor[1].room->getId());
-        m_admin = NULL;
+    if (m_admin != nullptr) {
+        if (m_connectionDescriptor[0].room != nullptr) {
+            m_admin->releaseRoom(this, m_connectionDescriptor[0].room->getId());
+        }
+        if (m_connectionDescriptor[1].room != nullptr) {
+            m_admin->releaseRoom(this, m_connectionDescriptor[1].room->getId());
+        }
+        m_admin = nullptr;
     }
 }
 
 bool ConnectionSelection::isValid()
 {
-    if (m_connectionDescriptor[0].room == NULL || m_connectionDescriptor[1].room == NULL)
-        return false;
-    return true;
+    return !(m_connectionDescriptor[0].room == nullptr || m_connectionDescriptor[1].room == nullptr);
 }
 
 ExitDirection ConnectionSelection::ComputeDirection(double mouseX, double mouseY)
@@ -130,10 +131,11 @@ void ConnectionSelection::setFirst(MapFrontend *mf, double mx, double my, int la
 {
     m_first = true;
     Coordinate c(GLtoMap(mx), GLtoMap(my), layer);
-    if (m_connectionDescriptor[0].room != NULL) {
-        if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room)
+    if (m_connectionDescriptor[0].room != nullptr) {
+        if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room) {
             m_admin->releaseRoom(this, m_connectionDescriptor[0].room->getId());
-        m_connectionDescriptor[0].room = NULL;
+        }
+        m_connectionDescriptor[0].room = nullptr;
     }
     mf->lookingForRooms(this, c, c );
     m_connectionDescriptor[0].direction = ComputeDirection(mx, my);
@@ -143,10 +145,11 @@ void ConnectionSelection::setFirst(MapFrontend *mf, double mx, double my, int la
 void ConnectionSelection::setFirst(MapFrontend *mf, uint id, ExitDirection dir)
 {
     m_first = true;
-    if (m_connectionDescriptor[0].room != NULL) {
-        if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room)
+    if (m_connectionDescriptor[0].room != nullptr) {
+        if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room) {
             m_admin->releaseRoom(this, m_connectionDescriptor[0].room->getId());
-        m_connectionDescriptor[0].room = NULL;
+        }
+        m_connectionDescriptor[0].room = nullptr;
     }
     mf->lookingForRooms(this, id );
     m_connectionDescriptor[0].direction = dir;
@@ -157,10 +160,11 @@ void ConnectionSelection::setSecond(MapFrontend *mf, double mx, double my, int l
 {
     m_first = false;
     Coordinate c(GLtoMap(mx), GLtoMap(my), layer);
-    if (m_connectionDescriptor[1].room != NULL) {
-        if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room)
+    if (m_connectionDescriptor[1].room != nullptr) {
+        if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room) {
             m_admin->releaseRoom(this, m_connectionDescriptor[1].room->getId());
-        m_connectionDescriptor[1].room = NULL;
+        }
+        m_connectionDescriptor[1].room = nullptr;
     }
     mf->lookingForRooms(this, c, c );
     m_connectionDescriptor[1].direction = ComputeDirection(mx, my);
@@ -170,10 +174,11 @@ void ConnectionSelection::setSecond(MapFrontend *mf, double mx, double my, int l
 void ConnectionSelection::setSecond(MapFrontend *mf, uint id, ExitDirection dir)
 {
     m_first = false;
-    if (m_connectionDescriptor[1].room != NULL) {
-        if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room)
+    if (m_connectionDescriptor[1].room != nullptr) {
+        if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room) {
             m_admin->releaseRoom(this, m_connectionDescriptor[1].room->getId());
-        m_connectionDescriptor[1].room = NULL;
+        }
+        m_connectionDescriptor[1].room = nullptr;
     }
     mf->lookingForRooms(this, id );
     m_connectionDescriptor[1].direction = dir;
@@ -182,19 +187,21 @@ void ConnectionSelection::setSecond(MapFrontend *mf, uint id, ExitDirection dir)
 
 void ConnectionSelection::removeFirst()
 {
-    if (m_connectionDescriptor[0].room != NULL) {
-        if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room)
+    if (m_connectionDescriptor[0].room != nullptr) {
+        if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room) {
             m_admin->releaseRoom(this, m_connectionDescriptor[0].room->getId());
-        m_connectionDescriptor[0].room = NULL;
+        }
+        m_connectionDescriptor[0].room = nullptr;
     }
 }
 
 void ConnectionSelection::removeSecond()
 {
-    if (m_connectionDescriptor[1].room != NULL) {
-        if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room)
+    if (m_connectionDescriptor[1].room != nullptr) {
+        if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room) {
             m_admin->releaseRoom(this, m_connectionDescriptor[1].room->getId());
-        m_connectionDescriptor[1].room = NULL;
+        }
+        m_connectionDescriptor[1].room = nullptr;
     }
 }
 
@@ -216,17 +223,19 @@ void ConnectionSelection::receiveRoom(RoomAdmin *admin, const Room *aRoom)
     //quint32 id = aRoom->getId();
 
     if (m_first) {
-        if (m_connectionDescriptor[0].room != NULL) {
-            if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room)
+        if (m_connectionDescriptor[0].room != nullptr) {
+            if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room) {
                 m_admin->releaseRoom(this, m_connectionDescriptor[0].room->getId());
+            }
             m_connectionDescriptor[0].room = aRoom;
         } else {
             m_connectionDescriptor[0].room = aRoom;
         }
     } else {
-        if (m_connectionDescriptor[1].room != NULL) {
-            if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room)
+        if (m_connectionDescriptor[1].room != nullptr) {
+            if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room) {
                 m_admin->releaseRoom(this, m_connectionDescriptor[1].room->getId());
+            }
             m_connectionDescriptor[1].room = aRoom;
         } else {
             m_connectionDescriptor[1].room = aRoom;

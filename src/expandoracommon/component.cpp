@@ -23,8 +23,8 @@
 **
 ************************************************************************/
 
-#include <iostream>
 #include "component.h"
+#include <iostream>
 
 using namespace std;
 
@@ -42,22 +42,23 @@ Component::Component(bool threaded)
     if (threaded) {
         thread = new ComponentThreader(this);
     } else {
-        thread = 0;
+        thread = nullptr;
     }
 }
 
 void Component::start()
 {
-    if (thread) {
+    if (thread != nullptr) {
         moveToThread(thread);
         thread->start();
-    } else
+    } else {
         init();
+    }
 }
 
 Component::~Component()
 {
-    if (thread) {
+    if (thread != nullptr) {
         // last chance to get rid of the thread.
         // components should handle that in their own destructors
         thread->terminate();

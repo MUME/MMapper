@@ -67,7 +67,7 @@ private:
     void saveRoom(const Room *room, QDataStream &stream);
     void saveExits(const Room *room, QDataStream &stream);
 
-    uint baseId;
+    uint baseId{};
     Coordinate basePosition;
 };
 

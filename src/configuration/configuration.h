@@ -42,12 +42,12 @@ public:
     void write() const;
     bool isChanged() const;
 
-    bool m_firstRun;
+    bool m_firstRun{};
     QPoint windowPosition;
     QSize windowSize;
     QByteArray windowState;
-    bool alwaysOnTop;
-    int m_mapMode; //0 play, 1 map
+    bool alwaysOnTop{};
+    int m_mapMode{}; //0 play, 1 map
     void setFirstRun(bool value)
     {
         m_firstRun = value;
@@ -75,42 +75,42 @@ public:
     }
 
     QString   m_remoteServerName;         /// Remote host and port settings
-    quint16   m_remotePort;
-    quint16   m_localPort;                /// Port to bind to on local machine
-    bool      m_tlsEncryption;
+    quint16   m_remotePort{};
+    quint16   m_localPort{};                /// Port to bind to on local machine
+    bool      m_tlsEncryption{};
 
     QColor m_backgroundColor;
-    int    m_antialiasingSamples;
-    bool   m_trilinearFiltering;
-    bool   m_softwareOpenGL;
+    int    m_antialiasingSamples{};
+    bool   m_trilinearFiltering{};
+    bool   m_softwareOpenGL{};
 
-    bool m_autoLog;         // enables log to file
+    bool m_autoLog{};         // enables log to file
     QString m_logFileName;  // file name to log
-    bool m_autoLoadWorld;
+    bool m_autoLoadWorld{};
     QString m_autoLoadFileName;
     QString m_lastMapDirectory;
 
     QString m_roomNameColor; // ANSI room name color
     QString m_roomDescColor; // ANSI room descriptions color
 
-    bool m_emulatedExits;
-    bool m_showHiddenExitFlags;
-    bool m_showNotes;
+    bool m_emulatedExits{};
+    bool m_showHiddenExitFlags{};
+    bool m_showNotes{};
 
-    bool m_showUpdated;
-    bool m_drawNotMappedExits;
-    bool m_drawNoMatchExits;
-    bool m_drawUpperLayersTextured;
-    bool m_drawDoorNames;
+    bool m_showUpdated{};
+    bool m_drawNotMappedExits{};
+    bool m_drawNoMatchExits{};
+    bool m_drawUpperLayersTextured{};
+    bool m_drawDoorNames{};
 
-    bool m_utf8Charset;
+    bool m_utf8Charset{};
 
-    bool m_IAC_prompt_parser;
-    bool m_remoteEditing;
-    bool m_internalRemoteEditor;
+    bool m_IAC_prompt_parser{};
+    bool m_remoteEditing{};
+    bool m_internalRemoteEditor{};
     QString m_externalRemoteEditorCommand;
 
-    bool m_removeXmlTags;
+    bool m_removeXmlTags{};
 
     QStringList m_moveForcePatternsList;  // string wildcart patterns, that force new move command
     QStringList m_noDescriptionPatternsList;
@@ -119,41 +119,41 @@ public:
     QByteArray  m_passwordPattern;
     QByteArray  m_menuPromptPattern;
 
-    qreal m_acceptBestRelative;
-    qreal m_acceptBestAbsolute;
-    qreal m_newRoomPenalty;
-    qreal m_multipleConnectionsPenalty;
-    qreal m_correctPositionBonus;
-    quint32 m_maxPaths;
-    quint32 m_matchingTolerance;
+    qreal m_acceptBestRelative{};
+    qreal m_acceptBestAbsolute{};
+    qreal m_newRoomPenalty{};
+    qreal m_multipleConnectionsPenalty{};
+    qreal m_correctPositionBonus{};
+    quint32 m_maxPaths{};
+    quint32 m_matchingTolerance{};
 
-    int m_groupManagerState;
-    int m_groupManagerLocalPort;
-    int m_groupManagerRemotePort;
+    int m_groupManagerState{};
+    int m_groupManagerLocalPort{};
+    int m_groupManagerRemotePort{};
     QByteArray m_groupManagerHost;
     QByteArray m_groupManagerCharName;
-    bool m_groupManagerShareSelf;
+    bool m_groupManagerShareSelf{};
     QColor m_groupManagerColor;
-    bool m_groupManagerRulesWarning;
+    bool m_groupManagerRulesWarning{};
 
-    int m_mumeStartEpoch;
-    bool m_displayMumeClock;
+    int m_mumeStartEpoch{};
+    bool m_displayMumeClock{};
 
     QFont m_clientFont;
     QColor m_clientForegroundColor;
     QColor m_clientBackgroundColor;
-    int m_clientColumns;
-    int m_clientRows;
-    int m_clientLinesOfScrollback;
-    int m_clientLinesOfInputHistory;
-    int m_clientTabCompletionDictionarySize;
-    bool m_clientClearInputOnEnter;
+    int m_clientColumns{};
+    int m_clientRows{};
+    int m_clientLinesOfScrollback{};
+    int m_clientLinesOfInputHistory{};
+    int m_clientTabCompletionDictionarySize{};
+    bool m_clientClearInputOnEnter{};
 
 private:
     Configuration();
     Configuration(const Configuration &);
 
-    bool configurationChanged;
+    bool configurationChanged{};
     void change()
     {
         configurationChanged = true;

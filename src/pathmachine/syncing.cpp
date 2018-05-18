@@ -24,12 +24,12 @@
 ************************************************************************/
 
 #include "syncing.h"
-#include "pathparameters.h"
 #include "path.h"
+#include "pathparameters.h"
 #include "roomadmin.h"
 #include "roomsignalhandler.h"
 
-#include <limits.h>
+#include <climits>
 
 using namespace std;
 
@@ -39,21 +39,21 @@ Syncing::Syncing(PathParameters &in_p, std::list<Path *> *in_paths,
     numPaths(0),
     params(in_p),
     paths(in_paths),
-    parent(new Path(0, 0, this, signaler))
+    parent(new Path(nullptr, nullptr, this, signaler))
 {}
 
 void Syncing::receiveRoom(RoomAdmin *sender, const Room *in_room)
 {
     if (++numPaths > params.maxPaths) {
         if (!paths->empty()) {
-            for (list<Path *>::iterator i = paths->begin(); i != paths->end(); ++i) {
-                (*i)->deny();
+            for (auto &path : *paths) {
+                path->deny();
             }
             paths->clear();
-            parent = 0;
+            parent = nullptr;
         }
     } else {
-        Path *p = new Path(in_room, sender, this, signaler, UINT_MAX - 1);
+        auto *p = new Path(in_room, sender, this, signaler, UINT_MAX - 1);
         p->setParent(parent);
         parent->insertChild(p);
         paths->push_back(p);
@@ -67,5 +67,7 @@ list<Path *> *Syncing::evaluate()
 
 Syncing::~Syncing()
 {
-    if (parent) parent->deny();
+    if (parent != nullptr) {
+        parent->deny();
+    }
 }

@@ -49,16 +49,24 @@ void Mmapper2PathMachine::event(ParseEvent *event)
     params.multipleConnectionsPenalty = config.m_multipleConnectionsPenalty;
 
     QString stringState = "received event, state: ";
-    if (state == EXPERIMENTING) stringState += "EXPERIMENTING";
-    else if (state == SYNCING) stringState += "SYNCING";
-    else stringState += "APPROVED";
+    if (state == EXPERIMENTING) {
+        stringState += "EXPERIMENTING";
+    } else if (state == SYNCING) {
+        stringState += "SYNCING";
+    } else {
+        stringState += "APPROVED";
+    }
     QString me("PathMachine");
     emit log(me, stringState);
     PathMachine::event(event);
     stringState = "done processing event, state: ";
-    if (state == EXPERIMENTING) stringState += "EXPERIMENTING";
-    else if (state == SYNCING) stringState += "SYNCING";
-    else stringState += "APPROVED";
+    if (state == EXPERIMENTING) {
+        stringState += "EXPERIMENTING";
+    } else if (state == SYNCING) {
+        stringState += "SYNCING";
+    } else {
+        stringState += "APPROVED";
+    }
     emit log(me, stringState);
 }
 

@@ -26,8 +26,8 @@
 #include "CGroupClient.h"
 #include "CGroupCommunicator.h"
 
-#include <QHostAddress>
 #include <QDebug>
+#include <QHostAddress>
 
 void CGroupClient::linkSignals()
 {
@@ -39,11 +39,9 @@ void CGroupClient::linkSignals()
     connect(this, SIGNAL(sendLog(const QString &)), parent(), SLOT(relayLog(const QString &)));
     connect(this, SIGNAL(errorInConnection(CGroupClient *, const QString &)),
             parent(), SLOT(errorInConnection(CGroupClient *, const QString &)));
-    buffer = "";
-    currentMessageLen = 0;
 }
 
-CGroupClient::CGroupClient(QByteArray host, int remotePort, QObject *parent) :
+CGroupClient::CGroupClient(const QByteArray &host, int remotePort, QObject *parent) :
     QTcpSocket(parent)
 {
     linkSignals();
@@ -73,7 +71,7 @@ CGroupClient::CGroupClient(QObject *parent) :
 
 void CGroupClient::setSocket(qintptr socketDescriptor)
 {
-    if (setSocketDescriptor(socketDescriptor) == false) {
+    if (!setSocketDescriptor(socketDescriptor)) {
         qWarning("Connection failed. Native socket not recognized.");
         errorHandler(QAbstractSocket::SocketAccessError);
         return;
@@ -130,7 +128,7 @@ void CGroupClient::connectionEstablished()
     setConnectionState(Connected);
 }
 
-void CGroupClient::errorHandler ( QAbstractSocket::SocketError socketError )
+void CGroupClient::errorHandler ( QAbstractSocket::SocketError  /*socketError*/ )
 {
     setConnectionState(Quiting);
     emit errorInConnection(this, errorString());
@@ -172,8 +170,9 @@ void CGroupClient::cutMessageFromBuffer()
         rest = buffer.right( buffer.size() - index - 1);
         buffer = rest;
 
-        if (buffer.size() == currentMessageLen)
+        if (buffer.size() == currentMessageLen) {
             cutMessageFromBuffer();
+        }
 
         //qInfo("returning from cutMessageFromBuffer");
         return;
@@ -187,9 +186,9 @@ void CGroupClient::cutMessageFromBuffer()
 }
 
 
-void CGroupClient::sendData(QByteArray data)
+void CGroupClient::sendData(const QByteArray &data)
 {
-    //      qInfo("%i ", data.size());
+//      qInfo("%i ", data.size());
     QByteArray buff;
     QString len = QString("%1 ").arg(data.size());
     buff = len.toLatin1();

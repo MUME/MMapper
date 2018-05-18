@@ -51,7 +51,7 @@ protected:
 class AddCharacter : public GroupAction
 {
 public:
-    AddCharacter(QDomNode blob);
+    AddCharacter(const QDomNode &blob);
 protected:
     void exec();
 private:
@@ -61,8 +61,8 @@ private:
 class RemoveCharacter : public GroupAction
 {
 public:
-    RemoveCharacter(QDomNode blob);
-    RemoveCharacter(const QByteArray &);
+    RemoveCharacter(const QDomNode &blob);
+    RemoveCharacter(QByteArray );
 protected:
     void exec();
 private:
@@ -72,7 +72,7 @@ private:
 class UpdateCharacter : public GroupAction
 {
 public:
-    UpdateCharacter(QDomNode blob);
+    UpdateCharacter(const QDomNode &blob);
 protected:
     void exec();
 private:
@@ -82,7 +82,7 @@ private:
 class RenameCharacter : public GroupAction
 {
 public:
-    RenameCharacter(QDomNode blob);
+    RenameCharacter(const QDomNode &blob);
 protected:
     void exec();
 private:

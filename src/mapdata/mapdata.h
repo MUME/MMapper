@@ -64,17 +64,17 @@ public:
     const RoomSelection *select();
 
     // selects the rooms given in "other" for "into"
-    const RoomSelection *select(const RoomSelection *other, const RoomSelection *into);
+    const RoomSelection *select(const RoomSelection *other, const RoomSelection *in);
     // removes the subset from the superset and unselects it
-    void unselect(const RoomSelection *subset, const RoomSelection *superset);
+    void unselect(const RoomSelection *subset, const RoomSelection *in);
     // removes the selection from the internal structures and deletes it
-    void unselect(const RoomSelection *selection);
+    void unselect(const RoomSelection *in);
     // unselects a room from a selection
-    void unselect(uint id, const RoomSelection *selection);
+    void unselect(uint id, const RoomSelection *in);
 
     // the room will be inserted in the given selection. the selection must have been created by mapdata
-    const Room *getRoom(const Coordinate &pos, const RoomSelection *selection);
-    const Room *getRoom(uint id, const RoomSelection *selection);
+    const Room *getRoom(const Coordinate &pos, const RoomSelection *in);
+    const Room *getRoom(uint id, const RoomSelection *in);
 
     void draw (const Coordinate &ulf, const Coordinate &lrb, MapCanvas &screen);
     bool isOccupied(const Coordinate &position);
@@ -117,7 +117,7 @@ public:
     {
         return m_fileName;
     }
-    QList<Coordinate> getPath(const QList<CommandIdType> dirs);
+    QList<Coordinate> getPath(const QList<CommandIdType> &dirs);
     virtual void clear();
 
     // search for matches
@@ -133,8 +133,8 @@ public:
     void setDoorName(const Coordinate &pos, const QString &name, uint dir);
     bool getExitFlag(const Coordinate &pos, uint flag, uint dir, uint field);
     void toggleExitFlag(const Coordinate &pos, uint flag, uint dir, uint field);
-    void setRoomField(const Coordinate &pos, const QVariant &field, uint flag);
-    QVariant getRoomField(const Coordinate &pos, uint flag);
+    void setRoomField(const Coordinate &pos, const QVariant &flag, uint field);
+    QVariant getRoomField(const Coordinate &pos, uint field);
     void toggleRoomFlag(const Coordinate &pos, uint flag, uint field);
     bool getRoomFlag(const Coordinate &pos, uint flag, uint field);
 

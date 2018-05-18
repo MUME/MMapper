@@ -39,7 +39,7 @@ public:
     ~StackedInputWidget();
 
 protected:
-    bool eventFilter(QObject *obj, QEvent *ev);
+    bool eventFilter(QObject *obj, QEvent *event);
 
 public slots:
     void toggleEchoMode(bool);

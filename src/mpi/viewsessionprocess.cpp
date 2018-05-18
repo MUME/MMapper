@@ -25,14 +25,15 @@
 #include "viewsessionprocess.h"
 #include "configuration/configuration.h"
 
+#include <QCoreApplication>
 #include <QDebug>
 #include <QDir>
-#include <QCoreApplication>
 #include <QTemporaryFile>
+#include <utility>
 
-ViewSessionProcess::ViewSessionProcess(int key, const QString &title, const QString &body,
+ViewSessionProcess::ViewSessionProcess(int key, QString title, QString body,
                                        QObject *parent)
-    : QProcess(parent), m_key(key), m_title(title), m_body(body)
+    : QProcess(parent), m_key(key), m_title(std::move(title)), m_body(std::move(body))
 {
     setReadChannelMode(QProcess::MergedChannels);
 
@@ -43,8 +44,11 @@ ViewSessionProcess::ViewSessionProcess(int key, const QString &title, const QStr
             SLOT(onError(QProcess::ProcessError)));
 
     QString keyTemp;
-    if (m_key == -1) keyTemp = "view";
-    else keyTemp = QString("key%1").arg(m_key);
+    if (m_key == -1) {
+        keyTemp = "view";
+    } else {
+        keyTemp = QString("key%1").arg(m_key);
+    }
 
     // Set the file template
     QString fileTemplate = QString("%1MMapper.%2.pid%3.XXXXXX")
@@ -67,7 +71,9 @@ ViewSessionProcess::ViewSessionProcess(int key, const QString &title, const QStr
 
         // Set the TITLE environmental variable
         QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-        if (env.contains("TITLE")) env.remove("TITLE");
+        if (env.contains("TITLE")) {
+            env.remove("TITLE");
+        }
         env.insert("TITLE", m_title);
         setProcessEnvironment(env);
 
@@ -87,7 +93,7 @@ ViewSessionProcess::ViewSessionProcess(int key, const QString &title, const QStr
 }
 
 ViewSessionProcess::~ViewSessionProcess()
-{}
+    = default;
 
 void ViewSessionProcess::onFinished(int exitCode, QProcess::ExitStatus status)
 {
@@ -119,28 +125,36 @@ QStringList ViewSessionProcess::splitCommandLine(const QString &cmdLine)
         }
         switch (state) {
         case Idle:
-            if (!escape && c == '"') state = QuotedArg;
-            else if (escape || !c.isSpace()) {
+            if (!escape && c == '"') {
+                state = QuotedArg;
+            } else if (escape || !c.isSpace()) {
                 arg += c;
                 state = Arg;
             }
             break;
         case Arg:
-            if (!escape && c == '"') state = QuotedArg;
-            else if (escape || !c.isSpace()) arg += c;
-            else {
+            if (!escape && c == '"') {
+                state = QuotedArg;
+            } else if (escape || !c.isSpace()) {
+                arg += c;
+            } else {
                 list << arg;
                 arg.clear();
                 state = Idle;
             }
             break;
         case QuotedArg:
-            if (!escape && c == '"') state = arg.isEmpty() ? Idle : Arg;
-            else arg += c;
+            if (!escape && c == '"') {
+                state = arg.isEmpty() ? Idle : Arg;
+            } else {
+                arg += c;
+            }
             break;
         }
         escape = false;
     }
-    if (!arg.isEmpty()) list << arg;
+    if (!arg.isEmpty()) {
+        list << arg;
+    }
     return list;
 }

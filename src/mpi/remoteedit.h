@@ -41,8 +41,8 @@ public:
     static const QRegExp s_lineFeedNewlineRx;
 
 public slots:
-    void remoteView(QString, QString);
-    void remoteEdit(const int, QString, QString);
+    void remoteView(const QString &, const QString &);
+    void remoteEdit(const int, const QString &, const QString &);
 
 protected slots:
     void cancel(const int);

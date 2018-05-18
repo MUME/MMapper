@@ -24,8 +24,8 @@
 ************************************************************************/
 
 #include "mmapper2event.h"
-#include "property.h"
 #include "parseevent.h"
+#include "property.h"
 
 using namespace std;
 
@@ -43,7 +43,7 @@ ParseEvent *createEvent(const CommandIdType &c, const QString &roomName, const Q
                         const ConnectedRoomFlagsType &connectedRoomFlags)
 {
 
-    ParseEvent *event = new ParseEvent(c);
+    auto *event = new ParseEvent(c);
     deque<QVariant> &optional = event->getOptional();
 
     if (roomName.isNull()) {
@@ -51,25 +51,25 @@ ParseEvent *createEvent(const CommandIdType &c, const QString &roomName, const Q
     } else {
         event->push_back(new Property(roomName.toLatin1()));
     }
-    optional.push_back(roomName);
-    optional.push_back(roomDesc);
+    optional.emplace_back(roomName);
+    optional.emplace_back(roomDesc);
 
     if (parsedRoomDesc.isNull()) {
         event->push_back(new SkipProperty());
-    } else
+    } else {
         event->push_back(new Property(parsedRoomDesc.toLatin1()));
-    optional.push_back(parsedRoomDesc);
-    optional.push_back((uint)exitFlags);
+    }
+    optional.emplace_back(parsedRoomDesc);
+    optional.emplace_back(static_cast<uint>(exitFlags));
 
-    if (promptFlags & PROMPT_FLAGS_VALID) {
-        char terrain = 0;
-        terrain += (promptFlags & TERRAIN_TYPE);
+    if ((promptFlags & PROMPT_FLAGS_VALID) != 0) {
+        char terrain = (promptFlags & TERRAIN_TYPE);
         event->push_back(new Property(QByteArray(1, terrain)));
     } else {
         event->push_back(new SkipProperty());
     }
-    optional.push_back((uint)promptFlags);
-    optional.push_back((uint)connectedRoomFlags);
+    optional.emplace_back(static_cast<uint>(promptFlags));
+    optional.emplace_back(static_cast<uint>(connectedRoomFlags));
     event->countSkipped();
     return event;
 }
@@ -100,5 +100,5 @@ ConnectedRoomFlagsType getConnectedRoomFlags(const ParseEvent *e)
     return e->getOptional()[EV_CROOM].toUInt();
 }
 
-}
+}  // namespace Mmapper2Event
 

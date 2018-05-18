@@ -29,8 +29,8 @@
 #include "CGroupChar.h"
 #include "groupaction.h"
 
-#include <assert.h>
 #include <QDebug>
+#include <cassert>
 
 CGroup::CGroup(QObject *parent) :
     QObject(parent),
@@ -48,8 +48,8 @@ CGroup::CGroup(QObject *parent) :
 CGroup::~CGroup()
 {
     // Delete all characters including self
-    for (uint i = 0; i < charIndex.size(); ++i) {
-        delete charIndex[i];
+    for (auto &character : charIndex) {
+        delete character;
     }
     charIndex.clear();
 }
@@ -91,7 +91,7 @@ void CGroup::releaseCharacters(GroupRecipient *sender)
 GroupSelection *CGroup::selectAll()
 {
     QMutexLocker locker(&characterLock);
-    GroupSelection *selection = new GroupSelection(this);
+    auto *selection = new GroupSelection(this);
     locks.insert(selection);
     selection->receiveCharacters(this, charIndex);
     return selection;
@@ -100,11 +100,12 @@ GroupSelection *CGroup::selectAll()
 GroupSelection *CGroup::selectByName(const QByteArray &name)
 {
     QMutexLocker locker(&characterLock);
-    GroupSelection *selection = new GroupSelection(this);
+    auto *selection = new GroupSelection(this);
     locks.insert(selection);
     CGroupChar *character = getCharByName(name);
-    if (character)
+    if (character != nullptr) {
         selection->receiveCharacters(this, {character});
+    }
     return selection;
 }
 
@@ -114,9 +115,9 @@ void CGroup::resetChars()
 
     emit log("You have left the group.");
 
-    for (uint i = 0; i < charIndex.size(); ++i) {
-        if (charIndex[i] != self) {
-            delete charIndex[i];
+    for (auto &character : charIndex) {
+        if (character != self) {
+            delete character;
         }
     }
     charIndex.clear();
@@ -125,25 +126,25 @@ void CGroup::resetChars()
     emit characterChanged();
 }
 
-bool CGroup::addChar(QDomNode node)
+bool CGroup::addChar(const QDomNode &node)
 {
     QMutexLocker locker(&characterLock);
-    CGroupChar *newChar = new CGroupChar();
+    auto *newChar = new CGroupChar();
     newChar->updateFromXML(node);
-    if (isNamePresent(newChar->getName()) == true || newChar->getName() == "") {
+    if (isNamePresent(newChar->getName()) || newChar->getName() == "") {
         emit log(QString("'%1' could not join the group because the name already existed.")
                  .arg(newChar->getName().constData()));
         delete newChar;
         return false;
-    } else {
-        emit log(QString("'%1' joined the group.").arg(newChar->getName().constData()));
-        charIndex.push_back(newChar);
-        emit characterChanged();
-        return true;
     }
+    emit log(QString("'%1' joined the group.").arg(newChar->getName().constData()));
+    charIndex.push_back(newChar);
+    emit characterChanged();
+    return true;
+
 }
 
-void CGroup::removeChar(QByteArray name)
+void CGroup::removeChar(const QByteArray &name)
 {
     QMutexLocker locker(&characterLock);
     if (name == Config().m_groupManagerCharName) {
@@ -151,7 +152,7 @@ void CGroup::removeChar(QByteArray name)
         return;
     }
 
-    for (std::vector<CGroupChar *>::iterator it = charIndex.begin(); it != charIndex.end(); ++it) {
+    for (auto it = charIndex.begin(); it != charIndex.end(); ++it) {
         CGroupChar *character = *it;
         if (character->getName() == name) {
             emit log(QString("Removing '%1' from the group.").arg(
@@ -164,7 +165,7 @@ void CGroup::removeChar(QByteArray name)
     }
 }
 
-void CGroup::removeChar(QDomNode node)
+void CGroup::removeChar(const QDomNode &node)
 {
     QMutexLocker locker(&characterLock);
     QByteArray name = CGroupChar::getNameFromXML(node);
@@ -176,40 +177,45 @@ void CGroup::removeChar(QDomNode node)
     removeChar(name);
 }
 
-bool CGroup::isNamePresent(QByteArray name)
+bool CGroup::isNamePresent(const QByteArray &name)
 {
     QMutexLocker locker(&characterLock);
-    for (uint i = 0; i < charIndex.size(); i++)
-        if (charIndex[i]->getName() == name) {
+    for (auto &character : charIndex) {
+        if (character->getName() == name) {
             return true;
         }
+    }
 
     return false;
 }
 
-CGroupChar *CGroup::getCharByName(QByteArray name)
+CGroupChar *CGroup::getCharByName(const QByteArray &name)
 {
     QMutexLocker locker(&characterLock);
-    for (uint i = 0; i < charIndex.size(); i++)
-        if (charIndex[i]->getName() == name)
-            return charIndex[i];
+    for (auto &character : charIndex) {
+        if (character->getName() == name) {
+            return character;
+        }
+    }
 
-    return NULL;
+    return nullptr;
 }
 
-void CGroup::updateChar(QDomNode blob)
+void CGroup::updateChar(const QDomNode &blob)
 {
     CGroupChar *ch;
 
     ch = getCharByName(CGroupChar::getNameFromXML(blob));
-    if (ch == NULL)
+    if (ch == nullptr) {
         return;
+    }
 
-    if (ch->updateFromXML(blob) == true)
+    if (ch->updateFromXML(blob)) {
         emit characterChanged();
+    }
 }
 
-void CGroup::renameChar(QDomNode blob)
+void CGroup::renameChar(const QDomNode &blob)
 {
     QMutexLocker locker(&characterLock);
     if (blob.nodeName() != "rename") {
@@ -224,7 +230,7 @@ void CGroup::renameChar(QDomNode blob)
 
     CGroupChar *ch;
     ch = getCharByName(oldname.toLatin1());
-    if (ch == NULL) {
+    if (ch == nullptr) {
         qWarning() << "Unable to find old name" << oldname;
         return;
     }

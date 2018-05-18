@@ -24,8 +24,8 @@
 ************************************************************************/
 
 #include "pathmachine.h"
-#include "experimenting.h"
 #include "abstractroomfactory.h"
+#include "experimenting.h"
 #include "path.h"
 
 using namespace std;
@@ -33,7 +33,7 @@ using namespace std;
 Experimenting::Experimenting(list<Path *> *pat, uint in_dirCode, PathParameters &in_params,
                              AbstractRoomFactory *in_factory) :
     direction(in_factory->exitDir(in_dirCode)), dirCode(in_dirCode), shortPaths(pat),
-    paths(new list<Path *>), best(0), second(0),
+    paths(new list<Path *>), best(nullptr), second(nullptr),
     params(in_params), numPaths(0), factory(in_factory)
 {}
 
@@ -41,14 +41,16 @@ void Experimenting::augmentPath(Path *path, RoomAdmin *map, const Room *room)
 {
     Coordinate c = path->getRoom()->getPosition() + direction;
     Path *working = path->fork(room, c, map, params, this, dirCode, factory);
-    if (best == 0) best = working;
-    else if (working->getProb() > best->getProb()) {
+    if (best == nullptr) {
+        best = working;
+    } else if (working->getProb() > best->getProb()) {
         paths->push_back(best);
         second = best;
         best = working;
     } else {
-        if (second == 0 || working->getProb() > second->getProb())
+        if (second == nullptr || working->getProb() > second->getProb()) {
             second = working;
+        }
         paths->push_back(working);
     }
     numPaths++;
@@ -57,18 +59,20 @@ void Experimenting::augmentPath(Path *path, RoomAdmin *map, const Room *room)
 
 list<Path *> *Experimenting::evaluate()
 {
-    Path *working = 0;
+    Path *working = nullptr;
     while (!shortPaths->empty()) {
         working = shortPaths->front();
         shortPaths->pop_front();
-        if (!(working->hasChildren())) working->deny();
+        if (!(working->hasChildren())) {
+            working->deny();
+        }
     }
 
-    if (best != 0) {
-        if (second == 0 || best->getProb() > second->getProb()*params.acceptBestRelative
+    if (best != nullptr) {
+        if (second == nullptr || best->getProb() > second->getProb()*params.acceptBestRelative
                 || best->getProb() > second->getProb() + params.acceptBestAbsolute) {
-            for (list<Path *>::iterator i = paths->begin(); i != paths->end(); ++i) {
-                (*i)->deny();
+            for (auto &path : *paths) {
+                path->deny();
             }
             paths->clear();
             paths->push_front(best);
@@ -84,15 +88,17 @@ list<Path *> *Experimenting::evaluate()
                 if ( best->getProb() > working->getProb()*params.maxPaths / numPaths
                         || ((!(best->getProb() > working->getProb())) && best->getRoom() == working->getRoom())) {
                     working->deny();
-                } else paths->push_back(working);
+                } else {
+                    paths->push_back(working);
+                }
                 working = paths->front();
             }
         }
     }
-    second = 0;
+    second = nullptr;
     delete shortPaths;
-    shortPaths = 0;
-    best = 0;
+    shortPaths = nullptr;
+    best = nullptr;
     return paths;
 }
 

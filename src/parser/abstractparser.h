@@ -93,7 +93,7 @@ protected:
     //command handling
     void performDoorCommand(DirectionType direction, DoorActionType action);
     void genericDoorCommand(QString command, DirectionType direction);
-    void nameDoorCommand(QString doorname, DirectionType direction);
+    void nameDoorCommand(const QString &doorname, DirectionType direction);
     void toggleDoorFlagCommand(uint flag, DirectionType direction);
     void toggleExitFlagCommand(uint flag, DirectionType direction);
     void setRoomFieldCommand(const QVariant &flag, uint field);
@@ -120,7 +120,7 @@ protected:
     QString m_dynamicRoomDesc;
     ExitsFlagsType m_exitsFlags;
     PromptFlagsType m_promptFlags;
-    ConnectedRoomFlagsType m_connectedRoomFlags;
+    ConnectedRoomFlagsType m_connectedRoomFlags{};
     QString m_lastPrompt;
     bool m_trollExitMapping;
 
@@ -132,8 +132,8 @@ protected:
     static const QString emptyString;
     static const QByteArray emptyByteArray;
 
-    void searchCommand(RoomFilter f);
-    void dirsCommand(RoomFilter f);
+    void searchCommand(const RoomFilter &f);
+    void dirsCommand(const RoomFilter &f);
     void markCurrentCommand();
 
     DirectionType dirForChar(const QString &dir);

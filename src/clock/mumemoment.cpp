@@ -99,12 +99,12 @@ MumeTime MumeMoment::toTimeOfDay()
 {
     int dawn = MumeClock::s_dawnHour[m_month];
     int dusk = MumeClock::s_duskHour[m_month];
-    if (m_hour == dawn)
+    if (m_hour == dawn) {
         return TIME_DAWN;
-    else if (m_hour == dusk)
+    } else if (m_hour == dusk) {
         return TIME_DUSK;
-    else if (m_hour < dawn || m_hour > dusk)
+    } else if (m_hour < dawn || m_hour > dusk) {
         return TIME_NIGHT;
-    else
-        return TIME_DAY;
+    }
+    return TIME_DAY;
 }

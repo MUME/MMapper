@@ -33,7 +33,7 @@ class ViewSessionProcess: public QProcess
     Q_OBJECT
 
 public:
-    ViewSessionProcess(int key, const QString &title, const QString &body, QObject *parent = 0);
+    ViewSessionProcess(int key, QString title, QString body, QObject *parent = 0);
     virtual ~ViewSessionProcess();
 
 protected slots:

@@ -46,8 +46,8 @@ public slots:
     void objectTypeCurrentIndexChanged(const QString &);
     void objectClassCurrentIndexChanged(const QString &);
 
-    void objectNameTextChanged(QString);
-    void objectTextChanged(QString);
+    void objectNameTextChanged(const QString &);
+    void objectTextChanged(const QString &);
     void x1ValueChanged(double);
     void y1ValueChanged(double);
     void x2ValueChanged(double);
@@ -91,7 +91,7 @@ private:
 
     InfoMarkType getType();
     InfoMarkClass getClass();
-    InfoMark *getInfoMark(QString name);
+    InfoMark *getInfoMark(const QString &name);
     InfoMark *getCurrentInfoMark();
     void setCurrentInfoMark(InfoMark *m);
 

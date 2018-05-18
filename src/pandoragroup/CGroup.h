@@ -58,7 +58,7 @@ public:
     CGroup(QObject *parent);
     virtual ~CGroup();
 
-    bool isNamePresent(QByteArray name);
+    bool isNamePresent(const QByteArray &name);
 
     // Interactions with group characters should occur through CGroupSelection due to threading
     void releaseCharacters(GroupRecipient *sender);
@@ -84,15 +84,15 @@ protected:
     {
         return self;
     }
-    void renameChar(QDomNode blob);
+    void renameChar(const QDomNode &blob);
     void resetChars();
-    void updateChar(QDomNode blob); // updates given char from the blob
-    void removeChar(QByteArray name);
-    void removeChar(QDomNode node);
-    bool addChar(QDomNode blob);
+    void updateChar(const QDomNode &blob); // updates given char from the blob
+    void removeChar(const QByteArray &name);
+    void removeChar(const QDomNode &node);
+    bool addChar(const QDomNode &node);
 
 private:
-    CGroupChar *getCharByName(QByteArray name);
+    CGroupChar *getCharByName(const QByteArray &name);
 
     QMutex characterLock;
     std::set<GroupRecipient *> locks;

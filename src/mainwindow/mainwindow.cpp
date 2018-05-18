@@ -25,37 +25,37 @@
 ************************************************************************/
 
 #include "mainwindow.h"
-#include "roomeditattrdlg.h"
 #include "aboutdialog.h"
-#include "findroomsdlg.h"
-#include "welcomewidget.h"
 #include "client/clientwidget.h"
-#include "display/mapwindow.h"
-#include "display/mapcanvas.h"
-#include "display/connectionselection.h"
-#include "display/prespammedpath.h"
-#include "mapstorage/mapstorage.h"
-#include "mapstorage/jsonmapstorage.h"
-#include "proxy/connectionlistener.h"
-#include "configuration/configuration.h"
-#include "pathmachine/mmapper2pathmachine.h"
-#include "mapdata/roomselection.h"
-#include "mapdata/mapdata.h"
-#include "mapdata/customaction.h"
-#include "preferences/configdialog.h"
-#include "pandoragroup/mmapper2group.h"
-#include "pandoragroup/groupwidget.h"
-#include "mapstorage/progresscounter.h"
-#include "mapstorage/filesaver.h"
-#include "clock/mumeclockwidget.h"
 #include "clock/mumeclock.h"
+#include "clock/mumeclockwidget.h"
+#include "configuration/configuration.h"
+#include "display/connectionselection.h"
+#include "display/mapcanvas.h"
+#include "display/mapwindow.h"
+#include "display/prespammedpath.h"
+#include "findroomsdlg.h"
+#include "mapdata/customaction.h"
+#include "mapdata/mapdata.h"
+#include "mapdata/roomselection.h"
+#include "mapstorage/filesaver.h"
+#include "mapstorage/jsonmapstorage.h"
+#include "mapstorage/mapstorage.h"
+#include "mapstorage/progresscounter.h"
+#include "pandoragroup/groupwidget.h"
+#include "pandoragroup/mmapper2group.h"
+#include "pathmachine/mmapper2pathmachine.h"
+#include "preferences/configdialog.h"
+#include "proxy/connectionlistener.h"
+#include "roomeditattrdlg.h"
+#include "welcomewidget.h"
 
-#include <QMessageBox>
+#include <QCloseEvent>
+#include <QDesktopServices>
 #include <QMenuBar>
+#include <QMessageBox>
 #include <QStatusBar>
 #include <QToolBar>
-#include <QDesktopServices>
-#include <QCloseEvent>
 
 #include <memory>
 
@@ -69,22 +69,22 @@ StackedWidget::StackedWidget(QWidget *parent)
 
 QSize StackedWidget::minimumSizeHint() const
 {
-    return QSize(200, 200);
+    return {200, 200};
 }
 
 QSize StackedWidget::sizeHint() const
 {
-    return QSize(500, 800);
+    return {500, 800};
 }
 
 QSize DockWidget::minimumSizeHint() const
 {
-    return QSize(200, 0);
+    return {200, 0};
 }
 
 QSize DockWidget::sizeHint() const
 {
-    return QSize(500, 130);
+    return {500, 130};
 }
 
 MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
@@ -99,8 +99,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     qRegisterMetaType<DirectionType>("DirectionType");
     qRegisterMetaType<DoorActionType>("DoorActionType");
 
-    m_roomSelection = NULL;
-    m_connectionSelection = NULL;
+    m_roomSelection = nullptr;
+    m_connectionSelection = nullptr;
 
     m_mapData = new MapData();
     m_mapData->setObjectName("MapData");
@@ -122,7 +122,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     m_pathMachine->setObjectName("Mmapper2PathMachine");
     m_pathMachine->start();
 
-    // TODO: What is this for? Delete it?
+    // TODO(nschimme): What is this for? Delete it?
     /*
     m_propertySetter = new RoomPropertySetter();
     m_propertySetter->setObjectName("RoomPropertySetter");
@@ -208,7 +208,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
 }
 
 MainWindow::~MainWindow()
-{}
+    = default;
 
 void MainWindow::readSettings()
 {
@@ -219,8 +219,12 @@ void MainWindow::readSettings()
     if (Config().alwaysOnTop) {
         alwaysOnTop();
     } else {
-        if (pos().x() < 0) pos().setX(0);
-        if (pos().y() < 0) pos().setY(0);
+        if (pos().x() < 0) {
+            pos().setX(0);
+        }
+        if (pos().y() < 0) {
+            pos().setY(0);
+        }
         move(pos());
     }
 }
@@ -831,7 +835,7 @@ void MainWindow::setupMenuBar()
 void MainWindow::showContextMenu(const QPoint &pos)
 {
     QMenu contextMenu(tr("Context menu"), this);
-    if (m_roomSelection) {
+    if (m_roomSelection != nullptr) {
         contextMenu.addAction(editRoomSelectionAct);
         contextMenu.addAction(moveUpRoomSelectionAct);
         contextMenu.addAction(moveDownRoomSelectionAct);
@@ -841,9 +845,9 @@ void MainWindow::showContextMenu(const QPoint &pos)
         contextMenu.addAction(connectToNeighboursRoomSelectionAct);
         contextMenu.addSeparator();
         contextMenu.addAction(forceRoomAct);
-    } else if (!m_connectionSelection) {
+    } else if (m_connectionSelection == nullptr) {
         contextMenu.addAction(createRoomAct);
-    } else if (m_connectionSelection) {
+    } else if (m_connectionSelection != nullptr) {
         contextMenu.addAction(deleteConnectionSelectionAct);
     }
     contextMenu.addSeparator();
@@ -964,7 +968,7 @@ void MainWindow::newRoomSelection(const RoomSelection *rs)
 {
     forceRoomAct->setEnabled(false);
     m_roomSelection = rs;
-    if (m_roomSelection) {
+    if (m_roomSelection != nullptr) {
         roomActGroup->setEnabled(true);
         if (m_roomSelection->size() == 1) {
             forceRoomAct->setEnabled(true);
@@ -977,7 +981,7 @@ void MainWindow::newRoomSelection(const RoomSelection *rs)
 void MainWindow::newConnectionSelection(ConnectionSelection *cs)
 {
     m_connectionSelection = cs;
-    if (m_connectionSelection) {
+    if (m_connectionSelection != nullptr) {
         connectionActGroup->setEnabled(true);
     } else {
         connectionActGroup->setEnabled(false);
@@ -987,20 +991,28 @@ void MainWindow::newConnectionSelection(ConnectionSelection *cs)
 
 void MainWindow::nextWindow()
 {
-    if (m_stackedWidget == NULL) return;
-    int i = (int)m_stackedWidget->currentIndex();
-    int y = (int)m_stackedWidget->count();
+    if (m_stackedWidget == nullptr) {
+        return;
+    }
+    auto i = m_stackedWidget->currentIndex();
+    auto y = m_stackedWidget->count();
     i++;
-    if (i == y) i = 0;
+    if (i == y) {
+        i = 0;
+    }
     m_stackedWidget->setCurrentIndex(i);
 }
 
 void MainWindow::prevWindow()
 {
-    if (m_stackedWidget == NULL) return;
-    int i = (int)m_stackedWidget->currentIndex();
+    if (m_stackedWidget == nullptr) {
+        return;
+    }
+    auto i = m_stackedWidget->currentIndex();
     i--;
-    if (i == -1) i = (int)m_stackedWidget->count() - 1;
+    if (i == -1) {
+        i = m_stackedWidget->count() - 1;
+    }
     m_stackedWidget->setCurrentIndex(i);
 }
 
@@ -1037,7 +1049,7 @@ void MainWindow::merge()
     QString fileName = QFileDialog::getOpenFileName(this, "Choose map file ...", "",
                                                     "MMapper2 (*.mm2);;MMapper (*.map)");
     if (!fileName.isEmpty()) {
-        QFile *file = new QFile(fileName);
+        auto *file = new QFile(fileName);
 
         if (!file->open(QFile::ReadOnly)) {
             QMessageBox::warning(this, tr("Application"),
@@ -1074,7 +1086,9 @@ void MainWindow::merge()
 
         disableActions(true);
         getCurrentMapWindow()->getCanvas()->hide();
-        if (storage->canLoad()) storage->mergeData();
+        if (storage->canLoad()) {
+            storage->mergeData();
+        }
         getCurrentMapWindow()->getCanvas()->show();
         disableActions(false);
         //cutAct->setEnabled(false);
@@ -1114,9 +1128,9 @@ bool MainWindow::save()
 {
     if (m_mapData->getFileName().isEmpty()) {
         return saveAs();
-    } else {
-        return saveFile(m_mapData->getFileName(), SAVEM_FULL, SAVEF_MM2);
     }
+    return saveFile(m_mapData->getFileName(), SAVEM_FULL, SAVEF_MM2);
+
 }
 
 QPointer<QFileDialog> MainWindow::defaultSaveDialog()
@@ -1135,7 +1149,7 @@ bool MainWindow::saveAs()
 {
     QPointer<QFileDialog> save = defaultSaveDialog();
     QStringList fileNames;
-    if (save->exec()) {
+    if (save->exec() != 0) {
         fileNames = save->selectedFiles();
     }
 
@@ -1159,7 +1173,7 @@ bool MainWindow::exportBaseMap()
     }
 
     QStringList fileNames;
-    if (save->exec()) {
+    if (save->exec() != 0) {
         fileNames = save->selectedFiles();
     }
 
@@ -1180,11 +1194,12 @@ bool MainWindow::exportWebMap()
     save->setAcceptMode(QFileDialog::AcceptSave);
 
     QFileInfo currentFile(m_mapData->getFileName());
-    if (currentFile.exists())
+    if (currentFile.exists()) {
         save->setDirectory(currentFile.absoluteDir());
+    }
 
     QStringList fileNames;
-    if (save->exec()) {
+    if (save->exec() != 0) {
         fileNames = save->selectedFiles();
     }
 
@@ -1211,17 +1226,19 @@ bool MainWindow::maybeSave()
                                        QMessageBox::Yes | QMessageBox::Default,
                                        QMessageBox::No,
                                        QMessageBox::Cancel | QMessageBox::Escape);
-        if (ret == QMessageBox::Yes)
+        if (ret == QMessageBox::Yes) {
             return save();
-        else if (ret == QMessageBox::Cancel)
+        }
+        if (ret == QMessageBox::Cancel) {
             return false;
+        }
     }
     return true;
 }
 
 void MainWindow::loadFile(const QString &fileName)
 {
-    QFile *file = new QFile(fileName);
+    auto *file = new QFile(fileName);
     if (!file->open(QFile::ReadOnly)) {
         QMessageBox::warning(this, tr("Application"),
                              tr("Cannot read file %1:\n%2.")
@@ -1248,8 +1265,8 @@ void MainWindow::loadFile(const QString &fileName)
     getCurrentMapWindow()->getCanvas()->clearRoomSelection();
     getCurrentMapWindow()->getCanvas()->clearConnectionSelection();
 
-    AbstractMapStorage *storage = (AbstractMapStorage *) new MapStorage(*m_mapData, fileName, file,
-                                                                        this);
+    auto *storage = (AbstractMapStorage *) new MapStorage(*m_mapData, fileName, file,
+                                                          this);
     connect(storage, SIGNAL(onDataLoaded()), getCurrentMapWindow()->getCanvas(), SLOT(dataLoaded()));
     connect(storage->progressCounter(), SIGNAL(onPercentageChanged(quint32)), this,
             SLOT(percentageChanged(quint32)));
@@ -1258,7 +1275,9 @@ void MainWindow::loadFile(const QString &fileName)
 
     disableActions(true);
     getCurrentMapWindow()->getCanvas()->hide();
-    if (storage->canLoad()) storage->loadData();
+    if (storage->canLoad()) {
+        storage->loadData();
+    }
     getCurrentMapWindow()->getCanvas()->show();
     disableActions(false);
     //cutAct->setEnabled(false);
@@ -1275,7 +1294,9 @@ void MainWindow::loadFile(const QString &fileName)
 
 void MainWindow::percentageChanged(quint32 p)
 {
-    if (!progressDlg) return;
+    if (progressDlg == nullptr) {
+        return;
+    }
     progressDlg->setValue(p);
 
     qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
@@ -1288,7 +1309,7 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode, SaveFormat for
         try {
             saver.open(fileName);
         } catch (std::exception &e) {
-            QMessageBox::warning(NULL, tr("Application"),
+            QMessageBox::warning(nullptr, tr("Application"),
                                  tr("Cannot write file %1:\n%2.")
                                  .arg(fileName)
                                  .arg(e.what()));
@@ -1298,13 +1319,15 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode, SaveFormat for
     }
 
     std::unique_ptr<AbstractMapStorage> storage;
-    if (format == SAVEF_WEB)
-        storage.reset(new JsonMapStorage(*m_mapData, fileName, this));
-    else
-        storage.reset(new MapStorage(*m_mapData, fileName, &saver.file(), this));
+    if (format == SAVEF_WEB) {
+        storage = std::make_unique<JsonMapStorage>(*m_mapData, fileName, this);
+    } else {
+        storage = std::make_unique<MapStorage>(*m_mapData, fileName, &saver.file(), this);
+    }
 
-    if (!storage->canSave())
+    if (!storage->canSave()) {
         return false;
+    }
 
     getCurrentMapWindow()->getCanvas()->setEnabled(false);
 
@@ -1339,7 +1362,7 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode, SaveFormat for
     try {
         saver.close();
     } catch (std::exception &e) {
-        QMessageBox::warning(NULL, tr("Application"),
+        QMessageBox::warning(nullptr, tr("Application"),
                              tr("Cannot write file %1:\n%2.")
                              .arg(fileName)
                              .arg(e.what()));
@@ -1348,11 +1371,12 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode, SaveFormat for
     }
 
     if (saveOk) {
-        if (mode == SAVEM_FULL && format == SAVEF_MM2)
+        if (mode == SAVEM_FULL && format == SAVEF_MM2) {
             setCurrentFile(fileName);
+        }
         statusBar()->showMessage(tr("File saved"), 2000);
     } else {
-        QMessageBox::warning(NULL, tr("Application"), tr("Error while saving (see log)."));
+        QMessageBox::warning(nullptr, tr("Application"), tr("Error while saving (see log)."));
     }
 
     getCurrentMapWindow()->getCanvas()->setEnabled(true);
@@ -1415,10 +1439,11 @@ void MainWindow::groupServer()
 void MainWindow::setCurrentFile(const QString &fileName)
 {
     QString shownName;
-    if (fileName.isEmpty())
+    if (fileName.isEmpty()) {
         shownName = "untitled.mm2";
-    else
+    } else {
         shownName = strippedName(fileName);
+    }
 
     setWindowTitle(tr("%1[*] - %2").arg(shownName).arg(tr("MMapper")));
 }
@@ -1486,7 +1511,7 @@ void MainWindow::onCreateRoom()
 
 void MainWindow::onEditRoomSelection()
 {
-    if (m_roomSelection) {
+    if (m_roomSelection != nullptr) {
         RoomEditAttrDlg m_roomEditDialog;
         m_roomEditDialog.setRoomSelection(m_roomSelection, m_mapData, getCurrentMapWindow()->getCanvas());
         m_roomEditDialog.exec();
@@ -1497,7 +1522,7 @@ void MainWindow::onEditRoomSelection()
 void MainWindow::onEditConnectionSelection()
 {
 
-    if (m_connectionSelection) {
+    if (m_connectionSelection != nullptr) {
         /*RoomConnectionsDlg connectionsDlg;
         connectionsDlg.setRoom(static_cast<Room*>(m_connectionSelection->getFirst().room),
                                         m_mapData,
@@ -1513,7 +1538,7 @@ void MainWindow::onEditConnectionSelection()
 
 void MainWindow::onDeleteRoomSelection()
 {
-    if (m_roomSelection) {
+    if (m_roomSelection != nullptr) {
         m_mapData->execute(new GroupAction(new Remove(), m_roomSelection), m_roomSelection);
         getCurrentMapWindow()->getCanvas()->clearRoomSelection();
         getCurrentMapWindow()->getCanvas()->update();
@@ -1522,13 +1547,13 @@ void MainWindow::onDeleteRoomSelection()
 
 void MainWindow::onDeleteConnectionSelection()
 {
-    if (m_connectionSelection) {
+    if (m_connectionSelection != nullptr) {
         const Room *r1 = m_connectionSelection->getFirst().room;
         ExitDirection dir1 = m_connectionSelection->getFirst().direction;
         const Room *r2 = m_connectionSelection->getSecond().room;
         ExitDirection dir2 = m_connectionSelection->getSecond().direction;
 
-        if (r2) {
+        if (r2 != nullptr) {
             const RoomSelection *tmpSel = m_mapData->select();
             m_mapData->getRoom(r1->getId(), tmpSel);
             m_mapData->getRoom(r2->getId(), tmpSel);
@@ -1547,7 +1572,9 @@ void MainWindow::onDeleteConnectionSelection()
 
 void MainWindow::onMoveUpRoomSelection()
 {
-    if (!m_roomSelection) return;
+    if (m_roomSelection == nullptr) {
+        return;
+    }
     Coordinate moverel(0, 0, 1);
     m_mapData->execute(new GroupAction(new MoveRelative(moverel), m_roomSelection), m_roomSelection);
     onLayerUp();
@@ -1556,7 +1583,9 @@ void MainWindow::onMoveUpRoomSelection()
 
 void MainWindow::onMoveDownRoomSelection()
 {
-    if (!m_roomSelection) return;
+    if (m_roomSelection == nullptr) {
+        return;
+    }
     Coordinate moverel(0, 0, -1);
     m_mapData->execute(new GroupAction(new MoveRelative(moverel), m_roomSelection), m_roomSelection);
     onLayerDown();
@@ -1565,7 +1594,9 @@ void MainWindow::onMoveDownRoomSelection()
 
 void MainWindow::onMergeUpRoomSelection()
 {
-    if (!m_roomSelection) return;
+    if (m_roomSelection == nullptr) {
+        return;
+    }
     Coordinate moverel(0, 0, 1);
     m_mapData->execute(new GroupAction(new MergeRelative(moverel), m_roomSelection), m_roomSelection);
     onLayerUp();
@@ -1574,7 +1605,9 @@ void MainWindow::onMergeUpRoomSelection()
 
 void MainWindow::onMergeDownRoomSelection()
 {
-    if (!m_roomSelection) return;
+    if (m_roomSelection == nullptr) {
+        return;
+    }
     Coordinate moverel(0, 0, -1);
     m_mapData->execute(new GroupAction(new MergeRelative(moverel), m_roomSelection), m_roomSelection);
     onLayerDown();
@@ -1583,7 +1616,9 @@ void MainWindow::onMergeDownRoomSelection()
 
 void MainWindow::onConnectToNeighboursRoomSelection()
 {
-    if (!m_roomSelection) return;
+    if (m_roomSelection == nullptr) {
+        return;
+    }
     m_mapData->execute(new GroupAction(new ConnectToNeighbours, m_roomSelection), m_roomSelection);
     getCurrentMapWindow()->getCanvas()->update();
 }

@@ -36,8 +36,7 @@ ProgressCounter::ProgressCounter( QObject *parent )
 }
 
 ProgressCounter::~ProgressCounter()
-{
-}
+    = default;
 
 void ProgressCounter::increaseTotalStepsBy( quint32 steps )
 {

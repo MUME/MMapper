@@ -1,7 +1,7 @@
 #include "shortestpath.h"
+#include "mapdata.h"
 #include "mmapper2exit.h"
 #include "mmapper2room.h"
-#include "mapdata.h"
 #include<queue>
 
 // Movement costs per terrain type.
@@ -30,18 +30,22 @@ double getLength(const Exit &e, const Room *curr, const Room *nextr)
 {
     double cost = TERRAIN_COSTS[Mmapper2Room::getTerrainType(nextr)];
     uint flags = Mmapper2Exit::getFlags(e);
-    if (ISSET(flags, EF_DOOR))
+    if (ISSET(flags, EF_DOOR)) {
         cost += 1;
-    if (ISSET(flags, EF_CLIMB))
+    }
+    if (ISSET(flags, EF_CLIMB)) {
         cost += 2;
+    }
     if (Mmapper2Room::getRidableType(nextr) == RRT_NOTRIDABLE) {
         cost += 3;
         // One non-ridable room means walking two rooms, plus dismount/mount.
-        if (Mmapper2Room::getRidableType(curr) != RRT_NOTRIDABLE)
+        if (Mmapper2Room::getRidableType(curr) != RRT_NOTRIDABLE) {
             cost += 4;
+        }
     }
-    if (ISSET(flags, EF_ROAD)) // Not sure if this is appropriate.
+    if (ISSET(flags, EF_ROAD)) { // Not sure if this is appropriate.
         cost -= 0.1;
+    }
     return cost;
 }
 
@@ -54,39 +58,46 @@ void MapData::shortestPathSearch(const Room *origin, ShortestPathRecipient *reci
     std::priority_queue<std::pair<double, int> > future_paths;
     sp_nodes.push_back(SPNode(origin, -1, 0, ED_UNKNOWN));
     future_paths.push(std::make_pair(0, 0));
-    while (future_paths.size()) {
+    while (!future_paths.empty()) {
         int spindex = future_paths.top().second;
         future_paths.pop();
         const Room *thisr = sp_nodes[spindex].r;
         float thisdist = sp_nodes[spindex].dist;
         int room_id = thisr->getId();
-        if (visited.contains(room_id))
+        if (visited.contains(room_id)) {
             continue;
+        }
         visited.insert(room_id);
         if (f.filter(thisr)) {
             recipient->receiveShortestPath(this, sp_nodes, spindex);
-            if (--max_hits == 0)
+            if (--max_hits == 0) {
                 return;
+            }
         }
-        if (max_dist && thisdist > max_dist)
+        if ((max_dist != 0.0) && thisdist > max_dist) {
             return;
+        }
         ExitsList exits = thisr->getExitsList();
         for (int dir = 0; dir < exits.size(); dir++) {
             const Exit &e = exits[dir];
-            std::set<uint>::const_iterator outbegin = e.outBegin();
-            std::set<uint>::const_iterator outend = e.outEnd();
-            if (outbegin == outend) // Not mapped
+            auto outbegin = e.outBegin();
+            auto outend = e.outEnd();
+            if (outbegin == outend) { // Not mapped
                 continue;
+            }
             ++outbegin;
-            if (outbegin != outend) // Random, so no clear directions; skip it.
+            if (outbegin != outend) { // Random, so no clear directions; skip it.
                 continue;
-            if (!(Mmapper2Exit::getFlags(e) & EF_EXIT))
+            }
+            if ((Mmapper2Exit::getFlags(e) & EF_EXIT) == 0) {
                 continue;
+            }
             const Room *nextr = roomIndex[*e.outBegin()];
-            if (visited.contains(nextr->getId()))
+            if (visited.contains(nextr->getId())) {
                 continue;
+            }
             double length = getLength(e, thisr, nextr);
-            sp_nodes.push_back(SPNode(nextr, spindex, thisdist + length, (ExitDirection)dir));
+            sp_nodes.push_back(SPNode(nextr, spindex, thisdist + length, static_cast<ExitDirection>(dir)));
             future_paths.push(std::make_pair(-(thisdist + length), sp_nodes.size() - 1));
         }
     }

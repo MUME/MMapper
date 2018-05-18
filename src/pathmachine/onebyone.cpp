@@ -24,8 +24,8 @@
 ************************************************************************/
 
 #include "onebyone.h"
-#include "parseevent.h"
 #include "abstractroomfactory.h"
+#include "parseevent.h"
 #include "pathparameters.h"
 #include "roomsignalhandler.h"
 
@@ -39,9 +39,9 @@ OneByOne::OneByOne(AbstractRoomFactory *in_factory, ParseEvent *in_event,
 
 void OneByOne::receiveRoom(RoomAdmin *admin, const Room *room)
 {
-    if (factory->compare(room, event, params.matchingTolerance) == CR_EQUAL)
+    if (factory->compare(room, event, params.matchingTolerance) == CR_EQUAL) {
         augmentPath(shortPaths->back(), admin, room);
-    else {
+    } else {
         // needed because the memory address is not unique and
         // calling admin->release might destroy a room still held by some path
         handler->hold(room, admin, this);

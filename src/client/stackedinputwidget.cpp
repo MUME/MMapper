@@ -26,8 +26,8 @@
 #include "inputwidget.h"
 
 #include <QApplication>
-#include <QLineEdit>
 #include <QDebug>
+#include <QLineEdit>
 
 StackedInputWidget::StackedInputWidget(QWidget *parent)
     : QStackedWidget(parent)
@@ -74,10 +74,10 @@ bool StackedInputWidget::eventFilter(QObject *obj, QEvent *event)
         }
         return true;
 
-    } else {
-        // Standard event processing
-        return QObject::eventFilter(obj, event);
     }
+    // Standard event processing
+    return QObject::eventFilter(obj, event);
+
 }
 
 void StackedInputWidget::toggleEchoMode(bool localEcho)

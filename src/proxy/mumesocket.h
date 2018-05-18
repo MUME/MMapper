@@ -80,7 +80,7 @@ protected slots:
     void checkTimeout();
 
 protected:
-    char m_buffer[ 8192 ];
+    char m_buffer[ 8192 ] {};
 
     QSslSocket *m_socket;
     QTimer *m_timer;

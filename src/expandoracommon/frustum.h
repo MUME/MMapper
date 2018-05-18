@@ -54,11 +54,6 @@ enum PlaneData {
     D = 3               // The distance the plane is from the origin
 };
 
-
-
-
-
-
 class Frustum
 {
 public:
@@ -66,14 +61,13 @@ public:
 
     ~Frustum();
 
-
-    bool PointInFrustum(Coordinate &c);
-    void rebuild(float *clip);
+    bool pointInFrustum(Coordinate &c);
+    void rebuild(const float *clip);
     float getDistance(Coordinate &c, int side = F_FRONT);
 private:
     //Coordinate center;
-    void NormalizePlane(int side);
-    float frustum[6][4];
+    void normalizePlane(int side);
+    float frustum[6][4] {};
 
 };
 

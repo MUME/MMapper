@@ -80,12 +80,12 @@ protected:
     {
         m_precision = state;
     }
-    void parseMumeTime(const QString &mumeString, int secsSinceUnixEpoch);
-    void parseClockTime(const QString &clockTime, int secsSinceUnixEpoch);
+    void parseMumeTime(const QString &mumeTime, int secsSinceEpoch);
+    void parseClockTime(const QString &clockTime, int secsSinceEpoch);
     void parseWeather(const QString &str, int secsSinceEpoch);
 
 private:
-    MumeMoment &unknownTimeTick(MumeMoment &time);
+    MumeMoment &unknownTimeTick(MumeMoment &moment);
 
     int m_mumeStartEpoch;
     MumeClockPrecision m_precision;

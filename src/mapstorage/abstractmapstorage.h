@@ -43,8 +43,8 @@ class AbstractMapStorage : public QObject
     Q_OBJECT
 
 public:
-    AbstractMapStorage(MapData &, const QString &, QFile *, QObject *parent = 0);
-    AbstractMapStorage(MapData &, const QString &, QObject *parent = 0);
+    AbstractMapStorage(MapData &, QString, QFile *, QObject *parent = 0);
+    AbstractMapStorage(MapData &, QString, QObject *parent = 0);
     ~AbstractMapStorage();
 
     virtual bool canLoad() = 0;

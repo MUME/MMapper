@@ -24,10 +24,10 @@
 
 #include <QSettings>
 #include <QTimer>
-#include <assert.h>
+#include <cassert>
 
-#include "mumeclockwidget.h"
 #include "configuration.h"
+#include "mumeclockwidget.h"
 
 MumeClockWidget::MumeClockWidget(MumeClock *clock, QWidget *parent)
     : QWidget(parent),
@@ -50,7 +50,9 @@ MumeClockWidget::MumeClockWidget(MumeClock *clock, QWidget *parent)
 
 MumeClockWidget::~MumeClockWidget()
 {
-    if (m_timer) delete m_timer;
+
+    delete m_timer;
+
 }
 
 void MumeClockWidget::updateLabel()
@@ -64,7 +66,8 @@ void MumeClockWidget::updateLabel()
         // Slow down the interval to a reasonable number
         m_timer->setInterval(60 * 1000);
         return ;
-    } else if (m_timer->interval() != 1000) {
+    }
+    if (m_timer->interval() != 1000) {
         show();
         // Speed up the interval again if the display needs to be shown
         m_timer->setInterval(1000);

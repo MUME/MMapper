@@ -24,13 +24,13 @@
 ************************************************************************/
 
 #include "infomarkseditdlg.h"
-#include "mapdata.h"
-#include "mapcanvas.h"
 #include "defs.h"
-#include "math.h"
+#include "mapcanvas.h"
+#include "mapdata.h"
+#include <cmath>
 
-#include <QSettings>
 #include <QMessageBox>
+#include <QSettings>
 
 InfoMarksEditDlg::InfoMarksEditDlg(MapData *mapData, QWidget *parent)
     : QDialog(parent)
@@ -59,7 +59,7 @@ void InfoMarksEditDlg::setPoints(double x1, double y1, double x2, double y2, int
     updateDialog();
 }
 
-void InfoMarksEditDlg::closeEvent(QCloseEvent *)
+void InfoMarksEditDlg::closeEvent(QCloseEvent * /*unused*/)
 {
     emit closeEventReceived();
 }
@@ -115,57 +115,57 @@ void InfoMarksEditDlg::connectAll()
 
 }
 
-void InfoMarksEditDlg::objectListCurrentIndexChanged(const QString &)
+void InfoMarksEditDlg::objectListCurrentIndexChanged(const QString & /*unused*/)
 {
     updateDialog();
 }
 
-void InfoMarksEditDlg::objectTypeCurrentIndexChanged(const QString &)
+void InfoMarksEditDlg::objectTypeCurrentIndexChanged(const QString & /*unused*/)
 {
     updateDialog();
 }
 
-void InfoMarksEditDlg::objectClassCurrentIndexChanged(const QString &)
+void InfoMarksEditDlg::objectClassCurrentIndexChanged(const QString & /*unused*/)
 {
 
 }
 
-void InfoMarksEditDlg::objectNameTextChanged(QString)
+void InfoMarksEditDlg::objectNameTextChanged(const QString /*unused*/&)
 {
 
 }
 
-void InfoMarksEditDlg::objectTextChanged(QString)
+void InfoMarksEditDlg::objectTextChanged(const QString /*unused*/&)
 {
 
 }
 
-void InfoMarksEditDlg::x1ValueChanged(double)
+void InfoMarksEditDlg::x1ValueChanged(double /*unused*/)
 {
 
 }
 
-void InfoMarksEditDlg::y1ValueChanged(double)
+void InfoMarksEditDlg::y1ValueChanged(double /*unused*/)
 {
 
 }
 
-void InfoMarksEditDlg::x2ValueChanged(double)
+void InfoMarksEditDlg::x2ValueChanged(double /*unused*/)
 {
 
 }
 
-void InfoMarksEditDlg::y2ValueChanged(double)
+void InfoMarksEditDlg::y2ValueChanged(double /*unused*/)
 {
 
 }
 
-void InfoMarksEditDlg::rotValueChanged(double)
+void InfoMarksEditDlg::rotValueChanged(double /*unused*/)
 {
 
 }
 
-void InfoMarksEditDlg::layerValueChanged(int)
+void InfoMarksEditDlg::layerValueChanged(int /*unused*/)
 {
 
 }
@@ -176,7 +176,7 @@ void InfoMarksEditDlg::onDeleteAllClicked()
 
     for (int i = 0; i < objectsList->count(); i++) {
         m = getInfoMark(objectsList->itemText(i));
-        if (m) {
+        if (m != nullptr) {
             m_mapData->removeMarker(m);
         }
     }
@@ -193,7 +193,7 @@ void InfoMarksEditDlg::onMoveNorthClicked()
 
     for (int i = 0; i < objectsList->count(); i++) {
         m = getInfoMark(objectsList->itemText(i));
-        if (m) {
+        if (m != nullptr) {
             switch (m->getType()) {
             case MT_LINE:
             case MT_ARROW:
@@ -219,7 +219,7 @@ void InfoMarksEditDlg::onMoveSouthClicked()
 
     for (int i = 0; i < objectsList->count(); i++) {
         m = getInfoMark(objectsList->itemText(i));
-        if (m) {
+        if (m != nullptr) {
             switch (m->getType()) {
             case MT_LINE:
             case MT_ARROW:
@@ -245,7 +245,7 @@ void InfoMarksEditDlg::onMoveEastClicked()
 
     for (int i = 0; i < objectsList->count(); i++) {
         m = getInfoMark(objectsList->itemText(i));
-        if (m) {
+        if (m != nullptr) {
             switch (m->getType()) {
             case MT_LINE:
             case MT_ARROW:
@@ -271,7 +271,7 @@ void InfoMarksEditDlg::onMoveWestClicked()
 
     for (int i = 0; i < objectsList->count(); i++) {
         m = getInfoMark(objectsList->itemText(i));
-        if (m) {
+        if (m != nullptr) {
             switch (m->getType()) {
             case MT_LINE:
             case MT_ARROW:
@@ -292,12 +292,12 @@ void InfoMarksEditDlg::onMoveWestClicked()
 
 void InfoMarksEditDlg::onMoveUpClicked()
 {
-    InfoMark *m = NULL;
+    InfoMark *m = nullptr;
     Coordinate c;
 
     for (int i = 0; i < objectsList->count(); i++) {
         m = getInfoMark(objectsList->itemText(i));
-        if (m) {
+        if (m != nullptr) {
             c = m->getPosition1();
             c.z++;
             m->setPosition1(c);
@@ -313,12 +313,12 @@ void InfoMarksEditDlg::onMoveUpClicked()
 
 void InfoMarksEditDlg::onMoveDownClicked()
 {
-    InfoMark *m = NULL;
+    InfoMark *m = nullptr;
     Coordinate c;
 
     for (int i = 0; i < objectsList->count(); i++) {
         m = getInfoMark(objectsList->itemText(i));
-        if (m) {
+        if (m != nullptr) {
             m = getInfoMark(objectsList->itemText(i));
             c = m->getPosition1();
             c.z--;
@@ -353,14 +353,16 @@ void InfoMarksEditDlg::createClicked()
         }
     }
 
-    InfoMark *im = new InfoMark();
+    auto *im = new InfoMark();
 
     im->setType(getType());
     im->setName(name);
     im->setText(objectText->text());
     im->setClass(getClass());
-    Coordinate pos1( (int)(m_x1->value() * 100.0f), (int)(m_y1->value() * 100.0f), m_layer->value() );
-    Coordinate pos2( (int)(m_x2->value() * 100.0f), (int)(m_y2->value() * 100.0f), m_layer->value() );
+    Coordinate pos1( static_cast<int>(m_x1->value() * 100.0f), static_cast<int>(m_y1->value() * 100.0f),
+                     m_layer->value() );
+    Coordinate pos2( static_cast<int>(m_x2->value() * 100.0f), static_cast<int>(m_y2->value() * 100.0f),
+                     m_layer->value() );
     im->setPosition1(pos1);
     im->setPosition2(pos2);
     im->setRotationAngle(m_rotationAngle->value());
@@ -381,8 +383,10 @@ void InfoMarksEditDlg::modifyClicked()
     im->setName(objectNameStr->text());
     im->setText(objectText->text());
     im->setClass(getClass());
-    Coordinate pos1( (int)(m_x1->value() * 100.0f), (int)(m_y1->value() * 100.0f), m_layer->value() );
-    Coordinate pos2( (int)(m_x2->value() * 100.0f), (int)(m_y2->value() * 100.0f), m_layer->value() );
+    Coordinate pos1( static_cast<int>(m_x1->value() * 100.0f), static_cast<int>(m_y1->value() * 100.0f),
+                     m_layer->value() );
+    Coordinate pos2( static_cast<int>(m_x2->value() * 100.0f), static_cast<int>(m_y2->value() * 100.0f),
+                     m_layer->value() );
     im->setPosition1(pos1);
     im->setPosition2(pos2);
     im->setRotationAngle(m_rotationAngle->value());
@@ -460,10 +464,12 @@ void InfoMarksEditDlg::updateMarkers()
         firstInside = false;
         secondInside = false;
 
-        if (c1.x / 100.0f > bx1 && c1.x / 100.0f < bx2 && c1.y / 100.0f > by1 && c1.y / 100.0f < by2)
+        if (c1.x / 100.0f > bx1 && c1.x / 100.0f < bx2 && c1.y / 100.0f > by1 && c1.y / 100.0f < by2) {
             firstInside = true;
-        if (c2.x / 100.0f > bx1 && c2.x / 100.0f < bx2 && c2.y / 100.0f > by1 && c2.y / 100.0f < by2)
+        }
+        if (c2.x / 100.0f > bx1 && c2.x / 100.0f < bx2 && c2.y / 100.0f > by1 && c2.y / 100.0f < by2) {
             secondInside = true;
+        }
 
         switch (marker->getType()) {
         case MT_TEXT:
@@ -492,10 +498,10 @@ void InfoMarksEditDlg::updateDialog()
     InfoMark *im = getCurrentInfoMark();
     int i = 0;
     int j = 0;
-    if (im != NULL) {
-        i = (int) im->getType();
+    if (im != nullptr) {
+        i = static_cast<int>(im->getType());
         objectType->setCurrentIndex(i);
-        j = (int) im->getClass();
+        j = static_cast<int>(im->getClass());
         objectClassesList->setCurrentIndex(j);
     }
 
@@ -522,7 +528,7 @@ void InfoMarksEditDlg::updateDialog()
 
     InfoMark *marker;
 
-    if (!(marker = getCurrentInfoMark())) {
+    if ((marker = getCurrentInfoMark()) == nullptr) {
         objectNameStr->clear();
         objectText->clear();
         m_x1->setValue(m_selX1);
@@ -555,35 +561,39 @@ void InfoMarksEditDlg::updateDialog()
 
 InfoMarkType InfoMarksEditDlg::getType()
 {
-    return (InfoMarkType)objectType->currentIndex();
+    return static_cast<InfoMarkType>(objectType->currentIndex());
 }
 
 InfoMarkClass InfoMarksEditDlg::getClass()
 {
-    return (InfoMarkClass)objectClassesList->currentIndex();
+    return static_cast<InfoMarkClass>(objectClassesList->currentIndex());
 }
 
 InfoMark *InfoMarksEditDlg::getCurrentInfoMark()
 {
-    if (objectsList->currentText() == "Create New Marker")
-        return NULL;
+    if (objectsList->currentText() == "Create New Marker") {
+        return nullptr;
+    }
     return getInfoMark(objectsList->currentText());
 }
 
 void InfoMarksEditDlg::setCurrentInfoMark(InfoMark *m)
 {
     int i = objectsList->findText(m->getName());
-    if (i == -1) i = 0;
+    if (i == -1) {
+        i = 0;
+    }
     objectsList->setCurrentIndex(i);
 }
 
-InfoMark *InfoMarksEditDlg::getInfoMark(QString name)
+InfoMark *InfoMarksEditDlg::getInfoMark(const QString &name)
 {
     MarkerListIterator mi(m_mapData->getMarkersList());
     while (mi.hasNext()) {
         InfoMark *marker = mi.next();
-        if (marker->getName() == name )
+        if (marker->getName() == name ) {
             return marker;
+        }
     }
-    return NULL;
+    return nullptr;
 }

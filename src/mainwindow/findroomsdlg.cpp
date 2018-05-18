@@ -24,9 +24,9 @@
 ************************************************************************/
 
 #include "findroomsdlg.h"
-#include "mmapper2room.h"
-#include "mmapper2exit.h"
 #include "mapdata.h"
+#include "mmapper2exit.h"
+#include "mmapper2room.h"
 #include "parserutils.h"
 #include "roomselection.h"
 
@@ -39,7 +39,7 @@ FindRoomsDlg::FindRoomsDlg(MapData *md, QWidget *parent)
     : QDialog(parent)
 {
     setupUi(this);
-    m_roomSelection = NULL;
+    m_roomSelection = nullptr;
     m_mapData = md;
     adjustResultTable();
 
@@ -58,9 +58,9 @@ FindRoomsDlg::FindRoomsDlg(MapData *md, QWidget *parent)
 
 FindRoomsDlg::~FindRoomsDlg()
 {
-    if (m_roomSelection != NULL) {
+    if (m_roomSelection != nullptr) {
         m_mapData->unselect(m_roomSelection);
-        m_roomSelection = NULL;
+        m_roomSelection = nullptr;
     }
     delete m_showSelectedRoom;
     resultTable->clear();
@@ -69,9 +69,9 @@ FindRoomsDlg::~FindRoomsDlg()
 void FindRoomsDlg::findClicked()
 {
     // Release rooms for a new search
-    if (m_roomSelection != NULL) {
+    if (m_roomSelection != nullptr) {
         m_mapData->unselect(m_roomSelection);
-        m_roomSelection = NULL;
+        m_roomSelection = nullptr;
     }
 
     m_roomSelection = m_mapData->select();
@@ -87,16 +87,17 @@ void FindRoomsDlg::findClicked()
     */
 
     char kind = PAT_ALL;
-    if (nameRadioButton->isChecked())
+    if (nameRadioButton->isChecked()) {
         kind = PAT_NAME;
-    else if (descRadioButton->isChecked())
+    } else if (descRadioButton->isChecked()) {
         kind = PAT_DESC;
-    else if (dynDescRadioButton->isChecked())
+    } else if (dynDescRadioButton->isChecked()) {
         kind = PAT_DYNDESC;
-    else if (exitsRadioButton->isChecked())
+    } else if (exitsRadioButton->isChecked()) {
         kind = PAT_EXITS;
-    else if (notesRadioButton->isChecked())
+    } else if (notesRadioButton->isChecked()) {
         kind = PAT_NOTE;
+    }
     m_mapData->genericSearch(m_roomSelection, RoomFilter(text, cs, kind));
 
     for (const Room *room : m_roomSelection->values()) {
@@ -145,7 +146,9 @@ QString FindRoomsDlg::constructToolTip(const Room *r)
         }
 
         if (ISSET(Mmapper2Exit::getFlags(r->exit(j)), EF_EXIT)) {
-            if (!door) etmp += " ";
+            if (!door) {
+                etmp += " ";
+            }
 
             switch (j) {
             case 0:
@@ -174,10 +177,11 @@ QString FindRoomsDlg::constructToolTip(const Room *r)
 
         if (door) {
             QString doorName = Mmapper2Exit::getDoorName(r->exit(j));
-            if (!doorName.isEmpty())
+            if (!doorName.isEmpty()) {
                 etmp += "/" + doorName + ")";
-            else
+            } else {
                 etmp += ")";
+            }
         }
     }
     etmp += ".\n";
@@ -199,8 +203,9 @@ void FindRoomsDlg::showSelectedRoom()
 void FindRoomsDlg::itemDoubleClicked(QTreeWidgetItem *item)
 {
     uint id;
-    if (item == NULL)
+    if (item == nullptr) {
         return;
+    }
 
     id = item->text(0).toInt();
 
@@ -229,9 +234,9 @@ void FindRoomsDlg::enableFindButton(const QString &text)
 void FindRoomsDlg::closeEvent( QCloseEvent *event )
 {
     // Release room locks
-    if (m_roomSelection != NULL) {
+    if (m_roomSelection != nullptr) {
         m_mapData->unselect(m_roomSelection);
-        m_roomSelection = NULL;
+        m_roomSelection = nullptr;
     }
     resultTable->clear();
     roomsFoundLabel->clear();

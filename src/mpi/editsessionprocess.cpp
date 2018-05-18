@@ -24,11 +24,11 @@
 
 #include "editsessionprocess.h"
 
+#include <QCoreApplication>
 #include <QDebug>
 #include <QDir>
-#include <QCoreApplication>
-#include <QTemporaryFile>
 #include <QFileInfo>
+#include <QTemporaryFile>
 
 EditSessionProcess::EditSessionProcess(int key, const QString &title, const QString &body,
                                        QObject *parent)
@@ -54,15 +54,19 @@ void EditSessionProcess::onFinished(int exitCode, QProcess::ExitStatus status)
         if (m_previousTime != currentTime) {
             // Read the file and submit it to MUME
             qDebug() << "Edit session" << m_key << "had changes, reading";
-            if (m_file.open())
+            if (m_file.open()) {
                 m_body = m_file.readAll();
-            else
+            } else {
                 qWarning() << "Edit session" << m_key << "unable to read file!";
+            }
             return finishEdit();
 
-        } else qDebug() << "Edit session" << m_key << "canceled (no changes)";
+        }
+        qDebug() << "Edit session" << m_key << "canceled (no changes)";
 
-    } else qWarning() << "File process did not end normally";
+    } else {
+        qWarning() << "File process did not end normally";
+    }
 
     // Cancel
     cancelEdit();

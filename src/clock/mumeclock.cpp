@@ -22,9 +22,9 @@
 **
 ************************************************************************/
 
-#include <QRegExp>
 #include <QDateTime>
 #include <QDebug>
+#include <QRegExp>
 
 #include "mumeclock.h"
 #include "mumemoment.h"
@@ -89,9 +89,10 @@ MumeClock::MumeClock(QObject *parent)
 
 MumeMoment MumeClock::getMumeMoment(int secsSinceUnixEpoch)
 {
-    if (secsSinceUnixEpoch < 0)
+    if (secsSinceUnixEpoch < 0) {
         secsSinceUnixEpoch = QDateTime::QDateTime::currentDateTimeUtc().toTime_t();
-    return MumeMoment(secsSinceUnixEpoch - m_mumeStartEpoch);
+    }
+    return {secsSinceUnixEpoch - m_mumeStartEpoch};
 }
 
 void MumeClock::parseMumeTime(const QString &mumeTime)
@@ -111,7 +112,7 @@ void MumeClock::parseMumeTime(const QString &mumeTime, int secsSinceEpoch)
 
     if (mumeTime.at(0).isDigit()) {
         // 3pm on Highday, the 18th of Halimath, year 3030 of the Third Age.
-        QRegExp rx("(\\d+)(am|pm) on \\w+, the (\\d+).{2} of (\\w+), year (\\d+) of the Third Age.");
+        QRegExp rx(R"((\d+)(am|pm) on \w+, the (\d+).{2} of (\w+), year (\d+) of the Third Age.)");
         if (rx.indexIn(mumeTime) != -1) {
             hour = rx.cap(1).toInt();
             if (rx.cap(2).at(0) == 'p') {
@@ -130,12 +131,13 @@ void MumeClock::parseMumeTime(const QString &mumeTime, int secsSinceEpoch)
                 month = s_sindarinMonthNames.keyToValue(rx.cap(4).toLatin1().data());
             }
             year = rx.cap(5).toInt();
-            if (m_precision <= MUMECLOCK_DAY)
+            if (m_precision <= MUMECLOCK_DAY) {
                 m_precision = MUMECLOCK_HOUR;
+            }
         }
     } else {
         // "Highday, the 18th of Halimath, year 3030 of the Third Age."
-        QRegExp rx("\\w+, the (\\d+).{2} of (\\w+), year (\\d+) of the Third Age.");
+        QRegExp rx(R"(\w+, the (\d+).{2} of (\w+), year (\d+) of the Third Age.)");
         if (rx.indexIn(mumeTime) != -1) {
             day = rx.cap(1).toInt() - 1;
             month = s_westronMonthNames.keyToValue(rx.cap(2).toLatin1().data());
@@ -143,18 +145,20 @@ void MumeClock::parseMumeTime(const QString &mumeTime, int secsSinceEpoch)
                 month = s_sindarinMonthNames.keyToValue(rx.cap(2).toLatin1().data());
             }
             year = rx.cap(3).toInt();
-            if (m_precision <= MUMECLOCK_UNSET)
+            if (m_precision <= MUMECLOCK_UNSET) {
                 m_precision = MUMECLOCK_DAY;
+            }
         }
     }
 
     // Calculate start of Mume epoch
     int mumeSecsSinceEpoch = MumeMoment(year, month, day, hour, minute).toSeconds();
     int newStartEpoch = secsSinceEpoch - mumeSecsSinceEpoch;
-    if (newStartEpoch != m_mumeStartEpoch)
+    if (newStartEpoch != m_mumeStartEpoch) {
         emit log("MumeClock", "Detected new Mume start epoch " + QString::number(
                      newStartEpoch) + " (" + QString::number(newStartEpoch - m_mumeStartEpoch) +
                  " seconds from previous)");
+    }
     m_mumeStartEpoch = newStartEpoch;
 }
 
@@ -166,8 +170,9 @@ void MumeClock::parseWeather(const QString &str)
 
 void MumeClock::parseWeather(const QString &str, int secsSinceEpoch)
 {
-    if (!m_stringTimeHash.contains(str))
+    if (!m_stringTimeHash.contains(str)) {
         return;
+    }
 
     MumeTime time = m_stringTimeHash.value(str);
 
@@ -297,17 +302,19 @@ const QString MumeClock::toMumeTime(const MumeMoment &moment)
     }
     int day = moment.m_day + 1;
     QString daySuffix;
-    if (day == 1 || day == 21)
+    if (day == 1 || day == 21) {
         daySuffix = "st";
-    else if (day == 2 || day == 22)
+    } else if (day == 2 || day == 22) {
         daySuffix = "nd";
-    else if (day == 3 || day == 23)
+    } else if (day == 3 || day == 23) {
         daySuffix = "rd";
-    else
+    } else {
         daySuffix = "th";
+    }
 
-    // TODO: Figure out how to reverse engineer the day of the week
-    QString monthName = MumeClock::s_westronMonthNames.valueToKey((WestronMonthNames)moment.m_month);
+    // TODO(nschimme): Figure out how to reverse engineer the day of the week
+    QString monthName = MumeClock::s_westronMonthNames.valueToKey(static_cast<WestronMonthNames>
+                                                                  (moment.m_month));
     return QString("%1%2%3 of %4, year %5 of the Third Age.")
            .arg(time)
            .arg(day)
@@ -334,9 +341,9 @@ const QString MumeClock::toCountdown(const MumeMoment &moment)
         // Add seconds until dusk
         secondsToCountdown += (dusk - 1 - moment.m_hour) * 60;
     }
-    if (m_precision <= MUMECLOCK_HOUR)
+    if (m_precision <= MUMECLOCK_HOUR) {
         return QString("~%1").arg((secondsToCountdown / 60) + 1);
-    else
-        return QString("%1:%2").arg(secondsToCountdown / 60).arg(QString().sprintf("%02d",
-                                                                                   secondsToCountdown % 60));
+    }
+    return QString("%1:%2").arg(secondsToCountdown / 60).arg(QString().sprintf("%02d",
+                                                                               secondsToCountdown % 60));
 }

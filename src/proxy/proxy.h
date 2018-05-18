@@ -106,10 +106,10 @@ private:
 
     int m_socketDescriptor;
     QString m_remoteHost;
-    int m_remotePort;
+    int m_remotePort{};
     MumeSocket *m_mudSocket;
     QPointer<QTcpSocket> m_userSocket;
-    char m_buffer[ 8192 ];
+    char m_buffer[ 8192 ] {};
 
     bool m_serverConnected;
 

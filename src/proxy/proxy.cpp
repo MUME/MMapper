@@ -25,17 +25,17 @@
 ************************************************************************/
 
 #include "proxy.h"
-#include "telnetfilter.h"
-#include "mumesocket.h"
+#include "clock/mumeclock.h"
+#include "configuration/configuration.h"
+#include "display/prespammedpath.h"
+#include "expandoracommon/parseevent.h"
 #include "mpi/mpifilter.h"
 #include "mpi/remoteedit.h"
-#include "parser/mumexmlparser.h"
-#include "expandoracommon/parseevent.h"
-#include "pathmachine/mmapper2pathmachine.h"
-#include "display/prespammedpath.h"
+#include "mumesocket.h"
 #include "pandoragroup/mmapper2group.h"
-#include "configuration/configuration.h"
-#include "clock/mumeclock.h"
+#include "parser/mumexmlparser.h"
+#include "pathmachine/mmapper2pathmachine.h"
+#include "telnetfilter.h"
 
 ProxyThreader::ProxyThreader(Proxy *proxy):
     m_proxy(proxy)
@@ -44,7 +44,7 @@ ProxyThreader::ProxyThreader(Proxy *proxy):
 
 ProxyThreader::~ProxyThreader()
 {
-    if (m_proxy) delete m_proxy;
+    delete m_proxy;
 }
 
 void ProxyThreader::run()
@@ -61,12 +61,12 @@ void ProxyThreader::run()
 
 Proxy::Proxy(MapData *md, Mmapper2PathMachine *pm, CommandEvaluator *ce, PrespammedPath *pp,
              Mmapper2Group *gm, MumeClock *mc, qintptr &socketDescriptor, bool threaded, QObject *parent)
-    : QObject(NULL),
+    : QObject(nullptr),
       m_socketDescriptor(socketDescriptor),
-      m_mudSocket(NULL),
-      m_userSocket(NULL),
+      m_mudSocket(nullptr),
+      m_userSocket(nullptr),
       m_serverConnected(false),
-      m_telnetFilter(NULL), m_mpiFilter(NULL), m_parserXml(NULL),
+      m_telnetFilter(nullptr), m_mpiFilter(nullptr), m_parserXml(nullptr),
       m_mapData(md),
       m_pathMachine(pm),
       m_commandEvaluator(ce),
@@ -76,10 +76,11 @@ Proxy::Proxy(MapData *md, Mmapper2PathMachine *pm, CommandEvaluator *ce, Prespam
       m_threaded(threaded),
       m_parent(parent)
 {
-    if (threaded)
+    if (threaded) {
         m_thread = new ProxyThreader(this);
-    else
-        m_thread = NULL;
+    } else {
+        m_thread = nullptr;
+    }
 
     m_remoteEdit = new RemoteEdit(m_parent->parent());
 
@@ -100,11 +101,11 @@ Proxy::~Proxy()
 #ifdef PROXY_STREAM_DEBUG_INPUT_TO_FILE
     file->close();
 #endif
-    if (m_userSocket) {
+    if (m_userSocket != nullptr) {
         m_userSocket->disconnectFromHost();
         m_userSocket->deleteLater();
     }
-    if (m_mudSocket) {
+    if (m_mudSocket != nullptr) {
         m_mudSocket->disconnectFromHost();
         m_mudSocket->deleteLater();
     }
@@ -118,10 +119,11 @@ Proxy::~Proxy()
 
 void Proxy::start()
 {
-    if (m_thread) {
+    if (m_thread != nullptr) {
         m_thread->start();
-        if (init())
+        if (init()) {
             moveToThread(m_thread);
+        }
     }
 }
 
@@ -137,7 +139,7 @@ bool Proxy::init()
     m_userSocket = new QTcpSocket(this);
     if (!m_userSocket->setSocketDescriptor(m_socketDescriptor)) {
         delete m_userSocket;
-        m_userSocket = NULL;
+        m_userSocket = nullptr;
         return false;
     }
     m_userSocket->setSocketOption(QAbstractSocket::KeepAliveOption, true);
@@ -282,8 +284,9 @@ void Proxy::userTerminatedConnection()
 
 void Proxy::mudTerminatedConnection()
 {
-    if (!m_serverConnected)
+    if (!m_serverConnected) {
         return;
+    }
 
     m_serverConnected = false;
 
@@ -299,7 +302,7 @@ void Proxy::mudTerminatedConnection()
 void Proxy::processUserStream()
 {
     int read;
-    while (m_userSocket->bytesAvailable()) {
+    while (m_userSocket->bytesAvailable() != 0) {
         read = m_userSocket->read(m_buffer, 8191);
         if (read != -1) {
             m_buffer[read] = 0;
@@ -311,14 +314,14 @@ void Proxy::processUserStream()
 
 void Proxy::sendToMud(const QByteArray &ba)
 {
-    if (m_mudSocket && m_serverConnected) {
+    if ((m_mudSocket != nullptr) && m_serverConnected) {
         m_mudSocket->sendToMud(ba);
     }
 }
 
 void Proxy::sendToUser(const QByteArray &ba)
 {
-    if (m_userSocket) {
+    if (m_userSocket != nullptr) {
         m_userSocket->write(ba.data(), ba.size());
         m_userSocket->flush();
     }

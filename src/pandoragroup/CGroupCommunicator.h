@@ -54,10 +54,10 @@ public:
     {
         return type;
     }
-    void sendCharUpdate(CGroupClient *, QDomNode);
-    void sendMessage(CGroupClient *, int, QByteArray data = "");
-    void sendMessage(CGroupClient *, int, QDomNode);
-    void renameConnection(QByteArray, QByteArray);
+    void sendCharUpdate(CGroupClient *, const QDomNode &);
+    void sendMessage(CGroupClient *, int, const QByteArray &blob = "");
+    void sendMessage(CGroupClient *, int, const QDomNode &);
+    void renameConnection(const QByteArray &, const QByteArray &);
 
     virtual void disconnect() = 0;
     virtual void reconnect() = 0;
@@ -66,12 +66,12 @@ public:
     virtual void sendCharRename(QDomNode) = 0;
 
 protected:
-    QByteArray formMessageBlock(int message, QDomNode data);
+    QByteArray formMessageBlock(int message, const QDomNode &data);
     CGroup *getGroup();
 
 public slots:
-    void incomingData(CGroupClient *, QByteArray);
-    void sendGTell(QByteArray);
+    void incomingData(CGroupClient *, const QByteArray &);
+    void sendGTell(const QByteArray &);
     void relayLog(const QString &);
     virtual void connectionEstablished(CGroupClient *) {}
     virtual void retrieveData(CGroupClient *, int, QDomNode) = 0;
@@ -96,26 +96,26 @@ public:
     CGroupServerCommunicator(QObject *parent);
     ~CGroupServerCommunicator();
 
-    void renameConnection(QByteArray oldName, QByteArray newName);
+    void renameConnection(const QByteArray &oldName, const QByteArray &newName);
 
 protected slots:
-    void relayMessage(CGroupClient *connection, int message, QDomNode node);
+    void relayMessage(CGroupClient *connection, int message, const QDomNode &data);
     void serverStartupFailed();
     void connectionEstablished(CGroupClient *);
     void retrieveData(CGroupClient *connection, int message, QDomNode data);
     void connectionClosed(CGroupClient *connection);
 
 protected:
-    void sendRemoveUserNotification(CGroupClient *conn, QByteArray name);
-    void sendGroupTellMessage(QDomElement dom);
+    void sendRemoveUserNotification(CGroupClient *connection, const QByteArray &name);
+    void sendGroupTellMessage(QDomElement root);
     void reconnect();
     void disconnect();
     void sendCharUpdate(QDomNode blob);
     void sendCharRename(QDomNode blob);
 
 private:
-    void parseLoginInformation(CGroupClient *conn, QDomNode data);
-    void sendGroupInformation(CGroupClient *conn);
+    void parseLoginInformation(CGroupClient *connection, const QDomNode &data);
+    void sendGroupInformation(CGroupClient *connection);
 
     QHash<QByteArray, int>  clientsList;
     CGroupServer *server;
@@ -132,11 +132,11 @@ public:
 
 public slots:
     void errorInConnection(CGroupClient *connection, const QString &);
-    void retrieveData(CGroupClient *connection, int message, QDomNode data);
+    void retrieveData(CGroupClient *conn, int message, QDomNode data);
     void connectionClosed(CGroupClient *connection);
 
 protected:
-    void sendGroupTellMessage(QDomElement dom);
+    void sendGroupTellMessage(QDomElement root);
     void reconnect();
     void disconnect();
     void sendCharUpdate(QDomNode blob);

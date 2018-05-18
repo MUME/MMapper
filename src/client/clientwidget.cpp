@@ -23,20 +23,20 @@
 ************************************************************************/
 
 #include "clientwidget.h"
-#include "stackedinputwidget.h"
-#include "displaywidget.h"
 #include "ctelnet.h"
+#include "displaywidget.h"
+#include "stackedinputwidget.h"
 
 #include "configuration/configuration.h"
 #include "mainwindow/mainwindow.h"
 
-#include <QSplitter>
-#include <QVBoxLayout>
-#include <QMenuBar>
-#include <QDebug>
-#include <QSettings>
 #include <QCloseEvent>
+#include <QDebug>
+#include <QMenuBar>
+#include <QSettings>
+#include <QSplitter>
 #include <QStatusBar>
+#include <QVBoxLayout>
 
 ClientWidget::ClientWidget(QWidget *parent) : QDialog(parent),
     m_connected(false)
@@ -45,7 +45,7 @@ ClientWidget::ClientWidget(QWidget *parent) : QDialog(parent),
     setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
-    QVBoxLayout *layout = new QVBoxLayout(this);
+    auto *layout = new QVBoxLayout(this);
     layout->setAlignment(Qt::AlignTop);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
@@ -100,7 +100,7 @@ ClientWidget::ClientWidget(QWidget *parent) : QDialog(parent),
     readSettings();
 
 
-    QMenuBar *menuBar = new QMenuBar(this);
+    auto *menuBar = new QMenuBar(this);
     layout->setMenuBar(menuBar);
 
     QMenu *fileMenu = menuBar->addMenu("&File");
@@ -253,7 +253,7 @@ void ClientWidget::saveLog()
     save->setAcceptMode(QFileDialog::AcceptSave);
 
     QStringList fileNames;
-    if (save->exec()) {
+    if (save->exec() != 0) {
         fileNames = save->selectedFiles();
     }
 
@@ -280,10 +280,10 @@ void ClientWidget::saveLog()
 
 QSize ClientWidget::minimumSizeHint() const
 {
-    return QSize(500, 480);
+    return {500, 480};
 }
 
 QSize ClientWidget::sizeHint() const
 {
-    return QSize(500, 480);
+    return {500, 480};
 }

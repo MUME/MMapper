@@ -23,12 +23,12 @@
 ************************************************************************/
 
 #include "clientpage.h"
-#include "ui_clientpage.h"
 #include "configuration/configuration.h"
+#include "ui_clientpage.h"
 
 #include <QFont>
-#include <QFontInfo>
 #include <QFontDialog>
+#include <QFontInfo>
 
 #include <QColorDialog>
 

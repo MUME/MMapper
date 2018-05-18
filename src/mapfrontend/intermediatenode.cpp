@@ -24,8 +24,8 @@
 ************************************************************************/
 
 #include "intermediatenode.h"
-#include "property.h"
 #include "parseevent.h"
+#include "property.h"
 
 using namespace std;
 
@@ -33,7 +33,7 @@ IntermediateNode::IntermediateNode(ParseEvent *event)
 {
     Property *prop = event->next();
 
-    if (prop == 0 || prop->isSkipped()) {
+    if (prop == nullptr || prop->isSkipped()) {
         myChars = new char[1];
         myChars[0] = 0;
     } else {
@@ -41,7 +41,7 @@ IntermediateNode::IntermediateNode(ParseEvent *event)
         myChars = new char[size];
         strncpy(myChars, prop->rest(), size);
     }
-    rooms = 0;
+    rooms = nullptr;
     event->prev();
 }
 
@@ -49,9 +49,14 @@ RoomCollection *IntermediateNode::insertRoom(ParseEvent *event)
 {
 
     if (event->next() == 0) {
-        if (rooms == 0) rooms = new RoomCollection;
+        if (rooms == nullptr) {
+            rooms = new RoomCollection;
+        }
         return rooms;
-    } else if (event->current()->isSkipped()) return 0;
+    }
+    if (event->current()->isSkipped()) {
+        return nullptr;
+    }
 
     return SearchTreeNode::insertRoom(event);
 }
@@ -60,11 +65,12 @@ RoomCollection *IntermediateNode::insertRoom(ParseEvent *event)
 void IntermediateNode::getRooms(RoomOutStream &stream, ParseEvent *event)
 {
     if (event->next() == 0) {
-        for (set<Room *>::iterator i = rooms->begin(); i != rooms->end(); ++i)
-            stream << *i;
-    } else if (event->current()->isSkipped())
+        for (auto room : *rooms) {
+            stream << room;
+        }
+    } else if (event->current()->isSkipped()) {
         SearchTreeNode::skipDown(stream, event);
-    else {
+    } else {
         SearchTreeNode::getRooms(stream, event);
     }
 }

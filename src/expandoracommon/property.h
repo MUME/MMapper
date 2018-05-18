@@ -32,13 +32,13 @@
 class Property : public ListCycler<char, QByteArray>
 {
 public:
-    Property(const QByteArray &in_data);
+    Property(const QByteArray &data);
 
     const char *rest() const;
     bool isSkipped() const ;
 
 protected:
-    Property(bool in_skipped = false) : m_skipped(in_skipped) {}
+    Property(bool skipped = false) : m_skipped(skipped) {}
 
 private:
     bool m_skipped;

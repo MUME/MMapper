@@ -77,7 +77,7 @@ void MpiFilter::analyzeNewMudInput(IncomingData &data)
     m_previousType = data.type;
 }
 
-void MpiFilter::parseMessage(char command, QByteArray buffer)
+void MpiFilter::parseMessage(char command, const QByteArray &buffer)
 {
     switch (command) {
     case 'E':
@@ -93,7 +93,7 @@ void MpiFilter::parseMessage(char command, QByteArray buffer)
     }
 }
 
-void MpiFilter::parseEditMessage(QByteArray buffer)
+void MpiFilter::parseEditMessage(const QByteArray &buffer)
 {
     if (buffer.at(0) != 'M') {
         qWarning() << "Expected 'M' character in remote editing protocol";
@@ -121,7 +121,7 @@ void MpiFilter::parseEditMessage(QByteArray buffer)
     emit editMessage(sessionId, title, body);
 }
 
-void MpiFilter::parseViewMessage(QByteArray buffer)
+void MpiFilter::parseViewMessage(const QByteArray &buffer)
 {
     int descriptionEnd = buffer.indexOf('\n');
     if (descriptionEnd == -1) {

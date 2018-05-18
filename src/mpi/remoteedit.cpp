@@ -23,10 +23,10 @@
 ************************************************************************/
 
 #include "remoteedit.h"
+#include "configuration/configuration.h"
+#include "editsessionprocess.h"
 #include "remoteeditwidget.h"
 #include "viewsessionprocess.h"
-#include "editsessionprocess.h"
-#include "configuration/configuration.h"
 
 #include <QDebug>
 
@@ -37,10 +37,9 @@ RemoteEdit::RemoteEdit(QObject *parent)
 {}
 
 RemoteEdit::~RemoteEdit()
-{
-}
+    = default;
 
-void RemoteEdit::remoteView(QString title, QString body)
+void RemoteEdit::remoteView(const QString &title, const QString &body)
 {
 #ifdef Q_OS_WIN
     body.replace(s_lineFeedNewlineRx, "\r\n");
@@ -52,19 +51,19 @@ void RemoteEdit::remoteView(QString title, QString body)
     }
 }
 
-void RemoteEdit::remoteEdit(const int key, QString title, QString body)
+void RemoteEdit::remoteEdit(const int key, const QString &title, const QString &body)
 {
 #ifdef Q_OS_WIN
     body.replace(s_lineFeedNewlineRx, "\r\n");
 #endif
     if (Config().m_internalRemoteEditor) {
-        RemoteEditWidget *widget = new RemoteEditWidget(key, title, body);
+        auto *widget = new RemoteEditWidget(key, title, body);
         connect(widget, SIGNAL(save(const QString &, const int)), SLOT(save(const QString &,
                                                                             const int)));
         connect(widget, SIGNAL(cancel(const int)), SLOT(cancel(const int)));
 
     } else {
-        EditSessionProcess *process = new EditSessionProcess(key, title, body, this);
+        auto *process = new EditSessionProcess(key, title, body, this);
         connect(process, SIGNAL(save(const QString &, const int)),
                 SLOT(save(const QString &, const int)));
         connect(process, SIGNAL(cancel(const int)), SLOT(cancel(const int)));
@@ -91,8 +90,9 @@ void RemoteEdit::save(const QString &body, const int key)
     content.replace("\r\n", "\n");
 #endif
     // The body contents have to be followed by a LF if they are not empty
-    if (!content.isEmpty() && !content.endsWith('\n'))
+    if (!content.isEmpty() && !content.endsWith('\n')) {
         content.append('\n');
+    }
 
     const QString &keystr = QString("E%1\n").arg(key);
     const QByteArray &buffer = QString("%1E%2\n%3%4")

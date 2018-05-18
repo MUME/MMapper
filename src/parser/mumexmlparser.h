@@ -46,7 +46,7 @@ public:
     void parse(const QByteArray & );
 
 public slots:
-    void parseNewMudInput(IncomingData &que);
+    void parseNewMudInput(IncomingData &data);
 
 protected:
 
@@ -79,8 +79,8 @@ protected:
     QByteArray m_tempCharacters;
     QByteArray m_tempTag;
     bool m_readingTag;
-    bool m_readStatusTag;
-    bool m_readWeatherTag;
+    bool m_readStatusTag{};
+    bool m_readWeatherTag{};
     bool m_gratuitous;
     bool m_readSnoopTag;
 

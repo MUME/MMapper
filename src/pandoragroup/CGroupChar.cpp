@@ -25,8 +25,8 @@
 
 #include "CGroupChar.h"
 
-#include <QDomNode>
 #include <QDebug>
+#include <QDomNode>
 
 CGroupChar::CGroupChar()
 {
@@ -46,8 +46,7 @@ CGroupChar::CGroupChar()
 }
 
 CGroupChar::~CGroupChar()
-{
-}
+    = default;
 
 QDomNode CGroupChar::toXML()
 {
@@ -74,7 +73,7 @@ QDomNode CGroupChar::toXML()
     return root;
 }
 
-bool CGroupChar::updateFromXML(QDomNode node)
+bool CGroupChar::updateFromXML(const QDomNode &node)
 {
     bool updated;
 
@@ -179,7 +178,7 @@ bool CGroupChar::updateFromXML(QDomNode node)
     return updated;
 }
 
-QByteArray CGroupChar::getNameFromXML(QDomNode node)
+QByteArray CGroupChar::getNameFromXML(const QDomNode &node)
 {
     if (node.nodeName() != "playerData") {
         qWarning("Called updateFromXML with wrong node. The name does not fit.");

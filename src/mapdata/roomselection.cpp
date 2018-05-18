@@ -24,9 +24,9 @@
 ************************************************************************/
 
 #include "roomselection.h"
-#include "mapdata.h"
 #include "coordinate.h"
-#include <assert.h>
+#include "mapdata.h"
+#include <cassert>
 
 void RoomSelection::receiveRoom(RoomAdmin *admin, const Room *aRoom)
 {
@@ -37,7 +37,9 @@ bool RoomSelection::containsAll(const RoomSelection *other) const
 {
     QMapIterator<uint, const Room *> i(*other);
     while (i.hasNext()) {
-        if (!contains(i.key())) return false;
+        if (!contains(i.key())) {
+            return false;
+        }
     }
     return true;
 }

@@ -24,27 +24,29 @@
 ************************************************************************/
 
 #include "path.h"
-#include "roomsignalhandler.h"
-#include "pathparameters.h"
 #include "abstractroomfactory.h"
 #include "coordinate.h"
-#include "room.h"
 #include "parseevent.h"
+#include "pathparameters.h"
+#include "room.h"
+#include "roomsignalhandler.h"
 
+#include <cassert>
 #include <iostream>
-#include <assert.h>
 
 using namespace std;
 
 Path::Path(const Room *in_room, RoomAdmin *owner, RoomRecipient *locker,
            RoomSignalHandler *in_signaler, uint direction) :
-    parent(0),
+    parent(nullptr),
     probability(1.0),
     room(in_room),
     signaler(in_signaler),
     dir(direction)
 {
-    if (dir != UINT_MAX) signaler->hold(room, owner, locker);
+    if (dir != UINT_MAX) {
+        signaler->hold(room, owner, locker);
+    }
 }
 
 
@@ -56,7 +58,7 @@ Path::Path(const Room *in_room, RoomAdmin *owner, RoomRecipient *locker,
 Path *Path::fork(const Room *in_room, Coordinate &expectedCoordinate, RoomAdmin *owner,
                  PathParameters p, RoomRecipient *locker, uint direction, AbstractRoomFactory *factory)
 {
-    Path *ret = new Path(in_room, owner, locker, signaler, direction);
+    auto *ret = new Path(in_room, owner, locker, signaler, direction);
     assert(ret != parent);
 
     ret->setParent(this);
@@ -66,22 +68,24 @@ Path *Path::fork(const Room *in_room, Coordinate &expectedCoordinate, RoomAdmin 
     uint size = room->getExitsList().size();
 
     if (dist < 0.5) {
-        if (direction < factory->numKnownDirs())
+        if (direction < factory->numKnownDirs()) {
             dist = 1.0 / p.correctPositionBonus;
-        else
+        } else {
             dist = p.multipleConnectionsPenalty;
+        }
     } else {
         if (direction < size) {
             const Exit &e = room->exit(direction);
             uint oid = in_room->getId();
-            if (e.containsOut(oid))
+            if (e.containsOut(oid)) {
                 dist = 1.0 / p.correctPositionBonus;
-            else if (e.outBegin() != e.outEnd() || oid == room->getId())
+            } else if (e.outBegin() != e.outEnd() || oid == room->getId()) {
                 dist *= p.multipleConnectionsPenalty;
-            else {
+            } else {
                 const Exit &oe = in_room->exit(factory->opposite(direction));
-                if (oe.inBegin() != oe.inEnd())
+                if (oe.inBegin() != oe.inEnd()) {
                     dist *= p.multipleConnectionsPenalty;
+                }
             }
         } else if (direction < factory->numKnownDirs()) {
             for (uint d = 0; d < size; ++d) {
@@ -94,7 +98,9 @@ Path *Path::fork(const Room *in_room, Coordinate &expectedCoordinate, RoomAdmin 
         }
     }
     dist /= (signaler->getNumLockers(in_room));
-    if (in_room->isTemporary()) dist *= p.newRoomPenalty;
+    if (in_room->isTemporary()) {
+        dist *= p.newRoomPenalty;
+    }
     ret->setProb(probability / dist);
 
     return ret;
@@ -107,10 +113,10 @@ void Path::setParent(Path *p)
 
 void Path::approve()
 {
-    if (parent) {
+    if (parent != nullptr) {
         uint pId = UINT_MAX;
         const Room *proom = parent->getRoom();
-        if (proom) {
+        if (proom != nullptr) {
             pId = proom->getId();
         }
         signaler->keep(room, dir, pId);
@@ -120,9 +126,9 @@ void Path::approve()
         assert(dir == UINT_MAX);
     }
 
-    set<Path *>::iterator i = children.begin();
+    auto i = children.begin();
     for (; i != children.end(); ++i) {
-        (*i)->setParent(0);
+        (*i)->setParent(nullptr);
     }
 
     delete this;
@@ -135,9 +141,13 @@ void Path::approve()
  */
 void Path::deny()
 {
-    if (!children.empty()) return;
-    if (dir != UINT_MAX) signaler->release(room);
-    if (parent) {
+    if (!children.empty()) {
+        return;
+    }
+    if (dir != UINT_MAX) {
+        signaler->release(room);
+    }
+    if (parent != nullptr) {
         parent->removeChild(this);
         parent->deny();
     }

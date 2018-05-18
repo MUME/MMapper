@@ -28,23 +28,20 @@
 #include <cmath>
 
 Frustum::Frustum()
-{}
+    = default;
 
 
 Frustum::~Frustum()
-{}
+    = default;
 
-
-
-
-void Frustum::NormalizePlane(int side)
+void Frustum::normalizePlane(int side)
 {
     // Here we calculate the magnitude of the normal to the plane (point A B C)
     // Remember that (A, B, C) is that same thing as the normal's (X, Y, Z).
     // To calculate magnitude you use the equation:  magnitude = sqrt( x^2 + y^2 + z^2)
-    float magnitude = (float)sqrt( frustum[side][A] * frustum[side][A] +
-                                   frustum[side][B] * frustum[side][B] +
-                                   frustum[side][C] * frustum[side][C] );
+    auto magnitude = static_cast<float>(std::sqrt( frustum[side][A] * frustum[side][A] +
+                                                   frustum[side][B] * frustum[side][B] +
+                                                   frustum[side][C] * frustum[side][C] ));
 
     // Then we divide the plane's values by it's magnitude.
     // This makes it easier to work with.
@@ -54,13 +51,13 @@ void Frustum::NormalizePlane(int side)
     frustum[side][D] /= magnitude;
 }
 
-bool Frustum::PointInFrustum(Coordinate &c)
+bool Frustum::pointInFrustum(Coordinate &c)
 {
     // Go through all the sides of the frustum
-    for (int i = 0; i < 6; ++i ) {
+    for (auto &plane : frustum) {
         // Calculate the plane equation and check if the point is behind a side of the frustum
-        if (frustum[i][A] * (float)c.x + frustum[i][B] * (float)c.y + frustum[i][C] *
-                (float)c.z + frustum[i][D] <= 0) {
+        if (plane[A] * static_cast<float>(c.x) + plane[B] * static_cast<float>(c.y) + plane[C] *
+                static_cast<float>(c.z) + plane[D] <= 0) {
             // The point was behind a side, so it ISN'T in the frustum
             return false;
         }
@@ -72,7 +69,7 @@ bool Frustum::PointInFrustum(Coordinate &c)
 
 
 
-void Frustum::rebuild(float *clip)
+void Frustum::rebuild(const float *clip)
 {
 
     // Now we actually want to get the sides of the frustum.  To do this we take
@@ -88,7 +85,7 @@ void Frustum::rebuild(float *clip)
     // we want to normalize that normal and distance.
 
     // Normalize the RIGHT side
-    NormalizePlane(F_RIGHT);
+    normalizePlane(F_RIGHT);
 
     // This will extract the LEFT side of the frustum
     frustum[F_LEFT][A] = clip[ 3] + clip[ 0];
@@ -97,7 +94,7 @@ void Frustum::rebuild(float *clip)
     frustum[F_LEFT][D] = clip[15] + clip[12];
 
     // Normalize the LEFT side
-    NormalizePlane(F_LEFT);
+    normalizePlane(F_LEFT);
 
     // This will extract the BOTTOM side of the frustum
     frustum[F_BOTTOM][A] = clip[ 3] + clip[ 1];
@@ -106,7 +103,7 @@ void Frustum::rebuild(float *clip)
     frustum[F_BOTTOM][D] = clip[15] + clip[13];
 
     // Normalize the BOTTOM side
-    NormalizePlane(F_BOTTOM);
+    normalizePlane(F_BOTTOM);
 
     // This will extract the TOP side of the frustum
     frustum[F_TOP][A] = clip[ 3] - clip[ 1];
@@ -115,7 +112,7 @@ void Frustum::rebuild(float *clip)
     frustum[F_TOP][D] = clip[15] - clip[13];
 
     // Normalize the TOP side
-    NormalizePlane(F_TOP);
+    normalizePlane(F_TOP);
 
     // This will extract the BACK side of the frustum
     frustum[F_BACK][A] = clip[ 3] - clip[ 2];
@@ -124,7 +121,7 @@ void Frustum::rebuild(float *clip)
     frustum[F_BACK][D] = clip[15] - clip[14];
 
     // Normalize the BACK side
-    NormalizePlane(F_BACK);
+    normalizePlane(F_BACK);
 
     // This will extract the FRONT side of the frustum
     frustum[F_FRONT][A] = clip[ 3] + clip[ 2];
@@ -133,7 +130,7 @@ void Frustum::rebuild(float *clip)
     frustum[F_FRONT][D] = clip[15] + clip[14];
 
     // Normalize the FRONT side
-    NormalizePlane(F_FRONT);
+    normalizePlane(F_FRONT);
 
 
 }

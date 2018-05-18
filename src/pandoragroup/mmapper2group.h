@@ -73,13 +73,13 @@ public slots:
     void setType(int newState);
     void updateSelf(); // changing settings
 
-    void sendGTell(QByteArray tell); // sends gtell from local user
+    void sendGTell(const QByteArray &tell); // sends gtell from local user
     void parseScoreInformation(QByteArray score);
     void parsePromptInformation(QByteArray prompt);
 
     // Communicator
-    void gTellArrived(QDomNode node);
-    void relayMessageBox(QString message);
+    void gTellArrived(const QDomNode &node);
+    void relayMessageBox(const QString &message);
     void sendLog(const QString &);
 
 protected slots:
@@ -87,8 +87,8 @@ protected slots:
     void networkDown();
 
 protected:
-    void gotKicked(QDomNode message);
-    void serverStartupFailed(QString message);
+    void gotKicked(const QDomNode &message);
+    void serverStartupFailed(const QString &message);
 
     void init();
 

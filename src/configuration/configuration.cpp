@@ -25,9 +25,9 @@
 ************************************************************************/
 
 #include "configuration.h"
-#include <QSettings>
-#include <QHostInfo>
 #include <QFontDatabase>
+#include <QHostInfo>
+#include <QSettings>
 
 Configuration::Configuration()
 {
