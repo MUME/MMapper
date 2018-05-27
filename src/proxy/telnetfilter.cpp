@@ -51,7 +51,6 @@
 #define ASCII_LF 10
 
 #define ESCAPE '\x1B'
-const QChar TelnetFilter::s_escChar('\x1B');
 
 TelnetFilter::TelnetFilter(QObject *parent)
     : QObject(parent)

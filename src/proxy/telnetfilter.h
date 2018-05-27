@@ -79,8 +79,6 @@ private:
     void dispatchTelnetStream(const QByteArray &stream, IncomingData &m_incomingData,
                               TelnetIncomingDataQueue &que);
 
-    static const QChar s_escChar;
-
     IncomingData m_userIncomingData;
     IncomingData m_mudIncomingData;
     TelnetIncomingDataQueue m_mudIncomingQue;
