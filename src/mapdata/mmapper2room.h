@@ -30,9 +30,9 @@
 
 class Room;
 
-typedef class QString RoomName;
-typedef class QString RoomDescription;
-typedef class QString RoomNote;
+using RoomName = QString;
+using RoomDescription = QString;
+using RoomNote = QString;
 
 enum RoomTerrainType    { RTT_UNDEFINED = 0, RTT_INDOORS, RTT_CITY, RTT_FIELD, RTT_FOREST, RTT_HILLS, RTT_MOUNTAINS,
                           RTT_SHALLOW, RTT_WATER, RTT_RAPIDS, RTT_UNDERWATER, RTT_ROAD, RTT_BRUSH,
@@ -86,6 +86,7 @@ typedef quint32 RoomLoadFlags;
 
 enum RoomField {R_NAME, R_DESC, R_TERRAINTYPE, R_DYNAMICDESC, R_NOTE, R_MOBFLAGS, R_LOADFLAGS, R_PORTABLETYPE, R_LIGHTTYPE, R_ALIGNTYPE, R_RIDABLETYPE, R_SUNDEATHTYPE, R_KEYWORDS, ROOMFIELD_LAST};
 
+// TODO: Just make these members of Room
 namespace Mmapper2Room {
 RoomName getName(const Room *room);
 

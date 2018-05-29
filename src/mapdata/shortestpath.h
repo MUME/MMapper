@@ -5,6 +5,7 @@
 #include "mmapper2exit.h"
 #include "roomadmin.h"
 #include <QSet>
+#include <QVector>
 
 class SPNode
 {

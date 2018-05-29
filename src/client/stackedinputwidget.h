@@ -37,22 +37,19 @@ class StackedInputWidget : public QStackedWidget
 public:
     StackedInputWidget(QWidget *parent = 0);
     ~StackedInputWidget();
-
-protected:
     bool eventFilter(QObject *obj, QEvent *event);
 
 public slots:
     void toggleEchoMode(bool);
     void gotPasswordInput();
-    void gotMultiLineInput(QString);
+    void gotMultiLineInput(const QString &);
     void relayMessage(const QString &);
-    void relayMessage(const QString &, int);
     void cut();
     void copy();
     void paste();
 
 signals:
-    void sendUserInput(const QByteArray &);
+    void sendUserInput(const QString &);
     void displayMessage(const QString &);
     void showMessage(const QString &, int);
 

@@ -287,10 +287,10 @@ void AbstractParser::parseExits(QString &str)
         // Orcs and trolls can detect exits with direct sunlight
         bool foundDirectSunlight = (m_connectedRoomFlags & ANY_DIRECT_SUNLIGHT) != 0;
         if (foundDirectSunlight || m_trollExitMapping) {
-            for (uint dir = 0; dir < 6; ++dir) {
-                ExitsFlagsType eThisExit = m_exitsFlags >> (dir * 4);
-                ExitsFlagsType eThisClosed = closedDoorFlag >> (dir * 4);
-                ConnectedRoomFlagsType cOtherRoom = m_connectedRoomFlags >> (dir * 2);
+            for (uint alt_dir = 0; alt_dir < 6; ++alt_dir) {
+                ExitsFlagsType eThisExit = m_exitsFlags >> (alt_dir * 4);
+                ExitsFlagsType eThisClosed = closedDoorFlag >> (alt_dir * 4);
+                ConnectedRoomFlagsType cOtherRoom = m_connectedRoomFlags >> (alt_dir * 2);
 
                 // Do not flag indirect sunlight if there was a closed door, no exit, or we saw direct sunlight
                 if (ISNOTSET(eThisExit, EF_EXIT) ||
@@ -300,7 +300,7 @@ void AbstractParser::parseExits(QString &str)
                 }
 
                 // Flag indirect sun
-                SET(m_connectedRoomFlags, (INDIRECT_SUN_ROOM << (dir * 2)));
+                SET(m_connectedRoomFlags, (INDIRECT_SUN_ROOM << (alt_dir * 2)));
             }
         }
     }
@@ -408,9 +408,9 @@ QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
                 }
                 etmp += "loop";
 
-            } else if (e.outBegin() != e.outEnd()) {
+            } else if (!e.outIsEmpty()) {
                 // Check target room for exit information
-                uint targetId = *e.outBegin();
+                uint targetId = e.outFirst();
                 const Room *targetRoom = m_mapData->getRoom(targetId, rs);
 
                 uint exitCount = 0;
@@ -565,10 +565,9 @@ public:
     explicit ShortestPathEmitter(AbstractParser &parser) : parser(parser) {}
     void receiveShortestPath(RoomAdmin * /*admin*/, QVector<SPNode> spnodes, int endpoint) override
     {
-
         const SPNode *spnode = &spnodes[endpoint];
-        QString ss = (*spnode->r)[0].toString();
-        QByteArray s = ("Distance " + QString::number(spnode->dist) + ": "  + ss + "\r\n").toLatin1();
+        auto name = Mmapper2Room::getName(spnode->r);
+        QByteArray s = ("Distance " + QString::number(spnode->dist) + ": "  + name + "\r\n").toLatin1();
         emit parser.sendToUser(s);
         QString dirs;
         while (spnode->parent >= 0) {
@@ -1252,9 +1251,9 @@ void AbstractParser::offlineCharacterMove(CommandIdType direction)
         sendPromptToUser(rb);
     } else {
         const Exit &e = rb->exit(static_cast<uint>(direction));
-        if (((Mmapper2Exit::getFlags(e) & EF_EXIT) != 0) && (e.outBegin() != e.outEnd())) {
+        if (((Mmapper2Exit::getFlags(e) & EF_EXIT) != 0) && !e.outIsEmpty()) {
             const RoomSelection *rs2 = m_mapData->select();
-            const Room *r = m_mapData->getRoom(*e.outBegin(), rs2);
+            const Room *r = m_mapData->getRoom(e.outFirst(), rs2);
 
             sendRoomInfoToUser(r);
             sendRoomExitsInfoToUser(r);
@@ -1328,8 +1327,8 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
             etmp += " ";
 
             RoomTerrainType sourceTerrain = Mmapper2Room::getTerrainType(r);
-            if (e.outBegin() != e.outEnd()) {
-                uint targetId = *e.outBegin();
+            if (!e.outIsEmpty()) {
+                uint targetId = e.outFirst();
                 const Room *targetRoom = m_mapData->getRoom(targetId, rs);
                 RoomTerrainType targetTerrain = Mmapper2Room::getTerrainType(targetRoom);
 
@@ -1772,19 +1771,20 @@ void AbstractParser::printRoomInfo(uint fieldset)
     const RoomSelection *rs = m_mapData->select(c);
     const Room *r = rs->values().front();
 
+    // TODO: use QStringBuilder (or std::ostringstream)?
     QString result;
 
     if ((fieldset & (1 << R_NAME)) != 0u) {
-        result = result + (*r)[R_NAME].toString() + "\r\n";
+        result += Mmapper2Room::getName(r) + "\r\n";
     }
     if ((fieldset & (1 << R_DESC)) != 0u) {
-        result = result + (*r)[R_DESC].toString();
+        result += Mmapper2Room::getDescription(r);
     }
     if ((fieldset & (1 << R_DYNAMICDESC)) != 0u) {
-        result = result + (*r)[R_DYNAMICDESC].toString();
+        result += Mmapper2Room::getDynamicDescription(r);
     }
     if ((fieldset & (1 << R_NOTE)) != 0u) {
-        result = result + "Note: " + (*r)[R_NOTE].toString() + "\r\n";
+        result += "Note: " + Mmapper2Room::getNote(r) + "\r\n";
     }
 
     emit sendToUser(result.toLatin1());

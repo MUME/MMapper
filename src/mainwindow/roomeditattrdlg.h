@@ -28,6 +28,7 @@
 #define ROOMEDITATTRDLG_H
 
 #include <QDialog>
+#include <QtWidgets/QListWidgetItem>
 #include "ui_roomeditattrdlg.h"
 
 class QShortcut;

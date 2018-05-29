@@ -31,8 +31,7 @@
 enum { TRUE = 1, FALSE = 0 };
 #endif
 
-enum { LEFT = 0, RIGHT };
-enum { SOURCE = 0, DESTINATION };
+enum Hand { LEFT = 0, RIGHT };
 
 #define bit1 1
 #define bit2 2
@@ -67,14 +66,9 @@ enum { SOURCE = 0, DESTINATION };
 #define bit31 1073741824
 #define bit32 2147483648
 
-#define UNSET(dest,bit) (dest &=~bit)
-#define SET(dest,bit) (dest |=bit)
-#define ISSET(src,bit) (src & bit)
-#define ISNOTSET(src,bit) (!(src & bit))
-#define KEEP(dest,bit) (dest = dest)
-
-// 2 -> set, 0 -> unset, 1 -> keep
-#define SETIF(dest,bit,b) (b == 2 ? SET(dest,bit): ( b == 0 ? UNSET(dest,bit) : KEEP(dest,bit) ) )
+#define SET(dest,bit) do { (dest) |= (bit); } while (false)
+#define ISSET(src,bit) static_cast<bool>((src) & (bit))
+#define ISNOTSET(src,bit) !ISSET((src), (bit))
 
 enum DirectionType { NORTH = 0, SOUTH = 1, EAST = 2, WEST = 3, UP = 4, DOWN = 5, NONE = 6, UNKNOWN = 7 };
 enum { FIRST = 0, SECOND = 1, THIRD = 2, FOURTH = 3, FIFTH = 4, SIXTH = 5 };

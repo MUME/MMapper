@@ -4,8 +4,6 @@
 #include "testclock.h"
 #include "mumeclock.h"
 
-using namespace std;
-
 TestClock::TestClock()
     : QObject()
 {}

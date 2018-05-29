@@ -26,14 +26,10 @@
 #include "component.h"
 #include <iostream>
 
-using namespace std;
 
-
-
-
-map<QString, ComponentCreator *> &ComponentCreator::creators()
+std::map<QString, ComponentCreator *> &ComponentCreator::creators()
 {
-    static map<QString, ComponentCreator *> creators;
+    static std::map<QString, ComponentCreator *> creators;
     return creators;
 }
 
@@ -72,7 +68,7 @@ void ComponentThreader::run()
         owner->runInit();
         exec();
     } catch (char const *error) {
-        cerr << error << endl;
+        std::cerr << error << std::endl;
         throw;
     }
 }

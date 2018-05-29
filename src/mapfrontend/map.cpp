@@ -30,12 +30,6 @@
 #include <QTime>
 #include <iostream>
 
-using namespace std;
-
-typedef map<int, map<int, map<int, Room *> > >::iterator ZIter;
-typedef map<int, map<int, Room *> >::iterator YIter;
-typedef map<int, Room *>::iterator XIter;
-
 void Map::clear()
 {
     m_map.clear();
@@ -54,10 +48,10 @@ void Map::getRooms(RoomOutStream &stream, const Coordinate &ulf, const Coordinat
 
     auto zUpper = m_map.lower_bound(zmax);
     for (auto z = m_map.upper_bound(zmin); z != zUpper; ++z) {
-        map<int, map<int, Room *> > &ymap = (*z).second;
+        auto &ymap = (*z).second;
         auto yUpper = ymap.lower_bound(ymax);
         for (auto y = ymap.upper_bound(ymin); y != yUpper; ++y) {
-            map<int, Room *> &xmap = (*y).second;
+            auto &xmap = (*y).second;
             auto xUpper = xmap.lower_bound(xmax);
             for (auto x = xmap.upper_bound(xmin); x != xUpper; ++x) {
                 stream << (*x).second;
@@ -96,10 +90,10 @@ bool Map::defined(const Coordinate &c)
 {
     auto z = m_map.find(c.z);
     if (z != m_map.end()) {
-        map<int, map<int, Room *> > &ySeg = (*z).second;
+        auto &ySeg = (*z).second;
         auto y = ySeg.find(c.y);
         if (y != ySeg.end()) {
-            map<int, Room *> &xSeg = (*y).second;
+            auto &xSeg = (*y).second;
             if (xSeg.find(c.x) != xSeg.end()) {
                 return true;
             }
@@ -133,11 +127,11 @@ void Map::set(const Coordinate &c, Room *room)
 /**
  * gets a new coordinate but doesn't return the old one ... should probably be changed ...
  */
-Coordinate Map::setNearest(const Coordinate &in_c, Room *room)
+Coordinate Map::setNearest(const Coordinate &in_c, Room &room)
 {
     Coordinate c = getNearestFree(in_c);
-    set(c, room);
-    room->setPosition(c);
+    set(c, &room);
+    room.setPosition(c);
     return c;
 }
 
@@ -148,7 +142,7 @@ Coordinate Map::getNearestFree(const Coordinate &p)
     int sum2 = (p.x + p.y + p.z + 1) / 2;
     bool random = (sum1 == sum2);
     CoordinateIterator i;
-    while (1) {
+    while (true) {
         if (random) {
             c = p + i.next();
         } else {
@@ -158,7 +152,7 @@ Coordinate Map::getNearestFree(const Coordinate &p)
             return c;
         }
     }
-    return 0;
+    /*NOTREACHED*/
 }
 
 Coordinate &CoordinateIterator::next()

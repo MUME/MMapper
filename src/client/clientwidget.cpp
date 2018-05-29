@@ -68,35 +68,28 @@ ClientWidget::ClientWidget(QWidget *parent) : QDialog(parent),
     layout->addWidget(m_statusBar);
 
     // Keyboard input on the display widget should be redirected to the input widget
-    m_display->installEventFilter(m_input);
+    m_display->setFocusProxy(m_input);
+    m_input->installEventFilter(this);
 
     // Focus should be on the input
     m_input->setFocus();
 
     // Connect the signals/slots
     m_telnet = new cTelnet(this);
-    connect(m_telnet, SIGNAL(disconnected()), this, SLOT(onDisconnected()) );
-    connect(m_telnet, SIGNAL(connected()), this, SLOT(onConnected()) );
-    connect(m_telnet, SIGNAL(socketError(const QString &)), this,
-            SLOT(onSocketError(const QString &)) );
+    connect(m_telnet, &cTelnet::disconnected, this, &ClientWidget::onDisconnected);
+    connect(m_telnet, &cTelnet::connected, this, &ClientWidget::onConnected);
+    connect(m_telnet, &cTelnet::socketError, this, &ClientWidget::onSocketError);
 
     // Input
-    connect(m_input, SIGNAL(sendUserInput(const QByteArray &)),
-            this, SLOT(sendToMud(const QByteArray &)));
-    connect(m_telnet, SIGNAL(echoModeChanged(bool)),
-            m_input, SLOT(toggleEchoMode(bool)));
-    connect(m_input, SIGNAL(showMessage(const QString &, int)), m_statusBar,
-            SLOT(showMessage(const QString &, int)));
+    connect(m_input, &StackedInputWidget::sendUserInput, this, &ClientWidget::sendToMud);
+    connect(m_telnet, &cTelnet::echoModeChanged, m_input, &StackedInputWidget::toggleEchoMode);
+    connect(m_input, &StackedInputWidget::showMessage, m_statusBar, &QStatusBar::showMessage);
 
     // Display
-    connect(m_input, SIGNAL(displayMessage(const QString &)), m_display,
-            SLOT(displayText(const QString &)));
-    connect(this, SIGNAL(sendToUser(const QString &)), m_display,
-            SLOT(displayText(const QString &)));
-    connect(m_telnet, SIGNAL(sendToUser(const QString &)), m_display,
-            SLOT(displayText(const QString &)));
-    connect(m_display, SIGNAL(showMessage(const QString &, int)), m_statusBar,
-            SLOT(showMessage(const QString &, int)));
+    connect(m_input, &StackedInputWidget::displayMessage, m_display, &DisplayWidget::displayText);
+    connect(this, &ClientWidget::sendToUser, m_display, &DisplayWidget::displayText);
+    connect(m_telnet, &cTelnet::sendToUser, m_display, &DisplayWidget::displayText);
+    connect(m_display, &DisplayWidget::showMessage, m_statusBar, &QStatusBar::showMessage);
     readSettings();
 
 
@@ -106,31 +99,31 @@ ClientWidget::ClientWidget(QWidget *parent) : QDialog(parent),
     QMenu *fileMenu = menuBar->addMenu("&File");
 
     QAction *connectAct = new QAction(QIcon(":/icons/online.png"), tr("Co&nnect"), this);
-    connectAct->setShortcut(tr("Ctrl+N"));
-    connect(connectAct, SIGNAL(triggered()), this, SLOT(connectToHost()) );
+    connectAct->setShortcut(QKeySequence(tr("Ctrl+N")));
+    connect(connectAct, &QAction::triggered, this, &ClientWidget::connectToHost);
     connect(connectAct, &QAction::hovered, [this]() {
         m_statusBar->showMessage(tr("Connect to the remote host"), 1000);
     });
 
     QAction *disconnectAct = new QAction(QIcon(":/icons/offline.png"), tr("&Disconnect"), this);
-    disconnectAct->setShortcut(tr("Ctrl+D"));
-    connect(disconnectAct, SIGNAL(triggered()), this, SLOT(disconnectFromHost()) );
+    disconnectAct->setShortcut(QKeySequence(tr("Ctrl+D")));
+    connect(disconnectAct, &QAction::triggered, this, &ClientWidget::disconnectFromHost);
     connect(disconnectAct, &QAction::hovered, [this]() {
         m_statusBar->showMessage(tr("Disconnect from the remote host"), 1000);
     });
 
     QAction *saveLog = new QAction(QIcon::fromTheme("document-save", QIcon(":/icons/save.png")),
                                    tr("&Save log as..."), this);
-    saveLog->setShortcut(tr("Ctrl+S"));
-    connect(saveLog, SIGNAL(triggered()), this, SLOT(saveLog()));
+    saveLog->setShortcut(QKeySequence(tr("Ctrl+S")));
+    connect(saveLog, &QAction::triggered, this, &ClientWidget::saveLog);
     connect(saveLog, &QAction::hovered, [this]() {
         m_statusBar->showMessage(tr("Save log as file"), 1000);
     });
 
     QAction *closeAct = new QAction(QIcon::fromTheme("window-close", QIcon(":/icons/exit.png")),
                                     tr("E&xit"), this);
-    closeAct->setShortcut(tr("Ctrl+Q"));
-    connect(closeAct, SIGNAL(triggered()), this, SLOT(close()));
+    closeAct->setShortcut(QKeySequence(tr("Ctrl+Q")));
+    connect(closeAct, &QAction::triggered, this, &ClientWidget::close);
     connect(closeAct, &QAction::hovered, [this]() {
         m_statusBar->showMessage(tr("Close the mud client"), 1000);
     });
@@ -143,24 +136,28 @@ ClientWidget::ClientWidget(QWidget *parent) : QDialog(parent),
     QMenu *editMenu = menuBar->addMenu("&Edit");
     QAction *cutAct = new QAction(QIcon::fromTheme("edit-cut", QIcon(":/icons/cut.png")), tr("Cu&t"),
                                   this);
-    cutAct->setShortcut(tr("Ctrl+X"));
+    cutAct->setShortcut(QKeySequence(tr("Ctrl+X")));
     cutAct->setStatusTip(tr("Cut the current selection's contents to the clipboard"));
     editMenu->addAction(cutAct);
-    connect(cutAct, SIGNAL(triggered()), m_input, SLOT(cut()));
+    connect(cutAct, &QAction::triggered, m_input, &StackedInputWidget::cut);
 
     QAction *copyAct = new QAction(QIcon::fromTheme("edit-copy", QIcon(":/icons/copy.png")),
                                    tr("&Copy"), this);
-    copyAct->setShortcut(tr("Ctrl+C"));
+    copyAct->setShortcut(QKeySequence(tr("Ctrl+C")));
     copyAct->setStatusTip(tr("Copy the current selection's contents to the clipboard"));
     editMenu->addAction(copyAct);
-    connect(copyAct, SIGNAL(triggered()), m_input, SLOT(copy()));
+    connect(copyAct, &QAction::triggered, this, &ClientWidget::copy);
+    connect(m_display, &DisplayWidget::copyAvailable,  [ = ](bool copyAvailable ) {
+        qInfo() << copyAvailable;
+        m_displayCopyAvailable = copyAvailable;
+    } );
 
     QAction *pasteAct = new QAction(QIcon::fromTheme("edit-paste", QIcon(":/icons/paste.png")),
                                     tr("&Paste"), this);
-    pasteAct->setShortcut(tr("Ctrl+V"));
+    pasteAct->setShortcut(QKeySequence(tr("Ctrl+V")));
     pasteAct->setStatusTip(tr("Paste the clipboard's contents into the current selection"));
     editMenu->addAction(pasteAct);
-    connect(pasteAct, SIGNAL(triggered()), m_input, SLOT(paste()));
+    connect(pasteAct, &QAction::triggered, m_input, &StackedInputWidget::paste);
 }
 
 ClientWidget::~ClientWidget()
@@ -236,11 +233,49 @@ void ClientWidget::onSocketError(const QString &errorStr)
     m_connected = false;
 }
 
-void ClientWidget::sendToMud(const QByteArray &ba)
+void ClientWidget::sendToMud(const QString &str)
 {
     if (m_connected) {
-        m_telnet->sendToMud(ba);
+        m_telnet->sendToMud(str);
     }
+}
+
+void ClientWidget::copy()
+{
+    qInfo() << "Copy" << m_displayCopyAvailable;
+    if (m_displayCopyAvailable) {
+        m_display->copy();
+        m_display->clear();
+    } else {
+        m_input->copy();
+    }
+}
+
+bool ClientWidget::eventFilter(QObject *obj, QEvent *event)
+{
+    if (event->type() == QEvent::ShortcutOverride && obj != this) {
+        // Shortcuts sent from child widgets should be handled by this widget
+        event->ignore();
+        return true;
+    }
+    if (event->type() == QEvent::KeyPress) {
+        auto *keyEvent = static_cast<QKeyEvent *>(event);
+        if (keyEvent->matches(QKeySequence::Copy)) {
+            copy();
+            keyEvent->accept();
+            return true;
+        } else if (keyEvent->matches(QKeySequence::Cut)) {
+            m_input->cut();
+            keyEvent->accept();
+            return true;
+        } else if (keyEvent->matches(QKeySequence::Paste)) {
+            m_input->paste();
+            keyEvent->accept();
+            return true;
+        }
+    }
+    // Standard event processing
+    return QObject::eventFilter(obj, event);
 }
 
 void ClientWidget::saveLog()

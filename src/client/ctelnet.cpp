@@ -33,7 +33,7 @@
 #include <QHostAddress>
 #include <QTextCodec>
 
-#define LATIN_1_ENCODING "ISO 8859-1"
+#define LATIN_1_ENCODING "latin1"
 
 cTelnet::cTelnet(QObject *parent)
     : QObject(parent)
@@ -148,7 +148,7 @@ void cTelnet::reset()
     command.clear();
 }
 
-void cTelnet::sendToMud(const QByteArray &data)
+void cTelnet::sendToMud(const QString &data)
 {
     QByteArray outdata = outCoder->fromUnicode(data);
 

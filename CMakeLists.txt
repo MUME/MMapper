@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(mmapper CXX)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "No build type selected, defaulting to Debug")
     set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type (default Debug)" FORCE)

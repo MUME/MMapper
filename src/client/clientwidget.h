@@ -56,14 +56,19 @@ public slots:
     void saveLog();
     void onConnected();
     void onDisconnected();
-    void onSocketError(const QString &errorStr);
-    void sendToMud(const QByteArray &);
+    void onSocketError(const QString &);
+    void sendToMud(const QString &);
+    void copy();
+
+protected:
+    bool eventFilter(QObject *obj, QEvent *event);
 
 private:
     void readSettings();
     void writeSettings();
 
     bool m_connected;
+    bool m_displayCopyAvailable;
 
     QSplitter *m_splitter;
     DisplayWidget *m_display;

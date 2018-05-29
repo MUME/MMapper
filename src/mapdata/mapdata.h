@@ -172,7 +172,7 @@ protected:
 
     QString m_fileName;
 
-    Coordinate m_position;
+    Coordinate m_position {};
 };
 
 

@@ -25,6 +25,9 @@
 
 #ifndef TINYLIST
 #define TINYLIST
+
+#include <cassert>
+
 /**
  * extremely shrinked array list implementation to be used for each room
  * because we have so many rooms and want to search them really fast, we
@@ -32,52 +35,97 @@
  *  - allow only 128 elements (1 per character)
  *  - only need 3 lines to access an element
  */
+class SearchTreeNode;
 
-template <class T>
 class TinyList
 {
 public:
-    TinyList() : list(0), listSize(0) {}
+    using T = SearchTreeNode *;
+    using iterator = T *;
+    using index_type = uint32_t;
+    using size_type = uint32_t;
+private:
+    static constexpr const index_type limit = 256u;
 
-    virtual ~TinyList()
+public:
+    explicit TinyList() = default;
+
+    ~TinyList() = default;
+
+public:
+    template<typename I>
+    using IsConvertible = typename std::enable_if_t < std::is_integral<I>::value
+                          && !std::is_same<I, T>::value >;
+
+    template<typename I, typename = IsConvertible <I>>
+    static inline index_type index(I c)
     {
-        if (list) delete[] list;
+        if (std::is_signed<I>::value)
+            return static_cast<index_type>(static_cast<std::make_unsigned_t<I>>(c));
+        return static_cast<index_type>(c);
     }
 
-    virtual T get(unsigned char c)
+    template<typename I, typename = IsConvertible <I>>
+    T get(I c) const
     {
-        if (c >= listSize) return 0;
-        else return list[c];
+        return get(index(c));
     }
 
-    virtual void put(unsigned char c, T object)
+    template<typename I, typename = IsConvertible <I>>
+    void put(I c, T object)
     {
-        if (c >= listSize) {
-            unsigned char i;
-            T *nlist = new T[c + 2];
-            for (i = 0; i < listSize; i++) nlist[i] = list[i];
-            for (; i < c; i++) nlist[i] = 0;
-            if (list) delete[] list;
-            list = nlist;
-            listSize = c + 1;
-            list[listSize] = 0;
+        put(index(c), object);
+    }
+
+    template<typename I, typename = IsConvertible <I>>
+    void remove(I c)
+    {
+        remove(index(c));
+    }
+
+public:
+    T get(index_type c) const
+    {
+        assert(c < limit);
+        if (c >= size())
+            return nullptr;
+        else
+            return list[c];
+    }
+
+    void put(index_type c, T object)
+    {
+        assert(c < limit);
+        if (c >= size()) {
+            list.resize(c + 1u);
         }
         list[c] = object;
     }
 
-    virtual void remove(unsigned char c)
+    void remove(index_type c)
     {
-        if (c < listSize) list[c] = 0;
+        assert(c < limit);
+        if (c < size())
+            list[c] = nullptr;
     }
 
-    virtual unsigned char size()
+    size_type size() const
     {
-        return listSize;
+        return static_cast<size_type>(list.size());
     }
 
-protected:
-    T *list;
-    unsigned char listSize;
+    iterator begin()
+    {
+        return list.data();
+    }
+
+    iterator end()
+    {
+        return begin() + size();
+    }
+
+private:
+    std::vector<T> list{};
 };
 
 #ifdef DMALLOC

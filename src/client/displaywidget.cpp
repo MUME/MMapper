@@ -45,6 +45,7 @@ DisplayWidget::DisplayWidget(QWidget *parent) : QTextEdit(parent)
     setDocumentTitle("MMapper Mud Client");
     setTextInteractionFlags(Qt::TextSelectableByMouse);
     setTabChangesFocus(false);
+    setContextMenuPolicy(Qt::NoContextMenu);
 
     document()->setUndoRedoEnabled(false);
 

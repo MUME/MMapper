@@ -27,8 +27,6 @@
 #include "parseevent.h"
 #include "property.h"
 
-using namespace std;
-
 #define EV_NAME 0
 #define EV_DESC 1
 #define EV_PDESC 2
@@ -38,13 +36,14 @@ using namespace std;
 
 namespace Mmapper2Event {
 
-ParseEvent *createEvent(const CommandIdType &c, const QString &roomName, const QString &roomDesc,
-                        const QString &parsedRoomDesc, const ExitsFlagsType &exitFlags, const PromptFlagsType &promptFlags,
-                        const ConnectedRoomFlagsType &connectedRoomFlags)
+ParseEvent *createEvent(const CommandIdType &c, const QString &roomName,
+                        const QString &dynamicDesc,
+                        const QString &staticDesc, const ExitsFlagsType &exitFlags,
+                        const PromptFlagsType &promptFlags, const ConnectedRoomFlagsType &connectedRoomFlags)
 {
 
     auto *event = new ParseEvent(c);
-    deque<QVariant> &optional = event->getOptional();
+    std::deque<QVariant> &optional = event->getOptional();
 
     if (roomName.isNull()) {
         event->push_back(new SkipProperty());
@@ -52,14 +51,14 @@ ParseEvent *createEvent(const CommandIdType &c, const QString &roomName, const Q
         event->push_back(new Property(roomName.toLatin1()));
     }
     optional.emplace_back(roomName);
-    optional.emplace_back(roomDesc);
+    optional.emplace_back(dynamicDesc);
 
-    if (parsedRoomDesc.isNull()) {
+    if (staticDesc.isNull()) {
         event->push_back(new SkipProperty());
     } else {
-        event->push_back(new Property(parsedRoomDesc.toLatin1()));
+        event->push_back(new Property(staticDesc.toLatin1()));
     }
-    optional.emplace_back(parsedRoomDesc);
+    optional.emplace_back(staticDesc);
     optional.emplace_back(static_cast<uint>(exitFlags));
 
     if ((promptFlags & PROMPT_FLAGS_VALID) != 0) {
@@ -75,29 +74,34 @@ ParseEvent *createEvent(const CommandIdType &c, const QString &roomName, const Q
 }
 
 
-QString getRoomName(const ParseEvent *e)
+QString getRoomName(const ParseEvent &e)
 {
-    return e->getOptional()[EV_NAME].toString();
+    return e.getOptional()[EV_NAME].toString();
 }
-QString getRoomDesc(const ParseEvent *e)
+
+QString getRoomDesc(const ParseEvent &e)
 {
-    return e->getOptional()[EV_DESC].toString();
+    return e.getOptional()[EV_DESC].toString();
 }
-QString getParsedRoomDesc(const ParseEvent *e)
+
+QString getParsedRoomDesc(const ParseEvent &e)
 {
-    return e->getOptional()[EV_PDESC].toString();
+    return e.getOptional()[EV_PDESC].toString();
 }
-ExitsFlagsType getExitFlags(const ParseEvent *e)
+
+ExitsFlagsType getExitFlags(const ParseEvent &e)
 {
-    return e->getOptional()[EV_EXITS].toUInt();
+    return e.getOptional()[EV_EXITS].toUInt();
 }
-PromptFlagsType getPromptFlags(const ParseEvent *e)
+
+PromptFlagsType getPromptFlags(const ParseEvent &e)
 {
-    return e->getOptional()[EV_PROMPT].toUInt();
+    return e.getOptional()[EV_PROMPT].toUInt();
 }
-ConnectedRoomFlagsType getConnectedRoomFlags(const ParseEvent *e)
+
+ConnectedRoomFlagsType getConnectedRoomFlags(const ParseEvent &e)
 {
-    return e->getOptional()[EV_CROOM].toUInt();
+    return e.getOptional()[EV_CROOM].toUInt();
 }
 
 }  // namespace Mmapper2Event

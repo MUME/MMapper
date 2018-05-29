@@ -38,20 +38,14 @@
 class IntermediateNode : public SearchTreeNode
 {
 public:
-    virtual ~IntermediateNode()
-    {
-        delete rooms;
-    }
-    IntermediateNode() : SearchTreeNode(const_cast<char *>(""))
-    {
-        rooms = 0;
-    }
-    IntermediateNode(ParseEvent *event);
-    RoomCollection *insertRoom(ParseEvent *event);
-    void getRooms(RoomOutStream &stream, ParseEvent *event);
-    void skipDown(RoomOutStream &stream, ParseEvent *event);
+    virtual ~IntermediateNode() = default;
+    explicit IntermediateNode() = default;
+    explicit IntermediateNode(ParseEvent &event);
+    RoomCollection *insertRoom(ParseEvent &event) override;
+    void getRooms(RoomOutStream &stream, ParseEvent &event) override;
+    void skipDown(RoomOutStream &stream, ParseEvent &event) override;
 private:
-    RoomCollection *rooms;
+    std::unique_ptr<RoomCollection> rooms{};
 };
 
 #endif

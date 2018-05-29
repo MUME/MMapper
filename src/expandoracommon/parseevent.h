@@ -35,7 +35,8 @@ class Property;
 /**
  * the ParseEvents will walk around in the SearchTree
  */
-class ParseEvent : public ListCycler<Property *, std::deque<Property *> >
+using ParseEventBase = ListCycler<Property *, std::deque<Property *> >;
+class ParseEvent : public ParseEventBase
 {
 public:
     ParseEvent(uint move) : moveType(move), numSkipped(0) {}

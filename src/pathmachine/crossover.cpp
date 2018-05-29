@@ -25,8 +25,6 @@
 
 #include "crossover.h"
 
-using namespace std;
-
 Crossover::Crossover(std::list<Path *> *paths, uint dirCode, PathParameters &params,
                      AbstractRoomFactory *in_factory) : Experimenting(paths, dirCode, params, in_factory) {}
 

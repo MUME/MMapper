@@ -57,16 +57,16 @@ Approved::~Approved()
         } else {
             owner->keepRoom(this, matchedRoom->getId());
             if (update) {
-                owner->scheduleAction(new SingleRoomAction(new Update( myEvent), matchedRoom->getId()));
+                owner->scheduleAction(new SingleRoomAction(new Update(*myEvent), matchedRoom->getId()));
             }
         }
     }
 }
 
 
-Approved::Approved(AbstractRoomFactory *in_factory, ParseEvent *event, int tolerance) :
+Approved::Approved(AbstractRoomFactory *in_factory, ParseEvent &event, int tolerance) :
     matchedRoom(nullptr),
-    myEvent(event),
+    myEvent(&event),
     matchingTolerance(tolerance),
     owner(nullptr),
     moreThanOne(false),

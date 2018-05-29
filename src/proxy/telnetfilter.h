@@ -45,9 +45,7 @@ struct IncomingData {
     TelnetDataType type;
 };
 
-typedef QQueue<IncomingData> TelnetIncomingDataQueue;
-
-
+using TelnetIncomingDataQueue = QQueue<IncomingData>;
 
 class TelnetFilter : public QObject
 {

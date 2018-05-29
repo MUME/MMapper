@@ -80,19 +80,15 @@ void MapData::shortestPathSearch(const Room *origin, ShortestPathRecipient *reci
         ExitsList exits = thisr->getExitsList();
         for (int dir = 0; dir < exits.size(); dir++) {
             const Exit &e = exits[dir];
-            auto outbegin = e.outBegin();
-            auto outend = e.outEnd();
-            if (outbegin == outend) { // Not mapped
-                continue;
-            }
-            ++outbegin;
-            if (outbegin != outend) { // Random, so no clear directions; skip it.
+            if (!e.outIsUnique()) {
+                // 0: Not mapped
+                // 2+: Random, so no clear directions; skip it.
                 continue;
             }
             if ((Mmapper2Exit::getFlags(e) & EF_EXIT) == 0) {
                 continue;
             }
-            const Room *nextr = roomIndex[*e.outBegin()];
+            const Room *nextr = roomIndex[e.outFirst()];
             if (visited.contains(nextr->getId())) {
                 continue;
             }

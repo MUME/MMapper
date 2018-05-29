@@ -49,8 +49,6 @@
 #include <cassert>
 #include <iostream>
 
-using namespace std;
-
 #define MINUMUM_STATIC_LINES 1
 #define CURRENT_SCHEMA_VERSION 042
 
@@ -558,13 +556,14 @@ bool MapStorage::mergeData()
         Coordinate pos;
 
         //read selected room x,y
+        // TODO(nschimme): Delete support for the old version due to octal constant nonsense
         if (version < 020) { // OLD VERSIONS SUPPORT CODE
             stream >> (quint32 &)pos.x;
             stream >> (quint32 &)pos.y;
         } else {
-            stream >> const_cast<qint32 &>(pos.x);
-            stream >> const_cast<qint32 &>(pos.y);
-            stream >> const_cast<qint32 &>(pos.z);
+            stream >> static_cast<qint32 &>(pos.x);
+            stream >> static_cast<qint32 &>(pos.y);
+            stream >> static_cast<qint32 &>(pos.z);
         }
 
         pos += basePosition;
@@ -591,7 +590,7 @@ bool MapStorage::mergeData()
             }
 
             m_progressCounter->step();
-            m_mapData.insertPredefinedRoom(room);
+            m_mapData.insertPredefinedRoom(*room);
         }
 
         if (version < 020) {
@@ -821,7 +820,7 @@ void MapStorage::loadOldConnection(Connection *connection, QDataStream &stream,
 
     stream >> vquint16;
     auto ct = static_cast<ConnectionType>(vquint16 & (bit1 + bit2));
-    cf = (vquint16 >> 2);
+    cf = static_cast<ConnectionFlags>(vquint16 >> 2);
     /*
     switch (vquint16)
     {
@@ -973,12 +972,12 @@ void MapStorage::saveExits(const Room *room, QDataStream &stream)
         stream << Mmapper2Exit::getFlags(e);
         stream << Mmapper2Exit::getDoorFlags(e);
         stream << Mmapper2Exit::getDoorName(e);
-        for (auto i = e.inBegin(); i != e.inEnd(); ++i) {
-            stream << static_cast<quint32>(*i);
+        for (auto idx : e.inRange()) {
+            stream << static_cast<quint32>(idx);
         }
         stream << static_cast<quint32>UINT_MAX;
-        for (auto i = e.outBegin(); i != e.outEnd(); ++i) {
-            stream << static_cast<quint32>(*i);
+        for (auto idx : e.outRange()) {
+            stream << static_cast<quint32>(idx);
         }
         stream << static_cast<quint32>UINT_MAX;
     }

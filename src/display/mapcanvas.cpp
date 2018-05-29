@@ -334,9 +334,14 @@ void MapCanvas::forceMapperToRoom()
     if (tmpSel->size() == 1) {
         if (Config().m_mapMode == 2) {
             const Room *r = tmpSel->values().front();
-            emit charMovedEvent(Mmapper2Event::createEvent( CID_UNKNOWN, Mmapper2Room::getName(r),
-                                                            Mmapper2Room::getDynamicDescription(r),
-                                                            Mmapper2Room::getDescription(r), 0, 0, 0));
+            // FIXME: need to force MainWindow's Mmapper2PathMachine's PathMachine's state to SYNCING,
+            // because this is ignored when the state is APPROVED (it alternates between the two).
+            // Alternate hack workaround: just trigger the event twice.
+            for (auto hack = 0; hack < 2; ++hack) {
+                emit charMovedEvent(Mmapper2Event::createEvent(CID_UNKNOWN, Mmapper2Room::getName(r),
+                                                               Mmapper2Room::getDynamicDescription(r),
+                                                               Mmapper2Room::getDescription(r), 0, 0, 0));
+            }
         } else {
             emit setCurrentRoom(tmpSel->keys().front());
         }
@@ -495,7 +500,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *event)
                 const Room *r1 = m_connectionSelection->getFirst().room;
                 ExitDirection dir1 = m_connectionSelection->getFirst().direction;
 
-                if ( r1->exit(dir1).outBegin() == r1->exit(dir1).outEnd() ) {
+                if ( r1->exit(dir1).outIsEmpty() ) {
                     delete m_connectionSelection;
                     m_connectionSelection = nullptr;
                 }
@@ -1103,12 +1108,12 @@ void MapCanvas::drawGroupCharacters()
     for (CGroupChar *character : selection->values()) {
         uint id = character->getPosition();
         if (character->getName() != Config().m_groupManagerCharName) {
-            const RoomSelection *selection = m_data->select();
-            const Room *r = m_data->getRoom(id, selection);
+            const RoomSelection *roomSelection = m_data->select();
+            const Room *r = m_data->getRoom(id, roomSelection);
             if (r != nullptr) {
                 drawCharacter(r->getPosition(), character->getColor());
             }
-            m_data->unselect(id, selection);
+            m_data->unselect(id, roomSelection);
         }
     }
     group->unselect(selection);
@@ -1420,7 +1425,7 @@ void MapCanvas::paintGL()
     if (!m_prespammedPath->isEmpty()) {
         QList<Coordinate> path = m_data->getPath(m_prespammedPath->getQueue());
         Coordinate c1, c2;
-        double dx, dy, dz;
+        double dx = 0.0, dy = 0.0, dz = 0.0;
         bool anypath = false;
 
         c1 = m_data->getPosition();
@@ -1819,16 +1824,12 @@ void MapCanvas::drawFlow(const Room *room, const std::vector<Room *> &rooms,
 
     // Draw part in adjacent room
     uint targetDir = Mmapper2Exit::opposite(exitDirection);
-    uint targetId;
-    const Room *targetRoom;
     const ExitsList &exitslist = room->getExitsList();
     const Exit &sourceExit = exitslist[exitDirection];
 
     //For each outgoing connections
-    auto itOut = sourceExit.outBegin();
-    while (itOut != sourceExit.outEnd()) {
-        targetId = *itOut;
-        targetRoom = rooms[targetId];
+    for (auto targetId : sourceExit.outRange()) {
+        const Room *targetRoom = rooms[targetId];
         if (targetRoom->getPosition().z == m_currentLayer) {
             QMatrix4x4 model;
             model.setToIdentity();
@@ -1837,7 +1838,6 @@ void MapCanvas::drawFlow(const Room *room, const std::vector<Room *> &rooms,
             loadMatrix(model);
             glCallList(m_flow_end_gllist[targetDir]);
         }
-        ++itOut;
     }
 
     // Finish pen
@@ -2116,7 +2116,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
     //exit n
     if (ISSET(ef_north, EF_EXIT) &&
             Config().m_drawNotMappedExits &&
-            room->exit(ED_NORTH).outBegin() == room->exit(ED_NORTH).outEnd()) { // zero outgoing connections
+            room->exit(ED_NORTH).outIsEmpty()) { // zero outgoing connections
         glEnable(GL_LINE_STIPPLE);
         glColor4d(1.0, 0.5, 0.0, 0.0);
         glCallList(m_wall_north_gllist);
@@ -2183,7 +2183,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
     //wall n
     if (ISNOTSET(ef_north, EF_EXIT) || ISSET(ef_north, EF_DOOR)) {
         if (ISNOTSET(ef_north, EF_DOOR)
-                && room->exit(ED_NORTH).outBegin() != room->exit(ED_NORTH).outEnd()) {
+                && !room->exit(ED_NORTH).outIsEmpty()) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.2, 0.0, 0.0, 0.0);
             glCallList(m_wall_north_gllist);
@@ -2201,7 +2201,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
     //exit s
     if (ISSET(ef_south, EF_EXIT) &&
             Config().m_drawNotMappedExits &&
-            room->exit(ED_SOUTH).outBegin() == room->exit(ED_SOUTH).outEnd()) { // zero outgoing connections
+            room->exit(ED_SOUTH).outIsEmpty()) { // zero outgoing connections
         glEnable(GL_LINE_STIPPLE);
         glColor4d(1.0, 0.5, 0.0, 0.0);
         glCallList(m_wall_south_gllist);
@@ -2268,7 +2268,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
     //wall s
     if (ISNOTSET(ef_south, EF_EXIT) || ISSET(ef_south, EF_DOOR)) {
         if (ISNOTSET(ef_south, EF_DOOR)
-                && room->exit(ED_SOUTH).outBegin() != room->exit(ED_SOUTH).outEnd()) {
+                && !room->exit(ED_SOUTH).outIsEmpty()) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.2, 0.0, 0.0, 0.0);
             glCallList(m_wall_south_gllist);
@@ -2287,7 +2287,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
     //exit e
     if (ISSET(ef_east, EF_EXIT) &&
             Config().m_drawNotMappedExits &&
-            room->exit(ED_EAST).outBegin() == room->exit(ED_EAST).outEnd()) { // zero outgoing connections
+            room->exit(ED_EAST).outIsEmpty()) { // zero outgoing connections
         glEnable(GL_LINE_STIPPLE);
         glColor4d(1.0, 0.5, 0.0, 0.0);
         glCallList(m_wall_east_gllist);
@@ -2353,7 +2353,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
     }
     //wall e
     if (ISNOTSET(ef_east, EF_EXIT) || ISSET(ef_east, EF_DOOR)) {
-        if (ISNOTSET(ef_east, EF_DOOR) && room->exit(ED_EAST).outBegin() != room->exit(ED_EAST).outEnd()) {
+        if (ISNOTSET(ef_east, EF_DOOR) && !room->exit(ED_EAST).outIsEmpty()) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.2, 0.0, 0.0, 0.0);
             glCallList(m_wall_east_gllist);
@@ -2372,7 +2372,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
     //exit w
     if (ISSET(ef_west, EF_EXIT) &&
             Config().m_drawNotMappedExits &&
-            room->exit(ED_WEST).outBegin() == room->exit(ED_WEST).outEnd()) { // zero outgoing connections
+            room->exit(ED_WEST).outIsEmpty()) { // zero outgoing connections
         glEnable(GL_LINE_STIPPLE);
         glColor4d(1.0, 0.5, 0.0, 0.0);
         glCallList(m_wall_west_gllist);
@@ -2438,7 +2438,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
     }
     //wall w
     if (ISNOTSET(ef_west, EF_EXIT) || ISSET(ef_west, EF_DOOR)) {
-        if (ISNOTSET(ef_west, EF_DOOR) && room->exit(ED_WEST).outBegin() != room->exit(ED_WEST).outEnd()) {
+        if (ISNOTSET(ef_west, EF_DOOR) && !room->exit(ED_WEST).outIsEmpty()) {
             glEnable(GL_LINE_STIPPLE);
             glColor4d(0.2, 0.0, 0.0, 0.0);
             glCallList(m_wall_west_gllist);
@@ -2461,7 +2461,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
     //exit u
     if (ISSET(ef_up, EF_EXIT)) {
         if (Config().m_drawNotMappedExits
-                && room->exit(ED_UP).outBegin() == room->exit(ED_UP).outEnd()) { // zero outgoing connections
+                && room->exit(ED_UP).outIsEmpty()) { // zero outgoing connections
             glEnable(GL_LINE_STIPPLE);
             glColor4d(1.0, 0.5, 0.0, 0.0);
 
@@ -2534,7 +2534,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
     //exit d
     if (ISSET(ef_down, EF_EXIT)) {
         if (Config().m_drawNotMappedExits
-                && room->exit(ED_DOWN).outBegin() == room->exit(ED_DOWN).outEnd()) { // zero outgoing connections
+                && room->exit(ED_DOWN).outIsEmpty()) { // zero outgoing connections
             glEnable(GL_LINE_STIPPLE);
             glColor4d(1.0, 0.5, 0.0, 0.0);
 
@@ -2644,7 +2644,6 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
     if (m_scaleFactor >= 0.15) {
         //draw connections and doors
         uint sourceId = room->getId();
-        uint targetId;
         const Room *targetRoom;
         const ExitsList &exitslist = room->getExitsList();
         bool oneway;
@@ -2655,9 +2654,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
             uint targetDir = Mmapper2Exit::opposite(i);
             const Exit &sourceExit = exitslist[i];
             //outgoing connections
-            auto itOut = sourceExit.outBegin();
-            while (itOut != sourceExit.outEnd()) {
-                targetId = *itOut;
+            for (auto targetId : sourceExit.outRange()) {
                 targetRoom = rooms[targetId];
                 rx = targetRoom->getPosition().x;
                 ry = targetRoom->getPosition().y;
@@ -2703,9 +2700,7 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
                 }
 
                 //incoming connections (only for oneway connections from rooms, that are not visible)
-                auto itIn = exitslist[i].inBegin();
-                while (itIn != exitslist[i].inEnd()) {
-                    targetId = *itIn;
+                for (auto targetId : exitslist[i].inRange()) {
                     targetRoom = rooms[targetId];
                     rx = targetRoom->getPosition().x;
                     ry = targetRoom->getPosition().y;
@@ -2718,7 +2713,6 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
                                             true, ISSET(Mmapper2Exit::getFlags(targetRoom->exit(Mmapper2Exit::opposite(i))), EF_EXIT) );
                         }
                     }
-                    ++itIn;
                 }
 
                 // draw door names
@@ -2737,8 +2731,6 @@ void MapCanvas::drawRoom(const Room *room, const std::vector<Room *> &rooms,
                     }
                     drawRoomDoorName(room, i, targetRoom, targetDir);
                 }
-
-                ++itOut;
             }
         }
     }

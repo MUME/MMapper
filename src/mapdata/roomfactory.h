@@ -34,16 +34,17 @@ class RoomFactory : public AbstractRoomFactory
 {
 public:
     RoomFactory();
-    virtual Room *createRoom(const ParseEvent *ev = 0) const;
-    virtual ComparisonResult compare(const Room *, const ParseEvent *event, uint tolerance = 0) const;
-    virtual ComparisonResult compareWeakProps(const Room *, const ParseEvent *event,
-                                              uint tolerance = 0) const;
-    virtual ParseEvent *getEvent(const Room *) const;
-    virtual void update(Room *, const ParseEvent *event) const;
-    virtual void update(Room *target, const Room *source) const;
-    virtual uint opposite(uint in) const;
-    virtual const Coordinate &exitDir(uint dir) const;
-    virtual uint numKnownDirs() const
+    virtual Room *createRoom(const ParseEvent *ev = 0) const override;
+    virtual ComparisonResult compare(const Room *, const ParseEvent *event,
+                                     uint tolerance = 0) const override;
+    virtual ComparisonResult compareWeakProps(const Room *, const ParseEvent &event,
+                                              uint tolerance = 0) const override;
+    virtual ParseEvent *getEvent(const Room *) const override;
+    virtual void update(Room &, const ParseEvent &event) const override;
+    virtual void update(Room *target, const Room *source) const override;
+    virtual uint opposite(uint in) const override;
+    virtual const Coordinate &exitDir(uint dir) const override;
+    virtual uint numKnownDirs() const override
     {
         return 8;
     }

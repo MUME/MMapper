@@ -39,7 +39,7 @@ RoomLocker::RoomLocker(RoomRecipient *forward, MapFrontend *frontend,
 RoomOutStream &RoomLocker::operator<<(const Room *room)
 {
     if ((factory != nullptr) && (comparator != nullptr)) {
-        if (factory->compareWeakProps(room, comparator) != CR_DIFFERENT) {
+        if (factory->compareWeakProps(room, *comparator) != CR_DIFFERENT) {
             data->lockRoom(recipient, room->getId());
             recipient->receiveRoom(data, room);
         }

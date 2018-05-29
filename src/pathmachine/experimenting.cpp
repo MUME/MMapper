@@ -28,12 +28,10 @@
 #include "experimenting.h"
 #include "path.h"
 
-using namespace std;
-
-Experimenting::Experimenting(list<Path *> *pat, uint in_dirCode, PathParameters &in_params,
+Experimenting::Experimenting(std::list<Path *> *pat, uint in_dirCode, PathParameters &in_params,
                              AbstractRoomFactory *in_factory) :
     direction(in_factory->exitDir(in_dirCode)), dirCode(in_dirCode), shortPaths(pat),
-    paths(new list<Path *>), best(nullptr), second(nullptr),
+    paths(new std::list<Path *>), best(nullptr), second(nullptr),
     params(in_params), numPaths(0), factory(in_factory)
 {}
 
@@ -57,7 +55,7 @@ void Experimenting::augmentPath(Path *path, RoomAdmin *map, const Room *room)
 }
 
 
-list<Path *> *Experimenting::evaluate()
+std::list<Path *> *Experimenting::evaluate()
 {
     Path *working = nullptr;
     while (!shortPaths->empty()) {
@@ -86,7 +84,7 @@ list<Path *> *Experimenting::evaluate()
                 // probability at the front, for we need to find a unique
                 // best path eventually.
                 if ( best->getProb() > working->getProb()*params.maxPaths / numPaths
-                        || ((!(best->getProb() > working->getProb())) && best->getRoom() == working->getRoom())) {
+                        || (best->getProb() <= working->getProb() && best->getRoom() == working->getRoom())) {
                     working->deny();
                 } else {
                     paths->push_back(working);

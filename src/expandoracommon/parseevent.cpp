@@ -26,9 +26,7 @@
 #include "parseevent.h"
 #include "property.h"
 
-using namespace std;
-
-ParseEvent::ParseEvent(const ParseEvent &other) : ListCycler<Property *, deque<Property *> >(),
+ParseEvent::ParseEvent(const ParseEvent &other) : ParseEventBase(),
     optional(other.optional), moveType(other.moveType), numSkipped(other.numSkipped)
 {
     for (unsigned int i = 0; i < other.size(); ++i) {
@@ -64,7 +62,7 @@ ParseEvent::~ParseEvent()
 
 void ParseEvent::reset()
 {
-    ListCycler<Property *, deque<Property *> >::reset();
+    ParseEventBase::reset();
     for (auto &property : *this) {
         property->reset();
     }

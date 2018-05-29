@@ -25,37 +25,46 @@
 
 #ifndef CUSTOMACTION_H
 #define CUSTOMACTION_H
+
 #include "mapaction.h"
 #include "coordinate.h"
 #include <list>
 
-enum FlagModifyMode {FMM_SET, FMM_UNSET, FMM_TOGGLE};
+enum FlagModifyMode {
+    FMM_SET, FMM_UNSET, FMM_TOGGLE
+};
 
 class MapData;
+
 class ParseEvent;
+
 class RoomSelection;
 
-typedef AddExit AddOneWayExit;
+using AddOneWayExit = AddExit;
 
 class AddTwoWayExit : public AddOneWayExit
 {
 public:
     AddTwoWayExit(uint room1Id, uint room2Id, uint room1Dir, uint in_room2Dir = UINT_MAX) :
         AddOneWayExit(room1Id, room2Id, room1Dir), room2Dir(in_room2Dir) {}
+
 protected:
     virtual void exec();
+
     uint room2Dir;
 };
 
-typedef RemoveExit RemoveOneWayExit;
+using RemoveOneWayExit = RemoveExit;
 
 class RemoveTwoWayExit : public RemoveOneWayExit
 {
 public:
     RemoveTwoWayExit(uint room1Id, uint room2Id, uint room1Dir, uint in_room2Dir = UINT_MAX) :
         RemoveOneWayExit(room1Id, room2Id, room1Dir), room2Dir(in_room2Dir) {}
+
 protected:
     virtual void exec();
+
     uint room2Dir;
 };
 
@@ -64,17 +73,22 @@ class GroupAction : virtual public MapAction
 {
 public:
     GroupAction(AbstractAction *ex, const RoomSelection *selection);
-    void schedule(MapFrontend *in)
+
+    void schedule(MapFrontend *in) override
     {
         executor->setFrontend(in);
     }
+
     virtual ~GroupAction()
     {
         delete executor;
     }
+
 protected:
-    virtual void exec();
-    virtual const std::set<uint> &getAffectedRooms();
+    virtual void exec() override;
+
+    virtual const std::set<uint> &getAffectedRooms() override;
+
 private:
     std::list<uint> selectedRooms;
     AbstractAction *executor;
@@ -83,9 +97,12 @@ private:
 class MoveRelative : public AbstractAction
 {
 public:
-    MoveRelative(const Coordinate &move);
-    virtual void preExec(uint id);
-    virtual void exec(uint id);
+    explicit MoveRelative(const Coordinate &move);
+
+    virtual void preExec(uint id) override;
+
+    virtual void exec(uint id) override;
+
 protected:
     Coordinate move;
 };
@@ -94,9 +111,13 @@ class MergeRelative : public Remove
 {
 public:
     MergeRelative(const Coordinate &move);
-    virtual void preExec(uint id);
-    virtual void exec(uint id);
-    virtual void insertAffected(uint id, std::set<uint> &affected);
+
+    virtual void preExec(uint id) override;
+
+    virtual void exec(uint id) override;
+
+    virtual void insertAffected(uint id, std::set<uint> &affected) override;
+
 protected:
     Coordinate move;
 };
@@ -105,25 +126,28 @@ protected:
 class ConnectToNeighbours : public AbstractAction
 {
 public:
-    virtual void insertAffected(uint id, std::set<uint> &affected);
-    virtual void exec(uint id);
+    virtual void insertAffected(uint id, std::set<uint> &affected) override;
+
+    virtual void exec(uint id) override;
+
 private:
     void connectRooms(Room *center, Coordinate &otherPos, uint dir, uint cid);
 };
 
-class DisconnectFromNeighbours :  public ExitsAffecter
+class DisconnectFromNeighbours : public ExitsAffecter
 {
 public:
-    virtual void exec(uint id);
+    virtual void exec(uint id) override;
 };
-
 
 
 class ModifyRoomFlags : public AbstractAction
 {
 public:
     ModifyRoomFlags(uint flags, uint fieldNum, FlagModifyMode);
-    virtual void exec(uint id);
+
+    virtual void exec(uint id) override;
+
 protected:
     const uint flags;
     const uint fieldNum;
@@ -134,7 +158,9 @@ class UpdateExitField : public AbstractAction
 {
 public:
     UpdateExitField(const QVariant &update, uint dir, uint fieldNum);
-    virtual void exec(uint id);
+
+    virtual void exec(uint id) override;
+
 protected:
     const QVariant update;
     const uint fieldNum;
@@ -145,7 +171,9 @@ class ModifyExitFlags : public AbstractAction
 {
 public:
     ModifyExitFlags(uint flags, uint dir, uint exitField, FlagModifyMode);
-    virtual void exec(uint id);
+
+    virtual void exec(uint id) override;
+
 protected:
     const uint flags;
     const uint fieldNum;

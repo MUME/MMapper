@@ -24,37 +24,33 @@
 ************************************************************************/
 
 #include "intermediatenode.h"
+
+#include <memory>
 #include "parseevent.h"
 #include "property.h"
 
-using namespace std;
-
-IntermediateNode::IntermediateNode(ParseEvent *event)
+IntermediateNode::IntermediateNode(ParseEvent &event)
 {
-    Property *prop = event->next();
-
-    if (prop == nullptr || prop->isSkipped()) {
-        myChars = new char[1];
-        myChars[0] = 0;
-    } else {
-        int size = strlen(prop->rest()) + 1;
-        myChars = new char[size];
-        strncpy(myChars, prop->rest(), size);
+    if (Property *prop = event.next()) {
+        if (!prop->isSkipped()) {
+            /* NOTE: This does not skip the first value */
+            myChars = from_string(prop->rest());
+        }
     }
-    rooms = nullptr;
-    event->prev();
+    event.prev();
 }
 
-RoomCollection *IntermediateNode::insertRoom(ParseEvent *event)
+// C++17 can return std::optional<std::reference_wrapper<RoomCollection>>
+RoomCollection *IntermediateNode::insertRoom(ParseEvent &event)
 {
 
-    if (event->next() == 0) {
+    if (event.next() == nullptr) {
         if (rooms == nullptr) {
-            rooms = new RoomCollection;
+            rooms = std::make_unique<RoomCollection>();
         }
-        return rooms;
+        return rooms.get();
     }
-    if (event->current()->isSkipped()) {
+    if (event.current()->isSkipped()) {
         return nullptr;
     }
 
@@ -62,20 +58,20 @@ RoomCollection *IntermediateNode::insertRoom(ParseEvent *event)
 }
 
 
-void IntermediateNode::getRooms(RoomOutStream &stream, ParseEvent *event)
+void IntermediateNode::getRooms(RoomOutStream &stream, ParseEvent &event)
 {
-    if (event->next() == 0) {
+    if (event.next() == 0) {
         for (auto room : *rooms) {
             stream << room;
         }
-    } else if (event->current()->isSkipped()) {
+    } else if (event.current()->isSkipped()) {
         SearchTreeNode::skipDown(stream, event);
     } else {
         SearchTreeNode::getRooms(stream, event);
     }
 }
 
-void IntermediateNode::skipDown(RoomOutStream &stream, ParseEvent *event)
+void IntermediateNode::skipDown(RoomOutStream &stream, ParseEvent &event)
 {
     getRooms(stream, event);
 }

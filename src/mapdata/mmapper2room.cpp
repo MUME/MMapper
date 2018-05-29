@@ -28,64 +28,125 @@
 
 #include <QString>
 
+RoomName Room::getName() const
+{
+    return at(R_NAME).toString();
+}
+
+RoomDescription Room::getDescription() const
+{
+    return at(R_DESC).toString();
+}
+
+RoomDescription Room::getDynamicDescription() const
+{
+    return at(R_DYNAMICDESC).toString();
+}
+
+RoomNote Room::getNote() const
+{
+    return at(R_NOTE).toString();
+}
+
+RoomMobFlags Room::getMobFlags() const
+{
+    return at(R_MOBFLAGS).toUInt();
+}
+
+RoomLoadFlags Room::getLoadFlags() const
+{
+    return at(R_LOADFLAGS).toUInt();
+}
+
+RoomTerrainType Room::getTerrainType() const
+{
+    return static_cast<RoomTerrainType>(at(R_TERRAINTYPE).toUInt());
+}
+
+RoomPortableType Room::getPortableType() const
+{
+    return static_cast<RoomPortableType>(at(R_PORTABLETYPE).toUInt());
+}
+
+RoomLightType Room::getLightType() const
+{
+    return static_cast<RoomLightType>(at(R_LIGHTTYPE).toUInt());
+}
+
+RoomAlignType Room::getAlignType() const
+{
+    return static_cast<RoomAlignType>(at(R_ALIGNTYPE).toUInt());
+}
+
+RoomRidableType Room::getRidableType() const
+{
+    return static_cast<RoomRidableType>(at(R_RIDABLETYPE).toUInt());
+}
+
+RoomSundeathType Room::getSundeathType() const
+{
+    return static_cast<RoomSundeathType>(at(R_SUNDEATHTYPE).toUInt());
+}
+
+
 namespace Mmapper2Room {
 RoomName getName(const Room *room)
 {
-    return (*room)[R_NAME].toString();
+    return room->getName();
 }
 
 RoomDescription getDescription(const Room *room)
 {
-    return (*room)[R_DESC].toString();
+    return room->getDescription();
 }
 
 RoomDescription getDynamicDescription(const Room *room)
 {
-    return (*room)[R_DYNAMICDESC].toString();
+    return room->getDynamicDescription();
 }
 
 RoomNote getNote(const Room *room)
 {
-    return (*room)[R_NOTE].toString();
+    return room->getNote();
 }
 
 RoomMobFlags getMobFlags(const Room *room)
 {
-    return (*room)[R_MOBFLAGS].toUInt();
+    return room->getMobFlags();
 }
 
 RoomLoadFlags getLoadFlags(const Room *room)
 {
-    return (*room)[R_LOADFLAGS].toUInt();
+    return room->getLoadFlags();
 }
 
 RoomTerrainType getTerrainType(const Room *room)
 {
-    return static_cast<RoomTerrainType>((*room)[R_TERRAINTYPE].toUInt());
+    return room->getTerrainType();
 }
 
 RoomPortableType getPortableType(const Room *room)
 {
-    return static_cast<RoomPortableType>((*room)[R_PORTABLETYPE].toUInt());
+    return room->getPortableType();
 }
 
 RoomLightType getLightType(const Room *room)
 {
-    return static_cast<RoomLightType>((*room)[R_LIGHTTYPE].toUInt());
+    return room->getLightType();
 }
 
 RoomAlignType getAlignType(const Room *room)
 {
-    return static_cast<RoomAlignType>((*room)[R_ALIGNTYPE].toUInt());
+    return room->getAlignType();
 }
 
 RoomRidableType getRidableType(const Room *room)
 {
-    return static_cast<RoomRidableType>((*room)[R_RIDABLETYPE].toUInt());
+    return room->getRidableType();
 }
 
 RoomSundeathType getSundeathType(const Room *room)
 {
-    return static_cast<RoomSundeathType>((*room)[R_SUNDEATHTYPE].toUInt());
+    return room->getSundeathType();
 }
 }  // namespace Mmapper2Room

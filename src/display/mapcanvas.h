@@ -165,8 +165,6 @@ private:
     QOpenGLTexture *m_updateTexture;
     QOpenGLTexture *m_trailTextures[16] {};
 
-    void moveSelection(const RoomSelection *sel, int dx, int dy);
-
     void makeGlLists();
 
     float m_scaleFactor {1.0f};

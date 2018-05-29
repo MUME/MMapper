@@ -1,95 +1,197 @@
 set(mmapper_SRCS
     main.cpp
-    clock/mumemoment.cpp
-    clock/mumeclock.cpp
-    clock/mumeclockwidget.cpp
     client/clientwidget.cpp
-    client/stackedinputwidget.cpp
-    client/inputwidget.cpp
-    client/displaywidget.cpp
+    client/clientwidget.h
     client/ctelnet.cpp
+    client/ctelnet.h
+    client/displaywidget.cpp
+    client/displaywidget.h
+    client/inputwidget.cpp
+    client/inputwidget.h
+    client/stackedinputwidget.cpp
+    client/stackedinputwidget.h
+    clock/mumeclock.cpp
+    clock/mumeclock.h
+    clock/mumeclockwidget.cpp
+    clock/mumeclockwidget.h
+    clock/mumemoment.cpp
+    clock/mumemoment.h
     configuration/configuration.cpp
+    configuration/configuration.h
     display/connectionselection.cpp
+    display/connectionselection.h
     display/mapcanvas.cpp
+    display/mapcanvas.h
     display/mapwindow.cpp
+    display/mapwindow.h
     display/prespammedpath.cpp
+    display/prespammedpath.h
+    expandoracommon/abstractroomfactory.h
     expandoracommon/component.cpp
+    expandoracommon/component.h
     expandoracommon/coordinate.cpp
+    expandoracommon/coordinate.h
+    expandoracommon/exit.h
     expandoracommon/frustum.cpp
+    expandoracommon/frustum.h
+    expandoracommon/listcycler.h
     expandoracommon/parseevent.cpp
+    expandoracommon/parseevent.h
     expandoracommon/property.cpp
+    expandoracommon/property.h
+    expandoracommon/roomadmin.h
+    expandoracommon/room.h
+    expandoracommon/roomrecipient.h
+    global/defs.h
+    global/range.h
     mainwindow/aboutdialog.cpp
+    mainwindow/aboutdialog.h
     mainwindow/findroomsdlg.cpp
+    mainwindow/findroomsdlg.h
     mainwindow/infomarkseditdlg.cpp
+    mainwindow/infomarkseditdlg.h
     mainwindow/mainwindow.cpp
+    mainwindow/mainwindow.h
     mainwindow/roomeditattrdlg.cpp
+    mainwindow/roomeditattrdlg.h
     mainwindow/welcomewidget.cpp
+    mainwindow/welcomewidget.h
     mapdata/customaction.cpp
-    mapdata/roomfilter.cpp
-    mapdata/shortestpath.cpp
+    mapdata/customaction.h
+    mapdata/drawstream.h
+    mapdata/infomark.h
     mapdata/mapdata.cpp
+    mapdata/mapdata.h
     mapdata/mmapper2exit.cpp
+    mapdata/mmapper2exit.h
     mapdata/mmapper2room.cpp
+    mapdata/mmapper2room.h
     mapdata/roomfactory.cpp
+    mapdata/roomfactory.h
+    mapdata/roomfilter.cpp
+    mapdata/roomfilter.h
     mapdata/roomselection.cpp
+    mapdata/roomselection.h
+    mapdata/shortestpath.cpp
+    mapdata/shortestpath.h
     mapfrontend/intermediatenode.cpp
+    mapfrontend/intermediatenode.h
     mapfrontend/mapaction.cpp
+    mapfrontend/mapaction.h
     mapfrontend/map.cpp
     mapfrontend/mapfrontend.cpp
+    mapfrontend/mapfrontend.h
+    mapfrontend/map.h
     mapfrontend/roomcollection.cpp
+    mapfrontend/roomcollection.h
     mapfrontend/roomlocker.cpp
+    mapfrontend/roomlocker.h
+    mapfrontend/roomoutstream.h
     mapfrontend/searchtreenode.cpp
+    mapfrontend/searchtreenode.h
+    mapfrontend/tinylist.h
     mapstorage/abstractmapstorage.cpp
+    mapstorage/abstractmapstorage.h
     mapstorage/basemapsavefilter.cpp
+    mapstorage/basemapsavefilter.h
     mapstorage/filesaver.cpp
+    mapstorage/filesaver.h
     mapstorage/jsonmapstorage.cpp
+    mapstorage/jsonmapstorage.h
     mapstorage/mapstorage.cpp
+    mapstorage/mapstorage.h
     mapstorage/oldconnection.cpp
+    mapstorage/oldconnection.h
+    mapstorage/olddoor.h
+    mapstorage/oldroom.h
     mapstorage/progresscounter.cpp
+    mapstorage/progresscounter.h
     mapstorage/roomsaver.cpp
-    pandoragroup/CGroupChar.cpp
-    pandoragroup/CGroupClient.cpp
-    pandoragroup/CGroupCommunicator.cpp
-    pandoragroup/CGroup.cpp
-    pandoragroup/CGroupServer.cpp
-    pandoragroup/mmapper2group.cpp
-    pandoragroup/groupaction.cpp
-    pandoragroup/groupselection.cpp
-    pandoragroup/groupwidget.cpp
-    parser/abstractparser.cpp
-    parser/mumexmlparser.cpp
-    parser/parserutils.cpp
-    parser/patterns.cpp
-    parser/roompropertysetter.cpp
-    parser/mmapper2event.cpp
-    mpi/remoteedit.cpp
-    mpi/mpifilter.cpp
-    mpi/viewsessionprocess.cpp
+    mapstorage/roomsaver.h
     mpi/editsessionprocess.cpp
+    mpi/editsessionprocess.h
+    mpi/mpifilter.cpp
+    mpi/mpifilter.h
+    mpi/remoteedit.cpp
+    mpi/remoteedit.h
     mpi/remoteeditwidget.cpp
+    mpi/remoteeditwidget.h
+    mpi/viewsessionprocess.cpp
+    mpi/viewsessionprocess.h
+    pandoragroup/CGroupChar.cpp
+    pandoragroup/CGroupChar.h
+    pandoragroup/CGroupClient.cpp
+    pandoragroup/CGroupClient.h
+    pandoragroup/CGroupCommunicator.cpp
+    pandoragroup/CGroupCommunicator.h
+    pandoragroup/CGroup.cpp
+    pandoragroup/CGroup.h
+    pandoragroup/CGroupServer.cpp
+    pandoragroup/CGroupServer.h
+    pandoragroup/groupaction.cpp
+    pandoragroup/groupaction.h
+    pandoragroup/groupselection.cpp
+    pandoragroup/groupselection.h
+    pandoragroup/groupwidget.cpp
+    pandoragroup/groupwidget.h
+    pandoragroup/mmapper2group.cpp
+    pandoragroup/mmapper2group.h
+    parser/abstractparser.cpp
+    parser/abstractparser.h
+    parser/mmapper2event.cpp
+    parser/mmapper2event.h
+    parser/mumexmlparser.cpp
+    parser/mumexmlparser.h
+    parser/parserutils.cpp
+    parser/parserutils.h
+    parser/patterns.cpp
+    parser/patterns.h
     pathmachine/approved.cpp
+    pathmachine/approved.h
     pathmachine/crossover.cpp
+    pathmachine/crossover.h
     pathmachine/experimenting.cpp
+    pathmachine/experimenting.h
     pathmachine/mmapper2pathmachine.cpp
+    pathmachine/mmapper2pathmachine.h
     pathmachine/onebyone.cpp
+    pathmachine/onebyone.h
     pathmachine/path.cpp
+    pathmachine/path.h
     pathmachine/pathmachine.cpp
+    pathmachine/pathmachine.h
     pathmachine/pathparameters.cpp
+    pathmachine/pathparameters.h
     pathmachine/roomsignalhandler.cpp
+    pathmachine/roomsignalhandler.h
     pathmachine/syncing.cpp
+    pathmachine/syncing.h
     preferences/ansicombo.cpp
-    preferences/configdialog.cpp
-    preferences/generalpage.cpp
-    preferences/groupmanagerpage.cpp
-    preferences/graphicspage.cpp
-    preferences/parserpage.cpp
-    preferences/pathmachinepage.cpp
+    preferences/ansicombo.h
     preferences/clientpage.cpp
+    preferences/clientpage.h
+    preferences/configdialog.cpp
+    preferences/configdialog.h
+    preferences/generalpage.cpp
+    preferences/generalpage.h
+    preferences/graphicspage.cpp
+    preferences/graphicspage.h
+    preferences/groupmanagerpage.cpp
+    preferences/groupmanagerpage.h
     preferences/mumeprotocolpage.cpp
+    preferences/mumeprotocolpage.h
+    preferences/parserpage.cpp
+    preferences/parserpage.h
+    preferences/pathmachinepage.cpp
+    preferences/pathmachinepage.h
     proxy/connectionlistener.cpp
-    proxy/proxy.cpp
-    proxy/telnetfilter.cpp
+    proxy/connectionlistener.h
     proxy/mumesocket.cpp
+    proxy/mumesocket.h
+    proxy/proxy.cpp
+    proxy/proxy.h
+    proxy/telnetfilter.cpp
+    proxy/telnetfilter.h
 )
 
 set(mmapper_RCS

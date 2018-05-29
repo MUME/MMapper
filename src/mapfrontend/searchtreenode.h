@@ -25,10 +25,15 @@
 
 #ifndef SEARCHTREENODE
 #define SEARCHTREENODE
+
+#include <memory>
+#include <vector>
 #include "tinylist.h"
 
 class ParseEvent;
+
 class RoomCollection;
+
 class RoomOutStream;
 
 /**
@@ -38,20 +43,29 @@ class RoomOutStream;
 class SearchTreeNode
 {
 protected:
-    bool ownerOfChars;
-    TinyList<SearchTreeNode *> *children;
-    char *myChars;
+    using byte_array = std::vector<uint8_t>;
+    static byte_array from_string(const char *s);
+    static byte_array skip(const byte_array &input, size_t count);
+protected:
+    TinyList children{};
+    byte_array myChars{};
 public:
-    SearchTreeNode(ParseEvent *event, TinyList<SearchTreeNode *> *children = 0);
-    SearchTreeNode(char *string = 0, TinyList<SearchTreeNode *> *children = 0);
+    explicit SearchTreeNode(ParseEvent &event);
+
+    explicit SearchTreeNode(byte_array in_bytes, TinyList in_children);
+
+    explicit SearchTreeNode();
+
     virtual ~SearchTreeNode();
-    virtual void getRooms(RoomOutStream &stream, ParseEvent *event);
-    virtual RoomCollection *insertRoom(ParseEvent *event);
+
+    virtual void getRooms(RoomOutStream &stream, ParseEvent &event);
+
+    virtual RoomCollection *insertRoom(ParseEvent &event);
 
     virtual void setChild(char, SearchTreeNode *);
-    virtual void skipDown(RoomOutStream &stream, ParseEvent *event);
-};
 
+    virtual void skipDown(RoomOutStream &stream, ParseEvent &event);
+};
 
 
 #endif

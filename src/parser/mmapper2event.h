@@ -60,20 +60,20 @@ typedef quint16 ConnectedRoomFlagsType;
 typedef quint8 PromptFlagsType;
 
 namespace Mmapper2Event {
-ParseEvent *createEvent(const CommandIdType &c, const QString &roomName, const QString &roomDesc,
-                        const QString &parsedRoomDesc, const ExitsFlagsType &exitFlags,
+ParseEvent *createEvent(const CommandIdType &c, const QString &roomName, const QString &dynamicDesc,
+                        const QString &staticDesc, const ExitsFlagsType &exitFlags,
                         const PromptFlagsType &promptFlags, const ConnectedRoomFlagsType &connectedRoomFlags);
 
-QString getRoomName(const ParseEvent *e);
+QString getRoomName(const ParseEvent &e);
 
-QString getRoomDesc(const ParseEvent *e);
+QString getRoomDesc(const ParseEvent &e);
 
-QString getParsedRoomDesc(const ParseEvent *e);
+QString getParsedRoomDesc(const ParseEvent &e);
 
-ExitsFlagsType getExitFlags(const ParseEvent *e);
+ExitsFlagsType getExitFlags(const ParseEvent &e);
 
-PromptFlagsType getPromptFlags(const ParseEvent *e);
+PromptFlagsType getPromptFlags(const ParseEvent &e);
 
-ConnectedRoomFlagsType getConnectedRoomFlags(const ParseEvent *e);
+ConnectedRoomFlagsType getConnectedRoomFlags(const ParseEvent &e);
 }
 #endif

@@ -68,7 +68,6 @@ public:
 
     void disconnectFromHost();
     void connectToHost();
-    QAbstractSocket::SocketError error();
     void sendToMud(const QByteArray &ba);
 
 protected slots:

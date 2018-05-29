@@ -411,6 +411,18 @@ void RoomEditAttrDlg::setRoomSelection(const RoomSelection *rs, MapData *md, Map
     connect(this, SIGNAL(mapChanged()), m_mapCanvas, SLOT(update()));
 }
 
+template<int N, typename Flags, typename Flag>
+void setCheckState(QListWidgetItem * (&list)[N], int index, const Flags &flags, Flag flag)
+{
+    static_assert(N > 0, "");
+    assert(index < N);
+    assert(static_cast<int>(flag) == (1 << index));
+    if (auto *x = list[index]) {
+        x->setCheckState(ISSET(flags, flag)
+                         ? Qt::CheckState::Checked
+                         : Qt::CheckState::Unchecked);
+    }
+}
 
 void RoomEditAttrDlg::updateDialog(const Room *r)
 {
@@ -457,11 +469,7 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         const Exit &e = r->exit(getSelectedExit());
         ExitFlags ef = Mmapper2Exit::getFlags(e);
 
-        if (ISSET(ef, EF_EXIT)) {
-            exitListItems[0]->setCheckState(Qt::Checked);
-        } else {
-            exitListItems[0]->setCheckState(Qt::Unchecked);
-        }
+        setCheckState(exitListItems, 0, ef, EF_EXIT);
 
         if (ISSET(ef, EF_DOOR)) {
             doorNameLineEdit->setEnabled(true);
@@ -472,65 +480,16 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
 
             DoorFlags df = Mmapper2Exit::getDoorFlags(e);
 
-            if (ISSET(df, DF_HIDDEN)) {
-                doorListItems[0]->setCheckState(Qt::Checked);
-            } else {
-                doorListItems[0]->setCheckState(Qt::Unchecked);
-            }
-
-            if (ISSET(df, DF_NEEDKEY)) {
-                doorListItems[1]->setCheckState(Qt::Checked);
-            } else {
-                doorListItems[1]->setCheckState(Qt::Unchecked);
-            }
-
-            if (ISSET(df, DF_NOBLOCK)) {
-                doorListItems[2]->setCheckState(Qt::Checked);
-            } else {
-                doorListItems[2]->setCheckState(Qt::Unchecked);
-            }
-
-            if (ISSET(df, DF_NOBREAK)) {
-                doorListItems[3]->setCheckState(Qt::Checked);
-            } else {
-                doorListItems[3]->setCheckState(Qt::Unchecked);
-            }
-
-            if (ISSET(df, DF_NOPICK)) {
-                doorListItems[4]->setCheckState(Qt::Checked);
-            } else {
-                doorListItems[4]->setCheckState(Qt::Unchecked);
-            }
-
-            if (ISSET(df, DF_DELAYED)) {
-                doorListItems[5]->setCheckState(Qt::Checked);
-            } else {
-                doorListItems[5]->setCheckState(Qt::Unchecked);
-            }
-
-            if (ISSET(df, DF_CALLABLE)) {
-                doorListItems[6]->setCheckState(Qt::Checked);
-            } else {
-                doorListItems[6]->setCheckState(Qt::Unchecked);
-            }
-
-            if (ISSET(df, DF_KNOCKABLE)) {
-                doorListItems[7]->setCheckState(Qt::Checked);
-            } else {
-                doorListItems[7]->setCheckState(Qt::Unchecked);
-            }
-
-            if (ISSET(df, DF_MAGIC)) {
-                doorListItems[8]->setCheckState(Qt::Checked);
-            } else {
-                doorListItems[8]->setCheckState(Qt::Unchecked);
-            }
-
-            if (ISSET(df, DF_ACTION)) {
-                doorListItems[9]->setCheckState(Qt::Checked);
-            } else {
-                doorListItems[9]->setCheckState(Qt::Unchecked);
-            }
+            setCheckState(doorListItems, 0, df, DF_HIDDEN);
+            setCheckState(doorListItems, 1, df, DF_NEEDKEY);
+            setCheckState(doorListItems, 2, df, DF_NOBLOCK);
+            setCheckState(doorListItems, 3, df, DF_NOBREAK);
+            setCheckState(doorListItems, 4, df, DF_NOPICK);
+            setCheckState(doorListItems, 5, df, DF_DELAYED);
+            setCheckState(doorListItems, 6, df, DF_CALLABLE);
+            setCheckState(doorListItems, 7, df, DF_KNOCKABLE);
+            setCheckState(doorListItems, 8, df, DF_MAGIC);
+            setCheckState(doorListItems, 9, df, DF_ACTION);
         } else {
             doorNameLineEdit->clear();
             doorNameLineEdit->setEnabled(false);
@@ -539,65 +498,16 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
             exitListItems[1]->setCheckState(Qt::Unchecked);
         }
 
-        if (ISSET(ef, EF_ROAD)) {
-            exitListItems[2]->setCheckState(Qt::Checked);
-        } else {
-            exitListItems[2]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(ef, EF_CLIMB)) {
-            exitListItems[3]->setCheckState(Qt::Checked);
-        } else {
-            exitListItems[3]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(ef, EF_RANDOM)) {
-            exitListItems[4]->setCheckState(Qt::Checked);
-        } else {
-            exitListItems[4]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(ef, EF_SPECIAL)) {
-            exitListItems[5]->setCheckState(Qt::Checked);
-        } else {
-            exitListItems[5]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(ef, EF_NO_MATCH)) {
-            exitListItems[6]->setCheckState(Qt::Checked);
-        } else {
-            exitListItems[6]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(ef, EF_FLOW)) {
-            exitListItems[7]->setCheckState(Qt::Checked);
-        } else {
-            exitListItems[7]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(ef, EF_NO_FLEE)) {
-            exitListItems[8]->setCheckState(Qt::Checked);
-        } else {
-            exitListItems[8]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(ef, EF_DAMAGE)) {
-            exitListItems[9]->setCheckState(Qt::Checked);
-        } else {
-            exitListItems[9]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(ef, EF_FALL)) {
-            exitListItems[10]->setCheckState(Qt::Checked);
-        } else {
-            exitListItems[10]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(ef, EF_GUARDED)) {
-            exitListItems[11]->setCheckState(Qt::Checked);
-        } else {
-            exitListItems[11]->setCheckState(Qt::Unchecked);
-        }
+        setCheckState(exitListItems, 2, ef, EF_ROAD);
+        setCheckState(exitListItems, 3, ef, EF_CLIMB);
+        setCheckState(exitListItems, 4, ef, EF_RANDOM);
+        setCheckState(exitListItems, 5, ef, EF_SPECIAL);
+        setCheckState(exitListItems, 6, ef, EF_NO_MATCH);
+        setCheckState(exitListItems, 7, ef, EF_FLOW);
+        setCheckState(exitListItems, 8, ef, EF_NO_FLEE);
+        setCheckState(exitListItems, 9, ef, EF_DAMAGE);
+        setCheckState(exitListItems, 10, ef, EF_FALL);
+        setCheckState(exitListItems, 11, ef, EF_GUARDED);
 
         roomNoteTextEdit->clear();
         roomNoteTextEdit->setEnabled(false);
@@ -614,204 +524,45 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
             index++;
         }
 
-
-        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_RENT)) {
-            mobListItems[0]->setCheckState(Qt::Checked);
-        } else {
-            mobListItems[0]->setCheckState(Qt::Unchecked);
+        {
+            RoomMobFlags rmf = Mmapper2Room::getMobFlags(r);
+            setCheckState(mobListItems, 0, rmf, RMF_RENT);
+            setCheckState(mobListItems, 1, rmf, RMF_SHOP);
+            setCheckState(mobListItems, 2, rmf, RMF_WEAPONSHOP);
+            setCheckState(mobListItems, 3, rmf, RMF_ARMOURSHOP);
+            setCheckState(mobListItems, 4, rmf, RMF_FOODSHOP);
+            setCheckState(mobListItems, 5, rmf, RMF_PETSHOP);
+            setCheckState(mobListItems, 6, rmf, RMF_GUILD);
+            setCheckState(mobListItems, 7, rmf, RMF_SCOUTGUILD);
+            setCheckState(mobListItems, 8, rmf, RMF_MAGEGUILD);
+            setCheckState(mobListItems, 9, rmf, RMF_CLERICGUILD);
+            setCheckState(mobListItems, 10, rmf, RMF_WARRIORGUILD);
+            setCheckState(mobListItems, 11, rmf, RMF_RANGERGUILD);
+            setCheckState(mobListItems, 12, rmf, RMF_SMOB);
+            setCheckState(mobListItems, 13, rmf, RMF_QUEST);
+            setCheckState(mobListItems, 14, rmf, RMF_ANY);
         }
 
-        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_SHOP)) {
-            mobListItems[1]->setCheckState(Qt::Checked);
-        } else {
-            mobListItems[1]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_WEAPONSHOP)) {
-            mobListItems[2]->setCheckState(Qt::Checked);
-        } else {
-            mobListItems[2]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_ARMOURSHOP)) {
-            mobListItems[3]->setCheckState(Qt::Checked);
-        } else {
-            mobListItems[3]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_FOODSHOP)) {
-            mobListItems[4]->setCheckState(Qt::Checked);
-        } else {
-            mobListItems[4]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_PETSHOP)) {
-            mobListItems[5]->setCheckState(Qt::Checked);
-        } else {
-            mobListItems[5]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_GUILD)) {
-            mobListItems[6]->setCheckState(Qt::Checked);
-        } else {
-            mobListItems[6]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_SCOUTGUILD)) {
-            mobListItems[7]->setCheckState(Qt::Checked);
-        } else {
-            mobListItems[7]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_MAGEGUILD)) {
-            mobListItems[8]->setCheckState(Qt::Checked);
-        } else {
-            mobListItems[8]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_CLERICGUILD)) {
-            mobListItems[9]->setCheckState(Qt::Checked);
-        } else {
-            mobListItems[9]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_WARRIORGUILD)) {
-            mobListItems[10]->setCheckState(Qt::Checked);
-        } else {
-            mobListItems[10]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_RANGERGUILD)) {
-            mobListItems[11]->setCheckState(Qt::Checked);
-        } else {
-            mobListItems[11]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_SMOB)) {
-            mobListItems[12]->setCheckState(Qt::Checked);
-        } else {
-            mobListItems[12]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_QUEST)) {
-            mobListItems[13]->setCheckState(Qt::Checked);
-        } else {
-            mobListItems[13]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getMobFlags(r), RMF_ANY)) {
-            mobListItems[14]->setCheckState(Qt::Checked);
-        } else {
-            mobListItems[14]->setCheckState(Qt::Unchecked);
-        }
-
-
-        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_TREASURE)) {
-            loadListItems[0]->setCheckState(Qt::Checked);
-        } else {
-            loadListItems[0]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_ARMOUR)) {
-            loadListItems[1]->setCheckState(Qt::Checked);
-        } else {
-            loadListItems[1]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_WEAPON)) {
-            loadListItems[2]->setCheckState(Qt::Checked);
-        } else {
-            loadListItems[2]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_WATER)) {
-            loadListItems[3]->setCheckState(Qt::Checked);
-        } else {
-            loadListItems[3]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_FOOD)) {
-            loadListItems[4]->setCheckState(Qt::Checked);
-        } else {
-            loadListItems[4]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_HERB)) {
-            loadListItems[5]->setCheckState(Qt::Checked);
-        } else {
-            loadListItems[5]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_KEY)) {
-            loadListItems[6]->setCheckState(Qt::Checked);
-        } else {
-            loadListItems[6]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_MULE)) {
-            loadListItems[7]->setCheckState(Qt::Checked);
-        } else {
-            loadListItems[7]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_HORSE)) {
-            loadListItems[8]->setCheckState(Qt::Checked);
-        } else {
-            loadListItems[8]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_PACKHORSE)) {
-            loadListItems[9]->setCheckState(Qt::Checked);
-        } else {
-            loadListItems[9]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_TRAINEDHORSE)) {
-            loadListItems[10]->setCheckState(Qt::Checked);
-        } else {
-            loadListItems[10]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_ROHIRRIM)) {
-            loadListItems[11]->setCheckState(Qt::Checked);
-        } else {
-            loadListItems[11]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_WARG)) {
-            loadListItems[12]->setCheckState(Qt::Checked);
-        } else {
-            loadListItems[12]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_BOAT)) {
-            loadListItems[13]->setCheckState(Qt::Checked);
-        } else {
-            loadListItems[13]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_ATTENTION)) {
-            loadListItems[14]->setCheckState(Qt::Checked);
-        } else {
-            loadListItems[14]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_TOWER)) {
-            loadListItems[15]->setCheckState(Qt::Checked);
-        } else {
-            loadListItems[15]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_CLOCK)) {
-            loadListItems[16]->setCheckState(Qt::Checked);
-        } else {
-            loadListItems[16]->setCheckState(Qt::Unchecked);
-        }
-
-        if (ISSET(Mmapper2Room::getLoadFlags(r), RLF_MAIL)) {
-            loadListItems[17]->setCheckState(Qt::Checked);
-        } else {
-            loadListItems[17]->setCheckState(Qt::Unchecked);
+        {
+            RoomLoadFlags rlf = Mmapper2Room::getLoadFlags(r);
+            setCheckState(loadListItems, 0, rlf, RLF_TREASURE);
+            setCheckState(loadListItems, 1, rlf, RLF_ARMOUR);
+            setCheckState(loadListItems, 2, rlf, RLF_WEAPON);
+            setCheckState(loadListItems, 3, rlf, RLF_WATER);
+            setCheckState(loadListItems, 4, rlf, RLF_FOOD);
+            setCheckState(loadListItems, 5, rlf, RLF_HERB);
+            setCheckState(loadListItems, 6, rlf, RLF_KEY);
+            setCheckState(loadListItems, 7, rlf, RLF_MULE);
+            setCheckState(loadListItems, 8, rlf, RLF_HORSE);
+            setCheckState(loadListItems, 9, rlf, RLF_PACKHORSE);
+            setCheckState(loadListItems, 10, rlf, RLF_TRAINEDHORSE);
+            setCheckState(loadListItems, 11, rlf, RLF_ROHIRRIM);
+            setCheckState(loadListItems, 12, rlf, RLF_WARG);
+            setCheckState(loadListItems, 13, rlf, RLF_BOAT);
+            setCheckState(loadListItems, 14, rlf, RLF_ATTENTION);
+            setCheckState(loadListItems, 15, rlf, RLF_TOWER);
+            setCheckState(loadListItems, 16, rlf, RLF_CLOCK);
+            setCheckState(loadListItems, 17, rlf, RLF_MAIL);
         }
 
         roomDescriptionTextEdit->setEnabled(true);
