@@ -40,6 +40,7 @@ private Q_SLOTS:
     // ParserUtils
     void removeAnsiMarksTest();
     void latinToAsciiTest();
+    void createParseEventTest();
 };
 
 #endif

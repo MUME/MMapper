@@ -28,42 +28,18 @@
 #include <list>
 #include <set>
 
+#include "global/range.h"
 #include "mapdata/mapdata.h"
 #include "mapdata/mmapper2exit.h"
 #include "mapstorage/basemapsavefilter.h"
 #include "mapstorage/progresscounter.h"
 
-using namespace std;
-
 namespace {
-class IsSecret
+
+bool contains(const std::set<uint> &set, uint x)
 {
-    const std::set<uint> &m_baseRooms;
-
-public:
-    explicit IsSecret( const set<uint> &baseRooms ) : m_baseRooms( baseRooms ) {}
-
-    using argument_type = uint;
-
-    bool operator() ( argument_type roomId )
-    {
-        return m_baseRooms.find( roomId ) == m_baseRooms.end();
-    }
-};
-
-template< typename Container >
-class InsertInto
-{
-    Container &m_container;
-
-public:
-    explicit InsertInto( Container &container ) : m_container( container ) {}
-
-    void operator() ( typename Container::value_type element )
-    {
-        m_container.insert( element );
-    }
-};
+    return set.find(x) == set.end();
+}
 
 bool isHiddenExit( const Exit &exit )
 {
@@ -75,7 +51,7 @@ struct RoomLink {
     uint from, to;
     RoomLink( uint f, uint t ) : from( f ), to( t ) {}
 
-private:
+public:
     RoomLink() = delete;
 };
 
@@ -122,7 +98,7 @@ void BaseMapSaveFilter::prepare( ProgressCounter *counter )
 {
     assert( m_impl->mapData );
 
-    set<uint> considered;
+    std::set<uint> considered;
 
     // Seed room
     m_impl->mapData->genericSearch( this, RoomFilter("The Fountain Square", Qt::CaseSensitive,
@@ -149,15 +125,14 @@ void BaseMapSaveFilter::prepare( ProgressCounter *counter )
 
 void BaseMapSaveFilter::receiveRoom( RoomAdmin * /*admin*/, const Room *room )
 {
-    const ExitsList &exits( room->getExitsList() );
-    for (const auto &exit : exits) {
-        if ( isHiddenExit( exit ) ) {
-            for ( auto to = exit.outBegin(); to != exit.outEnd(); ++to ) {
-                m_impl->secretLinks.insert( RoomLink( room->getId(), *to ) );
+    for (const auto &exit : room->getExitsList()) {
+        for (auto to : exit.outRange()) {
+            if (isHiddenExit(exit)) {
+                m_impl->secretLinks.emplace(RoomLink(room->getId(), to));
+            } else {
+                m_impl->baseRooms.emplace(to);
+                m_impl->roomsTodo.emplace_back(to);
             }
-        } else {
-            for_each( exit.outBegin(), exit.outEnd(), InsertInto< set<uint> >( m_impl->baseRooms ) );
-            copy( exit.outBegin(), exit.outEnd(), back_inserter( m_impl->roomsTodo ) );
         }
     }
 }
@@ -180,19 +155,24 @@ uint BaseMapSaveFilter::acceptedRoomsCount()
 
 BaseMapSaveFilter::Action BaseMapSaveFilter::filter( const Room *room )
 {
-    assert( !m_impl->baseRooms.empty() );
+    auto &baseRooms = m_impl->baseRooms;
+    assert(!baseRooms.empty() );
 
-    if ( m_impl->baseRooms.find( room->getId() ) != m_impl->baseRooms.end() ) {
+    if (baseRooms.find(room->getId()) != baseRooms.end() ) {
         const ExitsList &exits = room->getExitsList();
         for (const auto &exit : exits) {
-            if ( isHiddenExit( exit ) ) {
+            if (isHiddenExit(exit)) {
                 return ALTER;
             }
-            if ( find_if( exit.outBegin(), exit.outEnd(), IsSecret( m_impl->baseRooms ) ) != exit.outEnd() ) {
-                return ALTER;
+            for (auto idx : exit.outRange()) {
+                if (contains(baseRooms, idx)) {
+                    return ALTER;
+                }
             }
-            if ( find_if( exit.inBegin(), exit.inEnd(), IsSecret( m_impl->baseRooms ) ) != exit.inEnd() ) {
-                return ALTER;
+            for (auto idx : exit.inRange()) {
+                if (contains(baseRooms, idx)) {
+                    return ALTER;
+                }
             }
         }
 
@@ -204,22 +184,25 @@ BaseMapSaveFilter::Action BaseMapSaveFilter::filter( const Room *room )
 
 Room BaseMapSaveFilter::alteredRoom( const Room *room )
 {
-    assert( !m_impl->baseRooms.empty() );
+    auto &baseRooms = m_impl->baseRooms;
+    auto &secretLinks = m_impl->secretLinks;
+    assert(!baseRooms.empty() );
 
     Room copy = *room;
 
     ExitsList &exits = copy.getExitsList();
     for (auto &exit : exits) {
-        vector<uint> outLinks( exit.outBegin(), exit.outEnd() );
-        vector<uint> inLinks( exit.inBegin(), exit.inEnd() );
+
+        auto outLinks = exit.outRange();
+        auto inLinks = exit.inRange();
 
         // Destroy links to secret rooms
         for (unsigned int outLink : outLinks) {
-            const bool destRoomIsSecret = IsSecret( m_impl->baseRooms )( outLink );
+            const bool destRoomIsSecret = contains(baseRooms, outLink);
             const bool outLinkIsSecret = (
-                                             m_impl->secretLinks.find( RoomLink( copy.getId(), outLink ) ) != m_impl->secretLinks.end() );
+                                             secretLinks.find(RoomLink(copy.getId(), outLink ) ) != secretLinks.end() );
             const bool linkBackIsSecret = (
-                                              m_impl->secretLinks.find( RoomLink( outLink, copy.getId() ) ) != m_impl->secretLinks.end() );
+                                              secretLinks.find(RoomLink(outLink, copy.getId() ) ) != secretLinks.end() );
 
             if ( destRoomIsSecret || ( outLinkIsSecret && linkBackIsSecret ) ) {
                 exit.removeOut( outLink );
@@ -233,13 +216,13 @@ Room BaseMapSaveFilter::alteredRoom( const Room *room )
 
         // Destroy links from secret rooms to here
         for (unsigned int inLink : inLinks) {
-            if ( IsSecret( m_impl->baseRooms )( inLink ) ) {
+            if (contains(baseRooms, inLink)) {
                 exit.removeIn( inLink );
             }
         }
 
         // Remove names on hidden exits to areas reachable through visible doors
-        if ( isHiddenExit( exit ) ) {
+        if (isHiddenExit(exit)) {
             exit[E_DOORNAME] = "";
         }
     }

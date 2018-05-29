@@ -39,9 +39,9 @@ void Frustum::normalizePlane(int side)
     // Here we calculate the magnitude of the normal to the plane (point A B C)
     // Remember that (A, B, C) is that same thing as the normal's (X, Y, Z).
     // To calculate magnitude you use the equation:  magnitude = sqrt( x^2 + y^2 + z^2)
-    auto magnitude = static_cast<float>(std::sqrt( frustum[side][A] * frustum[side][A] +
-                                                   frustum[side][B] * frustum[side][B] +
-                                                   frustum[side][C] * frustum[side][C] ));
+    auto magnitude = std::sqrt(frustum[side][A] * frustum[side][A] +
+                               frustum[side][B] * frustum[side][B] +
+                               frustum[side][C] * frustum[side][C] );
 
     // Then we divide the plane's values by it's magnitude.
     // This makes it easier to work with.

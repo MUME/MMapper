@@ -51,36 +51,34 @@ class PathMachine : public Component
     Q_OBJECT
 public slots:
     virtual void event(ParseEvent *);
-    virtual void deleteMostLikelyRoom();
     virtual void releaseAllPaths();
     virtual void retry();
     virtual void setCurrentRoom(uint id);
     virtual void setCurrentRoom(const Coordinate &pos);
 
 signals:
-    void lookingForRooms(RoomRecipient *, ParseEvent *);
+    void lookingForRooms(RoomRecipient *, ParseEvent &);
     void lookingForRooms(RoomRecipient *, uint);
     void lookingForRooms(RoomRecipient *, const Coordinate &);
     void playerMoved(const Coordinate &);
-    void createRoom(ParseEvent *, const Coordinate &);
+    void createRoom(ParseEvent &, const Coordinate &);
     void scheduleAction(MapAction *);
     void setCharPosition(uint id);
 
 public:
     PathMachine(AbstractRoomFactory *factory, bool threaded = true);
     virtual void init();
-    virtual Qt::ConnectionType requiredConnectionType(const QString &);
 
 protected:
     PathParameters params;
-    void experimenting(ParseEvent *event);
-    void syncing(ParseEvent *event);
-    void approved(ParseEvent *event);
+    void experimenting(ParseEvent &event);
+    void syncing(ParseEvent &event);
+    void approved(ParseEvent &event);
     void evaluatePaths();
     void setCurrentRoom(Approved *app);
-    void tryExits(const Room *, RoomRecipient *, ParseEvent *, bool out);
+    void tryExits(const Room *, RoomRecipient *, ParseEvent &, bool out);
     void tryExit(const Exit &possible, RoomRecipient *recipient, bool out);
-    void tryCoordinate(const Room *, RoomRecipient *, ParseEvent *);
+    void tryCoordinate(const Room *, RoomRecipient *, ParseEvent &);
     AbstractRoomFactory *factory;
 
     RoomSignalHandler signaler;

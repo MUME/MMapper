@@ -26,8 +26,6 @@
 #include "property.h"
 #include <stdexcept>
 
-using namespace std;
-
 Property::Property(const QByteArray &data) :
     ListCycler<char, QByteArray>(data),
     m_skipped(false)
@@ -37,7 +35,7 @@ Property::Property(const QByteArray &data) :
 const char *Property::rest() const
 {
     if (m_skipped) {
-        throw runtime_error("can't get a string from a SKIPPED property");
+        throw std::runtime_error("can't get a string from a SKIPPED property");
     }
     if (pos >= static_cast<uint>(size())) {
         return "";

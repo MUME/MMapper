@@ -170,7 +170,7 @@ public slots:
     void windowSizeChanged (int x, int y);
 
     /** Prepares data, doubles IACs, sends it using sendRawData. */
-    void sendToMud (const QByteArray &data);
+    void sendToMud (const QString &data);
 
 protected slots:
     void onConnected();

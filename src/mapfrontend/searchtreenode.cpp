@@ -28,66 +28,69 @@
 #include "parseevent.h"
 #include "property.h"
 
+#include <cstring>
 #include <string>
 
-using namespace std;
-
-SearchTreeNode::SearchTreeNode(ParseEvent *event,
-                               TinyList<SearchTreeNode *> *in_children) : ownerOfChars(true)
+SearchTreeNode::byte_array
+SearchTreeNode::from_string(const char *s)
 {
-    const char *rest = event->current()->rest();
-
-    int size = strlen(rest);
-    myChars = new char[size];
-    strncpy(myChars, rest + 1,
-            size); // we copy the string so that we can remove rooms independently of tree nodes
-    if (in_children == nullptr) {
-        children = new TinyList<SearchTreeNode *>();
-    } else {
-        children = in_children;
+    if (s == nullptr) {
+        return byte_array{};
     }
+    const auto beg = reinterpret_cast<const uint8_t *>(s);
+    return byte_array{beg, beg + std::strlen(s)};
 }
 
-SearchTreeNode::~SearchTreeNode()
+SearchTreeNode::byte_array
+SearchTreeNode::skip(const SearchTreeNode::byte_array &input,
+                     const size_t count)
 {
-    if (ownerOfChars) {
-        delete myChars;
+    const auto avail = input.size();
+    if (count >= avail) {
+        return SearchTreeNode::byte_array{};
     }
-    for (uint i = 0; i < children->size(); ++i) {
-        delete children->get(i);
-    }
-    delete children;
-}
-
-SearchTreeNode::SearchTreeNode(char *in_myChars,
-                               TinyList<SearchTreeNode *> *in_children) : ownerOfChars(false)
-{
-    myChars = in_myChars;
-    if (in_children == nullptr) {
-        children = new TinyList<SearchTreeNode *>();
-    } else {
-        children = in_children;
-    }
+    return SearchTreeNode::byte_array{input.begin() + count, input.end()};
 }
 
 
-void SearchTreeNode::getRooms(RoomOutStream &stream, ParseEvent *event)
+SearchTreeNode::SearchTreeNode(ParseEvent &event)
+{
+    if (auto curr = event.current()) {
+        if (const char *rest = curr->rest()) {
+            // we copy the string so that we can remove rooms independently of tree nodes
+            // note: original code does not explain why it skips the first character
+            myChars = from_string(rest + 1);
+        }
+    }
+}
+
+SearchTreeNode::SearchTreeNode(byte_array in_bytes, TinyList in_children)
+    : children{std::move(in_children)}
+    , myChars{std::move(in_bytes)}
+{
+}
+
+SearchTreeNode::SearchTreeNode() = default;
+
+SearchTreeNode::~SearchTreeNode() = default;
+
+void SearchTreeNode::getRooms(RoomOutStream &stream, ParseEvent &event)
 {
     SearchTreeNode *selectedChild = nullptr;
-    Property *currentProperty = event->current();
+    Property *currentProperty = event.current();
 
-    for (int i = 0; myChars[i] != 0; i++) {
+    for (auto i = 0u; i < myChars.size() && myChars[i] != '\0'; i++) {
         if (currentProperty->next() != myChars[i]) {
-            for (; i > 0 ; i--) {
+            for (; i > 0; i--) {
                 currentProperty->prev();
             }
             return;
         }
     }
-    selectedChild = children->get(currentProperty->next());
+    selectedChild = children.get(currentProperty->next());
 
     if (selectedChild == nullptr) {
-        for (int i = 1; static_cast<int>(i < myChars[i]) != 0; i++) {
+        for (int i = 1; i < static_cast<int>(myChars[i]); i++) {
             currentProperty->prev();
         }
         return; // no such room
@@ -99,48 +102,53 @@ void SearchTreeNode::getRooms(RoomOutStream &stream, ParseEvent *event)
 
 void SearchTreeNode::setChild(char position, SearchTreeNode *node)
 {
-    children->put(position, node);
+    children.put(position, node);
 }
 
-RoomCollection *SearchTreeNode::insertRoom(ParseEvent *event)
+RoomCollection *SearchTreeNode::insertRoom(ParseEvent &event)
 {
     SearchTreeNode *selectedChild = nullptr;
-    Property *currentProperty = event->current();
+    Property *currentProperty = event.current();
     char c = currentProperty->next();
 
-    for (int i = 0; myChars[i] != 0; i++) {
+
+    for (size_t i = 0u; i < myChars.size() && myChars[i] != '\0'; i++, c = currentProperty->next()) {
         if (c != myChars[i]) {
             // we have to split, as we encountered a difference in the strings ...
-            selectedChild = new SearchTreeNode(myChars + i + 1,
-                                               children);    // first build the lower part of this node
-            children = new TinyList<SearchTreeNode *>();  // and update the upper part of this node
-            children->put(myChars[i], selectedChild);
+            // first build the lower part of this node
+            selectedChild = new SearchTreeNode(skip(myChars, i + 1u),
+                                               std::exchange(children, TinyList{}));
 
-            if (c == 0) {
+            // and update the upper part of this node
+            children.put(myChars[i], selectedChild);
+
+            if (c == '\0') {
                 selectedChild = new IntermediateNode(event);  // then build the branch
             } else {
                 selectedChild = new SearchTreeNode(event);
             }
 
-            children->put(c, selectedChild); // and update again
-            myChars[i] =
-                0; // the string is separated in [myChars][0][selectedChildChars][0] so we don't have to copy anything
+            children.put(c, selectedChild); // and update again
+
+            // the string is separated in [myChars][0][selectedChildChars][0] so we don't have to copy anything
+            //
+            // NOTE: it's unclear if this requires us to retain data after a null-character,
+            // (e.g. "foo\0bar"), so we use a byte_array instead of a std::string to be safe.
+            myChars[i] = '\0';
 
             return selectedChild->insertRoom(event);
-        }  {
-            c = currentProperty->next();
         }
     }
 
     // we reached the end of our string and can pass the event to the next node (or create it)
-    selectedChild = children->get(c);
+    selectedChild = children.get(c);
     if (selectedChild == nullptr) {
         if (c != 0) {
             selectedChild = new SearchTreeNode(event);
         } else {
             selectedChild = new IntermediateNode(event);
         }
-        children->put(c, selectedChild);
+        children.put(c, selectedChild);
     }
     return selectedChild->insertRoom(event);
 }
@@ -148,16 +156,14 @@ RoomCollection *SearchTreeNode::insertRoom(ParseEvent *event)
 /**
  * checking if another property needs to be skipped is done in the intermediate nodes
  */
-void SearchTreeNode::skipDown(RoomOutStream &stream, ParseEvent *event)
+void SearchTreeNode::skipDown(RoomOutStream &stream, ParseEvent &event)
 {
-    SearchTreeNode *selectedChild = nullptr;
-    ParseEvent *copy = nullptr;
-    for (unsigned int i = 0; i < 256; i++) {
-        if ((selectedChild = children->get(i)) != nullptr) {
-            copy = new ParseEvent(*event);
+    for (auto selectedChild : children) {
+        if (selectedChild != nullptr) {
+            // caution: this will slice a derived class; it would be better to use
+            // "virtual std::unique_ptr<ParseEvent> clone() const;"
+            ParseEvent copy(event);
             selectedChild->skipDown(stream, copy);
-            delete copy;
-            copy = nullptr;
         }
     }
 }

@@ -70,7 +70,7 @@ protected:
         QString description;
         QIcon picture;
     };
-    typedef QVector<AnsiItem> AnsiItemVector;
+    using AnsiItemVector = QVector<AnsiItem>;
 
     static AnsiItem initAnsiItem(int index);
 

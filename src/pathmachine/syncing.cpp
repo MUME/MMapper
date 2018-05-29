@@ -31,8 +31,6 @@
 
 #include <climits>
 
-using namespace std;
-
 Syncing::Syncing(PathParameters &in_p, std::list<Path *> *in_paths,
                  RoomSignalHandler *in_signaler) :
     signaler(in_signaler),
@@ -60,7 +58,7 @@ void Syncing::receiveRoom(RoomAdmin *sender, const Room *in_room)
     }
 }
 
-list<Path *> *Syncing::evaluate()
+std::list<Path *> *Syncing::evaluate()
 {
     return paths;
 }

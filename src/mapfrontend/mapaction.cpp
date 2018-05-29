@@ -34,8 +34,6 @@
 
 #include <utility>
 
-using namespace std;
-
 SingleRoomAction::SingleRoomAction(AbstractAction *ex, uint in_id) : id(in_id), executor(ex) {}
 
 const std::set<uint> &SingleRoomAction::getAffectedRooms()
@@ -58,7 +56,7 @@ void AddExit::exec()
 
 Room *AddExit::tryExec()
 {
-    vector<Room *> &rooms = roomIndex();
+    auto &rooms = roomIndex();
     Room *rfrom = rooms[from];
     if (rfrom == nullptr) {
         return nullptr;
@@ -87,7 +85,7 @@ void RemoveExit::exec()
 
 Room *RemoveExit::tryExec()
 {
-    vector<Room *> &rooms = roomIndex();
+    auto &rooms = roomIndex();
     Room *rfrom = rooms[from];
     if (rfrom != nullptr) {
         rfrom->exit(dir).removeOut(to);
@@ -112,20 +110,30 @@ UpdateRoomField::UpdateRoomField(const QVariant &in_update, uint in_fieldNum) :
 
 void UpdateRoomField::exec(uint id)
 {
-    Room *room = roomIndex()[id];
-    if (room != nullptr) {
-        (*room)[fieldNum] = update;
+    if (Room *room = roomIndex()[id]) {
+        room->replace(static_cast<RoomField>(fieldNum), update);
     }
 }
 
-Update::Update(ParseEvent *in_props) :
-    props(*in_props)
+Update::Update() : props(0)
+{
+    props.reset();
+}
+
+Update::Update(ParseEvent &in_props) :
+    props(in_props)
 {
     //assert(props.getNumSkipped() == 0);
 }
 
-UpdatePartial::UpdatePartial(const QVariant &in_val, uint in_pos) : Update(nullptr),
-    UpdateRoomField(in_val, in_pos)  {}
+UpdatePartial::UpdatePartial(const QVariant &in_val, uint in_pos) : Update(),
+    UpdateRoomField(in_val, in_pos)
+{
+
+    // This function is never called,
+    // as proven by the fact that it was calling Update(nullptr)
+    std::abort();
+}
 
 void UpdatePartial::exec(uint id)
 {
@@ -141,9 +149,9 @@ void Update::exec(uint id)
 {
     Room *room = roomIndex()[id];
     if (room != nullptr) {
-        factory()->update(room, &props);
-        RoomCollection *newHome = treeRoot().insertRoom(&props);
-        vector<RoomCollection *> &homes = roomHomes();
+        factory()->update(*room, props);
+        RoomCollection *newHome = treeRoot().insertRoom(props);
+        auto &homes = roomHomes();
         RoomCollection *oldHome = homes[id];
         if (oldHome != nullptr) {
             oldHome->erase(room);
@@ -156,18 +164,17 @@ void Update::exec(uint id)
 
 void ExitsAffecter::insertAffected(uint id, std::set<uint> &affected)
 {
-    Room *room = roomIndex()[id];
-    if (room != nullptr) {
+    if (Room *room = roomIndex()[id]) {
         affected.insert(id);
         const ExitsList &exits = room->getExitsList();
         ExitsList::const_iterator exitIter = exits.begin();
         while (exitIter != exits.end()) {
             const Exit &e = *exitIter;
-            for (auto i = e.inBegin(); i != e.inEnd(); ++i) {
-                affected.insert(*i);
+            for (auto idx : e.inRange()) {
+                affected.insert(idx);
             }
-            for (auto i = e.outBegin(); i != e.outEnd(); ++i) {
-                affected.insert(*i);
+            for (auto idx : e.outRange()) {
+                affected.insert(idx);
             }
             ++exitIter;
         }
@@ -177,45 +184,45 @@ void ExitsAffecter::insertAffected(uint id, std::set<uint> &affected)
 
 void Remove::exec(uint id)
 {
-    vector<Room *> &rooms = roomIndex();
-    Room *room = rooms[id];
+    auto &rooms = roomIndex();
+    Room *room = std::exchange(rooms[id], nullptr);
     if (room == nullptr) {
         return;
     }
+
     map().remove(room->getPosition());
-    RoomCollection *home = roomHomes()[id];
-    if (home != nullptr) {
+    if (RoomCollection *home = roomHomes()[id]) {
         home->erase(room);
     }
-    rooms[id] = nullptr;
     // don't return previously used ids for now
     // unusedIds().push(id);
     const ExitsList &exits = room->getExitsList();
     for (int dir = 0; dir < exits.size(); ++dir) {
         const Exit &e = exits[dir];
-        for (auto i = e.inBegin(); i != e.inEnd(); ++i) {
-            Room *other = rooms[*i];
-            if (other != nullptr) {
+        for (auto idx : e.inRange()) {
+            if (Room *other = rooms[idx]) {
                 other->exit(factory()->opposite(dir)).removeOut(id);
             }
         }
-        for (auto i = e.outBegin(); i != e.outEnd(); ++i) {
-            Room *other = rooms[*i];
-            if (other != nullptr) {
+        for (auto idx : e.outRange()) {
+            if (Room *other = rooms[idx]) {
                 other->exit(factory()->opposite(dir)).removeIn(id);
             }
         }
     }
     delete room;
 }
+
 void FrontendAccessor::setFrontend(MapFrontend *in)
 {
     m_frontend = in;
 }
+
 Map &FrontendAccessor::map()
 {
     return m_frontend->map;
 }
+
 IntermediateNode &FrontendAccessor::treeRoot()
 {
     return m_frontend->treeRoot;

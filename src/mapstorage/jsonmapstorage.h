@@ -48,8 +48,10 @@ public:
     JsonMapStorage(MapData &, const QString &, QObject *parent = 0);
     ~JsonMapStorage();
 
+public:
+    explicit JsonMapStorage() = delete;
+
 private:
-    JsonMapStorage(); // Disabled
     virtual bool canLoad()
     {
         return false;

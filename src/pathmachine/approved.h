@@ -45,7 +45,7 @@ private:
     AbstractRoomFactory *factory;
 
 public:
-    Approved(AbstractRoomFactory *in_factory, ParseEvent *event, int tolerance);
+    Approved(AbstractRoomFactory *in_factory, ParseEvent &event, int tolerance);
     ~Approved();
     void receiveRoom(RoomAdmin *, const Room *);
     const Room *oneMatch();

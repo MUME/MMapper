@@ -34,8 +34,6 @@
 #include <cassert>
 #include <iostream>
 
-using namespace std;
-
 Path::Path(const Room *in_room, RoomAdmin *owner, RoomRecipient *locker,
            RoomSignalHandler *in_signaler, uint direction) :
     parent(nullptr),
@@ -79,11 +77,11 @@ Path *Path::fork(const Room *in_room, Coordinate &expectedCoordinate, RoomAdmin 
             uint oid = in_room->getId();
             if (e.containsOut(oid)) {
                 dist = 1.0 / p.correctPositionBonus;
-            } else if (e.outBegin() != e.outEnd() || oid == room->getId()) {
+            } else if (!e.outIsEmpty() || oid == room->getId()) {
                 dist *= p.multipleConnectionsPenalty;
             } else {
                 const Exit &oe = in_room->exit(factory->opposite(direction));
-                if (oe.inBegin() != oe.inEnd()) {
+                if (!oe.inIsEmpty()) {
                     dist *= p.multipleConnectionsPenalty;
                 }
             }

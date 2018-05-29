@@ -78,14 +78,10 @@ public:
     MapFrontend(AbstractRoomFactory *factory);
     virtual ~MapFrontend();
     virtual void clear();
-    void removeSecretDoorNames();
     void block();
     void unblock();
     virtual void checkSize();
-    virtual Qt::ConnectionType requiredConnectionType(const QString &)
-    {
-        return Qt::DirectConnection;
-    }
+
     // removes the lock on a room
     // after the last lock is removed, the room is deleted
     virtual void releaseRoom(RoomRecipient *, uint);
@@ -98,7 +94,7 @@ public:
 
     virtual uint createEmptyRoom(const Coordinate &);
 
-    virtual void insertPredefinedRoom(Room *);
+    virtual void insertPredefinedRoom(Room &);
 
     virtual uint getMaxId()
     {
@@ -116,7 +112,7 @@ public:
     }
 public slots:
     // looking for rooms leads to a bunch of foundRoom() signals
-    virtual void lookingForRooms(RoomRecipient *, ParseEvent *);
+    virtual void lookingForRooms(RoomRecipient *, ParseEvent &);
     virtual void lookingForRooms(RoomRecipient *, uint); // by id
     virtual void lookingForRooms(RoomRecipient *, const Coordinate &);
     virtual void lookingForRooms(RoomRecipient *, Frustum *);
@@ -125,7 +121,7 @@ public slots:
 
     // createRoom creates a room without a lock
     // it will get deleted if no one looks for it for a certain time
-    virtual void createRoom(ParseEvent *, const Coordinate &);
+    virtual void createRoom(ParseEvent &, const Coordinate &);
     virtual void createEmptyRooms(const Coordinate &, const Coordinate &);
 
     virtual void scheduleAction(MapAction *action);

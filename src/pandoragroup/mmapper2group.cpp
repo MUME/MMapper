@@ -300,58 +300,87 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
         double maxmoves = self->maxmoves;
         double maxmana = self->maxmana;
         if (!hp.isEmpty() && maxhp != 0) {
-            int newhp = self->hp;
-            if (hp == "Healthy") {
-                newhp = maxhp;
-            } else if (hp == "Fine") {
-                newhp = maxhp * 0.99;
-            } else if (hp == "Hurt") {
-                newhp = maxhp * 0.65;
-            } else if (hp == "Wounded") {
-                newhp = maxhp * 0.45;
-            } else if (hp == "Bad") {
-                newhp = maxhp * 0.25;
-            } else if (hp == "Awful") {
-                newhp = maxhp * 0.10;
-            } else {
-                // Incap
-                newhp = 0;
-            }
+            // NOTE: This avoids capture so it can be lifted out more easily later.
+            const auto calc_hp = [](const QByteArray & hp, const double maxhp) -> double {
+                if (hp == "Healthy")
+                {
+                    return maxhp;
+                } else if (hp == "Fine")
+                {
+                    return maxhp * 0.99;
+                } else if (hp == "Hurt")
+                {
+                    return maxhp * 0.65;
+                } else if (hp == "Wounded")
+                {
+                    return maxhp * 0.45;
+                } else if (hp == "Bad")
+                {
+                    return maxhp * 0.25;
+                } else if (hp == "Awful")
+                {
+                    return maxhp * 0.10;
+                } else
+                {
+                    // Incap
+                    return 0.0;
+                }
+            };
+            const auto newhp = static_cast<int>(calc_hp(hp, maxhp));
             if (self->hp > newhp) {
                 self->hp = newhp;
             }
         }
         if (!mana.isEmpty() && maxmana != 0) {
-            int newmana = self->mana;
-            if (mana == "Burning") {
-                newmana = maxmana * 0.99;
-            } else if (mana == "Hot") {
-                newmana = maxmana * 0.75;
-            } else if (mana == "Warm") {
-                newmana = maxmana * 0.45;
-            } else if (mana == "Cold") {
-                newmana = maxmana * 0.25;
-            } else if (mana == "Icy") {
-                newmana = maxmana * 0.10;
-            } else {
-                // Frozen
-                newmana = 0;
-            }
+            const auto calc_mana = [](const QByteArray & mana, const double maxmana) -> double {
+                if (mana == "Burning")
+                {
+                    return maxmana * 0.99;
+                } else if (mana == "Hot")
+                {
+                    return maxmana * 0.75;
+                } else if (mana == "Warm")
+                {
+                    return maxmana * 0.45;
+                } else if (mana == "Cold")
+                {
+                    return maxmana * 0.25;
+                } else if (mana == "Icy")
+                {
+                    return maxmana * 0.10;
+                } else
+                {
+                    // Frozen
+                    return 0.0;
+                }
+            };
+            const auto newmana = static_cast<int>(calc_mana(mana, maxmana));
             if (self->mana > newmana) {
                 self->mana = newmana;
             }
         }
         if (!moves.isEmpty() && maxmoves != 0) {
-            int newmoves = self->moves;
-            if (moves == "Tired") {
-                newmoves = maxmoves * 0.42;
-            } else if (moves == "Slow") {
-                newmoves = maxmoves * 0.31;
-            } else if (moves == "Weak") {
-                newmoves = maxmoves * 0.12;
-            } else if (moves == "Fainting") {
-                newmoves = maxmoves * 0.05;
-            }
+            const auto calc_moves = [](const QByteArray & moves, const double maxmoves,
+            const int def) -> double {
+                if (moves == "Tired")
+                {
+                    return maxmoves * 0.42;
+                } else if (moves == "Slow")
+                {
+                    return maxmoves * 0.31;
+                } else if (moves == "Weak")
+                {
+                    return maxmoves * 0.12;
+                } else if (moves == "Fainting")
+                {
+                    return maxmoves * 0.05;
+                } else
+                {
+                    // REVISIT: What about "Exhausted"?
+                    return static_cast<double>(def);
+                }
+            };
+            const auto newmoves = static_cast<int>(calc_moves(moves, maxmoves, self->moves));
             if (self->moves > newmoves) {
                 self->moves = newmoves;
             }

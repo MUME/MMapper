@@ -28,7 +28,6 @@
 #define MAINWINDOW_H
 
 #include <QDockWidget>
-#include <QStackedWidget>
 #include <QMainWindow>
 #include <QTextBrowser>
 #include <QProgressDialog>
@@ -38,14 +37,12 @@
 
 class QMenu;
 class MapWindow;
-class MainWindowCtrl;
 class Mmapper2PathMachine;
 class CommandEvaluator;
 class PrespammedPath;
 class MapData;
 class RoomSelection;
 class ConnectionSelection;
-class RoomPropertySetter;
 class FindRoomsDlg;
 class Mmapper2Group;
 class GroupWidget;
@@ -65,16 +62,6 @@ public:
 
 };
 
-class StackedWidget : public QStackedWidget
-{
-    Q_OBJECT
-public:
-    StackedWidget ( QWidget *parent = 0 );
-
-    virtual QSize minimumSizeHint() const;
-    virtual QSize sizeHint() const;
-};
-
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -82,8 +69,6 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = 0, Qt::WindowFlags flags = 0);
     ~MainWindow();
-
-    MapWindow *getCurrentMapWindow();
 
     enum SaveMode { SAVEM_FULL, SAVEM_BASEMAP };
     enum SaveFormat { SAVEF_MM2, SAVEF_WEB };
@@ -105,14 +90,9 @@ public slots:
     bool exportWebMap();
     void about();
 
-    void nextWindow();
-    void prevWindow();
-
     void percentageChanged(quint32);
 
     void log(const QString &, const QString &);
-
-    void currentMapWindowChanged();
 
     void onModeConnectionSelect();
     void onModeRoomSelect();
@@ -160,10 +140,12 @@ public slots:
 
 protected:
     void closeEvent(QCloseEvent *event);
+    virtual QSize minimumSizeHint() const;
+    virtual QSize sizeHint() const;
 
 private:
-    StackedWidget *m_stackedWidget;
-    QTextBrowser   *logWindow;
+    MapWindow *m_mapWindow;
+    QTextBrowser *logWindow;
     DockWidget *m_dockDialogLog;
     DockWidget *m_dockDialogGroup;
     DockWidget *m_dockWelcome;
@@ -171,7 +153,6 @@ private:
     ConnectionListener *m_listener;
     Mmapper2PathMachine *m_pathMachine;
     MapData *m_mapData;
-    //RoomPropertySetter * m_propertySetter;
     CommandEvaluator *m_commandEvaluator{};
     PrespammedPath *m_prespammedPath;
     MumeClock *m_mumeClock;
@@ -285,6 +266,8 @@ private:
 
     QAction *forceRoomAct{};
     QAction *releaseAllPathsAct{};
+
+    void wireConnections();
 
     void createActions();
     void disableActions(bool value);

@@ -42,21 +42,21 @@ MapWindow::MapWindow(MapData *mapData, PrespammedPath *pp, Mmapper2Group *gm,  Q
     m_gridLayout->setSpacing(0);
     m_gridLayout->setMargin(0);
 
-    m_verticalScrollBar = new QScrollBar();
+    m_verticalScrollBar = new QScrollBar(this);
     m_verticalScrollBar->setOrientation(Qt::Vertical);
     m_verticalScrollBar->setRange(0, 0);
     m_verticalScrollBar->hide();
 
     m_gridLayout->addWidget(m_verticalScrollBar, 0, 1, 1, 1);
 
-    m_horizontalScrollBar = new QScrollBar();
+    m_horizontalScrollBar = new QScrollBar(this);
     m_horizontalScrollBar->setOrientation(Qt::Horizontal);
     m_horizontalScrollBar->setRange(0, 0);
     m_horizontalScrollBar->hide();
 
     m_gridLayout->addWidget(m_horizontalScrollBar, 1, 0, 1, 1);
 
-    m_canvas = new MapCanvas(mapData, pp, gm, nullptr);
+    m_canvas = new MapCanvas(mapData, pp, gm, this);
 
     m_gridLayout->addWidget(m_canvas, 0, 0, 1, 1);
 

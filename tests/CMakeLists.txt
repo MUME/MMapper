@@ -2,10 +2,16 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/../src/clock
 	${CMAKE_CURRENT_SOURCE_DIR}/../src/expandoracommon
 	${CMAKE_CURRENT_SOURCE_DIR}/../src/parser
+        ${CMAKE_CURRENT_SOURCE_DIR}/../src/global
 )
 
 # Clock
-set(clock_SRCS ../src/clock/mumeclock.cpp ../src/clock/mumemoment.cpp)
+set(clock_SRCS
+    ../src/clock/mumeclock.cpp
+    ../src/clock/mumeclock.h
+    ../src/clock/mumemoment.cpp
+    ../src/clock/mumemoment.h
+    )
 set(TestClock_SRCS testclock.cpp)
 add_executable(TestClock ${TestClock_SRCS} ${clock_SRCS})
 target_link_libraries(TestClock Qt5::Test)
@@ -19,7 +25,16 @@ target_link_libraries(TestExpandoraCommon Qt5::Test)
 add_test(NAME TestExpandoraCommon COMMAND TestExpandoraCommon)
 
 # Parser
-set(parser_SRCS ../src/parser/parserutils.cpp)
+set(parser_SRCS
+    ../src/parser/parserutils.cpp
+    ../src/parser/parserutils.h
+    ../src/parser/mmapper2event.cpp
+    ../src/parser/mmapper2event.h
+    ../src/expandoracommon/parseevent.cpp
+    ../src/expandoracommon/parseevent.h
+    ../src/expandoracommon/property.cpp
+    ../src/expandoracommon/property.h
+    )
 set(TestParser_SRCS testparser.cpp)
 add_executable(TestParser ${TestParser_SRCS} ${parser_SRCS})
 target_link_libraries(TestParser Qt5::Test)

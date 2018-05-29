@@ -34,8 +34,6 @@
 
 #include <cassert>
 
-using namespace std;
-
 MapData::MapData() :
     MapFrontend(new RoomFactory),
     m_dataChanged(false)
@@ -110,10 +108,7 @@ void MapData::toggleRoomFlag(const Coordinate &pos, uint flag, uint field)
 bool MapData::getRoomFlag(const Coordinate &pos, uint flag, uint field)
 {
     const QVariant val = getRoomField(pos, field);
-    if (val.isNull()) {
-        return false;
-    }
-    return ISSET(val.toUInt(), flag);
+    return !val.isNull() && ISSET(val.toUInt(), flag);
 }
 
 void MapData::setRoomField(const Coordinate &pos, const QVariant &flag, uint field)
@@ -130,9 +125,11 @@ void MapData::setRoomField(const Coordinate &pos, const QVariant &flag, uint fie
 QVariant MapData::getRoomField(const Coordinate &pos, uint field)
 {
     QMutexLocker locker(&mapLock);
-    Room *room = map.get(pos);
-    if ((room != nullptr) && field < ROOMFIELD_LAST ) {
-        return (*room)[field];
+    /* REVISIT: is it wise to just ignore bad data here? */
+    if (field < ROOMFIELD_LAST) {
+        if (Room *room = map.get(pos)) {
+            return room->at(static_cast<RoomField>(field));
+        }
     }
     return QVariant();
 }
@@ -141,8 +138,7 @@ QList<Coordinate> MapData::getPath(const QList<CommandIdType> &dirs)
 {
     QMutexLocker locker(&mapLock);
     QList<Coordinate> ret;
-    Room *room = map.get(m_position);
-    if (room != nullptr) {
+    if (Room *room = map.get(m_position)) {
         QListIterator<CommandIdType> iter(dirs);
         while (iter.hasNext()) {
             uint dir = iter.next();
@@ -151,12 +147,13 @@ QList<Coordinate> MapData::getPath(const QList<CommandIdType> &dirs)
             }
             Exit &e = room->exit(dir);
             if ((Mmapper2Exit::getFlags(e) & EF_EXIT) == 0) {
+                // REVISIT: why does this continue but all of the others break?
                 continue;
             }
-            if (e.outBegin() == e.outEnd() || ++e.outBegin() != e.outEnd()) {
+            if (!e.outIsUnique()) {
                 break;
             }
-            room = roomIndex[*e.outBegin()];
+            room = roomIndex[e.outFirst()];
             if (room == nullptr) {
                 break;
             }
@@ -237,9 +234,10 @@ const Room *MapData::getRoom(uint id, const RoomSelection *in)
     assert(selection);
     Room *room = roomIndex[id];
     if (room != nullptr) {
-        uint id = room->getId();
-        locks[id].insert(selection);
-        selection->insert(id, room);
+        // REVISIT: is roomID the same as id?
+        uint roomId = room->getId();
+        locks[roomId].insert(selection);
+        selection->insert(roomId, room);
     }
     return room;
 }
@@ -323,17 +321,18 @@ bool MapData::execute(MapAction *action, const RoomSelection *unlock)
 {
     QMutexLocker locker(&mapLock);
     action->schedule(this);
-    list<uint> selectedIds;
+    std::list<uint> selectedIds;
 
     RoomSelection *selection = selections[unlock];
     assert(selection);
-
-    QMap<uint, const Room *>::iterator i = selection->begin();
-    while (i != selection->end()) {
-        const Room *room = *(i++);
-        uint id = room->getId();
-        locks[id].erase(selection);
-        selectedIds.push_back(id);
+    {
+        QMap<uint, const Room *>::iterator i = selection->begin();
+        while (i != selection->end()) {
+            const Room *room = *(i++);
+            uint id = room->getId();
+            locks[id].erase(selection);
+            selectedIds.push_back(id);
+        }
     }
     selection->clear();
 
@@ -342,8 +341,7 @@ bool MapData::execute(MapAction *action, const RoomSelection *unlock)
         executeAction(action);
     }
 
-    for (list<uint>::const_iterator i =  selectedIds.begin(); i != selectedIds.end(); ++i) {
-        uint id = (*i);
+    for (auto id : selectedIds) {
         Room *room = roomIndex[id];
         if (room != nullptr) {
             locks[id].insert(selection);

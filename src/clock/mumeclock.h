@@ -25,7 +25,9 @@
 #ifndef MUMECLOCK_H
 #define MUMECLOCK_H
 
-enum MumeClockPrecision { MUMECLOCK_UNSET = -1, MUMECLOCK_DAY, MUMECLOCK_HOUR, MUMECLOCK_MINUTE };
+enum MumeClockPrecision {
+    MUMECLOCK_UNSET = -1, MUMECLOCK_DAY, MUMECLOCK_HOUR, MUMECLOCK_MINUTE
+};
 
 #include <QObject>
 #include <QList>
@@ -37,28 +39,64 @@ enum MumeClockPrecision { MUMECLOCK_UNSET = -1, MUMECLOCK_DAY, MUMECLOCK_HOUR, M
 class MumeClock : public QObject
 {
     Q_OBJECT
+
     friend class TestClock;
 
 public:
-    MumeClock(int mumeEpoch, QObject *parent = 0);
-    MumeClock(QObject *parent = 0);
+    explicit MumeClock(int mumeEpoch, QObject *parent = 0);
+
+    explicit MumeClock(QObject *parent = 0);
 
     MumeMoment getMumeMoment(int secsSinceUnixEpoch = -1);
+
     MumeClockPrecision getPrecision()
     {
         return m_precision;
     }
+
     const QString toMumeTime(const MumeMoment &moment);
+
     const QString toCountdown(const MumeMoment &moment);
+
     int getMumeStartEpoch()
     {
         return m_mumeStartEpoch;
     }
 
-    enum WestronMonthNames { UnknownWestronMonth = -1, Afteryule, Solmath, Rethe, Astron, Thrimidge, Forelithe, Afterlithe, Wedmath, Halimath, Winterfilth, Blotmath, Foreyule };
+    enum WestronMonthNames {
+        UnknownWestronMonth = -1,
+        Afteryule,
+        Solmath,
+        Rethe,
+        Astron,
+        Thrimidge,
+        Forelithe,
+        Afterlithe,
+        Wedmath,
+        Halimath,
+        Winterfilth,
+        Blotmath,
+        Foreyule
+    };
+
     Q_ENUM(WestronMonthNames)
 
-    enum SindarinMonthNames { UnknownSindarinMonth = -1, Narwain, Ninui, Gwaeron, Gwirith, Lothron, Norui, Cerveth, Urui, Ivanneth, Narbeleth, Hithui, Girithron };
+    enum SindarinMonthNames {
+        UnknownSindarinMonth = -1,
+        Narwain,
+        Ninui,
+        Gwaeron,
+        Gwirith,
+        Lothron,
+        Norui,
+        Cerveth,
+        Urui,
+        Ivanneth,
+        Narbeleth,
+        Hithui,
+        Girithron
+    };
+
     Q_ENUM(SindarinMonthNames)
 
     static const QList<int> s_dawnHour;
@@ -68,11 +106,15 @@ public:
     static const QHash<QString, MumeTime> m_stringTimeHash;
 
 signals:
+
     void log(const QString &, const QString &);
 
 public slots:
+
     void parseMumeTime(const QString &mumeTime);
+
     void parseClockTime(const QString &clockTime);
+
     void parseWeather(const QString &str);
 
 protected:
@@ -80,8 +122,11 @@ protected:
     {
         m_precision = state;
     }
+
     void parseMumeTime(const QString &mumeTime, int secsSinceEpoch);
+
     void parseClockTime(const QString &clockTime, int secsSinceEpoch);
+
     void parseWeather(const QString &str, int secsSinceEpoch);
 
 private:

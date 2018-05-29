@@ -62,13 +62,11 @@ public:
     bool isValid();
     bool isFirstValid()
     {
-        if (m_connectionDescriptor[0].room == nullptr) return false;
-        else return true;
+        return m_connectionDescriptor[0].room != nullptr;
     }
     bool isSecondValid()
     {
-        if (m_connectionDescriptor[1].room == nullptr) return false;
-        else return true;
+        return m_connectionDescriptor[1].room != nullptr;
     }
 
     void receiveRoom(RoomAdmin *admin, const Room *aRoom);

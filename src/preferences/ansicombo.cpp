@@ -36,10 +36,9 @@ AnsiCombo::AnsiCombo(QWidget *parent) : super(parent)
 
 void AnsiCombo::fillAnsiList()
 {
-    AnsiItem item;
     clear();
 
-    for (AnsiItem item : colours) {
+    for (const AnsiItem &item : colours) {
         addItem(item.picture, item.ansiCode);
     }
 }
@@ -281,8 +280,8 @@ void AnsiCombo::makeWidgetColoured(QWidget *pWidget, const QString &ansiColor)
         pWidget->setPalette(palette);
         pWidget->setBackgroundRole(QPalette::Window);
 
-        auto *pLabel = qobject_cast<QLabel *>(pWidget);
-        if (pLabel != nullptr) {
+        // keep type to avoid false positive warning in CLion
+        if (QLabel *pLabel = qobject_cast<QLabel *>(pWidget)) {
             pLabel->setText(intelligibleNameFg);
         }
     }

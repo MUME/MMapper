@@ -43,7 +43,7 @@ class Map
 {
 public:
     bool defined(const Coordinate &c);
-    Coordinate setNearest(const Coordinate &c, Room *room);
+    Coordinate setNearest(const Coordinate &c, Room &room);
     Room *get(const Coordinate &c);
     void remove(const Coordinate &c);
     void clear();

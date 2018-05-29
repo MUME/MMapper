@@ -39,32 +39,47 @@
 #include <stack>
 
 class Map;
+
 class MapFrontend;
+
 class AbstractRoomFactory;
+
 class IntermediateNode;
+
 class RoomCollection;
+
 class Room;
 
 class FrontendAccessor
 {
 public:
     virtual ~FrontendAccessor() {}
-    virtual void setFrontend(MapFrontend *in) ;
+
+    virtual void setFrontend(MapFrontend *in);
+
 protected:
     MapFrontend *m_frontend;
-    Map &map() ;
-    IntermediateNode &treeRoot() ;
-    std::vector<Room *> &roomIndex() ;
-    std::vector<RoomCollection *> &roomHomes() ;
-    std::stack<uint> &unusedIds() ;
-    AbstractRoomFactory *factory() ;
+
+    Map &map();
+
+    IntermediateNode &treeRoot();
+
+    std::vector<Room *> &roomIndex();
+
+    std::vector<RoomCollection *> &roomHomes();
+
+    std::stack<uint> &unusedIds();
+
+    AbstractRoomFactory *factory();
 };
 
 class AbstractAction : public virtual FrontendAccessor
 {
 public:
     virtual void preExec(uint) {}
+
     virtual void exec(uint id) = 0;
+
     virtual void insertAffected(uint id, std::set<uint> &affected)
     {
         affected.insert(id);
@@ -74,85 +89,105 @@ public:
 class MapAction
 {
     friend class MapFrontend;
+
 public:
     virtual void schedule(MapFrontend *in) = 0;
+
     virtual ~MapAction() {}
+
 protected:
     virtual void exec() = 0;
+
     virtual const std::set<uint> &getAffectedRooms()
     {
         return affectedRooms;
     }
+
     std::set<uint> affectedRooms;
 };
 
 class SingleRoomAction : public MapAction
 {
 public:
-    SingleRoomAction(AbstractAction *ex, uint id);
-    void schedule(MapFrontend *in)
+    explicit SingleRoomAction(AbstractAction *ex, uint id);
+
+    void schedule(MapFrontend *in)  override
     {
         executor->setFrontend(in);
     }
+
     virtual ~SingleRoomAction()
     {
         delete executor;
     }
+
 protected:
-    virtual void exec()
+    virtual void exec() override
     {
         executor->preExec(id);
         executor->exec(id);
     }
-    virtual const std::set<uint> &getAffectedRooms();
+
+    virtual const std::set<uint> &getAffectedRooms() override;
+
 private:
     uint id;
     AbstractAction *executor;
 };
 
-class AddExit: public MapAction, public FrontendAccessor
+class AddExit : public MapAction, public FrontendAccessor
 {
 public:
-    void schedule(MapFrontend *in)
+    void schedule(MapFrontend *in) override
     {
         setFrontend(in);
     }
-    AddExit(uint in_from, uint in_to, uint in_dir);
+
+    explicit AddExit(uint in_from, uint in_to, uint in_dir);
+
 protected:
-    virtual void exec();
+    virtual void exec() override;
+
     Room *tryExec();
+
     uint from;
     uint to;
     uint dir;
 };
 
-class RemoveExit: public MapAction, public FrontendAccessor
+class RemoveExit : public MapAction, public FrontendAccessor
 {
 public:
-    RemoveExit(uint from, uint to, uint dir);
-    void schedule(MapFrontend *in)
+    explicit RemoveExit(uint from, uint to, uint dir);
+
+    void schedule(MapFrontend *in) override
     {
         setFrontend(in);
     }
+
 protected:
-    virtual void exec();
+    virtual void exec() override;
+
     Room *tryExec();
+
     uint from;
     uint to;
     uint dir;
 };
 
-class MakePermanent: public AbstractAction
+class MakePermanent final : public AbstractAction
 {
 public:
-    virtual void exec(uint id);
+    virtual void exec(uint id) override;
 };
 
 class UpdateRoomField : public virtual AbstractAction
 {
 public:
-    UpdateRoomField(const QVariant &update, uint fieldNum);
-    virtual void exec(uint id);
+    explicit UpdateRoomField(const QVariant &update, uint fieldNum);
+
+    virtual void exec(uint id) override;
+
 protected:
     const QVariant update;
     const uint fieldNum;
@@ -161,29 +196,34 @@ protected:
 class Update : public virtual AbstractAction
 {
 public:
-    Update(ParseEvent *props);
-    virtual void exec(uint id);
+    explicit Update();
+
+    explicit Update(ParseEvent &props);
+
+    virtual void exec(uint id) override;
+
 protected:
     ParseEvent props;
 };
 
-class UpdatePartial :  public virtual Update,  public virtual UpdateRoomField
+class UpdatePartial : public virtual Update, public virtual UpdateRoomField
 {
 public:
-    UpdatePartial(const QVariant &in_val, uint in_pos);
-    virtual void exec(uint id);
+    explicit UpdatePartial(const QVariant &in_val, uint in_pos);
+
+    virtual void exec(uint id) override;
 };
 
 class ExitsAffecter : public AbstractAction
 {
 public:
-    virtual void insertAffected(uint id, std::set<uint> &affected);
+    virtual void insertAffected(uint id, std::set<uint> &affected) override;
 };
 
 class Remove : public ExitsAffecter
 {
 protected:
-    virtual void exec(uint id);
+    virtual void exec(uint id) override;
 };
 
 

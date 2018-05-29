@@ -30,9 +30,6 @@
 
 #include <cassert>
 
-using namespace Qt;
-using namespace std;
-
 void RoomSignalHandler::hold(const Room *room, RoomAdmin *owner, RoomRecipient *locker)
 {
     owners[room] = owner;

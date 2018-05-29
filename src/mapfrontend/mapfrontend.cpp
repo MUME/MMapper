@@ -33,9 +33,6 @@
 
 #include <cassert>
 
-using namespace Qt;
-using namespace std;
-
 MapFrontend::MapFrontend(AbstractRoomFactory *in_factory) :
     greatestUsedId(UINT_MAX),
     mapLock(QMutex::Recursive),
@@ -75,7 +72,7 @@ void MapFrontend::scheduleAction(MapAction *action)
     QMutexLocker locker(&mapLock);
     action->schedule(this);
 
-    const set<uint> &affectedRooms = action->getAffectedRooms();
+    const auto &affectedRooms = action->getAffectedRooms();
     bool executable = true;
     for (unsigned int roomId : affectedRooms) {
         actionSchedule[roomId].insert(action);
@@ -96,8 +93,7 @@ void MapFrontend::executeAction(MapAction *action)
 
 void MapFrontend::removeAction(MapAction *action)
 {
-    const set<uint> &affectedRooms = action->getAffectedRooms();
-    for (unsigned int roomId : affectedRooms) {
+    for (unsigned int roomId : action->getAffectedRooms()) {
         actionSchedule[roomId].erase(action);
     }
     delete action;
@@ -105,8 +101,7 @@ void MapFrontend::removeAction(MapAction *action)
 
 bool MapFrontend::isExecutable(MapAction *action)
 {
-    const set<uint> &affectedRooms = action->getAffectedRooms();
-    for (unsigned int affectedRoom : affectedRooms) {
+    for (unsigned int affectedRoom : action->getAffectedRooms()) {
         if (!locks[affectedRoom].empty()) {
             return false;
         }
@@ -116,7 +111,7 @@ bool MapFrontend::isExecutable(MapAction *action)
 
 void MapFrontend::executeActions(uint roomId)
 {
-    set<MapAction *> &actions = actionSchedule[roomId];
+    std::set<MapAction *> &actions = actionSchedule[roomId];
     auto actionIter = actions.begin();
     while (actionIter != actions.end()) {
         MapAction *action = *(actionIter++);
@@ -226,23 +221,23 @@ void MapFrontend::lookingForRooms(RoomRecipient *recipient, const Coordinate &ul
 }
 
 
-void MapFrontend::insertPredefinedRoom(Room *room)
+void MapFrontend::insertPredefinedRoom(Room &room)
 {
     QMutexLocker locker(&mapLock);
     assert(signalsBlocked());
-    uint id = room->getId();
-    const Coordinate &c = room->getPosition();
-    ParseEvent *event = factory->getEvent(room);
+    uint id = room.getId();
+    const Coordinate &c = room.getPosition();
+    ParseEvent *event = factory->getEvent(&room);
 
     assert (roomIndex.size() <= id || !roomIndex[id]);
 
-    RoomCollection *roomHome = treeRoot.insertRoom(event);
+    RoomCollection *roomHome = treeRoot.insertRoom(*event);
     map.setNearest(c, room);
-    checkSize(room->getPosition());
+    checkSize(room.getPosition());
     unusedIds.push(id);
-    assignId(room, roomHome);
+    assignId(&room, roomHome);
     if (roomHome != nullptr) {
-        roomHome->addRoom(room);
+        roomHome->addRoom(&room);
     }
     delete event;
 }
@@ -252,7 +247,7 @@ uint MapFrontend::createEmptyRoom(const Coordinate &c)
     QMutexLocker locker(&mapLock);
     Room *room = factory->createRoom();
     room->setPermanent();
-    map.setNearest(c, room);
+    map.setNearest(c, *room);
     checkSize(room->getPosition());
     uint id = assignId(room, nullptr);
     return id;
@@ -290,23 +285,23 @@ void MapFrontend::createEmptyRooms(const Coordinate &ulf, const Coordinate &lrb)
     map.fillArea(factory, ulf, lrb);
 }
 
-void MapFrontend::createRoom(ParseEvent *event, const Coordinate &expectedPosition)
+void MapFrontend::createRoom(ParseEvent &event, const Coordinate &expectedPosition)
 {
     QMutexLocker locker(&mapLock);
     checkSize(expectedPosition); // still hackish but somewhat better
     RoomCollection *roomHome = treeRoot.insertRoom(event);
 
     if (roomHome != nullptr) {
-        Room *room = factory->createRoom(event);
+        Room *room = factory->createRoom(&event);
         roomHome->addRoom(room);
-        map.setNearest(expectedPosition, room);
+        map.setNearest(expectedPosition, *room);
         assignId(room, roomHome);
     }
-    event->reset();
+    event.reset();
 }
 
 
-void MapFrontend::lookingForRooms(RoomRecipient *recipient, ParseEvent *event)
+void MapFrontend::lookingForRooms(RoomRecipient *recipient, ParseEvent &event)
 {
     QMutexLocker locker(&mapLock);
     if (greatestUsedId == UINT_MAX) {
@@ -317,10 +312,10 @@ void MapFrontend::lookingForRooms(RoomRecipient *recipient, ParseEvent *event)
         }
     }
 
-    RoomLocker ret(recipient, this, factory, event);
+    RoomLocker ret(recipient, this, factory, &event);
 
     treeRoot.getRooms(ret, event);
-    event->reset();
+    event.reset();
 }
 
 void MapFrontend::lockRoom(RoomRecipient *recipient, uint id)

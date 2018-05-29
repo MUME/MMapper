@@ -54,8 +54,6 @@
 #include <cassert>
 #include <iostream>
 
-using namespace std;
-
 namespace {
 
 // These settings have to be shared with the JS code:
@@ -405,14 +403,14 @@ void JsonWorld::addExits( const Room *room, QJsonObject &jr ) const
         je["name"]   = Mmapper2Exit::getDoorName(e);
 
         QJsonArray jin;
-        for (auto i = e.inBegin(); i != e.inEnd(); ++i) {
-            jin << QString::number(m_jRoomIds[*i]);
+        for (auto idx : e.inRange()) {
+            jin << QString::number(m_jRoomIds[idx]);
         }
         je["in"] = jin;
 
         QJsonArray jout;
-        for (auto i = e.outBegin(); i != e.outEnd(); ++i) {
-            jout << QString::number(m_jRoomIds[*i]);
+        for (auto idx : e.outRange()) {
+            jout << QString::number(m_jRoomIds[idx]);
         }
         je["out"] = jout;
 

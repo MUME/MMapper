@@ -88,7 +88,10 @@ ViewSessionProcess::ViewSessionProcess(int key, QString title, QString body,
 
     } else {
         qCritical() << "View session was unable to create a temporary file";
-        onError(QProcess::FailedToStart);
+        // Calling a not virtual method from the ctor is undefined behavior
+        // // onError(QProcess::FailedToStart);
+        // consider throwing instead?
+        // // throw std::runtime_error("failed to start");
     }
 }
 

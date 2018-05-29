@@ -26,9 +26,12 @@
 #ifndef ABSTRACTEXIT_H
 #define ABSTRACTEXIT_H
 
+#include <cassert>
 #include <set>
 #include <QVector>
 #include <QVariant>
+
+#include "global/range.h"
 
 class Exit : public QVector<QVariant>
 {
@@ -39,6 +42,60 @@ protected:
 
 public:
     Exit(uint numProps = 0) : QVector<QVariant>(static_cast<int>(numProps)) {}
+
+public:
+    auto inSize() const
+    {
+        return incoming.size();
+    }
+    bool inIsEmpty() const
+    {
+        return inSize() == 0;
+    }
+    bool inIsUnique() const
+    {
+        return inSize() == 1;
+    }
+    uint inFirst() const
+    {
+        assert(!inIsEmpty());
+        return *incoming.begin();
+    }
+    auto inRange() const
+    {
+        return make_range(inBegin(), inEnd());
+    }
+
+public:
+    auto outSize() const
+    {
+        return outgoing.size();
+    }
+    bool outIsEmpty() const
+    {
+        return outSize() == 0;
+    }
+    bool outIsUnique() const
+    {
+        return outSize() == 1;
+    }
+    uint outFirst() const
+    {
+        assert(!outIsEmpty());
+        return *outgoing.begin();
+    }
+    auto outRange() const
+    {
+        return make_range(outBegin(), outEnd());
+    }
+
+public:
+    auto getRange(bool out) const
+    {
+        return out ? outRange() : inRange();
+    }
+
+private:
     std::set<uint>::const_iterator inBegin() const
     {
         return incoming.begin();
@@ -57,6 +114,7 @@ public:
         return outgoing.end();
     }
 
+public:
     void addIn(uint from)
     {
         incoming.insert(from);

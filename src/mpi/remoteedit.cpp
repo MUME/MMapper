@@ -21,7 +21,6 @@
 ** 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **
 ************************************************************************/
-
 #include "remoteedit.h"
 #include "configuration/configuration.h"
 #include "editsessionprocess.h"
@@ -39,8 +38,9 @@ RemoteEdit::RemoteEdit(QObject *parent)
 RemoteEdit::~RemoteEdit()
     = default;
 
-void RemoteEdit::remoteView(const QString &title, const QString &body)
+void RemoteEdit::remoteView(const QString &title, const QString &text)
 {
+    QString body = text;
 #ifdef Q_OS_WIN
     body.replace(s_lineFeedNewlineRx, "\r\n");
 #endif
@@ -51,19 +51,20 @@ void RemoteEdit::remoteView(const QString &title, const QString &body)
     }
 }
 
-void RemoteEdit::remoteEdit(const int key, const QString &title, const QString &body)
+void RemoteEdit::remoteEdit(const int key, const QString &title, const QString &text)
 {
+    QString body = text;
 #ifdef Q_OS_WIN
     body.replace(s_lineFeedNewlineRx, "\r\n");
 #endif
     if (Config().m_internalRemoteEditor) {
-        auto *widget = new RemoteEditWidget(key, title, body);
+        auto widget = new RemoteEditWidget(key, title, body);
         connect(widget, SIGNAL(save(const QString &, const int)), SLOT(save(const QString &,
                                                                             const int)));
         connect(widget, SIGNAL(cancel(const int)), SLOT(cancel(const int)));
 
     } else {
-        auto *process = new EditSessionProcess(key, title, body, this);
+        auto process = new EditSessionProcess(key, title, body, this);
         connect(process, SIGNAL(save(const QString &, const int)),
                 SLOT(save(const QString &, const int)));
         connect(process, SIGNAL(cancel(const int)), SLOT(cancel(const int)));

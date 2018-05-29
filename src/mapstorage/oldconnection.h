@@ -86,7 +86,7 @@ public:
         r == m_rooms[FIRST] ? tmp = m_doors[FIRST] : tmp = m_doors[SECOND];
         return tmp;
     };
-    Door *getDoor(quint8 idx) const
+    Door *getDoor(Hand idx) const
     {
         return m_doors[idx];
     };
@@ -102,7 +102,7 @@ public:
         r == m_rooms[FIRST] ? tmp = m_directions[SECOND] : tmp = m_directions[FIRST];
         return tmp;
     };
-    ConnectionDirection getDirection(quint8 idx) const
+    ConnectionDirection getDirection(Hand idx) const
     {
         return m_directions[idx];
     };
@@ -132,12 +132,12 @@ public:
     {
         m_rooms[idx] = room;
     };
-    void setDoor(Door *door, quint8 idx)
+    void setDoor(Door *door, Hand idx)
     {
         m_doors[idx] = door;
         m_flags |= CF_DOOR;
     };
-    void setDirection(ConnectionDirection direction, quint8 idx)
+    void setDirection(ConnectionDirection direction, Hand idx)
     {
         m_directions[idx] = direction;
     };

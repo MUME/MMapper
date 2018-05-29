@@ -25,8 +25,6 @@
 
 #include "roomcollection.h"
 
-using namespace std;
-
 void RoomCollection::addRoom(Room *room)
 {
     insert(room);

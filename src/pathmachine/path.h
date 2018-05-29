@@ -30,6 +30,7 @@
 #include <QtGlobal>
 #include <set>
 #include <limits.h>
+#include "pathparameters.h"
 
 //#include "roomsignalhandler.h"
 //#include "room.h"

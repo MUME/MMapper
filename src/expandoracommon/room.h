@@ -28,23 +28,28 @@
 
 #include <QVariant>
 #include <QVector>
+#include <mapdata/mmapper2room.h>
 #include "coordinate.h"
 #include "exit.h"
 
 typedef QVector<Exit> ExitsList;
 typedef QVectorIterator<Exit> ExitsListIterator;
 
-class Room : public QVector<QVariant>
+class Room final
 {
-protected:
-    uint id;
-    Coordinate position;
-    bool temporary;
-    bool upToDate;
+private:
+    using RoomFields = QVector<QVariant>;
+
+private:
+    uint id = UINT_MAX;
+    Coordinate position{};
+    bool temporary = true;
+    bool upToDate = false;
+    RoomFields fields;
     ExitsList exits;
 
 public:
-    virtual Exit &exit(uint dir)
+    Exit &exit(uint dir)
     {
         return exits[dir];
     }
@@ -56,54 +61,117 @@ public:
     {
         return exits;
     }
-    virtual ~Room() {}
-    virtual void setId(uint in)
+    void setId(uint in)
     {
         id = in;
     }
-    virtual void setPosition(const Coordinate &in_c)
+    void setPosition(const Coordinate &in_c)
     {
         position = in_c;
     }
-    virtual uint getId() const
+    uint getId() const
     {
         return id;
     }
-    virtual const Coordinate &getPosition() const
+    const Coordinate &getPosition() const
     {
         return position;
     }
-    virtual bool isTemporary() const
+    bool isTemporary() const
     {
         return temporary;   // room is new if no exits are present
     }
-    virtual void setPermanent()
+    void setPermanent()
     {
         temporary = false;
     }
-    virtual bool isUpToDate() const
+    bool isUpToDate() const
     {
         return upToDate;
     }
-    virtual const Exit &exit(uint dir) const
+    const Exit &exit(uint dir) const
     {
         return exits[dir];
     }
-    virtual void setUpToDate()
+    void setUpToDate()
     {
         upToDate = true;
     }
-    virtual void setOutDated()
+    void setOutDated()
     {
         upToDate = false;
     }
+
+public:
+    RoomName getName() const;
+    RoomDescription getDescription() const;
+    RoomDescription getDynamicDescription() const;
+    RoomNote getNote() const;
+    RoomMobFlags getMobFlags() const;
+    RoomLoadFlags getLoadFlags() const;
+    RoomTerrainType getTerrainType() const;
+    RoomPortableType getPortableType() const;
+    RoomLightType getLightType() const;
+    RoomAlignType getAlignType() const;
+    RoomRidableType getRidableType() const;
+    RoomSundeathType getSundeathType() const;
+
+public:
+    inline QVariant at(const RoomField field) const
+    {
+        return fields.at(static_cast<int>(field));
+    }
+    inline void replace(const RoomField field, QVariant value)
+    {
+        fields.replace(static_cast<int>(field), value);
+    }
+
+public:
+    template<typename Callback>
+    inline void modifyVariant(const RoomField field, Callback &&callback)
+    {
+        const QVariant oldValue = at(field);
+        replace(field, callback(oldValue));
+    }
+
+    template<typename Callback>
+    inline void modifyUint(const RoomField field, Callback &&callback)
+    {
+        const uint oldValue = at(field).toUInt();
+        replace(field, callback(oldValue));
+    }
+
+    template<typename Callback>
+    inline void modifyString(const RoomField field, Callback &&callback)
+    {
+        const QString oldValue = at(field).toString();
+        replace(field, callback(oldValue));
+    }
+
+public:
+    inline auto begin()
+    {
+        return fields.begin();
+    }
+    inline auto end()
+    {
+        return fields.end();
+    }
+    inline auto begin() const
+    {
+        return fields.begin();
+    }
+    inline auto end() const
+    {
+        return fields.end();
+    }
+
+public:
     Room(uint numProps, uint numExits, uint numExitProps) :
-        QVector<QVariant>(numProps),
-        id(UINT_MAX),
-        temporary(true),
-        upToDate(false),
+        fields(numProps),
         exits(numExits, numExitProps)
     {}
+    ~Room() = default;
 };
 
 

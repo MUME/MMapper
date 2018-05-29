@@ -24,6 +24,7 @@
 
 #include "stackedinputwidget.h"
 #include "inputwidget.h"
+#include "clientwidget.h"
 
 #include <QApplication>
 #include <QDebug>
@@ -35,22 +36,25 @@ StackedInputWidget::StackedInputWidget(QWidget *parent)
     // Multiline Input Widget
     m_inputWidget = new InputWidget(this);
     addWidget(m_inputWidget);
-    connect(m_inputWidget, SIGNAL(sendUserInput(QString)), SLOT(gotMultiLineInput(QString)));
-    connect(m_inputWidget, SIGNAL(displayMessage(QString)), SLOT(relayMessage(QString)));
-    connect(m_inputWidget, SIGNAL(showMessage(const QString &, int)), SLOT(relayMessage(const QString &,
-                                                                                        int)));
+    connect(m_inputWidget, &InputWidget::sendUserInput, this, &StackedInputWidget::gotMultiLineInput);
+    connect(m_inputWidget, &InputWidget::displayMessage, this, &StackedInputWidget::relayMessage);
+    connect(m_inputWidget, &InputWidget::showMessage, this, &StackedInputWidget::relayMessage);
 
     // Password Widget
     m_passwordWidget = new QLineEdit(this);
     m_passwordWidget->setMaxLength(255);
     m_passwordWidget->setEchoMode(QLineEdit::Password);
     addWidget(m_passwordWidget);
-    connect(m_passwordWidget, SIGNAL(returnPressed()), SLOT(gotPasswordInput()));
+    connect(m_passwordWidget, &QLineEdit::returnPressed, this, &StackedInputWidget::gotPasswordInput);
 
     // Grab focus
     setCurrentWidget(m_inputWidget);
     setFocusProxy(m_inputWidget);
     m_localEcho = true;
+
+    // Swallow shortcuts
+    m_inputWidget->installEventFilter(this);
+    m_passwordWidget->installEventFilter(this);
 }
 
 StackedInputWidget::~StackedInputWidget()
@@ -63,21 +67,13 @@ StackedInputWidget::~StackedInputWidget()
 
 bool StackedInputWidget::eventFilter(QObject *obj, QEvent *event)
 {
-    if (event->type() == QEvent::KeyPress) {
-        // Send KeyPress events to the input widget from the display widget
-        if (m_localEcho) {
-            QCoreApplication::sendEvent(m_inputWidget, event);
-            m_inputWidget->setFocus();
-        } else {
-            QCoreApplication::sendEvent(m_passwordWidget, event);
-            m_passwordWidget->setFocus();
-        }
+    if (event->type() == QEvent::ShortcutOverride) {
+        // Send shortcuts to the parent
+        event->ignore();
         return true;
-
     }
     // Standard event processing
     return QObject::eventFilter(obj, event);
-
 }
 
 void StackedInputWidget::toggleEchoMode(bool localEcho)
@@ -97,25 +93,19 @@ void StackedInputWidget::gotPasswordInput()
     m_passwordWidget->selectAll();
     QString input = m_passwordWidget->text() + "\n";
     m_passwordWidget->clear();
-    emit sendUserInput(input.toLatin1());
+    emit sendUserInput(input);
 }
 
-void StackedInputWidget::gotMultiLineInput(QString input)
+void StackedInputWidget::gotMultiLineInput(const QString &input)
 {
-    QString str = input.append("\n");
-
+    QString str = QString(input).append("\n");
     emit displayMessage(str);
-    emit sendUserInput(str.toLatin1());
+    emit sendUserInput(str);
 }
 
 void StackedInputWidget::relayMessage(const QString &message)
 {
     emit displayMessage(message);
-}
-
-void StackedInputWidget::relayMessage(const QString &message, int timeout)
-{
-    emit showMessage(message, timeout);
 }
 
 void StackedInputWidget::cut()
