@@ -26,11 +26,10 @@
 #include "property.h"
 #include <stdexcept>
 
-Property::Property(const QByteArray &data) :
-    ListCycler<char, QByteArray>(data),
-    m_skipped(false)
-{
-}
+Property::Property(const QByteArray &data)
+    : ListCycler<char, QByteArray>(data)
+    , m_skipped(false)
+{}
 
 const char *Property::rest() const
 {

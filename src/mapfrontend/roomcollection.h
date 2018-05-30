@@ -37,9 +37,6 @@ public:
     void removeRoom(Room *room);
 };
 
-
-
-
 #ifdef DMALLOC
 #include <mpatrol.h>
 #endif

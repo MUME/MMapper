@@ -36,8 +36,10 @@ class RoomRecipient;
 class RoomLocker : public RoomOutStream
 {
 public:
-    RoomLocker(RoomRecipient *forward, MapFrontend *frontend,
-               AbstractRoomFactory *factory = 0, ParseEvent *compare = 0);
+    RoomLocker(RoomRecipient *forward,
+               MapFrontend *frontend,
+               AbstractRoomFactory *factory = 0,
+               ParseEvent *compare = 0);
     virtual RoomOutStream &operator<<(const Room *room);
 
 private:

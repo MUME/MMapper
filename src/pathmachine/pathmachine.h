@@ -27,10 +27,10 @@
 #ifndef PARSER
 #define PARSER
 
-#include "room.h"
 #include "component.h"
-#include "roomsignalhandler.h"
 #include "pathparameters.h"
+#include "room.h"
+#include "roomsignalhandler.h"
 
 #define APPROVED 0
 #define EXPERIMENTING 1
@@ -87,10 +87,6 @@ protected:
     ParseEvent *lastEvent;
     char state;
     std::list<Path *> *paths;
-
-}
-;
-
+};
 
 #endif
-

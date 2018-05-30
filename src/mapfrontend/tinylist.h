@@ -27,6 +27,9 @@
 #define TINYLIST
 
 #include <cassert>
+#include <cstdint>
+#include <type_traits>
+#include <vector>
 
 /**
  * extremely shrinked array list implementation to be used for each room
@@ -44,6 +47,7 @@ public:
     using iterator = T *;
     using index_type = uint32_t;
     using size_type = uint32_t;
+
 private:
     static constexpr const index_type limit = 256u;
 
@@ -54,10 +58,10 @@ public:
 
 public:
     template<typename I>
-    using IsConvertible = typename std::enable_if_t < std::is_integral<I>::value
-                          && !std::is_same<I, T>::value >;
+    using IsConvertible =
+        typename std::enable_if_t<std::is_integral<I>::value && !std::is_same<I, T>::value>;
 
-    template<typename I, typename = IsConvertible <I>>
+    template<typename I, typename = IsConvertible<I>>
     static inline index_type index(I c)
     {
         if (std::is_signed<I>::value)
@@ -65,19 +69,19 @@ public:
         return static_cast<index_type>(c);
     }
 
-    template<typename I, typename = IsConvertible <I>>
+    template<typename I, typename = IsConvertible<I>>
     T get(I c) const
     {
         return get(index(c));
     }
 
-    template<typename I, typename = IsConvertible <I>>
+    template<typename I, typename = IsConvertible<I>>
     void put(I c, T object)
     {
         put(index(c), object);
     }
 
-    template<typename I, typename = IsConvertible <I>>
+    template<typename I, typename = IsConvertible<I>>
     void remove(I c)
     {
         remove(index(c));
@@ -109,20 +113,11 @@ public:
             list[c] = nullptr;
     }
 
-    size_type size() const
-    {
-        return static_cast<size_type>(list.size());
-    }
+    size_type size() const { return static_cast<size_type>(list.size()); }
 
-    iterator begin()
-    {
-        return list.data();
-    }
+    iterator begin() { return list.data(); }
 
-    iterator end()
-    {
-        return begin() + size();
-    }
+    iterator end() { return begin() + size(); }
 
 private:
     std::vector<T> list{};

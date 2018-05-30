@@ -39,19 +39,15 @@ class ProgressCounter;
 class BaseMapSaveFilter : public RoomRecipient
 {
 public:
-    enum Action {
-        PASS,
-        ALTER,
-        REJECT
-    };
+    enum Action { PASS, ALTER, REJECT };
 
 private:
     class Impl;
     std::unique_ptr<Impl> m_impl;
 
     // Disallow copying because unique_ptr is used
-    BaseMapSaveFilter( const BaseMapSaveFilter & );
-    BaseMapSaveFilter &operator=( const BaseMapSaveFilter & );
+    BaseMapSaveFilter(const BaseMapSaveFilter &);
+    BaseMapSaveFilter &operator=(const BaseMapSaveFilter &);
 
     virtual void receiveRoom(RoomAdmin *, const Room *room);
 
@@ -60,17 +56,17 @@ public:
     virtual ~BaseMapSaveFilter();
 
     //! The map data to work on
-    void setMapData( MapData *mapData );
+    void setMapData(MapData *mapData);
     //! How much steps (rooms) to go through in prepare() (requires mapData)
     uint prepareCount();
     //! How much rooms will be accepted (PASS or ALTER)
     uint acceptedRoomsCount();
     //! First pass over the world's room (requires mapData)
-    void prepare( ProgressCounter *counter );
+    void prepare(ProgressCounter *counter);
     //! Determines the fate of this room (requires prepare())
-    Action filter( const Room *room );
+    Action filter(const Room *room);
     //! Returns an altered Room (requires action == ALTER)
-    Room alteredRoom( const Room *room );
+    Room alteredRoom(const Room *room);
 };
 
 #endif /* INCLUDED_BASEMAPSAVEFILTER_H */

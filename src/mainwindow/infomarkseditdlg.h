@@ -26,9 +26,9 @@
 #ifndef INFOMARKSEDITDLG_H
 #define INFOMARKSEDITDLG_H
 
-#include <QDialog>
-#include "ui_infomarkseditdlg.h"
 #include "infomark.h"
+#include "ui_infomarkseditdlg.h"
+#include <QDialog>
 
 class MapData;
 class MapCanvas;
@@ -65,7 +65,6 @@ public slots:
     void onMoveDownClicked();
     void onDeleteAllClicked();
 
-
 public:
     InfoMarksEditDlg(MapData *mapData, QWidget *parent = 0);
     ~InfoMarksEditDlg();
@@ -78,9 +77,7 @@ public:
 protected:
     void closeEvent(QCloseEvent *);
 
-
 private:
-
     MapData *m_mapData;
 
     double m_selX1, m_selY1, m_selX2, m_selY2;
@@ -98,6 +95,5 @@ private:
     void updateMarkers();
     void updateDialog();
 };
-
 
 #endif

@@ -26,26 +26,31 @@
 #ifndef DRAWSTREAM_H
 #define DRAWSTREAM_H
 
-#include "roomoutstream.h"
 #include "mapcanvas.h"
+#include "roomoutstream.h"
 
 //class MapCanvas;
 
 class DrawStream : public RoomOutStream
 {
 public:
-    DrawStream(MapCanvas &in, const std::vector<Room *> &in_rooms,
-               const std::vector<std::set<RoomRecipient *> > &in_locks) : canvas(in), rooms(in_rooms),
-        locks(in_locks) {}
+    DrawStream(MapCanvas &in,
+               const std::vector<Room *> &in_rooms,
+               const std::vector<std::set<RoomRecipient *>> &in_locks)
+        : canvas(in)
+        , rooms(in_rooms)
+        , locks(in_locks)
+    {}
     virtual RoomOutStream &operator<<(const Room *room)
     {
         canvas.drawRoom(room, rooms, locks);
         return *this;
     }
+
 private:
     MapCanvas &canvas;
     const std::vector<Room *> &rooms;
-    const std::vector<std::set<RoomRecipient *> > &locks;
+    const std::vector<std::set<RoomRecipient *>> &locks;
 };
 
 #endif

@@ -37,43 +37,40 @@ typedef class QString ConnectionNote;
 
 enum ConnectionType { CT_NORMAL = 0, CT_LOOP, CT_ONEWAY, CT_UNDEFINED };
 
-enum ConnectionDirection { CD_NORTH = 0, CD_SOUTH, CD_EAST, CD_WEST, CD_UP,
-                           CD_DOWN, CD_UNKNOWN, CD_NONE
-                         };
+enum ConnectionDirection {
+    CD_NORTH = 0,
+    CD_SOUTH,
+    CD_EAST,
+    CD_WEST,
+    CD_UP,
+    CD_DOWN,
+    CD_UNKNOWN,
+    CD_NONE
+};
 
 ConnectionDirection opposite(ConnectionDirection in);
 
-#define CF_DOOR       bit1
-#define CF_CLIMB      bit2
-#define CF_RANDOM     bit3
-#define CF_SPECIAL    bit4
-#define CF_RESERVED1  bit5
-#define CF_RESERVED2  bit6
-#define CF_RESERVED3  bit7
-#define CF_RESERVED4  bit8
+#define CF_DOOR bit1
+#define CF_CLIMB bit2
+#define CF_RANDOM bit3
+#define CF_SPECIAL bit4
+#define CF_RESERVED1 bit5
+#define CF_RESERVED2 bit6
+#define CF_RESERVED3 bit7
+#define CF_RESERVED4 bit8
 typedef quint8 ConnectionFlags;
 
 typedef QDateTime ConnectionTimeStamp;
 
 class Connection
 {
-
 public:
     Connection();
     ~Connection();
 
-    const ConnectionNote &getNote() const
-    {
-        return m_note;
-    };
-    quint32 getIndex() const
-    {
-        return m_index;
-    };
-    Room *getRoom(quint8 idx) const
-    {
-        return m_rooms[idx];
-    };
+    const ConnectionNote &getNote() const { return m_note; };
+    quint32 getIndex() const { return m_index; };
+    Room *getRoom(quint8 idx) const { return m_rooms[idx]; };
     Room *getTargetRoom(Room *r) const
     {
         Room *tmp;
@@ -86,10 +83,7 @@ public:
         r == m_rooms[FIRST] ? tmp = m_doors[FIRST] : tmp = m_doors[SECOND];
         return tmp;
     };
-    Door *getDoor(Hand idx) const
-    {
-        return m_doors[idx];
-    };
+    Door *getDoor(Hand idx) const { return m_doors[idx]; };
     ConnectionDirection getDirection(Room *r) const
     {
         ConnectionDirection tmp;
@@ -102,77 +96,45 @@ public:
         r == m_rooms[FIRST] ? tmp = m_directions[SECOND] : tmp = m_directions[FIRST];
         return tmp;
     };
-    ConnectionDirection getDirection(Hand idx) const
-    {
-        return m_directions[idx];
-    };
-    ConnectionType getType() const
-    {
-        return m_type;
-    };
-    ConnectionFlags getFlags() const
-    {
-        return m_flags;
-    };
-    const ConnectionTimeStamp &getTimeStamp() const
-    {
-        return m_timeStamp;
-    };
+    ConnectionDirection getDirection(Hand idx) const { return m_directions[idx]; };
+    ConnectionType getType() const { return m_type; };
+    ConnectionFlags getFlags() const { return m_flags; };
+    const ConnectionTimeStamp &getTimeStamp() const { return m_timeStamp; };
 
-//    void setID(ConnectionID id) { m_ID = id; };
-    void setNote(ConnectionNote note)
-    {
-        m_note = note;
-    };
-    void setIndex(quint32 idx)
-    {
-        m_index = idx;
-    };
-    void setRoom(Room *room, quint8 idx)
-    {
-        m_rooms[idx] = room;
-    };
+    //    void setID(ConnectionID id) { m_ID = id; };
+    void setNote(ConnectionNote note) { m_note = note; };
+    void setIndex(quint32 idx) { m_index = idx; };
+    void setRoom(Room *room, quint8 idx) { m_rooms[idx] = room; };
     void setDoor(Door *door, Hand idx)
     {
         m_doors[idx] = door;
         m_flags |= CF_DOOR;
     };
-    void setDirection(ConnectionDirection direction, Hand idx)
-    {
-        m_directions[idx] = direction;
-    };
+    void setDirection(ConnectionDirection direction, Hand idx) { m_directions[idx] = direction; };
     void setDirection(ConnectionDirection direction, Room *r)
     {
-        if (r == m_rooms[FIRST]) m_directions[FIRST] = direction;
-        if (r == m_rooms[SECOND])  m_directions[SECOND] = direction;
+        if (r == m_rooms[FIRST])
+            m_directions[FIRST] = direction;
+        if (r == m_rooms[SECOND])
+            m_directions[SECOND] = direction;
     };
-    void setType( ConnectionType type )
-    {
-        m_type = type;
-    };
-    void setFlags( ConnectionFlags flags )
-    {
-        m_flags = flags;
-    };
-    void setTimeStamp(ConnectionTimeStamp timeStamp)
-    {
-        m_timeStamp = timeStamp;
-    };
+    void setType(ConnectionType type) { m_type = type; };
+    void setFlags(ConnectionFlags flags) { m_flags = flags; };
+    void setTimeStamp(ConnectionTimeStamp timeStamp) { m_timeStamp = timeStamp; };
 
 private:
-
     //connection note
     ConnectionNote m_note;
 
-    ConnectionDirection m_directions[2] {};
+    ConnectionDirection m_directions[2]{};
 
     ConnectionTimeStamp m_timeStamp;
 
     //Index to rooms
-    Room *m_rooms[2] {};
+    Room *m_rooms[2]{};
 
     //doors (in case of exit with doors)
-    Door *m_doors[2] {};
+    Door *m_doors[2]{};
 
     //type of connections
     ConnectionType m_type;

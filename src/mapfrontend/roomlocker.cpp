@@ -28,13 +28,15 @@
 #include "mapfrontend.h"
 #include "roomrecipient.h"
 
-RoomLocker::RoomLocker(RoomRecipient *forward, MapFrontend *frontend,
-                       AbstractRoomFactory *in_factory, ParseEvent *compare) :
-    recipient(forward),
-    data(frontend),
-    factory(in_factory),
-    comparator(compare) {}
-
+RoomLocker::RoomLocker(RoomRecipient *forward,
+                       MapFrontend *frontend,
+                       AbstractRoomFactory *in_factory,
+                       ParseEvent *compare)
+    : recipient(forward)
+    , data(frontend)
+    , factory(in_factory)
+    , comparator(compare)
+{}
 
 RoomOutStream &RoomLocker::operator<<(const Room *room)
 {

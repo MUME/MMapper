@@ -42,14 +42,15 @@ const QByteArray MumeXmlParser::lessThanTemplate("&lt;");
 const QByteArray MumeXmlParser::ampersand("&");
 const QByteArray MumeXmlParser::ampersandTemplate("&amp;");
 
-MumeXmlParser::MumeXmlParser(MapData *md, MumeClock *mc, QObject *parent) :
-    AbstractParser(md, mc, parent),
-    m_roomDescLines(0), m_readingStaticDescLines(false),
-    m_move(CID_LOOK),
-    m_xmlMode(XML_NONE),
-    m_readingTag(false),
-    m_gratuitous(false),
-    m_readSnoopTag(false)
+MumeXmlParser::MumeXmlParser(MapData *md, MumeClock *mc, QObject *parent)
+    : AbstractParser(md, mc, parent)
+    , m_roomDescLines(0)
+    , m_readingStaticDescLines(false)
+    , m_move(CID_LOOK)
+    , m_xmlMode(XML_NONE)
+    , m_readingTag(false)
+    , m_gratuitous(false)
+    , m_readSnoopTag(false)
 {
 #ifdef XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
     QString fileName = "xmlparser_debug.dat";
@@ -108,7 +109,6 @@ void MumeXmlParser::parseNewMudInput(IncomingData &data)
     (*debugStream) << "***E***";
 #endif
 
-
     //}
 }
 
@@ -122,7 +122,7 @@ void MumeXmlParser::parse(const QByteArray &line)
             if (line.at(index) == '>') {
                 //send tag
                 if (!m_tempTag.isEmpty()) {
-                    element( m_tempTag );
+                    element(m_tempTag);
                 }
 
                 m_tempTag.clear();
@@ -166,7 +166,7 @@ void MumeXmlParser::parse(const QByteArray &line)
     }
 }
 
-bool MumeXmlParser::element( const QByteArray &line  )
+bool MumeXmlParser::element(const QByteArray &line)
 {
     int length = line.length();
 
@@ -339,7 +339,6 @@ bool MumeXmlParser::element( const QByteArray &line  )
     return true;
 }
 
-
 QByteArray MumeXmlParser::characters(QByteArray &ch)
 {
     QByteArray toUser;
@@ -368,14 +367,14 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
     ParserUtils::latinToAscii(m_stringBuffer);
     ParserUtils::removeAnsiMarks(m_stringBuffer);
 
-    if (m_readSnoopTag && m_stringBuffer.length() > 3
-            && m_stringBuffer.at(0) == '&' && m_stringBuffer.at(2) == ' ') {
+    if (m_readSnoopTag && m_stringBuffer.length() > 3 && m_stringBuffer.at(0) == '&'
+        && m_stringBuffer.at(2) == ' ') {
         // Remove snoop prefix (i.e. "&J Exits: north.")
         m_stringBuffer = m_stringBuffer.mid(3);
     }
 
     switch (m_xmlMode) {
-    case XML_NONE:        //non room info
+    case XML_NONE:                      //non room info
         if (m_stringBuffer.isEmpty()) { // standard end of description parsed
             if (m_readingRoomDesc) {
                 m_readingRoomDesc = false; // we finished read desc mode
@@ -388,7 +387,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
             parseMudCommands(m_stringBuffer);
         }
         if (m_readSnoopTag) {
-            if  (m_descriptionReady) {
+            if (m_descriptionReady) {
                 m_promptFlags = 0; // Don't trust god prompts
                 queue.enqueue(m_move);
                 emit showPath(queue, true);
@@ -405,7 +404,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         break;
 
     case XML_NAME:
-        if  (m_descriptionReady) {
+        if (m_descriptionReady) {
             move();
         }
 
@@ -438,14 +437,14 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
 
     case XML_PROMPT:
         emit sendPromptLineEvent(m_stringBuffer.toLatin1());
-        if (m_readingRoomDesc) { // fixes compact mode
+        if (m_readingRoomDesc) {       // fixes compact mode
             m_readingRoomDesc = false; // we finished read desc mode
             m_descriptionReady = true;
             if (Config().m_emulatedExits) {
                 emulateExits();
             }
         }
-        if  (m_descriptionReady) {
+        if (m_descriptionReady) {
             parsePrompt(m_stringBuffer);
             move();
         } else {
@@ -472,8 +471,8 @@ void MumeXmlParser::move()
     m_descriptionReady = false;
 
     if (m_roomName == emptyString || // blindness
-            Patterns::matchNoDescriptionPatterns(
-                m_roomName)) { // non standard end of description parsed (fog, dark or so ...)
+        Patterns::matchNoDescriptionPatterns(
+            m_roomName)) { // non standard end of description parsed (fog, dark or so ...)
         m_roomName = nullString;
         m_dynamicRoomDesc = nullString;
         m_staticRoomDesc = nullString;
@@ -481,10 +480,15 @@ void MumeXmlParser::move()
 
     if (!queue.isEmpty()) {
         CommandIdType c = queue.dequeue();
-        if ( c != CID_SCOUT ) {
+        if (c != CID_SCOUT) {
             emit showPath(queue, false);
-            emit event(Mmapper2Event::createEvent(m_move, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc,
-                                                  m_exitsFlags, m_promptFlags, m_connectedRoomFlags));
+            emit event(Mmapper2Event::createEvent(m_move,
+                                                  m_roomName,
+                                                  m_dynamicRoomDesc,
+                                                  m_staticRoomDesc,
+                                                  m_exitsFlags,
+                                                  m_promptFlags,
+                                                  m_connectedRoomFlags));
             if (c != m_move) {
                 queue.clear();
             }
@@ -492,12 +496,16 @@ void MumeXmlParser::move()
         }
     } else {
         //emit showPath(queue, false);
-        emit event(Mmapper2Event::createEvent(m_move, m_roomName, m_dynamicRoomDesc, m_staticRoomDesc,
-                                              m_exitsFlags, m_promptFlags, m_connectedRoomFlags));
+        emit event(Mmapper2Event::createEvent(m_move,
+                                              m_roomName,
+                                              m_dynamicRoomDesc,
+                                              m_staticRoomDesc,
+                                              m_exitsFlags,
+                                              m_promptFlags,
+                                              m_connectedRoomFlags));
         m_move = CID_LOOK;
     }
 }
-
 
 void MumeXmlParser::parseMudCommands(QString &str)
 {

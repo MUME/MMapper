@@ -49,10 +49,10 @@ void MumeSocket::onError(QAbstractSocket::SocketError e)
     }
 }
 
-
-MumeSslSocket::MumeSslSocket(QObject *parent) : MumeSocket(parent),
-    m_socket(new QSslSocket(this)),
-    m_timer(new QTimer(this))
+MumeSslSocket::MumeSslSocket(QObject *parent)
+    : MumeSocket(parent)
+    , m_socket(new QSslSocket(this))
+    , m_timer(new QTimer(this))
 {
     m_socket->setProtocol(QSsl::TlsV1_2OrLater);
     m_socket->setPeerVerifyMode(QSslSocket::QueryPeer);
@@ -60,10 +60,14 @@ MumeSslSocket::MumeSslSocket(QObject *parent) : MumeSocket(parent),
     connect(m_socket, SIGNAL(readyRead()), this, SLOT(onReadyRead()));
     connect(m_socket, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
     connect(m_socket, SIGNAL(encrypted()), this, SLOT(onEncrypted()));
-    connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)),
-            this, SLOT(onError(QAbstractSocket::SocketError)));
-    connect(m_socket, SIGNAL(peerVerifyError(const QSslError & )),
-            this, SLOT(onPeerVerifyError(const QSslError &)));
+    connect(m_socket,
+            SIGNAL(error(QAbstractSocket::SocketError)),
+            this,
+            SLOT(onError(QAbstractSocket::SocketError)));
+    connect(m_socket,
+            SIGNAL(peerVerifyError(const QSslError &)),
+            this,
+            SLOT(onPeerVerifyError(const QSslError &)));
 
     m_timer->setInterval(5000);
     m_timer->setSingleShot(true);
@@ -86,7 +90,8 @@ MumeSslSocket::~MumeSslSocket()
 
 void MumeSslSocket::connectToHost()
 {
-    m_socket->connectToHostEncrypted(Config().m_remoteServerName, Config().m_remotePort,
+    m_socket->connectToHostEncrypted(Config().m_remoteServerName,
+                                     Config().m_remotePort,
                                      QIODevice::ReadWrite);
     m_timer->start();
 }
@@ -146,7 +151,6 @@ void MumeSslSocket::onReadyRead()
 void MumeSslSocket::checkTimeout()
 {
     switch (m_socket->state()) {
-
     case QAbstractSocket::HostLookupState:
         onError(QAbstractSocket::HostNotFoundError);
         return;
@@ -171,10 +175,11 @@ void MumeSslSocket::sendToMud(const QByteArray &ba)
     m_socket->flush();
 }
 
-
 void MumeTcpSocket::connectToHost()
 {
-    m_socket->connectToHost(Config().m_remoteServerName, Config().m_remotePort, QIODevice::ReadWrite);
+    m_socket->connectToHost(Config().m_remoteServerName,
+                            Config().m_remotePort,
+                            QIODevice::ReadWrite);
     m_timer->start();
 }
 
@@ -184,4 +189,3 @@ void MumeTcpSocket::onConnect()
     m_socket->setSocketOption(QAbstractSocket::KeepAliveOption, true);
     MumeSocket::onConnect();
 }
-

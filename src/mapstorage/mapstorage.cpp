@@ -52,12 +52,12 @@
 #define MINUMUM_STATIC_LINES 1
 #define CURRENT_SCHEMA_VERSION 042
 
-MapStorage::MapStorage(MapData &mapdata, const QString &filename, QFile *file, QObject *parent) :
-    AbstractMapStorage(mapdata, filename, file, parent)
+MapStorage::MapStorage(MapData &mapdata, const QString &filename, QFile *file, QObject *parent)
+    : AbstractMapStorage(mapdata, filename, file, parent)
 {}
 
-MapStorage::MapStorage(MapData &mapdata, const QString &filename, QObject *parent) :
-    AbstractMapStorage(mapdata, filename, parent)
+MapStorage::MapStorage(MapData &mapdata, const QString &filename, QObject *parent)
+    : AbstractMapStorage(mapdata, filename, parent)
 {}
 
 void MapStorage::newData()
@@ -80,14 +80,14 @@ Room *MapStorage::loadOldRoom(QDataStream &stream, ConnectionList &connectionLis
     room->setPermanent();
 
     // set default values
-    RoomTerrainType     terrainType = RTT_UNDEFINED;
-    RoomPortableType    portableType = RPT_UNDEFINED;
-    RoomRidableType     ridableType = RRT_UNDEFINED;
-    RoomSundeathType    sundeathType = RST_UNDEFINED;
-    RoomLightType       lightType = RLT_UNDEFINED;
-    RoomAlignType       alignType = RAT_UNDEFINED;
-    RoomMobFlags        mobFlags = 0;
-    RoomLoadFlags       loadFlags = 0;
+    RoomTerrainType terrainType = RTT_UNDEFINED;
+    RoomPortableType portableType = RPT_UNDEFINED;
+    RoomRidableType ridableType = RRT_UNDEFINED;
+    RoomSundeathType sundeathType = RST_UNDEFINED;
+    RoomLightType lightType = RLT_UNDEFINED;
+    RoomAlignType alignType = RAT_UNDEFINED;
+    RoomMobFlags mobFlags = 0;
+    RoomLoadFlags loadFlags = 0;
     QString vqstr;
     quint16 vquint16;
     quint32 vquint32;
@@ -106,10 +106,9 @@ Room *MapStorage::loadOldRoom(QDataStream &stream, ConnectionList &connectionLis
     qint32 lineCount = 0;
 
     for (i = list.begin(); i != list.end(); ++i) {
-        if ( (*i) != "" ) {
-            if ((lineCount >= MINUMUM_STATIC_LINES) &&
-                    ((!readingStaticDescLines) ||
-                     Patterns::matchDynamicDescriptionPatterns(*i))) {
+        if ((*i) != "") {
+            if ((lineCount >= MINUMUM_STATIC_LINES)
+                && ((!readingStaticDescLines) || Patterns::matchDynamicDescriptionPatterns(*i))) {
                 readingStaticDescLines = false;
                 dynamicRoomDesc += (*i) + "\n";
                 lineCount++;
@@ -130,58 +129,58 @@ Room *MapStorage::loadOldRoom(QDataStream &stream, ConnectionList &connectionLis
     switch (static_cast<int>(vquint16)) {
     case 1:
         SET(mobFlags, RMF_ANY);
-        break;    //PEACEFULL
+        break; //PEACEFULL
     case 2:
         SET(mobFlags, RMF_SMOB);
-        break;   //AGGRESIVE
+        break; //AGGRESIVE
     case 3:
         SET(mobFlags, RMF_QUEST);
-        break;  //QUEST
+        break; //QUEST
     case 4:
         SET(mobFlags, RMF_SHOP);
-        break;   //SHOP
+        break; //SHOP
     case 5:
         SET(mobFlags, RMF_RENT);
-        break;   //RENT
+        break; //RENT
     case 6:
         SET(mobFlags, RMF_GUILD);
-        break;  //GUILD
+        break; //GUILD
     default:
         break;
     }
 
     stream >> vquint16; //roomLoad
     switch (static_cast<int>(vquint16)) {
-    case  1:
+    case 1:
         SET(loadFlags, RLF_TREASURE);
-        break;   //TREASURE
-    case  2:
+        break; //TREASURE
+    case 2:
         SET(loadFlags, RLF_HERB);
-        break;       //HERB
-    case  3:
+        break; //HERB
+    case 3:
         SET(loadFlags, RLF_KEY);
-        break;        //KEY
-    case  4:
+        break; //KEY
+    case 4:
         SET(loadFlags, RLF_WATER);
-        break;      //WATER
-    case  5:
+        break; //WATER
+    case 5:
         SET(loadFlags, RLF_FOOD);
-        break;       //FOOD
-    case  6:
+        break; //FOOD
+    case 6:
         SET(loadFlags, RLF_HORSE);
-        break;      //HORSE
-    case  7:
+        break; //HORSE
+    case 7:
         SET(loadFlags, RLF_WARG);
-        break;       //WARG
-    case  8:
+        break; //WARG
+    case 8:
         SET(loadFlags, RLF_TOWER);
-        break;   //TOWER
-    case  9:
+        break; //TOWER
+    case 9:
         SET(loadFlags, RLF_ATTENTION);
-        break;  //ATTENTION
+        break; //ATTENTION
     case 10:
         SET(loadFlags, RLF_BOAT);
-        break;       //BOAT
+        break; //BOAT
     default:
         break;
     }
@@ -196,7 +195,6 @@ Room *MapStorage::loadOldRoom(QDataStream &stream, ConnectionList &connectionLis
     alignType = static_cast<RoomAlignType>(vquint16 + 1);
 
     stream >> vquint32; //roomFlags
-
 
     if (ISSET(vquint32, bit2)) {
         Mmapper2Exit::orExitFlags(room->exit(ED_NORTH), EF_EXIT);
@@ -263,8 +261,8 @@ Room *MapStorage::loadOldRoom(QDataStream &stream, ConnectionList &connectionLis
 
     stream >> vqint8; //roomCheckExits
     Coordinate pos;
-    stream >> (quint32 &)pos.x;
-    stream >> (quint32 &)pos.y;
+    stream >> (quint32 &) pos.x;
+    stream >> (quint32 &) pos.y;
 
     room->setPosition(pos + basePosition);
 
@@ -343,7 +341,6 @@ Room *MapStorage::loadOldRoom(QDataStream &stream, ConnectionList &connectionLis
 
     return room;
 }
-
 
 Room *MapStorage::loadRoom(QDataStream &stream, qint32 version)
 {
@@ -465,7 +462,6 @@ bool MapStorage::loadData()
     return mergeData();
 }
 
-
 bool MapStorage::mergeData()
 {
     {
@@ -482,10 +478,10 @@ bool MapStorage::mergeData()
             basePosition.z = -1;
         }
 
-        emit log ("MapStorage", "Loading data ...");
+        emit log("MapStorage", "Loading data ...");
         m_progressCounter->reset();
 
-        QDataStream stream (m_file);
+        QDataStream stream(m_file);
 
         Room *room = nullptr;
         InfoMark *mark = nullptr;
@@ -501,19 +497,21 @@ bool MapStorage::mergeData()
 
         // Read the version and magic
         stream >> magic;
-        if ( magic != 0xFFB2AF01 ) {
+        if (magic != 0xFFB2AF01) {
             return false;
         }
         stream >> version;
-        if (version != 042 && version != 041 && version != 040 && version != 031 && version != 030 &&
-                version != 020 && version != 021 && version != 007) {
+        if (version != 042 && version != 041 && version != 040 && version != 031 && version != 030
+            && version != 020 && version != 021 && version != 007) {
             bool isNewer = version >= CURRENT_SCHEMA_VERSION;
-            QMessageBox::critical(dynamic_cast<QWidget *>(parent()), "MapStorage Error",
+            QMessageBox::critical(dynamic_cast<QWidget *>(parent()),
+                                  "MapStorage Error",
                                   QString("This map has schema version %1 which is too %2.\r\n\r\n"
                                           "Please %3 MMapper.")
-                                  .arg(version, 0, 8)
-                                  .arg(isNewer ? "new" : "old")
-                                  .arg(isNewer ? "upgrade to the latest" : "try an older version of"));
+                                      .arg(version, 0, 8)
+                                      .arg(isNewer ? "new" : "old")
+                                      .arg(isNewer ? "upgrade to the latest"
+                                                   : "try an older version of"));
             return false;
         }
 
@@ -529,7 +527,7 @@ bool MapStorage::mergeData()
             buffer.setData(uncompressedData);
             buffer.open(QIODevice::ReadOnly);
             stream.setDevice(&buffer);
-            emit log ("MapStorage", "Uncompressed data");
+            emit log("MapStorage", "Uncompressed data");
 
         } else if (version <= 041 && version >= 031) {
 #ifndef MMAPPER_NO_QTIOCOMPRESSOR
@@ -537,13 +535,15 @@ bool MapStorage::mergeData()
             compressor->open(QIODevice::ReadOnly);
             stream.setDevice(compressor);
 #else
-            QMessageBox::critical((QWidget *)parent(), "MapStorage Error",
-                                  "MMapper could not load this map because it is too old.\r\n\r\n"
-                                  "Please recompile MMapper with QtIOCompressor support and try again.");
+            QMessageBox::critical(
+                (QWidget *) parent(),
+                "MapStorage Error",
+                "MMapper could not load this map because it is too old.\r\n\r\n"
+                "Please recompile MMapper with QtIOCompressor support and try again.");
             return false;
 #endif
         }
-        emit log ("MapStorage", QString("Schema version: %1").arg(version, 0, 8));
+        emit log("MapStorage", QString("Schema version: %1").arg(version, 0, 8));
 
         stream >> roomsCount;
         if (version < 020) {
@@ -551,15 +551,15 @@ bool MapStorage::mergeData()
         }
         stream >> marksCount;
 
-        m_progressCounter->increaseTotalStepsBy( roomsCount + connectionsCount + marksCount );
+        m_progressCounter->increaseTotalStepsBy(roomsCount + connectionsCount + marksCount);
 
         Coordinate pos;
 
         //read selected room x,y
         // TODO(nschimme): Delete support for the old version due to octal constant nonsense
         if (version < 020) { // OLD VERSIONS SUPPORT CODE
-            stream >> (quint32 &)pos.x;
-            stream >> (quint32 &)pos.y;
+            stream >> (quint32 &) pos.x;
+            stream >> (quint32 &) pos.y;
         } else {
             stream >> static_cast<qint32 &>(pos.x);
             stream >> static_cast<qint32 &>(pos.y);
@@ -570,7 +570,7 @@ bool MapStorage::mergeData()
 
         m_mapData.setPosition(pos);
 
-        emit log ("MapStorage", QString("Number of rooms: %1").arg(roomsCount) );
+        emit log("MapStorage", QString("Number of rooms: %1").arg(roomsCount));
 
         ConnectionList connectionList;
         // create all pointers to connections
@@ -594,7 +594,7 @@ bool MapStorage::mergeData()
         }
 
         if (version < 020) {
-            emit log ("MapStorage", QString("Number of connections: %1").arg(connectionsCount) );
+            emit log("MapStorage", QString("Number of connections: %1").arg(connectionsCount));
             ConnectionListIterator c(connectionList);
             while (c.hasNext()) {
                 Connection *connection = c.next();
@@ -607,8 +607,7 @@ bool MapStorage::mergeData()
             connectionList.clear();
         }
 
-        emit log ("MapStorage", QString("Number of info items: %1").arg(marksCount) );
-
+        emit log("MapStorage", QString("Number of info items: %1").arg(marksCount));
 
         MarkerList &markerList = m_mapData.getMarkersList();
         // create all pointers to items
@@ -620,7 +619,7 @@ bool MapStorage::mergeData()
             m_progressCounter->step();
         }
 
-        emit log ("MapStorage", "Finished loading.");
+        emit log("MapStorage", "Finished loading.");
         buffer.close();
         m_file->close();
 
@@ -632,7 +631,7 @@ bool MapStorage::mergeData()
         }
 #endif
 
-        if (m_mapData.getRoomsCount() < 1 ) {
+        if (m_mapData.getRoomsCount() < 1) {
             return false;
         }
 
@@ -645,14 +644,12 @@ bool MapStorage::mergeData()
     return true;
 }
 
-
-
 void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, qint32 version)
 {
     QString vqstr;
     quint16 vquint16;
     quint32 vquint32;
-    qint32  vqint32;
+    qint32 vqint32;
 
     qint32 postfix = basePosition.x + basePosition.y + basePosition.z;
 
@@ -718,9 +715,9 @@ void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, qint32 version)
 
         Coordinate pos;
         stream >> vqint32;
-        pos.x = vqint32/*-40*/;
+        pos.x = vqint32 /*-40*/;
         stream >> vqint32;
-        pos.y = vqint32/*-55*/;
+        pos.y = vqint32 /*-55*/;
         stream >> vqint32;
         pos.z = vqint32;
         pos.x += basePosition.x * 100;
@@ -730,9 +727,9 @@ void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, qint32 version)
         mark->setPosition1(pos);
 
         stream >> vqint32;
-        pos.x = vqint32/*-40*/;
+        pos.x = vqint32 /*-40*/;
         stream >> vqint32;
-        pos.y = vqint32/*-55*/;
+        pos.y = vqint32 /*-55*/;
         stream >> vqint32;
         pos.z = vqint32;
         pos.x += basePosition.x * 100;
@@ -742,7 +739,6 @@ void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, qint32 version)
         mark->setPosition2(pos);
     }
 }
-
 
 void MapStorage::translateOldConnection(Connection *c)
 {
@@ -804,9 +800,7 @@ void MapStorage::translateOldConnection(Connection *c)
     }
 }
 
-
-void MapStorage::loadOldConnection(Connection *connection, QDataStream &stream,
-                                   RoomVector &roomList)
+void MapStorage::loadOldConnection(Connection *connection, QDataStream &stream, RoomVector &roomList)
 {
     quint16 vquint16;
     QString vqstr;
@@ -839,7 +833,7 @@ void MapStorage::loadOldConnection(Connection *connection, QDataStream &stream,
     stream >> vquint16;
     switch (vquint16) {
     case 0:
-        break;                      //Normal
+        break; //Normal
     case 1:
         SET(doorFlags1, DF_HIDDEN); //Hidden
         break;
@@ -854,7 +848,7 @@ void MapStorage::loadOldConnection(Connection *connection, QDataStream &stream,
     stream >> vquint16;
     switch (vquint16) {
     case 0:
-        break;                      //Normal
+        break; //Normal
     case 1:
         SET(doorFlags2, DF_HIDDEN); //Hidden
         break;
@@ -873,17 +867,17 @@ void MapStorage::loadOldConnection(Connection *connection, QDataStream &stream,
     doorName2 = vqstr;
 
     stream >> vquint32;
-    if (vquint32 != 0 && ( (vquint32 - 1) < static_cast<uint>(roomList.size())) ) {
+    if (vquint32 != 0 && ((vquint32 - 1) < static_cast<uint>(roomList.size()))) {
         r1 = roomList[vquint32 - 1];
-        if ( ISSET(cf, CF_DOOR) ) {
+        if (ISSET(cf, CF_DOOR)) {
             connection->setDoor(new Door(doorName1, doorFlags1), LEFT);
         }
     }
 
     stream >> vquint32;
-    if (vquint32 != 0 && ( (vquint32 - 1) < static_cast<uint>(roomList.size())) ) {
+    if (vquint32 != 0 && ((vquint32 - 1) < static_cast<uint>(roomList.size()))) {
         r2 = roomList[vquint32 - 1];
-        if ( ISSET(cf, CF_DOOR) ) {
+        if (ISSET(cf, CF_DOOR)) {
             connection->setDoor(new Door(doorName2, doorFlags2), RIGHT);
         }
     }
@@ -911,7 +905,6 @@ void MapStorage::loadOldConnection(Connection *connection, QDataStream &stream,
 
     assert(connection->getRoom(0) != nullptr);
     assert(connection->getRoom(1) != nullptr);
-
 
     if (ISSET(cf, CF_DOOR)) {
         assert(connection->getDoor(LEFT) != nullptr);
@@ -975,17 +968,17 @@ void MapStorage::saveExits(const Room *room, QDataStream &stream)
         for (auto idx : e.inRange()) {
             stream << static_cast<quint32>(idx);
         }
-        stream << static_cast<quint32>UINT_MAX;
+        stream << static_cast<quint32> UINT_MAX;
         for (auto idx : e.outRange()) {
             stream << static_cast<quint32>(idx);
         }
-        stream << static_cast<quint32>UINT_MAX;
+        stream << static_cast<quint32> UINT_MAX;
     }
 }
 
-bool MapStorage::saveData( bool baseMapOnly )
+bool MapStorage::saveData(bool baseMapOnly)
 {
-    emit log ("MapStorage", "Writing data to file ...");
+    emit log("MapStorage", "Writing data to file ...");
 
     QDataStream fileStream(m_file);
     fileStream.setVersion(QDataStream::Qt_4_8);
@@ -1004,13 +997,13 @@ bool MapStorage::saveData( bool baseMapOnly )
     uint marksCount = markerList.size();
 
     m_progressCounter->reset();
-    m_progressCounter->increaseTotalStepsBy( roomsCount + marksCount );
+    m_progressCounter->increaseTotalStepsBy(roomsCount + marksCount);
 
     BaseMapSaveFilter filter;
-    if ( baseMapOnly ) {
-        filter.setMapData( &m_mapData );
-        m_progressCounter->increaseTotalStepsBy( filter.prepareCount() );
-        filter.prepare( m_progressCounter );
+    if (baseMapOnly) {
+        filter.setMapData(&m_mapData);
+        m_progressCounter->increaseTotalStepsBy(filter.prepareCount());
+        filter.prepare(m_progressCounter);
         roomsCount = filter.acceptedRoomsCount();
     }
 
@@ -1038,15 +1031,15 @@ bool MapStorage::saveData( bool baseMapOnly )
     stream << static_cast<qint32>(self.z);
 
     // save rooms
-    QListIterator<const Room *>  roomit(roomList);
+    QListIterator<const Room *> roomit(roomList);
     while (roomit.hasNext()) {
         const Room *room = roomit.next();
-        if ( baseMapOnly ) {
-            BaseMapSaveFilter::Action action = filter.filter( room );
-            if ( !room->isTemporary() && action != BaseMapSaveFilter::REJECT ) {
-                if ( action == BaseMapSaveFilter::ALTER ) {
-                    Room copy = filter.alteredRoom( room );
-                    saveRoom( &copy, stream );
+        if (baseMapOnly) {
+            BaseMapSaveFilter::Action action = filter.filter(room);
+            if (!room->isTemporary() && action != BaseMapSaveFilter::REJECT) {
+                if (action == BaseMapSaveFilter::ALTER) {
+                    Room copy = filter.alteredRoom(room);
+                    saveRoom(&copy, stream);
                 } else { // action == PASS
                     saveRoom(room, stream);
                 }
@@ -1073,21 +1066,21 @@ bool MapStorage::saveData( bool baseMapOnly )
     QByteArray compressedData = qCompress(uncompressedData);
     m_progressCounter->step();
     double compressionRatio = (compressedData.size() == 0)
-                              ? 1.0
-                              : (static_cast<double>(uncompressedData.size()) /
-                                 static_cast<double>(compressedData.size()));
-    emit log ("MapStorage", QString("Map compressed (compression ratio of %1:1)")
-              .arg(QString::number(compressionRatio, 'f', 1)));
+                                  ? 1.0
+                                  : (static_cast<double>(uncompressedData.size())
+                                     / static_cast<double>(compressedData.size()));
+    emit log("MapStorage",
+             QString("Map compressed (compression ratio of %1:1)")
+                 .arg(QString::number(compressionRatio, 'f', 1)));
 
     fileStream.writeRawData(compressedData.data(), compressedData.size());
-    emit log ("MapStorage", "Writing data finished.");
+    emit log("MapStorage", "Writing data finished.");
 
     m_mapData.unsetDataChanged();
     emit onDataSaved();
 
     return true;
 }
-
 
 void MapStorage::saveMark(InfoMark *mark, QDataStream &stream)
 {

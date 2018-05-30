@@ -27,8 +27,8 @@
 #ifndef MAPWINDOW_H
 #define MAPWINDOW_H
 
-#include <QWidget>
 #include "coordinate.h"
+#include <QWidget>
 
 class QScrollBar;
 class QGridLayout;
@@ -47,7 +47,7 @@ public:
     MapWindow(MapData *mapData, PrespammedPath *pp, Mmapper2Group *gm, QWidget *parent = 0);
     ~MapWindow();
 
-    void resizeEvent (QResizeEvent *event);
+    void resizeEvent(QResizeEvent *event);
 
     MapCanvas *getCanvas() const;
 
@@ -58,8 +58,8 @@ signals:
 public slots:
     void setScrollBars(const Coordinate &, const Coordinate &);
 
-    void ensureVisible( qint32 x, qint32 y );
-    void center( qint32 x, qint32 y );
+    void ensureVisible(qint32 x, qint32 y);
+    void center(qint32 x, qint32 y);
 
     void mapMove(int, int);
     void continuousScroll(qint8, qint8);
@@ -70,8 +70,8 @@ public slots:
     void scrollTimerTimeout();
 
 protected:
-//   void resizeEvent ( QResizeEvent * event );
-//   void paintEvent ( QPaintEvent * event );
+    //   void resizeEvent ( QResizeEvent * event );
+    //   void paintEvent ( QPaintEvent * event );
 
     QTimer *scrollTimer;
     qint8 m_verticalScrollStep;
@@ -89,6 +89,5 @@ private:
     QPoint mousePressPos;
     QPoint scrollBarValuesOnMousePress;
 };
-
 
 #endif

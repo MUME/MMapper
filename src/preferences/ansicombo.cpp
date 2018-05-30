@@ -26,12 +26,12 @@
 #include "ansicombo.h"
 #include <QLabel>
 
-AnsiCombo::AnsiCombo(QWidget *parent) : super(parent)
+AnsiCombo::AnsiCombo(QWidget *parent)
+    : super(parent)
 {
     setEditable(true);
 
-    connect(this, SIGNAL(editTextChanged(const QString &)),
-            SLOT(afterEdit(const QString &)));
+    connect(this, SIGNAL(editTextChanged(const QString &)), SLOT(afterEdit(const QString &)));
 }
 
 void AnsiCombo::fillAnsiList()
@@ -109,9 +109,14 @@ AnsiCombo::AnsiItem AnsiCombo::initAnsiItem(int index)
 }
 
 bool AnsiCombo::colorFromString(const QString &colString,
-                                QColor &colFg, int &ansiCodeFg, QString &intelligibleNameFg,
-                                QColor &colBg, int &ansiCodeBg, QString &intelligibleNameBg,
-                                bool &bold, bool &underline)
+                                QColor &colFg,
+                                int &ansiCodeFg,
+                                QString &intelligibleNameFg,
+                                QColor &colBg,
+                                int &ansiCodeBg,
+                                QString &intelligibleNameBg,
+                                bool &bold,
+                                bool &underline)
 {
     int tmpInt;
 
@@ -137,25 +142,25 @@ bool AnsiCombo::colorFromString(const QString &colString,
 
         switch (list.size()) {
         case 4:
-            if  (list.at(3) == "1") {
+            if (list.at(3) == "1") {
                 bold = true;
             }
-            if  (list.at(3) == "4") {
+            if (list.at(3) == "4") {
                 underline = true;
             }
         case 3:
-            if  (list.at(2) == "1") {
+            if (list.at(2) == "1") {
                 bold = true;
             }
-            if  (list.at(2) == "4") {
+            if (list.at(2) == "4") {
                 underline = true;
             }
         case 2:
             tmpInt = list.at(1).toInt();
-            if  (tmpInt == 1) {
+            if (tmpInt == 1) {
                 bold = true;
             }
-            if  (tmpInt == 4) {
+            if (tmpInt == 4) {
                 underline = true;
             }
             if (tmpInt >= 40 && tmpInt <= 47) {
@@ -168,10 +173,10 @@ bool AnsiCombo::colorFromString(const QString &colString,
             }
         case 1:
             tmpInt = list.at(0).toInt();
-            if  (tmpInt == 1) {
+            if (tmpInt == 1) {
                 bold = true;
             }
-            if  (tmpInt == 4) {
+            if (tmpInt == 4) {
                 underline = true;
             }
             if (tmpInt >= 40 && tmpInt <= 47) {
@@ -196,8 +201,9 @@ bool AnsiCombo::colorFromNumber(int numColor, QColor &col, QString &intelligible
     intelligibleName = tr("undefined!");
     col = Qt::white;
 
-    const bool retVal = ( (((numColor >= 30) && (numColor <= 37)) || ((numColor >= 40)
-                                                                      && (numColor <= 47))) || numColor == 254 || numColor == 255);
+    const bool retVal = ((((numColor >= 30) && (numColor <= 37))
+                          || ((numColor >= 40) && (numColor <= 47)))
+                         || numColor == 254 || numColor == 255);
 
     switch (numColor) {
     case 254:
@@ -265,9 +271,14 @@ void AnsiCombo::makeWidgetColoured(QWidget *pWidget, const QString &ansiColor)
         bool underline;
 
         colorFromString(ansiColor,
-                        colFg, ansiCodeFg, intelligibleNameFg,
-                        colBg, ansiCodeBg, intelligibleNameBg,
-                        bold, underline);
+                        colFg,
+                        ansiCodeFg,
+                        intelligibleNameFg,
+                        colBg,
+                        ansiCodeBg,
+                        intelligibleNameBg,
+                        bold,
+                        underline);
 
         QPalette palette = pWidget->palette();
 

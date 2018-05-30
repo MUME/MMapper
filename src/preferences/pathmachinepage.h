@@ -26,8 +26,8 @@
 #ifndef PATHMACHINEPAGE_H
 #define PATHMACHINEPAGE_H
 
-#include <QWidget>
 #include "ui_pathmachinepage.h"
+#include <QWidget>
 
 class PathmachinePage : public QWidget, private Ui::PathmachinePage
 {
@@ -45,6 +45,5 @@ public slots:
     void maxPathsValueChanged(int);
     void matchingToleranceSpinBoxValueChanged(int);
 };
-
 
 #endif

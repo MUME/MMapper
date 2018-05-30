@@ -30,8 +30,8 @@
 #include "mmapper2event.h"
 #include "telnetfilter.h"
 
-#include <QQueue>
 #include <QObject>
+#include <QQueue>
 
 class MumeClock;
 class ParseEvent;
@@ -47,7 +47,6 @@ class AbstractParser : public QObject
 {
     Q_OBJECT
 public:
-
     AbstractParser(MapData *, MumeClock *, QObject *parent = 0);
     ~AbstractParser();
 
@@ -63,7 +62,7 @@ signals:
     void log(const QString &, const QString &);
 
     //for main move/search algorithm
-    void event(ParseEvent * );
+    void event(ParseEvent *);
 
     //for map
     void showPath(CommandQueue, bool);
@@ -80,7 +79,7 @@ public slots:
 
     void reset();
     void emptyQueue();
-    void sendGTellToUser(const QByteArray & );
+    void sendGTellToUser(const QByteArray &);
 
 protected:
     void offlineCharacterMove(CommandIdType direction);

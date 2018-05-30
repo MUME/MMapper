@@ -31,13 +31,12 @@
 
 #include <climits>
 
-Syncing::Syncing(PathParameters &in_p, std::list<Path *> *in_paths,
-                 RoomSignalHandler *in_signaler) :
-    signaler(in_signaler),
-    numPaths(0),
-    params(in_p),
-    paths(in_paths),
-    parent(new Path(nullptr, nullptr, this, signaler))
+Syncing::Syncing(PathParameters &in_p, std::list<Path *> *in_paths, RoomSignalHandler *in_signaler)
+    : signaler(in_signaler)
+    , numPaths(0)
+    , params(in_p)
+    , paths(in_paths)
+    , parent(new Path(nullptr, nullptr, this, signaler))
 {}
 
 void Syncing::receiveRoom(RoomAdmin *sender, const Room *in_room)

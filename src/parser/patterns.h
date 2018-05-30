@@ -35,7 +35,6 @@ class QStringList;
 
 class Patterns
 {
-
     static QRegExp m_rx;
     static const QStringList m_dynamicDescriptionPatternsList;
     static const QRegExp m_score;

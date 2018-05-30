@@ -23,16 +23,24 @@
 **
 ************************************************************************/
 
-#include "pathmachine.h"
-#include "abstractroomfactory.h"
 #include "experimenting.h"
+#include "abstractroomfactory.h"
 #include "path.h"
+#include "pathmachine.h"
 
-Experimenting::Experimenting(std::list<Path *> *pat, uint in_dirCode, PathParameters &in_params,
-                             AbstractRoomFactory *in_factory) :
-    direction(in_factory->exitDir(in_dirCode)), dirCode(in_dirCode), shortPaths(pat),
-    paths(new std::list<Path *>), best(nullptr), second(nullptr),
-    params(in_params), numPaths(0), factory(in_factory)
+Experimenting::Experimenting(std::list<Path *> *pat,
+                             uint in_dirCode,
+                             PathParameters &in_params,
+                             AbstractRoomFactory *in_factory)
+    : direction(in_factory->exitDir(in_dirCode))
+    , dirCode(in_dirCode)
+    , shortPaths(pat)
+    , paths(new std::list<Path *>)
+    , best(nullptr)
+    , second(nullptr)
+    , params(in_params)
+    , numPaths(0)
+    , factory(in_factory)
 {}
 
 void Experimenting::augmentPath(Path *path, RoomAdmin *map, const Room *room)
@@ -54,7 +62,6 @@ void Experimenting::augmentPath(Path *path, RoomAdmin *map, const Room *room)
     numPaths++;
 }
 
-
 std::list<Path *> *Experimenting::evaluate()
 {
     Path *working = nullptr;
@@ -67,8 +74,8 @@ std::list<Path *> *Experimenting::evaluate()
     }
 
     if (best != nullptr) {
-        if (second == nullptr || best->getProb() > second->getProb()*params.acceptBestRelative
-                || best->getProb() > second->getProb() + params.acceptBestAbsolute) {
+        if (second == nullptr || best->getProb() > second->getProb() * params.acceptBestRelative
+            || best->getProb() > second->getProb() + params.acceptBestAbsolute) {
             for (auto &path : *paths) {
                 path->deny();
             }
@@ -83,8 +90,9 @@ std::list<Path *> *Experimenting::evaluate()
                 // distinguishable from best. Don't keep paths with equal
                 // probability at the front, for we need to find a unique
                 // best path eventually.
-                if ( best->getProb() > working->getProb()*params.maxPaths / numPaths
-                        || (best->getProb() <= working->getProb() && best->getRoom() == working->getRoom())) {
+                if (best->getProb() > working->getProb() * params.maxPaths / numPaths
+                    || (best->getProb() <= working->getProb()
+                        && best->getRoom() == working->getRoom())) {
                     working->deny();
                 } else {
                     paths->push_back(working);
@@ -99,4 +107,3 @@ std::list<Path *> *Experimenting::evaluate()
     best = nullptr;
     return paths;
 }
-

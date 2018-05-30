@@ -28,7 +28,7 @@
 #include <QProcess>
 #include <QTemporaryFile>
 
-class ViewSessionProcess: public QProcess
+class ViewSessionProcess : public QProcess
 {
     Q_OBJECT
 
@@ -48,7 +48,6 @@ protected:
     QString m_body;
 
     QTemporaryFile m_file;
-
 };
 
 #endif /* _VIEWSESSIONPROCESS_H_ */

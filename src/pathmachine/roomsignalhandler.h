@@ -31,9 +31,9 @@
 //#include "roomadmin.h"
 //#include "mapaction.h"
 
-#include <QObject>
 #include <map>
 #include <set>
+#include <QObject>
 
 class Room;
 class RoomAdmin;
@@ -44,13 +44,14 @@ class RoomSignalHandler : public QObject
 {
     Q_OBJECT
 private:
-
     std::map<const Room *, RoomAdmin *> owners;
-    std::map<const Room *, std::set<RoomRecipient *> > lockers;
+    std::map<const Room *, std::set<RoomRecipient *>> lockers;
     std::map<const Room *, int> holdCount;
 
 public:
-    RoomSignalHandler(QObject *parent) : QObject(parent) {}
+    RoomSignalHandler(QObject *parent)
+        : QObject(parent)
+    {}
     /* receiving from our clients: */
     // hold the room, we don't know yet what to do, overrides release, re-caches if room was un-cached
     void hold(const Room *room, RoomAdmin *owner, RoomRecipient *locker);
@@ -65,10 +66,7 @@ public:
        keepRoom: keep the room, but we don't need it anymore for now
        releaseRoom: delete the room, if you like */
 
-    int getNumLockers(const Room *room)
-    {
-        return lockers[room].size();
-    }
+    int getNumLockers(const Room *room) { return lockers[room].size(); }
 
 signals:
     void scheduleAction(MapAction *);

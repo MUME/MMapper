@@ -26,8 +26,8 @@
 #ifndef ROOMSAVER_H
 #define ROOMSAVER_H
 
-#include "roomrecipient.h"
 #include "mapdata.h"
+#include "roomrecipient.h"
 
 #include <QList>
 
@@ -38,6 +38,7 @@ public:
     ~RoomSaver();
     void receiveRoom(RoomAdmin *admin, const Room *room);
     quint32 getRoomsCount();
+
 private:
     quint32 m_roomsCount;
     ConstRoomList &m_roomList;

@@ -27,12 +27,12 @@
 
 #include <QDebug>
 
-MpiFilter::MpiFilter(QObject *parent) : QObject(parent),
-    m_previousType(TDT_UNKNOWN),
-    m_parsingMpi(false),
-    m_remaining(0)
-{
-}
+MpiFilter::MpiFilter(QObject *parent)
+    : QObject(parent)
+    , m_previousType(TDT_UNKNOWN)
+    , m_parsingMpi(false)
+    , m_remaining(0)
+{}
 
 void MpiFilter::analyzeNewMudInput(IncomingData &data)
 {
@@ -97,12 +97,12 @@ void MpiFilter::parseEditMessage(const QByteArray &buffer)
 {
     if (buffer.at(0) != 'M') {
         qWarning() << "Expected 'M' character in remote editing protocol";
-        return ;
+        return;
     }
     int sessionEnd = buffer.indexOf('\n', 1);
     if (sessionEnd == -1) {
         qWarning() << "Unable to detect remote editing session end";
-        return ;
+        return;
     }
     int sessionId = buffer.mid(1, sessionEnd - 1).toInt();
     int descriptionEnd = buffer.indexOf('\n', sessionEnd + 1);
@@ -138,4 +138,3 @@ void MpiFilter::parseViewMessage(const QByteArray &buffer)
     qDebug() << "Message" << title << body;
     emit viewMessage(title, body);
 }
-

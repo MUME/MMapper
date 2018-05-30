@@ -35,7 +35,6 @@ public:
     ~TestParser() override;
 
 private:
-
 private Q_SLOTS:
     // ParserUtils
     void removeAnsiMarksTest();

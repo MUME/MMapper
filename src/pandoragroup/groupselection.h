@@ -25,8 +25,8 @@
 #ifndef GROUPSELECTION_H
 #define GROUPSELECTION_H
 
-#include <QString>
 #include <QMap>
+#include <QString>
 
 #include <vector>
 
@@ -51,7 +51,9 @@ public:
 class GroupSelection : public QMap<QString, CGroupChar *>, public GroupRecipient
 {
 public:
-    GroupSelection(GroupAdmin *admin) : m_admin(admin) {}
+    GroupSelection(GroupAdmin *admin)
+        : m_admin(admin)
+    {}
     void receiveCharacters(GroupAdmin *, const std::vector<CGroupChar *>);
 
 private:

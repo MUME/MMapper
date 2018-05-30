@@ -28,33 +28,31 @@
 #include "mapdata.h"
 #include "progresscounter.h"
 
-#include <QFile>
 #include <utility>
+#include <QFile>
 
-AbstractMapStorage::AbstractMapStorage(MapData &mapdata, QString filename, QFile *file,
-                                       QObject *parent) :
-    QObject(parent),
-    m_file(file),
-    m_mapData(mapdata),
-    m_fileName(std::move(filename)),
-    m_progressCounter( new ProgressCounter( this ) )
-{
-}
+AbstractMapStorage::AbstractMapStorage(MapData &mapdata,
+                                       QString filename,
+                                       QFile *file,
+                                       QObject *parent)
+    : QObject(parent)
+    , m_file(file)
+    , m_mapData(mapdata)
+    , m_fileName(std::move(filename))
+    , m_progressCounter(new ProgressCounter(this))
+{}
 
-AbstractMapStorage::AbstractMapStorage(MapData &mapdata, QString filename, QObject *parent) :
-    QObject(parent),
-    m_file(nullptr),
-    m_mapData(mapdata),
-    m_fileName(std::move(filename)),
-    m_progressCounter( new ProgressCounter( this ) )
-{
-}
+AbstractMapStorage::AbstractMapStorage(MapData &mapdata, QString filename, QObject *parent)
+    : QObject(parent)
+    , m_file(nullptr)
+    , m_mapData(mapdata)
+    , m_fileName(std::move(filename))
+    , m_progressCounter(new ProgressCounter(this))
+{}
 
-AbstractMapStorage::~AbstractMapStorage()
-    = default;
+AbstractMapStorage::~AbstractMapStorage() = default;
 
 const ProgressCounter *AbstractMapStorage::progressCounter() const
 {
     return m_progressCounter;
 }
-

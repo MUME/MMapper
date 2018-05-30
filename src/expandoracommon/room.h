@@ -26,11 +26,11 @@
 #ifndef ROOM_H
 #define ROOM_H
 
-#include <QVariant>
-#include <QVector>
-#include <mapdata/mmapper2room.h>
 #include "coordinate.h"
 #include "exit.h"
+#include <mapdata/mmapper2room.h>
+#include <QVariant>
+#include <QVector>
 
 typedef QVector<Exit> ExitsList;
 typedef QVectorIterator<Exit> ExitsListIterator;
@@ -49,58 +49,22 @@ private:
     ExitsList exits;
 
 public:
-    Exit &exit(uint dir)
-    {
-        return exits[dir];
-    }
-    ExitsList &getExitsList()
-    {
-        return exits;
-    }
-    const ExitsList &getExitsList() const
-    {
-        return exits;
-    }
-    void setId(uint in)
-    {
-        id = in;
-    }
-    void setPosition(const Coordinate &in_c)
-    {
-        position = in_c;
-    }
-    uint getId() const
-    {
-        return id;
-    }
-    const Coordinate &getPosition() const
-    {
-        return position;
-    }
+    Exit &exit(uint dir) { return exits[dir]; }
+    ExitsList &getExitsList() { return exits; }
+    const ExitsList &getExitsList() const { return exits; }
+    void setId(uint in) { id = in; }
+    void setPosition(const Coordinate &in_c) { position = in_c; }
+    uint getId() const { return id; }
+    const Coordinate &getPosition() const { return position; }
     bool isTemporary() const
     {
-        return temporary;   // room is new if no exits are present
+        return temporary; // room is new if no exits are present
     }
-    void setPermanent()
-    {
-        temporary = false;
-    }
-    bool isUpToDate() const
-    {
-        return upToDate;
-    }
-    const Exit &exit(uint dir) const
-    {
-        return exits[dir];
-    }
-    void setUpToDate()
-    {
-        upToDate = true;
-    }
-    void setOutDated()
-    {
-        upToDate = false;
-    }
+    void setPermanent() { temporary = false; }
+    bool isUpToDate() const { return upToDate; }
+    const Exit &exit(uint dir) const { return exits[dir]; }
+    void setUpToDate() { upToDate = true; }
+    void setOutDated() { upToDate = false; }
 
 public:
     RoomName getName() const;
@@ -117,10 +81,7 @@ public:
     RoomSundeathType getSundeathType() const;
 
 public:
-    inline QVariant at(const RoomField field) const
-    {
-        return fields.at(static_cast<int>(field));
-    }
+    inline QVariant at(const RoomField field) const { return fields.at(static_cast<int>(field)); }
     inline void replace(const RoomField field, QVariant value)
     {
         fields.replace(static_cast<int>(field), value);
@@ -149,30 +110,17 @@ public:
     }
 
 public:
-    inline auto begin()
-    {
-        return fields.begin();
-    }
-    inline auto end()
-    {
-        return fields.end();
-    }
-    inline auto begin() const
-    {
-        return fields.begin();
-    }
-    inline auto end() const
-    {
-        return fields.end();
-    }
+    inline auto begin() { return fields.begin(); }
+    inline auto end() { return fields.end(); }
+    inline auto begin() const { return fields.begin(); }
+    inline auto end() const { return fields.end(); }
 
 public:
-    Room(uint numProps, uint numExits, uint numExitProps) :
-        fields(numProps),
-        exits(numExits, numExitProps)
+    Room(uint numProps, uint numExits, uint numExitProps)
+        : fields(numProps)
+        , exits(numExits, numExitProps)
     {}
     ~Room() = default;
 };
-
 
 #endif

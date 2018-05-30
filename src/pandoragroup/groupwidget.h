@@ -25,8 +25,8 @@
 #ifndef GROUPWIDGET_H
 #define GROUPWIDGET_H
 
-#include <QWidget>
 #include <QHash>
+#include <QWidget>
 
 #include "groupselection.h"
 

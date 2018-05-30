@@ -27,10 +27,10 @@
 #ifndef PATH
 #define PATH
 
-#include <QtGlobal>
-#include <set>
-#include <limits.h>
 #include "pathparameters.h"
+#include <limits.h>
+#include <set>
+#include <QtGlobal>
 
 //#include "roomsignalhandler.h"
 //#include "room.h"
@@ -50,47 +50,39 @@ class AbstractRoomFactory;
 class Path
 {
 public:
-    Path(const Room *room, RoomAdmin *owner, RoomRecipient *locker, RoomSignalHandler *signaler,
+    Path(const Room *room,
+         RoomAdmin *owner,
+         RoomRecipient *locker,
+         RoomSignalHandler *signaler,
          uint direction = UINT_MAX);
     void insertChild(Path *p);
     void removeChild(Path *p);
     void setParent(Path *p);
-    bool hasChildren() const
-    {
-        return (!children.empty());
-    }
-    const Room *getRoom() const
-    {
-        return room;
-    }
+    bool hasChildren() const { return (!children.empty()); }
+    const Room *getRoom() const { return room; }
 
     //new Path is created, distance between rooms is calculated and probability is set accordingly
-    Path *fork(const Room *room, Coordinate &expectedCoordinate,
-               RoomAdmin *owner, PathParameters params, RoomRecipient *locker,
-               uint dir, AbstractRoomFactory *factory);
-    double getProb() const
-    {
-        return probability;
-    }
+    Path *fork(const Room *room,
+               Coordinate &expectedCoordinate,
+               RoomAdmin *owner,
+               PathParameters params,
+               RoomRecipient *locker,
+               uint dir,
+               AbstractRoomFactory *factory);
+    double getProb() const { return probability; }
     void approve();
 
     // deletes this path and all parents up to the next branch
     void deny();
-    void setProb(double p)
-    {
-        probability = p;
-    }
+    void setProb(double p) { probability = p; }
 
-    Path *getParent() const
-    {
-        return parent;
-    }
+    Path *getParent() const { return parent; }
 
 private:
     Path *parent;
     std::set<Path *> children;
     double probability;
-    const Room *room;  // in fact a path only has one room, one parent and some children (forks).
+    const Room *room; // in fact a path only has one room, one parent and some children (forks).
     RoomSignalHandler *signaler;
     uint dir;
     ~Path() {}

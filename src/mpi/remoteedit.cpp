@@ -35,8 +35,7 @@ RemoteEdit::RemoteEdit(QObject *parent)
     : QObject(parent)
 {}
 
-RemoteEdit::~RemoteEdit()
-    = default;
+RemoteEdit::~RemoteEdit() = default;
 
 void RemoteEdit::remoteView(const QString &title, const QString &text)
 {
@@ -59,13 +58,15 @@ void RemoteEdit::remoteEdit(const int key, const QString &title, const QString &
 #endif
     if (Config().m_internalRemoteEditor) {
         auto widget = new RemoteEditWidget(key, title, body);
-        connect(widget, SIGNAL(save(const QString &, const int)), SLOT(save(const QString &,
-                                                                            const int)));
+        connect(widget,
+                SIGNAL(save(const QString &, const int)),
+                SLOT(save(const QString &, const int)));
         connect(widget, SIGNAL(cancel(const int)), SLOT(cancel(const int)));
 
     } else {
         auto process = new EditSessionProcess(key, title, body, this);
-        connect(process, SIGNAL(save(const QString &, const int)),
+        connect(process,
+                SIGNAL(save(const QString &, const int)),
                 SLOT(save(const QString &, const int)));
         connect(process, SIGNAL(cancel(const int)), SLOT(cancel(const int)));
     }
@@ -74,11 +75,8 @@ void RemoteEdit::remoteEdit(const int key, const QString &title, const QString &
 void RemoteEdit::cancel(const int key)
 {
     const QString &keystr = QString("C%1\n").arg(key);
-    const QByteArray &buffer = QString("%1E%2\n%3")
-                               .arg("~$#E")
-                               .arg(keystr.length())
-                               .arg(keystr)
-                               .toLatin1();
+    const QByteArray &buffer
+        = QString("%1E%2\n%3").arg("~$#E").arg(keystr.length()).arg(keystr).toLatin1();
 
     qDebug() << "Cancel" << buffer;
     emit sendToSocket(buffer);
@@ -97,11 +95,11 @@ void RemoteEdit::save(const QString &body, const int key)
 
     const QString &keystr = QString("E%1\n").arg(key);
     const QByteArray &buffer = QString("%1E%2\n%3%4")
-                               .arg("~$#E")
-                               .arg(body.length() + keystr.length())
-                               .arg(keystr)
-                               .arg(content)
-                               .toLatin1();
+                                   .arg("~$#E")
+                                   .arg(body.length() + keystr.length())
+                                   .arg(keystr)
+                                   .arg(content)
+                                   .toLatin1();
 
     qInfo() << "Save" << buffer;
     emit sendToSocket(buffer);

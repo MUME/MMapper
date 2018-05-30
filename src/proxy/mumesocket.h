@@ -27,8 +27,8 @@
 #ifndef MUMESOCKET_H
 #define MUMESOCKET_H
 
-#include <QObject>
 #include <QAbstractSocket>
+#include <QObject>
 
 class QTcpSocket;
 class QSslSocket;
@@ -39,7 +39,9 @@ class MumeSocket : public QObject
 {
     Q_OBJECT
 public:
-    explicit MumeSocket(QObject *parent = nullptr) : QObject(parent) {}
+    explicit MumeSocket(QObject *parent = nullptr)
+        : QObject(parent)
+    {}
 
     virtual void disconnectFromHost() = 0;
     virtual void connectToHost() = 0;
@@ -56,7 +58,6 @@ signals:
     void socketError(QAbstractSocket::SocketError);
     void processMudStream(const QByteArray &buffer);
     void log(const QString &, const QString &);
-
 };
 
 class MumeSslSocket : public MumeSocket
@@ -79,24 +80,24 @@ protected slots:
     void checkTimeout();
 
 protected:
-    char m_buffer[ 8192 ] {};
+    char m_buffer[8192]{};
 
     QSslSocket *m_socket;
     QTimer *m_timer;
-
 };
 
 class MumeTcpSocket : public MumeSslSocket
 {
     Q_OBJECT
 public:
-    MumeTcpSocket(QObject *parent) : MumeSslSocket(parent) {}
+    MumeTcpSocket(QObject *parent)
+        : MumeSslSocket(parent)
+    {}
 
     void connectToHost() override;
 
 protected slots:
     void onConnect() override;
-
 };
 
 #endif // MUMESOCKET_H

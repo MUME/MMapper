@@ -26,8 +26,8 @@
 #ifndef PARSERPAGE_H
 #define PARSERPAGE_H
 
-#include <QWidget>
 #include "ui_parserpage.h"
+#include <QWidget>
 
 class ParserPage : public QWidget, private Ui::ParserPage
 {
@@ -67,6 +67,4 @@ private:
     void savePatterns();
 };
 
-
 #endif
-

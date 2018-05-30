@@ -33,10 +33,10 @@
 
 #include <cassert>
 
-MapFrontend::MapFrontend(AbstractRoomFactory *in_factory) :
-    greatestUsedId(UINT_MAX),
-    mapLock(QMutex::Recursive),
-    factory(in_factory)
+MapFrontend::MapFrontend(AbstractRoomFactory *in_factory)
+    : greatestUsedId(UINT_MAX)
+    , mapLock(QMutex::Recursive)
+    , factory(in_factory)
 {}
 
 MapFrontend::~MapFrontend()
@@ -110,7 +110,7 @@ bool MapFrontend::isExecutable(MapAction *action)
 
 void MapFrontend::executeActions(uint roomId)
 {
-    std::set<MapAction * > executedActions;
+    std::set<MapAction *> executedActions;
     for (auto action : actionSchedule[roomId]) {
         if (isExecutable(action)) {
             executeAction(action);
@@ -212,14 +212,14 @@ uint MapFrontend::assignId(Room *room, RoomCollection *roomHome)
     return id;
 }
 
-void MapFrontend::lookingForRooms(RoomRecipient *recipient, const Coordinate &ulf,
-                                  const Coordinate  &lrb)
+void MapFrontend::lookingForRooms(RoomRecipient *recipient,
+                                  const Coordinate &ulf,
+                                  const Coordinate &lrb)
 {
     QMutexLocker locker(&mapLock);
     RoomLocker ret(recipient, this);
     map.getRooms(ret, ulf, lrb);
 }
-
 
 void MapFrontend::insertPredefinedRoom(Room &room)
 {
@@ -229,7 +229,7 @@ void MapFrontend::insertPredefinedRoom(Room &room)
     const Coordinate &c = room.getPosition();
     ParseEvent *event = factory->getEvent(&room);
 
-    assert (roomIndex.size() <= id || !roomIndex[id]);
+    assert(roomIndex.size() <= id || !roomIndex[id]);
 
     RoomCollection *roomHome = treeRoot.insertRoom(*event);
     map.setNearest(c, room);
@@ -277,7 +277,6 @@ void MapFrontend::checkSize(const Coordinate &c)
     if (ulf != ulfBackup || lrb != lrbBackup) {
         emit mapSizeChanged(ulf, lrb);
     }
-
 }
 
 void MapFrontend::createEmptyRooms(const Coordinate &ulf, const Coordinate &lrb)
@@ -299,7 +298,6 @@ void MapFrontend::createRoom(ParseEvent &event, const Coordinate &expectedPositi
     }
     event.reset();
 }
-
 
 void MapFrontend::lookingForRooms(RoomRecipient *recipient, ParseEvent &event)
 {

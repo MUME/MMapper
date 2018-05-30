@@ -32,15 +32,23 @@
 #include <QObject>
 #include <QQueue>
 
-enum TelnetDataType { TDT_PROMPT, TDT_MENU_PROMPT, TDT_LOGIN, TDT_LOGIN_PASSWORD,
-                      TDT_CRLF, TDT_LFCR, TDT_LF, TDT_TELNET, TDT_DELAY, TDT_SPLIT, TDT_UNKNOWN
-                    };
+enum TelnetDataType {
+    TDT_PROMPT,
+    TDT_MENU_PROMPT,
+    TDT_LOGIN,
+    TDT_LOGIN_PASSWORD,
+    TDT_CRLF,
+    TDT_LFCR,
+    TDT_LF,
+    TDT_TELNET,
+    TDT_DELAY,
+    TDT_SPLIT,
+    TDT_UNKNOWN
+};
 
-struct IncomingData {
-    IncomingData()
-    {
-        type = TDT_PROMPT;
-    }
+struct IncomingData
+{
+    IncomingData() { type = TDT_PROMPT; }
     QByteArray line;
     TelnetDataType type;
 };
@@ -49,14 +57,13 @@ using TelnetIncomingDataQueue = QQueue<IncomingData>;
 
 class TelnetFilter : public QObject
 {
-
 public:
     TelnetFilter(QObject *parent);
     ~TelnetFilter();
 
 public slots:
-    void analyzeMudStream( const QByteArray &ba );
-    void analyzeUserStream( const QByteArray &ba );
+    void analyzeMudStream(const QByteArray &ba);
+    void analyzeUserStream(const QByteArray &ba);
 
 signals:
     void parseNewMudInput(IncomingData &);
@@ -67,14 +74,14 @@ signals:
     void sendToUser(const QByteArray &);
 
 private:
-
 #ifdef TELNET_STREAM_DEBUG_INPUT_TO_FILE
     QDataStream *debugStream;
     QFile *file;
 #endif
 
     Q_OBJECT
-    void dispatchTelnetStream(const QByteArray &stream, IncomingData &m_incomingData,
+    void dispatchTelnetStream(const QByteArray &stream,
+                              IncomingData &m_incomingData,
                               TelnetIncomingDataQueue &que);
 
     IncomingData m_userIncomingData;
@@ -84,4 +91,3 @@ private:
 };
 
 #endif
-

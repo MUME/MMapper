@@ -2,29 +2,30 @@
 #include "mapdata.h"
 #include "mmapper2exit.h"
 #include "mmapper2room.h"
-#include<queue>
+#include <queue>
 
 // Movement costs per terrain type.
 // Same order as the RoomTerrainType enum.
 // Values taken from https://github.com/nstockton/tintin-mume/blob/master/mapperproxy/mapper/constants.py
-const double TERRAIN_COSTS[] = {1, // undef
-                                0.75, // indoors
-                                0.75, // city
-                                1.5, // field
-                                2.15, // forest
-                                2.45, // hills
-                                2.8, // mountains
-                                2.45, // shallowwater
-                                50.0, // water
-                                60.0, // rapids
-                                100.0, // underwater
-                                0.85, // road
-                                1.5, // brush
-                                0.75, // tunnel
-                                0.75, // cavern
-                                1000.0, // Deathtrap
-                                30.0 // random
-                               };
+const double TERRAIN_COSTS[] = {
+    1,      // undef
+    0.75,   // indoors
+    0.75,   // city
+    1.5,    // field
+    2.15,   // forest
+    2.45,   // hills
+    2.8,    // mountains
+    2.45,   // shallowwater
+    50.0,   // water
+    60.0,   // rapids
+    100.0,  // underwater
+    0.85,   // road
+    1.5,    // brush
+    0.75,   // tunnel
+    0.75,   // cavern
+    1000.0, // Deathtrap
+    30.0    // random
+};
 
 double getLength(const Exit &e, const Room *curr, const Room *nextr)
 {
@@ -49,13 +50,16 @@ double getLength(const Exit &e, const Room *curr, const Room *nextr)
     return cost;
 }
 
-void MapData::shortestPathSearch(const Room *origin, ShortestPathRecipient *recipient,
-                                 const RoomFilter &f, int max_hits, double max_dist)
+void MapData::shortestPathSearch(const Room *origin,
+                                 ShortestPathRecipient *recipient,
+                                 const RoomFilter &f,
+                                 int max_hits,
+                                 double max_dist)
 {
     QMutexLocker locker(&mapLock);
     QVector<SPNode> sp_nodes;
     QSet<uint> visited;
-    std::priority_queue<std::pair<double, int> > future_paths;
+    std::priority_queue<std::pair<double, int>> future_paths;
     sp_nodes.push_back(SPNode(origin, -1, 0, ED_UNKNOWN));
     future_paths.push(std::make_pair(0, 0));
     while (!future_paths.empty()) {
@@ -93,7 +97,8 @@ void MapData::shortestPathSearch(const Room *origin, ShortestPathRecipient *reci
                 continue;
             }
             double length = getLength(e, thisr, nextr);
-            sp_nodes.push_back(SPNode(nextr, spindex, thisdist + length, static_cast<ExitDirection>(dir)));
+            sp_nodes.push_back(
+                SPNode(nextr, spindex, thisdist + length, static_cast<ExitDirection>(dir)));
             future_paths.push(std::make_pair(-(thisdist + length), sp_nodes.size() - 1));
         }
     }

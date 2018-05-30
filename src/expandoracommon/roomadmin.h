@@ -26,7 +26,6 @@
 #ifndef ROOMADMIN_H
 #define ROOMADMIN_H
 
-
 class RoomRecipient;
 class MapAction;
 

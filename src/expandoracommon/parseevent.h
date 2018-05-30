@@ -26,8 +26,8 @@
 #ifndef PARSEEVENT
 #define PARSEEVENT
 
-#include <deque>
 #include "listcycler.h"
+#include <deque>
 #include <QVariant>
 
 class Property;
@@ -35,39 +35,29 @@ class Property;
 /**
  * the ParseEvents will walk around in the SearchTree
  */
-using ParseEventBase = ListCycler<Property *, std::deque<Property *> >;
+using ParseEventBase = ListCycler<Property *, std::deque<Property *>>;
 class ParseEvent : public ParseEventBase
 {
 public:
-    ParseEvent(uint move) : moveType(move), numSkipped(0) {}
+    ParseEvent(uint move)
+        : moveType(move)
+        , numSkipped(0)
+    {}
     ParseEvent(const ParseEvent &other);
     virtual ~ParseEvent();
     ParseEvent &operator=(const ParseEvent &other);
 
     void reset();
     void countSkipped();
-    std::deque<QVariant> &getOptional()
-    {
-        return optional;
-    }
-    const std::deque<QVariant> &getOptional() const
-    {
-        return optional;
-    }
-    uint getMoveType() const
-    {
-        return moveType;
-    }
-    uint getNumSkipped() const
-    {
-        return numSkipped;
-    }
+    std::deque<QVariant> &getOptional() { return optional; }
+    const std::deque<QVariant> &getOptional() const { return optional; }
+    uint getMoveType() const { return moveType; }
+    uint getNumSkipped() const { return numSkipped; }
 
 private:
     std::deque<QVariant> optional;
     uint moveType;
     uint numSkipped;
-
 };
 
 #endif

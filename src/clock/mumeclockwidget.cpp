@@ -22,16 +22,16 @@
 **
 ************************************************************************/
 
+#include <cassert>
 #include <QSettings>
 #include <QTimer>
-#include <cassert>
 
 #include "configuration.h"
 #include "mumeclockwidget.h"
 
 MumeClockWidget::MumeClockWidget(MumeClock *clock, QWidget *parent)
-    : QWidget(parent),
-      m_clock(clock)
+    : QWidget(parent)
+    , m_clock(clock)
 {
     setupUi(this);
     setAttribute(Qt::WA_DeleteOnClose);
@@ -50,9 +50,7 @@ MumeClockWidget::MumeClockWidget(MumeClock *clock, QWidget *parent)
 
 MumeClockWidget::~MumeClockWidget()
 {
-
     delete m_timer;
-
 }
 
 void MumeClockWidget::updateLabel()
@@ -65,7 +63,7 @@ void MumeClockWidget::updateLabel()
         hide();
         // Slow down the interval to a reasonable number
         m_timer->setInterval(60 * 1000);
-        return ;
+        return;
     }
     if (m_timer->interval() != 1000) {
         show();

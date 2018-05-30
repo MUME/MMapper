@@ -26,9 +26,9 @@
 #ifndef CONNECTIONSELECTION_H
 #define CONNECTIONSELECTION_H
 
-#include <QObject>
-#include "roomrecipient.h"
 #include "mmapper2exit.h"
+#include "roomrecipient.h"
+#include <QObject>
 
 class MapFrontend;
 class Room;
@@ -38,8 +38,8 @@ class ConnectionSelection : public QObject, public RoomRecipient
     Q_OBJECT
 
 public:
-
-    struct ConnectionDescriptor {
+    struct ConnectionDescriptor
+    {
         const Room *room;
         ExitDirection direction;
     };
@@ -60,14 +60,8 @@ public:
     ConnectionDescriptor getSecond();
 
     bool isValid();
-    bool isFirstValid()
-    {
-        return m_connectionDescriptor[0].room != nullptr;
-    }
-    bool isSecondValid()
-    {
-        return m_connectionDescriptor[1].room != nullptr;
-    }
+    bool isFirstValid() { return m_connectionDescriptor[0].room != nullptr; }
+    bool isSecondValid() { return m_connectionDescriptor[1].room != nullptr; }
 
     void receiveRoom(RoomAdmin *admin, const Room *aRoom);
 
@@ -76,18 +70,15 @@ public slots:
 signals:
 
 protected:
-
 private:
-
     ExitDirection ComputeDirection(double mouseX, double mouseY);
 
     int GLtoMap(double arg);
 
-    ConnectionDescriptor m_connectionDescriptor[2] {};
+    ConnectionDescriptor m_connectionDescriptor[2]{};
 
     bool m_first;
     RoomAdmin *m_admin;
 };
-
 
 #endif

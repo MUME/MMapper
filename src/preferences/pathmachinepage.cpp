@@ -31,20 +31,32 @@ PathmachinePage::PathmachinePage(QWidget *parent)
 {
     setupUi(this);
 
-    connect ( acceptBestRelativeDoubleSpinBox, SIGNAL(valueChanged(double)), this,
-              SLOT(acceptBestRelativeDoubleSpinBoxValueChanged(double)) );
-    connect ( acceptBestAbsoluteDoubleSpinBox, SIGNAL(valueChanged(double)), this,
-              SLOT(acceptBestAbsoluteDoubleSpinBoxValueChanged(double)) );
-    connect ( newRoomPenaltyDoubleSpinBox, SIGNAL(valueChanged(double)), this,
-              SLOT(newRoomPenaltyDoubleSpinBoxValueChanged(double)) );
-    connect ( correctPositionBonusDoubleSpinBox, SIGNAL(valueChanged(double)), this,
-              SLOT(correctPositionBonusDoubleSpinBoxValueChanged(double)) );
-    connect ( multipleConnectionsPenaltyDoubleSpinBox, SIGNAL(valueChanged(double)), this,
-              SLOT(multipleConnectionsPenaltyDoubleSpinBoxValueChanged(double)) );
+    connect(acceptBestRelativeDoubleSpinBox,
+            SIGNAL(valueChanged(double)),
+            this,
+            SLOT(acceptBestRelativeDoubleSpinBoxValueChanged(double)));
+    connect(acceptBestAbsoluteDoubleSpinBox,
+            SIGNAL(valueChanged(double)),
+            this,
+            SLOT(acceptBestAbsoluteDoubleSpinBoxValueChanged(double)));
+    connect(newRoomPenaltyDoubleSpinBox,
+            SIGNAL(valueChanged(double)),
+            this,
+            SLOT(newRoomPenaltyDoubleSpinBoxValueChanged(double)));
+    connect(correctPositionBonusDoubleSpinBox,
+            SIGNAL(valueChanged(double)),
+            this,
+            SLOT(correctPositionBonusDoubleSpinBoxValueChanged(double)));
+    connect(multipleConnectionsPenaltyDoubleSpinBox,
+            SIGNAL(valueChanged(double)),
+            this,
+            SLOT(multipleConnectionsPenaltyDoubleSpinBoxValueChanged(double)));
 
-    connect ( maxPaths, SIGNAL(valueChanged(int)), this, SLOT(maxPathsValueChanged(int)) );
-    connect ( matchingToleranceSpinBox, SIGNAL(valueChanged(int)), this,
-              SLOT(matchingToleranceSpinBoxValueChanged(int)) );
+    connect(maxPaths, SIGNAL(valueChanged(int)), this, SLOT(maxPathsValueChanged(int)));
+    connect(matchingToleranceSpinBox,
+            SIGNAL(valueChanged(int)),
+            this,
+            SLOT(matchingToleranceSpinBoxValueChanged(int)));
 
     acceptBestRelativeDoubleSpinBox->setValue(Config().m_acceptBestRelative);
     acceptBestAbsoluteDoubleSpinBox->setValue(Config().m_acceptBestAbsolute);
@@ -89,4 +101,3 @@ void PathmachinePage::matchingToleranceSpinBoxValueChanged(int val)
 {
     Config().m_matchingTolerance = val;
 }
-

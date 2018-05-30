@@ -24,15 +24,15 @@
 **
 ************************************************************************/
 
-#include "mainwindow.h"
 #include "configuration.h"
 #include "coordinate.h"
+#include "mainwindow.h"
 #include "mapfrontend.h"
 #include "pathmachine.h"
 
+#include <cstdlib>
 #include <QApplication>
 #include <QSplashScreen>
-#include <cstdlib>
 
 int main(int argc, char **argv)
 {
@@ -58,7 +58,7 @@ int main(int argc, char **argv)
                        Qt::yellow);
     splash.show();
 #endif
-    MainWindow     mw;
+    MainWindow mw;
     if (Config().m_autoLoadWorld && Config().m_autoLoadFileName != "") {
         mw.loadFile(Config().m_autoLoadFileName);
     } else if (Config().m_firstRun) {
@@ -77,4 +77,3 @@ int main(int argc, char **argv)
     Config().write();
     return ret;
 }
-

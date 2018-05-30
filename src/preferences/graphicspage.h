@@ -1,8 +1,8 @@
 #ifndef GRAPHICSPAGE_H
 #define GRAPHICSPAGE_H
 
-#include <QWidget>
 #include "ui_graphicspage.h"
+#include <QWidget>
 
 namespace Ui {
 class GraphicsPage;

@@ -29,9 +29,9 @@
 #include "CGroupCommunicator.h"
 #include "configuration.h"
 
+#include <cassert>
 #include <QDebug>
 #include <QMutex>
-#include <cassert>
 
 #ifdef MODULAR
 extern "C" MY_EXPORT Component *createComponent()
@@ -42,11 +42,11 @@ extern "C" MY_EXPORT Component *createComponent()
 Initializer<Mmapper2Group> mmapper2Group("mmapper2Group");
 #endif
 
-Mmapper2Group::Mmapper2Group() :
-    Component(true),
-    networkLock(QMutex::Recursive),
-    network(nullptr),
-    group(nullptr)
+Mmapper2Group::Mmapper2Group()
+    : Component(true)
+    , networkLock(QMutex::Recursive)
+    , network(nullptr)
+    , group(nullptr)
 {}
 
 Mmapper2Group::~Mmapper2Group()
@@ -90,7 +90,7 @@ void Mmapper2Group::updateSelf()
         }
         getGroup()->getSelf()->setName(newname);
 
-    } else if (getGroup()->getSelf()->getColor() != Config().m_groupManagerColor ) {
+    } else if (getGroup()->getSelf()->getColor() != Config().m_groupManagerColor) {
         getGroup()->getSelf()->setColor(Config().m_groupManagerColor);
 
     } else {
@@ -137,14 +137,15 @@ void Mmapper2Group::relayMessageBox(const QString &message)
 
 void Mmapper2Group::serverStartupFailed(const QString &message)
 {
-    relayMessageBox(QString("Failed to start the Group server: %1")
-                    .arg(message.toLatin1().constData()));
+    relayMessageBox(
+        QString("Failed to start the Group server: %1").arg(message.toLatin1().constData()));
 }
 
 void Mmapper2Group::gotKicked(const QDomNode &message)
 {
     if (message.nodeName() != "data") {
-        qWarning() << "Called gotKicked with wrong node. No data node but instead:" << message.nodeName();
+        qWarning() << "Called gotKicked with wrong node. No data node but instead:"
+                   << message.nodeName();
         return;
     }
 
@@ -156,17 +157,18 @@ void Mmapper2Group::gotKicked(const QDomNode &message)
     }
 
     QDomElement text = e.toElement();
-    emit log("GroupManager", QString("You got kicked! Reason [nodename %1] : %2")
-             .arg(text.nodeName().toLatin1().constData())
-             .arg(text.text().toLatin1().constData()));
+    emit log("GroupManager",
+             QString("You got kicked! Reason [nodename %1] : %2")
+                 .arg(text.nodeName().toLatin1().constData())
+                 .arg(text.text().toLatin1().constData()));
     emit messageBox("Group Manager", QString("You got kicked! Reason: %1.").arg(text.text()));
-
 }
 
 void Mmapper2Group::gTellArrived(const QDomNode &node)
 {
     if (node.nodeName() != "data") {
-        qWarning() << "Called gTellArrived with wrong node. No data node but instead:" << node.nodeName();
+        qWarning() << "Called gTellArrived with wrong node. No data node but instead:"
+                   << node.nodeName();
         return;
     }
 
@@ -174,13 +176,16 @@ void Mmapper2Group::gTellArrived(const QDomNode &node)
     QString from = e.toElement().attribute("from");
 
     if (e.nodeName() != "gtell") {
-        qWarning() << "Called gTellArrived with wrong node. No text node but instead:" << e.nodeName();
+        qWarning() << "Called gTellArrived with wrong node. No text node but instead:"
+                   << e.nodeName();
         return;
     }
 
     QDomElement text = e.toElement();
-    emit log("GroupManager", QString("GTell from %1, Arrived : %2").arg(
-                 from.toLatin1().constData()).arg(text.text().toLatin1().constData()));
+    emit log("GroupManager",
+             QString("GTell from %1, Arrived : %2")
+                 .arg(from.toLatin1().constData())
+                 .arg(text.text().toLatin1().constData()));
 
     QByteArray tell = QString("" + from + " tells you [GT] '" + text.text() + "'\r\n").toLatin1();
 
@@ -219,8 +224,12 @@ void Mmapper2Group::parseScoreInformation(QByteArray score)
         qDebug( "Max Moves: %s", (const char *) list[5].toLatin1());
         */
 
-        getGroup()->getSelf()->setScore(list[0].toInt(), list[1].toInt(), list[2].toInt(), list[3].toInt(),
-                                        list[4].toInt(), list[5].toInt());
+        getGroup()->getSelf()->setScore(list[0].toInt(),
+                                        list[1].toInt(),
+                                        list[2].toInt(),
+                                        list[3].toInt(),
+                                        list[4].toInt(),
+                                        list[5].toInt());
 
         issueLocalCharUpdate();
 
@@ -238,8 +247,12 @@ void Mmapper2Group::parseScoreInformation(QByteArray score)
         qDebug( "Moves: %s", (const char *) list[2].toLatin1());
         qDebug( "Max Moves: %s", (const char *) list[3].toLatin1());
         */
-        getGroup()->getSelf()->setScore(list[0].toInt(), list[1].toInt(), 0, 0,
-                                        list[2].toInt(), list[3].toInt());
+        getGroup()->getSelf()->setScore(list[0].toInt(),
+                                        list[1].toInt(),
+                                        0,
+                                        0,
+                                        list[2].toInt(),
+                                        list[3].toInt());
 
         issueLocalCharUpdate();
     }
@@ -267,7 +280,7 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
     if (index != -1) {
         hp = "";
         int k = index + 3;
-        while (prompt[k] != ' ' && prompt[k] != '>' ) {
+        while (prompt[k] != ' ' && prompt[k] != '>') {
             hp += prompt[k++];
         }
         next = k;
@@ -277,7 +290,7 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
     if (index != -1) {
         mana = "";
         int k = index + 5;
-        while (prompt[k] != ' ' && prompt[k] != '>' ) {
+        while (prompt[k] != ' ' && prompt[k] != '>') {
             mana += prompt[k++];
         }
         next = k;
@@ -287,7 +300,7 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
     if (index != -1) {
         moves = "";
         int k = index + 5;
-        while (prompt[k] != ' ' && prompt[k] != '>' ) {
+        while (prompt[k] != ' ' && prompt[k] != '>') {
             moves += prompt[k++];
         }
     }
@@ -301,27 +314,20 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
         double maxmana = self->maxmana;
         if (!hp.isEmpty() && maxhp != 0) {
             // NOTE: This avoids capture so it can be lifted out more easily later.
-            const auto calc_hp = [](const QByteArray & hp, const double maxhp) -> double {
-                if (hp == "Healthy")
-                {
+            const auto calc_hp = [](const QByteArray &hp, const double maxhp) -> double {
+                if (hp == "Healthy") {
                     return maxhp;
-                } else if (hp == "Fine")
-                {
+                } else if (hp == "Fine") {
                     return maxhp * 0.99;
-                } else if (hp == "Hurt")
-                {
+                } else if (hp == "Hurt") {
                     return maxhp * 0.65;
-                } else if (hp == "Wounded")
-                {
+                } else if (hp == "Wounded") {
                     return maxhp * 0.45;
-                } else if (hp == "Bad")
-                {
+                } else if (hp == "Bad") {
                     return maxhp * 0.25;
-                } else if (hp == "Awful")
-                {
+                } else if (hp == "Awful") {
                     return maxhp * 0.10;
-                } else
-                {
+                } else {
                     // Incap
                     return 0.0;
                 }
@@ -332,24 +338,18 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
             }
         }
         if (!mana.isEmpty() && maxmana != 0) {
-            const auto calc_mana = [](const QByteArray & mana, const double maxmana) -> double {
-                if (mana == "Burning")
-                {
+            const auto calc_mana = [](const QByteArray &mana, const double maxmana) -> double {
+                if (mana == "Burning") {
                     return maxmana * 0.99;
-                } else if (mana == "Hot")
-                {
+                } else if (mana == "Hot") {
                     return maxmana * 0.75;
-                } else if (mana == "Warm")
-                {
+                } else if (mana == "Warm") {
                     return maxmana * 0.45;
-                } else if (mana == "Cold")
-                {
+                } else if (mana == "Cold") {
                     return maxmana * 0.25;
-                } else if (mana == "Icy")
-                {
+                } else if (mana == "Icy") {
                     return maxmana * 0.10;
-                } else
-                {
+                } else {
                     // Frozen
                     return 0.0;
                 }
@@ -360,22 +360,17 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
             }
         }
         if (!moves.isEmpty() && maxmoves != 0) {
-            const auto calc_moves = [](const QByteArray & moves, const double maxmoves,
-            const int def) -> double {
-                if (moves == "Tired")
-                {
+            const auto calc_moves =
+                [](const QByteArray &moves, const double maxmoves, const int def) -> double {
+                if (moves == "Tired") {
                     return maxmoves * 0.42;
-                } else if (moves == "Slow")
-                {
+                } else if (moves == "Slow") {
                     return maxmoves * 0.31;
-                } else if (moves == "Weak")
-                {
+                } else if (moves == "Weak") {
                     return maxmoves * 0.12;
-                } else if (moves == "Fainting")
-                {
+                } else if (moves == "Fainting") {
                     return maxmoves * 0.05;
-                } else
-                {
+                } else {
                     // REVISIT: What about "Exhausted"?
                     return static_cast<double>(def);
                 }

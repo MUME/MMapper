@@ -1,20 +1,18 @@
-#include <QtTest/QtTest>
-#include <QDebug>
 #include <memory>
+#include <QDebug>
+#include <QtTest/QtTest>
 
-#include "testparser.h"
-#include "parserutils.h"
 #include "mmapper2event.h"
 #include "parseevent.h"
+#include "parserutils.h"
 #include "property.h"
+#include "testparser.h"
 
 TestParser::TestParser()
     : QObject()
 {}
 
-TestParser::~TestParser()
-{
-}
+TestParser::~TestParser() {}
 
 int convertMumeRealTime(const QString &realTime)
 {
@@ -49,9 +47,8 @@ void TestParser::createParseEventTest()
     ExitsFlagsType eFlags = EXITS_FLAGS_VALID;
     PromptFlagsType pFlags = PROMPT_FLAGS_VALID + terrain;
     ConnectedRoomFlagsType cFlags = CONNECTED_ROOM_FLAGS_VALID;
-    std::unique_ptr<ParseEvent> event(Mmapper2Event::createEvent(CID_NORTH, roomName,
-                                                                 roomDescription,
-                                                                 parsedRoomDescription, eFlags, pFlags, cFlags));
+    std::unique_ptr<ParseEvent> event(Mmapper2Event::createEvent(
+        CID_NORTH, roomName, roomDescription, parsedRoomDescription, eFlags, pFlags, cFlags));
 
     ParseEvent e = *event.get();
     QCOMPARE(Mmapper2Event::getRoomName(e), roomName);
@@ -60,7 +57,6 @@ void TestParser::createParseEventTest()
     QCOMPARE(Mmapper2Event::getExitFlags(e), eFlags);
     QCOMPARE(Mmapper2Event::getPromptFlags(e), pFlags);
     QCOMPARE(Mmapper2Event::getConnectedRoomFlags(e), cFlags);
-
 
     QCOMPARE(e.getMoveType(), static_cast<uint>(CID_NORTH));
     QCOMPARE(e.getNumSkipped(), 0u);

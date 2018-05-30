@@ -34,7 +34,7 @@ class CGroupClient : public QTcpSocket
 {
     Q_OBJECT
 public:
-    enum ConnectionStates { Closed, Connecting, Connected, Quiting};
+    enum ConnectionStates { Closed, Connecting, Connected, Quiting };
     enum ProtocolStates { Idle, AwaitingLogin, AwaitingInfo, Logged };
 
     CGroupClient(QObject *parent);
@@ -43,22 +43,16 @@ public:
 
     void setSocket(qintptr socketDescriptor);
 
-    int getConnectionState()
-    {
-        return connectionState;
-    }
+    int getConnectionState() { return connectionState; }
     void setConnectionState(int val);
     void setProtocolState(int val);
-    int getProtocolState()
-    {
-        return protocolState;
-    }
+    int getProtocolState() { return protocolState; }
     void sendData(const QByteArray &data);
 
 protected slots:
     void lostConnection();
     void connectionEstablished();
-    void errorHandler ( QAbstractSocket::SocketError socketError );
+    void errorHandler(QAbstractSocket::SocketError socketError);
     void dataIncoming();
 
 signals:

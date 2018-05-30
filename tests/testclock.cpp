@@ -1,16 +1,14 @@
-#include <QtTest/QtTest>
 #include <QDebug>
+#include <QtTest/QtTest>
 
-#include "testclock.h"
 #include "mumeclock.h"
+#include "testclock.h"
 
 TestClock::TestClock()
     : QObject()
 {}
 
-TestClock::~TestClock()
-{
-}
+TestClock::~TestClock() {}
 
 QString testMumeStartEpochTime(MumeClock &clock, int time)
 {
@@ -172,7 +170,6 @@ void TestClock::parseClockTimeTest()
     QString midnight = "12:51am on the 18th of Halimath, year 3030 of the Third Age.";
     clock.parseClockTime("The current time is 12:51am.");
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), midnight);
-
 }
 
 QTEST_MAIN(TestClock)

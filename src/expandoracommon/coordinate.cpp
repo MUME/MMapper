@@ -27,12 +27,12 @@
 #include "coordinate.h"
 #include <cstdlib>
 
-bool Coordinate::operator== (const Coordinate &other) const
+bool Coordinate::operator==(const Coordinate &other) const
 {
     return (other.x == x && other.y == y && other.z == z);
 }
 
-bool Coordinate::operator!= (const Coordinate &other) const
+bool Coordinate::operator!=(const Coordinate &other) const
 {
     return (other.x != x || other.y != y || other.z != z);
 }

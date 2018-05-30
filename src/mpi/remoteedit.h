@@ -52,5 +52,4 @@ signals:
     void sendToSocket(const QByteArray &);
 };
 
-
 #endif /* REMOTEEDIT_H */

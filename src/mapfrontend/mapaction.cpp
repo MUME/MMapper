@@ -34,7 +34,10 @@
 
 #include <utility>
 
-SingleRoomAction::SingleRoomAction(AbstractAction *ex, uint in_id) : id(in_id), executor(ex) {}
+SingleRoomAction::SingleRoomAction(AbstractAction *ex, uint in_id)
+    : id(in_id)
+    , executor(ex)
+{}
 
 const std::set<uint> &SingleRoomAction::getAffectedRooms()
 {
@@ -42,8 +45,10 @@ const std::set<uint> &SingleRoomAction::getAffectedRooms()
     return affectedRooms;
 }
 
-AddExit::AddExit(uint in_from, uint in_to, uint in_dir) :
-    from(in_from), to(in_to), dir(in_dir)
+AddExit::AddExit(uint in_from, uint in_to, uint in_dir)
+    : from(in_from)
+    , to(in_to)
+    , dir(in_dir)
 {
     affectedRooms.insert(from);
     affectedRooms.insert(to);
@@ -71,8 +76,10 @@ Room *AddExit::tryExec()
     return rfrom;
 }
 
-RemoveExit::RemoveExit(uint in_from, uint in_to, uint in_dir) :
-    from(in_from), to(in_to), dir(in_dir)
+RemoveExit::RemoveExit(uint in_from, uint in_to, uint in_dir)
+    : from(in_from)
+    , to(in_to)
+    , dir(in_dir)
 {
     affectedRooms.insert(from);
     affectedRooms.insert(to);
@@ -105,8 +112,10 @@ void MakePermanent::exec(uint id)
     }
 }
 
-UpdateRoomField::UpdateRoomField(const QVariant &in_update, uint in_fieldNum) :
-    update(std::move(in_update)), fieldNum(in_fieldNum) {}
+UpdateRoomField::UpdateRoomField(const QVariant &in_update, uint in_fieldNum)
+    : update(std::move(in_update))
+    , fieldNum(in_fieldNum)
+{}
 
 void UpdateRoomField::exec(uint id)
 {
@@ -115,21 +124,22 @@ void UpdateRoomField::exec(uint id)
     }
 }
 
-Update::Update() : props(0)
+Update::Update()
+    : props(0)
 {
     props.reset();
 }
 
-Update::Update(ParseEvent &in_props) :
-    props(in_props)
+Update::Update(ParseEvent &in_props)
+    : props(in_props)
 {
     //assert(props.getNumSkipped() == 0);
 }
 
-UpdatePartial::UpdatePartial(const QVariant &in_val, uint in_pos) : Update(),
-    UpdateRoomField(in_val, in_pos)
+UpdatePartial::UpdatePartial(const QVariant &in_val, uint in_pos)
+    : Update()
+    , UpdateRoomField(in_val, in_pos)
 {
-
     // This function is never called,
     // as proven by the fact that it was calling Update(nullptr)
     std::abort();
@@ -161,7 +171,6 @@ void Update::exec(uint id)
     }
 }
 
-
 void ExitsAffecter::insertAffected(uint id, std::set<uint> &affected)
 {
     if (Room *room = roomIndex()[id]) {
@@ -180,7 +189,6 @@ void ExitsAffecter::insertAffected(uint id, std::set<uint> &affected)
         }
     }
 }
-
 
 void Remove::exec(uint id)
 {
@@ -247,5 +255,3 @@ AbstractRoomFactory *FrontendAccessor::factory()
 {
     return m_frontend->factory;
 }
-
-

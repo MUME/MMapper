@@ -43,7 +43,6 @@ Room *RoomFactory::createRoom(const ParseEvent *ev) const
     return room;
 }
 
-
 ParseEvent *RoomFactory::getEvent(const Room *room) const
 {
     ExitsFlagsType exitFlags = 0;
@@ -60,19 +59,24 @@ ParseEvent *RoomFactory::getEvent(const Room *room) const
 
     CommandIdType c = CID_UNKNOWN;
 
-    ParseEvent *event = Mmapper2Event::createEvent(c, Mmapper2Room::getName(room),
+    ParseEvent *event = Mmapper2Event::createEvent(c,
+                                                   Mmapper2Room::getName(room),
                                                    Mmapper2Room::getDynamicDescription(room),
-                                                   Mmapper2Room::getDescription(room), exitFlags, promptFlags, 0);
+                                                   Mmapper2Room::getDescription(room),
+                                                   exitFlags,
+                                                   promptFlags,
+                                                   0);
     return event;
 }
 
-ComparisonResult RoomFactory::compareStrings(const QString &room, const QString &event,
-                                             uint prevTolerance, bool updated) const
+ComparisonResult RoomFactory::compareStrings(const QString &room,
+                                             const QString &event,
+                                             uint prevTolerance,
+                                             bool updated) const
 {
     prevTolerance *= room.size();
     prevTolerance /= 100;
     int tolerance = prevTolerance;
-
 
     QStringList descWords = room.split(whitespace, QString::SkipEmptyParts);
     QStringList eventWords = event.split(whitespace, QString::SkipEmptyParts);
@@ -116,11 +120,10 @@ ComparisonResult RoomFactory::compareStrings(const QString &room, const QString 
         return CR_TOLERANCE;
     }
     return CR_EQUAL;
-
-
 }
 
-ComparisonResult RoomFactory::compare(const Room *room, const ParseEvent *event,
+ComparisonResult RoomFactory::compare(const Room *room,
+                                      const ParseEvent *event,
                                       uint tolerance) const
 {
     QString name = Mmapper2Room::getName(room);
@@ -182,7 +185,8 @@ ComparisonResult RoomFactory::compare(const Room *room, const ParseEvent *event,
     return CR_TOLERANCE;
 }
 
-ComparisonResult RoomFactory::compareWeakProps(const Room *room, const ParseEvent &event,
+ComparisonResult RoomFactory::compareWeakProps(const Room *room,
+                                               const ParseEvent &event,
                                                uint /*tolerance*/) const
 {
     bool exitsValid = room->isUpToDate();
@@ -227,7 +231,8 @@ ComparisonResult RoomFactory::compareWeakProps(const Room *room, const ParseEven
                 if (exitsValid) {
                     if (!tolerance) {
                         if (((mFlags & EF_EXIT) == 0)
-                                && ((eThisExit & EF_DOOR) != 0u)) { // We have no exit on record and there is a secret door
+                            && ((eThisExit & EF_DOOR)
+                                != 0u)) { // We have no exit on record and there is a secret door
                             tolerance = true;
                         } else if ((mFlags & EF_DOOR) != 0) { // We have a secret door on record
                             tolerance = true;
@@ -245,7 +250,6 @@ ComparisonResult RoomFactory::compareWeakProps(const Room *room, const ParseEven
             } else if ((diff & EF_CLIMB) != 0u) {
                 tolerance = true;
             }
-
         }
     }
     if (tolerance || !exitsValid) {
@@ -263,17 +267,16 @@ void RoomFactory::update(Room &room, const ParseEvent &event) const
         eFlags ^= EXITS_FLAGS_VALID;
         if (!room.isUpToDate()) {
             for (int dir = 0; dir < 6; ++dir) {
-
                 ExitFlags mFlags = (eFlags >> (dir * 4) & (EF_EXIT | EF_DOOR | EF_ROAD | EF_CLIMB));
 
                 Exit &e = room.exit(dir);
                 if (((Mmapper2Exit::getFlags(e) & EF_DOOR) != 0)
-                        && ((mFlags & EF_DOOR) == 0)) { // We have a secret door on record
+                    && ((mFlags & EF_DOOR) == 0)) { // We have a secret door on record
                     mFlags |= EF_DOOR;
                     mFlags |= EF_EXIT;
                 }
                 if (((mFlags & EF_DOOR) != 0)
-                        && ((mFlags & EF_ROAD) != 0)) { // TODO(nschimme): Door and road is confusing??
+                    && ((mFlags & EF_ROAD) != 0)) { // TODO(nschimme): Door and road is confusing??
                     mFlags |= EF_NO_MATCH;
                 }
                 e[E_FLAGS] = mFlags;
@@ -297,7 +300,7 @@ void RoomFactory::update(Room &room, const ParseEvent &event) const
         room.replace(R_TERRAINTYPE, static_cast<RoomTerrainType>(rt));
         if ((pFlags & LIT_ROOM) != 0) {
             room.replace(R_LIGHTTYPE, RLT_LIT);
-        }/* else if (pFlags & DARK_ROOM) {
+        } /* else if (pFlags & DARK_ROOM) {
             room.replace(R_LIGHTTYPE, RLT_DARK);
         }*/
     } else {
@@ -318,7 +321,6 @@ void RoomFactory::update(Room &room, const ParseEvent &event) const
         room.setOutDated();
     }
 }
-
 
 void RoomFactory::update(Room *target, const Room *source) const
 {
@@ -356,9 +358,10 @@ void RoomFactory::update(Room *target, const Room *source) const
 
     target->replace(R_NOTE, Mmapper2Room::getNote(target).append(Mmapper2Room::getNote(source)));
 
-    target->replace(R_MOBFLAGS, Mmapper2Room::getMobFlags(target) | Mmapper2Room::getMobFlags(source));
-    target->replace(R_LOADFLAGS, Mmapper2Room::getLoadFlags(target) | Mmapper2Room::getLoadFlags(
-                        source));
+    target->replace(R_MOBFLAGS,
+                    Mmapper2Room::getMobFlags(target) | Mmapper2Room::getMobFlags(source));
+    target->replace(R_LOADFLAGS,
+                    Mmapper2Room::getLoadFlags(target) | Mmapper2Room::getLoadFlags(source));
 
     if (!target->isUpToDate()) {
         for (int dir = 0; dir < 6; ++dir) {
@@ -401,7 +404,6 @@ void RoomFactory::update(Room *target, const Room *source) const
     }
 }
 
-
 uint RoomFactory::opposite(uint in) const
 {
     switch (in) {
@@ -422,13 +424,13 @@ uint RoomFactory::opposite(uint in) const
     }
 }
 
-
 const Coordinate &RoomFactory::exitDir(uint dir) const
 {
     return exitDirs[dir];
 }
 
-RoomFactory::RoomFactory() : exitDirs(64)
+RoomFactory::RoomFactory()
+    : exitDirs(64)
 {
     Coordinate north(0, -1, 0);
     exitDirs[CID_NORTH] = north;
@@ -444,5 +446,3 @@ RoomFactory::RoomFactory() : exitDirs(64)
     exitDirs[CID_DOWN] = down;
     // rest is default constructed which means (0,0,0)
 }
-
-

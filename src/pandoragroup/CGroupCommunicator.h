@@ -26,9 +26,9 @@
 #ifndef CGROUPCOMMUNICATOR_H_
 #define CGROUPCOMMUNICATOR_H_
 
-#include <QObject>
 #include <QDomNode>
 #include <QHash>
+#include <QObject>
 
 class CGroup;
 class CGroupClient;
@@ -43,17 +43,24 @@ public:
 
     const static int protocolVersion = 102;
 
-    enum Messages { NONE, ACK,
-                    REQ_VERSION, REQ_ACK, REQ_LOGIN, REQ_INFO,
-                    PROT_VERSION, GTELL,
-                    STATE_LOGGED, STATE_KICKED,
-                    ADD_CHAR, REMOVE_CHAR, UPDATE_CHAR, RENAME_CHAR
-                  };
+    enum Messages {
+        NONE,
+        ACK,
+        REQ_VERSION,
+        REQ_ACK,
+        REQ_LOGIN,
+        REQ_INFO,
+        PROT_VERSION,
+        GTELL,
+        STATE_LOGGED,
+        STATE_KICKED,
+        ADD_CHAR,
+        REMOVE_CHAR,
+        UPDATE_CHAR,
+        RENAME_CHAR
+    };
 
-    int getType() const
-    {
-        return type;
-    }
+    int getType() const { return type; }
     void sendCharUpdate(CGroupClient *, const QDomNode &);
     void sendMessage(CGroupClient *, int, const QByteArray &blob = "");
     void sendMessage(CGroupClient *, int, const QDomNode &);
@@ -92,6 +99,7 @@ class CGroupServerCommunicator : public CGroupCommunicator
 {
     Q_OBJECT
     friend class CGroupServer;
+
 public:
     CGroupServerCommunicator(QObject *parent);
     ~CGroupServerCommunicator();
@@ -117,15 +125,15 @@ private:
     void parseLoginInformation(CGroupClient *connection, const QDomNode &data);
     void sendGroupInformation(CGroupClient *connection);
 
-    QHash<QByteArray, int>  clientsList;
+    QHash<QByteArray, int> clientsList;
     CGroupServer *server;
-
 };
 
 class CGroupClientCommunicator : public CGroupCommunicator
 {
     Q_OBJECT
     friend class CGroupClient;
+
 public:
     CGroupClientCommunicator(QObject *parent);
     ~CGroupClientCommunicator();
@@ -146,7 +154,6 @@ private:
     void sendLoginInformation(CGroupClient *connection);
 
     CGroupClient *client;
-
 };
 
 #endif /*CGROUPCOMMUNICATOR_H_*/

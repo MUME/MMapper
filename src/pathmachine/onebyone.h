@@ -34,13 +34,16 @@ class RoomSignalHandler;
 class Room;
 class RoomAdmin;
 
-class OneByOne: public Experimenting
+class OneByOne : public Experimenting
 {
 public:
-    OneByOne(AbstractRoomFactory *factory, ParseEvent *event, PathParameters &in_params,
+    OneByOne(AbstractRoomFactory *factory,
+             ParseEvent *event,
+             PathParameters &in_params,
              RoomSignalHandler *handler);
     void receiveRoom(RoomAdmin *admin, const Room *room);
     void addPath(Path *path);
+
 private:
     ParseEvent *event;
     RoomSignalHandler *handler;

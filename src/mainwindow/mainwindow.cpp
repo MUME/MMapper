@@ -60,7 +60,8 @@
 #include <memory>
 
 DockWidget::DockWidget(const QString &title, QWidget *parent, Qt::WindowFlags flags)
-    : QDockWidget(title, parent, flags) {}
+    : QDockWidget(title, parent, flags)
+{}
 
 QSize MainWindow::minimumSizeHint() const
 {
@@ -130,8 +131,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     m_dockDialogLog = new DockWidget(tr("Log View"), this);
     m_dockDialogLog->setObjectName("DockWidgetLog");
     m_dockDialogLog->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
-    m_dockDialogLog->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable |
-                                 QDockWidget::DockWidgetClosable);
+    m_dockDialogLog->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
+                                 | QDockWidget::DockWidgetClosable);
     addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogLog);
 
     logWindow = new QTextBrowser(m_dockDialogLog);
@@ -142,7 +143,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     m_dockDialogGroup = new DockWidget(tr("Group Manager"), this);
     m_dockDialogGroup->setObjectName("DockWidgetGroup");
     m_dockDialogGroup->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
-    m_dockDialogGroup->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+    m_dockDialogGroup->setFeatures(QDockWidget::DockWidgetMovable
+                                   | QDockWidget::DockWidgetFloatable);
     addDockWidget(Qt::TopDockWidgetArea, m_dockDialogGroup);
     m_dockDialogGroup->setWidget(m_groupWidget);
     m_dockDialogGroup->hide();
@@ -162,18 +164,24 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     setCorner(Qt::TopRightCorner, Qt::TopDockWidgetArea);
     setCorner(Qt::BottomRightCorner, Qt::BottomDockWidgetArea);
 
-    m_listener = new ConnectionListener(m_mapData, m_pathMachine, m_commandEvaluator,
-                                        m_prespammedPath, m_groupManager, m_mumeClock, this);
+    m_listener = new ConnectionListener(m_mapData,
+                                        m_pathMachine,
+                                        m_commandEvaluator,
+                                        m_prespammedPath,
+                                        m_groupManager,
+                                        m_mumeClock,
+                                        this);
     m_listener->setMaxPendingConnections(1);
 
     if (!m_listener->listen(QHostAddress::Any, Config().m_localPort)) {
-        QMessageBox::critical(this, tr("MMapper2"),
+        QMessageBox::critical(this,
+                              tr("MMapper2"),
                               tr("Unable to start the server (switching to offline mode): %1.")
-                              .arg(m_listener->errorString()));
+                                  .arg(m_listener->errorString()));
     } else {
-        log("ConnectionListener", tr("Server bound on localhost to port: %2.").arg(Config().m_localPort));
+        log("ConnectionListener",
+            tr("Server bound on localhost to port: %2.").arg(Config().m_localPort));
     }
-
 
     //update connections
     wireConnections();
@@ -190,11 +198,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
         offlineModeAct->setChecked(true);
         onOfflineMode();
     }
-
 }
 
-MainWindow::~MainWindow()
-    = default;
+MainWindow::~MainWindow() = default;
 
 void MainWindow::readSettings()
 {
@@ -223,29 +229,42 @@ void MainWindow::writeSettings()
     Config().setAlwaysOnTop((bool) (windowFlags() & Qt::WindowStaysOnTopHint));
 }
 
-
 void MainWindow::wireConnections()
 {
     connect(m_pathMachine, &Mmapper2PathMachine::log, this, &MainWindow::log);
 
-    connect(m_pathMachine, SIGNAL(lookingForRooms(RoomRecipient *, const Coordinate & )),
-            m_mapData, SLOT(lookingForRooms(RoomRecipient *, const Coordinate & )));
-    connect(m_pathMachine, SIGNAL(lookingForRooms(RoomRecipient *, ParseEvent & )), m_mapData,
-            SLOT(lookingForRooms(RoomRecipient *, ParseEvent & )));
-    connect(m_pathMachine, SIGNAL(lookingForRooms(RoomRecipient *, uint)), m_mapData,
+    connect(m_pathMachine,
+            SIGNAL(lookingForRooms(RoomRecipient *, const Coordinate &)),
+            m_mapData,
+            SLOT(lookingForRooms(RoomRecipient *, const Coordinate &)));
+    connect(m_pathMachine,
+            SIGNAL(lookingForRooms(RoomRecipient *, ParseEvent &)),
+            m_mapData,
+            SLOT(lookingForRooms(RoomRecipient *, ParseEvent &)));
+    connect(m_pathMachine,
+            SIGNAL(lookingForRooms(RoomRecipient *, uint)),
+            m_mapData,
             SLOT(lookingForRooms(RoomRecipient *, uint)));
     connect(m_mapData, SIGNAL(clearingMap()), m_pathMachine, SLOT(releaseAllPaths()));
-    connect(m_pathMachine, &Mmapper2PathMachine::playerMoved, m_mapWindow->getCanvas(),
+    connect(m_pathMachine,
+            &Mmapper2PathMachine::playerMoved,
+            m_mapWindow->getCanvas(),
             &MapCanvas::moveMarker);
 
-    connect(m_mapWindow->getCanvas(), SIGNAL(setCurrentRoom(uint)), m_pathMachine,
+    connect(m_mapWindow->getCanvas(),
+            SIGNAL(setCurrentRoom(uint)),
+            m_pathMachine,
             SLOT(setCurrentRoom(uint)));
-    connect(m_mapWindow->getCanvas(), &MapCanvas::charMovedEvent, m_pathMachine,
+    connect(m_mapWindow->getCanvas(),
+            &MapCanvas::charMovedEvent,
+            m_pathMachine,
             &Mmapper2PathMachine::event);
 
     //moved to mapwindow
     connect(m_mapData, &MapData::mapSizeChanged, m_mapWindow, &MapWindow::setScrollBars);
-    connect(m_mapWindow->getCanvas(), &MapCanvas::roomPositionChanged, m_pathMachine,
+    connect(m_mapWindow->getCanvas(),
+            &MapCanvas::roomPositionChanged,
+            m_pathMachine,
             &Mmapper2PathMachine::retry);
 
     connect(m_prespammedPath, SIGNAL(update()), m_mapWindow->getCanvas(), SLOT(update()));
@@ -253,30 +272,44 @@ void MainWindow::wireConnections()
     connect(m_mapData, &MapData::log, this, &MainWindow::log);
     connect(m_mapWindow->getCanvas(), &MapCanvas::log, this, &MainWindow::log);
 
-    connect(m_mapData, SIGNAL(onDataLoaded()), m_mapWindow->getCanvas(),
-            SLOT(dataLoaded()));
+    connect(m_mapData, SIGNAL(onDataLoaded()), m_mapWindow->getCanvas(), SLOT(dataLoaded()));
 
     connect(zoomInAct, SIGNAL(triggered()), m_mapWindow->getCanvas(), SLOT(zoomIn()));
     connect(zoomOutAct, SIGNAL(triggered()), m_mapWindow->getCanvas(), SLOT(zoomOut()));
 
-    connect(m_mapWindow->getCanvas(), SIGNAL(newRoomSelection( const RoomSelection *)),
-            this, SLOT(newRoomSelection( const RoomSelection *)));
-    connect(m_mapWindow->getCanvas(), SIGNAL(newConnectionSelection(ConnectionSelection * )),
-            this, SLOT(newConnectionSelection(ConnectionSelection * )));
-    connect(m_mapWindow->getCanvas(), SIGNAL(customContextMenuRequested(const QPoint &)),
-            this, SLOT(showContextMenu(const QPoint &)));
+    connect(m_mapWindow->getCanvas(),
+            SIGNAL(newRoomSelection(const RoomSelection *)),
+            this,
+            SLOT(newRoomSelection(const RoomSelection *)));
+    connect(m_mapWindow->getCanvas(),
+            SIGNAL(newConnectionSelection(ConnectionSelection *)),
+            this,
+            SLOT(newConnectionSelection(ConnectionSelection *)));
+    connect(m_mapWindow->getCanvas(),
+            SIGNAL(customContextMenuRequested(const QPoint &)),
+            this,
+            SLOT(showContextMenu(const QPoint &)));
 
     // Group
     connect(m_groupManager, &Mmapper2Group::log, this, &MainWindow::log);
-    connect(m_pathMachine, SIGNAL(setCharPosition(uint)), m_groupManager,
+    connect(m_pathMachine,
+            SIGNAL(setCharPosition(uint)),
+            m_groupManager,
             SLOT(setCharPosition(uint)),
             Qt::QueuedConnection);
-    connect(m_groupManager, SIGNAL(drawCharacters()),
-            m_mapWindow->getCanvas(), SLOT(update()),
+    connect(m_groupManager,
+            SIGNAL(drawCharacters()),
+            m_mapWindow->getCanvas(),
+            SLOT(update()),
             Qt::QueuedConnection);
-    connect(this, SIGNAL(setGroupManagerType(int)), m_groupManager, SLOT(setType(int)),
+    connect(this,
+            SIGNAL(setGroupManagerType(int)),
+            m_groupManager,
+            SLOT(setType(int)),
             Qt::QueuedConnection);
-    connect(m_groupManager, SIGNAL(groupManagerOff()), SLOT(groupManagerOff()),
+    connect(m_groupManager,
+            SIGNAL(groupManagerOff()),
+            SLOT(groupManagerOff()),
             Qt::QueuedConnection);
 
     connect(m_mumeClock, &MumeClock::log, this, &MainWindow::log);
@@ -286,7 +319,6 @@ void MainWindow::wireConnections()
     connect(m_listener, SIGNAL(clientSuccessfullyConnected()), m_dockWelcome, SLOT(hide()));
 }
 
-
 void MainWindow::log(const QString &module, const QString &message)
 {
     logWindow->append("[" + module + "] " + message);
@@ -294,27 +326,31 @@ void MainWindow::log(const QString &module, const QString &message)
     logWindow->update();
 }
 
-
 void MainWindow::createActions()
 {
-    newAct = new QAction(QIcon::fromTheme("document-new", QIcon(":/icons/new.png")), tr("&New"), this);
+    newAct = new QAction(QIcon::fromTheme("document-new", QIcon(":/icons/new.png")),
+                         tr("&New"),
+                         this);
     newAct->setShortcut(tr("Ctrl+N"));
     newAct->setStatusTip(tr("Create a new file"));
     connect(newAct, SIGNAL(triggered()), this, SLOT(newFile()));
 
-    openAct = new QAction(QIcon::fromTheme("document-open", QIcon(":/icons/open.png")), tr("&Open..."),
+    openAct = new QAction(QIcon::fromTheme("document-open", QIcon(":/icons/open.png")),
+                          tr("&Open..."),
                           this);
     openAct->setShortcut(tr("Ctrl+O"));
     openAct->setStatusTip(tr("Open an existing file"));
     connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
 
     reloadAct = new QAction(QIcon::fromTheme("document-open-recent", QIcon(":/icons/reload.png")),
-                            tr("&Reload"), this);
+                            tr("&Reload"),
+                            this);
     reloadAct->setShortcut(tr("Ctrl+R"));
     reloadAct->setStatusTip(tr("Reload the current map"));
     connect(reloadAct, SIGNAL(triggered()), this, SLOT(reload()));
 
-    saveAct = new QAction(QIcon::fromTheme("document-save", QIcon(":/icons/save.png")), tr("&Save"),
+    saveAct = new QAction(QIcon::fromTheme("document-save", QIcon(":/icons/save.png")),
+                          tr("&Save"),
                           this);
     saveAct->setShortcut(tr("Ctrl+S"));
     saveAct->setStatusTip(tr("Save the document to disk"));
@@ -324,7 +360,8 @@ void MainWindow::createActions()
     saveAsAct->setStatusTip(tr("Save the document under a new name"));
     connect(saveAsAct, SIGNAL(triggered()), this, SLOT(saveAs()));
 
-    exportBaseMapAct = new QAction(QIcon::fromTheme("document-send"), tr("Export &Base Map As..."),
+    exportBaseMapAct = new QAction(QIcon::fromTheme("document-send"),
+                                   tr("Export &Base Map As..."),
                                    this);
     exportBaseMapAct->setStatusTip(tr("Save a copy of the map with no secrets"));
     connect(exportBaseMapAct, SIGNAL(triggered()), this, SLOT(exportBaseMap()));
@@ -362,7 +399,9 @@ void MainWindow::createActions()
     */
 
     preferencesAct = new QAction(QIcon::fromTheme("preferences-desktop",
-                                                  QIcon(":/icons/preferences.png")), tr("&Preferences"), this);
+                                                  QIcon(":/icons/preferences.png")),
+                                 tr("&Preferences"),
+                                 this);
     preferencesAct->setShortcut(tr("Ctrl+P"));
     preferencesAct->setStatusTip(tr("MMapper2 configuration"));
     connect(preferencesAct, SIGNAL(triggered()), this, SLOT(onPreferences()));
@@ -400,7 +439,8 @@ void MainWindow::createActions()
         prevWindowAct->setStatusTip(tr("Show the Previous Window"));
         connect(prevWindowAct, SIGNAL(triggered()), this, SLOT(prevWindow()));
     */
-    zoomInAct = new QAction(QIcon::fromTheme("zoom-in", QIcon(":/icons/viewmag+.png")), tr("Zoom In"),
+    zoomInAct = new QAction(QIcon::fromTheme("zoom-in", QIcon(":/icons/viewmag+.png")),
+                            tr("Zoom In"),
                             this);
     alwaysOnTopAct = new QAction(tr("Always on top"), this);
     alwaysOnTopAct->setCheckable(true);
@@ -409,10 +449,12 @@ void MainWindow::createActions()
     zoomInAct->setStatusTip(tr("Zooms In current map"));
     zoomInAct->setShortcut(tr("Ctrl++"));
     zoomOutAct = new QAction(QIcon::fromTheme("zoom-out", QIcon(":/icons/viewmag-.png")),
-                             tr("Zoom Out"), this);
+                             tr("Zoom Out"),
+                             this);
     zoomOutAct->setShortcut(tr("Ctrl+-"));
     zoomOutAct->setStatusTip(tr("Zooms Out current map"));
-    layerUpAct = new QAction(QIcon::fromTheme("go-up", QIcon(":/icons/layerup.png")), tr("Layer Up"),
+    layerUpAct = new QAction(QIcon::fromTheme("go-up", QIcon(":/icons/layerup.png")),
+                             tr("Layer Up"),
                              this);
 #ifdef __APPLE__
     layerUpAct->setShortcut(tr("Meta+Tab"));
@@ -422,7 +464,8 @@ void MainWindow::createActions()
     layerUpAct->setStatusTip(tr("Layer Up"));
     connect(layerUpAct, SIGNAL(triggered()), this, SLOT(onLayerUp()));
     layerDownAct = new QAction(QIcon::fromTheme("go-down", QIcon(":/icons/layerdown.png")),
-                               tr("Layer Down"), this);
+                               tr("Layer Down"),
+                               this);
 #ifdef __APPLE__
     layerDownAct->setShortcut(tr("Meta+Shift+Tab"));
 #else
@@ -432,7 +475,8 @@ void MainWindow::createActions()
     connect(layerDownAct, SIGNAL(triggered()), this, SLOT(onLayerDown()));
 
     modeConnectionSelectAct = new QAction(QIcon(":/icons/connectionselection.png"),
-                                          tr("Select Connection"), this);
+                                          tr("Select Connection"),
+                                          this);
     modeConnectionSelectAct->setStatusTip(tr("Select Connection"));
     modeConnectionSelectAct->setCheckable(true);
     connect(modeConnectionSelectAct, SIGNAL(triggered()), this, SLOT(onModeConnectionSelect()));
@@ -444,7 +488,9 @@ void MainWindow::createActions()
     modeMoveSelectAct->setStatusTip(tr("Move Map"));
     modeMoveSelectAct->setCheckable(true);
     connect(modeMoveSelectAct, SIGNAL(triggered()), this, SLOT(onModeMoveSelect()));
-    modeInfoMarkEditAct = new QAction(QIcon(":/icons/infomarksedit.png"), tr("Edit Info Marks"), this);
+    modeInfoMarkEditAct = new QAction(QIcon(":/icons/infomarksedit.png"),
+                                      tr("Edit Info Marks"),
+                                      this);
     modeInfoMarkEditAct->setStatusTip(tr("Edit Info Marks"));
     modeInfoMarkEditAct->setCheckable(true);
     connect(modeInfoMarkEditAct, SIGNAL(triggered()), this, SLOT(onModeInfoMarkEdit()));
@@ -455,16 +501,23 @@ void MainWindow::createActions()
     connect(modeCreateRoomAct, SIGNAL(triggered()), this, SLOT(onModeCreateRoomSelect()));
 
     modeCreateConnectionAct = new QAction(QIcon(":/icons/connectioncreate.png"),
-                                          tr("Create New Connection"), this);
+                                          tr("Create New Connection"),
+                                          this);
     modeCreateConnectionAct->setStatusTip(tr("Create New Connection"));
     modeCreateConnectionAct->setCheckable(true);
-    connect(modeCreateConnectionAct, SIGNAL(triggered()), this, SLOT(onModeCreateConnectionSelect()));
+    connect(modeCreateConnectionAct,
+            SIGNAL(triggered()),
+            this,
+            SLOT(onModeCreateConnectionSelect()));
 
     modeCreateOnewayConnectionAct = new QAction(QIcon(":/icons/onewayconnectioncreate.png"),
-                                                tr("Create New Oneway Connection"), this);
+                                                tr("Create New Oneway Connection"),
+                                                this);
     modeCreateOnewayConnectionAct->setStatusTip(tr("Create New Oneway Connection"));
     modeCreateOnewayConnectionAct->setCheckable(true);
-    connect(modeCreateOnewayConnectionAct, SIGNAL(triggered()), this,
+    connect(modeCreateOnewayConnectionAct,
+            SIGNAL(triggered()),
+            this,
             SLOT(onModeCreateOnewayConnectionSelect()));
 
     modeActGroup = new QActionGroup(this);
@@ -482,36 +535,46 @@ void MainWindow::createActions()
     createRoomAct->setStatusTip(tr("Create a new room under the cursor"));
     connect(createRoomAct, SIGNAL(triggered()), this, SLOT(onCreateRoom()));
 
-    editRoomSelectionAct = new QAction(QIcon(":/icons/roomedit.png"), tr("Edit Selected Rooms"), this);
+    editRoomSelectionAct = new QAction(QIcon(":/icons/roomedit.png"),
+                                       tr("Edit Selected Rooms"),
+                                       this);
     editRoomSelectionAct->setStatusTip(tr("Edit Selected Rooms"));
     editRoomSelectionAct->setShortcut(tr("Ctrl+E"));
     connect(editRoomSelectionAct, SIGNAL(triggered()), this, SLOT(onEditRoomSelection()));
 
-    deleteRoomSelectionAct = new QAction(QIcon(":/icons/roomdelete.png"), tr("Delete Selected Rooms"),
+    deleteRoomSelectionAct = new QAction(QIcon(":/icons/roomdelete.png"),
+                                         tr("Delete Selected Rooms"),
                                          this);
     deleteRoomSelectionAct->setStatusTip(tr("Delete Selected Rooms"));
     connect(deleteRoomSelectionAct, SIGNAL(triggered()), this, SLOT(onDeleteRoomSelection()));
 
-    moveUpRoomSelectionAct = new QAction(QIcon(":/icons/roommoveup.png"), tr("Move Up Selected Rooms"),
+    moveUpRoomSelectionAct = new QAction(QIcon(":/icons/roommoveup.png"),
+                                         tr("Move Up Selected Rooms"),
                                          this);
     moveUpRoomSelectionAct->setStatusTip(tr("Move Up Selected Rooms"));
     connect(moveUpRoomSelectionAct, SIGNAL(triggered()), this, SLOT(onMoveUpRoomSelection()));
     moveDownRoomSelectionAct = new QAction(QIcon(":/icons/roommovedown.png"),
-                                           tr("Move Down Selected Rooms"), this);
+                                           tr("Move Down Selected Rooms"),
+                                           this);
     moveDownRoomSelectionAct->setStatusTip(tr("Move Down Selected Rooms"));
     connect(moveDownRoomSelectionAct, SIGNAL(triggered()), this, SLOT(onMoveDownRoomSelection()));
     mergeUpRoomSelectionAct = new QAction(QIcon(":/icons/roommergeup.png"),
-                                          tr("Merge Up Selected Rooms"), this);
+                                          tr("Merge Up Selected Rooms"),
+                                          this);
     mergeUpRoomSelectionAct->setStatusTip(tr("Merge Up Selected Rooms"));
     connect(mergeUpRoomSelectionAct, SIGNAL(triggered()), this, SLOT(onMergeUpRoomSelection()));
     mergeDownRoomSelectionAct = new QAction(QIcon(":/icons/roommergedown.png"),
-                                            tr("Merge Down Selected Rooms"), this);
+                                            tr("Merge Down Selected Rooms"),
+                                            this);
     mergeDownRoomSelectionAct->setStatusTip(tr("Merge Down Selected Rooms"));
     connect(mergeDownRoomSelectionAct, SIGNAL(triggered()), this, SLOT(onMergeDownRoomSelection()));
     connectToNeighboursRoomSelectionAct = new QAction(QIcon(":/icons/roomconnecttoneighbours.png"),
-                                                      tr("Connect room(s) to its neighbour rooms"), this);
+                                                      tr("Connect room(s) to its neighbour rooms"),
+                                                      this);
     connectToNeighboursRoomSelectionAct->setStatusTip(tr("Connect room(s) to its neighbour rooms"));
-    connect(connectToNeighboursRoomSelectionAct, SIGNAL(triggered()), this,
+    connect(connectToNeighboursRoomSelectionAct,
+            SIGNAL(triggered()),
+            this,
             SLOT(onConnectToNeighboursRoomSelection()));
 
     findRoomsAct = new QAction(QIcon(":/icons/roomfind.png"), tr("&Find Rooms"), this);
@@ -528,13 +591,13 @@ void MainWindow::createActions()
     releaseAllPathsAct->setCheckable(false);
     connect(releaseAllPathsAct, SIGNAL(triggered()), m_pathMachine, SLOT(releaseAllPaths()));
 
-    forceRoomAct = new QAction(QIcon(":/icons/force.png"), tr("Force Path Machine to selected Room"),
+    forceRoomAct = new QAction(QIcon(":/icons/force.png"),
+                               tr("Force Path Machine to selected Room"),
                                this);
     forceRoomAct->setStatusTip(tr("Force Path Machine to selected Room"));
     forceRoomAct->setCheckable(false);
     forceRoomAct->setEnabled(false);
-    connect(forceRoomAct, SIGNAL(triggered()), m_mapWindow->getCanvas(),
-            SLOT(forceMapperToRoom()));
+    connect(forceRoomAct, SIGNAL(triggered()), m_mapWindow->getCanvas(), SLOT(forceMapperToRoom()));
 
     roomActGroup = new QActionGroup(this);
     roomActGroup->setExclusive(false);
@@ -552,9 +615,12 @@ void MainWindow::createActions()
     //connect(editConnectionSelectionAct, SIGNAL(triggered()), this, SLOT(onEditConnectionSelection()));
 
     deleteConnectionSelectionAct = new QAction(QIcon(":/icons/connectiondelete.png"),
-                                               tr("Delete Selected Connection"), this);
+                                               tr("Delete Selected Connection"),
+                                               this);
     deleteConnectionSelectionAct->setStatusTip(tr("Delete Selected Connection"));
-    connect(deleteConnectionSelectionAct, SIGNAL(triggered()), this,
+    connect(deleteConnectionSelectionAct,
+            SIGNAL(triggered()),
+            this,
             SLOT(onDeleteConnectionSelection()));
 
     connectionActGroup = new QActionGroup(this);
@@ -573,9 +639,11 @@ void MainWindow::createActions()
     mapModeAct->setCheckable(true);
     connect(mapModeAct, SIGNAL(triggered()), this, SLOT(onMapMode()));
 
-    offlineModeAct = new QAction(QIcon(":/icons/play.png"), tr("Switch to offline emulation mode"),
+    offlineModeAct = new QAction(QIcon(":/icons/play.png"),
+                                 tr("Switch to offline emulation mode"),
                                  this);
-    offlineModeAct->setStatusTip(tr("Switch to offline emulation mode - you can learn areas offline"));
+    offlineModeAct->setStatusTip(
+        tr("Switch to offline emulation mode - you can learn areas offline"));
     offlineModeAct->setCheckable(true);
     connect(offlineModeAct, SIGNAL(triggered()), this, SLOT(onOfflineMode()));
 
@@ -590,8 +658,10 @@ void MainWindow::createActions()
     //copyAct->setEnabled(false);
 
     // Find Room Dialog Connections
-    connect(m_findRoomsDlg, SIGNAL(center(qint32, qint32)), m_mapWindow, SLOT(center(qint32,
-                                                                                     qint32)));
+    connect(m_findRoomsDlg,
+            SIGNAL(center(qint32, qint32)),
+            m_mapWindow,
+            SLOT(center(qint32, qint32)));
     connect(m_findRoomsDlg, &FindRoomsDlg::log, this, &MainWindow::log);
 
     // group Manager
@@ -600,12 +670,14 @@ void MainWindow::createActions()
     groupOffAct->setCheckable(true);
     connect(groupOffAct, SIGNAL(triggered()), this, SLOT(groupOff()), Qt::QueuedConnection);
 
-    groupClientAct = new QAction(QIcon(":/icons/groupclient.png"), tr("&Connect to a friend's map"),
+    groupClientAct = new QAction(QIcon(":/icons/groupclient.png"),
+                                 tr("&Connect to a friend's map"),
                                  this);
     groupClientAct->setCheckable(true);
     connect(groupClientAct, SIGNAL(triggered()), this, SLOT(groupClient()), Qt::QueuedConnection);
 
-    groupServerAct = new QAction(QIcon(":/icons/groupserver.png"), tr("&Host your map with friends"),
+    groupServerAct = new QAction(QIcon(":/icons/groupserver.png"),
+                                 tr("&Host your map with friends"),
                                  this);
     groupServerAct->setCheckable(true);
     connect(groupServerAct, SIGNAL(triggered()), this, SLOT(groupServer()), Qt::QueuedConnection);
@@ -621,7 +693,9 @@ void MainWindow::createActions()
 void MainWindow::onPlayMode()
 {
     disconnect(m_pathMachine, &Mmapper2PathMachine::createRoom, m_mapData, &MapData::createRoom);
-    disconnect(m_pathMachine, &Mmapper2PathMachine::scheduleAction, m_mapData,
+    disconnect(m_pathMachine,
+               &Mmapper2PathMachine::scheduleAction,
+               m_mapData,
                &MapData::scheduleAction);
     Config().m_mapMode = 0;
 }
@@ -630,7 +704,10 @@ void MainWindow::onMapMode()
 {
     log("MainWindow", "Map mode selected - new rooms are created when entering unmapped areas.");
     connect(m_pathMachine, &Mmapper2PathMachine::createRoom, m_mapData, &MapData::createRoom);
-    connect(m_pathMachine, &Mmapper2PathMachine::scheduleAction, m_mapData, &MapData::scheduleAction);
+    connect(m_pathMachine,
+            &Mmapper2PathMachine::scheduleAction,
+            m_mapData,
+            &MapData::scheduleAction);
     Config().m_mapMode = 1;
 }
 
@@ -638,7 +715,9 @@ void MainWindow::onOfflineMode()
 {
     log("MainWindow", "Offline emulation mode selected - learn new areas safely.");
     disconnect(m_pathMachine, &Mmapper2PathMachine::createRoom, m_mapData, &MapData::createRoom);
-    disconnect(m_pathMachine, &Mmapper2PathMachine::scheduleAction, m_mapData,
+    disconnect(m_pathMachine,
+               &Mmapper2PathMachine::scheduleAction,
+               m_mapData,
                &MapData::scheduleAction);
     Config().m_mapMode = 2;
 }
@@ -704,7 +783,6 @@ void MainWindow::setupMenuBar()
     editMenu->addSeparator();
 
     editMenu->addAction(modeInfoMarkEditAct);
-
 
     roomMenu = editMenu->addMenu(QIcon(":/icons/roomselection.png"), tr("&Rooms"));
     roomMenu->addAction(modeRoomSelectAct);
@@ -831,15 +909,14 @@ void MainWindow::alwaysOnTop()
     show();
 }
 
-
 void MainWindow::setupToolBars()
 {
     fileToolBar = addToolBar(tr("File"));
     fileToolBar->setObjectName("FileToolBar");
     fileToolBar->addAction(newAct);
     fileToolBar->addAction(openAct);
-//  fileToolBar->addAction(mergeAct);
-//  fileToolBar->addAction(reloadAct);
+    //  fileToolBar->addAction(mergeAct);
+    //  fileToolBar->addAction(reloadAct);
     fileToolBar->addAction(saveAct);
     fileToolBar->hide();
     /*
@@ -973,16 +1050,19 @@ void MainWindow::newFile()
 
 void MainWindow::merge()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, "Choose map file ...", "",
+    QString fileName = QFileDialog::getOpenFileName(this,
+                                                    "Choose map file ...",
+                                                    "",
                                                     "MMapper2 (*.mm2);;MMapper (*.map)");
     if (!fileName.isEmpty()) {
         auto *file = new QFile(fileName);
 
         if (!file->open(QFile::ReadOnly)) {
-            QMessageBox::warning(this, tr("Application"),
+            QMessageBox::warning(this,
+                                 tr("Application"),
                                  tr("Cannot read file %1:\n%2.")
-                                 .arg(fileName)
-                                 .arg(file->errorString()));
+                                     .arg(fileName)
+                                     .arg(file->errorString()));
 
             m_mapWindow->getCanvas()->setEnabled(true);
             delete file;
@@ -1007,7 +1087,9 @@ void MainWindow::merge()
         auto real_storage = std::make_unique<MapStorage>(*m_mapData, fileName, file, this);
         auto storage = static_cast<AbstractMapStorage *>(real_storage.get());
         connect(storage, SIGNAL(onDataLoaded()), m_mapWindow->getCanvas(), SLOT(dataLoaded()));
-        connect(storage->progressCounter(), SIGNAL(onPercentageChanged(quint32)), this,
+        connect(storage->progressCounter(),
+                SIGNAL(onPercentageChanged(quint32)),
+                this,
                 SLOT(percentageChanged(quint32)));
         connect(storage, &AbstractMapStorage::log, this, &MainWindow::log);
 
@@ -1034,7 +1116,8 @@ void MainWindow::merge()
 void MainWindow::open()
 {
     if (maybeSave()) {
-        QString fileName = QFileDialog::getOpenFileName(this, "Choose map file ...",
+        QString fileName = QFileDialog::getOpenFileName(this,
+                                                        "Choose map file ...",
                                                         Config().m_lastMapDirectory,
                                                         "MMapper2 (*.mm2);;MMapper (*.map)");
         if (!fileName.isEmpty()) {
@@ -1058,7 +1141,6 @@ bool MainWindow::save()
         return saveAs();
     }
     return saveFile(m_mapData->getFileName(), SAVEM_FULL, SAVEF_MM2);
-
 }
 
 QPointer<QFileDialog> MainWindow::defaultSaveDialog()
@@ -1115,7 +1197,8 @@ bool MainWindow::exportBaseMap()
 
 bool MainWindow::exportWebMap()
 {
-    QPointer<QFileDialog> save = new QFileDialog(this, "Choose map file name ...",
+    QPointer<QFileDialog> save = new QFileDialog(this,
+                                                 "Choose map file name ...",
                                                  QDir::current().absolutePath());
     save->setFileMode(QFileDialog::Directory);
     save->setOption(QFileDialog::ShowDirsOnly, true);
@@ -1148,7 +1231,8 @@ void MainWindow::about()
 bool MainWindow::maybeSave()
 {
     if (m_mapData->dataChanged()) {
-        int ret = QMessageBox::warning(this, tr("mmapper"),
+        int ret = QMessageBox::warning(this,
+                                       tr("mmapper"),
                                        tr("The document has been modified.\n"
                                           "Do you want to save your changes?"),
                                        QMessageBox::Yes | QMessageBox::Default,
@@ -1168,10 +1252,9 @@ void MainWindow::loadFile(const QString &fileName)
 {
     auto *file = new QFile(fileName);
     if (!file->open(QFile::ReadOnly)) {
-        QMessageBox::warning(this, tr("Application"),
-                             tr("Cannot read file %1:\n%2.")
-                             .arg(fileName)
-                             .arg(file->errorString()));
+        QMessageBox::warning(this,
+                             tr("Application"),
+                             tr("Cannot read file %1:\n%2.").arg(fileName).arg(file->errorString()));
 
         m_mapWindow->getCanvas()->setEnabled(true);
         delete file;
@@ -1193,10 +1276,11 @@ void MainWindow::loadFile(const QString &fileName)
     m_mapWindow->getCanvas()->clearRoomSelection();
     m_mapWindow->getCanvas()->clearConnectionSelection();
 
-    auto *storage = (AbstractMapStorage *) new MapStorage(*m_mapData, fileName, file,
-                                                          this);
+    auto *storage = (AbstractMapStorage *) new MapStorage(*m_mapData, fileName, file, this);
     connect(storage, SIGNAL(onDataLoaded()), m_mapWindow->getCanvas(), SLOT(dataLoaded()));
-    connect(storage->progressCounter(), SIGNAL(onPercentageChanged(quint32)), this,
+    connect(storage->progressCounter(),
+            SIGNAL(onPercentageChanged(quint32)),
+            this,
             SLOT(percentageChanged(quint32)));
     connect(storage, &AbstractMapStorage::log, this, &MainWindow::log);
 
@@ -1236,10 +1320,9 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode, SaveFormat for
         try {
             saver.open(fileName);
         } catch (std::exception &e) {
-            QMessageBox::warning(nullptr, tr("Application"),
-                                 tr("Cannot write file %1:\n%2.")
-                                 .arg(fileName)
-                                 .arg(e.what()));
+            QMessageBox::warning(nullptr,
+                                 tr("Application"),
+                                 tr("Cannot write file %1:\n%2.").arg(fileName).arg(e.what()));
             m_mapWindow->getCanvas()->setEnabled(true);
             return false;
         }
@@ -1247,10 +1330,11 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode, SaveFormat for
 
     std::unique_ptr<AbstractMapStorage> storage;
     if (format == SAVEF_WEB) {
-        storage.reset(static_cast<AbstractMapStorage *>(new JsonMapStorage(*m_mapData, fileName, this)));
+        storage.reset(
+            static_cast<AbstractMapStorage *>(new JsonMapStorage(*m_mapData, fileName, this)));
     } else {
-        storage.reset(static_cast<AbstractMapStorage *>(new MapStorage(*m_mapData, fileName, &saver.file(),
-                                                                       this)));
+        storage.reset(static_cast<AbstractMapStorage *>(
+            new MapStorage(*m_mapData, fileName, &saver.file(), this)));
     }
 
     if (!storage->canSave()) {
@@ -1271,7 +1355,9 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode, SaveFormat for
     progressDlg->setValue(0);
     progressDlg->show();
 
-    connect(storage->progressCounter(), SIGNAL(onPercentageChanged(quint32)), this,
+    connect(storage->progressCounter(),
+            SIGNAL(onPercentageChanged(quint32)),
+            this,
             SLOT(percentageChanged(quint32)));
     connect(storage.get(), &AbstractMapStorage::log, this, &MainWindow::log);
 
@@ -1289,10 +1375,9 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode, SaveFormat for
     try {
         saver.close();
     } catch (std::exception &e) {
-        QMessageBox::warning(nullptr, tr("Application"),
-                             tr("Cannot write file %1:\n%2.")
-                             .arg(fileName)
-                             .arg(e.what()));
+        QMessageBox::warning(nullptr,
+                             tr("Application"),
+                             tr("Cannot write file %1:\n%2.").arg(fileName).arg(e.what()));
         m_mapWindow->getCanvas()->setEnabled(true);
         return false;
     }
@@ -1326,7 +1411,6 @@ void MainWindow::onLaunchClient()
     m_client->connectToHost();
 }
 
-
 void MainWindow::groupManagerOff()
 {
     groupOffAct->setChecked(true);
@@ -1351,7 +1435,6 @@ void MainWindow::groupClient()
         m_groupWidget->show();
     }
 }
-
 
 void MainWindow::groupServer()
 {
@@ -1443,7 +1526,6 @@ void MainWindow::onEditRoomSelection()
 
 void MainWindow::onEditConnectionSelection()
 {
-
     if (m_connectionSelection != nullptr) {
         /*RoomConnectionsDlg connectionsDlg;
         connectionsDlg.setRoom(static_cast<Room*>(m_connectionSelection->getFirst().room),
@@ -1520,7 +1602,8 @@ void MainWindow::onMergeUpRoomSelection()
         return;
     }
     Coordinate moverel(0, 0, 1);
-    m_mapData->execute(new GroupAction(new MergeRelative(moverel), m_roomSelection), m_roomSelection);
+    m_mapData->execute(new GroupAction(new MergeRelative(moverel), m_roomSelection),
+                       m_roomSelection);
     onLayerUp();
     onModeRoomSelect();
 }
@@ -1531,7 +1614,8 @@ void MainWindow::onMergeDownRoomSelection()
         return;
     }
     Coordinate moverel(0, 0, -1);
-    m_mapData->execute(new GroupAction(new MergeRelative(moverel), m_roomSelection), m_roomSelection);
+    m_mapData->execute(new GroupAction(new MergeRelative(moverel), m_roomSelection),
+                       m_roomSelection);
     onLayerDown();
     onModeRoomSelect();
 }
@@ -1552,8 +1636,8 @@ void MainWindow::onCheckForUpdate()
 
 void MainWindow::voteForMUMEOnTMC()
 {
-    QDesktopServices::openUrl(
-        QUrl("http://www.mudconnect.com/cgi-bin/vote_rank.cgi?mud=MUME+-+Multi+Users+In+Middle+Earth"));
+    QDesktopServices::openUrl(QUrl(
+        "http://www.mudconnect.com/cgi-bin/vote_rank.cgi?mud=MUME+-+Multi+Users+In+Middle+Earth"));
 }
 
 void MainWindow::openMumeWebsite()
@@ -1573,8 +1657,7 @@ void MainWindow::openMumeWiki()
 
 void MainWindow::openSettingUpMmapper()
 {
-    QDesktopServices::openUrl(
-        QUrl("https://github.com/MUME/MMapper/wiki/Troubleshooting"));
+    QDesktopServices::openUrl(QUrl("https://github.com/MUME/MMapper/wiki/Troubleshooting"));
 }
 
 void MainWindow::openNewbieHelp()

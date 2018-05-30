@@ -25,8 +25,8 @@
 #ifndef REMOTEEDITWIDGET_H
 #define REMOTEEDITWIDGET_H
 
-#include <QDialog>
 #include <QAction>
+#include <QDialog>
 
 class QTextEdit;
 

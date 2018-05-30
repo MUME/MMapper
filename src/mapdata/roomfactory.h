@@ -27,32 +27,34 @@
 #define ROOMFACTORY
 
 #include "abstractroomfactory.h"
-#include <QVector>
 #include <QRegExp>
+#include <QVector>
 
 class RoomFactory : public AbstractRoomFactory
 {
 public:
     RoomFactory();
     virtual Room *createRoom(const ParseEvent *ev = 0) const override;
-    virtual ComparisonResult compare(const Room *, const ParseEvent *event,
+    virtual ComparisonResult compare(const Room *,
+                                     const ParseEvent *event,
                                      uint tolerance = 0) const override;
-    virtual ComparisonResult compareWeakProps(const Room *, const ParseEvent &event,
+    virtual ComparisonResult compareWeakProps(const Room *,
+                                              const ParseEvent &event,
                                               uint tolerance = 0) const override;
     virtual ParseEvent *getEvent(const Room *) const override;
     virtual void update(Room &, const ParseEvent &event) const override;
     virtual void update(Room *target, const Room *source) const override;
     virtual uint opposite(uint in) const override;
     virtual const Coordinate &exitDir(uint dir) const override;
-    virtual uint numKnownDirs() const override
-    {
-        return 8;
-    }
+    virtual uint numKnownDirs() const override { return 8; }
     virtual ~RoomFactory() {}
+
 private:
     static const QRegExp whitespace;
     QVector<Coordinate> exitDirs;
-    ComparisonResult compareStrings(const QString &room, const QString &event, uint prevTolerance,
+    ComparisonResult compareStrings(const QString &room,
+                                    const QString &event,
+                                    uint prevTolerance,
                                     bool updated = true) const;
 };
 

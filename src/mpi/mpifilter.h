@@ -56,7 +56,6 @@ private:
     char m_command{};
     int m_remaining;
     QByteArray m_buffer;
-
 };
 
 #endif // MPIFILTER_H

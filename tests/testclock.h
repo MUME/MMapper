@@ -35,7 +35,6 @@ public:
     ~TestClock() override;
 
 private:
-
 private Q_SLOTS:
     // MumeClock
     void mumeClockTest();

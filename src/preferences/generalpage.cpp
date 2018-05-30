@@ -33,53 +33,62 @@ GeneralPage::GeneralPage(QWidget *parent)
     : QWidget(parent)
 {
     setupUi(this);
-    connect( remoteName, SIGNAL( textChanged(const QString &) ), this,
-             SLOT( remoteNameTextChanged(const QString &) )  );
-    connect( remotePort, SIGNAL( valueChanged(int) ), this, SLOT( remotePortValueChanged(int) )  );
-    connect( localPort, SIGNAL( valueChanged(int) ), this, SLOT( localPortValueChanged(int) )  );
-    connect( tlsEncryptionCheckBox, SIGNAL(stateChanged(int)),
-             SLOT(tlsEncryptionCheckBoxStateChanged(int)));
+    connect(remoteName,
+            SIGNAL(textChanged(const QString &)),
+            this,
+            SLOT(remoteNameTextChanged(const QString &)));
+    connect(remotePort, SIGNAL(valueChanged(int)), this, SLOT(remotePortValueChanged(int)));
+    connect(localPort, SIGNAL(valueChanged(int)), this, SLOT(localPortValueChanged(int)));
+    connect(tlsEncryptionCheckBox,
+            SIGNAL(stateChanged(int)),
+            SLOT(tlsEncryptionCheckBoxStateChanged(int)));
 
-    connect ( emulatedExitsCheckBox, SIGNAL(stateChanged(int)), SLOT(emulatedExitsStateChanged(int)));
-    connect ( showHiddenExitFlagsCheckBox, SIGNAL(stateChanged(int)),
-              SLOT(showHiddenExitFlagsStateChanged(int)));
-    connect ( showNotesCheckBox, SIGNAL(stateChanged(int)), SLOT(showNotesStateChanged(int)));
+    connect(emulatedExitsCheckBox, SIGNAL(stateChanged(int)), SLOT(emulatedExitsStateChanged(int)));
+    connect(showHiddenExitFlagsCheckBox,
+            SIGNAL(stateChanged(int)),
+            SLOT(showHiddenExitFlagsStateChanged(int)));
+    connect(showNotesCheckBox, SIGNAL(stateChanged(int)), SLOT(showNotesStateChanged(int)));
 
-    connect( autoLoadFileName, SIGNAL( textChanged(const QString &) ), this,
-             SLOT( autoLoadFileNameTextChanged(const QString &) )  );
-    connect( autoLoadCheck, SIGNAL(stateChanged(int)), SLOT(autoLoadCheckStateChanged(int)));
+    connect(autoLoadFileName,
+            SIGNAL(textChanged(const QString &)),
+            this,
+            SLOT(autoLoadFileNameTextChanged(const QString &)));
+    connect(autoLoadCheck, SIGNAL(stateChanged(int)), SLOT(autoLoadCheckStateChanged(int)));
 
-    connect( selectWorldFileButton, SIGNAL(clicked()), this, SLOT(selectWorldFileButtonClicked()));
+    connect(selectWorldFileButton, SIGNAL(clicked()), this, SLOT(selectWorldFileButtonClicked()));
 
-    connect( displayMumeClockCheckBox, SIGNAL(stateChanged(int)),
-             SLOT(displayMumeClockStateChanged(int)));
+    connect(displayMumeClockCheckBox,
+            SIGNAL(stateChanged(int)),
+            SLOT(displayMumeClockStateChanged(int)));
 
-    remoteName->setText( Config().m_remoteServerName );
-    remotePort->setValue( Config().m_remotePort );
-    localPort->setValue( Config().m_localPort );
+    remoteName->setText(Config().m_remoteServerName);
+    remotePort->setValue(Config().m_remotePort);
+    localPort->setValue(Config().m_localPort);
 #if MMAPPER_NO_OPENSSL
     tlsEncryptionCheckBox->setEnabled(false);
     tlsEncryptionCheckBox->setChecked(false);
 #else
-    tlsEncryptionCheckBox->setChecked( Config().m_tlsEncryption );
+    tlsEncryptionCheckBox->setChecked(Config().m_tlsEncryption);
 #endif
 
-    emulatedExitsCheckBox->setChecked( Config().m_emulatedExits );
-    showHiddenExitFlagsCheckBox->setChecked( Config().m_showHiddenExitFlags );
-    showNotesCheckBox->setChecked( Config().m_showNotes );
+    emulatedExitsCheckBox->setChecked(Config().m_emulatedExits);
+    showHiddenExitFlagsCheckBox->setChecked(Config().m_showHiddenExitFlags);
+    showNotesCheckBox->setChecked(Config().m_showNotes);
 
-    autoLoadCheck->setChecked( Config().m_autoLoadWorld );
-    autoLoadFileName->setText( Config().m_autoLoadFileName );
+    autoLoadCheck->setChecked(Config().m_autoLoadWorld);
+    autoLoadFileName->setText(Config().m_autoLoadFileName);
 
     displayMumeClockCheckBox->setChecked(Config().m_displayMumeClock);
 }
 
 void GeneralPage::selectWorldFileButtonClicked()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, "Choose map file ...", "",
+    QString fileName = QFileDialog::getOpenFileName(this,
+                                                    "Choose map file ...",
+                                                    "",
                                                     "MMapper2 (*.mm2);;MMapper (*.map)");
     if (!fileName.isEmpty()) {
-        autoLoadFileName->setText( fileName );
+        autoLoadFileName->setText(fileName);
         Config().m_autoLoadFileName = fileName;
         autoLoadCheck->setChecked(true);
         Config().m_autoLoadWorld = true;

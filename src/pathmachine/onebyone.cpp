@@ -29,11 +29,13 @@
 #include "pathparameters.h"
 #include "roomsignalhandler.h"
 
-OneByOne::OneByOne(AbstractRoomFactory *in_factory, ParseEvent *in_event,
-                   PathParameters &in_params, RoomSignalHandler *in_handler) :
-    Experimenting(new std::list<Path*>, in_event->getMoveType(), in_params, in_factory),
-    event(in_event),
-    handler(in_handler)
+OneByOne::OneByOne(AbstractRoomFactory *in_factory,
+                   ParseEvent *in_event,
+                   PathParameters &in_params,
+                   RoomSignalHandler *in_handler)
+    : Experimenting(new std::list<Path *>, in_event->getMoveType(), in_params, in_factory)
+    , event(in_event)
+    , handler(in_handler)
 {}
 
 void OneByOne::receiveRoom(RoomAdmin *admin, const Room *room)

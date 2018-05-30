@@ -25,8 +25,8 @@
 #ifndef GROUPMANAGERPAGE_H
 #define GROUPMANAGERPAGE_H
 
-#include <QWidget>
 #include "ui_groupmanagerpage.h"
+#include <QWidget>
 
 class Mmapper2Group;
 
@@ -56,6 +56,4 @@ private:
     Mmapper2Group *m_groupManager;
 };
 
-
 #endif
-

@@ -66,14 +66,15 @@ void Configuration::read()
     m_drawNoMatchExits = conf.value("Draw no match exits", false).toBool();
     m_drawUpperLayersTextured = conf.value("Draw upper layers textured", false).toBool();
     m_drawDoorNames = conf.value("Draw door names", true).toBool();
-    m_backgroundColor = QColor(conf.value("Background color", QColor(110, 110, 110).name()).toString());
+    m_backgroundColor = QColor(
+        conf.value("Background color", QColor(110, 110, 110).name()).toString());
     m_antialiasingSamples = conf.value("Number of anti-aliasing samples", 0).toInt();
     m_trilinearFiltering = conf.value("Use trilinear filtering", false).toBool();
     m_softwareOpenGL = conf.value("Use software OpenGL", false).toBool();
     conf.endGroup();
 
     conf.beginGroup("Auto load world");
-    m_autoLoadWorld = conf.value("Auto load", false ).toBool();
+    m_autoLoadWorld = conf.value("Auto load", false).toBool();
     m_autoLoadFileName = conf.value("File name", "arda.mm2").toString();
     m_lastMapDirectory = conf.value("Last map load directory",
 #if defined(Q_OS_LINUX)
@@ -83,7 +84,8 @@ void Configuration::read()
 #else
                                     ""
 #endif
-                                   ).toString();
+                                    )
+                             .toString();
     conf.endGroup();
 
     conf.beginGroup("Parser");
@@ -118,7 +120,8 @@ void Configuration::read()
 #else
                                                ""
 #endif
-                                              ).toString();
+                                               )
+                                        .toString();
     conf.endGroup();
 
     conf.beginGroup("Mume native");
@@ -183,7 +186,6 @@ void Configuration::read()
 
 void Configuration::write() const
 {
-
     QSettings conf("Caligor soft", "MMapper2");
 
     conf.beginGroup("General");

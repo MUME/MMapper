@@ -66,11 +66,23 @@ enum Hand { LEFT = 0, RIGHT };
 #define bit31 1073741824
 #define bit32 2147483648
 
-#define SET(dest,bit) do { (dest) |= (bit); } while (false)
-#define ISSET(src,bit) static_cast<bool>((src) & (bit))
-#define ISNOTSET(src,bit) !ISSET((src), (bit))
+#define SET(dest, bit) \
+    do { \
+        (dest) |= (bit); \
+    } while (false)
+#define ISSET(src, bit) static_cast<bool>((src) & (bit))
+#define ISNOTSET(src, bit) !ISSET((src), (bit))
 
-enum DirectionType { NORTH = 0, SOUTH = 1, EAST = 2, WEST = 3, UP = 4, DOWN = 5, NONE = 6, UNKNOWN = 7 };
+enum DirectionType {
+    NORTH = 0,
+    SOUTH = 1,
+    EAST = 2,
+    WEST = 3,
+    UP = 4,
+    DOWN = 5,
+    NONE = 6,
+    UNKNOWN = 7
+};
 enum { FIRST = 0, SECOND = 1, THIRD = 2, FOURTH = 3, FIFTH = 4, SIXTH = 5 };
 
 #endif

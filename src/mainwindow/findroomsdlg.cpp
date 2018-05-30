@@ -43,15 +43,18 @@ FindRoomsDlg::FindRoomsDlg(MapData *md, QWidget *parent)
     m_mapData = md;
     adjustResultTable();
 
-    m_showSelectedRoom = new QShortcut( QKeySequence( tr( "Space", "Select result item" ) ),
-                                        resultTable );
-    m_showSelectedRoom->setContext( Qt::WidgetShortcut );
+    m_showSelectedRoom = new QShortcut(QKeySequence(tr("Space", "Select result item")), resultTable);
+    m_showSelectedRoom->setContext(Qt::WidgetShortcut);
 
-    connect(lineEdit, SIGNAL(textChanged(const QString &)), this,
+    connect(lineEdit,
+            SIGNAL(textChanged(const QString &)),
+            this,
             SLOT(enableFindButton(const QString &)));
     connect(findButton, SIGNAL(clicked()), this, SLOT(findClicked()));
     connect(closeButton, SIGNAL(clicked()), this, SLOT(close()));
-    connect(resultTable, SIGNAL(itemDoubleClicked(QTreeWidgetItem *, int)), this,
+    connect(resultTable,
+            SIGNAL(itemDoubleClicked(QTreeWidgetItem *, int)),
+            this,
             SLOT(itemDoubleClicked(QTreeWidgetItem *)));
     connect(m_showSelectedRoom, SIGNAL(activated()), this, SLOT(showSelectedRoom()));
 }
@@ -107,12 +110,12 @@ void FindRoomsDlg::findClicked()
         // to fix
         ExitsList exits = room->getExitsList();
         for (uint dir = 0; dir < exits.size(); ++dir) {
-            const Exit &e = room->exit( dir );
-            bool isSecret = ISSET( Mmapper2Exit::getFlags( e ), EF_DOOR )
-                            && ISSET( Mmapper2Exit::getDoorFlags( e ), DF_HIDDEN );
+            const Exit &e = room->exit(dir);
+            bool isSecret = ISSET(Mmapper2Exit::getFlags(e), EF_DOOR)
+                            && ISSET(Mmapper2Exit::getDoorFlags(e), DF_HIDDEN);
             if (isSecret && QString((e)[0].toString()).isEmpty()) {
                 // I can't get MapActions to work here
-                nandDoorFlags( const_cast<Room *>( room )->exit( dir ), DF_HIDDEN );
+                nandDoorFlags(const_cast<Room *>(room)->exit(dir), DF_HIDDEN);
             }
         }
 #endif
@@ -129,8 +132,8 @@ void FindRoomsDlg::findClicked()
         item->setToolTip(1, toolTip);
     }
     roomsFoundLabel->setText(tr("%1 room%2 found")
-                             .arg( resultTable->topLevelItemCount() )
-                             .arg( (resultTable->topLevelItemCount() == 1) ? "" : "s" ));
+                                 .arg(resultTable->topLevelItemCount())
+                                 .arg((resultTable->topLevelItemCount() == 1) ? "" : "s"));
 }
 
 QString FindRoomsDlg::constructToolTip(const Room *r)
@@ -138,7 +141,6 @@ QString FindRoomsDlg::constructToolTip(const Room *r)
     // taken from MapCanvas:
     QString etmp = "Exits:";
     for (int j = 0; j < 7; j++) {
-
         bool door = false;
         if (ISSET(Mmapper2Exit::getFlags(r->exit(j)), EF_DOOR)) {
             door = true;
@@ -191,13 +193,13 @@ QString FindRoomsDlg::constructToolTip(const Room *r)
         note = "Note: " + note;
     }
 
-    return QString("Selected Room ID: %1").arg(r->getId()) + "\n" + Mmapper2Room::getName(r) + "\n" +
-           Mmapper2Room::getDescription(r) + Mmapper2Room::getDynamicDescription(r) + etmp + note;
+    return QString("Selected Room ID: %1").arg(r->getId()) + "\n" + Mmapper2Room::getName(r) + "\n"
+           + Mmapper2Room::getDescription(r) + Mmapper2Room::getDynamicDescription(r) + etmp + note;
 }
 
 void FindRoomsDlg::showSelectedRoom()
 {
-    itemDoubleClicked( resultTable->currentItem() );
+    itemDoubleClicked(resultTable->currentItem());
 }
 
 void FindRoomsDlg::itemDoubleClicked(QTreeWidgetItem *item)
@@ -213,8 +215,8 @@ void FindRoomsDlg::itemDoubleClicked(QTreeWidgetItem *item)
     Coordinate c = r->getPosition();
     emit center(c.x, c.y); // connects to MapWindow
 
-    emit log( "FindRooms", item->toolTip(0));
-//  emit newRoomSelection(m_roomSelection);
+    emit log("FindRooms", item->toolTip(0));
+    //  emit newRoomSelection(m_roomSelection);
 }
 
 void FindRoomsDlg::adjustResultTable()
@@ -231,7 +233,7 @@ void FindRoomsDlg::enableFindButton(const QString &text)
     findButton->setEnabled(!text.isEmpty());
 }
 
-void FindRoomsDlg::closeEvent( QCloseEvent *event )
+void FindRoomsDlg::closeEvent(QCloseEvent *event)
 {
     // Release room locks
     if (m_roomSelection != nullptr) {

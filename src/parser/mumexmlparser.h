@@ -32,24 +32,22 @@
 
 //#define XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
 
-enum XmlMode            {XML_NONE, XML_ROOM, XML_NAME, XML_DESCRIPTION, XML_EXITS, XML_PROMPT, XML_TERRAIN};
+enum XmlMode { XML_NONE, XML_ROOM, XML_NAME, XML_DESCRIPTION, XML_EXITS, XML_PROMPT, XML_TERRAIN };
 
 class MumeXmlParser : public AbstractParser
 {
     Q_OBJECT
 
 public:
-
     MumeXmlParser(MapData *, MumeClock *, QObject *parent = 0);
     ~MumeXmlParser();
 
-    void parse(const QByteArray & );
+    void parse(const QByteArray &);
 
 public slots:
     void parseNewMudInput(IncomingData &data);
 
 protected:
-
 #ifdef XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
     QDataStream *debugStream;
     QFile *file;
@@ -65,7 +63,7 @@ protected:
     void parseMudCommands(QString &str);
 
     QByteArray characters(QByteArray &ch);
-    bool element( const QByteArray & );
+    bool element(const QByteArray &);
 
     quint32 m_roomDescLines;
     bool m_readingStaticDescLines;

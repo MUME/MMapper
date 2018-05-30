@@ -28,8 +28,8 @@
 
 #include "component.h"
 
-#include <QObject>
 #include <QMutex>
+#include <QObject>
 
 class CGroupCommunicator;
 class CGroup;
@@ -44,7 +44,7 @@ public:
     friend class CGroupServerCommunicator;
 
 signals:
-    void log( const QString &, const QString & );
+    void log(const QString &, const QString &);
     void displayGroupTellEvent(const QByteArray &tell); // sends gtell from local user
     void messageBox(QString title, QString message);
     void groupManagerOff();
@@ -59,14 +59,8 @@ public:
     int getType();
     int getGroupSize();
 
-    CGroupCommunicator *getCommunicator()
-    {
-        return network;
-    }
-    CGroup *getGroup()
-    {
-        return group;
-    }
+    CGroupCommunicator *getCommunicator() { return network; }
+    CGroup *getGroup() { return group; }
 
 public slots:
     void setCharPosition(uint pos);

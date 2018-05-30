@@ -23,14 +23,14 @@
 ************************************************************************/
 
 #ifndef WIN32
-# define UNIX_SAFETY 1
+#define UNIX_SAFETY 1
 #endif
 
 #ifdef UNIX_SAFETY
-# include <cerrno>
-# include <cstdio>
-# include <cstring>
-# include <unistd.h>
+#include <cerrno>
+#include <cstdio>
+#include <cstring>
+#include <unistd.h>
 #endif
 
 #include "mapstorage/filesaver.h"
@@ -43,63 +43,62 @@ void throw_sys_error()
 {
 #ifdef UNIX_SAFETY
     char buf[1024] = "";
-# if _GNU_SOURCE
-    char const *str = strerror_r( errno, buf, sizeof( buf ) );
-    throw std::runtime_error( str );
-# else
-    strerror_r( errno, buf, sizeof( buf ) );
-    throw std::runtime_error( buf );
-# endif
+#if _GNU_SOURCE
+    char const *str = strerror_r(errno, buf, sizeof(buf));
+    throw std::runtime_error(str);
 #else
-    return ;
+    strerror_r(errno, buf, sizeof(buf));
+    throw std::runtime_error(buf);
+#endif
+#else
+    return;
 #endif
 }
 
-}  // namespace
+} // namespace
 
-FileSaver::FileSaver()
-    = default;
+FileSaver::FileSaver() = default;
 
 FileSaver::~FileSaver()
 {
     try {
         close();
-    } catch ( ... ) {
+    } catch (...) {
     }
 }
 
-void FileSaver::open( const QString &filename )
+void FileSaver::open(const QString &filename)
 {
     close();
 
     m_filename = filename;
 
 #ifdef UNIX_SAFETY
-    m_file.setFileName( filename + c_suffix );
+    m_file.setFileName(filename + c_suffix);
 #else
-    m_file.setFileName( filename );
+    m_file.setFileName(filename);
 #endif
 
-    if ( !m_file.open( QFile::WriteOnly ) ) {
-        throw std::runtime_error( m_file.errorString().toStdString() );
+    if (!m_file.open(QFile::WriteOnly)) {
+        throw std::runtime_error(m_file.errorString().toStdString());
     }
 }
 
 void FileSaver::close()
 {
-    if ( !m_file.isOpen() ) {
+    if (!m_file.isOpen()) {
         return;
     }
 
     m_file.flush();
 
 #ifdef UNIX_SAFETY
-    if ( fsync( m_file.handle() ) == -1 ) {
+    if (fsync(m_file.handle()) == -1) {
         throw_sys_error();
     }
 
-    if ( rename( QFile::encodeName( m_filename + c_suffix ).data(),
-                 QFile::encodeName( m_filename ).data() ) == -1 ) {
+    if (rename(QFile::encodeName(m_filename + c_suffix).data(), QFile::encodeName(m_filename).data())
+        == -1) {
         throw_sys_error();
     }
 #endif

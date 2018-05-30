@@ -29,12 +29,12 @@
 #include "CGroupChar.h"
 #include "groupaction.h"
 
-#include <QDebug>
 #include <cassert>
+#include <QDebug>
 
-CGroup::CGroup(QObject *parent) :
-    QObject(parent),
-    characterLock(QMutex::Recursive)
+CGroup::CGroup(QObject *parent)
+    : QObject(parent)
+    , characterLock(QMutex::Recursive)
 {
     self = new CGroupChar();
     self->setName(Config().m_groupManagerCharName);
@@ -133,7 +133,7 @@ bool CGroup::addChar(const QDomNode &node)
     newChar->updateFromXML(node);
     if (isNamePresent(newChar->getName()) || newChar->getName() == "") {
         emit log(QString("'%1' could not join the group because the name already existed.")
-                 .arg(newChar->getName().constData()));
+                     .arg(newChar->getName().constData()));
         delete newChar;
         return false;
     }
@@ -141,7 +141,6 @@ bool CGroup::addChar(const QDomNode &node)
     charIndex.push_back(newChar);
     emit characterChanged();
     return true;
-
 }
 
 void CGroup::removeChar(const QByteArray &name)
@@ -155,8 +154,7 @@ void CGroup::removeChar(const QByteArray &name)
     for (auto it = charIndex.begin(); it != charIndex.end(); ++it) {
         CGroupChar *character = *it;
         if (character->getName() == name) {
-            emit log(QString("Removing '%1' from the group.").arg(
-                         character->getName().constData()));
+            emit log(QString("Removing '%1' from the group.").arg(character->getName().constData()));
             charIndex.erase(it);
             delete character;
             emit characterChanged();

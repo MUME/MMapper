@@ -28,9 +28,11 @@
 #include "roomadmin.h"
 #include <cassert>
 
-RoomSaver::RoomSaver(RoomAdmin *admin, ConstRoomList &list) :
-    m_roomsCount(0), m_roomList(list), m_admin(admin) {}
-
+RoomSaver::RoomSaver(RoomAdmin *admin, ConstRoomList &list)
+    : m_roomsCount(0)
+    , m_roomList(list)
+    , m_admin(admin)
+{}
 
 void RoomSaver::receiveRoom(RoomAdmin *admin, const Room *room)
 {

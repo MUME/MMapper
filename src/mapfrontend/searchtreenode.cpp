@@ -31,8 +31,7 @@
 #include <cstring>
 #include <string>
 
-SearchTreeNode::byte_array
-SearchTreeNode::from_string(const char *s)
+SearchTreeNode::byte_array SearchTreeNode::from_string(const char *s)
 {
     if (s == nullptr) {
         return byte_array{};
@@ -41,9 +40,8 @@ SearchTreeNode::from_string(const char *s)
     return byte_array{beg, beg + std::strlen(s)};
 }
 
-SearchTreeNode::byte_array
-SearchTreeNode::skip(const SearchTreeNode::byte_array &input,
-                     const size_t count)
+SearchTreeNode::byte_array SearchTreeNode::skip(const SearchTreeNode::byte_array &input,
+                                                const size_t count)
 {
     const auto avail = input.size();
     if (count >= avail) {
@@ -51,7 +49,6 @@ SearchTreeNode::skip(const SearchTreeNode::byte_array &input,
     }
     return SearchTreeNode::byte_array{input.begin() + count, input.end()};
 }
-
 
 SearchTreeNode::SearchTreeNode(ParseEvent &event)
 {
@@ -67,8 +64,7 @@ SearchTreeNode::SearchTreeNode(ParseEvent &event)
 SearchTreeNode::SearchTreeNode(byte_array in_bytes, TinyList in_children)
     : children{std::move(in_children)}
     , myChars{std::move(in_bytes)}
-{
-}
+{}
 
 SearchTreeNode::SearchTreeNode() = default;
 
@@ -111,7 +107,6 @@ RoomCollection *SearchTreeNode::insertRoom(ParseEvent &event)
     Property *currentProperty = event.current();
     char c = currentProperty->next();
 
-
     for (size_t i = 0u; i < myChars.size() && myChars[i] != '\0'; i++, c = currentProperty->next()) {
         if (c != myChars[i]) {
             // we have to split, as we encountered a difference in the strings ...
@@ -123,7 +118,7 @@ RoomCollection *SearchTreeNode::insertRoom(ParseEvent &event)
             children.put(myChars[i], selectedChild);
 
             if (c == '\0') {
-                selectedChild = new IntermediateNode(event);  // then build the branch
+                selectedChild = new IntermediateNode(event); // then build the branch
             } else {
                 selectedChild = new SearchTreeNode(event);
             }
@@ -167,6 +162,3 @@ void SearchTreeNode::skipDown(RoomOutStream &stream, ParseEvent &event)
         }
     }
 }
-
-
-

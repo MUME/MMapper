@@ -29,9 +29,9 @@
 
 //#define PROXY_STREAM_DEBUG_INPUT_TO_FILE
 
-#include <QThread>
 #include <QPointer>
 #include <QTcpSocket>
+#include <QThread>
 
 class QFile;
 class QDataStream;
@@ -49,7 +49,7 @@ class PrespammedPath;
 class Mmapper2Group;
 class MumeClock;
 
-class ProxyThreader: public QThread
+class ProxyThreader : public QThread
 {
 public:
     ProxyThreader(Proxy *);
@@ -62,16 +62,21 @@ protected:
     Proxy *m_proxy;
 };
 
-
 class Proxy : public QObject
 {
-
 protected:
     Q_OBJECT
 
 public:
-    Proxy(MapData *, Mmapper2PathMachine *, CommandEvaluator *, PrespammedPath *, Mmapper2Group *,
-          MumeClock *, qintptr &socketDescriptor, bool threaded, QObject *parent);
+    Proxy(MapData *,
+          Mmapper2PathMachine *,
+          CommandEvaluator *,
+          PrespammedPath *,
+          Mmapper2Group *,
+          MumeClock *,
+          qintptr &socketDescriptor,
+          bool threaded,
+          QObject *parent);
     ~Proxy();
 
     void start();
@@ -92,8 +97,8 @@ signals:
     void doNotAcceptNewConnections();
     void doAcceptNewConnections();
 
-    void analyzeUserStream( const QByteArray & );
-    void analyzeMudStream( const QByteArray & );
+    void analyzeUserStream(const QByteArray &);
+    void analyzeMudStream(const QByteArray &);
     void terminate();
 
 private:
@@ -109,7 +114,7 @@ private:
     int m_remotePort{};
     MumeSocket *m_mudSocket;
     QPointer<QTcpSocket> m_userSocket;
-    char m_buffer[ 8192 ] {};
+    char m_buffer[8192]{};
 
     bool m_serverConnected;
 
@@ -131,4 +136,3 @@ private:
 };
 
 #endif
-
