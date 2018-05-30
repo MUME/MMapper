@@ -27,8 +27,8 @@
 #ifndef GENERALPAGE_H
 #define GENERALPAGE_H
 
-#include <QWidget>
 #include "ui_generalpage.h"
+#include <QWidget>
 
 class GeneralPage : public QWidget, private Ui::GeneralPage
 {
@@ -56,6 +56,4 @@ public:
     GeneralPage(QWidget *parent = 0);
 };
 
-
 #endif
-

@@ -27,8 +27,8 @@
 #include "abstractroomfactory.h"
 #include "room.h"
 #include "roomoutstream.h"
-#include <QTime>
 #include <iostream>
+#include <QTime>
 
 void Map::clear()
 {
@@ -101,7 +101,6 @@ bool Map::defined(const Coordinate &c)
     }
     return false;
 }
-
 
 Room *Map::get(const Coordinate &c)
 {

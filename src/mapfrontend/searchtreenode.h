@@ -26,9 +26,9 @@
 #ifndef SEARCHTREENODE
 #define SEARCHTREENODE
 
+#include "tinylist.h"
 #include <memory>
 #include <vector>
-#include "tinylist.h"
 
 class ParseEvent;
 
@@ -46,9 +46,11 @@ protected:
     using byte_array = std::vector<uint8_t>;
     static byte_array from_string(const char *s);
     static byte_array skip(const byte_array &input, size_t count);
+
 protected:
     TinyList children{};
     byte_array myChars{};
+
 public:
     explicit SearchTreeNode(ParseEvent &event);
 
@@ -66,6 +68,5 @@ public:
 
     virtual void skipDown(RoomOutStream &stream, ParseEvent &event);
 };
-
 
 #endif

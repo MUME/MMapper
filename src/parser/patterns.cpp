@@ -43,8 +43,7 @@ const QStringList Patterns::m_dynamicDescriptionPatternsList(
     << "#>whip all around you."
     << "#<Clusters of"
     << "#<Prickly"
-    << "#!.*arrived from.*\\."
-);
+    << "#!.*arrived from.*\\.");
 
 bool Patterns::matchPattern(QString pattern, QString &str)
 {
@@ -53,34 +52,33 @@ bool Patterns::matchPattern(QString pattern, QString &str)
     }
 
     switch (static_cast<int>((pattern.at(1)).toLatin1())) {
-    case 33:  // !
+    case 33: // !
         m_rx.setPattern(pattern.remove(0, 2));
         if (m_rx.exactMatch(str)) {
             return true;
         }
         break;
-    case 60:;  // <
+    case 60:; // <
         if (str.startsWith(pattern.remove(0, 2))) {
             return true;
         }
         break;
-    case 61:;  // =
-        if ( str == (pattern.remove(0, 2)) ) {
+    case 61:; // =
+        if (str == (pattern.remove(0, 2))) {
             return true;
         }
         break;
-    case 62:;  // >
+    case 62:; // >
         if (str.endsWith(pattern.remove(0, 2))) {
             return true;
         }
         break;
-    case 63:;  // ?
+    case 63:; // ?
         if (str.contains(pattern.remove(0, 2))) {
             return true;
         }
         break;
-    default:
-        ;
+    default:;
     }
     return false;
 }
@@ -92,30 +90,29 @@ bool Patterns::matchPattern(QByteArray pattern, QByteArray &str)
     }
 
     switch (static_cast<int>(pattern.at(1))) {
-    case 33:  // !
+    case 33: // !
         break;
-    case 60:;  // <
+    case 60:; // <
         if (str.startsWith(pattern.remove(0, 2))) {
             return true;
         }
         break;
-    case 61:;  // =
-        if ( str == (pattern.remove(0, 2)) ) {
+    case 61:; // =
+        if (str == (pattern.remove(0, 2))) {
             return true;
         }
         break;
-    case 62:;  // >
+    case 62:; // >
         if (str.endsWith(pattern.remove(0, 2))) {
             return true;
         }
         break;
-    case 63:;  // ?
+    case 63:; // ?
         if (str.contains(pattern.remove(0, 2))) {
             return true;
         }
         break;
-    default:
-        ;
+    default:;
     }
     return false;
 }
@@ -174,4 +171,3 @@ bool Patterns::matchMenuPromptPatterns(QByteArray &str)
 {
     return matchPattern(Config().m_menuPromptPattern, str);
 }
-

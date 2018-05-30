@@ -47,7 +47,7 @@ public:
     Mmapper2PathMachine();
 
 signals:
-    void log( const QString &, const QString & );
+    void log(const QString &, const QString &);
 };
 
 #endif

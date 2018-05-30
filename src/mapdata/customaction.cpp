@@ -36,7 +36,8 @@
 #include <utility>
 #include <vector>
 
-GroupAction::GroupAction(AbstractAction *action, const RoomSelection *selection) : executor(action)
+GroupAction::GroupAction(AbstractAction *action, const RoomSelection *selection)
+    : executor(action)
 {
     QMapIterator<uint, const Room *> roomIter(*selection);
     while (roomIter.hasNext()) {
@@ -59,8 +60,6 @@ void AddTwoWayExit::exec()
     AddOneWayExit::exec();
 }
 
-
-
 void RemoveTwoWayExit::exec()
 {
     if (room2Dir == UINT_MAX) {
@@ -73,7 +72,6 @@ void RemoveTwoWayExit::exec()
     dir = room2Dir;
     RemoveOneWayExit::exec();
 }
-
 
 const std::set<uint> &GroupAction::getAffectedRooms()
 {
@@ -93,8 +91,8 @@ void GroupAction::exec()
     }
 }
 
-MoveRelative::MoveRelative(const Coordinate &in_move) :
-    move(in_move)
+MoveRelative::MoveRelative(const Coordinate &in_move)
+    : move(in_move)
 {}
 
 void MoveRelative::exec(uint id)
@@ -115,9 +113,8 @@ void MoveRelative::preExec(uint id)
     }
 }
 
-
-MergeRelative::MergeRelative(const Coordinate &in_move) :
-    move(in_move)
+MergeRelative::MergeRelative(const Coordinate &in_move)
+    : move(in_move)
 {}
 
 void MergeRelative::insertAffected(uint id, std::set<uint> &affected)
@@ -189,7 +186,6 @@ void MergeRelative::exec(uint id)
         roomMap.setNearest(newPos, *source);
     }
 }
-
 
 void ConnectToNeighbours::insertAffected(uint id, std::set<uint> &affected)
 {
@@ -272,8 +268,11 @@ void DisconnectFromNeighbours::exec(uint id)
     }
 }
 
-ModifyRoomFlags::ModifyRoomFlags(uint in_flags, uint in_fieldNum, FlagModifyMode in_mode) :
-    flags(in_flags), fieldNum(in_fieldNum), mode(in_mode) {}
+ModifyRoomFlags::ModifyRoomFlags(uint in_flags, uint in_fieldNum, FlagModifyMode in_mode)
+    : flags(in_flags)
+    , fieldNum(in_fieldNum)
+    , mode(in_mode)
+{}
 
 template<typename Flags, typename Flag>
 static Flags modifyFlags(Flags flags, Flag x, FlagModifyMode mode)
@@ -303,8 +302,11 @@ void ModifyRoomFlags::exec(uint id)
     }
 }
 
-UpdateExitField::UpdateExitField(const QVariant &in_update, uint in_dir, uint in_fieldNum) :
-    update(std::move(in_update)), fieldNum(in_fieldNum), dir(in_dir) {}
+UpdateExitField::UpdateExitField(const QVariant &in_update, uint in_dir, uint in_fieldNum)
+    : update(std::move(in_update))
+    , fieldNum(in_fieldNum)
+    , dir(in_dir)
+{}
 
 void UpdateExitField::exec(uint id)
 {
@@ -314,9 +316,15 @@ void UpdateExitField::exec(uint id)
     }
 }
 
-ModifyExitFlags::ModifyExitFlags(uint in_flags, uint in_dir, uint in_fieldNum,
-                                 FlagModifyMode in_mode) :
-    flags(in_flags), fieldNum(in_fieldNum), mode(in_mode), dir(in_dir) {}
+ModifyExitFlags::ModifyExitFlags(uint in_flags,
+                                 uint in_dir,
+                                 uint in_fieldNum,
+                                 FlagModifyMode in_mode)
+    : flags(in_flags)
+    , fieldNum(in_fieldNum)
+    , mode(in_mode)
+    , dir(in_dir)
+{}
 
 void ModifyExitFlags::exec(uint id)
 {

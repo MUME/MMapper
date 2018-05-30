@@ -25,23 +25,25 @@
 #include "viewsessionprocess.h"
 #include "configuration/configuration.h"
 
+#include <utility>
 #include <QCoreApplication>
 #include <QDebug>
 #include <QDir>
 #include <QTemporaryFile>
-#include <utility>
 
-ViewSessionProcess::ViewSessionProcess(int key, QString title, QString body,
-                                       QObject *parent)
-    : QProcess(parent), m_key(key), m_title(std::move(title)), m_body(std::move(body))
+ViewSessionProcess::ViewSessionProcess(int key, QString title, QString body, QObject *parent)
+    : QProcess(parent)
+    , m_key(key)
+    , m_title(std::move(title))
+    , m_body(std::move(body))
 {
     setReadChannelMode(QProcess::MergedChannels);
 
     // Signals/Slots
-    connect(this, SIGNAL(finished(int, QProcess::ExitStatus)),
+    connect(this,
+            SIGNAL(finished(int, QProcess::ExitStatus)),
             SLOT(onFinished(int, QProcess::ExitStatus)));
-    connect(this, SIGNAL(error(QProcess::ProcessError)),
-            SLOT(onError(QProcess::ProcessError)));
+    connect(this, SIGNAL(error(QProcess::ProcessError)), SLOT(onError(QProcess::ProcessError)));
 
     QString keyTemp;
     if (m_key == -1) {
@@ -52,9 +54,9 @@ ViewSessionProcess::ViewSessionProcess(int key, QString title, QString body,
 
     // Set the file template
     QString fileTemplate = QString("%1MMapper.%2.pid%3.XXXXXX")
-                           .arg(QDir::tempPath() + QDir::separator()) // %1
-                           .arg(keyTemp)                              // %2
-                           .arg(QCoreApplication::applicationPid());  // %3
+                               .arg(QDir::tempPath() + QDir::separator()) // %1
+                               .arg(keyTemp)                              // %2
+                               .arg(QCoreApplication::applicationPid());  // %3
     m_file.setFileTemplate(fileTemplate);
 
     // Try opening up the temporary file
@@ -95,8 +97,7 @@ ViewSessionProcess::ViewSessionProcess(int key, QString title, QString body,
     }
 }
 
-ViewSessionProcess::~ViewSessionProcess()
-    = default;
+ViewSessionProcess::~ViewSessionProcess() = default;
 
 void ViewSessionProcess::onFinished(int exitCode, QProcess::ExitStatus status)
 {

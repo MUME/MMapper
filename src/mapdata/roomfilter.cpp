@@ -4,9 +4,8 @@
 #include <cassert>
 #include <cerrno>
 
-const char *RoomFilter::parse_help =
-    "Parse error; format is: [-(name|desc|dyndesc|note|exits|all)] pattern\r\n";
-
+const char *RoomFilter::parse_help
+    = "Parse error; format is: [-(name|desc|dyndesc|note|exits|all)] pattern\r\n";
 
 bool RoomFilter::parseRoomFilter(const QString &line, RoomFilter &output)
 {
@@ -14,9 +13,9 @@ bool RoomFilter::parseRoomFilter(const QString &line, RoomFilter &output)
     char kind = PAT_NAME;
     if (line.size() >= 2 && line[0] == '-') {
         QString kindstr = line.section(" ", 0, 0);
-        if (kindstr == "-desc" || kindstr.startsWith("-d") ) {
+        if (kindstr == "-desc" || kindstr.startsWith("-d")) {
             kind = PAT_DESC;
-        } else if (kindstr == "-dyndesc" || kindstr.startsWith("-dy") ) {
+        } else if (kindstr == "-dyndesc" || kindstr.startsWith("-dy")) {
             kind = PAT_DYNDESC;
         } else if (kindstr == "-name") {
             kind = PAT_NAME;

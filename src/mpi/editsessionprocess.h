@@ -29,7 +29,7 @@
 
 #include <QDateTime>
 
-class EditSessionProcess: public ViewSessionProcess
+class EditSessionProcess : public ViewSessionProcess
 {
     Q_OBJECT
 

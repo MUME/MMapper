@@ -26,8 +26,11 @@
 #include "parseevent.h"
 #include "property.h"
 
-ParseEvent::ParseEvent(const ParseEvent &other) : ParseEventBase(),
-    optional(other.optional), moveType(other.moveType), numSkipped(other.numSkipped)
+ParseEvent::ParseEvent(const ParseEvent &other)
+    : ParseEventBase()
+    , optional(other.optional)
+    , moveType(other.moveType)
+    , numSkipped(other.numSkipped)
 {
     for (unsigned int i = 0; i < other.size(); ++i) {
         push_back(new Property(*other[i]));
@@ -77,4 +80,3 @@ void ParseEvent::countSkipped()
         }
     }
 }
-

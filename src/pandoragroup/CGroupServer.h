@@ -32,7 +32,7 @@
 #include "CGroupClient.h"
 class CGroupServerCommunicator;
 
-class CGroupServer: public QTcpServer
+class CGroupServer : public QTcpServer
 {
     Q_OBJECT
 

@@ -25,19 +25,21 @@
 #include "remoteeditwidget.h"
 #include "configuration/configuration.h"
 
+#include <cassert>
+#include <utility>
 #include <QCloseEvent>
 #include <QDebug>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QTextEdit>
 #include <QVBoxLayout>
-#include <cassert>
-#include <utility>
 
-RemoteEditWidget::RemoteEditWidget(int key, QString title, QString body,
-                                   QWidget *parent)
-    : QDialog(parent), m_key(key), m_title(std::move(title)), m_body(std::move(body)),
-      m_submitted(false)
+RemoteEditWidget::RemoteEditWidget(int key, QString title, QString body, QWidget *parent)
+    : QDialog(parent)
+    , m_key(key)
+    , m_title(std::move(title))
+    , m_body(std::move(body))
+    , m_submitted(false)
 {
     setAttribute(Qt::WA_DeleteOnClose);
     assert(testAttribute(Qt::WA_DeleteOnClose));
@@ -67,21 +69,25 @@ RemoteEditWidget::RemoteEditWidget(int key, QString title, QString body,
 
     QMenu *fileMenu = menuBar->addMenu(tr("&File"));
     if (isEditSession()) {
-        QAction *saveAction = new QAction(QIcon::fromTheme("document-save", QIcon(":/icons/save.png")),
-                                          tr("&Submit"), this);
+        QAction *saveAction = new QAction(QIcon::fromTheme("document-save",
+                                                           QIcon(":/icons/save.png")),
+                                          tr("&Submit"),
+                                          this);
         saveAction->setShortcut(tr("Ctrl+S"));
         fileMenu->addAction(saveAction);
         connect(saveAction, SIGNAL(triggered()), SLOT(finishEdit()));
     }
 
     QAction *quitAction = new QAction(QIcon::fromTheme("window-close", QIcon(":/icons/exit.png")),
-                                      tr("E&xit"), this);
+                                      tr("E&xit"),
+                                      this);
     quitAction->setShortcut(tr("Ctrl+Q"));
     fileMenu->addAction(quitAction);
     connect(quitAction, SIGNAL(triggered()), SLOT(cancelEdit()));
 
     QMenu *editMenu = menuBar->addMenu("&Edit");
-    QAction *cutAct = new QAction(QIcon::fromTheme("edit-cut", QIcon(":/icons/cut.png")), tr("Cu&t"),
+    QAction *cutAct = new QAction(QIcon::fromTheme("edit-cut", QIcon(":/icons/cut.png")),
+                                  tr("Cu&t"),
                                   this);
     cutAct->setShortcut(tr("Ctrl+X"));
     cutAct->setStatusTip(tr("Cut the current selection's contents to the clipboard"));
@@ -89,14 +95,16 @@ RemoteEditWidget::RemoteEditWidget(int key, QString title, QString body,
     connect(cutAct, SIGNAL(triggered()), m_textEdit, SLOT(cut()));
 
     QAction *copyAct = new QAction(QIcon::fromTheme("edit-copy", QIcon(":/icons/copy.png")),
-                                   tr("&Copy"), this);
+                                   tr("&Copy"),
+                                   this);
     copyAct->setShortcut(tr("Ctrl+C"));
     copyAct->setStatusTip(tr("Copy the current selection's contents to the clipboard"));
     editMenu->addAction(copyAct);
     connect(copyAct, SIGNAL(triggered()), m_textEdit, SLOT(copy()));
 
     QAction *pasteAct = new QAction(QIcon::fromTheme("edit-paste", QIcon(":/icons/paste.png")),
-                                    tr("&Paste"), this);
+                                    tr("&Paste"),
+                                    this);
     pasteAct->setShortcut(tr("Ctrl+V"));
     pasteAct->setStatusTip(tr("Paste the clipboard's contents into the current selection"));
     editMenu->addAction(pasteAct);
@@ -111,8 +119,7 @@ RemoteEditWidget::RemoteEditWidget(int key, QString title, QString body,
     m_textEdit->setFocus();
 }
 
-RemoteEditWidget::~RemoteEditWidget()
-    = default;
+RemoteEditWidget::~RemoteEditWidget() = default;
 
 QSize RemoteEditWidget::minimumSizeHint() const
 {
@@ -141,7 +148,8 @@ bool RemoteEditWidget::isEditSession()
 bool RemoteEditWidget::maybeCancel()
 {
     if (contentsChanged()) {
-        int ret = QMessageBox::warning(this, m_title,
+        int ret = QMessageBox::warning(this,
+                                       m_title,
                                        tr("You have edited the document.\n"
                                           "Do you want to cancel your changes?"),
                                        QMessageBox::Yes,
@@ -168,11 +176,9 @@ void RemoteEditWidget::cancelEdit()
     close();
 }
 
-
 void RemoteEditWidget::finishEdit()
 {
     m_submitted = true;
     emit save(m_textEdit->toPlainText().toLatin1(), m_key);
     close();
 }
-

@@ -26,13 +26,11 @@
 #ifndef CUSTOMACTION_H
 #define CUSTOMACTION_H
 
-#include "mapaction.h"
 #include "coordinate.h"
+#include "mapaction.h"
 #include <list>
 
-enum FlagModifyMode {
-    FMM_SET, FMM_UNSET, FMM_TOGGLE
-};
+enum FlagModifyMode { FMM_SET, FMM_UNSET, FMM_TOGGLE };
 
 class MapData;
 
@@ -45,8 +43,10 @@ using AddOneWayExit = AddExit;
 class AddTwoWayExit : public AddOneWayExit
 {
 public:
-    AddTwoWayExit(uint room1Id, uint room2Id, uint room1Dir, uint in_room2Dir = UINT_MAX) :
-        AddOneWayExit(room1Id, room2Id, room1Dir), room2Dir(in_room2Dir) {}
+    AddTwoWayExit(uint room1Id, uint room2Id, uint room1Dir, uint in_room2Dir = UINT_MAX)
+        : AddOneWayExit(room1Id, room2Id, room1Dir)
+        , room2Dir(in_room2Dir)
+    {}
 
 protected:
     virtual void exec();
@@ -59,8 +59,10 @@ using RemoveOneWayExit = RemoveExit;
 class RemoveTwoWayExit : public RemoveOneWayExit
 {
 public:
-    RemoveTwoWayExit(uint room1Id, uint room2Id, uint room1Dir, uint in_room2Dir = UINT_MAX) :
-        RemoveOneWayExit(room1Id, room2Id, room1Dir), room2Dir(in_room2Dir) {}
+    RemoveTwoWayExit(uint room1Id, uint room2Id, uint room1Dir, uint in_room2Dir = UINT_MAX)
+        : RemoveOneWayExit(room1Id, room2Id, room1Dir)
+        , room2Dir(in_room2Dir)
+    {}
 
 protected:
     virtual void exec();
@@ -68,21 +70,14 @@ protected:
     uint room2Dir;
 };
 
-
 class GroupAction : virtual public MapAction
 {
 public:
     GroupAction(AbstractAction *ex, const RoomSelection *selection);
 
-    void schedule(MapFrontend *in) override
-    {
-        executor->setFrontend(in);
-    }
+    void schedule(MapFrontend *in) override { executor->setFrontend(in); }
 
-    virtual ~GroupAction()
-    {
-        delete executor;
-    }
+    virtual ~GroupAction() { delete executor; }
 
 protected:
     virtual void exec() override;
@@ -122,7 +117,6 @@ protected:
     Coordinate move;
 };
 
-
 class ConnectToNeighbours : public AbstractAction
 {
 public:
@@ -139,7 +133,6 @@ class DisconnectFromNeighbours : public ExitsAffecter
 public:
     virtual void exec(uint id) override;
 };
-
 
 class ModifyRoomFlags : public AbstractAction
 {

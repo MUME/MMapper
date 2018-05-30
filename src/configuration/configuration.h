@@ -27,11 +27,11 @@
 #ifndef MMAPPER_CONFIGURATION_H
 #define MMAPPER_CONFIGURATION_H
 
-#include <QStringList>
-#include <QPoint>
-#include <QSize>
 #include <QColor>
 #include <QFont>
+#include <QPoint>
+#include <QSize>
+#include <QStringList>
 
 #include "defs.h"
 
@@ -74,18 +74,18 @@ public:
         change();
     }
 
-    QString   m_remoteServerName;         /// Remote host and port settings
-    quint16   m_remotePort{};
-    quint16   m_localPort{};                /// Port to bind to on local machine
-    bool      m_tlsEncryption{};
+    QString m_remoteServerName; /// Remote host and port settings
+    quint16 m_remotePort{};
+    quint16 m_localPort{}; /// Port to bind to on local machine
+    bool m_tlsEncryption{};
 
     QColor m_backgroundColor;
-    int    m_antialiasingSamples{};
-    bool   m_trilinearFiltering{};
-    bool   m_softwareOpenGL{};
+    int m_antialiasingSamples{};
+    bool m_trilinearFiltering{};
+    bool m_softwareOpenGL{};
 
-    bool m_autoLog{};         // enables log to file
-    QString m_logFileName;  // file name to log
+    bool m_autoLog{};      // enables log to file
+    QString m_logFileName; // file name to log
     bool m_autoLoadWorld{};
     QString m_autoLoadFileName;
     QString m_lastMapDirectory;
@@ -112,12 +112,12 @@ public:
 
     bool m_removeXmlTags{};
 
-    QStringList m_moveForcePatternsList;  // string wildcart patterns, that force new move command
+    QStringList m_moveForcePatternsList; // string wildcart patterns, that force new move command
     QStringList m_noDescriptionPatternsList;
-    QByteArray  m_promptPattern;
-    QByteArray  m_loginPattern;
-    QByteArray  m_passwordPattern;
-    QByteArray  m_menuPromptPattern;
+    QByteArray m_promptPattern;
+    QByteArray m_loginPattern;
+    QByteArray m_passwordPattern;
+    QByteArray m_menuPromptPattern;
 
     qreal m_acceptBestRelative{};
     qreal m_acceptBestAbsolute{};
@@ -154,16 +154,12 @@ private:
     Configuration(const Configuration &);
 
     bool configurationChanged{};
-    void change()
-    {
-        configurationChanged = true;
-    }
+    void change() { configurationChanged = true; }
 
     friend Configuration &Config();
 };
 
 /// Returns a reference to the application configuration object.
 Configuration &Config();
-
 
 #endif

@@ -25,10 +25,10 @@
 #ifndef MUMECLOCKWIDGET_H
 #define MUMECLOCKWIDGET_H
 
-#include <QWidget>
-#include "ui_mumeclockwidget.h"
-#include "mumemoment.h"
 #include "mumeclock.h"
+#include "mumemoment.h"
+#include "ui_mumeclockwidget.h"
+#include <QWidget>
 
 class QTimer;
 
@@ -49,8 +49,6 @@ private:
     MumeTime m_lastTime;
     MumeSeason m_lastSeason;
     MumeClockPrecision m_lastPrecision;
-
 };
-
 
 #endif

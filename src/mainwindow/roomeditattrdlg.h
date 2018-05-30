@@ -27,9 +27,9 @@
 #ifndef ROOMEDITATTRDLG_H
 #define ROOMEDITATTRDLG_H
 
+#include "ui_roomeditattrdlg.h"
 #include <QDialog>
 #include <QtWidgets/QListWidgetItem>
-#include "ui_roomeditattrdlg.h"
 
 class QShortcut;
 class MapData;
@@ -100,9 +100,7 @@ public:
     void readSettings();
     void writeSettings();
 
-
 private:
-
     void connectAll();
     void disconnectAll();
 
@@ -110,17 +108,16 @@ private:
     uint getSelectedExit();
     void updateDialog(const Room *r);
 
-    QListWidgetItem *loadListItems[32] {};
-    QListWidgetItem *mobListItems[32] {};
+    QListWidgetItem *loadListItems[32]{};
+    QListWidgetItem *mobListItems[32]{};
 
-    QListWidgetItem *exitListItems[16] {};
-    QListWidgetItem *doorListItems[16] {};
+    QListWidgetItem *exitListItems[16]{};
+    QListWidgetItem *doorListItems[16]{};
 
-    const RoomSelection    *m_roomSelection{};
-    MapData                *m_mapData{};
-    MapCanvas              *m_mapCanvas{};
-    QShortcut              *m_hiddenShortcut;
+    const RoomSelection *m_roomSelection{};
+    MapData *m_mapData{};
+    MapCanvas *m_mapCanvas{};
+    QShortcut *m_hiddenShortcut;
 };
-
 
 #endif

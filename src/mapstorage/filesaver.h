@@ -41,15 +41,12 @@ public:
     FileSaver();
     ~FileSaver();
 
-    QFile &file()
-    {
-        return m_file;
-    }
+    QFile &file() { return m_file; }
 
     /*! \exception std::runtime_error if the file can't be opened or a currently
      * open file can't be closed.
      */
-    void open( const QString &filename );
+    void open(const QString &filename);
 
     /*! \exception std::runtime_error if the file can't be safely closed.
      */

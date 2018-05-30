@@ -25,9 +25,9 @@
 
 #include "intermediatenode.h"
 
-#include <memory>
 #include "parseevent.h"
 #include "property.h"
+#include <memory>
 
 IntermediateNode::IntermediateNode(ParseEvent &event)
 {
@@ -43,7 +43,6 @@ IntermediateNode::IntermediateNode(ParseEvent &event)
 // C++17 can return std::optional<std::reference_wrapper<RoomCollection>>
 RoomCollection *IntermediateNode::insertRoom(ParseEvent &event)
 {
-
     if (event.next() == nullptr) {
         if (rooms == nullptr) {
             rooms = std::make_unique<RoomCollection>();
@@ -56,7 +55,6 @@ RoomCollection *IntermediateNode::insertRoom(ParseEvent &event)
 
     return SearchTreeNode::insertRoom(event);
 }
-
 
 void IntermediateNode::getRooms(RoomOutStream &stream, ParseEvent &event)
 {

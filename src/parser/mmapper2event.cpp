@@ -36,12 +36,14 @@
 
 namespace Mmapper2Event {
 
-ParseEvent *createEvent(const CommandIdType &c, const QString &roomName,
+ParseEvent *createEvent(const CommandIdType &c,
+                        const QString &roomName,
                         const QString &dynamicDesc,
-                        const QString &staticDesc, const ExitsFlagsType &exitFlags,
-                        const PromptFlagsType &promptFlags, const ConnectedRoomFlagsType &connectedRoomFlags)
+                        const QString &staticDesc,
+                        const ExitsFlagsType &exitFlags,
+                        const PromptFlagsType &promptFlags,
+                        const ConnectedRoomFlagsType &connectedRoomFlags)
 {
-
     auto *event = new ParseEvent(c);
     std::deque<QVariant> &optional = event->getOptional();
 
@@ -73,7 +75,6 @@ ParseEvent *createEvent(const CommandIdType &c, const QString &roomName,
     return event;
 }
 
-
 QString getRoomName(const ParseEvent &e)
 {
     return e.getOptional()[EV_NAME].toString();
@@ -104,5 +105,4 @@ ConnectedRoomFlagsType getConnectedRoomFlags(const ParseEvent &e)
     return e.getOptional()[EV_CROOM].toUInt();
 }
 
-}  // namespace Mmapper2Event
-
+} // namespace Mmapper2Event

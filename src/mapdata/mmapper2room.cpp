@@ -88,7 +88,6 @@ RoomSundeathType Room::getSundeathType() const
     return static_cast<RoomSundeathType>(at(R_SUNDEATHTYPE).toUInt());
 }
 
-
 namespace Mmapper2Room {
 RoomName getName(const Room *room)
 {
@@ -149,4 +148,4 @@ RoomSundeathType getSundeathType(const Room *room)
 {
     return room->getSundeathType();
 }
-}  // namespace Mmapper2Room
+} // namespace Mmapper2Room

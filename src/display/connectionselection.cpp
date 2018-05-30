@@ -36,7 +36,7 @@ ConnectionSelection::ConnectionSelection(MapFrontend *mf, double mx, double my, 
     m_connectionDescriptor[1].room = nullptr;
 
     Coordinate c(GLtoMap(mx), GLtoMap(my), layer);
-    mf->lookingForRooms(this, c, c );
+    mf->lookingForRooms(this, c, c);
     m_connectionDescriptor[0].direction = ComputeDirection(mx, my);
 }
 
@@ -89,7 +89,7 @@ ExitDirection ConnectionSelection::ComputeDirection(double mouseX, double mouseY
     double x1d = mouseX - x1;
     double y1d = mouseY - y1;
 
-    if ( y1d > -0.2 && y1d < 0.2) {
+    if (y1d > -0.2 && y1d < 0.2) {
         //y1p = y1;
         if (x1d >= 0.2) {
             dir = ED_EAST;
@@ -137,7 +137,7 @@ void ConnectionSelection::setFirst(MapFrontend *mf, double mx, double my, int la
         }
         m_connectionDescriptor[0].room = nullptr;
     }
-    mf->lookingForRooms(this, c, c );
+    mf->lookingForRooms(this, c, c);
     m_connectionDescriptor[0].direction = ComputeDirection(mx, my);
     //if (m_connectionDescriptor[0].direction == CD_NONE) m_connectionDescriptor[0].direction = CD_UNKNOWN;
 }
@@ -151,7 +151,7 @@ void ConnectionSelection::setFirst(MapFrontend *mf, uint id, ExitDirection dir)
         }
         m_connectionDescriptor[0].room = nullptr;
     }
-    mf->lookingForRooms(this, id );
+    mf->lookingForRooms(this, id);
     m_connectionDescriptor[0].direction = dir;
     //if (m_connectionDescriptor[0].direction == CD_NONE) m_connectionDescriptor[0].direction = CD_UNKNOWN;
 }
@@ -166,7 +166,7 @@ void ConnectionSelection::setSecond(MapFrontend *mf, double mx, double my, int l
         }
         m_connectionDescriptor[1].room = nullptr;
     }
-    mf->lookingForRooms(this, c, c );
+    mf->lookingForRooms(this, c, c);
     m_connectionDescriptor[1].direction = ComputeDirection(mx, my);
     //if (m_connectionDescriptor[1].direction == ED_UNKNOWN) m_connectionDescriptor[1].direction = ED_NONE;
 }
@@ -180,7 +180,7 @@ void ConnectionSelection::setSecond(MapFrontend *mf, uint id, ExitDirection dir)
         }
         m_connectionDescriptor[1].room = nullptr;
     }
-    mf->lookingForRooms(this, id );
+    mf->lookingForRooms(this, id);
     m_connectionDescriptor[1].direction = dir;
     //if (m_connectionDescriptor[1].direction == ED_UNKNOWN) m_connectionDescriptor[1].direction = ED_NONE;
 }
@@ -204,7 +204,6 @@ void ConnectionSelection::removeSecond()
         m_connectionDescriptor[1].room = nullptr;
     }
 }
-
 
 ConnectionSelection::ConnectionDescriptor ConnectionSelection::getFirst()
 {

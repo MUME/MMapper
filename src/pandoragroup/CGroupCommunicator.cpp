@@ -36,15 +36,18 @@
 
 #include "configuration.h"
 
-CGroupCommunicator::CGroupCommunicator(int type, QObject *parent) :
-    QObject(parent), type(type)
+CGroupCommunicator::CGroupCommunicator(int type, QObject *parent)
+    : QObject(parent)
+    , type(type)
 {
     connect(this, SIGNAL(sendLog(const QString &)), parent, SLOT(sendLog(const QString &)));
     connect(this, SIGNAL(messageBox(QString)), parent, SLOT(relayMessageBox(QString)));
     connect(this, SIGNAL(gTellArrived(QDomNode)), parent, SLOT(gTellArrived(QDomNode)));
     connect(this, SIGNAL(networkDown()), parent, SLOT(networkDown()));
-    connect(this, SIGNAL(scheduleAction(GroupAction *)),
-            (dynamic_cast<Mmapper2Group *>(parent))->getGroup(), SLOT(scheduleAction(GroupAction *)));
+    connect(this,
+            SIGNAL(scheduleAction(GroupAction *)),
+            (dynamic_cast<Mmapper2Group *>(parent))->getGroup(),
+            SLOT(scheduleAction(GroupAction *)));
 }
 
 //
@@ -60,24 +63,22 @@ QByteArray CGroupCommunicator::formMessageBlock(int message, const QDomNode &dat
 
     QDomDocument doc("datagram");
     QDomElement root = doc.createElement("datagram");
-    root.setAttribute("message", message );
+    root.setAttribute("message", message);
     doc.appendChild(root);
 
-
     QDomElement dataElem = doc.createElement("data");
-    dataElem.appendChild( doc.importNode(data, true) );
+    dataElem.appendChild(doc.importNode(data, true));
     root.appendChild(dataElem);
 
     block = doc.toString().toLatin1();
     //NOTE: VERY Spammy
-//    qInfo("Message: %s", (const char *) block);
+    //    qInfo("Message: %s", (const char *) block);
 
     return block;
 }
 
 void CGroupCommunicator::sendMessage(CGroupClient *connection, int message, const QByteArray &blob)
 {
-
     QDomDocument doc("datagram");
     QDomElement root = doc.createElement("text");
 
@@ -90,7 +91,7 @@ void CGroupCommunicator::sendMessage(CGroupClient *connection, int message, cons
 
 void CGroupCommunicator::sendMessage(CGroupClient *connection, int message, const QDomNode &node)
 {
-    connection->sendData( formMessageBlock(message, node) );
+    connection->sendData(formMessageBlock(message, node));
 }
 
 // the core of the protocol
@@ -101,14 +102,16 @@ void CGroupCommunicator::incomingData(CGroupClient *conn, const QByteArray &buff
     data = buff;
 
     // NOTE: Very spammy
-//    qInfo("Raw data received: %s", (const char *) data.toLatin1());
+    //    qInfo("Raw data received: %s", (const char *) data.toLatin1());
 
     QString error;
     int errLine, errColumn;
     QDomDocument doc("datagram");
     if (!doc.setContent(data, &error, &errLine, &errColumn)) {
         qWarning("Failed to parse the datagram. Error in line %i, column %i: %s",
-                 errLine, errColumn, error.toLatin1().constData());
+                 errLine,
+                 errColumn,
+                 error.toLatin1().constData());
         return;
     }
 
@@ -125,9 +128,7 @@ void CGroupCommunicator::incomingData(CGroupClient *conn, const QByteArray &buff
         }
         n = n.nextSibling();
     }
-
 }
-
 
 // this function is for sending gtell from a local user
 void CGroupCommunicator::sendGTell(const QByteArray &tell)
@@ -135,7 +136,7 @@ void CGroupCommunicator::sendGTell(const QByteArray &tell)
     // form the gtell QDomNode first.
     QDomDocument doc("datagram");
     QDomElement root = doc.createElement("gtell");
-    root.setAttribute("from", QString(Config().m_groupManagerCharName) );
+    root.setAttribute("from", QString(Config().m_groupManagerCharName));
 
     QDomText t = doc.createTextNode("dataText");
     t.setNodeValue(tell);
@@ -146,7 +147,6 @@ void CGroupCommunicator::sendGTell(const QByteArray &tell)
     sendGroupTellMessage(root);
 }
 
-
 void CGroupCommunicator::sendCharUpdate(CGroupClient *connection, const QDomNode &blob)
 {
     sendMessage(connection, UPDATE_CHAR, blob);
@@ -154,13 +154,13 @@ void CGroupCommunicator::sendCharUpdate(CGroupClient *connection, const QDomNode
 
 void CGroupCommunicator::renameConnection(const QByteArray &oldName, const QByteArray &newName)
 {
-//    qInfo() << "Renaming from" << oldName << "to" << newName;
+    //    qInfo() << "Renaming from" << oldName << "to" << newName;
 
     // form the rename QDomNode first.
     QDomDocument doc("datagram");
     QDomElement root = doc.createElement("rename");
-    root.setAttribute("oldname", QString(oldName) );
-    root.setAttribute("newname", QString(newName) );
+    root.setAttribute("oldname", QString(oldName));
+    root.setAttribute("newname", QString(newName));
 
     sendCharRename(root);
 }
@@ -169,9 +169,9 @@ void CGroupCommunicator::renameConnection(const QByteArray &oldName, const QByte
 // ******************** S E R V E R   S I D E ******************
 //
 // Server side of the communication protocol
-CGroupServerCommunicator::CGroupServerCommunicator(QObject *parent):
-    CGroupCommunicator(Mmapper2Group::Server, parent),
-    server(nullptr)
+CGroupServerCommunicator::CGroupServerCommunicator(QObject *parent)
+    : CGroupCommunicator(Mmapper2Group::Server, parent)
+    , server(nullptr)
 {
     server = new CGroupServer(Config().m_groupManagerLocalPort, this);
     emit sendLog("Server mode has been selected");
@@ -190,31 +190,32 @@ void CGroupServerCommunicator::connectionClosed(CGroupClient *connection)
 {
     int sock = connection->socketDescriptor();
 
-    QByteArray name = clientsList.key( sock );
+    QByteArray name = clientsList.key(sock);
     if (name != "") {
         sendRemoveUserNotification(connection, name);
         clientsList.remove(name);
-        emit sendLog(QString("'%1' closed their connection and quit.").arg(QString(name)) );
+        emit sendLog(QString("'%1' closed their connection and quit.").arg(QString(name)));
         emit scheduleAction(new RemoveCharacter(name));
     }
 }
 
 void CGroupServerCommunicator::serverStartupFailed()
 {
-    emit messageBox(QString("Failed to start the groupManager server: %1.").arg(server->errorString()));
+    emit messageBox(
+        QString("Failed to start the groupManager server: %1.").arg(server->errorString()));
     disconnect();
     emit networkDown();
 }
 
 void CGroupServerCommunicator::connectionEstablished(CGroupClient *connection)
 {
-//    qInfo() << "Detected new connection, starting handshake";
+    //    qInfo() << "Detected new connection, starting handshake";
     sendMessage(connection, REQ_LOGIN, "test");
 }
 
 void CGroupServerCommunicator::retrieveData(CGroupClient *connection, int message, QDomNode data)
 {
-//    qInfo() << "Retrieve data from" << conn;
+    //    qInfo() << "Retrieve data from" << conn;
     switch (connection->getConnectionState()) {
     //Closed, Connecting, Connected, Quiting
     case CGroupClient::Connected:
@@ -272,14 +273,12 @@ void CGroupServerCommunicator::retrieveData(CGroupClient *connection, int messag
 
     case CGroupClient::Closed:
 
-
     case CGroupClient::Connecting:
     case CGroupClient::Quiting:
         qWarning("Data arrival during wrong connection state.");
         break;
     }
 }
-
 
 void CGroupServerCommunicator::sendCharUpdate(QDomNode blob)
 {
@@ -291,7 +290,7 @@ void CGroupServerCommunicator::sendCharUpdate(QDomNode blob)
 
 void CGroupServerCommunicator::parseLoginInformation(CGroupClient *connection, const QDomNode &data)
 {
-//    qInfo() << "Parsing login information from" << conn->socketDescriptor();
+    //    qInfo() << "Parsing login information from" << conn->socketDescriptor();
 
     if (data.nodeName() != "data") {
         qWarning("Called parseLoginInformation with wrong node. No data node.");
@@ -305,7 +304,7 @@ void CGroupServerCommunicator::parseLoginInformation(CGroupClient *connection, c
         return;
     }
 
-    int ver  = node.attribute("protocolVersion").toInt();
+    int ver = node.attribute("protocolVersion").toInt();
 
     QByteArray kickMessage = "";
     if (ver < protocolVersion) {
@@ -327,22 +326,20 @@ void CGroupServerCommunicator::parseLoginInformation(CGroupClient *connection, c
     if (getGroup()->isNamePresent(name)) {
         kickMessage = "The name you picked is already present!";
     } else {
-        clientsList.insert(name, connection->socketDescriptor() );
+        clientsList.insert(name, connection->socketDescriptor());
         emit scheduleAction(new AddCharacter(charNode));
         relayMessage(connection, ADD_CHAR, charNode);
     }
 
     if (kickMessage != "") {
         // kicked
-//        qInfo() << "Kicking conn" << conn->socketDescriptor() << "because" << kickMessage;
+        //        qInfo() << "Kicking conn" << conn->socketDescriptor() << "because" << kickMessage;
         sendMessage(connection, STATE_KICKED, kickMessage);
-        connection->close();  // got to make sure this causes the connection closed signal ...
+        connection->close(); // got to make sure this causes the connection closed signal ...
     } else {
         sendMessage(connection, ACK);
     }
 }
-
-
 
 void CGroupServerCommunicator::sendGroupInformation(CGroupClient *connection)
 {
@@ -364,7 +361,7 @@ void CGroupServerCommunicator::sendGroupInformation(CGroupClient *connection)
 void CGroupServerCommunicator::sendRemoveUserNotification(CGroupClient *connection,
                                                           const QByteArray &name)
 {
-//    qInfo("[Server] Sending remove user notification!");
+    //    qInfo("[Server] Sending remove user notification!");
     GroupSelection *selection = getGroup()->selectByName(name);
     QDomNode blob = selection->value(name)->toXML();
     getGroup()->unselect(selection);
@@ -378,7 +375,8 @@ void CGroupServerCommunicator::sendGroupTellMessage(QDomElement root)
     server->sendToAll(message);
 }
 
-void CGroupServerCommunicator::relayMessage(CGroupClient *connection, int message,
+void CGroupServerCommunicator::relayMessage(CGroupClient *connection,
+                                            int message,
                                             const QDomNode &data)
 {
     QByteArray buffer = formMessageBlock(message, data);
@@ -393,8 +391,7 @@ void CGroupServerCommunicator::sendCharRename(QDomNode blob)
     server->sendToAll(message);
 }
 
-void CGroupServerCommunicator::renameConnection(const QByteArray &oldName,
-                                                const QByteArray &newName)
+void CGroupServerCommunicator::renameConnection(const QByteArray &oldName, const QByteArray &newName)
 {
     if (clientsList.contains(oldName)) {
         int socket = clientsList.value(oldName);
@@ -424,9 +421,9 @@ void CGroupServerCommunicator::reconnect()
 // ******************** C L I E N T   S I D E ******************
 //
 // Client side of the communication protocol
-CGroupClientCommunicator::CGroupClientCommunicator(QObject *parent):
-    CGroupCommunicator(Mmapper2Group::Client, parent),
-    client(nullptr)
+CGroupClientCommunicator::CGroupClientCommunicator(QObject *parent)
+    : CGroupCommunicator(Mmapper2Group::Client, parent)
+    , client(nullptr)
 {
     emit sendLog("Client mode has been selected");
 
@@ -452,14 +449,14 @@ void CGroupClientCommunicator::connectionClosed(CGroupClient * /*connection*/)
 void CGroupClientCommunicator::errorInConnection(CGroupClient *connection,
                                                  const QString &errorString)
 {
-//    qInfo() << "errorInConnection:" << errorString;
+    //    qInfo() << "errorInConnection:" << errorString;
     QString str;
 
     switch (connection->error()) {
     case QAbstractSocket::ConnectionRefusedError:
         str = QString("Tried to connect to %1 on port %2")
-              .arg(connection->peerName())
-              .arg(Config().m_groupManagerRemotePort) ;
+                  .arg(connection->peerName())
+                  .arg(Config().m_groupManagerRemotePort);
         emit messageBox(QString("Connection refused: %1.").arg(str));
         break;
     case QAbstractSocket::RemoteHostClosedError:
@@ -540,7 +537,6 @@ void CGroupClientCommunicator::retrieveData(CGroupClient *conn, int message, QDo
                 // try to ignore?
                 qWarning("(Logged) Unexpected message marker. Trying to ignore.");
             }
-
         }
 
         break;
@@ -564,13 +560,13 @@ void CGroupClientCommunicator::sendLoginInformation(CGroupClient *connection)
     QDomDocument doc("datagraminfo");
 
     QDomElement root = doc.createElement("loginData");
-    root.setAttribute("protocolVersion", protocolVersion );
+    root.setAttribute("protocolVersion", protocolVersion);
     doc.appendChild(root);
 
     CGroupChar *character = getGroup()->getSelf();
     QDomNode xml = character->toXML();
 
-    root.appendChild( doc.importNode(xml, true) );
+    root.appendChild(doc.importNode(xml, true));
     sendMessage(connection, UPDATE_CHAR, root);
 }
 
@@ -578,7 +574,6 @@ void CGroupClientCommunicator::sendGroupTellMessage(QDomElement root)
 {
     sendMessage(client, GTELL, root);
 }
-
 
 void CGroupClientCommunicator::sendCharUpdate(QDomNode blob)
 {
@@ -611,6 +606,6 @@ void CGroupCommunicator::relayLog(const QString &str)
 
 CGroup *CGroupCommunicator::getGroup()
 {
-    auto *group = reinterpret_cast<Mmapper2Group *>( this->parent() );
+    auto *group = reinterpret_cast<Mmapper2Group *>(this->parent());
     return group->getGroup();
 }

@@ -29,30 +29,27 @@ ProgressCounter::ProgressCounter()
     reset();
 }
 
-ProgressCounter::ProgressCounter( QObject *parent )
-    : QObject( parent )
+ProgressCounter::ProgressCounter(QObject *parent)
+    : QObject(parent)
 {
     reset();
 }
 
-ProgressCounter::~ProgressCounter()
-    = default;
+ProgressCounter::~ProgressCounter() = default;
 
-void ProgressCounter::increaseTotalStepsBy( quint32 steps )
+void ProgressCounter::increaseTotalStepsBy(quint32 steps)
 {
     m_totalSteps += steps;
-    step( 0 );
+    step(0);
 }
 
-void ProgressCounter::step( quint32 steps )
+void ProgressCounter::step(quint32 steps)
 {
     m_steps += steps;
-    quint32 percentage = (m_totalSteps == 0u)
-                         ? 0u
-                         : (100u * m_steps / m_totalSteps);
-    if ( percentage != m_percentage ) {
+    quint32 percentage = (m_totalSteps == 0u) ? 0u : (100u * m_steps / m_totalSteps);
+    if (percentage != m_percentage) {
         m_percentage = percentage;
-        emit onPercentageChanged( percentage );
+        emit onPercentageChanged(percentage);
     }
 }
 
@@ -60,4 +57,3 @@ void ProgressCounter::reset()
 {
     m_totalSteps = m_steps = m_percentage = 0;
 }
-

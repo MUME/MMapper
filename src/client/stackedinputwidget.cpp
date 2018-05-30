@@ -23,8 +23,8 @@
 ************************************************************************/
 
 #include "stackedinputwidget.h"
-#include "inputwidget.h"
 #include "clientwidget.h"
+#include "inputwidget.h"
 
 #include <QApplication>
 #include <QDebug>
@@ -36,7 +36,10 @@ StackedInputWidget::StackedInputWidget(QWidget *parent)
     // Multiline Input Widget
     m_inputWidget = new InputWidget(this);
     addWidget(m_inputWidget);
-    connect(m_inputWidget, &InputWidget::sendUserInput, this, &StackedInputWidget::gotMultiLineInput);
+    connect(m_inputWidget,
+            &InputWidget::sendUserInput,
+            this,
+            &StackedInputWidget::gotMultiLineInput);
     connect(m_inputWidget, &InputWidget::displayMessage, this, &StackedInputWidget::relayMessage);
     connect(m_inputWidget, &InputWidget::showMessage, this, &StackedInputWidget::relayMessage);
 
@@ -45,7 +48,10 @@ StackedInputWidget::StackedInputWidget(QWidget *parent)
     m_passwordWidget->setMaxLength(255);
     m_passwordWidget->setEchoMode(QLineEdit::Password);
     addWidget(m_passwordWidget);
-    connect(m_passwordWidget, &QLineEdit::returnPressed, this, &StackedInputWidget::gotPasswordInput);
+    connect(m_passwordWidget,
+            &QLineEdit::returnPressed,
+            this,
+            &StackedInputWidget::gotPasswordInput);
 
     // Grab focus
     setCurrentWidget(m_inputWidget);

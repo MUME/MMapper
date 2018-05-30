@@ -46,9 +46,11 @@ InputWidget::InputWidget(QWidget *parent)
 
     // Minimum Size
     QFontMetrics fm(currentCharFormat().font());
-    setMinimumSize(QSize(fm.averageCharWidth(),
-                         fm.lineSpacing() + (static_cast<int>(document()->documentMargin()) + QFrame::frameWidth()) * 2 +
-                         contentsMargins().top() + contentsMargins().bottom()));
+    setMinimumSize(
+        QSize(fm.averageCharWidth(),
+              fm.lineSpacing()
+                  + (static_cast<int>(document()->documentMargin()) + QFrame::frameWidth()) * 2
+                  + contentsMargins().top() + contentsMargins().bottom()));
     setSizeIncrement(fm.averageCharWidth(), fm.lineSpacing());
 
     // Line Wrapping
@@ -83,7 +85,7 @@ void InputWidget::keyPressEvent(QKeyEvent *event)
     case Qt::Key_Return:
     case Qt::Key_Enter:
         switch (event->modifiers()) {
-        case Qt::NoModifier:    /** Submit text */
+        case Qt::NoModifier: /** Submit text */
             gotInput();
             event->accept();
             break;
@@ -91,7 +93,6 @@ void InputWidget::keyPressEvent(QKeyEvent *event)
         case Qt::ShiftModifier: /** Add newline (i.e. ignore) */
         default:                /** Otherwise ignore  */
             QPlainTextEdit::keyPressEvent(event);
-
         };
         break;
 
@@ -121,7 +122,7 @@ void InputWidget::keyPressEvent(QKeyEvent *event)
     case Qt::Key_Right:
     case Qt::Key_PageUp:
     case Qt::Key_PageDown:
-    case Qt::Key_Clear:  // Numpad 5
+    case Qt::Key_Clear: // Numpad 5
     case Qt::Key_Home:
     case Qt::Key_End:
 #ifndef Q_OS_MAC
@@ -190,7 +191,6 @@ void InputWidget::keypadMovement(int key)
     };
 }
 
-
 void InputWidget::wordHistory(int key)
 {
     QTextCursor cursor = textCursor();
@@ -199,14 +199,12 @@ void InputWidget::wordHistory(int key)
         if (!cursor.movePosition(QTextCursor::Up, QTextCursor::MoveAnchor)) {
             // At the top of the document
             backwardHistory();
-
         }
         break;
     case Qt::Key_Down:
         if (!cursor.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor)) {
             // At the end of the document
             forwardHistory();
-
         }
         break;
     case Qt::Key_Tab:
@@ -242,7 +240,6 @@ void InputWidget::addLineHistory(const InputHistoryEntry &string)
     }
 }
 
-
 void InputWidget::addTabHistory(const WordHistoryEntry &string)
 {
     QStringList list = string.split(s_whitespaceRx, QString::SkipEmptyParts);
@@ -254,20 +251,17 @@ void InputWidget::addTabHistory(const WordHistoryEntry &string)
             // Trim dictionary
             if (m_tabCompletionDictionary.size() > Config().m_clientTabCompletionDictionarySize) {
                 m_tabCompletionDictionary.removeFirst();
-
             }
         }
     }
 }
-
 
 void InputWidget::forwardHistory()
 {
     if (!m_lineIterator->hasNext()) {
         emit showMessage("Reached beginning of input history", 1000);
         clear();
-        return ;
-
+        return;
     }
 
     selectAll();
@@ -285,13 +279,11 @@ void InputWidget::forwardHistory()
     insertPlainText(next);
 }
 
-
 void InputWidget::backwardHistory()
 {
     if (!m_lineIterator->hasPrevious()) {
         emit showMessage("Reached end of input history", 1000);
-        return ;
-
+        return;
     }
 
     selectAll();
@@ -307,7 +299,6 @@ void InputWidget::backwardHistory()
     }
 
     insertPlainText(previous);
-
 }
 
 void InputWidget::tabComplete()
@@ -332,13 +323,14 @@ void InputWidget::tabComplete()
             // Found a previous word to complete to
             current.insertText(m_tabIterator->previous());
             if (current.movePosition(QTextCursor::StartOfWord, QTextCursor::KeepAnchor)) {
-                current.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, m_tabFragment.size());
+                current.movePosition(QTextCursor::Right,
+                                     QTextCursor::KeepAnchor,
+                                     m_tabFragment.size());
                 setTextCursor(current);
             }
-            return ;
+            return;
         }
         // Try the next word
         m_tabIterator->previous();
-
     }
 }

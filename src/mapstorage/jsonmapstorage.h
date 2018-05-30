@@ -41,7 +41,6 @@ class QJsonObject;
  */
 class JsonMapStorage : public AbstractMapStorage
 {
-
     Q_OBJECT
 
 public:
@@ -52,18 +51,12 @@ public:
     explicit JsonMapStorage() = delete;
 
 private:
-    virtual bool canLoad()
-    {
-        return false;
-    };
-    virtual bool canSave()
-    {
-        return true;
-    };
+    virtual bool canLoad() { return false; };
+    virtual bool canSave() { return true; };
 
-    virtual void newData ();
+    virtual void newData();
     virtual bool loadData();
-    virtual bool saveData( bool baseMapOnly );
+    virtual bool saveData(bool baseMapOnly);
     virtual bool mergeData();
 
     //void saveMark(InfoMark * mark, QJsonObject &jRoom, const JsonRoomIdsCache &jRoomIds);

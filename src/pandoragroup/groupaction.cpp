@@ -34,10 +34,9 @@
  * @brief AddCharacter::AddCharacter
  * @param blob of XML representing the character
  */
-AddCharacter::AddCharacter(const QDomNode &blob) :
-    blob(blob)
-{
-}
+AddCharacter::AddCharacter(const QDomNode &blob)
+    : blob(blob)
+{}
 
 void AddCharacter::exec()
 {
@@ -49,19 +48,17 @@ void AddCharacter::exec()
  * @brief RemoveCharacter::RemoveCharacter
  * @param blob of XML representing which character to delete
  */
-RemoveCharacter::RemoveCharacter(const QDomNode &blob) :
-    RemoveCharacter(CGroupChar::getNameFromXML(blob))
-{
-}
+RemoveCharacter::RemoveCharacter(const QDomNode &blob)
+    : RemoveCharacter(CGroupChar::getNameFromXML(blob))
+{}
 
 /**
  * @brief RemoveCharacter::RemoveCharacter
  * @param name of the character to delete
  */
-RemoveCharacter::RemoveCharacter(QByteArray name) :
-    name(std::move(name))
-{
-}
+RemoveCharacter::RemoveCharacter(QByteArray name)
+    : name(std::move(name))
+{}
 
 void RemoveCharacter::exec()
 {
@@ -73,10 +70,9 @@ void RemoveCharacter::exec()
  * @brief UpdateCharacter::UpdateCharacter
  * @param blob of XML with which to update the character with
  */
-UpdateCharacter::UpdateCharacter(const QDomNode &blob) :
-    blob(blob)
-{
-}
+UpdateCharacter::UpdateCharacter(const QDomNode &blob)
+    : blob(blob)
+{}
 
 void UpdateCharacter::exec()
 {
@@ -88,10 +84,9 @@ void UpdateCharacter::exec()
  * @brief RenameCharacter::RenameCharacter
  * @param blob of XML with the new name of the character
  */
-RenameCharacter::RenameCharacter(const QDomNode &blob) :
-    blob(blob)
-{
-}
+RenameCharacter::RenameCharacter(const QDomNode &blob)
+    : blob(blob)
+{}
 
 void RenameCharacter::exec()
 {
@@ -102,8 +97,7 @@ void RenameCharacter::exec()
 /**
  * @brief ResetCharacters::ResetCharacters
  */
-ResetCharacters::ResetCharacters()
-    = default;
+ResetCharacters::ResetCharacters() = default;
 
 void ResetCharacters::exec()
 {

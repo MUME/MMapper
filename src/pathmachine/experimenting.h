@@ -33,8 +33,8 @@
 
 #include "coordinate.h"
 #include "roomrecipient.h"
-#include <QtGlobal>
 #include <list>
+#include <QtGlobal>
 
 class PathMachine;
 class PathParameters;
@@ -58,11 +58,12 @@ protected:
     AbstractRoomFactory *factory;
 
 public:
-    Experimenting(std::list<Path *> *paths, uint dirCode, PathParameters &params,
+    Experimenting(std::list<Path *> *paths,
+                  uint dirCode,
+                  PathParameters &params,
                   AbstractRoomFactory *factory);
     std::list<Path *> *evaluate();
     virtual void receiveRoom(RoomAdmin *, const Room *) = 0;
 };
 
 #endif
-

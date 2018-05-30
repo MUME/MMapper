@@ -34,57 +34,87 @@ using RoomName = QString;
 using RoomDescription = QString;
 using RoomNote = QString;
 
-enum RoomTerrainType    { RTT_UNDEFINED = 0, RTT_INDOORS, RTT_CITY, RTT_FIELD, RTT_FOREST, RTT_HILLS, RTT_MOUNTAINS,
-                          RTT_SHALLOW, RTT_WATER, RTT_RAPIDS, RTT_UNDERWATER, RTT_ROAD, RTT_BRUSH,
-                          RTT_TUNNEL, RTT_CAVERN, RTT_DEATHTRAP, RTT_RANDOM
-                        };
+enum RoomTerrainType {
+    RTT_UNDEFINED = 0,
+    RTT_INDOORS,
+    RTT_CITY,
+    RTT_FIELD,
+    RTT_FOREST,
+    RTT_HILLS,
+    RTT_MOUNTAINS,
+    RTT_SHALLOW,
+    RTT_WATER,
+    RTT_RAPIDS,
+    RTT_UNDERWATER,
+    RTT_ROAD,
+    RTT_BRUSH,
+    RTT_TUNNEL,
+    RTT_CAVERN,
+    RTT_DEATHTRAP,
+    RTT_RANDOM
+};
 
-enum RoomPortableType   { RPT_UNDEFINED = 0, RPT_PORTABLE, RPT_NOTPORTABLE };
-enum RoomLightType      { RLT_UNDEFINED = 0, RLT_DARK, RLT_LIT };
-enum RoomAlignType      { RAT_UNDEFINED = 0, RAT_GOOD, RAT_NEUTRAL, RAT_EVIL };
-enum RoomRidableType    { RRT_UNDEFINED = 0, RRT_RIDABLE, RRT_NOTRIDABLE };
-enum RoomSundeathType   { RST_UNDEFINED = 0, RST_SUNDEATH, RST_NOSUNDEATH };
-#define NUM_ROOM_PROPS      12
+enum RoomPortableType { RPT_UNDEFINED = 0, RPT_PORTABLE, RPT_NOTPORTABLE };
+enum RoomLightType { RLT_UNDEFINED = 0, RLT_DARK, RLT_LIT };
+enum RoomAlignType { RAT_UNDEFINED = 0, RAT_GOOD, RAT_NEUTRAL, RAT_EVIL };
+enum RoomRidableType { RRT_UNDEFINED = 0, RRT_RIDABLE, RRT_NOTRIDABLE };
+enum RoomSundeathType { RST_UNDEFINED = 0, RST_SUNDEATH, RST_NOSUNDEATH };
+#define NUM_ROOM_PROPS 12
 
-#define RMF_RENT            bit1
-#define RMF_SHOP            bit2
-#define RMF_WEAPONSHOP      bit3
-#define RMF_ARMOURSHOP      bit4
-#define RMF_FOODSHOP        bit5
-#define RMF_PETSHOP         bit6
-#define RMF_GUILD           bit7
-#define RMF_SCOUTGUILD      bit8
-#define RMF_MAGEGUILD       bit9
-#define RMF_CLERICGUILD     bit10
-#define RMF_WARRIORGUILD    bit11
-#define RMF_RANGERGUILD     bit12
-#define RMF_SMOB            bit13
-#define RMF_QUEST           bit14
-#define RMF_ANY             bit15
-#define RMF_RESERVED2       bit16
+#define RMF_RENT bit1
+#define RMF_SHOP bit2
+#define RMF_WEAPONSHOP bit3
+#define RMF_ARMOURSHOP bit4
+#define RMF_FOODSHOP bit5
+#define RMF_PETSHOP bit6
+#define RMF_GUILD bit7
+#define RMF_SCOUTGUILD bit8
+#define RMF_MAGEGUILD bit9
+#define RMF_CLERICGUILD bit10
+#define RMF_WARRIORGUILD bit11
+#define RMF_RANGERGUILD bit12
+#define RMF_SMOB bit13
+#define RMF_QUEST bit14
+#define RMF_ANY bit15
+#define RMF_RESERVED2 bit16
 typedef quint32 RoomMobFlags;
 
-#define RLF_TREASURE        bit1
-#define RLF_ARMOUR          bit2
-#define RLF_WEAPON          bit3
-#define RLF_WATER           bit4
-#define RLF_FOOD            bit5
-#define RLF_HERB            bit6
-#define RLF_KEY             bit7
-#define RLF_MULE            bit8
-#define RLF_HORSE           bit9
-#define RLF_PACKHORSE       bit10
-#define RLF_TRAINEDHORSE    bit11
-#define RLF_ROHIRRIM        bit12
-#define RLF_WARG            bit13
-#define RLF_BOAT            bit14
-#define RLF_ATTENTION       bit15
-#define RLF_TOWER           bit16
-#define RLF_CLOCK           bit17
-#define RLF_MAIL            bit18
+#define RLF_TREASURE bit1
+#define RLF_ARMOUR bit2
+#define RLF_WEAPON bit3
+#define RLF_WATER bit4
+#define RLF_FOOD bit5
+#define RLF_HERB bit6
+#define RLF_KEY bit7
+#define RLF_MULE bit8
+#define RLF_HORSE bit9
+#define RLF_PACKHORSE bit10
+#define RLF_TRAINEDHORSE bit11
+#define RLF_ROHIRRIM bit12
+#define RLF_WARG bit13
+#define RLF_BOAT bit14
+#define RLF_ATTENTION bit15
+#define RLF_TOWER bit16
+#define RLF_CLOCK bit17
+#define RLF_MAIL bit18
 typedef quint32 RoomLoadFlags;
 
-enum RoomField {R_NAME, R_DESC, R_TERRAINTYPE, R_DYNAMICDESC, R_NOTE, R_MOBFLAGS, R_LOADFLAGS, R_PORTABLETYPE, R_LIGHTTYPE, R_ALIGNTYPE, R_RIDABLETYPE, R_SUNDEATHTYPE, R_KEYWORDS, ROOMFIELD_LAST};
+enum RoomField {
+    R_NAME,
+    R_DESC,
+    R_TERRAINTYPE,
+    R_DYNAMICDESC,
+    R_NOTE,
+    R_MOBFLAGS,
+    R_LOADFLAGS,
+    R_PORTABLETYPE,
+    R_LIGHTTYPE,
+    R_ALIGNTYPE,
+    R_RIDABLETYPE,
+    R_SUNDEATHTYPE,
+    R_KEYWORDS,
+    ROOMFIELD_LAST
+};
 
 // TODO: Just make these members of Room
 namespace Mmapper2Room {
@@ -111,5 +141,5 @@ RoomAlignType getAlignType(const Room *room);
 RoomRidableType getRidableType(const Room *room);
 
 RoomSundeathType getSundeathType(const Room *room);
-}
+} // namespace Mmapper2Room
 #endif

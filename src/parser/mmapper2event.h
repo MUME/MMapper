@@ -33,11 +33,32 @@
 class QString;
 class ParseEvent;
 
-enum CommandIdType   { CID_NORTH = 0, CID_SOUTH, CID_EAST, CID_WEST, CID_UP, CID_DOWN,
-                       CID_UNKNOWN, CID_LOOK, CID_FLEE, CID_SCOUT, /*CID_SYNC, CID_RESET, */CID_NONE
-                     };
+enum CommandIdType {
+    CID_NORTH = 0,
+    CID_SOUTH,
+    CID_EAST,
+    CID_WEST,
+    CID_UP,
+    CID_DOWN,
+    CID_UNKNOWN,
+    CID_LOOK,
+    CID_FLEE,
+    CID_SCOUT,
+    /*CID_SYNC, CID_RESET, */ CID_NONE
+};
 
-enum DoorActionType { DAT_OPEN, DAT_CLOSE, DAT_LOCK, DAT_UNLOCK, DAT_PICK, DAT_ROCK, DAT_BASH, DAT_BREAK, DAT_BLOCK, DAT_NONE };
+enum DoorActionType {
+    DAT_OPEN,
+    DAT_CLOSE,
+    DAT_LOCK,
+    DAT_UNLOCK,
+    DAT_PICK,
+    DAT_ROCK,
+    DAT_BASH,
+    DAT_BREAK,
+    DAT_BLOCK,
+    DAT_NONE
+};
 
 // bit1 through bit24
 // EF_EXIT, EF_DOOR, EF_ROAD, EF_CLIMB
@@ -60,9 +81,13 @@ typedef quint16 ConnectedRoomFlagsType;
 typedef quint8 PromptFlagsType;
 
 namespace Mmapper2Event {
-ParseEvent *createEvent(const CommandIdType &c, const QString &roomName, const QString &dynamicDesc,
-                        const QString &staticDesc, const ExitsFlagsType &exitFlags,
-                        const PromptFlagsType &promptFlags, const ConnectedRoomFlagsType &connectedRoomFlags);
+ParseEvent *createEvent(const CommandIdType &c,
+                        const QString &roomName,
+                        const QString &dynamicDesc,
+                        const QString &staticDesc,
+                        const ExitsFlagsType &exitFlags,
+                        const PromptFlagsType &promptFlags,
+                        const ConnectedRoomFlagsType &connectedRoomFlags);
 
 QString getRoomName(const ParseEvent &e);
 
@@ -75,5 +100,5 @@ ExitsFlagsType getExitFlags(const ParseEvent &e);
 PromptFlagsType getPromptFlags(const ParseEvent &e);
 
 ConnectedRoomFlagsType getConnectedRoomFlags(const ParseEvent &e);
-}
+} // namespace Mmapper2Event
 #endif

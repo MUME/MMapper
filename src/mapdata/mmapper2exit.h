@@ -33,38 +33,45 @@ class Exit;
 
 enum ExitType { ET_NORMAL, ET_LOOP, ET_ONEWAY, ET_UNDEFINED };
 
-enum ExitDirection { ED_NORTH = 0, ED_SOUTH, ED_EAST, ED_WEST, ED_UP,
-                     ED_DOWN, ED_UNKNOWN, ED_NONE
-                   };
+enum ExitDirection {
+    ED_NORTH = 0,
+    ED_SOUTH,
+    ED_EAST,
+    ED_WEST,
+    ED_UP,
+    ED_DOWN,
+    ED_UNKNOWN,
+    ED_NONE
+};
 #define NUM_EXITS 7
 
 typedef class QString DoorName;
 
-#define EF_EXIT       bit1
-#define EF_DOOR       bit2
-#define EF_ROAD       bit3
-#define EF_CLIMB      bit4
-#define EF_RANDOM     bit5
-#define EF_SPECIAL    bit6
-#define EF_NO_MATCH   bit7
-#define EF_FLOW       bit8
-#define EF_NO_FLEE    bit9
-#define EF_DAMAGE     bit10
-#define EF_FALL       bit11
-#define EF_GUARDED    bit12
+#define EF_EXIT bit1
+#define EF_DOOR bit2
+#define EF_ROAD bit3
+#define EF_CLIMB bit4
+#define EF_RANDOM bit5
+#define EF_SPECIAL bit6
+#define EF_NO_MATCH bit7
+#define EF_FLOW bit8
+#define EF_NO_FLEE bit9
+#define EF_DAMAGE bit10
+#define EF_FALL bit11
+#define EF_GUARDED bit12
 
-#define DF_HIDDEN     bit1
-#define DF_NEEDKEY    bit2
-#define DF_NOBLOCK    bit3
-#define DF_NOBREAK    bit4
-#define DF_NOPICK     bit5
-#define DF_DELAYED    bit6
-#define DF_CALLABLE   bit7
-#define DF_KNOCKABLE  bit8
-#define DF_MAGIC      bit9
-#define DF_ACTION     bit10
+#define DF_HIDDEN bit1
+#define DF_NEEDKEY bit2
+#define DF_NOBLOCK bit3
+#define DF_NOBREAK bit4
+#define DF_NOPICK bit5
+#define DF_DELAYED bit6
+#define DF_CALLABLE bit7
+#define DF_KNOCKABLE bit8
+#define DF_MAGIC bit9
+#define DF_ACTION bit10
 
-enum ExitField {E_DOORNAME = 0, E_FLAGS, E_DOORFLAGS};
+enum ExitField { E_DOORNAME = 0, E_FLAGS, E_DOORFLAGS };
 #define NUM_EXIT_PROPS 3
 
 typedef quint16 ExitFlags;
@@ -94,5 +101,5 @@ uint opposite(uint in);
 ExitDirection dirForChar(const char dir);
 
 const char charForDir(ExitDirection dir);
-}
+} // namespace Mmapper2Exit
 #endif

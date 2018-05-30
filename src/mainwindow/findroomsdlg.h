@@ -26,9 +26,9 @@
 #ifndef FINDDIALOG_H
 #define FINDDIALOG_H
 
-#include <QDialog>
-#include "ui_findroomsdlg.h"
 #include "abstractparser.h"
+#include "ui_findroomsdlg.h"
+#include <QDialog>
 
 class MapData;
 class MapCanvas;
@@ -42,11 +42,11 @@ class FindRoomsDlg : public QDialog, private Ui::FindRoomsDlg
 signals:
     //void lookingForRooms(RoomRecipient *,ParseEvent *);
     void center(qint32 x, qint32 y);
-    void log( const QString &, const QString & );
+    void log(const QString &, const QString &);
     //void newRoomSelection(const RoomSelection*);
 
 public slots:
-    void closeEvent( QCloseEvent *event );
+    void closeEvent(QCloseEvent *event);
 
 public:
     FindRoomsDlg(MapData *, QWidget *parent = 0);
@@ -72,4 +72,3 @@ private slots:
 };
 
 #endif
-

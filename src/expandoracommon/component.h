@@ -26,15 +26,15 @@
 #ifndef COMPONENT
 #define COMPONENT
 
-#include <QThread>
-#include <QVariant>
 #include <iostream>
 #include <map>
+#include <QThread>
+#include <QVariant>
 
 #ifdef Q_OS_WIN
-# define MY_EXPORT __declspec(dllexport)
+#define MY_EXPORT __declspec(dllexport)
 #else
-# define MY_EXPORT
+#define MY_EXPORT
 #endif
 
 class Component;
@@ -46,19 +46,19 @@ private:
     Component *owner;
 
 public:
-    ComponentThreader(Component *c) : owner(c) {}
+    ComponentThreader(Component *c)
+        : owner(c)
+    {}
     void run();
 };
 
 class Component : public QObject
 {
     friend class ComponentThreader;
+
 private:
     Q_OBJECT
-    void runInit()
-    {
-        init();
-    }
+    void runInit() { init(); }
 
 protected:
     ComponentThreader *thread;
@@ -95,22 +95,13 @@ public:
     static std::map<QString, ComponentCreator *> &creators();
 };
 
-template <class T>
+template<class T>
 class Initializer : public ComponentCreator
 {
-
 public:
-    Initializer(QString name)
-    {
-        creators()[name] = this;
-    }
-    T *create()
-    {
-        return new T;
-    }
+    Initializer(QString name) { creators()[name] = this; }
+    T *create() { return new T; }
 };
-
-
 
 #ifdef DMALLOC
 #include <mpatrol.h>

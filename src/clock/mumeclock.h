@@ -25,14 +25,12 @@
 #ifndef MUMECLOCK_H
 #define MUMECLOCK_H
 
-enum MumeClockPrecision {
-    MUMECLOCK_UNSET = -1, MUMECLOCK_DAY, MUMECLOCK_HOUR, MUMECLOCK_MINUTE
-};
+enum MumeClockPrecision { MUMECLOCK_UNSET = -1, MUMECLOCK_DAY, MUMECLOCK_HOUR, MUMECLOCK_MINUTE };
 
-#include <QObject>
+#include <QHash>
 #include <QList>
 #include <QMetaEnum>
-#include <QHash>
+#include <QObject>
 
 #include "mumemoment.h"
 
@@ -49,19 +47,13 @@ public:
 
     MumeMoment getMumeMoment(int secsSinceUnixEpoch = -1);
 
-    MumeClockPrecision getPrecision()
-    {
-        return m_precision;
-    }
+    MumeClockPrecision getPrecision() { return m_precision; }
 
     const QString toMumeTime(const MumeMoment &moment);
 
     const QString toCountdown(const MumeMoment &moment);
 
-    int getMumeStartEpoch()
-    {
-        return m_mumeStartEpoch;
-    }
+    int getMumeStartEpoch() { return m_mumeStartEpoch; }
 
     enum WestronMonthNames {
         UnknownWestronMonth = -1,
@@ -118,10 +110,7 @@ public slots:
     void parseWeather(const QString &str);
 
 protected:
-    void setPrecision(MumeClockPrecision state)
-    {
-        m_precision = state;
-    }
+    void setPrecision(MumeClockPrecision state) { m_precision = state; }
 
     void parseMumeTime(const QString &mumeTime, int secsSinceEpoch);
 

@@ -56,10 +56,11 @@ cTelnet::cTelnet(QObject *parent)
     connect(&socket, SIGNAL(connected()), this, SLOT(onConnected()));
     connect(&socket, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
     connect(&socket, SIGNAL(readyRead()), this, SLOT(onReadyRead()));
-    connect(&socket, SIGNAL(error(QAbstractSocket::SocketError)), this,
+    connect(&socket,
+            SIGNAL(error(QAbstractSocket::SocketError)),
+            this,
             SLOT(onError(QAbstractSocket::SocketError)));
 }
-
 
 cTelnet::~cTelnet()
 {
@@ -83,17 +84,17 @@ void cTelnet::onConnected()
 {
     qDebug() << "Telnet detected socket connect!";
 
-    reset ();
+    reset();
     sentbytes = 0;
 
     //negotiate some telnet options, if allowed
     if (startupneg) {
         //NAWS (used to send info about window size)
-        sendTelnetOption (TN_WILL, OPT_NAWS);
+        sendTelnetOption(TN_WILL, OPT_NAWS);
         //do not allow server to echo our text!
-        sendTelnetOption (TN_DONT, OPT_ECHO);
+        sendTelnetOption(TN_DONT, OPT_ECHO);
         //we will send our terminal type
-        sendTelnetOption (TN_WILL, OPT_TERMINAL_TYPE);
+        sendTelnetOption(TN_WILL, OPT_TERMINAL_TYPE);
     }
 
     emit connected();
@@ -108,7 +109,6 @@ void cTelnet::onDisconnected()
 {
     emit disconnected();
 }
-
 
 void cTelnet::onError(QAbstractSocket::SocketError error)
 {
@@ -167,7 +167,7 @@ void cTelnet::sendToMud(const QString &data)
         for (int i = 0; i < len; i++) {
             d.append(outdata.at(i));
             if (static_cast<unsigned char>(outdata.at(i)) == TN_IAC) {
-                d.append(outdata.at(i));  //double IAC
+                d.append(outdata.at(i)); //double IAC
             }
         }
         outdata = d;
@@ -177,14 +177,14 @@ void cTelnet::sendToMud(const QString &data)
     sendRawData(outdata);
 }
 
-void cTelnet::sendRawData (const QByteArray &data)
+void cTelnet::sendRawData(const QByteArray &data)
 {
     //update counter
     sentbytes += data.length();
     socket.write(data, data.length());
 }
 
-void cTelnet::windowSizeChanged (int x, int y)
+void cTelnet::windowSizeChanged(int x, int y)
 {
     //remember the size - we'll need it if NAWS is currently disabled but will
     //be enabled. Also remember it if no connection exists at the moment;
@@ -225,7 +225,7 @@ void cTelnet::windowSizeChanged (int x, int y)
     }
 }
 
-void cTelnet::sendTelnetOption (unsigned char type, unsigned char option)
+void cTelnet::sendTelnetOption(unsigned char type, unsigned char option)
 {
     qDebug() << "* Sending Telnet Command: " << type << " " << option;
     QByteArray s;
@@ -235,7 +235,7 @@ void cTelnet::sendTelnetOption (unsigned char type, unsigned char option)
     sendRawData(s);
 }
 
-void cTelnet::processTelnetCommand (const QByteArray &command)
+void cTelnet::processTelnetCommand(const QByteArray &command)
 {
     unsigned char ch = command[1];
     unsigned char option;
@@ -246,7 +246,7 @@ void cTelnet::processTelnetCommand (const QByteArray &command)
 
         switch (ch) {
         case TN_AYT:
-            sendRawData ("I'm here! Please be more patient!\r\n");
+            sendRawData("I'm here! Please be more patient!\r\n");
             //well, this should never be executed, as the response would probably
             //be treated as a command. But that's server's problem, not ours...
             //If the server wasn't capable of handling this, it wouldn't have
@@ -274,23 +274,23 @@ void cTelnet::processTelnetCommand (const QByteArray &command)
                 triedToEnable[option] = false;
             } else {
                 if (!hisOptionState[option])
-                    //only if this is not set; if it's set, something's wrong wth the server
-                    //(according to telnet specification, option announcement may not be
-                    //unless explicitly requested)
+                //only if this is not set; if it's set, something's wrong wth the server
+                //(according to telnet specification, option announcement may not be
+                //unless explicitly requested)
                 {
-                    if ((option == OPT_SUPPRESS_GA) || (option == OPT_STATUS) ||
-                            (option == OPT_TERMINAL_TYPE) || (option == OPT_NAWS) ||
-                            (option == OPT_ECHO))
-                        //these options are supported
+                    if ((option == OPT_SUPPRESS_GA) || (option == OPT_STATUS)
+                        || (option == OPT_TERMINAL_TYPE) || (option == OPT_NAWS)
+                        || (option == OPT_ECHO))
+                    //these options are supported
                     {
-                        sendTelnetOption (TN_DO, option);
+                        sendTelnetOption(TN_DO, option);
                         hisOptionState[option] = true;
                         // Echo mode support
                         if (option == OPT_ECHO) {
                             echoMode = false;
                             emit echoModeChanged(echoMode);
                         } else {
-                            sendTelnetOption (TN_DONT, option);
+                            sendTelnetOption(TN_DONT, option);
                             hisOptionState[option] = false;
                         }
                     }
@@ -307,7 +307,7 @@ void cTelnet::processTelnetCommand (const QByteArray &command)
             } else {
                 //send DONT if needed (see RFC 854 for details)
                 if (hisOptionState[option] || (!heAnnouncedState[option])) {
-                    sendTelnetOption (TN_DONT, option);
+                    sendTelnetOption(TN_DONT, option);
                     hisOptionState[option] = false;
                     if (option == OPT_ECHO) {
                         echoMode = true;
@@ -322,30 +322,30 @@ void cTelnet::processTelnetCommand (const QByteArray &command)
             option = command[2];
             if (option == OPT_TIMING_MARK) {
                 //send WILL TIMING_MARK
-                sendTelnetOption (TN_WILL, option);
+                sendTelnetOption(TN_WILL, option);
             } else if (!myOptionState[option])
-                //only if the option is currently disabled
+            //only if the option is currently disabled
             {
-                if ((option == OPT_SUPPRESS_GA) || (option == OPT_STATUS) ||
-                        (option == OPT_TERMINAL_TYPE) || (option == OPT_NAWS)) {
-                    sendTelnetOption (TN_WILL, option);
+                if ((option == OPT_SUPPRESS_GA) || (option == OPT_STATUS)
+                    || (option == OPT_TERMINAL_TYPE) || (option == OPT_NAWS)) {
+                    sendTelnetOption(TN_WILL, option);
                     myOptionState[option] = true;
                     announcedState[option] = true;
                 } else {
-                    sendTelnetOption (TN_WONT, option);
+                    sendTelnetOption(TN_WONT, option);
                     myOptionState[option] = false;
                     announcedState[option] = true;
                 }
             }
-            if (option == OPT_NAWS) {  //NAWS here - window size info must be sent
-                windowSizeChanged (curX, curY);
+            if (option == OPT_NAWS) { //NAWS here - window size info must be sent
+                windowSizeChanged(curX, curY);
             }
             break;
         case TN_DONT:
             //only respond if value changed or if this option has not been announced yet
             option = command[2];
             if (myOptionState[option] || (!announcedState[option])) {
-                sendTelnetOption (TN_WONT, option);
+                sendTelnetOption(TN_WONT, option);
                 announcedState[option] = true;
             }
             myOptionState[option] = false;
@@ -365,10 +365,10 @@ void cTelnet::processTelnetCommand (const QByteArray &command)
                 //see OPT_TERMINAL_TYPE for explanation why I'm doing this
                 if (true /*myOptionState[OPT_STATUS]*/) {
                     if (command[3] == TNSB_SEND)
-                        //request to send all enabled commands; if server sends his
-                        //own list of commands, we just ignore it (well, he shouldn't
-                        //send anything, as we do not request anything, but there are
-                        //so many servers out there, that you can never be sure...)
+                    //request to send all enabled commands; if server sends his
+                    //own list of commands, we just ignore it (well, he shouldn't
+                    //send anything, as we do not request anything, but there are
+                    //so many servers out there, that you can never be sure...)
                     {
                         QByteArray s;
                         s += TN_IAC;
@@ -387,15 +387,15 @@ void cTelnet::processTelnetCommand (const QByteArray &command)
                         }
                         s += TN_IAC;
                         s += TN_SE;
-                        sendRawData (s);
+                        sendRawData(s);
                     }
                 }
                 break;
             case OPT_TERMINAL_TYPE:
                 if (myOptionState[OPT_TERMINAL_TYPE]) {
                     if (command[3] == TNSB_SEND)
-                        //server wants us to send terminal type; he can send his own type
-                        //too, but we just ignore it, as we have no use for it...
+                    //server wants us to send terminal type; he can send his own type
+                    //too, but we just ignore it, as we have no use for it...
                     {
                         QByteArray s;
                         s += TN_IAC;
@@ -405,7 +405,7 @@ void cTelnet::processTelnetCommand (const QByteArray &command)
                         s += termType.toLatin1().data();
                         s += TN_IAC;
                         s += TN_SE;
-                        sendRawData (s);
+                        sendRawData(s);
                     }
                 }
                 break;
@@ -440,28 +440,25 @@ void cTelnet::onReadyRead()
     //so we parse the text and process all telnet commands:
 
     for (char i : data) {
-        if (iac || iac2 || insb ||
-                (static_cast<unsigned char>(i) == TN_IAC)) {
+        if (iac || iac2 || insb || (static_cast<unsigned char>(i) == TN_IAC)) {
             //there are many possibilities here:
             //1. this is IAC, previous character was regular data
-            if (! (iac || iac2 || insb) &&
-                    (static_cast<unsigned char>(i) == TN_IAC)) {
+            if (!(iac || iac2 || insb) && (static_cast<unsigned char>(i) == TN_IAC)) {
                 iac = true;
                 command.append(i);
             }
             //2. seq. of two IACs
-            else if (iac && (static_cast<unsigned char>(i) == TN_IAC)
-                     && (!insb)) {
+            else if (iac && (static_cast<unsigned char>(i) == TN_IAC) && (!insb)) {
                 iac = false;
                 cleanData.append(i);
                 command.clear();
             }
             //3. IAC DO/DONT/WILL/WONT
-            else if (iac && (!insb) &&
-                     ((static_cast<unsigned char>(i) == TN_WILL) ||
-                      (static_cast<unsigned char>(i) == TN_WONT) ||
-                      (static_cast<unsigned char>(i) == TN_DO)   ||
-                      (static_cast<unsigned char>(i) == TN_DONT))) {
+            else if (iac && (!insb)
+                     && ((static_cast<unsigned char>(i) == TN_WILL)
+                         || (static_cast<unsigned char>(i) == TN_WONT)
+                         || (static_cast<unsigned char>(i) == TN_DO)
+                         || (static_cast<unsigned char>(i) == TN_DONT))) {
                 iac = false;
                 iac2 = true;
                 command.append(i);
@@ -470,19 +467,17 @@ void cTelnet::onReadyRead()
             else if (iac2) {
                 iac2 = false;
                 command.append(i);
-                processTelnetCommand (command);
+                processTelnetCommand(command);
                 command.clear();
             }
             //5. IAC SB
-            else if (iac && (!insb) &&
-                     (static_cast<unsigned char>(i) == TN_SB)) {
+            else if (iac && (!insb) && (static_cast<unsigned char>(i) == TN_SB)) {
                 iac = false;
                 insb = true;
                 command.append(i);
             }
             //6. IAC SE without IAC SB - error - ignored
-            else if (iac && (!insb) &&
-                     (static_cast<unsigned char>(i) == TN_SE)) {
+            else if (iac && (!insb) && (static_cast<unsigned char>(i) == TN_SE)) {
                 command.clear();
                 iac = false;
             }
@@ -490,8 +485,8 @@ void cTelnet::onReadyRead()
             else if (insb) {
                 command.append(i);
                 if (iac && //IAC SE - end of subcommand
-                        (static_cast<unsigned char>(i) == TN_SE)) {
-                    processTelnetCommand (command);
+                    (static_cast<unsigned char>(i) == TN_SE)) {
+                    processTelnetCommand(command);
                     command.clear();
                     iac = false;
                     insb = false;
@@ -506,7 +501,7 @@ void cTelnet::onReadyRead()
             else {
                 iac = false;
                 command.append(i);
-                processTelnetCommand (command);
+                processTelnetCommand(command);
                 //this could have set receivedGA to true; we'll handle that later
                 // (at the end of this function)
                 command.clear();
@@ -545,6 +540,5 @@ void cTelnet::onReadyRead()
 
         // clean the buffer
         cleanData.clear();
-
     }
 }

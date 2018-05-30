@@ -27,15 +27,15 @@
 #ifndef MAPFRONTEND_H
 #define MAPFRONTEND_H
 
-#include "roomadmin.h"
 #include "component.h"
+#include "roomadmin.h"
 
-#include "shortestpath.h"
 #include "intermediatenode.h"
 #include "map.h"
+#include "shortestpath.h"
 
-#include <QMutex>
 #include <stack>
+#include <QMutex>
 
 /**
  * The MapFrontend organizes rooms and their relations to each other.
@@ -50,14 +50,13 @@ class MapFrontend : public Component, public RoomAdmin
     friend class FrontendAccessor;
 
 protected:
-
     IntermediateNode treeRoot;
     Map map;
     std::vector<Room *> roomIndex;
-    std::stack<uint>  unusedIds;
-    std::map<uint, std::set<MapAction *> > actionSchedule;
+    std::stack<uint> unusedIds;
+    std::map<uint, std::set<MapAction *>> actionSchedule;
     std::vector<RoomCollection *> roomHomes;
-    std::vector<std::set<RoomRecipient *> > locks;
+    std::vector<std::set<RoomRecipient *>> locks;
 
     uint greatestUsedId;
     QMutex mapLock;
@@ -72,7 +71,6 @@ protected:
 
     virtual uint assignId(Room *room, RoomCollection *roomHome);
     virtual void checkSize(const Coordinate &);
-
 
 public:
     MapFrontend(AbstractRoomFactory *factory);
@@ -96,27 +94,19 @@ public:
 
     virtual void insertPredefinedRoom(Room &);
 
-    virtual uint getMaxId()
-    {
-        return greatestUsedId;
-    }
+    virtual uint getMaxId() { return greatestUsedId; }
 
-    virtual const Coordinate &getUlf() const
-    {
-        return ulf;
-    }
+    virtual const Coordinate &getUlf() const { return ulf; }
 
-    virtual const Coordinate &getLrb() const
-    {
-        return lrb;
-    }
+    virtual const Coordinate &getLrb() const { return lrb; }
 public slots:
     // looking for rooms leads to a bunch of foundRoom() signals
     virtual void lookingForRooms(RoomRecipient *, ParseEvent &);
     virtual void lookingForRooms(RoomRecipient *, uint); // by id
     virtual void lookingForRooms(RoomRecipient *, const Coordinate &);
     virtual void lookingForRooms(RoomRecipient *, Frustum *);
-    virtual void lookingForRooms(RoomRecipient *, const Coordinate &,
+    virtual void lookingForRooms(RoomRecipient *,
+                                 const Coordinate &,
                                  const Coordinate &); // by bounding box
 
     // createRoom creates a room without a lock
@@ -133,6 +123,5 @@ signals:
     void mapSizeChanged(const Coordinate &, const Coordinate &);
     void clearingMap();
 };
-
 
 #endif

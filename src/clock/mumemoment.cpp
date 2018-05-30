@@ -29,9 +29,9 @@
 #define MUME_DAYS_PER_MONTH 30
 #define MUME_MONTHS_PER_YEAR 12
 
-#define MUME_MINUTES_PER_DAY     (MUME_HOURS_PER_DAY * MUME_MINUTES_PER_HOUR)
-#define MUME_MINUTES_PER_MONTH   (MUME_DAYS_PER_MONTH * MUME_MINUTES_PER_DAY)
-#define MUME_MINUTES_PER_YEAR    (MUME_MONTHS_PER_YEAR * MUME_MINUTES_PER_MONTH)
+#define MUME_MINUTES_PER_DAY (MUME_HOURS_PER_DAY * MUME_MINUTES_PER_HOUR)
+#define MUME_MINUTES_PER_MONTH (MUME_DAYS_PER_MONTH * MUME_MINUTES_PER_DAY)
+#define MUME_MINUTES_PER_YEAR (MUME_MONTHS_PER_YEAR * MUME_MINUTES_PER_MONTH)
 
 MumeMoment::MumeMoment(int year, int month, int day, int hour, int minute)
 {
@@ -54,21 +54,19 @@ MumeMoment::MumeMoment(int secsSinceMumeStartEpoch)
     int mumeTimeMinusYearsAndMonths = mumeTimeMinusYears - m_month * MUME_MINUTES_PER_MONTH;
     m_day = mumeTimeMinusYearsAndMonths / MUME_MINUTES_PER_DAY;
 
-    int mumeTimeMinusYearsMonthsAndDays = mumeTimeMinusYearsAndMonths - m_day * MUME_MINUTES_PER_DAY;
+    int mumeTimeMinusYearsMonthsAndDays = mumeTimeMinusYearsAndMonths
+                                          - m_day * MUME_MINUTES_PER_DAY;
     m_hour = mumeTimeMinusYearsMonthsAndDays / MUME_MINUTES_PER_HOUR;
 
-    int mumeTimeMinusYearsMonthDaysAndMinutes = mumeTimeMinusYearsMonthsAndDays - m_hour *
-                                                MUME_MINUTES_PER_HOUR;
+    int mumeTimeMinusYearsMonthDaysAndMinutes = mumeTimeMinusYearsMonthsAndDays
+                                                - m_hour * MUME_MINUTES_PER_HOUR;
     m_minute = mumeTimeMinusYearsMonthsAndDays <= 0 ? 0 : mumeTimeMinusYearsMonthDaysAndMinutes;
 }
 
 int MumeMoment::toSeconds()
 {
-    return m_minute
-           + m_hour * MUME_MINUTES_PER_HOUR
-           + m_day * MUME_MINUTES_PER_DAY
-           + m_month * MUME_MINUTES_PER_MONTH
-           + (m_year - MUME_START_YEAR) * MUME_MINUTES_PER_YEAR;
+    return m_minute + m_hour * MUME_MINUTES_PER_HOUR + m_day * MUME_MINUTES_PER_DAY
+           + m_month * MUME_MINUTES_PER_MONTH + (m_year - MUME_START_YEAR) * MUME_MINUTES_PER_YEAR;
 }
 
 MumeSeason MumeMoment::toSeason()

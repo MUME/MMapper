@@ -34,27 +34,34 @@
 #include <cassert>
 #include <iostream>
 
-Path::Path(const Room *in_room, RoomAdmin *owner, RoomRecipient *locker,
-           RoomSignalHandler *in_signaler, uint direction) :
-    parent(nullptr),
-    probability(1.0),
-    room(in_room),
-    signaler(in_signaler),
-    dir(direction)
+Path::Path(const Room *in_room,
+           RoomAdmin *owner,
+           RoomRecipient *locker,
+           RoomSignalHandler *in_signaler,
+           uint direction)
+    : parent(nullptr)
+    , probability(1.0)
+    , room(in_room)
+    , signaler(in_signaler)
+    , dir(direction)
 {
     if (dir != UINT_MAX) {
         signaler->hold(room, owner, locker);
     }
 }
 
-
 /**
  * new Path is created,
  * distance between rooms is calculated
  * and probability is updated accordingly
  */
-Path *Path::fork(const Room *in_room, Coordinate &expectedCoordinate, RoomAdmin *owner,
-                 PathParameters p, RoomRecipient *locker, uint direction, AbstractRoomFactory *factory)
+Path *Path::fork(const Room *in_room,
+                 Coordinate &expectedCoordinate,
+                 RoomAdmin *owner,
+                 PathParameters p,
+                 RoomRecipient *locker,
+                 uint direction,
+                 AbstractRoomFactory *factory)
 {
     auto *ret = new Path(in_room, owner, locker, signaler, direction);
     assert(ret != parent);
@@ -132,8 +139,6 @@ void Path::approve()
     delete this;
 }
 
-
-
 /** removes this path and all parents up to the next branch
  * and removes the respective rooms if experimental
  */
@@ -152,16 +157,12 @@ void Path::deny()
     delete this;
 }
 
-
-
 void Path::insertChild(Path *p)
 {
     children.insert(p);
 }
 
-
 void Path::removeChild(Path *p)
 {
     children.erase(p);
 }
-

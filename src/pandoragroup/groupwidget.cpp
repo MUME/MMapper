@@ -38,10 +38,10 @@
 
 #define GROUP_COLUMN_COUNT 8
 
-GroupWidget::GroupWidget(Mmapper2Group *groupManager, MapData *md, QWidget *parent) :
-    QWidget(parent),
-    m_group(groupManager),
-    m_map(md)
+GroupWidget::GroupWidget(Mmapper2Group *groupManager, MapData *md, QWidget *parent)
+    : QWidget(parent)
+    , m_group(groupManager)
+    , m_map(md)
 {
     auto *layout = new QVBoxLayout(this);
     layout->setAlignment(Qt::AlignTop);
@@ -51,8 +51,8 @@ GroupWidget::GroupWidget(Mmapper2Group *groupManager, MapData *md, QWidget *pare
     m_table = new QTableWidget(1, GROUP_COLUMN_COUNT, this);
 
     m_table->setColumnCount(GROUP_COLUMN_COUNT);
-    m_table->setHorizontalHeaderLabels(QStringList() << tr("Name") << tr("HP %") << tr("Mana %") <<
-                                       tr("Moves %")
+    m_table->setHorizontalHeaderLabels(QStringList()
+                                       << tr("Name") << tr("HP %") << tr("Mana %") << tr("Moves %")
                                        << tr("HP") << tr("Mana") << tr("Moves") << tr("Room Name"));
     m_table->verticalHeader()->setVisible(false);
     m_table->setAlternatingRowColors(true);
@@ -63,7 +63,9 @@ GroupWidget::GroupWidget(Mmapper2Group *groupManager, MapData *md, QWidget *pare
     hide();
 
     connect(m_group, SIGNAL(drawCharacters()), SLOT(updateLabels()), Qt::QueuedConnection);
-    connect(m_group, SIGNAL(messageBox(QString, QString)), SLOT(messageBox(QString, QString)),
+    connect(m_group,
+            SIGNAL(messageBox(QString, QString)),
+            SLOT(messageBox(QString, QString)),
             Qt::QueuedConnection);
 }
 
@@ -135,8 +137,8 @@ void GroupWidget::updateLabels()
                 m_table->takeItem(previousRow, i);
             }
         }
-        QTableWidgetItem *nameItem, *hpItemPct, *manaItemPct, *movesItemPct,
-                         *hpItem, *manaItem, *movesItem, *roomNameItem;
+        QTableWidgetItem *nameItem, *hpItemPct, *manaItemPct, *movesItemPct, *hpItem, *manaItem,
+            *movesItem, *roomNameItem;
         nameItem = items[0];
         hpItemPct = items[1];
         manaItemPct = items[2];
@@ -148,20 +150,24 @@ void GroupWidget::updateLabels()
 
         QColor color = character->getColor();
         setItemText(nameItem, character->name, color);
-        double hpPercentage = 100.0 * static_cast<double>(character->hp) / static_cast<double>
-                              (character->maxhp);
-        double manaPercentage = 100.0 * static_cast<double>(character->mana) / static_cast<double>
-                                (character->maxmana);
-        double movesPercentage = 100.0 * static_cast<double>(character->moves) / static_cast<double>
-                                 (character->maxmoves);
+        double hpPercentage = 100.0 * static_cast<double>(character->hp)
+                              / static_cast<double>(character->maxhp);
+        double manaPercentage = 100.0 * static_cast<double>(character->mana)
+                                / static_cast<double>(character->maxmana);
+        double movesPercentage = 100.0 * static_cast<double>(character->moves)
+                                 / static_cast<double>(character->maxmoves);
 
-        QString hpStrPct = qIsNaN(hpPercentage) ? "" : QString("%1\%").arg(static_cast<int>(hpPercentage));
+        QString hpStrPct = qIsNaN(hpPercentage)
+                               ? ""
+                               : QString("%1\%").arg(static_cast<int>(hpPercentage));
         setItemText(hpItemPct, hpStrPct, color);
-        QString manaStrPct = qIsNaN(manaPercentage) ? "" : QString("%1\%").arg(static_cast<int>
-                                                                               (manaPercentage));
+        QString manaStrPct = qIsNaN(manaPercentage)
+                                 ? ""
+                                 : QString("%1\%").arg(static_cast<int>(manaPercentage));
         setItemText(manaItemPct, manaStrPct, color);
-        QString movesStrPct = qIsNaN(movesPercentage) ? "" : QString("%1\%").arg(static_cast<int>
-                                                                                 (movesPercentage));
+        QString movesStrPct = qIsNaN(movesPercentage)
+                                  ? ""
+                                  : QString("%1\%").arg(static_cast<int>(movesPercentage));
         setItemText(movesItemPct, movesStrPct, color);
 
         QString hpStr = QString("%1/%2").arg(character->hp).arg(character->maxhp);
@@ -225,4 +231,3 @@ void GroupWidget::messageBox(const QString &title, const QString &message)
 {
     QMessageBox::critical(this, title, message);
 }
-

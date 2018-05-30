@@ -29,18 +29,23 @@
 
 #include "configuration/configuration.h"
 
-MumeProtocolPage::MumeProtocolPage(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::MumeProtocolPage)
+MumeProtocolPage::MumeProtocolPage(QWidget *parent)
+    : QWidget(parent)
+    , ui(new Ui::MumeProtocolPage)
 {
     ui->setupUi(this);
 
-    connect(ui->IACPromptCheckBox, SIGNAL(stateChanged(int)), SLOT(IACPromptCheckBoxStateChanged(int)));
-    connect(ui->remoteEditCheckBox, SIGNAL(stateChanged(int)),
+    connect(ui->IACPromptCheckBox,
+            SIGNAL(stateChanged(int)),
+            SLOT(IACPromptCheckBoxStateChanged(int)));
+    connect(ui->remoteEditCheckBox,
+            SIGNAL(stateChanged(int)),
             SLOT(remoteEditCheckBoxStateChanged(int)));
-    connect(ui->internalEditorRadioButton, SIGNAL(toggled(bool)),
+    connect(ui->internalEditorRadioButton,
+            SIGNAL(toggled(bool)),
             SLOT(internalEditorRadioButtonChanged(bool)));
-    connect(ui->externalEditorCommand, SIGNAL(textChanged(QString)),
+    connect(ui->externalEditorCommand,
+            SIGNAL(textChanged(QString)),
             SLOT(externalEditorCommandTextChanged(QString)));
 
     ui->IACPromptCheckBox->setChecked(Config().m_IAC_prompt_parser);

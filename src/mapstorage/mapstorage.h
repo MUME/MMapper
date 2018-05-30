@@ -27,14 +27,13 @@
 #ifndef MAPSTORAGE_H
 #define MAPSTORAGE_H
 
-#include "mapdata.h"
 #include "abstractmapstorage.h"
+#include "mapdata.h"
 #include "oldroom.h"
 #include "roomfactory.h"
 
 class MapStorage : public AbstractMapStorage
 {
-
     Q_OBJECT
 
 public:
@@ -43,18 +42,12 @@ public:
     bool mergeData();
 
 private:
-    virtual bool canLoad()
-    {
-        return TRUE;
-    }
-    virtual bool canSave()
-    {
-        return TRUE;
-    }
+    virtual bool canLoad() { return TRUE; }
+    virtual bool canSave() { return TRUE; }
 
-    virtual void newData ();
+    virtual void newData();
     virtual bool loadData();
-    virtual bool saveData( bool baseMapOnly );
+    virtual bool saveData(bool baseMapOnly);
 
     RoomFactory factory;
     Room *loadRoom(QDataStream &stream, qint32 version);
@@ -74,17 +67,15 @@ private:
 class MapFrontendBlocker
 {
 public:
-    MapFrontendBlocker(MapFrontend &in_data) : data(in_data)
+    MapFrontendBlocker(MapFrontend &in_data)
+        : data(in_data)
     {
         data.block();
     }
-    ~MapFrontendBlocker()
-    {
-        data.unblock();
-    }
+    ~MapFrontendBlocker() { data.unblock(); }
+
 private:
     MapFrontend &data;
 };
-
 
 #endif

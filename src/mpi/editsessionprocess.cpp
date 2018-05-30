@@ -30,7 +30,9 @@
 #include <QFileInfo>
 #include <QTemporaryFile>
 
-EditSessionProcess::EditSessionProcess(int key, const QString &title, const QString &body,
+EditSessionProcess::EditSessionProcess(int key,
+                                       const QString &title,
+                                       const QString &body,
                                        QObject *parent)
     : ViewSessionProcess(key, title, body, parent)
 {
@@ -60,7 +62,6 @@ void EditSessionProcess::onFinished(int exitCode, QProcess::ExitStatus status)
                 qWarning() << "Edit session" << m_key << "unable to read file!";
             }
             return finishEdit();
-
         }
         qDebug() << "Edit session" << m_key << "canceled (no changes)";
 
@@ -79,13 +80,11 @@ void EditSessionProcess::onError(QProcess::ProcessError /*error*/)
     cancelEdit();
 }
 
-
 void EditSessionProcess::cancelEdit()
 {
     emit cancel(m_key);
     deleteLater();
 }
-
 
 void EditSessionProcess::finishEdit()
 {

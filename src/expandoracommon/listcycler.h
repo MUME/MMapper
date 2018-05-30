@@ -29,43 +29,45 @@
 #include <climits>
 #include <QtGlobal>
 
-template <class T, class C>
+template<class T, class C>
 class ListCycler : public C
 {
 public:
-    ListCycler() : pos(UINT_MAX) {}
-    ListCycler(const C &data) : C(data), pos(data.size()) {}
+    ListCycler()
+        : pos(UINT_MAX)
+    {}
+    ListCycler(const C &data)
+        : C(data)
+        , pos(data.size())
+    {}
     virtual ~ListCycler() {}
     virtual T next();
     virtual T prev();
     virtual T current();
-    virtual unsigned int getPos()
-    {
-        return pos;
-    }
-    virtual void reset()
-    {
-        pos = C::size();
-    }
+    virtual unsigned int getPos() { return pos; }
+    virtual void reset() { pos = C::size(); }
 
 protected:
     unsigned int pos;
 };
 
-
-template <class T, class C>
+template<class T, class C>
 T ListCycler<T, C>::next()
 {
     const uint nSize = (uint) C::size();
 
-    if (pos >= nSize) pos = 0;
-    else if (++pos == nSize) return 0;
+    if (pos >= nSize)
+        pos = 0;
+    else if (++pos == nSize)
+        return 0;
 
-    if (pos < nSize) return C::operator[](pos);
-    else return 0;
+    if (pos < nSize)
+        return C::operator[](pos);
+    else
+        return 0;
 }
 
-template <class T, class C>
+template<class T, class C>
 T ListCycler<T, C>::prev()
 {
     const uint nSize = (uint) C::size();
@@ -74,22 +76,22 @@ T ListCycler<T, C>::prev()
         pos = nSize;
         return 0;
     } else {
-        if (pos >= nSize) pos = nSize;
+        if (pos >= nSize)
+            pos = nSize;
         pos--;
         return C::operator[](pos);
     }
 }
 
-template <class T, class C>
+template<class T, class C>
 T ListCycler<T, C>::current()
 {
-    if (pos >= (uint)C::size()) return 0;
+    if (pos >= (uint) C::size())
+        return 0;
     return C::operator[](pos);
 }
-
 
 #ifdef DMALLOC
 #include <mpatrol.h>
 #endif
 #endif
-

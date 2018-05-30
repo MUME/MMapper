@@ -23,19 +23,21 @@
 **
 ************************************************************************/
 
+#include <utility>
 #include <QDebug>
 #include <QHostAddress>
-#include <utility>
 
 #include "CGroupServer.h"
 
-CGroupServer::CGroupServer(int localPort, QObject *parent) :
-    QTcpServer(parent)
+CGroupServer::CGroupServer(int localPort, QObject *parent)
+    : QTcpServer(parent)
 {
     connect(this, SIGNAL(sendLog(const QString &)), parent, SLOT(relayLog(const QString &)));
     connect(this, SIGNAL(serverStartupFailed()), parent, SLOT(serverStartupFailed()));
-    connect(this, SIGNAL(connectionClosed(CGroupClient *)),
-            parent, SLOT(connectionClosed(CGroupClient *)));
+    connect(this,
+            SIGNAL(connectionClosed(CGroupClient *)),
+            parent,
+            SLOT(connectionClosed(CGroupClient *)));
 
     if (!listen(QHostAddress::Any, localPort)) {
         emit sendLog("Failed to start a group Manager server");
@@ -52,17 +54,21 @@ CGroupServer::~CGroupServer()
 
 void CGroupServer::incomingConnection(qintptr socketDescriptor)
 {
-//    qInfo() << "Adding incomming client to the connections list" << socketDescriptor;
+    //    qInfo() << "Adding incomming client to the connections list" << socketDescriptor;
 
     // connect the client straight to the Communicator, as he handles all the state changes
     // data transfers and similar.
     auto *client = new CGroupClient(this);
     connections.append(client);
 
-    connect(client, SIGNAL(incomingData(CGroupClient *, QByteArray)),
-            parent(), SLOT(incomingData(CGroupClient *, QByteArray)));
-    connect(client, SIGNAL(connectionEstablished(CGroupClient *)),
-            parent(), SLOT(connectionEstablished(CGroupClient *)));
+    connect(client,
+            SIGNAL(incomingData(CGroupClient *, QByteArray)),
+            parent(),
+            SLOT(incomingData(CGroupClient *, QByteArray)));
+    connect(client,
+            SIGNAL(connectionEstablished(CGroupClient *)),
+            parent(),
+            SLOT(connectionEstablished(CGroupClient *)));
 
     client->setSocket(socketDescriptor);
 }
@@ -70,7 +76,7 @@ void CGroupServer::incomingConnection(qintptr socketDescriptor)
 void CGroupServer::errorInConnection(CGroupClient *connection, const QString & /*errorMessage*/)
 {
     emit connectionClosed(connection);
-//    qInfo() << "Removing and deleting the connection completely" << connection->socketDescriptor();
+    //    qInfo() << "Removing and deleting the connection completely" << connection->socketDescriptor();
     connections.removeAll(connection);
     connection->close();
     connection->deleteLater();
@@ -92,7 +98,7 @@ void CGroupServer::sendToAllExceptOne(CGroupClient *exception, const QByteArray 
 
 void CGroupServer::closeAll()
 {
-//    qInfo() << "Closing connections";
+    //    qInfo() << "Closing connections";
     for (auto &connection : connections) {
         if (connection != nullptr) {
             connection->disconnectFromHost();
@@ -104,5 +110,5 @@ void CGroupServer::closeAll()
 
 void CGroupServer::relayLog(const QString & /*str*/)
 {
-//    qInfo() << "Client logged" << str;
+    //    qInfo() << "Client logged" << str;
 }

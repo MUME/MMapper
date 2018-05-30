@@ -167,10 +167,10 @@ public:
 
 public slots:
     /** Window size has changed - informs the server about it */
-    void windowSizeChanged (int x, int y);
+    void windowSizeChanged(int x, int y);
 
     /** Prepares data, doubles IACs, sends it using sendRawData. */
-    void sendToMud (const QString &data);
+    void sendToMud(const QString &data);
 
 protected slots:
     void onConnected();
@@ -178,38 +178,38 @@ protected slots:
     void onError(QAbstractSocket::SocketError);
 
     /** Reads, parses telnet, and so forth */
-    void onReadyRead ();
+    void onReadyRead();
 
 signals:
     /** Submits Telnet/text data back to the client */
-    void sendToUser (const QString &data);
+    void sendToUser(const QString &data);
 
     /** toggles echo mode for passwords */
-    void echoModeChanged (bool);
+    void echoModeChanged(bool);
 
     void disconnected();
     void connected();
     void socketError(const QString &);
 
 protected:
-    void reset ();
+    void reset();
 
-    void setupEncoding ();
+    void setupEncoding();
 
     /** Send out the data. Does not double IACs, this must be done
             by caller if needed. This function is suitable for sending
             telnet sequences. */
-    void sendRawData (const QByteArray &data);
+    void sendRawData(const QByteArray &data);
 
     /** processes a telnet command (IAC ...) */
-    void processTelnetCommand (const QByteArray &command);
+    void processTelnetCommand(const QByteArray &command);
 
     /** send a telnet option */
-    void sendTelnetOption (unsigned char type, unsigned char option);
+    void sendTelnetOption(unsigned char type, unsigned char option);
 
 private:
     QTcpSocket socket;
-    char buffer[32769] {};
+    char buffer[32769]{};
 
     QByteArray encoding;
 
@@ -223,15 +223,15 @@ private:
     bool iac, iac2, insb;
 
     /** current state of options on our side and on server side */
-    bool myOptionState[256] {}, hisOptionState[256] {};
+    bool myOptionState[256]{}, hisOptionState[256]{};
     /** whether we have announced WILL/WON'T for that option (if we have, we don't
         respond to DO/DON'T sent by the server -- see implementation and RFC 854
         for more information... */
-    bool announcedState[256] {};
+    bool announcedState[256]{};
     /** whether the server has already announced his WILL/WON'T */
-    bool heAnnouncedState[256] {};
+    bool heAnnouncedState[256]{};
     /** whether we have tried to enable this option */
-    bool triedToEnable[256] {};
+    bool triedToEnable[256]{};
     /** amount of bytes sent up to now */
     int sentbytes;
     /** have we received the GA signal? */
@@ -244,6 +244,5 @@ private:
     /* Terminal Type */
     QString termType;
 };
-
 
 #endif /* CTELNET_H */

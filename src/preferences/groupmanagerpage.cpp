@@ -39,39 +39,40 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
     m_groupManager = gm;
 
     // Character Section
-    connect( charName, SIGNAL( editingFinished() ), SLOT( charNameTextChanged() )  );
-    connect( changeColor, SIGNAL(clicked()), SLOT(changeColorClicked()));
+    connect(charName, SIGNAL(editingFinished()), SLOT(charNameTextChanged()));
+    connect(changeColor, SIGNAL(clicked()), SLOT(changeColorClicked()));
     // Host Section
-    connect( localHost, SIGNAL( linkActivated (const QString &) ),
-             SLOT( localHostLinkActivated(const QString &) ));
-    connect( localPort, SIGNAL( valueChanged(int) ), SLOT( localPortValueChanged(int) )  );
+    connect(localHost,
+            SIGNAL(linkActivated(const QString &)),
+            SLOT(localHostLinkActivated(const QString &)));
+    connect(localPort, SIGNAL(valueChanged(int)), SLOT(localPortValueChanged(int)));
     // Client Section
-    connect( remoteHost, SIGNAL( editingFinished() ), SLOT( remoteHostTextChanged() )  );
-    connect( remotePort, SIGNAL( valueChanged(int) ), SLOT( remotePortValueChanged(int) )  );
+    connect(remoteHost, SIGNAL(editingFinished()), SLOT(remoteHostTextChanged()));
+    connect(remotePort, SIGNAL(valueChanged(int)), SLOT(remotePortValueChanged(int)));
     // Checkbox Section
-    connect( rulesWarning, SIGNAL(stateChanged(int)), SLOT(rulesWarningChanged(int)));
-    connect( shareSelfCheckBox, SIGNAL(stateChanged(int)), SLOT(shareSelfChanged(int)));
+    connect(rulesWarning, SIGNAL(stateChanged(int)), SLOT(rulesWarningChanged(int)));
+    connect(shareSelfCheckBox, SIGNAL(stateChanged(int)), SLOT(shareSelfChanged(int)));
 
     // Inform Group Manager of changes
-    connect( this, SIGNAL(setGroupManagerType(int)), m_groupManager, SLOT(setType(int)));
-    connect( this, SIGNAL(updatedSelf()), m_groupManager, SLOT(updateSelf()));
+    connect(this, SIGNAL(setGroupManagerType(int)), m_groupManager, SLOT(setType(int)));
+    connect(this, SIGNAL(updatedSelf()), m_groupManager, SLOT(updateSelf()));
 
-    charName->setText( Config().m_groupManagerCharName );
+    charName->setText(Config().m_groupManagerCharName);
     QPixmap charColorPixmap(16, 16);
     charColorPixmap.fill(Config().m_groupManagerColor);
     changeColor->setIcon(QIcon(charColorPixmap));
-    localPort->setValue( Config().m_groupManagerLocalPort );
-    remoteHost->setText( Config().m_groupManagerHost );
-    remotePort->setValue( Config().m_groupManagerRemotePort );
-    rulesWarning->setChecked( Config().m_groupManagerRulesWarning );
-    shareSelfCheckBox->setChecked( Config().m_groupManagerShareSelf );
+    localPort->setValue(Config().m_groupManagerLocalPort);
+    remoteHost->setText(Config().m_groupManagerHost);
+    remotePort->setValue(Config().m_groupManagerRemotePort);
+    rulesWarning->setChecked(Config().m_groupManagerRulesWarning);
+    shareSelfCheckBox->setChecked(Config().m_groupManagerShareSelf);
 }
 
 void GroupManagerPage::charNameTextChanged()
 {
     const QString newName = charName->text();
-    if (!m_groupManager->getGroup()->isNamePresent(newName.toLatin1()) &&
-            Config().m_groupManagerCharName != newName) {
+    if (!m_groupManager->getGroup()->isNamePresent(newName.toLatin1())
+        && Config().m_groupManagerCharName != newName) {
         Config().m_groupManagerCharName = newName.toLatin1();
 
         emit updatedSelf();

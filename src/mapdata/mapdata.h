@@ -27,8 +27,8 @@
 #ifndef MAPDATA_H
 #define MAPDATA_H
 
-#include "mapfrontend.h"
 #include "abstractparser.h"
+#include "mapfrontend.h"
 #include "roomfilter.h"
 #include "shortestpath.h"
 
@@ -44,20 +44,20 @@ typedef QVector<Room *> RoomVector;
 typedef QLinkedList<InfoMark *> MarkerList;
 typedef QLinkedListIterator<InfoMark *> MarkerListIterator;
 
-
 class MapData : public MapFrontend
 {
-
     Q_OBJECT
     friend class CustomAction;
+
 public:
     MapData();
     virtual ~MapData();
 
-
     const RoomSelection *select(const Coordinate &ulf, const Coordinate &lrb);
     // updates a selection created by the mapdata
-    const RoomSelection *select(const Coordinate &ulf, const Coordinate &lrb, const RoomSelection *in);
+    const RoomSelection *select(const Coordinate &ulf,
+                                const Coordinate &lrb,
+                                const RoomSelection *in);
     // creates and registers a selection with one room
     const RoomSelection *select(const Coordinate &pos);
     // creates and registers an empty selection
@@ -76,7 +76,7 @@ public:
     const Room *getRoom(const Coordinate &pos, const RoomSelection *in);
     const Room *getRoom(uint id, const RoomSelection *in);
 
-    void draw (const Coordinate &ulf, const Coordinate &lrb, MapCanvas &screen);
+    void draw(const Coordinate &ulf, const Coordinate &lrb, MapCanvas &screen);
     bool isOccupied(const Coordinate &position);
 
     bool isMovable(const Coordinate &offset, const RoomSelection *selection);
@@ -85,38 +85,17 @@ public:
     bool execute(MapAction *action, const RoomSelection *unlock);
     bool execute(AbstractAction *action, const RoomSelection *unlock);
 
-    Coordinate &getPosition()
-    {
-        return m_position;
-    }
-    MarkerList &getMarkersList()
-    {
-        return m_markers;
-    }
-    uint getRoomsCount()
-    {
-        return greatestUsedId == UINT_MAX ? 0 : greatestUsedId + 1;
-    }
-    int getMarkersCount()
-    {
-        return m_markers.count();
-    }
+    Coordinate &getPosition() { return m_position; }
+    MarkerList &getMarkersList() { return m_markers; }
+    uint getRoomsCount() { return greatestUsedId == UINT_MAX ? 0 : greatestUsedId + 1; }
+    int getMarkersCount() { return m_markers.count(); }
 
     void addMarker(InfoMark *im);
     void removeMarker(InfoMark *im);
 
-    bool isEmpty()
-    {
-        return (greatestUsedId == UINT_MAX && m_markers.isEmpty());
-    }
-    bool dataChanged()
-    {
-        return m_dataChanged;
-    }
-    QString getFileName()
-    {
-        return m_fileName;
-    }
+    bool isEmpty() { return (greatestUsedId == UINT_MAX && m_markers.isEmpty()); }
+    bool dataChanged() { return m_dataChanged; }
+    QString getFileName() { return m_fileName; }
     QList<Coordinate> getPath(const QList<CommandIdType> &dirs);
     virtual void clear();
 
@@ -124,8 +103,11 @@ public:
     void genericSearch(RoomRecipient *recipient, const RoomFilter &f);
     void genericSearch(const RoomSelection *in, const RoomFilter &f);
 
-    void shortestPathSearch(const Room *origin, ShortestPathRecipient *recipient, const RoomFilter &f,
-                            int max_hits = -1, double max_dist = 0);
+    void shortestPathSearch(const Room *origin,
+                            ShortestPathRecipient *recipient,
+                            const RoomFilter &f,
+                            int max_hits = -1,
+                            double max_dist = 0);
 
     // Used in Console Commands
     void removeDoorNames();
@@ -139,28 +121,16 @@ public:
     bool getRoomFlag(const Coordinate &pos, uint flag, uint field);
 
 signals:
-    void log( const QString &, const QString & );
+    void log(const QString &, const QString &);
     void onDataLoaded();
     void onDataChanged();
     void updateCanvas();
 
 public slots:
-    void setFileName(QString filename)
-    {
-        m_fileName = filename;
-    }
-    void unsetDataChanged()
-    {
-        m_dataChanged = false;
-    }
-    void setDataChanged()
-    {
-        m_dataChanged = true;
-    }
-    void setPosition(const Coordinate &pos)
-    {
-        m_position = pos;
-    }
+    void setFileName(QString filename) { m_fileName = filename; }
+    void unsetDataChanged() { m_dataChanged = false; }
+    void setDataChanged() { m_dataChanged = true; }
+    void setPosition(const Coordinate &pos) { m_position = pos; }
 
 protected:
     std::map<const RoomSelection *, RoomSelection *> selections;
@@ -172,8 +142,7 @@ protected:
 
     QString m_fileName;
 
-    Coordinate m_position {};
+    Coordinate m_position{};
 };
-
 
 #endif

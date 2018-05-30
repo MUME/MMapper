@@ -28,117 +28,61 @@
 
 #include <cassert>
 #include <set>
-#include <QVector>
 #include <QVariant>
+#include <QVector>
 
 #include "global/range.h"
 
 class Exit : public QVector<QVariant>
 {
-
 protected:
     std::set<uint> incoming;
     std::set<uint> outgoing;
 
 public:
-    Exit(uint numProps = 0) : QVector<QVariant>(static_cast<int>(numProps)) {}
+    Exit(uint numProps = 0)
+        : QVector<QVariant>(static_cast<int>(numProps))
+    {}
 
 public:
-    auto inSize() const
-    {
-        return incoming.size();
-    }
-    bool inIsEmpty() const
-    {
-        return inSize() == 0;
-    }
-    bool inIsUnique() const
-    {
-        return inSize() == 1;
-    }
+    auto inSize() const { return incoming.size(); }
+    bool inIsEmpty() const { return inSize() == 0; }
+    bool inIsUnique() const { return inSize() == 1; }
     uint inFirst() const
     {
         assert(!inIsEmpty());
         return *incoming.begin();
     }
-    auto inRange() const
-    {
-        return make_range(inBegin(), inEnd());
-    }
+    auto inRange() const { return make_range(inBegin(), inEnd()); }
 
 public:
-    auto outSize() const
-    {
-        return outgoing.size();
-    }
-    bool outIsEmpty() const
-    {
-        return outSize() == 0;
-    }
-    bool outIsUnique() const
-    {
-        return outSize() == 1;
-    }
+    auto outSize() const { return outgoing.size(); }
+    bool outIsEmpty() const { return outSize() == 0; }
+    bool outIsUnique() const { return outSize() == 1; }
     uint outFirst() const
     {
         assert(!outIsEmpty());
         return *outgoing.begin();
     }
-    auto outRange() const
-    {
-        return make_range(outBegin(), outEnd());
-    }
+    auto outRange() const { return make_range(outBegin(), outEnd()); }
 
 public:
-    auto getRange(bool out) const
-    {
-        return out ? outRange() : inRange();
-    }
+    auto getRange(bool out) const { return out ? outRange() : inRange(); }
 
 private:
-    std::set<uint>::const_iterator inBegin() const
-    {
-        return incoming.begin();
-    }
-    std::set<uint>::const_iterator outBegin() const
-    {
-        return outgoing.begin();
-    }
+    std::set<uint>::const_iterator inBegin() const { return incoming.begin(); }
+    std::set<uint>::const_iterator outBegin() const { return outgoing.begin(); }
 
-    std::set<uint>::const_iterator inEnd() const
-    {
-        return incoming.end();
-    }
-    std::set<uint>::const_iterator outEnd() const
-    {
-        return outgoing.end();
-    }
+    std::set<uint>::const_iterator inEnd() const { return incoming.end(); }
+    std::set<uint>::const_iterator outEnd() const { return outgoing.end(); }
 
 public:
-    void addIn(uint from)
-    {
-        incoming.insert(from);
-    }
-    void addOut(uint to)
-    {
-        outgoing.insert(to);
-    }
-    void removeIn(uint from)
-    {
-        incoming.erase(from);
-    }
-    void removeOut(uint to)
-    {
-        outgoing.erase(to);
-    }
-    bool containsIn(uint from) const
-    {
-        return incoming.find(from) != incoming.end();
-    }
-    bool containsOut(uint to) const
-    {
-        return outgoing.find(to) != outgoing.end();
-    }
+    void addIn(uint from) { incoming.insert(from); }
+    void addOut(uint to) { outgoing.insert(to); }
+    void removeIn(uint from) { incoming.erase(from); }
+    void removeOut(uint to) { outgoing.erase(to); }
+    bool containsIn(uint from) const { return incoming.find(from) != incoming.end(); }
+    bool containsOut(uint to) const { return outgoing.find(to) != outgoing.end(); }
     void removeAll()
     {
         incoming.clear();

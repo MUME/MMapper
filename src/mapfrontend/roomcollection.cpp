@@ -30,12 +30,10 @@ void RoomCollection::addRoom(Room *room)
     insert(room);
 }
 
-
 void RoomCollection::removeRoom(Room *room)
 {
     erase(room);
 }
-
 
 RoomCollection *RoomCollection::merge(RoomCollection *other)
 {
@@ -44,4 +42,3 @@ RoomCollection *RoomCollection::merge(RoomCollection *other)
     }
     return this;
 }
-

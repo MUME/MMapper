@@ -31,12 +31,12 @@
 //#include "mapfrontend.h"
 #include "parseevent.h"
 
-#include <QtGlobal>
 #include <QVariant>
+#include <QtGlobal>
 
 #include <set>
-#include <vector>
 #include <stack>
+#include <vector>
 
 class Map;
 
@@ -80,10 +80,7 @@ public:
 
     virtual void exec(uint id) = 0;
 
-    virtual void insertAffected(uint id, std::set<uint> &affected)
-    {
-        affected.insert(id);
-    }
+    virtual void insertAffected(uint id, std::set<uint> &affected) { affected.insert(id); }
 };
 
 class MapAction
@@ -98,10 +95,7 @@ public:
 protected:
     virtual void exec() = 0;
 
-    virtual const std::set<uint> &getAffectedRooms()
-    {
-        return affectedRooms;
-    }
+    virtual const std::set<uint> &getAffectedRooms() { return affectedRooms; }
 
     std::set<uint> affectedRooms;
 };
@@ -111,15 +105,9 @@ class SingleRoomAction : public MapAction
 public:
     explicit SingleRoomAction(AbstractAction *ex, uint id);
 
-    void schedule(MapFrontend *in)  override
-    {
-        executor->setFrontend(in);
-    }
+    void schedule(MapFrontend *in) override { executor->setFrontend(in); }
 
-    virtual ~SingleRoomAction()
-    {
-        delete executor;
-    }
+    virtual ~SingleRoomAction() { delete executor; }
 
 protected:
     virtual void exec() override
@@ -138,10 +126,7 @@ private:
 class AddExit : public MapAction, public FrontendAccessor
 {
 public:
-    void schedule(MapFrontend *in) override
-    {
-        setFrontend(in);
-    }
+    void schedule(MapFrontend *in) override { setFrontend(in); }
 
     explicit AddExit(uint in_from, uint in_to, uint in_dir);
 
@@ -160,10 +145,7 @@ class RemoveExit : public MapAction, public FrontendAccessor
 public:
     explicit RemoveExit(uint from, uint to, uint dir);
 
-    void schedule(MapFrontend *in) override
-    {
-        setFrontend(in);
-    }
+    void schedule(MapFrontend *in) override { setFrontend(in); }
 
 protected:
     virtual void exec() override;
@@ -225,6 +207,5 @@ class Remove : public ExitsAffecter
 protected:
     virtual void exec(uint id) override;
 };
-
 
 #endif

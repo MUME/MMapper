@@ -26,10 +26,10 @@
 #include "oldconnection.h"
 #include "olddoor.h"
 
-Connection::Connection() :
-    m_type(CT_NORMAL),
-    m_flags(0),
-    m_index(0)
+Connection::Connection()
+    : m_type(CT_NORMAL)
+    , m_flags(0)
+    , m_index(0)
 {
     m_rooms[LEFT] = nullptr;
     m_rooms[RIGHT] = nullptr;
@@ -39,7 +39,7 @@ Connection::Connection() :
     m_directions[RIGHT] = CD_UNKNOWN;
 }
 
-Connection::~ Connection()
+Connection::~Connection()
 {
     // no one keeps track of the doors so we have to remove them here
     delete m_doors[LEFT];
@@ -48,7 +48,6 @@ Connection::~ Connection()
 
 ConnectionDirection opposite(ConnectionDirection in)
 {
-
     switch (in) {
     case CD_NORTH:
         return CD_SOUTH;
@@ -65,6 +64,4 @@ ConnectionDirection opposite(ConnectionDirection in)
     default:
         return CD_UNKNOWN;
     }
-
 }
-

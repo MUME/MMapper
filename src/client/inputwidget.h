@@ -25,9 +25,9 @@
 #ifndef INPUTWIDGET_H
 #define INPUTWIDGET_H
 
+#include <QLinkedList>
 #include <QPlainTextEdit>
 #include <QRegExp>
-#include <QLinkedList>
 
 typedef QString InputHistoryEntry;
 typedef QMutableLinkedListIterator<InputHistoryEntry> InputHistoryIterator;
@@ -74,6 +74,5 @@ signals:
     void displayMessage(const QString &);
     void showMessage(const QString &, int);
 };
-
 
 #endif /* INPUTWIDGET_H */

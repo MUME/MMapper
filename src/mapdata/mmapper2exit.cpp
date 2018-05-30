@@ -65,7 +65,6 @@ void nandDoorFlags(Exit &e, DoorFlags flags)
     e[E_DOORFLAGS] = getDoorFlags(e) & ~flags;
 }
 
-
 uint opposite(uint in)
 {
     return opposite(static_cast<ExitDirection>(in));
@@ -91,8 +90,7 @@ ExitDirection opposite(ExitDirection in)
     }
 }
 
-
-void updateExit(Exit &e, ExitFlags flags )
+void updateExit(Exit &e, ExitFlags flags)
 {
     ExitFlags diff = flags ^ getFlags(e);
     if (diff != 0u) {
@@ -101,7 +99,6 @@ void updateExit(Exit &e, ExitFlags flags )
         e[E_FLAGS] = flags;
     }
 }
-
 
 ExitDirection dirForChar(const char dir)
 {
@@ -142,5 +139,4 @@ const char charForDir(ExitDirection dir)
         return '?';
     }
 }
-}  // namespace Mmapper2Exit
-
+} // namespace Mmapper2Exit

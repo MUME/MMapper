@@ -45,29 +45,27 @@ CGroupChar::CGroupChar()
     lastMovement = "";
 }
 
-CGroupChar::~CGroupChar()
-    = default;
+CGroupChar::~CGroupChar() = default;
 
 QDomNode CGroupChar::toXML()
 {
-
     QDomDocument doc("charinfo");
 
     QDomElement root = doc.createElement("playerData");
-    root.setAttribute("name", QString(name) );
-    root.setAttribute("color", color.name() );
-    root.setAttribute("textHP", QString(textHP) );
-    root.setAttribute("textMana", QString(textMana) );
-    root.setAttribute("textMoves", QString(textMoves) );
-    root.setAttribute("hp", hp );
-    root.setAttribute("maxhp", maxhp );
+    root.setAttribute("name", QString(name));
+    root.setAttribute("color", color.name());
+    root.setAttribute("textHP", QString(textHP));
+    root.setAttribute("textMana", QString(textMana));
+    root.setAttribute("textMoves", QString(textMoves));
+    root.setAttribute("hp", hp);
+    root.setAttribute("maxhp", maxhp);
     root.setAttribute("mana", mana);
     root.setAttribute("maxmana", maxmana);
-    root.setAttribute("moves", moves );
-    root.setAttribute("maxmoves", maxmoves );
-    root.setAttribute("state", state );
+    root.setAttribute("moves", moves);
+    root.setAttribute("maxmoves", maxmoves);
+    root.setAttribute("state", state);
     root.setAttribute("lastMovement", QString(lastMovement));
-    root.setAttribute("room", pos );
+    root.setAttribute("room", pos);
     doc.appendChild(root);
 
     return root;
@@ -76,7 +74,6 @@ QDomNode CGroupChar::toXML()
 bool CGroupChar::updateFromXML(const QDomNode &node)
 {
     bool updated;
-
 
     updated = false;
     if (node.nodeName() != "playerData") {
@@ -90,12 +87,11 @@ bool CGroupChar::updateFromXML(const QDomNode &node)
 
     QDomElement e = node.toElement();
 
-    unsigned int newpos  = e.attribute("room").toInt();
+    unsigned int newpos = e.attribute("room").toInt();
     if (newpos != pos) {
         updated = true;
         pos = newpos;
     }
-
 
     str = e.attribute("name").toLatin1();
     if (str != name) {
@@ -108,7 +104,6 @@ bool CGroupChar::updateFromXML(const QDomNode &node)
         updated = true;
         lastMovement = str;
     }
-
 
     str = e.attribute("color").toLatin1();
     if (str != color.name().toLatin1()) {
@@ -134,43 +129,43 @@ bool CGroupChar::updateFromXML(const QDomNode &node)
         textMoves = str;
     }
 
-    newval  = e.attribute("hp").toInt();
+    newval = e.attribute("hp").toInt();
     if (newval != hp) {
         updated = true;
         hp = newval;
     }
 
-    newval  = e.attribute("maxhp").toInt();
+    newval = e.attribute("maxhp").toInt();
     if (newval != maxhp) {
         updated = true;
         maxhp = newval;
     }
 
-    newval  = e.attribute("mana").toInt();
+    newval = e.attribute("mana").toInt();
     if (newval != mana) {
         updated = true;
         mana = newval;
     }
 
-    newval  = e.attribute("maxmana").toInt();
+    newval = e.attribute("maxmana").toInt();
     if (newval != maxmana) {
         updated = true;
         maxmana = newval;
     }
 
-    newval  = e.attribute("moves").toInt();
+    newval = e.attribute("moves").toInt();
     if (newval != moves) {
         updated = true;
         moves = newval;
     }
 
-    newval  = e.attribute("maxmoves").toInt();
+    newval = e.attribute("maxmoves").toInt();
     if (newval != maxmoves) {
         updated = true;
         maxmoves = newval;
     }
 
-    newval  = e.attribute("state").toInt();
+    newval = e.attribute("state").toInt();
     if (newval != state) {
         updated = true;
         state = newval;
@@ -189,4 +184,3 @@ QByteArray CGroupChar::getNameFromXML(const QDomNode &node)
 
     return e.attribute("name").toLatin1();
 }
-

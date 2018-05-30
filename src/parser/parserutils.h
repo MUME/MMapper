@@ -32,6 +32,6 @@
 namespace ParserUtils {
 QString &removeAnsiMarks(QString &str);
 QString &latinToAscii(QString &str);
-}
+} // namespace ParserUtils
 
 #endif

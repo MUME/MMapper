@@ -33,13 +33,13 @@
 #define DEFAULT_TOLERANCE_LIMIT 10
 
 const QList<int> MumeClock::s_dawnHour = QList<int>() << 8 << 9 << 8 << 7 << 7 << 6 << 5 << 4 << 5
-                                         << 6 << 7 << 7;
-const QList<int> MumeClock::s_duskHour = QList<int>() << 6 + 12 << 5 + 12 << 6 + 12 << 7 + 12 << 8 +
-                                         12 << 8 + 12 << 9 + 12 << 10 + 12 << 9 + 12 << 8 + 12 << 8 + 12 << 7 + 12;
-const QMetaEnum MumeClock::s_westronMonthNames =
-    QMetaEnum::fromType<MumeClock::WestronMonthNames>();
-const QMetaEnum MumeClock::s_sindarinMonthNames =
-    QMetaEnum::fromType<MumeClock::SindarinMonthNames>();
+                                                      << 6 << 7 << 7;
+const QList<int> MumeClock::s_duskHour = QList<int>() << 6 + 12 << 5 + 12 << 6 + 12 << 7 + 12
+                                                      << 8 + 12 << 8 + 12 << 9 + 12 << 10 + 12
+                                                      << 9 + 12 << 8 + 12 << 8 + 12 << 7 + 12;
+const QMetaEnum MumeClock::s_westronMonthNames = QMetaEnum::fromType<MumeClock::WestronMonthNames>();
+const QMetaEnum MumeClock::s_sindarinMonthNames
+    = QMetaEnum::fromType<MumeClock::SindarinMonthNames>();
 
 const QHash<QString, MumeTime> MumeClock::m_stringTimeHash{
     // Generic Outdoors
@@ -64,7 +64,8 @@ const QHash<QString, MumeTime> MumeClock::m_stringTimeHash{
 
     // GH
     {"The sun rises over the city wall.", TIME_DAWN},
-    {"Rays of sunshine pierce the darkness as the sun begins its gradual ascent to the middle of the sky.", TIME_DAWN},
+    {"Rays of sunshine pierce the darkness as the sun begins its gradual ascent to the middle of the sky.",
+     TIME_DAWN},
 
     // Warrens
     {"The sun sinks slowly below the western horizon.", TIME_DUSK},
@@ -76,12 +77,11 @@ const QHash<QString, MumeTime> MumeClock::m_stringTimeHash{
 };
 
 MumeClock::MumeClock(int mumeEpoch, QObject *parent)
-    : QObject(parent),
-      m_mumeStartEpoch(mumeEpoch),
-      m_precision(MUMECLOCK_UNSET),
-      m_clockTolerance(DEFAULT_TOLERANCE_LIMIT)
+    : QObject(parent)
+    , m_mumeStartEpoch(mumeEpoch)
+    , m_precision(MUMECLOCK_UNSET)
+    , m_clockTolerance(DEFAULT_TOLERANCE_LIMIT)
 {}
-
 
 MumeClock::MumeClock(QObject *parent)
     : MumeClock(DEFAULT_MUME_START_EPOCH, parent)
@@ -155,9 +155,10 @@ void MumeClock::parseMumeTime(const QString &mumeTime, int secsSinceEpoch)
     int mumeSecsSinceEpoch = MumeMoment(year, month, day, hour, minute).toSeconds();
     int newStartEpoch = secsSinceEpoch - mumeSecsSinceEpoch;
     if (newStartEpoch != m_mumeStartEpoch) {
-        emit log("MumeClock", "Detected new Mume start epoch " + QString::number(
-                     newStartEpoch) + " (" + QString::number(newStartEpoch - m_mumeStartEpoch) +
-                 " seconds from previous)");
+        emit log("MumeClock",
+                 "Detected new Mume start epoch " + QString::number(newStartEpoch) + " ("
+                     + QString::number(newStartEpoch - m_mumeStartEpoch)
+                     + " seconds from previous)");
     }
     m_mumeStartEpoch = newStartEpoch;
 }
@@ -222,16 +223,19 @@ MumeMoment &MumeClock::unknownTimeTick(MumeMoment &moment)
             emit log("MumeClock", "Tick detected");
         } else {
             if (moment.m_minute > 0 && moment.m_minute <= m_clockTolerance) {
-                emit log("MumeClock", "Synchronized tick but Mume seems to be running slow by " +
-                         QString::number(moment.m_minute) + " seconds");
+                emit log("MumeClock",
+                         "Synchronized tick but Mume seems to be running slow by "
+                             + QString::number(moment.m_minute) + " seconds");
             } else if (moment.m_minute >= (60 - m_clockTolerance) && moment.m_minute < 60) {
-                emit log("MumeClock", "Synchronized tick but Mume seems to be running fast by " +
-                         QString::number(moment.m_minute) + " seconds");
+                emit log("MumeClock",
+                         "Synchronized tick but Mume seems to be running fast by "
+                             + QString::number(moment.m_minute) + " seconds");
                 moment.m_hour = moment.m_hour + 1;
             } else {
                 m_precision = MUMECLOCK_DAY;
-                emit log("MumeClock", "Precision lowered because tick was off by " +
-                         QString::number(moment.m_minute) + " seconds)");
+                emit log("MumeClock",
+                         "Precision lowered because tick was off by "
+                             + QString::number(moment.m_minute) + " seconds)");
             }
         }
     }
@@ -267,8 +271,10 @@ void MumeClock::parseClockTime(const QString &clockTime, int secsSinceEpoch)
         moment.m_minute = minute;
         moment.m_hour = hour;
         int newStartEpoch = secsSinceEpoch - moment.toSeconds();
-        emit log("MumeClock", "Synchronized with clock in room (" + QString::number(
-                     newStartEpoch - m_mumeStartEpoch) + " seconds from previous)");
+        emit log("MumeClock",
+                 "Synchronized with clock in room ("
+                     + QString::number(newStartEpoch - m_mumeStartEpoch)
+                     + " seconds from previous)");
         m_mumeStartEpoch = newStartEpoch;
     }
 }
@@ -294,8 +300,10 @@ const QString MumeClock::toMumeTime(const MumeMoment &moment)
         time = QString("%1%2 on the ").arg(hour).arg(period);
         break;
     case MUMECLOCK_MINUTE:
-        time = QString("%1:%2%3 on the ").arg(hour).arg(QString().sprintf("%02d",
-                                                                          moment.m_minute)).arg(period);
+        time = QString("%1:%2%3 on the ")
+                   .arg(hour)
+                   .arg(QString().sprintf("%02d", moment.m_minute))
+                   .arg(period);
         break;
     default:
         break;
@@ -313,16 +321,15 @@ const QString MumeClock::toMumeTime(const MumeMoment &moment)
     }
 
     // TODO(nschimme): Figure out how to reverse engineer the day of the week
-    QString monthName = MumeClock::s_westronMonthNames.valueToKey(static_cast<WestronMonthNames>
-                                                                  (moment.m_month));
+    QString monthName = MumeClock::s_westronMonthNames.valueToKey(
+        static_cast<WestronMonthNames>(moment.m_month));
     return QString("%1%2%3 of %4, year %5 of the Third Age.")
-           .arg(time)
-           .arg(day)
-           .arg(daySuffix)
-           .arg(monthName)
-           .arg(moment.m_year);
+        .arg(time)
+        .arg(day)
+        .arg(daySuffix)
+        .arg(monthName)
+        .arg(moment.m_year);
 }
-
 
 const QString MumeClock::toCountdown(const MumeMoment &moment)
 {
@@ -344,6 +351,7 @@ const QString MumeClock::toCountdown(const MumeMoment &moment)
     if (m_precision <= MUMECLOCK_HOUR) {
         return QString("~%1").arg((secondsToCountdown / 60) + 1);
     }
-    return QString("%1:%2").arg(secondsToCountdown / 60).arg(QString().sprintf("%02d",
-                                                                               secondsToCountdown % 60));
+    return QString("%1:%2")
+        .arg(secondsToCountdown / 60)
+        .arg(QString().sprintf("%02d", secondsToCountdown % 60));
 }

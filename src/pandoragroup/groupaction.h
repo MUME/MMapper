@@ -25,8 +25,8 @@
 #ifndef GROUPACTION_H
 #define GROUPACTION_H
 
-#include <QString>
 #include <QDomNode>
+#include <QString>
 
 class CGroup;
 
@@ -36,14 +36,9 @@ public:
     GroupAction() {}
     virtual ~GroupAction() {}
     virtual void exec() = 0;
-    void setGroup(CGroup *in)
-    {
-        this->group = in;
-    }
-    void schedule(CGroup *in)
-    {
-        setGroup(in);
-    }
+    void setGroup(CGroup *in) { this->group = in; }
+    void schedule(CGroup *in) { setGroup(in); }
+
 protected:
     CGroup *group;
 };
@@ -52,8 +47,10 @@ class AddCharacter : public GroupAction
 {
 public:
     AddCharacter(const QDomNode &blob);
+
 protected:
     void exec();
+
 private:
     QDomNode blob;
 };
@@ -62,9 +59,11 @@ class RemoveCharacter : public GroupAction
 {
 public:
     RemoveCharacter(const QDomNode &blob);
-    RemoveCharacter(QByteArray );
+    RemoveCharacter(QByteArray);
+
 protected:
     void exec();
+
 private:
     QByteArray name;
 };
@@ -73,8 +72,10 @@ class UpdateCharacter : public GroupAction
 {
 public:
     UpdateCharacter(const QDomNode &blob);
+
 protected:
     void exec();
+
 private:
     QDomNode blob;
 };
@@ -83,8 +84,10 @@ class RenameCharacter : public GroupAction
 {
 public:
     RenameCharacter(const QDomNode &blob);
+
 protected:
     void exec();
+
 private:
     QDomNode blob;
 };
@@ -93,6 +96,7 @@ class ResetCharacters : public GroupAction
 {
 public:
     ResetCharacters();
+
 protected:
     void exec();
 };

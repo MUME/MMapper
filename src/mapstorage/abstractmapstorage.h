@@ -39,7 +39,6 @@ class QFile;
 
 class AbstractMapStorage : public QObject
 {
-
     Q_OBJECT
 
 public:
@@ -50,14 +49,14 @@ public:
     virtual bool canLoad() = 0;
     virtual bool canSave() = 0;
 
-    virtual void newData () = 0;
+    virtual void newData() = 0;
     virtual bool loadData() = 0;
     virtual bool mergeData() = 0;
-    virtual bool saveData( bool baseMapOnly = false ) = 0;
+    virtual bool saveData(bool baseMapOnly = false) = 0;
     const ProgressCounter *progressCounter() const;
 
 signals:
-    void log( const QString &, const QString & );
+    void log(const QString &, const QString &);
     void onDataLoaded();
     void onDataSaved();
     void onNewData();
@@ -68,6 +67,5 @@ protected:
     QString m_fileName;
     QPointer<ProgressCounter> m_progressCounter;
 };
-
 
 #endif

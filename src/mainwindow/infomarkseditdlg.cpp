@@ -88,11 +88,17 @@ void InfoMarksEditDlg::writeSettings()
 
 void InfoMarksEditDlg::connectAll()
 {
-    connect(objectsList, SIGNAL(currentIndexChanged(const QString &)), this,
+    connect(objectsList,
+            SIGNAL(currentIndexChanged(const QString &)),
+            this,
             SLOT(objectListCurrentIndexChanged(const QString &)));
-    connect(objectType, SIGNAL(currentIndexChanged(const QString &)), this,
+    connect(objectType,
+            SIGNAL(currentIndexChanged(const QString &)),
+            this,
             SLOT(objectTypeCurrentIndexChanged(const QString &)));
-    connect(objectClassesList, SIGNAL(currentIndexChanged(const QString &)), this,
+    connect(objectClassesList,
+            SIGNAL(currentIndexChanged(const QString &)),
+            this,
             SLOT(objectClassCurrentIndexChanged(const QString &)));
     connect(objectNameStr, SIGNAL(textChanged(QString)), this, SLOT(objectNameTextChanged(QString)));
     connect(objectText, SIGNAL(textChanged(QString)), this, SLOT(objectTextChanged(QString)));
@@ -112,7 +118,6 @@ void InfoMarksEditDlg::connectAll()
     connect(layerEButton, SIGNAL(clicked()), this, SLOT(onMoveEastClicked()));
     connect(layerWButton, SIGNAL(clicked()), this, SLOT(onMoveWestClicked()));
     connect(objectDeleteAll, SIGNAL(clicked()), this, SLOT(onDeleteAllClicked()));
-
 }
 
 void InfoMarksEditDlg::objectListCurrentIndexChanged(const QString & /*unused*/)
@@ -125,50 +130,23 @@ void InfoMarksEditDlg::objectTypeCurrentIndexChanged(const QString & /*unused*/)
     updateDialog();
 }
 
-void InfoMarksEditDlg::objectClassCurrentIndexChanged(const QString & /*unused*/)
-{
+void InfoMarksEditDlg::objectClassCurrentIndexChanged(const QString & /*unused*/) {}
 
-}
+void InfoMarksEditDlg::objectNameTextChanged(const QString /*unused*/ &) {}
 
-void InfoMarksEditDlg::objectNameTextChanged(const QString /*unused*/&)
-{
+void InfoMarksEditDlg::objectTextChanged(const QString /*unused*/ &) {}
 
-}
+void InfoMarksEditDlg::x1ValueChanged(double /*unused*/) {}
 
-void InfoMarksEditDlg::objectTextChanged(const QString /*unused*/&)
-{
+void InfoMarksEditDlg::y1ValueChanged(double /*unused*/) {}
 
-}
+void InfoMarksEditDlg::x2ValueChanged(double /*unused*/) {}
 
-void InfoMarksEditDlg::x1ValueChanged(double /*unused*/)
-{
+void InfoMarksEditDlg::y2ValueChanged(double /*unused*/) {}
 
-}
+void InfoMarksEditDlg::rotValueChanged(double /*unused*/) {}
 
-void InfoMarksEditDlg::y1ValueChanged(double /*unused*/)
-{
-
-}
-
-void InfoMarksEditDlg::x2ValueChanged(double /*unused*/)
-{
-
-}
-
-void InfoMarksEditDlg::y2ValueChanged(double /*unused*/)
-{
-
-}
-
-void InfoMarksEditDlg::rotValueChanged(double /*unused*/)
-{
-
-}
-
-void InfoMarksEditDlg::layerValueChanged(int /*unused*/)
-{
-
-}
+void InfoMarksEditDlg::layerValueChanged(int /*unused*/) {}
 
 void InfoMarksEditDlg::onDeleteAllClicked()
 {
@@ -339,16 +317,14 @@ void InfoMarksEditDlg::createClicked()
     QString name = objectNameStr->text();
 
     if (name == "") {
-        QMessageBox::critical(this, tr("MMapper2"),
-                              tr("Can't create objects with empty name!"));
+        QMessageBox::critical(this, tr("MMapper2"), tr("Can't create objects with empty name!"));
     }
 
     MarkerListIterator mi(ml);
     while (mi.hasNext()) {
         InfoMark *marker = mi.next();
         if (marker->getName() == name) {
-            QMessageBox::critical(this, tr("MMapper2"),
-                                  tr("Object with this name already exists!"));
+            QMessageBox::critical(this, tr("MMapper2"), tr("Object with this name already exists!"));
             return;
         }
     }
@@ -359,10 +335,12 @@ void InfoMarksEditDlg::createClicked()
     im->setName(name);
     im->setText(objectText->text());
     im->setClass(getClass());
-    Coordinate pos1( static_cast<int>(m_x1->value() * 100.0f), static_cast<int>(m_y1->value() * 100.0f),
-                     m_layer->value() );
-    Coordinate pos2( static_cast<int>(m_x2->value() * 100.0f), static_cast<int>(m_y2->value() * 100.0f),
-                     m_layer->value() );
+    Coordinate pos1(static_cast<int>(m_x1->value() * 100.0f),
+                    static_cast<int>(m_y1->value() * 100.0f),
+                    m_layer->value());
+    Coordinate pos2(static_cast<int>(m_x2->value() * 100.0f),
+                    static_cast<int>(m_y2->value() * 100.0f),
+                    m_layer->value());
     im->setPosition1(pos1);
     im->setPosition2(pos2);
     im->setRotationAngle(m_rotationAngle->value());
@@ -383,10 +361,12 @@ void InfoMarksEditDlg::modifyClicked()
     im->setName(objectNameStr->text());
     im->setText(objectText->text());
     im->setClass(getClass());
-    Coordinate pos1( static_cast<int>(m_x1->value() * 100.0f), static_cast<int>(m_y1->value() * 100.0f),
-                     m_layer->value() );
-    Coordinate pos2( static_cast<int>(m_x2->value() * 100.0f), static_cast<int>(m_y2->value() * 100.0f),
-                     m_layer->value() );
+    Coordinate pos1(static_cast<int>(m_x1->value() * 100.0f),
+                    static_cast<int>(m_y1->value() * 100.0f),
+                    m_layer->value());
+    Coordinate pos2(static_cast<int>(m_x2->value() * 100.0f),
+                    static_cast<int>(m_y2->value() * 100.0f),
+                    m_layer->value());
     im->setPosition1(pos1);
     im->setPosition2(pos2);
     im->setRotationAngle(m_rotationAngle->value());
@@ -410,13 +390,22 @@ void InfoMarksEditDlg::deleteClicked()
 
 void InfoMarksEditDlg::disconnectAll()
 {
-    disconnect(objectsList, SIGNAL(currentIndexChanged(const QString &)), this,
+    disconnect(objectsList,
+               SIGNAL(currentIndexChanged(const QString &)),
+               this,
                SLOT(objectListCurrentIndexChanged(const QString &)));
-    disconnect(objectType, SIGNAL(currentIndexChanged(const QString &)), this,
+    disconnect(objectType,
+               SIGNAL(currentIndexChanged(const QString &)),
+               this,
                SLOT(objectTypeCurrentIndexChanged(const QString &)));
-    disconnect(objectNameStr, SIGNAL(textChanged(QString)), this, SLOT(objectNameTextChanged(QString)));
+    disconnect(objectNameStr,
+               SIGNAL(textChanged(QString)),
+               this,
+               SLOT(objectNameTextChanged(QString)));
     disconnect(objectText, SIGNAL(textChanged(QString)), this, SLOT(objectTextChanged(QString)));
-    disconnect(objectClassesList, SIGNAL(currentIndexChanged(const QString &)), this,
+    disconnect(objectClassesList,
+               SIGNAL(currentIndexChanged(const QString &)),
+               this,
                SLOT(objectClassCurrentIndexChanged(const QString &)));
     disconnect(m_x1, SIGNAL(valueChanged(double)), this, SLOT(x1ValueChanged(double)));
     disconnect(m_y1, SIGNAL(valueChanged(double)), this, SLOT(y1ValueChanged(double)));
@@ -464,26 +453,28 @@ void InfoMarksEditDlg::updateMarkers()
         firstInside = false;
         secondInside = false;
 
-        if (c1.x / 100.0f > bx1 && c1.x / 100.0f < bx2 && c1.y / 100.0f > by1 && c1.y / 100.0f < by2) {
+        if (c1.x / 100.0f > bx1 && c1.x / 100.0f < bx2 && c1.y / 100.0f > by1
+            && c1.y / 100.0f < by2) {
             firstInside = true;
         }
-        if (c2.x / 100.0f > bx1 && c2.x / 100.0f < bx2 && c2.y / 100.0f > by1 && c2.y / 100.0f < by2) {
+        if (c2.x / 100.0f > bx1 && c2.x / 100.0f < bx2 && c2.y / 100.0f > by1
+            && c2.y / 100.0f < by2) {
             secondInside = true;
         }
 
         switch (marker->getType()) {
         case MT_TEXT:
-            if ( firstInside && m_selLayer == c1.z) {
+            if (firstInside && m_selLayer == c1.z) {
                 objectsList->addItem(marker->getName());
             }
             break;
         case MT_LINE:
-            if ( m_selLayer == c1.z && (firstInside || secondInside)) {
+            if (m_selLayer == c1.z && (firstInside || secondInside)) {
                 objectsList->addItem(marker->getName());
             }
             break;
         case MT_ARROW:
-            if ( m_selLayer == c1.z && (firstInside || secondInside)) {
+            if (m_selLayer == c1.z && (firstInside || secondInside)) {
                 objectsList->addItem(marker->getName());
             }
             break;
@@ -591,7 +582,7 @@ InfoMark *InfoMarksEditDlg::getInfoMark(const QString &name)
     MarkerListIterator mi(m_mapData->getMarkersList());
     while (mi.hasNext()) {
         InfoMark *marker = mi.next();
-        if (marker->getName() == name ) {
+        if (marker->getName() == name) {
             return marker;
         }
     }

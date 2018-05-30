@@ -26,8 +26,8 @@
 #ifndef ROOMSELECTION_H
 #define ROOMSELECTION_H
 
-#include <QMap>
 #include "roomrecipient.h"
+#include <QMap>
 
 class Room;
 class RoomAdmin;
@@ -35,7 +35,9 @@ class RoomAdmin;
 class RoomSelection : public QMap<uint, const Room *>, public RoomRecipient
 {
 public:
-    RoomSelection(RoomAdmin *admin) : m_admin(admin) {}
+    RoomSelection(RoomAdmin *admin)
+        : m_admin(admin)
+    {}
     void receiveRoom(RoomAdmin *admin, const Room *aRoom);
     bool containsAll(const RoomSelection *other) const;
 

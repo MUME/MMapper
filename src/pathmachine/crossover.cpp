@@ -25,8 +25,12 @@
 
 #include "crossover.h"
 
-Crossover::Crossover(std::list<Path *> *paths, uint dirCode, PathParameters &params,
-                     AbstractRoomFactory *in_factory) : Experimenting(paths, dirCode, params, in_factory) {}
+Crossover::Crossover(std::list<Path *> *paths,
+                     uint dirCode,
+                     PathParameters &params,
+                     AbstractRoomFactory *in_factory)
+    : Experimenting(paths, dirCode, params, in_factory)
+{}
 
 void Crossover::receiveRoom(RoomAdmin *map, const Room *room)
 {

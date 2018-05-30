@@ -53,14 +53,18 @@ public:
 private:
     void set(const Coordinate &c, Room *room);
     Coordinate getNearestFree(const Coordinate &c);
-    std::map<int, std::map<int, std::map<int, Room *> > > m_map;
+    std::map<int, std::map<int, std::map<int, Room *>>> m_map;
 };
 
 class CoordinateIterator
 {
 public:
-    CoordinateIterator() : threshold(1), state(7) {}
+    CoordinateIterator()
+        : threshold(1)
+        , state(7)
+    {}
     Coordinate &next();
+
 private:
     Coordinate c;
     int threshold;

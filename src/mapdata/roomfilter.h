@@ -3,14 +3,17 @@
 
 #include "room.h"
 
-enum pattern_kinds {PAT_UNK, PAT_DESC, PAT_DYNDESC, PAT_NAME, PAT_NOTE, PAT_EXITS, PAT_ALL};
+enum pattern_kinds { PAT_UNK, PAT_DESC, PAT_DYNDESC, PAT_NAME, PAT_NOTE, PAT_EXITS, PAT_ALL };
 
 class RoomFilter
 {
 public:
     RoomFilter() {}
-    RoomFilter(const QString &pattern, const Qt::CaseSensitivity &cs,
-               const char kind) : pattern(pattern), cs(cs), kind(kind) { }
+    RoomFilter(const QString &pattern, const Qt::CaseSensitivity &cs, const char kind)
+        : pattern(pattern)
+        , cs(cs)
+        , kind(kind)
+    {}
 
     // Return false on parse failure
     static bool parseRoomFilter(const QString &line, RoomFilter &output);

@@ -38,8 +38,9 @@
 #include <QStatusBar>
 #include <QVBoxLayout>
 
-ClientWidget::ClientWidget(QWidget *parent) : QDialog(parent),
-    m_connected(false)
+ClientWidget::ClientWidget(QWidget *parent)
+    : QDialog(parent)
+    , m_connected(false)
 {
     setWindowTitle("MMapper Client");
     setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
@@ -92,7 +93,6 @@ ClientWidget::ClientWidget(QWidget *parent) : QDialog(parent),
     connect(m_display, &DisplayWidget::showMessage, m_statusBar, &QStatusBar::showMessage);
     readSettings();
 
-
     auto *menuBar = new QMenuBar(this);
     layout->setMenuBar(menuBar);
 
@@ -113,7 +113,8 @@ ClientWidget::ClientWidget(QWidget *parent) : QDialog(parent),
     });
 
     QAction *saveLog = new QAction(QIcon::fromTheme("document-save", QIcon(":/icons/save.png")),
-                                   tr("&Save log as..."), this);
+                                   tr("&Save log as..."),
+                                   this);
     saveLog->setShortcut(QKeySequence(tr("Ctrl+S")));
     connect(saveLog, &QAction::triggered, this, &ClientWidget::saveLog);
     connect(saveLog, &QAction::hovered, [this]() {
@@ -121,7 +122,8 @@ ClientWidget::ClientWidget(QWidget *parent) : QDialog(parent),
     });
 
     QAction *closeAct = new QAction(QIcon::fromTheme("window-close", QIcon(":/icons/exit.png")),
-                                    tr("E&xit"), this);
+                                    tr("E&xit"),
+                                    this);
     closeAct->setShortcut(QKeySequence(tr("Ctrl+Q")));
     connect(closeAct, &QAction::triggered, this, &ClientWidget::close);
     connect(closeAct, &QAction::hovered, [this]() {
@@ -134,7 +136,8 @@ ClientWidget::ClientWidget(QWidget *parent) : QDialog(parent),
     fileMenu->addAction(closeAct);
 
     QMenu *editMenu = menuBar->addMenu("&Edit");
-    QAction *cutAct = new QAction(QIcon::fromTheme("edit-cut", QIcon(":/icons/cut.png")), tr("Cu&t"),
+    QAction *cutAct = new QAction(QIcon::fromTheme("edit-cut", QIcon(":/icons/cut.png")),
+                                  tr("Cu&t"),
                                   this);
     cutAct->setShortcut(QKeySequence(tr("Ctrl+X")));
     cutAct->setStatusTip(tr("Cut the current selection's contents to the clipboard"));
@@ -142,18 +145,20 @@ ClientWidget::ClientWidget(QWidget *parent) : QDialog(parent),
     connect(cutAct, &QAction::triggered, m_input, &StackedInputWidget::cut);
 
     QAction *copyAct = new QAction(QIcon::fromTheme("edit-copy", QIcon(":/icons/copy.png")),
-                                   tr("&Copy"), this);
+                                   tr("&Copy"),
+                                   this);
     copyAct->setShortcut(QKeySequence(tr("Ctrl+C")));
     copyAct->setStatusTip(tr("Copy the current selection's contents to the clipboard"));
     editMenu->addAction(copyAct);
     connect(copyAct, &QAction::triggered, this, &ClientWidget::copy);
-    connect(m_display, &DisplayWidget::copyAvailable,  [ = ](bool copyAvailable ) {
+    connect(m_display, &DisplayWidget::copyAvailable, [=](bool copyAvailable) {
         qInfo() << copyAvailable;
         m_displayCopyAvailable = copyAvailable;
-    } );
+    });
 
     QAction *pasteAct = new QAction(QIcon::fromTheme("edit-paste", QIcon(":/icons/paste.png")),
-                                    tr("&Paste"), this);
+                                    tr("&Paste"),
+                                    this);
     pasteAct->setShortcut(QKeySequence(tr("Ctrl+V")));
     pasteAct->setStatusTip(tr("Paste the clipboard's contents into the current selection"));
     editMenu->addAction(pasteAct);
@@ -168,7 +173,6 @@ ClientWidget::~ClientWidget()
     delete m_splitter;
     delete m_statusBar;
 }
-
 
 void ClientWidget::readSettings()
 {
@@ -282,7 +286,8 @@ void ClientWidget::saveLog()
     QPointer<QFileDialog> save = new QFileDialog(this, "Choose log file name ...");
     save->setFileMode(QFileDialog::AnyFile);
     save->setDirectory(QDir::current());
-    save->setNameFilters(QStringList() << "Text log (*.log *.txt)" << "HTML log (*.htm *.html)");
+    save->setNameFilters(QStringList() << "Text log (*.log *.txt)"
+                                       << "HTML log (*.htm *.html)");
     save->setDefaultSuffix("txt");
     save->setAcceptMode(QFileDialog::AcceptSave);
 
@@ -293,13 +298,14 @@ void ClientWidget::saveLog()
 
     if (fileNames.isEmpty()) {
         m_statusBar->showMessage(tr("No filename provided"), 2000);
-        return ;
+        return;
     }
 
     QFile document(fileNames[0]);
     if (!document.open(QFile::WriteOnly | QFile::Text)) {
-        m_statusBar->showMessage(QString("Error occur while opening %1").arg(document.fileName()), 2000);
-        return ;
+        m_statusBar->showMessage(QString("Error occur while opening %1").arg(document.fileName()),
+                                 2000);
+        return;
     }
 
     QString nameFilter = save->selectedNameFilter();

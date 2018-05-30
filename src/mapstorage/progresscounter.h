@@ -35,15 +35,15 @@ class ProgressCounter : public QObject
 
 public:
     ProgressCounter();
-    ProgressCounter( QObject *parent );
+    ProgressCounter(QObject *parent);
     virtual ~ProgressCounter();
 
-    void step( quint32 steps = 1 );
-    void increaseTotalStepsBy( quint32 steps );
+    void step(quint32 steps = 1);
+    void increaseTotalStepsBy(quint32 steps);
     void reset();
 
 signals:
-    void onPercentageChanged( quint32 );
+    void onPercentageChanged(quint32);
 };
 
 #endif /* INCLUDED_STEPCOUNTER_H */

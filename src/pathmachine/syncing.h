@@ -28,8 +28,8 @@
 
 #include "roomrecipient.h"
 
-#include <QtGlobal>
 #include <list>
+#include <QtGlobal>
 
 class RoomSignalHandler;
 class PathParameters;
@@ -44,6 +44,7 @@ private:
     PathParameters &params;
     std::list<Path *> *paths;
     Path *parent;
+
 public:
     Syncing(PathParameters &p, std::list<Path *> *paths, RoomSignalHandler *signaler);
     void receiveRoom(RoomAdmin *, const Room *);
@@ -52,4 +53,3 @@ public:
 };
 
 #endif
-

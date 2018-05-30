@@ -27,13 +27,13 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QDockWidget>
-#include <QMainWindow>
-#include <QTextBrowser>
-#include <QProgressDialog>
-#include <QFileDialog>
-#include <QPointer>
 #include <QActionGroup>
+#include <QDockWidget>
+#include <QFileDialog>
+#include <QMainWindow>
+#include <QPointer>
+#include <QProgressDialog>
+#include <QTextBrowser>
 
 class QMenu;
 class MapWindow;
@@ -55,11 +55,10 @@ class DockWidget : public QDockWidget
 {
     Q_OBJECT
 public:
-    DockWidget ( const QString &title, QWidget *parent = 0, Qt::WindowFlags flags = 0 );
+    DockWidget(const QString &title, QWidget *parent = 0, Qt::WindowFlags flags = 0);
 
     virtual QSize minimumSizeHint() const;
     virtual QSize sizeHint() const;
-
 };
 
 class MainWindow : public QMainWindow
@@ -193,11 +192,11 @@ private:
     QMenu *onlineTutorialsMenu{};
     QMenu *groupMenu{};
 
-    QAction               *groupOffAct{};
-    QAction               *groupClientAct{};
-    QAction               *groupServerAct{};
-    QAction               *groupShowHideAct{};
-    QAction               *groupSettingsAct{};
+    QAction *groupOffAct{};
+    QAction *groupClientAct{};
+    QAction *groupServerAct{};
+    QAction *groupShowHideAct{};
+    QAction *groupSettingsAct{};
 
     QAction *newAct{};
     QAction *openAct{};

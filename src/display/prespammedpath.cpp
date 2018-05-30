@@ -42,8 +42,7 @@ PrespammedPath::PrespammedPath(QObject * /*unused*/)
 #endif
 }
 
-PrespammedPath::~PrespammedPath()
-    = default;
+PrespammedPath::~PrespammedPath() = default;
 
 void PrespammedPath::setPath(CommandQueue queue, bool upd)
 {
@@ -52,4 +51,3 @@ void PrespammedPath::setPath(CommandQueue queue, bool upd)
         emit update();
     }
 }
-

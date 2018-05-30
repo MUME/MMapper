@@ -59,5 +59,4 @@ private:
     QLineEdit *m_passwordWidget;
 };
 
-
 #endif /* STACKEDINPUTWIDGET_H */

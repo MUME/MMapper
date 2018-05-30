@@ -34,9 +34,9 @@
 
 #include <cassert>
 
-MapData::MapData() :
-    MapFrontend(new RoomFactory),
-    m_dataChanged(false)
+MapData::MapData()
+    : MapFrontend(new RoomFactory)
+    , m_dataChanged(false)
 {}
 
 QString MapData::getDoorName(const Coordinate &pos, uint dir)
@@ -62,7 +62,8 @@ void MapData::setDoorName(const Coordinate &pos, const QString &name, uint dir)
         }
         */
         setDataChanged();
-        MapAction *action = new SingleRoomAction(new UpdateExitField(name, dir, E_DOORNAME), room->getId());
+        MapAction *action = new SingleRoomAction(new UpdateExitField(name, dir, E_DOORNAME),
+                                                 room->getId());
         scheduleAction(action);
     }
 }
@@ -97,7 +98,7 @@ void MapData::toggleRoomFlag(const Coordinate &pos, uint flag, uint field)
 {
     QMutexLocker locker(&mapLock);
     Room *room = map.get(pos);
-    if ((room != nullptr) && field < ROOMFIELD_LAST ) {
+    if ((room != nullptr) && field < ROOMFIELD_LAST) {
         setDataChanged();
         MapAction *action = new SingleRoomAction(new ModifyRoomFlags(flag, field, FMM_TOGGLE),
                                                  room->getId());
@@ -115,7 +116,7 @@ void MapData::setRoomField(const Coordinate &pos, const QVariant &flag, uint fie
 {
     QMutexLocker locker(&mapLock);
     Room *room = map.get(pos);
-    if ((room != nullptr) && field < ROOMFIELD_LAST ) {
+    if ((room != nullptr) && field < ROOMFIELD_LAST) {
         setDataChanged();
         MapAction *action = new SingleRoomAction(new UpdateRoomField(flag, field), room->getId());
         scheduleAction(action);
@@ -172,7 +173,8 @@ const RoomSelection *MapData::select(const Coordinate &ulf, const Coordinate &lr
     return selection;
 }
 // updates a selection created by the mapdata
-const RoomSelection *MapData::select(const Coordinate &ulf, const Coordinate &lrb,
+const RoomSelection *MapData::select(const Coordinate &ulf,
+                                     const Coordinate &lrb,
                                      const RoomSelection *in)
 {
     QMutexLocker locker(&mapLock);
@@ -242,7 +244,7 @@ const Room *MapData::getRoom(uint id, const RoomSelection *in)
     return room;
 }
 
-void MapData::draw (const Coordinate &ulf, const Coordinate &lrb, MapCanvas &screen)
+void MapData::draw(const Coordinate &ulf, const Coordinate &lrb, MapCanvas &screen)
 {
     QMutexLocker locker(&mapLock);
     DrawStream drawer(screen, roomIndex, locks);
@@ -352,7 +354,6 @@ bool MapData::execute(MapAction *action, const RoomSelection *unlock)
     return executable;
 }
 
-
 void MapData::clear()
 {
     MapFrontend::clear();
@@ -369,7 +370,8 @@ void MapData::removeDoorNames()
     for (auto &room : roomIndex) {
         if (room != nullptr) {
             for (uint dir = 0; dir <= 6; dir++) {
-                MapAction *action = new SingleRoomAction(new UpdateExitField("", dir, E_DOORNAME), room->getId());
+                MapAction *action = new SingleRoomAction(new UpdateExitField("", dir, E_DOORNAME),
+                                                         room->getId());
                 scheduleAction(action);
             }
         }
@@ -417,4 +419,3 @@ void MapData::addMarker(InfoMark *im)
 {
     m_markers.append(im);
 }
-

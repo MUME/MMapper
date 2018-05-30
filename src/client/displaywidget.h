@@ -25,8 +25,8 @@
 #ifndef DISPLAYWIDGET_H
 #define DISPLAYWIDGET_H
 
-#include <QTextEdit>
 #include <QRegExp>
+#include <QTextEdit>
 
 class QTextDocument;
 

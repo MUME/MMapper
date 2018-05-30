@@ -26,8 +26,8 @@
 #ifndef PRESPAMMEDPATH_H_
 #define PRESPAMMEDPATH_H_
 
-#include <QObject>
 #include "abstractparser.h"
+#include <QObject>
 
 class MapData;
 class MapCanvas;
@@ -39,29 +39,16 @@ public:
     PrespammedPath(QObject *parent = 0);
     ~PrespammedPath();
 
-    bool isEmpty()
-    {
-        return m_queue.isEmpty();
-    };
-    CommandQueue::const_iterator begin() const
-    {
-        return m_queue.begin();
-    }
-    CommandQueue::const_iterator end() const
-    {
-        return m_queue.end();
-    }
-    CommandQueue &getQueue()
-    {
-        return m_queue;
-    };
+    bool isEmpty() { return m_queue.isEmpty(); };
+    CommandQueue::const_iterator begin() const { return m_queue.begin(); }
+    CommandQueue::const_iterator end() const { return m_queue.end(); }
+    CommandQueue &getQueue() { return m_queue; };
 signals:
     void update();
 public slots:
     void setPath(CommandQueue, bool);
 
 protected:
-
 private:
     CommandQueue m_queue;
 };

@@ -29,20 +29,21 @@
 class Coordinate
 {
 public:
-    bool operator== (const Coordinate &other) const;
-    bool operator!= (const Coordinate &other) const;
-    void operator+= (const Coordinate &other);
-    void operator-= (const Coordinate &other);
-    Coordinate operator+ (const Coordinate &other) const;
-    Coordinate operator- (const Coordinate &other) const;
+    bool operator==(const Coordinate &other) const;
+    bool operator!=(const Coordinate &other) const;
+    void operator+=(const Coordinate &other);
+    void operator-=(const Coordinate &other);
+    Coordinate operator+(const Coordinate &other) const;
+    Coordinate operator-(const Coordinate &other) const;
 
     int distance(const Coordinate &other) const;
     void clear();
-    Coordinate(int in_x = 0, int in_y = 0, int in_z = 0) : x(in_x), y(in_y), z(in_z) {}
-    bool isNull() const
-    {
-        return (x == 0 && y == 0 && z == 0);
-    }
+    Coordinate(int in_x = 0, int in_y = 0, int in_z = 0)
+        : x(in_x)
+        , y(in_y)
+        , z(in_z)
+    {}
+    bool isNull() const { return (x == 0 && y == 0 && z == 0); }
 
     int x;
     int y;
@@ -53,5 +54,3 @@ public:
 #include <mpatrol.h>
 #endif
 #endif
-
-

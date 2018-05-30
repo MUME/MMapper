@@ -4,26 +4,34 @@
 
 #include <QColorDialog>
 
-GraphicsPage::GraphicsPage(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::GraphicsPage)
+GraphicsPage::GraphicsPage(QWidget *parent)
+    : QWidget(parent)
+    , ui(new Ui::GraphicsPage)
 {
     ui->setupUi(this);
 
     connect(ui->changeColor, SIGNAL(clicked()), SLOT(changeColorClicked()));
-    connect(ui->antialiasingSamplesComboBox, SIGNAL( currentTextChanged(const QString &) ), this,
-            SLOT( antialiasingSamplesTextChanged(const QString &) )  );
-    connect(ui->trilinearFilteringCheckBox, SIGNAL(stateChanged(int)),
+    connect(ui->antialiasingSamplesComboBox,
+            SIGNAL(currentTextChanged(const QString &)),
+            this,
+            SLOT(antialiasingSamplesTextChanged(const QString &)));
+    connect(ui->trilinearFilteringCheckBox,
+            SIGNAL(stateChanged(int)),
             SLOT(trilinearFilteringStateChanged(int)));
-    connect(ui->softwareOpenGLCheckBox, SIGNAL(stateChanged(int)),
+    connect(ui->softwareOpenGLCheckBox,
+            SIGNAL(stateChanged(int)),
             SLOT(softwareOpenGLStateChanged(int)));
 
     connect(ui->updated, SIGNAL(stateChanged(int)), SLOT(updatedStateChanged(int)));
-    connect(ui->drawNotMappedExits, SIGNAL(stateChanged(int)),
+    connect(ui->drawNotMappedExits,
+            SIGNAL(stateChanged(int)),
             SLOT(drawNotMappedExitsStateChanged(int)));
-    connect(ui->drawNoMatchExits, SIGNAL(stateChanged(int)), SLOT(drawNoMatchExitsStateChanged(int)));
+    connect(ui->drawNoMatchExits,
+            SIGNAL(stateChanged(int)),
+            SLOT(drawNoMatchExitsStateChanged(int)));
     connect(ui->drawDoorNames, SIGNAL(stateChanged(int)), SLOT(drawDoorNamesStateChanged(int)));
-    connect(ui->drawUpperLayersTextured, SIGNAL(stateChanged(int)),
+    connect(ui->drawUpperLayersTextured,
+            SIGNAL(stateChanged(int)),
             SLOT(drawUpperLayersTexturedStateChanged(int)));
 
     QPixmap bgPix(16, 16);
@@ -38,13 +46,12 @@ GraphicsPage::GraphicsPage(QWidget *parent) :
     ui->trilinearFilteringCheckBox->setChecked(Config().m_trilinearFiltering);
     ui->softwareOpenGLCheckBox->setChecked(Config().m_softwareOpenGL);
 
-    ui->updated->setChecked( Config().m_showUpdated );
-    ui->drawNotMappedExits->setChecked( Config().m_drawNotMappedExits );
-    ui->drawNoMatchExits->setChecked( Config().m_drawNoMatchExits );
-    ui->drawUpperLayersTextured->setChecked( Config().m_drawUpperLayersTextured );
-    ui->drawDoorNames->setChecked( Config().m_drawDoorNames );
+    ui->updated->setChecked(Config().m_showUpdated);
+    ui->drawNotMappedExits->setChecked(Config().m_drawNotMappedExits);
+    ui->drawNoMatchExits->setChecked(Config().m_drawNoMatchExits);
+    ui->drawUpperLayersTextured->setChecked(Config().m_drawUpperLayersTextured);
+    ui->drawDoorNames->setChecked(Config().m_drawDoorNames);
 }
-
 
 void GraphicsPage::changeColorClicked()
 {
@@ -71,7 +78,6 @@ void GraphicsPage::softwareOpenGLStateChanged(int /*unused*/)
 {
     Config().m_softwareOpenGL = ui->softwareOpenGLCheckBox->isChecked();
 }
-
 
 void GraphicsPage::updatedStateChanged(int /*unused*/)
 {

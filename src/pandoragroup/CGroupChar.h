@@ -43,7 +43,6 @@ class QDomNode;
 class CGroupChar
 {
 public:
-
     unsigned int pos;
     QByteArray name;
     QByteArray textHP;
@@ -61,40 +60,16 @@ public:
     CGroupChar();
     virtual ~CGroupChar();
 
-    const QByteArray &getName() const
-    {
-        return name;
-    }
-    void setName(QByteArray _name)
-    {
-        name = _name;
-    }
-    void setColor(QColor col)
-    {
-        color = col;
-    }
-    const QColor &getColor() const
-    {
-        return color;
-    }
+    const QByteArray &getName() const { return name; }
+    void setName(QByteArray _name) { name = _name; }
+    void setColor(QColor col) { color = col; }
+    const QColor &getColor() const { return color; }
     QDomNode toXML();
     bool updateFromXML(const QDomNode &node);
-    void setLastMovement(QByteArray move)
-    {
-        lastMovement = move;
-    }
-    void setPosition(unsigned int id)
-    {
-        pos = id;
-    }
-    unsigned int getPosition() const
-    {
-        return pos;
-    }
-    const QByteArray &getLastMovement() const
-    {
-        return lastMovement;
-    }
+    void setLastMovement(QByteArray move) { lastMovement = move; }
+    void setPosition(unsigned int id) { pos = id; }
+    unsigned int getPosition() const { return pos; }
+    const QByteArray &getLastMovement() const { return lastMovement; }
     static QByteArray getNameFromXML(const QDomNode &node);
 
     // for local char only

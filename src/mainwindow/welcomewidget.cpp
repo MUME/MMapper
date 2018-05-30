@@ -28,9 +28,9 @@
 
 #include <QPixmap>
 
-WelcomeWidget::WelcomeWidget(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::WelcomeWidget)
+WelcomeWidget::WelcomeWidget(QWidget *parent)
+    : QWidget(parent)
+    , ui(new Ui::WelcomeWidget)
 {
     ui->setupUi(this);
 

@@ -28,12 +28,12 @@
 
 #include "groupselection.h"
 
-#include <QObject>
-#include <QMutex>
-#include <QDomNode>
-#include <queue>
 #include <set>
 #include <vector>
+#include <QDomNode>
+#include <QMutex>
+#include <QObject>
+#include <queue>
 
 class CGroupCommunicator;
 class CGroupChar;
@@ -80,10 +80,7 @@ signals:
 protected:
     void executeActions();
 
-    CGroupChar *getSelf()
-    {
-        return self;
-    }
+    CGroupChar *getSelf() { return self; }
     void renameChar(const QDomNode &blob);
     void resetChars();
     void updateChar(const QDomNode &blob); // updates given char from the blob
@@ -99,7 +96,7 @@ private:
     std::queue<GroupAction *> actionSchedule;
 
     std::vector<CGroupChar *> charIndex;
-    CGroupChar      *self;
+    CGroupChar *self;
 };
 
 #endif /*CGROUP_H_*/

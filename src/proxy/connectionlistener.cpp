@@ -27,8 +27,13 @@
 #include "connectionlistener.h"
 #include "proxy.h"
 
-ConnectionListener::ConnectionListener(MapData *md, Mmapper2PathMachine *pm, CommandEvaluator *ce,
-                                       PrespammedPath *pp, Mmapper2Group *gm, MumeClock *mc, QObject *parent)
+ConnectionListener::ConnectionListener(MapData *md,
+                                       Mmapper2PathMachine *pm,
+                                       CommandEvaluator *ce,
+                                       PrespammedPath *pp,
+                                       Mmapper2Group *gm,
+                                       MumeClock *mc,
+                                       QObject *parent)
     : QTcpServer(parent)
 {
     m_accept = true;
@@ -40,21 +45,29 @@ ConnectionListener::ConnectionListener(MapData *md, Mmapper2PathMachine *pm, Com
     m_groupManager = gm;
     m_mumeClock = mc;
 
-    connect(this, SIGNAL(log(const QString &, const QString &)), parent, SLOT(log(const QString &,
-                                                                                  const QString &)));
+    connect(this,
+            SIGNAL(log(const QString &, const QString &)),
+            parent,
+            SLOT(log(const QString &, const QString &)));
 }
-
 
 void ConnectionListener::incomingConnection(qintptr socketDescriptor)
 {
     if (m_accept) {
-        emit log ("Listener", "New connection: accepted.");
+        emit log("Listener", "New connection: accepted.");
         doNotAcceptNewConnections();
-        auto *proxy = new Proxy(m_mapData, m_pathMachine, m_commandEvaluator, m_prespammedPath,
-                                m_groupManager, m_mumeClock, socketDescriptor, true, this);
+        auto *proxy = new Proxy(m_mapData,
+                                m_pathMachine,
+                                m_commandEvaluator,
+                                m_prespammedPath,
+                                m_groupManager,
+                                m_mumeClock,
+                                socketDescriptor,
+                                true,
+                                this);
         proxy->start();
     } else {
-        emit log ("Listener", "New connection: rejected.");
+        emit log("Listener", "New connection: rejected.");
         QTcpSocket tcpSocket;
         if (tcpSocket.setSocketDescriptor(socketDescriptor)) {
             QByteArray ba("\033[1;37;41mYou can't connect to MMapper more than once!\r\n"
@@ -77,5 +90,3 @@ void ConnectionListener::doAcceptNewConnections()
 {
     m_accept = true;
 }
-
-

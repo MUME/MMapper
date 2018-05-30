@@ -38,15 +38,15 @@
 
 #include <stack>
 
-PathMachine::PathMachine(AbstractRoomFactory *in_factory, bool threaded) :
-    Component(threaded),
-    factory(in_factory),
-    signaler(this),
-    pathRoot(0, 0, 0),
-    mostLikelyRoom(0, 0, 0),
-    lastEvent(Mmapper2Event::createEvent(CID_UNKNOWN, nullptr, nullptr, nullptr, 0, 0, 0)),
-    state(SYNCING),
-    paths(new std::list<Path *>)
+PathMachine::PathMachine(AbstractRoomFactory *in_factory, bool threaded)
+    : Component(threaded)
+    , factory(in_factory)
+    , signaler(this)
+    , pathRoot(0, 0, 0)
+    , mostLikelyRoom(0, 0, 0)
+    , lastEvent(Mmapper2Event::createEvent(CID_UNKNOWN, nullptr, nullptr, nullptr, 0, 0, 0))
+    , state(SYNCING)
+    , paths(new std::list<Path *>)
 {}
 
 void PathMachine::setCurrentRoom(Approved *app)
@@ -80,7 +80,6 @@ void PathMachine::setCurrentRoom(uint id)
     setCurrentRoom(&app);
 }
 
-
 void PathMachine::init()
 {
     connect(&signaler, &RoomSignalHandler::scheduleAction, this, &PathMachine::scheduleAction);
@@ -98,7 +97,6 @@ void PathMachine::releaseAllPaths()
 
 void PathMachine::retry()
 {
-
     switch (state) {
     case APPROVED:
         state = SYNCING;
@@ -154,7 +152,6 @@ void PathMachine::tryExit(const Exit &possible, RoomRecipient *recipient, bool o
         emit lookingForRooms(recipient, idx);
     }
 }
-
 
 void PathMachine::tryCoordinate(const Room *room, RoomRecipient *recipient, ParseEvent &event)
 {
@@ -232,11 +229,13 @@ void PathMachine::approved(ParseEvent &event)
                 uint connectedRoomId = e.outFirst();
                 ConnectedRoomFlagsType bThisRoom = bFlags >> (dir * 2);
                 if ((bThisRoom & DIRECT_SUN_ROOM) != 0) {
-                    emit scheduleAction(new SingleRoomAction(new UpdateRoomField(RST_SUNDEATH, R_SUNDEATHTYPE),
-                                                             connectedRoomId));
+                    emit scheduleAction(
+                        new SingleRoomAction(new UpdateRoomField(RST_SUNDEATH, R_SUNDEATHTYPE),
+                                             connectedRoomId));
                 } else if ((bThisRoom & INDIRECT_SUN_ROOM) != 0) {
-                    emit scheduleAction(new SingleRoomAction(new UpdateRoomField(RST_NOSUNDEATH, R_SUNDEATHTYPE),
-                                                             connectedRoomId));
+                    emit scheduleAction(
+                        new SingleRoomAction(new UpdateRoomField(RST_NOSUNDEATH, R_SUNDEATHTYPE),
+                                             connectedRoomId));
                 }
             }
         }
@@ -255,7 +254,6 @@ void PathMachine::approved(ParseEvent &event)
     }
 }
 
-
 void PathMachine::syncing(ParseEvent &event)
 {
     {
@@ -268,7 +266,6 @@ void PathMachine::syncing(ParseEvent &event)
     evaluatePaths();
 }
 
-
 void PathMachine::experimenting(ParseEvent &event)
 {
     Experimenting *exp = nullptr;
@@ -277,7 +274,7 @@ void PathMachine::experimenting(ParseEvent &event)
     // only create rooms if no properties are skipped and
     // the move coordinate is not 0,0,0
     if (event.getNumSkipped() == 0
-            && (moveCode < static_cast<uint>(mostLikelyRoom.getExitsList().size()))) {
+        && (moveCode < static_cast<uint>(mostLikelyRoom.getExitsList().size()))) {
         exp = new Crossover(paths, moveCode, params, factory);
         std::set<const Room *> pathEnds;
         for (auto &path : *paths) {
@@ -321,8 +318,3 @@ void PathMachine::evaluatePaths()
         emit playerMoved(mostLikelyRoom.getPosition());
     }
 }
-
-
-
-
-

@@ -33,78 +33,17 @@ static const unsigned char escChar = '\033';
 
 // latin1 to 7-bit Ascii
 static const unsigned char latin1ToAscii[] = {
-    /*192*/ 'A',
-    'A',
-    'A',
-    'A',
-    'A',
-    'A',
-    'A',
-    'C',
-    'E',
-    'E',
-    'E',
-    'E',
-    'I',
-    'I',
-    'I',
-    'I',
-    'D',
-    'N',
-    'O',
-    'O',
-    'O',
-    'O',
-    'O',
-    'x',
-    'O',
-    'U',
-    'U',
-    'U',
-    'U',
-    'Y',
-    'b',
-    'B',
-    'a',
-    'a',
-    'a',
-    'a',
-    'a',
-    'a',
-    'a',
-    'c',
-    'e',
-    'e',
-    'e',
-    'e',
-    'i',
-    'i',
-    'i',
-    'i',
-    'o',
-    'n',
-    'o',
-    'o',
-    'o',
-    'o',
-    'o',
-    ':',
-    'o',
-    'u',
-    'u',
-    'u',
-    'u',
-    'y',
-    'b',
-    'y'
-};
+    /*192*/ 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'C', 'E', 'E', 'E', 'E', 'I', 'I', 'I', 'I',
+    'D',         'N', 'O', 'O', 'O', 'O', 'O', 'x', 'O', 'U', 'U', 'U', 'U', 'Y', 'b', 'B',
+    'a',         'a', 'a', 'a', 'a', 'a', 'a', 'c', 'e', 'e', 'e', 'e', 'i', 'i', 'i', 'i',
+    'o',         'n', 'o', 'o', 'o', 'o', 'o', ':', 'o', 'u', 'u', 'u', 'u', 'y', 'b', 'y'};
 
 QString &removeAnsiMarks(QString &str)
 {
     QString out = "";
     bool started = false;
     for (auto character : str) {
-        if ( started && (character.toLatin1() == colorEndMark)) {
+        if (started && (character.toLatin1() == colorEndMark)) {
             started = false;
             continue;
         }
@@ -131,7 +70,7 @@ QString &latinToAscii(QString &str)
             if (ch < 192) {
                 ch = 'z';
             } else {
-                ch = latin1ToAscii[ ch - 192 ];
+                ch = latin1ToAscii[ch - 192];
             }
             str[pos] = ch;
         }
@@ -139,4 +78,4 @@ QString &latinToAscii(QString &str)
     return str;
 }
 
-}  // namespace ParserUtils
+} // namespace ParserUtils

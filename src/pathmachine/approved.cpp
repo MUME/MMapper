@@ -57,23 +57,22 @@ Approved::~Approved()
         } else {
             owner->keepRoom(this, matchedRoom->getId());
             if (update) {
-                owner->scheduleAction(new SingleRoomAction(new Update(*myEvent), matchedRoom->getId()));
+                owner->scheduleAction(
+                    new SingleRoomAction(new Update(*myEvent), matchedRoom->getId()));
             }
         }
     }
 }
 
-
-Approved::Approved(AbstractRoomFactory *in_factory, ParseEvent &event, int tolerance) :
-    matchedRoom(nullptr),
-    myEvent(&event),
-    matchingTolerance(tolerance),
-    owner(nullptr),
-    moreThanOne(false),
-    update(false),
-    factory(in_factory)
+Approved::Approved(AbstractRoomFactory *in_factory, ParseEvent &event, int tolerance)
+    : matchedRoom(nullptr)
+    , myEvent(&event)
+    , matchingTolerance(tolerance)
+    , owner(nullptr)
+    , moreThanOne(false)
+    , update(false)
+    , factory(in_factory)
 {}
-
 
 const Room *Approved::oneMatch()
 {
@@ -93,8 +92,6 @@ void Approved::reset()
     moreThanOne = false;
     owner = nullptr;
 }
-
-
 
 RoomAdmin *Approved::getOwner()
 {

@@ -1,16 +1,13 @@
 #include <QtTest/QtTest>
 
-#include "testexpandoracommon.h"
 #include "property.h"
+#include "testexpandoracommon.h"
 
 TestExpandoraCommon::TestExpandoraCommon()
     : QObject()
-{
-}
+{}
 
-TestExpandoraCommon::~TestExpandoraCommon()
-{
-}
+TestExpandoraCommon::~TestExpandoraCommon() {}
 
 void TestExpandoraCommon::skippablePropertyTest()
 {

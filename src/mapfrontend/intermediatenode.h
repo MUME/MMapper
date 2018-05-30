@@ -26,10 +26,9 @@
 #ifndef INTERMEDIATENODE
 #define INTERMEDIATENODE
 
-#include "searchtreenode.h"
 #include "roomcollection.h"
 #include "roomoutstream.h"
-
+#include "searchtreenode.h"
 
 /**
  * IntermediateNodes represent possible ends of a property
@@ -44,6 +43,7 @@ public:
     RoomCollection *insertRoom(ParseEvent &event) override;
     void getRooms(RoomOutStream &stream, ParseEvent &event) override;
     void skipDown(RoomOutStream &stream, ParseEvent &event) override;
+
 private:
     std::unique_ptr<RoomCollection> rooms{};
 };

@@ -35,11 +35,9 @@ public:
     ~TestExpandoraCommon() override;
 
 private:
-
 private Q_SLOTS:
     void skippablePropertyTest();
     void stringPropertyTest();
 };
 
 #endif
-

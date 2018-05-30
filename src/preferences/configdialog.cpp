@@ -39,9 +39,9 @@
 #include <QStackedWidget>
 
 ConfigDialog::ConfigDialog(Mmapper2Group *gm, QWidget *parent)
-    : QDialog(parent),
-      ui(new Ui::ConfigDialog),
-      m_groupManager(gm)
+    : QDialog(parent)
+    , ui(new Ui::ConfigDialog)
+    , m_groupManager(gm)
 {
     ui->setupUi(this);
 
@@ -69,7 +69,8 @@ ConfigDialog::ConfigDialog(Mmapper2Group *gm, QWidget *parent)
     ui->contentsWidget->setCurrentItem(ui->contentsWidget->item(0));
     connect(ui->contentsWidget,
             SIGNAL(currentItemChanged(QListWidgetItem *, QListWidgetItem *)),
-            this, SLOT(changePage(QListWidgetItem *, QListWidgetItem *)));
+            this,
+            SLOT(changePage(QListWidgetItem *, QListWidgetItem *)));
     connect(ui->closeButton, SIGNAL(clicked()), this, SLOT(close()));
 }
 
@@ -142,4 +143,3 @@ void ConfigDialog::changePage(QListWidgetItem *current, QListWidgetItem *previou
 
     pagesWidget->setCurrentIndex(ui->contentsWidget->row(current));
 }
-

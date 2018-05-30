@@ -40,8 +40,13 @@ class MumeClock;
 class ConnectionListener : public QTcpServer
 {
 public:
-    ConnectionListener(MapData *, Mmapper2PathMachine *, CommandEvaluator *, PrespammedPath *,
-                       Mmapper2Group *, MumeClock *, QObject *parent);
+    ConnectionListener(MapData *,
+                       Mmapper2PathMachine *,
+                       CommandEvaluator *,
+                       PrespammedPath *,
+                       Mmapper2Group *,
+                       MumeClock *,
+                       QObject *parent);
 
 public slots:
     void doNotAcceptNewConnections();

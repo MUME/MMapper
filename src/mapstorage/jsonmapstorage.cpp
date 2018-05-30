@@ -42,7 +42,6 @@
 #include <QCryptographicHash>
 #include <QDir>
 #include <QFile>
-#include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -72,35 +71,28 @@ class WebHasher
 
 public:
     WebHasher()
-        : m_hash( QCryptographicHash::Md5 )
-    {
-    }
+        : m_hash(QCryptographicHash::Md5)
+    {}
 
-    void add( QString str )
+    void add(QString str)
     {
         // This is most likely unnecessary because the parser did it for us...
         // We need plain ASCII so that accentuation changes do not affect the
         // hashes and because MD5 is defined on bytes, not encoded chars.
-        ParserUtils::latinToAscii( str );
+        ParserUtils::latinToAscii(str);
         // Roomdescs may see whitespacing fixes over the year (ex: removing double
         // spaces after periods). MM2 ignores such changes when comparing rooms,
         // but the web mapper may only look up rooms by hash. Normalizing the
         // whitespaces make the hash resilient.
-        str.replace( QRegularExpression( " +" ), " " );
-        str.replace( QRegularExpression( " *\r?\n" ), "\n" );
+        str.replace(QRegularExpression(" +"), " ");
+        str.replace(QRegularExpression(" *\r?\n"), "\n");
 
-        m_hash.addData( str.toLatin1() );
+        m_hash.addData(str.toLatin1());
     }
 
-    QByteArray result() const
-    {
-        return m_hash.result();
-    }
+    QByteArray result() const { return m_hash.result(); }
 
-    void reset()
-    {
-        m_hash.reset();
-    }
+    void reset() { m_hash.reset(); }
 };
 
 // Lets the webclient locate and load the useful zones only, not the whole
@@ -115,18 +107,15 @@ private:
     WebHasher m_hasher;
 
 public:
-    void addRoom( const Room &room )
+    void addRoom(const Room &room)
     {
-        m_hasher.add( Mmapper2Room::getName( &room ) + "\n" );
-        m_hasher.add( Mmapper2Room::getDescription( &room ) );
-        m_index.insert( m_hasher.result().toHex(), room.getPosition() );
+        m_hasher.add(Mmapper2Room::getName(&room) + "\n");
+        m_hasher.add(Mmapper2Room::getDescription(&room));
+        m_index.insert(m_hasher.result().toHex(), room.getPosition());
         m_hasher.reset();
     }
 
-    const Index &index() const
-    {
-        return m_index;
-    }
+    const Index &index() const { return m_index; }
 };
 
 // Splits the world in zones easier to download and load
@@ -139,47 +128,44 @@ private:
     Index m_index;
 
 public:
-    void addRoom( const Room *room )
+    void addRoom(const Room *room)
     {
         Coordinate coords = room->getPosition();
-        QString zone( QString( "%1,%2" )
-                      .arg( coords.x - coords.x % c_zoneWidth )
-                      .arg( coords.y - coords.y % c_zoneWidth ) );
+        QString zone(QString("%1,%2")
+                         .arg(coords.x - coords.x % c_zoneWidth)
+                         .arg(coords.y - coords.y % c_zoneWidth));
 
-        Index::iterator iter = m_index.find( zone );
-        if ( iter == m_index.end() ) {
+        Index::iterator iter = m_index.find(zone);
+        if (iter == m_index.end()) {
             ConstRoomList list;
-            list.push_back( room );
-            m_index.insert( zone, list );
+            list.push_back(room);
+            m_index.insert(zone, list);
         } else {
-            iter.value().push_back( room );
+            iter.value().push_back(room);
         }
     }
 
-    const Index &index() const
-    {
-        return m_index;
-    }
+    const Index &index() const { return m_index; }
 };
 
 template<typename JsonT>
-void writeJson( const QString &filePath, JsonT json, const QString &what )
+void writeJson(const QString &filePath, JsonT json, const QString &what)
 {
-    QFile file( filePath );
-    if ( !file.open( QIODevice::WriteOnly ) ) {
-        QString msg( QString( "error opening %1 to %2: %3" )
-                     .arg( what ).arg( filePath ).arg( file.errorString() ) );
-        throw std::runtime_error( msg.toStdString() );
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly)) {
+        QString msg(
+            QString("error opening %1 to %2: %3").arg(what).arg(filePath).arg(file.errorString()));
+        throw std::runtime_error(msg.toStdString());
     }
 
-    QJsonDocument doc( json );
-    QTextStream stream( &file );
+    QJsonDocument doc(json);
+    QTextStream stream(&file);
     stream << doc.toJson();
     stream.flush();
-    if ( !file.flush() || stream.status() != QTextStream::Ok ) {
-        QString msg( QString( "error writing %1 to %2: %3" )
-                     .arg( what ).arg( filePath ).arg( file.errorString() ) );
-        throw std::runtime_error( msg.toStdString() );
+    if (!file.flush() || stream.status() != QTextStream::Ok) {
+        QString msg(
+            QString("error writing %1 to %2: %3").arg(what).arg(filePath).arg(file.errorString()));
+        throw std::runtime_error(msg.toStdString());
     }
 }
 
@@ -192,50 +178,48 @@ class RoomIndexStore
     RoomIndexStore() = delete; // Disabled
 
 public:
-    explicit RoomIndexStore( const QDir &dir )
-        : m_dir( dir )
-    {
-    }
+    explicit RoomIndexStore(const QDir &dir)
+        : m_dir(dir)
+    {}
 
-    void add( const QByteArray &hash, Coordinate coords )
+    void add(const QByteArray &hash, Coordinate coords)
     {
-        QByteArray prefix = hash.left( c_roomIndexFileNameSize );
-        if ( m_prefix != prefix ) {
+        QByteArray prefix = hash.left(c_roomIndexFileNameSize);
+        if (m_prefix != prefix) {
             close();
             m_prefix = prefix;
         }
 
         QJsonArray jCoords;
-        jCoords.push_back( coords.x );
-        jCoords.push_back( coords.y );
-        jCoords.push_back( coords.z );
+        jCoords.push_back(coords.x);
+        jCoords.push_back(coords.y);
+        jCoords.push_back(coords.z);
 
-        QJsonObject::iterator collision = m_hashes.find( hash );
-        if ( collision == m_hashes.end() ) {
+        QJsonObject::iterator collision = m_hashes.find(hash);
+        if (collision == m_hashes.end()) {
             QJsonArray array;
-            array.push_back( jCoords );
-            m_hashes.insert( hash, array );
+            array.push_back(jCoords);
+            m_hashes.insert(hash, array);
         } else {
-            collision.value().toArray().push_back( jCoords );
+            collision.value().toArray().push_back(jCoords);
         }
     }
 
     void close()
     {
-        if ( m_hashes.isEmpty() ) {
+        if (m_hashes.isEmpty()) {
             return;
         }
 
-        assert( m_prefix.size() != 0 );
-        QString filePath = m_dir.filePath( QString::fromLocal8Bit( m_prefix ) + ".json" );
+        assert(m_prefix.size() != 0);
+        QString filePath = m_dir.filePath(QString::fromLocal8Bit(m_prefix) + ".json");
 
-        writeJson( filePath, m_hashes, "room index" );
+        writeJson(filePath, m_hashes, "room index");
 
         m_hashes = QJsonObject();
         m_prefix = QByteArray();
     }
 };
-
 
 // Maps MM2 room IDs -> hole-free JSON room IDs
 class JsonRoomIdsCache
@@ -246,10 +230,7 @@ class JsonRoomIdsCache
 
 public:
     JsonRoomIdsCache();
-    void addRoom( uint mm2RoomId )
-    {
-        m_cache[mm2RoomId] = m_nextJsonId++;
-    }
+    void addRoom(uint mm2RoomId) { m_cache[mm2RoomId] = m_nextJsonId++; }
     uint operator[](uint roomId) const;
     uint size() const;
 };
@@ -270,7 +251,6 @@ uint JsonRoomIdsCache::size() const
     return m_nextJsonId;
 }
 
-
 // Expects that a RoomSaver locks the Rooms for the lifetime of this object!
 class JsonWorld
 {
@@ -278,46 +258,50 @@ class JsonWorld
     RoomHashIndex m_roomHashIndex;
     ZoneIndex m_zoneIndex;
 
-    void addRoom( QJsonArray &jRooms, const Room *room ) const;
-    void addExits( const Room *room, QJsonObject &jr ) const;
+    void addRoom(QJsonArray &jRooms, const Room *room) const;
+    void addExits(const Room *room, QJsonObject &jr) const;
 
 public:
     JsonWorld();
     ~JsonWorld();
-    void addRooms( const ConstRoomList &roomList, BaseMapSaveFilter &filter,
-                   const QPointer<ProgressCounter> &progressCounter, bool baseMapOnly );
-    void writeMetadata( const QFileInfo &path, const MapData &mapData ) const;
-    void writeRoomIndex( const QDir &dir ) const;
-    void writeZones( const QDir &dir, BaseMapSaveFilter &filter,
-                     const QPointer<ProgressCounter> &progressCounter, bool baseMapOnly ) const;
+    void addRooms(const ConstRoomList &roomList,
+                  BaseMapSaveFilter &filter,
+                  const QPointer<ProgressCounter> &progressCounter,
+                  bool baseMapOnly);
+    void writeMetadata(const QFileInfo &path, const MapData &mapData) const;
+    void writeRoomIndex(const QDir &dir) const;
+    void writeZones(const QDir &dir,
+                    BaseMapSaveFilter &filter,
+                    const QPointer<ProgressCounter> &progressCounter,
+                    bool baseMapOnly) const;
 };
 
-JsonWorld::JsonWorld()
-    = default;
+JsonWorld::JsonWorld() = default;
 
-JsonWorld::~JsonWorld()
-    = default;
+JsonWorld::~JsonWorld() = default;
 
-void JsonWorld::addRooms( const ConstRoomList &roomList, BaseMapSaveFilter &filter,
-                          const QPointer<ProgressCounter> &progressCounter, bool baseMapOnly )
+void JsonWorld::addRooms(const ConstRoomList &roomList,
+                         BaseMapSaveFilter &filter,
+                         const QPointer<ProgressCounter> &progressCounter,
+                         bool baseMapOnly)
 {
     for (auto room : roomList) {
         progressCounter->step();
 
-        if ( baseMapOnly ) {
-            BaseMapSaveFilter::Action action = filter.filter( room );
-            if ( room->isTemporary() || action == BaseMapSaveFilter::REJECT ) {
+        if (baseMapOnly) {
+            BaseMapSaveFilter::Action action = filter.filter(room);
+            if (room->isTemporary() || action == BaseMapSaveFilter::REJECT) {
                 continue;
             }
         }
 
-        m_jRoomIds.addRoom( room->getId() );
-        m_roomHashIndex.addRoom( *room );
-        m_zoneIndex.addRoom( room );
+        m_jRoomIds.addRoom(room->getId());
+        m_roomHashIndex.addRoom(*room);
+        m_zoneIndex.addRoom(room);
     }
 }
 
-void JsonWorld::writeMetadata( const QFileInfo &path, const MapData &mapData ) const
+void JsonWorld::writeMetadata(const QFileInfo &path, const MapData &mapData) const
 {
     QJsonObject meta;
     meta["roomsCount"] = static_cast<qint64>(m_jRoomIds.size());
@@ -328,35 +312,35 @@ void JsonWorld::writeMetadata( const QFileInfo &path, const MapData &mapData ) c
     meta["maxY"] = mapData.getLrb().y;
     meta["maxZ"] = mapData.getLrb().z;
     QJsonArray directions;
-    for ( size_t i = 0; i <= ED_NONE; ++i ) { // resize array
-        directions.push_back( QJsonValue() );
+    for (size_t i = 0; i <= ED_NONE; ++i) { // resize array
+        directions.push_back(QJsonValue());
     }
-    directions[ED_NORTH]   = "NORTH";
-    directions[ED_SOUTH]   = "SOUTH";
-    directions[ED_EAST]    = "EAST";
-    directions[ED_WEST]    = "WEST";
-    directions[ED_UP]      = "UP";
-    directions[ED_DOWN]    = "DOWN";
+    directions[ED_NORTH] = "NORTH";
+    directions[ED_SOUTH] = "SOUTH";
+    directions[ED_EAST] = "EAST";
+    directions[ED_WEST] = "WEST";
+    directions[ED_UP] = "UP";
+    directions[ED_DOWN] = "DOWN";
     directions[ED_UNKNOWN] = "UNKNOWN";
-    directions[ED_NONE]    = "NONE";
+    directions[ED_NONE] = "NONE";
     meta["directions"] = directions;
 
-    writeJson( path.filePath(), meta, "metadata" );
+    writeJson(path.filePath(), meta, "metadata");
 }
 
-void JsonWorld::writeRoomIndex( const QDir &dir ) const
+void JsonWorld::writeRoomIndex(const QDir &dir) const
 {
     using IterT = RoomHashIndex::Index::const_iterator;
     const RoomHashIndex::Index &index = m_roomHashIndex.index();
 
-    RoomIndexStore store( dir );
-    for ( IterT iter = index.cbegin(); iter != index.cend(); ++iter ) {
-        store.add( iter.key(), iter.value() );
+    RoomIndexStore store(dir);
+    for (IterT iter = index.cbegin(); iter != index.cend(); ++iter) {
+        store.add(iter.key(), iter.value());
     }
     store.close();
 }
 
-void JsonWorld::addRoom( QJsonArray &jRooms, const Room *room ) const
+void JsonWorld::addRoom(QJsonArray &jRooms, const Room *room) const
 {
     /*
           x: 5, y: 5, z: 0,
@@ -374,23 +358,23 @@ void JsonWorld::addRoom( QJsonArray &jRooms, const Room *room ) const
     jr["z"] = pos.z;
 
     uint jsonId = m_jRoomIds[room->getId()];
-    jr["id"]        = QString::number(jsonId);
-    jr["name"]      = Mmapper2Room::getName(room);
-    jr["desc"]      = Mmapper2Room::getDescription(room);
-    jr["sector"]    = static_cast<quint8>(Mmapper2Room::getTerrainType(room));
-    jr["light"]     = static_cast<quint8>(Mmapper2Room::getLightType(room));
-    jr["portable"]  = static_cast<quint8>(Mmapper2Room::getPortableType(room));
-    jr["rideable"]  = static_cast<quint8>(Mmapper2Room::getRidableType(room));
-    jr["sundeath"]  = static_cast<quint8>(Mmapper2Room::getSundeathType(room));
-    jr["mobflags"]  = static_cast<qint64>(Mmapper2Room::getMobFlags(room));
+    jr["id"] = QString::number(jsonId);
+    jr["name"] = Mmapper2Room::getName(room);
+    jr["desc"] = Mmapper2Room::getDescription(room);
+    jr["sector"] = static_cast<quint8>(Mmapper2Room::getTerrainType(room));
+    jr["light"] = static_cast<quint8>(Mmapper2Room::getLightType(room));
+    jr["portable"] = static_cast<quint8>(Mmapper2Room::getPortableType(room));
+    jr["rideable"] = static_cast<quint8>(Mmapper2Room::getRidableType(room));
+    jr["sundeath"] = static_cast<quint8>(Mmapper2Room::getSundeathType(room));
+    jr["mobflags"] = static_cast<qint64>(Mmapper2Room::getMobFlags(room));
     jr["loadflags"] = static_cast<qint64>(Mmapper2Room::getLoadFlags(room));
 
-    addExits( room, jr );
+    addExits(room, jr);
 
-    jRooms.push_back( jr );
+    jRooms.push_back(jr);
 }
 
-void JsonWorld::addExits( const Room *room, QJsonObject &jr ) const
+void JsonWorld::addExits(const Room *room, QJsonObject &jr) const
 {
     const ExitsList &exitList = room->getExitsList();
     ExitsListIterator el(exitList);
@@ -398,9 +382,9 @@ void JsonWorld::addExits( const Room *room, QJsonObject &jr ) const
     while (el.hasNext()) {
         const Exit &e = el.next();
         QJsonObject je;
-        je["flags"]  = Mmapper2Exit::getFlags(e);
+        je["flags"] = Mmapper2Exit::getFlags(e);
         je["dflags"] = Mmapper2Exit::getDoorFlags(e);
-        je["name"]   = Mmapper2Exit::getDoorName(e);
+        je["name"] = Mmapper2Exit::getDoorName(e);
 
         QJsonArray jin;
         for (auto idx : e.inRange()) {
@@ -420,45 +404,45 @@ void JsonWorld::addExits( const Room *room, QJsonObject &jr ) const
     jr["exits"] = jExits;
 }
 
-void JsonWorld::writeZones( const QDir &dir, BaseMapSaveFilter &filter,
-                            const QPointer<ProgressCounter> &progressCounter, bool baseMapOnly ) const
+void JsonWorld::writeZones(const QDir &dir,
+                           BaseMapSaveFilter &filter,
+                           const QPointer<ProgressCounter> &progressCounter,
+                           bool baseMapOnly) const
 {
     using ZoneIterT = ZoneIndex::Index::const_iterator;
     const ZoneIndex::Index &index = m_zoneIndex.index();
 
-    for ( ZoneIterT zIter = index.cbegin(); zIter != index.cend(); ++zIter ) {
+    for (ZoneIterT zIter = index.cbegin(); zIter != index.cend(); ++zIter) {
         const ConstRoomList &rooms = zIter.value();
         QJsonArray jRooms;
         for (auto room : rooms) {
-            if ( baseMapOnly ) {
-                BaseMapSaveFilter::Action action = filter.filter( room );
-                if ( action == BaseMapSaveFilter::ALTER ) {
-                    Room copy = filter.alteredRoom( room );
-                    addRoom( jRooms, &copy );
+            if (baseMapOnly) {
+                BaseMapSaveFilter::Action action = filter.filter(room);
+                if (action == BaseMapSaveFilter::ALTER) {
+                    Room copy = filter.alteredRoom(room);
+                    addRoom(jRooms, &copy);
                 } else {
-                    assert( action == BaseMapSaveFilter::PASS );
-                    addRoom( jRooms, room );
+                    assert(action == BaseMapSaveFilter::PASS);
+                    addRoom(jRooms, room);
                 }
             } else {
-                addRoom( jRooms, room );
+                addRoom(jRooms, room);
             }
             progressCounter->step();
         }
 
-        QString filePath = dir.filePath( zIter.key() + ".json" );
-        writeJson( filePath, jRooms, "zone" );
+        QString filePath = dir.filePath(zIter.key() + ".json");
+        writeJson(filePath, jRooms, "zone");
     }
 }
 
-}  // namespace
+} // namespace
 
-
-JsonMapStorage::JsonMapStorage(MapData &mapdata, const QString &filename, QObject *parent) :
-    AbstractMapStorage(mapdata, filename, parent)
+JsonMapStorage::JsonMapStorage(MapData &mapdata, const QString &filename, QObject *parent)
+    : AbstractMapStorage(mapdata, filename, parent)
 {}
 
-JsonMapStorage::~JsonMapStorage()
-    = default;
+JsonMapStorage::~JsonMapStorage() = default;
 
 void JsonMapStorage::newData()
 {
@@ -475,10 +459,9 @@ bool JsonMapStorage::mergeData()
     return false;
 }
 
-bool JsonMapStorage::saveData( bool baseMapOnly )
+bool JsonMapStorage::saveData(bool baseMapOnly)
 {
-    emit log ("JsonMapStorage", "Writing data to files ...");
-
+    emit log("JsonMapStorage", "Writing data to files ...");
 
     // Collect the room and marker lists. The room list can't be acquired
     // directly apparently and we have to go through a RoomSaver which receives
@@ -494,42 +477,42 @@ bool JsonMapStorage::saveData( bool baseMapOnly )
     uint roomsCount = saver.getRoomsCount();
     uint marksCount = markerList.size();
     m_progressCounter->reset();
-    m_progressCounter->increaseTotalStepsBy( roomsCount * 2 + marksCount );
+    m_progressCounter->increaseTotalStepsBy(roomsCount * 2 + marksCount);
 
     BaseMapSaveFilter filter;
-    if ( baseMapOnly ) {
-        filter.setMapData( &m_mapData );
-        m_progressCounter->increaseTotalStepsBy( filter.prepareCount() );
-        filter.prepare( m_progressCounter );
+    if (baseMapOnly) {
+        filter.setMapData(&m_mapData);
+        m_progressCounter->increaseTotalStepsBy(filter.prepareCount());
+        filter.prepare(m_progressCounter);
     }
 
     JsonWorld world;
-    world.addRooms( roomList, filter, m_progressCounter, baseMapOnly );
+    world.addRooms(roomList, filter, m_progressCounter, baseMapOnly);
 
-    QDir saveDir( m_fileName );
-    QDir destDir( QFileInfo( saveDir, "v1" ).filePath() );
-    QDir roomIndexDir( QFileInfo( destDir, "roomindex" ).filePath() );
-    QDir zoneDir( QFileInfo( destDir, "zone" ).filePath() );
+    QDir saveDir(m_fileName);
+    QDir destDir(QFileInfo(saveDir, "v1").filePath());
+    QDir roomIndexDir(QFileInfo(destDir, "roomindex").filePath());
+    QDir zoneDir(QFileInfo(destDir, "zone").filePath());
     try {
-        if ( !saveDir.mkdir( "v1" ) ) {
-            throw std::runtime_error( "error creating dir v1" );
+        if (!saveDir.mkdir("v1")) {
+            throw std::runtime_error("error creating dir v1");
         }
-        if ( !destDir.mkdir( "roomindex" ) ) {
-            throw std::runtime_error( "error creating dir v1/roomindex" );
+        if (!destDir.mkdir("roomindex")) {
+            throw std::runtime_error("error creating dir v1/roomindex");
         }
-        if ( !destDir.mkdir( "zone" ) ) {
-            throw std::runtime_error( "error creating dir v1/zone" );
+        if (!destDir.mkdir("zone")) {
+            throw std::runtime_error("error creating dir v1/zone");
         }
 
-        world.writeMetadata( QFileInfo( destDir, "arda.json" ), m_mapData );
-        world.writeRoomIndex( roomIndexDir );
-        world.writeZones( zoneDir, filter, m_progressCounter, baseMapOnly );
-    } catch ( std::exception &e ) {
-        emit log( "JsonMapStorage", e.what() );
+        world.writeMetadata(QFileInfo(destDir, "arda.json"), m_mapData);
+        world.writeRoomIndex(roomIndexDir);
+        world.writeZones(zoneDir, filter, m_progressCounter, baseMapOnly);
+    } catch (std::exception &e) {
+        emit log("JsonMapStorage", e.what());
         return false;
     }
 
-    emit log ("JsonMapStorage", "Writing data finished.");
+    emit log("JsonMapStorage", "Writing data finished.");
 
     m_mapData.unsetDataChanged();
     emit onDataSaved();

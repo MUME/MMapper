@@ -26,10 +26,10 @@
 #ifndef ANSI_COMBO_H
 #define ANSI_COMBO_H
 
-#include<QComboBox>
-#include<QVector>
+#include <QComboBox>
+#include <QVector>
 
-enum AnsiMode {ANSI_FG, ANSI_BG};
+enum AnsiMode { ANSI_FG, ANSI_BG };
 
 class AnsiCombo : public QComboBox
 {
@@ -51,9 +51,14 @@ public:
 
     ///\return true if string is valid ANSI color code
     static bool colorFromString(const QString &colString,
-                                QColor &colFg, int &ansiCodeFg, QString &intelligibleNameFg,
-                                QColor &colBg, int &ansiCodeBg, QString &intelligibleNameBg,
-                                bool &bold, bool &underline);
+                                QColor &colFg,
+                                int &ansiCodeFg,
+                                QString &intelligibleNameFg,
+                                QColor &colBg,
+                                int &ansiCodeBg,
+                                QString &intelligibleNameBg,
+                                bool &bold,
+                                bool &underline);
 
     ///\return true, if index is valid color code
     static bool colorFromNumber(int numColor, QColor &col, QString &intelligibleName);
@@ -62,7 +67,6 @@ protected slots:
     void afterEdit(const QString &);
 
 protected:
-
     class AnsiItem
     {
     public:
@@ -75,7 +79,6 @@ protected:
     static AnsiItem initAnsiItem(int index);
 
     AnsiItemVector colours;
-
 };
 
 #endif

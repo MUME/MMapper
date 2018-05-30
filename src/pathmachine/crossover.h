@@ -33,7 +33,9 @@ class AbstractRoomFactory;
 class Crossover : public Experimenting
 {
 public:
-    Crossover(std::list<Path *> *paths, uint dirCode, PathParameters &params,
+    Crossover(std::list<Path *> *paths,
+              uint dirCode,
+              PathParameters &params,
               AbstractRoomFactory *factory);
     void receiveRoom(RoomAdmin *, const Room *);
 };

@@ -25,17 +25,13 @@
 
 #include "pathparameters.h"
 
-PathParameters::PathParameters() :
-    acceptBestRelative(10.0),
-    acceptBestAbsolute(3.0),
-    newRoomPenalty(5.0),
-    multipleConnectionsPenalty(2.0),
-    correctPositionBonus(5.1),
-    maxPaths(500.0),
-    matchingTolerance(5),
-    maxSkipped(1)
-{
-}
-
-
-
+PathParameters::PathParameters()
+    : acceptBestRelative(10.0)
+    , acceptBestAbsolute(3.0)
+    , newRoomPenalty(5.0)
+    , multipleConnectionsPenalty(2.0)
+    , correctPositionBonus(5.1)
+    , maxPaths(500.0)
+    , matchingTolerance(5)
+    , maxSkipped(1)
+{}

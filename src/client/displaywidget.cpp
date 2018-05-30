@@ -37,7 +37,8 @@
 // escape + [ + n1 (+ n2) + m
 const QRegExp DisplayWidget::s_ansiRx(R"(\0033\[((?:\d+;)*\d+)m)");
 
-DisplayWidget::DisplayWidget(QWidget *parent) : QTextEdit(parent)
+DisplayWidget::DisplayWidget(QWidget *parent)
+    : QTextEdit(parent)
 {
     setReadOnly(true);
     setOverwriteMode(true);
@@ -97,15 +98,15 @@ DisplayWidget::DisplayWidget(QWidget *parent) : QTextEdit(parent)
     scrollbar->setPageStep(y);
 }
 
-DisplayWidget::~DisplayWidget()
-    = default;
+DisplayWidget::~DisplayWidget() = default;
 
 void DisplayWidget::resizeEvent(QResizeEvent *event)
 {
     QFontMetrics fm(m_serverOutputFont);
-    int x = (size().width() - contentsMargins().left() - contentsMargins().right()) /
-            fm.averageCharWidth();
-    int y = (size().height() - contentsMargins().top() - contentsMargins().bottom()) / fm.lineSpacing();
+    int x = (size().width() - contentsMargins().left() - contentsMargins().right())
+            / fm.averageCharWidth();
+    int y = (size().height() - contentsMargins().top() - contentsMargins().bottom())
+            / fm.lineSpacing();
     setLineWrapColumnOrWidth(x);
     verticalScrollBar()->setPageStep(y);
     emit showMessage(QString("Dimensions: %1x%2").arg(x).arg(y), 1000);
@@ -207,12 +208,12 @@ void DisplayWidget::updateFormat(QTextCharFormat &format, int ansiCode)
         break;
     case 7:
         // inverse
-    {
-        QBrush tempBrush = format.background();
-        format.setBackground(format.foreground());
-        format.setForeground(tempBrush);
-        break;
-    }
+        {
+            QBrush tempBrush = format.background();
+            format.setBackground(format.foreground());
+            format.setForeground(tempBrush);
+            break;
+        }
     case 8:
         // strike-through
         format.setFontStrikeOut(true);
