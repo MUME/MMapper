@@ -72,9 +72,8 @@ void MapFrontend::scheduleAction(MapAction *action)
     QMutexLocker locker(&mapLock);
     action->schedule(this);
 
-    const auto &affectedRooms = action->getAffectedRooms();
     bool executable = true;
-    for (unsigned int roomId : affectedRooms) {
+    for (unsigned int roomId : action->getAffectedRooms()) {
         actionSchedule[roomId].insert(action);
         if (!locks[roomId].empty()) {
             executable = false;
@@ -101,8 +100,8 @@ void MapFrontend::removeAction(MapAction *action)
 
 bool MapFrontend::isExecutable(MapAction *action)
 {
-    for (unsigned int affectedRoom : action->getAffectedRooms()) {
-        if (!locks[affectedRoom].empty()) {
+    for (unsigned int roomId : action->getAffectedRooms()) {
+        if (!locks[roomId].empty()) {
             return false;
         }
     }
@@ -111,14 +110,15 @@ bool MapFrontend::isExecutable(MapAction *action)
 
 void MapFrontend::executeActions(uint roomId)
 {
-    std::set<MapAction *> &actions = actionSchedule[roomId];
-    auto actionIter = actions.begin();
-    while (actionIter != actions.end()) {
-        MapAction *action = *(actionIter++);
+    std::set<MapAction * > executedActions;
+    for (auto action : actionSchedule[roomId]) {
         if (isExecutable(action)) {
             executeAction(action);
-            removeAction(action);
+            executedActions.insert(action);
         }
+    }
+    for (auto action : executedActions) {
+        removeAction(action);
     }
 }
 

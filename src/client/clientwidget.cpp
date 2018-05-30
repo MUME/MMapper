@@ -245,7 +245,6 @@ void ClientWidget::copy()
     qInfo() << "Copy" << m_displayCopyAvailable;
     if (m_displayCopyAvailable) {
         m_display->copy();
-        m_display->clear();
     } else {
         m_input->copy();
     }
