@@ -21,8 +21,10 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-6.0
           packages:
             - g++-4.9
+            - clang-format-6.0
       env:
         - QT=59 PPA=beineri/opt-qt595-trusty MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
     #
@@ -34,8 +36,10 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-6.0
           packages:
             - g++-5
+            - clang-format-6.0
       env:
         - QT=59 PPA=beineri/opt-qt595-trusty MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
     #
@@ -47,8 +51,10 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-6.0
           packages:
             - g++-6
+            - clang-format-6.0
       env:
         - QT=59 PPA=beineri/opt-qt595-trusty MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
     #
@@ -60,8 +66,10 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-6.0
           packages:
             - g++-7
+            - clang-format-6.0
       env:
         - QT=59 PPA=beineri/opt-qt595-trusty MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
     #
@@ -73,8 +81,10 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-6.0
           packages:
             - g++-8
+            - clang-format-6.0
       env:
         - QT=59 PPA=beineri/opt-qt595-trusty MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
 
@@ -84,10 +94,10 @@ before_install:
   - '[ "$TRAVIS_OS_NAME" != linux ] || sudo apt-get -qy update'
 
 install:
-  - '[ "$TRAVIS_OS_NAME" != linux ] || sudo apt-get -qy install cmake astyle'
+  - '[ "$TRAVIS_OS_NAME" != linux ] || sudo apt-get -qy install cmake'
   - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" != */opt-* ]] || sudo apt-get -qy install qt${QT}base qt${QT}xmlpatterns'
   - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" == */opt-* ]] || sudo apt-get -qy install qt5-qmake qtbase5-dev libqt5xmlpatterns5-dev'
-  - '[ "$TRAVIS_OS_NAME" != osx ] || brew install qt5 astyle openssl'
+  - '[ "$TRAVIS_OS_NAME" != osx ] || brew install qt5 clang-format openssl'
   - '[ "$TRAVIS_OS_NAME" != osx ] || brew link --force qt5'
   - '[ "$TRAVIS_OS_NAME" != osx ] || export PATH=/usr/local/opt/qt5/bin:$PATH'
   - qmake -v
@@ -103,10 +113,11 @@ before_script:
   - '[[ "$TRAVIS_OS_NAME" != osx   || "$CXX" != g++     ]] || export QMAKESPEC=macx-g++'
   - '[ "$TRAVIS_OS_NAME" != osx ] || export MMAPPER_CMAKE_EXTRA=-DOPENSSL_ROOT_DIR=/usr/local/opt/openssl'
   # Code style check
-  - astyle -V
+  - clang-format -version
   - |
-    if  [[ -n $(astyle --options=src/mmapper.astylerc -R *.cpp *.h | grep Formatted) ]]; then
-      echo "You must run astyle before submitting a pull request"
+    if  [[ -n $(find . -type f -name *.cpp -o -name *.h -exec clang-format -style=file {} \;) ]]; then
+      echo "Please fix your code style:"
+      echo "find . -type f -name *.cpp -o -name *.h -exec clang-format -i -style=file {} \;"
       exit -1
     fi
   # Prepare Makefile

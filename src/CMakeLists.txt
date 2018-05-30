@@ -231,7 +231,6 @@ endif()
 
 set(mmapper_DATA
     mmapper.desktop
-    mmapper.astylerc
     MacOSXBundleInfo.plist.in
 )
 
