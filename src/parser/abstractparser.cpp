@@ -881,6 +881,9 @@ bool AbstractParser::parseUserCommands(QString &command)
         } else if (str.startsWith("_mail")) {
             toggleRoomFlagCommand(RLF_MAIL, R_LOADFLAGS);
             return false;
+        } else if (str.startsWith("_stable")) {
+            toggleRoomFlagCommand(RLF_STABLE, R_LOADFLAGS);
+            return false;
         } else if (str.startsWith("_trollexit")) {
             m_trollExitMapping = !m_trollExitMapping;
             QByteArray toggleText = m_trollExitMapping ? "enabled" : "disabled";
@@ -1088,6 +1091,9 @@ bool AbstractParser::parseUserCommands(QString &command)
             emit sendToUser("  _boat         - toggle a boat in the room\r\n");
             emit sendToUser("  _attention    - toggle an attention flag in the room\r\n");
             emit sendToUser("  _watch        - toggle a watchable spot in the room\r\n");
+            emit sendToUser("  _clock        - toggle a clock in the room\r\n");
+            emit sendToUser("  _mail         - toggle a mailbox in the room\r\n");
+            emit sendToUser("  _stable       - toggle a stable in the room\r\n");
 
             emit sendToUser("\r\nMiscellaneous commands:\r\n");
             emit sendToUser("  _note [note]         - set a note in the room\r\n");

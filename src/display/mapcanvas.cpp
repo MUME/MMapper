@@ -138,7 +138,7 @@ MapCanvas::~MapCanvas()
     // destroy all underlying OpenGL resources.
     makeCurrent();
 
-    for (int i = 0; i < 18; i++) {
+    for (int i = 0; i < 19; i++) {
         if (i < 16) {
             if (m_terrainTextures[i] != nullptr) {
                 delete m_terrainTextures[i];
@@ -991,7 +991,7 @@ void MapCanvas::initializeGL()
     }
 
     // Load textures
-    for (int i = 0; i < 18; i++) {
+    for (int i = 0; i < 19; i++) {
         if (i < 16) {
             m_terrainTextures[i] = new QOpenGLTexture(
                 QImage(QString(":/pixmaps/terrain%1.png").arg(i)).mirrored());
@@ -1010,7 +1010,7 @@ void MapCanvas::initializeGL()
     m_updateTexture = new QOpenGLTexture(QImage(QString(":/pixmaps/update0.png")).mirrored());
 
     if (Config().m_trilinearFiltering) {
-        for (int i = 0; i < 18; i++) {
+        for (int i = 0; i < 19; i++) {
             if (i < 16) {
                 m_terrainTextures[i]->setMinMagFilters(QOpenGLTexture::LinearMipMapLinear,
                                                        QOpenGLTexture::Linear);
@@ -2089,6 +2089,9 @@ void MapCanvas::drawRoom(const Room *room,
             }
             if (ISSET(lf, RLF_MAIL)) {
                 alphaOverlayTexture(m_loadTextures[17]);
+            }
+            if (ISSET(lf, RLF_STABLE)) {
+                alphaOverlayTexture(m_loadTextures[18]);
             }
 
             glTranslated(0, 0, 0.005);
