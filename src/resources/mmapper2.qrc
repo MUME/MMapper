@@ -134,5 +134,6 @@
         <file>pixmaps/trail15.png</file>
         <file>icons/mumeprotocolcfg.png</file>
         <file>icons/graphicscfg.png</file>
+        <file>pixmaps/load18.png</file>
     </qresource>
 </RCC>

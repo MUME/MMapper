@@ -97,6 +97,7 @@ typedef quint32 RoomMobFlags;
 #define RLF_TOWER bit16
 #define RLF_CLOCK bit17
 #define RLF_MAIL bit18
+#define RLF_STABLE bit19
 typedef quint32 RoomLoadFlags;
 
 enum RoomField {

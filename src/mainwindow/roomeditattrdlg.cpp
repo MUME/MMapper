@@ -100,7 +100,7 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
     loadListItems[15] = new QListWidgetItem("Tower");
     loadListItems[16] = new QListWidgetItem("Clock");
     loadListItems[17] = new QListWidgetItem("Mail");
-    loadListItems[18] = nullptr;
+    loadListItems[18] = new QListWidgetItem("Stable");
     loadListItems[19] = nullptr;
     loadListItems[20] = nullptr;
     loadListItems[21] = nullptr;
@@ -115,7 +115,7 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
     loadListItems[30] = nullptr;
     loadListItems[31] = nullptr;
     loadFlagsListWidget->clear();
-    for (int i = 0; i < 18; i++) {
+    for (int i = 0; i < 19; i++) {
         loadListItems[i]->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsTristate);
         loadFlagsListWidget->addItem(loadListItems[i]);
     }
@@ -620,6 +620,7 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
             setCheckState(loadListItems, 15, rlf, RLF_TOWER);
             setCheckState(loadListItems, 16, rlf, RLF_CLOCK);
             setCheckState(loadListItems, 17, rlf, RLF_MAIL);
+            setCheckState(loadListItems, 18, rlf, RLF_STABLE);
         }
 
         roomDescriptionTextEdit->setEnabled(true);
