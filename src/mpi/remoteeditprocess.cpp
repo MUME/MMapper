@@ -22,7 +22,7 @@
 **
 ************************************************************************/
 
-#include "viewsessionprocess.h"
+#include "remoteeditprocess.h"
 #include "configuration/configuration.h"
 
 #include <utility>
@@ -31,45 +31,48 @@
 #include <QDir>
 #include <QTemporaryFile>
 
-ViewSessionProcess::ViewSessionProcess(int key, QString title, QString body, QObject *parent)
-    : QProcess(parent)
-    , m_key(key)
+#ifdef __APPLE__
+#include <fcntl.h>
+#elif not defined(__WIN32__)
+#include <unistd.h>
+#endif
+
+RemoteEditProcess::RemoteEditProcess(bool editSession, QString title, QString body, QObject *parent)
+    : QObject(parent)
+    , m_editSession(editSession)
     , m_title(std::move(title))
     , m_body(std::move(body))
 {
-    setReadChannelMode(QProcess::MergedChannels);
+    m_process.setReadChannelMode(QProcess::MergedChannels);
 
     // Signals/Slots
-    connect(this,
+    connect(&m_process,
             SIGNAL(finished(int, QProcess::ExitStatus)),
             SLOT(onFinished(int, QProcess::ExitStatus)));
-    connect(this, SIGNAL(error(QProcess::ProcessError)), SLOT(onError(QProcess::ProcessError)));
-
-    QString keyTemp;
-    if (m_key == -1) {
-        keyTemp = "view";
-    } else {
-        keyTemp = QString("key%1").arg(m_key);
-    }
+    connect(&m_process,
+            SIGNAL(error(QProcess::ProcessError)),
+            SLOT(onError(QProcess::ProcessError)));
 
     // Set the file template
     QString fileTemplate = QString("%1MMapper.%2.pid%3.XXXXXX")
                                .arg(QDir::tempPath() + QDir::separator()) // %1
-                               .arg(keyTemp)                              // %2
+                               .arg(m_editSession ? "edit" : "view")      // %2
                                .arg(QCoreApplication::applicationPid());  // %3
     m_file.setFileTemplate(fileTemplate);
-
     // Try opening up the temporary file
     if (m_file.open()) {
         const QString &fileName = m_file.fileName();
         qDebug() << "View session file template" << fileName;
         m_file.write(m_body.toLatin1());
         m_file.flush();
+#ifdef __APPLE__
+        fcntl(m_file.handle(), F_FULLFSYNC);
+#elif not defined(__WIN32__)
+        fsync(m_file.handle());
+#endif
         m_file.close();
-
-        if (!QFile::exists(m_file.fileName())) {
-            qWarning() << "File does not exist!" << m_file.fileName();
-        }
+        QFileInfo fileInfo(m_file);
+        m_previousTime = fileInfo.lastModified();
 
         // Set the TITLE environmental variable
         QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
@@ -77,45 +80,67 @@ ViewSessionProcess::ViewSessionProcess(int key, QString title, QString body, QOb
             env.remove("TITLE");
         }
         env.insert("TITLE", m_title);
-        setProcessEnvironment(env);
+        m_process.setProcessEnvironment(env);
 
         // Start the process!
         QStringList args = splitCommandLine(Config().m_externalRemoteEditorCommand);
         args << fileName;
         const QString &program = args.takeFirst();
         qDebug() << program << args;
-        start(program, args);
+        m_process.start(program, args);
 
-        qDebug() << "View session" << m_key << m_title << "started";
-
+        qDebug() << "View session started";
     } else {
         qCritical() << "View session was unable to create a temporary file";
-        // Calling a not virtual method from the ctor is undefined behavior
-        // // onError(QProcess::FailedToStart);
-        // consider throwing instead?
-        // // throw std::runtime_error("failed to start");
+        throw std::runtime_error("failed to start");
     }
 }
 
-ViewSessionProcess::~ViewSessionProcess() = default;
-
-void ViewSessionProcess::onFinished(int exitCode, QProcess::ExitStatus status)
+RemoteEditProcess::~RemoteEditProcess()
 {
-    qDebug() << "View session" << m_key << "process finished with code" << exitCode;
-    if (status != QProcess::NormalExit) {
-        qWarning() << "Process did not end normally" << exitCode;
+    qInfo() << "Destroyed RemoteEditProcess";
+}
+
+void RemoteEditProcess::onFinished(int exitCode, QProcess::ExitStatus status)
+{
+    qDebug() << "Edit session process finished with code" << exitCode;
+    if (status == QProcess::NormalExit) {
+        if (m_editSession) {
+            if (m_file.open()) {
+                // See if the file was modified since we created it
+                QFileInfo fileInfo(m_file);
+                QDateTime currentTime = fileInfo.lastModified();
+                if (m_previousTime != currentTime) {
+                    // Read the file and submit it to MUME
+                    QByteArray bytes = m_file.readAll();
+                    qDebug() << "Edit session had changes" << bytes;
+                    QString content = QString(bytes);
+                    emit save(content);
+                } else {
+                    qDebug() << "Edit session canceled (no changes)";
+                }
+                m_file.close();
+            } else {
+                qWarning() << "Edit session unable to read file!";
+            }
+        }
+
+    } else {
+        qWarning() << "File process did not end normally";
+        qWarning() << "Output:" << m_process.readAll();
     }
-    deleteLater();
+
+    emit cancel();
 }
 
-void ViewSessionProcess::onError(QProcess::ProcessError /*error*/)
+void RemoteEditProcess::onError(QProcess::ProcessError /*error*/)
 {
-    qWarning() << "View session" << m_key << "encountered an error:" << errorString();
-    qWarning() << "Output:" << readAll();
-    deleteLater();
+    qWarning() << "View session encountered an error:" << m_process.errorString();
+    qWarning() << "Output:" << m_process.readAll();
+    emit cancel();
 }
 
-QStringList ViewSessionProcess::splitCommandLine(const QString &cmdLine)
+QStringList RemoteEditProcess::splitCommandLine(const QString &cmdLine)
 {
     // https://stackoverflow.com/questions/25068750/extract-parameters-from-string-included-quoted-regions-in-qt
     QStringList list;

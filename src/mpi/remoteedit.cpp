@@ -23,84 +23,93 @@
 ************************************************************************/
 #include "remoteedit.h"
 #include "configuration/configuration.h"
-#include "editsessionprocess.h"
-#include "remoteeditwidget.h"
-#include "viewsessionprocess.h"
+#include "remoteeditsession.h"
 
+#include <cassert>
 #include <QDebug>
 
 const QRegExp RemoteEdit::s_lineFeedNewlineRx("(?!\\r)\\n");
 
-RemoteEdit::RemoteEdit(QObject *parent)
-    : QObject(parent)
-{}
-
-RemoteEdit::~RemoteEdit() = default;
-
-void RemoteEdit::remoteView(const QString &title, const QString &text)
+void RemoteEdit::remoteView(const QString &title, const QString &body)
 {
-    QString body = text;
-#ifdef Q_OS_WIN
-    body.replace(s_lineFeedNewlineRx, "\r\n");
-#endif
-    if (Config().m_internalRemoteEditor) {
-        new RemoteEditWidget(-1, title, body);
-    } else {
-        new ViewSessionProcess(-1, title, body, this);
-    }
+    addSession(REMOTE_EDIT_VIEW_KEY, title, body);
 }
 
-void RemoteEdit::remoteEdit(const int key, const QString &title, const QString &text)
-{
-    QString body = text;
-#ifdef Q_OS_WIN
-    body.replace(s_lineFeedNewlineRx, "\r\n");
-#endif
-    if (Config().m_internalRemoteEditor) {
-        auto widget = new RemoteEditWidget(key, title, body);
-        connect(widget,
-                SIGNAL(save(const QString &, const int)),
-                SLOT(save(const QString &, const int)));
-        connect(widget, SIGNAL(cancel(const int)), SLOT(cancel(const int)));
-
-    } else {
-        auto process = new EditSessionProcess(key, title, body, this);
-        connect(process,
-                SIGNAL(save(const QString &, const int)),
-                SLOT(save(const QString &, const int)));
-        connect(process, SIGNAL(cancel(const int)), SLOT(cancel(const int)));
-    }
-}
-
-void RemoteEdit::cancel(const int key)
-{
-    const QString &keystr = QString("C%1\n").arg(key);
-    const QByteArray &buffer
-        = QString("%1E%2\n%3").arg("~$#E").arg(keystr.length()).arg(keystr).toLatin1();
-
-    qDebug() << "Cancel" << buffer;
-    emit sendToSocket(buffer);
-}
-
-void RemoteEdit::save(const QString &body, const int key)
+void RemoteEdit::remoteEdit(const int key, const QString &title, const QString &body)
 {
     QString content = body;
 #ifdef Q_OS_WIN
-    content.replace("\r\n", "\n");
+    content.replace(s_lineFeedNewlineRx, "\r\n");
 #endif
-    // The body contents have to be followed by a LF if they are not empty
-    if (!content.isEmpty() && !content.endsWith('\n')) {
-        content.append('\n');
+    addSession(key, title, content);
+}
+
+void RemoteEdit::addSession(const int key, const QString &title, const QString &body)
+{
+    uint sessionId = getSessionCount();
+    std::unique_ptr<RemoteEditSession> session;
+    if (Config().m_internalRemoteEditor) {
+        session = std::make_unique<RemoteEditInternalSession>(sessionId, key, title, body, this);
+    } else {
+        session = std::make_unique<RemoteEditExternalSession>(sessionId, key, title, body, this);
+    }
+    m_sessions.insert(std::make_pair(sessionId, std::move(session)));
+}
+
+void RemoteEdit::removeSession(const uint sessionId)
+{
+    auto search = m_sessions.find(sessionId);
+    if (search != m_sessions.end()) {
+        qDebug() << "Destroying RemoteEditSession" << sessionId;
+        m_sessions.erase(search);
+    } else {
+        qWarning() << "Unable to find" << sessionId << "session to erase";
+    }
+}
+
+void RemoteEdit::cancel(const RemoteEditSession *session)
+{
+    assert(session != nullptr);
+    if (session->isEditSession()) {
+        const QString &keystr = QString("C%1\n").arg(session->getKey());
+        const QByteArray &buffer
+            = QString("%1E%2\n%3").arg("~$#E").arg(keystr.length()).arg(keystr).toLatin1();
+
+        qDebug() << "Cancelling session" << session->getKey() << buffer;
+        emit sendToSocket(buffer);
     }
 
-    const QString &keystr = QString("E%1\n").arg(key);
-    const QByteArray &buffer = QString("%1E%2\n%3%4")
-                                   .arg("~$#E")
-                                   .arg(body.length() + keystr.length())
-                                   .arg(keystr)
-                                   .arg(content)
-                                   .toLatin1();
+    int sessionId = session->getId();
+    removeSession(sessionId);
+}
 
-    qInfo() << "Save" << buffer;
-    emit sendToSocket(buffer);
+void RemoteEdit::save(const RemoteEditSession *session)
+{
+    assert(session != nullptr);
+    if (session->isEditSession()) {
+        QString content = session->getContent();
+#ifdef Q_OS_WIN
+        content.replace("\r\n", "\n");
+#endif
+        // The body contents have to be followed by a LF if they are not empty
+        if (!content.isEmpty() && !content.endsWith('\n')) {
+            content.append('\n');
+        }
+
+        const QString &keystr = QString("E%1\n").arg(session->getKey());
+        const QByteArray &buffer = QString("%1E%2\n%3%4")
+                                       .arg("~$#E")
+                                       .arg(content.length() + keystr.length())
+                                       .arg(keystr)
+                                       .arg(content)
+                                       .toLatin1();
+
+        qDebug() << "Saving session" << session->getKey() << buffer;
+        emit sendToSocket(buffer);
+    } else {
+        qWarning() << "Session" << session->getId()
+                   << "was not an edit session and could not be saved";
+    }
+
+    removeSession(session->getId());
 }

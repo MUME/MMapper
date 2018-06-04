@@ -22,32 +22,42 @@
 **
 ************************************************************************/
 
-#ifndef _VIEWSESSIONPROCESS_H_
-#define _VIEWSESSIONPROCESS_H_
+#ifndef _REMOTEEDITPROCESS_H_
+#define _REMOTEEDITPROCESS_H_
 
+#include "remoteeditsession.h"
+
+#include <QDateTime>
 #include <QProcess>
 #include <QTemporaryFile>
 
-class ViewSessionProcess : public QProcess
+class RemoteEditProcess : public QObject
 {
     Q_OBJECT
 
 public:
-    ViewSessionProcess(int key, QString title, QString body, QObject *parent = 0);
-    virtual ~ViewSessionProcess();
+    RemoteEditProcess(bool editSession, QString title, QString body, QObject *parent = 0);
+    ~RemoteEditProcess();
 
 protected slots:
     virtual void onError(QProcess::ProcessError);
     virtual void onFinished(int, QProcess::ExitStatus);
 
-protected:
+signals:
+    void cancel();
+    void save(const QString &);
+
+private:
     QStringList splitCommandLine(const QString &cmdLine);
 
-    int m_key;
-    QString m_title;
-    QString m_body;
+    const QString m_title;
+    const QString m_body;
+    const bool m_editSession;
 
+    QProcess m_process;
     QTemporaryFile m_file;
+    QString m_newBody;
+    QDateTime m_previousTime;
 };
 
-#endif /* _VIEWSESSIONPROCESS_H_ */
+#endif /* _REMOTEEDITPROCESS_H_ */

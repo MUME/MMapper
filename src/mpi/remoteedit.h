@@ -25,31 +25,44 @@
 #ifndef REMOTEEDIT_H
 #define REMOTEEDIT_H
 
+#include "remoteeditsession.h"
+
+#include <memory>
 #include <QObject>
 #include <QRegExp>
-
-class RemoteEditWidget;
 
 class RemoteEdit : public QObject
 {
     Q_OBJECT
 
-public:
-    RemoteEdit(QObject *parent = 0);
-    ~RemoteEdit();
+    friend class RemoteEditSession;
 
-    static const QRegExp s_lineFeedNewlineRx;
+public:
+    RemoteEdit(QObject *parent = nullptr)
+        : QObject(parent)
+    {}
+    ~RemoteEdit() = default;
 
 public slots:
     void remoteView(const QString &, const QString &);
     void remoteEdit(const int, const QString &, const QString &);
 
-protected slots:
-    void cancel(const int);
-    void save(const QString &, const int);
-
 signals:
     void sendToSocket(const QByteArray &);
+
+protected:
+    void cancel(const RemoteEditSession *);
+    void save(const RemoteEditSession *);
+
+private:
+    uint getSessionCount() { return greatestUsedId == UINT_MAX ? 0 : greatestUsedId + 1; }
+    void addSession(const int, const QString &, const QString &);
+    void removeSession(const uint);
+
+    static const QRegExp s_lineFeedNewlineRx;
+
+    uint greatestUsedId{0};
+    std::map<int, std::unique_ptr<RemoteEditSession>> m_sessions;
 };
 
 #endif /* REMOTEEDIT_H */

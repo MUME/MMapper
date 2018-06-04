@@ -116,7 +116,7 @@ void Configuration::read()
 #elif defined(Q_OS_WIN)
                                                "notepad"
 #elif defined(Q_OS_MAC)
-                                               "open -t"
+                                               "open -W -n -t"
 #else
                                                ""
 #endif

@@ -25,23 +25,25 @@
 #ifndef REMOTEEDITWIDGET_H
 #define REMOTEEDITWIDGET_H
 
+#include "remoteeditsession.h"
+
 #include <QAction>
 #include <QDialog>
+#include <QPointer>
 
-class QTextEdit;
+class QPlainTextEdit;
 
 class RemoteEditWidget : public QDialog
 {
     Q_OBJECT
 
 public:
-    RemoteEditWidget(int key, QString title, QString body, QWidget *parent = 0);
+    RemoteEditWidget(bool editSession, QString title, QString body, QWidget *parent = nullptr);
     ~RemoteEditWidget();
 
     QSize minimumSizeHint() const;
     QSize sizeHint() const;
     void closeEvent(QCloseEvent *event);
-    bool isEditSession();
 
 protected slots:
     void cancelEdit();
@@ -50,16 +52,16 @@ protected slots:
     bool contentsChanged();
 
 signals:
-    void cancel(const int);
-    void save(const QString &, const int);
+    void cancel();
+    void save(const QString &);
 
 private:
-    const int m_key;
+    const bool m_editSession;
     const QString m_title;
     const QString m_body;
-    bool m_submitted;
 
-    QTextEdit *m_textEdit;
+    bool m_submitted{false};
+    QPointer<QPlainTextEdit> m_textEdit;
 };
 
 #endif // REMOTEEDITWIDGET_H

@@ -31,22 +31,18 @@
 #include <QDebug>
 #include <QMenuBar>
 #include <QMessageBox>
-#include <QTextEdit>
+#include <QPlainTextEdit>
 #include <QVBoxLayout>
 
-RemoteEditWidget::RemoteEditWidget(int key, QString title, QString body, QWidget *parent)
+RemoteEditWidget::RemoteEditWidget(bool editSession, QString title, QString body, QWidget *parent)
     : QDialog(parent)
-    , m_key(key)
+    , m_editSession(editSession)
     , m_title(std::move(title))
     , m_body(std::move(body))
-    , m_submitted(false)
 {
-    setAttribute(Qt::WA_DeleteOnClose);
-    assert(testAttribute(Qt::WA_DeleteOnClose));
-
     setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
-    setWindowTitle(m_title + " - MMapper " + (isEditSession() ? "Editor" : "Viewer"));
+    setWindowTitle(m_title + " - MMapper " + (m_editSession ? "Editor" : "Viewer"));
 
     auto *mainLayout = new QVBoxLayout(this);
     mainLayout->setAlignment(Qt::AlignTop);
@@ -57,10 +53,10 @@ RemoteEditWidget::RemoteEditWidget(int key, QString title, QString body, QWidget
     int x = fm.averageCharWidth() * 80;
     int y = fm.lineSpacing() * 24;
 
-    m_textEdit = new QTextEdit(this);
+    m_textEdit = new QPlainTextEdit(this);
     m_textEdit->setFont(Config().m_clientFont);
-    m_textEdit->setText(m_body);
-    m_textEdit->setReadOnly(!isEditSession());
+    m_textEdit->setPlainText(m_body);
+    m_textEdit->setReadOnly(!m_editSession);
     m_textEdit->setMinimumSize(QSize(x, y));
     mainLayout->addWidget(m_textEdit);
 
@@ -68,7 +64,7 @@ RemoteEditWidget::RemoteEditWidget(int key, QString title, QString body, QWidget
     mainLayout->setMenuBar(menuBar);
 
     QMenu *fileMenu = menuBar->addMenu(tr("&File"));
-    if (isEditSession()) {
+    if (m_editSession) {
         QAction *saveAction = new QAction(QIcon::fromTheme("document-save",
                                                            QIcon(":/icons/save.png")),
                                           tr("&Submit"),
@@ -110,7 +106,7 @@ RemoteEditWidget::RemoteEditWidget(int key, QString title, QString body, QWidget
     editMenu->addAction(pasteAct);
     connect(pasteAct, SIGNAL(triggered()), m_textEdit, SLOT(paste()));
 
-    if (!isEditSession()) {
+    if (!m_editSession) {
         cutAct->setDisabled(true);
         pasteAct->setDisabled(true);
     }
@@ -119,7 +115,10 @@ RemoteEditWidget::RemoteEditWidget(int key, QString title, QString body, QWidget
     m_textEdit->setFocus();
 }
 
-RemoteEditWidget::~RemoteEditWidget() = default;
+RemoteEditWidget::~RemoteEditWidget()
+{
+    qInfo() << "Destroyed RemoteEditWidget" << m_title;
+}
 
 QSize RemoteEditWidget::minimumSizeHint() const
 {
@@ -133,16 +132,11 @@ QSize RemoteEditWidget::sizeHint() const
 
 void RemoteEditWidget::closeEvent(QCloseEvent *event)
 {
-    if (m_submitted || !isEditSession() || maybeCancel()) {
+    if (m_submitted || !m_editSession || maybeCancel()) {
         event->accept();
     } else {
         event->ignore();
     }
-}
-
-bool RemoteEditWidget::isEditSession()
-{
-    return m_key != -1;
 }
 
 bool RemoteEditWidget::maybeCancel()
@@ -172,13 +166,13 @@ bool RemoteEditWidget::contentsChanged()
 void RemoteEditWidget::cancelEdit()
 {
     m_submitted = true;
-    emit cancel(m_key);
+    emit cancel();
     close();
 }
 
 void RemoteEditWidget::finishEdit()
 {
     m_submitted = true;
-    emit save(m_textEdit->toPlainText().toLatin1(), m_key);
+    emit save(m_textEdit->toPlainText().toLatin1());
     close();
 }

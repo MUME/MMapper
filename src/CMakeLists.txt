@@ -108,16 +108,16 @@ set(mmapper_SRCS
     mapstorage/progresscounter.h
     mapstorage/roomsaver.cpp
     mapstorage/roomsaver.h
-    mpi/editsessionprocess.cpp
-    mpi/editsessionprocess.h
     mpi/mpifilter.cpp
     mpi/mpifilter.h
     mpi/remoteedit.cpp
     mpi/remoteedit.h
+    mpi/remoteeditprocess.cpp
+    mpi/remoteeditprocess.h
+    mpi/remoteeditsession.cpp
+    mpi/remoteeditsession.h
     mpi/remoteeditwidget.cpp
     mpi/remoteeditwidget.h
-    mpi/viewsessionprocess.cpp
-    mpi/viewsessionprocess.h
     pandoragroup/CGroupChar.cpp
     pandoragroup/CGroupChar.h
     pandoragroup/CGroupClient.cpp
