@@ -80,7 +80,6 @@ public slots:
     void incomingData(CGroupClient *, const QByteArray &);
     void sendGTell(const QByteArray &);
     void relayLog(const QString &);
-    virtual void connectionEstablished(CGroupClient *) {}
     virtual void retrieveData(CGroupClient *, int, QDomNode) = 0;
     virtual void connectionClosed(CGroupClient *) = 0;
 
@@ -109,7 +108,7 @@ public:
 protected slots:
     void relayMessage(CGroupClient *connection, int message, const QDomNode &data);
     void serverStartupFailed();
-    void connectionEstablished(CGroupClient *) override;
+    void connectionEstablished(CGroupClient *);
     void retrieveData(CGroupClient *connection, int message, QDomNode data) override;
     void connectionClosed(CGroupClient *connection) override;
 
