@@ -38,7 +38,7 @@ class FileSaver
     QFile m_file; // disables copying
 
 public:
-    FileSaver();
+    FileSaver() = default;
     ~FileSaver();
 
     QFile &file() { return m_file; }

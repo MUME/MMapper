@@ -33,6 +33,10 @@
 #include <unistd.h>
 #endif
 
+#ifdef __APPLE__
+#include <fcntl.h>
+#endif
+
 #include "mapstorage/filesaver.h"
 #include <stdexcept>
 
@@ -56,8 +60,6 @@ void throw_sys_error()
 }
 
 } // namespace
-
-FileSaver::FileSaver() = default;
 
 FileSaver::~FileSaver()
 {
@@ -93,7 +95,13 @@ void FileSaver::close()
     m_file.flush();
 
 #ifdef UNIX_SAFETY
-    if (fsync(m_file.handle()) == -1) {
+    int result = 0;
+#ifdef __APPLE__
+    result = fcntl(m_file.handle(), F_FULLFSYNC);
+#else
+    result = fsync(m_file.handle());
+#endif
+    if (result == -1) {
         throw_sys_error();
     }
 
