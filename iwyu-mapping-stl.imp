@@ -1,0 +1,15 @@
+[
+ {include: ["<bits/exception.h>", private, "<stdexcept>", public]},
+ {include: ["<bits/shared_ptr.h>", private, "<memory>", public]},
+ {include: ["<bits/std_function.h>", private, "<functional>", public]},
+ {include: ["<bits/stdint-intn.h>", private, "<cstdint>", public]},
+ {include: ["<bits/stdint-uintn.h>", private, "<cstdint>", public]},
+ {include: ["<bits/unique_ptr.h>", private, "<memory>", public]},
+
+ # NOTE: this <cmath> is the correct header for std::abs() in c++17
+ {include: ["<bits/std_abs.h>", private, "<cstdlib>", public]},
+
+ {include: ["<assert.h>", public, "<cassert>", public]},
+ {include: ["<stddef.h>", public, "<cstddef>", public]},
+ {include: ["<string.h>", public, "<cstring>", public]},
+]

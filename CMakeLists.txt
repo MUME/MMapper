@@ -1,10 +1,9 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.0.2)
 project(mmapper CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 if(NOT CMAKE_BUILD_TYPE)
-    message(STATUS "No build type selected, defaulting to Debug")
-    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type (default Debug)" FORCE)
+    set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Build type (default RelWithDebInfo)" FORCE)
 endif()
 
 # Version
@@ -15,6 +14,8 @@ message(STATUS "MMapper version ${MMAPPER_VERSION} (${CMAKE_BUILD_TYPE} distribu
 # Options
 option(WITH_QTIOCOMPRESSOR "QtIOCompressor old save backwards compatability" ON)
 option(WITH_OPENSSL "Use OpenSSL for TLS encryption" ON)
+option(USE_TIDY "Run clang-tidy with the compiler" OFF)
+option(USE_IWYU "Run include-what-you-use with the compiler" OFF)
 
 # Apple users are most likely using brew
 if(APPLE)
@@ -143,16 +144,16 @@ if(EXISTS ${GIT_EXECUTABLE})
     endif()
 endif()
 
-if(UNIX AND NOT APPLE)
-    set(SHARE_INSTALL_PREFIX
-        "${CMAKE_INSTALL_PREFIX}/share"
-        CACHE PATH "Base directory for files which go to share/"
-    )
-
+if(CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS_DEBUG
-      "-ggdb3 -Wunused-variable -Wno-long-long -Wno-unknown-pragmas -Wno-system-headers -Wreorder -Wparentheses -Wsign-compare"
-      CACHE STRING "Debug builds CMAKE CXX flags " FORCE )
-endif(UNIX AND NOT APPLE)
+      "-ggdb3 -Wall -Wextra -Wunused-variable -Wno-long-long -Wno-unknown-pragmas -Wno-system-headers -Wreorder -Wparentheses -Wsign-compare"
+      CACHE STRING "Debug builds CMAKE CXX flags" FORCE )
+endif()
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CMAKE_VERBOSE_MAKEFILE true)
+    add_compile_options( $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-D_GLIBCXX_DEBUG> )
+endif()
 
 # Download arda.mm2
 set(MMAPPER_MAP_FILE "${CMAKE_BINARY_DIR}/map/arda.mm2")
@@ -172,3 +173,11 @@ endif()
 add_subdirectory(src)
 add_subdirectory(appdata)
 add_subdirectory(tests)
+
+include(FeatureSummary)
+add_feature_info("WITH_QTIOCOMPRESSOR" WITH_QTIOCOMPRESSOR "backwards compatability with old .mm2 saves")
+add_feature_info("WITH_OPENSSL" WITH_OPENSSL "encrypt connection to MUME with TLS")
+add_feature_info("USE_TIDY" USE_TIDY "")
+add_feature_info("USE_IWYU" USE_IWYU "")
+feature_summary(WHAT ENABLED_FEATURES DESCRIPTION "Enabled options:")
+feature_summary(WHAT DISABLED_FEATURES DESCRIPTION "Disabled options:")

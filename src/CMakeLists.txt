@@ -249,7 +249,6 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/pathmachine
     ${CMAKE_CURRENT_SOURCE_DIR}/preferences
     ${CMAKE_CURRENT_SOURCE_DIR}/proxy
-    ${ZLIB_INCLUDE_DIRS}
 )
 
 # Build the executable
@@ -280,7 +279,7 @@ if(WITH_QTIOCOMPRESSOR)
         target_link_libraries(mmapper ${QTIOCOMPRESSOR_LIBRARIES})
     else()
         # Build QtIOCompressor as an object library
-        IF (NOT ZLIB_FOUND)
+        if(NOT ZLIB_FOUND)
             # Assume we are building a static zlib
             add_dependencies(mmapper zlib)
         endif()
@@ -288,23 +287,43 @@ if(WITH_QTIOCOMPRESSOR)
     endif()
 endif()
 
-# clang-tidy support
-find_program(
-    CLANG_TIDY_EXE
-    NAMES "clang-tidy-6.0"
-    DOC "Path to clang-tidy executable"
-    )
-if(NOT CLANG_TIDY_EXE)
-    message(STATUS "clang-tidy not found.")
-else()
-    message(STATUS "clang-tidy found: ${CLANG_TIDY_EXE}")
-    set(DO_CLANG_TIDY "${CLANG_TIDY_EXE}") # "-checks=*,-clang-analyzer-alpha.*")
+if(USE_TIDY)
+    find_program(
+        CLANG_TIDY_EXE
+        NAMES clang-tidy clang-tidy-6.0
+        DOC "Path to clang-tidy executable"
+        )
+    if(NOT CLANG_TIDY_EXE)
+        message(FATAL "clang-tidy not found.")
+    else()
+        message(STATUS "clang-tidy found: ${CLANG_TIDY_EXE}")
+        set(DO_CLANG_TIDY "${CLANG_TIDY_EXE}")
+        set_target_properties(
+            mmapper PROPERTIES
+            CXX_CLANG_TIDY "${DO_CLANG_TIDY}"
+        )
+    endif()
 endif()
-if(CLANG_TIDY_EXE)
-    set_target_properties(
-        mmapper PROPERTIES
-        CXX_CLANG_TIDY "${DO_CLANG_TIDY}"
-    )
+
+if(USE_IWYU)
+    find_program(IWYU_EXE
+        NAMES include-what-you-use iwyu
+        DOC "Path to iwyu executable"
+        )
+    if(NOT IWYU_EXE)
+        message(FATAL "Could not find IWYU")
+    else()
+        message(STATUS "Found IWYU: ${IWYU_EXE}")
+        set(IWYU_MAP_FILE "${PROJECT_SOURCE_DIR}/iwyu-mapping.imp")
+        set(IWYU_PATH_AND_OPTIONS
+                ${IWYU_EXE}
+                        -Xiwyu "--mapping_file=${IWYU_MAP_FILE}"
+        )
+        set_target_properties(
+                mmapper PROPERTIES
+                CXX_INCLUDE_WHAT_YOU_USE "${IWYU_PATH_AND_OPTIONS}"
+        )
+    endif()
 endif()
 
 # Begin CPack Settings
@@ -321,6 +340,11 @@ set(CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SY
 
 # Linux Install Settings
 if(UNIX AND NOT APPLE)
+    set(SHARE_INSTALL_PREFIX
+        "${CMAKE_INSTALL_PREFIX}/share"
+        CACHE PATH "Base directory for files which go to share/"
+    )
+
     # Install Executables
     install(
         TARGETS mmapper
