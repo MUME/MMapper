@@ -86,7 +86,7 @@ void SearchTreeNode::getRooms(RoomOutStream &stream, ParseEvent &event)
     selectedChild = children.get(currentProperty->next());
 
     if (selectedChild == nullptr) {
-        for (int i = 1; i < static_cast<int>(myChars[i]); i++) {
+        for (int i = 1; i < myChars.size() && i < static_cast<int>(myChars[i]); i++) {
             currentProperty->prev();
         }
         return; // no such room
