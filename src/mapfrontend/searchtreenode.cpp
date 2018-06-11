@@ -54,6 +54,9 @@ SearchTreeNode::SearchTreeNode(ParseEvent &event)
 {
     if (auto curr = event.current()) {
         if (const char *rest = curr->rest()) {
+            // Property::rest() can return "", but "" + 1 is garbage.
+            // A crash is better than data corruption.
+            assert(rest[0] != '\0');
             // we copy the string so that we can remove rooms independently of tree nodes
             // note: original code does not explain why it skips the first character
             myChars = from_string(rest + 1);
@@ -75,7 +78,8 @@ void SearchTreeNode::getRooms(RoomOutStream &stream, ParseEvent &event)
     SearchTreeNode *selectedChild = nullptr;
     Property *currentProperty = event.current();
 
-    for (auto i = 0u; i < myChars.size() && myChars[i] != '\0'; i++) {
+    const auto size = static_cast<int>(myChars.size());
+    for (auto i = 0; i < size && myChars[i] != '\0'; i++) {
         if (currentProperty->next() != myChars[i]) {
             for (; i > 0; i--) {
                 currentProperty->prev();
@@ -86,7 +90,21 @@ void SearchTreeNode::getRooms(RoomOutStream &stream, ParseEvent &event)
     selectedChild = children.get(currentProperty->next());
 
     if (selectedChild == nullptr) {
-        for (int i = 1; i < myChars.size() && i < static_cast<int>(myChars[i]); i++) {
+        // This test makes zero sense. I think someone meant to copy/paste
+        // the above code and lost some characters on accident, but I'm
+        // keeping the original behavior because I don't understand it.
+        //
+        // In the initial revision:
+        // above: for (int i = 0; myChars[i] != 0; i++) {
+        // here:  for (int i = 1; i < myChars[i] != 0; i++) ...
+        //
+        // I suspect they intended to type something like:
+        // - for (int i = 1; i < myChars[i] != 0; i++) ...
+        // + for (int i = 1; i < len && myChars[i] != 0; i++) ...
+        //
+        // But even still, I'm not convinced that the rewindings here
+        // and above don't contain off-by-at-least-one errors.
+        for (int i = 1; i < size && i < static_cast<int>(myChars[i]); i++) {
             currentProperty->prev();
         }
         return; // no such room
