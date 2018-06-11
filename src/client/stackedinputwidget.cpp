@@ -85,6 +85,7 @@ bool StackedInputWidget::eventFilter(QObject *obj, QEvent *event)
 void StackedInputWidget::toggleEchoMode(bool localEcho)
 {
     m_localEcho = localEcho;
+    m_passwordWidget->clear();
     if (m_localEcho) {
         setFocusProxy(m_inputWidget);
         setCurrentWidget(m_inputWidget);

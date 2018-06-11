@@ -72,6 +72,7 @@ a) FULLY SUPPORTED COMMANDS:
 b) PARTIALLY SUPPORTED COMMANDS
 - SUPPRESS-GO-AHEAD (cmd 3, RFC 858) - we try to suppress GA's if possible.
   If we fail, we just ignore all GA's, hoping for no problems...
+- CHARSET (cmd 42, RFC 2066) - mechanism for passing character set
 
 c) COMMANDS THAT ARE NOT SUPPORTED
 The following commands are not supported at all - they are all disabled,
@@ -144,10 +145,18 @@ else does it ;))
 #define OPT_TIMING_MARK (unsigned char) 6
 #define OPT_TERMINAL_TYPE (unsigned char) 24
 #define OPT_NAWS (unsigned char) 31
+#define OPT_CHARSET (unsigned char) 42
 
 //telnet SB suboption types
 #define TNSB_IS (char) 0
 #define TNSB_SEND (unsigned char) 1
+#define TNSB_REQUEST (char) 1
+#define TNSB_ACCEPTED (char) 2
+#define TNSB_REJECTED (char) 3
+#define TNSB_TTABLE_IS (char) 4
+#define TNSB_TTABLE_REJECTED (char) 5
+#define TNSB_TTABLE_ACK (char) 6
+#define TNSB_TTABLE_NAK (char) 7
 
 class QTextCodec;
 class QTextDecoder;
@@ -230,14 +239,11 @@ private:
     bool announcedState[256]{};
     /** whether the server has already announced his WILL/WON'T */
     bool heAnnouncedState[256]{};
-    /** whether we have tried to enable this option */
-    bool triedToEnable[256]{};
     /** amount of bytes sent up to now */
     int sentbytes;
     /** have we received the GA signal? */
     bool recvdGA{};
     bool echoMode{};
-    bool startupneg;
     /** current dimensions */
     int curX, curY;
 
