@@ -33,7 +33,7 @@
 #include <QHostAddress>
 #include <QTextCodec>
 
-#define LATIN_1_ENCODING "latin1"
+#define LATIN_1_ENCODING "ISO-8859-1"
 
 cTelnet::cTelnet(QObject *parent)
     : QObject(parent)
@@ -48,7 +48,6 @@ cTelnet::cTelnet(QObject *parent)
     sentbytes = 0;
     curX = 80;
     curY = 24;
-    startupneg = false;
     encoding = Config().m_utf8Charset ? "UTF-8" : LATIN_1_ENCODING;
     reset();
     setupEncoding();
@@ -76,26 +75,16 @@ void cTelnet::connectToHost()
         socket.abort();
     }
     socket.connectToHost(QHostAddress::LocalHost, Config().m_localPort);
-    socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
     socket.waitForConnected(3000);
 }
 
 void cTelnet::onConnected()
 {
-    qDebug() << "Telnet detected socket connect!";
+    qDebug() << "* Telnet detected socket connect!";
+    socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
 
-    reset();
-    sentbytes = 0;
-
-    //negotiate some telnet options, if allowed
-    if (startupneg) {
-        //NAWS (used to send info about window size)
-        sendTelnetOption(TN_WILL, OPT_NAWS);
-        //do not allow server to echo our text!
-        sendTelnetOption(TN_DONT, OPT_ECHO);
-        //we will send our terminal type
-        sendTelnetOption(TN_WILL, OPT_TERMINAL_TYPE);
-    }
+    // MUME opts to not send DO CHARSET due to older, broken clients
+    sendTelnetOption(TN_WILL, OPT_CHARSET);
 
     emit connected();
 }
@@ -107,6 +96,7 @@ void cTelnet::disconnectFromHost()
 
 void cTelnet::onDisconnected()
 {
+    reset();
     emit disconnected();
 }
 
@@ -126,10 +116,21 @@ void cTelnet::setupEncoding()
     delete inCoder;
     delete outCoder;
 
-    // MUME can output ASCII, Latin-1, or UTF-8
-    inCoder = QTextCodec::codecForName(encoding)->makeDecoder();
+    qDebug() << "* Switching to" << encoding << "encoding";
 
-    // MUME only understands Latin-1 input
+    Config().m_utf8Charset = (QString::compare(QString(encoding), "UTF-8", Qt::CaseInsensitive)
+                              == 0);
+
+    auto textCodec = QTextCodec::codecForName(encoding);
+    if (textCodec == nullptr) {
+        qWarning() << "* Falling back to LATIN-1 because" << encoding << "was not available";
+        textCodec = QTextCodec::codecForName(LATIN_1_ENCODING);
+    }
+
+    // MUME can output US-ASCII, LATIN1, or UTF-8
+    inCoder = textCodec->makeDecoder();
+
+    // MUME only understands US-ASCII or LATIN1 input
     outCoder = QTextCodec::codecForName(LATIN_1_ENCODING)->makeEncoder();
 }
 
@@ -141,11 +142,12 @@ void cTelnet::reset()
         hisOptionState[i] = false;
         announcedState[i] = false;
         heAnnouncedState[i] = false;
-        triedToEnable[i] = false;
     }
     //reset telnet status
     iac = iac2 = insb = false;
     command.clear();
+    sentbytes = 0;
+    emit echoModeChanged(true);
 }
 
 void cTelnet::sendToMud(const QString &data)
@@ -242,8 +244,6 @@ void cTelnet::processTelnetCommand(const QByteArray &command)
 
     switch (command.length()) {
     case 2:
-        qDebug() << "* Processing Telnet Command:" << command[1];
-
         switch (ch) {
         case TN_AYT:
             sendRawData("I'm here! Please be more patient!\r\n");
@@ -257,65 +257,52 @@ void cTelnet::processTelnetCommand(const QByteArray &command)
             recvdGA = true;
             //signal will be emitted later
             break;
+        default:
+            qDebug() << "* Processing Telnet Command:" << ch;
         };
         break;
 
     case 3:
-        qDebug() << "* Processing Telnet Command:" << command[1] << command[2];
+        qDebug() << "* Processing Telnet Command:" << ch << static_cast<unsigned char>(command[2]);
 
         switch (ch) {
         case TN_WILL:
             //server wants to enable some option (or he sends a timing-mark)...
             option = command[2];
-
             heAnnouncedState[option] = true;
-            if (triedToEnable[option]) {
-                hisOptionState[option] = true;
-                triedToEnable[option] = false;
-            } else {
-                if (!hisOptionState[option])
-                //only if this is not set; if it's set, something's wrong wth the server
-                //(according to telnet specification, option announcement may not be
-                //unless explicitly requested)
+            if (!hisOptionState[option])
+            //only if this is not set; if it's set, something's wrong wth the server
+            //(according to telnet specification, option announcement may not be
+            //unless explicitly requested)
+            {
+                if ((option == OPT_SUPPRESS_GA) || (option == OPT_STATUS)
+                    || (option == OPT_TERMINAL_TYPE) || (option == OPT_NAWS) || (option == OPT_ECHO)
+                    || (option == OPT_CHARSET))
+                //these options are supported
                 {
-                    if ((option == OPT_SUPPRESS_GA) || (option == OPT_STATUS)
-                        || (option == OPT_TERMINAL_TYPE) || (option == OPT_NAWS)
-                        || (option == OPT_ECHO))
-                    //these options are supported
-                    {
-                        sendTelnetOption(TN_DO, option);
-                        hisOptionState[option] = true;
-                        // Echo mode support
-                        if (option == OPT_ECHO) {
-                            echoMode = false;
-                            emit echoModeChanged(echoMode);
-                        } else {
-                            sendTelnetOption(TN_DONT, option);
-                            hisOptionState[option] = false;
-                        }
+                    sendTelnetOption(TN_DO, option);
+                    hisOptionState[option] = true;
+                    if (option == OPT_ECHO) {
+                        emit echoModeChanged(false);
                     }
+                } else {
+                    sendTelnetOption(TN_DONT, option);
+                    hisOptionState[option] = false;
                 }
             }
             break;
         case TN_WONT:
             //server refuses to enable some option...
             option = command[2];
-            if (triedToEnable[option]) {
+            //send DONT if needed (see RFC 854 for details)
+            if (hisOptionState[option] || (!heAnnouncedState[option])) {
+                sendTelnetOption(TN_DONT, option);
                 hisOptionState[option] = false;
-                triedToEnable[option] = false;
-                heAnnouncedState[option] = true;
-            } else {
-                //send DONT if needed (see RFC 854 for details)
-                if (hisOptionState[option] || (!heAnnouncedState[option])) {
-                    sendTelnetOption(TN_DONT, option);
-                    hisOptionState[option] = false;
-                    if (option == OPT_ECHO) {
-                        echoMode = true;
-                        emit echoModeChanged(echoMode);
-                    }
+                if (option == OPT_ECHO) {
+                    emit echoModeChanged(true);
                 }
-                heAnnouncedState[option] = true;
             }
+            heAnnouncedState[option] = true;
             break;
         case TN_DO:
             //server wants us to enable some option
@@ -327,7 +314,8 @@ void cTelnet::processTelnetCommand(const QByteArray &command)
             //only if the option is currently disabled
             {
                 if ((option == OPT_SUPPRESS_GA) || (option == OPT_STATUS)
-                    || (option == OPT_TERMINAL_TYPE) || (option == OPT_NAWS)) {
+                    || (option == OPT_TERMINAL_TYPE) || (option == OPT_NAWS)
+                    || (option == OPT_CHARSET)) {
                     sendTelnetOption(TN_WILL, option);
                     myOptionState[option] = true;
                     announcedState[option] = true;
@@ -339,6 +327,20 @@ void cTelnet::processTelnetCommand(const QByteArray &command)
             }
             if (option == OPT_NAWS) { //NAWS here - window size info must be sent
                 windowSizeChanged(curX, curY);
+            } else if (myOptionState[OPT_CHARSET] && option == OPT_CHARSET) {
+                QString myCharacterSet = Config().m_utf8Charset ? "UTF-8" : LATIN_1_ENCODING;
+                QByteArray s;
+                s += TN_IAC;
+                s += TN_SB;
+                s += OPT_CHARSET;
+                s += TNSB_REQUEST;
+                s += ";";
+                // RFC 2066 states we can provide many character sets but we will only give MUME our single preference
+                s += myCharacterSet;
+                s += TN_IAC;
+                s += TN_SE;
+                sendRawData(s);
+                // TODO: RFC 2066 states to queue all subsequent data until ACCEPTED / REJECTED
             }
             break;
         case TN_DONT:
@@ -353,8 +355,9 @@ void cTelnet::processTelnetCommand(const QByteArray &command)
         };
         break;
 
-    case 4:
-        qDebug() << "* Processing Telnet Command:" << command[1] << command[2] << command[3];
+    default:
+        qDebug() << "* Processing Telnet Command:" << ch << static_cast<unsigned char>(command[2])
+                 << static_cast<unsigned char>(command[3]);
 
         switch (ch) {
         case TN_SB:
@@ -411,9 +414,85 @@ void cTelnet::processTelnetCommand(const QByteArray &command)
                 break;
                 //other cmds should not arrive, as they were not negotiated.
                 //if they do, they are merely ignored
+            case OPT_CHARSET:
+                if (myOptionState[OPT_CHARSET]) {
+                    option = command[3];
+                    int iacPos = command.indexOf(TN_IAC, 3);
+                    switch (option) {
+                    case TNSB_REQUEST:
+                        // MMapper does not support [TTABLE]
+                        if (iacPos > 6 && command[4] != '[') {
+                            bool accepted = false;
+                            // TODO: Add US-ASCII to Parser dropdown
+                            QString myCharacterSet = Config().m_utf8Charset ? "UTF-8"
+                                                                            : LATIN_1_ENCODING;
+
+                            // Split remainder into delim and IAC
+                            // IAC SB CHARSET REQUEST <sep> <charsets> IAC SE
+                            unsigned char sep = command[4];
+                            auto characterSets = command.mid(5, iacPos - 5).split(sep);
+                            for (auto characterSet : characterSets) {
+                                QString hisCharacterSet(characterSet);
+                                if (QString::compare(myCharacterSet,
+                                                     hisCharacterSet,
+                                                     Qt::CaseInsensitive)
+                                    == 0) {
+                                    accepted = true;
+                                    encoding = std::move(characterSet);
+                                    setupEncoding();
+
+                                    // Reply to server that we accepted this encoding
+                                    QByteArray s;
+                                    s += TN_IAC;
+                                    s += TN_SB;
+                                    s += OPT_CHARSET;
+                                    s += TNSB_ACCEPTED;
+                                    s += characterSet;
+                                    s += TN_IAC;
+                                    s += TN_SE;
+                                    sendRawData(s);
+                                    break;
+                                }
+                            }
+                            if (accepted) {
+                                break;
+                            }
+                        }
+                        {
+                            // Reject invalid requests or if we did not find any supported codecs
+                            QByteArray s;
+                            s += TN_IAC;
+                            s += TN_SB;
+                            s += OPT_CHARSET;
+                            s += TNSB_REJECTED;
+                            s += TN_IAC;
+                            s += TN_SE;
+                            sendRawData(s);
+                        }
+                        break;
+                    case TNSB_ACCEPTED:
+                        if (iacPos > 5) {
+                            // IAC SB CHARSET ACCEPTED <charset> IAC SE
+                            auto characterSet = command.mid(4, iacPos - 4);
+                            encoding = characterSet;
+                            setupEncoding();
+                            // TODO: RFC 2066 states to stop queueing data
+                        }
+                        break;
+                    case TNSB_REJECTED:
+                        // TODO: RFC 2066 states to stop queueing data
+                        break;
+                    case TNSB_TTABLE_IS:
+                        // We never request a [TTABLE] so this should not happen
+                        abort();
+                    }
+                }
+                break;
             };
             break;
         };
+        break;
+    case 1:
         break;
     };
     //other commands are simply ignored (NOP and such, see .h file for list)

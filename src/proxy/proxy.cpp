@@ -312,7 +312,7 @@ void Proxy::onMudError(QAbstractSocket::SocketError socketError)
 {
     m_serverConnected = false;
 
-    qWarning() << socketError;
+    qWarning() << "Mud socket error" << socketError;
     QByteArray errorStr = "MUME is not responding!";
 
     switch (socketError) {
@@ -378,8 +378,10 @@ void Proxy::processUserStream()
 
 void Proxy::sendToMud(const QByteArray &ba)
 {
-    if ((m_mudSocket != nullptr) && m_serverConnected) {
+    if (m_mudSocket != nullptr) {
         m_mudSocket->sendToMud(ba);
+    } else {
+        qWarning() << "Mud socket not available";
     }
 }
 
@@ -388,5 +390,7 @@ void Proxy::sendToUser(const QByteArray &ba)
     if (m_userSocket != nullptr) {
         m_userSocket->write(ba.data(), ba.size());
         m_userSocket->flush();
+    } else {
+        qWarning() << "User socket not available";
     }
 }

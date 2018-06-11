@@ -113,7 +113,7 @@ void MumeSslSocket::onConnect()
 
 void MumeSslSocket::onError(QAbstractSocket::SocketError e)
 {
-    qWarning() << m_socket->errorString();
+    qWarning() << "MumeSslSocket error:" << m_socket->errorString();
     MumeSocket::onError(e);
 }
 
