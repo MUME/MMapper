@@ -1,0 +1,4 @@
+[
+ { ref: "iwyu-mapping-qt.imp" },
+ { ref: "iwyu-mapping-stl.imp" },
+]
