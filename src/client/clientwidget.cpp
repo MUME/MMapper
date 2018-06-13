@@ -151,8 +151,7 @@ ClientWidget::ClientWidget(QWidget *parent)
     copyAct->setStatusTip(tr("Copy the current selection's contents to the clipboard"));
     editMenu->addAction(copyAct);
     connect(copyAct, &QAction::triggered, this, &ClientWidget::copy);
-    connect(m_display, &DisplayWidget::copyAvailable, [=](bool copyAvailable) {
-        qInfo() << copyAvailable;
+    connect(m_display, &DisplayWidget::copyAvailable, [this](bool copyAvailable) {
         m_displayCopyAvailable = copyAvailable;
     });
 
@@ -246,7 +245,6 @@ void ClientWidget::sendToMud(const QString &str)
 
 void ClientWidget::copy()
 {
-    qInfo() << "Copy" << m_displayCopyAvailable;
     if (m_displayCopyAvailable) {
         m_display->copy();
     } else {

@@ -40,8 +40,12 @@ StackedInputWidget::StackedInputWidget(QWidget *parent)
             &InputWidget::sendUserInput,
             this,
             &StackedInputWidget::gotMultiLineInput);
-    connect(m_inputWidget, &InputWidget::displayMessage, this, &StackedInputWidget::relayMessage);
-    connect(m_inputWidget, &InputWidget::showMessage, this, &StackedInputWidget::relayMessage);
+    connect(m_inputWidget, &InputWidget::displayMessage, this, [this](QString message) {
+        emit displayMessage(message);
+    });
+    connect(m_inputWidget, &InputWidget::showMessage, this, [this](QString message, int timeout) {
+        emit showMessage(message, timeout);
+    });
 
     // Password Widget
     m_passwordWidget = new QLineEdit(this);
@@ -108,11 +112,6 @@ void StackedInputWidget::gotMultiLineInput(const QString &input)
     QString str = QString(input).append("\n");
     emit displayMessage(str);
     emit sendUserInput(str);
-}
-
-void StackedInputWidget::relayMessage(const QString &message)
-{
-    emit displayMessage(message);
 }
 
 void StackedInputWidget::cut()

@@ -113,7 +113,7 @@ void MpiFilter::parseEditMessage(const QByteArray &buffer)
     QByteArray description = buffer.mid(sessionEnd + 1, (descriptionEnd - sessionEnd - 1));
     QByteArray payload = buffer.mid(descriptionEnd + 1);
 
-    // Payload is never UTF-8
+    // MPI is always Latin1
     QString title = QString::fromLatin1(description);
     QString body = QString::fromLatin1(payload);
 
@@ -131,7 +131,7 @@ void MpiFilter::parseViewMessage(const QByteArray &buffer)
     QByteArray description = buffer.mid(0, descriptionEnd);
     QByteArray payload = buffer.mid(descriptionEnd + 1);
 
-    // Payload is never UTF-8
+    // MPI is always Latin1
     QString title = QString::fromLatin1(description);
     QString body = QString::fromLatin1(payload);
 

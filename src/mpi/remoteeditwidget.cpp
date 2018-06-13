@@ -34,7 +34,10 @@
 #include <QPlainTextEdit>
 #include <QVBoxLayout>
 
-RemoteEditWidget::RemoteEditWidget(bool editSession, QString title, QString body, QWidget *parent)
+RemoteEditWidget::RemoteEditWidget(bool editSession,
+                                   const QString &title,
+                                   const QString &body,
+                                   QWidget *parent)
     : QDialog(parent)
     , m_editSession(editSession)
     , m_title(std::move(title))
@@ -132,10 +135,15 @@ QSize RemoteEditWidget::sizeHint() const
 
 void RemoteEditWidget::closeEvent(QCloseEvent *event)
 {
-    if (m_submitted || !m_editSession || maybeCancel()) {
-        event->accept();
+    if (m_editSession) {
+        if (m_submitted || maybeCancel()) {
+            event->accept();
+        } else {
+            event->ignore();
+        }
     } else {
-        event->ignore();
+        cancelEdit();
+        event->accept();
     }
 }
 
@@ -173,6 +181,6 @@ void RemoteEditWidget::cancelEdit()
 void RemoteEditWidget::finishEdit()
 {
     m_submitted = true;
-    emit save(m_textEdit->toPlainText().toLatin1());
+    emit save(m_textEdit->toPlainText());
     close();
 }

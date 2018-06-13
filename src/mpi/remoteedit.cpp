@@ -37,15 +37,15 @@ void RemoteEdit::remoteView(const QString &title, const QString &body)
 
 void RemoteEdit::remoteEdit(const int key, const QString &title, const QString &body)
 {
-    QString content = body;
-#ifdef Q_OS_WIN
-    content.replace(s_lineFeedNewlineRx, "\r\n");
-#endif
-    addSession(key, title, content);
+    addSession(key, title, body);
 }
 
-void RemoteEdit::addSession(const int key, const QString &title, const QString &body)
+void RemoteEdit::addSession(const int key, const QString &title, QString body)
 {
+#ifdef Q_OS_WIN
+    body.replace(s_lineFeedNewlineRx, "\r\n");
+#endif
+
     uint sessionId = getSessionCount();
     std::unique_ptr<RemoteEditSession> session;
     if (Config().m_internalRemoteEditor) {
@@ -54,6 +54,8 @@ void RemoteEdit::addSession(const int key, const QString &title, const QString &
         session = std::make_unique<RemoteEditExternalSession>(sessionId, key, title, body, this);
     }
     m_sessions.insert(std::make_pair(sessionId, std::move(session)));
+
+    greatestUsedId = sessionId; // Increment sessionId counter
 }
 
 void RemoteEdit::removeSession(const uint sessionId)
@@ -104,6 +106,7 @@ void RemoteEdit::save(const RemoteEditSession *session)
                                        .arg(content)
                                        .toLatin1();
 
+        // MPI is always Latin1
         qDebug() << "Saving session" << session->getKey() << buffer;
         emit sendToSocket(buffer);
     } else {

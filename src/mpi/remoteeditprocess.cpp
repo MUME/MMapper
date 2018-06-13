@@ -37,7 +37,10 @@
 #include <unistd.h>
 #endif
 
-RemoteEditProcess::RemoteEditProcess(bool editSession, QString title, QString body, QObject *parent)
+RemoteEditProcess::RemoteEditProcess(bool editSession,
+                                     const QString &title,
+                                     const QString &body,
+                                     QObject *parent)
     : QObject(parent)
     , m_editSession(editSession)
     , m_title(std::move(title))
@@ -112,9 +115,8 @@ void RemoteEditProcess::onFinished(int exitCode, QProcess::ExitStatus status)
                 QDateTime currentTime = fileInfo.lastModified();
                 if (m_previousTime != currentTime) {
                     // Read the file and submit it to MUME
-                    QByteArray bytes = m_file.readAll();
-                    qDebug() << "Edit session had changes" << bytes;
-                    QString content = QString(bytes);
+                    QString content = QString::fromLatin1(m_file.readAll());
+                    qDebug() << "Edit session had changes" << content;
                     emit save(content);
                 } else {
                     qDebug() << "Edit session canceled (no changes)";

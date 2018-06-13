@@ -38,7 +38,10 @@ class RemoteEditWidget : public QDialog
     Q_OBJECT
 
 public:
-    RemoteEditWidget(bool editSession, QString title, QString body, QWidget *parent = nullptr);
+    RemoteEditWidget(bool editSession,
+                     const QString &title,
+                     const QString &body,
+                     QWidget *parent = nullptr);
     ~RemoteEditWidget();
 
     QSize minimumSizeHint() const;

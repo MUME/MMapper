@@ -155,58 +155,39 @@ bool Proxy::init()
     connect(m_userSocket, SIGNAL(readyRead()), this, SLOT(processUserStream()));
 
     m_telnetFilter = new TelnetFilter(this);
-    connect(this,
-            SIGNAL(analyzeUserStream(const QByteArray &)),
-            m_telnetFilter,
-            SLOT(analyzeUserStream(const QByteArray &)));
-    connect(m_telnetFilter,
-            SIGNAL(sendToMud(const QByteArray &)),
-            this,
-            SLOT(sendToMud(const QByteArray &)));
-    connect(m_telnetFilter,
-            SIGNAL(sendToUser(const QByteArray &)),
-            this,
-            SLOT(sendToUser(const QByteArray &)));
+    connect(this, &Proxy::analyzeUserStream, m_telnetFilter, &TelnetFilter::analyzeUserStream);
+    connect(m_telnetFilter, &TelnetFilter::sendToMud, this, &Proxy::sendToMud);
+    connect(m_telnetFilter, &TelnetFilter::sendToUser, this, &Proxy::sendToUser);
 
     m_mpiFilter = new MpiFilter(this);
     connect(m_telnetFilter,
-            SIGNAL(parseNewMudInput(IncomingData &)),
+            &TelnetFilter::parseNewMudInput,
             m_mpiFilter,
-            SLOT(analyzeNewMudInput(IncomingData &)));
-    connect(m_mpiFilter, SIGNAL(sendToMud(const QByteArray &)), this, SLOT(sendToMud(QByteArray)));
+            &MpiFilter::analyzeNewMudInput);
+    connect(m_mpiFilter, &MpiFilter::sendToMud, this, &Proxy::sendToMud);
     connect(m_mpiFilter,
-            SIGNAL(editMessage(int, QString, QString)),
+            &MpiFilter::editMessage,
             m_remoteEdit,
-            SLOT(remoteEdit(int, QString, QString)),
+            &RemoteEdit::remoteEdit,
             Qt::QueuedConnection);
     connect(m_mpiFilter,
-            SIGNAL(viewMessage(QString, QString)),
+            &MpiFilter::viewMessage,
             m_remoteEdit,
-            SLOT(remoteView(QString, QString)),
+            &RemoteEdit::remoteView,
             Qt::QueuedConnection);
-    connect(m_remoteEdit,
-            SIGNAL(sendToSocket(QByteArray)),
-            this,
-            SLOT(sendToMud(QByteArray)),
-            Qt::QueuedConnection);
+    connect(m_remoteEdit, &RemoteEdit::sendToSocket, this, &Proxy::sendToMud, Qt::QueuedConnection);
 
     m_parserXml = new MumeXmlParser(m_mapData, m_mumeClock, this);
     connect(m_mpiFilter,
-            SIGNAL(parseNewMudInput(IncomingData &)),
+            &MpiFilter::parseNewMudInput,
             m_parserXml,
-            SLOT(parseNewMudInput(IncomingData &)));
+            &MumeXmlParser::parseNewMudInput);
     connect(m_telnetFilter,
-            SIGNAL(parseNewUserInput(IncomingData &)),
+            &TelnetFilter::parseNewUserInput,
             m_parserXml,
-            SLOT(parseNewUserInput(IncomingData &)));
-    connect(m_parserXml,
-            SIGNAL(sendToMud(const QByteArray &)),
-            this,
-            SLOT(sendToMud(const QByteArray &)));
-    connect(m_parserXml,
-            SIGNAL(sendToUser(const QByteArray &)),
-            this,
-            SLOT(sendToUser(const QByteArray &)));
+            &MumeXmlParser::parseNewUserInput);
+    connect(m_parserXml, &MumeXmlParser::sendToMud, this, &Proxy::sendToMud);
+    connect(m_parserXml, &MumeXmlParser::sendToUser, this, &Proxy::sendToUser);
 
     connect(m_parserXml,
             SIGNAL(event(ParseEvent *)),

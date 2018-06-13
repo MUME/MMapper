@@ -56,7 +56,7 @@ protected:
 
 private:
     uint getSessionCount() { return greatestUsedId == UINT_MAX ? 0 : greatestUsedId + 1; }
-    void addSession(const int, const QString &, const QString &);
+    void addSession(const int, const QString &, QString);
     void removeSession(const uint);
 
     static const QRegExp s_lineFeedNewlineRx;

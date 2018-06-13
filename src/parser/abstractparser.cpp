@@ -1257,7 +1257,7 @@ void AbstractParser::offlineCharacterMove(CommandIdType direction)
     if (direction == CID_FLEE) {
         flee = true;
         emit sendToUser("You flee head over heels!\r\n");
-        direction = static_cast<CommandIdType>(rand() % 6);
+        direction = static_cast<CommandIdType>(rand() % 6); // NOLINT
     }
 
     if (!flee) {

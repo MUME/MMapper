@@ -78,7 +78,7 @@ class RemoteEditInternalSession : public RemoteEditSession
     Q_OBJECT
 public:
     RemoteEditInternalSession(
-        uint sessionId, int key, QString title, QString body, RemoteEdit *remoteEdit);
+        uint sessionId, int key, const QString &title, const QString &body, RemoteEdit *remoteEdit);
     ~RemoteEditInternalSession();
 
 private:
@@ -90,7 +90,7 @@ class RemoteEditExternalSession : public RemoteEditSession
     Q_OBJECT
 public:
     RemoteEditExternalSession(
-        uint sessionId, int key, QString title, QString body, RemoteEdit *remoteEdit);
+        uint sessionId, int key, const QString &title, const QString &body, RemoteEdit *remoteEdit);
     ~RemoteEditExternalSession();
 
 private:

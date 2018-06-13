@@ -121,17 +121,16 @@ void cTelnet::setupEncoding()
     Config().m_utf8Charset = (QString::compare(QString(encoding), "UTF-8", Qt::CaseInsensitive)
                               == 0);
 
+    // MUME can understand US-ASCII, ISO-8859-1, or UTF-8
     auto textCodec = QTextCodec::codecForName(encoding);
     if (textCodec == nullptr) {
-        qWarning() << "* Falling back to LATIN-1 because" << encoding << "was not available";
-        textCodec = QTextCodec::codecForName(LATIN_1_ENCODING);
+        qWarning() << "* Falling back to ISO-8859-1 because" << encoding << "was not available";
+        encoding = LATIN_1_ENCODING;
+        textCodec = QTextCodec::codecForName(encoding);
     }
 
-    // MUME can output US-ASCII, LATIN1, or UTF-8
     inCoder = textCodec->makeDecoder();
-
-    // MUME only understands US-ASCII or LATIN1 input
-    outCoder = QTextCodec::codecForName(LATIN_1_ENCODING)->makeEncoder();
+    outCoder = textCodec->makeEncoder();
 }
 
 void cTelnet::reset()
@@ -405,7 +404,7 @@ void cTelnet::processTelnetCommand(const QByteArray &command)
                         s += TN_SB;
                         s += OPT_TERMINAL_TYPE;
                         s += TNSB_IS;
-                        s += termType.toLatin1().data();
+                        s += outCoder->fromUnicode(termType);
                         s += TN_IAC;
                         s += TN_SE;
                         sendRawData(s);

@@ -43,7 +43,6 @@ public slots:
     void toggleEchoMode(bool);
     void gotPasswordInput();
     void gotMultiLineInput(const QString &);
-    void relayMessage(const QString &);
     void cut();
     void copy();
     void paste();

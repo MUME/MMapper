@@ -51,7 +51,7 @@ void RemoteEditSession::cancel()
 }
 
 RemoteEditInternalSession::RemoteEditInternalSession(
-    uint sessionId, int key, QString title, QString body, RemoteEdit *parent)
+    uint sessionId, int key, const QString &title, const QString &body, RemoteEdit *parent)
     : RemoteEditSession(sessionId, key, parent)
     , m_widget(new RemoteEditWidget(isEditSession(), title, body))
 {
@@ -66,7 +66,7 @@ RemoteEditInternalSession::~RemoteEditInternalSession()
 }
 
 RemoteEditExternalSession::RemoteEditExternalSession(
-    uint sessionId, int key, QString title, QString body, RemoteEdit *parent)
+    uint sessionId, int key, const QString &title, const QString &body, RemoteEdit *parent)
     : RemoteEditSession(sessionId, key, parent)
     , m_process(new RemoteEditProcess(isEditSession(), title, body, this))
 {

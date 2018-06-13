@@ -38,8 +38,8 @@ public:
 signals:
     void sendToMud(const QByteArray &);
     void parseNewMudInput(IncomingData &data);
-    void editMessage(int, QString, QString);
-    void viewMessage(QString, QString);
+    void editMessage(int, const QString &, const QString &);
+    void viewMessage(const QString &, const QString &);
 
 public slots:
     void analyzeNewMudInput(IncomingData &data);

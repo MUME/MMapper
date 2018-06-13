@@ -292,9 +292,10 @@ if(USE_TIDY)
         CLANG_TIDY_EXE
         NAMES clang-tidy clang-tidy-6.0
         DOC "Path to clang-tidy executable"
+        PATHS /usr/local/opt/llvm/bin
         )
     if(NOT CLANG_TIDY_EXE)
-        message(FATAL "clang-tidy not found.")
+        message(FATAL_ERROR "clang-tidy not found: use `-DUSE_TIDY=OFF` to disable")
     else()
         message(STATUS "clang-tidy found: ${CLANG_TIDY_EXE}")
         set(DO_CLANG_TIDY "${CLANG_TIDY_EXE}")
@@ -311,7 +312,7 @@ if(USE_IWYU)
         DOC "Path to iwyu executable"
         )
     if(NOT IWYU_EXE)
-        message(FATAL "Could not find IWYU")
+        message(FATAL_ERROR "Could not find IWYU: use `-DUSE_IWYU=OFF` to disable")
     else()
         message(STATUS "Found IWYU: ${IWYU_EXE}")
         set(IWYU_MAP_FILE "${PROJECT_SOURCE_DIR}/iwyu-mapping.imp")

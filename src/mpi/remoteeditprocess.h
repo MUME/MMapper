@@ -36,7 +36,10 @@ class RemoteEditProcess : public QObject
     Q_OBJECT
 
 public:
-    RemoteEditProcess(bool editSession, QString title, QString body, QObject *parent = 0);
+    RemoteEditProcess(bool editSession,
+                      const QString &title,
+                      const QString &body,
+                      QObject *parent = 0);
     ~RemoteEditProcess();
 
 protected slots:
