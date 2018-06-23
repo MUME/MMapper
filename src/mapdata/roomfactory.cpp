@@ -50,7 +50,7 @@ ParseEvent *RoomFactory::getEvent(const Room *room) const
         const Exit &e = room->exit(dir);
 
         ExitFlags eFlags = Mmapper2Exit::getFlags(e);
-        exitFlags |= (eFlags << (dir * 3));
+        exitFlags |= (eFlags << (dir * 4));
     }
 
     exitFlags |= EXITS_FLAGS_VALID;
