@@ -90,6 +90,7 @@ DisplayWidget::DisplayWidget(QWidget *parent)
                          y + contentsMargins().top() + contentsMargins().bottom()));
     setLineWrapMode(QTextEdit::FixedColumnWidth);
     setLineWrapColumnOrWidth(Config().m_clientColumns);
+    setWordWrapMode(QTextOption::WordWrap);
     setSizeIncrement(fm.averageCharWidth(), fm.lineSpacing());
     setTabStopWidth(fm.width(" ") * 8); // A tab is 8 spaces wide
 
