@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Nils Schimmelmann <nschimme@gmail.com> (Jahara)
@@ -25,10 +26,10 @@
 #ifndef GROUPSELECTION_H
 #define GROUPSELECTION_H
 
+#include <vector>
 #include <QMap>
 #include <QString>
-
-#include <vector>
+#include <QWidget>
 
 class CGroupChar;
 class GroupRecipient;
@@ -51,13 +52,13 @@ public:
 class GroupSelection : public QMap<QString, CGroupChar *>, public GroupRecipient
 {
 public:
-    GroupSelection(GroupAdmin *admin)
+    explicit GroupSelection(GroupAdmin *admin)
         : m_admin(admin)
     {}
-    void receiveCharacters(GroupAdmin *, const std::vector<CGroupChar *>);
+    void receiveCharacters(GroupAdmin *, const std::vector<CGroupChar *>) override;
 
 private:
-    GroupAdmin *m_admin;
+    GroupAdmin *m_admin = nullptr;
 };
 
 #endif // GROUPSELECTION_H

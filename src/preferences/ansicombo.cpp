@@ -24,14 +24,22 @@
 ************************************************************************/
 
 #include "ansicombo.h"
-#include <QLabel>
+
+#include <cassert>
+#include <type_traits>
+#include <QString>
+#include <QtGui>
+#include <QtWidgets>
+
+static constexpr const int DEFAULT_FG = 254;
+static constexpr const int DEFAULT_BG = 255;
 
 AnsiCombo::AnsiCombo(QWidget *parent)
     : super(parent)
 {
     setEditable(true);
 
-    connect(this, SIGNAL(editTextChanged(const QString &)), SLOT(afterEdit(const QString &)));
+    connect(this, &QComboBox::editTextChanged, this, &AnsiCombo::afterEdit);
 }
 
 void AnsiCombo::fillAnsiList()
@@ -48,19 +56,23 @@ QString AnsiCombo::text() const
     return super::currentText();
 }
 
-void AnsiCombo::setText(const QString &t)
+void AnsiCombo::setText(const QString &inputString)
 {
-    QString tmp = t;
-    if (t == "255" || t == "254") {
-        tmp = "none";
+    QString copiedString = inputString;
+
+    switch (copiedString.toInt()) {
+    case DEFAULT_FG:
+    case DEFAULT_BG:
+        copiedString = "none";
+        break;
     }
 
-    const int index = findText(tmp);
+    const int index = findText(copiedString);
 
     if (index >= 0) {
         setCurrentIndex(index);
     } else {
-        super::setEditText(tmp);
+        super::setEditText(copiedString);
     }
 }
 
@@ -72,14 +84,14 @@ void AnsiCombo::afterEdit(const QString &t)
 void AnsiCombo::initColours(AnsiMode mode)
 {
     switch (mode) {
-    case ANSI_FG:
-        colours.push_back(initAnsiItem(254));
+    case AnsiMode::ANSI_FG:
+        colours.push_back(initAnsiItem(DEFAULT_FG));
         for (int i = 30; i < 38; ++i) {
             colours.push_back(initAnsiItem(i));
         }
         break;
-    case ANSI_BG:
-        colours.push_back(initAnsiItem(255));
+    case AnsiMode::ANSI_BG:
+        colours.push_back(initAnsiItem(DEFAULT_BG));
         for (int i = 40; i < 48; ++i) {
             colours.push_back(initAnsiItem(i));
         }
@@ -99,7 +111,7 @@ AnsiCombo::AnsiItem AnsiCombo::initAnsiItem(int index)
         pix.fill(col);
 
         retVal.picture = pix;
-        if (index != 254 && index != 255) {
+        if (index != DEFAULT_FG && index != DEFAULT_BG) {
             retVal.ansiCode = QString("%1").arg(index);
         } else {
             retVal.ansiCode = QString("none");
@@ -108,6 +120,9 @@ AnsiCombo::AnsiItem AnsiCombo::initAnsiItem(int index)
     return retVal;
 }
 
+// FIXME: This should return a struct that reports the ansi found in colString.
+// You can use std::pair<Result, bool> or std::tuple<Result, bool>
+// until c++17 gives std::optional<Result>.
 bool AnsiCombo::colorFromString(const QString &colString,
                                 QColor &colFg,
                                 int &ansiCodeFg,
@@ -118,82 +133,82 @@ bool AnsiCombo::colorFromString(const QString &colString,
                                 bool &bold,
                                 bool &underline)
 {
-    int tmpInt;
+    // REVISIT: shouldn't this be compiled and stuffed somewhere?
+    // Is it safe to make this static?
+    QRegExp re(R"(^\[((?:\d+;)*\d+)m$)");
+    if (re.indexIn(colString) < 0)
+        return false;
 
-    ansiCodeFg = 254;
+    ansiCodeFg = DEFAULT_FG;
     intelligibleNameFg = "none";
     colFg = QColor(Qt::white);
-    ansiCodeBg = 255;
+    ansiCodeBg = DEFAULT_BG;
     intelligibleNameBg = "none";
     colBg = QColor(Qt::black);
     bold = false;
     underline = false;
 
-    QRegExp re(R"(^\[((?:\d+;)*\d+)m$)");
+    auto update_fg = [&](int n) {
+        // REVISIT: what about high colors?
+        assert((30 <= n && n <= 37) || n == DEFAULT_FG);
+        ansiCodeFg = n;
+        colorFromNumber(ansiCodeFg, colFg, intelligibleNameFg);
+    };
+    auto update_bg = [&](int n) {
+        assert((40 <= n && n <= 47) || n == DEFAULT_BG);
+        ansiCodeBg = n;
+        colorFromNumber(ansiCodeBg, colBg, intelligibleNameBg);
+    };
 
-    if (re.indexIn(colString) >= 0) {
-        //matches
-        QString tmpStr = colString;
+    //matches
+    QString tmpStr = colString;
 
-        tmpStr.chop(1);
-        tmpStr.remove(0, 1);
+    tmpStr.chop(1);
+    tmpStr.remove(0, 1);
 
-        QStringList list = tmpStr.split(";", QString::SkipEmptyParts);
-
-        switch (list.size()) {
-        case 4:
-            if (list.at(3) == "1") {
-                bold = true;
-            }
-            if (list.at(3) == "4") {
-                underline = true;
-            }
-        case 3:
-            if (list.at(2) == "1") {
-                bold = true;
-            }
-            if (list.at(2) == "4") {
-                underline = true;
-            }
-        case 2:
-            tmpInt = list.at(1).toInt();
-            if (tmpInt == 1) {
-                bold = true;
-            }
-            if (tmpInt == 4) {
-                underline = true;
-            }
-            if (tmpInt >= 40 && tmpInt <= 47) {
-                ansiCodeBg = tmpInt;
-                colorFromNumber(ansiCodeBg, colBg, intelligibleNameBg);
-            }
-            if (tmpInt >= 30 && tmpInt <= 37) {
-                ansiCodeFg = tmpInt;
-                colorFromNumber(ansiCodeFg, colFg, intelligibleNameFg);
-            }
-        case 1:
-            tmpInt = list.at(0).toInt();
-            if (tmpInt == 1) {
-                bold = true;
-            }
-            if (tmpInt == 4) {
-                underline = true;
-            }
-            if (tmpInt >= 40 && tmpInt <= 47) {
-                ansiCodeBg = tmpInt;
-                colorFromNumber(ansiCodeBg, colBg, intelligibleNameBg);
-            }
-            if (tmpInt >= 30 && tmpInt <= 37) {
-                ansiCodeFg = tmpInt;
-                colorFromNumber(ansiCodeFg, colFg, intelligibleNameFg);
-            }
+    for (const auto &s : tmpStr.split(";", QString::SkipEmptyParts)) {
+        switch (const auto n = s.toInt()) {
+        case 0:
+            /* Ansi reset will never happen, but it doesn't hurt to have it. */
+            bold = false;
+            underline = false;
+            update_fg(DEFAULT_FG);
+            update_bg(DEFAULT_BG);
             break;
-        default:
+
+        case 1:
+            bold = true;
+            break;
+
+        case 4:
+            underline = true;
+            break;
+
+        case 30:
+        case 31:
+        case 32:
+        case 33:
+        case 34:
+        case 35:
+        case 36:
+        case 37:
+            update_fg(n);
+            break;
+
+        case 40:
+        case 41:
+        case 42:
+        case 43:
+        case 44:
+        case 45:
+        case 46:
+        case 47:
+            update_bg(n);
             break;
         }
-        return true;
     }
-    return false;
+
+    return true;
 }
 
 bool AnsiCombo::colorFromNumber(int numColor, QColor &col, QString &intelligibleName)
@@ -203,14 +218,15 @@ bool AnsiCombo::colorFromNumber(int numColor, QColor &col, QString &intelligible
 
     const bool retVal = ((((numColor >= 30) && (numColor <= 37))
                           || ((numColor >= 40) && (numColor <= 47)))
-                         || numColor == 254 || numColor == 255);
+                         || numColor == DEFAULT_FG || numColor == DEFAULT_BG);
 
+    /* TODO: Simplify this. E.g. se ansi_color_table[n-30], etc. */
     switch (numColor) {
-    case 254:
+    case DEFAULT_FG:
         col = Qt::white;
         intelligibleName = tr("none");
         break;
-    case 255:
+    case DEFAULT_BG:
         col = Qt::black;
         intelligibleName = tr("none");
         break;
@@ -258,6 +274,13 @@ bool AnsiCombo::colorFromNumber(int numColor, QColor &col, QString &intelligible
     return retVal;
 }
 
+template<typename Derived, typename Base>
+static inline Derived *qdynamic_downcast(Base *ptr)
+{
+    static_assert(std::is_base_of<Base, Derived>::value, "");
+    return dynamic_cast<Derived *>(qobject_cast<Derived *>(ptr));
+}
+
 void AnsiCombo::makeWidgetColoured(QWidget *pWidget, const QString &ansiColor)
 {
     if (pWidget != nullptr) {
@@ -291,8 +314,7 @@ void AnsiCombo::makeWidgetColoured(QWidget *pWidget, const QString &ansiColor)
         pWidget->setPalette(palette);
         pWidget->setBackgroundRole(QPalette::Window);
 
-        // keep type to avoid false positive warning in CLion
-        if (QLabel *pLabel = qobject_cast<QLabel *>(pWidget)) {
+        if (auto *pLabel = qdynamic_downcast<QLabel>(pWidget)) {
             pLabel->setText(intelligibleNameFg);
         }
     }

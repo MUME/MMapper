@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -27,54 +28,60 @@
 #define LISTCYCLER
 
 #include <climits>
-#include <QtGlobal>
+#include <cstdint>
+#include <sys/types.h>
 
 template<class T, class C>
 class ListCycler : public C
 {
 public:
-    ListCycler()
-        : pos(UINT_MAX)
-    {}
-    ListCycler(const C &data)
+    explicit ListCycler() = default;
+    ListCycler(ListCycler &&) = default;
+    ListCycler(const ListCycler &) = default;
+    ListCycler &operator=(ListCycler &&) = default;
+    ListCycler &operator=(const ListCycler &) = default;
+
+    explicit ListCycler(const C &data)
         : C(data)
         , pos(data.size())
     {}
-    virtual ~ListCycler() {}
-    virtual T next();
-    virtual T prev();
-    virtual T current();
-    virtual unsigned int getPos() { return pos; }
+    virtual ~ListCycler() = default;
+    virtual const T &next();
+    virtual const T &prev();
+    virtual const T &current();
+    virtual uint32_t getPos() const { return pos; }
     virtual void reset() { pos = C::size(); }
 
 protected:
-    unsigned int pos;
+    uint32_t pos = UINT32_MAX;
 };
 
 template<class T, class C>
-T ListCycler<T, C>::next()
+const T &ListCycler<T, C>::next()
 {
-    const uint nSize = (uint) C::size();
+    static const T invalid{};
+    const uint32_t nSize = C::size();
 
     if (pos >= nSize)
         pos = 0;
     else if (++pos == nSize)
-        return 0;
+        return invalid;
 
-    if (pos < nSize)
-        return C::operator[](pos);
+    if (pos >= nSize)
+        return invalid;
     else
-        return 0;
+        return C::operator[](pos);
 }
 
 template<class T, class C>
-T ListCycler<T, C>::prev()
+const T &ListCycler<T, C>::prev()
 {
-    const uint nSize = (uint) C::size();
+    static const T invalid{};
+    const uint32_t nSize = C::size();
 
     if (pos == 0) {
         pos = nSize;
-        return 0;
+        return invalid;
     } else {
         if (pos >= nSize)
             pos = nSize;
@@ -84,14 +91,12 @@ T ListCycler<T, C>::prev()
 }
 
 template<class T, class C>
-T ListCycler<T, C>::current()
+const T &ListCycler<T, C>::current()
 {
-    if (pos >= (uint) C::size())
-        return 0;
+    static const T invalid{};
+    if (pos >= C::size())
+        return invalid;
     return C::operator[](pos);
 }
 
-#ifdef DMALLOC
-#include <mpatrol.h>
-#endif
 #endif

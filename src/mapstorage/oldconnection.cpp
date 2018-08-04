@@ -24,44 +24,46 @@
 ************************************************************************/
 
 #include "oldconnection.h"
+
+#include <utility>
+
+#include "../global/EnumIndexedArray.h"
 #include "olddoor.h"
 
 Connection::Connection()
-    : m_type(CT_NORMAL)
-    , m_flags(0)
-    , m_index(0)
 {
-    m_rooms[LEFT] = nullptr;
-    m_rooms[RIGHT] = nullptr;
-    m_doors[LEFT] = nullptr;
-    m_doors[RIGHT] = nullptr;
-    m_directions[LEFT] = CD_UNKNOWN;
-    m_directions[RIGHT] = CD_UNKNOWN;
+    // REVISIT: These might already be set correctly by default.
+    m_rooms[Hand::LEFT] = nullptr;
+    m_rooms[Hand::RIGHT] = nullptr;
+    m_doors[Hand::LEFT] = nullptr;
+    m_doors[Hand::RIGHT] = nullptr;
+    m_directions[Hand::LEFT] = ConnectionDirection::UNKNOWN;
+    m_directions[Hand::RIGHT] = ConnectionDirection::UNKNOWN;
 }
 
 Connection::~Connection()
 {
     // no one keeps track of the doors so we have to remove them here
-    delete m_doors[LEFT];
-    delete m_doors[RIGHT];
+    for (auto &d : m_doors)
+        delete std::exchange(d, nullptr);
 }
 
 ConnectionDirection opposite(ConnectionDirection in)
 {
     switch (in) {
-    case CD_NORTH:
-        return CD_SOUTH;
-    case CD_SOUTH:
-        return CD_NORTH;
-    case CD_WEST:
-        return CD_EAST;
-    case CD_EAST:
-        return CD_WEST;
-    case CD_UP:
-        return CD_DOWN;
-    case CD_DOWN:
-        return CD_UP;
+    case ConnectionDirection::NORTH:
+        return ConnectionDirection::SOUTH;
+    case ConnectionDirection::SOUTH:
+        return ConnectionDirection::NORTH;
+    case ConnectionDirection::WEST:
+        return ConnectionDirection::EAST;
+    case ConnectionDirection::EAST:
+        return ConnectionDirection::WEST;
+    case ConnectionDirection::UP:
+        return ConnectionDirection::DOWN;
+    case ConnectionDirection::DOWN:
+        return ConnectionDirection::UP;
     default:
-        return CD_UNKNOWN;
+        return ConnectionDirection::UNKNOWN;
     }
 }

@@ -23,12 +23,13 @@
 ************************************************************************/
 
 #include "stackedinputwidget.h"
-#include "clientwidget.h"
+
+#include <QLineEdit>
+#include <QString>
+
 #include "inputwidget.h"
 
-#include <QApplication>
-#include <QDebug>
-#include <QLineEdit>
+class QWidget;
 
 StackedInputWidget::StackedInputWidget(QWidget *parent)
     : QStackedWidget(parent)

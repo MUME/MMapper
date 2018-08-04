@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -27,56 +28,65 @@
 #ifndef PROXY
 #define PROXY
 
-//#define PROXY_STREAM_DEBUG_INPUT_TO_FILE
-
-#include <QPointer>
+#include <QAbstractSocket>
+#include <QByteArray>
+#include <QObject>
+#include <QScopedPointer>
+#include <QString>
 #include <QTcpSocket>
 #include <QThread>
+#include <QtCore>
+#include <QtGlobal>
 
-class QFile;
-class QDataStream;
-class TelnetFilter;
-class MpiFilter;
-class MumeXmlParser;
-class RemoteEdit;
-class Proxy;
-class MumeSocket;
+#include "../global/io.h"
 
-class MapData;
-class Mmapper2PathMachine;
 class CommandEvaluator;
-class PrespammedPath;
+class MapData;
 class Mmapper2Group;
+class Mmapper2PathMachine;
+class MpiFilter;
 class MumeClock;
+class MumeSocket;
+class MumeXmlParser;
+class PrespammedPath;
+class Proxy;
+class QDataStream;
+class QFile;
+class QTcpSocket;
+class RemoteEdit;
+class TelnetFilter;
 
-class ProxyThreader : public QThread
+//#define PROXY_STREAM_DEBUG_INPUT_TO_FILE
+
+// TODO: Rip out multithreading and use async sockets.
+class ProxyThreader final : public QThread
 {
 public:
-    ProxyThreader(Proxy *);
+    explicit ProxyThreader(Proxy *);
     ~ProxyThreader();
 
-    void run();
+    void run() override;
 
 protected:
     Q_OBJECT
-    Proxy *m_proxy;
+    Proxy *m_proxy = nullptr;
 };
 
-class Proxy : public QObject
+class Proxy final : public QObject
 {
 protected:
     Q_OBJECT
 
 public:
-    Proxy(MapData *,
-          Mmapper2PathMachine *,
-          CommandEvaluator *,
-          PrespammedPath *,
-          Mmapper2Group *,
-          MumeClock *,
-          qintptr &socketDescriptor,
-          bool threaded,
-          QObject *parent);
+    explicit Proxy(MapData *,
+                   Mmapper2PathMachine *,
+                   CommandEvaluator *,
+                   PrespammedPath *,
+                   Mmapper2Group *,
+                   MumeClock *,
+                   qintptr &socketDescriptor,
+                   bool threaded,
+                   QObject *parent);
     ~Proxy();
 
     void start();
@@ -109,30 +119,29 @@ private:
     QFile *file;
 #endif
 
-    int m_socketDescriptor;
-    QString m_remoteHost;
-    int m_remotePort{};
-    MumeSocket *m_mudSocket;
-    QPointer<QTcpSocket> m_userSocket;
-    char m_buffer[8192]{};
+    io::null_padded_buffer<(1 << 13)> m_buffer{};
 
-    bool m_serverConnected;
+    qintptr m_socketDescriptor = 0;
+    MumeSocket *m_mudSocket = nullptr;
+    QScopedPointer<QTcpSocket> m_userSocket{};
 
-    TelnetFilter *m_telnetFilter;
-    MpiFilter *m_mpiFilter;
-    MumeXmlParser *m_parserXml;
-    RemoteEdit *m_remoteEdit;
+    bool m_serverConnected = false;
 
-    MapData *m_mapData;
-    Mmapper2PathMachine *m_pathMachine;
-    CommandEvaluator *m_commandEvaluator;
-    PrespammedPath *m_prespammedPath;
-    Mmapper2Group *m_groupManager;
-    MumeClock *m_mumeClock;
+    TelnetFilter *m_telnetFilter = nullptr;
+    MpiFilter *m_mpiFilter = nullptr;
+    MumeXmlParser *m_parserXml = nullptr;
+    RemoteEdit *m_remoteEdit = nullptr;
 
-    ProxyThreader *m_thread;
-    bool m_threaded;
-    QObject *m_parent;
+    MapData *m_mapData = nullptr;
+    Mmapper2PathMachine *m_pathMachine = nullptr;
+    CommandEvaluator *m_commandEvaluator = nullptr;
+    PrespammedPath *m_prespammedPath = nullptr;
+    Mmapper2Group *m_groupManager = nullptr;
+    MumeClock *m_mumeClock = nullptr;
+
+    ProxyThreader *m_thread = nullptr;
+    bool m_threaded = false;
+    QObject *m_parent = nullptr;
 };
 
 #endif

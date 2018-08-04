@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Tomas Mecir <kmuddy@kmuddy.com>
@@ -24,12 +25,6 @@
 ** 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **
 ************************************************************************/
-
-#ifndef CTELNET_H
-#define CTELNET_H
-
-#include <QObject>
-#include <QTcpSocket>
 
 /**
 cTelnet handles the connection and telnet commands
@@ -118,56 +113,76 @@ Who knows, maybe one day I'll change my opinion and implement them (or somebody
 else does it ;))
 
   *@author Tomas Mecir
-  */
+*/
+
+#ifndef CTELNET_H
+#define CTELNET_H
+
+#include <array>
+#include <cstdint>
+#include <memory>
+#include <QAbstractSocket>
+#include <QByteArray>
+#include <QObject>
+#include <QString>
+#include <QTcpSocket>
+#include <QTextCodec>
+#include <QtCore>
+
+#include "../global/io.h"
 
 //telnet command codes (prefixed with TN_ to prevent duplicit #defines
-#define TN_SE (unsigned char) 240
-#define TN_NOP (unsigned char) 241
-#define TN_DM (unsigned char) 242
-#define TN_B (unsigned char) 243
-#define TN_IP (unsigned char) 244
-#define TN_AO (unsigned char) 245
-#define TN_AYT (unsigned char) 246
-#define TN_EC (unsigned char) 247
-#define TN_EL (unsigned char) 248
-#define TN_GA (unsigned char) 249
-#define TN_SB (unsigned char) 250
-#define TN_WILL (unsigned char) 251
-#define TN_WONT (unsigned char) 252
-#define TN_DO (unsigned char) 253
-#define TN_DONT (unsigned char) 254
-#define TN_IAC (unsigned char) 255
+static constexpr const uint8_t TN_SE = 240;
+static constexpr const uint8_t TN_NOP = 241;
+static constexpr const uint8_t TN_DM = 242;
+static constexpr const uint8_t TN_B = 243;
+static constexpr const uint8_t TN_IP = 244;
+static constexpr const uint8_t TN_AO = 245;
+static constexpr const uint8_t TN_AYT = 246;
+static constexpr const uint8_t TN_EC = 247;
+static constexpr const uint8_t TN_EL = 248;
+static constexpr const uint8_t TN_GA = 249;
+static constexpr const uint8_t TN_SB = 250;
+static constexpr const uint8_t TN_WILL = 251;
+static constexpr const uint8_t TN_WONT = 252;
+static constexpr const uint8_t TN_DO = 253;
+static constexpr const uint8_t TN_DONT = 254;
+static constexpr const uint8_t TN_IAC = 255;
 
 //telnet option codes (supported options only)
-#define OPT_ECHO (unsigned char) 1
-#define OPT_SUPPRESS_GA (unsigned char) 3
-#define OPT_STATUS (unsigned char) 5
-#define OPT_TIMING_MARK (unsigned char) 6
-#define OPT_TERMINAL_TYPE (unsigned char) 24
-#define OPT_NAWS (unsigned char) 31
-#define OPT_CHARSET (unsigned char) 42
+static constexpr const uint8_t OPT_ECHO = 1;
+static constexpr const uint8_t OPT_SUPPRESS_GA = 3;
+static constexpr const uint8_t OPT_STATUS = 5;
+static constexpr const uint8_t OPT_TIMING_MARK = 6;
+static constexpr const uint8_t OPT_TERMINAL_TYPE = 24;
+static constexpr const uint8_t OPT_NAWS = 31;
+static constexpr const uint8_t OPT_CHARSET = 42;
 
 //telnet SB suboption types
-#define TNSB_IS (char) 0
-#define TNSB_SEND (unsigned char) 1
-#define TNSB_REQUEST (char) 1
-#define TNSB_ACCEPTED (char) 2
-#define TNSB_REJECTED (char) 3
-#define TNSB_TTABLE_IS (char) 4
-#define TNSB_TTABLE_REJECTED (char) 5
-#define TNSB_TTABLE_ACK (char) 6
-#define TNSB_TTABLE_NAK (char) 7
+static constexpr const uint8_t TNSB_IS = 0;
+static constexpr const uint8_t TNSB_SEND = 1;
+static constexpr const uint8_t TNSB_REQUEST = 1;
+static constexpr const uint8_t TNSB_ACCEPTED = 2;
+static constexpr const uint8_t TNSB_REJECTED = 3;
+static constexpr const uint8_t TNSB_TTABLE_IS = 4;
+static constexpr const uint8_t TNSB_TTABLE_REJECTED = 5;
+static constexpr const uint8_t TNSB_TTABLE_ACK = 6;
+static constexpr const uint8_t TNSB_TTABLE_NAK = 7;
+
+//supported IANA character sets
+static constexpr const char *const LATIN_1_ENCODING = "ISO-8859-1";
+static constexpr const char *const UTF_8_ENCODING = "UTF-8";
 
 class QTextCodec;
 class QTextDecoder;
 class QTextEncoder;
 
-class cTelnet : public QObject
+class cTelnet final : public QObject
 {
     Q_OBJECT
 
 public:
-    cTelnet(QObject *parent = 0);
+    explicit cTelnet(QObject *parent = nullptr);
     ~cTelnet();
 
     void connectToHost();
@@ -189,6 +204,12 @@ protected slots:
     /** Reads, parses telnet, and so forth */
     void onReadyRead();
 
+private:
+    void sendToUserAndClear(QByteArray &);
+    void onReadInternal(const QByteArray&);
+    void onReadInternal2(QByteArray &, uint8_t);
+
+protected:
 signals:
     /** Submits Telnet/text data back to the client */
     void sendToUser(const QString &data);
@@ -217,38 +238,48 @@ protected:
     void sendTelnetOption(unsigned char type, unsigned char option);
 
 private:
-    QTcpSocket socket;
-    char buffer[32769]{};
+    io::null_padded_buffer<(1 << 15)> buffer{};
+    QTcpSocket socket{};
 
-    QByteArray encoding;
+    QByteArray encoding{};
 
-    QTextDecoder *inCoder;
-    QTextEncoder *outCoder;
+    std::unique_ptr<QTextDecoder> inCoder = nullptr;
+    std::unique_ptr<QTextEncoder> outCoder = nullptr;
 
     //iac: last char was IAC
     //iac2: last char was DO, DONT, WILL or WONT
     //insb: we're in IAC SB, waiting for IAC SE
-    QByteArray command;
-    bool iac, iac2, insb;
+    QByteArray command{};
+    bool iac = false, iac2 = false, insb = false;
+
+    using OptionArray = std::array<bool, 256>;
 
     /** current state of options on our side and on server side */
-    bool myOptionState[256]{}, hisOptionState[256]{};
+    OptionArray myOptionState{};
+    OptionArray hisOptionState{};
     /** whether we have announced WILL/WON'T for that option (if we have, we don't
         respond to DO/DON'T sent by the server -- see implementation and RFC 854
         for more information... */
-    bool announcedState[256]{};
+    OptionArray announcedState{};
     /** whether the server has already announced his WILL/WON'T */
-    bool heAnnouncedState[256]{};
+    OptionArray heAnnouncedState{};
+
     /** amount of bytes sent up to now */
-    int sentbytes;
+    int64_t sentbytes = 0;
+
     /** have we received the GA signal? */
-    bool recvdGA{};
-    bool echoMode{};
-    /** current dimensions */
-    int curX, curY;
+    bool recvdGA = false;
+    bool echoMode = false;
+    bool startupneg = false;
+
+    /** current dimensions for NAWS */
+    struct
+    {
+        int x = 80, y = 24;
+    } current{};
 
     /* Terminal Type */
-    QString termType;
+    QString termType{};
 };
 
 #endif /* CTELNET_H */

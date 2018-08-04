@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Azazello <lachupe@gmail.com>,
@@ -26,18 +27,25 @@
 #ifndef CGROUPSERVER_H_
 #define CGROUPSERVER_H_
 
+#include <QByteArray>
 #include <QList>
+#include <QString>
 #include <QTcpServer>
+#include <QtCore>
+#include <QtGlobal>
 
 #include "CGroupClient.h"
+
+class CGroupClient;
 class CGroupServerCommunicator;
+class QObject;
 
 class CGroupServer : public QTcpServer
 {
     Q_OBJECT
 
 public:
-    CGroupServer(int localPort, QObject *parent);
+    explicit CGroupServer(QObject *parent);
     virtual ~CGroupServer();
 
     void sendToAll(const QByteArray &);
@@ -49,15 +57,14 @@ protected slots:
     void relayLog(const QString &);
 
 protected:
-    void incomingConnection(qintptr socketDescriptor);
+    void incomingConnection(qintptr socketDescriptor) override;
 
 signals:
     void sendLog(const QString &);
-    void serverStartupFailed();
     void connectionClosed(CGroupClient *);
 
 private:
-    QList<CGroupClient *> connections;
+    QList<CGroupClient *> connections{};
 };
 
 #endif /*CGROUPSERVER_H_*/

@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Nils Schimmelmann <nschimme@gmail.com> (Jahara)
@@ -25,46 +26,71 @@
 #ifndef REMOTEEDITWIDGET_H
 #define REMOTEEDITWIDGET_H
 
-#include "remoteeditsession.h"
-
 #include <QAction>
 #include <QDialog>
-#include <QPointer>
+#include <QPlainTextEdit>
+#include <QScopedPointer>
+#include <QSize>
+#include <QString>
+#include <QtCore>
+#include <QtWidgets/QMenuBar>
+#include <QtWidgets/QVBoxLayout>
 
+#include "remoteeditsession.h"
+
+class QCloseEvent;
+class QMenu;
+class QMenuBar;
+class QObject;
 class QPlainTextEdit;
+class QVBoxLayout;
+class QWidget;
 
 class RemoteEditWidget : public QDialog
 {
     Q_OBJECT
 
 public:
-    RemoteEditWidget(bool editSession,
-                     const QString &title,
-                     const QString &body,
-                     QWidget *parent = nullptr);
+    explicit RemoteEditWidget(bool editSession,
+                              const QString &title,
+                              const QString &body,
+                              QWidget *parent = nullptr);
     ~RemoteEditWidget();
 
-    QSize minimumSizeHint() const;
-    QSize sizeHint() const;
-    void closeEvent(QCloseEvent *event);
+    QSize minimumSizeHint() const override;
+    QSize sizeHint() const override;
+    void closeEvent(QCloseEvent *event) override;
 
 protected slots:
     void cancelEdit();
     void finishEdit();
     bool maybeCancel();
-    bool contentsChanged();
+    bool contentsChanged() const;
 
 signals:
     void cancel();
     void save(const QString &);
 
 private:
+    QPlainTextEdit *createTextEdit();
+    QVBoxLayout *createLayout();
+    QPlainTextEdit *createTextEdit(QVBoxLayout *mainLayout);
+    void addMenuBar(QVBoxLayout *mainLayout, const QPlainTextEdit *pTextEdit);
+    void addFileMenu(QMenuBar *menuBar, const QPlainTextEdit *pTextEdit);
+    void addEditMenu(QMenuBar *menuBar, const QPlainTextEdit *pTextEdit);
+    void addSave(QMenu *fileMenu);
+    void addExit(QMenu *fileMenu);
+    void addCut(QMenu *editMenu, const QPlainTextEdit *pTextEdit);
+    void addCopy(QMenu *editMenu, const QPlainTextEdit *pTextEdit);
+    void addPaste(QMenu *editMenu, const QPlainTextEdit *pTextEdit);
+
+private:
     const bool m_editSession;
     const QString m_title;
     const QString m_body;
 
-    bool m_submitted{false};
-    QPointer<QPlainTextEdit> m_textEdit;
+    bool m_submitted = false;
+    QScopedPointer<QPlainTextEdit> m_textEdit{};
 };
 
 #endif // REMOTEEDITWIDGET_H

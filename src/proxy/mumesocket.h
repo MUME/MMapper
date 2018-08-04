@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -28,11 +29,16 @@
 #define MUMESOCKET_H
 
 #include <QAbstractSocket>
+#include <QByteArray>
 #include <QObject>
+#include <QString>
+#include <QtCore>
 
-class QTcpSocket;
-class QSslSocket;
+#include "../global/io.h"
+
 class QSslError;
+class QSslSocket;
+class QTcpSocket;
 class QTimer;
 
 class MumeSocket : public QObject
@@ -64,33 +70,32 @@ class MumeSslSocket : public MumeSocket
 {
     Q_OBJECT
 public:
-    MumeSslSocket(QObject *parent);
+    explicit MumeSslSocket(QObject *parent);
     ~MumeSslSocket();
 
-    void disconnectFromHost();
-    void connectToHost();
-    void sendToMud(const QByteArray &ba);
+    void disconnectFromHost() override;
+    void connectToHost() override;
+    void sendToMud(const QByteArray &ba) override;
 
 protected slots:
-    void onConnect();
-    void onError(QAbstractSocket::SocketError e);
+    void onConnect() override;
+    void onError(QAbstractSocket::SocketError e) override;
     void onReadyRead();
     void onEncrypted();
     void onPeerVerifyError(const QSslError &error);
     void checkTimeout();
 
 protected:
-    char m_buffer[8192]{};
-
-    QSslSocket *m_socket;
-    QTimer *m_timer;
+    io::null_padded_buffer<(1 << 13)> m_buffer{};
+    QSslSocket *m_socket = nullptr;
+    QTimer *m_timer = nullptr;
 };
 
 class MumeTcpSocket : public MumeSslSocket
 {
     Q_OBJECT
 public:
-    MumeTcpSocket(QObject *parent)
+    explicit MumeTcpSocket(QObject *parent)
         : MumeSslSocket(parent)
     {}
 

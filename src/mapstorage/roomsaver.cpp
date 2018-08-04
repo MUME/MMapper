@@ -24,21 +24,21 @@
 ************************************************************************/
 
 #include "roomsaver.h"
-#include "room.h"
-#include "roomadmin.h"
+#include "../expandoracommon/room.h"
+#include "../expandoracommon/roomadmin.h"
+#include "../mapdata/mapdata.h"
 #include <cassert>
 
-RoomSaver::RoomSaver(RoomAdmin *admin, ConstRoomList &list)
-    : m_roomsCount(0)
-    , m_roomList(list)
+RoomSaver::RoomSaver(RoomAdmin &admin, ConstRoomList &list)
+    : m_roomList(list)
     , m_admin(admin)
 {}
 
 void RoomSaver::receiveRoom(RoomAdmin *admin, const Room *room)
 {
-    assert(admin == m_admin);
+    assert(admin == &m_admin);
     if (room->isTemporary()) {
-        m_admin->releaseRoom(this, room->getId());
+        m_admin.releaseRoom(*this, room->getId());
     } else {
         m_roomList.append(room);
         m_roomsCount++;
@@ -54,7 +54,7 @@ RoomSaver::~RoomSaver()
 {
     for (auto &room : m_roomList) {
         if (room != nullptr) {
-            m_admin->releaseRoom(this, room->getId());
+            m_admin.releaseRoom(*this, room->getId());
             room = nullptr;
         }
     }

@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -27,26 +28,30 @@
 #ifndef CONNECTIONLISTENER
 #define CONNECTIONLISTENER
 
+#include <QString>
 #include <QTcpServer>
 #include <QTcpSocket>
+#include <QtCore>
+#include <QtGlobal>
 
-class MapData;
-class Mmapper2PathMachine;
 class CommandEvaluator;
-class PrespammedPath;
+class MapData;
 class Mmapper2Group;
+class Mmapper2PathMachine;
 class MumeClock;
+class PrespammedPath;
+class QObject;
 
 class ConnectionListener : public QTcpServer
 {
 public:
-    ConnectionListener(MapData *,
-                       Mmapper2PathMachine *,
-                       CommandEvaluator *,
-                       PrespammedPath *,
-                       Mmapper2Group *,
-                       MumeClock *,
-                       QObject *parent);
+    explicit ConnectionListener(MapData *,
+                                Mmapper2PathMachine *,
+                                CommandEvaluator *,
+                                PrespammedPath *,
+                                Mmapper2Group *,
+                                MumeClock *,
+                                QObject *parent);
 
 public slots:
     void doNotAcceptNewConnections();
@@ -57,19 +62,20 @@ signals:
     void clientSuccessfullyConnected();
 
 protected:
-    void incomingConnection(qintptr socketDescriptor);
+    void incomingConnection(qintptr socketDescriptor) override;
 
 private:
     Q_OBJECT
 
-    MapData *m_mapData;
-    Mmapper2PathMachine *m_pathMachine;
-    CommandEvaluator *m_commandEvaluator;
-    PrespammedPath *m_prespammedPath;
-    Mmapper2Group *m_groupManager;
-    MumeClock *m_mumeClock;
+private:
+    MapData *m_mapData = nullptr;
+    Mmapper2PathMachine *m_pathMachine = nullptr;
+    CommandEvaluator *m_commandEvaluator = nullptr;
+    PrespammedPath *m_prespammedPath = nullptr;
+    Mmapper2Group *m_groupManager = nullptr;
+    MumeClock *m_mumeClock = nullptr;
 
-    bool m_accept;
+    bool m_accept = true;
 };
 
 #endif

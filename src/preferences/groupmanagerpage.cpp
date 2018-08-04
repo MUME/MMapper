@@ -23,14 +23,14 @@
 ************************************************************************/
 
 #include "groupmanagerpage.h"
-#include "configuration.h"
 
-#include "CGroup.h"
-#include "mmapper2group.h"
+#include <QString>
+#include <QtGui>
+#include <QtWidgets>
 
-#include <QColorDialog>
-#include <QDesktopServices>
-#include <QUrl>
+#include "../configuration/configuration.h"
+#include "../pandoragroup/CGroup.h"
+#include "../pandoragroup/mmapper2group.h"
 
 GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
     : QWidget(parent)
@@ -39,41 +39,41 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
     m_groupManager = gm;
 
     // Character Section
-    connect(charName, SIGNAL(editingFinished()), SLOT(charNameTextChanged()));
-    connect(changeColor, SIGNAL(clicked()), SLOT(changeColorClicked()));
+    connect(charName, &QLineEdit::editingFinished, this, &GroupManagerPage::charNameTextChanged);
+    connect(changeColor, &QAbstractButton::clicked, this, &GroupManagerPage::changeColorClicked);
     // Host Section
     connect(localHost,
-            SIGNAL(linkActivated(const QString &)),
-            SLOT(localHostLinkActivated(const QString &)));
+            &QLabel::linkActivated,
+            this, &GroupManagerPage::localHostLinkActivated);
     connect(localPort, SIGNAL(valueChanged(int)), SLOT(localPortValueChanged(int)));
     // Client Section
-    connect(remoteHost, SIGNAL(editingFinished()), SLOT(remoteHostTextChanged()));
+    connect(remoteHost, &QLineEdit::editingFinished, this, &GroupManagerPage::remoteHostTextChanged);
     connect(remotePort, SIGNAL(valueChanged(int)), SLOT(remotePortValueChanged(int)));
     // Checkbox Section
-    connect(rulesWarning, SIGNAL(stateChanged(int)), SLOT(rulesWarningChanged(int)));
-    connect(shareSelfCheckBox, SIGNAL(stateChanged(int)), SLOT(shareSelfChanged(int)));
+    connect(rulesWarning, &QCheckBox::stateChanged, this, &GroupManagerPage::rulesWarningChanged);
+    connect(shareSelfCheckBox, &QCheckBox::stateChanged, this, &GroupManagerPage::shareSelfChanged);
 
     // Inform Group Manager of changes
-    connect(this, SIGNAL(setGroupManagerType(int)), m_groupManager, SLOT(setType(int)));
-    connect(this, SIGNAL(updatedSelf()), m_groupManager, SLOT(updateSelf()));
+    connect(this, &GroupManagerPage::setGroupManagerType, m_groupManager, &Mmapper2Group::setType);
+    connect(this, &GroupManagerPage::updatedSelf, m_groupManager, &Mmapper2Group::updateSelf);
 
-    charName->setText(Config().m_groupManagerCharName);
+    charName->setText(Config().groupManager.charName);
     QPixmap charColorPixmap(16, 16);
-    charColorPixmap.fill(Config().m_groupManagerColor);
+    charColorPixmap.fill(Config().groupManager.color);
     changeColor->setIcon(QIcon(charColorPixmap));
-    localPort->setValue(Config().m_groupManagerLocalPort);
-    remoteHost->setText(Config().m_groupManagerHost);
-    remotePort->setValue(Config().m_groupManagerRemotePort);
-    rulesWarning->setChecked(Config().m_groupManagerRulesWarning);
-    shareSelfCheckBox->setChecked(Config().m_groupManagerShareSelf);
+    localPort->setValue(Config().groupManager.localPort);
+    remoteHost->setText(Config().groupManager.host);
+    remotePort->setValue(Config().groupManager.remotePort);
+    rulesWarning->setChecked(Config().groupManager.rulesWarning);
+    shareSelfCheckBox->setChecked(Config().groupManager.shareSelf);
 }
 
 void GroupManagerPage::charNameTextChanged()
 {
     const QString newName = charName->text();
     if (!m_groupManager->getGroup()->isNamePresent(newName.toLatin1())
-        && Config().m_groupManagerCharName != newName) {
-        Config().m_groupManagerCharName = newName.toLatin1();
+        && Config().groupManager.charName != newName) {
+        Config().groupManager.charName = newName.toLatin1();
 
         emit updatedSelf();
     }
@@ -81,12 +81,12 @@ void GroupManagerPage::charNameTextChanged()
 
 void GroupManagerPage::changeColorClicked()
 {
-    const QColor newColor = QColorDialog::getColor(Config().m_groupManagerColor, this);
-    if (newColor.isValid() && newColor != Config().m_groupManagerColor) {
+    const QColor newColor = QColorDialog::getColor(Config().groupManager.color, this);
+    if (newColor.isValid() && newColor != Config().groupManager.color) {
         QPixmap charColorPixmap(16, 16);
         charColorPixmap.fill(newColor);
         changeColor->setIcon(QIcon(charColorPixmap));
-        Config().m_groupManagerColor = newColor;
+        Config().groupManager.color = newColor;
 
         emit updatedSelf();
     }
@@ -94,22 +94,22 @@ void GroupManagerPage::changeColorClicked()
 
 void GroupManagerPage::remoteHostTextChanged()
 {
-    if (QString(remoteHost->text()).toLatin1() != Config().m_groupManagerHost) {
-        Config().m_groupManagerHost = QString(remoteHost->text()).toLatin1();
+    if (QString(remoteHost->text()).toLatin1() != Config().groupManager.host) {
+        Config().groupManager.host = QString(remoteHost->text()).toLatin1();
 
-        if (m_groupManager->getType() == Mmapper2Group::Client) {
-            emit setGroupManagerType(Mmapper2Group::Off);
+        if (m_groupManager->getType() == GroupManagerState::Client) {
+            emit setGroupManagerType(GroupManagerState::Off);
         }
     }
 }
 
 void GroupManagerPage::remotePortValueChanged(int /*unused*/)
 {
-    if (remotePort->value() != Config().m_groupManagerRemotePort) {
-        Config().m_groupManagerRemotePort = remotePort->value();
+    if (remotePort->value() != Config().groupManager.remotePort) {
+        Config().groupManager.remotePort = remotePort->value();
 
-        if (m_groupManager->getType() == Mmapper2Group::Client) {
-            emit setGroupManagerType(Mmapper2Group::Off);
+        if (m_groupManager->getType() == GroupManagerState::Client) {
+            emit setGroupManagerType(GroupManagerState::Off);
         }
     }
 }
@@ -121,21 +121,21 @@ void GroupManagerPage::localHostLinkActivated(const QString &link)
 
 void GroupManagerPage::localPortValueChanged(int /*unused*/)
 {
-    if (localPort->value() != Config().m_groupManagerLocalPort) {
-        Config().m_groupManagerLocalPort = localPort->value();
+    if (localPort->value() != Config().groupManager.localPort) {
+        Config().groupManager.localPort = localPort->value();
 
-        if (m_groupManager->getType() == Mmapper2Group::Server) {
-            emit setGroupManagerType(Mmapper2Group::Off);
+        if (m_groupManager->getType() == GroupManagerState::Server) {
+            emit setGroupManagerType(GroupManagerState::Off);
         }
     }
 }
 
 void GroupManagerPage::rulesWarningChanged(int /*unused*/)
 {
-    Config().m_groupManagerRulesWarning = rulesWarning->isChecked();
+    Config().groupManager.rulesWarning = rulesWarning->isChecked();
 }
 
 void GroupManagerPage::shareSelfChanged(int /*unused*/)
 {
-    Config().m_groupManagerShareSelf = shareSelfCheckBox->isChecked();
+    Config().groupManager.shareSelf = shareSelfCheckBox->isChecked();
 }

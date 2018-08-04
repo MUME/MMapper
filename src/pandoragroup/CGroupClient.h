@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Azazello <lachupe@gmail.com>,
@@ -26,27 +27,33 @@
 #ifndef CGROUPCLIENT_H_
 #define CGROUPCLIENT_H_
 
+#include <QAbstractSocket>
+#include <QByteArray>
+#include <QString>
 #include <QTcpSocket>
+#include <QtCore>
+#include <QtGlobal>
 
 class CGroupCommunicator;
+class QObject;
+
+enum class ConnectionStates { Closed, Connecting, Connected, Quiting };
+enum class ProtocolStates { Idle, AwaitingLogin, AwaitingInfo, Logged };
 
 class CGroupClient : public QTcpSocket
 {
     Q_OBJECT
 public:
-    enum ConnectionStates { Closed, Connecting, Connected, Quiting };
-    enum ProtocolStates { Idle, AwaitingLogin, AwaitingInfo, Logged };
-
-    CGroupClient(QObject *parent);
+    explicit CGroupClient(QObject *parent);
     CGroupClient(const QByteArray &host, int remotePort, QObject *parent);
     virtual ~CGroupClient();
 
     void setSocket(qintptr socketDescriptor);
 
-    int getConnectionState() { return connectionState; }
-    void setConnectionState(int val);
-    void setProtocolState(int val);
-    int getProtocolState() { return protocolState; }
+    ConnectionStates getConnectionState() { return connectionState; }
+    void setConnectionState(ConnectionStates val);
+    void setProtocolState(ProtocolStates val);
+    ProtocolStates getProtocolState() { return protocolState; }
     void sendData(const QByteArray &data);
 
 protected slots:
@@ -66,11 +73,11 @@ private:
     void linkSignals();
     void cutMessageFromBuffer();
 
-    int connectionState{Closed};
-    int protocolState{Idle};
+    ConnectionStates connectionState = ConnectionStates::Closed;
+    ProtocolStates protocolState = ProtocolStates::Idle;
 
-    QByteArray buffer{""};
-    int currentMessageLen{0};
+    QByteArray buffer{};
+    int currentMessageLen = 0;
 };
 
 #endif /*CGROUPCLIENT_H_*/

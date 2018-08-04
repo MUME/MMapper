@@ -1,8 +1,34 @@
+/************************************************************************
+**
+** Authors:   ethorondil
+**
+** This file is part of the MMapper project.
+** Maintained by Nils Schimmelmann <nschimme@gmail.com>
+**
+** This program is free software; you can redistribute it and/or
+** modify it under the terms of the GNU General Public License
+** as published by the Free Software Foundation; either version 2
+** of the License, or (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the:
+** Free Software Foundation, Inc.
+** 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+**
+************************************************************************/
+
 #include "roomfilter.h"
-#include "mmapper2exit.h"
+
+#include "../expandoracommon/exit.h"
+#include "../expandoracommon/room.h"
+#include "../global/utils.h"
+#include "ExitFieldVariant.h"
 #include "mmapper2room.h"
-#include <cassert>
-#include <cerrno>
 
 const char *RoomFilter::parse_help
     = "Parse error; format is: [-(name|desc|dyndesc|note|exits|all)] pattern\r\n";
@@ -10,21 +36,21 @@ const char *RoomFilter::parse_help
 bool RoomFilter::parseRoomFilter(const QString &line, RoomFilter &output)
 {
     QString pattern = line;
-    char kind = PAT_NAME;
+    auto kind = pattern_kinds::NAME;
     if (line.size() >= 2 && line[0] == '-') {
         QString kindstr = line.section(" ", 0, 0);
         if (kindstr == "-desc" || kindstr.startsWith("-d")) {
-            kind = PAT_DESC;
+            kind = pattern_kinds::DESC;
         } else if (kindstr == "-dyndesc" || kindstr.startsWith("-dy")) {
-            kind = PAT_DYNDESC;
+            kind = pattern_kinds::DYN_DESC;
         } else if (kindstr == "-name") {
-            kind = PAT_NAME;
+            kind = pattern_kinds::NAME;
         } else if (kindstr == "-exits" || kindstr == "-e") {
-            kind = PAT_EXITS;
+            kind = pattern_kinds::EXITS;
         } else if (kindstr == "-note" || kindstr == "-n") {
-            kind = PAT_NOTE;
+            kind = pattern_kinds::NOTE;
         } else if (kindstr == "-all" || kindstr == "-a") {
-            kind = PAT_ALL;
+            kind = pattern_kinds::ALL;
         } else {
             return false;
         }
@@ -38,29 +64,32 @@ bool RoomFilter::parseRoomFilter(const QString &line, RoomFilter &output)
     return true;
 }
 
-bool RoomFilter::filter(const Room *r) const
+bool RoomFilter::filter(const Room *const r) const
 {
-    if (kind == PAT_ALL) {
-        for (const auto &elt : (*r)) {
+    deref(r);
+    if (kind == pattern_kinds::ALL) {
+        /* TODO: inline each separate case instead of trying to use deprecated QVariant interface */
+        for (int i = 0; i < NUM_ROOM_FIELDS; ++i) {
+            const auto &elt = r->at(static_cast<RoomField>(i));
             if (elt.toString().contains(pattern, cs)) {
-                return 1;
+                return true;
             }
         }
-    } else if (kind == PAT_DESC) {
-        return Mmapper2Room::getDescription(r).contains(pattern, cs);
-    } else if (kind == PAT_DYNDESC) {
-        return Mmapper2Room::getDynamicDescription(r).contains(pattern, cs);
-    } else if (kind == PAT_NAME) {
-        return Mmapper2Room::getName(r).contains(pattern, cs);
-    } else if (kind == PAT_NOTE) {
-        return Mmapper2Room::getNote(r).contains(pattern, cs);
-    } else if (kind == PAT_EXITS) {
+    } else if (kind == pattern_kinds::DESC) {
+        return r->getStaticDescription().contains(pattern, cs);
+    } else if (kind == pattern_kinds::DYN_DESC) {
+        return r->getDynamicDescription().contains(pattern, cs);
+    } else if (kind == pattern_kinds::NAME) {
+        return r->getName().contains(pattern, cs);
+    } else if (kind == pattern_kinds::NOTE) {
+        return r->getNote().contains(pattern, cs);
+    } else if (kind == pattern_kinds::EXITS) {
         ExitsList exits = r->getExitsList();
         for (const auto &e : exits) {
-            if (Mmapper2Exit::getDoorName(e).contains(pattern, cs)) {
-                return 1;
+            if (e.getDoorName().contains(pattern, cs)) {
+                return true;
             }
         }
     }
-    return 0;
+    return false;
 }

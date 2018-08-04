@@ -24,13 +24,10 @@
 ************************************************************************/
 
 #include "component.h"
-#include <iostream>
 
-std::map<QString, ComponentCreator *> &ComponentCreator::creators()
-{
-    static std::map<QString, ComponentCreator *> creators;
-    return creators;
-}
+#include <iostream>
+#include <QString>
+
 
 Component::Component(bool threaded)
 {

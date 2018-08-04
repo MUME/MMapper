@@ -25,6 +25,9 @@
 ************************************************************************/
 
 #include "connectionlistener.h"
+
+#include <QTcpSocket>
+
 #include "proxy.h"
 
 ConnectionListener::ConnectionListener(MapData *md,
@@ -36,8 +39,6 @@ ConnectionListener::ConnectionListener(MapData *md,
                                        QObject *parent)
     : QTcpServer(parent)
 {
-    m_accept = true;
-
     m_mapData = md;
     m_pathMachine = pm;
     m_commandEvaluator = ce;

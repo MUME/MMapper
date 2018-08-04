@@ -23,10 +23,13 @@
 ************************************************************************/
 
 #include "welcomewidget.h"
-#include "configuration/configuration.h"
-#include "ui_welcomewidget.h"
 
 #include <QPixmap>
+#include <QString>
+#include <QtWidgets>
+
+#include "../configuration/configuration.h"
+#include "ui_welcomewidget.h"
 
 WelcomeWidget::WelcomeWidget(QWidget *parent)
     : QWidget(parent)
@@ -40,10 +43,10 @@ WelcomeWidget::WelcomeWidget(QWidget *parent)
     ui->pixmapLabel->setPixmap(mellon);
 
     // Port
-    ui->port->setText(QString::number(Config().m_localPort));
+    ui->port->setText(QString::number(Config().connection.localPort));
 
     ui->playButton->setFocus();
-    connect(ui->playButton, SIGNAL(clicked(bool)), this, SLOT(onPlayButtonClicked(bool)));
+    connect(ui->playButton, &QAbstractButton::clicked, this, &WelcomeWidget::onPlayButtonClicked);
 }
 
 WelcomeWidget::~WelcomeWidget()

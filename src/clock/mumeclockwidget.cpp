@@ -22,12 +22,15 @@
 **
 ************************************************************************/
 
-#include <cassert>
-#include <QSettings>
-#include <QTimer>
-
-#include "configuration.h"
 #include "mumeclockwidget.h"
+
+#include <cassert>
+#include <QLabel>
+#include <QString>
+
+#include "../configuration/configuration.h"
+#include "mumeclock.h"
+#include "mumemoment.h"
 
 MumeClockWidget::MumeClockWidget(MumeClock *clock, QWidget *parent)
     : QWidget(parent)
@@ -37,12 +40,8 @@ MumeClockWidget::MumeClockWidget(MumeClock *clock, QWidget *parent)
     setAttribute(Qt::WA_DeleteOnClose);
     assert(testAttribute(Qt::WA_DeleteOnClose));
 
-    m_lastSeason = SEASON_UNKNOWN;
-    m_lastTime = TIME_UNKNOWN;
-    m_lastPrecision = MUMECLOCK_UNSET;
-
     m_timer = new QTimer(this);
-    connect(m_timer, SIGNAL(timeout()), this, SLOT(updateLabel()));
+    connect(m_timer, &QTimer::timeout, this, &MumeClockWidget::updateLabel);
     m_timer->start(1000);
 
     updateLabel();
@@ -56,10 +55,10 @@ MumeClockWidget::~MumeClockWidget()
 void MumeClockWidget::updateLabel()
 {
     // Ensure we have updated the epoch
-    Config().m_mumeStartEpoch = m_clock->getMumeStartEpoch();
+    Config().mumeClock.startEpoch = m_clock->getMumeStartEpoch();
 
     // Hide or show the widget if necessary
-    if (!Config().m_displayMumeClock) {
+    if (!Config().mumeClock.display) {
         hide();
         // Slow down the interval to a reasonable number
         m_timer->setInterval(60 * 1000);
@@ -82,23 +81,23 @@ void MumeClockWidget::updateLabel()
         QString styleSheet = "color:black";
         QString text = "Unknown";
         switch (season) {
-        case SEASON_WINTER:
+        case MumeSeason::SEASON_WINTER:
             styleSheet = "color:black;background:white";
             text = "Winter";
             break;
-        case SEASON_SPRING:
+        case MumeSeason::SEASON_SPRING:
             styleSheet = "color:white;background:teal";
             text = "Spring";
             break;
-        case SEASON_SUMMER:
+        case MumeSeason::SEASON_SUMMER:
             styleSheet = "color:white;background:green";
             text = "Summer";
             break;
-        case SEASON_AUTUMN:
+        case MumeSeason::SEASON_AUTUMN:
             styleSheet = "color:black;background:orange";
             text = "Autumn";
             break;
-        case SEASON_UNKNOWN:
+        case MumeSeason::SEASON_UNKNOWN:
         default:
             break;
         }
@@ -113,13 +112,13 @@ void MumeClockWidget::updateLabel()
         // The current time is 12:15 am.
         QString styleSheet = "color:black";
         QString statusTip = "";
-        if (precision <= MUMECLOCK_DAY) {
+        if (precision <= MumeClockPrecision::MUMECLOCK_DAY) {
             styleSheet = "color:black";
             statusTip = "Please run \"time\" to sync the clock";
-        } else if (time == TIME_DAWN) {
+        } else if (time == MumeTime::TIME_DAWN) {
             styleSheet = "color:white;background:red";
             statusTip = "Ticks left until day";
-        } else if (time >= TIME_DUSK) {
+        } else if (time >= MumeTime::TIME_DUSK) {
             styleSheet = "color:white;background:blue";
             statusTip = "Ticks left until day";
         } else {

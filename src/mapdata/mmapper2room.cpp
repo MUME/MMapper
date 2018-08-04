@@ -24,128 +24,129 @@
 ************************************************************************/
 
 #include "mmapper2room.h"
-#include "room.h"
 
-#include <QString>
+#include <QAssociativeIterable>
+
+#include "../expandoracommon/room.h"
+
+/* TODO: move this file to expandoracommon/room.cpp */
 
 RoomName Room::getName() const
 {
-    return at(R_NAME).toString();
+    return fields.name;
 }
 
-RoomDescription Room::getDescription() const
+RoomDescription Room::getStaticDescription() const
 {
-    return at(R_DESC).toString();
+    return fields.staticDescription;
 }
 
 RoomDescription Room::getDynamicDescription() const
 {
-    return at(R_DYNAMICDESC).toString();
+    return fields.dynamicDescription;
 }
 
 RoomNote Room::getNote() const
 {
-    return at(R_NOTE).toString();
+    return fields.note;
 }
 
 RoomMobFlags Room::getMobFlags() const
 {
-    return at(R_MOBFLAGS).toUInt();
+    return fields.mobFlags;
 }
 
 RoomLoadFlags Room::getLoadFlags() const
 {
-    return at(R_LOADFLAGS).toUInt();
+    return fields.loadFlags;
 }
 
 RoomTerrainType Room::getTerrainType() const
 {
-    return static_cast<RoomTerrainType>(at(R_TERRAINTYPE).toUInt());
+    return fields.terrainType;
 }
 
 RoomPortableType Room::getPortableType() const
 {
-    return static_cast<RoomPortableType>(at(R_PORTABLETYPE).toUInt());
+    return fields.portableType;
 }
 
 RoomLightType Room::getLightType() const
 {
-    return static_cast<RoomLightType>(at(R_LIGHTTYPE).toUInt());
+    return fields.lightType;
 }
 
 RoomAlignType Room::getAlignType() const
 {
-    return static_cast<RoomAlignType>(at(R_ALIGNTYPE).toUInt());
+    return fields.alignType;
 }
 
 RoomRidableType Room::getRidableType() const
 {
-    return static_cast<RoomRidableType>(at(R_RIDABLETYPE).toUInt());
+    return fields.ridableType;
 }
 
 RoomSundeathType Room::getSundeathType() const
 {
-    return static_cast<RoomSundeathType>(at(R_SUNDEATHTYPE).toUInt());
+    return fields.sundeathType;
 }
 
-namespace Mmapper2Room {
-RoomName getName(const Room *room)
+void Room::setName(RoomName value)
 {
-    return room->getName();
+    fields.name = std::move(value);
 }
 
-RoomDescription getDescription(const Room *room)
+void Room::setStaticDescription(RoomDescription value)
 {
-    return room->getDescription();
+    fields.staticDescription = std::move(value);
 }
 
-RoomDescription getDynamicDescription(const Room *room)
+void Room::setDynamicDescription(RoomDescription value)
 {
-    return room->getDynamicDescription();
+    fields.dynamicDescription = std::move(value);
 }
 
-RoomNote getNote(const Room *room)
+void Room::setNote(RoomNote value)
 {
-    return room->getNote();
+    fields.note = std::move(value);
 }
 
-RoomMobFlags getMobFlags(const Room *room)
+void Room::setMobFlags(const RoomMobFlags value)
 {
-    return room->getMobFlags();
+    fields.mobFlags = value;
 }
 
-RoomLoadFlags getLoadFlags(const Room *room)
+void Room::setLoadFlags(const RoomLoadFlags value)
 {
-    return room->getLoadFlags();
+    fields.loadFlags = value;
 }
 
-RoomTerrainType getTerrainType(const Room *room)
+void Room::setTerrainType(const RoomTerrainType value)
 {
-    return room->getTerrainType();
+    fields.terrainType = value;
 }
 
-RoomPortableType getPortableType(const Room *room)
+void Room::setPortableType(const RoomPortableType value)
 {
-    return room->getPortableType();
+    fields.portableType = value;
 }
 
-RoomLightType getLightType(const Room *room)
+void Room::setLightType(const RoomLightType value)
 {
-    return room->getLightType();
+    fields.lightType = value;
 }
 
-RoomAlignType getAlignType(const Room *room)
+void Room::setAlignType(const RoomAlignType value)
 {
-    return room->getAlignType();
+    fields.alignType = value;
 }
 
-RoomRidableType getRidableType(const Room *room)
+void Room::setRidableType(const RoomRidableType value)
 {
-    return room->getRidableType();
+    fields.ridableType = value;
 }
 
-RoomSundeathType getSundeathType(const Room *room)
+void Room::setSundeathType(const RoomSundeathType value)
 {
-    return room->getSundeathType();
+    fields.sundeathType = value;
 }
-} // namespace Mmapper2Room

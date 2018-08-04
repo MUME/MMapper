@@ -24,7 +24,10 @@
 ************************************************************************/
 
 #include "pathmachinepage.h"
-#include "configuration.h"
+
+#include <QDoubleSpinBox>
+
+#include "../configuration/configuration.h"
 
 PathmachinePage::PathmachinePage(QWidget *parent)
     : QWidget(parent)
@@ -58,46 +61,47 @@ PathmachinePage::PathmachinePage(QWidget *parent)
             this,
             SLOT(matchingToleranceSpinBoxValueChanged(int)));
 
-    acceptBestRelativeDoubleSpinBox->setValue(Config().m_acceptBestRelative);
-    acceptBestAbsoluteDoubleSpinBox->setValue(Config().m_acceptBestAbsolute);
-    newRoomPenaltyDoubleSpinBox->setValue(Config().m_newRoomPenalty);
-    correctPositionBonusDoubleSpinBox->setValue(Config().m_correctPositionBonus);
-    maxPaths->setValue(Config().m_maxPaths);
-    matchingToleranceSpinBox->setValue(Config().m_matchingTolerance);
-    multipleConnectionsPenaltyDoubleSpinBox->setValue(Config().m_multipleConnectionsPenalty);
+    const auto &settings = Config().pathMachine;
+    acceptBestRelativeDoubleSpinBox->setValue(settings.acceptBestRelative);
+    acceptBestAbsoluteDoubleSpinBox->setValue(settings.acceptBestAbsolute);
+    newRoomPenaltyDoubleSpinBox->setValue(settings.newRoomPenalty);
+    correctPositionBonusDoubleSpinBox->setValue(settings.correctPositionBonus);
+    maxPaths->setValue(settings.maxPaths);
+    matchingToleranceSpinBox->setValue(settings.matchingTolerance);
+    multipleConnectionsPenaltyDoubleSpinBox->setValue(settings.multipleConnectionsPenalty);
 }
 
-void PathmachinePage::acceptBestRelativeDoubleSpinBoxValueChanged(double val)
+void PathmachinePage::acceptBestRelativeDoubleSpinBoxValueChanged(const double val)
 {
-    Config().m_acceptBestRelative = val;
+    Config().pathMachine.acceptBestRelative = val;
 }
 
-void PathmachinePage::acceptBestAbsoluteDoubleSpinBoxValueChanged(double val)
+void PathmachinePage::acceptBestAbsoluteDoubleSpinBoxValueChanged(const double val)
 {
-    Config().m_acceptBestAbsolute = val;
+    Config().pathMachine.acceptBestAbsolute = val;
 }
 
-void PathmachinePage::newRoomPenaltyDoubleSpinBoxValueChanged(double val)
+void PathmachinePage::newRoomPenaltyDoubleSpinBoxValueChanged(const double val)
 {
-    Config().m_newRoomPenalty = val;
+    Config().pathMachine.newRoomPenalty = val;
 }
 
-void PathmachinePage::correctPositionBonusDoubleSpinBoxValueChanged(double val)
+void PathmachinePage::correctPositionBonusDoubleSpinBoxValueChanged(const double val)
 {
-    Config().m_correctPositionBonus = val;
+    Config().pathMachine.correctPositionBonus = val;
 }
 
-void PathmachinePage::multipleConnectionsPenaltyDoubleSpinBoxValueChanged(double val)
+void PathmachinePage::multipleConnectionsPenaltyDoubleSpinBoxValueChanged(const double val)
 {
-    Config().m_multipleConnectionsPenalty = val;
+    Config().pathMachine.multipleConnectionsPenalty = val;
 }
 
-void PathmachinePage::maxPathsValueChanged(int val)
+void PathmachinePage::maxPathsValueChanged(const int val)
 {
-    Config().m_maxPaths = val;
+    Config().pathMachine.maxPaths = static_cast<uint32_t>(val);
 }
 
-void PathmachinePage::matchingToleranceSpinBoxValueChanged(int val)
+void PathmachinePage::matchingToleranceSpinBoxValueChanged(const int val)
 {
-    Config().m_matchingTolerance = val;
+    Config().pathMachine.matchingTolerance = static_cast<uint32_t>(val);
 }

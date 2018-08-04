@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -28,33 +29,42 @@
 
 #include <QString>
 
-#define DF_HIDDEN bit1
-#define DF_NEEDKEY bit2
-#define DF_NOBLOCK bit3
-#define DF_NOBREAK bit4
-#define DF_NOPICK bit5
-#define DF_DELAYED bit6
-#define DF_RESERVED1 bit7
-#define DF_RESERVED2 bit8
-typedef class QString DoorName;
-typedef quint16 DoorFlags;
+enum class OldDoorFlag {
+    HIDDEN,
+    NEEDKEY,
+    NOBLOCK,
+    NOBREAK,
+    NOPICK,
+    DELAYED,
+};
+
+static constexpr const int NUM_OLD_DOOR_FLAGS = static_cast<int>(OldDoorFlag::DELAYED) + 1;
+static_assert(NUM_OLD_DOOR_FLAGS == 6, "");
+DEFINE_ENUM_COUNT(OldDoorFlag, NUM_OLD_DOOR_FLAGS);
+
+class OldDoorFlags final : public enums::Flags<OldDoorFlags, OldDoorFlag, uint16_t>
+{
+    using Flags::Flags;
+};
+
+using DoorName = QString;
 
 class Door
 {
 public:
-    Door(DoorName name = "", DoorFlags flags = 0)
-    {
-        m_name = name;
-        m_flags = flags;
-    }
-    DoorFlags getFlags() const { return m_flags; };
+    explicit Door(DoorName name = DoorName{}, OldDoorFlags flags = OldDoorFlags{})
+        : m_name{name}
+        , m_flags{flags}
+    {}
+
+    OldDoorFlags getFlags() const { return m_flags; };
     const DoorName &getName() const { return m_name; };
-    void setFlags(DoorFlags flags) { m_flags = flags; };
+    void setFlags(OldDoorFlags flags) { m_flags = flags; };
     void setName(const DoorName &name) { m_name = name; };
 
 private:
-    DoorName m_name;
-    DoorFlags m_flags;
+    DoorName m_name{};
+    OldDoorFlags m_flags{};
 };
 
 #endif

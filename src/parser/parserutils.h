@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -27,7 +28,7 @@
 #ifndef PARSERUTILS_H
 #define PARSERUTILS_H
 
-#include <QString>
+class QString;
 
 namespace ParserUtils {
 QString &removeAnsiMarks(QString &str);

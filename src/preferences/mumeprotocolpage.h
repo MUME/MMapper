@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Nils Schimmelmann <nschimme@gmail.com> (Jahara)
@@ -25,7 +26,11 @@
 #ifndef MUMEPROTOCOLPAGE_H
 #define MUMEPROTOCOLPAGE_H
 
+#include <QString>
 #include <QWidget>
+#include <QtCore>
+
+class QObject;
 
 namespace Ui {
 class MumeProtocolPage;
@@ -46,7 +51,7 @@ public slots:
     void externalEditorCommandTextChanged(QString);
 
 private:
-    Ui::MumeProtocolPage *ui;
+    Ui::MumeProtocolPage *ui = nullptr;
 };
 
 #endif // MUMEPROTOCOLPAGE_H

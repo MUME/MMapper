@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -24,51 +25,50 @@
 **
 ************************************************************************/
 
-#ifndef MAP
-#define MAP
+#ifndef MAP_H
+#define MAP_H
 
-#include "coordinate.h"
+#include "../expandoracommon/coordinate.h"
 #include <map>
 
-class Room;
-class RoomOutStream;
 class AbstractRoomFactory;
+class Room;
+class AbstractRoomVisitor;
 
 /**
  * The Map stores the geographic relations of rooms to each other
  * it doesn't store the search tree. The Map class is only used by the
  * RoomAdmin, which also stores the search tree
  */
-class Map
+class Map final
 {
 public:
-    bool defined(const Coordinate &c);
+    bool defined(const Coordinate &c) const;
     Coordinate setNearest(const Coordinate &c, Room &room);
-    Room *get(const Coordinate &c);
+    Room *get(const Coordinate &c) const;
     void remove(const Coordinate &c);
     void clear();
-    void getRooms(RoomOutStream &stream, const Coordinate &ulf, const Coordinate &lrb);
+    void getRooms(AbstractRoomVisitor &stream, const Coordinate &ulf, const Coordinate &lrb) const;
     void fillArea(AbstractRoomFactory *factory, const Coordinate &ulf, const Coordinate &lrb);
 
 private:
     void set(const Coordinate &c, Room *room);
     Coordinate getNearestFree(const Coordinate &c);
-    std::map<int, std::map<int, std::map<int, Room *>>> m_map;
+
+    // REVISIT: consider using something more efficient,
+    std::map<int, std::map<int, std::map<int, Room *>>> m_map{};
 };
 
-class CoordinateIterator
+class CoordinateIterator final
 {
 public:
-    CoordinateIterator()
-        : threshold(1)
-        , state(7)
-    {}
+    CoordinateIterator() = default;
     Coordinate &next();
 
 private:
     Coordinate c;
-    int threshold;
-    int state;
+    int threshold = 1;
+    int state = 7;
 };
 
-#endif
+#endif // MAP_H

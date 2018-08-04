@@ -24,35 +24,33 @@
 ************************************************************************/
 
 #include "infomarkseditdlg.h"
-#include "defs.h"
-#include "mapcanvas.h"
-#include "mapdata.h"
-#include <cmath>
 
-#include <QMessageBox>
-#include <QSettings>
+#include <algorithm>
+#include <QString>
+#include <QtWidgets>
 
-InfoMarksEditDlg::InfoMarksEditDlg(MapData *mapData, QWidget *parent)
+#include "../configuration/configuration.h"
+#include "../expandoracommon/coordinate.h"
+#include "../mapdata/infomark.h"
+#include "../mapdata/mapdata.h"
+
+class QCloseEvent;
+
+InfoMarksEditDlg::InfoMarksEditDlg(MapData *const mapData, QWidget *const parent)
     : QDialog(parent)
 {
     setupUi(this);
     readSettings();
-
-    m_selX1 = 0;
-    m_selY1 = 0;
-    m_selX2 = 0;
-    m_selY2 = 0;
-    m_selLayer = 0;
-
     m_mapData = mapData;
 }
 
-void InfoMarksEditDlg::setPoints(double x1, double y1, double x2, double y2, int layer)
+void InfoMarksEditDlg::setPoints(
+    const double x1, const double y1, const double x2, const double y2, const int layer)
 {
-    m_selX1 = x1;
-    m_selY1 = y1;
-    m_selX2 = x2;
-    m_selY2 = y2;
+    m_sel1.x = x1;
+    m_sel1.y = y1;
+    m_sel2.x = x2;
+    m_sel2.y = y2;
     m_selLayer = layer;
 
     updateMarkers();
@@ -71,19 +69,13 @@ InfoMarksEditDlg::~InfoMarksEditDlg()
 
 void InfoMarksEditDlg::readSettings()
 {
-    QSettings settings("Caligor soft", "MMapper2");
-    settings.beginGroup("InfoMarksEditDlg");
-    QPoint pos = settings.value("pos", QPoint(200, 200)).toPoint();
-    settings.endGroup();
+    const auto pos = Config().readInfoMarksEditDlgPos();
     move(pos);
 }
 
 void InfoMarksEditDlg::writeSettings()
 {
-    QSettings settings("Caligor soft", "MMapper2");
-    settings.beginGroup("InfoMarksEditDlg");
-    settings.setValue("pos", pos());
-    settings.endGroup();
+    Config().writeInfoMarksEditDlgPos(pos());
 }
 
 void InfoMarksEditDlg::connectAll()
@@ -100,24 +92,24 @@ void InfoMarksEditDlg::connectAll()
             SIGNAL(currentIndexChanged(const QString &)),
             this,
             SLOT(objectClassCurrentIndexChanged(const QString &)));
-    connect(objectNameStr, SIGNAL(textChanged(QString)), this, SLOT(objectNameTextChanged(QString)));
-    connect(objectText, SIGNAL(textChanged(QString)), this, SLOT(objectTextChanged(QString)));
+    connect(objectNameStr, &QLineEdit::textChanged, this, &InfoMarksEditDlg::objectNameTextChanged);
+    connect(objectText, &QLineEdit::textChanged, this, &InfoMarksEditDlg::objectTextChanged);
     connect(m_x1, SIGNAL(valueChanged(double)), this, SLOT(x1ValueChanged(double)));
     connect(m_y1, SIGNAL(valueChanged(double)), this, SLOT(y1ValueChanged(double)));
     connect(m_x2, SIGNAL(valueChanged(double)), this, SLOT(x2ValueChanged(double)));
     connect(m_y2, SIGNAL(valueChanged(double)), this, SLOT(y2ValueChanged(double)));
     connect(m_rotationAngle, SIGNAL(valueChanged(double)), this, SLOT(rotValueChanged(double)));
     connect(m_layer, SIGNAL(valueChanged(int)), this, SLOT(layerValueChanged(int)));
-    connect(objectCreate, SIGNAL(clicked()), this, SLOT(createClicked()));
-    connect(objectModify, SIGNAL(clicked()), this, SLOT(modifyClicked()));
-    connect(objectDelete, SIGNAL(clicked()), this, SLOT(deleteClicked()));
-    connect(layerUpButton, SIGNAL(clicked()), this, SLOT(onMoveUpClicked()));
-    connect(layerDownButton, SIGNAL(clicked()), this, SLOT(onMoveDownClicked()));
-    connect(layerNButton, SIGNAL(clicked()), this, SLOT(onMoveNorthClicked()));
-    connect(layerSButton, SIGNAL(clicked()), this, SLOT(onMoveSouthClicked()));
-    connect(layerEButton, SIGNAL(clicked()), this, SLOT(onMoveEastClicked()));
-    connect(layerWButton, SIGNAL(clicked()), this, SLOT(onMoveWestClicked()));
-    connect(objectDeleteAll, SIGNAL(clicked()), this, SLOT(onDeleteAllClicked()));
+    connect(objectCreate, &QAbstractButton::clicked, this, &InfoMarksEditDlg::createClicked);
+    connect(objectModify, &QAbstractButton::clicked, this, &InfoMarksEditDlg::modifyClicked);
+    connect(objectDelete, &QAbstractButton::clicked, this, &InfoMarksEditDlg::deleteClicked);
+    connect(layerUpButton, &QAbstractButton::clicked, this, &InfoMarksEditDlg::onMoveUpClicked);
+    connect(layerDownButton, &QAbstractButton::clicked, this, &InfoMarksEditDlg::onMoveDownClicked);
+    connect(layerNButton, &QAbstractButton::clicked, this, &InfoMarksEditDlg::onMoveNorthClicked);
+    connect(layerSButton, &QAbstractButton::clicked, this, &InfoMarksEditDlg::onMoveSouthClicked);
+    connect(layerEButton, &QAbstractButton::clicked, this, &InfoMarksEditDlg::onMoveEastClicked);
+    connect(layerWButton, &QAbstractButton::clicked, this, &InfoMarksEditDlg::onMoveWestClicked);
+    connect(objectDeleteAll, &QAbstractButton::clicked, this, &InfoMarksEditDlg::onDeleteAllClicked);
 }
 
 void InfoMarksEditDlg::objectListCurrentIndexChanged(const QString & /*unused*/)
@@ -150,11 +142,8 @@ void InfoMarksEditDlg::layerValueChanged(int /*unused*/) {}
 
 void InfoMarksEditDlg::onDeleteAllClicked()
 {
-    InfoMark *m;
-
     for (int i = 0; i < objectsList->count(); i++) {
-        m = getInfoMark(objectsList->itemText(i));
-        if (m != nullptr) {
+        if (auto m = getInfoMark(objectsList->itemText(i))) {
             m_mapData->removeMarker(m);
         }
     }
@@ -164,151 +153,60 @@ void InfoMarksEditDlg::onDeleteAllClicked()
     updateDialog();
 }
 
-void InfoMarksEditDlg::onMoveNorthClicked()
+void InfoMarksEditDlg::onMoveClicked(const Coordinate &offset)
 {
-    InfoMark *m;
-    Coordinate c;
-
+    // Moving both was the behavior when the switch statement had an undocumented fall-thru.
+    static constexpr const bool MOVE_BOTH_ENDS_OF_LINES_AND_ARROWS = true;
+    auto offset_pos1 = [&offset](auto m) { m->setPosition1(m->getPosition1() + offset); };
+    auto offset_pos2 = [&offset](auto m) { m->setPosition2(m->getPosition2() + offset); };
     for (int i = 0; i < objectsList->count(); i++) {
-        m = getInfoMark(objectsList->itemText(i));
-        if (m != nullptr) {
+        if (auto m = getInfoMark(objectsList->itemText(i))) {
             switch (m->getType()) {
-            case MT_LINE:
-            case MT_ARROW:
-                c = m->getPosition2();
-                c.y -= 100;
-                m->setPosition2(c);
-            case MT_TEXT:
-                c = m->getPosition1();
-                c.y -= 100;
-                m->setPosition1(c);
+            case InfoMarkType::LINE:
+            case InfoMarkType::ARROW:
+                offset_pos2(m);
+                if (MOVE_BOTH_ENDS_OF_LINES_AND_ARROWS) {
+                    offset_pos1(m);
+                }
+                break;
+            case InfoMarkType::TEXT:
+                offset_pos1(m);
                 break;
             }
         }
     }
     emit mapChanged();
     updateDialog();
+}
+
+void InfoMarksEditDlg::onMoveNorthClicked()
+{
+    onMoveClicked(Coordinate{0, -100, 0});
 }
 
 void InfoMarksEditDlg::onMoveSouthClicked()
 {
-    InfoMark *m;
-    Coordinate c;
-
-    for (int i = 0; i < objectsList->count(); i++) {
-        m = getInfoMark(objectsList->itemText(i));
-        if (m != nullptr) {
-            switch (m->getType()) {
-            case MT_LINE:
-            case MT_ARROW:
-                c = m->getPosition2();
-                c.y += 100;
-                m->setPosition2(c);
-            case MT_TEXT:
-                c = m->getPosition1();
-                c.y += 100;
-                m->setPosition1(c);
-                break;
-            }
-        }
-    }
-    emit mapChanged();
-    updateDialog();
+    onMoveClicked(Coordinate{0, +100, 0});
 }
 
 void InfoMarksEditDlg::onMoveEastClicked()
 {
-    InfoMark *m;
-    Coordinate c;
-
-    for (int i = 0; i < objectsList->count(); i++) {
-        m = getInfoMark(objectsList->itemText(i));
-        if (m != nullptr) {
-            switch (m->getType()) {
-            case MT_LINE:
-            case MT_ARROW:
-                c = m->getPosition2();
-                c.x += 100;
-                m->setPosition2(c);
-            case MT_TEXT:
-                c = m->getPosition1();
-                c.x += 100;
-                m->setPosition1(c);
-                break;
-            }
-        }
-    }
-    emit mapChanged();
-    updateDialog();
+    onMoveClicked(Coordinate{+100, 0, 0});
 }
 
 void InfoMarksEditDlg::onMoveWestClicked()
 {
-    InfoMark *m;
-    Coordinate c;
-
-    for (int i = 0; i < objectsList->count(); i++) {
-        m = getInfoMark(objectsList->itemText(i));
-        if (m != nullptr) {
-            switch (m->getType()) {
-            case MT_LINE:
-            case MT_ARROW:
-                c = m->getPosition2();
-                c.x -= 100;
-                m->setPosition2(c);
-            case MT_TEXT:
-                c = m->getPosition1();
-                c.x -= 100;
-                m->setPosition1(c);
-                break;
-            }
-        }
-    }
-    emit mapChanged();
-    updateDialog();
+    onMoveClicked(Coordinate{-100, 0, 0});
 }
 
 void InfoMarksEditDlg::onMoveUpClicked()
 {
-    InfoMark *m = nullptr;
-    Coordinate c;
-
-    for (int i = 0; i < objectsList->count(); i++) {
-        m = getInfoMark(objectsList->itemText(i));
-        if (m != nullptr) {
-            c = m->getPosition1();
-            c.z++;
-            m->setPosition1(c);
-
-            c = m->getPosition2();
-            c.z++;
-            m->setPosition2(c);
-        }
-    }
-    emit mapChanged();
-    updateDialog();
+    onMoveClicked(Coordinate{0, 0, +1});
 }
 
 void InfoMarksEditDlg::onMoveDownClicked()
 {
-    InfoMark *m = nullptr;
-    Coordinate c;
-
-    for (int i = 0; i < objectsList->count(); i++) {
-        m = getInfoMark(objectsList->itemText(i));
-        if (m != nullptr) {
-            m = getInfoMark(objectsList->itemText(i));
-            c = m->getPosition1();
-            c.z--;
-            m->setPosition1(c);
-
-            c = m->getPosition2();
-            c.z--;
-            m->setPosition2(c);
-        }
-    }
-    emit mapChanged();
-    updateDialog();
+    onMoveClicked(Coordinate{0, 0, -1});
 }
 
 void InfoMarksEditDlg::createClicked()
@@ -329,18 +227,18 @@ void InfoMarksEditDlg::createClicked()
         }
     }
 
-    auto *im = new InfoMark();
+    auto *const im = new InfoMark();
 
     im->setType(getType());
     im->setName(name);
     im->setText(objectText->text());
     im->setClass(getClass());
-    Coordinate pos1(static_cast<int>(m_x1->value() * 100.0f),
-                    static_cast<int>(m_y1->value() * 100.0f),
-                    m_layer->value());
-    Coordinate pos2(static_cast<int>(m_x2->value() * 100.0f),
-                    static_cast<int>(m_y2->value() * 100.0f),
-                    m_layer->value());
+    const Coordinate pos1(static_cast<int>(m_x1->value() * 100.0),
+                          static_cast<int>(m_y1->value() * 100.0),
+                          m_layer->value());
+    const Coordinate pos2(static_cast<int>(m_x2->value() * 100.0),
+                          static_cast<int>(m_y2->value() * 100.0),
+                          m_layer->value());
     im->setPosition1(pos1);
     im->setPosition2(pos2);
     im->setRotationAngle(m_rotationAngle->value());
@@ -355,18 +253,18 @@ void InfoMarksEditDlg::createClicked()
 
 void InfoMarksEditDlg::modifyClicked()
 {
-    InfoMark *im = getCurrentInfoMark();
+    InfoMark *const im = getCurrentInfoMark();
 
     im->setType(getType());
     im->setName(objectNameStr->text());
     im->setText(objectText->text());
     im->setClass(getClass());
-    Coordinate pos1(static_cast<int>(m_x1->value() * 100.0f),
-                    static_cast<int>(m_y1->value() * 100.0f),
-                    m_layer->value());
-    Coordinate pos2(static_cast<int>(m_x2->value() * 100.0f),
-                    static_cast<int>(m_y2->value() * 100.0f),
-                    m_layer->value());
+    const Coordinate pos1(static_cast<int>(m_x1->value() * 100.0),
+                          static_cast<int>(m_y1->value() * 100.0),
+                          m_layer->value());
+    const Coordinate pos2(static_cast<int>(m_x2->value() * 100.0),
+                          static_cast<int>(m_y2->value() * 100.0),
+                          m_layer->value());
     im->setPosition1(pos1);
     im->setPosition2(pos2);
     im->setRotationAngle(m_rotationAngle->value());
@@ -399,10 +297,10 @@ void InfoMarksEditDlg::disconnectAll()
                this,
                SLOT(objectTypeCurrentIndexChanged(const QString &)));
     disconnect(objectNameStr,
-               SIGNAL(textChanged(QString)),
+               &QLineEdit::textChanged,
                this,
-               SLOT(objectNameTextChanged(QString)));
-    disconnect(objectText, SIGNAL(textChanged(QString)), this, SLOT(objectTextChanged(QString)));
+               &InfoMarksEditDlg::objectNameTextChanged);
+    disconnect(objectText, &QLineEdit::textChanged, this, &InfoMarksEditDlg::objectTextChanged);
     disconnect(objectClassesList,
                SIGNAL(currentIndexChanged(const QString &)),
                this,
@@ -413,67 +311,68 @@ void InfoMarksEditDlg::disconnectAll()
     disconnect(m_y2, SIGNAL(valueChanged(double)), this, SLOT(y2ValueChanged(double)));
     disconnect(m_rotationAngle, SIGNAL(valueChanged(double)), this, SLOT(rotValueChanged(double)));
     disconnect(m_layer, SIGNAL(valueChanged(int)), this, SLOT(layerValueChanged(int)));
-    disconnect(objectCreate, SIGNAL(clicked()), this, SLOT(createClicked()));
-    disconnect(objectModify, SIGNAL(clicked()), this, SLOT(modifyClicked()));
-    disconnect(objectDelete, SIGNAL(clicked()), this, SLOT(deleteClicked()));
-    disconnect(layerUpButton, SIGNAL(clicked()), this, SLOT(onMoveUpClicked()));
-    disconnect(layerDownButton, SIGNAL(clicked()), this, SLOT(onMoveDownClicked()));
-    disconnect(layerNButton, SIGNAL(clicked()), this, SLOT(onMoveNorthClicked()));
-    disconnect(layerSButton, SIGNAL(clicked()), this, SLOT(onMoveSouthClicked()));
-    disconnect(layerEButton, SIGNAL(clicked()), this, SLOT(onMoveEastClicked()));
-    disconnect(layerWButton, SIGNAL(clicked()), this, SLOT(onMoveWestClicked()));
-    disconnect(objectDeleteAll, SIGNAL(clicked()), this, SLOT(onDeleteAllClicked()));
+    disconnect(objectCreate, &QAbstractButton::clicked, this, &InfoMarksEditDlg::createClicked);
+    disconnect(objectModify, &QAbstractButton::clicked, this, &InfoMarksEditDlg::modifyClicked);
+    disconnect(objectDelete, &QAbstractButton::clicked, this, &InfoMarksEditDlg::deleteClicked);
+    disconnect(layerUpButton, &QAbstractButton::clicked, this, &InfoMarksEditDlg::onMoveUpClicked);
+    disconnect(layerDownButton,
+               &QAbstractButton::clicked,
+               this,
+               &InfoMarksEditDlg::onMoveDownClicked);
+    disconnect(layerNButton, &QAbstractButton::clicked, this, &InfoMarksEditDlg::onMoveNorthClicked);
+    disconnect(layerSButton, &QAbstractButton::clicked, this, &InfoMarksEditDlg::onMoveSouthClicked);
+    disconnect(layerEButton, &QAbstractButton::clicked, this, &InfoMarksEditDlg::onMoveEastClicked);
+    disconnect(layerWButton, &QAbstractButton::clicked, this, &InfoMarksEditDlg::onMoveWestClicked);
+    disconnect(objectDeleteAll,
+               &QAbstractButton::clicked,
+               this,
+               &InfoMarksEditDlg::onDeleteAllClicked);
 }
 
 void InfoMarksEditDlg::updateMarkers()
 {
-    double bx1, by1, bx2, by2;
-    bx1 = m_selX1 < m_selX2 ? m_selX1 : m_selX2;
-    by1 = m_selY1 < m_selY2 ? m_selY1 : m_selY2;
-    bx2 = m_selX1 < m_selX2 ? m_selX2 : m_selX1;
-    by2 = m_selY1 < m_selY2 ? m_selY2 : m_selY1;
+    const auto margin = 0.2;
+    const auto bx1 = std::min(m_sel1.x, m_sel2.x) - margin;
+    const auto by1 = std::min(m_sel1.y, m_sel2.y) - margin;
+    const auto bx2 = std::max(m_sel1.x, m_sel2.x) + margin;
+    const auto by2 = std::max(m_sel1.y, m_sel2.y) + margin;
 
-    bx1 -= 0.2;
-    bx2 += 0.2;
-    by1 -= 0.2;
-    by2 += 0.2;
-
-    bool firstInside;
-    bool secondInside;
+    bool firstInside = false;
+    bool secondInside = false;
 
     objectsList->clear();
     objectsList->addItem("Create New Marker");
 
     MarkerListIterator mi(m_mapData->getMarkersList());
     while (mi.hasNext()) {
-        InfoMark *marker = mi.next();
-        Coordinate c1 = marker->getPosition1();
-        Coordinate c2 = marker->getPosition2();
+        InfoMark *const marker = mi.next();
+        const Coordinate c1 = marker->getPosition1();
+        const Coordinate c2 = marker->getPosition2();
 
         firstInside = false;
         secondInside = false;
 
-        if (c1.x / 100.0f > bx1 && c1.x / 100.0f < bx2 && c1.y / 100.0f > by1
-            && c1.y / 100.0f < by2) {
+        if (static_cast<double>(c1.x) / 100.0 > bx1 && static_cast<double>(c1.x) / 100.0 < bx2
+            && static_cast<double>(c1.y) / 100.0 > by1 && static_cast<double>(c1.y) / 100.0 < by2) {
             firstInside = true;
         }
-        if (c2.x / 100.0f > bx1 && c2.x / 100.0f < bx2 && c2.y / 100.0f > by1
-            && c2.y / 100.0f < by2) {
+        if (static_cast<double>(c2.x) / 100.0 > bx1 && static_cast<double>(c2.x) / 100.0 < bx2
+            && static_cast<double>(c2.y) / 100.0 > by1 && static_cast<double>(c2.y) / 100.0 < by2) {
             secondInside = true;
         }
 
         switch (marker->getType()) {
-        case MT_TEXT:
+        case InfoMarkType::TEXT:
             if (firstInside && m_selLayer == c1.z) {
                 objectsList->addItem(marker->getName());
             }
             break;
-        case MT_LINE:
+        case InfoMarkType::LINE:
             if (m_selLayer == c1.z && (firstInside || secondInside)) {
                 objectsList->addItem(marker->getName());
             }
             break;
-        case MT_ARROW:
+        case InfoMarkType::ARROW:
             if (m_selLayer == c1.z && (firstInside || secondInside)) {
                 objectsList->addItem(marker->getName());
             }
@@ -497,19 +396,19 @@ void InfoMarksEditDlg::updateDialog()
     }
 
     switch (getType()) {
-    case MT_TEXT:
+    case InfoMarkType::TEXT:
         m_x2->setEnabled(false);
         m_y2->setEnabled(false);
         m_rotationAngle->setEnabled(true);
         objectText->setEnabled(true);
         break;
-    case MT_LINE:
+    case InfoMarkType::LINE:
         m_x2->setEnabled(true);
         m_y2->setEnabled(true);
         m_rotationAngle->setEnabled(false);
         objectText->setEnabled(false);
         break;
-    case MT_ARROW:
+    case InfoMarkType::ARROW:
         m_x2->setEnabled(true);
         m_y2->setEnabled(true);
         m_rotationAngle->setEnabled(false);
@@ -522,10 +421,10 @@ void InfoMarksEditDlg::updateDialog()
     if ((marker = getCurrentInfoMark()) == nullptr) {
         objectNameStr->clear();
         objectText->clear();
-        m_x1->setValue(m_selX1);
-        m_y1->setValue(m_selY1);
-        m_x2->setValue(m_selX2);
-        m_y2->setValue(m_selY2);
+        m_x1->setValue(m_sel1.x);
+        m_y1->setValue(m_sel1.y);
+        m_x2->setValue(m_sel2.x);
+        m_y2->setValue(m_sel2.y);
         m_rotationAngle->setValue(0.0f);
         m_layer->setValue(m_selLayer);
 
@@ -535,10 +434,10 @@ void InfoMarksEditDlg::updateDialog()
     } else {
         objectNameStr->setText(marker->getName());
         objectText->setText(marker->getText());
-        m_x1->setValue(marker->getPosition1().x / 100.0f);
-        m_y1->setValue(marker->getPosition1().y / 100.0f);
-        m_x2->setValue(marker->getPosition2().x / 100.0f);
-        m_y2->setValue(marker->getPosition2().y / 100.0f);
+        m_x1->setValue(static_cast<float>(marker->getPosition1().x) / 100.0f);
+        m_y1->setValue(static_cast<float>(marker->getPosition1().y) / 100.0f);
+        m_x2->setValue(static_cast<float>(marker->getPosition2().x) / 100.0f);
+        m_y2->setValue(static_cast<float>(marker->getPosition2().y) / 100.0f);
         m_rotationAngle->setValue(marker->getRotationAngle());
         m_layer->setValue(marker->getPosition1().z);
 

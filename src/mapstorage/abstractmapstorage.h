@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -27,33 +28,37 @@
 #ifndef ABSTRACTMAPSTORAGE_H
 #define ABSTRACTMAPSTORAGE_H
 
+#include <memory>
 #include <QObject>
-#include <QPointer>
+#include <QString>
+#include <QtCore>
 
-class Room;
+#include "progresscounter.h"
+
 class InfoMark;
 class MapData;
-class RoomSaveFilter;
 class ProgressCounter;
 class QFile;
+class Room;
+class RoomSaveFilter;
 
 class AbstractMapStorage : public QObject
 {
     Q_OBJECT
 
 public:
-    AbstractMapStorage(MapData &, QString, QFile *, QObject *parent = 0);
-    AbstractMapStorage(MapData &, QString, QObject *parent = 0);
+    explicit AbstractMapStorage(MapData &, QString, QFile *, QObject *parent = nullptr);
+    explicit AbstractMapStorage(MapData &, QString, QObject *parent = nullptr);
     ~AbstractMapStorage();
 
-    virtual bool canLoad() = 0;
-    virtual bool canSave() = 0;
+    virtual bool canLoad() const = 0;
+    virtual bool canSave() const = 0;
 
     virtual void newData() = 0;
     virtual bool loadData() = 0;
     virtual bool mergeData() = 0;
     virtual bool saveData(bool baseMapOnly = false) = 0;
-    const ProgressCounter *progressCounter() const;
+    ProgressCounter &getProgressCounter() const;
 
 signals:
     void log(const QString &, const QString &);
@@ -62,10 +67,18 @@ signals:
     void onNewData();
 
 protected:
-    QFile *m_file;
+    QFile *m_file = nullptr;
     MapData &m_mapData;
-    QString m_fileName;
-    QPointer<ProgressCounter> m_progressCounter;
+    QString m_fileName{};
+
+private:
+    // REVISIT: This could be probably be converted to a regular member,
+    // unless there's some reason you can't nest QObjects inside one another.
+    //
+    // It needs to be private if it's a unique_ptr, but it might as well
+    // be public if it's a regular member. If so, rename it to remove the
+    // m_ protected/private member prefix, and remove getProgressCounter().
+    std::unique_ptr<ProgressCounter> m_progressCounter{};
 };
 
 #endif

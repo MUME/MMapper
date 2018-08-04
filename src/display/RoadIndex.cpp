@@ -1,7 +1,6 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
-**            Marek Krejza <krejza@gmail.com> (Caligor)
+** Authors:   Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
@@ -23,16 +22,28 @@
 **
 ************************************************************************/
 
-#ifndef ROOMSTREAM_H
-#define ROOMSTREAM_H
+#include "RoadIndex.h"
 
-#include "room.h"
+#include <stdexcept>
 
-class RoomOutStream
+#include "../expandoracommon/exit.h"
+#include "../expandoracommon/room.h"
+#include "../mapdata/ExitDirection.h"
+
+RoadIndex getRoadIndex(const ExitDirection dir)
 {
-public:
-    virtual RoomOutStream &operator<<(const Room *) = 0;
-    virtual ~RoomOutStream() {}
-};
+    if (isNESW(dir))
+        return static_cast<RoadIndex>(1 << static_cast<int>(dir));
+    throw std::invalid_argument("dir");
+}
 
-#endif
+RoadIndex getRoadIndex(const Room &room)
+{
+    RoadIndex roadIndex = RoadIndex::NONE;
+
+    for (auto dir : ALL_EXITS_NESW)
+        if (room.exit(dir).exitIsRoad())
+            roadIndex |= getRoadIndex(dir);
+
+    return roadIndex;
+}

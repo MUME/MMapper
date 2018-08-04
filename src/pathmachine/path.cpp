@@ -24,28 +24,29 @@
 ************************************************************************/
 
 #include "path.h"
-#include "abstractroomfactory.h"
-#include "coordinate.h"
-#include "parseevent.h"
-#include "pathparameters.h"
-#include "room.h"
-#include "roomsignalhandler.h"
 
 #include <cassert>
-#include <iostream>
+#include <cstdint>
+
+#include "../expandoracommon/coordinate.h"
+#include "../expandoracommon/exit.h"
+#include "../expandoracommon/room.h"
+#include "../global/roomid.h"
+#include "../global/utils.h"
+#include "../mapdata/ExitDirection.h"
+#include "pathparameters.h"
+#include "roomsignalhandler.h"
 
 Path::Path(const Room *in_room,
            RoomAdmin *owner,
            RoomRecipient *locker,
            RoomSignalHandler *in_signaler,
-           uint direction)
-    : parent(nullptr)
-    , probability(1.0)
-    , room(in_room)
+           ExitDirection direction)
+    : room(in_room)
     , signaler(in_signaler)
     , dir(direction)
 {
-    if (dir != UINT_MAX) {
+    if (dir != INVALID_DIRECTION) {
         signaler->hold(room, owner, locker);
     }
 }
@@ -55,46 +56,51 @@ Path::Path(const Room *in_room,
  * distance between rooms is calculated
  * and probability is updated accordingly
  */
-Path *Path::fork(const Room *in_room,
-                 Coordinate &expectedCoordinate,
-                 RoomAdmin *owner,
-                 PathParameters p,
-                 RoomRecipient *locker,
-                 uint direction,
-                 AbstractRoomFactory *factory)
+Path *Path::fork(const Room *const in_room,
+                 const Coordinate &expectedCoordinate,
+                 RoomAdmin *const owner,
+                 const PathParameters &p,
+                 RoomRecipient *const locker,
+                 const ExitDirection direction)
 {
-    auto *ret = new Path(in_room, owner, locker, signaler, direction);
+    auto *const ret = new Path(in_room, owner, locker, signaler, direction);
     assert(ret != parent);
+    assert(isClamped(static_cast<uint32_t>(direction), 0u, NUM_EXITS));
 
     ret->setParent(this);
     children.insert(ret);
 
     double dist = expectedCoordinate.distance(in_room->getPosition());
-    uint size = room->getExitsList().size();
+    const auto size = static_cast<uint>(room->getExitsList().size());
+    // NOTE: we can probably assert that size is nonzero (room is not a dummy).
+    assert(size == 0u /* dummy */ || size == NUM_EXITS /* valid */);
 
     if (dist < 0.5) {
-        if (direction < factory->numKnownDirs()) {
+        if (static_cast<uint>(direction) < NUM_EXITS_INCLUDING_NONE) {
+            /* NOTE: This is currently always true unless the data is corrupt. */
             dist = 1.0 / p.correctPositionBonus;
         } else {
             dist = p.multipleConnectionsPenalty;
         }
     } else {
-        if (direction < size) {
+        if (static_cast<uint>(direction) < size) {
             const Exit &e = room->exit(direction);
-            uint oid = in_room->getId();
+            auto oid = in_room->getId();
             if (e.containsOut(oid)) {
                 dist = 1.0 / p.correctPositionBonus;
             } else if (!e.outIsEmpty() || oid == room->getId()) {
                 dist *= p.multipleConnectionsPenalty;
             } else {
-                const Exit &oe = in_room->exit(factory->opposite(direction));
+                const Exit &oe = in_room->exit(opposite(direction));
                 if (!oe.inIsEmpty()) {
                     dist *= p.multipleConnectionsPenalty;
                 }
             }
-        } else if (direction < factory->numKnownDirs()) {
+
+        } else if (static_cast<uint>(direction) < NUM_EXITS_INCLUDING_NONE) {
+            /* NOTE: This is currently always true unless the data is corrupt. */
             for (uint d = 0; d < size; ++d) {
-                const Exit &e = room->exit(d);
+                const Exit &e = room->exit(static_cast<ExitDirection>(d));
                 if (e.containsOut(in_room->getId())) {
                     dist = 1.0 / p.correctPositionBonus;
                     break;
@@ -118,24 +124,22 @@ void Path::setParent(Path *p)
 
 void Path::approve()
 {
-    if (parent != nullptr) {
-        uint pId = UINT_MAX;
-        const Room *proom = parent->getRoom();
-        if (proom != nullptr) {
-            pId = proom->getId();
-        }
+    if (parent == nullptr) {
+        assert(dir == INVALID_DIRECTION);
+    } else {
+        const Room *const proom = parent->getRoom();
+        const auto pId = (proom == nullptr) ? INVALID_ROOMID : proom->getId();
         signaler->keep(room, dir, pId);
         parent->removeChild(this);
         parent->approve();
-    } else {
-        assert(dir == UINT_MAX);
     }
 
-    auto i = children.begin();
-    for (; i != children.end(); ++i) {
-        (*i)->setParent(nullptr);
+    for (Path *const child : children) {
+        if (child != nullptr)
+            child->setParent(nullptr);
     }
 
+    // UGG!
     delete this;
 }
 
@@ -147,7 +151,7 @@ void Path::deny()
     if (!children.empty()) {
         return;
     }
-    if (dir != UINT_MAX) {
+    if (dir != INVALID_DIRECTION) {
         signaler->release(room);
     }
     if (parent != nullptr) {

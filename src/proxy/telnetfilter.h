@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -26,31 +27,33 @@
 #ifndef TELNETFILTER
 #define TELNETFILTER
 
-//#define TELNET_STREAM_DEBUG_INPUT_TO_FILE
-
 #include <QByteArray>
 #include <QObject>
 #include <QQueue>
+#include <QString>
+#include <QtCore>
 
-enum TelnetDataType {
-    TDT_PROMPT,
-    TDT_MENU_PROMPT,
-    TDT_LOGIN,
-    TDT_LOGIN_PASSWORD,
-    TDT_CRLF,
-    TDT_LFCR,
-    TDT_LF,
-    TDT_TELNET,
-    TDT_DELAY,
-    TDT_SPLIT,
-    TDT_UNKNOWN
+//#define TELNET_STREAM_DEBUG_INPUT_TO_FILE
+
+enum class TelnetDataType {
+    PROMPT,
+    MENU_PROMPT,
+    LOGIN,
+    LOGIN_PASSWORD,
+    CRLF,
+    LFCR,
+    LF,
+    TELNET,
+    DELAY,
+    SPLIT,
+    UNKNOWN
 };
 
 struct IncomingData
 {
-    IncomingData() { type = TDT_PROMPT; }
-    QByteArray line;
-    TelnetDataType type;
+    explicit IncomingData() = default;
+    QByteArray line{};
+    TelnetDataType type = TelnetDataType::PROMPT;
 };
 
 using TelnetIncomingDataQueue = QQueue<IncomingData>;
@@ -58,7 +61,7 @@ using TelnetIncomingDataQueue = QQueue<IncomingData>;
 class TelnetFilter : public QObject
 {
 public:
-    TelnetFilter(QObject *parent);
+    explicit TelnetFilter(QObject *parent);
     ~TelnetFilter();
 
 public slots:
@@ -84,10 +87,10 @@ private:
                               IncomingData &m_incomingData,
                               TelnetIncomingDataQueue &que);
 
-    IncomingData m_userIncomingData;
-    IncomingData m_mudIncomingData;
-    TelnetIncomingDataQueue m_mudIncomingQue;
-    TelnetIncomingDataQueue m_userIncomingQue;
+    IncomingData m_userIncomingData{};
+    IncomingData m_mudIncomingData{};
+    TelnetIncomingDataQueue m_mudIncomingQue{};
+    TelnetIncomingDataQueue m_userIncomingQue{};
 };
 
 #endif

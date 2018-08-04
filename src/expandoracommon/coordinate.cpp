@@ -68,7 +68,7 @@ void Coordinate::operator-=(const Coordinate &other)
 
 Coordinate Coordinate::operator+(const Coordinate &other) const
 {
-    Coordinate ret;
+    Coordinate ret{};
     ret += *this;
     ret += other;
     return ret;
@@ -76,8 +76,17 @@ Coordinate Coordinate::operator+(const Coordinate &other) const
 
 Coordinate Coordinate::operator-(const Coordinate &other) const
 {
-    Coordinate ret;
+    Coordinate ret{};
     ret += *this;
     ret -= other;
+    return ret;
+}
+
+Coordinate Coordinate ::operator*(const int scalar) const
+{
+    Coordinate ret = *this;
+    ret.x *= scalar;
+    ret.y *= scalar;
+    ret.z *= scalar;
     return ret;
 }

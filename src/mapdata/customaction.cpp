@@ -25,23 +25,31 @@
 
 #include "customaction.h"
 
-#include "abstractroomfactory.h"
-#include "intermediatenode.h"
-#include "map.h"
-#include "mmapper2exit.h"
-#include "room.h"
-#include "roomcollection.h"
+#include <memory>
+#include <set>
+#include <stdexcept>
+#include <utility>
+
+#include "../expandoracommon/abstractroomfactory.h"
+#include "../expandoracommon/exit.h"
+#include "../expandoracommon/room.h"
+#include "../global/Flags.h"
+#include "../global/enums.h"
+#include "../mapfrontend/ParseTree.h"
+#include "../mapfrontend/map.h"
+#include "../mapfrontend/mapaction.h"
+#include "../mapfrontend/roomcollection.h"
+#include "DoorFlags.h"
+#include "ExitDirection.h"
+#include "ExitFlags.h"
 #include "roomselection.h"
 
-#include <utility>
-#include <vector>
-
-GroupAction::GroupAction(AbstractAction *action, const RoomSelection *selection)
+GroupAction::GroupAction(AbstractAction *const action, const RoomSelection *const selection)
     : executor(action)
 {
-    QMapIterator<uint, const Room *> roomIter(*selection);
+    QMapIterator<RoomId, const Room *> roomIter(*selection);
     while (roomIter.hasNext()) {
-        uint rid = roomIter.next().key();
+        RoomId rid = roomIter.next().key();
         affectedRooms.insert(rid);
         selectedRooms.push_back(rid);
     }
@@ -49,33 +57,29 @@ GroupAction::GroupAction(AbstractAction *action, const RoomSelection *selection)
 
 void AddTwoWayExit::exec()
 {
-    if (room2Dir == UINT_MAX) {
-        room2Dir = Mmapper2Exit::opposite(dir);
+    if (room2Dir == ExitDirection::UNKNOWN) {
+        room2Dir = opposite(dir);
     }
     AddOneWayExit::exec();
-    uint temp = to;
-    to = from;
-    from = temp;
+    std::swap(to, from);
     dir = room2Dir;
     AddOneWayExit::exec();
 }
 
 void RemoveTwoWayExit::exec()
 {
-    if (room2Dir == UINT_MAX) {
-        room2Dir = Mmapper2Exit::opposite(dir);
+    if (room2Dir == ExitDirection::UNKNOWN) {
+        room2Dir = opposite(dir);
     }
     RemoveOneWayExit::exec();
-    uint temp = to;
-    to = from;
-    from = temp;
+    std::swap(to, from);
     dir = room2Dir;
     RemoveOneWayExit::exec();
 }
 
-const std::set<uint> &GroupAction::getAffectedRooms()
+const RoomIdSet &GroupAction::getAffectedRooms()
 {
-    for (unsigned int &selectedRoom : selectedRooms) {
+    for (auto &selectedRoom : selectedRooms) {
         executor->insertAffected(selectedRoom, affectedRooms);
     }
     return affectedRooms;
@@ -83,10 +87,10 @@ const std::set<uint> &GroupAction::getAffectedRooms()
 
 void GroupAction::exec()
 {
-    for (unsigned int &selectedRoom : selectedRooms) {
+    for (auto &selectedRoom : selectedRooms) {
         executor->preExec(selectedRoom);
     }
-    for (unsigned int &selectedRoom : selectedRooms) {
+    for (auto &selectedRoom : selectedRooms) {
         executor->exec(selectedRoom);
     }
 }
@@ -95,20 +99,18 @@ MoveRelative::MoveRelative(const Coordinate &in_move)
     : move(in_move)
 {}
 
-void MoveRelative::exec(uint id)
+void MoveRelative::exec(const RoomId id)
 {
-    Room *room = roomIndex()[id];
-    if (room != nullptr) {
+    if (Room *room = roomIndex(id)) {
         const Coordinate &c = room->getPosition();
         Coordinate newPos = c + move;
         map().setNearest(newPos, *room);
     }
 }
 
-void MoveRelative::preExec(uint id)
+void MoveRelative::preExec(const RoomId id)
 {
-    Room *room = roomIndex()[id];
-    if (room != nullptr) {
+    if (Room *const room = roomIndex(id)) {
         map().remove(room->getPosition());
     }
 }
@@ -117,80 +119,81 @@ MergeRelative::MergeRelative(const Coordinate &in_move)
     : move(in_move)
 {}
 
-void MergeRelative::insertAffected(uint id, std::set<uint> &affected)
+void MergeRelative::insertAffected(const RoomId id, RoomIdSet &affected)
 {
-    Room *room = roomIndex()[id];
-    if (room != nullptr) {
+    if (Room *const room = roomIndex(id)) {
         ExitsAffecter::insertAffected(id, affected);
         const Coordinate &c = room->getPosition();
-        Coordinate newPos = c + move;
-        Room *other = map().get(newPos);
+        const Coordinate newPos = c + move;
+        Room *const other = map().get(newPos);
         if (other != nullptr) {
             affected.insert(other->getId());
         }
     }
 }
 
-void MergeRelative::preExec(uint id)
+void MergeRelative::preExec(const RoomId id)
 {
-    Room *room = roomIndex()[id];
-    if (room != nullptr) {
+    if (Room *const room = roomIndex(id)) {
         map().remove(room->getPosition());
     }
 }
 
-void MergeRelative::exec(uint id)
+void MergeRelative::exec(const RoomId id)
 {
-    Room *source = roomIndex()[id];
+    Room *const source = roomIndex(id);
     if (source == nullptr) {
         return;
     }
     Map &roomMap = map();
-    std::vector<Room *> &rooms = roomIndex();
+
     const Coordinate &c = source->getPosition();
-    Room *target = roomMap.get(c + move);
+    Room *const target = roomMap.get(c + move);
     if (target != nullptr) {
         factory()->update(target, source);
-        ParseEvent *props = factory()->getEvent(target);
-        uint oid = target->getId();
-        RoomCollection *newHome = treeRoot().insertRoom(*props);
-        std::vector<RoomCollection *> &homes = roomHomes();
-        RoomCollection *oldHome = homes[oid];
-        if (oldHome != nullptr) {
-            oldHome->erase(target);
+        auto oid = target->getId();
+        const SharedRoomCollection newHome = [&]() {
+            auto props = factory()->getEvent(target);
+            return getParseTree().insertRoom(*props);
+        }();
+
+        RoomHomes &homes = roomHomes();
+
+        auto &home_ref = homes[oid];
+        if (SharedRoomCollection &oldHome = home_ref) {
+            oldHome->removeRoom(target);
         }
 
-        homes[oid] = newHome;
+        home_ref = newHome;
         if (newHome != nullptr) {
-            newHome->insert(target);
+            newHome->addRoom(target);
         }
         const ExitsList &exits = source->getExitsList();
-        for (int dir = 0; dir < exits.size(); ++dir) {
+        for (const auto dir : enums::makeCountingIterator<ExitDirection>(exits)) {
             const Exit &e = exits[dir];
-            for (auto oeid : e.inRange()) {
-                if (Room *oe = rooms[oeid]) {
-                    oe->exit(Mmapper2Exit::opposite(dir)).addOut(oid);
+            for (const auto oeid : e.inRange()) {
+                if (Room *const oe = roomIndex(oeid)) {
+                    oe->exit(opposite(dir)).addOut(oid);
                     target->exit(dir).addIn(oeid);
                 }
             }
-            for (uint oeid : e.outRange()) {
-                if (Room *oe = rooms[oeid]) {
-                    oe->exit(Mmapper2Exit::opposite(dir)).addIn(oid);
+            for (const auto oeid : e.outRange()) {
+                if (Room *const oe = roomIndex(oeid)) {
+                    oe->exit(opposite(dir)).addIn(oid);
                     target->exit(dir).addOut(oeid);
                 }
             }
         }
         Remove::exec(source->getId());
     } else {
-        Coordinate newPos = c + move;
+        const Coordinate newPos = c + move;
         roomMap.setNearest(newPos, *source);
     }
 }
 
-void ConnectToNeighbours::insertAffected(uint id, std::set<uint> &affected)
+void ConnectToNeighbours::insertAffected(const RoomId id, RoomIdSet &affected)
 {
-    Room *center = roomIndex()[id];
-    if (center != nullptr) {
+    if (Room *const center = roomIndex(id)) {
         Coordinate other(0, -1, 0);
         other += center->getPosition();
         Room *room = map().get(other);
@@ -216,28 +219,30 @@ void ConnectToNeighbours::insertAffected(uint id, std::set<uint> &affected)
     }
 }
 
-void ConnectToNeighbours::exec(uint cid)
+void ConnectToNeighbours::exec(const RoomId cid)
 {
-    Room *center = roomIndex()[cid];
-    if (center != nullptr) {
+    if (Room *const center = roomIndex(cid)) {
         Coordinate other(0, -1, 0);
         other += center->getPosition();
-        connectRooms(center, other, ED_NORTH, cid);
+        connectRooms(center, other, ExitDirection::NORTH, cid);
         other.y += 2;
-        connectRooms(center, other, ED_SOUTH, cid);
+        connectRooms(center, other, ExitDirection::SOUTH, cid);
         other.y--;
         other.x--;
-        connectRooms(center, other, ED_WEST, cid);
+        connectRooms(center, other, ExitDirection::WEST, cid);
         other.x += 2;
-        connectRooms(center, other, ED_EAST, cid);
+        connectRooms(center, other, ExitDirection::EAST, cid);
     }
 }
 
-void ConnectToNeighbours::connectRooms(Room *center, Coordinate &otherPos, uint dir, uint cid)
+void ConnectToNeighbours::connectRooms(Room *const center,
+                                       Coordinate &otherPos,
+                                       const ExitDirection dir,
+                                       const RoomId cid)
 {
-    if (Room *room = map().get(otherPos)) {
-        uint oid = room->getId();
-        Exit &oexit = room->exit(Mmapper2Exit::opposite(dir));
+    if (Room *const room = map().get(otherPos)) {
+        const auto oid = room->getId();
+        Exit &oexit = room->exit(opposite(dir));
         oexit.addIn(cid);
         oexit.addOut(cid);
         Exit &cexit = center->exit(dir);
@@ -246,21 +251,21 @@ void ConnectToNeighbours::connectRooms(Room *center, Coordinate &otherPos, uint 
     }
 }
 
-void DisconnectFromNeighbours::exec(uint id)
+void DisconnectFromNeighbours::exec(const RoomId id)
 {
-    auto &rooms = roomIndex();
-    if (Room *room = rooms[id]) {
+    if (Room *room = roomIndex(id)) {
         ExitsList &exits = room->getExitsList();
-        for (int dir = 0; dir < exits.size(); ++dir) {
+
+        for (auto dir : enums::makeCountingIterator<ExitDirection>(exits)) {
             Exit &e = exits[dir];
             for (auto idx : e.inRange()) {
-                if (Room *other = rooms[idx]) {
-                    other->exit(Mmapper2Exit::opposite(dir)).removeOut(id);
+                if (Room *other = roomIndex(idx)) {
+                    other->exit(opposite(dir)).removeOut(id);
                 }
             }
             for (auto idx : e.outRange()) {
-                if (Room *other = rooms[idx]) {
-                    other->exit(Mmapper2Exit::opposite(dir)).removeIn(id);
+                if (Room *other = roomIndex(idx)) {
+                    other->exit(opposite(dir)).removeIn(id);
                 }
             }
             e.removeAll();
@@ -268,69 +273,127 @@ void DisconnectFromNeighbours::exec(uint id)
     }
 }
 
-ModifyRoomFlags::ModifyRoomFlags(uint in_flags, uint in_fieldNum, FlagModifyMode in_mode)
+ModifyRoomFlags::ModifyRoomFlags(const uint in_flags,
+                                 const RoomField in_fieldNum,
+                                 const FlagModifyMode in_mode)
     : flags(in_flags)
     , fieldNum(in_fieldNum)
     , mode(in_mode)
 {}
 
 template<typename Flags, typename Flag>
-static Flags modifyFlags(Flags flags, Flag x, FlagModifyMode mode)
+static Flags modifyFlags(const Flags flags, const Flag x, const FlagModifyMode mode)
 {
     switch (mode) {
-    case FMM_SET:
-        flags |= x;
-        break;
-    case FMM_UNSET:
-        flags &= (~x);
-        break;
-    case FMM_TOGGLE:
-        flags ^= x;
-        break;
+    case FlagModifyMode::SET:
+        return flags | x;
+    case FlagModifyMode::UNSET:
+        return flags & (~x);
+    case FlagModifyMode::TOGGLE:
+        return flags ^ x;
     }
     return flags;
 }
 
-void ModifyRoomFlags::exec(uint id)
+void ModifyRoomFlags::exec(const RoomId id)
 {
-    if (Room *room = roomIndex()[id]) {
+    if (Room *room = roomIndex(id)) {
         /* REVISIT: should there be an error here if the field really contains a string? */
-        const auto field = static_cast<RoomField>(fieldNum);
-        room->modifyUint(field, [flags = this->flags, mode = this->mode](uint roomFlags) {
-            return modifyFlags(roomFlags, flags, mode);
+        const auto field = this->fieldNum;
+        room->modifyUint(field, [this](uint roomFlags) {
+            return modifyFlags(roomFlags, this->flags, this->mode);
         });
     }
 }
 
-UpdateExitField::UpdateExitField(const QVariant &in_update, uint in_dir, uint in_fieldNum)
-    : update(std::move(in_update))
-    , fieldNum(in_fieldNum)
+UpdateExitField::UpdateExitField(const ExitFieldVariant &in_update, const ExitDirection in_dir)
+    : update(in_update)
     , dir(in_dir)
 {}
+UpdateExitField::UpdateExitField(const DoorName &update, const ExitDirection dir)
+    : update{update}
+    , dir{dir}
+{}
 
-void UpdateExitField::exec(uint id)
+void UpdateExitField::exec(const RoomId id)
 {
-    if (Room *room = roomIndex()[id]) {
+    if (Room *room = roomIndex(id)) {
         Exit &ex = room->exit(dir);
-        ex[fieldNum] = update;
+        ex.setField(update);
     }
 }
 
-ModifyExitFlags::ModifyExitFlags(uint in_flags,
-                                 uint in_dir,
-                                 uint in_fieldNum,
-                                 FlagModifyMode in_mode)
-    : flags(in_flags)
-    , fieldNum(in_fieldNum)
+ModifyExitFlags::ModifyExitFlags(const ExitFieldVariant in_flags,
+                                 const ExitDirection in_dir,
+                                 const FlagModifyMode in_mode)
+    : var{in_flags}
+    , mode(in_mode)
+    , dir(in_dir)
+{
+    // The DoorName version is actually implemented, but it has never been used.
+    // Test it if you use it!
+    if (in_flags.getType() == ExitField::DOOR_NAME)
+        throw std::runtime_error("not implemented");
+}
+
+ModifyExitFlags::ModifyExitFlags(const ExitFlags in_flags,
+                                 const ExitDirection in_dir,
+                                 const FlagModifyMode in_mode)
+    : var{in_flags}
     , mode(in_mode)
     , dir(in_dir)
 {}
 
-void ModifyExitFlags::exec(uint id)
+ModifyExitFlags::ModifyExitFlags(const DoorFlags in_flags,
+                                 const ExitDirection in_dir,
+                                 const FlagModifyMode in_mode)
+    : var{in_flags}
+    , mode(in_mode)
+    , dir(in_dir)
+{}
+
+static void modifyDoorName(Exit &ex, const ExitFieldVariant var, const FlagModifyMode mode)
 {
-    if (Room *room = roomIndex()[id]) {
+    switch (mode) {
+    case FlagModifyMode::SET:
+        ex.setDoorName(var.getDoorName());
+        break;
+    case FlagModifyMode::UNSET:
+        // this doesn't really make sense either.
+        ex.clearDoorName();
+        break;
+    case FlagModifyMode::TOGGLE:
+        // the idea of toggling a door name doesn't make sense,
+        // so this implementation is as good as any.
+        if (ex.hasDoorName())
+            ex.setDoorName(var.getDoorName());
+        else
+            ex.clearDoorName();
+        break;
+    default:
+        /* this can't happen */
+        throw std::runtime_error("impossible");
+    }
+}
+
+void ModifyExitFlags::exec(const RoomId id)
+{
+    if (Room *const room = roomIndex(id)) {
         Exit &ex = room->exit(dir);
-        uint exitFlags = ex[fieldNum].toUInt();
-        ex[fieldNum] = modifyFlags(exitFlags, flags, mode);
+
+        switch (var.getType()) {
+        case ExitField::DOOR_NAME:
+            modifyDoorName(ex, var, mode);
+            break;
+        case ExitField::EXIT_FLAGS:
+            ex.setExitFlags(modifyFlags(ex.getExitFlags(), var.getExitFlags(), mode));
+            break;
+        case ExitField::DOOR_FLAGS:
+            ex.setDoorFlags(modifyFlags(ex.getDoorFlags(), var.getDoorFlags(), mode));
+            break;
+        default:
+            /* this can't happen */
+            throw std::runtime_error("impossible");
+        }
     }
 }

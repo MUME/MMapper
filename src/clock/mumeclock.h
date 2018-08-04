@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Nils Schimmelmann <nschimme@gmail.com> (Jahara)
@@ -25,14 +26,24 @@
 #ifndef MUMECLOCK_H
 #define MUMECLOCK_H
 
-enum MumeClockPrecision { MUMECLOCK_UNSET = -1, MUMECLOCK_DAY, MUMECLOCK_HOUR, MUMECLOCK_MINUTE };
-
+#include <array>
 #include <QHash>
 #include <QList>
 #include <QMetaEnum>
 #include <QObject>
+#include <QString>
+#include <QtCore>
 
 #include "mumemoment.h"
+
+class QMetaEnum;
+
+enum class MumeClockPrecision {
+    MUMECLOCK_UNSET = -1,
+    MUMECLOCK_DAY,
+    MUMECLOCK_HOUR,
+    MUMECLOCK_MINUTE
+};
 
 class MumeClock : public QObject
 {
@@ -41,9 +52,9 @@ class MumeClock : public QObject
     friend class TestClock;
 
 public:
-    explicit MumeClock(int mumeEpoch, QObject *parent = 0);
+    explicit MumeClock(int mumeEpoch, QObject *parent = nullptr);
 
-    explicit MumeClock(QObject *parent = 0);
+    explicit MumeClock(QObject *parent = nullptr);
 
     MumeMoment getMumeMoment(int secsSinceUnixEpoch = -1);
 
@@ -55,7 +66,7 @@ public:
 
     int getMumeStartEpoch() { return m_mumeStartEpoch; }
 
-    enum WestronMonthNames {
+    enum class WestronMonthNames {
         UnknownWestronMonth = -1,
         Afteryule,
         Solmath,
@@ -73,7 +84,7 @@ public:
 
     Q_ENUM(WestronMonthNames)
 
-    enum SindarinMonthNames {
+    enum class SindarinMonthNames {
         UnknownSindarinMonth = -1,
         Narwain,
         Ninui,
@@ -91,8 +102,8 @@ public:
 
     Q_ENUM(SindarinMonthNames)
 
-    static const QList<int> s_dawnHour;
-    static const QList<int> s_duskHour;
+    static const std::array<int, 12> s_dawnHour;
+    static const std::array<int, 12> s_duskHour;
     static const QMetaEnum s_westronMonthNames;
     static const QMetaEnum s_sindarinMonthNames;
     static const QHash<QString, MumeTime> m_stringTimeHash;
@@ -121,9 +132,9 @@ protected:
 private:
     MumeMoment &unknownTimeTick(MumeMoment &moment);
 
-    int m_mumeStartEpoch;
-    MumeClockPrecision m_precision;
-    int m_clockTolerance;
+    int m_mumeStartEpoch = 0;
+    MumeClockPrecision m_precision{};
+    int m_clockTolerance = 0;
 };
 
 #endif // MUMECLOCK_H

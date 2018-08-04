@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -26,51 +27,63 @@
 #ifndef OLDCONNECTION_H
 #define OLDCONNECTION_H
 
-#include "defs.h"
-
+#include <cstddef>
+#include <cstdint>
 #include <QDateTime>
+#include <QString>
+#include <QtCore>
+#include <QtGlobal>
 
-class Room;
+#include "../global/EnumIndexedArray.h"
+#include "../global/Flags.h"
+
 class Door;
+class Room;
 
-typedef class QString ConnectionNote;
+using ConnectionNote = QString;
 
-enum ConnectionType { CT_NORMAL = 0, CT_LOOP, CT_ONEWAY, CT_UNDEFINED };
+enum class Hand { LEFT = 0, RIGHT };
+DEFINE_ENUM_COUNT(Hand, 2);
 
-enum ConnectionDirection {
-    CD_NORTH = 0,
-    CD_SOUTH,
-    CD_EAST,
-    CD_WEST,
-    CD_UP,
-    CD_DOWN,
-    CD_UNKNOWN,
-    CD_NONE
-};
+enum class ConnectionType { NORMAL = 0, LOOP, ONE_WAY };
+
+enum class ConnectionDirection { NORTH = 0, SOUTH, EAST, WEST, UP, DOWN, UNKNOWN, NONE };
 
 ConnectionDirection opposite(ConnectionDirection in);
 
-#define CF_DOOR bit1
-#define CF_CLIMB bit2
-#define CF_RANDOM bit3
-#define CF_SPECIAL bit4
-#define CF_RESERVED1 bit5
-#define CF_RESERVED2 bit6
-#define CF_RESERVED3 bit7
-#define CF_RESERVED4 bit8
-typedef quint8 ConnectionFlags;
+enum class ConnectionFlag {
+    DOOR = 0,
+    CLIMB,
+    RANDOM,
+    SPECIAL,
+};
+static constexpr const size_t NUM_CONNECTION_FLAGS = static_cast<size_t>(ConnectionFlag::SPECIAL)
+                                                     + 1u;
+static_assert(NUM_CONNECTION_FLAGS == 4u, "");
+DEFINE_ENUM_COUNT(ConnectionFlag, NUM_CONNECTION_FLAGS);
 
-typedef QDateTime ConnectionTimeStamp;
+class ConnectionFlags : public enums::Flags<ConnectionFlags, ConnectionFlag, uint8_t>
+{
+public:
+    using Flags::Flags;
+};
+
+using ConnectionTimeStamp = QDateTime;
 
 class Connection
 {
 public:
-    Connection();
+    static constexpr const Hand FIRST = Hand::LEFT;
+    static constexpr const Hand SECOND = Hand::RIGHT;
+
+public:
+    explicit Connection();
     ~Connection();
 
     const ConnectionNote &getNote() const { return m_note; };
     quint32 getIndex() const { return m_index; };
-    Room *getRoom(quint8 idx) const { return m_rooms[idx]; };
+    [[deprecated]] Room *getRoom(quint8 idx) const { return m_rooms[static_cast<Hand>(idx)]; };
+    Room *getRoom(Hand idx) const { return m_rooms[idx]; };
     Room *getTargetRoom(Room *r) const
     {
         Room *tmp;
@@ -104,11 +117,12 @@ public:
     //    void setID(ConnectionID id) { m_ID = id; };
     void setNote(ConnectionNote note) { m_note = note; };
     void setIndex(quint32 idx) { m_index = idx; };
-    void setRoom(Room *room, quint8 idx) { m_rooms[idx] = room; };
+    [[deprecated]] void setRoom(Room *room, quint8 idx) { m_rooms[static_cast<Hand>(idx)] = room; };
+    void setRoom(Room *room, Hand idx) { m_rooms[idx] = room; };
     void setDoor(Door *door, Hand idx)
     {
         m_doors[idx] = door;
-        m_flags |= CF_DOOR;
+        m_flags |= ConnectionFlag::DOOR;
     };
     void setDirection(ConnectionDirection direction, Hand idx) { m_directions[idx] = direction; };
     void setDirection(ConnectionDirection direction, Room *r)
@@ -124,23 +138,23 @@ public:
 
 private:
     //connection note
-    ConnectionNote m_note;
+    ConnectionNote m_note{};
 
-    ConnectionDirection m_directions[2]{};
+    EnumIndexedArray<ConnectionDirection, Hand> m_directions{};
 
-    ConnectionTimeStamp m_timeStamp;
+    ConnectionTimeStamp m_timeStamp{};
 
     //Index to rooms
-    Room *m_rooms[2]{};
+    EnumIndexedArray<Room *, Hand> m_rooms{};
 
     //doors (in case of exit with doors)
-    Door *m_doors[2]{};
+    EnumIndexedArray<Door *, Hand> m_doors{};
 
     //type of connections
-    ConnectionType m_type;
-    ConnectionFlags m_flags;
+    ConnectionType m_type = ConnectionType::NORMAL;
+    ConnectionFlags m_flags{0};
 
-    quint32 m_index;
+    quint32 m_index = 0u;
 };
 
 #endif

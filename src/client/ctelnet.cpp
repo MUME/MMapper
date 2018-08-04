@@ -26,35 +26,159 @@
 ************************************************************************/
 
 #include "ctelnet.h"
-#include "configuration/configuration.h"
 
+#include <limits>
 #include <QApplication>
-#include <QDebug>
+#include <QByteArray>
 #include <QHostAddress>
-#include <QTextCodec>
+#include <QMessageLogContext>
+#include <QObject>
+#include <QString>
 
-#define LATIN_1_ENCODING "ISO-8859-1"
+#include "../configuration/configuration.h"
+#include "../global/io.h"
+#include "../global/utils.h"
 
-cTelnet::cTelnet(QObject *parent)
+QString telnetCommandName(uint8_t cmd)
+{
+#define CASE(x) \
+    case TN_##x: \
+        return #x
+    switch (cmd) {
+        CASE(SE);
+        CASE(NOP);
+        CASE(DM);
+        CASE(B);
+        CASE(IP);
+        CASE(AO);
+        CASE(AYT);
+        CASE(EC);
+        CASE(EL);
+        CASE(GA);
+        CASE(SB);
+        CASE(WILL);
+        CASE(WONT);
+        CASE(DO);
+        CASE(DONT);
+        CASE(IAC);
+    }
+    return QString::asprintf("%u", cmd);
+#undef CASE
+}
+
+static QString telnetOptionName(uint8_t opt)
+{
+#define CASE(x) \
+    case OPT_##x: \
+        return #x
+    switch (opt) {
+        CASE(ECHO);
+        CASE(SUPPRESS_GA);
+        CASE(STATUS);
+        CASE(TIMING_MARK);
+        CASE(TERMINAL_TYPE);
+        CASE(NAWS);
+        CASE(CHARSET);
+    }
+    return QString::asprintf("%u", opt);
+#undef CASE
+}
+static QString telnetSubnegName(uint8_t opt)
+{
+#define CASE(x) \
+    case TNSB_##x: \
+        return #x
+    switch (opt) {
+        CASE(IS);
+        CASE(SEND); // TODO: conflict between SEND and REQUEST
+        CASE(ACCEPTED);
+        CASE(REJECTED);
+        CASE(TTABLE_IS);
+        CASE(TTABLE_REJECTED);
+        CASE(TTABLE_ACK);
+        CASE(TTABLE_NAK);
+    }
+    return QString::asprintf("%u", opt);
+#undef CASE
+}
+
+bool containsIAC(const QByteArray &arr)
+{
+    for (auto c : arr) {
+        if (static_cast<uint8_t>(c) == TN_IAC)
+            return true;
+    }
+    return false;
+}
+
+struct TelnetFormatter final : public QByteArray
+{
+    void addRaw(const uint8_t byte)
+    {
+        auto &s = static_cast<QByteArray &>(*this);
+        s += byte;
+    }
+
+    void addEscaped(const uint8_t byte)
+    {
+        addRaw(byte);
+        if (byte == TN_IAC) {
+            addRaw(byte);
+        }
+    }
+
+    void addTwoByteEscaped(const uint16_t n)
+    {
+        // network order is big-endian
+        addEscaped(static_cast<uint8_t>(n >> 8));
+        addEscaped(static_cast<uint8_t>(n));
+    }
+
+    void addClampedTwoByteEscaped(const int n)
+    {
+        static constexpr const auto lo = static_cast<int>(std::numeric_limits<uint16_t>::min());
+        static constexpr const auto hi = static_cast<int>(std::numeric_limits<uint16_t>::max());
+        static_assert(lo == 0, "");
+        static_assert(hi == 65535, "");
+        addTwoByteEscaped(static_cast<uint16_t>(clamp(n, lo, hi)));
+    }
+
+    void addEscapedBytes(const QByteArray &s)
+    {
+        for (auto c : s) {
+            addEscaped(static_cast<uint8_t>(c));
+        }
+    }
+
+    void addCommand(uint8_t cmd)
+    {
+        addRaw(TN_IAC);
+        addRaw(cmd);
+    }
+
+    void addSubnegBegin(uint8_t opt)
+    {
+        addCommand(TN_SB);
+        addRaw(opt);
+    }
+
+    void addSubnegEnd() { addCommand(TN_SE); }
+};
+
+cTelnet::cTelnet(QObject *const parent)
     : QObject(parent)
 {
     /** MMapper Telnet */
     termType = QString("MMapper %1").arg(MMAPPER_VERSION);
-    // set up encoding
-    inCoder = nullptr;
-    outCoder = nullptr;
-    iac = iac2 = insb = false;
-    command.clear();
-    sentbytes = 0;
-    curX = 80;
-    curY = 24;
-    encoding = Config().m_utf8Charset ? "UTF-8" : LATIN_1_ENCODING;
+
+    encoding = Config().parser.utf8Charset ? UTF_8_ENCODING : LATIN_1_ENCODING;
     reset();
+
     setupEncoding();
 
-    connect(&socket, SIGNAL(connected()), this, SLOT(onConnected()));
-    connect(&socket, SIGNAL(disconnected()), this, SLOT(onDisconnected()));
-    connect(&socket, SIGNAL(readyRead()), this, SLOT(onReadyRead()));
+    connect(&socket, &QAbstractSocket::connected, this, &cTelnet::onConnected);
+    connect(&socket, &QAbstractSocket::disconnected, this, &cTelnet::onDisconnected);
+    connect(&socket, &QIODevice::readyRead, this, &cTelnet::onReadyRead);
     connect(&socket,
             SIGNAL(error(QAbstractSocket::SocketError)),
             this,
@@ -63,8 +187,6 @@ cTelnet::cTelnet(QObject *parent)
 
 cTelnet::~cTelnet()
 {
-    delete inCoder;
-    delete outCoder;
     socket.disconnectFromHost();
     socket.deleteLater();
 }
@@ -74,7 +196,7 @@ void cTelnet::connectToHost()
     if (socket.state() != QAbstractSocket::UnconnectedState) {
         socket.abort();
     }
-    socket.connectToHost(QHostAddress::LocalHost, Config().m_localPort);
+    socket.connectToHost(QHostAddress::LocalHost, Config().connection.localPort);
     socket.waitForConnected(3000);
 }
 
@@ -113,13 +235,13 @@ void cTelnet::onError(QAbstractSocket::SocketError error)
 
 void cTelnet::setupEncoding()
 {
-    delete inCoder;
-    delete outCoder;
+    inCoder.reset();
+    outCoder.reset();
 
     qDebug() << "* Switching to" << encoding << "encoding";
 
-    Config().m_utf8Charset = (QString::compare(QString(encoding), "UTF-8", Qt::CaseInsensitive)
-                              == 0);
+    Config().parser.utf8Charset
+        = (QString::compare(QString(encoding), UTF_8_ENCODING, Qt::CaseInsensitive) == 0);
 
     // MUME can understand US-ASCII, ISO-8859-1, or UTF-8
     auto textCodec = QTextCodec::codecForName(encoding);
@@ -129,19 +251,18 @@ void cTelnet::setupEncoding()
         textCodec = QTextCodec::codecForName(encoding);
     }
 
-    inCoder = textCodec->makeDecoder();
-    outCoder = textCodec->makeEncoder();
+    // MUME can output US-ASCII, LATIN1, or UTF-8
+    inCoder = std::unique_ptr<QTextDecoder>{textCodec->makeDecoder()};
+    outCoder = std::unique_ptr<QTextEncoder>{textCodec->makeEncoder()};
 }
 
 void cTelnet::reset()
 {
-    //prepare option variables
-    for (int i = 0; i < 256; i++) {
-        myOptionState[i] = false;
-        hisOptionState[i] = false;
-        announcedState[i] = false;
-        heAnnouncedState[i] = false;
-    }
+    myOptionState.fill(false);
+    hisOptionState.fill(false);
+    announcedState.fill(false);
+    heAnnouncedState.fill(false);
+
     //reset telnet status
     iac = iac2 = insb = false;
     command.clear();
@@ -154,23 +275,9 @@ void cTelnet::sendToMud(const QString &data)
     QByteArray outdata = outCoder->fromUnicode(data);
 
     // IAC byte must be doubled
-    int len = outdata.length();
-    bool gotIAC = false;
-    for (int i = 0; i < len; i++) {
-        if ((unsigned char) outdata[i] == TN_IAC) {
-            gotIAC = true;
-            break;
-        }
-    }
-    if (gotIAC) {
-        QByteArray d;
-        // double IACs
-        for (int i = 0; i < len; i++) {
-            d.append(outdata.at(i));
-            if (static_cast<unsigned char>(outdata.at(i)) == TN_IAC) {
-                d.append(outdata.at(i)); //double IAC
-            }
-        }
+    if (containsIAC(outdata)) {
+        TelnetFormatter d;
+        d.addEscapedBytes(outdata);
         outdata = d;
     }
 
@@ -190,45 +297,26 @@ void cTelnet::windowSizeChanged(int x, int y)
     //remember the size - we'll need it if NAWS is currently disabled but will
     //be enabled. Also remember it if no connection exists at the moment;
     //we won't be called again when connecting
-    curX = x;
-    curY = y;
-    if (myOptionState[OPT_NAWS]) { //only if we have negotiated this option
-        QByteArray s;
-        s += TN_IAC;
-        s += TN_SB;
-        s += OPT_NAWS;
-        unsigned char x1, x2, y1, y2;
-        x1 = static_cast<unsigned char>(x) / 256;
-        x2 = static_cast<unsigned char>(x) % 256;
-        y1 = static_cast<unsigned char>(y) / 256;
-        y2 = static_cast<unsigned char>(y) % 256;
-        //IAC must be doubled
-        s += x1;
-        if (x1 == TN_IAC) {
-            s += TN_IAC;
-        }
-        s += x2;
-        if (x2 == TN_IAC) {
-            s += TN_IAC;
-        }
-        s += y1;
-        if (y1 == TN_IAC) {
-            s += TN_IAC;
-        }
-        s += y2;
-        if (y2 == TN_IAC) {
-            s += TN_IAC;
-        }
+    current.x = x;
+    current.y = y;
 
-        s += TN_IAC;
-        s += TN_SE;
+    // REVISIT: Should we attempt to rate-limit this to avoid spamming dozens of NAWS
+    // messages per second when the user adjusts the window size?
+    if (myOptionState[OPT_NAWS]) { //only if we have negotiated this option
+        // RFC 1073 specifies IAC SB NAWS WIDTH[1] WIDTH[0] HEIGHT[1] HEIGHT[0] IAC SE
+        TelnetFormatter s;
+        s.addSubnegBegin(OPT_NAWS);
+        // RFC855 specifies that option parameters with a byte value of 255 must be doubled
+        s.addClampedTwoByteEscaped(x);
+        s.addClampedTwoByteEscaped(y);
+        s.addSubnegEnd();
         sendRawData(s);
     }
 }
 
 void cTelnet::sendTelnetOption(unsigned char type, unsigned char option)
 {
-    qDebug() << "* Sending Telnet Command: " << type << " " << option;
+    qDebug() << "* Sending Telnet Command: " << telnetCommandName(type) << telnetOptionName(option);
     QByteArray s;
     s += TN_IAC;
     s += type;
@@ -238,11 +326,14 @@ void cTelnet::sendTelnetOption(unsigned char type, unsigned char option)
 
 void cTelnet::processTelnetCommand(const QByteArray &command)
 {
-    unsigned char ch = command[1];
+    const unsigned char ch = command[1];
     unsigned char option;
 
     switch (command.length()) {
     case 2:
+        if (ch != TN_GA)
+            qDebug() << "* Processing Telnet Command:" << telnetCommandName(ch);
+
         switch (ch) {
         case TN_AYT:
             sendRawData("I'm here! Please be more patient!\r\n");
@@ -256,18 +347,18 @@ void cTelnet::processTelnetCommand(const QByteArray &command)
             recvdGA = true;
             //signal will be emitted later
             break;
-        default:
-            qDebug() << "* Processing Telnet Command:" << ch;
         };
         break;
 
     case 3:
-        qDebug() << "* Processing Telnet Command:" << ch << static_cast<unsigned char>(command[2]);
+        qDebug() << "* Processing Telnet Command:" << telnetCommandName(ch)
+                 << telnetOptionName(command[2]);
 
         switch (ch) {
         case TN_WILL:
             //server wants to enable some option (or he sends a timing-mark)...
             option = command[2];
+
             heAnnouncedState[option] = true;
             if (!hisOptionState[option])
             //only if this is not set; if it's set, something's wrong wth the server
@@ -325,9 +416,10 @@ void cTelnet::processTelnetCommand(const QByteArray &command)
                 }
             }
             if (option == OPT_NAWS) { //NAWS here - window size info must be sent
-                windowSizeChanged(curX, curY);
+                windowSizeChanged(current.x, current.y);
             } else if (myOptionState[OPT_CHARSET] && option == OPT_CHARSET) {
-                QString myCharacterSet = Config().m_utf8Charset ? "UTF-8" : LATIN_1_ENCODING;
+                QString myCharacterSet = Config().parser.utf8Charset ? UTF_8_ENCODING
+                                                                     : LATIN_1_ENCODING;
                 QByteArray s;
                 s += TN_IAC;
                 s += TN_SB;
@@ -354,9 +446,9 @@ void cTelnet::processTelnetCommand(const QByteArray &command)
         };
         break;
 
-    default:
-        qDebug() << "* Processing Telnet Command:" << ch << static_cast<unsigned char>(command[2])
-                 << static_cast<unsigned char>(command[3]);
+    case 4:
+        qDebug() << "* Processing Telnet Command:" << telnetCommandName(ch)
+                 << telnetOptionName(command[2]) << telnetSubnegName(command[3]);
 
         switch (ch) {
         case TN_SB:
@@ -399,14 +491,12 @@ void cTelnet::processTelnetCommand(const QByteArray &command)
                     //server wants us to send terminal type; he can send his own type
                     //too, but we just ignore it, as we have no use for it...
                     {
-                        QByteArray s;
-                        s += TN_IAC;
-                        s += TN_SB;
-                        s += OPT_TERMINAL_TYPE;
-                        s += TNSB_IS;
-                        s += outCoder->fromUnicode(termType);
-                        s += TN_IAC;
-                        s += TN_SE;
+                        TelnetFormatter s;
+                        s.addSubnegBegin(OPT_TERMINAL_TYPE);
+                        // RFC855 specifies that option parameters with a byte value of 255 must be doubled
+                        s.addEscaped(TNSB_IS); /* NOTE: "IS" will never actually be escaped */
+                        s.addEscapedBytes(termType.toLatin1());
+                        s.addSubnegEnd();
                         sendRawData(s);
                     }
                 }
@@ -423,8 +513,8 @@ void cTelnet::processTelnetCommand(const QByteArray &command)
                         if (iacPos > 6 && command[4] != '[') {
                             bool accepted = false;
                             // TODO: Add US-ASCII to Parser dropdown
-                            QString myCharacterSet = Config().m_utf8Charset ? "UTF-8"
-                                                                            : LATIN_1_ENCODING;
+                            QString myCharacterSet = Config().parser.utf8Charset ? UTF_8_ENCODING
+                                                                                 : LATIN_1_ENCODING;
 
                             // Split remainder into delim and IAC
                             // IAC SB CHARSET REQUEST <sep> <charsets> IAC SE
@@ -499,124 +589,142 @@ void cTelnet::processTelnetCommand(const QByteArray &command)
 
 void cTelnet::onReadyRead()
 {
-    int read = socket.read(buffer, 32768);
-    if (read != -1) {
-        buffer[read] = 0;
-    } else if (read == 0) {
-        return;
-    } else {
-        buffer[read] = '\0';
-    }
-    QByteArray data = QByteArray::fromRawData(buffer, read);
-    QByteArray cleanData;
+    io::readAllAvailable(socket, buffer, [this](const QByteArray &byteArray) {
+        onReadInternal(byteArray);
+    });
+}
 
-    //clear the GO-AHEAD flag
-    recvdGA = false;
+void cTelnet::sendToUserAndClear(QByteArray &data)
+{
+    emit sendToUser(inCoder->toUnicode(data));
+    data.clear();
+}
 
+void cTelnet::onReadInternal(const QByteArray &data)
+{
     //now we have the data, but we cannot forward it to next stage of processing,
     //because the data contains telnet commands
     //so we parse the text and process all telnet commands:
 
+    //clear the GO-AHEAD flag
+    recvdGA = false;
+
+    auto cleanData = QByteArray{};
+    cleanData.reserve(data.size());
+
     for (char i : data) {
-        if (iac || iac2 || insb || (static_cast<unsigned char>(i) == TN_IAC)) {
-            //there are many possibilities here:
-            //1. this is IAC, previous character was regular data
-            if (!(iac || iac2 || insb) && (static_cast<unsigned char>(i) == TN_IAC)) {
-                iac = true;
-                command.append(i);
-            }
-            //2. seq. of two IACs
-            else if (iac && (static_cast<unsigned char>(i) == TN_IAC) && (!insb)) {
-                iac = false;
-                cleanData.append(i);
-                command.clear();
-            }
-            //3. IAC DO/DONT/WILL/WONT
-            else if (iac && (!insb)
-                     && ((static_cast<unsigned char>(i) == TN_WILL)
-                         || (static_cast<unsigned char>(i) == TN_WONT)
-                         || (static_cast<unsigned char>(i) == TN_DO)
-                         || (static_cast<unsigned char>(i) == TN_DONT))) {
-                iac = false;
-                iac2 = true;
-                command.append(i);
-            }
-            //4. IAC DO/DONT/WILL/WONT <command code>
-            else if (iac2) {
-                iac2 = false;
-                command.append(i);
-                processTelnetCommand(command);
-                command.clear();
-            }
-            //5. IAC SB
-            else if (iac && (!insb) && (static_cast<unsigned char>(i) == TN_SB)) {
-                iac = false;
-                insb = true;
-                command.append(i);
-            }
-            //6. IAC SE without IAC SB - error - ignored
-            else if (iac && (!insb) && (static_cast<unsigned char>(i) == TN_SE)) {
-                command.clear();
-                iac = false;
-            }
-            //7. inside IAC SB
-            else if (insb) {
-                command.append(i);
-                if (iac && //IAC SE - end of subcommand
-                    (static_cast<unsigned char>(i) == TN_SE)) {
-                    processTelnetCommand(command);
-                    command.clear();
-                    iac = false;
-                    insb = false;
-                }
-                if (iac) {
-                    iac = false;
-                } else if (static_cast<unsigned char>(i) == TN_IAC) {
-                    iac = true;
-                }
-            }
-            //8. IAC fol. by something else than IAC, SB, SE, DO, DONT, WILL, WONT
-            else {
-                iac = false;
-                command.append(i);
-                processTelnetCommand(command);
-                //this could have set receivedGA to true; we'll handle that later
-                // (at the end of this function)
-                command.clear();
-            }
-        } else { //plaintext
-            //everything except CRLF is okay; CRLF is replaced by LF(\n) (CR ignored)
+        onReadInternal2(cleanData, i);
 
-            switch (i) {
-            case '\a': // BEL
-                QApplication::beep();
-                break;
-            default:
-                cleanData.append(i);
-            };
-        }
-
-        // TODO(nschimme): do something about all that code duplication ...
-
-        //we've just received the GA signal - higher layers shall be informed about it
         if (recvdGA) {
-            //forward data for further processing
-            QString unicodeData;
-            unicodeData = inCoder->toUnicode(cleanData);
-            emit sendToUser(unicodeData); // with GO-AHEAD
-
-            //clean the flag, and the data (so that we don't send it multiple times)
-            cleanData.clear();
+            sendToUserAndClear(cleanData); // with GO-AHEAD
             recvdGA = false;
         }
     }
 
     //some data left to send - do it now!
     if (!cleanData.isEmpty()) {
-        QString unicodeData = inCoder->toUnicode(cleanData);
-        emit sendToUser(unicodeData); // without GO-AHEAD
+        sendToUserAndClear(cleanData); // without GO-AHEAD
+    }
+}
 
-        // clean the buffer
-        cleanData.clear();
+/*
+ * normal telnet state
+ * -------------------
+ * x                                # forward 0-254
+ * IAC IAC                          # forward 255
+ * IAC (WILL | WONT | DO | DONT) x  # negotiate 0-255 (w/ 255 = EXOPL)
+ * IAC SB                           # begins subnegotiation
+ * IAC SE                           # (error)
+ * IAC x                            # exec command
+ *
+ * within a subnegotiation
+ * -----------------------
+ * x          # appends 0-254 to option payload
+ * IAC IAC    # appends 255 to option payload
+ * IAC SE     # ends subnegotiation
+ * IAC SB     # (error)
+ * IAC x      # exec command
+ *
+ * NOTE: RFC 855 refers to IAC SE as a command rather than a delimiter,
+ * so that implies you're still supposed to process "commands" (e.g. IAC GA)!
+ *
+ * So if you receive "IAC SB IAC WILL ECHO f o o IAC IAC b a r IAC SE"
+ * then you process will(ECHO) followed by the subnegotiation(f o o 255 b a r).
+ */
+void cTelnet::onReadInternal2(QByteArray &cleanData, const uint8_t c)
+{
+    if (iac || iac2 || insb || (c == TN_IAC)) {
+        //there are many possibilities here:
+        //1. this is IAC, previous character was regular data
+        if (!(iac || iac2 || insb) && (c == TN_IAC)) {
+            iac = true;
+            command.append(c);
+        }
+        //2. seq. of two IACs
+        else if (iac && (c == TN_IAC) && (!insb)) {
+            iac = false;
+            cleanData.append(c);
+            command.clear();
+        }
+        //3. IAC DO/DONT/WILL/WONT
+        else if (iac && (!insb)
+                 && ((c == TN_WILL) || (c == TN_WONT) || (c == TN_DO) || (c == TN_DONT))) {
+            iac = false;
+            iac2 = true;
+            command.append(c);
+        }
+        //4. IAC DO/DONT/WILL/WONT <command code>
+        else if (iac2) {
+            iac2 = false;
+            command.append(c);
+            processTelnetCommand(command);
+            command.clear();
+        }
+        //5. IAC SB
+        else if (iac && (!insb) && (c == TN_SB)) {
+            iac = false;
+            insb = true;
+            command.append(c);
+        }
+        //6. IAC SE without IAC SB - error - ignored
+        else if (iac && (!insb) && (c == TN_SE)) {
+            command.clear();
+            iac = false;
+        }
+        //7. inside IAC SB
+        else if (insb) {
+            command.append(c);
+            if (iac && //IAC SE - end of subcommand
+                (c == TN_SE)) {
+                processTelnetCommand(command);
+                command.clear();
+                iac = false;
+                insb = false;
+            }
+            if (iac) {
+                iac = false;
+            } else if (c == TN_IAC) {
+                iac = true;
+            }
+        }
+        //8. IAC fol. by something else than IAC, SB, SE, DO, DONT, WILL, WONT
+        else {
+            iac = false;
+            command.append(c);
+            processTelnetCommand(command);
+            //this could have set receivedGA to true; we'll handle that later
+            // (at the end of this function)
+            command.clear();
+        }
+    } else { //plaintext
+        //everything except CRLF is okay; CRLF is replaced by LF(\n) (CR ignored)
+
+        switch (c) {
+        case '\a': // BEL
+            QApplication::beep();
+            break;
+        default:
+            cleanData.append(c);
+        };
     }
 }

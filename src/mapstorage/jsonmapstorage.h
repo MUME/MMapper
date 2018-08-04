@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -27,10 +28,15 @@
 #ifndef JSONMAPSTORAGE_H
 #define JSONMAPSTORAGE_H
 
+#include <QString>
+#include <QtCore>
+
 #include "abstractmapstorage.h"
 
+class MapData;
 class QJsonArray;
 class QJsonObject;
+class QObject;
 
 /*! \brief JSON export for web clients.
  *
@@ -44,20 +50,20 @@ class JsonMapStorage : public AbstractMapStorage
     Q_OBJECT
 
 public:
-    JsonMapStorage(MapData &, const QString &, QObject *parent = 0);
+    explicit JsonMapStorage(MapData &, const QString &, QObject *parent = nullptr);
     ~JsonMapStorage();
 
 public:
     explicit JsonMapStorage() = delete;
 
 private:
-    virtual bool canLoad() { return false; };
-    virtual bool canSave() { return true; };
+    virtual bool canLoad() const override { return false; }
+    virtual bool canSave() const override { return true; }
 
-    virtual void newData();
-    virtual bool loadData();
-    virtual bool saveData(bool baseMapOnly);
-    virtual bool mergeData();
+    virtual void newData() override;
+    virtual bool loadData() override;
+    virtual bool saveData(bool baseMapOnly) override;
+    virtual bool mergeData() override;
 
     //void saveMark(InfoMark * mark, QJsonObject &jRoom, const JsonRoomIdsCache &jRoomIds);
 };

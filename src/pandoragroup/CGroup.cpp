@@ -23,26 +23,29 @@
 **
 ************************************************************************/
 
-#include "configuration.h"
-
 #include "CGroup.h"
-#include "CGroupChar.h"
-#include "groupaction.h"
 
 #include <cassert>
-#include <QDebug>
+#include <QByteArray>
+#include <QMessageLogContext>
+#include <QMutex>
+#include <QObject>
+
+#include "../configuration/configuration.h"
+#include "../global/roomid.h"
+#include "CGroupChar.h"
+#include "groupaction.h"
+#include "groupselection.h"
 
 CGroup::CGroup(QObject *parent)
     : QObject(parent)
     , characterLock(QMutex::Recursive)
 {
     self = new CGroupChar();
-    self->setName(Config().m_groupManagerCharName);
-    self->setPosition(0);
-    self->setColor(Config().m_groupManagerColor);
+    self->setName(Config().groupManager.charName);
+    self->setPosition(DEFAULT_ROOMID);
+    self->setColor(Config().groupManager.color);
     charIndex.push_back(self);
-
-    connect(this, SIGNAL(log(const QString &)), parent, SLOT(sendLog(const QString &)));
 }
 
 CGroup::~CGroup()
@@ -146,7 +149,7 @@ bool CGroup::addChar(const QDomNode &node)
 void CGroup::removeChar(const QByteArray &name)
 {
     QMutexLocker locker(&characterLock);
-    if (name == Config().m_groupManagerCharName) {
+    if (name == Config().groupManager.charName) {
         emit log("You cannot delete yourself from the group.");
         return;
     }

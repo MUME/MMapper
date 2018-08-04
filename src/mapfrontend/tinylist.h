@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -123,7 +124,4 @@ private:
     std::vector<T> list{};
 };
 
-#ifdef DMALLOC
-#include <mpatrol.h>
-#endif
 #endif

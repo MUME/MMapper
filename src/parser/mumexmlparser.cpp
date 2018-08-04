@@ -23,17 +23,32 @@
 ** 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **
 ************************************************************************/
-
 #include "mumexmlparser.h"
-#include "configuration.h"
-#include "mapdata.h"
-#include "mmapper2event.h"
-#include "mmapper2group.h"
-#include "mmapper2room.h"
-#include "mumeclock.h"
+
+#include <QByteArray>
+#include <QString>
+
+#include "../clock/mumeclock.h"
+#include "../configuration/configuration.h"
+#include "../expandoracommon/parseevent.h"
+#include "../pandoragroup/mmapper2group.h"
+#include "../proxy/telnetfilter.h"
+#include "ExitsFlags.h"
+#include "PromptFlags.h"
+#include "abstractparser.h"
 #include "parserutils.h"
 #include "patterns.h"
-#include "telnetfilter.h"
+
+class MapData;
+
+namespace {
+#if defined(XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE)
+static constexpr const auto XPS_DEBUG_TO_FILE = static_cast<bool>(
+    XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE);
+#else
+static constexpr const auto XPS_DEBUG_TO_FILE = false;
+#endif
+} // namespace
 
 const QByteArray MumeXmlParser::greaterThanChar(">");
 const QByteArray MumeXmlParser::lessThanChar("<");
@@ -44,72 +59,63 @@ const QByteArray MumeXmlParser::ampersandTemplate("&amp;");
 
 MumeXmlParser::MumeXmlParser(MapData *md, MumeClock *mc, QObject *parent)
     : AbstractParser(md, mc, parent)
-    , m_roomDescLines(0)
-    , m_readingStaticDescLines(false)
-    , m_move(CID_LOOK)
-    , m_xmlMode(XML_NONE)
-    , m_readingTag(false)
-    , m_gratuitous(false)
-    , m_readSnoopTag(false)
 {
-#ifdef XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
-    QString fileName = "xmlparser_debug.dat";
+    if (XPS_DEBUG_TO_FILE) {
+        QString fileName = "xmlparser_debug.dat";
 
-    file = new QFile(fileName);
+        file = new QFile(fileName);
 
-    if (!file->open(QFile::WriteOnly))
-        return;
+        if (!file->open(QFile::WriteOnly))
+            return;
 
-    debugStream = new QDataStream(file);
-#endif
+        debugStream = new QDataStream(file);
+    }
 }
 
 MumeXmlParser::~MumeXmlParser()
 {
-#ifdef XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
-    file->close();
-#endif
+    if (XPS_DEBUG_TO_FILE) {
+        file->close();
+    }
 }
 
 void MumeXmlParser::parseNewMudInput(IncomingData &data)
 {
     switch (data.type) {
-    case TDT_DELAY:
-    case TDT_MENU_PROMPT:
-    case TDT_LOGIN:
-    case TDT_LOGIN_PASSWORD:
-    case TDT_TELNET:
-    case TDT_SPLIT:
-    case TDT_UNKNOWN:
-#ifdef XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
-        (*debugStream) << "***STYPE***";
-        (*debugStream) << "OTHER";
-        (*debugStream) << "***ETYPE***";
-#endif
+    case TelnetDataType::DELAY:
+    case TelnetDataType::MENU_PROMPT:
+    case TelnetDataType::LOGIN:
+    case TelnetDataType::LOGIN_PASSWORD:
+    case TelnetDataType::TELNET:
+    case TelnetDataType::SPLIT:
+    case TelnetDataType::UNKNOWN:
+        if (XPS_DEBUG_TO_FILE) {
+            (*debugStream) << "***STYPE***";
+            (*debugStream) << "OTHER";
+            (*debugStream) << "***ETYPE***";
+        }
         // Login prompt and IAC-GA
         parse(data.line);
         break;
 
-    case TDT_PROMPT:
-    case TDT_LF:
-    case TDT_LFCR:
-    case TDT_CRLF:
-#ifdef XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
-        (*debugStream) << "***STYPE***";
-        (*debugStream) << "CRLF";
-        (*debugStream) << "***ETYPE***";
-#endif
+    case TelnetDataType::PROMPT:
+    case TelnetDataType::LF:
+    case TelnetDataType::LFCR:
+    case TelnetDataType::CRLF:
+        if (XPS_DEBUG_TO_FILE) {
+            (*debugStream) << "***STYPE***";
+            (*debugStream) << "CRLF";
+            (*debugStream) << "***ETYPE***";
+        }
         // XML and prompts
         parse(data.line);
         break;
     }
-#ifdef XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
-    (*debugStream) << "***S***";
-    (*debugStream) << data.line;
-    (*debugStream) << "***E***";
-#endif
-
-    //}
+    if (XPS_DEBUG_TO_FILE) {
+        (*debugStream) << "***S***";
+        (*debugStream) << data.line;
+        (*debugStream) << "***E***";
+    }
 }
 
 void MumeXmlParser::parse(const QByteArray &line)
@@ -150,11 +156,11 @@ void MumeXmlParser::parse(const QByteArray &line)
     }
 
     if (!m_lineToUser.isEmpty()) {
-        emit sendToUser(m_lineToUser);
+        emit sig_sendToUser(m_lineToUser);
 
         if (m_readStatusTag) {
             m_readStatusTag = false;
-            if (Config().m_groupManagerState != Mmapper2Group::Off) {
+            if (Config().groupManager.state != GroupManagerState::Off) {
                 QString temp(m_lineToUser.simplified());
                 ParserUtils::removeAnsiMarks(temp);
                 if (Patterns::matchScore(temp)) {
@@ -171,28 +177,28 @@ bool MumeXmlParser::element(const QByteArray &line)
     int length = line.length();
 
     switch (m_xmlMode) {
-    case XML_NONE:
+    case XmlMode::NONE:
         if (length > 0) {
             switch (line.at(0)) {
             case '/':
                 if (line.startsWith("/xml")) {
-                    emit sendToUser("[MMapper] Mapper cannot function without XML mode\n");
+                    emit sig_sendToUser("[MMapper] Mapper cannot function without XML mode\n");
                     emptyQueue();
                 }
                 break;
             case 'p':
                 if (line.startsWith("prompt")) {
-                    m_xmlMode = XML_PROMPT;
+                    m_xmlMode = XmlMode::PROMPT;
                 }
                 break;
             case 'e':
                 if (line.startsWith("exits")) {
-                    m_xmlMode = XML_EXITS;
+                    m_xmlMode = XmlMode::EXITS;
                 }
                 break;
             case 'r':
                 if (line.startsWith("room")) {
-                    m_xmlMode = XML_ROOM;
+                    m_xmlMode = XmlMode::ROOM;
                 }
                 break;
             case 'm':
@@ -202,28 +208,28 @@ bool MumeXmlParser::element(const QByteArray &line)
                         if (length > 13) {
                             switch (line.at(13)) {
                             case 'n':
-                                m_move = CID_NORTH;
+                                m_move = CommandIdType::NORTH;
                                 break;
                             case 's':
-                                m_move = CID_SOUTH;
+                                m_move = CommandIdType::SOUTH;
                                 break;
                             case 'e':
-                                m_move = CID_EAST;
+                                m_move = CommandIdType::EAST;
                                 break;
                             case 'w':
-                                m_move = CID_WEST;
+                                m_move = CommandIdType::WEST;
                                 break;
                             case 'u':
-                                m_move = CID_UP;
+                                m_move = CommandIdType::UP;
                                 break;
                             case 'd':
-                                m_move = CID_DOWN;
+                                m_move = CommandIdType::DOWN;
                                 break;
                             };
                         }
                         break;
                     case '/':
-                        m_move = CID_NONE;
+                        m_move = CommandIdType::NONE;
                         break;
                     }
                 };
@@ -236,7 +242,7 @@ bool MumeXmlParser::element(const QByteArray &line)
             case 's':
                 if (line.startsWith("status")) {
                     m_readStatusTag = true;
-                    m_xmlMode = XML_NONE;
+                    m_xmlMode = XmlMode::NONE;
                 } else if (line.startsWith("snoop")) {
                     m_readSnoopTag = true;
                 }
@@ -245,7 +251,7 @@ bool MumeXmlParser::element(const QByteArray &line)
         };
         break;
 
-    case XML_ROOM:
+    case XmlMode::ROOM:
         if (length > 0) {
             switch (line.at(0)) {
             case 'g':
@@ -255,25 +261,25 @@ bool MumeXmlParser::element(const QByteArray &line)
                 break;
             case 'n':
                 if (line.startsWith("name")) {
-                    m_xmlMode = XML_NAME;
+                    m_xmlMode = XmlMode::NAME;
                     m_roomName = emptyString; // might be empty but valid room name
                 }
                 break;
             case 'd':
                 if (line.startsWith("description")) {
-                    m_xmlMode = XML_DESCRIPTION;
+                    m_xmlMode = XmlMode::DESCRIPTION;
                     m_staticRoomDesc = emptyString; // might be empty but valid description
                 }
                 break;
             case 't': // terrain tag only comes up in blindness or fog
                 if (line.startsWith("terrain")) {
-                    m_xmlMode = XML_TERRAIN;
+                    m_xmlMode = XmlMode::TERRAIN;
                 }
                 break;
 
             case '/':
                 if (line.startsWith("/room")) {
-                    m_xmlMode = XML_NONE;
+                    m_xmlMode = XmlMode::NONE;
                 } else if (line.startsWith("/gratuitous")) {
                     m_gratuitous = false;
                 }
@@ -281,50 +287,50 @@ bool MumeXmlParser::element(const QByteArray &line)
             }
         }
         break;
-    case XML_NAME:
+    case XmlMode::NAME:
         if (line.startsWith("/name")) {
-            m_xmlMode = XML_ROOM;
+            m_xmlMode = XmlMode::ROOM;
         }
         break;
-    case XML_DESCRIPTION:
+    case XmlMode::DESCRIPTION:
         if (length > 0) {
             switch (line.at(0)) {
             case '/':
                 if (line.startsWith("/description")) {
-                    m_xmlMode = XML_ROOM;
+                    m_xmlMode = XmlMode::ROOM;
                 }
                 break;
             }
         }
         break;
-    case XML_EXITS:
+    case XmlMode::EXITS:
         if (length > 0) {
             switch (line.at(0)) {
             case '/':
                 if (line.startsWith("/exits")) {
-                    m_xmlMode = XML_NONE;
+                    m_xmlMode = XmlMode::NONE;
                 }
                 break;
             }
         }
         break;
-    case XML_PROMPT:
+    case XmlMode::PROMPT:
         if (length > 0) {
             switch (line.at(0)) {
             case '/':
                 if (line.startsWith("/prompt")) {
-                    m_xmlMode = XML_NONE;
+                    m_xmlMode = XmlMode::NONE;
                 }
                 break;
             }
         }
         break;
-    case XML_TERRAIN:
+    case XmlMode::TERRAIN:
         if (length > 0) {
             switch (line.at(0)) {
             case '/':
                 if (line.startsWith("/terrain")) {
-                    m_xmlMode = XML_ROOM;
+                    m_xmlMode = XmlMode::ROOM;
                     m_readingRoomDesc = true;
                 }
                 break;
@@ -333,7 +339,8 @@ bool MumeXmlParser::element(const QByteArray &line)
         break;
     }
 
-    if (!Config().m_removeXmlTags) {
+    if (!Config().parser.removeXmlTags) {
+        // REVISIT: avoid temporary here; just append 3 times.
         m_lineToUser.append("<" + line + ">");
     }
     return true;
@@ -353,15 +360,12 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
     ch.replace(ampersandTemplate, ampersand);
 
     // Store prompts in case an internal command is executed
-    if (m_xmlMode == XML_PROMPT) {
+    if (m_xmlMode == XmlMode::PROMPT) {
         m_lastPrompt = ch;
     }
 
-    if (Config().m_utf8Charset) {
-        m_stringBuffer = QString::fromUtf8(ch);
-    } else {
-        m_stringBuffer = QString::fromLatin1(ch);
-    }
+    const auto &config = Config();
+    m_stringBuffer = config.parser.utf8Charset ? QString::fromUtf8(ch) : QString::fromLatin1(ch);
 
     m_stringBuffer = m_stringBuffer.simplified();
     ParserUtils::latinToAscii(m_stringBuffer);
@@ -374,12 +378,12 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
     }
 
     switch (m_xmlMode) {
-    case XML_NONE:                      //non room info
+    case XmlMode::NONE:                 //non room info
         if (m_stringBuffer.isEmpty()) { // standard end of description parsed
             if (m_readingRoomDesc) {
                 m_readingRoomDesc = false; // we finished read desc mode
                 m_descriptionReady = true;
-                if (Config().m_emulatedExits) {
+                if (config.mumeNative.emulatedExits) {
                     emulateExits();
                 }
             }
@@ -388,7 +392,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         }
         if (m_readSnoopTag) {
             if (m_descriptionReady) {
-                m_promptFlags = 0; // Don't trust god prompts
+                m_promptFlags.reset(); // Don't trust god prompts
                 queue.enqueue(m_move);
                 emit showPath(queue, true);
                 move();
@@ -398,12 +402,12 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         toUser.append(ch);
         break;
 
-    case XML_ROOM: // dynamic line
+    case XmlMode::ROOM: // dynamic line
         m_dynamicRoomDesc += m_stringBuffer + "\n";
         toUser.append(ch);
         break;
 
-    case XML_NAME:
+    case XmlMode::NAME:
         if (m_descriptionReady) {
             move();
         }
@@ -415,19 +419,19 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         m_staticRoomDesc = nullString;
         m_roomDescLines = 0;
         m_readingStaticDescLines = true;
-        m_exitsFlags = 0;
+        m_exitsFlags.reset();
 
         toUser.append(ch);
         break;
 
-    case XML_DESCRIPTION: // static line
+    case XmlMode::DESCRIPTION: // static line
         m_staticRoomDesc += m_stringBuffer + "\n";
         if (!m_gratuitous) {
             toUser.append(ch);
         }
         break;
 
-    case XML_EXITS:
+    case XmlMode::EXITS:
         parseExits(m_stringBuffer); //parse exits
         if (m_readingRoomDesc) {
             m_readingRoomDesc = false;
@@ -435,12 +439,12 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         }
         break;
 
-    case XML_PROMPT:
+    case XmlMode::PROMPT:
         emit sendPromptLineEvent(m_stringBuffer.toLatin1());
         if (m_readingRoomDesc) {       // fixes compact mode
             m_readingRoomDesc = false; // we finished read desc mode
             m_descriptionReady = true;
-            if (Config().m_emulatedExits) {
+            if (config.mumeNative.emulatedExits) {
                 emulateExits();
             }
         }
@@ -457,7 +461,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         toUser.append(ch);
         break;
 
-    case XML_TERRAIN:
+    case XmlMode::TERRAIN:
     default:
         toUser.append(ch);
         break;
@@ -478,32 +482,29 @@ void MumeXmlParser::move()
         m_staticRoomDesc = nullString;
     }
 
-    if (!queue.isEmpty()) {
-        CommandIdType c = queue.dequeue();
-        if (c != CID_SCOUT) {
+    const auto emitEvent = [this]() {
+        auto ev = ParseEvent::createEvent(m_move,
+                                          m_roomName,
+                                          m_dynamicRoomDesc,
+                                          m_staticRoomDesc,
+                                          m_exitsFlags,
+                                          m_promptFlags,
+                                          m_connectedRoomFlags);
+        emit event(SigParseEvent{ev});
+        m_move = CommandIdType::LOOK;
+    };
+
+    if (queue.isEmpty()) {
+        emitEvent();
+    } else {
+        const CommandIdType c = queue.dequeue();
+        if (c != CommandIdType::SCOUT) {
             emit showPath(queue, false);
-            emit event(Mmapper2Event::createEvent(m_move,
-                                                  m_roomName,
-                                                  m_dynamicRoomDesc,
-                                                  m_staticRoomDesc,
-                                                  m_exitsFlags,
-                                                  m_promptFlags,
-                                                  m_connectedRoomFlags));
+            emitEvent();
             if (c != m_move) {
                 queue.clear();
             }
-            m_move = CID_LOOK;
         }
-    } else {
-        //emit showPath(queue, false);
-        emit event(Mmapper2Event::createEvent(m_move,
-                                              m_roomName,
-                                              m_dynamicRoomDesc,
-                                              m_staticRoomDesc,
-                                              m_exitsFlags,
-                                              m_promptFlags,
-                                              m_connectedRoomFlags));
-        m_move = CID_LOOK;
     }
 }
 
@@ -520,7 +521,7 @@ void MumeXmlParser::parseMudCommands(QString &str)
             if (!queue.isEmpty()) {
                 queue.dequeue();
             }
-            queue.prepend(CID_NONE);
+            queue.prepend(CommandIdType::NONE);
             emit showPath(queue, true);
             return;
         } else if (str.startsWith("You flee head")) {
@@ -530,7 +531,7 @@ void MumeXmlParser::parseMudCommands(QString &str)
             queue.enqueue(m_move);
             return;
         } else if (str.startsWith("You quietly scout")) {
-            queue.prepend(CID_SCOUT);
+            queue.prepend(CommandIdType::SCOUT);
             return;
         }
     } else if (str.at(0) == 'T') {
@@ -550,7 +551,7 @@ void MumeXmlParser::parseMudCommands(QString &str)
 
     // parse regexps which force new char move
     if (Patterns::matchMoveForcePatterns(str)) {
-        queue.enqueue(CID_NONE);
+        queue.enqueue(CommandIdType::NONE);
         emit showPath(queue, true);
         return;
     }

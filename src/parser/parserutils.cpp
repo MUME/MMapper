@@ -26,6 +26,8 @@
 
 #include "parserutils.h"
 
+#include <QtCore>
+
 namespace ParserUtils {
 
 static const unsigned char colorEndMark = 'm';

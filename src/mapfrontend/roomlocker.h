@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -26,25 +27,26 @@
 #ifndef LOCKINGRECIPIENT_H
 #define LOCKINGRECIPIENT_H
 
-#include "roomoutstream.h"
+#include "AbstractRoomVisitor.h"
 
+class Room;
 class MapFrontend;
 class ParseEvent;
 class AbstractRoomFactory;
 class RoomRecipient;
 
-class RoomLocker : public RoomOutStream
+class RoomLocker final : public AbstractRoomVisitor
 {
 public:
-    RoomLocker(RoomRecipient *forward,
-               MapFrontend *frontend,
-               AbstractRoomFactory *factory = 0,
-               ParseEvent *compare = 0);
-    virtual RoomOutStream &operator<<(const Room *room);
+    explicit RoomLocker(RoomRecipient &forward,
+                        MapFrontend &frontend,
+                        AbstractRoomFactory *factory = nullptr,
+                        ParseEvent *compare = nullptr);
+    virtual void visit(const Room *room) override;
 
 private:
-    RoomRecipient *recipient;
-    MapFrontend *data;
+    RoomRecipient &recipient;
+    MapFrontend &data;
     AbstractRoomFactory *factory;
     ParseEvent *comparator;
 };

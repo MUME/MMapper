@@ -21,12 +21,18 @@
 ** 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **
 ************************************************************************/
+
 #include "remoteedit.h"
-#include "configuration/configuration.h"
-#include "remoteeditsession.h"
 
 #include <cassert>
-#include <QDebug>
+#include <type_traits>
+#include <utility>
+#include <QMessageLogContext>
+#include <QRegExp>
+#include <QString>
+
+#include "../configuration/configuration.h"
+#include "remoteeditsession.h"
 
 const QRegExp RemoteEdit::s_lineFeedNewlineRx("(?!\\r)\\n");
 
@@ -42,13 +48,13 @@ void RemoteEdit::remoteEdit(const int key, const QString &title, const QString &
 
 void RemoteEdit::addSession(const int key, const QString &title, QString body)
 {
-#ifdef Q_OS_WIN
-    body.replace(s_lineFeedNewlineRx, "\r\n");
-#endif
+    if (CURRENT_PLATFORM == Platform::Win32)
+        body.replace(s_lineFeedNewlineRx, "\r\n");
 
     uint sessionId = getSessionCount();
     std::unique_ptr<RemoteEditSession> session;
-    if (Config().m_internalRemoteEditor) {
+
+    if (Config().mumeClientProtocol.internalRemoteEditor) {
         session = std::make_unique<RemoteEditInternalSession>(sessionId, key, title, body, this);
     } else {
         session = std::make_unique<RemoteEditExternalSession>(sessionId, key, title, body, this);
@@ -64,6 +70,7 @@ void RemoteEdit::removeSession(const uint sessionId)
     if (search != m_sessions.end()) {
         qDebug() << "Destroying RemoteEditSession" << sessionId;
         m_sessions.erase(search);
+
     } else {
         qWarning() << "Unable to find" << sessionId << "session to erase";
     }
@@ -90,9 +97,8 @@ void RemoteEdit::save(const RemoteEditSession *session)
     assert(session != nullptr);
     if (session->isEditSession()) {
         QString content = session->getContent();
-#ifdef Q_OS_WIN
-        content.replace("\r\n", "\n");
-#endif
+        if (CURRENT_PLATFORM == Platform::Win32)
+            content.replace(s_lineFeedNewlineRx, "\n");
         // The body contents have to be followed by a LF if they are not empty
         if (!content.isEmpty() && !content.endsWith('\n')) {
             content.append('\n');

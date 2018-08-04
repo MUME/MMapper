@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -26,31 +27,27 @@
 #ifndef DRAWSTREAM_H
 #define DRAWSTREAM_H
 
-#include "mapcanvas.h"
-#include "roomoutstream.h"
+#include "../display/mapcanvas.h"
+#include "../mapfrontend/AbstractRoomVisitor.h"
 
 //class MapCanvas;
 
-class DrawStream : public RoomOutStream
+class DrawStream final : public AbstractRoomVisitor
 {
 public:
-    DrawStream(MapCanvas &in,
-               const std::vector<Room *> &in_rooms,
-               const std::vector<std::set<RoomRecipient *>> &in_locks)
+    explicit DrawStream(MapCanvasRoomDrawer &in,
+                        const RoomIndex &in_rooms,
+                        const RoomLocks &in_locks)
         : canvas(in)
         , rooms(in_rooms)
         , locks(in_locks)
     {}
-    virtual RoomOutStream &operator<<(const Room *room)
-    {
-        canvas.drawRoom(room, rooms, locks);
-        return *this;
-    }
+    virtual void visit(const Room *room) override { canvas.drawRoom(room, rooms, locks); }
 
 private:
-    MapCanvas &canvas;
-    const std::vector<Room *> &rooms;
-    const std::vector<std::set<RoomRecipient *>> &locks;
+    MapCanvasRoomDrawer &canvas;
+    const RoomIndex &rooms;
+    const RoomLocks &locks;
 };
 
 #endif

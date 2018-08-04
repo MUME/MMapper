@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -27,53 +28,64 @@
 #ifndef MAPFRONTEND_H
 #define MAPFRONTEND_H
 
-#include "component.h"
-#include "roomadmin.h"
-
-#include "intermediatenode.h"
-#include "map.h"
-#include "shortestpath.h"
-
+#include <map>
+#include <set>
 #include <stack>
 #include <QMutex>
+#include <QString>
+#include <QtCore>
+
+#include "../expandoracommon/component.h"
+#include "../expandoracommon/coordinate.h"
+#include "../expandoracommon/parseevent.h"
+#include "../expandoracommon/roomadmin.h"
+#include "../global/roomid.h"
+#include "ParseTree.h"
+#include "map.h"
+
+class AbstractRoomFactory;
+class Frustum;
+class MapAction;
+class ParseEvent;
+class QObject;
+class Room;
+class RoomCollection;
+class RoomRecipient;
+class SigParseEvent;
 
 /**
  * The MapFrontend organizes rooms and their relations to each other.
  */
-
-class MapAction;
-class Frustum;
-
 class MapFrontend : public Component, public RoomAdmin
 {
     Q_OBJECT
     friend class FrontendAccessor;
 
 protected:
-    IntermediateNode treeRoot;
-    Map map;
-    std::vector<Room *> roomIndex;
-    std::stack<uint> unusedIds;
-    std::map<uint, std::set<MapAction *>> actionSchedule;
-    std::vector<RoomCollection *> roomHomes;
-    std::vector<std::set<RoomRecipient *>> locks;
+    ParseTree parseTree{};
+    Map map{};
+    RoomIndex roomIndex{};
+    std::stack<RoomId> unusedIds{};
+    std::map<RoomId, std::set<MapAction *>> actionSchedule{};
+    RoomHomes roomHomes{};
+    RoomLocks locks{};
 
-    uint greatestUsedId;
-    QMutex mapLock;
-    Coordinate ulf;
-    Coordinate lrb;
-    AbstractRoomFactory *factory;
+    RoomId greatestUsedId = INVALID_ROOMID;
+    QMutex mapLock{};
+    Coordinate ulf{};
+    Coordinate lrb{};
+    AbstractRoomFactory *factory = nullptr;
 
-    void executeActions(uint roomId);
+    void executeActions(RoomId roomId);
     void executeAction(MapAction *action);
     bool isExecutable(MapAction *action);
     void removeAction(MapAction *action);
 
-    virtual uint assignId(Room *room, RoomCollection *roomHome);
+    virtual RoomId assignId(Room *room, const SharedRoomCollection &roomHome);
     virtual void checkSize(const Coordinate &);
 
 public:
-    MapFrontend(AbstractRoomFactory *factory);
+    explicit MapFrontend(AbstractRoomFactory *factory);
     virtual ~MapFrontend();
     virtual void clear();
     void block();
@@ -82,39 +94,38 @@ public:
 
     // removes the lock on a room
     // after the last lock is removed, the room is deleted
-    virtual void releaseRoom(RoomRecipient *, uint);
+    virtual void releaseRoom(RoomRecipient &, RoomId) override;
 
     // makes a lock on a room permanent and anonymous.
     // Like that the room can't be deleted via releaseRoom anymore.
-    virtual void keepRoom(RoomRecipient *, uint);
+    virtual void keepRoom(RoomRecipient &, RoomId) override;
 
-    virtual void lockRoom(RoomRecipient *, uint);
+    virtual void lockRoom(RoomRecipient *, RoomId);
 
-    virtual uint createEmptyRoom(const Coordinate &);
+    virtual RoomId createEmptyRoom(const Coordinate &);
 
     virtual void insertPredefinedRoom(Room &);
 
-    virtual uint getMaxId() { return greatestUsedId; }
+    virtual RoomId getMaxId() { return greatestUsedId; }
 
     virtual const Coordinate &getUlf() const { return ulf; }
-
     virtual const Coordinate &getLrb() const { return lrb; }
 public slots:
     // looking for rooms leads to a bunch of foundRoom() signals
-    virtual void lookingForRooms(RoomRecipient *, ParseEvent &);
-    virtual void lookingForRooms(RoomRecipient *, uint); // by id
-    virtual void lookingForRooms(RoomRecipient *, const Coordinate &);
-    virtual void lookingForRooms(RoomRecipient *, Frustum *);
-    virtual void lookingForRooms(RoomRecipient *,
+    virtual void lookingForRooms(RoomRecipient &, const SigParseEvent &);
+    virtual void lookingForRooms(RoomRecipient &, RoomId); // by id
+    virtual void lookingForRooms(RoomRecipient &, const Coordinate &);
+    virtual void lookingForRooms(RoomRecipient &, const Frustum &);
+    virtual void lookingForRooms(RoomRecipient &,
                                  const Coordinate &,
                                  const Coordinate &); // by bounding box
 
     // createRoom creates a room without a lock
     // it will get deleted if no one looks for it for a certain time
-    virtual void createRoom(ParseEvent &, const Coordinate &);
+    virtual void createRoom(const SigParseEvent &, const Coordinate &);
     virtual void createEmptyRooms(const Coordinate &, const Coordinate &);
 
-    virtual void scheduleAction(MapAction *action);
+    virtual void scheduleAction(MapAction *action) override;
 
 signals:
 

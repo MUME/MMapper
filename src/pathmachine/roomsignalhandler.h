@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -26,29 +27,32 @@
 #ifndef ROOMSIGNALHANDLER
 #define ROOMSIGNALHANDLER
 
-//#include "room.h"
-//#include "roomrecipient.h"
-//#include "roomadmin.h"
-//#include "mapaction.h"
-
 #include <map>
 #include <set>
 #include <QObject>
+#include <QString>
+#include <QtCore>
 
+#include "../global/roomid.h"
+#include "../mapdata/ExitDirection.h"
+#include "../mapdata/mmapper2exit.h"
+
+class MapAction;
 class Room;
 class RoomAdmin;
 class RoomRecipient;
-class MapAction;
+struct RoomId;
 
 class RoomSignalHandler : public QObject
 {
     Q_OBJECT
 private:
-    std::map<const Room *, RoomAdmin *> owners;
-    std::map<const Room *, std::set<RoomRecipient *>> lockers;
-    std::map<const Room *, int> holdCount;
+    std::map<const Room *, RoomAdmin *> owners{};
+    std::map<const Room *, std::set<RoomRecipient *>> lockers{};
+    std::map<const Room *, int> holdCount{};
 
 public:
+    RoomSignalHandler() = delete;
     RoomSignalHandler(QObject *parent)
         : QObject(parent)
     {}
@@ -60,7 +64,7 @@ public:
     // keep the room but un-cache it - overrides both hold and release
     // toId is negative if no exit should be added, else it's the id of
     // the room where the exit should lead
-    void keep(const Room *room, uint dir, uint fromId);
+    void keep(const Room *room, ExitDirection dir, RoomId fromId);
 
     /* Sending to the rooms' owners:
        keepRoom: keep the room, but we don't need it anymore for now
@@ -71,7 +75,5 @@ public:
 signals:
     void scheduleAction(MapAction *);
 };
-#ifdef DMALLOC
-#include <mpatrol.h>
-#endif
+
 #endif

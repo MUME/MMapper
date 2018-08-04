@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Nils Schimmelmann <nschimme@gmail.com>
@@ -26,31 +27,37 @@
 #define CLIENTWIDGET_H
 
 #include <QDialog>
+#include <QSize>
+#include <QString>
+#include <QtCore>
 
-class StackedInputWidget;
 class DisplayWidget;
-
 class QCloseEvent;
+class QEvent;
+class QObject;
 class QSplitter;
 class QStatusBar;
+class QWidget;
+class StackedInputWidget;
 class cTelnet;
 
-class ClientWidget : public QDialog
+class ClientWidget final : public QDialog
 {
+private:
     Q_OBJECT
 
 public:
-    ClientWidget(QWidget *parent = 0);
+    explicit ClientWidget(QWidget *parent = nullptr);
     ~ClientWidget();
 
-    QSize minimumSizeHint() const;
-    QSize sizeHint() const;
+    QSize minimumSizeHint() const override;
+    QSize sizeHint() const override;
 
 signals:
     void sendToUser(const QString &);
 
 public slots:
-    void closeEvent(QCloseEvent *event);
+    void closeEvent(QCloseEvent *event) override;
     void connectToHost();
     void disconnectFromHost();
     void saveLog();
@@ -61,20 +68,20 @@ public slots:
     void copy();
 
 protected:
-    bool eventFilter(QObject *obj, QEvent *event);
+    bool eventFilter(QObject *obj, QEvent *event) override;
 
 private:
     void readSettings();
     void writeSettings();
 
-    bool m_connected;
-    bool m_displayCopyAvailable;
+    bool m_connected = false;
+    bool m_displayCopyAvailable = false;
 
-    QSplitter *m_splitter;
-    DisplayWidget *m_display;
-    StackedInputWidget *m_input;
-    cTelnet *m_telnet;
-    QStatusBar *m_statusBar;
+    QSplitter *m_splitter = nullptr;
+    DisplayWidget *m_display = nullptr;
+    StackedInputWidget *m_input = nullptr;
+    cTelnet *m_telnet = nullptr;
+    QStatusBar *m_statusBar = nullptr;
 };
 
 #endif /* CLIENTWIDGET_H */

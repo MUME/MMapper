@@ -24,14 +24,20 @@
 ************************************************************************/
 
 #include "findroomsdlg.h"
-#include "mapdata.h"
-#include "mmapper2exit.h"
-#include "mmapper2room.h"
-#include "parserutils.h"
-#include "roomselection.h"
 
-#include <QCloseEvent>
-#include <QShortcut>
+#include <QString>
+#include <QtGui>
+#include <QtWidgets>
+
+#include "../expandoracommon/coordinate.h"
+#include "../expandoracommon/exit.h"
+#include "../expandoracommon/room.h"
+#include "../global/roomid.h"
+#include "../mapdata/ExitDirection.h"
+#include "../mapdata/mapdata.h"
+#include "../mapdata/roomfilter.h"
+#include "../mapdata/roomselection.h"
+#include "../parser/parserutils.h"
 
 const QString FindRoomsDlg::nullString;
 
@@ -47,16 +53,16 @@ FindRoomsDlg::FindRoomsDlg(MapData *md, QWidget *parent)
     m_showSelectedRoom->setContext(Qt::WidgetShortcut);
 
     connect(lineEdit,
-            SIGNAL(textChanged(const QString &)),
+            &QLineEdit::textChanged,
             this,
-            SLOT(enableFindButton(const QString &)));
-    connect(findButton, SIGNAL(clicked()), this, SLOT(findClicked()));
-    connect(closeButton, SIGNAL(clicked()), this, SLOT(close()));
+            &FindRoomsDlg::enableFindButton);
+    connect(findButton, &QAbstractButton::clicked, this, &FindRoomsDlg::findClicked);
+    connect(closeButton, &QAbstractButton::clicked, this, &QWidget::close);
     connect(resultTable,
-            SIGNAL(itemDoubleClicked(QTreeWidgetItem *, int)),
+            &QTreeWidget::itemDoubleClicked,
             this,
-            SLOT(itemDoubleClicked(QTreeWidgetItem *)));
-    connect(m_showSelectedRoom, SIGNAL(activated()), this, SLOT(showSelectedRoom()));
+            &FindRoomsDlg::itemDoubleClicked);
+    connect(m_showSelectedRoom, &QShortcut::activated, this, &FindRoomsDlg::showSelectedRoom);
 }
 
 FindRoomsDlg::~FindRoomsDlg()
@@ -86,43 +92,45 @@ void FindRoomsDlg::findClicked()
     roomsFoundLabel->clear();
 
     /*  for an absolute match do the below:
-    m_mapData->lookingForRooms(this, createEvent(CID_UNKNOWN, text, nullString, nullString, 0, 0));
+    m_mapData->lookingForRooms(this, createEvent(CommandIdType::UNKNOWN, text, nullString, nullString, 0, 0));
     */
 
-    char kind = PAT_ALL;
+    auto kind = pattern_kinds::ALL;
     if (nameRadioButton->isChecked()) {
-        kind = PAT_NAME;
+        kind = pattern_kinds::NAME;
     } else if (descRadioButton->isChecked()) {
-        kind = PAT_DESC;
+        kind = pattern_kinds::DESC;
     } else if (dynDescRadioButton->isChecked()) {
-        kind = PAT_DYNDESC;
+        kind = pattern_kinds::DYN_DESC;
     } else if (exitsRadioButton->isChecked()) {
-        kind = PAT_EXITS;
+        kind = pattern_kinds::EXITS;
     } else if (notesRadioButton->isChecked()) {
-        kind = PAT_NOTE;
+        kind = pattern_kinds::NOTE;
     }
     m_mapData->genericSearch(m_roomSelection, RoomFilter(text, cs, kind));
 
-    for (const Room *room : m_roomSelection->values()) {
-//#define HACK_FIX_THE_HIDDEN_NAMELESS_EXITS
-#ifdef HACK_FIX_THE_HIDDEN_NAMELESS_EXITS
-        // Remember to also alter the way searching works to match the exits you want
-        // to fix
-        ExitsList exits = room->getExitsList();
-        for (uint dir = 0; dir < exits.size(); ++dir) {
-            const Exit &e = room->exit(dir);
-            bool isSecret = ISSET(Mmapper2Exit::getFlags(e), EF_DOOR)
-                            && ISSET(Mmapper2Exit::getDoorFlags(e), DF_HIDDEN);
-            if (isSecret && QString((e)[0].toString()).isEmpty()) {
-                // I can't get MapActions to work here
-                nandDoorFlags(const_cast<Room *>(room)->exit(dir), DF_HIDDEN);
+    for (const Room *const room : m_roomSelection->values()) {
+        // This won't work because RoomSelection is a QMap<RoomId, const Room *>,
+        // which means it can't give us a writable handle to Room.
+        //
+        // WARNING: Don't even consider const_cast on the Room or Exit!
+        // One solution would be to send a message containing the RoomId
+        // to someone that can change the room.
+        //
+        // Another solution would be to reject the flag during map load,
+        // and then reject it if the player tries to manually set it.
+        static constexpr const bool HACK_FIX_THE_HIDDEN_NAMELESS_EXITS = false;
+        if (HACK_FIX_THE_HIDDEN_NAMELESS_EXITS) {
+            for (auto &e : room->getExitsList()) {
+                if (e.isHiddenExit() && !e.hasDoorName()) {
+                    // e.removeDoorFlag(DoorFlag::HIDDEN);
+                }
             }
         }
-#endif
 
         QString id;
-        id.setNum(room->getId());
-        QString roomName = Mmapper2Room::getName(room);
+        id.setNum(room->getId().asUint32());
+        QString roomName = room->getName();
         QString toolTip = constructToolTip(room);
 
         item = new QTreeWidgetItem(resultTable);
@@ -140,61 +148,37 @@ QString FindRoomsDlg::constructToolTip(const Room *r)
 {
     // taken from MapCanvas:
     QString etmp = "Exits:";
-    for (int j = 0; j < 7; j++) {
+    for (const auto j : ALL_EXITS7) {
         bool door = false;
-        if (ISSET(Mmapper2Exit::getFlags(r->exit(j)), EF_DOOR)) {
+        if (r->exit(j).isDoor()) {
             door = true;
             etmp += " (";
         }
 
-        if (ISSET(Mmapper2Exit::getFlags(r->exit(j)), EF_EXIT)) {
+        if (r->exit(j).isExit()) {
             if (!door) {
                 etmp += " ";
             }
 
-            switch (j) {
-            case 0:
-                etmp += "north";
-                break;
-            case 1:
-                etmp += "south";
-                break;
-            case 2:
-                etmp += "east";
-                break;
-            case 3:
-                etmp += "west";
-                break;
-            case 4:
-                etmp += "up";
-                break;
-            case 5:
-                etmp += "down";
-                break;
-            case 6:
-                etmp += "unknown";
-                break;
-            }
+            etmp += lowercaseDirection(j);
         }
-
         if (door) {
-            QString doorName = Mmapper2Exit::getDoorName(r->exit(j));
+            const QString doorName = r->exit(j).getDoorName();
             if (!doorName.isEmpty()) {
-                etmp += "/" + doorName + ")";
-            } else {
-                etmp += ")";
+                etmp += "/" + doorName;
             }
+            etmp += ")";
         }
     }
     etmp += ".\n";
 
-    QString note = Mmapper2Room::getNote(r);
+    QString note = r->getNote();
     if (!note.isEmpty()) {
         note = "Note: " + note;
     }
 
-    return QString("Selected Room ID: %1").arg(r->getId()) + "\n" + Mmapper2Room::getName(r) + "\n"
-           + Mmapper2Room::getDescription(r) + Mmapper2Room::getDynamicDescription(r) + etmp + note;
+    return QString("Selected Room ID: %1").arg(r->getId().asUint32()) + "\n" + r->getName() + "\n"
+           + r->getStaticDescription() + r->getDynamicDescription() + etmp + note;
 }
 
 void FindRoomsDlg::showSelectedRoom()
@@ -204,13 +188,11 @@ void FindRoomsDlg::showSelectedRoom()
 
 void FindRoomsDlg::itemDoubleClicked(QTreeWidgetItem *item)
 {
-    uint id;
     if (item == nullptr) {
         return;
     }
 
-    id = item->text(0).toInt();
-
+    const auto id = RoomId{item->text(0).toUInt()};
     const Room *r = m_mapData->getRoom(id, m_roomSelection);
     Coordinate c = r->getPosition();
     emit center(c.x, c.y); // connects to MapWindow

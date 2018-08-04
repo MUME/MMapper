@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Nils Schimmelmann <nschimme@gmail.com> (Jahara)
@@ -25,23 +26,28 @@
 #ifndef MUMEMOMENT_H
 #define MUMEMOMENT_H
 
-#define MUME_START_YEAR 2850
+static constexpr const int MUME_START_YEAR = 2850;
 
-enum MumeTime { TIME_UNKNOWN = 0, TIME_DAWN, TIME_DAY, TIME_DUSK, TIME_NIGHT };
-enum MumeSeason { SEASON_UNKNOWN = 0, SEASON_WINTER, SEASON_SPRING, SEASON_SUMMER, SEASON_AUTUMN };
+enum class MumeTime { TIME_UNKNOWN = 0, TIME_DAWN, TIME_DAY, TIME_DUSK, TIME_NIGHT };
+enum class MumeSeason {
+    SEASON_UNKNOWN = 0,
+    SEASON_WINTER,
+    SEASON_SPRING,
+    SEASON_SUMMER,
+    SEASON_AUTUMN
+};
 
 class QString;
 
 class MumeMoment
 {
 public:
-    MumeMoment(int year, int month, int day, int hour, int minute);
-    MumeMoment(int secsSinceMumeStartEpoch);
+    explicit MumeMoment(int year, int month, int day, int hour, int minute);
+    explicit MumeMoment(int secsSinceMumeStartEpoch);
 
-    int toSeconds();
-
-    MumeSeason toSeason();
-    MumeTime toTimeOfDay();
+    int toSeconds() const;
+    MumeSeason toSeason() const;
+    MumeTime toTimeOfDay() const;
 
     int m_year = 0;
     int m_month = 0;

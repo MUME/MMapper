@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Kalev Lember <kalev@smartlink.ee>,
@@ -26,13 +27,23 @@
 #ifndef FINDDIALOG_H
 #define FINDDIALOG_H
 
-#include "abstractparser.h"
-#include "ui_findroomsdlg.h"
 #include <QDialog>
+#include <QString>
+#include <QtCore>
+#include <QtGlobal>
+#include <QtWidgets/QTreeWidgetItem>
 
-class MapData;
+#include "../parser/abstractparser.h"
+#include "ui_findroomsdlg.h" // auto-generated
+
 class MapCanvas;
+class MapData;
+class QCloseEvent;
+class QObject;
 class QShortcut;
+class QTreeWidgetItem;
+class QWidget;
+class Room;
 class RoomSelection;
 
 class FindRoomsDlg : public QDialog, private Ui::FindRoomsDlg
@@ -40,27 +51,25 @@ class FindRoomsDlg : public QDialog, private Ui::FindRoomsDlg
     Q_OBJECT
 
 signals:
-    //void lookingForRooms(RoomRecipient *,ParseEvent *);
     void center(qint32 x, qint32 y);
     void log(const QString &, const QString &);
-    //void newRoomSelection(const RoomSelection*);
 
 public slots:
-    void closeEvent(QCloseEvent *event);
+    void closeEvent(QCloseEvent *event) override;
 
 public:
-    FindRoomsDlg(MapData *, QWidget *parent = 0);
+    explicit FindRoomsDlg(MapData *, QWidget *parent = nullptr);
     ~FindRoomsDlg();
 
 private:
-    MapData *m_mapData;
-    QTreeWidgetItem *item{};
-    QShortcut *m_showSelectedRoom;
+    MapData *m_mapData = nullptr;
+    QTreeWidgetItem *item = nullptr;
+    QShortcut *m_showSelectedRoom = nullptr;
 
     void adjustResultTable();
 
     static const QString nullString;
-    const RoomSelection *m_roomSelection;
+    const RoomSelection *m_roomSelection = nullptr;
 
 private slots:
     QString constructToolTip(const Room *);

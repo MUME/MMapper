@@ -25,32 +25,80 @@
 ************************************************************************/
 
 #include "mapstorage.h"
+
+#include <climits>
+#include <cstdint>
+#include <stdexcept>
+#include <type_traits>
+#include <utility>
+#include <QMessageLogContext>
+#include <QObject>
+#include <QtCore>
+#include <QtWidgets>
+
+#include "../expandoracommon/exit.h"
+#include "../expandoracommon/room.h"
+#include "../global/Flags.h"
+#include "../global/bits.h"
+#include "../global/io.h"
+#include "../global/roomid.h"
+#include "../global/utils.h"
+#include "../mapdata/DoorFlags.h"
+#include "../mapdata/ExitDirection.h"
+#include "../mapdata/ExitFlags.h"
+#include "../mapdata/infomark.h"
+#include "../mapdata/mapdata.h"
+#include "../mapdata/mmapper2room.h"
+#include "../mapdata/roomfactory.h"
+#include "../parser/patterns.h"
+#include "abstractmapstorage.h"
 #include "basemapsavefilter.h"
-#include "configuration.h"
-#include "infomark.h"
-#include "mapdata.h"
-#include "mmapper2exit.h"
-#include "mmapper2room.h"
 #include "oldconnection.h"
 #include "olddoor.h"
 #include "oldroom.h"
-#include "patterns.h"
 #include "progresscounter.h"
 #include "roomsaver.h"
+
 #ifndef MMAPPER_NO_QTIOCOMPRESSOR
 #include "qtiocompressor.h"
+
+static_assert(std::is_same<uint32_t, decltype(UINT_MAX)>::value, "");
+
+static constexpr const bool USE_IO_COMPRESSOR = true;
+#else
+static constexpr const bool USE_IO_COMPRESSOR = false;
+/* NOTE: Once we require C++17, this can be if constexpr,
+* and it won't be necessary to mock QtIOCompressor. */
+class QtIOCompressor final : public QIODevice
+{
+    explicit QtIOCompressor(QFile *) { std::abort(); }
+    bool open(QIODevice::OpenModeFlag) override { std::abort(); }
+    void close() override { std::abort(); }
+};
 #endif
 
-#include <QBuffer>
-#include <QDataStream>
-#include <QFile>
-#include <QMessageBox>
+static constexpr const int MINUMUM_STATIC_LINES = 1;
 
-#include <cassert>
-#include <iostream>
+// TODO(nschimme): Strip out support for older maps predating MMapper2
+static constexpr const int MMAPPER_1_0_0_SCHEMA = 7;  // MMapper 1.0 ???
+static constexpr const int MMAPPER_1_1_0_SCHEMA = 16; // MMapper 1.1 ???
+static constexpr const int MMAPPER_2_0_0_SCHEMA = 17; // Initial schema
+static constexpr const int MMAPPER_2_0_2_SCHEMA = 24; // Ridable flag
+static constexpr const int MMAPPER_2_0_4_SCHEMA = 25; // QtIOCompressor
+static constexpr const int MMAPPER_2_3_7_SCHEMA = 32; // 16bit DoorFlags, NoMatch
+static constexpr const int MMAPPER_2_4_0_SCHEMA = 33; // 16bit ExitsFlags, 32bit MobFlags/LoadFlags
+static constexpr const int MMAPPER_2_4_3_SCHEMA = 34; // qCompress, SunDeath flag
+static constexpr const int MMAPPER_2_5_1_SCHEMA = 35; // discard all previous NoMatch flags
+static constexpr const int CURRENT_SCHEMA = MMAPPER_2_5_1_SCHEMA;
 
-#define MINUMUM_STATIC_LINES 1
-#define CURRENT_SCHEMA_VERSION 042
+static_assert(007 == 7, "MMapper 1.0.0 Schema");
+static_assert(020 == 16, "MMapper 1.1.0 Schema");
+static_assert(021 == 17, "MMapper 2.0.0 Schema");
+static_assert(030 == 24, "MMapper 2.0.2 Schema");
+static_assert(031 == 25, "MMapper 2.0.4 Schema");
+static_assert(040 == 32, "MMapper 2.3.7 Schema");
+static_assert(041 == 33, "MMapper 2.4.0 Schema");
+static_assert(042 == 34, "MMapper 2.4.3 Schema");
 
 MapStorage::MapStorage(MapData &mapdata, const QString &filename, QFile *file, QObject *parent)
     : AbstractMapStorage(mapdata, filename, file, parent)
@@ -74,383 +122,434 @@ void MapStorage::newData()
     emit onNewData();
 }
 
+static void setConnection(Connection *c, Room *room, ConnectionDirection cd)
+{
+    c->setRoom(room, c->getRoom(Hand::LEFT) != nullptr ? Hand::RIGHT : Hand::LEFT);
+    c->setDirection(cd, room);
+}
+
+class LoadRoomHelperBase
+{
+private:
+    QDataStream &stream;
+
+public:
+    explicit LoadRoomHelperBase(QDataStream &stream)
+        : stream{stream}
+    {
+        check_status();
+    }
+
+public:
+    void check_status()
+    {
+        switch (stream.status()) {
+        case QDataStream::Ok:
+            break;
+        case QDataStream::ReadPastEnd:
+            throw io::IOException("read past end of file");
+        case QDataStream::ReadCorruptData:
+            throw io::IOException("read corrupt data");
+        case QDataStream::WriteFailed:
+            throw io::IOException("write failed");
+        default:
+            throw io::IOException("stream is not ok");
+        }
+    }
+
+public:
+    auto read_u8()
+    {
+        uint8_t result;
+        stream >> result;
+        check_status();
+        return result;
+    }
+
+    auto read_u16()
+    {
+        uint16_t result;
+        stream >> result;
+        check_status();
+        return result;
+    }
+
+    auto read_u32()
+    {
+        uint32_t result;
+        stream >> result;
+        return result;
+    }
+    auto read_i32()
+    {
+        int32_t result;
+        stream >> result;
+        check_status();
+        return result;
+    }
+
+    auto read_string()
+    {
+        QString result;
+        stream >> result;
+        check_status();
+        return result;
+    }
+
+    auto read_datetime()
+    {
+        QDateTime result;
+        stream >> result;
+        check_status();
+        return result;
+    }
+};
+
+class OldLoadRoomHelper : public LoadRoomHelperBase
+{
+public:
+    explicit OldLoadRoomHelper(QDataStream &stream)
+        : LoadRoomHelperBase{stream}
+    {}
+
+public:
+    auto readRoomAlignType() { return static_cast<RoomAlignType>(read_u16() + 1u); }
+    auto readRoomLightType() { return static_cast<RoomLightType>(read_u16() + 1u); }
+    auto readRoomPortableType() { return static_cast<RoomPortableType>(read_u16() + 1u); }
+    auto readRoomTerrainType() { return static_cast<RoomTerrainType>(read_u16() + 1u); }
+
+    Coordinate readCoord2d()
+    {
+        Coordinate pos;
+        pos.x = read_i32();
+        pos.y = read_i32();
+        return pos;
+    }
+
+    RoomMobFlags readMobFlags()
+    {
+        switch (static_cast<int>(read_u16())) {
+        case 1:
+            return RoomMobFlags{RoomMobFlag::ANY}; // PEACEFUL
+        case 2:
+            return RoomMobFlags{RoomMobFlag::SMOB}; // AGGRESIVE
+        case 3:
+            return RoomMobFlags{RoomMobFlag::QUEST};
+        case 4:
+            return RoomMobFlags{RoomMobFlag::SHOP};
+        case 5:
+            return RoomMobFlags{RoomMobFlag::RENT};
+        case 6:
+            return RoomMobFlags{RoomMobFlag::GUILD};
+        default:
+            return RoomMobFlags{0};
+        }
+    }
+
+    RoomLoadFlags readLoadFlags()
+    {
+        switch (static_cast<int>(read_u16())) {
+        case 1:
+            return RoomLoadFlags{RoomLoadFlag::TREASURE};
+        case 2:
+            return RoomLoadFlags{RoomLoadFlag::HERB};
+        case 3:
+            return RoomLoadFlags{RoomLoadFlag::KEY};
+        case 4:
+            return RoomLoadFlags{RoomLoadFlag::WATER};
+        case 5:
+            return RoomLoadFlags{RoomLoadFlag::FOOD};
+        case 6:
+            return RoomLoadFlags{RoomLoadFlag::HORSE};
+        case 7:
+            return RoomLoadFlags{RoomLoadFlag::WARG};
+        case 8:
+            return RoomLoadFlags{RoomLoadFlag::TOWER};
+        case 9:
+            return RoomLoadFlags{RoomLoadFlag::ATTENTION};
+        case 10:
+            return RoomLoadFlags{RoomLoadFlag::BOAT};
+        default:
+            return RoomLoadFlags{0};
+        }
+    }
+};
+
+struct OldLoadRoomHelper2 : public OldLoadRoomHelper
+{
+private:
+    ConnectionList &connectionList;
+
+public:
+    explicit OldLoadRoomHelper2(QDataStream &stream, ConnectionList &connectionList)
+        : OldLoadRoomHelper{stream}
+        , connectionList{connectionList}
+    {}
+
+    Connection *readConnection()
+    {
+        if (auto tmp = read_u32()) {
+            auto c = connectionList[tmp - 1u];
+            return c;
+        }
+        return nullptr;
+    }
+};
+
 Room *MapStorage::loadOldRoom(QDataStream &stream, ConnectionList &connectionList)
 {
-    Room *room = factory.createRoom();
+    auto helper = OldLoadRoomHelper2{stream, connectionList};
+    Room *const room = factory.createRoom();
     room->setPermanent();
 
-    // set default values
-    RoomTerrainType terrainType = RTT_UNDEFINED;
-    RoomPortableType portableType = RPT_UNDEFINED;
-    RoomRidableType ridableType = RRT_UNDEFINED;
-    RoomSundeathType sundeathType = RST_UNDEFINED;
-    RoomLightType lightType = RLT_UNDEFINED;
-    RoomAlignType alignType = RAT_UNDEFINED;
-    RoomMobFlags mobFlags = 0;
-    RoomLoadFlags loadFlags = 0;
-    QString vqstr;
-    quint16 vquint16;
-    quint32 vquint32;
-    qint8 vqint8;
+    const auto ridableType = RoomRidableType::UNDEFINED;
+    const auto sundeathType = RoomSundeathType::UNDEFINED;
 
-    stream >> vqstr;
-    room->replace(R_NAME, vqstr);
+    room->setName(helper.read_string());
 
-    stream >> vqstr;
-    QStringList list = vqstr.split('\n');
-    QStringList::iterator i;
-    bool readingStaticDescLines = true;
-    QString staticRoomDesc;
-    QString dynamicRoomDesc;
+    {
+        bool readingStaticDescLines = true;
+        QString staticRoomDesc{};
+        QString dynamicRoomDesc{};
+        qint32 lineCount = 0u;
+        for (const auto &s : helper.read_string().split('\n')) {
+            if (s.isEmpty())
+                continue;
 
-    qint32 lineCount = 0;
-
-    for (i = list.begin(); i != list.end(); ++i) {
-        if ((*i) != "") {
-            if ((lineCount >= MINUMUM_STATIC_LINES)
-                && ((!readingStaticDescLines) || Patterns::matchDynamicDescriptionPatterns(*i))) {
+            // REVISIT: simplify this!
+            // This logic is apparently an overly complicated way of saying
+            // that the first line is guaranteed to go into static,
+            // but all the rest go to dynamic once one matches the pattern.
+            if ((lineCount++ >= MINUMUM_STATIC_LINES)
+                && ((!readingStaticDescLines) || Patterns::matchDynamicDescriptionPatterns(s))) {
                 readingStaticDescLines = false;
-                dynamicRoomDesc += (*i) + "\n";
-                lineCount++;
+                dynamicRoomDesc += (s) + "\n";
             } else {
-                staticRoomDesc += (*i) + "\n";
-                lineCount++;
+                staticRoomDesc += (s) + "\n";
             }
         }
+        room->setStaticDescription(staticRoomDesc);
+        room->setDynamicDescription(dynamicRoomDesc);
     }
 
-    room->replace(R_DESC, staticRoomDesc);
-    room->replace(R_DYNAMICDESC, dynamicRoomDesc);
+    const auto terrainType = helper.readRoomTerrainType();
+    const auto mobFlags = helper.readMobFlags();
+    const auto loadFlags = helper.readLoadFlags();
+    (void) helper.read_u16();                                //roomLocation { INDOOR, OUTSIDE }
+    const auto portableType = helper.readRoomPortableType(); //roomPortable { PORT, NOPORT }
+    const auto lightType = helper.readRoomLightType();       //roomLight { DARK, LIT }
+    const auto alignType = helper.readRoomAlignType();       //roomAlign { GOOD, NEUTRAL, EVIL }
 
-    stream >> vquint16; //roomTerrain
-    terrainType = static_cast<RoomTerrainType>(vquint16 + 1);
+    {
+        const auto roomFlags = helper.read_u32(); //roomFlags
 
-    stream >> vquint16; //roomMob
-    switch (static_cast<int>(vquint16)) {
-    case 1:
-        SET(mobFlags, RMF_ANY);
-        break; //PEACEFULL
-    case 2:
-        SET(mobFlags, RMF_SMOB);
-        break; //AGGRESIVE
-    case 3:
-        SET(mobFlags, RMF_QUEST);
-        break; //QUEST
-    case 4:
-        SET(mobFlags, RMF_SHOP);
-        break; //SHOP
-    case 5:
-        SET(mobFlags, RMF_RENT);
-        break; //RENT
-    case 6:
-        SET(mobFlags, RMF_GUILD);
-        break; //GUILD
-    default:
-        break;
-    }
-
-    stream >> vquint16; //roomLoad
-    switch (static_cast<int>(vquint16)) {
-    case 1:
-        SET(loadFlags, RLF_TREASURE);
-        break; //TREASURE
-    case 2:
-        SET(loadFlags, RLF_HERB);
-        break; //HERB
-    case 3:
-        SET(loadFlags, RLF_KEY);
-        break; //KEY
-    case 4:
-        SET(loadFlags, RLF_WATER);
-        break; //WATER
-    case 5:
-        SET(loadFlags, RLF_FOOD);
-        break; //FOOD
-    case 6:
-        SET(loadFlags, RLF_HORSE);
-        break; //HORSE
-    case 7:
-        SET(loadFlags, RLF_WARG);
-        break; //WARG
-    case 8:
-        SET(loadFlags, RLF_TOWER);
-        break; //TOWER
-    case 9:
-        SET(loadFlags, RLF_ATTENTION);
-        break; //ATTENTION
-    case 10:
-        SET(loadFlags, RLF_BOAT);
-        break; //BOAT
-    default:
-        break;
-    }
-
-    stream >> vquint16; //roomLocation { INDOOR, OUTSIDE }
-
-    stream >> vquint16; //roomPortable { PORT, NOPORT }
-    portableType = static_cast<RoomPortableType>(vquint16 + 1);
-    stream >> vquint16; //roomLight { DARK, LIT }
-    lightType = static_cast<RoomLightType>(vquint16 + 1);
-    stream >> vquint16; //roomAlign { GOOD, NEUTRAL, EVIL }
-    alignType = static_cast<RoomAlignType>(vquint16 + 1);
-
-    stream >> vquint32; //roomFlags
-
-    if (ISSET(vquint32, bit2)) {
-        Mmapper2Exit::orExitFlags(room->exit(ED_NORTH), EF_EXIT);
-    }
-    if (ISSET(vquint32, bit3)) {
-        Mmapper2Exit::orExitFlags(room->exit(ED_SOUTH), EF_EXIT);
-    }
-    if (ISSET(vquint32, bit4)) {
-        Mmapper2Exit::orExitFlags(room->exit(ED_EAST), EF_EXIT);
-    }
-    if (ISSET(vquint32, bit5)) {
-        Mmapper2Exit::orExitFlags(room->exit(ED_WEST), EF_EXIT);
-    }
-    if (ISSET(vquint32, bit6)) {
-        Mmapper2Exit::orExitFlags(room->exit(ED_UP), EF_EXIT);
-    }
-    if (ISSET(vquint32, bit7)) {
-        Mmapper2Exit::orExitFlags(room->exit(ED_DOWN), EF_EXIT);
-    }
-    if (ISSET(vquint32, bit8)) {
-        Mmapper2Exit::orExitFlags(room->exit(ED_NORTH), EF_DOOR);
-        Mmapper2Exit::orExitFlags(room->exit(ED_NORTH), EF_NO_MATCH);
-    }
-    if (ISSET(vquint32, bit9)) {
-        Mmapper2Exit::orExitFlags(room->exit(ED_SOUTH), EF_DOOR);
-        Mmapper2Exit::orExitFlags(room->exit(ED_SOUTH), EF_NO_MATCH);
-    }
-    if (ISSET(vquint32, bit10)) {
-        Mmapper2Exit::orExitFlags(room->exit(ED_EAST), EF_DOOR);
-        Mmapper2Exit::orExitFlags(room->exit(ED_EAST), EF_NO_MATCH);
-    }
-    if (ISSET(vquint32, bit11)) {
-        Mmapper2Exit::orExitFlags(room->exit(ED_WEST), EF_DOOR);
-        Mmapper2Exit::orExitFlags(room->exit(ED_WEST), EF_NO_MATCH);
-    }
-    if (ISSET(vquint32, bit12)) {
-        Mmapper2Exit::orExitFlags(room->exit(ED_UP), EF_DOOR);
-        Mmapper2Exit::orExitFlags(room->exit(ED_UP), EF_NO_MATCH);
-    }
-    if (ISSET(vquint32, bit13)) {
-        Mmapper2Exit::orExitFlags(room->exit(ED_DOWN), EF_DOOR);
-        Mmapper2Exit::orExitFlags(room->exit(ED_DOWN), EF_NO_MATCH);
-    }
-    if (ISSET(vquint32, bit14)) {
-        Mmapper2Exit::orExitFlags(room->exit(ED_NORTH), EF_ROAD);
-    }
-    if (ISSET(vquint32, bit15)) {
-        Mmapper2Exit::orExitFlags(room->exit(ED_SOUTH), EF_ROAD);
-    }
-    if (ISSET(vquint32, bit16)) {
-        Mmapper2Exit::orExitFlags(room->exit(ED_EAST), EF_ROAD);
-    }
-    if (ISSET(vquint32, bit17)) {
-        Mmapper2Exit::orExitFlags(room->exit(ED_WEST), EF_ROAD);
-    }
-    if (ISSET(vquint32, bit18)) {
-        Mmapper2Exit::orExitFlags(room->exit(ED_UP), EF_ROAD);
-    }
-    if (ISSET(vquint32, bit19)) {
-        Mmapper2Exit::orExitFlags(room->exit(ED_DOWN), EF_ROAD);
-    }
-
-    stream >> vqint8; //roomUpdated
-
-    stream >> vqint8; //roomCheckExits
-    Coordinate pos;
-    stream >> (quint32 &) pos.x;
-    stream >> (quint32 &) pos.y;
-
-    room->setPosition(pos + basePosition);
-
-    Connection *c;
-
-    stream >> vquint32;
-    if (vquint32 != 0) {
-        c = connectionList[vquint32 - 1];
-        if (c->getRoom(0) != nullptr) {
-            c->setRoom(room, 1);
-        } else {
-            c->setRoom(room, 0);
+        if (IS_SET(roomFlags, bit2)) {
+            room->exit(ExitDirection::NORTH).orExitFlags(ExitFlag::EXIT);
         }
-        c->setDirection(CD_UP, room);
-    }
-    stream >> vquint32;
-    if (vquint32 != 0) {
-        c = connectionList[vquint32 - 1];
-        if (c->getRoom(0) != nullptr) {
-            c->setRoom(room, 1);
-        } else {
-            c->setRoom(room, 0);
+        if (IS_SET(roomFlags, bit3)) {
+            room->exit(ExitDirection::SOUTH).orExitFlags(ExitFlag::EXIT);
         }
-        c->setDirection(CD_DOWN, room);
-    }
-    stream >> vquint32;
-    if (vquint32 != 0) {
-        c = connectionList[vquint32 - 1];
-        if (c->getRoom(0) != nullptr) {
-            c->setRoom(room, 1);
-        } else {
-            c->setRoom(room, 0);
+        if (IS_SET(roomFlags, bit4)) {
+            room->exit(ExitDirection::EAST).orExitFlags(ExitFlag::EXIT);
         }
-        c->setDirection(CD_EAST, room);
-    }
-    stream >> vquint32;
-    if (vquint32 != 0) {
-        c = connectionList[vquint32 - 1];
-        if (c->getRoom(0) != nullptr) {
-            c->setRoom(room, 1);
-        } else {
-            c->setRoom(room, 0);
+        if (IS_SET(roomFlags, bit5)) {
+            room->exit(ExitDirection::WEST).orExitFlags(ExitFlag::EXIT);
         }
-        c->setDirection(CD_WEST, room);
-    }
-    stream >> vquint32;
-    if (vquint32 != 0) {
-        c = connectionList[vquint32 - 1];
-        if (c->getRoom(0) != nullptr) {
-            c->setRoom(room, 1);
-        } else {
-            c->setRoom(room, 0);
+        if (IS_SET(roomFlags, bit6)) {
+            room->exit(ExitDirection::UP).orExitFlags(ExitFlag::EXIT);
         }
-        c->setDirection(CD_NORTH, room);
-    }
-    stream >> vquint32;
-    if (vquint32 != 0) {
-        c = connectionList[vquint32 - 1];
-        if (c->getRoom(0) != nullptr) {
-            c->setRoom(room, 1);
-        } else {
-            c->setRoom(room, 0);
+        if (IS_SET(roomFlags, bit7)) {
+            room->exit(ExitDirection::DOWN).orExitFlags(ExitFlag::EXIT);
         }
-        c->setDirection(CD_SOUTH, room);
+        if (IS_SET(roomFlags, bit8)) {
+            room->exit(ExitDirection::NORTH).orExitFlags(ExitFlag::DOOR);
+            room->exit(ExitDirection::NORTH).orExitFlags(ExitFlag::NO_MATCH);
+        }
+        if (IS_SET(roomFlags, bit9)) {
+            room->exit(ExitDirection::SOUTH).orExitFlags(ExitFlag::DOOR);
+            room->exit(ExitDirection::SOUTH).orExitFlags(ExitFlag::NO_MATCH);
+        }
+        if (IS_SET(roomFlags, bit10)) {
+            room->exit(ExitDirection::EAST).orExitFlags(ExitFlag::DOOR);
+            room->exit(ExitDirection::EAST).orExitFlags(ExitFlag::NO_MATCH);
+        }
+        if (IS_SET(roomFlags, bit11)) {
+            room->exit(ExitDirection::WEST).orExitFlags(ExitFlag::DOOR);
+            room->exit(ExitDirection::WEST).orExitFlags(ExitFlag::NO_MATCH);
+        }
+        if (IS_SET(roomFlags, bit12)) {
+            room->exit(ExitDirection::UP).orExitFlags(ExitFlag::DOOR);
+            room->exit(ExitDirection::UP).orExitFlags(ExitFlag::NO_MATCH);
+        }
+        if (IS_SET(roomFlags, bit13)) {
+            room->exit(ExitDirection::DOWN).orExitFlags(ExitFlag::DOOR);
+            room->exit(ExitDirection::DOWN).orExitFlags(ExitFlag::NO_MATCH);
+        }
+        if (IS_SET(roomFlags, bit14)) {
+            room->exit(ExitDirection::NORTH).orExitFlags(ExitFlag::ROAD);
+        }
+        if (IS_SET(roomFlags, bit15)) {
+            room->exit(ExitDirection::SOUTH).orExitFlags(ExitFlag::ROAD);
+        }
+        if (IS_SET(roomFlags, bit16)) {
+            room->exit(ExitDirection::EAST).orExitFlags(ExitFlag::ROAD);
+        }
+        if (IS_SET(roomFlags, bit17)) {
+            room->exit(ExitDirection::WEST).orExitFlags(ExitFlag::ROAD);
+        }
+        if (IS_SET(roomFlags, bit18)) {
+            room->exit(ExitDirection::UP).orExitFlags(ExitFlag::ROAD);
+        }
+        if (IS_SET(roomFlags, bit19)) {
+            room->exit(ExitDirection::DOWN).orExitFlags(ExitFlag::ROAD);
+        }
+    }
+
+    (void) helper.read_u8(); //roomUpdated
+    (void) helper.read_u8(); //roomCheckExits
+
+    {
+        const Coordinate pos = helper.readCoord2d();
+        room->setPosition(pos + basePosition);
+    }
+
+    if (auto c = helper.readConnection()) {
+        setConnection(c, room, ConnectionDirection::UP);
+    }
+    if (auto c = helper.readConnection()) {
+        setConnection(c, room, ConnectionDirection::DOWN);
+    }
+    if (auto c = helper.readConnection()) {
+        setConnection(c, room, ConnectionDirection::EAST);
+    }
+    if (auto c = helper.readConnection()) {
+        setConnection(c, room, ConnectionDirection::WEST);
+    }
+    if (auto c = helper.readConnection()) {
+        setConnection(c, room, ConnectionDirection::NORTH);
+    }
+    if (auto c = helper.readConnection()) {
+        setConnection(c, room, ConnectionDirection::SOUTH);
     }
 
     // store imported values
-    room->replace(R_TERRAINTYPE, terrainType);
-    room->replace(R_LIGHTTYPE, lightType);
-    room->replace(R_ALIGNTYPE, alignType);
-    room->replace(R_PORTABLETYPE, portableType);
-    room->replace(R_RIDABLETYPE, ridableType);
-    room->replace(R_SUNDEATHTYPE, sundeathType);
-    room->replace(R_MOBFLAGS, mobFlags);
-    room->replace(R_LOADFLAGS, loadFlags);
+    room->setTerrainType(terrainType);
+    room->setLightType(lightType);
+    room->setAlignType(alignType);
+    room->setPortableType(portableType);
+    room->setRidableType(ridableType);
+    room->setSundeathType(sundeathType);
+    room->setMobFlags(mobFlags);
+    room->setLoadFlags(loadFlags);
 
     return room;
+}
+
+class NewLoadRoomHelper final : public LoadRoomHelperBase
+{
+public:
+    explicit NewLoadRoomHelper(QDataStream &stream)
+        : LoadRoomHelperBase{stream}
+    {}
+
+public:
+    Coordinate readCoord3d()
+    {
+        const auto x = read_i32();
+        const auto y = read_i32();
+        const auto z = read_i32();
+        return Coordinate{x, y, z};
+    }
+};
+
+/* FIXME: all of these static casts need to do stronger type checking */
+template<typename E>
+E serialize(const uint8_t value)
+{
+    /* Untrusted user data; this needs bounds checking! */
+    return static_cast<E>(value);
+}
+template<typename E>
+E serialize(const uint16_t value)
+{
+    /* Untrusted user data; this needs bounds checking! */
+    return static_cast<E>(value);
+}
+template<typename E>
+E serialize(const uint32_t value)
+{
+    /* Untrusted user data; this needs bounds checking! */
+    return static_cast<E>(value);
 }
 
 Room *MapStorage::loadRoom(QDataStream &stream, qint32 version)
 {
-    QString vqba;
-    quint32 vquint32;
-    quint8 vquint8;
-    quint16 vquint16;
+    auto helper = NewLoadRoomHelper{stream};
     Room *room = factory.createRoom();
     room->setPermanent();
-
-    stream >> vqba;
-    room->replace(R_NAME, vqba);
-    stream >> vqba;
-    room->replace(R_DESC, vqba);
-    stream >> vqba;
-    room->replace(R_DYNAMICDESC, vqba);
-    stream >> vquint32;
-    room->setId(vquint32 + baseId);
-    stream >> vqba;
-    room->replace(R_NOTE, vqba);
-    stream >> vquint8;
-    room->replace(R_TERRAINTYPE, vquint8);
-    stream >> vquint8;
-    room->replace(R_LIGHTTYPE, vquint8);
-    stream >> vquint8;
-    room->replace(R_ALIGNTYPE, vquint8);
-    stream >> vquint8;
-    room->replace(R_PORTABLETYPE, vquint8);
-    if (version >= 030) {
-        stream >> vquint8;
-    } else {
-        vquint8 = 0;
-    }
-    room->replace(R_RIDABLETYPE, vquint8);
-    if (version >= 041) {
-        stream >> vquint8;
-    } else {
-        vquint8 = 0;
-    }
-    room->replace(R_SUNDEATHTYPE, vquint8);
-    if (version >= 041) {
-        stream >> vquint32;
-        room->replace(R_MOBFLAGS, vquint32);
-        stream >> vquint32;
-        room->replace(R_LOADFLAGS, vquint32);
-    } else {
-        stream >> vquint16;
-        room->replace(R_MOBFLAGS, vquint16);
-        stream >> vquint16;
-        room->replace(R_LOADFLAGS, vquint16);
-    }
-
-    stream >> vquint8; //roomUpdated
-    if (vquint8 != 0u) {
+    room->setName(helper.read_string());
+    room->setStaticDescription(helper.read_string());
+    room->setDynamicDescription(helper.read_string());
+    room->setId(RoomId{helper.read_u32() + baseId});
+    room->setNote(helper.read_string());
+    room->setTerrainType(serialize<RoomTerrainType>(helper.read_u8()));
+    room->setLightType(serialize<RoomLightType>(helper.read_u8()));
+    room->setAlignType(serialize<RoomAlignType>(helper.read_u8()));
+    room->setPortableType(serialize<RoomPortableType>(helper.read_u8()));
+    room->setRidableType(serialize<RoomRidableType>(
+        (version >= MMAPPER_2_0_2_SCHEMA) ? helper.read_u8() : uint8_t{0}));
+    room->setSundeathType(serialize<RoomSundeathType>(
+        (version >= MMAPPER_2_4_0_SCHEMA) ? helper.read_u8() : uint8_t{0}));
+    room->setMobFlags(serialize<RoomMobFlags>(
+        (version >= MMAPPER_2_4_0_SCHEMA) ? helper.read_u32() : helper.read_u16()));
+    room->setLoadFlags(serialize<RoomLoadFlags>(
+        (version >= MMAPPER_2_4_0_SCHEMA) ? helper.read_u32() : helper.read_u16()));
+    if (helper.read_u8() /*roomUpdated*/ != 0u) {
         room->setUpToDate();
     }
-    Coordinate c;
-    stream >> const_cast<qint32 &>(c.x);
-    stream >> const_cast<qint32 &>(c.y);
-    stream >> const_cast<qint32 &>(c.z);
-
-    room->setPosition(c + basePosition);
-    loadExits(room, stream, version);
+    room->setPosition(helper.readCoord3d() + basePosition);
+    loadExits(*room, stream, version);
     return room;
 }
 
-void MapStorage::loadExits(Room *room, QDataStream &stream, qint32 version)
+void MapStorage::loadExits(Room &room, QDataStream &stream, const qint32 version)
 {
-    quint8 vquint8; // To read generic 8-bit value
+    auto helper = NewLoadRoomHelper{stream};
 
-    ExitsList &eList = room->getExitsList();
-    for (int i = 0; i < 7; ++i) {
+    ExitsList &eList = room.getExitsList();
+    for (const auto i : ALL_EXITS7) {
         Exit &e = eList[i];
 
         // Read the exit flags
-        ExitFlags flags;
-        if (version >= 041) {
-            // Exit flags are stored with 16 bits in version >= 041
-            stream >> flags;
-            e[E_FLAGS] = flags;
+        if (version >= MMAPPER_2_4_0_SCHEMA) {
+            e.setExitFlags(serialize<ExitFlags>(helper.read_u16()));
         } else {
-            // Exit flags were stored with 8 bits in version < 041
-            stream >> vquint8;
-            if (ISSET(vquint8, EF_DOOR)) {
-                SET(vquint8, EF_EXIT);
+            auto flags = serialize<ExitFlags>(helper.read_u8());
+            if (flags.isDoor()) {
+                flags |= ExitFlag::EXIT;
             }
-            e[E_FLAGS] = vquint8;
+            e.setExitFlags(flags);
         }
 
-        DoorFlags dFlags;
-        if (version >= 040) {
-            // Door flags are stored with 16 bits in version >= 040
-            stream >> dFlags;
-            e[E_DOORFLAGS] = dFlags;
-        } else {
-            // Door flags were stored with 8 bits in version < 040
-            stream >> vquint8;
-            e[E_DOORFLAGS] = vquint8;
+        // Exits saved after MMAPPER_2_0_4_SCHEMA were offset by 1 bit causing
+        // corruption and excessive NO_MATCH exits. We need to clean them and version the schema.
+        if (version >= MMAPPER_2_0_4_SCHEMA && version < MMAPPER_2_5_1_SCHEMA) {
+            e.setExitFlags(e.getExitFlags() & ~ExitFlags{ExitFlag::NO_MATCH});
         }
 
-        DoorName dName;
-        stream >> dName;
-        e[E_DOORNAME] = dName;
+        e.setDoorFlags(serialize<DoorFlags>((version >= MMAPPER_2_3_7_SCHEMA)
+                                                ? helper.read_u16()
+                                                : static_cast<uint16_t>(helper.read_u8())));
 
-        quint32 connection;
-        for (stream >> connection; connection != UINT_MAX; stream >> connection) {
-            e.addIn(connection + baseId);
+        e.setDoorName(static_cast<DoorName>(helper.read_string()));
+
+        for (uint32_t connection = helper.read_u32(); connection != UINT_MAX;
+             connection = helper.read_u32()) {
+            e.addIn(RoomId{connection + baseId});
         }
-        for (stream >> connection; connection != UINT_MAX; stream >> connection) {
-            e.addOut(connection + baseId);
+        for (uint32_t connection = helper.read_u32(); connection != UINT_MAX;
+             connection = helper.read_u32()) {
+            e.addOut(RoomId{connection + baseId});
         }
     }
 }
@@ -459,7 +558,15 @@ bool MapStorage::loadData()
 {
     //clear previous map
     m_mapData.clear();
-    return mergeData();
+    try {
+        return mergeData();
+    } catch (const std::exception &ex) {
+        const auto msg = QString::asprintf("Exception: %s", ex.what());
+        emit log("MapStorage", msg);
+        qWarning().noquote() << msg;
+        m_mapData.clear();
+        return false;
+    }
 }
 
 bool MapStorage::mergeData()
@@ -467,7 +574,8 @@ bool MapStorage::mergeData()
     {
         MapFrontendBlocker blocker(m_mapData);
 
-        baseId = m_mapData.getMaxId() + 1;
+        /* NOTE: This relies on the maxID being ~0u, so adding 1 brings us back to 0u. */
+        baseId = m_mapData.getMaxId().asUint32() + 1u;
         basePosition = m_mapData.getLrb();
         if (basePosition.x + basePosition.y + basePosition.z != 0) {
             //basePosition.y++;
@@ -479,36 +587,31 @@ bool MapStorage::mergeData()
         }
 
         emit log("MapStorage", "Loading data ...");
-        m_progressCounter->reset();
+
+        auto &progressCounter = getProgressCounter();
+        progressCounter.reset();
 
         QDataStream stream(m_file);
-
-        Room *room = nullptr;
-        InfoMark *mark = nullptr;
-
-        quint32 magic;
-        qint32 version;
-        quint32 index = 0;
-        quint32 roomsCount = 0;
-        quint32 connectionsCount = 0;
-        quint32 marksCount = 0;
-
+        auto helper = LoadRoomHelperBase{stream};
         m_mapData.setDataChanged();
 
         // Read the version and magic
-        stream >> magic;
-        if (magic != 0xFFB2AF01) {
+        static constexpr const auto MMAPPER_MAGIC = static_cast<int32_t>(0xFFB2AF01u);
+        if (helper.read_i32() != MMAPPER_MAGIC) {
             return false;
         }
-        stream >> version;
-        if (version != 042 && version != 041 && version != 040 && version != 031 && version != 030
-            && version != 020 && version != 021 && version != 007) {
-            bool isNewer = version >= CURRENT_SCHEMA_VERSION;
+        const auto version = helper.read_u32();
+        if (version != MMAPPER_2_5_1_SCHEMA && version != MMAPPER_2_4_3_SCHEMA
+            && version != MMAPPER_2_4_0_SCHEMA && version != MMAPPER_2_3_7_SCHEMA
+            && version != MMAPPER_2_0_4_SCHEMA && version != MMAPPER_2_0_2_SCHEMA
+            && version != MMAPPER_1_1_0_SCHEMA && version != MMAPPER_2_0_0_SCHEMA
+            && version != MMAPPER_1_0_0_SCHEMA) {
+            const bool isNewer = version >= CURRENT_SCHEMA;
             QMessageBox::critical(dynamic_cast<QWidget *>(parent()),
                                   "MapStorage Error",
                                   QString("This map has schema version %1 which is too %2.\r\n\r\n"
                                           "Please %3 MMapper.")
-                                      .arg(version, 0, 8)
+                                      .arg(version)
                                       .arg(isNewer ? "new" : "old")
                                       .arg(isNewer ? "upgrade to the latest"
                                                    : "try an older version of"));
@@ -520,8 +623,10 @@ bool MapStorage::mergeData()
         // http://doc.qt.io/qt-5/qdatastream.html#versioning
         stream.setVersion(QDataStream::Qt_4_8);
 
-        QBuffer buffer;
-        if (version >= 042) {
+        /* Caution! Stream requires buffer to have extended lifetime for new version,
+         * so don't be tempted to move this inside the scope. */
+        QBuffer buffer{};
+        if (version >= MMAPPER_2_4_3_SCHEMA) {
             QByteArray compressedData(stream.device()->readAll());
             QByteArray uncompressedData = qUncompress(compressedData);
             buffer.setData(uncompressedData);
@@ -529,71 +634,62 @@ bool MapStorage::mergeData()
             stream.setDevice(&buffer);
             emit log("MapStorage", "Uncompressed data");
 
-        } else if (version <= 041 && version >= 031) {
-#ifndef MMAPPER_NO_QTIOCOMPRESSOR
-            auto *compressor = new QtIOCompressor(m_file);
-            compressor->open(QIODevice::ReadOnly);
-            stream.setDevice(compressor);
-#else
-            QMessageBox::critical(
-                (QWidget *) parent(),
-                "MapStorage Error",
-                "MMapper could not load this map because it is too old.\r\n\r\n"
-                "Please recompile MMapper with QtIOCompressor support and try again.");
-            return false;
-#endif
+        } else if (version >= MMAPPER_2_0_4_SCHEMA && version <= MMAPPER_2_4_0_SCHEMA) {
+            /* once we require c++17, this can use if constexpr(USE_IO_COMPRESSOR) */
+            if (USE_IO_COMPRESSOR) {
+                auto *compressor = new QtIOCompressor(m_file);
+                compressor->open(QIODevice::ReadOnly);
+                stream.setDevice(compressor);
+            } else {
+                QMessageBox::critical(
+                    dynamic_cast<QWidget *>(parent()),
+                    "MapStorage Error",
+                    "MMapper could not load this map because it is too old.\r\n\r\n"
+                    "Please recompile MMapper with QtIOCompressor support and try again.");
+                return false;
+            }
         }
-        emit log("MapStorage", QString("Schema version: %1").arg(version, 0, 8));
+        emit log("MapStorage", QString("Schema version: %1").arg(version));
 
-        stream >> roomsCount;
-        if (version < 020) {
-            stream >> connectionsCount;
+        const quint32 roomsCount = helper.read_u32();
+        const quint32 connectionsCount = (version < MMAPPER_1_1_0_SCHEMA) ? helper.read_u32() : 0u;
+        const quint32 marksCount = helper.read_u32();
+
+        progressCounter.increaseTotalStepsBy(roomsCount + connectionsCount + marksCount);
+
+        {
+            Coordinate pos{};
+            pos.x = helper.read_i32();
+            pos.y = helper.read_i32();
+            pos.z = (version < MMAPPER_1_1_0_SCHEMA) ? 0u : helper.read_i32();
+            pos += basePosition;
+            m_mapData.setPosition(pos);
         }
-        stream >> marksCount;
-
-        m_progressCounter->increaseTotalStepsBy(roomsCount + connectionsCount + marksCount);
-
-        Coordinate pos;
-
-        //read selected room x,y
-        // TODO(nschimme): Delete support for the old version due to octal constant nonsense
-        if (version < 020) { // OLD VERSIONS SUPPORT CODE
-            stream >> (quint32 &) pos.x;
-            stream >> (quint32 &) pos.y;
-        } else {
-            stream >> static_cast<qint32 &>(pos.x);
-            stream >> static_cast<qint32 &>(pos.y);
-            stream >> static_cast<qint32 &>(pos.z);
-        }
-
-        pos += basePosition;
-
-        m_mapData.setPosition(pos);
 
         emit log("MapStorage", QString("Number of rooms: %1").arg(roomsCount));
 
-        ConnectionList connectionList;
+        ConnectionList connectionList{};
         // create all pointers to connections
-        for (index = 0; index < connectionsCount; index++) {
-            auto *connection = new Connection;
-            connectionList.append(connection);
+        for (quint32 index = 0; index < connectionsCount; ++index) {
+            connectionList.append(new Connection);
         }
 
         RoomVector roomList(roomsCount);
         for (uint i = 0; i < roomsCount; ++i) {
-            if (version < 020) { // OLD VERSIONS SUPPORT CODE
+            Room *room = nullptr;
+            if (version < MMAPPER_1_1_0_SCHEMA) { // OLD VERSIONS SUPPORT CODE
                 room = loadOldRoom(stream, connectionList);
-                room->setId(i + baseId);
+                room->setId(RoomId{baseId + i});
                 roomList[i] = room;
             } else {
                 room = loadRoom(stream, version);
             }
 
-            m_progressCounter->step();
+            progressCounter.step();
             m_mapData.insertPredefinedRoom(*room);
         }
 
-        if (version < 020) {
+        if (version < MMAPPER_1_1_0_SCHEMA) {
             emit log("MapStorage", QString("Number of connections: %1").arg(connectionsCount));
             ConnectionListIterator c(connectionList);
             while (c.hasNext()) {
@@ -602,7 +698,7 @@ bool MapStorage::mergeData()
                 translateOldConnection(connection);
                 delete connection;
 
-                m_progressCounter->step();
+                progressCounter.step();
             }
             connectionList.clear();
         }
@@ -611,27 +707,26 @@ bool MapStorage::mergeData()
 
         MarkerList &markerList = m_mapData.getMarkersList();
         // create all pointers to items
-        for (index = 0; index < marksCount; index++) {
-            mark = new InfoMark();
+        for (quint32 index = 0; index < marksCount; ++index) {
+            auto mark = new InfoMark();
             loadMark(mark, stream, version);
             markerList.append(mark);
 
-            m_progressCounter->step();
+            progressCounter.step();
         }
 
         emit log("MapStorage", "Finished loading.");
         buffer.close();
         m_file->close();
 
-#ifndef MMAPPER_NO_QTIOCOMPRESSOR
-        if (version <= 041 && version >= 031) {
+        if (USE_IO_COMPRESSOR && version >= MMAPPER_2_0_4_SCHEMA
+            && version <= MMAPPER_2_4_0_SCHEMA) {
             auto *compressor = dynamic_cast<QtIOCompressor *>(stream.device());
             compressor->close();
             delete compressor;
         }
-#endif
 
-        if (m_mapData.getRoomsCount() < 1) {
+        if (m_mapData.getRoomsCount() == 0u) {
             return false;
         }
 
@@ -646,333 +741,328 @@ bool MapStorage::mergeData()
 
 void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, qint32 version)
 {
-    QString vqstr;
-    quint16 vquint16;
-    quint32 vquint32;
-    qint32 vqint32;
+    auto helper = LoadRoomHelperBase{stream};
+    const qint32 postfix = basePosition.x + basePosition.y + basePosition.z;
 
-    qint32 postfix = basePosition.x + basePosition.y + basePosition.z;
-
-    if (version < 020) { // OLD VERSIONS SUPPORT CODE
-        stream >> vqstr;
-        if (postfix != 0 && postfix != 1) {
-            vqstr += QString("_m%1").arg(postfix);
+    if (version < MMAPPER_1_1_0_SCHEMA) { // OLD VERSIONS SUPPORT CODE
+        {
+            auto name = helper.read_string();
+            if (postfix != 0 && postfix != 1) {
+                name += QString("_m%1").arg(postfix);
+            }
+            mark->setName(name);
         }
-        mark->setName(vqstr);
-        stream >> vqstr;
-        mark->setText(vqstr);
-        stream >> vquint16;
-        mark->setType(static_cast<InfoMarkType>(vquint16));
+        mark->setText(helper.read_string());
+        mark->setType(static_cast<InfoMarkType>(helper.read_u16()));
 
-        Coordinate pos;
-        stream >> vquint32;
-        pos.x = static_cast<qint32>(vquint32);
-        pos.x = pos.x * 100 / 48 - 40;
-        stream >> vquint32;
-        pos.y = static_cast<qint32>(vquint32);
-        pos.y = pos.y * 100 / 48 - 55;
-        //pos += basePosition;
-        pos.x += basePosition.x * 100;
-        pos.y += basePosition.y * 100;
-        pos.z += basePosition.z;
-        mark->setPosition1(pos);
-
-        stream >> vquint32;
-        pos.x = static_cast<qint32>(vquint32);
-        pos.x = pos.x * 100 / 48 - 40;
-        stream >> vquint32;
-        pos.y = static_cast<qint32>(vquint32);
-        pos.y = pos.y * 100 / 48 - 55;
-        //pos += basePosition;
-        pos.x += basePosition.x * 100;
-        pos.y += basePosition.y * 100;
-        pos.z += basePosition.z;
-        mark->setPosition2(pos);
+        auto read_pos = [](auto &helper, auto &basePosition) {
+            Coordinate pos;
+            pos.x = helper.read_i32();
+            pos.x = pos.x * 100 / 48 - 40;
+            pos.y = helper.read_i32();
+            pos.y = pos.y * 100 / 48 - 55;
+            //pos += basePosition;
+            pos.x += basePosition.x * 100;
+            pos.y += basePosition.y * 100;
+            pos.z += basePosition.z;
+            return pos;
+        };
+        mark->setPosition1(read_pos(helper, basePosition));
+        mark->setPosition2(read_pos(helper, basePosition));
 
         mark->setRotationAngle(0.0);
     } else {
-        QString vqba;
-        QDateTime vdatetime;
-        quint8 vquint8;
-
-        stream >> vqba;
-        if (postfix != 0 && postfix != 1) {
-            vqba += QString("_m%1").arg(postfix).toLatin1();
-        }
-        mark->setName(vqba);
-        stream >> vqba;
-        mark->setText(vqba);
-        stream >> vdatetime;
-        mark->setTimeStamp(vdatetime);
-        stream >> vquint8;
-        mark->setType(static_cast<InfoMarkType>(vquint8));
-        if (version >= 040) {
-            stream >> vquint8;
-            mark->setClass(static_cast<InfoMarkClass>(vquint8));
-            stream >> vquint32;
-            mark->setRotationAngle(vquint32 / 100);
+        {
+            auto name = helper.read_string();
+            if (postfix != 0 && postfix != 1) {
+                name += QString("_m%1").arg(postfix).toLatin1();
+            }
+            mark->setName(name);
         }
 
-        Coordinate pos;
-        stream >> vqint32;
-        pos.x = vqint32 /*-40*/;
-        stream >> vqint32;
-        pos.y = vqint32 /*-55*/;
-        stream >> vqint32;
-        pos.z = vqint32;
-        pos.x += basePosition.x * 100;
-        pos.y += basePosition.y * 100;
-        pos.z += basePosition.z;
-        //pos += basePosition;
-        mark->setPosition1(pos);
+        mark->setText(helper.read_string());
+        mark->setTimeStamp(helper.read_datetime());
 
-        stream >> vqint32;
-        pos.x = vqint32 /*-40*/;
-        stream >> vqint32;
-        pos.y = vqint32 /*-55*/;
-        stream >> vqint32;
-        pos.z = vqint32;
-        pos.x += basePosition.x * 100;
-        pos.y += basePosition.y * 100;
-        pos.z += basePosition.z;
-        //pos += basePosition;
-        mark->setPosition2(pos);
+        mark->setType(static_cast<InfoMarkType>(helper.read_u8()));
+        if (version >= MMAPPER_2_3_7_SCHEMA) {
+            mark->setClass(static_cast<InfoMarkClass>(helper.read_u8()));
+            /* REVISIT: was this intended to be divided by 100.0? */
+            mark->setRotationAngle(helper.read_u32() / 100);
+        }
+
+        auto read_coord = [](auto &helper, auto &basePosition) {
+            Coordinate pos;
+            pos.x = helper.read_i32();
+            pos.y = helper.read_i32();
+            pos.z = helper.read_i32();
+            pos.x += basePosition.x * 100;
+            pos.y += basePosition.y * 100;
+            pos.z += basePosition.z;
+            return pos;
+        };
+
+        mark->setPosition1(read_coord(helper, basePosition));
+        mark->setPosition2(read_coord(helper, basePosition));
     }
+}
+
+static DoorFlags sanitizeOldDoorFlags(const OldDoorFlags oldDoorFlags)
+{
+    static constexpr const uint32_t MASK = (1u << NUM_OLD_DOOR_FLAGS) - 1u;
+    static_assert(MASK == 0x3Fu, "");
+    return static_cast<DoorFlags>(oldDoorFlags.asUint32() & MASK);
+}
+
+static void setDoorNameAndFlags(Exit &e, const Door &door)
+{
+    e.setDoorName(door.getName());
+    e.setDoorFlags(sanitizeOldDoorFlags(door.getFlags()));
 }
 
 void MapStorage::translateOldConnection(Connection *c)
 {
-    Room *left = c->getRoom(LEFT);
-    Room *right = c->getRoom(RIGHT);
-    ConnectionDirection leftDir = c->getDirection(LEFT);
-    ConnectionDirection rightDir = c->getDirection(RIGHT);
+    Room *left = c->getRoom(Hand::LEFT);
+    Room *right = c->getRoom(Hand::RIGHT);
+    ConnectionDirection leftDir = c->getDirection(Hand::LEFT);
+    ConnectionDirection rightDir = c->getDirection(Hand::RIGHT);
     ConnectionFlags cFlags = c->getFlags();
 
-    if (leftDir != CD_NONE) {
+    if (leftDir != ConnectionDirection::NONE) {
         Exit &e = left->exit(leftDir);
         e.addOut(right->getId());
-        ExitFlags eFlags = Mmapper2Exit::getFlags(e);
-        if ((cFlags & CF_DOOR) != 0) {
-            eFlags |= EF_NO_MATCH;
-            eFlags |= EF_DOOR;
-            e[E_DOORNAME] = c->getDoor(LEFT)->getName();
-            e[E_DOORFLAGS] = c->getDoor(LEFT)->getFlags();
+        ExitFlags eFlags = e.getExitFlags();
+        if (cFlags.contains(ConnectionFlag::DOOR)) {
+            eFlags |= ExitFlag::NO_MATCH;
+            eFlags |= ExitFlag::DOOR;
+            const auto leftDoor = c->getDoor(Hand::LEFT);
+            setDoorNameAndFlags(e, *leftDoor);
         }
-        if ((cFlags & CF_RANDOM) != 0) {
-            eFlags |= EF_RANDOM;
+        if (cFlags.contains(ConnectionFlag::RANDOM)) {
+            eFlags |= ExitFlag::RANDOM;
         }
-        if ((cFlags & CF_CLIMB) != 0) {
-            eFlags |= EF_CLIMB;
+        if (cFlags.contains(ConnectionFlag::CLIMB)) {
+            eFlags |= ExitFlag::CLIMB;
         }
-        if ((cFlags & CF_SPECIAL) != 0) {
-            eFlags |= EF_SPECIAL;
+        if (cFlags.contains(ConnectionFlag::SPECIAL)) {
+            eFlags |= ExitFlag::SPECIAL;
         }
-        eFlags |= EF_EXIT;
-        e[E_FLAGS] = eFlags;
+        eFlags |= ExitFlag::EXIT;
+        e.setExitFlags(eFlags);
 
         Exit &eR = right->exit(opposite(leftDir));
         eR.addIn(left->getId());
     }
-    if (rightDir != CD_NONE) {
+    if (rightDir != ConnectionDirection::NONE) {
         Exit &eL = left->exit(opposite(rightDir));
         eL.addIn(right->getId());
 
         Exit &e = right->exit(rightDir);
         e.addOut(left->getId());
-        ExitFlags eFlags = Mmapper2Exit::getFlags(e);
-        if ((cFlags & CF_DOOR) != 0) {
-            eFlags |= EF_DOOR;
-            eFlags |= EF_NO_MATCH;
-            e[E_DOORNAME] = c->getDoor(RIGHT)->getName();
-            e[E_DOORFLAGS] = c->getDoor(RIGHT)->getFlags();
+        ExitFlags eFlags = e.getExitFlags();
+        if (cFlags.contains(ConnectionFlag::DOOR)) {
+            eFlags |= ExitFlag::DOOR;
+            eFlags |= ExitFlag::NO_MATCH;
+            const auto rightDoor = c->getDoor(Hand::RIGHT);
+            setDoorNameAndFlags(e, *rightDoor);
         }
-        if ((cFlags & CF_RANDOM) != 0) {
-            eFlags |= EF_RANDOM;
+        if (cFlags.contains(ConnectionFlag::RANDOM)) {
+            eFlags |= ExitFlag::RANDOM;
         }
-        if ((cFlags & CF_CLIMB) != 0) {
-            eFlags |= EF_CLIMB;
+        if (cFlags.contains(ConnectionFlag::CLIMB)) {
+            eFlags |= ExitFlag::CLIMB;
         }
-        if ((cFlags & CF_SPECIAL) != 0) {
-            eFlags |= EF_SPECIAL;
+        if (cFlags.contains(ConnectionFlag::SPECIAL)) {
+            eFlags |= ExitFlag::SPECIAL;
         }
-        eFlags |= EF_EXIT;
-        e[E_FLAGS] = eFlags;
+        eFlags |= ExitFlag::EXIT;
+        e.setExitFlags(eFlags);
     }
 }
 
-void MapStorage::loadOldConnection(Connection *connection, QDataStream &stream, RoomVector &roomList)
+// TODO: use gsl::narrow_cast<>
+template<typename To, typename From>
+To narrow_cast(const From from)
 {
-    quint16 vquint16;
-    QString vqstr;
-    quint32 vquint32;
+    static_assert(std::is_integral<From>::value, "");
+    static_assert(std::is_integral<To>::value, "");
+    static_assert(sizeof(To) <= sizeof(From), "");
 
-    Room *r1 = nullptr, *r2 = nullptr;
+    const auto to = static_cast<To>(from);
+    if (std::is_signed<From>::value && !std::is_signed<To>::value) {
+        assert(from >= 0);
+    }
+    if (!std::is_signed<From>::value && std::is_signed<To>::value) {
+        assert(to >= 0);
+    }
+    assert(static_cast<From>(to) == from);
+    return to;
+}
 
-    ConnectionFlags cf = 0;
+template<typename To, typename From>
+To widen_cast(const From from)
+{
+    static_assert(std::is_integral<From>::value, "");
+    static_assert(std::is_integral<To>::value, "");
+    static_assert(sizeof(To) >= sizeof(From), "");
+
+    const auto to = static_cast<To>(from);
+    if (std::is_signed<From>::value && !std::is_signed<To>::value) {
+        assert(from >= 0);
+    }
+    if (!std::is_signed<From>::value && std::is_signed<To>::value) {
+        assert(to >= 0);
+    }
+    assert(static_cast<From>(to) == from);
+    return to;
+}
+
+void MapStorage::loadOldConnection(Connection *connection,
+                                   QDataStream &istream,
+                                   RoomVector &roomList)
+{
+    auto helper = OldLoadRoomHelper{istream};
 
     connection->setNote("");
 
-    stream >> vquint16;
-    auto ct = static_cast<ConnectionType>(vquint16 & (bit1 + bit2));
-    cf = static_cast<ConnectionFlags>(vquint16 >> 2);
-    /*
-    switch (vquint16)
-    {
-    case 0: ct = CT_NORMAL ; break;  // connection normal
-    case 1: ct = CT_LOOP   ; break;  // loop
-    case 2: ct = CT_ONEWAY ; break;  // oneway
-    case 4:  SET( cf, CF_DOOR)   ; break; // door
-    case 8:  SET( cf, CF_CLIMB)  ; break; // climb
-    case 16: SET( cf, CF_SPECIAL); break; // special
-    case 32: SET( cf, CF_RANDOM) ; break; // random
-    }
-    */
-    // DOOR TYPE: DNORMAL, DHIDDEN, DNORMALNEEDKEY, DHIDDENNEEDKEY
-    DoorFlags doorFlags1 = 0, doorFlags2 = 0;
-    DoorName doorName1, doorName2;
-    stream >> vquint16;
-    switch (vquint16) {
-    case 0:
-        break; //Normal
-    case 1:
-        SET(doorFlags1, DF_HIDDEN); //Hidden
-        break;
-    case 2:
-        SET(doorFlags1, DF_NEEDKEY); //Normal+Key
-        break;
-    case 3:
-        SET(doorFlags1, DF_HIDDEN); //Hidden+Key
-        SET(doorFlags1, DF_NEEDKEY);
-        break;
-    }
-    stream >> vquint16;
-    switch (vquint16) {
-    case 0:
-        break; //Normal
-    case 1:
-        SET(doorFlags2, DF_HIDDEN); //Hidden
-        break;
-    case 2:
-        SET(doorFlags2, DF_NEEDKEY); //Normal+Key
-        break;
-    case 3:
-        SET(doorFlags2, DF_HIDDEN); //Hidden+Key
-        SET(doorFlags2, DF_NEEDKEY);
-        break;
-    }
+    const auto decodeCtCf = [](uint16_t ctcf) {
+        return std::make_pair(static_cast<ConnectionType>(widen_cast<int>(ctcf & 0x3u)),
+                              static_cast<ConnectionFlags>(narrow_cast<uint8_t>(ctcf >> 2)));
+    };
+    const auto decodeDoorFlags = [](uint16_t df) -> DoorFlags {
+        DoorFlags result{};
+        if (df & 0x1)
+            result |= DoorFlag::HIDDEN;
+        if (df & 0x2)
+            result |= DoorFlag::NEED_KEY;
+        return result;
+    };
 
-    stream >> vqstr;
-    doorName1 = vqstr;
-    stream >> vqstr;
-    doorName2 = vqstr;
+    const auto ctcf = decodeCtCf(helper.read_u16());
+    ConnectionType ct = ctcf.first;
+    const ConnectionFlags cf = ctcf.second;
 
-    stream >> vquint32;
-    if (vquint32 != 0 && ((vquint32 - 1) < static_cast<uint>(roomList.size()))) {
-        r1 = roomList[vquint32 - 1];
-        if (ISSET(cf, CF_DOOR)) {
-            connection->setDoor(new Door(doorName1, doorFlags1), LEFT);
-        }
+    const auto doorFlags1 = decodeDoorFlags(helper.read_u16());
+    const auto doorFlags2 = decodeDoorFlags(helper.read_u16());
+
+    const DoorName doorName1 = helper.read_string();
+    const DoorName doorName2 = helper.read_string();
+
+    // REVISIT: just throw here if it fails?
+    const auto decodeRoom = [&](const uint32_t roomIdPlus1) -> Room * {
+        if (roomIdPlus1 == 0u)
+            return nullptr;
+        const auto roomId = roomIdPlus1 - 1u;
+        if (roomId >= static_cast<uint>(roomList.size()))
+            return nullptr;
+        return roomList[roomId];
+    };
+
+    Room *r1 = decodeRoom(helper.read_u32());
+    Room *r2 = decodeRoom(helper.read_u32());
+
+    // BTW, asserting here won't actually do anything on a release build.
+    // You need to throw an exception if this happens, or the mapper will crash.
+    // (it'll also crash if you don't catch the exception).
+#define parse_assert(x) \
+    do { \
+        if (x) \
+            continue; \
+        throw std::runtime_error("assertion failure: " #x); \
+    } while (false)
+
+    parse_assert(r1 != nullptr); // if these are not valid,
+    parse_assert(r2 != nullptr); // the indices were out of bounds
+
+    if (cf.contains(ConnectionFlag::DOOR)) {
+        /* REVISIT: This might be slicing off important bits by casting to OldDoorFlags,
+         * but we're loading an old save file, so maybe it's okay. */
+        connection->setDoor(new Door(doorName1,
+                                     OldDoorFlags{narrow_cast<uint16_t>(doorFlags1.asUint32())}),
+                            Hand::LEFT);
+        connection->setDoor(new Door(doorName2,
+                                     OldDoorFlags{narrow_cast<uint16_t>(doorFlags2.asUint32())}),
+                            Hand::RIGHT);
     }
 
-    stream >> vquint32;
-    if (vquint32 != 0 && ((vquint32 - 1) < static_cast<uint>(roomList.size()))) {
-        r2 = roomList[vquint32 - 1];
-        if (ISSET(cf, CF_DOOR)) {
-            connection->setDoor(new Door(doorName2, doorFlags2), RIGHT);
-        }
+    if (connection->getRoom(Hand::LEFT) == nullptr) {
+        auto room = connection->getRoom(Hand::RIGHT);
+        connection->setRoom((room != r1) ? r1 : r2, Hand::LEFT);
+    }
+    if (connection->getRoom(Hand::RIGHT) == nullptr) {
+        auto room = connection->getRoom(Hand::LEFT);
+        connection->setRoom((room != r1) ? r1 : r2, Hand::RIGHT);
     }
 
-    assert(r1 != nullptr); // if these are not valid,
-    assert(r2 != nullptr); // the indices were out of bounds
+    parse_assert(connection->getRoom(Hand::LEFT) != nullptr);
+    parse_assert(connection->getRoom(Hand::RIGHT) != nullptr);
 
-    Room *room = nullptr;
-    if (connection->getRoom(0) == nullptr) {
-        room = connection->getRoom(1);
-        if (room != r1) {
-            connection->setRoom(r1, 0);
-        } else {
-            connection->setRoom(r2, 0);
-        }
-    }
-    if (connection->getRoom(1) == nullptr) {
-        room = connection->getRoom(0);
-        if (room != r1) {
-            connection->setRoom(r1, 1);
-        } else {
-            connection->setRoom(r2, 1);
-        }
+    if (cf.contains(ConnectionFlag::DOOR)) {
+        parse_assert(connection->getDoor(Hand::LEFT) != nullptr);
+        parse_assert(connection->getDoor(Hand::RIGHT) != nullptr);
     }
 
-    assert(connection->getRoom(0) != nullptr);
-    assert(connection->getRoom(1) != nullptr);
-
-    if (ISSET(cf, CF_DOOR)) {
-        assert(connection->getDoor(LEFT) != nullptr);
-        assert(connection->getDoor(RIGHT) != nullptr);
+    if (connection->getDirection(Hand::RIGHT) == ConnectionDirection::UNKNOWN) {
+        ct = ConnectionType::ONE_WAY;
+        connection->setDirection(ConnectionDirection::NONE, Hand::RIGHT);
+    } else if (connection->getDirection(Hand::LEFT) == ConnectionDirection::UNKNOWN) {
+        ct = ConnectionType::ONE_WAY;
+        connection->setDirection(connection->getDirection(Hand::RIGHT), Hand::LEFT);
+        connection->setDirection(ConnectionDirection::NONE, Hand::LEFT);
+        Room *temp = connection->getRoom(Hand::LEFT);
+        connection->setRoom(connection->getRoom(Hand::RIGHT), Hand::LEFT);
+        connection->setRoom(temp, Hand::RIGHT);
     }
 
-    if (connection->getDirection(RIGHT) == CD_UNKNOWN) {
-        ct = CT_ONEWAY;
-        connection->setDirection(CD_NONE, RIGHT);
-    } else if (connection->getDirection(LEFT) == CD_UNKNOWN) {
-        ct = CT_ONEWAY;
-        connection->setDirection(connection->getDirection(RIGHT), LEFT);
-        connection->setDirection(CD_NONE, LEFT);
-        Room *temp = connection->getRoom(LEFT);
-        connection->setRoom(connection->getRoom(RIGHT), LEFT);
-        connection->setRoom(temp, RIGHT);
-    }
-
-    if (connection->getRoom(0) == connection->getRoom(1)) {
-        ct = CT_LOOP;
+    if (connection->getRoom(Hand::LEFT) == connection->getRoom(Hand::RIGHT)) {
+        ct = ConnectionType::LOOP;
     }
 
     connection->setType(ct);
     connection->setFlags(cf);
 }
 
-void MapStorage::saveRoom(const Room *room, QDataStream &stream)
+void MapStorage::saveRoom(const Room &room, QDataStream &stream)
 {
-    stream << Mmapper2Room::getName(room);
-    stream << Mmapper2Room::getDescription(room);
-    stream << Mmapper2Room::getDynamicDescription(room);
-    stream << static_cast<quint32>(room->getId());
-    stream << Mmapper2Room::getNote(room);
-    stream << static_cast<quint8>(Mmapper2Room::getTerrainType(room));
-    stream << static_cast<quint8>(Mmapper2Room::getLightType(room));
-    stream << static_cast<quint8>(Mmapper2Room::getAlignType(room));
-    stream << static_cast<quint8>(Mmapper2Room::getPortableType(room));
-    stream << static_cast<quint8>(Mmapper2Room::getRidableType(room));
-    stream << static_cast<quint8>(Mmapper2Room::getSundeathType(room));
-    stream << static_cast<quint32>(Mmapper2Room::getMobFlags(room));
-    stream << static_cast<quint32>(Mmapper2Room::getLoadFlags(room));
+    stream << room.getName();
+    stream << room.getStaticDescription();
+    stream << room.getDynamicDescription();
+    stream << static_cast<quint32>(room.getId());
+    stream << room.getNote();
+    stream << static_cast<quint8>(room.getTerrainType());
+    stream << static_cast<quint8>(room.getLightType());
+    stream << static_cast<quint8>(room.getAlignType());
+    stream << static_cast<quint8>(room.getPortableType());
+    stream << static_cast<quint8>(room.getRidableType());
+    stream << static_cast<quint8>(room.getSundeathType());
+    stream << static_cast<quint32>(room.getMobFlags());
+    stream << static_cast<quint32>(room.getLoadFlags());
+    stream << static_cast<quint8>(room.isUpToDate());
 
-    stream << static_cast<quint8>(room->isUpToDate());
-
-    const Coordinate &pos = room->getPosition();
+    const Coordinate &pos = room.getPosition();
     stream << static_cast<qint32>(pos.x);
     stream << static_cast<qint32>(pos.y);
     stream << static_cast<qint32>(pos.z);
     saveExits(room, stream);
 }
 
-void MapStorage::saveExits(const Room *room, QDataStream &stream)
+void MapStorage::saveExits(const Room &room, QDataStream &stream)
 {
-    const ExitsList &exitList = room->getExitsList();
-    ExitsListIterator el(exitList);
-    while (el.hasNext()) {
-        const Exit &e = el.next();
-        stream << Mmapper2Exit::getFlags(e);
-        stream << Mmapper2Exit::getDoorFlags(e);
-        stream << Mmapper2Exit::getDoorName(e);
+    const ExitsList &exitList = room.getExitsList();
+    for (const Exit &e : exitList) {
+        // REVISIT: need to be much more careful about how we serialize flags;
+        // places like this will be easy to overlook when the definition changes
+        // to increase the size beyond 16 bits.
+        stream << static_cast<uint16_t>(e.getExitFlags());
+        stream << static_cast<uint16_t>(e.getDoorFlags());
+        stream << e.getDoorName();
         for (auto idx : e.inRange()) {
             stream << static_cast<quint32>(idx);
         }
-        stream << static_cast<quint32> UINT_MAX;
+        stream << UINT_MAX;
         for (auto idx : e.outRange()) {
             stream << static_cast<quint32>(idx);
         }
-        stream << static_cast<quint32> UINT_MAX;
+        stream << UINT_MAX;
     }
 }
 
@@ -988,31 +1078,32 @@ bool MapStorage::saveData(bool baseMapOnly)
     // them from a sort of callback function.
     ConstRoomList roomList;
     MarkerList &markerList = m_mapData.getMarkersList();
-    RoomSaver saver(&m_mapData, roomList);
+    RoomSaver saver(m_mapData, roomList);
     for (uint i = 0; i < m_mapData.getRoomsCount(); ++i) {
-        m_mapData.lookingForRooms(&saver, i);
+        m_mapData.lookingForRooms(saver, RoomId{i});
     }
 
     uint roomsCount = saver.getRoomsCount();
     uint marksCount = markerList.size();
 
-    m_progressCounter->reset();
-    m_progressCounter->increaseTotalStepsBy(roomsCount + marksCount);
+    auto &progressCounter = getProgressCounter();
+    progressCounter.reset();
+    progressCounter.increaseTotalStepsBy(roomsCount + marksCount);
 
     BaseMapSaveFilter filter;
     if (baseMapOnly) {
         filter.setMapData(&m_mapData);
-        m_progressCounter->increaseTotalStepsBy(filter.prepareCount());
-        filter.prepare(m_progressCounter);
+        progressCounter.increaseTotalStepsBy(filter.prepareCount());
+        filter.prepare(progressCounter);
         roomsCount = filter.acceptedRoomsCount();
     }
 
     // Compression step
-    m_progressCounter->increaseTotalStepsBy(1);
+    progressCounter.increaseTotalStepsBy(1);
 
     // Write a header with a "magic number" and a version
     fileStream << static_cast<quint32>(0xFFB2AF01);
-    fileStream << static_cast<qint32>(CURRENT_SCHEMA_VERSION);
+    fileStream << static_cast<qint32>(CURRENT_SCHEMA);
 
     // Serialize the data
     QBuffer buffer;
@@ -1033,13 +1124,15 @@ bool MapStorage::saveData(bool baseMapOnly)
     // save rooms
     QListIterator<const Room *> roomit(roomList);
     while (roomit.hasNext()) {
-        const Room *room = roomit.next();
+        const Room *const pRoom = roomit.next();
+        const Room &room = deref(pRoom);
+
         if (baseMapOnly) {
             BaseMapSaveFilter::Action action = filter.filter(room);
-            if (!room->isTemporary() && action != BaseMapSaveFilter::REJECT) {
-                if (action == BaseMapSaveFilter::ALTER) {
+            if (!room.isTemporary() && action != BaseMapSaveFilter::Action::REJECT) {
+                if (action == BaseMapSaveFilter::Action::ALTER) {
                     Room copy = filter.alteredRoom(room);
-                    saveRoom(&copy, stream);
+                    saveRoom(copy, stream);
                 } else { // action == PASS
                     saveRoom(room, stream);
                 }
@@ -1048,7 +1141,7 @@ bool MapStorage::saveData(bool baseMapOnly)
             saveRoom(room, stream);
         }
 
-        m_progressCounter->step();
+        progressCounter.step();
     }
 
     // save items
@@ -1057,14 +1150,14 @@ bool MapStorage::saveData(bool baseMapOnly)
         InfoMark *mark = markerit.next();
         saveMark(mark, stream);
 
-        m_progressCounter->step();
+        progressCounter.step();
     }
 
     buffer.close();
 
     QByteArray uncompressedData(buffer.data());
     QByteArray compressedData = qCompress(uncompressedData);
-    m_progressCounter->step();
+    progressCounter.step();
     double compressionRatio = (compressedData.size() == 0)
                                   ? 1.0
                                   : (static_cast<double>(uncompressedData.size())

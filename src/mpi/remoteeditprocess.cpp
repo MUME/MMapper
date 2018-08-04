@@ -23,28 +23,27 @@
 ************************************************************************/
 
 #include "remoteeditprocess.h"
-#include "configuration/configuration.h"
 
+#include <stdexcept>
 #include <utility>
-#include <QCoreApplication>
-#include <QDebug>
-#include <QDir>
-#include <QTemporaryFile>
+#include <QDateTime>
+#include <QMessageLogContext>
+#include <QObject>
+#include <QProcess>
+#include <QString>
+#include <QStringList>
 
-#ifdef __APPLE__
-#include <fcntl.h>
-#elif not defined(__WIN32__)
-#include <unistd.h>
-#endif
+#include "../configuration/configuration.h"
+#include "../global/io.h"
 
-RemoteEditProcess::RemoteEditProcess(bool editSession,
+RemoteEditProcess::RemoteEditProcess(const bool editSession,
                                      const QString &title,
                                      const QString &body,
-                                     QObject *parent)
+                                     QObject *const parent)
     : QObject(parent)
+    , m_title(title)
+    , m_body(body)
     , m_editSession(editSession)
-    , m_title(std::move(title))
-    , m_body(std::move(body))
 {
     m_process.setReadChannelMode(QProcess::MergedChannels);
 
@@ -62,41 +61,37 @@ RemoteEditProcess::RemoteEditProcess(bool editSession,
                                .arg(m_editSession ? "edit" : "view")      // %2
                                .arg(QCoreApplication::applicationPid());  // %3
     m_file.setFileTemplate(fileTemplate);
+
     // Try opening up the temporary file
-    if (m_file.open()) {
-        const QString &fileName = m_file.fileName();
-        qDebug() << "View session file template" << fileName;
-        m_file.write(m_body.toLatin1());
-        m_file.flush();
-#ifdef __APPLE__
-        fcntl(m_file.handle(), F_FULLFSYNC);
-#elif not defined(__WIN32__)
-        fsync(m_file.handle());
-#endif
-        m_file.close();
-        QFileInfo fileInfo(m_file);
-        m_previousTime = fileInfo.lastModified();
-
-        // Set the TITLE environmental variable
-        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-        if (env.contains("TITLE")) {
-            env.remove("TITLE");
-        }
-        env.insert("TITLE", m_title);
-        m_process.setProcessEnvironment(env);
-
-        // Start the process!
-        QStringList args = splitCommandLine(Config().m_externalRemoteEditorCommand);
-        args << fileName;
-        const QString &program = args.takeFirst();
-        qDebug() << program << args;
-        m_process.start(program, args);
-
-        qDebug() << "View session started";
-    } else {
+    if (!m_file.open()) {
         qCritical() << "View session was unable to create a temporary file";
         throw std::runtime_error("failed to start");
     }
+
+    const QString &fileName = m_file.fileName();
+    qDebug() << "View session file template" << fileName;
+    m_file.write(m_body.toLatin1());
+    m_file.flush();
+    io::fsyncNoexcept(m_file);
+    m_file.close();
+    m_previousTime = QFileInfo{m_file}.lastModified();
+
+    // Set the TITLE environmental variable
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    if (env.contains("TITLE")) {
+        env.remove("TITLE");
+    }
+    env.insert("TITLE", m_title);
+    m_process.setProcessEnvironment(env);
+
+    // Start the process!
+    QStringList args = splitCommandLine(Config().mumeClientProtocol.externalRemoteEditorCommand);
+    args << fileName;
+    const QString &program = args.takeFirst();
+    qDebug() << program << args;
+    m_process.start(program, args);
+
+    qDebug() << "View session started";
 }
 
 RemoteEditProcess::~RemoteEditProcess()
@@ -142,41 +137,43 @@ void RemoteEditProcess::onError(QProcess::ProcessError /*error*/)
     emit cancel();
 }
 
+enum class State { Idle, Arg, QuotedArg };
+
 QStringList RemoteEditProcess::splitCommandLine(const QString &cmdLine)
 {
     // https://stackoverflow.com/questions/25068750/extract-parameters-from-string-included-quoted-regions-in-qt
     QStringList list;
     QString arg;
     bool escape = false;
-    enum { Idle, Arg, QuotedArg } state = Idle;
+    State state = State::Idle;
     for (QChar const c : cmdLine) {
         if (!escape && c == '\\') {
             escape = true;
             continue;
         }
         switch (state) {
-        case Idle:
+        case State::Idle:
             if (!escape && c == '"') {
-                state = QuotedArg;
+                state = State::QuotedArg;
             } else if (escape || !c.isSpace()) {
                 arg += c;
-                state = Arg;
+                state = State::Arg;
             }
             break;
-        case Arg:
+        case State::Arg:
             if (!escape && c == '"') {
-                state = QuotedArg;
+                state = State::QuotedArg;
             } else if (escape || !c.isSpace()) {
                 arg += c;
             } else {
                 list << arg;
                 arg.clear();
-                state = Idle;
+                state = State::Idle;
             }
             break;
-        case QuotedArg:
+        case State::QuotedArg:
             if (!escape && c == '"') {
-                state = arg.isEmpty() ? Idle : Arg;
+                state = arg.isEmpty() ? State::Idle : State::Arg;
             } else {
                 arg += c;
             }

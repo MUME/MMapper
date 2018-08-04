@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -24,37 +25,34 @@
 **
 ************************************************************************/
 
+#include "../mapdata/ExitDirection.h"
 #ifndef PATH
 #define PATH
 
-#include "pathparameters.h"
-#include <limits.h>
+#include <climits>
 #include <set>
 #include <QtGlobal>
 
-//#include "roomsignalhandler.h"
-//#include "room.h"
-//#include "roomrecipient.h"
-//#include "roomadmin.h"
-//#include "pathparameters.h"
-//#include "abstractroomfactory.h"
+#include "../mapdata/mmapper2exit.h"
+#include "pathparameters.h"
 
-class Room;
-class RoomSignalHandler;
-class RoomRecipient;
-class RoomAdmin;
+class AbstractRoomFactory;
 class Coordinate;
 class PathParameters;
-class AbstractRoomFactory;
+class Room;
+class RoomAdmin;
+class RoomRecipient;
+class RoomSignalHandler;
 
 class Path
 {
 public:
-    Path(const Room *room,
-         RoomAdmin *owner,
-         RoomRecipient *locker,
-         RoomSignalHandler *signaler,
-         uint direction = UINT_MAX);
+    static constexpr const auto INVALID_DIRECTION = static_cast<ExitDirection>(UINT_MAX);
+    explicit Path(const Room *room,
+                  RoomAdmin *owner,
+                  RoomRecipient *locker,
+                  RoomSignalHandler *signaler,
+                  ExitDirection direction = INVALID_DIRECTION);
     void insertChild(Path *p);
     void removeChild(Path *p);
     void setParent(Path *p);
@@ -63,12 +61,11 @@ public:
 
     //new Path is created, distance between rooms is calculated and probability is set accordingly
     Path *fork(const Room *room,
-               Coordinate &expectedCoordinate,
+               const Coordinate &expectedCoordinate,
                RoomAdmin *owner,
-               PathParameters params,
+               const PathParameters &params,
                RoomRecipient *locker,
-               uint dir,
-               AbstractRoomFactory *factory);
+               ExitDirection dir);
     double getProb() const { return probability; }
     void approve();
 
@@ -79,17 +76,14 @@ public:
     Path *getParent() const { return parent; }
 
 private:
-    Path *parent;
-    std::set<Path *> children;
-    double probability;
-    const Room *room; // in fact a path only has one room, one parent and some children (forks).
-    RoomSignalHandler *signaler;
-    uint dir;
+    Path *parent = nullptr;
+    std::set<Path *> children{};
+    double probability = 1.0;
+    const Room *room
+        = nullptr; // in fact a path only has one room, one parent and some children (forks).
+    RoomSignalHandler *signaler = nullptr;
+    ExitDirection dir = INVALID_DIRECTION;
     ~Path() {}
 };
 
-#endif
-
-#ifdef DMALLOC
-#include <mpatrol.h>
 #endif

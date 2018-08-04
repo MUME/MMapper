@@ -25,20 +25,41 @@
 
 #include "roomcollection.h"
 
+#include <cassert>
+
+#include "../global/RAII.h"
+#include "AbstractRoomVisitor.h"
+
+#ifndef NDEBUG
+#define DEBUG_ONLY(x) x // NOLINT
+#else
+#define DEBUG_ONLY(x)
+#endif
+
+#define DEBUG_LOCK() DEBUG_ONLY(assert(!m_inUse); const RAIIBool useLock{m_inUse})
+
 void RoomCollection::addRoom(Room *room)
 {
-    insert(room);
+    DEBUG_LOCK();
+    m_rooms.insert(room);
 }
 
 void RoomCollection::removeRoom(Room *room)
 {
-    erase(room);
+    DEBUG_LOCK();
+    m_rooms.erase(room);
 }
 
-RoomCollection *RoomCollection::merge(RoomCollection *other)
+void RoomCollection::clear()
 {
-    if (other != nullptr) {
-        insert(other->begin(), other->end());
+    DEBUG_LOCK();
+    return m_rooms.clear();
+}
+
+void RoomCollection::forEach(AbstractRoomVisitor &stream) const
+{
+    DEBUG_LOCK();
+    for (Room *const room : m_rooms) {
+        stream.visit(room);
     }
-    return this;
 }

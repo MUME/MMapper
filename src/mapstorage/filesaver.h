@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Thomas Equeter <waba@waba.be>
@@ -26,6 +27,7 @@
 #define INCLUDED_FILESAVER_H
 
 #include <QFile>
+#include <QString>
 
 /*! \brief Save to a file in an atomic way.
  *
@@ -34,23 +36,30 @@
  */
 class FileSaver
 {
-    QString m_filename;
-    QFile m_file; // disables copying
+    QString m_filename{};
+    QFile m_file{}; // disables copying
 
 public:
-    FileSaver() = default;
+    explicit FileSaver() = default;
     ~FileSaver();
 
+public:
+    FileSaver(FileSaver &&) = delete;
+    FileSaver(const FileSaver &) = delete;
+    FileSaver &operator=(FileSaver &&) = delete;
+    FileSaver &operator=(const FileSaver &) = delete;
+
+public:
     QFile &file() { return m_file; }
 
     /*! \exception std::runtime_error if the file can't be opened or a currently
      * open file can't be closed.
      */
-    void open(const QString &filename);
+    void open(const QString &filename) noexcept(false);
 
     /*! \exception std::runtime_error if the file can't be safely closed.
      */
-    void close();
+    void close() noexcept(false);
 };
 
 #endif /* INCLUDED_FILESAVER_H */

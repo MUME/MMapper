@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -26,37 +27,32 @@
 #ifndef INFOMARK_H
 #define INFOMARK_H
 
-#include "coordinate.h"
+#include "../expandoracommon/coordinate.h"
 #include <QDateTime>
 
-typedef class QString InfoMarkName;
-typedef class QString InfoMarkText;
-enum InfoMarkType { MT_TEXT, MT_LINE, MT_ARROW };
-enum InfoMarkClass {
-    MC_GENERIC,
-    MC_HERB,
-    MC_RIVER,
-    MC_PLACE,
-    MC_MOB,
-    MC_COMMENT,
-    MC_ROAD,
-    MC_OBJECT,
-    MC_ACTION,
-    MC_LOCALITY
+using InfoMarkName = QString;
+using InfoMarkText = QString;
+enum class InfoMarkType { TEXT, LINE, ARROW };
+enum class InfoMarkClass {
+    GENERIC,
+    HERB,
+    RIVER,
+    PLACE,
+    MOB,
+    COMMENT,
+    ROAD,
+    OBJECT,
+    ACTION,
+    LOCALITY
 };
 
-typedef QDateTime MarkerTimeStamp;
+using MarkerTimeStamp = QDateTime;
 
 class InfoMark
 {
 public:
-    InfoMark()
-    {
-        m_type = MT_TEXT;
-        m_class = MC_GENERIC;
-        m_rotationAngle = 0.0f;
-    }
-    ~InfoMark(){};
+    explicit InfoMark() = default;
+    ~InfoMark() = default;
 
     const InfoMarkName &getName() const { return m_name; }
     const InfoMarkText &getText() const { return m_text; }
@@ -67,8 +63,8 @@ public:
     double getRotationAngle() const { return m_rotationAngle; }
     const MarkerTimeStamp &getTimeStamp() const { return m_timeStamp; }
 
-    void setPosition1(Coordinate &pos) { m_pos1 = pos; }
-    void setPosition2(Coordinate &pos) { m_pos2 = pos; }
+    void setPosition1(const Coordinate &pos) { m_pos1 = pos; }
+    void setPosition2(const Coordinate &pos) { m_pos2 = pos; }
     void setRotationAngle(double rotationAngle) { m_rotationAngle = rotationAngle; }
     void setName(InfoMarkName name) { m_name = name; }
     void setText(InfoMarkText text) { m_text = text; }
@@ -78,16 +74,16 @@ public:
     void setTimeStamp(MarkerTimeStamp timeStamp) { m_timeStamp = timeStamp; }
 
 private:
-    InfoMarkName m_name;
-    InfoMarkType m_type;
-    InfoMarkText m_text;
-    InfoMarkClass m_class;
+    InfoMarkName m_name{};
+    InfoMarkType m_type = InfoMarkType::TEXT;
+    InfoMarkText m_text{};
+    InfoMarkClass m_class = InfoMarkClass::GENERIC;
 
-    MarkerTimeStamp m_timeStamp;
+    MarkerTimeStamp m_timeStamp{};
 
-    Coordinate m_pos1;
-    Coordinate m_pos2;
-    double m_rotationAngle; // in degrees
+    Coordinate m_pos1{};
+    Coordinate m_pos2{};
+    double m_rotationAngle = 0.0; // in degrees
 };
 
 #endif

@@ -25,9 +25,7 @@
 #include "groupaction.h"
 #include "CGroup.h"
 #include "CGroupChar.h"
-
 #include <cassert>
-
 #include <utility>
 
 /**

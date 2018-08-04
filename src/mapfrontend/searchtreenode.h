@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -26,15 +27,17 @@
 #ifndef SEARCHTREENODE
 #define SEARCHTREENODE
 
-#include "tinylist.h"
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <vector>
 
+#include "../global/roomid.h"
+#include "ByteArray.h"
+#include "tinylist.h"
+
+class AbstractRoomVisitor;
 class ParseEvent;
-
-class RoomCollection;
-
-class RoomOutStream;
 
 /**
  * keeps a substring of the properties, and a table of other RoomSearchNodes pointing to the possible following characters
@@ -43,30 +46,20 @@ class RoomOutStream;
 class SearchTreeNode
 {
 protected:
-    using byte_array = std::vector<uint8_t>;
-    static byte_array from_string(const char *s);
-    static byte_array skip(const byte_array &input, size_t count);
-
-protected:
     TinyList children{};
-    byte_array myChars{};
+    ByteArray myChars{};
 
 public:
     explicit SearchTreeNode(ParseEvent &event);
+    explicit SearchTreeNode(ByteArray in_bytes, TinyList in_children);
+    explicit SearchTreeNode() = default;
+    virtual ~SearchTreeNode() = default;
 
-    explicit SearchTreeNode(byte_array in_bytes, TinyList in_children);
-
-    explicit SearchTreeNode();
-
-    virtual ~SearchTreeNode();
-
-    virtual void getRooms(RoomOutStream &stream, ParseEvent &event);
-
-    virtual RoomCollection *insertRoom(ParseEvent &event);
-
+public:
+    virtual void getRooms(AbstractRoomVisitor &stream, ParseEvent &event);
+    virtual SharedRoomCollection insertRoom(ParseEvent &event);
     virtual void setChild(char, SearchTreeNode *);
-
-    virtual void skipDown(RoomOutStream &stream, ParseEvent &event);
+    virtual void skipDown(AbstractRoomVisitor &stream, ParseEvent &event);
 };
 
 #endif

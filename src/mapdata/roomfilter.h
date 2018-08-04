@@ -1,15 +1,47 @@
+#pragma once
+/************************************************************************
+**
+** Authors:   ethorondil
+**
+** This file is part of the MMapper project.
+** Maintained by Nils Schimmelmann <nschimme@gmail.com>
+**
+** This program is free software; you can redistribute it and/or
+** modify it under the terms of the GNU General Public License
+** as published by the Free Software Foundation; either version 2
+** of the License, or (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the:
+** Free Software Foundation, Inc.
+** 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+**
+************************************************************************/
+
 #ifndef ROOMFILTER_H
 #define ROOMFILTER_H
 
-#include "room.h"
+#include <QString>
+#include <QtCore>
 
-enum pattern_kinds { PAT_UNK, PAT_DESC, PAT_DYNDESC, PAT_NAME, PAT_NOTE, PAT_EXITS, PAT_ALL };
+#include "../expandoracommon/room.h"
+
+class Room;
+
+enum class pattern_kinds { UNK, DESC, DYN_DESC, NAME, NOTE, EXITS, ALL };
 
 class RoomFilter
 {
 public:
-    RoomFilter() {}
-    RoomFilter(const QString &pattern, const Qt::CaseSensitivity &cs, const char kind)
+    explicit RoomFilter() = default;
+    explicit RoomFilter(const QString &pattern,
+                        const Qt::CaseSensitivity &cs,
+                        const pattern_kinds kind)
         : pattern(pattern)
         , cs(cs)
         , kind(kind)
@@ -22,9 +54,9 @@ public:
     bool filter(const Room *r) const;
 
 protected:
-    QString pattern;
-    Qt::CaseSensitivity cs;
-    char kind;
+    QString pattern{};
+    Qt::CaseSensitivity cs{};
+    pattern_kinds kind = pattern_kinds::UNK;
 };
 
 #endif

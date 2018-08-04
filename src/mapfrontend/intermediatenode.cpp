@@ -25,29 +25,33 @@
 
 #include "intermediatenode.h"
 
-#include "parseevent.h"
-#include "property.h"
 #include <memory>
+
+#include "../expandoracommon/parseevent.h"
+#include "../expandoracommon/property.h"
+#include "../global/utils.h"
+#include "ByteArray.h"
+#include "roomcollection.h"
+#include "searchtreenode.h"
 
 IntermediateNode::IntermediateNode(ParseEvent &event)
 {
-    if (Property *prop = event.next()) {
+    if (Property *const prop = event.next()) {
         if (!prop->isSkipped()) {
             /* NOTE: This does not skip the first value */
-            myChars = from_string(prop->rest());
+            myChars = ByteArray{prop->rest()};
         }
     }
     event.prev();
 }
 
-// C++17 can return std::optional<std::reference_wrapper<RoomCollection>>
-RoomCollection *IntermediateNode::insertRoom(ParseEvent &event)
+SharedRoomCollection IntermediateNode::insertRoom(ParseEvent &event)
 {
     if (event.next() == nullptr) {
         if (rooms == nullptr) {
-            rooms = std::make_unique<RoomCollection>();
+            rooms = std::make_shared<RoomCollection>();
         }
-        return rooms.get();
+        return rooms;
     }
     if (event.current()->isSkipped()) {
         return nullptr;
@@ -56,12 +60,11 @@ RoomCollection *IntermediateNode::insertRoom(ParseEvent &event)
     return SearchTreeNode::insertRoom(event);
 }
 
-void IntermediateNode::getRooms(RoomOutStream &stream, ParseEvent &event)
+void IntermediateNode::getRooms(AbstractRoomVisitor &stream, ParseEvent &event)
 {
-    if (event.next() == 0) {
-        for (auto room : *rooms) {
-            stream << room;
-        }
+    if (event.next() == nullptr) {
+        // REVISIT: should this allow null collection?
+        deref(rooms).forEach(stream);
     } else if (event.current()->isSkipped()) {
         SearchTreeNode::skipDown(stream, event);
     } else {
@@ -69,7 +72,7 @@ void IntermediateNode::getRooms(RoomOutStream &stream, ParseEvent &event)
     }
 }
 
-void IntermediateNode::skipDown(RoomOutStream &stream, ParseEvent &event)
+void IntermediateNode::skipDown(AbstractRoomVisitor &stream, ParseEvent &event)
 {
     getRooms(stream, event);
 }

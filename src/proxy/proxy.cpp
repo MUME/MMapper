@@ -25,19 +25,36 @@
 ************************************************************************/
 
 #include "proxy.h"
-#include "clock/mumeclock.h"
-#include "configuration/configuration.h"
-#include "display/prespammedpath.h"
-#include "expandoracommon/parseevent.h"
-#include "mpi/mpifilter.h"
-#include "mpi/remoteedit.h"
+
+#include <stdexcept>
+#include <QByteArray>
+#include <QMessageLogContext>
+#include <QObject>
+#include <QScopedPointer>
+#include <QTcpSocket>
+
+#include "../configuration/configuration.h"
+#include "../display/prespammedpath.h"
+#include "../global/io.h"
+#include "../mpi/mpifilter.h"
+#include "../mpi/remoteedit.h"
+#include "../pandoragroup/mmapper2group.h"
+#include "../parser/abstractparser.h"
+#include "../parser/mumexmlparser.h"
+#include "../pathmachine/mmapper2pathmachine.h"
 #include "mumesocket.h"
-#include "pandoragroup/mmapper2group.h"
-#include "parser/mumexmlparser.h"
-#include "pathmachine/mmapper2pathmachine.h"
 #include "telnetfilter.h"
 
-ProxyThreader::ProxyThreader(Proxy *proxy)
+/* TODO: merge with other use */
+#if MMAPPER_NO_OPENSSL
+static constexpr const bool NO_OPEN_SSL = true;
+#else
+static constexpr const bool NO_OPEN_SSL = false;
+#endif
+
+class SigParseEvent;
+
+ProxyThreader::ProxyThreader(Proxy *const proxy)
     : m_proxy(proxy)
 {}
 
@@ -50,29 +67,27 @@ void ProxyThreader::run()
 {
     try {
         exec();
-    } catch (char const *error) {
-        //          cerr << error << endl;
+    } catch (const std::exception &ex) {
+        qCritical() << "Proxy thread is terminating because it threw an exception: " << ex.what()
+                    << ".";
+        throw;
+    } catch (...) {
+        qCritical() << "Proxy thread is terminating because it threw an unknown exception.";
         throw;
     }
 }
 
-Proxy::Proxy(MapData *md,
-             Mmapper2PathMachine *pm,
-             CommandEvaluator *ce,
-             PrespammedPath *pp,
-             Mmapper2Group *gm,
+Proxy::Proxy(MapData *const md,
+             Mmapper2PathMachine *const pm,
+             CommandEvaluator *const ce,
+             PrespammedPath *const pp,
+             Mmapper2Group *const gm,
              MumeClock *mc,
              qintptr &socketDescriptor,
-             bool threaded,
-             QObject *parent)
+             const bool threaded,
+             QObject *const parent)
     : QObject(nullptr)
     , m_socketDescriptor(socketDescriptor)
-    , m_mudSocket(nullptr)
-    , m_userSocket(nullptr)
-    , m_serverConnected(false)
-    , m_telnetFilter(nullptr)
-    , m_mpiFilter(nullptr)
-    , m_parserXml(nullptr)
     , m_mapData(md)
     , m_pathMachine(pm)
     , m_commandEvaluator(ce)
@@ -135,7 +150,7 @@ void Proxy::start()
 
 bool Proxy::init()
 {
-    connect(m_thread, SIGNAL(finished()), this, SLOT(deleteLater()));
+    connect(m_thread, &QThread::finished, this, &QObject::deleteLater);
     connect(m_thread, SIGNAL(finished()), m_parent, SLOT(doAcceptNewConnections()));
 
     connect(this,
@@ -143,16 +158,15 @@ bool Proxy::init()
             m_parent->parent(),
             SLOT(log(const QString &, const QString &)));
 
-    m_userSocket = new QTcpSocket(this);
+    m_userSocket.reset(new QTcpSocket(this));
     if (!m_userSocket->setSocketDescriptor(m_socketDescriptor)) {
-        delete m_userSocket;
-        m_userSocket = nullptr;
+        m_userSocket.reset(nullptr);
         return false;
     }
     m_userSocket->setSocketOption(QAbstractSocket::KeepAliveOption, true);
 
-    connect(m_userSocket, SIGNAL(disconnected()), this, SLOT(userTerminatedConnection()));
-    connect(m_userSocket, SIGNAL(readyRead()), this, SLOT(processUserStream()));
+    connect(m_userSocket.data(), &QAbstractSocket::disconnected, this, &Proxy::userTerminatedConnection);
+    connect(m_userSocket.data(), &QIODevice::readyRead, this, &Proxy::processUserStream);
 
     m_telnetFilter = new TelnetFilter(this);
     connect(this, &Proxy::analyzeUserStream, m_telnetFilter, &TelnetFilter::analyzeUserStream);
@@ -187,50 +201,53 @@ bool Proxy::init()
             m_parserXml,
             &MumeXmlParser::parseNewUserInput);
     connect(m_parserXml, &MumeXmlParser::sendToMud, this, &Proxy::sendToMud);
-    connect(m_parserXml, &MumeXmlParser::sendToUser, this, &Proxy::sendToUser);
+    connect(m_parserXml, &MumeXmlParser::sig_sendToUser, this, &Proxy::sendToUser);
 
     connect(m_parserXml,
-            SIGNAL(event(ParseEvent *)),
+            static_cast<void (MumeXmlParser::*)(const SigParseEvent &)>(&MumeXmlParser::event),
             m_pathMachine,
-            SLOT(event(ParseEvent *)),
+            &Mmapper2PathMachine::event,
             Qt::QueuedConnection);
     connect(m_parserXml,
-            SIGNAL(releaseAllPaths()),
+            &AbstractParser::releaseAllPaths,
             m_pathMachine,
-            SLOT(releaseAllPaths()),
+            &PathMachine::releaseAllPaths,
             Qt::QueuedConnection);
     connect(m_parserXml,
-            SIGNAL(showPath(CommandQueue, bool)),
+            &AbstractParser::showPath,
             m_prespammedPath,
-            SLOT(setPath(CommandQueue, bool)),
+            &PrespammedPath::setPath,
             Qt::QueuedConnection);
     connect(m_parserXml,
             SIGNAL(log(const QString &, const QString &)),
             m_parent->parent(),
             SLOT(log(const QString &, const QString &)));
-    connect(m_userSocket, SIGNAL(disconnected()), m_parserXml, SLOT(reset()));
+    connect(m_userSocket.data(),
+            &QAbstractSocket::disconnected,
+            m_parserXml,
+            &AbstractParser::reset);
 
     //Group Manager Support
     connect(m_parserXml,
-            SIGNAL(sendScoreLineEvent(QByteArray)),
+            &MumeXmlParser::sendScoreLineEvent,
             m_groupManager,
-            SLOT(parseScoreInformation(QByteArray)),
+            &Mmapper2Group::parseScoreInformation,
             Qt::QueuedConnection);
     connect(m_parserXml,
-            SIGNAL(sendPromptLineEvent(QByteArray)),
+            &MumeXmlParser::sendPromptLineEvent,
             m_groupManager,
-            SLOT(parsePromptInformation(QByteArray)),
+            &Mmapper2Group::parsePromptInformation,
             Qt::QueuedConnection);
     connect(m_parserXml,
-            SIGNAL(sendGroupTellEvent(QByteArray)),
+            &AbstractParser::sendGroupTellEvent,
             m_groupManager,
-            SLOT(sendGTell(QByteArray)),
+            &Mmapper2Group::sendGTell,
             Qt::QueuedConnection);
     // Group Tell
     connect(m_groupManager,
-            SIGNAL(displayGroupTellEvent(const QByteArray &)),
+            &Mmapper2Group::displayGroupTellEvent,
             m_parserXml,
-            SLOT(sendGTellToUser(const QByteArray &)),
+            &AbstractParser::sendGTellToUser,
             Qt::QueuedConnection);
 
     emit log("Proxy", "Connection to client established ...");
@@ -241,23 +258,18 @@ bool Proxy::init()
     m_userSocket->write(ba);
     m_userSocket->flush();
 
-#if MMAPPER_NO_OPENSSL
-    m_mudSocket = (MumeSocket *) new MumeTcpSocket(this);
-#else
-    m_mudSocket = Config().m_tlsEncryption ? (MumeSocket *) new MumeSslSocket(this)
-                                           : (MumeSocket *) new MumeTcpSocket(this);
-#endif
-    connect(m_mudSocket, SIGNAL(connected()), this, SLOT(onMudConnected()));
+    m_mudSocket = (NO_OPEN_SSL || !Config().connection.tlsEncryption)
+                      ? dynamic_cast<MumeSocket *>(new MumeTcpSocket(this))
+                      : dynamic_cast<MumeSocket *>(new MumeSslSocket(this));
+
+    connect(m_mudSocket, &MumeSocket::connected, this, &Proxy::onMudConnected);
+    connect(m_mudSocket, &MumeSocket::socketError, this, &Proxy::onMudError);
+    connect(m_mudSocket, &MumeSocket::disconnected, this, &Proxy::mudTerminatedConnection);
+    connect(m_mudSocket, &MumeSocket::disconnected, m_parserXml, &AbstractParser::reset);
     connect(m_mudSocket,
-            SIGNAL(socketError(QAbstractSocket::SocketError)),
-            this,
-            SLOT(onMudError(QAbstractSocket::SocketError)));
-    connect(m_mudSocket, SIGNAL(disconnected()), this, SLOT(mudTerminatedConnection()));
-    connect(m_mudSocket, SIGNAL(disconnected()), m_parserXml, SLOT(reset()));
-    connect(m_mudSocket,
-            SIGNAL(processMudStream(const QByteArray &)),
+            &MumeSocket::processMudStream,
             m_telnetFilter,
-            SLOT(analyzeMudStream(const QByteArray &)));
+            &TelnetFilter::analyzeMudStream);
     connect(m_mudSocket,
             SIGNAL(log(const QString &, const QString &)),
             m_parent->parent(),
@@ -268,24 +280,26 @@ bool Proxy::init()
 
 void Proxy::onMudConnected()
 {
+    const auto &settings = Config().mumeClientProtocol;
+
     m_serverConnected = true;
 
     emit log("Proxy", "Connection to server established ...");
 
     //send IAC-GA prompt request
-    if (Config().m_IAC_prompt_parser) {
+    if (settings.IAC_prompt_parser) {
         QByteArray idPrompt("~$#EP2\nG\n");
         emit log("Proxy", "Sent MUME Protocol Initiator IAC-GA prompt request");
-        emit sendToMud(idPrompt);
+        sendToMud(idPrompt);
     }
 
-    if (Config().m_remoteEditing) {
+    if (settings.remoteEditing) {
         QByteArray idRemoteEditing("~$#EI\n");
         emit log("Proxy", "Sent MUME Protocol Initiator remote editing request");
-        emit sendToMud(idRemoteEditing);
+        sendToMud(idRemoteEditing);
     }
 
-    emit sendToMud(QByteArray("~$#EX2\n3G\n"));
+    sendToMud(QByteArray("~$#EX2\n3G\n"));
     emit log("Proxy", "Sent MUME Protocol Initiator XML request");
 }
 
@@ -346,14 +360,11 @@ void Proxy::mudTerminatedConnection()
 
 void Proxy::processUserStream()
 {
-    int read;
-    while (m_userSocket->bytesAvailable() != 0) {
-        read = m_userSocket->read(m_buffer, 8191);
-        if (read != -1) {
-            m_buffer[read] = 0;
-            QByteArray ba = QByteArray::fromRawData(m_buffer, read);
-            emit analyzeUserStream(ba);
-        }
+    if (m_userSocket != nullptr) {
+        io::readAllAvailable(*m_userSocket, m_buffer, [this](QByteArray byteArray) {
+            if (byteArray.size() != 0)
+                emit analyzeUserStream(byteArray);
+        });
     }
 }
 

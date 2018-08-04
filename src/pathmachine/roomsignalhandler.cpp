@@ -24,13 +24,17 @@
 ************************************************************************/
 
 #include "roomsignalhandler.h"
-#include "customaction.h"
-#include "room.h"
-#include "roomadmin.h"
 
 #include <cassert>
 
-void RoomSignalHandler::hold(const Room *room, RoomAdmin *owner, RoomRecipient *locker)
+#include "../expandoracommon/room.h"
+#include "../expandoracommon/roomadmin.h"
+#include "../global/roomid.h"
+#include "../mapfrontend/mapaction.h"
+
+void RoomSignalHandler::hold(const Room *const room,
+                             RoomAdmin *const owner,
+                             RoomRecipient *const locker)
 {
     owners[room] = owner;
     if (lockers[room].empty()) {
@@ -40,16 +44,18 @@ void RoomSignalHandler::hold(const Room *room, RoomAdmin *owner, RoomRecipient *
     ++holdCount[room];
 }
 
-void RoomSignalHandler::release(const Room *room)
+void RoomSignalHandler::release(const Room *const room)
 {
     assert(holdCount[room]);
     if (--holdCount[room] == 0) {
-        RoomAdmin *rcv = owners[room];
-
-        for (auto i = lockers[room].begin(); i != lockers[room].end(); ++i) {
-            if (*i != nullptr) {
-                rcv->releaseRoom(*i, room->getId());
+        if (RoomAdmin *const rcv = owners[room]) {
+            for (auto i = lockers[room].begin(); i != lockers[room].end(); ++i) {
+                if (RoomRecipient *const recipient = *i) {
+                    rcv->releaseRoom(*recipient, room->getId());
+                }
             }
+        } else {
+            assert(false);
         }
 
         lockers.erase(room);
@@ -57,20 +63,24 @@ void RoomSignalHandler::release(const Room *room)
     }
 }
 
-void RoomSignalHandler::keep(const Room *room, uint dir, uint fromId)
+void RoomSignalHandler::keep(const Room *const room, const ExitDirection dir, const RoomId fromId)
 {
-    assert(holdCount[room]);
+    deref(room);
+    assert(!room->isFake());
+    assert(holdCount[room] != 0);
 
-    RoomAdmin *rcv = owners[room];
-
-    if (static_cast<uint>(room->getExitsList().size()) > dir) {
+    RoomAdmin *const rcv = owners[room];
+    if (static_cast<uint32_t>(dir) < NUM_EXITS) {
         emit scheduleAction(new AddExit(fromId, room->getId(), dir));
     }
 
     if (!lockers[room].empty()) {
-        RoomRecipient *locker = *(lockers[room].begin());
-        rcv->keepRoom(locker, room->getId());
-        lockers[room].erase(locker);
+        if (RoomRecipient *const locker = *(lockers[room].begin())) {
+            rcv->keepRoom(*locker, room->getId());
+            lockers[room].erase(locker);
+        } else {
+            assert(false);
+        }
     }
     release(room);
 }

@@ -23,15 +23,18 @@
 ************************************************************************/
 
 #include "remoteeditsession.h"
+
+#include <cassert>
+#include <QMessageLogContext>
+#include <QObject>
+#include <QScopedPointer>
+#include <QString>
+
 #include "remoteedit.h"
 #include "remoteeditprocess.h"
 #include "remoteeditwidget.h"
 
-#include <cassert>
-#include <utility>
-#include <QDebug>
-
-RemoteEditSession::RemoteEditSession(uint sessionId, int key, RemoteEdit *remoteEdit)
+RemoteEditSession::RemoteEditSession(uint sessionId, int key, RemoteEdit *const remoteEdit)
     : QObject(remoteEdit)
     , m_sessionId(sessionId)
     , m_key(key)
@@ -55,14 +58,16 @@ RemoteEditInternalSession::RemoteEditInternalSession(
     : RemoteEditSession(sessionId, key, parent)
     , m_widget(new RemoteEditWidget(isEditSession(), title, body))
 {
-    connect(m_widget, &RemoteEditWidget::save, this, &RemoteEditSession::onSave);
-    connect(m_widget, &RemoteEditWidget::cancel, this, &RemoteEditSession::onCancel);
+    const auto widget = m_widget.data();
+    connect(widget, &RemoteEditWidget::save, this, &RemoteEditSession::onSave);
+    connect(widget, &RemoteEditWidget::cancel, this, &RemoteEditSession::onCancel);
 }
 
 RemoteEditInternalSession::~RemoteEditInternalSession()
 {
     qDebug() << "Destructed RemoteEditInternalSession" << getId() << getKey();
-    m_widget->deleteLater();
+    if (auto notLeaked = m_widget.take())
+        notLeaked->deleteLater();
 }
 
 RemoteEditExternalSession::RemoteEditExternalSession(
@@ -70,12 +75,14 @@ RemoteEditExternalSession::RemoteEditExternalSession(
     : RemoteEditSession(sessionId, key, parent)
     , m_process(new RemoteEditProcess(isEditSession(), title, body, this))
 {
-    connect(m_process, &RemoteEditProcess::save, this, &RemoteEditExternalSession::onSave);
-    connect(m_process, &RemoteEditProcess::cancel, this, &RemoteEditExternalSession::onCancel);
+    const auto proc = m_process.data();
+    connect(proc, &RemoteEditProcess::save, this, &RemoteEditExternalSession::onSave);
+    connect(proc, &RemoteEditProcess::cancel, this, &RemoteEditExternalSession::onCancel);
 }
 
 RemoteEditExternalSession::~RemoteEditExternalSession()
 {
     qDebug() << "Destructed RemoteEditExternalSession" << getId() << getKey();
-    m_process->deleteLater();
+    if (auto notLeaked = m_process.take())
+        notLeaked->deleteLater();
 }

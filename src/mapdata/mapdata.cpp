@@ -25,111 +25,160 @@
 ************************************************************************/
 
 #include "mapdata.h"
+
+#include <cassert>
+#include <list>
+#include <map>
+#include <set>
+#include <QList>
+#include <QString>
+
+#include "../expandoracommon/coordinate.h"
+#include "../expandoracommon/exit.h"
+#include "../expandoracommon/room.h"
+#include "../expandoracommon/roomrecipient.h"
+#include "../global/roomid.h"
+#include "../global/utils.h"
+#include "../mapfrontend/map.h"
+#include "../mapfrontend/mapaction.h"
+#include "../mapfrontend/mapfrontend.h"
+#include "../parser/CommandId.h"
+#include "ExitDirection.h"
+#include "ExitFieldVariant.h"
 #include "customaction.h"
 #include "drawstream.h"
 #include "infomark.h"
 #include "mmapper2room.h"
 #include "roomfactory.h"
+#include "roomfilter.h"
 #include "roomselection.h"
 
-#include <cassert>
-
 MapData::MapData()
-    : MapFrontend(new RoomFactory)
-    , m_dataChanged(false)
+    : MapFrontend(new RoomFactory{})
 {}
 
-QString MapData::getDoorName(const Coordinate &pos, uint dir)
+QString MapData::getDoorName(const Coordinate &pos, const ExitDirection dir)
 {
+    // REVISIT: Could this function could be made const if we make mapLock mutable?
+    // Alternately, WTF are we accessing this from multiple threads?
     QMutexLocker locker(&mapLock);
-    Room *room = map.get(pos);
-    if ((room != nullptr) && dir < 7) {
-        return Mmapper2Exit::getDoorName(room->exit(dir));
+    if (Room *const room = map.get(pos)) {
+        if (dir < ExitDirection::UNKNOWN) {
+            return room->exit(dir).getDoorName();
+        }
     }
     return "exit";
 }
 
-void MapData::setDoorName(const Coordinate &pos, const QString &name, uint dir)
+void MapData::setDoorName(const Coordinate &pos, const QString &name, const ExitDirection dir)
 {
     QMutexLocker locker(&mapLock);
-    Room *room = map.get(pos);
-    if ((room != nullptr) && dir < 7) {
-        /*
-        // Is the Door there? If not, add it.
-        if (!getExitFlag(pos, dir, EF_DOOR)) {
-          MapAction * action_setdoor = new SingleRoomAction(new ModifyExitFlags(EF_DOOR, dir, E_FLAGS, FMM_SET), room->getId());
-          scheduleAction(action_setdoor);
+    const auto doorName = DoorName{name};
+    if (Room *const room = map.get(pos)) {
+        if (dir < ExitDirection::UNKNOWN) {
+            setDataChanged();
+            MapAction *action = new SingleRoomAction(new UpdateExitField(doorName, dir),
+                                                     room->getId());
+            scheduleAction(action);
         }
-        */
-        setDataChanged();
-        MapAction *action = new SingleRoomAction(new UpdateExitField(name, dir, E_DOORNAME),
-                                                 room->getId());
-        scheduleAction(action);
     }
 }
 
-bool MapData::getExitFlag(const Coordinate &pos, uint flag, uint dir, uint field)
+bool MapData::getExitFlag(const Coordinate &pos, const ExitDirection dir, ExitFieldVariant var)
 {
+    assert(var.getType() != ExitField::DOOR_NAME);
+
     QMutexLocker locker(&mapLock);
-    Room *room = map.get(pos);
-    if ((room != nullptr) && dir < 7) {
-        //ExitFlags ef = ::getFlags(room->exit(dir));
-        ExitFlags ef = room->exit(dir)[field].toUInt();
-        if (ISSET(ef, flag)) {
-            return true;
+    if (Room *const room = map.get(pos)) {
+        if (dir < ExitDirection::NONE) {
+            switch (var.getType()) {
+            case ExitField::DOOR_NAME: {
+                const auto name = room->exit(dir).getDoorName();
+                if (var.getDoorName() == name) {
+                    return true;
+                }
+                break;
+            }
+            case ExitField::EXIT_FLAGS: {
+                const auto ef = room->exit(dir).getExitFlags();
+                if (IS_SET(ef, var.getExitFlags())) {
+                    return true;
+                }
+                break;
+            }
+            case ExitField::DOOR_FLAGS: {
+                const auto df = room->exit(dir).getDoorFlags();
+                if (IS_SET(df, var.getDoorFlags())) {
+                    return true;
+                }
+                break;
+            }
+            }
         }
     }
     return false;
 }
 
-void MapData::toggleExitFlag(const Coordinate &pos, uint flag, uint dir, uint field)
+void MapData::toggleExitFlag(const Coordinate &pos, const ExitDirection dir, ExitFieldVariant var)
 {
+    const auto field = var.getType();
+    assert(field != ExitField::DOOR_NAME);
+
     QMutexLocker locker(&mapLock);
-    Room *room = map.get(pos);
-    if ((room != nullptr) && dir < 7) {
-        setDataChanged();
-        MapAction *action = new SingleRoomAction(new ModifyExitFlags(flag, dir, field, FMM_TOGGLE),
-                                                 room->getId());
-        scheduleAction(action);
+    if (Room *const room = map.get(pos)) {
+        if (dir < ExitDirection::NONE) {
+            setDataChanged();
+
+            MapAction *action = new SingleRoomAction(new ModifyExitFlags(var,
+                                                                         dir,
+                                                                         FlagModifyMode::TOGGLE),
+                                                     room->getId());
+            scheduleAction(action);
+        }
     }
 }
 
-void MapData::toggleRoomFlag(const Coordinate &pos, uint flag, uint field)
+void MapData::toggleRoomFlag(const Coordinate &pos, const uint flag, const RoomField field)
 {
     QMutexLocker locker(&mapLock);
-    Room *room = map.get(pos);
-    if ((room != nullptr) && field < ROOMFIELD_LAST) {
-        setDataChanged();
-        MapAction *action = new SingleRoomAction(new ModifyRoomFlags(flag, field, FMM_TOGGLE),
-                                                 room->getId());
-        scheduleAction(action);
+    if (Room *room = map.get(pos)) {
+        if (field < RoomField::LAST) {
+            setDataChanged();
+            MapAction *action = new SingleRoomAction(new ModifyRoomFlags(flag,
+                                                                         field,
+                                                                         FlagModifyMode::TOGGLE),
+                                                     room->getId());
+            scheduleAction(action);
+        }
     }
 }
 
-bool MapData::getRoomFlag(const Coordinate &pos, uint flag, uint field)
+bool MapData::getRoomFlag(const Coordinate &pos, const uint flag, const RoomField field)
 {
     const QVariant val = getRoomField(pos, field);
-    return !val.isNull() && ISSET(val.toUInt(), flag);
+    return !val.isNull() && IS_SET(val.toUInt(), flag);
 }
 
-void MapData::setRoomField(const Coordinate &pos, const QVariant &flag, uint field)
+void MapData::setRoomField(const Coordinate &pos, const QVariant &flag, const RoomField field)
 {
     QMutexLocker locker(&mapLock);
-    Room *room = map.get(pos);
-    if ((room != nullptr) && field < ROOMFIELD_LAST) {
-        setDataChanged();
-        MapAction *action = new SingleRoomAction(new UpdateRoomField(flag, field), room->getId());
-        scheduleAction(action);
+    if (Room *const room = map.get(pos)) {
+        if (field < RoomField::LAST) {
+            setDataChanged();
+            MapAction *action = new SingleRoomAction(new UpdateRoomField(flag, field),
+                                                     room->getId());
+            scheduleAction(action);
+        }
     }
 }
 
-QVariant MapData::getRoomField(const Coordinate &pos, uint field)
+QVariant MapData::getRoomField(const Coordinate &pos, const RoomField field)
 {
     QMutexLocker locker(&mapLock);
     /* REVISIT: is it wise to just ignore bad data here? */
-    if (field < ROOMFIELD_LAST) {
-        if (Room *room = map.get(pos)) {
-            return room->at(static_cast<RoomField>(field));
+    if (field < RoomField::LAST) {
+        if (Room *const room = map.get(pos)) {
+            return room->at(field);
         }
     }
     return QVariant();
@@ -139,21 +188,27 @@ QList<Coordinate> MapData::getPath(const QList<CommandIdType> &dirs)
 {
     QMutexLocker locker(&mapLock);
     QList<Coordinate> ret;
+
+    //* NOTE: room is used and then reassigned inside the loop.
     if (Room *room = map.get(m_position)) {
         QListIterator<CommandIdType> iter(dirs);
         while (iter.hasNext()) {
-            uint dir = iter.next();
-            if (dir > 5) {
+            const CommandIdType cmd = iter.next();
+            if (!isDirectionNESWUD(cmd)) {
                 break;
             }
-            Exit &e = room->exit(dir);
-            if ((Mmapper2Exit::getFlags(e) & EF_EXIT) == 0) {
+
+            Exit &e = room->exit(getDirection(cmd));
+            if (!e.isExit()) {
                 // REVISIT: why does this continue but all of the others break?
                 continue;
             }
+
             if (!e.outIsUnique()) {
                 break;
             }
+
+            // WARNING: room is reassigned here!
             room = roomIndex[e.outFirst()];
             if (room == nullptr) {
                 break;
@@ -167,10 +222,12 @@ QList<Coordinate> MapData::getPath(const QList<CommandIdType> &dirs)
 const RoomSelection *MapData::select(const Coordinate &ulf, const Coordinate &lrb)
 {
     QMutexLocker locker(&mapLock);
-    auto *selection = new RoomSelection(this);
-    selections[selection] = selection;
-    lookingForRooms(selection, ulf, lrb);
-    return selection;
+    if (auto *const selection = new RoomSelection(this)) {
+        selections[selection] = selection;
+        lookingForRooms(*selection, ulf, lrb);
+        return selection;
+    }
+    return nullptr;
 }
 // updates a selection created by the mapdata
 const RoomSelection *MapData::select(const Coordinate &ulf,
@@ -178,73 +235,89 @@ const RoomSelection *MapData::select(const Coordinate &ulf,
                                      const RoomSelection *in)
 {
     QMutexLocker locker(&mapLock);
-    RoomSelection *selection = selections[in];
-    assert(selection);
-    lookingForRooms(selection, ulf, lrb);
-    return selection;
+    if (RoomSelection *const selection = selections[in]) {
+        lookingForRooms(*selection, ulf, lrb);
+        return selection;
+    }
+    assert(false);
+    return nullptr;
 }
 // creates and registers a selection with one room
 const RoomSelection *MapData::select(const Coordinate &pos)
 {
     QMutexLocker locker(&mapLock);
-    auto *selection = new RoomSelection(this);
-    selections[selection] = selection;
-    lookingForRooms(selection, pos);
-    return selection;
+    if (auto *const selection = new RoomSelection(this)) {
+        selections[selection] = selection;
+        lookingForRooms(*selection, pos);
+        return selection;
+    }
+    assert(false);
+    return nullptr;
 }
 // creates and registers an empty selection
 const RoomSelection *MapData::select()
 {
     QMutexLocker locker(&mapLock);
-    auto *selection = new RoomSelection(this);
-    selections[selection] = selection;
-    return selection;
+    if (auto *const selection = new RoomSelection(this)) {
+        selections[selection] = selection;
+        return selection;
+    }
+    assert(false);
+    return nullptr;
 }
 // removes the selection from the internal structures and deletes it
-void MapData::unselect(const RoomSelection *in)
+void MapData::unselect(const RoomSelection *const in)
 {
     QMutexLocker locker(&mapLock);
-    RoomSelection *selection = selections[in];
-    assert(selection);
-    selections.erase(in);
-    QMap<uint, const Room *>::iterator i = selection->begin();
-    while (i != selection->end()) {
-        keepRoom(selection, (i++).key());
+    if (RoomSelection *const selection = selections[in]) {
+        selections.erase(in);
+        QMap<RoomId, const Room *>::iterator i = selection->begin();
+        while (i != selection->end()) {
+            keepRoom(*selection, (i++).key());
+        }
+        delete selection;
+    } else {
+        assert(false);
     }
-    delete selection;
 }
 
 // the room will be inserted in the given selection. the selection must have been created by mapdata
-const Room *MapData::getRoom(const Coordinate &pos, const RoomSelection *in)
+const Room *MapData::getRoom(const Coordinate &pos, const RoomSelection *const in)
 {
     QMutexLocker locker(&mapLock);
-    RoomSelection *selection = selections[in];
-    assert(selection);
-    Room *room = map.get(pos);
-    if (room != nullptr) {
-        uint id = room->getId();
-        locks[id].insert(selection);
-        selection->insert(id, room);
+    if (RoomSelection *selection = selections[in]) {
+        if (Room *const room = map.get(pos)) {
+            auto id = room->getId();
+            locks[id].insert(selection);
+            selection->insert(id, room);
+            return room;
+        }
+    } else {
+        assert(false);
     }
-    return room;
+    return nullptr;
 }
 
-const Room *MapData::getRoom(uint id, const RoomSelection *in)
+const Room *MapData::getRoom(const RoomId id, const RoomSelection *const in)
 {
     QMutexLocker locker(&mapLock);
-    RoomSelection *selection = selections[in];
-    assert(selection);
-    Room *room = roomIndex[id];
-    if (room != nullptr) {
-        // REVISIT: is roomID the same as id?
-        uint roomId = room->getId();
-        locks[roomId].insert(selection);
-        selection->insert(roomId, room);
+    if (RoomSelection *const selection = selections[in]) {
+        if (Room *const room = roomIndex[id]) {
+            // REVISIT: is roomID the same as id?
+            // Is it okay to assert(roomId == id);
+            const RoomId roomId = room->getId();
+
+            locks[roomId].insert(selection);
+            selection->insert(roomId, room);
+            return room;
+        }
+    } else {
+        assert(false);
     }
-    return room;
+    return nullptr;
 }
 
-void MapData::draw(const Coordinate &ulf, const Coordinate &lrb, MapCanvas &screen)
+void MapData::draw(const Coordinate &ulf, const Coordinate &lrb, MapCanvasRoomDrawer &screen)
 {
     QMutexLocker locker(&mapLock);
     DrawStream drawer(screen, roomIndex, locks);
@@ -257,54 +330,61 @@ bool MapData::isOccupied(const Coordinate &position)
     return map.get(position) != nullptr;
 }
 
-bool MapData::isMovable(const Coordinate &offset, const RoomSelection *selection)
+bool MapData::isMovable(const Coordinate &offset, const RoomSelection *const selection)
 {
     QMutexLocker locker(&mapLock);
-    QMap<uint, const Room *>::const_iterator i = selection->begin();
-    const Room *other = nullptr;
+    QMap<RoomId, const Room *>::const_iterator i = selection->begin();
+
     while (i != selection->end()) {
-        Coordinate target = (*(i++))->getPosition() + offset;
-        other = map.get(target);
-        if ((other != nullptr) && !selection->contains(other->getId())) {
-            return false;
+        const Coordinate target = (*i++)->getPosition() + offset;
+        if (Room *const other = map.get(target)) {
+            if (!selection->contains(other->getId())) {
+                return false;
+            }
         }
     }
     return true;
 }
 
-void MapData::unselect(uint id, const RoomSelection *in)
+void MapData::unselect(RoomId id, const RoomSelection *const in)
 {
     QMutexLocker locker(&mapLock);
-    RoomSelection *selection = selections[in];
-    assert(selection);
-    keepRoom(selection, id);
-    selection->remove(id);
+    if (RoomSelection *const selection = selections[in]) {
+        keepRoom(*selection, id);
+        selection->remove(id);
+    } else {
+        assert(false);
+    }
 }
 
 // selects the rooms given in "other" for "into"
-const RoomSelection *MapData::select(const RoomSelection *other, const RoomSelection *in)
+const RoomSelection *MapData::select(const RoomSelection *const other, const RoomSelection *const in)
 {
     QMutexLocker locker(&mapLock);
-    RoomSelection *into = selections[in];
-    assert(into);
-    QMapIterator<uint, const Room *> i(*other);
-    while (i.hasNext()) {
-        locks[i.key()].insert(into);
-        into->insert(i.key(), i.value());
+    if (RoomSelection *const into = selections[in]) {
+        QMapIterator<RoomId, const Room *> i(*other);
+        while (i.hasNext()) {
+            locks[i.key()].insert(into);
+            into->insert(i.key(), i.value());
+        }
+        return into;
     }
-    return into;
+    assert(false);
+    return nullptr;
 }
 
 // removes the subset from the superset and unselects
-void MapData::unselect(const RoomSelection *subset, const RoomSelection *in)
+void MapData::unselect(const RoomSelection *const subset, const RoomSelection *const in)
 {
     QMutexLocker locker(&mapLock);
-    RoomSelection *superset = selections[in];
-    assert(superset);
-    QMapIterator<uint, const Room *> i(*subset);
-    while (i.hasNext()) {
-        keepRoom(superset, i.key());
-        superset->remove(i.key());
+    if (RoomSelection *const superset = selections[in]) {
+        QMapIterator<RoomId, const Room *> i(*subset);
+        while (i.hasNext()) {
+            keepRoom(*superset, i.key());
+            superset->remove(i.key());
+        }
+    } else {
+        assert(false);
     }
 }
 
@@ -312,40 +392,40 @@ bool MapData::execute(MapAction *action)
 {
     QMutexLocker locker(&mapLock);
     action->schedule(this);
-    bool executable = isExecutable(action);
+    const bool executable = isExecutable(action);
     if (executable) {
         executeAction(action);
     }
     return executable;
 }
 
-bool MapData::execute(MapAction *action, const RoomSelection *unlock)
+bool MapData::execute(MapAction *const action, const RoomSelection *const unlock)
 {
     QMutexLocker locker(&mapLock);
     action->schedule(this);
-    std::list<uint> selectedIds;
+    std::list<RoomId> selectedIds;
 
-    RoomSelection *selection = selections[unlock];
-    assert(selection);
-    {
-        QMap<uint, const Room *>::iterator i = selection->begin();
-        while (i != selection->end()) {
-            const Room *room = *(i++);
-            uint id = room->getId();
-            locks[id].erase(selection);
-            selectedIds.push_back(id);
-        }
+    RoomSelection *const selection = selections[unlock];
+    if (!selection) {
+        assert(false);
+        return false;
+    }
+
+    for (auto i = selection->begin(); i != selection->end();) {
+        const Room *room = *i++;
+        const auto id = room->getId();
+        locks[id].erase(selection);
+        selectedIds.push_back(id);
     }
     selection->clear();
 
-    bool executable = isExecutable(action);
+    const bool executable = isExecutable(action);
     if (executable) {
         executeAction(action);
     }
 
     for (auto id : selectedIds) {
-        Room *room = roomIndex[id];
-        if (room != nullptr) {
+        if (Room *const room = roomIndex[id]) {
             locks[id].insert(selection);
             selection->insert(id, room);
         }
@@ -367,10 +447,11 @@ void MapData::removeDoorNames()
 {
     QMutexLocker locker(&mapLock);
 
+    const auto noName = DoorName{};
     for (auto &room : roomIndex) {
         if (room != nullptr) {
-            for (uint dir = 0; dir <= 6; dir++) {
-                MapAction *action = new SingleRoomAction(new UpdateExitField("", dir, E_DOORNAME),
+            for (const auto dir : ALL_EXITS_NESWUD) {
+                MapAction *action = new SingleRoomAction(new UpdateExitField(noName, dir),
                                                          room->getId());
                 scheduleAction(action);
             }
@@ -383,11 +464,9 @@ void MapData::genericSearch(RoomRecipient *recipient, const RoomFilter &f)
 {
     QMutexLocker locker(&mapLock);
     for (auto &room : roomIndex) {
-        if (room != nullptr) {
-            if (f.filter(room)) {
-                locks[room->getId()].insert(recipient);
-                recipient->receiveRoom(this, room);
-            }
+        if (room != nullptr && f.filter(room)) {
+            locks[room->getId()].insert(recipient);
+            recipient->receiveRoom(this, room);
         }
     }
 }
@@ -395,9 +474,11 @@ void MapData::genericSearch(RoomRecipient *recipient, const RoomFilter &f)
 void MapData::genericSearch(const RoomSelection *in, const RoomFilter &f)
 {
     QMutexLocker locker(&mapLock);
-    RoomSelection *selection = selections[in];
-    assert(selection);
-    genericSearch(dynamic_cast<RoomRecipient *>(selection), f);
+    if (RoomSelection *const selection = selections[in]) {
+        genericSearch(dynamic_cast<RoomRecipient *>(selection), f);
+    } else {
+        assert(false);
+    }
 }
 
 MapData::~MapData()

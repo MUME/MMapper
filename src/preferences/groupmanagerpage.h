@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Nils Schimmelmann <nschimme@gmail.com> (Jahara)
@@ -25,10 +26,15 @@
 #ifndef GROUPMANAGERPAGE_H
 #define GROUPMANAGERPAGE_H
 
-#include "ui_groupmanagerpage.h"
+#include <QString>
 #include <QWidget>
+#include <QtCore>
+
+#include "../pandoragroup/mmapper2group.h"
+#include "ui_groupmanagerpage.h"
 
 class Mmapper2Group;
+class QObject;
 
 class GroupManagerPage : public QWidget, private Ui::GroupManagerPage
 {
@@ -49,11 +55,11 @@ public slots:
     void shareSelfChanged(int);
 
 signals:
-    void setGroupManagerType(int);
+    void setGroupManagerType(GroupManagerState);
     void updatedSelf();
 
 private:
-    Mmapper2Group *m_groupManager;
+    Mmapper2Group *m_groupManager = nullptr;
 };
 
 #endif

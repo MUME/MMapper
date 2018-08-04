@@ -23,24 +23,22 @@
 ************************************************************************/
 
 #include "clientwidget.h"
+
+#include <memory>
+#include <QMessageLogContext>
+#include <QSize>
+#include <QString>
+#include <QtGui>
+#include <QtWidgets>
+
+#include "../configuration/configuration.h"
+#include "../global/utils.h"
 #include "ctelnet.h"
 #include "displaywidget.h"
 #include "stackedinputwidget.h"
 
-#include "configuration/configuration.h"
-#include "mainwindow/mainwindow.h"
-
-#include <QCloseEvent>
-#include <QDebug>
-#include <QMenuBar>
-#include <QSettings>
-#include <QSplitter>
-#include <QStatusBar>
-#include <QVBoxLayout>
-
 ClientWidget::ClientWidget(QWidget *parent)
     : QDialog(parent)
-    , m_connected(false)
 {
     setWindowTitle("MMapper Client");
     setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
@@ -91,6 +89,7 @@ ClientWidget::ClientWidget(QWidget *parent)
     connect(this, &ClientWidget::sendToUser, m_display, &DisplayWidget::displayText);
     connect(m_telnet, &cTelnet::sendToUser, m_display, &DisplayWidget::displayText);
     connect(m_display, &DisplayWidget::showMessage, m_statusBar, &QStatusBar::showMessage);
+    connect(m_display, &DisplayWidget::windowSizeChanged, m_telnet, &cTelnet::windowSizeChanged);
     readSettings();
 
     auto *menuBar = new QMenuBar(this);
@@ -175,22 +174,14 @@ ClientWidget::~ClientWidget()
 
 void ClientWidget::readSettings()
 {
-    QSettings settings("Caligor soft", "MMapper2");
-    settings.beginGroup("Integrated Mud Client");
-    QPoint pos = settings.value("pos", QPoint(200, 200)).toPoint();
-    QSize size = settings.value("size", QSize(400, 400)).toSize();
-    settings.endGroup();
-    move(pos);
-    resize(size);
+    const auto posSize = Config().readIntegratedMudClientPosSize();
+    move(posSize.pos);
+    resize(posSize.size);
 }
 
 void ClientWidget::writeSettings()
 {
-    QSettings settings("Caligor soft", "MMapper2");
-    settings.beginGroup("Integrated Mud Client");
-    settings.setValue("pos", pos());
-    settings.setValue("size", size());
-    settings.endGroup();
+    Config().writeIntegratedMudClientPosSize({pos(), size()});
 }
 
 void ClientWidget::closeEvent(QCloseEvent *event)
@@ -281,18 +272,28 @@ bool ClientWidget::eventFilter(QObject *obj, QEvent *event)
 
 void ClientWidget::saveLog()
 {
-    QPointer<QFileDialog> save = new QFileDialog(this, "Choose log file name ...");
-    save->setFileMode(QFileDialog::AnyFile);
-    save->setDirectory(QDir::current());
-    save->setNameFilters(QStringList() << "Text log (*.log *.txt)"
-                                       << "HTML log (*.htm *.html)");
-    save->setDefaultSuffix("txt");
-    save->setAcceptMode(QFileDialog::AcceptSave);
+    struct Result
+    {
+        QStringList filenames{};
+        bool isHtml = false;
+    };
+    const auto getFileNames = [this]() {
+        auto save = std::make_unique<QFileDialog>(this, "Choose log file name ...");
+        save->setFileMode(QFileDialog::AnyFile);
+        save->setDirectory(QDir::current());
+        save->setNameFilters(QStringList() << "Text log (*.log *.txt)"
+                                           << "HTML log (*.htm *.html)");
+        save->setDefaultSuffix("txt");
+        save->setAcceptMode(QFileDialog::AcceptSave);
 
-    QStringList fileNames;
-    if (save->exec() != 0) {
-        fileNames = save->selectedFiles();
-    }
+        if (save->exec() == QDialog::Accepted)
+            return Result{save->selectedFiles(), save->selectedNameFilter().contains("HTML")};
+
+        return Result{};
+    };
+
+    const auto result = getFileNames();
+    const auto &fileNames = result.filenames;
 
     if (fileNames.isEmpty()) {
         m_statusBar->showMessage(tr("No filename provided"), 2000);
@@ -306,13 +307,13 @@ void ClientWidget::saveLog()
         return;
     }
 
-    QString nameFilter = save->selectedNameFilter();
-    if (nameFilter.contains("HTML")) {
-        document.write(m_display->document()->toHtml().toLocal8Bit());
-
-    } else {
-        document.write(m_display->document()->toPlainText().toLocal8Bit());
-    }
+    const auto getDocString8bit = [](const QTextDocument *const pDoc,
+                                     const bool isHtml) -> QByteArray {
+        auto &doc = deref(pDoc);
+        const QString string = isHtml ? doc.toHtml() : doc.toPlainText();
+        return string.toLocal8Bit();
+    };
+    document.write(getDocString8bit(m_display->document(), result.isHtml));
     document.close();
 }
 

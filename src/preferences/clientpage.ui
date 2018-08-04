@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>299</width>
-    <height>471</height>
+    <width>303</width>
+    <height>525</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,12 +15,9 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QFrame" name="frame">
-     <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Appearance</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <item row="2" column="0">
@@ -95,14 +92,35 @@
     </widget>
    </item>
    <item>
-    <widget class="QFrame" name="frame_3">
-     <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="title">
+      <string>Terminal</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>Rows:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Lines of scrollback:</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Columns:</string>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="1">
        <widget class="QSpinBox" name="columnsSpinBox">
         <property name="showGroupSeparator" stdset="0">
@@ -113,36 +131,6 @@
         </property>
         <property name="maximum">
          <number>1000</number>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_7">
-        <property name="text">
-         <string>Columns</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QSpinBox" name="scrollbackSpinBox">
-        <property name="showGroupSeparator" stdset="0">
-         <bool>true</bool>
-        </property>
-        <property name="minimum">
-         <number>0</number>
-        </property>
-        <property name="maximum">
-         <number>2147483647</number>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>Lines of scrollback:</string>
-        </property>
-        <property name="wordWrap">
-         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -159,34 +147,8 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_6">
-        <property name="text">
-         <string>Rows</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QFrame" name="frame_2">
-     <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
-     </property>
-     <layout class="QGridLayout" name="gridLayout_2">
-      <item row="3" column="0">
-       <widget class="QCheckBox" name="clearInputCheckBox">
-        <property name="text">
-         <string>Clear input on enter</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QSpinBox" name="inputHistorySpinBox">
+      <item row="4" column="1">
+       <widget class="QSpinBox" name="scrollbackSpinBox">
         <property name="showGroupSeparator" stdset="0">
          <bool>true</bool>
         </property>
@@ -194,14 +156,47 @@
          <number>0</number>
         </property>
         <property name="maximum">
-         <number>1000</number>
-        </property>
-        <property name="value">
-         <number>100</number>
+         <number>2147483647</number>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="5" column="0" colspan="2">
+       <widget class="QCheckBox" name="autoResizeTerminalCheckBox">
+        <property name="text">
+         <string>Auto-resize with window</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>Input</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Tab word completion dictionary size:</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>Lines of input history:</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
        <widget class="QSpinBox" name="tabDictionarySpinBox">
         <property name="showGroupSeparator" stdset="0">
          <bool>true</bool>
@@ -217,23 +212,26 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_8">
-        <property name="text">
-         <string>Lines of input history:</string>
-        </property>
-        <property name="wordWrap">
+      <item row="1" column="1">
+       <widget class="QSpinBox" name="inputHistorySpinBox">
+        <property name="showGroupSeparator" stdset="0">
          <bool>true</bool>
+        </property>
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>1000</number>
+        </property>
+        <property name="value">
+         <number>100</number>
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_3">
+      <item row="3" column="0">
+       <widget class="QCheckBox" name="clearInputCheckBox">
         <property name="text">
-         <string>Tab word completion dictionary size:</string>
-        </property>
-        <property name="wordWrap">
-         <bool>true</bool>
+         <string>Clear input on enter</string>
         </property>
        </widget>
       </item>

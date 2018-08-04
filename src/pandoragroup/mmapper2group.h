@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Azazello <lachupe@gmail.com>,
@@ -26,14 +27,18 @@
 #ifndef MMAPPER2GROUP_H
 #define MMAPPER2GROUP_H
 
-#include "component.h"
-
+#include <memory>
+#include <QArgument>
 #include <QMutex>
 #include <QObject>
+
+#include "../expandoracommon/component.h"
+#include "../global/roomid.h"
 
 class CGroupCommunicator;
 class CGroup;
 class QDomNode;
+enum class GroupManagerState { Off = 0, Client = 1, Server = 2 };
 
 class Mmapper2Group : public Component
 {
@@ -51,20 +56,18 @@ signals:
     void drawCharacters(); // redraw the opengl screen
 
 public:
-    enum GroupManagerState { Off = 0, Client = 1, Server = 2 };
-
-    Mmapper2Group();
+    explicit Mmapper2Group();
     virtual ~Mmapper2Group();
 
-    int getType();
+    GroupManagerState getType();
     int getGroupSize();
 
-    CGroupCommunicator *getCommunicator() { return network; }
-    CGroup *getGroup() { return group; }
+    CGroupCommunicator *getCommunicator() { return network.get(); }
+    CGroup *getGroup() { return group.get(); }
 
 public slots:
-    void setCharPosition(uint pos);
-    void setType(int newState);
+    void setCharPosition(RoomId pos);
+    void setType(GroupManagerState newState);
     void updateSelf(); // changing settings
 
     void sendGTell(const QByteArray &tell); // sends gtell from local user
@@ -84,14 +87,14 @@ protected:
     void gotKicked(const QDomNode &message);
     void serverStartupFailed(const QString &message);
 
-    void init();
+    void init() override;
 
 private:
     void issueLocalCharUpdate();
 
-    QMutex networkLock;
-    CGroupCommunicator *network;
-    CGroup *group;
+    QMutex networkLock{};
+    std::unique_ptr<CGroupCommunicator> network;
+    std::unique_ptr<CGroup> group;
 };
 
 #endif // MMAPPER2GROUP_H

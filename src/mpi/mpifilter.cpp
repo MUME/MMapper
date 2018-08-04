@@ -23,16 +23,29 @@
 ************************************************************************/
 
 #include "mpifilter.h"
-#include "configuration/configuration.h"
 
-#include <QDebug>
+#include <QByteArray>
+#include <QMessageLogContext>
+#include <QObject>
+#include <QString>
+
+#include "../configuration/configuration.h"
+#include "../proxy/telnetfilter.h"
 
 MpiFilter::MpiFilter(QObject *parent)
     : QObject(parent)
-    , m_previousType(TDT_UNKNOWN)
-    , m_parsingMpi(false)
-    , m_remaining(0)
 {}
+
+static bool endsInLinefeed(TelnetDataType type)
+{
+    switch (type) {
+    case TelnetDataType::LF:
+    case TelnetDataType::CRLF:
+        return true;
+    default:
+        return false;
+    }
+}
 
 void MpiFilter::analyzeNewMudInput(IncomingData &data)
 {
@@ -56,21 +69,20 @@ void MpiFilter::analyzeNewMudInput(IncomingData &data)
         }
 
     } else {
-        switch (m_previousType) {
-        case TDT_LF:
-        case TDT_CRLF:
+        // mume protocol spec requires LF before start of MPI message
+        if (endsInLinefeed(m_previousType)) {
             if (!m_parsingMpi && data.line.length() >= 6 && data.line.startsWith("~$#E")) {
                 m_buffer.clear();
                 m_command = data.line.at(4);
                 m_remaining = data.line.mid(5).simplified().toInt();
-                if (Config().m_remoteEditing && (m_command == 'V' || m_command == 'E')) {
+                if (Config().mumeClientProtocol.remoteEditing
+                    && (m_command == 'V' || m_command == 'E')) {
                     m_parsingMpi = true;
-                    break;
                 }
             }
-        default:
+        }
+        if (!m_parsingMpi) {
             emit parseNewMudInput(data);
-            break;
         }
     }
 

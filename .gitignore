@@ -10,3 +10,4 @@ Makefile
 .qmake.stash
 map/arda.mm2
 **/.DS_Store
+.idea

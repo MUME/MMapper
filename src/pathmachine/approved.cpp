@@ -24,68 +24,68 @@
 ************************************************************************/
 
 #include "approved.h"
-#include "abstractroomfactory.h"
-#include "mapaction.h"
-#include "parseevent.h"
-#include "room.h"
-#include "roomadmin.h"
+
+#include "../expandoracommon/abstractroomfactory.h"
+#include "../expandoracommon/room.h"
+#include "../expandoracommon/roomadmin.h"
+#include "../mapfrontend/mapaction.h"
 
 void Approved::receiveRoom(RoomAdmin *sender, const Room *perhaps)
 {
+    auto &event = myEvent.deref();
+
     if (matchedRoom == nullptr) {
-        ComparisonResult indicator = factory->compare(perhaps, myEvent, matchingTolerance);
-        if (indicator != CR_DIFFERENT) {
+        ComparisonResult indicator = factory->compare(perhaps, event, matchingTolerance);
+        if (indicator != ComparisonResult::DIFFERENT) {
             matchedRoom = perhaps;
             owner = sender;
-            if (indicator == CR_TOLERANCE && myEvent->getNumSkipped() == 0) {
+            if (indicator == ComparisonResult::TOLERANCE && event.getNumSkipped() == 0) {
                 update = true;
             }
         } else {
-            sender->releaseRoom(this, perhaps->getId());
+            sender->releaseRoom(*this, perhaps->getId());
         }
     } else {
         moreThanOne = true;
-        sender->releaseRoom(this, perhaps->getId());
+        sender->releaseRoom(*this, perhaps->getId());
     }
 }
 
 Approved::~Approved()
 {
+    // REVISIT: Danger: destructors are implicitly noexcept, but we're allocating.
+    // Consider try-catch block, except there won't be much we could do to recover,
+    // so maybe it's better to just crash.
     if (owner != nullptr) {
         if (moreThanOne) {
-            owner->releaseRoom(this, matchedRoom->getId());
+            owner->releaseRoom(*this, matchedRoom->getId());
         } else {
-            owner->keepRoom(this, matchedRoom->getId());
+            owner->keepRoom(*this, matchedRoom->getId());
             if (update) {
                 owner->scheduleAction(
-                    new SingleRoomAction(new Update(*myEvent), matchedRoom->getId()));
+                    new SingleRoomAction(new Update(myEvent), matchedRoom->getId()));
             }
         }
     }
 }
 
-Approved::Approved(AbstractRoomFactory *in_factory, ParseEvent &event, int tolerance)
-    : matchedRoom(nullptr)
-    , myEvent(&event)
-    , matchingTolerance(tolerance)
-    , owner(nullptr)
-    , moreThanOne(false)
-    , update(false)
-    , factory(in_factory)
+Approved::Approved(AbstractRoomFactory *const in_factory,
+                   const SigParseEvent &sigParseEvent,
+                   const int tolerance)
+    : myEvent{sigParseEvent.requireValid()}
+    , matchingTolerance{tolerance}
+    , factory{in_factory}
 {}
 
-const Room *Approved::oneMatch()
+const Room *Approved::oneMatch() const
 {
-    if (moreThanOne) {
-        return nullptr;
-    }
-    return matchedRoom;
+    return moreThanOne ? nullptr : matchedRoom;
 }
 
 void Approved::reset()
 {
     if (matchedRoom != nullptr) {
-        owner->releaseRoom(this, matchedRoom->getId());
+        owner->releaseRoom(*this, matchedRoom->getId());
     }
     update = false;
     matchedRoom = nullptr;
@@ -93,10 +93,7 @@ void Approved::reset()
     owner = nullptr;
 }
 
-RoomAdmin *Approved::getOwner()
+RoomAdmin *Approved::getOwner() const
 {
-    if (moreThanOne) {
-        return nullptr;
-    }
-    return owner;
+    return moreThanOne ? nullptr : owner;
 }

@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Nils Schimmelmann <nschimme@gmail.com>
@@ -25,37 +26,52 @@
 #ifndef INPUTWIDGET_H
 #define INPUTWIDGET_H
 
+#include <QEvent>
 #include <QLinkedList>
+#include <QObject>
 #include <QPlainTextEdit>
 #include <QRegExp>
+#include <QSize>
+#include <QString>
+#include <QWidget>
+#include <QtCore>
 
-typedef QString InputHistoryEntry;
-typedef QMutableLinkedListIterator<InputHistoryEntry> InputHistoryIterator;
-typedef QString WordHistoryEntry;
-typedef QMutableLinkedListIterator<WordHistoryEntry> TabCompletionIterator;
+class QKeyEvent;
+class QObject;
+class QRegExp;
+class QWidget;
 
-class InputWidget : public QPlainTextEdit
+using InputHistoryEntry = QString;
+using InputHistoryIterator = QMutableLinkedListIterator<InputHistoryEntry>;
+using WordHistoryEntry = QString;
+using TabCompletionIterator = QMutableLinkedListIterator<WordHistoryEntry>;
+
+class InputWidget final : public QPlainTextEdit
 {
+private:
+    using base = QPlainTextEdit;
+
+private:
     Q_OBJECT
 
 public:
-    InputWidget(QWidget *parent = 0);
+    explicit InputWidget(QWidget *parent = nullptr);
     ~InputWidget();
 
-    QSize sizeHint() const;
+    QSize sizeHint() const override;
 
 protected:
-    void keyPressEvent(QKeyEvent *event);
+    void keyPressEvent(QKeyEvent *event) override;
 
 private:
     void gotInput();
     void wordHistory(int);
     void keypadMovement(int);
 
-    InputHistoryIterator *m_lineIterator;
-    bool m_newInput;
-    QLinkedList<QString> m_lineHistory;
-    QLinkedList<QString> m_tabCompletionDictionary;
+    InputHistoryIterator *m_lineIterator = nullptr;
+    bool m_newInput = false;
+    QLinkedList<QString> m_lineHistory{};
+    QLinkedList<QString> m_tabCompletionDictionary{};
 
     void addLineHistory(const InputHistoryEntry &);
     void forwardHistory();

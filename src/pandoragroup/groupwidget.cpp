@@ -23,20 +23,24 @@
 ************************************************************************/
 
 #include "groupwidget.h"
+
+#include <QHash>
+#include <QList>
+#include <QMessageLogContext>
+#include <QString>
+#include <QtWidgets>
+
+#include "../expandoracommon/room.h"
+#include "../global/roomid.h"
+#include "../mapdata/mapdata.h"
 #include "CGroup.h"
 #include "CGroupChar.h"
-#include "mapdata/mapdata.h"
+#include "groupselection.h"
 #include "mmapper2group.h"
-#include "mmapper2room.h"
 
-#include <QDebug>
-#include <QHeaderView>
-#include <QList>
-#include <QMessageBox>
-#include <QTableWidget>
-#include <QVBoxLayout>
+class RoomSelection;
 
-#define GROUP_COLUMN_COUNT 8
+static constexpr const int GROUP_COLUMN_COUNT = 8;
 
 GroupWidget::GroupWidget(Mmapper2Group *groupManager, MapData *md, QWidget *parent)
     : QWidget(parent)
@@ -62,10 +66,10 @@ GroupWidget::GroupWidget(Mmapper2Group *groupManager, MapData *md, QWidget *pare
 
     hide();
 
-    connect(m_group, SIGNAL(drawCharacters()), SLOT(updateLabels()), Qt::QueuedConnection);
+    connect(m_group, &Mmapper2Group::drawCharacters, this, &GroupWidget::updateLabels, Qt::QueuedConnection);
     connect(m_group,
-            SIGNAL(messageBox(QString, QString)),
-            SLOT(messageBox(QString, QString)),
+            &Mmapper2Group::messageBox,
+            this, &GroupWidget::messageBox,
             Qt::QueuedConnection);
 }
 
@@ -178,11 +182,11 @@ void GroupWidget::updateLabels()
         setItemText(movesItem, movesStr, color);
 
         QString roomName = "Unknown";
-        if (character->pos != 0) {
+        if (character->pos != DEFAULT_ROOMID) {
             const RoomSelection *roomSelection = m_map->select();
             const Room *r = m_map->getRoom(character->pos, roomSelection);
             if (r != nullptr) {
-                roomName = Mmapper2Room::getName(r);
+                roomName = r->getName();
             }
             m_map->unselect(roomSelection);
         }

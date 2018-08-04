@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -26,17 +27,20 @@
 #ifndef PRESPAMMEDPATH_H_
 #define PRESPAMMEDPATH_H_
 
-#include "abstractparser.h"
 #include <QObject>
+#include <QString>
+#include <QtCore>
 
-class MapData;
+#include "../parser/abstractparser.h"
+
 class MapCanvas;
+class MapData;
 
 class PrespammedPath : public QObject
 {
     Q_OBJECT
 public:
-    PrespammedPath(QObject *parent = 0);
+    explicit PrespammedPath(QObject *parent = nullptr);
     ~PrespammedPath();
 
     bool isEmpty() { return m_queue.isEmpty(); };
@@ -50,7 +54,7 @@ public slots:
 
 protected:
 private:
-    CommandQueue m_queue;
+    CommandQueue m_queue{};
 };
 
 #endif

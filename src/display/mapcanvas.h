@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -27,63 +28,87 @@
 #ifndef MAPCANVAS_H
 #define MAPCANVAS_H
 
-#include "coordinate.h"
-#include "mmapper2exit.h"
-
+#include <array>
+#include <cstddef>
+#include <cstdint>
 #include <set>
 #include <vector>
+#include <QColor>
 #include <QMatrix4x4>
 #include <QOpenGLDebugMessage>
 #include <QOpenGLFunctions_1_0>
 #include <QOpenGLWidget>
+#include <QSize>
+#include <QString>
+#include <QtCore>
+#include <QtGlobal>
+#include <QtGui/qopengl.h>
 
-class QOpenGLTexture;
-class MapData;
-class Room;
+#include "../expandoracommon/coordinate.h"
+#include "../expandoracommon/parseevent.h"
+#include "../global/EnumIndexedArray.h"
+#include "../global/Flags.h"
+#include "../global/roomid.h"
+#include "../mapdata/ExitDirection.h"
+#include "../mapdata/mmapper2exit.h"
+#include "../mapdata/mmapper2room.h"
+#include "FontFormatFlags.h"
+#include "MapCanvasData.h"
+#include "MapCanvasRoomDrawer.h"
+#include "OpenGL.h"
+#include "RoadIndex.h"
+
+class ConnectionSelection;
+class Coordinate;
 class InfoMark;
 class InfoMarksEditDlg;
-class RoomSelection;
-class ConnectionSelection;
-class ParseEvent;
+class MapCanvasRoomDrawer;
+class MapData;
 class Mmapper2Group;
-class CGroupCharacter;
-class RoomRecipient;
 class PrespammedPath;
-class Coordinate;
+class QFont;
+class QFontMetrics;
+class QMouseEvent;
+class QObject;
 class QOpenGLDebugLogger;
+class QOpenGLDebugMessage;
+class QOpenGLTexture;
+class QWheelEvent;
+class QWidget;
+class Room;
+class RoomSelection;
+class SigParseEvent;
+struct RoomId;
 
-class MapCanvas : public QOpenGLWidget, protected QOpenGLFunctions_1_0
+class MapCanvas final : public QOpenGLWidget, private MapCanvasData
 {
+private:
     Q_OBJECT
 
+private:
+    OpenGL m_opengl;
+    Mmapper2Group *m_groupManager = nullptr;
+    InfoMarksEditDlg *m_infoMarksEditDlg = nullptr;
+
 public:
-    MapCanvas(MapData *mapData,
-              PrespammedPath *prespammedPath,
-              Mmapper2Group *groupManager,
-              QWidget *parent = 0);
+    explicit MapCanvas(MapData *mapData,
+                       PrespammedPath *prespammedPath,
+                       Mmapper2Group *groupManager,
+                       QWidget *parent);
     ~MapCanvas();
 
-    QSize minimumSizeHint() const;
-    QSize sizeHint() const;
+public:
+    QSize minimumSizeHint() const override;
+    QSize sizeHint() const override;
 
     static float SCROLLFACTOR();
     float getDW() const;
     float getDH() const;
 
-    enum CanvasMouseMode {
-        CMM_NONE,
-        CMM_MOVE,
-        CMM_SELECT_ROOMS,
-        CMM_SELECT_CONNECTIONS,
-        CMM_CREATE_ROOMS,
-        CMM_CREATE_CONNECTIONS,
-        CMM_CREATE_ONEWAY_CONNECTIONS,
-        CMM_EDIT_INFOMARKS
-    };
-
-    void drawRoom(const Room *room,
-                  const std::vector<Room *> &rooms,
-                  const std::vector<std::set<RoomRecipient *>> &locks);
+public:
+    auto width() const { return QOpenGLWidget::width(); }
+    auto height() const { return QOpenGLWidget::height(); }
+    auto rect() const { return QOpenGLWidget::rect(); }
 
 public slots:
     void forceMapperToRoom();
@@ -108,7 +133,7 @@ public slots:
     void dataLoaded();
     void moveMarker(const Coordinate &);
 
-    void onMessageLogged(const QOpenGLDebugMessage &message);
+    void slot_onMessageLoggedDirect(const QOpenGLDebugMessage &message);
 
 signals:
     void onEnsureVisible(qint32 x, qint32 y);
@@ -124,134 +149,51 @@ signals:
     void newRoomSelection(const RoomSelection *);
     void newConnectionSelection(ConnectionSelection *);
 
-    void setCurrentRoom(uint id);
+    void setCurrentRoom(RoomId id);
     void roomPositionChanged();
 
     //for main move/search algorithm
-    void charMovedEvent(ParseEvent *);
+    void charMovedEvent(const SigParseEvent &);
 
 protected:
     //void closeEvent(QCloseEvent *event);
 
-    void initializeGL();
-    void paintGL();
+    void initializeGL() override;
+    void paintGL() override;
 
     void drawGroupCharacters();
     void drawCharacter(const Coordinate &c, const QColor &color);
-    void drawRoomDoorName(const Room *sourceRoom,
-                          uint sourceDir,
-                          const Room *targetRoom,
-                          uint targetDir);
-    void resizeGL(int width, int height);
-    void mousePressEvent(QMouseEvent *event);
-    void mouseReleaseEvent(QMouseEvent *event);
-    void mouseMoveEvent(QMouseEvent *event);
-    void wheelEvent(QWheelEvent *event);
 
-    void alphaOverlayTexture(QOpenGLTexture *texture);
+    void resizeGL(int width, int height) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void wheelEvent(QWheelEvent *event) override;
 
-    void drawConnection(const Room *leftRoom,
-                        const Room *rightRoom,
-                        ExitDirection connectionStartDirection,
-                        ExitDirection connectionEndDirection,
-                        bool oneway,
-                        bool inExitFlags = true);
-    void drawInfoMark(InfoMark *);
-    void drawPathStart(const Coordinate &);
-    bool drawPath(const Coordinate &sc, const Coordinate &dc, double &dx, double &dy, double &dz);
-    void drawPathEnd(double dx, double dy, double dz);
-    void drawFlow(const Room *room, const std::vector<Room *> &rooms, ExitDirection exitDirection);
-
-    enum FontFormatFlags { FFF_NONE = 0, FFF_ITALICS = 1, FFF_UNDERLINE = 2 };
-    void renderText(float x,
-                    float y,
-                    const QString &text,
-                    const QColor &color = Qt::white,
-                    uint fontFormatFlag = FFF_NONE,
-                    double rotationAngle = 0.0);
+    void drawPathStart(const Coordinate &, std::vector<Vec3d> &verts);
+    bool drawPath(const Coordinate &sc,
+                  const Coordinate &dc,
+                  double &dx,
+                  double &dy,
+                  double &dz,
+                  std::vector<Vec3d> &verts);
+    void drawPathEnd(double dx, double dy, double dz, std::vector<Vec3d> &verts);
 
 private:
-    QMatrix4x4 m_model, m_view, m_projection;
-    QOpenGLDebugLogger *m_logger{};
+    QOpenGLDebugLogger *m_logger = nullptr;
 
-    static QColor m_noFleeColor;
-
-    QOpenGLTexture *m_terrainTextures[16]{};
-    QOpenGLTexture *m_roadTextures[16]{};
-    QOpenGLTexture *m_loadTextures[19]{};
-    QOpenGLTexture *m_mobTextures[15]{};
-    QOpenGLTexture *m_updateTexture;
-    QOpenGLTexture *m_trailTextures[16]{};
-
+    void initTextures();
     void makeGlLists();
 
-    float m_scaleFactor{1.0f};
-    int m_scrollX{0}, m_scrollY{0};
-    qint16 m_currentLayer{0};
-    float m_visibleX1{}, m_visibleY1{};
-    float m_visibleX2{}, m_visibleY2{};
+    static int inline GLtoMap(double arg);
 
-    bool m_mouseRightPressed{false};
-    bool m_mouseLeftPressed{false};
-    bool m_altPressed{false};
-    bool m_ctrlPressed{false};
+    void setTrilinear(QOpenGLTexture *x) const;
 
-    CanvasMouseMode m_canvasMouseMode{CMM_MOVE};
+    void drawPreSpammedPath();
+    void paintSelection(GLdouble len);
+    void paintSelectedRoom(GLdouble len, const Room *room);
+    void paintSelectedConnection();
 
-    //mouse selection
-    float m_selX1{}, m_selY1{}, m_selX2{}, m_selY2{};
-    int m_selLayer1{}, m_selLayer2{};
-
-    GLdouble m_moveX1backup{}, m_moveY1backup{};
-
-    bool m_selectedArea{false}; //no area selected at start time
-    const RoomSelection *m_roomSelection;
-
-    bool m_roomSelectionMove{};
-    bool m_roomSelectionMoveWrongPlace{};
-    int m_roomSelectionMoveX{};
-    int m_roomSelectionMoveY{};
-
-    bool m_infoMarkSelection;
-
-    ConnectionSelection *m_connectionSelection;
-
-    Coordinate m_mapMove;
-
-    MapData *m_data;
-    PrespammedPath *m_prespammedPath;
-    Mmapper2Group *m_groupManager;
-
-    GLuint m_wall_north_gllist{};
-    GLuint m_wall_south_gllist{};
-    GLuint m_wall_east_gllist{};
-    GLuint m_wall_west_gllist{};
-    GLuint m_exit_up_gllist{};
-    GLuint m_exit_down_gllist{};
-    GLuint m_exit_up_transparent_gllist{};
-    GLuint m_exit_down_transparent_gllist{};
-
-    GLuint m_door_north_gllist{};
-    GLuint m_door_south_gllist{};
-    GLuint m_door_east_gllist{};
-    GLuint m_door_west_gllist{};
-    GLuint m_door_up_gllist{};
-    GLuint m_door_down_gllist{};
-
-    GLuint m_room_gllist{};
-    GLuint m_room_selection_gllist{};
-    GLuint m_room_selection_inner_gllist{};
-    GLuint m_character_hint_gllist{};
-    GLuint m_character_hint_inner_gllist{};
-
-    GLuint m_flow_begin_gllist[6]{};
-    GLuint m_flow_end_gllist[6]{};
-
-    QFont *m_glFont;
-    QFontMetrics *m_glFontMetrics;
-
-    InfoMarksEditDlg *m_infoMarksEditDlg;
-
-    int inline GLtoMap(double arg);
+    void drawRooms(MapCanvasRoomDrawer &drawer);
 };
 #endif

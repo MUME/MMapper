@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -27,8 +28,13 @@
 #ifndef GENERALPAGE_H
 #define GENERALPAGE_H
 
-#include "ui_generalpage.h"
+#include <QString>
 #include <QWidget>
+#include <QtCore>
+
+#include "ui_generalpage.h"
+
+class QObject;
 
 class GeneralPage : public QWidget, private Ui::GeneralPage
 {
@@ -53,7 +59,7 @@ public slots:
     void displayMumeClockStateChanged(int);
 
 public:
-    GeneralPage(QWidget *parent = 0);
+    explicit GeneralPage(QWidget *parent = nullptr);
 };
 
 #endif

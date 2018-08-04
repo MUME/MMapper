@@ -25,12 +25,15 @@
 ************************************************************************/
 
 #include "mumesocket.h"
-#include "configuration/configuration.h"
 
-#include <QDebug>
+#include <QByteArray>
+#include <QMessageLogContext>
 #include <QSslSocket>
-#include <QTcpSocket>
-#include <QTimer>
+#include <QString>
+#include <QtNetwork>
+
+#include "../configuration/configuration.h"
+#include "../global/io.h"
 
 void MumeSocket::onConnect()
 {
@@ -57,21 +60,21 @@ MumeSslSocket::MumeSslSocket(QObject *parent)
     m_socket->setProtocol(QSsl::TlsV1_2OrLater);
     m_socket->setPeerVerifyMode(QSslSocket::QueryPeer);
     connect(m_socket, SIGNAL(connected()), this, SLOT(onConnect()));
-    connect(m_socket, SIGNAL(readyRead()), this, SLOT(onReadyRead()));
-    connect(m_socket, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
-    connect(m_socket, SIGNAL(encrypted()), this, SLOT(onEncrypted()));
+    connect(m_socket, &QIODevice::readyRead, this, &MumeSslSocket::onReadyRead);
+    connect(m_socket, &QAbstractSocket::disconnected, this, &MumeSslSocket::onDisconnect);
+    connect(m_socket, &QSslSocket::encrypted, this, &MumeSslSocket::onEncrypted);
     connect(m_socket,
             SIGNAL(error(QAbstractSocket::SocketError)),
             this,
             SLOT(onError(QAbstractSocket::SocketError)));
     connect(m_socket,
-            SIGNAL(peerVerifyError(const QSslError &)),
+            &QSslSocket::peerVerifyError,
             this,
-            SLOT(onPeerVerifyError(const QSslError &)));
+            &MumeSslSocket::onPeerVerifyError);
 
     m_timer->setInterval(5000);
     m_timer->setSingleShot(true);
-    connect(m_timer, SIGNAL(timeout()), this, SLOT(checkTimeout()));
+    connect(m_timer, &QTimer::timeout, this, &MumeSslSocket::checkTimeout);
 }
 
 MumeSslSocket::~MumeSslSocket()
@@ -90,8 +93,9 @@ MumeSslSocket::~MumeSslSocket()
 
 void MumeSslSocket::connectToHost()
 {
-    m_socket->connectToHostEncrypted(Config().m_remoteServerName,
-                                     Config().m_remotePort,
+    const auto &settings = Config().connection;
+    m_socket->connectToHostEncrypted(settings.remoteServerName,
+                                     settings.remotePort,
                                      QIODevice::ReadWrite);
     m_timer->start();
 }
@@ -127,7 +131,8 @@ void MumeSslSocket::onEncrypted()
 void MumeSslSocket::onPeerVerifyError(const QSslError &error)
 {
     emit log("Proxy", "<b>WARNING:</b> " + error.errorString());
-    qWarning() << m_socket->errorString();
+    // REVISIT: Why is this "Unknown error" sometimes?
+    qWarning() << "onPeerVerifyError" << m_socket->errorString();
 
     if (m_socket->peerVerifyMode() >= QSslSocket::VerifyPeer) {
         m_socket->close();
@@ -137,15 +142,11 @@ void MumeSslSocket::onPeerVerifyError(const QSslError &error)
 
 void MumeSslSocket::onReadyRead()
 {
-    int read;
-    while (m_socket->bytesAvailable() != 0) {
-        read = m_socket->read(m_buffer, 8191);
-        if (read != -1) {
-            m_buffer[read] = 0;
-            QByteArray ba = QByteArray::fromRawData(m_buffer, read);
-            emit processMudStream(ba);
-        }
-    }
+    if (m_socket != nullptr)
+        io::readAllAvailable(*m_socket, m_buffer, [this](QByteArray byteArray) {
+            if (byteArray.size() != 0)
+                emit processMudStream(byteArray);
+        });
 }
 
 void MumeSslSocket::checkTimeout()
@@ -177,9 +178,8 @@ void MumeSslSocket::sendToMud(const QByteArray &ba)
 
 void MumeTcpSocket::connectToHost()
 {
-    m_socket->connectToHost(Config().m_remoteServerName,
-                            Config().m_remotePort,
-                            QIODevice::ReadWrite);
+    const auto &settings = Config().connection;
+    m_socket->connectToHost(settings.remoteServerName, settings.remotePort, QIODevice::ReadWrite);
     m_timer->start();
 }
 

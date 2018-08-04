@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -27,13 +28,33 @@
 #ifndef MMAPPER_CONFIGURATION_H
 #define MMAPPER_CONFIGURATION_H
 
+#include <QByteArray>
 #include <QColor>
 #include <QFont>
 #include <QPoint>
 #include <QSize>
+#include <QString>
 #include <QStringList>
+#include <QtCore>
+#include <QtGlobal>
 
-#include "defs.h"
+#include "../pandoragroup/mmapper2group.h"
+
+enum class MapMode { PLAY, MAP, OFFLINE };
+enum class Platform { Unknown, Win32, Mac, Linux };
+
+static inline constexpr Platform getCurrentPlatform()
+{
+#if defined(Q_OS_WIN)
+    return Platform::Win32;
+#elif defined(Q_OS_MAC)
+    return Platform::Mac;
+#elif defined(Q_OS_LINUX)
+    return Platform::Linux;
+#endif
+    return Platform::Unknown;
+}
+static constexpr const Platform CURRENT_PLATFORM = getCurrentPlatform();
 
 class Configuration
 {
@@ -42,121 +63,235 @@ public:
     void write() const;
     bool isChanged() const;
 
-    bool m_firstRun{};
-    QPoint windowPosition;
-    QSize windowSize;
-    QByteArray windowState;
-    bool alwaysOnTop{};
-    int m_mapMode{}; //0 play, 1 map
+public:
     void setFirstRun(bool value)
     {
-        m_firstRun = value;
+        general.firstRun = value;
         change();
     }
     void setWindowPosition(QPoint pos)
     {
-        windowPosition = pos;
+        general.windowPosition = pos;
         change();
     }
     void setWindowSize(QSize size)
     {
-        windowSize = size;
+        general.windowSize = size;
         change();
     }
     void setWindowState(QByteArray state)
     {
-        windowState = state;
+        general.windowState = state;
         change();
     }
     void setAlwaysOnTop(bool b)
     {
-        alwaysOnTop = b;
+        general.alwaysOnTop = b;
         change();
     }
 
-    QString m_remoteServerName; /// Remote host and port settings
-    quint16 m_remotePort{};
-    quint16 m_localPort{}; /// Port to bind to on local machine
-    bool m_tlsEncryption{};
+    struct GeneralSettings
+    {
+        bool firstRun = false;
+        QPoint windowPosition{};
+        QSize windowSize{};
+        QByteArray windowState{};
+        bool alwaysOnTop = false;
+        MapMode mapMode = MapMode::PLAY;
+        bool noSplash = false;
 
-    QColor m_backgroundColor;
-    int m_antialiasingSamples{};
-    bool m_trilinearFiltering{};
-    bool m_softwareOpenGL{};
+    private:
+        friend class Configuration;
+        void read(QSettings &conf);
+        void write(QSettings &conf) const;
 
-    bool m_autoLog{};      // enables log to file
-    QString m_logFileName; // file name to log
-    bool m_autoLoadWorld{};
-    QString m_autoLoadFileName;
-    QString m_lastMapDirectory;
+    } general{};
+    struct ConnectionSettings
+    {
+        QString remoteServerName{}; /// Remote host and port settings
+        quint16 remotePort = 0u;
+        quint16 localPort = 0u; /// Port to bind to on local machine
+        bool tlsEncryption = false;
 
-    QString m_roomNameColor; // ANSI room name color
-    QString m_roomDescColor; // ANSI room descriptions color
+    private:
+        friend class Configuration;
+        void read(QSettings &conf);
+        void write(QSettings &conf) const;
+    } connection{};
 
-    bool m_emulatedExits{};
-    bool m_showHiddenExitFlags{};
-    bool m_showNotes{};
+    bool m_autoLog = false;  // enables log to file
+    QString m_logFileName{}; // file name to log
 
-    bool m_showUpdated{};
-    bool m_drawNotMappedExits{};
-    bool m_drawNoMatchExits{};
-    bool m_drawUpperLayersTextured{};
-    bool m_drawDoorNames{};
+    struct ParserSettings
+    {
+        QString roomNameColor{}; // ANSI room name color
+        QString roomDescColor{}; // ANSI room descriptions color
+        bool removeXmlTags = false;
 
-    bool m_utf8Charset{};
+        QStringList moveForcePatternsList{}; // string wildcart patterns, that force new move command
+        QStringList noDescriptionPatternsList{};
 
-    bool m_IAC_prompt_parser{};
-    bool m_remoteEditing{};
-    bool m_internalRemoteEditor{};
-    QString m_externalRemoteEditorCommand;
+        QByteArray promptPattern{};
+        QByteArray loginPattern{};
+        QByteArray passwordPattern{};
+        QByteArray menuPromptPattern{};
 
-    bool m_removeXmlTags{};
+        bool utf8Charset = false;
 
-    QStringList m_moveForcePatternsList; // string wildcart patterns, that force new move command
-    QStringList m_noDescriptionPatternsList;
-    QByteArray m_promptPattern;
-    QByteArray m_loginPattern;
-    QByteArray m_passwordPattern;
-    QByteArray m_menuPromptPattern;
+    private:
+        friend class Configuration;
+        void read(QSettings &conf);
+        void write(QSettings &conf) const;
+    } parser;
 
-    qreal m_acceptBestRelative{};
-    qreal m_acceptBestAbsolute{};
-    qreal m_newRoomPenalty{};
-    qreal m_multipleConnectionsPenalty{};
-    qreal m_correctPositionBonus{};
-    quint32 m_maxPaths{};
-    quint32 m_matchingTolerance{};
+    struct MumeClientProtocolSettings
+    {
+        bool IAC_prompt_parser = false;
+        bool remoteEditing = false;
+        bool internalRemoteEditor = false;
+        QString externalRemoteEditorCommand{};
 
-    int m_groupManagerState{};
-    int m_groupManagerLocalPort{};
-    int m_groupManagerRemotePort{};
-    QByteArray m_groupManagerHost;
-    QByteArray m_groupManagerCharName;
-    bool m_groupManagerShareSelf{};
-    QColor m_groupManagerColor;
-    bool m_groupManagerRulesWarning{};
+    private:
+        friend class Configuration;
+        void read(QSettings &conf);
+        void write(QSettings &conf) const;
+    } mumeClientProtocol{};
 
-    int m_mumeStartEpoch{};
-    bool m_displayMumeClock{};
+    struct MumeNativeSettings
+    {
+        /* serialized */
+        bool emulatedExits = false;
+        bool showHiddenExitFlags = false;
+        bool showNotes = false;
 
-    QFont m_clientFont;
-    QColor m_clientForegroundColor;
-    QColor m_clientBackgroundColor;
-    int m_clientColumns{};
-    int m_clientRows{};
-    int m_clientLinesOfScrollback{};
-    int m_clientLinesOfInputHistory{};
-    int m_clientTabCompletionDictionarySize{};
-    bool m_clientClearInputOnEnter{};
+    private:
+        friend class Configuration;
+        void read(QSettings &conf);
+        void write(QSettings &conf) const;
+    } mumeNative{};
+
+    struct CanvasSettings
+    {
+        bool showUpdated = false;
+        bool drawNotMappedExits = false;
+        bool drawNoMatchExits = false;
+        bool drawUpperLayersTextured = false;
+        bool drawDoorNames = false;
+        QColor backgroundColor{};
+        int antialiasingSamples = 0;
+        bool trilinearFiltering = false;
+        bool softwareOpenGL = false;
+
+    private:
+        friend class Configuration;
+        void read(QSettings &conf);
+        void write(QSettings &conf) const;
+    } canvas{};
+
+    struct AutoLoadSettings
+    {
+        bool autoLoadMap = false;
+        QString fileName{};
+        QString lastMapDirectory{};
+
+    private:
+        friend class Configuration;
+        void read(QSettings &conf);
+        void write(QSettings &conf) const;
+    } autoLoad{};
+
+    struct PathMachineSettings
+    {
+        qreal acceptBestRelative = 0.0;
+        qreal acceptBestAbsolute = 0.0;
+        qreal newRoomPenalty = 0.0;
+        qreal multipleConnectionsPenalty = 0.0;
+        qreal correctPositionBonus = 0.0;
+        quint32 maxPaths = 0u;
+        quint32 matchingTolerance = 0u;
+
+    private:
+        friend class Configuration;
+        void read(QSettings &conf);
+        void write(QSettings &conf) const;
+    } pathMachine{};
+
+    struct GroupManagerSettings
+    {
+        GroupManagerState state = GroupManagerState::Off;
+        int localPort = 0;
+        int remotePort = 0;
+        QByteArray host{};
+        QByteArray charName{};
+        bool shareSelf = false;
+        QColor color{};
+        bool rulesWarning = false;
+
+    private:
+        friend class Configuration;
+        void read(QSettings &conf);
+        void write(QSettings &conf) const;
+    } groupManager{};
+
+    struct MumeClockSettings
+    {
+        int startEpoch = 0;
+        bool display = false;
+
+    private:
+        friend class Configuration;
+        void read(QSettings &conf);
+        void write(QSettings &conf) const;
+    } mumeClock{};
+
+    struct IntegratedMudClientSettings
+    {
+        QFont font{};
+        QColor foregroundColor{};
+        QColor backgroundColor{};
+        int columns = 0;
+        int rows = 0;
+        int linesOfScrollback = 0;
+        int linesOfInputHistory = 0;
+        int tabCompletionDictionarySize = 0;
+        bool clearInputOnEnter = false;
+        bool autoResizeTerminal = false;
+
+    private:
+        friend class Configuration;
+        void read(QSettings &conf);
+        void write(QSettings &conf) const;
+    } integratedClient{};
+
+public:
+    Configuration(Configuration &&) = delete;
+    Configuration(const Configuration &) = delete;
+    Configuration &operator=(Configuration &&) = delete;
+    Configuration &operator=(const Configuration &) = delete;
 
 private:
-    Configuration();
-    Configuration(const Configuration &);
-
-    bool configurationChanged{};
+    explicit Configuration();
+    bool configurationChanged = false;
     void change() { configurationChanged = true; }
 
     friend Configuration &Config();
+
+public:
+    struct PosSize
+    {
+        QPoint pos;
+        QSize size;
+    };
+    PosSize readIntegratedMudClientPosSize();
+    void writeIntegratedMudClientPosSize(const PosSize &posSize) const;
+
+public:
+    QPoint readInfoMarksEditDlgPos();
+    void writeInfoMarksEditDlgPos(const QPoint &pos) const;
+
+public:
+    QPoint readRoomEditAttrDlgPos();
+    void writeRoomEditAttrDlgPos(const QPoint &pos) const;
 };
 
 /// Returns a reference to the application configuration object.

@@ -23,16 +23,16 @@
 ************************************************************************/
 
 #include "clientpage.h"
-#include "configuration/configuration.h"
-#include "ui_clientpage.h"
 
 #include <QFont>
-#include <QFontDialog>
 #include <QFontInfo>
-
-#include <QColorDialog>
-
 #include <QSpinBox>
+#include <QString>
+#include <QtGui>
+#include <QtWidgets>
+
+#include "../configuration/configuration.h"
+#include "ui_clientpage.h"
 
 ClientPage::ClientPage(QWidget *parent)
     : QWidget(parent)
@@ -42,15 +42,22 @@ ClientPage::ClientPage(QWidget *parent)
 
     updateFontAndColors();
 
-    ui->columnsSpinBox->setValue(Config().m_clientColumns);
-    ui->rowsSpinBox->setValue(Config().m_clientRows);
-    ui->scrollbackSpinBox->setValue(Config().m_clientLinesOfScrollback);
+    const auto &settings = Config().integratedClient;
+    ui->columnsSpinBox->setValue(settings.columns);
+    ui->rowsSpinBox->setValue(settings.rows);
+    ui->scrollbackSpinBox->setValue(settings.linesOfScrollback);
+    ui->clearInputCheckBox->setChecked(settings.clearInputOnEnter);
+    ui->autoResizeTerminalCheckBox->setChecked(settings.autoResizeTerminal);
 
-    ui->clearInputCheckBox->setChecked(Config().m_clientClearInputOnEnter);
-
-    connect(ui->fontPushButton, SIGNAL(pressed()), this, SLOT(onChangeFont()));
-    connect(ui->bgColorPushBotton, SIGNAL(pressed()), this, SLOT(onChangeBackgroundColor()));
-    connect(ui->fgColorPushButton, SIGNAL(pressed()), this, SLOT(onChangeForegroundColor()));
+    connect(ui->fontPushButton, &QAbstractButton::pressed, this, &ClientPage::onChangeFont);
+    connect(ui->bgColorPushBotton,
+            &QAbstractButton::pressed,
+            this,
+            &ClientPage::onChangeBackgroundColor);
+    connect(ui->fgColorPushButton,
+            &QAbstractButton::pressed,
+            this,
+            &ClientPage::onChangeForegroundColor);
 
     connect(ui->columnsSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onChangeColumns(int)));
     connect(ui->rowsSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onChangeRows(int)));
@@ -67,8 +74,15 @@ ClientPage::ClientPage(QWidget *parent)
             SIGNAL(valueChanged(int)),
             this,
             SLOT(onChangeTabCompletionDictionarySize(int)));
+
     connect(ui->clearInputCheckBox, &QCheckBox::toggled, [=](bool isChecked) {
-        Config().m_clientClearInputOnEnter = isChecked;
+        /* NOTE: This directly modifies the global setting. */
+        Config().integratedClient.clearInputOnEnter = isChecked;
+    });
+
+    connect(ui->autoResizeTerminalCheckBox, &QCheckBox::toggled, [=](bool isChecked) {
+        /* NOTE: This directly modifies the global setting. */
+        Config().integratedClient.autoResizeTerminal = isChecked;
     });
 }
 
@@ -79,78 +93,82 @@ ClientPage::~ClientPage()
 
 void ClientPage::updateFontAndColors()
 {
-    QFont font = Config().m_clientFont;
-    ui->exampleLineEdit->setFont(font);
+    const auto &settings = Config().integratedClient;
+    ui->exampleLineEdit->setFont(settings.font);
 
-    QFontInfo fi(font);
+    QFontInfo fi(settings.font);
     ui->fontPushButton->setText(
         QString("%1 %2, %3").arg(fi.family()).arg(fi.styleName()).arg(fi.pointSize()));
 
     QPixmap fgPix(16, 16);
-    fgPix.fill(Config().m_clientForegroundColor);
+    fgPix.fill(settings.foregroundColor);
     ui->fgColorPushButton->setIcon(QIcon(fgPix));
 
     QPixmap bgPix(16, 16);
-    bgPix.fill(Config().m_clientBackgroundColor);
+    bgPix.fill(settings.backgroundColor);
     ui->bgColorPushBotton->setIcon(QIcon(bgPix));
     ui->exampleLineEdit->setStyleSheet(QString("background: %1; color: %2")
-                                           .arg(Config().m_clientBackgroundColor.name())
-                                           .arg(Config().m_clientForegroundColor.name()));
+                                           .arg(settings.backgroundColor.name())
+                                           .arg(settings.foregroundColor.name()));
 }
 
 void ClientPage::onChangeFont()
 {
-    bool ok;
-    QFont font = QFontDialog::getFont(&ok,
-                                      Config().m_clientFont,
-                                      this,
-                                      "Select Font",
-                                      QFontDialog::MonospacedFonts);
+    auto &font = Config().integratedClient.font;
+
+    bool ok = false;
+    const QFont newFont = QFontDialog::getFont(&ok,
+                                               font,
+                                               this,
+                                               "Select Font",
+                                               QFontDialog::MonospacedFonts);
     if (ok) {
-        Config().m_clientFont = font;
+        font = newFont;
         updateFontAndColors();
     }
 }
 
 void ClientPage::onChangeBackgroundColor()
 {
-    const QColor newColor = QColorDialog::getColor(Config().m_clientBackgroundColor, this);
-    if (newColor.isValid() && newColor != Config().m_clientBackgroundColor) {
-        Config().m_clientBackgroundColor = newColor;
+    auto &backgroundColor = Config().integratedClient.backgroundColor;
+    const QColor newColor = QColorDialog::getColor(backgroundColor, this);
+    if (newColor.isValid() && newColor != backgroundColor) {
+        backgroundColor = newColor;
         updateFontAndColors();
     }
 }
 
 void ClientPage::onChangeForegroundColor()
 {
-    const QColor newColor = QColorDialog::getColor(Config().m_clientForegroundColor, this);
-    if (newColor.isValid() && newColor != Config().m_clientForegroundColor) {
-        Config().m_clientForegroundColor = newColor;
+    auto &foregroundColor = Config().integratedClient.foregroundColor;
+    const QColor newColor = QColorDialog::getColor(foregroundColor, this);
+    if (newColor.isValid() && newColor != foregroundColor) {
+        foregroundColor = newColor;
         updateFontAndColors();
     }
 }
 
-void ClientPage::onChangeColumns(int value)
+void ClientPage::onChangeColumns(const int value)
 {
-    Config().m_clientColumns = value;
+    Config().integratedClient.columns = value;
 }
 
-void ClientPage::onChangeRows(int value)
+void ClientPage::onChangeRows(const int value)
 {
-    Config().m_clientRows = value;
+    Config().integratedClient.rows = value;
 }
 
-void ClientPage::onChangeLinesOfScrollback(int value)
+void ClientPage::onChangeLinesOfScrollback(const int value)
 {
-    Config().m_clientLinesOfScrollback = value;
+    Config().integratedClient.linesOfScrollback = value;
 }
 
-void ClientPage::onChangeLinesOfInputHistory(int value)
+void ClientPage::onChangeLinesOfInputHistory(const int value)
 {
-    Config().m_clientLinesOfInputHistory = value;
+    Config().integratedClient.linesOfInputHistory = value;
 }
 
-void ClientPage::onChangeTabCompletionDictionarySize(int value)
+void ClientPage::onChangeTabCompletionDictionarySize(const int value)
 {
-    Config().m_clientTabCompletionDictionarySize = value;
+    Config().integratedClient.tabCompletionDictionarySize = value;
 }

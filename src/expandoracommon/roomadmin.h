@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -26,6 +27,8 @@
 #ifndef ROOMADMIN_H
 #define ROOMADMIN_H
 
+#include "room.h"
+
 class RoomRecipient;
 class MapAction;
 
@@ -34,11 +37,11 @@ class RoomAdmin
 public:
     // removes the lock on a room
     // after the last lock is removed, the room is deleted
-    virtual void releaseRoom(RoomRecipient *, unsigned int) = 0;
+    virtual void releaseRoom(RoomRecipient &, RoomId) = 0;
 
     // makes a lock on a room permanent and anonymous.
     // Like that the room can't be deleted via releaseRoom anymore.
-    virtual void keepRoom(RoomRecipient *, unsigned int) = 0;
+    virtual void keepRoom(RoomRecipient &, RoomId) = 0;
 
     virtual void scheduleAction(MapAction *action) = 0;
 

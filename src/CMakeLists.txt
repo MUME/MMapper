@@ -18,19 +18,31 @@ set(mmapper_SRCS
     clock/mumemoment.h
     configuration/configuration.cpp
     configuration/configuration.h
+    display/ConnectionLineBuilder.cpp
+    display/ConnectionLineBuilder.h
     display/connectionselection.cpp
     display/connectionselection.h
+    display/FontFormatFlags.h
     display/mapcanvas.cpp
+    display/MapCanvasData.cpp
+    display/MapCanvasData.h
+    display/MapCanvasRoomDrawer.cpp
+    display/MapCanvasRoomDrawer.h
     display/mapcanvas.h
     display/mapwindow.cpp
     display/mapwindow.h
+    display/OpenGL.cpp
+    display/OpenGL.h
     display/prespammedpath.cpp
     display/prespammedpath.h
+    display/RoadIndex.cpp
+    display/RoadIndex.h
     expandoracommon/abstractroomfactory.h
     expandoracommon/component.cpp
     expandoracommon/component.h
     expandoracommon/coordinate.cpp
     expandoracommon/coordinate.h
+    expandoracommon/exit.cpp
     expandoracommon/exit.h
     expandoracommon/frustum.cpp
     expandoracommon/frustum.h
@@ -42,8 +54,22 @@ set(mmapper_SRCS
     expandoracommon/roomadmin.h
     expandoracommon/room.h
     expandoracommon/roomrecipient.h
-    global/defs.h
+    global/bits.h
+    global/CharBuffer.h
+    global/DirectionType.cpp
+    global/DirectionType.h
+    global/EnumIndexedArray.h
+    global/enums.h
+    global/Flags.h
+    global/io.cpp
+    global/io.h
+    global/RAII.cpp
+    global/RAII.h
     global/range.h
+    global/roomid.h
+    global/StringView.cpp
+    global/StringView.h
+    global/utils.h
     mainwindow/aboutdialog.cpp
     mainwindow/aboutdialog.h
     mainwindow/findroomsdlg.cpp
@@ -58,11 +84,18 @@ set(mmapper_SRCS
     mainwindow/welcomewidget.h
     mapdata/customaction.cpp
     mapdata/customaction.h
+    mapdata/DoorFlags.h
     mapdata/drawstream.h
+    mapdata/enums.cpp
+    mapdata/enums.h
+    mapdata/ExitDirection.cpp
+    mapdata/ExitDirection.h
+    mapdata/ExitFieldVariant.cpp
+    mapdata/ExitFieldVariant.h
+    mapdata/ExitFlags.h
     mapdata/infomark.h
     mapdata/mapdata.cpp
     mapdata/mapdata.h
-    mapdata/mmapper2exit.cpp
     mapdata/mmapper2exit.h
     mapdata/mmapper2room.cpp
     mapdata/mmapper2room.h
@@ -74,6 +107,9 @@ set(mmapper_SRCS
     mapdata/roomselection.h
     mapdata/shortestpath.cpp
     mapdata/shortestpath.h
+    mapfrontend/AbstractRoomVisitor.h
+    mapfrontend/ByteArray.cpp
+    mapfrontend/ByteArray.h
     mapfrontend/intermediatenode.cpp
     mapfrontend/intermediatenode.h
     mapfrontend/mapaction.cpp
@@ -82,11 +118,12 @@ set(mmapper_SRCS
     mapfrontend/mapfrontend.cpp
     mapfrontend/mapfrontend.h
     mapfrontend/map.h
+    mapfrontend/ParseTree.cpp
+    mapfrontend/ParseTree.h
     mapfrontend/roomcollection.cpp
     mapfrontend/roomcollection.h
     mapfrontend/roomlocker.cpp
     mapfrontend/roomlocker.h
-    mapfrontend/roomoutstream.h
     mapfrontend/searchtreenode.cpp
     mapfrontend/searchtreenode.h
     mapfrontend/tinylist.h
@@ -136,16 +173,27 @@ set(mmapper_SRCS
     pandoragroup/groupwidget.h
     pandoragroup/mmapper2group.cpp
     pandoragroup/mmapper2group.h
+    parser/Abbrev.cpp
+    parser/Abbrev.h
+    parser/AbstractParser-Commands.cpp
+    parser/AbstractParser-Commands.h
     parser/abstractparser.cpp
     parser/abstractparser.h
-    parser/mmapper2event.cpp
-    parser/mmapper2event.h
+    parser/AbstractParser-Utils.cpp
+    parser/AbstractParser-Utils.h
+    parser/CommandId.cpp
+    parser/CommandId.h
+    parser/ConnectedRoomFlags.h
+    parser/DoorAction.cpp
+    parser/DoorAction.h
+    parser/ExitsFlags.h
     parser/mumexmlparser.cpp
     parser/mumexmlparser.h
     parser/parserutils.cpp
     parser/parserutils.h
     parser/patterns.cpp
     parser/patterns.h
+    parser/PromptFlags.h
     pathmachine/approved.cpp
     pathmachine/approved.h
     pathmachine/crossover.cpp
@@ -232,24 +280,7 @@ endif()
 set(mmapper_DATA
     mmapper.desktop
     MacOSXBundleInfo.plist.in
-)
-
-include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}/clock
-    ${CMAKE_CURRENT_SOURCE_DIR}/configuration
-    ${CMAKE_CURRENT_SOURCE_DIR}/display
-    ${CMAKE_CURRENT_SOURCE_DIR}/expandoracommon
-    ${CMAKE_CURRENT_SOURCE_DIR}/global
-    ${CMAKE_CURRENT_SOURCE_DIR}/mainwindow
-    ${CMAKE_CURRENT_SOURCE_DIR}/mapdata
-    ${CMAKE_CURRENT_SOURCE_DIR}/mapfrontend
-    ${CMAKE_CURRENT_SOURCE_DIR}/mapstorage
-    ${CMAKE_CURRENT_SOURCE_DIR}/pandoragroup
-    ${CMAKE_CURRENT_SOURCE_DIR}/parser
-    ${CMAKE_CURRENT_SOURCE_DIR}/pathmachine
-    ${CMAKE_CURRENT_SOURCE_DIR}/preferences
-    ${CMAKE_CURRENT_SOURCE_DIR}/proxy
-)
+        display/OpenGL.cpp)
 
 # Build the executable
 add_executable(mmapper WIN32 MACOSX_BUNDLE
@@ -284,6 +315,9 @@ if(WITH_QTIOCOMPRESSOR)
             add_dependencies(mmapper zlib)
         endif()
         target_link_libraries(mmapper ${ZLIB_LIBRARIES})
+        include_directories(
+                ${ZLIB_INCLUDE_DIRS}
+        )
     endif()
 endif()
 
@@ -326,6 +360,7 @@ if(USE_IWYU)
         )
     endif()
 endif()
+
 
 # Begin CPack Settings
 set(CPACK_PACKAGE_VERSION ${MMAPPER_VERSION})

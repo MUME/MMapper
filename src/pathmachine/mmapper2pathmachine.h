@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -26,25 +27,31 @@
 #ifndef MMAPPER2PARSER_H
 #define MMAPPER2PARSER_H
 
+#include <QString>
+#include <QtCore>
+
+#include "../expandoracommon/parseevent.h"
 #include "pathmachine.h"
 
 class Configuration;
 class ParseEvent;
+class QObject;
+class SigParseEvent;
 
 /**
 @author alve,,,
 */
-class Mmapper2PathMachine : public PathMachine
+class Mmapper2PathMachine final : public PathMachine
 {
 private:
     Q_OBJECT
     Configuration &config;
 
 public slots:
-    void event(ParseEvent *);
+    void event(const SigParseEvent &) override;
 
 public:
-    Mmapper2PathMachine();
+    explicit Mmapper2PathMachine();
 
 signals:
     void log(const QString &, const QString &);

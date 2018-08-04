@@ -24,56 +24,170 @@
 **
 ************************************************************************/
 
-#include "configuration.h"
-#include "coordinate.h"
-#include "mainwindow.h"
-#include "mapfrontend.h"
-#include "pathmachine.h"
-
 #include <cstdlib>
-#include <QApplication>
-#include <QSplashScreen>
+#include <thread>
+#include <QPixmap>
+#include <QtCore>
+#include <QtWidgets>
 
-int main(int argc, char **argv)
+#include "configuration/configuration.h"
+#include "global/utils.h"
+#include "mainwindow/mainwindow.h"
+
+// REVISIT: move splash files somewhere else?
+// (presumably not in the "root" src/ directory?)
+struct ISplash
 {
-    QApplication app(argc, argv);
+    virtual ~ISplash() = default;
+    virtual void finish(QWidget *) = 0;
+};
 
+struct FakeSplash final : public ISplash
+{
+    void finish(QWidget *) final {}
+};
+
+class Splash final : public ISplash
+{
+private:
+    QPixmap pixmap;
+    QSplashScreen splash;
+
+public:
+    explicit Splash()
+        : pixmap(":/pixmaps/splash20.png")
+        , splash(pixmap)
+    {
+        const auto message = QString("%1").arg(MMAPPER_VERSION, -9);
+        splash.showMessage(message, Qt::AlignBottom | Qt::AlignRight, Qt::yellow);
+        splash.show();
+    }
+
+    void finish(QWidget *w) { splash.finish(w); }
+};
+
+static void tryUseHighDpi(QApplication &app)
+{
 #if QT_VERSION >= 0x050100
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
 #endif
+}
 
-    Config().read();
-    if (Config().m_softwareOpenGL) {
-        app.setAttribute(Qt::AA_UseSoftwareOpenGL);
-#ifdef Q_OS_LINUX
-        setenv("LIBGL_ALWAYS_SOFTWARE", "1", 1);
-#endif
+static bool tryLoad(MainWindow &mw,
+                    const QDir &dir,
+                    const QString &input_filename,
+                    const bool updateSettings)
+{
+    struct OptionalQString
+    {
+        QString filename;
+        bool isValid;
+    };
+
+    const auto getAbsoluteFileName = [](const QDir &dir,
+                                        const QString &input_filename) -> OptionalQString {
+        if (QFileInfo{input_filename}.isAbsolute())
+            return OptionalQString{input_filename, true};
+
+        if (!dir.exists()) {
+            qInfo() << "[main] Directory" << dir.absolutePath() << "does not exist.";
+            return {{}, false};
+        }
+
+        return OptionalQString{dir.absoluteFilePath(input_filename), true};
+    };
+
+    const auto maybeFilename = getAbsoluteFileName(dir, input_filename);
+    if (!maybeFilename.isValid)
+        return false;
+
+    const auto absoluteFilePath = maybeFilename.filename;
+    if (!QFile{absoluteFilePath}.exists()) {
+        qInfo() << "[main] File " << absoluteFilePath << "does not exist.";
+        return false;
     }
 
-#ifdef WITH_SPLASH
-    QPixmap pixmap(":/pixmaps/splash20.png");
-    QSplashScreen splash(pixmap);
-    splash.showMessage(QString("%1").arg(MMAPPER_VERSION, -9),
-                       Qt::AlignBottom | Qt::AlignRight,
-                       Qt::yellow);
-    splash.show();
+    mw.loadFile(absoluteFilePath);
+
+    if (updateSettings) {
+        // REVISIT: We probably shouldn't update if the load failed.
+        auto &settings = Config().autoLoad;
+
+        QFileInfo file(absoluteFilePath);
+        settings.autoLoadMap = true;
+        settings.fileName = file.fileName();
+        settings.lastMapDirectory = file.dir().absolutePath();
+    }
+
+    return true;
+}
+
+static void firstRun(MainWindow &mw)
+{
+    const auto cd = [](QDir dir, QString subdir) -> QDir {
+        return QDir{dir.absoluteFilePath(subdir)};
+    };
+
+    /* REVISIT: may want both .exe directory and the cwd, since they might be different! */
+    std::set<QString> seen;
+    for (const auto& dir :
+         {QDir{Config().autoLoad.lastMapDirectory}, QDir::current(), cd(QDir::current(), "map")}) {
+        const auto name = dir.absolutePath();
+        if (seen.find(name) != seen.end())
+            continue;
+        seen.emplace(name);
+        if (tryLoad(mw, dir, "arda.mm2", true))
+            break;
+    }
+}
+
+static void tryAutoLoad(MainWindow &mw)
+{
+    const auto &config = Config();
+    const auto &settings = config.autoLoad;
+
+    if (settings.autoLoadMap && !settings.fileName.isEmpty()) {
+        tryLoad(mw, QDir{settings.lastMapDirectory}, settings.fileName, false);
+    } else if (config.general.firstRun) {
+        firstRun(mw);
+    }
+}
+
+#ifndef NDEBUG
+static constexpr const bool IS_DEBUG_BUILD = true;
+#else
+static constexpr const bool IS_DEBUG_BUILD = false;
 #endif
-    MainWindow mw;
-    if (Config().m_autoLoadWorld && Config().m_autoLoadFileName != "") {
-        mw.loadFile(Config().m_autoLoadFileName);
-    } else if (Config().m_firstRun) {
-        QString fileName = QDir(Config().m_lastMapDirectory).filePath("arda.mm2");
-        if (QFile(fileName).exists()) {
-            mw.loadFile(fileName);
-            Config().m_autoLoadWorld = true;
-            Config().m_autoLoadFileName = fileName;
+
+int main(int argc, char **argv)
+{
+    if (IS_DEBUG_BUILD) {
+        // see http://doc.qt.io/qt-5/qtglobal.html#qSetMessagePattern
+        // also allows environment variable QT_MESSAGE_PATTERN
+        qSetMessagePattern("[%{time}] %{type} in %{function} (at %{file}:%{line}): %{message}");
+    }
+
+    QApplication app(argc, argv);
+    tryUseHighDpi(app);
+
+    const auto &config = Config();
+    if (config.canvas.softwareOpenGL) {
+        app.setAttribute(Qt::AA_UseSoftwareOpenGL);
+        if (CURRENT_PLATFORM == Platform::Linux) {
+            qputenv("LIBGL_ALWAYS_SOFTWARE", "1");
         }
     }
+
+    std::unique_ptr<ISplash> splash = !config.general.noSplash
+                                          ? static_upcast<ISplash>(std::make_unique<Splash>())
+                                          : static_upcast<ISplash>(std::make_unique<FakeSplash>());
+    MainWindow mw;
+    tryAutoLoad(mw);
     mw.show();
-#ifdef WITH_SPLASH
-    splash.finish(&mw);
-#endif
-    int ret = app.exec();
-    Config().write();
+    splash->finish(&mw);
+    splash.reset();
+
+    const int ret = app.exec();
+    config.write();
     return ret;
 }

@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -26,35 +27,29 @@
 #ifndef PROPERTYH
 #define PROPERTYH
 
-#include "listcycler.h"
-#include <QByteArray>
+#include <string>
 
-class Property : public ListCycler<char, QByteArray>
+#include "listcycler.h"
+
+class Property final : public ListCycler<char, std::string>
 {
 public:
-    Property(const QByteArray &data);
+    using ListCycler::ListCycler;
 
+public:
     const char *rest() const;
-    bool isSkipped() const;
+    inline bool isSkipped() const noexcept { return m_skipped; }
 
-protected:
-    Property(bool skipped = false)
-        : m_skipped(skipped)
+public:
+    static constexpr const struct TagSkip
+    {
+    } tagSkip{};
+    explicit Property(TagSkip)
+        : m_skipped{true}
     {}
 
 private:
-    bool m_skipped;
+    bool m_skipped = false;
 };
 
-class SkipProperty : public Property
-{
-public:
-    SkipProperty()
-        : Property(true)
-    {}
-};
-
-#ifdef DMALLOC
-#include <mpatrol.h>
-#endif
 #endif

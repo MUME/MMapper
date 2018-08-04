@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -25,12 +26,13 @@
 
 #ifndef PATHPARAMETERS_H
 #define PATHPARAMETERS_H
-typedef unsigned int uint;
+using uint = unsigned int;
 
 class PathParameters
 {
 public:
     PathParameters();
+
     double acceptBestRelative;
     double acceptBestAbsolute;
     double newRoomPenalty;

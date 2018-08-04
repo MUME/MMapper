@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -26,12 +27,20 @@
 #ifndef CONNECTIONSELECTION_H
 #define CONNECTIONSELECTION_H
 
-#include "mmapper2exit.h"
-#include "roomrecipient.h"
+#include <array>
 #include <QObject>
+#include <QString>
+#include <QtCore>
+
+#include "../expandoracommon/roomrecipient.h"
+#include "../global/roomid.h"
+#include "../mapdata/ExitDirection.h"
+#include "../mapdata/mmapper2exit.h"
 
 class MapFrontend;
 class Room;
+class RoomAdmin;
+struct RoomId;
 
 class ConnectionSelection : public QObject, public RoomRecipient
 {
@@ -40,18 +49,18 @@ class ConnectionSelection : public QObject, public RoomRecipient
 public:
     struct ConnectionDescriptor
     {
-        const Room *room;
-        ExitDirection direction;
+        const Room *room = nullptr;
+        ExitDirection direction{};
     };
 
-    ConnectionSelection(MapFrontend *, double mx, double my, int layer);
-    ConnectionSelection();
+    explicit ConnectionSelection(MapFrontend *, double mx, double my, int layer);
+    explicit ConnectionSelection();
     ~ConnectionSelection();
 
     void setFirst(MapFrontend *, double mx, double my, int layer);
-    void setFirst(MapFrontend *mf, uint id, ExitDirection dir);
+    void setFirst(MapFrontend *mf, RoomId RoomId, ExitDirection dir);
     void setSecond(MapFrontend *, double mx, double my, int layer);
-    void setSecond(MapFrontend *mf, uint id, ExitDirection dir);
+    void setSecond(MapFrontend *mf, RoomId RoomId, ExitDirection dir);
 
     void removeFirst();
     void removeSecond();
@@ -63,7 +72,7 @@ public:
     bool isFirstValid() { return m_connectionDescriptor[0].room != nullptr; }
     bool isSecondValid() { return m_connectionDescriptor[1].room != nullptr; }
 
-    void receiveRoom(RoomAdmin *admin, const Room *aRoom);
+    void receiveRoom(RoomAdmin *admin, const Room *aRoom) override;
 
 public slots:
 
@@ -73,12 +82,13 @@ protected:
 private:
     ExitDirection ComputeDirection(double mouseX, double mouseY);
 
-    int GLtoMap(double arg);
+    static int GLtoMap(double arg);
 
-    ConnectionDescriptor m_connectionDescriptor[2]{};
+    // REVISIT: give these enum names?
+    std::array<ConnectionDescriptor, 2> m_connectionDescriptor{};
 
-    bool m_first;
-    RoomAdmin *m_admin;
+    bool m_first = true;
+    RoomAdmin *m_admin = nullptr;
 };
 
 #endif

@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Azazello <lachupe@gmail.com>,
@@ -29,35 +30,38 @@
 #include <QByteArray>
 #include <QColor>
 
-class QDomNode;
+#include "../global/roomid.h"
 
-/*
- * TODO: Add Character Flags
- * BLIND
- * BASHED
- * SLEPT
- * POISONED
- * BLEEDING
- */
+class QDomNode;
 
 class CGroupChar
 {
 public:
-    unsigned int pos;
-    QByteArray name;
-    QByteArray textHP;
-    QByteArray textMoves;
-    QByteArray textMana;
-    QByteArray lastMovement;
-    int hp, maxhp;
-    int mana, maxmana;
-    int moves, maxmoves;
-    int state;
-    QColor color;
+    enum class CharacterStates {
+        NORMAL,
+        FIGHTING,
+        RESTING,
+        SLEEPING,
+        CASTING,
+        INCAPACITATED,
+        DEAD
+        // TODO: Add BLIND BASHED SLEPT POISONED BLEEDING
+    };
 
-    enum CharacterStates { NORMAL, FIGHTING, RESTING, SLEEPING, CASTING, INCAPACITATED, DEAD };
+public:
+    RoomId pos = INVALID_ROOMID;
+    QByteArray name{};
+    QByteArray textHP{};
+    QByteArray textMoves{};
+    QByteArray textMana{};
+    QByteArray lastMovement{};
+    int hp = 0, maxhp = 0;
+    int mana = 0, maxmana = 0;
+    int moves = 0, maxmoves = 0;
+    CharacterStates state = CharacterStates::NORMAL;
+    QColor color{};
 
-    CGroupChar();
+    explicit CGroupChar();
     virtual ~CGroupChar();
 
     const QByteArray &getName() const { return name; }
@@ -67,8 +71,8 @@ public:
     QDomNode toXML();
     bool updateFromXML(const QDomNode &node);
     void setLastMovement(QByteArray move) { lastMovement = move; }
-    void setPosition(unsigned int id) { pos = id; }
-    unsigned int getPosition() const { return pos; }
+    void setPosition(RoomId id) { pos = id; }
+    RoomId getPosition() const { return pos; }
     const QByteArray &getLastMovement() const { return lastMovement; }
     static QByteArray getNameFromXML(const QDomNode &node);
 
@@ -90,9 +94,9 @@ public:
         textMoves = moves;
     }
 
-private:
-    CGroupChar(const CGroupChar &); // prevent copying with pointer data on board
-    CGroupChar &operator=(const CGroupChar &);
+public:
+    CGroupChar(const CGroupChar &) = delete;
+    CGroupChar &operator=(const CGroupChar &) = delete;
 };
 
 #endif /*CGROUPCHAR_H_*/
