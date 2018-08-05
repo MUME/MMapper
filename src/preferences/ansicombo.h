@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Jan 'Kovis' Struhar <kovis@sourceforge.net> (Kovis)
@@ -27,18 +28,25 @@
 #define ANSI_COMBO_H
 
 #include <QComboBox>
+#include <QIcon>
+#include <QString>
 #include <QVector>
+#include <QtCore>
 
-enum AnsiMode { ANSI_FG, ANSI_BG };
+class QColor;
+class QObject;
+class QWidget;
+
+enum class AnsiMode { ANSI_FG, ANSI_BG };
 
 class AnsiCombo : public QComboBox
 {
-    typedef QComboBox super;
+    using super = QComboBox;
     Q_OBJECT
 public:
     static void makeWidgetColoured(QWidget *, const QString &ansiColor);
 
-    AnsiCombo(QWidget *parent);
+    explicit AnsiCombo(QWidget *parent);
 
     void initColours(AnsiMode mode);
     /// populate the list with ANSI codes and coloured boxes
@@ -70,15 +78,15 @@ protected:
     class AnsiItem
     {
     public:
-        QString ansiCode;
-        QString description;
-        QIcon picture;
+        QString ansiCode{};
+        QString description{};
+        QIcon picture{};
     };
     using AnsiItemVector = QVector<AnsiItem>;
 
     static AnsiItem initAnsiItem(int index);
 
-    AnsiItemVector colours;
+    AnsiItemVector colours{};
 };
 
 #endif

@@ -22,44 +22,35 @@
 **
 ************************************************************************/
 
-#ifndef WIN32
-#define UNIX_SAFETY 1
-#endif
+#include "filesaver.h"
 
-#ifdef UNIX_SAFETY
-#include <cerrno>
 #include <cstdio>
-#include <cstring>
-#include <unistd.h>
-#endif
-
-#ifdef __APPLE__
-#include <fcntl.h>
-#endif
-
-#include "mapstorage/filesaver.h"
 #include <stdexcept>
+#include <QByteArray>
+#include <QIODevice>
 
-namespace {
-const char *c_suffix = ".tmp";
+#include "../configuration/configuration.h"
+#include "../global/io.h"
 
-void throw_sys_error()
+static constexpr const bool USE_TMP_SUFFIX = CURRENT_PLATFORM != Platform::Win32;
+
+static const char *const TMP_FILE_SUFFIX = ".tmp";
+auto maybe_add_suffix(const QString &filename)
 {
-#ifdef UNIX_SAFETY
-    char buf[1024] = "";
-#if _GNU_SOURCE
-    char const *str = strerror_r(errno, buf, sizeof(buf));
-    throw std::runtime_error(str);
-#else
-    strerror_r(errno, buf, sizeof(buf));
-    throw std::runtime_error(buf);
-#endif
-#else
-    return;
-#endif
+    return USE_TMP_SUFFIX ? (filename + TMP_FILE_SUFFIX) : filename;
 }
 
-} // namespace
+static void remove_tmp_suffix(const QString &filename) noexcept(false)
+{
+    if (!USE_TMP_SUFFIX)
+        return;
+
+    const auto from = QFile::encodeName(filename + TMP_FILE_SUFFIX);
+    const auto to = QFile::encodeName(filename);
+    if (::rename(from.data(), to.data()) == -1) {
+        throw io::IOException::withCurrentErrno();
+    }
+}
 
 FileSaver::~FileSaver()
 {
@@ -69,47 +60,26 @@ FileSaver::~FileSaver()
     }
 }
 
-void FileSaver::open(const QString &filename)
+void FileSaver::open(const QString &filename) noexcept(false)
 {
     close();
 
     m_filename = filename;
-
-#ifdef UNIX_SAFETY
-    m_file.setFileName(filename + c_suffix);
-#else
-    m_file.setFileName(filename);
-#endif
+    m_file.setFileName(maybe_add_suffix(filename));
 
     if (!m_file.open(QFile::WriteOnly)) {
         throw std::runtime_error(m_file.errorString().toStdString());
     }
 }
 
-void FileSaver::close()
+void FileSaver::close() noexcept(false)
 {
     if (!m_file.isOpen()) {
         return;
     }
 
     m_file.flush();
-
-#ifdef UNIX_SAFETY
-    int result = 0;
-#ifdef __APPLE__
-    result = fcntl(m_file.handle(), F_FULLFSYNC);
-#else
-    result = fsync(m_file.handle());
-#endif
-    if (result == -1) {
-        throw_sys_error();
-    }
-
-    if (rename(QFile::encodeName(m_filename + c_suffix).data(), QFile::encodeName(m_filename).data())
-        == -1) {
-        throw_sys_error();
-    }
-#endif
-
+    ::io::fsync(m_file);
+    remove_tmp_suffix(m_filename);
     m_file.close();
 }

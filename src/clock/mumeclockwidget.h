@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Nils Schimmelmann <nschimme@gmail.com> (Jahara)
@@ -25,30 +26,34 @@
 #ifndef MUMECLOCKWIDGET_H
 #define MUMECLOCKWIDGET_H
 
+#include <QString>
+#include <QWidget>
+#include <QtCore>
+
 #include "mumeclock.h"
 #include "mumemoment.h"
 #include "ui_mumeclockwidget.h"
-#include <QWidget>
 
+class QObject;
 class QTimer;
 
 class MumeClockWidget : public QWidget, private Ui::MumeClockWidget
 {
     Q_OBJECT
 public:
-    MumeClockWidget(MumeClock *clock = 0, QWidget *parent = 0);
+    explicit MumeClockWidget(MumeClock *clock = 0, QWidget *parent = nullptr);
     ~MumeClockWidget();
 
 public slots:
     void updateLabel();
 
 private:
-    MumeClock *m_clock;
-    QTimer *m_timer;
+    MumeClock *m_clock = nullptr;
+    QTimer *m_timer = nullptr;
 
-    MumeTime m_lastTime;
-    MumeSeason m_lastSeason;
-    MumeClockPrecision m_lastPrecision;
+    MumeTime m_lastTime = MumeTime::TIME_UNKNOWN;
+    MumeSeason m_lastSeason = MumeSeason::SEASON_UNKNOWN;
+    MumeClockPrecision m_lastPrecision = MumeClockPrecision::MUMECLOCK_UNSET;
 };
 
 #endif

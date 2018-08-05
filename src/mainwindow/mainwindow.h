@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -27,38 +28,54 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <memory>
 #include <QActionGroup>
 #include <QDockWidget>
 #include <QFileDialog>
 #include <QMainWindow>
-#include <QPointer>
 #include <QProgressDialog>
+#include <QSize>
+#include <QString>
 #include <QTextBrowser>
+#include <QtCore>
+#include <QtGlobal>
 
-class QMenu;
-class MapWindow;
-class Mmapper2PathMachine;
+#include "../pandoragroup/mmapper2group.h"
+
+class ClientWidget;
 class CommandEvaluator;
-class PrespammedPath;
-class MapData;
-class RoomSelection;
+class ConnectionListener;
 class ConnectionSelection;
 class FindRoomsDlg;
-class Mmapper2Group;
 class GroupWidget;
+class MapData;
+class MapWindow;
+class Mmapper2Group;
+class Mmapper2PathMachine;
 class MumeClock;
-class ConnectionListener;
-class ClientWidget;
+class PrespammedPath;
+class QAction;
+class QActionGroup;
+class QCloseEvent;
+class QFileDialog;
+class QMenu;
+class QObject;
+class QPoint;
+class QProgressDialog;
+class QTextBrowser;
+class QToolBar;
+class QWidget;
+class RoomSelection;
 class WelcomeWidget;
 
 class DockWidget : public QDockWidget
 {
     Q_OBJECT
 public:
-    DockWidget(const QString &title, QWidget *parent = 0, Qt::WindowFlags flags = 0);
+    explicit DockWidget(const QString &title, QWidget *parent = 0, Qt::WindowFlags flags = 0);
 
-    virtual QSize minimumSizeHint() const;
-    virtual QSize sizeHint() const;
+    virtual QSize minimumSizeHint() const override;
+    virtual QSize sizeHint() const override;
 };
 
 class MainWindow : public QMainWindow
@@ -66,17 +83,17 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = 0, Qt::WindowFlags flags = 0);
+    explicit MainWindow(QWidget *parent = 0, Qt::WindowFlags flags = 0);
     ~MainWindow();
 
-    enum SaveMode { SAVEM_FULL, SAVEM_BASEMAP };
-    enum SaveFormat { SAVEF_MM2, SAVEF_WEB };
+    enum class SaveMode { SAVEM_FULL, SAVEM_BASEMAP };
+    enum class SaveFormat { SAVEF_MM2, SAVEF_WEB };
     bool saveFile(const QString &fileName, SaveMode mode, SaveFormat format);
     void loadFile(const QString &fileName);
     void setCurrentFile(const QString &fileName);
 
 signals:
-    void setGroupManagerType(int);
+    void setGroupManagerType(GroupManagerState);
 
 public slots:
     void newFile();
@@ -138,133 +155,133 @@ public slots:
     void openNewbieHelp();
 
 protected:
-    void closeEvent(QCloseEvent *event);
-    virtual QSize minimumSizeHint() const;
-    virtual QSize sizeHint() const;
+    void closeEvent(QCloseEvent *event) override;
+    virtual QSize minimumSizeHint() const override;
+    virtual QSize sizeHint() const override;
 
 private:
-    MapWindow *m_mapWindow;
-    QTextBrowser *logWindow;
-    DockWidget *m_dockDialogLog;
-    DockWidget *m_dockDialogGroup;
-    DockWidget *m_dockWelcome;
+    MapWindow *m_mapWindow = nullptr;
+    QTextBrowser *logWindow = nullptr;
+    DockWidget *m_dockDialogLog = nullptr;
+    DockWidget *m_dockDialogGroup = nullptr;
+    DockWidget *m_dockWelcome = nullptr;
 
-    ConnectionListener *m_listener;
-    Mmapper2PathMachine *m_pathMachine;
-    MapData *m_mapData;
-    CommandEvaluator *m_commandEvaluator{};
-    PrespammedPath *m_prespammedPath;
-    MumeClock *m_mumeClock;
+    ConnectionListener *m_listener = nullptr;
+    Mmapper2PathMachine *m_pathMachine = nullptr;
+    MapData *m_mapData = nullptr;
+    CommandEvaluator *m_commandEvaluator = nullptr;
+    PrespammedPath *m_prespammedPath = nullptr;
+    MumeClock *m_mumeClock = nullptr;
 
     // Pandora Ported
-    FindRoomsDlg *m_findRoomsDlg;
-    Mmapper2Group *m_groupManager;
-    GroupWidget *m_groupWidget;
+    FindRoomsDlg *m_findRoomsDlg = nullptr;
+    Mmapper2Group *m_groupManager = nullptr;
+    GroupWidget *m_groupWidget = nullptr;
 
-    ClientWidget *m_client;
-    WelcomeWidget *m_welcomeWidget;
+    ClientWidget *m_client = nullptr;
+    WelcomeWidget *m_welcomeWidget = nullptr;
 
-    const RoomSelection *m_roomSelection;
-    ConnectionSelection *m_connectionSelection;
+    const RoomSelection *m_roomSelection = nullptr;
+    ConnectionSelection *m_connectionSelection = nullptr;
 
-    QProgressDialog *progressDlg{};
+    QProgressDialog *progressDlg = nullptr;
 
-    QToolBar *fileToolBar{};
-    QToolBar *editToolBar{};
-    QToolBar *mouseModeToolBar{};
-    QToolBar *mapModeToolBar{};
-    QToolBar *viewToolBar{};
-    QToolBar *pathMachineToolBar{};
-    QToolBar *roomToolBar{};
-    QToolBar *connectionToolBar{};
-    QToolBar *groupToolBar{};
-    QToolBar *settingsToolBar{};
+    QToolBar *fileToolBar = nullptr;
+    QToolBar *editToolBar = nullptr;
+    QToolBar *mouseModeToolBar = nullptr;
+    QToolBar *mapModeToolBar = nullptr;
+    QToolBar *viewToolBar = nullptr;
+    QToolBar *pathMachineToolBar = nullptr;
+    QToolBar *roomToolBar = nullptr;
+    QToolBar *connectionToolBar = nullptr;
+    QToolBar *groupToolBar = nullptr;
+    QToolBar *settingsToolBar = nullptr;
 
-    QMenu *fileMenu{};
-    QMenu *editMenu{};
-    QMenu *roomMenu{};
-    QMenu *connectionMenu{};
-    QMenu *viewMenu{};
-    QMenu *searchMenu{};
-    QMenu *settingsMenu{};
-    QMenu *helpMenu{};
-    QMenu *mumeMenu{};
-    QMenu *onlineTutorialsMenu{};
-    QMenu *groupMenu{};
+    QMenu *fileMenu = nullptr;
+    QMenu *editMenu = nullptr;
+    QMenu *roomMenu = nullptr;
+    QMenu *connectionMenu = nullptr;
+    QMenu *viewMenu = nullptr;
+    QMenu *searchMenu = nullptr;
+    QMenu *settingsMenu = nullptr;
+    QMenu *helpMenu = nullptr;
+    QMenu *mumeMenu = nullptr;
+    QMenu *onlineTutorialsMenu = nullptr;
+    QMenu *groupMenu = nullptr;
 
-    QAction *groupOffAct{};
-    QAction *groupClientAct{};
-    QAction *groupServerAct{};
-    QAction *groupShowHideAct{};
-    QAction *groupSettingsAct{};
+    QAction *groupOffAct = nullptr;
+    QAction *groupClientAct = nullptr;
+    QAction *groupServerAct = nullptr;
+    QAction *groupShowHideAct = nullptr;
+    QAction *groupSettingsAct = nullptr;
 
-    QAction *newAct{};
-    QAction *openAct{};
-    QAction *mergeAct{};
-    QAction *reloadAct{};
-    QAction *saveAct{};
-    QAction *saveAsAct{};
-    QAction *exportBaseMapAct{};
-    QAction *exportWebMapAct{};
-    QAction *exitAct{};
+    QAction *newAct = nullptr;
+    QAction *openAct = nullptr;
+    QAction *mergeAct = nullptr;
+    QAction *reloadAct = nullptr;
+    QAction *saveAct = nullptr;
+    QAction *saveAsAct = nullptr;
+    QAction *exportBaseMapAct = nullptr;
+    QAction *exportWebMapAct = nullptr;
+    QAction *exitAct = nullptr;
     //QAction *cutAct;
     //QAction *copyAct;
     //QAction *pasteAct;
-    QAction *voteAct{};
-    QAction *mmapperCheckForUpdateAct{};
-    QAction *mumeWebsiteAct{};
-    QAction *mumeForumAct{};
-    QAction *mumeWikiAct{};
-    QAction *settingUpMmapperAct{};
-    QAction *newbieAct{};
-    QAction *aboutAct{};
-    QAction *aboutQtAct{};
-    QAction *prevWindowAct{};
-    QAction *nextWindowAct{};
-    QAction *zoomInAct{};
-    QAction *zoomOutAct{};
-    QAction *alwaysOnTopAct{};
-    QAction *preferencesAct{};
+    QAction *voteAct = nullptr;
+    QAction *mmapperCheckForUpdateAct = nullptr;
+    QAction *mumeWebsiteAct = nullptr;
+    QAction *mumeForumAct = nullptr;
+    QAction *mumeWikiAct = nullptr;
+    QAction *settingUpMmapperAct = nullptr;
+    QAction *newbieAct = nullptr;
+    QAction *aboutAct = nullptr;
+    QAction *aboutQtAct = nullptr;
+    QAction *prevWindowAct = nullptr;
+    QAction *nextWindowAct = nullptr;
+    QAction *zoomInAct = nullptr;
+    QAction *zoomOutAct = nullptr;
+    QAction *alwaysOnTopAct = nullptr;
+    QAction *preferencesAct = nullptr;
 
-    QAction *layerUpAct{};
-    QAction *layerDownAct{};
+    QAction *layerUpAct = nullptr;
+    QAction *layerDownAct = nullptr;
 
-    QAction *modeConnectionSelectAct{};
-    QAction *modeRoomSelectAct{};
-    QAction *modeMoveSelectAct{};
-    QAction *modeInfoMarkEditAct{};
+    QAction *modeConnectionSelectAct = nullptr;
+    QAction *modeRoomSelectAct = nullptr;
+    QAction *modeMoveSelectAct = nullptr;
+    QAction *modeInfoMarkEditAct = nullptr;
 
-    QAction *modeCreateRoomAct{};
-    QAction *modeCreateConnectionAct{};
-    QAction *modeCreateOnewayConnectionAct{};
+    QAction *modeCreateRoomAct = nullptr;
+    QAction *modeCreateConnectionAct = nullptr;
+    QAction *modeCreateOnewayConnectionAct = nullptr;
 
-    QAction *playModeAct{};
-    QAction *mapModeAct{};
-    QAction *offlineModeAct{};
+    QAction *playModeAct = nullptr;
+    QAction *mapModeAct = nullptr;
+    QAction *offlineModeAct = nullptr;
 
-    QActionGroup *mapModeActGroup{};
-    QActionGroup *modeActGroup{};
-    QActionGroup *roomActGroup{};
-    QActionGroup *connectionActGroup{};
-    QActionGroup *groupManagerGroup{};
+    QActionGroup *mapModeActGroup = nullptr;
+    QActionGroup *modeActGroup = nullptr;
+    QActionGroup *roomActGroup = nullptr;
+    QActionGroup *connectionActGroup = nullptr;
+    QActionGroup *groupManagerGroup = nullptr;
 
-    QAction *createRoomAct{};
-    QAction *editRoomSelectionAct{};
-    QAction *editConnectionSelectionAct{};
-    QAction *deleteRoomSelectionAct{};
-    QAction *deleteConnectionSelectionAct{};
+    QAction *createRoomAct = nullptr;
+    QAction *editRoomSelectionAct = nullptr;
+    QAction *editConnectionSelectionAct = nullptr;
+    QAction *deleteRoomSelectionAct = nullptr;
+    QAction *deleteConnectionSelectionAct = nullptr;
 
-    QAction *moveUpRoomSelectionAct{};
-    QAction *moveDownRoomSelectionAct{};
-    QAction *mergeUpRoomSelectionAct{};
-    QAction *mergeDownRoomSelectionAct{};
-    QAction *connectToNeighboursRoomSelectionAct{};
+    QAction *moveUpRoomSelectionAct = nullptr;
+    QAction *moveDownRoomSelectionAct = nullptr;
+    QAction *mergeUpRoomSelectionAct = nullptr;
+    QAction *mergeDownRoomSelectionAct = nullptr;
+    QAction *connectToNeighboursRoomSelectionAct = nullptr;
 
-    QAction *findRoomsAct{};
-    QAction *clientAct{};
+    QAction *findRoomsAct = nullptr;
+    QAction *clientAct = nullptr;
 
-    QAction *forceRoomAct{};
-    QAction *releaseAllPathsAct{};
+    QAction *forceRoomAct = nullptr;
+    QAction *releaseAllPathsAct = nullptr;
 
     void wireConnections();
 
@@ -279,7 +296,7 @@ private:
 
     QString strippedName(const QString &fullFileName);
     bool maybeSave();
-    QPointer<QFileDialog> defaultSaveDialog();
+    std::unique_ptr<QFileDialog> createDefaultSaveDialog();
 };
 
 #endif

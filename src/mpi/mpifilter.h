@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Nils Schimmelmann <nschimme@gmail.com> (Jahara)
@@ -25,15 +26,18 @@
 #ifndef MPIFILTER_H
 #define MPIFILTER_H
 
+#include <QByteArray>
 #include <QObject>
+#include <QString>
+#include <QtCore>
 
-#include "proxy/telnetfilter.h"
+#include "../proxy/telnetfilter.h"
 
 class MpiFilter : public QObject
 {
     Q_OBJECT
 public:
-    MpiFilter(QObject *parent = nullptr);
+    explicit MpiFilter(QObject *parent = nullptr);
 
 signals:
     void sendToMud(const QByteArray &);
@@ -50,12 +54,12 @@ protected:
     void parseViewMessage(const QByteArray &buffer);
 
 private:
-    TelnetDataType m_previousType;
-    bool m_parsingMpi;
+    TelnetDataType m_previousType = TelnetDataType::UNKNOWN;
+    bool m_parsingMpi = false;
 
-    char m_command{};
-    int m_remaining;
-    QByteArray m_buffer;
+    char m_command{}; /* '\0' */
+    int m_remaining = 0;
+    QByteArray m_buffer{};
 };
 
 #endif // MPIFILTER_H

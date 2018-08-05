@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Nils Schimmelmann <nschimme@gmail.com> (Jahara)
@@ -25,27 +26,35 @@
 #ifndef REMOTEEDIT_H
 #define REMOTEEDIT_H
 
-#include "remoteeditsession.h"
-
+#include <climits>
+#include <map>
 #include <memory>
+#include <QByteArray>
 #include <QObject>
 #include <QRegExp>
+#include <QString>
+#include <QtCore>
+#include <QtGlobal>
+
+#include "remoteeditsession.h"
+
+class QRegExp;
+class RemoteEditSession;
 
 class RemoteEdit : public QObject
 {
     Q_OBJECT
-
     friend class RemoteEditSession;
 
 public:
-    RemoteEdit(QObject *parent = nullptr)
+    explicit RemoteEdit(QObject *parent = nullptr)
         : QObject(parent)
     {}
     ~RemoteEdit() = default;
 
 public slots:
     void remoteView(const QString &, const QString &);
-    void remoteEdit(const int, const QString &, const QString &);
+    void remoteEdit(int, const QString &, const QString &);
 
 signals:
     void sendToSocket(const QByteArray &);
@@ -56,8 +65,8 @@ protected:
 
 private:
     uint getSessionCount() { return greatestUsedId == UINT_MAX ? 0 : greatestUsedId + 1; }
-    void addSession(const int, const QString &, QString);
-    void removeSession(const uint);
+    void addSession(int, const QString &, QString);
+    void removeSession(uint);
 
     static const QRegExp s_lineFeedNewlineRx;
 

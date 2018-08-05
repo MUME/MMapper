@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -26,30 +27,37 @@
 #ifndef INTERMEDIATENODE
 #define INTERMEDIATENODE
 
+#include <memory>
+
+#include "../global/roomid.h"
+#include "AbstractRoomVisitor.h"
 #include "roomcollection.h"
-#include "roomoutstream.h"
 #include "searchtreenode.h"
+
+class AbstractRoomVisitor;
+class TinyListParseTree;
+class ParseEvent;
 
 /**
  * IntermediateNodes represent possible ends of a property
  * they hold a RoomSearchNode if this property can be the last one
  */
-class IntermediateNode : public SearchTreeNode
+
+class IntermediateNode final : public SearchTreeNode
 {
+private:
+    friend class TinyListParseTree;
+    explicit IntermediateNode() = default;
+
 public:
     virtual ~IntermediateNode() = default;
-    explicit IntermediateNode() = default;
     explicit IntermediateNode(ParseEvent &event);
-    RoomCollection *insertRoom(ParseEvent &event) override;
-    void getRooms(RoomOutStream &stream, ParseEvent &event) override;
-    void skipDown(RoomOutStream &stream, ParseEvent &event) override;
+    SharedRoomCollection insertRoom(ParseEvent &event) override;
+    void getRooms(AbstractRoomVisitor &stream, ParseEvent &event) override;
+    void skipDown(AbstractRoomVisitor &stream, ParseEvent &event) override;
 
 private:
-    std::unique_ptr<RoomCollection> rooms{};
+    SharedRoomCollection rooms{};
 };
 
-#endif
-
-#ifdef DMALLOC
-#include <mpatrol.h>
 #endif

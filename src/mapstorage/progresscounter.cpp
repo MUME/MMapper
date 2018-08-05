@@ -22,31 +22,24 @@
 **
 ************************************************************************/
 
-#include "mapstorage/progresscounter.h"
+#include "progresscounter.h"
 
-ProgressCounter::ProgressCounter()
-{
-    reset();
-}
+#include <QObject>
 
 ProgressCounter::ProgressCounter(QObject *parent)
     : QObject(parent)
-{
-    reset();
-}
-
-ProgressCounter::~ProgressCounter() = default;
+{}
 
 void ProgressCounter::increaseTotalStepsBy(quint32 steps)
 {
     m_totalSteps += steps;
-    step(0);
+    step(0u);
 }
 
-void ProgressCounter::step(quint32 steps)
+void ProgressCounter::step(const quint32 steps)
 {
     m_steps += steps;
-    quint32 percentage = (m_totalSteps == 0u) ? 0u : (100u * m_steps / m_totalSteps);
+    const quint32 percentage = (m_totalSteps == 0u) ? 0u : (100u * m_steps / m_totalSteps);
     if (percentage != m_percentage) {
         m_percentage = percentage;
         emit onPercentageChanged(percentage);
@@ -55,5 +48,5 @@ void ProgressCounter::step(quint32 steps)
 
 void ProgressCounter::reset()
 {
-    m_totalSteps = m_steps = m_percentage = 0;
+    m_totalSteps = m_steps = m_percentage = 0u;
 }

@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -26,31 +27,41 @@
 #ifndef APPROVED_H
 #define APPROVED_H
 
-#include "roomrecipient.h"
+#include "../expandoracommon/parseevent.h"
+#include "../expandoracommon/roomrecipient.h"
 
-class Room;
-class RoomAdmin;
 class AbstractRoomFactory;
 class ParseEvent;
+class Room;
+class RoomAdmin;
 
 class Approved : public RoomRecipient
 {
 private:
-    const Room *matchedRoom;
-    ParseEvent *myEvent;
-    int matchingTolerance;
-    RoomAdmin *owner;
-    bool moreThanOne;
-    bool update;
-    AbstractRoomFactory *factory;
+    SigParseEvent myEvent;
+    const Room *matchedRoom = nullptr;
+    int matchingTolerance = 0;
+    RoomAdmin *owner = nullptr;
+    bool moreThanOne = false;
+    bool update = false;
+    AbstractRoomFactory *factory = nullptr;
 
 public:
-    Approved(AbstractRoomFactory *in_factory, ParseEvent &event, int tolerance);
+    explicit Approved(AbstractRoomFactory *in_factory,
+                      const SigParseEvent &sigParseEvent,
+                      int tolerance);
     ~Approved();
-    void receiveRoom(RoomAdmin *, const Room *);
-    const Room *oneMatch();
-    RoomAdmin *getOwner();
+    void receiveRoom(RoomAdmin *, const Room *) override;
+    const Room *oneMatch() const;
+    RoomAdmin *getOwner() const;
     void reset();
+
+public:
+    Approved() = delete;
+    Approved(Approved &&) = delete;
+    Approved(const Approved &) = delete;
+    Approved &operator=(Approved &&) = delete;
+    Approved &operator=(const Approved &) = delete;
 };
 
 #endif

@@ -24,37 +24,37 @@
 ************************************************************************/
 
 #include "frustum.h"
+#include "../global/EnumIndexedArray.h"
 #include "coordinate.h"
 #include <cmath>
 
-Frustum::Frustum() = default;
-
-Frustum::~Frustum() = default;
-
-void Frustum::normalizePlane(int side)
+void Frustum::normalizePlane(const FrustumSide side)
 {
     // Here we calculate the magnitude of the normal to the plane (point A B C)
     // Remember that (A, B, C) is that same thing as the normal's (X, Y, Z).
     // To calculate magnitude you use the equation:  magnitude = sqrt( x^2 + y^2 + z^2)
-    auto magnitude = std::sqrt(frustum[side][A] * frustum[side][A]
-                               + frustum[side][B] * frustum[side][B]
-                               + frustum[side][C] * frustum[side][C]);
+    auto &plane = frustum[side];
+    auto magnitude = std::sqrt(plane[PlaneData::A] * plane[PlaneData::A]
+                               + plane[PlaneData::B] * plane[PlaneData::B]
+                               + plane[PlaneData::C] * plane[PlaneData::C]);
 
     // Then we divide the plane's values by it's magnitude.
     // This makes it easier to work with.
-    frustum[side][A] /= magnitude;
-    frustum[side][B] /= magnitude;
-    frustum[side][C] /= magnitude;
-    frustum[side][D] /= magnitude;
+    plane[PlaneData::A] /= magnitude;
+    plane[PlaneData::B] /= magnitude;
+    plane[PlaneData::C] /= magnitude;
+    plane[PlaneData::D] /= magnitude;
 }
 
-bool Frustum::pointInFrustum(Coordinate &c)
+bool Frustum::pointInFrustum(const Coordinate &c) const
 {
     // Go through all the sides of the frustum
-    for (auto &plane : frustum) {
+    for (const Plane &plane : frustum) {
         // Calculate the plane equation and check if the point is behind a side of the frustum
-        if (plane[A] * static_cast<float>(c.x) + plane[B] * static_cast<float>(c.y)
-                + plane[C] * static_cast<float>(c.z) + plane[D]
+        // REVISIT: Could rewrite this to use getDistance().
+        if (plane[PlaneData::A] * static_cast<float>(c.x)
+                + plane[PlaneData::B] * static_cast<float>(c.y)
+                + plane[PlaneData::C] * static_cast<float>(c.z) + plane[PlaneData::D]
             <= 0) {
             // The point was behind a side, so it ISN'T in the frustum
             return false;
@@ -65,71 +65,79 @@ bool Frustum::pointInFrustum(Coordinate &c)
     return true;
 }
 
-void Frustum::rebuild(const float *clip)
+void Frustum::rebuild(const float *const clip)
 {
     // Now we actually want to get the sides of the frustum.  To do this we take
     // the clipping planes we received above and extract the sides from them.
 
     // This will extract the RIGHT side of the frustum
-    frustum[F_RIGHT][A] = clip[3] - clip[0];
-    frustum[F_RIGHT][B] = clip[7] - clip[4];
-    frustum[F_RIGHT][C] = clip[11] - clip[8];
-    frustum[F_RIGHT][D] = clip[15] - clip[12];
+    auto &right = frustum[FrustumSide::F_RIGHT];
+    right[PlaneData::A] = clip[3] - clip[0];
+    right[PlaneData::B] = clip[7] - clip[4];
+    right[PlaneData::C] = clip[11] - clip[8];
+    right[PlaneData::D] = clip[15] - clip[12];
 
     // Now that we have a normal (A,B,C) and a distance (D) to the plane,
     // we want to normalize that normal and distance.
 
     // Normalize the RIGHT side
-    normalizePlane(F_RIGHT);
+    normalizePlane(FrustumSide::F_RIGHT);
 
     // This will extract the LEFT side of the frustum
-    frustum[F_LEFT][A] = clip[3] + clip[0];
-    frustum[F_LEFT][B] = clip[7] + clip[4];
-    frustum[F_LEFT][C] = clip[11] + clip[8];
-    frustum[F_LEFT][D] = clip[15] + clip[12];
+    auto &left = frustum[FrustumSide::F_LEFT];
+    left[PlaneData::A] = clip[3] + clip[0];
+    left[PlaneData::B] = clip[7] + clip[4];
+    left[PlaneData::C] = clip[11] + clip[8];
+    left[PlaneData::D] = clip[15] + clip[12];
 
     // Normalize the LEFT side
-    normalizePlane(F_LEFT);
+    normalizePlane(FrustumSide::F_LEFT);
 
     // This will extract the BOTTOM side of the frustum
-    frustum[F_BOTTOM][A] = clip[3] + clip[1];
-    frustum[F_BOTTOM][B] = clip[7] + clip[5];
-    frustum[F_BOTTOM][C] = clip[11] + clip[9];
-    frustum[F_BOTTOM][D] = clip[15] + clip[13];
+    auto &bottom = frustum[FrustumSide::F_BOTTOM];
+    bottom[PlaneData::A] = clip[3] + clip[1];
+    bottom[PlaneData::B] = clip[7] + clip[5];
+    bottom[PlaneData::C] = clip[11] + clip[9];
+    bottom[PlaneData::D] = clip[15] + clip[13];
 
     // Normalize the BOTTOM side
-    normalizePlane(F_BOTTOM);
+    normalizePlane(FrustumSide::F_BOTTOM);
 
     // This will extract the TOP side of the frustum
-    frustum[F_TOP][A] = clip[3] - clip[1];
-    frustum[F_TOP][B] = clip[7] - clip[5];
-    frustum[F_TOP][C] = clip[11] - clip[9];
-    frustum[F_TOP][D] = clip[15] - clip[13];
+    auto &top = frustum[FrustumSide::F_TOP];
+    top[PlaneData::A] = clip[3] - clip[1];
+    top[PlaneData::B] = clip[7] - clip[5];
+    top[PlaneData::C] = clip[11] - clip[9];
+    top[PlaneData::D] = clip[15] - clip[13];
 
     // Normalize the TOP side
-    normalizePlane(F_TOP);
+    normalizePlane(FrustumSide::F_TOP);
 
     // This will extract the BACK side of the frustum
-    frustum[F_BACK][A] = clip[3] - clip[2];
-    frustum[F_BACK][B] = clip[7] - clip[6];
-    frustum[F_BACK][C] = clip[11] - clip[10];
-    frustum[F_BACK][D] = clip[15] - clip[14];
+    auto &back = frustum[FrustumSide::F_BACK];
+    back[PlaneData::A] = clip[3] - clip[2];
+    back[PlaneData::B] = clip[7] - clip[6];
+    back[PlaneData::C] = clip[11] - clip[10];
+    back[PlaneData::D] = clip[15] - clip[14];
 
     // Normalize the BACK side
-    normalizePlane(F_BACK);
+    normalizePlane(FrustumSide::F_BACK);
 
     // This will extract the FRONT side of the frustum
-    frustum[F_FRONT][A] = clip[3] + clip[2];
-    frustum[F_FRONT][B] = clip[7] + clip[6];
-    frustum[F_FRONT][C] = clip[11] + clip[10];
-    frustum[F_FRONT][D] = clip[15] + clip[14];
+    auto &front = frustum[FrustumSide::F_FRONT];
+    front[PlaneData::A] = clip[3] + clip[2];
+    front[PlaneData::B] = clip[7] + clip[6];
+    front[PlaneData::C] = clip[11] + clip[10];
+    front[PlaneData::D] = clip[15] + clip[14];
 
     // Normalize the FRONT side
-    normalizePlane(F_FRONT);
+    normalizePlane(FrustumSide::F_FRONT);
 }
 
-float Frustum::getDistance(Coordinate &c, int side)
+float Frustum::getDistance(const Coordinate &c, FrustumSide side) const
 {
-    return frustum[side][A] * c.x + frustum[side][B] * c.y + frustum[side][C] * c.z
-           + frustum[side][D];
+    const auto &plane = frustum[side];
+    return plane[PlaneData::A] * static_cast<float>(c.x)
+           + plane[PlaneData::B] * static_cast<float>(c.y)
+           + plane[PlaneData::C] * static_cast<float>(c.z) + plane[PlaneData::D];
 }

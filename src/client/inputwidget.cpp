@@ -23,18 +23,18 @@
 ************************************************************************/
 
 #include "inputwidget.h"
-#include "configuration/configuration.h"
 
-#include <QDebug>
-#include <QKeyEvent>
+#include <QLinkedList>
+#include <QMessageLogContext>
+#include <QRegExp>
+#include <QSize>
+#include <QString>
+#include <QtGui>
+#include <QtWidgets>
 
-#include <QFont>
-#include <QFontMetrics>
-#include <QSizePolicy>
-#include <QTextCharFormat>
-#include <QTextCursor>
+#include "../configuration/configuration.h"
 
-#define MIN_WORD_LENGTH 3
+static constexpr const int MIN_WORD_LENGTH = 3;
 
 const QRegExp InputWidget::s_whitespaceRx("\\W+");
 
@@ -75,77 +75,68 @@ InputWidget::~InputWidget()
 
 void InputWidget::keyPressEvent(QKeyEvent *event)
 {
-    if (event->key() != Qt::Key_Tab) {
+    const auto currentKey = event->key();
+    const auto currentModifiers = event->modifiers();
+
+    if (currentKey != Qt::Key_Tab) {
         m_tabbing = false;
     }
 
-    // Check for key bindings
-    switch (event->key()) {
-    /** Enter could mean to submit the current text or add a newline */
-    case Qt::Key_Return:
-    case Qt::Key_Enter:
-        switch (event->modifiers()) {
-        case Qt::NoModifier: /** Submit text */
+    // REVISIT: if (useConsoleEscapeKeys) ...
+    if (currentModifiers == Qt::ControlModifier) {
+        switch (currentKey) {
+        case Qt::Key_H: // ^H = backspace
+            // REVISIT: can this be translated to backspace key?
+            break;
+        case Qt::Key_U: // ^U = delete line (clear the input)
+            base::clear();
+            return;
+        case Qt::Key_W: // ^W = delete word
+            // REVISIT: can this be translated to ctrl+shift+leftarrow + backspace?
+            break;
+        }
+
+    } else if (currentModifiers == Qt::NoModifier) {
+        switch (currentKey) {
+        /** Submit the current text */
+        case Qt::Key_Return:
+        case Qt::Key_Enter:
             gotInput();
             event->accept();
-            break;
+            return;
 
-        case Qt::ShiftModifier: /** Add newline (i.e. ignore) */
-        default:                /** Otherwise ignore  */
-            QPlainTextEdit::keyPressEvent(event);
-        };
-        break;
-
-    /** Key bindings for word history, tab completion, etc) */
-    // NOTE: MacOS does not differentiate between arrow keys and the keypad keys
-    // and as such we disable keypad movement functionality in favor of history
-    case Qt::Key_Up:
-    case Qt::Key_Down:
-    case Qt::Key_Tab:
-        switch (event->modifiers()) {
-        case Qt::KeypadModifier:
-#ifndef Q_OS_MAC
-            keypadMovement(event->key());
+            /** Key bindings for word history and tab completion */
+        case Qt::Key_Up:
+        case Qt::Key_Down:
+        case Qt::Key_Tab:
+            wordHistory(currentKey);
             event->accept();
-            break;
-#endif
-        case Qt::NoModifier:
-            wordHistory(event->key());
-            event->accept();
-            break;
-        default:
-            QPlainTextEdit::keyPressEvent(event);
-        };
-        break;
+            return;
+        }
 
-    case Qt::Key_Left:
-    case Qt::Key_Right:
-    case Qt::Key_PageUp:
-    case Qt::Key_PageDown:
-    case Qt::Key_Clear: // Numpad 5
-    case Qt::Key_Home:
-    case Qt::Key_End:
-#ifndef Q_OS_MAC
-        switch (event->modifiers()) {
-        case Qt::KeypadModifier:
-            keypadMovement(event->key());
+    } else if (currentModifiers == Qt::KeypadModifier && CURRENT_PLATFORM != Platform::Mac) {
+        // NOTE: MacOS does not differentiate between arrow keys and the keypad keys
+        // and as such we disable keypad movement functionality in favor of history
+        switch (currentKey) {
+        case Qt::Key_Up:
+        case Qt::Key_Down:
+        case Qt::Key_Left:
+        case Qt::Key_Right:
+        case Qt::Key_PageUp:
+        case Qt::Key_PageDown:
+        case Qt::Key_Clear: // Numpad 5
+        case Qt::Key_Home:
+        case Qt::Key_End:
+            keypadMovement(currentKey);
             event->accept();
-            break;
-        };
-#endif
-    // TODO(nschimme): , Implement these following keys
-    case Qt::Key_Delete:
-    case Qt::Key_Plus:
-    case Qt::Key_Minus:
-    case Qt::Key_Slash:
-    case Qt::Key_Asterisk:
-    case Qt::Key_Insert:
+            return;
+        }
 
-    /** All other keys */
-    default:
-        m_newInput = true;
-        QPlainTextEdit::keyPressEvent(event);
-    };
+    }
+
+    // All other input
+    m_newInput = true;
+    base::keyPressEvent(event);
 }
 
 void InputWidget::keypadMovement(int key)
@@ -216,7 +207,7 @@ void InputWidget::wordHistory(int key)
 void InputWidget::gotInput()
 {
     QString input = toPlainText();
-    if (Config().m_clientClearInputOnEnter) {
+    if (Config().integratedClient.clearInputOnEnter) {
         clear();
     } else {
         selectAll();
@@ -235,7 +226,7 @@ void InputWidget::addLineHistory(const InputHistoryEntry &string)
     }
 
     // Trim line history
-    if (m_lineHistory.size() > Config().m_clientLinesOfInputHistory) {
+    if (m_lineHistory.size() > Config().integratedClient.linesOfInputHistory) {
         m_lineHistory.removeFirst();
     }
 }
@@ -249,7 +240,8 @@ void InputWidget::addTabHistory(const WordHistoryEntry &string)
             m_tabCompletionDictionary << word;
 
             // Trim dictionary
-            if (m_tabCompletionDictionary.size() > Config().m_clientTabCompletionDictionarySize) {
+            if (m_tabCompletionDictionary.size()
+                > Config().integratedClient.tabCompletionDictionarySize) {
                 m_tabCompletionDictionary.removeFirst();
             }
         }

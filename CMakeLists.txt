@@ -8,7 +8,7 @@ endif()
 
 # Version
 file(STRINGS "MMAPPER_VERSION" MMAPPER_VERSION)
-add_definitions(-DMMAPPER_VERSION="${MMAPPER_VERSION}" -DWITH_SPLASH)
+add_definitions(-DMMAPPER_VERSION="${MMAPPER_VERSION}")
 message(STATUS "MMapper version ${MMAPPER_VERSION} (${CMAKE_BUILD_TYPE} distribution)")
 
 # Options
@@ -146,7 +146,7 @@ endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS_DEBUG
-      "-ggdb3 -Wall -Wextra -Wunused-variable -Wno-long-long -Wno-unknown-pragmas -Wno-system-headers -Wreorder -Wparentheses -Wsign-compare"
+      "-ggdb3 -Wall -Wextra -Wunused-variable -Wno-long-long -Wno-unknown-pragmas -Wno-system-headers -Werror=reorder -Wparentheses -Werror=sign-compare -Wconversion -Werror=double-promotion"
       CACHE STRING "Debug builds CMAKE CXX flags" FORCE )
 endif()
 

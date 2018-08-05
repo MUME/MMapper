@@ -24,23 +24,34 @@
 ************************************************************************/
 
 #include "onebyone.h"
-#include "abstractroomfactory.h"
-#include "parseevent.h"
+
+#include <list>
+
+#include "../expandoracommon/abstractroomfactory.h"
+#include "../expandoracommon/parseevent.h"
+#include "../global/utils.h"
+#include "../parser/CommandId.h"
+#include "experimenting.h"
 #include "pathparameters.h"
 #include "roomsignalhandler.h"
 
+class Path;
+
 OneByOne::OneByOne(AbstractRoomFactory *in_factory,
-                   ParseEvent *in_event,
+                   const SigParseEvent &sigParseEvent,
                    PathParameters &in_params,
                    RoomSignalHandler *in_handler)
-    : Experimenting(new std::list<Path *>, in_event->getMoveType(), in_params, in_factory)
-    , event(in_event)
+    : Experimenting(new std::list<Path *>,
+                    getDirection(sigParseEvent.deref().getMoveType()),
+                    in_params,
+                    in_factory)
+    , event(sigParseEvent.getShared())
     , handler(in_handler)
 {}
 
 void OneByOne::receiveRoom(RoomAdmin *admin, const Room *room)
 {
-    if (factory->compare(room, event, params.matchingTolerance) == CR_EQUAL) {
+    if (factory->compare(room, deref(event), params.matchingTolerance) == ComparisonResult::EQUAL) {
         augmentPath(shortPaths->back(), admin, room);
     } else {
         // needed because the memory address is not unique and

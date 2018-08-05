@@ -1,17 +1,14 @@
+#include "testexpandoracommon.h"
+#include "property.h"
 #include <QtTest/QtTest>
 
-#include "property.h"
-#include "testexpandoracommon.h"
+TestExpandoraCommon::TestExpandoraCommon() = default;
 
-TestExpandoraCommon::TestExpandoraCommon()
-    : QObject()
-{}
-
-TestExpandoraCommon::~TestExpandoraCommon() {}
+TestExpandoraCommon::~TestExpandoraCommon() = default;
 
 void TestExpandoraCommon::skippablePropertyTest()
 {
-    SkipProperty property;
+    Property property{Property::tagSkip};
     QVERIFY(property.isSkipped());
     QVERIFY(property.current() == 0);
     QVERIFY_EXCEPTION_THROWN(property.rest(), std::runtime_error);
@@ -29,7 +26,7 @@ void TestExpandoraCommon::skippablePropertyTest()
 void TestExpandoraCommon::stringPropertyTest()
 {
     const QByteArray ba("hello world");
-    Property property(ba);
+    Property property(ba.toStdString());
     QVERIFY(!property.isSkipped());
     QVERIFY2(QString(property.rest()).isEmpty(), "Expected empty string");
 

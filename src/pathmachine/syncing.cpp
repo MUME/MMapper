@@ -24,16 +24,15 @@
 ************************************************************************/
 
 #include "syncing.h"
+
+#include "../mapdata/ExitDirection.h"
 #include "path.h"
 #include "pathparameters.h"
-#include "roomadmin.h"
-#include "roomsignalhandler.h"
 
-#include <climits>
+class Room;
 
 Syncing::Syncing(PathParameters &in_p, std::list<Path *> *in_paths, RoomSignalHandler *in_signaler)
     : signaler(in_signaler)
-    , numPaths(0)
     , params(in_p)
     , paths(in_paths)
     , parent(new Path(nullptr, nullptr, this, signaler))
@@ -50,7 +49,7 @@ void Syncing::receiveRoom(RoomAdmin *sender, const Room *in_room)
             parent = nullptr;
         }
     } else {
-        auto *p = new Path(in_room, sender, this, signaler, UINT_MAX - 1);
+        auto *p = new Path(in_room, sender, this, signaler, ExitDirection::NONE);
         p->setParent(parent);
         parent->insertChild(p);
         paths->push_back(p);

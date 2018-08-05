@@ -25,42 +25,46 @@
 ************************************************************************/
 
 #include "telnetfilter.h"
-#include "configuration.h"
-#include "patterns.h"
 
-#define TC_SE 240  //End of subnegotiation parameters.
-#define TC_NOP 241 //No operation
-#define TC_DM \
-    242 //Data mark. Indicates the position of a Synch event within the data stream. This should always be accompanied by a TCP urgent notification.
-#define TC_BRK 243 //Break. Indicates that the "break" or "attention" key was hit.
-#define TC_IP 244  //Suspend, interrupt or abort the process to which the NVT is connected.
-#define TC_AO \
-    245 //Abort output. Allows the current process to run to completion but do not send its output to the user.
-#define TC_AYT \
-    246 //Are you there. Send back to the NVT some visible evidence that the AYT was received.
-#define TC_EC \
-    247 //Erase character. The receiver should delete the last preceding undeleted character from the data stream.
-#define TC_EL \
-    248 //Erase line. Delete characters from the data stream back to but not including the previous CRLF.
-#define TC_GA \
-    249 //Go ahead. Used, under certain circumstances, to tell the other end that it can transmit.
-#define TC_SB 250 //Subnegotiation of the indicated option follows.
-#define TC_WILL \
-    251 //Indicates the desire to begin performing, or confirmation that you are now performing, the indicated option.
-#define TC_WONT \
-    252 //Indicates the refusal to perform, or continue performing, the indicated option.
-#define TC_DO \
-    253 //Indicates the request that the other party perform, or confirmation that you are expecting the other party to perform, the indicated option.
-#define TC_DONT \
-    254 //Indicates the demand that the other party stop performing, or confirmation that you are no longer expecting the other party to perform, the indicated option.
-#define TC_IAC 255
+#include <cstdint>
+#include <QByteArray>
+#include <QObject>
 
-#define ASCII_DEL 8
+#include "../configuration/configuration.h"
+#include "../parser/patterns.h"
 
-#define ASCII_CR 13
-#define ASCII_LF 10
-
-#define ESCAPE '\x1B'
+static constexpr const uint8_t TC_SE = 240;  //End of subnegotiation parameters.
+static constexpr const uint8_t TC_NOP = 241; //No operation
+static constexpr const uint8_t TC_DM
+    = 242; //Data mark. Indicates the position of a Synch event within the data stream. This should always be accompanied by a TCP urgent notification.
+static constexpr const uint8_t TC_BRK
+    = 243; //Break. Indicates that the "break" or "attention" key was hit.
+static constexpr const uint8_t TC_IP
+    = 244; //Suspend, interrupt or abort the process to which the NVT is connected.
+static constexpr const uint8_t TC_AO
+    = 245; //Abort output. Allows the current process to run to completion but do not send its output to the user.
+static constexpr const uint8_t TC_AYT
+    = 246; //Are you there. Send back to the NVT some visible evidence that the AYT was received.
+static constexpr const uint8_t TC_EC
+    = 247; //Erase character. The receiver should delete the last preceding undeleted character from the data stream.
+static constexpr const uint8_t TC_EL
+    = 248; //Erase line. Delete characters from the data stream back to but not including the previous CRLF.
+static constexpr const uint8_t TC_GA
+    = 249; //Go ahead. Used, under certain circumstances, to tell the other end that it can transmit.
+static constexpr const uint8_t TC_SB = 250; //Subnegotiation of the indicated option follows.
+static constexpr const uint8_t TC_WILL
+    = 251; //Indicates the desire to begin performing, or confirmation that you are now performing, the indicated option.
+static constexpr const uint8_t TC_WONT
+    = 252; //Indicates the refusal to perform, or continue performing, the indicated option.
+static constexpr const uint8_t TC_DO
+    = 253; //Indicates the request that the other party perform, or confirmation that you are expecting the other party to perform, the indicated option.
+static constexpr const uint8_t TC_DONT
+    = 254; //Indicates the demand that the other party stop performing, or confirmation that you are no longer expecting the other party to perform, the indicated option.
+static constexpr const uint8_t TC_IAC = 255;
+static constexpr const uint8_t ASCII_DEL = 8;
+static constexpr const uint8_t ASCII_CR = 13;
+static constexpr const uint8_t ASCII_LF = 10;
+// static constexpr const uint8_t ESCAPE = '\x1B';
 
 TelnetFilter::TelnetFilter(QObject *parent)
     : QObject(parent)
@@ -112,8 +116,6 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
                                         IncomingData &m_incomingData,
                                         TelnetIncomingDataQueue &que)
 {
-    quint8 val1 = 0;
-    quint8 val2 = 0;
     quint16 index = 0; //Here br
 
 #ifdef TELNET_STREAM_DEBUG_INPUT_TO_FILE
@@ -124,43 +126,44 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
     }
 #endif
 
+    /* REVISIT: This code doesn't look like it robustly handles IAC SB ... IAC SE,
+     * since SB is never used in this file. */
     while (index < stream.size()) {
-        val1 = static_cast<quint8>(stream.at(index));
+        const auto val1 = static_cast<quint8>(stream.at(index));
         switch (val1) {
         case ASCII_DEL:
             m_incomingData.line.append(static_cast<char>(ASCII_DEL));
 
-            if (m_incomingData.type != TDT_TELNET) {
-                m_incomingData.type = TDT_DELAY;
+            if (m_incomingData.type != TelnetDataType::TELNET) {
+                m_incomingData.type = TelnetDataType::DELAY;
                 que.enqueue(m_incomingData);
                 m_incomingData.line.clear();
-                m_incomingData.type = TDT_SPLIT;
+                m_incomingData.type = TelnetDataType::SPLIT;
             }
             index++;
             break;
 
         case TC_IAC: //IAC IAC  - should not happen tho, we use ASCII chars only!!!
 
-            if (m_incomingData.type != TDT_TELNET && !m_incomingData.line.isEmpty()) {
-                if (Config().m_IAC_prompt_parser
+            if (m_incomingData.type != TelnetDataType::TELNET && !m_incomingData.line.isEmpty()) {
+                if (Config().mumeClientProtocol.IAC_prompt_parser && index > 0
                     && (static_cast<quint8>(stream.at(index - 1)))
                            == '>' /*&& ((quint8) stream.at(index+1)) == TC_GA*/) {
                     //prompt
-                    m_incomingData.type = TDT_PROMPT;
+                    m_incomingData.type = TelnetDataType::PROMPT;
                 } else {
-                    m_incomingData.type = TDT_UNKNOWN;
+                    m_incomingData.type = TelnetDataType::UNKNOWN;
                 }
                 que.enqueue(m_incomingData);
                 m_incomingData.line.clear();
             }
             //start incoming telnet command
-            m_incomingData.type = TDT_TELNET;
+            m_incomingData.type = TelnetDataType::TELNET;
             m_incomingData.line.append(static_cast<char>(val1));
             index++;
             break;
 
         case TC_GA:
-
         case TC_NOP:
         case TC_DM:
         case TC_BRK:
@@ -170,15 +173,15 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
         case TC_EC:
         case TC_EL:
         case TC_SE:
-            if (m_incomingData.type == TDT_TELNET) {
+            if (m_incomingData.type == TelnetDataType::TELNET) {
                 //end incoming telnet command
                 m_incomingData.line.append(static_cast<char>(val1));
                 que.enqueue(m_incomingData);
                 m_incomingData.line.clear();
-                //              if (val1 == TC_GA && Config().m_IAC_prompt_parser)
-                //                  m_incomingData.type = TDT_PROMPT;
-                //              else
-                m_incomingData.type = TDT_SPLIT;
+                if (false && val1 == TC_GA && Config().mumeClientProtocol.IAC_prompt_parser)
+                    m_incomingData.type = TelnetDataType::PROMPT;
+                else
+                    m_incomingData.type = TelnetDataType::SPLIT;
 
             } else {
                 m_incomingData.line.append(static_cast<char>(val1));
@@ -187,17 +190,17 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
             break;
 
         case ASCII_CR:
-            if (!m_incomingData.line.isEmpty() && m_incomingData.type != TDT_TELNET) {
-                val2 = m_incomingData.line.right(1).at(0); //get last char
+            if (!m_incomingData.line.isEmpty() && m_incomingData.type != TelnetDataType::TELNET) {
+                const auto val2 = m_incomingData.line.right(1).at(0); //get last char
                 switch (val2) {
                 case ASCII_LF:
                     m_incomingData.line.append(static_cast<char>(ASCII_CR));
-                    m_incomingData.type = TDT_LFCR;
+                    m_incomingData.type = TelnetDataType::LFCR;
                     {
                         que.enqueue(m_incomingData);
                     }
                     m_incomingData.line.clear();
-                    m_incomingData.type = TDT_SPLIT;
+                    m_incomingData.type = TelnetDataType::SPLIT;
                     index++;
                     break;
 
@@ -214,17 +217,18 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
             break;
 
         case ASCII_LF:
-            if (!m_incomingData.line.isEmpty() && m_incomingData.type != TDT_TELNET) {
-                val2 = m_incomingData.line.right(1).at(0); //get last char
+            if (!m_incomingData.line.isEmpty() && m_incomingData.type != TelnetDataType::TELNET) {
+                const auto val2 = static_cast<uint8_t>(
+                    m_incomingData.line.right(1).at(0)); //get last char
                 switch (val2) {
                 case ASCII_CR:
                     m_incomingData.line.append(static_cast<char>(ASCII_LF));
-                    m_incomingData.type = TDT_CRLF;
+                    m_incomingData.type = TelnetDataType::CRLF;
                     {
                         que.enqueue(m_incomingData);
                     }
                     m_incomingData.line.clear();
-                    m_incomingData.type = TDT_SPLIT;
+                    m_incomingData.type = TelnetDataType::SPLIT;
                     index++;
                     break;
 
@@ -241,9 +245,10 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
             break;
 
         default:
-            if (m_incomingData.type == TDT_TELNET) {
+            if (m_incomingData.type == TelnetDataType::TELNET) {
                 if (!m_incomingData.line.isEmpty()) {
-                    val2 = m_incomingData.line.right(1).at(0); //get last char
+                    const auto val2 = static_cast<uint8_t>(
+                        m_incomingData.line.right(1).at(0)); //get last char
                     switch (val2) {
                     case TC_DONT:
                     case TC_DO:
@@ -255,7 +260,7 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
                             que.enqueue(m_incomingData);
                         }
                         m_incomingData.line.clear();
-                        m_incomingData.type = TDT_SPLIT;
+                        m_incomingData.type = TelnetDataType::SPLIT;
                         index++;
                         break;
 
@@ -268,10 +273,10 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
             } else {
                 if (!m_incomingData.line.isEmpty()
                     && m_incomingData.line.right(1).at(0) == ASCII_LF) {
-                    m_incomingData.type = TDT_LF;
+                    m_incomingData.type = TelnetDataType::LF;
                     que.enqueue(m_incomingData);
                     m_incomingData.line.clear();
-                    m_incomingData.type = TDT_SPLIT;
+                    m_incomingData.type = TelnetDataType::SPLIT;
                 }
 
                 m_incomingData.line.append(static_cast<char>(val1));
@@ -282,38 +287,38 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
         }
     }
 
-    if (!m_incomingData.line.isEmpty() && m_incomingData.type == TDT_SPLIT) {
+    if (!m_incomingData.line.isEmpty() && m_incomingData.type == TelnetDataType::SPLIT) {
         {
             if (m_incomingData.line.endsWith("prompt>")) {
-                m_incomingData.type = TDT_PROMPT;
+                m_incomingData.type = TelnetDataType::PROMPT;
                 que.enqueue(m_incomingData);
                 m_incomingData.line.clear();
-                m_incomingData.type = TDT_SPLIT;
+                m_incomingData.type = TelnetDataType::SPLIT;
             } else if (m_incomingData.line.endsWith(char(ASCII_LF))) {
-                m_incomingData.type = TDT_LF;
+                m_incomingData.type = TelnetDataType::LF;
                 que.enqueue(m_incomingData);
                 m_incomingData.line.clear();
-                m_incomingData.type = TDT_SPLIT;
+                m_incomingData.type = TelnetDataType::SPLIT;
             } else if (Patterns::matchPromptPatterns(m_incomingData.line)) {
-                m_incomingData.type = TDT_PROMPT;
+                m_incomingData.type = TelnetDataType::PROMPT;
                 que.enqueue(m_incomingData);
                 m_incomingData.line.clear();
-                m_incomingData.type = TDT_SPLIT;
+                m_incomingData.type = TelnetDataType::SPLIT;
             } else if (Patterns::matchPasswordPatterns(m_incomingData.line)) {
-                m_incomingData.type = TDT_LOGIN_PASSWORD;
+                m_incomingData.type = TelnetDataType::LOGIN_PASSWORD;
                 que.enqueue(m_incomingData);
                 m_incomingData.line.clear();
-                m_incomingData.type = TDT_SPLIT;
+                m_incomingData.type = TelnetDataType::SPLIT;
             } else if (Patterns::matchMenuPromptPatterns(m_incomingData.line)) {
-                m_incomingData.type = TDT_MENU_PROMPT;
+                m_incomingData.type = TelnetDataType::MENU_PROMPT;
                 que.enqueue(m_incomingData);
                 m_incomingData.line.clear();
-                m_incomingData.type = TDT_SPLIT;
+                m_incomingData.type = TelnetDataType::SPLIT;
             } else if (Patterns::matchLoginPatterns(m_incomingData.line)) {
-                m_incomingData.type = TDT_LOGIN;
+                m_incomingData.type = TelnetDataType::LOGIN;
                 que.enqueue(m_incomingData);
                 m_incomingData.line.clear();
-                m_incomingData.type = TDT_SPLIT;
+                m_incomingData.type = TelnetDataType::SPLIT;
             }
         }
     }

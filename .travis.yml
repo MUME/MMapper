@@ -12,21 +12,7 @@ matrix:
       compiler: clang
       env:
         - MATRIX_EVAL="brew update"
-    #
-    # Linux GCC 4
-    #
-    - os: linux
-      compiler: gcc
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-6.0
-          packages:
-            - g++-4.9
-            - clang-format-6.0
-      env:
-        - QT=59 PPA=beineri/opt-qt595-trusty MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+        - CLANG_FORMAT=clang-format
     #
     # Linux GCC 5
     #
@@ -42,6 +28,7 @@ matrix:
             - clang-format-6.0
       env:
         - QT=59 PPA=beineri/opt-qt595-trusty MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+        - CLANG_FORMAT=clang-format-6.0
     #
     # Linux GCC 6
     #
@@ -57,6 +44,7 @@ matrix:
             - clang-format-6.0
       env:
         - QT=59 PPA=beineri/opt-qt595-trusty MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+        - CLANG_FORMAT=clang-format-6.0
     #
     # Linux GCC 7
     #
@@ -72,6 +60,7 @@ matrix:
             - clang-format-6.0
       env:
         - QT=59 PPA=beineri/opt-qt595-trusty MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+        - CLANG_FORMAT=clang-format-6.0
     #
     # Linux GCC 8
     #
@@ -87,6 +76,7 @@ matrix:
             - clang-format-6.0
       env:
         - QT=59 PPA=beineri/opt-qt595-trusty MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+        - CLANG_FORMAT=clang-format-6.0
 
 before_install:
   - eval "${MATRIX_EVAL}"
@@ -113,8 +103,8 @@ before_script:
   - '[[ "$TRAVIS_OS_NAME" != osx   || "$CXX" != g++     ]] || export QMAKESPEC=macx-g++'
   - '[ "$TRAVIS_OS_NAME" != osx ] || export MMAPPER_CMAKE_EXTRA=-DOPENSSL_ROOT_DIR=/usr/local/opt/openssl'
   # Code style check
-  - clang-format -version
-  - find . -type f -name *.cpp -o -name *.h -exec clang-format -style=file -i {} \;
+  - $CLANG_FORMAT -version
+  - find . -type f -name *.cpp -o -name *.h -exec $CLANG_FORMAT -style=file -i {} \;
   - |
     if  [[ -n $(git diff) ]]; then
       echo
@@ -122,7 +112,7 @@ before_script:
       echo
       echo "Please fix your code style:"
       echo "find . -type f -name *.cpp -o -name *.h -exec clang-format -i -style=file {} \;"
-      exit -1
+      [[ $(git diff --stat | wc -l) -lt 5 ]] || exit -1
     fi
   # Prepare Makefile
   - mkdir build

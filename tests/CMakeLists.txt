@@ -27,9 +27,6 @@ add_test(NAME TestExpandoraCommon COMMAND TestExpandoraCommon)
 # Parser
 set(parser_SRCS
     ../src/parser/parserutils.cpp
-    ../src/parser/parserutils.h
-    ../src/parser/mmapper2event.cpp
-    ../src/parser/mmapper2event.h
     ../src/expandoracommon/parseevent.cpp
     ../src/expandoracommon/parseevent.h
     ../src/expandoracommon/property.cpp

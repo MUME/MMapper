@@ -24,53 +24,58 @@
 ************************************************************************/
 
 #include "mmapper2pathmachine.h"
-#include "mmapper2event.h"
-#include "roomfactory.h"
-//#include "parser.h"
-#include "configuration.h"
 
-#ifdef MODULAR
-extern "C" MY_EXPORT Component *createComponent()
+#include <cassert>
+#include <QString>
+
+#include "../configuration/configuration.h"
+#include "../mapdata/roomfactory.h"
+#include "pathmachine.h"
+#include "pathparameters.h"
+
+class SigParseEvent;
+
+static const char *stateName(const PathState state)
 {
-    return new Mmapper2PathMachine;
+#define CASE(x) \
+    do { \
+    case PathState::x: \
+        return #x; \
+    } while (0)
+    switch (state) {
+        CASE(APPROVED);
+        CASE(EXPERIMENTING);
+        CASE(SYNCING);
+    }
+#undef CASE
+    assert(false);
+    return "UNKNOWN";
 }
-#else
-Initializer<Mmapper2PathMachine> mmapper2PathMachine("Mmapper2PathMachine");
-#endif
 
-void Mmapper2PathMachine::event(ParseEvent *event)
+void Mmapper2PathMachine::event(const SigParseEvent &sigParseEvent)
 {
-    params.acceptBestRelative = config.m_acceptBestRelative;
-    params.acceptBestAbsolute = config.m_acceptBestAbsolute;
-    params.newRoomPenalty = config.m_newRoomPenalty;
-    params.correctPositionBonus = config.m_correctPositionBonus;
-    params.maxPaths = config.m_maxPaths;
-    params.matchingTolerance = config.m_matchingTolerance;
-    params.multipleConnectionsPenalty = config.m_multipleConnectionsPenalty;
+    static constexpr const char *const me = "PathMachine";
 
-    QString stringState = "received event, state: ";
-    if (state == EXPERIMENTING) {
-        stringState += "EXPERIMENTING";
-    } else if (state == SYNCING) {
-        stringState += "SYNCING";
-    } else {
-        stringState += "APPROVED";
-    }
-    QString me("PathMachine");
-    emit log(me, stringState);
-    PathMachine::event(event);
-    stringState = "done processing event, state: ";
-    if (state == EXPERIMENTING) {
-        stringState += "EXPERIMENTING";
-    } else if (state == SYNCING) {
-        stringState += "SYNCING";
-    } else {
-        stringState += "APPROVED";
-    }
-    emit log(me, stringState);
+    /*
+     * REVISIT: replace PathParameters with Configuration::PathMachineSettings
+     * and then just do: params = config.pathMachine; ? 
+     */
+    const auto &settings = config.pathMachine;
+
+    params.acceptBestRelative = settings.acceptBestRelative;
+    params.acceptBestAbsolute = settings.acceptBestAbsolute;
+    params.newRoomPenalty = settings.newRoomPenalty;
+    params.correctPositionBonus = settings.correctPositionBonus;
+    params.maxPaths = settings.maxPaths;
+    params.matchingTolerance = settings.matchingTolerance;
+    params.multipleConnectionsPenalty = settings.multipleConnectionsPenalty;
+
+    emit log(me, QString("received event, state: %1").arg(stateName(state)));
+    PathMachine::event(sigParseEvent);
+    emit log(me, QString("done processing event, state: %1").arg(stateName(state)));
 }
 
 Mmapper2PathMachine::Mmapper2PathMachine()
-    : PathMachine(new RoomFactory, false)
+    : PathMachine(new RoomFactory)
     , config(Config())
 {}

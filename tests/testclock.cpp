@@ -1,14 +1,11 @@
+#include "testclock.h"
+#include "mumeclock.h"
 #include <QDebug>
 #include <QtTest/QtTest>
 
-#include "mumeclock.h"
-#include "testclock.h"
+TestClock::TestClock() = default;
 
-TestClock::TestClock()
-    : QObject()
-{}
-
-TestClock::~TestClock() {}
+TestClock::~TestClock() = default;
 
 QString testMumeStartEpochTime(MumeClock &clock, int time)
 {
@@ -18,7 +15,7 @@ QString testMumeStartEpochTime(MumeClock &clock, int time)
 void TestClock::mumeClockTest()
 {
     MumeClock clock;
-    clock.setPrecision(MUMECLOCK_HOUR);
+    clock.setPrecision(MumeClockPrecision::MUMECLOCK_HOUR);
 
     QString zeroTime = "12am on the 1st of Afteryule, year 2850 of the Third Age.";
     QString actualTime = testMumeStartEpochTime(clock, 0);

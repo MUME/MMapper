@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Nils Schimmelmann <nschimme@gmail.com>
@@ -26,18 +27,24 @@
 #define STACKEDINPUTWIDGET_H
 
 #include <QStackedWidget>
+#include <QString>
+#include <QtCore>
 
-class QLineEdit;
 class InputWidget;
+class QEvent;
+class QLineEdit;
+class QObject;
+class QWidget;
 
-class StackedInputWidget : public QStackedWidget
+class StackedInputWidget final : public QStackedWidget
 {
+private:
     Q_OBJECT
 
 public:
-    StackedInputWidget(QWidget *parent = 0);
+    explicit StackedInputWidget(QWidget *parent = nullptr);
     ~StackedInputWidget();
-    bool eventFilter(QObject *obj, QEvent *event);
+    bool eventFilter(QObject *obj, QEvent *event) override;
 
 public slots:
     void toggleEchoMode(bool);
@@ -53,9 +60,9 @@ signals:
     void showMessage(const QString &, int);
 
 private:
-    bool m_localEcho;
-    InputWidget *m_inputWidget;
-    QLineEdit *m_passwordWidget;
+    bool m_localEcho = false;
+    InputWidget *m_inputWidget = nullptr;
+    QLineEdit *m_passwordWidget = nullptr;
 };
 
 #endif /* STACKEDINPUTWIDGET_H */

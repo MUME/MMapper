@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -28,10 +29,14 @@
 #define CONFIGDIALOG_H
 
 #include <QDialog>
+#include <QString>
+#include <QtCore>
 
-class QListWidgetItem;
-class QStackedWidget;
 class Mmapper2Group;
+class QListWidgetItem;
+class QObject;
+class QStackedWidget;
+class QWidget;
 
 namespace Ui {
 class ConfigDialog;
@@ -42,20 +47,20 @@ class ConfigDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit ConfigDialog(Mmapper2Group *, QWidget *parent = 0);
+    explicit ConfigDialog(Mmapper2Group *, QWidget *parent = nullptr);
     ~ConfigDialog();
 
 public slots:
     void changePage(QListWidgetItem *current, QListWidgetItem *previous);
 
 private:
-    Ui::ConfigDialog *ui;
+    Ui::ConfigDialog *ui = nullptr;
 
     void createIcons();
 
-    QStackedWidget *pagesWidget;
+    QStackedWidget *pagesWidget = nullptr;
 
-    Mmapper2Group *m_groupManager;
+    Mmapper2Group *m_groupManager = nullptr;
 };
 
 #endif

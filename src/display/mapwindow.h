@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -27,27 +28,38 @@
 #ifndef MAPWINDOW_H
 #define MAPWINDOW_H
 
-#include "coordinate.h"
+#include <QPoint>
+#include <QString>
 #include <QWidget>
+#include <QtCore>
+#include <QtGlobal>
 
-class QScrollBar;
+#include "../expandoracommon/coordinate.h"
+
+class MapCanvas;
+class MapData;
+class Mmapper2Group;
+class PrespammedPath;
 class QGridLayout;
 class QKeyEvent;
 class QMouseEvent;
-class MapCanvas;
-class MapData;
-class PrespammedPath;
-class Mmapper2Group;
+class QObject;
+class QResizeEvent;
+class QScrollBar;
+class QTimer;
 
 class MapWindow : public QWidget
 {
     Q_OBJECT
 
 public:
-    MapWindow(MapData *mapData, PrespammedPath *pp, Mmapper2Group *gm, QWidget *parent = 0);
+    explicit MapWindow(MapData *mapData,
+                       PrespammedPath *pp,
+                       Mmapper2Group *gm,
+                       QWidget *parent = nullptr);
     ~MapWindow();
 
-    void resizeEvent(QResizeEvent *event);
+    void resizeEvent(QResizeEvent *event) override;
 
     MapCanvas *getCanvas() const;
 
@@ -73,21 +85,21 @@ protected:
     //   void resizeEvent ( QResizeEvent * event );
     //   void paintEvent ( QPaintEvent * event );
 
-    QTimer *scrollTimer;
-    qint8 m_verticalScrollStep;
-    qint8 m_horizontalScrollStep;
+    QTimer *scrollTimer = nullptr;
+    qint8 m_verticalScrollStep = 0;
+    qint8 m_horizontalScrollStep = 0;
 
-    QGridLayout *m_gridLayout;
-    QScrollBar *m_horizontalScrollBar;
-    QScrollBar *m_verticalScrollBar;
-    MapCanvas *m_canvas;
+    QGridLayout *m_gridLayout = nullptr;
+    QScrollBar *m_horizontalScrollBar = nullptr;
+    QScrollBar *m_verticalScrollBar = nullptr;
+    MapCanvas *m_canvas = nullptr;
 
-    Coordinate m_scrollBarMinimumVisible;
-    Coordinate m_scrollBarMaximumVisible;
+    Coordinate m_scrollBarMinimumVisible{};
+    Coordinate m_scrollBarMaximumVisible{};
 
 private:
-    QPoint mousePressPos;
-    QPoint scrollBarValuesOnMousePress;
+    QPoint mousePressPos{};
+    QPoint scrollBarValuesOnMousePress{};
 };
 
 #endif

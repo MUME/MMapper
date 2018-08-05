@@ -24,52 +24,51 @@
 ************************************************************************/
 
 #include "mmapper2group.h"
+
+#include <QColor>
+#include <QDomAttr>
+#include <QMessageLogContext>
+#include <QMutex>
+#include <QtCore>
+
+#include "../configuration/configuration.h"
+#include "../expandoracommon/component.h"
+#include "../global/roomid.h"
 #include "CGroup.h"
 #include "CGroupChar.h"
 #include "CGroupCommunicator.h"
-#include "configuration.h"
-
-#include <cassert>
-#include <QDebug>
-#include <QMutex>
-
-#ifdef MODULAR
-extern "C" MY_EXPORT Component *createComponent()
-{
-    return new Mmapper2Group;
-}
-#else
-Initializer<Mmapper2Group> mmapper2Group("mmapper2Group");
-#endif
 
 Mmapper2Group::Mmapper2Group()
     : Component(true)
     , networkLock(QMutex::Recursive)
-    , network(nullptr)
-    , group(nullptr)
 {}
 
 Mmapper2Group::~Mmapper2Group()
 {
-    delete group;
+    group.reset(nullptr);
     if (network != nullptr) {
         network->disconnect();
-        delete network;
+        network.reset(nullptr);
     }
 }
 
 void Mmapper2Group::init()
 {
-    group = new CGroup(this);
+    group.reset(new CGroup(this));
 
-    connect(group, SIGNAL(characterChanged()), SLOT(characterChanged()), Qt::QueuedConnection);
+    connect(group.get(), &CGroup::log, this, &Mmapper2Group::sendLog);
+    connect(group.get(),
+            &CGroup::characterChanged,
+            this,
+            &Mmapper2Group::characterChanged,
+            Qt::QueuedConnection);
 
     emit log("GroupManager", "Starting up the GroupManager");
 }
 
 void Mmapper2Group::characterChanged()
 {
-    if (getType() != Off) {
+    if (getType() != GroupManagerState::Off) {
         emit drawCharacters();
     }
 }
@@ -81,31 +80,31 @@ void Mmapper2Group::updateSelf()
         return;
     }
 
-    if (getGroup()->getSelf()->getName() != Config().m_groupManagerCharName) {
+    if (getGroup()->getSelf()->getName() != Config().groupManager.charName) {
         QByteArray oldname = getGroup()->getSelf()->getName();
-        QByteArray newname = Config().m_groupManagerCharName;
+        QByteArray newname = Config().groupManager.charName;
 
         if (network != nullptr) {
             network->renameConnection(oldname, newname);
         }
         getGroup()->getSelf()->setName(newname);
 
-    } else if (getGroup()->getSelf()->getColor() != Config().m_groupManagerColor) {
-        getGroup()->getSelf()->setColor(Config().m_groupManagerColor);
+    } else if (getGroup()->getSelf()->getColor() != Config().groupManager.color) {
+        getGroup()->getSelf()->setColor(Config().groupManager.color);
 
     } else {
         return;
     }
 
-    if (getType() != Off) {
+    if (getType() != GroupManagerState::Off) {
         issueLocalCharUpdate();
     }
 }
 
-void Mmapper2Group::setCharPosition(unsigned int pos)
+void Mmapper2Group::setCharPosition(RoomId pos)
 {
     QMutexLocker locker(&networkLock);
-    if ((getGroup() == nullptr) || getType() == Off) {
+    if ((getGroup() == nullptr) || getType() == GroupManagerState::Off) {
         return;
     }
 
@@ -118,7 +117,7 @@ void Mmapper2Group::setCharPosition(unsigned int pos)
 void Mmapper2Group::issueLocalCharUpdate()
 {
     QMutexLocker locker(&networkLock);
-    if ((getGroup() == nullptr) || getType() == Off) {
+    if ((getGroup() == nullptr) || getType() == GroupManagerState::Off) {
         return;
     }
 
@@ -202,7 +201,7 @@ void Mmapper2Group::sendGTell(const QByteArray &tell)
 
 void Mmapper2Group::parseScoreInformation(QByteArray score)
 {
-    if ((getGroup() == nullptr) || getType() == Off) {
+    if ((getGroup() == nullptr) || getType() == GroupManagerState::Off) {
         return;
     }
     emit log("GroupManager", QString("Caught a score line: %1").arg(score.constData()));
@@ -260,7 +259,7 @@ void Mmapper2Group::parseScoreInformation(QByteArray score)
 
 void Mmapper2Group::parsePromptInformation(QByteArray prompt)
 {
-    if ((getGroup() == nullptr) || getType() == Off) {
+    if ((getGroup() == nullptr) || getType() == GroupManagerState::Off) {
         return;
     }
 
@@ -381,7 +380,7 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
             }
         }
 
-        emit issueLocalCharUpdate();
+        issueLocalCharUpdate();
     }
 }
 
@@ -390,22 +389,22 @@ void Mmapper2Group::sendLog(const QString &text)
     emit log("GroupManager", text);
 }
 
-int Mmapper2Group::getType()
+GroupManagerState Mmapper2Group::getType()
 {
     QMutexLocker locker(&networkLock);
     if (network != nullptr) {
         return network->getType();
     }
-    return 0;
+    return GroupManagerState::Off;
 }
 
 void Mmapper2Group::networkDown()
 {
-    setType(Off);
+    setType(GroupManagerState::Off);
     emit groupManagerOff();
 }
 
-void Mmapper2Group::setType(int newState)
+void Mmapper2Group::setType(GroupManagerState newState)
 {
     QMutexLocker locker(&networkLock);
 
@@ -413,26 +412,26 @@ void Mmapper2Group::setType(int newState)
     if (network != nullptr) {
         network->disconnect();
         network->deleteLater();
-        network = nullptr;
+        network.reset(nullptr);
     }
-    switch (static_cast<GroupManagerState>(newState)) {
-    case Server:
-        network = new CGroupServerCommunicator(this);
+    switch (newState) {
+    case GroupManagerState::Server:
+        network.reset(new CGroupServerCommunicator(this));
         break;
-    case Client:
-        network = new CGroupClientCommunicator(this);
+    case GroupManagerState::Client:
+        network.reset(new CGroupClientCommunicator(this));
         break;
-    case Off:
+    case GroupManagerState::Off:
     default:
-        emit sendLog("Off mode has been selected");
+        sendLog("Off mode has been selected");
         break;
     }
 
-    qDebug() << "Network type set to" << newState;
-    Config().m_groupManagerState = newState;
+    qDebug() << "Network type set to" << static_cast<int>(newState);
+    Config().groupManager.state = newState;
 
-    if (newState != Off) {
-        if (Config().m_groupManagerRulesWarning) {
+    if (newState != GroupManagerState::Off) {
+        if (Config().groupManager.rulesWarning) {
             emit messageBox("Warning: MUME Rules",
                             "Using the GroupManager in PK situations is ILLEGAL "
                             "according to RULES ACTIONS.\n\nBe sure to disable the "

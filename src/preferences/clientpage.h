@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Nils Schimmelmann <nschimme@gmail.com>
@@ -25,7 +26,11 @@
 #ifndef CLIENTPAGE_H
 #define CLIENTPAGE_H
 
+#include <QString>
 #include <QWidget>
+#include <QtCore>
+
+class QObject;
 
 namespace Ui {
 class ClientPage;
@@ -36,7 +41,7 @@ class ClientPage : public QWidget
     Q_OBJECT
 
 public:
-    explicit ClientPage(QWidget *parent = 0);
+    explicit ClientPage(QWidget *parent = nullptr);
     ~ClientPage();
 
     void updateFontAndColors();
@@ -54,7 +59,7 @@ public slots:
 signals:
 
 private:
-    Ui::ClientPage *ui;
+    Ui::ClientPage *ui = nullptr;
 };
 
 #endif // CLIENTPAGE_H

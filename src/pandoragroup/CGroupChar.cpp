@@ -25,26 +25,13 @@
 
 #include "CGroupChar.h"
 
-#include <QDebug>
+#include <QCharRef>
 #include <QDomNode>
+#include <QMessageLogContext>
 
-CGroupChar::CGroupChar()
-{
-    name = "";
-    pos = 0;
-    hp = 0;
-    maxhp = 0;
-    moves = 0;
-    maxmoves = 0;
-    mana = 0;
-    maxmana = 0;
-    state = NORMAL;
-    textHP = "";
-    textMoves = "";
-    textMana = "";
-    lastMovement = "";
-}
+#include "../global/roomid.h"
 
+CGroupChar::CGroupChar() = default;
 CGroupChar::~CGroupChar() = default;
 
 QDomNode CGroupChar::toXML()
@@ -63,9 +50,9 @@ QDomNode CGroupChar::toXML()
     root.setAttribute("maxmana", maxmana);
     root.setAttribute("moves", moves);
     root.setAttribute("maxmoves", maxmoves);
-    root.setAttribute("state", state);
+    root.setAttribute("state", static_cast<int>(state));
     root.setAttribute("lastMovement", QString(lastMovement));
-    root.setAttribute("room", pos);
+    root.setAttribute("room", pos.asUint32());
     doc.appendChild(root);
 
     return root;
@@ -73,104 +60,74 @@ QDomNode CGroupChar::toXML()
 
 bool CGroupChar::updateFromXML(const QDomNode &node)
 {
-    bool updated;
-
-    updated = false;
     if (node.nodeName() != "playerData") {
         qWarning("Called updateFromXML with wrong node. The name does not fit.");
         return false;
     }
 
-    QString s;
-    QByteArray str;
-    int newval;
-
+    bool updated = false;
     QDomElement e = node.toElement();
 
-    unsigned int newpos = e.attribute("room").toInt();
-    if (newpos != pos) {
-        updated = true;
-        pos = newpos;
+    {
+        auto newpos = RoomId{e.attribute("room").toUInt()};
+        if (newpos != pos) {
+            updated = true;
+            pos = newpos;
+        }
     }
 
-    str = e.attribute("name").toLatin1();
-    if (str != name) {
-        updated = true;
-        name = str;
-    }
+    auto tryUpdateString = [&](const char *attr, QByteArray &arr) {
+        auto s = e.attribute(attr).toLatin1();
+        if (s == arr)
+            return;
 
-    str = e.attribute("lastMovement").toLatin1();
-    if (str != lastMovement) {
+        arr = s;
         updated = true;
-        lastMovement = str;
-    }
+    };
 
-    str = e.attribute("color").toLatin1();
+#define TRY_UPDATE_STRING(s) tryUpdateString(#s, (s))
+
+    TRY_UPDATE_STRING(name);
+    TRY_UPDATE_STRING(lastMovement);
+
+    auto str = e.attribute("color").toLatin1();
     if (str != color.name().toLatin1()) {
         updated = true;
         color = QColor(QString(str));
     }
 
-    str = e.attribute("textHP").toLatin1();
-    if (s != textHP) {
-        updated = true;
-        textHP = str;
-    }
+    TRY_UPDATE_STRING(textHP);
+    TRY_UPDATE_STRING(textMana);
+    TRY_UPDATE_STRING(textMoves);
 
-    str = e.attribute("textMana").toLatin1();
-    if (s != textMana) {
-        updated = true;
-        textMana = str;
-    }
+    auto tryUpdateInt = [&](const char *attr, int &n) {
+        auto i = e.attribute(attr).toInt();
+        if (i == n)
+            return;
 
-    str = e.attribute("textMoves").toLatin1();
-    if (s != textMoves) {
+        n = i;
         updated = true;
-        textMoves = str;
-    }
+    };
+#define TRY_UPDATE_INT(n) tryUpdateInt(#n, (n))
 
-    newval = e.attribute("hp").toInt();
-    if (newval != hp) {
-        updated = true;
-        hp = newval;
-    }
+    TRY_UPDATE_INT(hp);
+    TRY_UPDATE_INT(maxhp);
+    TRY_UPDATE_INT(mana);
+    TRY_UPDATE_INT(maxmana);
+    TRY_UPDATE_INT(moves);
+    TRY_UPDATE_INT(maxmoves);
 
-    newval = e.attribute("maxhp").toInt();
-    if (newval != maxhp) {
-        updated = true;
-        maxhp = newval;
-    }
-
-    newval = e.attribute("mana").toInt();
-    if (newval != mana) {
-        updated = true;
-        mana = newval;
-    }
-
-    newval = e.attribute("maxmana").toInt();
-    if (newval != maxmana) {
-        updated = true;
-        maxmana = newval;
-    }
-
-    newval = e.attribute("moves").toInt();
-    if (newval != moves) {
-        updated = true;
-        moves = newval;
-    }
-
-    newval = e.attribute("maxmoves").toInt();
-    if (newval != maxmoves) {
-        updated = true;
-        maxmoves = newval;
-    }
-
-    newval = e.attribute("state").toInt();
-    if (newval != state) {
-        updated = true;
-        state = newval;
+    {
+        auto newState = static_cast<CharacterStates>(e.attribute("state").toInt());
+        if (newState != state) {
+            updated = true;
+            state = newState;
+        }
     }
     return updated;
+
+#undef TRY_UPDATE_INT
+#undef TRY_UPDATE_STRING
 }
 
 QByteArray CGroupChar::getNameFromXML(const QDomNode &node)

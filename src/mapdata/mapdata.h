@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -27,22 +28,44 @@
 #ifndef MAPDATA_H
 #define MAPDATA_H
 
-#include "abstractparser.h"
-#include "mapfrontend.h"
+#include <map>
+#include <QLinkedList>
+#include <QList>
+#include <QString>
+#include <QVariant>
+#include <QVector>
+#include <QtCore>
+#include <QtGlobal>
+
+#include "../display/OpenGL.h"
+#include "../expandoracommon/coordinate.h"
+#include "../global/DirectionType.h"
+#include "../global/roomid.h"
+#include "../mapfrontend/mapfrontend.h"
+#include "../parser/CommandId.h"
+#include "../parser/abstractparser.h"
+#include "ExitDirection.h"
+#include "mmapper2exit.h"
+#include "mmapper2room.h"
 #include "roomfilter.h"
 #include "shortestpath.h"
 
-#include <QLinkedList>
-
-class MapCanvas;
-class InfoMark;
-class RoomSelection;
 class AbstractAction;
+class ExitFieldVariant;
+class InfoMark;
+class MapAction;
+class MapCanvasRoomDrawer;
+class QObject;
+class Room;
+class RoomFilter;
+class RoomRecipient;
+class RoomSelection;
+class ShortestPathRecipient;
 
-typedef QList<const Room *> ConstRoomList;
-typedef QVector<Room *> RoomVector;
-typedef QLinkedList<InfoMark *> MarkerList;
-typedef QLinkedListIterator<InfoMark *> MarkerListIterator;
+using ConstRoomList = QList<const Room *>;
+using RoomVector = QVector<Room *>;
+using MarkerList = QLinkedList<InfoMark *>;
+using MarkerListIterator = QLinkedListIterator<InfoMark *>;
 
 class MapData : public MapFrontend
 {
@@ -50,7 +73,7 @@ class MapData : public MapFrontend
     friend class CustomAction;
 
 public:
-    MapData();
+    explicit MapData();
     virtual ~MapData();
 
     const RoomSelection *select(const Coordinate &ulf, const Coordinate &lrb);
@@ -70,13 +93,13 @@ public:
     // removes the selection from the internal structures and deletes it
     void unselect(const RoomSelection *in);
     // unselects a room from a selection
-    void unselect(uint id, const RoomSelection *in);
+    void unselect(RoomId id, const RoomSelection *in);
 
     // the room will be inserted in the given selection. the selection must have been created by mapdata
     const Room *getRoom(const Coordinate &pos, const RoomSelection *in);
-    const Room *getRoom(uint id, const RoomSelection *in);
+    const Room *getRoom(RoomId id, const RoomSelection *in);
 
-    void draw(const Coordinate &ulf, const Coordinate &lrb, MapCanvas &screen);
+    void draw(const Coordinate &ulf, const Coordinate &lrb, MapCanvasRoomDrawer &screen);
     bool isOccupied(const Coordinate &position);
 
     bool isMovable(const Coordinate &offset, const RoomSelection *selection);
@@ -87,17 +110,20 @@ public:
 
     Coordinate &getPosition() { return m_position; }
     MarkerList &getMarkersList() { return m_markers; }
-    uint getRoomsCount() { return greatestUsedId == UINT_MAX ? 0 : greatestUsedId + 1; }
+    uint getRoomsCount() const
+    {
+        return (greatestUsedId == INVALID_ROOMID) ? 0u : (greatestUsedId.asUint32() + 1u);
+    }
     int getMarkersCount() { return m_markers.count(); }
 
     void addMarker(InfoMark *im);
     void removeMarker(InfoMark *im);
 
-    bool isEmpty() { return (greatestUsedId == UINT_MAX && m_markers.isEmpty()); }
-    bool dataChanged() { return m_dataChanged; }
-    QString getFileName() { return m_fileName; }
+    bool isEmpty() const { return (greatestUsedId == INVALID_ROOMID) && m_markers.isEmpty(); }
+    bool dataChanged() const { return m_dataChanged; }
+    const QString &getFileName() const { return m_fileName; }
     QList<Coordinate> getPath(const QList<CommandIdType> &dirs);
-    virtual void clear();
+    virtual void clear() override;
 
     // search for matches
     void genericSearch(RoomRecipient *recipient, const RoomFilter &f);
@@ -111,14 +137,22 @@ public:
 
     // Used in Console Commands
     void removeDoorNames();
-    QString getDoorName(const Coordinate &pos, uint dir);
-    void setDoorName(const Coordinate &pos, const QString &name, uint dir);
-    bool getExitFlag(const Coordinate &pos, uint flag, uint dir, uint field);
-    void toggleExitFlag(const Coordinate &pos, uint flag, uint dir, uint field);
-    void setRoomField(const Coordinate &pos, const QVariant &flag, uint field);
-    QVariant getRoomField(const Coordinate &pos, uint field);
-    void toggleRoomFlag(const Coordinate &pos, uint flag, uint field);
-    bool getRoomFlag(const Coordinate &pos, uint flag, uint field);
+    QString getDoorName(const Coordinate &pos, ExitDirection dir);
+    QString getDoorName(const Coordinate &pos, DirectionType dir)
+    {
+        return getDoorName(pos, static_cast<ExitDirection>(dir));
+    }
+    void setDoorName(const Coordinate &pos, const QString &name, ExitDirection dir);
+
+public:
+    bool getExitFlag(const Coordinate &pos, ExitDirection dir, ExitFieldVariant var);
+    void toggleExitFlag(const Coordinate &pos, ExitDirection dir, ExitFieldVariant var);
+
+public:
+    void setRoomField(const Coordinate &pos, const QVariant &flag, RoomField field);
+    QVariant getRoomField(const Coordinate &pos, RoomField field);
+    void toggleRoomFlag(const Coordinate &pos, uint flag, RoomField field);
+    bool getRoomFlag(const Coordinate &pos, uint flag, RoomField field);
 
 signals:
     void log(const QString &, const QString &);
@@ -133,14 +167,14 @@ public slots:
     void setPosition(const Coordinate &pos) { m_position = pos; }
 
 protected:
-    std::map<const RoomSelection *, RoomSelection *> selections;
+    std::map<const RoomSelection *, RoomSelection *> selections{};
 
-    MarkerList m_markers;
+    MarkerList m_markers{};
 
     // changed data?
-    bool m_dataChanged;
+    bool m_dataChanged = false;
 
-    QString m_fileName;
+    QString m_fileName{};
 
     Coordinate m_position{};
 };

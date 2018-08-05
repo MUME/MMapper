@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Thomas Equeter <waba@waba.be>
@@ -26,19 +27,23 @@
 #define INCLUDED_STEPCOUNTER_H
 
 #include <QObject>
+#include <QString>
+#include <QtCore>
+#include <QtGlobal>
 
-class ProgressCounter : public QObject
+class ProgressCounter final : public QObject
 {
     Q_OBJECT
 
-    quint32 m_totalSteps{0}, m_steps{0}, m_percentage{0};
+    quint32 m_totalSteps = 0u, m_steps = 0u, m_percentage = 0u;
 
 public:
-    ProgressCounter();
-    ProgressCounter(QObject *parent);
-    virtual ~ProgressCounter();
+    explicit ProgressCounter() = default;
+    explicit ProgressCounter(QObject *parent);
+    virtual ~ProgressCounter() = default;
 
-    void step(quint32 steps = 1);
+public:
+    void step(quint32 steps = 1u);
     void increaseTotalStepsBy(quint32 steps);
     void reset();
 

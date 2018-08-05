@@ -24,12 +24,8 @@
 ************************************************************************/
 
 #include "property.h"
-#include <stdexcept>
 
-Property::Property(const QByteArray &data)
-    : ListCycler<char, QByteArray>(data)
-    , m_skipped(false)
-{}
+#include <stdexcept>
 
 const char *Property::rest() const
 {
@@ -39,10 +35,5 @@ const char *Property::rest() const
     if (pos >= static_cast<uint>(size())) {
         return "";
     }
-    return constData() + pos;
-}
-
-bool Property::isSkipped() const
-{
-    return m_skipped;
+    return this->c_str() + pos;
 }

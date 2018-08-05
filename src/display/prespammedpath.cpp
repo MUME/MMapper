@@ -27,19 +27,27 @@
 
 #include <utility>
 
+#include "../parser/CommandId.h"
+#include "../parser/abstractparser.h"
+
 //#define TEST
+#ifdef TEST
+static constexpr const bool USE_TEST = true;
+#else
+static constexpr const bool USE_TEST = false;
+#endif
 
 PrespammedPath::PrespammedPath(QObject * /*unused*/)
 {
-#ifdef TEST
-    m_queue.append(CID_DOWN);
-    m_queue.append(CID_EAST);
-    m_queue.append(CID_SOUTH);
-    m_queue.append(CID_SOUTH);
-    m_queue.append(CID_WEST);
-    m_queue.append(CID_NORTH);
-    m_queue.append(CID_WEST);
-#endif
+    if (USE_TEST) {
+        m_queue.append(CommandIdType::DOWN);
+        m_queue.append(CommandIdType::EAST);
+        m_queue.append(CommandIdType::SOUTH);
+        m_queue.append(CommandIdType::SOUTH);
+        m_queue.append(CommandIdType::WEST);
+        m_queue.append(CommandIdType::NORTH);
+        m_queue.append(CommandIdType::WEST);
+    }
 }
 
 PrespammedPath::~PrespammedPath() = default;

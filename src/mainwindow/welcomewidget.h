@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Nils Schimmelmann <nschimme@gmail.com>
@@ -25,7 +26,11 @@
 #ifndef WELCOMEWIDGET_H
 #define WELCOMEWIDGET_H
 
+#include <QString>
 #include <QWidget>
+#include <QtCore>
+
+class QObject;
 
 namespace Ui {
 class WelcomeWidget;
@@ -36,7 +41,7 @@ class WelcomeWidget : public QWidget
     Q_OBJECT
 
 public:
-    explicit WelcomeWidget(QWidget *parent = 0);
+    explicit WelcomeWidget(QWidget *parent = nullptr);
     ~WelcomeWidget();
 
 public slots:
@@ -46,7 +51,7 @@ signals:
     void playMumeClicked();
 
 private:
-    Ui::WelcomeWidget *ui;
+    Ui::WelcomeWidget *ui = nullptr;
 };
 
 #endif // WELCOMEWIDGET_H

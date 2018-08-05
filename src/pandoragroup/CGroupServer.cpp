@@ -23,28 +23,23 @@
 **
 ************************************************************************/
 
-#include <utility>
-#include <QDebug>
-#include <QHostAddress>
-
 #include "CGroupServer.h"
 
-CGroupServer::CGroupServer(int localPort, QObject *parent)
+#include <QByteArray>
+#include <QHostAddress>
+#include <QList>
+#include <QString>
+
+#include "CGroupClient.h"
+
+CGroupServer::CGroupServer(QObject *parent)
     : QTcpServer(parent)
 {
     connect(this, SIGNAL(sendLog(const QString &)), parent, SLOT(relayLog(const QString &)));
-    connect(this, SIGNAL(serverStartupFailed()), parent, SLOT(serverStartupFailed()));
     connect(this,
             SIGNAL(connectionClosed(CGroupClient *)),
             parent,
             SLOT(connectionClosed(CGroupClient *)));
-
-    if (!listen(QHostAddress::Any, localPort)) {
-        emit sendLog("Failed to start a group Manager server");
-        emit serverStartupFailed();
-    } else {
-        emit sendLog(QString("Listening on port %1").arg(localPort));
-    }
 }
 
 CGroupServer::~CGroupServer()

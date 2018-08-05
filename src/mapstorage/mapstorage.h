@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -27,52 +28,74 @@
 #ifndef MAPSTORAGE_H
 #define MAPSTORAGE_H
 
+#include <cstdint>
+#include <QArgument>
+#include <QObject>
+#include <QString>
+#include <QtGlobal>
+
+#include "../expandoracommon/coordinate.h"
+#include "../mapdata/mapdata.h"
+#include "../mapdata/roomfactory.h"
+#include "../mapfrontend/mapfrontend.h"
 #include "abstractmapstorage.h"
-#include "mapdata.h"
 #include "oldroom.h"
-#include "roomfactory.h"
+
+class Connection;
+class InfoMark;
+class QDataStream;
+class QFile;
+class QObject;
+class Room;
 
 class MapStorage : public AbstractMapStorage
 {
     Q_OBJECT
 
 public:
-    MapStorage(MapData &, const QString &, QFile *, QObject *parent = 0);
-    MapStorage(MapData &, const QString &, QObject *parent = 0);
-    bool mergeData();
+    explicit MapStorage(MapData &, const QString &, QFile *, QObject *parent = nullptr);
+    explicit MapStorage(MapData &, const QString &, QObject *parent = nullptr);
+    bool mergeData() override;
 
 private:
-    virtual bool canLoad() { return TRUE; }
-    virtual bool canSave() { return TRUE; }
+    virtual bool canLoad() const override { return true; }
+    virtual bool canSave() const override { return true; }
 
-    virtual void newData();
-    virtual bool loadData();
-    virtual bool saveData(bool baseMapOnly);
+    virtual void newData() override;
+    virtual bool loadData() override;
+    virtual bool saveData(bool baseMapOnly) override;
 
-    RoomFactory factory;
+    RoomFactory factory{};
     Room *loadRoom(QDataStream &stream, qint32 version);
-    void loadExits(Room *room, QDataStream &stream, qint32 version);
+    void loadExits(Room &room, QDataStream &stream, qint32 version);
     Room *loadOldRoom(QDataStream &stream, ConnectionList &connectionList);
     void loadOldConnection(Connection *, QDataStream &stream, RoomVector &roomList);
     void loadMark(InfoMark *mark, QDataStream &stream, qint32 version);
     void saveMark(InfoMark *mark, QDataStream &stream);
     void translateOldConnection(Connection *);
-    void saveRoom(const Room *room, QDataStream &stream);
-    void saveExits(const Room *room, QDataStream &stream);
+    void saveRoom(const Room &room, QDataStream &stream);
+    void saveExits(const Room &room, QDataStream &stream);
 
-    uint baseId{};
-    Coordinate basePosition;
+    uint32_t baseId = 0u;
+    Coordinate basePosition{};
 };
 
-class MapFrontendBlocker
+class MapFrontendBlocker final
 {
 public:
-    MapFrontendBlocker(MapFrontend &in_data)
+    explicit MapFrontendBlocker(MapFrontend &in_data)
         : data(in_data)
     {
         data.block();
     }
     ~MapFrontendBlocker() { data.unblock(); }
+
+public:
+    MapFrontendBlocker() = delete;
+    MapFrontendBlocker(MapFrontendBlocker &&) = delete;
+    MapFrontendBlocker(const MapFrontendBlocker &) = delete;
+    MapFrontendBlocker &operator=(MapFrontendBlocker &&) = delete;
+    MapFrontendBlocker &operator=(const MapFrontendBlocker &) = delete;
 
 private:
     MapFrontend &data;

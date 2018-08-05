@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -26,23 +27,33 @@
 #ifndef ROOMSAVER_H
 #define ROOMSAVER_H
 
-#include "mapdata.h"
-#include "roomrecipient.h"
+#include <QtGlobal>
 
-#include <QList>
+#include "../expandoracommon/roomrecipient.h"
+#include "../mapdata/mapdata.h"
 
-class RoomSaver : public RoomRecipient
+class Room;
+class RoomAdmin;
+
+class RoomSaver final : public RoomRecipient
 {
 public:
-    RoomSaver(RoomAdmin *admin, ConstRoomList &list);
+    explicit RoomSaver(RoomAdmin &admin, ConstRoomList &list);
     ~RoomSaver();
-    void receiveRoom(RoomAdmin *admin, const Room *room);
+    void receiveRoom(RoomAdmin *admin, const Room *room) override;
     quint32 getRoomsCount();
 
+public:
+    RoomSaver() = delete;
+    RoomSaver(RoomSaver &&) = delete;
+    RoomSaver(const RoomSaver &) = delete;
+    RoomSaver &operator=(RoomSaver &&) = delete;
+    RoomSaver &operator=(const RoomSaver &) = delete;
+
 private:
-    quint32 m_roomsCount;
+    quint32 m_roomsCount = 0u;
     ConstRoomList &m_roomList;
-    RoomAdmin *m_admin;
+    RoomAdmin &m_admin;
 };
 
 #endif

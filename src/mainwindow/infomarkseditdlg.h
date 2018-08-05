@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -26,12 +27,19 @@
 #ifndef INFOMARKSEDITDLG_H
 #define INFOMARKSEDITDLG_H
 
-#include "infomark.h"
-#include "ui_infomarkseditdlg.h"
 #include <QDialog>
+#include <QString>
+#include <QtCore>
 
-class MapData;
+#include "../mapdata/infomark.h"
+#include "ui_infomarkseditdlg.h"
+
+class Coordinate;
 class MapCanvas;
+class MapData;
+class QCloseEvent;
+class QObject;
+class QWidget;
 
 class InfoMarksEditDlg : public QDialog, private Ui::InfoMarksEditDlg
 {
@@ -57,6 +65,7 @@ public slots:
     void createClicked();
     void modifyClicked();
     void deleteClicked();
+    void onMoveClicked(const Coordinate &offset);
     void onMoveNorthClicked();
     void onMoveSouthClicked();
     void onMoveEastClicked();
@@ -66,7 +75,7 @@ public slots:
     void onDeleteAllClicked();
 
 public:
-    InfoMarksEditDlg(MapData *mapData, QWidget *parent = 0);
+    explicit InfoMarksEditDlg(MapData *mapData, QWidget *parent = nullptr);
     ~InfoMarksEditDlg();
 
     void setPoints(double x1, double y1, double x2, double y2, int layer);
@@ -75,13 +84,16 @@ public:
     void writeSettings();
 
 protected:
-    void closeEvent(QCloseEvent *);
+    void closeEvent(QCloseEvent *) override;
 
 private:
-    MapData *m_mapData;
+    MapData *m_mapData = nullptr;
 
-    double m_selX1, m_selY1, m_selX2, m_selY2;
-    int m_selLayer;
+    struct
+    {
+        double x = 0.0, y = 0.0;
+    } m_sel1{}, m_sel2{};
+    int m_selLayer = 0;
 
     void connectAll();
     void disconnectAll();

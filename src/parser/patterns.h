@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -28,29 +29,32 @@
 
 #include <QRegExp>
 #include <QStringList>
+#include <QtCore>
 
-class QString;
 class QByteArray;
+class QRegExp;
+class QString;
 class QStringList;
 
 class Patterns
 {
-    static QRegExp m_rx;
-    static const QStringList m_dynamicDescriptionPatternsList;
-    static const QRegExp m_score;
+    // If these were moved to .cpp file, then we wouldn't need headers.
+    static QRegExp g_rx;
+    static const QStringList g_dynamicDescriptionPatternsList;
+    static const QRegExp g_score;
 
 public:
-    static bool matchScore(QString &str);
-    static bool matchMoveForcePatterns(QString &);
-    static bool matchNoDescriptionPatterns(QString &);
-    static bool matchDynamicDescriptionPatterns(QString &);
-    static bool matchPasswordPatterns(QByteArray &);
-    static bool matchPromptPatterns(QByteArray &);
-    static bool matchLoginPatterns(QByteArray &);
-    static bool matchMenuPromptPatterns(QByteArray &);
+    static bool matchScore(const QString &str);
+    static bool matchMoveForcePatterns(const QString &);
+    static bool matchNoDescriptionPatterns(const QString &);
+    static bool matchDynamicDescriptionPatterns(const QString &);
+    static bool matchPasswordPatterns(const QByteArray &);
+    static bool matchPromptPatterns(const QByteArray &);
+    static bool matchLoginPatterns(const QByteArray &);
+    static bool matchMenuPromptPatterns(const QByteArray &);
 
-    static bool matchPattern(QString pattern, QString &str);
-    static bool matchPattern(QByteArray pattern, QByteArray &str);
+    static bool matchPattern(QString pattern, const QString &str);
+    static bool matchPattern(QByteArray pattern, const QByteArray &str);
 };
 
 #endif

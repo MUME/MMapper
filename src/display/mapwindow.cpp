@@ -25,11 +25,13 @@
 ************************************************************************/
 
 #include "mapwindow.h"
-#include "mapcanvas.h"
 
 #include <QGridLayout>
 #include <QScrollBar>
-#include <QTimer>
+
+#include "mapcanvas.h"
+
+class QResizeEvent;
 
 MapWindow::MapWindow(MapData *mapData, PrespammedPath *pp, Mmapper2Group *gm, QWidget *parent)
     : QWidget(parent)
@@ -61,28 +63,22 @@ MapWindow::MapWindow(MapData *mapData, PrespammedPath *pp, Mmapper2Group *gm, QW
     m_gridLayout->addWidget(m_canvas, 0, 0, 1, 1);
 
     connect(m_horizontalScrollBar,
-            SIGNAL(valueChanged(int)),
+            &QAbstractSlider::valueChanged,
             m_canvas,
-            SLOT(setHorizontalScroll(int)));
-    connect(m_verticalScrollBar, SIGNAL(valueChanged(int)), m_canvas, SLOT(setVerticalScroll(int)));
+            &MapCanvas::setHorizontalScroll);
+    connect(m_verticalScrollBar,
+            &QAbstractSlider::valueChanged,
+            m_canvas,
+            &MapCanvas::setVerticalScroll);
 
-    connect(m_canvas,
-            SIGNAL(onEnsureVisible(qint32, qint32)),
-            this,
-            SLOT(ensureVisible(qint32, qint32)));
-    connect(m_canvas, SIGNAL(onCenter(qint32, qint32)), this, SLOT(center(qint32, qint32)));
+    connect(m_canvas, &MapCanvas::onEnsureVisible, this, &MapWindow::ensureVisible);
+    connect(m_canvas, &MapCanvas::onCenter, this, &MapWindow::center);
 
-    connect(m_canvas,
-            SIGNAL(setScrollBars(const Coordinate &, const Coordinate &)),
-            this,
-            SLOT(setScrollBars(const Coordinate &, const Coordinate &)));
+    connect(m_canvas, &MapCanvas::setScrollBars, this, &MapWindow::setScrollBars);
 
-    connect(m_canvas,
-            SIGNAL(continuousScroll(qint8, qint8)),
-            this,
-            SLOT(continuousScroll(qint8, qint8)));
-    connect(m_canvas, SIGNAL(mapMove(int, int)), this, SLOT(mapMove(int, int)));
-    connect(this, SIGNAL(setScroll(int, int)), m_canvas, SLOT(setScroll(int, int)));
+    connect(m_canvas, &MapCanvas::continuousScroll, this, &MapWindow::continuousScroll);
+    connect(m_canvas, &MapCanvas::mapMove, this, &MapWindow::mapMove);
+    connect(this, &MapWindow::setScroll, m_canvas, &MapCanvas::setScroll);
 }
 
 MapWindow::~MapWindow()
@@ -99,13 +95,13 @@ void MapWindow::mapMove(int dx, int dy)
     int vValue = m_verticalScrollBar->value() + dy;
 
     disconnect(m_horizontalScrollBar,
-               SIGNAL(valueChanged(int)),
+               &QAbstractSlider::valueChanged,
                m_canvas,
-               SLOT(setHorizontalScroll(int)));
+               &MapCanvas::setHorizontalScroll);
     disconnect(m_verticalScrollBar,
-               SIGNAL(valueChanged(int)),
+               &QAbstractSlider::valueChanged,
                m_canvas,
-               SLOT(setVerticalScroll(int)));
+               &MapCanvas::setVerticalScroll);
 
     m_horizontalScrollBar->setValue(hValue);
     m_verticalScrollBar->setValue(vValue);
@@ -113,10 +109,13 @@ void MapWindow::mapMove(int dx, int dy)
     emit setScroll(hValue, vValue);
 
     connect(m_horizontalScrollBar,
-            SIGNAL(valueChanged(int)),
+            &QAbstractSlider::valueChanged,
             m_canvas,
-            SLOT(setHorizontalScroll(int)));
-    connect(m_verticalScrollBar, SIGNAL(valueChanged(int)), m_canvas, SLOT(setVerticalScroll(int)));
+            &MapCanvas::setHorizontalScroll);
+    connect(m_verticalScrollBar,
+            &QAbstractSlider::valueChanged,
+            m_canvas,
+            &MapCanvas::setVerticalScroll);
 }
 
 void MapWindow::continuousScroll(qint8 hStep, qint8 vStep)
@@ -136,7 +135,7 @@ void MapWindow::continuousScroll(qint8 hStep, qint8 vStep)
     //start
     if ((scrollTimer == nullptr) && (hStep != 0 || vStep != 0)) {
         scrollTimer = new QTimer(this);
-        connect(scrollTimer, SIGNAL(timeout()), this, SLOT(scrollTimerTimeout()));
+        connect(scrollTimer, &QTimer::timeout, this, &MapWindow::scrollTimerTimeout);
         scrollTimer->start(10);
     }
 }
@@ -147,13 +146,13 @@ void MapWindow::scrollTimerTimeout()
     qint32 hValue = m_horizontalScrollBar->value() + m_horizontalScrollStep;
 
     disconnect(m_horizontalScrollBar,
-               SIGNAL(valueChanged(int)),
+               &QAbstractSlider::valueChanged,
                m_canvas,
-               SLOT(setHorizontalScroll(int)));
+               &MapCanvas::setHorizontalScroll);
     disconnect(m_verticalScrollBar,
-               SIGNAL(valueChanged(int)),
+               &QAbstractSlider::valueChanged,
                m_canvas,
-               SLOT(setVerticalScroll(int)));
+               &MapCanvas::setVerticalScroll);
 
     m_horizontalScrollBar->setValue(hValue);
     m_verticalScrollBar->setValue(vValue);
@@ -161,10 +160,13 @@ void MapWindow::scrollTimerTimeout()
     emit setScroll(hValue, vValue);
 
     connect(m_horizontalScrollBar,
-            SIGNAL(valueChanged(int)),
+            &QAbstractSlider::valueChanged,
             m_canvas,
-            SLOT(setHorizontalScroll(int)));
-    connect(m_verticalScrollBar, SIGNAL(valueChanged(int)), m_canvas, SLOT(setVerticalScroll(int)));
+            &MapCanvas::setHorizontalScroll);
+    connect(m_verticalScrollBar,
+            &QAbstractSlider::valueChanged,
+            m_canvas,
+            &MapCanvas::setVerticalScroll);
 }
 
 void MapWindow::verticalScroll(qint8 step)
@@ -179,27 +181,35 @@ void MapWindow::horizontalScroll(qint8 step)
 
 void MapWindow::center(qint32 x, qint32 y)
 {
-    m_horizontalScrollBar->setValue(static_cast<qint32>(x / MapCanvas::SCROLLFACTOR()));
-    m_verticalScrollBar->setValue(static_cast<qint32>(y / MapCanvas::SCROLLFACTOR()));
+    const float scrollfactor = MapCanvas::SCROLLFACTOR();
+    m_horizontalScrollBar->setValue(static_cast<qint32>(static_cast<float>(x) / scrollfactor));
+    m_verticalScrollBar->setValue(static_cast<qint32>(static_cast<float>(y) / scrollfactor));
 }
 
 void MapWindow::ensureVisible(qint32 x, qint32 y)
 {
-    auto X1 = static_cast<qint32>(m_horizontalScrollBar->value() * MapCanvas::SCROLLFACTOR() - 5);
-    auto Y1 = static_cast<qint32>(m_verticalScrollBar->value() * MapCanvas::SCROLLFACTOR() - 5);
-    auto X2 = static_cast<qint32>(m_horizontalScrollBar->value() * MapCanvas::SCROLLFACTOR() + 5);
-    auto Y2 = static_cast<qint32>(m_verticalScrollBar->value() * MapCanvas::SCROLLFACTOR() + 5);
+    const float scrollfactor = MapCanvas::SCROLLFACTOR();
+    const auto X1 = static_cast<qint32>(
+        static_cast<float>(m_horizontalScrollBar->value()) * scrollfactor - 5.0f);
+    const auto Y1 = static_cast<qint32>(
+        static_cast<float>(m_verticalScrollBar->value()) * scrollfactor - 5.0f);
+    const auto X2 = static_cast<qint32>(
+        static_cast<float>(m_horizontalScrollBar->value()) * scrollfactor + 5.0f);
+    const auto Y2 = static_cast<qint32>(
+        static_cast<float>(m_verticalScrollBar->value()) * scrollfactor + 5.0f);
 
     if (x > X2 - 1) {
-        m_horizontalScrollBar->setValue(static_cast<qint32>((x - 2) / MapCanvas::SCROLLFACTOR()));
+        m_horizontalScrollBar->setValue(
+            static_cast<qint32>(static_cast<float>(x - 2) / scrollfactor));
     } else if (x < X1 + 1) {
-        m_horizontalScrollBar->setValue(static_cast<qint32>((x + 2) / MapCanvas::SCROLLFACTOR()));
+        m_horizontalScrollBar->setValue(
+            static_cast<qint32>(static_cast<float>(x + 2) / scrollfactor));
     }
 
     if (y > Y2 - 1) {
-        m_verticalScrollBar->setValue(static_cast<qint32>((y - 2) / MapCanvas::SCROLLFACTOR()));
+        m_verticalScrollBar->setValue(static_cast<qint32>(static_cast<float>(y - 2) / scrollfactor));
     } else if (y < Y1 + 1) {
-        m_verticalScrollBar->setValue(static_cast<qint32>((y + 2) / MapCanvas::SCROLLFACTOR()));
+        m_verticalScrollBar->setValue(static_cast<qint32>(static_cast<float>(y + 2) / scrollfactor));
     }
 
     bool scrollsNeedsUpdate = false;
@@ -234,32 +244,37 @@ void MapWindow::setScrollBars(const Coordinate &ulf, const Coordinate &lrb)
 {
     m_scrollBarMinimumVisible = ulf;
     m_scrollBarMaximumVisible = lrb;
-    float dwp = m_canvas->getDW();
-    float dhp = m_canvas->getDH();
 
-    auto horizontalMax = static_cast<int>((static_cast<float>(lrb.x) - dwp / 2 + 1.5)
-                                          / MapCanvas::SCROLLFACTOR());
-    auto horizontalMin = static_cast<int>((static_cast<float>(ulf.x) + dwp / 2 - 2.0)
-                                          / MapCanvas::SCROLLFACTOR());
-    auto verticalMax = static_cast<int>((static_cast<float>(lrb.y) - dhp / 2 + 1.5)
-                                        / MapCanvas::SCROLLFACTOR());
-    auto verticalMin = static_cast<int>((static_cast<float>(ulf.y) + dhp / 2 - 2.0)
-                                        / MapCanvas::SCROLLFACTOR());
+    // TODO: clean up all this code duplication.
+
+    const float dwp = m_canvas->getDW();
+    const float dhp = m_canvas->getDH();
+
+    const float scrollfactor = MapCanvas::SCROLLFACTOR();
+    const auto horizontalMax = static_cast<int>((static_cast<float>(lrb.x) - dwp / 2.0f + 1.5f)
+                                                / scrollfactor);
+    const auto horizontalMin = static_cast<int>((static_cast<float>(ulf.x) + dwp / 2.0f - 2.0f)
+                                                / scrollfactor);
+    const auto verticalMax = static_cast<int>((static_cast<float>(lrb.y) - dhp / 2.0f + 1.5f)
+                                              / scrollfactor);
+    const auto verticalMin = static_cast<int>((static_cast<float>(ulf.y) + dhp / 2.0f - 2.0f)
+                                              / scrollfactor);
 
     m_horizontalScrollBar->setRange(horizontalMin, horizontalMax);
-    if (lrb.x - ulf.x + 1 > dwp) {
+    if (static_cast<float>(lrb.x - ulf.x + 1) > dwp) {
         m_horizontalScrollBar->show();
     } else {
         m_horizontalScrollBar->hide();
     }
 
     m_verticalScrollBar->setRange(verticalMin, verticalMax);
-    if (lrb.y - ulf.y + 1 > dhp) {
+    if (static_cast<float>(lrb.y - ulf.y + 1) > dhp) {
         m_verticalScrollBar->show();
     } else {
         m_verticalScrollBar->hide();
     }
 }
+
 MapCanvas *MapWindow::getCanvas() const
 {
     return m_canvas;

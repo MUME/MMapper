@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -26,30 +27,38 @@
 #ifndef SYNCING_H
 #define SYNCING_H
 
-#include "roomrecipient.h"
-
 #include <list>
 #include <QtGlobal>
 
-class RoomSignalHandler;
-class PathParameters;
+#include "../expandoracommon/roomrecipient.h"
+
 class Path;
+class PathParameters;
+class Room;
 class RoomAdmin;
+class RoomSignalHandler;
 
 class Syncing : public RoomRecipient
 {
 private:
-    RoomSignalHandler *signaler;
-    uint numPaths;
+    RoomSignalHandler *signaler = nullptr;
+    uint numPaths = 0u;
     PathParameters &params;
-    std::list<Path *> *paths;
-    Path *parent;
+    std::list<Path *> *paths = nullptr;
+    Path *parent = nullptr;
 
 public:
-    Syncing(PathParameters &p, std::list<Path *> *paths, RoomSignalHandler *signaler);
-    void receiveRoom(RoomAdmin *, const Room *);
+    explicit Syncing(PathParameters &p, std::list<Path *> *paths, RoomSignalHandler *signaler);
+    void receiveRoom(RoomAdmin *, const Room *) override;
     std::list<Path *> *evaluate();
     ~Syncing();
+
+public:
+    Syncing() = delete;
+    Syncing(Syncing &&) = delete;
+    Syncing(const Syncing &) = delete;
+    Syncing &operator=(Syncing &&) = delete;
+    Syncing &operator=(const Syncing &) = delete;
 };
 
 #endif

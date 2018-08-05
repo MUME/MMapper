@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -25,50 +26,49 @@
 
 #ifndef MAPACTION_H
 #define MAPACTION_H
-//#include "roomselection.h"
-//#include "map.h"
-//#include "intermediatenode.h"
-//#include "mapfrontend.h"
-#include "parseevent.h"
-
-#include <QVariant>
-#include <QtGlobal>
 
 #include <set>
 #include <stack>
 #include <vector>
+#include <QCharRef>
+#include <QString>
+#include <QVariant>
+#include <QtGlobal>
 
-class Map;
-
-class MapFrontend;
+#include "../expandoracommon/parseevent.h"
+#include "../global/roomid.h"
+#include "../mapdata/ExitDirection.h"
+#include "../mapdata/mmapper2exit.h"
+#include "../mapdata/mmapper2room.h"
 
 class AbstractRoomFactory;
-
-class IntermediateNode;
-
-class RoomCollection;
-
+class Map;
+class MapFrontend;
+class ParseTree;
 class Room;
+class RoomCollection;
 
 class FrontendAccessor
 {
 public:
-    virtual ~FrontendAccessor() {}
+    virtual ~FrontendAccessor() = default;
 
     virtual void setFrontend(MapFrontend *in);
 
 protected:
-    MapFrontend *m_frontend;
+    MapFrontend *m_frontend = nullptr;
 
     Map &map();
 
-    IntermediateNode &treeRoot();
+    ParseTree &getParseTree();
 
-    std::vector<Room *> &roomIndex();
+    RoomIndex &roomIndex();
+    Room *roomIndex(RoomId) const;
 
-    std::vector<RoomCollection *> &roomHomes();
+    RoomHomes &roomHomes();
+    const SharedRoomCollection &roomHomes(RoomId) const;
 
-    std::stack<uint> &unusedIds();
+    std::stack<RoomId> &unusedIds();
 
     AbstractRoomFactory *factory();
 };
@@ -76,11 +76,11 @@ protected:
 class AbstractAction : public virtual FrontendAccessor
 {
 public:
-    virtual void preExec(uint) {}
+    virtual void preExec(RoomId) {}
 
-    virtual void exec(uint id) = 0;
+    virtual void exec(RoomId id) = 0;
 
-    virtual void insertAffected(uint id, std::set<uint> &affected) { affected.insert(id); }
+    virtual void insertAffected(RoomId id, std::set<RoomId> &affected) { affected.insert(id); }
 };
 
 class MapAction
@@ -95,15 +95,15 @@ public:
 protected:
     virtual void exec() = 0;
 
-    virtual const std::set<uint> &getAffectedRooms() { return affectedRooms; }
+    virtual const std::set<RoomId> &getAffectedRooms() { return affectedRooms; }
 
-    std::set<uint> affectedRooms;
+    std::set<RoomId> affectedRooms{};
 };
 
 class SingleRoomAction : public MapAction
 {
 public:
-    explicit SingleRoomAction(AbstractAction *ex, uint id);
+    explicit SingleRoomAction(AbstractAction *ex, RoomId id);
 
     void schedule(MapFrontend *in) override { executor->setFrontend(in); }
 
@@ -116,11 +116,11 @@ protected:
         executor->exec(id);
     }
 
-    virtual const std::set<uint> &getAffectedRooms() override;
+    virtual const RoomIdSet &getAffectedRooms() override;
 
 private:
-    uint id;
-    AbstractAction *executor;
+    RoomId id = INVALID_ROOMID;
+    AbstractAction *executor = nullptr;
 };
 
 class AddExit : public MapAction, public FrontendAccessor
@@ -128,22 +128,22 @@ class AddExit : public MapAction, public FrontendAccessor
 public:
     void schedule(MapFrontend *in) override { setFrontend(in); }
 
-    explicit AddExit(uint in_from, uint in_to, uint in_dir);
+    explicit AddExit(RoomId in_from, RoomId in_to, ExitDirection in_dir);
 
 protected:
     virtual void exec() override;
 
     Room *tryExec();
 
-    uint from;
-    uint to;
-    uint dir;
+    RoomId from;
+    RoomId to;
+    ExitDirection dir = ExitDirection::UNKNOWN;
 };
 
 class RemoveExit : public MapAction, public FrontendAccessor
 {
 public:
-    explicit RemoveExit(uint from, uint to, uint dir);
+    explicit RemoveExit(RoomId from, RoomId to, ExitDirection dir);
 
     void schedule(MapFrontend *in) override { setFrontend(in); }
 
@@ -152,60 +152,82 @@ protected:
 
     Room *tryExec();
 
-    uint from;
-    uint to;
-    uint dir;
+    RoomId from = DEFAULT_ROOMID;
+    RoomId to = DEFAULT_ROOMID;
+    ExitDirection dir = ExitDirection::UNKNOWN;
 };
 
 class MakePermanent final : public AbstractAction
 {
 public:
-    virtual void exec(uint id) override;
+    virtual void exec(RoomId RoomId) override;
 };
 
-class UpdateRoomField : public virtual AbstractAction
+class UpdateRoomField final : public virtual AbstractAction
 {
 public:
+    explicit UpdateRoomField(RoomAlignType rat, RoomField rf)
+        : UpdateRoomField{QVariant{static_cast<uint>(rat)}, static_cast<uint>(rf)}
+    {}
+    explicit UpdateRoomField(RoomLightType rlt, RoomField rf)
+        : UpdateRoomField{QVariant{static_cast<uint>(rlt)}, static_cast<uint>(rf)}
+    {}
+    explicit UpdateRoomField(RoomPortableType rpt, RoomField rf)
+        : UpdateRoomField{QVariant{static_cast<uint>(rpt)}, static_cast<uint>(rf)}
+    {}
+    explicit UpdateRoomField(RoomRidableType rrt, RoomField rf)
+        : UpdateRoomField{QVariant{static_cast<uint>(rrt)}, static_cast<uint>(rf)}
+    {}
+    explicit UpdateRoomField(RoomSundeathType rst, RoomField rf)
+        : UpdateRoomField{QVariant{static_cast<uint>(rst)}, static_cast<uint>(rf)}
+    {}
+    explicit UpdateRoomField(RoomTerrainType rtt, RoomField rf)
+        : UpdateRoomField{QVariant{static_cast<uint>(rtt)}, static_cast<uint>(rf)}
+    {}
+
+    explicit UpdateRoomField(QString type, RoomField rf)
+        : UpdateRoomField{QVariant{type}, static_cast<uint>(rf)}
+    {}
+
+public:
+    [[deprecated]] explicit UpdateRoomField(const QVariant &type, RoomField rf)
+        : UpdateRoomField{type, static_cast<uint>(rf)}
+    {}
+
+private:
     explicit UpdateRoomField(const QVariant &update, uint fieldNum);
 
-    virtual void exec(uint id) override;
+public:
+    virtual void exec(RoomId id) override;
 
 protected:
     const QVariant update;
     const uint fieldNum;
 };
 
-class Update : public virtual AbstractAction
+class Update final : public virtual AbstractAction
 {
 public:
     explicit Update();
 
-    explicit Update(ParseEvent &props);
+    explicit Update(const SigParseEvent &sigParseEvent);
 
-    virtual void exec(uint id) override;
+    virtual void exec(RoomId id) override;
 
 protected:
     ParseEvent props;
 };
 
-class UpdatePartial : public virtual Update, public virtual UpdateRoomField
-{
-public:
-    explicit UpdatePartial(const QVariant &in_val, uint in_pos);
-
-    virtual void exec(uint id) override;
-};
-
 class ExitsAffecter : public AbstractAction
 {
 public:
-    virtual void insertAffected(uint id, std::set<uint> &affected) override;
+    virtual void insertAffected(RoomId id, std::set<RoomId> &affected) override;
 };
 
 class Remove : public ExitsAffecter
 {
 protected:
-    virtual void exec(uint id) override;
+    virtual void exec(RoomId id) override;
 };
 
 #endif

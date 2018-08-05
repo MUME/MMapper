@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Nils Schimmelmann <nschimme@gmail.com>
@@ -25,36 +26,54 @@
 #ifndef DISPLAYWIDGET_H
 #define DISPLAYWIDGET_H
 
+#include <QColor>
+#include <QFont>
 #include <QRegExp>
+#include <QString>
+#include <QTextCursor>
 #include <QTextEdit>
+#include <QTextFormat>
+#include <QtCore>
+#include <QtGui>
 
+class QObject;
+class QRegExp;
+class QResizeEvent;
 class QTextDocument;
+class QWidget;
 
 class DisplayWidget : public QTextEdit
 {
+private:
+    using base = QTextEdit;
+
+private:
     Q_OBJECT
 
 public:
-    DisplayWidget(QWidget *parent = 0);
+    explicit DisplayWidget(QWidget *parent = nullptr);
     ~DisplayWidget();
 
 public slots:
     void displayText(const QString &str);
 
 protected:
-    QTextCursor m_cursor;
-    QTextCharFormat m_format;
+    QTextCursor m_cursor{};
+    QTextCharFormat m_format{};
 
-    void resizeEvent(QResizeEvent *event);
+    void resizeEvent(QResizeEvent *event) override;
 
 private:
     static const QRegExp s_ansiRx;
 
-    QColor m_blackColor, m_redColor, m_greenColor, m_yellowColor, m_blueColor, m_magentaColor;
-    QColor m_cyanColor, m_grayColor, m_darkGrayColor, m_brightRedColor, m_brightGreenColor;
-    QColor m_brightYellowColor, m_brightBlueColor, m_brightMagentaColor, m_brightCyanColor;
-    QColor m_whiteColor, m_foregroundColor, m_backgroundColor;
-    QFont m_serverOutputFont;
+    /* REVISIT: make this an object with operator[] indexed by enum class, or use a map */
+    QColor m_blackColor{}, m_redColor{}, m_greenColor{}, m_yellowColor{}, m_blueColor{},
+        m_magentaColor{};
+    QColor m_cyanColor{}, m_grayColor{}, m_darkGrayColor{}, m_brightRedColor{},
+        m_brightGreenColor{};
+    QColor m_brightYellowColor{}, m_brightBlueColor{}, m_brightMagentaColor{}, m_brightCyanColor{};
+    QColor m_whiteColor{}, m_foregroundColor{}, m_backgroundColor{};
+    QFont m_serverOutputFont{};
 
     bool m_backspace{};
 
@@ -64,6 +83,7 @@ private:
 
 signals:
     void showMessage(const QString &, int);
+    void windowSizeChanged(int, int);
 };
 
 #endif /* DISPLAYWIDGET_H */

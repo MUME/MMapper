@@ -24,29 +24,28 @@
 ************************************************************************/
 
 #include "experimenting.h"
-#include "abstractroomfactory.h"
-#include "path.h"
-#include "pathmachine.h"
 
-Experimenting::Experimenting(std::list<Path *> *pat,
-                             uint in_dirCode,
+#include "../expandoracommon/room.h"
+#include "../mapdata/roomfactory.h"
+#include "path.h"
+#include "pathparameters.h"
+
+Experimenting::Experimenting(std::list<Path *> *const pat,
+                             const ExitDirection in_dirCode,
                              PathParameters &in_params,
-                             AbstractRoomFactory *in_factory)
-    : direction(in_factory->exitDir(in_dirCode))
+                             AbstractRoomFactory *const in_factory)
+    : direction(RoomFactory::exitDir(in_dirCode))
     , dirCode(in_dirCode)
     , shortPaths(pat)
     , paths(new std::list<Path *>)
-    , best(nullptr)
-    , second(nullptr)
     , params(in_params)
-    , numPaths(0)
     , factory(in_factory)
 {}
 
-void Experimenting::augmentPath(Path *path, RoomAdmin *map, const Room *room)
+void Experimenting::augmentPath(Path *const path, RoomAdmin *const map, const Room *const room)
 {
-    Coordinate c = path->getRoom()->getPosition() + direction;
-    Path *working = path->fork(room, c, map, params, this, dirCode, factory);
+    const Coordinate c = path->getRoom()->getPosition() + direction;
+    Path *const working = path->fork(room, c, map, params, this, dirCode);
     if (best == nullptr) {
         best = working;
     } else if (working->getProb() > best->getProb()) {

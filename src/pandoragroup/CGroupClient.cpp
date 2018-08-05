@@ -24,15 +24,15 @@
 ************************************************************************/
 
 #include "CGroupClient.h"
-#include "CGroupCommunicator.h"
 
-#include <QDebug>
-#include <QHostAddress>
+#include <QByteArray>
+#include <QMessageLogContext>
+#include <QString>
 
 void CGroupClient::linkSignals()
 {
-    connect(this, SIGNAL(disconnected()), SLOT(lostConnection()));
-    connect(this, SIGNAL(readyRead()), SLOT(dataIncoming()));
+    connect(this, &QAbstractSocket::disconnected, this, &CGroupClient::lostConnection);
+    connect(this, &QIODevice::readyRead, this, &CGroupClient::dataIncoming);
     connect(this,
             SIGNAL(error(QAbstractSocket::SocketError)),
             SLOT(errorHandler(QAbstractSocket::SocketError)));
@@ -44,7 +44,7 @@ void CGroupClient::linkSignals()
             SLOT(errorInConnection(CGroupClient *, const QString &)));
 }
 
-CGroupClient::CGroupClient(const QByteArray &host, int remotePort, QObject *parent)
+CGroupClient::CGroupClient(const QByteArray &host, const int remotePort, QObject *const parent)
     : QTcpSocket(parent)
 {
     linkSignals();
@@ -52,11 +52,11 @@ CGroupClient::CGroupClient(const QByteArray &host, int remotePort, QObject *pare
             SIGNAL(incomingData(CGroupClient *, QByteArray)),
             parent,
             SLOT(incomingData(CGroupClient *, QByteArray)));
-    setConnectionState(Connecting);
-    connectToHost(host, remotePort);
-    protocolState = AwaitingLogin;
+    setConnectionState(ConnectionStates::Connecting);
+    connectToHost(host, static_cast<quint16>(remotePort));
+    protocolState = ProtocolStates::AwaitingLogin;
     if (!waitForConnected(5000)) {
-        if (getConnectionState() == Connecting) {
+        if (getConnectionState() == ConnectionStates::Connecting) {
             errorHandler(QAbstractSocket::SocketTimeoutError);
         }
     } else {
@@ -69,8 +69,6 @@ CGroupClient::CGroupClient(const QByteArray &host, int remotePort, QObject *pare
 CGroupClient::CGroupClient(QObject *parent)
     : QTcpSocket(parent)
 {
-    connectionState = Closed;
-    protocolState = Idle;
     linkSignals();
 }
 
@@ -82,37 +80,37 @@ void CGroupClient::setSocket(qintptr socketDescriptor)
         return;
     }
     setSocketOption(QAbstractSocket::KeepAliveOption, true);
-    setConnectionState(Connected);
+    setConnectionState(ConnectionStates::Connected);
 }
 
-void CGroupClient::setProtocolState(int val)
+void CGroupClient::setProtocolState(ProtocolStates val)
 {
     //    qInfo("Protocol state: %i", val);
     protocolState = val;
 }
 
-void CGroupClient::setConnectionState(int val)
+void CGroupClient::setConnectionState(ConnectionStates val)
 {
     //    qInfo("Connection state: %i", val);
     connectionState = val;
     switch (val) {
-    case CGroupClient::Connecting:
+    case ConnectionStates::Connecting:
         emit sendLog(QString("Connecting to remote host."));
         break;
-    case CGroupClient::Connected:
+    case ConnectionStates::Connected:
         emit sendLog(QString("Connection established."));
-        setProtocolState(CGroupClient::AwaitingLogin);
+        setProtocolState(ProtocolStates::AwaitingLogin);
         emit connectionEstablished(this);
         break;
-    case CGroupClient::Closed:
+    case ConnectionStates::Closed:
         emit sendLog(QString("Connection closed."));
         emit connectionClosed(this);
         break;
-    case CGroupClient::Quiting:
+    case ConnectionStates::Quiting:
         emit sendLog(QString("Closing the socket. Quitting."));
         break;
     default:
-        qWarning("Unknown state change: %i", val);
+        qWarning("Unknown state change: %i", static_cast<int>(val));
         break;
     }
 }
@@ -124,17 +122,17 @@ CGroupClient::~CGroupClient()
 
 void CGroupClient::lostConnection()
 {
-    setConnectionState(Closed);
+    setConnectionState(ConnectionStates::Closed);
 }
 
 void CGroupClient::connectionEstablished()
 {
-    setConnectionState(Connected);
+    setConnectionState(ConnectionStates::Connected);
 }
 
 void CGroupClient::errorHandler(QAbstractSocket::SocketError /*socketError*/)
 {
-    setConnectionState(Quiting);
+    setConnectionState(ConnectionStates::Quiting);
     emit errorInConnection(this, errorString());
 }
 

@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -26,54 +27,71 @@
 #ifndef CUSTOMACTION_H
 #define CUSTOMACTION_H
 
-#include "coordinate.h"
-#include "mapaction.h"
 #include <list>
+#include <QVariant>
+#include <QtCore>
+#include <QtGlobal>
 
-enum FlagModifyMode { FMM_SET, FMM_UNSET, FMM_TOGGLE };
+#include "../expandoracommon/coordinate.h"
+#include "../global/roomid.h"
+#include "../mapfrontend/mapaction.h"
+#include "ExitDirection.h"
+#include "ExitFieldVariant.h"
+#include "mmapper2exit.h"
+#include "mmapper2room.h"
 
+class DoorFlags;
+class ExitFlags;
 class MapData;
-
+class MapFrontend;
 class ParseEvent;
-
+class Room;
 class RoomSelection;
+
+enum class FlagModifyMode { SET, UNSET, TOGGLE };
 
 using AddOneWayExit = AddExit;
 
-class AddTwoWayExit : public AddOneWayExit
+class AddTwoWayExit final : public AddOneWayExit
 {
 public:
-    AddTwoWayExit(uint room1Id, uint room2Id, uint room1Dir, uint in_room2Dir = UINT_MAX)
+    explicit AddTwoWayExit(RoomId room1Id,
+                           RoomId room2Id,
+                           ExitDirection room1Dir,
+                           ExitDirection in_room2Dir = ExitDirection::UNKNOWN)
         : AddOneWayExit(room1Id, room2Id, room1Dir)
         , room2Dir(in_room2Dir)
     {}
 
 protected:
-    virtual void exec();
+    virtual void exec() override;
 
-    uint room2Dir;
+    ExitDirection room2Dir = ExitDirection::UNKNOWN;
 };
 
 using RemoveOneWayExit = RemoveExit;
 
-class RemoveTwoWayExit : public RemoveOneWayExit
+class RemoveTwoWayExit final : public RemoveOneWayExit
 {
 public:
-    RemoveTwoWayExit(uint room1Id, uint room2Id, uint room1Dir, uint in_room2Dir = UINT_MAX)
+    explicit RemoveTwoWayExit(RoomId room1Id,
+                              RoomId room2Id,
+                              ExitDirection room1Dir,
+                              ExitDirection in_room2Dir = ExitDirection::UNKNOWN)
         : RemoveOneWayExit(room1Id, room2Id, room1Dir)
         , room2Dir(in_room2Dir)
     {}
 
 protected:
-    virtual void exec();
+    virtual void exec() override;
 
-    uint room2Dir;
+    ExitDirection room2Dir = ExitDirection::UNKNOWN;
 };
 
 class GroupAction : virtual public MapAction
 {
 public:
-    GroupAction(AbstractAction *ex, const RoomSelection *selection);
+    explicit GroupAction(AbstractAction *ex, const RoomSelection *selection);
 
     void schedule(MapFrontend *in) override { executor->setFrontend(in); }
 
@@ -82,11 +100,11 @@ public:
 protected:
     virtual void exec() override;
 
-    virtual const std::set<uint> &getAffectedRooms() override;
+    virtual const RoomIdSet &getAffectedRooms() override;
 
 private:
-    std::list<uint> selectedRooms;
-    AbstractAction *executor;
+    std::list<RoomId> selectedRooms{};
+    AbstractAction *executor = nullptr;
 };
 
 class MoveRelative : public AbstractAction
@@ -94,84 +112,88 @@ class MoveRelative : public AbstractAction
 public:
     explicit MoveRelative(const Coordinate &move);
 
-    virtual void preExec(uint id) override;
+    virtual void preExec(RoomId id) override;
 
-    virtual void exec(uint id) override;
-
-protected:
-    Coordinate move;
-};
-
-class MergeRelative : public Remove
-{
-public:
-    MergeRelative(const Coordinate &move);
-
-    virtual void preExec(uint id) override;
-
-    virtual void exec(uint id) override;
-
-    virtual void insertAffected(uint id, std::set<uint> &affected) override;
+    virtual void exec(RoomId id) override;
 
 protected:
     Coordinate move;
 };
 
-class ConnectToNeighbours : public AbstractAction
+class MergeRelative final : public Remove
 {
 public:
-    virtual void insertAffected(uint id, std::set<uint> &affected) override;
+    explicit MergeRelative(const Coordinate &move);
 
-    virtual void exec(uint id) override;
+    virtual void preExec(RoomId id) override;
+
+    virtual void exec(RoomId id) override;
+
+    virtual void insertAffected(RoomId id, RoomIdSet &affected) override;
+
+protected:
+    Coordinate move{};
+};
+
+class ConnectToNeighbours final : public AbstractAction
+{
+public:
+    virtual void insertAffected(RoomId id, RoomIdSet &affected) override;
+
+    virtual void exec(RoomId id) override;
 
 private:
-    void connectRooms(Room *center, Coordinate &otherPos, uint dir, uint cid);
+    void connectRooms(Room *center, Coordinate &otherPos, ExitDirection dir, RoomId cid);
 };
 
-class DisconnectFromNeighbours : public ExitsAffecter
+class DisconnectFromNeighbours final : public ExitsAffecter
 {
 public:
-    virtual void exec(uint id) override;
+    virtual void exec(RoomId id) override;
 };
 
-class ModifyRoomFlags : public AbstractAction
+class ModifyRoomFlags final : public AbstractAction
 {
 public:
-    ModifyRoomFlags(uint flags, uint fieldNum, FlagModifyMode);
+    explicit ModifyRoomFlags(uint flags, RoomField fieldNum, FlagModifyMode);
 
-    virtual void exec(uint id) override;
+    virtual void exec(RoomId id) override;
 
 protected:
-    const uint flags;
-    const uint fieldNum;
-    const FlagModifyMode mode;
+    const uint flags = 0u;
+    const RoomField fieldNum = RoomField::NAME;
+    const FlagModifyMode mode{};
 };
 
-class UpdateExitField : public AbstractAction
+// Currently only used for DoorName, but it should work for any type.
+class UpdateExitField final : public AbstractAction
 {
 public:
-    UpdateExitField(const QVariant &update, uint dir, uint fieldNum);
+    explicit UpdateExitField(const ExitFieldVariant &update, ExitDirection dir);
+    explicit UpdateExitField(const DoorName &update, ExitDirection dir);
 
-    virtual void exec(uint id) override;
+    virtual void exec(RoomId id) override;
 
 protected:
-    const QVariant update;
-    const uint fieldNum;
-    const uint dir;
+    const ExitFieldVariant update;
+    const ExitDirection dir = ExitDirection::UNKNOWN;
 };
 
-class ModifyExitFlags : public AbstractAction
+// Despite its name, this is also used to modify an exit's DoorFlags.
+// This has never been called with DoorName, so that part is not implemented.
+class ModifyExitFlags final : public AbstractAction
 {
 public:
-    ModifyExitFlags(uint flags, uint dir, uint exitField, FlagModifyMode);
+    explicit ModifyExitFlags(ExitFieldVariant flags, ExitDirection dir, FlagModifyMode);
+    explicit ModifyExitFlags(ExitFlags flags, ExitDirection dir, FlagModifyMode);
+    explicit ModifyExitFlags(DoorFlags flags, ExitDirection dir, FlagModifyMode);
 
-    virtual void exec(uint id) override;
+    virtual void exec(RoomId id) override;
 
 protected:
-    const uint flags;
-    const uint fieldNum;
-    const FlagModifyMode mode;
-    const uint dir;
+    const ExitFieldVariant var;
+    const FlagModifyMode mode{};
+    const ExitDirection dir = ExitDirection::UNKNOWN;
 };
 
 #endif

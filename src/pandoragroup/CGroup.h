@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Azazello <lachupe@gmail.com>,
@@ -26,18 +27,21 @@
 #ifndef CGROUP_H_
 #define CGROUP_H_
 
-#include "groupselection.h"
-
 #include <set>
 #include <vector>
+#include <QByteArray>
 #include <QDomNode>
 #include <QMutex>
 #include <QObject>
+#include <QWidget>
+#include <QtCore>
 #include <queue>
 
-class CGroupCommunicator;
+#include "groupselection.h"
+
 class CGroupChar;
 class CGroupClient;
+class CGroupCommunicator;
 class GroupAction;
 
 class CGroup : public QObject, public GroupAdmin
@@ -61,7 +65,7 @@ public:
     bool isNamePresent(const QByteArray &name);
 
     // Interactions with group characters should occur through CGroupSelection due to threading
-    void releaseCharacters(GroupRecipient *sender);
+    void releaseCharacters(GroupRecipient *sender) override;
     void unselect(GroupSelection *s)
     {
         releaseCharacters(s);

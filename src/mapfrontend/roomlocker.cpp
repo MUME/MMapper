@@ -24,12 +24,14 @@
 ************************************************************************/
 
 #include "roomlocker.h"
-#include "abstractroomfactory.h"
-#include "mapfrontend.h"
-#include "roomrecipient.h"
 
-RoomLocker::RoomLocker(RoomRecipient *forward,
-                       MapFrontend *frontend,
+#include "../expandoracommon/abstractroomfactory.h"
+#include "../expandoracommon/room.h"
+#include "../expandoracommon/roomrecipient.h"
+#include "mapfrontend.h"
+
+RoomLocker::RoomLocker(RoomRecipient &forward,
+                       MapFrontend &frontend,
                        AbstractRoomFactory *in_factory,
                        ParseEvent *compare)
     : recipient(forward)
@@ -38,16 +40,15 @@ RoomLocker::RoomLocker(RoomRecipient *forward,
     , comparator(compare)
 {}
 
-RoomOutStream &RoomLocker::operator<<(const Room *room)
+void RoomLocker::visit(const Room *room)
 {
     if ((factory != nullptr) && (comparator != nullptr)) {
-        if (factory->compareWeakProps(room, *comparator) != CR_DIFFERENT) {
-            data->lockRoom(recipient, room->getId());
-            recipient->receiveRoom(data, room);
+        if (factory->compareWeakProps(room, *comparator) != ComparisonResult::DIFFERENT) {
+            data.lockRoom(&recipient, room->getId());
+            recipient.receiveRoom(&data, room);
         }
     } else {
-        data->lockRoom(recipient, room->getId());
-        recipient->receiveRoom(data, room);
+        data.lockRoom(&recipient, room->getId());
+        recipient.receiveRoom(&data, room);
     }
-    return *this;
 }

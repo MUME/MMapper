@@ -25,60 +25,80 @@
 ************************************************************************/
 
 #include "generalpage.h"
-#include "configuration/configuration.h"
 
-#include <QFileDialog>
+#include <QString>
+#include <QtWidgets>
+
+#include "../configuration/configuration.h"
+
+/* TODO: merge with other use */
+#if MMAPPER_NO_OPENSSL
+static constexpr const bool NO_OPEN_SSL = true;
+#else
+static constexpr const bool NO_OPEN_SSL = false;
+#endif
 
 GeneralPage::GeneralPage(QWidget *parent)
     : QWidget(parent)
 {
     setupUi(this);
-    connect(remoteName,
-            SIGNAL(textChanged(const QString &)),
-            this,
-            SLOT(remoteNameTextChanged(const QString &)));
+    connect(remoteName, &QLineEdit::textChanged, this, &GeneralPage::remoteNameTextChanged);
     connect(remotePort, SIGNAL(valueChanged(int)), this, SLOT(remotePortValueChanged(int)));
     connect(localPort, SIGNAL(valueChanged(int)), this, SLOT(localPortValueChanged(int)));
     connect(tlsEncryptionCheckBox,
-            SIGNAL(stateChanged(int)),
-            SLOT(tlsEncryptionCheckBoxStateChanged(int)));
+            &QCheckBox::stateChanged,
+            this,
+            &GeneralPage::tlsEncryptionCheckBoxStateChanged);
 
-    connect(emulatedExitsCheckBox, SIGNAL(stateChanged(int)), SLOT(emulatedExitsStateChanged(int)));
+    connect(emulatedExitsCheckBox,
+            &QCheckBox::stateChanged,
+            this,
+            &GeneralPage::emulatedExitsStateChanged);
     connect(showHiddenExitFlagsCheckBox,
-            SIGNAL(stateChanged(int)),
-            SLOT(showHiddenExitFlagsStateChanged(int)));
-    connect(showNotesCheckBox, SIGNAL(stateChanged(int)), SLOT(showNotesStateChanged(int)));
+            &QCheckBox::stateChanged,
+            this,
+            &GeneralPage::showHiddenExitFlagsStateChanged);
+    connect(showNotesCheckBox, &QCheckBox::stateChanged, this, &GeneralPage::showNotesStateChanged);
 
     connect(autoLoadFileName,
-            SIGNAL(textChanged(const QString &)),
+            &QLineEdit::textChanged,
             this,
-            SLOT(autoLoadFileNameTextChanged(const QString &)));
-    connect(autoLoadCheck, SIGNAL(stateChanged(int)), SLOT(autoLoadCheckStateChanged(int)));
+            &GeneralPage::autoLoadFileNameTextChanged);
+    connect(autoLoadCheck, &QCheckBox::stateChanged, this, &GeneralPage::autoLoadCheckStateChanged);
 
-    connect(selectWorldFileButton, SIGNAL(clicked()), this, SLOT(selectWorldFileButtonClicked()));
+    connect(selectWorldFileButton,
+            &QAbstractButton::clicked,
+            this,
+            &GeneralPage::selectWorldFileButtonClicked);
 
     connect(displayMumeClockCheckBox,
-            SIGNAL(stateChanged(int)),
-            SLOT(displayMumeClockStateChanged(int)));
+            &QCheckBox::stateChanged,
+            this,
+            &GeneralPage::displayMumeClockStateChanged);
 
-    remoteName->setText(Config().m_remoteServerName);
-    remotePort->setValue(Config().m_remotePort);
-    localPort->setValue(Config().m_localPort);
-#if MMAPPER_NO_OPENSSL
-    tlsEncryptionCheckBox->setEnabled(false);
-    tlsEncryptionCheckBox->setChecked(false);
-#else
-    tlsEncryptionCheckBox->setChecked(Config().m_tlsEncryption);
-#endif
+    const auto &config = Config();
+    const auto &connection = config.connection;
+    const auto &mumeNative = config.mumeNative;
+    const auto &autoLoad = config.autoLoad;
 
-    emulatedExitsCheckBox->setChecked(Config().m_emulatedExits);
-    showHiddenExitFlagsCheckBox->setChecked(Config().m_showHiddenExitFlags);
-    showNotesCheckBox->setChecked(Config().m_showNotes);
+    remoteName->setText(connection.remoteServerName);
+    remotePort->setValue(connection.remotePort);
+    localPort->setValue(connection.localPort);
+    if (NO_OPEN_SSL) {
+        tlsEncryptionCheckBox->setEnabled(false);
+        tlsEncryptionCheckBox->setChecked(false);
+    } else {
+        tlsEncryptionCheckBox->setChecked(connection.tlsEncryption);
+    }
 
-    autoLoadCheck->setChecked(Config().m_autoLoadWorld);
-    autoLoadFileName->setText(Config().m_autoLoadFileName);
+    emulatedExitsCheckBox->setChecked(mumeNative.emulatedExits);
+    showHiddenExitFlagsCheckBox->setChecked(mumeNative.showHiddenExitFlags);
+    showNotesCheckBox->setChecked(mumeNative.showNotes);
 
-    displayMumeClockCheckBox->setChecked(Config().m_displayMumeClock);
+    autoLoadCheck->setChecked(autoLoad.autoLoadMap);
+    autoLoadFileName->setText(autoLoad.fileName);
+
+    displayMumeClockCheckBox->setChecked(config.mumeClock.display);
 }
 
 void GeneralPage::selectWorldFileButtonClicked()
@@ -89,58 +109,59 @@ void GeneralPage::selectWorldFileButtonClicked()
                                                     "MMapper2 (*.mm2);;MMapper (*.map)");
     if (!fileName.isEmpty()) {
         autoLoadFileName->setText(fileName);
-        Config().m_autoLoadFileName = fileName;
         autoLoadCheck->setChecked(true);
-        Config().m_autoLoadWorld = true;
+        auto &settings = Config().autoLoad;
+        settings.fileName = fileName;
+        settings.autoLoadMap = true;
     }
 }
 
 void GeneralPage::remoteNameTextChanged(const QString & /*unused*/)
 {
-    Config().m_remoteServerName = remoteName->text();
+    Config().connection.remoteServerName = remoteName->text();
 }
 
 void GeneralPage::remotePortValueChanged(int /*unused*/)
 {
-    Config().m_remotePort = remotePort->value();
+    Config().connection.remotePort = static_cast<quint16>(remotePort->value());
 }
 
 void GeneralPage::localPortValueChanged(int /*unused*/)
 {
-    Config().m_localPort = localPort->value();
+    Config().connection.localPort = static_cast<quint16>(localPort->value());
 }
 
 void GeneralPage::tlsEncryptionCheckBoxStateChanged(int /*unused*/)
 {
-    Config().m_tlsEncryption = tlsEncryptionCheckBox->isChecked();
+    Config().connection.tlsEncryption = tlsEncryptionCheckBox->isChecked();
 }
 
 void GeneralPage::emulatedExitsStateChanged(int /*unused*/)
 {
-    Config().m_emulatedExits = emulatedExitsCheckBox->isChecked();
+    Config().mumeNative.emulatedExits = emulatedExitsCheckBox->isChecked();
 }
 
 void GeneralPage::showHiddenExitFlagsStateChanged(int /*unused*/)
 {
-    Config().m_showHiddenExitFlags = showHiddenExitFlagsCheckBox->isChecked();
+    Config().mumeNative.showHiddenExitFlags = showHiddenExitFlagsCheckBox->isChecked();
 }
 
 void GeneralPage::showNotesStateChanged(int /*unused*/)
 {
-    Config().m_showNotes = showNotesCheckBox->isChecked();
+    Config().mumeNative.showNotes = showNotesCheckBox->isChecked();
 }
 
 void GeneralPage::autoLoadFileNameTextChanged(const QString & /*unused*/)
 {
-    Config().m_autoLoadFileName = autoLoadFileName->text();
+    Config().autoLoad.fileName = autoLoadFileName->text();
 }
 
 void GeneralPage::autoLoadCheckStateChanged(int /*unused*/)
 {
-    Config().m_autoLoadWorld = autoLoadCheck->isChecked();
+    Config().autoLoad.autoLoadMap = autoLoadCheck->isChecked();
 }
 
 void GeneralPage::displayMumeClockStateChanged(int /*unused*/)
 {
-    Config().m_displayMumeClock = displayMumeClockCheckBox->isChecked();
+    Config().mumeClock.display = displayMumeClockCheckBox->isChecked();
 }

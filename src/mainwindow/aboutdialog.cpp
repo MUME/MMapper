@@ -24,8 +24,10 @@
 
 #include "aboutdialog.h"
 
-#include <QFile>
-#include <QTextStream>
+#include <QString>
+#include <QtConfig>
+#include <QtGui>
+#include <QtWidgets>
 
 AboutDialog::AboutDialog(QWidget *parent)
     : QDialog(parent)

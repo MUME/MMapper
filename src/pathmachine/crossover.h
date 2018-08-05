@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -26,18 +27,26 @@
 #ifndef CROSSOVER_H
 #define CROSSOVER_H
 
+#include <list>
+
+#include "../mapdata/ExitDirection.h"
+#include "../mapdata/mmapper2exit.h"
 #include "experimenting.h"
 
 class AbstractRoomFactory;
+class Path;
+class PathParameters;
+class Room;
+class RoomAdmin;
 
 class Crossover : public Experimenting
 {
 public:
     Crossover(std::list<Path *> *paths,
-              uint dirCode,
+              ExitDirection dirCode,
               PathParameters &params,
               AbstractRoomFactory *factory);
-    void receiveRoom(RoomAdmin *, const Room *);
+    void receiveRoom(RoomAdmin *, const Room *) override;
 };
 
 #endif

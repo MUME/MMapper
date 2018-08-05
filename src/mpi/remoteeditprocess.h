@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Nils Schimmelmann <nschimme@gmail.com> (Jahara)
@@ -25,21 +26,25 @@
 #ifndef _REMOTEEDITPROCESS_H_
 #define _REMOTEEDITPROCESS_H_
 
-#include "remoteeditsession.h"
-
 #include <QDateTime>
+#include <QObject>
 #include <QProcess>
+#include <QString>
+#include <QStringList>
 #include <QTemporaryFile>
+#include <QtCore>
+
+#include "remoteeditsession.h"
 
 class RemoteEditProcess : public QObject
 {
     Q_OBJECT
 
 public:
-    RemoteEditProcess(bool editSession,
-                      const QString &title,
-                      const QString &body,
-                      QObject *parent = 0);
+    explicit RemoteEditProcess(bool editSession,
+                               const QString &title,
+                               const QString &body,
+                               QObject *parent = nullptr);
     ~RemoteEditProcess();
 
 protected slots:
@@ -57,10 +62,10 @@ private:
     const QString m_body;
     const bool m_editSession;
 
-    QProcess m_process;
-    QTemporaryFile m_file;
-    QString m_newBody;
-    QDateTime m_previousTime;
+    QProcess m_process{};
+    QTemporaryFile m_file{};
+    QString m_newBody{};
+    QDateTime m_previousTime{};
 };
 
 #endif /* _REMOTEEDITPROCESS_H_ */

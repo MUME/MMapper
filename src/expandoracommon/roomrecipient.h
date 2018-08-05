@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -28,7 +29,6 @@
 #define ROOMRECIPIENT_H
 
 class Room;
-
 class RoomAdmin;
 
 /*! \brief Interface giving briefly access to a mutex-protected room.
@@ -38,8 +38,15 @@ class RoomAdmin;
 class RoomRecipient
 {
 public:
+    RoomRecipient() = default;
     virtual void receiveRoom(RoomAdmin *admin, const Room *room) = 0;
-    virtual ~RoomRecipient() {}
+    virtual ~RoomRecipient() = default;
+
+public:
+    RoomRecipient(RoomRecipient &&) = delete;
+    RoomRecipient(const RoomRecipient &) = delete;
+    RoomRecipient &operator=(RoomRecipient &&) = delete;
+    RoomRecipient &operator=(const RoomRecipient &) = delete;
 };
 
 #endif

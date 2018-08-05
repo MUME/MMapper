@@ -1,105 +1,141 @@
-#include "graphicspage.h"
-#include "configuration/configuration.h"
-#include "ui_graphicspage.h"
+/************************************************************************
+**
+** Authors:   Nils Schimmelmann <nschimme@gmail.com>
+**
+** This file is part of the MMapper project.
+** Maintained by Nils Schimmelmann <nschimme@gmail.com>
+**
+** This program is free software; you can redistribute it and/or
+** modify it under the terms of the GNU General Public License
+** as published by the Free Software Foundation; either version 2
+** of the License, or (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the:
+** Free Software Foundation, Inc.
+** 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+**
+************************************************************************/
 
-#include <QColorDialog>
+#include "graphicspage.h"
+
+#include <QString>
+#include <QtGui>
+#include <QtWidgets>
+
+#include "../configuration/configuration.h"
+#include "ui_graphicspage.h"
 
 GraphicsPage::GraphicsPage(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::GraphicsPage)
 {
+    const auto &settings = Config().canvas;
+
     ui->setupUi(this);
 
-    connect(ui->changeColor, SIGNAL(clicked()), SLOT(changeColorClicked()));
+    connect(ui->changeColor, &QAbstractButton::clicked, this, &GraphicsPage::changeColorClicked);
     connect(ui->antialiasingSamplesComboBox,
-            SIGNAL(currentTextChanged(const QString &)),
+            &QComboBox::currentTextChanged,
             this,
-            SLOT(antialiasingSamplesTextChanged(const QString &)));
+            &GraphicsPage::antialiasingSamplesTextChanged);
     connect(ui->trilinearFilteringCheckBox,
-            SIGNAL(stateChanged(int)),
-            SLOT(trilinearFilteringStateChanged(int)));
+            &QCheckBox::stateChanged,
+            this,
+            &GraphicsPage::trilinearFilteringStateChanged);
     connect(ui->softwareOpenGLCheckBox,
-            SIGNAL(stateChanged(int)),
-            SLOT(softwareOpenGLStateChanged(int)));
+            &QCheckBox::stateChanged,
+            this,
+            &GraphicsPage::softwareOpenGLStateChanged);
 
-    connect(ui->updated, SIGNAL(stateChanged(int)), SLOT(updatedStateChanged(int)));
+    connect(ui->updated, &QCheckBox::stateChanged, this, &GraphicsPage::updatedStateChanged);
     connect(ui->drawNotMappedExits,
-            SIGNAL(stateChanged(int)),
-            SLOT(drawNotMappedExitsStateChanged(int)));
+            &QCheckBox::stateChanged,
+            this,
+            &GraphicsPage::drawNotMappedExitsStateChanged);
     connect(ui->drawNoMatchExits,
-            SIGNAL(stateChanged(int)),
-            SLOT(drawNoMatchExitsStateChanged(int)));
-    connect(ui->drawDoorNames, SIGNAL(stateChanged(int)), SLOT(drawDoorNamesStateChanged(int)));
+            &QCheckBox::stateChanged,
+            this,
+            &GraphicsPage::drawNoMatchExitsStateChanged);
+    connect(ui->drawDoorNames,
+            &QCheckBox::stateChanged,
+            this,
+            &GraphicsPage::drawDoorNamesStateChanged);
     connect(ui->drawUpperLayersTextured,
-            SIGNAL(stateChanged(int)),
-            SLOT(drawUpperLayersTexturedStateChanged(int)));
+            &QCheckBox::stateChanged,
+            this,
+            &GraphicsPage::drawUpperLayersTexturedStateChanged);
 
     QPixmap bgPix(16, 16);
-    bgPix.fill(Config().m_backgroundColor);
+    bgPix.fill(settings.backgroundColor);
     ui->changeColor->setIcon(QIcon(bgPix));
-    QString antiAliasingSamples = QString::number(Config().m_antialiasingSamples);
-    int index = ui->antialiasingSamplesComboBox->findText(antiAliasingSamples);
-    if (index < 0) {
-        index = 0;
-    }
-    ui->antialiasingSamplesComboBox->setCurrentIndex(index);
-    ui->trilinearFilteringCheckBox->setChecked(Config().m_trilinearFiltering);
-    ui->softwareOpenGLCheckBox->setChecked(Config().m_softwareOpenGL);
 
-    ui->updated->setChecked(Config().m_showUpdated);
-    ui->drawNotMappedExits->setChecked(Config().m_drawNotMappedExits);
-    ui->drawNoMatchExits->setChecked(Config().m_drawNoMatchExits);
-    ui->drawUpperLayersTextured->setChecked(Config().m_drawUpperLayersTextured);
-    ui->drawDoorNames->setChecked(Config().m_drawDoorNames);
+    const QString antiAliasingSamples = QString::number(settings.antialiasingSamples);
+    const int index = std::max(0, ui->antialiasingSamplesComboBox->findText(antiAliasingSamples));
+    ui->antialiasingSamplesComboBox->setCurrentIndex(index);
+    ui->trilinearFilteringCheckBox->setChecked(settings.trilinearFiltering);
+    ui->softwareOpenGLCheckBox->setChecked(settings.softwareOpenGL);
+
+    ui->updated->setChecked(settings.showUpdated);
+    ui->drawNotMappedExits->setChecked(settings.drawNotMappedExits);
+    ui->drawNoMatchExits->setChecked(settings.drawNoMatchExits);
+    ui->drawUpperLayersTextured->setChecked(settings.drawUpperLayersTextured);
+    ui->drawDoorNames->setChecked(settings.drawDoorNames);
 }
 
 void GraphicsPage::changeColorClicked()
 {
-    const QColor newColor = QColorDialog::getColor(Config().m_backgroundColor, this);
-    if (newColor.isValid() && newColor != Config().m_backgroundColor) {
+    auto &backgroundColor = Config().canvas.backgroundColor;
+    const QColor newColor = QColorDialog::getColor(backgroundColor, this);
+    if (newColor.isValid() && newColor != backgroundColor) {
         QPixmap bgPix(16, 16);
         bgPix.fill(newColor);
         ui->changeColor->setIcon(QIcon(bgPix));
-        Config().m_backgroundColor = newColor;
+        backgroundColor = newColor;
     }
 }
 
 void GraphicsPage::antialiasingSamplesTextChanged(const QString & /*unused*/)
 {
-    Config().m_antialiasingSamples = ui->antialiasingSamplesComboBox->currentText().toInt();
+    Config().canvas.antialiasingSamples = ui->antialiasingSamplesComboBox->currentText().toInt();
 }
 
 void GraphicsPage::trilinearFilteringStateChanged(int /*unused*/)
 {
-    Config().m_trilinearFiltering = ui->trilinearFilteringCheckBox->isChecked();
+    Config().canvas.trilinearFiltering = ui->trilinearFilteringCheckBox->isChecked();
 }
 
 void GraphicsPage::softwareOpenGLStateChanged(int /*unused*/)
 {
-    Config().m_softwareOpenGL = ui->softwareOpenGLCheckBox->isChecked();
+    Config().canvas.softwareOpenGL = ui->softwareOpenGLCheckBox->isChecked();
 }
 
 void GraphicsPage::updatedStateChanged(int /*unused*/)
 {
-    Config().m_showUpdated = ui->updated->isChecked();
+    Config().canvas.showUpdated = ui->updated->isChecked();
 }
 
 void GraphicsPage::drawNotMappedExitsStateChanged(int /*unused*/)
 {
-    Config().m_drawNotMappedExits = ui->drawNotMappedExits->isChecked();
+    Config().canvas.drawNotMappedExits = ui->drawNotMappedExits->isChecked();
 }
 
 void GraphicsPage::drawNoMatchExitsStateChanged(int /*unused*/)
 {
-    Config().m_drawNoMatchExits = ui->drawNoMatchExits->isChecked();
+    Config().canvas.drawNoMatchExits = ui->drawNoMatchExits->isChecked();
 }
 
 void GraphicsPage::drawDoorNamesStateChanged(int /*unused*/)
 {
-    Config().m_drawDoorNames = ui->drawDoorNames->isChecked();
+    Config().canvas.drawDoorNames = ui->drawDoorNames->isChecked();
 }
 
 void GraphicsPage::drawUpperLayersTexturedStateChanged(int /*unused*/)
 {
-    Config().m_drawUpperLayersTextured = ui->drawUpperLayersTextured->isChecked();
+    Config().canvas.drawUpperLayersTextured = ui->drawUpperLayersTextured->isChecked();
 }

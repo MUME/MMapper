@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -27,11 +28,25 @@
 #ifndef ABSTRACTPARSER_H
 #define ABSTRACTPARSER_H
 
-#include "mmapper2event.h"
-#include "telnetfilter.h"
-
+#include <functional>
+#include <map>
+#include <string>
+#include <QArgument>
 #include <QObject>
 #include <QQueue>
+#include <QVariant>
+
+#include "../expandoracommon/parseevent.h"
+#include "../global/StringView.h"
+#include "../mapdata/DoorFlags.h"
+#include "../mapdata/ExitFieldVariant.h"
+#include "../mapdata/mmapper2room.h"
+#include "../proxy/telnetfilter.h"
+#include "CommandId.h"
+#include "ConnectedRoomFlags.h"
+#include "DoorAction.h"
+#include "ExitsFlags.h"
+#include "PromptFlags.h"
 
 class MumeClock;
 class ParseEvent;
@@ -41,28 +56,73 @@ class Coordinate;
 class RoomFilter;
 class RoomSelection;
 
-typedef QQueue<CommandIdType> CommandQueue;
+using CommandQueue = QQueue<CommandIdType>;
 
 class AbstractParser : public QObject
 {
+protected:
+    static const QString nullString;
+    static const QString emptyString;
+    static const QByteArray emptyByteArray;
+
+private:
     Q_OBJECT
+
+protected:
+    MumeClock *m_mumeClock = nullptr;
+
+private:
+    MapData *m_mapData = nullptr;
+    const RoomSelection *search_rs = nullptr;
+
+private:
+    using HelpCallback = std::function<void(const std::string &name)>;
+    using ParserCallback
+        = std::function<bool(const std::vector<StringView> &matched, StringView args)>;
+    struct ParserRecord
+    {
+        std::string fullCommand;
+        ParserCallback callback;
+        HelpCallback help;
+    };
+    std::map<std::string, ParserRecord> m_specialCommandMap{};
+    QByteArray m_newLineTerminator{};
+    char prefixChar = '_';
+
+protected:
+    QString m_roomName{};
+    QString m_staticRoomDesc{};
+    QString m_dynamicRoomDesc{};
+    ExitsFlagsType m_exitsFlags{};
+    PromptFlagsType m_promptFlags{};
+    ConnectedRoomFlagsType m_connectedRoomFlags{};
+
+protected:
+    QString m_stringBuffer{};
+    QString m_lastPrompt{};
+    CommandQueue queue{};
+    bool m_readingRoomDesc = false;
+    bool m_descriptionReady = false;
+
+private:
+    bool m_trollExitMapping = false;
+
 public:
-    AbstractParser(MapData *, MumeClock *, QObject *parent = 0);
+    explicit AbstractParser(MapData *, MumeClock *, QObject *parent = nullptr);
     ~AbstractParser();
 
-    const RoomSelection *search_rs;
 signals:
     //telnet
     void sendToMud(const QByteArray &);
-    void sendToUser(const QByteArray &);
-
+    void sig_sendToUser(const QByteArray &);
     void releaseAllPaths();
 
     //used to log
     void log(const QString &, const QString &);
 
+    // CAUTION: This hides virtual bool QObject::event(QEvent*).
     //for main move/search algorithm
-    void event(ParseEvent *);
+    void event(const SigParseEvent &);
 
     //for map
     void showPath(CommandQueue, bool);
@@ -85,7 +145,10 @@ protected:
     void offlineCharacterMove(CommandIdType direction);
     void sendRoomInfoToUser(const Room *);
     void sendPromptToUser();
-    void sendPromptToUser(const Room *r);
+    void sendPromptToUser(const Room &r);
+    void sendPromptToUser(char light, char terrain);
+    void sendPromptToUser(RoomLightType lightType, RoomTerrainType terrainType);
+
     void sendRoomExitsInfoToUser(const Room *r);
     const Coordinate getPosition();
 
@@ -93,49 +156,136 @@ protected:
     void performDoorCommand(DirectionType direction, DoorActionType action);
     void genericDoorCommand(QString command, DirectionType direction);
     void nameDoorCommand(const QString &doorname, DirectionType direction);
-    void toggleDoorFlagCommand(uint flag, DirectionType direction);
-    void toggleExitFlagCommand(uint flag, DirectionType direction);
-    void setRoomFieldCommand(const QVariant &flag, uint field);
-    void toggleRoomFlagCommand(uint flag, uint field);
+    void toggleDoorFlagCommand(DoorFlag flag, DirectionType direction);
+    void toggleExitFlagCommand(ExitFlag flag, DirectionType direction);
+    void setRoomFieldCommand(const QVariant &flag, RoomField field);
+    void setRoomFieldCommand(RoomAlignType rat, RoomField field)
+    {
+        setRoomFieldCommand(static_cast<QVariant>(static_cast<uint>(rat)), field);
+    }
+    void setRoomFieldCommand(RoomLightType rlt, RoomField field)
+    {
+        setRoomFieldCommand(static_cast<QVariant>(static_cast<uint>(rlt)), field);
+    }
+    void setRoomFieldCommand(RoomPortableType rpt, RoomField field)
+    {
+        setRoomFieldCommand(static_cast<QVariant>(static_cast<uint>(rpt)), field);
+    }
+    void setRoomFieldCommand(RoomRidableType rrt, RoomField field)
+    {
+        setRoomFieldCommand(static_cast<QVariant>(static_cast<uint>(rrt)), field);
+    }
+    void setRoomFieldCommand(RoomSundeathType rst, RoomField field)
+    {
+        setRoomFieldCommand(static_cast<QVariant>(static_cast<uint>(rst)), field);
+    }
 
-    void printRoomInfo(uint fieldset);
+    ExitFlags getExitFlags(DirectionType dir) const;
+    DirectionalLightType getConnectedRoomFlags(DirectionType dir) const;
+    void setExitFlags(ExitFlags flag, DirectionType dir);
+    void setConnectedRoomFlag(DirectionalLightType light, DirectionType dir);
+
+    void toggleRoomFlagCommand(uint flag, RoomField field);
+    void toggleRoomFlagCommand(RoomMobFlag flag, RoomField field)
+    {
+        toggleRoomFlagCommand(RoomMobFlags{flag}.asUint32(), field);
+    }
+    void toggleRoomFlagCommand(RoomLoadFlag flag, RoomField field)
+    {
+        toggleRoomFlagCommand(RoomLoadFlags{flag}.asUint32(), field);
+    }
+
+    void printRoomInfo(RoomFields fieldset);
+    void printRoomInfo(RoomField field) { printRoomInfo(RoomFields{field}); }
 
     void emulateExits();
     QByteArray enhanceExits(const Room *);
 
-    void parseExits(QString &str);
-    void parsePrompt(QString &prompt);
-    virtual bool parseUserCommands(QString &command);
-
-    QString m_stringBuffer;
-    QByteArray m_newLineTerminator;
-    QByteArray m_byteBuffer;
-
-    bool m_readingRoomDesc;
-    bool m_descriptionReady;
-
-    QString m_roomName;
-    QString m_staticRoomDesc;
-    QString m_dynamicRoomDesc;
-    ExitsFlagsType m_exitsFlags;
-    PromptFlagsType m_promptFlags;
-    ConnectedRoomFlagsType m_connectedRoomFlags{};
-    QString m_lastPrompt;
-    bool m_trollExitMapping;
-
-    CommandQueue queue;
-    MumeClock *m_mumeClock;
-    MapData *m_mapData;
-
-    static const QString nullString;
-    static const QString emptyString;
-    static const QByteArray emptyByteArray;
+    void parseExits(const QString &str);
+    void parsePrompt(const QString &prompt);
+    virtual bool parseUserCommands(const QString &command);
 
     void searchCommand(const RoomFilter &f);
     void dirsCommand(const RoomFilter &f);
     void markCurrentCommand();
 
-    DirectionType dirForChar(const QString &dir);
+private:
+    // avoid warning about signal hiding this function
+    virtual bool event(QEvent *e) final override { return QObject::event(e); }
+
+    bool tryParseGenericDoorCommand(const QString &str);
+    void parseSpecialCommand(StringView);
+    bool parseSimpleCommand(const QString &str);
+
+    void showDoorCommandHelp();
+    void showMumeTime();
+    void showHelp();
+    void showMapHelp();
+    void showGroupHelp();
+    void showExitHelp();
+    void showRoomSimpleFlagsHelp();
+    void showRoomMobFlagsHelp();
+    void showRoomLoadFlagsHelp();
+    void showMiscHelp();
+    void showDoorFlagHelp();
+    void showExitFlagHelp();
+    void showDoorVariableHelp();
+    void showCommandPrefix();
+    void showNote();
+    void showSyntax(const char *rest);
+    void showHelpCommands(bool showAbbreviations);
+
+    void showHeader(const QString &s);
+
+    bool getField(const Coordinate &c,
+                  const DirectionType &direction,
+                  const ExitFieldVariant &var) const;
+
+    DirectionType tryGetDir(StringView &words);
+    bool parseDoorAction(StringView words);
+    bool parseDoorFlags(StringView words);
+    bool parseExitFlags(StringView words);
+    bool parseField(const StringView view);
+    bool parseMobFlags(const StringView view);
+    bool parseLoadFlags(const StringView view);
+    void parseSetCommand(StringView view);
+    void parseName(StringView view);
+    void parseNoteCmd(StringView view);
+    void parseDirections(StringView view);
+    void parseSearch(StringView view);
+    void parseGtell(const StringView &view);
+
+    bool setCommandPrefix(char prefix);
+    void setNote(const QString &note);
+
+    void openVoteURL();
+    void doBackCommand();
+    void doRemoveDoorNamesCommand();
+    void doMarkCurrentCommand();
+    void doSearchCommand(StringView view);
+    void doGetDirectionsCommand(StringView view);
+    void toggleTrollMapping();
+
+    void initSpecialCommandMap();
+    void addSpecialCommand(const char *s,
+                           int minLen,
+                           const ParserCallback &callback,
+                           const HelpCallback &help);
+    bool evalSpecialCommandMap(StringView args);
+
+    void parseHelp(StringView words);
+    bool parsePrint(StringView &input);
+
+    bool parseDoorAction(DoorActionType dat, StringView words);
+    bool parseDoorFlag(DoorFlag flag, StringView words);
+    bool parseExitFlag(ExitFlag flag, StringView words);
+
+    void doMove(CommandIdType cmd);
+
+public:
+    inline void sendToUser(const QByteArray &arr) { emit sig_sendToUser(arr); }
+    inline void sendToUser(const char *s) { sendToUser(QByteArray{s}); }
+    inline void sendToUser(const QString &s) { sendToUser(s.toLatin1()); }
 };
 
 #endif

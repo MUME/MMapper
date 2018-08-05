@@ -25,16 +25,18 @@
 ************************************************************************/
 
 #include "abstractmapstorage.h"
-#include "mapdata.h"
-#include "progresscounter.h"
 
+#include <stdexcept>
 #include <utility>
-#include <QFile>
+#include <QObject>
+#include <QString>
+
+#include "progresscounter.h"
 
 AbstractMapStorage::AbstractMapStorage(MapData &mapdata,
                                        QString filename,
-                                       QFile *file,
-                                       QObject *parent)
+                                       QFile *const file,
+                                       QObject *const parent)
     : QObject(parent)
     , m_file(file)
     , m_mapData(mapdata)
@@ -42,9 +44,8 @@ AbstractMapStorage::AbstractMapStorage(MapData &mapdata,
     , m_progressCounter(new ProgressCounter(this))
 {}
 
-AbstractMapStorage::AbstractMapStorage(MapData &mapdata, QString filename, QObject *parent)
+AbstractMapStorage::AbstractMapStorage(MapData &mapdata, QString filename, QObject *const parent)
     : QObject(parent)
-    , m_file(nullptr)
     , m_mapData(mapdata)
     , m_fileName(std::move(filename))
     , m_progressCounter(new ProgressCounter(this))
@@ -52,7 +53,11 @@ AbstractMapStorage::AbstractMapStorage(MapData &mapdata, QString filename, QObje
 
 AbstractMapStorage::~AbstractMapStorage() = default;
 
-const ProgressCounter *AbstractMapStorage::progressCounter() const
+ProgressCounter &AbstractMapStorage::getProgressCounter() const
 {
-    return m_progressCounter;
+    // This will always exist, so it should be safe to just dereference it,
+    // but let's not tempt UB.
+    if (auto *const pc = m_progressCounter.get())
+        return *pc;
+    throw std::runtime_error("null pointer exception");
 }

@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Azazello <lachupe@gmail.com>,
@@ -26,9 +27,14 @@
 #ifndef CGROUPCOMMUNICATOR_H_
 #define CGROUPCOMMUNICATOR_H_
 
+#include <QByteArray>
 #include <QDomNode>
 #include <QHash>
 #include <QObject>
+#include <QString>
+#include <QtCore>
+
+#include "mmapper2group.h"
 
 class CGroup;
 class CGroupClient;
@@ -39,11 +45,11 @@ class CGroupCommunicator : public QObject
 {
     Q_OBJECT
 public:
-    CGroupCommunicator(int type, QObject *parent);
+    explicit CGroupCommunicator(GroupManagerState type, QObject *parent);
 
-    const static int protocolVersion = 102;
+    static constexpr const int protocolVersion = 102;
 
-    enum Messages {
+    enum class Messages {
         NONE,
         ACK,
         REQ_VERSION,
@@ -60,10 +66,10 @@ public:
         RENAME_CHAR
     };
 
-    int getType() const { return type; }
+    GroupManagerState getType() const { return type; }
     void sendCharUpdate(CGroupClient *, const QDomNode &);
-    void sendMessage(CGroupClient *, int, const QByteArray &blob = "");
-    void sendMessage(CGroupClient *, int, const QDomNode &);
+    void sendMessage(CGroupClient *, Messages, const QByteArray &blob = "");
+    void sendMessage(CGroupClient *, Messages, const QDomNode &);
     virtual void renameConnection(const QByteArray &, const QByteArray &);
 
     virtual void disconnect() = 0;
@@ -73,14 +79,14 @@ public:
     virtual void sendCharRename(QDomNode) = 0;
 
 protected:
-    QByteArray formMessageBlock(int message, const QDomNode &data);
+    QByteArray formMessageBlock(Messages message, const QDomNode &data);
     CGroup *getGroup();
 
 public slots:
     void incomingData(CGroupClient *, const QByteArray &);
     void sendGTell(const QByteArray &);
     void relayLog(const QString &);
-    virtual void retrieveData(CGroupClient *, int, QDomNode) = 0;
+    virtual void retrieveData(CGroupClient *, Messages, QDomNode) = 0;
     virtual void connectionClosed(CGroupClient *) = 0;
 
 signals:
@@ -91,7 +97,7 @@ signals:
     void sendLog(const QString &);
 
 private:
-    int type;
+    GroupManagerState type = GroupManagerState::Off;
 };
 
 class CGroupServerCommunicator : public CGroupCommunicator
@@ -100,16 +106,15 @@ class CGroupServerCommunicator : public CGroupCommunicator
     friend class CGroupServer;
 
 public:
-    CGroupServerCommunicator(QObject *parent);
+    explicit CGroupServerCommunicator(QObject *parent);
     ~CGroupServerCommunicator();
 
     virtual void renameConnection(const QByteArray &oldName, const QByteArray &newName) override;
 
 protected slots:
-    void relayMessage(CGroupClient *connection, int message, const QDomNode &data);
-    void serverStartupFailed();
+    void relayMessage(CGroupClient *connection, Messages message, const QDomNode &data);
     void connectionEstablished(CGroupClient *);
-    void retrieveData(CGroupClient *connection, int message, QDomNode data) override;
+    void retrieveData(CGroupClient *connection, Messages message, QDomNode data) override;
     void connectionClosed(CGroupClient *connection) override;
 
 protected:
@@ -123,9 +128,10 @@ protected:
 private:
     void parseLoginInformation(CGroupClient *connection, const QDomNode &data);
     void sendGroupInformation(CGroupClient *connection);
+    void serverStartupFailed();
 
-    QHash<QByteArray, int> clientsList;
-    CGroupServer *server;
+    QHash<QByteArray, qintptr> clientsList{};
+    CGroupServer *server = nullptr;
 };
 
 class CGroupClientCommunicator : public CGroupCommunicator
@@ -134,12 +140,12 @@ class CGroupClientCommunicator : public CGroupCommunicator
     friend class CGroupClient;
 
 public:
-    CGroupClientCommunicator(QObject *parent);
+    explicit CGroupClientCommunicator(QObject *parent);
     ~CGroupClientCommunicator();
 
 public slots:
     void errorInConnection(CGroupClient *connection, const QString &);
-    void retrieveData(CGroupClient *conn, int message, QDomNode data) override;
+    void retrieveData(CGroupClient *conn, Messages message, QDomNode data) override;
     void connectionClosed(CGroupClient *connection) override;
 
 protected:
@@ -152,7 +158,7 @@ protected:
 private:
     void sendLoginInformation(CGroupClient *connection);
 
-    CGroupClient *client;
+    CGroupClient *client = nullptr;
 };
 
 #endif /*CGROUPCOMMUNICATOR_H_*/

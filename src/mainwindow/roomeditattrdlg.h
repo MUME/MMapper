@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -27,15 +28,27 @@
 #ifndef ROOMEDITATTRDLG_H
 #define ROOMEDITATTRDLG_H
 
-#include "ui_roomeditattrdlg.h"
 #include <QDialog>
+#include <QString>
+#include <QtCore>
 #include <QtWidgets/QListWidgetItem>
 
-class QShortcut;
-class MapData;
+#include "../global/EnumIndexedArray.h"
+#include "../mapdata/DoorFlags.h"
+#include "../mapdata/ExitDirection.h"
+#include "../mapdata/ExitFlags.h"
+#include "../mapdata/mmapper2exit.h"
+#include "../mapdata/mmapper2room.h"
+#include "ui_roomeditattrdlg.h"
+
 class MapCanvas;
-class RoomSelection;
+class MapData;
+class QListWidgetItem;
+class QObject;
+class QShortcut;
+class QWidget;
 class Room;
+class RoomSelection;
 
 class RoomEditAttrDlg : public QDialog, private Ui::RoomEditAttrDlg
 {
@@ -94,7 +107,7 @@ public slots:
     void closeClicked();
 
 public:
-    RoomEditAttrDlg(QWidget *parent = 0);
+    explicit RoomEditAttrDlg(QWidget *parent = nullptr);
     ~RoomEditAttrDlg();
 
     void readSettings();
@@ -105,19 +118,25 @@ private:
     void disconnectAll();
 
     const Room *getSelectedRoom();
-    uint getSelectedExit();
+    ExitDirection getSelectedExit();
     void updateDialog(const Room *r);
 
-    QListWidgetItem *loadListItems[32]{};
-    QListWidgetItem *mobListItems[32]{};
+    EnumIndexedArray<QListWidgetItem *, RoomLoadFlag> loadListItems{};
+    EnumIndexedArray<QListWidgetItem *, RoomMobFlag> mobListItems{};
+    EnumIndexedArray<QListWidgetItem *, ExitFlag> exitListItems{};
+    EnumIndexedArray<QListWidgetItem *, DoorFlag> doorListItems{};
 
-    QListWidgetItem *exitListItems[16]{};
-    QListWidgetItem *doorListItems[16]{};
+#define NUM_ELEMENTS(arr) (decltype(arr)::SIZE)
+    static_assert(NUM_ELEMENTS(loadListItems) <= 32u, "");
+    static_assert(NUM_ELEMENTS(mobListItems) <= 32u, "");
+    static_assert(NUM_ELEMENTS(exitListItems) <= 16u, "");
+    static_assert(NUM_ELEMENTS(doorListItems) <= 16u, "");
+#undef NUM_ELEMENTS
 
-    const RoomSelection *m_roomSelection{};
-    MapData *m_mapData{};
-    MapCanvas *m_mapCanvas{};
-    QShortcut *m_hiddenShortcut;
+    const RoomSelection *m_roomSelection = nullptr;
+    MapData *m_mapData = nullptr;
+    MapCanvas *m_mapCanvas = nullptr;
+    QShortcut *m_hiddenShortcut = nullptr;
 };
 
 #endif

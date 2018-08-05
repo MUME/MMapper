@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -26,27 +27,30 @@
 #ifndef ONEBYONE_H
 #define ONEBYONE_H
 
+#include "../expandoracommon/parseevent.h"
 #include "experimenting.h"
 
 class AbstractRoomFactory;
 class ParseEvent;
-class RoomSignalHandler;
+class Path;
+class PathParameters;
 class Room;
 class RoomAdmin;
+class RoomSignalHandler;
 
-class OneByOne : public Experimenting
+class OneByOne final : public Experimenting
 {
 public:
-    OneByOne(AbstractRoomFactory *factory,
-             ParseEvent *event,
-             PathParameters &in_params,
-             RoomSignalHandler *handler);
-    void receiveRoom(RoomAdmin *admin, const Room *room);
+    explicit OneByOne(AbstractRoomFactory *factory,
+                      const SigParseEvent &sigParseEvent,
+                      PathParameters &in_params,
+                      RoomSignalHandler *handler);
+    void receiveRoom(RoomAdmin *admin, const Room *room) override;
     void addPath(Path *path);
 
 private:
-    ParseEvent *event;
-    RoomSignalHandler *handler;
+    SharedParseEvent event;
+    RoomSignalHandler *handler = nullptr;
 };
 
 #endif

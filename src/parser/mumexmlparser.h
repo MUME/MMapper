@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -27,31 +28,43 @@
 #ifndef MUMEXMLPARSER_H
 #define MUMEXMLPARSER_H
 
-#include "abstractparser.h"
+#include <QByteArray>
 #include <QRegExp>
+#include <QString>
+#include <QtCore/QFile>
+#include <QtCore>
+#include <QtGlobal>
+
+#include "CommandId.h"
+#include "abstractparser.h"
+
+class MapData;
+class MumeClock;
+class QDataStream;
+class QFile;
+class QObject;
+struct IncomingData;
 
 //#define XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
 
-enum XmlMode { XML_NONE, XML_ROOM, XML_NAME, XML_DESCRIPTION, XML_EXITS, XML_PROMPT, XML_TERRAIN };
+enum class XmlMode { NONE, ROOM, NAME, DESCRIPTION, EXITS, PROMPT, TERRAIN };
 
 class MumeXmlParser : public AbstractParser
 {
     Q_OBJECT
 
 public:
-    MumeXmlParser(MapData *, MumeClock *, QObject *parent = 0);
+    explicit MumeXmlParser(MapData *, MumeClock *, QObject *parent = nullptr);
     ~MumeXmlParser();
 
     void parse(const QByteArray &);
 
 public slots:
-    void parseNewMudInput(IncomingData &data);
+    void parseNewMudInput(IncomingData &data) override;
 
 protected:
-#ifdef XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
-    QDataStream *debugStream;
-    QFile *file;
-#endif
+    QDataStream *debugStream = nullptr;
+    QFile *file = nullptr;
 
     static const QByteArray greaterThanChar;
     static const QByteArray lessThanChar;
@@ -65,22 +78,21 @@ protected:
     QByteArray characters(QByteArray &ch);
     bool element(const QByteArray &);
 
-    quint32 m_roomDescLines;
-    bool m_readingStaticDescLines;
+    quint32 m_roomDescLines = 0u;
+    bool m_readingStaticDescLines = false;
 
-    CommandIdType m_move;
-    XmlMode m_xmlMode;
+    CommandIdType m_move = CommandIdType::LOOK;
+    XmlMode m_xmlMode = XmlMode::NONE;
 
-    //void checkqueue(CommandIdType dir = CID_UNKNOWN);
     void move();
-    QByteArray m_lineToUser;
-    QByteArray m_tempCharacters;
-    QByteArray m_tempTag;
-    bool m_readingTag;
-    bool m_readStatusTag{};
-    bool m_readWeatherTag{};
-    bool m_gratuitous;
-    bool m_readSnoopTag;
+    QByteArray m_lineToUser{};
+    QByteArray m_tempCharacters{};
+    QByteArray m_tempTag{};
+    bool m_readingTag = false;
+    bool m_readStatusTag = false;
+    bool m_readWeatherTag = false;
+    bool m_gratuitous = false;
+    bool m_readSnoopTag = false;
 
 signals:
     void sendScoreLineEvent(QByteArray);

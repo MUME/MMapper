@@ -25,8 +25,16 @@
 
 #include "crossover.h"
 
+#include "../mapdata/ExitDirection.h"
+#include "experimenting.h"
+
+class Path;
+class PathParameters;
+class Room;
+class RoomAdmin;
+
 Crossover::Crossover(std::list<Path *> *paths,
-                     uint dirCode,
+                     ExitDirection dirCode,
                      PathParameters &params,
                      AbstractRoomFactory *in_factory)
     : Experimenting(paths, dirCode, params, in_factory)

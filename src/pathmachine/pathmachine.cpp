@@ -25,59 +25,68 @@
 ************************************************************************/
 
 #include "pathmachine.h"
-#include "abstractroomfactory.h"
+
+#include <cassert>
+#include <memory>
+#include <set>
+#include <utility>
+
+#include "../expandoracommon/component.h"
+#include "../expandoracommon/coordinate.h"
+#include "../expandoracommon/exit.h"
+#include "../expandoracommon/room.h"
+#include "../global/DirectionType.h"
+#include "../global/roomid.h"
+#include "../global/utils.h"
+#include "../mapdata/ExitDirection.h"
+#include "../mapdata/mmapper2room.h"
+#include "../mapdata/roomfactory.h"
+#include "../mapfrontend/mapaction.h"
+#include "../parser/CommandId.h"
+#include "../parser/ConnectedRoomFlags.h"
 #include "approved.h"
 #include "crossover.h"
-#include "customaction.h"
-#include "mmapper2event.h"
-#include "mmapper2room.h"
+#include "experimenting.h"
 #include "onebyone.h"
-#include "parseevent.h"
 #include "path.h"
+#include "pathparameters.h"
+#include "roomsignalhandler.h"
 #include "syncing.h"
 
-#include <stack>
+class RoomRecipient;
 
-PathMachine::PathMachine(AbstractRoomFactory *in_factory, bool threaded)
-    : Component(threaded)
-    , factory(in_factory)
-    , signaler(this)
-    , pathRoot(0, 0, 0)
-    , mostLikelyRoom(0, 0, 0)
-    , lastEvent(Mmapper2Event::createEvent(CID_UNKNOWN, nullptr, nullptr, nullptr, 0, 0, 0))
-    , state(SYNCING)
-    , paths(new std::list<Path *>)
+PathMachine::PathMachine(AbstractRoomFactory *const in_factory)
+    : Component{false}
+    , factory{in_factory}
+    , signaler{this}
+    , pathRoot{Room::tagDummy}
+    , mostLikelyRoom{Room::tagDummy}
+    , lastEvent{ParseEvent::createDummyEvent()}
+    , paths{new std::list<Path *>}
 {}
 
-void PathMachine::setCurrentRoom(Approved *app)
+void PathMachine::setCurrentRoom(Approved &app)
 {
     releaseAllPaths();
-    const Room *perhaps = app->oneMatch();
-    if (perhaps != nullptr) {
+    if (const Room *perhaps = app.oneMatch()) {
         mostLikelyRoom = *perhaps;
         emit playerMoved(mostLikelyRoom.getPosition());
-        state = APPROVED;
+        state = PathState::APPROVED;
     }
 }
 
 void PathMachine::setCurrentRoom(const Coordinate &pos)
 {
-    if (lastEvent == nullptr) {
-        abort();
-    }
-    Approved app(factory, *lastEvent, 100);
-    emit lookingForRooms(&app, pos);
-    setCurrentRoom(&app);
+    Approved app(factory, lastEvent, 100);
+    emit lookingForRooms(app, pos);
+    setCurrentRoom(app);
 }
 
-void PathMachine::setCurrentRoom(uint id)
+void PathMachine::setCurrentRoom(const RoomId id)
 {
-    if (lastEvent == nullptr) {
-        abort();
-    }
-    Approved app(factory, *lastEvent, 100);
-    emit lookingForRooms(&app, id);
-    setCurrentRoom(&app);
+    Approved app(factory, lastEvent, 100);
+    emit lookingForRooms(app, id);
+    setCurrentRoom(app);
 }
 
 void PathMachine::init()
@@ -92,116 +101,137 @@ void PathMachine::releaseAllPaths()
     }
     paths->clear();
 
-    state = SYNCING;
+    state = PathState::SYNCING;
 }
 
 void PathMachine::retry()
 {
     switch (state) {
-    case APPROVED:
-        state = SYNCING;
+    case PathState::APPROVED:
+        state = PathState::SYNCING;
         break;
-    case EXPERIMENTING:
+    case PathState::EXPERIMENTING:
         releaseAllPaths();
         break;
+    case PathState::SYNCING:
+        break;
     }
+    assert(state == PathState::SYNCING);
     if (lastEvent != nullptr) {
         event(lastEvent);
     }
 }
 
-void PathMachine::event(ParseEvent *ev)
+void PathMachine::event(const SigParseEvent &sigParseEvent)
 {
-    if (ev != lastEvent) {
-        delete lastEvent;
-        lastEvent = ev;
-    }
+    if (lastEvent != sigParseEvent.requireValid())
+        lastEvent = sigParseEvent;
+
+    lastEvent.requireValid();
+
     switch (state) {
-    case APPROVED:
-        approved(*ev);
+    case PathState::APPROVED:
+        approved(sigParseEvent);
         break;
-    case EXPERIMENTING:
-        experimenting(*ev);
+    case PathState::EXPERIMENTING:
+        experimenting(sigParseEvent);
         break;
-    case SYNCING:
-        syncing(*ev);
+    case PathState::SYNCING:
+        syncing(sigParseEvent);
         break;
     }
 }
 
-void PathMachine::tryExits(const Room *room, RoomRecipient *recipient, ParseEvent &event, bool out)
+void PathMachine::tryExits(const Room *const room,
+                           RoomRecipient &recipient,
+                           ParseEvent &event,
+                           const bool out)
 {
-    uint move = event.getMoveType();
-    if (move < static_cast<uint>(room->getExitsList().size())) {
-        const Exit &possible = room->exit(move);
+    const CommandIdType move = event.getMoveType();
+    if (isDirection7(move)) {
+        const Exit &possible = room->exit(getDirection(move));
         tryExit(possible, recipient, out);
     } else {
         emit lookingForRooms(recipient, room->getId());
-        if (move >= factory->numKnownDirs()) {
-            const ExitsList &eList = room->getExitsList();
-            for (const auto &possible : eList) {
-                tryExit(possible, recipient, out);
-            }
+        for (const auto &possible : room->getExitsList()) {
+            tryExit(possible, recipient, out);
         }
     }
 }
 
-void PathMachine::tryExit(const Exit &possible, RoomRecipient *recipient, bool out)
+void PathMachine::tryExit(const Exit &possible, RoomRecipient &recipient, const bool out)
 {
     for (auto idx : possible.getRange(out)) {
         emit lookingForRooms(recipient, idx);
     }
 }
 
-void PathMachine::tryCoordinate(const Room *room, RoomRecipient *recipient, ParseEvent &event)
+void PathMachine::tryCoordinate(const Room *const room, RoomRecipient &recipient, ParseEvent &event)
 {
-    uint moveCode = event.getMoveType();
-    uint size = factory->numKnownDirs();
-    if (size > moveCode) {
-        Coordinate c = room->getPosition() + factory->exitDir(moveCode);
+    // NOTE: This previously had a subtle bug, or a devious feature:
+    // it was considering CommandIdType::LOOK(=7) to be a valid direction.
+    const CommandIdType moveCode = event.getMoveType();
+    if (isDirection7(moveCode)) {
+        const Coordinate c = room->getPosition() + RoomFactory::exitDir(getDirection(moveCode));
         emit lookingForRooms(recipient, c);
     } else {
-        Coordinate roomPos = room->getPosition();
-        for (uint i = 0; i < size; ++i) {
-            emit lookingForRooms(recipient, roomPos + factory->exitDir(i));
+        const Coordinate roomPos = room->getPosition();
+        // REVISIT: Should this enumerate 6 or 7 values?
+        // NOTE: This previously enumerated 8 values instead of 7,
+        // which meant it was asking for exitDir(ExitDirection::NONE),
+        // even though both ExitDirection::UNKNOWN and ExitDirection::NONE
+        // both have Coordinate(0, 0, 0).
+        for (const auto dir : ALL_EXITS7) {
+            emit lookingForRooms(recipient, roomPos + RoomFactory::exitDir(dir));
         }
     }
 }
 
-void PathMachine::approved(ParseEvent &event)
+void PathMachine::approved(const SigParseEvent &sigParseEvent)
 {
-    Approved appr(factory, event, params.matchingTolerance);
+    ParseEvent &event = sigParseEvent.deref();
+
+    Approved appr(factory, sigParseEvent, params.matchingTolerance);
     const Room *perhaps = nullptr;
 
-    tryExits(&mostLikelyRoom, &appr, event, true);
+    tryExits(&mostLikelyRoom, appr, event, true);
 
     perhaps = appr.oneMatch();
 
     if (perhaps == nullptr) {
         // try to match by reverse exit
         appr.reset();
-        tryExits(&mostLikelyRoom, &appr, event, false);
+        tryExits(&mostLikelyRoom, appr, event, false);
         perhaps = appr.oneMatch();
         if (perhaps == nullptr) {
             // try to match by coordinate
             appr.reset();
-            tryCoordinate(&mostLikelyRoom, &appr, event);
+            tryCoordinate(&mostLikelyRoom, appr, event);
             perhaps = appr.oneMatch();
             if (perhaps == nullptr) {
                 // try to match by coordinate one step below expected
-                const Coordinate &eDir = factory->exitDir(event.getMoveType());
+                // FIXME: need stronger type checking here.
+
+                const auto cmd = event.getMoveType();
+                // NOTE: This allows ExitDirection::UNKNOWN,
+                // which means the coordinate can be Coordinate(0,0,0).
+                const Coordinate &eDir = RoomFactory::exitDir(getDirection(cmd));
+
+                // CAUTION: This test seems to mean it wants only NESW,
+                // but it would also accept ExitDirection::UNKNOWN,
+                // which in the context of this function would mean "no move."
                 if (eDir.z == 0) {
                     appr.reset();
                     Coordinate c = mostLikelyRoom.getPosition() + eDir;
                     c.z--;
-                    emit lookingForRooms(&appr, c);
+                    emit lookingForRooms(appr, c);
                     perhaps = appr.oneMatch();
 
                     if (perhaps == nullptr) {
                         // try to match by coordinate one step above expected
                         appr.reset();
                         c.z += 2;
-                        emit lookingForRooms(&appr, c);
+                        emit lookingForRooms(appr, c);
                         perhaps = appr.oneMatch();
                     }
                 }
@@ -210,31 +240,35 @@ void PathMachine::approved(ParseEvent &event)
     }
     if (perhaps != nullptr) {
         // Update the exit from the previous room to the current room
-        uint move = event.getMoveType();
-        if (static_cast<uint>(mostLikelyRoom.getExitsList().size()) > move) {
-            emit scheduleAction(new AddExit(mostLikelyRoom.getId(), perhaps->getId(), move));
+        const CommandIdType move = event.getMoveType();
+        if (static_cast<uint32_t>(move) < NUM_EXITS) {
+            emit scheduleAction(new AddExit(mostLikelyRoom.getId(),
+                                            perhaps->getId(),
+                                            static_cast<ExitDirection>(move)));
         }
 
         // Update most likely room with player's current location
         mostLikelyRoom = *perhaps;
 
         // Update rooms behind exits now that we are certain about our current location
-        ConnectedRoomFlagsType bFlags = Mmapper2Event::getConnectedRoomFlags(event);
-        if ((bFlags & CONNECTED_ROOM_FLAGS_VALID) != 0) {
-            for (uint dir = 0; dir < 6; ++dir) {
+        const ConnectedRoomFlagsType bFlags = event.getConnectedRoomFlags();
+        if (bFlags.isValid()) {
+            for (const auto dir : ALL_DIRECTIONS6) {
                 const Exit &e = mostLikelyRoom.exit(dir);
                 if (!e.outIsUnique()) {
                     continue;
                 }
-                uint connectedRoomId = e.outFirst();
-                ConnectedRoomFlagsType bThisRoom = bFlags >> (dir * 2);
-                if ((bThisRoom & DIRECT_SUN_ROOM) != 0) {
+                RoomId connectedRoomId = e.outFirst();
+                auto bThisRoom = bFlags.getDirectionalLight(dir);
+                if (IS_SET(bThisRoom, DirectionalLightType::DIRECT_SUN_ROOM)) {
                     emit scheduleAction(
-                        new SingleRoomAction(new UpdateRoomField(RST_SUNDEATH, R_SUNDEATHTYPE),
+                        new SingleRoomAction(new UpdateRoomField(RoomSundeathType::SUNDEATH,
+                                                                 RoomField::SUNDEATH_TYPE),
                                              connectedRoomId));
-                } else if ((bThisRoom & INDIRECT_SUN_ROOM) != 0) {
+                } else if (IS_SET(bThisRoom, DirectionalLightType::INDIRECT_SUN_ROOM)) {
                     emit scheduleAction(
-                        new SingleRoomAction(new UpdateRoomField(RST_NOSUNDEATH, R_SUNDEATHTYPE),
+                        new SingleRoomAction(new UpdateRoomField(RoomSundeathType::NO_SUNDEATH,
+                                                                 RoomField::SUNDEATH_TYPE),
                                              connectedRoomId));
                 }
             }
@@ -246,74 +280,82 @@ void PathMachine::approved(ParseEvent &event)
         emit setCharPosition(mostLikelyRoom.getId());
     } else {
         // couldn't match, give up
-        state = EXPERIMENTING;
+        state = PathState::EXPERIMENTING;
         pathRoot = mostLikelyRoom;
-        auto *root = new Path(&pathRoot, nullptr, nullptr, &signaler);
+        auto *const root = new Path(&pathRoot, nullptr, nullptr, &signaler);
         paths->push_front(root);
-        experimenting(event);
+        experimenting(sigParseEvent);
     }
 }
 
-void PathMachine::syncing(ParseEvent &event)
+void PathMachine::syncing(const SigParseEvent &sigParseEvent)
 {
+    ParseEvent &event = sigParseEvent.deref();
     {
         Syncing sync(params, paths, &signaler);
         if (event.getNumSkipped() <= params.maxSkipped) {
-            emit lookingForRooms(&sync, event);
+            emit lookingForRooms(sync, sigParseEvent);
         }
         paths = sync.evaluate();
     }
     evaluatePaths();
 }
 
-void PathMachine::experimenting(ParseEvent &event)
+void PathMachine::experimenting(const SigParseEvent &sigParseEvent)
 {
-    Experimenting *exp = nullptr;
-    uint moveCode = event.getMoveType();
-    Coordinate move = factory->exitDir(moveCode);
+    ParseEvent &event = sigParseEvent.deref();
+
+    std::unique_ptr<Experimenting> exp = nullptr;
+    const CommandIdType moveCode = event.getMoveType();
+
+    const auto dir = getDirection(moveCode);
+    const Coordinate &move = RoomFactory::exitDir(dir);
+
     // only create rooms if no properties are skipped and
     // the move coordinate is not 0,0,0
-    if (event.getNumSkipped() == 0
-        && (moveCode < static_cast<uint>(mostLikelyRoom.getExitsList().size()))) {
-        exp = new Crossover(paths, moveCode, params, factory);
-        std::set<const Room *> pathEnds;
+
+    if (event.getNumSkipped() == 0 && !mostLikelyRoom.isFake() && !move.isNull()) {
+        exp = std::make_unique<Crossover>(paths, dir, params, factory);
+        std::set<const Room *> pathEnds{};
         for (auto &path : *paths) {
-            const Room *working = path->getRoom();
+            const Room *const working = path->getRoom();
             if (pathEnds.find(working) == pathEnds.end()) {
-                emit createRoom(event, working->getPosition() + move);
+                emit createRoom(sigParseEvent, working->getPosition() + move);
                 pathEnds.insert(working);
             }
         }
-        emit lookingForRooms(exp, event);
+        emit lookingForRooms(*exp, sigParseEvent);
     } else {
-        auto *oneByOne = new OneByOne(factory, &event, params, &signaler);
-        exp = oneByOne;
-        for (auto &path : *paths) {
-            const Room *working = path->getRoom();
-            oneByOne->addPath(path);
-            tryExits(working, exp, event, true);
-            tryExits(working, exp, event, false);
-            tryCoordinate(working, exp, event);
+        auto pOneByOne = std::make_unique<OneByOne>(factory, sigParseEvent, params, &signaler);
+        {
+            auto &tmp = *pOneByOne;
+            for (auto &path : *paths) {
+                const Room *const working = path->getRoom();
+                tmp.addPath(path);
+                tryExits(working, tmp, event, true);
+                tryExits(working, tmp, event, false);
+                tryCoordinate(working, tmp, event);
+            }
         }
+        exp = static_upcast<Experimenting>(std::exchange(pOneByOne, nullptr));
     }
 
     paths = exp->evaluate();
-    delete exp;
     evaluatePaths();
 }
 
 void PathMachine::evaluatePaths()
 {
     if (paths->empty()) {
-        state = SYNCING;
+        state = PathState::SYNCING;
     } else {
         mostLikelyRoom = *(paths->front()->getRoom());
         if (++paths->begin() == paths->end()) {
-            state = APPROVED;
+            state = PathState::APPROVED;
             paths->front()->approve();
             paths->pop_front();
         } else {
-            state = EXPERIMENTING;
+            state = PathState::EXPERIMENTING;
         }
         emit playerMoved(mostLikelyRoom.getPosition());
     }

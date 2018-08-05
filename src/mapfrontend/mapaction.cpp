@@ -24,28 +24,36 @@
 ************************************************************************/
 
 #include "mapaction.h"
-#include "abstractroomfactory.h"
-#include "intermediatenode.h"
+
+#include <memory>
+#include <utility>
+#include <QMutableVectorIterator>
+
+#include "../expandoracommon/abstractroomfactory.h"
+#include "../expandoracommon/exit.h"
+#include "../expandoracommon/parseevent.h"
+#include "../expandoracommon/room.h"
+#include "../global/enums.h"
+#include "../global/roomid.h"
+#include "../mapdata/ExitDirection.h"
+#include "../parser/CommandId.h"
+#include "ParseTree.h"
 #include "map.h"
 #include "mapfrontend.h"
-#include "room.h"
 #include "roomcollection.h"
-#include <cassert>
 
-#include <utility>
-
-SingleRoomAction::SingleRoomAction(AbstractAction *ex, uint in_id)
+SingleRoomAction::SingleRoomAction(AbstractAction *const ex, const RoomId in_id)
     : id(in_id)
     , executor(ex)
 {}
 
-const std::set<uint> &SingleRoomAction::getAffectedRooms()
+const RoomIdSet &SingleRoomAction::getAffectedRooms()
 {
     executor->insertAffected(id, affectedRooms);
     return affectedRooms;
 }
 
-AddExit::AddExit(uint in_from, uint in_to, uint in_dir)
+AddExit::AddExit(const RoomId in_from, const RoomId in_to, const ExitDirection in_dir)
     : from(in_from)
     , to(in_to)
     , dir(in_dir)
@@ -61,22 +69,21 @@ void AddExit::exec()
 
 Room *AddExit::tryExec()
 {
-    auto &rooms = roomIndex();
-    Room *rfrom = rooms[from];
+    Room *rfrom = roomIndex(from);
     if (rfrom == nullptr) {
         return nullptr;
     }
-    Room *rto = rooms[to];
+    Room *rto = roomIndex(to);
     if (rto == nullptr) {
         return nullptr;
     }
 
     rfrom->exit(dir).addOut(to);
-    rto->exit(factory()->opposite(dir)).addIn(from);
+    rto->exit(opposite(dir)).addIn(from);
     return rfrom;
 }
 
-RemoveExit::RemoveExit(uint in_from, uint in_to, uint in_dir)
+RemoveExit::RemoveExit(const RoomId in_from, const RoomId in_to, const ExitDirection in_dir)
     : from(in_from)
     , to(in_to)
     , dir(in_dir)
@@ -92,136 +99,122 @@ void RemoveExit::exec()
 
 Room *RemoveExit::tryExec()
 {
-    auto &rooms = roomIndex();
-    Room *rfrom = rooms[from];
+    Room *rfrom = roomIndex(from);
     if (rfrom != nullptr) {
         rfrom->exit(dir).removeOut(to);
     }
-    Room *rto = rooms[to];
-    if (rto != nullptr) {
-        rto->exit(factory()->opposite(dir)).removeIn(from);
+    if (Room *rto = roomIndex(to)) {
+        rto->exit(opposite(dir)).removeIn(from);
     }
     return rfrom;
 }
 
-void MakePermanent::exec(uint id)
+void MakePermanent::exec(const RoomId id)
 {
-    Room *room = roomIndex()[id];
-    if (room != nullptr) {
+    if (Room *room = roomIndex(id)) {
         room->setPermanent();
     }
 }
 
-UpdateRoomField::UpdateRoomField(const QVariant &in_update, uint in_fieldNum)
+UpdateRoomField::UpdateRoomField(const QVariant &in_update, const uint in_fieldNum)
     : update(std::move(in_update))
     , fieldNum(in_fieldNum)
 {}
 
-void UpdateRoomField::exec(uint id)
+void UpdateRoomField::exec(const RoomId id)
 {
-    if (Room *room = roomIndex()[id]) {
+    /* TODO: update directly */
+    if (Room *const room = roomIndex(id)) {
         room->replace(static_cast<RoomField>(fieldNum), update);
     }
 }
 
 Update::Update()
-    : props(0)
+    : props(CommandIdType::NONE /* was effectively CommandIdType::NORTH */)
 {
     props.reset();
 }
 
-Update::Update(ParseEvent &in_props)
-    : props(in_props)
+Update::Update(const SigParseEvent &sigParseEvent)
+    : props{CommandIdType::NONE}
 {
+    props = sigParseEvent.deref().clone();
     //assert(props.getNumSkipped() == 0);
 }
 
-UpdatePartial::UpdatePartial(const QVariant &in_val, uint in_pos)
-    : Update()
-    , UpdateRoomField(in_val, in_pos)
+void Update::exec(const RoomId id)
 {
-    // This function is never called,
-    // as proven by the fact that it was calling Update(nullptr)
-    std::abort();
-}
-
-void UpdatePartial::exec(uint id)
-{
-    Room *room = roomIndex()[id];
-    if (room != nullptr) {
-        UpdateRoomField::exec(id);
-        props = *(factory()->getEvent(room));
-        Update::exec(id);
-    }
-}
-
-void Update::exec(uint id)
-{
-    Room *room = roomIndex()[id];
-    if (room != nullptr) {
+    if (Room *const room = roomIndex(id)) {
         factory()->update(*room, props);
-        RoomCollection *newHome = treeRoot().insertRoom(props);
+        auto newHome = getParseTree().insertRoom(props);
+
+        // NOTE: This requires a reference.
+        // Consider removing roomHomes() and adding roomHomeRef(id).
         auto &homes = roomHomes();
-        RoomCollection *oldHome = homes[id];
-        if (oldHome != nullptr) {
-            oldHome->erase(room);
+        auto &home_ref = homes[id];
+
+        if (auto &oldHome = home_ref) {
+            oldHome->removeRoom(room);
         }
-        homes[id] = newHome;
-        newHome->insert(room);
+        home_ref = newHome;
+
+        // REVISIT: newHome can be nullptr here!
+        // Compare with other uses of insertRoom() and factor out common code.
+        if (newHome != nullptr) {
+            newHome->addRoom(room);
+        }
     }
 }
 
-void ExitsAffecter::insertAffected(uint id, std::set<uint> &affected)
+void ExitsAffecter::insertAffected(const RoomId id, RoomIdSet &affected)
 {
-    if (Room *room = roomIndex()[id]) {
+    if (Room *const room = roomIndex(id)) {
         affected.insert(id);
         const ExitsList &exits = room->getExitsList();
-        ExitsList::const_iterator exitIter = exits.begin();
-        while (exitIter != exits.end()) {
-            const Exit &e = *exitIter;
+        for (const Exit &e : exits) {
             for (auto idx : e.inRange()) {
                 affected.insert(idx);
             }
             for (auto idx : e.outRange()) {
                 affected.insert(idx);
             }
-            ++exitIter;
         }
     }
 }
 
-void Remove::exec(uint id)
+void Remove::exec(const RoomId id)
 {
+    // This still needs a reference so it can set it to nullptr
     auto &rooms = roomIndex();
-    Room *room = std::exchange(rooms[id], nullptr);
+    Room *const room = std::exchange(rooms[id], nullptr);
     if (room == nullptr) {
         return;
     }
 
     map().remove(room->getPosition());
-    if (RoomCollection *home = roomHomes()[id]) {
-        home->erase(room);
+    if (SharedRoomCollection home = roomHomes(id)) {
+        home->removeRoom(room);
     }
     // don't return previously used ids for now
     // unusedIds().push(id);
     const ExitsList &exits = room->getExitsList();
-    for (int dir = 0; dir < exits.size(); ++dir) {
+    for (const auto dir : enums::makeCountingIterator<ExitDirection>(exits)) {
         const Exit &e = exits[dir];
-        for (auto idx : e.inRange()) {
-            if (Room *other = rooms[idx]) {
-                other->exit(factory()->opposite(dir)).removeOut(id);
+        for (const auto idx : e.inRange()) {
+            if (Room *const other = rooms[idx]) {
+                other->exit(opposite(dir)).removeOut(id);
             }
         }
-        for (auto idx : e.outRange()) {
-            if (Room *other = rooms[idx]) {
-                other->exit(factory()->opposite(dir)).removeIn(id);
+        for (const auto idx : e.outRange()) {
+            if (Room *const other = rooms[idx]) {
+                other->exit(opposite(dir)).removeIn(id);
             }
         }
     }
     delete room;
 }
 
-void FrontendAccessor::setFrontend(MapFrontend *in)
+void FrontendAccessor::setFrontend(MapFrontend *const in)
 {
     m_frontend = in;
 }
@@ -231,22 +224,30 @@ Map &FrontendAccessor::map()
     return m_frontend->map;
 }
 
-IntermediateNode &FrontendAccessor::treeRoot()
+ParseTree &FrontendAccessor::getParseTree()
 {
-    return m_frontend->treeRoot;
+    return m_frontend->parseTree;
 }
 
-std::vector<Room *> &FrontendAccessor::roomIndex()
+RoomIndex &FrontendAccessor::roomIndex()
 {
     return m_frontend->roomIndex;
 }
+Room *FrontendAccessor::roomIndex(const RoomId id) const
+{
+    return m_frontend->roomIndex[id];
+}
 
-std::vector<RoomCollection *> &FrontendAccessor::roomHomes()
+RoomHomes &FrontendAccessor::roomHomes()
 {
     return m_frontend->roomHomes;
 }
+const SharedRoomCollection &FrontendAccessor::roomHomes(const RoomId id) const
+{
+    return m_frontend->roomHomes[id];
+}
 
-std::stack<uint> &FrontendAccessor::unusedIds()
+std::stack<RoomId> &FrontendAccessor::unusedIds()
 {
     return m_frontend->unusedIds;
 }

@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -28,8 +29,13 @@
 
 #include <iostream>
 #include <map>
+#include <QObject>
+#include <QString>
 #include <QThread>
 #include <QVariant>
+#include <QtCore>
+
+class Component;
 
 #ifdef Q_OS_WIN
 #define MY_EXPORT __declspec(dllexport)
@@ -37,19 +43,17 @@
 #define MY_EXPORT
 #endif
 
-class Component;
-
 class ComponentThreader : public QThread
 {
 private:
     Q_OBJECT;
-    Component *owner;
+    Component *owner = nullptr;
 
 public:
-    ComponentThreader(Component *c)
+    explicit ComponentThreader(Component *c)
         : owner(c)
     {}
-    void run();
+    void run() override;
 };
 
 class Component : public QObject
@@ -61,8 +65,8 @@ private:
     void runInit() { init(); }
 
 protected:
-    ComponentThreader *thread;
-    std::map<QString, QVariant> options;
+    ComponentThreader *thread = nullptr;
+    std::map<QString, QVariant> options{};
     virtual void init() {}
 
 public:
@@ -77,34 +81,8 @@ public:
     void start();
 
     virtual ~Component();
-    Component(bool threaded = false);
+    explicit Component(bool threaded = false);
     void setOption(const QString &key, const QVariant &value);
 };
-
-/**
- * every component that should be available from a library should inherit Component
- * and implement a componentCreator which is available via "extern "C" MY_EXPORT ..."
- */
-typedef Component *(*componentCreator)();
-
-class ComponentCreator
-{
-public:
-    virtual Component *create() = 0;
-    virtual ~ComponentCreator() {}
-    static std::map<QString, ComponentCreator *> &creators();
-};
-
-template<class T>
-class Initializer : public ComponentCreator
-{
-public:
-    Initializer(QString name) { creators()[name] = this; }
-    T *create() { return new T; }
-};
-
-#ifdef DMALLOC
-#include <mpatrol.h>
-#endif
 
 #endif

@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -27,19 +28,29 @@
 #ifndef PARSER
 #define PARSER
 
-#include "component.h"
+#include <list>
+#include <memory>
+#include <QString>
+#include <QtCore>
+
+#include "../expandoracommon/component.h"
+#include "../expandoracommon/parseevent.h"
+#include "../expandoracommon/room.h"
 #include "pathparameters.h"
-#include "room.h"
 #include "roomsignalhandler.h"
 
-#define APPROVED 0
-#define EXPERIMENTING 1
-#define SYNCING 2
-
-class Approved;
-class Path;
-class ParseEvent;
 class AbstractRoomFactory;
+class Approved;
+class Coordinate;
+class Exit;
+class MapAction;
+class Path;
+class QEvent;
+class QObject;
+class RoomRecipient;
+struct RoomId;
+
+enum class PathState { APPROVED = 0, EXPERIMENTING = 1, SYNCING = 2 };
 
 /**
  * the parser determines the relations between incoming move- and room-events
@@ -50,43 +61,49 @@ class PathMachine : public Component
 {
     Q_OBJECT
 public slots:
-    virtual void event(ParseEvent *);
+    // CAUTION: This hides virtual bool QObject::event(QEvent*).
+    virtual void event(const SigParseEvent &);
     virtual void releaseAllPaths();
     virtual void retry();
-    virtual void setCurrentRoom(uint id);
+    virtual void setCurrentRoom(RoomId id);
     virtual void setCurrentRoom(const Coordinate &pos);
 
 signals:
-    void lookingForRooms(RoomRecipient *, ParseEvent &);
-    void lookingForRooms(RoomRecipient *, uint);
-    void lookingForRooms(RoomRecipient *, const Coordinate &);
+    void lookingForRooms(RoomRecipient &, const SigParseEvent &);
+    void lookingForRooms(RoomRecipient &, RoomId);
+    void lookingForRooms(RoomRecipient &, const Coordinate &);
     void playerMoved(const Coordinate &);
-    void createRoom(ParseEvent &, const Coordinate &);
+    void createRoom(const SigParseEvent &, const Coordinate &);
     void scheduleAction(MapAction *);
-    void setCharPosition(uint id);
+    void setCharPosition(RoomId id);
 
 public:
-    PathMachine(AbstractRoomFactory *factory, bool threaded = true);
-    virtual void init();
+    explicit PathMachine(AbstractRoomFactory *factory);
+    virtual void init() override;
 
 protected:
-    PathParameters params;
-    void experimenting(ParseEvent &event);
-    void syncing(ParseEvent &event);
-    void approved(ParseEvent &event);
+    PathParameters params{};
+    void experimenting(const SigParseEvent &sigParseEvent);
+    void syncing(const SigParseEvent &sigParseEvent);
+    void approved(const SigParseEvent &sigParseEvent);
     void evaluatePaths();
-    void setCurrentRoom(Approved *app);
-    void tryExits(const Room *, RoomRecipient *, ParseEvent &, bool out);
-    void tryExit(const Exit &possible, RoomRecipient *recipient, bool out);
-    void tryCoordinate(const Room *, RoomRecipient *, ParseEvent &);
+    void setCurrentRoom(Approved &app);
+    void tryExits(const Room *, RoomRecipient &, ParseEvent &, bool out);
+    void tryExit(const Exit &possible, RoomRecipient &recipient, bool out);
+    void tryCoordinate(const Room *, RoomRecipient &, ParseEvent &);
     AbstractRoomFactory *factory;
 
     RoomSignalHandler signaler;
+    /* REVISIT: pathRoot and mostLikelyRoom should probably be of type RoomId */
     Room pathRoot;
     Room mostLikelyRoom;
-    ParseEvent *lastEvent;
-    char state;
-    std::list<Path *> *paths;
+    SigParseEvent lastEvent{};
+    PathState state = PathState::SYNCING;
+    std::list<Path *> *paths = nullptr;
+
+private:
+    // avoid warning about signal hiding this function
+    virtual bool event(QEvent *e) final override { return QObject::event(e); }
 };
 
 #endif

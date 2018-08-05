@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Kalev Lember <kalev@smartlink.ee>
@@ -21,18 +22,25 @@
 ** 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **
 ************************************************************************/
-
 #ifndef ABOUTDIALOG_H
 #define ABOUTDIALOG_H
 
+#include <QDialog>
+#include <QString>
+#include <QtCore>
+
 #include "ui_aboutdialog.h"
+
+class QObject;
+class QTextBrowser;
+class QWidget;
 
 class AboutDialog : public QDialog, private Ui::AboutDialog
 {
     Q_OBJECT
 
 public:
-    AboutDialog(QWidget *parent = 0);
+    explicit AboutDialog(QWidget *parent = nullptr);
 
 private:
     void setFixedFont(QTextBrowser *browser);

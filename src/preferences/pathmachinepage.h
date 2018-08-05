@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -26,15 +27,20 @@
 #ifndef PATHMACHINEPAGE_H
 #define PATHMACHINEPAGE_H
 
-#include "ui_pathmachinepage.h"
+#include <QString>
 #include <QWidget>
+#include <QtCore>
+
+#include "ui_pathmachinepage.h"
+
+class QObject;
 
 class PathmachinePage : public QWidget, private Ui::PathmachinePage
 {
     Q_OBJECT
 
 public:
-    PathmachinePage(QWidget *parent = 0);
+    explicit PathmachinePage(QWidget *parent = nullptr);
 
 public slots:
     void acceptBestRelativeDoubleSpinBoxValueChanged(double);

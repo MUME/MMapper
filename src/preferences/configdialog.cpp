@@ -25,6 +25,11 @@
 ************************************************************************/
 
 #include "configdialog.h"
+
+#include <QIcon>
+#include <QListWidget>
+#include <QtWidgets>
+
 #include "clientpage.h"
 #include "generalpage.h"
 #include "graphicspage.h"
@@ -33,10 +38,6 @@
 #include "parserpage.h"
 #include "pathmachinepage.h"
 #include "ui_configdialog.h"
-
-#include <QListWidget>
-#include <QScrollBar>
-#include <QStackedWidget>
 
 ConfigDialog::ConfigDialog(Mmapper2Group *gm, QWidget *parent)
     : QDialog(parent)
@@ -68,10 +69,10 @@ ConfigDialog::ConfigDialog(Mmapper2Group *gm, QWidget *parent)
 
     ui->contentsWidget->setCurrentItem(ui->contentsWidget->item(0));
     connect(ui->contentsWidget,
-            SIGNAL(currentItemChanged(QListWidgetItem *, QListWidgetItem *)),
+            &QListWidget::currentItemChanged,
             this,
-            SLOT(changePage(QListWidgetItem *, QListWidgetItem *)));
-    connect(ui->closeButton, SIGNAL(clicked()), this, SLOT(close()));
+            &ConfigDialog::changePage);
+    connect(ui->closeButton, &QAbstractButton::clicked, this, &QWidget::close);
 }
 
 ConfigDialog::~ConfigDialog()

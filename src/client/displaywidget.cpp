@@ -23,15 +23,15 @@
 ************************************************************************/
 
 #include "displaywidget.h"
-#include "configuration/configuration.h"
 
-#include <QBrush>
-#include <QDebug>
+#include <QMessageLogContext>
+#include <QRegExp>
 #include <QScrollBar>
-#include <QTextCharFormat>
+#include <QString>
 #include <QTextCursor>
-#include <QTextDocument>
-#include <QTextFrame>
+#include <QtGui>
+
+#include "../configuration/configuration.h"
 
 // ANSI codes are formatted as the following:
 // escape + [ + n1 (+ n2) + m
@@ -40,6 +40,8 @@ const QRegExp DisplayWidget::s_ansiRx(R"(\0033\[((?:\d+;)*\d+)m)");
 DisplayWidget::DisplayWidget(QWidget *parent)
     : QTextEdit(parent)
 {
+    const auto &settings = Config().integratedClient;
+
     setReadOnly(true);
     setOverwriteMode(true);
     setUndoRedoEnabled(false);
@@ -51,8 +53,8 @@ DisplayWidget::DisplayWidget(QWidget *parent)
     document()->setUndoRedoEnabled(false);
 
     // Default Colors
-    m_foregroundColor = Config().m_clientForegroundColor;
-    m_backgroundColor = Config().m_clientBackgroundColor;
+    m_foregroundColor = settings.foregroundColor;
+    m_backgroundColor = settings.backgroundColor;
     m_blackColor = QColor("#2e3436");
     m_darkGrayColor = QColor("#555753");
     m_redColor = QColor("#cc0000");
@@ -71,7 +73,7 @@ DisplayWidget::DisplayWidget(QWidget *parent)
     m_whiteColor = QColor("#eeeeec");
 
     // Default Font
-    m_serverOutputFont = Config().m_clientFont;
+    m_serverOutputFont = settings.font;
 
     QTextFrameFormat frameFormat = document()->rootFrame()->frameFormat();
     frameFormat.setBackground(m_backgroundColor);
@@ -84,12 +86,12 @@ DisplayWidget::DisplayWidget(QWidget *parent)
     m_cursor.setCharFormat(m_format);
 
     QFontMetrics fm(m_serverOutputFont);
-    int x = fm.averageCharWidth() * Config().m_clientColumns;
-    int y = fm.lineSpacing() * Config().m_clientRows;
+    int x = fm.averageCharWidth() * settings.columns;
+    int y = fm.lineSpacing() * settings.rows;
     setMinimumSize(QSize(x + contentsMargins().left() + contentsMargins().right(),
                          y + contentsMargins().top() + contentsMargins().bottom()));
     setLineWrapMode(QTextEdit::FixedColumnWidth);
-    setLineWrapColumnOrWidth(Config().m_clientColumns);
+    setLineWrapColumnOrWidth(settings.columns);
     setWordWrapMode(QTextOption::WordWrap);
     setSizeIncrement(fm.averageCharWidth(), fm.lineSpacing());
     setTabStopWidth(fm.width(" ") * 8); // A tab is 8 spaces wide
@@ -111,6 +113,10 @@ void DisplayWidget::resizeEvent(QResizeEvent *event)
     setLineWrapColumnOrWidth(x);
     verticalScrollBar()->setPageStep(y);
     emit showMessage(QString("Dimensions: %1x%2").arg(x).arg(y), 1000);
+    const auto &settings = Config().integratedClient;
+    if (settings.autoResizeTerminal) {
+        emit windowSizeChanged(x, y);
+    }
     QTextEdit::resizeEvent(event);
 }
 
@@ -175,7 +181,7 @@ void DisplayWidget::displayText(const QString &str)
     }
 
     // Ensure we limit the scrollback history
-    int lineLimit = Config().m_clientLinesOfScrollback;
+    int lineLimit = Config().integratedClient.linesOfScrollback;
     if (document()->lineCount() > lineLimit) {
         int trimLines = document()->lineCount() - lineLimit;
         m_cursor.movePosition(QTextCursor::Start);

@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Nils Schimmelmann <nschimme@gmail.com> (Jahara)
@@ -25,6 +26,8 @@
 #ifndef GROUPACTION_H
 #define GROUPACTION_H
 
+#include <QByteArray>
+#include <QByteArrayDataPtr>
 #include <QDomNode>
 #include <QString>
 
@@ -33,72 +36,72 @@ class CGroup;
 class GroupAction
 {
 public:
-    GroupAction() {}
+    explicit GroupAction() = default;
     virtual ~GroupAction() {}
     virtual void exec() = 0;
     void setGroup(CGroup *in) { this->group = in; }
     void schedule(CGroup *in) { setGroup(in); }
 
 protected:
-    CGroup *group;
+    CGroup *group = nullptr;
 };
 
 class AddCharacter : public GroupAction
 {
 public:
-    AddCharacter(const QDomNode &blob);
+    explicit AddCharacter(const QDomNode &blob);
 
 protected:
-    void exec();
+    void exec() override;
 
 private:
-    QDomNode blob;
+    QDomNode blob{};
 };
 
 class RemoveCharacter : public GroupAction
 {
 public:
-    RemoveCharacter(const QDomNode &blob);
-    RemoveCharacter(QByteArray);
+    explicit RemoveCharacter(const QDomNode &blob);
+    explicit RemoveCharacter(QByteArray);
 
 protected:
-    void exec();
+    void exec() override;
 
 private:
-    QByteArray name;
+    QByteArray name{};
 };
 
 class UpdateCharacter : public GroupAction
 {
 public:
-    UpdateCharacter(const QDomNode &blob);
+    explicit UpdateCharacter(const QDomNode &blob);
 
 protected:
-    void exec();
+    void exec() override;
 
 private:
-    QDomNode blob;
+    QDomNode blob{};
 };
 
 class RenameCharacter : public GroupAction
 {
 public:
-    RenameCharacter(const QDomNode &blob);
+    explicit RenameCharacter(const QDomNode &blob);
 
 protected:
-    void exec();
+    void exec() override;
 
 private:
-    QDomNode blob;
+    QDomNode blob{};
 };
 
 class ResetCharacters : public GroupAction
 {
 public:
-    ResetCharacters();
+    explicit ResetCharacters();
 
 protected:
-    void exec();
+    void exec() override;
 };
 
 #endif // GROUPACTION_H

@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -26,7 +27,7 @@
 #ifndef COORDINATE
 #define COORDINATE
 
-class Coordinate
+class Coordinate final
 {
 public:
     bool operator==(const Coordinate &other) const;
@@ -35,22 +36,20 @@ public:
     void operator-=(const Coordinate &other);
     Coordinate operator+(const Coordinate &other) const;
     Coordinate operator-(const Coordinate &other) const;
+    Coordinate operator*(const int scalar) const;
 
     int distance(const Coordinate &other) const;
     void clear();
-    Coordinate(int in_x = 0, int in_y = 0, int in_z = 0)
+    explicit Coordinate(int in_x = 0, int in_y = 0, int in_z = 0)
         : x(in_x)
         , y(in_y)
         , z(in_z)
     {}
     bool isNull() const { return (x == 0 && y == 0 && z == 0); }
 
-    int x;
-    int y;
-    int z;
+    int x = 0;
+    int y = 0;
+    int z = 0;
 };
 
-#ifdef DMALLOC
-#include <mpatrol.h>
-#endif
 #endif

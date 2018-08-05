@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -26,8 +27,15 @@
 #ifndef PARSERPAGE_H
 #define PARSERPAGE_H
 
-#include "ui_parserpage.h"
+#include <QString>
 #include <QWidget>
+#include <QtCore>
+
+#include "ui_parserpage.h"
+
+class QObject;
+
+enum class UiCharset { AsciiOrLatin1, UTF8 };
 
 class ParserPage : public QWidget, private Ui::ParserPage
 {
@@ -52,7 +60,7 @@ private slots:
     void charsetChanged(int);
 
 public:
-    ParserPage(QWidget *parent = 0);
+    explicit ParserPage(QWidget *parent = nullptr);
 
 protected slots:
     void roomDescColorChanged(const QString &);

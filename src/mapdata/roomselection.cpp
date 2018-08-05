@@ -24,9 +24,10 @@
 ************************************************************************/
 
 #include "roomselection.h"
-#include "coordinate.h"
-#include "mapdata.h"
+
 #include <cassert>
+
+#include "../expandoracommon/room.h"
 
 void RoomSelection::receiveRoom(RoomAdmin *admin, const Room *aRoom)
 {
@@ -35,7 +36,7 @@ void RoomSelection::receiveRoom(RoomAdmin *admin, const Room *aRoom)
 }
 bool RoomSelection::containsAll(const RoomSelection *other) const
 {
-    QMapIterator<uint, const Room *> i(*other);
+    QMapIterator<RoomId, const Room *> i(*other);
     while (i.hasNext()) {
         if (!contains(i.key())) {
             return false;

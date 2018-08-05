@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Nils Schimmelmann <nschimme@gmail.com> (Jahara)
@@ -25,14 +26,18 @@
 #ifndef _REMOTEEDITSESSION_H_
 #define _REMOTEEDITSESSION_H_
 
+#include <algorithm>
 #include <QObject>
-#include <QPointer>
+#include <QScopedPointer>
+#include <QString>
+#include <QtCore>
+#include <QtGlobal>
 
 class RemoteEdit;
 class RemoteEditProcess;
 class RemoteEditWidget;
 
-#define REMOTE_EDIT_VIEW_KEY -1
+static constexpr const int REMOTE_EDIT_VIEW_KEY = -1;
 
 class RemoteEditSession : public QObject
 {
@@ -42,13 +47,13 @@ class RemoteEditSession : public QObject
     friend class RemoteEditInternalSession;
 
 public:
-    RemoteEditSession(uint sessionId, int key, RemoteEdit *remoteEdit);
+    explicit RemoteEditSession(uint sessionId, int key, RemoteEdit *remoteEdit);
 
     int getId() const { return m_sessionId; }
 
     int getKey() const { return m_key; }
 
-    const bool isEditSession() const { return m_key != REMOTE_EDIT_VIEW_KEY; }
+    bool isEditSession() const { return m_key != REMOTE_EDIT_VIEW_KEY; }
 
     const QString &getContent() const { return m_content; }
 
@@ -66,10 +71,9 @@ protected slots:
     }
 
 private:
-    const uint m_sessionId;
-    const int m_key;
-    RemoteEdit *m_manager;
-
+    const uint m_sessionId = 0;
+    const int m_key = REMOTE_EDIT_VIEW_KEY;
+    RemoteEdit *m_manager = nullptr;
     QString m_content{};
 };
 
@@ -77,24 +81,24 @@ class RemoteEditInternalSession : public RemoteEditSession
 {
     Q_OBJECT
 public:
-    RemoteEditInternalSession(
+    explicit RemoteEditInternalSession(
         uint sessionId, int key, const QString &title, const QString &body, RemoteEdit *remoteEdit);
     ~RemoteEditInternalSession();
 
 private:
-    QPointer<RemoteEditWidget> m_widget;
+    QScopedPointer<RemoteEditWidget> m_widget;
 };
 
 class RemoteEditExternalSession : public RemoteEditSession
 {
     Q_OBJECT
 public:
-    RemoteEditExternalSession(
+    explicit RemoteEditExternalSession(
         uint sessionId, int key, const QString &title, const QString &body, RemoteEdit *remoteEdit);
     ~RemoteEditExternalSession();
 
 private:
-    QPointer<RemoteEditProcess> m_process;
+    QScopedPointer<RemoteEditProcess> m_process;
 };
 
 #endif /* _REMOTEEDITSESSION_H_ */

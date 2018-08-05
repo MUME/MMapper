@@ -24,14 +24,18 @@
 ************************************************************************/
 
 #include "patterns.h"
-#include "configuration.h"
 
-QRegExp Patterns::m_rx;
+#include <QRegExp>
+#include <QStringList>
 
-const QRegExp Patterns::m_score(R"(\d+/\d+ hits(?:, \d+/\d+ mana,)? and \d+/\d+ moves.)");
+#include "../configuration/configuration.h"
+
+QRegExp Patterns::g_rx;
+
+const QRegExp Patterns::g_score(R"(\d+/\d+ hits(?:, \d+/\d+ mana,)? and \d+/\d+ moves.)");
 
 // Used for oldRoom loading only
-const QStringList Patterns::m_dynamicDescriptionPatternsList(
+const QStringList Patterns::g_dynamicDescriptionPatternsList(
     QStringList()
     << "#!(?:A|An|The)[^.]*\\."
     << "#![^.]*(?:sit(?:s|ting)?|rest(?:s|ing)?|stand(?:s|ing)|sleep(?:s|ing)?|swim(?:s|ming)?|walk(?:s|ing)?|wander(?:s|ing)?|grow(?:s|ing)?|lies?|lying)[^.]*"
@@ -45,7 +49,7 @@ const QStringList Patterns::m_dynamicDescriptionPatternsList(
     << "#<Prickly"
     << "#!.*arrived from.*\\.");
 
-bool Patterns::matchPattern(QString pattern, QString &str)
+bool Patterns::matchPattern(QString pattern, const QString &str)
 {
     if (pattern.at(0) != '#') {
         return false;
@@ -53,8 +57,8 @@ bool Patterns::matchPattern(QString pattern, QString &str)
 
     switch (static_cast<int>((pattern.at(1)).toLatin1())) {
     case 33: // !
-        m_rx.setPattern(pattern.remove(0, 2));
-        if (m_rx.exactMatch(str)) {
+        g_rx.setPattern(pattern.remove(0, 2));
+        if (g_rx.exactMatch(str)) {
             return true;
         }
         break;
@@ -83,7 +87,7 @@ bool Patterns::matchPattern(QString pattern, QString &str)
     return false;
 }
 
-bool Patterns::matchPattern(QByteArray pattern, QByteArray &str)
+bool Patterns::matchPattern(QByteArray pattern, const QByteArray &str)
 {
     if (pattern.at(0) != '#') {
         return false;
@@ -117,14 +121,14 @@ bool Patterns::matchPattern(QByteArray pattern, QByteArray &str)
     return false;
 }
 
-bool Patterns::matchScore(QString &str)
+bool Patterns::matchScore(const QString &str)
 {
-    return m_score.exactMatch(str);
+    return g_score.exactMatch(str);
 }
 
-bool Patterns::matchMoveForcePatterns(QString &str)
+bool Patterns::matchMoveForcePatterns(const QString &str)
 {
-    for (auto &pattern : Config().m_moveForcePatternsList) {
+    for (auto &pattern : Config().parser.moveForcePatternsList) {
         if (matchPattern(pattern, str)) {
             return true;
         }
@@ -132,9 +136,9 @@ bool Patterns::matchMoveForcePatterns(QString &str)
     return false;
 }
 
-bool Patterns::matchNoDescriptionPatterns(QString &str)
+bool Patterns::matchNoDescriptionPatterns(const QString &str)
 {
-    for (auto &pattern : Config().m_noDescriptionPatternsList) {
+    for (auto &pattern : Config().parser.noDescriptionPatternsList) {
         if (matchPattern(pattern, str)) {
             return true;
         }
@@ -142,9 +146,9 @@ bool Patterns::matchNoDescriptionPatterns(QString &str)
     return false;
 }
 
-bool Patterns::matchDynamicDescriptionPatterns(QString &str)
+bool Patterns::matchDynamicDescriptionPatterns(const QString &str)
 {
-    for (auto &pattern : m_dynamicDescriptionPatternsList) {
+    for (auto &pattern : g_dynamicDescriptionPatternsList) {
         if (matchPattern(pattern, str)) {
             return true;
         }
@@ -152,22 +156,22 @@ bool Patterns::matchDynamicDescriptionPatterns(QString &str)
     return false;
 }
 
-bool Patterns::matchPasswordPatterns(QByteArray &str)
+bool Patterns::matchPasswordPatterns(const QByteArray &str)
 {
-    return matchPattern(Config().m_passwordPattern, str);
+    return matchPattern(Config().parser.passwordPattern, str);
 }
 
-bool Patterns::matchPromptPatterns(QByteArray &str)
+bool Patterns::matchPromptPatterns(const QByteArray &str)
 {
-    return matchPattern(Config().m_promptPattern, str);
+    return matchPattern(Config().parser.promptPattern, str);
 }
 
-bool Patterns::matchLoginPatterns(QByteArray &str)
+bool Patterns::matchLoginPatterns(const QByteArray &str)
 {
-    return matchPattern(Config().m_loginPattern, str);
+    return matchPattern(Config().parser.loginPattern, str);
 }
 
-bool Patterns::matchMenuPromptPatterns(QByteArray &str)
+bool Patterns::matchMenuPromptPatterns(const QByteArray &str)
 {
-    return matchPattern(Config().m_menuPromptPattern, str);
+    return matchPattern(Config().parser.menuPromptPattern, str);
 }

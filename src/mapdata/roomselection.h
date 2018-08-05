@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -26,23 +27,25 @@
 #ifndef ROOMSELECTION_H
 #define ROOMSELECTION_H
 
-#include "roomrecipient.h"
 #include <QMap>
+
+#include "../expandoracommon/roomrecipient.h"
+#include "../global/roomid.h"
 
 class Room;
 class RoomAdmin;
 
-class RoomSelection : public QMap<uint, const Room *>, public RoomRecipient
+class RoomSelection : public QMap<RoomId, const Room *>, public RoomRecipient
 {
 public:
-    RoomSelection(RoomAdmin *admin)
+    explicit RoomSelection(RoomAdmin *admin)
         : m_admin(admin)
     {}
-    void receiveRoom(RoomAdmin *admin, const Room *aRoom);
+    void receiveRoom(RoomAdmin *admin, const Room *aRoom) override;
     bool containsAll(const RoomSelection *other) const;
 
 private:
-    RoomAdmin *m_admin;
+    RoomAdmin *m_admin = nullptr;
 };
 
 #endif

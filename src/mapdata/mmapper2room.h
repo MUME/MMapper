@@ -1,3 +1,4 @@
+#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -28,119 +29,138 @@
 
 #include <QtGlobal>
 
+#include "../global/Flags.h"
+
 class Room;
 
 using RoomName = QString;
 using RoomDescription = QString;
 using RoomNote = QString;
 
-enum RoomTerrainType {
-    RTT_UNDEFINED = 0,
-    RTT_INDOORS,
-    RTT_CITY,
-    RTT_FIELD,
-    RTT_FOREST,
-    RTT_HILLS,
-    RTT_MOUNTAINS,
-    RTT_SHALLOW,
-    RTT_WATER,
-    RTT_RAPIDS,
-    RTT_UNDERWATER,
-    RTT_ROAD,
-    RTT_BRUSH,
-    RTT_TUNNEL,
-    RTT_CAVERN,
-    RTT_DEATHTRAP,
-    RTT_RANDOM
+enum class RoomTerrainType {
+    UNDEFINED = 0,
+    INDOORS,
+    CITY,
+    FIELD,
+    FOREST,
+    HILLS,
+    MOUNTAINS,
+    SHALLOW,
+    WATER,
+    RAPIDS,
+    UNDERWATER,
+    ROAD,
+    BRUSH,
+    TUNNEL,
+    CAVERN,
+    DEATHTRAP,
+    RANDOM
+};
+static constexpr const size_t NUM_ROOM_TERRAIN_TYPES = static_cast<size_t>(RoomTerrainType::RANDOM)
+                                                       + 1u;
+static_assert(NUM_ROOM_TERRAIN_TYPES == 17, "");
+DEFINE_ENUM_COUNT(RoomTerrainType, NUM_ROOM_TERRAIN_TYPES);
+
+enum class RoomAlignType { UNDEFINED = 0, GOOD, NEUTRAL, EVIL };
+static constexpr const int NUM_ALIGN_TYPES = 4;
+
+// REVISIT: Consider just using a single tri-state bool enums for these?
+enum class RoomLightType { UNDEFINED = 0, DARK, LIT };
+enum class RoomPortableType { UNDEFINED = 0, PORTABLE, NOT_PORTABLE };
+enum class RoomRidableType { UNDEFINED = 0, RIDABLE, NOT_RIDABLE };
+enum class RoomSundeathType { UNDEFINED = 0, SUNDEATH, NO_SUNDEATH };
+static constexpr const int NUM_LIGHT_TYPES = 3;
+static constexpr const int NUM_SUNDEATH_TYPES = 3;
+static constexpr const int NUM_PORTABLE_TYPES = 3;
+static constexpr const int NUM_RIDABLE_TYPES = 3;
+
+enum class RoomMobFlag {
+    RENT,
+    SHOP,
+    WEAPON_SHOP,
+    ARMOUR_SHOP,
+    FOOD_SHOP,
+    PET_SHOP,
+    GUILD,
+    SCOUT_GUILD,
+    MAGE_GUILD,
+    CLERIC_GUILD,
+    WARRIOR_GUILD,
+    RANGER_GUILD,
+    SMOB,
+    QUEST,
+    ANY,
+};
+static constexpr const int NUM_ROOM_MOB_FLAGS = static_cast<int>(RoomMobFlag::ANY) + 1;
+static_assert(NUM_ROOM_MOB_FLAGS == 15, "");
+DEFINE_ENUM_COUNT(RoomMobFlag, NUM_ROOM_MOB_FLAGS);
+
+class RoomMobFlags final : public enums::Flags<RoomMobFlags, RoomMobFlag, uint32_t>
+{
+    using Flags::Flags;
 };
 
-enum RoomPortableType { RPT_UNDEFINED = 0, RPT_PORTABLE, RPT_NOTPORTABLE };
-enum RoomLightType { RLT_UNDEFINED = 0, RLT_DARK, RLT_LIT };
-enum RoomAlignType { RAT_UNDEFINED = 0, RAT_GOOD, RAT_NEUTRAL, RAT_EVIL };
-enum RoomRidableType { RRT_UNDEFINED = 0, RRT_RIDABLE, RRT_NOTRIDABLE };
-enum RoomSundeathType { RST_UNDEFINED = 0, RST_SUNDEATH, RST_NOSUNDEATH };
-#define NUM_ROOM_PROPS 12
+enum class RoomLoadFlag {
+    TREASURE,
+    ARMOUR,
+    WEAPON,
+    WATER,
+    FOOD,
+    HERB,
+    KEY,
+    MULE,
+    HORSE,
+    PACK_HORSE,
+    TRAINED_HORSE,
+    ROHIRRIM,
+    WARG,
+    BOAT,
+    ATTENTION,
+    TOWER,
+    CLOCK,
+    MAIL,
+    STABLE,
+};
+static constexpr const int NUM_ROOM_LOAD_FLAGS = static_cast<int>(RoomLoadFlag::STABLE) + 1;
+static_assert(NUM_ROOM_LOAD_FLAGS == 19, "");
+DEFINE_ENUM_COUNT(RoomLoadFlag, NUM_ROOM_LOAD_FLAGS);
 
-#define RMF_RENT bit1
-#define RMF_SHOP bit2
-#define RMF_WEAPONSHOP bit3
-#define RMF_ARMOURSHOP bit4
-#define RMF_FOODSHOP bit5
-#define RMF_PETSHOP bit6
-#define RMF_GUILD bit7
-#define RMF_SCOUTGUILD bit8
-#define RMF_MAGEGUILD bit9
-#define RMF_CLERICGUILD bit10
-#define RMF_WARRIORGUILD bit11
-#define RMF_RANGERGUILD bit12
-#define RMF_SMOB bit13
-#define RMF_QUEST bit14
-#define RMF_ANY bit15
-#define RMF_RESERVED2 bit16
-typedef quint32 RoomMobFlags;
-
-#define RLF_TREASURE bit1
-#define RLF_ARMOUR bit2
-#define RLF_WEAPON bit3
-#define RLF_WATER bit4
-#define RLF_FOOD bit5
-#define RLF_HERB bit6
-#define RLF_KEY bit7
-#define RLF_MULE bit8
-#define RLF_HORSE bit9
-#define RLF_PACKHORSE bit10
-#define RLF_TRAINEDHORSE bit11
-#define RLF_ROHIRRIM bit12
-#define RLF_WARG bit13
-#define RLF_BOAT bit14
-#define RLF_ATTENTION bit15
-#define RLF_TOWER bit16
-#define RLF_CLOCK bit17
-#define RLF_MAIL bit18
-#define RLF_STABLE bit19
-typedef quint32 RoomLoadFlags;
-
-enum RoomField {
-    R_NAME,
-    R_DESC,
-    R_TERRAINTYPE,
-    R_DYNAMICDESC,
-    R_NOTE,
-    R_MOBFLAGS,
-    R_LOADFLAGS,
-    R_PORTABLETYPE,
-    R_LIGHTTYPE,
-    R_ALIGNTYPE,
-    R_RIDABLETYPE,
-    R_SUNDEATHTYPE,
-    R_KEYWORDS,
-    ROOMFIELD_LAST
+class RoomLoadFlags final : public enums::Flags<RoomLoadFlags, RoomLoadFlag, uint32_t>
+{
+    using Flags::Flags;
 };
 
-// TODO: Just make these members of Room
-namespace Mmapper2Room {
-RoomName getName(const Room *room);
+enum class RoomField {
+    NAME,
+    /** STATIC_DESC */
+    DESC,
+    TERRAIN_TYPE,
+    DYNAMIC_DESC,
+    NOTE,
+    MOB_FLAGS,
+    LOAD_FLAGS,
+    PORTABLE_TYPE,
+    LIGHT_TYPE,
+    ALIGN_TYPE,
+    RIDABLE_TYPE,
+    SUNDEATH_TYPE,
+    KEYWORDS,
+    LAST
+};
 
-RoomDescription getDescription(const Room *room);
+static constexpr const int NUM_ROOM_FIELDS = static_cast<int>(RoomField::KEYWORDS) + 1;
+static_assert(NUM_ROOM_FIELDS == static_cast<int>(RoomField::LAST), "");
+static_assert(NUM_ROOM_FIELDS == 13, "");
+static constexpr const int NUM_ROOM_PROPS = NUM_ROOM_FIELDS;
+DEFINE_ENUM_COUNT(RoomField, NUM_ROOM_FIELDS);
+class RoomFields : public enums::Flags<RoomFields, RoomField, uint16_t>
+{
+    using Flags::Flags;
+};
 
-RoomDescription getDynamicDescription(const Room *room);
+inline constexpr RoomFields operator|(const RoomField lhs, const RoomField rhs) noexcept
+{
+    return RoomFields{lhs} | RoomFields{rhs};
+}
 
-RoomNote getNote(const Room *room);
-
-RoomMobFlags getMobFlags(const Room *room);
-
-RoomLoadFlags getLoadFlags(const Room *room);
-
-RoomTerrainType getTerrainType(const Room *room);
-
-RoomPortableType getPortableType(const Room *room);
-
-RoomLightType getLightType(const Room *room);
-
-RoomAlignType getAlignType(const Room *room);
-
-RoomRidableType getRidableType(const Room *room);
-
-RoomSundeathType getSundeathType(const Room *room);
-} // namespace Mmapper2Room
 #endif
