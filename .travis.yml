@@ -14,22 +14,6 @@ matrix:
         - MATRIX_EVAL="brew update"
         - CLANG_FORMAT=clang-format
     #
-    # Linux GCC 4
-    #
-    - os: linux
-      compiler: gcc
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-6.0
-          packages:
-            - g++-4.9
-            - clang-format-6.0
-      env:
-        - QT=59 PPA=beineri/opt-qt595-trusty MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
-        - CLANG_FORMAT=clang-format-6.0
-    #
     # Linux GCC 5
     #
     - os: linux
