@@ -90,9 +90,10 @@ private:
     char prefixChar = '_';
 
 protected:
-    QString m_roomName{};
-    QString m_staticRoomDesc{};
-    QString m_dynamicRoomDesc{};
+    QString m_roomName = nullString;
+    QString m_staticRoomDesc = nullString;
+    QString m_dynamicRoomDesc = nullString;
+    QString m_exits = nullString;
     ExitsFlagsType m_exitsFlags{};
     PromptFlagsType m_promptFlags{};
     ConnectedRoomFlagsType m_connectedRoomFlags{};
@@ -201,9 +202,10 @@ protected:
     void emulateExits();
     QByteArray enhanceExits(const Room *);
 
-    void parseExits(const QString &str);
+    void parseExits();
     void parsePrompt(const QString &prompt);
     virtual bool parseUserCommands(const QString &command);
+    QString& normalizeString(QString &str);
 
     void searchCommand(const RoomFilter &f);
     void dirsCommand(const RoomFilter &f);

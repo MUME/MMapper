@@ -308,6 +308,7 @@ bool MumeXmlParser::element(const QByteArray &line)
             switch (line.at(0)) {
             case '/':
                 if (line.startsWith("/exits")) {
+                    parseExits();
                     m_xmlMode = XmlMode::NONE;
                 }
                 break;
@@ -367,10 +368,6 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
     const auto &config = Config();
     m_stringBuffer = config.parser.utf8Charset ? QString::fromUtf8(ch) : QString::fromLatin1(ch);
 
-    m_stringBuffer = m_stringBuffer.simplified();
-    ParserUtils::latinToAscii(m_stringBuffer);
-    ParserUtils::removeAnsiMarks(m_stringBuffer);
-
     if (m_readSnoopTag && m_stringBuffer.length() > 3 && m_stringBuffer.at(0) == '&'
         && m_stringBuffer.at(2) == ' ') {
         // Remove snoop prefix (i.e. "&J Exits: north.")
@@ -379,7 +376,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
 
     switch (m_xmlMode) {
     case XmlMode::NONE:                 //non room info
-        if (m_stringBuffer.isEmpty()) { // standard end of description parsed
+        if (m_stringBuffer.trimmed().isEmpty()) { // standard end of description parsed
             if (m_readingRoomDesc) {
                 m_readingRoomDesc = false; // we finished read desc mode
                 m_descriptionReady = true;
@@ -403,7 +400,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         break;
 
     case XmlMode::ROOM: // dynamic line
-        m_dynamicRoomDesc += m_stringBuffer + "\n";
+        m_dynamicRoomDesc += m_stringBuffer.simplified() + "\n";
         toUser.append(ch);
         break;
 
@@ -417,22 +414,21 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         m_roomName = m_stringBuffer;
         m_dynamicRoomDesc = nullString;
         m_staticRoomDesc = nullString;
-        m_roomDescLines = 0;
-        m_readingStaticDescLines = true;
+        m_exits = nullString;
         m_exitsFlags.reset();
 
         toUser.append(ch);
         break;
 
     case XmlMode::DESCRIPTION: // static line
-        m_staticRoomDesc += m_stringBuffer + "\n";
+        m_staticRoomDesc += m_stringBuffer.simplified() + "\n";
         if (!m_gratuitous) {
             toUser.append(ch);
         }
         break;
 
     case XmlMode::EXITS:
-        parseExits(m_stringBuffer); //parse exits
+        m_exits += m_stringBuffer;
         if (m_readingRoomDesc) {
             m_readingRoomDesc = false;
             m_descriptionReady = true;
@@ -484,9 +480,9 @@ void MumeXmlParser::move()
 
     const auto emitEvent = [this]() {
         auto ev = ParseEvent::createEvent(m_move,
-                                          m_roomName,
-                                          m_dynamicRoomDesc,
-                                          m_staticRoomDesc,
+                                          normalizeString(m_roomName),
+                                          normalizeString(m_dynamicRoomDesc),
+                                          normalizeString(m_staticRoomDesc),
                                           m_exitsFlags,
                                           m_promptFlags,
                                           m_connectedRoomFlags);
@@ -508,7 +504,7 @@ void MumeXmlParser::move()
     }
 }
 
-void MumeXmlParser::parseMudCommands(QString &str)
+void MumeXmlParser::parseMudCommands(const QString &str)
 {
     if (str.at(0) == ('Y')) {
         if (str.startsWith("You are dead!")) {
