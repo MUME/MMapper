@@ -189,7 +189,7 @@ private:
     QToolBar *fileToolBar = nullptr;
     QToolBar *editToolBar = nullptr;
     QToolBar *mouseModeToolBar = nullptr;
-    QToolBar *mapModeToolBar = nullptr;
+    QToolBar *mapperModeToolBar = nullptr;
     QToolBar *viewToolBar = nullptr;
     QToolBar *pathMachineToolBar = nullptr;
     QToolBar *roomToolBar = nullptr;
@@ -199,6 +199,7 @@ private:
 
     QMenu *fileMenu = nullptr;
     QMenu *editMenu = nullptr;
+    QMenu *modeMenu = nullptr;
     QMenu *roomMenu = nullptr;
     QMenu *connectionMenu = nullptr;
     QMenu *viewMenu = nullptr;
@@ -209,9 +210,6 @@ private:
     QMenu *onlineTutorialsMenu = nullptr;
     QMenu *groupMenu = nullptr;
 
-    QAction *groupOffAct = nullptr;
-    QAction *groupClientAct = nullptr;
-    QAction *groupServerAct = nullptr;
     QAction *groupShowHideAct = nullptr;
     QAction *groupSettingsAct = nullptr;
 
@@ -246,24 +244,35 @@ private:
     QAction *layerUpAct = nullptr;
     QAction *layerDownAct = nullptr;
 
-    QAction *modeConnectionSelectAct = nullptr;
-    QAction *modeRoomSelectAct = nullptr;
-    QAction *modeMoveSelectAct = nullptr;
-    QAction *modeInfoMarkEditAct = nullptr;
+    struct MouseModeActions
+    {
+        QActionGroup *mouseModeActGroup = nullptr;
+        QAction *modeConnectionSelectAct = nullptr;
+        QAction *modeRoomSelectAct = nullptr;
+        QAction *modeMoveSelectAct = nullptr;
+        QAction *modeInfoMarkEditAct = nullptr;
+        QAction *modeCreateRoomAct = nullptr;
+        QAction *modeCreateConnectionAct = nullptr;
+        QAction *modeCreateOnewayConnectionAct = nullptr;
+    } mouseMode{};
 
-    QAction *modeCreateRoomAct = nullptr;
-    QAction *modeCreateConnectionAct = nullptr;
-    QAction *modeCreateOnewayConnectionAct = nullptr;
+    struct MapperModeActions
+    {
+        QActionGroup *mapModeActGroup = nullptr;
+        QAction *playModeAct = nullptr;
+        QAction *mapModeAct = nullptr;
+        QAction *offlineModeAct = nullptr;
+    } mapperMode{};
 
-    QAction *playModeAct = nullptr;
-    QAction *mapModeAct = nullptr;
-    QAction *offlineModeAct = nullptr;
+    QActionGroup *selectedRoomActGroup = nullptr;
+    QActionGroup *selectedConnectionActGroup = nullptr;
 
-    QActionGroup *mapModeActGroup = nullptr;
-    QActionGroup *modeActGroup = nullptr;
-    QActionGroup *roomActGroup = nullptr;
-    QActionGroup *connectionActGroup = nullptr;
-    QActionGroup *groupManagerGroup = nullptr;
+    struct GroupModeActions {
+        QActionGroup *groupManagerGroup = nullptr;
+        QAction *groupOffAct = nullptr;
+        QAction *groupClientAct = nullptr;
+        QAction *groupServerAct = nullptr;
+    } groupMode{};
 
     QAction *createRoomAct = nullptr;
     QAction *editRoomSelectionAct = nullptr;

@@ -391,7 +391,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
     }
 
     if (!m_mouseLeftPressed && m_mouseRightPressed) {
-        if (m_canvasMouseMode == CanvasMouseMode::MOVE || m_roomSelection == nullptr) {
+        if (m_canvasMouseMode == CanvasMouseMode::MOVE) {
             // Select the room under the cursor
             Coordinate c = Coordinate(GLtoMap(m_sel1.x), GLtoMap(m_sel1.y), m_sel1.layer);
             if (m_roomSelection != nullptr) {

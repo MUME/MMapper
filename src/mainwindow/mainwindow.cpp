@@ -215,15 +215,15 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
 
     switch (Config().general.mapMode) {
     case MapMode::PLAY:
-        playModeAct->setChecked(true);
+        mapperMode.playModeAct->setChecked(true);
         onPlayMode();
         break;
     case MapMode::MAP:
-        mapModeAct->setChecked(true);
+        mapperMode.mapModeAct->setChecked(true);
         onMapMode();
         break;
     case MapMode::OFFLINE:
-        offlineModeAct->setChecked(true);
+        mapperMode.offlineModeAct->setChecked(true);
         onOfflineMode();
         break;
     }
@@ -513,62 +513,62 @@ void MainWindow::createActions()
     layerDownAct->setStatusTip(tr("Layer Down"));
     connect(layerDownAct, &QAction::triggered, this, &MainWindow::onLayerDown);
 
-    modeConnectionSelectAct = new QAction(QIcon(":/icons/connectionselection.png"),
+    mouseMode.modeConnectionSelectAct = new QAction(QIcon(":/icons/connectionselection.png"),
                                           tr("Select Connection"),
                                           this);
-    modeConnectionSelectAct->setStatusTip(tr("Select Connection"));
-    modeConnectionSelectAct->setCheckable(true);
-    connect(modeConnectionSelectAct, &QAction::triggered, this, &MainWindow::onModeConnectionSelect);
-    modeRoomSelectAct = new QAction(QIcon(":/icons/roomselection.png"), tr("Select Rooms"), this);
-    modeRoomSelectAct->setStatusTip(tr("Select Rooms"));
-    modeRoomSelectAct->setCheckable(true);
-    connect(modeRoomSelectAct, &QAction::triggered, this, &MainWindow::onModeRoomSelect);
-    modeMoveSelectAct = new QAction(QIcon(":/icons/mapmove.png"), tr("Move map"), this);
-    modeMoveSelectAct->setStatusTip(tr("Move Map"));
-    modeMoveSelectAct->setCheckable(true);
-    connect(modeMoveSelectAct, &QAction::triggered, this, &MainWindow::onModeMoveSelect);
-    modeInfoMarkEditAct = new QAction(QIcon(":/icons/infomarksedit.png"),
+    mouseMode.modeConnectionSelectAct->setStatusTip(tr("Select Connection"));
+    mouseMode.modeConnectionSelectAct->setCheckable(true);
+    connect(mouseMode.modeConnectionSelectAct, &QAction::triggered, this, &MainWindow::onModeConnectionSelect);
+    mouseMode.modeRoomSelectAct = new QAction(QIcon(":/icons/roomselection.png"), tr("Select Rooms"), this);
+    mouseMode.modeRoomSelectAct->setStatusTip(tr("Select Rooms"));
+    mouseMode.modeRoomSelectAct->setCheckable(true);
+    connect(mouseMode.modeRoomSelectAct, &QAction::triggered, this, &MainWindow::onModeRoomSelect);
+    mouseMode.modeMoveSelectAct = new QAction(QIcon(":/icons/mapmove.png"), tr("Move map"), this);
+    mouseMode.modeMoveSelectAct->setStatusTip(tr("Move Map"));
+    mouseMode.modeMoveSelectAct->setCheckable(true);
+    connect(mouseMode.modeMoveSelectAct, &QAction::triggered, this, &MainWindow::onModeMoveSelect);
+    mouseMode.modeInfoMarkEditAct = new QAction(QIcon(":/icons/infomarksedit.png"),
                                       tr("Edit Info Marks"),
                                       this);
-    modeInfoMarkEditAct->setStatusTip(tr("Edit Info Marks"));
-    modeInfoMarkEditAct->setCheckable(true);
-    connect(modeInfoMarkEditAct, &QAction::triggered, this, &MainWindow::onModeInfoMarkEdit);
+    mouseMode.modeInfoMarkEditAct->setStatusTip(tr("Edit Info Marks"));
+    mouseMode.modeInfoMarkEditAct->setCheckable(true);
+    connect(mouseMode.modeInfoMarkEditAct, &QAction::triggered, this, &MainWindow::onModeInfoMarkEdit);
 
-    modeCreateRoomAct = new QAction(QIcon(":/icons/roomcreate.png"), tr("Create New Rooms"), this);
-    modeCreateRoomAct->setStatusTip(tr("Create New Rooms"));
-    modeCreateRoomAct->setCheckable(true);
-    connect(modeCreateRoomAct, &QAction::triggered, this, &MainWindow::onModeCreateRoomSelect);
+    mouseMode.modeCreateRoomAct = new QAction(QIcon(":/icons/roomcreate.png"), tr("Create New Rooms"), this);
+    mouseMode.modeCreateRoomAct->setStatusTip(tr("Create New Rooms"));
+    mouseMode.modeCreateRoomAct->setCheckable(true);
+    connect(mouseMode.modeCreateRoomAct, &QAction::triggered, this, &MainWindow::onModeCreateRoomSelect);
 
-    modeCreateConnectionAct = new QAction(QIcon(":/icons/connectioncreate.png"),
+    mouseMode.modeCreateConnectionAct = new QAction(QIcon(":/icons/connectioncreate.png"),
                                           tr("Create New Connection"),
                                           this);
-    modeCreateConnectionAct->setStatusTip(tr("Create New Connection"));
-    modeCreateConnectionAct->setCheckable(true);
-    connect(modeCreateConnectionAct,
+    mouseMode.modeCreateConnectionAct->setStatusTip(tr("Create New Connection"));
+    mouseMode.modeCreateConnectionAct->setCheckable(true);
+    connect(mouseMode.modeCreateConnectionAct,
             &QAction::triggered,
             this,
             &MainWindow::onModeCreateConnectionSelect);
 
-    modeCreateOnewayConnectionAct = new QAction(QIcon(":/icons/onewayconnectioncreate.png"),
+    mouseMode.modeCreateOnewayConnectionAct = new QAction(QIcon(":/icons/onewayconnectioncreate.png"),
                                                 tr("Create New Oneway Connection"),
                                                 this);
-    modeCreateOnewayConnectionAct->setStatusTip(tr("Create New Oneway Connection"));
-    modeCreateOnewayConnectionAct->setCheckable(true);
-    connect(modeCreateOnewayConnectionAct,
+    mouseMode.modeCreateOnewayConnectionAct->setStatusTip(tr("Create New Oneway Connection"));
+    mouseMode.modeCreateOnewayConnectionAct->setCheckable(true);
+    connect(mouseMode.modeCreateOnewayConnectionAct,
             &QAction::triggered,
             this,
             &MainWindow::onModeCreateOnewayConnectionSelect);
 
-    modeActGroup = new QActionGroup(this);
-    modeActGroup->setExclusive(true);
-    modeActGroup->addAction(modeMoveSelectAct);
-    modeActGroup->addAction(modeRoomSelectAct);
-    modeActGroup->addAction(modeConnectionSelectAct);
-    modeActGroup->addAction(modeCreateRoomAct);
-    modeActGroup->addAction(modeCreateConnectionAct);
-    modeActGroup->addAction(modeCreateOnewayConnectionAct);
-    modeActGroup->addAction(modeInfoMarkEditAct);
-    modeMoveSelectAct->setChecked(true);
+    mouseMode.mouseModeActGroup = new QActionGroup(this);
+    mouseMode.mouseModeActGroup->setExclusive(true);
+    mouseMode.mouseModeActGroup->addAction(mouseMode.modeMoveSelectAct);
+    mouseMode.mouseModeActGroup->addAction(mouseMode.modeRoomSelectAct);
+    mouseMode.mouseModeActGroup->addAction(mouseMode.modeConnectionSelectAct);
+    mouseMode.mouseModeActGroup->addAction(mouseMode.modeCreateRoomAct);
+    mouseMode.mouseModeActGroup->addAction(mouseMode.modeCreateConnectionAct);
+    mouseMode.mouseModeActGroup->addAction(mouseMode.modeCreateOnewayConnectionAct);
+    mouseMode.mouseModeActGroup->addAction(mouseMode.modeInfoMarkEditAct);
+    mouseMode.modeMoveSelectAct->setChecked(true);
 
     createRoomAct = new QAction(QIcon(":/icons/roomcreate.png"), tr("Create New Room"), this);
     createRoomAct->setStatusTip(tr("Create a new room under the cursor"));
@@ -647,16 +647,16 @@ void MainWindow::createActions()
             m_mapWindow->getCanvas(),
             &MapCanvas::forceMapperToRoom);
 
-    roomActGroup = new QActionGroup(this);
-    roomActGroup->setExclusive(false);
-    roomActGroup->addAction(editRoomSelectionAct);
-    roomActGroup->addAction(deleteRoomSelectionAct);
-    roomActGroup->addAction(moveUpRoomSelectionAct);
-    roomActGroup->addAction(moveDownRoomSelectionAct);
-    roomActGroup->addAction(mergeUpRoomSelectionAct);
-    roomActGroup->addAction(mergeDownRoomSelectionAct);
-    roomActGroup->addAction(connectToNeighboursRoomSelectionAct);
-    roomActGroup->setEnabled(false);
+    selectedRoomActGroup = new QActionGroup(this);
+    selectedRoomActGroup->setExclusive(false);
+    selectedRoomActGroup->addAction(editRoomSelectionAct);
+    selectedRoomActGroup->addAction(deleteRoomSelectionAct);
+    selectedRoomActGroup->addAction(moveUpRoomSelectionAct);
+    selectedRoomActGroup->addAction(moveDownRoomSelectionAct);
+    selectedRoomActGroup->addAction(mergeUpRoomSelectionAct);
+    selectedRoomActGroup->addAction(mergeDownRoomSelectionAct);
+    selectedRoomActGroup->addAction(connectToNeighboursRoomSelectionAct);
+    selectedRoomActGroup->setEnabled(false);
 
     //editConnectionSelectionAct = new QAction(QIcon(":/icons/connectionedit.png"), tr("Edit Selected Connection"), this);
     //editConnectionSelectionAct->setStatusTip(tr("Edit Selected Connection"));
@@ -671,36 +671,36 @@ void MainWindow::createActions()
             this,
             &MainWindow::onDeleteConnectionSelection);
 
-    connectionActGroup = new QActionGroup(this);
-    connectionActGroup->setExclusive(false);
+    selectedConnectionActGroup = new QActionGroup(this);
+    selectedConnectionActGroup->setExclusive(false);
     //connectionActGroup->addAction(editConnectionSelectionAct);
-    connectionActGroup->addAction(deleteConnectionSelectionAct);
-    connectionActGroup->setEnabled(false);
+    selectedConnectionActGroup->addAction(deleteConnectionSelectionAct);
+    selectedConnectionActGroup->setEnabled(false);
 
-    playModeAct = new QAction(QIcon(":/icons/online.png"), tr("Switch to play mode"), this);
-    playModeAct->setStatusTip(tr("Switch to play mode - no new rooms are created"));
-    playModeAct->setCheckable(true);
-    connect(playModeAct, &QAction::triggered, this, &MainWindow::onPlayMode);
+    mapperMode.playModeAct = new QAction(QIcon(":/icons/online.png"), tr("Switch to play mode"), this);
+    mapperMode.playModeAct->setStatusTip(tr("Switch to play mode - no new rooms are created"));
+    mapperMode.playModeAct->setCheckable(true);
+    connect(mapperMode.playModeAct, &QAction::triggered, this, &MainWindow::onPlayMode);
 
-    mapModeAct = new QAction(QIcon(":/icons/map.png"), tr("Switch to mapping mode"), this);
-    mapModeAct->setStatusTip(tr("Switch to mapping mode - new rooms are created when moving"));
-    mapModeAct->setCheckable(true);
-    connect(mapModeAct, &QAction::triggered, this, &MainWindow::onMapMode);
+    mapperMode.mapModeAct = new QAction(QIcon(":/icons/map.png"), tr("Switch to mapping mode"), this);
+    mapperMode.mapModeAct->setStatusTip(tr("Switch to mapping mode - new rooms are created when moving"));
+    mapperMode.mapModeAct->setCheckable(true);
+    connect(mapperMode.mapModeAct, &QAction::triggered, this, &MainWindow::onMapMode);
 
-    offlineModeAct = new QAction(QIcon(":/icons/play.png"),
+    mapperMode.offlineModeAct = new QAction(QIcon(":/icons/play.png"),
                                  tr("Switch to offline emulation mode"),
                                  this);
-    offlineModeAct->setStatusTip(
+    mapperMode.offlineModeAct->setStatusTip(
         tr("Switch to offline emulation mode - you can learn areas offline"));
-    offlineModeAct->setCheckable(true);
-    connect(offlineModeAct, &QAction::triggered, this, &MainWindow::onOfflineMode);
+    mapperMode.offlineModeAct->setCheckable(true);
+    connect(mapperMode.offlineModeAct, &QAction::triggered, this, &MainWindow::onOfflineMode);
 
-    mapModeActGroup = new QActionGroup(this);
-    mapModeActGroup->setExclusive(true);
-    mapModeActGroup->addAction(playModeAct);
-    mapModeActGroup->addAction(mapModeAct);
-    mapModeActGroup->addAction(offlineModeAct);
-    mapModeActGroup->setEnabled(true);
+    mapperMode.mapModeActGroup = new QActionGroup(this);
+    mapperMode.mapModeActGroup->setExclusive(true);
+    mapperMode.mapModeActGroup->addAction(mapperMode.playModeAct);
+    mapperMode.mapModeActGroup->addAction(mapperMode.mapModeAct);
+    mapperMode.mapModeActGroup->addAction(mapperMode.offlineModeAct);
+    mapperMode.mapModeActGroup->setEnabled(true);
 
     //cutAct->setEnabled(false);
     //copyAct->setEnabled(false);
@@ -710,36 +710,36 @@ void MainWindow::createActions()
     connect(m_findRoomsDlg, &FindRoomsDlg::log, this, &MainWindow::log);
 
     // group Manager
-    groupOffAct = new QAction(QIcon(":/icons/groupoff.png"), tr("&Off"), this);
-    groupOffAct->setShortcut(tr("Ctrl+G"));
-    groupOffAct->setCheckable(true);
-    connect(groupOffAct, &QAction::triggered, this, &MainWindow::groupOff, Qt::QueuedConnection);
+    groupMode.groupOffAct = new QAction(QIcon(":/icons/groupoff.png"), tr("&Off"), this);
+    groupMode.groupOffAct->setShortcut(tr("Ctrl+G"));
+    groupMode.groupOffAct->setCheckable(true);
+    connect(groupMode.groupOffAct, &QAction::triggered, this, &MainWindow::groupOff, Qt::QueuedConnection);
 
-    groupClientAct = new QAction(QIcon(":/icons/groupclient.png"),
+    groupMode.groupClientAct = new QAction(QIcon(":/icons/groupclient.png"),
                                  tr("&Connect to a friend's map"),
                                  this);
-    groupClientAct->setCheckable(true);
-    connect(groupClientAct,
+    groupMode.groupClientAct->setCheckable(true);
+    connect(groupMode.groupClientAct,
             &QAction::triggered,
             this,
             &MainWindow::groupClient,
             Qt::QueuedConnection);
 
-    groupServerAct = new QAction(QIcon(":/icons/groupserver.png"),
+    groupMode.groupServerAct = new QAction(QIcon(":/icons/groupserver.png"),
                                  tr("&Host your map with friends"),
                                  this);
-    groupServerAct->setCheckable(true);
-    connect(groupServerAct,
+    groupMode.groupServerAct->setCheckable(true);
+    connect(groupMode.groupServerAct,
             &QAction::triggered,
             this,
             &MainWindow::groupServer,
             Qt::QueuedConnection);
 
-    groupManagerGroup = new QActionGroup(this);
-    groupManagerGroup->setExclusive(true);
-    groupManagerGroup->addAction(groupOffAct);
-    groupManagerGroup->addAction(groupClientAct);
-    groupManagerGroup->addAction(groupServerAct);
+    groupMode.groupManagerGroup = new QActionGroup(this);
+    groupMode.groupManagerGroup->setExclusive(true);
+    groupMode.groupManagerGroup->addAction(groupMode.groupOffAct);
+    groupMode.groupManagerGroup->addAction(groupMode.groupClientAct);
+    groupMode.groupManagerGroup->addAction(groupMode.groupServerAct);
     groupManagerOff();
 }
 
@@ -751,6 +751,7 @@ void MainWindow::onPlayMode()
                m_mapData,
                &MapData::scheduleAction);
     Config().general.mapMode = MapMode::PLAY;
+    modeMenu->setIcon(mapperMode.playModeAct->icon());
 }
 
 void MainWindow::onMapMode()
@@ -762,6 +763,7 @@ void MainWindow::onMapMode()
             m_mapData,
             &MapData::scheduleAction);
     Config().general.mapMode = MapMode::MAP;
+    modeMenu->setIcon(mapperMode.mapModeAct->icon());
 }
 
 void MainWindow::onOfflineMode()
@@ -773,6 +775,7 @@ void MainWindow::onOfflineMode()
                m_mapData,
                &MapData::scheduleAction);
     Config().general.mapMode = MapMode::OFFLINE;
+    modeMenu->setIcon(mapperMode.offlineModeAct->icon());
 }
 
 void MainWindow::disableActions(bool value)
@@ -795,17 +798,17 @@ void MainWindow::disableActions(bool value)
     //    prevWindowAct->setDisabled(value);
     zoomInAct->setDisabled(value);
     zoomOutAct->setDisabled(value);
-    playModeAct->setDisabled(value);
-    mapModeAct->setDisabled(value);
-    modeRoomSelectAct->setDisabled(value);
-    modeConnectionSelectAct->setDisabled(value);
-    modeMoveSelectAct->setDisabled(value);
-    modeInfoMarkEditAct->setDisabled(value);
+    mapperMode.playModeAct->setDisabled(value);
+    mapperMode.mapModeAct->setDisabled(value);
+    mouseMode.modeRoomSelectAct->setDisabled(value);
+    mouseMode.modeConnectionSelectAct->setDisabled(value);
+    mouseMode.modeMoveSelectAct->setDisabled(value);
+    mouseMode.modeInfoMarkEditAct->setDisabled(value);
     layerUpAct->setDisabled(value);
     layerDownAct->setDisabled(value);
-    modeCreateRoomAct->setDisabled(value);
-    modeCreateConnectionAct->setDisabled(value);
-    modeCreateOnewayConnectionAct->setDisabled(value);
+    mouseMode.modeCreateRoomAct->setDisabled(value);
+    mouseMode.modeCreateConnectionAct->setDisabled(value);
+    mouseMode.modeCreateOnewayConnectionAct->setDisabled(value);
     releaseAllPathsAct->setDisabled(value);
     alwaysOnTopAct->setDisabled(value);
 }
@@ -829,18 +832,18 @@ void MainWindow::setupMenuBar()
     //editMenu->addAction(cutAct);
     //editMenu->addAction(copyAct);
     //editMenu->addAction(pasteAct);
-    QMenu *modeMenu = editMenu->addMenu(QIcon(":/icons/online.png"), tr("&Mode"));
-    modeMenu->addAction(playModeAct);
-    modeMenu->addAction(mapModeAct);
-    modeMenu->addAction(offlineModeAct);
+    modeMenu = editMenu->addMenu(QIcon(":/icons/online.png"), tr("&Mode"));
+    modeMenu->addAction(mapperMode.playModeAct);
+    modeMenu->addAction(mapperMode.mapModeAct);
+    modeMenu->addAction(mapperMode.offlineModeAct);
     editMenu->addSeparator();
 
-    editMenu->addAction(modeInfoMarkEditAct);
+    editMenu->addAction(mouseMode.modeInfoMarkEditAct);
 
     roomMenu = editMenu->addMenu(QIcon(":/icons/roomselection.png"), tr("&Rooms"));
-    roomMenu->addAction(modeRoomSelectAct);
+    roomMenu->addAction(mouseMode.modeRoomSelectAct);
     roomMenu->addSeparator();
-    roomMenu->addAction(modeCreateRoomAct);
+    roomMenu->addAction(mouseMode.modeCreateRoomAct);
     roomMenu->addAction(editRoomSelectionAct);
     roomMenu->addAction(deleteRoomSelectionAct);
     roomMenu->addAction(moveUpRoomSelectionAct);
@@ -850,10 +853,10 @@ void MainWindow::setupMenuBar()
     roomMenu->addAction(connectToNeighboursRoomSelectionAct);
 
     connectionMenu = editMenu->addMenu(QIcon(":/icons/connectionselection.png"), tr("&Connections"));
-    connectionMenu->addAction(modeConnectionSelectAct);
+    connectionMenu->addAction(mouseMode.modeConnectionSelectAct);
     connectionMenu->addSeparator();
-    connectionMenu->addAction(modeCreateConnectionAct);
-    connectionMenu->addAction(modeCreateOnewayConnectionAct);
+    connectionMenu->addAction(mouseMode.modeCreateConnectionAct);
+    connectionMenu->addAction(mouseMode.modeCreateOnewayConnectionAct);
     //connectionMenu->addAction(editConnectionSelectionAct);
     connectionMenu->addAction(deleteConnectionSelectionAct);
 
@@ -865,11 +868,11 @@ void MainWindow::setupMenuBar()
     //editMenu->addAction(createConnectionAct);
 
     viewMenu = menuBar()->addMenu(tr("&View"));
-    viewMenu->addAction(modeMoveSelectAct);
+    viewMenu->addAction(mouseMode.modeMoveSelectAct);
     QMenu *toolbars = viewMenu->addMenu(tr("&Toolbars"));
     toolbars->addAction(fileToolBar->toggleViewAction());
     //toolbars->addAction(editToolBar->toggleViewAction());
-    toolbars->addAction(mapModeToolBar->toggleViewAction());
+    toolbars->addAction(mapperModeToolBar->toggleViewAction());
     toolbars->addAction(mouseModeToolBar->toggleViewAction());
     toolbars->addAction(viewToolBar->toggleViewAction());
     toolbars->addAction(pathMachineToolBar->toggleViewAction());
@@ -893,11 +896,11 @@ void MainWindow::setupMenuBar()
     settingsMenu = menuBar()->addMenu(tr("&Tools"));
     settingsMenu->addAction(clientAct);
     groupMenu = settingsMenu->addMenu(QIcon(":/icons/groupclient.png"), tr("&Group Manager"));
-    groupMenu->addAction(groupOffAct);
-    groupMenu->addAction(groupClientAct);
-    groupMenu->addAction(groupServerAct);
+    groupMenu->addAction(groupMode.groupOffAct);
+    groupMenu->addAction(groupMode.groupClientAct);
+    groupMenu->addAction(groupMode.groupServerAct);
     QMenu *pathMachineMenu = settingsMenu->addMenu(QIcon(":/icons/force.png"), tr("&Path Machine"));
-    pathMachineMenu->addAction(modeRoomSelectAct);
+    pathMachineMenu->addAction(mouseMode.modeRoomSelectAct);
     pathMachineMenu->addSeparator();
     pathMachineMenu->addAction(forceRoomAct);
     pathMachineMenu->addAction(releaseAllPathsAct);
@@ -928,7 +931,9 @@ void MainWindow::setupMenuBar()
 void MainWindow::showContextMenu(const QPoint &pos)
 {
     QMenu contextMenu(tr("Context menu"), this);
-    if (m_roomSelection != nullptr) {
+    if (m_connectionSelection != nullptr) {
+        contextMenu.addAction(deleteConnectionSelectionAct);
+    } else if (m_roomSelection != nullptr) {
         contextMenu.addAction(editRoomSelectionAct);
         contextMenu.addAction(moveUpRoomSelectionAct);
         contextMenu.addAction(moveDownRoomSelectionAct);
@@ -938,20 +943,18 @@ void MainWindow::showContextMenu(const QPoint &pos)
         contextMenu.addAction(connectToNeighboursRoomSelectionAct);
         contextMenu.addSeparator();
         contextMenu.addAction(forceRoomAct);
-    } else if (m_connectionSelection == nullptr) {
-        contextMenu.addAction(createRoomAct);
-    } else if (m_connectionSelection != nullptr) {
-        contextMenu.addAction(deleteConnectionSelectionAct);
+    } else if (m_connectionSelection == nullptr && m_roomSelection == nullptr) {
+           contextMenu.addAction(createRoomAct);
     }
     contextMenu.addSeparator();
     QMenu *mouseMenu = contextMenu.addMenu(QIcon::fromTheme("input-mouse"), "Mouse Mode");
-    mouseMenu->addAction(modeMoveSelectAct);
-    mouseMenu->addAction(modeRoomSelectAct);
-    mouseMenu->addAction(modeConnectionSelectAct);
-    mouseMenu->addAction(modeCreateRoomAct);
-    mouseMenu->addAction(modeCreateConnectionAct);
-    mouseMenu->addAction(modeCreateOnewayConnectionAct);
-    mouseMenu->addAction(modeInfoMarkEditAct);
+    mouseMenu->addAction(mouseMode.modeMoveSelectAct);
+    mouseMenu->addAction(mouseMode.modeRoomSelectAct);
+    mouseMenu->addAction(mouseMode.modeConnectionSelectAct);
+    mouseMenu->addAction(mouseMode.modeCreateRoomAct);
+    mouseMenu->addAction(mouseMode.modeCreateConnectionAct);
+    mouseMenu->addAction(mouseMode.modeCreateOnewayConnectionAct);
+    mouseMenu->addAction(mouseMode.modeInfoMarkEditAct);
 
     contextMenu.exec(m_mapWindow->getCanvas()->mapToGlobal(pos));
 }
@@ -979,29 +982,29 @@ void MainWindow::setupToolBars()
         editToolBar->addAction(pasteAct);
     */
 
-    mapModeToolBar = addToolBar(tr("Map Mode"));
-    mapModeToolBar->setObjectName("MapModeToolBar");
-    mapModeToolBar->addAction(playModeAct);
-    mapModeToolBar->addAction(mapModeAct);
-    mapModeToolBar->addAction(offlineModeAct);
-    mapModeToolBar->hide();
+    mapperModeToolBar = addToolBar(tr("Mapper Mode"));
+    mapperModeToolBar->setObjectName("MapperModeToolBar");
+    mapperModeToolBar->addAction(mapperMode.playModeAct);
+    mapperModeToolBar->addAction(mapperMode.mapModeAct);
+    mapperModeToolBar->addAction(mapperMode.offlineModeAct);
+    mapperModeToolBar->hide();
 
     mouseModeToolBar = addToolBar(tr("Mouse Mode"));
     mouseModeToolBar->setObjectName("ModeToolBar");
-    mouseModeToolBar->addAction(modeMoveSelectAct);
-    mouseModeToolBar->addAction(modeRoomSelectAct);
-    mouseModeToolBar->addAction(modeConnectionSelectAct);
-    mouseModeToolBar->addAction(modeCreateRoomAct);
-    mouseModeToolBar->addAction(modeCreateConnectionAct);
-    mouseModeToolBar->addAction(modeCreateOnewayConnectionAct);
-    mouseModeToolBar->addAction(modeInfoMarkEditAct);
+    mouseModeToolBar->addAction(mouseMode.modeMoveSelectAct);
+    mouseModeToolBar->addAction(mouseMode.modeRoomSelectAct);
+    mouseModeToolBar->addAction(mouseMode.modeConnectionSelectAct);
+    mouseModeToolBar->addAction(mouseMode.modeCreateRoomAct);
+    mouseModeToolBar->addAction(mouseMode.modeCreateConnectionAct);
+    mouseModeToolBar->addAction(mouseMode.modeCreateOnewayConnectionAct);
+    mouseModeToolBar->addAction(mouseMode.modeInfoMarkEditAct);
     mouseModeToolBar->hide();
 
     groupToolBar = addToolBar(tr("Group Manager"));
     groupToolBar->setObjectName("GroupManagerToolBar");
-    groupToolBar->addAction(groupOffAct);
-    groupToolBar->addAction(groupClientAct);
-    groupToolBar->addAction(groupServerAct);
+    groupToolBar->addAction(groupMode.groupOffAct);
+    groupToolBar->addAction(groupMode.groupClientAct);
+    groupToolBar->addAction(groupMode.groupServerAct);
     groupToolBar->hide();
 
     viewToolBar = addToolBar(tr("View"));
@@ -1060,19 +1063,19 @@ void MainWindow::newRoomSelection(const RoomSelection *rs)
     forceRoomAct->setEnabled(false);
     m_roomSelection = rs;
     if (m_roomSelection != nullptr) {
-        roomActGroup->setEnabled(true);
+        selectedRoomActGroup->setEnabled(true);
         if (m_roomSelection->size() == 1) {
             forceRoomAct->setEnabled(true);
         }
     } else {
-        roomActGroup->setEnabled(false);
+        selectedRoomActGroup->setEnabled(false);
     }
 }
 
 void MainWindow::newConnectionSelection(ConnectionSelection *cs)
 {
     m_connectionSelection = cs;
-    connectionActGroup->setEnabled(m_connectionSelection != nullptr);
+    selectedConnectionActGroup->setEnabled(m_connectionSelection != nullptr);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -1478,7 +1481,7 @@ void MainWindow::onLaunchClient()
 
 void MainWindow::groupManagerOff()
 {
-    groupOffAct->setChecked(true);
+    groupMode.groupOffAct->setChecked(true);
     m_dockDialogGroup->hide();
     m_groupWidget->hide();
 }
@@ -1486,16 +1489,15 @@ void MainWindow::groupManagerOff()
 void MainWindow::groupOff()
 {
     groupManagerOff();
-    if (m_groupManager->getType() != GroupManagerState::Off && groupOffAct->isChecked()) {
+    if (m_groupManager->getType() != GroupManagerState::Off && groupMode.groupOffAct->isChecked()) {
         emit setGroupManagerType(GroupManagerState::Off);
     }
 }
 
 void MainWindow::groupClient()
 {
-    if (m_groupManager->getType() != GroupManagerState::Client && groupClientAct->isChecked()) {
+    if (m_groupManager->getType() != GroupManagerState::Client && groupMode.groupClientAct->isChecked()) {
         emit setGroupManagerType(GroupManagerState::Client);
-        groupClientAct->setChecked(true);
         m_dockDialogGroup->show();
         m_groupWidget->show();
     }
@@ -1503,9 +1505,8 @@ void MainWindow::groupClient()
 
 void MainWindow::groupServer()
 {
-    if (m_groupManager->getType() != GroupManagerState::Server && groupServerAct->isChecked()) {
+    if (m_groupManager->getType() != GroupManagerState::Server && groupMode.groupServerAct->isChecked()) {
         emit setGroupManagerType(GroupManagerState::Server);
-        groupServerAct->setChecked(true);
         m_dockDialogGroup->show();
         m_groupWidget->show();
     }
