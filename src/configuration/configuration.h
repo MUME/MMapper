@@ -99,6 +99,7 @@ public:
         bool alwaysOnTop = false;
         MapMode mapMode = MapMode::PLAY;
         bool noSplash = false;
+        bool noLaunchPanel = false;
 
     private:
         friend class Configuration;

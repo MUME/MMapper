@@ -116,10 +116,10 @@ ConstString GRP_ROOMEDITATTRDLG = "RoomEditAttrDlg";
 ConstString KEY_ABSOLUTE_PATH_ACCEPTANCE = "absolute path acceptance";
 ConstString KEY_ALWAYS_ON_TOP = "Always On Top";
 ConstString KEY_AUTO_LOAD = "Auto load";
+ConstString KEY_AUTO_RESIZE_TERMINAL = "Auto resize terminal";
 ConstString KEY_BACKGROUND_COLOR = "Background color";
 ConstString KEY_CHARACTER_NAME = "character name";
 ConstString KEY_CLEAR_INPUT_ON_ENTER = "Clear input on enter";
-ConstString KEY_AUTO_RESIZE_TERMINAL = "Auto resize terminal";
 ConstString KEY_COLOR = "color";
 ConstString KEY_COLUMNS = "Columns";
 ConstString KEY_CORRECT_POSITION_BONUS = "correct position bonus";
@@ -149,6 +149,7 @@ ConstString KEY_MUME_CHARSET_IS_UTF_8 = "MUME charset is UTF-8";
 ConstString KEY_MUME_START_EPOCH = "Mume start epoch";
 ConstString KEY_NO_ROOM_DESCRIPTION_PATTERNS = "No room description patterns";
 ConstString KEY_NO_SPLASH = "No splash screen";
+ConstString KEY_NO_LAUNCH_PANEL = "No launch panel";
 ConstString KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES = "Number of anti-aliasing samples";
 ConstString KEY_PASSWORD_PATTERN = "Password pattern";
 ConstString KEY_POS = "pos";
@@ -330,6 +331,7 @@ void Configuration::GeneralSettings::read(QSettings &conf)
     alwaysOnTop = conf.value(KEY_ALWAYS_ON_TOP, false).toBool();
     mapMode = sanitizeMapMode(conf.value(KEY_MAP_MODE, static_cast<uint>(MapMode::PLAY)).toUInt());
     noSplash = conf.value(KEY_NO_SPLASH, false).toBool();
+    noLaunchPanel = conf.value(KEY_NO_LAUNCH_PANEL, false).toBool();
 }
 
 void Configuration::ConnectionSettings::read(QSettings &conf)
@@ -478,6 +480,7 @@ void Configuration::GeneralSettings::write(QSettings &conf) const
     conf.setValue(KEY_ALWAYS_ON_TOP, alwaysOnTop);
     conf.setValue(KEY_MAP_MODE, static_cast<uint>(mapMode));
     conf.setValue(KEY_NO_SPLASH, noSplash);
+    conf.setValue(KEY_NO_LAUNCH_PANEL, noLaunchPanel);
 }
 
 void Configuration::ConnectionSettings::write(QSettings &conf) const

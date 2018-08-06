@@ -211,7 +211,12 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     //update connections
     wireConnections();
     readSettings();
-    m_dockWelcome->show();
+    if (Config().general.noLaunchPanel) {
+        m_welcomeWidget->hide();
+        m_dockWelcome->hide();
+    } else {
+        m_dockWelcome->show();
+    }
 
     switch (Config().general.mapMode) {
     case MapMode::PLAY:
