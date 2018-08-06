@@ -206,7 +206,7 @@ protected slots:
 
 private:
     void sendToUserAndClear(QByteArray &);
-    void onReadInternal(const QByteArray&);
+    void onReadInternal(const QByteArray &);
     void onReadInternal2(QByteArray &, uint8_t);
 
 protected:
