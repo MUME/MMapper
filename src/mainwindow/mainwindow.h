@@ -267,7 +267,8 @@ private:
     QActionGroup *selectedRoomActGroup = nullptr;
     QActionGroup *selectedConnectionActGroup = nullptr;
 
-    struct GroupModeActions {
+    struct GroupModeActions
+    {
         QActionGroup *groupManagerGroup = nullptr;
         QAction *groupOffAct = nullptr;
         QAction *groupClientAct = nullptr;

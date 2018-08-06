@@ -205,7 +205,7 @@ protected:
     void parseExits();
     void parsePrompt(const QString &prompt);
     virtual bool parseUserCommands(const QString &command);
-    QString& normalizeString(QString &str);
+    QString &normalizeString(QString &str);
 
     void searchCommand(const RoomFilter &f);
     void dirsCommand(const RoomFilter &f);
