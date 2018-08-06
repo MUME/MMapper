@@ -73,13 +73,10 @@ protected:
     static const QByteArray ampersand;
     static const QByteArray ampersandTemplate;
 
-    void parseMudCommands(QString &str);
+    void parseMudCommands(const QString &str);
 
     QByteArray characters(QByteArray &ch);
     bool element(const QByteArray &);
-
-    quint32 m_roomDescLines = 0u;
-    bool m_readingStaticDescLines = false;
 
     CommandIdType m_move = CommandIdType::LOOK;
     XmlMode m_xmlMode = XmlMode::NONE;

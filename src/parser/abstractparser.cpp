@@ -74,6 +74,7 @@
 #include "DoorAction.h"
 #include "ExitsFlags.h"
 #include "PromptFlags.h"
+#include "parserutils.h"
 
 class RoomAdmin;
 
@@ -288,8 +289,10 @@ void AbstractParser::parsePrompt(const QString &prompt)
     m_promptFlags.setValid();
 }
 
-void AbstractParser::parseExits(const QString &str)
+void AbstractParser::parseExits()
 {
+    QString str = m_exits;
+    normalizeString(str);
     m_connectedRoomFlags.reset();
     m_exitsFlags.reset();
     ExitsFlagsType closedDoorFlag{};
@@ -303,7 +306,7 @@ void AbstractParser::parseExits(const QString &str)
 
     if (str.length() > 5 && str.at(5).toLatin1() != ':') {
         // Ainur exits
-        sendToUser(str.toLatin1() + "\r\n");
+        sendToUser(m_exits);
         return;
     }
     int length = str.length();
@@ -440,7 +443,7 @@ void AbstractParser::parseExits(const QString &str)
     const RoomSelection *rs = m_mapData->select();
     const Room *room = m_mapData->getRoom(getPosition(), rs);
     QByteArray cn = enhanceExits(room);
-    sendToUser(str.toLatin1() + cn);
+    sendToUser(m_exits.toLatin1().simplified() + cn);
 
     if (Config().mumeNative.showNotes) {
         QString ns = room->getNote();
@@ -451,6 +454,13 @@ void AbstractParser::parseExits(const QString &str)
     }
 
     m_mapData->unselect(rs);
+}
+
+
+QString& AbstractParser::normalizeString(QString& string) {
+    ParserUtils::latinToAscii(string);
+    ParserUtils::removeAnsiMarks(string);
+    return string;
 }
 
 const Coordinate AbstractParser::getPosition()
@@ -603,10 +613,10 @@ void AbstractParser::parseNewUserInput(IncomingData &data)
 {
     auto parse_and_send = [this, &data]() {
         auto parse = [this, &data]() -> bool {
-            m_stringBuffer = QString::fromLatin1(data.line.constData(), data.line.size());
-            m_stringBuffer = m_stringBuffer.simplified();
+            // REVISIT: Should we also parse user input as UTF-8?
+            const QString input = QString::fromLatin1(data.line.constData(), data.line.size()).simplified();
             try {
-                return parseUserCommands(m_stringBuffer);
+                return parseUserCommands(input);
             } catch (const std::exception &ex) {
                 qWarning() << "Exception: " << ex.what();
                 sendToUser(QString::asprintf("An exception occurred: %s\r\n", ex.what()));
