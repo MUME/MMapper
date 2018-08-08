@@ -414,7 +414,7 @@ if(UNIX AND NOT APPLE)
 
     install(
         FILES resources/icons/m.png
-        DESTINATION share/icons/hicolor/128x128/apps/
+        DESTINATION share/icons/hicolor/256x256/apps/
         COMPONENT desktopintegration
         RENAME mmapper.png
     )
@@ -430,7 +430,7 @@ if(UNIX AND NOT APPLE)
         set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, zlib1g")
     endif()
     if(WITH_OPENSSL)
-        set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libssl1.1")
+        set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libssl1.0.0")
     endif()
 
     set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_FILE_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
