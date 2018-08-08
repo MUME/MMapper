@@ -16,6 +16,7 @@ confinement: strict
 apps:
   mmapper-desktop:
     command: desktop-launch mmapper
+    aliases: [mmapper]
     desktop: usr/share/applications/mmapper.desktop
     plugs:
       - home
@@ -45,6 +46,6 @@ parts:
       - libqt5xml5
     override-build: |
       snapcraftctl build
-      sed -i 's|Icon=mmapper|Icon=${SNAP}/usr/share/icons/hicolor/128x128/apps/mmapper.png|g' $SNAPCRAFT_PART_INSTALL/usr/share/applications/mmapper.desktop
+      sed -i 's|Icon=mmapper|Icon=${SNAP}/usr/share/icons/hicolor/256x256/apps/mmapper.png|g' $SNAPCRAFT_PART_INSTALL/usr/share/applications/mmapper.desktop
     after:
       - desktop-qt5
