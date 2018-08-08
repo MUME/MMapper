@@ -27,11 +27,11 @@
 #include <cerrno>
 #include <cstring>
 
-#ifndef WIN32
+#ifndef Q_OS_WIN
 #include <unistd.h>
 #endif
 
-#ifdef __APPLE__
+#ifdef Q_OS_MAC
 #include <fcntl.h>
 #endif
 
@@ -40,7 +40,7 @@ namespace io {
 ErrorNumberMessage::ErrorNumberMessage(const int error_number) noexcept
     : error_number{error_number}
 {
-#ifdef WIN32
+#ifdef Q_OS_WIN
     /* nop */
 #elif defined(_GNU_SOURCE)
     /* GNU/Linux version can return a pointer to a static string */
@@ -70,9 +70,9 @@ IOException IOException::withCurrentErrno()
 bool fsync(QFile &file) noexcept(false)
 {
     const int handle = file.handle();
-#ifdef WIN32
+#ifdef Q_OS_WIN
     return false;
-#elif defined(__APPLE__)
+#elif defined(Q_OS_MAC)
     if (::fcntl(handle, F_FULLFSYNC) == -1) {
         throw IOException::withCurrentErrno();
     }

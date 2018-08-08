@@ -1,5 +1,5 @@
 ================================
-MMapper 2.5.1 (Launch TBD)
+MMapper 2.5.1 (August 7, 2018)
 ================================
 
 Changes:
@@ -7,6 +7,7 @@ Changes:
  - Integrated client supports automatic character set negotiation (RFC 2066)
  - Fixed bug that caused unnecessary NO_MATCH exits to be applied to maps
  - Squished bug that prevented auto-mapping sundeath for rooms to the west of the player
+ - Exits now preserve their color from MUME
 
 ================================
 MMapper 2.5.0 (May 13, 2018)

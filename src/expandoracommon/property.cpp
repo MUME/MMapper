@@ -32,7 +32,7 @@ const char *Property::rest() const
     if (m_skipped) {
         throw std::runtime_error("can't get a string from a SKIPPED property");
     }
-    if (pos >= static_cast<uint>(size())) {
+    if (pos >= static_cast<uint32_t>(size())) {
         return "";
     }
     return this->c_str() + pos;
