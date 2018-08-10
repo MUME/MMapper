@@ -412,7 +412,7 @@ void Mmapper2Group::setType(GroupManagerState newState)
     if (network != nullptr) {
         network->disconnect();
         network->deleteLater();
-        network.reset(nullptr);
+        network.release(); // There might still be signals left to be processed
     }
     switch (newState) {
     case GroupManagerState::Server:
