@@ -27,8 +27,8 @@
 
 #include <QByteArray>
 #include <QHostAddress>
-#include <QList>
 #include <QString>
+#include <QList>
 
 #include "CGroupClient.h"
 
@@ -37,9 +37,9 @@ CGroupServer::CGroupServer(QObject *parent)
 {
     connect(this, SIGNAL(sendLog(const QString &)), parent, SLOT(relayLog(const QString &)));
     connect(this,
-            SIGNAL(connectionClosed(CGroupClient *)),
+            SIGNAL(connectionClosed(CGroupClient *const)),
             parent,
-            SLOT(connectionClosed(CGroupClient *)));
+            SLOT(connectionClosed(CGroupClient *const)));
 }
 
 CGroupServer::~CGroupServer()
@@ -49,7 +49,7 @@ CGroupServer::~CGroupServer()
 
 void CGroupServer::incomingConnection(qintptr socketDescriptor)
 {
-    //    qInfo() << "Adding incomming client to the connections list" << socketDescriptor;
+    //qInfo() << "Adding incomming client to the connections list from descriptor" << socketDescriptor;
 
     // connect the client straight to the Communicator, as he handles all the state changes
     // data transfers and similar.
@@ -57,24 +57,24 @@ void CGroupServer::incomingConnection(qintptr socketDescriptor)
     connections.append(client);
 
     connect(client,
-            SIGNAL(incomingData(CGroupClient *, QByteArray)),
+            SIGNAL(incomingData(CGroupClient *const, QByteArray)),
             parent(),
-            SLOT(incomingData(CGroupClient *, QByteArray)));
+            SLOT(incomingData(CGroupClient *const, QByteArray)));
     connect(client,
-            SIGNAL(connectionEstablished(CGroupClient *)),
+            SIGNAL(connectionEstablished(CGroupClient *const)),
             parent(),
-            SLOT(connectionEstablished(CGroupClient *)));
+            SLOT(connectionEstablished(CGroupClient *const)));
 
     client->setSocket(socketDescriptor);
 }
 
-void CGroupServer::errorInConnection(CGroupClient *connection, const QString & /*errorMessage*/)
+void CGroupServer::errorInConnection(CGroupClient *const connection, const QString & /*errorMessage*/)
 {
-    emit connectionClosed(connection);
-    //    qInfo() << "Removing and deleting the connection completely" << connection->socketDescriptor();
+     emit connectionClosed(connection);
     connections.removeAll(connection);
     connection->close();
     connection->deleteLater();
+    //    qInfo() << "Removing and deleting the connection completely" << connectionToDelete->socketDescriptor();
 }
 
 void CGroupServer::sendToAll(const QByteArray &message)
@@ -82,7 +82,7 @@ void CGroupServer::sendToAll(const QByteArray &message)
     sendToAllExceptOne(nullptr, message);
 }
 
-void CGroupServer::sendToAllExceptOne(CGroupClient *exception, const QByteArray &message)
+void CGroupServer::sendToAllExceptOne(CGroupClient *const exception, const QByteArray &message)
 {
     for (auto &connection : connections) {
         if (connection != exception) {

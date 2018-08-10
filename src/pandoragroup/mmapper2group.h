@@ -62,7 +62,6 @@ public:
     GroupManagerState getType();
     int getGroupSize();
 
-    CGroupCommunicator *getCommunicator() { return network.get(); }
     CGroup *getGroup() { return group.get(); }
 
 public slots:

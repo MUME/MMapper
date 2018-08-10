@@ -34,7 +34,6 @@
 #include <QtCore>
 #include <QtGlobal>
 
-class CGroupCommunicator;
 class QObject;
 
 enum class ConnectionStates { Closed, Connecting, Connected, Quiting };
@@ -45,32 +44,28 @@ class CGroupClient : public QTcpSocket
     Q_OBJECT
 public:
     explicit CGroupClient(QObject *parent);
-    CGroupClient(const QByteArray &host, int remotePort, QObject *parent);
     virtual ~CGroupClient();
 
     void setSocket(qintptr socketDescriptor);
 
-    ConnectionStates getConnectionState() { return connectionState; }
+    ConnectionStates getConnectionState() const { return connectionState; }
     void setConnectionState(ConnectionStates val);
-    void setProtocolState(ProtocolStates val);
-    ProtocolStates getProtocolState() { return protocolState; }
+    void setProtocolState(ProtocolStates val) { protocolState = val; }
+    ProtocolStates getProtocolState() const { return protocolState; }
     void sendData(const QByteArray &data);
 
 protected slots:
-    void lostConnection();
-    void connectionEstablished();
     void errorHandler(QAbstractSocket::SocketError socketError);
     void dataIncoming();
 
 signals:
     void sendLog(const QString &);
-    void connectionClosed(CGroupClient *);
-    void errorInConnection(CGroupClient *, const QString &);
-    void incomingData(CGroupClient *, QByteArray);
-    void connectionEstablished(CGroupClient *);
+    void connectionClosed(CGroupClient *const);
+    void errorInConnection(CGroupClient *const, const QString &);
+    void incomingData(CGroupClient *const, QByteArray);
+    void connectionEstablished(CGroupClient *const);
 
 private:
-    void linkSignals();
     void cutMessageFromBuffer();
 
     ConnectionStates connectionState = ConnectionStates::Closed;

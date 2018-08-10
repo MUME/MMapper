@@ -84,7 +84,7 @@ QByteArray CGroupCommunicator::formMessageBlock(Messages message, const QDomNode
     return block;
 }
 
-void CGroupCommunicator::sendMessage(CGroupClient *connection,
+void CGroupCommunicator::sendMessage(CGroupClient *const connection,
                                      Messages message,
                                      const QByteArray &blob)
 {
@@ -98,7 +98,7 @@ void CGroupCommunicator::sendMessage(CGroupClient *connection,
     sendMessage(connection, message, root);
 }
 
-void CGroupCommunicator::sendMessage(CGroupClient *connection,
+void CGroupCommunicator::sendMessage(CGroupClient *const connection,
                                      Messages message,
                                      const QDomNode &node)
 {
@@ -106,7 +106,7 @@ void CGroupCommunicator::sendMessage(CGroupClient *connection,
 }
 
 // the core of the protocol
-void CGroupCommunicator::incomingData(CGroupClient *conn, const QByteArray &buff)
+void CGroupCommunicator::incomingData(CGroupClient *const conn, const QByteArray &buff)
 {
     QString data;
 
@@ -158,7 +158,7 @@ void CGroupCommunicator::sendGTell(const QByteArray &tell)
     sendGroupTellMessage(root);
 }
 
-void CGroupCommunicator::sendCharUpdate(CGroupClient *connection, const QDomNode &blob)
+void CGroupCommunicator::sendCharUpdate(CGroupClient *const connection, const QDomNode &blob)
 {
     sendMessage(connection, Messages::UPDATE_CHAR, blob);
 }
@@ -181,7 +181,8 @@ void CGroupCommunicator::renameConnection(const QByteArray &oldName, const QByte
 //
 // Server side of the communication protocol
 CGroupServerCommunicator::CGroupServerCommunicator(QObject *parent)
-    : CGroupCommunicator(GroupManagerState::Server, parent)
+    : CGroupCommunicator(GroupManagerState::Server, parent),
+      server(this)
 {
     emit sendLog("Server mode has been selected");
     reconnect();
@@ -189,14 +190,11 @@ CGroupServerCommunicator::CGroupServerCommunicator(QObject *parent)
 
 CGroupServerCommunicator::~CGroupServerCommunicator()
 {
-    if (server != nullptr) {
-        server->closeAll();
-        delete server;
-        server = nullptr;
-    }
+    server.closeAll();
+    server.deleteLater();
 }
 
-void CGroupServerCommunicator::connectionClosed(CGroupClient *connection)
+void CGroupServerCommunicator::connectionClosed(CGroupClient *const connection)
 {
     auto sock = connection->socketDescriptor();
 
@@ -212,18 +210,18 @@ void CGroupServerCommunicator::connectionClosed(CGroupClient *connection)
 void CGroupServerCommunicator::serverStartupFailed()
 {
     emit messageBox(
-        QString("Failed to start the groupManager server: %1.").arg(server->errorString()));
+        QString("Failed to start the groupManager server: %1.").arg(server.errorString()));
     disconnect();
     emit networkDown();
 }
 
-void CGroupServerCommunicator::connectionEstablished(CGroupClient *connection)
+void CGroupServerCommunicator::connectionEstablished(CGroupClient *const connection)
 {
     //    qInfo() << "Detected new connection, starting handshake";
     sendMessage(connection, Messages::REQ_LOGIN, "test");
 }
 
-void CGroupServerCommunicator::retrieveData(CGroupClient *connection,
+void CGroupServerCommunicator::retrieveData(CGroupClient *const connection,
                                             Messages message,
                                             QDomNode data)
 {
@@ -296,11 +294,11 @@ void CGroupServerCommunicator::sendCharUpdate(QDomNode blob)
 {
     if (Config().groupManager.shareSelf) {
         QByteArray message = formMessageBlock(Messages::UPDATE_CHAR, blob);
-        server->sendToAll(message);
+        server.sendToAll(message);
     }
 }
 
-void CGroupServerCommunicator::parseLoginInformation(CGroupClient *connection, const QDomNode &data)
+void CGroupServerCommunicator::parseLoginInformation(CGroupClient *const connection, const QDomNode &data)
 {
     //    qInfo() << "Parsing login information from" << conn->socketDescriptor();
 
@@ -353,7 +351,7 @@ void CGroupServerCommunicator::parseLoginInformation(CGroupClient *connection, c
     }
 }
 
-void CGroupServerCommunicator::sendGroupInformation(CGroupClient *connection)
+void CGroupServerCommunicator::sendGroupInformation(CGroupClient *const connection)
 {
     GroupSelection *selection = getGroup()->selectAll();
     for (const auto character : *selection) {
@@ -370,7 +368,7 @@ void CGroupServerCommunicator::sendGroupInformation(CGroupClient *connection)
     getGroup()->unselect(selection);
 }
 
-void CGroupServerCommunicator::sendRemoveUserNotification(CGroupClient *connection,
+void CGroupServerCommunicator::sendRemoveUserNotification(CGroupClient *const connection,
                                                           const QByteArray &name)
 {
     //    qInfo("[Server] Sending remove user notification!");
@@ -378,29 +376,29 @@ void CGroupServerCommunicator::sendRemoveUserNotification(CGroupClient *connecti
     QDomNode blob = selection->value(name)->toXML();
     getGroup()->unselect(selection);
     QByteArray message = formMessageBlock(Messages::REMOVE_CHAR, blob);
-    server->sendToAllExceptOne(connection, message);
+    server.sendToAllExceptOne(connection, message);
 }
 
 void CGroupServerCommunicator::sendGroupTellMessage(QDomElement root)
 {
     QByteArray message = formMessageBlock(Messages::GTELL, root);
-    server->sendToAll(message);
+    server.sendToAll(message);
 }
 
-void CGroupServerCommunicator::relayMessage(CGroupClient *connection,
+void CGroupServerCommunicator::relayMessage(CGroupClient *const connection,
                                             Messages message,
                                             const QDomNode &data)
 {
     QByteArray buffer = formMessageBlock(message, data);
 
     //  qInfo("Relaying message from %s", (const char *) clientsList.key(connection->socketDescriptor()) );
-    server->sendToAllExceptOne(connection, buffer);
+    server.sendToAllExceptOne(connection, buffer);
 }
 
 void CGroupServerCommunicator::sendCharRename(QDomNode blob)
 {
     QByteArray message = formMessageBlock(Messages::RENAME_CHAR, blob);
-    server->sendToAll(message);
+    server.sendToAll(message);
 }
 
 void CGroupServerCommunicator::renameConnection(const QByteArray &oldName, const QByteArray &newName)
@@ -416,9 +414,7 @@ void CGroupServerCommunicator::renameConnection(const QByteArray &oldName, const
 
 void CGroupServerCommunicator::disconnect()
 {
-    if (server != nullptr) {
-        server->closeAll();
-    }
+    server.closeAll();
     clientsList.clear();
     emit scheduleAction(new ResetCharacters());
 }
@@ -426,10 +422,9 @@ void CGroupServerCommunicator::disconnect()
 void CGroupServerCommunicator::reconnect()
 {
     disconnect();
-    server = new CGroupServer(this);
     const auto localPort = static_cast<quint16>(Config().groupManager.localPort);
     emit sendLog(QString("Listening on port %1").arg(localPort));
-    if (!server->listen(QHostAddress::Any, localPort)) {
+    if (!server.listen(QHostAddress::Any, localPort)) {
         emit sendLog("Failed to start a group Manager server");
         serverStartupFailed();
     }
@@ -440,20 +435,22 @@ void CGroupServerCommunicator::reconnect()
 //
 // Client side of the communication protocol
 CGroupClientCommunicator::CGroupClientCommunicator(QObject *parent)
-    : CGroupCommunicator(GroupManagerState::Client, parent)
+    : CGroupCommunicator(GroupManagerState::Client, parent),
+      client(this)
 {
     emit sendLog("Client mode has been selected");
-
-    client = new CGroupClient(Config().groupManager.host, Config().groupManager.remotePort, this);
+    connect(&client,
+            &CGroupClient::incomingData,
+            this,
+            &CGroupClientCommunicator::incomingData);
 }
 
 CGroupClientCommunicator::~CGroupClientCommunicator()
 {
-    if (client != nullptr) {
-        client->disconnectFromHost();
-        delete client;
-        client = nullptr;
-    }
+    qInfo() << "Destroying CGroupClientCommunicator";
+    client.disconnectFromHost();
+    client.deleteLater();
+    qInfo() << "Destructed CGroupClientCommunicator";
 }
 
 void CGroupClientCommunicator::connectionClosed(CGroupClient * /*connection*/)
@@ -463,7 +460,7 @@ void CGroupClientCommunicator::connectionClosed(CGroupClient * /*connection*/)
     emit networkDown();
 }
 
-void CGroupClientCommunicator::errorInConnection(CGroupClient *connection,
+void CGroupClientCommunicator::errorInConnection(CGroupClient *const connection,
                                                  const QString &errorString)
 {
     //    qInfo() << "errorInConnection:" << errorString;
@@ -572,7 +569,7 @@ void CGroupClientCommunicator::retrieveData(CGroupClient *conn, Messages message
 //
 // Parsers and Senders of information and signals to upper and lower objects
 //
-void CGroupClientCommunicator::sendLoginInformation(CGroupClient *connection)
+void CGroupClientCommunicator::sendLoginInformation(CGroupClient *const connection)
 {
     QDomDocument doc("datagraminfo");
 
@@ -589,31 +586,41 @@ void CGroupClientCommunicator::sendLoginInformation(CGroupClient *connection)
 
 void CGroupClientCommunicator::sendGroupTellMessage(QDomElement root)
 {
-    sendMessage(client, Messages::GTELL, root);
+    sendMessage(&client, Messages::GTELL, root);
 }
 
 void CGroupClientCommunicator::sendCharUpdate(QDomNode blob)
 {
-    CGroupCommunicator::sendCharUpdate(client, blob);
+    CGroupCommunicator::sendCharUpdate(&client, blob);
 }
 
 void CGroupClientCommunicator::sendCharRename(QDomNode blob)
 {
-    sendMessage(client, Messages::RENAME_CHAR, blob);
+    sendMessage(&client, Messages::RENAME_CHAR, blob);
 }
 
 void CGroupClientCommunicator::disconnect()
-{
-    if (client != nullptr) {
-        client->disconnectFromHost();
-    }
+{    
+    client.disconnectFromHost();
     emit scheduleAction(new ResetCharacters());
 }
 
 void CGroupClientCommunicator::reconnect()
 {
     disconnect();
-    client = new CGroupClient(Config().groupManager.host, Config().groupManager.remotePort, this);
+
+    client.setConnectionState(ConnectionStates::Connecting);
+    client.setProtocolState(ProtocolStates::AwaitingLogin);
+    client.connectToHost(Config().groupManager.host, Config().groupManager.remotePort);
+    if (!client.waitForConnected(5000)) {
+        if (client.getConnectionState() == ConnectionStates::Connecting) {
+            client.setConnectionState(ConnectionStates::Quiting);
+            errorInConnection(&client, client.errorString());
+        }
+    } else {
+        // Linux needs to have this option set after the server has established a connection
+        client.setSocketOption(QAbstractSocket::KeepAliveOption, true);
+    }
 }
 
 void CGroupCommunicator::relayLog(const QString &str)

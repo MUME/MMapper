@@ -29,47 +29,21 @@
 #include <QMessageLogContext>
 #include <QString>
 
-void CGroupClient::linkSignals()
+CGroupClient::CGroupClient(QObject *parent)
+    : QTcpSocket(parent)
 {
-    connect(this, &QAbstractSocket::disconnected, this, &CGroupClient::lostConnection);
+    connect(this, &QAbstractSocket::connected, this, [=]() { this->setConnectionState(ConnectionStates::Connected); });
+    connect(this, &QAbstractSocket::disconnected, this, [=]() { this->setConnectionState(ConnectionStates::Closed); });
     connect(this, &QIODevice::readyRead, this, &CGroupClient::dataIncoming);
     connect(this,
             SIGNAL(error(QAbstractSocket::SocketError)),
             SLOT(errorHandler(QAbstractSocket::SocketError)));
 
-    connect(this, SIGNAL(sendLog(const QString &)), parent(), SLOT(relayLog(const QString &)));
+    connect(this, SIGNAL(sendLog(const QString &)), parent, SLOT(relayLog(const QString &)));
     connect(this,
-            SIGNAL(errorInConnection(CGroupClient *, const QString &)),
-            parent(),
-            SLOT(errorInConnection(CGroupClient *, const QString &)));
-}
-
-CGroupClient::CGroupClient(const QByteArray &host, const int remotePort, QObject *const parent)
-    : QTcpSocket(parent)
-{
-    linkSignals();
-    connect(this,
-            SIGNAL(incomingData(CGroupClient *, QByteArray)),
+            SIGNAL(errorInConnection(CGroupClient *const, const QString &)),
             parent,
-            SLOT(incomingData(CGroupClient *, QByteArray)));
-    setConnectionState(ConnectionStates::Connecting);
-    connectToHost(host, static_cast<quint16>(remotePort));
-    protocolState = ProtocolStates::AwaitingLogin;
-    if (!waitForConnected(5000)) {
-        if (getConnectionState() == ConnectionStates::Connecting) {
-            errorHandler(QAbstractSocket::SocketTimeoutError);
-        }
-    } else {
-        // Linux needs to have this option set after the server has established a connection
-        setSocketOption(QAbstractSocket::KeepAliveOption, true);
-        connectionEstablished();
-    }
-}
-
-CGroupClient::CGroupClient(QObject *parent)
-    : QTcpSocket(parent)
-{
-    linkSignals();
+            SLOT(errorInConnection(CGroupClient *const, const QString &)));
 }
 
 void CGroupClient::setSocket(qintptr socketDescriptor)
@@ -81,12 +55,6 @@ void CGroupClient::setSocket(qintptr socketDescriptor)
     }
     setSocketOption(QAbstractSocket::KeepAliveOption, true);
     setConnectionState(ConnectionStates::Connected);
-}
-
-void CGroupClient::setProtocolState(ProtocolStates val)
-{
-    //    qInfo("Protocol state: %i", val);
-    protocolState = val;
 }
 
 void CGroupClient::setConnectionState(ConnectionStates val)
@@ -118,16 +86,7 @@ void CGroupClient::setConnectionState(ConnectionStates val)
 CGroupClient::~CGroupClient()
 {
     disconnectFromHost();
-}
-
-void CGroupClient::lostConnection()
-{
-    setConnectionState(ConnectionStates::Closed);
-}
-
-void CGroupClient::connectionEstablished()
-{
-    setConnectionState(ConnectionStates::Connected);
+    qInfo() << "Destructed" << "CGroupClient" << socketDescriptor();
 }
 
 void CGroupClient::errorHandler(QAbstractSocket::SocketError /*socketError*/)

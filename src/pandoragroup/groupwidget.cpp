@@ -134,6 +134,7 @@ void GroupWidget::updateLabels()
                 items.append(item);
             }
         }
+        m_nameItemHash[name] = items;
         int previousRow = items[0]->row();
         bool moveItem = previousRow != row;
         if (newItem || moveItem) {
