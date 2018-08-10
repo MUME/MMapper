@@ -63,6 +63,9 @@ FindRoomsDlg::FindRoomsDlg(MapData *md, QWidget *parent)
             this,
             &FindRoomsDlg::itemDoubleClicked);
     connect(m_showSelectedRoom, &QShortcut::activated, this, &FindRoomsDlg::showSelectedRoom);
+
+    label->setFocusProxy(lineEdit);
+    lineEdit->setFocus();
 }
 
 FindRoomsDlg::~FindRoomsDlg()
@@ -224,6 +227,7 @@ void FindRoomsDlg::closeEvent(QCloseEvent *event)
     }
     resultTable->clear();
     roomsFoundLabel->clear();
+    lineEdit->setFocus();
     event->accept();
 }
 
