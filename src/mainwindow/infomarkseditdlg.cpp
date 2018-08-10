@@ -38,10 +38,15 @@ class QCloseEvent;
 
 InfoMarksEditDlg::InfoMarksEditDlg(MapData *const mapData, QWidget *const parent)
     : QDialog(parent)
+    , m_mapData(mapData)
 {
     setupUi(this);
     readSettings();
-    m_mapData = mapData;
+
+    connect(closeButton, &QAbstractButton::clicked, this, [=]() {
+        emit closeEventReceived();
+        this->accept(); }
+    );
 }
 
 void InfoMarksEditDlg::setPoints(
@@ -88,18 +93,6 @@ void InfoMarksEditDlg::connectAll()
             SIGNAL(currentIndexChanged(const QString &)),
             this,
             SLOT(objectTypeCurrentIndexChanged(const QString &)));
-    connect(objectClassesList,
-            SIGNAL(currentIndexChanged(const QString &)),
-            this,
-            SLOT(objectClassCurrentIndexChanged(const QString &)));
-    connect(objectNameStr, &QLineEdit::textChanged, this, &InfoMarksEditDlg::objectNameTextChanged);
-    connect(objectText, &QLineEdit::textChanged, this, &InfoMarksEditDlg::objectTextChanged);
-    connect(m_x1, SIGNAL(valueChanged(double)), this, SLOT(x1ValueChanged(double)));
-    connect(m_y1, SIGNAL(valueChanged(double)), this, SLOT(y1ValueChanged(double)));
-    connect(m_x2, SIGNAL(valueChanged(double)), this, SLOT(x2ValueChanged(double)));
-    connect(m_y2, SIGNAL(valueChanged(double)), this, SLOT(y2ValueChanged(double)));
-    connect(m_rotationAngle, SIGNAL(valueChanged(double)), this, SLOT(rotValueChanged(double)));
-    connect(m_layer, SIGNAL(valueChanged(int)), this, SLOT(layerValueChanged(int)));
     connect(objectCreate, &QAbstractButton::clicked, this, &InfoMarksEditDlg::createClicked);
     connect(objectModify, &QAbstractButton::clicked, this, &InfoMarksEditDlg::modifyClicked);
     connect(objectDelete, &QAbstractButton::clicked, this, &InfoMarksEditDlg::deleteClicked);
@@ -122,29 +115,13 @@ void InfoMarksEditDlg::objectTypeCurrentIndexChanged(const QString & /*unused*/)
     updateDialog();
 }
 
-void InfoMarksEditDlg::objectClassCurrentIndexChanged(const QString & /*unused*/) {}
-
-void InfoMarksEditDlg::objectNameTextChanged(const QString /*unused*/ &) {}
-
-void InfoMarksEditDlg::objectTextChanged(const QString /*unused*/ &) {}
-
-void InfoMarksEditDlg::x1ValueChanged(double /*unused*/) {}
-
-void InfoMarksEditDlg::y1ValueChanged(double /*unused*/) {}
-
-void InfoMarksEditDlg::x2ValueChanged(double /*unused*/) {}
-
-void InfoMarksEditDlg::y2ValueChanged(double /*unused*/) {}
-
-void InfoMarksEditDlg::rotValueChanged(double /*unused*/) {}
-
-void InfoMarksEditDlg::layerValueChanged(int /*unused*/) {}
-
 void InfoMarksEditDlg::onDeleteAllClicked()
 {
     for (int i = 0; i < objectsList->count(); i++) {
         if (auto m = getInfoMark(objectsList->itemText(i))) {
-            m_mapData->removeMarker(m);
+            if (m != nullptr) {
+                m_mapData->removeMarker(m);
+            }
         }
     }
 
@@ -161,17 +138,19 @@ void InfoMarksEditDlg::onMoveClicked(const Coordinate &offset)
     auto offset_pos2 = [&offset](auto m) { m->setPosition2(m->getPosition2() + offset); };
     for (int i = 0; i < objectsList->count(); i++) {
         if (auto m = getInfoMark(objectsList->itemText(i))) {
-            switch (m->getType()) {
-            case InfoMarkType::LINE:
-            case InfoMarkType::ARROW:
-                offset_pos2(m);
-                if (MOVE_BOTH_ENDS_OF_LINES_AND_ARROWS) {
+            if (m != nullptr) {
+                switch (m->getType()) {
+                case InfoMarkType::LINE:
+                case InfoMarkType::ARROW:
+                    offset_pos2(m);
+                    if (MOVE_BOTH_ENDS_OF_LINES_AND_ARROWS) {
+                        offset_pos1(m);
+                    }
+                    break;
+                case InfoMarkType::TEXT:
                     offset_pos1(m);
+                    break;
                 }
-                break;
-            case InfoMarkType::TEXT:
-                offset_pos1(m);
-                break;
             }
         }
     }
@@ -218,9 +197,7 @@ void InfoMarksEditDlg::createClicked()
         QMessageBox::critical(this, tr("MMapper2"), tr("Can't create objects with empty name!"));
     }
 
-    MarkerListIterator mi(ml);
-    while (mi.hasNext()) {
-        InfoMark *marker = mi.next();
+    for (const auto marker : ml) {
         if (marker->getName() == name) {
             QMessageBox::critical(this, tr("MMapper2"), tr("Object with this name already exists!"));
             return;
@@ -233,11 +210,11 @@ void InfoMarksEditDlg::createClicked()
     im->setName(name);
     im->setText(objectText->text());
     im->setClass(getClass());
-    const Coordinate pos1(static_cast<int>(m_x1->value() * 100.0),
-                          static_cast<int>(m_y1->value() * 100.0),
+    const Coordinate pos1(m_x1->value(),
+                          m_y1->value(),
                           m_layer->value());
-    const Coordinate pos2(static_cast<int>(m_x2->value() * 100.0),
-                          static_cast<int>(m_y2->value() * 100.0),
+    const Coordinate pos2(m_x2->value(),
+                          m_y2->value(),
                           m_layer->value());
     im->setPosition1(pos1);
     im->setPosition2(pos2);
@@ -259,11 +236,11 @@ void InfoMarksEditDlg::modifyClicked()
     im->setName(objectNameStr->text());
     im->setText(objectText->text());
     im->setClass(getClass());
-    const Coordinate pos1(static_cast<int>(m_x1->value() * 100.0),
-                          static_cast<int>(m_y1->value() * 100.0),
+    const Coordinate pos1(m_x1->value(),
+                          m_y1->value(),
                           m_layer->value());
-    const Coordinate pos2(static_cast<int>(m_x2->value() * 100.0),
-                          static_cast<int>(m_y2->value() * 100.0),
+    const Coordinate pos2(m_x2->value(),
+                          m_y2->value(),
                           m_layer->value());
     im->setPosition1(pos1);
     im->setPosition2(pos2);
@@ -276,10 +253,7 @@ void InfoMarksEditDlg::deleteClicked()
 {
     InfoMark *im = getCurrentInfoMark();
 
-    //MarkerList ml = m_mapData->getMarkersList();
     m_mapData->removeMarker(im);
-    //ml.removeAll(im);
-    //delete im;
 
     emit mapChanged();
     updateMarkers();
@@ -296,21 +270,6 @@ void InfoMarksEditDlg::disconnectAll()
                SIGNAL(currentIndexChanged(const QString &)),
                this,
                SLOT(objectTypeCurrentIndexChanged(const QString &)));
-    disconnect(objectNameStr,
-               &QLineEdit::textChanged,
-               this,
-               &InfoMarksEditDlg::objectNameTextChanged);
-    disconnect(objectText, &QLineEdit::textChanged, this, &InfoMarksEditDlg::objectTextChanged);
-    disconnect(objectClassesList,
-               SIGNAL(currentIndexChanged(const QString &)),
-               this,
-               SLOT(objectClassCurrentIndexChanged(const QString &)));
-    disconnect(m_x1, SIGNAL(valueChanged(double)), this, SLOT(x1ValueChanged(double)));
-    disconnect(m_y1, SIGNAL(valueChanged(double)), this, SLOT(y1ValueChanged(double)));
-    disconnect(m_x2, SIGNAL(valueChanged(double)), this, SLOT(x2ValueChanged(double)));
-    disconnect(m_y2, SIGNAL(valueChanged(double)), this, SLOT(y2ValueChanged(double)));
-    disconnect(m_rotationAngle, SIGNAL(valueChanged(double)), this, SLOT(rotValueChanged(double)));
-    disconnect(m_layer, SIGNAL(valueChanged(int)), this, SLOT(layerValueChanged(int)));
     disconnect(objectCreate, &QAbstractButton::clicked, this, &InfoMarksEditDlg::createClicked);
     disconnect(objectModify, &QAbstractButton::clicked, this, &InfoMarksEditDlg::modifyClicked);
     disconnect(objectDelete, &QAbstractButton::clicked, this, &InfoMarksEditDlg::deleteClicked);
@@ -332,10 +291,10 @@ void InfoMarksEditDlg::disconnectAll()
 void InfoMarksEditDlg::updateMarkers()
 {
     const auto margin = 0.2;
-    const auto bx1 = std::min(m_sel1.x, m_sel2.x) - margin;
-    const auto by1 = std::min(m_sel1.y, m_sel2.y) - margin;
-    const auto bx2 = std::max(m_sel1.x, m_sel2.x) + margin;
-    const auto by2 = std::max(m_sel1.y, m_sel2.y) + margin;
+    const auto bx1 = static_cast<int>(std::min(m_sel1.x, m_sel2.x) - margin) * 100;
+    const auto by1 = static_cast<int>(std::min(m_sel1.y, m_sel2.y) - margin) * 100;
+    const auto bx2 = static_cast<int>(std::max(m_sel1.x, m_sel2.x) + margin) * 100;
+    const auto by2 = static_cast<int>(std::max(m_sel1.y, m_sel2.y) + margin) * 100;
 
     bool firstInside = false;
     bool secondInside = false;
@@ -343,21 +302,19 @@ void InfoMarksEditDlg::updateMarkers()
     objectsList->clear();
     objectsList->addItem("Create New Marker");
 
-    MarkerListIterator mi(m_mapData->getMarkersList());
-    while (mi.hasNext()) {
-        InfoMark *const marker = mi.next();
+    for (const auto marker : m_mapData->getMarkersList()) {
         const Coordinate c1 = marker->getPosition1();
         const Coordinate c2 = marker->getPosition2();
 
         firstInside = false;
         secondInside = false;
 
-        if (static_cast<double>(c1.x) / 100.0 > bx1 && static_cast<double>(c1.x) / 100.0 < bx2
-            && static_cast<double>(c1.y) / 100.0 > by1 && static_cast<double>(c1.y) / 100.0 < by2) {
+        if (c1.x > bx1 && c1.x < bx2
+            && c1.y > by1 && c1.y < by2) {
             firstInside = true;
         }
-        if (static_cast<double>(c2.x) / 100.0 > bx1 && static_cast<double>(c2.x) / 100.0 < bx2
-            && static_cast<double>(c2.y) / 100.0 > by1 && static_cast<double>(c2.y) / 100.0 < by2) {
+        if (c2.x > bx1 && c2.x < bx2
+            && c2.y > by1 && c2.y < by2) {
             secondInside = true;
         }
 
@@ -385,14 +342,10 @@ void InfoMarksEditDlg::updateDialog()
 {
     disconnectAll();
 
-    InfoMark *im = getCurrentInfoMark();
-    int i = 0;
-    int j = 0;
+    InfoMark *const im = getCurrentInfoMark();
     if (im != nullptr) {
-        i = static_cast<int>(im->getType());
-        objectType->setCurrentIndex(i);
-        j = static_cast<int>(im->getClass());
-        objectClassesList->setCurrentIndex(j);
+        objectType->setCurrentIndex(static_cast<int>(im->getType()));
+        objectClassesList->setCurrentIndex(static_cast<int>(im->getClass()));
     }
 
     switch (getType()) {
@@ -416,16 +369,16 @@ void InfoMarksEditDlg::updateDialog()
         break;
     }
 
-    InfoMark *marker;
+    InfoMark *marker = getCurrentInfoMark();
 
-    if ((marker = getCurrentInfoMark()) == nullptr) {
+    if (marker == nullptr) {
         objectNameStr->clear();
         objectText->clear();
-        m_x1->setValue(m_sel1.x);
-        m_y1->setValue(m_sel1.y);
-        m_x2->setValue(m_sel2.x);
-        m_y2->setValue(m_sel2.y);
-        m_rotationAngle->setValue(0.0f);
+        m_x1->setValue(m_sel1.x * 100);
+        m_y1->setValue(m_sel1.y * 100);
+        m_x2->setValue(m_sel2.x * 100);
+        m_y2->setValue(m_sel2.y * 100);
+        m_rotationAngle->setValue(0.0);
         m_layer->setValue(m_selLayer);
 
         objectCreate->setEnabled(true);
@@ -434,10 +387,10 @@ void InfoMarksEditDlg::updateDialog()
     } else {
         objectNameStr->setText(marker->getName());
         objectText->setText(marker->getText());
-        m_x1->setValue(static_cast<float>(marker->getPosition1().x) / 100.0f);
-        m_y1->setValue(static_cast<float>(marker->getPosition1().y) / 100.0f);
-        m_x2->setValue(static_cast<float>(marker->getPosition2().x) / 100.0f);
-        m_y2->setValue(static_cast<float>(marker->getPosition2().y) / 100.0f);
+        m_x1->setValue(marker->getPosition1().x);
+        m_y1->setValue(marker->getPosition1().y);
+        m_x2->setValue(marker->getPosition2().x);
+        m_y2->setValue(marker->getPosition2().y);
         m_rotationAngle->setValue(marker->getRotationAngle());
         m_layer->setValue(marker->getPosition1().z);
 
@@ -478,9 +431,7 @@ void InfoMarksEditDlg::setCurrentInfoMark(InfoMark *m)
 
 InfoMark *InfoMarksEditDlg::getInfoMark(const QString &name)
 {
-    MarkerListIterator mi(m_mapData->getMarkersList());
-    while (mi.hasNext()) {
-        InfoMark *marker = mi.next();
+    for (const auto marker : m_mapData->getMarkersList()) {
         if (marker->getName() == name) {
             return marker;
         }

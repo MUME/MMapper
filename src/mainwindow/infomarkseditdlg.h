@@ -52,16 +52,7 @@ signals:
 public slots:
     void objectListCurrentIndexChanged(const QString &);
     void objectTypeCurrentIndexChanged(const QString &);
-    void objectClassCurrentIndexChanged(const QString &);
 
-    void objectNameTextChanged(const QString &);
-    void objectTextChanged(const QString &);
-    void x1ValueChanged(double);
-    void y1ValueChanged(double);
-    void x2ValueChanged(double);
-    void y2ValueChanged(double);
-    void rotValueChanged(double);
-    void layerValueChanged(int);
     void createClicked();
     void modifyClicked();
     void deleteClicked();

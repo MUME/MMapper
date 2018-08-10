@@ -1,680 +1,587 @@
-<ui version="4.0" >
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
  <author>Marek Krejza</author>
- <comment></comment>
- <exportmacro></exportmacro>
  <class>InfoMarksEditDlg</class>
- <widget class="QDialog" name="InfoMarksEditDlg" >
-  <property name="geometry" >
+ <widget class="QDialog" name="InfoMarksEditDlg">
+  <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>395</width>
-    <height>510</height>
+    <width>404</width>
+    <height>504</height>
    </rect>
   </property>
-  <property name="sizePolicy" >
-   <sizepolicy>
-    <hsizetype>4</hsizetype>
-    <vsizetype>4</vsizetype>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
   </property>
-  <property name="minimumSize" >
+  <property name="minimumSize">
+   <size>
+    <width>404</width>
+    <height>504</height>
+   </size>
+  </property>
+  <property name="baseSize">
    <size>
     <width>395</width>
     <height>510</height>
    </size>
   </property>
-  <property name="baseSize" >
-   <size>
-    <width>395</width>
-    <height>510</height>
-   </size>
-  </property>
-  <property name="contextMenuPolicy" >
+  <property name="contextMenuPolicy">
    <enum>Qt::NoContextMenu</enum>
   </property>
-  <property name="windowTitle" >
+  <property name="windowTitle">
    <string>Edit Markers</string>
   </property>
-  <property name="sizeGripEnabled" >
+  <property name="sizeGripEnabled">
    <bool>false</bool>
   </property>
-  <layout class="QGridLayout" >
-   <property name="margin" >
+  <layout class="QGridLayout" name="gridLayout">
+   <property name="leftMargin">
     <number>9</number>
    </property>
-   <property name="spacing" >
-    <number>6</number>
+   <property name="topMargin">
+    <number>9</number>
    </property>
-   <item row="0" column="0" >
-    <widget class="QFrame" name="frame" >
-     <property name="frameShape" >
-      <enum>QFrame::NoFrame</enum>
+   <property name="rightMargin">
+    <number>9</number>
+   </property>
+   <property name="bottomMargin">
+    <number>9</number>
+   </property>
+   <item row="0" column="0">
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>0</number>
      </property>
-     <property name="frameShadow" >
-      <enum>QFrame::Plain</enum>
-     </property>
-     <layout class="QGridLayout">
-       <property name="margin">
-        <number>9</number>
-       </property>
-       <property name="spacing">
-        <number>6</number>
-       </property>
-       <item row="0" column="0">
-         <widget class="QGroupBox" name="selectedMarkBox">
-           <property name="title" >
-             <string>Edit one marker:</string>
-           </property>
-           <layout class="QGridLayout">
-             <property name="margin">
-               <number>9</number>
+     <widget class="QWidget" name="tab">
+      <attribute name="title">
+       <string>&amp;Selection</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QLabel" name="textLabel1_2_2">
+         <property name="text">
+          <string>&amp;Marker:</string>
+         </property>
+         <property name="buddy">
+          <cstring>objectsList</cstring>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="objectsList"/>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="selectedMarkBox">
+         <property name="title">
+          <string>Fields:</string>
+         </property>
+         <layout class="QGridLayout">
+          <property name="leftMargin">
+           <number>9</number>
+          </property>
+          <property name="topMargin">
+           <number>9</number>
+          </property>
+          <property name="rightMargin">
+           <number>9</number>
+          </property>
+          <property name="bottomMargin">
+           <number>9</number>
+          </property>
+          <property name="spacing">
+           <number>6</number>
+          </property>
+          <item row="4" column="1" colspan="2">
+           <widget class="QLineEdit" name="objectText"/>
+          </item>
+          <item row="5" column="1" colspan="2">
+           <widget class="QComboBox" name="objectClassesList">
+            <item>
+             <property name="text">
+              <string>Generic marker</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Herb</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>River</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Place</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Mobile name</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Comment</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Road</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Object</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Action</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Locality</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="textLabel3_1">
+            <property name="text">
+             <string>Marker &amp;class:</string>
+            </property>
+            <property name="buddy">
+             <cstring>objectClassesList</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="textLabel2_2_3">
+            <property name="text">
+             <string>Marker &amp;name:</string>
+            </property>
+            <property name="buddy">
+             <cstring>objectNameStr</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0" colspan="3">
+           <widget class="QGroupBox" name="positionGroupBox">
+            <property name="minimumSize">
+             <size>
+              <width>340</width>
+              <height>115</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>340</width>
+              <height>115</height>
+             </size>
+            </property>
+            <property name="title">
+             <string>Marker position:</string>
+            </property>
+            <layout class="QGridLayout">
+             <property name="leftMargin">
+              <number>9</number>
+             </property>
+             <property name="topMargin">
+              <number>9</number>
+             </property>
+             <property name="rightMargin">
+              <number>9</number>
+             </property>
+             <property name="bottomMargin">
+              <number>9</number>
              </property>
              <property name="spacing">
-               <number>6</number>
+              <number>6</number>
              </property>
-             <item row="0" column="0" colspan="3">
-               <widget class="QLabel" name="textLabel1_2_2" >
-                <property name="geometry" >
-                 <rect>
-                  <width>202</width>
-                  <height>20</height>
-                 </rect>
-                </property>
-                <property name="text" >
-                 <string>Choose a marker near selected position:</string>
-                </property>
-               </widget>
+             <item row="1" column="0">
+              <widget class="QLabel" name="textLabel4_3">
+               <property name="text">
+                <string>X1</string>
+               </property>
+               <property name="buddy">
+                <cstring>m_x1</cstring>
+               </property>
+              </widget>
              </item>
-             <item row="1" column="0" colspan="3">
-               <widget class="QComboBox" name="objectsList" >
-                <property name="geometry" >
-                 <rect>
-                  <width>261</width>
-                  <height>21</height>
-                 </rect>
-                </property>
-               </widget>
+             <item row="1" column="2">
+              <widget class="QLabel" name="textLabel4_3_3">
+               <property name="text">
+                <string>X2</string>
+               </property>
+               <property name="buddy">
+                <cstring>m_x2</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="4">
+              <widget class="QLabel" name="textLabel4_3_4">
+               <property name="text">
+                <string>Layer:</string>
+               </property>
+               <property name="buddy">
+                <cstring>m_layer</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="5">
+              <widget class="QSpinBox" name="m_layer">
+               <property name="minimum">
+                <number>-10</number>
+               </property>
+               <property name="maximum">
+                <number>10</number>
+               </property>
+              </widget>
              </item>
              <item row="2" column="0">
-               <widget class="QLabel" name="textLabel2_2_3" >
-                <property name="geometry" >
-                 <rect>
-                  <width>63</width>
-                  <height>20</height>
-                 </rect>
-                </property>
-                <property name="text" >
-                 <string>Marker name:</string>
-                </property>
-               </widget>
+              <widget class="QLabel" name="textLabel4_3_2">
+               <property name="text">
+                <string>Y1</string>
+               </property>
+               <property name="buddy">
+                <cstring>m_y1</cstring>
+               </property>
+              </widget>
              </item>
-             <item row="2" column="1" colspan="2">
-               <widget class="QLineEdit" name="objectNameStr" >
-                <property name="geometry" >
-                 <rect>
-                  <width>181</width>
-                  <height>18</height>
-                 </rect>
-                </property>
-               </widget>
+             <item row="2" column="2">
+              <widget class="QLabel" name="textLabel4_3_2_2">
+               <property name="text">
+                <string>Y2</string>
+               </property>
+               <property name="buddy">
+                <cstring>m_y2</cstring>
+               </property>
+              </widget>
              </item>
-             <item row="3" column="0">
-               <widget class="QLabel" name="textLabel1_2" >
-                <property name="geometry" >
-                 <rect>
-                  <width>61</width>
-                  <height>20</height>
-                 </rect>
-                </property>
-                <property name="text" >
-                 <string>Marker type:</string>
-                </property>
-               </widget>
+             <item row="2" column="4">
+              <widget class="QLabel" name="textLabel4_3_5">
+               <property name="text">
+                <string>Angle:</string>
+               </property>
+               <property name="buddy">
+                <cstring>m_rotationAngle</cstring>
+               </property>
+              </widget>
              </item>
-             <item row="3" column="1" colspan="2">
-               <widget class="QComboBox" name="objectType" >
-                <property name="geometry" >
-                 <rect>
-                  <width>181</width>
-                  <height>21</height>
-                 </rect>
-                </property>
-                <item>
-                 <property name="text" >
-                  <string>Text mark</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text" >
-                  <string>Line</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text" >
-                  <string>Arrow</string>
-                 </property>
-                </item>
-               </widget>
+             <item row="1" column="3">
+              <widget class="QSpinBox" name="m_x2">
+               <property name="minimum">
+                <number>-2147483647</number>
+               </property>
+               <property name="maximum">
+                <number>2147483647</number>
+               </property>
+               <property name="singleStep">
+                <number>100</number>
+               </property>
+              </widget>
              </item>
-             <item row="4" column="0">
-               <widget class="QLabel" name="textLabel2_2" >
-                <property name="geometry" >
-                 <rect>
-                  <width>40</width>
-                  <height>20</height>
-                 </rect>
-                </property>
-                <property name="text" >
-                 <string>Text:</string>
-                </property>
-               </widget>
+             <item row="2" column="3">
+              <widget class="QSpinBox" name="m_y2">
+               <property name="minimum">
+                <number>-2147483647</number>
+               </property>
+               <property name="maximum">
+                <number>2147483647</number>
+               </property>
+               <property name="singleStep">
+                <number>100</number>
+               </property>
+              </widget>
              </item>
-             <item row="4" column="1" colspan="2">
-               <widget class="QLineEdit" name="objectText" >
-                <property name="geometry" >
-                 <rect>
-                  <width>181</width>
-                  <height>18</height>
-                 </rect>
-                </property>
-               </widget>
+             <item row="2" column="1">
+              <widget class="QSpinBox" name="m_y1">
+               <property name="minimum">
+                <number>-2147483647</number>
+               </property>
+               <property name="maximum">
+                <number>2147483647</number>
+               </property>
+               <property name="singleStep">
+                <number>100</number>
+               </property>
+              </widget>
              </item>
-             <item row="5" column="0">
-               <widget class="QLabel" name="textLabel3_1" >
-                <property name="geometry" >
-                 <rect>
-                  <width>61</width>
-                  <height>20</height>
-                 </rect>
-                </property>
-                <property name="text" >
-                 <string>Marker class:</string>
-                </property>
-               </widget>
+             <item row="1" column="1">
+              <widget class="QSpinBox" name="m_x1">
+               <property name="minimum">
+                <number>-2147483647</number>
+               </property>
+               <property name="maximum">
+                <number>2147483647</number>
+               </property>
+               <property name="singleStep">
+                <number>100</number>
+               </property>
+              </widget>
              </item>
-             <item row="5" column="1" colspan="2">
-               <widget class="QComboBox" name="objectClassesList" >
-                 <property name="geometry" >
-                   <rect>
-                     <width>261</width>
-                     <height>21</height>
-                   </rect>
-                 </property>
-                 <item>
-                  <property name="text" >
-                   <string>Generic marker</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text" >
-                   <string>Herb</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text" >
-                   <string>River</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text" >
-                   <string>Place</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text" >
-                   <string>Mobile name</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text" >
-                   <string>Comment</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text" >
-                   <string>Road</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text" >
-                   <string>Object</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text" >
-                   <string>Action</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text" >
-                   <string>Locality</string>
-                  </property>
-                 </item>
-               </widget>
+             <item row="2" column="5">
+              <widget class="QDoubleSpinBox" name="m_rotationAngle">
+               <property name="suffix">
+                <string>°</string>
+               </property>
+               <property name="decimals">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <double>360.000000000000000</double>
+               </property>
+               <property name="singleStep">
+                <double>45.000000000000000</double>
+               </property>
+              </widget>
              </item>
-             <item row="6" column="0" colspan="3">
-               <widget class="QGroupBox" name="positionGroupBox">
-                 <property name="minimumSize">
-                  <size>
-                   <width>340</width>
-                   <height>115</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>340</width>
-                   <height>115</height>
-                  </size>
-                 </property>
-                 <property name="title" >
-                   <string>Marker position:</string>
-                 </property>
-                 <layout class="QGridLayout">
-                   <property name="margin">
-                     <number>9</number>
-                   </property>
-                   <property name="spacing">
-                     <number>6</number>
-                   </property>
-                   <item row="0" column="1">
-                     <widget class="QLabel" name="startLabel" >
-                      <property name="geometry" >
-                       <rect>
-                        <width>51</width>
-                        <height>20</height>
-                       </rect>
-                      </property>
-                      <property name="text" >
-                       <string>Start</string>
-                      </property>
-                     </widget>
-                   </item>
-                   <item row="0" column="3">
-                     <widget class="QLabel" name="endLabel" >
-                      <property name="geometry" >
-                       <rect>
-                        <width>31</width>
-                        <height>20</height>
-                       </rect>
-                      </property>
-                      <property name="text" >
-                       <string>End</string>
-                      </property>
-                     </widget>
-                   </item>
-                   <item row="1" column="0">
-                     <widget class="QLabel" name="textLabel4_3" >
-                      <property name="geometry" >
-                       <rect>
-                        <width>16</width>
-                        <height>20</height>
-                       </rect>
-                      </property>
-                      <property name="text" >
-                       <string>X1</string>
-                      </property>
-                     </widget>
-                   </item>
-                   <item row="1" column="1">
-                     <widget class="QDoubleSpinBox" name="m_x1" >
-                      <property name="geometry" >
-                       <rect>
-                        <width>71</width>
-                        <height>22</height>
-                       </rect>
-                      </property>
-                      <property name="maximum" >
-                       <double>1e+10</double>
-                      </property>
-                      <property name="minimum" >
-                       <double>-1e+09</double>
-                      </property>
-                      <property name="singleStep" >
-                       <double>0.01</double>
-                      </property>
-                     </widget>
-                   </item>
-                   <item row="1" column="2">
-                     <widget class="QLabel" name="textLabel4_3_3" >
-                      <property name="geometry" >
-                       <rect>
-                        <width>24</width>
-                        <height>20</height>
-                       </rect>
-                      </property>
-                      <property name="text" >
-                       <string>X2</string>
-                      </property>
-                     </widget>
-                   </item>
-                   <item row="1" column="3">
-                     <widget class="QDoubleSpinBox" name="m_x2" >
-                      <property name="geometry" >
-                       <rect>
-                        <width>71</width>
-                        <height>22</height>
-                       </rect>
-                      </property>
-                      <property name="maximum" >
-                       <double>1e+10</double>
-                      </property>
-                      <property name="minimum" >
-                       <double>-1e+09</double>
-                      </property>
-                      <property name="singleStep" >
-                       <double>0.01</double>
-                      </property>
-                     </widget>
-                   </item>
-                   <item row="1" column="4">
-                     <widget class="QLabel" name="textLabel4_3_4" >
-                      <property name="geometry" >
-                       <rect>
-                        <width>41</width>
-                        <height>20</height>
-                       </rect>
-                      </property>
-                      <property name="text" >
-                       <string>Layer:</string>
-                      </property>
-                     </widget>
-                   </item>
-                   <item row="1" column="5">
-                     <widget class="QSpinBox" name="m_layer" >
-                      <property name="geometry" >
-                       <rect>
-                         <width>64</width>
-                        <height>22</height>
-                       </rect>
-                      </property>
-                      <property name="maximum" >
-                       <number>10</number>
-                      </property>
-                      <property name="minimum" >
-                       <number>-10</number>
-                      </property>
-                     </widget>
-                   </item>
-                   <item row="2" column="0">
-                     <widget class="QLabel" name="textLabel4_3_2" >
-                      <property name="geometry" >
-                       <rect>
-                        <width>16</width>
-                        <height>20</height>
-                       </rect>
-                      </property>
-                      <property name="text" >
-                       <string>Y1</string>
-                      </property>
-                     </widget>
-                   </item>
-                   <item row="2" column="1">
-                     <widget class="QDoubleSpinBox" name="m_y1" >
-                      <property name="geometry" >
-                       <rect>
-                        <width>71</width>
-                        <height>22</height>
-                       </rect>
-                      </property>
-                      <property name="maximum" >
-                       <double>1e+10</double>
-                      </property>
-                      <property name="minimum" >
-                       <double>-1e+09</double>
-                      </property>
-                      <property name="singleStep" >
-                       <double>0.01</double>
-                      </property>
-                     </widget>
-                   </item>
-                   <item row="2" column="2">
-                     <widget class="QLabel" name="textLabel4_3_2_2" >
-                      <property name="geometry" >
-                       <rect>
-                        <width>24</width>
-                        <height>20</height>
-                       </rect>
-                      </property>
-                      <property name="text" >
-                       <string>Y2</string>
-                      </property>
-                     </widget>
-                   </item>
-                   <item row="2" column="3">
-                     <widget class="QDoubleSpinBox" name="m_y2" >
-                      <property name="geometry" >
-                       <rect>
-                        <width>71</width>
-                        <height>22</height>
-                       </rect>
-                      </property>
-                      <property name="maximum" >
-                       <double>1e+10</double>
-                      </property>
-                      <property name="minimum" >
-                       <double>-1e+09</double>
-                      </property>
-                      <property name="singleStep" >
-                       <double>0.01</double>
-                      </property>
-                     </widget>
-                   </item>
-                   <item row="2" column="4">
-                     <widget class="QLabel" name="textLabel4_3_5" >
-                      <property name="geometry" >
-                       <rect>
-                        <width>41</width>
-                        <height>20</height>
-                       </rect>
-                      </property>
-                      <property name="text" >
-                       <string>Rot (°):</string>
-                      </property>
-                     </widget>
-                   </item>
-                   <item row="2" column="5">
-                     <widget class="QDoubleSpinBox" name="m_rotationAngle" >
-                      <property name="geometry" >
-                       <rect>
-                        <width>91</width>
-                        <height>22</height>
-                       </rect>
-                      </property>
-                      <property name="maximum" >
-                       <double>360</double>
-                      </property>
-                      <property name="minimum" >
-                       <double>0</double>
-                      </property>
-                      <property name="singleStep" >
-                       <double>1</double>
-                      </property>
-                     </widget>
-                   </item>
-                 </layout>
-               </widget>
+             <item row="0" column="0" colspan="2">
+              <widget class="QLabel" name="startLabel">
+               <property name="text">
+                <string>Start</string>
+               </property>
+              </widget>
              </item>
-             <item row="10" column="0">
-               <widget class="QPushButton" name="objectModify" >
-                <property name="enabled" >
-                 <bool>false</bool>
-                </property>
-                <property name="geometry" >
-                 <rect>
-                  <width>71</width>
-                  <height>33</height>
-                 </rect>
-                </property>
-                <property name="text" >
-                 <string>Modify</string>
-                </property>
-               </widget>
+             <item row="0" column="2" colspan="2">
+              <widget class="QLabel" name="endLabel">
+               <property name="text">
+                <string>End</string>
+               </property>
+              </widget>
              </item>
-             <item row="10" column="1">
-               <widget class="QPushButton" name="objectCreate" >
-                <property name="geometry" >
-                 <rect>
-                  <width>71</width>
-                  <height>33</height>
-                 </rect>
-                </property>
-                <property name="text" >
-                 <string>Create</string>
-                </property>
-               </widget>
-             </item>
-             <item row="10" column="2">
-               <widget class="QPushButton" name="objectDelete" >
-                <property name="enabled" >
-                 <bool>false</bool>
-                </property>
-                <property name="geometry" >
-                 <rect>
-                  <width>71</width>
-                  <height>33</height>
-                 </rect>
-                </property>
-                <property name="text" >
-                 <string>Delete</string>
-                </property>
-               </widget>
-             </item>
-           </layout>
-         </widget>
+            </layout>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="textLabel2_2">
+            <property name="text">
+             <string>&amp;Text:</string>
+            </property>
+            <property name="buddy">
+             <cstring>objectText</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="textLabel1_2">
+            <property name="text">
+             <string>Marker t&amp;ype:</string>
+            </property>
+            <property name="buddy">
+             <cstring>objectType</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1" colspan="2">
+           <widget class="QComboBox" name="objectType">
+            <item>
+             <property name="text">
+              <string>Text mark</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Line</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Arrow</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="2" column="1" colspan="2">
+           <widget class="QLineEdit" name="objectNameStr"/>
+          </item>
+          <item row="10" column="2">
+           <widget class="QPushButton" name="objectDelete">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>&amp;Delete</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="1">
+           <widget class="QPushButton" name="objectCreate">
+            <property name="text">
+             <string>&amp;Create</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="0">
+           <widget class="QPushButton" name="objectModify">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>&amp;Update</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_2">
+      <attribute name="title">
+       <string>&amp;All</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="selectExitGroupBox">
+         <property name="minimumSize">
+          <size>
+           <width>110</width>
+           <height>115</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>110</width>
+           <height>115</height>
+          </size>
+         </property>
+         <property name="title">
+          <string>Move all markers:</string>
+         </property>
+         <layout class="QGridLayout" name="exitButtonLayout">
+          <item row="0" column="1">
+           <widget class="QToolButton" name="layerNButton">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>N</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QToolButton" name="layerUpButton">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>U</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QToolButton" name="layerEButton">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>E</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QToolButton" name="layerWButton">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>W</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QToolButton" name="layerDownButton">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>D</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QToolButton" name="layerSButton">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>S</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </item>
        <item row="1" column="0">
-         <widget class="QGroupBox" name="teleportGroupBox">
-           <property name="title">
-            <string>Act on all selected markers:</string>
-           </property>
-           <layout class="QHBoxLayout">
-             <item>
-              <widget class="QGroupBox" name="selectExitGroupBox">
-                <property name="minimumSize">
-                 <size>
-                  <width>110</width>
-                  <height>115</height>
-                 </size>
-                </property>
-                <property name="title">
-                  <string>Move all markers:</string>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>110</width>
-                  <height>115</height>
-                 </size>
-                </property>
-                <layout class="QGridLayout" name="exitButtonLayout">
-                 <item row="0" column="1">
-                  <widget class="QToolButton" name="layerNButton" >
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="text" >
-                    <string>N</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="2">
-                  <widget class="QToolButton" name="layerUpButton" >
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="text" >
-                    <string>U</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="2">
-                  <widget class="QToolButton" name="layerEButton" >
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="text" >
-                    <string>E</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="0">
-                  <widget class="QToolButton" name="layerWButton" >
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="text" >
-                    <string>W</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="0">
-                  <widget class="QToolButton" name="layerDownButton" >
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="text" >
-                    <string>D</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="1">
-                  <widget class="QToolButton" name="layerSButton" >
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="text" >
-                    <string>S</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-             </item>
-             <item>
-               <widget class="QPushButton" name="objectDeleteAll" >
-                <property name="enabled" >
-                 <bool>true</bool>
-                </property>
-                <property name="geometry" >
-                 <rect>
-                  <width>61</width>
-                  <height>33</height>
-                 </rect>
-                </property>
-                <property name="text" >
-                 <string>Delete All</string>
-                </property>
-               </widget>
-             </item>
-           </layout>
-         </widget>
+        <widget class="QPushButton" name="objectDeleteAll">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="text">
+          <string>Delete All</string>
+         </property>
+        </widget>
        </item>
-     </layout>
+      </layout>
+     </widget>
     </widget>
+   </item>
+   <item row="1" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="topMargin">
+      <number>5</number>
+     </property>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="closeButton">
+       <property name="text">
+        <string>Close</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>
- <layoutdefault spacing="6" margin="11" />
+ <layoutdefault spacing="6" margin="11"/>
  <pixmapfunction>qPixmapFromMimeSource</pixmapfunction>
  <resources/>
  <connections/>
