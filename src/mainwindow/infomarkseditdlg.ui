@@ -155,7 +155,7 @@
           <item row="5" column="0">
            <widget class="QLabel" name="textLabel3_1">
             <property name="text">
-             <string>Marker &amp;class:</string>
+             <string>C&amp;lass:</string>
             </property>
             <property name="buddy">
              <cstring>objectClassesList</cstring>
@@ -165,7 +165,7 @@
           <item row="2" column="0">
            <widget class="QLabel" name="textLabel2_2_3">
             <property name="text">
-             <string>Marker &amp;name:</string>
+             <string>&amp;Name:</string>
             </property>
             <property name="buddy">
              <cstring>objectNameStr</cstring>
@@ -187,7 +187,7 @@
              </size>
             </property>
             <property name="title">
-             <string>Marker position:</string>
+             <string>Position:</string>
             </property>
             <layout class="QGridLayout">
              <property name="leftMargin">
@@ -373,7 +373,7 @@
           <item row="3" column="0">
            <widget class="QLabel" name="textLabel1_2">
             <property name="text">
-             <string>Marker t&amp;ype:</string>
+             <string>T&amp;ype:</string>
             </property>
             <property name="buddy">
              <cstring>objectType</cstring>
