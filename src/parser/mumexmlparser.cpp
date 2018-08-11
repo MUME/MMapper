@@ -193,6 +193,7 @@ bool MumeXmlParser::element(const QByteArray &line)
                 break;
             case 'e':
                 if (line.startsWith("exits")) {
+                    m_exits = nullString; // Reset string since payload can be from the 'exit' command
                     m_xmlMode = XmlMode::EXITS;
                 }
                 break;
