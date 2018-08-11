@@ -45,11 +45,12 @@ CGroupServer::CGroupServer(QObject *parent)
 CGroupServer::~CGroupServer()
 {
     closeAll();
+    qInfo() << "Destructed CGroupServer";
 }
 
 void CGroupServer::incomingConnection(qintptr socketDescriptor)
 {
-    //qInfo() << "Adding incomming client to the connections list from descriptor" << socketDescriptor;
+    qDebug() << "Adding incoming client from descriptor" << socketDescriptor;
 
     // connect the client straight to the Communicator, as he handles all the state changes
     // data transfers and similar.
@@ -70,11 +71,11 @@ void CGroupServer::incomingConnection(qintptr socketDescriptor)
 
 void CGroupServer::errorInConnection(CGroupClient *const connection, const QString & /*errorMessage*/)
 {
-     emit connectionClosed(connection);
+    emit connectionClosed(connection);
     connections.removeAll(connection);
     connection->close();
     connection->deleteLater();
-    //    qInfo() << "Removing and deleting the connection completely" << connectionToDelete->socketDescriptor();
+    qDebug() << "Removing and deleting client from descriptor" << connection->socketDescriptor();
 }
 
 void CGroupServer::sendToAll(const QByteArray &message)

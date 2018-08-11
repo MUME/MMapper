@@ -24,8 +24,6 @@
 
 #include "groupwidget.h"
 
-#include <QHash>
-#include <QList>
 #include <QMessageLogContext>
 #include <QString>
 #include <QtWidgets>
@@ -41,198 +39,180 @@
 class RoomSelection;
 
 static constexpr const int GROUP_COLUMN_COUNT = 8;
+enum class ColumnType { NAME = 0,
+    HP_PERCENT,
+    MANA_PERCENT,
+    MOVES_PERCENT,
+    HP,
+    MANA,
+    MOVES,
+    ROOM_NAME };
+static_assert(GROUP_COLUMN_COUNT == static_cast<int>(ColumnType::ROOM_NAME) + 1, "# of columns");
 
-GroupWidget::GroupWidget(Mmapper2Group *groupManager, MapData *md, QWidget *parent)
+GroupModel::GroupModel(MapData* md, QObject* parent) : QAbstractTableModel(parent),
+    m_map(md) {}
+
+void GroupModel::setGroupSelection(GroupSelection* const selection)
+{
+    beginResetModel();
+    m_characters.clear();
+    for (const auto character : *selection) {
+        m_characters.emplace_back(character);
+    }
+    endResetModel();
+}
+
+int GroupModel::rowCount(const QModelIndex& /* parent */) const
+{
+    return m_characters.size();
+}
+
+int GroupModel::columnCount(const QModelIndex& /* parent */) const
+{
+    return GROUP_COLUMN_COUNT;
+}
+
+QString calculatePercentage(const int numerator, const int denomenator)
+{
+    if (denomenator == 0)
+        return "";
+    int percentage = static_cast<int>(100.0 * static_cast<double>(numerator) / static_cast<double>(denomenator));
+    return QString("%1\%").arg(percentage);
+}
+
+QString calculateRatio(const int numerator, const int denomenator)
+{
+    if (numerator == 0 && denomenator == 0)
+        return "";
+    return QString("%1/%2").arg(numerator).arg(denomenator);
+}
+
+QVariant GroupModel::data(const QModelIndex& index, int role) const
+{
+    if (!index.isValid())
+        return QVariant();
+
+    // Map row to character
+    assert(index.row() < static_cast<int>(m_characters.size()));
+    CGroupChar* character = m_characters.at(index.row());
+
+    // Map column to data
+    ColumnType column = static_cast<ColumnType>(index.column());
+    switch (role) {
+    case Qt::DisplayRole:
+        switch (column) {
+        case ColumnType::NAME:
+            return character->getName();
+        case ColumnType::HP_PERCENT:
+            return calculatePercentage(character->hp, character->maxhp);
+        case ColumnType::MANA_PERCENT:
+            return calculatePercentage(character->mana, character->maxmana);
+        case ColumnType::MOVES_PERCENT:
+            return calculatePercentage(character->moves, character->maxmoves);
+        case ColumnType::HP:
+            return calculateRatio(character->hp, character->maxhp);
+        case ColumnType::MANA:
+            return calculateRatio(character->mana, character->maxmana);
+        case ColumnType::MOVES:
+            return calculateRatio(character->moves, character->maxmoves);
+        case ColumnType::ROOM_NAME: {
+            QString roomName = "Unknown";
+            if (character->pos != DEFAULT_ROOMID) {
+                const RoomSelection* roomSelection = m_map->select();
+                const Room* r = m_map->getRoom(character->pos, roomSelection);
+                if (r != nullptr) {
+                    roomName = r->getName();
+                }
+                m_map->unselect(roomSelection);
+            }
+            return roomName;
+        }
+        default:
+            qWarning() << "Unsupported column" << index.column();
+    }
+        break;
+    case Qt::BackgroundRole:
+        return character->getColor();
+    case Qt::TextColorRole:
+        return character->getColor().value() < 150 ? QColor(Qt::white) : QColor(Qt::black);
+    case Qt::TextAlignmentRole:
+        if (column != ColumnType::NAME && column != ColumnType::ROOM_NAME) {
+            return Qt::AlignCenter;
+        }
+    }
+    return QVariant();
+}
+
+QVariant GroupModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    switch (role) {
+    case Qt::DisplayRole:
+        if (orientation == Qt::Orientation::Horizontal) {
+            switch (static_cast<ColumnType>(section)) {
+            case ColumnType::NAME: return "Name";
+            case ColumnType::HP_PERCENT: return "HP %";
+            case ColumnType::MANA_PERCENT: return "Mana %";
+            case ColumnType::MOVES_PERCENT: return "Moves %";
+            case ColumnType::HP: return "HP";
+            case ColumnType::MANA: return "Mana";
+            case ColumnType::MOVES: return "Moves";
+            case ColumnType::ROOM_NAME: return "Room Name";
+            default:
+                qWarning() << "Unsupported column" << section;
+            }
+        }
+        break;
+    }
+    return QVariant();
+}
+
+Qt::ItemFlags GroupModel::flags(const QModelIndex & /* index */) const {
+    return Qt::ItemFlag::NoItemFlags;
+}
+
+GroupWidget::GroupWidget(Mmapper2Group* groupManager, MapData* md, QWidget* parent)
     : QWidget(parent)
     , m_group(groupManager)
     , m_map(md)
+    , m_model(md)
 {
-    auto *layout = new QVBoxLayout(this);
+    auto* layout = new QVBoxLayout(this);
     layout->setAlignment(Qt::AlignTop);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
 
-    m_table = new QTableWidget(1, GROUP_COLUMN_COUNT, this);
-
-    m_table->setColumnCount(GROUP_COLUMN_COUNT);
-    m_table->setHorizontalHeaderLabels(QStringList()
-                                       << tr("Name") << tr("HP %") << tr("Mana %") << tr("Moves %")
-                                       << tr("HP") << tr("Mana") << tr("Moves") << tr("Room Name"));
-    m_table->verticalHeader()->setVisible(false);
-    m_table->setAlternatingRowColors(true);
+    m_table = new QTableView(this);
     m_table->setSelectionMode(QAbstractItemView::NoSelection);
     m_table->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+    m_table->horizontalHeader()->setStretchLastSection(true);
+    m_table->setModel(&m_model);
     layout->addWidget(m_table);
 
     hide();
 
     connect(m_group, &Mmapper2Group::drawCharacters, this, &GroupWidget::updateLabels, Qt::QueuedConnection);
     connect(m_group,
-            &Mmapper2Group::messageBox,
-            this, &GroupWidget::messageBox,
-            Qt::QueuedConnection);
+        &Mmapper2Group::messageBox,
+        this, &GroupWidget::messageBox,
+        Qt::QueuedConnection);
 }
 
 GroupWidget::~GroupWidget()
 {
-    for (const QString &name : m_nameItemHash.keys()) {
-        QList<QTableWidgetItem *> items = m_nameItemHash.take(name);
-        for (auto &item : items) {
-            delete item;
-        }
-    }
-    m_nameItemHash.clear();
     delete m_table;
-}
-
-void GroupWidget::setItemText(QTableWidgetItem *item, const QString &text, const QColor &color)
-{
-    item->setText(text);
-    item->setBackgroundColor(color);
-    if (color.value() < 150) {
-        item->setTextColor(Qt::white);
-    } else {
-        item->setTextColor(Qt::black);
-    }
 }
 
 void GroupWidget::updateLabels()
 {
-    GroupSelection *selection = m_group->getGroup()->selectAll();
+    GroupSelection* selection = m_group->getGroup()->selectAll();
 
-    // Clean up deleted characters
-    QSet<QString> previous = QSet<QString>::fromList(m_nameItemHash.keys());
-    QSet<QString> current = QSet<QString>::fromList(selection->keys());
-    previous.subtract(current);
-    if (!previous.empty()) {
-        for (const QString &name : previous) {
-            qDebug() << "Cleaning up item for character" << name;
-            QList<QTableWidgetItem *> items = m_nameItemHash.take(name);
-            if (!items.isEmpty()) {
-                int row = items[0]->row();
-                for (int i = 0; i < items.length(); i++) {
-                    QTableWidgetItem *item = m_table->takeItem(row, i);
-                    delete item;
-                }
-            }
-            qDebug() << "Done cleaning up item for character" << name;
-        }
-    }
+    m_model.setGroupSelection(selection);
+    m_table->resizeColumnsToContents();
 
-    // Render the existing and new characters
-    int row = 0;
-    m_table->setRowCount(selection->keys().size());
-    for (const QString &name : selection->keys()) {
-        CGroupChar *character = selection->value(name);
-        QList<QTableWidgetItem *> items = m_nameItemHash[name];
-        bool newItem = items.isEmpty();
-        if (newItem) {
-            qDebug() << "New item for character" << name << row;
-            for (uint i = 0; i < GROUP_COLUMN_COUNT; i++) {
-                QTableWidgetItem *item = new QTableWidgetItem("temp");
-                item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-                items.append(item);
-            }
-        }
-        m_nameItemHash[name] = items;
-        int previousRow = items[0]->row();
-        bool moveItem = previousRow != row;
-        if (newItem || moveItem) {
-            for (uint i = 0; i < GROUP_COLUMN_COUNT; i++) {
-                m_table->takeItem(previousRow, i);
-            }
-        }
-        QTableWidgetItem *nameItem, *hpItemPct, *manaItemPct, *movesItemPct, *hpItem, *manaItem,
-            *movesItem, *roomNameItem;
-        nameItem = items[0];
-        hpItemPct = items[1];
-        manaItemPct = items[2];
-        movesItemPct = items[3];
-        hpItem = items[4];
-        manaItem = items[5];
-        movesItem = items[6];
-        roomNameItem = items[7];
-
-        QColor color = character->getColor();
-        setItemText(nameItem, character->name, color);
-        double hpPercentage = 100.0 * static_cast<double>(character->hp)
-                              / static_cast<double>(character->maxhp);
-        double manaPercentage = 100.0 * static_cast<double>(character->mana)
-                                / static_cast<double>(character->maxmana);
-        double movesPercentage = 100.0 * static_cast<double>(character->moves)
-                                 / static_cast<double>(character->maxmoves);
-
-        QString hpStrPct = qIsNaN(hpPercentage)
-                               ? ""
-                               : QString("%1\%").arg(static_cast<int>(hpPercentage));
-        setItemText(hpItemPct, hpStrPct, color);
-        QString manaStrPct = qIsNaN(manaPercentage)
-                                 ? ""
-                                 : QString("%1\%").arg(static_cast<int>(manaPercentage));
-        setItemText(manaItemPct, manaStrPct, color);
-        QString movesStrPct = qIsNaN(movesPercentage)
-                                  ? ""
-                                  : QString("%1\%").arg(static_cast<int>(movesPercentage));
-        setItemText(movesItemPct, movesStrPct, color);
-
-        QString hpStr = QString("%1/%2").arg(character->hp).arg(character->maxhp);
-        setItemText(hpItem, hpStr, color);
-        QString manaStr = QString("%1/%2").arg(character->mana).arg(character->maxmana);
-        setItemText(manaItem, manaStr, color);
-        QString movesStr = QString("%1/%2").arg(character->moves).arg(character->maxmoves);
-        setItemText(movesItem, movesStr, color);
-
-        QString roomName = "Unknown";
-        if (character->pos != DEFAULT_ROOMID) {
-            const RoomSelection *roomSelection = m_map->select();
-            const Room *r = m_map->getRoom(character->pos, roomSelection);
-            if (r != nullptr) {
-                roomName = r->getName();
-            }
-            m_map->unselect(roomSelection);
-        }
-        setItemText(roomNameItem, roomName, color);
-
-        if (newItem || moveItem) {
-            m_table->setItem(row, 0, nameItem);
-            m_table->setItem(row, 1, hpItemPct);
-            m_table->setItem(row, 2, manaItemPct);
-            m_table->setItem(row, 3, movesItemPct);
-            m_table->setItem(row, 4, hpItem);
-            m_table->setItem(row, 5, manaItem);
-            m_table->setItem(row, 6, movesItem);
-            m_table->setItem(row, 7, roomNameItem);
-        }
-
-        /*
-        switch (state) {
-          case BASHED:
-            setItemText(item, 8, "BASHED", color);
-            break;
-          case INCAPACITATED:
-            setItemText(item, 8, "INCAP", color);
-            break;
-          case DEAD:
-            setItemText(item, 8, "DEAD", color);
-            break;
-          default:
-            setItemText(item, 8, "Normal", color);
-            break;
-        }
-        */
-
-        // Increment current row
-        row++;
-    }
     m_group->getGroup()->unselect(selection);
-
-    for (int i = 0; i < GROUP_COLUMN_COUNT; i++) {
-        m_table->resizeColumnToContents(i);
-    }
-    m_table->horizontalHeader()->setStretchLastSection(true);
 }
 
-void GroupWidget::messageBox(const QString &title, const QString &message)
+void GroupWidget::messageBox(const QString& title, const QString& message)
 {
     QMessageBox::critical(this, title, message);
 }

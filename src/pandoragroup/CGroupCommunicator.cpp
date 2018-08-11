@@ -191,7 +191,7 @@ CGroupServerCommunicator::CGroupServerCommunicator(QObject *parent)
 CGroupServerCommunicator::~CGroupServerCommunicator()
 {
     server.closeAll();
-    server.deleteLater();
+    qInfo() << "Destructed CGroupServerCommunicator";
 }
 
 void CGroupServerCommunicator::connectionClosed(CGroupClient *const connection)
@@ -373,10 +373,14 @@ void CGroupServerCommunicator::sendRemoveUserNotification(CGroupClient *const co
 {
     //    qInfo("[Server] Sending remove user notification!");
     GroupSelection *selection = getGroup()->selectByName(name);
-    QDomNode blob = selection->value(name)->toXML();
+    for (const auto character : *selection) {
+        if (character->getName() == name) {
+            QDomNode blob = character->toXML();
+            QByteArray message = formMessageBlock(Messages::REMOVE_CHAR, blob);
+            server.sendToAllExceptOne(connection, message);
+        }
+    }
     getGroup()->unselect(selection);
-    QByteArray message = formMessageBlock(Messages::REMOVE_CHAR, blob);
-    server.sendToAllExceptOne(connection, message);
 }
 
 void CGroupServerCommunicator::sendGroupTellMessage(QDomElement root)
@@ -443,13 +447,12 @@ CGroupClientCommunicator::CGroupClientCommunicator(QObject *parent)
             &CGroupClient::incomingData,
             this,
             &CGroupClientCommunicator::incomingData);
+    reconnect();
 }
 
 CGroupClientCommunicator::~CGroupClientCommunicator()
 {
-    qInfo() << "Destroying CGroupClientCommunicator";
     client.disconnectFromHost();
-    client.deleteLater();
     qInfo() << "Destructed CGroupClientCommunicator";
 }
 
@@ -489,8 +492,8 @@ void CGroupClientCommunicator::errorInConnection(CGroupClient *const connection,
         emit messageBox(QString("Connection error: %1.").arg(errorString));
         break;
     }
-    disconnect();
     emit networkDown();
+    disconnect();
 }
 
 void CGroupClientCommunicator::retrieveData(CGroupClient *conn, Messages message, QDomNode data)
@@ -601,13 +604,16 @@ void CGroupClientCommunicator::sendCharRename(QDomNode blob)
 
 void CGroupClientCommunicator::disconnect()
 {    
+    client.abort();
     client.disconnectFromHost();
     emit scheduleAction(new ResetCharacters());
 }
 
 void CGroupClientCommunicator::reconnect()
 {
-    disconnect();
+    if (client.getConnectionState() != ConnectionStates::Closed) {
+        disconnect();
+    }
 
     client.setConnectionState(ConnectionStates::Connecting);
     client.setProtocolState(ProtocolStates::AwaitingLogin);

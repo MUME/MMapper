@@ -122,7 +122,7 @@ void Mmapper2Group::issueLocalCharUpdate()
     }
 
     if (network) {
-        QDomNode data = group->getSelf()->toXML();
+        const QDomNode &data = group->getSelf()->toXML();
         network->sendCharUpdate(data);
         emit drawCharacters();
     }
@@ -267,7 +267,7 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
         return; // false prompt
     }
 
-    CGroupChar *self = group->getSelf();
+    CGroupLocalChar *self = group->getSelf();
     QByteArray oldHP = self->textHP;
     QByteArray oldMana = self->textMana;
     QByteArray oldMoves = self->textMoves;
@@ -370,8 +370,8 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
                 } else if (moves == "Fainting") {
                     return maxmoves * 0.05;
                 } else {
-                    // REVISIT: What about "Exhausted"?
-                    return static_cast<double>(def);
+                    // Exhausted
+                    return 0.0;
                 }
             };
             const auto newmoves = static_cast<int>(calc_moves(moves, maxmoves, self->moves));
@@ -397,7 +397,7 @@ GroupManagerState Mmapper2Group::getType()
 
 void Mmapper2Group::networkDown()
 {
-    setType(GroupManagerState::Off);
+    qDebug() << "Network down";
     emit groupManagerOff();
 }
 

@@ -34,16 +34,13 @@
 CGroupChar::CGroupChar() = default;
 CGroupChar::~CGroupChar() = default;
 
-QDomNode CGroupChar::toXML()
+const QDomNode CGroupChar::toXML() const
 {
     QDomDocument doc("charinfo");
 
     QDomElement root = doc.createElement("playerData");
     root.setAttribute("name", QString(name));
     root.setAttribute("color", color.name());
-    root.setAttribute("textHP", QString(textHP));
-    root.setAttribute("textMana", QString(textMana));
-    root.setAttribute("textMoves", QString(textMoves));
     root.setAttribute("hp", hp);
     root.setAttribute("maxhp", maxhp);
     root.setAttribute("mana", mana);
@@ -51,7 +48,6 @@ QDomNode CGroupChar::toXML()
     root.setAttribute("moves", moves);
     root.setAttribute("maxmoves", maxmoves);
     root.setAttribute("state", static_cast<int>(state));
-    root.setAttribute("lastMovement", QString(lastMovement));
     root.setAttribute("room", pos.asUint32());
     doc.appendChild(root);
 
@@ -88,17 +84,12 @@ bool CGroupChar::updateFromXML(const QDomNode &node)
 #define TRY_UPDATE_STRING(s) tryUpdateString(#s, (s))
 
     TRY_UPDATE_STRING(name);
-    TRY_UPDATE_STRING(lastMovement);
 
-    auto str = e.attribute("color").toLatin1();
-    if (str != color.name().toLatin1()) {
+    auto str = e.attribute("color");
+    if (str != color.name()) {
         updated = true;
-        color = QColor(QString(str));
+        color = QColor(str);
     }
-
-    TRY_UPDATE_STRING(textHP);
-    TRY_UPDATE_STRING(textMana);
-    TRY_UPDATE_STRING(textMoves);
 
     auto tryUpdateInt = [&](const char *attr, int &n) {
         auto i = e.attribute(attr).toInt();

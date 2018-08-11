@@ -86,7 +86,7 @@ void CGroupClient::setConnectionState(ConnectionStates val)
 CGroupClient::~CGroupClient()
 {
     disconnectFromHost();
-    qInfo() << "Destructed" << "CGroupClient" << socketDescriptor();
+    qInfo() << "Destructed CGroupClient" << socketDescriptor();
 }
 
 void CGroupClient::errorHandler(QAbstractSocket::SocketError /*socketError*/)

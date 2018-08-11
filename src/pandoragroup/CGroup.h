@@ -40,6 +40,7 @@
 #include "groupselection.h"
 
 class CGroupChar;
+class CGroupLocalChar;
 class CGroupClient;
 class CGroupCommunicator;
 class GroupAction;
@@ -84,7 +85,7 @@ signals:
 protected:
     void executeActions();
 
-    CGroupChar *getSelf() { return self; }
+    CGroupLocalChar *getSelf() { return self; }
     void renameChar(const QDomNode &blob);
     void resetChars();
     void updateChar(const QDomNode &blob); // updates given char from the blob
@@ -100,7 +101,7 @@ private:
     std::queue<GroupAction *> actionSchedule;
 
     std::vector<CGroupChar *> charIndex;
-    CGroupChar *self;
+    CGroupLocalChar *self;
 };
 
 #endif /*CGROUP_H_*/

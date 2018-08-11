@@ -26,9 +26,8 @@
 #ifndef GROUPWIDGET_H
 #define GROUPWIDGET_H
 
-#include <QColor>
-#include <QHash>
-#include <QList>
+#include <vector>
+#include <QAbstractTableModel>
 #include <QString>
 #include <QWidget>
 #include <QtCore>
@@ -36,10 +35,33 @@
 #include "groupselection.h"
 
 class MapData;
+class CGroupChar;
 class Mmapper2Group;
 class QObject;
-class QTableWidget;
-class QTableWidgetItem;
+class QTableView;
+
+class GroupModel : public QAbstractTableModel
+{
+    Q_OBJECT
+
+public:
+    explicit GroupModel(MapData *md, QObject *parent = nullptr);
+
+    void setGroupSelection(GroupSelection *const selection);
+
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    QVariant headerData(int section,
+                        Qt::Orientation orientation,
+                        int role = Qt::DisplayRole) const override;
+    Qt::ItemFlags flags(const QModelIndex &parent = QModelIndex()) const override;
+
+private:
+    MapData *m_map = nullptr;
+    std::vector<CGroupChar *> m_characters;
+};
 
 class GroupWidget : public QWidget
 {
@@ -48,17 +70,15 @@ public:
     explicit GroupWidget(Mmapper2Group *groupManager, MapData *md, QWidget *parent = nullptr);
     virtual ~GroupWidget();
 
-    void setItemText(QTableWidgetItem *item, const QString &, const QColor &color);
-
 public slots:
     void updateLabels();
     void messageBox(const QString &title, const QString &message);
 
 private:
-    QTableWidget *m_table = nullptr;
+    QTableView *m_table = nullptr;
     Mmapper2Group *m_group = nullptr;
     MapData *m_map = nullptr;
-    QHash<QString, QList<QTableWidgetItem *>> m_nameItemHash{};
+    GroupModel m_model;
 };
 
 #endif // GROUPWIDGET_H
