@@ -31,8 +31,6 @@
 #include <QChar>
 #include <QFontDatabase>
 #include <QHostInfo>
-#include <QPoint>
-#include <QSize>
 #include <QString>
 #include <QStringList>
 
@@ -152,7 +150,6 @@ ConstString KEY_NO_SPLASH = "No splash screen";
 ConstString KEY_NO_LAUNCH_PANEL = "No launch panel";
 ConstString KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES = "Number of anti-aliasing samples";
 ConstString KEY_PASSWORD_PATTERN = "Password pattern";
-ConstString KEY_POS = "pos";
 ConstString KEY_PROMPT_PATTERN = "Prompt pattern";
 ConstString KEY_RELATIVE_PATH_ACCEPTANCE = "relative path acceptance";
 ConstString KEY_REMOTE_EDITING_AND_VIEWING = "Remote editing and viewing";
@@ -171,7 +168,6 @@ ConstString KEY_SHARE_SELF = "share self";
 ConstString KEY_SHOW_HIDDEN_EXIT_FLAGS = "Show hidden exit flags";
 ConstString KEY_SHOW_NOTES = "Show notes";
 ConstString KEY_SHOW_UPDATED_ROOMS = "Show updated rooms";
-ConstString KEY_SIZE = "size";
 ConstString KEY_STATE = "state";
 ConstString KEY_TAB_COMPLETION_DICTIONARY_SIZE = "Tab completion dictionary size";
 ConstString KEY_TLS_ENCRYPTION = "TLS encryption";
@@ -179,8 +175,7 @@ ConstString KEY_USE_INTERNAL_EDITOR = "Use internal editor";
 ConstString KEY_USE_SOFTWARE_OPENGL = "Use software OpenGL";
 ConstString KEY_USE_TELNET_IAC_GA_PROMPTS = "Use Telnet IAC-GA prompts";
 ConstString KEY_USE_TRILINEAR_FILTERING = "Use trilinear filtering";
-ConstString KEY_WINDOW_POSITION = "Window Position";
-ConstString KEY_WINDOW_SIZE = "Window Size";
+ConstString KEY_WINDOW_GEOMETRY = "Window Geometry";
 ConstString KEY_WINDOW_STATE = "Window State";
 
 static bool isValidAnsi(const QString &input)
@@ -311,12 +306,6 @@ void Configuration::GeneralSettings::read(QSettings &conf)
 {
     firstRun = conf.value(KEY_RUN_FIRST_TIME, true).toBool();
     /*
-     * REVISIT: What happens if the position is off of the current monitor,
-     * or if the size is too large for the current monitor?
-     */
-    windowPosition = conf.value(KEY_WINDOW_POSITION, QPoint(200, 200)).toPoint();
-    windowSize = conf.value(KEY_WINDOW_SIZE, QSize(800, 600)).toSize();
-    /*
      * REVISIT: It's basically impossible to verify that this state is valid,
      * because we have no idea what it contains!
      *
@@ -327,7 +316,8 @@ void Configuration::GeneralSettings::read(QSettings &conf)
      * (or better yet sign it), and record the OS config, so that we won't
      * try to apply Windows settings to Mac, or Gnome settings to KDE, etc?
      */
-    windowState = conf.value(KEY_WINDOW_STATE, "").toByteArray();
+    windowGeometry = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
+    windowState = conf.value(KEY_WINDOW_STATE).toByteArray();
     alwaysOnTop = conf.value(KEY_ALWAYS_ON_TOP, false).toBool();
     mapMode = sanitizeMapMode(conf.value(KEY_MAP_MODE, static_cast<uint>(MapMode::PLAY)).toUInt());
     noSplash = conf.value(KEY_NO_SPLASH, false).toBool();
@@ -474,8 +464,7 @@ void Configuration::IntegratedMudClientSettings::read(QSettings &conf)
 void Configuration::GeneralSettings::write(QSettings &conf) const
 {
     conf.setValue(KEY_RUN_FIRST_TIME, false);
-    conf.setValue(KEY_WINDOW_POSITION, windowPosition);
-    conf.setValue(KEY_WINDOW_SIZE, windowSize);
+    conf.setValue(KEY_WINDOW_GEOMETRY, windowGeometry);
     conf.setValue(KEY_WINDOW_STATE, windowState);
     conf.setValue(KEY_ALWAYS_ON_TOP, alwaysOnTop);
     conf.setValue(KEY_MAP_MODE, static_cast<uint>(mapMode));
@@ -595,70 +584,67 @@ bool Configuration::isChanged() const
 }
 
 /* REVISIT: convert to global data members? */
-Configuration::PosSize Configuration::readIntegratedMudClientPosSize()
+QByteArray Configuration::readIntegratedMudClientGeometry()
 {
     SETTINGS(conf);
 
-    PosSize result;
     conf.beginGroup(GRP_INTEGRATED_MUD_CLIENT);
-    result.pos = conf.value(KEY_POS, QPoint(200, 200)).toPoint();
-    result.size = conf.value(KEY_SIZE, QSize(400, 400)).toSize();
+    QByteArray result = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
     conf.endGroup();
 
     return result;
 }
 
 /* REVISIT: convert to global data members? */
-void Configuration::writeIntegratedMudClientPosSize(const PosSize &posSize) const
+void Configuration::writeIntegratedMudClientGeometry(const QByteArray &geometry) const
 {
     SETTINGS(conf);
 
     conf.beginGroup(GRP_INTEGRATED_MUD_CLIENT);
-    conf.setValue(KEY_POS, posSize.pos);
-    conf.setValue(KEY_SIZE, posSize.size);
+    conf.setValue(KEY_WINDOW_GEOMETRY, geometry);
     conf.endGroup();
 }
 
 /* REVISIT: convert to global data member? */
-QPoint Configuration::readInfoMarksEditDlgPos()
+QByteArray Configuration::readInfoMarksEditDlgGeometry()
 {
     SETTINGS(conf);
 
     conf.beginGroup(GRP_INFOMARKSEDITDLG);
-    QPoint pos = conf.value(KEY_POS, QPoint(200, 200)).toPoint();
+    QByteArray result = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
     conf.endGroup();
 
-    return pos;
+    return result;
 }
 
 /* REVISIT: convert to global data member? */
-void Configuration::writeInfoMarksEditDlgPos(const QPoint &pos) const
+void Configuration::writeInfoMarksEditDlgGeometry(const QByteArray &geometry) const
 {
     SETTINGS(conf);
 
     conf.beginGroup(GRP_INFOMARKSEDITDLG);
-    conf.setValue(KEY_POS, pos);
+    conf.setValue(KEY_WINDOW_GEOMETRY, geometry);
     conf.endGroup();
 }
 
 /* REVISIT: convert to global data member? */
-QPoint Configuration::readRoomEditAttrDlgPos()
+QByteArray Configuration::readRoomEditAttrGeometry()
 {
     SETTINGS(conf);
 
     conf.beginGroup(GRP_ROOMEDITATTRDLG);
-    QPoint pos = conf.value(KEY_POS, QPoint(200, 200)).toPoint();
+    QByteArray result = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
     conf.endGroup();
 
-    return pos;
+    return result;
 }
 
 /* REVISIT: convert to global data member? */
-void Configuration::writeRoomEditAttrDlgPos(const QPoint &pos) const
+void Configuration::writeRoomEditAttrDlgGeometry(const QByteArray &geometry) const
 {
     SETTINGS(conf);
 
     conf.beginGroup(GRP_ROOMEDITATTRDLG);
-    conf.setValue(KEY_POS, pos);
+    conf.setValue(KEY_WINDOW_GEOMETRY, geometry);
     conf.endGroup();
 }

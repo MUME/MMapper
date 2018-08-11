@@ -174,14 +174,12 @@ ClientWidget::~ClientWidget()
 
 void ClientWidget::readSettings()
 {
-    const auto posSize = Config().readIntegratedMudClientPosSize();
-    move(posSize.pos);
-    resize(posSize.size);
+    restoreGeometry(Config().readIntegratedMudClientGeometry());
 }
 
 void ClientWidget::writeSettings()
 {
-    Config().writeIntegratedMudClientPosSize({pos(), size()});
+    Config().writeIntegratedMudClientGeometry(saveGeometry());
 }
 
 void ClientWidget::closeEvent(QCloseEvent *event)

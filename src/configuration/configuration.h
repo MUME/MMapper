@@ -31,8 +31,6 @@
 #include <QByteArray>
 #include <QColor>
 #include <QFont>
-#include <QPoint>
-#include <QSize>
 #include <QString>
 #include <QStringList>
 #include <QtCore>
@@ -69,14 +67,9 @@ public:
         general.firstRun = value;
         change();
     }
-    void setWindowPosition(QPoint pos)
+    void setWindowGeometry(QByteArray geometry)
     {
-        general.windowPosition = pos;
-        change();
-    }
-    void setWindowSize(QSize size)
-    {
-        general.windowSize = size;
+        general.windowGeometry = geometry;
         change();
     }
     void setWindowState(QByteArray state)
@@ -93,8 +86,7 @@ public:
     struct GeneralSettings
     {
         bool firstRun = false;
-        QPoint windowPosition{};
-        QSize windowSize{};
+        QByteArray windowGeometry{};
         QByteArray windowState{};
         bool alwaysOnTop = false;
         MapMode mapMode = MapMode::PLAY;
@@ -278,21 +270,16 @@ private:
     friend Configuration &Config();
 
 public:
-    struct PosSize
-    {
-        QPoint pos;
-        QSize size;
-    };
-    PosSize readIntegratedMudClientPosSize();
-    void writeIntegratedMudClientPosSize(const PosSize &posSize) const;
+    QByteArray readIntegratedMudClientGeometry();
+    void writeIntegratedMudClientGeometry(const QByteArray &geometry) const;
 
 public:
-    QPoint readInfoMarksEditDlgPos();
-    void writeInfoMarksEditDlgPos(const QPoint &pos) const;
+    QByteArray readInfoMarksEditDlgGeometry();
+    void writeInfoMarksEditDlgGeometry(const QByteArray &geometry) const;
 
 public:
-    QPoint readRoomEditAttrDlgPos();
-    void writeRoomEditAttrDlgPos(const QPoint &pos) const;
+    QByteArray readRoomEditAttrGeometry();
+    void writeRoomEditAttrDlgGeometry(const QByteArray &geometry) const;
 };
 
 /// Returns a reference to the application configuration object.

@@ -156,15 +156,13 @@ public slots:
 
 protected:
     void closeEvent(QCloseEvent *event) override;
-    virtual QSize minimumSizeHint() const override;
-    virtual QSize sizeHint() const override;
 
 private:
     MapWindow *m_mapWindow = nullptr;
     QTextBrowser *logWindow = nullptr;
     DockWidget *m_dockDialogLog = nullptr;
     DockWidget *m_dockDialogGroup = nullptr;
-    DockWidget *m_dockWelcome = nullptr;
+    DockWidget *m_dockLaunch = nullptr;
 
     ConnectionListener *m_listener = nullptr;
     Mmapper2PathMachine *m_pathMachine = nullptr;
@@ -179,7 +177,7 @@ private:
     GroupWidget *m_groupWidget = nullptr;
 
     ClientWidget *m_client = nullptr;
-    WelcomeWidget *m_welcomeWidget = nullptr;
+    WelcomeWidget *m_launchWidget = nullptr;
 
     const RoomSelection *m_roomSelection = nullptr;
     ConnectionSelection *m_connectionSelection = nullptr;

@@ -85,16 +85,6 @@ DockWidget::DockWidget(const QString &title, QWidget *parent, Qt::WindowFlags fl
     : QDockWidget(title, parent, flags)
 {}
 
-QSize MainWindow::minimumSizeHint() const
-{
-    return {200, 200};
-}
-
-QSize MainWindow::sizeHint() const
-{
-    return {500, 800};
-}
-
 QSize DockWidget::minimumSizeHint() const
 {
     return {200, 0};
@@ -144,14 +134,14 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     m_client = new ClientWidget(this);
     m_client->setObjectName("MMapper2Client");
 
-    m_welcomeWidget = new WelcomeWidget(this);
-    m_welcomeWidget->setObjectName("WelcomeWidget");
-    m_dockWelcome = new DockWidget("Launch Panel", this);
-    m_dockWelcome->setObjectName("DockWelcome");
-    m_dockWelcome->setAllowedAreas(Qt::LeftDockWidgetArea);
-    m_dockWelcome->setFeatures(QDockWidget::DockWidgetClosable);
-    addDockWidget(Qt::LeftDockWidgetArea, m_dockWelcome);
-    m_dockWelcome->setWidget(m_welcomeWidget);
+    m_launchWidget = new WelcomeWidget(this);
+    m_launchWidget->setObjectName("WelcomeWidget");
+    m_dockLaunch = new DockWidget("Launch Panel", this);
+    m_dockLaunch->setObjectName("DockWelcome");
+    m_dockLaunch->setAllowedAreas(Qt::LeftDockWidgetArea);
+    m_dockLaunch->setFeatures(QDockWidget::DockWidgetClosable);
+    addDockWidget(Qt::LeftDockWidgetArea, m_dockLaunch);
+    m_dockLaunch->setWidget(m_launchWidget);
 
     m_dockDialogLog = new DockWidget(tr("Log View"), this);
     m_dockDialogLog->setObjectName("DockWidgetLog");
@@ -211,11 +201,12 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     //update connections
     wireConnections();
     readSettings();
+
     if (Config().general.noLaunchPanel) {
-        m_welcomeWidget->hide();
-        m_dockWelcome->hide();
+        m_launchWidget->hide();
+        m_dockLaunch->hide();
     } else {
-        m_dockWelcome->show();
+        m_dockLaunch->show();
     }
 
     switch (Config().general.mapMode) {
@@ -239,27 +230,17 @@ MainWindow::~MainWindow() = default;
 void MainWindow::readSettings()
 {
     const auto &settings = Config().general;
-    resize(settings.windowSize);
-    move(settings.windowPosition);
+    restoreGeometry(settings.windowGeometry);
     restoreState(settings.windowState);
     alwaysOnTopAct->setChecked(settings.alwaysOnTop);
     if (settings.alwaysOnTop) {
         alwaysOnTop();
     }
-    auto position = pos();
-    if (position.x() < 0) {
-        position.setX(0);
-    }
-    if (position.y() < 0) {
-        position.setY(0);
-    }
-    move(position);
 }
 
 void MainWindow::writeSettings()
 {
-    Config().setWindowPosition(pos());
-    Config().setWindowSize(size());
+    Config().setWindowGeometry(saveGeometry());
     Config().setWindowState(saveState());
     Config().setAlwaysOnTop(static_cast<bool>(windowFlags() & Qt::WindowStaysOnTopHint));
 }
@@ -352,14 +333,14 @@ void MainWindow::wireConnections()
 
     connect(m_mumeClock, &MumeClock::log, this, &MainWindow::log);
 
-    connect(m_welcomeWidget, &WelcomeWidget::playMumeClicked, this, &MainWindow::onLaunchClient);
+    connect(m_launchWidget, &WelcomeWidget::playMumeClicked, this, &MainWindow::onLaunchClient);
     connect(m_listener,
             &ConnectionListener::clientSuccessfullyConnected,
-            m_welcomeWidget,
+            m_launchWidget,
             &QWidget::hide);
     connect(m_listener,
             &ConnectionListener::clientSuccessfullyConnected,
-            m_dockWelcome,
+            m_dockLaunch,
             &QWidget::hide);
 }
 
@@ -1476,8 +1457,8 @@ void MainWindow::onFindRoom()
 
 void MainWindow::onLaunchClient()
 {
-    m_welcomeWidget->hide();
-    m_dockWelcome->hide();
+    m_launchWidget->hide();
+    m_dockLaunch->hide();
 
     m_client->show();
     m_client->focusWidget();
