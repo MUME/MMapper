@@ -1489,13 +1489,15 @@ void MainWindow::groupManagerOff()
     groupMode.groupOffAct->setChecked(true);
     m_dockDialogGroup->hide();
     m_groupWidget->hide();
+    emit setGroupManagerType(GroupManagerState::Off);
 }
 
 void MainWindow::groupOff()
 {
-    groupManagerOff();
     if (m_groupManager->getType() != GroupManagerState::Off && groupMode.groupOffAct->isChecked()) {
         emit setGroupManagerType(GroupManagerState::Off);
+        m_dockDialogGroup->hide();
+        m_groupWidget->hide();
     }
 }
 

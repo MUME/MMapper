@@ -25,7 +25,11 @@
 #include "groupselection.h"
 #include "CGroupChar.h"
 #include <cassert>
-#include <vector>
+
+GroupSelection::GroupSelection(GroupAdmin *admin):
+    m_admin(admin) {}
+
+GroupSelection::~GroupSelection() = default;
 
 /**
  * @brief CGroupSelection::receiveCharacters
@@ -35,7 +39,7 @@
 void GroupSelection::receiveCharacters(GroupAdmin *admin, const std::vector<CGroupChar *> chars)
 {
     assert(admin == m_admin);
-    for (CGroupChar *aChar : chars) {
-        insert(aChar->getName(), aChar);
+    for (auto aChar : chars) {
+        emplace_back(aChar);
     }
 }

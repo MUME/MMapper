@@ -27,9 +27,6 @@
 #define GROUPSELECTION_H
 
 #include <vector>
-#include <QMap>
-#include <QString>
-#include <QWidget>
 
 class CGroupChar;
 class GroupRecipient;
@@ -38,24 +35,42 @@ class GroupAdmin
 {
 public:
     virtual void releaseCharacters(GroupRecipient *) = 0;
-
-    virtual ~GroupAdmin() {}
+    virtual ~GroupAdmin() = default;
 };
 
 class GroupRecipient
 {
 public:
     virtual void receiveCharacters(GroupAdmin *, const std::vector<CGroupChar *>) = 0;
-    virtual ~GroupRecipient() {}
+    virtual ~GroupRecipient() = default;
 };
 
-class GroupSelection : public QMap<QString, CGroupChar *>, public GroupRecipient
+
+class GroupSelection : private std::vector<CGroupChar*>, public GroupRecipient
 {
+private:
+    using base = std::vector<CGroupChar*>;
+
 public:
-    explicit GroupSelection(GroupAdmin *admin)
-        : m_admin(admin)
-    {}
+    using std::vector<CGroupChar*>::vector;
+
+private:
+    GroupSelection(GroupSelection &&) = delete;
+    GroupSelection(const GroupSelection &) = delete;
+    GroupSelection &operator=(GroupSelection &&) = delete;
+    GroupSelection &operator=(const GroupSelection &) = delete;
+
+public:
+    explicit GroupSelection(GroupAdmin *admin);
+    virtual ~GroupSelection();
+
     void receiveCharacters(GroupAdmin *, const std::vector<CGroupChar *>) override;
+
+public:
+    using base::begin;
+    using base::end;
+    using base::cbegin;
+    using base::cend;
 
 private:
     GroupAdmin *m_admin = nullptr;

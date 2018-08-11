@@ -1083,7 +1083,7 @@ void MapCanvas::drawGroupCharacters()
     }
 
     GroupSelection *const selection = group->selectAll();
-    for (CGroupChar *const character : selection->values()) {
+    for (auto character : *selection) {
         const RoomId id = character->getPosition();
         if (character->getName() != Config().groupManager.charName) {
             const RoomSelection *const roomSelection = m_data->select();

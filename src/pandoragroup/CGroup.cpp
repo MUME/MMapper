@@ -41,7 +41,7 @@ CGroup::CGroup(QObject *parent)
     : QObject(parent)
     , characterLock(QMutex::Recursive)
 {
-    self = new CGroupChar();
+    self = new CGroupLocalChar();
     self->setName(Config().groupManager.charName);
     self->setPosition(DEFAULT_ROOMID);
     self->setColor(Config().groupManager.color);

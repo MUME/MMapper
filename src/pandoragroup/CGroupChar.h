@@ -50,16 +50,10 @@ public:
 
 public:
     RoomId pos = INVALID_ROOMID;
-    QByteArray name{};
-    QByteArray textHP{};
-    QByteArray textMoves{};
-    QByteArray textMana{};
-    QByteArray lastMovement{};
     int hp = 0, maxhp = 0;
     int mana = 0, maxmana = 0;
     int moves = 0, maxmoves = 0;
     CharacterStates state = CharacterStates::NORMAL;
-    QColor color{};
 
     explicit CGroupChar();
     virtual ~CGroupChar();
@@ -68,13 +62,29 @@ public:
     void setName(QByteArray _name) { name = _name; }
     void setColor(QColor col) { color = col; }
     const QColor &getColor() const { return color; }
-    QDomNode toXML();
+    const QDomNode toXML() const;
     bool updateFromXML(const QDomNode &node);
-    void setLastMovement(QByteArray move) { lastMovement = move; }
     void setPosition(RoomId id) { pos = id; }
     RoomId getPosition() const { return pos; }
-    const QByteArray &getLastMovement() const { return lastMovement; }
     static QByteArray getNameFromXML(const QDomNode &node);
+
+private:
+    QByteArray name{};
+    QColor color{};
+
+public:
+    CGroupChar(const CGroupChar &) = delete;
+    CGroupChar &operator=(const CGroupChar &) = delete;
+};
+
+class CGroupLocalChar : public CGroupChar
+{
+public:
+    explicit CGroupLocalChar() = default;
+
+    QByteArray textHP{};
+    QByteArray textMoves{};
+    QByteArray textMana{};
 
     // for local char only
     void setScore(int _hp, int _maxhp, int _mana, int _maxmana, int _moves, int _maxmoves)
@@ -93,10 +103,6 @@ public:
         textMana = mana;
         textMoves = moves;
     }
-
-public:
-    CGroupChar(const CGroupChar &) = delete;
-    CGroupChar &operator=(const CGroupChar &) = delete;
 };
 
 #endif /*CGROUPCHAR_H_*/
