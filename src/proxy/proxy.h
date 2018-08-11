@@ -40,6 +40,7 @@
 
 #include "../global/io.h"
 
+class ConnectionListener;
 class CommandEvaluator;
 class MapData;
 class Mmapper2Group;
@@ -61,22 +62,20 @@ class TelnetFilter;
 // TODO: Rip out multithreading and use async sockets.
 class ProxyThreader final : public QThread
 {
+    Q_OBJECT
 public:
     explicit ProxyThreader(Proxy *);
-    ~ProxyThreader();
+    ~ProxyThreader() override;
 
     void run() override;
 
 protected:
-    Q_OBJECT
     Proxy *m_proxy = nullptr;
 };
 
 class Proxy final : public QObject
 {
-protected:
     Q_OBJECT
-
 public:
     explicit Proxy(MapData *,
                    Mmapper2PathMachine *,
@@ -141,7 +140,7 @@ private:
 
     ProxyThreader *m_thread = nullptr;
     bool m_threaded = false;
-    QObject *m_parent = nullptr;
+    ConnectionListener *m_parent = nullptr;
 };
 
 #endif

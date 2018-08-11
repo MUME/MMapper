@@ -42,6 +42,7 @@
 #include "../parser/abstractparser.h"
 #include "../parser/mumexmlparser.h"
 #include "../pathmachine/mmapper2pathmachine.h"
+#include "connectionlistener.h"
 #include "mumesocket.h"
 #include "telnetfilter.h"
 
@@ -95,7 +96,7 @@ Proxy::Proxy(MapData *const md,
     , m_groupManager(gm)
     , m_mumeClock(mc)
     , m_threaded(threaded)
-    , m_parent(parent)
+    , m_parent(dynamic_cast<ConnectionListener *>(parent))
 {
     if (threaded) {
         m_thread = new ProxyThreader(this);
@@ -145,13 +146,17 @@ void Proxy::start()
         if (init()) {
             moveToThread(m_thread);
         }
+    } else {
+        init();
     }
 }
 
 bool Proxy::init()
 {
-    connect(m_thread, &QThread::finished, this, &QObject::deleteLater);
-    connect(m_thread, SIGNAL(finished()), m_parent, SLOT(doAcceptNewConnections()));
+    if (m_threaded) {
+        connect(m_thread, &QThread::finished, this, &QObject::deleteLater);
+        connect(m_thread, &QThread::finished, m_parent, &ConnectionListener::doAcceptNewConnections);
+    }
 
     connect(this,
             SIGNAL(log(const QString &, const QString &)),
@@ -165,7 +170,10 @@ bool Proxy::init()
     }
     m_userSocket->setSocketOption(QAbstractSocket::KeepAliveOption, true);
 
-    connect(m_userSocket.data(), &QAbstractSocket::disconnected, this, &Proxy::userTerminatedConnection);
+    connect(m_userSocket.data(),
+            &QAbstractSocket::disconnected,
+            this,
+            &Proxy::userTerminatedConnection);
     connect(m_userSocket.data(), &QIODevice::readyRead, this, &Proxy::processUserStream);
 
     m_telnetFilter = new TelnetFilter(this);
@@ -179,17 +187,9 @@ bool Proxy::init()
             m_mpiFilter,
             &MpiFilter::analyzeNewMudInput);
     connect(m_mpiFilter, &MpiFilter::sendToMud, this, &Proxy::sendToMud);
-    connect(m_mpiFilter,
-            &MpiFilter::editMessage,
-            m_remoteEdit,
-            &RemoteEdit::remoteEdit,
-            Qt::QueuedConnection);
-    connect(m_mpiFilter,
-            &MpiFilter::viewMessage,
-            m_remoteEdit,
-            &RemoteEdit::remoteView,
-            Qt::QueuedConnection);
-    connect(m_remoteEdit, &RemoteEdit::sendToSocket, this, &Proxy::sendToMud, Qt::QueuedConnection);
+    connect(m_mpiFilter, &MpiFilter::editMessage, m_remoteEdit, &RemoteEdit::remoteEdit);
+    connect(m_mpiFilter, &MpiFilter::viewMessage, m_remoteEdit, &RemoteEdit::remoteView);
+    connect(m_remoteEdit, &RemoteEdit::sendToSocket, this, &Proxy::sendToMud);
 
     m_parserXml = new MumeXmlParser(m_mapData, m_mumeClock, this);
     connect(m_mpiFilter,
@@ -206,18 +206,12 @@ bool Proxy::init()
     connect(m_parserXml,
             static_cast<void (MumeXmlParser::*)(const SigParseEvent &)>(&MumeXmlParser::event),
             m_pathMachine,
-            &Mmapper2PathMachine::event,
-            Qt::QueuedConnection);
+            &Mmapper2PathMachine::event);
     connect(m_parserXml,
             &AbstractParser::releaseAllPaths,
             m_pathMachine,
-            &PathMachine::releaseAllPaths,
-            Qt::QueuedConnection);
-    connect(m_parserXml,
-            &AbstractParser::showPath,
-            m_prespammedPath,
-            &PrespammedPath::setPath,
-            Qt::QueuedConnection);
+            &PathMachine::releaseAllPaths);
+    connect(m_parserXml, &AbstractParser::showPath, m_prespammedPath, &PrespammedPath::setPath);
     connect(m_parserXml,
             SIGNAL(log(const QString &, const QString &)),
             m_parent->parent(),
@@ -231,24 +225,20 @@ bool Proxy::init()
     connect(m_parserXml,
             &MumeXmlParser::sendScoreLineEvent,
             m_groupManager,
-            &Mmapper2Group::parseScoreInformation,
-            Qt::QueuedConnection);
+            &Mmapper2Group::parseScoreInformation);
     connect(m_parserXml,
             &MumeXmlParser::sendPromptLineEvent,
             m_groupManager,
-            &Mmapper2Group::parsePromptInformation,
-            Qt::QueuedConnection);
+            &Mmapper2Group::parsePromptInformation);
     connect(m_parserXml,
             &AbstractParser::sendGroupTellEvent,
             m_groupManager,
-            &Mmapper2Group::sendGTell,
-            Qt::QueuedConnection);
+            &Mmapper2Group::sendGTell);
     // Group Tell
     connect(m_groupManager,
             &Mmapper2Group::displayGroupTellEvent,
             m_parserXml,
-            &AbstractParser::sendGTellToUser,
-            Qt::QueuedConnection);
+            &AbstractParser::sendGTellToUser);
 
     emit log("Proxy", "Connection to client established ...");
 
@@ -338,7 +328,11 @@ void Proxy::onMudError(QAbstractSocket::SocketError socketError)
 void Proxy::userTerminatedConnection()
 {
     emit log("Proxy", "User terminated connection ...");
-    m_thread->exit();
+    if (m_threaded) {
+        m_thread->exit();
+    } else {
+        deleteLater();
+    }
 }
 
 void Proxy::mudTerminatedConnection()
