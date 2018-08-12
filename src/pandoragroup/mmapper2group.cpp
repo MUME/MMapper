@@ -360,7 +360,7 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
         }
         if (!moves.isEmpty() && maxmoves != 0) {
             const auto calc_moves =
-                [](const QByteArray &moves, const double maxmoves, const int def) -> double {
+                [](const QByteArray &moves, const double maxmoves, const int /*def*/) -> double {
                 if (moves == "Tired") {
                     return maxmoves * 0.42;
                 } else if (moves == "Slow") {

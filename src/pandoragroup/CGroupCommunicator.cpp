@@ -181,8 +181,8 @@ void CGroupCommunicator::renameConnection(const QByteArray &oldName, const QByte
 //
 // Server side of the communication protocol
 CGroupServerCommunicator::CGroupServerCommunicator(Mmapper2Group *parent)
-    : CGroupCommunicator(GroupManagerState::Server, parent),
-      server(this)
+    : CGroupCommunicator(GroupManagerState::Server, parent)
+    , server(this)
 {
     connect(&server, &CGroupServer::sendLog, this, &CGroupServerCommunicator::relayLog);
     connect(&server,
@@ -303,7 +303,8 @@ void CGroupServerCommunicator::sendCharUpdate(QDomNode blob)
     }
 }
 
-void CGroupServerCommunicator::parseLoginInformation(CGroupClient *const connection, const QDomNode &data)
+void CGroupServerCommunicator::parseLoginInformation(CGroupClient *const connection,
+                                                     const QDomNode &data)
 {
     //    qInfo() << "Parsing login information from" << conn->socketDescriptor();
 
@@ -444,8 +445,8 @@ void CGroupServerCommunicator::reconnect()
 //
 // Client side of the communication protocol
 CGroupClientCommunicator::CGroupClientCommunicator(Mmapper2Group *parent)
-    : CGroupCommunicator(GroupManagerState::Client, parent),
-      client(this)
+    : CGroupCommunicator(GroupManagerState::Client, parent)
+    , client(this)
 {
     emit sendLog("Client mode has been selected");
     connect(&client,
@@ -613,7 +614,7 @@ void CGroupClientCommunicator::sendCharRename(QDomNode blob)
 }
 
 void CGroupClientCommunicator::disconnect()
-{    
+{
     client.abort();
     client.disconnectFromHost();
     emit scheduleAction(new ResetCharacters());
@@ -627,7 +628,8 @@ void CGroupClientCommunicator::reconnect()
 
     client.setConnectionState(ConnectionStates::Connecting);
     client.setProtocolState(ProtocolStates::AwaitingLogin);
-    client.connectToHost(Config().groupManager.host, Config().groupManager.remotePort);
+    client.connectToHost(Config().groupManager.host,
+                         static_cast<quint16>(Config().groupManager.remotePort));
     if (!client.waitForConnected(5000)) {
         if (client.getConnectionState() == ConnectionStates::Connecting) {
             client.setConnectionState(ConnectionStates::Quiting);

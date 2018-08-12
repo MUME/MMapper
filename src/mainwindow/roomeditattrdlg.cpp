@@ -732,7 +732,7 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
 
         const auto get_terrain_pixmap = [](RoomTerrainType type) -> QString {
             switch (type) {
-             case RoomTerrainType::ROAD:
+            case RoomTerrainType::ROAD:
                 return QString(":/pixmaps/road7.png");
             default:
                 return QString(":/pixmaps/terrain%1.png").arg(static_cast<int>(type));
@@ -851,6 +851,9 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
             break;
         case RoomTerrainType::DEATHTRAP:
             toolButton15->setChecked(true);
+            break;
+        case RoomTerrainType::RANDOM:
+            // REVISIT: add a button?
             break;
         }
     }

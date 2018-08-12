@@ -69,7 +69,7 @@ public:
     explicit InfoMarksEditDlg(MapData *mapData, QWidget *parent = nullptr);
     ~InfoMarksEditDlg();
 
-    void setPoints(double x1, double y1, double x2, double y2, int layer);
+    void setPoints(float x1, float y1, float x2, float y2, int layer);
 
     void readSettings();
     void writeSettings();
@@ -82,7 +82,7 @@ private:
 
     struct
     {
-        double x = 0.0, y = 0.0;
+        float x = 0.0, y = 0.0;
     } m_sel1{}, m_sel2{};
     int m_selLayer = 0;
 

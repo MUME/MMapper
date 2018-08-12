@@ -455,8 +455,8 @@ void AbstractParser::parseExits()
     m_mapData->unselect(rs);
 }
 
-
-QString& AbstractParser::normalizeString(QString& string) {
+QString &AbstractParser::normalizeString(QString &string)
+{
     ParserUtils::latinToAscii(string);
     ParserUtils::removeAnsiMarks(string);
     return string;
@@ -613,7 +613,8 @@ void AbstractParser::parseNewUserInput(IncomingData &data)
     auto parse_and_send = [this, &data]() {
         auto parse = [this, &data]() -> bool {
             // REVISIT: Should we also parse user input as UTF-8?
-            const QString input = QString::fromLatin1(data.line.constData(), data.line.size()).simplified();
+            const QString input = QString::fromLatin1(data.line.constData(), data.line.size())
+                                      .simplified();
             try {
                 return parseUserCommands(input);
             } catch (const std::exception &ex) {
@@ -1185,14 +1186,14 @@ bool AbstractParser::tryParseGenericDoorCommand(const QString &str)
 void AbstractParser::doOfflineCharacterMove()
 {
     if (queue.isEmpty()) {
-        return ;
+        return;
     }
 
     CommandIdType direction = queue.dequeue();
     if (m_mapData->isEmpty()) {
         sendToUser("Alas, you cannot go that way...");
         m_offlineCommandTimer.start();
-        return ;
+        return;
     }
 
     bool flee = false;
@@ -1237,6 +1238,12 @@ void AbstractParser::doOfflineCharacterMove()
                     break;
                 case CommandIdType::DOWN:
                     sendToUser("You flee down.");
+                    break;
+                case CommandIdType::UNKNOWN:
+                case CommandIdType::LOOK:
+                case CommandIdType::FLEE:
+                case CommandIdType::SCOUT:
+                case CommandIdType::NONE:
                     break;
                 }
             }

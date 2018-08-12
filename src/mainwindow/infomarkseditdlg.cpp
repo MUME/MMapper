@@ -45,12 +45,12 @@ InfoMarksEditDlg::InfoMarksEditDlg(MapData *const mapData, QWidget *const parent
 
     connect(closeButton, &QAbstractButton::clicked, this, [=]() {
         emit closeEventReceived();
-        this->accept(); }
-    );
+        this->accept();
+    });
 }
 
 void InfoMarksEditDlg::setPoints(
-    const double x1, const double y1, const double x2, const double y2, const int layer)
+    const float x1, const float y1, const float x2, const float y2, const int layer)
 {
     m_sel1.x = x1;
     m_sel1.y = y1;
@@ -210,12 +210,8 @@ void InfoMarksEditDlg::createClicked()
     im->setName(name);
     im->setText(objectText->text());
     im->setClass(getClass());
-    const Coordinate pos1(m_x1->value(),
-                          m_y1->value(),
-                          m_layer->value());
-    const Coordinate pos2(m_x2->value(),
-                          m_y2->value(),
-                          m_layer->value());
+    const Coordinate pos1(m_x1->value(), m_y1->value(), m_layer->value());
+    const Coordinate pos2(m_x2->value(), m_y2->value(), m_layer->value());
     im->setPosition1(pos1);
     im->setPosition2(pos2);
     im->setRotationAngle(m_rotationAngle->value());
@@ -236,12 +232,8 @@ void InfoMarksEditDlg::modifyClicked()
     im->setName(objectNameStr->text());
     im->setText(objectText->text());
     im->setClass(getClass());
-    const Coordinate pos1(m_x1->value(),
-                          m_y1->value(),
-                          m_layer->value());
-    const Coordinate pos2(m_x2->value(),
-                          m_y2->value(),
-                          m_layer->value());
+    const Coordinate pos1(m_x1->value(), m_y1->value(), m_layer->value());
+    const Coordinate pos2(m_x2->value(), m_y2->value(), m_layer->value());
     im->setPosition1(pos1);
     im->setPosition2(pos2);
     im->setRotationAngle(m_rotationAngle->value());
@@ -290,7 +282,7 @@ void InfoMarksEditDlg::disconnectAll()
 
 void InfoMarksEditDlg::updateMarkers()
 {
-    const auto margin = 0.2;
+    const auto margin = 0.2f;
     const auto bx1 = static_cast<int>(std::min(m_sel1.x, m_sel2.x) - margin) * 100;
     const auto by1 = static_cast<int>(std::min(m_sel1.y, m_sel2.y) - margin) * 100;
     const auto bx2 = static_cast<int>(std::max(m_sel1.x, m_sel2.x) + margin) * 100;
@@ -309,12 +301,10 @@ void InfoMarksEditDlg::updateMarkers()
         firstInside = false;
         secondInside = false;
 
-        if (c1.x > bx1 && c1.x < bx2
-            && c1.y > by1 && c1.y < by2) {
+        if (c1.x > bx1 && c1.x < bx2 && c1.y > by1 && c1.y < by2) {
             firstInside = true;
         }
-        if (c2.x > bx1 && c2.x < bx2
-            && c2.y > by1 && c2.y < by2) {
+        if (c2.x > bx1 && c2.x < bx2 && c2.y > by1 && c2.y < by2) {
             secondInside = true;
         }
 
@@ -374,10 +364,10 @@ void InfoMarksEditDlg::updateDialog()
     if (marker == nullptr) {
         objectNameStr->clear();
         objectText->clear();
-        m_x1->setValue(m_sel1.x * 100);
-        m_y1->setValue(m_sel1.y * 100);
-        m_x2->setValue(m_sel2.x * 100);
-        m_y2->setValue(m_sel2.y * 100);
+        m_x1->setValue(static_cast<int>(m_sel1.x * 100.0f));
+        m_y1->setValue(static_cast<int>(m_sel1.y * 100.0f));
+        m_x2->setValue(static_cast<int>(m_sel2.x * 100.0f));
+        m_y2->setValue(static_cast<int>(m_sel2.y * 100.0f));
         m_rotationAngle->setValue(0.0);
         m_layer->setValue(m_selLayer);
 
