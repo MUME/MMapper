@@ -43,17 +43,17 @@
 
 using Messages = CGroupCommunicator::Messages;
 
-CGroupCommunicator::CGroupCommunicator(GroupManagerState type, QObject *parent)
+CGroupCommunicator::CGroupCommunicator(GroupManagerState type, Mmapper2Group *parent)
     : QObject(parent)
     , type(type)
 {
-    connect(this, SIGNAL(sendLog(const QString &)), parent, SLOT(sendLog(const QString &)));
-    connect(this, SIGNAL(messageBox(QString)), parent, SLOT(relayMessageBox(QString)));
-    connect(this, SIGNAL(gTellArrived(QDomNode)), parent, SLOT(gTellArrived(QDomNode)));
-    connect(this, SIGNAL(networkDown()), parent, SLOT(networkDown()));
+    connect(this, &CGroupCommunicator::sendLog, parent, &Mmapper2Group::sendLog);
+    connect(this, &CGroupCommunicator::messageBox, parent, &Mmapper2Group::relayMessageBox);
+    connect(this, &CGroupCommunicator::gTellArrived, parent, &Mmapper2Group::gTellArrived);
+    connect(this, &CGroupCommunicator::networkDown, parent, &Mmapper2Group::networkDown);
     connect(this,
             &CGroupCommunicator::scheduleAction,
-            (dynamic_cast<Mmapper2Group *>(parent))->getGroup(),
+            parent->getGroup(),
             &CGroup::scheduleAction);
 }
 
@@ -180,10 +180,15 @@ void CGroupCommunicator::renameConnection(const QByteArray &oldName, const QByte
 // ******************** S E R V E R   S I D E ******************
 //
 // Server side of the communication protocol
-CGroupServerCommunicator::CGroupServerCommunicator(QObject *parent)
+CGroupServerCommunicator::CGroupServerCommunicator(Mmapper2Group *parent)
     : CGroupCommunicator(GroupManagerState::Server, parent),
       server(this)
 {
+    connect(&server, &CGroupServer::sendLog, this, &CGroupServerCommunicator::relayLog);
+    connect(&server,
+            &CGroupServer::connectionClosed,
+            this,
+            &CGroupServerCommunicator::connectionClosed);
     emit sendLog("Server mode has been selected");
     reconnect();
 }
@@ -438,7 +443,7 @@ void CGroupServerCommunicator::reconnect()
 // ******************** C L I E N T   S I D E ******************
 //
 // Client side of the communication protocol
-CGroupClientCommunicator::CGroupClientCommunicator(QObject *parent)
+CGroupClientCommunicator::CGroupClientCommunicator(Mmapper2Group *parent)
     : CGroupCommunicator(GroupManagerState::Client, parent),
       client(this)
 {
@@ -447,6 +452,11 @@ CGroupClientCommunicator::CGroupClientCommunicator(QObject *parent)
             &CGroupClient::incomingData,
             this,
             &CGroupClientCommunicator::incomingData);
+    connect(&client, &CGroupClient::sendLog, this, &CGroupClientCommunicator::relayLog);
+    connect(&client,
+            &CGroupClient::errorInConnection,
+            this,
+            &CGroupClientCommunicator::errorInConnection);
     reconnect();
 }
 

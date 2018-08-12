@@ -45,7 +45,7 @@ class CGroupCommunicator : public QObject
 {
     Q_OBJECT
 public:
-    explicit CGroupCommunicator(GroupManagerState type, QObject *parent);
+    explicit CGroupCommunicator(GroupManagerState type, Mmapper2Group *parent);
 
     static constexpr const int protocolVersion = 102;
 
@@ -106,7 +106,7 @@ class CGroupServerCommunicator : public CGroupCommunicator
     friend class CGroupServer;
 
 public:
-    explicit CGroupServerCommunicator(QObject *parent);
+    explicit CGroupServerCommunicator(Mmapper2Group *parent);
     ~CGroupServerCommunicator();
 
     virtual void renameConnection(const QByteArray &oldName, const QByteArray &newName) override;
@@ -140,7 +140,7 @@ class CGroupClientCommunicator : public CGroupCommunicator
     friend class CGroupClient;
 
 public:
-    explicit CGroupClientCommunicator(QObject *parent);
+    explicit CGroupClientCommunicator(Mmapper2Group *parent);
     ~CGroupClientCommunicator();
 
 public slots:

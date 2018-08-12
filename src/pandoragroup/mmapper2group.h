@@ -77,10 +77,10 @@ public slots:
     void gTellArrived(const QDomNode &node);
     void relayMessageBox(const QString &message);
     void sendLog(const QString &);
+    void networkDown();
 
 protected slots:
     void characterChanged();
-    void networkDown();
 
 protected:
     void gotKicked(const QDomNode &message);

@@ -30,22 +30,18 @@
 #include <QString>
 #include <QList>
 
+#include "CGroupCommunicator.h"
 #include "CGroupClient.h"
 
-CGroupServer::CGroupServer(QObject *parent)
-    : QTcpServer(parent)
-{
-    connect(this, SIGNAL(sendLog(const QString &)), parent, SLOT(relayLog(const QString &)));
-    connect(this,
-            SIGNAL(connectionClosed(CGroupClient *const)),
-            parent,
-            SLOT(connectionClosed(CGroupClient *const)));
-}
+CGroupServer::CGroupServer(CGroupServerCommunicator *parent)
+    : QTcpServer(parent),
+      communicator(parent)
+{}
 
 CGroupServer::~CGroupServer()
 {
     closeAll();
-    qInfo() << "Destructed CGroupServer";
+    qDebug() << "Destructed CGroupServer";
 }
 
 void CGroupServer::incomingConnection(qintptr socketDescriptor)
@@ -58,13 +54,17 @@ void CGroupServer::incomingConnection(qintptr socketDescriptor)
     connections.append(client);
 
     connect(client,
-            SIGNAL(incomingData(CGroupClient *const, QByteArray)),
-            parent(),
-            SLOT(incomingData(CGroupClient *const, QByteArray)));
+            &CGroupClient::incomingData,
+            communicator,
+            &CGroupServerCommunicator::incomingData);
     connect(client,
-            SIGNAL(connectionEstablished(CGroupClient *const)),
-            parent(),
-            SLOT(connectionEstablished(CGroupClient *const)));
+            &CGroupClient::connectionEstablished,
+            communicator,
+            &CGroupServerCommunicator::connectionEstablished);
+    connect(client,
+            &CGroupClient::errorInConnection,
+            this,
+            &CGroupServer::errorInConnection);
 
     client->setSocket(socketDescriptor);
 }
@@ -102,9 +102,4 @@ void CGroupServer::closeAll()
         }
     }
     connections.clear();
-}
-
-void CGroupServer::relayLog(const QString & /*str*/)
-{
-    //    qInfo() << "Client logged" << str;
 }

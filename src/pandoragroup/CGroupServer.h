@@ -34,6 +34,7 @@
 #include <QtCore>
 #include <QtGlobal>
 
+class CGroupServerCommunicator;
 class CGroupClient;
 class QObject;
 
@@ -42,7 +43,7 @@ class CGroupServer : public QTcpServer
     Q_OBJECT
 
 public:
-    explicit CGroupServer(QObject *parent);
+    explicit CGroupServer(CGroupServerCommunicator *parent);
     virtual ~CGroupServer();
 
     void sendToAll(const QByteArray &);
@@ -51,7 +52,6 @@ public:
 
 protected slots:
     void errorInConnection(CGroupClient *, const QString &);
-    void relayLog(const QString &);
 
 protected:
     void incomingConnection(qintptr socketDescriptor) override;
@@ -62,6 +62,7 @@ signals:
 
 private:
     QList<CGroupClient *> connections{};
+    CGroupServerCommunicator *communicator;
 };
 
 #endif /*CGROUPSERVER_H_*/

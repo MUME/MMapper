@@ -34,23 +34,21 @@ CGroupClient::CGroupClient(QObject *parent)
 {
     connect(this, &QAbstractSocket::connected, this, [=]() { this->setConnectionState(ConnectionStates::Connected); });
     connect(this, &QAbstractSocket::disconnected, this, [=]() { this->setConnectionState(ConnectionStates::Closed); });
-    connect(this, &QIODevice::readyRead, this, &CGroupClient::dataIncoming);
-    connect(this,
-            SIGNAL(error(QAbstractSocket::SocketError)),
-            SLOT(errorHandler(QAbstractSocket::SocketError)));
+    connect(this, &QIODevice::readyRead, this, &CGroupClient::onReadyRead);
+    connect(this, SIGNAL(error(QAbstractSocket::SocketError )), this, SLOT(onError(QAbstractSocket::SocketError) ) );
+}
 
-    connect(this, SIGNAL(sendLog(const QString &)), parent, SLOT(relayLog(const QString &)));
-    connect(this,
-            SIGNAL(errorInConnection(CGroupClient *const, const QString &)),
-            parent,
-            SLOT(errorInConnection(CGroupClient *const, const QString &)));
+CGroupClient::~CGroupClient()
+{
+    disconnectFromHost();
+    qDebug() << "Destructed CGroupClient" << socketDescriptor();
 }
 
 void CGroupClient::setSocket(qintptr socketDescriptor)
 {
     if (!setSocketDescriptor(socketDescriptor)) {
         qWarning("Connection failed. Native socket not recognized.");
-        errorHandler(QAbstractSocket::SocketAccessError);
+        onError(QAbstractSocket::SocketAccessError);
         return;
     }
     setSocketOption(QAbstractSocket::KeepAliveOption, true);
@@ -83,19 +81,13 @@ void CGroupClient::setConnectionState(ConnectionStates val)
     }
 }
 
-CGroupClient::~CGroupClient()
-{
-    disconnectFromHost();
-    qInfo() << "Destructed CGroupClient" << socketDescriptor();
-}
-
-void CGroupClient::errorHandler(QAbstractSocket::SocketError /*socketError*/)
+void CGroupClient::onError(QAbstractSocket::SocketError /*socketError*/)
 {
     setConnectionState(ConnectionStates::Quiting);
     emit errorInConnection(this, errorString());
 }
 
-void CGroupClient::dataIncoming()
+void CGroupClient::onReadyRead()
 {
     QByteArray message;
     QByteArray rest;

@@ -55,8 +55,8 @@ public:
     void sendData(const QByteArray &data);
 
 protected slots:
-    void errorHandler(QAbstractSocket::SocketError socketError);
-    void dataIncoming();
+    void onError(QAbstractSocket::SocketError socketError);
+    void onReadyRead();
 
 signals:
     void sendLog(const QString &);
