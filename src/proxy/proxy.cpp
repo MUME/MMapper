@@ -86,7 +86,7 @@ Proxy::Proxy(MapData *const md,
              MumeClock *mc,
              qintptr &socketDescriptor,
              const bool threaded,
-             QObject *const parent)
+             ConnectionListener *const listener)
     : QObject(nullptr)
     , m_socketDescriptor(socketDescriptor)
     , m_mapData(md)
@@ -96,7 +96,7 @@ Proxy::Proxy(MapData *const md,
     , m_groupManager(gm)
     , m_mumeClock(mc)
     , m_threaded(threaded)
-    , m_parent(dynamic_cast<ConnectionListener *>(parent))
+    , m_listener(listener)
 {
     if (threaded) {
         m_thread = new ProxyThreader(this);
@@ -104,7 +104,7 @@ Proxy::Proxy(MapData *const md,
         m_thread = nullptr;
     }
 
-    m_remoteEdit = new RemoteEdit(m_parent->parent());
+    m_remoteEdit = new RemoteEdit(m_listener->parent());
 
 #ifdef PROXY_STREAM_DEBUG_INPUT_TO_FILE
     QString fileName = "proxy_debug.dat";
@@ -135,7 +135,7 @@ Proxy::~Proxy()
     delete m_telnetFilter;
     delete m_mpiFilter;
     delete m_parserXml;
-    connect(this, SIGNAL(doAcceptNewConnections()), m_parent, SLOT(doAcceptNewConnections()));
+    connect(this, SIGNAL(doAcceptNewConnections()), m_listener, SLOT(doAcceptNewConnections()));
     emit doAcceptNewConnections();
 }
 
@@ -155,12 +155,15 @@ bool Proxy::init()
 {
     if (m_threaded) {
         connect(m_thread, &QThread::finished, this, &QObject::deleteLater);
-        connect(m_thread, &QThread::finished, m_parent, &ConnectionListener::doAcceptNewConnections);
+        connect(m_thread,
+                &QThread::finished,
+                m_listener,
+                &ConnectionListener::doAcceptNewConnections);
     }
 
     connect(this,
             SIGNAL(log(const QString &, const QString &)),
-            m_parent->parent(),
+            m_listener->parent(),
             SLOT(log(const QString &, const QString &)));
 
     m_userSocket.reset(new QTcpSocket(this));
@@ -214,7 +217,7 @@ bool Proxy::init()
     connect(m_parserXml, &AbstractParser::showPath, m_prespammedPath, &PrespammedPath::setPath);
     connect(m_parserXml,
             SIGNAL(log(const QString &, const QString &)),
-            m_parent->parent(),
+            m_listener->parent(),
             SLOT(log(const QString &, const QString &)));
     connect(m_userSocket.data(),
             &QAbstractSocket::disconnected,
@@ -262,7 +265,7 @@ bool Proxy::init()
             &TelnetFilter::analyzeMudStream);
     connect(m_mudSocket,
             SIGNAL(log(const QString &, const QString &)),
-            m_parent->parent(),
+            m_listener->parent(),
             SLOT(log(const QString &, const QString &)));
     m_mudSocket->connectToHost();
     return true;
@@ -305,8 +308,8 @@ void Proxy::onMudError(QAbstractSocket::SocketError socketError)
         errorStr = "Connection refused by server!";
         break;
     case QAbstractSocket::SslHandshakeFailedError:
-        errorStr = "Server does not support encryption.\r\n"
-                   "Consider unchecking this option under the MMapper preferences.";
+        errorStr = "Server failed TLS encryption handshake.\r\n"
+                   "Uncheck TLS encryption under the MMapper preferences at your own risk.";
         break;
     case QAbstractSocket::SocketTimeoutError:
     default:

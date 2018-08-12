@@ -83,9 +83,9 @@ public:
                    PrespammedPath *,
                    Mmapper2Group *,
                    MumeClock *,
-                   qintptr &socketDescriptor,
+                   qintptr &,
                    bool threaded,
-                   QObject *parent);
+                   ConnectionListener *);
     ~Proxy();
 
     void start();
@@ -140,7 +140,7 @@ private:
 
     ProxyThreader *m_thread = nullptr;
     bool m_threaded = false;
-    ConnectionListener *m_parent = nullptr;
+    ConnectionListener *m_listener = nullptr;
 };
 
 #endif
