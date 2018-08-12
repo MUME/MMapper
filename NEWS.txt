@@ -1,4 +1,18 @@
 ================================
+MMapper 2.5.2 (August 12, 2018)
+================================
+
+Changes:
+ - Host disconnecting will no longer cause Group Manager to crash
+ - Prespammed path now correctly displays on the map
+ - Emulated exits are better sync'd due to threading changes in the Proxy
+ - Exits do not mangle special characters for the UTF-8 character set
+ - Edit room dialog shows and selects terrain correctly
+ - Dialogs should now consistently be visible on the viewport
+ - Fixed shortcuts in Find Rooms and Edit Informarks dialogs
+ - Refactored Edit Informarks dialog to make more sense
+
+================================
 MMapper 2.5.1 (August 7, 2018)
 ================================
 
