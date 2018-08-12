@@ -58,7 +58,7 @@ MumeSslSocket::MumeSslSocket(QObject *parent)
     , m_timer(new QTimer(this))
 {
     m_socket->setProtocol(QSsl::TlsV1_2OrLater);
-    m_socket->setPeerVerifyMode(QSslSocket::QueryPeer);
+    m_socket->setPeerVerifyMode(QSslSocket::VerifyPeer);
     connect(m_socket, SIGNAL(connected()), this, SLOT(onConnect()));
     connect(m_socket, &QIODevice::readyRead, this, &MumeSslSocket::onReadyRead);
     connect(m_socket, &QAbstractSocket::disconnected, this, &MumeSslSocket::onDisconnect);
@@ -67,10 +67,7 @@ MumeSslSocket::MumeSslSocket(QObject *parent)
             SIGNAL(error(QAbstractSocket::SocketError)),
             this,
             SLOT(onError(QAbstractSocket::SocketError)));
-    connect(m_socket,
-            &QSslSocket::peerVerifyError,
-            this,
-            &MumeSslSocket::onPeerVerifyError);
+    connect(m_socket, &QSslSocket::peerVerifyError, this, &MumeSslSocket::onPeerVerifyError);
 
     m_timer->setInterval(5000);
     m_timer->setSingleShot(true);
@@ -134,10 +131,8 @@ void MumeSslSocket::onPeerVerifyError(const QSslError &error)
     // REVISIT: Why is this "Unknown error" sometimes?
     qWarning() << "onPeerVerifyError" << m_socket->errorString();
 
-    if (m_socket->peerVerifyMode() >= QSslSocket::VerifyPeer) {
-        m_socket->close();
-        emit socketError(QAbstractSocket::SslHandshakeFailedError);
-    }
+    m_socket->close();
+    emit socketError(QAbstractSocket::SslHandshakeFailedError);
 }
 
 void MumeSslSocket::onReadyRead()
