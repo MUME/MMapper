@@ -64,7 +64,7 @@ void ConnectionListener::incomingConnection(qintptr socketDescriptor)
                                 m_groupManager,
                                 m_mumeClock,
                                 socketDescriptor,
-                                true,
+                                false,
                                 this);
         proxy->start();
     } else {
