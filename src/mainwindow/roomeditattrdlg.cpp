@@ -795,6 +795,57 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
             sundeathUndefRadioButton->setChecked(true);
             break;
         }
+
+        switch (r->getTerrainType()) {
+        case RoomTerrainType::UNDEFINED:
+            toolButton00->setChecked(true);
+            break;
+        case RoomTerrainType::INDOORS:
+            toolButton01->setChecked(true);
+            break;
+        case RoomTerrainType::CITY:
+            toolButton02->setChecked(true);
+            break;
+        case RoomTerrainType::FIELD:
+            toolButton03->setChecked(true);
+            break;
+        case RoomTerrainType::FOREST:
+            toolButton04->setChecked(true);
+            break;
+        case RoomTerrainType::HILLS:
+            toolButton05->setChecked(true);
+            break;
+        case RoomTerrainType::MOUNTAINS:
+            toolButton06->setChecked(true);
+            break;
+        case RoomTerrainType::SHALLOW:
+            toolButton07->setChecked(true);
+            break;
+        case RoomTerrainType::WATER:
+            toolButton08->setChecked(true);
+            break;
+        case RoomTerrainType::RAPIDS:
+            toolButton09->setChecked(true);
+            break;
+        case RoomTerrainType::UNDERWATER:
+            toolButton10->setChecked(true);
+            break;
+        case RoomTerrainType::ROAD:
+            toolButton11->setChecked(true);
+            break;
+        case RoomTerrainType::BRUSH:
+            toolButton12->setChecked(true);
+            break;
+        case RoomTerrainType::TUNNEL:
+            toolButton13->setChecked(true);
+            break;
+        case RoomTerrainType::CAVERN:
+            toolButton14->setChecked(true);
+            break;
+        case RoomTerrainType::DEATHTRAP:
+            toolButton15->setChecked(true);
+            break;
+        }
     }
 
     connectAll();
