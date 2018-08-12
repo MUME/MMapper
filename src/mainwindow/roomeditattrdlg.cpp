@@ -730,8 +730,15 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         roomNoteTextEdit->clear();
         roomNoteTextEdit->append(r->getNote());
 
-        terrainLabel->setPixmap(
-            QPixmap(QString(":/pixmaps/terrain%1.png").arg(static_cast<int>(r->getTerrainType()))));
+        const auto get_terrain_pixmap = [](RoomTerrainType type) -> QString {
+            switch (type) {
+             case RoomTerrainType::ROAD:
+                return QString(":/pixmaps/road7.png");
+            default:
+                return QString(":/pixmaps/terrain%1.png").arg(static_cast<int>(type));
+            }
+        };
+        terrainLabel->setPixmap(get_terrain_pixmap(r->getTerrainType()));
 
         switch (r->getAlignType()) {
         case RoomAlignType::GOOD:
