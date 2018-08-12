@@ -290,6 +290,10 @@ void AbstractParser::parsePrompt(const QString &prompt)
 
 void AbstractParser::parseExits()
 {
+    // REVISIT: Character set encoding/decoding
+    const auto &config = Config();
+    QByteArray exitsByteArray = config.parser.utf8Charset ? m_exits.toUtf8() : m_exits.toLatin1();
+
     QString str = m_exits;
     normalizeString(str);
     m_connectedRoomFlags.reset();
@@ -305,7 +309,7 @@ void AbstractParser::parseExits()
 
     if (str.length() > 5 && str.at(5).toLatin1() != ':') {
         // Ainur exits
-        sendToUser(m_exits);
+        sendToUser(exitsByteArray);
         return;
     }
     int length = str.length();
@@ -442,7 +446,8 @@ void AbstractParser::parseExits()
     const RoomSelection *rs = m_mapData->select();
     const Room *room = m_mapData->getRoom(getPosition(), rs);
     QByteArray cn = enhanceExits(room);
-    sendToUser(m_exits.toLatin1().simplified() + cn);
+
+    sendToUser(exitsByteArray.simplified() + cn);
 
     if (Config().mumeNative.showNotes) {
         QString ns = room->getNote();
