@@ -32,9 +32,9 @@
 #include <map>
 #include <string>
 #include <QArgument>
-#include <QTimer>
 #include <QObject>
 #include <QQueue>
+#include <QTimer>
 #include <QVariant>
 
 #include "../expandoracommon/parseevent.h"

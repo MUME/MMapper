@@ -1200,9 +1200,6 @@ void AbstractParser::doOfflineCharacterMove()
         flee = true;
         sendToUser("You flee head over heels.\r\n");
         direction = static_cast<CommandIdType>(rand() % 6); // NOLINT
-        if (!flee) {
-
-        }
     }
 
     Coordinate c;
