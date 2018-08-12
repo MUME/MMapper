@@ -183,7 +183,7 @@ bool MumeXmlParser::element(const QByteArray &line)
             case '/':
                 if (line.startsWith("/xml")) {
                     emit sig_sendToUser("[MMapper] Mapper cannot function without XML mode\n");
-                    emptyQueue();
+                    queue.clear();
                 }
                 break;
             case 'p':
@@ -488,7 +488,6 @@ void MumeXmlParser::move()
                                           m_promptFlags,
                                           m_connectedRoomFlags);
         emit event(SigParseEvent{ev});
-        m_move = CommandIdType::LOOK;
     };
 
     if (queue.isEmpty()) {
@@ -503,6 +502,7 @@ void MumeXmlParser::move()
             }
         }
     }
+    m_move = CommandIdType::LOOK;
 }
 
 void MumeXmlParser::parseMudCommands(const QString &str)

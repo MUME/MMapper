@@ -32,6 +32,7 @@
 #include <map>
 #include <string>
 #include <QArgument>
+#include <QTimer>
 #include <QObject>
 #include <QQueue>
 #include <QVariant>
@@ -107,6 +108,7 @@ protected:
 
 private:
     bool m_trollExitMapping = false;
+    QTimer m_offlineCommandTimer;
 
 public:
     explicit AbstractParser(MapData *, MumeClock *, QObject *parent = nullptr);
@@ -139,8 +141,10 @@ public slots:
     void parseNewUserInput(IncomingData &);
 
     void reset();
-    void emptyQueue();
     void sendGTellToUser(const QByteArray &);
+
+protected slots:
+    void doOfflineCharacterMove();
 
 protected:
     void offlineCharacterMove(CommandIdType direction);

@@ -189,7 +189,11 @@ AbstractParser::AbstractParser(MapData *md, MumeClock *mc, QObject *parent)
     : QObject(parent)
     , m_mumeClock(mc)
     , m_mapData(md)
+    , m_offlineCommandTimer(this)
 {
+    connect(&m_offlineCommandTimer, &QTimer::timeout, this, &AbstractParser::doOfflineCharacterMove);
+    m_offlineCommandTimer.setInterval(250); // MUME enforces 4 commands per seconds (i.e. 250ms)
+
     initSpecialCommandMap();
 }
 
@@ -206,11 +210,6 @@ void AbstractParser::reset()
         emit log("Parser", "Disabling troll exit mapping");
         m_trollExitMapping = false;
     }
-    queue.clear();
-}
-
-void AbstractParser::emptyQueue()
-{
     queue.clear();
 }
 
@@ -1183,20 +1182,27 @@ bool AbstractParser::tryParseGenericDoorCommand(const QString &str)
     return false;
 }
 
-void AbstractParser::offlineCharacterMove(CommandIdType direction)
+void AbstractParser::doOfflineCharacterMove()
 {
-    if (m_mapData->isEmpty())
-        return;
+    if (queue.isEmpty()) {
+        return ;
+    }
+
+    CommandIdType direction = queue.dequeue();
+    if (m_mapData->isEmpty()) {
+        sendToUser("Alas, you cannot go that way...");
+        m_offlineCommandTimer.start();
+        return ;
+    }
 
     bool flee = false;
     if (direction == CommandIdType::FLEE) {
         flee = true;
-        sendToUser("You flee head over heels!\r\n");
+        sendToUser("You flee head over heels.\r\n");
         direction = static_cast<CommandIdType>(rand() % 6); // NOLINT
-    }
+        if (!flee) {
 
-    if (!flee) {
-        queue.dequeue();
+        }
     }
 
     Coordinate c;
@@ -1215,6 +1221,28 @@ void AbstractParser::offlineCharacterMove(CommandIdType direction)
             const RoomSelection *rs2 = m_mapData->select();
             const Room *r = m_mapData->getRoom(e.outFirst(), rs2);
 
+            if (flee) {
+                switch (direction) {
+                case CommandIdType::NORTH:
+                    sendToUser("You flee north.");
+                    break;
+                case CommandIdType::SOUTH:
+                    sendToUser("You flee south.");
+                    break;
+                case CommandIdType::EAST:
+                    sendToUser("You flee east.");
+                    break;
+                case CommandIdType::WEST:
+                    sendToUser("You flee west.");
+                    break;
+                case CommandIdType::UP:
+                    sendToUser("You flee up.");
+                    break;
+                case CommandIdType::DOWN:
+                    sendToUser("You flee down.");
+                    break;
+                }
+            }
             sendRoomInfoToUser(r);
             sendRoomExitsInfoToUser(r);
             sendPromptToUser(*r);
@@ -1231,15 +1259,26 @@ void AbstractParser::offlineCharacterMove(CommandIdType direction)
             m_mapData->unselect(rs2);
         } else {
             if (!flee) {
-                sendToUser("You cannot go that way...");
+                sendToUser("Alas, you cannot go that way...\r\n");
             } else {
-                sendToUser("You cannot flee!!!");
+                sendToUser("PANIC! You couldn't escape!\r\n");
             }
             sendPromptToUser(*rb);
         }
     }
     m_mapData->unselect(rs1);
-    usleep(40'000); // 40 milliseconds
+    m_offlineCommandTimer.start();
+}
+
+void AbstractParser::offlineCharacterMove(CommandIdType direction)
+{
+    if (direction == CommandIdType::FLEE) {
+        queue.enqueue(direction);
+    }
+
+    if (!m_offlineCommandTimer.isActive()) {
+        m_offlineCommandTimer.start();
+    }
 }
 
 void AbstractParser::sendRoomInfoToUser(const Room *r)
