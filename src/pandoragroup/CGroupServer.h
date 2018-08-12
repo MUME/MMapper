@@ -46,11 +46,11 @@ public:
     virtual ~CGroupServer();
 
     void sendToAll(const QByteArray &);
-    void sendToAllExceptOne(CGroupClient *const exception, const QByteArray &);
+    void sendToAllExceptOne(CGroupClient *exception, const QByteArray &);
     void closeAll();
 
 protected slots:
-    void errorInConnection(CGroupClient *const, const QString &);
+    void errorInConnection(CGroupClient *, const QString &);
     void relayLog(const QString &);
 
 protected:
@@ -58,7 +58,7 @@ protected:
 
 signals:
     void sendLog(const QString &);
-    void connectionClosed(CGroupClient *const);
+    void connectionClosed(CGroupClient *);
 
 private:
     QList<CGroupClient *> connections{};

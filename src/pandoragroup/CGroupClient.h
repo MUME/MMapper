@@ -60,10 +60,10 @@ protected slots:
 
 signals:
     void sendLog(const QString &);
-    void connectionClosed(CGroupClient *const);
-    void errorInConnection(CGroupClient *const, const QString &);
-    void incomingData(CGroupClient *const, QByteArray);
-    void connectionEstablished(CGroupClient *const);
+    void connectionClosed(CGroupClient *);
+    void errorInConnection(CGroupClient *, const QString &);
+    void incomingData(CGroupClient *, QByteArray);
+    void connectionEstablished(CGroupClient *);
 
 private:
     void cutMessageFromBuffer();

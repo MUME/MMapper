@@ -45,14 +45,13 @@ public:
     virtual ~GroupRecipient() = default;
 };
 
-
-class GroupSelection : private std::vector<CGroupChar*>, public GroupRecipient
+class GroupSelection : private std::vector<CGroupChar *>, public GroupRecipient
 {
 private:
-    using base = std::vector<CGroupChar*>;
+    using base = std::vector<CGroupChar *>;
 
 public:
-    using std::vector<CGroupChar*>::vector;
+    using std::vector<CGroupChar *>::vector;
 
 private:
     GroupSelection(GroupSelection &&) = delete;
@@ -68,9 +67,9 @@ public:
 
 public:
     using base::begin;
-    using base::end;
     using base::cbegin;
     using base::cend;
+    using base::end;
 
 private:
     GroupAdmin *m_admin = nullptr;

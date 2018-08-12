@@ -67,9 +67,9 @@ public:
     };
 
     GroupManagerState getType() const { return type; }
-    void sendCharUpdate(CGroupClient *const, const QDomNode &);
-    void sendMessage(CGroupClient *const, Messages, const QByteArray &blob = "");
-    void sendMessage(CGroupClient *const, Messages, const QDomNode &);
+    void sendCharUpdate(CGroupClient *, const QDomNode &);
+    void sendMessage(CGroupClient *, Messages, const QByteArray &blob = "");
+    void sendMessage(CGroupClient *, Messages, const QDomNode &);
     virtual void renameConnection(const QByteArray &, const QByteArray &);
 
     virtual void disconnect() = 0;
@@ -83,11 +83,11 @@ protected:
     CGroup *getGroup();
 
 public slots:
-    void incomingData(CGroupClient *const, const QByteArray &);
+    void incomingData(CGroupClient *, const QByteArray &);
     void sendGTell(const QByteArray &);
     void relayLog(const QString &);
-    virtual void retrieveData(CGroupClient *const, Messages, QDomNode) = 0;
-    virtual void connectionClosed(CGroupClient *const) = 0;
+    virtual void retrieveData(CGroupClient *, Messages, QDomNode) = 0;
+    virtual void connectionClosed(CGroupClient *) = 0;
 
 signals:
     void networkDown();
@@ -112,13 +112,13 @@ public:
     virtual void renameConnection(const QByteArray &oldName, const QByteArray &newName) override;
 
 protected slots:
-    void relayMessage(CGroupClient *const connection, Messages message, const QDomNode &data);
-    void connectionEstablished(CGroupClient *const connection);
-    void retrieveData(CGroupClient *const connection, Messages message, QDomNode data) override;
-    void connectionClosed(CGroupClient *const connection) override;
+    void relayMessage(CGroupClient *connection, Messages message, const QDomNode &data);
+    void connectionEstablished(CGroupClient *connection);
+    void retrieveData(CGroupClient *connection, Messages message, QDomNode data) override;
+    void connectionClosed(CGroupClient *connection) override;
 
 protected:
-    void sendRemoveUserNotification(CGroupClient *const connection, const QByteArray &name);
+    void sendRemoveUserNotification(CGroupClient *connection, const QByteArray &name);
     void sendGroupTellMessage(QDomElement root) override;
     void reconnect() override;
     void disconnect() override;
@@ -144,9 +144,9 @@ public:
     ~CGroupClientCommunicator();
 
 public slots:
-    void errorInConnection(CGroupClient *const connection, const QString &);
-    void retrieveData(CGroupClient *const connection, Messages message, QDomNode data) override;
-    void connectionClosed(CGroupClient *const connection) override;
+    void errorInConnection(CGroupClient *connection, const QString &);
+    void retrieveData(CGroupClient *connection, Messages message, QDomNode data) override;
+    void connectionClosed(CGroupClient *connection) override;
 
 protected:
     void sendGroupTellMessage(QDomElement root) override;
@@ -156,7 +156,7 @@ protected:
     void sendCharRename(QDomNode blob) override;
 
 private:
-    void sendLoginInformation(CGroupClient *const connection);
+    void sendLoginInformation(CGroupClient *connection);
 
     CGroupClient client;
 };
