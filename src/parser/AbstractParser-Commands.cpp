@@ -537,7 +537,7 @@ bool AbstractParser::parseLoadFlags(StringView words)
 void AbstractParser::parseSetCommand(StringView view)
 {
     if (view.isEmpty()) {
-        sendToUser("set what?");
+        sendToUser("Set what? [prefix]\r\n");
         return;
     }
 
