@@ -66,7 +66,7 @@ static const char *getPlatformLoadDir()
     case Platform::Win32:
         return "C:/Program Files (x86)/MMapper";
     case Platform::Linux:
-        return "/usr/share/games/mmapper";
+        return qgetenv("SNAP") + "/usr/share/games/mmapper";
     case Platform::Mac:
     default:
         return "";
