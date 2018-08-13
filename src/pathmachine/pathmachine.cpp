@@ -168,10 +168,11 @@ void PathMachine::tryExit(const Exit &possible, RoomRecipient &recipient, const 
 
 void PathMachine::tryCoordinate(const Room *const room, RoomRecipient &recipient, ParseEvent &event)
 {
-    // NOTE: This previously had a subtle bug, or a devious feature:
-    // it was considering CommandIdType::LOOK(=7) to be a valid direction.
     const CommandIdType moveCode = event.getMoveType();
-    if (isDirection7(moveCode)) {
+    if (moveCode == CommandIdType::LOOK) {
+        const Coordinate c = room->getPosition();
+        emit lookingForRooms(recipient, c);
+    } else if (isDirection7(moveCode)) {
         const Coordinate c = room->getPosition() + RoomFactory::exitDir(getDirection(moveCode));
         emit lookingForRooms(recipient, c);
     } else {
