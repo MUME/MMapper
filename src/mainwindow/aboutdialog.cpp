@@ -96,6 +96,7 @@ AboutDialog::AboutDialog(QWidget *parent)
     licenseView->setMinimumWidth(700);
 
     setMaximumSize(sizeHint());
+    adjustSize();
 }
 
 void AboutDialog::setFixedFont(QTextBrowser *browser)
