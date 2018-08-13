@@ -45,14 +45,8 @@ public:
     virtual ~GroupRecipient() = default;
 };
 
-class GroupSelection : private std::vector<CGroupChar *>, public GroupRecipient
+class GroupSelection : public GroupRecipient
 {
-private:
-    using base = std::vector<CGroupChar *>;
-
-public:
-    using std::vector<CGroupChar *>::vector;
-
 private:
     GroupSelection(GroupSelection &&) = delete;
     GroupSelection(const GroupSelection &) = delete;
@@ -61,18 +55,21 @@ private:
 
 public:
     explicit GroupSelection(GroupAdmin *admin);
-    virtual ~GroupSelection();
+    virtual ~GroupSelection() = default;
 
     void receiveCharacters(GroupAdmin *, const std::vector<CGroupChar *>) override;
 
 public:
-    using base::begin;
-    using base::cbegin;
-    using base::cend;
-    using base::end;
+    auto at(int i) const { return chars.at(i); }
+    auto begin() const { return chars.begin(); }
+    auto cbegin() const { return chars.cbegin(); }
+    auto cend() const { return chars.cend(); }
+    auto end() const { return chars.end(); }
+    auto size() const { return chars.size(); }
 
 private:
     GroupAdmin *m_admin = nullptr;
+    std::vector<CGroupChar *> chars;
 };
 
 #endif // GROUPSELECTION_H

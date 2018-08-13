@@ -72,8 +72,8 @@ public:
     void sendMessage(CGroupClient *, Messages, const QDomNode &);
     virtual void renameConnection(const QByteArray &, const QByteArray &);
 
-    virtual void disconnect() = 0;
-    virtual void reconnect() = 0;
+    virtual void disconnectCommunicator() = 0;
+    virtual void connectCommunicator() = 0;
     virtual void sendGroupTellMessage(QDomElement) = 0;
     virtual void sendCharUpdate(QDomNode) = 0;
     virtual void sendCharRename(QDomNode) = 0;
@@ -120,8 +120,8 @@ protected slots:
 protected:
     void sendRemoveUserNotification(CGroupClient *connection, const QByteArray &name);
     void sendGroupTellMessage(QDomElement root) override;
-    void reconnect() override;
-    void disconnect() override;
+    void connectCommunicator() override;
+    void disconnectCommunicator() override;
     void sendCharUpdate(QDomNode blob) override;
     void sendCharRename(QDomNode blob) override;
 
@@ -150,8 +150,8 @@ public slots:
 
 protected:
     void sendGroupTellMessage(QDomElement root) override;
-    void reconnect() override;
-    void disconnect() override;
+    void connectCommunicator() override;
+    void disconnectCommunicator() override;
     void sendCharUpdate(QDomNode blob) override;
     void sendCharRename(QDomNode blob) override;
 

@@ -45,9 +45,21 @@ class GroupModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit GroupModel(MapData *md, QObject *parent = nullptr);
+    enum class ColumnType {
+        NAME = 0,
+        HP_PERCENT,
+        MANA_PERCENT,
+        MOVES_PERCENT,
+        HP,
+        MANA,
+        MOVES,
+        ROOM_NAME
+    };
 
-    void setGroupSelection(GroupSelection *const selection);
+    explicit GroupModel(MapData *md, Mmapper2Group *group, QObject *parent = nullptr);
+
+    void resetModel();
+    QVariant dataForCharacter(CGroupChar *character, ColumnType column, int role) const;
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
@@ -60,14 +72,14 @@ public:
 
 private:
     MapData *m_map = nullptr;
-    std::vector<CGroupChar *> m_characters;
+    Mmapper2Group *m_group = nullptr;
 };
 
 class GroupWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit GroupWidget(Mmapper2Group *groupManager, MapData *md, QWidget *parent = nullptr);
+    explicit GroupWidget(Mmapper2Group *group, MapData *md, QWidget *parent = nullptr);
     virtual ~GroupWidget();
 
 public slots:

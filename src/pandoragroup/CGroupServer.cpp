@@ -27,15 +27,15 @@
 
 #include <QByteArray>
 #include <QHostAddress>
-#include <QString>
 #include <QList>
+#include <QString>
 
-#include "CGroupCommunicator.h"
 #include "CGroupClient.h"
+#include "CGroupCommunicator.h"
 
 CGroupServer::CGroupServer(CGroupServerCommunicator *parent)
-    : QTcpServer(parent),
-      communicator(parent)
+    : QTcpServer(parent)
+    , communicator(parent)
 {}
 
 CGroupServer::~CGroupServer()
@@ -52,28 +52,18 @@ void CGroupServer::incomingConnection(qintptr socketDescriptor)
     // data transfers and similar.
     auto *client = new CGroupClient(this);
     connections.append(client);
-
-    connect(client,
-            &CGroupClient::incomingData,
-            communicator,
-            &CGroupServerCommunicator::incomingData);
-    connect(client,
-            &CGroupClient::connectionEstablished,
-            communicator,
-            &CGroupServerCommunicator::connectionEstablished);
-    connect(client,
-            &CGroupClient::errorInConnection,
-            this,
-            &CGroupServer::errorInConnection);
+    connectAll(client);
 
     client->setSocket(socketDescriptor);
 }
 
-void CGroupServer::errorInConnection(CGroupClient *const connection, const QString & /*errorMessage*/)
+void CGroupServer::errorInConnection(CGroupClient *const connection,
+                                     const QString & /*errorMessage*/)
 {
     emit connectionClosed(connection);
     connections.removeAll(connection);
     connection->close();
+    disconnectAll(connection);
     connection->deleteLater();
     qDebug() << "Removing and deleting client from descriptor" << connection->socketDescriptor();
 }
@@ -98,8 +88,35 @@ void CGroupServer::closeAll()
     for (auto &connection : connections) {
         if (connection != nullptr) {
             connection->disconnectFromHost();
+            disconnectAll(connection);
             connection->deleteLater();
         }
     }
     connections.clear();
+}
+
+void CGroupServer::connectAll(CGroupClient *const client)
+{
+    connect(client,
+            &CGroupClient::incomingData,
+            communicator,
+            &CGroupServerCommunicator::incomingData);
+    connect(client,
+            &CGroupClient::connectionEstablished,
+            communicator,
+            &CGroupServerCommunicator::connectionEstablished);
+    connect(client, &CGroupClient::errorInConnection, this, &CGroupServer::errorInConnection);
+}
+
+void CGroupServer::disconnectAll(CGroupClient *const client)
+{
+    disconnect(client,
+               &CGroupClient::incomingData,
+               communicator,
+               &CGroupServerCommunicator::incomingData);
+    disconnect(client,
+               &CGroupClient::connectionEstablished,
+               communicator,
+               &CGroupServerCommunicator::connectionEstablished);
+    disconnect(client, &CGroupClient::errorInConnection, this, &CGroupServer::errorInConnection);
 }

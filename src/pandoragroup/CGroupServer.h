@@ -61,6 +61,9 @@ signals:
     void connectionClosed(CGroupClient *);
 
 private:
+    void connectAll(CGroupClient *);
+    void disconnectAll(CGroupClient *);
+
     QList<CGroupClient *> connections{};
     CGroupServerCommunicator *communicator;
 };

@@ -51,10 +51,7 @@ CGroupCommunicator::CGroupCommunicator(GroupManagerState type, Mmapper2Group *pa
     connect(this, &CGroupCommunicator::messageBox, parent, &Mmapper2Group::relayMessageBox);
     connect(this, &CGroupCommunicator::gTellArrived, parent, &Mmapper2Group::gTellArrived);
     connect(this, &CGroupCommunicator::networkDown, parent, &Mmapper2Group::networkDown);
-    connect(this,
-            &CGroupCommunicator::scheduleAction,
-            parent->getGroup(),
-            &CGroup::scheduleAction);
+    connect(this, &CGroupCommunicator::scheduleAction, parent->getGroup(), &CGroup::scheduleAction);
 }
 
 //
@@ -190,11 +187,16 @@ CGroupServerCommunicator::CGroupServerCommunicator(Mmapper2Group *parent)
             this,
             &CGroupServerCommunicator::connectionClosed);
     emit sendLog("Server mode has been selected");
-    reconnect();
+    connectCommunicator();
 }
 
 CGroupServerCommunicator::~CGroupServerCommunicator()
 {
+    disconnect(&server, &CGroupServer::sendLog, this, &CGroupServerCommunicator::relayLog);
+    disconnect(&server,
+               &CGroupServer::connectionClosed,
+               this,
+               &CGroupServerCommunicator::connectionClosed);
     server.closeAll();
     qInfo() << "Destructed CGroupServerCommunicator";
 }
@@ -216,7 +218,7 @@ void CGroupServerCommunicator::serverStartupFailed()
 {
     emit messageBox(
         QString("Failed to start the groupManager server: %1.").arg(server.errorString()));
-    disconnect();
+    disconnectCommunicator();
     emit networkDown();
 }
 
@@ -422,16 +424,16 @@ void CGroupServerCommunicator::renameConnection(const QByteArray &oldName, const
     CGroupCommunicator::renameConnection(oldName, newName);
 }
 
-void CGroupServerCommunicator::disconnect()
+void CGroupServerCommunicator::disconnectCommunicator()
 {
     server.closeAll();
     clientsList.clear();
     emit scheduleAction(new ResetCharacters());
 }
 
-void CGroupServerCommunicator::reconnect()
+void CGroupServerCommunicator::connectCommunicator()
 {
-    disconnect();
+    disconnectCommunicator();
     const auto localPort = static_cast<quint16>(Config().groupManager.localPort);
     emit sendLog(QString("Listening on port %1").arg(localPort));
     if (!server.listen(QHostAddress::Any, localPort)) {
@@ -449,28 +451,31 @@ CGroupClientCommunicator::CGroupClientCommunicator(Mmapper2Group *parent)
     , client(this)
 {
     emit sendLog("Client mode has been selected");
-    connect(&client,
-            &CGroupClient::incomingData,
-            this,
-            &CGroupClientCommunicator::incomingData);
+    connect(&client, &CGroupClient::incomingData, this, &CGroupClientCommunicator::incomingData);
     connect(&client, &CGroupClient::sendLog, this, &CGroupClientCommunicator::relayLog);
     connect(&client,
             &CGroupClient::errorInConnection,
             this,
             &CGroupClientCommunicator::errorInConnection);
-    reconnect();
+    connectCommunicator();
 }
 
 CGroupClientCommunicator::~CGroupClientCommunicator()
 {
     client.disconnectFromHost();
+    disconnect(&client, &CGroupClient::incomingData, this, &CGroupClientCommunicator::incomingData);
+    disconnect(&client, &CGroupClient::sendLog, this, &CGroupClientCommunicator::relayLog);
+    disconnect(&client,
+               &CGroupClient::errorInConnection,
+               this,
+               &CGroupClientCommunicator::errorInConnection);
     qInfo() << "Destructed CGroupClientCommunicator";
 }
 
 void CGroupClientCommunicator::connectionClosed(CGroupClient * /*connection*/)
 {
     emit messageBox("Server closed the connection");
-    disconnect();
+    disconnectCommunicator();
     emit networkDown();
 }
 
@@ -504,7 +509,7 @@ void CGroupClientCommunicator::errorInConnection(CGroupClient *const connection,
         break;
     }
     emit networkDown();
-    disconnect();
+    disconnectCommunicator();
 }
 
 void CGroupClientCommunicator::retrieveData(CGroupClient *conn, Messages message, QDomNode data)
@@ -613,17 +618,17 @@ void CGroupClientCommunicator::sendCharRename(QDomNode blob)
     sendMessage(&client, Messages::RENAME_CHAR, blob);
 }
 
-void CGroupClientCommunicator::disconnect()
+void CGroupClientCommunicator::disconnectCommunicator()
 {
     client.abort();
     client.disconnectFromHost();
     emit scheduleAction(new ResetCharacters());
 }
 
-void CGroupClientCommunicator::reconnect()
+void CGroupClientCommunicator::connectCommunicator()
 {
     if (client.getConnectionState() != ConnectionStates::Closed) {
-        disconnect();
+        disconnectCommunicator();
     }
 
     client.setConnectionState(ConnectionStates::Connecting);

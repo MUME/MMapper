@@ -39,35 +39,30 @@
 class RoomSelection;
 
 static constexpr const int GROUP_COLUMN_COUNT = 8;
-enum class ColumnType { NAME = 0,
-    HP_PERCENT,
-    MANA_PERCENT,
-    MOVES_PERCENT,
-    HP,
-    MANA,
-    MOVES,
-    ROOM_NAME };
-static_assert(GROUP_COLUMN_COUNT == static_cast<int>(ColumnType::ROOM_NAME) + 1, "# of columns");
+static_assert(GROUP_COLUMN_COUNT == static_cast<int>(GroupModel::ColumnType::ROOM_NAME) + 1,
+              "# of columns");
 
-GroupModel::GroupModel(MapData* md, QObject* parent) : QAbstractTableModel(parent),
-    m_map(md) {}
+GroupModel::GroupModel(MapData *md, Mmapper2Group *group, QObject *parent)
+    : QAbstractTableModel(parent)
+    , m_map(md)
+    , m_group(group)
+{}
 
-void GroupModel::setGroupSelection(GroupSelection* const selection)
+void GroupModel::resetModel()
 {
     beginResetModel();
-    m_characters.clear();
-    for (const auto character : *selection) {
-        m_characters.emplace_back(character);
-    }
     endResetModel();
 }
 
-int GroupModel::rowCount(const QModelIndex& /* parent */) const
+int GroupModel::rowCount(const QModelIndex & /* parent */) const
 {
-    return m_characters.size();
+    GroupSelection *selection = m_group->getGroup()->selectAll();
+    int size = selection->size();
+    m_group->getGroup()->unselect(selection);
+    return size;
 }
 
-int GroupModel::columnCount(const QModelIndex& /* parent */) const
+int GroupModel::columnCount(const QModelIndex & /* parent */) const
 {
     return GROUP_COLUMN_COUNT;
 }
@@ -76,7 +71,8 @@ QString calculatePercentage(const int numerator, const int denomenator)
 {
     if (denomenator == 0)
         return "";
-    int percentage = static_cast<int>(100.0 * static_cast<double>(numerator) / static_cast<double>(denomenator));
+    int percentage = static_cast<int>(100.0 * static_cast<double>(numerator)
+                                      / static_cast<double>(denomenator));
     return QString("%1\%").arg(percentage);
 }
 
@@ -87,17 +83,9 @@ QString calculateRatio(const int numerator, const int denomenator)
     return QString("%1/%2").arg(numerator).arg(denomenator);
 }
 
-QVariant GroupModel::data(const QModelIndex& index, int role) const
+QVariant GroupModel::dataForCharacter(CGroupChar *const character, ColumnType column, int role) const
 {
-    if (!index.isValid())
-        return QVariant();
-
-    // Map row to character
-    assert(index.row() < static_cast<int>(m_characters.size()));
-    CGroupChar* character = m_characters.at(index.row());
-
     // Map column to data
-    ColumnType column = static_cast<ColumnType>(index.column());
     switch (role) {
     case Qt::DisplayRole:
         switch (column) {
@@ -118,8 +106,8 @@ QVariant GroupModel::data(const QModelIndex& index, int role) const
         case ColumnType::ROOM_NAME: {
             QString roomName = "Unknown";
             if (character->pos != DEFAULT_ROOMID) {
-                const RoomSelection* roomSelection = m_map->select();
-                const Room* r = m_map->getRoom(character->pos, roomSelection);
+                const RoomSelection *roomSelection = m_map->select();
+                const Room *r = m_map->getRoom(character->pos, roomSelection);
                 if (r != nullptr) {
                     roomName = r->getName();
                 }
@@ -128,8 +116,8 @@ QVariant GroupModel::data(const QModelIndex& index, int role) const
             return roomName;
         }
         default:
-            qWarning() << "Unsupported column" << index.column();
-    }
+            qWarning() << "Unsupported column" << static_cast<int>(column);
+        }
         break;
     case Qt::BackgroundRole:
         return character->getColor();
@@ -140,7 +128,27 @@ QVariant GroupModel::data(const QModelIndex& index, int role) const
             return Qt::AlignCenter;
         }
     }
+
     return QVariant();
+}
+
+QVariant GroupModel::data(const QModelIndex &index, int role) const
+{
+    QVariant data = QVariant();
+    if (!index.isValid())
+        return data;
+
+    GroupSelection *selection = m_group->getGroup()->selectAll();
+
+    // Map row to character
+    if (index.row() < static_cast<int>(selection->size())) {
+        CGroupChar *character = selection->at(index.row());
+        ColumnType column = static_cast<ColumnType>(index.column());
+        data = dataForCharacter(character, column, role);
+    }
+
+    m_group->getGroup()->unselect(selection);
+    return data;
 }
 
 QVariant GroupModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -149,14 +157,22 @@ QVariant GroupModel::headerData(int section, Qt::Orientation orientation, int ro
     case Qt::DisplayRole:
         if (orientation == Qt::Orientation::Horizontal) {
             switch (static_cast<ColumnType>(section)) {
-            case ColumnType::NAME: return "Name";
-            case ColumnType::HP_PERCENT: return "HP %";
-            case ColumnType::MANA_PERCENT: return "Mana %";
-            case ColumnType::MOVES_PERCENT: return "Moves %";
-            case ColumnType::HP: return "HP";
-            case ColumnType::MANA: return "Mana";
-            case ColumnType::MOVES: return "Moves";
-            case ColumnType::ROOM_NAME: return "Room Name";
+            case ColumnType::NAME:
+                return "Name";
+            case ColumnType::HP_PERCENT:
+                return "HP %";
+            case ColumnType::MANA_PERCENT:
+                return "Mana %";
+            case ColumnType::MOVES_PERCENT:
+                return "Moves %";
+            case ColumnType::HP:
+                return "HP";
+            case ColumnType::MANA:
+                return "Mana";
+            case ColumnType::MOVES:
+                return "Moves";
+            case ColumnType::ROOM_NAME:
+                return "Room Name";
             default:
                 qWarning() << "Unsupported column" << section;
             }
@@ -166,17 +182,18 @@ QVariant GroupModel::headerData(int section, Qt::Orientation orientation, int ro
     return QVariant();
 }
 
-Qt::ItemFlags GroupModel::flags(const QModelIndex & /* index */) const {
+Qt::ItemFlags GroupModel::flags(const QModelIndex & /* index */) const
+{
     return Qt::ItemFlag::NoItemFlags;
 }
 
-GroupWidget::GroupWidget(Mmapper2Group* groupManager, MapData* md, QWidget* parent)
+GroupWidget::GroupWidget(Mmapper2Group *group, MapData *md, QWidget *parent)
     : QWidget(parent)
-    , m_group(groupManager)
+    , m_group(group)
     , m_map(md)
-    , m_model(md)
+    , m_model(md, group, this)
 {
-    auto* layout = new QVBoxLayout(this);
+    auto *layout = new QVBoxLayout(this);
     layout->setAlignment(Qt::AlignTop);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
@@ -190,11 +207,16 @@ GroupWidget::GroupWidget(Mmapper2Group* groupManager, MapData* md, QWidget* pare
 
     hide();
 
-    connect(m_group, &Mmapper2Group::drawCharacters, this, &GroupWidget::updateLabels, Qt::QueuedConnection);
     connect(m_group,
-        &Mmapper2Group::messageBox,
-        this, &GroupWidget::messageBox,
-        Qt::QueuedConnection);
+            &Mmapper2Group::drawCharacters,
+            this,
+            &GroupWidget::updateLabels,
+            Qt::QueuedConnection);
+    connect(m_group,
+            &Mmapper2Group::messageBox,
+            this,
+            &GroupWidget::messageBox,
+            Qt::QueuedConnection);
 }
 
 GroupWidget::~GroupWidget()
@@ -204,15 +226,11 @@ GroupWidget::~GroupWidget()
 
 void GroupWidget::updateLabels()
 {
-    GroupSelection* selection = m_group->getGroup()->selectAll();
-
-    m_model.setGroupSelection(selection);
+    m_model.resetModel();
     m_table->resizeColumnsToContents();
-
-    m_group->getGroup()->unselect(selection);
 }
 
-void GroupWidget::messageBox(const QString& title, const QString& message)
+void GroupWidget::messageBox(const QString &title, const QString &message)
 {
     QMessageBox::critical(this, title, message);
 }

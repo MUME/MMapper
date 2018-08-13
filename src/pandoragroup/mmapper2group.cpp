@@ -47,7 +47,7 @@ Mmapper2Group::~Mmapper2Group()
 {
     group.reset(nullptr);
     if (network) {
-        network->disconnect();
+        network->disconnectCommunicator();
         network.reset(nullptr);
     }
 }
@@ -224,13 +224,11 @@ void Mmapper2Group::parseScoreInformation(QByteArray score)
         */
 
         group->getSelf()->setScore(list[0].toInt(),
-                                        list[1].toInt(),
-                                        list[2].toInt(),
-                                        list[3].toInt(),
-                                        list[4].toInt(),
-                                        list[5].toInt());
-
-        issueLocalCharUpdate();
+                                   list[1].toInt(),
+                                   list[2].toInt(),
+                                   list[3].toInt(),
+                                   list[4].toInt(),
+                                   list[5].toInt());
 
     } else {
         // 399/529 hits and 121/133 moves.
@@ -246,15 +244,10 @@ void Mmapper2Group::parseScoreInformation(QByteArray score)
         qDebug( "Moves: %s", (const char *) list[2].toLatin1());
         qDebug( "Max Moves: %s", (const char *) list[3].toLatin1());
         */
-        group->getSelf()->setScore(list[0].toInt(),
-                                        list[1].toInt(),
-                                        0,
-                                        0,
-                                        list[2].toInt(),
-                                        list[3].toInt());
-
-        issueLocalCharUpdate();
+        group->getSelf()
+            ->setScore(list[0].toInt(), list[1].toInt(), 0, 0, list[2].toInt(), list[3].toInt());
     }
+    issueLocalCharUpdate();
 }
 
 void Mmapper2Group::parsePromptInformation(QByteArray prompt)
@@ -407,7 +400,7 @@ void Mmapper2Group::setType(GroupManagerState newState)
 
     // Delete previous network and regenerate
     if (network) {
-        network->disconnect();
+        network->disconnectCommunicator();
         network->deleteLater();
         network.release(); // There might still be signals left to be processed
     }

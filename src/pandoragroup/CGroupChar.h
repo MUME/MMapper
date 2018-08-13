@@ -86,7 +86,6 @@ public:
     QByteArray textMoves{};
     QByteArray textMana{};
 
-    // for local char only
     void setScore(int _hp, int _maxhp, int _mana, int _maxmana, int _moves, int _maxmoves)
     {
         hp = _hp;
