@@ -59,14 +59,18 @@ MumeSslSocket::MumeSslSocket(QObject *parent)
 {
     m_socket->setProtocol(QSsl::TlsV1_2OrLater);
     m_socket->setPeerVerifyMode(QSslSocket::VerifyPeer);
-    connect(m_socket, SIGNAL(connected()), this, SLOT(onConnect()));
+    connect(m_socket,
+            static_cast<void (QAbstractSocket::*)()>(&QAbstractSocket::connected),
+            this,
+            &MumeSslSocket::onConnect);
     connect(m_socket, &QIODevice::readyRead, this, &MumeSslSocket::onReadyRead);
     connect(m_socket, &QAbstractSocket::disconnected, this, &MumeSslSocket::onDisconnect);
     connect(m_socket, &QSslSocket::encrypted, this, &MumeSslSocket::onEncrypted);
     connect(m_socket,
-            SIGNAL(error(QAbstractSocket::SocketError)),
+            static_cast<void (QAbstractSocket::*)(QAbstractSocket::SocketError)>(
+                &QAbstractSocket::error),
             this,
-            SLOT(onError(QAbstractSocket::SocketError)));
+            &MumeSslSocket::onError);
     connect(m_socket, &QSslSocket::peerVerifyError, this, &MumeSslSocket::onPeerVerifyError);
 
     m_timer->setInterval(5000);
