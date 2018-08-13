@@ -49,8 +49,9 @@ static inline constexpr Platform getCurrentPlatform()
     return Platform::Mac;
 #elif defined(Q_OS_LINUX)
     return Platform::Linux;
-#endif
+#else
     return Platform::Unknown;
+#endif
 }
 static constexpr const Platform CURRENT_PLATFORM = getCurrentPlatform();
 
@@ -92,6 +93,7 @@ public:
         MapMode mapMode = MapMode::PLAY;
         bool noSplash = false;
         bool noLaunchPanel = false;
+        bool proxyThreaded = false;
 
     private:
         friend class Configuration;

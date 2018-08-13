@@ -151,6 +151,7 @@ ConstString KEY_NO_LAUNCH_PANEL = "No launch panel";
 ConstString KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES = "Number of anti-aliasing samples";
 ConstString KEY_PASSWORD_PATTERN = "Password pattern";
 ConstString KEY_PROMPT_PATTERN = "Prompt pattern";
+ConstString KEY_PROXY_THREADED = "Proxy Threaded";
 ConstString KEY_RELATIVE_PATH_ACCEPTANCE = "relative path acceptance";
 ConstString KEY_REMOTE_EDITING_AND_VIEWING = "Remote editing and viewing";
 ConstString KEY_REMOTE_PORT_NUMBER = "Remote port number";
@@ -322,6 +323,7 @@ void Configuration::GeneralSettings::read(QSettings &conf)
     mapMode = sanitizeMapMode(conf.value(KEY_MAP_MODE, static_cast<uint>(MapMode::PLAY)).toUInt());
     noSplash = conf.value(KEY_NO_SPLASH, false).toBool();
     noLaunchPanel = conf.value(KEY_NO_LAUNCH_PANEL, false).toBool();
+    proxyThreaded = conf.value(KEY_PROXY_THREADED, true).toBool();
 }
 
 void Configuration::ConnectionSettings::read(QSettings &conf)
@@ -470,6 +472,7 @@ void Configuration::GeneralSettings::write(QSettings &conf) const
     conf.setValue(KEY_MAP_MODE, static_cast<uint>(mapMode));
     conf.setValue(KEY_NO_SPLASH, noSplash);
     conf.setValue(KEY_NO_LAUNCH_PANEL, noLaunchPanel);
+    conf.setValue(KEY_PROXY_THREADED, proxyThreaded);
 }
 
 void Configuration::ConnectionSettings::write(QSettings &conf) const

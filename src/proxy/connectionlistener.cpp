@@ -28,6 +28,7 @@
 
 #include <QTcpSocket>
 
+#include "../configuration/configuration.h"
 #include "proxy.h"
 
 ConnectionListener::ConnectionListener(MapData *md,
@@ -64,7 +65,7 @@ void ConnectionListener::incomingConnection(qintptr socketDescriptor)
                                 m_groupManager,
                                 m_mumeClock,
                                 socketDescriptor,
-                                false,
+                                Config().general.proxyThreaded,
                                 this);
         proxy->start();
     } else {
