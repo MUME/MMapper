@@ -16,12 +16,10 @@ confinement: strict
 apps:
   mmapper-desktop:
     command: desktop-launch mmapper
-    aliases: [mmapper]
     desktop: usr/share/applications/mmapper.desktop
     plugs:
       - home
       - network
-      - network-manager
       - network-bind
       - opengl
       - x11
