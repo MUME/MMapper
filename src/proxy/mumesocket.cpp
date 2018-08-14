@@ -58,7 +58,7 @@ MumeSslSocket::MumeSslSocket(QObject *parent)
     , m_timer(new QTimer(this))
 {
     m_socket->setProtocol(QSsl::TlsV1_2OrLater);
-    m_socket->setPeerVerifyMode(QSslSocket::VerifyPeer);
+    m_socket->setPeerVerifyMode(QSslSocket::QueryPeer);
     connect(m_socket,
             static_cast<void (QAbstractSocket::*)()>(&QAbstractSocket::connected),
             this,
@@ -135,8 +135,10 @@ void MumeSslSocket::onPeerVerifyError(const QSslError &error)
     // REVISIT: Why is this "Unknown error" sometimes?
     qWarning() << "onPeerVerifyError" << m_socket->errorString();
 
-    m_socket->close();
-    emit socketError(QAbstractSocket::SslHandshakeFailedError);
+    if (m_socket->peerVerifyMode() >= QSslSocket::VerifyPeer) {
+        m_socket->close();
+        emit socketError(QAbstractSocket::SslHandshakeFailedError);
+    }
 }
 
 void MumeSslSocket::onReadyRead()
