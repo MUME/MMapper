@@ -60,13 +60,13 @@ static const char *getPlatformEditor()
 // Mac: _NSGetExecutablePath
 // All: argv[0] may also work as a last resort.
 // OR maybe: github.com/gpakosz/whereami
-static const char *getPlatformLoadDir()
+static QByteArray getPlatformLoadDir()
 {
     switch (CURRENT_PLATFORM) {
     case Platform::Win32:
         return "C:/Program Files (x86)/MMapper";
     case Platform::Linux:
-        return qgetenv("SNAP") + "/usr/share/games/mmapper";
+        return qgetenv("SNAP").append("/usr/share/games/mmapper");
     case Platform::Mac:
     default:
         return "";
