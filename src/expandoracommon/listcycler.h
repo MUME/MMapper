@@ -43,14 +43,14 @@ public:
 
     explicit ListCycler(const C &data)
         : C(data)
-        , pos(data.size())
+        , pos(static_cast<uint32_t>(data.size()))
     {}
     virtual ~ListCycler() = default;
     virtual const T &next();
     virtual const T &prev();
     virtual const T &current();
     virtual uint32_t getPos() const { return pos; }
-    virtual void reset() { pos = C::size(); }
+    virtual void reset() { pos = static_cast<uint32_t>(C::size()); }
 
 protected:
     uint32_t pos = UINT32_MAX;
@@ -60,7 +60,7 @@ template<class T, class C>
 const T &ListCycler<T, C>::next()
 {
     static const T invalid{};
-    const uint32_t nSize = C::size();
+    const uint32_t nSize = static_cast<uint32_t>(C::size());
 
     if (pos >= nSize)
         pos = 0;
@@ -77,7 +77,7 @@ template<class T, class C>
 const T &ListCycler<T, C>::prev()
 {
     static const T invalid{};
-    const uint32_t nSize = C::size();
+    const uint32_t nSize = static_cast<uint32_t>(C::size());
 
     if (pos == 0) {
         pos = nSize;

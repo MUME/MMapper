@@ -108,7 +108,7 @@ Path *Path::fork(const Room *const in_room,
             }
         }
     }
-    dist /= (signaler->getNumLockers(in_room));
+    dist /= static_cast<double>(signaler->getNumLockers(in_room));
     if (in_room->isTemporary()) {
         dist *= p.newRoomPenalty;
     }

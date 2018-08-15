@@ -70,7 +70,7 @@ public:
        keepRoom: keep the room, but we don't need it anymore for now
        releaseRoom: delete the room, if you like */
 
-    int getNumLockers(const Room *room) { return lockers[room].size(); }
+    auto getNumLockers(const Room *room) { return lockers[room].size(); }
 
 signals:
     void scheduleAction(MapAction *);

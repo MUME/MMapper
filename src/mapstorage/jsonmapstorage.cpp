@@ -338,7 +338,7 @@ void JsonWorld::writeMetadata(const QFileInfo &path, const MapData &mapData) con
         for (size_t i = 0; i <= SIZE; ++i)
             arr.push_back(QString{});
         for (size_t i = 0; i <= SIZE; ++i)
-            arr[i] = getNameUpper(static_cast<ExitDirection>(i));
+            arr[static_cast<int>(i)] = getNameUpper(static_cast<ExitDirection>(i));
         return arr;
     }();
 

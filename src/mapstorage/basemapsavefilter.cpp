@@ -153,7 +153,7 @@ uint32_t BaseMapSaveFilter::prepareCount()
 
 uint32_t BaseMapSaveFilter::acceptedRoomsCount()
 {
-    return m_impl->baseRooms.size();
+    return static_cast<uint32_t>(m_impl->baseRooms.size());
 }
 
 BaseMapSaveFilter::Action BaseMapSaveFilter::filter(const Room &room)
