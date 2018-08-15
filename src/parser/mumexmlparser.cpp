@@ -161,11 +161,16 @@ void MumeXmlParser::parse(const QByteArray &line)
         if (m_readStatusTag) {
             m_readStatusTag = false;
             if (Config().groupManager.state != GroupManagerState::Off) {
-                QString temp(m_lineToUser.simplified());
-                ParserUtils::removeAnsiMarks(temp);
-                if (Patterns::matchScore(temp)) {
+                QByteArray temp = m_lineToUser;
+                if (!Config().parser.removeXmlTags) {
+                    stripXmlEntities(temp);
+                }
+                QString tempStr = temp;
+                ParserUtils::removeAnsiMarks(tempStr);
+                if (Patterns::matchScore(tempStr)) {
                     // inform groupManager
-                    emit sendScoreLineEvent(temp.toLatin1());
+                    temp = tempStr.toLocal8Bit();
+                    emit sendScoreLineEvent(temp);
                 }
             }
         }
@@ -256,7 +261,7 @@ bool MumeXmlParser::element(const QByteArray &line)
         if (length > 0) {
             switch (line.at(0)) {
             case 'g':
-                if (line.startsWith("gratuitous")) {
+                if (line.startsWith("gratuitous") && Config().parser.removeXmlTags) {
                     m_gratuitous = true;
                 }
                 break;
@@ -342,10 +347,16 @@ bool MumeXmlParser::element(const QByteArray &line)
     }
 
     if (!Config().parser.removeXmlTags) {
-        // REVISIT: avoid temporary here; just append 3 times.
-        m_lineToUser.append("<" + line + ">");
+        m_lineToUser.append("<").append(line).append(">");
     }
     return true;
+}
+
+void MumeXmlParser::stripXmlEntities(QByteArray &ch)
+{
+    ch.replace(greaterThanTemplate, greaterThanChar);
+    ch.replace(lessThanTemplate, lessThanChar);
+    ch.replace(ampersandTemplate, ampersand);
 }
 
 QByteArray MumeXmlParser::characters(QByteArray &ch)
@@ -357,9 +368,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
     }
 
     // replace > and < chars
-    ch.replace(greaterThanTemplate, greaterThanChar);
-    ch.replace(lessThanTemplate, lessThanChar);
-    ch.replace(ampersandTemplate, ampersand);
+    stripXmlEntities(ch);
 
     // Store prompts in case an internal command is executed
     if (m_xmlMode == XmlMode::PROMPT) {
@@ -376,7 +385,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
     }
 
     switch (m_xmlMode) {
-    case XmlMode::NONE:                 //non room info
+    case XmlMode::NONE:                           //non room info
         if (m_stringBuffer.trimmed().isEmpty()) { // standard end of description parsed
             if (m_readingRoomDesc) {
                 m_readingRoomDesc = false; // we finished read desc mode
@@ -386,6 +395,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
                 }
             }
         } else {
+            ParserUtils::removeAnsiMarks(m_stringBuffer);
             parseMudCommands(m_stringBuffer);
         }
         if (m_readSnoopTag) {
@@ -464,6 +474,11 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         break;
     }
 
+    if (!Config().parser.removeXmlTags) {
+        toUser.replace(greaterThanChar, greaterThanTemplate);
+        toUser.replace(lessThanChar, lessThanTemplate);
+        toUser.replace(ampersand, ampersandTemplate);
+    }
     return toUser;
 }
 

@@ -91,6 +91,9 @@ protected:
     bool m_gratuitous = false;
     bool m_readSnoopTag = false;
 
+private:
+    void stripXmlEntities(QByteArray &ch);
+
 signals:
     void sendScoreLineEvent(QByteArray);
     void sendPromptLineEvent(QByteArray);
