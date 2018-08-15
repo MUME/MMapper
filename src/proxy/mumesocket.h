@@ -56,12 +56,13 @@ public:
 protected slots:
     virtual void onConnect();
     virtual void onDisconnect();
-    virtual void onError(QAbstractSocket::SocketError e);
+    virtual void onError(QAbstractSocket::SocketError e) = 0;
+    virtual void onError2(QAbstractSocket::SocketError e, const QString &errorString = QString());
 
 signals:
     void connected();
     void disconnected();
-    void socketError(QAbstractSocket::SocketError);
+    void socketError(const QString &errorString);
     void processMudStream(const QByteArray &buffer);
     void log(const QString &, const QString &);
 };

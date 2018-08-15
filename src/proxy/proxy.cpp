@@ -246,8 +246,8 @@ bool Proxy::init()
     emit log("Proxy", "Connection to client established ...");
 
     QByteArray ba(
-        "\033[1;37;41mWelcome to MMapper!\033[0;37;41m"
-        "   Type \033[1m_help\033[0m\033[37;41m for help or \033[1m_vote\033[0m\033[37;41m to vote!\033[0m\r\n");
+        "\033[1;37;46mWelcome to MMapper!\033[0;37;46m"
+        "   Type \033[1m_help\033[0m\033[37;46m for help or \033[1m_vote\033[0m\033[37;46m to vote!\033[0m\r\n");
     m_userSocket->write(ba);
     m_userSocket->flush();
 
@@ -296,35 +296,20 @@ void Proxy::onMudConnected()
     emit log("Proxy", "Sent MUME Protocol Initiator XML request");
 }
 
-void Proxy::onMudError(QAbstractSocket::SocketError socketError)
+void Proxy::onMudError(const QString &errorStr)
 {
     m_serverConnected = false;
 
-    qWarning() << "Mud socket error" << socketError;
-    QByteArray errorStr = "MUME is not responding!";
-
-    switch (socketError) {
-    case QAbstractSocket::ConnectionRefusedError:
-        errorStr = "Connection refused by server!";
-        break;
-    case QAbstractSocket::SslHandshakeFailedError:
-        errorStr = "Server failed TLS encryption handshake.\r\n"
-                   "Uncheck TLS encryption under the MMapper preferences at your own risk.";
-        break;
-    case QAbstractSocket::SocketTimeoutError:
-    default:
-        break;
-    }
-
+    qWarning() << "Mud socket error" << errorStr;
     emit log("Proxy", errorStr);
 
     sendToUser(
         "\r\n"
-        "\033[1;37;41m"
-        + errorStr
+        "\033[1;37;46m"
+        + errorStr.toLocal8Bit()
         + "\033[0m\r\n"
           "\r\n"
-          "\033[1;37;41mYou can explore world map offline or try to reconnect again...\033[0m\r\n"
+          "\033[1;37;46mYou can explore world map offline or try to reconnect again...\033[0m\r\n"
           "\r\n>");
 }
 
@@ -349,9 +334,9 @@ void Proxy::mudTerminatedConnection()
     emit log("Proxy", "Mud terminated connection ...");
 
     sendToUser("\r\n"
-               "\033[1;37;41mMUME closed the connection.\033[0m\r\n"
+               "\033[1;37;46mMUME closed the connection.\033[0m\r\n"
                "\r\n"
-               "\033[1;37;41mYou can explore world map offline or reconnect again...\033[0m\r\n"
+               "\033[1;37;46mYou can explore world map offline or reconnect again...\033[0m\r\n"
                "\r\n>");
 }
 

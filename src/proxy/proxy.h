@@ -28,7 +28,6 @@
 #ifndef PROXY
 #define PROXY
 
-#include <QAbstractSocket>
 #include <QByteArray>
 #include <QObject>
 #include <QScopedPointer>
@@ -98,7 +97,7 @@ public slots:
     void sendToMud(const QByteArray &);
     void sendToUser(const QByteArray &);
 
-    void onMudError(QAbstractSocket::SocketError);
+    void onMudError(const QString &);
     void onMudConnected();
 
 signals:
