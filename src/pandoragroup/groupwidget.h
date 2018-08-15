@@ -40,7 +40,7 @@ class Mmapper2Group;
 class QObject;
 class QTableView;
 
-class GroupModel : public QAbstractTableModel
+class GroupModel final : public QAbstractTableModel
 {
     Q_OBJECT
 

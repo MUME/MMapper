@@ -1083,7 +1083,7 @@ void MapCanvas::drawGroupCharacters()
     }
 
     GroupSelection *const selection = group->selectAll();
-    for (auto character : *selection) {
+    for (auto &character : *selection) {
         const RoomId id = character->getPosition();
         if (character->getName() != Config().groupManager.charName) {
             const RoomSelection *const roomSelection = m_data->select();
@@ -1543,11 +1543,11 @@ void MapCanvas::initTextures()
 void MapCanvas::makeGlLists()
 {
     const auto getDevicePixelRatio = [this]() {
-    #if QT_VERSION >= 0x050600
+#if QT_VERSION >= 0x050600
         return static_cast<float>(devicePixelRatioF());
-    #else
+#else
         return static_cast<float>(devicePixelRatio());
-    #endif
+#endif
     };
     m_opengl.setDevicePixelRatio(getDevicePixelRatio());
 

@@ -39,7 +39,7 @@ class QObject;
 enum class ConnectionStates { Closed, Connecting, Connected, Quiting };
 enum class ProtocolStates { Idle, AwaitingLogin, AwaitingInfo, Logged };
 
-class CGroupClient : public QTcpSocket
+class CGroupClient final : public QTcpSocket
 {
     Q_OBJECT
 public:

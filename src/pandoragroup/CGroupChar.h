@@ -77,7 +77,7 @@ public:
     CGroupChar &operator=(const CGroupChar &) = delete;
 };
 
-class CGroupLocalChar : public CGroupChar
+class CGroupLocalChar final : public CGroupChar
 {
 public:
     explicit CGroupLocalChar() = default;
@@ -86,6 +86,7 @@ public:
     QByteArray textMoves{};
     QByteArray textMana{};
 
+    // REVISIT: Why does this need to extend CGroupChar?
     void setScore(int _hp, int _maxhp, int _mana, int _maxmana, int _moves, int _maxmoves)
     {
         hp = _hp;

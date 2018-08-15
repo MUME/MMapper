@@ -45,7 +45,7 @@ class CGroupClient;
 class CGroupCommunicator;
 class GroupAction;
 
-class CGroup : public QObject, public GroupAdmin
+class CGroup final : public QObject, public GroupAdmin
 {
     Q_OBJECT
 

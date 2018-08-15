@@ -42,7 +42,7 @@ static constexpr const int GROUP_COLUMN_COUNT = 8;
 static_assert(GROUP_COLUMN_COUNT == static_cast<int>(GroupModel::ColumnType::ROOM_NAME) + 1,
               "# of columns");
 
-GroupModel::GroupModel(MapData *md, Mmapper2Group *group, QObject *parent)
+GroupModel::GroupModel(MapData *const md, Mmapper2Group *const group, QObject *const parent)
     : QAbstractTableModel(parent)
     , m_map(md)
     , m_group(group)
@@ -57,7 +57,7 @@ void GroupModel::resetModel()
 int GroupModel::rowCount(const QModelIndex & /* parent */) const
 {
     GroupSelection *selection = m_group->getGroup()->selectAll();
-    int size = selection->size();
+    int size = static_cast<int>(selection->size());
     m_group->getGroup()->unselect(selection);
     return size;
 }
@@ -187,7 +187,7 @@ Qt::ItemFlags GroupModel::flags(const QModelIndex & /* index */) const
     return Qt::ItemFlag::NoItemFlags;
 }
 
-GroupWidget::GroupWidget(Mmapper2Group *group, MapData *md, QWidget *parent)
+GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget *const parent)
     : QWidget(parent)
     , m_group(group)
     , m_map(md)

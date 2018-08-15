@@ -57,7 +57,7 @@ public:
     explicit GroupSelection(GroupAdmin *admin);
     virtual ~GroupSelection() = default;
 
-    void receiveCharacters(GroupAdmin *, const std::vector<CGroupChar *>) override;
+    void receiveCharacters(GroupAdmin *, std::vector<CGroupChar *>) override;
 
 public:
     auto at(int i) const { return chars.at(i); }

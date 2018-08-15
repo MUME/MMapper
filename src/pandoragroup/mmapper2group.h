@@ -40,7 +40,7 @@ class CGroup;
 class QDomNode;
 enum class GroupManagerState { Off = 0, Client = 1, Server = 2 };
 
-class Mmapper2Group : public Component
+class Mmapper2Group final : public Component
 {
 public:
     Q_OBJECT

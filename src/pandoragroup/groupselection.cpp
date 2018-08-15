@@ -35,8 +35,7 @@ GroupSelection::GroupSelection(GroupAdmin *admin)
  * @param admin lock administrator
  * @param chars characters to insert
  */
-void GroupSelection::receiveCharacters(GroupAdmin *const admin,
-                                       const std::vector<CGroupChar *> in_chars)
+void GroupSelection::receiveCharacters(GroupAdmin *const admin, std::vector<CGroupChar *> in_chars)
 {
     assert(admin == m_admin);
     chars = std::move(in_chars);

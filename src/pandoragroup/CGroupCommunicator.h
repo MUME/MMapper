@@ -100,7 +100,7 @@ private:
     GroupManagerState type = GroupManagerState::Off;
 };
 
-class CGroupServerCommunicator : public CGroupCommunicator
+class CGroupServerCommunicator final : public CGroupCommunicator
 {
     Q_OBJECT
     friend class CGroupServer;
@@ -134,7 +134,7 @@ private:
     CGroupServer server;
 };
 
-class CGroupClientCommunicator : public CGroupCommunicator
+class CGroupClientCommunicator final : public CGroupCommunicator
 {
     Q_OBJECT
     friend class CGroupClient;

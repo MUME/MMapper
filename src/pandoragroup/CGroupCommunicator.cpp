@@ -362,7 +362,7 @@ void CGroupServerCommunicator::parseLoginInformation(CGroupClient *const connect
 void CGroupServerCommunicator::sendGroupInformation(CGroupClient *const connection)
 {
     GroupSelection *selection = getGroup()->selectAll();
-    for (const auto character : *selection) {
+    for (const auto &character : *selection) {
         // Only send group information for other characters
         if (clientsList.value(character->getName()) == connection->socketDescriptor()) {
             continue;
@@ -381,7 +381,7 @@ void CGroupServerCommunicator::sendRemoveUserNotification(CGroupClient *const co
 {
     //    qInfo("[Server] Sending remove user notification!");
     GroupSelection *selection = getGroup()->selectByName(name);
-    for (const auto character : *selection) {
+    for (const auto &character : *selection) {
         if (character->getName() == name) {
             QDomNode blob = character->toXML();
             QByteArray message = formMessageBlock(Messages::REMOVE_CHAR, blob);
