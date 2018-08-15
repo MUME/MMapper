@@ -69,11 +69,33 @@ static constexpr const bool USE_IO_COMPRESSOR = true;
 static constexpr const bool USE_IO_COMPRESSOR = false;
 /* NOTE: Once we require C++17, this can be if constexpr,
 * and it won't be necessary to mock QtIOCompressor. */
+#include <QIODevice>
+using OpenMode = QIODevice::OpenMode;
 class QtIOCompressor final : public QIODevice
 {
+public:
     explicit QtIOCompressor(QFile *) { std::abort(); }
-    bool open(QIODevice::OpenModeFlag) override { std::abort(); }
+
+public:
+    bool open(OpenMode /*mode*/) override
+    {
+        std::abort();
+        return false;
+    }
     void close() override { std::abort(); }
+
+protected:
+    qint64 readData(char * /*data*/, qint64 /*maxlen*/) override
+    {
+        std::abort();
+        return 0;
+    }
+
+    qint64 writeData(const char * /*data*/, qint64 /*len*/) override
+    {
+        std::abort();
+        return 0;
+    }
 };
 #endif
 

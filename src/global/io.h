@@ -53,7 +53,7 @@ enum class IOResult { SUCCESS, FAILURE, EXCEPTION };
 template<size_t N, typename Callback>
 IOResult readAllAvailable(QIODevice &dev, null_padded_buffer<N> &buffer, Callback &&callback)
 {
-    const auto data = buffer.array.data();
+    char *const data = buffer.array.data();
     const auto maxSize = static_cast<qint64>(buffer.array.size()) - 1;
     while (dev.bytesAvailable() != 0) {
         const auto got = dev.read(data, maxSize);
@@ -69,8 +69,7 @@ IOResult readAllAvailable(QIODevice &dev, null_padded_buffer<N> &buffer, Callbac
         data[got] = '\0';
         const int igot = static_cast<int>(got);
         assert(igot >= 0 && static_cast<decltype(got)>(igot) == got);
-        auto byteArray = QByteArray::fromRawData(data, igot);
-        callback(byteArray);
+        callback(QByteArray::fromRawData(data, igot));
     }
     callback(QByteArray::fromRawData(data, 0));
     return IOResult::SUCCESS;
