@@ -34,12 +34,13 @@
 #include "../global/roomid.h"
 #include "../mapfrontend/mapfrontend.h"
 
-int ConnectionSelection::GLtoMap(const double arg)
+// REVISIT: Duplication between here and mapcanvas.cpp
+int ConnectionSelection::GLtoMap(const float arg)
 {
     if (arg >= 0) {
-        return static_cast<int>(arg + 0.5);
+        return static_cast<int>(arg + 0.5f);
     }
-    return static_cast<int>(arg - 0.5);
+    return static_cast<int>(arg - 0.5f);
 }
 
 ConnectionSelection::ConnectionSelection()
@@ -49,8 +50,8 @@ ConnectionSelection::ConnectionSelection()
 }
 
 ConnectionSelection::ConnectionSelection(MapFrontend *const mf,
-                                         const double mx,
-                                         const double my,
+                                         const float mx,
+                                         const float my,
                                          const int layer)
 {
     for (auto &x : m_connectionDescriptor)
@@ -81,7 +82,7 @@ bool ConnectionSelection::isValid()
     return true;
 }
 
-ExitDirection ConnectionSelection::ComputeDirection(const double mouseX, const double mouseY)
+ExitDirection ConnectionSelection::ComputeDirection(const float mouseX, const float mouseY)
 {
     ExitDirection dir = ExitDirection::UNKNOWN;
 
@@ -91,16 +92,16 @@ ExitDirection ConnectionSelection::ComputeDirection(const double mouseX, const d
     const int x1 = GLtoMap(mouseX);
     const int y1 = GLtoMap(mouseY);
 
-    double x1d = mouseX - x1;
-    double y1d = mouseY - y1;
+    float x1d = mouseX - static_cast<float>(x1);
+    float y1d = mouseY - static_cast<float>(y1);
 
-    if (y1d > -0.2 && y1d < 0.2) {
+    if (y1d > -0.2f && y1d < 0.2f) {
         //y1p = y1;
-        if (x1d >= 0.2) {
+        if (x1d >= 0.2f) {
             dir = ExitDirection::EAST;
             //x1p = x1 + 0.4;
         } else {
-            if (x1d <= -0.2) {
+            if (x1d <= -0.2f) {
                 dir = ExitDirection::WEST;
                 //x1p = x1 - 0.4;
             } else {
@@ -110,18 +111,18 @@ ExitDirection ConnectionSelection::ComputeDirection(const double mouseX, const d
         }
     } else {
         //x1p = x1;
-        if (y1d >= 0.2) {
+        if (y1d >= 0.2f) {
             //y1p = y1 + 0.4;
             dir = ExitDirection::SOUTH;
-            if (x1d <= -0.2) {
+            if (x1d <= -0.2f) {
                 dir = ExitDirection::DOWN;
                 //x1p = x1 + 0.4;
             }
         } else {
-            if (y1d <= -0.2) {
+            if (y1d <= -0.2f) {
                 //y1p = y1 - 0.4;
                 dir = ExitDirection::NORTH;
-                if (x1d >= 0.2) {
+                if (x1d >= 0.2f) {
                     dir = ExitDirection::UP;
                     //x1p = x1 - 0.4;
                 }
@@ -134,8 +135,8 @@ ExitDirection ConnectionSelection::ComputeDirection(const double mouseX, const d
 
 /* TODO: refactor xxx{First,Second} to call the same functions with different argument */
 void ConnectionSelection::setFirst(MapFrontend *const mf,
-                                   const double mx,
-                                   const double my,
+                                   const float mx,
+                                   const float my,
                                    const int layer)
 {
     m_first = true;
@@ -166,8 +167,8 @@ void ConnectionSelection::setFirst(MapFrontend *const mf, const RoomId id, const
 }
 
 void ConnectionSelection::setSecond(MapFrontend *const mf,
-                                    const double mx,
-                                    const double my,
+                                    const float mx,
+                                    const float my,
                                     const int layer)
 {
     m_first = false;

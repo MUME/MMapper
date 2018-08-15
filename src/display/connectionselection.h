@@ -53,13 +53,13 @@ public:
         ExitDirection direction{};
     };
 
-    explicit ConnectionSelection(MapFrontend *, double mx, double my, int layer);
+    explicit ConnectionSelection(MapFrontend *, float mx, float my, int layer);
     explicit ConnectionSelection();
     ~ConnectionSelection();
 
-    void setFirst(MapFrontend *, double mx, double my, int layer);
+    void setFirst(MapFrontend *, float mx, float my, int layer);
     void setFirst(MapFrontend *mf, RoomId RoomId, ExitDirection dir);
-    void setSecond(MapFrontend *, double mx, double my, int layer);
+    void setSecond(MapFrontend *, float mx, float my, int layer);
     void setSecond(MapFrontend *mf, RoomId RoomId, ExitDirection dir);
 
     void removeFirst();
@@ -80,9 +80,9 @@ signals:
 
 protected:
 private:
-    ExitDirection ComputeDirection(double mouseX, double mouseY);
+    ExitDirection ComputeDirection(float mouseX, float mouseY);
 
-    static int GLtoMap(double arg);
+    static int inline GLtoMap(float arg);
 
     // REVISIT: give these enum names?
     std::array<ConnectionDescriptor, 2> m_connectionDescriptor{};

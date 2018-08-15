@@ -185,7 +185,7 @@ private:
     void initTextures();
     void makeGlLists();
 
-    static int inline GLtoMap(double arg);
+    static int inline GLtoMap(float arg);
 
     void setTrilinear(QOpenGLTexture *x) const;
 

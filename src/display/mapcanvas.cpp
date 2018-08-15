@@ -224,12 +224,12 @@ void MapCanvas::layerDown()
     update();
 }
 
-int inline MapCanvas::GLtoMap(double arg)
+int inline MapCanvas::GLtoMap(float arg)
 {
     if (arg >= 0) {
-        return static_cast<int>(arg + 0.5);
+        return static_cast<int>(arg + 0.5f);
     }
-    return static_cast<int>(arg - 0.5);
+    return static_cast<int>(arg - 0.5f);
 }
 
 void MapCanvas::setCanvasMouseMode(CanvasMouseMode mode)
@@ -573,10 +573,8 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
     case CanvasMouseMode::MOVE:
         if (((event->buttons() & Qt::LeftButton) != 0u) && m_mouseLeftPressed) {
             const float scrollfactor = SCROLLFACTOR();
-            auto idx = static_cast<int>((m_sel2.x - static_cast<float>(m_moveBackup.x))
-                                        / scrollfactor);
-            auto idy = static_cast<int>((m_sel2.y - static_cast<float>(m_moveBackup.y))
-                                        / scrollfactor);
+            auto idx = static_cast<int>((m_sel2.x - m_moveBackup.x) / scrollfactor);
+            auto idy = static_cast<int>((m_sel2.y - m_moveBackup.y) / scrollfactor);
 
             emit mapMove(-idx, -idy);
 

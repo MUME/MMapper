@@ -122,13 +122,7 @@ struct MapCanvasData
         float x = 0.0f;
         float y = 0.0f;
         int layer = 0;
-    } m_sel1{}, m_sel2{};
-
-    struct
-    {
-        GLdouble x = 0.0;
-        GLdouble y = 0.0;
-    } m_moveBackup{};
+    } m_sel1{}, m_sel2{}, m_moveBackup{};
 
     bool m_selectedArea = false; //no area selected at start time
     const RoomSelection *m_roomSelection = nullptr;

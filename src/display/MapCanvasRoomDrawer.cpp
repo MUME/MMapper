@@ -363,14 +363,14 @@ void MapCanvasRoomDrawer::drawRoomDoorName(const Room *const sourceRoom,
     assert(sourceRoom != nullptr);
     assert(targetRoom != nullptr);
 
-    const qint32 srcX = sourceRoom->getPosition().x;
-    const qint32 srcY = sourceRoom->getPosition().y;
-    const qint32 srcZ = sourceRoom->getPosition().z;
-    const qint32 tarX = targetRoom->getPosition().x;
-    const qint32 tarY = targetRoom->getPosition().y;
-    const qint32 tarZ = targetRoom->getPosition().z;
-    const qint32 dX = srcX - tarX;
-    const qint32 dY = srcY - tarY;
+    const auto srcX = sourceRoom->getPosition().x;
+    const auto srcY = sourceRoom->getPosition().y;
+    const auto srcZ = sourceRoom->getPosition().z;
+    const auto tarX = targetRoom->getPosition().x;
+    const auto tarY = targetRoom->getPosition().y;
+    const auto tarZ = targetRoom->getPosition().z;
+    const auto dX = srcX - tarX;
+    const auto dY = srcY - tarY;
 
     if (srcZ != m_currentLayer && tarZ != m_currentLayer) {
         return;
@@ -403,15 +403,15 @@ void MapCanvasRoomDrawer::drawRoomDoorName(const Room *const sourceRoom,
         name = sourceRoom->exit(sourceDir).getDoorName();
     }
 
-    const qreal width = getScaledFontWidth(name);
-    const qreal height = getScaledFontHeight();
+    const auto width = getScaledFontWidth(name);
+    const auto height = getScaledFontHeight();
 
-    qreal boxX = 0, boxY = 0;
+    auto boxX = 0, boxY = 0;
     if (together) {
-        boxX = srcX - (width / 2.0) - (dX * 0.5);
-        boxY = srcY - 0.5 - (dY * 0.5);
+        boxX = srcX - (width / 2.0f) - (dX * 0.5f);
+        boxY = srcY - 0.5f - (dY * 0.5f);
     } else {
-        boxX = srcX - (width / 2.0);
+        boxX = srcX - (width / 2.0f);
         switch (sourceDir) {
         case ExitDirection::NORTH:
             boxY = srcY - 0.65;
