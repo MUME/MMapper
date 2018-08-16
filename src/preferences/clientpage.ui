@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>303</width>
-    <height>525</height>
+    <height>534</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,12 +25,18 @@
         <property name="text">
          <string>Text color:</string>
         </property>
+        <property name="buddy">
+         <cstring>fgColorPushButton</cstring>
+        </property>
        </widget>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
          <string>Font:</string>
+        </property>
+        <property name="buddy">
+         <cstring>fontPushButton</cstring>
         </property>
        </widget>
       </item>
@@ -55,6 +61,9 @@
         </property>
         <property name="wordWrap">
          <bool>true</bool>
+        </property>
+        <property name="buddy">
+         <cstring>bgColorPushButton</cstring>
         </property>
        </widget>
       </item>
@@ -102,6 +111,9 @@
         <property name="text">
          <string>Rows:</string>
         </property>
+        <property name="buddy">
+         <cstring>rowsSpinBox</cstring>
+        </property>
        </widget>
       </item>
       <item row="4" column="0">
@@ -112,12 +124,18 @@
         <property name="wordWrap">
          <bool>true</bool>
         </property>
+        <property name="buddy">
+         <cstring>scrollbackSpinBox</cstring>
+        </property>
        </widget>
       </item>
       <item row="0" column="0">
        <widget class="QLabel" name="label_7">
         <property name="text">
          <string>Columns:</string>
+        </property>
+        <property name="buddy">
+         <cstring>columnsSpinBox</cstring>
         </property>
        </widget>
       </item>
@@ -184,6 +202,9 @@
         <property name="wordWrap">
          <bool>true</bool>
         </property>
+        <property name="buddy">
+         <cstring>tabDictionarySpinBox</cstring>
+        </property>
        </widget>
       </item>
       <item row="1" column="0">
@@ -193,6 +214,9 @@
         </property>
         <property name="wordWrap">
          <bool>true</bool>
+        </property>
+        <property name="buddy">
+         <cstring>inputHistorySpinBox</cstring>
         </property>
        </widget>
       </item>

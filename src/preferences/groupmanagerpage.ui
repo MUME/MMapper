@@ -79,7 +79,7 @@
    <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string>Host Settings</string>
+      <string>Host</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -164,7 +164,7 @@ p, li { white-space: pre-wrap; }
    <item>
     <widget class="QGroupBox" name="groupBox_2">
      <property name="title">
-      <string>Client Settings</string>
+      <string>Client</string>
      </property>
      <layout class="QGridLayout">
       <item row="0" column="0">

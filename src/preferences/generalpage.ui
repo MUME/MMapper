@@ -2,14 +2,6 @@
 <ui version="4.0">
  <class>GeneralPage</class>
  <widget class="QWidget" name="GeneralPage">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>487</width>
-    <height>568</height>
-   </rect>
-  </property>
   <property name="sizePolicy">
    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
     <horstretch>0</horstretch>
@@ -42,9 +34,9 @@
     <number>9</number>
    </property>
    <item>
-    <widget class="QGroupBox" name="groupBox_2">
+    <widget class="QGroupBox" name="groupBox_connections">
      <property name="title">
-      <string>Connection Settings</string>
+      <string>Connection</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_5">
       <property name="leftMargin">
@@ -97,6 +89,9 @@
         <property name="text">
          <string>Remote server:</string>
         </property>
+        <property name="buddy">
+         <cstring>remoteName</cstring>
+        </property>
        </widget>
       </item>
       <item row="2" column="0">
@@ -109,6 +104,9 @@
         </property>
         <property name="text">
          <string>Local port number:</string>
+        </property>
+        <property name="buddy">
+         <cstring>localPort</cstring>
         </property>
        </widget>
       </item>
@@ -123,10 +121,13 @@
         <property name="text">
          <string>Remote port number:</string>
         </property>
+        <property name="buddy">
+         <cstring>remotePort</cstring>
+        </property>
        </widget>
       </item>
       <item row="2" column="2">
-       <spacer>
+       <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
@@ -149,9 +150,9 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBox_5">
+    <widget class="QGroupBox" name="groupBox_exits">
      <property name="title">
-      <string>Emulated Exit Settings</string>
+      <string>Emulated Exits</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_6">
       <property name="leftMargin">
@@ -225,20 +226,8 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
-        <property name="minimumSize">
-         <size>
-          <width>45</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>45</width>
-          <height>16777215</height>
-         </size>
-        </property>
         <property name="text">
-         <string>Select</string>
+         <string>&amp;Select</string>
         </property>
        </widget>
       </item>
@@ -263,12 +252,9 @@
     </widget>
    </item>
    <item>
-    <widget class="QFrame" name="frame_4">
-     <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Sunken</enum>
+    <widget class="QGroupBox" name="groupBox_statusbar">
+     <property name="title">
+      <string>Status Bar</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_4">
       <property name="leftMargin">
@@ -289,7 +275,7 @@
       <item row="0" column="0">
        <widget class="QCheckBox" name="displayMumeClockCheckBox">
         <property name="text">
-         <string>Display Mume clock</string>
+         <string>Show Mume clock</string>
         </property>
        </widget>
       </item>

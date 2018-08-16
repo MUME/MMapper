@@ -61,6 +61,9 @@
         <property name="text">
          <string>&quot;change charset&quot; is:</string>
         </property>
+        <property name="buddy">
+         <cstring>charset</cstring>
+        </property>
        </widget>
       </item>
      </layout>
@@ -257,7 +260,7 @@
       <item row="4" column="0">
        <widget class="QCheckBox" name="suppressXmlTagsCheckBox">
         <property name="text">
-         <string>Suppress XML tags</string>
+         <string>Suppress XML</string>
         </property>
        </widget>
       </item>
