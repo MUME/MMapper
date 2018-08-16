@@ -171,6 +171,8 @@ void MumeClock::parseMumeTime(const QString &mumeTime, int secsSinceEpoch)
                  "Detected new Mume start epoch " + QString::number(newStartEpoch) + " ("
                      + QString::number(newStartEpoch - m_mumeStartEpoch)
                      + " seconds from previous)");
+    } else {
+        emit log("MumeClock", "Synchronized clock using 'time' output.");
     }
     m_mumeStartEpoch = newStartEpoch;
 }
