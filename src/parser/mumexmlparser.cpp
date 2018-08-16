@@ -166,7 +166,7 @@ void MumeXmlParser::parse(const QByteArray &line)
                     stripXmlEntities(temp);
                 }
                 QString tempStr = temp;
-                ParserUtils::removeAnsiMarks(tempStr);
+                tempStr = normalizeString(tempStr).trimmed();
                 if (Patterns::matchScore(tempStr)) {
                     // inform groupManager
                     temp = tempStr.toLocal8Bit();
@@ -385,8 +385,9 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
     }
 
     switch (m_xmlMode) {
-    case XmlMode::NONE:                           //non room info
-        if (m_stringBuffer.trimmed().isEmpty()) { // standard end of description parsed
+    case XmlMode::NONE: //non room info
+        m_stringBuffer = normalizeString(m_stringBuffer).trimmed();
+        if (m_stringBuffer.isEmpty()) { // standard end of description parsed
             if (m_readingRoomDesc) {
                 m_readingRoomDesc = false; // we finished read desc mode
                 m_descriptionReady = true;
@@ -395,7 +396,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
                 }
             }
         } else {
-            parseMudCommands(normalizeString(m_stringBuffer).simplified());
+            parseMudCommands(m_stringBuffer);
         }
         if (m_readSnoopTag) {
             if (m_descriptionReady) {
