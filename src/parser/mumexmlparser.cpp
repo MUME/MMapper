@@ -395,8 +395,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
                 }
             }
         } else {
-            ParserUtils::removeAnsiMarks(m_stringBuffer);
-            parseMudCommands(m_stringBuffer);
+            parseMudCommands(normalizeString(m_stringBuffer).simplified());
         }
         if (m_readSnoopTag) {
             if (m_descriptionReady) {
