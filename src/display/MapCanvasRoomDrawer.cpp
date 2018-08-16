@@ -403,15 +403,15 @@ void MapCanvasRoomDrawer::drawRoomDoorName(const Room *const sourceRoom,
         name = sourceRoom->exit(sourceDir).getDoorName();
     }
 
-    const auto width = getScaledFontWidth(name);
-    const auto height = getScaledFontHeight();
+    const qreal width = getScaledFontWidth(name);
+    const qreal height = getScaledFontHeight();
 
-    auto boxX = 0, boxY = 0;
+    qreal boxX = 0, boxY = 0;
     if (together) {
-        boxX = srcX - (width / 2.0f) - (dX * 0.5f);
-        boxY = srcY - 0.5f - (dY * 0.5f);
+        boxX = srcX - (width / 2.0) - (dX * 0.5);
+        boxY = srcY - 0.5 - (dY * 0.5);
     } else {
-        boxX = srcX - (width / 2.0f);
+        boxX = srcX - (width / 2.0);
         switch (sourceDir) {
         case ExitDirection::NORTH:
             boxY = srcY - 0.65;
