@@ -27,6 +27,7 @@
 
 #include <cassert>
 #include <QString>
+#include <QTime>
 
 #include "../configuration/configuration.h"
 #include "../mapdata/roomfactory.h"
@@ -70,9 +71,13 @@ void Mmapper2PathMachine::event(const SigParseEvent &sigParseEvent)
     params.matchingTolerance = settings.matchingTolerance;
     params.multipleConnectionsPenalty = settings.multipleConnectionsPenalty;
 
+    time.restart();
     emit log(me, QString("received event, state: %1").arg(stateName(state)));
     PathMachine::event(sigParseEvent);
-    emit log(me, QString("done processing event, state: %1").arg(stateName(state)));
+    emit log(me,
+             QString("done processing event, state: %1, elapsed: %2 ms")
+                 .arg(stateName(state))
+                 .arg(time.elapsed()));
 }
 
 Mmapper2PathMachine::Mmapper2PathMachine()

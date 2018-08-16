@@ -36,6 +36,7 @@
 class Configuration;
 class ParseEvent;
 class QObject;
+class QTime;
 class SigParseEvent;
 
 /**
@@ -55,6 +56,9 @@ public:
 
 signals:
     void log(const QString &, const QString &);
+
+private:
+    QTime time;
 };
 
 #endif
