@@ -141,6 +141,14 @@ if(EXISTS ${GIT_EXECUTABLE})
           OUTPUT_STRIP_TRAILING_WHITESPACE
         )
 
+        # Get the latest annotated tag of the working branch
+        execute_process(
+          COMMAND ${GIT_EXECUTABLE} describe --abbrev=0 --tags
+          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+          OUTPUT_VARIABLE GIT_ANNOTATED_TAG
+          OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+
         message(STATUS "Building from branch ${GIT_BRANCH} on commit ${GIT_COMMIT_HASH}")
         add_definitions(-DGIT_COMMIT_HASH="${GIT_COMMIT_HASH}")
         add_definitions(-DGIT_BRANCH="${GIT_BRANCH}")
@@ -161,7 +169,11 @@ endif()
 # Download arda.mm2
 set(MMAPPER_MAP_FILE "${CMAKE_BINARY_DIR}/map/arda.mm2")
 if(NOT EXISTS ${MMAPPER_MAP_FILE})
-    set(MMAPPER_MAP_URL "https://github.com/MUME/MMapper/releases/download/v${MMAPPER_VERSION}/arda.mm2")
+    if(GIT_ANNOTATED_TAG)
+        set(MMAPPER_MAP_URL "https://github.com/MUME/MMapper/releases/download/${GIT_ANNOTATED_TAG}/arda.mm2")
+    else()
+        set(MMAPPER_MAP_URL "https://github.com/MUME/MMapper/releases/download/v${MMAPPER_VERSION}/arda.mm2")
+    endif()
     message(STATUS "Fetching MMapper Map from: ${MMAPPER_MAP_URL}")
 
     file(DOWNLOAD
