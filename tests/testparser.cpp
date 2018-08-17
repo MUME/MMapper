@@ -58,6 +58,7 @@ void TestParser::createParseEventTest()
                                          cFlags);
 
     ParseEvent &e = *event;
+    qDebug() << e;
     QCOMPARE(e.getRoomName(), roomName);
     QCOMPARE(e.getDynamicDesc(), roomDescription);
     QCOMPARE(e.getStaticDesc(), parsedRoomDescription);

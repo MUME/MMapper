@@ -31,6 +31,7 @@
 #include <memory>
 
 #include "../global/utils.h"
+#include "../mapdata/ExitDirection.h"
 #include "../parser/CommandId.h"
 #include "../parser/ConnectedRoomFlags.h"
 #include "../parser/ExitsFlags.h"
@@ -148,6 +149,50 @@ static std::string getPromptBytes(const PromptFlagsType &promptFlags)
                            : std::string{};
     assert(promptBytes.size() == promptFlags.isValid() ? 1 : 0);
     return promptBytes;
+}
+
+ParseEvent::operator QString() const
+{
+    QString exitsStr;
+    // REVISIT: Duplicate code with AbstractParser
+    if (m_exitsFlags.isValid() && m_connectedRoomFlags.isValid()) {
+        for (const auto &dir : enums::getAllExitsNESWUD()) {
+            const ExitFlags exitFlags = m_exitsFlags.get(dir);
+            if (exitFlags.isExit()) {
+                exitsStr.append("[");
+                exitsStr.append(lowercaseDirection(dir));
+                if (exitFlags.isClimb())
+                    exitsStr.append("/");
+                if (exitFlags.isRoad())
+                    exitsStr.append("=");
+                if (exitFlags.isDoor())
+                    exitsStr.append("(");
+                const DirectionalLightType lightType = m_connectedRoomFlags.getDirectionalLight(
+                    static_cast<DirectionType>(dir));
+                if (lightType == DirectionalLightType::DIRECT_SUN_ROOM)
+                    exitsStr.append("^");
+                exitsStr.append("]");
+            }
+        }
+    }
+    QString promptStr;
+    if (m_promptFlags.isValid()) {
+        promptStr.append(QString::fromStdString(getPromptBytes(m_promptFlags)));
+        if (m_promptFlags.isLit())
+            promptStr.append("*");
+        else if (m_promptFlags.isDark())
+            promptStr.append("o");
+    }
+
+    return QString("[%1,%2,%3,%4,%5,%6,%7]")
+        .arg(m_roomName)
+        .arg(m_dynamicDesc)
+        .arg(m_staticDesc)
+        .arg(exitsStr)
+        .arg(promptStr)
+        .arg(getUppercase(moveType))
+        .arg(numSkipped)
+        .replace("\n", "\\n");
 }
 
 SharedParseEvent ParseEvent::createEvent(const CommandIdType c,

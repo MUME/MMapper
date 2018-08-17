@@ -198,24 +198,30 @@ ComparisonResult RoomFactory::compareWeakProps(const Room *const room,
                                                uint /*tolerance*/) const
 {
     bool exitsValid = room->isUpToDate();
+    // REVISIT: Should tolerance be an integer given known 'weak' params like hidden
+    // exits or undefined flags?
     bool tolerance = false;
 
+    const ConnectedRoomFlagsType connectedRoomFlags = event.getConnectedRoomFlags();
     const PromptFlagsType pFlags = event.getPromptFlags();
     if (pFlags.isValid()) {
         const RoomLightType lightType = room->getLightType();
         const RoomSundeathType sunType = room->getSundeathType();
         if (pFlags.isLit() && lightType != RoomLightType::LIT
             && sunType == RoomSundeathType::NO_SUNDEATH) {
-            // Allow prompt sunlight to override rooms with the DARK flag if we know the room
+            // Allow prompt sunlight to override rooms without LIT flag if we know the room
             // is troll safe and obviously not in permanent darkness
+            qDebug() << "Updating room to be LIT";
+            tolerance = true;
+
+        } else if (pFlags.isDark() && lightType != RoomLightType::DARK
+                   && sunType == RoomSundeathType::NO_SUNDEATH && connectedRoomFlags.isValid()
+                   && connectedRoomFlags.hasAnyDirectSunlight()) {
+            // Allow prompt sunlight to override rooms without DARK flag if we know the room
+            // has at least one sunlit exit and the room is troll safe
+            qDebug() << "Updating room to be DARK";
             tolerance = true;
         }
-        /*
-        // Disable until we can identify day/night or blindness/darkness spell
-        else if ((pFlags & DARK_ROOM) && lightType != RLT_DARK) {
-            tolerance = true;
-        }
-        */
     }
 
     const ExitsFlagsType eventExitsFlags = event.getExitsFlags();
@@ -243,19 +249,44 @@ ComparisonResult RoomFactory::compareWeakProps(const Room *const room,
                 } else {
                     if (tolerance) {
                         // Do not be tolerant for multiple differences
+                        qDebug() << "Found too many differences" << event;
                         return ComparisonResult::DIFFERENT;
+
                     } else if (!roomExitFlags.isExit() && eventExitFlags.isDoor()) {
-                        // No exit exists on the map and we just found a secret door
+                        // No exit exists on the map so we probably found a secret door
+                        qDebug() << "Secret door likely found to the" << lowercaseDirection(dir)
+                                 << event;
                         tolerance = true;
-                    } else if (roomExitFlags.isDoor()) {
-                        // Our map says there is a door here but we see some difference in exit/door flags (probably climb/road)
-                        tolerance = true;
+
+                    } else if (roomExit.isHiddenExit() && !eventExitFlags.isDoor()) {
+                        qDebug() << "Secret exit hidden to the" << lowercaseDirection(dir);
+
                     } else {
+                        qWarning() << "Unknown exit/door tolerance condition to the"
+                                   << lowercaseDirection(dir) << event;
                         return ComparisonResult::DIFFERENT;
                     }
                 }
-            } else if (diff.isRoad() || diff.isClimb()) {
-                // A known door was previously mapped closed and a new climb/road exit flag was found
+            } else if (diff.isRoad()) {
+                if (roomExitFlags.isRoad() && connectedRoomFlags.isValid()
+                    && connectedRoomFlags.hasDirectionalSunlight(static_cast<DirectionType>(dir))) {
+                    // Orcs/trolls can only see trails/roads if it is dark (but can see climbs)
+                    qDebug() << "Orc/troll could not see trail to the" << lowercaseDirection(dir);
+
+                } else {
+                    // A known door was previously mapped closed and a new road exit flag was found
+                    if (!roomExitFlags.isDoor()) {
+                        qWarning() << "Unknown road tolerance condition to the"
+                                   << lowercaseDirection(dir) << event;
+                    }
+                    tolerance = true;
+                }
+            } else if (diff.isClimb()) {
+                // A known door was previously mapped closed and a new climb exit flag was found
+                if (!roomExitFlags.isDoor()) {
+                    qWarning() << "Unknown road tolerance condition to the"
+                               << lowercaseDirection(dir) << event;
+                }
                 tolerance = true;
             }
         }
@@ -270,24 +301,31 @@ void RoomFactory::update(Room &room, const ParseEvent &event) const
 {
     room.setDynamicDescription(event.getDynamicDesc());
 
+    const ConnectedRoomFlagsType connectedRoomFlags = event.getConnectedRoomFlags();
     ExitsFlagsType eventExitsFlags = event.getExitsFlags();
     if (eventExitsFlags.isValid()) {
         eventExitsFlags.removeValid();
-        if (!room.isUpToDate()) {
-            for (const auto dir : ALL_EXITS_NESWUD) {
-                ExitFlags eventExitFlag = eventExitsFlags.get(dir);
-                Exit &roomExit = room.exit(dir);
-                if (roomExit.isDoor() && !eventExitFlag.isDoor()) {
+        for (const auto dir : ALL_EXITS_NESWUD) {
+            ExitFlags eventExitFlags = eventExitsFlags.get(dir);
+            Exit &roomExit = room.exit(dir);
+
+            if (!room.isUpToDate()) {
+                if (roomExit.isDoor() && !eventExitFlags.isDoor()) {
                     // Prevent room hidden exits from being overridden
-                    eventExitFlag |= ExitFlag::DOOR | ExitFlag::EXIT;
+                    eventExitFlags |= ExitFlag::DOOR | ExitFlag::EXIT;
                 }
-                roomExit.setExitFlags(eventExitFlag);
-            }
-        } else {
-            for (const auto dir : ALL_EXITS_NESWUD) {
-                Exit &e = room.exit(dir);
-                const ExitFlags eventExitFlags = eventExitsFlags.get(dir);
-                e.updateExit(eventExitFlags);
+                if (roomExit.exitIsRoad() && !eventExitFlags.isRoad()
+                    && connectedRoomFlags.isValid()
+                    && connectedRoomFlags.hasDirectionalSunlight(static_cast<DirectionType>(dir))) {
+                    // Prevent orcs/trolls from removing roads/trails if they're sunlit
+                    eventExitFlags |= ExitFlag::ROAD;
+                }
+                // Replace exits if target room is not up to date
+                roomExit.setExitFlags(eventExitFlags);
+
+            } else {
+                // Update exits if target room is up to date
+                roomExit.updateExit(eventExitFlags);
             }
         }
         room.setUpToDate();
@@ -298,23 +336,25 @@ void RoomFactory::update(Room &room, const ParseEvent &event) const
     const PromptFlagsType pFlags = event.getPromptFlags();
     if (pFlags.isValid()) {
         room.setTerrainType(pFlags.getTerrainType());
-        if (pFlags.isLit()) {
+        const RoomSundeathType sunType = room.getSundeathType();
+        if (pFlags.isLit() && sunType == RoomSundeathType::NO_SUNDEATH) {
             room.setLightType(RoomLightType::LIT);
-        } /* else if (pFlags & DARK_ROOM) {
-            room.replace(RoomField::LIGHT_TYPE, RLT_DARK);
-        }*/
+        } else if (pFlags.isDark() && sunType == RoomSundeathType::NO_SUNDEATH
+                   && connectedRoomFlags.isValid() && connectedRoomFlags.hasAnyDirectSunlight()) {
+            room.setLightType(RoomLightType::DARK);
+        }
     } else {
         room.setOutDated();
     }
 
-    const QString& desc = event.getStaticDesc();
+    const QString &desc = event.getStaticDesc();
     if (!desc.isEmpty()) {
         room.setStaticDescription(desc);
     } else {
         room.setOutDated();
     }
 
-    const QString& name = event.getRoomName();
+    const QString &name = event.getRoomName();
     if (!name.isEmpty()) {
         room.setName(name);
     } else {

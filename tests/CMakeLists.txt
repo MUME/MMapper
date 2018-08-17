@@ -18,7 +18,13 @@ target_link_libraries(TestClock Qt5::Test)
 add_test(NAME TestClock COMMAND TestClock)
 
 # Expandora
-file(GLOB_RECURSE expandoracommon_SRCS ../src/expandoracommon/*.cpp)
+file(GLOB_RECURSE expandoracommon_SRCS
+    ../src/expandoracommon/*.cpp
+    ../src/parser/CommandId.cpp
+    ../src/parser/CommandId.h
+    ../src/mapdata/ExitDirection.cpp
+    ../src/mapdata/ExitDirection.h
+    )
 set(TestExpandoraCommon_SRCS testexpandoracommon.cpp)
 add_executable(TestExpandoraCommon ${TestExpandoraCommon_SRCS} ${expandoracommon_SRCS})
 target_link_libraries(TestExpandoraCommon Qt5::Test)
@@ -26,11 +32,15 @@ add_test(NAME TestExpandoraCommon COMMAND TestExpandoraCommon)
 
 # Parser
 set(parser_SRCS
+    ../src/parser/CommandId.cpp
+    ../src/parser/CommandId.h
     ../src/parser/parserutils.cpp
     ../src/expandoracommon/parseevent.cpp
     ../src/expandoracommon/parseevent.h
     ../src/expandoracommon/property.cpp
     ../src/expandoracommon/property.h
+    ../src/mapdata/ExitDirection.cpp
+    ../src/mapdata/ExitDirection.h
     )
 set(TestParser_SRCS testparser.cpp)
 add_executable(TestParser ${TestParser_SRCS} ${parser_SRCS})

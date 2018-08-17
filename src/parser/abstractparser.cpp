@@ -233,8 +233,7 @@ void AbstractParser::parsePrompt(const QString &prompt)
         break; // )  moon (direct and indirect)
     case 111:
         index++; // o  darkness
-        // TODO(nschimme): Enable when we know it is night only
-        //m_promptFlags=DARK_ROOM;
+        m_promptFlags.setDark();
         break;
     default:;
     }

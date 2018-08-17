@@ -35,6 +35,7 @@
 #include <string>
 #include <QByteArrayDataPtr>
 #include <QCharRef>
+#include <QString>
 #include <QVariant>
 #include <QtGlobal>
 
@@ -156,6 +157,9 @@ public:
     ParseEvent &operator=(ParseEvent);
     static void swap(ParseEvent &lhs, ParseEvent &rhs);
     ParseEvent clone() const { return ParseEvent{*this}; }
+
+public:
+    operator QString() const;
 
 public:
     virtual ~ParseEvent();

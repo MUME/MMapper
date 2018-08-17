@@ -71,7 +71,7 @@ public:
 public:
     void setAnyDirectSunlight() { flags |= ANY_DIRECT_SUNLIGHT; }
 
-    bool hasAnyDirectSunlight() { return IS_SET(flags, ANY_DIRECT_SUNLIGHT); }
+    bool hasAnyDirectSunlight() const { return IS_SET(flags, ANY_DIRECT_SUNLIGHT); }
 
 public:
     void reset() { flags = uint16_t{0}; }
@@ -96,6 +96,11 @@ public:
     {
         const auto shift = getShift(dir);
         return static_cast<DirectionalLightType>((flags >> shift) & MASK);
+    }
+
+    bool hasDirectionalSunlight(DirectionType dir) const
+    {
+        return getDirectionalLight(dir) == DirectionalLightType::DIRECT_SUN_ROOM;
     }
 };
 
