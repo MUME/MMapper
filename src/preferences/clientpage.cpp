@@ -50,7 +50,7 @@ ClientPage::ClientPage(QWidget *parent)
     ui->autoResizeTerminalCheckBox->setChecked(settings.autoResizeTerminal);
 
     connect(ui->fontPushButton, &QAbstractButton::pressed, this, &ClientPage::onChangeFont);
-    connect(ui->bgColorPushBotton,
+    connect(ui->bgColorPushButton,
             &QAbstractButton::pressed,
             this,
             &ClientPage::onChangeBackgroundColor);
@@ -106,7 +106,7 @@ void ClientPage::updateFontAndColors()
 
     QPixmap bgPix(16, 16);
     bgPix.fill(settings.backgroundColor);
-    ui->bgColorPushBotton->setIcon(QIcon(bgPix));
+    ui->bgColorPushButton->setIcon(QIcon(bgPix));
     ui->exampleLineEdit->setStyleSheet(QString("background: %1; color: %2")
                                            .arg(settings.backgroundColor.name())
                                            .arg(settings.foregroundColor.name()));

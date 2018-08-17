@@ -45,8 +45,8 @@ class Component;
 
 class ComponentThreader : public QThread
 {
+    Q_OBJECT
 private:
-    Q_OBJECT;
     Component *owner = nullptr;
 
 public:
