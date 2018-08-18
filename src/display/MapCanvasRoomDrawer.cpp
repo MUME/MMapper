@@ -1132,11 +1132,11 @@ void MapCanvasRoomDrawer::drawConnEndTri(const ExitDirection endDir,
 
     case ExitDirection::UP:
     case ExitDirection::DOWN:
+        // Do not draw triangles for 2-way up/down
         break;
-
     case ExitDirection::UNKNOWN:
         // NOTE: This is drawn for both 1-way and 2-way
-        drawConnEndTriUnknown(dX, dY, dstZ);
+        drawConnEndTriUpDownUnknown(dX, dY, dstZ);
         break;
     case ExitDirection::NONE:
         // NOTE: This is drawn for both 1-way and 2-way
@@ -1185,11 +1185,9 @@ void MapCanvasRoomDrawer::drawConnEndTri1Way(const ExitDirection endDir,
 
     case ExitDirection::UP:
     case ExitDirection::DOWN:
-        break;
-
     case ExitDirection::UNKNOWN:
         // NOTE: This is drawn for both 1-way and 2-way
-        drawConnEndTriUnknown(dX, dY, dstZ);
+        drawConnEndTriUpDownUnknown(dX, dY, dstZ);
         break;
     case ExitDirection::NONE:
         // NOTE: This is drawn for both 1-way and 2-way
@@ -1208,7 +1206,7 @@ void MapCanvasRoomDrawer::drawConnEndTriNone(qint32 dX, qint32 dY, double dstZ)
                   });
 }
 
-void MapCanvasRoomDrawer::drawConnEndTriUnknown(qint32 dX, qint32 dY, double dstZ)
+void MapCanvasRoomDrawer::drawConnEndTriUpDownUnknown(qint32 dX, qint32 dY, double dstZ)
 {
     m_opengl.draw(DrawType::TRIANGLES,
                   std::vector<Vec3d>{

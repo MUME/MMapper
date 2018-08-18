@@ -104,7 +104,7 @@ public:
     void drawRoom(const Room *room, const RoomIndex &rooms, const RoomLocks &locks);
 
 private:
-    void drawConnEndTriUnknown(qint32 dX, qint32 dY, double dstZ);
+    void drawConnEndTriUpDownUnknown(qint32 dX, qint32 dY, double dstZ);
     void drawConnEndTriNone(qint32 dX, qint32 dY, double dstZ);
 
 private:

@@ -57,6 +57,7 @@ void ConnectionLineBuilder::drawConnLineStart(const ExitDirection dir,
 
     case ExitDirection::UNKNOWN:
     case ExitDirection::NONE:
+        // REVISIT: Should UNKNOWN/NONE have a starting point?
     default:
         break;
     }
@@ -151,26 +152,30 @@ void ConnectionLineBuilder::drawConnLineEnd1Way(const ExitDirection endDir,
                                                 const double dstZ)
 {
     switch (endDir) {
-    case ExitDirection::NORTH: {
+    case ExitDirection::NORTH:
         addVertex(dX + 0.25, dY - 0.1, dstZ);
         addVertex(dX + 0.25, dY + 0.1, dstZ);
-    } break;
-    case ExitDirection::SOUTH: {
+        break;
+    case ExitDirection::SOUTH:
         addVertex(dX + 0.75, dY + 1.1, dstZ);
         addVertex(dX + 0.75, dY + 0.9, dstZ);
-    } break;
-    case ExitDirection::EAST: {
+        break;
+    case ExitDirection::EAST:
         addVertex(dX + 1.1, dY + 0.75, dstZ);
         addVertex(dX + 0.9, dY + 0.75, dstZ);
-    } break;
-    case ExitDirection::WEST: {
+        break;
+    case ExitDirection::WEST:
         addVertex(dX - 0.1, dY + 0.25, dstZ);
         addVertex(dX + 0.1, dY + 0.25, dstZ);
-    } break;
+        break;
     case ExitDirection::UP:
     case ExitDirection::DOWN:
+        addVertex(dX + 0.75, dY + 0.75, dstZ);
+        addVertex(dX + 0.5, dY + 0.5, dstZ);
+        break;
     case ExitDirection::UNKNOWN:
     case ExitDirection::NONE:
+        // REVISIT: Original code used the UP/DOWN logic for UNKNOWN/NONE but has no starting point
         break;
     }
 }
