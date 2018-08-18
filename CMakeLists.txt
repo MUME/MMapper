@@ -169,17 +169,21 @@ endif()
 # Download arda.mm2
 set(MMAPPER_MAP_FILE "${CMAKE_BINARY_DIR}/map/arda.mm2")
 if(NOT EXISTS ${MMAPPER_MAP_FILE})
-    if(GIT_ANNOTATED_TAG)
-        set(MMAPPER_MAP_URL "https://github.com/MUME/MMapper/releases/download/${GIT_ANNOTATED_TAG}/arda.mm2")
-    else()
-        set(MMAPPER_MAP_URL "https://github.com/MUME/MMapper/releases/download/v${MMAPPER_VERSION}/arda.mm2")
-    endif()
+    set(MMAPPER_MAP_URL "https://github.com/MUME/MMapper/releases/download/v${MMAPPER_VERSION}/arda.mm2")
     message(STATUS "Fetching MMapper Map from: ${MMAPPER_MAP_URL}")
 
-    file(DOWNLOAD
-        ${MMAPPER_MAP_URL}
-        ${MMAPPER_MAP_FILE}
-    )
+    file(DOWNLOAD ${MMAPPER_MAP_URL} ${MMAPPER_MAP_FILE} STATUS MMAPPER_MAP_HTTP_STATUS)
+    list(GET MMAPPER_MAP_HTTP_STATUS 0 MMAPPER_MAP_STATUS)
+
+    if(MMAPPER_MAP_STATUS)
+        file(REMOVE MMAPPER_MAP_FILE)
+        if(GIT_ANNOTATED_TAG)
+            set(MMAPPER_MAP_URL "https://github.com/MUME/MMapper/releases/download/${GIT_ANNOTATED_TAG}/arda.mm2")
+            message(STATUS "Map not found. Fetching alternative map from: ${MMAPPER_MAP_URL}")
+            file(DOWNLOAD ${MMAPPER_MAP_URL} ${MMAPPER_MAP_FILE})
+        endif()
+    endif()
+
     message(STATUS "Downloaded map to: ${MMAPPER_MAP_FILE}")
 else()
     message(STATUS "Using cached MMapper map: ${MMAPPER_MAP_FILE}")
