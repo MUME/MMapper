@@ -49,6 +49,9 @@ GeneralPage::GeneralPage(QWidget *parent)
             &QCheckBox::stateChanged,
             this,
             &GeneralPage::tlsEncryptionCheckBoxStateChanged);
+    connect(proxyThreadedCheckBox, &QCheckBox::stateChanged, this, [this]() {
+        Config().connection.proxyThreaded = proxyThreadedCheckBox->isChecked();
+    });
 
     connect(emulatedExitsCheckBox,
             &QCheckBox::stateChanged,
@@ -90,6 +93,7 @@ GeneralPage::GeneralPage(QWidget *parent)
     } else {
         tlsEncryptionCheckBox->setChecked(connection.tlsEncryption);
     }
+    proxyThreadedCheckBox->setChecked(config.connection.proxyThreaded);
 
     emulatedExitsCheckBox->setChecked(mumeNative.emulatedExits);
     showHiddenExitFlagsCheckBox->setChecked(mumeNative.showHiddenExitFlags);

@@ -323,7 +323,6 @@ void Configuration::GeneralSettings::read(QSettings &conf)
     mapMode = sanitizeMapMode(conf.value(KEY_MAP_MODE, static_cast<uint>(MapMode::PLAY)).toUInt());
     noSplash = conf.value(KEY_NO_SPLASH, false).toBool();
     noLaunchPanel = conf.value(KEY_NO_LAUNCH_PANEL, false).toBool();
-    proxyThreaded = conf.value(KEY_PROXY_THREADED, true).toBool();
 }
 
 void Configuration::ConnectionSettings::read(QSettings &conf)
@@ -336,6 +335,7 @@ void Configuration::ConnectionSettings::read(QSettings &conf)
     localPort = sanitizeUint16(conf.value(KEY_LOCAL_PORT_NUMBER, DEFAULT_PORT).toInt(),
                                static_cast<uint16_t>(DEFAULT_PORT));
     tlsEncryption = conf.value(KEY_TLS_ENCRYPTION, true).toBool();
+    proxyThreaded = conf.value(KEY_PROXY_THREADED, true).toBool();
 
     // News 2340, changing domain from fire.pvv.org to mume.org:
     auto &remote = remoteServerName;
@@ -472,7 +472,6 @@ void Configuration::GeneralSettings::write(QSettings &conf) const
     conf.setValue(KEY_MAP_MODE, static_cast<uint>(mapMode));
     conf.setValue(KEY_NO_SPLASH, noSplash);
     conf.setValue(KEY_NO_LAUNCH_PANEL, noLaunchPanel);
-    conf.setValue(KEY_PROXY_THREADED, proxyThreaded);
 }
 
 void Configuration::ConnectionSettings::write(QSettings &conf) const
@@ -481,6 +480,7 @@ void Configuration::ConnectionSettings::write(QSettings &conf) const
     conf.setValue(KEY_REMOTE_PORT_NUMBER, static_cast<int>(remotePort));
     conf.setValue(KEY_LOCAL_PORT_NUMBER, static_cast<int>(localPort));
     conf.setValue(KEY_TLS_ENCRYPTION, tlsEncryption);
+    conf.setValue(KEY_PROXY_THREADED, proxyThreaded);
 }
 
 void Configuration::CanvasSettings::write(QSettings &conf) const

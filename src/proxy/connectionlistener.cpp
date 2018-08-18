@@ -65,7 +65,7 @@ void ConnectionListener::incomingConnection(qintptr socketDescriptor)
                                 m_groupManager,
                                 m_mumeClock,
                                 socketDescriptor,
-                                Config().general.proxyThreaded,
+                                Config().connection.proxyThreaded,
                                 this);
         proxy->start();
     } else {

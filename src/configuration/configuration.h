@@ -93,7 +93,6 @@ public:
         MapMode mapMode = MapMode::PLAY;
         bool noSplash = false;
         bool noLaunchPanel = false;
-        bool proxyThreaded = false;
 
     private:
         friend class Configuration;
@@ -107,6 +106,7 @@ public:
         quint16 remotePort = 0u;
         quint16 localPort = 0u; /// Port to bind to on local machine
         bool tlsEncryption = false;
+        bool proxyThreaded = false;
 
     private:
         friend class Configuration;
