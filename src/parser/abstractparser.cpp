@@ -1218,38 +1218,13 @@ void AbstractParser::doOfflineCharacterMove()
         sendPromptToUser(*rb);
     } else {
         /* FIXME: This needs stronger type check on the cast */
-        const Exit &e = rb->exit(static_cast<ExitDirection>(static_cast<uint>(direction)));
+        const Exit &e = rb->exit(static_cast<ExitDirection>(direction));
         if (e.isExit() && !e.outIsEmpty()) {
             const RoomSelection *rs2 = m_mapData->select();
             const Room *r = m_mapData->getRoom(e.outFirst(), rs2);
 
             if (flee) {
-                switch (direction) {
-                case CommandIdType::NORTH:
-                    sendToUser("You flee north.");
-                    break;
-                case CommandIdType::SOUTH:
-                    sendToUser("You flee south.");
-                    break;
-                case CommandIdType::EAST:
-                    sendToUser("You flee east.");
-                    break;
-                case CommandIdType::WEST:
-                    sendToUser("You flee west.");
-                    break;
-                case CommandIdType::UP:
-                    sendToUser("You flee up.");
-                    break;
-                case CommandIdType::DOWN:
-                    sendToUser("You flee down.");
-                    break;
-                case CommandIdType::UNKNOWN:
-                case CommandIdType::LOOK:
-                case CommandIdType::FLEE:
-                case CommandIdType::SCOUT:
-                case CommandIdType::NONE:
-                    break;
-                }
+                sendToUser(QByteArray("You flee ").append(getLowercase(direction)).append("."));
             }
             sendRoomInfoToUser(r);
             sendRoomExitsInfoToUser(r);
