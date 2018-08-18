@@ -67,6 +67,7 @@ ProxyThreader::~ProxyThreader()
 void ProxyThreader::run()
 {
     try {
+        qDebug() << "Proxy is being threaded";
         exec();
     } catch (const std::exception &ex) {
         qCritical() << "Proxy thread is terminating because it threw an exception: " << ex.what()

@@ -195,7 +195,12 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
     Approved appr(factory, sigParseEvent, params.matchingTolerance);
     const Room *perhaps = nullptr;
 
-    tryExits(&mostLikelyRoom, appr, event, true);
+    if (event.getMoveType() == CommandIdType::LOOK) {
+        emit lookingForRooms(appr, mostLikelyRoom.getId());
+
+    } else {
+        tryExits(&mostLikelyRoom, appr, event, true);
+    }
 
     perhaps = appr.oneMatch();
 

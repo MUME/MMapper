@@ -130,7 +130,7 @@ static void firstRun(MainWindow &mw)
 
     /* REVISIT: may want both .exe directory and the cwd, since they might be different! */
     std::set<QString> seen;
-    for (const auto& dir :
+    for (const auto &dir :
          {QDir{Config().autoLoad.lastMapDirectory}, QDir::current(), cd(QDir::current(), "map")}) {
         const auto name = dir.absolutePath();
         if (seen.find(name) != seen.end())
@@ -164,7 +164,8 @@ int main(int argc, char **argv)
     if (IS_DEBUG_BUILD) {
         // see http://doc.qt.io/qt-5/qtglobal.html#qSetMessagePattern
         // also allows environment variable QT_MESSAGE_PATTERN
-        qSetMessagePattern("[%{time}] %{type} in %{function} (at %{file}:%{line}): %{message}");
+        qSetMessagePattern(
+            "[%{time} %{threadid}] %{type} in %{function} (at %{file}:%{line}): %{message}");
     }
 
     QApplication app(argc, argv);
