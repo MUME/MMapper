@@ -152,9 +152,13 @@ void PathMachine::tryExits(const Room *const room,
         const Exit &possible = room->exit(getDirection(move));
         tryExit(possible, recipient, out);
     } else {
+        // Only check the current room for LOOK
         emit lookingForRooms(recipient, room->getId());
-        for (const auto &possible : room->getExitsList()) {
-            tryExit(possible, recipient, out);
+        if (move >= CommandIdType::FLEE) {
+            // Only try all possible exits for commands FLEE, SCOUT, and NONE
+            for (const auto &possible : room->getExitsList()) {
+                tryExit(possible, recipient, out);
+            }
         }
     }
 }
@@ -169,12 +173,12 @@ void PathMachine::tryExit(const Exit &possible, RoomRecipient &recipient, const 
 void PathMachine::tryCoordinate(const Room *const room, RoomRecipient &recipient, ParseEvent &event)
 {
     const CommandIdType moveCode = event.getMoveType();
-    if (moveCode == CommandIdType::LOOK) {
-        const Coordinate c = room->getPosition();
+    if (moveCode < CommandIdType::FLEE) {
+        // LOOK, UNKNOWN will have an empty offset
+        auto offset = RoomFactory::exitDir(getDirection(moveCode));
+        const Coordinate c = room->getPosition() + offset;
         emit lookingForRooms(recipient, c);
-    } else if (isDirection7(moveCode)) {
-        const Coordinate c = room->getPosition() + RoomFactory::exitDir(getDirection(moveCode));
-        emit lookingForRooms(recipient, c);
+
     } else {
         const Coordinate roomPos = room->getPosition();
         // REVISIT: Should this enumerate 6 or 7 values?
@@ -320,7 +324,8 @@ void PathMachine::experimenting(const SigParseEvent &sigParseEvent)
     // only create rooms if no properties are skipped and
     // the move coordinate is not 0,0,0
 
-    if (event.getNumSkipped() == 0 && !mostLikelyRoom.isFake() && !move.isNull()) {
+    if (event.getNumSkipped() == 0 && moveCode < CommandIdType::FLEE && !mostLikelyRoom.isFake()
+        && !move.isNull()) {
         exp = std::make_unique<Crossover>(paths, dir, params, factory);
         std::set<const Room *> pathEnds{};
         for (auto &path : *paths) {

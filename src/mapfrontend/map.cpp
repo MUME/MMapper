@@ -88,10 +88,10 @@ void Map::fillArea(AbstractRoomFactory *factory, const Coordinate &ulf, const Co
  */
 bool Map::defined(const Coordinate &c) const
 {
-    const auto z = m_map.find(c.z);
+    const auto &z = m_map.find(c.z);
     if (z != m_map.end()) {
         auto &ySeg = (*z).second;
-        const auto y = ySeg.find(c.y);
+        const auto &y = ySeg.find(c.y);
         if (y != ySeg.end()) {
             const auto &xSeg = (*y).second;
             if (xSeg.find(c.x) != xSeg.end()) {
@@ -110,18 +110,18 @@ Room *Map::get(const Coordinate &c) const
     //    }
     //    return m_map[c.z][c.y][c.x];
 
-    const auto zmap = m_map;
-    const auto z = zmap.find(c.z);
+    const auto &zmap = m_map;
+    const auto &z = zmap.find(c.z);
     if (z == zmap.end())
         return nullptr;
 
     const auto &ymap = z->second;
-    const auto y = ymap.find(c.y);
+    const auto &y = ymap.find(c.y);
     if (y == ymap.end())
         return nullptr;
 
     const auto &xmap = y->second;
-    const auto x = xmap.find(c.x);
+    const auto &x = xmap.find(c.x);
     if (x == xmap.end())
         return nullptr;
 

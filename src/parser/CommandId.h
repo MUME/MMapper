@@ -44,6 +44,11 @@ enum class CommandIdType {
     /*SYNC, RESET, */
     NONE
 };
+static_assert(CommandIdType::FLEE > CommandIdType::UNKNOWN, "Code expects FLEE to be above UNKNOWN");
+static_assert(CommandIdType::FLEE > CommandIdType::LOOK, "Code expects FLEE to be above LOOK");
+static_assert(CommandIdType::FLEE < CommandIdType::SCOUT, "Code expects FLEE to be below SCOUT");
+static_assert(CommandIdType::FLEE < CommandIdType::NONE, "Code expects FLEE to be below NONE");
+
 /* does not include NONE */
 static constexpr const int NUM_COMMANDS = 10;
 
