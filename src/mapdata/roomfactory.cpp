@@ -273,21 +273,41 @@ ComparisonResult RoomFactory::compareWeakProps(const Room *const room,
                     // Orcs/trolls can only see trails/roads if it is dark (but can see climbs)
                     qDebug() << "Orc/troll could not see trail to the" << lowercaseDirection(dir);
 
-                } else {
+                } else if (roomExitFlags.isRoad() && !eventExitFlags.isRoad()
+                           && roomExitFlags.isDoor() && eventExitFlags.isDoor()) {
+                    // A closed door is hiding the road that we know is there
+                    qDebug() << "Closed door masking road/trail to the" << lowercaseDirection(dir);
+
+                } else if (!roomExitFlags.isRoad() && eventExitFlags.isRoad()
+                           && roomExitFlags.isDoor() && eventExitFlags.isDoor()) {
                     // A known door was previously mapped closed and a new road exit flag was found
-                    if (!roomExitFlags.isDoor()) {
-                        qWarning() << "Unknown road tolerance condition to the"
-                                   << lowercaseDirection(dir) << event;
-                    }
+                    qDebug() << "Previously closed door was hiding road to the"
+                             << lowercaseDirection(dir);
                     tolerance = true;
-                }
-            } else if (diff.isClimb()) {
-                // A known door was previously mapped closed and a new climb exit flag was found
-                if (!roomExitFlags.isDoor()) {
+
+                } else {
                     qWarning() << "Unknown road tolerance condition to the"
                                << lowercaseDirection(dir) << event;
+                    return ComparisonResult::DIFFERENT;
                 }
-                tolerance = true;
+            } else if (diff.isClimb()) {
+                if (roomExitFlags.isClimb() && !eventExitFlags.isClimb() && roomExitFlags.isDoor()
+                    && eventExitFlags.isDoor()) {
+                    // A closed door is hiding the climb that we know is there
+                    qDebug() << "Closed door masking climb to the" << lowercaseDirection(dir);
+
+                } else if (!roomExitFlags.isClimb() && eventExitFlags.isClimb()
+                           && roomExitFlags.isDoor() && eventExitFlags.isDoor()) {
+                    // A known door was previously mapped closed and a new climb exit flag was found
+                    qDebug() << "Previously closed door was hiding climb to the"
+                             << lowercaseDirection(dir);
+                    tolerance = true;
+
+                } else {
+                    qWarning() << "Unknown climb tolerance condition to the"
+                               << lowercaseDirection(dir) << event;
+                    return ComparisonResult::DIFFERENT;
+                }
             }
         }
     }
