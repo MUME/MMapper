@@ -1,4 +1,18 @@
 ================================
+MMapper 2.5.3 (August 18, 2018)
+================================
+
+Changes:
+ - Group Manager stability improved
+ - Proxy threading re-enabled by default and exposed as an option
+ - Improved error reporting when connecting to MUME
+ - Corrected XML entities when unchecking the 'Suppress XML' option
+ - Emulated exits better support Latin-1 and UTF-8 character sets
+ - Up/down one way exits are rendered again
+ - Greatly improved path machine performance back to 2.5.0 levels
+ - Path machine handles doors/roads/climbs better
+
+================================
 MMapper 2.5.2 (August 12, 2018)
 ================================
 
