@@ -288,7 +288,7 @@ ComparisonResult RoomFactory::compareWeakProps(const Room *const room,
                 } else {
                     qWarning() << "Unknown road tolerance condition to the"
                                << lowercaseDirection(dir) << event;
-                    return ComparisonResult::DIFFERENT;
+                    tolerance = true;
                 }
             } else if (diff.isClimb()) {
                 if (roomExitFlags.isClimb() && !eventExitFlags.isClimb() && roomExitFlags.isDoor()
@@ -306,7 +306,7 @@ ComparisonResult RoomFactory::compareWeakProps(const Room *const room,
                 } else {
                     qWarning() << "Unknown climb tolerance condition to the"
                                << lowercaseDirection(dir) << event;
-                    return ComparisonResult::DIFFERENT;
+                    tolerance = true;
                 }
             }
         }
