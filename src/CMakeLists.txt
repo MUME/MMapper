@@ -108,10 +108,6 @@ set(mmapper_SRCS
     mapdata/shortestpath.cpp
     mapdata/shortestpath.h
     mapfrontend/AbstractRoomVisitor.h
-    mapfrontend/ByteArray.cpp
-    mapfrontend/ByteArray.h
-    mapfrontend/intermediatenode.cpp
-    mapfrontend/intermediatenode.h
     mapfrontend/mapaction.cpp
     mapfrontend/mapaction.h
     mapfrontend/map.cpp
@@ -124,9 +120,6 @@ set(mmapper_SRCS
     mapfrontend/roomcollection.h
     mapfrontend/roomlocker.cpp
     mapfrontend/roomlocker.h
-    mapfrontend/searchtreenode.cpp
-    mapfrontend/searchtreenode.h
-    mapfrontend/tinylist.h
     mapstorage/abstractmapstorage.cpp
     mapstorage/abstractmapstorage.h
     mapstorage/basemapsavefilter.cpp

@@ -51,7 +51,7 @@ private:
     std::unique_ptr<Pimpl> m_pimpl;
 
 public:
-    explicit ParseTree();
+    explicit ParseTree(const bool useVerboseKeys = false);
     ~ParseTree();
     ParseTree(ParseTree &&) = delete;
     ParseTree(const ParseTree &) = delete;
