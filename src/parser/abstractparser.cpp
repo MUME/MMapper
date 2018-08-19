@@ -193,6 +193,7 @@ AbstractParser::AbstractParser(MapData *md, MumeClock *mc, QObject *parent)
 {
     connect(&m_offlineCommandTimer, &QTimer::timeout, this, &AbstractParser::doOfflineCharacterMove);
     m_offlineCommandTimer.setInterval(250); // MUME enforces 4 commands per seconds (i.e. 250ms)
+    m_offlineCommandTimer.setSingleShot(true);
 
     initSpecialCommandMap();
 }
