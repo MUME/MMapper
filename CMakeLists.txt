@@ -79,7 +79,7 @@ if(WITH_QTIOCOMPRESSOR)
         set(QTIOCOMPRESSOR_OBJECTS $<TARGET_OBJECTS:qtiocompressorobj>)
     endif()
 else()
-    message(STATUS "Building without QtIOCompressor which provides old map backwards compatability")
+    message(STATUS "Building without QtIOCompressor: use `-DWITH_QTIOCOMPRESSOR=ON` to build with old map backwards compatability")
     add_definitions(/DMMAPPER_NO_QTIOCOMPRESSOR)
 endif()
 
