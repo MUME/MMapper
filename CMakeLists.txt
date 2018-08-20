@@ -15,7 +15,7 @@ add_definitions(-DMMAPPER_VERSION="${MMAPPER_VERSION}")
 message(STATUS "MMapper version ${MMAPPER_VERSION} (${CMAKE_BUILD_TYPE} distribution)")
 
 # Options
-option(WITH_QTIOCOMPRESSOR "QtIOCompressor old save backwards compatability" ON)
+option(WITH_QTIOCOMPRESSOR "QtIOCompressor old save backwards compatability" OFF)
 option(WITH_OPENSSL "Use OpenSSL for TLS encryption" ON)
 option(USE_TIDY "Run clang-tidy with the compiler" OFF)
 option(USE_IWYU "Run include-what-you-use with the compiler" OFF)
