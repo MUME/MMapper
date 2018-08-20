@@ -27,7 +27,6 @@
 #include <array>
 
 #include "../mapdata/ExitDirection.h"
-#include "../mapstorage/oldconnection.h"
 #include "../parser/CommandId.h"
 #include "enums.h"
 
@@ -46,49 +45,41 @@ namespace {
 TEST(DirectionType::NORTH, 0);
 TEST(ExitDirection::NORTH, 0);
 TEST(CommandIdType::NORTH, 0);
-TEST(ConnectionDirection::NORTH, 0);
 
 // SOUTH
 TEST(DirectionType::SOUTH, 1);
 TEST(ExitDirection::SOUTH, 1);
 TEST(CommandIdType::SOUTH, 1);
-TEST(ConnectionDirection::SOUTH, 1);
 
 // EAST
 TEST(DirectionType::EAST, 2);
 TEST(ExitDirection::EAST, 2);
 TEST(CommandIdType::EAST, 2);
-TEST(ConnectionDirection::EAST, 2);
 
 // WEST
 TEST(DirectionType::WEST, 3);
 TEST(ExitDirection::WEST, 3);
 TEST(CommandIdType::WEST, 3);
-TEST(ConnectionDirection::WEST, 3);
 
 // UP
 TEST(DirectionType::UP, 4);
 TEST(ExitDirection::UP, 4);
 TEST(CommandIdType::UP, 4);
-TEST(ConnectionDirection::UP, 4);
 
 // DOWN
 TEST(DirectionType::DOWN, 5);
 TEST(ExitDirection::DOWN, 5);
 TEST(CommandIdType::DOWN, 5);
-TEST(ConnectionDirection::DOWN, 5);
 
 // UNKNOWN
 TEST(DirectionType::UNKNOWN, 7);
 TEST(ExitDirection::UNKNOWN, 6);
 TEST(CommandIdType::UNKNOWN, 6);
-TEST(ConnectionDirection::UNKNOWN, 6);
 
 // NONE
 TEST(DirectionType::NONE, 6);
 TEST(ExitDirection::NONE, 7);
 TEST(CommandIdType::NONE, 10);
-TEST(ConnectionDirection::NONE, 7);
 
 #undef TEST
 } // namespace

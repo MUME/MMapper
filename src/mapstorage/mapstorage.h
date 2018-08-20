@@ -39,7 +39,6 @@
 #include "../mapdata/roomfactory.h"
 #include "../mapfrontend/mapfrontend.h"
 #include "abstractmapstorage.h"
-#include "oldroom.h"
 
 class Connection;
 class InfoMark;
@@ -66,13 +65,10 @@ private:
     virtual bool saveData(bool baseMapOnly) override;
 
     RoomFactory factory{};
-    Room *loadRoom(QDataStream &stream, qint32 version);
-    void loadExits(Room &room, QDataStream &stream, qint32 version);
-    Room *loadOldRoom(QDataStream &stream, ConnectionList &connectionList);
-    void loadOldConnection(Connection *, QDataStream &stream, RoomVector &roomList);
-    void loadMark(InfoMark *mark, QDataStream &stream, qint32 version);
+    Room *loadRoom(QDataStream &stream, uint32_t version);
+    void loadExits(Room &room, QDataStream &stream, uint32_t version);
+    void loadMark(InfoMark *mark, QDataStream &stream, uint32_t version);
     void saveMark(InfoMark *mark, QDataStream &stream);
-    void translateOldConnection(Connection *);
     void saveRoom(const Room &room, QDataStream &stream);
     void saveExits(const Room &room, QDataStream &stream);
 

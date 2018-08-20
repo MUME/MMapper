@@ -53,9 +53,6 @@
 #include "../parser/patterns.h"
 #include "abstractmapstorage.h"
 #include "basemapsavefilter.h"
-#include "oldconnection.h"
-#include "olddoor.h"
-#include "oldroom.h"
 #include "progresscounter.h"
 #include "roomsaver.h"
 
@@ -99,11 +96,6 @@ protected:
 };
 #endif
 
-static constexpr const int MINUMUM_STATIC_LINES = 1;
-
-// TODO(nschimme): Strip out support for older maps predating MMapper2
-static constexpr const int MMAPPER_1_0_0_SCHEMA = 7;  // MMapper 1.0 ???
-static constexpr const int MMAPPER_1_1_0_SCHEMA = 16; // MMapper 1.1 ???
 static constexpr const int MMAPPER_2_0_0_SCHEMA = 17; // Initial schema
 static constexpr const int MMAPPER_2_0_2_SCHEMA = 24; // Ridable flag
 static constexpr const int MMAPPER_2_0_4_SCHEMA = 25; // QtIOCompressor
@@ -113,8 +105,6 @@ static constexpr const int MMAPPER_2_4_3_SCHEMA = 34; // qCompress, SunDeath fla
 static constexpr const int MMAPPER_2_5_1_SCHEMA = 35; // discard all previous NoMatch flags
 static constexpr const int CURRENT_SCHEMA = MMAPPER_2_5_1_SCHEMA;
 
-static_assert(007 == 7, "MMapper 1.0.0 Schema");
-static_assert(020 == 16, "MMapper 1.1.0 Schema");
 static_assert(021 == 17, "MMapper 2.0.0 Schema");
 static_assert(030 == 24, "MMapper 2.0.2 Schema");
 static_assert(031 == 25, "MMapper 2.0.4 Schema");
@@ -144,19 +134,13 @@ void MapStorage::newData()
     emit onNewData();
 }
 
-static void setConnection(Connection *c, Room *room, ConnectionDirection cd)
-{
-    c->setRoom(room, c->getRoom(Hand::LEFT) != nullptr ? Hand::RIGHT : Hand::LEFT);
-    c->setDirection(cd, room);
-}
-
-class LoadRoomHelperBase
+class LoadRoomHelper final
 {
 private:
     QDataStream &stream;
 
 public:
-    explicit LoadRoomHelperBase(QDataStream &stream)
+    explicit LoadRoomHelper(QDataStream &stream)
         : stream{stream}
     {
         check_status();
@@ -225,256 +209,7 @@ public:
         check_status();
         return result;
     }
-};
 
-class OldLoadRoomHelper : public LoadRoomHelperBase
-{
-public:
-    explicit OldLoadRoomHelper(QDataStream &stream)
-        : LoadRoomHelperBase{stream}
-    {}
-
-public:
-    auto readRoomAlignType() { return static_cast<RoomAlignType>(read_u16() + 1u); }
-    auto readRoomLightType() { return static_cast<RoomLightType>(read_u16() + 1u); }
-    auto readRoomPortableType() { return static_cast<RoomPortableType>(read_u16() + 1u); }
-    auto readRoomTerrainType() { return static_cast<RoomTerrainType>(read_u16() + 1u); }
-
-    Coordinate readCoord2d()
-    {
-        Coordinate pos;
-        pos.x = read_i32();
-        pos.y = read_i32();
-        return pos;
-    }
-
-    RoomMobFlags readMobFlags()
-    {
-        switch (static_cast<int>(read_u16())) {
-        case 1:
-            return RoomMobFlags{RoomMobFlag::ANY}; // PEACEFUL
-        case 2:
-            return RoomMobFlags{RoomMobFlag::SMOB}; // AGGRESIVE
-        case 3:
-            return RoomMobFlags{RoomMobFlag::QUEST};
-        case 4:
-            return RoomMobFlags{RoomMobFlag::SHOP};
-        case 5:
-            return RoomMobFlags{RoomMobFlag::RENT};
-        case 6:
-            return RoomMobFlags{RoomMobFlag::GUILD};
-        default:
-            return RoomMobFlags{0};
-        }
-    }
-
-    RoomLoadFlags readLoadFlags()
-    {
-        switch (static_cast<int>(read_u16())) {
-        case 1:
-            return RoomLoadFlags{RoomLoadFlag::TREASURE};
-        case 2:
-            return RoomLoadFlags{RoomLoadFlag::HERB};
-        case 3:
-            return RoomLoadFlags{RoomLoadFlag::KEY};
-        case 4:
-            return RoomLoadFlags{RoomLoadFlag::WATER};
-        case 5:
-            return RoomLoadFlags{RoomLoadFlag::FOOD};
-        case 6:
-            return RoomLoadFlags{RoomLoadFlag::HORSE};
-        case 7:
-            return RoomLoadFlags{RoomLoadFlag::WARG};
-        case 8:
-            return RoomLoadFlags{RoomLoadFlag::TOWER};
-        case 9:
-            return RoomLoadFlags{RoomLoadFlag::ATTENTION};
-        case 10:
-            return RoomLoadFlags{RoomLoadFlag::BOAT};
-        default:
-            return RoomLoadFlags{0};
-        }
-    }
-};
-
-struct OldLoadRoomHelper2 : public OldLoadRoomHelper
-{
-private:
-    ConnectionList &connectionList;
-
-public:
-    explicit OldLoadRoomHelper2(QDataStream &stream, ConnectionList &connectionList)
-        : OldLoadRoomHelper{stream}
-        , connectionList{connectionList}
-    {}
-
-    Connection *readConnection()
-    {
-        if (auto tmp = read_u32()) {
-            auto c = connectionList[tmp - 1u];
-            return c;
-        }
-        return nullptr;
-    }
-};
-
-Room *MapStorage::loadOldRoom(QDataStream &stream, ConnectionList &connectionList)
-{
-    auto helper = OldLoadRoomHelper2{stream, connectionList};
-    Room *const room = factory.createRoom();
-    room->setPermanent();
-
-    const auto ridableType = RoomRidableType::UNDEFINED;
-    const auto sundeathType = RoomSundeathType::UNDEFINED;
-
-    room->setName(helper.read_string());
-
-    {
-        bool readingStaticDescLines = true;
-        QString staticRoomDesc{};
-        QString dynamicRoomDesc{};
-        qint32 lineCount = 0u;
-        for (const auto &s : helper.read_string().split('\n')) {
-            if (s.isEmpty())
-                continue;
-
-            // REVISIT: simplify this!
-            // This logic is apparently an overly complicated way of saying
-            // that the first line is guaranteed to go into static,
-            // but all the rest go to dynamic once one matches the pattern.
-            if ((lineCount++ >= MINUMUM_STATIC_LINES)
-                && ((!readingStaticDescLines) || Patterns::matchDynamicDescriptionPatterns(s))) {
-                readingStaticDescLines = false;
-                dynamicRoomDesc += (s) + "\n";
-            } else {
-                staticRoomDesc += (s) + "\n";
-            }
-        }
-        room->setStaticDescription(staticRoomDesc);
-        room->setDynamicDescription(dynamicRoomDesc);
-    }
-
-    const auto terrainType = helper.readRoomTerrainType();
-    const auto mobFlags = helper.readMobFlags();
-    const auto loadFlags = helper.readLoadFlags();
-    (void) helper.read_u16();                                //roomLocation { INDOOR, OUTSIDE }
-    const auto portableType = helper.readRoomPortableType(); //roomPortable { PORT, NOPORT }
-    const auto lightType = helper.readRoomLightType();       //roomLight { DARK, LIT }
-    const auto alignType = helper.readRoomAlignType();       //roomAlign { GOOD, NEUTRAL, EVIL }
-
-    {
-        const auto roomFlags = helper.read_u32(); //roomFlags
-
-        if (IS_SET(roomFlags, bit2)) {
-            room->exit(ExitDirection::NORTH).orExitFlags(ExitFlag::EXIT);
-        }
-        if (IS_SET(roomFlags, bit3)) {
-            room->exit(ExitDirection::SOUTH).orExitFlags(ExitFlag::EXIT);
-        }
-        if (IS_SET(roomFlags, bit4)) {
-            room->exit(ExitDirection::EAST).orExitFlags(ExitFlag::EXIT);
-        }
-        if (IS_SET(roomFlags, bit5)) {
-            room->exit(ExitDirection::WEST).orExitFlags(ExitFlag::EXIT);
-        }
-        if (IS_SET(roomFlags, bit6)) {
-            room->exit(ExitDirection::UP).orExitFlags(ExitFlag::EXIT);
-        }
-        if (IS_SET(roomFlags, bit7)) {
-            room->exit(ExitDirection::DOWN).orExitFlags(ExitFlag::EXIT);
-        }
-        if (IS_SET(roomFlags, bit8)) {
-            room->exit(ExitDirection::NORTH).orExitFlags(ExitFlag::DOOR);
-            room->exit(ExitDirection::NORTH).orExitFlags(ExitFlag::NO_MATCH);
-        }
-        if (IS_SET(roomFlags, bit9)) {
-            room->exit(ExitDirection::SOUTH).orExitFlags(ExitFlag::DOOR);
-            room->exit(ExitDirection::SOUTH).orExitFlags(ExitFlag::NO_MATCH);
-        }
-        if (IS_SET(roomFlags, bit10)) {
-            room->exit(ExitDirection::EAST).orExitFlags(ExitFlag::DOOR);
-            room->exit(ExitDirection::EAST).orExitFlags(ExitFlag::NO_MATCH);
-        }
-        if (IS_SET(roomFlags, bit11)) {
-            room->exit(ExitDirection::WEST).orExitFlags(ExitFlag::DOOR);
-            room->exit(ExitDirection::WEST).orExitFlags(ExitFlag::NO_MATCH);
-        }
-        if (IS_SET(roomFlags, bit12)) {
-            room->exit(ExitDirection::UP).orExitFlags(ExitFlag::DOOR);
-            room->exit(ExitDirection::UP).orExitFlags(ExitFlag::NO_MATCH);
-        }
-        if (IS_SET(roomFlags, bit13)) {
-            room->exit(ExitDirection::DOWN).orExitFlags(ExitFlag::DOOR);
-            room->exit(ExitDirection::DOWN).orExitFlags(ExitFlag::NO_MATCH);
-        }
-        if (IS_SET(roomFlags, bit14)) {
-            room->exit(ExitDirection::NORTH).orExitFlags(ExitFlag::ROAD);
-        }
-        if (IS_SET(roomFlags, bit15)) {
-            room->exit(ExitDirection::SOUTH).orExitFlags(ExitFlag::ROAD);
-        }
-        if (IS_SET(roomFlags, bit16)) {
-            room->exit(ExitDirection::EAST).orExitFlags(ExitFlag::ROAD);
-        }
-        if (IS_SET(roomFlags, bit17)) {
-            room->exit(ExitDirection::WEST).orExitFlags(ExitFlag::ROAD);
-        }
-        if (IS_SET(roomFlags, bit18)) {
-            room->exit(ExitDirection::UP).orExitFlags(ExitFlag::ROAD);
-        }
-        if (IS_SET(roomFlags, bit19)) {
-            room->exit(ExitDirection::DOWN).orExitFlags(ExitFlag::ROAD);
-        }
-    }
-
-    (void) helper.read_u8(); //roomUpdated
-    (void) helper.read_u8(); //roomCheckExits
-
-    {
-        const Coordinate pos = helper.readCoord2d();
-        room->setPosition(pos + basePosition);
-    }
-
-    if (auto c = helper.readConnection()) {
-        setConnection(c, room, ConnectionDirection::UP);
-    }
-    if (auto c = helper.readConnection()) {
-        setConnection(c, room, ConnectionDirection::DOWN);
-    }
-    if (auto c = helper.readConnection()) {
-        setConnection(c, room, ConnectionDirection::EAST);
-    }
-    if (auto c = helper.readConnection()) {
-        setConnection(c, room, ConnectionDirection::WEST);
-    }
-    if (auto c = helper.readConnection()) {
-        setConnection(c, room, ConnectionDirection::NORTH);
-    }
-    if (auto c = helper.readConnection()) {
-        setConnection(c, room, ConnectionDirection::SOUTH);
-    }
-
-    // store imported values
-    room->setTerrainType(terrainType);
-    room->setLightType(lightType);
-    room->setAlignType(alignType);
-    room->setPortableType(portableType);
-    room->setRidableType(ridableType);
-    room->setSundeathType(sundeathType);
-    room->setMobFlags(mobFlags);
-    room->setLoadFlags(loadFlags);
-
-    return room;
-}
-
-class NewLoadRoomHelper final : public LoadRoomHelperBase
-{
-public:
-    explicit NewLoadRoomHelper(QDataStream &stream)
-        : LoadRoomHelperBase{stream}
-    {}
-
-public:
     Coordinate readCoord3d()
     {
         const auto x = read_i32();
@@ -504,9 +239,9 @@ E serialize(const uint32_t value)
     return static_cast<E>(value);
 }
 
-Room *MapStorage::loadRoom(QDataStream &stream, qint32 version)
+Room *MapStorage::loadRoom(QDataStream &stream, uint32_t version)
 {
-    auto helper = NewLoadRoomHelper{stream};
+    auto helper = LoadRoomHelper{stream};
     Room *room = factory.createRoom();
     room->setPermanent();
     room->setName(helper.read_string());
@@ -534,9 +269,9 @@ Room *MapStorage::loadRoom(QDataStream &stream, qint32 version)
     return room;
 }
 
-void MapStorage::loadExits(Room &room, QDataStream &stream, const qint32 version)
+void MapStorage::loadExits(Room &room, QDataStream &stream, const uint32_t version)
 {
-    auto helper = NewLoadRoomHelper{stream};
+    auto helper = LoadRoomHelper{stream};
 
     ExitsList &eList = room.getExitsList();
     for (const auto i : ALL_EXITS7) {
@@ -614,7 +349,7 @@ bool MapStorage::mergeData()
         progressCounter.reset();
 
         QDataStream stream(m_file);
-        auto helper = LoadRoomHelperBase{stream};
+        auto helper = LoadRoomHelper{stream};
         m_mapData.setDataChanged();
 
         // Read the version and magic
@@ -626,8 +361,7 @@ bool MapStorage::mergeData()
         if (version != MMAPPER_2_5_1_SCHEMA && version != MMAPPER_2_4_3_SCHEMA
             && version != MMAPPER_2_4_0_SCHEMA && version != MMAPPER_2_3_7_SCHEMA
             && version != MMAPPER_2_0_4_SCHEMA && version != MMAPPER_2_0_2_SCHEMA
-            && version != MMAPPER_1_1_0_SCHEMA && version != MMAPPER_2_0_0_SCHEMA
-            && version != MMAPPER_1_0_0_SCHEMA) {
+            && version != MMAPPER_2_0_0_SCHEMA) {
             const bool isNewer = version >= CURRENT_SCHEMA;
             QMessageBox::critical(dynamic_cast<QWidget *>(parent()),
                                   "MapStorage Error",
@@ -673,63 +407,33 @@ bool MapStorage::mergeData()
         }
         emit log("MapStorage", QString("Schema version: %1").arg(version));
 
-        const quint32 roomsCount = helper.read_u32();
-        const quint32 connectionsCount = (version < MMAPPER_1_1_0_SCHEMA) ? helper.read_u32() : 0u;
-        const quint32 marksCount = helper.read_u32();
-
-        progressCounter.increaseTotalStepsBy(roomsCount + connectionsCount + marksCount);
+        const uint32_t roomsCount = helper.read_u32();
+        const uint32_t marksCount = helper.read_u32();
+        progressCounter.increaseTotalStepsBy(roomsCount + marksCount);
 
         {
             Coordinate pos{};
             pos.x = helper.read_i32();
             pos.y = helper.read_i32();
-            pos.z = (version < MMAPPER_1_1_0_SCHEMA) ? 0u : helper.read_i32();
+            pos.z = helper.read_i32();
             pos += basePosition;
             m_mapData.setPosition(pos);
         }
 
         emit log("MapStorage", QString("Number of rooms: %1").arg(roomsCount));
 
-        ConnectionList connectionList{};
-        // create all pointers to connections
-        for (quint32 index = 0; index < connectionsCount; ++index) {
-            connectionList.append(new Connection);
-        }
-
-        RoomVector roomList(roomsCount);
-        for (uint i = 0; i < roomsCount; ++i) {
-            Room *room = nullptr;
-            if (version < MMAPPER_1_1_0_SCHEMA) { // OLD VERSIONS SUPPORT CODE
-                room = loadOldRoom(stream, connectionList);
-                room->setId(RoomId{baseId + i});
-                roomList[i] = room;
-            } else {
-                room = loadRoom(stream, version);
-            }
+        for (uint32_t i = 0; i < roomsCount; ++i) {
+            Room *room = loadRoom(stream, version);
 
             progressCounter.step();
             m_mapData.insertPredefinedRoom(*room);
-        }
-
-        if (version < MMAPPER_1_1_0_SCHEMA) {
-            emit log("MapStorage", QString("Number of connections: %1").arg(connectionsCount));
-            ConnectionListIterator c(connectionList);
-            while (c.hasNext()) {
-                Connection *connection = c.next();
-                loadOldConnection(connection, stream, roomList);
-                translateOldConnection(connection);
-                delete connection;
-
-                progressCounter.step();
-            }
-            connectionList.clear();
         }
 
         emit log("MapStorage", QString("Number of info items: %1").arg(marksCount));
 
         MarkerList &markerList = m_mapData.getMarkersList();
         // create all pointers to items
-        for (quint32 index = 0; index < marksCount; ++index) {
+        for (uint32_t index = 0; index < marksCount; ++index) {
             auto mark = new InfoMark();
             loadMark(mark, stream, version);
             markerList.append(mark);
@@ -761,286 +465,41 @@ bool MapStorage::mergeData()
     return true;
 }
 
-void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, qint32 version)
+void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, uint32_t version)
 {
-    auto helper = LoadRoomHelperBase{stream};
+    auto helper = LoadRoomHelper{stream};
     const qint32 postfix = basePosition.x + basePosition.y + basePosition.z;
-
-    if (version < MMAPPER_1_1_0_SCHEMA) { // OLD VERSIONS SUPPORT CODE
-        {
-            auto name = helper.read_string();
-            if (postfix != 0 && postfix != 1) {
-                name += QString("_m%1").arg(postfix);
-            }
-            mark->setName(name);
+    {
+        auto name = helper.read_string();
+        if (postfix != 0 && postfix != 1) {
+            name += QString("_m%1").arg(postfix).toLatin1();
         }
-        mark->setText(helper.read_string());
-        mark->setType(static_cast<InfoMarkType>(helper.read_u16()));
-
-        auto read_pos = [](auto &helper, auto &basePosition) {
-            Coordinate pos;
-            pos.x = helper.read_i32();
-            pos.x = pos.x * 100 / 48 - 40;
-            pos.y = helper.read_i32();
-            pos.y = pos.y * 100 / 48 - 55;
-            //pos += basePosition;
-            pos.x += basePosition.x * 100;
-            pos.y += basePosition.y * 100;
-            pos.z += basePosition.z;
-            return pos;
-        };
-        mark->setPosition1(read_pos(helper, basePosition));
-        mark->setPosition2(read_pos(helper, basePosition));
-
-        mark->setRotationAngle(0.0);
-    } else {
-        {
-            auto name = helper.read_string();
-            if (postfix != 0 && postfix != 1) {
-                name += QString("_m%1").arg(postfix).toLatin1();
-            }
-            mark->setName(name);
-        }
-
-        mark->setText(helper.read_string());
-        mark->setTimeStamp(helper.read_datetime());
-
-        mark->setType(static_cast<InfoMarkType>(helper.read_u8()));
-        if (version >= MMAPPER_2_3_7_SCHEMA) {
-            mark->setClass(static_cast<InfoMarkClass>(helper.read_u8()));
-            /* REVISIT: was this intended to be divided by 100.0? */
-            mark->setRotationAngle(helper.read_u32() / 100);
-        }
-
-        auto read_coord = [](auto &helper, auto &basePosition) {
-            Coordinate pos;
-            pos.x = helper.read_i32();
-            pos.y = helper.read_i32();
-            pos.z = helper.read_i32();
-            pos.x += basePosition.x * 100;
-            pos.y += basePosition.y * 100;
-            pos.z += basePosition.z;
-            return pos;
-        };
-
-        mark->setPosition1(read_coord(helper, basePosition));
-        mark->setPosition2(read_coord(helper, basePosition));
+        mark->setName(name);
     }
-}
 
-static DoorFlags sanitizeOldDoorFlags(const OldDoorFlags oldDoorFlags)
-{
-    static constexpr const uint32_t MASK = (1u << NUM_OLD_DOOR_FLAGS) - 1u;
-    static_assert(MASK == 0x3Fu, "");
-    return static_cast<DoorFlags>(oldDoorFlags.asUint32() & MASK);
-}
+    mark->setText(helper.read_string());
+    mark->setTimeStamp(helper.read_datetime());
 
-static void setDoorNameAndFlags(Exit &e, const Door &door)
-{
-    e.setDoorName(door.getName());
-    e.setDoorFlags(sanitizeOldDoorFlags(door.getFlags()));
-}
-
-void MapStorage::translateOldConnection(Connection *c)
-{
-    Room *left = c->getRoom(Hand::LEFT);
-    Room *right = c->getRoom(Hand::RIGHT);
-    ConnectionDirection leftDir = c->getDirection(Hand::LEFT);
-    ConnectionDirection rightDir = c->getDirection(Hand::RIGHT);
-    ConnectionFlags cFlags = c->getFlags();
-
-    if (leftDir != ConnectionDirection::NONE) {
-        Exit &e = left->exit(leftDir);
-        e.addOut(right->getId());
-        ExitFlags eFlags = e.getExitFlags();
-        if (cFlags.contains(ConnectionFlag::DOOR)) {
-            eFlags |= ExitFlag::NO_MATCH;
-            eFlags |= ExitFlag::DOOR;
-            const auto leftDoor = c->getDoor(Hand::LEFT);
-            setDoorNameAndFlags(e, *leftDoor);
-        }
-        if (cFlags.contains(ConnectionFlag::RANDOM)) {
-            eFlags |= ExitFlag::RANDOM;
-        }
-        if (cFlags.contains(ConnectionFlag::CLIMB)) {
-            eFlags |= ExitFlag::CLIMB;
-        }
-        if (cFlags.contains(ConnectionFlag::SPECIAL)) {
-            eFlags |= ExitFlag::SPECIAL;
-        }
-        eFlags |= ExitFlag::EXIT;
-        e.setExitFlags(eFlags);
-
-        Exit &eR = right->exit(opposite(leftDir));
-        eR.addIn(left->getId());
+    mark->setType(static_cast<InfoMarkType>(helper.read_u8()));
+    if (version >= MMAPPER_2_3_7_SCHEMA) {
+        mark->setClass(static_cast<InfoMarkClass>(helper.read_u8()));
+        /* REVISIT: was this intended to be divided by 100.0? */
+        mark->setRotationAngle(helper.read_u32() / 100);
     }
-    if (rightDir != ConnectionDirection::NONE) {
-        Exit &eL = left->exit(opposite(rightDir));
-        eL.addIn(right->getId());
 
-        Exit &e = right->exit(rightDir);
-        e.addOut(left->getId());
-        ExitFlags eFlags = e.getExitFlags();
-        if (cFlags.contains(ConnectionFlag::DOOR)) {
-            eFlags |= ExitFlag::DOOR;
-            eFlags |= ExitFlag::NO_MATCH;
-            const auto rightDoor = c->getDoor(Hand::RIGHT);
-            setDoorNameAndFlags(e, *rightDoor);
-        }
-        if (cFlags.contains(ConnectionFlag::RANDOM)) {
-            eFlags |= ExitFlag::RANDOM;
-        }
-        if (cFlags.contains(ConnectionFlag::CLIMB)) {
-            eFlags |= ExitFlag::CLIMB;
-        }
-        if (cFlags.contains(ConnectionFlag::SPECIAL)) {
-            eFlags |= ExitFlag::SPECIAL;
-        }
-        eFlags |= ExitFlag::EXIT;
-        e.setExitFlags(eFlags);
-    }
-}
-
-// TODO: use gsl::narrow_cast<>
-template<typename To, typename From>
-To narrow_cast(const From from)
-{
-    static_assert(std::is_integral<From>::value, "");
-    static_assert(std::is_integral<To>::value, "");
-    static_assert(sizeof(To) <= sizeof(From), "");
-
-    const auto to = static_cast<To>(from);
-    if (std::is_signed<From>::value && !std::is_signed<To>::value) {
-        assert(from >= 0);
-    }
-    if (!std::is_signed<From>::value && std::is_signed<To>::value) {
-        assert(to >= 0);
-    }
-    assert(static_cast<From>(to) == from);
-    return to;
-}
-
-template<typename To, typename From>
-To widen_cast(const From from)
-{
-    static_assert(std::is_integral<From>::value, "");
-    static_assert(std::is_integral<To>::value, "");
-    static_assert(sizeof(To) >= sizeof(From), "");
-
-    const auto to = static_cast<To>(from);
-    if (std::is_signed<From>::value && !std::is_signed<To>::value) {
-        assert(from >= 0);
-    }
-    if (!std::is_signed<From>::value && std::is_signed<To>::value) {
-        assert(to >= 0);
-    }
-    assert(static_cast<From>(to) == from);
-    return to;
-}
-
-void MapStorage::loadOldConnection(Connection *connection,
-                                   QDataStream &istream,
-                                   RoomVector &roomList)
-{
-    auto helper = OldLoadRoomHelper{istream};
-
-    connection->setNote("");
-
-    const auto decodeCtCf = [](uint16_t ctcf) {
-        return std::make_pair(static_cast<ConnectionType>(widen_cast<int>(ctcf & 0x3u)),
-                              static_cast<ConnectionFlags>(narrow_cast<uint8_t>(ctcf >> 2)));
-    };
-    const auto decodeDoorFlags = [](uint16_t df) -> DoorFlags {
-        DoorFlags result{};
-        if (df & 0x1)
-            result |= DoorFlag::HIDDEN;
-        if (df & 0x2)
-            result |= DoorFlag::NEED_KEY;
-        return result;
+    auto read_coord = [](auto &helper, auto &basePosition) {
+        Coordinate pos;
+        pos.x = helper.read_i32();
+        pos.y = helper.read_i32();
+        pos.z = helper.read_i32();
+        pos.x += basePosition.x * 100;
+        pos.y += basePosition.y * 100;
+        pos.z += basePosition.z;
+        return pos;
     };
 
-    const auto ctcf = decodeCtCf(helper.read_u16());
-    ConnectionType ct = ctcf.first;
-    const ConnectionFlags cf = ctcf.second;
-
-    const auto doorFlags1 = decodeDoorFlags(helper.read_u16());
-    const auto doorFlags2 = decodeDoorFlags(helper.read_u16());
-
-    const DoorName doorName1 = helper.read_string();
-    const DoorName doorName2 = helper.read_string();
-
-    // REVISIT: just throw here if it fails?
-    const auto decodeRoom = [&](const uint32_t roomIdPlus1) -> Room * {
-        if (roomIdPlus1 == 0u)
-            return nullptr;
-        const auto roomId = roomIdPlus1 - 1u;
-        if (roomId >= static_cast<uint>(roomList.size()))
-            return nullptr;
-        return roomList[roomId];
-    };
-
-    Room *r1 = decodeRoom(helper.read_u32());
-    Room *r2 = decodeRoom(helper.read_u32());
-
-    // BTW, asserting here won't actually do anything on a release build.
-    // You need to throw an exception if this happens, or the mapper will crash.
-    // (it'll also crash if you don't catch the exception).
-#define parse_assert(x) \
-    do { \
-        if (x) \
-            continue; \
-        throw std::runtime_error("assertion failure: " #x); \
-    } while (false)
-
-    parse_assert(r1 != nullptr); // if these are not valid,
-    parse_assert(r2 != nullptr); // the indices were out of bounds
-
-    if (cf.contains(ConnectionFlag::DOOR)) {
-        /* REVISIT: This might be slicing off important bits by casting to OldDoorFlags,
-         * but we're loading an old save file, so maybe it's okay. */
-        connection->setDoor(new Door(doorName1,
-                                     OldDoorFlags{narrow_cast<uint16_t>(doorFlags1.asUint32())}),
-                            Hand::LEFT);
-        connection->setDoor(new Door(doorName2,
-                                     OldDoorFlags{narrow_cast<uint16_t>(doorFlags2.asUint32())}),
-                            Hand::RIGHT);
-    }
-
-    if (connection->getRoom(Hand::LEFT) == nullptr) {
-        auto room = connection->getRoom(Hand::RIGHT);
-        connection->setRoom((room != r1) ? r1 : r2, Hand::LEFT);
-    }
-    if (connection->getRoom(Hand::RIGHT) == nullptr) {
-        auto room = connection->getRoom(Hand::LEFT);
-        connection->setRoom((room != r1) ? r1 : r2, Hand::RIGHT);
-    }
-
-    parse_assert(connection->getRoom(Hand::LEFT) != nullptr);
-    parse_assert(connection->getRoom(Hand::RIGHT) != nullptr);
-
-    if (cf.contains(ConnectionFlag::DOOR)) {
-        parse_assert(connection->getDoor(Hand::LEFT) != nullptr);
-        parse_assert(connection->getDoor(Hand::RIGHT) != nullptr);
-    }
-
-    if (connection->getDirection(Hand::RIGHT) == ConnectionDirection::UNKNOWN) {
-        ct = ConnectionType::ONE_WAY;
-        connection->setDirection(ConnectionDirection::NONE, Hand::RIGHT);
-    } else if (connection->getDirection(Hand::LEFT) == ConnectionDirection::UNKNOWN) {
-        ct = ConnectionType::ONE_WAY;
-        connection->setDirection(connection->getDirection(Hand::RIGHT), Hand::LEFT);
-        connection->setDirection(ConnectionDirection::NONE, Hand::LEFT);
-        Room *temp = connection->getRoom(Hand::LEFT);
-        connection->setRoom(connection->getRoom(Hand::RIGHT), Hand::LEFT);
-        connection->setRoom(temp, Hand::RIGHT);
-    }
-
-    if (connection->getRoom(Hand::LEFT) == connection->getRoom(Hand::RIGHT)) {
-        ct = ConnectionType::LOOP;
-    }
-
-    connection->setType(ct);
-    connection->setFlags(cf);
+    mark->setPosition1(read_coord(helper, basePosition));
+    mark->setPosition2(read_coord(helper, basePosition));
 }
 
 void MapStorage::saveRoom(const Room &room, QDataStream &stream)

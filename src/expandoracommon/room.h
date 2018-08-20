@@ -28,10 +28,10 @@
 #define ROOM_H
 
 #include "../global/DirectionType.h"
+#include "../global/EnumIndexedArray.h"
 #include "../global/roomid.h"
 #include "../mapdata/mmapper2exit.h"
 #include "../mapdata/mmapper2room.h"
-#include "../mapstorage/oldconnection.h"
 #include "coordinate.h"
 #include "exit.h"
 #include <QVariant>
@@ -100,14 +100,9 @@ private:
     bool isDummy_;
 
 public:
-    // TODO: merge ConnectionDirection, DirectionType, and ExitDirection enums
-    Exit &exit(ConnectionDirection dir) { return exits[static_cast<ExitDirection>(dir)]; }
+    // TODO: merge DirectionType and ExitDirection enums
     Exit &exit(DirectionType dir) { return exits[static_cast<ExitDirection>(dir)]; }
     Exit &exit(ExitDirection dir) { return exits[dir]; }
-    const Exit &exit(ConnectionDirection dir) const
-    {
-        return exits[static_cast<ExitDirection>(dir)];
-    }
     const Exit &exit(DirectionType dir) const { return exits[static_cast<ExitDirection>(dir)]; }
     const Exit &exit(ExitDirection dir) const { return exits[dir]; }
 
@@ -155,8 +150,7 @@ public:
     void setSundeathType(RoomSundeathType value);
 
 public:
-    [[deprecated]] QVariant at(const RoomField field) const
-    {
+    [[deprecated]] QVariant at(const RoomField field) const {
 #define CASE_STR(UPPER, camelCase) \
     do { \
     case RoomField::UPPER: \
@@ -188,8 +182,8 @@ public:
 #undef CASE_STR
 #undef CASE_INT
     }
-    //
-    [[deprecated]] void replace(const RoomField field, QVariant value)
+        //
+        [[deprecated]] void replace(const RoomField field, QVariant value)
     {
 #define CASE_STR(UPPER, camelCase) \
     do { \

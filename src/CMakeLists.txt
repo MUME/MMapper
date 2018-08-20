@@ -130,10 +130,6 @@ set(mmapper_SRCS
     mapstorage/jsonmapstorage.h
     mapstorage/mapstorage.cpp
     mapstorage/mapstorage.h
-    mapstorage/oldconnection.cpp
-    mapstorage/oldconnection.h
-    mapstorage/olddoor.h
-    mapstorage/oldroom.h
     mapstorage/progresscounter.cpp
     mapstorage/progresscounter.h
     mapstorage/roomsaver.cpp
