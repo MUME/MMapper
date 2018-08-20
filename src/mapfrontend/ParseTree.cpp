@@ -92,11 +92,11 @@ static MaskFlags getKeyMask(const ParseEvent &event)
     const auto flags = static_cast<MaskFlags>(mask);
     if (flags == MaskFlags::DESC) {
         // The only one never seen in the wild
-        qInfo() << "MaskFlags::DESC observed in the wild!";
+        std::cout << "MaskFlags::DESC observed in the wild!" << std::endl;
     }
     if (flags == MaskFlags::NAME_DESC) {
         // The only one never seen in the wild
-        qInfo() << "MaskFlags::NAME_DESC observed in the wild!";
+        std::cout << "MaskFlags::NAME_DESC observed in the wild!" << std::endl;
     }
     return flags;
 }
