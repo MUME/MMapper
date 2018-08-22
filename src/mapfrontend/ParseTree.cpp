@@ -94,18 +94,14 @@ static MaskFlags getKeyMask(const ParseEvent &event)
         // The only one never seen in the wild
         std::cout << "MaskFlags::DESC observed in the wild!" << std::endl;
     }
-    if (flags == MaskFlags::NAME_DESC) {
-        // The only one never seen in the wild
-        std::cout << "MaskFlags::NAME_DESC observed in the wild!" << std::endl;
-    }
     return flags;
 }
 
 static bool isMatchedByTree(const MaskFlags mask)
 {
     switch (mask) {
-    // case MaskFlags::NAME:      // Not observed in the wild?
-    // case MaskFlags::NAME_DESC: // Not observed in the wild?
+    case MaskFlags::NAME:      // Not observed in the wild?
+    case MaskFlags::NAME_DESC: // Offline movement
     case MaskFlags::NAME_DESC_TERRAIN:
         return true;
     default:
