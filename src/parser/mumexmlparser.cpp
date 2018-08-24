@@ -166,7 +166,7 @@ void MumeXmlParser::parse(const QByteArray &line)
                     stripXmlEntities(temp);
                 }
                 QString tempStr = temp;
-                tempStr = normalizeString(tempStr).trimmed();
+                tempStr = normalizeStringCopy(tempStr.trimmed());
                 if (Patterns::matchScore(tempStr)) {
                     // inform groupManager
                     temp = tempStr.toLocal8Bit();
@@ -386,7 +386,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
 
     switch (m_xmlMode) {
     case XmlMode::NONE: //non room info
-        m_stringBuffer = normalizeString(m_stringBuffer).trimmed();
+        m_stringBuffer = normalizeStringCopy(m_stringBuffer.trimmed());
         if (m_stringBuffer.isEmpty()) { // standard end of description parsed
             if (m_readingRoomDesc) {
                 m_readingRoomDesc = false; // we finished read desc mode
@@ -411,7 +411,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         break;
 
     case XmlMode::ROOM: // dynamic line
-        m_dynamicRoomDesc += m_stringBuffer.simplified() + "\n";
+        m_dynamicRoomDesc += normalizeStringCopy(m_stringBuffer.simplified().append("\n"));
         toUser.append(ch);
         break;
 
@@ -422,7 +422,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
 
         m_readingRoomDesc = true; //start of read desc mode
         m_descriptionReady = false;
-        m_roomName = m_stringBuffer;
+        m_roomName = normalizeStringCopy(m_stringBuffer);
         m_dynamicRoomDesc = nullString;
         m_staticRoomDesc = nullString;
         m_exits = nullString;
@@ -432,7 +432,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         break;
 
     case XmlMode::DESCRIPTION: // static line
-        m_staticRoomDesc += m_stringBuffer.simplified() + "\n";
+        m_staticRoomDesc += normalizeStringCopy(m_stringBuffer.simplified().append("\n"));
         if (!m_gratuitous) {
             toUser.append(ch);
         }
@@ -496,9 +496,9 @@ void MumeXmlParser::move()
 
     const auto emitEvent = [this]() {
         auto ev = ParseEvent::createEvent(m_move,
-                                          normalizeString(m_roomName),
-                                          normalizeString(m_dynamicRoomDesc),
-                                          normalizeString(m_staticRoomDesc),
+                                          m_roomName,
+                                          m_dynamicRoomDesc,
+                                          m_staticRoomDesc,
                                           m_exitsFlags,
                                           m_promptFlags,
                                           m_connectedRoomFlags);

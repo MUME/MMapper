@@ -25,7 +25,7 @@ void TestParser::removeAnsiMarksTest()
 {
     QString ansiString("\033[32mHello world\033[0m");
     QString expected("Hello world");
-    ParserUtils::removeAnsiMarks(ansiString);
+    ParserUtils::removeAnsiMarksInPlace(ansiString);
     QCOMPARE(ansiString, expected);
 }
 
@@ -33,7 +33,7 @@ void TestParser::latinToAsciiTest()
 {
     QString latin("Nórui Nínui");
     QString expectedAscii("Norui Ninui");
-    ParserUtils::latinToAscii(latin);
+    ParserUtils::latinToAsciiInPlace(latin);
     QCOMPARE(latin, expectedAscii);
 }
 

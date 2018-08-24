@@ -31,8 +31,8 @@
 class QString;
 
 namespace ParserUtils {
-QString &removeAnsiMarks(QString &str);
-QString &latinToAscii(QString &str);
+QString &removeAnsiMarksInPlace(QString &str);
+QString &latinToAsciiInPlace(QString &str);
 } // namespace ParserUtils
 
 #endif

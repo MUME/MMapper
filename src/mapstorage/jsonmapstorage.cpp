@@ -73,7 +73,7 @@ public:
         // This is most likely unnecessary because the parser did it for us...
         // We need plain ASCII so that accentuation changes do not affect the
         // hashes and because MD5 is defined on bytes, not encoded chars.
-        ParserUtils::latinToAscii(str);
+        ParserUtils::latinToAsciiInPlace(str);
         // Roomdescs may see whitespacing fixes over the year (ex: removing double
         // spaces after periods). MM2 ignores such changes when comparing rooms,
         // but the web mapper may only look up rooms by hash. Normalizing the

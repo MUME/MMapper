@@ -26,12 +26,10 @@
 
 #include "parserutils.h"
 
+#include <QRegExp>
 #include <QtCore>
 
 namespace ParserUtils {
-
-static const unsigned char colorEndMark = 'm';
-static const unsigned char escChar = '\033';
 
 // latin1 to 7-bit Ascii
 static const unsigned char latin1ToAscii[] = {
@@ -40,29 +38,14 @@ static const unsigned char latin1ToAscii[] = {
     'a',         'a', 'a', 'a', 'a', 'a', 'a', 'c', 'e', 'e', 'e', 'e', 'i', 'i', 'i', 'i',
     'o',         'n', 'o', 'o', 'o', 'o', 'o', ':', 'o', 'u', 'u', 'u', 'u', 'y', 'b', 'y'};
 
-QString &removeAnsiMarks(QString &str)
+QString &removeAnsiMarksInPlace(QString &str)
 {
-    QString out = "";
-    bool started = false;
-    for (auto character : str) {
-        if (started && (character.toLatin1() == colorEndMark)) {
-            started = false;
-            continue;
-        }
-        if (character.toLatin1() == escChar) {
-            started = true;
-            continue;
-        }
-        if (started) {
-            continue;
-        }
-        out.append(character);
-    }
-    str = out;
+    static const QRegularExpression ansi("\x1b\\[[0-9;]*[A-Za-z]");
+    str.remove(ansi);
     return str;
 }
 
-QString &latinToAscii(QString &str)
+QString &latinToAsciiInPlace(QString &str)
 {
     unsigned char ch;
     int pos;

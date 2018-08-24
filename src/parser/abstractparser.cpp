@@ -294,8 +294,7 @@ void AbstractParser::parseExits()
     const auto &config = getConfig();
     QByteArray exitsByteArray = config.parser.utf8Charset ? m_exits.toUtf8() : m_exits.toLatin1();
 
-    QString str = m_exits;
-    normalizeString(str);
+    QString str = normalizeStringCopy(m_exits);
     m_connectedRoomFlags.reset();
     m_exitsFlags.reset();
     ExitsFlagsType closedDoorFlag{};
@@ -460,10 +459,12 @@ void AbstractParser::parseExits()
     m_mapData->unselect(rs);
 }
 
-QString &AbstractParser::normalizeString(QString &string)
+QString AbstractParser::normalizeStringCopy(QString string)
 {
-    ParserUtils::latinToAscii(string);
-    ParserUtils::removeAnsiMarks(string);
+    // Remove ANSI first, since we don't want Latin1
+    // transliterations to accidentally count as ANSI.
+    ParserUtils::removeAnsiMarksInPlace(string);
+    ParserUtils::latinToAsciiInPlace(string);
     return string;
 }
 

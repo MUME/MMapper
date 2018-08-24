@@ -90,7 +90,7 @@ void FindRoomsDlg::findClicked()
     Qt::CaseSensitivity cs = caseCheckBox->isChecked() ? Qt::CaseSensitive : Qt::CaseInsensitive;
     QString text = lineEdit->text();
     // remove latin1
-    text = ParserUtils::latinToAscii(text);
+    text = ParserUtils::latinToAsciiInPlace(text);
     resultTable->clear();
     roomsFoundLabel->clear();
 
