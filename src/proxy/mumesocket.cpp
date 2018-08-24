@@ -144,6 +144,20 @@ void MumeSslSocket::onEncrypted()
 {
     m_timer->stop();
     emit log("Proxy", "Connection now encrypted ...");
+    constexpr const bool LOG_CERT_INFO = true;
+    if ((LOG_CERT_INFO)) {
+        /* TODO: If we save the cert to config file, then we can notify the user if it changes! */
+        const auto cert = m_socket->peerCertificate();
+        const auto commonNameList = cert.subjectInfo(cert.CommonName);
+        const auto commonName = commonNameList.isEmpty() ? "(n/a)" : commonNameList.front();
+        const auto sha1 = cert.digest(QCryptographicHash::Algorithm::Sha1).toHex(':').toStdString();
+        const auto exp = cert.expiryDate();
+        const auto expStr = exp.toLocalTime().toString(Qt::DateFormat::SystemLocaleLongDate);
+        emit log("Proxy", QString("Peer certificate common name: %1.").arg(commonName));
+        emit log("Proxy", QString("Peer certificate SHA1: %1.").arg(sha1.c_str()));
+        emit log("Proxy", QString("Peer certificate expires: %1.").arg(expStr));
+    }
+
     MumeSocket::onConnect();
 }
 
