@@ -148,13 +148,13 @@ bool AnsiCombo::colorFromString(const QString &colString,
     bold = false;
     underline = false;
 
-    auto update_fg = [&](int n) {
+    const auto update_fg = [&ansiCodeFg, &colFg, &intelligibleNameFg](const int n) {
         // REVISIT: what about high colors?
         assert((30 <= n && n <= 37) || n == DEFAULT_FG);
         ansiCodeFg = n;
         colorFromNumber(ansiCodeFg, colFg, intelligibleNameFg);
     };
-    auto update_bg = [&](int n) {
+    const auto update_bg = [&ansiCodeBg, &colBg, &intelligibleNameBg](const int n) {
         assert((40 <= n && n <= 47) || n == DEFAULT_BG);
         ansiCodeBg = n;
         colorFromNumber(ansiCodeBg, colBg, intelligibleNameBg);

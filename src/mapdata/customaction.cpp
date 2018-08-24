@@ -152,7 +152,7 @@ void MergeRelative::exec(const RoomId id)
     if (target != nullptr) {
         factory()->update(target, source);
         auto oid = target->getId();
-        const SharedRoomCollection newHome = [&]() {
+        const SharedRoomCollection newHome = [this, &target]() {
             auto props = factory()->getEvent(target);
             return getParseTree().insertRoom(*props);
         }();

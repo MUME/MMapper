@@ -75,12 +75,12 @@ ClientPage::ClientPage(QWidget *parent)
             this,
             SLOT(onChangeTabCompletionDictionarySize(int)));
 
-    connect(ui->clearInputCheckBox, &QCheckBox::toggled, [=](bool isChecked) {
+    connect(ui->clearInputCheckBox, &QCheckBox::toggled, [](bool isChecked) {
         /* NOTE: This directly modifies the global setting. */
         Config().integratedClient.clearInputOnEnter = isChecked;
     });
 
-    connect(ui->autoResizeTerminalCheckBox, &QCheckBox::toggled, [=](bool isChecked) {
+    connect(ui->autoResizeTerminalCheckBox, &QCheckBox::toggled, [](bool isChecked) {
         /* NOTE: This directly modifies the global setting. */
         Config().integratedClient.autoResizeTerminal = isChecked;
     });

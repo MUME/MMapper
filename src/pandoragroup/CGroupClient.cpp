@@ -32,10 +32,10 @@
 CGroupClient::CGroupClient(QObject *parent)
     : QTcpSocket(parent)
 {
-    connect(this, &QAbstractSocket::connected, this, [=]() {
+    connect(this, &QAbstractSocket::connected, this, [this]() {
         this->setConnectionState(ConnectionStates::Connected);
     });
-    connect(this, &QAbstractSocket::disconnected, this, [=]() {
+    connect(this, &QAbstractSocket::disconnected, this, [this]() {
         this->setConnectionState(ConnectionStates::Closed);
     });
     connect(this, &QIODevice::readyRead, this, &CGroupClient::onReadyRead);

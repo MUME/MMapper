@@ -72,7 +72,7 @@ bool CGroupChar::updateFromXML(const QDomNode &node)
         }
     }
 
-    auto tryUpdateString = [&](const char *attr, QByteArray &arr) {
+    const auto tryUpdateString = [&e, &updated](const char *const attr, QByteArray &arr) {
         auto s = e.attribute(attr).toLatin1();
         if (s == arr)
             return;
@@ -85,13 +85,13 @@ bool CGroupChar::updateFromXML(const QDomNode &node)
 
     TRY_UPDATE_STRING(name);
 
-    auto str = e.attribute("color");
+    const auto str = e.attribute("color");
     if (str != color.name()) {
         updated = true;
         color = QColor(str);
     }
 
-    auto tryUpdateInt = [&](const char *attr, int &n) {
+    const auto tryUpdateInt = [&e, &updated](const char *const attr, int &n) {
         auto i = e.attribute(attr).toInt();
         if (i == n)
             return;
@@ -109,7 +109,7 @@ bool CGroupChar::updateFromXML(const QDomNode &node)
     TRY_UPDATE_INT(maxmoves);
 
     {
-        auto newState = static_cast<CharacterStates>(e.attribute("state").toInt());
+        const auto newState = static_cast<CharacterStates>(e.attribute("state").toInt());
         if (newState != state) {
             updated = true;
             state = newState;

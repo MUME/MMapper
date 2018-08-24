@@ -43,7 +43,7 @@ InfoMarksEditDlg::InfoMarksEditDlg(MapData *const mapData, QWidget *const parent
     setupUi(this);
     readSettings();
 
-    connect(closeButton, &QAbstractButton::clicked, this, [=]() {
+    connect(closeButton, &QAbstractButton::clicked, this, [this]() {
         emit closeEventReceived();
         this->accept();
     });

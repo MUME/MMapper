@@ -93,7 +93,7 @@ GeneralPage::GeneralPage(QWidget *parent)
     } else {
         tlsEncryptionCheckBox->setChecked(connection.tlsEncryption);
     }
-    proxyThreadedCheckBox->setChecked(config.connection.proxyThreaded);
+    proxyThreadedCheckBox->setChecked(connection.proxyThreaded);
 
     emulatedExitsCheckBox->setChecked(mumeNative.emulatedExits);
     showHiddenExitFlagsCheckBox->setChecked(mumeNative.showHiddenExitFlags);
