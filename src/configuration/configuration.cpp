@@ -359,7 +359,8 @@ void Configuration::CanvasSettings::read(QSettings &conf)
         conf.value(KEY_BACKGROUND_COLOR, QColor(110, 110, 110).name()).toString());
     antialiasingSamples = conf.value(KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES, 0).toInt();
     trilinearFiltering = conf.value(KEY_USE_TRILINEAR_FILTERING, false).toBool();
-    softwareOpenGL = conf.value(KEY_USE_SOFTWARE_OPENGL, false).toBool();
+    softwareOpenGL = conf.value(KEY_USE_SOFTWARE_OPENGL, getCurrentPlatform() == Platform::Win32)
+                         .toBool();
 }
 
 void Configuration::AutoLoadSettings::read(QSettings &conf)
