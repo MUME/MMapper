@@ -475,9 +475,9 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
     }
 
     if (!Config().parser.removeXmlTags) {
+        toUser.replace(ampersand, ampersandTemplate);
         toUser.replace(greaterThanChar, greaterThanTemplate);
         toUser.replace(lessThanChar, lessThanTemplate);
-        toUser.replace(ampersand, ampersandTemplate);
     }
     return toUser;
 }
