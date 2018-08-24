@@ -300,7 +300,7 @@ void ClientWidget::saveLog()
 
     QFile document(fileNames[0]);
     if (!document.open(QFile::WriteOnly | QFile::Text)) {
-        m_statusBar->showMessage(QString("Error occur while opening %1").arg(document.fileName()),
+        m_statusBar->showMessage(QString("Error occurred while opening %1").arg(document.fileName()),
                                  2000);
         return;
     }
