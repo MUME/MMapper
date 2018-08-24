@@ -207,7 +207,7 @@ void InputWidget::wordHistory(int key)
 void InputWidget::gotInput()
 {
     QString input = toPlainText();
-    if (Config().integratedClient.clearInputOnEnter) {
+    if (getConfig().integratedClient.clearInputOnEnter) {
         clear();
     } else {
         selectAll();
@@ -226,7 +226,7 @@ void InputWidget::addLineHistory(const InputHistoryEntry &string)
     }
 
     // Trim line history
-    if (m_lineHistory.size() > Config().integratedClient.linesOfInputHistory) {
+    if (m_lineHistory.size() > getConfig().integratedClient.linesOfInputHistory) {
         m_lineHistory.removeFirst();
     }
 }
@@ -241,7 +241,7 @@ void InputWidget::addTabHistory(const WordHistoryEntry &string)
 
             // Trim dictionary
             if (m_tabCompletionDictionary.size()
-                > Config().integratedClient.tabCompletionDictionarySize) {
+                > getConfig().integratedClient.tabCompletionDictionarySize) {
                 m_tabCompletionDictionary.removeFirst();
             }
         }

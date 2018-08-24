@@ -54,7 +54,7 @@ void RemoteEdit::addSession(const int key, const QString &title, QString body)
     uint sessionId = getSessionCount();
     std::unique_ptr<RemoteEditSession> session;
 
-    if (Config().mumeClientProtocol.internalRemoteEditor) {
+    if (getConfig().mumeClientProtocol.internalRemoteEditor) {
         session = std::make_unique<RemoteEditInternalSession>(sessionId, key, title, body, this);
     } else {
         session = std::make_unique<RemoteEditExternalSession>(sessionId, key, title, body, this);

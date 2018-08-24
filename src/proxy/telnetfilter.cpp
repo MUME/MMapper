@@ -146,7 +146,7 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
         case TC_IAC: //IAC IAC  - should not happen tho, we use ASCII chars only!!!
 
             if (m_incomingData.type != TelnetDataType::TELNET && !m_incomingData.line.isEmpty()) {
-                if (Config().mumeClientProtocol.IAC_prompt_parser && index > 0
+                if (getConfig().mumeClientProtocol.IAC_prompt_parser && index > 0
                     && (static_cast<quint8>(stream.at(index - 1)))
                            == '>' /*&& ((quint8) stream.at(index+1)) == TC_GA*/) {
                     //prompt
@@ -178,7 +178,7 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
                 m_incomingData.line.append(static_cast<char>(val1));
                 que.enqueue(m_incomingData);
                 m_incomingData.line.clear();
-                if (false && val1 == TC_GA && Config().mumeClientProtocol.IAC_prompt_parser)
+                if (false && val1 == TC_GA && getConfig().mumeClientProtocol.IAC_prompt_parser)
                     m_incomingData.type = TelnetDataType::PROMPT;
                 else
                     m_incomingData.type = TelnetDataType::SPLIT;

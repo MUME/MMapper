@@ -160,9 +160,9 @@ void MumeXmlParser::parse(const QByteArray &line)
 
         if (m_readStatusTag) {
             m_readStatusTag = false;
-            if (Config().groupManager.state != GroupManagerState::Off) {
+            if (getConfig().groupManager.state != GroupManagerState::Off) {
                 QByteArray temp = m_lineToUser;
-                if (!Config().parser.removeXmlTags) {
+                if (!getConfig().parser.removeXmlTags) {
                     stripXmlEntities(temp);
                 }
                 QString tempStr = temp;
@@ -261,7 +261,7 @@ bool MumeXmlParser::element(const QByteArray &line)
         if (length > 0) {
             switch (line.at(0)) {
             case 'g':
-                if (line.startsWith("gratuitous") && Config().parser.removeXmlTags) {
+                if (line.startsWith("gratuitous") && getConfig().parser.removeXmlTags) {
                     m_gratuitous = true;
                 }
                 break;
@@ -346,8 +346,8 @@ bool MumeXmlParser::element(const QByteArray &line)
         break;
     }
 
-    if (!Config().parser.removeXmlTags) {
-        m_lineToUser.append("<").append(line).append(">");
+    if (!getConfig().parser.removeXmlTags) {
+        m_lineToUser.append(lessThanChar).append(line).append(greaterThanChar);
     }
     return true;
 }
@@ -375,7 +375,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         m_lastPrompt = ch;
     }
 
-    const auto &config = Config();
+    const auto &config = getConfig();
     m_stringBuffer = config.parser.utf8Charset ? QString::fromUtf8(ch) : QString::fromLatin1(ch);
 
     if (m_readSnoopTag && m_stringBuffer.length() > 3 && m_stringBuffer.at(0) == '&'
@@ -474,7 +474,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         break;
     }
 
-    if (!Config().parser.removeXmlTags) {
+    if (!getConfig().parser.removeXmlTags) {
         toUser.replace(ampersand, ampersandTemplate);
         toUser.replace(greaterThanChar, greaterThanTemplate);
         toUser.replace(lessThanChar, lessThanTemplate);

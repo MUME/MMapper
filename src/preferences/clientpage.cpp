@@ -42,7 +42,7 @@ ClientPage::ClientPage(QWidget *parent)
 
     updateFontAndColors();
 
-    const auto &settings = Config().integratedClient;
+    const auto &settings = getConfig().integratedClient;
     ui->columnsSpinBox->setValue(settings.columns);
     ui->rowsSpinBox->setValue(settings.rows);
     ui->scrollbackSpinBox->setValue(settings.linesOfScrollback);
@@ -77,12 +77,12 @@ ClientPage::ClientPage(QWidget *parent)
 
     connect(ui->clearInputCheckBox, &QCheckBox::toggled, [](bool isChecked) {
         /* NOTE: This directly modifies the global setting. */
-        Config().integratedClient.clearInputOnEnter = isChecked;
+        setConfig().integratedClient.clearInputOnEnter = isChecked;
     });
 
     connect(ui->autoResizeTerminalCheckBox, &QCheckBox::toggled, [](bool isChecked) {
         /* NOTE: This directly modifies the global setting. */
-        Config().integratedClient.autoResizeTerminal = isChecked;
+        setConfig().integratedClient.autoResizeTerminal = isChecked;
     });
 }
 
@@ -93,7 +93,7 @@ ClientPage::~ClientPage()
 
 void ClientPage::updateFontAndColors()
 {
-    const auto &settings = Config().integratedClient;
+    const auto &settings = getConfig().integratedClient;
     ui->exampleLineEdit->setFont(settings.font);
 
     QFontInfo fi(settings.font);
@@ -114,7 +114,7 @@ void ClientPage::updateFontAndColors()
 
 void ClientPage::onChangeFont()
 {
-    auto &font = Config().integratedClient.font;
+    auto &font = setConfig().integratedClient.font;
 
     bool ok = false;
     const QFont newFont = QFontDialog::getFont(&ok,
@@ -130,7 +130,7 @@ void ClientPage::onChangeFont()
 
 void ClientPage::onChangeBackgroundColor()
 {
-    auto &backgroundColor = Config().integratedClient.backgroundColor;
+    auto &backgroundColor = setConfig().integratedClient.backgroundColor;
     const QColor newColor = QColorDialog::getColor(backgroundColor, this);
     if (newColor.isValid() && newColor != backgroundColor) {
         backgroundColor = newColor;
@@ -140,7 +140,7 @@ void ClientPage::onChangeBackgroundColor()
 
 void ClientPage::onChangeForegroundColor()
 {
-    auto &foregroundColor = Config().integratedClient.foregroundColor;
+    auto &foregroundColor = setConfig().integratedClient.foregroundColor;
     const QColor newColor = QColorDialog::getColor(foregroundColor, this);
     if (newColor.isValid() && newColor != foregroundColor) {
         foregroundColor = newColor;
@@ -150,25 +150,25 @@ void ClientPage::onChangeForegroundColor()
 
 void ClientPage::onChangeColumns(const int value)
 {
-    Config().integratedClient.columns = value;
+    setConfig().integratedClient.columns = value;
 }
 
 void ClientPage::onChangeRows(const int value)
 {
-    Config().integratedClient.rows = value;
+    setConfig().integratedClient.rows = value;
 }
 
 void ClientPage::onChangeLinesOfScrollback(const int value)
 {
-    Config().integratedClient.linesOfScrollback = value;
+    setConfig().integratedClient.linesOfScrollback = value;
 }
 
 void ClientPage::onChangeLinesOfInputHistory(const int value)
 {
-    Config().integratedClient.linesOfInputHistory = value;
+    setConfig().integratedClient.linesOfInputHistory = value;
 }
 
 void ClientPage::onChangeTabCompletionDictionarySize(const int value)
 {
-    Config().integratedClient.tabCompletionDictionarySize = value;
+    setConfig().integratedClient.tabCompletionDictionarySize = value;
 }

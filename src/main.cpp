@@ -25,6 +25,7 @@
 ************************************************************************/
 
 #include <cstdlib>
+#include <memory>
 #include <thread>
 #include <QPixmap>
 #include <QtCore>
@@ -111,12 +112,12 @@ static bool tryLoad(MainWindow &mw,
 
     if (updateSettings) {
         // REVISIT: We probably shouldn't update if the load failed.
-        auto &settings = Config().autoLoad;
+        auto &savedSettings = setConfig().autoLoad;
 
         QFileInfo file(absoluteFilePath);
-        settings.autoLoadMap = true;
-        settings.fileName = file.fileName();
-        settings.lastMapDirectory = file.dir().absolutePath();
+        savedSettings.autoLoadMap = true;
+        savedSettings.fileName = file.fileName();
+        savedSettings.lastMapDirectory = file.dir().absolutePath();
     }
 
     return true;
@@ -130,8 +131,9 @@ static void firstRun(MainWindow &mw)
 
     /* REVISIT: may want both .exe directory and the cwd, since they might be different! */
     std::set<QString> seen;
-    for (const auto &dir :
-         {QDir{Config().autoLoad.lastMapDirectory}, QDir::current(), cd(QDir::current(), "map")}) {
+    for (const auto &dir : {QDir{getConfig().autoLoad.lastMapDirectory},
+                            QDir::current(),
+                            cd(QDir::current(), "map")}) {
         const auto name = dir.absolutePath();
         if (seen.find(name) != seen.end())
             continue;
@@ -143,7 +145,7 @@ static void firstRun(MainWindow &mw)
 
 static void tryAutoLoad(MainWindow &mw)
 {
-    const auto &config = Config();
+    const auto &config = getConfig();
     const auto &settings = config.autoLoad;
 
     if (settings.autoLoadMap && !settings.fileName.isEmpty()) {
@@ -171,7 +173,7 @@ int main(int argc, char **argv)
     QApplication app(argc, argv);
     tryUseHighDpi(app);
 
-    const auto &config = Config();
+    const auto &config = getConfig();
     if (config.canvas.softwareOpenGL) {
         app.setAttribute(Qt::AA_UseSoftwareOpenGL);
         if (CURRENT_PLATFORM == Platform::Linux) {
@@ -182,13 +184,14 @@ int main(int argc, char **argv)
     std::unique_ptr<ISplash> splash = !config.general.noSplash
                                           ? static_upcast<ISplash>(std::make_unique<Splash>())
                                           : static_upcast<ISplash>(std::make_unique<FakeSplash>());
-    MainWindow mw;
-    tryAutoLoad(mw);
-    mw.show();
-    splash->finish(&mw);
+    auto mw = std::make_unique<MainWindow>();
+    tryAutoLoad(*mw);
+    mw->show();
+    splash->finish(mw.get());
     splash.reset();
 
     const int ret = app.exec();
+    mw.reset();
     config.write();
     return ret;
 }

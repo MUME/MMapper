@@ -73,7 +73,7 @@ void OpenGL::renderTextAt(const float x,
         m_glFont.font->setUnderline(true);
     }
     painter.setFont(*m_glFont.font);
-    if (Config().canvas.antialiasingSamples > 0) {
+    if (getConfig().canvas.antialiasingSamples > 0) {
         painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
     }
     painter.drawText(0, 0, text);

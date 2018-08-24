@@ -85,7 +85,7 @@ RemoteEditProcess::RemoteEditProcess(const bool editSession,
     m_process.setProcessEnvironment(env);
 
     // Start the process!
-    QStringList args = splitCommandLine(Config().mumeClientProtocol.externalRemoteEditorCommand);
+    QStringList args = splitCommandLine(getConfig().mumeClientProtocol.externalRemoteEditorCommand);
     args << fileName;
     const QString &program = args.takeFirst();
     qDebug() << program << args;

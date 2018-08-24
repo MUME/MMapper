@@ -75,7 +75,7 @@ void MpiFilter::analyzeNewMudInput(IncomingData &data)
                 m_buffer.clear();
                 m_command = data.line.at(4);
                 m_remaining = data.line.mid(5).simplified().toInt();
-                if (Config().mumeClientProtocol.remoteEditing
+                if (getConfig().mumeClientProtocol.remoteEditing
                     && (m_command == 'V' || m_command == 'E')) {
                     m_parsingMpi = true;
                 }

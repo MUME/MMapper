@@ -167,7 +167,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     m_findRoomsDlg = new FindRoomsDlg(m_mapData, this);
     m_findRoomsDlg->setObjectName("FindRoomsDlg");
 
-    m_mumeClock = new MumeClock(Config().mumeClock.startEpoch);
+    m_mumeClock = new MumeClock(getConfig().mumeClock.startEpoch);
 
     createActions();
     setupToolBars();
@@ -188,7 +188,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
                                         this);
     m_listener->setMaxPendingConnections(1);
 
-    const auto port = Config().connection.localPort;
+    const auto port = getConfig().connection.localPort;
     if (!m_listener->listen(QHostAddress::Any, port)) {
         QMessageBox::critical(this,
                               tr("MMapper2"),
@@ -202,14 +202,14 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     wireConnections();
     readSettings();
 
-    if (Config().general.noLaunchPanel) {
+    if (getConfig().general.noLaunchPanel) {
         m_launchWidget->hide();
         m_dockLaunch->hide();
     } else {
         m_dockLaunch->show();
     }
 
-    switch (Config().general.mapMode) {
+    switch (getConfig().general.mapMode) {
     case MapMode::PLAY:
         mapperMode.playModeAct->setChecked(true);
         onPlayMode();
@@ -229,7 +229,7 @@ MainWindow::~MainWindow() = default;
 
 void MainWindow::readSettings()
 {
-    const auto &settings = Config().general;
+    const auto &settings = getConfig().general;
     restoreGeometry(settings.windowGeometry);
     restoreState(settings.windowState);
     alwaysOnTopAct->setChecked(settings.alwaysOnTop);
@@ -240,9 +240,10 @@ void MainWindow::readSettings()
 
 void MainWindow::writeSettings()
 {
-    Config().setWindowGeometry(saveGeometry());
-    Config().setWindowState(saveState());
-    Config().setAlwaysOnTop(static_cast<bool>(windowFlags() & Qt::WindowStaysOnTopHint));
+    auto &savedConfig = setConfig().general;
+    savedConfig.windowGeometry = saveGeometry();
+    savedConfig.windowState = saveState();
+    savedConfig.alwaysOnTop = static_cast<bool>(windowFlags() & Qt::WindowStaysOnTopHint);
 }
 
 void MainWindow::wireConnections()
@@ -759,7 +760,7 @@ void MainWindow::onPlayMode()
                &Mmapper2PathMachine::scheduleAction,
                m_mapData,
                &MapData::scheduleAction);
-    Config().general.mapMode = MapMode::PLAY;
+    setConfig().general.mapMode = MapMode::PLAY;
     modeMenu->setIcon(mapperMode.playModeAct->icon());
 }
 
@@ -771,7 +772,7 @@ void MainWindow::onMapMode()
             &Mmapper2PathMachine::scheduleAction,
             m_mapData,
             &MapData::scheduleAction);
-    Config().general.mapMode = MapMode::MAP;
+    setConfig().general.mapMode = MapMode::MAP;
     modeMenu->setIcon(mapperMode.mapModeAct->icon());
 }
 
@@ -783,7 +784,7 @@ void MainWindow::onOfflineMode()
                &Mmapper2PathMachine::scheduleAction,
                m_mapData,
                &MapData::scheduleAction);
-    Config().general.mapMode = MapMode::OFFLINE;
+    setConfig().general.mapMode = MapMode::OFFLINE;
     modeMenu->setIcon(mapperMode.offlineModeAct->icon());
 }
 
@@ -1189,14 +1190,14 @@ void MainWindow::open()
     if (!maybeSave())
         return;
 
-    auto &lastMapDir = Config().autoLoad.lastMapDirectory;
+    auto &savedLastMapDir = setConfig().autoLoad.lastMapDirectory;
     const QString fileName = QFileDialog::getOpenFileName(this,
                                                           "Choose map file ...",
-                                                          lastMapDir,
+                                                          savedLastMapDir,
                                                           "MMapper2 (*.mm2);;MMapper (*.map)");
     if (!fileName.isEmpty()) {
         QFileInfo file(fileName);
-        lastMapDir = file.dir().absolutePath();
+        savedLastMapDir = file.dir().absolutePath();
         loadFile(file.absoluteFilePath());
     }
 }

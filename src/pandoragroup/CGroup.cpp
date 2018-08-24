@@ -42,9 +42,10 @@ CGroup::CGroup(QObject *parent)
     , characterLock(QMutex::Recursive)
 {
     self = new CGroupLocalChar();
-    self->setName(Config().groupManager.charName);
+    const Configuration::GroupManagerSettings &groupManager = getConfig().groupManager;
+    self->setName(groupManager.charName);
     self->setPosition(DEFAULT_ROOMID);
-    self->setColor(Config().groupManager.color);
+    self->setColor(groupManager.color);
     charIndex.push_back(self);
 }
 
@@ -149,7 +150,7 @@ bool CGroup::addChar(const QDomNode &node)
 void CGroup::removeChar(const QByteArray &name)
 {
     QMutexLocker locker(&characterLock);
-    if (name == Config().groupManager.charName) {
+    if (name == getConfig().groupManager.charName) {
         emit log("You cannot delete yourself from the group.");
         return;
     }

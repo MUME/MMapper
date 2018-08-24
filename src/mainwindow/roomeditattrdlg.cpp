@@ -212,13 +212,12 @@ RoomEditAttrDlg::~RoomEditAttrDlg()
 
 void RoomEditAttrDlg::readSettings()
 {
-    const auto geometry = Config().readRoomEditAttrGeometry();
-    restoreGeometry(geometry);
+    restoreGeometry(getConfig().roomEditDialog.geometry);
 }
 
 void RoomEditAttrDlg::writeSettings()
 {
-    Config().writeRoomEditAttrDlgGeometry(saveGeometry());
+    setConfig().roomEditDialog.geometry = saveGeometry();
 }
 
 void RoomEditAttrDlg::connectAll()

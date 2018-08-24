@@ -74,13 +74,12 @@ InfoMarksEditDlg::~InfoMarksEditDlg()
 
 void InfoMarksEditDlg::readSettings()
 {
-    const auto geometry = Config().readInfoMarksEditDlgGeometry();
-    restoreGeometry(geometry);
+    restoreGeometry(getConfig().infoMarksDialog.geometry);
 }
 
 void InfoMarksEditDlg::writeSettings()
 {
-    Config().writeInfoMarksEditDlgGeometry(saveGeometry());
+    setConfig().infoMarksDialog.geometry = saveGeometry();
 }
 
 void InfoMarksEditDlg::connectAll()

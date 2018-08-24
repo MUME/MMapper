@@ -50,41 +50,24 @@ static inline constexpr Platform getCurrentPlatform()
 #elif defined(Q_OS_LINUX)
     return Platform::Linux;
 #else
-    return Platform::Unknown;
+    throw std::runtime_error("unsupported platform");
 #endif
 }
 static constexpr const Platform CURRENT_PLATFORM = getCurrentPlatform();
 
-class Configuration
+#define SUBGROUP() \
+    friend class Configuration; \
+    void read(QSettings &conf); \
+    void write(QSettings &conf) const;
+
+class Configuration final
 {
 public:
     void read();
     void write() const;
-    bool isChanged() const;
 
 public:
-    void setFirstRun(bool value)
-    {
-        general.firstRun = value;
-        change();
-    }
-    void setWindowGeometry(QByteArray geometry)
-    {
-        general.windowGeometry = geometry;
-        change();
-    }
-    void setWindowState(QByteArray state)
-    {
-        general.windowState = state;
-        change();
-    }
-    void setAlwaysOnTop(bool b)
-    {
-        general.alwaysOnTop = b;
-        change();
-    }
-
-    struct GeneralSettings
+    struct GeneralSettings final
     {
         bool firstRun = false;
         QByteArray windowGeometry{};
@@ -95,12 +78,10 @@ public:
         bool noLaunchPanel = false;
 
     private:
-        friend class Configuration;
-        void read(QSettings &conf);
-        void write(QSettings &conf) const;
-
+        SUBGROUP();
     } general{};
-    struct ConnectionSettings
+
+    struct ConnectionSettings final
     {
         QString remoteServerName{}; /// Remote host and port settings
         quint16 remotePort = 0u;
@@ -109,15 +90,10 @@ public:
         bool proxyThreaded = false;
 
     private:
-        friend class Configuration;
-        void read(QSettings &conf);
-        void write(QSettings &conf) const;
+        SUBGROUP();
     } connection{};
 
-    bool m_autoLog = false;  // enables log to file
-    QString m_logFileName{}; // file name to log
-
-    struct ParserSettings
+    struct ParserSettings final
     {
         QString roomNameColor{}; // ANSI room name color
         QString roomDescColor{}; // ANSI room descriptions color
@@ -134,12 +110,10 @@ public:
         bool utf8Charset = false;
 
     private:
-        friend class Configuration;
-        void read(QSettings &conf);
-        void write(QSettings &conf) const;
+        SUBGROUP();
     } parser;
 
-    struct MumeClientProtocolSettings
+    struct MumeClientProtocolSettings final
     {
         bool IAC_prompt_parser = false;
         bool remoteEditing = false;
@@ -147,12 +121,10 @@ public:
         QString externalRemoteEditorCommand{};
 
     private:
-        friend class Configuration;
-        void read(QSettings &conf);
-        void write(QSettings &conf) const;
+        SUBGROUP();
     } mumeClientProtocol{};
 
-    struct MumeNativeSettings
+    struct MumeNativeSettings final
     {
         /* serialized */
         bool emulatedExits = false;
@@ -160,12 +132,10 @@ public:
         bool showNotes = false;
 
     private:
-        friend class Configuration;
-        void read(QSettings &conf);
-        void write(QSettings &conf) const;
+        SUBGROUP();
     } mumeNative{};
 
-    struct CanvasSettings
+    struct CanvasSettings final
     {
         bool showUpdated = false;
         bool drawNotMappedExits = false;
@@ -178,24 +148,20 @@ public:
         bool softwareOpenGL = false;
 
     private:
-        friend class Configuration;
-        void read(QSettings &conf);
-        void write(QSettings &conf) const;
+        SUBGROUP();
     } canvas{};
 
-    struct AutoLoadSettings
+    struct AutoLoadSettings final
     {
         bool autoLoadMap = false;
         QString fileName{};
         QString lastMapDirectory{};
 
     private:
-        friend class Configuration;
-        void read(QSettings &conf);
-        void write(QSettings &conf) const;
+        SUBGROUP();
     } autoLoad{};
 
-    struct PathMachineSettings
+    struct PathMachineSettings final
     {
         qreal acceptBestRelative = 0.0;
         qreal acceptBestAbsolute = 0.0;
@@ -206,16 +172,14 @@ public:
         quint32 matchingTolerance = 0u;
 
     private:
-        friend class Configuration;
-        void read(QSettings &conf);
-        void write(QSettings &conf) const;
+        SUBGROUP();
     } pathMachine{};
 
-    struct GroupManagerSettings
+    struct GroupManagerSettings final
     {
         GroupManagerState state = GroupManagerState::Off;
-        int localPort = 0;
-        int remotePort = 0;
+        quint16 localPort = 0u;
+        quint16 remotePort = 0u;
         QByteArray host{};
         QByteArray charName{};
         bool shareSelf = false;
@@ -223,23 +187,19 @@ public:
         bool rulesWarning = false;
 
     private:
-        friend class Configuration;
-        void read(QSettings &conf);
-        void write(QSettings &conf) const;
+        SUBGROUP();
     } groupManager{};
 
-    struct MumeClockSettings
+    struct MumeClockSettings final
     {
         int startEpoch = 0;
         bool display = false;
 
     private:
-        friend class Configuration;
-        void read(QSettings &conf);
-        void write(QSettings &conf) const;
+        SUBGROUP();
     } mumeClock{};
 
-    struct IntegratedMudClientSettings
+    struct IntegratedMudClientSettings final
     {
         QFont font{};
         QColor foregroundColor{};
@@ -251,12 +211,27 @@ public:
         int tabCompletionDictionarySize = 0;
         bool clearInputOnEnter = false;
         bool autoResizeTerminal = false;
+        QByteArray geometry{};
 
     private:
-        friend class Configuration;
-        void read(QSettings &conf);
-        void write(QSettings &conf) const;
+        SUBGROUP();
     } integratedClient{};
+
+    struct InfoMarksDialog final
+    {
+        QByteArray geometry{};
+
+    private:
+        SUBGROUP();
+    } infoMarksDialog{};
+
+    struct RoomEditDialog final
+    {
+        QByteArray geometry{};
+
+    private:
+        SUBGROUP();
+    } roomEditDialog{};
 
 public:
     Configuration(Configuration &&) = delete;
@@ -266,25 +241,12 @@ public:
 
 private:
     explicit Configuration();
-    bool configurationChanged = false;
-    void change() { configurationChanged = true; }
-
-    friend Configuration &Config();
-
-public:
-    QByteArray readIntegratedMudClientGeometry();
-    void writeIntegratedMudClientGeometry(const QByteArray &geometry) const;
-
-public:
-    QByteArray readInfoMarksEditDlgGeometry();
-    void writeInfoMarksEditDlgGeometry(const QByteArray &geometry) const;
-
-public:
-    QByteArray readRoomEditAttrGeometry();
-    void writeRoomEditAttrDlgGeometry(const QByteArray &geometry) const;
+    friend Configuration &setConfig();
 };
 
 /// Returns a reference to the application configuration object.
-Configuration &Config();
+Configuration &setConfig();
+const Configuration &getConfig();
 
+#undef SUBGROUP
 #endif

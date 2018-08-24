@@ -173,7 +173,7 @@ FontFormatFlags getFontFormatFlags(InfoMarkClass infoMarkClass)
 // TODO: change to std::optional<QColor> in C++17 instead of returning transparent
 static QColor getWallColor(const ExitFlags &flags)
 {
-    const auto drawNoMatchExits = Config().canvas.drawNoMatchExits;
+    const auto drawNoMatchExits = getConfig().canvas.drawNoMatchExits;
 
     if (flags.isNoFlee()) {
         return WALL_COLOR_NO_FLEE;
@@ -535,7 +535,7 @@ void MapCanvasRoomDrawer::drawExit(const Room *const room,
                                    const RoomIndex &rooms,
                                    const ExitDirection dir)
 {
-    const auto drawNotMappedExits = Config().canvas.drawNotMappedExits;
+    const auto drawNotMappedExits = getConfig().canvas.drawNotMappedExits;
 
     const auto wallList = m_gllist.wall[dir];
     const auto doorList = m_gllist.door[dir];
@@ -599,7 +599,7 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room,
     m_opengl.apply(XColor4d{Qt::white, 1.0f});
 
     if (layer > 0) {
-        if (Config().canvas.drawUpperLayersTextured) {
+        if (getConfig().canvas.drawUpperLayersTextured) {
             m_opengl.apply(XEnable{XOption::POLYGON_STIPPLE});
         } else {
             m_opengl.apply(XDisable{XOption::POLYGON_STIPPLE});
@@ -685,7 +685,7 @@ void MapCanvasRoomDrawer::drawUpperLayers(const Room *const room,
                                           const RoadIndex &roadIndex,
                                           const bool wantExtraDetail)
 {
-    if (layer > 0 && !Config().canvas.drawUpperLayersTextured) {
+    if (layer > 0 && !getConfig().canvas.drawUpperLayersTextured) {
         m_opengl.apply(XEnable{XOption::BLEND});
         m_opengl.callList(m_gllist.room);
         m_opengl.apply(XDisable{XOption::BLEND});
@@ -756,7 +756,7 @@ void MapCanvasRoomDrawer::drawUpperLayers(const Room *const room,
         }
 
         m_opengl.glTranslated(0, 0, 0.005);
-        if (Config().canvas.showUpdated && !room->isUpToDate()) {
+        if (getConfig().canvas.showUpdated && !room->isUpToDate()) {
             alphaOverlayTexture(m_textures.update);
         }
         m_opengl.apply(XDisable{XOption::BLEND});
@@ -779,7 +779,7 @@ void MapCanvasRoomDrawer::drawRoomConnectionsAndDoors(const Room *const room, co
     int rx = 0;
     int ry = 0;
 
-    const auto wantDoorNames = Config().canvas.drawDoorNames && (m_scaleFactor >= 0.40f);
+    const auto wantDoorNames = getConfig().canvas.drawDoorNames && (m_scaleFactor >= 0.40f);
     for (const auto i : ALL_EXITS7) {
         const auto opp = opposite(i);
         ExitDirection targetDir = opp;
@@ -889,7 +889,7 @@ void MapCanvasRoomDrawer::drawVertical(
     if (!flags.isExit())
         return;
 
-    const auto drawNotMappedExits = Config().canvas.drawNotMappedExits;
+    const auto drawNotMappedExits = getConfig().canvas.drawNotMappedExits;
     if (drawNotMappedExits && roomExit.outIsEmpty()) { // zero outgoing connections
         drawListWithLineStipple(transparent, WALL_COLOR_NOTMAPPED);
         return;

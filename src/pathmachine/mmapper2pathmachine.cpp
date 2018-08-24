@@ -61,7 +61,7 @@ void Mmapper2PathMachine::event(const SigParseEvent &sigParseEvent)
      * REVISIT: replace PathParameters with Configuration::PathMachineSettings
      * and then just do: params = config.pathMachine; ? 
      */
-    const auto &settings = config.pathMachine;
+    const auto &settings = getConfig().pathMachine;
 
     params.acceptBestRelative = settings.acceptBestRelative;
     params.acceptBestAbsolute = settings.acceptBestAbsolute;
@@ -82,5 +82,4 @@ void Mmapper2PathMachine::event(const SigParseEvent &sigParseEvent)
 
 Mmapper2PathMachine::Mmapper2PathMachine()
     : PathMachine(new RoomFactory)
-    , config(Config())
 {}

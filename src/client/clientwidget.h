@@ -72,7 +72,7 @@ protected:
 
 private:
     void readSettings();
-    void writeSettings();
+    void writeSettings() const;
 
     bool m_connected = false;
     bool m_displayCopyAvailable = false;

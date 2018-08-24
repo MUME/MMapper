@@ -43,7 +43,7 @@ WelcomeWidget::WelcomeWidget(QWidget *parent)
     ui->pixmapLabel->setPixmap(mellon);
 
     // Port
-    ui->port->setText(QString::number(Config().connection.localPort));
+    ui->port->setText(QString::number(getConfig().connection.localPort));
 
     ui->playButton->setFocus();
     connect(ui->playButton, &QAbstractButton::clicked, this, &WelcomeWidget::onPlayButtonClicked);

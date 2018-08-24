@@ -107,7 +107,7 @@ MumeSslSocket::~MumeSslSocket()
 
 void MumeSslSocket::connectToHost()
 {
-    const auto &settings = Config().connection;
+    const auto &settings = getConfig().connection;
     m_socket->connectToHostEncrypted(settings.remoteServerName,
                                      settings.remotePort,
                                      QIODevice::ReadWrite);
@@ -201,7 +201,7 @@ void MumeSslSocket::sendToMud(const QByteArray &ba)
 
 void MumeTcpSocket::connectToHost()
 {
-    const auto &settings = Config().connection;
+    const auto &settings = getConfig().connection;
     m_socket->connectToHost(settings.remoteServerName, settings.remotePort);
     m_timer->start();
 }

@@ -50,7 +50,7 @@ MumeProtocolPage::MumeProtocolPage(QWidget *parent)
             &QLineEdit::textChanged,
             this, &MumeProtocolPage::externalEditorCommandTextChanged);
 
-    const auto &settings = Config().mumeClientProtocol;
+    const auto &settings = getConfig().mumeClientProtocol;
     ui->IACPromptCheckBox->setChecked(settings.IAC_prompt_parser);
     ui->remoteEditCheckBox->setChecked(settings.remoteEditing);
     ui->internalEditorRadioButton->setChecked(settings.internalRemoteEditor);
@@ -65,14 +65,14 @@ MumeProtocolPage::~MumeProtocolPage()
 
 void MumeProtocolPage::IACPromptCheckBoxStateChanged(int /*unused*/)
 {
-    Config().mumeClientProtocol.IAC_prompt_parser = ui->IACPromptCheckBox->isChecked();
+    setConfig().mumeClientProtocol.IAC_prompt_parser = ui->IACPromptCheckBox->isChecked();
 }
 
 void MumeProtocolPage::remoteEditCheckBoxStateChanged(int /*unused*/)
 {
     const auto useExternalEditor = ui->remoteEditCheckBox->isChecked();
 
-    Config().mumeClientProtocol.remoteEditing = useExternalEditor;
+    setConfig().mumeClientProtocol.remoteEditing = useExternalEditor;
 
     ui->externalEditorCommand->setEnabled(useExternalEditor);
     ui->externalEditorRadioButton->setEnabled(useExternalEditor);
@@ -81,10 +81,10 @@ void MumeProtocolPage::remoteEditCheckBoxStateChanged(int /*unused*/)
 
 void MumeProtocolPage::internalEditorRadioButtonChanged(bool /*unused*/)
 {
-    Config().mumeClientProtocol.internalRemoteEditor = ui->internalEditorRadioButton->isChecked();
+    setConfig().mumeClientProtocol.internalRemoteEditor = ui->internalEditorRadioButton->isChecked();
 }
 
 void MumeProtocolPage::externalEditorCommandTextChanged(QString text)
 {
-    Config().mumeClientProtocol.externalRemoteEditorCommand = std::move(text);
+    setConfig().mumeClientProtocol.externalRemoteEditorCommand = std::move(text);
 }

@@ -50,7 +50,7 @@ GeneralPage::GeneralPage(QWidget *parent)
             this,
             &GeneralPage::tlsEncryptionCheckBoxStateChanged);
     connect(proxyThreadedCheckBox, &QCheckBox::stateChanged, this, [this]() {
-        Config().connection.proxyThreaded = proxyThreadedCheckBox->isChecked();
+        setConfig().connection.proxyThreaded = proxyThreadedCheckBox->isChecked();
     });
 
     connect(emulatedExitsCheckBox,
@@ -79,7 +79,7 @@ GeneralPage::GeneralPage(QWidget *parent)
             this,
             &GeneralPage::displayMumeClockStateChanged);
 
-    const auto &config = Config();
+    const auto &config = getConfig();
     const auto &connection = config.connection;
     const auto &mumeNative = config.mumeNative;
     const auto &autoLoad = config.autoLoad;
@@ -114,58 +114,58 @@ void GeneralPage::selectWorldFileButtonClicked()
     if (!fileName.isEmpty()) {
         autoLoadFileName->setText(fileName);
         autoLoadCheck->setChecked(true);
-        auto &settings = Config().autoLoad;
-        settings.fileName = fileName;
-        settings.autoLoadMap = true;
+        auto &savedAutoLoad = setConfig().autoLoad;
+        savedAutoLoad.fileName = fileName;
+        savedAutoLoad.autoLoadMap = true;
     }
 }
 
 void GeneralPage::remoteNameTextChanged(const QString & /*unused*/)
 {
-    Config().connection.remoteServerName = remoteName->text();
+    setConfig().connection.remoteServerName = remoteName->text();
 }
 
 void GeneralPage::remotePortValueChanged(int /*unused*/)
 {
-    Config().connection.remotePort = static_cast<quint16>(remotePort->value());
+    setConfig().connection.remotePort = static_cast<quint16>(remotePort->value());
 }
 
 void GeneralPage::localPortValueChanged(int /*unused*/)
 {
-    Config().connection.localPort = static_cast<quint16>(localPort->value());
+    setConfig().connection.localPort = static_cast<quint16>(localPort->value());
 }
 
 void GeneralPage::tlsEncryptionCheckBoxStateChanged(int /*unused*/)
 {
-    Config().connection.tlsEncryption = tlsEncryptionCheckBox->isChecked();
+    setConfig().connection.tlsEncryption = tlsEncryptionCheckBox->isChecked();
 }
 
 void GeneralPage::emulatedExitsStateChanged(int /*unused*/)
 {
-    Config().mumeNative.emulatedExits = emulatedExitsCheckBox->isChecked();
+    setConfig().mumeNative.emulatedExits = emulatedExitsCheckBox->isChecked();
 }
 
 void GeneralPage::showHiddenExitFlagsStateChanged(int /*unused*/)
 {
-    Config().mumeNative.showHiddenExitFlags = showHiddenExitFlagsCheckBox->isChecked();
+    setConfig().mumeNative.showHiddenExitFlags = showHiddenExitFlagsCheckBox->isChecked();
 }
 
 void GeneralPage::showNotesStateChanged(int /*unused*/)
 {
-    Config().mumeNative.showNotes = showNotesCheckBox->isChecked();
+    setConfig().mumeNative.showNotes = showNotesCheckBox->isChecked();
 }
 
 void GeneralPage::autoLoadFileNameTextChanged(const QString & /*unused*/)
 {
-    Config().autoLoad.fileName = autoLoadFileName->text();
+    setConfig().autoLoad.fileName = autoLoadFileName->text();
 }
 
 void GeneralPage::autoLoadCheckStateChanged(int /*unused*/)
 {
-    Config().autoLoad.autoLoadMap = autoLoadCheck->isChecked();
+    setConfig().autoLoad.autoLoadMap = autoLoadCheck->isChecked();
 }
 
 void GeneralPage::displayMumeClockStateChanged(int /*unused*/)
 {
-    Config().mumeClock.display = displayMumeClockCheckBox->isChecked();
+    setConfig().mumeClock.display = displayMumeClockCheckBox->isChecked();
 }

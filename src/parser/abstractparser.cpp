@@ -291,7 +291,7 @@ void AbstractParser::parsePrompt(const QString &prompt)
 void AbstractParser::parseExits()
 {
     // REVISIT: Character set encoding/decoding
-    const auto &config = Config();
+    const auto &config = getConfig();
     QByteArray exitsByteArray = config.parser.utf8Charset ? m_exits.toUtf8() : m_exits.toLatin1();
 
     QString str = m_exits;
@@ -449,7 +449,7 @@ void AbstractParser::parseExits()
 
     sendToUser(exitsByteArray.simplified() + cn);
 
-    if (Config().mumeNative.showNotes) {
+    if (getConfig().mumeNative.showNotes) {
         QString ns = room->getNote();
         if (!ns.isEmpty()) {
             QByteArray note = "Note: " + ns.toLatin1() + "\r\n";
@@ -519,7 +519,7 @@ QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
         };
 
         // Extract hidden exit flags
-        if (Config().mumeNative.showHiddenExitFlags) {
+        if (getConfig().mumeNative.showHiddenExitFlags) {
             /* TODO: const char* lowercaseName(ExitFlag) */
             if (ef.contains(ExitFlag::NO_FLEE)) {
                 add_exit_keyword("noflee");
@@ -1272,7 +1272,7 @@ void AbstractParser::sendRoomInfoToUser(const Room *r)
         return;
     }
 
-    const auto &settings = Config().parser;
+    const auto &settings = getConfig().parser;
     static constexpr const auto ESCAPE = "\033"; // also known as "\x1b"
 
     QByteArray roomName("\r\n");
@@ -1395,7 +1395,7 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
     QByteArray cn = enhanceExits(r);
     sendToUser(etmp.toLatin1() + cn);
 
-    if (Config().mumeNative.showNotes) {
+    if (getConfig().mumeNative.showNotes) {
         QString ns = r->getNote();
         if (!ns.isEmpty()) {
             QByteArray note = "Note: " + ns.toLatin1() + "\r\n";

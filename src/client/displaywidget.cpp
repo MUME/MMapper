@@ -40,7 +40,7 @@ const QRegExp DisplayWidget::s_ansiRx(R"(\0033\[((?:\d+;)*\d+)m)");
 DisplayWidget::DisplayWidget(QWidget *parent)
     : QTextEdit(parent)
 {
-    const auto &settings = Config().integratedClient;
+    const auto &settings = getConfig().integratedClient;
 
     setReadOnly(true);
     setOverwriteMode(true);
@@ -113,7 +113,7 @@ void DisplayWidget::resizeEvent(QResizeEvent *event)
     setLineWrapColumnOrWidth(x);
     verticalScrollBar()->setPageStep(y);
     emit showMessage(QString("Dimensions: %1x%2").arg(x).arg(y), 1000);
-    const auto &settings = Config().integratedClient;
+    const auto &settings = getConfig().integratedClient;
     if (settings.autoResizeTerminal) {
         emit windowSizeChanged(x, y);
     }
@@ -181,9 +181,10 @@ void DisplayWidget::displayText(const QString &str)
     }
 
     // Ensure we limit the scrollback history
-    int lineLimit = Config().integratedClient.linesOfScrollback;
-    if (document()->lineCount() > lineLimit) {
-        int trimLines = document()->lineCount() - lineLimit;
+    const int lineLimit = getConfig().integratedClient.linesOfScrollback;
+    const int lineCount = document()->lineCount();
+    if (lineCount > lineLimit) {
+        const int trimLines = lineCount - lineLimit;
         m_cursor.movePosition(QTextCursor::Start);
         m_cursor.movePosition(QTextCursor::Down, QTextCursor::KeepAnchor, trimLines);
         m_cursor.removeSelectedText();

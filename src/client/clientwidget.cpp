@@ -174,12 +174,12 @@ ClientWidget::~ClientWidget()
 
 void ClientWidget::readSettings()
 {
-    restoreGeometry(Config().readIntegratedMudClientGeometry());
+    restoreGeometry(getConfig().integratedClient.geometry);
 }
 
-void ClientWidget::writeSettings()
+void ClientWidget::writeSettings() const
 {
-    Config().writeIntegratedMudClientGeometry(saveGeometry());
+    setConfig().integratedClient.geometry = saveGeometry();
 }
 
 void ClientWidget::closeEvent(QCloseEvent *event)

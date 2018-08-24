@@ -78,7 +78,7 @@ public:
     virtual QSize sizeHint() const override;
 };
 
-class MainWindow : public QMainWindow
+class MainWindow final : public QMainWindow
 {
     Q_OBJECT
 

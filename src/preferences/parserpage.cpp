@@ -44,7 +44,7 @@ ParserPage::ParserPage(QWidget *parent)
 
     updateColors();
 
-    const auto &settings = Config().parser;
+    const auto &settings = getConfig().parser;
     charset->setCurrentIndex(
         static_cast<int>(settings.utf8Charset ? UiCharset::UTF8 : UiCharset::AsciiOrLatin1));
 
@@ -109,13 +109,13 @@ ParserPage::ParserPage(QWidget *parent)
 
 void ParserPage::charsetChanged(int /* unused */)
 {
-    Config().parser.utf8Charset = (static_cast<UiCharset>(charset->currentIndex())
+    setConfig().parser.utf8Charset = (static_cast<UiCharset>(charset->currentIndex())
                                    == UiCharset::UTF8);
 }
 
 void ParserPage::suppressXmlTagsCheckBoxStateChanged(int /*unused*/)
 {
-    Config().parser.removeXmlTags = suppressXmlTagsCheckBox->isChecked();
+    setConfig().parser.removeXmlTags = suppressXmlTagsCheckBox->isChecked();
 }
 
 void ParserPage::savePatterns()
@@ -130,7 +130,7 @@ void ParserPage::savePatterns()
         return result;
     };
 
-    auto &settings = Config().parser;
+    auto &settings = setConfig().parser;
     settings.moveForcePatternsList = save(forcePatternsList);
     settings.noDescriptionPatternsList = save(endDescPatternsList);
 }
@@ -263,7 +263,7 @@ void ParserPage::updateColors()
     };
 
     // room name color
-    const auto &settings = Config().parser;
+    const auto &settings = getConfig().parser;
     roomNameColorLabel->setText(ansiString(settings.roomNameColor));
 
     AnsiCombo::makeWidgetColoured(labelRoomColor, settings.roomNameColor);
@@ -343,7 +343,7 @@ void ParserPage::generateNewAnsiColor()
         return result;
     };
 
-    auto &settings = Config().parser;
+    auto &settings = setConfig().parser;
     settings.roomNameColor = getColor(roomNameAnsiColor,
                                       roomNameAnsiColorBG,
                                       roomNameAnsiBold,

@@ -55,10 +55,10 @@ MumeClockWidget::~MumeClockWidget()
 void MumeClockWidget::updateLabel()
 {
     // Ensure we have updated the epoch
-    Config().mumeClock.startEpoch = m_clock->getMumeStartEpoch();
+    setConfig().mumeClock.startEpoch = m_clock->getMumeStartEpoch();
 
     // Hide or show the widget if necessary
-    if (!Config().mumeClock.display) {
+    if (!getConfig().mumeClock.display) {
         hide();
         // Slow down the interval to a reasonable number
         m_timer->setInterval(60 * 1000);

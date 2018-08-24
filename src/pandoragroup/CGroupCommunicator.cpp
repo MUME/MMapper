@@ -144,7 +144,7 @@ void CGroupCommunicator::sendGTell(const QByteArray &tell)
     // form the gtell QDomNode first.
     QDomDocument doc("datagram");
     QDomElement root = doc.createElement("gtell");
-    root.setAttribute("from", QString(Config().groupManager.charName));
+    root.setAttribute("from", QString(getConfig().groupManager.charName));
 
     QDomText t = doc.createTextNode("dataText");
     t.setNodeValue(tell);
@@ -299,7 +299,7 @@ void CGroupServerCommunicator::retrieveData(CGroupClient *const connection,
 
 void CGroupServerCommunicator::sendCharUpdate(QDomNode blob)
 {
-    if (Config().groupManager.shareSelf) {
+    if (getConfig().groupManager.shareSelf) {
         QByteArray message = formMessageBlock(Messages::UPDATE_CHAR, blob);
         server.sendToAll(message);
     }
@@ -368,7 +368,7 @@ void CGroupServerCommunicator::sendGroupInformation(CGroupClient *const connecti
             continue;
         }
         // Only share self if we enabled it
-        if (getGroup()->getSelf() == character && !Config().groupManager.shareSelf) {
+        if (getGroup()->getSelf() == character && !getConfig().groupManager.shareSelf) {
             continue;
         }
         CGroupCommunicator::sendCharUpdate(connection, character->toXML());
@@ -434,7 +434,7 @@ void CGroupServerCommunicator::disconnectCommunicator()
 void CGroupServerCommunicator::connectCommunicator()
 {
     disconnectCommunicator();
-    const auto localPort = static_cast<quint16>(Config().groupManager.localPort);
+    const auto localPort = static_cast<quint16>(getConfig().groupManager.localPort);
     emit sendLog(QString("Listening on port %1").arg(localPort));
     if (!server.listen(QHostAddress::Any, localPort)) {
         emit sendLog("Failed to start a group Manager server");
@@ -489,7 +489,7 @@ void CGroupClientCommunicator::errorInConnection(CGroupClient *const connection,
     case QAbstractSocket::ConnectionRefusedError:
         str = QString("Tried to connect to %1 on port %2")
                   .arg(connection->peerName())
-                  .arg(Config().groupManager.remotePort);
+                  .arg(getConfig().groupManager.remotePort);
         emit messageBox(QString("Connection refused: %1.").arg(str));
         break;
     case QAbstractSocket::RemoteHostClosedError:
@@ -633,8 +633,8 @@ void CGroupClientCommunicator::connectCommunicator()
 
     client.setConnectionState(ConnectionStates::Connecting);
     client.setProtocolState(ProtocolStates::AwaitingLogin);
-    client.connectToHost(Config().groupManager.host,
-                         static_cast<quint16>(Config().groupManager.remotePort));
+    client.connectToHost(getConfig().groupManager.host,
+                         static_cast<quint16>(getConfig().groupManager.remotePort));
     if (!client.waitForConnected(5000)) {
         if (client.getConnectionState() == ConnectionStates::Connecting) {
             client.setConnectionState(ConnectionStates::Quiting);

@@ -102,14 +102,14 @@ ConstString GRP_CANVAS = "Canvas";
 ConstString GRP_CONNECTION = "Connection";
 ConstString GRP_GENERAL = "General";
 ConstString GRP_GROUP_MANAGER = "Group Manager";
-ConstString GRP_INFOMARKSEDITDLG = "InfoMarksEditDlg";
+ConstString GRP_INFOMARKS_DIALOG = "InfoMarks Dialog";
 ConstString GRP_INTEGRATED_MUD_CLIENT = "Integrated Mud Client";
 ConstString GRP_MUME_CLIENT_PROTOCOL = "Mume client protocol";
 ConstString GRP_MUME_CLOCK = "Mume Clock";
 ConstString GRP_MUME_NATIVE = "Mume native";
 ConstString GRP_PARSER = "Parser";
 ConstString GRP_PATH_MACHINE = "Path Machine";
-ConstString GRP_ROOMEDITATTRDLG = "RoomEditAttrDlg";
+ConstString GRP_ROOMEDIT_DIALOG = "RoomEdit Dialog";
 
 ConstString KEY_ABSOLUTE_PATH_ACCEPTANCE = "absolute path acceptance";
 ConstString KEY_ALWAYS_ON_TOP = "Always On Top";
@@ -132,6 +132,7 @@ ConstString KEY_FILE_NAME = "File name";
 ConstString KEY_FONT = "Font";
 ConstString KEY_FOREGROUND_COLOR = "Foreground color";
 ConstString KEY_HOST = "host";
+ConstString KEY_INFOMARKSEDITDLG_GEOMETRY = "InfoMarks Dialog Geometry";
 ConstString KEY_LAST_MAP_LOAD_DIRECTORY = "Last map load directory";
 ConstString KEY_LINES_OF_INPUT_HISTORY = "Lines of input history";
 ConstString KEY_LINES_OF_SCROLLBACK = "Lines of scrollback";
@@ -145,9 +146,9 @@ ConstString KEY_MOVE_FORCE_PATTERNS_FOR_XML = "Move force patterns for XML";
 ConstString KEY_MULTIPLE_CONNECTIONS_PENALTY = "multiple connections penalty";
 ConstString KEY_MUME_CHARSET_IS_UTF_8 = "MUME charset is UTF-8";
 ConstString KEY_MUME_START_EPOCH = "Mume start epoch";
+ConstString KEY_NO_LAUNCH_PANEL = "No launch panel";
 ConstString KEY_NO_ROOM_DESCRIPTION_PATTERNS = "No room description patterns";
 ConstString KEY_NO_SPLASH = "No splash screen";
-ConstString KEY_NO_LAUNCH_PANEL = "No launch panel";
 ConstString KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES = "Number of anti-aliasing samples";
 ConstString KEY_PASSWORD_PATTERN = "Password pattern";
 ConstString KEY_PROMPT_PATTERN = "Prompt pattern";
@@ -159,6 +160,7 @@ ConstString KEY_REMOTE_PORT = "remote port";
 ConstString KEY_REMOVE_XML_TAGS = "Remove XML tags";
 ConstString KEY_ROOM_CREATION_PENALTY = "room creation penalty";
 ConstString KEY_ROOM_DESC_ANSI_COLOR = "Room desc ansi color";
+ConstString KEY_ROOMEDITATTRDLG_GEOMETRY = "Room Attribs Dialog Geometry";
 ConstString KEY_ROOM_MATCHING_TOLERANCE = "room matching tolerance";
 ConstString KEY_ROOM_NAME_ANSI_COLOR = "Room name ansi color";
 ConstString KEY_ROWS = "Rows";
@@ -286,6 +288,8 @@ static uint16_t sanitizeUint16(const int input, const uint16_t defaultValue)
         GROUP_CALLBACK(callback, GRP_GROUP_MANAGER, groupManager); \
         GROUP_CALLBACK(callback, GRP_MUME_CLOCK, mumeClock); \
         GROUP_CALLBACK(callback, GRP_INTEGRATED_MUD_CLIENT, integratedClient); \
+        GROUP_CALLBACK(callback, GRP_INFOMARKS_DIALOG, infoMarksDialog); \
+        GROUP_CALLBACK(callback, GRP_ROOMEDIT_DIALOG, roomEditDialog); \
     } while (false)
 
 void Configuration::read()
@@ -430,8 +434,8 @@ void Configuration::GroupManagerSettings::read(QSettings &conf)
 {
     state = sanitizeGroupManagerState(
         conf.value(KEY_STATE, static_cast<int>(GroupManagerState::Off)).toInt());
-    localPort = conf.value(KEY_LOCAL_PORT, 4243).toInt();
-    remotePort = conf.value(KEY_REMOTE_PORT, 4243).toInt();
+    localPort = static_cast<quint16>(conf.value(KEY_LOCAL_PORT, 4243).toInt());
+    remotePort = static_cast<quint16>(conf.value(KEY_REMOTE_PORT, 4243).toInt());
     host = conf.value(KEY_HOST, "localhost").toByteArray();
     charName = conf.value(KEY_CHARACTER_NAME, QHostInfo::localHostName()).toByteArray();
     shareSelf = conf.value(KEY_SHARE_SELF, true).toBool();
@@ -461,6 +465,17 @@ void Configuration::IntegratedMudClientSettings::read(QSettings &conf)
     tabCompletionDictionarySize = conf.value(KEY_TAB_COMPLETION_DICTIONARY_SIZE, 100).toInt();
     clearInputOnEnter = conf.value(KEY_CLEAR_INPUT_ON_ENTER, true).toBool();
     autoResizeTerminal = conf.value(KEY_AUTO_RESIZE_TERMINAL, false).toBool();
+    geometry = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
+}
+
+void Configuration::InfoMarksDialog::read(QSettings &conf)
+{
+    geometry = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
+}
+
+void Configuration::RoomEditDialog::read(QSettings &conf)
+{
+    geometry = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
 }
 
 void Configuration::GeneralSettings::write(QSettings &conf) const
@@ -573,81 +588,26 @@ void Configuration::IntegratedMudClientSettings::write(QSettings &conf) const
     conf.setValue(KEY_TAB_COMPLETION_DICTIONARY_SIZE, tabCompletionDictionarySize);
     conf.setValue(KEY_CLEAR_INPUT_ON_ENTER, clearInputOnEnter);
     conf.setValue(KEY_AUTO_RESIZE_TERMINAL, autoResizeTerminal);
+    conf.setValue(KEY_WINDOW_GEOMETRY, geometry);
 }
 
-Configuration &Config()
+void Configuration::InfoMarksDialog::write(QSettings &conf) const
+{
+    conf.setValue(KEY_WINDOW_GEOMETRY, geometry);
+}
+
+void Configuration::RoomEditDialog::write(QSettings &conf) const
+{
+    conf.setValue(KEY_WINDOW_GEOMETRY, geometry);
+}
+
+Configuration &setConfig()
 {
     static Configuration conf{};
     return conf;
 }
 
-bool Configuration::isChanged() const
+const Configuration &getConfig()
 {
-    return configurationChanged;
-}
-
-/* REVISIT: convert to global data members? */
-QByteArray Configuration::readIntegratedMudClientGeometry()
-{
-    SETTINGS(conf);
-
-    conf.beginGroup(GRP_INTEGRATED_MUD_CLIENT);
-    QByteArray result = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
-    conf.endGroup();
-
-    return result;
-}
-
-/* REVISIT: convert to global data members? */
-void Configuration::writeIntegratedMudClientGeometry(const QByteArray &geometry) const
-{
-    SETTINGS(conf);
-
-    conf.beginGroup(GRP_INTEGRATED_MUD_CLIENT);
-    conf.setValue(KEY_WINDOW_GEOMETRY, geometry);
-    conf.endGroup();
-}
-
-/* REVISIT: convert to global data member? */
-QByteArray Configuration::readInfoMarksEditDlgGeometry()
-{
-    SETTINGS(conf);
-
-    conf.beginGroup(GRP_INFOMARKSEDITDLG);
-    QByteArray result = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
-    conf.endGroup();
-
-    return result;
-}
-
-/* REVISIT: convert to global data member? */
-void Configuration::writeInfoMarksEditDlgGeometry(const QByteArray &geometry) const
-{
-    SETTINGS(conf);
-
-    conf.beginGroup(GRP_INFOMARKSEDITDLG);
-    conf.setValue(KEY_WINDOW_GEOMETRY, geometry);
-    conf.endGroup();
-}
-
-/* REVISIT: convert to global data member? */
-QByteArray Configuration::readRoomEditAttrGeometry()
-{
-    SETTINGS(conf);
-
-    conf.beginGroup(GRP_ROOMEDITATTRDLG);
-    QByteArray result = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
-    conf.endGroup();
-
-    return result;
-}
-
-/* REVISIT: convert to global data member? */
-void Configuration::writeRoomEditAttrDlgGeometry(const QByteArray &geometry) const
-{
-    SETTINGS(conf);
-
-    conf.beginGroup(GRP_ROOMEDITATTRDLG);
-    conf.setValue(KEY_WINDOW_GEOMETRY, geometry);
-    conf.endGroup();
+    return setConfig();
 }

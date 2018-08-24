@@ -46,7 +46,6 @@ class Mmapper2PathMachine final : public PathMachine
 {
 private:
     Q_OBJECT
-    Configuration &config;
 
 public slots:
     void event(const SigParseEvent &) override;

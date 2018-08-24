@@ -252,7 +252,7 @@ bool Proxy::init()
     m_userSocket->write(ba);
     m_userSocket->flush();
 
-    m_mudSocket = (NO_OPEN_SSL || !Config().connection.tlsEncryption)
+    m_mudSocket = (NO_OPEN_SSL || !getConfig().connection.tlsEncryption)
                       ? dynamic_cast<MumeSocket *>(new MumeTcpSocket(this))
                       : dynamic_cast<MumeSocket *>(new MumeSslSocket(this));
 
@@ -274,7 +274,7 @@ bool Proxy::init()
 
 void Proxy::onMudConnected()
 {
-    const auto &settings = Config().mumeClientProtocol;
+    const auto &settings = getConfig().mumeClientProtocol;
 
     m_serverConnected = true;
 

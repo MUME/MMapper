@@ -80,17 +80,18 @@ void Mmapper2Group::updateSelf()
         return;
     }
 
-    if (group->getSelf()->getName() != Config().groupManager.charName) {
+    const Configuration::GroupManagerSettings &groupManagerSettings = getConfig().groupManager;
+    if (group->getSelf()->getName() != groupManagerSettings.charName) {
         QByteArray oldname = group->getSelf()->getName();
-        QByteArray newname = Config().groupManager.charName;
+        QByteArray newname = groupManagerSettings.charName;
 
         if (network) {
             network->renameConnection(oldname, newname);
         }
         group->getSelf()->setName(newname);
 
-    } else if (group->getSelf()->getColor() != Config().groupManager.color) {
-        group->getSelf()->setColor(Config().groupManager.color);
+    } else if (group->getSelf()->getColor() != groupManagerSettings.color) {
+        group->getSelf()->setColor(groupManagerSettings.color);
 
     } else {
         return;
@@ -418,10 +419,10 @@ void Mmapper2Group::setType(GroupManagerState newState)
     }
 
     qDebug() << "Network type set to" << static_cast<int>(newState);
-    Config().groupManager.state = newState;
+    setConfig().groupManager.state = newState;
 
     if (newState != GroupManagerState::Off) {
-        if (Config().groupManager.rulesWarning) {
+        if (getConfig().groupManager.rulesWarning) {
             emit messageBox("Warning: MUME Rules",
                             "Using the GroupManager in PK situations is ILLEGAL "
                             "according to RULES ACTIONS.\n\nBe sure to disable the "

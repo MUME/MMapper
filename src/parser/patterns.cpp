@@ -30,6 +30,8 @@
 
 #include "../configuration/configuration.h"
 
+const Configuration::ParserSettings &Patterns::parserConfig = getConfig().parser;
+
 QRegExp Patterns::g_rx;
 
 const QRegExp Patterns::g_score(R"(\d+/\d+ hits(?:, \d+/\d+ mana,)? and \d+/\d+ moves.)");
@@ -113,7 +115,7 @@ bool Patterns::matchScore(const QString &str)
 
 bool Patterns::matchMoveForcePatterns(const QString &str)
 {
-    for (auto &pattern : Config().parser.moveForcePatternsList) {
+    for (auto &pattern : parserConfig.moveForcePatternsList) {
         if (matchPattern(pattern, str)) {
             return true;
         }
@@ -123,7 +125,7 @@ bool Patterns::matchMoveForcePatterns(const QString &str)
 
 bool Patterns::matchNoDescriptionPatterns(const QString &str)
 {
-    for (auto &pattern : Config().parser.noDescriptionPatternsList) {
+    for (auto &pattern : parserConfig.noDescriptionPatternsList) {
         if (matchPattern(pattern, str)) {
             return true;
         }
@@ -133,20 +135,20 @@ bool Patterns::matchNoDescriptionPatterns(const QString &str)
 
 bool Patterns::matchPasswordPatterns(const QByteArray &str)
 {
-    return matchPattern(Config().parser.passwordPattern, str);
+    return matchPattern(parserConfig.passwordPattern, str);
 }
 
 bool Patterns::matchPromptPatterns(const QByteArray &str)
 {
-    return matchPattern(Config().parser.promptPattern, str);
+    return matchPattern(parserConfig.promptPattern, str);
 }
 
 bool Patterns::matchLoginPatterns(const QByteArray &str)
 {
-    return matchPattern(Config().parser.loginPattern, str);
+    return matchPattern(parserConfig.loginPattern, str);
 }
 
 bool Patterns::matchMenuPromptPatterns(const QByteArray &str)
 {
-    return matchPattern(Config().parser.menuPromptPattern, str);
+    return matchPattern(parserConfig.menuPromptPattern, str);
 }

@@ -35,7 +35,7 @@ GraphicsPage::GraphicsPage(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::GraphicsPage)
 {
-    const auto &settings = Config().canvas;
+    const auto &settings = getConfig().canvas;
 
     ui->setupUi(this);
 
@@ -90,7 +90,7 @@ GraphicsPage::GraphicsPage(QWidget *parent)
 
 void GraphicsPage::changeColorClicked()
 {
-    auto &backgroundColor = Config().canvas.backgroundColor;
+    auto &backgroundColor = setConfig().canvas.backgroundColor;
     const QColor newColor = QColorDialog::getColor(backgroundColor, this);
     if (newColor.isValid() && newColor != backgroundColor) {
         QPixmap bgPix(16, 16);
@@ -102,40 +102,40 @@ void GraphicsPage::changeColorClicked()
 
 void GraphicsPage::antialiasingSamplesTextChanged(const QString & /*unused*/)
 {
-    Config().canvas.antialiasingSamples = ui->antialiasingSamplesComboBox->currentText().toInt();
+    setConfig().canvas.antialiasingSamples = ui->antialiasingSamplesComboBox->currentText().toInt();
 }
 
 void GraphicsPage::trilinearFilteringStateChanged(int /*unused*/)
 {
-    Config().canvas.trilinearFiltering = ui->trilinearFilteringCheckBox->isChecked();
+    setConfig().canvas.trilinearFiltering = ui->trilinearFilteringCheckBox->isChecked();
 }
 
 void GraphicsPage::softwareOpenGLStateChanged(int /*unused*/)
 {
-    Config().canvas.softwareOpenGL = ui->softwareOpenGLCheckBox->isChecked();
+    setConfig().canvas.softwareOpenGL = ui->softwareOpenGLCheckBox->isChecked();
 }
 
 void GraphicsPage::updatedStateChanged(int /*unused*/)
 {
-    Config().canvas.showUpdated = ui->updated->isChecked();
+    setConfig().canvas.showUpdated = ui->updated->isChecked();
 }
 
 void GraphicsPage::drawNotMappedExitsStateChanged(int /*unused*/)
 {
-    Config().canvas.drawNotMappedExits = ui->drawNotMappedExits->isChecked();
+    setConfig().canvas.drawNotMappedExits = ui->drawNotMappedExits->isChecked();
 }
 
 void GraphicsPage::drawNoMatchExitsStateChanged(int /*unused*/)
 {
-    Config().canvas.drawNoMatchExits = ui->drawNoMatchExits->isChecked();
+    setConfig().canvas.drawNoMatchExits = ui->drawNoMatchExits->isChecked();
 }
 
 void GraphicsPage::drawDoorNamesStateChanged(int /*unused*/)
 {
-    Config().canvas.drawDoorNames = ui->drawDoorNames->isChecked();
+    setConfig().canvas.drawDoorNames = ui->drawDoorNames->isChecked();
 }
 
 void GraphicsPage::drawUpperLayersTexturedStateChanged(int /*unused*/)
 {
-    Config().canvas.drawUpperLayersTextured = ui->drawUpperLayersTextured->isChecked();
+    setConfig().canvas.drawUpperLayersTextured = ui->drawUpperLayersTextured->isChecked();
 }

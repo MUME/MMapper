@@ -160,10 +160,14 @@ MapCanvas::MapCanvas(MapData *mapData,
             &MapCanvas::onInfoMarksEditDlgClose);
     connect(m_data, SIGNAL(updateCanvas()), this, SLOT(update()));
 
-    int samples = Config().canvas.antialiasingSamples;
-    if (samples <= 0) {
-        samples = 2; // Default to 2 samples to prevent restart
-    }
+    const auto getAaSamples = []() {
+        int samples = getConfig().canvas.antialiasingSamples;
+        if (samples <= 0) {
+            samples = 2; // Default to 2 samples to prevent restart
+        }
+        return samples;
+    };
+    const int samples = getAaSamples();
     QSurfaceFormat format;
     format.setVersion(1, 0);
     format.setSamples(samples);
@@ -336,7 +340,7 @@ void MapCanvas::forceMapperToRoom()
         tmpSel = m_data->select(Coordinate(GLtoMap(m_sel1.x), GLtoMap(m_sel1.y), m_sel1.layer));
     }
     if (tmpSel->size() == 1) {
-        if (Config().general.mapMode == MapMode::OFFLINE) {
+        if (getConfig().general.mapMode == MapMode::OFFLINE) {
             const Room *r = tmpSel->values().front();
             auto ev = ParseEvent::createEvent(CommandIdType::UNKNOWN,
                                               r->getName(),
@@ -992,7 +996,7 @@ void MapCanvas::initializeGL()
                                  QOpenGLDebugMessage::AnySeverity);
     }
 
-    if (Config().canvas.antialiasingSamples > 0) {
+    if (getConfig().canvas.antialiasingSamples > 0) {
         m_opengl.apply(XEnable{XOption::MULTISAMPLE});
     }
 
@@ -1076,7 +1080,7 @@ void MapCanvas::moveMarker(const Coordinate &c)
 void MapCanvas::drawGroupCharacters()
 {
     CGroup *const group = m_groupManager->getGroup();
-    if ((group == nullptr) || Config().groupManager.state == GroupManagerState::Off
+    if ((group == nullptr) || getConfig().groupManager.state == GroupManagerState::Off
         || m_data->isEmpty()) {
         return;
     }
@@ -1084,7 +1088,7 @@ void MapCanvas::drawGroupCharacters()
     GroupSelection *const selection = group->selectAll();
     for (auto &character : *selection) {
         const RoomId id = character->getPosition();
-        if (character->getName() != Config().groupManager.charName) {
+        if (character->getName() != getConfig().groupManager.charName) {
             const RoomSelection *const roomSelection = m_data->select();
             if (const Room *const r = m_data->getRoom(id, roomSelection)) {
                 drawCharacter(r->getPosition(), character->getColor());
@@ -1164,7 +1168,7 @@ void MapCanvas::drawCharacter(const Coordinate &c, const QColor &color)
 void MapCanvas::paintGL()
 {
     // Background Color
-    const auto backgroundColor = Config().canvas.backgroundColor;
+    const auto backgroundColor = getConfig().canvas.backgroundColor;
     m_opengl.glClearColor(static_cast<float>(backgroundColor.redF()),
                           static_cast<float>(backgroundColor.greenF()),
                           static_cast<float>(backgroundColor.blueF()),
@@ -1231,7 +1235,7 @@ void MapCanvas::paintGL()
     //paint char current position
     if (!m_data->isEmpty()) {
         // Use the player's selected color
-        const QColor color = Config().groupManager.color;
+        const QColor color = getConfig().groupManager.color;
         drawCharacter(m_data->getPosition(), color);
     }
 
@@ -1446,7 +1450,7 @@ void MapCanvas::drawPathStart(const Coordinate &sc, std::vector<Vec3d> &verts)
     m_opengl.glTranslated(x1, y1, 0);
 
     // Use the player's color
-    QColor color = Config().groupManager.color;
+    const QColor color = getConfig().groupManager.color;
     m_opengl.apply(XColor4d{color});
     m_opengl.apply(XEnable{XOption::BLEND});
     m_opengl.apply(XDevicePointSize{4.0});
@@ -1503,7 +1507,7 @@ void MapCanvas::drawPathEnd(const double dx,
 
 void MapCanvas::initTextures()
 {
-    const auto wantTrilinear = Config().canvas.trilinearFiltering;
+    const auto wantTrilinear = getConfig().canvas.trilinearFiltering;
 #define LOAD_PIXMAP_ARRAY(x) \
     do { \
         loadPixmapArray(this->m_textures.x, #x); \

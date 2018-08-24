@@ -31,6 +31,8 @@
 #include <QStringList>
 #include <QtCore>
 
+#include "../configuration/configuration.h"
+
 class QByteArray;
 class QRegExp;
 class QString;
@@ -38,7 +40,9 @@ class QStringList;
 
 class Patterns
 {
-    // If these were moved to .cpp file, then we wouldn't need headers.
+private:
+    // If these were moved to .cpp file, then we wouldn't need to include headers.
+    static const Configuration::ParserSettings &parserConfig;
     static QRegExp g_rx;
     static const QStringList g_dynamicDescriptionPatternsList;
     static const QRegExp g_score;

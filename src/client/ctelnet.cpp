@@ -171,7 +171,7 @@ cTelnet::cTelnet(QObject *const parent)
     /** MMapper Telnet */
     termType = QString("MMapper %1").arg(MMAPPER_VERSION);
 
-    encoding = Config().parser.utf8Charset ? UTF_8_ENCODING : LATIN_1_ENCODING;
+    encoding = getConfig().parser.utf8Charset ? UTF_8_ENCODING : LATIN_1_ENCODING;
     reset();
 
     setupEncoding();
@@ -196,7 +196,7 @@ void cTelnet::connectToHost()
     if (socket.state() != QAbstractSocket::UnconnectedState) {
         socket.abort();
     }
-    socket.connectToHost(QHostAddress::LocalHost, Config().connection.localPort);
+    socket.connectToHost(QHostAddress::LocalHost, getConfig().connection.localPort);
     socket.waitForConnected(3000);
 }
 
@@ -240,7 +240,7 @@ void cTelnet::setupEncoding()
 
     qDebug() << "* Switching to" << encoding << "encoding";
 
-    Config().parser.utf8Charset
+    setConfig().parser.utf8Charset
         = (QString::compare(QString(encoding), UTF_8_ENCODING, Qt::CaseInsensitive) == 0);
 
     // MUME can understand US-ASCII, ISO-8859-1, or UTF-8
@@ -418,7 +418,7 @@ void cTelnet::processTelnetCommand(const QByteArray &command)
             if (option == OPT_NAWS) { //NAWS here - window size info must be sent
                 windowSizeChanged(current.x, current.y);
             } else if (myOptionState[OPT_CHARSET] && option == OPT_CHARSET) {
-                QString myCharacterSet = Config().parser.utf8Charset ? UTF_8_ENCODING
+                const QString myCharacterSet = getConfig().parser.utf8Charset ? UTF_8_ENCODING
                                                                      : LATIN_1_ENCODING;
                 QByteArray s;
                 s += TN_IAC;
@@ -513,7 +513,7 @@ void cTelnet::processTelnetCommand(const QByteArray &command)
                         if (iacPos > 6 && command[4] != '[') {
                             bool accepted = false;
                             // TODO: Add US-ASCII to Parser dropdown
-                            QString myCharacterSet = Config().parser.utf8Charset ? UTF_8_ENCODING
+                            const QString myCharacterSet = getConfig().parser.utf8Charset ? UTF_8_ENCODING
                                                                                  : LATIN_1_ENCODING;
 
                             // Split remainder into delim and IAC

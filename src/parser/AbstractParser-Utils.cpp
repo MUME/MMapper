@@ -28,7 +28,7 @@
 
 bool isOffline()
 {
-    return Config().general.mapMode == MapMode::OFFLINE;
+    return getConfig().general.mapMode == MapMode::OFFLINE;
 }
 
 bool isOnline()
