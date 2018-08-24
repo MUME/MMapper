@@ -70,15 +70,12 @@ SharedParseEvent RoomFactory::getEvent(const Room *const room) const
     }
     exitFlags.setValid();
 
-    auto promptFlags = PromptFlagsType{room->getTerrainType()};
-    promptFlags.setValid();
-
     return ParseEvent::createEvent(CommandIdType::UNKNOWN,
                                    room->getName(),
                                    room->getDynamicDescription(),
                                    room->getStaticDescription(),
                                    exitFlags,
-                                   promptFlags,
+                                   PromptFlagsType::fromRoomTerrainType(room->getTerrainType()),
                                    ConnectedRoomFlagsType{});
 }
 

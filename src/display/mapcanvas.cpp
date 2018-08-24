@@ -343,7 +343,8 @@ void MapCanvas::forceMapperToRoom()
                                               r->getDynamicDescription(),
                                               r->getStaticDescription(),
                                               ExitsFlagsType{},
-                                              PromptFlagsType{},
+                                              PromptFlagsType::fromRoomTerrainType(
+                                                  r->getTerrainType()),
                                               ConnectedRoomFlagsType{});
 
             // FIXME: need to force MainWindow's Mmapper2PathMachine's PathMachine's state to SYNCING,

@@ -46,22 +46,22 @@ private:
     uint8_t flags{};
 
 private:
-    static uint8_t encodeTerrainType(RoomTerrainType rtt)
+    static uint8_t encodeTerrainType(const RoomTerrainType rtt)
     {
         return static_cast<uint8_t>(clamp(static_cast<int>(rtt), 0, 15));
     }
 
 public:
     explicit PromptFlagsType() = default;
-    explicit PromptFlagsType(uint8_t flags)
-        : flags{flags}
+
+public:
+    /// NOTE: This sets the valid flag on the result.
+    static PromptFlagsType fromRoomTerrainType(const RoomTerrainType rtt)
     {
-        // REVISIT: turn this into an "unsafe" static function?
-    }
-    explicit PromptFlagsType(RoomTerrainType rtt)
-        : PromptFlagsType{}
-    {
-        setTerrainType(rtt);
+        PromptFlagsType result{};
+        result.setTerrainType(rtt);
+        result.setValid();
+        return result;
     }
 
 public:
@@ -78,7 +78,7 @@ public:
     {
         return static_cast<RoomTerrainType>(flags & static_cast<uint8_t>(TERRAIN_TYPE));
     }
-    void setTerrainType(RoomTerrainType type)
+    void setTerrainType(const RoomTerrainType type)
     {
         using flags_type = decltype(flags);
         flags = static_cast<flags_type>(flags & ~TERRAIN_TYPE);

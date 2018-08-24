@@ -1236,7 +1236,8 @@ void AbstractParser::doOfflineCharacterMove()
                                               r->getDynamicDescription(),
                                               r->getStaticDescription(),
                                               ExitsFlagsType{},
-                                              PromptFlagsType{},
+                                              PromptFlagsType::fromRoomTerrainType(
+                                                  r->getTerrainType()),
                                               ConnectedRoomFlagsType{});
             emit event(SigParseEvent{ev});
             emit showPath(queue, true);

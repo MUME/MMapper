@@ -45,8 +45,7 @@ void TestParser::createParseEventTest()
     auto terrain = RoomTerrainType::INDOORS;
     ExitsFlagsType eFlags{};
     eFlags.setValid();
-    PromptFlagsType pFlags{terrain};
-    pFlags.setValid();
+    auto pFlags = PromptFlagsType::fromRoomTerrainType(terrain);
     ConnectedRoomFlagsType cFlags{};
     cFlags.setValid();
     auto event = ParseEvent::createEvent(CommandIdType::NORTH,
