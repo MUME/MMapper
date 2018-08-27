@@ -202,12 +202,9 @@
     </widget>
    </item>
    <item>
-    <widget class="QFrame" name="frame">
-     <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Sunken</enum>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Startup</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
       <property name="leftMargin">
@@ -225,7 +222,24 @@
       <property name="spacing">
        <number>6</number>
       </property>
-      <item row="0" column="2">
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="autoLoadCheck">
+        <property name="text">
+         <string>Auto load world:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="autoLoadFileName">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
        <widget class="QPushButton" name="selectWorldFileButton">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -238,20 +252,10 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="autoLoadFileName">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="0">
-       <widget class="QCheckBox" name="autoLoadCheck">
+       <widget class="QCheckBox" name="showLaunchPanelCheckBox">
         <property name="text">
-         <string>Auto load world:</string>
+         <string>Show launch panel</string>
         </property>
        </widget>
       </item>

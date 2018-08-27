@@ -63,6 +63,9 @@ GeneralPage::GeneralPage(QWidget *parent)
             &GeneralPage::showHiddenExitFlagsStateChanged);
     connect(showNotesCheckBox, &QCheckBox::stateChanged, this, &GeneralPage::showNotesStateChanged);
 
+    connect(showLaunchPanelCheckBox, &QCheckBox::stateChanged, this, [this]() {
+        setConfig().general.noLaunchPanel = !showLaunchPanelCheckBox->isChecked();
+    });
     connect(autoLoadFileName,
             &QLineEdit::textChanged,
             this,
@@ -99,6 +102,7 @@ GeneralPage::GeneralPage(QWidget *parent)
     showHiddenExitFlagsCheckBox->setChecked(mumeNative.showHiddenExitFlags);
     showNotesCheckBox->setChecked(mumeNative.showNotes);
 
+    showLaunchPanelCheckBox->setChecked(!config.general.noLaunchPanel);
     autoLoadCheck->setChecked(autoLoad.autoLoadMap);
     autoLoadFileName->setText(autoLoad.fileName);
 
