@@ -150,7 +150,14 @@ void MumeSslSocket::onEncrypted()
         const auto cert = m_socket->peerCertificate();
         const auto commonNameList = cert.subjectInfo(cert.CommonName);
         const auto commonName = commonNameList.isEmpty() ? "(n/a)" : commonNameList.front();
-        const auto sha1 = cert.digest(QCryptographicHash::Algorithm::Sha1).toHex(':').toStdString();
+        const auto toHex = [](const QByteArray &ba) {
+#if QT_VERSION >= 0x050900
+            return ba.toHex(':');
+#else
+            return ba.toHex();
+#endif
+        };
+        const auto sha1 = toHex(cert.digest(QCryptographicHash::Algorithm::Sha1)).toStdString();
         const auto exp = cert.expiryDate();
         const auto expStr = exp.toLocalTime().toString(Qt::DateFormat::SystemLocaleLongDate);
         emit log("Proxy", QString("Peer certificate common name: %1.").arg(commonName));
