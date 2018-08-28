@@ -15,7 +15,7 @@ add_definitions(-DMMAPPER_VERSION="${MMAPPER_VERSION}")
 message(STATUS "MMapper version ${MMAPPER_VERSION} (${CMAKE_BUILD_TYPE} distribution)")
 
 # Options
-option(WITH_QTIOCOMPRESSOR "QtIOCompressor old save backwards compatability" OFF)
+option(WITH_ZLIB "zlib compressed old save backwards compatability" ON)
 option(WITH_OPENSSL "Use OpenSSL for TLS encryption" ON)
 option(USE_TIDY "Run clang-tidy with the compiler" OFF)
 option(USE_IWYU "Run include-what-you-use with the compiler" OFF)
@@ -38,49 +38,35 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-# Try to find the system copy of QtIOCompressor
-if(WITH_QTIOCOMPRESSOR)
-    find_path(QTIOCOMPRESSOR_INCLUDE_DIRS qtiocompressor.h PATH_SUFFIXES QtSolutions)
-    find_library(QTIOCOMPRESSOR_LIBRARIES QtSolutions_IOCompressor-2.3)
-    if(QTIOCOMPRESSOR_INCLUDE_DIRS AND QTIOCOMPRESSOR_LIBRARIES)
-        set(QTIOCOMPRESSOR_FOUND 1)
-        message(STATUS "Found QtIOCompressor: ${QTIOCOMPRESSOR_LIBRARIES}")
+# Try to find the system copy of zlib
+if(WITH_ZLIB)
+    find_package(ZLIB)
+    if(ZLIB_FOUND)
+        message(STATUS "zlib found: ${ZLIB_LIBRARIES} ${ZLIB_INCLUDE_DIRS}")
     else()
-        set(QTIOCOMPRESSOR_FOUND 0)
-        message(STATUS "QtIOCompressor not found: use `-DWITH_QTIOCOMPRESSOR=OFF` to build without old map backwards compatability")
-        message(STATUS "Building QtIOCompressor as an object library...")
-
-        # QtIOCompressor requires zlib
-        find_package(ZLIB QUIET)
-        if(ZLIB_FOUND)
-            message(STATUS "Found ZLIB: ${ZLIB_LIBRARIES} ${ZLIB_INCLUDE_DIRS}")
+        message(STATUS "Could not find zlib; building as static library")
+        include(ExternalProject)
+        ExternalProject_Add(zlib
+            GIT_REPOSITORY "https://github.com/madler/zlib.git"
+            GIT_TAG "v1.2.11"
+            SOURCE_DIR "${CMAKE_BINARY_DIR}/zlib-src"
+            BINARY_DIR "${CMAKE_BINARY_DIR}/zlib-build"
+            INSTALL_COMMAND ""
+            CMAKE_ARGS "-DBUILD_SHARED_LIBS=OFF"
+            CMAKE_CACHE_ARGS "-DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}"
+            )
+        if(WIN32)
+            set(ZLIB_STATIC_LIBRARY_NAME zlibstatic)
         else()
-            # QtIOCompressor will build a static zlib under zlib-build
-            if(WIN32)
-                set(ZLIB_STATIC_LIBRARY_NAME zlibstatic)
-            else()
-                set(ZLIB_STATIC_LIBRARY_NAME z)
-            endif()
-            set(ZLIB_STATIC_LIBRARY ${CMAKE_BINARY_DIR}/zlib-build/${CMAKE_STATIC_LIBRARY_PREFIX}${ZLIB_STATIC_LIBRARY_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
-            set(ZLIB_LIBRARIES ${ZLIB_STATIC_LIBRARY})
-            set(ZLIB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/zlib-src ${CMAKE_BINARY_DIR}/zlib-build)
+            set(ZLIB_STATIC_LIBRARY_NAME z)
         endif()
-
-        # Add QtIOCommpressor sources
-        option(SKIP_INSTALL_ALL "Do not install QtIOCompressor libraries or headers" TRUE)
-        configure_file(CMakeLists.QtIOCompressor.in QtIOCompressor-download/CMakeLists.txt)
-        execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/QtIOCompressor-download" )
-        execute_process(COMMAND "${CMAKE_COMMAND}" --build .
-            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/QtIOCompressor-download" )
-        add_subdirectory("${CMAKE_BINARY_DIR}/QtIOCompressor-src" "${CMAKE_BINARY_DIR}/QtIOCompressor-build")
-        set(QTIOCOMPRESSOR_INCLUDE_DIRS "${CMAKE_BINARY_DIR}/QtIOCompressor-src/src")
-
-        set(QTIOCOMPRESSOR_OBJECTS $<TARGET_OBJECTS:qtiocompressorobj>)
+        set(ZLIB_STATIC_LIBRARY ${CMAKE_BINARY_DIR}/zlib-build/${CMAKE_STATIC_LIBRARY_PREFIX}${ZLIB_STATIC_LIBRARY_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
+        set(ZLIB_LIBRARIES ${ZLIB_STATIC_LIBRARY})
+        set(ZLIB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/zlib-src ${CMAKE_BINARY_DIR}/zlib-build)
     endif()
 else()
-    message(STATUS "Building without QtIOCompressor: use `-DWITH_QTIOCOMPRESSOR=ON` to build with old map backwards compatability")
-    add_definitions(/DMMAPPER_NO_QTIOCOMPRESSOR)
+    message(STATUS "Building without zlib: use `-DWITH_ZLIB=ON` to build with old map backwards compatability")
+    add_definitions(/DMMAPPER_NO_ZLIB)
 endif()
 
 if(WITH_OPENSSL)
@@ -194,7 +180,7 @@ add_subdirectory(appdata)
 add_subdirectory(tests)
 
 include(FeatureSummary)
-add_feature_info("WITH_QTIOCOMPRESSOR" WITH_QTIOCOMPRESSOR "backwards compatability with old .mm2 saves")
+add_feature_info("WITH_ZLIB" WITH_ZLIB "backwards compatability with old .mm2 saves")
 add_feature_info("WITH_OPENSSL" WITH_OPENSSL "encrypt connection to MUME with TLS")
 add_feature_info("USE_TIDY" USE_TIDY "")
 add_feature_info("USE_IWYU" USE_IWYU "")

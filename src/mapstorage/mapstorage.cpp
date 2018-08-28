@@ -51,54 +51,21 @@
 #include "../mapdata/mmapper2room.h"
 #include "../mapdata/roomfactory.h"
 #include "../parser/patterns.h"
+#include "StorageUtils.h"
 #include "abstractmapstorage.h"
 #include "basemapsavefilter.h"
 #include "progresscounter.h"
 #include "roomsaver.h"
 
-#ifndef MMAPPER_NO_QTIOCOMPRESSOR
-#include "qtiocompressor.h"
-
-static_assert(std::is_same<uint32_t, decltype(UINT_MAX)>::value, "");
-
-static constexpr const bool USE_IO_COMPRESSOR = true;
+#ifndef MMAPPER_NO_ZLIB
+static constexpr const bool USE_ZLIB = true;
 #else
-static constexpr const bool USE_IO_COMPRESSOR = false;
-/* NOTE: Once we require C++17, this can be if constexpr,
-* and it won't be necessary to mock QtIOCompressor. */
-#include <QIODevice>
-using OpenMode = QIODevice::OpenMode;
-class QtIOCompressor final : public QIODevice
-{
-public:
-    explicit QtIOCompressor(QFile *) { std::abort(); }
-
-public:
-    bool open(OpenMode /*mode*/) override
-    {
-        std::abort();
-        return false;
-    }
-    void close() override { std::abort(); }
-
-protected:
-    qint64 readData(char * /*data*/, qint64 /*maxlen*/) override
-    {
-        std::abort();
-        return 0;
-    }
-
-    qint64 writeData(const char * /*data*/, qint64 /*len*/) override
-    {
-        std::abort();
-        return 0;
-    }
-};
+static constexpr const bool USE_ZLIB = false;
 #endif
 
 static constexpr const int MMAPPER_2_0_0_SCHEMA = 17; // Initial schema
 static constexpr const int MMAPPER_2_0_2_SCHEMA = 24; // Ridable flag
-static constexpr const int MMAPPER_2_0_4_SCHEMA = 25; // QtIOCompressor
+static constexpr const int MMAPPER_2_0_4_SCHEMA = 25; // zlib compression
 static constexpr const int MMAPPER_2_3_7_SCHEMA = 32; // 16bit DoorFlags, NoMatch
 static constexpr const int MMAPPER_2_4_0_SCHEMA = 33; // 16bit ExitsFlags, 32bit MobFlags/LoadFlags
 static constexpr const int MMAPPER_2_4_3_SCHEMA = 34; // qCompress, SunDeath flag
@@ -382,28 +349,27 @@ bool MapStorage::mergeData()
         /* Caution! Stream requires buffer to have extended lifetime for new version,
          * so don't be tempted to move this inside the scope. */
         QBuffer buffer{};
-        if (version >= MMAPPER_2_4_3_SCHEMA) {
+        const bool qCompressed = (version >= MMAPPER_2_4_3_SCHEMA);
+        const bool zlibCompressed = (version >= MMAPPER_2_0_4_SCHEMA
+                                     && version <= MMAPPER_2_4_0_SCHEMA);
+        if (qCompressed || (USE_ZLIB && zlibCompressed)) {
             QByteArray compressedData(stream.device()->readAll());
-            QByteArray uncompressedData = qUncompress(compressedData);
+            QByteArray uncompressedData = qCompressed ? qUncompress(compressedData)
+                                                      : StorageUtils::inflate(compressedData);
             buffer.setData(uncompressedData);
             buffer.open(QIODevice::ReadOnly);
             stream.setDevice(&buffer);
-            emit log("MapStorage", "Uncompressed data");
+            emit log("MapStorage",
+                     QString("Uncompressed map using %1").arg(qCompressed ? "qUncompress" : "zlib"));
 
-        } else if (version >= MMAPPER_2_0_4_SCHEMA && version <= MMAPPER_2_4_0_SCHEMA) {
-            /* once we require c++17, this can use if constexpr(USE_IO_COMPRESSOR) */
-            if (USE_IO_COMPRESSOR) {
-                auto *compressor = new QtIOCompressor(m_file);
-                compressor->open(QIODevice::ReadOnly);
-                stream.setDevice(compressor);
-            } else {
-                QMessageBox::critical(
-                    dynamic_cast<QWidget *>(parent()),
-                    "MapStorage Error",
-                    "MMapper could not load this map because it is too old.\r\n\r\n"
-                    "Please recompile MMapper with QtIOCompressor support and try again.");
-                return false;
-            }
+        } else if (!USE_ZLIB && zlibCompressed) {
+            QMessageBox::critical(dynamic_cast<QWidget *>(parent()),
+                                  "MapStorage Error",
+                                  "MMapper could not load this map because it is too old.\r\n\r\n"
+                                  "Please recompile MMapper with USE_ZLIB.");
+            return false;
+        } else {
+            emit log("MapStorage", "Map was not compressed");
         }
         emit log("MapStorage", QString("Schema version: %1").arg(version));
 
@@ -444,13 +410,6 @@ bool MapStorage::mergeData()
         emit log("MapStorage", "Finished loading.");
         buffer.close();
         m_file->close();
-
-        if (USE_IO_COMPRESSOR && version >= MMAPPER_2_0_4_SCHEMA
-            && version <= MMAPPER_2_4_0_SCHEMA) {
-            auto *compressor = dynamic_cast<QtIOCompressor *>(stream.device());
-            compressor->close();
-            delete compressor;
-        }
 
         if (m_mapData.getRoomsCount() == 0u) {
             return false;

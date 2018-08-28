@@ -65,10 +65,6 @@ AboutDialog::AboutDialog(QWidget *parent)
 #endif
         + "<br>"
 #endif
-#ifndef MMAPPER_NO_QTIOCOMPRESSOR
-        + tr("Built with QtIOCompressor under the <a href=\"https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html\">LGPL 2.1 license</a>.")
-        + "<br>"
-#endif
         + tr("Based on Qt %1 (%2 bit)").arg(QT_VERSION_STR, QString::number(QSysInfo::WordSize))
         + "<br>" + tr("Built on %1 at %2").arg(QString(__DATE__)).arg(QString(__TIME__)) + "</p>");
 

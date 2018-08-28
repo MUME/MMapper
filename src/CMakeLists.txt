@@ -134,6 +134,8 @@ set(mmapper_SRCS
     mapstorage/progresscounter.h
     mapstorage/roomsaver.cpp
     mapstorage/roomsaver.h
+    mapstorage/StorageUtils.cpp
+    mapstorage/StorageUtils.h
     mpi/mpifilter.cpp
     mpi/mpifilter.h
     mpi/remoteedit.cpp
@@ -258,12 +260,8 @@ set(mmapper_UIS
     preferences/mumeprotocolpage.ui
 )
 
-if(WITH_QTIOCOMPRESSOR)
-    if(NOT QTIOCOMPRESSOR_FOUND)
-        # Build QtIOCompressor as an object library
-        set(mmapper_SRCS ${mmapper_SRCS} ${QTIOCOMPRESSOR_OBJECTS})
-    endif()
-    include_directories(${QTIOCOMPRESSOR_INCLUDE_DIRS})
+if(WITH_ZLIB)
+    include_directories(${ZLIB_INCLUDE_DIRS})
 endif()
 
 set(mmapper_DATA
@@ -295,19 +293,10 @@ set_target_properties(
   COMPILE_FLAGS "${WARNING_FLAGS}"
 )
 
-if(WITH_QTIOCOMPRESSOR)
-    if(QTIOCOMPRESSOR_FOUND)
-        target_link_libraries(mmapper ${QTIOCOMPRESSOR_LIBRARIES})
-    else()
-        # Build QtIOCompressor as an object library
-        if(NOT ZLIB_FOUND)
-            # Assume we are building a static zlib
-            add_dependencies(mmapper zlib)
-        endif()
-        target_link_libraries(mmapper ${ZLIB_LIBRARIES})
-        include_directories(
-                ${ZLIB_INCLUDE_DIRS}
-        )
+if(WITH_ZLIB)
+    target_link_libraries(mmapper ${ZLIB_LIBRARIES})
+    if(NOT ZLIB_FOUND)
+        add_dependencies(mmapper zlib)
     endif()
 endif()
 
@@ -415,7 +404,7 @@ if(UNIX AND NOT APPLE)
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "nschimme@gmail.com")
     set(CPACK_DEBIAN_PACKAGE_NAME "mmapper")
     set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt5core5a (>= 5.4.0), libqt5gui5 (>= 5.4.0), libqt5opengl5 (>= 5.4.0), libqt5network5 (>= 5.4.0), libqt5xml5 (>= 5.4.0)")
-    if(WITH_QTIOCOMPRESSOR)
+    if(WITH_ZLIB)
         set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, zlib1g")
     endif()
     if(WITH_OPENSSL)
