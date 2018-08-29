@@ -456,7 +456,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
             }
         }
         if (m_descriptionReady) {
-            parsePrompt(m_stringBuffer);
+            parsePrompt(normalizeStringCopy(m_stringBuffer));
             move();
         } else {
             if (!queue.isEmpty()) {
