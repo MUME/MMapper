@@ -206,6 +206,8 @@ void cTelnet::onConnected()
     socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
 
     // MUME opts to not send DO CHARSET due to older, broken clients
+    myOptionState[OPT_CHARSET] = true;
+    announcedState[OPT_CHARSET] = true;
     sendTelnetOption(TN_WILL, OPT_CHARSET);
 
     emit connected();
@@ -330,6 +332,8 @@ void cTelnet::processTelnetCommand(const QByteArray &command)
     unsigned char option;
 
     switch (command.length()) {
+    case 1:
+        break;
     case 2:
         if (ch != TN_GA)
             qDebug() << "* Processing Telnet Command:" << telnetCommandName(ch);
@@ -419,7 +423,7 @@ void cTelnet::processTelnetCommand(const QByteArray &command)
                 windowSizeChanged(current.x, current.y);
             } else if (myOptionState[OPT_CHARSET] && option == OPT_CHARSET) {
                 const QString myCharacterSet = getConfig().parser.utf8Charset ? UTF_8_ENCODING
-                                                                     : LATIN_1_ENCODING;
+                                                                              : LATIN_1_ENCODING;
                 QByteArray s;
                 s += TN_IAC;
                 s += TN_SB;
@@ -447,6 +451,7 @@ void cTelnet::processTelnetCommand(const QByteArray &command)
         break;
 
     case 4:
+    default:
         qDebug() << "* Processing Telnet Command:" << telnetCommandName(ch)
                  << telnetOptionName(command[2]) << telnetSubnegName(command[3]);
 
@@ -513,8 +518,9 @@ void cTelnet::processTelnetCommand(const QByteArray &command)
                         if (iacPos > 6 && command[4] != '[') {
                             bool accepted = false;
                             // TODO: Add US-ASCII to Parser dropdown
-                            const QString myCharacterSet = getConfig().parser.utf8Charset ? UTF_8_ENCODING
-                                                                                 : LATIN_1_ENCODING;
+                            const QString myCharacterSet = getConfig().parser.utf8Charset
+                                                               ? UTF_8_ENCODING
+                                                               : LATIN_1_ENCODING;
 
                             // Split remainder into delim and IAC
                             // IAC SB CHARSET REQUEST <sep> <charsets> IAC SE
@@ -580,8 +586,6 @@ void cTelnet::processTelnetCommand(const QByteArray &command)
             };
             break;
         };
-        break;
-    case 1:
         break;
     };
     //other commands are simply ignored (NOP and such, see .h file for list)
