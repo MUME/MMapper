@@ -261,7 +261,7 @@ set(mmapper_UIS
 )
 
 if(WITH_ZLIB)
-    include_directories(${ZLIB_INCLUDE_DIRS})
+    include_directories(SYSTEM ${ZLIB_INCLUDE_DIRS})
 endif()
 
 set(mmapper_DATA

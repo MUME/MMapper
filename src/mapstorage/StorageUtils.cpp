@@ -26,10 +26,10 @@
 #include <QByteArray>
 
 #ifndef MMAPPER_NO_ZLIB
-#include "zlib.h"
 #include <cassert>
 #include <sstream>
 #include <stdexcept>
+#include <zlib.h>
 #endif
 
 namespace StorageUtils {
@@ -54,14 +54,7 @@ QByteArray inflate(QByteArray &data)
     strm.opaque = nullptr;
     strm.avail_in = static_cast<uInt>(data.size());
     strm.next_in = reinterpret_cast<Bytef *>(data.data());
-#if (defined(__GNUC__) || defined(__clang__))
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wold-style-cast"
-#endif
     int ret = inflateInit(&strm);
-#if (defined(__GNUC__) || defined(__clang__))
-#pragma GCC diagnostic pop
-#endif
     if (ret != Z_OK) {
         throw std::runtime_error("Unable to initialize zlib");
     }
