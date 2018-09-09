@@ -40,7 +40,6 @@ parts:
     stage-packages:
       - zlib1g
       - libssl1.0.0
-      - libc6
       - libqt5xml5
     override-build: |
       snapcraftctl build
