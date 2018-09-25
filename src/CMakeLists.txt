@@ -340,6 +340,21 @@ if(USE_IWYU)
     endif()
 endif()
 
+if(USE_DISTCC)
+    find_program(
+        DISTCC_EXE
+        NAMES distcc
+        DOC "Path to distcc executable"
+        )
+    if(NOT DISTCC_EXE)
+        message(FATAL_ERROR "distcc not found: use `-DUSE_DISTCC=OFF` to disable")
+    else()
+        message(STATUS "distcc found: ${DISTCC_EXE}")
+        set(CMAKE_C_COMPILER_LAUNCHER "${DISTCC_EXE}")
+        set(CMAKE_CXX_COMPILER_LAUNCHER "${DISTCC_EXE}")
+    endif()
+endif()
+
 
 # Begin CPack Settings
 set(CPACK_PACKAGE_VERSION ${MMAPPER_VERSION})

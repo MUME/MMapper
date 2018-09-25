@@ -19,6 +19,7 @@ option(WITH_ZLIB "zlib compressed old save backwards compatability" ON)
 option(WITH_OPENSSL "Use OpenSSL for TLS encryption" ON)
 option(USE_TIDY "Run clang-tidy with the compiler" OFF)
 option(USE_IWYU "Run include-what-you-use with the compiler" OFF)
+option(USE_DISTCC "Use distcc for distributed builds" OFF)
 
 # Apple users are most likely using brew
 if(APPLE)
@@ -188,5 +189,6 @@ add_feature_info("WITH_ZLIB" WITH_ZLIB "backwards compatability with old .mm2 sa
 add_feature_info("WITH_OPENSSL" WITH_OPENSSL "encrypt connection to MUME with TLS")
 add_feature_info("USE_TIDY" USE_TIDY "")
 add_feature_info("USE_IWYU" USE_IWYU "")
+add_feature_info("USE_DISTCC" USE_DISTCC "")
 feature_summary(WHAT ENABLED_FEATURES DESCRIPTION "Enabled options:")
 feature_summary(WHAT DISABLED_FEATURES DESCRIPTION "Disabled options:")
