@@ -42,6 +42,7 @@
     X(KNOCKABLE, knockable, Knockable, "Knockable") \
     X(MAGIC, magic, Magic, "Magic") \
     X(ACTION, action, Action, "Action-controlled") \
+    X(NO_BASH, no_bash, NoBash, "No bash") \
     /* define door flags above */
 
 enum class DoorFlag {

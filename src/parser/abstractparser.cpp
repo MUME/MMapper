@@ -180,6 +180,7 @@ static const char *getFlagName(const DoorFlag flag)
         CASE(KNOCKABLE, "Knockable");
         CASE(MAGIC, "Magic");
         CASE(ACTION, "Action");
+        CASE(NO_BASH, "No bash");
     }
     return "Unknown";
 #undef CASE

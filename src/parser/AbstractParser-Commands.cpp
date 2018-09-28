@@ -84,6 +84,7 @@ Abbrev getParserCommandName(const DoorFlag x)
         CASE3(KNOCKABLE, "knockable", 5);
         CASE3(MAGIC, "magic", 3);
         CASE3(ACTION, "action", 3);
+        CASE3(NO_BASH, "nobash", -1);
     }
     return Abbrev{};
 #undef CASE3
