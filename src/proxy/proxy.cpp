@@ -42,6 +42,8 @@
 #include "../parser/abstractparser.h"
 #include "../parser/mumexmlparser.h"
 #include "../pathmachine/mmapper2pathmachine.h"
+#include "MudTelnet.h"
+#include "UserTelnet.h"
 #include "connectionlistener.h"
 #include "mumesocket.h"
 #include "telnetfilter.h"
@@ -133,6 +135,8 @@ Proxy::~Proxy()
         m_mudSocket->deleteLater();
     }
     delete m_remoteEdit;
+    delete m_userTelnet;
+    delete m_mudTelnet;
     delete m_telnetFilter;
     delete m_mpiFilter;
     delete m_parserXml;
@@ -180,20 +184,36 @@ bool Proxy::init()
             &Proxy::userTerminatedConnection);
     connect(m_userSocket.data(), &QIODevice::readyRead, this, &Proxy::processUserStream);
 
+    m_userTelnet = new UserTelnet(this);
+    m_mudTelnet = new MudTelnet(this);
     m_telnetFilter = new TelnetFilter(this);
-    connect(this, &Proxy::analyzeUserStream, m_telnetFilter, &TelnetFilter::analyzeUserStream);
-    connect(m_telnetFilter, &TelnetFilter::sendToMud, this, &Proxy::sendToMud);
-    connect(m_telnetFilter, &TelnetFilter::sendToUser, this, &Proxy::sendToUser);
+
+    connect(m_userTelnet,
+            &UserTelnet::analyzeUserStream,
+            m_telnetFilter,
+            &TelnetFilter::onAnalyzeUserStream);
+    connect(m_userTelnet, &UserTelnet::sendToSocket, this, &Proxy::sendToUser);
+    connect(m_userTelnet, &UserTelnet::relayNaws, m_mudTelnet, &MudTelnet::onRelayNaws);
+    connect(m_userTelnet, &UserTelnet::relayTermType, m_mudTelnet, &MudTelnet::onRelayTermType);
+
+    connect(m_mudTelnet,
+            &MudTelnet::analyzeMudStream,
+            m_telnetFilter,
+            &TelnetFilter::onAnalyzeMudStream);
+    connect(m_mudTelnet, &MudTelnet::sendToSocket, this, &Proxy::sendToMud);
+    connect(m_mudTelnet, &MudTelnet::relayEchoMode, m_userTelnet, &UserTelnet::onRelayEchoMode);
+
+    connect(this, &Proxy::analyzeUserStream, m_userTelnet, &UserTelnet::onAnalyzeUserStream);
 
     m_mpiFilter = new MpiFilter(this);
     connect(m_telnetFilter,
             &TelnetFilter::parseNewMudInput,
             m_mpiFilter,
             &MpiFilter::analyzeNewMudInput);
-    connect(m_mpiFilter, &MpiFilter::sendToMud, this, &Proxy::sendToMud);
+    connect(m_mpiFilter, &MpiFilter::sendToMud, m_mudTelnet, &MudTelnet::onSendToMud);
     connect(m_mpiFilter, &MpiFilter::editMessage, m_remoteEdit, &RemoteEdit::remoteEdit);
     connect(m_mpiFilter, &MpiFilter::viewMessage, m_remoteEdit, &RemoteEdit::remoteView);
-    connect(m_remoteEdit, &RemoteEdit::sendToSocket, this, &Proxy::sendToMud);
+    connect(m_remoteEdit, &RemoteEdit::sendToSocket, m_mudTelnet, &MudTelnet::onSendToMud);
 
     m_parserXml = new MumeXmlParser(m_mapData, m_mumeClock, this);
     connect(m_mpiFilter,
@@ -204,8 +224,8 @@ bool Proxy::init()
             &TelnetFilter::parseNewUserInput,
             m_parserXml,
             &MumeXmlParser::parseNewUserInput);
-    connect(m_parserXml, &MumeXmlParser::sendToMud, this, &Proxy::sendToMud);
-    connect(m_parserXml, &MumeXmlParser::sig_sendToUser, this, &Proxy::sendToUser);
+    connect(m_parserXml, &MumeXmlParser::sendToMud, m_mudTelnet, &MudTelnet::onSendToMud);
+    connect(m_parserXml, &MumeXmlParser::sig_sendToUser, m_userTelnet, &UserTelnet::onSendToUser);
 
     connect(m_parserXml,
             static_cast<void (MumeXmlParser::*)(const SigParseEvent &)>(&MumeXmlParser::event),
@@ -250,20 +270,19 @@ bool Proxy::init()
         "\033[1;37;46mWelcome to MMapper!\033[0;37;46m"
         "   Type \033[1m_help\033[0m\033[37;46m for help or \033[1m_vote\033[0m\033[37;46m to vote!\033[0m\r\n");
     m_userSocket->write(ba);
-    m_userSocket->flush();
 
     m_mudSocket = (NO_OPEN_SSL || !getConfig().connection.tlsEncryption)
                       ? dynamic_cast<MumeSocket *>(new MumeTcpSocket(this))
                       : dynamic_cast<MumeSocket *>(new MumeSslSocket(this));
 
     connect(m_mudSocket, &MumeSocket::connected, this, &Proxy::onMudConnected);
+    connect(m_mudSocket, &MumeSocket::connected, m_userTelnet, &UserTelnet::onConnected);
+    connect(m_mudSocket, &MumeSocket::connected, m_mudTelnet, &MudTelnet::onConnected);
+    connect(m_mudSocket, &MumeSocket::connected, this, &Proxy::onMudConnected);
     connect(m_mudSocket, &MumeSocket::socketError, this, &Proxy::onMudError);
     connect(m_mudSocket, &MumeSocket::disconnected, this, &Proxy::mudTerminatedConnection);
     connect(m_mudSocket, &MumeSocket::disconnected, m_parserXml, &AbstractParser::reset);
-    connect(m_mudSocket,
-            &MumeSocket::processMudStream,
-            m_telnetFilter,
-            &TelnetFilter::analyzeMudStream);
+    connect(m_mudSocket, &MumeSocket::processMudStream, m_mudTelnet, &MudTelnet::onAnalyzeMudStream);
     connect(m_mudSocket,
             SIGNAL(log(const QString &, const QString &)),
             m_listener->parent(),
@@ -281,11 +300,9 @@ void Proxy::onMudConnected()
     emit log("Proxy", "Connection to server established ...");
 
     //send IAC-GA prompt request
-    if (settings.IAC_prompt_parser) {
-        QByteArray idPrompt("~$#EP2\nG\n");
-        emit log("Proxy", "Sent MUME Protocol Initiator IAC-GA prompt request");
-        sendToMud(idPrompt);
-    }
+    QByteArray idPrompt("~$#EP2\nG\n");
+    emit log("Proxy", "Sent MUME Protocol Initiator IAC-GA prompt request");
+    sendToMud(idPrompt);
 
     if (settings.remoteEditing) {
         QByteArray idRemoteEditing("~$#EI\n");
@@ -363,8 +380,7 @@ void Proxy::sendToMud(const QByteArray &ba)
 void Proxy::sendToUser(const QByteArray &ba)
 {
     if (m_userSocket != nullptr) {
-        m_userSocket->write(ba.data(), ba.size());
-        m_userSocket->flush();
+        m_userSocket->write(ba);
     } else {
         qWarning() << "User socket not available";
     }

@@ -33,7 +33,7 @@
 
 #include "../configuration/configuration.h"
 #include "../global/utils.h"
-#include "ctelnet.h"
+#include "ClientTelnet.h"
 #include "displaywidget.h"
 #include "stackedinputwidget.h"
 
@@ -74,22 +74,25 @@ ClientWidget::ClientWidget(QWidget *parent)
     m_input->setFocus();
 
     // Connect the signals/slots
-    m_telnet = new cTelnet(this);
-    connect(m_telnet, &cTelnet::disconnected, this, &ClientWidget::onDisconnected);
-    connect(m_telnet, &cTelnet::connected, this, &ClientWidget::onConnected);
-    connect(m_telnet, &cTelnet::socketError, this, &ClientWidget::onSocketError);
+    m_telnet = new ClientTelnet(this);
+    connect(m_telnet, &ClientTelnet::disconnected, this, &ClientWidget::onDisconnected);
+    connect(m_telnet, &ClientTelnet::connected, this, &ClientWidget::onConnected);
+    connect(m_telnet, &ClientTelnet::socketError, this, &ClientWidget::onSocketError);
 
     // Input
     connect(m_input, &StackedInputWidget::sendUserInput, this, &ClientWidget::sendToMud);
-    connect(m_telnet, &cTelnet::echoModeChanged, m_input, &StackedInputWidget::toggleEchoMode);
+    connect(m_telnet, &ClientTelnet::echoModeChanged, m_input, &StackedInputWidget::toggleEchoMode);
     connect(m_input, &StackedInputWidget::showMessage, m_statusBar, &QStatusBar::showMessage);
 
     // Display
     connect(m_input, &StackedInputWidget::displayMessage, m_display, &DisplayWidget::displayText);
     connect(this, &ClientWidget::sendToUser, m_display, &DisplayWidget::displayText);
-    connect(m_telnet, &cTelnet::sendToUser, m_display, &DisplayWidget::displayText);
+    connect(m_telnet, &ClientTelnet::sendToUser, m_display, &DisplayWidget::displayText);
     connect(m_display, &DisplayWidget::showMessage, m_statusBar, &QStatusBar::showMessage);
-    connect(m_display, &DisplayWidget::windowSizeChanged, m_telnet, &cTelnet::windowSizeChanged);
+    connect(m_display,
+            &DisplayWidget::windowSizeChanged,
+            m_telnet,
+            &ClientTelnet::onWindowSizeChanged);
     readSettings();
 
     auto *menuBar = new QMenuBar(this);

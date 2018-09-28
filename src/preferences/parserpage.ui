@@ -34,42 +34,6 @@
     <number>9</number>
    </property>
    <item>
-    <widget class="QFrame" name="frame_5">
-     <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
-     </property>
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="1" column="1">
-       <widget class="QComboBox" name="charset">
-        <item>
-         <property name="text">
-          <string notr="true">ASCII or Latin1</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string notr="true">UTF-8</string>
-         </property>
-        </item>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>&quot;change charset&quot; is:</string>
-        </property>
-        <property name="buddy">
-         <cstring>charset</cstring>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
     <widget class="QFrame" name="frame_4">
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>

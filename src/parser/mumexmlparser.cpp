@@ -79,14 +79,13 @@ MumeXmlParser::~MumeXmlParser()
     }
 }
 
-void MumeXmlParser::parseNewMudInput(IncomingData &data)
+void MumeXmlParser::parseNewMudInput(const IncomingData &data)
 {
     switch (data.type) {
     case TelnetDataType::DELAY:
     case TelnetDataType::MENU_PROMPT:
     case TelnetDataType::LOGIN:
     case TelnetDataType::LOGIN_PASSWORD:
-    case TelnetDataType::TELNET:
     case TelnetDataType::SPLIT:
     case TelnetDataType::UNKNOWN:
         if (XPS_DEBUG_TO_FILE) {
@@ -95,7 +94,7 @@ void MumeXmlParser::parseNewMudInput(IncomingData &data)
             (*debugStream) << "***ETYPE***";
         }
         // Login prompt and IAC-GA
-        parse(data.line);
+        parse(data);
         break;
 
     case TelnetDataType::PROMPT:
@@ -108,7 +107,7 @@ void MumeXmlParser::parseNewMudInput(IncomingData &data)
             (*debugStream) << "***ETYPE***";
         }
         // XML and prompts
-        parse(data.line);
+        parse(data);
         break;
     }
     if (XPS_DEBUG_TO_FILE) {
@@ -118,8 +117,9 @@ void MumeXmlParser::parseNewMudInput(IncomingData &data)
     }
 }
 
-void MumeXmlParser::parse(const QByteArray &line)
+void MumeXmlParser::parse(const IncomingData &data)
 {
+    const QByteArray &line = data.line;
     m_lineToUser.clear();
     int index;
 
@@ -154,9 +154,19 @@ void MumeXmlParser::parse(const QByteArray &line)
         m_lineToUser.append(characters(m_tempCharacters));
         m_tempCharacters.clear();
     }
-
     if (!m_lineToUser.isEmpty()) {
-        emit sig_sendToUser(m_lineToUser);
+        const auto isGoAhead = [](TelnetDataType type) {
+            switch (type) {
+            case TelnetDataType::LOGIN:
+            case TelnetDataType::LOGIN_PASSWORD:
+            case TelnetDataType::MENU_PROMPT:
+            case TelnetDataType::PROMPT:
+                return true;
+            default:
+                return false;
+            }
+        };
+        sendToUser(m_lineToUser, isGoAhead(data.type));
 
         if (m_readStatusTag) {
             m_readStatusTag = false;
@@ -187,7 +197,7 @@ bool MumeXmlParser::element(const QByteArray &line)
             switch (line.at(0)) {
             case '/':
                 if (line.startsWith("/xml")) {
-                    emit sig_sendToUser("[MMapper] Mapper cannot function without XML mode\n");
+                    sendToUser("[MMapper] Mapper cannot function without XML mode\n");
                     queue.clear();
                 }
                 break;
@@ -376,7 +386,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
     }
 
     const auto &config = getConfig();
-    m_stringBuffer = config.parser.utf8Charset ? QString::fromUtf8(ch) : QString::fromLatin1(ch);
+    m_stringBuffer = QString::fromLatin1(ch);
 
     if (m_readSnoopTag && m_stringBuffer.length() > 3 && m_stringBuffer.at(0) == '&'
         && m_stringBuffer.at(2) == ' ') {
@@ -447,7 +457,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         break;
 
     case XmlMode::PROMPT:
-        emit sendPromptLineEvent(m_stringBuffer.toLatin1());
+        emit sendPromptLineEvent(normalizeStringCopy(m_stringBuffer).toLatin1());
         if (m_readingRoomDesc) {       // fixes compact mode
             m_readingRoomDesc = false; // we finished read desc mode
             m_descriptionReady = true;

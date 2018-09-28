@@ -290,9 +290,7 @@ void AbstractParser::parsePrompt(const QString &prompt)
 
 void AbstractParser::parseExits()
 {
-    // REVISIT: Character set encoding/decoding
-    const auto &config = getConfig();
-    QByteArray exitsByteArray = config.parser.utf8Charset ? m_exits.toUtf8() : m_exits.toLatin1();
+    QByteArray exitsByteArray = m_exits.toLatin1();
 
     QString str = normalizeStringCopy(m_exits);
     m_connectedRoomFlags.reset();
@@ -614,7 +612,7 @@ QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
     return cn;
 }
 
-void AbstractParser::parseNewUserInput(IncomingData &data)
+void AbstractParser::parseNewUserInput(const IncomingData &data)
 {
     auto parse_and_send = [this, &data]() {
         auto parse = [this, &data]() -> bool {
@@ -643,7 +641,6 @@ void AbstractParser::parseNewUserInput(IncomingData &data)
     case TelnetDataType::MENU_PROMPT:
     case TelnetDataType::LOGIN:
     case TelnetDataType::LOGIN_PASSWORD:
-    case TelnetDataType::TELNET:
     case TelnetDataType::SPLIT:
     case TelnetDataType::UNKNOWN:
         emit sendToMud(data.line);
@@ -1410,7 +1407,7 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
 void AbstractParser::sendPromptToUser()
 {
     if (!m_lastPrompt.isEmpty() && isOnline()) {
-        sendToUser(m_lastPrompt);
+        sendToUser(m_lastPrompt, true);
         return;
     }
 
@@ -1447,7 +1444,7 @@ void AbstractParser::sendPromptToUser(const char light, const char terrain)
     prompt += light;
     prompt += terrain;
     prompt += ">";
-    sendToUser(prompt);
+    sendToUser(prompt, true);
 }
 
 void AbstractParser::performDoorCommand(const DirectionType direction, const DoorActionType action)

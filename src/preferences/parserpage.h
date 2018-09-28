@@ -56,9 +56,6 @@ public slots:
 
     void suppressXmlTagsCheckBoxStateChanged(int);
 
-private slots:
-    void charsetChanged(int);
-
 public:
     explicit ParserPage(QWidget *parent = nullptr);
 

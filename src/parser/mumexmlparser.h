@@ -57,10 +57,10 @@ public:
     explicit MumeXmlParser(MapData *, MumeClock *, QObject *parent = nullptr);
     ~MumeXmlParser();
 
-    void parse(const QByteArray &);
+    void parse(const IncomingData &);
 
 public slots:
-    void parseNewMudInput(IncomingData &data) override;
+    void parseNewMudInput(const IncomingData &data) override;
 
 protected:
     QDataStream *debugStream = nullptr;

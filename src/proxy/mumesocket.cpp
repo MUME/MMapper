@@ -35,7 +35,7 @@
 #include "../configuration/configuration.h"
 #include "../global/io.h"
 
-static constexpr int TIMEOUT_MILLIS = 5000;
+static constexpr int TIMEOUT_MILLIS = 10000;
 
 void MumeSocket::onConnect()
 {
@@ -214,10 +214,7 @@ void MumeSslSocket::checkTimeout()
 
 void MumeSslSocket::sendToMud(const QByteArray &ba)
 {
-    m_socket->write(ba.data(), ba.size());
-    if (m_socket->state() == QAbstractSocket::ConnectedState) {
-        m_socket->flush();
-    }
+    m_socket->write(ba);
 }
 
 void MumeTcpSocket::connectToHost()

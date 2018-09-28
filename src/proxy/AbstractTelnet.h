@@ -115,21 +115,16 @@ else does it ;))
   *@author Tomas Mecir
 */
 
-#ifndef CTELNET_H
-#define CTELNET_H
+#ifndef ABSTRACTTELNET_H
+#define ABSTRACTTELNET_H
 
+#include "TextCodec.h"
 #include <array>
 #include <cstdint>
-#include <memory>
-#include <QAbstractSocket>
 #include <QByteArray>
 #include <QObject>
 #include <QString>
-#include <QTcpSocket>
-#include <QTextCodec>
 #include <QtCore>
-
-#include "../global/io.h"
 
 //telnet command codes (prefixed with TN_ to prevent duplicit #defines
 static constexpr const uint8_t TN_SE = 240;
@@ -169,88 +164,56 @@ static constexpr const uint8_t TNSB_TTABLE_REJECTED = 5;
 static constexpr const uint8_t TNSB_TTABLE_ACK = 6;
 static constexpr const uint8_t TNSB_TTABLE_NAK = 7;
 
-//supported IANA character sets
-static constexpr const char *const LATIN_1_ENCODING = "ISO-8859-1";
-static constexpr const char *const UTF_8_ENCODING = "UTF-8";
-
-class QTextCodec;
-class QTextDecoder;
-class QTextEncoder;
-
-class cTelnet final : public QObject
+class AbstractTelnet : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit cTelnet(QObject *parent = nullptr);
-    ~cTelnet();
+    explicit AbstractTelnet(TextCodec textCodec, bool debug = false, QObject *parent = nullptr);
 
-    void connectToHost();
+protected:
+    void sendCharsetRequest(const QStringList &myCharacterSet);
 
-    void disconnectFromHost();
+    void sendTerminalType(const QByteArray &terminalType);
 
-public slots:
-    /** Window size has changed - informs the server about it */
-    void windowSizeChanged(int x, int y);
+    void sendCharsetRejected();
+
+    void sendCharsetAccepted(const QByteArray &characterSet);
+
+    void sendOptionStatus();
+
+    void sendAreYouThere();
+
+    void sendWindowSizeChanged(int, int);
+
+    void sendTerminalTypeRequest();
+
+    void requestTelnetOption(unsigned char type, unsigned char option);
 
     /** Prepares data, doubles IACs, sends it using sendRawData. */
-    void sendToMud(const QString &data);
+    void submitOverTelnet(const QByteArray &data, bool goAhead);
 
-protected slots:
-    void onConnected();
-    void onDisconnected();
-    void onError(QAbstractSocket::SocketError);
+    virtual void sendToMapper(const QByteArray &, bool goAhead) = 0;
 
-    /** Reads, parses telnet, and so forth */
-    void onReadyRead();
+    virtual void receiveEchoMode(bool) {}
 
-private:
-    void sendToUserAndClear(QByteArray &);
-    void onReadInternal(const QByteArray &);
-    void onReadInternal2(QByteArray &, uint8_t);
+    virtual void receiveTerminalType(QByteArray) {}
 
-protected:
-signals:
-    /** Submits Telnet/text data back to the client */
-    void sendToUser(const QString &data);
-
-    /** toggles echo mode for passwords */
-    void echoModeChanged(bool);
-
-    void disconnected();
-    void connected();
-    void socketError(const QString &);
-
-protected:
-    void reset();
-
-    void setupEncoding();
+    virtual void receiveWindowSize(int, int) {}
 
     /** Send out the data. Does not double IACs, this must be done
             by caller if needed. This function is suitable for sending
             telnet sequences. */
-    void sendRawData(const QByteArray &data);
-
-    /** processes a telnet command (IAC ...) */
-    void processTelnetCommand(const QByteArray &command);
+    virtual void sendRawData(const QByteArray &data) = 0;
 
     /** send a telnet option */
     void sendTelnetOption(unsigned char type, unsigned char option);
 
-private:
-    io::null_padded_buffer<(1 << 15)> buffer{};
-    QTcpSocket socket{};
+    void reset();
 
-    QByteArray encoding{};
+    void onReadInternal(const QByteArray &);
 
-    std::unique_ptr<QTextDecoder> inCoder = nullptr;
-    std::unique_ptr<QTextEncoder> outCoder = nullptr;
-
-    //iac: last char was IAC
-    //iac2: last char was DO, DONT, WILL or WONT
-    //insb: we're in IAC SB, waiting for IAC SE
-    QByteArray command{};
-    bool iac = false, iac2 = false, insb = false;
+    TextCodec textCodec{};
 
     using OptionArray = std::array<bool, 256>;
 
@@ -264,14 +227,6 @@ private:
     /** whether the server has already announced his WILL/WON'T */
     OptionArray heAnnouncedState{};
 
-    /** amount of bytes sent up to now */
-    int64_t sentbytes = 0;
-
-    /** have we received the GA signal? */
-    bool recvdGA = false;
-    bool echoMode = false;
-    bool startupneg = false;
-
     /** current dimensions for NAWS */
     struct
     {
@@ -280,6 +235,26 @@ private:
 
     /* Terminal Type */
     QString termType{};
+
+    /** amount of bytes sent up to now */
+    int64_t sentBytes = 0;
+
+private:
+    void onReadInternal2(QByteArray &, uint8_t);
+
+    /** processes a telnet command (IAC ...) */
+    void processTelnetCommand(const QByteArray &command);
+
+    //iac: last char was IAC
+    //iac2: last char was DO, DONT, WILL or WONT
+    //insb: we're in IAC SB, waiting for IAC SE
+    QByteArray command{};
+    bool iac = false, iac2 = false, insb = false;
+
+    /** have we received the GA signal? */
+    bool recvdGA = false;
+
+    bool debug = false;
 };
 
-#endif /* CTELNET_H */
+#endif /* ABSTRACTTELNET_H */

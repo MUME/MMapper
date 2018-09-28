@@ -117,7 +117,7 @@ public:
 signals:
     //telnet
     void sendToMud(const QByteArray &);
-    void sig_sendToUser(const QByteArray &);
+    void sig_sendToUser(const QByteArray &, bool goAhead);
     void releaseAllPaths();
 
     //used to log
@@ -137,8 +137,8 @@ signals:
     void sendGroupTellEvent(QByteArray);
 
 public slots:
-    virtual void parseNewMudInput(IncomingData &) = 0;
-    void parseNewUserInput(IncomingData &);
+    virtual void parseNewMudInput(const IncomingData &) = 0;
+    void parseNewUserInput(const IncomingData &);
 
     void reset();
     void sendGTellToUser(const QByteArray &);
@@ -289,9 +289,18 @@ private:
     void doMove(CommandIdType cmd);
 
 public:
-    inline void sendToUser(const QByteArray &arr) { emit sig_sendToUser(arr); }
-    inline void sendToUser(const char *s) { sendToUser(QByteArray{s}); }
-    inline void sendToUser(const QString &s) { sendToUser(s.toLatin1()); }
+    inline void sendToUser(const QByteArray &arr, bool goAhead = false)
+    {
+        emit sig_sendToUser(arr, goAhead);
+    }
+    inline void sendToUser(const char *s, bool goAhead = false)
+    {
+        sendToUser(QByteArray{s}, goAhead);
+    }
+    inline void sendToUser(const QString &s, bool goAhead = false)
+    {
+        sendToUser(s.toLatin1(), goAhead);
+    }
 };
 
 #endif

@@ -111,8 +111,10 @@ void StackedInputWidget::gotPasswordInput()
 void StackedInputWidget::gotMultiLineInput(const QString &input)
 {
     QString str = QString(input).append("\n");
-    emit displayMessage(str);
     emit sendUserInput(str);
+    // REVISIT: Make color configurable
+    QString displayStr = QString("\033[0;33m").append(input).append("\033[0m\n");
+    emit displayMessage(displayStr);
 }
 
 void StackedInputWidget::cut()

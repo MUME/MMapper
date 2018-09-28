@@ -23,43 +23,36 @@
 **
 ************************************************************************/
 
-#ifndef MPIFILTER_H
-#define MPIFILTER_H
+#ifndef MUDTELNET_H
+#define MUDTELNET_H
 
+#include "AbstractTelnet.h"
 #include <QByteArray>
 #include <QObject>
-#include <QString>
-#include <QtCore>
 
-#include "../proxy/telnetfilter.h"
-
-class MpiFilter : public QObject
+class MudTelnet final : public AbstractTelnet
 {
     Q_OBJECT
 public:
-    explicit MpiFilter(QObject *parent = nullptr);
-
-signals:
-    void sendToMud(const QByteArray &);
-    void parseNewMudInput(const IncomingData &data);
-    void editMessage(int, const QString &, const QString &);
-    void viewMessage(const QString &, const QString &);
+    explicit MudTelnet(QObject *parent);
+    ~MudTelnet() = default;
 
 public slots:
-    void analyzeNewMudInput(const IncomingData &data);
+    void onAnalyzeMudStream(const QByteArray &);
+    void onSendToMud(const QByteArray &);
+    void onConnected();
+    void onRelayNaws(int, int);
+    void onRelayTermType(QByteArray);
 
-protected:
-    void parseMessage(char command, const QByteArray &buffer);
-    void parseEditMessage(const QByteArray &buffer);
-    void parseViewMessage(const QByteArray &buffer);
+signals:
+    void analyzeMudStream(const QByteArray &, bool goAhead);
+    void sendToSocket(const QByteArray &);
+    void relayEchoMode(bool);
 
 private:
-    TelnetDataType m_previousType = TelnetDataType::UNKNOWN;
-    bool m_parsingMpi = false;
-
-    char m_command{}; /* '\0' */
-    int m_remaining = 0;
-    QByteArray m_buffer{};
+    void sendToMapper(const QByteArray &data, bool goAhead) override;
+    void receiveEchoMode(bool toggle) override;
+    void sendRawData(const QByteArray &data) override;
 };
 
-#endif // MPIFILTER_H
+#endif // MUDTELNET_H
