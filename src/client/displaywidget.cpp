@@ -206,15 +206,29 @@ void DisplayWidget::updateFormat(QTextCharFormat &format, int ansiCode)
         format.setFontWeight(QFont::Bold);
         updateFormatBoldColor(format);
         break;
+    case 2:
+        // dim
+        format.setFontWeight(QFont::Light);
+        break;
+    case 3:
+        // italic
+        format.setFontItalic(true);
+        break;
     case 4:
         // underline
         format.setFontUnderline(true);
         break;
     case 5:
-        // blink
-        format.setFontItalic(true);
+        // blink slow
+        format.setFontWeight(QFont::Bold);
+        break;
+    case 6:
+        // blink fast
+        format.setFontWeight(QFont::Bold);
+        updateFormatBoldColor(format);
         break;
     case 7:
+    case 27:
         // inverse
         {
             QBrush tempBrush = format.background();
@@ -223,8 +237,34 @@ void DisplayWidget::updateFormat(QTextCharFormat &format, int ansiCode)
             break;
         }
     case 8:
+        // conceal
+        format.setForeground(format.background());
+        break;
+    case 9:
         // strike-through
         format.setFontStrikeOut(true);
+        break;
+    case 21:
+    case 22:
+    case 25:
+        // bold off
+        format.setFontWeight(QFont::Normal);
+        break;
+    case 23:
+        // italic off
+        format.setFontItalic(false);
+        break;
+    case 24:
+        // underline off
+        format.setFontUnderline(false);
+        break;
+    case 28:
+        // conceal off
+        format.setForeground(m_foregroundColor);
+        break;
+    case 29:
+        // not crossed out
+        format.setFontStrikeOut(false);
         break;
     case 30:
         // black foreground
