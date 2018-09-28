@@ -42,6 +42,7 @@ GeneralPage::GeneralPage(QWidget *parent)
     : QWidget(parent)
 {
     setupUi(this);
+
     connect(remoteName, &QLineEdit::textChanged, this, &GeneralPage::remoteNameTextChanged);
     connect(remotePort, SIGNAL(valueChanged(int)), this, SLOT(remotePortValueChanged(int)));
     connect(localPort, SIGNAL(valueChanged(int)), this, SLOT(localPortValueChanged(int)));
@@ -52,6 +53,12 @@ GeneralPage::GeneralPage(QWidget *parent)
     connect(proxyThreadedCheckBox, &QCheckBox::stateChanged, this, [this]() {
         setConfig().connection.proxyThreaded = proxyThreadedCheckBox->isChecked();
     });
+    connect(charsetComboBox,
+            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+            this,
+            [](const int index) {
+                setConfig().general.characterEncoding = static_cast<CharacterEncoding>(index);
+            });
 
     connect(emulatedExitsCheckBox,
             &QCheckBox::stateChanged,
@@ -86,6 +93,7 @@ GeneralPage::GeneralPage(QWidget *parent)
     const auto &connection = config.connection;
     const auto &mumeNative = config.mumeNative;
     const auto &autoLoad = config.autoLoad;
+    const auto &general = config.general;
 
     remoteName->setText(connection.remoteServerName);
     remotePort->setValue(connection.remotePort);
@@ -97,6 +105,7 @@ GeneralPage::GeneralPage(QWidget *parent)
         tlsEncryptionCheckBox->setChecked(connection.tlsEncryption);
     }
     proxyThreadedCheckBox->setChecked(connection.proxyThreaded);
+    charsetComboBox->setCurrentIndex(static_cast<int>(general.characterEncoding));
 
     emulatedExitsCheckBox->setChecked(mumeNative.emulatedExits);
     showHiddenExitFlagsCheckBox->setChecked(mumeNative.showHiddenExitFlags);

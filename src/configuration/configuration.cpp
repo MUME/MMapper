@@ -116,6 +116,7 @@ ConstString KEY_ALWAYS_ON_TOP = "Always On Top";
 ConstString KEY_AUTO_LOAD = "Auto load";
 ConstString KEY_AUTO_RESIZE_TERMINAL = "Auto resize terminal";
 ConstString KEY_BACKGROUND_COLOR = "Background color";
+ConstString KEY_CHARACTER_ENCODING = "Character encoding";
 ConstString KEY_CHARACTER_NAME = "character name";
 ConstString KEY_CLEAR_INPUT_ON_ENTER = "Clear input on enter";
 ConstString KEY_COLOR = "color";
@@ -144,7 +145,6 @@ ConstString KEY_MAXIMUM_NUMBER_OF_PATHS = "maximum number of paths";
 ConstString KEY_MENU_PROMPT_PATTERN = "Menu prompt pattern";
 ConstString KEY_MOVE_FORCE_PATTERNS_FOR_XML = "Move force patterns for XML";
 ConstString KEY_MULTIPLE_CONNECTIONS_PENALTY = "multiple connections penalty";
-ConstString KEY_MUME_CHARSET_IS_UTF_8 = "MUME charset is UTF-8";
 ConstString KEY_MUME_START_EPOCH = "Mume start epoch";
 ConstString KEY_NO_LAUNCH_PANEL = "No launch panel";
 ConstString KEY_NO_ROOM_DESCRIPTION_PATTERNS = "No room description patterns";
@@ -176,7 +176,6 @@ ConstString KEY_TAB_COMPLETION_DICTIONARY_SIZE = "Tab completion dictionary size
 ConstString KEY_TLS_ENCRYPTION = "TLS encryption";
 ConstString KEY_USE_INTERNAL_EDITOR = "Use internal editor";
 ConstString KEY_USE_SOFTWARE_OPENGL = "Use software OpenGL";
-ConstString KEY_USE_TELNET_IAC_GA_PROMPTS = "Use Telnet IAC-GA prompts";
 ConstString KEY_USE_TRILINEAR_FILTERING = "Use trilinear filtering";
 ConstString KEY_WINDOW_GEOMETRY = "Window Geometry";
 ConstString KEY_WINDOW_STATE = "Window State";
@@ -224,6 +223,17 @@ static bool isValidMapMode(const MapMode mode)
     return false;
 }
 
+static bool isValidCharacterEncoding(const CharacterEncoding encoding)
+{
+    switch (encoding) {
+    case CharacterEncoding::ASCII:
+    case CharacterEncoding::LATIN1:
+    case CharacterEncoding::UTF8:
+        return true;
+    }
+    return false;
+}
+
 static QString sanitizeAnsi(const QString &input, const QString &defaultValue)
 {
     assert(isValidAnsi(defaultValue));
@@ -254,6 +264,16 @@ static MapMode sanitizeMapMode(const uint32_t input)
 
     qWarning() << "invalid MapMode:" << input;
     return MapMode::PLAY;
+}
+
+static CharacterEncoding sanitizeCharacterEncoding(const uint32_t input)
+{
+    const auto encoding = static_cast<CharacterEncoding>(input);
+    if (isValidCharacterEncoding(encoding))
+        return encoding;
+
+    qWarning() << "invalid CharacterEncoding:" << input;
+    return CharacterEncoding::LATIN1;
 }
 
 static uint16_t sanitizeUint16(const int input, const uint16_t defaultValue)
@@ -324,9 +344,13 @@ void Configuration::GeneralSettings::read(QSettings &conf)
     windowGeometry = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
     windowState = conf.value(KEY_WINDOW_STATE).toByteArray();
     alwaysOnTop = conf.value(KEY_ALWAYS_ON_TOP, false).toBool();
-    mapMode = sanitizeMapMode(conf.value(KEY_MAP_MODE, static_cast<uint>(MapMode::PLAY)).toUInt());
+    mapMode = sanitizeMapMode(
+        conf.value(KEY_MAP_MODE, static_cast<uint32_t>(MapMode::PLAY)).toUInt());
     noSplash = conf.value(KEY_NO_SPLASH, false).toBool();
     noLaunchPanel = conf.value(KEY_NO_LAUNCH_PANEL, false).toBool();
+    characterEncoding = sanitizeCharacterEncoding(
+        conf.value(KEY_CHARACTER_ENCODING, static_cast<uint32_t>(CharacterEncoding::LATIN1))
+            .toUInt());
 }
 
 void Configuration::ConnectionSettings::read(QSettings &conf)
@@ -386,8 +410,6 @@ void Configuration::ParserSettings::read(QSettings &conf)
     loginPattern = conf.value(KEY_LOGIN_PATTERN, "#>known? ").toByteArray();
     passwordPattern = conf.value(KEY_PASSWORD_PATTERN, "#>pass phrase: ").toByteArray();
     menuPromptPattern = conf.value(KEY_MENU_PROMPT_PATTERN, "#>> ").toByteArray();
-    // XML mode used UTF-8, non-XML used Latin1.
-    utf8Charset = conf.value(KEY_MUME_CHARSET_IS_UTF_8, false).toBool();
 
     auto &forced = moveForcePatternsList;
     if (forced.isEmpty()) {
@@ -406,7 +428,6 @@ void Configuration::ParserSettings::read(QSettings &conf)
 
 void Configuration::MumeClientProtocolSettings::read(QSettings &conf)
 {
-    IAC_prompt_parser = conf.value(KEY_USE_TELNET_IAC_GA_PROMPTS, true).toBool();
     remoteEditing = conf.value(KEY_REMOTE_EDITING_AND_VIEWING, true).toBool();
     internalRemoteEditor = conf.value(KEY_USE_INTERNAL_EDITOR, true).toBool();
     externalRemoteEditorCommand = conf.value(KEY_EXTERNAL_EDITOR_COMMAND, getPlatformEditor())
@@ -485,9 +506,10 @@ void Configuration::GeneralSettings::write(QSettings &conf) const
     conf.setValue(KEY_WINDOW_GEOMETRY, windowGeometry);
     conf.setValue(KEY_WINDOW_STATE, windowState);
     conf.setValue(KEY_ALWAYS_ON_TOP, alwaysOnTop);
-    conf.setValue(KEY_MAP_MODE, static_cast<uint>(mapMode));
+    conf.setValue(KEY_MAP_MODE, static_cast<uint32_t>(mapMode));
     conf.setValue(KEY_NO_SPLASH, noSplash);
     conf.setValue(KEY_NO_LAUNCH_PANEL, noLaunchPanel);
+    conf.setValue(KEY_CHARACTER_ENCODING, static_cast<uint32_t>(characterEncoding));
 }
 
 void Configuration::ConnectionSettings::write(QSettings &conf) const
@@ -530,7 +552,6 @@ void Configuration::ParserSettings::write(QSettings &conf) const
     conf.setValue(KEY_LOGIN_PATTERN, loginPattern);
     conf.setValue(KEY_PASSWORD_PATTERN, passwordPattern);
     conf.setValue(KEY_MENU_PROMPT_PATTERN, menuPromptPattern);
-    conf.setValue(KEY_MUME_CHARSET_IS_UTF_8, utf8Charset);
 }
 
 void Configuration::MumeNativeSettings::write(QSettings &conf) const
@@ -542,7 +563,6 @@ void Configuration::MumeNativeSettings::write(QSettings &conf) const
 
 void Configuration::MumeClientProtocolSettings::write(QSettings &conf) const
 {
-    conf.setValue(KEY_USE_TELNET_IAC_GA_PROMPTS, IAC_prompt_parser);
     conf.setValue(KEY_REMOTE_EDITING_AND_VIEWING, remoteEditing);
     conf.setValue(KEY_USE_INTERNAL_EDITOR, internalRemoteEditor);
     conf.setValue(KEY_EXTERNAL_EDITOR_COMMAND, externalRemoteEditorCommand);

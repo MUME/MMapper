@@ -26,6 +26,7 @@
 #include "parserpage.h"
 
 #include <QColor>
+#include <QComboBox>
 #include <QString>
 #include <QtWidgets>
 
@@ -45,8 +46,6 @@ ParserPage::ParserPage(QWidget *parent)
     updateColors();
 
     const auto &settings = getConfig().parser;
-    charset->setCurrentIndex(
-        static_cast<int>(settings.utf8Charset ? UiCharset::UTF8 : UiCharset::AsciiOrLatin1));
 
     suppressXmlTagsCheckBox->setChecked(settings.removeXmlTags);
     suppressXmlTagsCheckBox->setEnabled(true);
@@ -56,42 +55,63 @@ ParserPage::ParserPage(QWidget *parent)
     endDescPatternsList->clear();
     endDescPatternsList->addItems(settings.noDescriptionPatternsList);
 
-    connect(removeForcePattern, &QAbstractButton::clicked, this, &ParserPage::removeForcePatternClicked);
-    connect(removeEndDescPattern, &QAbstractButton::clicked, this, &ParserPage::removeEndDescPatternClicked);
+    connect(removeForcePattern,
+            &QAbstractButton::clicked,
+            this,
+            &ParserPage::removeForcePatternClicked);
+    connect(removeEndDescPattern,
+            &QAbstractButton::clicked,
+            this,
+            &ParserPage::removeEndDescPatternClicked);
 
     connect(addForcePattern, &QAbstractButton::clicked, this, &ParserPage::addForcePatternClicked);
-    connect(addEndDescPattern, &QAbstractButton::clicked, this, &ParserPage::addEndDescPatternClicked);
+    connect(addEndDescPattern,
+            &QAbstractButton::clicked,
+            this,
+            &ParserPage::addEndDescPatternClicked);
 
     connect(testPattern, &QAbstractButton::clicked, this, &ParserPage::testPatternClicked);
     connect(validPattern, &QAbstractButton::clicked, this, &ParserPage::validPatternClicked);
 
     connect(forcePatternsList,
-            SIGNAL(activated(const QString &)),
-            SLOT(forcePatternsListActivated(const QString &)));
+            static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::activated),
+            this,
+            &ParserPage::forcePatternsListActivated);
     connect(endDescPatternsList,
-            SIGNAL(activated(const QString &)),
-            SLOT(endDescPatternsListActivated(const QString &)));
+            static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::activated),
+            this,
+            &ParserPage::endDescPatternsListActivated);
 
     connect(roomNameAnsiColor,
-            SIGNAL(activated(const QString &)),
-            SLOT(roomNameColorChanged(const QString &)));
+            static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::activated),
+            this,
+            &ParserPage::roomNameColorChanged);
     connect(roomDescAnsiColor,
-            SIGNAL(activated(const QString &)),
-            SLOT(roomDescColorChanged(const QString &)));
+            static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::activated),
+            this,
+            &ParserPage::roomDescColorChanged);
 
     connect(roomNameAnsiColorBG,
-            SIGNAL(activated(const QString &)),
-            SLOT(roomNameColorBGChanged(const QString &)));
+            static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::activated),
+            this,
+            &ParserPage::roomNameColorBGChanged);
     connect(roomDescAnsiColorBG,
-            SIGNAL(activated(const QString &)),
-            SLOT(roomDescColorBGChanged(const QString &)));
+            static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::activated),
+            this,
+            &ParserPage::roomDescColorBGChanged);
 
-    connect(roomNameAnsiBold, &QAbstractButton::toggled, this, &ParserPage::anyColorToggleButtonToggled);
+    connect(roomNameAnsiBold,
+            &QAbstractButton::toggled,
+            this,
+            &ParserPage::anyColorToggleButtonToggled);
     connect(roomNameAnsiUnderline,
             &QAbstractButton::toggled,
             this,
             &ParserPage::anyColorToggleButtonToggled);
-    connect(roomDescAnsiBold, &QAbstractButton::toggled, this, &ParserPage::anyColorToggleButtonToggled);
+    connect(roomDescAnsiBold,
+            &QAbstractButton::toggled,
+            this,
+            &ParserPage::anyColorToggleButtonToggled);
     connect(roomDescAnsiUnderline,
             &QAbstractButton::toggled,
             this,
@@ -99,18 +119,8 @@ ParserPage::ParserPage(QWidget *parent)
 
     connect(suppressXmlTagsCheckBox,
             &QCheckBox::stateChanged,
-            this, &ParserPage::suppressXmlTagsCheckBoxStateChanged);
-
-    connect(charset,
-            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
             this,
-            &ParserPage::charsetChanged);
-}
-
-void ParserPage::charsetChanged(int /* unused */)
-{
-    setConfig().parser.utf8Charset = (static_cast<UiCharset>(charset->currentIndex())
-                                   == UiCharset::UTF8);
+            &ParserPage::suppressXmlTagsCheckBoxStateChanged);
 }
 
 void ParserPage::suppressXmlTagsCheckBoxStateChanged(int /*unused*/)

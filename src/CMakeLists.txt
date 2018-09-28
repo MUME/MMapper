@@ -1,9 +1,9 @@
 set(mmapper_SRCS
     main.cpp
+    client/ClientTelnet.cpp
+    client/ClientTelnet.h
     client/clientwidget.cpp
     client/clientwidget.h
-    client/ctelnet.cpp
-    client/ctelnet.h
     client/displaywidget.cpp
     client/displaywidget.h
     client/inputwidget.cpp
@@ -223,14 +223,22 @@ set(mmapper_SRCS
     preferences/parserpage.h
     preferences/pathmachinepage.cpp
     preferences/pathmachinepage.h
+    proxy/AbstractTelnet.cpp
+    proxy/AbstractTelnet.h
     proxy/connectionlistener.cpp
     proxy/connectionlistener.h
+    proxy/MudTelnet.cpp
+    proxy/MudTelnet.h
     proxy/mumesocket.cpp
     proxy/mumesocket.h
     proxy/proxy.cpp
     proxy/proxy.h
     proxy/telnetfilter.cpp
     proxy/telnetfilter.h
+    proxy/TextCodec.cpp
+    proxy/TextCodec.h
+    proxy/UserTelnet.cpp
+    proxy/UserTelnet.h
 )
 
 set(mmapper_RCS

@@ -37,21 +37,20 @@ MumeProtocolPage::MumeProtocolPage(QWidget *parent)
 {
     ui->setupUi(this);
 
-    connect(ui->IACPromptCheckBox,
-            &QCheckBox::stateChanged,
-            this, &MumeProtocolPage::IACPromptCheckBoxStateChanged);
     connect(ui->remoteEditCheckBox,
             &QCheckBox::stateChanged,
-            this, &MumeProtocolPage::remoteEditCheckBoxStateChanged);
+            this,
+            &MumeProtocolPage::remoteEditCheckBoxStateChanged);
     connect(ui->internalEditorRadioButton,
             &QAbstractButton::toggled,
-            this, &MumeProtocolPage::internalEditorRadioButtonChanged);
+            this,
+            &MumeProtocolPage::internalEditorRadioButtonChanged);
     connect(ui->externalEditorCommand,
             &QLineEdit::textChanged,
-            this, &MumeProtocolPage::externalEditorCommandTextChanged);
+            this,
+            &MumeProtocolPage::externalEditorCommandTextChanged);
 
     const auto &settings = getConfig().mumeClientProtocol;
-    ui->IACPromptCheckBox->setChecked(settings.IAC_prompt_parser);
     ui->remoteEditCheckBox->setChecked(settings.remoteEditing);
     ui->internalEditorRadioButton->setChecked(settings.internalRemoteEditor);
     ui->externalEditorRadioButton->setChecked(!settings.internalRemoteEditor);
@@ -61,11 +60,6 @@ MumeProtocolPage::MumeProtocolPage(QWidget *parent)
 MumeProtocolPage::~MumeProtocolPage()
 {
     delete ui;
-}
-
-void MumeProtocolPage::IACPromptCheckBoxStateChanged(int /*unused*/)
-{
-    setConfig().mumeClientProtocol.IAC_prompt_parser = ui->IACPromptCheckBox->isChecked();
 }
 
 void MumeProtocolPage::remoteEditCheckBoxStateChanged(int /*unused*/)

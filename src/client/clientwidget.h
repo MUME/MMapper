@@ -39,7 +39,7 @@ class QSplitter;
 class QStatusBar;
 class QWidget;
 class StackedInputWidget;
-class cTelnet;
+class ClientTelnet;
 
 class ClientWidget final : public QDialog
 {
@@ -80,7 +80,7 @@ private:
     QSplitter *m_splitter = nullptr;
     DisplayWidget *m_display = nullptr;
     StackedInputWidget *m_input = nullptr;
-    cTelnet *m_telnet = nullptr;
+    ClientTelnet *m_telnet = nullptr;
     QStatusBar *m_statusBar = nullptr;
 };
 

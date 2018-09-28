@@ -45,7 +45,6 @@ public:
     ~MumeProtocolPage();
 
 public slots:
-    void IACPromptCheckBoxStateChanged(int);
     void remoteEditCheckBoxStateChanged(int);
     void internalEditorRadioButtonChanged(bool);
     void externalEditorCommandTextChanged(QString);

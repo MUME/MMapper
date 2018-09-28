@@ -40,6 +40,7 @@
 
 enum class MapMode { PLAY, MAP, OFFLINE };
 enum class Platform { Unknown, Win32, Mac, Linux };
+enum class CharacterEncoding { LATIN1, UTF8, ASCII };
 
 static inline constexpr Platform getCurrentPlatform()
 {
@@ -76,6 +77,7 @@ public:
         MapMode mapMode = MapMode::PLAY;
         bool noSplash = false;
         bool noLaunchPanel = false;
+        CharacterEncoding characterEncoding = CharacterEncoding::LATIN1;
 
     private:
         SUBGROUP();
@@ -107,15 +109,12 @@ public:
         QByteArray passwordPattern{};
         QByteArray menuPromptPattern{};
 
-        bool utf8Charset = false;
-
     private:
         SUBGROUP();
     } parser;
 
     struct MumeClientProtocolSettings final
     {
-        bool IAC_prompt_parser = false;
         bool remoteEditing = false;
         bool internalRemoteEditor = false;
         QString externalRemoteEditorCommand{};

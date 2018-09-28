@@ -23,43 +23,34 @@
 **
 ************************************************************************/
 
-#ifndef MPIFILTER_H
-#define MPIFILTER_H
+#ifndef TEXTCODEC_H
+#define TEXTCODEC_H
 
-#include <QByteArray>
-#include <QObject>
-#include <QString>
-#include <QtCore>
+#include <QTextCodec>
 
-#include "../proxy/telnetfilter.h"
+class QTextCodec;
 
-class MpiFilter : public QObject
+//supported IANA character sets
+static constexpr const char *const LATIN_1_ENCODING = "ISO-8859-1";
+static constexpr const char *const UTF_8_ENCODING = "UTF-8";
+static constexpr const char *const US_ASCII_ENCODING = "US-ASCII";
+
+enum class TextCodecStrategy { AUTO_SELECT_CODEC = 0, FORCE_US_ASCII, FORCE_LATIN_1, FORCE_UTF_8 };
+
+class TextCodec
 {
-    Q_OBJECT
 public:
-    explicit MpiFilter(QObject *parent = nullptr);
+    explicit TextCodec(TextCodecStrategy textCodecStrategy = TextCodecStrategy::AUTO_SELECT_CODEC);
+    void setupEncoding(const QByteArray &encoding);
+    QByteArray fromUnicode(const QString &);
+    QString toUnicode(const QByteArray &);
 
-signals:
-    void sendToMud(const QByteArray &);
-    void parseNewMudInput(const IncomingData &data);
-    void editMessage(int, const QString &, const QString &);
-    void viewMessage(const QString &, const QString &);
-
-public slots:
-    void analyzeNewMudInput(const IncomingData &data);
-
-protected:
-    void parseMessage(char command, const QByteArray &buffer);
-    void parseEditMessage(const QByteArray &buffer);
-    void parseViewMessage(const QByteArray &buffer);
+    bool supports(const QByteArray &encoding) const;
+    QStringList supportedEncodings() const;
 
 private:
-    TelnetDataType m_previousType = TelnetDataType::UNKNOWN;
-    bool m_parsingMpi = false;
-
-    char m_command{}; /* '\0' */
-    int m_remaining = 0;
-    QByteArray m_buffer{};
+    QTextCodec *textCodec = nullptr;
+    TextCodecStrategy textCodecStrategy{TextCodecStrategy::AUTO_SELECT_CODEC};
 };
 
-#endif // MPIFILTER_H
+#endif // TEXTCODEC_H

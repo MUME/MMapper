@@ -47,14 +47,14 @@ static bool endsInLinefeed(TelnetDataType type)
     }
 }
 
-void MpiFilter::analyzeNewMudInput(IncomingData &data)
+void MpiFilter::analyzeNewMudInput(const IncomingData &data)
 {
     if (m_parsingMpi) {
         if (data.line.length() <= m_remaining) {
             m_buffer.append(data.line);
             m_remaining -= data.line.length();
         } else {
-            QByteArray temp = data.line.left(m_remaining);
+            const QByteArray temp = data.line.left(m_remaining);
             m_buffer.append(temp);
             m_remaining -= temp.length();
 

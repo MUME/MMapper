@@ -2,7 +2,8 @@
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
-**            Marek Krejza <krejza@gmail.com> (Caligor)
+**            Marek Krejza <krejza@gmail.com> (Caligor),
+**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
 ** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
@@ -33,8 +34,6 @@
 #include <QString>
 #include <QtCore>
 
-//#define TELNET_STREAM_DEBUG_INPUT_TO_FILE
-
 enum class TelnetDataType {
     PROMPT,
     MENU_PROMPT,
@@ -43,7 +42,6 @@ enum class TelnetDataType {
     CRLF,
     LFCR,
     LF,
-    TELNET,
     DELAY,
     SPLIT,
     UNKNOWN
@@ -53,42 +51,33 @@ struct IncomingData
 {
     explicit IncomingData() = default;
     QByteArray line{};
-    TelnetDataType type = TelnetDataType::PROMPT;
+    TelnetDataType type = TelnetDataType::SPLIT;
 };
-
-using TelnetIncomingDataQueue = QQueue<IncomingData>;
 
 class TelnetFilter : public QObject
 {
+    Q_OBJECT
+    using TelnetIncomingDataQueue = QQueue<IncomingData>;
+
 public:
     explicit TelnetFilter(QObject *parent);
-    ~TelnetFilter();
+    ~TelnetFilter() = default;
 
 public slots:
-    void analyzeMudStream(const QByteArray &ba);
-    void analyzeUserStream(const QByteArray &ba);
+    void onAnalyzeMudStream(const QByteArray &ba, bool goAhead);
+    void onAnalyzeUserStream(const QByteArray &ba, bool goAhead);
 
 signals:
-    void parseNewMudInput(IncomingData &);
-    void parseNewUserInput(IncomingData &);
-
-    //telnet
-    void sendToMud(const QByteArray &);
-    void sendToUser(const QByteArray &);
+    void parseNewMudInput(const IncomingData &);
+    void parseNewUserInput(const IncomingData &);
 
 private:
-#ifdef TELNET_STREAM_DEBUG_INPUT_TO_FILE
-    QDataStream *debugStream;
-    QFile *file;
-#endif
-
-    Q_OBJECT
     void dispatchTelnetStream(const QByteArray &stream,
                               IncomingData &m_incomingData,
                               TelnetIncomingDataQueue &que);
 
     IncomingData m_userIncomingData{};
-    IncomingData m_mudIncomingData{};
+    IncomingData m_mudIncomingBuffer{};
     TelnetIncomingDataQueue m_mudIncomingQue{};
     TelnetIncomingDataQueue m_userIncomingQue{};
 };

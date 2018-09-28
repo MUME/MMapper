@@ -39,12 +39,14 @@
 
 #include "../global/io.h"
 
+class UserTelnet;
 class ConnectionListener;
 class CommandEvaluator;
 class MapData;
 class Mmapper2Group;
 class Mmapper2PathMachine;
 class MpiFilter;
+class MudTelnet;
 class MumeClock;
 class MumeSocket;
 class MumeXmlParser;
@@ -125,6 +127,8 @@ private:
 
     bool m_serverConnected = false;
 
+    UserTelnet *m_userTelnet = nullptr;
+    MudTelnet *m_mudTelnet = nullptr;
     TelnetFilter *m_telnetFilter = nullptr;
     MpiFilter *m_mpiFilter = nullptr;
     MumeXmlParser *m_parserXml = nullptr;
