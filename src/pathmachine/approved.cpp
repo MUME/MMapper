@@ -61,10 +61,6 @@ Approved::~Approved()
             owner->releaseRoom(*this, matchedRoom->getId());
         } else {
             owner->keepRoom(*this, matchedRoom->getId());
-            if (update) {
-                owner->scheduleAction(
-                    new SingleRoomAction(new Update(myEvent), matchedRoom->getId()));
-            }
         }
     }
 }

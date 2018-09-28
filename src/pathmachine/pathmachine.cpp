@@ -284,6 +284,12 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
             }
         }
 
+        // Update the room if we had a tolerant match rather than an exact match
+        if (appr.needsUpdate()) {
+            emit scheduleAction(
+                new SingleRoomAction(new Update(sigParseEvent), mostLikelyRoom.getId()));
+        }
+
         // Send updates
         emit playerMoved(mostLikelyRoom.getPosition());
         // GroupManager

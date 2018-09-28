@@ -49,11 +49,12 @@ private:
 public:
     explicit Approved(AbstractRoomFactory *in_factory,
                       const SigParseEvent &sigParseEvent,
-                      int tolerance);
+                      int matchingTolerance);
     ~Approved();
     void receiveRoom(RoomAdmin *, const Room *) override;
     const Room *oneMatch() const;
     RoomAdmin *getOwner() const;
+    bool needsUpdate() const { return update; }
     void reset();
 
 public:
