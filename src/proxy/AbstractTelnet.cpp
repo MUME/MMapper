@@ -501,10 +501,10 @@ void AbstractTelnet::processTelnetCommand(const QByteArray &command)
                             // IAC SB CHARSET REQUEST <sep> <charsets> IAC SE
                             const auto sep = command[4];
                             const auto characterSets = command.mid(5, iacPos - 5).split(sep);
-                            for (auto characterSet : characterSets) {
+                            for (const auto characterSet : characterSets) {
                                 if (textCodec.supports(characterSet)) {
                                     accepted = true;
-                                    textCodec.setupEncoding(characterSet);
+                                    textCodec.setEncodingForName(characterSet);
 
                                     // Reply to server that we accepted this encoding
                                     sendCharsetAccepted(characterSet);
@@ -524,7 +524,7 @@ void AbstractTelnet::processTelnetCommand(const QByteArray &command)
                         if (iacPos > 5) {
                             // IAC SB CHARSET ACCEPTED <charset> IAC SE
                             auto characterSet = command.mid(4, iacPos - 4);
-                            textCodec.setupEncoding(characterSet);
+                            textCodec.setEncodingForName(characterSet);
                             // TODO: RFC 2066 states to stop queueing data
                         }
                         break;

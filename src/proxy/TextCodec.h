@@ -26,6 +26,7 @@
 #ifndef TEXTCODEC_H
 #define TEXTCODEC_H
 
+#include "../configuration/configuration.h"
 #include <QTextCodec>
 
 class QTextCodec;
@@ -35,20 +36,25 @@ static constexpr const char *const LATIN_1_ENCODING = "ISO-8859-1";
 static constexpr const char *const UTF_8_ENCODING = "UTF-8";
 static constexpr const char *const US_ASCII_ENCODING = "US-ASCII";
 
-enum class TextCodecStrategy { AUTO_SELECT_CODEC = 0, FORCE_US_ASCII, FORCE_LATIN_1, FORCE_UTF_8 };
+enum class TextCodecStrategy { FORCE_US_ASCII, FORCE_LATIN_1, FORCE_UTF_8, AUTO_SELECT_CODEC };
 
 class TextCodec
 {
 public:
     explicit TextCodec(TextCodecStrategy textCodecStrategy = TextCodecStrategy::AUTO_SELECT_CODEC);
-    void setupEncoding(const QByteArray &encoding);
+
+    CharacterEncoding getEncoding() const { return currentEncoding; }
+    void setEncoding(CharacterEncoding encoding);
+
     QByteArray fromUnicode(const QString &);
     QString toUnicode(const QByteArray &);
 
-    bool supports(const QByteArray &encoding) const;
+    void setEncodingForName(const QByteArray &encodingName);
+    bool supports(const QByteArray &encodingName) const;
     QStringList supportedEncodings() const;
 
 private:
+    CharacterEncoding currentEncoding;
     QTextCodec *textCodec = nullptr;
     TextCodecStrategy textCodecStrategy{TextCodecStrategy::AUTO_SELECT_CODEC};
 };

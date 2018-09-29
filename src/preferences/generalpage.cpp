@@ -38,14 +38,25 @@ static constexpr const bool NO_OPEN_SSL = true;
 static constexpr const bool NO_OPEN_SSL = false;
 #endif
 
+// Order of entries in charsetComboBox drop down
+static_assert(static_cast<int>(CharacterEncoding::LATIN1) == 0, "");
+static_assert(static_cast<int>(CharacterEncoding::UTF8) == 1, "");
+static_assert(static_cast<int>(CharacterEncoding::ASCII) == 2, "");
+
 GeneralPage::GeneralPage(QWidget *parent)
     : QWidget(parent)
 {
     setupUi(this);
 
     connect(remoteName, &QLineEdit::textChanged, this, &GeneralPage::remoteNameTextChanged);
-    connect(remotePort, SIGNAL(valueChanged(int)), this, SLOT(remotePortValueChanged(int)));
-    connect(localPort, SIGNAL(valueChanged(int)), this, SLOT(localPortValueChanged(int)));
+    connect(remotePort,
+            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            this,
+            &GeneralPage::remotePortValueChanged);
+    connect(localPort,
+            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            this,
+            &GeneralPage::localPortValueChanged);
     connect(tlsEncryptionCheckBox,
             &QCheckBox::stateChanged,
             this,
