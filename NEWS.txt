@@ -1,4 +1,29 @@
 ================================
+MMapper 2.6.0 (September 29, 2018)
+================================
+
+Note:
+ - MUME will now ignore 'change charset' commands because MMapper 2.6.0 always
+   communicates to MUME in Latin-1 over a Telnet proxy
+ - In order to change the character encoding sent to your mud client please
+   navigate to the MMapper General preferences and select an alternative
+   character encoding from the drop down: Latin-1, UTF-8, or US-ASCII
+Changes:
+ - Introduced "No bash" door flag and "Stables" room flag
+ - Squished bug where rooms would update themselves outside of "Mapping Mode"
+ - Integrated client now displays user input as yellow
+ - MMapper now supports character set negotiation (RFC 2066) and handles
+   character encoding for any client that supports it
+ - Prompts are now parsed if they are coloured
+ - Windows users now utilize OpenGL software rendering by default
+ - Added "Show launch panel" option to General preferences
+ - Stripped support for maps predating MMapper2
+ - Fixed Parser &amp; bug in 'Suppress XML' mode
+ - TLS certificate information is now logged
+ - Refactored room lookups to use STL data structures
+ - Cleaned up MMapper configuration and map compression logic
+
+================================
 MMapper 2.5.3 (August 18, 2018)
 ================================
 
