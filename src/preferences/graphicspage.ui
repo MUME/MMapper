@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>GraphicsPage</class>
  <widget class="QWidget" name="GraphicsPage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>420</width>
+    <height>427</height>
+   </rect>
+  </property>
   <property name="sizePolicy">
    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
     <horstretch>0</horstretch>
@@ -253,6 +261,17 @@
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <pixmapfunction>qPixmapFromMimeSource</pixmapfunction>
+ <tabstops>
+  <tabstop>antialiasingSamplesComboBox</tabstop>
+  <tabstop>trilinearFilteringCheckBox</tabstop>
+  <tabstop>softwareOpenGLCheckBox</tabstop>
+  <tabstop>drawUpperLayersTextured</tabstop>
+  <tabstop>drawNotMappedExits</tabstop>
+  <tabstop>drawDoorNames</tabstop>
+  <tabstop>drawNoMatchExits</tabstop>
+  <tabstop>updated</tabstop>
+  <tabstop>changeColor</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>ParserPage</class>
  <widget class="QWidget" name="ParserPage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>441</width>
+    <height>549</height>
+   </rect>
+  </property>
   <property name="sizePolicy">
    <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
     <horstretch>0</horstretch>
@@ -58,10 +66,18 @@
        <number>6</number>
       </property>
       <item row="3" column="1">
-       <widget class="AnsiCombo" name="roomDescAnsiColorBG" native="true"/>
+       <widget class="AnsiCombo" name="roomDescAnsiColorBG" native="true">
+        <property name="focusPolicy">
+         <enum>Qt::TabFocus</enum>
+        </property>
+       </widget>
       </item>
       <item row="1" column="1">
-       <widget class="AnsiCombo" name="roomNameAnsiColorBG" native="true"/>
+       <widget class="AnsiCombo" name="roomNameAnsiColorBG" native="true">
+        <property name="focusPolicy">
+         <enum>Qt::TabFocus</enum>
+        </property>
+       </widget>
       </item>
       <item row="1" column="3">
        <widget class="QCheckBox" name="roomNameAnsiUnderline">
@@ -90,7 +106,11 @@
        </widget>
       </item>
       <item row="1" column="0">
-       <widget class="AnsiCombo" name="roomNameAnsiColor" native="true"/>
+       <widget class="AnsiCombo" name="roomNameAnsiColor" native="true">
+        <property name="focusPolicy">
+         <enum>Qt::TabFocus</enum>
+        </property>
+       </widget>
       </item>
       <item row="3" column="2">
        <widget class="QCheckBox" name="roomDescAnsiBold">
@@ -169,7 +189,11 @@
        </widget>
       </item>
       <item row="3" column="0">
-       <widget class="AnsiCombo" name="roomDescAnsiColor" native="true"/>
+       <widget class="AnsiCombo" name="roomDescAnsiColor" native="true">
+        <property name="focusPolicy">
+         <enum>Qt::TabFocus</enum>
+        </property>
+       </widget>
       </item>
       <item row="1" column="4">
        <widget class="QLabel" name="labelRoomColor">
@@ -561,18 +585,25 @@
  </customwidgets>
  <tabstops>
   <tabstop>roomNameAnsiColor</tabstop>
+  <tabstop>roomNameAnsiColorBG</tabstop>
+  <tabstop>roomNameAnsiBold</tabstop>
+  <tabstop>roomNameAnsiUnderline</tabstop>
   <tabstop>roomDescAnsiColor</tabstop>
+  <tabstop>roomDescAnsiColorBG</tabstop>
+  <tabstop>roomDescAnsiBold</tabstop>
+  <tabstop>roomDescAnsiUnderline</tabstop>
+  <tabstop>suppressXmlTagsCheckBox</tabstop>
   <tabstop>forcePatternsList</tabstop>
-  <tabstop>removeForcePattern</tabstop>
   <tabstop>addForcePattern</tabstop>
+  <tabstop>removeForcePattern</tabstop>
   <tabstop>endDescPatternsList</tabstop>
   <tabstop>addEndDescPattern</tabstop>
   <tabstop>removeEndDescPattern</tabstop>
-  <tabstop>testPattern</tabstop>
-  <tabstop>validPattern</tabstop>
   <tabstop>newPattern</tabstop>
-  <tabstop>testString</tabstop>
   <tabstop>resetPatterns</tabstop>
+  <tabstop>testString</tabstop>
+  <tabstop>validPattern</tabstop>
+  <tabstop>testPattern</tabstop>
  </tabstops>
  <resources/>
  <connections/>

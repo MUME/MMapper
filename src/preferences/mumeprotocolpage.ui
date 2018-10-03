@@ -153,6 +153,14 @@
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <pixmapfunction>qPixmapFromMimeSource</pixmapfunction>
+ <tabstops>
+  <tabstop>remoteEditCheckBox</tabstop>
+  <tabstop>IACPromptCheckBox</tabstop>
+  <tabstop>xmlSupportCheckBox</tabstop>
+  <tabstop>internalEditorRadioButton</tabstop>
+  <tabstop>externalEditorRadioButton</tabstop>
+  <tabstop>externalEditorCommand</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
  <buttongroups>

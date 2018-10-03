@@ -583,6 +583,31 @@
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <pixmapfunction>qPixmapFromMimeSource</pixmapfunction>
+ <tabstops>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>objectsList</tabstop>
+  <tabstop>objectNameStr</tabstop>
+  <tabstop>objectType</tabstop>
+  <tabstop>objectText</tabstop>
+  <tabstop>objectClassesList</tabstop>
+  <tabstop>m_x1</tabstop>
+  <tabstop>m_x2</tabstop>
+  <tabstop>m_layer</tabstop>
+  <tabstop>m_y1</tabstop>
+  <tabstop>m_y2</tabstop>
+  <tabstop>m_rotationAngle</tabstop>
+  <tabstop>objectModify</tabstop>
+  <tabstop>objectCreate</tabstop>
+  <tabstop>objectDelete</tabstop>
+  <tabstop>closeButton</tabstop>
+  <tabstop>layerNButton</tabstop>
+  <tabstop>layerUpButton</tabstop>
+  <tabstop>layerWButton</tabstop>
+  <tabstop>layerEButton</tabstop>
+  <tabstop>layerDownButton</tabstop>
+  <tabstop>layerSButton</tabstop>
+  <tabstop>objectDeleteAll</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

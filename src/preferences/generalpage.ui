@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>GeneralPage</class>
  <widget class="QWidget" name="GeneralPage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>454</width>
+    <height>546</height>
+   </rect>
+  </property>
   <property name="sizePolicy">
    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
     <horstretch>0</horstretch>
@@ -339,6 +347,22 @@
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <pixmapfunction>qPixmapFromMimeSource</pixmapfunction>
+ <tabstops>
+  <tabstop>remoteName</tabstop>
+  <tabstop>remotePort</tabstop>
+  <tabstop>tlsEncryptionCheckBox</tabstop>
+  <tabstop>localPort</tabstop>
+  <tabstop>proxyThreadedCheckBox</tabstop>
+  <tabstop>charsetComboBox</tabstop>
+  <tabstop>emulatedExitsCheckBox</tabstop>
+  <tabstop>showHiddenExitFlagsCheckBox</tabstop>
+  <tabstop>showNotesCheckBox</tabstop>
+  <tabstop>showLaunchPanelCheckBox</tabstop>
+  <tabstop>autoLoadCheck</tabstop>
+  <tabstop>autoLoadFileName</tabstop>
+  <tabstop>selectWorldFileButton</tabstop>
+  <tabstop>displayMumeClockCheckBox</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

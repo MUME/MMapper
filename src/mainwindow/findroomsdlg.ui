@@ -171,6 +171,18 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>lineEdit</tabstop>
+  <tabstop>nameRadioButton</tabstop>
+  <tabstop>descRadioButton</tabstop>
+  <tabstop>dynDescRadioButton</tabstop>
+  <tabstop>exitsRadioButton</tabstop>
+  <tabstop>notesRadioButton</tabstop>
+  <tabstop>caseCheckBox</tabstop>
+  <tabstop>findButton</tabstop>
+  <tabstop>closeButton</tabstop>
+  <tabstop>resultTable</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

@@ -290,6 +290,18 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>fontPushButton</tabstop>
+  <tabstop>fgColorPushButton</tabstop>
+  <tabstop>bgColorPushButton</tabstop>
+  <tabstop>columnsSpinBox</tabstop>
+  <tabstop>rowsSpinBox</tabstop>
+  <tabstop>scrollbackSpinBox</tabstop>
+  <tabstop>autoResizeTerminalCheckBox</tabstop>
+  <tabstop>inputHistorySpinBox</tabstop>
+  <tabstop>tabDictionarySpinBox</tabstop>
+  <tabstop>clearInputCheckBox</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
