@@ -11,3 +11,11 @@ Makefile
 map/arda.mm2
 **/.DS_Store
 .idea
+
+# snapcraft
+parts/
+prime/
+snap/
+stage/
+*.snap
+*_source.tar.bz2

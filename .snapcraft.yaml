@@ -1,5 +1,5 @@
 name: mmapper
-version: 2.5.1+git
+version: 2.6.0+git
 version-script: git describe --tags --always --long
 icon: src/resources/icons/m.png
 summary: MUME Mapper
@@ -24,6 +24,8 @@ apps:
       - opengl
       - x11
       - gsettings
+    environment:
+      DISABLE_WAYLAND: 1
 
 parts:
   mmapper:
@@ -41,6 +43,7 @@ parts:
       - zlib1g
       - libssl1.0.0
       - libqt5xml5
+      - qtwayland5
     override-build: |
       snapcraftctl build
       sed -i 's|Icon=mmapper|Icon=${SNAP}/usr/share/icons/hicolor/256x256/apps/mmapper.png|g' $SNAPCRAFT_PART_INSTALL/usr/share/applications/mmapper.desktop
