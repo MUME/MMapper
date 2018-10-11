@@ -202,6 +202,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     wireConnections();
     readSettings();
 
+    // Re-hide or re-show docks that might have been restored
+    m_dockDialogGroup->hide();
     if (getConfig().general.noLaunchPanel) {
         m_launchWidget->hide();
         m_dockLaunch->hide();
