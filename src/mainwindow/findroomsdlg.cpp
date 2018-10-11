@@ -52,16 +52,10 @@ FindRoomsDlg::FindRoomsDlg(MapData *md, QWidget *parent)
     m_showSelectedRoom = new QShortcut(QKeySequence(tr("Space", "Select result item")), resultTable);
     m_showSelectedRoom->setContext(Qt::WidgetShortcut);
 
-    connect(lineEdit,
-            &QLineEdit::textChanged,
-            this,
-            &FindRoomsDlg::enableFindButton);
+    connect(lineEdit, &QLineEdit::textChanged, this, &FindRoomsDlg::enableFindButton);
     connect(findButton, &QAbstractButton::clicked, this, &FindRoomsDlg::findClicked);
     connect(closeButton, &QAbstractButton::clicked, this, &QWidget::close);
-    connect(resultTable,
-            &QTreeWidget::itemDoubleClicked,
-            this,
-            &FindRoomsDlg::itemDoubleClicked);
+    connect(resultTable, &QTreeWidget::itemDoubleClicked, this, &FindRoomsDlg::itemDoubleClicked);
     connect(m_showSelectedRoom, &QShortcut::activated, this, &FindRoomsDlg::showSelectedRoom);
 
     label->setFocusProxy(lineEdit);
@@ -196,9 +190,10 @@ void FindRoomsDlg::itemDoubleClicked(QTreeWidgetItem *item)
     }
 
     const auto id = RoomId{item->text(0).toUInt()};
-    const Room *r = m_mapData->getRoom(id, m_roomSelection);
-    Coordinate c = r->getPosition();
-    emit center(c.x, c.y); // connects to MapWindow
+    if (const Room *r = m_mapData->getRoom(id, m_roomSelection)) {
+        Coordinate c = r->getPosition();
+        emit center(c.x, c.y); // connects to MapWindow
+    }
 
     emit log("FindRooms", item->toolTip(0));
     //  emit newRoomSelection(m_roomSelection);

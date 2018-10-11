@@ -107,8 +107,7 @@ QVariant GroupModel::dataForCharacter(CGroupChar *const character, ColumnType co
             QString roomName = "Unknown";
             if (character->pos != DEFAULT_ROOMID) {
                 const RoomSelection *roomSelection = m_map->select();
-                const Room *r = m_map->getRoom(character->pos, roomSelection);
-                if (r != nullptr) {
+                if (const Room *r = m_map->getRoom(character->pos, roomSelection)) {
                     roomName = r->getName();
                 }
                 m_map->unselect(roomSelection);

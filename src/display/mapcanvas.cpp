@@ -645,7 +645,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
                 const Room *r2 = m_connectionSelection->getSecond().room;
                 ExitDirection dir2 = m_connectionSelection->getSecond().direction;
 
-                if (r2 != nullptr) {
+                if (r1 != nullptr && r2 != nullptr) {
                     if (!(r1->exit(dir1).containsOut(r2->getId()))
                         || !(r2->exit(dir2).containsOut(r1->getId()))) { //not two ways
                         if (dir2 != ExitDirection::UNKNOWN) {
@@ -820,7 +820,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                 const Room *r2 = m_connectionSelection->getSecond().room;
                 ExitDirection dir2 = m_connectionSelection->getSecond().direction;
 
-                if (r2 != nullptr) {
+                if (r1 != nullptr && r2 != nullptr) {
                     const RoomSelection *tmpSel = m_data->select();
                     m_data->getRoom(r1->getId(), tmpSel);
                     m_data->getRoom(r2->getId(), tmpSel);
@@ -871,7 +871,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                 const Room *r2 = m_connectionSelection->getSecond().room;
                 ExitDirection dir2 = m_connectionSelection->getSecond().direction;
 
-                if (r2 != nullptr) {
+                if (r1 != nullptr && r2 != nullptr) {
                     if (!(r1->exit(dir1).containsOut(r2->getId()))
                         || !(r2->exit(dir2).containsOut(r1->getId()))) {
                         if (dir2 != ExitDirection::UNKNOWN) {

@@ -1637,7 +1637,7 @@ void MainWindow::onDeleteConnectionSelection()
         const Room *r2 = m_connectionSelection->getSecond().room;
         ExitDirection dir2 = m_connectionSelection->getSecond().direction;
 
-        if (r2 != nullptr) {
+        if (r1 != nullptr && r2 != nullptr) {
             const RoomSelection *tmpSel = m_mapData->select();
             m_mapData->getRoom(r1->getId(), tmpSel);
             m_mapData->getRoom(r2->getId(), tmpSel);

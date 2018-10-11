@@ -442,19 +442,19 @@ void AbstractParser::parseExits()
     }
 
     const RoomSelection *rs = m_mapData->select();
-    const Room *room = m_mapData->getRoom(getPosition(), rs);
-    QByteArray cn = enhanceExits(room);
+    if (const Room *room = m_mapData->getRoom(getPosition(), rs)) {
+        QByteArray cn = enhanceExits(room);
 
-    sendToUser(exitsByteArray.simplified() + cn);
+        sendToUser(exitsByteArray.simplified() + cn);
 
-    if (getConfig().mumeNative.showNotes) {
-        QString ns = room->getNote();
-        if (!ns.isEmpty()) {
-            QByteArray note = "Note: " + ns.toLatin1() + "\r\n";
-            sendToUser(note);
+        if (getConfig().mumeNative.showNotes) {
+            QString ns = room->getNote();
+            if (!ns.isEmpty()) {
+                QByteArray note = "Note: " + ns.toLatin1() + "\r\n";
+                sendToUser(note);
+            }
         }
     }
-
     m_mapData->unselect(rs);
 }
 
@@ -489,10 +489,9 @@ void AbstractParser::emulateExits()
 {
     Coordinate c = getPosition();
     const RoomSelection *rs = m_mapData->select();
-    const Room *r = m_mapData->getRoom(c, rs);
-
-    sendRoomExitsInfoToUser(r);
-
+    if (const Room *room = m_mapData->getRoom(c, rs)) {
+        sendRoomExitsInfoToUser(room);
+    }
     m_mapData->unselect(rs);
 }
 
@@ -546,44 +545,44 @@ QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
 
             } else if (!e.outIsEmpty()) {
                 // Check target room for exit information
-                auto targetId = e.outFirst();
-                const Room *targetRoom = m_mapData->getRoom(targetId, rs);
-
+                const auto targetId = e.outFirst();
                 uint exitCount = 0;
                 bool oneWay = false;
                 bool hasNoFlee = false;
-                if (!targetRoom->exit(opposite(i)).containsOut(sourceId)) {
-                    oneWay = true;
-                }
-                for (auto j : ALL_EXITS_NESWUD) {
-                    const Exit &targetExit = targetRoom->exit(j);
-                    if (!targetExit.getExitFlags().isExit()) {
-                        continue;
+                if (const Room *targetRoom = m_mapData->getRoom(targetId, rs)) {
+                    if (!targetRoom->exit(opposite(i)).containsOut(sourceId)) {
+                        oneWay = true;
                     }
-                    exitCount++;
-                    if (targetExit.containsOut(sourceId)) {
-                        // Technically rooms can point back in a different direction
-                        oneWay = false;
+                    for (auto j : ALL_EXITS_NESWUD) {
+                        const Exit &targetExit = targetRoom->exit(j);
+                        if (!targetExit.getExitFlags().isExit()) {
+                            continue;
+                        }
+                        exitCount++;
+                        if (targetExit.containsOut(sourceId)) {
+                            // Technically rooms can point back in a different direction
+                            oneWay = false;
+                        }
+                        if (targetExit.getExitFlags().contains(ExitFlag::NO_FLEE)) {
+                            hasNoFlee = true;
+                        }
                     }
-                    if (targetExit.getExitFlags().contains(ExitFlag::NO_FLEE)) {
-                        hasNoFlee = true;
+                    if (oneWay) {
+                        add_exit_keyword("oneway");
                     }
-                }
-                if (oneWay) {
-                    add_exit_keyword("oneway");
-                }
-                if (hasNoFlee && exitCount == 1) {
-                    // If there is only 1 exit out of this room add the 'hasnoflee' flag since its usually a mobtrap
-                    add_exit_keyword("hasnoflee");
-                }
+                    if (hasNoFlee && exitCount == 1) {
+                        // If there is only 1 exit out of this room add the 'hasnoflee' flag since its usually a mobtrap
+                        add_exit_keyword("hasnoflee");
+                    }
 
-                // Terrain type exit modifiers
-                RoomTerrainType targetTerrain = targetRoom->getTerrainType();
-                if (targetTerrain == RoomTerrainType::UNDERWATER) {
-                    add_exit_keyword("underwater");
-                } else if (targetTerrain == RoomTerrainType::DEATHTRAP) {
-                    // Override all previous flags
-                    etmp = "deathtrap";
+                    // Terrain type exit modifiers
+                    RoomTerrainType targetTerrain = targetRoom->getTerrainType();
+                    if (targetTerrain == RoomTerrainType::UNDERWATER) {
+                        add_exit_keyword("underwater");
+                    } else if (targetTerrain == RoomTerrainType::DEATHTRAP) {
+                        // Override all previous flags
+                        etmp = "deathtrap";
+                    }
                 }
             }
         }
@@ -764,9 +763,11 @@ void AbstractParser::dirsCommand(const RoomFilter &f)
 
     Coordinate c = m_mapData->getPosition();
     const RoomSelection *rs = m_mapData->select(c);
-    const Room *r = rs->values().front();
+    if (!rs->isEmpty()) {
+        const Room *r = rs->values().front();
 
-    m_mapData->shortestPathSearch(r, &sp_emitter, f, 10, 0);
+        m_mapData->shortestPathSearch(r, &sp_emitter, f, 10, 0);
+    }
     m_mapData->unselect(rs);
 }
 
@@ -1210,44 +1211,47 @@ void AbstractParser::doOfflineCharacterMove()
     Coordinate c;
     c = m_mapData->getPosition();
     const RoomSelection *rs1 = m_mapData->select(c);
-    const Room *rb = rs1->values().front();
-
-    if (direction == CommandIdType::LOOK) {
-        sendRoomInfoToUser(rb);
-        sendRoomExitsInfoToUser(rb);
-        sendPromptToUser(*rb);
-    } else {
-        /* FIXME: This needs stronger type check on the cast */
-        const Exit &e = rb->exit(static_cast<ExitDirection>(direction));
-        if (e.isExit() && !e.outIsEmpty()) {
-            const RoomSelection *rs2 = m_mapData->select();
-            const Room *r = m_mapData->getRoom(e.outFirst(), rs2);
-
-            if (flee) {
-                sendToUser(QByteArray("You flee ").append(getLowercase(direction)).append("."));
-            }
-            sendRoomInfoToUser(r);
-            sendRoomExitsInfoToUser(r);
-            sendPromptToUser(*r);
-            // Create character move event for main move/search algorithm
-            auto ev = ParseEvent::createEvent(direction,
-                                              r->getName(),
-                                              r->getDynamicDescription(),
-                                              r->getStaticDescription(),
-                                              ExitsFlagsType{},
-                                              PromptFlagsType::fromRoomTerrainType(
-                                                  r->getTerrainType()),
-                                              ConnectedRoomFlagsType{});
-            emit event(SigParseEvent{ev});
-            emit showPath(queue, true);
-            m_mapData->unselect(rs2);
-        } else {
-            if (!flee) {
-                sendToUser("Alas, you cannot go that way...\r\n");
-            } else {
-                sendToUser("PANIC! You couldn't escape!\r\n");
-            }
+    if (!rs1->isEmpty()) {
+        const Room *rb = rs1->values().front();
+        if (direction == CommandIdType::LOOK) {
+            sendRoomInfoToUser(rb);
+            sendRoomExitsInfoToUser(rb);
             sendPromptToUser(*rb);
+        } else {
+            /* FIXME: This needs stronger type check on the cast */
+            const Exit &e = rb->exit(static_cast<ExitDirection>(direction));
+            if (e.isExit() && !e.outIsEmpty()) {
+                const RoomSelection *rs2 = m_mapData->select();
+                const auto targetId = e.outFirst();
+                if (const Room *r = m_mapData->getRoom(targetId, rs2)) {
+                    if (flee) {
+                        sendToUser(
+                            QByteArray("You flee ").append(getLowercase(direction)).append("."));
+                    }
+                    sendRoomInfoToUser(r);
+                    sendRoomExitsInfoToUser(r);
+                    sendPromptToUser(*r);
+                    // Create character move event for main move/search algorithm
+                    auto ev = ParseEvent::createEvent(direction,
+                                                      r->getName(),
+                                                      r->getDynamicDescription(),
+                                                      r->getStaticDescription(),
+                                                      ExitsFlagsType{},
+                                                      PromptFlagsType::fromRoomTerrainType(
+                                                          r->getTerrainType()),
+                                                      ConnectedRoomFlagsType{});
+                    emit event(SigParseEvent{ev});
+                    emit showPath(queue, true);
+                }
+                m_mapData->unselect(rs2);
+            } else {
+                if (!flee) {
+                    sendToUser("Alas, you cannot go that way...\r\n");
+                } else {
+                    sendToUser("PANIC! You couldn't escape!\r\n");
+                }
+                sendPromptToUser(*rb);
+            }
         }
     }
     m_mapData->unselect(rs1);
@@ -1303,8 +1307,8 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
 
     uint exitCount = 0;
     QString etmp = "Exits/emulated:";
-    for (int j_ = 0; j_ < 6; j_++) {
-        const auto j = static_cast<ExitDirection>(j_);
+    for (int i = 0; i < 6; i++) {
+        const auto direction = static_cast<ExitDirection>(i);
         bool door = false;
         bool exit = false;
         bool road = false;
@@ -1313,7 +1317,7 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
         bool directSun = false;
         bool swim = false;
 
-        const Exit &e = r->exit(j);
+        const Exit &e = r->exit(direction);
         if (e.isExit()) {
             exitCount++;
             exit = true;
@@ -1321,27 +1325,28 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
 
             RoomTerrainType sourceTerrain = r->getTerrainType();
             if (!e.outIsEmpty()) {
-                auto targetId = e.outFirst();
-                const Room *targetRoom = m_mapData->getRoom(targetId, rs);
-                RoomTerrainType targetTerrain = targetRoom->getTerrainType();
+                const auto targetId = e.outFirst();
+                if (const Room *targetRoom = m_mapData->getRoom(targetId, rs)) {
+                    RoomTerrainType targetTerrain = targetRoom->getTerrainType();
 
-                // Sundeath exit flag modifiers
-                if (targetRoom->getSundeathType() == RoomSundeathType::SUNDEATH) {
-                    directSun = true;
-                    etmp += sunCharacter;
-                }
+                    // Sundeath exit flag modifiers
+                    if (targetRoom->getSundeathType() == RoomSundeathType::SUNDEATH) {
+                        directSun = true;
+                        etmp += sunCharacter;
+                    }
 
-                // Terrain type exit modifiers
-                if (targetTerrain == RoomTerrainType::RAPIDS
-                    || targetTerrain == RoomTerrainType::UNDERWATER
-                    || targetTerrain == RoomTerrainType::WATER) {
-                    swim = true;
-                    etmp += "~";
+                    // Terrain type exit modifiers
+                    if (targetTerrain == RoomTerrainType::RAPIDS
+                        || targetTerrain == RoomTerrainType::UNDERWATER
+                        || targetTerrain == RoomTerrainType::WATER) {
+                        swim = true;
+                        etmp += "~";
 
-                } else if (targetTerrain == RoomTerrainType::ROAD
-                           && sourceTerrain == RoomTerrainType::ROAD) {
-                    road = true;
-                    etmp += "=";
+                    } else if (targetTerrain == RoomTerrainType::ROAD
+                               && sourceTerrain == RoomTerrainType::ROAD) {
+                        road = true;
+                        etmp += "=";
+                    }
                 }
             }
 
@@ -1363,7 +1368,7 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
                 etmp += "|";
             }
 
-            etmp += lowercaseDirection(j);
+            etmp += lowercaseDirection(direction);
         }
 
         if (door) {
@@ -1616,25 +1621,27 @@ void AbstractParser::printRoomInfo(const RoomFields fieldset)
     const Coordinate c = getPosition();
 
     const RoomSelection *rs = m_mapData->select(c);
-    const Room *const r = rs->values().front();
+    if (!rs->isEmpty()) {
+        const Room *const r = rs->values().front();
 
-    // TODO: use QStringBuilder (or std::ostringstream)?
-    QString result;
+        // TODO: use QStringBuilder (or std::ostringstream)?
+        QString result;
 
-    if (fieldset.contains(RoomField::NAME)) {
-        result += r->getName() + "\r\n";
-    }
-    if (fieldset.contains(RoomField::DESC)) {
-        result += r->getStaticDescription();
-    }
-    if (fieldset.contains(RoomField::DYNAMIC_DESC)) {
-        result += r->getDynamicDescription();
-    }
-    if (fieldset.contains(RoomField::NOTE)) {
-        result += "Note: " + r->getNote() + "\r\n";
-    }
+        if (fieldset.contains(RoomField::NAME)) {
+            result += r->getName() + "\r\n";
+        }
+        if (fieldset.contains(RoomField::DESC)) {
+            result += r->getStaticDescription();
+        }
+        if (fieldset.contains(RoomField::DYNAMIC_DESC)) {
+            result += r->getDynamicDescription();
+        }
+        if (fieldset.contains(RoomField::NOTE)) {
+            result += "Note: " + r->getNote() + "\r\n";
+        }
 
-    sendToUser(result);
+        sendToUser(result);
+    }
     m_mapData->unselect(rs);
 }
 
