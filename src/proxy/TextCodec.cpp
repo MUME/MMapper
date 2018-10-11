@@ -65,7 +65,7 @@ QStringList TextCodec::supportedEncodings() const
 
 bool TextCodec::supports(const QByteArray &hisCharacterSet) const
 {
-    for (const auto myCharacterSet : supportedEncodings()) {
+    for (const auto &myCharacterSet : supportedEncodings()) {
         if (QString::compare(myCharacterSet, hisCharacterSet, Qt::CaseInsensitive) == 0) {
             return true;
         }
@@ -75,8 +75,8 @@ bool TextCodec::supports(const QByteArray &hisCharacterSet) const
 
 QByteArray TextCodec::fromUnicode(const QString &data)
 {
-    // Simplify Latin-1 character to US-ASCII because fromUnicode() does not do this
-    if (textCodec->name() == US_ASCII_ENCODING) {
+    if (currentEncoding == CharacterEncoding::ASCII) {
+        // Simplify Latin-1 characters to US-ASCII
         QString outdata = data;
         ParserUtils::latinToAsciiInPlace(outdata);
         return textCodec->fromUnicode(outdata);
@@ -93,17 +93,16 @@ QString TextCodec::toUnicode(const QByteArray &data)
 void TextCodec::setEncoding(CharacterEncoding encoding)
 {
     switch (encoding) {
-    case CharacterEncoding::LATIN1:
-        textCodec = QTextCodec::codecForName(LATIN_1_ENCODING);
-        break;
     case CharacterEncoding::UTF8:
         textCodec = QTextCodec::codecForName(UTF_8_ENCODING);
         break;
     default:
     case CharacterEncoding::ASCII:
-        textCodec = QTextCodec::codecForName(US_ASCII_ENCODING);
+    case CharacterEncoding::LATIN1:
+        textCodec = QTextCodec::codecForName(LATIN_1_ENCODING);
         break;
     }
+    assert(textCodec);
     currentEncoding = encoding;
     qDebug() << "Switching to" << textCodec->name() << "character encoding";
 }
