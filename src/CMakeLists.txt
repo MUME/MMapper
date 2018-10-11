@@ -56,6 +56,7 @@ set(mmapper_SRCS
     expandoracommon/roomrecipient.h
     global/bits.h
     global/CharBuffer.h
+    global/Color.h
     global/DirectionType.cpp
     global/DirectionType.h
     global/EnumIndexedArray.h

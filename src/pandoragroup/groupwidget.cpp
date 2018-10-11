@@ -29,6 +29,7 @@
 #include <QtWidgets>
 
 #include "../expandoracommon/room.h"
+#include "../global/Color.h"
 #include "../global/roomid.h"
 #include "../mapdata/mapdata.h"
 #include "CGroup.h"
@@ -121,7 +122,7 @@ QVariant GroupModel::dataForCharacter(CGroupChar *const character, ColumnType co
     case Qt::BackgroundRole:
         return character->getColor();
     case Qt::TextColorRole:
-        return character->getColor().value() < 150 ? QColor(Qt::white) : QColor(Qt::black);
+        return textColor(character->getColor());
     case Qt::TextAlignmentRole:
         if (column != ColumnType::NAME && column != ColumnType::ROOM_NAME) {
             return Qt::AlignCenter;
