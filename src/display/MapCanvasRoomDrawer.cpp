@@ -37,6 +37,7 @@
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
+#include "../global/Color.h"
 #include "../global/EnumIndexedArray.h"
 #include "../global/Flags.h"
 #include "../global/utils.h"
@@ -122,30 +123,31 @@ QMatrix4x4 getTranslationMatrix(const int x, const int y)
     return getTranslationMatrix(static_cast<float>(x), static_cast<float>(y));
 }
 
-QColor getInforMarkColor(InfoMarkClass infoMarkClass)
+QColor getInfoMarkColor(InfoMarkClass infoMarkClass)
 {
+    static const QColor defaultColor = QColor(0, 0, 0, 76);
     switch (infoMarkClass) {
     case InfoMarkClass::HERB:
-        return QColor(0, 200, 0); // Dark green
+        return QColor(0, 255, 0, 140); // Green
     case InfoMarkClass::RIVER:
-        return QColor(76, 216, 255); // Cyan-like
+        return QColor(76, 216, 255, 140); // Cyan-like
     case InfoMarkClass::MOB:
-        return QColor(177, 27, 27); // Dark red
+        return QColor(255, 0, 0, 140); // Red
     case InfoMarkClass::COMMENT:
-        return Qt::lightGray;
+        return QColor(192, 192, 192, 140); // Light grey
     case InfoMarkClass::ROAD:
-        return QColor(140, 83, 58); // Maroonish
+        return QColor(140, 83, 58, 140); // Maroonish
     case InfoMarkClass::OBJECT:
-        return Qt::yellow;
+        return QColor(255, 255, 0, 140); // Yellow
 
     case InfoMarkClass::GENERIC:
     case InfoMarkClass::PLACE:
     case InfoMarkClass::ACTION:
     case InfoMarkClass::LOCALITY:
-        return Qt::white;
+        return defaultColor;
     }
 
-    return Qt::white; // Default color;
+    return defaultColor;
 }
 
 FontFormatFlags getFontFormatFlags(InfoMarkClass infoMarkClass)
@@ -259,11 +261,11 @@ void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
     const auto infoMarkClass = marker->getClass();
 
     // Color depends of the class of the InfoMark
-    const QColor color = getInforMarkColor(infoMarkClass);
+    const QColor color = getInfoMarkColor(infoMarkClass);
     const auto fontFormatFlag = getFontFormatFlags(infoMarkClass);
 
     if (infoMarkType == InfoMarkType::TEXT) {
-        width = getScaledFontWidth(marker->getText());
+        width = getScaledFontWidth(marker->getText(), fontFormatFlag);
         height = getScaledFontHeight();
         x2 = x1 + width;
         y2 = y1 + height;
@@ -289,7 +291,7 @@ void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
     switch (infoMarkType) {
     case InfoMarkType::TEXT:
         // Render background
-        m_opengl.apply(XColor4d{0, 0, 0, 0.3});
+        m_opengl.apply(XColor4d{color});
         m_opengl.apply(XEnable{XOption::BLEND});
         m_opengl.apply(XDisable{XOption::DEPTH_TEST});
         m_opengl.draw(DrawType::POLYGON,
@@ -304,9 +306,9 @@ void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
         // Render text proper
         m_opengl.glTranslated(-x1 / 2.0, -y1 / 2.0, 0.0);
         renderText(static_cast<float>(x1 + 0.1),
-                   static_cast<float>(y1 + 0.25),
+                   static_cast<float>(y1 + 0.3),
                    marker->getText(),
-                   color,
+                   textColor(color),
                    fontFormatFlag,
                    marker->getRotationAngle());
         m_opengl.apply(XEnable{XOption::DEPTH_TEST});
@@ -480,7 +482,7 @@ void MapCanvasRoomDrawer::drawTextBox(
 
     // text
     m_opengl.glTranslated(-x / 2.0, -y / 2.0, 0.0);
-    renderText(static_cast<float>(x + 0.1), static_cast<float>(y + 0.25), name);
+    renderText(static_cast<float>(x + 0.1), static_cast<float>(y + 0.3), name);
     m_opengl.apply(XEnable{XOption::DEPTH_TEST});
 
     m_opengl.glPopMatrix();

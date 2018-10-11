@@ -132,9 +132,9 @@ private:
 
 public:
     template<typename T>
-    float getScaledFontWidth(T x) const
+    float getScaledFontWidth(T x, FontFormatFlags flags = FontFormatFlags::NONE) const
     {
-        return static_cast<float>(m_opengl.getFontWidth(x)) * 0.022f / m_scaleFactor;
+        return static_cast<float>(m_opengl.getFontWidth(x, flags)) * 0.022f / m_scaleFactor;
     }
 
     float getScaledFontHeight() const

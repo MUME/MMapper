@@ -267,6 +267,7 @@ private:
     {
         QFont *font = nullptr;
         QFontMetrics *metrics = nullptr;
+        QFontMetrics *italicMetrics = nullptr;
     } m_glFont;
 
 private:
@@ -480,9 +481,14 @@ public:
     void initFont(QPaintDevice *paintDevice);
 
     template<typename T>
-    int getFontWidth(T x) const
+    int getFontWidth(T x, FontFormatFlags flags) const
     {
-        return deref(m_glFont.metrics).width(x);
+        switch (flags) {
+        case FontFormatFlags::ITALICS:
+            return deref(m_glFont.italicMetrics).width(x);
+        default:
+            return deref(m_glFont.metrics).width(x);
+        }
     }
 
     int getFontHeight() const { return deref(m_glFont.metrics).height(); }

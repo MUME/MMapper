@@ -36,6 +36,7 @@ OpenGL::~OpenGL()
 {
     // Note: We give metrics a pointer to font, so kill metrics first.
     delete std::exchange(m_glFont.metrics, nullptr);
+    delete std::exchange(m_glFont.italicMetrics, nullptr);
     delete std::exchange(m_glFont.font, nullptr);
 }
 
@@ -47,6 +48,9 @@ void OpenGL::initFont(QPaintDevice *const paintDevice)
     m_glFont.font = new QFont(QFont(), paintDevice);
     m_glFont.font->setStyleHint(QFont::System, QFont::OpenGLCompatible);
     m_glFont.metrics = new QFontMetrics(*m_glFont.font);
+    m_glFont.font->setItalic(true);
+    m_glFont.italicMetrics = new QFontMetrics(*m_glFont.font);
+    m_glFont.font->setItalic(false);
 }
 
 // http://stackoverflow.com/questions/28216001/how-to-render-text-with-qopenglwidget/28517897
@@ -61,6 +65,7 @@ void OpenGL::renderTextAt(const float x,
     deref(m_paintDevice);
     deref(m_glFont.font);
     deref(m_glFont.metrics);
+    deref(m_glFont.italicMetrics);
 
     QPainter painter(m_paintDevice);
     painter.translate(x, y);
