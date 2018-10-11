@@ -27,6 +27,7 @@
 #include "../configuration/configuration.h"
 #include "../parser/parserutils.h"
 
+#include <cassert>
 #include <QDebug>
 
 TextCodec::TextCodec(TextCodecStrategy textCodecStrategy)
