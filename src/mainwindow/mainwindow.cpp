@@ -273,13 +273,9 @@ void MainWindow::wireConnections()
             &MapCanvas::moveMarker);
 
     connect(m_mapWindow->getCanvas(),
-            SIGNAL(setCurrentRoom(RoomId)),
+            &MapCanvas::setCurrentRoom,
             m_pathMachine,
-            SLOT(setCurrentRoom(RoomId)));
-    connect(m_mapWindow->getCanvas(),
-            &MapCanvas::charMovedEvent,
-            m_pathMachine,
-            &Mmapper2PathMachine::event);
+            &PathMachine::setCurrentRoom);
 
     //moved to mapwindow
     connect(m_mapData, &MapData::mapSizeChanged, m_mapWindow, &MapWindow::setScrollBars);
@@ -635,14 +631,14 @@ void MainWindow::createActions()
     connect(clientAct, &QAction::triggered, this, &MainWindow::onLaunchClient);
 
     releaseAllPathsAct = new QAction(QIcon(":/icons/cancel.png"), tr("Release All Paths"), this);
-    releaseAllPathsAct->setStatusTip(tr("Release All Paths"));
+    releaseAllPathsAct->setStatusTip(tr("Release all paths"));
     releaseAllPathsAct->setCheckable(false);
     connect(releaseAllPathsAct, &QAction::triggered, m_pathMachine, &PathMachine::releaseAllPaths);
 
     forceRoomAct = new QAction(QIcon(":/icons/force.png"),
-                               tr("Force Path Machine to selected Room"),
+                               tr("Force update selected room with last movement"),
                                this);
-    forceRoomAct->setStatusTip(tr("Force Path Machine to selected Room"));
+    forceRoomAct->setStatusTip(tr("Force update selected room with last movement"));
     forceRoomAct->setCheckable(false);
     forceRoomAct->setEnabled(false);
     connect(forceRoomAct,

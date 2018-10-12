@@ -140,8 +140,8 @@ ComparisonResult RoomFactory::compare(const Room *const room,
     //        return ComparisonResult::EQUAL;
     //    }
 
-    if (tolerance >= 100 || (name.isEmpty() && staticDesc.isEmpty() && (!updated))) {
-        // user-created oder explicit update
+    if (name.isEmpty() && staticDesc.isEmpty() && (!updated)) {
+        // user-created
         return ComparisonResult::TOLERANCE;
     }
 

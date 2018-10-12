@@ -340,26 +340,10 @@ void MapCanvas::forceMapperToRoom()
         tmpSel = m_data->select(Coordinate(GLtoMap(m_sel1.x), GLtoMap(m_sel1.y), m_sel1.layer));
     }
     if (tmpSel->size() == 1) {
-        if (getConfig().general.mapMode == MapMode::OFFLINE) {
-            const Room *r = tmpSel->values().front();
-            auto ev = ParseEvent::createEvent(CommandIdType::UNKNOWN,
-                                              r->getName(),
-                                              r->getDynamicDescription(),
-                                              r->getStaticDescription(),
-                                              ExitsFlagsType{},
-                                              PromptFlagsType::fromRoomTerrainType(
-                                                  r->getTerrainType()),
-                                              ConnectedRoomFlagsType{});
-
-            // FIXME: need to force MainWindow's Mmapper2PathMachine's PathMachine's state to SYNCING,
-            // because this is ignored when the state is APPROVED (it alternates between the two).
-            // Alternate hack workaround: just trigger the event twice.
-            for (auto hack = 0; hack < 2; ++hack) {
-                emit charMovedEvent(SigParseEvent{ev});
-            }
-        } else {
-            emit setCurrentRoom(tmpSel->keys().front());
-        }
+        const RoomId id = tmpSel->values().front()->getId();
+        // Force update rooms only if we're in play or mapping mode
+        const bool update = getConfig().general.mapMode != MapMode::OFFLINE;
+        emit setCurrentRoom(id, update);
     }
     m_data->unselect(tmpSel);
     update();

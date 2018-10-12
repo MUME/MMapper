@@ -65,8 +65,7 @@ public slots:
     virtual void event(const SigParseEvent &);
     virtual void releaseAllPaths();
     virtual void retry();
-    virtual void setCurrentRoom(RoomId id);
-    virtual void setCurrentRoom(const Coordinate &pos);
+    virtual void setCurrentRoom(RoomId id, bool update);
 
 signals:
     void lookingForRooms(RoomRecipient &, const SigParseEvent &);
@@ -87,7 +86,6 @@ protected:
     void syncing(const SigParseEvent &sigParseEvent);
     void approved(const SigParseEvent &sigParseEvent);
     void evaluatePaths();
-    void setCurrentRoom(Approved &app);
     void tryExits(const Room *, RoomRecipient &, ParseEvent &, bool out);
     void tryExit(const Exit &possible, RoomRecipient &recipient, bool out);
     void tryCoordinate(const Room *, RoomRecipient &, ParseEvent &);

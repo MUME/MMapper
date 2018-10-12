@@ -53,9 +53,6 @@ void Approved::receiveRoom(RoomAdmin *sender, const Room *perhaps)
 
 Approved::~Approved()
 {
-    // REVISIT: Danger: destructors are implicitly noexcept, but we're allocating.
-    // Consider try-catch block, except there won't be much we could do to recover,
-    // so maybe it's better to just crash.
     if (owner != nullptr) {
         if (moreThanOne) {
             owner->releaseRoom(*this, matchedRoom->getId());

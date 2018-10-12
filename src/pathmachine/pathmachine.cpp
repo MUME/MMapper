@@ -47,6 +47,7 @@
 #include "approved.h"
 #include "crossover.h"
 #include "experimenting.h"
+#include "forced.h"
 #include "onebyone.h"
 #include "path.h"
 #include "pathparameters.h"
@@ -65,28 +66,16 @@ PathMachine::PathMachine(AbstractRoomFactory *const in_factory)
     , paths{new std::list<Path *>}
 {}
 
-void PathMachine::setCurrentRoom(Approved &app)
+void PathMachine::setCurrentRoom(const RoomId id, bool update)
 {
+    Forced forced(lastEvent, update);
+    emit lookingForRooms(forced, id);
     releaseAllPaths();
-    if (const Room *perhaps = app.oneMatch()) {
+    if (const Room *perhaps = forced.oneMatch()) {
         mostLikelyRoom = *perhaps;
         emit playerMoved(mostLikelyRoom.getPosition());
         state = PathState::APPROVED;
     }
-}
-
-void PathMachine::setCurrentRoom(const Coordinate &pos)
-{
-    Approved app(factory, lastEvent, 100);
-    emit lookingForRooms(app, pos);
-    setCurrentRoom(app);
-}
-
-void PathMachine::setCurrentRoom(const RoomId id)
-{
-    Approved app(factory, lastEvent, 100);
-    emit lookingForRooms(app, id);
-    setCurrentRoom(app);
 }
 
 void PathMachine::init()

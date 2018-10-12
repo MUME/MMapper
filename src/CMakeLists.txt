@@ -192,6 +192,8 @@ set(mmapper_SRCS
     pathmachine/crossover.h
     pathmachine/experimenting.cpp
     pathmachine/experimenting.h
+    pathmachine/forced.cpp
+    pathmachine/forced.h
     pathmachine/mmapper2pathmachine.cpp
     pathmachine/mmapper2pathmachine.h
     pathmachine/onebyone.cpp

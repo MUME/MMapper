@@ -149,11 +149,8 @@ signals:
     void newRoomSelection(const RoomSelection *);
     void newConnectionSelection(ConnectionSelection *);
 
-    void setCurrentRoom(RoomId id);
+    void setCurrentRoom(RoomId id, bool update);
     void roomPositionChanged();
-
-    //for main move/search algorithm
-    void charMovedEvent(const SigParseEvent &);
 
 protected:
     //void closeEvent(QCloseEvent *event);
