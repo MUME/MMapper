@@ -122,6 +122,7 @@ public slots:
     void setScroll(int x, int y);
     void zoomIn();
     void zoomOut();
+    void zoomReset();
     void layerUp();
     void layerDown();
 

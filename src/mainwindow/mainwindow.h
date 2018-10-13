@@ -236,6 +236,7 @@ private:
     QAction *nextWindowAct = nullptr;
     QAction *zoomInAct = nullptr;
     QAction *zoomOutAct = nullptr;
+    QAction *zoomResetAct = nullptr;
     QAction *alwaysOnTopAct = nullptr;
     QAction *preferencesAct = nullptr;
 

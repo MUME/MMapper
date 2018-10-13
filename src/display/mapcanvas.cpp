@@ -941,6 +941,12 @@ void MapCanvas::zoomOut()
     resizeGL(width(), height());
 }
 
+void MapCanvas::zoomReset()
+{
+    m_scaleFactor = 1.0f;
+    resizeGL(width(), height());
+}
+
 void MapCanvas::initializeGL()
 {
     m_opengl.initializeOpenGLFunctions();

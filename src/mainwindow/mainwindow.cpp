@@ -293,6 +293,7 @@ void MainWindow::wireConnections()
 
     connect(zoomInAct, &QAction::triggered, m_mapWindow->getCanvas(), &MapCanvas::zoomIn);
     connect(zoomOutAct, &QAction::triggered, m_mapWindow->getCanvas(), &MapCanvas::zoomOut);
+    connect(zoomResetAct, &QAction::triggered, m_mapWindow->getCanvas(), &MapCanvas::zoomReset);
 
     connect(m_mapWindow->getCanvas(),
             &MapCanvas::newRoomSelection,
@@ -466,10 +467,6 @@ void MainWindow::createActions()
     zoomInAct = new QAction(QIcon::fromTheme("zoom-in", QIcon(":/icons/viewmag+.png")),
                             tr("Zoom In"),
                             this);
-    alwaysOnTopAct = new QAction(tr("Always on top"), this);
-    alwaysOnTopAct->setCheckable(true);
-    connect(alwaysOnTopAct, &QAction::triggered, this, &MainWindow::alwaysOnTop);
-
     zoomInAct->setStatusTip(tr("Zooms In current map"));
     zoomInAct->setShortcut(tr("Ctrl++"));
     zoomOutAct = new QAction(QIcon::fromTheme("zoom-out", QIcon(":/icons/viewmag-.png")),
@@ -477,6 +474,16 @@ void MainWindow::createActions()
                              this);
     zoomOutAct->setShortcut(tr("Ctrl+-"));
     zoomOutAct->setStatusTip(tr("Zooms Out current map"));
+    zoomResetAct = new QAction(QIcon::fromTheme("zoom-original", QIcon(":/icons/viewmagfit.png")),
+                               tr("Zoom Reset"),
+                               this);
+    zoomResetAct->setShortcut(tr("Ctrl+0"));
+    zoomResetAct->setStatusTip(tr("Zoom to original size"));
+
+    alwaysOnTopAct = new QAction(tr("Always on top"), this);
+    alwaysOnTopAct->setCheckable(true);
+    connect(alwaysOnTopAct, &QAction::triggered, this, &MainWindow::alwaysOnTop);
+
     layerUpAct = new QAction(QIcon::fromTheme("go-up", QIcon(":/icons/layerup.png")),
                              tr("Layer Up"),
                              this);
@@ -806,6 +813,7 @@ void MainWindow::disableActions(bool value)
     //    prevWindowAct->setDisabled(value);
     zoomInAct->setDisabled(value);
     zoomOutAct->setDisabled(value);
+    zoomResetAct->setDisabled(value);
     mapperMode.playModeAct->setDisabled(value);
     mapperMode.mapModeAct->setDisabled(value);
     mouseMode.modeRoomSelectAct->setDisabled(value);
@@ -891,6 +899,7 @@ void MainWindow::setupMenuBar()
     viewMenu->addSeparator();
     viewMenu->addAction(zoomInAct);
     viewMenu->addAction(zoomOutAct);
+    viewMenu->addAction(zoomResetAct);
     viewMenu->addSeparator();
     viewMenu->addAction(layerUpAct);
     viewMenu->addAction(layerDownAct);
