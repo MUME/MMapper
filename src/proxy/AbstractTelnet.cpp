@@ -700,7 +700,7 @@ void AbstractTelnet::onReadInternal2(QByteArray &cleanData, const uint8_t c)
     case TelnetState::SUBNEG_IAC:
         // seq. of two IACs
         if (c == TN_IAC) {
-            state = TelnetState::FORWARD;
+            state = TelnetState::SUBNEG;
             subnegBuffer.append(c);
             commandBuffer.clear();
         }
