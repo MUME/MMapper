@@ -123,9 +123,11 @@ QMatrix4x4 getTranslationMatrix(const int x, const int y)
     return getTranslationMatrix(static_cast<float>(x), static_cast<float>(y));
 }
 
-QColor getInfoMarkColor(InfoMarkClass infoMarkClass)
+QColor getInfoMarkColor(InfoMarkType infoMarkType, InfoMarkClass infoMarkClass)
 {
-    static const QColor defaultColor = QColor(0, 0, 0, 76);
+    const QColor defaultColor = (infoMarkType == InfoMarkType::TEXT)
+                                    ? QColor(0, 0, 0, 76)         // Black
+                                    : QColor(255, 255, 255, 178); // White
     switch (infoMarkClass) {
     case InfoMarkClass::HERB:
         return QColor(0, 255, 0, 140); // Green
@@ -261,7 +263,7 @@ void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
     const auto infoMarkClass = marker->getClass();
 
     // Color depends of the class of the InfoMark
-    const QColor color = getInfoMarkColor(infoMarkClass);
+    const QColor color = getInfoMarkColor(infoMarkType, infoMarkClass);
     const auto fontFormatFlag = getFontFormatFlags(infoMarkClass);
 
     if (infoMarkType == InfoMarkType::TEXT) {
@@ -314,7 +316,7 @@ void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
         m_opengl.apply(XEnable{XOption::DEPTH_TEST});
         break;
     case InfoMarkType::LINE:
-        m_opengl.apply(XColor4d{color, 0.70});
+        m_opengl.apply(XColor4d{color});
         m_opengl.apply(XEnable{XOption::BLEND});
         m_opengl.apply(XDisable{XOption::DEPTH_TEST});
         m_opengl.apply(XDevicePointSize{2.0});
@@ -328,7 +330,7 @@ void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
         m_opengl.apply(XEnable{XOption::DEPTH_TEST});
         break;
     case InfoMarkType::ARROW:
-        m_opengl.apply(XColor4d{color, 0.70});
+        m_opengl.apply(XColor4d{color});
         m_opengl.apply(XEnable{XOption::BLEND});
         m_opengl.apply(XDisable{XOption::DEPTH_TEST});
         m_opengl.apply(XDevicePointSize{2.0});
