@@ -188,7 +188,7 @@ protected:
 
     void sendTerminalTypeRequest();
 
-    void requestTelnetOption(unsigned char type, unsigned char option);
+    void requestTelnetOption(unsigned char type, unsigned char subnegBuffer);
 
     /** Prepares data, doubles IACs, sends it using sendRawData. */
     void submitOverTelnet(const QByteArray &data, bool goAhead);
@@ -207,7 +207,7 @@ protected:
     virtual void sendRawData(const QByteArray &data) = 0;
 
     /** send a telnet option */
-    void sendTelnetOption(unsigned char type, unsigned char option);
+    void sendTelnetOption(unsigned char type, unsigned char subnegBuffer);
 
     void reset();
 
@@ -245,11 +245,12 @@ private:
     /** processes a telnet command (IAC ...) */
     void processTelnetCommand(const QByteArray &command);
 
-    //iac: last char was IAC
-    //iac2: last char was DO, DONT, WILL or WONT
-    //insb: we're in IAC SB, waiting for IAC SE
-    QByteArray command{};
-    bool iac = false, iac2 = false, insb = false;
+    /** processes a telnet subcommand payload */
+    void processTelnetSubnegotiation(const QByteArray &payload);
+
+    QByteArray commandBuffer{};
+    QByteArray subnegBuffer{};
+    enum class TelnetState { FORWARD, IAC, COMMAND, SUBNEG, SUBNEG_IAC, SUBNEG_COMMAND } state;
 
     /** have we received the GA signal? */
     bool recvdGA = false;

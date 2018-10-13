@@ -57,9 +57,7 @@ static TextCodecStrategy getStrategyFromConfig()
 ClientTelnet::ClientTelnet(QObject *const parent)
     : AbstractTelnet(TextCodec(getStrategyFromConfig()), false, parent)
 {
-    /** MMapper Telnet */
     termType = "MMapper";
-
     connect(&socket, &QAbstractSocket::connected, this, &ClientTelnet::onConnected);
     connect(&socket, &QAbstractSocket::disconnected, this, &ClientTelnet::onDisconnected);
     connect(&socket, &QIODevice::readyRead, this, &ClientTelnet::onReadyRead);
@@ -98,6 +96,7 @@ void ClientTelnet::disconnectFromHost()
 void ClientTelnet::onDisconnected()
 {
     reset();
+    termType = "MMapper";
     emit echoModeChanged(true);
     emit disconnected();
 }

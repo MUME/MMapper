@@ -65,7 +65,7 @@ void MudTelnet::onRelayNaws(int x, int y)
 
 void MudTelnet::onRelayTermType(QByteArray terminalType)
 {
-    terminalType.append(QString("/MMapper-%1").arg(MMAPPER_VERSION));
+    termType = terminalType.append(QString("/MMapper-%1").arg(MMAPPER_VERSION));
     if (myOptionState[OPT_TERMINAL_TYPE]) {
         sendTerminalType(terminalType);
     }
