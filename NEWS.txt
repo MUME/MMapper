@@ -1,4 +1,17 @@
 ================================
+MMapper 2.6.1 (October 12, 2018)
+================================
+
+Changes:
+ - Fixed crash when user selected US-ASCII character encoding
+ - Improved stability when player was in room that got deleted
+ - Certain InfoMark classes now have a colored background rather than text
+ - Forcing the path machine to update rooms works again
+ - Improved Telnet parsing to better support negotiated window size
+ - Re-ordered window tab navigation to make sense
+ - MacOS Mojave and Wayland support improved
+
+================================
 MMapper 2.6.0 (September 29, 2018)
 ================================
 
