@@ -30,7 +30,6 @@
 #include <QByteArray>
 #include <QObject>
 
-#include "../configuration/configuration.h"
 #include "../parser/patterns.h"
 
 static constexpr const uint8_t ASCII_DEL = 8;

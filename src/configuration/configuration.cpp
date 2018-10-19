@@ -379,8 +379,7 @@ void Configuration::CanvasSettings::read(QSettings &conf)
     drawNoMatchExits = conf.value(KEY_DRAW_NO_MATCH_EXITS, false).toBool();
     drawUpperLayersTextured = conf.value(KEY_DRAW_UPPER_LAYERS_TEXTURED, false).toBool();
     drawDoorNames = conf.value(KEY_DRAW_DOOR_NAMES, true).toBool();
-    backgroundColor = QColor(
-        conf.value(KEY_BACKGROUND_COLOR, QColor(110, 110, 110).name()).toString());
+    backgroundColor = QColor(conf.value(KEY_BACKGROUND_COLOR, QColor("#2e3436").name()).toString());
     antialiasingSamples = conf.value(KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES, 0).toInt();
     trilinearFiltering = conf.value(KEY_USE_TRILINEAR_FILTERING, false).toBool();
     softwareOpenGL = conf.value(KEY_USE_SOFTWARE_OPENGL, getCurrentPlatform() == Platform::Win32)
