@@ -398,6 +398,7 @@ bool AbstractParser::parseSimpleCommand(const QString &str)
     }
 
     if (!isOnline) {
+        sendToUser("Arglebargle, glop-glyf!?!\r\n");
         sendPromptToUser();
     }
 
@@ -627,9 +628,11 @@ void AbstractParser::parseSpecialCommand(StringView wholeCommand)
 void AbstractParser::parseGtell(const StringView &view)
 {
     if (view.isEmpty())
-        sendToUser("What do you want to tell the group?");
-    else
+        sendToUser("What do you want to tell the group?\r\n");
+    else {
         emit sendGroupTellEvent(view.toQByteArray());
+        sendToUser("OK.\r\n");
+    }
 }
 
 void AbstractParser::parseSearch(StringView view)

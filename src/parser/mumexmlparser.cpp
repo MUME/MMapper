@@ -337,6 +337,7 @@ bool MumeXmlParser::element(const QByteArray &line)
             case '/':
                 if (line.startsWith("/prompt")) {
                     m_xmlMode = XmlMode::NONE;
+                    m_overrideSendPrompt = false;
                 }
                 break;
             }

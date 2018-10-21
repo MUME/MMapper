@@ -172,8 +172,8 @@ void Mmapper2Group::gTellArrived(const QDomNode &node)
         return;
     }
 
-    QDomNode e = node.firstChildElement();
-    QString from = e.toElement().attribute("from");
+    const QDomNode e = node.firstChildElement();
+    const QString from = e.toElement().attribute("from");
 
     if (e.nodeName() != "gtell") {
         qWarning() << "Called gTellArrived with wrong node. No text node but instead:"
@@ -181,13 +181,10 @@ void Mmapper2Group::gTellArrived(const QDomNode &node)
         return;
     }
 
-    QDomElement text = e.toElement();
-    emit log("GroupManager",
-             QString("GTell from %1, Arrived : %2")
-                 .arg(from.toLatin1().constData())
-                 .arg(text.text().toLatin1().constData()));
+    const QString text = e.toElement().text();
+    emit log("GroupManager", QString("GTell from %1, Arrived : %2").arg(from).arg(text));
 
-    QByteArray tell = QString("" + from + " tells you [GT] '" + text.text() + "'\r\n").toLatin1();
+    const QByteArray tell = QString("%1 tells you [GT] '%2'").arg(from).arg(text).toLatin1();
 
     emit displayGroupTellEvent(tell);
 }

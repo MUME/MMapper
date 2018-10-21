@@ -91,20 +91,16 @@ private:
     char prefixChar = '_';
 
 protected:
-    QString m_roomName = nullString;
-    QString m_staticRoomDesc = nullString;
-    QString m_dynamicRoomDesc = nullString;
     QString m_exits = nullString;
     ExitsFlagsType m_exitsFlags{};
     PromptFlagsType m_promptFlags{};
     ConnectedRoomFlagsType m_connectedRoomFlags{};
 
 protected:
-    QString m_stringBuffer{};
-    QString m_lastPrompt{};
+    QByteArray m_lastPrompt{};
+    bool m_compactMode = false;
+    bool m_overrideSendPrompt = false;
     CommandQueue queue{};
-    bool m_readingRoomDesc = false;
-    bool m_descriptionReady = false;
 
 private:
     bool m_trollExitMapping = false;

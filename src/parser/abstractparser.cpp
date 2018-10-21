@@ -624,8 +624,7 @@ void AbstractParser::parseNewUserInput(const IncomingData &data)
             } catch (const std::exception &ex) {
                 qWarning() << "Exception: " << ex.what();
                 sendToUser(QString::asprintf("An exception occurred: %s\r\n", ex.what()));
-                if (isOffline())
-                    sendPromptToUser();
+                sendPromptToUser();
                 return false;
             }
         };
@@ -944,8 +943,6 @@ void AbstractParser::showGroupHelp()
     showHeader("Group commands");
     sendToUser(
         QString("  %1gt [message]     - send a grouptell with the [message]\r\n").arg(prefixChar));
-
-    sendToUser("\r\n");
 }
 
 void AbstractParser::showHeader(const QString &s)
@@ -974,8 +971,6 @@ void AbstractParser::showMapHelp()
 
     showRoomLoadFlagsHelp();
     showMiscHelp();
-
-    sendToUser("\r\n");
 }
 
 void AbstractParser::showMiscHelp()
@@ -1119,7 +1114,7 @@ void AbstractParser::showMumeTime()
 
         data += " for " + m_mumeClock->toCountdown(moment).toLatin1() + " more ticks.\r\n";
     }
-    sendToUser(data + "\r\n");
+    sendToUser(data);
 }
 
 void AbstractParser::showDoorCommandHelp()
@@ -1141,8 +1136,6 @@ void AbstractParser::showDoorCommandHelp()
     sendToUser(
         QString("  %1removedoornames   - removes all secret door names from the current map\r\n")
             .arg(prefixChar));
-
-    sendToUser("\r\n");
 }
 
 void AbstractParser::showDoorVariableHelp()
@@ -1196,7 +1189,7 @@ void AbstractParser::doOfflineCharacterMove()
 
     CommandIdType direction = queue.dequeue();
     if (m_mapData->isEmpty()) {
-        sendToUser("Alas, you cannot go that way...");
+        sendToUser("Alas, you cannot go that way...\r\n");
         m_offlineCommandTimer.start();
         return;
     }
@@ -1286,14 +1279,20 @@ void AbstractParser::sendRoomInfoToUser(const Room *r)
     sendToUser(roomName);
 
     QByteArray roomDescription;
-    if (!settings.roomDescColor.isEmpty()) {
-        roomDescription += ESCAPE + settings.roomDescColor.toLatin1();
+    if (!r->getStaticDescription().trimmed().isEmpty()) {
+        if (!settings.roomDescColor.isEmpty()) {
+            roomDescription += ESCAPE + settings.roomDescColor.toLatin1();
+        }
+        roomDescription += r->getStaticDescription().trimmed().toLatin1() + ESCAPE + "[0m";
+        roomDescription.replace("\n", "\r\n");
+        sendToUser(roomDescription + "\r\n");
     }
-    roomDescription += r->getStaticDescription().toLatin1() + ESCAPE + "[0m";
-    roomDescription.replace("\n", "\r\n");
-    sendToUser(roomDescription);
 
-    sendToUser(r->getDynamicDescription().toLatin1().replace("\n", "\r\n"));
+    QByteArray dynamicDescription = r->getDynamicDescription().trimmed().toLatin1();
+    if (!dynamicDescription.isEmpty()) {
+        dynamicDescription.replace("\n", "\r\n");
+        sendToUser(dynamicDescription + "\r\n");
+    }
 }
 
 void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
@@ -1412,7 +1411,15 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
 
 void AbstractParser::sendPromptToUser()
 {
+    if (m_overrideSendPrompt) {
+        m_overrideSendPrompt = false;
+        return;
+    }
+
     if (!m_lastPrompt.isEmpty() && isOnline()) {
+        if (!m_compactMode) {
+            sendToUser("\r\n");
+        }
         sendToUser(m_lastPrompt, true);
         return;
     }
@@ -1446,7 +1453,10 @@ void AbstractParser::sendPromptToUser(const RoomLightType lightType,
 
 void AbstractParser::sendPromptToUser(const char light, const char terrain)
 {
-    QByteArray prompt("\r\n");
+    if (!m_compactMode) {
+        sendToUser("\r\n");
+    }
+    QByteArray prompt;
     prompt += light;
     prompt += terrain;
     prompt += ">";
@@ -1484,6 +1494,7 @@ void AbstractParser::performDoorCommand(const DirectionType direction, const Doo
     if (isOnline()) { // online mode
         emit sendToMud(cn);
         sendToUser("--->" + cn);
+        m_overrideSendPrompt = true;
     } else {
         sendToUser("--->" + cn);
         sendToUser("OK.\r\n");
@@ -1526,6 +1537,7 @@ void AbstractParser::genericDoorCommand(QString command, const DirectionType dir
     if (isOnline()) { // online mode
         emit sendToMud(command.toLatin1());
         sendToUser("--->" + command);
+        m_overrideSendPrompt = true;
     } else {
         sendToUser("--->" + command);
         sendToUser("OK.\r\n");
@@ -1647,6 +1659,6 @@ void AbstractParser::printRoomInfo(const RoomFields fieldset)
 
 void AbstractParser::sendGTellToUser(const QByteArray &ba)
 {
-    sendToUser(ba);
+    sendToUser("\r\n" + ba + "\r\n");
     sendPromptToUser();
 }
