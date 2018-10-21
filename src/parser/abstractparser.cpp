@@ -616,7 +616,6 @@ void AbstractParser::parseNewUserInput(const IncomingData &data)
 {
     auto parse_and_send = [this, &data]() {
         auto parse = [this, &data]() -> bool {
-            // REVISIT: Should we also parse user input as UTF-8?
             const QString input = QString::fromLatin1(data.line.constData(), data.line.size())
                                       .simplified();
             try {
@@ -823,9 +822,9 @@ void AbstractParser::setNote(const QString &note)
 {
     setRoomFieldCommand(note, RoomField::NOTE);
     if (note.isEmpty()) {
-        sendToUser("Note cleared!");
+        sendToUser("Note cleared!\r\n");
     } else {
-        sendToUser("Note set!");
+        sendToUser("Note set!\r\n");
         showNote();
     }
 }

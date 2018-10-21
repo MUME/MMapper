@@ -651,13 +651,9 @@ void AbstractParser::parseDirections(StringView view)
         doGetDirectionsCommand(view);
 }
 
-// REVISIT: how do you clear it?
 void AbstractParser::parseNoteCmd(StringView view)
 {
-    if (view.isEmpty())
-        showNote();
-    else
-        setNote(view.toQString());
+    setNote(view.toQString());
 }
 
 void AbstractParser::parseHelp(StringView words)
