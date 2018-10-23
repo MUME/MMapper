@@ -189,7 +189,8 @@ void MumeXmlParser::parse(const IncomingData &data)
 
 bool MumeXmlParser::element(const QByteArray &line)
 {
-    int length = line.length();
+    const int length = line.length();
+    const XmlMode lastMode = m_xmlMode;
 
     switch (m_xmlMode) {
     case XmlMode::NONE:
@@ -360,6 +361,12 @@ bool MumeXmlParser::element(const QByteArray &line)
     if (!getConfig().parser.removeXmlTags) {
         m_lineToUser.append(lessThanChar).append(line).append(greaterThanChar);
     }
+
+    if (lastMode == XmlMode::PROMPT) {
+        // Store prompts in case an internal command is executed
+        m_lastPrompt = m_lineToUser;
+    }
+
     return true;
 }
 
@@ -380,11 +387,6 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
 
     // replace > and < chars
     stripXmlEntities(ch);
-
-    // Store prompts in case an internal command is executed
-    if (m_xmlMode == XmlMode::PROMPT) {
-        m_lastPrompt = ch;
-    }
 
     const auto &config = getConfig();
     m_stringBuffer = QString::fromLatin1(ch);
