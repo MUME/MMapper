@@ -551,16 +551,14 @@ void AbstractTelnet::processTelnetSubnegotiation(const QByteArray &payload)
         if (myOptionState[OPT_NAWS]) {
             // NAWS <16-bit value> <16-bit value>
             if (payload.length() == 5) {
-                static constexpr const auto lo = static_cast<int>(
-                    std::numeric_limits<uint8_t>::min());
-                static constexpr const auto hi = static_cast<int>(
-                    std::numeric_limits<uint8_t>::max());
+                static constexpr const auto lo = std::numeric_limits<uint8_t>::min();
+                static constexpr const auto hi = std::numeric_limits<uint8_t>::max();
                 static_assert(lo == 0, "");
                 static_assert(hi == 255, "");
-                const int x1 = static_cast<int>(payload[1]);
-                const int x2 = static_cast<int>(payload[2]);
-                const int y1 = static_cast<int>(payload[3]);
-                const int y2 = static_cast<int>(payload[4]);
+                const auto x1 = static_cast<uint8_t>(payload[1]);
+                const auto x2 = static_cast<uint8_t>(payload[2]);
+                const auto y1 = static_cast<uint8_t>(payload[3]);
+                const auto y2 = static_cast<uint8_t>(payload[4]);
                 if (isClamped(x1, lo, hi) && isClamped(x2, lo, hi) && isClamped(y1, lo, hi)
                     && isClamped(y2, lo, hi)) {
                     const auto x = static_cast<uint16_t>((x1 << 8) + x2);
