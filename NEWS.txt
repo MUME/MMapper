@@ -1,4 +1,15 @@
 ================================
+MMapper 2.6.2 (October 27, 2018)
+================================
+
+Changes:
+ - Fixed bug when the negotiated window size was larger than 127 characters
+ - Prompts are more consistently stored and displayed with internal commands
+ - _note command now clears notes when provided with an empty payload
+ - Added shortcut to reset the zoom level back to the default level
+ - Darkened default background color
+
+================================
 MMapper 2.6.1 (October 12, 2018)
 ================================
 
