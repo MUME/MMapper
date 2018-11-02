@@ -179,7 +179,7 @@ void AbstractTelnet::reset()
 
     //reset telnet status
     termType = QString("MMapper-%1").arg(MMAPPER_VERSION);
-    state = TelnetState::FORWARD;
+    state = TelnetState::NORMAL;
     commandBuffer.clear();
     subnegBuffer.clear();
     sentBytes = 0;
@@ -551,21 +551,14 @@ void AbstractTelnet::processTelnetSubnegotiation(const QByteArray &payload)
         if (myOptionState[OPT_NAWS]) {
             // NAWS <16-bit value> <16-bit value>
             if (payload.length() == 5) {
-                static constexpr const auto lo = std::numeric_limits<uint8_t>::min();
-                static constexpr const auto hi = std::numeric_limits<uint8_t>::max();
-                static_assert(lo == 0, "");
-                static_assert(hi == 255, "");
                 const auto x1 = static_cast<uint8_t>(payload[1]);
                 const auto x2 = static_cast<uint8_t>(payload[2]);
                 const auto y1 = static_cast<uint8_t>(payload[3]);
                 const auto y2 = static_cast<uint8_t>(payload[4]);
-                if (isClamped(x1, lo, hi) && isClamped(x2, lo, hi) && isClamped(y1, lo, hi)
-                    && isClamped(y2, lo, hi)) {
-                    const auto x = static_cast<uint16_t>((x1 << 8) + x2);
-                    const auto y = static_cast<uint16_t>((y1 << 8) + y2);
-                    receiveWindowSize(x, y);
-                    break;
-                }
+                const auto x = static_cast<uint16_t>((x1 << 8) + x2);
+                const auto y = static_cast<uint16_t>((y1 << 8) + y2);
+                receiveWindowSize(x, y);
+                break;
             }
             qWarning() << "Corrupted NAWS received" << payload;
         }
@@ -635,7 +628,7 @@ void AbstractTelnet::onReadInternal(const QByteArray &data)
 void AbstractTelnet::onReadInternal2(QByteArray &cleanData, const uint8_t c)
 {
     switch (state) {
-    case TelnetState::FORWARD:
+    case TelnetState::NORMAL:
         if (c == TN_IAC) {
             // this is IAC, previous character was regular data
             state = TelnetState::IAC;
@@ -648,7 +641,7 @@ void AbstractTelnet::onReadInternal2(QByteArray &cleanData, const uint8_t c)
     case TelnetState::IAC:
         // seq. of two IACs
         if (c == TN_IAC) {
-            state = TelnetState::FORWARD;
+            state = TelnetState::NORMAL;
             cleanData.append(c);
             commandBuffer.clear();
         }
@@ -664,12 +657,12 @@ void AbstractTelnet::onReadInternal2(QByteArray &cleanData, const uint8_t c)
         }
         // IAC SE without IAC SB - error - ignored
         else if (c == TN_SE) {
-            state = TelnetState::FORWARD;
+            state = TelnetState::NORMAL;
             commandBuffer.clear();
         }
         // IAC fol. by something else than IAC, SB, SE, DO, DONT, WILL, WONT
         else {
-            state = TelnetState::FORWARD;
+            state = TelnetState::NORMAL;
             commandBuffer.append(c);
             processTelnetCommand(commandBuffer);
             //this could have set receivedGA to true; we'll handle that later
@@ -679,7 +672,7 @@ void AbstractTelnet::onReadInternal2(QByteArray &cleanData, const uint8_t c)
         break;
     case TelnetState::COMMAND:
         // IAC DO/DONT/WILL/WONT <command code>
-        state = TelnetState::FORWARD;
+        state = TelnetState::NORMAL;
         commandBuffer.append(c);
         processTelnetCommand(commandBuffer);
         commandBuffer.clear();
@@ -709,14 +702,14 @@ void AbstractTelnet::onReadInternal2(QByteArray &cleanData, const uint8_t c)
         }
         // IAC SE - end of subcommand
         else if (c == TN_SE) {
-            state = TelnetState::FORWARD;
+            state = TelnetState::NORMAL;
             processTelnetSubnegotiation(subnegBuffer);
             commandBuffer.clear();
             subnegBuffer.clear();
         }
         // IAC SB within IAC SB - error - ignored
         else if (c == TN_SB) {
-            state = TelnetState::FORWARD;
+            state = TelnetState::NORMAL;
             commandBuffer.clear();
             subnegBuffer.clear();
         }

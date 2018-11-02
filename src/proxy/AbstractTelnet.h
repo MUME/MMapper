@@ -250,7 +250,20 @@ private:
 
     QByteArray commandBuffer{};
     QByteArray subnegBuffer{};
-    enum class TelnetState { FORWARD, IAC, COMMAND, SUBNEG, SUBNEG_IAC, SUBNEG_COMMAND } state;
+    enum class TelnetState {
+        /// normal input
+        NORMAL,
+        /// received IAC
+        IAC,
+        /// received IAC <WILL|WONT|DO|DONT>
+        COMMAND,
+        /// received IAC SB
+        SUBNEG,
+        /// received IAC SB ... IAC
+        SUBNEG_IAC,
+        /// received IAC SB ... IAC <WILL|WONT|DO|DONT>
+        SUBNEG_COMMAND
+    } state;
 
     /** have we received the GA signal? */
     bool recvdGA = false;
