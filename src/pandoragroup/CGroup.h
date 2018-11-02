@@ -30,9 +30,9 @@
 #include <set>
 #include <vector>
 #include <QByteArray>
-#include <QDomNode>
 #include <QMutex>
 #include <QObject>
+#include <QVariantMap>
 #include <QWidget>
 #include <QtCore>
 #include <queue>
@@ -86,12 +86,12 @@ protected:
     void executeActions();
 
     CGroupLocalChar *getSelf() { return self; }
-    void renameChar(const QDomNode &blob);
+    void renameChar(const QVariantMap &map);
     void resetChars();
-    void updateChar(const QDomNode &blob); // updates given char from the blob
+    void updateChar(const QVariantMap &map); // updates given char from the map
     void removeChar(const QByteArray &name);
-    void removeChar(const QDomNode &node);
-    bool addChar(const QDomNode &node);
+    void removeChar(const QVariantMap &node);
+    bool addChar(const QVariantMap &node);
 
 private:
     CGroupChar *getCharByName(const QByteArray &name);

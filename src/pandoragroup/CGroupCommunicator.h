@@ -28,10 +28,10 @@
 #define CGROUPCOMMUNICATOR_H_
 
 #include <QByteArray>
-#include <QDomNode>
 #include <QHash>
 #include <QObject>
 #include <QString>
+#include <QVariantMap>
 #include <QtCore>
 
 #include "CGroupClient.h"
@@ -47,16 +47,17 @@ class CGroupCommunicator : public QObject
 public:
     explicit CGroupCommunicator(GroupManagerState type, Mmapper2Group *parent);
 
-    static constexpr const int protocolVersion = 102;
+    static constexpr const int SUPPORTED_PROTOCOL_VERSION = 102;
 
+    // TODO: password and encryption options
     enum class Messages {
-        NONE,
+        NONE, // Unused
         ACK,
-        REQ_VERSION,
+        REQ_VERSION, // Unused
         REQ_ACK,
         REQ_LOGIN,
         REQ_INFO,
-        PROT_VERSION,
+        PROT_VERSION, // Unused
         GTELL,
         STATE_LOGGED,
         STATE_KICKED,
@@ -67,33 +68,33 @@ public:
     };
 
     GroupManagerState getType() const { return type; }
-    void sendCharUpdate(CGroupClient *, const QDomNode &);
-    void sendMessage(CGroupClient *, Messages, const QByteArray &blob = "");
-    void sendMessage(CGroupClient *, Messages, const QDomNode &);
+    void sendCharUpdate(CGroupClient *, const QVariantMap &);
+    void sendMessage(CGroupClient *, const Messages, const QByteArray & = "");
+    void sendMessage(CGroupClient *, const Messages, const QVariantMap &);
     virtual void renameConnection(const QByteArray &, const QByteArray &);
 
     virtual void disconnectCommunicator() = 0;
     virtual void connectCommunicator() = 0;
-    virtual void sendGroupTellMessage(QDomElement) = 0;
-    virtual void sendCharUpdate(QDomNode) = 0;
-    virtual void sendCharRename(QDomNode) = 0;
+    virtual void sendGroupTellMessage(const QVariantMap &map) = 0;
+    virtual void sendCharUpdate(const QVariantMap &map) = 0;
+    virtual void sendCharRename(const QVariantMap &map) = 0;
 
 protected:
-    QByteArray formMessageBlock(Messages message, const QDomNode &data);
+    QByteArray formMessageBlock(const Messages message, const QVariantMap &data);
     CGroup *getGroup();
 
 public slots:
     void incomingData(CGroupClient *, const QByteArray &);
-    void sendGTell(const QByteArray &);
+    void sendGroupTell(const QByteArray &);
     void relayLog(const QString &);
-    virtual void retrieveData(CGroupClient *, Messages, QDomNode) = 0;
+    virtual void retrieveData(CGroupClient *, const Messages, const QVariantMap &) = 0;
     virtual void connectionClosed(CGroupClient *) = 0;
 
 signals:
     void networkDown();
     void messageBox(QString message);
     void scheduleAction(GroupAction *action);
-    void gTellArrived(QDomNode node);
+    void gTellArrived(QVariantMap node);
     void sendLog(const QString &);
 
 private:
@@ -112,21 +113,23 @@ public:
     virtual void renameConnection(const QByteArray &oldName, const QByteArray &newName) override;
 
 protected slots:
-    void relayMessage(CGroupClient *connection, Messages message, const QDomNode &data);
+    void relayMessage(CGroupClient *connection, const Messages message, const QVariantMap &data);
     void connectionEstablished(CGroupClient *connection);
-    void retrieveData(CGroupClient *connection, Messages message, QDomNode data) override;
+    void retrieveData(CGroupClient *connection,
+                      const Messages message,
+                      const QVariantMap &data) override;
     void connectionClosed(CGroupClient *connection) override;
 
 protected:
     void sendRemoveUserNotification(CGroupClient *connection, const QByteArray &name);
-    void sendGroupTellMessage(QDomElement root) override;
+    void sendGroupTellMessage(const QVariantMap &root) override;
     void connectCommunicator() override;
     void disconnectCommunicator() override;
-    void sendCharUpdate(QDomNode blob) override;
-    void sendCharRename(QDomNode blob) override;
+    void sendCharUpdate(const QVariantMap &map) override;
+    void sendCharRename(const QVariantMap &map) override;
 
 private:
-    void parseLoginInformation(CGroupClient *connection, const QDomNode &data);
+    void parseLoginInformation(CGroupClient *connection, const QVariantMap &data);
     void sendGroupInformation(CGroupClient *connection);
     void serverStartupFailed();
 
@@ -145,15 +148,17 @@ public:
 
 public slots:
     void errorInConnection(CGroupClient *connection, const QString &);
-    void retrieveData(CGroupClient *connection, Messages message, QDomNode data) override;
+    void retrieveData(CGroupClient *connection,
+                      const Messages message,
+                      const QVariantMap &data) override;
     void connectionClosed(CGroupClient *connection) override;
 
 protected:
-    void sendGroupTellMessage(QDomElement root) override;
+    void sendGroupTellMessage(const QVariantMap &map) override;
     void connectCommunicator() override;
     void disconnectCommunicator() override;
-    void sendCharUpdate(QDomNode blob) override;
-    void sendCharRename(QDomNode blob) override;
+    void sendCharUpdate(const QVariantMap &map) override;
+    void sendCharRename(const QVariantMap &map) override;
 
 private:
     void sendLoginInformation(CGroupClient *connection);

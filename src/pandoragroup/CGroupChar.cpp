@@ -26,7 +26,7 @@
 #include "CGroupChar.h"
 
 #include <QCharRef>
-#include <QDomNode>
+#include <QDebug>
 #include <QMessageLogContext>
 
 #include "../global/roomid.h"
@@ -34,70 +34,73 @@
 CGroupChar::CGroupChar() = default;
 CGroupChar::~CGroupChar() = default;
 
-const QDomNode CGroupChar::toXML() const
+const QVariantMap CGroupChar::toVariantMap() const
 {
-    QDomDocument doc("charinfo");
+    QVariantMap playerData;
 
-    QDomElement root = doc.createElement("playerData");
-    root.setAttribute("name", QString(name));
-    root.setAttribute("color", color.name());
-    root.setAttribute("hp", hp);
-    root.setAttribute("maxhp", maxhp);
-    root.setAttribute("mana", mana);
-    root.setAttribute("maxmana", maxmana);
-    root.setAttribute("moves", moves);
-    root.setAttribute("maxmoves", maxmoves);
-    root.setAttribute("state", static_cast<int>(state));
-    root.setAttribute("room", pos.asUint32());
-    doc.appendChild(root);
+    playerData["name"] = name;
+    playerData["color"] = color.name();
+    playerData["hp"] = hp;
+    playerData["maxhp"] = maxhp;
+    playerData["mana"] = mana;
+    playerData["maxmana"] = maxmana;
+    playerData["moves"] = moves;
+    playerData["maxmoves"] = maxmoves;
+    playerData["state"] = static_cast<int>(state);
+    playerData["room"] = pos.asUint32();
 
+    QVariantMap root;
+    root["playerData"] = playerData;
     return root;
 }
 
-bool CGroupChar::updateFromXML(const QDomNode &node)
+bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
 {
-    if (node.nodeName() != "playerData") {
-        qWarning("Called updateFromXML with wrong node. The name does not fit.");
+    if (!data.contains("playerData") || !data["playerData"].canConvert(QMetaType::QVariantMap)) {
+        qWarning() << "Unable to find 'playerData' in map" << data;
         return false;
     }
+    const QVariantMap &playerData = data["playerData"].toMap();
 
     bool updated = false;
-    QDomElement e = node.toElement();
-
-    {
-        auto newpos = RoomId{e.attribute("room").toUInt()};
+    if (playerData.contains("room") && playerData["room"].canConvert(QMetaType::UInt)) {
+        const auto newpos = RoomId{static_cast<uint32_t>(playerData["room"].toUInt())};
         if (newpos != pos) {
             updated = true;
             pos = newpos;
         }
     }
 
-    const auto tryUpdateString = [&e, &updated](const char *const attr, QByteArray &arr) {
-        auto s = e.attribute(attr).toLatin1();
-        if (s == arr)
-            return;
-
-        arr = s;
-        updated = true;
+    const auto tryUpdateString = [&playerData, &updated](const char *const attr, QByteArray &arr) {
+        if (playerData.contains(attr) && playerData[attr].canConvert(QMetaType::QByteArray)) {
+            const auto &s = playerData[attr].toByteArray();
+            if (s != arr) {
+                updated = true;
+                arr = s;
+            }
+        }
     };
 
 #define TRY_UPDATE_STRING(s) tryUpdateString(#s, (s))
 
     TRY_UPDATE_STRING(name);
 
-    const auto str = e.attribute("color");
-    if (str != color.name()) {
-        updated = true;
-        color = QColor(str);
+    if (playerData.contains("color") && playerData["color"].canConvert(QMetaType::QString)) {
+        const QString &str = playerData["color"].toString();
+        if (str != color.name()) {
+            updated = true;
+            color = QColor(str);
+        }
     }
 
-    const auto tryUpdateInt = [&e, &updated](const char *const attr, int &n) {
-        auto i = e.attribute(attr).toInt();
-        if (i == n)
-            return;
-
-        n = i;
-        updated = true;
+    const auto tryUpdateInt = [&playerData, &updated](const char *const attr, int &n) {
+        if (playerData.contains(attr) && playerData[attr].canConvert(QMetaType::Int)) {
+            const auto i = playerData[attr].toInt();
+            if (i != n) {
+                updated = true;
+                n = i;
+            }
+        }
     };
 #define TRY_UPDATE_INT(n) tryUpdateInt(#n, (n))
 
@@ -108,8 +111,8 @@ bool CGroupChar::updateFromXML(const QDomNode &node)
     TRY_UPDATE_INT(moves);
     TRY_UPDATE_INT(maxmoves);
 
-    {
-        const auto newState = static_cast<CharacterStates>(e.attribute("state").toInt());
+    if (playerData.contains("state") && playerData["state"].canConvert(QMetaType::Int)) {
+        const auto newState = static_cast<CharacterStates>(playerData["state"].toInt());
         if (newState != state) {
             updated = true;
             state = newState;
@@ -121,14 +124,18 @@ bool CGroupChar::updateFromXML(const QDomNode &node)
 #undef TRY_UPDATE_STRING
 }
 
-QByteArray CGroupChar::getNameFromXML(const QDomNode &node)
+QByteArray CGroupChar::getNameFromVariantMap(const QVariantMap &data)
 {
-    if (node.nodeName() != "playerData") {
-        qWarning("Called updateFromXML with wrong node. The name does not fit.");
-        return QByteArray();
+    if (!data.contains("playerData") || !data["playerData"].canConvert(QMetaType::QVariantMap)) {
+        qWarning() << "Unable to find 'playerData' in map" << data;
+        return "";
     }
 
-    QDomElement e = node.toElement();
+    const QVariantMap &playerData = data["playerData"].toMap();
+    if (!playerData.contains("name") || !playerData["name"].canConvert(QMetaType::QByteArray)) {
+        qWarning() << "Unable to find 'name' in map" << playerData;
+        return "";
+    }
 
-    return e.attribute("name").toLatin1();
+    return playerData["name"].toByteArray();
 }

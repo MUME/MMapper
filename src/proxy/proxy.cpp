@@ -257,7 +257,7 @@ bool Proxy::init()
     connect(m_parserXml,
             &AbstractParser::sendGroupTellEvent,
             m_groupManager,
-            &Mmapper2Group::sendGTell);
+            &Mmapper2Group::sendGroupTell);
     // Group Tell
     connect(m_groupManager,
             &Mmapper2Group::displayGroupTellEvent,

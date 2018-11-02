@@ -49,8 +49,8 @@ public:
     void setSocket(qintptr socketDescriptor);
 
     ConnectionStates getConnectionState() const { return connectionState; }
-    void setConnectionState(ConnectionStates val);
-    void setProtocolState(ProtocolStates val) { protocolState = val; }
+    void setConnectionState(const ConnectionStates val);
+    void setProtocolState(const ProtocolStates val) { protocolState = val; }
     ProtocolStates getProtocolState() const { return protocolState; }
     void sendData(const QByteArray &data);
 

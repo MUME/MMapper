@@ -63,7 +63,7 @@ void CGroupClient::setSocket(qintptr socketDescriptor)
     setConnectionState(ConnectionStates::Connected);
 }
 
-void CGroupClient::setConnectionState(ConnectionStates val)
+void CGroupClient::setConnectionState(const ConnectionStates val)
 {
     //    qInfo("Connection state: %i", val);
     connectionState = val;

@@ -69,11 +69,18 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
 
 void GroupManagerPage::charNameTextChanged()
 {
-    const QString newName = charName->text();
+    // REVISIT: Remove non-valid characters (numbers, punctuation, etc)
+    const QByteArray newName = charName->text().toLatin1().simplified();
     QByteArray &savedCharName = setConfig().groupManager.charName;
-    if (!m_groupManager->getGroup()->isNamePresent(newName.toLatin1()) && savedCharName != newName) {
-        savedCharName = newName.toLatin1();
+    if (!m_groupManager->getGroup()->isNamePresent(newName) && savedCharName != newName) {
+        savedCharName = newName;
         emit updatedSelf();
+    }
+
+    // Correct any UTF-8 characters that we do not understand
+    QString newNameStr = QString::fromLatin1(newName);
+    if (charName->text() != newNameStr) {
+        charName->setText(newNameStr);
     }
 }
 

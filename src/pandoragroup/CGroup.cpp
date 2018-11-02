@@ -30,6 +30,7 @@
 #include <QMessageLogContext>
 #include <QMutex>
 #include <QObject>
+#include <QVariantMap>
 
 #include "../configuration/configuration.h"
 #include "../global/roomid.h"
@@ -130,11 +131,11 @@ void CGroup::resetChars()
     emit characterChanged();
 }
 
-bool CGroup::addChar(const QDomNode &node)
+bool CGroup::addChar(const QVariantMap &map)
 {
     QMutexLocker locker(&characterLock);
     auto *newChar = new CGroupChar();
-    newChar->updateFromXML(node);
+    newChar->updateFromVariantMap(map);
     if (isNamePresent(newChar->getName()) || newChar->getName() == "") {
         emit log(QString("'%1' could not join the group because the name already existed.")
                      .arg(newChar->getName().constData()));
@@ -167,12 +168,12 @@ void CGroup::removeChar(const QByteArray &name)
     }
 }
 
-void CGroup::removeChar(const QDomNode &node)
+void CGroup::removeChar(const QVariantMap &map)
 {
     QMutexLocker locker(&characterLock);
-    QByteArray name = CGroupChar::getNameFromXML(node);
+    const auto &name = CGroupChar::getNameFromVariantMap(map);
     if (name.isEmpty()) {
-        qWarning() << "Unable to extract character name from" << node.nodeName();
+        qWarning() << "Unable to extract character name from" << map;
         return;
     }
 
@@ -203,30 +204,32 @@ CGroupChar *CGroup::getCharByName(const QByteArray &name)
     return nullptr;
 }
 
-void CGroup::updateChar(const QDomNode &blob)
+void CGroup::updateChar(const QVariantMap &map)
 {
-    CGroupChar *ch;
-
-    ch = getCharByName(CGroupChar::getNameFromXML(blob));
+    CGroupChar *ch = getCharByName(CGroupChar::getNameFromVariantMap(map));
     if (ch == nullptr) {
         return;
     }
 
-    if (ch->updateFromXML(blob)) {
+    if (ch->updateFromVariantMap(map)) {
         emit characterChanged();
     }
 }
 
-void CGroup::renameChar(const QDomNode &blob)
+void CGroup::renameChar(const QVariantMap &map)
 {
     QMutexLocker locker(&characterLock);
-    if (blob.nodeName() != "rename") {
-        qWarning() << "nodeName was '" << blob.nodeName() << "' and not 'rename'";
+    if (!map.contains("oldname") && map["oldname"].canConvert(QMetaType::QString)) {
+        qWarning() << "'oldname' element not found" << map;
+        return;
+    }
+    if (!map.contains("newname") && map["newname"].canConvert(QMetaType::QString)) {
+        qWarning() << "'newname' element not found" << map;
         return;
     }
 
-    QString oldname = blob.toElement().attribute("oldname");
-    QString newname = blob.toElement().attribute("newname");
+    QString oldname = map["oldname"].toString();
+    QString newname = map["newname"].toString();
 
     emit log(QString("Renaming '%1' to '%2'").arg(oldname).arg(newname));
 

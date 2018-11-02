@@ -28,8 +28,8 @@
 
 #include <QByteArray>
 #include <QByteArrayDataPtr>
-#include <QDomNode>
 #include <QString>
+#include <QVariantMap>
 
 class CGroup;
 
@@ -49,19 +49,19 @@ protected:
 class AddCharacter : public GroupAction
 {
 public:
-    explicit AddCharacter(const QDomNode &blob);
+    explicit AddCharacter(const QVariantMap &map);
 
 protected:
     void exec() override;
 
 private:
-    QDomNode blob{};
+    QVariantMap map{};
 };
 
 class RemoveCharacter : public GroupAction
 {
 public:
-    explicit RemoveCharacter(const QDomNode &blob);
+    explicit RemoveCharacter(const QVariantMap &variant);
     explicit RemoveCharacter(QByteArray);
 
 protected:
@@ -74,25 +74,25 @@ private:
 class UpdateCharacter : public GroupAction
 {
 public:
-    explicit UpdateCharacter(const QDomNode &blob);
+    explicit UpdateCharacter(const QVariantMap &variant);
 
 protected:
     void exec() override;
 
 private:
-    QDomNode blob{};
+    QVariantMap map{};
 };
 
 class RenameCharacter : public GroupAction
 {
 public:
-    explicit RenameCharacter(const QDomNode &blob);
+    explicit RenameCharacter(const QVariantMap &variant);
 
 protected:
     void exec() override;
 
 private:
-    QDomNode blob{};
+    QVariantMap map{};
 };
 
 class ResetCharacters : public GroupAction

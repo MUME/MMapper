@@ -31,13 +31,13 @@
 #include <QArgument>
 #include <QMutex>
 #include <QObject>
+#include <QVariantMap>
 
 #include "../expandoracommon/component.h"
 #include "../global/roomid.h"
 
 class CGroupCommunicator;
 class CGroup;
-class QDomNode;
 enum class GroupManagerState { Off = 0, Client = 1, Server = 2 };
 
 class Mmapper2Group final : public Component
@@ -69,12 +69,12 @@ public slots:
     void setType(GroupManagerState newState);
     void updateSelf(); // changing settings
 
-    void sendGTell(const QByteArray &tell); // sends gtell from local user
+    void sendGroupTell(const QByteArray &tell); // sends gtell from local user
     void parseScoreInformation(QByteArray score);
     void parsePromptInformation(QByteArray prompt);
 
     // Communicator
-    void gTellArrived(const QDomNode &node);
+    void gTellArrived(const QVariantMap &node);
     void relayMessageBox(const QString &message);
     void sendLog(const QString &);
     void networkDown();
@@ -83,7 +83,7 @@ protected slots:
     void characterChanged();
 
 protected:
-    void gotKicked(const QDomNode &message);
+    void gotKicked(const QVariantMap &message);
     void serverStartupFailed(const QString &message);
 
     void init() override;

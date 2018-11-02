@@ -29,10 +29,9 @@
 
 #include <QByteArray>
 #include <QColor>
+#include <QVariantMap>
 
 #include "../global/roomid.h"
-
-class QDomNode;
 
 class CGroupChar
 {
@@ -62,11 +61,11 @@ public:
     void setName(QByteArray _name) { name = _name; }
     void setColor(QColor col) { color = col; }
     const QColor &getColor() const { return color; }
-    const QDomNode toXML() const;
-    bool updateFromXML(const QDomNode &node);
+    const QVariantMap toVariantMap() const;
+    bool updateFromVariantMap(const QVariantMap &);
     void setPosition(RoomId id) { pos = id; }
     RoomId getPosition() const { return pos; }
-    static QByteArray getNameFromXML(const QDomNode &node);
+    static QByteArray getNameFromVariantMap(const QVariantMap &);
 
 private:
     QByteArray name{};

@@ -26,9 +26,9 @@
 #include "mmapper2group.h"
 
 #include <QColor>
-#include <QDomAttr>
 #include <QMessageLogContext>
 #include <QMutex>
+#include <QVariantMap>
 #include <QtCore>
 
 #include "../configuration/configuration.h"
@@ -123,7 +123,7 @@ void Mmapper2Group::issueLocalCharUpdate()
     }
 
     if (network) {
-        const QDomNode &data = group->getSelf()->toXML();
+        const QVariantMap &data = group->getSelf()->toVariantMap();
         network->sendCharUpdate(data);
         emit drawCharacters();
     }
@@ -141,59 +141,46 @@ void Mmapper2Group::serverStartupFailed(const QString &message)
         QString("Failed to start the Group server: %1").arg(message.toLatin1().constData()));
 }
 
-void Mmapper2Group::gotKicked(const QDomNode &message)
+void Mmapper2Group::gotKicked(const QVariantMap &message)
 {
-    if (message.nodeName() != "data") {
-        qWarning() << "Called gotKicked with wrong node. No data node but instead:"
-                   << message.nodeName();
+    if (!message.contains("text") && message["text"].canConvert(QMetaType::QString)) {
+        qWarning() << "Text not found" << message;
         return;
     }
-
-    QDomNode e = message.firstChildElement();
-
-    if (e.nodeName() != "text") {
-        qWarning() << "Called gotKicked with wrong node. No text node but instead:" << e.nodeName();
-        return;
-    }
-
-    QDomElement text = e.toElement();
-    emit log("GroupManager",
-             QString("You got kicked! Reason [nodename %1] : %2")
-                 .arg(text.nodeName().toLatin1().constData())
-                 .arg(text.text().toLatin1().constData()));
-    emit messageBox("Group Manager", QString("You got kicked! Reason: %1.").arg(text.text()));
+    const QString &text = message["text"].toString();
+    const QString reason = QString("You got kicked! Reason: %1").arg(text);
+    emit log("GroupManager", reason);
+    emit messageBox("Group Manager", reason);
 }
 
-void Mmapper2Group::gTellArrived(const QDomNode &node)
+void Mmapper2Group::gTellArrived(const QVariantMap &node)
 {
-    if (node.nodeName() != "data") {
-        qWarning() << "Called gTellArrived with wrong node. No data node but instead:"
-                   << node.nodeName();
+    if (!node.contains("name") && node["name"].canConvert(QMetaType::QByteArray)) {
+        qWarning() << "Name not found" << node;
+        return;
+    }
+    const QByteArray &from = node["name"].toByteArray();
+
+    if (!node.contains("text") && node["text"].canConvert(QMetaType::QByteArray)) {
+        qWarning() << "Text not found" << node;
         return;
     }
 
-    const QDomNode e = node.firstChildElement();
-    const QString from = e.toElement().attribute("from");
+    const QString &text = node["text"].toString();
+    emit log("GroupManager", QString("GTell from %1 arrived: %2").arg(from.constData()).arg(text));
 
-    if (e.nodeName() != "gtell") {
-        qWarning() << "Called gTellArrived with wrong node. No text node but instead:"
-                   << e.nodeName();
-        return;
-    }
-
-    const QString text = e.toElement().text();
-    emit log("GroupManager", QString("GTell from %1, Arrived : %2").arg(from).arg(text));
-
-    const QByteArray tell = QString("%1 tells you [GT] '%2'").arg(from).arg(text).toLatin1();
+    // TODO: Color
+    const QByteArray tell
+        = QString("%1 tells you [GT] '%2'").arg(from.constData()).arg(text).toLatin1();
 
     emit displayGroupTellEvent(tell);
 }
 
-void Mmapper2Group::sendGTell(const QByteArray &tell)
+void Mmapper2Group::sendGroupTell(const QByteArray &tell)
 {
     QMutexLocker locker(&networkLock);
     if (network) {
-        network->sendGTell(tell);
+        network->sendGroupTell(tell);
     }
 }
 

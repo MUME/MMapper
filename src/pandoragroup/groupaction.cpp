@@ -30,24 +30,24 @@
 
 /**
  * @brief AddCharacter::AddCharacter
- * @param blob of XML representing the character
+ * @param Variant map representing the character
  */
-AddCharacter::AddCharacter(const QDomNode &blob)
-    : blob(blob)
+AddCharacter::AddCharacter(const QVariantMap &map)
+    : map(map)
 {}
 
 void AddCharacter::exec()
 {
     assert(group);
-    group->addChar(blob);
+    group->addChar(map);
 }
 
 /**
  * @brief RemoveCharacter::RemoveCharacter
- * @param blob of XML representing which character to delete
+ * @param Variant map representing which character to delete
  */
-RemoveCharacter::RemoveCharacter(const QDomNode &blob)
-    : RemoveCharacter(CGroupChar::getNameFromXML(blob))
+RemoveCharacter::RemoveCharacter(const QVariantMap &map)
+    : RemoveCharacter(CGroupChar::getNameFromVariantMap(map))
 {}
 
 /**
@@ -66,30 +66,30 @@ void RemoveCharacter::exec()
 
 /**
  * @brief UpdateCharacter::UpdateCharacter
- * @param blob of XML with which to update the character with
+ * @param Variant map with which to update the character with
  */
-UpdateCharacter::UpdateCharacter(const QDomNode &blob)
-    : blob(blob)
+UpdateCharacter::UpdateCharacter(const QVariantMap &map)
+    : map(map)
 {}
 
 void UpdateCharacter::exec()
 {
     assert(group);
-    group->updateChar(blob);
+    group->updateChar(map);
 }
 
 /**
  * @brief RenameCharacter::RenameCharacter
- * @param blob of XML with the new name of the character
+ * @param Variant map with the new name of the character
  */
-RenameCharacter::RenameCharacter(const QDomNode &blob)
-    : blob(blob)
+RenameCharacter::RenameCharacter(const QVariantMap &map)
+    : map(map)
 {}
 
 void RenameCharacter::exec()
 {
     assert(group);
-    group->renameChar(blob);
+    group->renameChar(map);
 }
 
 /**
