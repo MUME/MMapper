@@ -89,8 +89,8 @@ public:
                          bool wantExtraDetail);
     void drawInfoMarks();
 
-    void renderText(float x,
-                    float y,
+    void renderText(double x,
+                    double y,
                     const QString &text,
                     const QColor &color = Qt::white,
                     FontFormatFlags fontFormatFlag = FontFormatFlags::NONE,
@@ -132,14 +132,14 @@ private:
 
 public:
     template<typename T>
-    float getScaledFontWidth(T x, FontFormatFlags flags = FontFormatFlags::NONE) const
+    double getScaledFontWidth(T x, FontFormatFlags flags = FontFormatFlags::NONE) const
     {
-        return static_cast<float>(m_opengl.getFontWidth(x, flags)) * 0.022f / m_scaleFactor;
+        return m_opengl.getFontWidth(x, flags) * static_cast<double>(0.022f / m_scaleFactor);
     }
 
-    float getScaledFontHeight() const
+    double getScaledFontHeight() const
     {
-        return static_cast<float>(m_opengl.getFontHeight()) * 0.007f / m_scaleFactor;
+        return m_opengl.getFontHeight() * static_cast<double>(0.007f / m_scaleFactor);
     }
 };
 

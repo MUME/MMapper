@@ -523,8 +523,8 @@ bool MapStorage::saveData(bool baseMapOnly)
         m_mapData.lookingForRooms(saver, RoomId{i});
     }
 
-    uint roomsCount = saver.getRoomsCount();
-    uint marksCount = markerList.size();
+    auto roomsCount = saver.getRoomsCount();
+    const auto marksCount = markerList.size();
 
     auto &progressCounter = getProgressCounter();
     progressCounter.reset();

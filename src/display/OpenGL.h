@@ -493,8 +493,8 @@ public:
 
     int getFontHeight() const { return deref(m_glFont.metrics).height(); }
 
-    void renderTextAt(const float x,
-                      const float y,
+    void renderTextAt(const double x,
+                      const double y,
                       const QString &text,
                       const QColor &color,
                       const FontFormatFlags fontFormatFlag,

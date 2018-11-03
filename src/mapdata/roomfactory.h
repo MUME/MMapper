@@ -49,10 +49,10 @@ public:
     virtual Room *createRoom(const ParseEvent &) const override;
     virtual ComparisonResult compare(const Room *,
                                      const ParseEvent &event,
-                                     uint tolerance = 0) const override;
+                                     uint tolerance) const override;
     virtual ComparisonResult compareWeakProps(const Room *,
                                               const ParseEvent &event,
-                                              uint tolerance = 0) const override;
+                                              uint tolerance) const override;
     virtual SharedParseEvent getEvent(const Room *) const override;
     virtual void update(Room &, const ParseEvent &event) const override;
     virtual void update(Room *target, const Room *source) const override;

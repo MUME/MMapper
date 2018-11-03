@@ -174,7 +174,7 @@ ComparisonResult RoomFactory::compare(const Room *const room,
         break;
     }
 
-    switch (compareWeakProps(room, event)) {
+    switch (compareWeakProps(room, event, 0)) {
     case ComparisonResult::DIFFERENT:
         return ComparisonResult::DIFFERENT;
     case ComparisonResult::TOLERANCE:

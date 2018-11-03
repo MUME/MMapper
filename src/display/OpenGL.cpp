@@ -55,8 +55,8 @@ void OpenGL::initFont(QPaintDevice *const paintDevice)
 
 // http://stackoverflow.com/questions/28216001/how-to-render-text-with-qopenglwidget/28517897
 // They couldn't find a slower way to do this I guess
-void OpenGL::renderTextAt(const float x,
-                          const float y,
+void OpenGL::renderTextAt(const double x,
+                          const double y,
                           const QString &text,
                           const QColor &color,
                           const FontFormatFlags fontFormatFlag,

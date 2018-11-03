@@ -307,8 +307,8 @@ void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
 
         // Render text proper
         m_opengl.glTranslated(-x1 / 2.0, -y1 / 2.0, 0.0);
-        renderText(static_cast<float>(x1 + 0.1),
-                   static_cast<float>(y1 + 0.3),
+        renderText(x1 + 0.1,
+                   y1 + 0.3,
                    marker->getText(),
                    textColor(color),
                    fontFormatFlag,
@@ -484,7 +484,7 @@ void MapCanvasRoomDrawer::drawTextBox(
 
     // text
     m_opengl.glTranslated(-x / 2.0, -y / 2.0, 0.0);
-    renderText(static_cast<float>(x + 0.1), static_cast<float>(y + 0.3), name);
+    renderText(x + 0.1, y + 0.3, name);
     m_opengl.apply(XEnable{XOption::DEPTH_TEST});
 
     m_opengl.glPopMatrix();
@@ -600,7 +600,7 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room,
     m_opengl.apply(LineStippleType::TWO);
 
     //terrain texture
-    m_opengl.apply(XColor4d{Qt::white, 1.0f});
+    m_opengl.apply(XColor4d{Qt::white, 1.0});
 
     if (layer > 0) {
         if (getConfig().canvas.drawUpperLayersTextured) {
@@ -611,7 +611,7 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room,
             m_opengl.apply(XEnable{XOption::BLEND});
         }
     } else if (layer == 0) {
-        m_opengl.apply(XColor4d{Qt::white, 0.9f});
+        m_opengl.apply(XColor4d{Qt::white, 0.9});
         m_opengl.apply(XEnable{XOption::BLEND});
     }
 
@@ -662,7 +662,7 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room,
 
         m_opengl.apply(XEnable{XOption::BLEND});
         m_opengl.apply(XDisable{XOption::DEPTH_TEST});
-        m_opengl.apply(XColor4d{Qt::white, 0.1f}); // was 1.0f, 1.0f, 1.0f, 0.1f
+        m_opengl.apply(XColor4d{Qt::white, 0.1});
         m_opengl.callList(m_gllist.room);
         m_opengl.apply(XEnable{XOption::DEPTH_TEST});
         m_opengl.apply(XDisable{XOption::BLEND});
@@ -671,7 +671,7 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room,
     if (!locks[room->getId()].empty()) { //---> room is locked
         m_opengl.apply(XEnable{XOption::BLEND});
         m_opengl.apply(XDisable{XOption::DEPTH_TEST});
-        m_opengl.apply(XColor4d{0.6f, 0.0f, 0.0f, 0.2f});
+        m_opengl.apply(XColor4d{0.6, 0.0, 0.0, 0.2});
         m_opengl.callList(m_gllist.room);
         m_opengl.apply(XEnable{XOption::DEPTH_TEST});
         m_opengl.apply(XDisable{XOption::BLEND});
@@ -712,7 +712,7 @@ void MapCanvasRoomDrawer::drawUpperLayers(const Room *const room,
         SAVE_COLOR();
         m_opengl.glTranslated(0, 0, 0.005);
         m_opengl.apply(
-            XColor4d{0.1f, 0.0f, 0.0f, room->getLightType() == RoomLightType::DARK ? 0.4f : 0.2f});
+            XColor4d{0.1, 0.0, 0.0, room->getLightType() == RoomLightType::DARK ? 0.4 : 0.2});
         m_opengl.callList(m_gllist.room);
     }
 
@@ -726,7 +726,7 @@ void MapCanvasRoomDrawer::drawUpperLayers(const Room *const room,
             SAVE_COLOR();
             m_opengl.apply(XDisable{XOption::TEXTURE_2D});
 
-            m_opengl.apply(XColor4d{0.5f, 0.0f, 0.0f, 0.9f});
+            m_opengl.apply(XColor4d{0.5, 0.0, 0.0, 0.9});
             m_opengl.apply(XDeviceLineWidth{3.0});
             m_opengl.draw(DrawType::LINES,
                           std::vector<Vec3d>{
@@ -1220,16 +1220,18 @@ void MapCanvasRoomDrawer::drawConnEndTriUpDownUnknown(qint32 dX, qint32 dY, doub
                   });
 }
 
-void MapCanvasRoomDrawer::renderText(const float x,
-                                     const float y,
+void MapCanvasRoomDrawer::renderText(const double x,
+                                     const double y,
                                      const QString &text,
                                      const QColor &color,
                                      const FontFormatFlags fontFormatFlag,
                                      const double rotationAngle)
 {
     // http://stackoverflow.com/questions/28216001/how-to-render-text-with-qopenglwidget/28517897
-    const QVector3D projected = project(QVector3D{x, y, CAMERA_Z_DISTANCE});
-    const float textPosX = projected.x();
-    const float textPosY = static_cast<float>(height()) - projected.y(); // y is inverted
+    const QVector3D projected = project(
+        QVector3D{static_cast<float>(x), static_cast<float>(y), CAMERA_Z_DISTANCE});
+    const auto textPosX = static_cast<double>(projected.x());
+    const auto textPosY = static_cast<double>(height())
+                          - static_cast<double>(projected.y()); // y is inverted
     m_opengl.renderTextAt(textPosX, textPosY, text, color, fontFormatFlag, rotationAngle);
 }

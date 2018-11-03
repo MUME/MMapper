@@ -1097,7 +1097,7 @@ void MapCanvas::drawCharacter(const Coordinate &c, const QColor &color)
     qint32 layer = z - m_currentLayer;
 
     m_opengl.glPushMatrix();
-    m_opengl.apply(XColor4d{Qt::black, 0.4f});
+    m_opengl.apply(XColor4d{Qt::black, 0.4});
     m_opengl.apply(XEnable{XOption::BLEND});
     m_opengl.apply(XDisable{XOption::DEPTH_TEST});
 
@@ -1106,8 +1106,8 @@ void MapCanvas::drawCharacter(const Coordinate &c, const QColor &color)
         || ((static_cast<float>(y) < m_visible1.y - 1.0f)
             || (static_cast<float>(y) > m_visible2.y + 1.0f))) {
         // Player is distant
-        const double cameraCenterX = (m_visible1.x + m_visible2.x) / 2.0f;
-        const double cameraCenterY = (m_visible1.y + m_visible2.y) / 2.0f;
+        const double cameraCenterX = static_cast<double>(m_visible1.x + m_visible2.x) / 2.0;
+        const double cameraCenterY = static_cast<double>(m_visible1.y + m_visible2.y) / 2.0;
 
         // Calculate degrees from camera center to character
         const double adjacent = cameraCenterY - y;
@@ -1172,44 +1172,48 @@ void MapCanvas::paintGL()
         drawRooms(drawer);
 
     } else {
-        drawer.renderText((m_visible1.x + m_visible2.x) / 2,
-                          (m_visible1.y + m_visible2.y) / 2,
+        drawer.renderText(static_cast<double>(m_visible1.x + m_visible2.x) / 2,
+                          static_cast<double>(m_visible1.y + m_visible2.y) / 2,
                           "No map loaded");
     }
 
-    GLdouble len = 0.2f;
+    GLdouble len = 0.2;
     if (m_selectedArea || m_infoMarkSelection) {
         m_opengl.apply(XEnable{XOption::BLEND});
         m_opengl.apply(XDisable{XOption::DEPTH_TEST});
-        m_opengl.apply(XColor4d{Qt::black, 0.5f});
-        m_opengl.draw(DrawType::POLYGON,
-                      std::vector<Vec3d>{Vec3d{m_sel1.x, m_sel1.y, 0.005},
-                                         Vec3d{m_sel2.x, m_sel1.y, 0.005},
-                                         Vec3d{m_sel2.x, m_sel2.y, 0.005},
-                                         Vec3d{m_sel1.x, m_sel2.y, 0.005}});
+        m_opengl.apply(XColor4d{Qt::black, 0.5});
+        m_opengl
+            .draw(DrawType::POLYGON,
+                  std::vector<Vec3d>{
+                      Vec3d{static_cast<double>(m_sel1.x), static_cast<double>(m_sel1.y), 0.005},
+                      Vec3d{static_cast<double>(m_sel2.x), static_cast<double>(m_sel1.y), 0.005},
+                      Vec3d{static_cast<double>(m_sel2.x), static_cast<double>(m_sel2.y), 0.005},
+                      Vec3d{static_cast<double>(m_sel1.x), static_cast<double>(m_sel2.y), 0.005}});
 
         m_opengl.apply(XColor4d{(Qt::white)});
         m_opengl.apply(LineStippleType::FOUR);
         m_opengl.apply(XEnable{XOption::LINE_STIPPLE});
-        m_opengl.draw(DrawType::LINE_LOOP,
-                      std::vector<Vec3d>{Vec3d{m_sel1.x, m_sel1.y, 0.005},
-                                         Vec3d{m_sel2.x, m_sel1.y, 0.005},
-                                         Vec3d{m_sel2.x, m_sel2.y, 0.005},
-                                         Vec3d{m_sel1.x, m_sel2.y, 0.005}});
+        m_opengl
+            .draw(DrawType::LINE_LOOP,
+                  std::vector<Vec3d>{
+                      Vec3d{static_cast<double>(m_sel1.x), static_cast<double>(m_sel1.y), 0.005},
+                      Vec3d{static_cast<double>(m_sel2.x), static_cast<double>(m_sel1.y), 0.005},
+                      Vec3d{static_cast<double>(m_sel2.x), static_cast<double>(m_sel2.y), 0.005},
+                      Vec3d{static_cast<double>(m_sel1.x), static_cast<double>(m_sel2.y), 0.005}});
         m_opengl.apply(XDisable{XOption::LINE_STIPPLE});
         m_opengl.apply(XDisable{XOption::BLEND});
         m_opengl.apply(XEnable{XOption::DEPTH_TEST});
     }
 
     if (m_infoMarkSelection) {
-        m_opengl.apply(XColor4d{Qt::yellow, 1.0f});
+        m_opengl.apply(XColor4d{Qt::yellow, 1.0});
         m_opengl.apply(XDevicePointSize{3.0});
         m_opengl.apply(XDeviceLineWidth{3.0});
 
         m_opengl.draw(DrawType::LINES,
                       std::vector<Vec3d>{
-                          Vec3d{m_sel1.x, m_sel1.y, 0.005},
-                          Vec3d{m_sel2.x, m_sel2.y, 0.005},
+                          Vec3d{static_cast<double>(m_sel1.x), static_cast<double>(m_sel1.y), 0.005},
+                          Vec3d{static_cast<double>(m_sel2.x), static_cast<double>(m_sel2.y), 0.005},
                       });
     }
 
@@ -1258,8 +1262,8 @@ void MapCanvas::paintSelectedConnection()
 
     GLdouble x1p = r->getPosition().x;
     GLdouble y1p = r->getPosition().y;
-    GLdouble x2p = m_sel2.x;
-    GLdouble y2p = m_sel2.y;
+    GLdouble x2p = static_cast<double>(m_sel2.x);
+    GLdouble y2p = static_cast<double>(m_sel2.y);
 
     /* TODO: factor duplicate code using vec2 return value */
     switch (m_connectionSelection->getFirst().direction) {
@@ -1359,7 +1363,7 @@ void MapCanvas::paintSelectedRoom(const GLdouble len, const Room *const room)
     m_opengl.glPushMatrix();
     m_opengl.glTranslated(x - 0.5, y - 0.5, ROOM_Z_DISTANCE * layer);
 
-    m_opengl.apply(XColor4d{Qt::black, 0.4f});
+    m_opengl.apply(XColor4d{Qt::black, 0.4});
 
     m_opengl.apply(XEnable{XOption::BLEND});
     m_opengl.apply(XDisable{XOption::DEPTH_TEST});
@@ -1385,9 +1389,9 @@ void MapCanvas::paintSelectedRoom(const GLdouble len, const Room *const room)
 
     if (m_roomSelectionMove.inUse) {
         if (m_roomSelectionMove.wrongPlace) {
-            m_opengl.apply(XColor4d{Qt::red, 0.4f});
+            m_opengl.apply(XColor4d{Qt::red, 0.4});
         } else {
-            m_opengl.apply(XColor4d{Qt::white, 0.4f});
+            m_opengl.apply(XColor4d{Qt::white, 0.4});
         }
 
         m_opengl.glTranslated(m_roomSelectionMove.x, m_roomSelectionMove.y, ROOM_Z_DISTANCE * layer);
