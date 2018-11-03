@@ -46,8 +46,6 @@ Forced::~Forced()
 {
     if (owner != nullptr) {
         owner->releaseRoom(*this, matchedRoom->getId());
-    } else {
-        owner->keepRoom(*this, matchedRoom->getId());
     }
 }
 
