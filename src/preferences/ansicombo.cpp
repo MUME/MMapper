@@ -133,12 +133,6 @@ bool AnsiCombo::colorFromString(const QString &colString,
                                 bool &bold,
                                 bool &underline)
 {
-    // REVISIT: shouldn't this be compiled and stuffed somewhere?
-    // Is it safe to make this static?
-    QRegExp re(R"(^\[((?:\d+;)*\d+)m$)");
-    if (re.indexIn(colString) < 0)
-        return false;
-
     ansiCodeFg = DEFAULT_FG;
     intelligibleNameFg = "none";
     colFg = QColor(Qt::white);
@@ -147,6 +141,16 @@ bool AnsiCombo::colorFromString(const QString &colString,
     colBg = QColor(Qt::black);
     bold = false;
     underline = false;
+
+    // No need to proceed if the color is empty
+    if (colString.isEmpty())
+        return true;
+
+    // REVISIT: shouldn't this be compiled and stuffed somewhere?
+    // Is it safe to make this static?
+    QRegExp re(R"(^\[((?:\d+;)*\d+)m$)");
+    if (re.indexIn(colString) < 0)
+        return false;
 
     const auto update_fg = [&ansiCodeFg, &colFg, &intelligibleNameFg](const int n) {
         // REVISIT: what about high colors?
