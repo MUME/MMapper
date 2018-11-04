@@ -32,15 +32,38 @@
 #include <QtCore>
 
 #include "../configuration/configuration.h"
-#include "../expandoracommon/component.h"
 #include "../global/roomid.h"
 #include "CGroup.h"
 #include "CGroupChar.h"
 #include "CGroupCommunicator.h"
 
-Mmapper2Group::Mmapper2Group()
-    : Component(true)
+GroupThreader::GroupThreader(Mmapper2Group *const group)
+    : group(group)
+{}
+
+GroupThreader::~GroupThreader()
+{
+    delete group;
+}
+
+void GroupThreader::run()
+{
+    try {
+        exec();
+    } catch (const std::exception &ex) {
+        qCritical() << "Group thread is terminating because it threw an exception: " << ex.what()
+                    << ".";
+        throw;
+    } catch (...) {
+        qCritical() << "Group thread is terminating because it threw an unknown exception.";
+        throw;
+    }
+}
+
+Mmapper2Group::Mmapper2Group(QObject *const /* parent */)
+    : QObject(nullptr)
     , networkLock(QMutex::Recursive)
+    , thread(new GroupThreader(this))
 {}
 
 Mmapper2Group::~Mmapper2Group()
@@ -52,7 +75,19 @@ Mmapper2Group::~Mmapper2Group()
     }
 }
 
-void Mmapper2Group::init()
+void Mmapper2Group::start()
+{
+    if (thread != nullptr) {
+        thread->start();
+        if (init()) {
+            moveToThread(thread);
+        }
+    } else {
+        init();
+    }
+}
+
+bool Mmapper2Group::init()
 {
     group.reset(new CGroup(this));
 
@@ -64,6 +99,7 @@ void Mmapper2Group::init()
             Qt::QueuedConnection);
 
     emit log("GroupManager", "Starting up the GroupManager");
+    return true;
 }
 
 void Mmapper2Group::characterChanged()

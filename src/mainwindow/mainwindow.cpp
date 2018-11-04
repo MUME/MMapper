@@ -113,13 +113,13 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     m_roomSelection = nullptr;
     m_connectionSelection = nullptr;
 
+    // REVISIT: MapData should be destructed last due to locks
     m_mapData = new MapData();
     m_mapData->setObjectName("MapData");
-    m_mapData->start();
 
     m_prespammedPath = new PrespammedPath(this);
 
-    m_groupManager = new Mmapper2Group();
+    m_groupManager = new Mmapper2Group(this);
     m_groupManager->setObjectName("GroupManager");
     m_groupManager->start();
     m_groupWidget = new GroupWidget(m_groupManager, m_mapData, this);
@@ -127,9 +127,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     m_mapWindow = new MapWindow(m_mapData, m_prespammedPath, m_groupManager, this);
     setCentralWidget(m_mapWindow);
 
-    m_pathMachine = new Mmapper2PathMachine();
+    m_pathMachine = new Mmapper2PathMachine(this);
     m_pathMachine->setObjectName("Mmapper2PathMachine");
-    m_pathMachine->start();
 
     m_client = new ClientWidget(this);
     m_client->setObjectName("MMapper2Client");

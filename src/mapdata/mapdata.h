@@ -73,7 +73,7 @@ class MapData : public MapFrontend
     friend class CustomAction;
 
 public:
-    explicit MapData();
+    explicit MapData(QObject *parent = nullptr);
     virtual ~MapData();
 
     const RoomSelection *select(const Coordinate &ulf, const Coordinate &lrb);

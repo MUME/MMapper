@@ -31,7 +31,6 @@
 #include <set>
 #include <utility>
 
-#include "../expandoracommon/component.h"
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
@@ -56,15 +55,17 @@
 
 class RoomRecipient;
 
-PathMachine::PathMachine(AbstractRoomFactory *const in_factory)
-    : Component{false}
+PathMachine::PathMachine(AbstractRoomFactory *const in_factory, QObject *const parent)
+    : QObject(parent)
     , factory{in_factory}
     , signaler{this}
     , pathRoot{Room::tagDummy}
     , mostLikelyRoom{Room::tagDummy}
     , lastEvent{ParseEvent::createDummyEvent()}
     , paths{new std::list<Path *>}
-{}
+{
+    connect(&signaler, &RoomSignalHandler::scheduleAction, this, &PathMachine::scheduleAction);
+}
 
 void PathMachine::setCurrentRoom(const RoomId id, bool update)
 {
@@ -76,11 +77,6 @@ void PathMachine::setCurrentRoom(const RoomId id, bool update)
         emit playerMoved(mostLikelyRoom.getPosition());
         state = PathState::APPROVED;
     }
-}
-
-void PathMachine::init()
-{
-    connect(&signaler, &RoomSignalHandler::scheduleAction, this, &PathMachine::scheduleAction);
 }
 
 void PathMachine::releaseAllPaths()

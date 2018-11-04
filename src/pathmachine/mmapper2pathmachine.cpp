@@ -80,6 +80,6 @@ void Mmapper2PathMachine::event(const SigParseEvent &sigParseEvent)
                  .arg(time.elapsed()));
 }
 
-Mmapper2PathMachine::Mmapper2PathMachine()
-    : PathMachine(new RoomFactory)
+Mmapper2PathMachine::Mmapper2PathMachine(QObject *const parent)
+    : PathMachine(new RoomFactory, parent)
 {}

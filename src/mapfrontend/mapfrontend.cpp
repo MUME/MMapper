@@ -44,8 +44,9 @@
 #include "roomcollection.h"
 #include "roomlocker.h"
 
-MapFrontend::MapFrontend(AbstractRoomFactory *const in_factory)
-    : mapLock(QMutex::Recursive)
+MapFrontend::MapFrontend(AbstractRoomFactory *const in_factory, QObject *const parent)
+    : QObject(parent)
+    , mapLock(QMutex::Recursive)
     , factory(in_factory)
 {}
 

@@ -44,14 +44,12 @@ class SigParseEvent;
 */
 class Mmapper2PathMachine final : public PathMachine
 {
-private:
     Q_OBJECT
-
 public slots:
     void event(const SigParseEvent &) override;
 
 public:
-    explicit Mmapper2PathMachine();
+    explicit Mmapper2PathMachine(QObject *parent = nullptr);
 
 signals:
     void log(const QString &, const QString &);

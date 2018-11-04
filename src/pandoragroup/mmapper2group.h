@@ -31,16 +31,30 @@
 #include <QArgument>
 #include <QMutex>
 #include <QObject>
+#include <QThread>
 #include <QVariantMap>
 
-#include "../expandoracommon/component.h"
 #include "../global/roomid.h"
 
 class CGroupCommunicator;
 class CGroup;
+class Mmapper2Group;
 enum class GroupManagerState { Off = 0, Client = 1, Server = 2 };
 
-class Mmapper2Group final : public Component
+class GroupThreader final : public QThread
+{
+    Q_OBJECT
+public:
+    explicit GroupThreader(Mmapper2Group *);
+    ~GroupThreader() override;
+
+    void run() override;
+
+protected:
+    Mmapper2Group *group = nullptr;
+};
+
+class Mmapper2Group final : public QObject
 {
 public:
     Q_OBJECT
@@ -56,8 +70,10 @@ signals:
     void drawCharacters(); // redraw the opengl screen
 
 public:
-    explicit Mmapper2Group();
+    explicit Mmapper2Group(QObject *parent = nullptr);
     virtual ~Mmapper2Group();
+
+    void start();
 
     GroupManagerState getType();
     int getGroupSize();
@@ -86,12 +102,12 @@ protected:
     void gotKicked(const QVariantMap &message);
     void serverStartupFailed(const QString &message);
 
-    void init() override;
-
 private:
+    bool init();
     void issueLocalCharUpdate();
 
     QMutex networkLock{};
+    GroupThreader *thread;
     std::unique_ptr<CGroupCommunicator> network;
     std::unique_ptr<CGroup> group;
 };

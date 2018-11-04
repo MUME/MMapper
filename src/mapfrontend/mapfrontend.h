@@ -35,7 +35,6 @@
 #include <QString>
 #include <QtCore>
 
-#include "../expandoracommon/component.h"
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/parseevent.h"
 #include "../expandoracommon/roomadmin.h"
@@ -56,7 +55,7 @@ class SigParseEvent;
 /**
  * The MapFrontend organizes rooms and their relations to each other.
  */
-class MapFrontend : public Component, public RoomAdmin
+class MapFrontend : public QObject, public RoomAdmin
 {
     Q_OBJECT
     friend class FrontendAccessor;
@@ -85,7 +84,7 @@ protected:
     virtual void checkSize(const Coordinate &);
 
 public:
-    explicit MapFrontend(AbstractRoomFactory *factory);
+    explicit MapFrontend(AbstractRoomFactory *factory, QObject *parent = nullptr);
     virtual ~MapFrontend();
     virtual void clear();
     void block();

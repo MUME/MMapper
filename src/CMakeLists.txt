@@ -38,8 +38,6 @@ set(mmapper_SRCS
     display/RoadIndex.cpp
     display/RoadIndex.h
     expandoracommon/abstractroomfactory.h
-    expandoracommon/component.cpp
-    expandoracommon/component.h
     expandoracommon/coordinate.cpp
     expandoracommon/coordinate.h
     expandoracommon/exit.cpp

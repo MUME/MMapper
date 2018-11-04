@@ -33,7 +33,6 @@
 #include <QString>
 #include <QtCore>
 
-#include "../expandoracommon/component.h"
 #include "../expandoracommon/parseevent.h"
 #include "../expandoracommon/room.h"
 #include "pathparameters.h"
@@ -57,7 +56,7 @@ enum class PathState { APPROVED = 0, EXPERIMENTING = 1, SYNCING = 2 };
  * and decides if rooms have to be added (and where) and where the player is
  * the results are published via signals
  */
-class PathMachine : public Component
+class PathMachine : public QObject
 {
     Q_OBJECT
 public slots:
@@ -77,8 +76,7 @@ signals:
     void setCharPosition(RoomId id);
 
 public:
-    explicit PathMachine(AbstractRoomFactory *factory);
-    virtual void init() override;
+    explicit PathMachine(AbstractRoomFactory *factory, QObject *parent = nullptr);
 
 protected:
     PathParameters params{};

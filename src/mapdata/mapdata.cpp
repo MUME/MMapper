@@ -53,8 +53,8 @@
 #include "roomfilter.h"
 #include "roomselection.h"
 
-MapData::MapData()
-    : MapFrontend(new RoomFactory{})
+MapData::MapData(QObject *const parent)
+    : MapFrontend(new RoomFactory{}, parent)
 {}
 
 QString MapData::getDoorName(const Coordinate &pos, const ExitDirection dir)
