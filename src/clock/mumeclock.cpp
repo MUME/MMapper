@@ -56,7 +56,9 @@ const QMetaEnum MumeClock::s_sindarinMonthNames
 const QHash<QString, MumeTime> MumeClock::m_stringTimeHash{
     // Generic Outdoors
     {"The day has begun.", MumeTime::TIME_DAY},
+    {"The day has begun. You feel so weak under the cruel light!", MumeTime::TIME_DAY},
     {"The night has begun.", MumeTime::TIME_NIGHT},
+    {"The night has begun. You feel stronger in the dark!", MumeTime::TIME_NIGHT},
 
     // Generic Indoors
     {"Light gradually filters in, proclaiming a new sunrise outside.", MumeTime::TIME_DAWN},
