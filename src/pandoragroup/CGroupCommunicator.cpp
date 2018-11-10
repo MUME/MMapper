@@ -188,7 +188,7 @@ void CGroupCommunicator::incomingData(CGroupClient *const conn, const QByteArray
         switch (message) {
         case Messages::GTELL:
             if (xml.name() == QLatin1String("gtell")) {
-                data["name"] = xml.attributes().value("from").toString().toLatin1();
+                data["from"] = xml.attributes().value("from").toString().toLatin1();
                 data["text"] = xml.readElementText().toLatin1();
             }
             break;

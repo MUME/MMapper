@@ -155,11 +155,11 @@ void Mmapper2Group::gotKicked(const QVariantMap &message)
 
 void Mmapper2Group::gTellArrived(const QVariantMap &node)
 {
-    if (!node.contains("name") && node["name"].canConvert(QMetaType::QByteArray)) {
-        qWarning() << "Name not found" << node;
+    if (!node.contains("from") && node["from"].canConvert(QMetaType::QByteArray)) {
+        qWarning() << "From not found" << node;
         return;
     }
-    const QByteArray &from = node["name"].toByteArray();
+    const QByteArray &from = node["from"].toByteArray();
 
     if (!node.contains("text") && node["text"].canConvert(QMetaType::QByteArray)) {
         qWarning() << "Text not found" << node;
