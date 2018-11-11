@@ -37,34 +37,42 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
 {
     setupUi(this);
     m_groupManager = gm;
+    const Configuration::GroupManagerSettings &groupManager = getConfig().groupManager;
 
     // Character Section
     connect(charName, &QLineEdit::editingFinished, this, &GroupManagerPage::charNameTextChanged);
     connect(changeColor, &QAbstractButton::clicked, this, &GroupManagerPage::changeColorClicked);
-    // Host Section
-    connect(localHost, &QLabel::linkActivated, this, &GroupManagerPage::localHostLinkActivated);
-    connect(localPort, SIGNAL(valueChanged(int)), SLOT(localPortValueChanged(int)));
-    // Client Section
-    connect(remoteHost, &QLineEdit::editingFinished, this, &GroupManagerPage::remoteHostTextChanged);
-    connect(remotePort, SIGNAL(valueChanged(int)), SLOT(remotePortValueChanged(int)));
-    // Checkbox Section
-    connect(rulesWarning, &QCheckBox::stateChanged, this, &GroupManagerPage::rulesWarningChanged);
-    connect(shareSelfCheckBox, &QCheckBox::stateChanged, this, &GroupManagerPage::shareSelfChanged);
-
-    // Inform Group Manager of changes
-    connect(this, &GroupManagerPage::setGroupManagerType, m_groupManager, &Mmapper2Group::setType);
-    connect(this, &GroupManagerPage::updatedSelf, m_groupManager, &Mmapper2Group::updateSelf);
-
-    const Configuration::GroupManagerSettings &groupManager = getConfig().groupManager;
     charName->setText(groupManager.charName);
     QPixmap charColorPixmap(16, 16);
     charColorPixmap.fill(groupManager.color);
     changeColor->setIcon(QIcon(charColorPixmap));
+
+    // Host Section
+    connect(localHost, &QLabel::linkActivated, this, &GroupManagerPage::localHostLinkActivated);
+    connect(localPort,
+            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            this,
+            &GroupManagerPage::localPortValueChanged);
+    connect(shareSelfCheckBox, &QCheckBox::stateChanged, this, &GroupManagerPage::shareSelfChanged);
     localPort->setValue(groupManager.localPort);
+    shareSelfCheckBox->setChecked(groupManager.shareSelf);
+
+    // Client Section
+    connect(remoteHost, &QLineEdit::editingFinished, this, &GroupManagerPage::remoteHostTextChanged);
+    connect(remotePort,
+            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            this,
+            &GroupManagerPage::remotePortValueChanged);
     remoteHost->setText(groupManager.host);
     remotePort->setValue(groupManager.remotePort);
+
+    // Other Sections
+    connect(rulesWarning, &QCheckBox::stateChanged, this, &GroupManagerPage::rulesWarningChanged);
     rulesWarning->setChecked(groupManager.rulesWarning);
-    shareSelfCheckBox->setChecked(groupManager.shareSelf);
+
+    // Inform Group Manager of changes
+    connect(this, &GroupManagerPage::setGroupManagerType, m_groupManager, &Mmapper2Group::setType);
+    connect(this, &GroupManagerPage::updatedSelf, m_groupManager, &Mmapper2Group::updateSelf);
 }
 
 void GroupManagerPage::charNameTextChanged()

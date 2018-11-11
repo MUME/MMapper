@@ -400,7 +400,7 @@ void CGroupServerCommunicator::parseLoginInformation(CGroupClient *const connect
     //    qInfo() << "Parsing login information from" << conn->socketDescriptor();
     const auto kick_connection = [this](auto connection, const auto &kickMessage) {
         this->sendMessage(connection, Messages::STATE_KICKED, kickMessage);
-        connection->close();
+        connection->disconnectFromHost();
     };
     if (!data.contains("protocolVersion") || !data["protocolVersion"].canConvert(QMetaType::Int)) {
         kick_connection(connection, "Payload did not include the 'protocolVersion' attribute");
@@ -621,7 +621,7 @@ void CGroupClientCommunicator::retrieveData(CGroupClient *conn,
                 // woops
                 auto *manager = dynamic_cast<Mmapper2Group *>(parent());
                 manager->gotKicked(data);
-                conn->close();
+                conn->disconnectFromHost();
                 emit networkDown();
                 disconnectCommunicator();
 
@@ -711,7 +711,6 @@ void CGroupClientCommunicator::sendCharRename(const QVariantMap &map)
 
 void CGroupClientCommunicator::disconnectCommunicator()
 {
-    client.abort();
     client.disconnectFromHost();
     emit scheduleAction(new ResetCharacters());
 }
@@ -722,19 +721,7 @@ void CGroupClientCommunicator::connectCommunicator()
         disconnectCommunicator();
     }
 
-    client.setConnectionState(ConnectionStates::Connecting);
-    client.setProtocolState(ProtocolStates::AwaitingLogin);
-    client.connectToHost(getConfig().groupManager.host,
-                         static_cast<quint16>(getConfig().groupManager.remotePort));
-    if (!client.waitForConnected(5000)) {
-        if (client.getConnectionState() == ConnectionStates::Connecting) {
-            client.setConnectionState(ConnectionStates::Quiting);
-            errorInConnection(&client, client.errorString());
-        }
-    } else {
-        // Linux needs to have this option set after the server has established a connection
-        client.setSocketOption(QAbstractSocket::KeepAliveOption, true);
-    }
+    client.connectToHost();
 }
 
 void CGroupCommunicator::relayLog(const QString &str)

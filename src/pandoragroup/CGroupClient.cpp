@@ -27,19 +27,34 @@
 
 #include <QByteArray>
 #include <QMessageLogContext>
+#include <QSslSocket>
 #include <QString>
+#include <QTimer>
+
+#include "../configuration/configuration.h"
+#include "../global/io.h"
+
+static constexpr const bool DEBUG = false;
 
 CGroupClient::CGroupClient(QObject *parent)
-    : QTcpSocket(parent)
+    : QObject(parent)
+    , timer(new QTimer(this))
 {
-    connect(this, &QAbstractSocket::connected, this, [this]() {
+    timer->setInterval(5000);
+    timer->setSingleShot(true);
+    connect(timer, &QTimer::timeout, this, &CGroupClient::onTimeout);
+
+    connect(&socket, &QAbstractSocket::connected, this, [this]() {
+        timer->stop();
+        socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
         this->setConnectionState(ConnectionStates::Connected);
     });
-    connect(this, &QAbstractSocket::disconnected, this, [this]() {
+    connect(&socket, &QAbstractSocket::disconnected, this, [this]() {
         this->setConnectionState(ConnectionStates::Closed);
+        timer->stop();
     });
-    connect(this, &QIODevice::readyRead, this, &CGroupClient::onReadyRead);
-    connect(this,
+    connect(&socket, &QIODevice::readyRead, this, &CGroupClient::onReadyRead);
+    connect(&socket,
             static_cast<void (QAbstractSocket::*)(QAbstractSocket::SocketError)>(
                 &QAbstractSocket::error),
             this,
@@ -48,24 +63,49 @@ CGroupClient::CGroupClient(QObject *parent)
 
 CGroupClient::~CGroupClient()
 {
-    disconnectFromHost();
-    qDebug() << "Destructed CGroupClient" << socketDescriptor();
+    if (timer)
+        delete timer;
+    socket.disconnectFromHost();
+    qDebug() << "Destructed CGroupClient" << socket.socketDescriptor();
+}
+
+void CGroupClient::connectToHost()
+{
+    if (socket.state() != QAbstractSocket::UnconnectedState) {
+        socket.abort();
+    }
+    setConnectionState(ConnectionStates::Connecting);
+    setProtocolState(ProtocolStates::AwaitingLogin);
+
+    const auto &groupConfig = getConfig().groupManager;
+    const auto remoteHost = groupConfig.host;
+    const auto remotePort = static_cast<quint16>(groupConfig.remotePort);
+    socket.connectToHost(remoteHost, remotePort);
+    timer->start();
+}
+
+void CGroupClient::disconnectFromHost()
+{
+    socket.close();
 }
 
 void CGroupClient::setSocket(qintptr socketDescriptor)
 {
-    if (!setSocketDescriptor(socketDescriptor)) {
+    if (!socket.setSocketDescriptor(socketDescriptor)) {
         qWarning("Connection failed. Native socket not recognized.");
         onError(QAbstractSocket::SocketAccessError);
         return;
     }
-    setSocketOption(QAbstractSocket::KeepAliveOption, true);
+    socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
     setConnectionState(ConnectionStates::Connected);
+    // REVISIT: Do we need to start the timer?
+    timer->start();
 }
 
 void CGroupClient::setConnectionState(const ConnectionStates val)
 {
-    //    qInfo("Connection state: %i", val);
+    if (DEBUG)
+        qInfo() << "Connection state:" << static_cast<int>(val);
     connectionState = val;
     switch (val) {
     case ConnectionStates::Connecting:
@@ -91,66 +131,75 @@ void CGroupClient::setConnectionState(const ConnectionStates val)
 
 void CGroupClient::onError(QAbstractSocket::SocketError /*socketError*/)
 {
+    timer->stop();
     setConnectionState(ConnectionStates::Quiting);
-    emit errorInConnection(this, errorString());
+    emit errorInConnection(this, socket.errorString());
+}
+
+void CGroupClient::onTimeout()
+{
+    switch (socket.state()) {
+    case QAbstractSocket::ConnectedState:
+        // Race condition? Connection was successfully connected
+        break;
+    case QAbstractSocket::HostLookupState:
+        socket.abort();
+        emit errorInConnection(this, "Host not found");
+        return;
+    default:
+        socket.abort();
+        emit errorInConnection(this, "Connection timed out");
+        break;
+    }
 }
 
 void CGroupClient::onReadyRead()
 {
-    QByteArray message;
-    QByteArray rest;
-
-    //    qInfo("Incoming Data [conn %i, IP: %s]", socketDescriptor(),
-    //            (const char *) peerAddress().toString().toLatin1() );
-
-    QByteArray tmp = readAll();
-
-    buffer += tmp;
-
-    //      qInfo("RAW data buffer: %s", (const char *) buffer);
-
-    while (currentMessageLen < buffer.size()) {
-        //              qInfo("in data-receiving cycle, buffer %s", (const char *) buffer);
-        cutMessageFromBuffer();
-    }
+    io::readAllAvailable(socket, ioBuffer, [this](const QByteArray &byteArray) {
+        buffer += byteArray;
+        while (currentMessageLen < buffer.size()) {
+            cutMessageFromBuffer();
+        }
+    });
 }
 
 void CGroupClient::cutMessageFromBuffer()
 {
-    QByteArray rest;
-
+    // REVISIT: Turn this into a state machine
     if (currentMessageLen == 0) {
-        int index = buffer.indexOf(' ');
+        // Find the next message length
+        int spaceIndex = buffer.indexOf(' ');
+        QString messageLengthStr = buffer.left(spaceIndex + 1);
+        currentMessageLen = messageLengthStr.toInt();
 
-        QString len = buffer.left(index + 1);
-        currentMessageLen = len.toInt();
-        //              qInfo("Incoming buffer length: %i, incoming message length %i",
-        //                              buffer.size(), currentMessageLen);
+        // Update buffer with remainder
+        buffer = buffer.right(buffer.size() - spaceIndex - 1);
 
-        rest = buffer.right(buffer.size() - index - 1);
-        buffer = rest;
-
-        if (buffer.size() == currentMessageLen) {
+        // Do we have enough for a message?
+        if (currentMessageLen == buffer.size())
             cutMessageFromBuffer();
-        }
-
-        //qInfo("returning from cutMessageFromBuffer");
         return;
     }
 
-    //      qInfo("cutting off one message case");
-    emit incomingData(this, buffer.left(currentMessageLen));
-    rest = buffer.right(buffer.size() - currentMessageLen);
-    buffer = rest;
+    // Cut message from buffer
+    QByteArray message = buffer.left(currentMessageLen);
+    if (DEBUG)
+        qDebug() << "Incoming message:" << message;
+    emit incomingData(this, message);
+    buffer = buffer.right(buffer.size() - currentMessageLen);
     currentMessageLen = 0;
 }
 
+/*
+ * Protocol is <message length as string> <space> <message XML>
+ */
 void CGroupClient::sendData(const QByteArray &data)
 {
-    //      qInfo("%i ", data.size());
     QByteArray buff;
     QString len = QString("%1 ").arg(data.size());
     buff = len.toLatin1();
     buff += data;
-    write(buff);
+    if (DEBUG)
+        qDebug() << "Sending message:" << buff;
+    socket.write(buff);
 }

@@ -29,17 +29,20 @@
 
 #include <QAbstractSocket>
 #include <QByteArray>
+#include <QObject>
 #include <QString>
 #include <QTcpSocket>
 #include <QtCore>
 #include <QtGlobal>
 
-class QObject;
+#include "../global/io.h"
+
+class QTimer;
 
 enum class ConnectionStates { Closed, Connecting, Connected, Quiting };
 enum class ProtocolStates { Idle, AwaitingLogin, AwaitingInfo, Logged };
 
-class CGroupClient final : public QTcpSocket
+class CGroupClient final : public QObject
 {
     Q_OBJECT
 public:
@@ -47,6 +50,12 @@ public:
     virtual ~CGroupClient();
 
     void setSocket(qintptr socketDescriptor);
+    void connectToHost();
+    void disconnectFromHost();
+
+    QString peerName() const { return socket.peerName(); }
+    QAbstractSocket::SocketError error() const { return socket.error(); }
+    qintptr socketDescriptor() const { return socket.socketDescriptor(); }
 
     ConnectionStates getConnectionState() const { return connectionState; }
     void setConnectionState(const ConnectionStates val);
@@ -57,6 +66,7 @@ public:
 protected slots:
     void onError(QAbstractSocket::SocketError socketError);
     void onReadyRead();
+    void onTimeout();
 
 signals:
     void sendLog(const QString &);
@@ -66,11 +76,14 @@ signals:
     void connectionEstablished(CGroupClient *);
 
 private:
+    QTcpSocket socket;
+    QTimer *timer;
     void cutMessageFromBuffer();
 
     ConnectionStates connectionState = ConnectionStates::Closed;
     ProtocolStates protocolState = ProtocolStates::Idle;
 
+    io::null_padded_buffer<(1 << 15)> ioBuffer{};
     QByteArray buffer{};
     int currentMessageLen = 0;
 };

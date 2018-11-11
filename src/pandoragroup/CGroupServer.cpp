@@ -57,15 +57,15 @@ void CGroupServer::incomingConnection(qintptr socketDescriptor)
     client->setSocket(socketDescriptor);
 }
 
-void CGroupServer::errorInConnection(CGroupClient *const connection,
-                                     const QString & /*errorMessage*/)
+void CGroupServer::errorInConnection(CGroupClient *const connection, const QString &errorMessage)
 {
     emit connectionClosed(connection);
     connections.removeAll(connection);
-    connection->close();
+    connection->disconnectFromHost();
     disconnectAll(connection);
     connection->deleteLater();
-    qDebug() << "Removing and deleting client from descriptor" << connection->socketDescriptor();
+    qWarning() << "Removing and deleting client" << connection->socketDescriptor()
+               << connection->peerName() << errorMessage;
 }
 
 void CGroupServer::sendToAll(const QByteArray &message)
