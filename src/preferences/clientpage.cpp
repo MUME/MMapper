@@ -118,12 +118,12 @@ void ClientPage::onChangeFont()
 
     bool ok = false;
     const QFont newFont = QFontDialog::getFont(&ok,
-                                               font,
+                                               QFont(font),
                                                this,
                                                "Select Font",
                                                QFontDialog::MonospacedFonts);
     if (ok) {
-        font = newFont;
+        font = newFont.toString();
         updateFontAndColors();
     }
 }

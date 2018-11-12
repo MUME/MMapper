@@ -30,7 +30,6 @@
 
 #include <QByteArray>
 #include <QColor>
-#include <QFont>
 #include <QString>
 #include <QStringList>
 #include <QtCore>
@@ -201,7 +200,7 @@ public:
 
     struct IntegratedMudClientSettings final
     {
-        QFont font{};
+        QString font{};
         QColor foregroundColor{};
         QColor backgroundColor{};
         int columns = 0;

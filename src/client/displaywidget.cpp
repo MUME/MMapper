@@ -73,7 +73,7 @@ DisplayWidget::DisplayWidget(QWidget *parent)
     m_whiteColor = QColor("#eeeeec");
 
     // Default Font
-    m_serverOutputFont = settings.font;
+    m_serverOutputFont = QFont(settings.font);
 
     QTextFrameFormat frameFormat = document()->rootFrame()->frameFormat();
     frameFormat.setBackground(m_backgroundColor);

@@ -136,5 +136,7 @@
         <file>icons/mumeprotocolcfg.png</file>
         <file>icons/graphicscfg.png</file>
         <file>pixmaps/load18.png</file>
+        <file>fonts/DejaVuSansMono.ttf</file>
+        <file>fonts/LICENSE</file>
     </qresource>
 </RCC>

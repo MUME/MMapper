@@ -32,6 +32,7 @@
 #include <QCloseEvent>
 #include <QDesktopServices>
 #include <QFileDialog>
+#include <QFontDatabase>
 #include <QHostAddress>
 #include <QIcon>
 #include <QProgressDialog>
@@ -95,12 +96,31 @@ QSize DockWidget::sizeHint() const
     return {500, 130};
 }
 
+static void addApplicationFont()
+{
+    const auto id = QFontDatabase::addApplicationFont(":/fonts/DejaVuSansMono.ttf");
+    const auto family = QFontDatabase::applicationFontFamilies(id);
+    if (family.isEmpty()) {
+        qWarning() << "Unable to load bundled DejaVuSansMono font";
+    } else {
+        // Utilize the application font here because we can gaurantee that resources have been loaded
+        // REVISIT: Move this to the configuration?
+        if (getConfig().integratedClient.font.isEmpty()) {
+            QFont defaultClientFont = QFont(family.front());
+            defaultClientFont.setPointSize(12);
+            defaultClientFont.setStyleStrategy(QFont::PreferAntialias);
+            setConfig().integratedClient.font = defaultClientFont.toString();
+        }
+    }
+}
+
 MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     : QMainWindow(parent, flags)
 {
     setObjectName("MainWindow");
     setWindowTitle("MMapper: MUME Mapper");
     setWindowIcon(QIcon(":/icons/m.png"));
+    addApplicationFont();
 
     qRegisterMetaType<RoomId>("RoomId");
     qRegisterMetaType<IncomingData>("IncomingData");

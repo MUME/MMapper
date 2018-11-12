@@ -29,7 +29,6 @@
 #include <cassert>
 #include <QByteArray>
 #include <QChar>
-#include <QFontDatabase>
 #include <QHostInfo>
 #include <QString>
 #include <QStringList>
@@ -477,11 +476,7 @@ void Configuration::MumeClockSettings::read(QSettings &conf)
 
 void Configuration::IntegratedMudClientSettings::read(QSettings &conf)
 {
-    QFont defaultClientFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-    defaultClientFont.setPointSize(12);
-    defaultClientFont.setStyleHint(QFont::Monospace, QFont::PreferAntialias);
-
-    font.fromString(conf.value(KEY_FONT, defaultClientFont.toString()).toString());
+    font = conf.value(KEY_FONT, "").toString();
     backgroundColor = conf.value(KEY_BACKGROUND_COLOR, QColor(Qt::black).name()).toString();
     foregroundColor = conf.value(KEY_FOREGROUND_COLOR, QColor(Qt::lightGray).name()).toString();
     columns = conf.value(KEY_COLUMNS, 80).toInt();
@@ -603,7 +598,7 @@ void Configuration::MumeClockSettings::write(QSettings &conf) const
 
 void Configuration::IntegratedMudClientSettings::write(QSettings &conf) const
 {
-    conf.setValue(KEY_FONT, font.toString());
+    conf.setValue(KEY_FONT, font);
     conf.setValue(KEY_BACKGROUND_COLOR, backgroundColor.name());
     conf.setValue(KEY_FOREGROUND_COLOR, foregroundColor.name());
     conf.setValue(KEY_COLUMNS, columns);

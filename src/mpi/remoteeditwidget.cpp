@@ -80,7 +80,7 @@ QVBoxLayout *RemoteEditWidget::createLayout()
 
 QPlainTextEdit *RemoteEditWidget::createTextEdit(QVBoxLayout *const mainLayout)
 {
-    const auto &font = getConfig().integratedClient.font;
+    const auto &font = QFont(getConfig().integratedClient.font);
     const QFontMetrics fm(font);
     const int x = fm.averageCharWidth() * 80;
     const int y = fm.lineSpacing() * 24;
