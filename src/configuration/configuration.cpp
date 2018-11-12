@@ -322,6 +322,13 @@ void Configuration::write() const
     FOREACH_CONFIG_GROUP(write);
 }
 
+void Configuration::reset()
+{
+    SETTINGS(conf);
+    conf.clear();
+    FOREACH_CONFIG_GROUP(read);
+}
+
 #undef FOREACH_CONFIG_GROUP
 #undef GROUP_CALLBACK
 

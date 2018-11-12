@@ -66,6 +66,7 @@ class Configuration final
 public:
     void read();
     void write() const;
+    void reset();
 
 public:
     struct GeneralSettings final

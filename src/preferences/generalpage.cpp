@@ -100,6 +100,16 @@ GeneralPage::GeneralPage(QWidget *parent)
             this,
             &GeneralPage::displayMumeClockStateChanged);
 
+    connect(configurationResetButton, &QAbstractButton::clicked, this, [this]() {
+        QMessageBox::StandardButton reply
+            = QMessageBox::question(this,
+                                    "MMapper Factory Reset",
+                                    "Are you sure you want to perform a factory reset?",
+                                    QMessageBox::Yes | QMessageBox::No);
+        if (reply == QMessageBox::Yes) {
+            setConfig().reset();
+        }
+    });
     const auto &config = getConfig();
     const auto &connection = config.connection;
     const auto &mumeNative = config.mumeNative;
