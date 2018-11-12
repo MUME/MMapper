@@ -148,12 +148,17 @@ endif()
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS_DEBUG
       "-ggdb3 -Wall -Wextra -Wunused-variable -Wno-long-long -Wno-unknown-pragmas -Wno-system-headers -Werror=reorder -Wparentheses -Werror=sign-compare -Wconversion -Werror=double-promotion"
-      CACHE STRING "Debug builds CMAKE CXX flags" FORCE )
+      CACHE STRING "Debug builds CMAKE CXX flags" FORCE)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(CMAKE_CXX_FLAGS_DEBUG "-g" CACHE STRING "Debug builds CMAKE CXX flags" FORCE)
 endif()
+
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CMAKE_VERBOSE_MAKEFILE true)
-    add_compile_options( $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-D_GLIBCXX_DEBUG> )
+    if(CMAKE_COMPILER_IS_GNUCXX)
+        add_compile_options( $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-D_GLIBCXX_DEBUG> )
+    endif()
 endif()
 
 # Download arda.mm2
