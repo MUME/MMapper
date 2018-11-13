@@ -150,10 +150,10 @@ endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS_DEBUG
-      "-ggdb3 -Wall -Wextra -Wunused-variable -Wno-long-long -Wno-unknown-pragmas -Wno-system-headers -Werror=reorder -Wparentheses -Werror=sign-compare -Wconversion -Werror=double-promotion"
+      "-ggdb3 -Wall -Wextra -Wunused-variable -Wno-long-long -Wno-unknown-pragmas -Wno-system-headers -Werror=reorder -Wparentheses -Werror=sign-compare -Wconversion -Werror=double-promotion -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls"
       CACHE STRING "Debug builds CMAKE CXX flags" FORCE)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(CMAKE_CXX_FLAGS_DEBUG "-g" CACHE STRING "Debug builds CMAKE CXX flags" FORCE)
+    set(CMAKE_CXX_FLAGS_DEBUG "-g -fsanitize=undefined -fsanitize=address" CACHE STRING "Debug builds CMAKE CXX flags" FORCE)
 endif()
 
 
