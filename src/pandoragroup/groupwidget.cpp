@@ -57,10 +57,13 @@ void GroupModel::resetModel()
 
 int GroupModel::rowCount(const QModelIndex & /* parent */) const
 {
-    GroupSelection *selection = m_group->getGroup()->selectAll();
-    int size = static_cast<int>(selection->size());
-    m_group->getGroup()->unselect(selection);
-    return size;
+    if (auto group = m_group->getGroup()) {
+        GroupSelection *selection = group->selectAll();
+        int size = static_cast<int>(selection->size());
+        group->unselect(selection);
+        return size;
+    }
+    return 0;
 }
 
 int GroupModel::columnCount(const QModelIndex & /* parent */) const
@@ -138,16 +141,18 @@ QVariant GroupModel::data(const QModelIndex &index, int role) const
     if (!index.isValid())
         return data;
 
-    GroupSelection *selection = m_group->getGroup()->selectAll();
+    if (auto group = m_group->getGroup()) {
+        GroupSelection *selection = group->selectAll();
 
-    // Map row to character
-    if (index.row() < static_cast<int>(selection->size())) {
-        CGroupChar *character = selection->at(index.row());
-        ColumnType column = static_cast<ColumnType>(index.column());
-        data = dataForCharacter(character, column, role);
+        // Map row to character
+        if (index.row() < static_cast<int>(selection->size())) {
+            CGroupChar *character = selection->at(index.row());
+            ColumnType column = static_cast<ColumnType>(index.column());
+            data = dataForCharacter(character, column, role);
+        }
+
+        group->unselect(selection);
     }
-
-    m_group->getGroup()->unselect(selection);
     return data;
 }
 

@@ -80,9 +80,11 @@ void GroupManagerPage::charNameTextChanged()
     // REVISIT: Remove non-valid characters (numbers, punctuation, etc)
     const QByteArray newName = charName->text().toLatin1().simplified();
     QByteArray &savedCharName = setConfig().groupManager.charName;
-    if (!m_groupManager->getGroup()->isNamePresent(newName) && savedCharName != newName) {
-        savedCharName = newName;
-        emit updatedSelf();
+    if (auto group = m_groupManager->getGroup()) {
+        if (!group->isNamePresent(newName) && savedCharName != newName) {
+            savedCharName = newName;
+            emit updatedSelf();
+        }
     }
 
     // Correct any UTF-8 characters that we do not understand
