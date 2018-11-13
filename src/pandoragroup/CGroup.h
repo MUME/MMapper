@@ -60,7 +60,7 @@ class CGroup final : public QObject, public GroupAdmin
     friend class Mmapper2Group;
 
 public:
-    CGroup(QObject *parent);
+    explicit CGroup(QObject *parent);
     virtual ~CGroup();
 
     bool isNamePresent(const QByteArray &name);

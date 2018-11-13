@@ -44,7 +44,7 @@
 #include "ExitFlags.h"
 #include "roomselection.h"
 
-GroupAction::GroupAction(AbstractAction *const action, const RoomSelection *const selection)
+GroupMapAction::GroupMapAction(AbstractAction *const action, const RoomSelection *const selection)
     : executor(action)
 {
     QMapIterator<RoomId, const Room *> roomIter(*selection);
@@ -77,7 +77,7 @@ void RemoveTwoWayExit::exec()
     RemoveOneWayExit::exec();
 }
 
-const RoomIdSet &GroupAction::getAffectedRooms()
+const RoomIdSet &GroupMapAction::getAffectedRooms()
 {
     for (auto &selectedRoom : selectedRooms) {
         executor->insertAffected(selectedRoom, affectedRooms);
@@ -85,7 +85,7 @@ const RoomIdSet &GroupAction::getAffectedRooms()
     return affectedRooms;
 }
 
-void GroupAction::exec()
+void GroupMapAction::exec()
 {
     for (auto &selectedRoom : selectedRooms) {
         executor->preExec(selectedRoom);

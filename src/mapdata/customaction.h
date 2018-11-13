@@ -88,14 +88,14 @@ protected:
     ExitDirection room2Dir = ExitDirection::UNKNOWN;
 };
 
-class GroupAction : virtual public MapAction
+class GroupMapAction final : virtual public MapAction
 {
 public:
-    explicit GroupAction(AbstractAction *ex, const RoomSelection *selection);
+    explicit GroupMapAction(AbstractAction *ex, const RoomSelection *selection);
 
     void schedule(MapFrontend *in) override { executor->setFrontend(in); }
 
-    virtual ~GroupAction() { delete executor; }
+    virtual ~GroupMapAction() { delete executor; }
 
 protected:
     virtual void exec() override;
@@ -107,7 +107,7 @@ private:
     AbstractAction *executor = nullptr;
 };
 
-class MoveRelative : public AbstractAction
+class MoveRelative final : public AbstractAction
 {
 public:
     explicit MoveRelative(const Coordinate &move);

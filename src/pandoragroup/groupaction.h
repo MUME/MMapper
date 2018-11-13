@@ -46,7 +46,7 @@ protected:
     CGroup *group = nullptr;
 };
 
-class AddCharacter : public GroupAction
+class AddCharacter final : public GroupAction
 {
 public:
     explicit AddCharacter(const QVariantMap &map);
@@ -58,7 +58,7 @@ private:
     QVariantMap map{};
 };
 
-class RemoveCharacter : public GroupAction
+class RemoveCharacter final : public GroupAction
 {
 public:
     explicit RemoveCharacter(const QVariantMap &variant);
@@ -71,7 +71,7 @@ private:
     QByteArray name{};
 };
 
-class UpdateCharacter : public GroupAction
+class UpdateCharacter final : public GroupAction
 {
 public:
     explicit UpdateCharacter(const QVariantMap &variant);
@@ -83,7 +83,7 @@ private:
     QVariantMap map{};
 };
 
-class RenameCharacter : public GroupAction
+class RenameCharacter final : public GroupAction
 {
 public:
     explicit RenameCharacter(const QVariantMap &variant);
@@ -95,7 +95,7 @@ private:
     QVariantMap map{};
 };
 
-class ResetCharacters : public GroupAction
+class ResetCharacters final : public GroupAction
 {
 public:
     explicit ResetCharacters();

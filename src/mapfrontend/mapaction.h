@@ -100,7 +100,7 @@ protected:
     std::set<RoomId> affectedRooms{};
 };
 
-class SingleRoomAction : public MapAction
+class SingleRoomAction final : public MapAction
 {
 public:
     explicit SingleRoomAction(AbstractAction *ex, RoomId id);

@@ -1649,7 +1649,7 @@ void MainWindow::onEditConnectionSelection()
 void MainWindow::onDeleteRoomSelection()
 {
     if (m_roomSelection != nullptr) {
-        m_mapData->execute(new GroupAction(new Remove(), m_roomSelection), m_roomSelection);
+        m_mapData->execute(new GroupMapAction(new Remove(), m_roomSelection), m_roomSelection);
         m_mapWindow->getCanvas()->clearRoomSelection();
         m_mapWindow->getCanvas()->update();
     }
@@ -1686,7 +1686,8 @@ void MainWindow::onMoveUpRoomSelection()
         return;
     }
     Coordinate moverel(0, 0, 1);
-    m_mapData->execute(new GroupAction(new MoveRelative(moverel), m_roomSelection), m_roomSelection);
+    m_mapData->execute(new GroupMapAction(new MoveRelative(moverel), m_roomSelection),
+                       m_roomSelection);
     onLayerUp();
     m_mapWindow->getCanvas()->update();
 }
@@ -1697,7 +1698,8 @@ void MainWindow::onMoveDownRoomSelection()
         return;
     }
     Coordinate moverel(0, 0, -1);
-    m_mapData->execute(new GroupAction(new MoveRelative(moverel), m_roomSelection), m_roomSelection);
+    m_mapData->execute(new GroupMapAction(new MoveRelative(moverel), m_roomSelection),
+                       m_roomSelection);
     onLayerDown();
     m_mapWindow->getCanvas()->update();
 }
@@ -1708,7 +1710,7 @@ void MainWindow::onMergeUpRoomSelection()
         return;
     }
     Coordinate moverel(0, 0, 1);
-    m_mapData->execute(new GroupAction(new MergeRelative(moverel), m_roomSelection),
+    m_mapData->execute(new GroupMapAction(new MergeRelative(moverel), m_roomSelection),
                        m_roomSelection);
     onLayerUp();
     onModeRoomSelect();
@@ -1720,7 +1722,7 @@ void MainWindow::onMergeDownRoomSelection()
         return;
     }
     Coordinate moverel(0, 0, -1);
-    m_mapData->execute(new GroupAction(new MergeRelative(moverel), m_roomSelection),
+    m_mapData->execute(new GroupMapAction(new MergeRelative(moverel), m_roomSelection),
                        m_roomSelection);
     onLayerDown();
     onModeRoomSelect();
@@ -1731,7 +1733,8 @@ void MainWindow::onConnectToNeighboursRoomSelection()
     if (m_roomSelection == nullptr) {
         return;
     }
-    m_mapData->execute(new GroupAction(new ConnectToNeighbours, m_roomSelection), m_roomSelection);
+    m_mapData->execute(new GroupMapAction(new ConnectToNeighbours, m_roomSelection),
+                       m_roomSelection);
     m_mapWindow->getCanvas()->update();
 }
 

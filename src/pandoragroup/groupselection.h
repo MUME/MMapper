@@ -45,7 +45,7 @@ public:
     virtual ~GroupRecipient() = default;
 };
 
-class GroupSelection : public GroupRecipient
+class GroupSelection final : public GroupRecipient
 {
 private:
     GroupSelection(GroupSelection &&) = delete;

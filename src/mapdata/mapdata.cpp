@@ -489,7 +489,7 @@ MapData::~MapData()
 }
 bool MapData::execute(AbstractAction *action, const RoomSelection *unlock)
 {
-    return execute(new GroupAction(action, unlock), unlock);
+    return execute(new GroupMapAction(action, unlock), unlock);
 }
 void MapData::removeMarker(InfoMark *im)
 {

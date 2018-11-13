@@ -696,7 +696,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                 m_roomSelectionMove.inUse = false;
                 if (!m_roomSelectionMove.wrongPlace && (m_roomSelection != nullptr)) {
                     Coordinate moverel(m_roomSelectionMove.x, m_roomSelectionMove.y, 0);
-                    m_data->execute(new GroupAction(new MoveRelative(moverel), m_roomSelection),
+                    m_data->execute(new GroupMapAction(new MoveRelative(moverel), m_roomSelection),
                                     m_roomSelection);
                 }
             } else {
