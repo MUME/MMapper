@@ -1,4 +1,16 @@
 ================================
+MMapper 2.6.3 (November 12, 2018)
+================================
+
+Changes:
+ - *Orc* day/night strings now sync the Mume clock
+ - Fix Parser configuration ANSI dropdown to correctly select "none"
+ - Introduced button to perform a configuration factory reset
+ - Default integrated client font is a bundled DejaVu Sans Mono font
+ - Fixed a race condition in the group manager and refactored the code
+ - Do not draw characters if they are in an unknown location
+
+================================
 MMapper 2.6.2 (October 27, 2018)
 ================================
 
