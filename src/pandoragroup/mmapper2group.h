@@ -76,7 +76,6 @@ public:
     void start();
 
     GroupManagerState getType();
-    int getGroupSize();
 
     CGroup *getGroup() { return group.get(); }
 

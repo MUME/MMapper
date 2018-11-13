@@ -150,7 +150,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
       "-ggdb3 -Wall -Wextra -Wunused-variable -Wno-long-long -Wno-unknown-pragmas -Wno-system-headers -Werror=reorder -Wparentheses -Werror=sign-compare -Wconversion -Werror=double-promotion -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls"
       CACHE STRING "Debug builds CMAKE CXX flags" FORCE)
     if(APPLE)
-        # Minimum version of OS X that supporst c++14 is 10.6 "Snow Leopard" with GCC
+        # Minimum version of OS X that supports c++14 is 10.6 "Snow Leopard" with GCC
         set(CMAKE_OSX_DEPLOYMENT_TARGET "10.6")
     endif()
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")

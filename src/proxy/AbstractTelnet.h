@@ -171,6 +171,9 @@ class AbstractTelnet : public QObject
 public:
     explicit AbstractTelnet(TextCodec textCodec, bool debug = false, QObject *parent = nullptr);
 
+    QByteArray getTerminalType() const { return termType; }
+    uint64_t getSentBytes() const { return sentBytes; }
+
 protected:
     void sendCharsetRequest(const QStringList &myCharacterSet);
 
@@ -213,6 +216,8 @@ protected:
 
     void onReadInternal(const QByteArray &);
 
+    void setTerminalType(const QByteArray &terminalType = "unknown");
+
     TextCodec textCodec{};
 
     using OptionArray = std::array<bool, 256>;
@@ -234,10 +239,10 @@ protected:
     } current{};
 
     /* Terminal Type */
-    QString termType{};
+    QByteArray termType{};
 
     /** amount of bytes sent up to now */
-    int64_t sentBytes = 0;
+    uint64_t sentBytes = 0;
 
 private:
     void onReadInternal2(QByteArray &, uint8_t);

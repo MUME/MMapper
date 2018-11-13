@@ -33,6 +33,7 @@
 #include <QObject>
 #include <QString>
 
+#include "../configuration/configuration.h"
 #include "../global/utils.h"
 #include "TextCodec.h"
 
@@ -170,6 +171,25 @@ AbstractTelnet::AbstractTelnet(TextCodec textCodec, bool debug, QObject *const p
     reset();
 }
 
+void AbstractTelnet::setTerminalType(const QByteArray &terminalType)
+{
+    const auto get_os_string = []() {
+        switch (getCurrentPlatform()) {
+        case Platform::Linux:
+            return "Linux";
+        case Platform::Mac:
+            return "Mac";
+        case Platform::Win32:
+            return "Windows";
+        default:
+            return "Unknown";
+        };
+    };
+    QString temp = terminalType;
+    temp.append(QString("/MMapper-%1/%2").arg(MMAPPER_VERSION).arg(get_os_string()));
+    termType = temp.toLatin1();
+}
+
 void AbstractTelnet::reset()
 {
     myOptionState.fill(false);
@@ -178,7 +198,7 @@ void AbstractTelnet::reset()
     heAnnouncedState.fill(false);
 
     //reset telnet status
-    termType = QString("MMapper-%1").arg(MMAPPER_VERSION);
+    setTerminalType();
     state = TelnetState::NORMAL;
     commandBuffer.clear();
     subnegBuffer.clear();
@@ -490,7 +510,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const QByteArray &payload)
             switch (payload[1]) {
             case TNSB_SEND:
                 //server wants us to send terminal type
-                sendTerminalType(termType.toLocal8Bit());
+                sendTerminalType(termType);
                 break;
             case TNSB_IS:
                 // Extract sender's terminal type
