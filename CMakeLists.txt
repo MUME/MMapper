@@ -24,7 +24,9 @@ option(USE_DISTCC "Use distcc for distributed builds" OFF)
 # Apple users are most likely using brew
 if(APPLE)
    set(CMAKE_PREFIX_PATH /usr/local/opt/qt5/)
-   set(CMAKE_OSX_DEPLOYMENT_TARGET "10.6")
+
+   # Minimum version of OS X that supports c++14 is 10.9 "Mavericks"
+   set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9")
 endif()
 
 find_package(Qt5Core REQUIRED)
