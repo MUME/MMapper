@@ -336,6 +336,7 @@ void MapCanvas::forceMapperToRoom()
     if (m_roomSelection != nullptr) {
         tmpSel = m_roomSelection;
         m_roomSelection = nullptr;
+        emit newRoomSelection(m_roomSelection);
     } else {
         tmpSel = m_data->select(Coordinate(GLtoMap(m_sel1.x), GLtoMap(m_sel1.y), m_sel1.layer));
     }
