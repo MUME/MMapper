@@ -159,6 +159,17 @@ protected:
     const FlagModifyMode mode{};
 };
 
+class ModifyRoomUpToDate final : public AbstractAction
+{
+public:
+    explicit ModifyRoomUpToDate(bool checked);
+
+    virtual void exec(RoomId id) override;
+
+protected:
+    const bool checked = false;
+};
+
 // Currently only used for DoorName, but it should work for any type.
 class UpdateExitField final : public AbstractAction
 {

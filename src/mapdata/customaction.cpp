@@ -284,6 +284,20 @@ void ModifyRoomFlags::exec(const RoomId id)
     }
 }
 
+ModifyRoomUpToDate::ModifyRoomUpToDate(const bool in_checked)
+    : checked(in_checked)
+{}
+
+void ModifyRoomUpToDate::exec(const RoomId id)
+{
+    if (Room *room = roomIndex(id)) {
+        if (checked)
+            room->setUpToDate();
+        else
+            room->setOutDated();
+    }
+}
+
 UpdateExitField::UpdateExitField(const DoorName &update, const ExitDirection dir)
     : update{update}
     , dir{dir}

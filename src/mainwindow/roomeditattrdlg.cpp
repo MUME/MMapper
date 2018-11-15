@@ -200,7 +200,8 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
 
     m_hiddenShortcut = new QShortcut(QKeySequence(tr("Ctrl+H", "Room edit > hidden flag")), this);
 
-    updatedLabel->setText("Room has not been online updated yet!!!");
+    updatedCheckBox->setCheckable(false);
+    updatedCheckBox->setText("Room has not been online updated yet!!!");
 
     readSettings();
 }
@@ -389,6 +390,20 @@ void RoomEditAttrDlg::connectAll()
     connect(roomNoteTextEdit, &QTextEdit::textChanged, this, &RoomEditAttrDlg::roomNoteChanged);
 
     connect(m_hiddenShortcut, &QShortcut::activated, this, &RoomEditAttrDlg::toggleHiddenDoor);
+
+    connect(updatedCheckBox, &QCheckBox::toggled, this, [this](bool checked) {
+        const Room *r = getSelectedRoom();
+        if (r != nullptr) {
+            m_mapData->execute(new SingleRoomAction(new ModifyRoomUpToDate(checked), r->getId()),
+                               m_roomSelection);
+        } else {
+            m_mapData->execute(new GroupMapAction(new ModifyRoomUpToDate(checked), m_roomSelection),
+                               m_roomSelection);
+        }
+
+        emit mapChanged();
+        updateDialog(getSelectedRoom());
+    });
 }
 
 void RoomEditAttrDlg::disconnectAll()
@@ -658,7 +673,8 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         roomDescriptionTextEdit->clear();
         roomDescriptionTextEdit->setEnabled(false);
 
-        updatedLabel->setText("");
+        updatedCheckBox->setCheckable(false);
+        updatedCheckBox->setText("");
 
         roomNoteTextEdit->clear();
         roomNoteTextEdit->setEnabled(false);
@@ -680,10 +696,12 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         roomDescriptionTextEdit->clear();
         roomDescriptionTextEdit->setEnabled(true);
 
+        updatedCheckBox->setCheckable(true);
+        updatedCheckBox->setChecked(r->isUpToDate());
         if (r->isUpToDate()) {
-            updatedLabel->setText("Room has been online updated.");
+            updatedCheckBox->setText("Room has been online updated.");
         } else {
-            updatedLabel->setText("Room has not been online updated yet!!!");
+            updatedCheckBox->setText("Room has not been online updated yet!!!");
         }
 
         exitsFrame->setEnabled(true);
