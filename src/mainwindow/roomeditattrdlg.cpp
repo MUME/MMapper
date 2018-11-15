@@ -400,9 +400,12 @@ void RoomEditAttrDlg::connectAll()
             m_mapData->execute(new GroupMapAction(new ModifyRoomUpToDate(checked), m_roomSelection),
                                m_roomSelection);
         }
-
+        if (checked) {
+            updatedCheckBox->setText("Room has been forced updated.");
+        } else {
+            updatedCheckBox->setText("Room has been forced outdated.");
+        }
         emit mapChanged();
-        updateDialog(getSelectedRoom());
     });
 }
 
