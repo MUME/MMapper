@@ -85,6 +85,7 @@ public slots:
     void updateSelf(); // changing settings
 
     void sendGroupTell(const QByteArray &tell); // sends gtell from local user
+    void kickCharacter(const QByteArray &character);
     void parseScoreInformation(QByteArray score);
     void parsePromptInformation(QByteArray prompt);
 

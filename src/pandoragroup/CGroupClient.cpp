@@ -27,31 +27,35 @@
 
 #include <QByteArray>
 #include <QMessageLogContext>
-#include <QSslSocket>
 #include <QString>
+#include <QTcpSocket>
 #include <QTimer>
 
 #include "../configuration/configuration.h"
 #include "../global/io.h"
 
 static constexpr const bool DEBUG = false;
+static constexpr const auto FIVE_SECOND_TIMEOUT = 5000;
 
 CGroupClient::CGroupClient(QObject *parent)
     : QObject(parent)
     , timer(new QTimer(this))
 {
-    timer->setInterval(5000);
+    timer->setInterval(FIVE_SECOND_TIMEOUT);
     timer->setSingleShot(true);
     connect(timer, &QTimer::timeout, this, &CGroupClient::onTimeout);
 
+    connect(&socket, &QAbstractSocket::hostFound, this, [this]() { emit sendLog("Host found."); });
     connect(&socket, &QAbstractSocket::connected, this, [this]() {
-        timer->stop();
         socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
-        this->setConnectionState(ConnectionStates::Connected);
+        setProtocolState(ProtocolStates::AwaitingLogin);
+        emit sendLog("Connection established.");
+        emit connectionEstablished(this);
     });
     connect(&socket, &QAbstractSocket::disconnected, this, [this]() {
-        this->setConnectionState(ConnectionStates::Closed);
         timer->stop();
+        emit sendLog("Connection closed.");
+        emit connectionClosed(this);
     });
     connect(&socket, &QIODevice::readyRead, this, &CGroupClient::onReadyRead);
     connect(&socket,
@@ -74,65 +78,61 @@ void CGroupClient::connectToHost()
     if (socket.state() != QAbstractSocket::UnconnectedState) {
         socket.abort();
     }
-    setConnectionState(ConnectionStates::Connecting);
-    setProtocolState(ProtocolStates::AwaitingLogin);
-
+    timer->start();
     const auto &groupConfig = getConfig().groupManager;
     const auto remoteHost = groupConfig.host;
     const auto remotePort = static_cast<quint16>(groupConfig.remotePort);
+    emit sendLog(
+        QString("Connecting to remote host %1:%2").arg(remoteHost.constData()).arg(remotePort));
     socket.connectToHost(remoteHost, remotePort);
-    timer->start();
 }
 
 void CGroupClient::disconnectFromHost()
 {
-    socket.close();
+    timer->stop();
+    emit sendLog("Closing the socket. Quitting.");
+    socket.disconnectFromHost();
 }
 
 void CGroupClient::setSocket(qintptr socketDescriptor)
 {
     if (!socket.setSocketDescriptor(socketDescriptor)) {
-        qWarning("Connection failed. Native socket not recognized.");
+        qWarning() << "Connection failed. Native socket not recognized.";
         onError(QAbstractSocket::SocketAccessError);
         return;
     }
     socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
-    setConnectionState(ConnectionStates::Connected);
-    // REVISIT: Do we need to start the timer?
-    timer->start();
+    setProtocolState(ProtocolStates::AwaitingLogin);
+    emit connectionEstablished(this);
 }
 
-void CGroupClient::setConnectionState(const ConnectionStates val)
+void CGroupClient::setProtocolState(const ProtocolStates val)
 {
     if (DEBUG)
-        qInfo() << "Connection state:" << static_cast<int>(val);
-    connectionState = val;
+        qInfo() << "Protocol state:" << static_cast<int>(val);
+    protocolState = val;
     switch (val) {
-    case ConnectionStates::Connecting:
-        emit sendLog(QString("Connecting to remote host."));
+    case ProtocolStates::AwaitingLogin:
+        // Restart timer to verify that info was sent
+        timer->start();
         break;
-    case ConnectionStates::Connected:
-        emit sendLog(QString("Connection established."));
-        setProtocolState(ProtocolStates::AwaitingLogin);
-        emit connectionEstablished(this);
+    case ProtocolStates::AwaitingInfo:
+        // Restart timer to verify that login occurred
+        emit sendLog("Login accepted.");
+        timer->start();
         break;
-    case ConnectionStates::Closed:
-        emit sendLog(QString("Connection closed."));
-        emit connectionClosed(this);
-        break;
-    case ConnectionStates::Quiting:
-        emit sendLog(QString("Closing the socket. Quitting."));
+    case ProtocolStates::Logged:
+        emit sendLog("Group information received.");
+        timer->stop();
         break;
     default:
-        qWarning("Unknown state change: %i", static_cast<int>(val));
-        break;
+        abort();
     }
 }
 
 void CGroupClient::onError(QAbstractSocket::SocketError /*socketError*/)
 {
     timer->stop();
-    setConnectionState(ConnectionStates::Quiting);
     emit errorInConnection(this, socket.errorString());
 }
 
@@ -140,7 +140,17 @@ void CGroupClient::onTimeout()
 {
     switch (socket.state()) {
     case QAbstractSocket::ConnectedState:
-        // Race condition? Connection was successfully connected
+        switch (protocolState) {
+        case ProtocolStates::Unconnected:
+        case ProtocolStates::AwaitingLogin:
+        case ProtocolStates::AwaitingInfo:
+            socket.disconnectFromHost();
+            emit errorInConnection(this, "Login timed out");
+            break;
+        case ProtocolStates::Logged:
+            // Race condition? Protocol was successfully logged
+            break;
+        }
         break;
     case QAbstractSocket::HostLookupState:
         socket.abort();

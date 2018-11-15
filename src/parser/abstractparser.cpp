@@ -943,8 +943,10 @@ void AbstractParser::showGroupHelp()
 {
     showHeader("MMapper group manager help");
     showHeader("Group commands");
+    sendToUser(QString("  %1GTell [message]     - send a grouptell with the [message]\r\n")
+                   .arg(prefixChar));
     sendToUser(
-        QString("  %1gt [message]     - send a grouptell with the [message]\r\n").arg(prefixChar));
+        QString("  %1GKick [player]      - kick [player] from the group\r\n").arg(prefixChar));
 }
 
 void AbstractParser::showHeader(const QString &s)

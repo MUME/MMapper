@@ -49,6 +49,7 @@ public:
     void sendToAll(const QByteArray &);
     void sendToAllExceptOne(CGroupClient *exception, const QByteArray &);
     void closeAll();
+    void closeOne(CGroupClient *target);
 
 protected slots:
     void errorInConnection(CGroupClient *, const QString &);

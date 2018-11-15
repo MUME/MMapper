@@ -49,7 +49,8 @@ const Abbrev cmdBack{"back"};
 const Abbrev cmdDirections{"dirs", 3};
 const Abbrev cmdDoorHelp{"doorhelp", 5};
 const Abbrev cmdGroupHelp{"grouphelp", 6};
-const Abbrev cmdGtell{"gtell", 2};
+const Abbrev cmdGroupTell{"gtell", 2};
+const Abbrev cmdGroupKick{"gkick", 2};
 const Abbrev cmdHelp{"help", 2};
 const Abbrev cmdMapHelp{"maphelp", 5};
 const Abbrev cmdMarkCurrent{"markcurrent", 4};
@@ -625,12 +626,24 @@ void AbstractParser::parseSpecialCommand(StringView wholeCommand)
     sendToUser(QString("Unrecognized command: %1\r\n").arg(word.toQString()));
 }
 
-void AbstractParser::parseGtell(const StringView &view)
+void AbstractParser::parseGroupTell(const StringView &view)
 {
     if (view.isEmpty())
         sendToUser("What do you want to tell the group?\r\n");
     else {
         emit sendGroupTellEvent(view.toQByteArray());
+        sendToUser("OK.\r\n");
+    }
+}
+
+void AbstractParser::parseGroupKick(const StringView &view)
+{
+    if (view.isEmpty())
+        sendToUser("Who do you want to kick from the group?\r\n");
+    else {
+        // REVISIT: We should change GroupManager to be a "FrontEnd" in this
+        // thread and call it directly
+        emit sendGroupKickEvent(view.toQByteArray().simplified());
         sendToUser("OK.\r\n");
     }
 }
@@ -848,12 +861,18 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Prints directions to matching rooms."));
-    add(cmdGtell,
+    add(cmdGroupTell,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
-            this->parseGtell(rest);
+            this->parseGroupTell(rest);
             return true;
         },
         makeSimpleHelp("Send a grouptell with the [message]."));
+    add(cmdGroupKick,
+        [this](const std::vector<StringView> & /*s*/, StringView rest) {
+            this->parseGroupKick(rest);
+            return true;
+        },
+        makeSimpleHelp("Kick [player] from the group."));
     add(cmdMarkCurrent,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             if (!rest.isEmpty())

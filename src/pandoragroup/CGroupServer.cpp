@@ -46,8 +46,6 @@ CGroupServer::~CGroupServer()
 
 void CGroupServer::incomingConnection(qintptr socketDescriptor)
 {
-    qDebug() << "Adding incoming client from descriptor" << socketDescriptor;
-
     // connect the client straight to the Communicator, as he handles all the state changes
     // data transfers and similar.
     auto *client = new CGroupClient(this);
@@ -55,6 +53,7 @@ void CGroupServer::incomingConnection(qintptr socketDescriptor)
     connectAll(client);
 
     client->setSocket(socketDescriptor);
+    qDebug() << "Adding incoming client" << client->getPeerAddress().toString();
 }
 
 void CGroupServer::errorInConnection(CGroupClient *const connection, const QString &errorMessage)
@@ -64,8 +63,8 @@ void CGroupServer::errorInConnection(CGroupClient *const connection, const QStri
     connection->disconnectFromHost();
     disconnectAll(connection);
     connection->deleteLater();
-    qWarning() << "Removing and deleting client" << connection->socketDescriptor()
-               << connection->peerName() << errorMessage;
+    qWarning() << "Removing and deleting client" << connection->getPeerAddress().toString()
+               << errorMessage;
 }
 
 void CGroupServer::sendToAll(const QByteArray &message)
@@ -93,6 +92,15 @@ void CGroupServer::closeAll()
         }
     }
     connections.clear();
+}
+
+void CGroupServer::closeOne(CGroupClient *const target)
+{
+    if (connections.removeOne(target)) {
+        target->disconnectFromHost();
+        disconnectAll(target);
+        target->deleteLater();
+    }
 }
 
 void CGroupServer::connectAll(CGroupClient *const client)

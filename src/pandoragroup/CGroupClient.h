@@ -29,6 +29,7 @@
 
 #include <QAbstractSocket>
 #include <QByteArray>
+#include <QHostAddress>
 #include <QObject>
 #include <QString>
 #include <QTcpSocket>
@@ -38,9 +39,7 @@
 #include "../global/io.h"
 
 class QTimer;
-
-enum class ConnectionStates { Closed, Connecting, Connected, Quiting };
-enum class ProtocolStates { Idle, AwaitingLogin, AwaitingInfo, Logged };
+enum class ProtocolStates { Unconnected, AwaitingLogin, AwaitingInfo, Logged };
 
 class CGroupClient final : public QObject
 {
@@ -53,13 +52,11 @@ public:
     void connectToHost();
     void disconnectFromHost();
 
-    QString peerName() const { return socket.peerName(); }
-    QAbstractSocket::SocketError error() const { return socket.error(); }
-    qintptr socketDescriptor() const { return socket.socketDescriptor(); }
+    QHostAddress getPeerAddress() const { return socket.peerAddress(); }
+    QAbstractSocket::SocketError getSocketError() const { return socket.error(); }
 
-    ConnectionStates getConnectionState() const { return connectionState; }
-    void setConnectionState(const ConnectionStates val);
-    void setProtocolState(const ProtocolStates val) { protocolState = val; }
+    QAbstractSocket::SocketState getSocketState() const { return socket.state(); }
+    void setProtocolState(const ProtocolStates val);
     ProtocolStates getProtocolState() const { return protocolState; }
     void sendData(const QByteArray &data);
 
@@ -80,8 +77,7 @@ private:
     QTimer *timer;
     void cutMessageFromBuffer();
 
-    ConnectionStates connectionState = ConnectionStates::Closed;
-    ProtocolStates protocolState = ProtocolStates::Idle;
+    ProtocolStates protocolState = ProtocolStates::Unconnected;
 
     io::null_padded_buffer<(1 << 15)> ioBuffer{};
     QByteArray buffer{};

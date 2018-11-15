@@ -319,9 +319,7 @@ CGroupServerCommunicator::~CGroupServerCommunicator()
 
 void CGroupServerCommunicator::connectionClosed(CGroupClient *const connection)
 {
-    const auto sock = connection->socketDescriptor();
-
-    const QByteArray &name = clientsList.key(sock);
+    const QByteArray &name = clientsList.key(connection);
     if (!name.isEmpty()) {
         sendRemoveUserNotification(connection, name);
         clientsList.remove(name);
@@ -350,9 +348,9 @@ void CGroupServerCommunicator::retrieveData(CGroupClient *const connection,
                                             const QVariantMap &data)
 {
     //    qInfo() << "Retrieve data from" << conn;
-    switch (connection->getConnectionState()) {
+    switch (connection->getSocketState()) {
     // Closed, Connecting, Connected, Quiting
-    case ConnectionStates::Connected:
+    case QAbstractSocket::ConnectedState:
         // AwaitingLogin, AwaitingInfo, Logged
 
         // ---------------------- AwaitingLogin  --------------------
@@ -402,14 +400,9 @@ void CGroupServerCommunicator::retrieveData(CGroupClient *const connection,
                 qWarning("(Logged) Unexpected message marker. Trying to ignore.");
             }
         }
-
         break;
-
-    case ConnectionStates::Closed:
-
-    case ConnectionStates::Connecting:
-    case ConnectionStates::Quiting:
-        qWarning("Data arrival during wrong connection state.");
+    default:
+        qWarning() << "Data arrival during wrong connection state:" << connection->getSocketState();
         break;
     }
 }
@@ -428,7 +421,7 @@ void CGroupServerCommunicator::parseLoginInformation(CGroupClient *const connect
     //    qInfo() << "Parsing login information from" << conn->socketDescriptor();
     const auto kick_connection = [this](auto connection, const auto &kickMessage) {
         this->sendMessage(connection, Messages::STATE_KICKED, kickMessage);
-        connection->disconnectFromHost();
+        server.closeOne(connection);
     };
     if (!data.contains("protocolVersion") || !data["protocolVersion"].canConvert(QMetaType::Int)) {
         kick_connection(connection, "Payload did not include the 'protocolVersion' attribute");
@@ -459,11 +452,14 @@ void CGroupServerCommunicator::parseLoginInformation(CGroupClient *const connect
         kick_connection(connection, "The name you picked is already present!");
         return;
     }
+    emit sendLog(QString("'%1's IP address: %2")
+                     .arg(name.constData())
+                     .arg(connection->getPeerAddress().toString()));
     emit sendLog(
         QString("'%1's protocol version: %2").arg(name.constData()).arg(clientProtocolVersion));
 
     // Client is allowed to log in
-    clientsList.insert(name, connection->socketDescriptor());
+    clientsList.insert(name, connection);
 
     // Strip protocolVersion from original QVariantMap
     QVariantMap charNode;
@@ -478,7 +474,7 @@ void CGroupServerCommunicator::sendGroupInformation(CGroupClient *const connecti
     GroupSelection *selection = getGroup()->selectAll();
     for (const auto &character : *selection) {
         // Only send group information for other characters
-        if (clientsList.value(character->getName()) == connection->socketDescriptor()) {
+        if (clientsList.value(character->getName()) == connection) {
             continue;
         }
         // Only share self if we enabled it
@@ -516,8 +512,6 @@ void CGroupServerCommunicator::relayMessage(CGroupClient *const connection,
                                             const QVariantMap &data)
 {
     const QByteArray &buffer = formMessageBlock(message, data);
-
-    //  qInfo("Relaying message from %s", (const char *) clientsList.key(connection->socketDescriptor()) );
     server.sendToAllExceptOne(connection, buffer);
 }
 
@@ -530,9 +524,9 @@ void CGroupServerCommunicator::sendCharRename(const QVariantMap &map)
 void CGroupServerCommunicator::renameConnection(const QByteArray &oldName, const QByteArray &newName)
 {
     if (clientsList.contains(oldName)) {
-        auto socket = clientsList.value(oldName);
+        auto connection = clientsList.value(oldName);
         clientsList.remove(oldName);
-        clientsList.insert(newName, socket);
+        clientsList.insert(newName, connection);
     } else {
         // REVISIT: Kick misbehaving client? (right now it could be ourself!)
     }
@@ -556,6 +550,27 @@ void CGroupServerCommunicator::connectCommunicator()
         emit sendLog("Failed to start a group Manager server");
         serverStartupFailed();
     }
+}
+
+bool CGroupServerCommunicator::kickCharacter(const QByteArray &name)
+{
+    if (getGroup()->getSelf()->getName() == name) {
+        emit messageBox("You can't kick yourself!");
+        return false;
+    }
+    if (auto connection = clientsList[name]) {
+        server.closeOne(connection);
+        clientsList.remove(name);
+    }
+    if (getGroup()->isNamePresent(name)) {
+        sendRemoveUserNotification(nullptr, name);
+        emit sendLog(QString("'%1' was kicked.").arg(name.constData()));
+        emit scheduleAction(new RemoveCharacter(name));
+    } else {
+        emit sendLog(QString("Could not find '%1' to kick.").arg(name.constData()));
+        return false;
+    }
+    return true;
 }
 
 //
@@ -601,10 +616,10 @@ void CGroupClientCommunicator::errorInConnection(CGroupClient *const connection,
     //    qInfo() << "errorInConnection:" << errorString;
     QString str;
 
-    switch (connection->error()) {
+    switch (connection->getSocketError()) {
     case QAbstractSocket::ConnectionRefusedError:
         str = QString("Tried to connect to %1 on port %2")
-                  .arg(connection->peerName())
+                  .arg(getConfig().groupManager.host.constData())
                   .arg(getConfig().groupManager.remotePort);
         emit messageBox(QString("Connection refused: %1.").arg(str));
         break;
@@ -614,7 +629,7 @@ void CGroupClientCommunicator::errorInConnection(CGroupClient *const connection,
         break;
 
     case QAbstractSocket::HostNotFoundError:
-        str = QString("Host %1 not found ").arg(connection->peerName());
+        str = QString("Host %1 not found ").arg(getConfig().groupManager.host.constData());
         emit messageBox(QString("Connection refused: %1.").arg(str));
         break;
 
@@ -651,9 +666,9 @@ void CGroupClientCommunicator::retrieveData(CGroupClient *conn,
                                             const Messages message,
                                             const QVariantMap &data)
 {
-    switch (conn->getConnectionState()) {
+    switch (conn->getSocketState()) {
     // Closed, Connecting, Connected, Quiting
-    case ConnectionStates::Connected:
+    case QAbstractSocket::ConnectedState:
         // AwaitingLogin, AwaitingInfo, Logged
 
         if (conn->getProtocolState() == ProtocolStates::AwaitingLogin) {
@@ -713,14 +728,8 @@ void CGroupClientCommunicator::retrieveData(CGroupClient *conn,
         }
 
         break;
-    case ConnectionStates::Closed:
-        qWarning("(Closed) Data arrival during wrong connection state.");
-        break;
-    case ConnectionStates::Connecting:
-        qWarning("(Connecting) Data arrival during wrong connection state.");
-        break;
-    case ConnectionStates::Quiting:
-        qWarning("(Quiting) Data arrival during wrong connection state.");
+    default:
+        qWarning() << "Data arrival during wrong connection state:" << conn->getSocketState();
         break;
     }
 }
@@ -764,11 +773,13 @@ void CGroupClientCommunicator::disconnectCommunicator()
 
 void CGroupClientCommunicator::connectCommunicator()
 {
-    if (client.getConnectionState() != ConnectionStates::Closed) {
-        disconnectCommunicator();
-    }
-
     client.connectToHost();
+}
+
+bool CGroupClientCommunicator::kickCharacter(const QByteArray &)
+{
+    emit messageBox("Clients cannot kick players.");
+    return false;
 }
 
 void CGroupCommunicator::relayLog(const QString &str)

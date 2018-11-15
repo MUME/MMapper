@@ -24,6 +24,7 @@
 
 #include "groupwidget.h"
 
+#include <QAction>
 #include <QMessageLogContext>
 #include <QString>
 #include <QtWidgets>
@@ -220,7 +221,33 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
     m_table->setModel(&m_model);
     layout->addWidget(m_table);
 
+    m_kick = new QAction(QIcon(":/icons/offline.png"), tr("&Kick"), this);
+    connect(m_kick, &QAction::triggered, this, [this]() { emit kickCharacter(selectedCharacter); });
+
     hide();
+
+    connect(m_table, &QAbstractItemView::clicked, this, [this](const QModelIndex &index) {
+        if (!index.isValid()) {
+            return;
+        }
+
+        // Identify kick target
+        if (auto group = m_group->getGroup()) {
+            GroupSelection *selection = group->selectAll();
+            // Map row to character
+            if (index.row() < static_cast<int>(selection->size())) {
+                CGroupChar *character = selection->at(index.row());
+                selectedCharacter = character->getName();
+            }
+            group->unselect(selection);
+
+            // Build Context menu
+            m_kick->setText(QString("&Kick %1").arg(selectedCharacter.constData()));
+            QMenu contextMenu(tr("Context menu"), this);
+            contextMenu.addAction(m_kick);
+            contextMenu.exec(QCursor::pos());
+        }
+    });
 
     connect(m_group,
             &Mmapper2Group::drawCharacters,
@@ -232,11 +259,17 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
             this,
             &GroupWidget::messageBox,
             Qt::QueuedConnection);
+    connect(this,
+            &GroupWidget::kickCharacter,
+            m_group,
+            &Mmapper2Group::kickCharacter,
+            Qt::QueuedConnection);
 }
 
 GroupWidget::~GroupWidget()
 {
     delete m_table;
+    delete m_kick;
 }
 
 void GroupWidget::updateLabels()

@@ -42,7 +42,7 @@ extern const Abbrev cmdBack;
 extern const Abbrev cmdDirections;
 extern const Abbrev cmdDoorHelp;
 extern const Abbrev cmdGroupHelp;
-extern const Abbrev cmdGtell;
+extern const Abbrev cmdGroupTell;
 extern const Abbrev cmdHelp;
 extern const Abbrev cmdMapHelp;
 extern const Abbrev cmdMarkCurrent;

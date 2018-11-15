@@ -34,6 +34,7 @@
 
 #include "groupselection.h"
 
+class QAction;
 class MapData;
 class CGroupChar;
 class Mmapper2Group;
@@ -84,11 +85,18 @@ public slots:
     void updateLabels();
     void messageBox(const QString &title, const QString &message);
 
+signals:
+    void kickCharacter(const QByteArray &);
+
 private:
     QTableView *m_table = nullptr;
     Mmapper2Group *m_group = nullptr;
     MapData *m_map = nullptr;
     GroupModel m_model;
+
+private:
+    QAction *m_kick = nullptr;
+    QByteArray selectedCharacter{};
 };
 
 #endif // GROUPWIDGET_H

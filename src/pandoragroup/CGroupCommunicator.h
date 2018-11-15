@@ -69,17 +69,20 @@ public:
 
     GroupManagerState getType() const { return type; }
     void sendCharUpdate(CGroupClient *, const QVariantMap &);
-    void sendMessage(CGroupClient *, const Messages, const QByteArray & = "");
-    void sendMessage(CGroupClient *, const Messages, const QVariantMap &);
     virtual void renameConnection(const QByteArray &, const QByteArray &);
 
     virtual void disconnectCommunicator() = 0;
     virtual void connectCommunicator() = 0;
-    virtual void sendGroupTellMessage(const QVariantMap &map) = 0;
     virtual void sendCharUpdate(const QVariantMap &map) = 0;
-    virtual void sendCharRename(const QVariantMap &map) = 0;
+    virtual bool kickCharacter(const QByteArray &) = 0;
 
 protected:
+    void sendMessage(CGroupClient *, const Messages, const QByteArray & = "");
+    void sendMessage(CGroupClient *, const Messages, const QVariantMap &);
+
+    virtual void sendGroupTellMessage(const QVariantMap &map) = 0;
+    virtual void sendCharRename(const QVariantMap &map) = 0;
+
     QByteArray formMessageBlock(const Messages message, const QVariantMap &data);
     CGroup *getGroup();
 
@@ -127,13 +130,14 @@ protected:
     void disconnectCommunicator() override;
     void sendCharUpdate(const QVariantMap &map) override;
     void sendCharRename(const QVariantMap &map) override;
+    bool kickCharacter(const QByteArray &) override;
 
 private:
     void parseLoginInformation(CGroupClient *connection, const QVariantMap &data);
     void sendGroupInformation(CGroupClient *connection);
     void serverStartupFailed();
 
-    QHash<QByteArray, qintptr> clientsList{};
+    QHash<QByteArray, CGroupClient *> clientsList{};
     CGroupServer server;
 };
 
@@ -159,6 +163,7 @@ protected:
     void disconnectCommunicator() override;
     void sendCharUpdate(const QVariantMap &map) override;
     void sendCharRename(const QVariantMap &map) override;
+    bool kickCharacter(const QByteArray &) override;
 
 private:
     void sendLoginInformation(CGroupClient *connection);

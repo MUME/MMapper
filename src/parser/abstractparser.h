@@ -130,7 +130,8 @@ signals:
     void command(const QByteArray &, const Coordinate &);
 
     // for group manager
-    void sendGroupTellEvent(QByteArray);
+    void sendGroupTellEvent(const QByteArray &);
+    void sendGroupKickEvent(const QByteArray &);
 
 public slots:
     virtual void parseNewMudInput(const IncomingData &) = 0;
@@ -235,7 +236,8 @@ private:
     void parseNoteCmd(StringView view);
     void parseDirections(StringView view);
     void parseSearch(StringView view);
-    void parseGtell(const StringView &view);
+    void parseGroupTell(const StringView &view);
+    void parseGroupKick(const StringView &view);
 
     bool setCommandPrefix(char prefix);
     void setNote(const QString &note);

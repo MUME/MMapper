@@ -212,6 +212,14 @@ void Mmapper2Group::gTellArrived(const QVariantMap &node)
     emit displayGroupTellEvent(tell);
 }
 
+void Mmapper2Group::kickCharacter(const QByteArray &character)
+{
+    QMutexLocker locker(&networkLock);
+    if (network) {
+        network->kickCharacter(character);
+    }
+}
+
 void Mmapper2Group::sendGroupTell(const QByteArray &tell)
 {
     QMutexLocker locker(&networkLock);
