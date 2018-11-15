@@ -67,7 +67,7 @@ public slots:
 
 public:
     explicit InfoMarksEditDlg(MapData *mapData, QWidget *parent = nullptr);
-    ~InfoMarksEditDlg();
+    ~InfoMarksEditDlg() override;
 
     void setPoints(float x1, float y1, float x2, float y2, int layer);
 

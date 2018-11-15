@@ -55,7 +55,7 @@ public:
                               const QString &title,
                               const QString &body,
                               QWidget *parent = nullptr);
-    ~RemoteEditWidget();
+    ~RemoteEditWidget() override;
 
     QSize minimumSizeHint() const override;
     QSize sizeHint() const override;

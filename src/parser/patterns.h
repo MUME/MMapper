@@ -24,8 +24,8 @@
 **
 ************************************************************************/
 
-#ifndef _PATTERNS_H_
-#define _PATTERNS_H_
+#ifndef PATTERNS_H
+#define PATTERNS_H
 
 #include <QRegExp>
 #include <QStringList>
@@ -60,4 +60,4 @@ public:
     static bool matchPattern(QByteArray pattern, const QByteArray &str);
 };
 
-#endif
+#endif // PATTERNS_H

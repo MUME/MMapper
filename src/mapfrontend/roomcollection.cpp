@@ -38,6 +38,8 @@
 
 #define DEBUG_LOCK() DEBUG_ONLY(assert(!m_inUse); const RAIIBool useLock{m_inUse})
 
+IRoomCollection::~IRoomCollection() = default;
+
 void RoomCollection::addRoom(Room *room)
 {
     DEBUG_LOCK();

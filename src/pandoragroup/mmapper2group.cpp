@@ -322,10 +322,8 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
         self->setTextScore(hp, mana, moves);
 
         // Estimate new numerical scores using prompt
-        double maxhp = self->maxhp;
-        double maxmoves = self->maxmoves;
-        double maxmana = self->maxmana;
-        if (!hp.isEmpty() && maxhp != 0) {
+        if (!hp.isEmpty() && self->maxhp != 0) {
+            double maxhp = self->maxhp;
             // NOTE: This avoids capture so it can be lifted out more easily later.
             const auto calc_hp = [](const QByteArray &hp, const double maxhp) -> double {
                 if (hp == "Healthy") {
@@ -350,7 +348,8 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
                 self->hp = newhp;
             }
         }
-        if (!mana.isEmpty() && maxmana != 0) {
+        if (!mana.isEmpty() && self->maxmana != 0) {
+            double maxmana = self->maxmana;
             const auto calc_mana = [](const QByteArray &mana, const double maxmana) -> double {
                 if (mana == "Burning") {
                     return maxmana * 0.99;
@@ -372,7 +371,8 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
                 self->mana = newmana;
             }
         }
-        if (!moves.isEmpty() && maxmoves != 0) {
+        if (!moves.isEmpty() && self->maxmoves != 0) {
+            double maxmoves = self->maxmoves;
             const auto calc_moves =
                 [](const QByteArray &moves, const double maxmoves, const int /*def*/) -> double {
                 if (moves == "Tired") {

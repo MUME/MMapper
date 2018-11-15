@@ -1,4 +1,3 @@
-#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -24,33 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef ABSTRACTROOMFACTORY_H
-#define ABSTRACTROOMFACTORY_H
+#include "AbstractRoomFactory.h"
 
-#include "../mapdata/mmapper2exit.h"
-#include "parseevent.h"
-#include <QtGlobal>
-
-class Room;
-class Coordinate;
-
-enum class ComparisonResult { DIFFERENT = 0, EQUAL, TOLERANCE };
-
-class AbstractRoomFactory
-{
-public:
-    virtual Room *createRoom() const = 0;
-    virtual Room *createRoom(const ParseEvent &event) const = 0;
-    virtual ComparisonResult compare(const Room *,
-                                     const ParseEvent &props,
-                                     uint tolerance = 0) const = 0;
-    virtual ComparisonResult compareWeakProps(const Room *,
-                                              const ParseEvent &props,
-                                              uint tolerance = 0) const = 0;
-    virtual SharedParseEvent getEvent(const Room *) const = 0;
-    virtual void update(Room &, const ParseEvent &event) const = 0;
-    virtual void update(Room *target, const Room *source) const = 0;
-    virtual ~AbstractRoomFactory() {}
-};
-
-#endif
+AbstractRoomFactory::~AbstractRoomFactory() = default;

@@ -91,4 +91,8 @@ public:
     bool operator==(const char *s) const noexcept;
 };
 
+namespace test {
+void testStringView();
+} // namespace test
+
 #endif // MMAPPER_STRINGVIEW_H

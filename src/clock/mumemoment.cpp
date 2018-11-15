@@ -22,8 +22,11 @@
 **
 ************************************************************************/
 #include "mumemoment.h"
-#include "mumeclock.h"
+
 #include <array>
+#include <iostream>
+
+#include "mumeclock.h"
 
 static constexpr const int MUME_MINUTES_PER_HOUR = 60;
 static constexpr const int MUME_HOURS_PER_DAY = 24;
@@ -34,45 +37,79 @@ static constexpr const int MUME_MINUTES_PER_DAY = MUME_HOURS_PER_DAY * MUME_MINU
 static constexpr const int MUME_MINUTES_PER_MONTH = MUME_DAYS_PER_MONTH * MUME_MINUTES_PER_DAY;
 static constexpr const int MUME_MINUTES_PER_YEAR = MUME_MONTHS_PER_YEAR * MUME_MINUTES_PER_MONTH;
 
-MumeMoment::MumeMoment(int year, int month, int day, int hour, int minute)
-    : m_year{year}
-    , m_month{month}
-    , m_day{day}
-    , m_hour{hour}
-    , m_minute{minute}
-{}
+static void maybe_warn_if_not_clamped(
+    const char *const name, bool &warned, const int val, const int lo, const int hi)
+{
+    if (warned)
+        return;
 
-MumeMoment::MumeMoment(const int secsSinceMumeStartEpoch)
+    if (val >= lo && val < hi)
+        return;
+
+#ifndef NDEBUG
+    std::cerr << "[at " << __FILE__ << ":" << __LINE__ << "] ";
+#endif
+    std::cerr << "WARNING: soft assertion failure: " << name << "(" << val
+              << ") is not in the half-open interval '[" << lo << ".." << hi << ")'" << std::endl;
+    warned = true;
+}
+
+MumeMoment::MumeMoment(
+    const int year, const int month, const int day, const int hour, const int minute)
+    : year{year}
+    , month{month}
+    , day{day}
+    , hour{hour}
+    , minute{minute}
+{
+    static bool year_warned = false, month_warned = false, day_warned = false, hour_warned = false,
+                minute_warned = false;
+
+#define soft_assert_clamped(x, lo, hi) maybe_warn_if_not_clamped(#x, x##_warned, (x), (lo), (hi))
+    soft_assert_clamped(year, 2100, 4100);
+    soft_assert_clamped(month, 0, MUME_MONTHS_PER_YEAR);
+    soft_assert_clamped(day, 0, MUME_DAYS_PER_MONTH);
+    soft_assert_clamped(hour, 0, MUME_HOURS_PER_DAY);
+    soft_assert_clamped(minute, 0, MUME_MINUTES_PER_HOUR);
+#undef soft_assert_clamped
+}
+
+MumeMoment MumeMoment::sinceMumeEpoch(const int64_t secsSinceMumeStartEpoch)
 {
     // https://github.com/iheartdisraptor/mume/blob/master/mudlet/scrolls/Clock/lua/clock.lua
-    const int mumeTimeYears = (secsSinceMumeStartEpoch / MUME_MINUTES_PER_YEAR);
-    m_year = MUME_START_YEAR + mumeTimeYears;
+    const int mumeTimeYears = static_cast<int>(secsSinceMumeStartEpoch / MUME_MINUTES_PER_YEAR);
+    const int year = MUME_START_YEAR + mumeTimeYears;
 
-    const int mumeTimeMinusYears = secsSinceMumeStartEpoch - mumeTimeYears * MUME_MINUTES_PER_YEAR;
-    m_month = mumeTimeMinusYears / MUME_MINUTES_PER_MONTH;
+    const int mumeTimeMinusYears = static_cast<int>(secsSinceMumeStartEpoch
+                                                    - mumeTimeYears * MUME_MINUTES_PER_YEAR);
+    const int month = mumeTimeMinusYears / MUME_MINUTES_PER_MONTH;
 
-    const int mumeTimeMinusYearsAndMonths = mumeTimeMinusYears - m_month * MUME_MINUTES_PER_MONTH;
-    m_day = mumeTimeMinusYearsAndMonths / MUME_MINUTES_PER_DAY;
+    const int mumeTimeMinusYearsAndMonths = mumeTimeMinusYears - month * MUME_MINUTES_PER_MONTH;
+    const int day = mumeTimeMinusYearsAndMonths / MUME_MINUTES_PER_DAY;
 
     const int mumeTimeMinusYearsMonthsAndDays = mumeTimeMinusYearsAndMonths
-                                                - m_day * MUME_MINUTES_PER_DAY;
-    m_hour = mumeTimeMinusYearsMonthsAndDays / MUME_MINUTES_PER_HOUR;
+                                                - day * MUME_MINUTES_PER_DAY;
+    const int hour = mumeTimeMinusYearsMonthsAndDays / MUME_MINUTES_PER_HOUR;
 
     const int mumeTimeMinusYearsMonthDaysAndMinutes = mumeTimeMinusYearsMonthsAndDays
-                                                      - m_hour * MUME_MINUTES_PER_HOUR;
-    m_minute = (mumeTimeMinusYearsMonthsAndDays <= 0) ? 0 : mumeTimeMinusYearsMonthDaysAndMinutes;
+                                                      - hour * MUME_MINUTES_PER_HOUR;
+    const int minute = (mumeTimeMinusYearsMonthsAndDays <= 0)
+                           ? 0
+                           : mumeTimeMinusYearsMonthDaysAndMinutes;
+
+    return MumeMoment{year, month, day, hour, minute};
 }
 
 int MumeMoment::toSeconds() const
 {
-    return m_minute + m_hour * MUME_MINUTES_PER_HOUR + m_day * MUME_MINUTES_PER_DAY
-           + m_month * MUME_MINUTES_PER_MONTH + (m_year - MUME_START_YEAR) * MUME_MINUTES_PER_YEAR;
+    return minute + hour * MUME_MINUTES_PER_HOUR + day * MUME_MINUTES_PER_DAY
+           + month * MUME_MINUTES_PER_MONTH + (year - MUME_START_YEAR) * MUME_MINUTES_PER_YEAR;
 }
 
 MumeSeason MumeMoment::toSeason() const
 {
     using WMN = typename MumeClock::WestronMonthNames;
-    switch (static_cast<WMN>(m_month)) {
+    switch (static_cast<WMN>(month)) {
     case WMN::Afteryule:
     case WMN::Solmath:
     case WMN::Rethe:
@@ -89,20 +126,23 @@ MumeSeason MumeMoment::toSeason() const
     case WMN::Blotmath:
     case WMN::Foreyule:
         return MumeSeason::SEASON_AUTUMN;
-    default:
-        return MumeSeason::SEASON_UNKNOWN;
+
+    case MumeClock::WestronMonthNames::UnknownWestronMonth:
+        break;
     };
+    return MumeSeason::SEASON_UNKNOWN;
 }
 
 MumeTime MumeMoment::toTimeOfDay() const
 {
-    const int dawn = MumeClock::s_dawnHour[m_month];
-    const int dusk = MumeClock::s_duskHour[m_month];
-    if (m_hour == dawn) {
+    const auto dawnDusk = MumeClock::getDawnDusk(month);
+    const int dawn = dawnDusk.dawnHour;
+    const int dusk = dawnDusk.duskHour;
+    if (hour == dawn) {
         return MumeTime::TIME_DAWN;
-    } else if (m_hour == dusk) {
+    } else if (hour == dusk) {
         return MumeTime::TIME_DUSK;
-    } else if (m_hour < dawn || m_hour > dusk) {
+    } else if (hour < dawn || hour > dusk) {
         return MumeTime::TIME_NIGHT;
     }
     return MumeTime::TIME_DAY;

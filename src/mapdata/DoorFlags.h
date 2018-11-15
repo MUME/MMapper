@@ -54,7 +54,7 @@ enum class DoorFlag {
 #define X_COUNT(UPPER_CASE, lower_case, CamelCase, friendly) +1
 static constexpr const int NUM_DOOR_FLAGS = X_FOREACH_DOOR_FLAG(X_COUNT);
 #undef X_COUNT
-DEFINE_ENUM_COUNT(DoorFlag, NUM_DOOR_FLAGS);
+DEFINE_ENUM_COUNT(DoorFlag, NUM_DOOR_FLAGS)
 
 class DoorFlags final : public enums::Flags<DoorFlags, DoorFlag, uint16_t>
 {

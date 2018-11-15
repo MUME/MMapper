@@ -120,6 +120,7 @@ else does it ;))
 
 #include "TextCodec.h"
 #include <array>
+#include <cassert>
 #include <cstdint>
 #include <QByteArray>
 #include <QObject>
@@ -164,6 +165,32 @@ static constexpr const uint8_t TNSB_TTABLE_REJECTED = 5;
 static constexpr const uint8_t TNSB_TTABLE_ACK = 6;
 static constexpr const uint8_t TNSB_TTABLE_NAK = 7;
 
+struct AppendBuffer : public QByteArray
+{
+    explicit AppendBuffer()
+        : QByteArray()
+    {}
+
+    AppendBuffer(QByteArray &&rhs)
+        : QByteArray{std::move(rhs)}
+    {}
+    AppendBuffer(const QByteArray &rhs)
+        : QByteArray{rhs}
+    {}
+
+    using QByteArray::QByteArray;
+    using QByteArray::operator=;
+
+    void append(const uint8_t c) { QByteArray::append(static_cast<char>(c)); }
+    void operator+=(const uint8_t c) { QByteArray::operator+=(static_cast<char>(c)); }
+
+    unsigned char unsigned_at(int pos) const
+    {
+        assert(size() > pos);
+        return static_cast<unsigned char>(QByteArray::at(pos));
+    }
+};
+
 class AbstractTelnet : public QObject
 {
     Q_OBJECT
@@ -172,7 +199,8 @@ public:
     explicit AbstractTelnet(TextCodec textCodec, bool debug = false, QObject *parent = nullptr);
 
     QByteArray getTerminalType() const { return termType; }
-    uint64_t getSentBytes() const { return sentBytes; }
+    /* unused */
+    int64_t getSentBytes() const { return sentBytes; }
 
 protected:
     void sendCharsetRequest(const QStringList &myCharacterSet);
@@ -200,7 +228,7 @@ protected:
 
     virtual void receiveEchoMode(bool) {}
 
-    virtual void receiveTerminalType(QByteArray) {}
+    virtual void receiveTerminalType(const QByteArray &) {}
 
     virtual void receiveWindowSize(int, int) {}
 
@@ -220,7 +248,8 @@ protected:
 
     TextCodec textCodec{};
 
-    using OptionArray = std::array<bool, 256>;
+    static constexpr const size_t NUM_OPTS = 256;
+    using OptionArray = std::array<bool, NUM_OPTS>;
 
     /** current state of options on our side and on server side */
     OptionArray myOptionState{};
@@ -242,19 +271,19 @@ protected:
     QByteArray termType{};
 
     /** amount of bytes sent up to now */
-    uint64_t sentBytes = 0;
+    int64_t sentBytes = 0;
 
 private:
-    void onReadInternal2(QByteArray &, uint8_t);
+    void onReadInternal2(AppendBuffer &, uint8_t);
 
     /** processes a telnet command (IAC ...) */
-    void processTelnetCommand(const QByteArray &command);
+    void processTelnetCommand(const AppendBuffer &command);
 
     /** processes a telnet subcommand payload */
-    void processTelnetSubnegotiation(const QByteArray &payload);
+    void processTelnetSubnegotiation(const AppendBuffer &payload);
 
-    QByteArray commandBuffer{};
-    QByteArray subnegBuffer{};
+    AppendBuffer commandBuffer{};
+    AppendBuffer subnegBuffer{};
     enum class TelnetState {
         /// normal input
         NORMAL,

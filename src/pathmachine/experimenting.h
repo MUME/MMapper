@@ -30,8 +30,8 @@
 #include <list>
 #include <QtGlobal>
 
+#include "../expandoracommon/RoomRecipient.h"
 #include "../expandoracommon/coordinate.h"
-#include "../expandoracommon/roomrecipient.h"
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/mmapper2exit.h"
 
@@ -61,6 +61,8 @@ public:
                            ExitDirection dirCode,
                            PathParameters &params,
                            AbstractRoomFactory *factory);
+    virtual ~Experimenting() override;
+
     std::list<Path *> *evaluate();
     virtual void receiveRoom(RoomAdmin *, const Room *) override = 0;
 

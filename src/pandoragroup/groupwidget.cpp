@@ -71,16 +71,17 @@ int GroupModel::columnCount(const QModelIndex & /* parent */) const
     return GROUP_COLUMN_COUNT;
 }
 
-QString calculatePercentage(const int numerator, const int denomenator)
+static QString calculatePercentage(const int numerator, const int denomenator)
 {
     if (denomenator == 0)
         return "";
     int percentage = static_cast<int>(100.0 * static_cast<double>(numerator)
                                       / static_cast<double>(denomenator));
-    return QString("%1\%").arg(percentage);
+    // QT documentation doesn't say it's legal to use "\\%" or "%%", so we'll just append.
+    return QString("%1").arg(percentage).append("%");
 }
 
-QString calculateRatio(const int numerator, const int denomenator)
+static QString calculateRatio(const int numerator, const int denomenator)
 {
     if (numerator == 0 && denomenator == 0)
         return "";
@@ -120,16 +121,25 @@ QVariant GroupModel::dataForCharacter(CGroupChar *const character, ColumnType co
         }
         default:
             qWarning() << "Unsupported column" << static_cast<int>(column);
+            break;
         }
         break;
+
     case Qt::BackgroundRole:
         return character->getColor();
+
     case Qt::TextColorRole:
         return textColor(character->getColor());
+
     case Qt::TextAlignmentRole:
         if (column != ColumnType::NAME && column != ColumnType::ROOM_NAME) {
-            return Qt::AlignCenter;
+            // NOTE: There's no QVariant(AlignmentFlag) constructor.
+            return static_cast<int>(Qt::AlignCenter);
         }
+        break;
+
+    default:
+        break;
     }
 
     return QVariant();

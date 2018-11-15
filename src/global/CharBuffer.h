@@ -69,6 +69,6 @@ template<size_t N>
 CharBuffer<N> makeCharBuffer(const char (&data)[N])
 {
     return CharBuffer<N>{data};
-};
+}
 
 #endif // MMAPPER_CHARBUFFER_H

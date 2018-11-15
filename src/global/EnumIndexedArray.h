@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <cstdint>
 
 #include "Flags.h"
 
@@ -44,8 +45,8 @@ public:
     using std::array<T, _SIZE>::array;
 
 public:
-    auto operator[](E e) -> decltype(auto) { return base::at(static_cast<int>(e)); }
-    auto operator[](E e) const -> decltype(auto) { return base::at(static_cast<int>(e)); }
+    auto operator[](E e) -> decltype(auto) { return base::at(static_cast<uint32_t>(e)); }
+    auto operator[](E e) const -> decltype(auto) { return base::at(static_cast<uint32_t>(e)); }
 
 public:
     using base::data;

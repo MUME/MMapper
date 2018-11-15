@@ -970,7 +970,8 @@ void AbstractParser::addSpecialCommand(const char *const s,
     std::string key = fullName;
     auto &map = m_specialCommandMap;
     for (int i = len; i >= min; --i) {
-        key.resize(i);
+        assert(i >= 0);
+        key.resize(static_cast<unsigned int>(i));
         auto it = map.find(key);
         if (it == map.end())
             map.emplace(key, ParserRecord{fullName, callback, help});

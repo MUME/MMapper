@@ -60,40 +60,6 @@ public:
     {}
 
 public:
-    //    this can't be implemented easily without move (until c++17's RVO eliminates move)
-    //    ExitFieldVariant getField(ExitField exitField) const
-    //    {
-    //        assert(hasFields);
-    //        switch (exitField) {
-    //        case ExitField::DOOR_NAME:
-    //            return ExitFieldVariant{doorName};
-    //        case ExitField::EXIT_FLAGS:
-    //            return ExitFieldVariant{exitFlags};
-    //        case ExitField::DOOR_FLAGS:
-    //            return ExitFieldVariant{doorFlags};
-    //        default:
-    //            throw std::invalid_argument("exitField");
-    //        }
-    //    }
-
-    void setField(const ExitFieldVariant &var)
-    {
-        assert(hasFields);
-        switch (var.getType()) {
-        case ExitField::DOOR_NAME:
-            doorName = var.getDoorName();
-            return;
-        case ExitField::EXIT_FLAGS:
-            exitFlags = var.getExitFlags();
-            return;
-        case ExitField::DOOR_FLAGS:
-            doorFlags = var.getDoorFlags();
-            return;
-        }
-        /*NOTREACHED*/
-        throw std::invalid_argument("exitField");
-    }
-
     void clearFields()
     {
         assert(hasFields);
@@ -105,12 +71,6 @@ public:
 public:
     auto inSize() const { return incoming.size(); }
     bool inIsEmpty() const { return inSize() == 0; }
-    bool inIsUnique() const { return inSize() == 1; }
-    RoomId inFirst() const
-    {
-        assert(!inIsEmpty());
-        return *incoming.begin();
-    }
     auto inRange() const { return make_range(inBegin(), inEnd()); }
     RoomIdSet inClone() const { return incoming; }
 
@@ -143,11 +103,6 @@ public:
     void removeOut(RoomId to) { outgoing.erase(to); }
     bool containsIn(RoomId from) const { return incoming.find(from) != incoming.end(); }
     bool containsOut(RoomId to) const { return outgoing.find(to) != outgoing.end(); }
-    void removeAll()
-    {
-        incoming.clear();
-        outgoing.clear();
-    }
 
     DoorName getDoorName() const;
     bool hasDoorName() const;
@@ -159,12 +114,6 @@ public:
     void setDoorFlags(DoorFlags flags);
 
     void clearDoorName();
-    void clearExitFlags();
-    void clearDoorFlags();
-
-    void removeDoorFlag(DoorFlag flag);
-
-    void orExitFlags(ExitFlag flags);
     void updateExit(ExitFlags flags);
 
 public:

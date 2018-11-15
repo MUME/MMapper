@@ -84,6 +84,7 @@ QByteArray CGroupCommunicator::formMessageBlock(const Messages message, const QV
         xml.writeAttribute("maxhp", playerData["maxhp"].toString());
         xml.writeAttribute("moves", playerData["moves"].toString());
         xml.writeAttribute("state", playerData["state"].toString());
+        xml.writeAttribute("mana", playerData["mana"].toString());
         xml.writeAttribute("maxmana", playerData["maxmana"].toString());
         xml.writeAttribute("name", playerData["name"].toString());
         xml.writeAttribute("color", playerData["color"].toString());
@@ -107,22 +108,35 @@ QByteArray CGroupCommunicator::formMessageBlock(const Messages message, const QV
             write_player_data(xml, data);
         }
         break;
+
     case Messages::GTELL:
         xml.writeStartElement("gtell");
         xml.writeAttribute("from", data["from"].toString());
         xml.writeCharacters(data["text"].toString());
         xml.writeEndElement();
         break;
+
     case Messages::REMOVE_CHAR:
     case Messages::ADD_CHAR:
         write_player_data(xml, data);
         break;
+
     case Messages::RENAME_CHAR:
         xml.writeStartElement("rename");
         xml.writeAttribute("oldname", data["oldname"].toString());
         xml.writeAttribute("newname", data["newname"].toString());
         xml.writeEndElement();
         break;
+
+    case Messages::NONE:
+    case Messages::ACK:
+    case Messages::REQ_VERSION:
+    case Messages::REQ_ACK:
+    case Messages::REQ_LOGIN:
+    case Messages::REQ_INFO:
+    case Messages::PROT_VERSION:
+    case Messages::STATE_LOGGED:
+    case Messages::STATE_KICKED:
     default:
         xml.writeTextElement("text", data["text"].toString());
         break;
@@ -192,14 +206,16 @@ void CGroupCommunicator::incomingData(CGroupClient *const conn, const QByteArray
                 data["text"] = xml.readElementText().toLatin1();
             }
             break;
+
         case Messages::UPDATE_CHAR:
             if (xml.name() == QLatin1String("loginData")
                 && xml.attributes().hasAttribute("protocolVersion")) {
                 data["protocolVersion"] = xml.attributes().value("protocolVersion").toInt();
                 xml.readNextStartElement();
             }
-            // fall through
-            // Above comment can be replaced with [[fallthrough]]; in C++17
+            goto common_update_char; // effectively a fall-thru
+
+        common_update_char:
         case Messages::REMOVE_CHAR:
         case Messages::ADD_CHAR:
             if (xml.name() == QLatin1String("playerData")) {
@@ -207,6 +223,7 @@ void CGroupCommunicator::incomingData(CGroupClient *const conn, const QByteArray
                 playerData["maxhp"] = xml.attributes().value("maxhp").toInt();
                 playerData["moves"] = xml.attributes().value("moves").toInt();
                 playerData["state"] = xml.attributes().value("state").toUInt();
+                playerData["mana"] = xml.attributes().value("mana").toInt();
                 playerData["maxmana"] = xml.attributes().value("maxmana").toInt();
                 playerData["name"] = xml.attributes().value("name").toString().toLatin1();
                 playerData["color"] = xml.attributes().value("color").toString();
@@ -216,12 +233,23 @@ void CGroupCommunicator::incomingData(CGroupClient *const conn, const QByteArray
                 data["playerData"] = playerData;
             }
             break;
+
         case Messages::RENAME_CHAR:
             if (xml.name() == QLatin1String("rename")) {
                 data["oldname"] = xml.attributes().value("oldname").toLatin1();
                 data["newname"] = xml.attributes().value("newname").toLatin1();
             }
             break;
+
+        case Messages::NONE:
+        case Messages::ACK:
+        case Messages::REQ_VERSION:
+        case Messages::REQ_ACK:
+        case Messages::REQ_LOGIN:
+        case Messages::REQ_INFO:
+        case Messages::PROT_VERSION:
+        case Messages::STATE_LOGGED:
+        case Messages::STATE_KICKED:
         default:
             if (xml.name() == QLatin1String("text")) {
                 data["text"] = xml.readElementText();
@@ -580,18 +608,37 @@ void CGroupClientCommunicator::errorInConnection(CGroupClient *const connection,
                   .arg(getConfig().groupManager.remotePort);
         emit messageBox(QString("Connection refused: %1.").arg(str));
         break;
+
     case QAbstractSocket::RemoteHostClosedError:
         emit messageBox(QString("Connection error: %1.").arg(errorString));
         break;
+
     case QAbstractSocket::HostNotFoundError:
         str = QString("Host %1 not found ").arg(connection->peerName());
         emit messageBox(QString("Connection refused: %1.").arg(str));
         break;
+
     case QAbstractSocket::SocketAccessError:
     case QAbstractSocket::UnsupportedSocketOperationError:
     case QAbstractSocket::ProxyAuthenticationRequiredError:
     case QAbstractSocket::UnknownSocketError:
     case QAbstractSocket::UnfinishedSocketOperationError:
+    case QAbstractSocket::SocketResourceError:
+    case QAbstractSocket::SocketTimeoutError:
+    case QAbstractSocket::DatagramTooLargeError:
+    case QAbstractSocket::NetworkError:
+    case QAbstractSocket::AddressInUseError:
+    case QAbstractSocket::SocketAddressNotAvailableError:
+    case QAbstractSocket::SslHandshakeFailedError:
+    case QAbstractSocket::ProxyConnectionRefusedError:
+    case QAbstractSocket::ProxyConnectionClosedError:
+    case QAbstractSocket::ProxyConnectionTimeoutError:
+    case QAbstractSocket::ProxyNotFoundError:
+    case QAbstractSocket::ProxyProtocolError:
+    case QAbstractSocket::OperationError:
+    case QAbstractSocket::SslInternalError:
+    case QAbstractSocket::SslInvalidUserDataError:
+    case QAbstractSocket::TemporaryError:
     default:
         emit messageBox(QString("Connection error: %1.").arg(errorString));
         break;

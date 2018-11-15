@@ -29,7 +29,7 @@
 
 #include <QtGlobal>
 
-#include "../expandoracommon/roomrecipient.h"
+#include "../expandoracommon/RoomRecipient.h"
 #include "../mapdata/mapdata.h"
 
 class Room;
@@ -39,7 +39,7 @@ class RoomSaver final : public RoomRecipient
 {
 public:
     explicit RoomSaver(RoomAdmin &admin, ConstRoomList &list);
-    ~RoomSaver();
+    ~RoomSaver() override;
     void receiveRoom(RoomAdmin *admin, const Room *room) override;
     quint32 getRoomsCount();
 

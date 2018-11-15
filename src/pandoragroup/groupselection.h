@@ -26,6 +26,8 @@
 #ifndef GROUPSELECTION_H
 #define GROUPSELECTION_H
 
+#include <cassert>
+#include <cstdint>
 #include <vector>
 
 class CGroupChar;
@@ -35,19 +37,20 @@ class GroupAdmin
 {
 public:
     virtual void releaseCharacters(GroupRecipient *) = 0;
-    virtual ~GroupAdmin() = default;
+    virtual ~GroupAdmin();
 };
 
 class GroupRecipient
 {
 public:
     virtual void receiveCharacters(GroupAdmin *, const std::vector<CGroupChar *>) = 0;
-    virtual ~GroupRecipient() = default;
+    virtual ~GroupRecipient();
 };
 
 class GroupSelection final : public GroupRecipient
 {
-private:
+    // NOTE: deleted members must be public.
+public:
     GroupSelection(GroupSelection &&) = delete;
     GroupSelection(const GroupSelection &) = delete;
     GroupSelection &operator=(GroupSelection &&) = delete;
@@ -55,12 +58,16 @@ private:
 
 public:
     explicit GroupSelection(GroupAdmin *admin);
-    virtual ~GroupSelection() = default;
+    virtual ~GroupSelection() override;
 
     void receiveCharacters(GroupAdmin *, std::vector<CGroupChar *>) override;
 
 public:
-    auto at(int i) const { return chars.at(i); }
+    auto at(int i) const
+    {
+        assert(i >= 0);
+        return chars.at(static_cast<uint32_t>(i));
+    }
     auto begin() const { return chars.begin(); }
     auto cbegin() const { return chars.cbegin(); }
     auto cend() const { return chars.cend(); }

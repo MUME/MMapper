@@ -26,6 +26,8 @@
 #ifndef MUMEMOMENT_H
 #define MUMEMOMENT_H
 
+#include <cstdint>
+
 static constexpr const int MUME_START_YEAR = 2850;
 
 enum class MumeTime { TIME_UNKNOWN = 0, TIME_DAWN, TIME_DAY, TIME_DUSK, TIME_NIGHT };
@@ -43,17 +45,17 @@ class MumeMoment
 {
 public:
     explicit MumeMoment(int year, int month, int day, int hour, int minute);
-    explicit MumeMoment(int secsSinceMumeStartEpoch);
+    static MumeMoment sinceMumeEpoch(int64_t secsSinceMumeStartEpoch);
 
     int toSeconds() const;
     MumeSeason toSeason() const;
     MumeTime toTimeOfDay() const;
 
-    int m_year = 0;
-    int m_month = 0;
-    int m_day = 0;
-    int m_hour = 0;
-    int m_minute = 0;
+    int year = 0;
+    int month = 0;
+    int day = 0;
+    int hour = 0;
+    int minute = 0;
 };
 
 #endif // MUMEMOMENT_H

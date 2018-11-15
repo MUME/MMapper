@@ -84,7 +84,7 @@ public:
     explicit RAIIColorSaver(OpenGL &opengl)
         : m_opengl{opengl}
     {
-        m_opengl.glGetDoublev(GL_CURRENT_COLOR, oldcolour.data());
+        m_opengl.glGetDoublev(static_cast<GLenum>(GL_CURRENT_COLOR), oldcolour.data());
     }
 
 public:
@@ -111,19 +111,19 @@ static bool isOdd(const ExitDirection sourceDir)
     return static_cast<int>(sourceDir) % 2 == 1;
 }
 
-QMatrix4x4 getTranslationMatrix(float x, float y)
+static QMatrix4x4 getTranslationMatrix(float x, float y)
 {
     QMatrix4x4 model;
     model.setToIdentity();
     model.translate(x, y, 0);
     return model;
 }
-QMatrix4x4 getTranslationMatrix(const int x, const int y)
+static QMatrix4x4 getTranslationMatrix(const int x, const int y)
 {
     return getTranslationMatrix(static_cast<float>(x), static_cast<float>(y));
 }
 
-QColor getInfoMarkColor(InfoMarkType infoMarkType, InfoMarkClass infoMarkClass)
+static QColor getInfoMarkColor(InfoMarkType infoMarkType, InfoMarkClass infoMarkClass)
 {
     const QColor defaultColor = (infoMarkType == InfoMarkType::TEXT)
                                     ? QColor(0, 0, 0, 76)         // Black
@@ -152,7 +152,7 @@ QColor getInfoMarkColor(InfoMarkType infoMarkType, InfoMarkClass infoMarkClass)
     return defaultColor;
 }
 
-FontFormatFlags getFontFormatFlags(InfoMarkClass infoMarkClass)
+static FontFormatFlags getFontFormatFlags(InfoMarkClass infoMarkClass)
 {
     switch (infoMarkClass) {
     case InfoMarkClass::GENERIC:

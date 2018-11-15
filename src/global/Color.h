@@ -29,7 +29,7 @@
 #ifndef MMAPPER_COLOR_H
 #define MMAPPER_COLOR_H
 
-static QColor textColor(const QColor color)
+static inline QColor textColor(const QColor color)
 {
     // Dynamically select text color according to the background color
     // https://gist.github.com/jlong/f06f5843104ee10006fe

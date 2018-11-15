@@ -44,6 +44,8 @@ SigParseEvent::SigParseEvent(const SharedParseEvent &event)
     requireValid(); /* throws invalid argument */
 }
 
+ParseEvent::Cycler::~Cycler() = default;
+
 ParseEvent &SigParseEvent::deref() const
 {
     return ::deref(m_sharedParseEvent);
@@ -145,7 +147,7 @@ void ParseEvent::countSkipped()
 static std::string getPromptBytes(const PromptFlagsType &promptFlags)
 {
     auto promptBytes = promptFlags.isValid()
-                           ? std::string(1, static_cast<uint8_t>(promptFlags.getTerrainType()))
+                           ? std::string(1, static_cast<int8_t>(promptFlags.getTerrainType()))
                            : std::string{};
     assert(promptBytes.size() == promptFlags.isValid() ? 1 : 0);
     return promptBytes;

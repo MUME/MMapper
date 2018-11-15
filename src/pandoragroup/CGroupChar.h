@@ -46,6 +46,7 @@ public:
         DEAD
         // TODO: Add BLIND BASHED SLEPT POISONED BLEEDING
     };
+    static constexpr const int MAX_STATE = static_cast<int>(CharacterStates::DEAD);
 
 public:
     RoomId pos = INVALID_ROOMID;
@@ -80,6 +81,7 @@ class CGroupLocalChar final : public CGroupChar
 {
 public:
     explicit CGroupLocalChar() = default;
+    virtual ~CGroupLocalChar();
 
     QByteArray textHP{};
     QByteArray textMoves{};

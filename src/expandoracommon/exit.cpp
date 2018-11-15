@@ -70,26 +70,6 @@ void Exit::clearDoorName()
 {
     setDoorName(DoorName{});
 }
-void Exit::clearExitFlags()
-{
-    setExitFlags(ExitFlags{});
-}
-void Exit::clearDoorFlags()
-{
-    setDoorFlags(DoorFlags{});
-}
-
-void Exit::removeDoorFlag(const DoorFlag flag)
-{
-    assert(hasFields);
-    doorFlags &= ~DoorFlags{flag};
-}
-
-void Exit::orExitFlags(const ExitFlag flag)
-{
-    assert(hasFields);
-    exitFlags |= flag;
-}
 
 void Exit::updateExit(ExitFlags flags)
 {

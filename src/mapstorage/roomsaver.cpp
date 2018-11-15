@@ -24,8 +24,8 @@
 ************************************************************************/
 
 #include "roomsaver.h"
+#include "../expandoracommon/RoomAdmin.h"
 #include "../expandoracommon/room.h"
-#include "../expandoracommon/roomadmin.h"
 #include "../mapdata/mapdata.h"
 #include <cassert>
 

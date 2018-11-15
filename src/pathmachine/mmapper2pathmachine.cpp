@@ -68,7 +68,7 @@ void Mmapper2PathMachine::event(const SigParseEvent &sigParseEvent)
     params.newRoomPenalty = settings.newRoomPenalty;
     params.correctPositionBonus = settings.correctPositionBonus;
     params.maxPaths = settings.maxPaths;
-    params.matchingTolerance = settings.matchingTolerance;
+    params.matchingTolerance = std::max(0, settings.matchingTolerance);
     params.multipleConnectionsPenalty = settings.multipleConnectionsPenalty;
 
     time.restart();

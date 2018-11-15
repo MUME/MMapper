@@ -27,6 +27,12 @@
 
 #include <stdexcept>
 
+Property::Property(Property::TagSkip)
+    : m_skipped{true}
+{}
+
+Property::~Property() = default;
+
 const char *Property::rest() const
 {
     if (m_skipped) {

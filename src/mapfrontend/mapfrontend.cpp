@@ -31,12 +31,12 @@
 #include <utility>
 #include <QMutex>
 
-#include "../expandoracommon/abstractroomfactory.h"
+#include "../expandoracommon/AbstractRoomFactory.h"
+#include "../expandoracommon/RoomRecipient.h"
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/frustum.h"
 #include "../expandoracommon/parseevent.h"
 #include "../expandoracommon/room.h"
-#include "../expandoracommon/roomrecipient.h"
 #include "../global/roomid.h"
 #include "ParseTree.h"
 #include "map.h"
@@ -226,12 +226,12 @@ RoomId MapFrontend::assignId(Room *const room, const SharedRoomCollection &roomH
 }
 
 void MapFrontend::lookingForRooms(RoomRecipient &recipient,
-                                  const Coordinate &ulf,
-                                  const Coordinate &lrb)
+                                  const Coordinate &input_ulf,
+                                  const Coordinate &input_lrb)
 {
     QMutexLocker locker(&mapLock);
     RoomLocker ret(recipient, *this);
-    map.getRooms(ret, ulf, lrb);
+    map.getRooms(ret, input_ulf, input_lrb);
 }
 
 void MapFrontend::insertPredefinedRoom(Room &room)
@@ -292,9 +292,9 @@ void MapFrontend::checkSize(const Coordinate &c)
     }
 }
 
-void MapFrontend::createEmptyRooms(const Coordinate &ulf, const Coordinate &lrb)
+void MapFrontend::createEmptyRooms(const Coordinate &input_ulf, const Coordinate &input_lrb)
 {
-    map.fillArea(factory, ulf, lrb);
+    map.fillArea(factory, input_ulf, input_lrb);
 }
 
 void MapFrontend::createRoom(const SigParseEvent &sigParseEvent, const Coordinate &expectedPosition)

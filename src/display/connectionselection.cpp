@@ -28,9 +28,9 @@
 #include <cassert>
 #include <utility>
 
+#include "../expandoracommon/RoomAdmin.h"
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/room.h"
-#include "../expandoracommon/roomadmin.h"
 #include "../global/roomid.h"
 #include "../mapfrontend/mapfrontend.h"
 

@@ -98,10 +98,10 @@ void PathmachinePage::multipleConnectionsPenaltyDoubleSpinBoxValueChanged(const 
 
 void PathmachinePage::maxPathsValueChanged(const int val)
 {
-    setConfig().pathMachine.maxPaths = static_cast<uint32_t>(val);
+    setConfig().pathMachine.maxPaths = val;
 }
 
 void PathmachinePage::matchingToleranceSpinBoxValueChanged(const int val)
 {
-    setConfig().pathMachine.matchingTolerance = static_cast<uint32_t>(val);
+    setConfig().pathMachine.matchingTolerance = val;
 }

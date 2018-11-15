@@ -7,7 +7,7 @@ TestClock::TestClock() = default;
 
 TestClock::~TestClock() = default;
 
-QString testMumeStartEpochTime(MumeClock &clock, int time)
+static QString testMumeStartEpochTime(MumeClock &clock, int64_t time)
 {
     return clock.toMumeTime(clock.getMumeMoment(clock.getMumeStartEpoch() + time));
 }

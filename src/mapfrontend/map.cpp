@@ -24,7 +24,7 @@
 ************************************************************************/
 
 #include "map.h"
-#include "../expandoracommon/abstractroomfactory.h"
+#include "../expandoracommon/AbstractRoomFactory.h"
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/room.h"
 #include "AbstractRoomVisitor.h"

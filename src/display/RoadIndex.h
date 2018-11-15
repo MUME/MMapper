@@ -47,9 +47,8 @@ enum class RoadIndex : uint32_t {
 #undef BIT_FROM_EXDIR
 };
 static_assert(static_cast<int>(RoadIndex::ALL) == 15, "");
-DEFINE_ENUM_COUNT(RoadIndex, NUM_ROAD_INDICES);
+DEFINE_ENUM_COUNT(RoadIndex, NUM_ROAD_INDICES)
 
-RoadIndex getRoadIndex(ExitDirection dir);
 inline constexpr RoadIndex operator|(RoadIndex lhs, RoadIndex rhs) noexcept
 {
     return static_cast<RoadIndex>(static_cast<uint32_t>(lhs) | static_cast<uint32_t>(rhs));

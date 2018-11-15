@@ -55,7 +55,7 @@ class MumeXmlParser : public AbstractParser
 
 public:
     explicit MumeXmlParser(MapData *, MumeClock *, QObject *parent = nullptr);
-    ~MumeXmlParser();
+    ~MumeXmlParser() override;
 
     void parse(const IncomingData &);
 

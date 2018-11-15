@@ -43,7 +43,7 @@ private:
 
 public:
     explicit StackedInputWidget(QWidget *parent = nullptr);
-    ~StackedInputWidget();
+    ~StackedInputWidget() override;
     bool eventFilter(QObject *obj, QEvent *event) override;
 
 public slots:

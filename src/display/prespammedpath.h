@@ -43,10 +43,10 @@ public:
     explicit PrespammedPath(QObject *parent = nullptr);
     ~PrespammedPath();
 
-    bool isEmpty() { return m_queue.isEmpty(); };
+    bool isEmpty() { return m_queue.isEmpty(); }
     CommandQueue::const_iterator begin() const { return m_queue.begin(); }
     CommandQueue::const_iterator end() const { return m_queue.end(); }
-    CommandQueue &getQueue() { return m_queue; };
+    CommandQueue &getQueue() { return m_queue; }
 signals:
     void update();
 public slots:

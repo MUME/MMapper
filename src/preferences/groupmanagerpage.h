@@ -40,7 +40,7 @@ class GroupManagerPage : public QWidget, private Ui::GroupManagerPage
 {
     Q_OBJECT
 public:
-    GroupManagerPage(Mmapper2Group *, QWidget *parent = 0);
+    GroupManagerPage(Mmapper2Group *, QWidget *parent = nullptr);
 
 public slots:
     void changeColorClicked();

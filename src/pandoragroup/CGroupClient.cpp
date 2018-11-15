@@ -146,6 +146,11 @@ void CGroupClient::onTimeout()
         socket.abort();
         emit errorInConnection(this, "Host not found");
         return;
+    case QAbstractSocket::UnconnectedState:
+    case QAbstractSocket::ConnectingState:
+    case QAbstractSocket::BoundState:
+    case QAbstractSocket::ListeningState:
+    case QAbstractSocket::ClosingState:
     default:
         socket.abort();
         emit errorInConnection(this, "Connection timed out");

@@ -26,7 +26,7 @@
 #ifndef INCLUDED_BASEMAPSAVEFILTER_H
 #define INCLUDED_BASEMAPSAVEFILTER_H
 
-#include "../expandoracommon/roomrecipient.h"
+#include "../expandoracommon/RoomRecipient.h"
 #include <cstdint>
 #include <memory>
 #include <sys/types.h>
@@ -55,7 +55,7 @@ private:
 
 public:
     explicit BaseMapSaveFilter();
-    virtual ~BaseMapSaveFilter();
+    virtual ~BaseMapSaveFilter() override;
 
     //! The map data to work on
     void setMapData(MapData *mapData);

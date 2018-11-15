@@ -29,6 +29,8 @@
 #include <memory>
 #include <type_traits>
 
+#include "NullPointerException.h"
+
 #define IS_SET(src, bit) static_cast<bool>((src) & (bit))
 
 template<typename T>
@@ -49,13 +51,6 @@ std::unique_ptr<Base> static_upcast(std::unique_ptr<Derived> &&ptr)
     static_assert(std::is_base_of<Base, Derived>::value, "");
     return std::unique_ptr<Base>(ptr.release());
 }
-
-struct NullPointerException final : public std::runtime_error
-{
-    explicit NullPointerException()
-        : runtime_error("NullPointerException")
-    {}
-};
 
 template<typename T>
 inline T &deref(T *const ptr)

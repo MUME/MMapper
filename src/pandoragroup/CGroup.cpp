@@ -168,18 +168,6 @@ void CGroup::removeChar(const QByteArray &name)
     }
 }
 
-void CGroup::removeChar(const QVariantMap &map)
-{
-    QMutexLocker locker(&characterLock);
-    const auto &name = CGroupChar::getNameFromVariantMap(map);
-    if (name.isEmpty()) {
-        qWarning() << "Unable to extract character name from" << map;
-        return;
-    }
-
-    removeChar(name);
-}
-
 bool CGroup::isNamePresent(const QByteArray &name)
 {
     QMutexLocker locker(&characterLock);

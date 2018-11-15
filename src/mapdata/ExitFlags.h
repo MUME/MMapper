@@ -53,7 +53,7 @@ enum class ExitFlag {
 #define X_COUNT(UPPER_CASE, lower_case, CamelCase, friendly) +1
 static constexpr const int NUM_EXIT_FLAGS = X_FOREACH_EXIT_FLAG(X_COUNT);
 #undef X_COUNT
-DEFINE_ENUM_COUNT(ExitFlag, NUM_EXIT_FLAGS);
+DEFINE_ENUM_COUNT(ExitFlag, NUM_EXIT_FLAGS)
 
 class ExitFlags final : public enums::Flags<ExitFlags, ExitFlag, uint16_t>
 {

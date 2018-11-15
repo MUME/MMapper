@@ -55,6 +55,11 @@ bool isNESW(const ExitDirection dir)
     case ExitDirection::EAST:
     case ExitDirection::WEST:
         return true;
+
+    case ExitDirection::UP:
+    case ExitDirection::DOWN:
+    case ExitDirection::UNKNOWN:
+    case ExitDirection::NONE:
     default:
         return false;
     }
@@ -65,6 +70,13 @@ bool isUpDown(const ExitDirection dir)
     case ExitDirection::UP:
     case ExitDirection::DOWN:
         return true;
+
+    case ExitDirection::NORTH:
+    case ExitDirection::SOUTH:
+    case ExitDirection::EAST:
+    case ExitDirection::WEST:
+    case ExitDirection::UNKNOWN:
+    case ExitDirection::NONE:
     default:
         return false;
     }
@@ -80,9 +92,12 @@ bool isNESWUD(const ExitDirection dir)
     case ExitDirection::UP:
     case ExitDirection::DOWN:
         return true;
-    default:
-        return false;
+
+    case ExitDirection::UNKNOWN:
+    case ExitDirection::NONE:
+        break;
     }
+    return false;
 }
 
 // TODO: merge this with other implementations
@@ -99,9 +114,11 @@ ExitDirection opposite(const ExitDirection in)
         PAIR(NORTH, SOUTH);
         PAIR(WEST, EAST);
         PAIR(UP, DOWN);
-    default:
-        return ExitDirection::UNKNOWN;
+    case ExitDirection::UNKNOWN:
+    case ExitDirection::NONE:
+        break;
     }
+    return ExitDirection::UNKNOWN;
 #undef PAIR
 }
 
@@ -161,8 +178,10 @@ char charForDir(ExitDirection dir)
         return 'u';
     case ExitDirection::DOWN:
         return 'd';
-    default:
-        return '?';
+    case ExitDirection::UNKNOWN:
+    case ExitDirection::NONE:
+        break;
     }
+    return '?';
 }
 } // namespace Mmapper2Exit

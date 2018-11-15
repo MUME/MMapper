@@ -34,8 +34,8 @@ struct range
     It begin_;
     It end_;
 
-    It begin() const { return begin_; };
-    It end() const { return end_; };
+    It begin() const { return begin_; }
+    It end() const { return end_; }
 };
 
 template<typename It>

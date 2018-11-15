@@ -89,12 +89,12 @@ void OpenGL::renderTextAt(const double x,
 
 void OpenGL::setMatrix(const MatrixType type, const QMatrix4x4 &m)
 {
-    const auto getType = [](const MatrixType type) {
+    const auto getType = [](const MatrixType type) -> GLenum {
         switch (type) {
         case MatrixType::MODELVIEW:
-            return GL_MODELVIEW;
+            return static_cast<GLenum>(GL_MODELVIEW);
         case MatrixType::PROJECTION:
-            return GL_PROJECTION;
+            return static_cast<GLenum>(GL_PROJECTION);
         }
         throw std::invalid_argument("type");
     };

@@ -29,7 +29,7 @@
 #include <QSet>
 #include <QVector>
 
-#include "../expandoracommon/roomadmin.h"
+#include "../expandoracommon/RoomAdmin.h"
 #include "../parser/abstractparser.h"
 #include "ExitDirection.h"
 #include "mmapper2exit.h"
@@ -57,7 +57,7 @@ class ShortestPathRecipient
 {
 public:
     virtual void receiveShortestPath(RoomAdmin *admin, QVector<SPNode> spnodes, int endpoint) = 0;
-    virtual ~ShortestPathRecipient() {}
+    virtual ~ShortestPathRecipient();
 };
 
 #endif

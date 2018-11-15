@@ -48,24 +48,22 @@ AboutDialog::AboutDialog(QWidget *parent)
     aboutText->setOpenExternalLinks(true);
     aboutText->setTextInteractionFlags(Qt::TextBrowserInteraction);
     aboutText->setText(
-        "<p align=\"center\"><b>" + tr("MMapper Version %1").arg(QString(MMAPPER_VERSION))
-        + "</b></p>" + "<p align=\"center\">"
+        "<p align=\"center\"><b>" + tr("MMapper Version %1").arg(MMAPPER_VERSION) + "</b></p>"
+        + "<p align=\"center\">"
 #ifdef GIT_BRANCH
-        + tr("Built on branch %1 and revision %2 ").arg(QString(GIT_BRANCH), QString(GIT_COMMIT_HASH))
+        + tr("Built on branch %1 and revision %2 ").arg(GIT_BRANCH).arg(GIT_COMMIT_HASH)
 #ifdef __clang__
-        + tr("using Clang %1.%2.%3")
-              .arg(QString::number(__clang_major__),
-                   QString::number(__clang_minor__),
-                   QString::number(__clang_patchlevel__))
+        + tr("using Clang %1.%2.%3").arg(__clang_major__).arg(__clang_minor__).arg(__clang_patchlevel__)
 #elif __GNUC__
-        + tr("using GCC %1.%2.%3")
-              .arg(QString::number(__GNUC__),
-                   QString::number(__GNUC_MINOR__),
-                   QString::number(__GNUC_PATCHLEVEL__))
+        + tr("using GCC %1.%2.%3").arg(__GNUC__).arg(__GNUC_MINOR__).arg(__GNUC_PATCHLEVEL__)
 #endif
         + "<br>"
 #endif
-        + tr("Based on Qt %1 (%2 bit)").arg(QT_VERSION_STR, QString::number(QSysInfo::WordSize))
+        + tr("Based on Qt %1 (%2 bit)")
+              .arg(QT_VERSION_STR)
+              .arg(static_cast<size_t>(QSysInfo::WordSize))
+
+        // REVISIT: warning: expansion of date or time macro is not reproducible [-Wdate-time]
         + "<br>" + tr("Built on %1 at %2").arg(QString(__DATE__)).arg(QString(__TIME__)) + "</p>");
 
     /* Authors tab */

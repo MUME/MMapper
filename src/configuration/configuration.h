@@ -58,7 +58,7 @@ static constexpr const Platform CURRENT_PLATFORM = getCurrentPlatform();
 #define SUBGROUP() \
     friend class Configuration; \
     void read(QSettings &conf); \
-    void write(QSettings &conf) const;
+    void write(QSettings &conf) const
 
 class Configuration final
 {
@@ -167,8 +167,8 @@ public:
         qreal newRoomPenalty = 0.0;
         qreal multipleConnectionsPenalty = 0.0;
         qreal correctPositionBonus = 0.0;
-        quint32 maxPaths = 0u;
-        quint32 matchingTolerance = 0u;
+        qint32 maxPaths = 0;
+        qint32 matchingTolerance = 0;
 
     private:
         SUBGROUP();
@@ -191,7 +191,7 @@ public:
 
     struct MumeClockSettings final
     {
-        int startEpoch = 0;
+        int64_t startEpoch = 0;
         bool display = false;
 
     private:

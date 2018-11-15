@@ -23,8 +23,8 @@
 **
 ************************************************************************/
 
-#ifndef _REMOTEEDITPROCESS_H_
-#define _REMOTEEDITPROCESS_H_
+#ifndef REMOTEEDITPROCESS_H
+#define REMOTEEDITPROCESS_H
 
 #include <QDateTime>
 #include <QObject>
@@ -68,4 +68,4 @@ private:
     QDateTime m_previousTime{};
 };
 
-#endif /* _REMOTEEDITPROCESS_H_ */
+#endif /* REMOTEEDITPROCESS_H */

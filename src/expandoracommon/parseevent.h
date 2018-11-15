@@ -120,7 +120,9 @@ private:
     using LUP = ListCycler<UP, DUP>;
     struct Cycler final : LUP
     {
-        Cycler() = default;
+        explicit Cycler() = default;
+        virtual ~Cycler() override;
+
         Cycler(Cycler &&) = default;
         Cycler(const Cycler &) = default;
         Cycler &operator=(Cycler &&) = default;

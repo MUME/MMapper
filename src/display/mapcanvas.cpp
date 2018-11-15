@@ -74,7 +74,7 @@ static auto loadTexture(const QString &name)
         throw std::runtime_error(("failed to load: " + name).toStdString());
 
     if (!texture->isCreated()) {
-        qWarning() << "failed to create: " << name << "\n";
+        qWarning() << "failed to create: " << name;
         texture->setSize(1);
         texture->create();
 
@@ -252,11 +252,14 @@ void MapCanvas::setCanvasMouseMode(CanvasMouseMode mode)
     case CanvasMouseMode::MOVE:
         setCursor(Qt::OpenHandCursor);
         break;
+
     default:
+    case CanvasMouseMode::NONE:
     case CanvasMouseMode::SELECT_CONNECTIONS:
     case CanvasMouseMode::EDIT_INFOMARKS:
         setCursor(Qt::CrossCursor);
         break;
+
     case CanvasMouseMode::SELECT_ROOMS:
     case CanvasMouseMode::CREATE_ROOMS:
     case CanvasMouseMode::CREATE_CONNECTIONS:
@@ -285,7 +288,12 @@ void MapCanvas::clearConnectionSelection()
     emit newConnectionSelection(m_connectionSelection);
 }
 
-void MapCanvas::wheelEvent(QWheelEvent *event)
+static uint32_t operator&(const Qt::KeyboardModifiers left, const Qt::Modifier right)
+{
+    return static_cast<uint32_t>(left) & static_cast<uint32_t>(right);
+}
+
+void MapCanvas::wheelEvent(QWheelEvent *const event)
 {
     if (event->delta() > 100) {
         switch (m_canvasMouseMode) {
@@ -304,7 +312,10 @@ void MapCanvas::wheelEvent(QWheelEvent *event)
         case CanvasMouseMode::CREATE_ONEWAY_CONNECTIONS:
             layerDown();
             break;
-        default:;
+
+        case CanvasMouseMode::NONE:
+        default:
+            break;
         }
     }
 
@@ -325,7 +336,10 @@ void MapCanvas::wheelEvent(QWheelEvent *event)
         case CanvasMouseMode::CREATE_ONEWAY_CONNECTIONS:
             layerUp();
             break;
-        default:;
+
+        case CanvasMouseMode::NONE:
+        default:
+            break;
         }
     }
 }
@@ -523,6 +537,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
         createRoom();
         break;
 
+    case CanvasMouseMode::NONE:
     default:
         break;
     }
@@ -648,8 +663,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
         break;
 
     case CanvasMouseMode::CREATE_ROOMS:
-        break;
-
+    case CanvasMouseMode::NONE:
     default:
         break;
     }
@@ -882,6 +896,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
         }
         break;
 
+    case CanvasMouseMode::NONE:
     default:
         break;
     }
@@ -951,11 +966,15 @@ void MapCanvas::zoomReset()
 void MapCanvas::initializeGL()
 {
     m_opengl.initializeOpenGLFunctions();
+    const auto getString = [this](const GLint id) -> QByteArray {
+        const unsigned char *s = m_opengl.glGetString(static_cast<GLenum>(id));
+        return QByteArray{reinterpret_cast<const char *>(s)};
+    };
 
-    QByteArray version(reinterpret_cast<const char *>(m_opengl.glGetString(GL_VERSION)));
-    QByteArray renderer(reinterpret_cast<const char *>(m_opengl.glGetString(GL_RENDERER)));
-    QByteArray vendor(reinterpret_cast<const char *>(m_opengl.glGetString(GL_VENDOR)));
-    QByteArray isOpenGLES((context()->isOpenGLES() ? "true" : "false"));
+    const auto version = getString(GL_VERSION);
+    const auto renderer = getString(GL_RENDERER);
+    const auto vendor = getString(GL_VENDOR);
+    const QByteArray isOpenGLES((context()->isOpenGLES() ? "true" : "false"));
     qInfo() << "OpenGL Version: " << version;
     qInfo() << "OpenGL Renderer: " << renderer;
     qInfo() << "OpenGL Vendor: " << vendor;
@@ -995,13 +1014,14 @@ void MapCanvas::initializeGL()
 
     // <= OpenGL 3.0
     makeGlLists(); // TODO(nschimme): Convert these GlLists into shaders
-    m_opengl.glShadeModel(GL_FLAT);
+    m_opengl.glShadeModel(static_cast<GLenum>(GL_FLAT));
     m_opengl.glPolygonStipple(getStipple(StippleType::HalfTone));
 
     // >= OpenGL 3.0
     m_opengl.apply(XEnable{XOption::DEPTH_TEST});
     m_opengl.apply(XEnable{XOption::NORMALIZE});
-    m_opengl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    m_opengl.glBlendFunc(static_cast<GLenum>(GL_SRC_ALPHA),
+                         static_cast<GLenum>(GL_ONE_MINUS_SRC_ALPHA));
 }
 
 void MapCanvas::resizeGL(int width, int height)
@@ -1168,7 +1188,7 @@ void MapCanvas::paintGL()
                           static_cast<float>(backgroundColor.blueF()),
                           static_cast<float>(backgroundColor.alphaF()));
 
-    m_opengl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    m_opengl.glClear(static_cast<GLbitfield>(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
     MapCanvasRoomDrawer drawer{*static_cast<MapCanvasData *>(this), this->m_opengl};
 
@@ -1292,8 +1312,9 @@ void MapCanvas::paintSelectedConnection()
         y1p += 0.3;
         break;
     case ExitDirection::UNKNOWN:
+    case ExitDirection::NONE:
+    default:
         break;
-    default:;
     }
 
     if (m_connectionSelection->isSecondValid()) {
@@ -1324,8 +1345,9 @@ void MapCanvas::paintSelectedConnection()
             y2p += 0.3;
             break;
         case ExitDirection::UNKNOWN:
+        case ExitDirection::NONE:
+        default:
             break;
-        default:;
         }
     }
 

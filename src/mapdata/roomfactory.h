@@ -32,7 +32,7 @@
 #include <QtCore>
 #include <QtGlobal>
 
-#include "../expandoracommon/abstractroomfactory.h"
+#include "../expandoracommon/AbstractRoomFactory.h"
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/parseevent.h"
 #include "ExitDirection.h"
@@ -49,10 +49,10 @@ public:
     virtual Room *createRoom(const ParseEvent &) const override;
     virtual ComparisonResult compare(const Room *,
                                      const ParseEvent &event,
-                                     uint tolerance) const override;
+                                     int tolerance) const override;
     virtual ComparisonResult compareWeakProps(const Room *,
                                               const ParseEvent &event,
-                                              uint tolerance) const override;
+                                              int tolerance) const override;
     virtual SharedParseEvent getEvent(const Room *) const override;
     virtual void update(Room &, const ParseEvent &event) const override;
     virtual void update(Room *target, const Room *source) const override;
@@ -62,10 +62,10 @@ public:
     static const Coordinate &exitDir(ExitDirection dir);
 
 private:
-    ComparisonResult compareStrings(const QString &room,
-                                    const QString &event,
-                                    uint prevTolerance,
-                                    bool updated = true) const;
+    static ComparisonResult compareStrings(const QString &room,
+                                           const QString &event,
+                                           int prevTolerance,
+                                           bool updated = true);
 };
 
 #endif

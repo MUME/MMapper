@@ -32,7 +32,7 @@
 #include "../configuration/configuration.h"
 
 /* TODO: merge with other use */
-#if MMAPPER_NO_OPENSSL
+#if defined(MMAPPER_NO_OPENSSL) && MMAPPER_NO_OPENSSL
 static constexpr const bool NO_OPEN_SSL = true;
 #else
 static constexpr const bool NO_OPEN_SSL = false;

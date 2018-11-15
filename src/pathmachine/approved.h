@@ -27,8 +27,8 @@
 #ifndef APPROVED_H
 #define APPROVED_H
 
+#include "../expandoracommon/RoomRecipient.h"
 #include "../expandoracommon/parseevent.h"
-#include "../expandoracommon/roomrecipient.h"
 
 class AbstractRoomFactory;
 class ParseEvent;
@@ -50,7 +50,7 @@ public:
     explicit Approved(AbstractRoomFactory *in_factory,
                       const SigParseEvent &sigParseEvent,
                       int matchingTolerance);
-    ~Approved();
+    ~Approved() override;
     void receiveRoom(RoomAdmin *, const Room *) override;
     const Room *oneMatch() const;
     RoomAdmin *getOwner() const;

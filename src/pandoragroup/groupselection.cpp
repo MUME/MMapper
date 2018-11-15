@@ -26,9 +26,14 @@
 #include "CGroupChar.h"
 #include <cassert>
 
+GroupAdmin::~GroupAdmin() = default;
+GroupRecipient::~GroupRecipient() = default;
+
 GroupSelection::GroupSelection(GroupAdmin *admin)
     : m_admin(admin)
 {}
+
+GroupSelection::~GroupSelection() = default;
 
 /**
  * @brief CGroupSelection::receiveCharacters

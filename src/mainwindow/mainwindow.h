@@ -72,7 +72,9 @@ class DockWidget : public QDockWidget
 {
     Q_OBJECT
 public:
-    explicit DockWidget(const QString &title, QWidget *parent = 0, Qt::WindowFlags flags = 0);
+    explicit DockWidget(const QString &title,
+                        QWidget *parent = nullptr,
+                        Qt::WindowFlags flags = Qt::WindowFlags{});
 
     virtual QSize minimumSizeHint() const override;
     virtual QSize sizeHint() const override;
@@ -83,8 +85,8 @@ class MainWindow final : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0, Qt::WindowFlags flags = 0);
-    ~MainWindow();
+    explicit MainWindow(QWidget *parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags{});
+    ~MainWindow() override;
 
     enum class SaveMode { SAVEM_FULL, SAVEM_BASEMAP };
     enum class SaveFormat { SAVEF_MM2, SAVEF_WEB };

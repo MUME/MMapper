@@ -29,7 +29,7 @@
 #include <utility>
 #include <QMutableVectorIterator>
 
-#include "../expandoracommon/abstractroomfactory.h"
+#include "../expandoracommon/AbstractRoomFactory.h"
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/parseevent.h"
 #include "../expandoracommon/room.h"
@@ -41,6 +41,9 @@
 #include "map.h"
 #include "mapfrontend.h"
 #include "roomcollection.h"
+
+AbstractAction::~AbstractAction() = default;
+MapAction::~MapAction() = default;
 
 SingleRoomAction::SingleRoomAction(AbstractAction *const ex, const RoomId in_id)
     : id(in_id)
@@ -200,12 +203,12 @@ void Remove::exec(const RoomId id)
     const ExitsList &exits = room->getExitsList();
     for (const auto dir : enums::makeCountingIterator<ExitDirection>(exits)) {
         const Exit &e = exits[dir];
-        for (const auto idx : e.inRange()) {
+        for (const auto &idx : e.inRange()) {
             if (Room *const other = rooms[idx]) {
                 other->exit(opposite(dir)).removeOut(id);
             }
         }
-        for (const auto idx : e.outRange()) {
+        for (const auto &idx : e.outRange()) {
             if (Room *const other = rooms[idx]) {
                 other->exit(opposite(dir)).removeIn(id);
             }

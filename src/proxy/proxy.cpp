@@ -49,7 +49,7 @@
 #include "telnetfilter.h"
 
 /* TODO: merge with other use */
-#if MMAPPER_NO_OPENSSL
+#if defined(MMAPPER_NO_OPENSSL) && MMAPPER_NO_OPENSSL
 static constexpr const bool NO_OPEN_SSL = true;
 #else
 static constexpr const bool NO_OPEN_SSL = false;
@@ -361,7 +361,7 @@ void Proxy::mudTerminatedConnection()
 void Proxy::processUserStream()
 {
     if (m_userSocket != nullptr) {
-        io::readAllAvailable(*m_userSocket, m_buffer, [this](QByteArray byteArray) {
+        io::readAllAvailable(*m_userSocket, m_buffer, [this](const QByteArray &byteArray) {
             if (byteArray.size() != 0)
                 emit analyzeUserStream(byteArray);
         });

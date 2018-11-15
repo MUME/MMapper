@@ -33,10 +33,10 @@
 #include <QList>
 #include <QString>
 
+#include "../expandoracommon/RoomRecipient.h"
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
-#include "../expandoracommon/roomrecipient.h"
 #include "../global/roomid.h"
 #include "../global/utils.h"
 #include "../mapfrontend/map.h"
@@ -324,12 +324,6 @@ void MapData::draw(const Coordinate &ulf, const Coordinate &lrb, MapCanvasRoomDr
     map.getRooms(drawer, ulf, lrb);
 }
 
-bool MapData::isOccupied(const Coordinate &position)
-{
-    QMutexLocker locker(&mapLock);
-    return map.get(position) != nullptr;
-}
-
 bool MapData::isMovable(const Coordinate &offset, const RoomSelection *const selection)
 {
     QMutexLocker locker(&mapLock);
@@ -371,32 +365,6 @@ const RoomSelection *MapData::select(const RoomSelection *const other, const Roo
     }
     assert(false);
     return nullptr;
-}
-
-// removes the subset from the superset and unselects
-void MapData::unselect(const RoomSelection *const subset, const RoomSelection *const in)
-{
-    QMutexLocker locker(&mapLock);
-    if (RoomSelection *const superset = selections[in]) {
-        QMapIterator<RoomId, const Room *> i(*subset);
-        while (i.hasNext()) {
-            keepRoom(*superset, i.key());
-            superset->remove(i.key());
-        }
-    } else {
-        assert(false);
-    }
-}
-
-bool MapData::execute(MapAction *action)
-{
-    QMutexLocker locker(&mapLock);
-    action->schedule(this);
-    const bool executable = isExecutable(action);
-    if (executable) {
-        executeAction(action);
-    }
-    return executable;
 }
 
 bool MapData::execute(MapAction *const action, const RoomSelection *const unlock)
@@ -487,15 +455,13 @@ MapData::~MapData()
         delete m_markers.takeFirst();
     }
 }
-bool MapData::execute(AbstractAction *action, const RoomSelection *unlock)
-{
-    return execute(new GroupMapAction(action, unlock), unlock);
-}
+
 void MapData::removeMarker(InfoMark *im)
 {
     m_markers.removeAll(im);
     delete im;
 }
+
 void MapData::addMarker(InfoMark *im)
 {
     m_markers.append(im);

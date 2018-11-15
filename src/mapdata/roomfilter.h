@@ -33,7 +33,7 @@
 
 class Room;
 
-enum class pattern_kinds { UNK, DESC, DYN_DESC, NAME, NOTE, EXITS, ALL };
+enum class pattern_kinds { NONE, DESC, DYN_DESC, NAME, NOTE, EXITS, ALL_BUT_EXITS };
 
 class RoomFilter
 {
@@ -56,7 +56,7 @@ public:
 protected:
     QString pattern{};
     Qt::CaseSensitivity cs{};
-    pattern_kinds kind = pattern_kinds::UNK;
+    pattern_kinds kind = pattern_kinds::NONE;
 };
 
 #endif

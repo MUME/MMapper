@@ -155,16 +155,22 @@ void MumeXmlParser::parse(const IncomingData &data)
         m_tempCharacters.clear();
     }
     if (!m_lineToUser.isEmpty()) {
-        const auto isGoAhead = [](TelnetDataType type) {
+        const auto isGoAhead = [](TelnetDataType type) -> bool {
             switch (type) {
             case TelnetDataType::LOGIN:
             case TelnetDataType::LOGIN_PASSWORD:
             case TelnetDataType::MENU_PROMPT:
             case TelnetDataType::PROMPT:
                 return true;
-            default:
+            case TelnetDataType::CRLF:
+            case TelnetDataType::LFCR:
+            case TelnetDataType::LF:
+            case TelnetDataType::DELAY:
+            case TelnetDataType::SPLIT:
+            case TelnetDataType::UNKNOWN:
                 return false;
             }
+            return false;
         };
         sendToUser(m_lineToUser, isGoAhead(data.type));
 

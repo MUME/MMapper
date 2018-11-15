@@ -41,13 +41,17 @@ static const char *getPlatformEditor()
     switch (CURRENT_PLATFORM) {
     case Platform::Win32:
         return "notepad";
+
     case Platform::Mac:
         return "open -W -n -t";
+
     case Platform::Linux:
         // add .txt extension and use xdg-open instead?
         // or if xdg-open doesn't exist, then you can
         // look for gnome-open, mate-open, etc.
         return "gedit";
+
+    case Platform::Unknown:
     default:
         return "";
     }
@@ -64,9 +68,12 @@ static QByteArray getPlatformLoadDir()
     switch (CURRENT_PLATFORM) {
     case Platform::Win32:
         return "C:/Program Files (x86)/MMapper";
+
     case Platform::Linux:
         return qgetenv("SNAP").append("/usr/share/games/mmapper");
+
     case Platform::Mac:
+    case Platform::Unknown:
     default:
         return "";
     }
@@ -451,16 +458,18 @@ void Configuration::PathMachineSettings::read(QSettings &conf)
     newRoomPenalty = conf.value(KEY_ROOM_CREATION_PENALTY, 5).toDouble();
     correctPositionBonus = conf.value(KEY_CORRECT_POSITION_BONUS, 5).toDouble();
     multipleConnectionsPenalty = conf.value(KEY_MULTIPLE_CONNECTIONS_PENALTY, 2.0).toDouble();
-    maxPaths = conf.value(KEY_MAXIMUM_NUMBER_OF_PATHS, 1000).toUInt();
-    matchingTolerance = conf.value(KEY_ROOM_MATCHING_TOLERANCE, 8).toUInt();
+    maxPaths = std::max(0, conf.value(KEY_MAXIMUM_NUMBER_OF_PATHS, 1000).toInt());
+    matchingTolerance = std::max(0, conf.value(KEY_ROOM_MATCHING_TOLERANCE, 8).toInt());
 }
 
 void Configuration::GroupManagerSettings::read(QSettings &conf)
 {
+    static constexpr const int DEFAULT_PORT = 4243;
+
     state = sanitizeGroupManagerState(
         conf.value(KEY_STATE, static_cast<int>(GroupManagerState::Off)).toInt());
-    localPort = static_cast<quint16>(conf.value(KEY_LOCAL_PORT, 4243).toInt());
-    remotePort = static_cast<quint16>(conf.value(KEY_REMOTE_PORT, 4243).toInt());
+    localPort = sanitizeUint16(conf.value(KEY_LOCAL_PORT, DEFAULT_PORT).toInt(), DEFAULT_PORT);
+    remotePort = sanitizeUint16(conf.value(KEY_REMOTE_PORT, DEFAULT_PORT).toInt(), DEFAULT_PORT);
     host = conf.value(KEY_HOST, "localhost").toByteArray();
     charName = conf.value(KEY_CHARACTER_NAME, QHostInfo::localHostName()).toByteArray();
     shareSelf = conf.value(KEY_SHARE_SELF, true).toBool();
@@ -470,7 +479,8 @@ void Configuration::GroupManagerSettings::read(QSettings &conf)
 
 void Configuration::MumeClockSettings::read(QSettings &conf)
 {
-    startEpoch = conf.value(KEY_MUME_START_EPOCH, 1517443173).toInt();
+    // NOTE: old values might be stored as int32
+    startEpoch = conf.value(KEY_MUME_START_EPOCH, 1517443173).toLongLong();
     display = conf.value(KEY_DISPLAY_CLOCK, true).toBool();
 }
 
@@ -581,8 +591,9 @@ void Configuration::PathMachineSettings::write(QSettings &conf) const
 void Configuration::GroupManagerSettings::write(QSettings &conf) const
 {
     conf.setValue(KEY_STATE, static_cast<int>(state));
-    conf.setValue(KEY_LOCAL_PORT, localPort);
-    conf.setValue(KEY_REMOTE_PORT, remotePort);
+    // Note: There's no QVariant(quint16) constructor.
+    conf.setValue(KEY_LOCAL_PORT, static_cast<int>(localPort));
+    conf.setValue(KEY_REMOTE_PORT, static_cast<int>(remotePort));
     conf.setValue(KEY_HOST, host);
     conf.setValue(KEY_CHARACTER_NAME, charName);
     conf.setValue(KEY_SHARE_SELF, shareSelf);
@@ -592,7 +603,8 @@ void Configuration::GroupManagerSettings::write(QSettings &conf) const
 
 void Configuration::MumeClockSettings::write(QSettings &conf) const
 {
-    conf.setValue(KEY_MUME_START_EPOCH, startEpoch);
+    // Note: There's no QVariant(int64_t) constructor.
+    conf.setValue(KEY_MUME_START_EPOCH, static_cast<qlonglong>(startEpoch));
     conf.setValue(KEY_DISPLAY_CLOCK, display);
 }
 

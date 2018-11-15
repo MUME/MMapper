@@ -74,7 +74,7 @@ class MapData : public MapFrontend
 
 public:
     explicit MapData(QObject *parent = nullptr);
-    virtual ~MapData();
+    virtual ~MapData() override;
 
     const RoomSelection *select(const Coordinate &ulf, const Coordinate &lrb);
     // updates a selection created by the mapdata
@@ -88,8 +88,6 @@ public:
 
     // selects the rooms given in "other" for "into"
     const RoomSelection *select(const RoomSelection *other, const RoomSelection *in);
-    // removes the subset from the superset and unselects it
-    void unselect(const RoomSelection *subset, const RoomSelection *in);
     // removes the selection from the internal structures and deletes it
     void unselect(const RoomSelection *in);
     // unselects a room from a selection
@@ -100,13 +98,9 @@ public:
     const Room *getRoom(RoomId id, const RoomSelection *in);
 
     void draw(const Coordinate &ulf, const Coordinate &lrb, MapCanvasRoomDrawer &screen);
-    bool isOccupied(const Coordinate &position);
-
     bool isMovable(const Coordinate &offset, const RoomSelection *selection);
 
-    bool execute(MapAction *action);
     bool execute(MapAction *action, const RoomSelection *unlock);
-    bool execute(AbstractAction *action, const RoomSelection *unlock);
 
     Coordinate &getPosition() { return m_position; }
     MarkerList &getMarkersList() { return m_markers; }
@@ -114,7 +108,6 @@ public:
     {
         return (greatestUsedId == INVALID_ROOMID) ? 0u : (greatestUsedId.asUint32() + 1u);
     }
-    int getMarkersCount() { return m_markers.count(); }
 
     void addMarker(InfoMark *im);
     void removeMarker(InfoMark *im);
@@ -149,10 +142,10 @@ public:
     void toggleExitFlag(const Coordinate &pos, ExitDirection dir, ExitFieldVariant var);
 
 public:
-    void setRoomField(const Coordinate &pos, const QVariant &flag, RoomField field);
-    QVariant getRoomField(const Coordinate &pos, RoomField field);
-    void toggleRoomFlag(const Coordinate &pos, uint flag, RoomField field);
-    bool getRoomFlag(const Coordinate &pos, uint flag, RoomField field);
+    [[deprecated]] void setRoomField(const Coordinate &pos, const QVariant &flag, RoomField field);
+    [[deprecated]] QVariant getRoomField(const Coordinate &pos, RoomField field);
+    [[deprecated]] void toggleRoomFlag(const Coordinate &pos, uint flag, RoomField field);
+    [[deprecated]] bool getRoomFlag(const Coordinate &pos, uint flag, RoomField field);
 
 signals:
     void log(const QString &, const QString &);
@@ -168,14 +161,10 @@ public slots:
 
 protected:
     std::map<const RoomSelection *, RoomSelection *> selections{};
-
     MarkerList m_markers{};
-
     // changed data?
     bool m_dataChanged = false;
-
     QString m_fileName{};
-
     Coordinate m_position{};
 };
 

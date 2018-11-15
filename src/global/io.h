@@ -85,6 +85,12 @@ public:
     explicit IOException(const std::string &s)
         : std::runtime_error(s)
     {}
+    virtual ~IOException() override;
+
+    IOException(IOException &&) = default;
+    IOException(const IOException &) = default;
+    IOException &operator=(IOException &&) = default;
+    IOException &operator=(const IOException &) = default;
 
 public:
     static IOException withCurrentErrno();

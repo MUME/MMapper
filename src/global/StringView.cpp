@@ -43,7 +43,7 @@ StringView::StringView(const QString &s) noexcept(false)
 
 QString StringView::toQString() const noexcept(false)
 {
-    return QString{(QChar *) begin_, size()};
+    return QString{begin_, size()};
 }
 
 QByteArray StringView::toQByteArray() const noexcept(false)
@@ -138,8 +138,9 @@ int StringView::countWords() const noexcept(false)
 std::vector<StringView> StringView::getWords() const noexcept(false)
 {
     const auto numWords = countWords();
+    assert(numWords >= 0);
     std::vector<StringView> result{};
-    result.reserve(numWords);
+    result.reserve(static_cast<size_t>(numWords));
 
     auto tmp = *this;
     tmp.trim();
@@ -154,8 +155,9 @@ std::vector<StringView> StringView::getWords() const noexcept(false)
 std::vector<QString> StringView::getWordsAsQStrings() const noexcept(false)
 {
     const auto numWords = countWords();
+    assert(numWords >= 0);
     std::vector<QString> result{};
-    result.reserve(numWords);
+    result.reserve(static_cast<size_t>(numWords));
 
     auto tmp = *this;
     tmp.trim();

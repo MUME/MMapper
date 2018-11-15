@@ -45,18 +45,30 @@ enum class MumeClockPrecision {
     MUMECLOCK_MINUTE
 };
 
-class MumeClock : public QObject
+class MumeClock final : public QObject
 {
     Q_OBJECT
 
     friend class TestClock;
 
 public:
-    explicit MumeClock(int mumeEpoch, QObject *parent = nullptr);
+    static constexpr const int NUM_MONTHS = 12;
+    struct DawnDusk
+    {
+        int dawnHour;
+        int duskHour;
+    };
+    static DawnDusk getDawnDusk(int month);
+
+public:
+    explicit MumeClock(int64_t mumeEpoch, QObject *parent = nullptr);
 
     explicit MumeClock(QObject *parent = nullptr);
 
-    MumeMoment getMumeMoment(int secsSinceUnixEpoch = -1);
+    MumeMoment getMumeMoment();
+
+    // TODO: #ifdef TEST?
+    MumeMoment getMumeMoment(int64_t secsSinceUnixEpoch);
 
     MumeClockPrecision getPrecision() { return m_precision; }
 
@@ -64,7 +76,7 @@ public:
 
     const QString toCountdown(const MumeMoment &moment);
 
-    int getMumeStartEpoch() { return m_mumeStartEpoch; }
+    int64_t getMumeStartEpoch() { return m_mumeStartEpoch; }
 
     enum class WestronMonthNames {
         UnknownWestronMonth = -1,
@@ -102,8 +114,11 @@ public:
 
     Q_ENUM(SindarinMonthNames)
 
-    static const std::array<int, 12> s_dawnHour;
-    static const std::array<int, 12> s_duskHour;
+private:
+    static const std::array<int, NUM_MONTHS> s_dawnHour;
+    static const std::array<int, NUM_MONTHS> s_duskHour;
+
+public:
     static const QMetaEnum s_westronMonthNames;
     static const QMetaEnum s_sindarinMonthNames;
     static const QHash<QString, MumeTime> m_stringTimeHash;
@@ -123,16 +138,16 @@ public slots:
 protected:
     void setPrecision(MumeClockPrecision state) { m_precision = state; }
 
-    void parseMumeTime(const QString &mumeTime, int secsSinceEpoch);
+    void parseMumeTime(const QString &mumeTime, int64_t secsSinceEpoch);
 
-    void parseClockTime(const QString &clockTime, int secsSinceEpoch);
+    void parseClockTime(const QString &clockTime, int64_t secsSinceEpoch);
 
-    void parseWeather(const QString &str, int secsSinceEpoch);
+    void parseWeather(const QString &str, int64_t secsSinceEpoch);
 
 private:
     MumeMoment &unknownTimeTick(MumeMoment &moment);
 
-    int m_mumeStartEpoch = 0;
+    int64_t m_mumeStartEpoch = 0;
     MumeClockPrecision m_precision{};
     int m_clockTolerance = 0;
 };

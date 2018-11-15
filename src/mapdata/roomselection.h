@@ -29,7 +29,7 @@
 
 #include <QMap>
 
-#include "../expandoracommon/roomrecipient.h"
+#include "../expandoracommon/RoomRecipient.h"
 #include "../global/roomid.h"
 
 class Room;
@@ -42,7 +42,6 @@ public:
         : m_admin(admin)
     {}
     void receiveRoom(RoomAdmin *admin, const Room *aRoom) override;
-    bool containsAll(const RoomSelection *other) const;
 
 private:
     RoomAdmin *m_admin = nullptr;

@@ -56,7 +56,7 @@ private:
 
 public:
     explicit InputWidget(QWidget *parent = nullptr);
-    ~InputWidget();
+    ~InputWidget() override;
 
     QSize sizeHint() const override;
 

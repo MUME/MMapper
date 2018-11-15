@@ -108,7 +108,7 @@ class CGroupServerCommunicator final : public CGroupCommunicator
 
 public:
     explicit CGroupServerCommunicator(Mmapper2Group *parent);
-    ~CGroupServerCommunicator();
+    ~CGroupServerCommunicator() override;
 
     virtual void renameConnection(const QByteArray &oldName, const QByteArray &newName) override;
 
@@ -144,7 +144,7 @@ class CGroupClientCommunicator final : public CGroupCommunicator
 
 public:
     explicit CGroupClientCommunicator(Mmapper2Group *parent);
-    ~CGroupClientCommunicator();
+    ~CGroupClientCommunicator() override;
 
 public slots:
     void errorInConnection(CGroupClient *connection, const QString &);

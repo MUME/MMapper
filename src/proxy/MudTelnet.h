@@ -35,7 +35,7 @@ class MudTelnet final : public AbstractTelnet
     Q_OBJECT
 public:
     explicit MudTelnet(QObject *parent);
-    ~MudTelnet() = default;
+    ~MudTelnet() override = default;
 
 public slots:
     void onAnalyzeMudStream(const QByteArray &);

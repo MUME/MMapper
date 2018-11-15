@@ -76,6 +76,7 @@ protected:
 class AbstractAction : public virtual FrontendAccessor
 {
 public:
+    virtual ~AbstractAction() override;
     virtual void preExec(RoomId) {}
 
     virtual void exec(RoomId id) = 0;
@@ -90,7 +91,7 @@ class MapAction
 public:
     virtual void schedule(MapFrontend *in) = 0;
 
-    virtual ~MapAction() {}
+    virtual ~MapAction();
 
 protected:
     virtual void exec() = 0;
@@ -107,7 +108,7 @@ public:
 
     void schedule(MapFrontend *in) override { executor->setFrontend(in); }
 
-    virtual ~SingleRoomAction() { delete executor; }
+    virtual ~SingleRoomAction() override { delete executor; }
 
 protected:
     virtual void exec() override

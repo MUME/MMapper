@@ -92,7 +92,7 @@ void FindRoomsDlg::findClicked()
     m_mapData->lookingForRooms(this, createEvent(CommandIdType::UNKNOWN, text, nullString, nullString, 0, 0));
     */
 
-    auto kind = pattern_kinds::ALL;
+    auto kind = pattern_kinds::ALL_BUT_EXITS;
     if (nameRadioButton->isChecked()) {
         kind = pattern_kinds::NAME;
     } else if (descRadioButton->isChecked()) {
@@ -183,19 +183,19 @@ void FindRoomsDlg::showSelectedRoom()
     itemDoubleClicked(resultTable->currentItem());
 }
 
-void FindRoomsDlg::itemDoubleClicked(QTreeWidgetItem *item)
+void FindRoomsDlg::itemDoubleClicked(QTreeWidgetItem *const inputItem)
 {
-    if (item == nullptr) {
+    if (inputItem == nullptr) {
         return;
     }
 
-    const auto id = RoomId{item->text(0).toUInt()};
+    const auto id = RoomId{inputItem->text(0).toUInt()};
     if (const Room *r = m_mapData->getRoom(id, m_roomSelection)) {
         Coordinate c = r->getPosition();
         emit center(c.x, c.y); // connects to MapWindow
     }
 
-    emit log("FindRooms", item->toolTip(0));
+    emit log("FindRooms", inputItem->toolTip(0));
     //  emit newRoomSelection(m_roomSelection);
 }
 

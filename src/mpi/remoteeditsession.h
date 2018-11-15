@@ -23,8 +23,8 @@
 **
 ************************************************************************/
 
-#ifndef _REMOTEEDITSESSION_H_
-#define _REMOTEEDITSESSION_H_
+#ifndef REMOTEEDITSESSION_H
+#define REMOTEEDITSESSION_H
 
 #include <algorithm>
 #include <QObject>
@@ -49,9 +49,9 @@ class RemoteEditSession : public QObject
 public:
     explicit RemoteEditSession(uint sessionId, int key, RemoteEdit *remoteEdit);
 
-    int getId() const { return m_sessionId; }
+    auto getId() const { return m_sessionId; }
 
-    int getKey() const { return m_key; }
+    auto getKey() const { return m_key; }
 
     bool isEditSession() const { return m_key != REMOTE_EDIT_VIEW_KEY; }
 
@@ -101,4 +101,4 @@ private:
     QScopedPointer<RemoteEditProcess> m_process;
 };
 
-#endif /* _REMOTEEDITSESSION_H_ */
+#endif /* REMOTEEDITSESSION_H */

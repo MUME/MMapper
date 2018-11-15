@@ -32,7 +32,7 @@
 #include <QString>
 #include <QtCore>
 
-#include "../expandoracommon/roomrecipient.h"
+#include "../expandoracommon/RoomRecipient.h"
 #include "../global/roomid.h"
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/mmapper2exit.h"
@@ -55,7 +55,7 @@ public:
 
     explicit ConnectionSelection(MapFrontend *, float mx, float my, int layer);
     explicit ConnectionSelection();
-    ~ConnectionSelection();
+    ~ConnectionSelection() override;
 
     void setFirst(MapFrontend *, float mx, float my, int layer);
     void setFirst(MapFrontend *mf, RoomId RoomId, ExitDirection dir);

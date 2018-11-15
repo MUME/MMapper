@@ -145,27 +145,147 @@ if(EXISTS ${GIT_EXECUTABLE})
     endif()
 endif()
 
+if (CMAKE_BUILD_TYPE MATCHES "[Dd][Ee][Bb][Uu][Gg]")
+    message(STATUS "Debug build type: ${CMAKE_BUILD_TYPE}")
+    set(MMAPPER_IS_DEBUG "YES")
+else()
+    message(STATUS "Release build type: ${CMAKE_BUILD_TYPE}")
+    set(MMAPPER_IS_DEBUG "NO")
+endif()
+
+if (MMAPPER_IS_DEBUG)
+    set(CMAKE_VERBOSE_MAKEFILE true)
+
+    # common options for gcc and clang
+    add_compile_options(-O0)
+    add_compile_options(-Wall -Wextra -pedantic)
+
+    # -g     = debugging in OS native format (also note: -g is ignored by the linker)
+    # -ggdb  = use gdb debugging format (defaults to -ggdb2)
+    # -ggdb3 = adds macro definitions
+    add_compile_options(-ggdb3)
+
+    # improved debugging experience
+    add_compile_options(-fno-omit-frame-pointer -fno-optimize-sibling-calls)
+    add_compile_options(-fno-inline -fno-inline-functions)
+
+    message(STATUS "Forcing QT assertions")
+    add_definitions(-DQT_FORCE_ASSERTS)
+
+    message(STATUS "Using _GLIBCXX_DEBUG")
+    add_definitions(-D_GLIBCXX_DEBUG) # c++ STL debugging
+endif()
+
 if(CMAKE_COMPILER_IS_GNUCXX)
-    set(CMAKE_CXX_FLAGS_DEBUG
-      "-ggdb3 -Wall -Wextra -Wunused-variable -Wno-long-long -Wno-unknown-pragmas -Wno-system-headers -Werror=reorder -Wparentheses -Werror=sign-compare -Wconversion -Werror=double-promotion -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls"
-      CACHE STRING "Debug builds CMAKE CXX flags" FORCE)
+    message(STATUS "Building with GCC (${CMAKE_CXX_COMPILER})")
+    if (MMAPPER_IS_DEBUG)
+        if (FALSE)
+            # This doesn't work on my machine. All the __asan_xxx symbols are undefined.
+            message("-- Building with GCC address sanitizer")
+            add_compile_options(-fsanitize=address)
+            set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+        endif()
+
+        add_compile_options(-Waddress)
+        add_compile_options(-Wcast-align)
+        add_compile_options(-Wcast-qual)
+        add_compile_options(-Wconversion)
+        add_compile_options(-Wendif-labels)
+        add_compile_options(-Wenum-compare)
+        add_compile_options(-Wdelete-non-virtual-dtor -Wnon-virtual-dtor)
+        add_compile_options(-Wignored-qualifiers)
+        add_compile_options(-Winit-self)
+        add_compile_options(-Wmultichar)
+        add_compile_options(-Wnarrowing)
+        add_compile_options(-Wnonnull)
+        add_compile_options(-Wnormalized)
+        add_compile_options(-Wold-style-cast)
+        add_compile_options(-Wparentheses)
+        add_compile_options(-Wpointer-arith)
+        add_compile_options(-Wredundant-decls)
+        add_compile_options(-Wreturn-local-addr)
+        add_compile_options(-Wreturn-type)
+        add_compile_options(-Wsequence-point)
+        add_compile_options(-Wsign-conversion)
+        add_compile_options(-Wsign-promo)
+        add_compile_options(-Wstrict-aliasing)
+        add_compile_options(-Wstrict-null-sentinel)
+        add_compile_options(-Wsuggest-override)
+        add_compile_options(-Wtype-limits)
+        add_compile_options(-Wundef)
+        add_compile_options(-Wuninitialized)
+        add_compile_options(-Wunused-result)
+        add_compile_options(-Wunused-variable)
+        add_compile_options(-Wvla)
+        add_compile_options(-Wwrite-strings)
+
+        # always ignored
+        add_compile_options(-Wno-system-headers)
+        # add_compile_options(-Wno-unknown-pragmas)
+        # add_compile_options(-Wno-deprecated-declarations)
+
+        # always errors
+        add_compile_options(-Werror=double-promotion)
+        add_compile_options(-Werror=reorder)
+        add_compile_options(-Werror=sign-compare)
+    endif(MMAPPER_IS_DEBUG)
     if(APPLE)
         # Minimum version of OS X that supports c++14 is 10.6 "Snow Leopard" with GCC
         set(CMAKE_OSX_DEPLOYMENT_TARGET "10.6")
     endif()
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(CMAKE_CXX_FLAGS_DEBUG "-g -fsanitize=undefined -fsanitize=address" CACHE STRING "Debug builds CMAKE CXX flags" FORCE)
+    message(STATUS "Building with Clang (${CMAKE_CXX_COMPILER})")
+    add_compile_options(-fno-standalone-debug)
+
+    if (MMAPPER_IS_DEBUG)
+        if (FALSE)
+            # segfaults in ASAN initializer on 32-bit Ubuntu 18.04.1 with clang 6.0
+            # note: apparently -fsanitize=address can't be used with gnu libc 2.25+
+            # Ubuntu 18.04.1 has libc 2.27.
+            message(STATUS "Building with Clang address sanitizer")
+            add_compile_options(-fsanitize=address)
+            set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+        endif()
+
+        if (TRUE)
+            message(STATUS "Building with Clang undefined behavior sanitizer")
+            add_compile_options(-fsanitize=undefined)
+            set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined")
+        endif()
+
+        if(TRUE)
+            add_compile_options(-Weverything)
+            add_compile_options(-Wno-c++98-c++11-compat-binary-literal) # never useful.
+            add_compile_options(-Wno-c++98-compat) # never useful.
+            add_compile_options(-Wno-c++98-compat-pedantic) # sometimes useful.
+            add_compile_options(-Wno-covered-switch-default) # this is never an error; it's just extra info.
+            # add_compile_options(-Wno-deprecated-declarations)
+            add_compile_options(-Wno-documentation)
+            add_compile_options(-Wno-global-constructors -Wno-exit-time-destructors) # these go together.
+            add_compile_options(-Wno-padded) # this isn't usually a mistake; it's just extra info.
+            add_compile_options(-Wno-redundant-parens) # MOCs spam this.
+            add_compile_options(-Wno-shadow-field-in-constructor -Wno-shadow-uncaptured-local) # common idioms
+        endif()
+
+        # These should probably be errors, but someone using gcc might add them and break the build.
+        add_compile_options(-Wcast-qual) # always a mistake unless you added the qualifier yourself.
+        add_compile_options(-Wconversion)
+        add_compile_options(-Wdouble-promotion)
+        add_compile_options(-Wfloat-conversion)
+        add_compile_options(-Wfloat-equal) # this is usually an error.
+        add_compile_options(-Winconsistent-missing-destructor-override)
+        add_compile_options(-Winconsistent-missing-override)
+        add_compile_options(-Wnewline-eof)
+        add_compile_options(-Wold-style-cast)
+        add_compile_options(-Wpedantic)
+        add_compile_options(-Wshorten-64-to-32)
+        add_compile_options(-Wsign-conversion) # can warn about hard-to-spot bugs.
+        add_compile_options(-Wunused-result) # required for c++17 [[nodiscard]]
+        add_compile_options(-Wweak-vtables) # can result in crashes for ODR violations.
+    endif(MMAPPER_IS_DEBUG)
     if(APPLE)
         # Minimum version of OS X that supports c++14 is 10.9 "Mavericks" with Clang
         set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9")
-    endif()
-endif()
-
-
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CMAKE_VERBOSE_MAKEFILE true)
-    if(CMAKE_COMPILER_IS_GNUCXX)
-        add_compile_options( $<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-D_GLIBCXX_DEBUG> )
     endif()
 endif()
 
@@ -196,6 +316,7 @@ add_subdirectory(src)
 add_subdirectory(appdata)
 add_subdirectory(tests)
 
+message("") # blank line
 include(FeatureSummary)
 add_feature_info("WITH_ZLIB" WITH_ZLIB "backwards compatability with old .mm2 saves")
 add_feature_info("WITH_OPENSSL" WITH_OPENSSL "encrypt connection to MUME with TLS")

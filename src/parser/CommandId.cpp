@@ -47,6 +47,12 @@ bool isDirectionNESWUD(const CommandIdType cmd)
     case CommandIdType::UP:
     case CommandIdType::DOWN:
         return true;
+
+    case CommandIdType::UNKNOWN:
+    case CommandIdType::LOOK:
+    case CommandIdType::FLEE:
+    case CommandIdType::SCOUT:
+    case CommandIdType::NONE:
     default:
         return false;
     }
@@ -62,6 +68,11 @@ bool isDirection7(const CommandIdType cmd)
     case CommandIdType::DOWN:
     case CommandIdType::UNKNOWN:
         return true;
+
+    case CommandIdType::LOOK:
+    case CommandIdType::FLEE:
+    case CommandIdType::SCOUT:
+    case CommandIdType::NONE:
     default:
         return false;
     }
@@ -79,6 +90,11 @@ ExitDirection getDirection(const CommandIdType cmd)
         CASE(UP);
         CASE(DOWN);
         CASE(UNKNOWN);
+
+    case CommandIdType::LOOK:
+    case CommandIdType::FLEE:
+    case CommandIdType::SCOUT:
+    case CommandIdType::NONE:
     default:
         return ExitDirection::NONE;
     }

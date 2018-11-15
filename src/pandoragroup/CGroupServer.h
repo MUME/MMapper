@@ -44,7 +44,7 @@ class CGroupServer final : public QTcpServer
 
 public:
     explicit CGroupServer(CGroupServerCommunicator *parent);
-    virtual ~CGroupServer();
+    virtual ~CGroupServer() override;
 
     void sendToAll(const QByteArray &);
     void sendToAllExceptOne(CGroupClient *exception, const QByteArray &);

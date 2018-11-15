@@ -43,10 +43,12 @@
 struct ParseTree::Pimpl
 {
     explicit Pimpl() = default;
-    virtual ~Pimpl() = default;
+    virtual ~Pimpl();
     virtual SharedRoomCollection insertRoom(ParseEvent &event) = 0;
     virtual void getRooms(AbstractRoomVisitor &stream, ParseEvent &event) = 0;
 };
+
+ParseTree::Pimpl::~Pimpl() = default;
 
 enum class MaskFlags : uint32_t {
     NONE = 0u,
@@ -59,7 +61,7 @@ enum class MaskFlags : uint32_t {
     NAME_DESC_TERRAIN = NAME | DESC | TERRAIN
 };
 
-DEFINE_ENUM_COUNT(MaskFlags, 8);
+DEFINE_ENUM_COUNT(MaskFlags, 8)
 
 static_assert(static_cast<uint32_t>(MaskFlags::NONE) == 0u, "");
 static_assert(static_cast<uint32_t>(MaskFlags::NAME) == 1u, "");
@@ -69,11 +71,6 @@ static_assert(static_cast<uint32_t>(MaskFlags::TERRAIN) == 4u, "");
 static_assert(static_cast<uint32_t>(MaskFlags::NAME_TERRAIN) == 5u, "");
 static_assert(static_cast<uint32_t>(MaskFlags::DESC_TERRAIN) == 6u, "");
 static_assert(static_cast<uint32_t>(MaskFlags::NAME_DESC_TERRAIN) == 7u, "");
-
-static inline constexpr MaskFlags operator&(MaskFlags lhs, MaskFlags rhs)
-{
-    return static_cast<MaskFlags>(static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs));
-}
 
 static MaskFlags getKeyMask(const ParseEvent &event)
 {
@@ -104,6 +101,12 @@ static bool isMatchedByTree(const MaskFlags mask)
     case MaskFlags::NAME_DESC: // Offline movement
     case MaskFlags::NAME_DESC_TERRAIN:
         return true;
+
+    case MaskFlags::NONE:
+    case MaskFlags::DESC:
+    case MaskFlags::TERRAIN:
+    case MaskFlags::NAME_TERRAIN:
+    case MaskFlags::DESC_TERRAIN:
     default:
         return false;
     }
@@ -188,7 +191,9 @@ public:
         : m_useVerboseKeys{useVerboseKeys}
     {}
 
-    SharedRoomCollection insertRoom(ParseEvent &event_)
+    virtual ~ParseHashMap() override;
+
+    SharedRoomCollection insertRoom(ParseEvent &event_) override
     {
         const auto &event = event_;
         assert(event.size() == 3);
@@ -213,7 +218,7 @@ public:
         return result;
     }
 
-    void getRooms(AbstractRoomVisitor &stream, ParseEvent &event_)
+    void getRooms(AbstractRoomVisitor &stream, ParseEvent &event_) override
     {
         const auto &event = event_;
 
@@ -239,6 +244,8 @@ public:
         return;
     }
 };
+
+ParseHashMap::~ParseHashMap() = default;
 
 ParseTree::ParseTree(const bool useVerboseKeys)
     : m_pimpl{std::unique_ptr<Pimpl>(static_cast<Pimpl *>(new ParseHashMap(useVerboseKeys)))}

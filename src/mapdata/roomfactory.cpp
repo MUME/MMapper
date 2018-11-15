@@ -27,7 +27,7 @@
 
 #include <QString>
 
-#include "../expandoracommon/abstractroomfactory.h"
+#include "../expandoracommon/AbstractRoomFactory.h"
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/parseevent.h"
@@ -90,9 +90,11 @@ static int wordDifference(StringView a, StringView b)
 
 ComparisonResult RoomFactory::compareStrings(const QString &room,
                                              const QString &event,
-                                             uint prevTolerance,
-                                             const bool updated) const
+                                             int prevTolerance,
+                                             const bool updated)
 {
+    assert(prevTolerance >= 0);
+    prevTolerance = std::max(0, prevTolerance);
     prevTolerance *= room.size();
     prevTolerance /= 100;
     int tolerance = prevTolerance;
@@ -129,7 +131,7 @@ ComparisonResult RoomFactory::compareStrings(const QString &room,
 
 ComparisonResult RoomFactory::compare(const Room *const room,
                                       const ParseEvent &event,
-                                      const uint tolerance) const
+                                      const int tolerance) const
 {
     const QString name = room->getName();
     const QString staticDesc = room->getStaticDescription();
@@ -192,7 +194,7 @@ ComparisonResult RoomFactory::compare(const Room *const room,
 
 ComparisonResult RoomFactory::compareWeakProps(const Room *const room,
                                                const ParseEvent &event,
-                                               uint /*tolerance*/) const
+                                               int /*tolerance*/) const
 {
     bool exitsValid = room->isUpToDate();
     // REVISIT: Should tolerance be an integer given known 'weak' params like hidden

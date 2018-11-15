@@ -44,9 +44,12 @@ public:
     static constexpr const struct TagSkip
     {
     } tagSkip{};
-    explicit Property(TagSkip)
-        : m_skipped{true}
-    {}
+    explicit Property(TagSkip);
+    virtual ~Property() override;
+    Property(Property &&) = default;
+    Property(const Property &) = default;
+    Property &operator=(Property &&) = default;
+    Property &operator=(const Property &) = default;
 
 private:
     bool m_skipped = false;

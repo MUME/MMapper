@@ -32,8 +32,8 @@
 class AbstractRoomVisitor
 {
 public:
-    explicit AbstractRoomVisitor() = default;
-    virtual ~AbstractRoomVisitor() = default;
+    explicit AbstractRoomVisitor();
+    virtual ~AbstractRoomVisitor();
 
 public:
     virtual void visit(const Room *) = 0;

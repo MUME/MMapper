@@ -50,7 +50,7 @@ bool RoomFilter::parseRoomFilter(const QString &line, RoomFilter &output)
         } else if (kindstr == "-note" || kindstr == "-n") {
             kind = pattern_kinds::NOTE;
         } else if (kindstr == "-all" || kindstr == "-a") {
-            kind = pattern_kinds::ALL;
+            kind = pattern_kinds::ALL_BUT_EXITS;
         } else {
             return false;
         }
@@ -64,32 +64,50 @@ bool RoomFilter::parseRoomFilter(const QString &line, RoomFilter &output)
     return true;
 }
 
-bool RoomFilter::filter(const Room *const r) const
+bool RoomFilter::filter(const Room *const pr) const
 {
-    deref(r);
-    if (kind == pattern_kinds::ALL) {
-        /* TODO: inline each separate case instead of trying to use deprecated QVariant interface */
-        for (int i = 0; i < NUM_ROOM_FIELDS; ++i) {
-            const auto &elt = r->at(static_cast<RoomField>(i));
-            if (elt.toString().contains(pattern, cs)) {
-                return true;
+    auto &r = deref(pr);
+
+    const auto filter_kind = [this](const Room &r, const pattern_kinds pat) -> bool {
+        switch (pat) {
+        case pattern_kinds::ALL_BUT_EXITS:
+            throw std::invalid_argument("pat");
+
+        case pattern_kinds::DESC:
+            return r.getStaticDescription().contains(pattern, cs);
+
+        case pattern_kinds::DYN_DESC:
+            return r.getDynamicDescription().contains(pattern, cs);
+
+        case pattern_kinds::NAME:
+            return r.getName().contains(pattern, cs);
+
+        case pattern_kinds::NOTE:
+            return r.getNote().contains(pattern, cs);
+
+        case pattern_kinds::EXITS:
+            for (const auto &e : r.getExitsList()) {
+                if (e.getDoorName().contains(pattern, cs)) {
+                    return true;
+                }
             }
+            return false;
+
+        case pattern_kinds::NONE:
+            return false;
         }
-    } else if (kind == pattern_kinds::DESC) {
-        return r->getStaticDescription().contains(pattern, cs);
-    } else if (kind == pattern_kinds::DYN_DESC) {
-        return r->getDynamicDescription().contains(pattern, cs);
-    } else if (kind == pattern_kinds::NAME) {
-        return r->getName().contains(pattern, cs);
-    } else if (kind == pattern_kinds::NOTE) {
-        return r->getNote().contains(pattern, cs);
-    } else if (kind == pattern_kinds::EXITS) {
-        ExitsList exits = r->getExitsList();
-        for (const auto &e : exits) {
-            if (e.getDoorName().contains(pattern, cs)) {
+        return false;
+    };
+
+    if (kind == pattern_kinds::ALL_BUT_EXITS) {
+        for (auto pat : {pattern_kinds::DESC,
+                         pattern_kinds::DYN_DESC,
+                         pattern_kinds::NAME,
+                         pattern_kinds::NOTE})
+            if (filter_kind(r, pat))
                 return true;
-            }
-        }
+        return false;
+    } else {
+        return filter_kind(r, this->kind);
     }
-    return false;
 }

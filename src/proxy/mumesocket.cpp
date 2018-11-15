@@ -59,6 +59,28 @@ void MumeSocket::onError2(QAbstractSocket::SocketError e, const QString &errorSt
         errorStr += "\r\n\r\n"
                     "Uncheck TLS encryption under the MMapper preferences at your own risk.";
         break;
+
+    case QAbstractSocket::ConnectionRefusedError:
+    case QAbstractSocket::RemoteHostClosedError:
+    case QAbstractSocket::HostNotFoundError:
+    case QAbstractSocket::SocketAccessError:
+    case QAbstractSocket::SocketResourceError:
+    case QAbstractSocket::SocketTimeoutError:
+    case QAbstractSocket::DatagramTooLargeError:
+    case QAbstractSocket::NetworkError:
+    case QAbstractSocket::AddressInUseError:
+    case QAbstractSocket::SocketAddressNotAvailableError:
+    case QAbstractSocket::UnsupportedSocketOperationError:
+    case QAbstractSocket::UnfinishedSocketOperationError:
+    case QAbstractSocket::ProxyAuthenticationRequiredError:
+    case QAbstractSocket::ProxyConnectionRefusedError:
+    case QAbstractSocket::ProxyConnectionClosedError:
+    case QAbstractSocket::ProxyConnectionTimeoutError:
+    case QAbstractSocket::ProxyNotFoundError:
+    case QAbstractSocket::ProxyProtocolError:
+    case QAbstractSocket::OperationError:
+    case QAbstractSocket::TemporaryError:
+    case QAbstractSocket::UnknownSocketError:
     default:
         break;
     }
@@ -205,6 +227,12 @@ void MumeSslSocket::checkTimeout()
         m_socket->abort();
         onError2(QAbstractSocket::HostNotFoundError, "Could not find host!");
         return;
+
+    case QAbstractSocket::UnconnectedState:
+    case QAbstractSocket::ConnectingState:
+    case QAbstractSocket::BoundState:
+    case QAbstractSocket::ListeningState:
+    case QAbstractSocket::ClosingState:
     default:
         m_socket->abort();
         onError2(QAbstractSocket::SocketTimeoutError, "Connection timed out!");

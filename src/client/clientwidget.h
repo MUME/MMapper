@@ -48,7 +48,7 @@ private:
 
 public:
     explicit ClientWidget(QWidget *parent = nullptr);
-    ~ClientWidget();
+    ~ClientWidget() override;
 
     QSize minimumSizeHint() const override;
     QSize sizeHint() const override;

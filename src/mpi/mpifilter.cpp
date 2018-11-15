@@ -42,6 +42,14 @@ static bool endsInLinefeed(TelnetDataType type)
     case TelnetDataType::LF:
     case TelnetDataType::CRLF:
         return true;
+    case TelnetDataType::PROMPT:
+    case TelnetDataType::MENU_PROMPT:
+    case TelnetDataType::LOGIN:
+    case TelnetDataType::LOGIN_PASSWORD:
+    case TelnetDataType::LFCR:
+    case TelnetDataType::DELAY:
+    case TelnetDataType::SPLIT:
+    case TelnetDataType::UNKNOWN:
     default:
         return false;
     }

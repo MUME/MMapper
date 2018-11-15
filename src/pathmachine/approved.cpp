@@ -25,9 +25,9 @@
 
 #include "approved.h"
 
-#include "../expandoracommon/abstractroomfactory.h"
+#include "../expandoracommon/AbstractRoomFactory.h"
+#include "../expandoracommon/RoomAdmin.h"
 #include "../expandoracommon/room.h"
-#include "../expandoracommon/roomadmin.h"
 #include "../mapfrontend/mapaction.h"
 
 void Approved::receiveRoom(RoomAdmin *sender, const Room *perhaps)

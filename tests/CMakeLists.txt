@@ -2,7 +2,7 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/../src/clock
 	${CMAKE_CURRENT_SOURCE_DIR}/../src/expandoracommon
 	${CMAKE_CURRENT_SOURCE_DIR}/../src/parser
-        ${CMAKE_CURRENT_SOURCE_DIR}/../src/global
+	${CMAKE_CURRENT_SOURCE_DIR}/../src/global
 )
 
 # Clock
@@ -24,6 +24,8 @@ file(GLOB_RECURSE expandoracommon_SRCS
     ../src/parser/CommandId.h
     ../src/mapdata/ExitDirection.cpp
     ../src/mapdata/ExitDirection.h
+    ../src/global/NullPointerException.cpp
+    ../src/global/NullPointerException.h
     )
 set(TestExpandoraCommon_SRCS testexpandoracommon.cpp)
 add_executable(TestExpandoraCommon ${TestExpandoraCommon_SRCS} ${expandoracommon_SRCS})
@@ -41,6 +43,8 @@ set(parser_SRCS
     ../src/expandoracommon/property.h
     ../src/mapdata/ExitDirection.cpp
     ../src/mapdata/ExitDirection.h
+    ../src/global/NullPointerException.cpp
+    ../src/global/NullPointerException.h
     )
 set(TestParser_SRCS testparser.cpp)
 add_executable(TestParser ${TestParser_SRCS} ${parser_SRCS})

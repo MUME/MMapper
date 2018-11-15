@@ -72,7 +72,7 @@ class MumeSslSocket : public MumeSocket
     Q_OBJECT
 public:
     explicit MumeSslSocket(QObject *parent);
-    ~MumeSslSocket();
+    ~MumeSslSocket() override;
 
     void disconnectFromHost() override;
     void connectToHost() override;

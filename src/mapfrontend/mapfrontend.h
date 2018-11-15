@@ -35,9 +35,9 @@
 #include <QString>
 #include <QtCore>
 
+#include "../expandoracommon/RoomAdmin.h"
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/parseevent.h"
-#include "../expandoracommon/roomadmin.h"
 #include "../global/roomid.h"
 #include "ParseTree.h"
 #include "map.h"
@@ -85,7 +85,7 @@ protected:
 
 public:
     explicit MapFrontend(AbstractRoomFactory *factory, QObject *parent = nullptr);
-    virtual ~MapFrontend();
+    virtual ~MapFrontend() override;
     virtual void clear();
     void block();
     void unblock();

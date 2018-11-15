@@ -30,19 +30,14 @@
 #include "../display/mapcanvas.h"
 #include "../mapfrontend/AbstractRoomVisitor.h"
 
-//class MapCanvas;
-
 class DrawStream final : public AbstractRoomVisitor
 {
 public:
     explicit DrawStream(MapCanvasRoomDrawer &in,
                         const RoomIndex &in_rooms,
-                        const RoomLocks &in_locks)
-        : canvas(in)
-        , rooms(in_rooms)
-        , locks(in_locks)
-    {}
-    virtual void visit(const Room *room) override { canvas.drawRoom(room, rooms, locks); }
+                        const RoomLocks &in_locks);
+    virtual ~DrawStream() override;
+    virtual void visit(const Room *room) override;
 
 private:
     MapCanvasRoomDrawer &canvas;

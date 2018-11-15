@@ -121,15 +121,6 @@ public:
     void removeValid() { value &= ~static_cast<uint32_t>(EXITS_FLAGS_VALID); }
 
 public:
-    [[deprecated]] ExitsFlagsType &operator|=(ExitFlagExt flag)
-    {
-        if (flag != EXITS_FLAGS_VALID)
-            throw std::invalid_argument("flag");
-        setValid();
-        return *this;
-    }
-
-public:
     void reset() { value = 0u; }
 };
 

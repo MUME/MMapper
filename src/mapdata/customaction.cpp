@@ -30,7 +30,7 @@
 #include <stdexcept>
 #include <utility>
 
-#include "../expandoracommon/abstractroomfactory.h"
+#include "../expandoracommon/AbstractRoomFactory.h"
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
 #include "../global/Flags.h"
@@ -171,13 +171,13 @@ void MergeRelative::exec(const RoomId id)
         const ExitsList &exits = source->getExitsList();
         for (const auto dir : enums::makeCountingIterator<ExitDirection>(exits)) {
             const Exit &e = exits[dir];
-            for (const auto oeid : e.inRange()) {
+            for (const auto &oeid : e.inRange()) {
                 if (Room *const oe = roomIndex(oeid)) {
                     oe->exit(opposite(dir)).addOut(oid);
                     target->exit(dir).addIn(oeid);
                 }
             }
-            for (const auto oeid : e.outRange()) {
+            for (const auto &oeid : e.outRange()) {
                 if (Room *const oe = roomIndex(oeid)) {
                     oe->exit(opposite(dir)).addIn(oid);
                     target->exit(dir).addOut(oeid);
@@ -251,28 +251,6 @@ void ConnectToNeighbours::connectRooms(Room *const center,
     }
 }
 
-void DisconnectFromNeighbours::exec(const RoomId id)
-{
-    if (Room *room = roomIndex(id)) {
-        ExitsList &exits = room->getExitsList();
-
-        for (auto dir : enums::makeCountingIterator<ExitDirection>(exits)) {
-            Exit &e = exits[dir];
-            for (auto idx : e.inRange()) {
-                if (Room *other = roomIndex(idx)) {
-                    other->exit(opposite(dir)).removeOut(id);
-                }
-            }
-            for (auto idx : e.outRange()) {
-                if (Room *other = roomIndex(idx)) {
-                    other->exit(opposite(dir)).removeIn(id);
-                }
-            }
-            e.removeAll();
-        }
-    }
-}
-
 ModifyRoomFlags::ModifyRoomFlags(const uint in_flags,
                                  const RoomField in_fieldNum,
                                  const FlagModifyMode in_mode)
@@ -306,10 +284,6 @@ void ModifyRoomFlags::exec(const RoomId id)
     }
 }
 
-UpdateExitField::UpdateExitField(const ExitFieldVariant &in_update, const ExitDirection in_dir)
-    : update(in_update)
-    , dir(in_dir)
-{}
 UpdateExitField::UpdateExitField(const DoorName &update, const ExitDirection dir)
     : update{update}
     , dir{dir}
@@ -319,7 +293,19 @@ void UpdateExitField::exec(const RoomId id)
 {
     if (Room *room = roomIndex(id)) {
         Exit &ex = room->exit(dir);
-        ex.setField(update);
+        switch (update.getType()) {
+        case ExitField::DOOR_NAME:
+            ex.setDoorName(update.getDoorName());
+            break;
+
+        case ExitField::EXIT_FLAGS:
+            ex.setExitFlags(update.getExitFlags());
+            break;
+
+        case ExitField::DOOR_FLAGS:
+            ex.setDoorFlags(update.getDoorFlags());
+            break;
+        }
     }
 }
 

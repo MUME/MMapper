@@ -73,6 +73,7 @@ void PathMachine::setCurrentRoom(const RoomId id, bool update)
     emit lookingForRooms(forced, id);
     releaseAllPaths();
     if (const Room *perhaps = forced.oneMatch()) {
+        // WARNING: This copies the current values of the room.
         mostLikelyRoom = *perhaps;
         emit playerMoved(mostLikelyRoom.getPosition());
         state = PathState::APPROVED;

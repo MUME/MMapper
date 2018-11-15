@@ -39,7 +39,7 @@ public:
     double multipleConnectionsPenalty;
     double correctPositionBonus;
     double maxPaths;
-    uint matchingTolerance;
+    int matchingTolerance;
     uint maxSkipped;
     ~PathParameters() {}
 };

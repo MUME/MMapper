@@ -41,7 +41,7 @@ class MumeClockWidget : public QWidget, private Ui::MumeClockWidget
 {
     Q_OBJECT
 public:
-    explicit MumeClockWidget(MumeClock *clock = 0, QWidget *parent = nullptr);
+    explicit MumeClockWidget(MumeClock *clock = nullptr, QWidget *parent = nullptr);
     ~MumeClockWidget();
 
 public slots:

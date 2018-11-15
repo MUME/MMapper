@@ -25,9 +25,9 @@
 
 #include "roomlocker.h"
 
-#include "../expandoracommon/abstractroomfactory.h"
+#include "../expandoracommon/AbstractRoomFactory.h"
+#include "../expandoracommon/RoomRecipient.h"
 #include "../expandoracommon/room.h"
-#include "../expandoracommon/roomrecipient.h"
 #include "mapfrontend.h"
 
 RoomLocker::RoomLocker(RoomRecipient &forward,
@@ -39,6 +39,8 @@ RoomLocker::RoomLocker(RoomRecipient &forward,
     , factory(in_factory)
     , comparator(compare)
 {}
+
+RoomLocker::~RoomLocker() = default;
 
 void RoomLocker::visit(const Room *room)
 {

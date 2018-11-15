@@ -31,40 +31,84 @@
 
 #include "../global/roomid.h"
 
+#define KEY static constexpr const char *const
+KEY playerDataKey = "playerData";
+
+KEY nameKey = "name";
+KEY roomKey = "room";
+KEY colorKey = "color";
+KEY stateKey = "state";
+
+#undef KEY
+
 CGroupChar::CGroupChar() = default;
 CGroupChar::~CGroupChar() = default;
+
+CGroupLocalChar::~CGroupLocalChar() = default;
 
 const QVariantMap CGroupChar::toVariantMap() const
 {
     QVariantMap playerData;
 
-    playerData["name"] = name;
-    playerData["color"] = color.name();
+    playerData[nameKey] = name;
+    playerData[colorKey] = color.name();
     playerData["hp"] = hp;
     playerData["maxhp"] = maxhp;
     playerData["mana"] = mana;
     playerData["maxmana"] = maxmana;
     playerData["moves"] = moves;
     playerData["maxmoves"] = maxmoves;
-    playerData["state"] = static_cast<int>(state);
-    playerData["room"] = pos.asUint32();
+    playerData[stateKey] = static_cast<int>(state);
+    playerData[roomKey] = pos.asUint32();
 
     QVariantMap root;
-    root["playerData"] = playerData;
+    root[playerDataKey] = playerData;
     return root;
 }
 
+struct QuotedString final
+{
+    QString str;
+    explicit QuotedString(QString input)
+        : str{std::move(input)}
+    {}
+    friend QDebug &operator<<(QDebug &debug, const QuotedString &q)
+    {
+        debug.quote();
+        debug << q.str;
+        debug.noquote();
+        return debug;
+    }
+};
+
 bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
 {
-    if (!data.contains("playerData") || !data["playerData"].canConvert(QMetaType::QVariantMap)) {
-        qWarning() << "Unable to find 'playerData' in map" << data;
+    if (!data.contains(playerDataKey) || !data[playerDataKey].canConvert(QMetaType::QVariantMap)) {
+        qWarning() << "Unable to find" << QuotedString(playerDataKey) << "in map" << data;
         return false;
     }
-    const QVariantMap &playerData = data["playerData"].toMap();
+    const QVariantMap &playerData = data[playerDataKey].toMap();
 
     bool updated = false;
-    if (playerData.contains("room") && playerData["room"].canConvert(QMetaType::UInt)) {
-        const auto newpos = RoomId{static_cast<uint32_t>(playerData["room"].toUInt())};
+    if (playerData.contains(roomKey) && playerData[roomKey].canConvert(QMetaType::UInt)) {
+        const uint32_t i = playerData[roomKey].toUInt();
+
+        // FIXME: Using a room# assumes everyone has _exactly_ the same static map;
+        // if anyone in the group modifies their map, they will report a room #
+        // that does not exist in anyone else's map. And if two different users
+        // each modify their maps, they'll be reported as being in the same room?
+        // Instead, this should serialize the room coordinates + name/desc/exits.
+
+        // NOTE: We don't have access to the map here, so we can't verify the room #.
+        const auto newpos = [i]() {
+            auto newpos = RoomId{i};
+            if (newpos == INVALID_ROOMID) {
+                qWarning() << "Invalid room changed to default room.";
+                newpos = DEFAULT_ROOMID;
+            }
+            return newpos;
+        }();
+
         if (newpos != pos) {
             updated = true;
             pos = newpos;
@@ -85,57 +129,96 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
 
     TRY_UPDATE_STRING(name);
 
-    if (playerData.contains("color") && playerData["color"].canConvert(QMetaType::QString)) {
-        const QString &str = playerData["color"].toString();
+    if (playerData.contains(colorKey) && playerData[colorKey].canConvert(QMetaType::QString)) {
+        const QString &str = playerData[colorKey].toString();
         if (str != color.name()) {
             updated = true;
             color = QColor(str);
+            if (str != color.name())
+                qWarning() << "Round trip error on color" << QuotedString(str) << "vs" << color;
         }
     }
 
     const auto tryUpdateInt = [&playerData, &updated](const char *const attr, int &n) {
         if (playerData.contains(attr) && playerData[attr].canConvert(QMetaType::Int)) {
-            const auto i = playerData[attr].toInt();
+            const auto i = [&playerData, attr]() {
+                auto i = playerData[attr].toInt();
+                if (i < 0) {
+                    qWarning() << "[tryUpdateInt] Input" << attr << "(" << i
+                               << ") has been raised to 0.";
+                    i = 0;
+                }
+                return i;
+            }();
+
             if (i != n) {
                 updated = true;
                 n = i;
             }
         }
     };
-#define TRY_UPDATE_INT(n) tryUpdateInt(#n, (n))
 
-    TRY_UPDATE_INT(hp);
-    TRY_UPDATE_INT(maxhp);
-    TRY_UPDATE_INT(mana);
-    TRY_UPDATE_INT(maxmana);
-    TRY_UPDATE_INT(moves);
-    TRY_UPDATE_INT(maxmoves);
+    const auto boundsCheck =
+        [&updated](const char *const xname, auto &x, const char *const maxxname, auto &maxx) {
+            if (maxx < 0) {
+                qWarning() << "[boundsCheck]" << QuotedString(maxxname) << "(" << maxx
+                           << ") has been raised to 0.";
+                maxx = 0;
+                updated = true;
+            }
+            if (x > maxx) {
+                qWarning() << "[boundsCheck]" << QuotedString(xname) << "(" << x
+                           << ") has been clamped to " << maxxname << "(" << maxx << ").";
+                x = maxx;
+                updated = true;
+            }
+        };
 
-    if (playerData.contains("state") && playerData["state"].canConvert(QMetaType::Int)) {
-        const auto newState = static_cast<CharacterStates>(playerData["state"].toInt());
+#define UPDATE_AND_BOUNDS_CHECK(n) \
+    do { \
+        tryUpdateInt(#n, (n)); \
+        tryUpdateInt(("max" #n), (max##n)); \
+        boundsCheck(#n, (n), ("max" #n), (max##n)); \
+    } while (0)
+
+    UPDATE_AND_BOUNDS_CHECK(hp);
+    UPDATE_AND_BOUNDS_CHECK(mana);
+    UPDATE_AND_BOUNDS_CHECK(moves);
+
+    const auto setState = [&state = this->state, &updated](const CharacterStates newState) {
         if (newState != state) {
             updated = true;
             state = newState;
         }
+    };
+
+    if (playerData.contains(stateKey) && playerData[stateKey].canConvert(QMetaType::Int)) {
+        const int n = playerData[stateKey].toInt();
+        if (n < static_cast<int>(CharacterStates::NORMAL) || n > MAX_STATE) {
+            qWarning() << "Invalid input state (" << n << ") is changed to NORMAL.";
+            setState(CharacterStates::NORMAL);
+        } else {
+            setState(static_cast<CharacterStates>(n));
+        }
     }
     return updated;
 
-#undef TRY_UPDATE_INT
+#undef UPDATE_AND_BOUNDS_CHECK
 #undef TRY_UPDATE_STRING
 }
 
 QByteArray CGroupChar::getNameFromVariantMap(const QVariantMap &data)
 {
-    if (!data.contains("playerData") || !data["playerData"].canConvert(QMetaType::QVariantMap)) {
-        qWarning() << "Unable to find 'playerData' in map" << data;
+    if (!data.contains(playerDataKey) || !data[playerDataKey].canConvert(QMetaType::QVariantMap)) {
+        qWarning() << "Unable to find" << QuotedString(playerDataKey) << "in map" << data;
         return "";
     }
 
-    const QVariantMap &playerData = data["playerData"].toMap();
-    if (!playerData.contains("name") || !playerData["name"].canConvert(QMetaType::QByteArray)) {
-        qWarning() << "Unable to find 'name' in map" << playerData;
+    const QVariantMap &playerData = data[playerDataKey].toMap();
+    if (!playerData.contains(nameKey) || !playerData[nameKey].canConvert(QMetaType::QByteArray)) {
+        qWarning() << "Unable to find" << QuotedString(nameKey) << "in map" << playerData;
         return "";
     }
 
-    return playerData["name"].toByteArray();
+    return playerData[nameKey].toByteArray();
 }

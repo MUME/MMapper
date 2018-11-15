@@ -88,7 +88,7 @@ void RemoteEdit::cancel(const RemoteEditSession *session)
         emit sendToSocket(buffer);
     }
 
-    int sessionId = session->getId();
+    auto sessionId = session->getId();
     removeSession(sessionId);
 }
 

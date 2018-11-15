@@ -30,7 +30,7 @@
 #include <list>
 #include <QtGlobal>
 
-#include "../expandoracommon/roomrecipient.h"
+#include "../expandoracommon/RoomRecipient.h"
 
 class Path;
 class PathParameters;
@@ -51,7 +51,7 @@ public:
     explicit Syncing(PathParameters &p, std::list<Path *> *paths, RoomSignalHandler *signaler);
     void receiveRoom(RoomAdmin *, const Room *) override;
     std::list<Path *> *evaluate();
-    ~Syncing();
+    ~Syncing() override;
 
 public:
     Syncing() = delete;

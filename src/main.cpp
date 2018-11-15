@@ -39,14 +39,19 @@
 // (presumably not in the "root" src/ directory?)
 struct ISplash
 {
-    virtual ~ISplash() = default;
+    virtual ~ISplash();
     virtual void finish(QWidget *) = 0;
 };
 
+ISplash::~ISplash() = default;
+
 struct FakeSplash final : public ISplash
 {
-    void finish(QWidget *) final {}
+    virtual ~FakeSplash() override;
+    virtual void finish(QWidget *) final override {}
 };
+
+FakeSplash::~FakeSplash() = default;
 
 class Splash final : public ISplash
 {
@@ -63,9 +68,12 @@ public:
         splash.showMessage(message, Qt::AlignBottom | Qt::AlignRight, Qt::yellow);
         splash.show();
     }
+    virtual ~Splash() override;
 
-    void finish(QWidget *w) { splash.finish(w); }
+    void finish(QWidget *w) override { splash.finish(w); }
 };
+
+Splash::~Splash() = default;
 
 static void tryUseHighDpi(QApplication &app)
 {

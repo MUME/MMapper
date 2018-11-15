@@ -37,16 +37,15 @@ ExitFieldVariant::ExitFieldVariant(const ExitFieldVariant &rhs)
     switch (type) {
     case ExitField::DOOR_NAME:
         new (storage) DoorName(rhs.getDoorName());
-        break;
+        return;
     case ExitField::EXIT_FLAGS:
         new (storage) ExitFlags(rhs.getExitFlags());
-        break;
+        return;
     case ExitField::DOOR_FLAGS:
         new (storage) DoorFlags(rhs.getDoorFlags());
-        break;
-    default:
-        throw std::runtime_error("bad type");
+        return;
     }
+    throw std::runtime_error("bad type");
 }
 
 ExitFieldVariant &ExitFieldVariant::operator=(const ExitFieldVariant &rhs)

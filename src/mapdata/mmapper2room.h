@@ -59,7 +59,7 @@ enum class RoomTerrainType {
 static constexpr const size_t NUM_ROOM_TERRAIN_TYPES = static_cast<size_t>(RoomTerrainType::RANDOM)
                                                        + 1u;
 static_assert(NUM_ROOM_TERRAIN_TYPES == 17, "");
-DEFINE_ENUM_COUNT(RoomTerrainType, NUM_ROOM_TERRAIN_TYPES);
+DEFINE_ENUM_COUNT(RoomTerrainType, NUM_ROOM_TERRAIN_TYPES)
 
 enum class RoomAlignType { UNDEFINED = 0, GOOD, NEUTRAL, EVIL };
 static constexpr const int NUM_ALIGN_TYPES = 4;
@@ -93,7 +93,7 @@ enum class RoomMobFlag {
 };
 static constexpr const int NUM_ROOM_MOB_FLAGS = static_cast<int>(RoomMobFlag::ANY) + 1;
 static_assert(NUM_ROOM_MOB_FLAGS == 15, "");
-DEFINE_ENUM_COUNT(RoomMobFlag, NUM_ROOM_MOB_FLAGS);
+DEFINE_ENUM_COUNT(RoomMobFlag, NUM_ROOM_MOB_FLAGS)
 
 class RoomMobFlags final : public enums::Flags<RoomMobFlags, RoomMobFlag, uint32_t>
 {
@@ -123,7 +123,7 @@ enum class RoomLoadFlag {
 };
 static constexpr const int NUM_ROOM_LOAD_FLAGS = static_cast<int>(RoomLoadFlag::STABLE) + 1;
 static_assert(NUM_ROOM_LOAD_FLAGS == 19, "");
-DEFINE_ENUM_COUNT(RoomLoadFlag, NUM_ROOM_LOAD_FLAGS);
+DEFINE_ENUM_COUNT(RoomLoadFlag, NUM_ROOM_LOAD_FLAGS)
 
 class RoomLoadFlags final : public enums::Flags<RoomLoadFlags, RoomLoadFlag, uint32_t>
 {
@@ -144,15 +144,15 @@ enum class RoomField {
     ALIGN_TYPE,
     RIDABLE_TYPE,
     SUNDEATH_TYPE,
-    KEYWORDS,
+    RESERVED,
     LAST
 };
 
-static constexpr const int NUM_ROOM_FIELDS = static_cast<int>(RoomField::KEYWORDS) + 1;
+static constexpr const int NUM_ROOM_FIELDS = static_cast<int>(RoomField::RESERVED) + 1;
 static_assert(NUM_ROOM_FIELDS == static_cast<int>(RoomField::LAST), "");
 static_assert(NUM_ROOM_FIELDS == 13, "");
 static constexpr const int NUM_ROOM_PROPS = NUM_ROOM_FIELDS;
-DEFINE_ENUM_COUNT(RoomField, NUM_ROOM_FIELDS);
+DEFINE_ENUM_COUNT(RoomField, NUM_ROOM_FIELDS)
 class RoomFields : public enums::Flags<RoomFields, RoomField, uint16_t>
 {
     using Flags::Flags;

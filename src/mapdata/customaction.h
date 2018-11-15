@@ -95,7 +95,7 @@ public:
 
     void schedule(MapFrontend *in) override { executor->setFrontend(in); }
 
-    virtual ~GroupMapAction() { delete executor; }
+    virtual ~GroupMapAction() override { delete executor; }
 
 protected:
     virtual void exec() override;
@@ -146,12 +146,6 @@ private:
     void connectRooms(Room *center, Coordinate &otherPos, ExitDirection dir, RoomId cid);
 };
 
-class DisconnectFromNeighbours final : public ExitsAffecter
-{
-public:
-    virtual void exec(RoomId id) override;
-};
-
 class ModifyRoomFlags final : public AbstractAction
 {
 public:
@@ -169,7 +163,6 @@ protected:
 class UpdateExitField final : public AbstractAction
 {
 public:
-    explicit UpdateExitField(const ExitFieldVariant &update, ExitDirection dir);
     explicit UpdateExitField(const DoorName &update, ExitDirection dir);
 
     virtual void exec(RoomId id) override;

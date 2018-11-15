@@ -86,8 +86,6 @@ private:
         RoomAlignType alignType{};
         RoomRidableType ridableType{};
         RoomSundeathType sundeathType{};
-        /* REVISIT: is this actually used anywhere? */
-        QString keywords{};
     };
 
 private:
@@ -150,22 +148,13 @@ public:
     void setSundeathType(RoomSundeathType value);
 
 public:
-    [[deprecated]] QVariant at(const RoomField field) const {
-#define CASE_STR(UPPER, camelCase) \
-    do { \
-    case RoomField::UPPER: \
-        return fields.camelCase; \
-    } while (false)
+    [[deprecated]] uint32_t at(const RoomField field) const {
 #define CASE_INT(UPPER, camelCase) \
     do { \
     case RoomField::UPPER: \
         return static_cast<uint32_t>(fields.camelCase); \
     } while (false)
         switch (field) {
-            CASE_STR(NAME, name);
-            CASE_STR(DESC, staticDescription);
-            CASE_STR(DYNAMIC_DESC, dynamicDescription);
-            CASE_STR(NOTE, note);
             CASE_INT(TERRAIN_TYPE, terrainType);
             CASE_INT(MOB_FLAGS, mobFlags);
             CASE_INT(LOAD_FLAGS, loadFlags);
@@ -174,12 +163,15 @@ public:
             CASE_INT(ALIGN_TYPE, alignType);
             CASE_INT(RIDABLE_TYPE, ridableType);
             CASE_INT(SUNDEATH_TYPE, sundeathType);
-            CASE_STR(KEYWORDS, keywords);
+        case RoomField::NAME:
+        case RoomField::DESC:
+        case RoomField::DYNAMIC_DESC:
+        case RoomField::NOTE:
+        case RoomField::RESERVED:
         case RoomField::LAST:
             break;
         }
         throw std::invalid_argument("type");
-#undef CASE_STR
 #undef CASE_INT
     }
         //
@@ -210,7 +202,7 @@ public:
             CASE_INT(ALIGN_TYPE, alignType);
             CASE_INT(RIDABLE_TYPE, ridableType);
             CASE_INT(SUNDEATH_TYPE, sundeathType);
-            CASE_STR(KEYWORDS, keywords);
+        case RoomField::RESERVED:
         case RoomField::LAST:
             break;
         }
@@ -223,7 +215,7 @@ public:
     template<typename Callback>
     [[deprecated]] inline void modifyUint(const RoomField field, Callback &&callback)
     {
-        const uint oldValue = at(field).toUInt();
+        const uint oldValue = at(field);
         replace(field, callback(oldValue));
     }
 
@@ -247,7 +239,14 @@ public:
     {
         assert(!isFake());
     }
+
     ~Room() = default;
+
+    // REVISIT: copies should be more explicit (e.g. room.copy(const Room& other)).
+    Room(Room &&) = default;
+    Room(const Room &) = default;
+    Room &operator=(Room &&) = default;
+    Room &operator=(const Room &) = default;
 
 public:
     bool isFake() const { return isDummy_; }

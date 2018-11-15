@@ -1,9 +1,7 @@
-#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
-**            Marek Krejza <krejza@gmail.com> (Caligor),
-**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
+**            Marek Krejza <krejza@gmail.com> (Caligor)
 **
 ** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
@@ -25,28 +23,7 @@
 **
 ************************************************************************/
 
-#ifndef ROOMRECIPIENT_H
-#define ROOMRECIPIENT_H
+#include "AbstractRoomVisitor.h"
 
-class Room;
-class RoomAdmin;
-
-/*! \brief Interface giving briefly access to a mutex-protected room.
- *
- * See MapFrontend::lookingForRooms().
- */
-class RoomRecipient
-{
-public:
-    RoomRecipient() = default;
-    virtual void receiveRoom(RoomAdmin *admin, const Room *room) = 0;
-    virtual ~RoomRecipient() = default;
-
-public:
-    RoomRecipient(RoomRecipient &&) = delete;
-    RoomRecipient(const RoomRecipient &) = delete;
-    RoomRecipient &operator=(RoomRecipient &&) = delete;
-    RoomRecipient &operator=(const RoomRecipient &) = delete;
-};
-
-#endif
+AbstractRoomVisitor::AbstractRoomVisitor() = default;
+AbstractRoomVisitor::~AbstractRoomVisitor() = default;

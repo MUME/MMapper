@@ -80,7 +80,7 @@ private:
     using HelpCallback = std::function<void(const std::string &name)>;
     using ParserCallback
         = std::function<bool(const std::vector<StringView> &matched, StringView args)>;
-    struct ParserRecord
+    struct ParserRecord final
     {
         std::string fullCommand;
         ParserCallback callback;
@@ -108,7 +108,7 @@ private:
 
 public:
     explicit AbstractParser(MapData *, MumeClock *, QObject *parent = nullptr);
-    ~AbstractParser();
+    ~AbstractParser() override;
 
 signals:
     // telnet
@@ -159,45 +159,24 @@ protected:
     void nameDoorCommand(const QString &doorname, DirectionType direction);
     void toggleDoorFlagCommand(DoorFlag flag, DirectionType direction);
     void toggleExitFlagCommand(ExitFlag flag, DirectionType direction);
-    void setRoomFieldCommand(const QVariant &flag, RoomField field);
-    void setRoomFieldCommand(RoomAlignType rat, RoomField field)
-    {
-        setRoomFieldCommand(static_cast<QVariant>(static_cast<uint>(rat)), field);
-    }
-    void setRoomFieldCommand(RoomLightType rlt, RoomField field)
-    {
-        setRoomFieldCommand(static_cast<QVariant>(static_cast<uint>(rlt)), field);
-    }
-    void setRoomFieldCommand(RoomPortableType rpt, RoomField field)
-    {
-        setRoomFieldCommand(static_cast<QVariant>(static_cast<uint>(rpt)), field);
-    }
-    void setRoomFieldCommand(RoomRidableType rrt, RoomField field)
-    {
-        setRoomFieldCommand(static_cast<QVariant>(static_cast<uint>(rrt)), field);
-    }
-    void setRoomFieldCommand(RoomSundeathType rst, RoomField field)
-    {
-        setRoomFieldCommand(static_cast<QVariant>(static_cast<uint>(rst)), field);
-    }
+    [[deprecated]] void setRoomFieldCommand(const QVariant &flag, RoomField field);
+    void setRoomFieldCommand(RoomAlignType rat, RoomField field);
+    void setRoomFieldCommand(RoomLightType rlt, RoomField field);
+    void setRoomFieldCommand(RoomPortableType rpt, RoomField field);
+    void setRoomFieldCommand(RoomRidableType rrt, RoomField field);
+    void setRoomFieldCommand(RoomSundeathType rst, RoomField field);
 
     ExitFlags getExitFlags(DirectionType dir) const;
     DirectionalLightType getConnectedRoomFlags(DirectionType dir) const;
     void setExitFlags(ExitFlags flag, DirectionType dir);
     void setConnectedRoomFlag(DirectionalLightType light, DirectionType dir);
 
-    void toggleRoomFlagCommand(uint flag, RoomField field);
-    void toggleRoomFlagCommand(RoomMobFlag flag, RoomField field)
-    {
-        toggleRoomFlagCommand(RoomMobFlags{flag}.asUint32(), field);
-    }
-    void toggleRoomFlagCommand(RoomLoadFlag flag, RoomField field)
-    {
-        toggleRoomFlagCommand(RoomLoadFlags{flag}.asUint32(), field);
-    }
+    [[deprecated]] void toggleRoomFlagCommand(uint flag, RoomField field);
+    void toggleRoomFlagCommand(RoomMobFlag flag, RoomField field);
+    void toggleRoomFlagCommand(RoomLoadFlag flag, RoomField field);
 
     void printRoomInfo(RoomFields fieldset);
-    void printRoomInfo(RoomField field) { printRoomInfo(RoomFields{field}); }
+    void printRoomInfo(RoomField field);
 
     void emulateExits();
     QByteArray enhanceExits(const Room *);
@@ -212,7 +191,8 @@ protected:
     void markCurrentCommand();
 
 private:
-    // avoid warning about signal hiding this function
+    // NOTE: This declaration only exists to avoids the warning
+    // about the "event" signal hiding this function function.
     virtual bool event(QEvent *e) final override { return QObject::event(e); }
 
     bool tryParseGenericDoorCommand(const QString &str);

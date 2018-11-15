@@ -59,7 +59,7 @@ public slots:
 
 public:
     explicit FindRoomsDlg(MapData *, QWidget *parent = nullptr);
-    ~FindRoomsDlg();
+    ~FindRoomsDlg() override;
 
 private:
     MapData *m_mapData = nullptr;
@@ -76,7 +76,7 @@ private slots:
     void on_lineEdit_textChanged();
     void findClicked();
     void enableFindButton(const QString &text);
-    void itemDoubleClicked(QTreeWidgetItem *item);
+    void itemDoubleClicked(QTreeWidgetItem *inputItem);
     void showSelectedRoom();
 };
 

@@ -95,7 +95,7 @@ public:
                        PrespammedPath *prespammedPath,
                        Mmapper2Group *groupManager,
                        QWidget *parent);
-    ~MapCanvas();
+    ~MapCanvas() override;
 
 public:
     QSize minimumSizeHint() const override;

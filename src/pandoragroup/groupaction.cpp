@@ -28,6 +28,9 @@
 #include <cassert>
 #include <utility>
 
+GroupAction::GroupAction() = default;
+GroupAction::~GroupAction() = default;
+
 /**
  * @brief AddCharacter::AddCharacter
  * @param Variant map representing the character

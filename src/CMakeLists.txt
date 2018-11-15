@@ -1,5 +1,6 @@
 set(mmapper_SRCS
     main.cpp
+    odr.cpp
     client/ClientTelnet.cpp
     client/ClientTelnet.h
     client/clientwidget.cpp
@@ -37,7 +38,8 @@ set(mmapper_SRCS
     display/prespammedpath.h
     display/RoadIndex.cpp
     display/RoadIndex.h
-    expandoracommon/abstractroomfactory.h
+    expandoracommon/AbstractRoomFactory.cpp
+    expandoracommon/AbstractRoomFactory.h
     expandoracommon/coordinate.cpp
     expandoracommon/coordinate.h
     expandoracommon/exit.cpp
@@ -49,15 +51,19 @@ set(mmapper_SRCS
     expandoracommon/parseevent.h
     expandoracommon/property.cpp
     expandoracommon/property.h
-    expandoracommon/roomadmin.h
+    expandoracommon/RoomAdmin.cpp
+    expandoracommon/RoomAdmin.h
     expandoracommon/room.h
-    expandoracommon/roomrecipient.h
+    expandoracommon/RoomRecipient.cpp
+    expandoracommon/RoomRecipient.h
     global/bits.h
     global/CharBuffer.h
     global/Color.h
     global/DirectionType.cpp
     global/DirectionType.h
     global/EnumIndexedArray.h
+    global/NullPointerException.cpp
+    global/NullPointerException.h
     global/enums.h
     global/Flags.h
     global/io.cpp
@@ -84,6 +90,7 @@ set(mmapper_SRCS
     mapdata/customaction.cpp
     mapdata/customaction.h
     mapdata/DoorFlags.h
+    mapdata/drawstream.cpp
     mapdata/drawstream.h
     mapdata/enums.cpp
     mapdata/enums.h
@@ -106,6 +113,7 @@ set(mmapper_SRCS
     mapdata/roomselection.h
     mapdata/shortestpath.cpp
     mapdata/shortestpath.h
+    mapfrontend/AbstractRoomVisitor.cpp
     mapfrontend/AbstractRoomVisitor.h
     mapfrontend/mapaction.cpp
     mapfrontend/mapaction.h

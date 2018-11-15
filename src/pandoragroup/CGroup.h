@@ -53,7 +53,6 @@ class CGroup final : public QObject, public GroupAdmin
     friend class RemoveCharacter;
     friend class RenameCharacter;
     friend class UpdateCharacter;
-    friend class KickCharacter;
     friend class ResetCharacters;
     friend class CGroupClientCommunicator;
     friend class CGroupServerCommunicator;
@@ -61,7 +60,7 @@ class CGroup final : public QObject, public GroupAdmin
 
 public:
     explicit CGroup(QObject *parent);
-    virtual ~CGroup();
+    virtual ~CGroup() override;
 
     bool isNamePresent(const QByteArray &name);
 
@@ -90,7 +89,6 @@ protected:
     void resetChars();
     void updateChar(const QVariantMap &map); // updates given char from the map
     void removeChar(const QByteArray &name);
-    void removeChar(const QVariantMap &node);
     bool addChar(const QVariantMap &node);
 
 private:

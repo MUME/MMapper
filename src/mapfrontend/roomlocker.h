@@ -43,6 +43,7 @@ public:
                         AbstractRoomFactory *factory = nullptr,
                         ParseEvent *compare = nullptr);
     virtual void visit(const Room *room) override;
+    virtual ~RoomLocker() override;
 
 private:
     RoomRecipient &recipient;

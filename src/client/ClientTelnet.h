@@ -41,7 +41,7 @@ class ClientTelnet final : public AbstractTelnet
 
 public:
     explicit ClientTelnet(QObject *parent = nullptr);
-    ~ClientTelnet();
+    ~ClientTelnet() override;
 
     void connectToHost();
 

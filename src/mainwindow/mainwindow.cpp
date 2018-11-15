@@ -1131,7 +1131,7 @@ void MainWindow::newFile()
     m_mapWindow->getCanvas()->clearConnectionSelection();
 
     if (maybeSave()) {
-        AbstractMapStorage *storage = (AbstractMapStorage *) new MapStorage(*m_mapData, "", this);
+        auto *storage = static_cast<AbstractMapStorage *>(new MapStorage(*m_mapData, "", this));
         connect(storage,
                 &AbstractMapStorage::onNewData,
                 m_mapWindow->getCanvas(),
@@ -1376,7 +1376,8 @@ void MainWindow::loadFile(const QString &fileName)
     m_mapWindow->getCanvas()->clearRoomSelection();
     m_mapWindow->getCanvas()->clearConnectionSelection();
 
-    auto *storage = (AbstractMapStorage *) new MapStorage(*m_mapData, fileName, file, this);
+    auto *storage = static_cast<AbstractMapStorage *>(
+        new MapStorage(*m_mapData, fileName, file, this));
     connect(storage,
             &AbstractMapStorage::onDataLoaded,
             m_mapWindow->getCanvas(),

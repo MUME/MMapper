@@ -446,14 +446,14 @@ void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, uint32_t version)
         mark->setRotationAngle(helper.read_u32() / 100);
     }
 
-    auto read_coord = [](auto &helper, auto &basePosition) {
+    const auto read_coord = [](auto &helper, const auto &basePos) {
         Coordinate pos;
         pos.x = helper.read_i32();
         pos.y = helper.read_i32();
         pos.z = helper.read_i32();
-        pos.x += basePosition.x * 100;
-        pos.y += basePosition.y * 100;
-        pos.z += basePosition.z;
+        pos.x += basePos.x * 100;
+        pos.y += basePos.y * 100;
+        pos.z += basePos.z;
         return pos;
     };
 
@@ -524,7 +524,7 @@ bool MapStorage::saveData(bool baseMapOnly)
     }
 
     auto roomsCount = saver.getRoomsCount();
-    const auto marksCount = markerList.size();
+    const auto marksCount = static_cast<uint32_t>(markerList.size());
 
     auto &progressCounter = getProgressCounter();
     progressCounter.reset();

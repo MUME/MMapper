@@ -45,7 +45,7 @@ class ParseEvent;
 class ParseTree final
 {
 public:
-    class Pimpl;
+    struct Pimpl;
 
 private:
     std::unique_ptr<Pimpl> m_pimpl;

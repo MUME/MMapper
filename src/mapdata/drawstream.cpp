@@ -1,4 +1,3 @@
-#pragma once
 /************************************************************************
 **
 ** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
@@ -24,28 +23,17 @@
 **
 ************************************************************************/
 
-#ifndef ROOMADMIN_H
-#define ROOMADMIN_H
+#include "drawstream.h"
 
-#include "room.h"
+DrawStream::DrawStream(MapCanvasRoomDrawer &in, const RoomIndex &in_rooms, const RoomLocks &in_locks)
+    : canvas(in)
+    , rooms(in_rooms)
+    , locks(in_locks)
+{}
 
-class RoomRecipient;
-class MapAction;
+DrawStream::~DrawStream() = default;
 
-class RoomAdmin
+void DrawStream::visit(const Room *room)
 {
-public:
-    // removes the lock on a room
-    // after the last lock is removed, the room is deleted
-    virtual void releaseRoom(RoomRecipient &, RoomId) = 0;
-
-    // makes a lock on a room permanent and anonymous.
-    // Like that the room can't be deleted via releaseRoom anymore.
-    virtual void keepRoom(RoomRecipient &, RoomId) = 0;
-
-    virtual void scheduleAction(MapAction *action) = 0;
-
-    virtual ~RoomAdmin() {}
-};
-
-#endif
+    canvas.drawRoom(room, rooms, locks);
+}

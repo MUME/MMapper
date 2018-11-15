@@ -67,6 +67,8 @@ IOException IOException::withCurrentErrno()
     return withErrorNumber(errno);
 }
 
+IOException::~IOException() = default;
+
 bool fsync(QFile &file) noexcept(false)
 {
     const int handle = file.handle();

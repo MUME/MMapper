@@ -26,8 +26,8 @@
 #ifndef FORCED_H
 #define FORCED_H
 
+#include "../expandoracommon/RoomRecipient.h"
 #include "../expandoracommon/parseevent.h"
-#include "../expandoracommon/roomrecipient.h"
 
 class ParseEvent;
 class Room;
@@ -43,7 +43,7 @@ private:
 
 public:
     explicit Forced(const SigParseEvent &sigParseEvent, bool update = false);
-    ~Forced();
+    ~Forced() override;
     void receiveRoom(RoomAdmin *, const Room *) override;
     const Room *oneMatch() const { return matchedRoom; }
 

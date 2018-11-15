@@ -39,6 +39,7 @@ class Room;
 struct IRoomCollection
 {
 public:
+    virtual ~IRoomCollection();
     virtual void addRoom(Room *room) = 0;
     virtual void removeRoom(Room *room) = 0;
 

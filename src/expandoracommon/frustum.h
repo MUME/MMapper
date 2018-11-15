@@ -49,7 +49,7 @@ enum class FrustumSide {
     F_FRONT = 5   // The FRONT side of the frustum
 };
 
-DEFINE_ENUM_COUNT(FrustumSide, 6);
+DEFINE_ENUM_COUNT(FrustumSide, 6)
 
 // Like above, instead of saying a number for the ABC and D of the plane, we
 // want to be more descriptive.
@@ -60,7 +60,7 @@ enum class PlaneData {
     D = 3  // The distance the plane is from the origin
 };
 
-DEFINE_ENUM_COUNT(PlaneData, 4);
+DEFINE_ENUM_COUNT(PlaneData, 4)
 
 class Frustum final
 {

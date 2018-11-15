@@ -730,12 +730,10 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         roomNoteTextEdit->append(r->getNote());
 
         const auto get_terrain_pixmap = [](RoomTerrainType type) -> QString {
-            switch (type) {
-            case RoomTerrainType::ROAD:
+            if (type == RoomTerrainType::ROAD)
                 return QString(":/pixmaps/road7.png");
-            default:
+            else
                 return QString(":/pixmaps/terrain%1.png").arg(static_cast<int>(type));
-            }
         };
         terrainLabel->setPixmap(get_terrain_pixmap(r->getTerrainType()));
 

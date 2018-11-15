@@ -42,6 +42,8 @@ Experimenting::Experimenting(std::list<Path *> *const pat,
     , factory(in_factory)
 {}
 
+Experimenting::~Experimenting() = default;
+
 void Experimenting::augmentPath(Path *const path, RoomAdmin *const map, const Room *const room)
 {
     const Coordinate c = path->getRoom()->getPosition() + direction;
@@ -63,8 +65,7 @@ void Experimenting::augmentPath(Path *const path, RoomAdmin *const map, const Ro
 
 std::list<Path *> *Experimenting::evaluate()
 {
-    Path *working = nullptr;
-    while (!shortPaths->empty()) {
+    for (Path *working = nullptr; !shortPaths->empty();) {
         working = shortPaths->front();
         shortPaths->pop_front();
         if (!(working->hasChildren())) {
@@ -82,8 +83,8 @@ std::list<Path *> *Experimenting::evaluate()
             paths->push_front(best);
         } else {
             paths->push_back(best);
-            Path *working = paths->front();
-            while (working != best) {
+
+            for (Path *working = paths->front(); working != best;) {
                 paths->pop_front();
                 // throw away if the probability is very low or not
                 // distinguishable from best. Don't keep paths with equal

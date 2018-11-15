@@ -57,7 +57,7 @@ public:
                        PrespammedPath *pp,
                        Mmapper2Group *gm,
                        QWidget *parent = nullptr);
-    ~MapWindow();
+    ~MapWindow() override;
 
     void resizeEvent(QResizeEvent *event) override;
 

@@ -121,7 +121,6 @@ void ClientTelnet::sendToMud(const QString &data)
 
 void ClientTelnet::sendRawData(const QByteArray &data)
 {
-    //update counter
     sentBytes += data.length();
     socket.write(data);
 }

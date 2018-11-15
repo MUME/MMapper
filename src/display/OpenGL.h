@@ -486,6 +486,9 @@ public:
         switch (flags) {
         case FontFormatFlags::ITALICS:
             return deref(m_glFont.italicMetrics).width(x);
+
+        case FontFormatFlags::NONE:
+        case FontFormatFlags::UNDERLINE:
         default:
             return deref(m_glFont.metrics).width(x);
         }

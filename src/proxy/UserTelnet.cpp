@@ -42,7 +42,7 @@ void UserTelnet::onAnalyzeUserStream(const QByteArray &data)
     onReadInternal(data);
 }
 
-void UserTelnet::onSendToUser(const QByteArray &ba, bool goAhead)
+void UserTelnet::onSendToUser(const QByteArray &ba, const bool goAhead)
 {
     // MMapper internally represents all data as Latin-1
     QString temp = QString::fromLatin1(ba);
@@ -59,7 +59,7 @@ void UserTelnet::onSendToUser(const QByteArray &ba, bool goAhead)
     submitOverTelnet(outdata, goAhead);
 }
 
-void UserTelnet::sendToMapper(const QByteArray &data, bool goAhead)
+void UserTelnet::sendToMapper(const QByteArray &data, const bool goAhead)
 {
     // MMapper requires all data to be Latin-1 internally
     // REVISIT: This will break things if the client is handling MPI itself
@@ -67,19 +67,19 @@ void UserTelnet::sendToMapper(const QByteArray &data, bool goAhead)
     emit analyzeUserStream(outdata, goAhead);
 }
 
-void UserTelnet::onRelayEchoMode(bool isDisabled)
+void UserTelnet::onRelayEchoMode(const bool isDisabled)
 {
     sendTelnetOption(isDisabled ? TN_WONT : TN_WILL, OPT_ECHO);
     myOptionState[OPT_ECHO] = !isDisabled;
     announcedState[OPT_ECHO] = true;
 }
 
-void UserTelnet::receiveTerminalType(QByteArray data)
+void UserTelnet::receiveTerminalType(const QByteArray &data)
 {
     emit relayTermType(data);
 }
 
-void UserTelnet::receiveWindowSize(int x, int y)
+void UserTelnet::receiveWindowSize(const int x, const int y)
 {
     emit relayNaws(x, y);
 }

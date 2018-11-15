@@ -27,6 +27,7 @@
 
 #include "AbstractTelnet.h"
 
+#include <cassert>
 #include <limits>
 #include <QByteArray>
 #include <QMessageLogContext>
@@ -37,7 +38,7 @@
 #include "../global/utils.h"
 #include "TextCodec.h"
 
-QString telnetCommandName(uint8_t cmd)
+static QString telnetCommandName(uint8_t cmd)
 {
 #define CASE(x) \
     case TN_##x: \
@@ -100,7 +101,7 @@ static QString telnetSubnegName(uint8_t opt)
 #undef CASE
 }
 
-bool containsIAC(const QByteArray &arr)
+static bool containsIAC(const QByteArray &arr)
 {
     for (auto c : arr) {
         if (static_cast<uint8_t>(c) == TN_IAC)
@@ -109,11 +110,11 @@ bool containsIAC(const QByteArray &arr)
     return false;
 }
 
-struct TelnetFormatter final : public QByteArray
+struct TelnetFormatter final : public AppendBuffer
 {
     void addRaw(const uint8_t byte)
     {
-        auto &s = static_cast<QByteArray &>(*this);
+        auto &s = static_cast<AppendBuffer &>(*this);
         s += byte;
     }
 
@@ -177,10 +178,14 @@ void AbstractTelnet::setTerminalType(const QByteArray &terminalType)
         switch (getCurrentPlatform()) {
         case Platform::Linux:
             return "Linux";
+
         case Platform::Mac:
             return "Mac";
+
         case Platform::Win32:
             return "Windows";
+
+        case Platform::Unknown:
         default:
             return "Unknown";
         };
@@ -205,9 +210,9 @@ void AbstractTelnet::reset()
     sentBytes = 0;
 }
 
-void AbstractTelnet::submitOverTelnet(const QByteArray &data, bool goAhead)
+void AbstractTelnet::submitOverTelnet(const QByteArray &data, const bool goAhead)
 {
-    QByteArray outdata = data;
+    AppendBuffer outdata = data; /* copy */
 
     // IAC byte must be doubled
     if (containsIAC(outdata)) {
@@ -245,7 +250,7 @@ void AbstractTelnet::sendTelnetOption(unsigned char type, unsigned char option)
     if (debug)
         qDebug() << "* Sending Telnet Command: " << telnetCommandName(type)
                  << telnetOptionName(option);
-    QByteArray s;
+    AppendBuffer s;
     s += TN_IAC;
     s += type;
     s += option;
@@ -311,12 +316,12 @@ void AbstractTelnet::sendCharsetAccepted(const QByteArray &characterSet)
 
 void AbstractTelnet::sendOptionStatus()
 {
-    QByteArray s;
+    AppendBuffer s;
     s += TN_IAC;
     s += TN_SB;
     s += OPT_STATUS;
     s += TNSB_IS;
-    for (int i = 0; i < 256; i++) {
+    for (size_t i = 0; i < NUM_OPTS; ++i) {
         if (myOptionState[i]) {
             s += TN_WILL;
             s += static_cast<unsigned char>(i);
@@ -350,9 +355,11 @@ void AbstractTelnet::sendTerminalTypeRequest()
     sendRawData(s);
 }
 
-void AbstractTelnet::processTelnetCommand(const QByteArray &command)
+void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
 {
-    const unsigned char ch = command[1];
+    assert(!command.isEmpty());
+
+    const unsigned char ch = command.unsigned_at(1);
     unsigned char option;
 
     switch (command.length()) {
@@ -375,12 +382,12 @@ void AbstractTelnet::processTelnetCommand(const QByteArray &command)
     case 3:
         if (debug)
             qDebug() << "* Processing Telnet Command:" << telnetCommandName(ch)
-                     << telnetOptionName(command[2]);
+                     << telnetOptionName(command.unsigned_at(2));
 
         switch (ch) {
         case TN_WILL:
             // server wants to enable some option (or he sends a timing-mark)...
-            option = command[2];
+            option = command.unsigned_at(2);
 
             heAnnouncedState[option] = true;
             if (!hisOptionState[option])
@@ -414,7 +421,7 @@ void AbstractTelnet::processTelnetCommand(const QByteArray &command)
             break;
         case TN_WONT:
             // server refuses to enable some option...
-            option = command[2];
+            option = command.unsigned_at(2);
             if (!myOptionState[option])
             // only if the option is currently disabled
             {
@@ -431,7 +438,7 @@ void AbstractTelnet::processTelnetCommand(const QByteArray &command)
             break;
         case TN_DO:
             // server wants us to enable some option
-            option = command[2];
+            option = command.unsigned_at(2);
             if (option == OPT_TIMING_MARK) {
                 // send WILL TIMING_MARK
                 sendTelnetOption(TN_WILL, option);
@@ -465,7 +472,7 @@ void AbstractTelnet::processTelnetCommand(const QByteArray &command)
             break;
         case TN_DONT:
             // only respond if value changed or if this option has not been announced yet
-            option = command[2];
+            option = command.unsigned_at(2);
             if (myOptionState[option] || (!announcedState[option])) {
                 sendTelnetOption(TN_WONT, option);
                 announcedState[option] = true;
@@ -483,11 +490,12 @@ void AbstractTelnet::processTelnetCommand(const QByteArray &command)
     // other commands are simply ignored (NOP and such, see .h file for list)
 }
 
-void AbstractTelnet::processTelnetSubnegotiation(const QByteArray &payload)
+void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
 {
     if (debug && payload.length() >= 2) {
-        qDebug() << "* Processing Telnet Subnegotiation:" << telnetOptionName(payload[0])
-                 << telnetSubnegName(payload[1]);
+        qDebug() << "* Processing Telnet Subnegotiation:"
+                 << telnetOptionName(payload.unsigned_at(0))
+                 << telnetSubnegName(payload.unsigned_at(1));
     }
 
     // subnegotiation - we analyze and respond...
@@ -531,7 +539,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const QByteArray &payload)
                     // CHARSET REQUEST <sep> <charsets>
                     const auto sep = payload[2];
                     const auto characterSets = payload.mid(3).split(sep);
-                    for (const auto characterSet : characterSets) {
+                    for (const auto &characterSet : characterSets) {
                         if (textCodec.supports(characterSet)) {
                             accepted = true;
                             textCodec.setEncodingForName(characterSet);
@@ -592,19 +600,23 @@ void AbstractTelnet::processTelnetSubnegotiation(const QByteArray &payload)
 
 void AbstractTelnet::onReadInternal(const QByteArray &data)
 {
-    //now we have the data, but we cannot forward it to next stage of processing,
-    //because the data contains telnet commands
-    //so we parse the text and process all telnet commands:
+    // REVISIT: should this still clear recvdGA even if the string is empty?
+    if (data.isEmpty())
+        return;
 
-    //clear the GO-AHEAD flag
+    // now we have the data, but we cannot forward it to next stage of processing,
+    // because the data contains telnet commands
+    // so we parse the text and process all telnet commands:
+
+    // clear the GO-AHEAD flag
+    // yes, but WHY are we clearing it?
     recvdGA = false;
 
-    auto cleanData = QByteArray{};
+    AppendBuffer cleanData{};
     cleanData.reserve(data.size());
 
-    for (int j = 0; j < data.length(); j++) {
-        char i = data.at(j);
-        onReadInternal2(cleanData, i);
+    for (const auto &c : data) {
+        onReadInternal2(cleanData, static_cast<unsigned char>(c));
 
         if (recvdGA) {
             sendToMapper(cleanData, recvdGA); // with GO-AHEAD
@@ -618,6 +630,8 @@ void AbstractTelnet::onReadInternal(const QByteArray &data)
         sendToMapper(cleanData, recvdGA); // without GO-AHEAD
         cleanData.clear();
     }
+
+    // REVISIT: should recvdGA be cleared at exit?
 }
 
 /*
@@ -645,7 +659,7 @@ void AbstractTelnet::onReadInternal(const QByteArray &data)
  * So if you receive "IAC SB IAC WILL ECHO f o o IAC IAC b a r IAC SE"
  * then you process will(ECHO) followed by the subnegotiation(f o o 255 b a r).
  */
-void AbstractTelnet::onReadInternal2(QByteArray &cleanData, const uint8_t c)
+void AbstractTelnet::onReadInternal2(AppendBuffer &cleanData, const uint8_t c)
 {
     switch (state) {
     case TelnetState::NORMAL:

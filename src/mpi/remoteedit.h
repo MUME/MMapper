@@ -71,7 +71,7 @@ private:
     static const QRegExp s_lineFeedNewlineRx;
 
     uint greatestUsedId{0};
-    std::map<int, std::unique_ptr<RemoteEditSession>> m_sessions;
+    std::map<uint, std::unique_ptr<RemoteEditSession>> m_sessions;
 };
 
 #endif /* REMOTEEDIT_H */

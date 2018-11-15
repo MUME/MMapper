@@ -46,6 +46,8 @@
 // Same order as the RoomTerrainType enum.
 // Values taken from https://github.com/nstockton/tintin-mume/blob/master/mapperproxy/mapper/constants.py
 
+ShortestPathRecipient::~ShortestPathRecipient() = default;
+
 static double terrain_cost(const RoomTerrainType type)
 {
     switch (type) {
@@ -88,7 +90,7 @@ static double terrain_cost(const RoomTerrainType type)
     return 1.0;
 }
 
-double getLength(const Exit &e, const Room *curr, const Room *nextr)
+static double getLength(const Exit &e, const Room *curr, const Room *nextr)
 {
     double cost = terrain_cost(nextr->getTerrainType());
     auto flags = e.getExitFlags();

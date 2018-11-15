@@ -218,10 +218,9 @@ void AbstractParser::reset()
 void AbstractParser::parsePrompt(const QString &prompt)
 {
     m_promptFlags.reset();
-    quint8 index = 0;
-    int sv;
+    int index = 0;
 
-    switch (sv = static_cast<int>((prompt[index]).toLatin1())) {
+    switch (static_cast<int>(prompt[index].toLatin1())) {
     case 42:
         index++;
         m_promptFlags.setLit();
@@ -240,7 +239,7 @@ void AbstractParser::parsePrompt(const QString &prompt)
     default:;
     }
 
-    switch (sv = static_cast<int>((prompt[index]).toLatin1())) {
+    switch (static_cast<int>(prompt[index].toLatin1())) {
     case 91:
         m_promptFlags.setTerrainType(RoomTerrainType::INDOORS);
         break; // [  // indoors
@@ -723,6 +722,8 @@ public:
     explicit ShortestPathEmitter(AbstractParser &parser)
         : parser(parser)
     {}
+    virtual ~ShortestPathEmitter() override;
+
     void receiveShortestPath(RoomAdmin * /*admin*/, QVector<SPNode> spnodes, int endpoint) override
     {
         const SPNode *spnode = &spnodes[endpoint];
@@ -741,6 +742,8 @@ public:
         parser.sendToUser("dirs: " + compressDirections(dirs) + "\r\n");
     }
 };
+
+ShortestPathEmitter::~ShortestPathEmitter() = default;
 
 void AbstractParser::searchCommand(const RoomFilter &f)
 {
@@ -1660,4 +1663,51 @@ void AbstractParser::sendGTellToUser(const QByteArray &ba)
 {
     sendToUser("\r\n" + ba + "\r\n");
     sendPromptToUser();
+}
+
+void AbstractParser::setRoomFieldCommand(const RoomAlignType rat, const RoomField field)
+{
+    assert(field == RoomField::ALIGN_TYPE);
+    setRoomFieldCommand(static_cast<QVariant>(static_cast<uint>(rat)), field);
+}
+
+void AbstractParser::setRoomFieldCommand(const RoomLightType rlt, const RoomField field)
+{
+    assert(field == RoomField::LIGHT_TYPE);
+    setRoomFieldCommand(static_cast<QVariant>(static_cast<uint>(rlt)), field);
+}
+
+void AbstractParser::setRoomFieldCommand(const RoomPortableType rpt, const RoomField field)
+{
+    assert(field == RoomField::PORTABLE_TYPE);
+    setRoomFieldCommand(static_cast<QVariant>(static_cast<uint>(rpt)), field);
+}
+
+void AbstractParser::setRoomFieldCommand(const RoomRidableType rrt, const RoomField field)
+{
+    assert(field == RoomField::RIDABLE_TYPE);
+    setRoomFieldCommand(static_cast<QVariant>(static_cast<uint>(rrt)), field);
+}
+
+void AbstractParser::setRoomFieldCommand(const RoomSundeathType rst, const RoomField field)
+{
+    assert(field == RoomField::SUNDEATH_TYPE);
+    setRoomFieldCommand(static_cast<QVariant>(static_cast<uint>(rst)), field);
+}
+
+void AbstractParser::toggleRoomFlagCommand(const RoomMobFlag flag, const RoomField field)
+{
+    assert(field == RoomField::MOB_FLAGS);
+    toggleRoomFlagCommand(RoomMobFlags{flag}.asUint32(), field);
+}
+
+void AbstractParser::toggleRoomFlagCommand(const RoomLoadFlag flag, const RoomField field)
+{
+    assert(field == RoomField::LOAD_FLAGS);
+    toggleRoomFlagCommand(RoomLoadFlags{flag}.asUint32(), field);
+}
+
+void AbstractParser::printRoomInfo(const RoomField field)
+{
+    printRoomInfo(RoomFields{field});
 }

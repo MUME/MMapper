@@ -52,7 +52,7 @@ private:
 
 public:
     explicit DisplayWidget(QWidget *parent = nullptr);
-    ~DisplayWidget();
+    ~DisplayWidget() override;
 
 public slots:
     void displayText(const QString &str);

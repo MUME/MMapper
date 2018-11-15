@@ -35,7 +35,7 @@ class UserTelnet final : public AbstractTelnet
     Q_OBJECT
 public:
     explicit UserTelnet(QObject *parent);
-    ~UserTelnet() = default;
+    ~UserTelnet() override = default;
 
 public slots:
     void onSendToUser(const QByteArray &data, bool goAhead);
@@ -52,7 +52,7 @@ signals:
 
 private:
     void sendToMapper(const QByteArray &data, bool goAhead) override;
-    void receiveTerminalType(QByteArray) override;
+    void receiveTerminalType(const QByteArray &) override;
     void receiveWindowSize(int, int) override;
     void sendRawData(const QByteArray &data) override;
 };

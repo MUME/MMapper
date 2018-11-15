@@ -24,8 +24,8 @@
 
 #include "forced.h"
 
+#include "../expandoracommon/RoomAdmin.h"
 #include "../expandoracommon/room.h"
-#include "../expandoracommon/roomadmin.h"
 #include "../mapfrontend/mapaction.h"
 
 void Forced::receiveRoom(RoomAdmin *sender, const Room *perhaps)

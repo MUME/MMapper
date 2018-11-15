@@ -50,9 +50,8 @@ QString &removeAnsiMarksInPlace(QString &str)
 
 QString &latinToAsciiInPlace(QString &str)
 {
-    unsigned char ch;
     for (int pos = 0; pos < str.length(); pos++) {
-        ch = str.at(pos).toLatin1();
+        auto ch = static_cast<unsigned char>(str.at(pos).toLatin1());
         if (ch > 128) {
             if (ch < 160) {
                 ch = 'z';

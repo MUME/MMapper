@@ -36,8 +36,8 @@ class CGroup;
 class GroupAction
 {
 public:
-    explicit GroupAction() = default;
-    virtual ~GroupAction() {}
+    explicit GroupAction();
+    virtual ~GroupAction();
     virtual void exec() = 0;
     void setGroup(CGroup *in) { this->group = in; }
     void schedule(CGroup *in) { setGroup(in); }

@@ -27,7 +27,7 @@
 
 #include <list>
 
-#include "../expandoracommon/abstractroomfactory.h"
+#include "../expandoracommon/AbstractRoomFactory.h"
 #include "../expandoracommon/parseevent.h"
 #include "../global/utils.h"
 #include "../parser/CommandId.h"

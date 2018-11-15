@@ -51,7 +51,7 @@ class JsonMapStorage : public AbstractMapStorage
 
 public:
     explicit JsonMapStorage(MapData &, const QString &, QObject *parent = nullptr);
-    ~JsonMapStorage();
+    ~JsonMapStorage() override;
 
 public:
     explicit JsonMapStorage() = delete;

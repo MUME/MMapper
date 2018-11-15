@@ -35,7 +35,7 @@
 static constexpr const bool USE_TMP_SUFFIX = CURRENT_PLATFORM != Platform::Win32;
 
 static const char *const TMP_FILE_SUFFIX = ".tmp";
-auto maybe_add_suffix(const QString &filename)
+static auto maybe_add_suffix(const QString &filename)
 {
     return USE_TMP_SUFFIX ? (filename + TMP_FILE_SUFFIX) : filename;
 }
