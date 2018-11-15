@@ -72,4 +72,4 @@ inline constexpr const ExitFlags operator|(ExitFlag lhs, ExitFlag rhs) noexcept
     return ExitFlags{lhs} | ExitFlags{rhs};
 }
 
-#endif //MMAPPER_EXITFLAGS_H
+#endif // MMAPPER_EXITFLAGS_H

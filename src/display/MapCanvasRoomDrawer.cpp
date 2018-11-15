@@ -273,7 +273,7 @@ void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
         y2 = y1 + height;
     }
 
-    //check if marker is visible
+    // check if marker is visible
     if (((x1 + 1.0 < static_cast<double>(m_visible1.x))
          || (x1 - 1.0 > static_cast<double>(m_visible2.x) + 1.0))
         && ((x2 + 1.0 < static_cast<double>(m_visible1.x))
@@ -452,7 +452,7 @@ void MapCanvasRoomDrawer::drawTextBox(
     const qreal boxX2 = x + width;
     const qreal boxY2 = y + height;
 
-    //check if box is visible
+    // check if box is visible
     if (((x + 1.0 < static_cast<double>(m_visible1.x))
          || (x - 1 > static_cast<double>(m_visible2.x) + 1))
         && ((boxX2 + 1 < static_cast<double>(m_visible1.x))
@@ -514,7 +514,7 @@ void MapCanvasRoomDrawer::drawFlow(const Room *const room,
     const ExitsList &exitslist = room->getExitsList();
     const Exit &sourceExit = exitslist[exitDirection];
 
-    //For each outgoing connections
+    // For each outgoing connections
     for (auto targetId : sourceExit.outRange()) {
         const Room *const targetRoom = rooms[targetId];
         const auto &pos = targetRoom->getPosition();
@@ -563,7 +563,7 @@ void MapCanvasRoomDrawer::drawExit(const Room *const room,
         }
     }
 
-    //wall
+    // wall
     if (!isExit || isDoor) {
         if (!isDoor && !exit.outIsEmpty()) {
             drawListWithLineStipple(wallList, WALL_COLOR_WALL_DOOR);
@@ -571,7 +571,7 @@ void MapCanvasRoomDrawer::drawExit(const Room *const room,
             m_opengl.callList(wallList);
         }
     }
-    //door
+    // door
     if (isDoor) {
         m_opengl.callList(doorList);
     }
@@ -599,7 +599,7 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room,
     // TODO(nschimme): https://stackoverflow.com/questions/6017176/gllinestipple-deprecated-in-opengl-3-1
     m_opengl.apply(LineStippleType::TWO);
 
-    //terrain texture
+    // terrain texture
     m_opengl.apply(XColor4d{Qt::white, 1.0});
 
     if (layer > 0) {
@@ -618,7 +618,7 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room,
     const RoadIndex roadIndex = getRoadIndex(*room);
     drawUpperLayers(room, layer, roadIndex, wantExtraDetail);
 
-    //walls
+    // walls
     m_opengl.glTranslated(0, 0, 0.005);
 
     if (layer > 0) {
@@ -668,7 +668,7 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room,
         m_opengl.apply(XDisable{XOption::BLEND});
     }
 
-    if (!locks[room->getId()].empty()) { //---> room is locked
+    if (!locks[room->getId()].empty()) { // ---> room is locked
         m_opengl.apply(XEnable{XOption::BLEND});
         m_opengl.apply(XDisable{XOption::DEPTH_TEST});
         m_opengl.apply(XColor4d{0.6, 0.0, 0.0, 0.2});
@@ -788,13 +788,13 @@ void MapCanvasRoomDrawer::drawRoomConnectionsAndDoors(const Room *const room, co
         const auto opp = opposite(i);
         ExitDirection targetDir = opp;
         const Exit &sourceExit = exitslist[i];
-        //outgoing connections
-        for (const auto targetId : sourceExit.outRange()) {
-            targetRoom = rooms[targetId];
+        // outgoing connections
+        for (const auto &outTargetId : sourceExit.outRange()) {
+            targetRoom = rooms[outTargetId];
             rx = targetRoom->getPosition().x;
             ry = targetRoom->getPosition().y;
-            if ((targetId >= sourceId) || // draw exits if targetId >= sourceId ...
-                                          // or if target room is not visible
+            if ((outTargetId >= sourceId) || // draw exits if outTargetId >= sourceId ...
+                                             // or if target room is not visible
                 (((static_cast<float>(rx) < m_visible1.x - 1.0f)
                   || (static_cast<float>(rx) > m_visible2.x + 1.0f))
                  || ((static_cast<float>(ry) < m_visible1.y - 1.0f)
@@ -821,7 +821,7 @@ void MapCanvasRoomDrawer::drawRoomConnectionsAndDoors(const Room *const room, co
                                    false,
                                    room->exit(i).isExit() && targetRoom->exit(targetDir).isExit());
                 }
-            } else if (!sourceExit.containsIn(targetId)) { // ... or if they are outgoing oneways
+            } else if (!sourceExit.containsIn(outTargetId)) { // ... or if they are outgoing oneways
                 oneway = true;
                 for (const auto j : ALL_EXITS7) {
                     if (targetRoom->exit(j).containsOut(sourceId)) {
@@ -835,9 +835,9 @@ void MapCanvasRoomDrawer::drawRoomConnectionsAndDoors(const Room *const room, co
                 }
             }
 
-            //incoming connections (only for oneway connections from rooms, that are not visible)
-            for (const auto targetId : exitslist[i].inRange()) {
-                targetRoom = rooms[targetId];
+            // incoming connections (only for oneway connections from rooms, that are not visible)
+            for (const auto &inTargetId : exitslist[i].inRange()) {
+                targetRoom = rooms[inTargetId];
                 rx = targetRoom->getPosition().x;
                 ry = targetRoom->getPosition().y;
 

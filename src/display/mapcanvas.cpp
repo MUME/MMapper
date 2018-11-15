@@ -632,12 +632,12 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
 
                 if (r1 != nullptr && r2 != nullptr) {
                     if (!(r1->exit(dir1).containsOut(r2->getId()))
-                        || !(r2->exit(dir2).containsOut(r1->getId()))) { //not two ways
+                        || !(r2->exit(dir2).containsOut(r1->getId()))) { // not two ways
                         if (dir2 != ExitDirection::UNKNOWN) {
                             m_connectionSelection->removeSecond();
                         } else if (dir2 == ExitDirection::UNKNOWN
                                    && (!(r1->exit(dir1).containsOut(r2->getId()))
-                                       || (r1->exit(dir1).containsIn(r2->getId())))) { //not oneway
+                                       || (r1->exit(dir1).containsIn(r2->getId())))) { // not oneway
                             m_connectionSelection->removeSecond();
                         }
                     }
@@ -702,7 +702,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                 }
             } else {
                 if (m_roomSelection == nullptr) {
-                    //add rooms to default selections
+                    // add rooms to default selections
                     m_roomSelection = m_data->select(Coordinate(GLtoMap(m_sel1.x),
                                                                 GLtoMap(m_sel1.y),
                                                                 m_sel1.layer),
@@ -710,7 +710,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                                                                 GLtoMap(m_sel2.y),
                                                                 m_sel2.layer));
                 } else {
-                    //add or remove rooms to/from default selection
+                    // add or remove rooms to/from default selection
                     const RoomSelection *tmpSel = m_data->select(Coordinate(GLtoMap(m_sel1.x),
                                                                             GLtoMap(m_sel1.y),
                                                                             m_sel1.layer),
@@ -864,7 +864,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                             m_connectionSelection = nullptr;
                         } else if (dir2 == ExitDirection::UNKNOWN
                                    && (!(r1->exit(dir1).containsOut(r2->getId()))
-                                       || (r1->exit(dir1).containsIn(r2->getId())))) { //not oneway
+                                       || (r1->exit(dir1).containsIn(r2->getId())))) { // not oneway
                             delete m_connectionSelection;
                             m_connectionSelection = nullptr;
                         }
@@ -1065,7 +1065,7 @@ void MapCanvas::moveMarker(const Coordinate &c)
     makeCurrent();
     update();
     emit onCenter(c.x, c.y);
-    //emit onEnsureVisible(c.x, c.y);
+    // emit onEnsureVisible(c.x, c.y);
 }
 
 void MapCanvas::drawGroupCharacters()
@@ -1221,16 +1221,16 @@ void MapCanvas::paintGL()
                       });
     }
 
-    //paint selected connection
+    // paint selected connection
     paintSelectedConnection();
 
     // paint selection
     paintSelection(len);
 
-    //draw the characters before the current position
+    // draw the characters before the current position
     drawGroupCharacters();
 
-    //paint char current position
+    // paint char current position
     if (!m_data->isEmpty()) {
         // Use the player's selected color
         const QColor color = getConfig().groupManager.color;
@@ -1468,7 +1468,7 @@ bool MapCanvas::drawPath(const Coordinate &sc,
 {
     qint32 x1 = sc.x;
     qint32 y1 = sc.y;
-    //qint32 z1 = sc.z;
+    // qint32 z1 = sc.z;
 
     qint32 x2 = dc.x;
     qint32 y2 = dc.y;

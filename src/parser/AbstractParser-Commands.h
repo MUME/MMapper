@@ -72,4 +72,4 @@ Abbrev getParserCommandName(RoomPortableType x);
 Abbrev getParserCommandName(RoomRidableType x);
 Abbrev getParserCommandName(RoomSundeathType x);
 
-#endif //MMAPPER_ABSTRACTPARSER_COMMANDS_H
+#endif // MMAPPER_ABSTRACTPARSER_COMMANDS_H

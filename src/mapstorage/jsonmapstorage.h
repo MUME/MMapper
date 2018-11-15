@@ -65,7 +65,7 @@ private:
     virtual bool saveData(bool baseMapOnly) override;
     virtual bool mergeData() override;
 
-    //void saveMark(InfoMark * mark, QJsonObject &jRoom, const JsonRoomIdsCache &jRoomIds);
+    // void saveMark(InfoMark * mark, QJsonObject &jRoom, const JsonRoomIdsCache &jRoomIds);
 };
 
 #endif

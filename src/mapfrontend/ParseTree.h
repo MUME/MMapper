@@ -65,4 +65,4 @@ public:
     void getRooms(AbstractRoomVisitor &stream, ParseEvent &event);
 };
 
-#endif //MMAPPER_PARSETREE_H
+#endif // MMAPPER_PARSETREE_H

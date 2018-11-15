@@ -126,7 +126,7 @@ else does it ;))
 #include <QString>
 #include <QtCore>
 
-//telnet command codes (prefixed with TN_ to prevent duplicit #defines
+// telnet command codes (prefixed with TN_ to prevent duplicit #defines
 static constexpr const uint8_t TN_SE = 240;
 static constexpr const uint8_t TN_NOP = 241;
 static constexpr const uint8_t TN_DM = 242;
@@ -144,7 +144,7 @@ static constexpr const uint8_t TN_DO = 253;
 static constexpr const uint8_t TN_DONT = 254;
 static constexpr const uint8_t TN_IAC = 255;
 
-//telnet option codes (supported options only)
+// telnet option codes (supported options only)
 static constexpr const uint8_t OPT_ECHO = 1;
 static constexpr const uint8_t OPT_SUPPRESS_GA = 3;
 static constexpr const uint8_t OPT_STATUS = 5;
@@ -153,7 +153,7 @@ static constexpr const uint8_t OPT_TERMINAL_TYPE = 24;
 static constexpr const uint8_t OPT_NAWS = 31;
 static constexpr const uint8_t OPT_CHARSET = 42;
 
-//telnet SB suboption types
+// telnet SB suboption types
 static constexpr const uint8_t TNSB_IS = 0;
 static constexpr const uint8_t TNSB_SEND = 1;
 static constexpr const uint8_t TNSB_REQUEST = 1;

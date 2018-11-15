@@ -31,7 +31,7 @@
 
 class QTextCodec;
 
-//supported IANA character sets
+// supported IANA character sets
 static constexpr const char *const LATIN_1_ENCODING = "ISO-8859-1";
 static constexpr const char *const UTF_8_ENCODING = "UTF-8";
 static constexpr const char *const US_ASCII_ENCODING = "US-ASCII";

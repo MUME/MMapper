@@ -176,4 +176,4 @@ public:
 };
 } // namespace enums
 
-#endif //MMAPPER_FLAGS_H
+#endif // MMAPPER_FLAGS_H

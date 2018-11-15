@@ -139,7 +139,7 @@ Update::Update(const SigParseEvent &sigParseEvent)
     : props{CommandIdType::NONE}
 {
     props = sigParseEvent.deref().clone();
-    //assert(props.getNumSkipped() == 0);
+    // assert(props.getNumSkipped() == 0);
 }
 
 void Update::exec(const RoomId id)

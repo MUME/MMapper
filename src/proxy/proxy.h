@@ -58,7 +58,7 @@ class QTcpSocket;
 class RemoteEdit;
 class TelnetFilter;
 
-//#define PROXY_STREAM_DEBUG_INPUT_TO_FILE
+// #define PROXY_STREAM_DEBUG_INPUT_TO_FILE
 
 // TODO: Rip out multithreading and use async sockets.
 class ProxyThreader final : public QThread

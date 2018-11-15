@@ -860,7 +860,7 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
     connectAll();
 }
 
-//attributes page
+// attributes page
 void RoomEditAttrDlg::exitButtonToggled(bool /*unused*/)
 {
     updateDialog(getSelectedRoom());
@@ -1400,7 +1400,7 @@ void RoomEditAttrDlg::toggleHiddenDoor()
     }
 }
 
-//terrain tab
+// terrain tab
 void RoomEditAttrDlg::terrainToolButtonToggled(bool val)
 {
     if (!val)
@@ -1476,7 +1476,7 @@ void RoomEditAttrDlg::terrainToolButtonToggled(bool val)
     emit mapChanged();
 }
 
-//note tab
+// note tab
 void RoomEditAttrDlg::roomNoteChanged()
 {
     const Room *r = getSelectedRoom();
@@ -1495,7 +1495,7 @@ void RoomEditAttrDlg::roomNoteChanged()
     emit mapChanged();
 }
 
-//all tabs
+// all tabs
 void RoomEditAttrDlg::closeClicked()
 {
     accept();

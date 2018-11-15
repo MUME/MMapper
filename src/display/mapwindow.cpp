@@ -123,7 +123,7 @@ void MapWindow::continuousScroll(qint8 hStep, qint8 vStep)
     m_horizontalScrollStep = hStep;
     m_verticalScrollStep = vStep;
 
-    //stop
+    // stop
     if ((scrollTimer != nullptr) && hStep == 0 && vStep == 0) {
         if (scrollTimer->isActive()) {
             scrollTimer->stop();
@@ -132,7 +132,7 @@ void MapWindow::continuousScroll(qint8 hStep, qint8 vStep)
         scrollTimer = nullptr;
     }
 
-    //start
+    // start
     if ((scrollTimer == nullptr) && (hStep != 0 || vStep != 0)) {
         scrollTimer = new QTimer(this);
         connect(scrollTimer, &QTimer::timeout, this, &MapWindow::scrollTimerTimeout);

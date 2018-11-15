@@ -245,7 +245,7 @@ bool Proxy::init()
             m_parserXml,
             &AbstractParser::reset);
 
-    //Group Manager Support
+    // Group Manager Support
     connect(m_parserXml,
             &MumeXmlParser::sendScoreLineEvent,
             m_groupManager,
@@ -299,7 +299,7 @@ void Proxy::onMudConnected()
 
     emit log("Proxy", "Connection to server established ...");
 
-    //send IAC-GA prompt request
+    // send IAC-GA prompt request
     QByteArray idPrompt("~$#EP2\nG\n");
     emit log("Proxy", "Sent MUME Protocol Initiator IAC-GA prompt request");
     sendToMud(idPrompt);

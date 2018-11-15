@@ -117,4 +117,4 @@ bool fsync(QFile &) noexcept(false);
 IOResult fsyncNoexcept(QFile &) noexcept;
 
 } // namespace io
-#endif //MMAPPER_IO_H
+#endif // MMAPPER_IO_H

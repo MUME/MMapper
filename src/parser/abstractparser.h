@@ -111,25 +111,25 @@ public:
     ~AbstractParser();
 
 signals:
-    //telnet
+    // telnet
     void sendToMud(const QByteArray &);
     void sig_sendToUser(const QByteArray &, bool goAhead);
     void releaseAllPaths();
 
-    //used to log
+    // used to log
     void log(const QString &, const QString &);
 
+    // for main move/search algorithm
     // CAUTION: This hides virtual bool QObject::event(QEvent*).
-    //for main move/search algorithm
     void event(const SigParseEvent &);
 
-    //for map
+    // for map
     void showPath(CommandQueue, bool);
 
-    //for user commands
+    // for user commands
     void command(const QByteArray &, const Coordinate &);
 
-    //for group manager
+    // for group manager
     void sendGroupTellEvent(QByteArray);
 
 public slots:
@@ -153,7 +153,7 @@ protected:
     void sendRoomExitsInfoToUser(const Room *r);
     const Coordinate getPosition();
 
-    //command handling
+    // command handling
     void performDoorCommand(DirectionType direction, DoorActionType action);
     void genericDoorCommand(QString command, DirectionType direction);
     void nameDoorCommand(const QString &doorname, DirectionType direction);

@@ -66,4 +66,4 @@ ExitDirection getDirection(const CommandIdType cmd);
 const char *getUppercase(const CommandIdType cmd);
 const char *getLowercase(const CommandIdType cmd);
 
-#endif //MMAPPER_COMMANDID_H
+#endif // MMAPPER_COMMANDID_H

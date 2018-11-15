@@ -217,7 +217,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
         log("ConnectionListener", tr("Server bound on localhost to port: %2.").arg(port));
     }
 
-    //update connections
+    // update connections
     wireConnections();
     readSettings();
 
@@ -296,7 +296,7 @@ void MainWindow::wireConnections()
             m_pathMachine,
             &PathMachine::setCurrentRoom);
 
-    //moved to mapwindow
+    // moved to mapwindow
     connect(m_mapData, &MapData::mapSizeChanged, m_mapWindow, &MapWindow::setScrollBars);
     connect(m_mapWindow->getCanvas(),
             &MapCanvas::roomPositionChanged,
@@ -415,7 +415,7 @@ void MainWindow::createActions()
     connect(exportWebMapAct, &QAction::triggered, this, &MainWindow::exportWebMap);
 
     mergeAct = new QAction(QIcon(":/icons/merge.png"), tr("&Merge..."), this);
-    //mergeAct->setShortcut(tr("Ctrl+M"));
+    // mergeAct->setShortcut(tr("Ctrl+M"));
     mergeAct->setStatusTip(tr("Merge an existing file into current map"));
     connect(mergeAct, &QAction::triggered, this, &MainWindow::merge);
 
@@ -439,7 +439,7 @@ void MainWindow::createActions()
     pasteAct->setShortcut(tr("Ctrl+V"));
     pasteAct->setStatusTip(tr("Paste the clipboard's contents into the current "
                               "selection"));
-    //connect(pasteAct, SIGNAL(triggered()), textEdit, SLOT(paste()));
+    // connect(pasteAct, SIGNAL(triggered()), textEdit, SLOT(paste()));
     */
 
     preferencesAct = new QAction(QIcon::fromTheme("preferences-desktop",
@@ -683,9 +683,9 @@ void MainWindow::createActions()
     selectedRoomActGroup->addAction(connectToNeighboursRoomSelectionAct);
     selectedRoomActGroup->setEnabled(false);
 
-    //editConnectionSelectionAct = new QAction(QIcon(":/icons/connectionedit.png"), tr("Edit Selected Connection"), this);
-    //editConnectionSelectionAct->setStatusTip(tr("Edit Selected Connection"));
-    //connect(editConnectionSelectionAct, SIGNAL(triggered()), this, SLOT(onEditConnectionSelection()));
+    // editConnectionSelectionAct = new QAction(QIcon(":/icons/connectionedit.png"), tr("Edit Selected Connection"), this);
+    // editConnectionSelectionAct->setStatusTip(tr("Edit Selected Connection"));
+    // connect(editConnectionSelectionAct, SIGNAL(triggered()), this, SLOT(onEditConnectionSelection()));
 
     deleteConnectionSelectionAct = new QAction(QIcon(":/icons/connectiondelete.png"),
                                                tr("Delete Selected Connection"),
@@ -698,7 +698,7 @@ void MainWindow::createActions()
 
     selectedConnectionActGroup = new QActionGroup(this);
     selectedConnectionActGroup->setExclusive(false);
-    //connectionActGroup->addAction(editConnectionSelectionAct);
+    // connectionActGroup->addAction(editConnectionSelectionAct);
     selectedConnectionActGroup->addAction(deleteConnectionSelectionAct);
     selectedConnectionActGroup->setEnabled(false);
 
@@ -732,8 +732,8 @@ void MainWindow::createActions()
     mapperMode.mapModeActGroup->addAction(mapperMode.offlineModeAct);
     mapperMode.mapModeActGroup->setEnabled(true);
 
-    //cutAct->setEnabled(false);
-    //copyAct->setEnabled(false);
+    // cutAct->setEnabled(false);
+    // copyAct->setEnabled(false);
 
     // Find Room Dialog Connections
     connect(m_findRoomsDlg, &FindRoomsDlg::center, m_mapWindow, &MapWindow::center);
@@ -823,9 +823,9 @@ void MainWindow::disableActions(bool value)
     exportBaseMapAct->setDisabled(value);
     exportWebMapAct->setDisabled(value);
     exitAct->setDisabled(value);
-    //cutAct->setDisabled(value);
-    //copyAct->setDisabled(value);
-    //pasteAct->setDisabled(value);
+    // cutAct->setDisabled(value);
+    // copyAct->setDisabled(value);
+    // pasteAct->setDisabled(value);
     aboutAct->setDisabled(value);
     aboutQtAct->setDisabled(value);
     //    nextWindowAct->setDisabled(value);
@@ -864,9 +864,9 @@ void MainWindow::setupMenuBar()
     fileMenu->addAction(exitAct);
 
     editMenu = menuBar()->addMenu(tr("&Edit"));
-    //editMenu->addAction(cutAct);
-    //editMenu->addAction(copyAct);
-    //editMenu->addAction(pasteAct);
+    // editMenu->addAction(cutAct);
+    // editMenu->addAction(copyAct);
+    // editMenu->addAction(pasteAct);
     modeMenu = editMenu->addMenu(QIcon(":/icons/online.png"), tr("&Mode"));
     modeMenu->addAction(mapperMode.playModeAct);
     modeMenu->addAction(mapperMode.mapModeAct);
@@ -892,21 +892,21 @@ void MainWindow::setupMenuBar()
     connectionMenu->addSeparator();
     connectionMenu->addAction(mouseMode.modeCreateConnectionAct);
     connectionMenu->addAction(mouseMode.modeCreateOnewayConnectionAct);
-    //connectionMenu->addAction(editConnectionSelectionAct);
+    // connectionMenu->addAction(editConnectionSelectionAct);
     connectionMenu->addAction(deleteConnectionSelectionAct);
 
     editMenu->addSeparator();
     editMenu->addAction(findRoomsAct);
     editMenu->addAction(preferencesAct);
 
-    //editMenu->addAction(createRoomAct);
-    //editMenu->addAction(createConnectionAct);
+    // editMenu->addAction(createRoomAct);
+    // editMenu->addAction(createConnectionAct);
 
     viewMenu = menuBar()->addMenu(tr("&View"));
     viewMenu->addAction(mouseMode.modeMoveSelectAct);
     QMenu *toolbars = viewMenu->addMenu(tr("&Toolbars"));
     toolbars->addAction(fileToolBar->toggleViewAction());
-    //toolbars->addAction(editToolBar->toggleViewAction());
+    // toolbars->addAction(editToolBar->toggleViewAction());
     toolbars->addAction(mapperModeToolBar->toggleViewAction());
     toolbars->addAction(mouseModeToolBar->toggleViewAction());
     toolbars->addAction(viewToolBar->toggleViewAction());
@@ -1056,7 +1056,7 @@ void MainWindow::setupToolBars()
     pathMachineToolBar->addAction(releaseAllPathsAct);
     pathMachineToolBar->addAction(forceRoomAct);
     pathMachineToolBar->hide();
-    //viewToolBar->addAction(m_dockDialog->toggleViewAction());
+    // viewToolBar->addAction(m_dockDialog->toggleViewAction());
 
     roomToolBar = addToolBar(tr("Rooms"));
     roomToolBar->setObjectName("RoomsToolBar");
@@ -1072,7 +1072,7 @@ void MainWindow::setupToolBars()
 
     connectionToolBar = addToolBar(tr("Connections"));
     connectionToolBar->setObjectName("ConnectionsToolBar");
-    //connectionToolBar->addAction(editConnectionSelectionAct);
+    // connectionToolBar->addAction(editConnectionSelectionAct);
     connectionToolBar->addAction(deleteConnectionSelectionAct);
     connectionToolBar->hide();
 
@@ -1164,7 +1164,7 @@ void MainWindow::merge()
             return;
         }
 
-        //MERGE
+        // MERGE
         progressDlg = new QProgressDialog(this);
         QPushButton *cb = new QPushButton("Abort ...");
         cb->setEnabled(false);
@@ -1198,9 +1198,9 @@ void MainWindow::merge()
         }
         m_mapWindow->getCanvas()->show();
         disableActions(false);
-        //cutAct->setEnabled(false);
-        //copyAct->setEnabled(false);
-        //pasteAct->setEnabled(false);
+        // cutAct->setEnabled(false);
+        // copyAct->setEnabled(false);
+        // pasteAct->setEnabled(false);
 
         storage = nullptr;
         real_storage.reset();
@@ -1361,7 +1361,7 @@ void MainWindow::loadFile(const QString &fileName)
         return;
     }
 
-    //LOAD
+    // LOAD
     progressDlg = new QProgressDialog(this);
     QPushButton *cb = new QPushButton("Abort ...");
     cb->setEnabled(false);
@@ -1394,9 +1394,9 @@ void MainWindow::loadFile(const QString &fileName)
     }
     m_mapWindow->getCanvas()->show();
     disableActions(false);
-    //cutAct->setEnabled(false);
-    //copyAct->setEnabled(false);
-    //pasteAct->setEnabled(false);
+    // cutAct->setEnabled(false);
+    // copyAct->setEnabled(false);
+    // pasteAct->setEnabled(false);
 
     delete (storage);
     delete progressDlg;
@@ -1446,7 +1446,7 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode, SaveFormat for
 
     m_mapWindow->getCanvas()->setEnabled(false);
 
-    //SAVE
+    // SAVE
     progressDlg = new QProgressDialog(this);
     QPushButton *cb = new QPushButton("Abort ...");
     cb->setEnabled(false);
@@ -1466,7 +1466,7 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode, SaveFormat for
     connect(storage.get(), &AbstractMapStorage::log, this, &MainWindow::log);
 
     disableActions(true);
-    //m_mapWindow->getCanvas()->hide();
+    // m_mapWindow->getCanvas()->hide();
     const bool saveOk = storage->saveData(mode == SaveMode::SAVEM_BASEMAP);
     //m_mapWindow->getCanvas()->show();
     disableActions(false);

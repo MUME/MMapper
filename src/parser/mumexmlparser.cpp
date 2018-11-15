@@ -126,7 +126,7 @@ void MumeXmlParser::parse(const IncomingData &data)
     for (index = 0; index < line.size(); index++) {
         if (m_readingTag) {
             if (line.at(index) == '>') {
-                //send tag
+                // send tag
                 if (!m_tempTag.isEmpty()) {
                     element(m_tempTag);
                 }
@@ -398,7 +398,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
     }
 
     switch (m_xmlMode) {
-    case XmlMode::NONE: //non room info
+    case XmlMode::NONE: // non room info
         m_stringBuffer = normalizeStringCopy(m_stringBuffer.trimmed());
         if (m_stringBuffer.isEmpty()) { // standard end of description parsed
             if (m_readingRoomDesc) {
@@ -433,7 +433,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
             move();
         }
 
-        m_readingRoomDesc = true; //start of read desc mode
+        m_readingRoomDesc = true; // start of read desc mode
         m_descriptionReady = false;
         m_roomName = normalizeStringCopy(m_stringBuffer);
         m_dynamicRoomDesc = nullString;

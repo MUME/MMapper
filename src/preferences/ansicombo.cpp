@@ -164,7 +164,7 @@ bool AnsiCombo::colorFromString(const QString &colString,
         colorFromNumber(ansiCodeBg, colBg, intelligibleNameBg);
     };
 
-    //matches
+    // matches
     QString tmpStr = colString;
 
     tmpStr.chop(1);

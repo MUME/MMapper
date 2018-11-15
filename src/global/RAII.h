@@ -44,4 +44,4 @@ public:
     ~RAIIBool();
 };
 
-#endif //MMAPPER_RAII_H
+#endif // MMAPPER_RAII_H

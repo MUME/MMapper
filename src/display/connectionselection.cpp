@@ -64,7 +64,7 @@ ConnectionSelection::ConnectionSelection(MapFrontend *const mf,
 
 ConnectionSelection::~ConnectionSelection()
 {
-    //for all rooms remove them internaly and call release room
+    // for all rooms remove them internaly and call release room
     if (auto *const admin = std::exchange(m_admin, nullptr)) {
         for (const auto &x : m_connectionDescriptor) {
             if (auto *const room = x.room) {
@@ -86,9 +86,9 @@ ExitDirection ConnectionSelection::ComputeDirection(const float mouseX, const fl
 {
     ExitDirection dir = ExitDirection::UNKNOWN;
 
-    //room centre
-    //int x1 = (int) (mouseX + 0.5);
-    //int y1 = (int) (mouseY + 0.5);
+    // room centre
+    // int x1 = (int) (mouseX + 0.5);
+    // int y1 = (int) (mouseY + 0.5);
     const int x1 = GLtoMap(mouseX);
     const int y1 = GLtoMap(mouseY);
 
@@ -96,35 +96,35 @@ ExitDirection ConnectionSelection::ComputeDirection(const float mouseX, const fl
     float y1d = mouseY - static_cast<float>(y1);
 
     if (y1d > -0.2f && y1d < 0.2f) {
-        //y1p = y1;
+        // y1p = y1;
         if (x1d >= 0.2f) {
             dir = ExitDirection::EAST;
-            //x1p = x1 + 0.4;
+            // x1p = x1 + 0.4;
         } else {
             if (x1d <= -0.2f) {
                 dir = ExitDirection::WEST;
-                //x1p = x1 - 0.4;
+                // x1p = x1 - 0.4;
             } else {
                 dir = ExitDirection::UNKNOWN;
-                //x1p = x1;
+                // x1p = x1;
             }
         }
     } else {
-        //x1p = x1;
+        // x1p = x1;
         if (y1d >= 0.2f) {
-            //y1p = y1 + 0.4;
+            // y1p = y1 + 0.4;
             dir = ExitDirection::SOUTH;
             if (x1d <= -0.2f) {
                 dir = ExitDirection::DOWN;
-                //x1p = x1 + 0.4;
+                // x1p = x1 + 0.4;
             }
         } else {
             if (y1d <= -0.2f) {
-                //y1p = y1 - 0.4;
+                // y1p = y1 - 0.4;
                 dir = ExitDirection::NORTH;
                 if (x1d >= 0.2f) {
                     dir = ExitDirection::UP;
-                    //x1p = x1 - 0.4;
+                    // x1p = x1 - 0.4;
                 }
             }
         }
@@ -149,7 +149,7 @@ void ConnectionSelection::setFirst(MapFrontend *const mf,
     }
     mf->lookingForRooms(*this, c, c);
     m_connectionDescriptor[0].direction = ComputeDirection(mx, my);
-    //if (m_connectionDescriptor[0].direction == CD_NONE) m_connectionDescriptor[0].direction = CD_UNKNOWN;
+    // if (m_connectionDescriptor[0].direction == CD_NONE) m_connectionDescriptor[0].direction = CD_UNKNOWN;
 }
 
 void ConnectionSelection::setFirst(MapFrontend *const mf, const RoomId id, const ExitDirection dir)
@@ -163,7 +163,7 @@ void ConnectionSelection::setFirst(MapFrontend *const mf, const RoomId id, const
     }
     mf->lookingForRooms(*this, id);
     m_connectionDescriptor[0].direction = dir;
-    //if (m_connectionDescriptor[0].direction == CD_NONE) m_connectionDescriptor[0].direction = CD_UNKNOWN;
+    // if (m_connectionDescriptor[0].direction == CD_NONE) m_connectionDescriptor[0].direction = CD_UNKNOWN;
 }
 
 void ConnectionSelection::setSecond(MapFrontend *const mf,
@@ -181,7 +181,7 @@ void ConnectionSelection::setSecond(MapFrontend *const mf,
     }
     mf->lookingForRooms(*this, c, c);
     m_connectionDescriptor[1].direction = ComputeDirection(mx, my);
-    //if (m_connectionDescriptor[1].direction == ED_UNKNOWN) m_connectionDescriptor[1].direction = ED_NONE;
+    // if (m_connectionDescriptor[1].direction == ED_UNKNOWN) m_connectionDescriptor[1].direction = ED_NONE;
 }
 
 void ConnectionSelection::setSecond(MapFrontend *const mf, const RoomId id, const ExitDirection dir)
@@ -195,7 +195,7 @@ void ConnectionSelection::setSecond(MapFrontend *const mf, const RoomId id, cons
     }
     mf->lookingForRooms(*this, id);
     m_connectionDescriptor[1].direction = dir;
-    //if (m_connectionDescriptor[1].direction == ED_UNKNOWN) m_connectionDescriptor[1].direction = ED_NONE;
+    // if (m_connectionDescriptor[1].direction == ED_UNKNOWN) m_connectionDescriptor[1].direction = ED_NONE;
 }
 
 void ConnectionSelection::removeFirst()
@@ -231,8 +231,8 @@ ConnectionSelection::ConnectionDescriptor ConnectionSelection::getSecond()
 void ConnectionSelection::receiveRoom(RoomAdmin *const admin, const Room *const aRoom)
 {
     m_admin = admin;
-    //addroom to internal map
-    //quint32 id = aRoom->getId();
+    // addroom to internal map
+    // quint32 id = aRoom->getId();
 
     if (m_first) {
         if (m_connectionDescriptor[0].room != nullptr) {

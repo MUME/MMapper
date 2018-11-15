@@ -360,11 +360,11 @@ void AbstractParser::parseExits()
             break;
 
         case 110:                                                        // n
-            if ((i + 2) < length && (str.at(i + 2).toLatin1()) == 'r') { //north
+            if ((i + 2) < length && (str.at(i + 2).toLatin1()) == 'r') { // north
                 i += 5;
                 dir = DirectionType::NORTH;
             } else {
-                i += 4; //none
+                i += 4; // none
                 dir = DirectionType::NONE;
             }
             break;
@@ -1547,7 +1547,7 @@ void AbstractParser::nameDoorCommand(const QString &doorname, DirectionType dire
 {
     Coordinate c = getPosition();
 
-    //if (doorname.isEmpty()) toggleExitFlagCommand(ExitFlag::DOOR, direction);
+    // if (doorname.isEmpty()) toggleExitFlagCommand(ExitFlag::DOOR, direction);
     m_mapData->setDoorName(c, doorname, static_cast<ExitDirection>(direction));
     sendToUser("--->Doorname set to: " + doorname.toLatin1() + "\r\n");
 }

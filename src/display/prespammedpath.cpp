@@ -30,7 +30,7 @@
 #include "../parser/CommandId.h"
 #include "../parser/abstractparser.h"
 
-//#define TEST
+// #define TEST
 #ifdef TEST
 static constexpr const bool USE_TEST = true;
 #else

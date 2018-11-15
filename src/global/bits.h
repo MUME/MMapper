@@ -43,4 +43,4 @@ static_assert(bit32 == 2147483648u, "");
 #undef ADD
 #undef DEFINE_BITS
 
-#endif //MMAPPER_BITS_H
+#endif // MMAPPER_BITS_H

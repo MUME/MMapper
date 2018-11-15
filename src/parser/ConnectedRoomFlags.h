@@ -104,4 +104,4 @@ public:
     }
 };
 
-#endif //MMAPPER_CONNECTEDROOMFLAGS_H
+#endif // MMAPPER_CONNECTEDROOMFLAGS_H

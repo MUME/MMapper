@@ -197,7 +197,7 @@ void AbstractTelnet::reset()
     announcedState.fill(false);
     heAnnouncedState.fill(false);
 
-    //reset telnet status
+    // reset telnet status
     setTerminalType();
     state = TelnetState::NORMAL;
     commandBuffer.clear();
@@ -222,7 +222,7 @@ void AbstractTelnet::submitOverTelnet(const QByteArray &data, bool goAhead)
         outdata += TN_GA;
     }
 
-    //data ready, send it
+    // data ready, send it
     sendRawData(outdata);
 }
 
@@ -334,11 +334,11 @@ void AbstractTelnet::sendOptionStatus()
 void AbstractTelnet::sendAreYouThere()
 {
     sendRawData("I'm here! Please be more patient!\r\n");
-    //well, this should never be executed, as the response would probably
-    //be treated as a command. But that's server's problem, not ours...
-    //If the server wasn't capable of handling this, it wouldn't have
-    //sent us the AYT command, would it? Impatient server = bad server.
-    //Let it suffer! ;-)
+    // well, this should never be executed, as the response would probably
+    // be treated as a command. But that's server's problem, not ours...
+    // If the server wasn't capable of handling this, it wouldn't have
+    // sent us the AYT command, would it? Impatient server = bad server.
+    // Let it suffer! ;-)
 }
 
 void AbstractTelnet::sendTerminalTypeRequest()
@@ -367,7 +367,7 @@ void AbstractTelnet::processTelnetCommand(const QByteArray &command)
             sendAreYouThere();
             break;
         case TN_GA:
-            recvdGA = true; //signal will be emitted later
+            recvdGA = true; // signal will be emitted later
             break;
         };
         break;
@@ -379,22 +379,22 @@ void AbstractTelnet::processTelnetCommand(const QByteArray &command)
 
         switch (ch) {
         case TN_WILL:
-            //server wants to enable some option (or he sends a timing-mark)...
+            // server wants to enable some option (or he sends a timing-mark)...
             option = command[2];
 
             heAnnouncedState[option] = true;
             if (!hisOptionState[option])
-            //only if this is not set; if it's set, something's wrong wth the server
-            //(according to telnet specification, option announcement may not be
-            //unless explicitly requested)
+            // only if this is not set; if it's set, something's wrong wth the server
+            // (according to telnet specification, option announcement may not be
+            // unless explicitly requested)
             {
                 if (!myOptionState[option])
-                //only if the option is currently disabled
+                // only if the option is currently disabled
                 {
                     if ((option == OPT_SUPPRESS_GA) || (option == OPT_STATUS)
                         || (option == OPT_TERMINAL_TYPE) || (option == OPT_NAWS)
                         || (option == OPT_ECHO) || (option == OPT_CHARSET))
-                    //these options are supported
+                    // these options are supported
                     {
                         sendTelnetOption(TN_DO, option);
                         hisOptionState[option] = true;
@@ -413,12 +413,12 @@ void AbstractTelnet::processTelnetCommand(const QByteArray &command)
             }
             break;
         case TN_WONT:
-            //server refuses to enable some option...
+            // server refuses to enable some option...
             option = command[2];
             if (!myOptionState[option])
-            //only if the option is currently disabled
+            // only if the option is currently disabled
             {
-                //send DONT if needed (see RFC 854 for details)
+                // send DONT if needed (see RFC 854 for details)
                 if (hisOptionState[option] || (!heAnnouncedState[option])) {
                     sendTelnetOption(TN_DONT, option);
                     hisOptionState[option] = false;
@@ -430,13 +430,13 @@ void AbstractTelnet::processTelnetCommand(const QByteArray &command)
             heAnnouncedState[option] = true;
             break;
         case TN_DO:
-            //server wants us to enable some option
+            // server wants us to enable some option
             option = command[2];
             if (option == OPT_TIMING_MARK) {
-                //send WILL TIMING_MARK
+                // send WILL TIMING_MARK
                 sendTelnetOption(TN_WILL, option);
             } else if (!myOptionState[option])
-            //only if the option is currently disabled
+            // only if the option is currently disabled
             {
                 if ((option == OPT_SUPPRESS_GA) || (option == OPT_STATUS)
                     || (option == OPT_TERMINAL_TYPE) || (option == OPT_NAWS)
@@ -453,7 +453,7 @@ void AbstractTelnet::processTelnetCommand(const QByteArray &command)
                 qDebug() << "My option" << telnetOptionName(option) << "was already enabled";
             }
             if (myOptionState[OPT_NAWS] && option == OPT_NAWS) {
-                //NAWS here - window size info must be sent
+                // NAWS here - window size info must be sent
                 // REVISIT: Should we attempt to rate-limit this to avoid spamming dozens of NAWS
                 // messages per second when the user adjusts the window size?
                 sendWindowSizeChanged(current.x, current.y);
@@ -464,7 +464,7 @@ void AbstractTelnet::processTelnetCommand(const QByteArray &command)
             }
             break;
         case TN_DONT:
-            //only respond if value changed or if this option has not been announced yet
+            // only respond if value changed or if this option has not been announced yet
             option = command[2];
             if (myOptionState[option] || (!announcedState[option])) {
                 sendTelnetOption(TN_WONT, option);
@@ -476,11 +476,11 @@ void AbstractTelnet::processTelnetCommand(const QByteArray &command)
         break;
 
     default:
-        //other cmds should not arrive, as they were not negotiated.
-        //if they do, they are merely ignored
+        // other cmds should not arrive, as they were not negotiated.
+        // if they do, they are merely ignored
         break;
     };
-    //other commands are simply ignored (NOP and such, see .h file for list)
+    // other commands are simply ignored (NOP and such, see .h file for list)
 }
 
 void AbstractTelnet::processTelnetSubnegotiation(const QByteArray &payload)
@@ -490,16 +490,16 @@ void AbstractTelnet::processTelnetSubnegotiation(const QByteArray &payload)
                  << telnetSubnegName(payload[1]);
     }
 
-    //subnegotiation - we analyze and respond...
+    // subnegotiation - we analyze and respond...
     switch (payload[0]) {
     case OPT_STATUS:
-        //see OPT_TERMINAL_TYPE for explanation why I'm doing this
+        // see OPT_TERMINAL_TYPE for explanation why I'm doing this
         if (true /*myOptionState[OPT_STATUS]*/) {
             if (payload[1] == TNSB_SEND)
-            //request to send all enabled commands; if server sends his
-            //own list of commands, we just ignore it (well, he shouldn't
-            //send anything, as we do not request anything, but there are
-            //so many servers out there, that you can never be sure...)
+            // request to send all enabled commands; if server sends his
+            // own list of commands, we just ignore it (well, he shouldn't
+            // send anything, as we do not request anything, but there are
+            // so many servers out there, that you can never be sure...)
             {
                 sendOptionStatus();
             }
@@ -509,7 +509,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const QByteArray &payload)
         if (myOptionState[OPT_TERMINAL_TYPE]) {
             switch (payload[1]) {
             case TNSB_SEND:
-                //server wants us to send terminal type
+                // server wants us to send terminal type
                 sendTerminalType(termType);
                 break;
             case TNSB_IS:
@@ -585,7 +585,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const QByteArray &payload)
         break;
 
     default:
-        //other subnegs should not arrive and if they do, they are merely ignored
+        // other subnegs should not arrive and if they do, they are merely ignored
         break;
     }
 }
@@ -613,7 +613,7 @@ void AbstractTelnet::onReadInternal(const QByteArray &data)
         }
     }
 
-    //some data left to send - do it now!
+    // some data left to send - do it now!
     if (!cleanData.isEmpty()) {
         sendToMapper(cleanData, recvdGA); // without GO-AHEAD
         cleanData.clear();
@@ -685,7 +685,7 @@ void AbstractTelnet::onReadInternal2(QByteArray &cleanData, const uint8_t c)
             state = TelnetState::NORMAL;
             commandBuffer.append(c);
             processTelnetCommand(commandBuffer);
-            //this could have set receivedGA to true; we'll handle that later
+            // this could have set receivedGA to true; we'll handle that later
             // (at the end of this function)
             commandBuffer.clear();
         }
@@ -704,7 +704,7 @@ void AbstractTelnet::onReadInternal2(QByteArray &cleanData, const uint8_t c)
             state = TelnetState::SUBNEG_IAC;
             commandBuffer.append(c);
         } else {
-            //option payload
+            // option payload
             subnegBuffer.append(c);
         }
         break;
@@ -738,7 +738,7 @@ void AbstractTelnet::onReadInternal2(QByteArray &cleanData, const uint8_t c)
             state = TelnetState::SUBNEG;
             commandBuffer.append(c);
             processTelnetCommand(commandBuffer);
-            //this could have set receivedGA to true; we'll handle that later
+            // this could have set receivedGA to true; we'll handle that later
             // (at the end of this function)
             commandBuffer.clear();
         }

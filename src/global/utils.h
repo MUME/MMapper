@@ -79,4 +79,4 @@ inline T &deref(const std::unique_ptr<T> &ptr)
     return *ptr;
 }
 
-#endif //MMAPPER_UTILS_H
+#endif // MMAPPER_UTILS_H

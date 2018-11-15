@@ -60,10 +60,10 @@ signals:
 public slots:
     void setRoomSelection(const RoomSelection *, MapData *, MapCanvas *);
 
-    //selection page
+    // selection page
     void roomListCurrentIndexChanged(int);
 
-    //attributes page
+    // attributes page
     void neutralRadioButtonToggled(bool);
     void goodRadioButtonToggled(bool);
     void evilRadioButtonToggled(bool);
@@ -97,13 +97,13 @@ public slots:
 
     void toggleHiddenDoor();
 
-    //terrain tab
+    // terrain tab
     void terrainToolButtonToggled(bool);
 
-    //note tab
+    // note tab
     void roomNoteChanged();
 
-    //all tabs
+    // all tabs
     void closeClicked();
 
 public:

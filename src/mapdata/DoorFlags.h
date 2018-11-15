@@ -77,4 +77,4 @@ inline constexpr const DoorFlags operator|(DoorFlag lhs, DoorFlag rhs) noexcept
     return DoorFlags{lhs} | DoorFlags{rhs};
 }
 
-#endif //MMAPPER_DOORFLAGS_H
+#endif // MMAPPER_DOORFLAGS_H

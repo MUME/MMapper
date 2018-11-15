@@ -323,7 +323,7 @@ void CGroupServerCommunicator::retrieveData(CGroupClient *const connection,
 {
     //    qInfo() << "Retrieve data from" << conn;
     switch (connection->getConnectionState()) {
-    //Closed, Connecting, Connected, Quiting
+    // Closed, Connecting, Connected, Quiting
     case ConnectionStates::Connected:
         // AwaitingLogin, AwaitingInfo, Logged
 
@@ -605,7 +605,7 @@ void CGroupClientCommunicator::retrieveData(CGroupClient *conn,
                                             const QVariantMap &data)
 {
     switch (conn->getConnectionState()) {
-    //Closed, Connecting, Connected, Quiting
+    // Closed, Connecting, Connected, Quiting
     case ConnectionStates::Connected:
         // AwaitingLogin, AwaitingInfo, Logged
 

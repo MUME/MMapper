@@ -37,8 +37,8 @@ void Map::clear()
 
 void Map::getRooms(AbstractRoomVisitor &stream, const Coordinate &ulf, const Coordinate &lrb) const
 {
-    //QTime start = QTime::currentTime();
-    //int checks = 0;
+    // QTime start = QTime::currentTime();
+    // int checks = 0;
     const int xmin = (ulf.x < lrb.x ? ulf.x : lrb.x) - 1;
     const int xmax = (ulf.x > lrb.x ? ulf.x : lrb.x) + 1;
     const int ymin = (ulf.y < lrb.y ? ulf.y : lrb.y) - 1;
@@ -55,11 +55,11 @@ void Map::getRooms(AbstractRoomVisitor &stream, const Coordinate &ulf, const Coo
             auto xUpper = xmap.lower_bound(xmax);
             for (auto x = xmap.upper_bound(xmin); x != xUpper; ++x) {
                 stream.visit(x->second);
-                //++checks;
+                // ++checks;
             }
         }
     }
-    //cout << "rendering took " << start.msecsTo(QTime::currentTime()) << " msecs for " << checks << " checks" << endl;
+    // cout << "rendering took " << start.msecsTo(QTime::currentTime()) << " msecs for " << checks << " checks" << endl;
 }
 
 void Map::fillArea(AbstractRoomFactory *factory, const Coordinate &ulf, const Coordinate &lrb)

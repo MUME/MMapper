@@ -45,7 +45,7 @@ class QFile;
 class QObject;
 struct IncomingData;
 
-//#define XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
+// #define XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
 
 enum class XmlMode { NONE, ROOM, NAME, DESCRIPTION, EXITS, PROMPT, TERRAIN };
 

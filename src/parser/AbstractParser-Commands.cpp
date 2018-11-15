@@ -384,7 +384,7 @@ bool AbstractParser::parseSimpleCommand(const QString &str)
         case CommandIdType::FLEE:
             if (!isOnline) {
                 offlineCharacterMove(CommandIdType::FLEE);
-                return false; //do not send command to mud server for offline mode
+                return false; // do not send command to mud server for offline mode
             }
             break;
 
@@ -402,7 +402,7 @@ bool AbstractParser::parseSimpleCommand(const QString &str)
         sendPromptToUser();
     }
 
-    return isOnline; //only forward command to mud server if online
+    return isOnline; // only forward command to mud server if online
 }
 
 bool AbstractParser::parseDoorAction(StringView words)

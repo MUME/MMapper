@@ -40,4 +40,4 @@ const std::array<DoorActionType, NUM_DOOR_ACTION_TYPES> &getAllDoorActionTypes()
 
 } // namespace enums
 
-#endif //MMAPPER_DOORACTION_H
+#endif // MMAPPER_DOORACTION_H

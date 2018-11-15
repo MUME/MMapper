@@ -116,7 +116,7 @@ struct MapCanvasData
 
     CanvasMouseMode m_canvasMouseMode{CanvasMouseMode::MOVE};
 
-    //mouse selection
+    // mouse selection
     struct
     {
         float x = 0.0f;
@@ -124,7 +124,7 @@ struct MapCanvasData
         int layer = 0;
     } m_sel1{}, m_sel2{}, m_moveBackup{};
 
-    bool m_selectedArea = false; //no area selected at start time
+    bool m_selectedArea = false; // no area selected at start time
     const RoomSelection *m_roomSelection = nullptr;
 
     struct

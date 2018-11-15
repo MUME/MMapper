@@ -133,4 +133,4 @@ public:
     void reset() { value = 0u; }
 };
 
-#endif //MMAPPER_EXITSFLAGS_H
+#endif // MMAPPER_EXITSFLAGS_H

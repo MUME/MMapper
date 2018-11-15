@@ -89,4 +89,4 @@ public:
     DoorFlags getDoorFlags() const;
 };
 
-#endif //MMAPPER_EXITFLAGVARIANT_H
+#endif // MMAPPER_EXITFLAGVARIANT_H

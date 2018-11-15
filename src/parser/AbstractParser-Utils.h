@@ -31,4 +31,4 @@ bool isOnline();
 const char *enabledString(bool isEnabled);
 bool isValidPrefix(char c);
 
-#endif //MMAPPER_ABSTRACTPARSER_UTILS_H
+#endif // MMAPPER_ABSTRACTPARSER_UTILS_H

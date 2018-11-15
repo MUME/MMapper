@@ -45,4 +45,4 @@ const std::array<DirectionType, 6> &getAllDirections6();
 
 #define ALL_DIRECTIONS6 enums::getAllDirections6()
 
-#endif //MMAPPER_DIRECTIONTYPE_H
+#endif // MMAPPER_DIRECTIONTYPE_H

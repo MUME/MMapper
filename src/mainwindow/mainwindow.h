@@ -220,9 +220,9 @@ private:
     QAction *exportBaseMapAct = nullptr;
     QAction *exportWebMapAct = nullptr;
     QAction *exitAct = nullptr;
-    //QAction *cutAct;
-    //QAction *copyAct;
-    //QAction *pasteAct;
+    // QAction *cutAct;
+    // QAction *copyAct;
+    // QAction *pasteAct;
     QAction *voteAct = nullptr;
     QAction *mmapperCheckForUpdateAct = nullptr;
     QAction *mumeWebsiteAct = nullptr;

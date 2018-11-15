@@ -71,4 +71,4 @@ CharBuffer<N> makeCharBuffer(const char (&data)[N])
     return CharBuffer<N>{data};
 };
 
-#endif //MMAPPER_CHARBUFFER_H
+#endif // MMAPPER_CHARBUFFER_H

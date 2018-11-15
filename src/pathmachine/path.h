@@ -59,7 +59,7 @@ public:
     bool hasChildren() const { return (!children.empty()); }
     const Room *getRoom() const { return room; }
 
-    //new Path is created, distance between rooms is calculated and probability is set accordingly
+    // new Path is created, distance between rooms is calculated and probability is set accordingly
     Path *fork(const Room *room,
                const Coordinate &expectedCoordinate,
                RoomAdmin *owner,

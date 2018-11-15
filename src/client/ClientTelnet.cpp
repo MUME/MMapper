@@ -128,9 +128,9 @@ void ClientTelnet::sendRawData(const QByteArray &data)
 
 void ClientTelnet::onWindowSizeChanged(int x, int y)
 {
-    //remember the size - we'll need it if NAWS is currently disabled but will
-    //be enabled. Also remember it if no connection exists at the moment;
-    //we won't be called again when connecting
+    // remember the size - we'll need it if NAWS is currently disabled but will
+    // be enabled. Also remember it if no connection exists at the moment;
+    // we won't be called again when connecting
     current.x = x;
     current.y = y;
 

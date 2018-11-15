@@ -62,4 +62,4 @@ ExitDirection dirForChar(const char dir);
 char charForDir(ExitDirection dir);
 } // namespace Mmapper2Exit
 
-#endif //MMAPPER_EXITDIRECTION_H
+#endif // MMAPPER_EXITDIRECTION_H

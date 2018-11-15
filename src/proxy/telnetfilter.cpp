@@ -56,7 +56,7 @@ void TelnetFilter::onAnalyzeMudStream(const QByteArray &ba, bool goAhead)
     }
     dispatchTelnetStream(ba, m_mudIncomingBuffer, m_mudIncomingQue);
 
-    //parse incoming lines in que
+    // parse incoming lines in que
     IncomingData data;
     while (!m_mudIncomingQue.isEmpty()) {
         data = m_mudIncomingQue.dequeue();
@@ -72,7 +72,7 @@ void TelnetFilter::onAnalyzeUserStream(const QByteArray &ba, bool goAhead)
     }
     dispatchTelnetStream(ba, m_userIncomingData, m_userIncomingQue);
 
-    //parse incoming lines in que
+    // parse incoming lines in que
     IncomingData data;
     while (!m_userIncomingQue.isEmpty()) {
         data = m_userIncomingQue.dequeue();
@@ -101,7 +101,7 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
 
         case ASCII_CR:
             if (!buffer.line.isEmpty()) {
-                const auto val2 = buffer.line.right(1).at(0); //get last char
+                const auto val2 = buffer.line.right(1).at(0); // get last char
                 switch (val2) {
                 case ASCII_LF:
                     buffer.line.append(static_cast<char>(ASCII_CR));
@@ -128,7 +128,7 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
 
         case ASCII_LF:
             if (!buffer.line.isEmpty()) {
-                const auto val2 = static_cast<uint8_t>(buffer.line.right(1).at(0)); //get last char
+                const auto val2 = static_cast<uint8_t>(buffer.line.right(1).at(0)); // get last char
                 switch (val2) {
                 case ASCII_CR:
                     buffer.line.append(static_cast<char>(ASCII_LF));

@@ -57,4 +57,4 @@ public:
     QString describe() const;
 };
 
-#endif //MMAPPER_ABBREV_H
+#endif // MMAPPER_ABBREV_H

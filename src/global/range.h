@@ -50,4 +50,4 @@ auto make_reverse_range(T &&container)
     return make_range(std::rbegin(container), std::rend(container));
 }
 
-#endif //MMAPPER_RANGE_H
+#endif // MMAPPER_RANGE_H

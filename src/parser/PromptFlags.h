@@ -105,4 +105,4 @@ public:
     void reset() { flags = uint8_t{0}; }
 };
 
-#endif //MMAPPER_PROMPTFLAGS_H
+#endif // MMAPPER_PROMPTFLAGS_H

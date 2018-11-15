@@ -129,7 +129,7 @@ public slots:
     void clearRoomSelection();
     void clearConnectionSelection();
 
-    //void worldChanged();
+    // void worldChanged();
 
     void dataLoaded();
     void moveMarker(const Coordinate &);
@@ -154,7 +154,7 @@ signals:
     void roomPositionChanged();
 
 protected:
-    //void closeEvent(QCloseEvent *event);
+    // void closeEvent(QCloseEvent *event);
 
     void initializeGL() override;
     void paintGL() override;
