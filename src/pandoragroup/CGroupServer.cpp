@@ -58,13 +58,13 @@ void CGroupServer::incomingConnection(qintptr socketDescriptor)
 
 void CGroupServer::errorInConnection(CGroupClient *const connection, const QString &errorMessage)
 {
+    qWarning() << "Removing and deleting client" << connection->getPeerAddress().toString()
+               << errorMessage;
     emit connectionClosed(connection);
     connections.removeAll(connection);
     connection->disconnectFromHost();
     disconnectAll(connection);
     connection->deleteLater();
-    qWarning() << "Removing and deleting client" << connection->getPeerAddress().toString()
-               << errorMessage;
 }
 
 void CGroupServer::sendToAll(const QByteArray &message)
