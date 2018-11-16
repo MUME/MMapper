@@ -53,12 +53,12 @@ enum class RoomTerrainType {
     BRUSH,
     TUNNEL,
     CAVERN,
-    DEATHTRAP,
-    RANDOM
+    DEATHTRAP
 };
-static constexpr const size_t NUM_ROOM_TERRAIN_TYPES = static_cast<size_t>(RoomTerrainType::RANDOM)
+static constexpr const size_t NUM_ROOM_TERRAIN_TYPES = static_cast<size_t>(
+                                                           RoomTerrainType::DEATHTRAP)
                                                        + 1u;
-static_assert(NUM_ROOM_TERRAIN_TYPES == 17, "");
+static_assert(NUM_ROOM_TERRAIN_TYPES == 16, "");
 DEFINE_ENUM_COUNT(RoomTerrainType, NUM_ROOM_TERRAIN_TYPES)
 
 enum class RoomAlignType { UNDEFINED = 0, GOOD, NEUTRAL, EVIL };

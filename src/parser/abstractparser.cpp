@@ -115,8 +115,6 @@ static char getTerrainSymbol(const RoomTerrainType type)
         return 'O'; // O  // cavern
     case RoomTerrainType::BRUSH:
         return ':'; // :  // brush
-    case RoomTerrainType::RANDOM:
-        return '?';
     case RoomTerrainType::DEATHTRAP:
         return 'X';
     };

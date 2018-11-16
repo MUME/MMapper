@@ -870,9 +870,6 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         case RoomTerrainType::DEATHTRAP:
             toolButton15->setChecked(true);
             break;
-        case RoomTerrainType::RANDOM:
-            // REVISIT: add a button?
-            break;
         }
     }
 

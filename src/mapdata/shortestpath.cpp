@@ -83,8 +83,6 @@ static double terrain_cost(const RoomTerrainType type)
         return 0.75; // cavern
     case RoomTerrainType::DEATHTRAP:
         return 1000.0; // deathtrap
-    case RoomTerrainType::RANDOM:
-        return 30.0; // random
     }
 
     return 1.0;
@@ -94,6 +92,9 @@ static double getLength(const Exit &e, const Room *curr, const Room *nextr)
 {
     double cost = terrain_cost(nextr->getTerrainType());
     auto flags = e.getExitFlags();
+    if (flags.isRandom()) {
+        cost += 30;
+    }
     if (flags.isDoor()) {
         cost += 1;
     }
