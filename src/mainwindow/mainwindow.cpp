@@ -361,6 +361,14 @@ void MainWindow::wireConnections()
             &ConnectionListener::clientSuccessfullyConnected,
             m_dockLaunch,
             &QWidget::hide);
+
+    // Find Room Dialog Connections
+    connect(m_findRoomsDlg,
+            &FindRoomsDlg::newRoomSelection,
+            m_mapWindow->getCanvas(),
+            &MapCanvas::setRoomSelection);
+    connect(m_findRoomsDlg, &FindRoomsDlg::center, m_mapWindow, &MapWindow::center);
+    connect(m_findRoomsDlg, &FindRoomsDlg::log, this, &MainWindow::log);
 }
 
 void MainWindow::log(const QString &module, const QString &message)
@@ -734,10 +742,6 @@ void MainWindow::createActions()
 
     // cutAct->setEnabled(false);
     // copyAct->setEnabled(false);
-
-    // Find Room Dialog Connections
-    connect(m_findRoomsDlg, &FindRoomsDlg::center, m_mapWindow, &MapWindow::center);
-    connect(m_findRoomsDlg, &FindRoomsDlg::log, this, &MainWindow::log);
 
     // group Manager
     groupMode.groupOffAct = new QAction(QIcon(":/icons/groupoff.png"), tr("&Off"), this);

@@ -272,19 +272,36 @@ void MapCanvas::setCanvasMouseMode(CanvasMouseMode mode)
     update();
 }
 
-void MapCanvas::clearRoomSelection()
+void MapCanvas::setRoomSelection(const RoomSelection *selection)
 {
+    // Clear old room selection
     if (m_roomSelection != nullptr) {
         m_data->unselect(m_roomSelection);
+        m_roomSelection = nullptr;
     }
-    m_roomSelection = nullptr;
+
+    // Only update room selection if its populated
+    if (selection != nullptr && selection->isEmpty()) {
+        m_data->unselect(selection);
+        selection = nullptr;
+    } else {
+        m_roomSelection = selection;
+    }
+
+    if (m_roomSelection)
+        qDebug() << "Updated selection with" << m_roomSelection->size() << "rooms";
+    else
+        qDebug() << "Cleared room selection";
+
+    // Let the MainWindow know
     emit newRoomSelection(m_roomSelection);
+    update();
 }
 
-void MapCanvas::clearConnectionSelection()
+void MapCanvas::setConnectionSelection(ConnectionSelection *selection)
 {
     delete m_connectionSelection;
-    m_connectionSelection = nullptr;
+    m_connectionSelection = selection;
     emit newConnectionSelection(m_connectionSelection);
 }
 

@@ -72,14 +72,14 @@
             <item>
              <widget class="QRadioButton" name="exitsRadioButton">
               <property name="text">
-               <string>Secret &amp;exits name</string>
+               <string>&amp;Exit names</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QRadioButton" name="notesRadioButton">
               <property name="text">
-               <string>Notes &amp;text</string>
+               <string>&amp;Notes</string>
               </property>
              </widget>
             </item>
@@ -95,7 +95,7 @@
             <item>
              <widget class="QCheckBox" name="caseCheckBox">
               <property name="text">
-               <string>Case &amp;sensitive</string>
+               <string>C&amp;ase sensitive</string>
               </property>
              </widget>
             </item>
@@ -163,10 +163,50 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="roomsFoundLabel">
-     <property name="text">
-      <string/>
+    <widget class="QFrame" name="frame">
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
      </property>
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
+     </property>
+     <property name="lineWidth">
+      <number>0</number>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="roomsFoundLabel">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="selectButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>&amp;Select</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
   </layout>

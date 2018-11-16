@@ -126,8 +126,10 @@ public slots:
     void layerUp();
     void layerDown();
 
-    void clearRoomSelection();
-    void clearConnectionSelection();
+    void setRoomSelection(const RoomSelection *);
+    void clearRoomSelection() { setRoomSelection(nullptr); }
+    void setConnectionSelection(ConnectionSelection *);
+    void clearConnectionSelection() { setConnectionSelection(nullptr); }
 
     // void worldChanged();
 

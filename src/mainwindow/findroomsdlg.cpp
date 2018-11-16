@@ -25,6 +25,7 @@
 
 #include "findroomsdlg.h"
 
+#include <cstdint>
 #include <QString>
 #include <QtGui>
 #include <QtWidgets>
@@ -52,11 +53,36 @@ FindRoomsDlg::FindRoomsDlg(MapData *md, QWidget *parent)
     m_showSelectedRoom = new QShortcut(QKeySequence(tr("Space", "Select result item")), resultTable);
     m_showSelectedRoom->setContext(Qt::WidgetShortcut);
 
+    selectButton->setEnabled(false);
+
     connect(lineEdit, &QLineEdit::textChanged, this, &FindRoomsDlg::enableFindButton);
     connect(findButton, &QAbstractButton::clicked, this, &FindRoomsDlg::findClicked);
     connect(closeButton, &QAbstractButton::clicked, this, &QWidget::close);
     connect(resultTable, &QTreeWidget::itemDoubleClicked, this, &FindRoomsDlg::itemDoubleClicked);
     connect(m_showSelectedRoom, &QShortcut::activated, this, &FindRoomsDlg::showSelectedRoom);
+    connect(resultTable, &QTreeWidget::itemSelectionChanged, this, [this]() {
+        selectButton->setEnabled(!resultTable->selectedItems().isEmpty());
+    });
+    connect(selectButton, &QAbstractButton::clicked, this, [this]() {
+        const RoomSelection *tmpSel = m_mapData->select();
+        for (const auto &item : resultTable->selectedItems()) {
+            const auto id = RoomId{item->text(0).toUInt()};
+            m_mapData->getRoom(id, tmpSel);
+        }
+        if (!tmpSel->isEmpty()) {
+            int64_t avgX = 0;
+            int64_t avgY = 0;
+            for (const Room *const r : tmpSel->values()) {
+                const Coordinate &c = r->getPosition();
+                avgX += c.x;
+                avgY += c.y;
+            }
+            avgX = avgX / tmpSel->size();
+            avgY = avgY / tmpSel->size();
+            emit center(static_cast<qint32>(avgX), static_cast<qint32>(avgY));
+        }
+        emit newRoomSelection(tmpSel);
+    });
 
     label->setFocusProxy(lineEdit);
     lineEdit->setFocus();
@@ -190,13 +216,15 @@ void FindRoomsDlg::itemDoubleClicked(QTreeWidgetItem *const inputItem)
     }
 
     const auto id = RoomId{inputItem->text(0).toUInt()};
-    if (const Room *r = m_mapData->getRoom(id, m_roomSelection)) {
-        Coordinate c = r->getPosition();
-        emit center(c.x, c.y); // connects to MapWindow
+    if (m_roomSelection) {
+        for (const Room *const r : m_roomSelection->values()) {
+            if (r && r->getId() == id) {
+                const Coordinate &c = r->getPosition();
+                emit center(c.x, c.y); // connects to MapWindow
+            }
+        }
     }
-
     emit log("FindRooms", inputItem->toolTip(0));
-    //  emit newRoomSelection(m_roomSelection);
 }
 
 void FindRoomsDlg::adjustResultTable()
@@ -206,6 +234,8 @@ void FindRoomsDlg::adjustResultTable()
     resultTable->header()->setSectionResizeMode(QHeaderView::Stretch);
     resultTable->setRootIsDecorated(false);
     resultTable->setAlternatingRowColors(true);
+    resultTable->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
+    resultTable->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
 }
 
 void FindRoomsDlg::enableFindButton(const QString &text)
@@ -223,6 +253,7 @@ void FindRoomsDlg::closeEvent(QCloseEvent *event)
     resultTable->clear();
     roomsFoundLabel->clear();
     lineEdit->setFocus();
+    selectButton->setEnabled(false);
     event->accept();
 }
 
