@@ -111,7 +111,7 @@ static QString getName(const RoomLoadFlag flag)
     } while (false)
     switch (flag) {
         CASE2(TREASURE, "Treasure");
-        CASE2(ARMOUR, "Equipment");
+        CASE2(ARMOUR, "Armour");
         CASE2(WEAPON, "Weapon");
         CASE2(WATER, "Water");
         CASE2(FOOD, "Food");
@@ -129,6 +129,9 @@ static QString getName(const RoomLoadFlag flag)
         CASE2(CLOCK, "Clock");
         CASE2(MAIL, "Mail");
         CASE2(STABLE, "Stable");
+        CASE2(WHITE_WORD, "White word");
+        CASE2(DARK_WORD, "Dark word");
+        CASE2(EQUIPMENT, "Equipment");
     }
     return QString::asprintf("(RoomLoadFlag)%d", static_cast<int>(flag));
 #undef CASE2

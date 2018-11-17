@@ -221,6 +221,9 @@ Abbrev getParserCommandName(const RoomLoadFlag x)
         CASE3(CLOCK, "clock", -1);
         CASE3(MAIL, "mail", -1);
         CASE3(STABLE, "stable", -1);
+        CASE3(WHITE_WORD, "whiteword", -1);
+        CASE3(DARK_WORD, "darkword", -1);
+        CASE3(EQUIPMENT, "equipment", -1);
     }
     return Abbrev{};
 #undef CASE3

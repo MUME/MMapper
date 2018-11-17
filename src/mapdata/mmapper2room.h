@@ -120,9 +120,12 @@ enum class RoomLoadFlag {
     CLOCK,
     MAIL,
     STABLE,
+    WHITE_WORD,
+    DARK_WORD,
+    EQUIPMENT
 };
-static constexpr const int NUM_ROOM_LOAD_FLAGS = static_cast<int>(RoomLoadFlag::STABLE) + 1;
-static_assert(NUM_ROOM_LOAD_FLAGS == 19, "");
+static constexpr const int NUM_ROOM_LOAD_FLAGS = static_cast<int>(RoomLoadFlag::EQUIPMENT) + 1;
+static_assert(NUM_ROOM_LOAD_FLAGS == 22, "");
 DEFINE_ENUM_COUNT(RoomLoadFlag, NUM_ROOM_LOAD_FLAGS)
 
 class RoomLoadFlags final : public enums::Flags<RoomLoadFlags, RoomLoadFlag, uint32_t>
