@@ -740,27 +740,27 @@ void MapCanvasRoomDrawer::drawUpperLayers(const Room *const room,
         }
 
         // Trail Support
-        m_opengl.glTranslated(0, 0, 0.005);
         if (roadIndex != RoadIndex::NONE && roomTerrainType != RoomTerrainType::ROAD) {
-            alphaOverlayTexture(m_textures.trail[roadIndex]);
             m_opengl.glTranslated(0, 0, 0.005);
+            alphaOverlayTexture(m_textures.trail[roadIndex]);
         }
 
-        for (const RoomMobFlag flag : ALL_MOB_FLAGS)
-            if (mf.contains(flag))
-                alphaOverlayTexture(m_textures.mob[flag]);
-
-        m_opengl.glTranslated(0, 0, 0.005);
-        for (const RoomLoadFlag flag : ALL_LOAD_FLAGS) {
-            // everything starting at RLF_ATTENTION is raised by a tiny bit?
-            if (flag == RoomLoadFlag::ATTENTION)
+        for (const RoomMobFlag flag : ALL_MOB_FLAGS) {
+            if (mf.contains(flag)) {
                 m_opengl.glTranslated(0, 0, 0.005);
-            if (lf.contains(flag))
-                alphaOverlayTexture(m_textures.load[flag]);
+                alphaOverlayTexture(m_textures.mob[flag]);
+            }
         }
 
-        m_opengl.glTranslated(0, 0, 0.005);
+        for (const RoomLoadFlag flag : ALL_LOAD_FLAGS) {
+            if (lf.contains(flag)) {
+                m_opengl.glTranslated(0, 0, 0.005);
+                alphaOverlayTexture(m_textures.load[flag]);
+            }
+        }
+
         if (getConfig().canvas.showUpdated && !room->isUpToDate()) {
+            m_opengl.glTranslated(0, 0, 0.005);
             alphaOverlayTexture(m_textures.update);
         }
         m_opengl.apply(XDisable{XOption::BLEND});
