@@ -1214,7 +1214,31 @@ void AbstractParser::doOfflineCharacterMove()
             sendPromptToUser(*rb);
         } else {
             /* FIXME: This needs stronger type check on the cast */
-            const Exit &e = rb->exit(static_cast<ExitDirection>(direction));
+            Exit e = rb->exit(static_cast<ExitDirection>(direction));
+            if (e.exitIsRandom()) {
+                // Pick an alternative direction to randomly wander into
+                std::vector<ExitDirection> exitDirections;
+                for (auto i : ALL_EXITS_NESWUD) {
+                    const Exit &e = rb->exit(i);
+                    if (!e.isExit() || e.outIsEmpty()) {
+                        continue;
+                    }
+                    exitDirections.emplace_back(i);
+                }
+                if (exitDirections.size() > 0) {
+                    const auto randomDirection = static_cast<CommandIdType>(
+                        exitDirections[rand() % exitDirections.size()]); // NOLINT
+
+                    // Update exit and direction with new random one
+                    if (direction != randomDirection) {
+                        qDebug() << "Randomly moving" << getLowercase(randomDirection)
+                                 << "instead of" << getLowercase(direction);
+                        e = rb->exit(static_cast<ExitDirection>(randomDirection));
+                        // REVISIT: Should we update the direction hint to the Path Machine?
+                        // direction = randomDirection;
+                    }
+                }
+            }
             if (e.isExit() && !e.outIsEmpty()) {
                 const RoomSelection *rs2 = m_mapData->select();
                 const auto targetId = e.outFirst();
