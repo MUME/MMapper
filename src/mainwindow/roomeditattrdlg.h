@@ -50,7 +50,16 @@ class QWidget;
 class Room;
 class RoomSelection;
 
-class RoomEditAttrDlg : public QDialog, private Ui::RoomEditAttrDlg
+class RoomListWidgetItem final : public QListWidgetItem
+{
+public:
+    explicit RoomListWidgetItem(const QString &text, int priority = 0);
+    explicit RoomListWidgetItem(const QIcon &icon, const QString &text, int priority = 0);
+
+    bool operator<(const QListWidgetItem &other) const override;
+};
+
+class RoomEditAttrDlg final : public QDialog, private Ui::RoomEditAttrDlg
 {
     Q_OBJECT
 
@@ -121,10 +130,10 @@ private:
     ExitDirection getSelectedExit();
     void updateDialog(const Room *r);
 
-    EnumIndexedArray<QListWidgetItem *, RoomLoadFlag> loadListItems{};
-    EnumIndexedArray<QListWidgetItem *, RoomMobFlag> mobListItems{};
-    EnumIndexedArray<QListWidgetItem *, ExitFlag> exitListItems{};
-    EnumIndexedArray<QListWidgetItem *, DoorFlag> doorListItems{};
+    EnumIndexedArray<RoomListWidgetItem *, RoomLoadFlag> loadListItems{};
+    EnumIndexedArray<RoomListWidgetItem *, RoomMobFlag> mobListItems{};
+    EnumIndexedArray<RoomListWidgetItem *, ExitFlag> exitListItems{};
+    EnumIndexedArray<RoomListWidgetItem *, DoorFlag> doorListItems{};
 
 #define NUM_ELEMENTS(arr) (decltype(arr)::SIZE)
     static_assert(NUM_ELEMENTS(loadListItems) <= 32u, "");

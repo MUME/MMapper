@@ -27,8 +27,10 @@
 #include "roomeditattrdlg.h"
 
 #include <cstddef>
+#include <map>
 #include <QMessageLogContext>
 #include <QString>
+#include <QVariant>
 #include <QtGui>
 #include <QtWidgets>
 
@@ -49,11 +51,11 @@
 template<typename T>
 void fixMissing(T &array, const char *name)
 {
-    for (QListWidgetItem *&x : array) {
+    for (RoomListWidgetItem *&x : array) {
         if (x != nullptr)
             continue;
         const auto ordinal = static_cast<int>(&x - array.data());
-        x = new QListWidgetItem(QString::asprintf("%d", ordinal));
+        x = new RoomListWidgetItem(QString::asprintf("%d", ordinal));
         qWarning() << "Missing " << name << " " << ordinal;
     }
 }
@@ -66,9 +68,9 @@ void installWidgets(T &array,
 {
     fixMissing(array, name);
     widget.clear();
-    for (QListWidgetItem *x : array) {
+    for (RoomListWidgetItem *x : array) {
         x->setFlags(flags);
-        widget.addItem(x);
+        widget.addItem(dynamic_cast<QListWidgetItem *>(x));
     }
 }
 
@@ -169,35 +171,96 @@ static QString getName(const DoorFlag flag)
 #undef X_CASE
 }
 
+template<typename T>
+static QIcon getIcon(T flag, const char *name)
+{
+    const auto i = static_cast<uint32_t>(flag);
+    return QIcon(QString::asprintf(":/pixmaps/%s%u.png", name, i));
+}
+
+static int getPriority(const RoomMobFlag flag)
+{
+#define X_POS(UPPER, pos) \
+    do { \
+        if (flag == RoomMobFlag::UPPER) \
+            return NUM_ROOM_MOB_FLAGS * -1 + pos; \
+    } while (false)
+    X_POS(PASSIVE_MOB, 0);
+    X_POS(AGGRESSIVE_MOB, 1);
+    X_POS(ELITE_MOB, 2);
+    X_POS(SUPER_MOB, 3);
+    X_POS(QUEST_MOB, 4);
+#undef X_POS
+    return static_cast<int>(flag);
+}
+
+static int getPriority(const RoomLoadFlag flag)
+{
+#define X_POS(UPPER, pos) \
+    do { \
+        if (flag == RoomLoadFlag::UPPER) \
+            return NUM_ROOM_LOAD_FLAGS * -1 + pos; \
+    } while (false)
+    X_POS(TREASURE, 0);
+    X_POS(ARMOUR, 1);
+    X_POS(WEAPON, 2);
+    X_POS(EQUIPMENT, 3);
+#undef X_POS
+    return static_cast<int>(flag);
+}
+
+RoomListWidgetItem::RoomListWidgetItem(const QString &text, int priority)
+    : QListWidgetItem(text)
+{
+    setData(Qt::UserRole, priority);
+}
+
+RoomListWidgetItem::RoomListWidgetItem(const QIcon &icon, const QString &text, int priority)
+    : QListWidgetItem(icon, text)
+{
+    setData(Qt::UserRole, priority);
+}
+
+bool RoomListWidgetItem::operator<(const QListWidgetItem &other) const
+{
+    // Sort on user role for priority as opposed to text
+    return data(Qt::UserRole).toInt() < other.data(Qt::UserRole).toInt();
+}
+
 RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
     : QDialog(parent)
 {
     setupUi(this);
     roomDescriptionTextEdit->setLineWrapMode(QTextEdit::NoWrap);
 
-    for (auto flag : ALL_MOB_FLAGS)
-        mobListItems[flag] = new QListWidgetItem(getName(flag));
+    for (const auto flag : ALL_MOB_FLAGS)
+        mobListItems[flag] = new RoomListWidgetItem(getIcon(flag, "mob"),
+                                                    getName(flag),
+                                                    getPriority(flag));
     installWidgets(mobListItems,
                    "mob room flags",
                    *mobFlagsListWidget,
                    Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsTristate);
 
-    for (auto flag : ALL_LOAD_FLAGS)
-        loadListItems[flag] = new QListWidgetItem(getName(flag));
+    for (const auto flag : ALL_LOAD_FLAGS)
+        loadListItems[flag] = new RoomListWidgetItem(getIcon(flag, "load"),
+                                                     getName(flag),
+                                                     getPriority(flag));
+
     installWidgets(loadListItems,
                    "load list",
                    *loadFlagsListWidget,
                    Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsTristate);
 
-    for (auto flag : ALL_EXIT_FLAGS)
-        exitListItems[flag] = new QListWidgetItem(getName(flag));
+    for (const auto flag : ALL_EXIT_FLAGS)
+        exitListItems[flag] = new RoomListWidgetItem(getName(flag));
     installWidgets(exitListItems,
                    "exit list",
                    *exitFlagsListWidget,
                    Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
 
-    for (auto flag : ALL_DOOR_FLAGS)
-        doorListItems[flag] = new QListWidgetItem(getName(flag));
+    for (const auto flag : ALL_DOOR_FLAGS)
+        doorListItems[flag] = new RoomListWidgetItem(getName(flag));
     installWidgets(doorListItems,
                    "door list",
                    *doorFlagsListWidget,
@@ -1221,7 +1284,7 @@ void RoomEditAttrDlg::mobFlagsListItemChanged(QListWidgetItem *const item)
 {
     deref(item);
     RoomMobFlag flag{};
-    if (!mobListItems.findIndexOf(item, flag)) {
+    if (!mobListItems.findIndexOf(dynamic_cast<RoomListWidgetItem *>(item), flag)) {
         qWarning() << "oops" << __FILE__ << ":" << __LINE__;
         return;
     }
@@ -1271,7 +1334,7 @@ void RoomEditAttrDlg::loadFlagsListItemChanged(QListWidgetItem *const item)
 {
     deref(item);
     RoomLoadFlag flag{};
-    if (!loadListItems.findIndexOf(item, flag)) {
+    if (!loadListItems.findIndexOf(dynamic_cast<RoomListWidgetItem *>(item), flag)) {
         qWarning() << "oops: " << __FILE__ << ":" << __LINE__;
         return;
     }
@@ -1321,7 +1384,7 @@ void RoomEditAttrDlg::exitFlagsListItemChanged(QListWidgetItem *const item)
 {
     deref(item);
     ExitFlag flag{};
-    if (!exitListItems.findIndexOf(item, flag)) {
+    if (!exitListItems.findIndexOf(dynamic_cast<RoomListWidgetItem *>(item), flag)) {
         qWarning() << "oops: " << __FILE__ << ":" << __LINE__;
         return;
     }
@@ -1382,7 +1445,7 @@ void RoomEditAttrDlg::doorFlagsListItemChanged(QListWidgetItem *const item)
 {
     deref(item);
     DoorFlag flag{};
-    if (!doorListItems.findIndexOf(item, flag)) {
+    if (!doorListItems.findIndexOf(dynamic_cast<RoomListWidgetItem *>(item), flag)) {
         qWarning() << "oops: " << __FILE__ << ":" << __LINE__;
         return;
     }
