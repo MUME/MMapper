@@ -87,12 +87,14 @@ enum class RoomMobFlag {
     CLERIC_GUILD,
     WARRIOR_GUILD,
     RANGER_GUILD,
-    SMOB,
-    QUEST,
-    ANY,
+    AGGRESSIVE_MOB,
+    QUEST_MOB,
+    PASSIVE_MOB,
+    ELITE_MOB,
+    SUPER_MOB,
 };
-static constexpr const int NUM_ROOM_MOB_FLAGS = static_cast<int>(RoomMobFlag::ANY) + 1;
-static_assert(NUM_ROOM_MOB_FLAGS == 15, "");
+static constexpr const int NUM_ROOM_MOB_FLAGS = static_cast<int>(RoomMobFlag::SUPER_MOB) + 1;
+static_assert(NUM_ROOM_MOB_FLAGS == 17, "");
 DEFINE_ENUM_COUNT(RoomMobFlag, NUM_ROOM_MOB_FLAGS)
 
 class RoomMobFlags final : public enums::Flags<RoomMobFlags, RoomMobFlag, uint32_t>

@@ -187,9 +187,11 @@ Abbrev getParserCommandName(const RoomMobFlag x)
         CASE3(CLERIC_GUILD, "clericguild", 6);
         CASE3(WARRIOR_GUILD, "warriorguild", 7);
         CASE3(RANGER_GUILD, "rangerguild", 6);
-        CASE3(SMOB, "smob", -1);
-        CASE3(QUEST, "quest", -1);
-        CASE3(ANY, "mob", -1);
+        CASE3(AGGRESSIVE_MOB, "aggmob", -1);
+        CASE3(QUEST_MOB, "questmob", -1);
+        CASE3(PASSIVE_MOB, "passivemob", -1);
+        CASE3(ELITE_MOB, "elitemob", -1);
+        CASE3(SUPER_MOB, "smob", -1);
     }
     return Abbrev{};
 #undef CASE3

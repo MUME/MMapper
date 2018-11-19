@@ -93,9 +93,11 @@ static QString getName(const RoomMobFlag flag)
         CASE2(CLERIC_GUILD, "Cleric guild");
         CASE2(WARRIOR_GUILD, "Warrior guild");
         CASE2(RANGER_GUILD, "Ranger guild");
-        CASE2(SMOB, "SMOB");
-        CASE2(QUEST, "Quest mob");
-        CASE2(ANY, "Any mob");
+        CASE2(AGGRESSIVE_MOB, "Aggressive mob");
+        CASE2(QUEST_MOB, "Quest mob");
+        CASE2(PASSIVE_MOB, "Passive mob");
+        CASE2(ELITE_MOB, "Elite mob");
+        CASE2(SUPER_MOB, "Super mob");
     }
     return QString::asprintf("(RoomMobFlag)%d", static_cast<int>(flag));
 #undef CASE2
