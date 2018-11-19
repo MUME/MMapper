@@ -369,6 +369,7 @@ void MainWindow::wireConnections()
             &MapCanvas::setRoomSelection);
     connect(m_findRoomsDlg, &FindRoomsDlg::center, m_mapWindow, &MapWindow::center);
     connect(m_findRoomsDlg, &FindRoomsDlg::log, this, &MainWindow::log);
+    connect(m_findRoomsDlg, &FindRoomsDlg::editSelection, this, &MainWindow::onEditRoomSelection);
 }
 
 void MainWindow::log(const QString &module, const QString &message)

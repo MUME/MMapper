@@ -50,7 +50,7 @@ bool RoomFilter::parseRoomFilter(const QString &line, RoomFilter &output)
         } else if (kindstr == "-note" || kindstr == "-n") {
             kind = pattern_kinds::NOTE;
         } else if (kindstr == "-all" || kindstr == "-a") {
-            kind = pattern_kinds::ALL_BUT_EXITS;
+            kind = pattern_kinds::ALL;
         } else {
             return false;
         }
@@ -70,7 +70,7 @@ bool RoomFilter::filter(const Room *const pr) const
 
     const auto filter_kind = [this](const Room &r, const pattern_kinds pat) -> bool {
         switch (pat) {
-        case pattern_kinds::ALL_BUT_EXITS:
+        case pattern_kinds::ALL:
             throw std::invalid_argument("pat");
 
         case pattern_kinds::DESC:
@@ -99,11 +99,12 @@ bool RoomFilter::filter(const Room *const pr) const
         return false;
     };
 
-    if (kind == pattern_kinds::ALL_BUT_EXITS) {
+    if (kind == pattern_kinds::ALL) {
         for (auto pat : {pattern_kinds::DESC,
                          pattern_kinds::DYN_DESC,
                          pattern_kinds::NAME,
-                         pattern_kinds::NOTE})
+                         pattern_kinds::NOTE,
+                         pattern_kinds::EXITS})
             if (filter_kind(r, pat))
                 return true;
         return false;

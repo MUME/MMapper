@@ -26,6 +26,7 @@
 #ifndef ROOMFILTER_H
 #define ROOMFILTER_H
 
+#include <cassert>
 #include <QString>
 #include <QtCore>
 
@@ -33,7 +34,9 @@
 
 class Room;
 
-enum class pattern_kinds { NONE, DESC, DYN_DESC, NAME, NOTE, EXITS, ALL_BUT_EXITS };
+enum class pattern_kinds { NONE, DESC, DYN_DESC, NAME, NOTE, EXITS, ALL };
+static constexpr const auto PATTERN_KINDS_LENGTH = static_cast<size_t>(pattern_kinds::ALL) + 1u;
+static_assert(PATTERN_KINDS_LENGTH == 7, "");
 
 class RoomFilter
 {

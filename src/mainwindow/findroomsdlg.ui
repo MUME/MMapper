@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>500</width>
-    <height>400</height>
+    <height>468</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -18,6 +18,10 @@
   </property>
   <property name="windowTitle">
    <string>Find Rooms</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="../resources/mmapper2.qrc">
+    <normaloff>:/icons/roomfind.png</normaloff>:/icons/roomfind.png</iconset>
   </property>
   <layout class="QVBoxLayout">
    <item>
@@ -38,48 +42,58 @@
         <widget class="QLineEdit" name="lineEdit"/>
        </item>
        <item>
-        <layout class="QHBoxLayout">
-         <item alignment="Qt::AlignTop">
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
           <widget class="QGroupBox" name="searchGroupBox">
            <property name="title">
             <string>Search</string>
            </property>
-           <layout class="QVBoxLayout">
-            <item>
+           <layout class="QGridLayout" name="gridLayout">
+            <item row="1" column="0">
+             <widget class="QRadioButton" name="descRadioButton">
+              <property name="text">
+               <string>&amp;Description</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
              <widget class="QRadioButton" name="nameRadioButton">
               <property name="text">
-               <string>Room &amp;name</string>
+               <string>&amp;Name</string>
               </property>
               <property name="checked">
                <bool>true</bool>
               </property>
              </widget>
             </item>
-            <item>
-             <widget class="QRadioButton" name="descRadioButton">
-              <property name="text">
-               <string>Room &amp;description</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QRadioButton" name="dynDescRadioButton">
-              <property name="text">
-               <string>Room d&amp;ynamic description</string>
-              </property>
-             </widget>
-            </item>
-            <item>
+            <item row="0" column="1">
              <widget class="QRadioButton" name="exitsRadioButton">
               <property name="text">
-               <string>&amp;Exit names</string>
+               <string>E&amp;xits</string>
               </property>
              </widget>
             </item>
-            <item>
+            <item row="4" column="1">
+             <widget class="QRadioButton" name="allRadioButton">
+              <property name="text">
+               <string>A&amp;ll</string>
+              </property>
+              <property name="checked">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
              <widget class="QRadioButton" name="notesRadioButton">
               <property name="text">
-               <string>&amp;Notes</string>
+               <string>N&amp;otes</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QRadioButton" name="dynDescRadioButton">
+              <property name="text">
+               <string>D&amp;ynamic description</string>
               </property>
              </widget>
             </item>
@@ -147,6 +161,9 @@
    </item>
    <item>
     <widget class="QTreeWidget" name="resultTable">
+     <property name="sortingEnabled">
+      <bool>true</bool>
+     </property>
      <property name="columnCount">
       <number>2</number>
      </property>
@@ -206,6 +223,19 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QPushButton" name="editButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Select and &amp;Edit</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -213,16 +243,20 @@
  </widget>
  <tabstops>
   <tabstop>lineEdit</tabstop>
-  <tabstop>nameRadioButton</tabstop>
-  <tabstop>descRadioButton</tabstop>
-  <tabstop>dynDescRadioButton</tabstop>
-  <tabstop>exitsRadioButton</tabstop>
-  <tabstop>notesRadioButton</tabstop>
-  <tabstop>caseCheckBox</tabstop>
   <tabstop>findButton</tabstop>
   <tabstop>closeButton</tabstop>
+  <tabstop>nameRadioButton</tabstop>
+  <tabstop>exitsRadioButton</tabstop>
+  <tabstop>descRadioButton</tabstop>
+  <tabstop>notesRadioButton</tabstop>
+  <tabstop>dynDescRadioButton</tabstop>
+  <tabstop>allRadioButton</tabstop>
+  <tabstop>caseCheckBox</tabstop>
   <tabstop>resultTable</tabstop>
+  <tabstop>selectButton</tabstop>
  </tabstops>
- <resources/>
+ <resources>
+  <include location="../resources/mmapper2.qrc"/>
+ </resources>
  <connections/>
 </ui>

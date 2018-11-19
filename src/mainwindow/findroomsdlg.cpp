@@ -46,7 +46,6 @@ FindRoomsDlg::FindRoomsDlg(MapData *md, QWidget *parent)
     : QDialog(parent)
 {
     setupUi(this);
-    m_roomSelection = nullptr;
     m_mapData = md;
     adjustResultTable();
 
@@ -54,6 +53,7 @@ FindRoomsDlg::FindRoomsDlg(MapData *md, QWidget *parent)
     m_showSelectedRoom->setContext(Qt::WidgetShortcut);
 
     selectButton->setEnabled(false);
+    editButton->setEnabled(false);
 
     connect(lineEdit, &QLineEdit::textChanged, this, &FindRoomsDlg::enableFindButton);
     connect(findButton, &QAbstractButton::clicked, this, &FindRoomsDlg::findClicked);
@@ -61,7 +61,9 @@ FindRoomsDlg::FindRoomsDlg(MapData *md, QWidget *parent)
     connect(resultTable, &QTreeWidget::itemDoubleClicked, this, &FindRoomsDlg::itemDoubleClicked);
     connect(m_showSelectedRoom, &QShortcut::activated, this, &FindRoomsDlg::showSelectedRoom);
     connect(resultTable, &QTreeWidget::itemSelectionChanged, this, [this]() {
-        selectButton->setEnabled(!resultTable->selectedItems().isEmpty());
+        const bool enabled = !resultTable->selectedItems().isEmpty();
+        selectButton->setEnabled(enabled);
+        editButton->setEnabled(enabled);
     });
     connect(selectButton, &QAbstractButton::clicked, this, [this]() {
         const RoomSelection *tmpSel = m_mapData->select();
@@ -83,6 +85,15 @@ FindRoomsDlg::FindRoomsDlg(MapData *md, QWidget *parent)
         }
         emit newRoomSelection(tmpSel);
     });
+    connect(editButton, &QAbstractButton::clicked, this, [this]() {
+        const RoomSelection *tmpSel = m_mapData->select();
+        for (const auto &item : resultTable->selectedItems()) {
+            const auto id = RoomId{item->text(0).toUInt()};
+            m_mapData->getRoom(id, tmpSel);
+        }
+        emit newRoomSelection(tmpSel);
+        emit editSelection();
+    });
 
     label->setFocusProxy(lineEdit);
     lineEdit->setFocus();
@@ -90,23 +101,13 @@ FindRoomsDlg::FindRoomsDlg(MapData *md, QWidget *parent)
 
 FindRoomsDlg::~FindRoomsDlg()
 {
-    if (m_roomSelection != nullptr) {
-        m_mapData->unselect(m_roomSelection);
-        m_roomSelection = nullptr;
-    }
     delete m_showSelectedRoom;
     resultTable->clear();
 }
 
 void FindRoomsDlg::findClicked()
 {
-    // Release rooms for a new search
-    if (m_roomSelection != nullptr) {
-        m_mapData->unselect(m_roomSelection);
-        m_roomSelection = nullptr;
-    }
-
-    m_roomSelection = m_mapData->select();
+    const RoomSelection *tmpSel = m_mapData->select();
     Qt::CaseSensitivity cs = caseCheckBox->isChecked() ? Qt::CaseSensitive : Qt::CaseInsensitive;
     QString text = lineEdit->text();
     // remove latin1
@@ -118,7 +119,7 @@ void FindRoomsDlg::findClicked()
     m_mapData->lookingForRooms(this, createEvent(CommandIdType::UNKNOWN, text, nullString, nullString, 0, 0));
     */
 
-    auto kind = pattern_kinds::ALL_BUT_EXITS;
+    auto kind = pattern_kinds::ALL;
     if (nameRadioButton->isChecked()) {
         kind = pattern_kinds::NAME;
     } else if (descRadioButton->isChecked()) {
@@ -130,27 +131,9 @@ void FindRoomsDlg::findClicked()
     } else if (notesRadioButton->isChecked()) {
         kind = pattern_kinds::NOTE;
     }
-    m_mapData->genericSearch(m_roomSelection, RoomFilter(text, cs, kind));
+    m_mapData->genericSearch(tmpSel, RoomFilter(text, cs, kind));
 
-    for (const Room *const room : m_roomSelection->values()) {
-        // This won't work because RoomSelection is a QMap<RoomId, const Room *>,
-        // which means it can't give us a writable handle to Room.
-        //
-        // WARNING: Don't even consider const_cast on the Room or Exit!
-        // One solution would be to send a message containing the RoomId
-        // to someone that can change the room.
-        //
-        // Another solution would be to reject the flag during map load,
-        // and then reject it if the player tries to manually set it.
-        static constexpr const bool HACK_FIX_THE_HIDDEN_NAMELESS_EXITS = false;
-        if (HACK_FIX_THE_HIDDEN_NAMELESS_EXITS) {
-            for (auto &e : room->getExitsList()) {
-                if (e.isHiddenExit() && !e.hasDoorName()) {
-                    // e.removeDoorFlag(DoorFlag::HIDDEN);
-                }
-            }
-        }
-
+    for (const Room *const room : tmpSel->values()) {
         QString id;
         id.setNum(room->getId().asUint32());
         QString roomName = room->getName();
@@ -165,6 +148,7 @@ void FindRoomsDlg::findClicked()
     roomsFoundLabel->setText(tr("%1 room%2 found")
                                  .arg(resultTable->topLevelItemCount())
                                  .arg((resultTable->topLevelItemCount() == 1) ? "" : "s"));
+    m_mapData->unselect(tmpSel);
 }
 
 QString FindRoomsDlg::constructToolTip(const Room *r)
@@ -215,15 +199,18 @@ void FindRoomsDlg::itemDoubleClicked(QTreeWidgetItem *const inputItem)
         return;
     }
 
+    const RoomSelection *tmpSel = m_mapData->select();
     const auto id = RoomId{inputItem->text(0).toUInt()};
-    if (m_roomSelection) {
-        for (const Room *const r : m_roomSelection->values()) {
+    m_mapData->getRoom(id, tmpSel);
+    if (!tmpSel->isEmpty()) {
+        for (const Room *const r : tmpSel->values()) {
             if (r && r->getId() == id) {
                 const Coordinate &c = r->getPosition();
                 emit center(c.x, c.y); // connects to MapWindow
             }
         }
     }
+    m_mapData->unselect(tmpSel);
     emit log("FindRooms", inputItem->toolTip(0));
 }
 
@@ -231,7 +218,7 @@ void FindRoomsDlg::adjustResultTable()
 {
     resultTable->setColumnCount(2);
     resultTable->setHeaderLabels(QStringList() << tr("Room ID") << tr("Room Name"));
-    resultTable->header()->setSectionResizeMode(QHeaderView::Stretch);
+    resultTable->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
     resultTable->setRootIsDecorated(false);
     resultTable->setAlternatingRowColors(true);
     resultTable->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
@@ -245,15 +232,11 @@ void FindRoomsDlg::enableFindButton(const QString &text)
 
 void FindRoomsDlg::closeEvent(QCloseEvent *event)
 {
-    // Release room locks
-    if (m_roomSelection != nullptr) {
-        m_mapData->unselect(m_roomSelection);
-        m_roomSelection = nullptr;
-    }
     resultTable->clear();
     roomsFoundLabel->clear();
     lineEdit->setFocus();
     selectButton->setEnabled(false);
+    editButton->setEnabled(false);
     event->accept();
 }
 

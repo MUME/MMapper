@@ -390,6 +390,8 @@ bool MapData::execute(MapAction *const action, const RoomSelection *const unlock
     const bool executable = isExecutable(action);
     if (executable) {
         executeAction(action);
+    } else {
+        qWarning() << "Unable to execute action" << action;
     }
 
     for (auto id : selectedIds) {

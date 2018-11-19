@@ -53,6 +53,7 @@ class FindRoomsDlg : public QDialog, private Ui::FindRoomsDlg
 signals:
     void center(qint32 x, qint32 y);
     void newRoomSelection(const RoomSelection *);
+    void editSelection();
     void log(const QString &, const QString &);
 
 public slots:
@@ -70,7 +71,6 @@ private:
     void adjustResultTable();
 
     static const QString nullString;
-    const RoomSelection *m_roomSelection = nullptr;
 
 private slots:
     QString constructToolTip(const Room *);
