@@ -144,7 +144,7 @@ protected slots:
     void doOfflineCharacterMove();
 
 protected:
-    void offlineCharacterMove(CommandIdType direction);
+    void offlineCharacterMove(CommandIdType direction = CommandIdType::UNKNOWN);
     void sendRoomInfoToUser(const Room *);
     void sendPromptToUser();
     void sendPromptToUser(const Room &r);

@@ -1197,10 +1197,14 @@ void AbstractParser::doOfflineCharacterMove()
     }
 
     bool flee = false;
+    bool scout = false;
     if (direction == CommandIdType::FLEE) {
         flee = true;
         sendToUser("You flee head over heels.\r\n");
         direction = static_cast<CommandIdType>(rand() % 6); // NOLINT
+    } else if (direction == CommandIdType::SCOUT) {
+        scout = true;
+        direction = queue.dequeue();
     }
 
     Coordinate c;
@@ -1247,24 +1251,36 @@ void AbstractParser::doOfflineCharacterMove()
                         sendToUser(
                             QByteArray("You flee ").append(getLowercase(direction)).append("."));
                     }
+                    if (scout) {
+                        sendToUser(QByteArray("You quietly scout ")
+                                       .append(getLowercase(direction))
+                                       .append("wards...\r\n"));
+                    }
                     sendRoomInfoToUser(r);
                     sendRoomExitsInfoToUser(r);
-                    sendPromptToUser(*r);
-                    // Create character move event for main move/search algorithm
-                    auto ev = ParseEvent::createEvent(direction,
-                                                      r->getName(),
-                                                      r->getDynamicDescription(),
-                                                      r->getStaticDescription(),
-                                                      ExitsFlagsType{},
-                                                      PromptFlagsType::fromRoomTerrainType(
-                                                          r->getTerrainType()),
-                                                      ConnectedRoomFlagsType{});
-                    emit event(SigParseEvent{ev});
-                    emit showPath(queue, true);
+                    if (scout) {
+                        sendToUser("\r\nYou stop scouting.\r\n");
+                        sendPromptToUser();
+
+                    } else {
+                        sendPromptToUser(*r);
+
+                        // Create character move event for main move/search algorithm
+                        auto ev = ParseEvent::createEvent(direction,
+                                                          r->getName(),
+                                                          r->getDynamicDescription(),
+                                                          r->getStaticDescription(),
+                                                          ExitsFlagsType{},
+                                                          PromptFlagsType::fromRoomTerrainType(
+                                                              r->getTerrainType()),
+                                                          ConnectedRoomFlagsType{});
+                        emit event(SigParseEvent{ev});
+                        emit showPath(queue, true);
+                    }
                 }
                 m_mapData->unselect(rs2);
             } else {
-                if (!flee) {
+                if (!flee || scout) {
                     sendToUser("Alas, you cannot go that way...\r\n");
                 } else {
                     sendToUser("PANIC! You couldn't escape!\r\n");

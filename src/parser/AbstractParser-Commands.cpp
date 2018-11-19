@@ -392,8 +392,25 @@ bool AbstractParser::parseSimpleCommand(const QString &str)
             }
             break;
 
-        case CommandIdType::UNKNOWN:
         case CommandIdType::SCOUT:
+            if (!isOnline) {
+                auto view = StringView{str}.trim();
+                if (!view.isEmpty() && !view.takeFirstWord().isEmpty()) {
+                    const auto dir = static_cast<CommandIdType>(tryGetDir(view));
+                    if (dir >= CommandIdType::UNKNOWN) {
+                        sendToUser("In which direction do you want to scout?\r\n");
+                        sendPromptToUser();
+
+                    } else {
+                        queue.enqueue(CommandIdType::SCOUT);
+                        queue.enqueue(dir);
+                        offlineCharacterMove();
+                    }
+                    return false;
+                }
+            }
+
+        case CommandIdType::UNKNOWN:
         case CommandIdType::NONE:
             break;
         }
