@@ -79,7 +79,11 @@ GraphicsPage::GraphicsPage(QWidget *parent)
     const int index = std::max(0, ui->antialiasingSamplesComboBox->findText(antiAliasingSamples));
     ui->antialiasingSamplesComboBox->setCurrentIndex(index);
     ui->trilinearFilteringCheckBox->setChecked(settings.trilinearFiltering);
-    ui->softwareOpenGLCheckBox->setChecked(settings.softwareOpenGL);
+    if (getCurrentPlatform() == Platform::Mac) {
+        ui->softwareOpenGLCheckBox->setEnabled(false);
+        ui->softwareOpenGLCheckBox->setChecked(false);
+    } else
+        ui->softwareOpenGLCheckBox->setChecked(settings.softwareOpenGL);
 
     ui->updated->setChecked(settings.showUpdated);
     ui->drawNotMappedExits->setChecked(settings.drawNotMappedExits);

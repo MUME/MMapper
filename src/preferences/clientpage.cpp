@@ -26,6 +26,7 @@
 
 #include <QFont>
 #include <QFontInfo>
+#include <QPalette>
 #include <QSpinBox>
 #include <QString>
 #include <QtGui>
@@ -94,7 +95,7 @@ ClientPage::~ClientPage()
 void ClientPage::updateFontAndColors()
 {
     const auto &settings = getConfig().integratedClient;
-    ui->exampleLineEdit->setFont(settings.font);
+    ui->exampleLabel->setFont(settings.font);
 
     QFontInfo fi(settings.font);
     ui->fontPushButton->setText(
@@ -107,9 +108,13 @@ void ClientPage::updateFontAndColors()
     QPixmap bgPix(16, 16);
     bgPix.fill(settings.backgroundColor);
     ui->bgColorPushButton->setIcon(QIcon(bgPix));
-    ui->exampleLineEdit->setStyleSheet(QString("background: %1; color: %2")
-                                           .arg(settings.backgroundColor.name())
-                                           .arg(settings.foregroundColor.name()));
+
+    QPalette palette = ui->exampleLabel->palette();
+    ui->exampleLabel->setAutoFillBackground(true);
+    palette.setColor(QPalette::WindowText, settings.foregroundColor);
+    palette.setColor(QPalette::Window, settings.backgroundColor);
+    ui->exampleLabel->setPalette(palette);
+    ui->exampleLabel->setBackgroundRole(QPalette::Window);
 }
 
 void ClientPage::onChangeFont()
