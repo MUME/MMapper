@@ -36,6 +36,7 @@
 
 class CGroupServerCommunicator;
 class CGroupClient;
+class GroupAuthority;
 class QObject;
 
 class CGroupServer final : public QTcpServer

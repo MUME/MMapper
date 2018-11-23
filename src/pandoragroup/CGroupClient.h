@@ -30,38 +30,52 @@
 #include <QAbstractSocket>
 #include <QByteArray>
 #include <QHostAddress>
+#include <QMap>
 #include <QObject>
+#include <QSslSocket>
 #include <QString>
-#include <QTcpSocket>
+#include <QTimer>
 #include <QtCore>
 #include <QtGlobal>
 
 #include "../global/io.h"
 
-class QTimer;
-enum class ProtocolStates { Unconnected, AwaitingLogin, AwaitingInfo, Logged };
+class GroupAuthority;
+
+enum class ProtocolState { Unconnected, AwaitingLogin, AwaitingInfo, Logged };
+using ProtocolVersion = uint32_t;
 
 class CGroupClient final : public QObject
 {
     Q_OBJECT
 public:
-    explicit CGroupClient(QObject *parent);
+    explicit CGroupClient(GroupAuthority *authority, QObject *parent);
     virtual ~CGroupClient();
 
     void setSocket(qintptr socketDescriptor);
     void connectToHost();
     void disconnectFromHost();
+    void startServerEncrypted() { socket.startServerEncryption(); }
+    void startClientEncrypted() { socket.startClientEncryption(); }
 
+    QByteArray getSecret() const { return secret; }
     QHostAddress getPeerAddress() const { return socket.peerAddress(); }
     QAbstractSocket::SocketError getSocketError() const { return socket.error(); }
 
-    QAbstractSocket::SocketState getSocketState() const { return socket.state(); }
-    void setProtocolState(const ProtocolStates val);
-    ProtocolStates getProtocolState() const { return protocolState; }
+    void setProtocolState(const ProtocolState val);
+    ProtocolState getProtocolState() const { return protocolState; }
+
+    void setProtocolVersion(const ProtocolVersion val) { protocolVersion = val; }
+    ProtocolVersion getProtocolVersion() { return protocolVersion; }
+
+    void setName(const QByteArray val) { name = val; }
+    const QByteArray &getName() { return name; }
+
     void sendData(const QByteArray &data);
 
 protected slots:
     void onError(QAbstractSocket::SocketError socketError);
+    void onPeerVerifyError(const QSslError &error);
     void onReadyRead();
     void onTimeout();
 
@@ -71,16 +85,21 @@ signals:
     void errorInConnection(CGroupClient *, const QString &);
     void incomingData(CGroupClient *, QByteArray);
     void connectionEstablished(CGroupClient *);
+    void connectionEncrypted(CGroupClient *);
 
 private:
-    QTcpSocket socket;
-    QTimer *timer;
+    QSslSocket socket;
+    QTimer timer;
+    GroupAuthority *authority;
     void cutMessageFromBuffer();
 
-    ProtocolStates protocolState = ProtocolStates::Unconnected;
+    ProtocolState protocolState = ProtocolState::Unconnected;
+    ProtocolVersion protocolVersion = 102;
 
     io::null_padded_buffer<(1 << 15)> ioBuffer{};
     QByteArray buffer{};
+    QByteArray secret{};
+    QByteArray name{};
     int currentMessageLen = 0;
 };
 

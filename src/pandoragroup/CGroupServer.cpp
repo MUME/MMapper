@@ -32,6 +32,7 @@
 
 #include "CGroupClient.h"
 #include "CGroupCommunicator.h"
+#include "groupauthority.h"
 
 CGroupServer::CGroupServer(CGroupServerCommunicator *parent)
     : QTcpServer(parent)
@@ -48,7 +49,7 @@ void CGroupServer::incomingConnection(qintptr socketDescriptor)
 {
     // connect the client straight to the Communicator, as he handles all the state changes
     // data transfers and similar.
-    auto *client = new CGroupClient(this);
+    auto *client = new CGroupClient(communicator->getAuthority(), this);
     connections.append(client);
     connectAll(client);
 
@@ -113,6 +114,11 @@ void CGroupServer::connectAll(CGroupClient *const client)
             &CGroupClient::connectionEstablished,
             communicator,
             &CGroupServerCommunicator::connectionEstablished);
+    connect(client,
+            &CGroupClient::connectionClosed,
+            communicator,
+            &CGroupServerCommunicator::connectionClosed);
+    connect(client, &CGroupClient::connectionClosed, this, &CGroupServer::closeOne);
     connect(client, &CGroupClient::errorInConnection, this, &CGroupServer::errorInConnection);
 }
 
@@ -126,5 +132,10 @@ void CGroupServer::disconnectAll(CGroupClient *const client)
                &CGroupClient::connectionEstablished,
                communicator,
                &CGroupServerCommunicator::connectionEstablished);
+    disconnect(client,
+               &CGroupClient::connectionClosed,
+               communicator,
+               &CGroupServerCommunicator::connectionClosed);
+    disconnect(client, &CGroupClient::connectionClosed, this, &CGroupServer::closeOne);
     disconnect(client, &CGroupClient::errorInConnection, this, &CGroupServer::errorInConnection);
 }

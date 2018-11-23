@@ -30,6 +30,7 @@
 
 #include "../configuration/configuration.h"
 #include "../pandoragroup/CGroup.h"
+#include "../pandoragroup/groupauthority.h"
 #include "../pandoragroup/mmapper2group.h"
 
 GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
@@ -38,14 +39,72 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
     setupUi(this);
     m_groupManager = gm;
     const Configuration::GroupManagerSettings &groupManager = getConfig().groupManager;
+    auto authority = m_groupManager->getAuthority();
+    connect(this, &GroupManagerPage::refresh, authority, &GroupAuthority::refresh);
+    connect(authority, &GroupAuthority::secretRefreshed, this, [this](const GroupSecret &secret) {
+        secretLineEdit->setText(secret);
+        refreshButton->setEnabled(true);
+        emit setGroupManagerType(GroupManagerState::Off);
+    });
 
     // Character Section
     connect(charName, &QLineEdit::editingFinished, this, &GroupManagerPage::charNameTextChanged);
     connect(changeColor, &QAbstractButton::clicked, this, &GroupManagerPage::changeColorClicked);
+    connect(refreshButton, &QAbstractButton::clicked, this, [this]() {
+        refreshButton->setEnabled(false);
+        // Refreshing the SSL certificate asynchronously
+        emit refresh();
+    });
     charName->setText(groupManager.charName);
     QPixmap charColorPixmap(16, 16);
     charColorPixmap.fill(groupManager.color);
     changeColor->setIcon(QIcon(charColorPixmap));
+    secretLineEdit->setText(authority->getSecret());
+
+    // Authorized Secrets Section
+    connect(authorizationCheckBox, &QCheckBox::clicked, this, [this](const bool checked) {
+        allowedComboBox->setEnabled(checked);
+        if (!checked) {
+            allowedComboBox->setCurrentText("");
+        }
+        setConfig().groupManager.requireAuth = checked;
+        allowedSecretsChanged();
+    });
+    connect(allowedComboBox,
+            &QComboBox::editTextChanged,
+            this,
+            &GroupManagerPage::allowedSecretsChanged);
+    connect(authority->getItemModel(), &QAbstractItemModel::dataChanged, this, [this]() {
+        allowedSecretsChanged();
+    });
+    connect(allowSecret, &QPushButton::pressed, this, [this]() {
+        auto authority = m_groupManager->getAuthority();
+        auto secret = allowedComboBox->currentText().simplified().toLatin1();
+        authority->add(secret);
+    });
+    connect(revokeSecret, &QPushButton::pressed, this, [this]() {
+        auto authority = m_groupManager->getAuthority();
+        auto secret = allowedComboBox->currentText().simplified().toLatin1();
+        authority->remove(secret);
+    });
+    secretLineEdit->setEnabled(!NO_OPEN_SSL);
+    refreshButton->setEnabled(!NO_OPEN_SSL);
+    authorizationCheckBox->setEnabled(!NO_OPEN_SSL);
+    authorizationCheckBox->setChecked(groupManager.requireAuth);
+    allowSecret->setEnabled(false);
+    revokeSecret->setEnabled(false);
+    allowedComboBox->setEnabled(groupManager.requireAuth);
+    allowedComboBox->setModel(authority->getItemModel());
+    allowedComboBox->setEditText("");
+    allowedSecretsChanged();
+
+    // Host Section
+    connect(localHost, &QLabel::linkActivated, this, &GroupManagerPage::localHostLinkActivated);
+    connect(localPort,
+            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            this,
+            &GroupManagerPage::localPortValueChanged);
+    connect(shareSelfCheckBox, &QCheckBox::stateChanged, this, &GroupManagerPage::shareSelfChanged);
 
     // Host Section
     connect(localHost, &QLabel::linkActivated, this, &GroupManagerPage::localHostLinkActivated);
@@ -105,6 +164,34 @@ void GroupManagerPage::changeColorClicked()
         savedColor = newColor;
 
         emit updatedSelf();
+    }
+}
+
+void GroupManagerPage::allowedSecretsChanged()
+{
+    static constexpr const int SHA1_LENGTH = 40;
+    const auto authority = m_groupManager->getAuthority();
+    const auto secretText = allowedComboBox->currentText().simplified();
+    bool correctLength = secretText.length() == SHA1_LENGTH;
+    bool isSelf = secretText.compare(authority->getSecret(), Qt::CaseInsensitive) == 0;
+    bool alreadyPresent = authority->isAuthorized(secretText.toLatin1());
+
+    bool enableAllowSecret = correctLength && !alreadyPresent && !isSelf;
+    if (allowSecret->hasFocus() && !enableAllowSecret)
+        allowedComboBox->setFocus();
+    allowSecret->setEnabled(enableAllowSecret);
+
+    bool enableRevokeSecret = correctLength && alreadyPresent && !isSelf;
+    if (revokeSecret->hasFocus() && !enableRevokeSecret)
+        allowedComboBox->setFocus();
+    revokeSecret->setEnabled(enableRevokeSecret);
+
+    if (authorizationCheckBox->isEnabled() && authorizationCheckBox->isChecked()) {
+        secretCountLabel->setText(QString("<i>%1 contact%2 found</i>")
+                                      .arg(allowedComboBox->count())
+                                      .arg(allowedComboBox->count() == 1 ? "" : "s"));
+    } else {
+        secretCountLabel->setText("");
     }
 }
 

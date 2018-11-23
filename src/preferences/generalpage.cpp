@@ -31,13 +31,6 @@
 
 #include "../configuration/configuration.h"
 
-/* TODO: merge with other use */
-#if defined(MMAPPER_NO_OPENSSL) && MMAPPER_NO_OPENSSL
-static constexpr const bool NO_OPEN_SSL = true;
-#else
-static constexpr const bool NO_OPEN_SSL = false;
-#endif
-
 // Order of entries in charsetComboBox drop down
 static_assert(static_cast<int>(CharacterEncoding::LATIN1) == 0, "");
 static_assert(static_cast<int>(CharacterEncoding::UTF8) == 1, "");

@@ -122,6 +122,7 @@ ConstString KEY_ALWAYS_ON_TOP = "Always On Top";
 ConstString KEY_AUTO_LOAD = "Auto load";
 ConstString KEY_AUTO_RESIZE_TERMINAL = "Auto resize terminal";
 ConstString KEY_BACKGROUND_COLOR = "Background color";
+ConstString KEY_RSA_X509_CERTIFICATE = "RSA X509 certificate";
 ConstString KEY_CHARACTER_ENCODING = "Character encoding";
 ConstString KEY_CHARACTER_NAME = "character name";
 ConstString KEY_CLEAR_INPUT_ON_ENTER = "Clear input on enter";
@@ -156,6 +157,9 @@ ConstString KEY_NO_ROOM_DESCRIPTION_PATTERNS = "No room description patterns";
 ConstString KEY_NO_SPLASH = "No splash screen";
 ConstString KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES = "Number of anti-aliasing samples";
 ConstString KEY_PASSWORD_PATTERN = "Password pattern";
+ConstString KEY_AUTHORIZATION_REQUIRED = "Authorization required";
+ConstString KEY_AUTHORIZED_SECRETS = "Authorized secrets";
+ConstString KEY_RSA_PRIVATE_KEY = "RSA private key";
 ConstString KEY_PROMPT_PATTERN = "Prompt pattern";
 ConstString KEY_PROXY_THREADED = "Proxy Threaded";
 ConstString KEY_RELATIVE_PATH_ACCEPTANCE = "relative path acceptance";
@@ -373,7 +377,7 @@ void Configuration::ConnectionSettings::read(QSettings &conf)
                                 static_cast<uint16_t>(DEFAULT_PORT));
     localPort = sanitizeUint16(conf.value(KEY_LOCAL_PORT_NUMBER, DEFAULT_PORT).toInt(),
                                static_cast<uint16_t>(DEFAULT_PORT));
-    tlsEncryption = conf.value(KEY_TLS_ENCRYPTION, true).toBool();
+    tlsEncryption = NO_OPEN_SSL ? false : conf.value(KEY_TLS_ENCRYPTION, true).toBool();
     proxyThreaded = conf.value(KEY_PROXY_THREADED, true).toBool();
 
     // News 2340, changing domain from fire.pvv.org to mume.org:
@@ -475,6 +479,10 @@ void Configuration::GroupManagerSettings::read(QSettings &conf)
     shareSelf = conf.value(KEY_SHARE_SELF, true).toBool();
     color = QColor(conf.value(KEY_COLOR, "#ffff00").toString());
     rulesWarning = conf.value(KEY_RULES_WARNING, true).toBool();
+    certificate = conf.value(KEY_RSA_X509_CERTIFICATE, "").toByteArray();
+    privateKey = conf.value(KEY_RSA_PRIVATE_KEY, "").toByteArray();
+    authorizedSecrets = conf.value(KEY_AUTHORIZED_SECRETS, QStringList()).toStringList();
+    requireAuth = NO_OPEN_SSL ? false : conf.value(KEY_AUTHORIZATION_REQUIRED, false).toBool();
 }
 
 void Configuration::MumeClockSettings::read(QSettings &conf)
@@ -599,6 +607,10 @@ void Configuration::GroupManagerSettings::write(QSettings &conf) const
     conf.setValue(KEY_SHARE_SELF, shareSelf);
     conf.setValue(KEY_COLOR, color.name());
     conf.setValue(KEY_RULES_WARNING, rulesWarning);
+    conf.setValue(KEY_RSA_X509_CERTIFICATE, certificate);
+    conf.setValue(KEY_RSA_PRIVATE_KEY, privateKey);
+    conf.setValue(KEY_AUTHORIZED_SECRETS, authorizedSecrets);
+    conf.setValue(KEY_AUTHORIZATION_REQUIRED, requireAuth);
 }
 
 void Configuration::MumeClockSettings::write(QSettings &conf) const

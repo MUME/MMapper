@@ -118,7 +118,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     : QMainWindow(parent, flags)
 {
     setObjectName("MainWindow");
-    setWindowTitle("MMapper: MUME Mapper");
+    setWindowTitle("MMapper");
     setWindowIcon(QIcon(":/icons/m.png"));
     addApplicationFont();
 
@@ -210,7 +210,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     const auto port = getConfig().connection.localPort;
     if (!m_listener->listen(QHostAddress::Any, port)) {
         QMessageBox::critical(this,
-                              tr("MMapper2"),
+                              tr("mmapper"),
                               tr("Unable to start the server (switching to offline mode): %1.")
                                   .arg(m_listener->errorString()));
     } else {
@@ -242,6 +242,21 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     case MapMode::OFFLINE:
         mapperMode.offlineModeAct->setChecked(true);
         onOfflineMode();
+        break;
+    }
+
+    switch (getConfig().groupManager.state) {
+    case GroupManagerState::Off:
+        groupMode.groupOffAct->setChecked(true);
+        groupOff();
+        break;
+    case GroupManagerState::Client:
+        groupMode.groupClientAct->setChecked(true);
+        groupClient();
+        break;
+    case GroupManagerState::Server:
+        groupMode.groupServerAct->setChecked(true);
+        groupServer();
         break;
     }
 }
@@ -1121,7 +1136,6 @@ void MainWindow::newConnectionSelection(ConnectionSelection *cs)
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    groupOff();
     writeSettings();
     if (maybeSave()) {
         event->accept();
@@ -1526,7 +1540,6 @@ void MainWindow::groupManagerOff()
     groupMode.groupOffAct->setChecked(true);
     m_dockDialogGroup->hide();
     m_groupWidget->hide();
-    emit setGroupManagerType(GroupManagerState::Off);
 }
 
 void MainWindow::groupOff()
@@ -1567,7 +1580,7 @@ void MainWindow::setCurrentFile(const QString &fileName)
         shownName = strippedName(fileName);
     }
 
-    setWindowTitle(tr("%1[*] - %2").arg(shownName).arg(tr("MMapper")));
+    setWindowTitle(QString("%1[*] - %2").arg(shownName).arg("MMapper"));
 }
 
 QString MainWindow::strippedName(const QString &fullFileName)

@@ -23,46 +23,48 @@
 **
 ************************************************************************/
 
-#ifndef GROUPMANAGERPAGE_H
-#define GROUPMANAGERPAGE_H
+#ifndef GROUPCERTIFICATE_H
+#define GROUPCERTIFICATE_H
 
-#include <QString>
-#include <QWidget>
-#include <QtCore>
+#include <QObject>
+#include <QSslCertificate>
+#include <QSslKey>
+#include <QStringListModel>
 
-#include "../pandoragroup/mmapper2group.h"
-#include "ui_groupmanagerpage.h"
+using GroupSecret = QByteArray;
 
-class Mmapper2Group;
-class QObject;
+static constexpr const auto GROUP_ORGANIZATION = "MUME";
+static constexpr const auto GROUP_ORGANIZATIONAL_UNIT = "MMapper";
+static constexpr const auto GROUP_COMMON_NAME = "GroupManager";
 
-class GroupManagerPage : public QWidget, private Ui::GroupManagerPage
+class GroupAuthority : public QObject
 {
     Q_OBJECT
 public:
-    GroupManagerPage(Mmapper2Group *, QWidget *parent = nullptr);
+    explicit GroupAuthority(QObject *parent = nullptr);
 
 public slots:
-    void changeColorClicked();
-    void charNameTextChanged();
-
-    void allowedSecretsChanged();
-
-    void remoteHostTextChanged();
-    void remotePortValueChanged(int);
-    void localPortValueChanged(int);
-    void localHostLinkActivated(const QString &);
-
-    void rulesWarningChanged(int);
-    void shareSelfChanged(int);
-
-signals:
-    void setGroupManagerType(GroupManagerState);
-    void updatedSelf();
     void refresh();
 
+public:
+    GroupSecret getSecret() const;
+    QSslCertificate getLocalCertificate() const { return certificate; }
+    QSslKey getPrivateKey() const { return key; }
+
+public:
+    QAbstractItemModel *getItemModel() { return &model; }
+    bool add(const GroupSecret &);
+    bool remove(const GroupSecret &);
+    bool isAuthorized(const GroupSecret &) const;
+
+signals:
+    void secretRevoked(const GroupSecret &);
+    void secretRefreshed(const GroupSecret &);
+
 private:
-    Mmapper2Group *m_groupManager = nullptr;
+    QStringListModel model;
+    QSslCertificate certificate;
+    QSslKey key;
 };
 
-#endif
+#endif // GROUPCERTIFICATE_H

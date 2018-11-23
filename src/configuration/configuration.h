@@ -55,6 +55,12 @@ static inline constexpr Platform getCurrentPlatform()
 }
 static constexpr const Platform CURRENT_PLATFORM = getCurrentPlatform();
 
+#if defined(MMAPPER_NO_OPENSSL) && MMAPPER_NO_OPENSSL
+static constexpr const bool NO_OPEN_SSL = true;
+#else
+static constexpr const bool NO_OPEN_SSL = false;
+#endif
+
 #define SUBGROUP() \
     friend class Configuration; \
     void read(QSettings &conf); \
@@ -184,6 +190,10 @@ public:
         bool shareSelf = false;
         QColor color{};
         bool rulesWarning = false;
+        QByteArray certificate{};
+        QByteArray privateKey{};
+        QStringList authorizedSecrets{};
+        bool requireAuth = false;
 
     private:
         SUBGROUP();

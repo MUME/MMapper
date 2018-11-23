@@ -27,6 +27,7 @@
 #ifndef CGROUPCOMMUNICATOR_H_
 #define CGROUPCOMMUNICATOR_H_
 
+#include <cstdint>
 #include <QByteArray>
 #include <QHash>
 #include <QObject>
@@ -39,6 +40,7 @@
 #include "mmapper2group.h"
 
 class CGroup;
+class GroupAuthority;
 class GroupAction;
 
 class CGroupCommunicator : public QObject
@@ -47,15 +49,16 @@ class CGroupCommunicator : public QObject
 public:
     explicit CGroupCommunicator(GroupManagerState type, Mmapper2Group *parent);
 
-    static constexpr const int SUPPORTED_PROTOCOL_VERSION = 102;
+    static constexpr const ProtocolVersion PROTOCOL_VERSION_103 = 103;
+    static constexpr const ProtocolVersion PROTOCOL_VERSION_102 = 102;
 
     // TODO: password and encryption options
     enum class Messages {
         NONE, // Unused
         ACK,
-        REQ_VERSION, // Unused
-        REQ_ACK,
         REQ_LOGIN,
+        REQ_ACK,
+        REQ_HANDSHAKE,
         REQ_INFO,
         PROT_VERSION, // Unused
         GTELL,
@@ -85,6 +88,7 @@ protected:
 
     QByteArray formMessageBlock(const Messages message, const QVariantMap &data);
     CGroup *getGroup();
+    GroupAuthority *getAuthority();
 
 public slots:
     void incomingData(CGroupClient *, const QByteArray &);
@@ -94,7 +98,6 @@ public slots:
     virtual void connectionClosed(CGroupClient *) = 0;
 
 signals:
-    void networkDown();
     void messageBox(QString message);
     void scheduleAction(GroupAction *action);
     void gTellArrived(QVariantMap node);
@@ -118,6 +121,7 @@ public:
 protected slots:
     void relayMessage(CGroupClient *connection, const Messages message, const QVariantMap &data);
     void connectionEstablished(CGroupClient *connection);
+    void onRevokeWhitelist(const QByteArray &secret);
     void retrieveData(CGroupClient *connection,
                       const Messages message,
                       const QVariantMap &data) override;
@@ -133,9 +137,11 @@ protected:
     bool kickCharacter(const QByteArray &) override;
 
 private:
+    void parseHandshake(CGroupClient *connection, const QVariantMap &data);
     void parseLoginInformation(CGroupClient *connection, const QVariantMap &data);
     void sendGroupInformation(CGroupClient *connection);
     void serverStartupFailed();
+    void kickConnection(CGroupClient *connection, const QByteArray &message);
 
     QHash<QByteArray, CGroupClient *> clientsList{};
     CGroupServer server;
@@ -156,6 +162,8 @@ public slots:
                       const Messages message,
                       const QVariantMap &data) override;
     void connectionClosed(CGroupClient *connection) override;
+    void connectionEncrypted(CGroupClient *connection);
+    void connectionEstablished(CGroupClient *connection);
 
 protected:
     void sendGroupTellMessage(const QVariantMap &map) override;
@@ -166,8 +174,11 @@ protected:
     bool kickCharacter(const QByteArray &) override;
 
 private:
+    void sendHandshake(CGroupClient *connection, const QVariantMap &data);
     void sendLoginInformation(CGroupClient *connection);
 
+    ProtocolVersion proposedProtocolVersion = PROTOCOL_VERSION_102;
+    bool clientConnected = false;
     CGroupClient client;
 };
 

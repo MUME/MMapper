@@ -41,6 +41,7 @@
 #include "CGroupClient.h"
 #include "CGroupServer.h"
 #include "groupaction.h"
+#include "groupauthority.h"
 #include "groupselection.h"
 #include "mmapper2group.h"
 
@@ -55,7 +56,7 @@ CGroupCommunicator::CGroupCommunicator(GroupManagerState type, Mmapper2Group *pa
     connect(this, &CGroupCommunicator::sendLog, parent, &Mmapper2Group::sendLog);
     connect(this, &CGroupCommunicator::messageBox, parent, &Mmapper2Group::relayMessageBox);
     connect(this, &CGroupCommunicator::gTellArrived, parent, &Mmapper2Group::gTellArrived);
-    connect(this, &CGroupCommunicator::networkDown, parent, &Mmapper2Group::networkDown);
+    connect(this, &CGroupCommunicator::destroyed, parent, &Mmapper2Group::networkDown);
     connect(this, &CGroupCommunicator::scheduleAction, parent->getGroup(), &CGroup::scheduleAction);
 }
 
@@ -70,6 +71,7 @@ QByteArray CGroupCommunicator::formMessageBlock(const Messages message, const QV
 {
     QByteArray block;
     QXmlStreamWriter xml(&block);
+    xml.setAutoFormatting(LOG_MESSAGE_INFO);
     xml.writeStartDocument();
     xml.writeStartElement("datagram");
     xml.writeAttribute("message", QString::number(static_cast<int>(message)));
@@ -95,11 +97,19 @@ QByteArray CGroupCommunicator::formMessageBlock(const Messages message, const QV
     };
 
     switch (message) {
+    case Messages::REQ_HANDSHAKE:
+        xml.writeStartElement("handshake");
+        xml.writeStartElement("protocolVersion");
+        xml.writeCharacters(data["protocolVersion"].toString());
+        xml.writeEndElement();
+        xml.writeEndElement();
+        break;
+
     case Messages::UPDATE_CHAR:
         if (data.contains("loginData") && data["loginData"].canConvert(QMetaType::QVariantMap)) {
             // Client needs to submit loginData and nested playerData
-            const QVariantMap &loginData = data["loginData"].toMap();
             xml.writeStartElement("loginData");
+            const QVariantMap &loginData = data["loginData"].toMap();
             xml.writeAttribute("protocolVersion", loginData["protocolVersion"].toString());
             write_player_data(xml, loginData);
             xml.writeEndElement();
@@ -130,14 +140,12 @@ QByteArray CGroupCommunicator::formMessageBlock(const Messages message, const QV
 
     case Messages::NONE:
     case Messages::ACK:
-    case Messages::REQ_VERSION:
     case Messages::REQ_ACK:
-    case Messages::REQ_LOGIN:
     case Messages::REQ_INFO:
+    case Messages::REQ_LOGIN:
     case Messages::PROT_VERSION:
     case Messages::STATE_LOGGED:
     case Messages::STATE_KICKED:
-    default:
         xml.writeTextElement("text", data["text"].toString());
         break;
     }
@@ -207,10 +215,16 @@ void CGroupCommunicator::incomingData(CGroupClient *const conn, const QByteArray
             }
             break;
 
+        case Messages::REQ_HANDSHAKE:
+            if (xml.name() == QLatin1String("protocolVersion")) {
+                data["protocolVersion"] = xml.readElementText().toLatin1();
+            }
+            break;
         case Messages::UPDATE_CHAR:
-            if (xml.name() == QLatin1String("loginData")
-                && xml.attributes().hasAttribute("protocolVersion")) {
-                data["protocolVersion"] = xml.attributes().value("protocolVersion").toInt();
+            if (xml.name() == QLatin1String("loginData")) {
+                const auto &attributes = xml.attributes();
+                if (attributes.hasAttribute("protocolVersion"))
+                    data["protocolVersion"] = attributes.value("protocolVersion").toUInt();
                 xml.readNextStartElement();
             }
             goto common_update_char; // effectively a fall-thru
@@ -219,38 +233,38 @@ void CGroupCommunicator::incomingData(CGroupClient *const conn, const QByteArray
         case Messages::REMOVE_CHAR:
         case Messages::ADD_CHAR:
             if (xml.name() == QLatin1String("playerData")) {
+                const auto &attributes = xml.attributes();
                 QVariantMap playerData;
-                playerData["maxhp"] = xml.attributes().value("maxhp").toInt();
-                playerData["moves"] = xml.attributes().value("moves").toInt();
-                playerData["state"] = xml.attributes().value("state").toUInt();
-                playerData["mana"] = xml.attributes().value("mana").toInt();
-                playerData["maxmana"] = xml.attributes().value("maxmana").toInt();
-                playerData["name"] = xml.attributes().value("name").toString().toLatin1();
-                playerData["color"] = xml.attributes().value("color").toString();
-                playerData["hp"] = xml.attributes().value("hp").toInt();
-                playerData["maxmoves"] = xml.attributes().value("maxmoves").toInt();
-                playerData["room"] = xml.attributes().value("room").toUInt();
+                playerData["hp"] = attributes.value("hp").toInt();
+                playerData["maxhp"] = attributes.value("maxhp").toInt();
+                playerData["moves"] = attributes.value("moves").toInt();
+                playerData["maxmoves"] = attributes.value("maxmoves").toInt();
+                playerData["mana"] = attributes.value("mana").toInt();
+                playerData["maxmana"] = attributes.value("maxmana").toInt();
+                playerData["state"] = attributes.value("state").toUInt();
+                playerData["name"] = attributes.value("name").toString().toLatin1();
+                playerData["color"] = attributes.value("color").toString();
+                playerData["room"] = attributes.value("room").toUInt();
                 data["playerData"] = playerData;
             }
             break;
 
         case Messages::RENAME_CHAR:
             if (xml.name() == QLatin1String("rename")) {
-                data["oldname"] = xml.attributes().value("oldname").toLatin1();
-                data["newname"] = xml.attributes().value("newname").toLatin1();
+                const auto &attributes = xml.attributes();
+                data["oldname"] = attributes.value("oldname").toLatin1();
+                data["newname"] = attributes.value("newname").toLatin1();
             }
             break;
 
         case Messages::NONE:
         case Messages::ACK:
-        case Messages::REQ_VERSION:
         case Messages::REQ_ACK:
-        case Messages::REQ_LOGIN:
         case Messages::REQ_INFO:
+        case Messages::REQ_LOGIN:
         case Messages::PROT_VERSION:
         case Messages::STATE_LOGGED:
         case Messages::STATE_KICKED:
-        default:
             if (xml.name() == QLatin1String("text")) {
                 data["text"] = xml.readElementText();
             }
@@ -302,6 +316,10 @@ CGroupServerCommunicator::CGroupServerCommunicator(Mmapper2Group *parent)
             &CGroupServer::connectionClosed,
             this,
             &CGroupServerCommunicator::connectionClosed);
+    connect(getAuthority(),
+            &GroupAuthority::secretRevoked,
+            this,
+            &CGroupServerCommunicator::onRevokeWhitelist);
     emit sendLog("Server mode has been selected");
     connectCommunicator();
 }
@@ -313,6 +331,10 @@ CGroupServerCommunicator::~CGroupServerCommunicator()
                &CGroupServer::connectionClosed,
                this,
                &CGroupServerCommunicator::connectionClosed);
+    disconnect(getAuthority(),
+               &GroupAuthority::secretRevoked,
+               this,
+               &CGroupServerCommunicator::onRevokeWhitelist);
     server.closeAll();
     qInfo() << "Destructed CGroupServerCommunicator";
 }
@@ -333,77 +355,79 @@ void CGroupServerCommunicator::serverStartupFailed()
     emit messageBox(
         QString("Failed to start the groupManager server: %1.").arg(server.errorString()));
     disconnectCommunicator();
-    emit networkDown();
 }
 
 void CGroupServerCommunicator::connectionEstablished(CGroupClient *const connection)
 {
-    //    qInfo() << "Detected new connection, starting handshake";
-    // REVISIT: Provide the server protocol upon login?
-    sendMessage(connection, Messages::REQ_LOGIN, "test");
+    QVariantMap handshake;
+    handshake["protocolVersion"] = NO_OPEN_SSL ? PROTOCOL_VERSION_102 : PROTOCOL_VERSION_103;
+    sendMessage(connection, Messages::REQ_HANDSHAKE, handshake);
 }
 
 void CGroupServerCommunicator::retrieveData(CGroupClient *const connection,
                                             const Messages message,
                                             const QVariantMap &data)
 {
-    //    qInfo() << "Retrieve data from" << conn;
-    switch (connection->getSocketState()) {
-    // Closed, Connecting, Connected, Quiting
-    case QAbstractSocket::ConnectedState:
-        // AwaitingLogin, AwaitingInfo, Logged
-
-        // ---------------------- AwaitingLogin  --------------------
-        if (connection->getProtocolState() == ProtocolStates::AwaitingLogin) {
-            // Login state. either REQ_LOGIN or ACK should come
-            if (message == Messages::UPDATE_CHAR) {
-                // aha! parse the data
-                connection->setProtocolState(ProtocolStates::AwaitingInfo);
+    // ---------------------- AwaitingLogin  --------------------
+    if (connection->getProtocolState() == ProtocolState::AwaitingLogin) {
+        // Login state. either REQ_HANDSHAKE, UPDATE_CHAR, or ACK should come
+        if (message == Messages::REQ_HANDSHAKE) {
+            // Shaking hands with client
+            parseHandshake(connection, data);
+        } else if (message == Messages::UPDATE_CHAR) {
+            // aha! parse the data
+            if (connection->getProtocolVersion() >= PROTOCOL_VERSION_103)
                 parseLoginInformation(connection, data);
-            } else {
-                // ERROR: unexpected message marker!
-                // try to ignore?
-                qWarning("(AwaitingLogin) Unexpected message marker. Trying to ignore.");
-            }
-            // ---------------------- AwaitingInfo  --------------------
-        } else if (connection->getProtocolState() == ProtocolStates::AwaitingInfo) {
-            // almost connected. awaiting full information about the connection
-            if (message == Messages::REQ_INFO) {
-                sendGroupInformation(connection);
-                sendMessage(connection, Messages::REQ_ACK);
-            } else if (message == Messages::ACK) {
-                connection->setProtocolState(ProtocolStates::Logged);
-                sendMessage(connection, Messages::STATE_LOGGED);
-            } else {
-                // ERROR: unexpected message marker!
-                // try to ignore?
-                qWarning("(AwaitingInfo) Unexpected message marker. Trying to ignore.");
-            }
-
-            // ---------------------- LOGGED --------------------
-        } else if (connection->getProtocolState() == ProtocolStates::Logged) {
-            // usual update situation. receive update, unpack, apply.
-            if (message == Messages::UPDATE_CHAR) {
-                emit scheduleAction(new UpdateCharacter(data));
-                relayMessage(connection, Messages::UPDATE_CHAR, data);
-            } else if (message == Messages::GTELL) {
-                emit gTellArrived(data);
-                relayMessage(connection, Messages::GTELL, data);
-            } else if (message == Messages::REQ_ACK) {
-                sendMessage(connection, Messages::ACK);
-            } else if (message == Messages::RENAME_CHAR) {
-                emit scheduleAction(new RenameCharacter(data));
-                relayMessage(connection, Messages::RENAME_CHAR, data);
-            } else {
-                // ERROR: unexpected message marker!
-                // try to ignore?
-                qWarning("(Logged) Unexpected message marker. Trying to ignore.");
-            }
+            else
+                parseHandshake(connection, data); // Protocol 102 skips the handshake
+        } else {
+            // ERROR: unexpected message marker!
+            // try to ignore?
+            qWarning("(AwaitingLogin) Unexpected message marker. Trying to ignore.");
         }
-        break;
-    default:
-        qWarning() << "Data arrival during wrong connection state:" << connection->getSocketState();
-        break;
+        // ---------------------- AwaitingInfo  --------------------
+    } else if (connection->getProtocolState() == ProtocolState::AwaitingInfo) {
+        // almost connected. awaiting full information about the connection
+        if (message == Messages::REQ_INFO) {
+            sendGroupInformation(connection);
+            sendMessage(connection, Messages::REQ_ACK);
+        } else if (message == Messages::ACK) {
+            connection->setProtocolState(ProtocolState::Logged);
+            sendMessage(connection, Messages::STATE_LOGGED);
+            if (!NO_OPEN_SSL && connection->getProtocolVersion() == PROTOCOL_VERSION_102) {
+                QVariantMap root;
+                root["text"] = QString("WARNING: %1 joined the group with an insecure connection "
+                                       "and needs to upgrade MMapper!")
+                                   .arg(connection->getName().constData());
+                root["from"] = "MMapper";
+                sendGroupTellMessage(root);
+                emit gTellArrived(root);
+            }
+        } else {
+            // ERROR: unexpected message marker!
+            // try to ignore?
+            qWarning("(AwaitingInfo) Unexpected message marker. Trying to ignore.");
+        }
+
+        // ---------------------- LOGGED --------------------
+    } else if (connection->getProtocolState() == ProtocolState::Logged) {
+        // usual update situation. receive update, unpack, apply.
+        if (message == Messages::UPDATE_CHAR) {
+            emit scheduleAction(new UpdateCharacter(data));
+            relayMessage(connection, Messages::UPDATE_CHAR, data);
+        } else if (message == Messages::GTELL) {
+            emit gTellArrived(data);
+            relayMessage(connection, Messages::GTELL, data);
+        } else if (message == Messages::REQ_ACK) {
+            sendMessage(connection, Messages::ACK);
+        } else if (message == Messages::RENAME_CHAR) {
+            emit scheduleAction(new RenameCharacter(data));
+            relayMessage(connection, Messages::RENAME_CHAR, data);
+        } else {
+            // ERROR: unexpected message marker!
+            // try to ignore?
+            qWarning("(Logged) Unexpected message marker. Trying to ignore.");
+        }
     }
 }
 
@@ -415,48 +439,79 @@ void CGroupServerCommunicator::sendCharUpdate(const QVariantMap &map)
     }
 }
 
-void CGroupServerCommunicator::parseLoginInformation(CGroupClient *const connection,
+void CGroupServerCommunicator::parseHandshake(CGroupClient *const connection,
+                                              const QVariantMap &data)
+{
+    if (!data.contains("protocolVersion") || !data["protocolVersion"].canConvert(QMetaType::UInt)) {
+        kickConnection(connection, "Payload did not include the 'protocolVersion' attribute");
+        return;
+    }
+    const ProtocolVersion clientProtocolVersion = data["protocolVersion"].toUInt();
+    if (clientProtocolVersion < PROTOCOL_VERSION_102) {
+        kickConnection(connection,
+                       "Host requires a newer version of the group protocol. "
+                       "Please upgrade to the latest MMapper.");
+        return;
+    }
+    if (getConfig().groupManager.requireAuth && clientProtocolVersion == PROTOCOL_VERSION_102) {
+        kickConnection(connection,
+                       "Host requires authorization. "
+                       "Please upgrade to the latest MMapper.");
+        return;
+    }
+    auto supportedProtocolVersion = NO_OPEN_SSL ? PROTOCOL_VERSION_102 : PROTOCOL_VERSION_103;
+    if (clientProtocolVersion > supportedProtocolVersion) {
+        kickConnection(connection, "Host uses an older version of MMapper and needs to upgrade.");
+        return;
+    }
+    if (clientProtocolVersion == PROTOCOL_VERSION_102) {
+        connection->setProtocolVersion(clientProtocolVersion);
+        parseLoginInformation(connection, data);
+    } else {
+        assert(!NO_OPEN_SSL);
+        sendMessage(connection, Messages::REQ_LOGIN);
+        connection->setProtocolVersion(clientProtocolVersion);
+        connection->startServerEncrypted();
+    }
+}
+
+void CGroupServerCommunicator::parseLoginInformation(CGroupClient *connection,
                                                      const QVariantMap &data)
 {
-    //    qInfo() << "Parsing login information from" << conn->socketDescriptor();
-    const auto kick_connection = [this](auto connection, const auto &kickMessage) {
-        this->sendMessage(connection, Messages::STATE_KICKED, kickMessage);
-        server.closeOne(connection);
-    };
-    if (!data.contains("protocolVersion") || !data["protocolVersion"].canConvert(QMetaType::Int)) {
-        kick_connection(connection, "Payload did not include the 'protocolVersion' attribute");
-        return;
-    }
-    const int clientProtocolVersion = data["protocolVersion"].toInt();
-
-    if (clientProtocolVersion < SUPPORTED_PROTOCOL_VERSION) {
-        // REVISIT: Should we support older versions?
-        kick_connection(connection, "Server uses newer version of the protocol. Please update.");
-        return;
-    }
-    if (clientProtocolVersion > SUPPORTED_PROTOCOL_VERSION) {
-        kick_connection(connection, "Server uses older version of the protocol.");
-        return;
-    }
     if (!data.contains("playerData") || !data["playerData"].canConvert(QMetaType::QVariantMap)) {
-        kick_connection(connection, "Payload did not include 'playerData' element.");
+        kickConnection(connection, "Payload did not include 'playerData' element.");
         return;
     }
     const QVariantMap &playerData = data["playerData"].toMap();
     if (!playerData.contains("name") || !playerData["name"].canConvert(QMetaType::QByteArray)) {
-        kick_connection(connection, "Payload did not include 'name' attribute.");
+        kickConnection(connection, "Payload did not include 'name' attribute.");
         return;
     }
-    const QByteArray &name = playerData["name"].toByteArray();
-    if (getGroup()->isNamePresent(name)) {
-        kick_connection(connection, "The name you picked is already present!");
-        return;
+    connection->setName(playerData["name"].toByteArray());
+    const QByteArray name = connection->getName();
+    const auto secret = connection->getSecret();
+    emit sendLog(QString("'%1' is trying to join the group.").arg(name.constData()));
+    if (!secret.isEmpty() && connection->getProtocolVersion() >= PROTOCOL_VERSION_103) {
+        emit sendLog(QString("'%1's secret: %2").arg(name.constData()).arg(secret.constData()));
+    } else {
+        emit sendLog(
+            QString("<b>WARNING:</b> '%1' has no secret and their connection is not encrypted.")
+                .arg(name.constData()));
     }
     emit sendLog(QString("'%1's IP address: %2")
                      .arg(name.constData())
                      .arg(connection->getPeerAddress().toString()));
-    emit sendLog(
-        QString("'%1's protocol version: %2").arg(name.constData()).arg(clientProtocolVersion));
+    emit sendLog(QString("'%1's protocol version: %2")
+                     .arg(name.constData())
+                     .arg(connection->getProtocolVersion()));
+    if (getConfig().groupManager.requireAuth && !getAuthority()->isAuthorized(secret)) {
+        kickConnection(connection, "Host has not added your secret to their contacts!");
+        return;
+    }
+    if (getGroup()->isNamePresent(name)) {
+        kickConnection(connection, "The name you picked is already present!");
+        return;
+    }
 
     // Client is allowed to log in
     clientsList.insert(name, connection);
@@ -467,6 +522,7 @@ void CGroupServerCommunicator::parseLoginInformation(CGroupClient *const connect
     emit scheduleAction(new AddCharacter(charNode));
     relayMessage(connection, Messages::ADD_CHAR, charNode);
     sendMessage(connection, Messages::ACK);
+    connection->setProtocolState(ProtocolState::AwaitingInfo);
 }
 
 void CGroupServerCommunicator::sendGroupInformation(CGroupClient *const connection)
@@ -539,11 +595,11 @@ void CGroupServerCommunicator::disconnectCommunicator()
     server.closeAll();
     clientsList.clear();
     emit scheduleAction(new ResetCharacters());
+    deleteLater();
 }
 
 void CGroupServerCommunicator::connectCommunicator()
 {
-    disconnectCommunicator();
     const auto localPort = static_cast<quint16>(getConfig().groupManager.localPort);
     emit sendLog(QString("Listening on port %1").arg(localPort));
     if (!server.listen(QHostAddress::Any, localPort)) {
@@ -559,18 +615,53 @@ bool CGroupServerCommunicator::kickCharacter(const QByteArray &name)
         return false;
     }
     if (auto connection = clientsList[name]) {
+        kickConnection(connection, "You have been kicked by the host!");
+        return true;
+    }
+    return false;
+}
+
+void CGroupServerCommunicator::kickConnection(CGroupClient *connection, const QByteArray &message)
+{
+    if (connection->getProtocolVersion() == PROTOCOL_VERSION_102
+        && connection->getProtocolState() != ProtocolState::AwaitingLogin) {
+        // Protocol 102 does not support kicking outside of AwaitingLogin so we fake it with a group tell
+        QVariantMap root;
+        root["text"] = QString::fromLatin1(message);
+        root["from"] = QString::fromLatin1(getConfig().groupManager.charName);
+        sendMessage(connection, Messages::GTELL, message);
         server.closeOne(connection);
-        clientsList.remove(name);
-    }
-    if (getGroup()->isNamePresent(name)) {
-        sendRemoveUserNotification(nullptr, name);
-        emit sendLog(QString("'%1' was kicked.").arg(name.constData()));
-        emit scheduleAction(new RemoveCharacter(name));
+
     } else {
-        emit sendLog(QString("Could not find '%1' to kick.").arg(name.constData()));
-        return false;
+        sendMessage(connection, Messages::STATE_KICKED, message);
+        server.closeOne(connection);
     }
-    return true;
+    QString identifier = connection->getName().isEmpty() ? connection->getPeerAddress().toString()
+                                                         : connection->getName();
+    qDebug() << "Kicking" << identifier << "for" << message;
+    emit sendLog(QString("'%1' was kicked: %2").arg(identifier).arg(message.constData()));
+
+    for (const auto &name : clientsList.keys()) {
+        const auto target = clientsList[name];
+        if (connection == target) {
+            clientsList.remove(name);
+            if (getGroup()->isNamePresent(name)) {
+                sendRemoveUserNotification(nullptr, name);
+                emit scheduleAction(new RemoveCharacter(name));
+            }
+        }
+    }
+}
+void CGroupServerCommunicator::onRevokeWhitelist(const QByteArray &secret)
+{
+    if (getConfig().groupManager.requireAuth) {
+        for (const auto &name : clientsList.keys()) {
+            const auto connection = clientsList[name];
+            if (QString(secret).compare(connection->getSecret(), Qt::CaseInsensitive) == 0) {
+                kickConnection(connection, "You have been removed from the host's contacts!");
+            }
+        }
+    }
 }
 
 //
@@ -579,7 +670,7 @@ bool CGroupServerCommunicator::kickCharacter(const QByteArray &name)
 // Client side of the communication protocol
 CGroupClientCommunicator::CGroupClientCommunicator(Mmapper2Group *parent)
     : CGroupCommunicator(GroupManagerState::Client, parent)
-    , client(this)
+    , client(parent->getAuthority(), this)
 {
     emit sendLog("Client mode has been selected");
     connect(&client, &CGroupClient::incomingData, this, &CGroupClientCommunicator::incomingData);
@@ -588,6 +679,18 @@ CGroupClientCommunicator::CGroupClientCommunicator(Mmapper2Group *parent)
             &CGroupClient::errorInConnection,
             this,
             &CGroupClientCommunicator::errorInConnection);
+    connect(&client,
+            &CGroupClient::connectionEstablished,
+            this,
+            &CGroupClientCommunicator::connectionEstablished);
+    connect(&client,
+            &CGroupClient::connectionClosed,
+            this,
+            &CGroupClientCommunicator::connectionClosed);
+    connect(&client,
+            &CGroupClient::connectionEncrypted,
+            this,
+            &CGroupClientCommunicator::connectionEncrypted);
     connectCommunicator();
 }
 
@@ -600,20 +703,38 @@ CGroupClientCommunicator::~CGroupClientCommunicator()
                &CGroupClient::errorInConnection,
                this,
                &CGroupClientCommunicator::errorInConnection);
+    disconnect(&client,
+               &CGroupClient::connectionEstablished,
+               this,
+               &CGroupClientCommunicator::connectionEstablished);
+    disconnect(&client,
+               &CGroupClient::connectionClosed,
+               this,
+               &CGroupClientCommunicator::connectionClosed);
+    disconnect(&client,
+               &CGroupClient::connectionEncrypted,
+               this,
+               &CGroupClientCommunicator::connectionEncrypted);
     qInfo() << "Destructed CGroupClientCommunicator";
+}
+
+void CGroupClientCommunicator::connectionEstablished(CGroupClient * /*connection*/)
+{
+    clientConnected = true;
 }
 
 void CGroupClientCommunicator::connectionClosed(CGroupClient * /*connection*/)
 {
+    if (!clientConnected)
+        return;
+
     emit sendLog("Server closed the connection");
     disconnectCommunicator();
-    emit networkDown();
 }
 
 void CGroupClientCommunicator::errorInConnection(CGroupClient *const connection,
                                                  const QString &errorString)
 {
-    //    qInfo() << "errorInConnection:" << errorString;
     QString str;
 
     switch (connection->getSocketError()) {
@@ -625,7 +746,7 @@ void CGroupClientCommunicator::errorInConnection(CGroupClient *const connection,
         break;
 
     case QAbstractSocket::RemoteHostClosedError:
-        emit messageBox(QString("Connection error: %1.").arg(errorString));
+        emit messageBox(QString("Connection closed: %1.").arg(errorString));
         break;
 
     case QAbstractSocket::HostNotFoundError:
@@ -654,11 +775,9 @@ void CGroupClientCommunicator::errorInConnection(CGroupClient *const connection,
     case QAbstractSocket::SslInternalError:
     case QAbstractSocket::SslInvalidUserDataError:
     case QAbstractSocket::TemporaryError:
-    default:
         emit messageBox(QString("Connection error: %1.").arg(errorString));
         break;
     }
-    emit networkDown();
     disconnectCommunicator();
 }
 
@@ -666,88 +785,139 @@ void CGroupClientCommunicator::retrieveData(CGroupClient *conn,
                                             const Messages message,
                                             const QVariantMap &data)
 {
-    switch (conn->getSocketState()) {
-    // Closed, Connecting, Connected, Quiting
-    case QAbstractSocket::ConnectedState:
-        // AwaitingLogin, AwaitingInfo, Logged
-
-        if (conn->getProtocolState() == ProtocolStates::AwaitingLogin) {
-            // Login state. either REQ_LOGIN or ACK should come
-            if (message == Messages::REQ_LOGIN) {
-                sendLoginInformation(conn);
-            } else if (message == Messages::ACK) {
-                // aha! logged on!
-                sendMessage(conn, Messages::REQ_INFO);
-                conn->setProtocolState(ProtocolStates::AwaitingInfo);
-            } else if (message == Messages::STATE_KICKED) {
-                // woops
-                auto *manager = dynamic_cast<Mmapper2Group *>(parent());
-                manager->gotKicked(data);
-                conn->disconnectFromHost();
-                emit networkDown();
-                disconnectCommunicator();
-
-            } else {
-                // ERROR: unexpected message marker!
-                // try to ignore?
-                qWarning("(AwaitingLogin) Unexpected message marker. Trying to ignore.");
-            }
-
-        } else if (conn->getProtocolState() == ProtocolStates::AwaitingInfo) {
-            // almost connected. awaiting full information about the connection
-            if (message == Messages::UPDATE_CHAR) {
-                emit scheduleAction(new AddCharacter(data));
-            } else if (message == Messages::STATE_LOGGED) {
-                conn->setProtocolState(ProtocolStates::Logged);
-            } else if (message == Messages::REQ_ACK) {
-                sendMessage(conn, Messages::ACK);
-            } else {
-                // ERROR: unexpected message marker!
-                // try to ignore?
-                qWarning("(AwaitingInfo) Unexpected message marker. Trying to ignore.");
-            }
-
-        } else if (conn->getProtocolState() == ProtocolStates::Logged) {
-            if (message == Messages::ADD_CHAR) {
-                emit scheduleAction(new AddCharacter(data));
-            } else if (message == Messages::REMOVE_CHAR) {
-                emit scheduleAction(new RemoveCharacter(data));
-            } else if (message == Messages::UPDATE_CHAR) {
-                emit scheduleAction(new UpdateCharacter(data));
-            } else if (message == Messages::RENAME_CHAR) {
-                emit scheduleAction(new RenameCharacter(data));
-            } else if (message == Messages::GTELL) {
-                emit gTellArrived(data);
-            } else if (message == Messages::REQ_ACK) {
-                sendMessage(conn, Messages::ACK);
-            } else {
-                // ERROR: unexpected message marker!
-                // try to ignore?
-                qWarning("(Logged) Unexpected message marker. Trying to ignore.");
-            }
+    if (message == Messages::STATE_KICKED) {
+        emit messageBox(QString("You got kicked! Reason: %1").arg(data["text"].toString()));
+        disconnectCommunicator();
+        return;
+    }
+    if (conn->getProtocolState() == ProtocolState::AwaitingLogin) {
+        // Login state. either REQ_HANDSHAKE, REQ_LOGIN, or ACK should come
+        if (message == Messages::REQ_HANDSHAKE) {
+            sendHandshake(conn, data);
+        } else if (message == Messages::REQ_LOGIN) {
+            assert(!NO_OPEN_SSL);
+            conn->setProtocolVersion(proposedProtocolVersion);
+            conn->startClientEncrypted();
+        } else if (message == Messages::ACK) {
+            // aha! logged on!
+            sendMessage(conn, Messages::REQ_INFO);
+            conn->setProtocolState(ProtocolState::AwaitingInfo);
+        } else {
+            // ERROR: unexpected message marker!
+            // try to ignore?
+            qWarning("(AwaitingLogin) Unexpected message marker. Trying to ignore.");
         }
 
-        break;
-    default:
-        qWarning() << "Data arrival during wrong connection state:" << conn->getSocketState();
-        break;
+    } else if (conn->getProtocolState() == ProtocolState::AwaitingInfo) {
+        // almost connected. awaiting full information about the connection
+        if (message == Messages::UPDATE_CHAR) {
+            emit scheduleAction(new AddCharacter(data));
+        } else if (message == Messages::STATE_LOGGED) {
+            conn->setProtocolState(ProtocolState::Logged);
+        } else if (message == Messages::REQ_ACK) {
+            sendMessage(conn, Messages::ACK);
+        } else {
+            // ERROR: unexpected message marker!
+            // try to ignore?
+            qWarning("(AwaitingInfo) Unexpected message marker. Trying to ignore.");
+        }
+
+    } else if (conn->getProtocolState() == ProtocolState::Logged) {
+        if (message == Messages::ADD_CHAR) {
+            emit scheduleAction(new AddCharacter(data));
+        } else if (message == Messages::REMOVE_CHAR) {
+            emit scheduleAction(new RemoveCharacter(data));
+        } else if (message == Messages::UPDATE_CHAR) {
+            emit scheduleAction(new UpdateCharacter(data));
+        } else if (message == Messages::RENAME_CHAR) {
+            emit scheduleAction(new RenameCharacter(data));
+        } else if (message == Messages::GTELL) {
+            emit gTellArrived(data);
+        } else if (message == Messages::REQ_ACK) {
+            sendMessage(conn, Messages::ACK);
+        } else {
+            // ERROR: unexpected message marker!
+            // try to ignore?
+            qWarning("(Logged) Unexpected message marker. Trying to ignore.");
+        }
     }
 }
 
 //
 // Parsers and Senders of information and signals to upper and lower objects
 //
+void CGroupClientCommunicator::sendHandshake(CGroupClient *const connection, const QVariantMap &data)
+{
+    const auto get_server_protocol_version = [](const auto &data) {
+        if (!data.contains("protocolVersion")
+            || !data["protocolVersion"].canConvert(QMetaType::UInt)) {
+            return PROTOCOL_VERSION_102;
+        }
+        return data["protocolVersion"].toUInt();
+    };
+    const auto serverProtocolVersion = get_server_protocol_version(data);
+    emit sendLog(QString("Host's protocol version: %1").arg(serverProtocolVersion));
+    const auto get_proposed_protocol_version = [](const auto serverProtocolVersion) {
+        // Ensure we only pick a protocol within the bounds we understand
+        if (NO_OPEN_SSL) {
+            return PROTOCOL_VERSION_102;
+        } else if (serverProtocolVersion >= PROTOCOL_VERSION_103) {
+            return PROTOCOL_VERSION_103;
+        } else if (serverProtocolVersion <= PROTOCOL_VERSION_102) {
+            return PROTOCOL_VERSION_102;
+        }
+        return serverProtocolVersion;
+    };
+    proposedProtocolVersion = get_proposed_protocol_version(serverProtocolVersion);
+
+    if (serverProtocolVersion == PROTOCOL_VERSION_102
+        || proposedProtocolVersion == PROTOCOL_VERSION_102) {
+        if (!NO_OPEN_SSL && getConfig().groupManager.requireAuth) {
+            emit messageBox(
+                "Host does not support encryption.\n"
+                "Consider disabling \"Require authorization\" under the Group Manager settings.");
+            disconnectCommunicator();
+            return;
+        } else {
+            // MMapper 2.0.3 through MMapper 2.6 Protocol 102 does not do a version handshake
+            // and goes directly to login
+            sendLoginInformation(connection);
+        }
+
+    } else {
+        QVariantMap handshake;
+        handshake["protocolVersion"] = proposedProtocolVersion;
+        sendMessage(connection, Messages::REQ_HANDSHAKE, handshake);
+    }
+}
+
 void CGroupClientCommunicator::sendLoginInformation(CGroupClient *const connection)
 {
     const CGroupChar *character = getGroup()->getSelf();
     QVariantMap loginData = character->toVariantMap();
-    int protocolVersion = SUPPORTED_PROTOCOL_VERSION;
-    loginData["protocolVersion"] = protocolVersion;
-
+    if (proposedProtocolVersion == PROTOCOL_VERSION_102) {
+        // Protocol 102 does handshake and login in one step
+        loginData["protocolVersion"] = connection->getProtocolVersion();
+        connection->setProtocolVersion(PROTOCOL_VERSION_102);
+    }
     QVariantMap root;
     root["loginData"] = loginData;
-
     sendMessage(connection, Messages::UPDATE_CHAR, root);
+}
+
+void CGroupClientCommunicator::connectionEncrypted(CGroupClient *const connection)
+{
+    const auto secret = connection->getSecret();
+    emit sendLog(QString("Host's secret: %1").arg(secret.constData()));
+    bool authorized = getAuthority()->isAuthorized(secret);
+    if (!getConfig().groupManager.requireAuth || authorized) {
+        sendLoginInformation(connection);
+    } else {
+        // REVISIT: Error message?
+        emit messageBox(
+            QString("Host's secret is not in your contacts:\n%1").arg(secret.constData()));
+        disconnectCommunicator();
+    }
 }
 
 void CGroupClientCommunicator::sendGroupTellMessage(const QVariantMap &root)
@@ -767,8 +937,10 @@ void CGroupClientCommunicator::sendCharRename(const QVariantMap &map)
 
 void CGroupClientCommunicator::disconnectCommunicator()
 {
+    clientConnected = false;
     client.disconnectFromHost();
     emit scheduleAction(new ResetCharacters());
+    deleteLater();
 }
 
 void CGroupClientCommunicator::connectCommunicator()
@@ -791,4 +963,10 @@ CGroup *CGroupCommunicator::getGroup()
 {
     auto *group = reinterpret_cast<Mmapper2Group *>(this->parent());
     return group->getGroup();
+}
+
+GroupAuthority *CGroupCommunicator::getAuthority()
+{
+    auto *group = reinterpret_cast<Mmapper2Group *>(this->parent());
+    return group->getAuthority();
 }

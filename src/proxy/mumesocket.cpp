@@ -89,87 +89,78 @@ void MumeSocket::onError2(QAbstractSocket::SocketError e, const QString &errorSt
 
 MumeSslSocket::MumeSslSocket(QObject *parent)
     : MumeSocket(parent)
-    , m_socket(new QSslSocket(this))
-    , m_timer(new QTimer(this))
+    , m_socket{this}
+    , m_timer{this}
 {
-    m_socket->setProtocol(QSsl::TlsV1_2OrLater);
-    m_socket->setPeerVerifyMode(QSslSocket::QueryPeer);
-    connect(m_socket,
+    m_socket.setPeerVerifyMode(QSslSocket::QueryPeer);
+    connect(&m_socket,
             static_cast<void (QAbstractSocket::*)()>(&QAbstractSocket::connected),
             this,
             &MumeSslSocket::onConnect);
-    connect(m_socket, &QIODevice::readyRead, this, &MumeSslSocket::onReadyRead);
-    connect(m_socket, &QAbstractSocket::disconnected, this, &MumeSslSocket::onDisconnect);
-    connect(m_socket, &QSslSocket::encrypted, this, &MumeSslSocket::onEncrypted);
-    connect(m_socket,
+    connect(&m_socket, &QIODevice::readyRead, this, &MumeSslSocket::onReadyRead);
+    connect(&m_socket, &QAbstractSocket::disconnected, this, &MumeSslSocket::onDisconnect);
+    connect(&m_socket, &QSslSocket::encrypted, this, &MumeSslSocket::onEncrypted);
+    connect(&m_socket,
             static_cast<void (QAbstractSocket::*)(QAbstractSocket::SocketError)>(
                 &QAbstractSocket::error),
             this,
             &MumeSslSocket::onError);
-    connect(m_socket, &QSslSocket::peerVerifyError, this, &MumeSslSocket::onPeerVerifyError);
+    connect(&m_socket, &QSslSocket::peerVerifyError, this, &MumeSslSocket::onPeerVerifyError);
 
-    m_timer->setInterval(TIMEOUT_MILLIS);
-    m_timer->setSingleShot(true);
-    connect(m_timer, &QTimer::timeout, this, &MumeSslSocket::checkTimeout);
+    m_timer.setInterval(TIMEOUT_MILLIS);
+    m_timer.setSingleShot(true);
+    connect(&m_timer, &QTimer::timeout, this, &MumeSslSocket::checkTimeout);
 }
 
 MumeSslSocket::~MumeSslSocket()
 {
-    if (m_socket != nullptr) {
-        m_socket->disconnectFromHost();
-        m_socket->deleteLater();
-    }
-    m_socket = nullptr;
-    if (m_timer != nullptr) {
-        m_timer->stop();
-        delete m_timer;
-    }
-    m_timer = nullptr;
+    m_socket.disconnectFromHost();
+    m_timer.stop();
 }
 
 void MumeSslSocket::connectToHost()
 {
     const auto &settings = getConfig().connection;
-    m_socket->connectToHostEncrypted(settings.remoteServerName,
-                                     settings.remotePort,
-                                     QIODevice::ReadWrite);
-    m_timer->start();
+    m_socket.connectToHostEncrypted(settings.remoteServerName,
+                                    settings.remotePort,
+                                    QIODevice::ReadWrite);
+    m_timer.start();
 }
 
 void MumeSslSocket::disconnectFromHost()
 {
-    m_timer->stop();
-    if (m_socket->state() != QAbstractSocket::UnconnectedState) {
-        m_socket->disconnectFromHost();
+    m_timer.stop();
+    if (m_socket.state() != QAbstractSocket::UnconnectedState) {
+        m_socket.disconnectFromHost();
     }
 }
 
 void MumeSslSocket::onConnect()
 {
     emit log("Proxy", "Negotiating handshake with server ...");
-    m_socket->setSocketOption(QAbstractSocket::KeepAliveOption, true);
+    m_socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
 
     // Restart timer to check if encryption has successfully finished
-    m_timer->start();
+    m_timer.start();
 }
 
 void MumeSslSocket::onError(QAbstractSocket::SocketError e)
 {
     // MUME disconnecting is not an error. We also handle timeouts separately.
     if (e != QAbstractSocket::RemoteHostClosedError && e != QAbstractSocket::SocketTimeoutError) {
-        m_timer->stop();
-        onError2(e, m_socket->errorString());
+        m_timer.stop();
+        onError2(e, m_socket.errorString());
     }
 }
 
 void MumeSslSocket::onEncrypted()
 {
-    m_timer->stop();
+    m_timer.stop();
     emit log("Proxy", "Connection now encrypted ...");
     constexpr const bool LOG_CERT_INFO = true;
     if ((LOG_CERT_INFO)) {
         /* TODO: If we save the cert to config file, then we can notify the user if it changes! */
-        const auto cert = m_socket->peerCertificate();
+        const auto cert = m_socket.peerCertificate();
         const auto commonNameList = cert.subjectInfo(cert.CommonName);
         const auto commonName = commonNameList.isEmpty() ? "(n/a)" : commonNameList.front();
         const auto toHex = [](const QByteArray &ba) {
@@ -193,7 +184,7 @@ void MumeSslSocket::onEncrypted()
 void MumeSslSocket::onPeerVerifyError(const QSslError &error)
 {
     emit log("Proxy", "<b>WARNING:</b> " + error.errorString());
-    qWarning() << "onPeerVerifyError" << m_socket->errorString() << error.errorString();
+    qWarning() << "onPeerVerifyError" << m_socket.errorString() << error.errorString();
 
     // Warn user of possible compromise
     QByteArray byteArray = QByteArray("\r\n\033[1;37;41mENCRYPTION WARNING:\033[0;37;41m ")
@@ -204,18 +195,17 @@ void MumeSslSocket::onPeerVerifyError(const QSslError &error)
 
 void MumeSslSocket::onReadyRead()
 {
-    if (m_socket != nullptr)
-        io::readAllAvailable(*m_socket, m_buffer, [this](const QByteArray &byteArray) {
-            if (byteArray.size() != 0)
-                emit processMudStream(byteArray);
-        });
+    io::readAllAvailable(m_socket, m_buffer, [this](const QByteArray &byteArray) {
+        if (byteArray.size() != 0)
+            emit processMudStream(byteArray);
+    });
 }
 
 void MumeSslSocket::checkTimeout()
 {
-    switch (m_socket->state()) {
+    switch (m_socket.state()) {
     case QAbstractSocket::ConnectedState:
-        if (!m_socket->isEncrypted()) {
+        if (!m_socket.isEncrypted()) {
             onError2(QAbstractSocket::SslHandshakeFailedError,
                      "Timeout during encryption handshake.");
             return;
@@ -224,7 +214,7 @@ void MumeSslSocket::checkTimeout()
         }
         break;
     case QAbstractSocket::HostLookupState:
-        m_socket->abort();
+        m_socket.abort();
         onError2(QAbstractSocket::HostNotFoundError, "Could not find host!");
         return;
 
@@ -234,7 +224,7 @@ void MumeSslSocket::checkTimeout()
     case QAbstractSocket::ListeningState:
     case QAbstractSocket::ClosingState:
     default:
-        m_socket->abort();
+        m_socket.abort();
         onError2(QAbstractSocket::SocketTimeoutError, "Connection timed out!");
         break;
     }
@@ -242,19 +232,19 @@ void MumeSslSocket::checkTimeout()
 
 void MumeSslSocket::sendToMud(const QByteArray &ba)
 {
-    m_socket->write(ba);
+    m_socket.write(ba);
 }
 
 void MumeTcpSocket::connectToHost()
 {
     const auto &settings = getConfig().connection;
-    m_socket->connectToHost(settings.remoteServerName, settings.remotePort);
-    m_timer->start();
+    m_socket.connectToHost(settings.remoteServerName, settings.remotePort);
+    m_timer.start();
 }
 
 void MumeTcpSocket::onConnect()
 {
-    m_timer->stop();
-    m_socket->setSocketOption(QAbstractSocket::KeepAliveOption, true);
+    m_timer.stop();
+    m_socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
     MumeSocket::onConnect();
 }

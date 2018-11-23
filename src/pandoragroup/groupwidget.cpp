@@ -29,6 +29,7 @@
 #include <QString>
 #include <QtWidgets>
 
+#include "../configuration/configuration.h"
 #include "../expandoracommon/room.h"
 #include "../global/Color.h"
 #include "../global/roomid.h"
@@ -228,6 +229,11 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
 
     connect(m_table, &QAbstractItemView::clicked, this, [this](const QModelIndex &index) {
         if (!index.isValid()) {
+            return;
+        }
+
+        if (getConfig().groupManager.state != GroupManagerState::Server) {
+            // All context menu actions are only actionable by the server right now
             return;
         }
 

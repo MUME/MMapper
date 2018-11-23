@@ -36,6 +36,7 @@
 
 #include "../global/roomid.h"
 
+class GroupAuthority;
 class CGroupCommunicator;
 class CGroup;
 class Mmapper2Group;
@@ -77,6 +78,7 @@ public:
 
     GroupManagerState getType();
 
+    GroupAuthority *getAuthority() { return authority.get(); }
     CGroup *getGroup() { return group.get(); }
 
 public slots:
@@ -98,16 +100,13 @@ public slots:
 protected slots:
     void characterChanged();
 
-protected:
-    void gotKicked(const QVariantMap &message);
-    void serverStartupFailed(const QString &message);
-
 private:
     bool init();
     void issueLocalCharUpdate();
 
     QMutex networkLock{};
     GroupThreader *thread;
+    std::unique_ptr<GroupAuthority> authority;
     std::unique_ptr<CGroupCommunicator> network;
     std::unique_ptr<CGroup> group;
 };

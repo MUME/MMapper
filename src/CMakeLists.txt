@@ -165,6 +165,8 @@ set(mmapper_SRCS
     pandoragroup/CGroupServer.h
     pandoragroup/groupaction.cpp
     pandoragroup/groupaction.h
+    pandoragroup/groupauthority.cpp
+    pandoragroup/groupauthority.h
     pandoragroup/groupselection.cpp
     pandoragroup/groupselection.h
     pandoragroup/groupwidget.cpp
@@ -281,6 +283,10 @@ if(WITH_ZLIB)
     include_directories(SYSTEM ${ZLIB_INCLUDE_DIRS})
 endif()
 
+if (WITH_OPENSSL)
+    include_directories(SYSTEM ${OPENSSL_INCLUDE_DIR})
+endif()
+
 set(mmapper_DATA
     mmapper.desktop
     MacOSXBundleInfo.plist.in
@@ -314,6 +320,10 @@ if(WITH_ZLIB)
     if(NOT ZLIB_FOUND)
         add_dependencies(mmapper zlib)
     endif()
+endif()
+
+if (WITH_OPENSSL)
+    target_link_libraries(mmapper ${OPENSSL_LIBRARIES})
 endif()
 
 if(USE_TIDY)
@@ -439,7 +449,11 @@ if(UNIX AND NOT APPLE)
         set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, zlib1g")
     endif()
     if(WITH_OPENSSL)
-        set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libssl1.0.0")
+        if(OPENSSL_VERSION VERSION_LESS 1.1.0)
+            set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libssl1.0.0")
+        else()
+            set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libssl1.1")
+        endif()
     endif()
 
     set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_FILE_NAME}-${CMAKE_SYSTEM_PROCESSOR}")

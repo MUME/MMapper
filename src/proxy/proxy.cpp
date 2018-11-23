@@ -48,13 +48,6 @@
 #include "mumesocket.h"
 #include "telnetfilter.h"
 
-/* TODO: merge with other use */
-#if defined(MMAPPER_NO_OPENSSL) && MMAPPER_NO_OPENSSL
-static constexpr const bool NO_OPEN_SSL = true;
-#else
-static constexpr const bool NO_OPEN_SSL = false;
-#endif
-
 class SigParseEvent;
 
 ProxyThreader::ProxyThreader(Proxy *const proxy)

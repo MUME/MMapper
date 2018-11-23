@@ -36,6 +36,7 @@
 #include "CGroup.h"
 #include "CGroupChar.h"
 #include "CGroupCommunicator.h"
+#include "groupauthority.h"
 
 GroupThreader::GroupThreader(Mmapper2Group *const group)
     : group(group)
@@ -68,6 +69,7 @@ Mmapper2Group::Mmapper2Group(QObject *const /* parent */)
 
 Mmapper2Group::~Mmapper2Group()
 {
+    authority.reset(nullptr);
     group.reset(nullptr);
     if (network) {
         network->disconnectCommunicator();
@@ -90,6 +92,7 @@ void Mmapper2Group::start()
 bool Mmapper2Group::init()
 {
     group.reset(new CGroup(this));
+    authority.reset(new GroupAuthority(this));
 
     connect(group.get(), &CGroup::log, this, &Mmapper2Group::sendLog);
     connect(group.get(),
@@ -169,24 +172,6 @@ void Mmapper2Group::relayMessageBox(const QString &message)
 {
     emit log("GroupManager", message.toLatin1());
     emit messageBox("Group Manager", message);
-}
-
-void Mmapper2Group::serverStartupFailed(const QString &message)
-{
-    relayMessageBox(
-        QString("Failed to start the Group server: %1").arg(message.toLatin1().constData()));
-}
-
-void Mmapper2Group::gotKicked(const QVariantMap &message)
-{
-    if (!message.contains("text") && message["text"].canConvert(QMetaType::QString)) {
-        qWarning() << "Text not found" << message;
-        return;
-    }
-    const QString &text = message["text"].toString();
-    const QString reason = QString("You got kicked! Reason: %1").arg(text);
-    emit log("GroupManager", reason);
-    emit messageBox("Group Manager", reason);
 }
 
 void Mmapper2Group::gTellArrived(const QVariantMap &node)
@@ -420,6 +405,8 @@ GroupManagerState Mmapper2Group::getType()
 void Mmapper2Group::networkDown()
 {
     qDebug() << "Network down";
+    network.release();
+    setConfig().groupManager.state = GroupManagerState::Off;
     emit groupManagerOff();
 }
 
@@ -433,6 +420,15 @@ void Mmapper2Group::setType(GroupManagerState newState)
         network->deleteLater();
         network.release(); // There might still be signals left to be processed
     }
+
+    const auto oldState = getConfig().groupManager.state;
+    if (oldState != newState)
+        setConfig().groupManager.state = newState; // Ensure config matches reality
+
+    const auto currentState = getType();
+    if (currentState == newState)
+        return; // Do not bother changing states if we're already in it
+
     switch (newState) {
     case GroupManagerState::Server:
         network.reset(new CGroupServerCommunicator(this));
@@ -445,9 +441,7 @@ void Mmapper2Group::setType(GroupManagerState newState)
         sendLog("Off mode has been selected");
         break;
     }
-
     qDebug() << "Network type set to" << static_cast<int>(newState);
-    setConfig().groupManager.state = newState;
 
     if (newState != GroupManagerState::Off) {
         if (getConfig().groupManager.rulesWarning) {

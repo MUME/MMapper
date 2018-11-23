@@ -31,15 +31,14 @@
 #include <QAbstractSocket>
 #include <QByteArray>
 #include <QObject>
+#include <QSslSocket>
 #include <QString>
+#include <QTimer>
 #include <QtCore>
 
 #include "../global/io.h"
 
 class QSslError;
-class QSslSocket;
-class QTcpSocket;
-class QTimer;
 
 class MumeSocket : public QObject
 {
@@ -88,11 +87,11 @@ protected slots:
 
 protected:
     io::null_padded_buffer<(1 << 13)> m_buffer{};
-    QSslSocket *m_socket = nullptr;
-    QTimer *m_timer = nullptr;
+    QSslSocket m_socket;
+    QTimer m_timer;
 };
 
-class MumeTcpSocket : public MumeSslSocket
+class MumeTcpSocket final : public MumeSslSocket
 {
     Q_OBJECT
 public:

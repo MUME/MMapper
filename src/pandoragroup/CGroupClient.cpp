@@ -25,36 +25,57 @@
 
 #include "CGroupClient.h"
 
+#include <cassert>
 #include <QByteArray>
 #include <QMessageLogContext>
+#include <QSslConfiguration>
 #include <QString>
 #include <QTcpSocket>
 #include <QTimer>
 
 #include "../configuration/configuration.h"
 #include "../global/io.h"
+#include "groupauthority.h"
 
 static constexpr const bool DEBUG = false;
 static constexpr const auto FIVE_SECOND_TIMEOUT = 5000;
 
-CGroupClient::CGroupClient(QObject *parent)
+CGroupClient::CGroupClient(GroupAuthority *authority, QObject *parent)
     : QObject(parent)
-    , timer(new QTimer(this))
+    , socket{this}
+    , timer{this}
+    , authority(authority)
 {
-    timer->setInterval(FIVE_SECOND_TIMEOUT);
-    timer->setSingleShot(true);
-    connect(timer, &QTimer::timeout, this, &CGroupClient::onTimeout);
+    timer.setInterval(FIVE_SECOND_TIMEOUT);
+    timer.setSingleShot(true);
+    connect(&timer, &QTimer::timeout, this, &CGroupClient::onTimeout);
 
+    auto config = socket.sslConfiguration();
+    config.setCaCertificates({});
+    config.setLocalCertificate(authority->getLocalCertificate());
+    config.setPrivateKey(authority->getPrivateKey());
+    if (getConfig().groupManager.requireAuth) {
+        config.setPeerVerifyMode(QSslSocket::QueryPeer);
+    } else {
+        config.setPeerVerifyMode(QSslSocket::VerifyNone);
+    }
+    socket.setSslConfiguration(config);
+    socket.setPeerVerifyName(GROUP_COMMON_NAME);
     connect(&socket, &QAbstractSocket::hostFound, this, [this]() { emit sendLog("Host found."); });
     connect(&socket, &QAbstractSocket::connected, this, [this]() {
         socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
-        setProtocolState(ProtocolStates::AwaitingLogin);
+        setProtocolState(ProtocolState::AwaitingLogin);
         emit sendLog("Connection established.");
         emit connectionEstablished(this);
     });
+    connect(&socket, &QSslSocket::encrypted, this, [this]() {
+        timer.stop();
+        secret = socket.peerCertificate().digest(QCryptographicHash::Algorithm::Sha1).toHex();
+        emit sendLog("Connection successfully encrypted.");
+        emit connectionEncrypted(this);
+    });
     connect(&socket, &QAbstractSocket::disconnected, this, [this]() {
-        timer->stop();
-        emit sendLog("Connection closed.");
+        timer.stop();
         emit connectionClosed(this);
     });
     connect(&socket, &QIODevice::readyRead, this, &CGroupClient::onReadyRead);
@@ -63,12 +84,12 @@ CGroupClient::CGroupClient(QObject *parent)
                 &QAbstractSocket::error),
             this,
             &CGroupClient::onError);
+    connect(&socket, &QSslSocket::peerVerifyError, this, &CGroupClient::onPeerVerifyError);
 }
 
 CGroupClient::~CGroupClient()
 {
-    if (timer)
-        delete timer;
+    timer.stop();
     socket.disconnectFromHost();
     qDebug() << "Destructed CGroupClient" << socket.socketDescriptor();
 }
@@ -78,7 +99,7 @@ void CGroupClient::connectToHost()
     if (socket.state() != QAbstractSocket::UnconnectedState) {
         socket.abort();
     }
-    timer->start();
+    timer.start();
     const auto &groupConfig = getConfig().groupManager;
     const auto remoteHost = groupConfig.host;
     const auto remotePort = static_cast<quint16>(groupConfig.remotePort);
@@ -89,9 +110,13 @@ void CGroupClient::connectToHost()
 
 void CGroupClient::disconnectFromHost()
 {
-    timer->stop();
-    emit sendLog("Closing the socket. Quitting.");
-    socket.disconnectFromHost();
+    timer.stop();
+    if (socket.state() != QAbstractSocket::UnconnectedState) {
+        socket.flush();
+        emit sendLog("Closing the socket. Quitting.");
+        socket.disconnectFromHost();
+        setProtocolState(ProtocolState::Unconnected);
+    }
 }
 
 void CGroupClient::setSocket(qintptr socketDescriptor)
@@ -102,38 +127,51 @@ void CGroupClient::setSocket(qintptr socketDescriptor)
         return;
     }
     socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
-    setProtocolState(ProtocolStates::AwaitingLogin);
+    setProtocolState(ProtocolState::AwaitingLogin);
     emit connectionEstablished(this);
 }
 
-void CGroupClient::setProtocolState(const ProtocolStates val)
+void CGroupClient::setProtocolState(const ProtocolState val)
 {
+    timer.stop();
     if (DEBUG)
         qInfo() << "Protocol state:" << static_cast<int>(val);
     protocolState = val;
     switch (val) {
-    case ProtocolStates::AwaitingLogin:
+    case ProtocolState::AwaitingLogin:
         // Restart timer to verify that info was sent
-        timer->start();
+        timer.start();
         break;
-    case ProtocolStates::AwaitingInfo:
+    case ProtocolState::AwaitingInfo:
         // Restart timer to verify that login occurred
-        emit sendLog("Login accepted.");
-        timer->start();
+        emit sendLog("Receiving group information...");
+        timer.start();
         break;
-    case ProtocolStates::Logged:
-        emit sendLog("Group information received.");
-        timer->stop();
+    case ProtocolState::Logged:
+        emit sendLog("Group information received. Login completed successfully.");
+        break;
+    case ProtocolState::Unconnected:
         break;
     default:
         abort();
     }
 }
 
-void CGroupClient::onError(QAbstractSocket::SocketError /*socketError*/)
+void CGroupClient::onError(QAbstractSocket::SocketError e)
 {
-    timer->stop();
-    emit errorInConnection(this, socket.errorString());
+    // Disconnecting and timeouts are not an error
+    if (e != QAbstractSocket::RemoteHostClosedError && e != QAbstractSocket::SocketTimeoutError) {
+        qDebug() << "onError" << static_cast<int>(e) << socket.errorString();
+        timer.stop();
+        emit errorInConnection(this, socket.errorString());
+    }
+}
+
+void CGroupClient::onPeerVerifyError(const QSslError &error)
+{
+    emit sendLog("<b>WARNING:</b> " + error.errorString());
+    qWarning() << "onPeerVerifyError" << static_cast<int>(socket.error()) << socket.errorString()
+               << error.errorString();
 }
 
 void CGroupClient::onTimeout()
@@ -141,13 +179,23 @@ void CGroupClient::onTimeout()
     switch (socket.state()) {
     case QAbstractSocket::ConnectedState:
         switch (protocolState) {
-        case ProtocolStates::Unconnected:
-        case ProtocolStates::AwaitingLogin:
-        case ProtocolStates::AwaitingInfo:
+        case ProtocolState::Unconnected:
+        case ProtocolState::AwaitingLogin:
+            if (!socket.isEncrypted()) {
+                socket.disconnectFromHost();
+                QString buffer = socket.isEncrypted() ? socket.errorString()
+                                                      : "Connection not successfully encrypted";
+                emit errorInConnection(this, buffer);
+                return;
+            }
+            goto continue_common_timeout;
+
+        continue_common_timeout:
+        case ProtocolState::AwaitingInfo:
             socket.disconnectFromHost();
             emit errorInConnection(this, "Login timed out");
             break;
-        case ProtocolStates::Logged:
+        case ProtocolState::Logged:
             // Race condition? Protocol was successfully logged
             break;
         }
