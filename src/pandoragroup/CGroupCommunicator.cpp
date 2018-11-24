@@ -875,12 +875,17 @@ void CGroupClientCommunicator::sendHandshake(CGroupClient *const connection, con
         if (!NO_OPEN_SSL && getConfig().groupManager.requireAuth) {
             emit messageBox(
                 "Host does not support encryption.\n"
-                "Consider disabling \"Require authorization\" under the Group Manager settings.");
+                "Consider disabling \"Require authorization\" under the Group Manager settings "
+                "or ask the host to upgrade MMapper.");
             disconnectCommunicator();
             return;
         } else {
             // MMapper 2.0.3 through MMapper 2.6 Protocol 102 does not do a version handshake
             // and goes directly to login
+            if (!NO_OPEN_SSL)
+                emit sendLog("<b>WARNING:</b> "
+                             "Host does not support encryption and your connection is insecure.");
+
             sendLoginInformation(connection);
         }
 
