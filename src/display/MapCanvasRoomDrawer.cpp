@@ -791,6 +791,11 @@ void MapCanvasRoomDrawer::drawRoomConnectionsAndDoors(const Room *const room, co
         // outgoing connections
         for (const auto &outTargetId : sourceExit.outRange()) {
             targetRoom = rooms[outTargetId];
+            if (!targetRoom) {
+                qWarning() << "Source room" << sourceId.asUint32() << "has target room"
+                           << outTargetId.asUint32() << "which does not exist!";
+                continue;
+            }
             rx = targetRoom->getPosition().x;
             ry = targetRoom->getPosition().y;
             if ((outTargetId >= sourceId) || // draw exits if outTargetId >= sourceId ...

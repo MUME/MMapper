@@ -206,6 +206,15 @@ E serialize(const uint32_t value)
     return static_cast<E>(value);
 }
 
+RoomTerrainType serialize(const uint32_t value)
+{
+    if (value >= NUM_ROOM_TERRAIN_TYPES) {
+        qWarning() << "Detected out of bounds terrain type!";
+        return RoomTerrainType::UNDEFINED;
+    }
+    return static_cast<RoomTerrainType>(value);
+}
+
 Room *MapStorage::loadRoom(QDataStream &stream, uint32_t version)
 {
     auto helper = LoadRoomHelper{stream};
@@ -216,7 +225,7 @@ Room *MapStorage::loadRoom(QDataStream &stream, uint32_t version)
     room->setDynamicDescription(helper.read_string());
     room->setId(RoomId{helper.read_u32() + baseId});
     room->setNote(helper.read_string());
-    room->setTerrainType(serialize<RoomTerrainType>(helper.read_u8()));
+    room->setTerrainType(serialize(helper.read_u8()));
     room->setLightType(serialize<RoomLightType>(helper.read_u8()));
     room->setAlignType(serialize<RoomAlignType>(helper.read_u8()));
     room->setPortableType(serialize<RoomPortableType>(helper.read_u8()));
@@ -392,14 +401,6 @@ bool MapStorage::mergeData()
             Room *room = loadRoom(stream, version);
 
             progressCounter.step();
-
-            // REVISIT: Validate rooms in a smarter location
-            if (static_cast<uint32_t>(room->getTerrainType()) >= NUM_ROOM_TERRAIN_TYPES) {
-                qWarning() << "Dropping invalid room" << room->getId().asUint32()
-                           << room->getName();
-                continue;
-            }
-
             m_mapData.insertPredefinedRoom(*room);
         }
 
