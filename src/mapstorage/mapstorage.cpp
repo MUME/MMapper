@@ -392,6 +392,14 @@ bool MapStorage::mergeData()
             Room *room = loadRoom(stream, version);
 
             progressCounter.step();
+
+            // REVISIT: Validate rooms in a smarter location
+            if (static_cast<uint32_t>(room->getTerrainType()) >= NUM_ROOM_TERRAIN_TYPES) {
+                qWarning() << "Dropping invalid room" << room->getId().asUint32()
+                           << room->getName();
+                continue;
+            }
+
             m_mapData.insertPredefinedRoom(*room);
         }
 
