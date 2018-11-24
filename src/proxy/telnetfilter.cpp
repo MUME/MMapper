@@ -36,25 +36,13 @@ static constexpr const uint8_t ASCII_DEL = 8;
 static constexpr const uint8_t ASCII_CR = 13;
 static constexpr const uint8_t ASCII_LF = 10;
 
-static IncomingData createIncomingDataPrompt(const QByteArray &data)
-{
-    IncomingData incomingData;
-    incomingData.line = data;
-    incomingData.type = TelnetDataType::PROMPT;
-    return incomingData;
-}
-
 TelnetFilter::TelnetFilter(QObject *parent)
     : QObject(parent)
 {}
 
 void TelnetFilter::onAnalyzeMudStream(const QByteArray &ba, bool goAhead)
 {
-    if (goAhead) {
-        emit parseNewMudInput(createIncomingDataPrompt(ba));
-        return;
-    }
-    dispatchTelnetStream(ba, m_mudIncomingBuffer, m_mudIncomingQue);
+    dispatchTelnetStream(ba, m_mudIncomingBuffer, m_mudIncomingQue, goAhead);
 
     // parse incoming lines in que
     IncomingData data;
@@ -66,11 +54,7 @@ void TelnetFilter::onAnalyzeMudStream(const QByteArray &ba, bool goAhead)
 
 void TelnetFilter::onAnalyzeUserStream(const QByteArray &ba, bool goAhead)
 {
-    if (goAhead) {
-        emit parseNewMudInput(createIncomingDataPrompt(ba));
-        return;
-    }
-    dispatchTelnetStream(ba, m_userIncomingData, m_userIncomingQue);
+    dispatchTelnetStream(ba, m_userIncomingData, m_userIncomingQue, goAhead);
 
     // parse incoming lines in que
     IncomingData data;
@@ -82,7 +66,8 @@ void TelnetFilter::onAnalyzeUserStream(const QByteArray &ba, bool goAhead)
 
 void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
                                         IncomingData &buffer,
-                                        TelnetIncomingDataQueue &que)
+                                        TelnetIncomingDataQueue &que,
+                                        const bool &goAhead)
 {
     quint16 index = 0;
 
@@ -167,9 +152,14 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
         }
     }
 
-    if (!buffer.line.isEmpty() && buffer.type == TelnetDataType::SPLIT) {
+    if (!buffer.line.isEmpty() && (goAhead || buffer.type == TelnetDataType::SPLIT)) {
         {
-            if (buffer.line.endsWith(char(ASCII_LF))) {
+            if (goAhead) {
+                buffer.type = TelnetDataType::PROMPT;
+                que.enqueue(buffer);
+                buffer.line.clear();
+                buffer.type = TelnetDataType::SPLIT;
+            } else if (buffer.line.endsWith(char(ASCII_LF))) {
                 buffer.type = TelnetDataType::LF;
                 que.enqueue(buffer);
                 buffer.line.clear();

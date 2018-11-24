@@ -74,7 +74,8 @@ signals:
 private:
     void dispatchTelnetStream(const QByteArray &stream,
                               IncomingData &m_incomingData,
-                              TelnetIncomingDataQueue &que);
+                              TelnetIncomingDataQueue &que,
+                              const bool &goAhead);
 
     IncomingData m_userIncomingData{};
     IncomingData m_mudIncomingBuffer{};
