@@ -33,6 +33,7 @@
 #include <QPlainTextEdit>
 #include <QScopedPointer>
 #include <QSize>
+#include <QStatusBar>
 #include <QString>
 #include <QVBoxLayout>
 #include <QtGui>
@@ -66,6 +67,7 @@ QPlainTextEdit *RemoteEditWidget::createTextEdit()
     QVBoxLayout *const mainLayout = createLayout();
     QPlainTextEdit *pTextEdit = createTextEdit(mainLayout);
     addMenuBar(mainLayout, pTextEdit);
+    addStatusBar(mainLayout, pTextEdit);
     return pTextEdit;
 }
 
@@ -174,6 +176,20 @@ void RemoteEditWidget::addPaste(QMenu *const editMenu, const QPlainTextEdit *pTe
     editMenu->addAction(pasteAct);
     connect(pasteAct, &QAction::triggered, pTextEdit, &QPlainTextEdit::paste);
     pasteAct->setDisabled(!m_editSession);
+}
+
+void RemoteEditWidget::addStatusBar(QVBoxLayout *mainLayout, const QPlainTextEdit *pTextEdit)
+{
+    QStatusBar *statusBar = new QStatusBar(this);
+    statusBar->showMessage(tr("Ready"));
+    mainLayout->addWidget(statusBar);
+
+    connect(pTextEdit, &QPlainTextEdit::cursorPositionChanged, this, [pTextEdit, statusBar]() {
+        const int column = pTextEdit->textCursor().columnNumber() + 1;
+        const int row = pTextEdit->textCursor().blockNumber() + 1;
+        QString text = QString("Line %1, Column %2").arg(row).arg(column);
+        statusBar->showMessage(text);
+    });
 }
 
 RemoteEditWidget::~RemoteEditWidget()

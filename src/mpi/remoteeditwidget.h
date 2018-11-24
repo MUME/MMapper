@@ -45,6 +45,7 @@ class QObject;
 class QPlainTextEdit;
 class QVBoxLayout;
 class QWidget;
+class QStatusBar;
 
 class RemoteEditWidget : public QDialog
 {
@@ -75,6 +76,7 @@ private:
     QPlainTextEdit *createTextEdit();
     QVBoxLayout *createLayout();
     QPlainTextEdit *createTextEdit(QVBoxLayout *mainLayout);
+
     void addMenuBar(QVBoxLayout *mainLayout, const QPlainTextEdit *pTextEdit);
     void addFileMenu(QMenuBar *menuBar, const QPlainTextEdit *pTextEdit);
     void addEditMenu(QMenuBar *menuBar, const QPlainTextEdit *pTextEdit);
@@ -83,6 +85,7 @@ private:
     void addCut(QMenu *editMenu, const QPlainTextEdit *pTextEdit);
     void addCopy(QMenu *editMenu, const QPlainTextEdit *pTextEdit);
     void addPaste(QMenu *editMenu, const QPlainTextEdit *pTextEdit);
+    void addStatusBar(QVBoxLayout *mainLayout, const QPlainTextEdit *pTextEdit);
 
 private:
     const bool m_editSession;
