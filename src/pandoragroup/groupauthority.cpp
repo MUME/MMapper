@@ -267,7 +267,7 @@ bool GroupAuthority::add(const GroupSecret &secret)
     // Update model
     if (model.insertRow(model.rowCount())) {
         QModelIndex index = model.index(model.rowCount() - 1, 0);
-        model.setData(index, secret);
+        model.setData(index, secret, Qt::DisplayRole);
         setConfig().groupManager.authorizedSecrets = model.stringList();
         return true;
     }
@@ -285,7 +285,8 @@ bool GroupAuthority::remove(const GroupSecret &secret)
     // Remove from model
     for (int i = 0; i <= model.rowCount(); i++) {
         QModelIndex index = model.index(i);
-        if (model.data(index).toString().compare(secret, Qt::CaseInsensitive) == 0) {
+        const QString targetSecret = model.data(index, Qt::DisplayRole).toString();
+        if (targetSecret.compare(secret, Qt::CaseInsensitive) == 0) {
             model.removeRow(i);
             setConfig().groupManager.authorizedSecrets = model.stringList();
             return true;
