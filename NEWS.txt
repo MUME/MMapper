@@ -1,4 +1,28 @@
 ================================
+MMapper 2.7.0 (November 24, 2018)
+================================
+
+New features:
+ - Group manager keeps your communications secure with encryption
+ - Group manager allows you to authorize who can connect to your group
+ - Elite and super mob flags have been introduced
+ - Quest and passive mob flags have been modernized
+ - Word of recall and equipment load flags have been added
+ - 'Find Rooms' dialog can now select and edit rooms
+ - Hosts can kick group members with the _gkick command or by clicking on them
+ - Offline mode now supports scouting and random exits
+ - Integrated editor shows the line/column of the cursor within the status bar
+ - Rooms can be forced updated or outdated
+ - 'Edit Rooms' dialog icon and flag ordering improvements
+
+Bug fixes:
+ - Improved stability when editing rooms after force moving
+ - Multiple room and load flags are displayed at the same time again
+ - Fixed bug where group member's mana was always shown as zero
+ - Squished bug with prompt handling when the connection was not encrypted
+ - Removed deprecated 'random' terrain type that displayed warnings in the logs
+
+================================
 MMapper 2.6.3 (November 12, 2018)
 ================================
 
