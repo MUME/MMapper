@@ -112,7 +112,8 @@ QVariant GroupModel::dataForCharacter(CGroupChar *const character, ColumnType co
             return calculateRatio(character->moves, character->maxmoves);
         case ColumnType::ROOM_NAME: {
             QString roomName = "Unknown";
-            if (character->pos != DEFAULT_ROOMID) {
+            if (character->pos != DEFAULT_ROOMID && character->pos != INVALID_ROOMID
+                && !m_map->isEmpty() && m_mapLoaded) {
                 const RoomSelection *roomSelection = m_map->select();
                 if (const Room *r = m_map->getRoom(character->pos, roomSelection)) {
                     roomName = r->getName();
@@ -225,8 +226,6 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
     m_kick = new QAction(QIcon(":/icons/offline.png"), tr("&Kick"), this);
     connect(m_kick, &QAction::triggered, this, [this]() { emit kickCharacter(selectedCharacter); });
 
-    hide();
-
     connect(m_table, &QAbstractItemView::clicked, this, [this](const QModelIndex &index) {
         if (!index.isValid()) {
             return;
@@ -270,12 +269,16 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
             m_group,
             &Mmapper2Group::kickCharacter,
             Qt::QueuedConnection);
+
+    readSettings();
+    m_table->resizeColumnsToContents();
 }
 
 GroupWidget::~GroupWidget()
 {
     delete m_table;
     delete m_kick;
+    writeSettings();
 }
 
 void GroupWidget::updateLabels()
@@ -287,4 +290,14 @@ void GroupWidget::updateLabels()
 void GroupWidget::messageBox(const QString &title, const QString &message)
 {
     QMessageBox::critical(this, title, message);
+}
+
+void GroupWidget::readSettings()
+{
+    restoreGeometry(getConfig().groupManager.geometry);
+}
+
+void GroupWidget::writeSettings()
+{
+    setConfig().groupManager.geometry = saveGeometry();
 }

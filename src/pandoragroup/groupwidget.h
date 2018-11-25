@@ -69,9 +69,12 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
     Qt::ItemFlags flags(const QModelIndex &parent) const override;
 
+    void setMapLoaded(const bool val) { m_mapLoaded = val; }
+
 private:
     MapData *m_map = nullptr;
     Mmapper2Group *m_group = nullptr;
+    bool m_mapLoaded = false;
 };
 
 class GroupWidget : public QWidget
@@ -84,9 +87,15 @@ public:
 public slots:
     void updateLabels();
     void messageBox(const QString &title, const QString &message);
+    void mapUnloaded() { m_model.setMapLoaded(false); }
+    void mapLoaded() { m_model.setMapLoaded(true); }
 
 signals:
     void kickCharacter(const QByteArray &);
+
+private:
+    void readSettings();
+    void writeSettings();
 
 private:
     QTableView *m_table = nullptr;

@@ -483,6 +483,7 @@ void Configuration::GroupManagerSettings::read(QSettings &conf)
     privateKey = conf.value(KEY_RSA_PRIVATE_KEY, "").toByteArray();
     authorizedSecrets = conf.value(KEY_AUTHORIZED_SECRETS, QStringList()).toStringList();
     requireAuth = NO_OPEN_SSL ? false : conf.value(KEY_AUTHORIZATION_REQUIRED, false).toBool();
+    geometry = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
 }
 
 void Configuration::MumeClockSettings::read(QSettings &conf)
@@ -611,6 +612,7 @@ void Configuration::GroupManagerSettings::write(QSettings &conf) const
     conf.setValue(KEY_RSA_PRIVATE_KEY, privateKey);
     conf.setValue(KEY_AUTHORIZED_SECRETS, authorizedSecrets);
     conf.setValue(KEY_AUTHORIZATION_REQUIRED, requireAuth);
+    conf.setValue(KEY_WINDOW_GEOMETRY, geometry);
 }
 
 void Configuration::MumeClockSettings::write(QSettings &conf) const

@@ -93,6 +93,7 @@ public:
     bool saveFile(const QString &fileName, SaveMode mode, SaveFormat format);
     void loadFile(const QString &fileName);
     void setCurrentFile(const QString &fileName);
+    void startServices();
 
 signals:
     void setGroupManagerType(GroupManagerState);

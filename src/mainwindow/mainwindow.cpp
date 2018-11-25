@@ -141,8 +141,6 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
 
     m_groupManager = new Mmapper2Group(this);
     m_groupManager->setObjectName("GroupManager");
-    m_groupManager->start();
-    m_groupWidget = new GroupWidget(m_groupManager, m_mapData, this);
 
     m_mapWindow = new MapWindow(m_mapData, m_prespammedPath, m_groupManager, this);
     setCentralWidget(m_mapWindow);
@@ -174,6 +172,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     m_dockDialogLog->setWidget(logWindow);
     m_dockDialogLog->hide();
 
+    m_groupWidget = new GroupWidget(m_groupManager, m_mapData, this);
     m_dockDialogGroup = new DockWidget(tr("Group Manager"), this);
     m_dockDialogGroup->setObjectName("DockWidgetGroup");
     m_dockDialogGroup->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
@@ -207,16 +206,6 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
                                         this);
     m_listener->setMaxPendingConnections(1);
 
-    const auto port = getConfig().connection.localPort;
-    if (!m_listener->listen(QHostAddress::Any, port)) {
-        QMessageBox::critical(this,
-                              tr("mmapper"),
-                              tr("Unable to start the server (switching to offline mode): %1.")
-                                  .arg(m_listener->errorString()));
-    } else {
-        log("ConnectionListener", tr("Server bound on localhost to port: %2.").arg(port));
-    }
-
     // update connections
     wireConnections();
     readSettings();
@@ -244,7 +233,23 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
         onOfflineMode();
         break;
     }
+}
 
+MainWindow::~MainWindow() = default;
+
+void MainWindow::startServices()
+{
+    const auto port = getConfig().connection.localPort;
+    if (!m_listener->listen(QHostAddress::Any, port)) {
+        QMessageBox::critical(this,
+                              tr("mmapper"),
+                              tr("Unable to start the server (switching to offline mode): %1.")
+                                  .arg(m_listener->errorString()));
+    } else {
+        log("ConnectionListener", tr("Server bound on localhost to port: %2.").arg(port));
+    }
+
+    m_groupManager->start();
     switch (getConfig().groupManager.state) {
     case GroupManagerState::Off:
         groupMode.groupOffAct->setChecked(true);
@@ -260,8 +265,6 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
         break;
     }
 }
-
-MainWindow::~MainWindow() = default;
 
 void MainWindow::readSettings()
 {
@@ -364,6 +367,7 @@ void MainWindow::wireConnections()
             this,
             &MainWindow::groupManagerOff,
             Qt::QueuedConnection);
+    connect(m_mapData, &MapFrontend::clearingMap, m_groupWidget, &GroupWidget::mapUnloaded);
 
     connect(m_mumeClock, &MumeClock::log, this, &MainWindow::log);
 
@@ -1155,6 +1159,7 @@ void MainWindow::newFile()
                 &AbstractMapStorage::onNewData,
                 m_mapWindow->getCanvas(),
                 &MapCanvas::dataLoaded);
+        connect(storage, &AbstractMapStorage::onDataLoaded, m_groupWidget, &GroupWidget::mapLoaded);
         connect(storage, &AbstractMapStorage::log, this, &MainWindow::log);
         storage->newData();
         delete (storage);
@@ -1204,6 +1209,7 @@ void MainWindow::merge()
                 &AbstractMapStorage::onDataLoaded,
                 m_mapWindow->getCanvas(),
                 &MapCanvas::dataLoaded);
+        connect(storage, &AbstractMapStorage::onDataLoaded, m_groupWidget, &GroupWidget::mapLoaded);
         connect(&storage->getProgressCounter(),
                 &ProgressCounter::onPercentageChanged,
                 this,
@@ -1401,6 +1407,7 @@ void MainWindow::loadFile(const QString &fileName)
             &AbstractMapStorage::onDataLoaded,
             m_mapWindow->getCanvas(),
             &MapCanvas::dataLoaded);
+    connect(storage, &AbstractMapStorage::onDataLoaded, m_groupWidget, &GroupWidget::mapLoaded);
     connect(&storage->getProgressCounter(),
             &ProgressCounter::onPercentageChanged,
             this,
@@ -1539,7 +1546,6 @@ void MainWindow::groupManagerOff()
 {
     groupMode.groupOffAct->setChecked(true);
     m_dockDialogGroup->hide();
-    m_groupWidget->hide();
 }
 
 void MainWindow::groupOff()
@@ -1547,7 +1553,6 @@ void MainWindow::groupOff()
     if (m_groupManager->getType() != GroupManagerState::Off && groupMode.groupOffAct->isChecked()) {
         emit setGroupManagerType(GroupManagerState::Off);
         m_dockDialogGroup->hide();
-        m_groupWidget->hide();
     }
 }
 
@@ -1557,7 +1562,6 @@ void MainWindow::groupClient()
         && groupMode.groupClientAct->isChecked()) {
         emit setGroupManagerType(GroupManagerState::Client);
         m_dockDialogGroup->show();
-        m_groupWidget->show();
     }
 }
 
@@ -1567,7 +1571,6 @@ void MainWindow::groupServer()
         && groupMode.groupServerAct->isChecked()) {
         emit setGroupManagerType(GroupManagerState::Server);
         m_dockDialogGroup->show();
-        m_groupWidget->show();
     }
 }
 

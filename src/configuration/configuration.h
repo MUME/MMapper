@@ -194,6 +194,7 @@ public:
         QByteArray privateKey{};
         QStringList authorizedSecrets{};
         bool requireAuth = false;
+        QByteArray geometry{};
 
     private:
         SUBGROUP();

@@ -198,6 +198,7 @@ int main(int argc, char **argv)
     splash->finish(mw.get());
     splash.reset();
 
+    mw->startServices();
     const int ret = app.exec();
     mw.reset();
     config.write();

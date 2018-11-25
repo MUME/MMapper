@@ -1117,7 +1117,7 @@ void MapCanvas::drawGroupCharacters()
     for (auto &character : *selection) {
         const RoomId id = character->getPosition();
         // Do not draw the character if they're in an "Unknown" room
-        if (id == DEFAULT_ROOMID)
+        if (id == DEFAULT_ROOMID || id == INVALID_ROOMID)
             continue;
         if (character->getName() != getConfig().groupManager.charName) {
             const RoomSelection *const roomSelection = m_data->select();
