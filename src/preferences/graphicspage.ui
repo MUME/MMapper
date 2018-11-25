@@ -169,7 +169,7 @@
       <item row="1" column="0">
        <widget class="QCheckBox" name="drawDoorNames">
         <property name="text">
-         <string>Draw door names</string>
+         <string>Draw hidden door names</string>
         </property>
        </widget>
       </item>

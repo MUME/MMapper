@@ -214,15 +214,14 @@ static QColor getVerticalColor(const ExitFlags &flags, const QColor &noFleeColor
 
 static QString getDoorPostFix(const Room *const room, const ExitDirection dir)
 {
-    static constexpr const auto SHOWN_FLAGS = DoorFlag::HIDDEN | DoorFlag::NEED_KEY
-                                              | DoorFlag::NO_PICK | DoorFlag::DELAYED;
+    static constexpr const auto SHOWN_FLAGS = DoorFlag::NEED_KEY | DoorFlag::NO_PICK
+                                              | DoorFlag::DELAYED;
 
     const DoorFlags flags = room->exit(dir).getDoorFlags();
     if (!flags.containsAny(SHOWN_FLAGS))
         return QString{};
 
-    return QString::asprintf(" [%s%s%s%s]",
-                             flags.isHidden() ? "h" : "",
+    return QString::asprintf(" [%s%s%s]",
                              flags.needsKey() ? "L" : "",
                              flags.isNoPick() ? "/NP" : "",
                              flags.isDelayed() ? "d" : "");
@@ -387,6 +386,8 @@ void MapCanvasRoomDrawer::drawRoomDoorName(const Room *const sourceRoom,
         // the other room has a door?
         && targetRoom->exit(targetDir).hasDoorName()
         // has a door on both sides...
+        && targetRoom->exit(targetDir).isHiddenExit()
+        // is hidden
         && abs(dX) <= 1 && abs(dY) <= 1) { // the door is close by!
         // skip the other direction since we're printing these together
         if (isOdd(sourceDir)) {
@@ -404,7 +405,7 @@ void MapCanvasRoomDrawer::drawRoomDoorName(const Room *const sourceRoom,
             name = sourceName;
         }
     } else {
-        name = sourceRoom->exit(sourceDir).getDoorName();
+        name = getPostfixedDoorName(sourceRoom, sourceDir);
     }
 
     const qreal width = getScaledFontWidth(name);
@@ -862,7 +863,8 @@ void MapCanvasRoomDrawer::drawRoomConnectionsAndDoors(const Room *const room, co
             }
 
             // draw door names
-            if (wantDoorNames && room->exit(i).isDoor() && room->exit(i).hasDoorName()) {
+            if (wantDoorNames && room->exit(i).isDoor() && room->exit(i).hasDoorName()
+                && room->exit(i).isHiddenExit()) {
                 if (targetRoom->exit(opp).containsOut(sourceId)) {
                     targetDir = opp;
                 } else {
