@@ -493,6 +493,13 @@ void CGroupServerCommunicator::parseLoginInformation(CGroupClient *connection,
     emit sendLog(QString("'%1' is trying to join the group.").arg(name.constData()));
     if (!secret.isEmpty() && connection->getProtocolVersion() >= PROTOCOL_VERSION_103) {
         emit sendLog(QString("'%1's secret: %2").arg(name.constData()).arg(secret.constData()));
+        QString secretStr = QString::fromLatin1(connection->getSecret());
+        for (auto target : clientsList.values()) {
+            if (secretStr.compare(target->getSecret(), Qt::CaseInsensitive) == 0) {
+                kickConnection(target, "Someone reconnected to the server using your secret!");
+            }
+        }
+
     } else {
         emit sendLog(
             QString("<b>WARNING:</b> '%1' has no secret and their connection is not encrypted.")
