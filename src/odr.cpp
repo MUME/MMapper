@@ -92,6 +92,7 @@
 #include "pandoragroup/CGroup.h"
 #include "pandoragroup/CGroupServer.h"
 #include "pandoragroup/groupaction.h"
+#include "pandoragroup/groupauthority.h"
 #include "pandoragroup/groupselection.h"
 #include "pandoragroup/groupwidget.h"
 #include "pandoragroup/mmapper2group.h"
