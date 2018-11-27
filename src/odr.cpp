@@ -13,6 +13,7 @@
 #include "configuration/configuration.h"
 #include "display/ConnectionLineBuilder.h"
 #include "display/connectionselection.h"
+#include "display/Filenames.h"
 #include "display/FontFormatFlags.h"
 #include "display/MapCanvasData.h"
 #include "display/mapcanvas.h"

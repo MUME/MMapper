@@ -417,7 +417,7 @@
                <string/>
               </property>
               <property name="pixmap">
-               <pixmap resource="../resources/mmapper2.qrc">:/pixmaps/terrain5.png</pixmap>
+               <pixmap resource="../resources/mmapper2.qrc">:/pixmaps/terrain-hills.png</pixmap>
               </property>
               <property name="scaledContents">
                <bool>false</bool>
@@ -894,7 +894,7 @@
             </property>
             <property name="icon">
              <iconset resource="../resources/mmapper2.qrc">
-              <normaloff>:/pixmaps/terrain8.png</normaloff>:/pixmaps/terrain8.png</iconset>
+              <normaloff>:/pixmaps/terrain-water.png</normaloff>:/pixmaps/terrain-water.png</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -917,7 +917,7 @@
             </property>
             <property name="icon">
              <iconset resource="../resources/mmapper2.qrc">
-              <normaloff>:/pixmaps/terrain9.png</normaloff>:/pixmaps/terrain9.png</iconset>
+              <normaloff>:/pixmaps/terrain-rapids.png</normaloff>:/pixmaps/terrain-rapids.png</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -940,7 +940,7 @@
             </property>
             <property name="icon">
              <iconset resource="../resources/mmapper2.qrc">
-              <normaloff>:/pixmaps/road7.png</normaloff>:/pixmaps/road7.png</iconset>
+              <normaloff>:/pixmaps/road-nes.png</normaloff>:/pixmaps/road-nes.png</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -963,7 +963,7 @@
             </property>
             <property name="icon">
              <iconset resource="../resources/mmapper2.qrc">
-              <normaloff>:/pixmaps/terrain10.png</normaloff>:/pixmaps/terrain10.png</iconset>
+              <normaloff>:/pixmaps/terrain-underwater.png</normaloff>:/pixmaps/terrain-underwater.png</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -1007,7 +1007,7 @@
             </property>
             <property name="icon">
              <iconset resource="../resources/mmapper2.qrc">
-              <normaloff>:/pixmaps/terrain14.png</normaloff>:/pixmaps/terrain14.png</iconset>
+              <normaloff>:/pixmaps/terrain-cavern.png</normaloff>:/pixmaps/terrain-cavern.png</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -1030,7 +1030,7 @@
             </property>
             <property name="icon">
              <iconset resource="../resources/mmapper2.qrc">
-              <normaloff>:/pixmaps/terrain7.png</normaloff>:/pixmaps/terrain7.png</iconset>
+              <normaloff>:/pixmaps/terrain-shallow.png</normaloff>:/pixmaps/terrain-shallow.png</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -1053,7 +1053,7 @@
             </property>
             <property name="icon">
              <iconset resource="../resources/mmapper2.qrc">
-              <normaloff>:/pixmaps/terrain15.png</normaloff>:/pixmaps/terrain15.png</iconset>
+              <normaloff>:/pixmaps/terrain-deathtrap.png</normaloff>:/pixmaps/terrain-deathtrap.png</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -1076,7 +1076,7 @@
             </property>
             <property name="icon">
              <iconset resource="../resources/mmapper2.qrc">
-              <normaloff>:/pixmaps/terrain12.png</normaloff>:/pixmaps/terrain12.png</iconset>
+              <normaloff>:/pixmaps/terrain-brush.png</normaloff>:/pixmaps/terrain-brush.png</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -1099,7 +1099,7 @@
             </property>
             <property name="icon">
              <iconset resource="../resources/mmapper2.qrc">
-              <normaloff>:/pixmaps/terrain2.png</normaloff>:/pixmaps/terrain2.png</iconset>
+              <normaloff>:/pixmaps/terrain-city.png</normaloff>:/pixmaps/terrain-city.png</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -1122,7 +1122,7 @@
             </property>
             <property name="icon">
              <iconset resource="../resources/mmapper2.qrc">
-              <normaloff>:/pixmaps/terrain13.png</normaloff>:/pixmaps/terrain13.png</iconset>
+              <normaloff>:/pixmaps/terrain-tunnel.png</normaloff>:/pixmaps/terrain-tunnel.png</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -1145,7 +1145,7 @@
             </property>
             <property name="icon">
              <iconset resource="../resources/mmapper2.qrc">
-              <normaloff>:/pixmaps/terrain3.png</normaloff>:/pixmaps/terrain3.png</iconset>
+              <normaloff>:/pixmaps/terrain-field.png</normaloff>:/pixmaps/terrain-field.png</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -1168,7 +1168,7 @@
             </property>
             <property name="icon">
              <iconset resource="../resources/mmapper2.qrc">
-              <normaloff>:/pixmaps/terrain6.png</normaloff>:/pixmaps/terrain6.png</iconset>
+              <normaloff>:/pixmaps/terrain-mountains.png</normaloff>:/pixmaps/terrain-mountains.png</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -1191,7 +1191,7 @@
             </property>
             <property name="icon">
              <iconset resource="../resources/mmapper2.qrc">
-              <normaloff>:/pixmaps/terrain5.png</normaloff>:/pixmaps/terrain5.png</iconset>
+              <normaloff>:/pixmaps/terrain-hills.png</normaloff>:/pixmaps/terrain-hills.png</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -1214,7 +1214,7 @@
             </property>
             <property name="icon">
              <iconset resource="../resources/mmapper2.qrc">
-              <normaloff>:/pixmaps/terrain4.png</normaloff>:/pixmaps/terrain4.png</iconset>
+              <normaloff>:/pixmaps/terrain-forest.png</normaloff>:/pixmaps/terrain-forest.png</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -1328,7 +1328,7 @@
             </property>
             <property name="icon">
              <iconset resource="../resources/mmapper2.qrc">
-              <normaloff>:/pixmaps/terrain0.png</normaloff>:/pixmaps/terrain0.png</iconset>
+              <normaloff>:/pixmaps/terrain-undefined.png</normaloff>:/pixmaps/terrain-undefined.png</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -1351,7 +1351,7 @@
             </property>
             <property name="icon">
              <iconset resource="../resources/mmapper2.qrc">
-              <normaloff>:/pixmaps/terrain1.png</normaloff>:/pixmaps/terrain1.png</iconset>
+              <normaloff>:/pixmaps/terrain-indoors.png</normaloff>:/pixmaps/terrain-indoors.png</iconset>
             </property>
             <property name="iconSize">
              <size>

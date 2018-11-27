@@ -57,8 +57,32 @@ inline constexpr RoadIndex &operator|=(RoadIndex &lhs, RoadIndex rhs) noexcept
 {
     return lhs = (lhs | rhs);
 }
+inline constexpr RoadIndex operator&(RoadIndex lhs, RoadIndex rhs)
+{
+    return static_cast<RoadIndex>(static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs));
+}
+inline constexpr RoadIndex operator~(RoadIndex x)
+{
+    return static_cast<RoadIndex>(static_cast<uint32_t>(x) ^ static_cast<uint32_t>(RoadIndex::ALL));
+}
+static_assert(~RoadIndex::ALL == RoadIndex::NONE, "");
+static_assert(~RoadIndex::NONE == RoadIndex::ALL, "");
 
 RoadIndex getRoadIndex(const ExitDirection dir);
 RoadIndex getRoadIndex(const Room &room);
+
+enum class RoadIndexType { ROAD, TRAIL };
+template<RoadIndexType Tag>
+struct TaggedRoadIndex final
+{
+    static constexpr const RoadIndexType tag_type = Tag;
+    RoadIndex index;
+    explicit constexpr TaggedRoadIndex(const RoadIndex i)
+        : index{i}
+    {}
+};
+
+using TaggedRoad = TaggedRoadIndex<RoadIndexType::ROAD>;
+using TaggedTrail = TaggedRoadIndex<RoadIndexType::TRAIL>;
 
 #endif

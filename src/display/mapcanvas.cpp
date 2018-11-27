@@ -66,6 +66,7 @@
 #include "RoadIndex.h"
 #include "connectionselection.h"
 #include "prespammedpath.h"
+#include "Filenames.h"
 
 static auto loadTexture(const QString &name)
 {
@@ -84,17 +85,32 @@ static auto loadTexture(const QString &name)
 
     return texture;
 }
+
 static auto loadPixmap(const char *const name, const uint i)
 {
+    if (name == nullptr)
+        throw NullPointerException();
     return loadTexture(QString::asprintf(":/pixmaps/%s%u.png", name, i));
 }
 
+
 template<typename E, size_t N>
-static void loadPixmapArray(EnumIndexedArray<QOpenGLTexture *, E, N> &textures,
-                            const char *const name)
+static void loadPixmapArray(EnumIndexedArray<QOpenGLTexture *, E, N> &textures)
 {
-    for (uint i = 0u; i < N; ++i)
-        textures[static_cast<E>(i)] = loadPixmap(name, i);
+    for (uint i = 0u; i < N; ++i) {
+        const auto x = static_cast<E>(i);
+        textures[x] = loadTexture(getPixmapFilename(x));
+    }
+}
+
+template<RoadIndexType Type>
+static void loadPixmapArray(road_texture_array<Type> &textures)
+{
+    const auto N = textures.size();
+    for (uint i = 0u; i < N; ++i) {
+        const auto x = TaggedRoadIndex<Type>{static_cast<RoadIndex>(i)};
+        textures[x] = loadTexture(getPixmapFilename(x));
+    }
 }
 
 static constexpr const int BASESIZEX = 528; // base canvas size
@@ -1545,16 +1561,12 @@ void MapCanvas::drawPathEnd(const double dx,
 void MapCanvas::initTextures()
 {
     const auto wantTrilinear = getConfig().canvas.trilinearFiltering;
-#define LOAD_PIXMAP_ARRAY(x) \
-    do { \
-        loadPixmapArray(this->m_textures.x, #x); \
-    } while (false)
 
-    LOAD_PIXMAP_ARRAY(terrain);
-    LOAD_PIXMAP_ARRAY(road);
-    LOAD_PIXMAP_ARRAY(trail);
-    LOAD_PIXMAP_ARRAY(load);
-    LOAD_PIXMAP_ARRAY(mob);
+    loadPixmapArray(this->m_textures.terrain);
+    loadPixmapArray(this->m_textures.road);
+    loadPixmapArray(this->m_textures.trail);
+    loadPixmapArray(this->m_textures.load);
+    loadPixmapArray(this->m_textures.mob);
     this->m_textures.update = loadPixmap("update", 0u);
 
     if (wantTrilinear) {

@@ -35,6 +35,7 @@
 #include <QtWidgets>
 
 #include "../configuration/configuration.h"
+#include "../display/Filenames.h"
 #include "../display/mapcanvas.h"
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
@@ -172,10 +173,19 @@ static QString getName(const DoorFlag flag)
 }
 
 template<typename T>
-static QIcon getIcon(T flag, const char *name)
+static QIcon getIcon(T flag)
 {
-    const auto i = static_cast<uint32_t>(flag);
-    return QIcon(QString::asprintf(":/pixmaps/%s%u.png", name, i));
+    const QString filename = getPixmapFilename(flag);
+    try {
+        QIcon result(filename);
+        if (result.isNull())
+            throw std::runtime_error(
+                QString("failed to load icon '%1'").arg(filename).toStdString());
+        return result;
+    } catch (...) {
+        qWarning() << "Oops: Unable to create icon:" << filename;
+        throw;
+    }
 }
 
 static int getPriority(const RoomMobFlag flag)
@@ -234,16 +244,14 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
     roomDescriptionTextEdit->setLineWrapMode(QTextEdit::NoWrap);
 
     for (const auto flag : ALL_MOB_FLAGS)
-        mobListItems[flag] = new RoomListWidgetItem(getIcon(flag, "mob"),
-                                                    getName(flag),
-                                                    getPriority(flag));
+        mobListItems[flag] = new RoomListWidgetItem(getIcon(flag), getName(flag), getPriority(flag));
     installWidgets(mobListItems,
                    "mob room flags",
                    *mobFlagsListWidget,
                    Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsTristate);
 
     for (const auto flag : ALL_LOAD_FLAGS)
-        loadListItems[flag] = new RoomListWidgetItem(getIcon(flag, "load"),
+        loadListItems[flag] = new RoomListWidgetItem(getIcon(flag),
                                                      getName(flag),
                                                      getPriority(flag));
 
@@ -750,7 +758,7 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         roomNoteTextEdit->clear();
         roomNoteTextEdit->setEnabled(false);
 
-        terrainLabel->setPixmap(QPixmap(QString(":/pixmaps/terrain%1.png").arg(0)));
+        terrainLabel->setPixmap(QPixmap(getPixmapFilename(RoomTerrainType::UNDEFINED)));
 
         exitsFrame->setEnabled(false);
 
@@ -820,9 +828,10 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
 
         const auto get_terrain_pixmap = [](RoomTerrainType type) -> QString {
             if (type == RoomTerrainType::ROAD)
-                return QString(":/pixmaps/road7.png");
+                return getPixmapFilename(
+                    TaggedRoad{RoadIndex::NORTH | RoadIndex::EAST | RoadIndex::SOUTH});
             else
-                return QString(":/pixmaps/terrain%1.png").arg(static_cast<int>(type));
+                return getPixmapFilename(type);
         };
         terrainLabel->setPixmap(get_terrain_pixmap(r->getTerrainType()));
 
@@ -1545,7 +1554,7 @@ void RoomEditAttrDlg::terrainToolButtonToggled(bool val)
     /* WARNING: there are more than 16 room terrain types */
     const auto rtt = static_cast<RoomTerrainType>(index);
 
-    terrainLabel->setPixmap(QPixmap(QString(":/pixmaps/terrain%1.png").arg(index)));
+    terrainLabel->setPixmap(QPixmap(getPixmapFilename(rtt)));
 
     if (r != nullptr) {
         m_mapData->execute(new SingleRoomAction(new UpdateRoomField(rtt, RoomField::TERRAIN_TYPE),

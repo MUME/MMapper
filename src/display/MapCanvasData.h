@@ -53,6 +53,17 @@ static constexpr const float CAMERA_Z_DISTANCE = 0.978f;
 template<typename E>
 using texture_array = EnumIndexedArray<QOpenGLTexture *, E>;
 
+template<RoadIndexType Type>
+struct road_texture_array : private texture_array<RoadIndex>
+{
+    using base = texture_array<RoadIndex>;
+    decltype(auto) operator[](TaggedRoadIndex<Type> x) { return base::operator[](x.index); }
+    using base::operator[];
+    using base::begin;
+    using base::end;
+    using base::size;
+};
+
 enum class CanvasMouseMode {
     NONE,
     MOVE,
@@ -90,8 +101,8 @@ struct MapCanvasData
         texture_array<RoomTerrainType> terrain{};
         texture_array<RoomLoadFlag> load{};
         texture_array<RoomMobFlag> mob{};
-        texture_array<RoadIndex> trail{};
-        texture_array<RoadIndex> road{};
+        road_texture_array<RoadIndexType::TRAIL> trail{};
+        road_texture_array<RoadIndexType::ROAD> road{};
         QOpenGLTexture *update = nullptr;
     } m_textures{};
 

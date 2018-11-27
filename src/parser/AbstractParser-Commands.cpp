@@ -237,6 +237,36 @@ Abbrev getParserCommandName(const RoomLoadFlag x)
 #undef CASE3
 }
 
+// NOTE: This isn't used by the parser (currently only used for filenames).
+Abbrev getParserCommandName(const RoomTerrainType x)
+{
+#define CASE3(UPPER, s, n) \
+    do { \
+    case RoomTerrainType::UPPER: \
+        return Abbrev{s, n}; \
+    } while (false)
+    switch (x) {
+        CASE3(UNDEFINED, "undefined", -1);
+        CASE3(INDOORS, "indoors", -1);
+        CASE3(CITY, "city", -1);
+        CASE3(FIELD, "field", -1);
+        CASE3(FOREST, "forest", -1);
+        CASE3(HILLS, "hills", -1);
+        CASE3(MOUNTAINS, "mountains", -1);
+        CASE3(SHALLOW, "shallow", -1);
+        CASE3(WATER, "water", -1);
+        CASE3(RAPIDS, "rapids", -1);
+        CASE3(UNDERWATER, "underwater", -1);
+        CASE3(ROAD, "road", -1);
+        CASE3(BRUSH, "brush", -1);
+        CASE3(TUNNEL, "tunnel", -1);
+        CASE3(CAVERN, "cavern", -1);
+        CASE3(DEATHTRAP, "deathtrap", -1);
+    }
+    return Abbrev{};
+#undef CASE3
+}
+
 QByteArray getCommandName(const DoorActionType action)
 {
 #define CASE2(UPPER, s) \

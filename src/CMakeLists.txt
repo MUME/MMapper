@@ -23,13 +23,15 @@ set(mmapper_SRCS
     display/ConnectionLineBuilder.h
     display/connectionselection.cpp
     display/connectionselection.h
+    display/Filenames.cpp
+    display/Filenames.h
     display/FontFormatFlags.h
     display/mapcanvas.cpp
     display/MapCanvasData.cpp
     display/MapCanvasData.h
+    display/mapcanvas.h
     display/MapCanvasRoomDrawer.cpp
     display/MapCanvasRoomDrawer.h
-    display/mapcanvas.h
     display/mapwindow.cpp
     display/mapwindow.h
     display/OpenGL.cpp
