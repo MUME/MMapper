@@ -89,8 +89,8 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
     });
     secretLineEdit->setEnabled(!NO_OPEN_SSL);
     refreshButton->setEnabled(!NO_OPEN_SSL);
-    authorizationCheckBox->setEnabled(!NO_OPEN_SSL);
     authorizationCheckBox->setChecked(groupManager.requireAuth);
+    authorizationCheckBox->setEnabled(!NO_OPEN_SSL);
     allowSecret->setEnabled(false);
     revokeSecret->setEnabled(false);
     allowedComboBox->setEnabled(groupManager.requireAuth);

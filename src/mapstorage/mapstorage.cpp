@@ -28,6 +28,7 @@
 
 #include <climits>
 #include <cstdint>
+#include <mutex>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -209,7 +210,8 @@ E serialize(const uint32_t value)
 static RoomTerrainType serialize(const uint32_t value)
 {
     if (value >= NUM_ROOM_TERRAIN_TYPES) {
-        qWarning() << "Detected out of bounds terrain type!";
+        static std::once_flag flag;
+        std::call_once(flag, []() { qWarning() << "Detected out of bounds terrain type!"; });
         return RoomTerrainType::UNDEFINED;
     }
     return static_cast<RoomTerrainType>(value);
