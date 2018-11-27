@@ -572,6 +572,8 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
             case TNSB_TTABLE_IS:
                 // We never request a [TTABLE] so this should not happen
                 abort();
+                /*NOTREACHED*/
+                break;
             }
         }
         break;

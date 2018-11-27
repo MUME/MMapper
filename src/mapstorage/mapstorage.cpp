@@ -206,7 +206,7 @@ E serialize(const uint32_t value)
     return static_cast<E>(value);
 }
 
-RoomTerrainType serialize(const uint32_t value)
+static RoomTerrainType serialize(const uint32_t value)
 {
     if (value >= NUM_ROOM_TERRAIN_TYPES) {
         qWarning() << "Detected out of bounds terrain type!";

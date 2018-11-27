@@ -43,7 +43,7 @@ using X509_ptr = std::unique_ptr<X509, decltype(&::X509_free)>;
 using BIO_MEM_ptr = std::unique_ptr<BIO, decltype(&::BIO_free)>;
 
 /* Generates a 2048-bit RSA key. */
-EVP_PKEY_ptr generatePrivateKey()
+static EVP_PKEY_ptr generatePrivateKey()
 {
     /* Allocate memory for the EVP_PKEY and BIGNUM structures. */
     EVP_PKEY_ptr pkey(EVP_PKEY_new(), ::EVP_PKEY_free);
@@ -76,7 +76,7 @@ EVP_PKEY_ptr generatePrivateKey()
 }
 
 /* Generates a self-signed x509 certificate. */
-X509_ptr generateX509(const EVP_PKEY_ptr &pkey)
+static X509_ptr generateX509(const EVP_PKEY_ptr &pkey)
 {
     /* Allocate memory for the X509 structure. */
     X509_ptr x509(X509_new(), ::X509_free);
@@ -133,7 +133,7 @@ X509_ptr generateX509(const EVP_PKEY_ptr &pkey)
     return x509;
 }
 
-QSslCertificate toSslCertificate(const X509_ptr &x509)
+static QSslCertificate toSslCertificate(const X509_ptr &x509)
 {
     BIO_MEM_ptr bio(BIO_new(BIO_s_mem()), ::BIO_free);
 
@@ -161,7 +161,7 @@ QSslCertificate toSslCertificate(const X509_ptr &x509)
     return QSslCertificate(ba);
 }
 
-QSslKey toSslKey(const EVP_PKEY_ptr &pkey)
+static QSslKey toSslKey(const EVP_PKEY_ptr &pkey)
 {
     BIO_MEM_ptr bio(BIO_new(BIO_s_mem()), ::BIO_free);
 

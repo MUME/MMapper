@@ -1218,20 +1218,22 @@ void AbstractParser::doOfflineCharacterMove()
             sendPromptToUser(*rb);
         } else {
             /* FIXME: This needs stronger type check on the cast */
+            /* NOTE: This is a copy instead of a reference; later e is re-assigned. */
             Exit e = rb->exit(static_cast<ExitDirection>(direction));
             if (e.exitIsRandom()) {
                 // Pick an alternative direction to randomly wander into
                 std::vector<ExitDirection> exitDirections;
                 for (auto i : ALL_EXITS_NESWUD) {
-                    const Exit &e = rb->exit(i);
-                    if (!e.isExit() || e.outIsEmpty()) {
+                    const Exit &e2 = rb->exit(i);
+                    if (!e2.isExit() || e2.outIsEmpty()) {
                         continue;
                     }
                     exitDirections.emplace_back(i);
                 }
                 if (exitDirections.size() > 0) {
-                    const auto randomDirection = static_cast<CommandIdType>(
-                        exitDirections[rand() % exitDirections.size()]); // NOLINT
+                    const auto n = static_cast<uint32_t>(rand()); // NOLINT
+                    const auto dir = n % exitDirections.size();
+                    const auto randomDirection = static_cast<CommandIdType>(exitDirections[dir]);
 
                     // Update exit and direction with new random one
                     if (direction != randomDirection) {

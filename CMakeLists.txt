@@ -190,9 +190,9 @@ if(CMAKE_COMPILER_IS_GNUCXX)
         add_compile_options(-Wcast-align)
         add_compile_options(-Wcast-qual)
         add_compile_options(-Wconversion)
+        add_compile_options(-Wdelete-non-virtual-dtor -Wnon-virtual-dtor)
         add_compile_options(-Wendif-labels)
         add_compile_options(-Wenum-compare)
-        add_compile_options(-Wdelete-non-virtual-dtor -Wnon-virtual-dtor)
         add_compile_options(-Wignored-qualifiers)
         add_compile_options(-Winit-self)
         add_compile_options(-Wmultichar)
@@ -253,35 +253,34 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
             set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined")
         endif()
 
-        if(TRUE)
-            add_compile_options(-Weverything)
-            add_compile_options(-Wno-c++98-c++11-compat-binary-literal) # never useful.
-            add_compile_options(-Wno-c++98-compat) # never useful.
-            add_compile_options(-Wno-c++98-compat-pedantic) # sometimes useful.
-            add_compile_options(-Wno-covered-switch-default) # this is never an error; it's just extra info.
-            # add_compile_options(-Wno-deprecated-declarations)
-            add_compile_options(-Wno-documentation)
-            add_compile_options(-Wno-global-constructors -Wno-exit-time-destructors) # these go together.
-            add_compile_options(-Wno-padded) # this isn't usually a mistake; it's just extra info.
-            add_compile_options(-Wno-redundant-parens) # MOCs spam this.
-            add_compile_options(-Wno-shadow-field-in-constructor -Wno-shadow-uncaptured-local) # common idioms
-        endif()
+        add_compile_options(-Weverything)
+        add_compile_options(-Wno-c++98-c++11-compat-binary-literal) # never useful.
+        add_compile_options(-Wno-c++98-compat) # never useful.
+        add_compile_options(-Wno-c++98-compat-pedantic) # sometimes useful.
+        add_compile_options(-Wno-covered-switch-default) # this is never an error; it's just extra info.
+        # add_compile_options(-Wno-deprecated-declarations)
+        add_compile_options(-Wno-documentation)
+        add_compile_options(-Wno-global-constructors -Wno-exit-time-destructors) # these go together.
+        add_compile_options(-Wno-padded) # this isn't usually a mistake; it's just extra info.
+        add_compile_options(-Wno-redundant-parens) # MOCs spam this.
+        add_compile_options(-Wno-shadow-field-in-constructor -Wno-shadow-uncaptured-local) # common idioms
+        add_compile_options(-Wno-unreachable-code-break) # break after [[noreturn]] function is not a mistake; omitting the break is a recipe for future disaster.
 
-        # These should probably be errors, but someone using gcc might add them and break the build.
-        add_compile_options(-Wcast-qual) # always a mistake unless you added the qualifier yourself.
-        add_compile_options(-Wconversion)
-        add_compile_options(-Wdouble-promotion)
-        add_compile_options(-Wfloat-conversion)
-        add_compile_options(-Wfloat-equal) # this is usually an error.
-        add_compile_options(-Winconsistent-missing-destructor-override)
-        add_compile_options(-Winconsistent-missing-override)
-        add_compile_options(-Wnewline-eof)
-        add_compile_options(-Wold-style-cast)
-        add_compile_options(-Wpedantic)
-        add_compile_options(-Wshorten-64-to-32)
-        add_compile_options(-Wsign-conversion) # can warn about hard-to-spot bugs.
-        add_compile_options(-Wunused-result) # required for c++17 [[nodiscard]]
-        add_compile_options(-Wweak-vtables) # can result in crashes for ODR violations.
+        # always errors
+        add_compile_options(-Werror=cast-qual) # always a mistake unless you added the qualifier yourself.
+        add_compile_options(-Werror=conversion)
+        add_compile_options(-Werror=double-promotion)
+        add_compile_options(-Werror=float-conversion)
+        add_compile_options(-Werror=float-equal) # this is usually an error.
+        add_compile_options(-Werror=inconsistent-missing-destructor-override)
+        add_compile_options(-Werror=inconsistent-missing-override)
+        add_compile_options(-Werror=newline-eof)
+        add_compile_options(-Werror=old-style-cast)
+        add_compile_options(-Werror=pedantic)
+        add_compile_options(-Werror=shorten-64-to-32)
+        add_compile_options(-Werror=sign-conversion) # can warn about hard-to-spot bugs.
+        add_compile_options(-Werror=unused-result) # required for c++17 [[nodiscard]]
+        add_compile_options(-Werror=weak-vtables) # can result in crashes for ODR violations.
     endif(MMAPPER_IS_DEBUG)
     if(APPLE)
         # Minimum version of OS X that supports c++14 is 10.9 "Mavericks" with Clang

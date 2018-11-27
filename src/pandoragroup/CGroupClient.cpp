@@ -183,9 +183,9 @@ void CGroupClient::onTimeout()
         case ProtocolState::AwaitingLogin:
             if (!socket.isEncrypted()) {
                 socket.disconnectFromHost();
-                QString buffer = socket.isEncrypted() ? socket.errorString()
-                                                      : "Connection not successfully encrypted";
-                emit errorInConnection(this, buffer);
+                const QString msg = socket.isEncrypted() ? socket.errorString()
+                                                         : "Connection not successfully encrypted";
+                emit errorInConnection(this, msg);
                 return;
             }
             goto continue_common_timeout;

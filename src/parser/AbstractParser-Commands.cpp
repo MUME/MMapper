@@ -106,6 +106,7 @@ Abbrev getParserCommandName(const RoomLightType x)
     return Abbrev{};
 #undef CASE3
 }
+
 Abbrev getParserCommandName(const RoomSundeathType x)
 {
 #define CASE3(UPPER, s, n) \
@@ -121,6 +122,7 @@ Abbrev getParserCommandName(const RoomSundeathType x)
     return Abbrev{};
 #undef CASE3
 }
+
 Abbrev getParserCommandName(const RoomPortableType x)
 {
 #define CASE3(UPPER, s, n) \
@@ -136,6 +138,7 @@ Abbrev getParserCommandName(const RoomPortableType x)
     return Abbrev{};
 #undef CASE3
 }
+
 Abbrev getParserCommandName(const RoomRidableType x)
 {
 #define CASE3(UPPER, s, n) \
@@ -151,6 +154,7 @@ Abbrev getParserCommandName(const RoomRidableType x)
     return Abbrev{};
 #undef CASE3
 }
+
 Abbrev getParserCommandName(const RoomAlignType x)
 {
 #define CASE3(UPPER, s, n) \
@@ -167,6 +171,7 @@ Abbrev getParserCommandName(const RoomAlignType x)
     return Abbrev{};
 #undef CASE3
 }
+
 Abbrev getParserCommandName(const RoomMobFlag x)
 {
 #define CASE3(UPPER, s, n) \
@@ -196,6 +201,7 @@ Abbrev getParserCommandName(const RoomMobFlag x)
     return Abbrev{};
 #undef CASE3
 }
+
 Abbrev getParserCommandName(const RoomLoadFlag x)
 {
 #define CASE3(UPPER, s, n) \
@@ -411,6 +417,7 @@ bool AbstractParser::parseSimpleCommand(const QString &str)
                     return false;
                 }
             }
+            break;
 
         case CommandIdType::UNKNOWN:
         case CommandIdType::NONE:

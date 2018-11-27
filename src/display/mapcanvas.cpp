@@ -1493,7 +1493,7 @@ void MapCanvas::drawPathStart(const Coordinate &sc, std::vector<Vec3d> &verts)
     m_opengl.apply(XDevicePointSize{4.0});
     m_opengl.apply(XDeviceLineWidth{4.0});
 
-    const double srcZ = static_cast<double>(ROOM_Z_DISTANCE) * static_cast<double>(layer1) + 0.3;
+    const double srcZ = ROOM_Z_DISTANCE * static_cast<double>(layer1) + 0.3;
 
     verts.emplace_back(0.0, 0.0, srcZ);
 }

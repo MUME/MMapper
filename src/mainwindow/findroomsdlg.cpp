@@ -67,8 +67,8 @@ FindRoomsDlg::FindRoomsDlg(MapData *md, QWidget *parent)
     });
     connect(selectButton, &QAbstractButton::clicked, this, [this]() {
         const RoomSelection *tmpSel = m_mapData->select();
-        for (const auto &item : resultTable->selectedItems()) {
-            const auto id = RoomId{item->text(0).toUInt()};
+        for (const auto &selectedItem : resultTable->selectedItems()) {
+            const auto id = RoomId{selectedItem->text(0).toUInt()};
             m_mapData->getRoom(id, tmpSel);
         }
         if (!tmpSel->isEmpty()) {
@@ -87,8 +87,8 @@ FindRoomsDlg::FindRoomsDlg(MapData *md, QWidget *parent)
     });
     connect(editButton, &QAbstractButton::clicked, this, [this]() {
         const RoomSelection *tmpSel = m_mapData->select();
-        for (const auto &item : resultTable->selectedItems()) {
-            const auto id = RoomId{item->text(0).toUInt()};
+        for (const auto &selectedItem : resultTable->selectedItems()) {
+            const auto id = RoomId{selectedItem->text(0).toUInt()};
             m_mapData->getRoom(id, tmpSel);
         }
         emit newRoomSelection(tmpSel);
