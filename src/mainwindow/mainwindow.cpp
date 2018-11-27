@@ -1162,7 +1162,7 @@ void MainWindow::newFile()
         connect(storage, &AbstractMapStorage::onDataLoaded, m_groupWidget, &GroupWidget::mapLoaded);
         connect(storage, &AbstractMapStorage::log, this, &MainWindow::log);
         storage->newData();
-        delete (storage);
+        delete storage;
         setCurrentFile("");
     }
 }
@@ -1403,6 +1403,7 @@ void MainWindow::loadFile(const QString &fileName)
 
     auto *storage = static_cast<AbstractMapStorage *>(
         new MapStorage(*m_mapData, fileName, file, this));
+    // REVISIT: refactor the connections to a common function?
     connect(storage,
             &AbstractMapStorage::onDataLoaded,
             m_mapWindow->getCanvas(),
@@ -1425,7 +1426,7 @@ void MainWindow::loadFile(const QString &fileName)
     // copyAct->setEnabled(false);
     // pasteAct->setEnabled(false);
 
-    delete (storage);
+    delete storage;
     delete progressDlg;
 
     setCurrentFile(fileName);
