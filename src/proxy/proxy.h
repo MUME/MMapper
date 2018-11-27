@@ -41,7 +41,6 @@
 
 class UserTelnet;
 class ConnectionListener;
-class CommandEvaluator;
 class MapData;
 class Mmapper2Group;
 class Mmapper2PathMachine;
@@ -80,7 +79,6 @@ class Proxy final : public QObject
 public:
     explicit Proxy(MapData *,
                    Mmapper2PathMachine *,
-                   CommandEvaluator *,
                    PrespammedPath *,
                    Mmapper2Group *,
                    MumeClock *,
@@ -136,7 +134,6 @@ private:
 
     MapData *m_mapData = nullptr;
     Mmapper2PathMachine *m_pathMachine = nullptr;
-    CommandEvaluator *m_commandEvaluator = nullptr;
     PrespammedPath *m_prespammedPath = nullptr;
     Mmapper2Group *m_groupManager = nullptr;
     MumeClock *m_mumeClock = nullptr;

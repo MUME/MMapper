@@ -33,7 +33,6 @@
 
 ConnectionListener::ConnectionListener(MapData *md,
                                        Mmapper2PathMachine *pm,
-                                       CommandEvaluator *ce,
                                        PrespammedPath *pp,
                                        Mmapper2Group *gm,
                                        MumeClock *mc,
@@ -42,7 +41,6 @@ ConnectionListener::ConnectionListener(MapData *md,
 {
     m_mapData = md;
     m_pathMachine = pm;
-    m_commandEvaluator = ce;
     m_prespammedPath = pp;
     m_groupManager = gm;
     m_mumeClock = mc;
@@ -60,7 +58,6 @@ void ConnectionListener::incomingConnection(qintptr socketDescriptor)
         doNotAcceptNewConnections();
         auto *proxy = new Proxy(m_mapData,
                                 m_pathMachine,
-                                m_commandEvaluator,
                                 m_prespammedPath,
                                 m_groupManager,
                                 m_mumeClock,

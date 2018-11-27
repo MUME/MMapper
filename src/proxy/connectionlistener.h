@@ -34,7 +34,6 @@
 #include <QtCore>
 #include <QtGlobal>
 
-class CommandEvaluator;
 class MapData;
 class Mmapper2Group;
 class Mmapper2PathMachine;
@@ -47,7 +46,6 @@ class ConnectionListener : public QTcpServer
 public:
     explicit ConnectionListener(MapData *,
                                 Mmapper2PathMachine *,
-                                CommandEvaluator *,
                                 PrespammedPath *,
                                 Mmapper2Group *,
                                 MumeClock *,
@@ -70,7 +68,6 @@ private:
 private:
     MapData *m_mapData = nullptr;
     Mmapper2PathMachine *m_pathMachine = nullptr;
-    CommandEvaluator *m_commandEvaluator = nullptr;
     PrespammedPath *m_prespammedPath = nullptr;
     Mmapper2Group *m_groupManager = nullptr;
     MumeClock *m_mumeClock = nullptr;

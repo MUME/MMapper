@@ -76,7 +76,6 @@ void ProxyThreader::run()
 
 Proxy::Proxy(MapData *const md,
              Mmapper2PathMachine *const pm,
-             CommandEvaluator *const ce,
              PrespammedPath *const pp,
              Mmapper2Group *const gm,
              MumeClock *mc,
@@ -87,7 +86,6 @@ Proxy::Proxy(MapData *const md,
     , m_socketDescriptor(socketDescriptor)
     , m_mapData(md)
     , m_pathMachine(pm)
-    , m_commandEvaluator(ce)
     , m_prespammedPath(pp)
     , m_groupManager(gm)
     , m_mumeClock(mc)

@@ -43,7 +43,6 @@
 #include "../pandoragroup/mmapper2group.h"
 
 class ClientWidget;
-class CommandEvaluator;
 class ConnectionListener;
 class ConnectionSelection;
 class FindRoomsDlg;
@@ -170,7 +169,6 @@ private:
     ConnectionListener *m_listener = nullptr;
     Mmapper2PathMachine *m_pathMachine = nullptr;
     MapData *m_mapData = nullptr;
-    CommandEvaluator *m_commandEvaluator = nullptr;
     PrespammedPath *m_prespammedPath = nullptr;
     MumeClock *m_mumeClock = nullptr;
 

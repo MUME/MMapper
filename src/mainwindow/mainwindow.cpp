@@ -199,7 +199,6 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
 
     m_listener = new ConnectionListener(m_mapData,
                                         m_pathMachine,
-                                        m_commandEvaluator,
                                         m_prespammedPath,
                                         m_groupManager,
                                         m_mumeClock,
@@ -711,10 +710,6 @@ void MainWindow::createActions()
     selectedRoomActGroup->addAction(connectToNeighboursRoomSelectionAct);
     selectedRoomActGroup->setEnabled(false);
 
-    // editConnectionSelectionAct = new QAction(QIcon(":/icons/connectionedit.png"), tr("Edit Selected Connection"), this);
-    // editConnectionSelectionAct->setStatusTip(tr("Edit Selected Connection"));
-    // connect(editConnectionSelectionAct, SIGNAL(triggered()), this, SLOT(onEditConnectionSelection()));
-
     deleteConnectionSelectionAct = new QAction(QIcon(":/icons/connectiondelete.png"),
                                                tr("Delete Selected Connection"),
                                                this);
@@ -726,7 +721,6 @@ void MainWindow::createActions()
 
     selectedConnectionActGroup = new QActionGroup(this);
     selectedConnectionActGroup->setExclusive(false);
-    // connectionActGroup->addAction(editConnectionSelectionAct);
     selectedConnectionActGroup->addAction(deleteConnectionSelectionAct);
     selectedConnectionActGroup->setEnabled(false);
 
@@ -916,7 +910,6 @@ void MainWindow::setupMenuBar()
     connectionMenu->addSeparator();
     connectionMenu->addAction(mouseMode.modeCreateConnectionAct);
     connectionMenu->addAction(mouseMode.modeCreateOnewayConnectionAct);
-    // connectionMenu->addAction(editConnectionSelectionAct);
     connectionMenu->addAction(deleteConnectionSelectionAct);
 
     editMenu->addSeparator();
@@ -1096,7 +1089,6 @@ void MainWindow::setupToolBars()
 
     connectionToolBar = addToolBar(tr("Connections"));
     connectionToolBar->setObjectName("ConnectionsToolBar");
-    // connectionToolBar->addAction(editConnectionSelectionAct);
     connectionToolBar->addAction(deleteConnectionSelectionAct);
     connectionToolBar->hide();
 
