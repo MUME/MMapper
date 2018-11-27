@@ -1,6 +1,5 @@
 set(mmapper_SRCS
     main.cpp
-    odr.cpp
     client/ClientTelnet.cpp
     client/ClientTelnet.h
     client/clientwidget.cpp
@@ -289,10 +288,21 @@ if (WITH_OPENSSL)
     include_directories(SYSTEM ${OPENSSL_INCLUDE_DIR})
 endif()
 
+# ODR Violation Check
+file(GLOB_RECURSE mmapper_HDRS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.h)
+list(SORT mmapper_HDRS)
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/odr.cpp "// This generated file exists to help detect ODR violations.\n"
+    "// It will catch duplicate class names in header files,\n"
+    "// but it will NOT catch duplicate names in source files.\n\n")
+foreach(header_path ${mmapper_HDRS})
+    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/odr.cpp "#include \"${header_path}\"\n")
+endforeach()
+list(APPEND mmapper_SRCS "${CMAKE_CURRENT_BINARY_DIR}/odr.cpp")
+
 set(mmapper_DATA
     mmapper.desktop
     MacOSXBundleInfo.plist.in
-        display/OpenGL.cpp)
+    display/OpenGL.cpp)
 
 # Build the executable
 add_executable(mmapper WIN32 MACOSX_BUNDLE
