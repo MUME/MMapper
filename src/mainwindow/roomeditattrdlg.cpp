@@ -52,7 +52,7 @@
 template<typename T>
 void fixMissing(T &array, const char *name)
 {
-    for (RoomListWidgetItem *x : array) {
+    for (auto &x : array) { // reference to pointer so we can add missing elements
         if (x != nullptr)
             continue;
         const auto ordinal = static_cast<int>(&x - array.data());
