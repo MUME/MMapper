@@ -40,14 +40,20 @@ class MapData;
 class QCloseEvent;
 class QObject;
 class QWidget;
+class InfoMarkSelection;
 
 class InfoMarksEditDlg : public QDialog, private Ui::InfoMarksEditDlg
 {
     Q_OBJECT
 
+public:
+    explicit InfoMarksEditDlg(QWidget *parent = nullptr);
+    ~InfoMarksEditDlg() override;
+
+    void setInfoMarkSelection(InfoMarkSelection *is, MapData *md, MapCanvas *mc);
+
 signals:
     void mapChanged();
-    void closeEventReceived();
 
 public slots:
     void objectListCurrentIndexChanged(const QString &);
@@ -55,39 +61,17 @@ public slots:
 
     void createClicked();
     void modifyClicked();
-    void deleteClicked();
-    void onMoveClicked(const Coordinate &offset);
-    void onMoveNorthClicked();
-    void onMoveSouthClicked();
-    void onMoveEastClicked();
-    void onMoveWestClicked();
-    void onMoveUpClicked();
-    void onMoveDownClicked();
-    void onDeleteAllClicked();
-
-public:
-    explicit InfoMarksEditDlg(MapData *mapData, QWidget *parent = nullptr);
-    ~InfoMarksEditDlg() override;
-
-    void setPoints(float x1, float y1, float x2, float y2, int layer);
-
-    void readSettings();
-    void writeSettings();
-
-protected:
-    void closeEvent(QCloseEvent *) override;
 
 private:
+    InfoMarkSelection *m_selection = nullptr;
     MapData *m_mapData = nullptr;
-
-    struct
-    {
-        float x = 0.0, y = 0.0;
-    } m_sel1{}, m_sel2{};
-    int m_selLayer = 0;
+    MapCanvas *m_mapCanvas = nullptr;
 
     void connectAll();
     void disconnectAll();
+
+    void readSettings();
+    void writeSettings();
 
     InfoMarkType getType();
     InfoMarkClass getClass();

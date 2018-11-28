@@ -30,6 +30,8 @@
 #include "../expandoracommon/coordinate.h"
 #include <QDateTime>
 
+static constexpr const auto INFOMARK_SCALE = 100;
+
 using InfoMarkName = QString;
 using InfoMarkText = QString;
 enum class InfoMarkType { TEXT, LINE, ARROW };

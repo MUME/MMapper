@@ -25,6 +25,8 @@ set(mmapper_SRCS
     display/Filenames.cpp
     display/Filenames.h
     display/FontFormatFlags.h
+    display/InfoMarkSelection.cpp
+    display/InfoMarkSelection.h
     display/mapcanvas.cpp
     display/MapCanvasData.cpp
     display/MapCanvasData.h

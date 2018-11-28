@@ -454,7 +454,7 @@ void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, uint32_t version)
     if (version >= MMAPPER_2_3_7_SCHEMA) {
         mark->setClass(static_cast<InfoMarkClass>(helper.read_u8()));
         /* REVISIT: was this intended to be divided by 100.0? */
-        mark->setRotationAngle(helper.read_u32() / 100);
+        mark->setRotationAngle(helper.read_u32() / INFOMARK_SCALE);
     }
 
     const auto read_coord = [](auto &helper, const auto &basePos) {
@@ -462,8 +462,8 @@ void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, uint32_t version)
         pos.x = helper.read_i32();
         pos.y = helper.read_i32();
         pos.z = helper.read_i32();
-        pos.x += basePos.x * 100;
-        pos.y += basePos.y * 100;
+        pos.x += basePos.x * INFOMARK_SCALE;
+        pos.y += basePos.y * INFOMARK_SCALE;
         pos.z += basePos.z;
         return pos;
     };
@@ -633,7 +633,7 @@ void MapStorage::saveMark(InfoMark *mark, QDataStream &stream)
     stream << QDateTime(mark->getTimeStamp());
     stream << static_cast<quint8>(mark->getType());
     stream << static_cast<quint8>(mark->getClass());
-    stream << static_cast<qint32>(mark->getRotationAngle() * 100);
+    stream << static_cast<qint32>(mark->getRotationAngle() * INFOMARK_SCALE);
     const Coordinate &c1 = mark->getPosition1();
     const Coordinate &c2 = mark->getPosition2();
     stream << static_cast<qint32>(c1.x);

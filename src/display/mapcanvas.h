@@ -60,8 +60,7 @@
 
 class ConnectionSelection;
 class Coordinate;
-class InfoMark;
-class InfoMarksEditDlg;
+class InfoMarkSelection;
 class MapCanvasRoomDrawer;
 class MapData;
 class Mmapper2Group;
@@ -88,7 +87,6 @@ private:
 private:
     OpenGL m_opengl;
     Mmapper2Group *m_groupManager = nullptr;
-    InfoMarksEditDlg *m_infoMarksEditDlg = nullptr;
 
 public:
     explicit MapCanvas(MapData *mapData,
@@ -113,7 +111,6 @@ public:
 public slots:
     void forceMapperToRoom();
     void createRoom();
-    void onInfoMarksEditDlgClose();
 
     void setCanvasMouseMode(CanvasMouseMode);
 
@@ -130,6 +127,8 @@ public slots:
     void clearRoomSelection() { setRoomSelection(nullptr); }
     void setConnectionSelection(ConnectionSelection *);
     void clearConnectionSelection() { setConnectionSelection(nullptr); }
+    void setInfoMarkSelection(InfoMarkSelection *);
+    void clearInfoMarkSelection() { setInfoMarkSelection(nullptr); }
 
     // void worldChanged();
 
@@ -151,6 +150,7 @@ signals:
 
     void newRoomSelection(const RoomSelection *);
     void newConnectionSelection(ConnectionSelection *);
+    void newInfoMarkSelection(InfoMarkSelection *);
 
     void setCurrentRoom(RoomId id, bool update);
     void roomPositionChanged();
@@ -193,6 +193,8 @@ private:
     void paintSelection(GLdouble len);
     void paintSelectedRoom(GLdouble len, const Room *room);
     void paintSelectedConnection();
+    void paintSelectedInfoMarks();
+    void paintSelectedInfoMark(const InfoMark *marker);
 
     void drawRooms(MapCanvasRoomDrawer &drawer);
 };

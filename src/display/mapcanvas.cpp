@@ -60,13 +60,14 @@
 #include "../parser/ExitsFlags.h"
 #include "../parser/PromptFlags.h"
 #include "../parser/abstractparser.h"
+#include "Filenames.h"
+#include "InfoMarkSelection.h"
 #include "MapCanvasData.h"
 #include "MapCanvasRoomDrawer.h"
 #include "OpenGL.h"
 #include "RoadIndex.h"
 #include "connectionselection.h"
 #include "prespammedpath.h"
-#include "Filenames.h"
 
 static auto loadTexture(const QString &name)
 {
@@ -92,7 +93,6 @@ static auto loadPixmap(const char *const name, const uint i)
         throw NullPointerException();
     return loadTexture(QString::asprintf(":/pixmaps/%s%u.png", name, i));
 }
-
 
 template<typename E, size_t N>
 static void loadPixmapArray(EnumIndexedArray<QOpenGLTexture *, E, N> &textures)
@@ -168,14 +168,6 @@ MapCanvas::MapCanvas(MapData *mapData,
 
     setContextMenuPolicy(Qt::CustomContextMenu);
 
-    m_infoMarksEditDlg = new InfoMarksEditDlg(mapData, this);
-    connect(m_infoMarksEditDlg, SIGNAL(mapChanged()), this, SLOT(update()));
-    connect(m_infoMarksEditDlg,
-            &InfoMarksEditDlg::closeEventReceived,
-            this,
-            &MapCanvas::onInfoMarksEditDlgClose);
-    connect(m_data, SIGNAL(updateCanvas()), this, SLOT(update()));
-
     const auto getAaSamples = []() {
         int samples = getConfig().canvas.antialiasingSamples;
         if (samples <= 0) {
@@ -188,13 +180,6 @@ MapCanvas::MapCanvas(MapData *mapData,
     format.setVersion(1, 0);
     format.setSamples(samples);
     setFormat(format);
-}
-
-void MapCanvas::onInfoMarksEditDlgClose()
-{
-    m_infoMarkSelection = false;
-    makeCurrent();
-    update();
 }
 
 MapCanvas::~MapCanvas()
@@ -256,13 +241,9 @@ void MapCanvas::setCanvasMouseMode(CanvasMouseMode mode)
 {
     m_canvasMouseMode = mode;
 
-    if (m_canvasMouseMode != CanvasMouseMode::EDIT_INFOMARKS) {
-        m_infoMarksEditDlg->hide();
-        m_infoMarkSelection = false;
-    }
-
     clearRoomSelection();
     clearConnectionSelection();
+    clearInfoMarkSelection();
 
     switch (m_canvasMouseMode) {
     case CanvasMouseMode::MOVE:
@@ -272,7 +253,7 @@ void MapCanvas::setCanvasMouseMode(CanvasMouseMode mode)
     default:
     case CanvasMouseMode::NONE:
     case CanvasMouseMode::SELECT_CONNECTIONS:
-    case CanvasMouseMode::EDIT_INFOMARKS:
+    case CanvasMouseMode::CREATE_INFOMARKS:
         setCursor(Qt::CrossCursor);
         break;
 
@@ -280,6 +261,7 @@ void MapCanvas::setCanvasMouseMode(CanvasMouseMode mode)
     case CanvasMouseMode::CREATE_ROOMS:
     case CanvasMouseMode::CREATE_CONNECTIONS:
     case CanvasMouseMode::CREATE_ONEWAY_CONNECTIONS:
+    case CanvasMouseMode::SELECT_INFOMARKS:
         setCursor(Qt::ArrowCursor);
         break;
     }
@@ -319,6 +301,27 @@ void MapCanvas::setConnectionSelection(ConnectionSelection *selection)
     delete m_connectionSelection;
     m_connectionSelection = selection;
     emit newConnectionSelection(m_connectionSelection);
+    update();
+}
+
+void MapCanvas::setInfoMarkSelection(InfoMarkSelection *selection)
+{
+    delete m_infoMarkSelection;
+    m_infoMarkSelection = nullptr;
+
+    if (selection && m_canvasMouseMode == CanvasMouseMode::CREATE_INFOMARKS) {
+        qDebug() << "Creating new infomark";
+    } else if (selection && !selection->isEmpty()) {
+        qDebug() << "Updated selection with" << selection->size() << "infomarks";
+    } else {
+        qDebug() << "Cleared infomark selection";
+        delete selection;
+        selection = nullptr;
+    }
+
+    m_infoMarkSelection = selection;
+    emit newInfoMarkSelection(m_infoMarkSelection);
+    update();
 }
 
 static uint32_t operator&(const Qt::KeyboardModifiers left, const Qt::Modifier right)
@@ -337,7 +340,8 @@ void MapCanvas::wheelEvent(QWheelEvent *const event)
                 zoomIn();
             }
             break;
-        case CanvasMouseMode::EDIT_INFOMARKS:
+        case CanvasMouseMode::SELECT_INFOMARKS:
+        case CanvasMouseMode::CREATE_INFOMARKS:
         case CanvasMouseMode::SELECT_ROOMS:
         case CanvasMouseMode::SELECT_CONNECTIONS:
         case CanvasMouseMode::CREATE_ROOMS:
@@ -361,7 +365,8 @@ void MapCanvas::wheelEvent(QWheelEvent *const event)
                 zoomOut();
             }
             break;
-        case CanvasMouseMode::EDIT_INFOMARKS:
+        case CanvasMouseMode::SELECT_INFOMARKS:
+        case CanvasMouseMode::CREATE_INFOMARKS:
         case CanvasMouseMode::SELECT_ROOMS:
         case CanvasMouseMode::SELECT_CONNECTIONS:
         case CanvasMouseMode::CREATE_ROOMS:
@@ -429,18 +434,28 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
 
     if (!m_mouseLeftPressed && m_mouseRightPressed) {
         if (m_canvasMouseMode == CanvasMouseMode::MOVE) {
-            // Select the room under the cursor
-            Coordinate c = Coordinate(GLtoMap(m_sel1.x), GLtoMap(m_sel1.y), m_sel1.layer);
-            if (m_roomSelection != nullptr) {
-                m_data->unselect(m_roomSelection);
-                m_roomSelection = nullptr;
+            // Select infomarks under the cursor
+            Coordinate infoCoord = Coordinate(static_cast<int>(m_sel1.x * INFOMARK_SCALE),
+                                              static_cast<int>(m_sel1.y * INFOMARK_SCALE),
+                                              m_sel1.layer);
+            InfoMarkSelection *tmpSel = new InfoMarkSelection(m_data, infoCoord);
+            setInfoMarkSelection(tmpSel);
+
+            if (m_infoMarkSelection == nullptr) {
+                // Select the room under the cursor
+                Coordinate c = Coordinate(GLtoMap(m_sel1.x), GLtoMap(m_sel1.y), m_sel1.layer);
+                if (m_roomSelection != nullptr) {
+                    m_data->unselect(m_roomSelection);
+                    m_roomSelection = nullptr;
+                }
+                m_roomSelection = m_data->select(c);
+                if (m_roomSelection->isEmpty()) {
+                    m_data->unselect(m_roomSelection);
+                    m_roomSelection = nullptr;
+                }
+                emit newRoomSelection(m_roomSelection);
             }
-            m_roomSelection = m_data->select(c);
-            if (m_roomSelection->isEmpty()) {
-                m_data->unselect(m_roomSelection);
-                m_roomSelection = nullptr;
-            }
-            emit newRoomSelection(m_roomSelection);
+
             update();
         }
         m_mouseRightPressed = false;
@@ -449,9 +464,27 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
     }
 
     switch (m_canvasMouseMode) {
-    case CanvasMouseMode::EDIT_INFOMARKS:
-        m_infoMarkSelection = true;
-        m_infoMarksEditDlg->hide();
+    case CanvasMouseMode::CREATE_INFOMARKS:
+        update();
+        break;
+    case CanvasMouseMode::SELECT_INFOMARKS:
+        // Select infomarks
+        if ((event->buttons() & Qt::LeftButton) != 0u) {
+            const auto c1 = Coordinate(static_cast<int>(m_sel1.x * INFOMARK_SCALE),
+                                       static_cast<int>(m_sel1.y * INFOMARK_SCALE),
+                                       m_sel1.layer);
+            InfoMarkSelection tmpSel(m_data, c1);
+            if (m_infoMarkSelection != nullptr && !tmpSel.isEmpty()
+                && m_infoMarkSelection->contains(tmpSel.front())) {
+                m_infoMarkSelectionMove.inUse = true;
+                m_infoMarkSelectionMove.x = 0;
+                m_infoMarkSelectionMove.y = 0;
+
+            } else {
+                m_selectedArea = false;
+                m_infoMarkSelectionMove.inUse = false;
+            }
+        }
         update();
         break;
     case CanvasMouseMode::MOVE:
@@ -605,7 +638,23 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
     m_sel2.layer = m_currentLayer;
 
     switch (m_canvasMouseMode) {
-    case CanvasMouseMode::EDIT_INFOMARKS:
+    case CanvasMouseMode::SELECT_INFOMARKS:
+        if ((event->buttons() & Qt::LeftButton) != 0u) {
+            if (m_infoMarkSelectionMove.inUse) {
+                m_infoMarkSelectionMove.x = m_sel2.x - m_sel1.x;
+                m_infoMarkSelectionMove.y = m_sel2.y - m_sel1.y;
+                setCursor(Qt::ClosedHandCursor);
+
+            } else {
+                m_selectedArea = true;
+            }
+        }
+        update();
+        break;
+    case CanvasMouseMode::CREATE_INFOMARKS:
+        if ((event->buttons() & Qt::LeftButton) != 0u) {
+            m_selectedArea = true;
+        }
         update();
         break;
     case CanvasMouseMode::MOVE:
@@ -715,15 +764,69 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
     }
 
     switch (m_canvasMouseMode) {
-    case CanvasMouseMode::EDIT_INFOMARKS:
+    case CanvasMouseMode::SELECT_INFOMARKS:
+        setCursor(Qt::ArrowCursor);
         if (m_mouseLeftPressed) {
             m_mouseLeftPressed = false;
-            m_infoMarksEditDlg->setPoints(m_sel1.x, m_sel1.y, m_sel2.x, m_sel2.y, m_sel1.layer);
-            m_infoMarksEditDlg->show();
-        } else {
-            m_infoMarkSelection = false;
-            m_infoMarksEditDlg->hide();
+            if (m_infoMarkSelectionMove.inUse) {
+                m_infoMarkSelectionMove.inUse = false;
+                if (m_infoMarkSelection != nullptr) {
+                    // Update infomark location
+                    for (auto mark : *m_infoMarkSelection) {
+                        Coordinate c1(mark->getPosition1().x
+                                          + static_cast<int>(m_infoMarkSelectionMove.x
+                                                             * INFOMARK_SCALE),
+                                      mark->getPosition1().y
+                                          + static_cast<int>(m_infoMarkSelectionMove.y
+                                                             * INFOMARK_SCALE),
+                                      mark->getPosition1().z);
+                        mark->setPosition1(c1);
+                        Coordinate c2(mark->getPosition2().x
+                                          + static_cast<int>(m_infoMarkSelectionMove.x
+                                                             * INFOMARK_SCALE),
+                                      mark->getPosition2().y
+                                          + static_cast<int>(m_infoMarkSelectionMove.y
+                                                             * INFOMARK_SCALE),
+                                      mark->getPosition2().z);
+                        mark->setPosition2(c2);
+                    }
+                }
+            } else {
+                // Add infomarks to selection
+                const auto c1 = Coordinate(static_cast<int>(m_sel1.x * INFOMARK_SCALE),
+                                           static_cast<int>(m_sel1.y * INFOMARK_SCALE),
+                                           m_sel1.layer);
+                const auto c2 = Coordinate(static_cast<int>(m_sel2.x * INFOMARK_SCALE),
+                                           static_cast<int>(m_sel2.y * INFOMARK_SCALE),
+                                           m_sel2.layer);
+                InfoMarkSelection *tmpSel = new InfoMarkSelection(m_data, c1, c2);
+                if (tmpSel && tmpSel->size() == 1) {
+                    QString ctemp = QString("Selected Info Mark: %1 %2")
+                                        .arg(tmpSel->front()->getName())
+                                        .arg(tmpSel->front()->getText());
+                    emit log("MapCanvas", ctemp);
+                }
+                setInfoMarkSelection(tmpSel);
+            }
+            m_selectedArea = false;
         }
+        update();
+        break;
+    case CanvasMouseMode::CREATE_INFOMARKS:
+        if (m_mouseLeftPressed) {
+            m_mouseLeftPressed = false;
+            // Add infomarks to selection
+            const auto c1 = Coordinate(static_cast<int>(m_sel1.x * INFOMARK_SCALE),
+                                       static_cast<int>(m_sel1.y * INFOMARK_SCALE),
+                                       m_sel1.layer);
+            const auto c2 = Coordinate(static_cast<int>(m_sel2.x * INFOMARK_SCALE),
+                                       static_cast<int>(m_sel2.y * INFOMARK_SCALE),
+                                       m_sel2.layer);
+            InfoMarkSelection *tmpSel = new InfoMarkSelection(m_data, c1, c2, 0);
+            tmpSel->clear(); // REVISIT: Should creation workflow require the selection to be empty?
+            setInfoMarkSelection(tmpSel);
+        }
+        update();
         break;
     case CanvasMouseMode::MOVE:
         setCursor(Qt::OpenHandCursor);
@@ -1235,7 +1338,7 @@ void MapCanvas::paintGL()
     }
 
     GLdouble len = 0.2;
-    if (m_selectedArea || m_infoMarkSelection) {
+    if (m_selectedArea) {
         m_opengl.apply(XEnable{XOption::BLEND});
         m_opengl.apply(XDisable{XOption::DEPTH_TEST});
         m_opengl.apply(XColor4d{Qt::black, 0.5});
@@ -1262,7 +1365,8 @@ void MapCanvas::paintGL()
         m_opengl.apply(XEnable{XOption::DEPTH_TEST});
     }
 
-    if (m_infoMarkSelection) {
+    // Draw yellow guide when creating an infomark line/arrow
+    if (m_canvasMouseMode == CanvasMouseMode::CREATE_INFOMARKS && m_selectedArea) {
         m_opengl.apply(XColor4d{Qt::yellow, 1.0});
         m_opengl.apply(XDevicePointSize{3.0});
         m_opengl.apply(XDeviceLineWidth{3.0});
@@ -1279,6 +1383,9 @@ void MapCanvas::paintGL()
 
     // paint selection
     paintSelection(len);
+
+    // paint selected infomarks
+    paintSelectedInfoMarks();
 
     // draw the characters before the current position
     drawGroupCharacters();
@@ -1455,6 +1562,81 @@ void MapCanvas::paintSelectedRoom(const GLdouble len, const Room *const room)
 
         m_opengl.glTranslated(m_roomSelectionMove.x, m_roomSelectionMove.y, ROOM_Z_DISTANCE * layer);
         m_opengl.callList(m_gllist.room);
+    }
+
+    m_opengl.apply(XDisable{XOption::BLEND});
+    m_opengl.apply(XEnable{XOption::DEPTH_TEST});
+
+    m_opengl.glPopMatrix();
+}
+
+void MapCanvas::paintSelectedInfoMarks()
+{
+    if (m_infoMarkSelection == nullptr)
+        return;
+
+    for (const auto marker : *m_infoMarkSelection) {
+        paintSelectedInfoMark(marker);
+    }
+}
+
+void MapCanvas::paintSelectedInfoMark(const InfoMark *const marker)
+{
+    const qreal x1 = static_cast<double>(marker->getPosition1().x) / INFOMARK_SCALE;
+    const qreal y1 = static_cast<double>(marker->getPosition1().y) / INFOMARK_SCALE;
+    const qreal x2 = static_cast<double>(marker->getPosition2().x) / INFOMARK_SCALE;
+    const qreal y2 = static_cast<double>(marker->getPosition2().y) / INFOMARK_SCALE;
+    const qreal dx = x2 - x1;
+    const qreal dy = y2 - y1;
+
+    m_opengl.glPushMatrix();
+    m_opengl.glTranslated(x1, y1, 0.0);
+    m_opengl.apply(XColor4d{(Qt::red)});
+    m_opengl.apply(XEnable{XOption::BLEND});
+    m_opengl.apply(XDisable{XOption::DEPTH_TEST});
+
+    const auto draw_info_mark = [this](const auto marker, const auto &dx, const auto &dy) {
+        switch (marker->getType()) {
+        case InfoMarkType::TEXT:
+            m_opengl.draw(DrawType::LINE_LOOP,
+                          std::vector<Vec3d>{
+                              Vec3d{0.0, 0.0, 1.0},
+                              Vec3d{0.0, 0.25 + dy, 1.0},
+                              Vec3d{0.2 + dx, 0.25 + dy, 1.0},
+                              Vec3d{0.2 + dx, 0.0, 1.0},
+                          });
+            break;
+        case InfoMarkType::LINE:
+            m_opengl.apply(XDevicePointSize{2.0});
+            m_opengl.apply(XDeviceLineWidth{2.0});
+            m_opengl.draw(DrawType::LINES,
+                          std::vector<Vec3d>{
+                              Vec3d{0.0, 0.0, 0.1},
+                              Vec3d{dx, dy, 0.1},
+                          });
+            break;
+        case InfoMarkType::ARROW:
+            m_opengl.apply(XDevicePointSize{2.0});
+            m_opengl.apply(XDeviceLineWidth{2.0});
+            m_opengl.draw(DrawType::LINE_STRIP,
+                          std::vector<Vec3d>{Vec3d{0.0, 0.05, 1.0},
+                                             Vec3d{dx - 0.2, dy + 0.1, 1.0},
+                                             Vec3d{dx - 0.1, dy + 0.1, 1.0}});
+            m_opengl.draw(DrawType::LINE_STRIP,
+                          std::vector<Vec3d>{Vec3d{dx - 0.1, dy + 0.1 - 0.07, 1.0},
+                                             Vec3d{dx - 0.1, dy + 0.1 + 0.07, 1.0},
+                                             Vec3d{dx + 0.1, dy + 0.1, 1.0}});
+            break;
+        }
+    };
+
+    draw_info_mark(marker, dx, dy);
+
+    if (m_infoMarkSelectionMove.inUse) {
+        m_opengl.glTranslated(static_cast<double>(m_infoMarkSelectionMove.x),
+                              static_cast<double>(m_infoMarkSelectionMove.y),
+                              0);
+        draw_info_mark(marker, dx, dy);
     }
 
     m_opengl.apply(XDisable{XOption::BLEND});

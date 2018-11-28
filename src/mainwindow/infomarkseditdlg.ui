@@ -7,20 +7,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>404</width>
-    <height>504</height>
+    <width>400</width>
+    <height>450</height>
    </rect>
-  </property>
-  <property name="sizePolicy">
-   <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-    <horstretch>0</horstretch>
-    <verstretch>0</verstretch>
-   </sizepolicy>
   </property>
   <property name="minimumSize">
    <size>
-    <width>404</width>
-    <height>504</height>
+    <width>400</width>
+    <height>450</height>
    </size>
   </property>
   <property name="baseSize">
@@ -51,508 +45,7 @@
    <property name="bottomMargin">
     <number>9</number>
    </property>
-   <item row="0" column="0">
-    <widget class="QTabWidget" name="tabWidget">
-     <property name="currentIndex">
-      <number>0</number>
-     </property>
-     <widget class="QWidget" name="tab">
-      <attribute name="title">
-       <string>&amp;Selection</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout">
-       <item>
-        <widget class="QLabel" name="textLabel1_2_2">
-         <property name="text">
-          <string>&amp;Marker:</string>
-         </property>
-         <property name="buddy">
-          <cstring>objectsList</cstring>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="objectsList"/>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="selectedMarkBox">
-         <property name="title">
-          <string>Fields:</string>
-         </property>
-         <layout class="QGridLayout">
-          <property name="leftMargin">
-           <number>9</number>
-          </property>
-          <property name="topMargin">
-           <number>9</number>
-          </property>
-          <property name="rightMargin">
-           <number>9</number>
-          </property>
-          <property name="bottomMargin">
-           <number>9</number>
-          </property>
-          <property name="spacing">
-           <number>6</number>
-          </property>
-          <item row="4" column="1" colspan="2">
-           <widget class="QLineEdit" name="objectText"/>
-          </item>
-          <item row="5" column="1" colspan="2">
-           <widget class="QComboBox" name="objectClassesList">
-            <item>
-             <property name="text">
-              <string>Generic marker</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Herb</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>River</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Place</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Mobile name</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Comment</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Road</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Object</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Action</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Locality</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="textLabel3_1">
-            <property name="text">
-             <string>C&amp;lass:</string>
-            </property>
-            <property name="buddy">
-             <cstring>objectClassesList</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="textLabel2_2_3">
-            <property name="text">
-             <string>&amp;Name:</string>
-            </property>
-            <property name="buddy">
-             <cstring>objectNameStr</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="0" colspan="3">
-           <widget class="QGroupBox" name="positionGroupBox">
-            <property name="minimumSize">
-             <size>
-              <width>340</width>
-              <height>115</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>340</width>
-              <height>115</height>
-             </size>
-            </property>
-            <property name="title">
-             <string>Position:</string>
-            </property>
-            <layout class="QGridLayout">
-             <property name="leftMargin">
-              <number>9</number>
-             </property>
-             <property name="topMargin">
-              <number>9</number>
-             </property>
-             <property name="rightMargin">
-              <number>9</number>
-             </property>
-             <property name="bottomMargin">
-              <number>9</number>
-             </property>
-             <property name="spacing">
-              <number>6</number>
-             </property>
-             <item row="1" column="0">
-              <widget class="QLabel" name="textLabel4_3">
-               <property name="text">
-                <string>X1</string>
-               </property>
-               <property name="buddy">
-                <cstring>m_x1</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="2">
-              <widget class="QLabel" name="textLabel4_3_3">
-               <property name="text">
-                <string>X2</string>
-               </property>
-               <property name="buddy">
-                <cstring>m_x2</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="4">
-              <widget class="QLabel" name="textLabel4_3_4">
-               <property name="text">
-                <string>Layer:</string>
-               </property>
-               <property name="buddy">
-                <cstring>m_layer</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="5">
-              <widget class="QSpinBox" name="m_layer">
-               <property name="minimum">
-                <number>-10</number>
-               </property>
-               <property name="maximum">
-                <number>10</number>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="textLabel4_3_2">
-               <property name="text">
-                <string>Y1</string>
-               </property>
-               <property name="buddy">
-                <cstring>m_y1</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="2">
-              <widget class="QLabel" name="textLabel4_3_2_2">
-               <property name="text">
-                <string>Y2</string>
-               </property>
-               <property name="buddy">
-                <cstring>m_y2</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="4">
-              <widget class="QLabel" name="textLabel4_3_5">
-               <property name="text">
-                <string>Angle:</string>
-               </property>
-               <property name="buddy">
-                <cstring>m_rotationAngle</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="3">
-              <widget class="QSpinBox" name="m_x2">
-               <property name="minimum">
-                <number>-2147483647</number>
-               </property>
-               <property name="maximum">
-                <number>2147483647</number>
-               </property>
-               <property name="singleStep">
-                <number>100</number>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="3">
-              <widget class="QSpinBox" name="m_y2">
-               <property name="minimum">
-                <number>-2147483647</number>
-               </property>
-               <property name="maximum">
-                <number>2147483647</number>
-               </property>
-               <property name="singleStep">
-                <number>100</number>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="1">
-              <widget class="QSpinBox" name="m_y1">
-               <property name="minimum">
-                <number>-2147483647</number>
-               </property>
-               <property name="maximum">
-                <number>2147483647</number>
-               </property>
-               <property name="singleStep">
-                <number>100</number>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QSpinBox" name="m_x1">
-               <property name="minimum">
-                <number>-2147483647</number>
-               </property>
-               <property name="maximum">
-                <number>2147483647</number>
-               </property>
-               <property name="singleStep">
-                <number>100</number>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="5">
-              <widget class="QDoubleSpinBox" name="m_rotationAngle">
-               <property name="suffix">
-                <string>°</string>
-               </property>
-               <property name="decimals">
-                <number>1</number>
-               </property>
-               <property name="maximum">
-                <double>360.000000000000000</double>
-               </property>
-               <property name="singleStep">
-                <double>45.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0" colspan="2">
-              <widget class="QLabel" name="startLabel">
-               <property name="text">
-                <string>Start</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="2" colspan="2">
-              <widget class="QLabel" name="endLabel">
-               <property name="text">
-                <string>End</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="textLabel2_2">
-            <property name="text">
-             <string>&amp;Text:</string>
-            </property>
-            <property name="buddy">
-             <cstring>objectText</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="textLabel1_2">
-            <property name="text">
-             <string>T&amp;ype:</string>
-            </property>
-            <property name="buddy">
-             <cstring>objectType</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1" colspan="2">
-           <widget class="QComboBox" name="objectType">
-            <item>
-             <property name="text">
-              <string>Text mark</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Line</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Arrow</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item row="2" column="1" colspan="2">
-           <widget class="QLineEdit" name="objectNameStr"/>
-          </item>
-          <item row="10" column="2">
-           <widget class="QPushButton" name="objectDelete">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="text">
-             <string>&amp;Delete</string>
-            </property>
-           </widget>
-          </item>
-          <item row="10" column="1">
-           <widget class="QPushButton" name="objectCreate">
-            <property name="text">
-             <string>&amp;Create</string>
-            </property>
-           </widget>
-          </item>
-          <item row="10" column="0">
-           <widget class="QPushButton" name="objectModify">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="text">
-             <string>&amp;Update</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tab_2">
-      <attribute name="title">
-       <string>&amp;All</string>
-      </attribute>
-      <layout class="QGridLayout" name="gridLayout_2">
-       <item row="0" column="0">
-        <widget class="QGroupBox" name="selectExitGroupBox">
-         <property name="minimumSize">
-          <size>
-           <width>110</width>
-           <height>115</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>110</width>
-           <height>115</height>
-          </size>
-         </property>
-         <property name="title">
-          <string>Move all markers:</string>
-         </property>
-         <layout class="QGridLayout" name="exitButtonLayout">
-          <item row="0" column="1">
-           <widget class="QToolButton" name="layerNButton">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>N</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <widget class="QToolButton" name="layerUpButton">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>U</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="2">
-           <widget class="QToolButton" name="layerEButton">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>E</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QToolButton" name="layerWButton">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>W</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QToolButton" name="layerDownButton">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>D</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QToolButton" name="layerSButton">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>S</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QPushButton" name="objectDeleteAll">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="text">
-          <string>Delete All</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-    </widget>
-   </item>
-   <item row="1" column="0">
+   <item row="3" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <property name="topMargin">
       <number>5</number>
@@ -579,12 +72,418 @@
      </item>
     </layout>
    </item>
+   <item row="2" column="0">
+    <widget class="QGroupBox" name="selectedMarkBox">
+     <property name="title">
+      <string>Fields:</string>
+     </property>
+     <layout class="QGridLayout">
+      <property name="leftMargin">
+       <number>9</number>
+      </property>
+      <property name="topMargin">
+       <number>9</number>
+      </property>
+      <property name="rightMargin">
+       <number>9</number>
+      </property>
+      <property name="bottomMargin">
+       <number>9</number>
+      </property>
+      <property name="spacing">
+       <number>6</number>
+      </property>
+      <item row="3" column="1" colspan="2">
+       <widget class="QComboBox" name="objectType">
+        <item>
+         <property name="text">
+          <string>Text</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Line</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Arrow</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="textLabel1_2">
+        <property name="text">
+         <string>T&amp;ype:</string>
+        </property>
+        <property name="buddy">
+         <cstring>objectType</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="textLabel2_2_3">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>&amp;Name:</string>
+        </property>
+        <property name="buddy">
+         <cstring>objectNameStr</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="11" column="2">
+       <spacer name="verticalSpacer">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="2" column="1" colspan="2">
+       <widget class="QLineEdit" name="objectNameStr"/>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="textLabel3_1">
+        <property name="text">
+         <string>C&amp;lass:</string>
+        </property>
+        <property name="buddy">
+         <cstring>objectClassesList</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1" colspan="2">
+       <widget class="QComboBox" name="objectClassesList">
+        <item>
+         <property name="text">
+          <string>Generic marker</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Herb</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>River</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Place</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Mobile name</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Comment</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Road</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Object</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Action</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Locality</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="6" column="0" colspan="3">
+       <widget class="QGroupBox" name="positionGroupBox">
+        <property name="minimumSize">
+         <size>
+          <width>340</width>
+          <height>115</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>340</width>
+          <height>115</height>
+         </size>
+        </property>
+        <property name="title">
+         <string>Position:</string>
+        </property>
+        <layout class="QGridLayout">
+         <property name="leftMargin">
+          <number>9</number>
+         </property>
+         <property name="topMargin">
+          <number>9</number>
+         </property>
+         <property name="rightMargin">
+          <number>9</number>
+         </property>
+         <property name="bottomMargin">
+          <number>9</number>
+         </property>
+         <property name="spacing">
+          <number>6</number>
+         </property>
+         <item row="1" column="0">
+          <widget class="QLabel" name="textLabel4_3">
+           <property name="text">
+            <string>X1</string>
+           </property>
+           <property name="buddy">
+            <cstring>m_x1</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QLabel" name="textLabel4_3_3">
+           <property name="text">
+            <string>X2</string>
+           </property>
+           <property name="buddy">
+            <cstring>m_x2</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="4">
+          <widget class="QLabel" name="textLabel4_3_4">
+           <property name="text">
+            <string>Layer:</string>
+           </property>
+           <property name="buddy">
+            <cstring>m_layer</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="5">
+          <widget class="QSpinBox" name="m_layer">
+           <property name="minimum">
+            <number>-10</number>
+           </property>
+           <property name="maximum">
+            <number>10</number>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="textLabel4_3_2">
+           <property name="text">
+            <string>Y1</string>
+           </property>
+           <property name="buddy">
+            <cstring>m_y1</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QLabel" name="textLabel4_3_2_2">
+           <property name="text">
+            <string>Y2</string>
+           </property>
+           <property name="buddy">
+            <cstring>m_y2</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="4">
+          <widget class="QLabel" name="textLabel4_3_5">
+           <property name="text">
+            <string>Angle:</string>
+           </property>
+           <property name="buddy">
+            <cstring>m_rotationAngle</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3">
+          <widget class="QSpinBox" name="m_x2">
+           <property name="minimum">
+            <number>-2147483647</number>
+           </property>
+           <property name="maximum">
+            <number>2147483647</number>
+           </property>
+           <property name="singleStep">
+            <number>100</number>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="3">
+          <widget class="QSpinBox" name="m_y2">
+           <property name="minimum">
+            <number>-2147483647</number>
+           </property>
+           <property name="maximum">
+            <number>2147483647</number>
+           </property>
+           <property name="singleStep">
+            <number>100</number>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QSpinBox" name="m_y1">
+           <property name="minimum">
+            <number>-2147483647</number>
+           </property>
+           <property name="maximum">
+            <number>2147483647</number>
+           </property>
+           <property name="singleStep">
+            <number>100</number>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QSpinBox" name="m_x1">
+           <property name="minimum">
+            <number>-2147483647</number>
+           </property>
+           <property name="maximum">
+            <number>2147483647</number>
+           </property>
+           <property name="singleStep">
+            <number>100</number>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="5">
+          <widget class="QDoubleSpinBox" name="m_rotationAngle">
+           <property name="suffix">
+            <string>°</string>
+           </property>
+           <property name="decimals">
+            <number>1</number>
+           </property>
+           <property name="maximum">
+            <double>360.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>45.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" colspan="2">
+          <widget class="QLabel" name="startLabel">
+           <property name="text">
+            <string>Start</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2" colspan="2">
+          <widget class="QLabel" name="endLabel">
+           <property name="text">
+            <string>End</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="4" column="1" colspan="2">
+       <widget class="QLineEdit" name="objectText"/>
+      </item>
+      <item row="10" column="0" colspan="3">
+       <widget class="QFrame" name="frame">
+        <property name="frameShape">
+         <enum>QFrame::NoFrame</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Plain</enum>
+        </property>
+        <property name="lineWidth">
+         <number>0</number>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QPushButton" name="objectModify">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>&amp;Update</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="objectCreate">
+           <property name="text">
+            <string>&amp;Create</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="textLabel2_2">
+        <property name="text">
+         <string>&amp;Text:</string>
+        </property>
+        <property name="buddy">
+         <cstring>objectText</cstring>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="textLabel1_2_2">
+     <property name="text">
+      <string>&amp;Marker:</string>
+     </property>
+     <property name="buddy">
+      <cstring>objectsList</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QComboBox" name="objectsList"/>
+   </item>
   </layout>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <pixmapfunction>qPixmapFromMimeSource</pixmapfunction>
  <tabstops>
-  <tabstop>tabWidget</tabstop>
   <tabstop>objectsList</tabstop>
   <tabstop>objectNameStr</tabstop>
   <tabstop>objectType</tabstop>
@@ -598,15 +497,7 @@
   <tabstop>m_rotationAngle</tabstop>
   <tabstop>objectModify</tabstop>
   <tabstop>objectCreate</tabstop>
-  <tabstop>objectDelete</tabstop>
   <tabstop>closeButton</tabstop>
-  <tabstop>layerNButton</tabstop>
-  <tabstop>layerUpButton</tabstop>
-  <tabstop>layerWButton</tabstop>
-  <tabstop>layerEButton</tabstop>
-  <tabstop>layerDownButton</tabstop>
-  <tabstop>layerSButton</tabstop>
-  <tabstop>objectDeleteAll</tabstop>
  </tabstops>
  <resources/>
  <connections/>

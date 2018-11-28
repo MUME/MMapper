@@ -46,6 +46,7 @@ class ConnectionSelection;
 class MapData;
 class PrespammedPath;
 class RoomSelection;
+class InfoMarkSelection;
 
 /* REVISIT: move this somewhere else? */
 static constexpr const float CAMERA_Z_DISTANCE = 0.978f;
@@ -72,7 +73,8 @@ enum class CanvasMouseMode {
     CREATE_ROOMS,
     CREATE_CONNECTIONS,
     CREATE_ONEWAY_CONNECTIONS,
-    EDIT_INFOMARKS
+    SELECT_INFOMARKS,
+    CREATE_INFOMARKS
 };
 
 struct MapCanvasData
@@ -146,7 +148,14 @@ struct MapCanvasData
         int y = 0;
     } m_roomSelectionMove{};
 
-    bool m_infoMarkSelection = false;
+    InfoMarkSelection *m_infoMarkSelection = nullptr;
+
+    struct
+    {
+        bool inUse = false;
+        float x = 0;
+        float y = 0;
+    } m_infoMarkSelectionMove{};
 
     ConnectionSelection *m_connectionSelection = nullptr;
 

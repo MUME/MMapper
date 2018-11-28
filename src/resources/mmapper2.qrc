@@ -33,7 +33,10 @@
         <file>icons/roomfind.png</file>
         <file>icons/connectionselection.png</file>
         <file>icons/connectionedit.png</file>
-        <file>icons/infomarksedit.png</file>
+        <file>icons/infomarkcreate.png</file>
+        <file>icons/infomarkedit.png</file>
+        <file>icons/infomarkdelete.png</file>
+        <file>icons/infomarkselection.png</file>
         <file>icons/connectioncreate.png</file>
         <file>icons/onewayconnectioncreate.png</file>
         <file>icons/connectiondelete.png</file>

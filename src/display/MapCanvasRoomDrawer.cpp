@@ -243,16 +243,16 @@ void MapCanvasRoomDrawer::drawInfoMarks()
 
 void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
 {
-    const qreal x1 = static_cast<double>(marker->getPosition1().x) / 100.0;
-    const qreal y1 = static_cast<double>(marker->getPosition1().y) / 100.0;
+    const double x1 = static_cast<double>(marker->getPosition1().x) / INFOMARK_SCALE;
+    const double y1 = static_cast<double>(marker->getPosition1().y) / INFOMARK_SCALE;
     const int layer = marker->getPosition1().z;
-    qreal x2 = static_cast<double>(marker->getPosition2().x) / 100.0;
-    qreal y2 = static_cast<double>(marker->getPosition2().y) / 100.0;
-    const qreal dx = x2 - x1;
-    const qreal dy = y2 - y1;
+    double x2 = static_cast<double>(marker->getPosition2().x) / INFOMARK_SCALE;
+    double y2 = static_cast<double>(marker->getPosition2().y) / INFOMARK_SCALE;
+    const double dx = x2 - x1;
+    const double dy = y2 - y1;
 
-    qreal width = 0.0;
-    qreal height = 0.0;
+    double width = 0;
+    double height = 0;
 
     if (layer != m_currentLayer) {
         return;
@@ -270,6 +270,14 @@ void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
         height = getScaledFontHeight();
         x2 = x1 + width;
         y2 = y1 + height;
+
+        // Update the text marker's X2 and Y2 position
+        const auto p2x = static_cast<double>(marker->getPosition2().x) / INFOMARK_SCALE;
+        const auto p2y = static_cast<double>(marker->getPosition2().y) / INFOMARK_SCALE;
+        // REVISIT: This should be done in the "data" stage
+        marker->setPosition2(Coordinate(static_cast<int>(x2 * INFOMARK_SCALE),
+                                        static_cast<int>(y2 * INFOMARK_SCALE),
+                                        marker->getPosition2().z));
     }
 
     // check if marker is visible

@@ -45,6 +45,7 @@
 class ClientWidget;
 class ConnectionListener;
 class ConnectionSelection;
+class InfoMarkSelection;
 class FindRoomsDlg;
 class GroupWidget;
 class MapData;
@@ -115,7 +116,8 @@ public slots:
     void onModeConnectionSelect();
     void onModeRoomSelect();
     void onModeMoveSelect();
-    void onModeInfoMarkEdit();
+    void onModeInfoMarkSelect();
+    void onModeCreateInfoMarkSelect();
     void onModeCreateRoomSelect();
     void onModeCreateConnectionSelect();
     void onModeCreateOnewayConnectionSelect();
@@ -123,7 +125,8 @@ public slots:
     void onLayerDown();
     void onCreateRoom();
     void onEditRoomSelection();
-    void onEditConnectionSelection();
+    void onEditInfoMarkSelection();
+    void onDeleteInfoMarkSelection();
     void onDeleteRoomSelection();
     void onDeleteConnectionSelection();
     void onMoveUpRoomSelection();
@@ -141,6 +144,7 @@ public slots:
 
     void newRoomSelection(const RoomSelection *);
     void newConnectionSelection(ConnectionSelection *);
+    void newInfoMarkSelection(InfoMarkSelection *);
     void showContextMenu(const QPoint &);
 
     void groupOff();
@@ -182,6 +186,7 @@ private:
 
     const RoomSelection *m_roomSelection = nullptr;
     ConnectionSelection *m_connectionSelection = nullptr;
+    InfoMarkSelection *m_infoMarkSelection = nullptr;
 
     QProgressDialog *progressDlg = nullptr;
 
@@ -250,7 +255,8 @@ private:
         QAction *modeConnectionSelectAct = nullptr;
         QAction *modeRoomSelectAct = nullptr;
         QAction *modeMoveSelectAct = nullptr;
-        QAction *modeInfoMarkEditAct = nullptr;
+        QAction *modeInfoMarkSelectAct = nullptr;
+        QAction *modeCreateInfoMarkAct = nullptr;
         QAction *modeCreateRoomAct = nullptr;
         QAction *modeCreateConnectionAct = nullptr;
         QAction *modeCreateOnewayConnectionAct = nullptr;
@@ -266,6 +272,13 @@ private:
 
     QActionGroup *selectedRoomActGroup = nullptr;
     QActionGroup *selectedConnectionActGroup = nullptr;
+
+    struct InfoMarkActions
+    {
+        QActionGroup *infoMarkGroup = nullptr;
+        QAction *deleteInfoMarkAct = nullptr;
+        QAction *editInfoMarkAct = nullptr;
+    } infoMarkActions{};
 
     struct GroupModeActions
     {
