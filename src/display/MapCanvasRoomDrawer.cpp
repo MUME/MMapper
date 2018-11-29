@@ -293,7 +293,7 @@ void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
     }
 
     m_opengl.glPushMatrix();
-    m_opengl.glTranslated(x1 /*-0.5*/, y1 /*-0.5*/, 0.0);
+    m_opengl.glTranslated(x1, y1, 0.0);
 
     switch (infoMarkType) {
     case InfoMarkType::TEXT:

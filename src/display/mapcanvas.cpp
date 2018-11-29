@@ -1110,15 +1110,15 @@ void MapCanvas::initializeGL()
     const auto version = getString(GL_VERSION);
     const auto renderer = getString(GL_RENDERER);
     const auto vendor = getString(GL_VENDOR);
-    const QByteArray isOpenGLES((context()->isOpenGLES() ? "true" : "false"));
+    const auto glSlVersion = getString(GL_SHADING_LANGUAGE_VERSION);
     qInfo() << "OpenGL Version: " << version;
     qInfo() << "OpenGL Renderer: " << renderer;
     qInfo() << "OpenGL Vendor: " << vendor;
-    qInfo() << "OpenGLES: " << isOpenGLES;
+    qInfo() << "OpenGL GLSL: " << glSlVersion;
     emit log("MapCanvas", "OpenGL Version: " + version);
     emit log("MapCanvas", "OpenGL Renderer: " + renderer);
     emit log("MapCanvas", "OpenGL Vendor: " + vendor);
-    emit log("MapCanvas", "OpenGLES: " + isOpenGLES);
+    emit log("MapCanvas", "OpenGL GLSL: " + glSlVersion);
 
     QString contextStr = QString("%1.%2 ")
                              .arg(context()->format().majorVersion())
