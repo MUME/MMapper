@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>454</width>
-    <height>546</height>
+    <height>603</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -92,13 +92,6 @@
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="2">
-       <widget class="QCheckBox" name="proxyThreadedCheckBox">
-        <property name="text">
-         <string>Proxy threaded</string>
         </property>
        </widget>
       </item>
@@ -336,14 +329,14 @@
       <string>Advanced</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0">
+      <item row="1" column="0">
        <widget class="QPushButton" name="configurationResetButton">
         <property name="text">
          <string>Reset to Default Settings</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
+      <item row="1" column="1">
        <spacer name="horizontalSpacer_2">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -355,6 +348,23 @@
          </size>
         </property>
        </spacer>
+      </item>
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="proxyThreadedCheckBox">
+        <property name="text">
+         <string>Proxy threaded</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QCheckBox" name="proxyConnectionStatusCheckBox">
+        <property name="toolTip">
+         <string>Disconnect from the mud client when MUME disconnects</string>
+        </property>
+        <property name="text">
+         <string>Proxy connection status</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
@@ -381,7 +391,6 @@
   <tabstop>remotePort</tabstop>
   <tabstop>tlsEncryptionCheckBox</tabstop>
   <tabstop>localPort</tabstop>
-  <tabstop>proxyThreadedCheckBox</tabstop>
   <tabstop>charsetComboBox</tabstop>
   <tabstop>emulatedExitsCheckBox</tabstop>
   <tabstop>showHiddenExitFlagsCheckBox</tabstop>
@@ -391,6 +400,9 @@
   <tabstop>autoLoadFileName</tabstop>
   <tabstop>selectWorldFileButton</tabstop>
   <tabstop>displayMumeClockCheckBox</tabstop>
+  <tabstop>proxyThreadedCheckBox</tabstop>
+  <tabstop>proxyConnectionStatusCheckBox</tabstop>
+  <tabstop>configurationResetButton</tabstop>
  </tabstops>
  <resources/>
  <connections/>

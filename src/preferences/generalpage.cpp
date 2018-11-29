@@ -54,9 +54,6 @@ GeneralPage::GeneralPage(QWidget *parent)
             &QCheckBox::stateChanged,
             this,
             &GeneralPage::tlsEncryptionCheckBoxStateChanged);
-    connect(proxyThreadedCheckBox, &QCheckBox::stateChanged, this, [this]() {
-        setConfig().connection.proxyThreaded = proxyThreadedCheckBox->isChecked();
-    });
     connect(charsetComboBox,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
             this,
@@ -93,6 +90,13 @@ GeneralPage::GeneralPage(QWidget *parent)
             this,
             &GeneralPage::displayMumeClockStateChanged);
 
+    connect(proxyThreadedCheckBox, &QCheckBox::stateChanged, this, [this]() {
+        setConfig().connection.proxyThreaded = proxyThreadedCheckBox->isChecked();
+    });
+    connect(proxyConnectionStatusCheckBox, &QCheckBox::stateChanged, this, [this]() {
+        setConfig().connection.proxyConnectionStatus = proxyConnectionStatusCheckBox->isChecked();
+    });
+
     connect(configurationResetButton, &QAbstractButton::clicked, this, [this]() {
         QMessageBox::StandardButton reply
             = QMessageBox::question(this,
@@ -118,7 +122,6 @@ GeneralPage::GeneralPage(QWidget *parent)
     } else {
         tlsEncryptionCheckBox->setChecked(connection.tlsEncryption);
     }
-    proxyThreadedCheckBox->setChecked(connection.proxyThreaded);
     charsetComboBox->setCurrentIndex(static_cast<int>(general.characterEncoding));
 
     emulatedExitsCheckBox->setChecked(mumeNative.emulatedExits);
@@ -130,6 +133,9 @@ GeneralPage::GeneralPage(QWidget *parent)
     autoLoadFileName->setText(autoLoad.fileName);
 
     displayMumeClockCheckBox->setChecked(config.mumeClock.display);
+
+    proxyThreadedCheckBox->setChecked(connection.proxyThreaded);
+    proxyConnectionStatusCheckBox->setChecked(connection.proxyConnectionStatus);
 }
 
 void GeneralPage::selectWorldFileButtonClicked()

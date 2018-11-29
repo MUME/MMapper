@@ -88,6 +88,7 @@ public:
     ~Proxy();
 
     void start();
+    void stop();
 
 public slots:
     void processUserStream();

@@ -110,6 +110,9 @@ public:
     explicit AbstractParser(MapData *, MumeClock *, QObject *parent = nullptr);
     ~AbstractParser() override;
 
+    void doMove(CommandIdType cmd);
+    void sendPromptToUser();
+
 signals:
     // telnet
     void sendToMud(const QByteArray &);
@@ -146,7 +149,6 @@ protected slots:
 protected:
     void offlineCharacterMove(CommandIdType direction = CommandIdType::UNKNOWN);
     void sendRoomInfoToUser(const Room *);
-    void sendPromptToUser();
     void sendPromptToUser(const Room &r);
     void sendPromptToUser(char light, char terrain);
     void sendPromptToUser(RoomLightType lightType, RoomTerrainType terrainType);
@@ -263,8 +265,6 @@ private:
     bool parseDoorAction(DoorActionType dat, StringView words);
     bool parseDoorFlag(DoorFlag flag, StringView words);
     bool parseExitFlag(ExitFlag flag, StringView words);
-
-    void doMove(CommandIdType cmd);
 
 public:
     inline void sendToUser(const QByteArray &arr, bool goAhead = false)

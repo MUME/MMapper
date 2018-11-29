@@ -118,6 +118,7 @@ Proxy::~Proxy()
     file->close();
 #endif
     if (m_userSocket != nullptr) {
+        m_userSocket->flush();
         m_userSocket->disconnectFromHost();
         m_userSocket->deleteLater();
     }
@@ -144,6 +145,15 @@ void Proxy::start()
         }
     } else {
         init();
+    }
+}
+
+void Proxy::stop()
+{
+    if (m_thread != nullptr) {
+        m_thread->exit();
+    } else {
+        deleteLater();
     }
 }
 
@@ -282,7 +292,17 @@ bool Proxy::init()
             SIGNAL(log(const QString &, const QString &)),
             m_listener->parent(),
             SLOT(log(const QString &, const QString &)));
-    m_mudSocket->connectToHost();
+    if (getConfig().general.mapMode != MapMode::OFFLINE)
+        m_mudSocket->connectToHost();
+    else {
+        sendToUser(
+            "\r\n"
+            "\033[1;37;46mMMapper is running in offline mode. Switch modes and reconnect to play MUME.\033[0m\r\n"
+            "\r\n"
+            "Welcome to the land of Middle-earth. May your visit here be... interesting.\r\n"
+            "Never forget! Try to role-play...\r\n");
+        m_parserXml->doMove(CommandIdType::LOOK);
+    }
     return true;
 }
 
@@ -316,24 +336,29 @@ void Proxy::onMudError(const QString &errorStr)
     qWarning() << "Mud socket error" << errorStr;
     emit log("Proxy", errorStr);
 
-    sendToUser(
-        "\r\n"
-        "\033[1;37;46m"
-        + errorStr.toLocal8Bit()
-        + "\033[0m\r\n"
-          "\r\n"
-          "\033[1;37;46mYou can explore world map offline or try to reconnect again...\033[0m\r\n"
-          "\r\n>");
+    sendToUser("\r\n\033[1;37;46m" + errorStr.toLocal8Bit() + "\033[0m\r\n");
+
+    if (getConfig().connection.proxyConnectionStatus) {
+        if (getConfig().general.mapMode == MapMode::OFFLINE) {
+            sendToUser("\r\n"
+                       "\033[1;37;46mYou are now exploring the world map offline.\033[0m\r\n");
+            m_parserXml->sendPromptToUser();
+        } else {
+            // Terminate connection
+            stop();
+        }
+    } else {
+        sendToUser(
+            "\r\n"
+            "\033[1;37;46mYou can explore world map offline or reconnect again...\033[0m\r\n");
+        m_parserXml->sendPromptToUser();
+    }
 }
 
 void Proxy::userTerminatedConnection()
 {
     emit log("Proxy", "User terminated connection ...");
-    if (m_threaded) {
-        m_thread->exit();
-    } else {
-        deleteLater();
-    }
+    stop();
 }
 
 void Proxy::mudTerminatedConnection()
@@ -346,11 +371,23 @@ void Proxy::mudTerminatedConnection()
 
     emit log("Proxy", "Mud terminated connection ...");
 
-    sendToUser("\r\n"
-               "\033[1;37;46mMUME closed the connection.\033[0m\r\n"
-               "\r\n"
-               "\033[1;37;46mYou can explore world map offline or reconnect again...\033[0m\r\n"
-               "\r\n>");
+    sendToUser("\r\n\033[1;37;46mMUME closed the connection.\033[0m\r\n");
+
+    if (getConfig().connection.proxyConnectionStatus) {
+        if (getConfig().general.mapMode == MapMode::OFFLINE) {
+            sendToUser("\r\n"
+                       "\033[1;37;46mYou are now exploring the world map offline.\033[0m\r\n");
+            m_parserXml->sendPromptToUser();
+        } else {
+            // Terminate connection
+            stop();
+        }
+    } else {
+        sendToUser(
+            "\r\n"
+            "\033[1;37;46mYou can explore world map offline or reconnect again...\033[0m\r\n");
+        m_parserXml->sendPromptToUser();
+    }
 }
 
 void Proxy::processUserStream()
@@ -366,7 +403,13 @@ void Proxy::processUserStream()
 void Proxy::sendToMud(const QByteArray &ba)
 {
     if (m_mudSocket != nullptr) {
-        m_mudSocket->sendToMud(ba);
+        if (m_mudSocket->state() != QAbstractSocket::ConnectedState) {
+            sendToUser(
+                "\033[1;37;46mMMapper is not connected to MUME. Please reconnect to play.\033[0m\r\n");
+            m_parserXml->sendPromptToUser();
+        } else {
+            m_mudSocket->sendToMud(ba);
+        }
     } else {
         qWarning() << "Mud socket not available";
     }

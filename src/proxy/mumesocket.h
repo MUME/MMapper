@@ -51,6 +51,7 @@ public:
     virtual void disconnectFromHost() = 0;
     virtual void connectToHost() = 0;
     virtual void sendToMud(const QByteArray &ba) = 0;
+    virtual QAbstractSocket::SocketState state() = 0;
 
 protected slots:
     virtual void onConnect();
@@ -76,6 +77,7 @@ public:
     void disconnectFromHost() override;
     void connectToHost() override;
     void sendToMud(const QByteArray &ba) override;
+    QAbstractSocket::SocketState state() override { return m_socket.state(); }
 
 protected slots:
     void onConnect() override;

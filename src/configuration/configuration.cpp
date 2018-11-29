@@ -162,6 +162,7 @@ ConstString KEY_AUTHORIZED_SECRETS = "Authorized secrets";
 ConstString KEY_RSA_PRIVATE_KEY = "RSA private key";
 ConstString KEY_PROMPT_PATTERN = "Prompt pattern";
 ConstString KEY_PROXY_THREADED = "Proxy Threaded";
+ConstString KEY_PROXY_CONNECTION_STATUS = "Proxy connection status";
 ConstString KEY_RELATIVE_PATH_ACCEPTANCE = "relative path acceptance";
 ConstString KEY_REMOTE_EDITING_AND_VIEWING = "Remote editing and viewing";
 ConstString KEY_REMOTE_PORT_NUMBER = "Remote port number";
@@ -379,6 +380,7 @@ void Configuration::ConnectionSettings::read(QSettings &conf)
                                static_cast<uint16_t>(DEFAULT_PORT));
     tlsEncryption = NO_OPEN_SSL ? false : conf.value(KEY_TLS_ENCRYPTION, true).toBool();
     proxyThreaded = conf.value(KEY_PROXY_THREADED, true).toBool();
+    proxyConnectionStatus = conf.value(KEY_PROXY_CONNECTION_STATUS, true).toBool();
 
     // News 2340, changing domain from fire.pvv.org to mume.org:
     auto &remote = remoteServerName;
@@ -537,6 +539,7 @@ void Configuration::ConnectionSettings::write(QSettings &conf) const
     conf.setValue(KEY_LOCAL_PORT_NUMBER, static_cast<int>(localPort));
     conf.setValue(KEY_TLS_ENCRYPTION, tlsEncryption);
     conf.setValue(KEY_PROXY_THREADED, proxyThreaded);
+    conf.setValue(KEY_PROXY_CONNECTION_STATUS, proxyConnectionStatus);
 }
 
 void Configuration::CanvasSettings::write(QSettings &conf) const

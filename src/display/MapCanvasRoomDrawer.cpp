@@ -272,8 +272,6 @@ void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
         y2 = y1 + height;
 
         // Update the text marker's X2 and Y2 position
-        const auto p2x = static_cast<double>(marker->getPosition2().x) / INFOMARK_SCALE;
-        const auto p2y = static_cast<double>(marker->getPosition2().y) / INFOMARK_SCALE;
         // REVISIT: This should be done in the "data" stage
         marker->setPosition2(Coordinate(static_cast<int>(x2 * INFOMARK_SCALE),
                                         static_cast<int>(y2 * INFOMARK_SCALE),

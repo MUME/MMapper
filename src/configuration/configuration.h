@@ -96,6 +96,7 @@ public:
         quint16 localPort = 0u; /// Port to bind to on local machine
         bool tlsEncryption = false;
         bool proxyThreaded = false;
+        bool proxyConnectionStatus = false;
 
     private:
         SUBGROUP();
