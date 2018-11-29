@@ -162,7 +162,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     addDockWidget(Qt::LeftDockWidgetArea, m_dockLaunch);
     m_dockLaunch->setWidget(m_launchWidget);
 
-    m_dockDialogLog = new DockWidget(tr("Log View"), this);
+    m_dockDialogLog = new DockWidget(tr("Log Panel"), this);
     m_dockDialogLog->setObjectName("DockWidgetLog");
     m_dockDialogLog->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
     m_dockDialogLog->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
@@ -740,18 +740,18 @@ void MainWindow::createActions()
     selectedConnectionActGroup->setEnabled(false);
 
     infoMarkActions.editInfoMarkAct = new QAction(QIcon(":/icons/infomarkedit.png"),
-                                                  tr("Edit Markers"),
+                                                  tr("Edit Selected Markers"),
                                                   this);
-    infoMarkActions.editInfoMarkAct->setStatusTip(tr("Edit Info Markers"));
+    infoMarkActions.editInfoMarkAct->setStatusTip(tr("Edit Selected Info Markers"));
     infoMarkActions.editInfoMarkAct->setCheckable(true);
     connect(infoMarkActions.editInfoMarkAct,
             &QAction::triggered,
             this,
             &MainWindow::onEditInfoMarkSelection);
     infoMarkActions.deleteInfoMarkAct = new QAction(QIcon(":/icons/infomarkdelete.png"),
-                                                    tr("Delete Markers"),
+                                                    tr("Delete Selected Markers"),
                                                     this);
-    infoMarkActions.deleteInfoMarkAct->setStatusTip(tr("Delete Info Markers"));
+    infoMarkActions.deleteInfoMarkAct->setStatusTip(tr("Delete Selected Info Markers"));
     infoMarkActions.deleteInfoMarkAct->setCheckable(true);
     connect(infoMarkActions.deleteInfoMarkAct,
             &QAction::triggered,
@@ -979,6 +979,10 @@ void MainWindow::setupMenuBar()
     toolbars->addAction(connectionToolBar->toggleViewAction());
     toolbars->addAction(groupToolBar->toggleViewAction());
     toolbars->addAction(settingsToolBar->toggleViewAction());
+    QMenu *sidebars = viewMenu->addMenu(tr("&Sidebars"));
+    sidebars->addAction(m_dockDialogLog->toggleViewAction());
+    sidebars->addAction(m_dockLaunch->toggleViewAction());
+    sidebars->addAction(m_dockDialogGroup->toggleViewAction());
     viewMenu->addSeparator();
     viewMenu->addAction(zoomInAct);
     viewMenu->addAction(zoomOutAct);
@@ -1004,8 +1008,6 @@ void MainWindow::setupMenuBar()
     pathMachineMenu->addSeparator();
     pathMachineMenu->addAction(forceRoomAct);
     pathMachineMenu->addAction(releaseAllPathsAct);
-    settingsMenu->addSeparator();
-    settingsMenu->addAction(m_dockDialogLog->toggleViewAction());
 
     helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(voteAct);
