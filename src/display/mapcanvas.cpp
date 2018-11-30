@@ -31,7 +31,6 @@
 #include <cstddef>
 #include <stdexcept>
 #include <utility>
-#include <QContextMenuEvent>
 #include <QGestureEvent>
 #include <QMatrix4x4>
 #include <QMessageLogContext>
@@ -166,7 +165,6 @@ MapCanvas::MapCanvas(MapData *mapData,
 {
     setCursor(Qt::OpenHandCursor);
     grabGesture(Qt::PinchGesture);
-    grabGesture(Qt::TapAndHoldGesture);
 
     m_opengl.initFont(static_cast<QPaintDevice *>(this));
 
@@ -410,32 +408,6 @@ bool MapCanvas::event(QEvent *event)
 {
     if (event->type() == QEvent::Gesture) {
         QGestureEvent *gestureEvent = static_cast<QGestureEvent *>(event);
-
-        // Right click
-        if (QGesture *gesture = gestureEvent->gesture(Qt::TapAndHoldGesture)) {
-            QTapAndHoldGesture *tap = static_cast<QTapAndHoldGesture *>(gesture);
-            if (tap->state() == Qt::GestureFinished) {
-                QPoint localPos = mapFromGlobal(tap->position().toPoint());
-                QMouseEvent *press = new QMouseEvent(QEvent::MouseButtonPress,
-                                                     localPos,
-                                                     Qt::RightButton,
-                                                     Qt::MouseButtons{Qt::RightButton},
-                                                     Qt::KeyboardModifiers{});
-                QApplication::postEvent(this, press);
-                QMouseEvent *release = new QMouseEvent(QEvent::MouseButtonRelease,
-                                                       localPos,
-                                                       Qt::RightButton,
-                                                       Qt::MouseButtons{Qt::RightButton},
-                                                       Qt::KeyboardModifiers{});
-                QApplication::postEvent(this, release);
-                QContextMenuEvent *menu = new QContextMenuEvent(QContextMenuEvent::Reason::Mouse,
-                                                                localPos,
-                                                                tap->position().toPoint(),
-                                                                Qt::KeyboardModifiers{});
-                QApplication::postEvent(this, menu);
-            }
-        }
-
         // Zoom in / out
         if (QGesture *gesture = gestureEvent->gesture(Qt::PinchGesture)) {
             QPinchGesture *pinch = static_cast<QPinchGesture *>(gesture);
@@ -451,10 +423,9 @@ bool MapCanvas::event(QEvent *event)
                 m_scaleFactor *= m_currentStepScaleFactor;
                 m_currentStepScaleFactor = 1.0f;
             }
+            resizeGL(width(), height());
+            return true;
         }
-
-        update();
-        return true;
     }
     return QWidget::event(event);
 }
