@@ -275,120 +275,105 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
     }
 
     CGroupLocalChar *self = group->getSelf();
-    QByteArray oldHP = self->textHP;
-    QByteArray oldMana = self->textMana;
-    QByteArray oldMoves = self->textMoves;
-
-    QByteArray hp = oldHP, mana = oldMana, moves = oldMoves;
+    QByteArray textHP{}, textMana{}, textMoves{};
 
     int next = 0;
     int index = prompt.indexOf("HP:", next);
     if (index != -1) {
-        hp = "";
         int k = index + 3;
         while (prompt[k] != ' ' && prompt[k] != '>') {
-            hp += prompt[k++];
+            textHP += prompt[k++];
         }
         next = k;
     }
 
     index = prompt.indexOf("Mana:", next);
     if (index != -1) {
-        mana = "";
         int k = index + 5;
         while (prompt[k] != ' ' && prompt[k] != '>') {
-            mana += prompt[k++];
+            textMana += prompt[k++];
         }
         next = k;
     }
 
     index = prompt.indexOf("Move:", next);
     if (index != -1) {
-        moves = "";
         int k = index + 5;
         while (prompt[k] != ' ' && prompt[k] != '>') {
-            moves += prompt[k++];
+            textMoves += prompt[k++];
         }
     }
 
-    if (hp != oldHP || mana != oldMana || moves != oldMoves) {
-        self->setTextScore(hp, mana, moves);
+    if (textHP == self->textHP && textMana == self->textMana && textMoves == self->textMoves)
+        return; // No update needed
+    else
+        self->setTextScore(textHP, textMana, textMoves);
 
-        // Estimate new numerical scores using prompt
-        if (!hp.isEmpty() && self->maxhp != 0) {
-            double maxhp = self->maxhp;
-            // NOTE: This avoids capture so it can be lifted out more easily later.
-            const auto calc_hp = [](const QByteArray &hp, const double maxhp) -> double {
-                if (hp == "Healthy") {
-                    return maxhp;
-                } else if (hp == "Fine") {
-                    return maxhp * 0.99;
-                } else if (hp == "Hurt") {
-                    return maxhp * 0.65;
-                } else if (hp == "Wounded") {
-                    return maxhp * 0.45;
-                } else if (hp == "Bad") {
-                    return maxhp * 0.25;
-                } else if (hp == "Awful") {
-                    return maxhp * 0.10;
-                } else {
-                    // Incap
-                    return 0.0;
-                }
-            };
-            const auto newhp = static_cast<int>(calc_hp(hp, maxhp));
-            if (self->hp > newhp) {
-                self->hp = newhp;
-            }
-        }
-        if (!mana.isEmpty() && self->maxmana != 0) {
-            double maxmana = self->maxmana;
-            const auto calc_mana = [](const QByteArray &mana, const double maxmana) -> double {
-                if (mana == "Burning") {
-                    return maxmana * 0.99;
-                } else if (mana == "Hot") {
-                    return maxmana * 0.75;
-                } else if (mana == "Warm") {
-                    return maxmana * 0.45;
-                } else if (mana == "Cold") {
-                    return maxmana * 0.25;
-                } else if (mana == "Icy") {
-                    return maxmana * 0.10;
-                } else {
-                    // Frozen
-                    return 0.0;
-                }
-            };
-            const auto newmana = static_cast<int>(calc_mana(mana, maxmana));
-            if (self->mana > newmana) {
-                self->mana = newmana;
-            }
-        }
-        if (!moves.isEmpty() && self->maxmoves != 0) {
-            double maxmoves = self->maxmoves;
-            const auto calc_moves =
-                [](const QByteArray &moves, const double maxmoves, const int /*def*/) -> double {
-                if (moves == "Tired") {
-                    return maxmoves * 0.42;
-                } else if (moves == "Slow") {
-                    return maxmoves * 0.31;
-                } else if (moves == "Weak") {
-                    return maxmoves * 0.12;
-                } else if (moves == "Fainting") {
-                    return maxmoves * 0.05;
-                } else {
-                    // Exhausted
-                    return 0.0;
-                }
-            };
-            const auto newmoves = static_cast<int>(calc_moves(moves, maxmoves, self->moves));
-            if (self->moves > newmoves) {
-                self->moves = newmoves;
-            }
-        }
+#define X_SCORE(target, lower, upper) \
+    do { \
+        if (text == target) { \
+            const auto ub = max * upper; \
+            const auto lb = max * lower; \
+            if (current >= ub) \
+                return ub; \
+            else if (current <= lb) \
+                return lb; \
+            else \
+                return current; \
+        } \
+    } while (false)
 
-        issueLocalCharUpdate();
+    // Estimate new numerical scores using prompt
+    if (self->maxhp != 0) {
+        // NOTE: This avoids capture so it can be lifted out more easily later.
+        const auto calc_hp =
+            [](const QByteArray &text, const double current, const double max) -> double {
+            if (text.isEmpty() || text == "Healthy")
+                return max;
+            X_SCORE("Fine", 0.66, 0.99);
+            X_SCORE("Hurt", 0.45, 0.65);
+            X_SCORE("Wounded", 0.26, 0.45);
+            X_SCORE("Bad", 0.11, 0.25);
+            X_SCORE("Awful", 0.01, 0.10);
+            return 0.0; // Incap
+        };
+        self->hp = static_cast<int>(calc_hp(textHP, self->hp, self->maxhp));
     }
+    if (self->maxmana != 0) {
+        const auto calc_mana =
+            [](const QByteArray &text, const double current, const double max) -> double {
+            if (text.isEmpty())
+                return max;
+            X_SCORE("Burning", 0.76, 0.99);
+            X_SCORE("Hot", 0.46, 0.75);
+            X_SCORE("Warm", 0.26, 0.45);
+            X_SCORE("Cold", 0.11, 0.25);
+            X_SCORE("Icy", 0.01, 0.10);
+            return 0.0; // Frozen
+        };
+        self->mana = static_cast<int>(calc_mana(textMana, self->mana, self->maxmana));
+    }
+    if (self->maxmoves != 0) {
+        const auto calc_moves =
+            [](const QByteArray &text, const double current, const double max) -> double {
+            if (text.isEmpty()) {
+                const double lb = max * 0.43;
+                if (current <= lb)
+                    return lb;
+                else
+                    return current;
+            }
+            X_SCORE("Tired", 0.32, 0.42);
+            X_SCORE("Slow", 0.13, 0.31);
+            X_SCORE("Weak", 0.06, 0.12);
+            X_SCORE("Fainting", 0.01, 0.05);
+            return 0.0; // Exhausted
+        };
+        self->moves = static_cast<int>(calc_moves(textMoves, self->moves, self->maxmoves));
+    }
+#undef X_SCORE
+
+    issueLocalCharUpdate();
 }
 
 void Mmapper2Group::sendLog(const QString &text)
