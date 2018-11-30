@@ -1237,6 +1237,7 @@ void AbstractParser::doOfflineCharacterMove()
 
                     // Update exit and direction with new random one
                     if (direction != randomDirection) {
+                        sendToUser("You feel confused and move along randomly...\r\n");
                         qDebug() << "Randomly moving" << getLowercase(randomDirection)
                                  << "instead of" << getLowercase(direction);
                         e = rb->exit(static_cast<ExitDirection>(randomDirection));
