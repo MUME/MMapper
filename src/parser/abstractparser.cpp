@@ -1516,10 +1516,28 @@ void AbstractParser::performDoorCommand(const DirectionType direction, const Doo
 
     bool needdir = false;
 
-    if (dn.isEmpty()) {
-        dn = "exit";
+    if (direction == DirectionType::UNKNOWN) {
+        // If there is only one secret assume that is what needs opening
+        auto secretCount = 0;
+        for (int i_ = 0; i_ < 6; i_++) {
+            const auto i = static_cast<DirectionType>(i_);
+            if (getField(c, i, ExitFieldVariant{DoorFlags{DoorFlag::HIDDEN}})) {
+                dn = m_mapData->getDoorName(c, i).toLatin1();
+                secretCount++;
+            }
+        }
+        if (secretCount == 1 && !dn.isEmpty()) {
+            needdir = false;
+        } else {
+            // Otherwise open any exit
+            needdir = true;
+            dn = "exit";
+        }
+    } else if (dn.isEmpty()) {
         needdir = true;
+        dn = "exit";
     } else {
+        // Check if we need to add a direction to the door name
         for (int i_ = 0; i_ < 6; i_++) {
             const auto i = static_cast<DirectionType>(i_);
             if ((i != direction) && (m_mapData->getDoorName(c, i).toLatin1() == dn)) {
