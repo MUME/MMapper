@@ -134,12 +134,14 @@ public:
     template<typename T>
     double getScaledFontWidth(T x, FontFormatFlags flags = FontFormatFlags::NONE) const
     {
-        return m_opengl.getFontWidth(x, flags) * static_cast<double>(0.022f / m_scaleFactor);
+        return m_opengl.getFontWidth(x, flags)
+               * static_cast<double>(0.022f / m_scaleFactor * m_currentStepScaleFactor);
     }
 
     double getScaledFontHeight() const
     {
-        return m_opengl.getFontHeight() * static_cast<double>(0.007f / m_scaleFactor);
+        return m_opengl.getFontHeight()
+               * static_cast<double>(0.007f / m_scaleFactor * m_currentStepScaleFactor);
     }
 };
 

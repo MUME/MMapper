@@ -592,7 +592,7 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room,
         return;
     }
 
-    const auto wantExtraDetail = m_scaleFactor >= 0.15f;
+    const auto wantExtraDetail = m_scaleFactor * m_currentStepScaleFactor >= 0.15f;
     const auto x = room->getPosition().x;
     const auto y = room->getPosition().y;
     const auto z = room->getPosition().z;
@@ -790,7 +790,8 @@ void MapCanvasRoomDrawer::drawRoomConnectionsAndDoors(const Room *const room, co
     int rx = 0;
     int ry = 0;
 
-    const auto wantDoorNames = getConfig().canvas.drawDoorNames && (m_scaleFactor >= 0.40f);
+    const auto wantDoorNames = getConfig().canvas.drawDoorNames
+                               && (m_scaleFactor * m_currentStepScaleFactor >= 0.40f);
     for (const auto i : ALL_EXITS7) {
         const auto opp = opposite(i);
         ExitDirection targetDir = opp;

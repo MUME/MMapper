@@ -31,6 +31,8 @@
 #include <cstddef>
 #include <stdexcept>
 #include <utility>
+#include <QContextMenuEvent>
+#include <QGestureEvent>
 #include <QMatrix4x4>
 #include <QMessageLogContext>
 #include <QOpenGLDebugMessage>
@@ -163,6 +165,8 @@ MapCanvas::MapCanvas(MapData *mapData,
     , m_groupManager(groupManager)
 {
     setCursor(Qt::OpenHandCursor);
+    grabGesture(Qt::PinchGesture);
+    grabGesture(Qt::TapAndHoldGesture);
 
     m_opengl.initFont(static_cast<QPaintDevice *>(this));
 
@@ -402,6 +406,59 @@ void MapCanvas::forceMapperToRoom()
     update();
 }
 
+bool MapCanvas::event(QEvent *event)
+{
+    if (event->type() == QEvent::Gesture) {
+        QGestureEvent *gestureEvent = static_cast<QGestureEvent *>(event);
+
+        // Right click
+        if (QGesture *gesture = gestureEvent->gesture(Qt::TapAndHoldGesture)) {
+            QTapAndHoldGesture *tap = static_cast<QTapAndHoldGesture *>(gesture);
+            if (tap->state() == Qt::GestureFinished) {
+                QPoint localPos = mapFromGlobal(tap->position().toPoint());
+                QMouseEvent *press = new QMouseEvent(QEvent::MouseButtonPress,
+                                                     localPos,
+                                                     Qt::RightButton,
+                                                     Qt::MouseButtons{Qt::RightButton},
+                                                     Qt::KeyboardModifiers{});
+                QApplication::postEvent(this, press);
+                QMouseEvent *release = new QMouseEvent(QEvent::MouseButtonRelease,
+                                                       localPos,
+                                                       Qt::RightButton,
+                                                       Qt::MouseButtons{Qt::RightButton},
+                                                       Qt::KeyboardModifiers{});
+                QApplication::postEvent(this, release);
+                QContextMenuEvent *menu = new QContextMenuEvent(QContextMenuEvent::Reason::Mouse,
+                                                                localPos,
+                                                                tap->position().toPoint(),
+                                                                Qt::KeyboardModifiers{});
+                QApplication::postEvent(this, menu);
+            }
+        }
+
+        // Zoom in / out
+        if (QGesture *gesture = gestureEvent->gesture(Qt::PinchGesture)) {
+            QPinchGesture *pinch = static_cast<QPinchGesture *>(gesture);
+            QPinchGesture::ChangeFlags changeFlags = pinch->changeFlags();
+            if (changeFlags & QPinchGesture::ScaleFactorChanged) {
+                const auto candidateStep = static_cast<float>(pinch->totalScaleFactor());
+                const auto candidateScaleFactor = m_scaleFactor * candidateStep;
+                if (candidateScaleFactor <= 2.0f && candidateScaleFactor >= 0.04f) {
+                    m_currentStepScaleFactor = candidateStep;
+                }
+            }
+            if (pinch->state() == Qt::GestureFinished) {
+                m_scaleFactor *= m_currentStepScaleFactor;
+                m_currentStepScaleFactor = 1.0f;
+            }
+        }
+
+        update();
+        return true;
+    }
+    return QWidget::event(event);
+}
+
 void MapCanvas::createRoom()
 {
     const RoomSelection *tmpSel = m_data->select(
@@ -425,12 +482,8 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
     m_sel1.layer = m_currentLayer;
     m_sel2.layer = m_currentLayer;
 
-    if ((event->buttons() & Qt::LeftButton) != 0u) {
-        m_mouseLeftPressed = true;
-    }
-    if ((event->buttons() & Qt::RightButton) != 0u) {
-        m_mouseRightPressed = true;
-    }
+    m_mouseLeftPressed = (event->buttons() & Qt::LeftButton) != 0u;
+    m_mouseRightPressed = (event->buttons() & Qt::RightButton) != 0u;
 
     if (!m_mouseLeftPressed && m_mouseRightPressed) {
         if (m_canvasMouseMode == CanvasMouseMode::MOVE) {
@@ -1167,9 +1220,9 @@ void MapCanvas::resizeGL(int width, int height)
         return;
     }
 
-    const float swp = m_scaleFactor
+    const float swp = m_scaleFactor * m_currentStepScaleFactor
                       * (1.0f - (static_cast<float>(width - BASESIZEX) / static_cast<float>(width)));
-    const float shp = m_scaleFactor
+    const float shp = m_scaleFactor * m_currentStepScaleFactor
                       * (1.0f
                          - (static_cast<float>(height - BASESIZEY) / static_cast<float>(height)));
 
@@ -1410,7 +1463,7 @@ void MapCanvas::drawRooms(/* TODO: make this const */ MapCanvasRoomDrawer &drawe
                             m_currentLayer + 10),
                  drawer);
 
-    const auto wantInfoMarks = (m_scaleFactor >= 0.25f);
+    const auto wantInfoMarks = (m_scaleFactor * m_currentStepScaleFactor >= 0.25f);
     if (wantInfoMarks) {
         drawer.drawInfoMarks();
     }

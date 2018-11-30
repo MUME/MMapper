@@ -168,6 +168,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
+    bool event(QEvent *e) override;
 
     void drawPathStart(const Coordinate &, std::vector<Vec3d> &verts);
     bool drawPath(const Coordinate &sc,

@@ -109,6 +109,8 @@ struct MapCanvasData
     } m_textures{};
 
     float m_scaleFactor = 1.0f;
+    float m_currentStepScaleFactor = 1.0f;
+
     struct
     {
         int x = 0;
