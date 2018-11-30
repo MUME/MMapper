@@ -153,7 +153,6 @@ signals:
     void newInfoMarkSelection(InfoMarkSelection *);
 
     void setCurrentRoom(RoomId id, bool update);
-    void roomPositionChanged();
 
 protected:
     // void closeEvent(QCloseEvent *event);

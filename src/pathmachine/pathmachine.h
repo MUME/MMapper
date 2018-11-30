@@ -63,7 +63,6 @@ public slots:
     // CAUTION: This hides virtual bool QObject::event(QEvent*).
     virtual void event(const SigParseEvent &);
     virtual void releaseAllPaths();
-    virtual void retry();
     virtual void setCurrentRoom(RoomId id, bool update);
 
 signals:

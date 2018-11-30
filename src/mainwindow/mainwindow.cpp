@@ -305,6 +305,18 @@ void MainWindow::wireConnections()
             m_mapData,
             SLOT(lookingForRooms(RoomRecipient &, RoomId)));
     connect(m_mapData, &MapFrontend::clearingMap, m_pathMachine, &PathMachine::releaseAllPaths);
+    connect(m_mapData,
+            &MapFrontend::clearingMap,
+            m_mapWindow->getCanvas(),
+            &MapCanvas::clearRoomSelection);
+    connect(m_mapData,
+            &MapFrontend::clearingMap,
+            m_mapWindow->getCanvas(),
+            &MapCanvas::clearConnectionSelection);
+    connect(m_mapData,
+            &MapFrontend::clearingMap,
+            m_mapWindow->getCanvas(),
+            &MapCanvas::clearInfoMarkSelection);
     connect(m_pathMachine,
             &Mmapper2PathMachine::playerMoved,
             m_mapWindow->getCanvas(),
@@ -317,10 +329,6 @@ void MainWindow::wireConnections()
 
     // moved to mapwindow
     connect(m_mapData, &MapData::mapSizeChanged, m_mapWindow, &MapWindow::setScrollBars);
-    connect(m_mapWindow->getCanvas(),
-            &MapCanvas::roomPositionChanged,
-            m_pathMachine,
-            &Mmapper2PathMachine::retry);
 
     connect(m_prespammedPath, SIGNAL(update()), m_mapWindow->getCanvas(), SLOT(update()));
 
@@ -1209,10 +1217,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::newFile()
 {
-    m_mapWindow->getCanvas()->clearRoomSelection();
-    m_mapWindow->getCanvas()->clearConnectionSelection();
-    m_mapWindow->getCanvas()->clearInfoMarkSelection();
-
     if (maybeSave()) {
         auto *storage = static_cast<AbstractMapStorage *>(new MapStorage(*m_mapData, "", this));
         connect(storage,
@@ -1458,10 +1462,6 @@ void MainWindow::loadFile(const QString &fileName)
     progressDlg->setMaximum(100);
     progressDlg->setValue(0);
     progressDlg->show();
-
-    m_mapWindow->getCanvas()->clearRoomSelection();
-    m_mapWindow->getCanvas()->clearConnectionSelection();
-    m_mapWindow->getCanvas()->clearInfoMarkSelection();
 
     auto *storage = static_cast<AbstractMapStorage *>(
         new MapStorage(*m_mapData, fileName, file, this));

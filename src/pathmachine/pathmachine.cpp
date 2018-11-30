@@ -90,24 +90,6 @@ void PathMachine::releaseAllPaths()
     state = PathState::SYNCING;
 }
 
-void PathMachine::retry()
-{
-    switch (state) {
-    case PathState::APPROVED:
-        state = PathState::SYNCING;
-        break;
-    case PathState::EXPERIMENTING:
-        releaseAllPaths();
-        break;
-    case PathState::SYNCING:
-        break;
-    }
-    assert(state == PathState::SYNCING);
-    if (lastEvent != nullptr) {
-        event(lastEvent);
-    }
-}
-
 void PathMachine::event(const SigParseEvent &sigParseEvent)
 {
     if (lastEvent != sigParseEvent.requireValid())

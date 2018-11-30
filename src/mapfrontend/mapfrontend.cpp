@@ -55,7 +55,7 @@ MapFrontend::~MapFrontend()
     QMutexLocker locker(&mapLock);
     emit clearingMap();
 
-    for (uint i = 0; i <= greatestUsedId.asUint32(); ++i) {
+    for (uint i = 0; i < roomIndex.size(); ++i) {
         /* NOTE: you're allowed to delete nullptr, so no conditional is required */
         delete std::exchange(roomIndex[RoomId{i}], nullptr);
     }
