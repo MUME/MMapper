@@ -30,6 +30,7 @@
 
 #include <QByteArray>
 #include <QColor>
+#include <QMap>
 #include <QString>
 #include <QStringList>
 #include <QtCore>
@@ -196,6 +197,7 @@ public:
         QStringList authorizedSecrets{};
         bool requireAuth = false;
         QByteArray geometry{};
+        QMap<QString, QVariant> secretMetadata{};
 
     private:
         SUBGROUP();

@@ -174,7 +174,7 @@ void GroupManagerPage::allowedSecretsChanged()
     const auto secretText = allowedComboBox->currentText().simplified();
     bool correctLength = secretText.length() == SHA1_LENGTH;
     bool isSelf = secretText.compare(authority->getSecret(), Qt::CaseInsensitive) == 0;
-    bool alreadyPresent = authority->isAuthorized(secretText.toLatin1());
+    bool alreadyPresent = authority->validSecret(secretText.toLatin1());
 
     bool enableAllowSecret = correctLength && !alreadyPresent && !isSelf;
     if (allowSecret->hasFocus() && !enableAllowSecret)
@@ -185,6 +185,25 @@ void GroupManagerPage::allowedSecretsChanged()
     if (revokeSecret->hasFocus() && !enableRevokeSecret)
         allowedComboBox->setFocus();
     revokeSecret->setEnabled(enableRevokeSecret);
+
+    if (correctLength && alreadyPresent) {
+        const auto key = secretText.toLatin1();
+        const auto lastLogin = authority->getMetadata(key, GroupMetadata::LAST_LOGIN);
+        QString line;
+        if (lastLogin.isEmpty()) {
+            line = "<i>Never seen before</i>";
+        } else {
+            const auto name = authority->getMetadata(key, GroupMetadata::NAME);
+            const auto ip = authority->getMetadata(key, GroupMetadata::IP_ADDRESS);
+            line = QString("<i>Last seen %1%2 from %3</i>")
+                       .arg(lastLogin)
+                       .arg(name.isEmpty() ? "" : QString(" as '%2'").arg(name))
+                       .arg(ip);
+        }
+        secretMetadataLabel->setText(line);
+    } else {
+        secretMetadataLabel->setText("");
+    }
 
     if (authorizationCheckBox->isEnabled() && authorizationCheckBox->isChecked()) {
         secretCountLabel->setText(QString("<i>%1 contact%2 found</i>")

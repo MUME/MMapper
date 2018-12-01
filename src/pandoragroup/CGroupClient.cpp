@@ -54,11 +54,7 @@ CGroupClient::CGroupClient(GroupAuthority *authority, QObject *parent)
     config.setCaCertificates({});
     config.setLocalCertificate(authority->getLocalCertificate());
     config.setPrivateKey(authority->getPrivateKey());
-    if (getConfig().groupManager.requireAuth) {
-        config.setPeerVerifyMode(QSslSocket::QueryPeer);
-    } else {
-        config.setPeerVerifyMode(QSslSocket::VerifyNone);
-    }
+    config.setPeerVerifyMode(QSslSocket::QueryPeer);
     socket.setSslConfiguration(config);
     socket.setPeerVerifyName(GROUP_COMMON_NAME);
     connect(&socket, &QAbstractSocket::hostFound, this, [this]() { emit sendLog("Host found."); });
@@ -70,7 +66,8 @@ CGroupClient::CGroupClient(GroupAuthority *authority, QObject *parent)
     });
     connect(&socket, &QSslSocket::encrypted, this, [this]() {
         timer.stop();
-        secret = socket.peerCertificate().digest(QCryptographicHash::Algorithm::Sha1).toHex();
+        secret
+            = socket.peerCertificate().digest(QCryptographicHash::Algorithm::Sha1).toHex().toLower();
         emit sendLog("Connection successfully encrypted.");
         emit connectionEncrypted(this);
     });
@@ -169,6 +166,10 @@ void CGroupClient::onError(QAbstractSocket::SocketError e)
 
 void CGroupClient::onPeerVerifyError(const QSslError &error)
 {
+    // Ignore expected warnings
+    if (error.error() == QSslError::SelfSignedCertificate)
+        return;
+
     emit sendLog("<b>WARNING:</b> " + error.errorString());
     qWarning() << "onPeerVerifyError" << static_cast<int>(socket.error()) << socket.errorString()
                << error.errorString();

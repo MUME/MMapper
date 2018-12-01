@@ -26,10 +26,21 @@
 #ifndef GROUPCERTIFICATE_H
 #define GROUPCERTIFICATE_H
 
+#include <array>
 #include <QObject>
 #include <QSslCertificate>
 #include <QSslKey>
 #include <QStringListModel>
+
+enum class GroupMetadata { LAST_LOGIN, NAME, IP_ADDRESS, CERTIFICATE };
+static constexpr const auto NUM_GROUP_METADATA = 4u;
+
+namespace enums {
+const std::array<GroupMetadata, NUM_GROUP_METADATA> &getAllGroupMetadata();
+
+#define ALL_GROUP_METADATA enums::getAllGroupMetadata()
+
+} // namespace enums
 
 using GroupSecret = QByteArray;
 
@@ -37,6 +48,7 @@ static constexpr const auto GROUP_ORGANIZATION = "MUME";
 static constexpr const auto GROUP_ORGANIZATIONAL_UNIT = "MMapper";
 static constexpr const auto GROUP_COMMON_NAME = "GroupManager";
 
+class CGroupClient;
 class GroupAuthority : public QObject
 {
     Q_OBJECT
@@ -55,7 +67,12 @@ public:
     QAbstractItemModel *getItemModel() { return &model; }
     bool add(const GroupSecret &);
     bool remove(const GroupSecret &);
-    bool isAuthorized(const GroupSecret &) const;
+    bool validSecret(const GroupSecret &) const;
+    bool validCertificate(const CGroupClient *) const;
+
+public:
+    QString getMetadata(const GroupSecret &, const GroupMetadata) const;
+    void setMetadata(const GroupSecret &, const GroupMetadata, const QString &value);
 
 signals:
     void secretRevoked(const GroupSecret &);

@@ -2,14 +2,6 @@
 <ui version="4.0">
  <class>GroupManagerPage</class>
  <widget class="QWidget" name="GroupManagerPage">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>333</width>
-    <height>657</height>
-   </rect>
-  </property>
   <property name="windowTitle">
    <string>GroupManager Settings</string>
   </property>
@@ -169,23 +161,7 @@
       <string>Authorized Contacts</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_8">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Secret:</string>
-        </property>
-        <property name="buddy">
-         <cstring>allowedComboBox</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1" colspan="2">
+      <item row="3" column="1" colspan="2">
        <widget class="QFrame" name="frame_2">
         <property name="frameShape">
          <enum>QFrame::NoFrame</enum>
@@ -226,10 +202,19 @@
         </layout>
        </widget>
       </item>
-      <item row="1" column="1" colspan="2">
-       <widget class="QComboBox" name="allowedComboBox">
-        <property name="editable">
-         <bool>true</bool>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_8">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Secret:</string>
+        </property>
+        <property name="buddy">
+         <cstring>allowedComboBox</cstring>
         </property>
        </widget>
       </item>
@@ -253,6 +238,29 @@
         </property>
         <property name="text">
          <string>&lt;i&gt;0 contacts found&lt;/i&gt;</string>
+        </property>
+        <property name="buddy">
+         <cstring>allowedComboBox</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1" colspan="2">
+       <widget class="QComboBox" name="allowedComboBox">
+        <property name="editable">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1" colspan="2">
+       <widget class="QLabel" name="secretMetadataLabel">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="buddy">
+         <cstring>allowedComboBox</cstring>
         </property>
        </widget>
       </item>

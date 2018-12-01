@@ -119,6 +119,8 @@ ConstString GRP_ROOMEDIT_DIALOG = "RoomEdit Dialog";
 
 ConstString KEY_ABSOLUTE_PATH_ACCEPTANCE = "absolute path acceptance";
 ConstString KEY_ALWAYS_ON_TOP = "Always On Top";
+ConstString KEY_AUTHORIZATION_REQUIRED = "Authorization required";
+ConstString KEY_AUTHORIZED_SECRETS = "Authorized secrets";
 ConstString KEY_AUTO_LOAD = "Auto load";
 ConstString KEY_AUTO_RESIZE_TERMINAL = "Auto resize terminal";
 ConstString KEY_BACKGROUND_COLOR = "Background color";
@@ -157,9 +159,6 @@ ConstString KEY_NO_ROOM_DESCRIPTION_PATTERNS = "No room description patterns";
 ConstString KEY_NO_SPLASH = "No splash screen";
 ConstString KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES = "Number of anti-aliasing samples";
 ConstString KEY_PASSWORD_PATTERN = "Password pattern";
-ConstString KEY_AUTHORIZATION_REQUIRED = "Authorization required";
-ConstString KEY_AUTHORIZED_SECRETS = "Authorized secrets";
-ConstString KEY_RSA_PRIVATE_KEY = "RSA private key";
 ConstString KEY_PROMPT_PATTERN = "Prompt pattern";
 ConstString KEY_PROXY_THREADED = "Proxy Threaded";
 ConstString KEY_PROXY_CONNECTION_STATUS = "Proxy connection status";
@@ -173,8 +172,10 @@ ConstString KEY_ROOM_DESC_ANSI_COLOR = "Room desc ansi color";
 ConstString KEY_ROOM_MATCHING_TOLERANCE = "room matching tolerance";
 ConstString KEY_ROOM_NAME_ANSI_COLOR = "Room name ansi color";
 ConstString KEY_ROWS = "Rows";
+ConstString KEY_RSA_PRIVATE_KEY = "RSA private key";
 ConstString KEY_RULES_WARNING = "rules warning";
 ConstString KEY_RUN_FIRST_TIME = "Run first time";
+ConstString KEY_SECRET_METADATA = "Secret metadata";
 ConstString KEY_SERVER_NAME = "Server name";
 ConstString KEY_SHARE_SELF = "share self";
 ConstString KEY_SHOW_HIDDEN_EXIT_FLAGS = "Show hidden exit flags";
@@ -486,6 +487,7 @@ void Configuration::GroupManagerSettings::read(QSettings &conf)
     authorizedSecrets = conf.value(KEY_AUTHORIZED_SECRETS, QStringList()).toStringList();
     requireAuth = NO_OPEN_SSL ? false : conf.value(KEY_AUTHORIZATION_REQUIRED, false).toBool();
     geometry = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
+    secretMetadata = conf.value(KEY_SECRET_METADATA).toMap();
 }
 
 void Configuration::MumeClockSettings::read(QSettings &conf)
@@ -616,6 +618,7 @@ void Configuration::GroupManagerSettings::write(QSettings &conf) const
     conf.setValue(KEY_AUTHORIZED_SECRETS, authorizedSecrets);
     conf.setValue(KEY_AUTHORIZATION_REQUIRED, requireAuth);
     conf.setValue(KEY_WINDOW_GEOMETRY, geometry);
+    conf.setValue(KEY_SECRET_METADATA, secretMetadata);
 }
 
 void Configuration::MumeClockSettings::write(QSettings &conf) const

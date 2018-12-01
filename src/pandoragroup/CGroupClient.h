@@ -61,6 +61,7 @@ public:
     QByteArray getSecret() const { return secret; }
     QHostAddress getPeerAddress() const { return socket.peerAddress(); }
     QAbstractSocket::SocketError getSocketError() const { return socket.error(); }
+    QSslCertificate getPeerCertificate() const { return socket.peerCertificate(); }
 
     void setProtocolState(const ProtocolState val);
     ProtocolState getProtocolState() const { return protocolState; }

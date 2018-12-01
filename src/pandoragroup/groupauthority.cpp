@@ -30,6 +30,8 @@
 #include <QDebug>
 
 #include "../configuration/configuration.h"
+#include "../global/enums.h"
+#include "CGroupClient.h"
 
 #ifndef MMAPPER_NO_OPENSSL
 #include <openssl/bio.h>
@@ -216,6 +218,33 @@ void GroupAuthority::refresh()
 }
 #endif
 
+namespace enums {
+
+const std::array<GroupMetadata, NUM_GROUP_METADATA> &getAllGroupMetadata()
+{
+    static const auto g_all_types = genEnumValues<GroupMetadata, NUM_GROUP_METADATA>();
+    return g_all_types;
+}
+
+} // namespace enums
+
+static inline QString getMetadataKey(const GroupSecret &secret, const GroupMetadata meta)
+{
+    const auto get_prefix = [](auto meta) {
+        switch (meta) {
+        case GroupMetadata::CERTIFICATE:
+            return "certificate";
+        case GroupMetadata::NAME:
+            return "name";
+        case GroupMetadata::IP_ADDRESS:
+            return "ip";
+        case GroupMetadata::LAST_LOGIN:
+            return "last_login";
+        }
+    };
+    return QString("%1-%2").arg(get_prefix(meta)).arg(secret.toLower().constData());
+}
+
 GroupAuthority::GroupAuthority(QObject *const parent)
     : QObject(parent)
 {
@@ -261,13 +290,15 @@ GroupSecret GroupAuthority::getSecret() const
 
 bool GroupAuthority::add(const GroupSecret &secret)
 {
-    if (isAuthorized(secret))
+    if (validSecret(secret))
         return false;
 
     // Update model
     if (model.insertRow(model.rowCount())) {
         QModelIndex index = model.index(model.rowCount() - 1, 0);
-        model.setData(index, secret, Qt::DisplayRole);
+        model.setData(index, secret.toLower(), Qt::DisplayRole);
+
+        // Update configuration
         setConfig().groupManager.authorizedSecrets = model.stringList();
         return true;
     }
@@ -277,7 +308,7 @@ bool GroupAuthority::add(const GroupSecret &secret)
 
 bool GroupAuthority::remove(const GroupSecret &secret)
 {
-    if (!isAuthorized(secret))
+    if (!validSecret(secret))
         return false;
 
     emit secretRevoked(secret);
@@ -288,14 +319,48 @@ bool GroupAuthority::remove(const GroupSecret &secret)
         const QString targetSecret = model.data(index, Qt::DisplayRole).toString();
         if (targetSecret.compare(secret, Qt::CaseInsensitive) == 0) {
             model.removeRow(i);
-            setConfig().groupManager.authorizedSecrets = model.stringList();
+
+            // Update configuration
+            auto &conf = setConfig().groupManager;
+            conf.authorizedSecrets = model.stringList();
+
+            for (auto type : ALL_GROUP_METADATA) {
+                conf.secretMetadata.remove(getMetadataKey(secret, type));
+            }
             return true;
         }
     }
     return false;
 }
 
-bool GroupAuthority::isAuthorized(const GroupSecret &secret) const
+bool GroupAuthority::validSecret(const GroupSecret &secret) const
 {
-    return model.stringList().contains(secret);
+    return model.stringList().contains(secret.toLower());
+}
+
+bool GroupAuthority::validCertificate(const CGroupClient *connection) const
+{
+    const GroupSecret &targetSecret = connection->getSecret();
+    const QString &storedCertificate = getMetadata(targetSecret, GroupMetadata::CERTIFICATE);
+    if (storedCertificate.isEmpty())
+        return true;
+
+    const QString targetCertficiate = connection->getPeerCertificate().toPem();
+    const bool certificatesMatch = targetCertficiate.compare(storedCertificate, Qt::CaseInsensitive)
+                                   == 0;
+    return certificatesMatch;
+}
+
+QString GroupAuthority::getMetadata(const GroupSecret &secret, const GroupMetadata meta) const
+{
+    const auto &metadata = getConfig().groupManager.secretMetadata;
+    return metadata[getMetadataKey(secret, meta)].toString();
+}
+
+void GroupAuthority::setMetadata(const GroupSecret &secret,
+                                 const GroupMetadata meta,
+                                 const QString &value)
+{
+    auto &metadata = setConfig().groupManager.secretMetadata;
+    metadata[getMetadataKey(secret, meta)] = value;
 }
