@@ -177,6 +177,7 @@ bool Proxy::init()
         m_userSocket.reset(nullptr);
         return false;
     }
+    m_userSocket->setSocketOption(QAbstractSocket::LowDelayOption, true);
     m_userSocket->setSocketOption(QAbstractSocket::KeepAliveOption, true);
 
     connect(m_userSocket.data(),

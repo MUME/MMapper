@@ -59,6 +59,7 @@ CGroupClient::CGroupClient(GroupAuthority *authority, QObject *parent)
     socket.setPeerVerifyName(GROUP_COMMON_NAME);
     connect(&socket, &QAbstractSocket::hostFound, this, [this]() { emit sendLog("Host found."); });
     connect(&socket, &QAbstractSocket::connected, this, [this]() {
+        socket.setSocketOption(QAbstractSocket::LowDelayOption, true);
         socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
         setProtocolState(ProtocolState::AwaitingLogin);
         emit sendLog("Connection established.");
@@ -123,6 +124,7 @@ void CGroupClient::setSocket(qintptr socketDescriptor)
         onError(QAbstractSocket::SocketAccessError);
         return;
     }
+    socket.setSocketOption(QAbstractSocket::LowDelayOption, true);
     socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
     setProtocolState(ProtocolState::AwaitingLogin);
     emit connectionEstablished(this);
