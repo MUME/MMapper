@@ -489,10 +489,15 @@ void CGroupServerCommunicator::parseLoginInformation(CGroupClient *connection,
     }
     connection->setName(playerData["name"].toByteArray());
     const QByteArray name = connection->getName();
+    emit sendLog(QString("'%1' is trying to join the group.").arg(name.constData()));
+
+    // Check credentials
     const auto secret = connection->getSecret();
     const bool isEncrypted = !secret.isEmpty()
                              && connection->getProtocolVersion() >= PROTOCOL_VERSION_103;
-    emit sendLog(QString("'%1' is trying to join the group.").arg(name.constData()));
+    const bool requireAuth = getConfig().groupManager.requireAuth;
+    const bool validSecret = getAuthority()->validSecret(secret);
+    const bool validCert = getAuthority()->validCertificate(connection);
     if (isEncrypted) {
         emit sendLog(QString("'%1's secret: %2").arg(name.constData()).arg(secret.constData()));
 
@@ -500,7 +505,7 @@ void CGroupServerCommunicator::parseLoginInformation(CGroupClient *connection,
         QString secretStr = QString::fromLatin1(connection->getSecret());
         for (auto target : clientsList.values()) {
             if (secretStr.compare(target->getSecret(), Qt::CaseInsensitive) == 0) {
-                if (getAuthority()->validCertificate(connection))
+                if (!requireAuth || validCert)
                     kickConnection(target, "Someone reconnected to the server using your secret!");
                 else {
                     kickConnection(connection, "Host does not trust your compromised secret.");
@@ -520,23 +525,23 @@ void CGroupServerCommunicator::parseLoginInformation(CGroupClient *connection,
     emit sendLog(QString("'%1's protocol version: %2")
                      .arg(name.constData())
                      .arg(connection->getProtocolVersion()));
-    if (getConfig().groupManager.requireAuth && !getAuthority()->validSecret(secret)) {
+    if (requireAuth && !validSecret) {
         kickConnection(connection, "Host has not added your secret to their contacts!");
+        return;
+    }
+    if (isEncrypted && requireAuth && !validCert) {
+        kickConnection(connection, "Host does not trust your compromised secret.");
         return;
     }
     if (getGroup()->isNamePresent(name)) {
         kickConnection(connection, "The name you picked is already present!");
         return;
     }
-    if (isEncrypted && !getAuthority()->validCertificate(connection)) {
-        kickConnection(connection, "Host does not trust your compromised secret.");
-        return;
-    }
 
     // Client is allowed to log in
     clientsList.insert(name, connection);
 
-    if (isEncrypted && getAuthority()->validCertificate(connection)) {
+    if (isEncrypted && validSecret) {
         // Update metadata
         getAuthority()->setMetadata(secret, GroupMetadata::NAME, name);
         getAuthority()->setMetadata(secret,
@@ -949,23 +954,25 @@ void CGroupClientCommunicator::connectionEncrypted(CGroupClient *const connectio
     const auto secret = connection->getSecret();
     emit sendLog(QString("Host's secret: %1").arg(secret.constData()));
 
-    bool secretAuthorized = getAuthority()->validSecret(secret);
-    if (getConfig().groupManager.requireAuth && !secretAuthorized) {
+    const bool requireAuth = getConfig().groupManager.requireAuth;
+    const bool validSecret = getAuthority()->validSecret(secret);
+    const bool validCert = getAuthority()->validCertificate(connection);
+    if (requireAuth && !validSecret) {
         emit messageBox(
             QString("Host's secret is not in your contacts:\n%1").arg(secret.constData()));
         disconnectCommunicator();
         return;
     }
-    if (!getAuthority()->validCertificate(connection)) {
+    if (requireAuth && !validCert) {
         emit messageBox(
-            "WARNING: Host's secret has been compromised making the connection is insecure.");
+            "WARNING: Host's secret has been compromised making the connection insecure.");
         disconnectCommunicator();
         return;
     }
 
     sendLoginInformation(connection);
 
-    if (secretAuthorized) {
+    if (validSecret) {
         // Update metadata
         getAuthority()->setMetadata(secret,
                                     GroupMetadata::IP_ADDRESS,
