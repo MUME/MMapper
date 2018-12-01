@@ -1,4 +1,21 @@
 ================================
+MMapper 2.7.1 (November 30, 2018)
+================================
+
+New features:
+ - Info Markers are now selectible and movable using a mouse
+ - Disconnects from MUME are now optionally mirrored on the client
+ - Pinch gestures now zoom the map
+ - Store and validate additional Group Manager secrets metadata
+
+Bug fixes:
+ - Group Manager now remembers its last window position and state on boot
+ - Only hidden door names are displayed on the map now
+ - View panel moved to Sidebars toolbar
+ - Door commands now work without a direction if there is only one secret exit
+ - Prompts now update HP, mana, and moves using a lower bound
+
+================================
 MMapper 2.7.0 (November 24, 2018)
 ================================
 
