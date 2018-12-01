@@ -83,6 +83,10 @@ void MumeXmlParser::parseNewMudInput(const IncomingData &data)
 {
     switch (data.type) {
     case TelnetDataType::DELAY:
+        // Twiddlers
+        m_lastPrompt = data.line;
+        parse(data);
+        break;
     case TelnetDataType::MENU_PROMPT:
     case TelnetDataType::LOGIN:
     case TelnetDataType::LOGIN_PASSWORD:
@@ -157,6 +161,7 @@ void MumeXmlParser::parse(const IncomingData &data)
     if (!m_lineToUser.isEmpty()) {
         const auto isGoAhead = [](TelnetDataType type) -> bool {
             switch (type) {
+            case TelnetDataType::DELAY:
             case TelnetDataType::LOGIN:
             case TelnetDataType::LOGIN_PASSWORD:
             case TelnetDataType::MENU_PROMPT:
@@ -165,7 +170,6 @@ void MumeXmlParser::parse(const IncomingData &data)
             case TelnetDataType::CRLF:
             case TelnetDataType::LFCR:
             case TelnetDataType::LF:
-            case TelnetDataType::DELAY:
             case TelnetDataType::SPLIT:
             case TelnetDataType::UNKNOWN:
                 return false;
