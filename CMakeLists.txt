@@ -38,6 +38,12 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
+if(WIN32)
+    # Target Windows Vista and above
+    add_definitions(/DNTDDI_VERSION=NTDDI_VISTA)
+    add_definitions(/D_WIN32_WINNT=0x0600)
+endif()
+
 # Try to find the system copy of zlib
 if(WITH_ZLIB)
     find_package(ZLIB)
@@ -56,7 +62,7 @@ if(WITH_ZLIB)
             SOURCE_DIR "${CMAKE_BINARY_DIR}/zlib-src"
             BINARY_DIR "${CMAKE_BINARY_DIR}/zlib-build"
             INSTALL_COMMAND ""
-            CMAKE_ARGS "-DBUILD_SHARED_LIBS=OFF"
+            CMAKE_ARGS "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_SHARED_LIBS=OFF"
             CMAKE_CACHE_ARGS "-DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}"
             )
         if(WIN32)
@@ -91,19 +97,31 @@ if(WITH_OPENSSL)
             set(OPENSSL_ROOT_DIR "C:\\OpenSSL-Win32")
         endif()
         file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/src/bin)
-        find_library(OPENSSL_LIBEAY32 NAMES libeay32 PATHS ${OPENSSL_ROOT_DIR})
-        if(OPENSSL_LIBEAY32-NOTFOUND)
+        find_file(LIB_EAY_BIN
+                NAMES
+                libeay32.dll
+                HINTS
+                ${OPENSSL_ROOT_DIR}
+                PATH_SUFFIXES
+                bin)
+        if(LIB_EAY_BIN-NOTFOUND)
             message(FATAL_ERROR "OpenSSL libeay32.dll was NOT found")
         else()
-            configure_file(${OPENSSL_LIBEAY32} ${CMAKE_CURRENT_BINARY_DIR}/src/bin/libeay32.dll COPYONLY)
-            message(STATUS "   Copied ${OPENSSL_LIBEAY32} to src/bin/")
+            configure_file(${LIB_EAY_BIN} ${CMAKE_CURRENT_BINARY_DIR}/src/bin/libeay32.dll COPYONLY)
+            message(STATUS "   Copied ${LIB_EAY_BIN} to src/bin/")
         endif()
-        find_library(OPENSSL_SSLEAY32 NAMES ssleay32 PATHS ${OPENSSL_ROOT_DIR})
-        if(OPENSSL_SSLEAY32-NOTFOUND)
+        find_file(SSL_EAY_BIN
+                NAMES
+                ssleay32.dll
+                HINTS
+                ${OPENSSL_ROOT_DIR}
+                PATH_SUFFIXES
+                bin)
+        if(SSL_EAY_BIN-NOTFOUND)
             message(FATAL_ERROR "OpenSSL ssleay32.dll was NOT found")
         else()
-            configure_file(${OPENSSL_SSLEAY32} ${CMAKE_CURRENT_BINARY_DIR}/src/bin/ssleay32.dll COPYONLY)
-            message(STATUS "   Copied ${OPENSSL_SSLEAY32} to src/bin/")
+            configure_file(${SSL_EAY_BIN} ${CMAKE_CURRENT_BINARY_DIR}/src/bin/ssleay32.dll COPYONLY)
+            message(STATUS "   Copied ${SSL_EAY_BIN} to src/bin/")
         endif()
     endif()
 else()
@@ -156,24 +174,26 @@ endif()
 if (MMAPPER_IS_DEBUG)
     set(CMAKE_VERBOSE_MAKEFILE true)
 
-    # common options for gcc and clang
-    add_compile_options(-O0)
-    add_compile_options(-Wall -Wextra -pedantic)
+    if(NOT MSVC)
+        # common options for gcc and clang
+        add_compile_options(-O0)
+        add_compile_options(-Wall -Wextra -pedantic)
 
-    # -g     = debugging in OS native format (also note: -g is ignored by the linker)
-    # -ggdb  = use gdb debugging format (defaults to -ggdb2)
-    # -ggdb3 = adds macro definitions
-    add_compile_options(-ggdb3)
+        # -g     = debugging in OS native format (also note: -g is ignored by the linker)
+        # -ggdb  = use gdb debugging format (defaults to -ggdb2)
+        # -ggdb3 = adds macro definitions
+        add_compile_options(-ggdb3)
 
-    # improved debugging experience
-    add_compile_options(-fno-omit-frame-pointer -fno-optimize-sibling-calls)
-    add_compile_options(-fno-inline -fno-inline-functions)
+        # improved debugging experience
+        add_compile_options(-fno-omit-frame-pointer -fno-optimize-sibling-calls)
+        add_compile_options(-fno-inline -fno-inline-functions)
 
-    message(STATUS "Forcing QT assertions")
-    add_definitions(-DQT_FORCE_ASSERTS)
+        message(STATUS "Forcing QT assertions")
+        add_definitions(-DQT_FORCE_ASSERTS)
 
-    message(STATUS "Using _GLIBCXX_DEBUG")
-    add_definitions(-D_GLIBCXX_DEBUG) # c++ STL debugging
+        message(STATUS "Using _GLIBCXX_DEBUG")
+        add_definitions(-D_GLIBCXX_DEBUG) # c++ STL debugging
+    endif()
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX)

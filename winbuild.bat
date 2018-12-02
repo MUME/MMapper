@@ -21,14 +21,13 @@ GOTO :start
 REM ####
 REM #### COMPILER SELECTION
 REM ####
-FOR /f %%j in ("mingw32-make") DO SET QMAKESPEC=win32-g++
-FOR /f %%j in ("mingw64-make") DO SET QMAKESPEC=win64-g++
-IF /i "%QMAKESPEC%" == "win32-g++" GOTO :mingw
-IF /i "%QMAKESPEC%" == "win64-g++" GOTO :mingw
-IF /i "%QMAKESPEC%" == "win32-msvc" GOTO :msvc
-IF /i "%QMAKESPEC%" == "win64-msvc" GOTO :msvc
-
-IF /i "%QMAKESPEC%" == "" GOTO :noqmakespec
+FOR /f %%j in ("cl.exe") DO SET CL_EXISTS=%%~dp$PATH:j
+IF /i "%CL_EXISTS%" NEQ "" SET QMAKESPEC=win32-msvc && GOTO :msvc
+FOR /f %%j in ("mingw32-make.exe") DO SET MINGW32_EXISTS=%%~dp$PATH:j
+IF /i "%MINGW32_EXISTS%" NEQ "" SET QMAKESPEC=win32-g++ && GOTO :mingw
+FOR /f %%j in ("mingw64-make.exe") DO SET MINGW64_EXISTS=%%~dp$PATH:j
+IF /i "%MINGW64_EXISTS%" NEQ "" SET QMAKESPEC=win64-g++ && GOTO :mingw
+ECHO -- No compiler found
 GOTO :end
 
 REM ####
@@ -36,6 +35,7 @@ REM #### BUILD FOR MINGW
 REM ####
 :mingw
 ECHO -- MingW compiler found
+IF /i "%QMAKESPEC%" == "" GOTO :noqmakespec
 IF NOT EXIST winbuild MKDIR winbuild
 CD winbuild
 cmake ../ -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DCMAKE_INSTALL_PREFIX=. -G "MinGW Makefiles"
@@ -48,6 +48,7 @@ REM #### BUILD FOR MS VISUAL C++
 REM ####
 :msvc
 ECHO -- Microsoft Visual C++ compiler found
+IF /i "%QMAKESPEC%" == "" GOTO :noqmakespec
 IF NOT EXIST winbuild MKDIR winbuild
 CD winbuild
 cmake ../ -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DCMAKE_INSTALL_PREFIX=. -G "NMake Makefiles"
@@ -56,6 +57,7 @@ IF /i "%JOM_EXISTS%" == "" GOTO :nojom
 jom && jom install
 GOTO :success
 :nojom
+SET CL=/MP
 nmake /NOLOGO && nmake /NOLOGO install
 GOTO :success
 

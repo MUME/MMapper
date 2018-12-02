@@ -247,12 +247,19 @@ static void testLazyDog(const bool verbose = false)
     }
 }
 
+#ifdef _MSC_VER
+#define PRETTY_FUNCTION __FUNCTION__
+#else
+#define PRETTY_FUNCTION __PRETTY_FUNCTION__
+#endif
+
 void testStringView()
 {
     testEmpty();
     testLazyDog();
-    std::cout << "Test \"" << __PRETTY_FUNCTION__ << "\" passed.\n" << std::flush;
+    std::cout << "Test \"" << PRETTY_FUNCTION << "\" passed.\n" << std::flush;
     std::cerr << std::flush;
 }
+#undef PRETTY_FUNCTION
 
 } // namespace test
