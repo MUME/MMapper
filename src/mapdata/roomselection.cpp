@@ -28,6 +28,36 @@
 #include <cassert>
 
 #include "../expandoracommon/room.h"
+#include "../mapdata/mapdata.h"
+
+SigRoomSelection::SigRoomSelection(const SharedRoomSelection &selection)
+    : m_sharedRoomSelection{selection}
+{
+    requireValid(); /* throws invalid argument */
+}
+
+RoomSelection &SigRoomSelection::deref() const
+{
+    return ::deref(m_sharedRoomSelection);
+}
+
+const SharedRoomSelection &SigRoomSelection::getShared() const
+{
+    if (auto &p = m_sharedRoomSelection)
+        return p;
+    throw std::runtime_error("null pointer");
+}
+
+RoomSelection::RoomSelection(MapData *admin)
+    : m_admin(admin)
+{
+    assert(m_admin != nullptr);
+}
+
+RoomSelection::~RoomSelection()
+{
+    m_admin->unselect(this);
+}
 
 void RoomSelection::receiveRoom(RoomAdmin *admin, const Room *aRoom)
 {

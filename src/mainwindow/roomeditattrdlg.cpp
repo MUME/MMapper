@@ -645,13 +645,13 @@ void RoomEditAttrDlg::disconnectAll()
 
 const Room *RoomEditAttrDlg::getSelectedRoom()
 {
-    if (m_roomSelection->empty()) {
+    if (!m_roomSelection.isValid() || m_roomSelection.getShared()->empty()) {
         return nullptr;
     }
-    if (m_roomSelection->size() == 1) {
-        return (m_roomSelection->values().front());
+    if (m_roomSelection.getShared()->size() == 1) {
+        return (m_roomSelection.getShared()->values().front());
     }
-    return m_roomSelection->value(
+    return m_roomSelection.getShared()->value(
         RoomId{roomListComboBox->itemData(roomListComboBox->currentIndex()).toUInt()});
 }
 
@@ -689,7 +689,7 @@ void RoomEditAttrDlg::roomListCurrentIndexChanged(int /*unused*/)
     updateDialog(getSelectedRoom());
 }
 
-void RoomEditAttrDlg::setRoomSelection(const RoomSelection *rs, MapData *md, MapCanvas *mc)
+void RoomEditAttrDlg::setRoomSelection(const SigRoomSelection &rs, MapData *md, MapCanvas *mc)
 {
     m_roomSelection = rs;
     m_mapData = md;
@@ -697,7 +697,10 @@ void RoomEditAttrDlg::setRoomSelection(const RoomSelection *rs, MapData *md, Map
 
     roomListComboBox->clear();
 
-    if (rs->size() > 1) {
+    if (!rs.isValid())
+        return;
+
+    if (rs.getShared()->size() > 1) {
         tabWidget->setCurrentWidget(selectionTab);
         roomListComboBox->addItem("All", 0);
         updateDialog(nullptr);
@@ -707,12 +710,12 @@ void RoomEditAttrDlg::setRoomSelection(const RoomSelection *rs, MapData *md, Map
         portUndefRadioButton->setChecked(true);
         lightUndefRadioButton->setChecked(true);
         connectAll();
-    } else if (rs->size() == 1) {
+    } else if (rs.getShared()->size() == 1) {
         tabWidget->setCurrentWidget(attributesTab);
-        updateDialog(m_roomSelection->values().front());
+        updateDialog(m_roomSelection.getShared()->values().front());
     }
 
-    for (auto room : m_roomSelection->values()) {
+    for (auto room : m_roomSelection.getShared()->values()) {
         roomListComboBox->addItem(room->getName(), room->getId().asUint32());
     }
 

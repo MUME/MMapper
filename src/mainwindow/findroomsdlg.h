@@ -44,7 +44,6 @@ class QShortcut;
 class QTreeWidgetItem;
 class QWidget;
 class Room;
-class RoomSelection;
 
 class FindRoomsDlg : public QDialog, private Ui::FindRoomsDlg
 {
@@ -52,7 +51,7 @@ class FindRoomsDlg : public QDialog, private Ui::FindRoomsDlg
 
 signals:
     void center(qint32 x, qint32 y);
-    void newRoomSelection(const RoomSelection *);
+    void newRoomSelection(const SigRoomSelection &);
     void editSelection();
     void log(const QString &, const QString &);
 

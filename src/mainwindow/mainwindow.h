@@ -40,6 +40,7 @@
 #include <QtCore>
 #include <QtGlobal>
 
+#include "../mapdata/roomselection.h"
 #include "../pandoragroup/mmapper2group.h"
 
 class ClientWidget;
@@ -65,7 +66,6 @@ class QProgressDialog;
 class QTextBrowser;
 class QToolBar;
 class QWidget;
-class RoomSelection;
 class WelcomeWidget;
 
 class DockWidget : public QDockWidget
@@ -142,7 +142,7 @@ public slots:
     void onOfflineMode();
     void alwaysOnTop();
 
-    void newRoomSelection(const RoomSelection *);
+    void newRoomSelection(const SigRoomSelection &);
     void newConnectionSelection(ConnectionSelection *);
     void newInfoMarkSelection(InfoMarkSelection *);
     void showContextMenu(const QPoint &);
@@ -184,7 +184,7 @@ private:
     ClientWidget *m_client = nullptr;
     WelcomeWidget *m_launchWidget = nullptr;
 
-    const RoomSelection *m_roomSelection = nullptr;
+    SigRoomSelection m_roomSelection{};
     ConnectionSelection *m_connectionSelection = nullptr;
     InfoMarkSelection *m_infoMarkSelection = nullptr;
 

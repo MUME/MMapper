@@ -75,7 +75,6 @@ class QOpenGLTexture;
 class QWheelEvent;
 class QWidget;
 class Room;
-class RoomSelection;
 class SigParseEvent;
 struct RoomId;
 
@@ -123,8 +122,8 @@ public slots:
     void layerUp();
     void layerDown();
 
-    void setRoomSelection(const RoomSelection *);
-    void clearRoomSelection() { setRoomSelection(nullptr); }
+    void setRoomSelection(const SigRoomSelection &);
+    void clearRoomSelection() { setRoomSelection(SigRoomSelection{}); }
     void setConnectionSelection(ConnectionSelection *);
     void clearConnectionSelection() { setConnectionSelection(nullptr); }
     void setInfoMarkSelection(InfoMarkSelection *);
@@ -148,7 +147,7 @@ signals:
 
     void continuousScroll(qint8, qint8);
 
-    void newRoomSelection(const RoomSelection *);
+    void newRoomSelection(const SigRoomSelection &);
     void newConnectionSelection(ConnectionSelection *);
     void newInfoMarkSelection(InfoMarkSelection *);
 

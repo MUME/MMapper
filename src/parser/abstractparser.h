@@ -42,6 +42,7 @@
 #include "../mapdata/DoorFlags.h"
 #include "../mapdata/ExitFieldVariant.h"
 #include "../mapdata/mmapper2room.h"
+#include "../mapdata/roomselection.h"
 #include "../proxy/telnetfilter.h"
 #include "CommandId.h"
 #include "ConnectedRoomFlags.h"
@@ -55,7 +56,6 @@ class MapData;
 class Room;
 class Coordinate;
 class RoomFilter;
-class RoomSelection;
 
 using CommandQueue = QQueue<CommandIdType>;
 
@@ -74,7 +74,7 @@ protected:
 
 private:
     MapData *m_mapData = nullptr;
-    const RoomSelection *search_rs = nullptr;
+    SigRoomSelection search_rs{};
 
 private:
     using HelpCallback = std::function<void(const std::string &name)>;

@@ -46,7 +46,7 @@ class MapData;
 class MapFrontend;
 class ParseEvent;
 class Room;
-class RoomSelection;
+class SigRoomSelection;
 
 enum class FlagModifyMode { SET, UNSET, TOGGLE };
 
@@ -91,7 +91,7 @@ protected:
 class GroupMapAction final : virtual public MapAction
 {
 public:
-    explicit GroupMapAction(AbstractAction *ex, const RoomSelection *selection);
+    explicit GroupMapAction(AbstractAction *ex, const SigRoomSelection &selection);
 
     void schedule(MapFrontend *in) override { executor->setFrontend(in); }
 

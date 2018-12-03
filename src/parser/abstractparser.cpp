@@ -196,12 +196,7 @@ AbstractParser::AbstractParser(MapData *md, MumeClock *mc, QObject *parent)
     initSpecialCommandMap();
 }
 
-AbstractParser::~AbstractParser()
-{
-    if (search_rs != nullptr) {
-        m_mapData->unselect(search_rs);
-    }
-}
+AbstractParser::~AbstractParser() = default;
 
 void AbstractParser::reset()
 {
@@ -437,7 +432,7 @@ void AbstractParser::parseExits()
         }
     }
 
-    const RoomSelection *rs = m_mapData->select();
+    SigRoomSelection rs = m_mapData->select();
     if (const Room *room = m_mapData->getRoom(getPosition(), rs)) {
         QByteArray cn = enhanceExits(room);
 
@@ -451,7 +446,6 @@ void AbstractParser::parseExits()
             }
         }
     }
-    m_mapData->unselect(rs);
 }
 
 QString AbstractParser::normalizeStringCopy(QString string)
@@ -484,11 +478,10 @@ const Coordinate AbstractParser::getPosition()
 void AbstractParser::emulateExits()
 {
     Coordinate c = getPosition();
-    const RoomSelection *rs = m_mapData->select();
+    SigRoomSelection rs = m_mapData->select();
     if (const Room *room = m_mapData->getRoom(c, rs)) {
         sendRoomExitsInfoToUser(room);
     }
-    m_mapData->unselect(rs);
 }
 
 QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
@@ -496,7 +489,7 @@ QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
     QByteArray cn = " -";
     bool enhancedExits = false;
 
-    const RoomSelection *rs = m_mapData->select();
+    SigRoomSelection rs = m_mapData->select();
     auto sourceId = sourceRoom->getId();
     for (auto i : ALL_EXITS_NESWUD) {
         const Exit &e = sourceRoom->exit(i);
@@ -598,7 +591,6 @@ QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
             }
         }
     }
-    m_mapData->unselect(rs);
 
     if (!enhancedExits) {
         return "\r\n";
@@ -744,15 +736,12 @@ ShortestPathEmitter::~ShortestPathEmitter() = default;
 
 void AbstractParser::searchCommand(const RoomFilter &f)
 {
-    if (search_rs != nullptr) {
-        m_mapData->unselect(search_rs);
-    }
     search_rs = m_mapData->select();
     m_mapData->genericSearch(search_rs, f);
     emit m_mapData->updateCanvas();
     sendToUser(QString("%1 room%2 found.\r\n")
-                   .arg(search_rs->size())
-                   .arg((search_rs->size() == 1) ? "" : "s"));
+                   .arg(search_rs.getShared()->size())
+                   .arg((search_rs.getShared()->size() == 1) ? "" : "s"));
 }
 
 void AbstractParser::dirsCommand(const RoomFilter &f)
@@ -760,23 +749,18 @@ void AbstractParser::dirsCommand(const RoomFilter &f)
     ShortestPathEmitter sp_emitter(*this);
 
     Coordinate c = m_mapData->getPosition();
-    const RoomSelection *rs = m_mapData->select(c);
-    if (!rs->isEmpty()) {
-        const Room *r = rs->values().front();
+    SigRoomSelection rs = m_mapData->select(c);
+    if (!rs.getShared()->isEmpty()) {
+        const Room *r = rs.getShared()->values().front();
 
         m_mapData->shortestPathSearch(r, &sp_emitter, f, 10, 0);
     }
-    m_mapData->unselect(rs);
 }
 
 void AbstractParser::markCurrentCommand()
 {
-    if (search_rs != nullptr) {
-        m_mapData->unselect(search_rs);
-    }
-    search_rs = m_mapData->select();
     Coordinate c = getPosition();
-    m_mapData->select(c);
+    search_rs = m_mapData->select(c);
     emit m_mapData->updateCanvas();
 }
 
@@ -1208,9 +1192,9 @@ void AbstractParser::doOfflineCharacterMove()
 
     Coordinate c;
     c = m_mapData->getPosition();
-    const RoomSelection *rs1 = m_mapData->select(c);
-    if (!rs1->isEmpty()) {
-        const Room *rb = rs1->values().front();
+    SigRoomSelection rs1 = m_mapData->select(c);
+    if (!rs1.getShared()->isEmpty()) {
+        const Room *rb = rs1.getShared()->values().front();
         if (direction == CommandIdType::LOOK) {
             sendRoomInfoToUser(rb);
             sendRoomExitsInfoToUser(rb);
@@ -1246,7 +1230,7 @@ void AbstractParser::doOfflineCharacterMove()
                 }
             }
             if (e.isExit() && !e.outIsEmpty()) {
-                const RoomSelection *rs2 = m_mapData->select();
+                SigRoomSelection rs2 = m_mapData->select();
                 const auto targetId = e.outFirst();
                 if (const Room *r = m_mapData->getRoom(targetId, rs2)) {
                     if (flee) {
@@ -1280,7 +1264,6 @@ void AbstractParser::doOfflineCharacterMove()
                         emit showPath(queue, true);
                     }
                 }
-                m_mapData->unselect(rs2);
             } else {
                 if (!flee || scout) {
                     sendToUser("Alas, you cannot go that way...\r\n");
@@ -1291,7 +1274,6 @@ void AbstractParser::doOfflineCharacterMove()
             }
         }
     }
-    m_mapData->unselect(rs1);
     m_offlineCommandTimer.start();
 }
 
@@ -1346,7 +1328,7 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
     }
     char sunCharacter = (m_mumeClock->getMumeMoment().toTimeOfDay() <= MumeTime::TIME_DAY) ? '*'
                                                                                            : '^';
-    const RoomSelection *rs = m_mapData->select();
+    SigRoomSelection rs = m_mapData->select();
 
     uint exitCount = 0;
     QString etmp = "Exits/emulated:";
@@ -1449,8 +1431,6 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
             sendToUser(note);
         }
     }
-
-    m_mapData->unselect(rs);
 }
 
 void AbstractParser::sendPromptToUser()
@@ -1470,14 +1450,12 @@ void AbstractParser::sendPromptToUser()
 
     // Emulate prompt mode
     Coordinate c = getPosition();
-    const RoomSelection *rs = m_mapData->select();
+    SigRoomSelection rs = m_mapData->select();
 
     if (const Room *r = m_mapData->getRoom(c, rs))
         sendPromptToUser(*r);
     else
         sendPromptToUser('?', '?');
-
-    m_mapData->unselect(rs);
 }
 
 void AbstractParser::sendPromptToUser(const Room &r)
@@ -1694,9 +1672,9 @@ void AbstractParser::printRoomInfo(const RoomFields fieldset)
 
     const Coordinate c = getPosition();
 
-    const RoomSelection *rs = m_mapData->select(c);
-    if (!rs->isEmpty()) {
-        const Room *const r = rs->values().front();
+    SigRoomSelection rs = m_mapData->select(c);
+    if (!rs.getShared()->isEmpty()) {
+        const Room *const r = rs.getShared()->values().front();
 
         // TODO: use QStringBuilder (or std::ostringstream)?
         QString result;
@@ -1716,7 +1694,6 @@ void AbstractParser::printRoomInfo(const RoomFields fieldset)
 
         sendToUser(result);
     }
-    m_mapData->unselect(rs);
 }
 
 void AbstractParser::sendGTellToUser(const QByteArray &ba)

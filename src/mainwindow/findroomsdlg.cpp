@@ -66,27 +66,27 @@ FindRoomsDlg::FindRoomsDlg(MapData *md, QWidget *parent)
         editButton->setEnabled(enabled);
     });
     connect(selectButton, &QAbstractButton::clicked, this, [this]() {
-        const RoomSelection *tmpSel = m_mapData->select();
+        SigRoomSelection tmpSel = m_mapData->select();
         for (const auto &selectedItem : resultTable->selectedItems()) {
             const auto id = RoomId{selectedItem->text(0).toUInt()};
             m_mapData->getRoom(id, tmpSel);
         }
-        if (!tmpSel->isEmpty()) {
+        if (!tmpSel.getShared()->isEmpty()) {
             int64_t avgX = 0;
             int64_t avgY = 0;
-            for (const Room *const r : tmpSel->values()) {
+            for (const Room *const r : tmpSel.getShared()->values()) {
                 const Coordinate &c = r->getPosition();
                 avgX += c.x;
                 avgY += c.y;
             }
-            avgX = avgX / tmpSel->size();
-            avgY = avgY / tmpSel->size();
+            avgX = avgX / tmpSel.getShared()->size();
+            avgY = avgY / tmpSel.getShared()->size();
             emit center(static_cast<qint32>(avgX), static_cast<qint32>(avgY));
         }
         emit newRoomSelection(tmpSel);
     });
     connect(editButton, &QAbstractButton::clicked, this, [this]() {
-        const RoomSelection *tmpSel = m_mapData->select();
+        SigRoomSelection tmpSel = m_mapData->select();
         for (const auto &selectedItem : resultTable->selectedItems()) {
             const auto id = RoomId{selectedItem->text(0).toUInt()};
             m_mapData->getRoom(id, tmpSel);
@@ -108,7 +108,7 @@ FindRoomsDlg::~FindRoomsDlg()
 
 void FindRoomsDlg::findClicked()
 {
-    const RoomSelection *tmpSel = m_mapData->select();
+    SigRoomSelection tmpSel = m_mapData->select();
     Qt::CaseSensitivity cs = caseCheckBox->isChecked() ? Qt::CaseSensitive : Qt::CaseInsensitive;
     QString text = lineEdit->text();
     // remove latin1
@@ -134,7 +134,7 @@ void FindRoomsDlg::findClicked()
     }
     m_mapData->genericSearch(tmpSel, RoomFilter(text, cs, kind));
 
-    for (const Room *const room : tmpSel->values()) {
+    for (const Room *const room : tmpSel.getShared()->values()) {
         QString id;
         id.setNum(room->getId().asUint32());
         QString roomName = room->getName();
@@ -149,7 +149,6 @@ void FindRoomsDlg::findClicked()
     roomsFoundLabel->setText(tr("%1 room%2 found")
                                  .arg(resultTable->topLevelItemCount())
                                  .arg((resultTable->topLevelItemCount() == 1) ? "" : "s"));
-    m_mapData->unselect(tmpSel);
 }
 
 QString FindRoomsDlg::constructToolTip(const Room *r)
@@ -200,18 +199,17 @@ void FindRoomsDlg::itemDoubleClicked(QTreeWidgetItem *const inputItem)
         return;
     }
 
-    const RoomSelection *tmpSel = m_mapData->select();
+    SigRoomSelection tmpSel = m_mapData->select();
     const auto id = RoomId{inputItem->text(0).toUInt()};
     m_mapData->getRoom(id, tmpSel);
-    if (!tmpSel->isEmpty()) {
-        for (const Room *const r : tmpSel->values()) {
+    if (!tmpSel.getShared()->isEmpty()) {
+        for (const Room *const r : tmpSel.getShared()->values()) {
             if (r && r->getId() == id) {
                 const Coordinate &c = r->getPosition();
                 emit center(c.x, c.y); // connects to MapWindow
             }
         }
     }
-    m_mapData->unselect(tmpSel);
     emit log("FindRooms", inputItem->toolTip(0));
 }
 

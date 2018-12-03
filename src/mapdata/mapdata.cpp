@@ -219,100 +219,78 @@ QList<Coordinate> MapData::getPath(const QList<CommandIdType> &dirs)
     return ret;
 }
 
-const RoomSelection *MapData::select(const Coordinate &ulf, const Coordinate &lrb)
+const SigRoomSelection MapData::select(const Coordinate &ulf, const Coordinate &lrb)
 {
     QMutexLocker locker(&mapLock);
-    if (auto *const selection = new RoomSelection(this)) {
-        selections[selection] = selection;
-        lookingForRooms(*selection, ulf, lrb);
-        return selection;
-    }
-    return nullptr;
+    const auto &sig = select();
+    const auto &selection = sig.getShared();
+    lookingForRooms(*selection, ulf, lrb);
+    return sig;
 }
+
 // updates a selection created by the mapdata
-const RoomSelection *MapData::select(const Coordinate &ulf,
-                                     const Coordinate &lrb,
-                                     const RoomSelection *in)
+const SigRoomSelection MapData::select(const Coordinate &ulf,
+                                       const Coordinate &lrb,
+                                       const SigRoomSelection &in)
 {
     QMutexLocker locker(&mapLock);
-    if (RoomSelection *const selection = selections[in]) {
-        lookingForRooms(*selection, ulf, lrb);
-        return selection;
-    }
-    assert(false);
-    return nullptr;
+    auto &selection = in.getShared();
+    lookingForRooms(*selection, ulf, lrb);
+    return in;
 }
 // creates and registers a selection with one room
-const RoomSelection *MapData::select(const Coordinate &pos)
+const SigRoomSelection MapData::select(const Coordinate &pos)
 {
     QMutexLocker locker(&mapLock);
-    if (auto *const selection = new RoomSelection(this)) {
-        selections[selection] = selection;
-        lookingForRooms(*selection, pos);
-        return selection;
-    }
-    assert(false);
-    return nullptr;
+    const auto &sig = select();
+    const auto &selection = sig.getShared();
+    lookingForRooms(*selection, pos);
+    return sig;
 }
 // creates and registers an empty selection
-const RoomSelection *MapData::select()
+const SigRoomSelection MapData::select()
 {
     QMutexLocker locker(&mapLock);
-    if (auto *const selection = new RoomSelection(this)) {
-        selections[selection] = selection;
-        return selection;
-    }
-    assert(false);
-    return nullptr;
+    const auto selection = std::make_shared<RoomSelection>(this);
+    return SigRoomSelection{selection};
 }
-// removes the selection from the internal structures and deletes it
-void MapData::unselect(const RoomSelection *const in)
+
+// removes the selection from the internal structures
+void MapData::unselect(RoomSelection *selection)
 {
     QMutexLocker locker(&mapLock);
-    if (RoomSelection *const selection = selections[in]) {
-        selections.erase(in);
-        QMap<RoomId, const Room *>::iterator i = selection->begin();
-        while (i != selection->end()) {
-            keepRoom(*selection, (i++).key());
-        }
-        delete selection;
-    } else {
-        assert(false);
+    QMap<RoomId, const Room *>::iterator i = selection->begin();
+    while (i != selection->end()) {
+        keepRoom(*selection, (i++).key());
     }
 }
 
 // the room will be inserted in the given selection. the selection must have been created by mapdata
-const Room *MapData::getRoom(const Coordinate &pos, const RoomSelection *const in)
+const Room *MapData::getRoom(const Coordinate &pos, const SigRoomSelection &in)
 {
     QMutexLocker locker(&mapLock);
-    if (RoomSelection *selection = selections[in]) {
-        if (Room *const room = map.get(pos)) {
-            auto id = room->getId();
-            locks[id].insert(selection);
-            selection->insert(id, room);
-            return room;
-        }
-    } else {
-        assert(false);
+    const auto &selection = in.getShared();
+    if (Room *const room = map.get(pos)) {
+        auto id = room->getId();
+        locks[id].insert(selection.get());
+        selection->insert(id, room);
+        return room;
     }
     return nullptr;
 }
 
-const Room *MapData::getRoom(const RoomId id, const RoomSelection *const in)
+const Room *MapData::getRoom(const RoomId id, const SigRoomSelection &in)
 {
     QMutexLocker locker(&mapLock);
-    if (RoomSelection *const selection = selections[in]) {
-        if (Room *const room = roomIndex[id]) {
-            // REVISIT: is roomID the same as id?
-            // Is it okay to assert(roomId == id);
-            const RoomId roomId = room->getId();
+    const auto &selection = in.getShared();
+    if (Room *const room = roomIndex[id]) {
+        // REVISIT: is roomID the same as id?
+        // Is it okay to assert(roomId == id);
+        const RoomId roomId = room->getId();
 
-            locks[roomId].insert(selection);
-            selection->insert(roomId, room);
-            return room;
-        }
-    } else {
-        assert(false);
+        locks[roomId].insert(selection.get());
+        selection->insert(roomId, room);
+        return room;
     }
     return nullptr;
 }
@@ -324,9 +302,10 @@ void MapData::draw(const Coordinate &ulf, const Coordinate &lrb, MapCanvasRoomDr
     map.getRooms(drawer, ulf, lrb);
 }
 
-bool MapData::isMovable(const Coordinate &offset, const RoomSelection *const selection)
+bool MapData::isMovable(const Coordinate &offset, const SigRoomSelection &in)
 {
     QMutexLocker locker(&mapLock);
+    const auto &selection = in.getShared();
     QMap<RoomId, const Room *>::const_iterator i = selection->begin();
 
     while (i != selection->end()) {
@@ -340,49 +319,25 @@ bool MapData::isMovable(const Coordinate &offset, const RoomSelection *const sel
     return true;
 }
 
-void MapData::unselect(RoomId id, const RoomSelection *const in)
+void MapData::unselectRoom(RoomId id, const SigRoomSelection &in)
 {
     QMutexLocker locker(&mapLock);
-    if (RoomSelection *const selection = selections[in]) {
-        keepRoom(*selection, id);
-        selection->remove(id);
-    } else {
-        assert(false);
-    }
+    const auto &selection = in.getShared();
+    keepRoom(*selection, id);
+    selection->remove(id);
 }
 
-// selects the rooms given in "other" for "into"
-const RoomSelection *MapData::select(const RoomSelection *const other, const RoomSelection *const in)
-{
-    QMutexLocker locker(&mapLock);
-    if (RoomSelection *const into = selections[in]) {
-        QMapIterator<RoomId, const Room *> i(*other);
-        while (i.hasNext()) {
-            locks[i.key()].insert(into);
-            into->insert(i.key(), i.value());
-        }
-        return into;
-    }
-    assert(false);
-    return nullptr;
-}
-
-bool MapData::execute(MapAction *const action, const RoomSelection *const unlock)
+bool MapData::execute(MapAction *const action, const SigRoomSelection &unlock)
 {
     QMutexLocker locker(&mapLock);
     action->schedule(this);
     std::list<RoomId> selectedIds;
 
-    RoomSelection *const selection = selections[unlock];
-    if (!selection) {
-        assert(false);
-        return false;
-    }
-
+    const auto &selection = unlock.getShared();
     for (auto i = selection->begin(); i != selection->end();) {
         const Room *room = *i++;
         const auto id = room->getId();
-        locks[id].erase(selection);
+        locks[id].erase(selection.get());
         selectedIds.push_back(id);
     }
     selection->clear();
@@ -396,7 +351,7 @@ bool MapData::execute(MapAction *const action, const RoomSelection *const unlock
 
     for (auto id : selectedIds) {
         if (Room *const room = roomIndex[id]) {
-            locks[id].insert(selection);
+            locks[id].insert(selection.get());
             selection->insert(id, room);
         }
     }
@@ -441,14 +396,11 @@ void MapData::genericSearch(RoomRecipient *recipient, const RoomFilter &f)
     }
 }
 
-void MapData::genericSearch(const RoomSelection *in, const RoomFilter &f)
+void MapData::genericSearch(const SigRoomSelection &in, const RoomFilter &f)
 {
     QMutexLocker locker(&mapLock);
-    if (RoomSelection *const selection = selections[in]) {
-        genericSearch(dynamic_cast<RoomRecipient *>(selection), f);
-    } else {
-        assert(false);
-    }
+    const auto &selection = in.getShared();
+    genericSearch(dynamic_cast<RoomRecipient *>(selection.get()), f);
 }
 
 MapData::~MapData()

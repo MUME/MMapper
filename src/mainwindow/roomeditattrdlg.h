@@ -39,6 +39,7 @@
 #include "../mapdata/ExitFlags.h"
 #include "../mapdata/mmapper2exit.h"
 #include "../mapdata/mmapper2room.h"
+#include "../mapdata/roomselection.h"
 #include "ui_roomeditattrdlg.h"
 
 class MapCanvas;
@@ -48,7 +49,6 @@ class QObject;
 class QShortcut;
 class QWidget;
 class Room;
-class RoomSelection;
 
 class RoomListWidgetItem final : public QListWidgetItem
 {
@@ -67,7 +67,7 @@ signals:
     void mapChanged();
 
 public slots:
-    void setRoomSelection(const RoomSelection *, MapData *, MapCanvas *);
+    void setRoomSelection(const SigRoomSelection &, MapData *, MapCanvas *);
 
     // selection page
     void roomListCurrentIndexChanged(int);
@@ -142,7 +142,7 @@ private:
     static_assert(NUM_ELEMENTS(doorListItems) <= 16u, "");
 #undef NUM_ELEMENTS
 
-    const RoomSelection *m_roomSelection = nullptr;
+    SigRoomSelection m_roomSelection{};
     MapData *m_mapData = nullptr;
     MapCanvas *m_mapCanvas = nullptr;
     QShortcut *m_hiddenShortcut = nullptr;

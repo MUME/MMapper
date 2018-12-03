@@ -39,8 +39,6 @@
 #include "groupselection.h"
 #include "mmapper2group.h"
 
-class RoomSelection;
-
 static constexpr const int GROUP_COLUMN_COUNT = 8;
 static_assert(GROUP_COLUMN_COUNT == static_cast<int>(GroupModel::ColumnType::ROOM_NAME) + 1,
               "# of columns");
@@ -114,11 +112,10 @@ QVariant GroupModel::dataForCharacter(CGroupChar *const character, ColumnType co
             QString roomName = "Unknown";
             if (character->pos != DEFAULT_ROOMID && character->pos != INVALID_ROOMID
                 && !m_map->isEmpty() && m_mapLoaded) {
-                const RoomSelection *roomSelection = m_map->select();
+                SigRoomSelection roomSelection = m_map->select();
                 if (const Room *r = m_map->getRoom(character->pos, roomSelection)) {
                     roomName = r->getName();
                 }
-                m_map->unselect(roomSelection);
             }
             return roomName;
         }

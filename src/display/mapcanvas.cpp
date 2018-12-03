@@ -205,9 +205,7 @@ MapCanvas::~MapCanvas()
         delete std::exchange(x, nullptr);
     delete std::exchange(m_textures.update, nullptr);
 
-    if (auto tmp = std::exchange(m_roomSelection, nullptr)) {
-        m_data->unselect(tmp);
-    }
+    m_roomSelection = SigRoomSelection{};
 
     delete std::exchange(m_connectionSelection, nullptr);
 
@@ -272,24 +270,12 @@ void MapCanvas::setCanvasMouseMode(CanvasMouseMode mode)
     update();
 }
 
-void MapCanvas::setRoomSelection(const RoomSelection *selection)
+void MapCanvas::setRoomSelection(const SigRoomSelection &selection)
 {
-    // Clear old room selection
-    if (m_roomSelection != nullptr) {
-        m_data->unselect(m_roomSelection);
-        m_roomSelection = nullptr;
-    }
+    m_roomSelection = selection;
 
-    // Only update room selection if its populated
-    if (selection != nullptr && selection->isEmpty()) {
-        m_data->unselect(selection);
-        selection = nullptr;
-    } else {
-        m_roomSelection = selection;
-    }
-
-    if (m_roomSelection)
-        qDebug() << "Updated selection with" << m_roomSelection->size() << "rooms";
+    if (m_roomSelection.isValid())
+        qDebug() << "Updated selection with" << m_roomSelection.getShared()->size() << "rooms";
     else
         qDebug() << "Cleared room selection";
 
@@ -386,21 +372,18 @@ void MapCanvas::wheelEvent(QWheelEvent *const event)
 
 void MapCanvas::forceMapperToRoom()
 {
-    const RoomSelection *tmpSel = nullptr;
-    if (m_roomSelection != nullptr) {
-        tmpSel = m_roomSelection;
-        m_roomSelection = nullptr;
+    if (m_roomSelection.isValid()) {
         emit newRoomSelection(m_roomSelection);
     } else {
-        tmpSel = m_data->select(Coordinate(GLtoMap(m_sel1.x), GLtoMap(m_sel1.y), m_sel1.layer));
+        m_roomSelection = m_data->select(
+            Coordinate(GLtoMap(m_sel1.x), GLtoMap(m_sel1.y), m_sel1.layer));
     }
-    if (tmpSel->size() == 1) {
-        const RoomId id = tmpSel->values().front()->getId();
+    if (m_roomSelection.getShared()->size() == 1) {
+        const RoomId id = m_roomSelection.getShared()->values().front()->getId();
         // Force update rooms only if we're in play or mapping mode
         const bool update = getConfig().general.mapMode != MapMode::OFFLINE;
         emit setCurrentRoom(id, update);
     }
-    m_data->unselect(tmpSel);
     update();
 }
 
@@ -432,13 +415,11 @@ bool MapCanvas::event(QEvent *event)
 
 void MapCanvas::createRoom()
 {
-    const RoomSelection *tmpSel = m_data->select(
-        Coordinate(GLtoMap(m_sel1.x), GLtoMap(m_sel1.y), m_sel1.layer));
-    if (tmpSel->isEmpty()) {
+    m_roomSelection = m_data->select(Coordinate(GLtoMap(m_sel1.x), GLtoMap(m_sel1.y), m_sel1.layer));
+    if (m_roomSelection.getShared()->isEmpty()) {
         Coordinate c = Coordinate(GLtoMap(m_sel1.x), GLtoMap(m_sel1.y), m_currentLayer);
         m_data->createEmptyRoom(c);
     }
-    m_data->unselect(tmpSel);
     update();
 }
 
@@ -468,15 +449,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
             if (m_infoMarkSelection == nullptr) {
                 // Select the room under the cursor
                 Coordinate c = Coordinate(GLtoMap(m_sel1.x), GLtoMap(m_sel1.y), m_sel1.layer);
-                if (m_roomSelection != nullptr) {
-                    m_data->unselect(m_roomSelection);
-                    m_roomSelection = nullptr;
-                }
                 m_roomSelection = m_data->select(c);
-                if (m_roomSelection->isEmpty()) {
-                    m_data->unselect(m_roomSelection);
-                    m_roomSelection = nullptr;
-                }
                 emit newRoomSelection(m_roomSelection);
             }
 
@@ -523,10 +496,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
         // Force mapper to room shortcut
         if (((event->buttons() & Qt::LeftButton) != 0u) && ((event->modifiers() & Qt::CTRL) != 0u)
             && ((event->modifiers() & Qt::ALT) != 0u)) {
-            if (m_roomSelection != nullptr) {
-                m_data->unselect(m_roomSelection);
-                m_roomSelection = nullptr;
-            }
+            clearRoomSelection();
             m_ctrlPressed = true;
             m_altPressed = true;
             forceMapperToRoom();
@@ -535,19 +505,15 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
         // Cancel
         if ((event->buttons() & Qt::RightButton) != 0u) {
             m_selectedArea = false;
-            if (m_roomSelection != nullptr) {
-                m_data->unselect(m_roomSelection);
-            }
-            m_roomSelection = nullptr;
-            emit newRoomSelection(m_roomSelection);
+            clearRoomSelection();
         }
         // Select rooms
         if ((event->buttons() & Qt::LeftButton) != 0u) {
             if (event->modifiers() != Qt::CTRL) {
-                const RoomSelection *tmpSel = m_data->select(
+                SigRoomSelection tmpSel = m_data->select(
                     Coordinate(GLtoMap(m_sel1.x), GLtoMap(m_sel1.y), m_sel1.layer));
-                if ((m_roomSelection != nullptr) && !tmpSel->empty()
-                    && m_roomSelection->contains(tmpSel->keys().front())) {
+                if ((m_roomSelection.isValid()) && !tmpSel.getShared()->empty()
+                    && m_roomSelection.getShared()->contains(tmpSel.getShared()->keys().front())) {
                     m_roomSelectionMove.inUse = true;
                     m_roomSelectionMove.x = 0;
                     m_roomSelectionMove.y = 0;
@@ -555,13 +521,8 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
                 } else {
                     m_roomSelectionMove.inUse = false;
                     m_selectedArea = false;
-                    if (m_roomSelection != nullptr) {
-                        m_data->unselect(m_roomSelection);
-                    }
-                    m_roomSelection = nullptr;
-                    emit newRoomSelection(m_roomSelection);
+                    clearRoomSelection();
                 }
-                m_data->unselect(tmpSel);
             } else {
                 m_ctrlPressed = true;
             }
@@ -875,7 +836,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                                     m_roomSelection);
                 }
             } else {
-                if (m_roomSelection == nullptr) {
+                if (!m_roomSelection.isValid()) {
                     // add rooms to default selections
                     m_roomSelection = m_data->select(Coordinate(GLtoMap(m_sel1.x),
                                                                 GLtoMap(m_sel1.y),
@@ -885,29 +846,27 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                                                                 m_sel2.layer));
                 } else {
                     // add or remove rooms to/from default selection
-                    const RoomSelection *tmpSel = m_data->select(Coordinate(GLtoMap(m_sel1.x),
-                                                                            GLtoMap(m_sel1.y),
-                                                                            m_sel1.layer),
-                                                                 Coordinate(GLtoMap(m_sel2.x),
-                                                                            GLtoMap(m_sel2.y),
-                                                                            m_sel2.layer));
-                    QList<RoomId> keys = tmpSel->keys();
+                    SigRoomSelection tmpSel = m_data->select(Coordinate(GLtoMap(m_sel1.x),
+                                                                        GLtoMap(m_sel1.y),
+                                                                        m_sel1.layer),
+                                                             Coordinate(GLtoMap(m_sel2.x),
+                                                                        GLtoMap(m_sel2.y),
+                                                                        m_sel2.layer));
+                    QList<RoomId> keys = tmpSel.getShared()->keys();
                     for (RoomId key : keys) {
-                        if (m_roomSelection->contains(key)) {
-                            m_data->unselect(key, m_roomSelection);
+                        if (m_roomSelection.getShared()->contains(key)) {
+                            m_data->unselectRoom(key, m_roomSelection);
                         } else {
                             m_data->getRoom(key, m_roomSelection);
                         }
                     }
-                    m_data->unselect(tmpSel);
                 }
 
-                if (m_roomSelection->empty()) {
-                    m_data->unselect(m_roomSelection);
-                    m_roomSelection = nullptr;
+                if (m_roomSelection.getShared()->empty()) {
+                    clearRoomSelection();
                 } else {
-                    if (m_roomSelection->size() == 1) {
-                        const Room *r = m_roomSelection->values().front();
+                    if (m_roomSelection.getShared()->size() == 1) {
+                        const Room *r = m_roomSelection.getShared()->values().front();
                         qint32 x = r->getPosition().x;
                         qint32 y = r->getPosition().y;
 
@@ -980,7 +939,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                 ExitDirection dir2 = m_connectionSelection->getSecond().direction;
 
                 if (r1 != nullptr && r2 != nullptr) {
-                    const RoomSelection *tmpSel = m_data->select();
+                    SigRoomSelection tmpSel = m_data->select();
                     m_data->getRoom(r1->getId(), tmpSel);
                     m_data->getRoom(r2->getId(), tmpSel);
 
@@ -999,8 +958,6 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                         m_connectionSelection->setFirst(m_data, r1->getId(), dir1);
                         m_connectionSelection->setSecond(m_data, r2->getId(), dir2);
                     }
-
-                    m_data->unselect(tmpSel);
                 }
             }
 
@@ -1263,11 +1220,10 @@ void MapCanvas::drawGroupCharacters()
         if (id == DEFAULT_ROOMID || id == INVALID_ROOMID)
             continue;
         if (character->getName() != getConfig().groupManager.charName) {
-            const RoomSelection *const roomSelection = m_data->select();
+            SigRoomSelection roomSelection = m_data->select();
             if (const Room *const r = m_data->getRoom(id, roomSelection)) {
                 drawCharacter(r->getPosition(), character->getColor());
             }
-            m_data->unselect(id, roomSelection);
         }
     }
     group->unselect(selection);
@@ -1534,10 +1490,10 @@ void MapCanvas::paintSelectedConnection()
 
 void MapCanvas::paintSelection(const GLdouble len)
 {
-    if (m_roomSelection == nullptr)
+    if (!m_roomSelection.isValid())
         return;
 
-    QList<const Room *> rooms = m_roomSelection->values();
+    QList<const Room *> rooms = m_roomSelection.getShared()->values();
     for (const auto room : rooms) {
         paintSelectedRoom(len, room);
     }

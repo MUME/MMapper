@@ -37,6 +37,7 @@
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/mmapper2room.h"
+#include "../mapdata/roomselection.h"
 #include "OpenGL.h"
 #include "RoadIndex.h"
 #include "connectionselection.h"
@@ -45,7 +46,6 @@
 class ConnectionSelection;
 class MapData;
 class PrespammedPath;
-class RoomSelection;
 class InfoMarkSelection;
 
 /* REVISIT: move this somewhere else? */
@@ -140,7 +140,7 @@ struct MapCanvasData
     } m_sel1{}, m_sel2{}, m_moveBackup{};
 
     bool m_selectedArea = false; // no area selected at start time
-    const RoomSelection *m_roomSelection = nullptr;
+    SigRoomSelection m_roomSelection{};
 
     struct
     {

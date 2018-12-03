@@ -59,8 +59,9 @@ class QObject;
 class Room;
 class RoomFilter;
 class RoomRecipient;
-class RoomSelection;
 class ShortestPathRecipient;
+class SigRoomSelection;
+class RoomSelection;
 
 using ConstRoomList = QList<const Room *>;
 using RoomVector = QVector<Room *>;
@@ -70,37 +71,38 @@ using MarkerListIterator = QLinkedListIterator<InfoMark *>;
 class MapData : public MapFrontend
 {
     Q_OBJECT
-    friend class CustomAction;
+    friend class RoomSelection;
+
+protected:
+    // removes the selection from the internal structures
+    void unselect(RoomSelection *selection);
 
 public:
     explicit MapData(QObject *parent = nullptr);
     virtual ~MapData() override;
 
-    const RoomSelection *select(const Coordinate &ulf, const Coordinate &lrb);
+    // creates and registers a selection created by mapdata
+    const SigRoomSelection select(const Coordinate &ulf, const Coordinate &lrb);
     // updates a selection created by the mapdata
-    const RoomSelection *select(const Coordinate &ulf,
-                                const Coordinate &lrb,
-                                const RoomSelection *in);
+    const SigRoomSelection select(const Coordinate &ulf,
+                                  const Coordinate &lrb,
+                                  const SigRoomSelection &in);
     // creates and registers a selection with one room
-    const RoomSelection *select(const Coordinate &pos);
+    const SigRoomSelection select(const Coordinate &pos);
     // creates and registers an empty selection
-    const RoomSelection *select();
+    const SigRoomSelection select();
 
-    // selects the rooms given in "other" for "into"
-    const RoomSelection *select(const RoomSelection *other, const RoomSelection *in);
-    // removes the selection from the internal structures and deletes it
-    void unselect(const RoomSelection *in);
     // unselects a room from a selection
-    void unselect(RoomId id, const RoomSelection *in);
+    void unselectRoom(RoomId id, const SigRoomSelection &in);
 
     // the room will be inserted in the given selection. the selection must have been created by mapdata
-    const Room *getRoom(const Coordinate &pos, const RoomSelection *in);
-    const Room *getRoom(RoomId id, const RoomSelection *in);
+    const Room *getRoom(const Coordinate &pos, const SigRoomSelection &in);
+    const Room *getRoom(RoomId id, const SigRoomSelection &in);
 
     void draw(const Coordinate &ulf, const Coordinate &lrb, MapCanvasRoomDrawer &screen);
-    bool isMovable(const Coordinate &offset, const RoomSelection *selection);
+    bool isMovable(const Coordinate &offset, const SigRoomSelection &selection);
 
-    bool execute(MapAction *action, const RoomSelection *unlock);
+    bool execute(MapAction *action, const SigRoomSelection &unlock);
 
     Coordinate &getPosition() { return m_position; }
     MarkerList &getMarkersList() { return m_markers; }
@@ -120,7 +122,7 @@ public:
 
     // search for matches
     void genericSearch(RoomRecipient *recipient, const RoomFilter &f);
-    void genericSearch(const RoomSelection *in, const RoomFilter &f);
+    void genericSearch(const SigRoomSelection &in, const RoomFilter &f);
 
     void shortestPathSearch(const Room *origin,
                             ShortestPathRecipient *recipient,
@@ -160,7 +162,6 @@ public slots:
     void setPosition(const Coordinate &pos) { m_position = pos; }
 
 protected:
-    std::map<const RoomSelection *, RoomSelection *> selections{};
     MarkerList m_markers{};
     // changed data?
     bool m_dataChanged = false;

@@ -44,10 +44,10 @@
 #include "ExitFlags.h"
 #include "roomselection.h"
 
-GroupMapAction::GroupMapAction(AbstractAction *const action, const RoomSelection *const selection)
+GroupMapAction::GroupMapAction(AbstractAction *const action, const SigRoomSelection &selection)
     : executor(action)
 {
-    QMapIterator<RoomId, const Room *> roomIter(*selection);
+    QMapIterator<RoomId, const Room *> roomIter(*selection.getShared());
     while (roomIter.hasNext()) {
         RoomId rid = roomIter.next().key();
         affectedRooms.insert(rid);
