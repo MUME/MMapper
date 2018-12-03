@@ -1213,7 +1213,7 @@ void MapCanvas::drawGroupCharacters()
         return;
     }
 
-    GroupSelection *const selection = group->selectAll();
+    auto selection = group->selectAll();
     for (auto &character : *selection) {
         const RoomId id = character->getPosition();
         // Do not draw the character if they're in an "Unknown" room
@@ -1226,7 +1226,6 @@ void MapCanvas::drawGroupCharacters()
             }
         }
     }
-    group->unselect(selection);
 }
 
 void MapCanvas::drawCharacter(const Coordinate &c, const QColor &color)

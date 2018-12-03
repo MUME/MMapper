@@ -441,7 +441,7 @@ void GroupServer::parseLoginInformation(GroupSocket *socket, const QVariantMap &
 
 void GroupServer::sendGroupInformation(GroupSocket *const socket)
 {
-    GroupSelection *selection = getGroup()->selectAll();
+    auto selection = getGroup()->selectAll();
     for (const auto &character : *selection) {
         // Only send group information for other characters
         if (character->getName() == socket->getName()) {
@@ -453,12 +453,11 @@ void GroupServer::sendGroupInformation(GroupSocket *const socket)
         }
         CGroupCommunicator::sendCharUpdate(socket, character->toVariantMap());
     }
-    getGroup()->unselect(selection);
 }
 
 void GroupServer::sendRemoveUserNotification(GroupSocket *const socket, const QByteArray &name)
 {
-    GroupSelection *selection = getGroup()->selectByName(name);
+    auto selection = getGroup()->selectByName(name);
     for (const auto &character : *selection) {
         if (character->getName() == name) {
             const QVariantMap &map = character->toVariantMap();
@@ -466,7 +465,6 @@ void GroupServer::sendRemoveUserNotification(GroupSocket *const socket, const QB
             sendToAllExceptOne(socket, message);
         }
     }
-    getGroup()->unselect(selection);
 }
 
 void GroupServer::sendGroupTellMessage(const QVariantMap &root)

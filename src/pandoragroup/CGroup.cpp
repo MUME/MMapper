@@ -26,6 +26,7 @@
 #include "CGroup.h"
 
 #include <cassert>
+#include <memory>
 #include <QByteArray>
 #include <QMessageLogContext>
 #include <QMutex>
@@ -93,20 +94,20 @@ void CGroup::releaseCharacters(GroupRecipient *sender)
     }
 }
 
-GroupSelection *CGroup::selectAll()
+std::unique_ptr<GroupSelection> CGroup::selectAll()
 {
     QMutexLocker locker(&characterLock);
-    auto *selection = new GroupSelection(this);
-    locks.insert(selection);
+    std::unique_ptr<GroupSelection> selection(new GroupSelection(this));
+    locks.insert(selection.get());
     selection->receiveCharacters(this, charIndex);
     return selection;
 }
 
-GroupSelection *CGroup::selectByName(const QByteArray &name)
+std::unique_ptr<GroupSelection> CGroup::selectByName(const QByteArray &name)
 {
     QMutexLocker locker(&characterLock);
-    auto *selection = new GroupSelection(this);
-    locks.insert(selection);
+    std::unique_ptr<GroupSelection> selection(new GroupSelection(this));
+    locks.insert(selection.get());
     CGroupChar *character = getCharByName(name);
     if (character != nullptr) {
         selection->receiveCharacters(this, {character});

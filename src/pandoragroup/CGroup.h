@@ -27,6 +27,7 @@
 #ifndef CGROUP_H_
 #define CGROUP_H_
 
+#include <memory>
 #include <set>
 #include <vector>
 #include <QByteArray>
@@ -70,8 +71,8 @@ public:
         releaseCharacters(s);
         delete s;
     }
-    GroupSelection *selectAll();
-    GroupSelection *selectByName(const QByteArray &);
+    std::unique_ptr<GroupSelection> selectAll();
+    std::unique_ptr<GroupSelection> selectByName(const QByteArray &);
 
 public slots:
     void scheduleAction(GroupAction *action);

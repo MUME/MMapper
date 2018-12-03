@@ -58,10 +58,8 @@ void GroupModel::resetModel()
 int GroupModel::rowCount(const QModelIndex & /* parent */) const
 {
     if (auto group = m_group->getGroup()) {
-        GroupSelection *selection = group->selectAll();
-        int size = static_cast<int>(selection->size());
-        group->unselect(selection);
-        return size;
+        auto selection = group->selectAll();
+        return static_cast<int>(selection->size());
     }
     return 0;
 }
@@ -152,7 +150,7 @@ QVariant GroupModel::data(const QModelIndex &index, int role) const
         return data;
 
     if (auto group = m_group->getGroup()) {
-        GroupSelection *selection = group->selectAll();
+        auto selection = group->selectAll();
 
         // Map row to character
         if (index.row() < static_cast<int>(selection->size())) {
@@ -160,8 +158,6 @@ QVariant GroupModel::data(const QModelIndex &index, int role) const
             ColumnType column = static_cast<ColumnType>(index.column());
             data = dataForCharacter(character, column, role);
         }
-
-        group->unselect(selection);
     }
     return data;
 }
@@ -235,13 +231,12 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
 
         // Identify kick target
         if (auto group = m_group->getGroup()) {
-            GroupSelection *selection = group->selectAll();
+            auto selection = group->selectAll();
             // Map row to character
             if (index.row() < static_cast<int>(selection->size())) {
                 CGroupChar *character = selection->at(index.row());
                 selectedCharacter = character->getName();
             }
-            group->unselect(selection);
 
             // Build Context menu
             m_kick->setText(QString("&Kick %1").arg(selectedCharacter.constData()));

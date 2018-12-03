@@ -33,7 +33,10 @@ GroupSelection::GroupSelection(GroupAdmin *admin)
     : m_admin(admin)
 {}
 
-GroupSelection::~GroupSelection() = default;
+GroupSelection::~GroupSelection()
+{
+    m_admin->releaseCharacters(this);
+}
 
 /**
  * @brief CGroupSelection::receiveCharacters
