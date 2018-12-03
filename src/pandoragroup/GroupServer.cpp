@@ -376,7 +376,7 @@ void GroupServer::parseLoginInformation(GroupSocket *socket, const QVariantMap &
             if (secretStr.compare(target->getSecret(), Qt::CaseInsensitive) == 0) {
                 if (!requireAuth || validCert) {
                     kickConnection(target, "Someone reconnected to the server using your secret!");
-                    return;
+                    break;
                 } else {
                     kickConnection(socket, "Host does not trust your compromised secret.");
                     return;
