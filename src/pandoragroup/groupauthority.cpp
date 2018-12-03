@@ -240,6 +240,8 @@ static inline QString getMetadataKey(const GroupSecret &secret, const GroupMetad
             return "ip";
         case GroupMetadata::LAST_LOGIN:
             return "last_login";
+        default:
+            abort();
         }
     };
     return QString("%1-%2").arg(get_prefix(meta)).arg(secret.toLower().constData());
