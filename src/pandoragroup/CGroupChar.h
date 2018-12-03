@@ -33,7 +33,7 @@
 
 #include "../global/roomid.h"
 
-class CGroupChar
+class CGroupChar final
 {
 public:
     enum class CharacterStates {
@@ -66,28 +66,8 @@ public:
     bool updateFromVariantMap(const QVariantMap &);
     void setPosition(RoomId id) { pos = id; }
     RoomId getPosition() const { return pos; }
-    static QByteArray getNameFromVariantMap(const QVariantMap &);
+    static QByteArray getNameFromUpdateChar(const QVariantMap &);
 
-private:
-    QByteArray name{};
-    QColor color{};
-
-public:
-    CGroupChar(const CGroupChar &) = delete;
-    CGroupChar &operator=(const CGroupChar &) = delete;
-};
-
-class CGroupLocalChar final : public CGroupChar
-{
-public:
-    explicit CGroupLocalChar() = default;
-    virtual ~CGroupLocalChar();
-
-    QByteArray textHP{};
-    QByteArray textMoves{};
-    QByteArray textMana{};
-
-    // REVISIT: Why does this need to extend CGroupChar?
     void setScore(int _hp, int _maxhp, int _mana, int _maxmana, int _moves, int _maxmoves)
     {
         hp = _hp;
@@ -98,12 +78,13 @@ public:
         maxmoves = _maxmoves;
     }
 
-    void setTextScore(QByteArray hp, QByteArray mana, QByteArray moves)
-    {
-        textHP = hp;
-        textMana = mana;
-        textMoves = moves;
-    }
+private:
+    QByteArray name{};
+    QColor color{};
+
+public:
+    CGroupChar(const CGroupChar &) = delete;
+    CGroupChar &operator=(const CGroupChar &) = delete;
 };
 
 #endif /*CGROUPCHAR_H_*/

@@ -158,14 +158,16 @@ set(mmapper_SRCS
     mpi/remoteeditwidget.h
     pandoragroup/CGroupChar.cpp
     pandoragroup/CGroupChar.h
-    pandoragroup/CGroupClient.cpp
-    pandoragroup/CGroupClient.h
     pandoragroup/CGroupCommunicator.cpp
     pandoragroup/CGroupCommunicator.h
     pandoragroup/CGroup.cpp
     pandoragroup/CGroup.h
-    pandoragroup/CGroupServer.cpp
-    pandoragroup/CGroupServer.h
+    pandoragroup/GroupClient.cpp
+    pandoragroup/GroupClient.h
+    pandoragroup/GroupServer.cpp
+    pandoragroup/GroupServer.h
+    pandoragroup/GroupSocket.cpp
+    pandoragroup/GroupSocket.h
     pandoragroup/groupaction.cpp
     pandoragroup/groupaction.h
     pandoragroup/groupauthority.cpp

@@ -31,7 +31,7 @@
 
 #include "../configuration/configuration.h"
 #include "../global/enums.h"
-#include "CGroupClient.h"
+#include "GroupSocket.h"
 
 #ifndef MMAPPER_NO_OPENSSL
 #include <openssl/bio.h>
@@ -338,7 +338,7 @@ bool GroupAuthority::validSecret(const GroupSecret &secret) const
     return model.stringList().contains(secret.toLower());
 }
 
-bool GroupAuthority::validCertificate(const CGroupClient *connection) const
+bool GroupAuthority::validCertificate(const GroupSocket *connection) const
 {
     const GroupSecret &targetSecret = connection->getSecret();
     const QString &storedCertificate = getMetadata(targetSecret, GroupMetadata::CERTIFICATE);

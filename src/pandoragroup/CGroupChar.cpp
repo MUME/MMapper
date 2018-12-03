@@ -44,8 +44,6 @@ KEY stateKey = "state";
 CGroupChar::CGroupChar() = default;
 CGroupChar::~CGroupChar() = default;
 
-CGroupLocalChar::~CGroupLocalChar() = default;
-
 const QVariantMap CGroupChar::toVariantMap() const
 {
     QVariantMap playerData;
@@ -207,7 +205,7 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
 #undef TRY_UPDATE_STRING
 }
 
-QByteArray CGroupChar::getNameFromVariantMap(const QVariantMap &data)
+QByteArray CGroupChar::getNameFromUpdateChar(const QVariantMap &data)
 {
     if (!data.contains(playerDataKey) || !data[playerDataKey].canConvert(QMetaType::QVariantMap)) {
         qWarning() << "Unable to find" << QuotedString(playerDataKey) << "in map" << data;

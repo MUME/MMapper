@@ -50,7 +50,7 @@ void AddCharacter::exec()
  * @param Variant map representing which character to delete
  */
 RemoveCharacter::RemoveCharacter(const QVariantMap &map)
-    : RemoveCharacter(CGroupChar::getNameFromVariantMap(map))
+    : RemoveCharacter(CGroupChar::getNameFromUpdateChar(map))
 {}
 
 /**

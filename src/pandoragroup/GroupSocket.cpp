@@ -23,7 +23,7 @@
 **
 ************************************************************************/
 
-#include "CGroupClient.h"
+#include "GroupSocket.h"
 
 #include <cassert>
 #include <QByteArray>
@@ -40,7 +40,7 @@
 static constexpr const bool DEBUG = false;
 static constexpr const auto FIVE_SECOND_TIMEOUT = 5000;
 
-CGroupClient::CGroupClient(GroupAuthority *authority, QObject *parent)
+GroupSocket::GroupSocket(GroupAuthority *authority, QObject *parent)
     : QObject(parent)
     , socket{this}
     , timer{this}
@@ -48,7 +48,7 @@ CGroupClient::CGroupClient(GroupAuthority *authority, QObject *parent)
 {
     timer.setInterval(FIVE_SECOND_TIMEOUT);
     timer.setSingleShot(true);
-    connect(&timer, &QTimer::timeout, this, &CGroupClient::onTimeout);
+    connect(&timer, &QTimer::timeout, this, &GroupSocket::onTimeout);
 
     auto config = socket.sslConfiguration();
     config.setCaCertificates({});
@@ -76,23 +76,23 @@ CGroupClient::CGroupClient(GroupAuthority *authority, QObject *parent)
         timer.stop();
         emit connectionClosed(this);
     });
-    connect(&socket, &QIODevice::readyRead, this, &CGroupClient::onReadyRead);
+    connect(&socket, &QIODevice::readyRead, this, &GroupSocket::onReadyRead);
     connect(&socket,
             static_cast<void (QAbstractSocket::*)(QAbstractSocket::SocketError)>(
                 &QAbstractSocket::error),
             this,
-            &CGroupClient::onError);
-    connect(&socket, &QSslSocket::peerVerifyError, this, &CGroupClient::onPeerVerifyError);
+            &GroupSocket::onError);
+    connect(&socket, &QSslSocket::peerVerifyError, this, &GroupSocket::onPeerVerifyError);
 }
 
-CGroupClient::~CGroupClient()
+GroupSocket::~GroupSocket()
 {
     timer.stop();
     socket.disconnectFromHost();
     qDebug() << "Destructed CGroupClient" << socket.socketDescriptor();
 }
 
-void CGroupClient::connectToHost()
+void GroupSocket::connectToHost()
 {
     if (socket.state() != QAbstractSocket::UnconnectedState) {
         socket.abort();
@@ -106,7 +106,7 @@ void CGroupClient::connectToHost()
     socket.connectToHost(remoteHost, remotePort);
 }
 
-void CGroupClient::disconnectFromHost()
+void GroupSocket::disconnectFromHost()
 {
     timer.stop();
     if (socket.state() != QAbstractSocket::UnconnectedState) {
@@ -117,7 +117,7 @@ void CGroupClient::disconnectFromHost()
     }
 }
 
-void CGroupClient::setSocket(qintptr socketDescriptor)
+void GroupSocket::setSocket(qintptr socketDescriptor)
 {
     if (!socket.setSocketDescriptor(socketDescriptor)) {
         qWarning() << "Connection failed. Native socket not recognized.";
@@ -130,7 +130,7 @@ void CGroupClient::setSocket(qintptr socketDescriptor)
     emit connectionEstablished(this);
 }
 
-void CGroupClient::setProtocolState(const ProtocolState val)
+void GroupSocket::setProtocolState(const ProtocolState val)
 {
     timer.stop();
     if (DEBUG)
@@ -156,7 +156,7 @@ void CGroupClient::setProtocolState(const ProtocolState val)
     }
 }
 
-void CGroupClient::onError(QAbstractSocket::SocketError e)
+void GroupSocket::onError(QAbstractSocket::SocketError e)
 {
     // Disconnecting and timeouts are not an error
     if (e != QAbstractSocket::RemoteHostClosedError && e != QAbstractSocket::SocketTimeoutError) {
@@ -166,7 +166,7 @@ void CGroupClient::onError(QAbstractSocket::SocketError e)
     }
 }
 
-void CGroupClient::onPeerVerifyError(const QSslError &error)
+void GroupSocket::onPeerVerifyError(const QSslError &error)
 {
     // Ignore expected warnings
     if (error.error() == QSslError::SelfSignedCertificate)
@@ -177,7 +177,7 @@ void CGroupClient::onPeerVerifyError(const QSslError &error)
                << error.errorString();
 }
 
-void CGroupClient::onTimeout()
+void GroupSocket::onTimeout()
 {
     switch (socket.state()) {
     case QAbstractSocket::ConnectedState:
@@ -219,7 +219,7 @@ void CGroupClient::onTimeout()
     }
 }
 
-void CGroupClient::onReadyRead()
+void GroupSocket::onReadyRead()
 {
     io::readAllAvailable(socket, ioBuffer, [this](const QByteArray &byteArray) {
         buffer += byteArray;
@@ -229,7 +229,7 @@ void CGroupClient::onReadyRead()
     });
 }
 
-void CGroupClient::cutMessageFromBuffer()
+void GroupSocket::cutMessageFromBuffer()
 {
     // REVISIT: Turn this into a state machine
     if (currentMessageLen == 0) {
@@ -259,7 +259,7 @@ void CGroupClient::cutMessageFromBuffer()
 /*
  * Protocol is <message length as string> <space> <message XML>
  */
-void CGroupClient::sendData(const QByteArray &data)
+void GroupSocket::sendData(const QByteArray &data)
 {
     QByteArray buff;
     QString len = QString("%1 ").arg(data.size());

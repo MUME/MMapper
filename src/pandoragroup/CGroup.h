@@ -40,8 +40,7 @@
 #include "groupselection.h"
 
 class CGroupChar;
-class CGroupLocalChar;
-class CGroupClient;
+class GroupSocket;
 class CGroupCommunicator;
 class GroupAction;
 
@@ -54,8 +53,8 @@ class CGroup final : public QObject, public GroupAdmin
     friend class RenameCharacter;
     friend class UpdateCharacter;
     friend class ResetCharacters;
-    friend class CGroupClientCommunicator;
-    friend class CGroupServerCommunicator;
+    friend class GroupClient;
+    friend class GroupServer;
     friend class Mmapper2Group;
 
 public:
@@ -84,7 +83,7 @@ signals:
 protected:
     void executeActions();
 
-    CGroupLocalChar *getSelf() { return self; }
+    CGroupChar *getSelf() { return self; }
     void renameChar(const QVariantMap &map);
     void resetChars();
     void updateChar(const QVariantMap &map); // updates given char from the map
@@ -99,7 +98,7 @@ private:
     std::queue<GroupAction *> actionSchedule;
 
     std::vector<CGroupChar *> charIndex;
-    CGroupLocalChar *self;
+    CGroupChar *self;
 };
 
 #endif /*CGROUP_H_*/

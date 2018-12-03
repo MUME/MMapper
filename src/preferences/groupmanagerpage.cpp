@@ -138,19 +138,15 @@ void GroupManagerPage::charNameTextChanged()
 {
     // REVISIT: Remove non-valid characters (numbers, punctuation, etc)
     const QByteArray newName = charName->text().toLatin1().simplified();
-    QByteArray &savedCharName = setConfig().groupManager.charName;
-    if (auto group = m_groupManager->getGroup()) {
-        if (!group->isNamePresent(newName) && savedCharName != newName) {
-            savedCharName = newName;
-            emit updatedSelf();
-        }
-    }
+    setConfig().groupManager.charName = newName;
 
     // Correct any UTF-8 characters that we do not understand
     QString newNameStr = QString::fromLatin1(newName);
     if (charName->text() != newNameStr) {
         charName->setText(newNameStr);
     }
+
+    emit updatedSelf();
 }
 
 void GroupManagerPage::changeColorClicked()

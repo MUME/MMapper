@@ -24,8 +24,8 @@
 **
 ************************************************************************/
 
-#ifndef CGROUPCLIENT_H_
-#define CGROUPCLIENT_H_
+#ifndef GROUPSOCKET_H_
+#define GROUPSOCKET_H_
 
 #include <QAbstractSocket>
 #include <QByteArray>
@@ -45,12 +45,12 @@ class GroupAuthority;
 enum class ProtocolState { Unconnected, AwaitingLogin, AwaitingInfo, Logged };
 using ProtocolVersion = uint32_t;
 
-class CGroupClient final : public QObject
+class GroupSocket final : public QObject
 {
     Q_OBJECT
 public:
-    explicit CGroupClient(GroupAuthority *authority, QObject *parent);
-    virtual ~CGroupClient();
+    explicit GroupSocket(GroupAuthority *authority, QObject *parent);
+    virtual ~GroupSocket();
 
     void setSocket(qintptr socketDescriptor);
     void connectToHost();
@@ -82,11 +82,11 @@ protected slots:
 
 signals:
     void sendLog(const QString &);
-    void connectionClosed(CGroupClient *);
-    void errorInConnection(CGroupClient *, const QString &);
-    void incomingData(CGroupClient *, QByteArray);
-    void connectionEstablished(CGroupClient *);
-    void connectionEncrypted(CGroupClient *);
+    void connectionClosed(GroupSocket *);
+    void errorInConnection(GroupSocket *, const QString &);
+    void incomingData(GroupSocket *, QByteArray);
+    void connectionEstablished(GroupSocket *);
+    void connectionEncrypted(GroupSocket *);
 
 private:
     QSslSocket socket;
@@ -104,4 +104,4 @@ private:
     int currentMessageLen = 0;
 };
 
-#endif /*CGROUPCLIENT_H_*/
+#endif /*GROUPSOCKET_H_*/

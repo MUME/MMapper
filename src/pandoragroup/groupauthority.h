@@ -48,7 +48,7 @@ static constexpr const auto GROUP_ORGANIZATION = "MUME";
 static constexpr const auto GROUP_ORGANIZATIONAL_UNIT = "MMapper";
 static constexpr const auto GROUP_COMMON_NAME = "GroupManager";
 
-class CGroupClient;
+class GroupSocket;
 class GroupAuthority : public QObject
 {
     Q_OBJECT
@@ -68,7 +68,7 @@ public:
     bool add(const GroupSecret &);
     bool remove(const GroupSecret &);
     bool validSecret(const GroupSecret &) const;
-    bool validCertificate(const CGroupClient *) const;
+    bool validCertificate(const GroupSocket *) const;
 
 public:
     QString getMetadata(const GroupSecret &, const GroupMetadata) const;

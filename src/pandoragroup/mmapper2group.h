@@ -60,12 +60,9 @@ class Mmapper2Group final : public QObject
 public:
     Q_OBJECT
 
-    friend class CGroupClientCommunicator;
-    friend class CGroupServerCommunicator;
-
 signals:
     void log(const QString &, const QString &);
-    void displayGroupTellEvent(const QByteArray &tell); // sends gtell from local user
+    void displayGroupTellEvent(const QByteArray &tell); // displays gtell from remote user
     void messageBox(QString title, QString message);
     void groupManagerOff();
     void drawCharacters(); // redraw the opengl screen
@@ -101,6 +98,13 @@ protected slots:
     void characterChanged();
 
 private:
+    struct
+    {
+        QByteArray textHP{};
+        QByteArray textMoves{};
+        QByteArray textMana{};
+    } lastPrompt;
+
     bool init();
     void issueLocalCharUpdate();
 

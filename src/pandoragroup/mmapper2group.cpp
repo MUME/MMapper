@@ -35,7 +35,8 @@
 #include "../global/roomid.h"
 #include "CGroup.h"
 #include "CGroupChar.h"
-#include "CGroupCommunicator.h"
+#include "GroupClient.h"
+#include "GroupServer.h"
 #include "groupauthority.h"
 
 GroupThreader::GroupThreader(Mmapper2Group *const group)
@@ -72,7 +73,7 @@ Mmapper2Group::~Mmapper2Group()
     authority.reset(nullptr);
     group.reset(nullptr);
     if (network) {
-        network->disconnectCommunicator();
+        network->stop();
         network.reset(nullptr);
     }
 }
@@ -124,8 +125,14 @@ void Mmapper2Group::updateSelf()
         QByteArray oldname = group->getSelf()->getName();
         QByteArray newname = groupManagerSettings.charName;
 
+        if (getGroup()->isNamePresent(newname)) {
+            emit messageBox("Group Manager", "You cannot take a name that is already present.");
+            setConfig().groupManager.charName = oldname;
+            return;
+        }
+
         if (network) {
-            network->renameConnection(oldname, newname);
+            network->sendSelfRename(oldname, newname);
         }
         group->getSelf()->setName(newname);
 
@@ -274,7 +281,7 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
         return; // false prompt
     }
 
-    CGroupLocalChar *self = group->getSelf();
+    CGroupChar *self = getGroup()->getSelf();
     QByteArray textHP{}, textMana{}, textMoves{};
 
     int next = 0;
@@ -304,10 +311,14 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
         }
     }
 
-    if (textHP == self->textHP && textMana == self->textMana && textMoves == self->textMoves)
+    if (textHP == lastPrompt.textHP && textMana == lastPrompt.textMana
+        && textMoves == lastPrompt.textMoves)
         return; // No update needed
-    else
-        self->setTextScore(textHP, textMana, textMoves);
+
+    // Update last prompt values
+    lastPrompt.textHP = textHP;
+    lastPrompt.textMana = textMana;
+    lastPrompt.textMoves = textMoves;
 
 #define X_SCORE(target, lower, upper) \
     do { \
@@ -401,7 +412,7 @@ void Mmapper2Group::setType(GroupManagerState newState)
 
     // Delete previous network and regenerate
     if (network) {
-        network->disconnectCommunicator();
+        network->stop();
         network->deleteLater();
         network.release(); // There might still be signals left to be processed
     }
@@ -416,10 +427,10 @@ void Mmapper2Group::setType(GroupManagerState newState)
 
     switch (newState) {
     case GroupManagerState::Server:
-        network.reset(new CGroupServerCommunicator(this));
+        network.reset(new GroupServer(this));
         break;
     case GroupManagerState::Client:
-        network.reset(new CGroupClientCommunicator(this));
+        network.reset(new GroupClient(this));
         break;
     case GroupManagerState::Off:
     default:

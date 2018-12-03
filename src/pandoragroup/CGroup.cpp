@@ -42,7 +42,7 @@ CGroup::CGroup(QObject *parent)
     : QObject(parent)
     , characterLock(QMutex::Recursive)
 {
-    self = new CGroupLocalChar();
+    self = new CGroupChar();
     const Configuration::GroupManagerSettings &groupManager = getConfig().groupManager;
     self->setName(groupManager.charName);
     self->setPosition(DEFAULT_ROOMID);
@@ -171,8 +171,10 @@ void CGroup::removeChar(const QByteArray &name)
 bool CGroup::isNamePresent(const QByteArray &name)
 {
     QMutexLocker locker(&characterLock);
+
+    const QString nameStr = name.simplified();
     for (auto &character : charIndex) {
-        if (character->getName() == name) {
+        if (nameStr.compare(character->getName(), Qt::CaseInsensitive) == 0) {
             return true;
         }
     }
@@ -194,7 +196,7 @@ CGroupChar *CGroup::getCharByName(const QByteArray &name)
 
 void CGroup::updateChar(const QVariantMap &map)
 {
-    CGroupChar *ch = getCharByName(CGroupChar::getNameFromVariantMap(map));
+    CGroupChar *ch = getCharByName(CGroupChar::getNameFromUpdateChar(map));
     if (ch == nullptr) {
         return;
     }
