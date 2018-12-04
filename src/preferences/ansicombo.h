@@ -43,6 +43,7 @@ class AnsiCombo : public QComboBox
 {
     using super = QComboBox;
     Q_OBJECT
+
 public:
     static void makeWidgetColoured(QWidget *, const QString &ansiColor);
 

@@ -92,6 +92,9 @@
         <property name="frameShape">
          <enum>QFrame::StyledPanel</enum>
         </property>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
+        </property>
         <property name="text">
          <string>Arglebargle, glop-glyf!?!</string>
         </property>

@@ -223,6 +223,8 @@ set(mmapper_SRCS
     pathmachine/syncing.h
     preferences/ansicombo.cpp
     preferences/ansicombo.h
+    preferences/AnsiColorDialog.cpp
+    preferences/AnsiColorDialog.h
     preferences/clientpage.cpp
     preferences/clientpage.h
     preferences/configdialog.cpp
@@ -274,6 +276,7 @@ set(mmapper_UIS
     mainwindow/roomeditattrdlg.ui
     mainwindow/welcomewidget.ui
     clock/mumeclockwidget.ui
+    preferences/AnsiColorDialog.ui
     preferences/configdialog.ui
     preferences/generalpage.ui
     preferences/groupmanagerpage.ui

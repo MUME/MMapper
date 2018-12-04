@@ -319,7 +319,12 @@ void AnsiCombo::makeWidgetColoured(QWidget *pWidget, const QString &ansiColor)
         pWidget->setBackgroundRole(QPalette::Window);
 
         if (auto *pLabel = qdynamic_downcast<QLabel>(pWidget)) {
-            pLabel->setText(intelligibleNameFg);
+            QString displayString = intelligibleNameFg;
+            if (bold)
+                displayString = QString("<b>%1</b>").arg(displayString);
+            if (underline)
+                displayString = QString("<u>%1</u>").arg(displayString);
+            pLabel->setText(displayString);
         }
     }
 }

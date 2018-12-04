@@ -1,8 +1,9 @@
 #pragma once
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
+** Authors:   Jan 'Kovis' Struhar <kovis@sourceforge.net> (Kovis)
 **            Marek Krejza <krejza@gmail.com> (Caligor)
+**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
 ** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
@@ -24,41 +25,39 @@
 **
 ************************************************************************/
 
-#ifndef PARSERPAGE_H
-#define PARSERPAGE_H
+#ifndef ANSICOLORDIALOG_H
+#define ANSICOLORDIALOG_H
 
-#include <QString>
-#include <QWidget>
-#include <QtCore>
+#include <QDialog>
 
-#include "ui_parserpage.h"
+namespace Ui {
+class AnsiColorDialog;
+}
 
-class QObject;
-
-enum class UiCharset { AsciiOrLatin1, UTF8 };
-
-class ParserPage : public QWidget, private Ui::ParserPage
+class AnsiColorDialog : public QDialog
 {
     Q_OBJECT
 
-public slots:
-    void roomNameColorClicked();
-    void roomDescColorClicked();
-    void removeForcePatternClicked();
-    void removeEndDescPatternClicked();
-    void addForcePatternClicked();
-    void addEndDescPatternClicked();
-    void testPatternClicked();
-    void validPatternClicked();
-    void forcePatternsListActivated(const QString &);
-    void endDescPatternsListActivated(const QString &);
-    void suppressXmlTagsCheckBoxStateChanged(int);
-
 public:
-    explicit ParserPage(QWidget *parent = nullptr);
+    explicit AnsiColorDialog(const QString &ansiString, QWidget *parent = nullptr);
+    explicit AnsiColorDialog(QWidget *parent = nullptr);
+    ~AnsiColorDialog();
+
+    QString getAnsiString() const { return ansiString; }
+
+    static QString getColor(const QString &ansiString, QWidget *parent = nullptr);
+
+public slots:
+    void ansiComboChange();
+    void updateColors();
+    void generateNewAnsiColor();
+
+signals:
+    void newAnsiString(const QString &);
 
 private:
-    void savePatterns();
+    QString ansiString{};
+    Ui::AnsiColorDialog *ui;
 };
 
-#endif
+#endif // ANSICOLORDIALOG_H

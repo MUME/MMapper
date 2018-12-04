@@ -31,6 +31,7 @@
 #include <QtWidgets>
 
 #include "../configuration/configuration.h"
+#include "AnsiColorDialog.h"
 #include "ansicombo.h"
 
 ParserPage::ParserPage(QWidget *parent)
@@ -38,14 +39,19 @@ ParserPage::ParserPage(QWidget *parent)
 {
     setupUi(this);
 
-    roomNameAnsiColor->initColours(AnsiMode::ANSI_FG);
-    roomNameAnsiColorBG->initColours(AnsiMode::ANSI_BG);
-    roomDescAnsiColor->initColours(AnsiMode::ANSI_FG);
-    roomDescAnsiColorBG->initColours(AnsiMode::ANSI_BG);
-
-    updateColors();
-
     const auto &settings = getConfig().parser;
+
+    AnsiCombo::makeWidgetColoured(roomNameColorLabel, settings.roomNameColor);
+    AnsiCombo::makeWidgetColoured(roomDescColorLabel, settings.roomDescColor);
+
+    connect(roomNameColorPushButton,
+            &QAbstractButton::clicked,
+            this,
+            &ParserPage::roomNameColorClicked);
+    connect(roomDescColorPushButton,
+            &QAbstractButton::clicked,
+            this,
+            &ParserPage::roomDescColorClicked);
 
     suppressXmlTagsCheckBox->setChecked(settings.removeXmlTags);
     suppressXmlTagsCheckBox->setEnabled(true);
@@ -82,45 +88,24 @@ ParserPage::ParserPage(QWidget *parent)
             this,
             &ParserPage::endDescPatternsListActivated);
 
-    connect(roomNameAnsiColor,
-            static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::activated),
-            this,
-            &ParserPage::roomNameColorChanged);
-    connect(roomDescAnsiColor,
-            static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::activated),
-            this,
-            &ParserPage::roomDescColorChanged);
-
-    connect(roomNameAnsiColorBG,
-            static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::activated),
-            this,
-            &ParserPage::roomNameColorBGChanged);
-    connect(roomDescAnsiColorBG,
-            static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::activated),
-            this,
-            &ParserPage::roomDescColorBGChanged);
-
-    connect(roomNameAnsiBold,
-            &QAbstractButton::toggled,
-            this,
-            &ParserPage::anyColorToggleButtonToggled);
-    connect(roomNameAnsiUnderline,
-            &QAbstractButton::toggled,
-            this,
-            &ParserPage::anyColorToggleButtonToggled);
-    connect(roomDescAnsiBold,
-            &QAbstractButton::toggled,
-            this,
-            &ParserPage::anyColorToggleButtonToggled);
-    connect(roomDescAnsiUnderline,
-            &QAbstractButton::toggled,
-            this,
-            &ParserPage::anyColorToggleButtonToggled);
-
     connect(suppressXmlTagsCheckBox,
             &QCheckBox::stateChanged,
             this,
             &ParserPage::suppressXmlTagsCheckBoxStateChanged);
+}
+
+void ParserPage::roomNameColorClicked()
+{
+    QString ansiString = AnsiColorDialog::getColor(getConfig().parser.roomNameColor, this);
+    AnsiCombo::makeWidgetColoured(roomNameColorLabel, ansiString);
+    setConfig().parser.roomNameColor = ansiString;
+}
+
+void ParserPage::roomDescColorClicked()
+{
+    QString ansiString = AnsiColorDialog::getColor(getConfig().parser.roomDescColor, this);
+    AnsiCombo::makeWidgetColoured(roomDescColorLabel, ansiString);
+    setConfig().parser.roomDescColor = ansiString;
 }
 
 void ParserPage::suppressXmlTagsCheckBoxStateChanged(int /*unused*/)
@@ -254,142 +239,4 @@ void ParserPage::addEndDescPatternClicked()
         endDescPatternsList->setCurrentIndex(endDescPatternsList->count() - 1);
     }
     savePatterns();
-}
-
-void ParserPage::updateColors()
-{
-    // TODO: turn this into a struct!
-    QColor colFg;
-    QColor colBg;
-    int ansiCodeFg;
-    int ansiCodeBg;
-    QString intelligibleNameFg;
-    QString intelligibleNameBg;
-    bool bold;
-    bool underline;
-
-    const auto ansiString = [](const QString &s) -> QString {
-        return s.isEmpty() ? QString{"[0m"} : s;
-    };
-
-    // room name color
-    const auto &settings = getConfig().parser;
-    roomNameColorLabel->setText(ansiString(settings.roomNameColor));
-
-    AnsiCombo::makeWidgetColoured(labelRoomColor, settings.roomNameColor);
-
-    AnsiCombo::colorFromString(settings.roomNameColor,
-                               colFg,
-                               ansiCodeFg,
-                               intelligibleNameFg,
-                               colBg,
-                               ansiCodeBg,
-                               intelligibleNameBg,
-                               bold,
-                               underline);
-
-    roomNameAnsiBold->setChecked(bold);
-    roomNameAnsiUnderline->setChecked(underline);
-
-    roomNameAnsiColor->setEditable(false);
-    roomNameAnsiColorBG->setEditable(false);
-    roomNameAnsiColor->setText(QString("%1").arg(ansiCodeFg));
-    roomNameAnsiColorBG->setText(QString("%1").arg(ansiCodeBg));
-
-    // room desc color
-    roomDescColorLabel->setText(ansiString(settings.roomDescColor));
-
-    AnsiCombo::makeWidgetColoured(labelRoomDesc, settings.roomDescColor);
-
-    AnsiCombo::colorFromString(settings.roomDescColor,
-                               colFg,
-                               ansiCodeFg,
-                               intelligibleNameFg,
-                               colBg,
-                               ansiCodeBg,
-                               intelligibleNameBg,
-                               bold,
-                               underline);
-
-    roomDescAnsiBold->setChecked(bold);
-    roomDescAnsiUnderline->setChecked(underline);
-
-    roomDescAnsiColor->setEditable(false);
-    roomDescAnsiColorBG->setEditable(false);
-    roomDescAnsiColor->setText(QString("%1").arg(ansiCodeFg));
-    roomDescAnsiColorBG->setText(QString("%1").arg(ansiCodeBg));
-}
-
-void ParserPage::generateNewAnsiColor()
-{
-    const auto getColor = [](auto color, auto bg, auto bold, auto underline) {
-        QString result = "";
-        auto add = [&result](auto &s) {
-            if (result.isEmpty())
-                result += "[";
-            else
-                result += ";";
-            result += s;
-        };
-
-        const auto &colorText = color->text();
-        if (colorText != "none")
-            add(colorText);
-
-        const auto &bgText = bg->text();
-        if (bgText != "none")
-            add(bgText);
-
-        if (bold->isChecked())
-            add("1");
-
-        if (underline->isChecked())
-            add("4");
-
-        if (result.isEmpty())
-            return result;
-
-        result.append("m");
-        return result;
-    };
-
-    auto &settings = setConfig().parser;
-    settings.roomNameColor = getColor(roomNameAnsiColor,
-                                      roomNameAnsiColorBG,
-                                      roomNameAnsiBold,
-                                      roomNameAnsiUnderline);
-    settings.roomDescColor = getColor(roomDescAnsiColor,
-                                      roomDescAnsiColorBG,
-                                      roomDescAnsiBold,
-                                      roomDescAnsiUnderline);
-}
-
-void ParserPage::roomDescColorChanged(const QString & /*unused*/)
-{
-    generateNewAnsiColor();
-    updateColors();
-}
-
-void ParserPage::roomNameColorChanged(const QString & /*unused*/)
-{
-    generateNewAnsiColor();
-    updateColors();
-}
-
-void ParserPage::roomDescColorBGChanged(const QString & /*unused*/)
-{
-    generateNewAnsiColor();
-    updateColors();
-}
-
-void ParserPage::roomNameColorBGChanged(const QString & /*unused*/)
-{
-    generateNewAnsiColor();
-    updateColors();
-}
-
-void ParserPage::anyColorToggleButtonToggled(bool /*unused*/)
-{
-    generateNewAnsiColor();
-    updateColors();
 }
