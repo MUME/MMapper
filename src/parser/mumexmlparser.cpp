@@ -82,14 +82,13 @@ MumeXmlParser::~MumeXmlParser()
 void MumeXmlParser::parseNewMudInput(const IncomingData &data)
 {
     switch (data.type) {
-    case TelnetDataType::DELAY:
-        // Twiddlers
-        m_lastPrompt = data.line;
-        parse(data);
-        break;
+    case TelnetDataType::DELAY: // Twiddlers
     case TelnetDataType::MENU_PROMPT:
     case TelnetDataType::LOGIN:
     case TelnetDataType::LOGIN_PASSWORD:
+        m_lastPrompt = data.line;
+        parse(data);
+        break;
     case TelnetDataType::SPLIT:
     case TelnetDataType::UNKNOWN:
         if (XPS_DEBUG_TO_FILE) {
