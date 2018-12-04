@@ -1,5 +1,5 @@
-<RCC>
-    <qresource prefix="/">
+<!DOCTYPE RCC><RCC version="1.0">
+    <qresource>
         <file>COPYING</file>
         <file>icons/m.png</file>
         <file>icons/online.png</file>
