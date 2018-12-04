@@ -129,8 +129,10 @@ GeneralPage::GeneralPage(QWidget *parent)
     showNotesCheckBox->setChecked(mumeNative.showNotes);
 
     showLaunchPanelCheckBox->setChecked(!config.general.noLaunchPanel);
-    autoLoadCheck->setChecked(autoLoad.autoLoadMap);
     autoLoadFileName->setText(autoLoad.fileName);
+    autoLoadCheck->setChecked(autoLoad.autoLoadMap);
+    autoLoadFileName->setEnabled(autoLoad.autoLoadMap);
+    selectWorldFileButton->setEnabled(autoLoad.autoLoadMap);
 
     displayMumeClockCheckBox->setChecked(config.mumeClock.display);
 
@@ -196,6 +198,8 @@ void GeneralPage::autoLoadFileNameTextChanged(const QString & /*unused*/)
 void GeneralPage::autoLoadCheckStateChanged(int /*unused*/)
 {
     setConfig().autoLoad.autoLoadMap = autoLoadCheck->isChecked();
+    autoLoadFileName->setEnabled(autoLoadCheck->isChecked());
+    selectWorldFileButton->setEnabled(autoLoadCheck->isChecked());
 }
 
 void GeneralPage::displayMumeClockStateChanged(int /*unused*/)
