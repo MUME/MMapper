@@ -66,13 +66,7 @@ protected:
 private:
     static const QRegExp s_ansiRx;
 
-    /* REVISIT: make this an object with operator[] indexed by enum class, or use a map */
-    QColor m_blackColor{}, m_redColor{}, m_greenColor{}, m_yellowColor{}, m_blueColor{},
-        m_magentaColor{};
-    QColor m_cyanColor{}, m_grayColor{}, m_darkGrayColor{}, m_brightRedColor{},
-        m_brightGreenColor{};
-    QColor m_brightYellowColor{}, m_brightBlueColor{}, m_brightMagentaColor{}, m_brightCyanColor{};
-    QColor m_whiteColor{}, m_foregroundColor{}, m_backgroundColor{};
+    QColor m_foregroundColor{}, m_backgroundColor{};
     QFont m_serverOutputFont{};
 
     bool m_backspace{};

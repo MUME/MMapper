@@ -32,6 +32,14 @@
 #include <QtGui>
 #include <QtWidgets>
 
+#include "../global/Color.h"
+
+AnsiCombo::AnsiCombo(AnsiMode mode, QWidget *parent)
+    : AnsiCombo(parent)
+{
+    initColours(mode);
+}
+
 AnsiCombo::AnsiCombo(QWidget *parent)
     : super(parent)
 {
@@ -45,38 +53,29 @@ void AnsiCombo::fillAnsiList()
     clear();
 
     for (const AnsiItem &item : colours) {
-        addItem(item.picture, item.ansiCode);
+        addItem(item.picture, item.description, item.ansiCode);
     }
 }
 
-QString AnsiCombo::text() const
+QString AnsiCombo::getAnsiString() const
 {
-    return super::currentText();
+    return currentData(Qt::UserRole).toString();
 }
 
-void AnsiCombo::setText(const QString &inputString)
+void AnsiCombo::setAnsiString(const QString &inputString)
 {
-    QString copiedString = inputString;
-
-    switch (copiedString.toInt()) {
-    case DEFAULT_FG:
-    case DEFAULT_BG:
-        copiedString = "none";
-        break;
-    }
-
-    const int index = findText(copiedString);
+    const int index = findData(inputString, Qt::UserRole, Qt::MatchCaseSensitive);
 
     if (index >= 0) {
         setCurrentIndex(index);
     } else {
-        super::setEditText(copiedString);
+        setCurrentIndex(findText("none"));
     }
 }
 
 void AnsiCombo::afterEdit(const QString &t)
 {
-    setText(t);
+    setAnsiString(t);
 }
 
 void AnsiCombo::initColours(AnsiMode mode)
@@ -87,10 +86,16 @@ void AnsiCombo::initColours(AnsiMode mode)
         for (int i = 30; i < 38; ++i) {
             colours.push_back(initAnsiItem(i));
         }
+        for (int i = 90; i < 98; ++i) {
+            colours.push_back(initAnsiItem(i));
+        }
         break;
     case AnsiMode::ANSI_BG:
         colours.push_back(initAnsiItem(DEFAULT_BG));
         for (int i = 40; i < 48; ++i) {
+            colours.push_back(initAnsiItem(i));
+        }
+        for (int i = 100; i < 108; ++i) {
             colours.push_back(initAnsiItem(i));
         }
         break;
@@ -131,13 +136,12 @@ AnsiCombo::AnsiColor AnsiCombo::colorFromString(const QString &colString)
         return color;
 
     const auto update_fg = [&color](const int n) {
-        // REVISIT: what about high colors?
-        assert((30 <= n && n <= 37) || n == DEFAULT_FG);
+        assert((30 <= n && n <= 37) || (90 <= n && n <= 97) || n == DEFAULT_FG);
         color.ansiCodeFg = n;
         colorFromNumber(color.ansiCodeFg, color.colFg, color.intelligibleNameFg);
     };
     const auto update_bg = [&color](const int n) {
-        assert((40 <= n && n <= 47) || n == DEFAULT_BG);
+        assert((40 <= n && n <= 47) || (100 <= n && n <= 107) || n == DEFAULT_BG);
         color.ansiCodeBg = n;
         colorFromNumber(color.ansiCodeBg, color.colBg, color.intelligibleNameBg);
     };
@@ -162,6 +166,10 @@ AnsiCombo::AnsiColor AnsiCombo::colorFromString(const QString &colString)
             color.bold = true;
             break;
 
+        case 3:
+            color.italic = true;
+            break;
+
         case 4:
             color.underline = true;
             break;
@@ -174,6 +182,14 @@ AnsiCombo::AnsiColor AnsiCombo::colorFromString(const QString &colString)
         case 35:
         case 36:
         case 37:
+        case 90:
+        case 91:
+        case 92:
+        case 93:
+        case 94:
+        case 95:
+        case 96:
+        case 97:
             update_fg(n);
             break;
 
@@ -185,6 +201,14 @@ AnsiCombo::AnsiColor AnsiCombo::colorFromString(const QString &colString)
         case 45:
         case 46:
         case 47:
+        case 100:
+        case 101:
+        case 102:
+        case 103:
+        case 104:
+        case 105:
+        case 106:
+        case 107:
             update_bg(n);
             break;
         }
@@ -196,61 +220,103 @@ AnsiCombo::AnsiColor AnsiCombo::colorFromString(const QString &colString)
 bool AnsiCombo::colorFromNumber(int numColor, QColor &col, QString &intelligibleName)
 {
     intelligibleName = tr("undefined!");
-    col = Qt::white;
+    col = ansiColor(AnsiColorTable::white);
 
-    const bool retVal = ((((numColor >= 30) && (numColor <= 37))
-                          || ((numColor >= 40) && (numColor <= 47)))
-                         || numColor == DEFAULT_FG || numColor == DEFAULT_BG);
+    const bool foreground = (30 <= numColor && numColor <= 37) || (90 <= numColor && numColor <= 97)
+                            || numColor == DEFAULT_FG;
+    const bool background = (40 <= numColor && numColor <= 47)
+                            || (100 <= numColor && numColor <= 107) || numColor == DEFAULT_BG;
+    const bool retVal = (foreground || background);
 
     /* TODO: Simplify this. E.g. se ansi_color_table[n-30], etc. */
     switch (numColor) {
     case DEFAULT_FG:
-        col = Qt::white;
+        col = ansiColor(AnsiColorTable::white);
         intelligibleName = tr("none");
         break;
     case DEFAULT_BG:
-        col = Qt::black;
+        col = ansiColor(AnsiColorTable::black);
         intelligibleName = tr("none");
         break;
     case 30:
     case 40:
-        col = Qt::black;
+        col = ansiColor(AnsiColorTable::black);
         intelligibleName = tr("black");
         break;
     case 31:
     case 41:
-        col = Qt::red;
+        col = ansiColor(AnsiColorTable::red);
         intelligibleName = tr("red");
         break;
     case 32:
     case 42:
-        col = Qt::green;
+        col = ansiColor(AnsiColorTable::green);
         intelligibleName = tr("green");
         break;
     case 33:
     case 43:
-        col = Qt::yellow;
+        col = ansiColor(AnsiColorTable::yellow);
         intelligibleName = tr("yellow");
         break;
     case 34:
     case 44:
-        col = Qt::blue;
+        col = ansiColor(AnsiColorTable::blue);
         intelligibleName = tr("blue");
         break;
     case 35:
     case 45:
-        col = Qt::magenta;
+        col = ansiColor(AnsiColorTable::magenta);
         intelligibleName = tr("magenta");
         break;
     case 36:
     case 46:
-        col = Qt::cyan;
+        col = ansiColor(AnsiColorTable::cyan);
         intelligibleName = tr("cyan");
         break;
     case 37:
     case 47:
-        col = Qt::white;
+        col = ansiColor(AnsiColorTable::white);
         intelligibleName = tr("white");
+        break;
+    case 90:
+    case 100:
+        col = ansiColor(AnsiColorTable::BLACK);
+        intelligibleName = tr("BLACK");
+        break;
+    case 91:
+    case 101:
+        col = ansiColor(AnsiColorTable::RED);
+        intelligibleName = tr("RED");
+        break;
+    case 92:
+    case 102:
+        col = ansiColor(AnsiColorTable::GREEN);
+        intelligibleName = tr("GREEN");
+        break;
+    case 93:
+    case 103:
+        col = ansiColor(AnsiColorTable::YELLOW);
+        intelligibleName = tr("YELLOW");
+        break;
+    case 94:
+    case 104:
+        col = ansiColor(AnsiColorTable::BLUE);
+        intelligibleName = tr("BLUE");
+        break;
+    case 95:
+    case 105:
+        col = ansiColor(AnsiColorTable::MAGENTA);
+        intelligibleName = tr("MAGENTA");
+        break;
+    case 96:
+    case 106:
+        col = ansiColor(AnsiColorTable::CYAN);
+        intelligibleName = tr("CYAN");
+        break;
+    case 97:
+    case 107:
+        col = ansiColor(AnsiColorTable::WHITE);
+        intelligibleName = tr("WHITE");
         break;
     }
     return retVal;
@@ -283,6 +349,8 @@ void AnsiCombo::makeWidgetColoured(QWidget *pWidget, const QString &ansiColor)
             QString displayString = color.intelligibleNameFg;
             if (color.bold)
                 displayString = QString("<b>%1</b>").arg(displayString);
+            if (color.italic)
+                displayString = QString("<i>%1</i>").arg(displayString);
             if (color.underline)
                 displayString = QString("<u>%1</u>").arg(displayString);
             pLabel->setText(displayString);

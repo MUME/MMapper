@@ -27,13 +27,15 @@
 #ifndef ANSI_COMBO_H
 #define ANSI_COMBO_H
 
+#include <QColor>
 #include <QComboBox>
 #include <QIcon>
 #include <QString>
 #include <QVector>
 #include <QtCore>
 
-class QColor;
+#include "../global/Color.h"
+
 class QObject;
 class QWidget;
 
@@ -53,22 +55,23 @@ public:
     void initColours(AnsiMode mode);
 
     /// get currently selected ANSI code like [32m for green colour
-    QString text() const;
+    QString getAnsiString() const;
 
-    void setText(const QString &);
+    void setAnsiString(const QString &);
 
     static constexpr const int DEFAULT_FG = 254;
     static constexpr const int DEFAULT_BG = 255;
 
     struct AnsiColor
     {
-        QColor colFg{Qt::white};
-        QColor colBg{Qt::black};
+        QColor colFg{ansiColor(AnsiColorTable::white)};
+        QColor colBg{ansiColor(AnsiColorTable::black)};
         int ansiCodeFg{DEFAULT_FG};
         int ansiCodeBg{DEFAULT_BG};
         QString intelligibleNameFg{"none"};
         QString intelligibleNameBg{"none"};
         bool bold{false};
+        bool italic{false};
         bool underline{false};
     };
 

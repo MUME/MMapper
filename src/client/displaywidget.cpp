@@ -32,6 +32,7 @@
 #include <QtGui>
 
 #include "../configuration/configuration.h"
+#include "../global/Color.h"
 
 // ANSI codes are formatted as the following:
 // escape + [ + n1 (+ n2) + m
@@ -55,22 +56,6 @@ DisplayWidget::DisplayWidget(QWidget *parent)
     // Default Colors
     m_foregroundColor = settings.foregroundColor;
     m_backgroundColor = settings.backgroundColor;
-    m_blackColor = QColor("#2e3436");
-    m_darkGrayColor = QColor("#555753");
-    m_redColor = QColor("#cc0000");
-    m_brightRedColor = QColor("#ef2929");
-    m_greenColor = QColor("#4e9a06");
-    m_brightGreenColor = QColor("#8ae234");
-    m_yellowColor = QColor("#c4a000");
-    m_brightYellowColor = QColor("#fce94f");
-    m_blueColor = QColor("#3465a4");
-    m_brightBlueColor = QColor("#729fcf");
-    m_magentaColor = QColor("#75507b");
-    m_brightMagentaColor = QColor("#ad7fa8");
-    m_cyanColor = QColor("#06989a");
-    m_brightCyanColor = QColor("#34e2e2");
-    m_grayColor = QColor("#d3d7cf");
-    m_whiteColor = QColor("#eeeeec");
 
     // Default Font
     m_serverOutputFont = QFont(settings.font);
@@ -274,131 +259,131 @@ void DisplayWidget::updateFormat(QTextCharFormat &format, int ansiCode)
         break;
     case 30:
         // black foreground
-        format.setForeground(m_blackColor);
+        format.setForeground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 30)));
         break;
     case 31:
         // red foreground
-        format.setForeground(m_redColor);
+        format.setForeground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 30)));
         break;
     case 32:
         // green foreground
-        format.setForeground(m_greenColor);
+        format.setForeground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 30)));
         break;
     case 33:
         // yellow foreground
-        format.setForeground(m_yellowColor);
+        format.setForeground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 30)));
         break;
     case 34:
         // blue foreground
-        format.setForeground(m_blueColor);
+        format.setForeground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 30)));
         break;
     case 35:
         // magenta foreground
-        format.setForeground(m_magentaColor);
+        format.setForeground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 30)));
         break;
     case 36:
         // cyan foreground
-        format.setForeground(m_cyanColor);
+        format.setForeground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 30)));
         break;
     case 37:
         // gray foreground
-        format.setForeground(m_grayColor);
+        format.setForeground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 30)));
         break;
     case 40:
         // black background
-        format.setBackground(m_blackColor);
+        format.setBackground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 40)));
         break;
     case 41:
         // red background
-        format.setBackground(m_redColor);
+        format.setBackground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 40)));
         break;
     case 42:
         // green background
-        format.setBackground(m_greenColor);
+        format.setBackground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 40)));
         break;
     case 43:
         // yellow background
-        format.setBackground(m_yellowColor);
+        format.setBackground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 40)));
         break;
     case 44:
         // blue background
-        format.setBackground(m_blueColor);
+        format.setBackground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 40)));
         break;
     case 45:
         // magenta background
-        format.setBackground(m_magentaColor);
+        format.setBackground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 40)));
         break;
     case 46:
         // cyan background
-        format.setBackground(m_cyanColor);
+        format.setBackground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 40)));
         break;
     case 47:
         // gray background
-        format.setBackground(m_grayColor);
+        format.setBackground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 40)));
         break;
     case 90:
         // high-black foreground
-        format.setForeground(m_darkGrayColor);
+        format.setForeground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 30)));
         break;
     case 91:
         // high-red foreground
-        format.setForeground(m_brightRedColor);
+        format.setForeground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 30)));
         break;
     case 92:
         // high-green foreground
-        format.setForeground(m_brightGreenColor);
+        format.setForeground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 30)));
         break;
     case 93:
         // high-yellow foreground
-        format.setForeground(m_brightYellowColor);
+        format.setForeground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 30)));
         break;
     case 94:
         // high-blue foreground
-        format.setForeground(m_brightBlueColor);
+        format.setForeground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 30)));
         break;
     case 95:
         // high-magenta foreground
-        format.setForeground(m_brightMagentaColor);
+        format.setForeground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 30)));
         break;
     case 96:
         // high-cyan foreground
-        format.setForeground(m_brightCyanColor);
+        format.setForeground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 30)));
         break;
     case 97:
         // high-white foreground
-        format.setForeground(m_whiteColor);
+        format.setForeground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 30)));
         break;
     case 100:
         // high-black background
-        format.setBackground(m_darkGrayColor);
+        format.setBackground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 40)));
         break;
     case 101:
         // high-red background
-        format.setBackground(m_brightRedColor);
+        format.setBackground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 40)));
         break;
     case 102:
         // high-green background
-        format.setBackground(m_brightGreenColor);
+        format.setBackground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 40)));
         break;
     case 103:
         // high-yellow background
-        format.setBackground(m_brightYellowColor);
+        format.setBackground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 40)));
         break;
     case 104:
         // high-blue background
-        format.setBackground(m_brightBlueColor);
+        format.setBackground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 40)));
         break;
     case 105:
         // high-magenta background
-        format.setBackground(m_brightMagentaColor);
+        format.setBackground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 40)));
         break;
     case 106:
         // high-cyan background
-        format.setBackground(m_brightCyanColor);
+        format.setBackground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 40)));
         break;
     case 107:
         // high-white background
-        format.setBackground(m_whiteColor);
+        format.setBackground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 40)));
         break;
     default:
         qWarning() << "Unknown ansicode" << ansiCode;
@@ -408,21 +393,8 @@ void DisplayWidget::updateFormat(QTextCharFormat &format, int ansiCode)
 
 void DisplayWidget::updateFormatBoldColor(QTextCharFormat &format)
 {
-    if (format.foreground() == m_blackColor) {
-        format.setForeground(m_darkGrayColor);
-    } else if (format.foreground() == m_redColor) {
-        format.setForeground(m_brightRedColor);
-    } else if (format.foreground() == m_greenColor) {
-        format.setForeground(m_brightGreenColor);
-    } else if (format.foreground() == m_yellowColor) {
-        format.setForeground(m_brightYellowColor);
-    } else if (format.foreground() == m_blueColor) {
-        format.setForeground(m_brightBlueColor);
-    } else if (format.foreground() == m_magentaColor) {
-        format.setForeground(m_brightMagentaColor);
-    } else if (format.foreground() == m_cyanColor) {
-        format.setForeground(m_brightCyanColor);
-    } else if (format.foreground() == m_grayColor) {
-        format.setForeground(m_whiteColor);
+    for (int i = 0; i <= static_cast<int>(AnsiColorTable::white); i++) {
+        if (format.foreground().color() == ansiColor(static_cast<AnsiColorTable>(i)))
+            format.setForeground(ansiColor(static_cast<AnsiColorTable>(i + 60)));
     }
 }
