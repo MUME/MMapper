@@ -85,42 +85,24 @@ void AnsiColorDialog::ansiComboChange()
 
 void AnsiColorDialog::updateColors()
 {
-    // TODO: turn this into a struct!
-    QColor colFg;
-    QColor colBg;
-    int ansiCodeFg;
-    int ansiCodeBg;
-    QString intelligibleNameFg;
-    QString intelligibleNameBg;
-    bool bold;
-    bool underline;
-
     AnsiCombo::makeWidgetColoured(ui->exampleLabel, ansiString);
 
-    AnsiCombo::colorFromString(ansiString,
-                               colFg,
-                               ansiCodeFg,
-                               intelligibleNameFg,
-                               colBg,
-                               ansiCodeBg,
-                               intelligibleNameBg,
-                               bold,
-                               underline);
+    AnsiCombo::AnsiColor colors = AnsiCombo::colorFromString(ansiString);
 
-    ui->boldCheckBox->setChecked(bold);
-    ui->underlineCheckBox->setChecked(underline);
+    ui->boldCheckBox->setChecked(colors.bold);
+    ui->underlineCheckBox->setChecked(colors.underline);
 
     QString displayString = ansiString.isEmpty() ? "[0m" : ansiString;
-    if (bold)
+    if (colors.bold)
         displayString = QString("<b>%1</b>").arg(displayString);
-    if (underline)
+    if (colors.underline)
         displayString = QString("<u>%1</u>").arg(displayString);
     ui->exampleLabel->setText(displayString);
 
     ui->foregroundAnsiCombo->setEditable(false);
     ui->backgroundAnsiCombo->setEditable(false);
-    ui->foregroundAnsiCombo->setText(QString("%1").arg(ansiCodeFg));
-    ui->backgroundAnsiCombo->setText(QString("%1").arg(ansiCodeBg));
+    ui->foregroundAnsiCombo->setText(QString("%1").arg(colors.ansiCodeFg));
+    ui->backgroundAnsiCombo->setText(QString("%1").arg(colors.ansiCodeBg));
 }
 
 void AnsiColorDialog::generateNewAnsiColor()

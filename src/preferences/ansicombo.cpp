@@ -27,12 +27,10 @@
 
 #include <cassert>
 #include <type_traits>
+#include <QRegularExpression>
 #include <QString>
 #include <QtGui>
 #include <QtWidgets>
-
-static constexpr const int DEFAULT_FG = 254;
-static constexpr const int DEFAULT_BG = 255;
 
 AnsiCombo::AnsiCombo(QWidget *parent)
     : super(parent)
@@ -120,48 +118,28 @@ AnsiCombo::AnsiItem AnsiCombo::initAnsiItem(int index)
     return retVal;
 }
 
-// FIXME: This should return a struct that reports the ansi found in colString.
-// You can use std::pair<Result, bool> or std::tuple<Result, bool>
-// until c++17 gives std::optional<Result>.
-bool AnsiCombo::colorFromString(const QString &colString,
-                                QColor &colFg,
-                                int &ansiCodeFg,
-                                QString &intelligibleNameFg,
-                                QColor &colBg,
-                                int &ansiCodeBg,
-                                QString &intelligibleNameBg,
-                                bool &bold,
-                                bool &underline)
+AnsiCombo::AnsiColor AnsiCombo::colorFromString(const QString &colString)
 {
-    ansiCodeFg = DEFAULT_FG;
-    intelligibleNameFg = "none";
-    colFg = QColor(Qt::white);
-    ansiCodeBg = DEFAULT_BG;
-    intelligibleNameBg = "none";
-    colBg = QColor(Qt::black);
-    bold = false;
-    underline = false;
+    AnsiColor color;
 
     // No need to proceed if the color is empty
     if (colString.isEmpty())
-        return true;
+        return color;
 
-    // REVISIT: shouldn't this be compiled and stuffed somewhere?
-    // Is it safe to make this static?
-    QRegExp re(R"(^\[((?:\d+;)*\d+)m$)");
-    if (re.indexIn(colString) < 0)
-        return false;
+    QRegularExpression re(R"(^\[((?:\d+;)*\d+)m$)");
+    if (!re.match(colString).hasMatch())
+        return color;
 
-    const auto update_fg = [&ansiCodeFg, &colFg, &intelligibleNameFg](const int n) {
+    const auto update_fg = [&color](const int n) {
         // REVISIT: what about high colors?
         assert((30 <= n && n <= 37) || n == DEFAULT_FG);
-        ansiCodeFg = n;
-        colorFromNumber(ansiCodeFg, colFg, intelligibleNameFg);
+        color.ansiCodeFg = n;
+        colorFromNumber(color.ansiCodeFg, color.colFg, color.intelligibleNameFg);
     };
-    const auto update_bg = [&ansiCodeBg, &colBg, &intelligibleNameBg](const int n) {
+    const auto update_bg = [&color](const int n) {
         assert((40 <= n && n <= 47) || n == DEFAULT_BG);
-        ansiCodeBg = n;
-        colorFromNumber(ansiCodeBg, colBg, intelligibleNameBg);
+        color.ansiCodeBg = n;
+        colorFromNumber(color.ansiCodeBg, color.colBg, color.intelligibleNameBg);
     };
 
     // matches
@@ -174,18 +152,18 @@ bool AnsiCombo::colorFromString(const QString &colString,
         switch (const auto n = s.toInt()) {
         case 0:
             /* Ansi reset will never happen, but it doesn't hurt to have it. */
-            bold = false;
-            underline = false;
+            color.bold = false;
+            color.underline = false;
             update_fg(DEFAULT_FG);
             update_bg(DEFAULT_BG);
             break;
 
         case 1:
-            bold = true;
+            color.bold = true;
             break;
 
         case 4:
-            underline = true;
+            color.underline = true;
             break;
 
         case 30:
@@ -212,7 +190,7 @@ bool AnsiCombo::colorFromString(const QString &colString,
         }
     }
 
-    return true;
+    return color;
 }
 
 bool AnsiCombo::colorFromNumber(int numColor, QColor &col, QString &intelligibleName)
@@ -288,41 +266,24 @@ static inline Derived *qdynamic_downcast(Base *ptr)
 void AnsiCombo::makeWidgetColoured(QWidget *pWidget, const QString &ansiColor)
 {
     if (pWidget != nullptr) {
-        QColor colFg;
-        QColor colBg;
-        int ansiCodeFg;
-        int ansiCodeBg;
-        QString intelligibleNameFg;
-        QString intelligibleNameBg;
-        bool bold;
-        bool underline;
-
-        colorFromString(ansiColor,
-                        colFg,
-                        ansiCodeFg,
-                        intelligibleNameFg,
-                        colBg,
-                        ansiCodeBg,
-                        intelligibleNameBg,
-                        bold,
-                        underline);
+        AnsiColor color = colorFromString(ansiColor);
 
         QPalette palette = pWidget->palette();
 
         // crucial call to have background filled
         pWidget->setAutoFillBackground(true);
 
-        palette.setColor(QPalette::WindowText, colFg);
-        palette.setColor(QPalette::Window, colBg);
+        palette.setColor(QPalette::WindowText, color.colFg);
+        palette.setColor(QPalette::Window, color.colBg);
 
         pWidget->setPalette(palette);
         pWidget->setBackgroundRole(QPalette::Window);
 
         if (auto *pLabel = qdynamic_downcast<QLabel>(pWidget)) {
-            QString displayString = intelligibleNameFg;
-            if (bold)
+            QString displayString = color.intelligibleNameFg;
+            if (color.bold)
                 displayString = QString("<b>%1</b>").arg(displayString);
-            if (underline)
+            if (color.underline)
                 displayString = QString("<u>%1</u>").arg(displayString);
             pLabel->setText(displayString);
         }
