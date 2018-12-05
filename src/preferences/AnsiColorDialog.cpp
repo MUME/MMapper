@@ -39,6 +39,8 @@ AnsiColorDialog::AnsiColorDialog(const QString &ansiString, QWidget *parent)
     ui->foregroundAnsiCombo->initColours(AnsiMode::ANSI_FG);
     ui->backgroundAnsiCombo->initColours(AnsiMode::ANSI_BG);
 
+    updateColors();
+
     connect(ui->foregroundAnsiCombo,
             static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::activated),
             this,
@@ -55,8 +57,6 @@ AnsiColorDialog::AnsiColorDialog(const QString &ansiString, QWidget *parent)
             &QAbstractButton::toggled,
             this,
             &AnsiColorDialog::ansiComboChange);
-
-    updateColors();
 }
 
 AnsiColorDialog::AnsiColorDialog(QWidget *parent)
@@ -84,7 +84,7 @@ void AnsiColorDialog::ansiComboChange()
 
 void AnsiColorDialog::updateColors()
 {
-    AnsiCombo::makeWidgetColoured(ui->exampleLabel, ansiString);
+    AnsiCombo::makeWidgetColoured(ui->exampleLabel, ansiString, false);
 
     AnsiCombo::AnsiColor color = AnsiCombo::colorFromString(ansiString);
 
@@ -92,19 +92,11 @@ void AnsiColorDialog::updateColors()
     ui->italicCheckBox->setChecked(color.italic);
     ui->underlineCheckBox->setChecked(color.underline);
 
-    QString displayString = ansiString.isEmpty() ? "[0m" : ansiString;
-    if (color.bold)
-        displayString = QString("<b>%1</b>").arg(displayString);
-    if (color.italic)
-        displayString = QString("<i>%1</i>").arg(displayString);
-    if (color.underline)
-        displayString = QString("<u>%1</u>").arg(displayString);
-    ui->exampleLabel->setText(displayString);
+    QString toolTipString = ansiString.isEmpty() ? "[0m" : ansiString;
+    ui->exampleLabel->setToolTip(toolTipString);
 
-    ui->foregroundAnsiCombo->setEditable(false);
-    ui->backgroundAnsiCombo->setEditable(false);
-    ui->foregroundAnsiCombo->setAnsiString(QString("%1").arg(color.ansiCodeFg));
-    ui->backgroundAnsiCombo->setAnsiString(QString("%1").arg(color.ansiCodeBg));
+    ui->foregroundAnsiCombo->setAnsiCode(color.ansiCodeFg);
+    ui->backgroundAnsiCombo->setAnsiCode(color.ansiCodeBg);
 }
 
 void AnsiColorDialog::generateNewAnsiColor()
@@ -119,12 +111,12 @@ void AnsiColorDialog::generateNewAnsiColor()
             result += s;
         };
 
-        const auto &colorText = fg->getAnsiString();
-        if (colorText != "none")
+        const auto colorText = QString("%1").arg(fg->getAnsiCode());
+        if (colorText != QString("%1").arg(AnsiCombo::DEFAULT_FG))
             add(colorText);
 
-        const auto &bgText = bg->getAnsiString();
-        if (bgText != "none")
+        const auto bgText = QString("%1").arg(bg->getAnsiCode());
+        if (bgText != QString("%1").arg(AnsiCombo::DEFAULT_BG))
             add(bgText);
 
         if (bold->isChecked())

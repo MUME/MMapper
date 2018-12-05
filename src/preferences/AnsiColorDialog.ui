@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>AnsiColorDialog</class>
  <widget class="QDialog" name="AnsiColorDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>274</width>
+    <height>170</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Ansi Color Dialog</string>
   </property>
@@ -84,6 +92,12 @@
      </property>
      <property name="wordWrap">
       <bool>true</bool>
+     </property>
+     <property name="margin">
+      <number>3</number>
+     </property>
+     <property name="indent">
+      <number>3</number>
      </property>
     </widget>
    </item>

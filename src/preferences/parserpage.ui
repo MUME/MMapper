@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>426</width>
-    <height>575</height>
+    <width>437</width>
+    <height>558</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -73,6 +73,12 @@
         <property name="text">
          <string>roomname</string>
         </property>
+        <property name="margin">
+         <number>3</number>
+        </property>
+        <property name="indent">
+         <number>3</number>
+        </property>
        </widget>
       </item>
       <item row="0" column="2">
@@ -123,6 +129,12 @@
         </property>
         <property name="text">
          <string>roomdesc</string>
+        </property>
+        <property name="margin">
+         <number>3</number>
+        </property>
+        <property name="indent">
+         <number>3</number>
         </property>
        </widget>
       </item>

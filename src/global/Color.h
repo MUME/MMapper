@@ -100,6 +100,8 @@ static inline QColor ansiColor(const AnsiColorTable i)
         return CYAN;
     case AnsiColorTable::WHITE:
         return WHITE;
+    default:
+        return white;
     }
 }
 

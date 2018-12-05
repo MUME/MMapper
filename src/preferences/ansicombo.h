@@ -47,18 +47,23 @@ class AnsiCombo : public QComboBox
     Q_OBJECT
 
 public:
-    static void makeWidgetColoured(QWidget *, const QString &ansiColor);
+    static void makeWidgetColoured(QWidget *,
+                                   const QString &ansiColor,
+                                   const bool changeText = true);
 
     explicit AnsiCombo(AnsiMode mode, QWidget *parent = nullptr);
     explicit AnsiCombo(QWidget *parent = nullptr);
 
     void initColours(AnsiMode mode);
 
-    /// get currently selected ANSI code like [32m for green colour
-    QString getAnsiString() const;
+    AnsiMode getMode() const { return mode; }
 
-    void setAnsiString(const QString &);
+    /// get currently selected ANSI code like 32 for green colour
+    int getAnsiCode() const;
 
+    void setAnsiCode(const int);
+
+    static constexpr const char *NONE = "none";
     static constexpr const int DEFAULT_FG = 254;
     static constexpr const int DEFAULT_BG = 255;
 
@@ -68,8 +73,8 @@ public:
         QColor colBg{ansiColor(AnsiColorTable::black)};
         int ansiCodeFg{DEFAULT_FG};
         int ansiCodeBg{DEFAULT_BG};
-        QString intelligibleNameFg{"none"};
-        QString intelligibleNameBg{"none"};
+        QString intelligibleNameFg{NONE};
+        QString intelligibleNameBg{NONE};
         bool bold{false};
         bool italic{false};
         bool underline{false};
@@ -81,25 +86,8 @@ public:
     ///\return true, if index is valid color code
     static bool colorFromNumber(int numColor, QColor &col, QString &intelligibleName);
 
-protected slots:
-    void afterEdit(const QString &);
-
-protected:
-    /// populate the list with ANSI codes and coloured boxes
-    void fillAnsiList();
-
-    class AnsiItem
-    {
-    public:
-        QString ansiCode{};
-        QString description{};
-        QIcon picture{};
-    };
-    using AnsiItemVector = QVector<AnsiItem>;
-
-    static AnsiItem initAnsiItem(int index);
-
-    AnsiItemVector colours{};
+private:
+    AnsiMode mode;
 };
 
 #endif

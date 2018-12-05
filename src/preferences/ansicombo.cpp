@@ -26,6 +26,7 @@
 #include "ansicombo.h"
 
 #include <cassert>
+#include <memory>
 #include <type_traits>
 #include <QRegularExpression>
 #include <QString>
@@ -33,6 +34,14 @@
 #include <QtWidgets>
 
 #include "../global/Color.h"
+
+struct AnsiItem
+{
+    int ansiCode{};
+    QString description{};
+    QIcon picture{};
+};
+using AnsiItemVector = QVector<AnsiItem>;
 
 AnsiCombo::AnsiCombo(AnsiMode mode, QWidget *parent)
     : AnsiCombo(parent)
@@ -42,85 +51,74 @@ AnsiCombo::AnsiCombo(AnsiMode mode, QWidget *parent)
 
 AnsiCombo::AnsiCombo(QWidget *parent)
     : super(parent)
-{
-    setEditable(true);
+{}
 
-    connect(this, &QComboBox::editTextChanged, this, &AnsiCombo::afterEdit);
+int AnsiCombo::getAnsiCode() const
+{
+    return currentData(Qt::UserRole).toInt();
 }
 
-void AnsiCombo::fillAnsiList()
+void AnsiCombo::setAnsiCode(const int ansiCode)
 {
-    clear();
-
-    for (const AnsiItem &item : colours) {
-        addItem(item.picture, item.description, item.ansiCode);
-    }
-}
-
-QString AnsiCombo::getAnsiString() const
-{
-    return currentData(Qt::UserRole).toString();
-}
-
-void AnsiCombo::setAnsiString(const QString &inputString)
-{
-    const int index = findData(inputString, Qt::UserRole, Qt::MatchCaseSensitive);
+    const int index = findData(ansiCode, Qt::UserRole, Qt::MatchCaseSensitive);
 
     if (index >= 0) {
         setCurrentIndex(index);
     } else {
-        setCurrentIndex(findText("none"));
+        qWarning() << "Could not find ansiCode" << ansiCode;
+        setCurrentIndex(findText(NONE));
     }
 }
 
-void AnsiCombo::afterEdit(const QString &t)
+static AnsiItem initAnsiItem(int ansiCode)
 {
-    setAnsiString(t);
+    QColor col;
+    AnsiItem retVal;
+
+    if (AnsiCombo::colorFromNumber(ansiCode, col, retVal.description)) {
+        QPixmap pix(20, 20);
+        pix.fill(col);
+
+        // Draw border
+        std::unique_ptr<QPainter> paint(new QPainter(&pix));
+        paint->setPen(Qt::black);
+        paint->drawRect(0, 0, 19, 19);
+
+        retVal.picture = pix;
+        retVal.ansiCode = ansiCode;
+    }
+    return retVal;
 }
 
-void AnsiCombo::initColours(AnsiMode mode)
+void AnsiCombo::initColours(AnsiMode change)
 {
+    mode = change;
+    AnsiItemVector colours{};
+
+    const auto high_color = [](int i) { return i + 60; };
+
     switch (mode) {
     case AnsiMode::ANSI_FG:
         colours.push_back(initAnsiItem(DEFAULT_FG));
         for (int i = 30; i < 38; ++i) {
             colours.push_back(initAnsiItem(i));
-        }
-        for (int i = 90; i < 98; ++i) {
-            colours.push_back(initAnsiItem(i));
+            colours.push_back(initAnsiItem(high_color(i)));
         }
         break;
     case AnsiMode::ANSI_BG:
         colours.push_back(initAnsiItem(DEFAULT_BG));
         for (int i = 40; i < 48; ++i) {
             colours.push_back(initAnsiItem(i));
-        }
-        for (int i = 100; i < 108; ++i) {
-            colours.push_back(initAnsiItem(i));
+            colours.push_back(initAnsiItem(high_color(i)));
         }
         break;
     }
-    fillAnsiList();
-}
 
-AnsiCombo::AnsiItem AnsiCombo::initAnsiItem(int index)
-{
-    QColor col;
-    AnsiItem retVal;
+    clear();
 
-    if (colorFromNumber(index, col, retVal.description)) {
-        QPixmap pix(20, 20);
-
-        pix.fill(col);
-
-        retVal.picture = pix;
-        if (index != DEFAULT_FG && index != DEFAULT_BG) {
-            retVal.ansiCode = QString("%1").arg(index);
-        } else {
-            retVal.ansiCode = QString("none");
-        }
+    for (const AnsiItem &item : colours) {
+        addItem(item.picture, item.description, item.ansiCode);
     }
-    return retVal;
 }
 
 AnsiCombo::AnsiColor AnsiCombo::colorFromString(const QString &colString)
@@ -132,18 +130,22 @@ AnsiCombo::AnsiColor AnsiCombo::colorFromString(const QString &colString)
         return color;
 
     QRegularExpression re(R"(^\[((?:\d+;)*\d+)m$)");
-    if (!re.match(colString).hasMatch())
+    if (!re.match(colString).hasMatch()) {
+        qWarning() << "String did not contain valid ANSI: " << colString;
         return color;
+    }
 
     const auto update_fg = [&color](const int n) {
         assert((30 <= n && n <= 37) || (90 <= n && n <= 97) || n == DEFAULT_FG);
         color.ansiCodeFg = n;
-        colorFromNumber(color.ansiCodeFg, color.colFg, color.intelligibleNameFg);
+        if (!colorFromNumber(color.ansiCodeFg, color.colFg, color.intelligibleNameFg))
+            qWarning() << "Unable to extract foreground color and name from ansiCode" << n;
     };
     const auto update_bg = [&color](const int n) {
         assert((40 <= n && n <= 47) || (100 <= n && n <= 107) || n == DEFAULT_BG);
         color.ansiCodeBg = n;
-        colorFromNumber(color.ansiCodeBg, color.colBg, color.intelligibleNameBg);
+        if (!colorFromNumber(color.ansiCodeBg, color.colBg, color.intelligibleNameBg))
+            qWarning() << "Unable to extract background color and name from ansiCode" << n;
     };
 
     // matches
@@ -157,6 +159,7 @@ AnsiCombo::AnsiColor AnsiCombo::colorFromString(const QString &colString)
         case 0:
             /* Ansi reset will never happen, but it doesn't hurt to have it. */
             color.bold = false;
+            color.italic = false;
             color.underline = false;
             update_fg(DEFAULT_FG);
             update_bg(DEFAULT_BG);
@@ -232,11 +235,11 @@ bool AnsiCombo::colorFromNumber(int numColor, QColor &col, QString &intelligible
     switch (numColor) {
     case DEFAULT_FG:
         col = ansiColor(AnsiColorTable::white);
-        intelligibleName = tr("none");
+        intelligibleName = tr(NONE);
         break;
     case DEFAULT_BG:
         col = ansiColor(AnsiColorTable::black);
-        intelligibleName = tr("none");
+        intelligibleName = tr(NONE);
         break;
     case 30:
     case 40:
@@ -329,7 +332,9 @@ static inline Derived *qdynamic_downcast(Base *ptr)
     return dynamic_cast<Derived *>(qobject_cast<Derived *>(ptr));
 }
 
-void AnsiCombo::makeWidgetColoured(QWidget *pWidget, const QString &ansiColor)
+void AnsiCombo::makeWidgetColoured(QWidget *const pWidget,
+                                   const QString &ansiColor,
+                                   const bool changeText)
 {
     if (pWidget != nullptr) {
         AnsiColor color = colorFromString(ansiColor);
@@ -346,7 +351,28 @@ void AnsiCombo::makeWidgetColoured(QWidget *pWidget, const QString &ansiColor)
         pWidget->setBackgroundRole(QPalette::Window);
 
         if (auto *pLabel = qdynamic_downcast<QLabel>(pWidget)) {
-            QString displayString = color.intelligibleNameFg;
+            const auto display_string = [&color, &changeText](auto labelText) {
+                if (!changeText) {
+                    // Strip previous HTML entities
+                    QRegularExpression re(R"(</?[b|i|u]>)");
+                    labelText.replace(re, "");
+                    return labelText;
+                }
+
+                const bool hasFg = color.intelligibleNameFg != NONE;
+                const bool hasBg = color.intelligibleNameBg != NONE;
+                if (!hasFg && !hasBg)
+                    return QString(NONE);
+                else if (hasFg && !hasBg)
+                    return color.intelligibleNameFg;
+                else if (!hasFg && hasBg)
+                    return QString("on %2").arg(color.intelligibleNameBg);
+                else
+                    return QString("%1 on %2")
+                        .arg(color.intelligibleNameFg)
+                        .arg(color.intelligibleNameBg);
+            };
+            QString displayString = display_string(pLabel->text());
             if (color.bold)
                 displayString = QString("<b>%1</b>").arg(displayString);
             if (color.italic)
