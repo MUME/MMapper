@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>GroupManagerPage</class>
  <widget class="QWidget" name="GroupManagerPage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>429</width>
+    <height>700</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>GroupManager Settings</string>
   </property>
@@ -420,6 +428,67 @@ p, li { white-space: pre-wrap; }
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Group Tells</string>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <item>
+       <widget class="QLabel" name="label_11">
+        <property name="text">
+         <string>Color:</string>
+        </property>
+        <property name="buddy">
+         <cstring>groupTellColorPushButton</cstring>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="groupTellColorLabel">
+        <property name="frameShape">
+         <enum>QFrame::StyledPanel</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
+        </property>
+        <property name="text">
+         <string>Gandalf tells you [GT] 'Fly, you fools!'</string>
+        </property>
+        <property name="margin">
+         <number>3</number>
+        </property>
+        <property name="indent">
+         <number>3</number>
+        </property>
+        <property name="buddy">
+         <cstring>groupTellColorPushButton</cstring>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="groupTellColorPushButton">
+        <property name="text">
+         <string>Select</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QFrame" name="frame_4">
      <layout class="QGridLayout" name="_2">
       <item row="1" column="0">
@@ -462,6 +531,7 @@ p, li { white-space: pre-wrap; }
   <tabstop>shareSelfCheckBox</tabstop>
   <tabstop>remoteHost</tabstop>
   <tabstop>remotePort</tabstop>
+  <tabstop>groupTellColorPushButton</tabstop>
   <tabstop>rulesWarning</tabstop>
  </tabstops>
  <resources/>

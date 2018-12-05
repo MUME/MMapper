@@ -32,6 +32,8 @@
 #include "../pandoragroup/CGroup.h"
 #include "../pandoragroup/groupauthority.h"
 #include "../pandoragroup/mmapper2group.h"
+#include "AnsiColorDialog.h"
+#include "ansicombo.h"
 
 GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
     : QWidget(parent)
@@ -124,6 +126,15 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
             &GroupManagerPage::remotePortValueChanged);
     remoteHost->setText(groupManager.host);
     remotePort->setValue(groupManager.remotePort);
+
+    // Group Tells Section
+    AnsiCombo::makeWidgetColoured(groupTellColorLabel, groupManager.groupTellColor, false);
+    connect(groupTellColorPushButton, &QPushButton::pressed, this, [this]() {
+        QString ansiString = AnsiColorDialog::getColor(getConfig().groupManager.groupTellColor,
+                                                       this);
+        AnsiCombo::makeWidgetColoured(groupTellColorLabel, ansiString, false);
+        setConfig().groupManager.groupTellColor = ansiString;
+    });
 
     // Other Sections
     connect(rulesWarning, &QCheckBox::stateChanged, this, &GroupManagerPage::rulesWarningChanged);

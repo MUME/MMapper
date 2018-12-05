@@ -141,6 +141,7 @@ ConstString KEY_EXTERNAL_EDITOR_COMMAND = "External editor command";
 ConstString KEY_FILE_NAME = "File name";
 ConstString KEY_FONT = "Font";
 ConstString KEY_FOREGROUND_COLOR = "Foreground color";
+ConstString KEY_GROUP_TELL_ANSI_COLOR = "Group tell ansi color";
 ConstString KEY_HOST = "host";
 ConstString KEY_LAST_MAP_LOAD_DIRECTORY = "Last map load directory";
 ConstString KEY_LINES_OF_INPUT_HISTORY = "Lines of input history";
@@ -472,6 +473,7 @@ void Configuration::PathMachineSettings::read(QSettings &conf)
 void Configuration::GroupManagerSettings::read(QSettings &conf)
 {
     static constexpr const int DEFAULT_PORT = 4243;
+    static constexpr const char *const ANSI_GREEN = "[32m";
 
     state = sanitizeGroupManagerState(
         conf.value(KEY_STATE, static_cast<int>(GroupManagerState::Off)).toInt());
@@ -488,6 +490,7 @@ void Configuration::GroupManagerSettings::read(QSettings &conf)
     requireAuth = NO_OPEN_SSL ? false : conf.value(KEY_AUTHORIZATION_REQUIRED, false).toBool();
     geometry = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
     secretMetadata = conf.value(KEY_SECRET_METADATA).toMap();
+    groupTellColor = conf.value(KEY_GROUP_TELL_ANSI_COLOR, QString(ANSI_GREEN)).toString();
 }
 
 void Configuration::MumeClockSettings::read(QSettings &conf)
@@ -619,6 +622,7 @@ void Configuration::GroupManagerSettings::write(QSettings &conf) const
     conf.setValue(KEY_AUTHORIZATION_REQUIRED, requireAuth);
     conf.setValue(KEY_WINDOW_GEOMETRY, geometry);
     conf.setValue(KEY_SECRET_METADATA, secretMetadata);
+    conf.setValue(KEY_GROUP_TELL_ANSI_COLOR, groupTellColor);
 }
 
 void Configuration::MumeClockSettings::write(QSettings &conf) const

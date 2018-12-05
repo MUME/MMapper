@@ -198,6 +198,7 @@ public:
         bool requireAuth = false;
         QByteArray geometry{};
         QMap<QString, QVariant> secretMetadata{};
+        QString groupTellColor{}; // ANSI color
 
     private:
         SUBGROUP();

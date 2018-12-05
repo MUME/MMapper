@@ -197,9 +197,11 @@ void Mmapper2Group::gTellArrived(const QVariantMap &node)
     const QString &text = node["text"].toString();
     emit log("GroupManager", QString("GTell from %1 arrived: %2").arg(from.constData()).arg(text));
 
-    // TODO: Color
-    const QByteArray tell
-        = QString("%1 tells you [GT] '%2'").arg(from.constData()).arg(text).toLatin1();
+    const QByteArray tell = QString("\x1b%1%2 tells you [GT] '%3'\x1b[0m")
+                                .arg(getConfig().groupManager.groupTellColor)
+                                .arg(from.constData())
+                                .arg(text)
+                                .toLatin1();
 
     emit displayGroupTellEvent(tell);
 }

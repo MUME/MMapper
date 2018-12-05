@@ -101,8 +101,9 @@ void GroupSocket::connectToHost()
     const auto &groupConfig = getConfig().groupManager;
     const auto remoteHost = groupConfig.host;
     const auto remotePort = static_cast<quint16>(groupConfig.remotePort);
-    emit sendLog(
-        QString("Connecting to remote host %1:%2").arg(remoteHost.constData()).arg(remotePort));
+    emit sendLog(QString("Connecting to remote host %1:%2")
+                     .arg(remoteHost.simplified().constData())
+                     .arg(remotePort));
     socket.connectToHost(remoteHost, remotePort);
 }
 
