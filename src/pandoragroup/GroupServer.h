@@ -75,7 +75,7 @@ protected slots:
 protected:
     void sendRemoveUserNotification(GroupSocket *socket, const QByteArray &name);
     void sendGroupTellMessage(const QVariantMap &root) override;
-    void start() override;
+    bool start() override;
     void stop() override;
     void sendCharUpdate(const QVariantMap &map) override;
     void sendCharRename(const QVariantMap &map) override;
@@ -85,7 +85,6 @@ private:
     void parseHandshake(GroupSocket *socket, const QVariantMap &data);
     void parseLoginInformation(GroupSocket *socket, const QVariantMap &data);
     void sendGroupInformation(GroupSocket *socket);
-    void serverStartupFailed();
     void kickConnection(GroupSocket *socket, const QString &message);
 
 protected slots:

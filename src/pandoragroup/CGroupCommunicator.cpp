@@ -45,16 +45,10 @@ using Messages = CGroupCommunicator::Messages;
 
 constexpr const bool LOG_MESSAGE_INFO = false;
 
-CGroupCommunicator::CGroupCommunicator(GroupManagerState type, Mmapper2Group *parent)
+CGroupCommunicator::CGroupCommunicator(GroupManagerState mode, Mmapper2Group *parent)
     : QObject(parent)
-    , type(type)
-{
-    connect(this, &CGroupCommunicator::sendLog, parent, &Mmapper2Group::sendLog);
-    connect(this, &CGroupCommunicator::messageBox, parent, &Mmapper2Group::relayMessageBox);
-    connect(this, &CGroupCommunicator::gTellArrived, parent, &Mmapper2Group::gTellArrived);
-    connect(this, &CGroupCommunicator::destroyed, parent, &Mmapper2Group::networkDown);
-    connect(this, &CGroupCommunicator::scheduleAction, parent->getGroup(), &CGroup::scheduleAction);
-}
+    , mode(mode)
+{}
 
 //
 // Communication protocol switches and logic

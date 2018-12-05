@@ -89,12 +89,12 @@ GroupSocket::~GroupSocket()
 {
     timer.stop();
     socket.disconnectFromHost();
-    qDebug() << "Destructed CGroupClient" << socket.socketDescriptor();
 }
 
 void GroupSocket::connectToHost()
 {
     if (socket.state() != QAbstractSocket::UnconnectedState) {
+        emit sendLog("Aborting previous connection");
         socket.abort();
     }
     timer.start();

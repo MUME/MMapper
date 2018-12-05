@@ -251,18 +251,21 @@ void MainWindow::startServices()
     }
 
     m_groupManager->start();
+    groupNetwork.networkStopAct->setChecked(true);
     switch (getConfig().groupManager.state) {
     case GroupManagerState::Off:
         groupMode.groupOffAct->setChecked(true);
-        groupOff();
+        onModeGroupOff();
         break;
     case GroupManagerState::Client:
         groupMode.groupClientAct->setChecked(true);
-        groupClient();
+        onModeGroupClient();
+        groupNetwork.networkStartAct->trigger();
         break;
     case GroupManagerState::Server:
         groupMode.groupServerAct->setChecked(true);
-        groupServer();
+        onModeGroupServer();
+        groupNetwork.networkStartAct->trigger();
         break;
     }
 }
@@ -371,14 +374,14 @@ void MainWindow::wireConnections()
             SLOT(update()),
             Qt::QueuedConnection);
     connect(this,
-            &MainWindow::setGroupManagerType,
+            &MainWindow::setGroupMode,
             m_groupManager,
-            &Mmapper2Group::setType,
+            &Mmapper2Group::setMode,
             Qt::QueuedConnection);
     connect(m_groupManager,
-            &Mmapper2Group::groupManagerOff,
+            &Mmapper2Group::networkStatus,
             this,
-            &MainWindow::groupManagerOff,
+            &MainWindow::groupNetworkStatus,
             Qt::QueuedConnection);
     connect(m_mapData, &MapFrontend::clearingMap, m_groupWidget, &GroupWidget::mapUnloaded);
 
@@ -806,41 +809,48 @@ void MainWindow::createActions()
     // copyAct->setEnabled(false);
 
     // group Manager
-    groupMode.groupOffAct = new QAction(QIcon(":/icons/groupoff.png"), tr("&Off"), this);
-    groupMode.groupOffAct->setShortcut(tr("Ctrl+G"));
+    groupMode.groupOffAct = new QAction(QIcon(":/icons/groupoff.png"),
+                                        tr("Switch to &offline mode"),
+                                        this);
     groupMode.groupOffAct->setCheckable(true);
-    connect(groupMode.groupOffAct,
-            &QAction::triggered,
-            this,
-            &MainWindow::groupOff,
-            Qt::QueuedConnection);
+    connect(groupMode.groupOffAct, &QAction::triggered, this, &MainWindow::onModeGroupOff);
 
     groupMode.groupClientAct = new QAction(QIcon(":/icons/groupclient.png"),
-                                           tr("&Connect to a friend's map"),
+                                           tr("Switch to &client mode"),
                                            this);
     groupMode.groupClientAct->setCheckable(true);
-    connect(groupMode.groupClientAct,
-            &QAction::triggered,
-            this,
-            &MainWindow::groupClient,
-            Qt::QueuedConnection);
+    connect(groupMode.groupClientAct, &QAction::triggered, this, &MainWindow::onModeGroupClient);
 
     groupMode.groupServerAct = new QAction(QIcon(":/icons/groupserver.png"),
-                                           tr("&Host your map with friends"),
+                                           tr("Switch to &hosting mode"),
                                            this);
     groupMode.groupServerAct->setCheckable(true);
-    connect(groupMode.groupServerAct,
-            &QAction::triggered,
-            this,
-            &MainWindow::groupServer,
-            Qt::QueuedConnection);
+    connect(groupMode.groupServerAct, &QAction::triggered, this, &MainWindow::onModeGroupServer);
 
-    groupMode.groupManagerGroup = new QActionGroup(this);
-    groupMode.groupManagerGroup->setExclusive(true);
-    groupMode.groupManagerGroup->addAction(groupMode.groupOffAct);
-    groupMode.groupManagerGroup->addAction(groupMode.groupClientAct);
-    groupMode.groupManagerGroup->addAction(groupMode.groupServerAct);
-    groupManagerOff();
+    groupMode.groupModeGroup = new QActionGroup(this);
+    groupMode.groupModeGroup->setExclusive(true);
+    groupMode.groupModeGroup->addAction(groupMode.groupOffAct);
+    groupMode.groupModeGroup->addAction(groupMode.groupClientAct);
+    groupMode.groupModeGroup->addAction(groupMode.groupServerAct);
+
+    groupNetwork.networkStartAct = new QAction(QIcon(":/icons/online.png"), tr("Start"), this);
+    groupNetwork.networkStartAct->setCheckable(true);
+    groupNetwork.networkStartAct->setShortcut(tr("Ctrl+G"));
+    groupNetwork.networkStopAct = new QAction(QIcon(":/icons/offline.png"), tr("Stop"), this);
+    groupNetwork.networkStopAct->setCheckable(true);
+    connect(groupNetwork.networkStartAct,
+            &QAction::triggered,
+            m_groupManager,
+            &Mmapper2Group::startNetwork);
+    connect(groupNetwork.networkStopAct,
+            &QAction::triggered,
+            m_groupManager,
+            &Mmapper2Group::stopNetwork);
+
+    groupNetwork.groupNetworkGroup = new QActionGroup(this);
+    groupNetwork.groupNetworkGroup->setExclusive(true);
+    groupNetwork.groupNetworkGroup->addAction(groupNetwork.networkStartAct);
+    groupNetwork.groupNetworkGroup->addAction(groupNetwork.networkStopAct);
 }
 
 void MainWindow::onPlayMode()
@@ -1008,9 +1018,12 @@ void MainWindow::setupMenuBar()
     settingsMenu = menuBar()->addMenu(tr("&Tools"));
     settingsMenu->addAction(clientAct);
     groupMenu = settingsMenu->addMenu(QIcon(":/icons/groupclient.png"), tr("&Group Manager"));
-    groupMenu->addAction(groupMode.groupOffAct);
-    groupMenu->addAction(groupMode.groupClientAct);
-    groupMenu->addAction(groupMode.groupServerAct);
+    groupModeMenu = groupMenu->addMenu(tr("&Mode"));
+    groupModeMenu->addAction(groupMode.groupOffAct);
+    groupModeMenu->addAction(groupMode.groupClientAct);
+    groupModeMenu->addAction(groupMode.groupServerAct);
+    groupMenu->addAction(groupNetwork.networkStartAct);
+    groupMenu->addAction(groupNetwork.networkStopAct);
     QMenu *pathMachineMenu = settingsMenu->addMenu(QIcon(":/icons/force.png"), tr("&Path Machine"));
     pathMachineMenu->addAction(mouseMode.modeRoomSelectAct);
     pathMachineMenu->addSeparator();
@@ -1122,6 +1135,8 @@ void MainWindow::setupToolBars()
     groupToolBar->addAction(groupMode.groupOffAct);
     groupToolBar->addAction(groupMode.groupClientAct);
     groupToolBar->addAction(groupMode.groupServerAct);
+    groupToolBar->addAction(groupNetwork.networkStartAct);
+    groupToolBar->addAction(groupNetwork.networkStopAct);
     groupToolBar->hide();
 
     viewToolBar = addToolBar(tr("View"));
@@ -1605,36 +1620,48 @@ void MainWindow::onLaunchClient()
     m_client->connectToHost();
 }
 
-void MainWindow::groupManagerOff()
+void MainWindow::groupNetworkStatus(const bool status)
 {
-    groupMode.groupOffAct->setChecked(true);
-    m_dockDialogGroup->hide();
-}
-
-void MainWindow::groupOff()
-{
-    if (m_groupManager->getType() != GroupManagerState::Off && groupMode.groupOffAct->isChecked()) {
-        emit setGroupManagerType(GroupManagerState::Off);
+    if (status) {
+        qDebug() << "Network up";
+        m_dockDialogGroup->show();
+        groupNetwork.networkStopAct->setShortcut(tr("Ctrl+G"));
+        groupNetwork.networkStartAct->setChecked(true);
+        groupNetwork.networkStartAct->setShortcut(tr(""));
+    } else {
+        qDebug() << "Network down";
         m_dockDialogGroup->hide();
+        groupNetwork.networkStartAct->setShortcut(tr("Ctrl+G"));
+        groupNetwork.networkStopAct->setChecked(true);
+        groupNetwork.networkStopAct->setShortcut(tr(""));
     }
 }
 
-void MainWindow::groupClient()
+void MainWindow::onModeGroupOff()
 {
-    if (m_groupManager->getType() != GroupManagerState::Client
-        && groupMode.groupClientAct->isChecked()) {
-        emit setGroupManagerType(GroupManagerState::Client);
-        m_dockDialogGroup->show();
-    }
+    groupModeMenu->setIcon(QIcon(":/icons/groupoff.png"));
+    groupNetwork.groupNetworkGroup->setEnabled(false);
+    groupNetwork.networkStartAct->setText("Start");
+    groupNetwork.networkStopAct->setText("Stop");
+    emit setGroupMode(GroupManagerState::Off);
 }
 
-void MainWindow::groupServer()
+void MainWindow::onModeGroupClient()
 {
-    if (m_groupManager->getType() != GroupManagerState::Server
-        && groupMode.groupServerAct->isChecked()) {
-        emit setGroupManagerType(GroupManagerState::Server);
-        m_dockDialogGroup->show();
-    }
+    groupModeMenu->setIcon(QIcon(":/icons/groupclient.png"));
+    groupNetwork.groupNetworkGroup->setEnabled(true);
+    groupNetwork.networkStartAct->setText("&Connect to a friend's map");
+    groupNetwork.networkStopAct->setText("&Disconnect");
+    emit setGroupMode(GroupManagerState::Client);
+}
+
+void MainWindow::onModeGroupServer()
+{
+    groupModeMenu->setIcon(QIcon(":/icons/groupserver.png"));
+    groupNetwork.groupNetworkGroup->setEnabled(true);
+    groupNetwork.networkStartAct->setText("&Host your map with friends");
+    groupNetwork.networkStopAct->setText("&Disconnect");
+    emit setGroupMode(GroupManagerState::Server);
 }
 
 void MainWindow::setCurrentFile(const QString &fileName)

@@ -141,7 +141,7 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
     rulesWarning->setChecked(groupManager.rulesWarning);
 
     // Inform Group Manager of changes
-    connect(this, &GroupManagerPage::setGroupManagerType, m_groupManager, &Mmapper2Group::setType);
+    connect(this, &GroupManagerPage::setGroupManagerType, m_groupManager, &Mmapper2Group::setMode);
     connect(this, &GroupManagerPage::updatedSelf, m_groupManager, &Mmapper2Group::updateSelf);
 }
 
@@ -228,7 +228,7 @@ void GroupManagerPage::remoteHostTextChanged()
     if (currentHost != savedHost) {
         savedHost = currentHost;
 
-        if (m_groupManager->getType() == GroupManagerState::Client) {
+        if (m_groupManager->getMode() == GroupManagerState::Client) {
             emit setGroupManagerType(GroupManagerState::Off);
         }
     }
@@ -241,7 +241,7 @@ void GroupManagerPage::remotePortValueChanged(int /*unused*/)
     if (currentRemotePort != savedRemotePort) {
         savedRemotePort = currentRemotePort;
 
-        if (m_groupManager->getType() == GroupManagerState::Client) {
+        if (m_groupManager->getMode() == GroupManagerState::Client) {
             emit setGroupManagerType(GroupManagerState::Off);
         }
     }
@@ -259,7 +259,7 @@ void GroupManagerPage::localPortValueChanged(int /*unused*/)
     if (currentLocalPort != savedLocalPort) {
         savedLocalPort = currentLocalPort;
 
-        if (m_groupManager->getType() == GroupManagerState::Server) {
+        if (m_groupManager->getMode() == GroupManagerState::Server) {
             emit setGroupManagerType(GroupManagerState::Off);
         }
     }

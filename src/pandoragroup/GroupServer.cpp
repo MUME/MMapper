@@ -146,13 +146,15 @@ GroupServer::GroupServer(Mmapper2Group *parent)
     : CGroupCommunicator(GroupManagerState::Server, parent)
     , server(this)
 {
+    connect(&server, &GroupTcpServer::acceptError, this, [this]() {
+        emit sendLog(QString("Server encountered an error: %1").arg(server.errorString()));
+    });
     connect(&server,
             &GroupTcpServer::signal_incomingConnection,
             this,
             &GroupServer::onIncomingConnection);
     connect(getAuthority(), &GroupAuthority::secretRevoked, this, &GroupServer::onRevokeWhitelist);
     emit sendLog("Server mode has been selected");
-    start();
 }
 
 GroupServer::~GroupServer()
@@ -173,13 +175,6 @@ void GroupServer::connectionClosed(GroupSocket *const socket)
         emit scheduleAction(new RemoveCharacter(name));
     }
     closeOne(socket);
-}
-
-void GroupServer::serverStartupFailed()
-{
-    emit messageBox(
-        QString("Failed to start the groupManager server: %1.").arg(server.errorString()));
-    stop();
 }
 
 void GroupServer::connectionEstablished(GroupSocket *const socket)
@@ -494,14 +489,23 @@ void GroupServer::stop()
     deleteLater();
 }
 
-void GroupServer::start()
+bool GroupServer::start()
 {
+    if (server.isListening()) {
+        emit sendLog("Closing connections and restarting server...");
+        server.setMaxPendingConnections(0);
+        closeAll();
+        server.close();
+    }
     const auto localPort = static_cast<quint16>(getConfig().groupManager.localPort);
     emit sendLog(QString("Listening on port %1").arg(localPort));
     if (!server.listen(QHostAddress::Any, localPort)) {
         emit sendLog("Failed to start a group Manager server");
-        serverStartupFailed();
+        emit messageBox(
+            QString("Failed to start the groupManager server: %1.").arg(server.errorString()));
+        return false;
     }
+    return true;
 }
 
 bool GroupServer::kickCharacter(const QByteArray &name)

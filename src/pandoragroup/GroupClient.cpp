@@ -53,7 +53,6 @@ GroupClient::GroupClient(Mmapper2Group *parent)
     connect(&client, &GroupSocket::connectionEstablished, this, &GroupClient::connectionEstablished);
     connect(&client, &GroupSocket::connectionClosed, this, &GroupClient::connectionClosed);
     connect(&client, &GroupSocket::connectionEncrypted, this, &GroupClient::connectionEncrypted);
-    start();
 }
 
 GroupClient::~GroupClient()
@@ -321,9 +320,10 @@ void GroupClient::stop()
     deleteLater();
 }
 
-void GroupClient::start()
+bool GroupClient::start()
 {
     client.connectToHost();
+    return true;
 }
 
 bool GroupClient::kickCharacter(const QByteArray &)

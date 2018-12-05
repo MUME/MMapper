@@ -46,7 +46,7 @@ class CGroupCommunicator : public QObject
 {
     Q_OBJECT
 public:
-    explicit CGroupCommunicator(GroupManagerState type, Mmapper2Group *parent);
+    explicit CGroupCommunicator(GroupManagerState mode, Mmapper2Group *parent);
 
     static constexpr const ProtocolVersion PROTOCOL_VERSION_103 = 103;
     static constexpr const ProtocolVersion PROTOCOL_VERSION_102 = 102;
@@ -69,11 +69,11 @@ public:
         RENAME_CHAR
     };
 
-    GroupManagerState getType() const { return type; }
+    GroupManagerState getMode() const { return mode; }
     void sendSelfRename(const QByteArray &, const QByteArray &);
 
     virtual void stop() = 0;
-    virtual void start() = 0;
+    virtual bool start() = 0;
     virtual void sendCharUpdate(const QVariantMap &map) = 0;
     virtual bool kickCharacter(const QByteArray &) = 0;
 
@@ -103,7 +103,7 @@ signals:
     void sendLog(const QString &);
 
 private:
-    GroupManagerState type = GroupManagerState::Off;
+    GroupManagerState mode = GroupManagerState::Off;
 };
 
 #endif /*CGROUPCOMMUNICATOR_H_*/

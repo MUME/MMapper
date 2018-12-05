@@ -49,7 +49,7 @@ public slots:
 
 protected:
     void sendGroupTellMessage(const QVariantMap &map) override;
-    void start() override;
+    bool start() override;
     void stop() override;
     void sendCharUpdate(const QVariantMap &map) override;
     void sendCharRename(const QVariantMap &map) override;

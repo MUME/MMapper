@@ -102,13 +102,13 @@ bool Mmapper2Group::init()
             &Mmapper2Group::characterChanged,
             Qt::QueuedConnection);
 
-    emit log("GroupManager", "Starting up the GroupManager");
+    emit log("GroupManager", "Initialized Group Manager service");
     return true;
 }
 
 void Mmapper2Group::characterChanged()
 {
-    if (getType() != GroupManagerState::Off) {
+    if (getMode() != GroupManagerState::Off) {
         emit drawCharacters();
     }
 }
@@ -143,7 +143,7 @@ void Mmapper2Group::updateSelf()
         return;
     }
 
-    if (getType() != GroupManagerState::Off) {
+    if (getMode() != GroupManagerState::Off) {
         issueLocalCharUpdate();
     }
 }
@@ -151,7 +151,7 @@ void Mmapper2Group::updateSelf()
 void Mmapper2Group::setCharPosition(RoomId pos)
 {
     QMutexLocker locker(&networkLock);
-    if (!group || getType() == GroupManagerState::Off) {
+    if (!group || getMode() == GroupManagerState::Off) {
         return;
     }
 
@@ -164,7 +164,7 @@ void Mmapper2Group::setCharPosition(RoomId pos)
 void Mmapper2Group::issueLocalCharUpdate()
 {
     QMutexLocker locker(&networkLock);
-    if (!group || getType() == GroupManagerState::Off) {
+    if (!group || getMode() == GroupManagerState::Off) {
         return;
     }
 
@@ -224,7 +224,7 @@ void Mmapper2Group::sendGroupTell(const QByteArray &tell)
 
 void Mmapper2Group::parseScoreInformation(QByteArray score)
 {
-    if (!group || getType() == GroupManagerState::Off) {
+    if (!group || getMode() == GroupManagerState::Off) {
         return;
     }
     emit log("GroupManager", QString("Caught a score line: %1").arg(score.constData()));
@@ -275,7 +275,7 @@ void Mmapper2Group::parseScoreInformation(QByteArray score)
 
 void Mmapper2Group::parsePromptInformation(QByteArray prompt)
 {
-    if (!group || getType() == GroupManagerState::Off) {
+    if (!group || getMode() == GroupManagerState::Off) {
         return;
     }
 
@@ -394,60 +394,88 @@ void Mmapper2Group::sendLog(const QString &text)
     emit log("GroupManager", text);
 }
 
-GroupManagerState Mmapper2Group::getType()
+GroupManagerState Mmapper2Group::getMode()
 {
     QMutexLocker locker(&networkLock);
-    return network ? network->getType() : GroupManagerState::Off;
+    return network ? network->getMode() : GroupManagerState::Off;
 }
 
-void Mmapper2Group::networkDown()
-{
-    qDebug() << "Network down";
-    network.release();
-    setConfig().groupManager.state = GroupManagerState::Off;
-    emit groupManagerOff();
-}
-
-void Mmapper2Group::setType(GroupManagerState newState)
+void Mmapper2Group::startNetwork()
 {
     QMutexLocker locker(&networkLock);
 
-    // Delete previous network and regenerate
-    if (network) {
-        network->stop();
-        network->deleteLater();
-        network.release(); // There might still be signals left to be processed
+    if (!network) {
+        // Create network
+        switch (getConfig().groupManager.state) {
+        case GroupManagerState::Server:
+            network.reset(new GroupServer(this));
+            break;
+        case GroupManagerState::Client:
+            network.reset(new GroupClient(this));
+            break;
+        case GroupManagerState::Off:
+            return;
+        }
+
+        connect(network.get(), &CGroupCommunicator::sendLog, this, &Mmapper2Group::sendLog);
+        connect(network.get(),
+                &CGroupCommunicator::messageBox,
+                this,
+                &Mmapper2Group::relayMessageBox);
+        connect(network.get(),
+                &CGroupCommunicator::gTellArrived,
+                this,
+                &Mmapper2Group::gTellArrived);
+        connect(network.get(), &CGroupCommunicator::destroyed, this, [this]() {
+            network.release();
+            emit networkStatus(false);
+        });
+        connect(network.get(),
+                &CGroupCommunicator::scheduleAction,
+                getGroup(),
+                &CGroup::scheduleAction);
     }
 
-    const auto oldState = getConfig().groupManager.state;
-    if (oldState != newState)
-        setConfig().groupManager.state = newState; // Ensure config matches reality
+    // REVISIT: What about if the network is already started?
+    if (network->start()) {
+        emit networkStatus(true);
+        emit drawCharacters();
 
-    const auto currentState = getType();
-    if (currentState == newState)
-        return; // Do not bother changing states if we're already in it
-
-    switch (newState) {
-    case GroupManagerState::Server:
-        network.reset(new GroupServer(this));
-        break;
-    case GroupManagerState::Client:
-        network.reset(new GroupClient(this));
-        break;
-    case GroupManagerState::Off:
-    default:
-        sendLog("Off mode has been selected");
-        break;
-    }
-    qDebug() << "Network type set to" << static_cast<int>(newState);
-
-    if (newState != GroupManagerState::Off) {
         if (getConfig().groupManager.rulesWarning) {
             emit messageBox("Warning: MUME Rules",
                             "Using the GroupManager in PK situations is ILLEGAL "
                             "according to RULES ACTIONS.\n\nBe sure to disable the "
                             "GroupManager under such conditions.");
         }
-        emit drawCharacters();
+    } else {
+        network->stop();
     }
+}
+
+void Mmapper2Group::stopNetwork()
+{
+    QMutexLocker locker(&networkLock);
+    if (network) {
+        network->stop();
+    }
+}
+
+void Mmapper2Group::setMode(GroupManagerState newMode)
+{
+    QMutexLocker locker(&networkLock);
+
+    const auto oldMode = getConfig().groupManager.state;
+    if (oldMode != newMode)
+        setConfig().groupManager.state = newMode; // Ensure config matches reality
+
+    const auto currentState = getMode();
+    if (currentState == newMode)
+        return; // Do not bother changing states if we're already in it
+
+    // Delete previous network if it changed
+    if (network) {
+        network->stop();
+    }
+
+    qDebug() << "Network type set to" << static_cast<int>(newMode);
 }

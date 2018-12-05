@@ -64,7 +64,7 @@ signals:
     void log(const QString &, const QString &);
     void displayGroupTellEvent(const QByteArray &tell); // displays gtell from remote user
     void messageBox(QString title, QString message);
-    void groupManagerOff();
+    void networkStatus(bool);
     void drawCharacters(); // redraw the opengl screen
 
 public:
@@ -73,14 +73,16 @@ public:
 
     void start();
 
-    GroupManagerState getType();
+    GroupManagerState getMode();
 
     GroupAuthority *getAuthority() { return authority.get(); }
     CGroup *getGroup() { return group.get(); }
 
 public slots:
     void setCharPosition(RoomId pos);
-    void setType(GroupManagerState newState);
+    void setMode(GroupManagerState newState);
+    void startNetwork();
+    void stopNetwork();
     void updateSelf(); // changing settings
 
     void sendGroupTell(const QByteArray &tell); // sends gtell from local user
@@ -88,13 +90,12 @@ public slots:
     void parseScoreInformation(QByteArray score);
     void parsePromptInformation(QByteArray prompt);
 
+protected slots:
     // Communicator
     void gTellArrived(const QVariantMap &node);
     void relayMessageBox(const QString &message);
     void sendLog(const QString &);
-    void networkDown();
 
-protected slots:
     void characterChanged();
 
 private:

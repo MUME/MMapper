@@ -96,7 +96,9 @@ public:
     void startServices();
 
 signals:
-    void setGroupManagerType(GroupManagerState);
+    void setGroupMode(GroupManagerState);
+    void startGroupNetwork();
+    void stopGroupNetwork();
 
 public slots:
     void newFile();
@@ -147,10 +149,10 @@ public slots:
     void newInfoMarkSelection(InfoMarkSelection *);
     void showContextMenu(const QPoint &);
 
-    void groupOff();
-    void groupClient();
-    void groupServer();
-    void groupManagerOff();
+    void onModeGroupOff();
+    void onModeGroupClient();
+    void onModeGroupServer();
+    void groupNetworkStatus(const bool toggle);
 
     void onCheckForUpdate();
     void voteForMUMEOnTMC();
@@ -213,9 +215,7 @@ private:
     QMenu *mumeMenu = nullptr;
     QMenu *onlineTutorialsMenu = nullptr;
     QMenu *groupMenu = nullptr;
-
-    QAction *groupShowHideAct = nullptr;
-    QAction *groupSettingsAct = nullptr;
+    QMenu *groupModeMenu = nullptr;
 
     QAction *newAct = nullptr;
     QAction *openAct = nullptr;
@@ -282,11 +282,18 @@ private:
 
     struct GroupModeActions
     {
-        QActionGroup *groupManagerGroup = nullptr;
+        QActionGroup *groupModeGroup = nullptr;
         QAction *groupOffAct = nullptr;
         QAction *groupClientAct = nullptr;
         QAction *groupServerAct = nullptr;
     } groupMode{};
+
+    struct GroupNetworkActions
+    {
+        QActionGroup *groupNetworkGroup = nullptr;
+        QAction *networkStartAct = nullptr;
+        QAction *networkStopAct = nullptr;
+    } groupNetwork{};
 
     QAction *createRoomAct = nullptr;
     QAction *editRoomSelectionAct = nullptr;
