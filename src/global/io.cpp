@@ -110,37 +110,71 @@ bool tuneKeepAlive(qintptr socketDescriptor, int maxIdle, int count, int interva
     const auto intervalInMillis = static_cast<unsigned long>(interval * 1000);
     return WinSock::tuneKeepAlive(socket, maxIdleInMillis, intervalInMillis);
 #else
+    // Enable TCP keepalive
     const int fd = static_cast<int>(socketDescriptor);
-
-    // Verify that keepalive option is enabled
-    int optVal;
-    socklen_t optLen = sizeof(optVal);
-    if (getsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &optVal, &optLen) < 0) {
-        return false;
-    }
-    if (optVal != 1) {
+    int optVal = 1;
+    int ret = setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &optVal, sizeof(optVal));
+    if (ret == -1) {
+        qWarning() << "setsockopt(SO_KEEPALIVE) failed with" << ret << errno;
         return false;
     }
 
 #ifdef Q_OS_MAC
     // Tune that we wait until 'maxIdle' (default: 60) seconds
-    setsockopt(fd, IPPROTO_TCP, TCP_KEEPALIVE, &maxIdle, sizeof(maxIdle));
+    ret = setsockopt(fd, IPPROTO_TCP, TCP_KEEPALIVE, &maxIdle, sizeof(maxIdle));
+    if (ret < 0) {
+        qWarning() << "setsockopt(TCP_KEEPALIVE) failed with" << ret << errno;
+        return false;
+    }
 
     // and then send up to 'count' (default: 4) keepalive packets out, then disconnect if no response
-    setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &count, sizeof(count));
+    ret = setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &count, sizeof(count));
+    if (ret < 0) {
+        qWarning() << "setsockopt(TCP_KEEPCNT) failed with" << ret << errno;
+        return false;
+    }
 
     // Send a keepalive packet out every 'interval' (default: 60) seconds
-    setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &interval, sizeof(interval));
+    ret = setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &interval, sizeof(interval));
+    if (ret < 0) {
+        qWarning() << "setsockopt(TCP_KEEPINTVL) failed with" << ret << errno;
+        return false;
+    }
 #else
     // Tune that we wait until 'maxIdle' (default: 60) seconds
-    setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &maxIdle, sizeof(maxIdle));
+    ret = setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &maxIdle, sizeof(maxIdle));
+    if (ret < 0) {
+        qWarning() << "setsockopt(TCP_KEEPIDLE) failed with" << ret << errno;
+        return false;
+    }
 
     // and then send up to 'count' (default: 4) keepalive packets out, then disconnect if no response
-    setsockopt(fd, SOL_TCP, TCP_KEEPCNT, &count, sizeof(count));
+    ret = setsockopt(fd, SOL_TCP, TCP_KEEPCNT, &count, sizeof(count));
+    if (ret < 0) {
+        qWarning() << "setsockopt(TCP_KEEPCNT) failed with" << ret << errno;
+        return false;
+    }
 
     // Send a keepalive packet out every 'interval' (default: 60) seconds
-    setsockopt(fd, SOL_TCP, TCP_KEEPINTVL, &interval, sizeof(interval));
+    ret = setsockopt(fd, SOL_TCP, TCP_KEEPINTVL, &interval, sizeof(interval));
+    if (ret < 0) {
+        qWarning() << "setsockopt(TCP_KEEPINTVL) failed with" << ret << errno;
+        return false;
+    }
+
 #endif
+    // Verify that the keepalive option is enabled
+    optVal = 0;
+    socklen_t optLen = sizeof(optVal);
+    ret = getsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &optVal, &optLen);
+    if (ret == -1) {
+        qWarning() << "getsockopt(SO_KEEPALIVE) failed with" << ret << errno;
+        return false;
+    }
+    if (!optVal) {
+        qWarning() << "SO_KEEPALIVE was not enabled" << optVal;
+        return false;
+    }
     return true;
 #endif
 }
