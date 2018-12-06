@@ -57,7 +57,6 @@ GroupClient::GroupClient(Mmapper2Group *parent)
 
 GroupClient::~GroupClient()
 {
-    socket.disconnectFromHost();
     disconnect(&socket, &GroupSocket::incomingData, this, &GroupClient::incomingData);
     disconnect(&socket, &GroupSocket::sendLog, this, &GroupClient::relayLog);
     disconnect(&socket, &GroupSocket::errorInConnection, this, &GroupClient::errorInConnection);
@@ -69,7 +68,7 @@ GroupClient::~GroupClient()
     disconnect(&socket, &GroupSocket::connectionEncrypted, this, &GroupClient::connectionEncrypted);
 }
 
-void GroupClient::connectionEstablished(GroupSocket * /*socket*/)
+void GroupClient::connectionEstablished()
 {
     clientConnected = true;
 }
@@ -80,19 +79,26 @@ void GroupClient::connectionClosed(GroupSocket * /*socket*/)
         return;
 
     emit sendLog("Server closed the connection");
-    stop();
+    tryReconnecting();
 }
 
 void GroupClient::errorInConnection(GroupSocket *const socket, const QString &errorString)
 {
     QString str;
 
+    const auto log_message = [this](const QString &message) {
+        if (reconnectAttempts <= 0)
+            emit messageBox(message);
+        else
+            emit sendLog(message);
+    };
+
     switch (socket->getSocketError()) {
     case QAbstractSocket::ConnectionRefusedError:
         str = QString("Tried to connect to %1 on port %2")
                   .arg(getConfig().groupManager.host.constData())
                   .arg(getConfig().groupManager.remotePort);
-        emit messageBox(QString("Connection refused: %1.").arg(str));
+        log_message(QString("Connection refused: %1.").arg(str));
         break;
 
     case QAbstractSocket::RemoteHostClosedError:
@@ -101,7 +107,7 @@ void GroupClient::errorInConnection(GroupSocket *const socket, const QString &er
 
     case QAbstractSocket::HostNotFoundError:
         str = QString("Host %1 not found ").arg(getConfig().groupManager.host.constData());
-        emit messageBox(QString("Connection refused: %1.").arg(str));
+        log_message(QString("Connection refused: %1.").arg(str));
         break;
 
     case QAbstractSocket::SocketAccessError:
@@ -125,10 +131,10 @@ void GroupClient::errorInConnection(GroupSocket *const socket, const QString &er
     case QAbstractSocket::SslInternalError:
     case QAbstractSocket::SslInvalidUserDataError:
     case QAbstractSocket::TemporaryError:
-        emit messageBox(QString("Connection error: %1.").arg(errorString));
+        log_message(QString("Connection error: %1.").arg(errorString));
         break;
     }
-    stop();
+    tryReconnecting();
 }
 
 void GroupClient::retrieveData(GroupSocket *const socket,
@@ -143,7 +149,7 @@ void GroupClient::retrieveData(GroupSocket *const socket,
     if (socket->getProtocolState() == ProtocolState::AwaitingLogin) {
         // Login state. either REQ_HANDSHAKE, REQ_LOGIN, or ACK should come
         if (message == Messages::REQ_HANDSHAKE) {
-            sendHandshake(socket, data);
+            sendHandshake(data);
         } else if (message == Messages::REQ_LOGIN) {
             assert(!NO_OPEN_SSL);
             socket->setProtocolVersion(proposedProtocolVersion);
@@ -196,7 +202,7 @@ void GroupClient::retrieveData(GroupSocket *const socket,
 //
 // Parsers and Senders of information and signals to upper and lower objects
 //
-void GroupClient::sendHandshake(GroupSocket *const socket, const QVariantMap &data)
+void GroupClient::sendHandshake(const QVariantMap &data)
 {
     const auto get_server_protocol_version = [](const auto &data) {
         if (!data.contains("protocolVersion")
@@ -236,38 +242,38 @@ void GroupClient::sendHandshake(GroupSocket *const socket, const QVariantMap &da
                 emit sendLog("<b>WARNING:</b> "
                              "Host does not support encryption and your connection is insecure.");
 
-            sendLoginInformation(socket);
+            sendLoginInformation();
         }
 
     } else {
         QVariantMap handshake;
         handshake["protocolVersion"] = proposedProtocolVersion;
-        sendMessage(socket, Messages::REQ_HANDSHAKE, handshake);
+        sendMessage(&socket, Messages::REQ_HANDSHAKE, handshake);
     }
 }
 
-void GroupClient::sendLoginInformation(GroupSocket *const socket)
+void GroupClient::sendLoginInformation()
 {
     const CGroupChar *character = getGroup()->getSelf();
     QVariantMap loginData = character->toVariantMap();
     if (proposedProtocolVersion == PROTOCOL_VERSION_102) {
         // Protocol 102 does handshake and login in one step
-        loginData["protocolVersion"] = socket->getProtocolVersion();
-        socket->setProtocolVersion(PROTOCOL_VERSION_102);
+        loginData["protocolVersion"] = socket.getProtocolVersion();
+        socket.setProtocolVersion(PROTOCOL_VERSION_102);
     }
     QVariantMap root;
     root["loginData"] = loginData;
-    sendMessage(socket, Messages::UPDATE_CHAR, root);
+    sendMessage(&socket, Messages::UPDATE_CHAR, root);
 }
 
-void GroupClient::connectionEncrypted(GroupSocket *const socket)
+void GroupClient::connectionEncrypted()
 {
-    const auto secret = socket->getSecret();
+    const auto secret = socket.getSecret();
     emit sendLog(QString("Host's secret: %1").arg(secret.constData()));
 
     const bool requireAuth = getConfig().groupManager.requireAuth;
     const bool validSecret = getAuthority()->validSecret(secret);
-    const bool validCert = getAuthority()->validCertificate(socket);
+    const bool validCert = getAuthority()->validCertificate(&socket);
     if (requireAuth && !validSecret) {
         emit messageBox(
             QString("Host's secret is not in your contacts:\n%1").arg(secret.constData()));
@@ -281,20 +287,37 @@ void GroupClient::connectionEncrypted(GroupSocket *const socket)
         return;
     }
 
-    sendLoginInformation(socket);
+    sendLoginInformation();
 
     if (validSecret) {
         // Update metadata
         getAuthority()->setMetadata(secret,
                                     GroupMetadata::IP_ADDRESS,
-                                    socket->getPeerAddress().toString());
+                                    socket.getPeerAddress().toString());
         getAuthority()->setMetadata(secret,
                                     GroupMetadata::LAST_LOGIN,
                                     QDateTime::currentDateTime().toString());
         getAuthority()->setMetadata(secret,
                                     GroupMetadata::CERTIFICATE,
-                                    socket->getPeerCertificate().toPem());
+                                    socket.getPeerCertificate().toPem());
     }
+}
+
+void GroupClient::tryReconnecting()
+{
+    clientConnected = false;
+
+    if (reconnectAttempts <= 0) {
+        emit sendLog("Exhausted reconnect attempts.");
+        stop();
+        return;
+    }
+    emit sendLog(QString("Attempting to reconnect... (%1 left)").arg(reconnectAttempts));
+
+    // Retry
+    reconnectAttempts--;
+    emit scheduleAction(new ResetCharacters());
+    socket.connectToHost();
 }
 
 void GroupClient::sendGroupTellMessage(const QVariantMap &root)

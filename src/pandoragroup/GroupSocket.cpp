@@ -57,7 +57,7 @@ GroupSocket::GroupSocket(GroupAuthority *authority, QObject *parent)
     config.setPeerVerifyMode(QSslSocket::QueryPeer);
     socket.setSslConfiguration(config);
     socket.setPeerVerifyName(GROUP_COMMON_NAME);
-    connect(&socket, &QAbstractSocket::hostFound, this, [this]() { emit sendLog("Host found."); });
+    connect(&socket, &QAbstractSocket::hostFound, this, [this]() { emit sendLog("Host found..."); });
     connect(&socket, &QAbstractSocket::connected, this, [this]() {
         socket.setSocketOption(QAbstractSocket::LowDelayOption, true);
         socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
@@ -65,14 +65,14 @@ GroupSocket::GroupSocket(GroupAuthority *authority, QObject *parent)
             emit sendLog("Tuned TCP keep alive parameters for socket");
         }
         setProtocolState(ProtocolState::AwaitingLogin);
-        emit sendLog("Connection established.");
+        emit sendLog("Connection established...");
         emit connectionEstablished(this);
     });
     connect(&socket, &QSslSocket::encrypted, this, [this]() {
         timer.stop();
         secret
             = socket.peerCertificate().digest(QCryptographicHash::Algorithm::Sha1).toHex().toLower();
-        emit sendLog("Connection successfully encrypted.");
+        emit sendLog("Connection successfully encrypted...");
         emit connectionEncrypted(this);
     });
     connect(&socket, &QAbstractSocket::disconnected, this, [this]() {
@@ -96,15 +96,18 @@ GroupSocket::~GroupSocket()
 
 void GroupSocket::connectToHost()
 {
+    bool retry = false;
     if (socket.state() != QAbstractSocket::UnconnectedState) {
-        emit sendLog("Aborting previous connection");
+        retry = true;
         socket.abort();
     }
+    reset();
     timer.start();
     const auto &groupConfig = getConfig().groupManager;
     const auto remoteHost = groupConfig.host;
     const auto remotePort = static_cast<quint16>(groupConfig.remotePort);
-    emit sendLog(QString("Connecting to remote host %1:%2")
+    emit sendLog(QString("%1 to remote host %2:%3")
+                     .arg(retry ? "Reconnecting" : "Connecting")
                      .arg(remoteHost.simplified().constData())
                      .arg(remotePort));
     socket.connectToHost(remoteHost, remotePort);
@@ -192,7 +195,6 @@ void GroupSocket::onTimeout()
         case ProtocolState::Unconnected:
         case ProtocolState::AwaitingLogin:
             if (!socket.isEncrypted()) {
-                socket.disconnectFromHost();
                 const QString msg = socket.isEncrypted() ? socket.errorString()
                                                          : "Connection not successfully encrypted";
                 emit errorInConnection(this, msg);
@@ -202,7 +204,6 @@ void GroupSocket::onTimeout()
 
         continue_common_timeout:
         case ProtocolState::AwaitingInfo:
-            socket.disconnectFromHost();
             emit errorInConnection(this, "Login timed out");
             break;
         case ProtocolState::Logged:
@@ -211,7 +212,6 @@ void GroupSocket::onTimeout()
         }
         break;
     case QAbstractSocket::HostLookupState:
-        socket.abort();
         emit errorInConnection(this, "Host not found");
         return;
     case QAbstractSocket::UnconnectedState:
@@ -220,7 +220,6 @@ void GroupSocket::onTimeout()
     case QAbstractSocket::ListeningState:
     case QAbstractSocket::ClosingState:
     default:
-        socket.abort();
         emit errorInConnection(this, "Connection timed out");
         break;
     }
@@ -275,4 +274,14 @@ void GroupSocket::sendData(const QByteArray &data)
     if (DEBUG)
         qDebug() << "Sending message:" << buff;
     socket.write(buff);
+}
+
+void GroupSocket::reset()
+{
+    protocolState = ProtocolState::Unconnected;
+    protocolVersion = 102;
+    buffer.clear();
+    secret.clear();
+    name.clear();
+    currentMessageLen = 0;
 }

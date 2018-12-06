@@ -89,6 +89,8 @@ signals:
     void connectionEncrypted(GroupSocket *);
 
 private:
+    void reset();
+
     QSslSocket socket;
     QTimer timer;
     GroupAuthority *authority;

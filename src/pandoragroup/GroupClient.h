@@ -44,8 +44,8 @@ public slots:
     void errorInConnection(GroupSocket *socket, const QString &);
     void retrieveData(GroupSocket *socket, const Messages message, const QVariantMap &data) override;
     void connectionClosed(GroupSocket *socket) override;
-    void connectionEncrypted(GroupSocket *socket);
-    void connectionEstablished(GroupSocket *socket);
+    void connectionEncrypted();
+    void connectionEstablished();
 
 protected:
     void sendGroupTellMessage(const QVariantMap &map) override;
@@ -56,11 +56,13 @@ protected:
     bool kickCharacter(const QByteArray &) override;
 
 private:
-    void sendHandshake(GroupSocket *socket, const QVariantMap &data);
-    void sendLoginInformation(GroupSocket *socket);
+    void sendHandshake(const QVariantMap &data);
+    void sendLoginInformation();
+    void tryReconnecting();
 
     ProtocolVersion proposedProtocolVersion = PROTOCOL_VERSION_102;
     bool clientConnected = false;
+    int reconnectAttempts{3};
     GroupSocket socket;
 };
 
