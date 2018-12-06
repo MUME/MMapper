@@ -112,11 +112,6 @@ public:
         QStringList moveForcePatternsList{}; // string wildcart patterns, that force new move command
         QStringList noDescriptionPatternsList{};
 
-        QByteArray promptPattern{};
-        QByteArray loginPattern{};
-        QByteArray passwordPattern{};
-        QByteArray menuPromptPattern{};
-
     private:
         SUBGROUP();
     } parser;

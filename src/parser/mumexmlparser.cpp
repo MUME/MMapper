@@ -87,6 +87,7 @@ void MumeXmlParser::parseNewMudInput(const IncomingData &data)
     case TelnetDataType::LOGIN:
     case TelnetDataType::LOGIN_PASSWORD:
         m_lastPrompt = data.line;
+        stripXmlEntities(m_lastPrompt);
         parse(data);
         break;
     case TelnetDataType::SPLIT:

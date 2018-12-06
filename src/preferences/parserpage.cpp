@@ -27,6 +27,7 @@
 
 #include <QColor>
 #include <QComboBox>
+#include <QRegularExpression>
 #include <QString>
 #include <QtWidgets>
 
@@ -147,14 +148,12 @@ void ParserPage::testPatternClicked()
     QString pattern = newPattern->text();
     QString str = testString->text();
     bool matches = false;
-    QRegExp rx;
 
     if ((pattern)[0] != '#') {
     } else {
         switch (static_cast<int>((pattern[1]).toLatin1())) {
         case 33: // !
-            rx.setPattern((pattern).remove(0, 2));
-            if (rx.exactMatch(str)) {
+            if (QRegularExpression(pattern.remove(0, 2)).match(str).hasMatch()) {
                 matches = true;
             }
             break;
@@ -197,7 +196,7 @@ void ParserPage::validPatternClicked()
             && ((pattern)[1] != '>') && ((pattern)[1] != '='))) {
         str = "Pattern must begin with '#t', where t means type of pattern (!?<>=)";
     } else if ((pattern)[1] == '!') {
-        QRegExp rx(pattern.remove(0, 2));
+        QRegularExpression rx(pattern.remove(0, 2));
         if (!rx.isValid()) {
             str = "Pattern '" + pattern + "' is not valid!!!";
         }

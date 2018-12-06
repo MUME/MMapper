@@ -148,10 +148,8 @@ ConstString KEY_LINES_OF_INPUT_HISTORY = "Lines of input history";
 ConstString KEY_LINES_OF_SCROLLBACK = "Lines of scrollback";
 ConstString KEY_LOCAL_PORT = "local port";
 ConstString KEY_LOCAL_PORT_NUMBER = "Local port number";
-ConstString KEY_LOGIN_PATTERN = "Login pattern";
 ConstString KEY_MAP_MODE = "Map Mode";
 ConstString KEY_MAXIMUM_NUMBER_OF_PATHS = "maximum number of paths";
-ConstString KEY_MENU_PROMPT_PATTERN = "Menu prompt pattern";
 ConstString KEY_MOVE_FORCE_PATTERNS_FOR_XML = "Move force patterns for XML";
 ConstString KEY_MULTIPLE_CONNECTIONS_PENALTY = "multiple connections penalty";
 ConstString KEY_MUME_START_EPOCH = "Mume start epoch";
@@ -159,8 +157,6 @@ ConstString KEY_NO_LAUNCH_PANEL = "No launch panel";
 ConstString KEY_NO_ROOM_DESCRIPTION_PATTERNS = "No room description patterns";
 ConstString KEY_NO_SPLASH = "No splash screen";
 ConstString KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES = "Number of anti-aliasing samples";
-ConstString KEY_PASSWORD_PATTERN = "Password pattern";
-ConstString KEY_PROMPT_PATTERN = "Prompt pattern";
 ConstString KEY_PROXY_THREADED = "Proxy Threaded";
 ConstString KEY_PROXY_CONNECTION_STATUS = "Proxy connection status";
 ConstString KEY_RELATIVE_PATH_ACCEPTANCE = "relative path acceptance";
@@ -424,10 +420,6 @@ void Configuration::ParserSettings::read(QSettings &conf)
     removeXmlTags = conf.value(KEY_REMOVE_XML_TAGS, true).toBool();
     moveForcePatternsList = conf.value(KEY_MOVE_FORCE_PATTERNS_FOR_XML).toStringList();
     noDescriptionPatternsList = conf.value(KEY_NO_ROOM_DESCRIPTION_PATTERNS).toStringList();
-    promptPattern = conf.value(KEY_PROMPT_PATTERN, "#>>").toByteArray();
-    loginPattern = conf.value(KEY_LOGIN_PATTERN, "#>known? ").toByteArray();
-    passwordPattern = conf.value(KEY_PASSWORD_PATTERN, "#>pass phrase: ").toByteArray();
-    menuPromptPattern = conf.value(KEY_MENU_PROMPT_PATTERN, "#>> ").toByteArray();
 
     auto &forced = moveForcePatternsList;
     if (forced.isEmpty()) {
@@ -574,10 +566,6 @@ void Configuration::ParserSettings::write(QSettings &conf) const
     conf.setValue(KEY_REMOVE_XML_TAGS, removeXmlTags);
     conf.setValue(KEY_MOVE_FORCE_PATTERNS_FOR_XML, moveForcePatternsList);
     conf.setValue(KEY_NO_ROOM_DESCRIPTION_PATTERNS, noDescriptionPatternsList);
-    conf.setValue(KEY_PROMPT_PATTERN, promptPattern);
-    conf.setValue(KEY_LOGIN_PATTERN, loginPattern);
-    conf.setValue(KEY_PASSWORD_PATTERN, passwordPattern);
-    conf.setValue(KEY_MENU_PROMPT_PATTERN, menuPromptPattern);
 }
 
 void Configuration::MumeNativeSettings::write(QSettings &conf) const

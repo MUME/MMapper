@@ -25,16 +25,13 @@
 
 #include "patterns.h"
 
-#include <QRegExp>
-#include <QStringList>
+#include <QRegularExpression>
 
 #include "../configuration/configuration.h"
 
 const Configuration::ParserSettings &Patterns::parserConfig = getConfig().parser;
 
-QRegExp Patterns::g_rx;
-
-const QRegExp Patterns::g_score(R"(\d+/\d+ hits(?:, \d+/\d+ mana,)? and \d+/\d+ moves.)");
+using PO = QRegularExpression::PatternOption;
 
 bool Patterns::matchPattern(QString pattern, const QString &str)
 {
@@ -44,8 +41,7 @@ bool Patterns::matchPattern(QString pattern, const QString &str)
 
     switch (static_cast<int>((pattern.at(1)).toLatin1())) {
     case 33: // !
-        g_rx.setPattern(pattern.remove(0, 2));
-        if (g_rx.exactMatch(str)) {
+        if (QRegularExpression(pattern.remove(0, 2)).match(str).hasMatch()) {
             return true;
         }
         break;
@@ -110,7 +106,9 @@ bool Patterns::matchPattern(QByteArray pattern, const QByteArray &str)
 
 bool Patterns::matchScore(const QString &str)
 {
-    return g_score.exactMatch(str);
+    static const QRegularExpression re(R"(\d+/\d+ hits(?:, \d+/\d+ mana,)? and \d+/\d+ moves.)",
+                                       PO::OptimizeOnFirstUsageOption);
+    return re.match(str).hasMatch();
 }
 
 bool Patterns::matchMoveForcePatterns(const QString &str)
@@ -135,20 +133,20 @@ bool Patterns::matchNoDescriptionPatterns(const QString &str)
 
 bool Patterns::matchPasswordPatterns(const QByteArray &str)
 {
-    return matchPattern(parserConfig.passwordPattern, str);
-}
-
-bool Patterns::matchPromptPatterns(const QByteArray &str)
-{
-    return matchPattern(parserConfig.promptPattern, str);
+    static const QRegularExpression re(R"(^Account pass phrase:? $)",
+                                       PO::OptimizeOnFirstUsageOption);
+    return re.match(str).hasMatch();
 }
 
 bool Patterns::matchLoginPatterns(const QByteArray &str)
 {
-    return matchPattern(parserConfig.loginPattern, str);
+    static const QRegularExpression re(R"(^By what name do you wish to be known\?? $)",
+                                       PO::OptimizeOnFirstUsageOption);
+    return re.match(str).hasMatch();
 }
 
 bool Patterns::matchMenuPromptPatterns(const QByteArray &str)
 {
-    return matchPattern(parserConfig.menuPromptPattern, str);
+    static const QRegularExpression re(R"(^Account(>|&gt;)? $)", PO::OptimizeOnFirstUsageOption);
+    return re.match(str).hasMatch();
 }

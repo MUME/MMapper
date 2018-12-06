@@ -76,7 +76,6 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
         switch (val1) {
         case ASCII_DEL:
             buffer.line.append(static_cast<char>(ASCII_DEL));
-
             buffer.type = TelnetDataType::DELAY;
             que.enqueue(buffer);
             buffer.line.clear();
@@ -91,9 +90,7 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
                 case ASCII_LF:
                     buffer.line.append(static_cast<char>(ASCII_CR));
                     buffer.type = TelnetDataType::LFCR;
-                    {
-                        que.enqueue(buffer);
-                    }
+                    que.enqueue(buffer);
                     buffer.line.clear();
                     buffer.type = TelnetDataType::SPLIT;
                     index++;
@@ -118,9 +115,7 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
                 case ASCII_CR:
                     buffer.line.append(static_cast<char>(ASCII_LF));
                     buffer.type = TelnetDataType::CRLF;
-                    {
-                        que.enqueue(buffer);
-                    }
+                    que.enqueue(buffer);
                     buffer.line.clear();
                     buffer.type = TelnetDataType::SPLIT;
                     index++;
@@ -155,7 +150,14 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
     if (!buffer.line.isEmpty() && (goAhead || buffer.type == TelnetDataType::SPLIT)) {
         {
             if (goAhead) {
-                buffer.type = TelnetDataType::PROMPT;
+                const auto get_type = [&buffer]() {
+                    if (Patterns::matchPasswordPatterns(buffer.line))
+                        return TelnetDataType::LOGIN_PASSWORD;
+                    else if (Patterns::matchMenuPromptPatterns(buffer.line))
+                        return TelnetDataType::MENU_PROMPT;
+                    return TelnetDataType::PROMPT;
+                };
+                buffer.type = get_type();
                 que.enqueue(buffer);
                 buffer.line.clear();
                 buffer.type = TelnetDataType::SPLIT;
@@ -164,22 +166,8 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
                 que.enqueue(buffer);
                 buffer.line.clear();
                 buffer.type = TelnetDataType::SPLIT;
-            } else if (Patterns::matchPromptPatterns(buffer.line)) {
-                buffer.type = TelnetDataType::PROMPT;
-                que.enqueue(buffer);
-                buffer.line.clear();
-                buffer.type = TelnetDataType::SPLIT;
-            } else if (Patterns::matchPasswordPatterns(buffer.line)) {
-                buffer.type = TelnetDataType::LOGIN_PASSWORD;
-                que.enqueue(buffer);
-                buffer.line.clear();
-                buffer.type = TelnetDataType::SPLIT;
-            } else if (Patterns::matchMenuPromptPatterns(buffer.line)) {
-                buffer.type = TelnetDataType::MENU_PROMPT;
-                que.enqueue(buffer);
-                buffer.line.clear();
-                buffer.type = TelnetDataType::SPLIT;
             } else if (Patterns::matchLoginPatterns(buffer.line)) {
+                // IAC-GA usually take effect after the login screen
                 buffer.type = TelnetDataType::LOGIN;
                 que.enqueue(buffer);
                 buffer.line.clear();

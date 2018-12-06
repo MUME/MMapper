@@ -27,8 +27,6 @@
 #ifndef PATTERNS_H
 #define PATTERNS_H
 
-#include <QRegExp>
-#include <QStringList>
 #include <QtCore>
 
 #include "../configuration/configuration.h"
@@ -36,23 +34,18 @@
 class QByteArray;
 class QRegExp;
 class QString;
-class QStringList;
 
 class Patterns
 {
 private:
     // If these were moved to .cpp file, then we wouldn't need to include headers.
     static const Configuration::ParserSettings &parserConfig;
-    static QRegExp g_rx;
-    static const QStringList g_dynamicDescriptionPatternsList;
-    static const QRegExp g_score;
 
 public:
     static bool matchScore(const QString &str);
     static bool matchMoveForcePatterns(const QString &);
     static bool matchNoDescriptionPatterns(const QString &);
     static bool matchPasswordPatterns(const QByteArray &);
-    static bool matchPromptPatterns(const QByteArray &);
     static bool matchLoginPatterns(const QByteArray &);
     static bool matchMenuPromptPatterns(const QByteArray &);
 

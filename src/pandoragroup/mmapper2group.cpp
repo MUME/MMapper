@@ -464,9 +464,7 @@ void Mmapper2Group::setMode(GroupManagerState newMode)
 {
     QMutexLocker locker(&networkLock);
 
-    const auto oldMode = getConfig().groupManager.state;
-    if (oldMode != newMode)
-        setConfig().groupManager.state = newMode; // Ensure config matches reality
+    setConfig().groupManager.state = newMode; // Ensure config matches reality
 
     const auto currentState = getMode();
     if (currentState == newMode)
