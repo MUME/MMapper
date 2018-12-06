@@ -122,6 +122,16 @@ bool tuneKeepAlive(qintptr socketDescriptor, int maxIdle, int count, int interva
         return false;
     }
 
+#ifdef Q_OS_MAC
+    // Tune that we wait until 'maxIdle' (default: 60) seconds
+    setsockopt(fd, IPPROTO_TCP, TCP_KEEPALIVE, &maxIdle, sizeof(maxIdle));
+
+    // and then send up to 'count' (default: 4) keepalive packets out, then disconnect if no response
+    setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &count, sizeof(count));
+
+    // Send a keepalive packet out every 'interval' (default: 60) seconds
+    setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &interval, sizeof(interval));
+#else
     // Tune that we wait until 'maxIdle' (default: 60) seconds
     setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &maxIdle, sizeof(maxIdle));
 
@@ -130,6 +140,7 @@ bool tuneKeepAlive(qintptr socketDescriptor, int maxIdle, int count, int interva
 
     // Send a keepalive packet out every 'interval' (default: 60) seconds
     setsockopt(fd, SOL_TCP, TCP_KEEPINTVL, &interval, sizeof(interval));
+#endif
     return true;
 #endif
 }
