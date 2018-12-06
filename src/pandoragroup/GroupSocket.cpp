@@ -61,6 +61,9 @@ GroupSocket::GroupSocket(GroupAuthority *authority, QObject *parent)
     connect(&socket, &QAbstractSocket::connected, this, [this]() {
         socket.setSocketOption(QAbstractSocket::LowDelayOption, true);
         socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
+        if (io::tuneKeepAlive(socket.socketDescriptor())) {
+            emit sendLog("Tuned TCP keep alive parameters for socket");
+        }
         setProtocolState(ProtocolState::AwaitingLogin);
         emit sendLog("Connection established.");
         emit connectionEstablished(this);
@@ -127,6 +130,9 @@ void GroupSocket::setSocket(qintptr socketDescriptor)
     }
     socket.setSocketOption(QAbstractSocket::LowDelayOption, true);
     socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
+    if (io::tuneKeepAlive(socket.socketDescriptor())) {
+        emit sendLog("Tuned TCP keep alive parameters for socket");
+    }
     setProtocolState(ProtocolState::AwaitingLogin);
     emit connectionEstablished(this);
 }

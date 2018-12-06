@@ -61,7 +61,7 @@ private:
 
     ProtocolVersion proposedProtocolVersion = PROTOCOL_VERSION_102;
     bool clientConnected = false;
-    GroupSocket client;
+    GroupSocket socket;
 };
 
 #endif // GROUPCLIENT_H

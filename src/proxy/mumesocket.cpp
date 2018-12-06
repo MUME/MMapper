@@ -140,7 +140,9 @@ void MumeSslSocket::onConnect()
     emit log("Proxy", "Negotiating handshake with server ...");
     m_socket.setSocketOption(QAbstractSocket::LowDelayOption, true);
     m_socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
-
+    if (io::tuneKeepAlive(m_socket.socketDescriptor())) {
+        emit log("Proxy", "Tuned TCP keep alive parameters for socket");
+    }
     // Restart timer to check if encryption has successfully finished
     m_timer.start();
 }
@@ -248,5 +250,8 @@ void MumeTcpSocket::onConnect()
     m_timer.stop();
     m_socket.setSocketOption(QAbstractSocket::LowDelayOption, true);
     m_socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
+    if (io::tuneKeepAlive(m_socket.socketDescriptor())) {
+        emit log("Proxy", "Tuned TCP keep alive parameters for socket");
+    }
     MumeSocket::onConnect();
 }

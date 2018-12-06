@@ -44,29 +44,29 @@ using Messages = CGroupCommunicator::Messages;
 
 GroupClient::GroupClient(Mmapper2Group *parent)
     : CGroupCommunicator(GroupManagerState::Client, parent)
-    , client(parent->getAuthority(), this)
+    , socket(parent->getAuthority(), this)
 {
     emit sendLog("Client mode has been selected");
-    connect(&client, &GroupSocket::incomingData, this, &GroupClient::incomingData);
-    connect(&client, &GroupSocket::sendLog, this, &GroupClient::relayLog);
-    connect(&client, &GroupSocket::errorInConnection, this, &GroupClient::errorInConnection);
-    connect(&client, &GroupSocket::connectionEstablished, this, &GroupClient::connectionEstablished);
-    connect(&client, &GroupSocket::connectionClosed, this, &GroupClient::connectionClosed);
-    connect(&client, &GroupSocket::connectionEncrypted, this, &GroupClient::connectionEncrypted);
+    connect(&socket, &GroupSocket::incomingData, this, &GroupClient::incomingData);
+    connect(&socket, &GroupSocket::sendLog, this, &GroupClient::relayLog);
+    connect(&socket, &GroupSocket::errorInConnection, this, &GroupClient::errorInConnection);
+    connect(&socket, &GroupSocket::connectionEstablished, this, &GroupClient::connectionEstablished);
+    connect(&socket, &GroupSocket::connectionClosed, this, &GroupClient::connectionClosed);
+    connect(&socket, &GroupSocket::connectionEncrypted, this, &GroupClient::connectionEncrypted);
 }
 
 GroupClient::~GroupClient()
 {
-    client.disconnectFromHost();
-    disconnect(&client, &GroupSocket::incomingData, this, &GroupClient::incomingData);
-    disconnect(&client, &GroupSocket::sendLog, this, &GroupClient::relayLog);
-    disconnect(&client, &GroupSocket::errorInConnection, this, &GroupClient::errorInConnection);
-    disconnect(&client,
+    socket.disconnectFromHost();
+    disconnect(&socket, &GroupSocket::incomingData, this, &GroupClient::incomingData);
+    disconnect(&socket, &GroupSocket::sendLog, this, &GroupClient::relayLog);
+    disconnect(&socket, &GroupSocket::errorInConnection, this, &GroupClient::errorInConnection);
+    disconnect(&socket,
                &GroupSocket::connectionEstablished,
                this,
                &GroupClient::connectionEstablished);
-    disconnect(&client, &GroupSocket::connectionClosed, this, &GroupClient::connectionClosed);
-    disconnect(&client, &GroupSocket::connectionEncrypted, this, &GroupClient::connectionEncrypted);
+    disconnect(&socket, &GroupSocket::connectionClosed, this, &GroupClient::connectionClosed);
+    disconnect(&socket, &GroupSocket::connectionEncrypted, this, &GroupClient::connectionEncrypted);
 }
 
 void GroupClient::connectionEstablished(GroupSocket * /*socket*/)
@@ -299,30 +299,30 @@ void GroupClient::connectionEncrypted(GroupSocket *const socket)
 
 void GroupClient::sendGroupTellMessage(const QVariantMap &root)
 {
-    sendMessage(&client, Messages::GTELL, root);
+    sendMessage(&socket, Messages::GTELL, root);
 }
 
 void GroupClient::sendCharUpdate(const QVariantMap &map)
 {
-    CGroupCommunicator::sendCharUpdate(&client, map);
+    CGroupCommunicator::sendCharUpdate(&socket, map);
 }
 
 void GroupClient::sendCharRename(const QVariantMap &map)
 {
-    sendMessage(&client, Messages::RENAME_CHAR, map);
+    sendMessage(&socket, Messages::RENAME_CHAR, map);
 }
 
 void GroupClient::stop()
 {
     clientConnected = false;
-    client.disconnectFromHost();
+    socket.disconnectFromHost();
     emit scheduleAction(new ResetCharacters());
     deleteLater();
 }
 
 bool GroupClient::start()
 {
-    client.connectToHost();
+    socket.connectToHost();
     return true;
 }
 

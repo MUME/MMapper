@@ -40,7 +40,7 @@ set(CMAKE_AUTORCC ON)
 
 if(WIN32)
     # Target Windows Vista and above
-    add_definitions(/DNTDDI_VERSION=NTDDI_VISTA)
+    add_definitions(/DNTDDI_VERSION=0x06000000)
     add_definitions(/D_WIN32_WINNT=0x0600)
 endif()
 

@@ -28,11 +28,18 @@
 #include <cstring>
 
 #ifndef Q_OS_WIN
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <sys/socket.h>
 #include <unistd.h>
 #endif
 
 #ifdef Q_OS_MAC
 #include <fcntl.h>
+#endif
+
+#ifdef Q_OS_WIN
+#include "WinSock.h"
 #endif
 
 namespace io {
@@ -93,6 +100,38 @@ IOResult fsyncNoexcept(QFile &file) noexcept
     } catch (...) {
         return IOResult::EXCEPTION;
     }
+}
+
+bool tuneKeepAlive(qintptr socketDescriptor, int maxIdle, int count, int interval)
+{
+#ifdef Q_OS_WIN
+    const unsigned int socket = static_cast<unsigned int>(socketDescriptor);
+    const auto maxIdleInMillis = static_cast<unsigned long>(maxIdle * 1000);
+    const auto intervalInMillis = static_cast<unsigned long>(interval * 1000);
+    return WinSock::tuneKeepAlive(socket, maxIdleInMillis, intervalInMillis);
+#else
+    const int fd = static_cast<int>(socketDescriptor);
+
+    // Verify that keepalive option is enabled
+    int optVal;
+    socklen_t optLen = sizeof(optVal);
+    if (getsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &optVal, &optLen) < 0) {
+        return false;
+    }
+    if (optVal != 1) {
+        return false;
+    }
+
+    // Tune that we wait until 'maxIdle' (default: 60) seconds
+    setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &maxIdle, sizeof(maxIdle));
+
+    // and then send up to 'count' (default: 4) keepalive packets out, then disconnect if no response
+    setsockopt(fd, SOL_TCP, TCP_KEEPCNT, &count, sizeof(count));
+
+    // Send a keepalive packet out every 'interval' (default: 60) seconds
+    setsockopt(fd, SOL_TCP, TCP_KEEPINTVL, &interval, sizeof(interval));
+    return true;
+#endif
 }
 
 } // namespace io

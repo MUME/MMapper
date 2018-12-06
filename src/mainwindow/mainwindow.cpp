@@ -822,7 +822,7 @@ void MainWindow::createActions()
     connect(groupMode.groupClientAct, &QAction::triggered, this, &MainWindow::onModeGroupClient);
 
     groupMode.groupServerAct = new QAction(QIcon(":/icons/groupserver.png"),
-                                           tr("Switch to &hosting mode"),
+                                           tr("Switch to &host mode"),
                                            this);
     groupMode.groupServerAct->setCheckable(true);
     connect(groupMode.groupServerAct, &QAction::triggered, this, &MainWindow::onModeGroupServer);

@@ -122,5 +122,7 @@ bool fsync(QFile &) noexcept(false);
 
 IOResult fsyncNoexcept(QFile &) noexcept;
 
+bool tuneKeepAlive(qintptr socketDescriptor, int maxIdle = 60, int count = 4, int interval = 60);
+
 } // namespace io
 #endif // MMAPPER_IO_H

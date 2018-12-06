@@ -78,6 +78,8 @@ set(mmapper_SRCS
     global/StringView.cpp
     global/StringView.h
     global/utils.h
+    global/WinSock.cpp
+    global/WinSock.h
     mainwindow/aboutdialog.cpp
     mainwindow/aboutdialog.h
     mainwindow/findroomsdlg.cpp
@@ -333,6 +335,10 @@ set_target_properties(
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"
 )
+
+if(WIN32)
+    target_link_libraries(mmapper ws2_32)
+endif()
 
 if(WITH_ZLIB)
     target_link_libraries(mmapper ${ZLIB_LIBRARIES})

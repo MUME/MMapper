@@ -32,6 +32,7 @@
 #include <QtWidgets>
 
 #include "configuration/configuration.h"
+#include "global/WinSock.h"
 #include "global/utils.h"
 #include "mainwindow/mainwindow.h"
 
@@ -181,6 +182,7 @@ int main(int argc, char **argv)
     QApplication app(argc, argv);
     Q_INIT_RESOURCE(mmapper2);
     tryUseHighDpi(app);
+    auto tryLoadingWinSock = std::make_unique<WinSock>();
 
     const auto &config = getConfig();
     if (config.canvas.softwareOpenGL) {
