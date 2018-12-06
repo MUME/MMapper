@@ -26,7 +26,7 @@
 
 #include "parserutils.h"
 
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QtCore>
 
 namespace ParserUtils {

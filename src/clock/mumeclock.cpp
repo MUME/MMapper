@@ -29,6 +29,7 @@
 #include <QHash>
 #include <QMetaEnum>
 #include <QObject>
+#include <QRegularExpression>
 #include <QString>
 
 #include "mumemoment.h"
@@ -135,10 +136,12 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
 
     if (mumeTime.at(0).isDigit()) {
         // 3pm on Highday, the 18th of Halimath, year 3030 of the Third Age.
-        QRegExp rx(R"((\d+)(am|pm) on \w+, the (\d+).{2} of (\w+), year (\d+) of the Third Age.)");
-        if (rx.indexIn(mumeTime) != -1) {
-            hour = rx.cap(1).toInt();
-            if (rx.cap(2).at(0) == 'p') {
+        static const QRegularExpression rx(
+            R"((\d+)(am|pm) on \w+, the (\d+).{2} of (\w+), year (\d+) of the Third Age.)");
+        auto match = rx.match(mumeTime);
+        if (match.hasMatch()) {
+            hour = match.captured(1).toInt();
+            if (match.captured(2).at(0) == 'p') {
                 // pm
                 if (hour != 12) {
                     // add 12 if not noon
@@ -148,26 +151,28 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
                 // midnight
                 hour = 0;
             }
-            day = rx.cap(3).toInt() - 1;
-            month = s_westronMonthNames.keyToValue(rx.cap(4).toLatin1().data());
+            day = match.captured(3).toInt() - 1;
+            month = s_westronMonthNames.keyToValue(match.captured(4).toLatin1().data());
             if (month == static_cast<int>(WestronMonthNames::UnknownWestronMonth)) {
-                month = s_sindarinMonthNames.keyToValue(rx.cap(4).toLatin1().data());
+                month = s_sindarinMonthNames.keyToValue(match.captured(4).toLatin1().data());
             }
-            year = rx.cap(5).toInt();
+            year = match.captured(5).toInt();
             if (m_precision <= MumeClockPrecision::MUMECLOCK_DAY) {
                 m_precision = MumeClockPrecision::MUMECLOCK_HOUR;
             }
         }
     } else {
         // "Highday, the 18th of Halimath, year 3030 of the Third Age."
-        QRegExp rx(R"(\w+, the (\d+).{2} of (\w+), year (\d+) of the Third Age.)");
-        if (rx.indexIn(mumeTime) != -1) {
-            day = rx.cap(1).toInt() - 1;
-            month = s_westronMonthNames.keyToValue(rx.cap(2).toLatin1().data());
+        static const QRegularExpression rx(
+            R"(\w+, the (\d+).{2} of (\w+), year (\d+) of the Third Age.)");
+        auto match = rx.match(mumeTime);
+        if (match.hasMatch()) {
+            day = match.captured(1).toInt() - 1;
+            month = s_westronMonthNames.keyToValue(match.captured(2).toLatin1().data());
             if (month == static_cast<int>(WestronMonthNames::UnknownWestronMonth)) {
-                month = s_sindarinMonthNames.keyToValue(rx.cap(2).toLatin1().data());
+                month = s_sindarinMonthNames.keyToValue(match.captured(2).toLatin1().data());
             }
-            year = rx.cap(3).toInt();
+            year = match.captured(3).toInt();
             if (m_precision <= MumeClockPrecision::MUMECLOCK_UNSET) {
                 m_precision = MumeClockPrecision::MUMECLOCK_DAY;
             }
@@ -277,13 +282,14 @@ void MumeClock::parseClockTime(const QString &clockTime)
 void MumeClock::parseClockTime(const QString &clockTime, const int64_t secsSinceEpoch)
 {
     // The current time is 5:23pm.
-    QRegExp rx("The current time is (\\d+):(\\d+)(am|pm).");
-    if (rx.indexIn(clockTime) == -1)
+    static const QRegularExpression rx("The current time is (\\d+):(\\d+)(am|pm).");
+    auto match = rx.match(clockTime);
+    if (!match.hasMatch())
         return;
 
-    int hour = rx.cap(1).toInt();
-    int minute = rx.cap(2).toInt();
-    if (rx.cap(3).at(0) == 'p') {
+    int hour = match.captured(1).toInt();
+    int minute = match.captured(2).toInt();
+    if (match.captured(3).at(0) == 'p') {
         // pm
         if (hour != 12) {
             // add 12 if not noon

@@ -29,7 +29,6 @@
 #define MUMEXMLPARSER_H
 
 #include <QByteArray>
-#include <QRegExp>
 #include <QString>
 #include <QtCore/QFile>
 #include <QtCore>

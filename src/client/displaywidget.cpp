@@ -25,7 +25,7 @@
 #include "displaywidget.h"
 
 #include <QMessageLogContext>
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QScrollBar>
 #include <QString>
 #include <QTextCursor>
@@ -36,7 +36,7 @@
 
 // ANSI codes are formatted as the following:
 // escape + [ + n1 (+ n2) + m
-const QRegExp DisplayWidget::s_ansiRx(R"(\0033\[((?:\d+;)*\d+)m)");
+static const QRegularExpression s_ansiRx(R"(\x1b\[((?:\d+;)*\d+)m)");
 
 DisplayWidget::DisplayWidget(QWidget *parent)
     : QTextEdit(parent)
@@ -127,10 +127,13 @@ void DisplayWidget::displayText(const QString &str)
     // Split ansi from this text
     QStringList textList, ansiList;
     int textIndex = 0, ansiIndex = 0;
-    while ((ansiIndex = s_ansiRx.indexIn(str, textIndex)) != -1) {
+    QRegularExpressionMatchIterator it = s_ansiRx.globalMatch(str);
+    while (it.hasNext()) {
+        QRegularExpressionMatch match = it.next();
+        ansiIndex = match.capturedStart(0);
         textList << str.mid(textIndex, ansiIndex - textIndex);
-        ansiList << s_ansiRx.cap(1);
-        textIndex = ansiIndex + s_ansiRx.matchedLength();
+        ansiList << match.captured(1);
+        textIndex = match.capturedEnd(0);
     }
     if (textIndex < str.length()) {
         textList << str.mid(textIndex);

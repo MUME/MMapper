@@ -28,13 +28,13 @@
 #include <type_traits>
 #include <utility>
 #include <QMessageLogContext>
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QString>
 
 #include "../configuration/configuration.h"
 #include "remoteeditsession.h"
 
-const QRegExp RemoteEdit::s_lineFeedNewlineRx("(?!\\r)\\n");
+static const QRegularExpression s_lineFeedNewlineRx(R"((?!\r)\n)");
 
 void RemoteEdit::remoteView(const QString &title, const QString &body)
 {

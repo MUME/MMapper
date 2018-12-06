@@ -28,7 +28,6 @@
 
 #include <QColor>
 #include <QFont>
-#include <QRegExp>
 #include <QString>
 #include <QTextCursor>
 #include <QTextEdit>
@@ -37,7 +36,6 @@
 #include <QtGui>
 
 class QObject;
-class QRegExp;
 class QResizeEvent;
 class QTextDocument;
 class QWidget;
@@ -64,8 +62,6 @@ protected:
     void resizeEvent(QResizeEvent *event) override;
 
 private:
-    static const QRegExp s_ansiRx;
-
     QColor m_foregroundColor{}, m_backgroundColor{};
     QFont m_serverOutputFont{};
 

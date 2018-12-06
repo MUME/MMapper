@@ -32,7 +32,6 @@
 #include "../configuration/configuration.h"
 
 class QByteArray;
-class QRegExp;
 class QString;
 
 class Patterns

@@ -26,7 +26,7 @@
 
 #include <QLinkedList>
 #include <QMessageLogContext>
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QSize>
 #include <QString>
 #include <QtGui>
@@ -36,7 +36,7 @@
 
 static constexpr const int MIN_WORD_LENGTH = 3;
 
-const QRegExp InputWidget::s_whitespaceRx("\\W+");
+static const QRegularExpression s_whitespaceRx(R"(\W+)");
 
 InputWidget::InputWidget(QWidget *parent)
     : QPlainTextEdit(parent)
@@ -131,7 +131,6 @@ void InputWidget::keyPressEvent(QKeyEvent *event)
             event->accept();
             return;
         }
-
     }
 
     // All other input

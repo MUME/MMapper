@@ -30,7 +30,6 @@
 #include <QLinkedList>
 #include <QObject>
 #include <QPlainTextEdit>
-#include <QRegExp>
 #include <QSize>
 #include <QString>
 #include <QWidget>
@@ -38,7 +37,6 @@
 
 class QKeyEvent;
 class QObject;
-class QRegExp;
 class QWidget;
 
 using InputHistoryEntry = QString;
@@ -79,7 +77,6 @@ private:
 
     void tabComplete();
 
-    static const QRegExp s_whitespaceRx;
     bool m_tabbing{};
     QString m_tabFragment;
     TabCompletionIterator *m_tabIterator;

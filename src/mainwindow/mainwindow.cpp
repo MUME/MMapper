@@ -1387,7 +1387,8 @@ bool MainWindow::exportBaseMap()
         QFileInfo currentFile(m_mapData->getFileName());
         if (currentFile.exists()) {
             saveDialog->setDirectory(currentFile.absoluteDir());
-            saveDialog->selectFile(currentFile.fileName().replace(QRegExp("\\.mm2$"), "-base.mm2"));
+            saveDialog->selectFile(
+                currentFile.fileName().replace(QRegularExpression(R"(\.mm2$)"), "-base.mm2"));
         }
         return saveDialog;
     };

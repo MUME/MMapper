@@ -31,14 +31,12 @@
 #include <memory>
 #include <QByteArray>
 #include <QObject>
-#include <QRegExp>
 #include <QString>
 #include <QtCore>
 #include <QtGlobal>
 
 #include "remoteeditsession.h"
 
-class QRegExp;
 class RemoteEditSession;
 
 class RemoteEdit : public QObject
@@ -67,8 +65,6 @@ private:
     uint getSessionCount() { return greatestUsedId == UINT_MAX ? 0 : greatestUsedId + 1; }
     void addSession(int, const QString &, QString);
     void removeSession(uint);
-
-    static const QRegExp s_lineFeedNewlineRx;
 
     uint greatestUsedId{0};
     std::map<uint, std::unique_ptr<RemoteEditSession>> m_sessions;
