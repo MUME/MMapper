@@ -194,6 +194,7 @@ public:
         QByteArray geometry{};
         QMap<QString, QVariant> secretMetadata{};
         QString groupTellColor{}; // ANSI color
+        bool lockGroup = false;
 
     private:
         SUBGROUP();

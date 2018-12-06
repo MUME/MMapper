@@ -360,6 +360,7 @@ void GroupServer::parseLoginInformation(GroupSocket *socket, const QVariantMap &
     const bool requireAuth = getConfig().groupManager.requireAuth;
     const bool validSecret = getAuthority()->validSecret(secret);
     const bool validCert = getAuthority()->validCertificate(socket);
+    bool reconnect = false;
     if (isEncrypted) {
         emit sendLog(QString("'%1's secret: %2").arg(tempName).arg(secret.constData()));
 
@@ -371,6 +372,7 @@ void GroupServer::parseLoginInformation(GroupSocket *socket, const QVariantMap &
             if (secretStr.compare(target->getSecret(), Qt::CaseInsensitive) == 0) {
                 if (!requireAuth || validCert) {
                     kickConnection(target, "Someone reconnected to the server using your secret!");
+                    reconnect = true;
                     break;
                 } else {
                     kickConnection(socket, "Host does not trust your compromised secret.");
@@ -390,6 +392,10 @@ void GroupServer::parseLoginInformation(GroupSocket *socket, const QVariantMap &
         QString("'%1's protocol version: %2").arg(tempName).arg(socket->getProtocolVersion()));
     if (requireAuth && !validSecret) {
         kickConnection(socket, "Host has not added your secret to their contacts!");
+        return;
+    }
+    if (getConfig().groupManager.lockGroup && !reconnect) {
+        kickConnection(socket, "Host has locked the group!");
         return;
     }
     if (isEncrypted && requireAuth && !validCert) {

@@ -115,8 +115,12 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
             this,
             &GroupManagerPage::localPortValueChanged);
     connect(shareSelfCheckBox, &QCheckBox::stateChanged, this, &GroupManagerPage::shareSelfChanged);
+    connect(lockGroupCheckBox, &QCheckBox::stateChanged, this, [this]() {
+        setConfig().groupManager.lockGroup = lockGroupCheckBox->isChecked();
+    });
     localPort->setValue(groupManager.localPort);
     shareSelfCheckBox->setChecked(groupManager.shareSelf);
+    lockGroupCheckBox->setChecked(groupManager.lockGroup);
 
     // Client Section
     connect(remoteHost, &QLineEdit::editingFinished, this, &GroupManagerPage::remoteHostTextChanged);

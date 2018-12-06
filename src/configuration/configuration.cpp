@@ -148,6 +148,7 @@ ConstString KEY_LINES_OF_INPUT_HISTORY = "Lines of input history";
 ConstString KEY_LINES_OF_SCROLLBACK = "Lines of scrollback";
 ConstString KEY_LOCAL_PORT = "local port";
 ConstString KEY_LOCAL_PORT_NUMBER = "Local port number";
+ConstString KEY_LOCK_GROUP = "Lock current group members";
 ConstString KEY_MAP_MODE = "Map Mode";
 ConstString KEY_MAXIMUM_NUMBER_OF_PATHS = "maximum number of paths";
 ConstString KEY_MOVE_FORCE_PATTERNS_FOR_XML = "Move force patterns for XML";
@@ -483,6 +484,7 @@ void Configuration::GroupManagerSettings::read(QSettings &conf)
     geometry = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
     secretMetadata = conf.value(KEY_SECRET_METADATA).toMap();
     groupTellColor = conf.value(KEY_GROUP_TELL_ANSI_COLOR, QString(ANSI_GREEN)).toString();
+    lockGroup = conf.value(KEY_LOCK_GROUP, false).toBool();
 }
 
 void Configuration::MumeClockSettings::read(QSettings &conf)
@@ -611,6 +613,7 @@ void Configuration::GroupManagerSettings::write(QSettings &conf) const
     conf.setValue(KEY_WINDOW_GEOMETRY, geometry);
     conf.setValue(KEY_SECRET_METADATA, secretMetadata);
     conf.setValue(KEY_GROUP_TELL_ANSI_COLOR, groupTellColor);
+    conf.setValue(KEY_LOCK_GROUP, lockGroup);
 }
 
 void Configuration::MumeClockSettings::write(QSettings &conf) const
