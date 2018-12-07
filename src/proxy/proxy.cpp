@@ -272,9 +272,12 @@ bool Proxy::init()
 
     emit log("Proxy", "Connection to client established ...");
 
-    QByteArray ba(
-        "\033[1;37;46mWelcome to MMapper!\033[0;37;46m"
-        "   Type \033[1m_help\033[0m\033[37;46m for help or \033[1m_vote\033[0m\033[37;46m to vote!\033[0m\r\n");
+    QByteArray ba
+        = QString(
+              "\033[1;37;46mWelcome to MMapper!\033[0;37;46m"
+              "   Type \033[1m%1help\033[0m\033[37;46m for help or \033[1m%1vote\033[0m\033[37;46m to vote!\033[0m\r\n")
+              .arg(getConfig().parser.prefixChar)
+              .toLatin1();
     m_userSocket->write(ba);
 
     m_mudSocket = (NO_OPEN_SSL || !getConfig().connection.tlsEncryption)

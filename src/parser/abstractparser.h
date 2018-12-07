@@ -88,7 +88,6 @@ private:
     };
     std::map<std::string, ParserRecord> m_specialCommandMap{};
     QByteArray m_newLineTerminator{};
-    char prefixChar = '_';
 
 protected:
     QString m_exits = nullString;

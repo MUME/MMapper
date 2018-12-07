@@ -29,11 +29,31 @@
 #include <QComboBox>
 #include <QRegularExpression>
 #include <QString>
+#include <QValidator>
 #include <QtWidgets>
 
 #include "../configuration/configuration.h"
 #include "AnsiColorDialog.h"
 #include "ansicombo.h"
+
+class CommandPrefixValidator final : public QValidator
+{
+public:
+    explicit CommandPrefixValidator(QObject *parent)
+        : QValidator(parent)
+    {}
+
+    void fixup(QString &input) const override { input = input.toLatin1(); }
+
+    State validate(QString &input, int & /* pos */) const override
+    {
+        if (input.isEmpty())
+            return State::Intermediate;
+        if (input.length() == 1)
+            return State::Acceptable;
+        return State::Invalid;
+    }
+};
 
 ParserPage::ParserPage(QWidget *parent)
     : QWidget(parent)
@@ -53,6 +73,12 @@ ParserPage::ParserPage(QWidget *parent)
             &QAbstractButton::clicked,
             this,
             &ParserPage::roomDescColorClicked);
+
+    connect(charPrefixLineEdit, &QLineEdit::editingFinished, this, [this]() {
+        setConfig().parser.prefixChar = charPrefixLineEdit->text().at(0).toLatin1();
+    });
+    charPrefixLineEdit->setText(QString(getConfig().parser.prefixChar));
+    charPrefixLineEdit->setValidator(new CommandPrefixValidator(this));
 
     suppressXmlTagsCheckBox->setChecked(settings.removeXmlTags);
     suppressXmlTagsCheckBox->setEnabled(true);

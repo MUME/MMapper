@@ -782,6 +782,7 @@ DirectionType AbstractParser::tryGetDir(StringView &view)
 
 void AbstractParser::showCommandPrefix()
 {
+    const auto &prefixChar = getConfig().parser.prefixChar;
     const auto quote = static_cast<char>((prefixChar == '\'') ? '"' : '\'');
     sendToUser(QString("The current command prefix is: %1%2%1 (e.g. %2help) \r\n")
                    .arg(quote)
@@ -792,13 +793,14 @@ bool AbstractParser::setCommandPrefix(const char prefix)
 {
     if (!isValidPrefix(prefix))
         return false;
-    this->prefixChar = prefix;
+    setConfig().parser.prefixChar = prefix;
     showCommandPrefix();
     return true;
 }
 
 void AbstractParser::showSyntax(const char *rest)
 {
+    const auto &prefixChar = getConfig().parser.prefixChar;
     sendToUser(QString::asprintf("Usage: %c%s\r\n", prefixChar, rest));
 }
 
@@ -876,6 +878,7 @@ void AbstractParser::openVoteURL()
 void AbstractParser::showHelpCommands(const bool showAbbreviations)
 {
     auto &map = this->m_specialCommandMap;
+    const auto &prefixChar = getConfig().parser.prefixChar;
 
     struct record
     {
@@ -922,6 +925,7 @@ void AbstractParser::showHelpCommands(const bool showAbbreviations)
 
 void AbstractParser::showGroupHelp()
 {
+    const auto &prefixChar = getConfig().parser.prefixChar;
     showHeader("MMapper group manager help");
     showHeader("Group commands");
     sendToUser(QString("  %1GTell [message]     - send a grouptell with the [message]\r\n")
@@ -960,6 +964,7 @@ void AbstractParser::showMapHelp()
 
 void AbstractParser::showMiscHelp()
 {
+    const auto &prefixChar = getConfig().parser.prefixChar;
     showHeader("Miscellaneous commands");
     sendToUser(QString("  %1note [note] - set a note in the room\r\n"
                        "  %1trollexit   - toggle troll-only exit mapping for direct sunlight\r\n")
@@ -970,6 +975,7 @@ void AbstractParser::showRoomLoadFlagsHelp()
 {
     showHeader("Room load flag commands");
 
+    const auto &prefixChar = getConfig().parser.prefixChar;
     for (auto x : ALL_LOAD_FLAGS) {
         if (const Abbrev cmd = getParserCommandName(x))
             sendToUser(QString("  %1%2 - toggle the \"%3\" load flag in the room\r\n")
@@ -983,6 +989,7 @@ void AbstractParser::showRoomMobFlagsHelp()
 {
     showHeader("Room mob flag commands");
 
+    const auto &prefixChar = getConfig().parser.prefixChar;
     for (auto x : ALL_MOB_FLAGS) {
         if (const Abbrev cmd = getParserCommandName(x))
             sendToUser(QString("  %1%2 - toggle the \"%3\" mob flag in the room\r\n")
@@ -996,6 +1003,7 @@ void AbstractParser::showRoomSimpleFlagsHelp()
 {
     showHeader("Basic room flag commands");
 
+    const auto &prefixChar = getConfig().parser.prefixChar;
 #define SHOW(X) \
     for (auto x : DEFINED_ROOM_##X##_TYPES) { \
         if (const Abbrev cmd = getParserCommandName(x)) \
@@ -1015,6 +1023,7 @@ void AbstractParser::showRoomSimpleFlagsHelp()
 
 void AbstractParser::showExitHelp()
 {
+    const auto &prefixChar = getConfig().parser.prefixChar;
     showHeader("Exit commands");
     sendToUser(QString("  %1name <dir> <name> - name a door in direction <dir> with <name>\r\n")
                    .arg(prefixChar));
@@ -1030,6 +1039,7 @@ void AbstractParser::showExitHelp()
 
 void AbstractParser::showExitFlagHelp()
 {
+    const auto &prefixChar = getConfig().parser.prefixChar;
     showHeader("Exit flags");
     for (const ExitFlag flag : ALL_EXIT_FLAGS) {
         if (const Abbrev cmd = getParserCommandName(flag))
@@ -1042,6 +1052,7 @@ void AbstractParser::showExitFlagHelp()
 
 void AbstractParser::showDoorFlagHelp()
 {
+    const auto &prefixChar = getConfig().parser.prefixChar;
     showHeader("Door flags (implies exit has door flag)");
     for (const DoorFlag flag : ALL_DOOR_FLAGS) {
         if (const Abbrev cmd = getParserCommandName(flag))
@@ -1074,8 +1085,10 @@ void AbstractParser::showHelp()
                      "  %1dirs [-options] pattern   - directions to matching rooms\r\n"
                      "  %1search [-options] pattern - highlight matching rooms\r\n"
                      "  %1markcurrent               - highlight the room you are currently in\r\n"
-                     "  %1time                      - display current MUME time\r\n");
+                     "  %1time                      - display current MUME time\r\n"
+                     "  %1prefix character          - change command prefix\r\n");
 
+    const auto &prefixChar = getConfig().parser.prefixChar;
     sendToUser(s.arg(prefixChar));
 }
 
@@ -1106,6 +1119,7 @@ void AbstractParser::showDoorCommandHelp()
 {
     showHeader("MMapper door help");
 
+    const auto &prefixChar = getConfig().parser.prefixChar;
     showHeader("Door commands");
     for (auto dat : ALL_DOOR_ACTION_TYPES) {
         const int cmdWidth = 6;

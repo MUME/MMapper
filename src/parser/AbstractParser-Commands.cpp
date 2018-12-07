@@ -34,6 +34,7 @@
 #include <QMessageLogContext>
 #include <QtCore>
 
+#include "../configuration/configuration.h"
 #include "../global/StringView.h"
 #include "../mapdata/DoorFlags.h"
 #include "../mapdata/ExitFlags.h"
@@ -388,6 +389,7 @@ bool AbstractParser::parseUserCommands(const QString &input)
     if (tryParseGenericDoorCommand(input))
         return false;
 
+    const auto &prefixChar = getConfig().parser.prefixChar;
     if (input.startsWith(prefixChar)) {
         auto view = StringView{input}.trim();
         if (view.isEmpty() || view.takeFirstLetter() != prefixChar)
@@ -785,6 +787,7 @@ void AbstractParser::initSpecialCommandMap()
 
     const auto makeSimpleHelp = [this](const std::string &help) {
         return [this, help](const std::string &name) {
+            const auto &prefixChar = getConfig().parser.prefixChar;
             sendToUser(QString("Help for %1%2:\r\n  %3\r\n\r\n")
                            .arg(prefixChar)
                            .arg(QString::fromStdString(name))
