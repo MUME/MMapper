@@ -57,7 +57,7 @@ protected slots:
     virtual void onConnect();
     virtual void onDisconnect();
     virtual void onError(QAbstractSocket::SocketError e) = 0;
-    virtual void onError2(QAbstractSocket::SocketError e, const QString &errorString = QString());
+    virtual void onError2(QAbstractSocket::SocketError e, const QString &errorString);
 
 signals:
     void connected();

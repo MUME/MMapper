@@ -82,7 +82,7 @@ void GroupClient::connectionClosed(GroupSocket * /*socket*/)
     tryReconnecting();
 }
 
-void GroupClient::errorInConnection(GroupSocket *const socket, const QString &errorString)
+void GroupClient::errorInConnection(GroupSocket *const /* socket */, const QString &errorString)
 {
     QString str;
 
@@ -93,7 +93,7 @@ void GroupClient::errorInConnection(GroupSocket *const socket, const QString &er
             emit sendLog(message);
     };
 
-    switch (socket->getSocketError()) {
+    switch (socket.getSocketError()) {
     case QAbstractSocket::ConnectionRefusedError:
         str = QString("Tried to connect to %1 on port %2")
                   .arg(getConfig().groupManager.host.constData())
@@ -137,7 +137,7 @@ void GroupClient::errorInConnection(GroupSocket *const socket, const QString &er
     tryReconnecting();
 }
 
-void GroupClient::retrieveData(GroupSocket *const socket,
+void GroupClient::retrieveData(GroupSocket *const /* socket */,
                                const Messages message,
                                const QVariantMap &data)
 {
@@ -146,39 +146,39 @@ void GroupClient::retrieveData(GroupSocket *const socket,
         stop();
         return;
     }
-    if (socket->getProtocolState() == ProtocolState::AwaitingLogin) {
+    if (socket.getProtocolState() == ProtocolState::AwaitingLogin) {
         // Login state. either REQ_HANDSHAKE, REQ_LOGIN, or ACK should come
         if (message == Messages::REQ_HANDSHAKE) {
             sendHandshake(data);
         } else if (message == Messages::REQ_LOGIN) {
             assert(!NO_OPEN_SSL);
-            socket->setProtocolVersion(proposedProtocolVersion);
-            socket->startClientEncrypted();
+            socket.setProtocolVersion(proposedProtocolVersion);
+            socket.startClientEncrypted();
         } else if (message == Messages::ACK) {
             // aha! logged on!
-            sendMessage(socket, Messages::REQ_INFO);
-            socket->setProtocolState(ProtocolState::AwaitingInfo);
+            sendMessage(&socket, Messages::REQ_INFO);
+            socket.setProtocolState(ProtocolState::AwaitingInfo);
         } else {
             // ERROR: unexpected message marker!
             // try to ignore?
             qWarning("(AwaitingLogin) Unexpected message marker. Trying to ignore.");
         }
 
-    } else if (socket->getProtocolState() == ProtocolState::AwaitingInfo) {
+    } else if (socket.getProtocolState() == ProtocolState::AwaitingInfo) {
         // almost connected. awaiting full information about the connection
         if (message == Messages::UPDATE_CHAR) {
             emit scheduleAction(new AddCharacter(data));
         } else if (message == Messages::STATE_LOGGED) {
-            socket->setProtocolState(ProtocolState::Logged);
+            socket.setProtocolState(ProtocolState::Logged);
         } else if (message == Messages::REQ_ACK) {
-            sendMessage(socket, Messages::ACK);
+            sendMessage(&socket, Messages::ACK);
         } else {
             // ERROR: unexpected message marker!
             // try to ignore?
             qWarning("(AwaitingInfo) Unexpected message marker. Trying to ignore.");
         }
 
-    } else if (socket->getProtocolState() == ProtocolState::Logged) {
+    } else if (socket.getProtocolState() == ProtocolState::Logged) {
         if (message == Messages::ADD_CHAR) {
             emit scheduleAction(new AddCharacter(data));
         } else if (message == Messages::REMOVE_CHAR) {
@@ -190,7 +190,7 @@ void GroupClient::retrieveData(GroupSocket *const socket,
         } else if (message == Messages::GTELL) {
             emit gTellArrived(data);
         } else if (message == Messages::REQ_ACK) {
-            sendMessage(socket, Messages::ACK);
+            sendMessage(&socket, Messages::ACK);
         } else {
             // ERROR: unexpected message marker!
             // try to ignore?
