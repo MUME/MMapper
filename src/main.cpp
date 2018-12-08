@@ -78,8 +78,9 @@ Splash::~Splash() = default;
 
 static void tryUseHighDpi(QApplication &app)
 {
-#if QT_VERSION >= 0x050100
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
+#if QT_VERSION >= 0x050600
+    app.setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
 }
 
