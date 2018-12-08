@@ -365,19 +365,13 @@ void GroupServer::parseLoginInformation(GroupSocket *socket, const QVariantMap &
         emit sendLog(QString("'%1's secret: %2").arg(tempName).arg(secret.constData()));
 
         // Verify only one secret can be connected at once
-        QString secretStr = QString::fromLatin1(socket->getSecret());
         for (auto &target : clientsList) {
             if (socket == target)
                 continue;
-            if (secretStr.compare(target->getSecret(), Qt::CaseInsensitive) == 0) {
-                if (!requireAuth || validCert) {
-                    kickConnection(target, "Someone reconnected to the server using your secret!");
-                    reconnect = true;
-                    break;
-                } else {
-                    kickConnection(socket, "Host does not trust your compromised secret.");
-                    return;
-                }
+            if (socket->getPeerCertificate() == target->getPeerCertificate()) {
+                kickConnection(target, "Someone reconnected to the server using your secret!");
+                reconnect = true;
+                break;
             }
         }
 
