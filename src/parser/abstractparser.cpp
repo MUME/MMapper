@@ -1086,7 +1086,7 @@ void AbstractParser::showHelp()
                      "  %1search [-options] pattern - highlight matching rooms\r\n"
                      "  %1markcurrent               - highlight the room you are currently in\r\n"
                      "  %1time                      - display current MUME time\r\n"
-                     "  %1prefix character          - change command prefix\r\n");
+                     "  %1set [prefix] character    - change command prefix\r\n");
 
     const auto &prefixChar = getConfig().parser.prefixChar;
     sendToUser(s.arg(prefixChar));

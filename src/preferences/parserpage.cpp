@@ -39,9 +39,8 @@
 class CommandPrefixValidator final : public QValidator
 {
 public:
-    explicit CommandPrefixValidator(QObject *parent)
-        : QValidator(parent)
-    {}
+    explicit CommandPrefixValidator(QObject *parent);
+    virtual ~CommandPrefixValidator() override;
 
     void fixup(QString &input) const override { input = input.toLatin1(); }
 
@@ -54,6 +53,12 @@ public:
         return State::Invalid;
     }
 };
+
+CommandPrefixValidator::CommandPrefixValidator(QObject *parent)
+    : QValidator(parent)
+{}
+
+CommandPrefixValidator::~CommandPrefixValidator() = default;
 
 ParserPage::ParserPage(QWidget *parent)
     : QWidget(parent)
