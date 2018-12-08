@@ -32,6 +32,14 @@
 #include "../global/utils.h"
 #include "FontFormatFlags.h"
 
+#ifdef WIN32
+extern "C" {
+// Prefer discrete nVidia and AMD GPUs by default on Windows
+__declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
+#endif
+
 OpenGL::~OpenGL()
 {
     // Note: We give metrics a pointer to font, so kill metrics first.
