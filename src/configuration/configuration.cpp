@@ -379,7 +379,7 @@ void Configuration::ConnectionSettings::read(QSettings &conf)
     localPort = sanitizeUint16(conf.value(KEY_LOCAL_PORT_NUMBER, DEFAULT_PORT).toInt(),
                                static_cast<uint16_t>(DEFAULT_PORT));
     tlsEncryption = NO_OPEN_SSL ? false : conf.value(KEY_TLS_ENCRYPTION, true).toBool();
-    proxyThreaded = conf.value(KEY_PROXY_THREADED, true).toBool();
+    proxyThreaded = conf.value(KEY_PROXY_THREADED, false).toBool();
     proxyConnectionStatus = conf.value(KEY_PROXY_CONNECTION_STATUS, true).toBool();
 
     // News 2340, changing domain from fire.pvv.org to mume.org:

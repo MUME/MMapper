@@ -28,6 +28,7 @@
 #ifndef CONNECTIONLISTENER
 #define CONNECTIONLISTENER
 
+#include <memory>
 #include <QString>
 #include <QTcpServer>
 #include <QTcpSocket>
@@ -39,6 +40,7 @@ class Mmapper2Group;
 class Mmapper2PathMachine;
 class MumeClock;
 class PrespammedPath;
+class Proxy;
 class QObject;
 
 class ConnectionListener : public QTcpServer
@@ -50,10 +52,7 @@ public:
                                 Mmapper2Group *,
                                 MumeClock *,
                                 QObject *parent);
-
-public slots:
-    void doNotAcceptNewConnections();
-    void doAcceptNewConnections();
+    virtual ~ConnectionListener() override;
 
 signals:
     void log(const QString &, const QString &);
@@ -71,6 +70,8 @@ private:
     PrespammedPath *m_prespammedPath = nullptr;
     Mmapper2Group *m_groupManager = nullptr;
     MumeClock *m_mumeClock = nullptr;
+    std::unique_ptr<Proxy> m_proxy;
+    std::unique_ptr<QThread> m_thread;
 
     bool m_accept = true;
 };

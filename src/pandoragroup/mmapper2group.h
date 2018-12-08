@@ -31,7 +31,6 @@
 #include <QArgument>
 #include <QMutex>
 #include <QObject>
-#include <QThread>
 #include <QVariantMap>
 
 #include "../global/roomid.h"
@@ -41,19 +40,6 @@ class CGroupCommunicator;
 class CGroup;
 class Mmapper2Group;
 enum class GroupManagerState { Off = 0, Client = 1, Server = 2 };
-
-class GroupThreader final : public QThread
-{
-    Q_OBJECT
-public:
-    explicit GroupThreader(Mmapper2Group *);
-    ~GroupThreader() override;
-
-    void run() override;
-
-protected:
-    Mmapper2Group *group = nullptr;
-};
 
 class Mmapper2Group final : public QObject
 {
@@ -72,6 +58,7 @@ public:
     virtual ~Mmapper2Group();
 
     void start();
+    void stop();
 
     GroupManagerState getMode();
 
@@ -110,7 +97,7 @@ private:
     void issueLocalCharUpdate();
 
     QMutex networkLock{};
-    GroupThreader *thread;
+    std::unique_ptr<QThread> thread;
     std::unique_ptr<GroupAuthority> authority;
     std::unique_ptr<CGroupCommunicator> network;
     std::unique_ptr<CGroup> group;

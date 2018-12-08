@@ -28,6 +28,7 @@
 #include <QColor>
 #include <QMessageLogContext>
 #include <QMutex>
+#include <QThread>
 #include <QVariantMap>
 #include <QtCore>
 
@@ -39,34 +40,21 @@
 #include "GroupServer.h"
 #include "groupauthority.h"
 
-GroupThreader::GroupThreader(Mmapper2Group *const group)
-    : group(group)
-{}
-
-GroupThreader::~GroupThreader()
-{
-    delete group;
-}
-
-void GroupThreader::run()
-{
-    try {
-        exec();
-    } catch (const std::exception &ex) {
-        qCritical() << "Group thread is terminating because it threw an exception: " << ex.what()
-                    << ".";
-        throw;
-    } catch (...) {
-        qCritical() << "Group thread is terminating because it threw an unknown exception.";
-        throw;
-    }
-}
-
 Mmapper2Group::Mmapper2Group(QObject *const /* parent */)
     : QObject(nullptr)
     , networkLock(QMutex::Recursive)
-    , thread(new GroupThreader(this))
-{}
+    , thread(new QThread)
+{
+    connect(thread.get(), &QThread::started, this, [this]() {
+        emit log("GroupManager", "Initialized Group Manager service");
+    });
+    connect(thread.get(), &QThread::finished, thread.get(), &QObject::deleteLater);
+    connect(thread.get(), &QThread::destroyed, this, [this]() {
+        thread.release();
+        deleteLater();
+        qInfo() << "Terminated Group Manager service";
+    });
+}
 
 Mmapper2Group::~Mmapper2Group()
 {
@@ -76,15 +64,19 @@ Mmapper2Group::~Mmapper2Group()
         network->stop();
         network.reset(nullptr);
     }
+    if (thread) {
+        thread->quit();
+        thread.release(); // finished() and destroyed() signals will destruct the thread
+    }
 }
 
 void Mmapper2Group::start()
 {
     if (thread != nullptr) {
-        thread->start();
         if (init()) {
-            moveToThread(thread);
+            moveToThread(thread.get());
         }
+        thread->start();
     } else {
         init();
     }
@@ -101,9 +93,17 @@ bool Mmapper2Group::init()
             this,
             &Mmapper2Group::characterChanged,
             Qt::QueuedConnection);
-
-    emit log("GroupManager", "Initialized Group Manager service");
     return true;
+}
+
+void Mmapper2Group::stop()
+{
+    QMutexLocker locker(&networkLock);
+    if (thread) {
+        thread->quit();
+        if (QThread::currentThread() != thread->thread())
+            thread->wait();
+    }
 }
 
 void Mmapper2Group::characterChanged()

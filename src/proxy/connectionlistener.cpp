@@ -27,6 +27,7 @@
 #include "connectionlistener.h"
 
 #include <QTcpSocket>
+#include <QThread>
 
 #include "../configuration/configuration.h"
 #include "proxy.h"
@@ -51,20 +52,59 @@ ConnectionListener::ConnectionListener(MapData *md,
             SLOT(log(const QString &, const QString &)));
 }
 
+ConnectionListener::~ConnectionListener()
+{
+    if (m_proxy) {
+        m_proxy->deleteLater();
+        m_proxy.release();
+    }
+    if (m_thread) {
+        m_thread->quit();
+        m_thread->wait();
+        m_thread.release(); // finished() and destroyed() signals will destruct the thread
+    }
+}
+
 void ConnectionListener::incomingConnection(qintptr socketDescriptor)
 {
     if (m_accept) {
         emit log("Listener", "New connection: accepted.");
-        doNotAcceptNewConnections();
-        auto *proxy = new Proxy(m_mapData,
+        m_accept = false;
+        emit clientSuccessfullyConnected();
+
+        m_proxy.reset(new Proxy(m_mapData,
                                 m_pathMachine,
                                 m_prespammedPath,
                                 m_groupManager,
                                 m_mumeClock,
                                 socketDescriptor,
-                                getConfig().connection.proxyThreaded,
-                                this);
-        proxy->start();
+                                this));
+
+        if (getConfig().connection.proxyThreaded) {
+            m_thread.reset(new QThread);
+            m_proxy->moveToThread(m_thread.get());
+
+            // Proxy destruction stops the thread which then destroys itself on completion
+            connect(m_proxy.get(), &QObject::destroyed, m_thread.get(), &QThread::quit);
+            connect(m_thread.get(), &QThread::finished, m_thread.get(), &QObject::deleteLater);
+            connect(m_thread.get(), &QObject::destroyed, this, [this]() {
+                m_accept = true;
+                m_proxy.release();
+                m_thread.release();
+            });
+
+            // Start the proxy when the thread starts
+            connect(m_thread.get(), &QThread::started, m_proxy.get(), &Proxy::start);
+            m_thread->start();
+
+        } else {
+            connect(m_proxy.get(), &QObject::destroyed, this, [this]() {
+                m_accept = true;
+                m_proxy.release();
+            });
+            m_proxy->start();
+        }
+
     } else {
         emit log("Listener", "New connection: rejected.");
         QTcpSocket tcpSocket;
@@ -77,15 +117,4 @@ void ConnectionListener::incomingConnection(qintptr socketDescriptor)
             tcpSocket.waitForDisconnected();
         }
     }
-}
-
-void ConnectionListener::doNotAcceptNewConnections()
-{
-    emit clientSuccessfullyConnected();
-    m_accept = false;
-}
-
-void ConnectionListener::doAcceptNewConnections()
-{
-    m_accept = true;
 }

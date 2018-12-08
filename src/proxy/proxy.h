@@ -33,7 +33,6 @@
 #include <QScopedPointer>
 #include <QString>
 #include <QTcpSocket>
-#include <QThread>
 #include <QtCore>
 #include <QtGlobal>
 
@@ -50,7 +49,6 @@ class MumeClock;
 class MumeSocket;
 class MumeXmlParser;
 class PrespammedPath;
-class Proxy;
 class QDataStream;
 class QFile;
 class QTcpSocket;
@@ -58,20 +56,6 @@ class RemoteEdit;
 class TelnetFilter;
 
 // #define PROXY_STREAM_DEBUG_INPUT_TO_FILE
-
-// TODO: Rip out multithreading and use async sockets.
-class ProxyThreader final : public QThread
-{
-    Q_OBJECT
-public:
-    explicit ProxyThreader(Proxy *);
-    ~ProxyThreader() override;
-
-    void run() override;
-
-protected:
-    Proxy *m_proxy = nullptr;
-};
 
 class Proxy final : public QObject
 {
@@ -83,14 +67,12 @@ public:
                    Mmapper2Group *,
                    MumeClock *,
                    qintptr &,
-                   bool threaded,
                    ConnectionListener *);
     ~Proxy();
 
-    void start();
-    void stop();
-
 public slots:
+    void start();
+
     void processUserStream();
     void userTerminatedConnection();
     void mudTerminatedConnection();
@@ -103,16 +85,11 @@ public slots:
 
 signals:
     void log(const QString &, const QString &);
-    void doNotAcceptNewConnections();
-    void doAcceptNewConnections();
 
     void analyzeUserStream(const QByteArray &);
     void analyzeMudStream(const QByteArray &);
-    void terminate();
 
 private:
-    bool init();
-
 #ifdef PROXY_STREAM_DEBUG_INPUT_TO_FILE
     QDataStream *debugStream;
     QFile *file;
@@ -139,8 +116,6 @@ private:
     Mmapper2Group *m_groupManager = nullptr;
     MumeClock *m_mumeClock = nullptr;
 
-    ProxyThreader *m_thread = nullptr;
-    bool m_threaded = false;
     ConnectionListener *m_listener = nullptr;
 };
 

@@ -50,37 +50,12 @@
 
 class SigParseEvent;
 
-ProxyThreader::ProxyThreader(Proxy *const proxy)
-    : m_proxy(proxy)
-{}
-
-ProxyThreader::~ProxyThreader()
-{
-    delete m_proxy;
-}
-
-void ProxyThreader::run()
-{
-    try {
-        qDebug() << "Proxy is being threaded";
-        exec();
-    } catch (const std::exception &ex) {
-        qCritical() << "Proxy thread is terminating because it threw an exception: " << ex.what()
-                    << ".";
-        throw;
-    } catch (...) {
-        qCritical() << "Proxy thread is terminating because it threw an unknown exception.";
-        throw;
-    }
-}
-
 Proxy::Proxy(MapData *const md,
              Mmapper2PathMachine *const pm,
              PrespammedPath *const pp,
              Mmapper2Group *const gm,
              MumeClock *mc,
              qintptr &socketDescriptor,
-             const bool threaded,
              ConnectionListener *const listener)
     : QObject(nullptr)
     , m_socketDescriptor(socketDescriptor)
@@ -89,15 +64,9 @@ Proxy::Proxy(MapData *const md,
     , m_prespammedPath(pp)
     , m_groupManager(gm)
     , m_mumeClock(mc)
-    , m_threaded(threaded)
     , m_listener(listener)
 {
-    if (threaded) {
-        m_thread = new ProxyThreader(this);
-    } else {
-        m_thread = nullptr;
-    }
-
+    // REVISIT: Move instantiation to MainWindow
     m_remoteEdit = new RemoteEdit(m_listener->parent());
 
 #ifdef PROXY_STREAM_DEBUG_INPUT_TO_FILE
@@ -126,47 +95,16 @@ Proxy::~Proxy()
         m_mudSocket->disconnectFromHost();
         m_mudSocket->deleteLater();
     }
-    delete m_remoteEdit;
+    m_remoteEdit->deleteLater(); // Owned by MainWindow
     delete m_userTelnet;
     delete m_mudTelnet;
     delete m_telnetFilter;
     delete m_mpiFilter;
     delete m_parserXml;
-    connect(this, SIGNAL(doAcceptNewConnections()), m_listener, SLOT(doAcceptNewConnections()));
-    emit doAcceptNewConnections();
 }
 
 void Proxy::start()
 {
-    if (m_thread != nullptr) {
-        m_thread->start();
-        if (init()) {
-            moveToThread(m_thread);
-        }
-    } else {
-        init();
-    }
-}
-
-void Proxy::stop()
-{
-    if (m_thread != nullptr) {
-        m_thread->exit();
-    } else {
-        deleteLater();
-    }
-}
-
-bool Proxy::init()
-{
-    if (m_threaded) {
-        connect(m_thread, &QThread::finished, this, &QObject::deleteLater);
-        connect(m_thread,
-                &QThread::finished,
-                m_listener,
-                &ConnectionListener::doAcceptNewConnections);
-    }
-
     connect(this,
             SIGNAL(log(const QString &, const QString &)),
             m_listener->parent(),
@@ -175,7 +113,8 @@ bool Proxy::init()
     m_userSocket.reset(new QTcpSocket(this));
     if (!m_userSocket->setSocketDescriptor(m_socketDescriptor)) {
         m_userSocket.reset(nullptr);
-        return false;
+        deleteLater();
+        return;
     }
     m_userSocket->setSocketOption(QAbstractSocket::LowDelayOption, true);
     m_userSocket->setSocketOption(QAbstractSocket::KeepAliveOption, true);
@@ -307,7 +246,6 @@ bool Proxy::init()
             "Never forget! Try to role-play...\r\n");
         m_parserXml->doMove(CommandIdType::LOOK);
     }
-    return true;
 }
 
 void Proxy::onMudConnected()
@@ -349,7 +287,7 @@ void Proxy::onMudError(const QString &errorStr)
             m_parserXml->sendPromptToUser();
         } else {
             // Terminate connection
-            stop();
+            deleteLater();
         }
     } else {
         sendToUser(
@@ -362,7 +300,7 @@ void Proxy::onMudError(const QString &errorStr)
 void Proxy::userTerminatedConnection()
 {
     emit log("Proxy", "User terminated connection ...");
-    stop();
+    deleteLater();
 }
 
 void Proxy::mudTerminatedConnection()
@@ -384,7 +322,7 @@ void Proxy::mudTerminatedConnection()
             m_parserXml->sendPromptToUser();
         } else {
             // Terminate connection
-            stop();
+            deleteLater();
         }
     } else {
         sendToUser(

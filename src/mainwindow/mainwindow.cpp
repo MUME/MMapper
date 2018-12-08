@@ -1225,6 +1225,9 @@ void MainWindow::closeEvent(QCloseEvent *event)
     writeSettings();
     if (maybeSave()) {
         event->accept();
+
+        // REVISIT: Group Manager is not owned by the MainWindow and needs to be terminated
+        m_groupManager->stop();
     } else {
         event->ignore();
     }
