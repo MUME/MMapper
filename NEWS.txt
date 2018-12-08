@@ -1,4 +1,28 @@
 ================================
+MMapper 2.7.2 (December 8, 2018)
+================================
+
+New features:
+ - Disabled NAGLE for tcp connections which should hopefully increase performance during lossy conditions
+ - ANSI color selection has` been moved into a dialog that supports high colors
+ - Internal command prefix character can be changed with "_set prefix <char>"
+ - Group manager clients will atempt to reconnect 3 times to a host before failing
+ - Group hosts can lock the group to the current clients
+ - Group tells are now colored
+
+Bug fixes:
+ - Fixed crash due to threading issues on Windows
+ - Tightened TCP keepalive to hopefully prevent idle connections from dropping
+ - Fixed "black screen bug" with Intel video cards on Windows
+ - Group manager reconnects are more secure and verify the entire OpenSSL certificate matches
+ - Group manager prevents clients from spoofing another client
+ - Parser detects and remembers twiddlers, logins, and account prompts
+ - Preference sections are visually disabled when unselected
+ - Improved High DPI display support
+ - Discrete nVidia and AMD GPUs are preferred on Windows for laptops with hybrid graphics
+ - Room and group selection has been refactored
+
+================================
 MMapper 2.7.1 (November 30, 2018)
 ================================
 
