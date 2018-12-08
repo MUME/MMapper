@@ -190,6 +190,9 @@ int main(int argc, char **argv)
         if (CURRENT_PLATFORM == Platform::Linux) {
             qputenv("LIBGL_ALWAYS_SOFTWARE", "1");
         }
+    } else {
+        // Windows Intel drivers cause black screens if we don't specify OpenGL
+        app.setAttribute(Qt::AA_UseDesktopOpenGL);
     }
 
     std::unique_ptr<ISplash> splash = !config.general.noSplash
