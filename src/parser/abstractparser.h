@@ -249,6 +249,7 @@ private:
     void doMarkCurrentCommand();
     void doSearchCommand(StringView view);
     void doGetDirectionsCommand(StringView view);
+    void doGroupLockCommand();
     void toggleTrollMapping();
 
     void initSpecialCommandMap();

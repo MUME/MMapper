@@ -855,6 +855,13 @@ void AbstractParser::doMarkCurrentCommand()
     sendToUser("--->Current room marked temporarily on the map.\r\n");
 }
 
+void AbstractParser::doGroupLockCommand()
+{
+    bool toggle = !getConfig().groupManager.lockGroup;
+    setConfig().groupManager.lockGroup = toggle;
+    sendToUser(QString("--->Group has been %1.\r\n").arg(toggle ? "locked" : "unlocked"));
+}
+
 void AbstractParser::doRemoveDoorNamesCommand()
 {
     m_mapData->removeDoorNames();
@@ -928,10 +935,10 @@ void AbstractParser::showGroupHelp()
     const auto &prefixChar = getConfig().parser.prefixChar;
     showHeader("MMapper group manager help");
     showHeader("Group commands");
-    sendToUser(QString("  %1GTell [message]     - send a grouptell with the [message]\r\n")
+    sendToUser(QString("  %1GKick [player]      - kick [player] from the group\r\n"
+                       "  %1GLock               - Toggle lock on group\r\n"
+                       "  %1GTell [message]     - send a grouptell with the [message]\r\n")
                    .arg(prefixChar));
-    sendToUser(
-        QString("  %1GKick [player]      - kick [player] from the group\r\n").arg(prefixChar));
 }
 
 void AbstractParser::showHeader(const QString &s)
