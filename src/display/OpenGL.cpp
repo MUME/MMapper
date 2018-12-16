@@ -88,12 +88,12 @@ void OpenGL::initFont(QPaintDevice *const paintDevice)
 
 // http://stackoverflow.com/questions/28216001/how-to-render-text-with-qopenglwidget/28517897
 // They couldn't find a slower way to do this I guess
-void OpenGL::renderTextAt(const double x,
-                          const double y,
+void OpenGL::renderTextAt(const float x,
+                          const float y,
                           const QString &text,
                           const QColor &color,
                           const FontFormatFlags fontFormatFlag,
-                          const double rotationAngle)
+                          const float rotationAngle)
 {
     deref(m_paintDevice);
     auto &font = deref(m_glFont.font);
@@ -101,8 +101,8 @@ void OpenGL::renderTextAt(const double x,
     deref(m_glFont.italicMetrics);
 
     QPainter painter(m_paintDevice);
-    painter.translate(x, y);
-    painter.rotate(rotationAngle);
+    painter.translate(QPointF(static_cast<qreal>(x), static_cast<qreal>(y)));
+    painter.rotate(static_cast<qreal>(rotationAngle));
     painter.setPen(color);
     if (IS_SET(fontFormatFlag, FontFormatFlags::ITALICS)) {
         font.setItalic(true);

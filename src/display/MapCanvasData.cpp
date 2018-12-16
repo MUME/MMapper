@@ -60,7 +60,7 @@ QVector3D MapCanvasData::unproject(const QMouseEvent *const event) const
 MouseSel MapCanvasData::getUnprojectedMouseSel(const QMouseEvent *const event) const
 {
     const QVector3D v = unproject(event);
-    return MouseSel{vec2f{v.x(), v.y()}, m_currentLayer};
+    return MouseSel{Coordinate2f{v.x(), v.y()}, m_currentLayer};
 }
 
 void MapCanvasData::destroyAllGLObjects()

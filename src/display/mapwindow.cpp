@@ -189,14 +189,12 @@ void MapWindow::center(qint32 x, qint32 y)
 void MapWindow::ensureVisible(qint32 x, qint32 y)
 {
     const float scrollfactor = MapCanvas::SCROLLFACTOR();
-    const auto X1 = static_cast<qint32>(
-        static_cast<float>(m_horizontalScrollBar->value()) * scrollfactor - 5.0f);
-    const auto Y1 = static_cast<qint32>(
-        static_cast<float>(m_verticalScrollBar->value()) * scrollfactor - 5.0f);
-    const auto X2 = static_cast<qint32>(
-        static_cast<float>(m_horizontalScrollBar->value()) * scrollfactor + 5.0f);
-    const auto Y2 = static_cast<qint32>(
-        static_cast<float>(m_verticalScrollBar->value()) * scrollfactor + 5.0f);
+    const float horizontalValue = static_cast<float>(m_horizontalScrollBar->value()) * scrollfactor;
+    const float verticalValue = static_cast<float>(m_verticalScrollBar->value()) * scrollfactor;
+    const auto X1 = static_cast<qint32>(horizontalValue - 5.0f);
+    const auto Y1 = static_cast<qint32>(verticalValue - 5.0f);
+    const auto X2 = static_cast<qint32>(horizontalValue + 5.0f);
+    const auto Y2 = static_cast<qint32>(verticalValue + 5.0f);
 
     if (x > X2 - 1) {
         m_horizontalScrollBar->setValue(

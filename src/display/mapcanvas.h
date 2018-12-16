@@ -172,14 +172,14 @@ protected:
     void wheelEvent(QWheelEvent *event) override;
     bool event(QEvent *e) override;
 
-    void drawPathStart(const Coordinate &, std::vector<Vec3d> &verts);
+    void drawPathStart(const Coordinate &, std::vector<Vec3f> &verts);
     bool drawPath(const Coordinate &sc,
                   const Coordinate &dc,
-                  double &dx,
-                  double &dy,
-                  double &dz,
-                  std::vector<Vec3d> &verts);
-    void drawPathEnd(double dx, double dy, double dz, std::vector<Vec3d> &verts);
+                  float &dx,
+                  float &dy,
+                  float &dz,
+                  std::vector<Vec3f> &verts);
+    void drawPathEnd(float dx, float dy, float dz, std::vector<Vec3f> &verts);
 
 private:
     QOpenGLDebugLogger *m_logger = nullptr;
@@ -190,8 +190,9 @@ private:
     void setTrilinear(const std::unique_ptr<QOpenGLTexture> &x) const;
 
     void drawPreSpammedPath();
-    void paintSelection(GLdouble len);
-    void paintSelectedRoom(GLdouble len, const Room *room);
+    void paintSelection();
+    void paintSelectedRooms();
+    void paintSelectedRoom(const Room *room);
     void paintSelectedConnection();
     void paintSelectedInfoMarks();
     void paintSelectedInfoMark(const InfoMark *marker);

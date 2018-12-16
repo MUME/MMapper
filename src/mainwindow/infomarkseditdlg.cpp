@@ -120,7 +120,7 @@ void InfoMarksEditDlg::createClicked()
     const Coordinate pos2(m_x2->value(), m_y2->value(), m_layer->value());
     im->setPosition1(pos1);
     im->setPosition2(pos2);
-    im->setRotationAngle(m_rotationAngle->value());
+    im->setRotationAngle(static_cast<float>(m_rotationAngle->value()));
 
     m_mapData->addMarker(im);
 
@@ -142,7 +142,7 @@ void InfoMarksEditDlg::modifyClicked()
     const Coordinate pos2(m_x2->value(), m_y2->value(), m_layer->value());
     im->setPosition1(pos1);
     im->setPosition2(pos2);
-    im->setRotationAngle(m_rotationAngle->value());
+    im->setRotationAngle(static_cast<float>(m_rotationAngle->value()));
 
     emit mapChanged();
 }
@@ -238,7 +238,7 @@ void InfoMarksEditDlg::updateDialog()
         m_y1->setValue(marker->getPosition1().y);
         m_x2->setValue(marker->getPosition2().x);
         m_y2->setValue(marker->getPosition2().y);
-        m_rotationAngle->setValue(marker->getRotationAngle());
+        m_rotationAngle->setValue(static_cast<double>(marker->getRotationAngle()));
         m_layer->setValue(marker->getPosition1().z);
 
         objectCreate->setEnabled(false);

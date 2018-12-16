@@ -33,7 +33,7 @@
 #include <QtCore>
 
 #include "../expandoracommon/RoomRecipient.h"
-#include "../expandoracommon/coordinate.h" /* vec2f */
+#include "../expandoracommon/coordinate.h" /* Coordinate2f */
 #include "../global/roomid.h"
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/mmapper2exit.h"
@@ -45,11 +45,11 @@ struct RoomId;
 
 struct MouseSel final
 {
-    vec2f pos{};
+    Coordinate2f pos{};
     int layer = 0;
 
     explicit MouseSel() = default;
-    explicit MouseSel(const vec2f &pos, const int layer)
+    explicit MouseSel(const Coordinate2f &pos, const int layer)
         : pos{pos}
         , layer{layer}
     {}
@@ -96,7 +96,7 @@ signals:
 
 protected:
 private:
-    static ExitDirection ComputeDirection(const vec2f &mouse_f);
+    static ExitDirection ComputeDirection(const Coordinate2f &mouse_f);
 
     // REVISIT: give these enum names?
     std::array<ConnectionDescriptor, 2> m_connectionDescriptor{};

@@ -27,34 +27,40 @@
 #ifndef COORDINATE
 #define COORDINATE
 
-struct vec2i final
+struct Coordinate2i final
 {
     int x = 0;
     int y = 0;
-    explicit vec2i() = default;
-    explicit vec2i(const int x, const int y)
+    explicit Coordinate2i() = default;
+    explicit Coordinate2i(const int x, const int y)
         : x{x}
         , y{y}
     {}
 
-    vec2i operator-(const vec2i &rhs) const { return vec2i{x - rhs.x, y - rhs.y}; }
+    Coordinate2i operator-(const Coordinate2i &rhs) const
+    {
+        return Coordinate2i{x - rhs.x, y - rhs.y};
+    }
 };
 
-struct vec2f final
+struct Coordinate2f final
 {
     float x = 0.0f;
     float y = 0.0f;
-    explicit vec2f() = default;
-    explicit vec2f(const float x, const float y)
+    explicit Coordinate2f() = default;
+    explicit Coordinate2f(const float x, const float y)
         : x{x}
         , y{y}
     {}
 
-    vec2i round() const;
+    Coordinate2i round() const;
 
-    vec2f operator-(const vec2f &rhs) const { return vec2f{this->x - rhs.x, this->y - rhs.y}; }
-    vec2f operator*(const float f) const { return vec2f{f * x, f * y}; }
-    vec2f operator/(const float f) const;
+    Coordinate2f operator-(const Coordinate2f &rhs) const
+    {
+        return Coordinate2f{this->x - rhs.x, this->y - rhs.y};
+    }
+    Coordinate2f operator*(const float f) const { return Coordinate2f{f * x, f * y}; }
+    Coordinate2f operator/(const float f) const;
 };
 
 class Coordinate final
@@ -73,7 +79,7 @@ public:
 
 public:
     explicit Coordinate() = default;
-    explicit Coordinate(const vec2i &in_xy, const int in_z)
+    explicit Coordinate(const Coordinate2i &in_xy, const int in_z)
         : x(in_xy.x)
         , y(in_xy.y)
         , z{in_z}

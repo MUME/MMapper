@@ -31,34 +31,33 @@
 #include "../mapdata/ExitDirection.h"
 #include "OpenGL.h"
 
-struct Vec3d;
+struct Vec3f;
 
 class ConnectionLineBuilder
 {
 private:
-    std::vector<Vec3d> &points;
+    std::vector<Vec3f> &points;
 
 public:
-    explicit ConnectionLineBuilder(std::vector<Vec3d> &points)
+    explicit ConnectionLineBuilder(std::vector<Vec3f> &points)
         : points{points}
     {}
 
 private:
-    void addVertex(double x, double y, double z) { points.emplace_back(x, y, z); }
+    void addVertex(float x, float y, float z) { points.emplace_back(x, y, z); }
 
 private:
-    void drawConnStartLineUp(bool neighbours, double srcZ);
-    void drawConnStartLineDown(bool neighbours, double srcZ);
+    void drawConnStartLineUp(bool neighbours, float srcZ);
+    void drawConnStartLineDown(bool neighbours, float srcZ);
 
 private:
-    void drawConnEndLineUp(bool neighbours, qint32 dX, qint32 dY, double dstZ);
-    void drawConnEndLineDown(bool neighbours, qint32 dX, qint32 dY, double dstZ);
+    void drawConnEndLineUp(bool neighbours, qint32 dX, qint32 dY, float dstZ);
+    void drawConnEndLineDown(bool neighbours, qint32 dX, qint32 dY, float dstZ);
 
 public:
-    void drawConnLineStart(ExitDirection dir, bool neighbours, double srcZ);
-    void drawConnLineEnd2Way(
-        ExitDirection endDir, bool neighbours, qint32 dX, qint32 dY, double dstZ);
-    void drawConnLineEnd1Way(ExitDirection endDir, qint32 dX, qint32 dY, double dstZ);
+    void drawConnLineStart(ExitDirection dir, bool neighbours, float srcZ);
+    void drawConnLineEnd2Way(ExitDirection endDir, bool neighbours, qint32 dX, qint32 dY, float dstZ);
+    void drawConnLineEnd1Way(ExitDirection endDir, qint32 dX, qint32 dY, float dstZ);
 };
 
 #endif // MMAPPER_CONNECTION_LINE_BUILDER_H

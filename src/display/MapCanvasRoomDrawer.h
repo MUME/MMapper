@@ -44,19 +44,19 @@ class QOpenGLTexture;
 class QPaintDevice;
 class Room;
 class XDisplayList;
-struct Vec3d;
+struct Vec3f;
 
 /* TODO: move these elsewhere */
-static constexpr const double ROOM_Z_DISTANCE = 7.0;
-static constexpr const double ROOM_WALL_ALIGN = 0.008;
+static constexpr const float ROOM_Z_DISTANCE = 7.0f;
+static constexpr const float ROOM_WALL_ALIGN = 0.008f;
 
 class MapCanvasRoomDrawer final
 {
 private:
     const MapCanvasData &m_mapCanvasData;
     OpenGL &m_opengl;
-    const vec2f &m_visible1;
-    const vec2f &m_visible2;
+    const Coordinate2f &m_visible1;
+    const Coordinate2f &m_visible2;
     const qint16 &m_currentLayer;
     const float &m_scaleFactor;
     const MapCanvasData::DrawLists &m_gllist;
@@ -102,28 +102,28 @@ public:
                          bool wantExtraDetail);
     void drawInfoMarks();
 
-    void renderText(double x,
-                    double y,
+    void renderText(float x,
+                    float y,
                     const QString &text,
                     const QColor &color = Qt::white,
                     FontFormatFlags fontFormatFlag = FontFormatFlags::NONE,
-                    double rotationAngle = 0.0);
+                    float rotationAngle = 0.0f);
 
     void alphaOverlayTexture(QOpenGLTexture *texture);
-    void drawLineStrip(const std::vector<Vec3d> &points);
+    void drawLineStrip(const std::vector<Vec3f> &points);
     void drawListWithLineStipple(XDisplayList list, const QColor &color);
 
-    void drawTextBox(const QString &name, qreal x, qreal y, qreal width, qreal height);
+    void drawTextBox(const QString &name, float x, float y, float width, float height);
     void drawRoom(const Room *room, const RoomIndex &rooms, const RoomLocks &locks);
 
 private:
-    void drawConnEndTriUpDownUnknown(qint32 dX, qint32 dY, double dstZ);
-    void drawConnEndTriNone(qint32 dX, qint32 dY, double dstZ);
+    void drawConnEndTriUpDownUnknown(qint32 dX, qint32 dY, float dstZ);
+    void drawConnEndTriNone(qint32 dX, qint32 dY, float dstZ);
 
 private:
-    void drawConnStartTri(ExitDirection startDir, double srcZ);
-    void drawConnEndTri(ExitDirection endDir, qint32 dX, qint32 dY, double dstZ);
-    void drawConnEndTri1Way(ExitDirection endDir, qint32 dX, qint32 dY, double dstZ);
+    void drawConnStartTri(ExitDirection startDir, float srcZ);
+    void drawConnEndTri(ExitDirection endDir, qint32 dX, qint32 dY, float dstZ);
+    void drawConnEndTri1Way(ExitDirection endDir, qint32 dX, qint32 dY, float dstZ);
 
 private:
     void drawConnectionLine(ExitDirection startDir,
@@ -132,31 +132,29 @@ private:
                             bool neighbours,
                             qint32 dX,
                             qint32 dY,
-                            double srcZ,
-                            double dstZ);
+                            float srcZ,
+                            float dstZ);
 
     void drawConnectionTriangles(ExitDirection startDir,
                                  ExitDirection endDir,
                                  bool oneway,
                                  qint32 dX,
                                  qint32 dY,
-                                 double srcZ,
-                                 double dstZ);
+                                 float srcZ,
+                                 float dstZ);
 
 public:
     template<typename T>
-    double getScaledFontWidth(T x, FontFormatFlags flags = FontFormatFlags::NONE) const
+    float getScaledFontWidth(T x, FontFormatFlags flags = FontFormatFlags::NONE) const
     {
-        return m_opengl.getFontWidth(x, flags)
-               * static_cast<double>(0.022f / m_mapCanvasData.m_scaleFactor
-                                     * m_mapCanvasData.m_currentStepScaleFactor);
+        return m_opengl.getFontWidth(x, flags) * 0.022f / m_mapCanvasData.m_scaleFactor
+               * m_mapCanvasData.m_currentStepScaleFactor;
     }
 
-    double getScaledFontHeight() const
+    float getScaledFontHeight() const
     {
-        return m_opengl.getFontHeight()
-               * static_cast<double>(0.007f / m_mapCanvasData.m_scaleFactor
-                                     * m_mapCanvasData.m_currentStepScaleFactor);
+        return m_opengl.getFontHeight() * 0.007f / m_mapCanvasData.m_scaleFactor
+               * m_mapCanvasData.m_currentStepScaleFactor;
     }
 };
 

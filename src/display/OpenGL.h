@@ -42,22 +42,21 @@
 
 #include "../global/utils.h"
 
-struct Vec2d
+struct Vec2f
 {
-    double x = 0.0, y = 0.0;
-    explicit Vec2d() = default;
-    explicit Vec2d(double x, double y)
+    float x = 0.0f, y = 0.0f;
+    explicit Vec2f() = default;
+    explicit Vec2f(float x, float y)
         : x{x}
         , y{y}
-
     {}
 };
 
-struct Vec3d
+struct Vec3f
 {
-    double x = 0.0, y = 0.0, z = 0.0;
-    explicit Vec3d() = default;
-    explicit Vec3d(double x, double y, double z)
+    float x = 0.0f, y = 0.0f, z = 0.0f;
+    explicit Vec3f() = default;
+    explicit Vec3f(float x, float y, float z)
         : x{x}
         , y{y}
         , z{z}
@@ -70,11 +69,11 @@ class TexVert
 {
 private:
     friend class OpenGL;
-    Vec2d tex;
-    Vec3d vert;
+    Vec2f tex;
+    Vec3f vert;
 
 public:
-    explicit TexVert(Vec2d tex, Vec3d vert)
+    explicit TexVert(Vec2f tex, Vec3f vert)
         : tex{tex}
         , vert{vert}
     {}
@@ -82,16 +81,16 @@ public:
 
 enum class DrawType { LINES, LINE_LOOP, LINE_STRIP, POINTS, POLYGON, TRIANGLES, TRIANGLE_STRIP };
 
-class XColor4d
+class XColor4f
 {
 private:
     friend class OpenGL;
 
 private:
-    GLdouble r, g, b, a;
+    GLfloat r, g, b, a;
 
 public:
-    explicit XColor4d(const GLdouble r, const GLdouble g, const GLdouble b, const GLdouble a)
+    explicit XColor4f(const GLfloat r, const GLfloat g, const GLfloat b, const GLfloat a)
         : r{r}
         , g{g}
         , b{b}
@@ -99,11 +98,11 @@ public:
     {
         check();
     }
-    explicit XColor4d(const QColor color)
-        : r{color.redF()}
-        , g{color.greenF()}
-        , b{color.blueF()}
-        , a{color.alphaF()}
+    explicit XColor4f(const QColor color)
+        : r{static_cast<float>(color.redF())}
+        , g{static_cast<float>(color.greenF())}
+        , b{static_cast<float>(color.blueF())}
+        , a{static_cast<float>(color.alphaF())}
     {
         check();
     }
@@ -112,26 +111,26 @@ public:
      * @param color
      * @param a Overrides QColor's alpha
      */
-    explicit XColor4d(const QColor color, const double a)
-        : r{color.redF()}
-        , g{color.greenF()}
-        , b{color.blueF()}
+    explicit XColor4f(const QColor color, const float a)
+        : r{static_cast<float>(color.redF())}
+        , g{static_cast<float>(color.greenF())}
+        , b{static_cast<float>(color.blueF())}
         , a{a}
     {
         check();
     }
 
 public:
-    GLdouble getR() const { return r; }
-    GLdouble getG() const { return g; }
-    GLdouble getB() const { return b; }
-    GLdouble getA() const { return a; }
+    GLfloat getR() const { return r; }
+    GLfloat getG() const { return g; }
+    GLfloat getB() const { return b; }
+    GLfloat getA() const { return a; }
 
     void check() const
     {
 #define CHECK(x) \
-    if (x < 0.0 || x > 1.0) \
-    qWarning() << "XColor4d" << #x " = " << x
+    if (x < 0.0f || x > 1.0f) \
+    qWarning() << "XColor4f" << #x " = " << x
         CHECK(r);
         CHECK(g);
         CHECK(b);
@@ -146,10 +145,10 @@ private:
     friend class OpenGL;
 
 private:
-    GLdouble width;
+    GLfloat width;
 
 public:
-    explicit XDeviceLineWidth(const GLdouble width)
+    explicit XDeviceLineWidth(const GLfloat width)
         : width{width}
     {}
 };
@@ -160,10 +159,10 @@ private:
     friend class OpenGL;
 
 private:
-    GLdouble size;
+    GLfloat size;
 
 public:
-    explicit XDevicePointSize(const GLdouble size)
+    explicit XDevicePointSize(const GLfloat size)
         : size{size}
     {}
 };
@@ -213,10 +212,10 @@ private:
 
 private:
     DrawType type;
-    std::vector<Vec3d> args;
+    std::vector<Vec3f> args;
 
 public:
-    XDraw(const DrawType type, std::vector<Vec3d> args)
+    XDraw(const DrawType type, std::vector<Vec3f> args)
         : type{type}
         , args{std::move(args)}
     {}
@@ -321,11 +320,7 @@ public:
     GL_PROXY(glPopMatrix)
     GL_PROXY(glPushMatrix)
     GL_PROXY(glRotatef)
-    GL_PROXY(glTranslated)
-
-public:
-    // lame
-    GL_PROXY(glGetDoublev)
+    GL_PROXY(glTranslatef)
 
 public:
 #undef GL_PROXY
@@ -376,11 +371,11 @@ private:
     }
 
 public:
-    void draw(DrawType type, const std::vector<Vec3d> &args)
+    void draw(DrawType type, const std::vector<Vec3f> &args)
     {
         m_opengl.glBegin(getGLType(type));
         for (auto v : args) {
-            m_opengl.glVertex3d(v.x, v.y, v.z);
+            m_opengl.glVertex3f(v.x, v.y, v.z);
         }
         m_opengl.glEnd();
     }
@@ -390,8 +385,8 @@ private:
     {
         m_opengl.glBegin(getGLType(type));
         for (auto v : args) {
-            m_opengl.glTexCoord2d(v.tex.x, v.tex.y);
-            m_opengl.glVertex3d(v.vert.x, v.vert.y, v.vert.z);
+            m_opengl.glTexCoord2f(v.tex.x, v.tex.y);
+            m_opengl.glVertex3f(v.vert.x, v.vert.y, v.vert.z);
         }
         m_opengl.glEnd();
     }
@@ -419,10 +414,10 @@ public:
     }
 
     template<typename... Args>
-    void apply(const XColor4d &color, const Args &... args)
+    void apply(const XColor4f &color, const Args &... args)
     {
         color.check();
-        m_opengl.glColor4d(color.getR(), color.getG(), color.getB(), color.getA());
+        m_opengl.glColor4f(color.getR(), color.getG(), color.getB(), color.getA());
         apply(args...);
     }
 
@@ -516,12 +511,12 @@ public:
 
     int getFontHeight() const { return deref(m_glFont.metrics).height(); }
 
-    void renderTextAt(const double x,
-                      const double y,
+    void renderTextAt(const float x,
+                      const float y,
                       const QString &text,
                       const QColor &color,
                       const FontFormatFlags fontFormatFlag,
-                      const double rotationAngle);
+                      const float rotationAngle);
 };
 
 #endif // MMAPPER_OPENGL_H

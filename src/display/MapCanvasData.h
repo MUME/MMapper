@@ -119,9 +119,9 @@ struct MapCanvasData
 
     float m_scaleFactor = 1.0f;
     float m_currentStepScaleFactor = 1.0f;
-    vec2i m_scroll{};
+    Coordinate2i m_scroll{};
     qint16 m_currentLayer = 0;
-    vec2f m_visible1{}, m_visible2{};
+    Coordinate2f m_visible1{}, m_visible2{};
 
     bool m_mouseRightPressed{false};
     bool m_mouseLeftPressed{false};
@@ -138,7 +138,7 @@ struct MapCanvasData
 
     struct RoomSelMove final
     {
-        vec2i pos{};
+        Coordinate2i pos{};
         bool inUse = false;
         bool wrongPlace = false;
     } m_roomSelectionMove{};
@@ -147,7 +147,7 @@ struct MapCanvasData
 
     struct InfoMarkSelectionMove final
     {
-        vec2f pos{};
+        Coordinate2f pos{};
         bool inUse = false;
 
     } m_infoMarkSelectionMove{};

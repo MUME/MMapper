@@ -55,43 +55,6 @@
 #include "OpenGL.h"
 #include "RoadIndex.h"
 
-class RAIIColorSaver;
-
-/*
- * NOTE: glGetXXX() is a huge performance killer because it requires a sync with the driver.
- * But please don't blindly take this comment to mean "add a color variable to the class."
- * The better solution is to always specify what color we want for each draw call!
- *
- * Eventually we'll want to make a LineBatch and TriangleBatch objects that buffer up
- * as many lines / triangles as possible before calling a custom shader that applies the
- * specified colors / styles, using only a single eventual draw call per buffer.
- * Once we have that, we won't need to bother setting the legacy OpenGL 1.x color property.
- */
-#define SAVE_COLOR() \
-    RAIIColorSaver saved_color { this->m_opengl }
-class RAIIColorSaver final
-{
-private:
-    OpenGL &m_opengl;
-    std::array<GLdouble, 4> oldcolour{};
-
-public:
-    DELETE_CTORS_AND_ASSIGN_OPS(RAIIColorSaver);
-
-public:
-    explicit RAIIColorSaver(OpenGL &opengl)
-        : m_opengl{opengl}
-    {
-        m_opengl.glGetDoublev(static_cast<GLenum>(GL_CURRENT_COLOR), oldcolour.data());
-    }
-
-public:
-    ~RAIIColorSaver() noexcept(false) /* allow exceptions */
-    {
-        m_opengl.apply(XColor4d{oldcolour[0], oldcolour[1], oldcolour[2], oldcolour[3]});
-    }
-};
-
 // TODO: Make all of the WALL_COLOR_XXX configurable?
 // Also, should FALL and CLIMB damage be separate colors? What about wall and door?
 static const auto WALL_COLOR_CLIMB = QColor::fromRgbF(0.7, 0.7, 0.7);       // lightgray;
@@ -241,16 +204,16 @@ void MapCanvasRoomDrawer::drawInfoMarks()
 
 void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
 {
-    const double x1 = static_cast<double>(marker->getPosition1().x) / INFOMARK_SCALE;
-    const double y1 = static_cast<double>(marker->getPosition1().y) / INFOMARK_SCALE;
+    const float x1 = static_cast<float>(marker->getPosition1().x) / INFOMARK_SCALE;
+    const float y1 = static_cast<float>(marker->getPosition1().y) / INFOMARK_SCALE;
     const int layer = marker->getPosition1().z;
-    double x2 = static_cast<double>(marker->getPosition2().x) / INFOMARK_SCALE;
-    double y2 = static_cast<double>(marker->getPosition2().y) / INFOMARK_SCALE;
-    const double dx = x2 - x1;
-    const double dy = y2 - y1;
+    float x2 = static_cast<float>(marker->getPosition2().x) / INFOMARK_SCALE;
+    float y2 = static_cast<float>(marker->getPosition2().y) / INFOMARK_SCALE;
+    const float dx = x2 - x1;
+    const float dy = y2 - y1;
 
-    double width = 0;
-    double height = 0;
+    float width = 0;
+    float height = 0;
 
     if (layer != m_currentLayer) {
         return;
@@ -277,41 +240,37 @@ void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
     }
 
     // check if marker is visible
-    if (((x1 + 1.0 < static_cast<double>(m_visible1.x))
-         || (x1 - 1.0 > static_cast<double>(m_visible2.x) + 1.0))
-        && ((x2 + 1.0 < static_cast<double>(m_visible1.x))
-            || (x2 - 1.0 > static_cast<double>(m_visible2.x) + 1))) {
+    if (((x1 + 1.0f < m_visible1.x) || (x1 - 1.0f > m_visible2.x + 1.0f))
+        && ((x2 + 1.0f < m_visible1.x) || (x2 - 1.0f > m_visible2.x + 1))) {
         return;
     }
-    if (((y1 + 1.0 < static_cast<double>(m_visible1.y))
-         || (y1 - 1.0 > static_cast<double>(m_visible2.y) + 1.0))
-        && ((y2 + 1.0 < static_cast<double>(m_visible1.y))
-            || (y2 - 1.0 > static_cast<double>(m_visible2.y) + 1.0))) {
+    if (((y1 + 1.0f < m_visible1.y) || (y1 - 1.0f > m_visible2.y + 1.0f))
+        && ((y2 + 1.0f < m_visible1.y) || (y2 - 1.0f > m_visible2.y + 1.0f))) {
         return;
     }
 
     m_opengl.glPushMatrix();
-    m_opengl.glTranslated(x1, y1, 0.0);
+    m_opengl.glTranslatef(x1, y1, 0.0f);
 
     switch (infoMarkType) {
     case InfoMarkType::TEXT:
         // Render background
-        m_opengl.apply(XColor4d{color});
+        m_opengl.apply(XColor4f{color});
         m_opengl.apply(XEnable{XOption::BLEND});
         m_opengl.apply(XDisable{XOption::DEPTH_TEST});
         m_opengl.draw(DrawType::POLYGON,
-                      std::vector<Vec3d>{
-                          Vec3d{0.0, 0.0, 1.0},
-                          Vec3d{0.0, 0.25 + height, 1.0},
-                          Vec3d{0.2 + width, 0.25 + height, 1.0},
-                          Vec3d{0.2 + width, 0.0, 1.0},
+                      std::vector<Vec3f>{
+                          Vec3f{0.0f, 0.0f, 1.0f},
+                          Vec3f{0.0f, 0.25f + height, 1.0f},
+                          Vec3f{0.2f + width, 0.25f + height, 1.0f},
+                          Vec3f{0.2f + width, 0.0f, 1.0f},
                       });
         m_opengl.apply(XDisable{XOption::BLEND});
 
         // Render text proper
-        m_opengl.glTranslated(-x1 / 2.0, -y1 / 2.0, 0.0);
-        renderText(x1 + 0.1,
-                   y1 + 0.3,
+        m_opengl.glTranslatef(-x1 / 2.0f, -y1 / 2.0f, 0.0f);
+        renderText(x1 + 0.1f,
+                   y1 + 0.3f,
                    marker->getText(),
                    textColor(color),
                    fontFormatFlag,
@@ -319,33 +278,33 @@ void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
         m_opengl.apply(XEnable{XOption::DEPTH_TEST});
         break;
     case InfoMarkType::LINE:
-        m_opengl.apply(XColor4d{color});
+        m_opengl.apply(XColor4f{color});
         m_opengl.apply(XEnable{XOption::BLEND});
         m_opengl.apply(XDisable{XOption::DEPTH_TEST});
         m_opengl.apply(XDevicePointSize{2.0});
         m_opengl.apply(XDeviceLineWidth{2.0});
         m_opengl.draw(DrawType::LINES,
-                      std::vector<Vec3d>{
-                          Vec3d{0.0, 0.0, 0.1},
-                          Vec3d{dx, dy, 0.1},
+                      std::vector<Vec3f>{
+                          Vec3f{0.0f, 0.0f, 0.1f},
+                          Vec3f{dx, dy, 0.1f},
                       });
         m_opengl.apply(XDisable{XOption::BLEND});
         m_opengl.apply(XEnable{XOption::DEPTH_TEST});
         break;
     case InfoMarkType::ARROW:
-        m_opengl.apply(XColor4d{color});
+        m_opengl.apply(XColor4f{color});
         m_opengl.apply(XEnable{XOption::BLEND});
         m_opengl.apply(XDisable{XOption::DEPTH_TEST});
         m_opengl.apply(XDevicePointSize{2.0});
         m_opengl.apply(XDeviceLineWidth{2.0});
         m_opengl.draw(DrawType::LINE_STRIP,
-                      std::vector<Vec3d>{Vec3d{0.0, 0.05, 1.0},
-                                         Vec3d{dx - 0.2, dy + 0.1, 1.0},
-                                         Vec3d{dx - 0.1, dy + 0.1, 1.0}});
+                      std::vector<Vec3f>{Vec3f{0.0f, 0.05f, 1.0f},
+                                         Vec3f{dx - 0.2f, dy + 0.1f, 1.0f},
+                                         Vec3f{dx - 0.1f, dy + 0.1f, 1.0f}});
         m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3d>{Vec3d{dx - 0.1, dy + 0.1 - 0.07, 1.0},
-                                         Vec3d{dx - 0.1, dy + 0.1 + 0.07, 1.0},
-                                         Vec3d{dx + 0.1, dy + 0.1, 1.0}});
+                      std::vector<Vec3f>{Vec3f{dx - 0.1f, dy + 0.1f - 0.07f, 1.0f},
+                                         Vec3f{dx - 0.1f, dy + 0.1f + 0.07f, 1.0f},
+                                         Vec3f{dx + 0.1f, dy + 0.1f, 1.0f}});
         m_opengl.apply(XDisable{XOption::BLEND});
         m_opengl.apply(XEnable{XOption::DEPTH_TEST});
         break;
@@ -416,30 +375,30 @@ void MapCanvasRoomDrawer::drawRoomDoorName(const Room *const sourceRoom,
         name = getPostfixedDoorName(sourceRoom, sourceDir);
     }
 
-    const qreal width = getScaledFontWidth(name);
-    const qreal height = getScaledFontHeight();
+    const float width = getScaledFontWidth(name);
+    const float height = getScaledFontHeight();
 
-    qreal boxX = 0, boxY = 0;
+    float boxX = 0, boxY = 0;
     if (together) {
-        boxX = srcX - (width / 2.0) - (dX * 0.5);
-        boxY = srcY - 0.5 - (dY * 0.5);
+        boxX = srcX - (width / 2.0f) - (dX * 0.5f);
+        boxY = srcY - 0.5f - (dY * 0.5f);
     } else {
-        boxX = srcX - (width / 2.0);
+        boxX = srcX - (width / 2.0f);
         switch (sourceDir) {
         case ExitDirection::NORTH:
-            boxY = srcY - 0.65;
+            boxY = srcY - 0.65f;
             break;
         case ExitDirection::SOUTH:
-            boxY = srcY - 0.15;
+            boxY = srcY - 0.15f;
             break;
         case ExitDirection::WEST:
-            boxY = srcY - 0.5;
+            boxY = srcY - 0.5f;
             break;
         case ExitDirection::EAST:
-            boxY = srcY - 0.35;
+            boxY = srcY - 0.35f;
             break;
         case ExitDirection::UP:
-            boxY = srcY - 0.85;
+            boxY = srcY - 0.85f;
             break;
         case ExitDirection::DOWN:
             boxY = srcY;
@@ -456,44 +415,40 @@ void MapCanvasRoomDrawer::drawRoomDoorName(const Room *const sourceRoom,
 }
 
 void MapCanvasRoomDrawer::drawTextBox(
-    const QString &name, const qreal x, const qreal y, const qreal width, const qreal height)
+    const QString &name, const float x, const float y, const float width, const float height)
 {
-    const qreal boxX2 = x + width;
-    const qreal boxY2 = y + height;
+    const float boxX2 = x + width;
+    const float boxY2 = y + height;
 
     // check if box is visible
-    if (((x + 1.0 < static_cast<double>(m_visible1.x))
-         || (x - 1 > static_cast<double>(m_visible2.x) + 1))
-        && ((boxX2 + 1 < static_cast<double>(m_visible1.x))
-            || (boxX2 - 1.0 > static_cast<double>(m_visible2.x) + 1.0))) {
+    if (((x + 1.0f < m_visible1.x) || (x - 1 > m_visible2.x + 1))
+        && ((boxX2 + 1 < m_visible1.x) || (boxX2 - 1.0f > m_visible2.x + 1.0f))) {
         return;
     }
-    if (((y + 1.0 < static_cast<double>(m_visible1.y))
-         || (y - 1 > static_cast<double>(m_visible2.y) + 1))
-        && ((boxY2 + 1.0 < static_cast<double>(m_visible1.y))
-            || (boxY2 - 1.0 > static_cast<double>(m_visible2.y) + 1.0))) {
+    if (((y + 1.0f < m_visible1.y) || (y - 1 > m_visible2.y + 1))
+        && ((boxY2 + 1.0f < m_visible1.y) || (boxY2 - 1.0f > m_visible2.y + 1.0f))) {
         return;
     }
 
     m_opengl.glPushMatrix();
 
-    m_opengl.glTranslated(x /*-0.5*/, y /*-0.5*/, 0);
+    m_opengl.glTranslatef(x /*-0.5*/, y /*-0.5*/, 0);
 
     // Render background
-    m_opengl.apply(XColor4d{0, 0, 0, 0.3});
+    m_opengl.apply(XColor4f{0, 0, 0, 0.3f});
     m_opengl.apply(XEnable{XOption::BLEND});
     m_opengl.draw(DrawType::POLYGON,
-                  std::vector<Vec3d>{
-                      Vec3d{0.0, 0.0, 1.0},
-                      Vec3d{0.0, 0.25 + height, 1.0},
-                      Vec3d{0.2 + width, 0.25 + height, 1.0},
-                      Vec3d{0.2 + width, 0.0, 1.0},
+                  std::vector<Vec3f>{
+                      Vec3f{0.0f, 0.0f, 1.0f},
+                      Vec3f{0.0f, 0.25f + height, 1.0f},
+                      Vec3f{0.2f + width, 0.25f + height, 1.0f},
+                      Vec3f{0.2f + width, 0.0f, 1.0f},
                   });
     m_opengl.apply(XDisable{XOption::BLEND});
 
     // text
-    m_opengl.glTranslated(-x / 2.0, -y / 2.0, 0.0);
-    renderText(x + 0.1, y + 0.3, name);
+    m_opengl.glTranslatef(-x / 2.0f, -y / 2.0f, 0.0f);
+    renderText(x + 0.1f, y + 0.3f, name);
     m_opengl.apply(XEnable{XOption::DEPTH_TEST});
 
     m_opengl.glPopMatrix();
@@ -508,10 +463,10 @@ void MapCanvasRoomDrawer::drawFlow(const Room *const room,
 
     // Prepare pen
     QColor color = QColor(76, 216, 255);
-    m_opengl.apply(XColor4d{color});
+    m_opengl.apply(XColor4f{color});
     m_opengl.apply(XEnable{XOption::BLEND});
     m_opengl.apply(XDevicePointSize{4.0});
-    m_opengl.apply(XDeviceLineWidth{1.0});
+    m_opengl.apply(XDeviceLineWidth{1.0f});
 
     // Draw part in this room
     if (room->getPosition().z == m_currentLayer) {
@@ -540,7 +495,7 @@ void MapCanvasRoomDrawer::drawFlow(const Room *const room,
 
     // Terminate drawing
     color = Qt::black;
-    m_opengl.apply(XColor4d{color});
+    m_opengl.apply(XColor4f{color});
     m_opengl.glPopMatrix();
 }
 
@@ -601,26 +556,21 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room,
     const auto layer = z - m_currentLayer;
 
     m_opengl.glPushMatrix();
-    m_opengl.glTranslated(static_cast<double>(x) - 0.5,
-                          static_cast<double>(y) - 0.5,
-                          ROOM_Z_DISTANCE * static_cast<double>(layer));
+    m_opengl.glTranslatef(static_cast<float>(x) - 0.5f,
+                          static_cast<float>(y) - 0.5f,
+                          ROOM_Z_DISTANCE * static_cast<float>(layer));
 
     // TODO(nschimme): https://stackoverflow.com/questions/6017176/gllinestipple-deprecated-in-opengl-3-1
     m_opengl.apply(LineStippleType::TWO);
-
-    // terrain texture
-    m_opengl.apply(XColor4d{Qt::white, 1.0});
 
     if (layer > 0) {
         if (getConfig().canvas.drawUpperLayersTextured) {
             m_opengl.apply(XEnable{XOption::POLYGON_STIPPLE});
         } else {
             m_opengl.apply(XDisable{XOption::POLYGON_STIPPLE});
-            m_opengl.apply(XColor4d{0.3, 0.3, 0.3, 0.6 - 0.2 * static_cast<double>(layer)});
             m_opengl.apply(XEnable{XOption::BLEND});
         }
     } else if (layer == 0) {
-        m_opengl.apply(XColor4d{Qt::white, 0.9});
         m_opengl.apply(XEnable{XOption::BLEND});
     }
 
@@ -628,18 +578,18 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room,
     drawUpperLayers(room, layer, roadIndex, wantExtraDetail);
 
     // walls
-    m_opengl.glTranslated(0, 0, 0.005);
+    m_opengl.glTranslatef(0, 0, 0.005f);
 
     if (layer > 0) {
         m_opengl.apply(XDisable{XOption::POLYGON_STIPPLE});
-        m_opengl.apply(XColor4d{0.3, 0.3, 0.3, 0.6});
+        m_opengl.apply(XColor4f{0.3f, 0.3f, 0.3f, 0.6f});
         m_opengl.apply(XEnable{XOption::BLEND});
     } else {
-        m_opengl.apply(XColor4d{Qt::black});
+        m_opengl.apply(XColor4f{Qt::black});
     }
 
     m_opengl.apply(XDevicePointSize{3.0});
-    m_opengl.apply(XDeviceLineWidth{2.4});
+    m_opengl.apply(XDeviceLineWidth{2.4f});
 
     for (auto dir : ALL_EXITS_NESW) {
         drawExit(room, rooms, dir);
@@ -658,11 +608,11 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room,
         m_opengl.apply(XDisable{XOption::BLEND});
     }
 
-    m_opengl.glTranslated(0, 0, 0.0100);
+    m_opengl.glTranslatef(0, 0, 0.0100f);
     if (layer < 0) {
         m_opengl.apply(XEnable{XOption::BLEND});
         m_opengl.apply(XDisable{XOption::DEPTH_TEST});
-        m_opengl.apply(XColor4d{Qt::black, 0.5 - 0.03 * static_cast<double>(layer)});
+        m_opengl.apply(XColor4f{Qt::black, 0.5f - 0.03f * static_cast<float>(layer)});
         m_opengl.callList(m_gllist.room);
         m_opengl.apply(XEnable{XOption::DEPTH_TEST});
         m_opengl.apply(XDisable{XOption::BLEND});
@@ -671,7 +621,7 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room,
 
         m_opengl.apply(XEnable{XOption::BLEND});
         m_opengl.apply(XDisable{XOption::DEPTH_TEST});
-        m_opengl.apply(XColor4d{Qt::white, 0.1});
+        m_opengl.apply(XColor4f{Qt::white, 0.1f});
         m_opengl.callList(m_gllist.room);
         m_opengl.apply(XEnable{XOption::DEPTH_TEST});
         m_opengl.apply(XDisable{XOption::BLEND});
@@ -680,7 +630,7 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room,
     if (!locks[room->getId()].empty()) { // ---> room is locked
         m_opengl.apply(XEnable{XOption::BLEND});
         m_opengl.apply(XDisable{XOption::DEPTH_TEST});
-        m_opengl.apply(XColor4d{0.6, 0.0, 0.0, 0.2});
+        m_opengl.apply(XColor4f{0.6f, 0.0f, 0.0f, 0.2f});
         m_opengl.callList(m_gllist.room);
         m_opengl.apply(XEnable{XOption::DEPTH_TEST});
         m_opengl.apply(XDisable{XOption::BLEND});
@@ -700,6 +650,7 @@ void MapCanvasRoomDrawer::drawUpperLayers(const Room *const room,
 {
     if (layer > 0 && !getConfig().canvas.drawUpperLayersTextured) {
         m_opengl.apply(XEnable{XOption::BLEND});
+        m_opengl.apply(XColor4f{0.3f, 0.3f, 0.3f, 0.6f - 0.2f * static_cast<float>(layer)});
         m_opengl.callList(m_gllist.room);
         m_opengl.apply(XDisable{XOption::BLEND});
         return;
@@ -712,17 +663,20 @@ void MapCanvasRoomDrawer::drawUpperLayers(const Room *const room,
 
     m_opengl.apply(XEnable{XOption::BLEND});
     m_opengl.apply(XEnable{XOption::TEXTURE_2D});
+    m_opengl.apply(XColor4f{Qt::white, layer == 0 ? 0.9f : 1.0f});
     texture->bind();
     m_opengl.callList(m_gllist.room);
 
     // Make dark and troll safe rooms look dark
     if (room->getSundeathType() == RoomSundeathType::NO_SUNDEATH
         || room->getLightType() == RoomLightType::DARK) {
-        SAVE_COLOR();
-        m_opengl.glTranslated(0, 0, 0.005);
+        m_opengl.glTranslatef(0, 0, 0.005f);
         m_opengl.apply(
-            XColor4d{0.1, 0.0, 0.0, room->getLightType() == RoomLightType::DARK ? 0.4 : 0.2});
+            XColor4f{0.1f, 0.0f, 0.0f, room->getLightType() == RoomLightType::DARK ? 0.4f : 0.2f});
         m_opengl.callList(m_gllist.room);
+
+        // Undo dark color
+        m_opengl.apply(XColor4f{Qt::white, layer == 0 ? 0.9f : 1.0f});
     }
 
     // Only display at a certain scale
@@ -732,44 +686,46 @@ void MapCanvasRoomDrawer::drawUpperLayers(const Room *const room,
 
         // Draw a little dark red cross on noride rooms
         if (room->getRidableType() == RoomRidableType::NOT_RIDABLE) {
-            SAVE_COLOR();
             m_opengl.apply(XDisable{XOption::TEXTURE_2D});
 
-            m_opengl.apply(XColor4d{0.5, 0.0, 0.0, 0.9});
+            m_opengl.apply(XColor4f{0.5f, 0.0f, 0.0f, 0.9f});
             m_opengl.apply(XDeviceLineWidth{3.0});
             m_opengl.draw(DrawType::LINES,
-                          std::vector<Vec3d>{
-                              Vec3d{0.6, 0.2, 0.005},
-                              Vec3d{0.8, 0.4, 0.005},
-                              Vec3d{0.8, 0.2, 0.005},
-                              Vec3d{0.6, 0.4, 0.005},
+                          std::vector<Vec3f>{
+                              Vec3f{0.6f, 0.2f, 0.005f},
+                              Vec3f{0.8f, 0.4f, 0.005f},
+                              Vec3f{0.8f, 0.2f, 0.005f},
+                              Vec3f{0.6f, 0.4f, 0.005f},
                           });
 
             m_opengl.apply(XEnable{XOption::TEXTURE_2D});
+
+            // Undo red color
+            m_opengl.apply(XColor4f{Qt::white, layer == 0 ? 0.9f : 1.0f});
         }
 
         // Trail Support
         if (roadIndex != RoadIndex::NONE && roomTerrainType != RoomTerrainType::ROAD) {
-            m_opengl.glTranslated(0, 0, 0.005);
+            m_opengl.glTranslatef(0, 0, 0.005f);
             alphaOverlayTexture(m_textures.trail[roadIndex].get());
         }
 
         for (const RoomMobFlag flag : ALL_MOB_FLAGS) {
             if (mf.contains(flag)) {
-                m_opengl.glTranslated(0, 0, 0.005);
+                m_opengl.glTranslatef(0, 0, 0.005f);
                 alphaOverlayTexture(m_textures.mob[flag].get());
             }
         }
 
         for (const RoomLoadFlag flag : ALL_LOAD_FLAGS) {
             if (lf.contains(flag)) {
-                m_opengl.glTranslated(0, 0, 0.005);
+                m_opengl.glTranslatef(0, 0, 0.005f);
                 alphaOverlayTexture(m_textures.load[flag].get());
             }
         }
 
         if (getConfig().canvas.showUpdated && !room->isUpToDate()) {
-            m_opengl.glTranslated(0, 0, 0.005);
+            m_opengl.glTranslatef(0, 0, 0.005f);
             alphaOverlayTexture(m_textures.update.get());
         }
         m_opengl.apply(XDisable{XOption::BLEND});
@@ -789,8 +745,8 @@ void MapCanvasRoomDrawer::drawRoomConnectionsAndDoors(const Room *const room, co
     const Room *targetRoom = nullptr;
     const ExitsList &exitslist = room->getExitsList();
     bool oneway = false;
-    int rx = 0;
-    int ry = 0;
+    float rx = 0;
+    float ry = 0;
 
     const auto wantDoorNames = getConfig().canvas.drawDoorNames
                                && (m_mapCanvasData.m_scaleFactor
@@ -808,14 +764,12 @@ void MapCanvasRoomDrawer::drawRoomConnectionsAndDoors(const Room *const room, co
                            << outTargetId.asUint32() << "which does not exist!";
                 continue;
             }
-            rx = targetRoom->getPosition().x;
-            ry = targetRoom->getPosition().y;
+            rx = static_cast<float>(targetRoom->getPosition().x);
+            ry = static_cast<float>(targetRoom->getPosition().y);
             if ((outTargetId >= sourceId) || // draw exits if outTargetId >= sourceId ...
                                              // or if target room is not visible
-                (((static_cast<float>(rx) < m_visible1.x - 1.0f)
-                  || (static_cast<float>(rx) > m_visible2.x + 1.0f))
-                 || ((static_cast<float>(ry) < m_visible1.y - 1.0f)
-                     || (static_cast<float>(ry) > m_visible2.y + 1.0f)))) {
+                ((rx < m_visible1.x - 1.0f) || (rx > m_visible2.x + 1.0f))
+                || ((ry < m_visible1.y - 1.0f) || (ry > m_visible2.y + 1.0f))) {
                 if (targetRoom->exit(targetDir).containsOut(sourceId)) {
                     oneway = false;
                 } else {
@@ -858,10 +812,8 @@ void MapCanvasRoomDrawer::drawRoomConnectionsAndDoors(const Room *const room, co
                 rx = targetRoom->getPosition().x;
                 ry = targetRoom->getPosition().y;
 
-                if (((static_cast<float>(rx) < m_visible1.x - 1.0f)
-                     || (static_cast<float>(rx) > m_visible2.x + 1.0f))
-                    || ((static_cast<float>(ry) < m_visible1.y - 1.0f)
-                        || (static_cast<float>(ry) > m_visible2.y + 1.0f))) {
+                if (((rx < m_visible1.x - 1.0f) || (rx > m_visible2.x + 1.0f))
+                    || ((ry < m_visible1.y - 1.0f) || (ry > m_visible2.y + 1.0f))) {
                     if (!targetRoom->exit(opp).containsIn(sourceId)) {
                         drawConnection(targetRoom,
                                        room,
@@ -925,7 +877,7 @@ void MapCanvasRoomDrawer::drawVertical(
      * but the transparent display list doesn't.
      * Door display list doesn't set its own color, but flow does. */
     const auto useTransparent = layer > 0;
-    m_opengl.apply(useTransparent ? transparent : opaque, XColor4d{Qt::black});
+    m_opengl.apply(useTransparent ? transparent : opaque, XColor4f{Qt::black});
 
     if (flags.isDoor()) {
         m_opengl.callList(doorlist);
@@ -942,9 +894,9 @@ void MapCanvasRoomDrawer::drawListWithLineStipple(const XDisplayList list, const
         qWarning() << __FUNCTION__ << color;
 
     m_opengl.apply(XEnable{XOption::LINE_STIPPLE});
-    m_opengl.apply(XColor4d{color});
+    m_opengl.apply(XColor4f{color});
     m_opengl.callList(list);
-    m_opengl.apply(XColor4d{Qt::black});
+    m_opengl.apply(XColor4f{Qt::black});
     m_opengl.apply(XDisable{XOption::LINE_STIPPLE});
 }
 
@@ -1003,22 +955,22 @@ void MapCanvasRoomDrawer::drawConnection(const Room *leftRoom,
     }
 
     m_opengl.glPushMatrix();
-    m_opengl.glTranslated(leftX - 0.5, leftY - 0.5, 0.0);
+    m_opengl.glTranslatef(leftX - 0.5f, leftY - 0.5f, 0.0f);
 
-    m_opengl.apply(XColor4d{inExitFlags ? Qt::white : Qt::red, 0.70});
+    m_opengl.apply(XColor4f{inExitFlags ? Qt::white : Qt::red, 0.70f});
 
     m_opengl.apply(XEnable{XOption::BLEND});
     m_opengl.apply(XDevicePointSize{2.0});
     m_opengl.apply(XDeviceLineWidth{2.0});
 
-    const double srcZ = ROOM_Z_DISTANCE * static_cast<double>(leftLayer) + 0.3;
-    const double dstZ = ROOM_Z_DISTANCE * static_cast<double>(rightLayer) + 0.3;
+    const float srcZ = ROOM_Z_DISTANCE * static_cast<float>(leftLayer) + 0.3f;
+    const float dstZ = ROOM_Z_DISTANCE * static_cast<float>(rightLayer) + 0.3f;
 
     drawConnectionLine(startDir, endDir, oneway, neighbours, dX, dY, srcZ, dstZ);
     drawConnectionTriangles(startDir, endDir, oneway, dX, dY, srcZ, dstZ);
 
     m_opengl.apply(XDisable{XOption::BLEND});
-    m_opengl.apply(XColor4d{Qt::white, 0.70});
+    m_opengl.apply(XColor4f{Qt::white, 0.70f});
     m_opengl.glPopMatrix();
 }
 
@@ -1027,8 +979,8 @@ void MapCanvasRoomDrawer::drawConnectionTriangles(const ExitDirection startDir,
                                                   const bool oneway,
                                                   const qint32 dX,
                                                   const qint32 dY,
-                                                  const double srcZ,
-                                                  const double dstZ)
+                                                  const float srcZ,
+                                                  const float dstZ)
 {
     if (oneway) {
         drawConnEndTri1Way(endDir, dX, dY, dstZ);
@@ -1044,10 +996,10 @@ void MapCanvasRoomDrawer::drawConnectionLine(const ExitDirection startDir,
                                              const bool neighbours,
                                              const qint32 dX,
                                              const qint32 dY,
-                                             const double srcZ,
-                                             const double dstZ)
+                                             const float srcZ,
+                                             const float dstZ)
 {
-    std::vector<Vec3d> points{};
+    std::vector<Vec3f> points{};
     ConnectionLineBuilder lb{points};
     lb.drawConnLineStart(startDir, neighbours, srcZ);
     if (points.empty())
@@ -1064,44 +1016,44 @@ void MapCanvasRoomDrawer::drawConnectionLine(const ExitDirection startDir,
     drawLineStrip(points);
 }
 
-void MapCanvasRoomDrawer::drawLineStrip(const std::vector<Vec3d> &points)
+void MapCanvasRoomDrawer::drawLineStrip(const std::vector<Vec3f> &points)
 {
     m_opengl.draw(DrawType::LINE_STRIP, points);
 }
 
-void MapCanvasRoomDrawer::drawConnStartTri(const ExitDirection startDir, const double srcZ)
+void MapCanvasRoomDrawer::drawConnStartTri(const ExitDirection startDir, const float srcZ)
 {
     switch (startDir) {
     case ExitDirection::NORTH:
         m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3d>{
-                          Vec3d{0.68, +0.1, srcZ},
-                          Vec3d{0.82, +0.1, srcZ},
-                          Vec3d{0.75, +0.3, srcZ},
+                      std::vector<Vec3f>{
+                          Vec3f{0.68f, +0.1f, srcZ},
+                          Vec3f{0.82f, +0.1f, srcZ},
+                          Vec3f{0.75f, +0.3f, srcZ},
                       });
         break;
     case ExitDirection::SOUTH:
         m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3d>{
-                          Vec3d{0.18, 0.9, srcZ},
-                          Vec3d{0.32, 0.9, srcZ},
-                          Vec3d{0.25, 0.7, srcZ},
+                      std::vector<Vec3f>{
+                          Vec3f{0.18f, 0.9f, srcZ},
+                          Vec3f{0.32f, 0.9f, srcZ},
+                          Vec3f{0.25f, 0.7f, srcZ},
                       });
         break;
     case ExitDirection::EAST:
         m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3d>{
-                          Vec3d{0.9, 0.18, srcZ},
-                          Vec3d{0.9, 0.32, srcZ},
-                          Vec3d{0.7, 0.25, srcZ},
+                      std::vector<Vec3f>{
+                          Vec3f{0.9f, 0.18f, srcZ},
+                          Vec3f{0.9f, 0.32f, srcZ},
+                          Vec3f{0.7f, 0.25f, srcZ},
                       });
         break;
     case ExitDirection::WEST:
         m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3d>{
-                          Vec3d{0.1, 0.68, srcZ},
-                          Vec3d{0.1, 0.82, srcZ},
-                          Vec3d{0.3, 0.75, srcZ},
+                      std::vector<Vec3f>{
+                          Vec3f{0.1f, 0.68f, srcZ},
+                          Vec3f{0.1f, 0.82f, srcZ},
+                          Vec3f{0.3f, 0.75f, srcZ},
                       });
         break;
 
@@ -1116,39 +1068,39 @@ void MapCanvasRoomDrawer::drawConnStartTri(const ExitDirection startDir, const d
 void MapCanvasRoomDrawer::drawConnEndTri(const ExitDirection endDir,
                                          const qint32 dX,
                                          const qint32 dY,
-                                         const double dstZ)
+                                         const float dstZ)
 {
     switch (endDir) {
     case ExitDirection::NORTH:
         m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3d>{
-                          Vec3d{dX + 0.68, dY + 0.1, dstZ},
-                          Vec3d{dX + 0.82, dY + 0.1, dstZ},
-                          Vec3d{dX + 0.75, dY + 0.3, dstZ},
+                      std::vector<Vec3f>{
+                          Vec3f{dX + 0.68f, dY + 0.1f, dstZ},
+                          Vec3f{dX + 0.82f, dY + 0.1f, dstZ},
+                          Vec3f{dX + 0.75f, dY + 0.3f, dstZ},
                       });
         break;
     case ExitDirection::SOUTH:
         m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3d>{
-                          Vec3d{dX + 0.18, dY + 0.9, dstZ},
-                          Vec3d{dX + 0.32, dY + 0.9, dstZ},
-                          Vec3d{dX + 0.25, dY + 0.7, dstZ},
+                      std::vector<Vec3f>{
+                          Vec3f{dX + 0.18f, dY + 0.9f, dstZ},
+                          Vec3f{dX + 0.32f, dY + 0.9f, dstZ},
+                          Vec3f{dX + 0.25f, dY + 0.7f, dstZ},
                       });
         break;
     case ExitDirection::EAST:
         m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3d>{
-                          Vec3d{dX + 0.9, dY + 0.18, dstZ},
-                          Vec3d{dX + 0.9, dY + 0.32, dstZ},
-                          Vec3d{dX + 0.7, dY + 0.25, dstZ},
+                      std::vector<Vec3f>{
+                          Vec3f{dX + 0.9f, dY + 0.18f, dstZ},
+                          Vec3f{dX + 0.9f, dY + 0.32f, dstZ},
+                          Vec3f{dX + 0.7f, dY + 0.25f, dstZ},
                       });
         break;
     case ExitDirection::WEST:
         m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3d>{
-                          Vec3d{dX + 0.1, dY + 0.68, dstZ},
-                          Vec3d{dX + 0.1, dY + 0.82, dstZ},
-                          Vec3d{dX + 0.3, dY + 0.75, dstZ},
+                      std::vector<Vec3f>{
+                          Vec3f{dX + 0.1f, dY + 0.68f, dstZ},
+                          Vec3f{dX + 0.1f, dY + 0.82f, dstZ},
+                          Vec3f{dX + 0.3f, dY + 0.75f, dstZ},
                       });
         break;
 
@@ -1169,39 +1121,39 @@ void MapCanvasRoomDrawer::drawConnEndTri(const ExitDirection endDir,
 void MapCanvasRoomDrawer::drawConnEndTri1Way(const ExitDirection endDir,
                                              const qint32 dX,
                                              const qint32 dY,
-                                             const double dstZ)
+                                             const float dstZ)
 {
     switch (endDir) {
     case ExitDirection::NORTH:
         m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3d>{
-                          Vec3d{dX + 0.18, dY + 0.1, dstZ},
-                          Vec3d{dX + 0.32, dY + 0.1, dstZ},
-                          Vec3d{dX + 0.25, dY + 0.3, dstZ},
+                      std::vector<Vec3f>{
+                          Vec3f{dX + 0.18f, dY + 0.1f, dstZ},
+                          Vec3f{dX + 0.32f, dY + 0.1f, dstZ},
+                          Vec3f{dX + 0.25f, dY + 0.3f, dstZ},
                       });
         break;
     case ExitDirection::SOUTH:
         m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3d>{
-                          Vec3d{dX + 0.68, dY + 0.9, dstZ},
-                          Vec3d{dX + 0.82, dY + 0.9, dstZ},
-                          Vec3d{dX + 0.75, dY + 0.7, dstZ},
+                      std::vector<Vec3f>{
+                          Vec3f{dX + 0.68f, dY + 0.9f, dstZ},
+                          Vec3f{dX + 0.82f, dY + 0.9f, dstZ},
+                          Vec3f{dX + 0.75f, dY + 0.7f, dstZ},
                       });
         break;
     case ExitDirection::EAST:
         m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3d>{
-                          Vec3d{dX + 0.9, dY + 0.68, dstZ},
-                          Vec3d{dX + 0.9, dY + 0.82, dstZ},
-                          Vec3d{dX + 0.7, dY + 0.75, dstZ},
+                      std::vector<Vec3f>{
+                          Vec3f{dX + 0.9f, dY + 0.68f, dstZ},
+                          Vec3f{dX + 0.9f, dY + 0.82f, dstZ},
+                          Vec3f{dX + 0.7f, dY + 0.75f, dstZ},
                       });
         break;
     case ExitDirection::WEST:
         m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3d>{
-                          Vec3d{dX + 0.1, dY + 0.18, dstZ},
-                          Vec3d{dX + 0.1, dY + 0.32, dstZ},
-                          Vec3d{dX + 0.3, dY + 0.25, dstZ},
+                      std::vector<Vec3f>{
+                          Vec3f{dX + 0.1f, dY + 0.18f, dstZ},
+                          Vec3f{dX + 0.1f, dY + 0.32f, dstZ},
+                          Vec3f{dX + 0.3f, dY + 0.25f, dstZ},
                       });
         break;
 
@@ -1218,38 +1170,37 @@ void MapCanvasRoomDrawer::drawConnEndTri1Way(const ExitDirection endDir,
     }
 }
 
-void MapCanvasRoomDrawer::drawConnEndTriNone(qint32 dX, qint32 dY, double dstZ)
+void MapCanvasRoomDrawer::drawConnEndTriNone(qint32 dX, qint32 dY, float dstZ)
 {
     m_opengl.draw(DrawType::TRIANGLES,
-                  std::vector<Vec3d>{
-                      Vec3d{dX + 0.5, dY + 0.5, dstZ},
-                      Vec3d{dX + 0.7, dY + 0.55, dstZ},
-                      Vec3d{dX + 0.55, dY + 0.7, dstZ},
+                  std::vector<Vec3f>{
+                      Vec3f{dX + 0.5f, dY + 0.5f, dstZ},
+                      Vec3f{dX + 0.7f, dY + 0.55f, dstZ},
+                      Vec3f{dX + 0.55f, dY + 0.7f, dstZ},
                   });
 }
 
-void MapCanvasRoomDrawer::drawConnEndTriUpDownUnknown(qint32 dX, qint32 dY, double dstZ)
+void MapCanvasRoomDrawer::drawConnEndTriUpDownUnknown(qint32 dX, qint32 dY, float dstZ)
 {
     m_opengl.draw(DrawType::TRIANGLES,
-                  std::vector<Vec3d>{
-                      Vec3d{dX + 0.5, dY + 0.5, dstZ},
-                      Vec3d{dX + 0.7, dY + 0.55, dstZ},
-                      Vec3d{dX + 0.55, dY + 0.7, dstZ},
+                  std::vector<Vec3f>{
+                      Vec3f{dX + 0.5f, dY + 0.5f, dstZ},
+                      Vec3f{dX + 0.7f, dY + 0.55f, dstZ},
+                      Vec3f{dX + 0.55f, dY + 0.7f, dstZ},
                   });
 }
 
-void MapCanvasRoomDrawer::renderText(const double x,
-                                     const double y,
+void MapCanvasRoomDrawer::renderText(const float x,
+                                     const float y,
                                      const QString &text,
                                      const QColor &color,
                                      const FontFormatFlags fontFormatFlag,
-                                     const double rotationAngle)
+                                     const float rotationAngle)
 {
     // http://stackoverflow.com/questions/28216001/how-to-render-text-with-qopenglwidget/28517897
-    const QVector3D projected = m_mapCanvasData.project(
-        QVector3D{static_cast<float>(x), static_cast<float>(y), CAMERA_Z_DISTANCE});
-    const auto textPosX = static_cast<double>(projected.x());
-    const auto textPosY = static_cast<double>(m_mapCanvasData.height())
-                          - static_cast<double>(projected.y()); // y is inverted
+    const QVector3D projected = m_mapCanvasData.project(QVector3D{x, y, CAMERA_Z_DISTANCE});
+    const auto textPosX = projected.x();
+    const auto textPosY = static_cast<float>(m_mapCanvasData.height())
+                          - projected.y(); // y is inverted
     m_opengl.renderTextAt(textPosX, textPosY, text, color, fontFormatFlag, rotationAngle);
 }

@@ -32,12 +32,12 @@
 
 #include "../global/utils.h"
 
-vec2i vec2f::round() const
+Coordinate2i Coordinate2f::round() const
 {
-    return vec2i{utils::round_ftoi(x), utils::round_ftoi(y)};
+    return Coordinate2i{utils::round_ftoi(x), utils::round_ftoi(y)};
 }
 
-vec2f vec2f::operator/(const float f) const
+Coordinate2f Coordinate2f::operator/(const float f) const
 {
     if (f == 0.0f)
         throw std::runtime_error("division by zero");

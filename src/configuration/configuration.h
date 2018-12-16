@@ -166,13 +166,13 @@ public:
 
     struct PathMachineSettings final
     {
-        qreal acceptBestRelative = 0.0;
-        qreal acceptBestAbsolute = 0.0;
-        qreal newRoomPenalty = 0.0;
-        qreal multipleConnectionsPenalty = 0.0;
-        qreal correctPositionBonus = 0.0;
-        qint32 maxPaths = 0;
-        qint32 matchingTolerance = 0;
+        double acceptBestRelative = 0.0;
+        double acceptBestAbsolute = 0.0;
+        double newRoomPenalty = 0.0;
+        double multipleConnectionsPenalty = 0.0;
+        double correctPositionBonus = 0.0;
+        int maxPaths = 0;
+        int matchingTolerance = 0;
 
     private:
         SUBGROUP();

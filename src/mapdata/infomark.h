@@ -62,12 +62,12 @@ public:
     InfoMarkClass getClass() const { return m_class; }
     const Coordinate &getPosition1() const { return m_pos1; }
     const Coordinate &getPosition2() const { return m_pos2; }
-    double getRotationAngle() const { return m_rotationAngle; }
+    float getRotationAngle() const { return m_rotationAngle; }
     const MarkerTimeStamp &getTimeStamp() const { return m_timeStamp; }
 
     void setPosition1(const Coordinate &pos) { m_pos1 = pos; }
     void setPosition2(const Coordinate &pos) { m_pos2 = pos; }
-    void setRotationAngle(double rotationAngle) { m_rotationAngle = rotationAngle; }
+    void setRotationAngle(float rotationAngle) { m_rotationAngle = rotationAngle; }
     void setName(InfoMarkName name) { m_name = name; }
     void setText(InfoMarkText text) { m_text = text; }
     void setType(InfoMarkType type) { m_type = type; }
@@ -85,7 +85,7 @@ private:
 
     Coordinate m_pos1{};
     Coordinate m_pos2{};
-    double m_rotationAngle = 0.0; // in degrees
+    float m_rotationAngle = 0.0; // in degrees
 };
 
 #endif

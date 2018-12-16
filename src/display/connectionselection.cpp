@@ -70,7 +70,7 @@ bool ConnectionSelection::isValid()
     return true;
 }
 
-ExitDirection ConnectionSelection::ComputeDirection(const vec2f &mouse_f)
+ExitDirection ConnectionSelection::ComputeDirection(const Coordinate2f &mouse_f)
 {
     ExitDirection dir = ExitDirection::UNKNOWN;
     const auto mouse = mouse_f.round();
