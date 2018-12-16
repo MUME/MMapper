@@ -1,4 +1,3 @@
-#pragma once
 /************************************************************************
 **
 ** Authors:   Nils Schimmelmann <nschimme@gmail.com>
@@ -23,21 +22,25 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_FILENAMES_H
-#define MMAPPER_FILENAMES_H
+#include "random.h"
 
-#include <QtCore/QString>
+static auto expensiveSeed()
+{
+    return std::random_device{}();
+}
 
-#include "../mapdata/mmapper2room.h"
-#include "RoadIndex.h"
+RandomEngine::RandomEngine()
+    : std::mt19937{expensiveSeed()}
+{}
 
-QString getPixmapFilenameRaw(QString name);
-QString getPixmapFilename(RoomTerrainType);
-QString getPixmapFilename(RoomLoadFlag);
-QString getPixmapFilename(RoomMobFlag);
-QString getPixmapFilename(TaggedRoad);
-QString getPixmapFilename(TaggedTrail);
+RandomEngine &RandomEngine::getSingleton()
+{
+    static RandomEngine singleton;
+    return singleton;
+}
 
-
-
-#endif // MMAPPER_FILENAMES_H
+size_t getRandom(const size_t max)
+{
+    std::uniform_int_distribution<size_t> dist{0u, max}; // inclusive
+    return dist(RandomEngine::getSingleton());
+}

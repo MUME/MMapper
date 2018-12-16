@@ -30,6 +30,7 @@
 #include <QtGlobal>
 
 #include "../expandoracommon/RoomRecipient.h"
+#include "../global/RuleOf5.h"
 #include "../mapdata/mapdata.h"
 
 class Room;
@@ -45,10 +46,7 @@ public:
 
 public:
     RoomSaver() = delete;
-    RoomSaver(RoomSaver &&) = delete;
-    RoomSaver(const RoomSaver &) = delete;
-    RoomSaver &operator=(RoomSaver &&) = delete;
-    RoomSaver &operator=(const RoomSaver &) = delete;
+    DELETE_CTORS_AND_ASSIGN_OPS(RoomSaver);
 
 private:
     quint32 m_roomsCount = 0u;

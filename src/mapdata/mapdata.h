@@ -48,6 +48,7 @@
 #include "mmapper2exit.h"
 #include "mmapper2room.h"
 #include "roomfilter.h"
+#include "roomselection.h"
 #include "shortestpath.h"
 
 class AbstractAction;
@@ -60,8 +61,6 @@ class Room;
 class RoomFilter;
 class RoomRecipient;
 class ShortestPathRecipient;
-class SigRoomSelection;
-class RoomSelection;
 
 using ConstRoomList = QList<const Room *>;
 using RoomVector = QVector<Room *>;
@@ -74,35 +73,17 @@ class MapData : public MapFrontend
     friend class RoomSelection;
 
 protected:
-    // removes the selection from the internal structures
-    void unselect(RoomSelection *selection);
+    // the room will be inserted in the given selection. the selection must have been created by mapdata
+    const Room *getRoom(const Coordinate &pos, RoomSelection &in);
+    const Room *getRoom(RoomId id, RoomSelection &in);
 
 public:
     explicit MapData(QObject *parent = nullptr);
     virtual ~MapData() override;
 
-    // creates and registers a selection created by mapdata
-    const SigRoomSelection select(const Coordinate &ulf, const Coordinate &lrb);
-    // updates a selection created by the mapdata
-    const SigRoomSelection select(const Coordinate &ulf,
-                                  const Coordinate &lrb,
-                                  const SigRoomSelection &in);
-    // creates and registers a selection with one room
-    const SigRoomSelection select(const Coordinate &pos);
-    // creates and registers an empty selection
-    const SigRoomSelection select();
-
-    // unselects a room from a selection
-    void unselectRoom(RoomId id, const SigRoomSelection &in);
-
-    // the room will be inserted in the given selection. the selection must have been created by mapdata
-    const Room *getRoom(const Coordinate &pos, const SigRoomSelection &in);
-    const Room *getRoom(RoomId id, const SigRoomSelection &in);
-
     void draw(const Coordinate &ulf, const Coordinate &lrb, MapCanvasRoomDrawer &screen);
-    bool isMovable(const Coordinate &offset, const SigRoomSelection &selection);
 
-    bool execute(MapAction *action, const SigRoomSelection &unlock);
+    bool execute(MapAction *action, const SharedRoomSelection &unlock);
 
     Coordinate &getPosition() { return m_position; }
     MarkerList &getMarkersList() { return m_markers; }
@@ -122,7 +103,6 @@ public:
 
     // search for matches
     void genericSearch(RoomRecipient *recipient, const RoomFilter &f);
-    void genericSearch(const SigRoomSelection &in, const RoomFilter &f);
 
     void shortestPathSearch(const Room *origin,
                             ShortestPathRecipient *recipient,

@@ -52,7 +52,16 @@ class InfoMarkSelection;
 static constexpr const float CAMERA_Z_DISTANCE = 0.978f;
 
 template<typename E>
-using texture_array = EnumIndexedArray<QOpenGLTexture *, E>;
+struct texture_array : public EnumIndexedArray<std::unique_ptr<QOpenGLTexture>, E>
+{
+    ~texture_array() { destroyAll(); }
+
+    void destroyAll()
+    {
+        for (auto &x : *this)
+            x.reset();
+    }
+};
 
 template<RoadIndexType Type>
 struct road_texture_array : private texture_array<RoadIndex>
@@ -61,6 +70,7 @@ struct road_texture_array : private texture_array<RoadIndex>
     decltype(auto) operator[](TaggedRoadIndex<Type> x) { return base::operator[](x.index); }
     using base::operator[];
     using base::begin;
+    using base::destroyAll;
     using base::end;
     using base::size;
 };
@@ -81,48 +91,37 @@ struct MapCanvasData
 {
     static QColor g_noFleeColor;
 
-    explicit MapCanvasData(MapData *mapData, PrespammedPath *prespammedPath, QWidget &sizeWidget)
-        : m_sizeWidget(sizeWidget)
-        , m_data(mapData)
-        , m_prespammedPath(prespammedPath)
-
-    {}
+    explicit MapCanvasData(MapData *mapData, PrespammedPath *prespammedPath, QWidget &sizeWidget);
+    ~MapCanvasData();
 
     QMatrix4x4 m_modelview{}, m_projection{};
     QVector3D project(const QVector3D &) const;
     QVector3D unproject(const QVector3D &) const;
-    QVector3D unproject(QMouseEvent *event) const;
+    QVector3D unproject(const QMouseEvent *event) const;
+    MouseSel getUnprojectedMouseSel(const QMouseEvent *event) const;
 
     QWidget &m_sizeWidget;
     auto width() const { return m_sizeWidget.width(); }
     auto height() const { return m_sizeWidget.height(); }
     auto rect() const { return m_sizeWidget.rect(); }
 
-    struct
+    struct Textures final
     {
         texture_array<RoomTerrainType> terrain{};
         texture_array<RoomLoadFlag> load{};
         texture_array<RoomMobFlag> mob{};
         road_texture_array<RoadIndexType::TRAIL> trail{};
         road_texture_array<RoadIndexType::ROAD> road{};
-        QOpenGLTexture *update = nullptr;
+        std::unique_ptr<QOpenGLTexture> update = nullptr;
+
+        void destroyAll();
     } m_textures{};
 
     float m_scaleFactor = 1.0f;
     float m_currentStepScaleFactor = 1.0f;
-
-    struct
-    {
-        int x = 0;
-        int y = 0;
-    } m_scroll{};
+    vec2i m_scroll{};
     qint16 m_currentLayer = 0;
-
-    struct
-    {
-        float x = 0.0f;
-        float y = 0.0f;
-    } m_visible1{}, m_visible2{};
+    vec2f m_visible1{}, m_visible2{};
 
     bool m_mouseRightPressed{false};
     bool m_mouseLeftPressed{false};
@@ -132,31 +131,25 @@ struct MapCanvasData
     CanvasMouseMode m_canvasMouseMode{CanvasMouseMode::MOVE};
 
     // mouse selection
-    struct
-    {
-        float x = 0.0f;
-        float y = 0.0f;
-        int layer = 0;
-    } m_sel1{}, m_sel2{}, m_moveBackup{};
+    MouseSel m_sel1{}, m_sel2{}, m_moveBackup{};
 
     bool m_selectedArea = false; // no area selected at start time
-    SigRoomSelection m_roomSelection{};
+    SharedRoomSelection m_roomSelection{};
 
-    struct
+    struct RoomSelMove final
     {
+        vec2i pos{};
         bool inUse = false;
         bool wrongPlace = false;
-        int x = 0;
-        int y = 0;
     } m_roomSelectionMove{};
 
     InfoMarkSelection *m_infoMarkSelection = nullptr;
 
-    struct
+    struct InfoMarkSelectionMove final
     {
+        vec2f pos{};
         bool inUse = false;
-        float x = 0;
-        float y = 0;
+
     } m_infoMarkSelectionMove{};
 
     ConnectionSelection *m_connectionSelection = nullptr;
@@ -164,17 +157,27 @@ struct MapCanvasData
     MapData *m_data = nullptr;
     PrespammedPath *m_prespammedPath = nullptr;
 
-    struct DrawLists
+    struct DrawLists final
     {
         EnumIndexedArray<XDisplayList, ExitDirection, NUM_EXITS_NESW> wall{};
 
-        struct ExitUpDown
+        struct ExitUpDown final
         {
-            struct OpaqueTransparent
+            struct OpaqueTransparent final
             {
                 XDisplayList opaque{};
                 XDisplayList transparent{};
+                void destroyAll()
+                {
+                    opaque.destroy();
+                    transparent.destroy();
+                }
             } up{}, down{};
+            void destroyAll()
+            {
+                up.destroyAll();
+                down.destroyAll();
+            }
         } exit{};
 
         EnumIndexedArray<XDisplayList, ExitDirection, NUM_EXITS_NESWUD> door{};
@@ -184,14 +187,42 @@ struct MapCanvasData
         {
             XDisplayList outer{};
             XDisplayList inner{};
+
+            void destroyAll()
+            {
+                outer.destroy();
+                inner.destroy();
+            }
         } room_selection{}, character_hint{};
 
         struct
         {
             EnumIndexedArray<XDisplayList, ExitDirection, NUM_EXITS_NESWUD> begin{};
             EnumIndexedArray<XDisplayList, ExitDirection, NUM_EXITS_NESWUD> end{};
+            void destroyAll()
+            {
+                for (auto &x : begin)
+                    x.destroy();
+                for (auto &x : end)
+                    x.destroy();
+            }
         } flow;
+
+        void destroyAll()
+        {
+            for (auto &x : wall)
+                x.destroy();
+            exit.destroyAll();
+            for (auto &x : door)
+                x.destroy();
+            room.destroy();
+            room_selection.destroyAll();
+            character_hint.destroyAll();
+            flow.destroyAll();
+        }
     } m_gllist{};
+
+    void destroyAllGLObjects();
 };
 
 #endif // MMAPPER_MAP_CANVAS_DATA_H

@@ -30,11 +30,10 @@
 #include <QTime>
 
 #include "../configuration/configuration.h"
+#include "../expandoracommon/parseevent.h"
 #include "../mapdata/roomfactory.h"
 #include "pathmachine.h"
 #include "pathparameters.h"
-
-class SigParseEvent;
 
 static const char *stateName(const PathState state)
 {

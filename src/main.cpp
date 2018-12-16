@@ -32,6 +32,7 @@
 #include <QtWidgets>
 
 #include "configuration/configuration.h"
+#include "display/Filenames.h"
 #include "global/WinSock.h"
 #include "global/utils.h"
 #include "mainwindow/mainwindow.h"
@@ -62,7 +63,7 @@ private:
 
 public:
     explicit Splash()
-        : pixmap(":/pixmaps/splash20.png")
+        : pixmap(getPixmapFilenameRaw("splash20.png"))
         , splash(pixmap)
     {
         const auto message = QString("%1").arg(MMAPPER_VERSION, -9);

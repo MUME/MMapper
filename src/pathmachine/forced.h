@@ -28,6 +28,7 @@
 
 #include "../expandoracommon/RoomRecipient.h"
 #include "../expandoracommon/parseevent.h"
+#include "../global/RuleOf5.h"
 
 class ParseEvent;
 class Room;
@@ -49,10 +50,7 @@ public:
 
 public:
     Forced() = delete;
-    Forced(Forced &&) = delete;
-    Forced(const Forced &) = delete;
-    Forced &operator=(Forced &&) = delete;
-    Forced &operator=(const Forced &) = delete;
+    DELETE_CTORS_AND_ASSIGN_OPS(Forced);
 };
 
 #endif

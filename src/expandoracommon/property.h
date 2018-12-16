@@ -29,6 +29,7 @@
 
 #include <string>
 
+#include "../global/RuleOf5.h"
 #include "listcycler.h"
 
 class Property final : public ListCycler<char, std::string>
@@ -46,10 +47,7 @@ public:
     } tagSkip{};
     explicit Property(TagSkip);
     virtual ~Property() override;
-    Property(Property &&) = default;
-    Property(const Property &) = default;
-    Property &operator=(Property &&) = default;
-    Property &operator=(const Property &) = default;
+    DEFAULT_CTORS_AND_ASSIGN_OPS(Property);
 
 private:
     bool m_skipped = false;

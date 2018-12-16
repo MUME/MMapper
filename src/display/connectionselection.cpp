@@ -34,32 +34,20 @@
 #include "../global/roomid.h"
 #include "../mapfrontend/mapfrontend.h"
 
-// REVISIT: Duplication between here and mapcanvas.cpp
-int ConnectionSelection::GLtoMap(const float arg)
-{
-    if (arg >= 0) {
-        return static_cast<int>(arg + 0.5f);
-    }
-    return static_cast<int>(arg - 0.5f);
-}
-
 ConnectionSelection::ConnectionSelection()
 {
     for (auto &x : m_connectionDescriptor)
         assert(x.room == nullptr);
 }
 
-ConnectionSelection::ConnectionSelection(MapFrontend *const mf,
-                                         const float mx,
-                                         const float my,
-                                         const int layer)
+ConnectionSelection::ConnectionSelection(MapFrontend *mf, const MouseSel &sel)
 {
     for (auto &x : m_connectionDescriptor)
         assert(x.room == nullptr);
 
-    const Coordinate c(GLtoMap(mx), GLtoMap(my), layer);
+    const Coordinate c = sel.getCoordinate();
     mf->lookingForRooms(*this, c, c);
-    m_connectionDescriptor[0].direction = ComputeDirection(mx, my);
+    m_connectionDescriptor[0].direction = ComputeDirection(sel.pos);
 }
 
 ConnectionSelection::~ConnectionSelection()
@@ -82,18 +70,16 @@ bool ConnectionSelection::isValid()
     return true;
 }
 
-ExitDirection ConnectionSelection::ComputeDirection(const float mouseX, const float mouseY)
+ExitDirection ConnectionSelection::ComputeDirection(const vec2f &mouse_f)
 {
     ExitDirection dir = ExitDirection::UNKNOWN;
+    const auto mouse = mouse_f.round();
 
-    // room centre
-    // int x1 = (int) (mouseX + 0.5);
-    // int y1 = (int) (mouseY + 0.5);
-    const int x1 = GLtoMap(mouseX);
-    const int y1 = GLtoMap(mouseY);
+    const int x1 = mouse.x;
+    const int y1 = mouse.y;
 
-    float x1d = mouseX - static_cast<float>(x1);
-    float y1d = mouseY - static_cast<float>(y1);
+    const float x1d = mouse_f.x - static_cast<float>(x1);
+    const float y1d = mouse_f.y - static_cast<float>(y1);
 
     if (y1d > -0.2f && y1d < 0.2f) {
         // y1p = y1;
@@ -133,25 +119,6 @@ ExitDirection ConnectionSelection::ComputeDirection(const float mouseX, const fl
     return dir;
 }
 
-/* TODO: refactor xxx{First,Second} to call the same functions with different argument */
-void ConnectionSelection::setFirst(MapFrontend *const mf,
-                                   const float mx,
-                                   const float my,
-                                   const int layer)
-{
-    m_first = true;
-    const Coordinate c(GLtoMap(mx), GLtoMap(my), layer);
-    if (m_connectionDescriptor[0].room != nullptr) {
-        if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room) {
-            m_admin->releaseRoom(*this, m_connectionDescriptor[0].room->getId());
-        }
-        m_connectionDescriptor[0].room = nullptr;
-    }
-    mf->lookingForRooms(*this, c, c);
-    m_connectionDescriptor[0].direction = ComputeDirection(mx, my);
-    // if (m_connectionDescriptor[0].direction == CD_NONE) m_connectionDescriptor[0].direction = CD_UNKNOWN;
-}
-
 void ConnectionSelection::setFirst(MapFrontend *const mf, const RoomId id, const ExitDirection dir)
 {
     m_first = true;
@@ -166,13 +133,10 @@ void ConnectionSelection::setFirst(MapFrontend *const mf, const RoomId id, const
     // if (m_connectionDescriptor[0].direction == CD_NONE) m_connectionDescriptor[0].direction = CD_UNKNOWN;
 }
 
-void ConnectionSelection::setSecond(MapFrontend *const mf,
-                                    const float mx,
-                                    const float my,
-                                    const int layer)
+void ConnectionSelection::setSecond(MapFrontend *const mf, const MouseSel &sel)
 {
     m_first = false;
-    Coordinate c(GLtoMap(mx), GLtoMap(my), layer);
+    const Coordinate c = sel.getCoordinate();
     if (m_connectionDescriptor[1].room != nullptr) {
         if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room) {
             m_admin->releaseRoom(*this, m_connectionDescriptor[1].room->getId());
@@ -180,7 +144,7 @@ void ConnectionSelection::setSecond(MapFrontend *const mf,
         m_connectionDescriptor[1].room = nullptr;
     }
     mf->lookingForRooms(*this, c, c);
-    m_connectionDescriptor[1].direction = ComputeDirection(mx, my);
+    m_connectionDescriptor[1].direction = ComputeDirection(sel.pos);
     // if (m_connectionDescriptor[1].direction == ED_UNKNOWN) m_connectionDescriptor[1].direction = ED_NONE;
 }
 
@@ -196,16 +160,6 @@ void ConnectionSelection::setSecond(MapFrontend *const mf, const RoomId id, cons
     mf->lookingForRooms(*this, id);
     m_connectionDescriptor[1].direction = dir;
     // if (m_connectionDescriptor[1].direction == ED_UNKNOWN) m_connectionDescriptor[1].direction = ED_NONE;
-}
-
-void ConnectionSelection::removeFirst()
-{
-    if (m_connectionDescriptor[0].room != nullptr) {
-        if (m_connectionDescriptor[1].room != m_connectionDescriptor[0].room) {
-            m_admin->releaseRoom(*this, m_connectionDescriptor[0].room->getId());
-        }
-        m_connectionDescriptor[0].room = nullptr;
-    }
 }
 
 void ConnectionSelection::removeSecond()

@@ -34,6 +34,7 @@
 #include <QString>
 #include <QtGlobal>
 
+#include "../global/RuleOf5.h"
 #include "DoorFlags.h"
 #include "ExitDirection.h"
 #include "ExitFlags.h"
@@ -69,8 +70,8 @@ public:
 public:
     /* NOTE: Adding move support would be a pain for little gain.
      * You'd at least a boolean indicating that the object is in moved-from state. */
-    ExitFieldVariant(ExitFieldVariant &&) = delete;
-    ExitFieldVariant &operator=(ExitFieldVariant &&) = delete;
+    DELETE_MOVE_CTOR(ExitFieldVariant);
+    DELETE_MOVE_ASSIGN_OP(ExitFieldVariant);
 
 public:
     ExitFieldVariant(const ExitFieldVariant &rhs);

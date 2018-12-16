@@ -44,70 +44,14 @@
 #include "../parser/ConnectedRoomFlags.h"
 #include "../parser/ExitsFlags.h"
 #include "../parser/PromptFlags.h"
+#include "MmQtHandle.h"
 #include "listcycler.h"
 #include "property.h"
 
 class ParseEvent;
 class Property;
-
 using SharedParseEvent = std::shared_ptr<ParseEvent>;
-
-/* Handle used for QT signals */
-class SigParseEvent final // was using SigParseEvent = SharedParseEvent;
-{
-private:
-    SharedParseEvent m_sharedParseEvent{};
-
-public:
-    explicit SigParseEvent(std::nullptr_t) {}
-    explicit SigParseEvent(const SharedParseEvent &event)
-        /* throws invalid argument */
-        noexcept(false);
-
-public:
-    explicit SigParseEvent() = default; /* required by QT */
-    SigParseEvent(SigParseEvent &&) = default;
-    SigParseEvent(const SigParseEvent &) = default;
-    SigParseEvent &operator=(SigParseEvent &&) = default;
-    SigParseEvent &operator=(const SigParseEvent &) = default;
-    ~SigParseEvent() = default;
-
-public:
-    // keep as non-inline for debugging
-    bool isValid() const { return m_sharedParseEvent != nullptr; }
-    inline explicit operator bool() const { return isValid(); }
-
-public:
-    inline bool operator==(std::nullptr_t) const { return m_sharedParseEvent == nullptr; }
-    inline bool operator!=(std::nullptr_t) const { return m_sharedParseEvent != nullptr; }
-
-public:
-    inline bool operator==(const SigParseEvent &rhs) const
-    {
-        return m_sharedParseEvent == rhs.m_sharedParseEvent;
-    }
-    inline bool operator!=(const SigParseEvent &rhs) const { return !(*this == rhs); }
-
-public:
-    inline const SigParseEvent &requireValid() const
-        /* throws invalid argument */
-        noexcept(false)
-    {
-        if (!isValid())
-            throw std::runtime_error("invalid argument");
-        return *this;
-    }
-
-public:
-    const SharedParseEvent &getShared() const
-        /* throws null pointer */
-        noexcept(false);
-
-public:
-    ParseEvent &deref() const
-        /* throws null pointer */
-        noexcept(false);
-};
+using SigParseEvent = MmQtHandle<ParseEvent>;
 
 /**
  * the ParseEvents will walk around in the SearchTree
@@ -123,10 +67,7 @@ private:
         explicit Cycler() = default;
         virtual ~Cycler() override;
 
-        Cycler(Cycler &&) = default;
-        Cycler(const Cycler &) = default;
-        Cycler &operator=(Cycler &&) = default;
-        Cycler &operator=(const Cycler &) = default;
+        DEFAULT_CTORS_AND_ASSIGN_OPS(Cycler);
         Cycler clone() const;
 
         void addProperty(std::string string);

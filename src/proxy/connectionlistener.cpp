@@ -55,8 +55,7 @@ ConnectionListener::ConnectionListener(MapData *md,
 ConnectionListener::~ConnectionListener()
 {
     if (m_proxy) {
-        m_proxy->deleteLater();
-        m_proxy.release();
+        m_proxy.release(); // thread will delete the proxy
     }
     if (m_thread) {
         m_thread->quit();
@@ -92,6 +91,9 @@ void ConnectionListener::incomingConnection(qintptr socketDescriptor)
                 m_proxy.release();
                 m_thread.release();
             });
+
+            // Make sure if the thread is interrupted that we kill the proxy
+            connect(m_thread.get(), &QThread::finished, m_proxy.get(), &QObject::deleteLater);
 
             // Start the proxy when the thread starts
             connect(m_thread.get(), &QThread::started, m_proxy.get(), &Proxy::start);

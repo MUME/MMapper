@@ -51,7 +51,9 @@
 #include "../expandoracommon/room.h"
 #include "../global/CharBuffer.h"
 #include "../global/DirectionType.h"
+#include "../global/RAII.h"
 #include "../global/StringView.h"
+#include "../global/random.h"
 #include "../global/utils.h"
 #include "../mapdata/DoorFlags.h"
 #include "../mapdata/ExitDirection.h"
@@ -187,7 +189,7 @@ AbstractParser::AbstractParser(MapData *md, MumeClock *mc, QObject *parent)
     : QObject(parent)
     , m_mumeClock(mc)
     , m_mapData(md)
-    , m_offlineCommandTimer(this)
+    , prefixChar{getConfig().parser.prefixChar}
 {
     connect(&m_offlineCommandTimer, &QTimer::timeout, this, &AbstractParser::doOfflineCharacterMove);
     m_offlineCommandTimer.setInterval(250); // MUME enforces 4 commands per seconds (i.e. 250ms)
@@ -432,16 +434,15 @@ void AbstractParser::parseExits()
         }
     }
 
-    SigRoomSelection rs = m_mapData->select();
-    if (const Room *room = m_mapData->getRoom(getPosition(), rs)) {
-        QByteArray cn = enhanceExits(room);
-
+    auto rs = RoomSelection(*m_mapData);
+    if (const Room *const room = rs.getRoom(getPosition())) {
+        const QByteArray cn = enhanceExits(room);
         sendToUser(exitsByteArray.simplified() + cn);
 
         if (getConfig().mumeNative.showNotes) {
-            QString ns = room->getNote();
+            const QString ns = room->getNote();
             if (!ns.isEmpty()) {
-                QByteArray note = "Note: " + ns.toLatin1() + "\r\n";
+                const QByteArray note = "Note: " + ns.toLatin1() + "\r\n";
                 sendToUser(note);
             }
         }
@@ -459,7 +460,6 @@ QString AbstractParser::normalizeStringCopy(QString string)
 
 const Coordinate AbstractParser::getPosition()
 {
-    Coordinate c;
     CommandQueue tmpqueue;
 
     if (!queue.isEmpty()) {
@@ -467,21 +467,14 @@ const Coordinate AbstractParser::getPosition()
     }
 
     QList<Coordinate> cl = m_mapData->getPath(tmpqueue);
-    if (!cl.isEmpty()) {
-        c = cl.at(cl.size() - 1);
-    } else {
-        c = m_mapData->getPosition();
-    }
-    return c;
+    return !cl.isEmpty() ? cl.back() : m_mapData->getPosition();
 }
 
 void AbstractParser::emulateExits()
 {
-    Coordinate c = getPosition();
-    SigRoomSelection rs = m_mapData->select();
-    if (const Room *room = m_mapData->getRoom(c, rs)) {
-        sendRoomExitsInfoToUser(room);
-    }
+    auto rs = RoomSelection(*m_mapData);
+    if (const Room *const r = rs.getRoom(getPosition()))
+        sendRoomExitsInfoToUser(r);
 }
 
 QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
@@ -489,7 +482,6 @@ QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
     QByteArray cn = " -";
     bool enhancedExits = false;
 
-    SigRoomSelection rs = m_mapData->select();
     auto sourceId = sourceRoom->getId();
     for (auto i : ALL_EXITS_NESWUD) {
         const Exit &e = sourceRoom->exit(i);
@@ -538,7 +530,8 @@ QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
                 uint exitCount = 0;
                 bool oneWay = false;
                 bool hasNoFlee = false;
-                if (const Room *targetRoom = m_mapData->getRoom(targetId, rs)) {
+                auto rs = RoomSelection(*m_mapData);
+                if (const Room *const targetRoom = rs.getRoom(targetId)) {
                     if (!targetRoom->exit(opposite(i)).containsOut(sourceId)) {
                         oneWay = true;
                     }
@@ -736,31 +729,27 @@ ShortestPathEmitter::~ShortestPathEmitter() = default;
 
 void AbstractParser::searchCommand(const RoomFilter &f)
 {
-    search_rs = m_mapData->select();
-    m_mapData->genericSearch(search_rs, f);
+    search_rs = RoomSelection::createSelection(*m_mapData);
+    search_rs->genericSearch(f);
     emit m_mapData->updateCanvas();
     sendToUser(QString("%1 room%2 found.\r\n")
-                   .arg(search_rs.getShared()->size())
-                   .arg((search_rs.getShared()->size() == 1) ? "" : "s"));
+                   .arg(search_rs->size())
+                   .arg((search_rs->size() == 1) ? "" : "s"));
 }
 
 void AbstractParser::dirsCommand(const RoomFilter &f)
 {
     ShortestPathEmitter sp_emitter(*this);
 
-    Coordinate c = m_mapData->getPosition();
-    SigRoomSelection rs = m_mapData->select(c);
-    if (!rs.getShared()->isEmpty()) {
-        const Room *r = rs.getShared()->values().front();
-
+    auto rs = RoomSelection(*m_mapData);
+    if (const Room *const r = rs.getRoom(getPosition())) {
         m_mapData->shortestPathSearch(r, &sp_emitter, f, 10, 0);
     }
 }
 
 void AbstractParser::markCurrentCommand()
 {
-    Coordinate c = getPosition();
-    search_rs = m_mapData->select(c);
+    search_rs = RoomSelection::createSelection(*m_mapData, getPosition());
     emit m_mapData->updateCanvas();
 }
 
@@ -782,7 +771,6 @@ DirectionType AbstractParser::tryGetDir(StringView &view)
 
 void AbstractParser::showCommandPrefix()
 {
-    const auto &prefixChar = getConfig().parser.prefixChar;
     const auto quote = static_cast<char>((prefixChar == '\'') ? '"' : '\'');
     sendToUser(QString("The current command prefix is: %1%2%1 (e.g. %2help) \r\n")
                    .arg(quote)
@@ -800,7 +788,6 @@ bool AbstractParser::setCommandPrefix(const char prefix)
 
 void AbstractParser::showSyntax(const char *rest)
 {
-    const auto &prefixChar = getConfig().parser.prefixChar;
     sendToUser(QString::asprintf("Usage: %c%s\r\n", prefixChar, rest));
 }
 
@@ -885,7 +872,6 @@ void AbstractParser::openVoteURL()
 void AbstractParser::showHelpCommands(const bool showAbbreviations)
 {
     auto &map = this->m_specialCommandMap;
-    const auto &prefixChar = getConfig().parser.prefixChar;
 
     struct record
     {
@@ -932,7 +918,6 @@ void AbstractParser::showHelpCommands(const bool showAbbreviations)
 
 void AbstractParser::showGroupHelp()
 {
-    const auto &prefixChar = getConfig().parser.prefixChar;
     showHeader("MMapper group manager help");
     showHeader("Group commands");
     sendToUser(QString("  %1GKick [player]      - kick [player] from the group\r\n"
@@ -971,7 +956,6 @@ void AbstractParser::showMapHelp()
 
 void AbstractParser::showMiscHelp()
 {
-    const auto &prefixChar = getConfig().parser.prefixChar;
     showHeader("Miscellaneous commands");
     sendToUser(QString("  %1note [note] - set a note in the room\r\n"
                        "  %1trollexit   - toggle troll-only exit mapping for direct sunlight\r\n")
@@ -982,7 +966,6 @@ void AbstractParser::showRoomLoadFlagsHelp()
 {
     showHeader("Room load flag commands");
 
-    const auto &prefixChar = getConfig().parser.prefixChar;
     for (auto x : ALL_LOAD_FLAGS) {
         if (const Abbrev cmd = getParserCommandName(x))
             sendToUser(QString("  %1%2 - toggle the \"%3\" load flag in the room\r\n")
@@ -996,7 +979,6 @@ void AbstractParser::showRoomMobFlagsHelp()
 {
     showHeader("Room mob flag commands");
 
-    const auto &prefixChar = getConfig().parser.prefixChar;
     for (auto x : ALL_MOB_FLAGS) {
         if (const Abbrev cmd = getParserCommandName(x))
             sendToUser(QString("  %1%2 - toggle the \"%3\" mob flag in the room\r\n")
@@ -1010,7 +992,6 @@ void AbstractParser::showRoomSimpleFlagsHelp()
 {
     showHeader("Basic room flag commands");
 
-    const auto &prefixChar = getConfig().parser.prefixChar;
 #define SHOW(X) \
     for (auto x : DEFINED_ROOM_##X##_TYPES) { \
         if (const Abbrev cmd = getParserCommandName(x)) \
@@ -1030,7 +1011,6 @@ void AbstractParser::showRoomSimpleFlagsHelp()
 
 void AbstractParser::showExitHelp()
 {
-    const auto &prefixChar = getConfig().parser.prefixChar;
     showHeader("Exit commands");
     sendToUser(QString("  %1name <dir> <name> - name a door in direction <dir> with <name>\r\n")
                    .arg(prefixChar));
@@ -1046,7 +1026,6 @@ void AbstractParser::showExitHelp()
 
 void AbstractParser::showExitFlagHelp()
 {
-    const auto &prefixChar = getConfig().parser.prefixChar;
     showHeader("Exit flags");
     for (const ExitFlag flag : ALL_EXIT_FLAGS) {
         if (const Abbrev cmd = getParserCommandName(flag))
@@ -1059,7 +1038,6 @@ void AbstractParser::showExitFlagHelp()
 
 void AbstractParser::showDoorFlagHelp()
 {
-    const auto &prefixChar = getConfig().parser.prefixChar;
     showHeader("Door flags (implies exit has door flag)");
     for (const DoorFlag flag : ALL_DOOR_FLAGS) {
         if (const Abbrev cmd = getParserCommandName(flag))
@@ -1093,9 +1071,8 @@ void AbstractParser::showHelp()
                      "  %1search [-options] pattern - highlight matching rooms\r\n"
                      "  %1markcurrent               - highlight the room you are currently in\r\n"
                      "  %1time                      - display current MUME time\r\n"
-                     "  %1set [prefix] character    - change command prefix\r\n");
+                     "  %1set [prefix [punct-char]] - change command prefix\r\n");
 
-    const auto &prefixChar = getConfig().parser.prefixChar;
     sendToUser(s.arg(prefixChar));
 }
 
@@ -1126,7 +1103,6 @@ void AbstractParser::showDoorCommandHelp()
 {
     showHeader("MMapper door help");
 
-    const auto &prefixChar = getConfig().parser.prefixChar;
     showHeader("Door commands");
     for (auto dat : ALL_DOOR_ACTION_TYPES) {
         const int cmdWidth = 6;
@@ -1187,115 +1163,149 @@ bool AbstractParser::tryParseGenericDoorCommand(const QString &str)
     return false;
 }
 
+static ExitDirection convert_to_ExitDirection(const CommandIdType dir)
+{
+    if (!isDirectionNESWUD(dir))
+        throw std::invalid_argument("dir");
+    return static_cast<ExitDirection>(dir);
+}
+
+static CommandIdType convert_to_CommandIdType(const ExitDirection dir)
+{
+    const auto result = static_cast<CommandIdType>(dir);
+    if (!isDirectionNESWUD(result))
+        throw std::invalid_argument("dir");
+    return result;
+}
+
+static CommandIdType getRandomDirection()
+{
+    return convert_to_CommandIdType(chooseRandomElement(ALL_EXITS_NESWUD));
+}
+
 void AbstractParser::doOfflineCharacterMove()
 {
     if (queue.isEmpty()) {
         return;
     }
 
+    const RAIICallback timerRaii{[this]() { this->m_offlineCommandTimer.start(); }};
+
     CommandIdType direction = queue.dequeue();
     if (m_mapData->isEmpty()) {
         sendToUser("Alas, you cannot go that way...\r\n");
-        m_offlineCommandTimer.start();
+        sendPromptToUser();
         return;
     }
 
-    bool flee = false;
-    bool scout = false;
-    if (direction == CommandIdType::FLEE) {
-        flee = true;
+    const bool flee = direction == CommandIdType::FLEE;
+    const bool scout = direction == CommandIdType::SCOUT;
+    const bool onlyUseActualExits = true;
+
+    // Note: flee and scout are mutually exclusive.
+    if (flee) {
         sendToUser("You flee head over heels.\r\n");
-        direction = static_cast<CommandIdType>(rand() % 6); // NOLINT
-    } else if (direction == CommandIdType::SCOUT) {
-        scout = true;
+        direction = getRandomDirection(); // pointless if onlyUseActualExits is true
+    } else if (scout) {
         direction = queue.dequeue();
     }
 
-    Coordinate c;
-    c = m_mapData->getPosition();
-    SigRoomSelection rs1 = m_mapData->select(c);
-    if (!rs1.getShared()->isEmpty()) {
-        const Room *rb = rs1.getShared()->values().front();
-        if (direction == CommandIdType::LOOK) {
-            sendRoomInfoToUser(rb);
-            sendRoomExitsInfoToUser(rb);
-            sendPromptToUser(*rb);
-        } else {
-            /* FIXME: This needs stronger type check on the cast */
-            /* NOTE: This is a copy instead of a reference; later e is re-assigned. */
-            Exit e = rb->exit(static_cast<ExitDirection>(direction));
-            if (e.exitIsRandom()) {
-                // Pick an alternative direction to randomly wander into
-                std::vector<ExitDirection> exitDirections;
-                for (auto i : ALL_EXITS_NESWUD) {
-                    const Exit &e2 = rb->exit(i);
-                    if (!e2.isExit() || e2.outIsEmpty()) {
-                        continue;
-                    }
-                    exitDirections.emplace_back(i);
-                }
-                if (exitDirections.size() > 0) {
-                    const auto n = static_cast<uint32_t>(rand()); // NOLINT
-                    const auto dir = n % exitDirections.size();
-                    const auto randomDirection = static_cast<CommandIdType>(exitDirections[dir]);
+    const auto rs1 = RoomSelection(*m_mapData, m_mapData->getPosition());
+    if (rs1.isEmpty()) {
+        sendToUser("Alas, you cannot go that way...\r\n");
+        return;
+    }
 
-                    // Update exit and direction with new random one
-                    if (direction != randomDirection) {
-                        sendToUser("You feel confused and move along randomly...\r\n");
-                        qDebug() << "Randomly moving" << getLowercase(randomDirection)
-                                 << "instead of" << getLowercase(direction);
-                        e = rb->exit(static_cast<ExitDirection>(randomDirection));
-                        // REVISIT: Should we update the direction hint to the Path Machine?
-                        // direction = randomDirection;
-                    }
-                }
-            }
-            if (e.isExit() && !e.outIsEmpty()) {
-                SigRoomSelection rs2 = m_mapData->select();
-                const auto targetId = e.outFirst();
-                if (const Room *r = m_mapData->getRoom(targetId, rs2)) {
-                    if (flee) {
-                        sendToUser(
-                            QByteArray("You flee ").append(getLowercase(direction)).append("."));
-                    }
-                    if (scout) {
-                        sendToUser(QByteArray("You quietly scout ")
-                                       .append(getLowercase(direction))
-                                       .append("wards...\r\n"));
-                    }
-                    sendRoomInfoToUser(r);
-                    sendRoomExitsInfoToUser(r);
-                    if (scout) {
-                        sendToUser("\r\nYou stop scouting.\r\n");
-                        sendPromptToUser();
+    const Room &here = deref(rs1.getFirstRoom());
+    if (direction == CommandIdType::LOOK) {
+        sendRoomInfoToUser(&here);
+        sendRoomExitsInfoToUser(&here);
+        sendPromptToUser(here);
+        return;
+    }
 
-                    } else {
-                        sendPromptToUser(*r);
-
-                        // Create character move event for main move/search algorithm
-                        auto ev = ParseEvent::createEvent(direction,
-                                                          r->getName(),
-                                                          r->getDynamicDescription(),
-                                                          r->getStaticDescription(),
-                                                          ExitsFlagsType{},
-                                                          PromptFlagsType::fromRoomTerrainType(
-                                                              r->getTerrainType()),
-                                                          ConnectedRoomFlagsType{});
-                        emit event(SigParseEvent{ev});
-                        emit showPath(queue, true);
-                    }
-                }
+    const auto getExit = [this, flee, &here, &direction]() -> const Exit & {
+        if (flee && onlyUseActualExits) {
+            if (auto opt = here.getRandomExit()) {
+                direction = convert_to_CommandIdType(opt.value().dir);
             } else {
-                if (!flee || scout) {
-                    sendToUser("Alas, you cannot go that way...\r\n");
-                } else {
-                    sendToUser("PANIC! You couldn't escape!\r\n");
-                }
-                sendPromptToUser(*rb);
+                // movement will fail; "PANIC! You couldn't escape!"
             }
         }
+
+        // REVISIT: Should we update the direction hint to the Path Machine?
+        const bool updateDir = false;
+
+        const auto &moveDir = here.getExitMaybeRandom(convert_to_ExitDirection(direction));
+        const auto actualdir = convert_to_CommandIdType(moveDir.dir);
+        const Exit &e = moveDir.exit;
+
+        if (actualdir != direction) {
+            sendToUser("You feel confused and move along randomly...\r\n");
+            // REVISIT: remove this spam?
+            qDebug() << "Randomly moving" << getLowercase(actualdir) << "instead of"
+                     << getLowercase(direction);
+
+            if (updateDir)
+                direction = actualdir;
+        }
+
+        return e;
+    };
+
+    const auto showMovement = [this, flee, scout](const CommandIdType direction,
+                                                  const Room *const otherRoom) {
+        const auto showOtherRoom = [this, otherRoom]() {
+            sendRoomInfoToUser(otherRoom);
+            sendRoomExitsInfoToUser(otherRoom);
+        };
+
+        if (scout) {
+            sendToUser(QByteArray("You quietly scout ")
+                           .append(getLowercase(direction))
+                           .append("wards...\r\n"));
+            showOtherRoom();
+            sendToUser("\r\nYou stop scouting.\r\n");
+            sendPromptToUser();
+            return;
+        }
+
+        if (flee) {
+            // REVISIT: Does MUME actually show you the direction when you flee?
+            sendToUser(QByteArray("You flee ").append(getLowercase(direction)).append("."));
+        }
+
+        showOtherRoom();
+        sendPromptToUser(*otherRoom);
+
+        // Create character move event for main move/search algorithm
+        auto ev = ParseEvent::createEvent(direction,
+                                          otherRoom->getName(),
+                                          otherRoom->getDynamicDescription(),
+                                          otherRoom->getStaticDescription(),
+                                          ExitsFlagsType{},
+                                          PromptFlagsType::fromRoomTerrainType(
+                                              otherRoom->getTerrainType()),
+                                          ConnectedRoomFlagsType{});
+        emit event(SigParseEvent{ev});
+        emit showPath(queue, true);
+    };
+
+    const Exit &e = getExit(); /* NOTE: getExit() can modify direction */
+    if (e.isExit() && !e.outIsEmpty()) {
+        auto rs2 = RoomSelection(*m_mapData);
+        if (const Room *const otherRoom = rs2.getRoom(e.outFirst())) {
+            showMovement(direction, otherRoom);
+            return;
+        }
     }
-    m_offlineCommandTimer.start();
+
+    if (!flee || scout) {
+        sendToUser("Alas, you cannot go that way...\r\n");
+    } else {
+        sendToUser("PANIC! You couldn't escape!\r\n");
+    }
+    sendPromptToUser(here);
 }
 
 void AbstractParser::offlineCharacterMove(CommandIdType direction)
@@ -1349,8 +1359,6 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
     }
     char sunCharacter = (m_mumeClock->getMumeMoment().toTimeOfDay() <= MumeTime::TIME_DAY) ? '*'
                                                                                            : '^';
-    SigRoomSelection rs = m_mapData->select();
-
     uint exitCount = 0;
     QString etmp = "Exits/emulated:";
     for (int i = 0; i < 6; i++) {
@@ -1372,8 +1380,9 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
             RoomTerrainType sourceTerrain = r->getTerrainType();
             if (!e.outIsEmpty()) {
                 const auto targetId = e.outFirst();
-                if (const Room *targetRoom = m_mapData->getRoom(targetId, rs)) {
-                    RoomTerrainType targetTerrain = targetRoom->getTerrainType();
+                auto rs = RoomSelection(*m_mapData);
+                if (const Room *const targetRoom = rs.getRoom(targetId)) {
+                    const RoomTerrainType targetTerrain = targetRoom->getTerrainType();
 
                     // Sundeath exit flag modifiers
                     if (targetRoom->getSundeathType() == RoomSundeathType::SUNDEATH) {
@@ -1470,10 +1479,8 @@ void AbstractParser::sendPromptToUser()
     }
 
     // Emulate prompt mode
-    Coordinate c = getPosition();
-    SigRoomSelection rs = m_mapData->select();
-
-    if (const Room *r = m_mapData->getRoom(c, rs))
+    auto rs = RoomSelection(*m_mapData);
+    if (const Room *const r = rs.getRoom(getPosition()))
         sendPromptToUser(*r);
     else
         sendPromptToUser('?', '?');
@@ -1691,12 +1698,8 @@ void AbstractParser::printRoomInfo(const RoomFields fieldset)
     if (m_mapData->isEmpty())
         return;
 
-    const Coordinate c = getPosition();
-
-    SigRoomSelection rs = m_mapData->select(c);
-    if (!rs.getShared()->isEmpty()) {
-        const Room *const r = rs.getShared()->values().front();
-
+    auto rs = RoomSelection(*m_mapData);
+    if (const Room *const r = rs.getRoom(getPosition())) {
         // TODO: use QStringBuilder (or std::ostringstream)?
         QString result;
 

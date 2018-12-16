@@ -29,6 +29,7 @@
 
 #include "../expandoracommon/RoomRecipient.h"
 #include "../expandoracommon/parseevent.h"
+#include "../global/RuleOf5.h"
 
 class AbstractRoomFactory;
 class ParseEvent;
@@ -59,10 +60,7 @@ public:
 
 public:
     Approved() = delete;
-    Approved(Approved &&) = delete;
-    Approved(const Approved &) = delete;
-    Approved &operator=(Approved &&) = delete;
-    Approved &operator=(const Approved &) = delete;
+    DELETE_CTORS_AND_ASSIGN_OPS(Approved);
 };
 
 #endif

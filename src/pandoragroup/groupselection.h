@@ -30,6 +30,8 @@
 #include <cstdint>
 #include <vector>
 
+#include "../global/RuleOf5.h"
+
 class CGroupChar;
 class GroupRecipient;
 
@@ -51,10 +53,7 @@ class GroupSelection final : public GroupRecipient
 {
     // NOTE: deleted members must be public.
 public:
-    GroupSelection(GroupSelection &&) = delete;
-    GroupSelection(const GroupSelection &) = delete;
-    GroupSelection &operator=(GroupSelection &&) = delete;
-    GroupSelection &operator=(const GroupSelection &) = delete;
+    DELETE_CTORS_AND_ASSIGN_OPS(GroupSelection);
 
 public:
     explicit GroupSelection(GroupAdmin *admin);

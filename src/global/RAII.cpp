@@ -44,3 +44,18 @@ RAIIBool::~RAIIBool()
     if (!std::exchange(moved, true))
         ref = false;
 }
+
+RAIICallback::RAIICallback(RAIICallback &&rhs)
+    : callback{std::exchange(rhs.callback, {})}
+    , moved{std::exchange(rhs.moved, true)}
+{}
+
+RAIICallback::RAIICallback(RAIICallback::Callback &&callback)
+    : callback{std::move(callback)}
+{}
+
+RAIICallback::~RAIICallback() noexcept(false)
+{
+    if (!moved)
+        callback();
+}

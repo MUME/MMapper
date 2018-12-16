@@ -50,7 +50,6 @@ class QObject;
 class Room;
 class RoomCollection;
 class RoomRecipient;
-class SigParseEvent;
 
 /**
  * The MapFrontend organizes rooms and their relations to each other.

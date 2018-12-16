@@ -35,6 +35,7 @@
 #include <QtGlobal>
 
 #include "../expandoracommon/coordinate.h"
+#include "../global/RuleOf5.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/roomfactory.h"
 #include "../mapfrontend/mapfrontend.h"
@@ -88,10 +89,7 @@ public:
 
 public:
     MapFrontendBlocker() = delete;
-    MapFrontendBlocker(MapFrontendBlocker &&) = delete;
-    MapFrontendBlocker(const MapFrontendBlocker &) = delete;
-    MapFrontendBlocker &operator=(MapFrontendBlocker &&) = delete;
-    MapFrontendBlocker &operator=(const MapFrontendBlocker &) = delete;
+    DELETE_CTORS_AND_ASSIGN_OPS(MapFrontendBlocker);
 
 private:
     MapFrontend &data;

@@ -40,25 +40,50 @@ __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 }
 #endif
 
-OpenGL::~OpenGL()
+void XDisplayList::destroy()
+{
+    if (isValid()) {
+        if (auto gl = std::exchange(opengl, nullptr)) {
+            if ((false))
+                qInfo() << "Destroying list:" << list;
+            gl->destroyList(std::exchange(list, 0u));
+        }
+    }
+}
+
+FontData::~FontData()
+{
+    cleanup();
+}
+
+void FontData::cleanup()
 {
     // Note: We give metrics a pointer to font, so kill metrics first.
-    delete std::exchange(m_glFont.metrics, nullptr);
-    delete std::exchange(m_glFont.italicMetrics, nullptr);
-    delete std::exchange(m_glFont.font, nullptr);
+    delete std::exchange(italicMetrics, nullptr);
+    delete std::exchange(metrics, nullptr);
+    delete std::exchange(font, nullptr);
 }
+
+void FontData::init(QPaintDevice *const paintDevice)
+{
+    font = new QFont(QFont(), paintDevice);
+    font->setStyleHint(QFont::System, QFont::OpenGLCompatible);
+
+    metrics = new QFontMetrics(*font);
+    font->setItalic(true);
+
+    italicMetrics = new QFontMetrics(*font);
+    font->setItalic(false);
+}
+
+OpenGL::~OpenGL() = default;
 
 void OpenGL::initFont(QPaintDevice *const paintDevice)
 {
     assert(m_paintDevice == nullptr);
     deref(paintDevice);
     m_paintDevice = paintDevice;
-    m_glFont.font = new QFont(QFont(), paintDevice);
-    m_glFont.font->setStyleHint(QFont::System, QFont::OpenGLCompatible);
-    m_glFont.metrics = new QFontMetrics(*m_glFont.font);
-    m_glFont.font->setItalic(true);
-    m_glFont.italicMetrics = new QFontMetrics(*m_glFont.font);
-    m_glFont.font->setItalic(false);
+    m_glFont.init(paintDevice);
 }
 
 // http://stackoverflow.com/questions/28216001/how-to-render-text-with-qopenglwidget/28517897
@@ -71,7 +96,7 @@ void OpenGL::renderTextAt(const double x,
                           const double rotationAngle)
 {
     deref(m_paintDevice);
-    deref(m_glFont.font);
+    auto &font = deref(m_glFont.font);
     deref(m_glFont.metrics);
     deref(m_glFont.italicMetrics);
 
@@ -80,18 +105,18 @@ void OpenGL::renderTextAt(const double x,
     painter.rotate(rotationAngle);
     painter.setPen(color);
     if (IS_SET(fontFormatFlag, FontFormatFlags::ITALICS)) {
-        m_glFont.font->setItalic(true);
+        font.setItalic(true);
     }
     if (IS_SET(fontFormatFlag, FontFormatFlags::UNDERLINE)) {
-        m_glFont.font->setUnderline(true);
+        font.setUnderline(true);
     }
-    painter.setFont(*m_glFont.font);
+    painter.setFont(font);
     if (getConfig().canvas.antialiasingSamples > 0) {
         painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
     }
     painter.drawText(0, 0, text);
-    m_glFont.font->setItalic(false);
-    m_glFont.font->setUnderline(false);
+    font.setItalic(false);
+    font.setUnderline(false);
     painter.end();
 }
 

@@ -33,6 +33,7 @@
 #include <QtCore>
 
 #include "../expandoracommon/RoomRecipient.h"
+#include "../expandoracommon/coordinate.h" /* vec2f */
 #include "../global/roomid.h"
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/mmapper2exit.h"
@@ -41,6 +42,24 @@ class MapFrontend;
 class Room;
 class RoomAdmin;
 struct RoomId;
+
+struct MouseSel final
+{
+    vec2f pos{};
+    int layer = 0;
+
+    explicit MouseSel() = default;
+    explicit MouseSel(const vec2f &pos, const int layer)
+        : pos{pos}
+        , layer{layer}
+    {}
+
+    Coordinate getCoordinate() const { return Coordinate{pos.round(), layer}; }
+    Coordinate getScaledCoordinate(const float xy_scale) const
+    {
+        return Coordinate{(pos * xy_scale).round(), layer};
+    }
+};
 
 class ConnectionSelection : public QObject, public RoomRecipient
 {
@@ -53,16 +72,13 @@ public:
         ExitDirection direction{};
     };
 
-    explicit ConnectionSelection(MapFrontend *, float mx, float my, int layer);
+    explicit ConnectionSelection(MapFrontend *mf, const MouseSel &sel);
     explicit ConnectionSelection();
     ~ConnectionSelection() override;
 
-    void setFirst(MapFrontend *, float mx, float my, int layer);
     void setFirst(MapFrontend *mf, RoomId RoomId, ExitDirection dir);
-    void setSecond(MapFrontend *, float mx, float my, int layer);
     void setSecond(MapFrontend *mf, RoomId RoomId, ExitDirection dir);
-
-    void removeFirst();
+    void setSecond(MapFrontend *mf, const MouseSel &sel);
     void removeSecond();
 
     ConnectionDescriptor getFirst();
@@ -80,9 +96,7 @@ signals:
 
 protected:
 private:
-    ExitDirection ComputeDirection(float mouseX, float mouseY);
-
-    static int inline GLtoMap(float arg);
+    static ExitDirection ComputeDirection(const vec2f &mouse_f);
 
     // REVISIT: give these enum names?
     std::array<ConnectionDescriptor, 2> m_connectionDescriptor{};

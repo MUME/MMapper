@@ -645,13 +645,13 @@ void RoomEditAttrDlg::disconnectAll()
 
 const Room *RoomEditAttrDlg::getSelectedRoom()
 {
-    if (!m_roomSelection.isValid() || m_roomSelection.getShared()->empty()) {
+    if (m_roomSelection == nullptr || m_roomSelection->empty()) {
         return nullptr;
     }
-    if (m_roomSelection.getShared()->size() == 1) {
-        return (m_roomSelection.getShared()->values().front());
+    if (m_roomSelection->size() == 1) {
+        return m_roomSelection->first();
     }
-    return m_roomSelection.getShared()->value(
+    return m_roomSelection->value(
         RoomId{roomListComboBox->itemData(roomListComboBox->currentIndex()).toUInt()});
 }
 
@@ -689,7 +689,9 @@ void RoomEditAttrDlg::roomListCurrentIndexChanged(int /*unused*/)
     updateDialog(getSelectedRoom());
 }
 
-void RoomEditAttrDlg::setRoomSelection(const SigRoomSelection &rs, MapData *md, MapCanvas *mc)
+void RoomEditAttrDlg::setRoomSelection(const SharedRoomSelection &rs,
+                                       MapData *const md,
+                                       MapCanvas *const mc)
 {
     m_roomSelection = rs;
     m_mapData = md;
@@ -697,10 +699,10 @@ void RoomEditAttrDlg::setRoomSelection(const SigRoomSelection &rs, MapData *md, 
 
     roomListComboBox->clear();
 
-    if (!rs.isValid())
+    if (rs == nullptr)
         return;
 
-    if (rs.getShared()->size() > 1) {
+    if (rs->size() > 1) {
         tabWidget->setCurrentWidget(selectionTab);
         roomListComboBox->addItem("All", 0);
         updateDialog(nullptr);
@@ -710,12 +712,12 @@ void RoomEditAttrDlg::setRoomSelection(const SigRoomSelection &rs, MapData *md, 
         portUndefRadioButton->setChecked(true);
         lightUndefRadioButton->setChecked(true);
         connectAll();
-    } else if (rs.getShared()->size() == 1) {
+    } else if (rs->size() == 1) {
         tabWidget->setCurrentWidget(attributesTab);
-        updateDialog(m_roomSelection.getShared()->values().front());
+        updateDialog(m_roomSelection->first());
     }
 
-    for (auto room : m_roomSelection.getShared()->values()) {
+    for (const Room *room : *m_roomSelection) {
         roomListComboBox->addItem(room->getName(), room->getId().asUint32());
     }
 

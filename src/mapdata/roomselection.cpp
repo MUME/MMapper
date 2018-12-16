@@ -26,41 +26,101 @@
 #include "roomselection.h"
 
 #include <cassert>
+#include <memory>
 
 #include "../expandoracommon/room.h"
-#include "../mapdata/mapdata.h"
+#include "mapdata.h"
 
-SigRoomSelection::SigRoomSelection(const SharedRoomSelection &selection)
-    : m_sharedRoomSelection{selection}
+RoomSelection::RoomSelection(MapData &admin)
+    : m_mapData(admin)
+{}
+
+RoomSelection::RoomSelection(MapData &admin, const Coordinate &c)
+    : RoomSelection(admin)
 {
-    requireValid(); /* throws invalid argument */
+    m_mapData.lookingForRooms(*this, c);
 }
 
-RoomSelection &SigRoomSelection::deref() const
+RoomSelection::RoomSelection(MapData &admin, const Coordinate &ulf, const Coordinate &lrb)
+    : RoomSelection(admin)
 {
-    return ::deref(m_sharedRoomSelection);
-}
-
-const SharedRoomSelection &SigRoomSelection::getShared() const
-{
-    if (auto &p = m_sharedRoomSelection)
-        return p;
-    throw std::runtime_error("null pointer");
-}
-
-RoomSelection::RoomSelection(MapData *admin)
-    : m_admin(admin)
-{
-    assert(m_admin != nullptr);
-}
-
-RoomSelection::~RoomSelection()
-{
-    m_admin->unselect(this);
+    m_mapData.lookingForRooms(*this, ulf, lrb);
 }
 
 void RoomSelection::receiveRoom(RoomAdmin *admin, const Room *aRoom)
 {
-    assert(admin == m_admin);
+    assert(admin == &m_mapData);
     insert(aRoom->getId(), aRoom);
+}
+
+RoomSelection::~RoomSelection()
+{
+    // Remove the lock within the map
+    for (auto i = cbegin(); i != cend(); i++) {
+        m_mapData.keepRoom(*this, i.key());
+    }
+}
+
+const Room *RoomSelection::getFirstRoom() const noexcept(false)
+{
+    if (isEmpty())
+        throw std::runtime_error("empty");
+    return first();
+}
+
+RoomId RoomSelection::getFirstRoomId() const noexcept(false)
+{
+    return getFirstRoom()->getId();
+}
+
+const Room *RoomSelection::getRoom(const RoomId targetId)
+{
+    return m_mapData.getRoom(targetId, *this);
+}
+
+const Room *RoomSelection::getRoom(const Coordinate &coord)
+{
+    return m_mapData.getRoom(coord, *this);
+}
+
+void RoomSelection::unselect(const RoomId targetId)
+{
+    m_mapData.keepRoom(*this, targetId);
+    remove(targetId);
+}
+
+bool RoomSelection::isMovable(const Coordinate &offset) const
+{
+    for (auto i = cbegin(); i != cend(); i++) {
+        const Coordinate target = i.value()->getPosition() + offset;
+        RoomSelection tmpSel = RoomSelection(m_mapData);
+        if (const Room *const other = tmpSel.getRoom(target)) {
+            if (!contains(other->getId())) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+void RoomSelection::genericSearch(const RoomFilter &f)
+{
+    m_mapData.genericSearch(dynamic_cast<RoomRecipient *>(this), f);
+}
+
+SharedRoomSelection RoomSelection::createSelection(MapData &mapData)
+{
+    return std::make_shared<RoomSelection>(mapData);
+}
+
+SharedRoomSelection RoomSelection::createSelection(MapData &mapData, const Coordinate &c)
+{
+    return std::make_shared<RoomSelection>(mapData, c);
+}
+
+SharedRoomSelection RoomSelection::createSelection(MapData &mapData,
+                                                   const Coordinate &ulf,
+                                                   const Coordinate &lrb)
+{
+    return std::make_shared<RoomSelection>(mapData, ulf, lrb);
 }

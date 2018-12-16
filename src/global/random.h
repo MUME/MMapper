@@ -23,21 +23,37 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_FILENAMES_H
-#define MMAPPER_FILENAMES_H
+#ifndef MMAPPER_RANDOM_H
+#define MMAPPER_RANDOM_H
 
-#include <QtCore/QString>
+#include <random>
+#include <stdexcept>
 
-#include "../mapdata/mmapper2room.h"
-#include "RoadIndex.h"
+#include "RuleOf5.h"
 
-QString getPixmapFilenameRaw(QString name);
-QString getPixmapFilename(RoomTerrainType);
-QString getPixmapFilename(RoomLoadFlag);
-QString getPixmapFilename(RoomMobFlag);
-QString getPixmapFilename(TaggedRoad);
-QString getPixmapFilename(TaggedTrail);
+class RandomEngine final : public std::mt19937
+{
+private:
+    explicit RandomEngine();
 
+public:
+    ~RandomEngine() = default;
+    DELETE_CTORS_AND_ASSIGN_OPS(RandomEngine);
 
+public:
+    static RandomEngine &getSingleton();
+};
 
-#endif // MMAPPER_FILENAMES_H
+// returns a uniformly-distributed random number in [0..max], inclusive
+size_t getRandom(size_t max);
+
+template<typename T>
+decltype(auto) chooseRandomElement(T &container)
+{
+    if (container.empty())
+        throw std::invalid_argument("container");
+    const auto dir = getRandom(container.size() - 1u);
+    return container[dir];
+}
+
+#endif // MMAPPER_RANDOM_H

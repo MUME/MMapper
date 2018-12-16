@@ -25,7 +25,32 @@
 ************************************************************************/
 
 #include "coordinate.h"
+
+#include <cmath>
 #include <cstdlib>
+#include <stdexcept>
+
+vec2i vec2f::round() const
+{
+    const auto round_f = [](const float f) {
+        if (f >= 0.0f) {
+            return static_cast<int>(f + 0.5f);
+        }
+        return static_cast<int>(f - 0.5f);
+    };
+    return vec2i{round_f(x), round_f(y)};
+}
+
+vec2f vec2f::operator/(const float f) const
+{
+    if (f == 0.0f)
+        throw std::runtime_error("division by zero");
+
+    if (std::isnan(f))
+        throw std::runtime_error("division by NaN");
+
+    return operator*(1.0f / f);
+}
 
 bool Coordinate::operator==(const Coordinate &other) const
 {
@@ -39,10 +64,7 @@ bool Coordinate::operator!=(const Coordinate &other) const
 
 int Coordinate::distance(const Coordinate &other) const
 {
-    int ret = abs(x - other.x);
-    ret += abs(y - other.y);
-    ret += abs(z - other.z);
-    return ret;
+    return std::abs(x - other.x) + std::abs(y - other.y) + std::abs(z - other.z);
 }
 
 void Coordinate::clear()
@@ -68,16 +90,14 @@ void Coordinate::operator-=(const Coordinate &other)
 
 Coordinate Coordinate::operator+(const Coordinate &other) const
 {
-    Coordinate ret{};
-    ret += *this;
+    Coordinate ret = *this;
     ret += other;
     return ret;
 }
 
 Coordinate Coordinate::operator-(const Coordinate &other) const
 {
-    Coordinate ret{};
-    ret += *this;
+    Coordinate ret = *this;
     ret -= other;
     return ret;
 }

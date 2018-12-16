@@ -191,6 +191,7 @@ public:
         : option{option}
     {}
 };
+
 class XDisable
 {
 private:
@@ -231,44 +232,57 @@ private:
     std::vector<TexVert> args;
 
 public:
-    XDrawTextured(const DrawType type, std::vector<TexVert> args)
+    explicit XDrawTextured(const DrawType type, std::vector<TexVert> args)
         : type{type}
         , args{std::move(args)}
     {}
 };
 
-class XDisplayList
+class XDisplayList final
 {
 private:
     friend class OpenGL;
     GLuint list = 0u;
+    OpenGL *opengl = nullptr;
 
 private:
-    explicit XDisplayList(GLuint list)
+    explicit XDisplayList(OpenGL *const opengl, const GLuint list)
         : list{list}
+        , opengl{opengl}
     {}
 
 public:
-    XDisplayList() = default;
+    explicit XDisplayList() = default;
 
 public:
     bool isValid() const { return list != 0u; }
+    void destroy();
 };
 
 enum class LineStippleType { TWO, FOUR };
 enum class MatrixType { MODELVIEW, PROJECTION };
 
-class OpenGL
+struct FontData final
+{
+public:
+    QFont *font = nullptr;
+    QFontMetrics *metrics = nullptr;
+    QFontMetrics *italicMetrics = nullptr;
+
+public:
+    ~FontData();
+
+public:
+    void init(QPaintDevice *paintDevice);
+    void cleanup();
+};
+
+class OpenGL final
 {
 private:
     QOpenGLFunctions_1_0 m_opengl;
     QPaintDevice *m_paintDevice = nullptr;
-    struct
-    {
-        QFont *font = nullptr;
-        QFontMetrics *metrics = nullptr;
-        QFontMetrics *italicMetrics = nullptr;
-    } m_glFont;
+    FontData m_glFont;
 
 private:
     float devicePixelRatio_ = 1.0f;
@@ -472,7 +486,13 @@ public:
         m_opengl.glNewList(list, GL_COMPILE);
         apply(args...);
         m_opengl.glEndList();
-        return XDisplayList{list};
+        return XDisplayList{this, list};
+    }
+
+    void destroyList(GLuint list)
+    {
+        if (list != 0u)
+            m_opengl.glDeleteLists(list, 1);
     }
 
 public:

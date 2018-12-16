@@ -33,13 +33,14 @@
 #include <QtWidgets>
 
 #include "../configuration/configuration.h"
+#include "../parser/AbstractParser-Utils.h"
 #include "AnsiColorDialog.h"
 #include "ansicombo.h"
 
 class CommandPrefixValidator final : public QValidator
 {
 public:
-    explicit CommandPrefixValidator(QObject *parent);
+    explicit CommandPrefixValidator(QObject *const parent);
     virtual ~CommandPrefixValidator() override;
 
     void fixup(QString &input) const override { input = input.toLatin1(); }
@@ -48,19 +49,19 @@ public:
     {
         if (input.isEmpty())
             return State::Intermediate;
-        if (input.length() == 1)
-            return State::Acceptable;
-        return State::Invalid;
+
+        const bool valid = input.length() == 1 && isValidPrefix(input[0].toLatin1());
+        return valid ? State::Acceptable : State::Invalid;
     }
 };
 
-CommandPrefixValidator::CommandPrefixValidator(QObject *parent)
+CommandPrefixValidator::CommandPrefixValidator(QObject *const parent)
     : QValidator(parent)
 {}
 
 CommandPrefixValidator::~CommandPrefixValidator() = default;
 
-ParserPage::ParserPage(QWidget *parent)
+ParserPage::ParserPage(QWidget *const parent)
     : QWidget(parent)
 {
     setupUi(this);

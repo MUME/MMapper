@@ -33,6 +33,7 @@
 #include <QtGlobal>
 #include <QtWidgets/QTreeWidgetItem>
 
+#include "../mapdata/roomselection.h"
 #include "../parser/abstractparser.h"
 #include "ui_findroomsdlg.h" // auto-generated
 

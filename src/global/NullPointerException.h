@@ -29,14 +29,13 @@
 
 #include <stdexcept>
 
+#include "RuleOf5.h"
+
 struct NullPointerException final : public std::runtime_error
 {
     explicit NullPointerException();
     virtual ~NullPointerException() override;
-    NullPointerException(NullPointerException &&) = default;
-    NullPointerException(const NullPointerException &) = default;
-    NullPointerException &operator=(NullPointerException &&) = default;
-    NullPointerException &operator=(const NullPointerException &) = default;
+    DEFAULT_CTORS_AND_ASSIGN_OPS(NullPointerException);
 };
 
 #endif // MMAPPER_EXCEPTIONS_H

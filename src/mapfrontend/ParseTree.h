@@ -32,6 +32,7 @@
 #include <vector>
 
 #include "../expandoracommon/parseevent.h"
+#include "../global/RuleOf5.h"
 #include "../global/roomid.h"
 #include "AbstractRoomVisitor.h"
 
@@ -53,10 +54,7 @@ private:
 public:
     explicit ParseTree(const bool useVerboseKeys = false);
     ~ParseTree();
-    ParseTree(ParseTree &&) = delete;
-    ParseTree(const ParseTree &) = delete;
-    ParseTree &operator=(ParseTree &&) = delete;
-    ParseTree &operator=(const ParseTree &) = delete;
+    DELETE_CTORS_AND_ASSIGN_OPS(ParseTree);
 
 public:
     /* REVISIT: Is it safe to convert these to const reference,

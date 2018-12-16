@@ -74,7 +74,7 @@ protected:
 
 private:
     MapData *m_mapData = nullptr;
-    SigRoomSelection search_rs{};
+    SharedRoomSelection search_rs;
 
 private:
     using HelpCallback = std::function<void(const std::string &name)>;
@@ -88,6 +88,7 @@ private:
     };
     std::map<std::string, ParserRecord> m_specialCommandMap{};
     QByteArray m_newLineTerminator{};
+    const char &prefixChar;
 
 protected:
     QString m_exits = nullString;
@@ -112,6 +113,7 @@ public:
     void doMove(CommandIdType cmd);
     void sendPromptToUser();
 
+public:
 signals:
     // telnet
     void sendToMud(const QByteArray &);

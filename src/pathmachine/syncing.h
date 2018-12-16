@@ -31,6 +31,7 @@
 #include <QtGlobal>
 
 #include "../expandoracommon/RoomRecipient.h"
+#include "../global/RuleOf5.h"
 
 class Path;
 class PathParameters;
@@ -55,10 +56,7 @@ public:
 
 public:
     Syncing() = delete;
-    Syncing(Syncing &&) = delete;
-    Syncing(const Syncing &) = delete;
-    Syncing &operator=(Syncing &&) = delete;
-    Syncing &operator=(const Syncing &) = delete;
+    DELETE_CTORS_AND_ASSIGN_OPS(Syncing);
 };
 
 #endif

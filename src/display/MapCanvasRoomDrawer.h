@@ -50,15 +50,28 @@ struct Vec3d;
 static constexpr const double ROOM_Z_DISTANCE = 7.0;
 static constexpr const double ROOM_WALL_ALIGN = 0.008;
 
-class MapCanvasRoomDrawer : public MapCanvasData
+class MapCanvasRoomDrawer final
 {
 private:
+    const MapCanvasData &m_mapCanvasData;
     OpenGL &m_opengl;
+    const vec2f &m_visible1;
+    const vec2f &m_visible2;
+    const qint16 &m_currentLayer;
+    const float &m_scaleFactor;
+    const MapCanvasData::DrawLists &m_gllist;
+    const MapCanvasData::Textures &m_textures;
 
 public:
     explicit MapCanvasRoomDrawer(const MapCanvasData &data, OpenGL &opengl)
-        : MapCanvasData(data)
+        : m_mapCanvasData(data)
         , m_opengl(opengl)
+        , m_visible1{m_mapCanvasData.m_visible1}
+        , m_visible2{m_mapCanvasData.m_visible2}
+        , m_currentLayer{m_mapCanvasData.m_currentLayer}
+        , m_scaleFactor{m_mapCanvasData.m_scaleFactor}
+        , m_gllist{m_mapCanvasData.m_gllist}
+        , m_textures{m_mapCanvasData.m_textures}
     {}
 
     void drawInfoMark(InfoMark *);
@@ -135,13 +148,15 @@ public:
     double getScaledFontWidth(T x, FontFormatFlags flags = FontFormatFlags::NONE) const
     {
         return m_opengl.getFontWidth(x, flags)
-               * static_cast<double>(0.022f / m_scaleFactor * m_currentStepScaleFactor);
+               * static_cast<double>(0.022f / m_mapCanvasData.m_scaleFactor
+                                     * m_mapCanvasData.m_currentStepScaleFactor);
     }
 
     double getScaledFontHeight() const
     {
         return m_opengl.getFontHeight()
-               * static_cast<double>(0.007f / m_scaleFactor * m_currentStepScaleFactor);
+               * static_cast<double>(0.007f / m_mapCanvasData.m_scaleFactor
+                                     * m_mapCanvasData.m_currentStepScaleFactor);
     }
 };
 

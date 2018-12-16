@@ -28,6 +28,8 @@
 
 #include <cstdint>
 
+#include "../global/Flags.h"
+
 // X(UPPER_CASE, lower_case, CamelCase, "Friendly name")
 #define X_FOREACH_EXIT_FLAG(X) \
     X(EXIT, exit, Exit, "Exit") \

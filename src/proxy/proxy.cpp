@@ -35,6 +35,7 @@
 
 #include "../configuration/configuration.h"
 #include "../display/prespammedpath.h"
+#include "../expandoracommon/parseevent.h"
 #include "../global/io.h"
 #include "../mpi/mpifilter.h"
 #include "../mpi/remoteedit.h"
@@ -47,8 +48,6 @@
 #include "connectionlistener.h"
 #include "mumesocket.h"
 #include "telnetfilter.h"
-
-class SigParseEvent;
 
 Proxy::Proxy(MapData *const md,
              Mmapper2PathMachine *const pm,

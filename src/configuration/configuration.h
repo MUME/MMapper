@@ -36,6 +36,7 @@
 #include <QtCore>
 #include <QtGlobal>
 
+#include "../global/RuleOf5.h"
 #include "../pandoragroup/mmapper2group.h"
 
 enum class MapMode { PLAY, MAP, OFFLINE };
@@ -108,7 +109,7 @@ public:
         QString roomNameColor{}; // ANSI room name color
         QString roomDescColor{}; // ANSI room descriptions color
         bool removeXmlTags = false;
-        char prefixChar{'_'};
+        char prefixChar = '_';
         QStringList moveForcePatternsList{}; // string wildcart patterns, that force new move command
         QStringList noDescriptionPatternsList{};
 
@@ -244,10 +245,7 @@ public:
     } roomEditDialog{};
 
 public:
-    Configuration(Configuration &&) = delete;
-    Configuration(const Configuration &) = delete;
-    Configuration &operator=(Configuration &&) = delete;
-    Configuration &operator=(const Configuration &) = delete;
+    DELETE_CTORS_AND_ASSIGN_OPS(Configuration);
 
 private:
     explicit Configuration();

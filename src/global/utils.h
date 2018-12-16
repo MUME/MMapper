@@ -26,6 +26,7 @@
 #ifndef MMAPPER_UTILS_H
 #define MMAPPER_UTILS_H
 
+#include <algorithm>
 #include <memory>
 #include <type_traits>
 

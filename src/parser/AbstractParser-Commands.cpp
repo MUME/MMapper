@@ -34,7 +34,6 @@
 #include <QMessageLogContext>
 #include <QtCore>
 
-#include "../configuration/configuration.h"
 #include "../global/StringView.h"
 #include "../mapdata/DoorFlags.h"
 #include "../mapdata/ExitFlags.h"
@@ -390,7 +389,6 @@ bool AbstractParser::parseUserCommands(const QString &input)
     if (tryParseGenericDoorCommand(input))
         return false;
 
-    const auto &prefixChar = getConfig().parser.prefixChar;
     if (input.startsWith(prefixChar)) {
         auto view = StringView{input}.trim();
         if (view.isEmpty() || view.takeFirstLetter() != prefixChar)
@@ -602,7 +600,7 @@ bool AbstractParser::parseLoadFlags(StringView words)
 void AbstractParser::parseSetCommand(StringView view)
 {
     if (view.isEmpty()) {
-        sendToUser("Set what? [prefix]\r\n");
+        sendToUser(QString("Syntax: %1set prefix [punct-char]\r\n").arg(prefixChar));
         return;
     }
 
@@ -620,7 +618,7 @@ void AbstractParser::parseSetCommand(StringView view)
             const auto prefix = next.takeFirstLetter().toLatin1();
 
             if (validQuote && isValidPrefix(prefix) && quote == next.takeFirstLetter()
-                && setCommandPrefix(prefix)) {
+                && quote != prefix && setCommandPrefix(prefix)) {
                 return;
             }
         } else if (next.size() == 1) {
@@ -788,7 +786,6 @@ void AbstractParser::initSpecialCommandMap()
 
     const auto makeSimpleHelp = [this](const std::string &help) {
         return [this, help](const std::string &name) {
-            const auto &prefixChar = getConfig().parser.prefixChar;
             sendToUser(QString("Help for %1%2:\r\n  %3\r\n\r\n")
                            .arg(prefixChar)
                            .arg(QString::fromStdString(name))
@@ -985,7 +982,32 @@ void AbstractParser::initSpecialCommandMap()
             this->parseSetCommand(rest);
             return true;
         },
-        makeSimpleHelp("Subcommand: prefix <punct char>; Lets you change the command prefix!"));
+        [this](const std::string &name) {
+            const char help[]
+                = "Subcommands:\r\n"
+                  "\tprefix              # Displays the current prefix.\r\n"
+                  "\tprefix <punct-char> # Changes the current prefix.\r\n"
+                  "\r\n"
+                  // REVISIT: Does it actually support LATIN-1 punctuation like the degree symbol?
+                  "Note: <punct-char> may be any ASCII punctuation character,\r\n"
+                  "      which can be optionally single- or double-quoted.\r\n"
+                  "\r\n"
+                  "Examples to set prefix:\r\n"
+                  "\tprefix /   # slash character\r\n"
+                  "\tprefix '/' # single-quoted slash character\r\n"
+                  "\tprefix \"/\" # double-quoted slash character\r\n"
+                  "\tprefix '   # bare single-quote character\r\n"
+                  "\tprefix \"'\" # double-quoted single-quote character\r\n"
+                  "\tprefix \"   # bare double-quote character\r\n"
+                  "\tprefix '\"' # single-quoted double-quote character\r\n"
+                  "\r\n"
+                  "Note: Quoted versions do not allow escape codes,\r\n"
+                  "so you cannot do ''', '\\'', \"\"\", or \"\\\"\".";
+            sendToUser(QString("Help for %1%2:\r\n%3\r\n\r\n")
+                           .arg(prefixChar)
+                           .arg(QString::fromStdString(name))
+                           .arg(QString::fromStdString(help)));
+        });
     add(cmdTime,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             if (!rest.isEmpty())

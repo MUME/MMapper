@@ -34,6 +34,7 @@
 #include "../global/Color.h"
 #include "../global/roomid.h"
 #include "../mapdata/mapdata.h"
+#include "../mapdata/roomselection.h"
 #include "CGroup.h"
 #include "CGroupChar.h"
 #include "groupselection.h"
@@ -106,17 +107,17 @@ QVariant GroupModel::dataForCharacter(CGroupChar *const character, ColumnType co
             return calculateRatio(character->mana, character->maxmana);
         case ColumnType::MOVES:
             return calculateRatio(character->moves, character->maxmoves);
-        case ColumnType::ROOM_NAME: {
-            QString roomName = "Unknown";
+
+        case ColumnType::ROOM_NAME:
             if (character->pos != DEFAULT_ROOMID && character->pos != INVALID_ROOMID
                 && !m_map->isEmpty() && m_mapLoaded) {
-                SigRoomSelection roomSelection = m_map->select();
-                if (const Room *r = m_map->getRoom(character->pos, roomSelection)) {
-                    roomName = r->getName();
+                auto roomSelection = RoomSelection(*m_map);
+                if (const Room *const r = roomSelection.getRoom(character->pos)) {
+                    return r->getName();
                 }
             }
-            return roomName;
-        }
+            return "Unknown";
+
         default:
             qWarning() << "Unsupported column" << static_cast<int>(column);
             break;

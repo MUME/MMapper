@@ -37,7 +37,6 @@ class Configuration;
 class ParseEvent;
 class QObject;
 class QTime;
-class SigParseEvent;
 
 /**
 @author alve,,,

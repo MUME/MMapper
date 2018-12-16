@@ -28,6 +28,8 @@
 #ifndef ROOMRECIPIENT_H
 #define ROOMRECIPIENT_H
 
+#include "../global/RuleOf5.h"
+
 class Room;
 class RoomAdmin;
 
@@ -43,10 +45,7 @@ public:
     virtual void receiveRoom(RoomAdmin *admin, const Room *room) = 0;
 
 public:
-    RoomRecipient(RoomRecipient &&) = delete;
-    RoomRecipient(const RoomRecipient &) = delete;
-    RoomRecipient &operator=(RoomRecipient &&) = delete;
-    RoomRecipient &operator=(const RoomRecipient &) = delete;
+    DELETE_CTORS_AND_ASSIGN_OPS(RoomRecipient);
 };
 
 #endif

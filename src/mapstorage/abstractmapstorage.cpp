@@ -31,6 +31,7 @@
 #include <QObject>
 #include <QString>
 
+#include "../global/NullPointerException.h"
 #include "progresscounter.h"
 
 AbstractMapStorage::AbstractMapStorage(MapData &mapdata,
@@ -59,5 +60,5 @@ ProgressCounter &AbstractMapStorage::getProgressCounter() const
     // but let's not tempt UB.
     if (auto *const pc = m_progressCounter.get())
         return *pc;
-    throw std::runtime_error("null pointer exception");
+    throw NullPointerException();
 }

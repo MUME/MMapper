@@ -105,20 +105,25 @@ static const char *getFilenameSuffix(const E x)
     return getParserCommandName(x).getCommand();
 }
 
-template<typename E>
-static QString getPixmapFilename(const char *const name, const E x)
+QString getPixmapFilenameRaw(const QString name)
 {
-    if (name == nullptr)
+    const auto filename = QString(":/pixmaps/").append(name);
+    if (!QFile{filename}.exists())
+        qWarning() << "WARNING: pixmap" << filename << "does not exist.";
+    return filename;
+}
+
+template<typename E>
+static QString getPixmapFilename(const char *const prefix, const E x)
+{
+    if (prefix == nullptr)
         throw NullPointerException();
 
     const char *const suffix = getFilenameSuffix(x);
     if (suffix == nullptr)
         throw NullPointerException();
 
-    const auto filename = QString::asprintf(":/pixmaps/%s-%s.png", name, suffix);
-    if (!QFile{filename}.exists())
-        qWarning() << "WARNING: pixmap" << filename << "does not exist.";
-    return filename;
+    return getPixmapFilenameRaw(QString::asprintf("%s-%s.png", prefix, suffix));
 }
 
 QString getPixmapFilename(const RoomTerrainType x)

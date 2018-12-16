@@ -28,6 +28,7 @@
 #define ROOMSTREAM_H
 
 #include "../expandoracommon/room.h"
+#include "../global/RuleOf5.h"
 
 class AbstractRoomVisitor
 {
@@ -39,10 +40,7 @@ public:
     virtual void visit(const Room *) = 0;
 
 public:
-    AbstractRoomVisitor(AbstractRoomVisitor &&) = delete;
-    AbstractRoomVisitor(const AbstractRoomVisitor &) = delete;
-    AbstractRoomVisitor &operator=(AbstractRoomVisitor &&) = delete;
-    AbstractRoomVisitor &operator=(const AbstractRoomVisitor &) = delete;
+    DELETE_CTORS_AND_ASSIGN_OPS(AbstractRoomVisitor);
 };
 
 #endif

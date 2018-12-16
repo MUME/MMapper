@@ -50,12 +50,14 @@ set(mmapper_SRCS
     expandoracommon/frustum.cpp
     expandoracommon/frustum.h
     expandoracommon/listcycler.h
+    expandoracommon/MmQtHandle.h
     expandoracommon/parseevent.cpp
     expandoracommon/parseevent.h
     expandoracommon/property.cpp
     expandoracommon/property.h
     expandoracommon/RoomAdmin.cpp
     expandoracommon/RoomAdmin.h
+    expandoracommon/room.cpp
     expandoracommon/room.h
     expandoracommon/RoomRecipient.cpp
     expandoracommon/RoomRecipient.h
@@ -65,16 +67,19 @@ set(mmapper_SRCS
     global/DirectionType.cpp
     global/DirectionType.h
     global/EnumIndexedArray.h
-    global/NullPointerException.cpp
-    global/NullPointerException.h
     global/enums.h
     global/Flags.h
     global/io.cpp
     global/io.h
+    global/NullPointerException.cpp
+    global/NullPointerException.h
     global/RAII.cpp
     global/RAII.h
+    global/random.cpp
+    global/random.h
     global/range.h
     global/roomid.h
+    global/RuleOf5.h
     global/StringView.cpp
     global/StringView.h
     global/utils.h
@@ -108,7 +113,6 @@ set(mmapper_SRCS
     mapdata/mapdata.cpp
     mapdata/mapdata.h
     mapdata/mmapper2exit.h
-    mapdata/mmapper2room.cpp
     mapdata/mmapper2room.h
     mapdata/roomfactory.cpp
     mapdata/roomfactory.h
@@ -293,20 +297,45 @@ if(WITH_ZLIB)
     include_directories(SYSTEM ${ZLIB_INCLUDE_DIRS})
 endif()
 
-if (WITH_OPENSSL)
+if(WITH_OPENSSL)
     include_directories(SYSTEM ${OPENSSL_INCLUDE_DIR})
 endif()
 
-# ODR Violation Check
-file(GLOB_RECURSE mmapper_HDRS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.h)
-list(SORT mmapper_HDRS)
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/odr.cpp "// This generated file exists to help detect ODR violations.\n"
-    "// It will catch duplicate class names in header files,\n"
-    "// but it will NOT catch duplicate names in source files.\n\n")
-foreach(header_path ${mmapper_HDRS})
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/odr.cpp "#include \"${header_path}\"\n")
-endforeach()
-list(APPEND mmapper_SRCS "${CMAKE_CURRENT_BINARY_DIR}/odr.cpp")
+if(MMAPPER_IS_DEBUG)
+    if(NOT DEFINED CHECK_ODR)
+        set(CHECK_ODR YES)
+    endif()
+    if(NOT DEFINED CHECK_MISSING_INCLUDES)
+        set(CHECK_MISSING_INCLUDES YES)
+    endif()
+endif()
+
+if(CHECK_ODR)
+    message(STATUS "Will check headers for ODR violations (slow)")
+    # ODR Violation Check
+    file(GLOB_RECURSE mmapper_HDRS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.h)
+    list(SORT mmapper_HDRS)
+    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/odr.cpp "// This generated file exists to help detect ODR violations.\n"
+        "// It will catch duplicate class names in header files,\n"
+        "// but it will NOT catch duplicate names in source files.\n\n")
+    foreach(header_path ${mmapper_HDRS})
+        file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/odr.cpp "#include \"${header_path}\"\n")
+    endforeach()
+    # REVISIT: Find a way to avoid adding this to mmapper_SRCS?
+    list(APPEND mmapper_SRCS "${CMAKE_CURRENT_BINARY_DIR}/odr.cpp")
+endif()
+
+if(CHECK_MISSING_INCLUDES)
+    message(STATUS "Will check headers for missing includes (slow)")
+    foreach(header_path ${mmapper_HDRS})
+        set(FNAME "${CMAKE_CURRENT_BINARY_DIR}/gen/${header_path}.gen.cpp")
+        file(WRITE ${FNAME} "#include \"${header_path}\"\n")
+        list(APPEND DUMMY_FILES ${FNAME})
+        set(FNAME "")
+    endforeach()
+    # REVISIT: Find a way to avoid adding this to mmapper_SRCS?
+    list(APPEND mmapper_SRCS ${DUMMY_FILES})
+endif()
 
 set(mmapper_DATA
     mmapper.desktop
@@ -347,7 +376,7 @@ if(WITH_ZLIB)
     endif()
 endif()
 
-if (WITH_OPENSSL)
+if(WITH_OPENSSL)
     target_link_libraries(mmapper ${OPENSSL_LIBRARIES})
 endif()
 

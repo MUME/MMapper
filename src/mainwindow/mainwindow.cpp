@@ -55,6 +55,7 @@
 #include "../expandoracommon/parseevent.h"
 #include "../expandoracommon/room.h"
 #include "../global/DirectionType.h"
+#include "../global/NullPointerException.h"
 #include "../global/roomid.h"
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/customaction.h"
@@ -133,6 +134,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     qRegisterMetaType<SigParseEvent>("SigParseEvent");
     qRegisterMetaType<SigRoomSelection>("SigRoomSelection");
 
+    m_roomSelection = nullptr;
     m_connectionSelection = nullptr;
 
     // REVISIT: MapData should be destructed last due to locks
@@ -813,18 +815,22 @@ void MainWindow::createActions()
                                         tr("Switch to &offline mode"),
                                         this);
     groupMode.groupOffAct->setCheckable(true);
+    groupMode.groupOffAct->setStatusTip(tr("Switch to offline mode - Group Manager is disabled"));
     connect(groupMode.groupOffAct, &QAction::triggered, this, &MainWindow::onModeGroupOff);
 
     groupMode.groupClientAct = new QAction(QIcon(":/icons/groupclient.png"),
                                            tr("Switch to &client mode"),
                                            this);
     groupMode.groupClientAct->setCheckable(true);
+    groupMode.groupClientAct->setStatusTip(tr("Switch to client mode - connect to a friend's map"));
     connect(groupMode.groupClientAct, &QAction::triggered, this, &MainWindow::onModeGroupClient);
 
     groupMode.groupServerAct = new QAction(QIcon(":/icons/groupserver.png"),
                                            tr("Switch to &host mode"),
                                            this);
     groupMode.groupServerAct->setCheckable(true);
+    groupMode.groupServerAct->setStatusTip(
+        tr("Switch to host mode - allow friends to connect to your map"));
     connect(groupMode.groupServerAct, &QAction::triggered, this, &MainWindow::onModeGroupServer);
 
     groupMode.groupModeGroup = new QActionGroup(this);
@@ -836,8 +842,10 @@ void MainWindow::createActions()
     groupNetwork.networkStartAct = new QAction(QIcon(":/icons/online.png"), tr("Start"), this);
     groupNetwork.networkStartAct->setCheckable(true);
     groupNetwork.networkStartAct->setShortcut(tr("Ctrl+G"));
+    groupNetwork.networkStartAct->setStatusTip(tr("Start the Group Manager"));
     groupNetwork.networkStopAct = new QAction(QIcon(":/icons/offline.png"), tr("Stop"), this);
     groupNetwork.networkStopAct->setCheckable(true);
+    groupNetwork.networkStopAct->setStatusTip(tr("Stop the Group Manager"));
     connect(groupNetwork.networkStartAct,
             &QAction::triggered,
             m_groupManager,
@@ -1059,7 +1067,7 @@ void MainWindow::showContextMenu(const QPoint &pos)
     } else if (m_infoMarkSelection != nullptr && !m_infoMarkSelection->isEmpty()) {
         contextMenu.addAction(infoMarkActions.editInfoMarkAct);
         contextMenu.addAction(infoMarkActions.deleteInfoMarkAct);
-    } else if (m_roomSelection.isValid()) {
+    } else if (m_roomSelection != nullptr) {
         contextMenu.addAction(editRoomSelectionAct);
         contextMenu.addAction(moveUpRoomSelectionAct);
         contextMenu.addAction(moveDownRoomSelectionAct);
@@ -1069,7 +1077,7 @@ void MainWindow::showContextMenu(const QPoint &pos)
         contextMenu.addAction(connectToNeighboursRoomSelectionAct);
         contextMenu.addSeparator();
         contextMenu.addAction(forceRoomAct);
-    } else if (m_connectionSelection == nullptr && !m_roomSelection.isValid()
+    } else if (m_connectionSelection == nullptr && m_roomSelection == nullptr
                && (m_infoMarkSelection == nullptr || m_infoMarkSelection->isEmpty())) {
         contextMenu.addAction(createRoomAct);
         //TODO: contextMenu.addAction(createInfoMarkAct);
@@ -1192,10 +1200,13 @@ void MainWindow::onPreferences()
 void MainWindow::newRoomSelection(const SigRoomSelection &rs)
 {
     forceRoomAct->setEnabled(false);
-    m_roomSelection = rs;
-    if (m_roomSelection.isValid()) {
+    if (rs.isValid())
+        m_roomSelection = rs.getShared();
+    else
+        m_roomSelection.reset();
+    if (m_roomSelection != nullptr) {
         selectedRoomActGroup->setEnabled(true);
-        if (m_roomSelection.getShared()->size() == 1) {
+        if (m_roomSelection->size() == 1) {
             forceRoomAct->setEnabled(true);
         }
     } else {
@@ -1369,7 +1380,7 @@ static QStringList getSaveFileNames(std::unique_ptr<QFileDialog> &&ptr)
             return pSaveDialog->selectedFiles();
         return QStringList{};
     }
-    throw std::runtime_error("null pointer");
+    throw NullPointerException();
 }
 
 bool MainWindow::saveAs()
@@ -1753,7 +1764,7 @@ void MainWindow::onCreateRoom()
 
 void MainWindow::onEditRoomSelection()
 {
-    if (m_roomSelection.isValid()) {
+    if (m_roomSelection != nullptr) {
         RoomEditAttrDlg roomEditDialog(this);
         roomEditDialog.setRoomSelection(m_roomSelection, m_mapData, m_mapWindow->getCanvas());
         roomEditDialog.exec();
@@ -1776,7 +1787,7 @@ void MainWindow::onDeleteInfoMarkSelection()
 
 void MainWindow::onDeleteRoomSelection()
 {
-    if (m_roomSelection.isValid()) {
+    if (m_roomSelection != nullptr) {
         m_mapData->execute(new GroupMapAction(new Remove(), m_roomSelection), m_roomSelection);
         m_mapWindow->getCanvas()->clearRoomSelection();
         m_mapWindow->getCanvas()->update();
@@ -1786,20 +1797,23 @@ void MainWindow::onDeleteRoomSelection()
 void MainWindow::onDeleteConnectionSelection()
 {
     if (m_connectionSelection != nullptr) {
-        const Room *r1 = m_connectionSelection->getFirst().room;
-        ExitDirection dir1 = m_connectionSelection->getFirst().direction;
-        const Room *r2 = m_connectionSelection->getSecond().room;
-        ExitDirection dir2 = m_connectionSelection->getSecond().direction;
-
+        const auto &first = m_connectionSelection->getFirst();
+        const auto &second = m_connectionSelection->getSecond();
+        const Room *const r1 = first.room;
+        const Room *const r2 = second.room;
         if (r1 != nullptr && r2 != nullptr) {
-            SigRoomSelection tmpSel = m_mapData->select();
-            m_mapData->getRoom(r1->getId(), tmpSel);
-            m_mapData->getRoom(r2->getId(), tmpSel);
+            const ExitDirection dir1 = first.direction;
+            const ExitDirection dir2 = second.direction;
+            const RoomId &id1 = r1->getId();
+            const RoomId &id2 = r2->getId();
 
+            const auto tmpSel = RoomSelection::createSelection(*m_mapData);
+            tmpSel->getRoom(id1);
+            tmpSel->getRoom(id2);
             m_mapWindow->getCanvas()->clearConnectionSelection();
-
-            m_mapData->execute(new RemoveTwoWayExit(r1->getId(), r2->getId(), dir1, dir2), tmpSel);
-            //m_mapData->execute(new RemoveExit(r2->getId(), r1->getId(), dir2), tmpSel);
+            m_mapData->execute(new RemoveTwoWayExit(id1, id2, dir1, dir2), tmpSel);
+            if ((false))
+                m_mapData->execute(new RemoveExit(id2, id1, dir2), tmpSel);
         }
     }
 
@@ -1808,7 +1822,7 @@ void MainWindow::onDeleteConnectionSelection()
 
 void MainWindow::onMoveUpRoomSelection()
 {
-    if (!m_roomSelection.isValid()) {
+    if (m_roomSelection == nullptr) {
         return;
     }
     Coordinate moverel(0, 0, 1);
@@ -1820,7 +1834,7 @@ void MainWindow::onMoveUpRoomSelection()
 
 void MainWindow::onMoveDownRoomSelection()
 {
-    if (!m_roomSelection.isValid()) {
+    if (m_roomSelection == nullptr) {
         return;
     }
     Coordinate moverel(0, 0, -1);
@@ -1832,7 +1846,7 @@ void MainWindow::onMoveDownRoomSelection()
 
 void MainWindow::onMergeUpRoomSelection()
 {
-    if (!m_roomSelection.isValid()) {
+    if (m_roomSelection == nullptr) {
         return;
     }
     Coordinate moverel(0, 0, 1);
@@ -1844,7 +1858,7 @@ void MainWindow::onMergeUpRoomSelection()
 
 void MainWindow::onMergeDownRoomSelection()
 {
-    if (!m_roomSelection.isValid()) {
+    if (m_roomSelection == nullptr) {
         return;
     }
     Coordinate moverel(0, 0, -1);
@@ -1856,7 +1870,7 @@ void MainWindow::onMergeDownRoomSelection()
 
 void MainWindow::onConnectToNeighboursRoomSelection()
 {
-    if (!m_roomSelection.isValid()) {
+    if (m_roomSelection == nullptr) {
         return;
     }
     m_mapData->execute(new GroupMapAction(new ConnectToNeighbours, m_roomSelection),

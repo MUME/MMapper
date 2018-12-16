@@ -29,12 +29,14 @@
 #include <QFile>
 #include <QString>
 
+#include "../global/RuleOf5.h"
+
 /*! \brief Save to a file in an atomic way.
  *
  * Currently this does not work on Windows (where a simple file overwriting is
  * then performed).
  */
-class FileSaver
+class FileSaver final
 {
     QString m_filename{};
     QFile m_file{}; // disables copying
@@ -44,10 +46,7 @@ public:
     ~FileSaver();
 
 public:
-    FileSaver(FileSaver &&) = delete;
-    FileSaver(const FileSaver &) = delete;
-    FileSaver &operator=(FileSaver &&) = delete;
-    FileSaver &operator=(const FileSaver &) = delete;
+    DELETE_CTORS_AND_ASSIGN_OPS(FileSaver);
 
 public:
     QFile &file() { return m_file; }

@@ -36,6 +36,8 @@
 #include <QtCore>
 #include <QtGlobal>
 
+#include "RuleOf5.h"
+
 class QFile;
 
 namespace io {
@@ -87,10 +89,8 @@ public:
     {}
     virtual ~IOException() override;
 
-    IOException(IOException &&) = default;
-    IOException(const IOException &) = default;
-    IOException &operator=(IOException &&) = default;
-    IOException &operator=(const IOException &) = default;
+    IOException() = delete; // must give a reason!
+    DEFAULT_CTORS_AND_ASSIGN_OPS(IOException);
 
 public:
     static IOException withCurrentErrno();

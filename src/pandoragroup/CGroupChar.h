@@ -31,6 +31,7 @@
 #include <QColor>
 #include <QVariantMap>
 
+#include "../global/RuleOf5.h"
 #include "../global/roomid.h"
 
 class CGroupChar final
@@ -83,8 +84,7 @@ private:
     QColor color{};
 
 public:
-    CGroupChar(const CGroupChar &) = delete;
-    CGroupChar &operator=(const CGroupChar &) = delete;
+    DELETE_CTORS_AND_ASSIGN_OPS(CGroupChar);
 };
 
 #endif /*CGROUPCHAR_H_*/

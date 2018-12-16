@@ -23,13 +23,98 @@
 **
 ************************************************************************/
 
-#include "mmapper2room.h"
+#include "room.h"
 
-#include <QAssociativeIterable>
+#include "../global/random.h"
 
-#include "../expandoracommon/room.h"
+ExitsList::ExitsList(const bool isDummy)
+{
+    for (auto &e : exits)
+        e = Exit{!isDummy};
+}
 
-/* TODO: move this file to expandoracommon/room.cpp */
+ExitDirConstRef::ExitDirConstRef(const ExitDirection dir, const Exit &exit)
+    : dir{dir}
+    , exit{exit}
+{}
+
+OptionalExitDirConstRef::OptionalExitDirConstRef(const ExitDirConstRef &dir)
+{
+    new (buf) ExitDirConstRef{dir.dir, dir.exit};
+    isValid = true;
+}
+
+OptionalExitDirConstRef::~OptionalExitDirConstRef()
+{
+    reset();
+}
+
+void OptionalExitDirConstRef::reset()
+{
+    if (std::exchange(isValid, false)) {
+        reinterpret_cast<ExitDirConstRef &>(buf).~ExitDirConstRef();
+    }
+}
+
+bool OptionalExitDirConstRef::hasValue() const
+{
+    return isValid;
+}
+
+OptionalExitDirConstRef::operator bool() const
+{
+    return hasValue();
+}
+
+ExitDirConstRef &OptionalExitDirConstRef::value()
+{
+    if (!hasValue())
+        throw std::runtime_error("invalid");
+    return reinterpret_cast<ExitDirConstRef &>(buf);
+}
+
+const ExitDirConstRef &OptionalExitDirConstRef::value() const
+{
+    if (!hasValue())
+        throw std::runtime_error("invalid");
+    return reinterpret_cast<const ExitDirConstRef &>(buf);
+}
+
+std::vector<ExitDirection> Room::getOutExits() const
+{
+    std::vector<ExitDirection> result;
+    result.reserve(ALL_EXITS_NESWUD.size());
+    for (auto dir : ALL_EXITS_NESWUD) {
+        const Exit &e = this->exit(dir);
+        if (e.isExit() && !e.outIsEmpty())
+            result.emplace_back(dir);
+    }
+    return result;
+}
+
+OptionalExitDirConstRef Room::getRandomExit() const
+{
+    // Pick an alternative direction to randomly wander into
+    const std::vector<ExitDirection> outExits = this->getOutExits();
+    if (!outExits.empty()) {
+        const auto randomDir = chooseRandomElement(outExits);
+        return OptionalExitDirConstRef{ExitDirConstRef{randomDir, this->exit(randomDir)}};
+    }
+
+    return OptionalExitDirConstRef{};
+}
+
+ExitDirConstRef Room::getExitMaybeRandom(const ExitDirection dir) const
+{
+    // REVISIT: The whole room (not just exits) can be flagged as random in MUME.
+    const Exit &e = this->exit(dir);
+
+    if (e.exitIsRandom())
+        if (auto opt = getRandomExit())
+            return opt.value();
+
+    return ExitDirConstRef{dir, e};
+}
 
 RoomName Room::getName() const
 {

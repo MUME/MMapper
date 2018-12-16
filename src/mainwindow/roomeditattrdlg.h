@@ -67,7 +67,7 @@ signals:
     void mapChanged();
 
 public slots:
-    void setRoomSelection(const SigRoomSelection &, MapData *, MapCanvas *);
+    void setRoomSelection(const SharedRoomSelection &, MapData *, MapCanvas *);
 
     // selection page
     void roomListCurrentIndexChanged(int);
@@ -142,7 +142,7 @@ private:
     static_assert(NUM_ELEMENTS(doorListItems) <= 16u, "");
 #undef NUM_ELEMENTS
 
-    SigRoomSelection m_roomSelection{};
+    SharedRoomSelection m_roomSelection;
     MapData *m_mapData = nullptr;
     MapCanvas *m_mapCanvas = nullptr;
     QShortcut *m_hiddenShortcut = nullptr;

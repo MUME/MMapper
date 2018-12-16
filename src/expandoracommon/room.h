@@ -27,15 +27,21 @@
 #ifndef ROOM_H
 #define ROOM_H
 
+#include <QVariant>
+#include <QVector>
+
+#if __cplusplus >= 201703L
+#include <optional>
+#endif
+
 #include "../global/DirectionType.h"
 #include "../global/EnumIndexedArray.h"
+#include "../global/RuleOf5.h"
 #include "../global/roomid.h"
 #include "../mapdata/mmapper2exit.h"
 #include "../mapdata/mmapper2room.h"
 #include "coordinate.h"
 #include "exit.h"
-#include <QVariant>
-#include <QVector>
 
 // REVISIT: can't trivially make this
 // `using ExitsList = EnumIndexedArray<Exit, ExitDirection, NUM_EXITS>`
@@ -47,11 +53,7 @@ private:
     EnumIndexedArray<Exit, ExitDirection, NUM_EXITS> exits{};
 
 public:
-    explicit ExitsList(const bool isDummy)
-    {
-        for (auto &e : exits)
-            e = Exit{!isDummy};
-    }
+    explicit ExitsList(bool isDummy);
 
 public:
     Exit &operator[](const ExitDirection idx) { return exits[idx]; }
@@ -68,6 +70,41 @@ public:
     auto cbegin() const { return exits.cbegin(); }
     auto cend() const { return exits.cend(); }
 };
+
+struct ExitDirConstRef final
+{
+    ExitDirection dir;
+    const Exit &exit;
+    explicit ExitDirConstRef(const ExitDirection dir, const Exit &exit);
+};
+
+#if __cplusplus >= 201703L
+using OptionalExitDirConstRef = std::optional<ExitDirConstRef>;
+#else
+class OptionalExitDirConstRef final
+{
+private:
+    alignas(alignof(ExitDirConstRef)) char buf[sizeof(ExitDirConstRef)];
+    bool isValid = false;
+
+public:
+    explicit OptionalExitDirConstRef() = default;
+    explicit OptionalExitDirConstRef(const ExitDirConstRef &dir);
+    ~OptionalExitDirConstRef();
+    DEFAULT_CTORS_AND_ASSIGN_OPS(OptionalExitDirConstRef);
+
+public:
+    void reset();
+
+public:
+    bool hasValue() const;
+    explicit operator bool() const;
+
+public:
+    ExitDirConstRef &value();
+    const ExitDirConstRef &value() const;
+};
+#endif
 
 class Room final
 {
@@ -106,6 +143,11 @@ public:
 
     ExitsList &getExitsList() { return exits; }
     const ExitsList &getExitsList() const { return exits; }
+
+    std::vector<ExitDirection> getOutExits() const;
+    OptionalExitDirConstRef getRandomExit() const;
+    ExitDirConstRef getExitMaybeRandom(ExitDirection dir) const;
+
     void setId(const RoomId in) { id = in; }
     void setPosition(const Coordinate &in_c) { position = in_c; }
     RoomId getId() const { return id; }
@@ -243,10 +285,7 @@ public:
     ~Room() = default;
 
     // REVISIT: copies should be more explicit (e.g. room.copy(const Room& other)).
-    Room(Room &&) = default;
-    Room(const Room &) = default;
-    Room &operator=(Room &&) = default;
-    Room &operator=(const Room &) = default;
+    DEFAULT_CTORS_AND_ASSIGN_OPS(Room);
 
 public:
     bool isFake() const { return isDummy_; }

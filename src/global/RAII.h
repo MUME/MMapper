@@ -26,8 +26,18 @@
 #ifndef MMAPPER_RAII_H
 #define MMAPPER_RAII_H
 
-/* TODO: add [[nodiscard]] for C++17 */
+#include <algorithm>
+#include <functional>
+
+#include "RuleOf5.h"
+
+#ifndef NODISCARD
+#if __cplusplus >= 201703L
+#define NODISCARD [[nodiscard]]
+#else
 #define NODISCARD
+#endif
+#endif
 
 class NODISCARD RAIIBool final
 {
@@ -36,12 +46,32 @@ private:
     bool moved = false;
 
 public:
-    explicit RAIIBool(bool &b);
-    RAIIBool(RAIIBool &&rhs);
-    RAIIBool &operator=(RAIIBool &&rhs) = delete;
-    RAIIBool(const RAIIBool &) = delete;
-    RAIIBool &operator=(const RAIIBool &) = delete;
+    NODISCARD explicit RAIIBool(bool &b);
     ~RAIIBool();
+
+public:
+    /* move ctor */
+    RAIIBool(RAIIBool &&rhs);
+    DELETE_COPY_CTOR(RAIIBool);
+    DELETE_ASSIGN_OPS(RAIIBool);
+};
+
+class NODISCARD RAIICallback final
+{
+private:
+    using Callback = std::function<void()>;
+    Callback callback;
+    bool moved = false;
+
+public:
+    /* move ctor */
+    RAIICallback(RAIICallback &&rhs);
+    DELETE_COPY_CTOR(RAIICallback);
+    DELETE_ASSIGN_OPS(RAIICallback);
+
+public:
+    NODISCARD explicit RAIICallback(Callback &&callback);
+    ~RAIICallback() noexcept(false);
 };
 
 #endif // MMAPPER_RAII_H

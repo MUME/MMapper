@@ -32,6 +32,7 @@
 
 #include "../expandoracommon/RoomRecipient.h"
 #include "../expandoracommon/coordinate.h"
+#include "../global/RuleOf5.h"
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/mmapper2exit.h"
 
@@ -68,10 +69,7 @@ public:
 
 public:
     Experimenting() = delete;
-    Experimenting(Experimenting &&) = delete;
-    Experimenting(const Experimenting &) = delete;
-    Experimenting &operator=(Experimenting &&) = delete;
-    Experimenting &operator=(const Experimenting &) = delete;
+    DELETE_CTORS_AND_ASSIGN_OPS(Experimenting);
 };
 
 #endif

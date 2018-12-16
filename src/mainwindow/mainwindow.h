@@ -66,6 +66,7 @@ class QProgressDialog;
 class QTextBrowser;
 class QToolBar;
 class QWidget;
+class RoomSelection;
 class WelcomeWidget;
 
 class DockWidget : public QDockWidget
@@ -186,7 +187,7 @@ private:
     ClientWidget *m_client = nullptr;
     WelcomeWidget *m_launchWidget = nullptr;
 
-    SigRoomSelection m_roomSelection{};
+    SharedRoomSelection m_roomSelection;
     ConnectionSelection *m_connectionSelection = nullptr;
     InfoMarkSelection *m_infoMarkSelection = nullptr;
 

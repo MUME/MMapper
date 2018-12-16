@@ -38,25 +38,7 @@
 #include "../parser/PromptFlags.h"
 #include "property.h"
 
-SigParseEvent::SigParseEvent(const SharedParseEvent &event)
-    : m_sharedParseEvent{event}
-{
-    requireValid(); /* throws invalid argument */
-}
-
 ParseEvent::Cycler::~Cycler() = default;
-
-ParseEvent &SigParseEvent::deref() const
-{
-    return ::deref(m_sharedParseEvent);
-}
-
-const SharedParseEvent &SigParseEvent::getShared() const
-{
-    if (auto &p = m_sharedParseEvent)
-        return p;
-    throw std::runtime_error("null pointer");
-}
 
 ParseEvent::Cycler ParseEvent::Cycler::clone() const
 {

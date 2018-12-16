@@ -37,19 +37,19 @@
 
 class Path;
 
-OneByOne::OneByOne(AbstractRoomFactory *in_factory,
+OneByOne::OneByOne(AbstractRoomFactory *const in_factory,
                    const SigParseEvent &sigParseEvent,
                    PathParameters &in_params,
-                   RoomSignalHandler *in_handler)
-    : Experimenting(new std::list<Path *>,
+                   RoomSignalHandler *const in_handler)
+    : Experimenting{new std::list<Path *>,
                     getDirection(sigParseEvent.deref().getMoveType()),
                     in_params,
-                    in_factory)
-    , event(sigParseEvent.getShared())
-    , handler(in_handler)
+                    in_factory}
+    , event{sigParseEvent.getShared()}
+    , handler{in_handler}
 {}
 
-void OneByOne::receiveRoom(RoomAdmin *admin, const Room *room)
+void OneByOne::receiveRoom(RoomAdmin *const admin, const Room *const room)
 {
     if (factory->compare(room, deref(event), params.matchingTolerance) == ComparisonResult::EQUAL) {
         augmentPath(shortPaths->back(), admin, room);
@@ -61,7 +61,7 @@ void OneByOne::receiveRoom(RoomAdmin *admin, const Room *room)
     }
 }
 
-void OneByOne::addPath(Path *path)
+void OneByOne::addPath(Path *const path)
 {
     shortPaths->push_back(path);
 }

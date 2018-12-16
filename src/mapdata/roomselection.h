@@ -29,82 +29,66 @@
 
 #include <QMap>
 
+#include "../expandoracommon/MmQtHandle.h"
 #include "../expandoracommon/RoomRecipient.h"
+#include "../global/NullPointerException.h"
+#include "../global/RAII.h"
+#include "../global/RuleOf5.h"
 #include "../global/roomid.h"
+#include "roomfilter.h"
+
+class RoomSelection;
+using SharedRoomSelection = std::shared_ptr<RoomSelection>;
+using SigRoomSelection = MmQtHandle<RoomSelection>;
 
 class Room;
 class RoomAdmin;
-class RoomSelection;
+class Coordinate;
 class MapData;
-
-using SharedRoomSelection = std::shared_ptr<RoomSelection>;
-
-/* Handle used for QT signals */
-class SigRoomSelection final // was using SigRoomSelection = SharedRoomSelection;
-{
-private:
-    SharedRoomSelection m_sharedRoomSelection{};
-
-public:
-    explicit SigRoomSelection(std::nullptr_t) {}
-    explicit SigRoomSelection(const SharedRoomSelection &event)
-        /* throws invalid argument */
-        noexcept(false);
-
-public:
-    explicit SigRoomSelection() = default; /* required by QT */
-    SigRoomSelection(SigRoomSelection &&) = default;
-    SigRoomSelection(const SigRoomSelection &) = default;
-    SigRoomSelection &operator=(SigRoomSelection &&) = default;
-    SigRoomSelection &operator=(const SigRoomSelection &) = default;
-    ~SigRoomSelection() = default;
-
-public:
-    // keep as non-inline for debugging
-    bool isValid() const { return m_sharedRoomSelection != nullptr; }
-    inline explicit operator bool() const { return isValid(); }
-
-public:
-    inline bool operator==(std::nullptr_t) const { return m_sharedRoomSelection == nullptr; }
-    inline bool operator!=(std::nullptr_t) const { return m_sharedRoomSelection != nullptr; }
-
-public:
-    inline bool operator==(const SigRoomSelection &rhs) const
-    {
-        return m_sharedRoomSelection == rhs.m_sharedRoomSelection;
-    }
-    inline bool operator!=(const SigRoomSelection &rhs) const { return !(*this == rhs); }
-
-public:
-    inline const SigRoomSelection &requireValid() const
-        /* throws invalid argument */
-        noexcept(false)
-    {
-        if (!isValid())
-            throw std::runtime_error("invalid argument");
-        return *this;
-    }
-
-public:
-    const SharedRoomSelection &getShared() const
-        /* throws null pointer */
-        noexcept(false);
-
-public:
-    RoomSelection &deref() const
-        /* throws null pointer */
-        noexcept(false);
-};
-
-class RoomSelection : public QMap<RoomId, const Room *>, public RoomRecipient
+class NODISCARD RoomSelection final : public QMap<RoomId, const Room *>, public RoomRecipient
 {
 public:
-    explicit RoomSelection(MapData *admin);
-    ~RoomSelection() override;
     void receiveRoom(RoomAdmin *admin, const Room *aRoom) override;
 
 private:
-    MapData *m_admin = nullptr;
+    MapData &m_mapData;
+    bool m_moved = false;
+
+public:
+    NODISCARD explicit RoomSelection(MapData &mapData);
+    NODISCARD explicit RoomSelection(MapData &mapData, const Coordinate &c);
+    NODISCARD explicit RoomSelection(MapData &mapData, const Coordinate &ulf, const Coordinate &lrb);
+    ~RoomSelection() override;
+
+public:
+    const RoomSelection &operator*() const noexcept(false);
+
+public:
+    const Room *getFirstRoom() const noexcept(false);
+    RoomId getFirstRoomId() const noexcept(false);
+
+public:
+    const Room *getRoom(const RoomId targetId);
+    const Room *getRoom(const Coordinate &coord);
+    void unselect(const RoomId targetId);
+
+public:
+    bool isMovable(const Coordinate &offset) const;
+
+public:
+    void genericSearch(const RoomFilter &f);
+
+public:
+    static SharedRoomSelection createSelection(MapData &mapData);
+    static SharedRoomSelection createSelection(MapData &mapData, const Coordinate &c);
+    static SharedRoomSelection createSelection(MapData &mapData,
+                                               const Coordinate &ulf,
+                                               const Coordinate &lrb);
+
+public:
+    RoomSelection(RoomSelection &&);
+    DELETE_COPY_CTOR(RoomSelection);
+    DELETE_MOVE_ASSIGN_OP(RoomSelection);
 };
 
-#endif
+#endif // ROOMSELECTION_H

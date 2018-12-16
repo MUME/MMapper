@@ -75,7 +75,6 @@ class QOpenGLTexture;
 class QWheelEvent;
 class QWidget;
 class Room;
-class SigParseEvent;
 struct RoomId;
 
 class MapCanvas final : public QOpenGLWidget, private MapCanvasData
@@ -93,6 +92,10 @@ public:
                        Mmapper2Group *groupManager,
                        QWidget *parent);
     ~MapCanvas() override;
+
+private:
+    void cleanupOpenGL();
+    void makeCurrentAndUpdate();
 
 public:
     QSize minimumSizeHint() const override;
@@ -184,9 +187,7 @@ private:
     void initTextures();
     void makeGlLists();
 
-    static int inline GLtoMap(float arg);
-
-    void setTrilinear(QOpenGLTexture *x) const;
+    void setTrilinear(const std::unique_ptr<QOpenGLTexture> &x) const;
 
     void drawPreSpammedPath();
     void paintSelection(GLdouble len);

@@ -31,15 +31,14 @@
 #include <cstdint>
 #include <sys/types.h>
 
+#include "../global/RuleOf5.h"
+
 template<class T, class C>
 class ListCycler : public C
 {
 public:
     explicit ListCycler() = default;
-    ListCycler(ListCycler &&) = default;
-    ListCycler(const ListCycler &) = default;
-    ListCycler &operator=(ListCycler &&) = default;
-    ListCycler &operator=(const ListCycler &) = default;
+    DEFAULT_CTORS_AND_ASSIGN_OPS(ListCycler);
 
     explicit ListCycler(const C &data)
         : C(data)

@@ -40,6 +40,7 @@
 #include "../global/Color.h"
 #include "../global/EnumIndexedArray.h"
 #include "../global/Flags.h"
+#include "../global/RuleOf5.h"
 #include "../global/utils.h"
 #include "../mapdata/DoorFlags.h"
 #include "../mapdata/ExitFieldVariant.h"
@@ -75,10 +76,7 @@ private:
     std::array<GLdouble, 4> oldcolour{};
 
 public:
-    RAIIColorSaver(RAIIColorSaver &&) = delete;
-    RAIIColorSaver(const RAIIColorSaver &) = delete;
-    RAIIColorSaver &operator=(RAIIColorSaver &&) = delete;
-    RAIIColorSaver &operator=(const RAIIColorSaver &) = delete;
+    DELETE_CTORS_AND_ASSIGN_OPS(RAIIColorSaver);
 
 public:
     explicit RAIIColorSaver(OpenGL &opengl)
@@ -235,7 +233,7 @@ static QString getPostfixedDoorName(const Room *const room, const ExitDirection 
 
 void MapCanvasRoomDrawer::drawInfoMarks()
 {
-    MarkerListIterator m(m_data->getMarkersList());
+    MarkerListIterator m(m_mapCanvasData.m_data->getMarkersList());
     while (m.hasNext()) {
         drawInfoMark(m.next());
     }
@@ -273,9 +271,9 @@ void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
 
         // Update the text marker's X2 and Y2 position
         // REVISIT: This should be done in the "data" stage
-        marker->setPosition2(Coordinate(static_cast<int>(x2 * INFOMARK_SCALE),
+        marker->setPosition2(Coordinate{static_cast<int>(x2 * INFOMARK_SCALE),
                                         static_cast<int>(y2 * INFOMARK_SCALE),
-                                        marker->getPosition2().z));
+                                        marker->getPosition2().z});
     }
 
     // check if marker is visible
@@ -372,18 +370,22 @@ void MapCanvasRoomDrawer::drawRoomDoorName(const Room *const sourceRoom,
     assert(sourceRoom != nullptr);
     assert(targetRoom != nullptr);
 
-    const auto srcX = sourceRoom->getPosition().x;
-    const auto srcY = sourceRoom->getPosition().y;
-    const auto srcZ = sourceRoom->getPosition().z;
-    const auto tarX = targetRoom->getPosition().x;
-    const auto tarY = targetRoom->getPosition().y;
-    const auto tarZ = targetRoom->getPosition().z;
-    const auto dX = srcX - tarX;
-    const auto dY = srcY - tarY;
+    const Coordinate sourcePos = sourceRoom->getPosition();
+    const auto srcX = sourcePos.x;
+    const auto srcY = sourcePos.y;
+    const auto srcZ = sourcePos.z;
+
+    const Coordinate targetPos = targetRoom->getPosition();
+    const auto tarX = targetPos.x;
+    const auto tarY = targetPos.y;
+    const auto tarZ = targetPos.z;
 
     if (srcZ != m_currentLayer && tarZ != m_currentLayer) {
         return;
     }
+
+    const auto dX = srcX - tarX;
+    const auto dY = srcY - tarY;
 
     QString name;
     bool together = false;
@@ -394,7 +396,7 @@ void MapCanvasRoomDrawer::drawRoomDoorName(const Room *const sourceRoom,
         // has a door on both sides...
         && targetRoom->exit(targetDir).isHiddenExit()
         // is hidden
-        && abs(dX) <= 1 && abs(dY) <= 1) { // the door is close by!
+        && std::abs(dX) <= 1 && std::abs(dY) <= 1) { // the door is close by!
         // skip the other direction since we're printing these together
         if (isOdd(sourceDir)) {
             return;
@@ -592,7 +594,7 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room,
         return;
     }
 
-    const auto wantExtraDetail = m_scaleFactor * m_currentStepScaleFactor >= 0.15f;
+    const auto wantExtraDetail = m_scaleFactor * m_mapCanvasData.m_currentStepScaleFactor >= 0.15f;
     const auto x = room->getPosition().x;
     const auto y = room->getPosition().y;
     const auto z = room->getPosition().z;
@@ -705,8 +707,8 @@ void MapCanvasRoomDrawer::drawUpperLayers(const Room *const room,
 
     const auto roomTerrainType = room->getTerrainType();
     QOpenGLTexture *const texture = (roomTerrainType == RoomTerrainType::ROAD)
-                                        ? m_textures.road[roadIndex]
-                                        : m_textures.terrain[roomTerrainType];
+                                        ? m_textures.road[roadIndex].get()
+                                        : m_textures.terrain[roomTerrainType].get();
 
     m_opengl.apply(XEnable{XOption::BLEND});
     m_opengl.apply(XEnable{XOption::TEXTURE_2D});
@@ -749,26 +751,26 @@ void MapCanvasRoomDrawer::drawUpperLayers(const Room *const room,
         // Trail Support
         if (roadIndex != RoadIndex::NONE && roomTerrainType != RoomTerrainType::ROAD) {
             m_opengl.glTranslated(0, 0, 0.005);
-            alphaOverlayTexture(m_textures.trail[roadIndex]);
+            alphaOverlayTexture(m_textures.trail[roadIndex].get());
         }
 
         for (const RoomMobFlag flag : ALL_MOB_FLAGS) {
             if (mf.contains(flag)) {
                 m_opengl.glTranslated(0, 0, 0.005);
-                alphaOverlayTexture(m_textures.mob[flag]);
+                alphaOverlayTexture(m_textures.mob[flag].get());
             }
         }
 
         for (const RoomLoadFlag flag : ALL_LOAD_FLAGS) {
             if (lf.contains(flag)) {
                 m_opengl.glTranslated(0, 0, 0.005);
-                alphaOverlayTexture(m_textures.load[flag]);
+                alphaOverlayTexture(m_textures.load[flag].get());
             }
         }
 
         if (getConfig().canvas.showUpdated && !room->isUpToDate()) {
             m_opengl.glTranslated(0, 0, 0.005);
-            alphaOverlayTexture(m_textures.update);
+            alphaOverlayTexture(m_textures.update.get());
         }
         m_opengl.apply(XDisable{XOption::BLEND});
         m_opengl.apply(XDisable{XOption::TEXTURE_2D});
@@ -791,7 +793,9 @@ void MapCanvasRoomDrawer::drawRoomConnectionsAndDoors(const Room *const room, co
     int ry = 0;
 
     const auto wantDoorNames = getConfig().canvas.drawDoorNames
-                               && (m_scaleFactor * m_currentStepScaleFactor >= 0.40f);
+                               && (m_mapCanvasData.m_scaleFactor
+                                       * m_mapCanvasData.m_currentStepScaleFactor
+                                   >= 0.40f);
     for (const auto i : ALL_EXITS7) {
         const auto opp = opposite(i);
         ExitDirection targetDir = opp;
@@ -913,7 +917,7 @@ void MapCanvasRoomDrawer::drawVertical(
         return;
     }
 
-    const auto color = getVerticalColor(flags, g_noFleeColor);
+    const auto color = getVerticalColor(flags, m_mapCanvasData.g_noFleeColor);
     if (color != Qt::transparent)
         drawListWithLineStipple(transparent, color);
 
@@ -1242,10 +1246,10 @@ void MapCanvasRoomDrawer::renderText(const double x,
                                      const double rotationAngle)
 {
     // http://stackoverflow.com/questions/28216001/how-to-render-text-with-qopenglwidget/28517897
-    const QVector3D projected = project(
+    const QVector3D projected = m_mapCanvasData.project(
         QVector3D{static_cast<float>(x), static_cast<float>(y), CAMERA_Z_DISTANCE});
     const auto textPosX = static_cast<double>(projected.x());
-    const auto textPosY = static_cast<double>(height())
+    const auto textPosY = static_cast<double>(m_mapCanvasData.height())
                           - static_cast<double>(projected.y()); // y is inverted
     m_opengl.renderTextAt(textPosX, textPosY, text, color, fontFormatFlag, rotationAngle);
 }
