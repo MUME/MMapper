@@ -30,15 +30,11 @@
 #include <cstdlib>
 #include <stdexcept>
 
+#include "../global/utils.h"
+
 vec2i vec2f::round() const
 {
-    const auto round_f = [](const float f) {
-        if (f >= 0.0f) {
-            return static_cast<int>(f + 0.5f);
-        }
-        return static_cast<int>(f - 0.5f);
-    };
-    return vec2i{round_f(x), round_f(y)};
+    return vec2i{utils::round_ftoi(x), utils::round_ftoi(y)};
 }
 
 vec2f vec2f::operator/(const float f) const

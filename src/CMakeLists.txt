@@ -82,6 +82,7 @@ set(mmapper_SRCS
     global/RuleOf5.h
     global/StringView.cpp
     global/StringView.h
+    global/utils.cpp
     global/utils.h
     global/WinSock.cpp
     global/WinSock.h

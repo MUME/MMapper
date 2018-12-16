@@ -28,6 +28,8 @@ file(GLOB_RECURSE expandoracommon_SRCS
     ../src/global/NullPointerException.h
     ../src/global/random.cpp
     ../src/global/random.h
+    ../src/global/utils.cpp
+    ../src/global/utils.h
     )
 set(TestExpandoraCommon_SRCS testexpandoracommon.cpp)
 add_executable(TestExpandoraCommon ${TestExpandoraCommon_SRCS} ${expandoracommon_SRCS})

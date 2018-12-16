@@ -46,6 +46,10 @@ bool isClamped(T x, T lo, T hi)
     return x >= lo && x <= hi;
 }
 
+namespace utils {
+int round_ftoi(float f);
+}
+
 template<typename Base, typename Derived>
 std::unique_ptr<Base> static_upcast(std::unique_ptr<Derived> &&ptr)
 {
