@@ -48,7 +48,6 @@ struct Vec3f;
 
 /* TODO: move these elsewhere */
 static constexpr const float ROOM_Z_DISTANCE = 7.0f;
-static constexpr const float ROOM_WALL_ALIGN = 0.008f;
 
 class MapCanvasRoomDrawer final
 {

@@ -258,12 +258,12 @@ void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
         m_opengl.apply(XColor4f{color});
         m_opengl.apply(XEnable{XOption::BLEND});
         m_opengl.apply(XDisable{XOption::DEPTH_TEST});
-        m_opengl.draw(DrawType::POLYGON,
+        m_opengl.draw(DrawType::TRIANGLE_STRIP,
                       std::vector<Vec3f>{
                           Vec3f{0.0f, 0.0f, 1.0f},
                           Vec3f{0.0f, 0.25f + height, 1.0f},
-                          Vec3f{0.2f + width, 0.25f + height, 1.0f},
                           Vec3f{0.2f + width, 0.0f, 1.0f},
+                          Vec3f{0.2f + width, 0.25f + height, 1.0f},
                       });
         m_opengl.apply(XDisable{XOption::BLEND});
 
@@ -437,12 +437,12 @@ void MapCanvasRoomDrawer::drawTextBox(
     // Render background
     m_opengl.apply(XColor4f{0, 0, 0, 0.3f});
     m_opengl.apply(XEnable{XOption::BLEND});
-    m_opengl.draw(DrawType::POLYGON,
+    m_opengl.draw(DrawType::TRIANGLE_STRIP,
                   std::vector<Vec3f>{
                       Vec3f{0.0f, 0.0f, 1.0f},
                       Vec3f{0.0f, 0.25f + height, 1.0f},
-                      Vec3f{0.2f + width, 0.25f + height, 1.0f},
                       Vec3f{0.2f + width, 0.0f, 1.0f},
+                      Vec3f{0.2f + width, 0.25f + height, 1.0f},
                   });
     m_opengl.apply(XDisable{XOption::BLEND});
 

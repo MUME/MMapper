@@ -185,13 +185,13 @@ struct MapCanvasData
         XDisplayList room{};
         struct
         {
-            XDisplayList outer{};
-            XDisplayList inner{};
+            XDisplayList outline{};
+            XDisplayList filled{};
 
             void destroyAll()
             {
-                outer.destroy();
-                inner.destroy();
+                outline.destroy();
+                filled.destroy();
             }
         } room_selection{}, character_hint{};
 

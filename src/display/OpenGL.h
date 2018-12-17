@@ -56,6 +56,9 @@ struct Vec3f
 {
     float x = 0.0f, y = 0.0f, z = 0.0f;
     explicit Vec3f() = default;
+    explicit Vec3f(Vec2f v, float z)
+        : Vec3f(v.x, v.y, z)
+    {}
     explicit Vec3f(float x, float y, float z)
         : x{x}
         , y{y}
@@ -79,7 +82,7 @@ public:
     {}
 };
 
-enum class DrawType { LINES, LINE_LOOP, LINE_STRIP, POINTS, POLYGON, TRIANGLES, TRIANGLE_STRIP };
+enum class DrawType { LINES, LINE_LOOP, LINE_STRIP, POINTS, TRIANGLES, TRIANGLE_STRIP };
 
 class XColor4f
 {
@@ -219,6 +222,10 @@ public:
         : type{type}
         , args{std::move(args)}
     {}
+
+public:
+    DrawType getType() const { return type; }
+    const std::vector<Vec3f> &getArgs() const { return args; }
 };
 
 class XDrawTextured
@@ -342,7 +349,6 @@ private:
             CASE(LINE_STRIP);
             CASE(LINES);
             CASE(POINTS);
-            CASE(POLYGON);
             CASE(TRIANGLES);
             CASE(TRIANGLE_STRIP);
         }
