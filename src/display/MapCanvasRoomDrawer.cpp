@@ -173,6 +173,27 @@ static QColor getVerticalColor(const ExitFlags &flags, const QColor &noFleeColor
     }
 }
 
+static XColor4f getWallDoorColor(const qint32 layer)
+{
+    // change wall/door color depending on the layer
+    if (layer == 0)
+        return XColor4f{Qt::black};
+    else if (layer > 0)
+        return XColor4f{0.3f, 0.3f, 0.3f, 0.6f};
+    else
+        return XColor4f{Qt::black, 0.5f - 0.03f * static_cast<float>(layer)};
+}
+
+static XColor4f getRoomColor(const qint32 layer)
+{
+    if (layer == 0)
+        return XColor4f{Qt::white, 0.9f};
+    else if (layer > 0)
+        return XColor4f{0.3f, 0.3f, 0.3f, 0.6f - 0.2f * static_cast<float>(layer)};
+    else
+        return XColor4f{Qt::white, 1.0f};
+}
+
 static QString getDoorPostFix(const Room *const room, const ExitDirection dir)
 {
     static constexpr const auto SHOWN_FLAGS = DoorFlag::NEED_KEY | DoorFlag::NO_PICK
@@ -501,6 +522,7 @@ void MapCanvasRoomDrawer::drawFlow(const Room *const room,
 
 void MapCanvasRoomDrawer::drawExit(const Room *const room,
                                    const RoomIndex &rooms,
+                                   const qint32 layer,
                                    const ExitDirection dir)
 {
     const auto drawNotMappedExits = getConfig().canvas.drawNotMappedExits;
@@ -532,11 +554,13 @@ void MapCanvasRoomDrawer::drawExit(const Room *const room,
         if (!isDoor && !exit.outIsEmpty()) {
             drawListWithLineStipple(wallList, WALL_COLOR_WALL_DOOR);
         } else {
+            m_opengl.apply(getWallDoorColor(layer));
             m_opengl.callList(wallList);
         }
     }
     // door
     if (isDoor) {
+        m_opengl.apply(getWallDoorColor(layer));
         m_opengl.callList(doorList);
     }
 }
@@ -563,14 +587,7 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room,
     // TODO(nschimme): https://stackoverflow.com/questions/6017176/gllinestipple-deprecated-in-opengl-3-1
     m_opengl.apply(LineStippleType::TWO);
 
-    if (layer > 0) {
-        if (getConfig().canvas.drawUpperLayersTextured) {
-            m_opengl.apply(XEnable{XOption::POLYGON_STIPPLE});
-        } else {
-            m_opengl.apply(XDisable{XOption::POLYGON_STIPPLE});
-            m_opengl.apply(XEnable{XOption::BLEND});
-        }
-    } else if (layer == 0) {
+    if (layer >= 0) {
         m_opengl.apply(XEnable{XOption::BLEND});
     }
 
@@ -581,18 +598,14 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room,
     m_opengl.glTranslatef(0, 0, 0.005f);
 
     if (layer > 0) {
-        m_opengl.apply(XDisable{XOption::POLYGON_STIPPLE});
-        m_opengl.apply(XColor4f{0.3f, 0.3f, 0.3f, 0.6f});
         m_opengl.apply(XEnable{XOption::BLEND});
-    } else {
-        m_opengl.apply(XColor4f{Qt::black});
     }
 
     m_opengl.apply(XDevicePointSize{3.0});
     m_opengl.apply(XDeviceLineWidth{2.4f});
 
     for (auto dir : ALL_EXITS_NESW) {
-        drawExit(room, rooms, dir);
+        drawExit(room, rooms, layer, dir);
     }
 
     m_opengl.apply(XDevicePointSize{3.0});
@@ -608,6 +621,7 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room,
         m_opengl.apply(XDisable{XOption::BLEND});
     }
 
+    // Boost the colors of rooms that are on a different layer
     m_opengl.glTranslatef(0, 0, 0.0100f);
     if (layer < 0) {
         m_opengl.apply(XEnable{XOption::BLEND});
@@ -618,7 +632,6 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room,
         m_opengl.apply(XDisable{XOption::BLEND});
     } else if (layer > 0) {
         m_opengl.apply(XDisable{XOption::LINE_STIPPLE});
-
         m_opengl.apply(XEnable{XOption::BLEND});
         m_opengl.apply(XDisable{XOption::DEPTH_TEST});
         m_opengl.apply(XColor4f{Qt::white, 0.1f});
@@ -627,7 +640,8 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room,
         m_opengl.apply(XDisable{XOption::BLEND});
     }
 
-    if (!locks[room->getId()].empty()) { // ---> room is locked
+    // Locked rooms have a red hint
+    if (!locks[room->getId()].empty()) {
         m_opengl.apply(XEnable{XOption::BLEND});
         m_opengl.apply(XDisable{XOption::DEPTH_TEST});
         m_opengl.apply(XColor4f{0.6f, 0.0f, 0.0f, 0.2f});
@@ -648,12 +662,16 @@ void MapCanvasRoomDrawer::drawUpperLayers(const Room *const room,
                                           const RoadIndex &roadIndex,
                                           const bool wantExtraDetail)
 {
-    if (layer > 0 && !getConfig().canvas.drawUpperLayersTextured) {
-        m_opengl.apply(XEnable{XOption::BLEND});
-        m_opengl.apply(XColor4f{0.3f, 0.3f, 0.3f, 0.6f - 0.2f * static_cast<float>(layer)});
-        m_opengl.callList(m_gllist.room);
-        m_opengl.apply(XDisable{XOption::BLEND});
-        return;
+    auto roomColor = getRoomColor(layer);
+    if (layer > 0) {
+        if (!getConfig().canvas.drawUpperLayersTextured) {
+            m_opengl.apply(XEnable{XOption::BLEND});
+            m_opengl.apply(roomColor);
+            m_opengl.callList(m_gllist.room);
+            m_opengl.apply(XDisable{XOption::BLEND});
+            return;
+        }
+        m_opengl.apply(XEnable{XOption::POLYGON_STIPPLE});
     }
 
     const auto roomTerrainType = room->getTerrainType();
@@ -663,7 +681,7 @@ void MapCanvasRoomDrawer::drawUpperLayers(const Room *const room,
 
     m_opengl.apply(XEnable{XOption::BLEND});
     m_opengl.apply(XEnable{XOption::TEXTURE_2D});
-    m_opengl.apply(XColor4f{Qt::white, layer == 0 ? 0.9f : 1.0f});
+    m_opengl.apply(roomColor);
     texture->bind();
     m_opengl.callList(m_gllist.room);
 
@@ -674,9 +692,6 @@ void MapCanvasRoomDrawer::drawUpperLayers(const Room *const room,
         m_opengl.apply(
             XColor4f{0.1f, 0.0f, 0.0f, room->getLightType() == RoomLightType::DARK ? 0.4f : 0.2f});
         m_opengl.callList(m_gllist.room);
-
-        // Undo dark color
-        m_opengl.apply(XColor4f{Qt::white, layer == 0 ? 0.9f : 1.0f});
     }
 
     // Only display at a certain scale
@@ -699,10 +714,10 @@ void MapCanvasRoomDrawer::drawUpperLayers(const Room *const room,
                           });
 
             m_opengl.apply(XEnable{XOption::TEXTURE_2D});
-
-            // Undo red color
-            m_opengl.apply(XColor4f{Qt::white, layer == 0 ? 0.9f : 1.0f});
         }
+
+        // Restore room color from dark room or noride red cross
+        m_opengl.apply(roomColor);
 
         // Trail Support
         if (roadIndex != RoadIndex::NONE && roomTerrainType != RoomTerrainType::ROAD) {
@@ -731,6 +746,9 @@ void MapCanvasRoomDrawer::drawUpperLayers(const Room *const room,
         m_opengl.apply(XDisable{XOption::BLEND});
         m_opengl.apply(XDisable{XOption::TEXTURE_2D});
     }
+
+    if (layer > 0)
+        m_opengl.apply(XDisable{XOption::POLYGON_STIPPLE});
 }
 
 void MapCanvasRoomDrawer::drawRoomConnectionsAndDoors(const Room *const room, const RoomIndex &rooms)
@@ -877,7 +895,7 @@ void MapCanvasRoomDrawer::drawVertical(
      * but the transparent display list doesn't.
      * Door display list doesn't set its own color, but flow does. */
     const auto useTransparent = layer > 0;
-    m_opengl.apply(useTransparent ? transparent : opaque, XColor4f{Qt::black});
+    m_opengl.apply(getWallDoorColor(layer), useTransparent ? transparent : opaque);
 
     if (flags.isDoor()) {
         m_opengl.callList(doorlist);
@@ -896,7 +914,6 @@ void MapCanvasRoomDrawer::drawListWithLineStipple(const XDisplayList list, const
     m_opengl.apply(XEnable{XOption::LINE_STIPPLE});
     m_opengl.apply(XColor4f{color});
     m_opengl.callList(list);
-    m_opengl.apply(XColor4f{Qt::black});
     m_opengl.apply(XDisable{XOption::LINE_STIPPLE});
 }
 

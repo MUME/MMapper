@@ -93,7 +93,7 @@ public:
                       const MapCanvasData::DrawLists::ExitUpDown::OpaqueTransparent &exlists,
                       XDisplayList doorlist);
 
-    void drawExit(const Room *const room, const RoomIndex &rooms, ExitDirection dir);
+    void drawExit(const Room *const room, const RoomIndex &rooms, qint32 layer, ExitDirection dir);
     void drawRoomConnectionsAndDoors(const Room *room, const RoomIndex &rooms);
     void drawUpperLayers(const Room *room,
                          qint32 layer,
