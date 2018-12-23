@@ -24,121 +24,182 @@
 ************************************************************************/
 
 #include "map.h"
+
 #include "../expandoracommon/AbstractRoomFactory.h"
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/room.h"
 #include "AbstractRoomVisitor.h"
+
+#include <map>
+#include <memory>
 #include <utility>
 
-void Map::clear()
+struct Map::Pimpl
 {
-    m_map.clear();
-}
+    explicit Pimpl() = default;
+    virtual ~Pimpl();
+    virtual void clear() = 0;
+    virtual void getRooms(AbstractRoomVisitor &stream,
+                          const Coordinate &ulf,
+                          const Coordinate &lrb) const = 0;
+    virtual void fillArea(AbstractRoomFactory *factory, const Coordinate &ulf, const Coordinate &lrb)
+        = 0;
+    virtual bool defined(const Coordinate &c) const = 0;
+    virtual void set(const Coordinate &c, Room *room) = 0;
+    virtual void remove(const Coordinate &c) = 0;
+    virtual Room *get(const Coordinate &c) const = 0;
+};
 
-void Map::getRooms(AbstractRoomVisitor &stream, const Coordinate &ulf, const Coordinate &lrb) const
+Map::Pimpl::~Pimpl() = default;
+
+class MapOrderedTree final : public Map::Pimpl
 {
-    // QTime start = QTime::currentTime();
-    // int checks = 0;
-    const int xmin = (ulf.x < lrb.x ? ulf.x : lrb.x) - 1;
-    const int xmax = (ulf.x > lrb.x ? ulf.x : lrb.x) + 1;
-    const int ymin = (ulf.y < lrb.y ? ulf.y : lrb.y) - 1;
-    const int ymax = (ulf.y > lrb.y ? ulf.y : lrb.y) + 1;
-    const int zmin = (ulf.z < lrb.z ? ulf.z : lrb.z) - 1;
-    const int zmax = (ulf.z > lrb.z ? ulf.z : lrb.z) + 1;
+private:
+    // REVISIT: consider using something more efficient
+    std::map<int, std::map<int, std::map<int, Room *>>> map{};
 
-    auto zUpper = m_map.lower_bound(zmax);
-    for (auto z = m_map.upper_bound(zmin); z != zUpper; ++z) {
-        auto &ymap = (*z).second;
-        auto yUpper = ymap.lower_bound(ymax);
-        for (auto y = ymap.upper_bound(ymin); y != yUpper; ++y) {
-            auto &xmap = (*y).second;
-            auto xUpper = xmap.lower_bound(xmax);
-            for (auto x = xmap.upper_bound(xmin); x != xUpper; ++x) {
-                stream.visit(x->second);
-                // ++checks;
-            }
-        }
-    }
-    // cout << "rendering took " << start.msecsTo(QTime::currentTime()) << " msecs for " << checks << " checks" << endl;
-}
+public:
+    explicit MapOrderedTree() = default;
+    virtual ~MapOrderedTree() override;
 
-void Map::fillArea(AbstractRoomFactory *factory, const Coordinate &ulf, const Coordinate &lrb)
-{
-    const int xmin = ulf.x < lrb.x ? ulf.x : lrb.x;
-    const int xmax = ulf.x > lrb.x ? ulf.x : lrb.x;
-    const int ymin = ulf.y < lrb.y ? ulf.y : lrb.y;
-    const int ymax = ulf.y > lrb.y ? ulf.y : lrb.y;
-    const int zmin = ulf.z < lrb.z ? ulf.z : lrb.z;
-    const int zmax = ulf.z > lrb.z ? ulf.z : lrb.z;
+    void clear() override { map.clear(); }
 
-    for (int z = zmin; z <= zmax; ++z) {
-        for (int y = ymin; y <= ymax; ++y) {
-            for (int x = xmin; x <= xmax; ++x) {
-                Room *&room = m_map[z][y][x];
-                if (room == nullptr) {
-                    room = factory->createRoom();
+    void getRooms(AbstractRoomVisitor &stream,
+                  const Coordinate &ulf,
+                  const Coordinate &lrb) const override
+    {
+        const int xmin = (ulf.x < lrb.x ? ulf.x : lrb.x) - 1;
+        const int xmax = (ulf.x > lrb.x ? ulf.x : lrb.x) + 1;
+        const int ymin = (ulf.y < lrb.y ? ulf.y : lrb.y) - 1;
+        const int ymax = (ulf.y > lrb.y ? ulf.y : lrb.y) + 1;
+        const int zmin = (ulf.z < lrb.z ? ulf.z : lrb.z) - 1;
+        const int zmax = (ulf.z > lrb.z ? ulf.z : lrb.z) + 1;
+
+        auto zUpper = map.lower_bound(zmax);
+        for (auto z = map.upper_bound(zmin); z != zUpper; ++z) {
+            auto &ymap = (*z).second;
+            auto yUpper = ymap.lower_bound(ymax);
+            for (auto y = ymap.upper_bound(ymin); y != yUpper; ++y) {
+                auto &xmap = (*y).second;
+                auto xUpper = xmap.lower_bound(xmax);
+                for (auto x = xmap.upper_bound(xmin); x != xUpper; ++x) {
+                    stream.visit(x->second);
                 }
             }
         }
     }
-}
 
-/**
- * doesn't modify c
- */
-bool Map::defined(const Coordinate &c) const
-{
-    const auto &z = m_map.find(c.z);
-    if (z != m_map.end()) {
-        auto &ySeg = (*z).second;
-        const auto &y = ySeg.find(c.y);
-        if (y != ySeg.end()) {
-            const auto &xSeg = (*y).second;
-            if (xSeg.find(c.x) != xSeg.end()) {
-                return true;
+    void fillArea(AbstractRoomFactory *factory,
+                  const Coordinate &ulf,
+                  const Coordinate &lrb) override
+    {
+        const int xmin = ulf.x < lrb.x ? ulf.x : lrb.x;
+        const int xmax = ulf.x > lrb.x ? ulf.x : lrb.x;
+        const int ymin = ulf.y < lrb.y ? ulf.y : lrb.y;
+        const int ymax = ulf.y > lrb.y ? ulf.y : lrb.y;
+        const int zmin = ulf.z < lrb.z ? ulf.z : lrb.z;
+        const int zmax = ulf.z > lrb.z ? ulf.z : lrb.z;
+
+        for (int z = zmin; z <= zmax; ++z) {
+            for (int y = ymin; y <= ymax; ++y) {
+                for (int x = xmin; x <= xmax; ++x) {
+                    Room *&room = map[z][y][x];
+                    if (room == nullptr) {
+                        room = factory->createRoom();
+                    }
+                }
             }
         }
     }
-    return false;
+
+    /**
+     * doesn't modify c
+     */
+    bool defined(const Coordinate &c) const override
+    {
+        const auto &z = map.find(c.z);
+        if (z != map.end()) {
+            auto &ySeg = (*z).second;
+            const auto &y = ySeg.find(c.y);
+            if (y != ySeg.end()) {
+                const auto &xSeg = (*y).second;
+                if (xSeg.find(c.x) != xSeg.end()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    Room *get(const Coordinate &c) const override
+    { // map<K,V>::operator[] is not const!
+        //    if (!defined(c)) {
+        //        return nullptr;
+        //    }
+        //    return m_map[c.z][c.y][c.x];
+
+        const auto &zmap = map;
+        const auto &z = zmap.find(c.z);
+        if (z == zmap.end())
+            return nullptr;
+
+        const auto &ymap = z->second;
+        const auto &y = ymap.find(c.y);
+        if (y == ymap.end())
+            return nullptr;
+
+        const auto &xmap = y->second;
+        const auto &x = xmap.find(c.x);
+        if (x == xmap.end())
+            return nullptr;
+
+        return x->second;
+    }
+
+    void remove(const Coordinate &c) override { map[c.z][c.y].erase(c.x); }
+
+    /**
+     * doesn't modify c
+     */
+    void set(const Coordinate &c, Room *room) override { map[c.z][c.y][c.x] = room; }
+};
+
+MapOrderedTree::~MapOrderedTree() = default;
+
+Map::Map()
+    : m_pimpl{std::unique_ptr<Pimpl>(static_cast<Pimpl *>(new MapOrderedTree()))}
+{}
+
+Map::~Map() = default;
+
+bool Map::defined(const Coordinate &c) const
+{
+    return m_pimpl->defined(c);
 }
 
 Room *Map::get(const Coordinate &c) const
 {
-    // map<K,V>::operator[] is not const!
-    //    if (!defined(c)) {
-    //        return nullptr;
-    //    }
-    //    return m_map[c.z][c.y][c.x];
-
-    const auto &zmap = m_map;
-    const auto &z = zmap.find(c.z);
-    if (z == zmap.end())
-        return nullptr;
-
-    const auto &ymap = z->second;
-    const auto &y = ymap.find(c.y);
-    if (y == ymap.end())
-        return nullptr;
-
-    const auto &xmap = y->second;
-    const auto &x = xmap.find(c.x);
-    if (x == xmap.end())
-        return nullptr;
-
-    return x->second;
+    return m_pimpl->get(c);
 }
 
 void Map::remove(const Coordinate &c)
 {
-    m_map[c.z][c.y].erase(c.x);
+    return m_pimpl->remove(c);
 }
 
-/**
- * doesn't modify c
- */
-void Map::set(const Coordinate &c, Room *room)
+void Map::clear()
 {
-    m_map[c.z][c.y][c.x] = room;
+    return m_pimpl->clear();
+}
+
+void Map::getRooms(AbstractRoomVisitor &stream, const Coordinate &ulf, const Coordinate &lrb) const
+{
+    return m_pimpl->getRooms(stream, ulf, lrb);
+}
+
+void Map::fillArea(AbstractRoomFactory *factory, const Coordinate &ulf, const Coordinate &lrb)
+{
+    return m_pimpl->fillArea(factory, ulf, lrb);
 }
 
 /**
@@ -147,7 +208,7 @@ void Map::set(const Coordinate &c, Room *room)
 Coordinate Map::setNearest(const Coordinate &in_c, Room &room)
 {
     const Coordinate c = getNearestFree(in_c);
-    set(c, &room);
+    m_pimpl->set(c, &room);
     room.setPosition(c);
     return c;
 }
@@ -165,7 +226,7 @@ Coordinate Map::getNearestFree(const Coordinate &p)
         } else {
             c = p - i.next();
         }
-        if (!defined(c)) {
+        if (!m_pimpl->defined(c)) {
             return c;
         }
     }

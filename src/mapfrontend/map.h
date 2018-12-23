@@ -29,11 +29,13 @@
 #define MAP_H
 
 #include "../expandoracommon/coordinate.h"
-#include <map>
+#include "../global/RuleOf5.h"
+
+#include <memory>
 
 class AbstractRoomFactory;
-class Room;
 class AbstractRoomVisitor;
+class Room;
 
 /**
  * The Map stores the geographic relations of rooms to each other
@@ -43,6 +45,16 @@ class AbstractRoomVisitor;
 class Map final
 {
 public:
+    struct Pimpl;
+
+private:
+    std::unique_ptr<Pimpl> m_pimpl;
+
+public:
+    explicit Map();
+    ~Map();
+    DELETE_CTORS_AND_ASSIGN_OPS(Map);
+
     bool defined(const Coordinate &c) const;
     Coordinate setNearest(const Coordinate &c, Room &room);
     Room *get(const Coordinate &c) const;
@@ -54,9 +66,6 @@ public:
 private:
     void set(const Coordinate &c, Room *room);
     Coordinate getNearestFree(const Coordinate &c);
-
-    // REVISIT: consider using something more efficient,
-    std::map<int, std::map<int, std::map<int, Room *>>> m_map{};
 };
 
 class CoordinateIterator final
