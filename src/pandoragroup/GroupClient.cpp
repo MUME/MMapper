@@ -102,7 +102,7 @@ void GroupClient::errorInConnection(GroupSocket *const /* socket */, const QStri
         break;
 
     case QAbstractSocket::RemoteHostClosedError:
-        emit messageBox(QString("Connection closed: %1.").arg(errorString));
+        log_message(QString("Connection closed: %1.").arg(errorString));
         break;
 
     case QAbstractSocket::HostNotFoundError:
