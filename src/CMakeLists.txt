@@ -559,9 +559,18 @@ if(WIN32)
         COMPONENT libraries
     )
 
+    if(WITH_DRMINGW)
+        # Include shortcut to crash logs
+        install(FILES
+            "${PROJECT_SOURCE_DIR}/appdata/Crash Log.lnk"
+            DESTINATION .
+            COMPONENT applications
+        )
+    endif()
+
     # Install Help Documentation
     install(FILES
-        "${PROJECT_SOURCE_DIR}/docs/Installation Guide.URL"
+        "${PROJECT_SOURCE_DIR}/appdata/Installation Guide.URL"
         "${PROJECT_SOURCE_DIR}/docs/mapping_advice.txt"
         DESTINATION .
         COMPONENT help
@@ -573,7 +582,7 @@ if(WIN32)
 
     # Windows (NSIS) Settings
     set(CPACK_NSIS_EXECUTABLES_DIRECTORY "bin")
-    set(CPACK_NSIS_MENU_LINKS "bin/mmapper.exe;MMapper;Installation Guide.URL;Installation Guide")
+    set(CPACK_NSIS_MENU_LINKS "bin/mmapper.exe;MMapper;Installation Guide.URL;MMapper Help;Crash Log.lnk;MMapper Crash Log")
     set(CPACK_NSIS_INSTALLED_ICON_NAME "mmapper.exe")
     set(CPACK_NSIS_DISPLAY_NAME "MMapper")
     set(CPACK_NSIS_HELP_LINK "http:\\\\\\\\github.com\\\\mume\\\\mmapper")
@@ -622,7 +631,7 @@ if(APPLE)
 
     # Install Help Documentation
     install(FILES
-        "${PROJECT_SOURCE_DIR}/docs/Installation Guide.URL"
+        "${PROJECT_SOURCE_DIR}/appdata/Installation Guide.URL"
         "${PROJECT_SOURCE_DIR}/docs/mapping_advice.txt"
         DESTINATION MMapper
         COMPONENT help
