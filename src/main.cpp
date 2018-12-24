@@ -37,6 +37,10 @@
 #include "global/utils.h"
 #include "mainwindow/mainwindow.h"
 
+#ifdef WITH_DRMINGW
+#include <windows.h>
+#endif
+
 // REVISIT: move splash files somewhere else?
 // (presumably not in the "root" src/ directory?)
 struct ISplash
@@ -82,6 +86,38 @@ static void tryUseHighDpi(QApplication &app)
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
 #if QT_VERSION >= 0x050600
     app.setAttribute(Qt::AA_EnableHighDpiScaling);
+#endif
+}
+
+static void tryInitDrMingw()
+{
+#ifdef WITH_DRMINGW
+    wchar_t path[MAX_PATH];
+    QString pathStr = QCoreApplication::applicationDirPath().replace(L'/', L'\\')
+                      + QStringLiteral("\\exchndl.dll");
+    if (pathStr.size() > MAX_PATH - 1) {
+        qWarning() << "Failed finding exchndl library";
+        return;
+    }
+    int pathLen = pathStr.toWCharArray(path);
+    path[pathLen] = L'\0'; // toWCharArray doesn't add NULL terminator
+    HMODULE hMod = LoadLibraryW(path);
+    if (!hMod) {
+        qWarning() << "Failed loading exchndl library";
+        return;
+    }
+    // No need to call ExcHndlInit since the crash handler is installed on DllMain
+    auto myExcHndlSetLogFileNameA = reinterpret_cast<BOOL(APIENTRY *)(const char *)>(
+        GetProcAddress(hMod, "ExcHndlSetLogFileNameA"));
+    if (!myExcHndlSetLogFileNameA) {
+        qWarning() << "Failed initializing exchndl library";
+        return;
+    }
+    // Set the log file path to %LocalAppData%\mmappercrash.log
+    QString logFile = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation)
+                          .replace(L'/', L'\\')
+                      + QStringLiteral("\\mmappercrash.log");
+    myExcHndlSetLogFileNameA(logFile.toLocal8Bit());
 #endif
 }
 
@@ -183,6 +219,7 @@ int main(int argc, char **argv)
 
     QApplication app(argc, argv);
     Q_INIT_RESOURCE(mmapper2);
+    tryInitDrMingw();
     tryUseHighDpi(app);
     auto tryLoadingWinSock = std::make_unique<WinSock>();
 

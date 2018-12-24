@@ -381,6 +381,10 @@ if(WITH_OPENSSL)
     target_link_libraries(mmapper ${OPENSSL_LIBRARIES})
 endif()
 
+if(WITH_DRMINGW)
+    add_dependencies(mmapper drmingw)
+endif()
+
 if(USE_TIDY)
     find_program(
         CLANG_TIDY_EXE
@@ -533,19 +537,19 @@ if(WIN32)
     )
 
     # Bundle Library Files
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-            set(WINDEPLOYQT_ARGS --debug)
-    elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-            set(WINDEPLOYQT_ARGS --release-with-debug-info)
-    elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-            set(WINDEPLOYQT_ARGS --release)
+    if(CMAKE_BUILD_TYPE_UPPER STREQUAL "DEBUG")
+       set(WINDEPLOYQT_ARGS --debug)
+    else()
+       set(WINDEPLOYQT_ARGS --release)
     endif()
+    set(WINDEPLOYQT_ARGS ${WINDEPLOYQT_ARGS} --dir ${CMAKE_CURRENT_BINARY_DIR}/bin --compiler-runtime --no-angle)
     find_program(WINDEPLOYQT_APP windeployqt)
     message(" - windeployqt path: ${WINDEPLOYQT_APP}")
+    message(" - windeployqt args: ${WINDEPLOYQT_ARGS}")
     add_custom_command(
             TARGET mmapper
             POST_BUILD
-            COMMAND ${WINDEPLOYQT_APP} ${WINDEPLOYQT_ARGS} ${CMAKE_CURRENT_BINARY_DIR}/mmapper.exe --dir ${CMAKE_CURRENT_BINARY_DIR}/bin --compiler-runtime
+            COMMAND ${WINDEPLOYQT_APP} ${WINDEPLOYQT_ARGS} ${CMAKE_CURRENT_BINARY_DIR}/mmapper.exe
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             COMMENT "Finding the Qt framework dependencies"
     )
@@ -652,7 +656,11 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A mud mapper especially written for the m
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "MMapper")
 
 # Components:
-set(CPACK_STRIP_FILES TRUE)
+if(CMAKE_BUILD_TYPE_UPPER MATCHES "^(DEBUG|RELWITHDEBINFO)$")
+    set(CPACK_STRIP_FILES FALSE)
+else()
+    set(CPACK_STRIP_FILES TRUE)
+endif()
 # Applications Component
 set(CPACK_COMPONENTS_ALL applications map libraries help)
 set(CPACK_COMPONENT_APPLICATIONS_DISPLAY_NAME "MMapper")

@@ -20,6 +20,9 @@ option(WITH_OPENSSL "Use OpenSSL for TLS encryption" ON)
 option(USE_TIDY "Run clang-tidy with the compiler" OFF)
 option(USE_IWYU "Run include-what-you-use with the compiler" OFF)
 option(USE_DISTCC "Use distcc for distributed builds" OFF)
+if(WIN32)
+   option(WITH_DRMINGW "Include Dr. Mingw crash dumping (Windows only)" ON)
+endif()
 
 # Apple users are most likely using brew
 if(APPLE)
@@ -58,27 +61,10 @@ if(WITH_ZLIB)
     else()
         if(WIN32)
             message(STATUS "Could not find local zlib; building as a static library")
+            add_subdirectory(external/zlib)
         else()
             message(FATAL_ERROR "zlib NOT found: use `-DWITH_ZLIB=OFF` to build with old map backwards compatability")
         endif()
-        include(ExternalProject)
-        ExternalProject_Add(zlib
-            GIT_REPOSITORY "https://github.com/madler/zlib.git"
-            GIT_TAG "v1.2.11"
-            SOURCE_DIR "${CMAKE_BINARY_DIR}/zlib-src"
-            BINARY_DIR "${CMAKE_BINARY_DIR}/zlib-build"
-            INSTALL_COMMAND ""
-            CMAKE_ARGS "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_SHARED_LIBS=OFF"
-            CMAKE_CACHE_ARGS "-DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}"
-            )
-        if(WIN32)
-            set(ZLIB_STATIC_LIBRARY_NAME zlibstatic)
-        else()
-            set(ZLIB_STATIC_LIBRARY_NAME z)
-        endif()
-        set(ZLIB_STATIC_LIBRARY ${CMAKE_BINARY_DIR}/zlib-build/${CMAKE_STATIC_LIBRARY_PREFIX}${ZLIB_STATIC_LIBRARY_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
-        set(ZLIB_LIBRARIES ${ZLIB_STATIC_LIBRARY})
-        set(ZLIB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/zlib-src ${CMAKE_BINARY_DIR}/zlib-build)
     endif()
 else()
     message(STATUS "Building without zlib")
@@ -169,7 +155,8 @@ if(EXISTS ${GIT_EXECUTABLE})
     endif()
 endif()
 
-if (CMAKE_BUILD_TYPE MATCHES "[Dd][Ee][Bb][Uu][Gg]")
+string(TOUPPER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_UPPER)
+if(CMAKE_BUILD_TYPE_UPPER STREQUAL "DEBUG")
     message(STATUS "Debug build type: ${CMAKE_BUILD_TYPE}")
     set(MMAPPER_IS_DEBUG "YES")
 else()
@@ -177,7 +164,16 @@ else()
     set(MMAPPER_IS_DEBUG "NO")
 endif()
 
-if (MMAPPER_IS_DEBUG)
+if(WITH_DRMINGW)
+    if(CMAKE_BUILD_TYPE_UPPER MATCHES "^(DEBUG|RELWITHDEBINFO)$")
+        add_subdirectory(external/drmingw)
+        add_definitions(/DWITH_DRMINGW)
+    else()
+        message(FATAL "Build MISSING debug symbols: use `-DWITH_DRMINGW=OFF` to build without crash reporting")
+    endif()
+endif()
+
+if(MMAPPER_IS_DEBUG)
     set(CMAKE_VERBOSE_MAKEFILE true)
 
     if(NOT MSVC)
@@ -204,8 +200,8 @@ endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     message(STATUS "Building with GCC (${CMAKE_CXX_COMPILER})")
-    if (MMAPPER_IS_DEBUG)
-        if (FALSE)
+    if(MMAPPER_IS_DEBUG)
+        if(FALSE)
             # This doesn't work on my machine. All the __asan_xxx symbols are undefined.
             message("-- Building with GCC address sanitizer")
             add_compile_options(-fsanitize=address)
@@ -263,8 +259,8 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     message(STATUS "Building with Clang (${CMAKE_CXX_COMPILER})")
     add_compile_options(-fno-standalone-debug)
 
-    if (MMAPPER_IS_DEBUG)
-        if (FALSE)
+    if(MMAPPER_IS_DEBUG)
+        if(FALSE)
             # segfaults in ASAN initializer on 32-bit Ubuntu 18.04.1 with clang 6.0
             # note: apparently -fsanitize=address can't be used with gnu libc 2.25+
             # Ubuntu 18.04.1 has libc 2.27.
@@ -273,7 +269,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
             set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
         endif()
 
-        if (TRUE)
+        if(TRUE)
             message(STATUS "Building with Clang undefined behavior sanitizer")
             add_compile_options(-fsanitize=undefined)
             set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined")
@@ -350,5 +346,8 @@ add_feature_info("WITH_OPENSSL" WITH_OPENSSL "encrypt connection to MUME with TL
 add_feature_info("USE_TIDY" USE_TIDY "")
 add_feature_info("USE_IWYU" USE_IWYU "")
 add_feature_info("USE_DISTCC" USE_DISTCC "")
+if(WIN32)
+    add_feature_info("WITH_DRMINGW" WITH_DRMINGW "")
+endif()
 feature_summary(WHAT ENABLED_FEATURES DESCRIPTION "Enabled options:")
 feature_summary(WHAT DISABLED_FEATURES DESCRIPTION "Disabled options:")

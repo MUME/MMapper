@@ -4,18 +4,11 @@ REM #### START
 REM ####
 FOR /f %%j in ("qmake.exe") DO SET QMAKE_EXISTS=%%~dp$PATH:j
 IF /i "%QMAKE_EXISTS%" == "" GOTO :noqmake
-IF /i "%1" == "" GOTO :release
-IF /i "%1" == "Debug" GOTO :debug
-IF /i "%1" == "Release" GOTO :release
+IF /i "%1" == "" SET BUILD_TYPE=RelWithDebInfo && GOTO :start
+IF /i "%1" == "Debug" SET BUILD_TYPE=Debug && GOTO :start
+IF /i "%1" == "Release" SET BUILD_TYPE=Release && GOTO :start
+IF /i "%1" == "RelWithDebInfo" SET BUILD_TYPE=RelWithDebInfo && GOTO :start
 GOTO :help
-
-:debug
-SET BUILD_TYPE=Debug
-GOTO :start
-
-:release
-SET BUILD_TYPE=Release
-GOTO :start
 
 :start
 REM ####
@@ -82,7 +75,7 @@ REM ####
 REM #### HELP
 REM ####
 :help
-ECHO Usage: winbuild [Release/Debug]
+ECHO Usage: winbuild [RelWithDebInfo/Release/Debug]
 goto :end
 
 
