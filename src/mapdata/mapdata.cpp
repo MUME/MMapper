@@ -251,6 +251,7 @@ void MapData::draw(const Coordinate &ulf, const Coordinate &lrb, MapCanvasRoomDr
     QMutexLocker locker(&mapLock);
     DrawStream drawer(screen, roomIndex, locks);
     map.getRooms(drawer, ulf, lrb);
+    drawer.draw();
 }
 
 bool MapData::execute(MapAction *const action, const SharedRoomSelection &selection)

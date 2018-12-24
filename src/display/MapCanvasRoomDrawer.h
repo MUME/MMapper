@@ -48,6 +48,12 @@ struct Vec3f;
 
 /* TODO: move these elsewhere */
 static constexpr const float ROOM_Z_DISTANCE = 7.0f;
+static constexpr const float ROOM_Z_LAYER_BUMP = 0.00001f;
+static constexpr const float ROOM_BOOST_BUMP = 0.01f;
+static constexpr const float ROOM_WALLS_BUMP = 0.009f; // was 0.005f but should be below boost
+
+using RoomVector = std::vector<const Room *>;
+using LayerToRooms = std::map<int, RoomVector>;
 
 class MapCanvasRoomDrawer final
 {
@@ -73,6 +79,11 @@ public:
         , m_textures{m_mapCanvasData.m_textures}
     {}
 
+    void drawRooms(const LayerToRooms &layerToRooms,
+                   const RoomIndex &roomIndex,
+                   const RoomLocks &locks);
+    void drawWallsAndExits(const Room *room, const RoomIndex &rooms);
+
     void drawInfoMark(InfoMark *);
 
     void drawRoomDoorName(const Room *sourceRoom,
@@ -95,10 +106,6 @@ public:
 
     void drawExit(const Room *const room, const RoomIndex &rooms, qint32 layer, ExitDirection dir);
     void drawRoomConnectionsAndDoors(const Room *room, const RoomIndex &rooms);
-    void drawUpperLayers(const Room *room,
-                         qint32 layer,
-                         const RoadIndex &roadIndex,
-                         bool wantExtraDetail);
     void drawInfoMarks();
 
     void renderText(float x,
@@ -113,7 +120,8 @@ public:
     void drawListWithLineStipple(XDisplayList list, const QColor &color);
 
     void drawTextBox(const QString &name, float x, float y, float width, float height);
-    void drawRoom(const Room *room, const RoomIndex &rooms, const RoomLocks &locks);
+    void drawRoom(const Room *room, bool wantExtraDetail);
+    void drawBoost(const Room *room, const RoomLocks &locks);
 
 private:
     void drawConnEndTriUpDownUnknown(qint32 dX, qint32 dY, float dstZ);

@@ -63,7 +63,6 @@ class RoomRecipient;
 class ShortestPathRecipient;
 
 using ConstRoomList = QList<const Room *>;
-using RoomVector = QVector<Room *>;
 using MarkerList = QLinkedList<InfoMark *>;
 using MarkerListIterator = QLinkedListIterator<InfoMark *>;
 

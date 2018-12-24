@@ -27,6 +27,9 @@
 #ifndef DRAWSTREAM_H
 #define DRAWSTREAM_H
 
+#include <map>
+#include <vector>
+
 #include "../display/mapcanvas.h"
 #include "../mapfrontend/AbstractRoomVisitor.h"
 
@@ -39,9 +42,12 @@ public:
     virtual ~DrawStream() override;
     virtual void visit(const Room *room) override;
 
+    void draw() const;
+
 private:
+    LayerToRooms layerToRooms;
     MapCanvasRoomDrawer &canvas;
-    const RoomIndex &rooms;
+    const RoomIndex &roomIndex;
     const RoomLocks &locks;
 };
 
