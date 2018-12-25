@@ -92,7 +92,15 @@ MumeSslSocket::MumeSslSocket(QObject *parent)
     , m_socket{this}
     , m_timer{this}
 {
-    m_socket.setPeerVerifyMode(QSslSocket::QueryPeer);
+    const auto get_ssl_config = [this]() {
+        auto config = m_socket.sslConfiguration();
+        config.setPeerVerifyMode(QSslSocket::QueryPeer);
+        // CVE-2012-4929 forced the below option to be enabled by default but we can disable it because
+        // the vulernability only impacts browsers
+        config.setSslOption(QSsl::SslOption::SslOptionDisableCompression, false);
+        return config;
+    };
+    m_socket.setSslConfiguration(get_ssl_config());
     connect(&m_socket,
             static_cast<void (QAbstractSocket::*)()>(&QAbstractSocket::connected),
             this,

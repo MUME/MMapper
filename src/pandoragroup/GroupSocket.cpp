@@ -50,12 +50,19 @@ GroupSocket::GroupSocket(GroupAuthority *authority, QObject *parent)
     timer.setSingleShot(true);
     connect(&timer, &QTimer::timeout, this, &GroupSocket::onTimeout);
 
-    auto config = socket.sslConfiguration();
-    config.setCaCertificates({});
-    config.setLocalCertificate(authority->getLocalCertificate());
-    config.setPrivateKey(authority->getPrivateKey());
-    config.setPeerVerifyMode(QSslSocket::QueryPeer);
-    socket.setSslConfiguration(config);
+    const auto get_ssl_config = [this, authority]() {
+        auto config = socket.sslConfiguration();
+        config.setCaCertificates({});
+        config.setLocalCertificate(authority->getLocalCertificate());
+        config.setPrivateKey(authority->getPrivateKey());
+        config.setPeerVerifyMode(QSslSocket::QueryPeer);
+
+        // CVE-2012-4929 forced the below option to be enabled by default but we can disable it because
+        // the vulernability only impacts browsers
+        config.setSslOption(QSsl::SslOption::SslOptionDisableCompression, false);
+        return config;
+    };
+    socket.setSslConfiguration(get_ssl_config());
     socket.setPeerVerifyName(GROUP_COMMON_NAME);
     connect(&socket, &QAbstractSocket::hostFound, this, [this]() { emit sendLog("Host found..."); });
     connect(&socket, &QAbstractSocket::connected, this, [this]() {
