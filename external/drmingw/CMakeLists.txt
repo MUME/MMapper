@@ -1,6 +1,6 @@
-if (MSVC OR MINGW)
+if(MSVC OR MINGW)
     include(ExternalProject)
-    if ("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
+    if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
         ExternalProject_Add(drmingw
             URL https://github.com/jrfonseca/drmingw/releases/download/0.8.1/drmingw-0.8.1-win64.7z
             URL_HASH SHA1=8be29cc7efc0d611056c3b745e7f8de30d7c8baa
@@ -17,7 +17,7 @@ if (MSVC OR MINGW)
             UPDATE_COMMAND ""
             ALWAYS 0
         )
-    else ("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
+    else()
         ExternalProject_Add(drmingw
             URL https://github.com/jrfonseca/drmingw/releases/download/0.8.1/drmingw-0.8.1-win32.7z
             URL_HASH SHA1=5eefeefc392cae36afb891ca81e3756aa0d79644
@@ -34,5 +34,5 @@ if (MSVC OR MINGW)
             UPDATE_COMMAND ""
             ALWAYS 0
         )
-    endif ("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
-endif (MSVC OR MINGW)
+    endif()
+endif()

@@ -77,43 +77,10 @@ if(WITH_OPENSSL)
         message(STATUS "OpenSSL found: ${OPENSSL_LIBRARIES}")
     else()
         if(WIN32)
-            message(STATUS "OpenSSL NOT Found: download Win32 OpenSSL v1.0.2: https://slproweb.com/products/Win32OpenSSL.html")
-            message(STATUS "     or")
-        endif()
-        message(FATAL_ERROR "OpenSSL NOT found: use `-DWITH_OPENSSL=OFF` to build without TLS encryption")
-    endif()
-
-    # Ensure that we package OpenSSL DLLs with MMapper for Windows
-    if(WIN32)
-        if(NOT OPENSSL_ROOT_DIR)
-            set(OPENSSL_ROOT_DIR "C:\\OpenSSL-Win32")
-        endif()
-        file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/src/bin)
-        find_file(LIB_EAY_BIN
-                NAMES
-                libeay32.dll
-                HINTS
-                ${OPENSSL_ROOT_DIR}
-                PATH_SUFFIXES
-                bin)
-        if(LIB_EAY_BIN-NOTFOUND)
-            message(FATAL_ERROR "OpenSSL libeay32.dll was NOT found")
+            message(STATUS "Could not find local OpenSSL; downloading a precompiled library")
+            add_subdirectory(external/openssl)
         else()
-            configure_file(${LIB_EAY_BIN} ${CMAKE_CURRENT_BINARY_DIR}/src/bin/libeay32.dll COPYONLY)
-            message(STATUS "   Copied ${LIB_EAY_BIN} to src/bin/")
-        endif()
-        find_file(SSL_EAY_BIN
-                NAMES
-                ssleay32.dll
-                HINTS
-                ${OPENSSL_ROOT_DIR}
-                PATH_SUFFIXES
-                bin)
-        if(SSL_EAY_BIN-NOTFOUND)
-            message(FATAL_ERROR "OpenSSL ssleay32.dll was NOT found")
-        else()
-            configure_file(${SSL_EAY_BIN} ${CMAKE_CURRENT_BINARY_DIR}/src/bin/ssleay32.dll COPYONLY)
-            message(STATUS "   Copied ${SSL_EAY_BIN} to src/bin/")
+            message(FATAL_ERROR "OpenSSL NOT found: use `-DWITH_OPENSSL=OFF` to build without TLS encryption")
         endif()
     endif()
 else()

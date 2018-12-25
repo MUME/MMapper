@@ -379,6 +379,9 @@ endif()
 
 if(WITH_OPENSSL)
     target_link_libraries(mmapper ${OPENSSL_LIBRARIES})
+    if(NOT OPENSSL_FOUND)
+        add_dependencies(mmapper openssl)
+    endif()
 endif()
 
 if(WITH_DRMINGW)
