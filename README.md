@@ -1,6 +1,7 @@
 MMapper
 ============================
 [![Build Status](https://travis-ci.org/MUME/MMapper.svg?branch=master)](https://travis-ci.org/MUME/MMapper)
+[![Build Status](https://ci.appveyor.com/api/projects/status/github/MUME/MMapper?branch=master&svg=true)](https://ci.appveyor.com/project/MUME/MMapper)
 
 [![MMapper Screenshot](/../master/appdata/screenshot1.png?raw=true "MMapper")<br>Download the latest version of MMapper](https://github.com/MUME/MMapper/releases)
 

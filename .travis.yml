@@ -121,7 +121,7 @@ before_script:
   - cmake .. $MMAPPER_CMAKE_EXTRA
 
 script:
-  - make -j2
+  - cmake --build . -j $(getconf _NPROCESSORS_ONLN)
 
 after_success:
   - ctest -V
