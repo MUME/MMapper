@@ -48,7 +48,7 @@ struct Vec3f;
 
 /* TODO: move these elsewhere */
 static constexpr const float ROOM_Z_DISTANCE = 7.0f;
-static constexpr const float ROOM_Z_LAYER_BUMP = 0.00001f;
+static constexpr const float ROOM_Z_LAYER_BUMP = 0.0001f;
 static constexpr const float ROOM_BOOST_BUMP = 0.01f;
 static constexpr const float ROOM_WALLS_BUMP = 0.009f; // was 0.005f but should be below boost
 
