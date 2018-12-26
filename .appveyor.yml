@@ -14,6 +14,8 @@ environment:
     QTDIR: C:\Qt\5.11\mingw53_32
     MINGW_PATH: C:\Qt\Tools\mingw530_32
 
+image: Visual Studio 2017
+
 init:
   - git config --global core.autocrlf input
   - echo NUMBER_OF_PROCESSORS=%NUMBER_OF_PROCESSORS%
@@ -32,9 +34,6 @@ before_build:
 build:
 
 build_script:
-  # Do not use AppVeyor provided OpenSSL
-  - rd /s /q C:\OpenSSL-Win32
-  - rd /s /q C:\OpenSSL-Win64
   - if "%CMAKE_GENERATOR%" == "MinGW Makefiles" echo "Using MinGW"
   - cd c:\Build\MMapper
   - md winbuild
