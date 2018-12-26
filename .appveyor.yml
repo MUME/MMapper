@@ -32,6 +32,9 @@ before_build:
 build:
 
 build_script:
+  # Do not use AppVeyor provided OpenSSL
+  - rd /s /q C:\OpenSSL-Win32
+  - rd /s /q C:\OpenSSL-Win64
   - if "%CMAKE_GENERATOR%" == "MinGW Makefiles" echo "Using MinGW"
   - cd c:\Build\MMapper
   - md winbuild

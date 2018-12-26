@@ -87,8 +87,8 @@ install:
   - '[ "$TRAVIS_OS_NAME" != linux ] || sudo apt-get -qy install cmake'
   - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" != */opt-* ]] || sudo apt-get -qy install qt${QT}base'
   - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" == */opt-* ]] || sudo apt-get -qy install qt5-qmake qtbase5-dev'
-  - '[ "$TRAVIS_OS_NAME" != osx ] || brew install qt5 clang-format openssl'
-  - '[ "$TRAVIS_OS_NAME" != osx ] || brew upgrade openssl'
+  - '[ "$TRAVIS_OS_NAME" != osx ] || brew install qt5 clang-format'
+  - '[ "$TRAVIS_OS_NAME" != osx ] || brew upgrade openssl@1.1'
   - '[ "$TRAVIS_OS_NAME" != osx ] || brew link --force qt5'
   - '[ "$TRAVIS_OS_NAME" != osx ] || export PATH=/usr/local/opt/qt5/bin:$PATH'
   - qmake -v
