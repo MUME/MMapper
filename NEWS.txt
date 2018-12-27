@@ -1,4 +1,18 @@
 ================================
+MMapper 2.7.3 (December 26, 2018)
+================================
+
+New features:
+ - Allow TLS connections to be compressed
+ - Crash reporting added for Windows
+ - Added _glock command to toggle the group lock
+
+Bug fixes:
+ - Improved group manager stability after the host disconnected
+ - Group manager host disconnecting will now not cause a message box to appear 3x
+ - Major refactor of offline character movement and rendering pipeline
+
+================================
 MMapper 2.7.2 (December 8, 2018)
 ================================
 
