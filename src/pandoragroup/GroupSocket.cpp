@@ -274,6 +274,10 @@ void GroupSocket::cutMessageFromBuffer()
  */
 void GroupSocket::sendData(const QByteArray &data)
 {
+    if (socket.state() != QAbstractSocket::ConnectedState) {
+        qWarning() << "Socket is not connected";
+        return;
+    }
     QByteArray buff;
     QString len = QString("%1 ").arg(data.size());
     buff = len.toLatin1();
