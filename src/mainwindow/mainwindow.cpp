@@ -279,7 +279,7 @@ void MainWindow::readSettings()
     restoreState(settings.windowState);
     alwaysOnTopAct->setChecked(settings.alwaysOnTop);
     if (settings.alwaysOnTop)
-        setWindowFlags(windowFlags() & Qt::WindowStaysOnTopHint);
+        setWindowFlags(windowFlags() ^ Qt::WindowStaysOnTopHint);
 }
 
 void MainWindow::writeSettings()
