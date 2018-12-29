@@ -88,9 +88,9 @@ RemoteEditWidget::RemoteEditWidget(const bool editSession,
     , m_title(title)
     , m_body(body)
 {
-    setWindowFlag(Qt::WindowType::Widget, true);
-    setWindowFlag(Qt::WindowStaysOnTopHint, false);
-    setWindowFlag(Qt::WindowContextHelpButtonHint, false);
+    setWindowFlags(windowFlags() & Qt::WindowType::Widget);
+    setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
+    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
     setWindowTitle(m_title + " - MMapper " + (m_editSession ? "Editor" : "Viewer"));
 
     // REVISIT: can this be called as an initializer?

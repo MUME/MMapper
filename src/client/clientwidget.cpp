@@ -41,9 +41,9 @@ ClientWidget::ClientWidget(QWidget *parent)
     : QMainWindow(parent)
 {
     setWindowTitle("MMapper Client");
-    setWindowFlag(Qt::WindowType::Widget, true);
-    setWindowFlag(Qt::WindowStaysOnTopHint, false);
-    setWindowFlag(Qt::WindowContextHelpButtonHint, false);
+    setWindowFlags(windowFlags() & Qt::WindowType::Widget);
+    setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
+    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
     m_splitter = new QSplitter(this);
     m_splitter->setOrientation(Qt::Vertical);
