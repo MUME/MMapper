@@ -31,32 +31,76 @@
 #include <QMessageBox>
 #include <QMessageLogContext>
 #include <QPlainTextEdit>
+#include <QRegularExpression>
 #include <QScopedPointer>
 #include <QSize>
 #include <QStatusBar>
 #include <QString>
-#include <QVBoxLayout>
+#include <QTextDocument>
 #include <QtGui>
+#include <QtWidgets>
 
 #include "../configuration/configuration.h"
 
 class QWidget;
 
+static constexpr const auto MAX_LENGTH = 80;
+static const QRegularExpression s_ansiRx(R"(^\[((?:\d+;)*\d+)m$)");
+
+class LineHighlighter final : public QSyntaxHighlighter
+{
+public:
+    explicit LineHighlighter(QTextDocument *parent);
+    virtual ~LineHighlighter() override;
+
+    void highlightBlock(const QString &text) override
+    {
+        static const QRegularExpression quotedText(R"(^[[:space:]]*>)");
+        if (quotedText.match(text).hasMatch()) {
+            setCurrentBlockState(1);
+            return;
+        }
+        if (s_ansiRx.match(text).hasMatch())
+            return;
+        if (text.length() >= MAX_LENGTH) {
+            QTextCharFormat underlineFormat;
+            underlineFormat.setFontUnderline(true);
+            underlineFormat.setUnderlineStyle(QTextCharFormat::UnderlineStyle::WaveUnderline);
+            underlineFormat.setUnderlineColor(Qt::red);
+            auto length = text.length() - MAX_LENGTH;
+            setFormat(MAX_LENGTH, length, underlineFormat);
+        }
+    }
+};
+
+LineHighlighter::LineHighlighter(QTextDocument *const parent)
+    : QSyntaxHighlighter(parent)
+{}
+
+LineHighlighter::~LineHighlighter() = default;
+
 RemoteEditWidget::RemoteEditWidget(const bool editSession,
                                    const QString &title,
                                    const QString &body,
                                    QWidget *const parent)
-    : QDialog(parent)
+    : QMainWindow(parent)
     , m_editSession(editSession)
     , m_title(title)
     , m_body(body)
 {
-    setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
-    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
+    setWindowFlag(Qt::WindowType::Widget, true);
+    setWindowFlag(Qt::WindowStaysOnTopHint, false);
+    setWindowFlag(Qt::WindowContextHelpButtonHint, false);
     setWindowTitle(m_title + " - MMapper " + (m_editSession ? "Editor" : "Viewer"));
 
     // REVISIT: can this be called as an initializer?
     m_textEdit.reset(createTextEdit());
+
+    // REVISIT: Restore geometry from config?
+    setGeometry(QStyle::alignedRect(Qt::LeftToRight,
+                                    Qt::AlignCenter,
+                                    size(),
+                                    qApp->desktop()->availableGeometry()));
 
     show();
     m_textEdit->setFocus(); // REVISIT: can this be done in the creation function?
@@ -64,25 +108,7 @@ RemoteEditWidget::RemoteEditWidget(const bool editSession,
 
 QPlainTextEdit *RemoteEditWidget::createTextEdit()
 {
-    QVBoxLayout *const mainLayout = createLayout();
-    QPlainTextEdit *pTextEdit = createTextEdit(mainLayout);
-    addMenuBar(mainLayout, pTextEdit);
-    addStatusBar(mainLayout, pTextEdit);
-    return pTextEdit;
-}
-
-QVBoxLayout *RemoteEditWidget::createLayout()
-{
-    auto *const mainLayout = new QVBoxLayout(this);
-    mainLayout->setAlignment(Qt::AlignTop);
-    mainLayout->setContentsMargins(0, 0, 0, 0);
-    mainLayout->setSpacing(0);
-    return mainLayout;
-}
-
-QPlainTextEdit *RemoteEditWidget::createTextEdit(QVBoxLayout *const mainLayout)
-{
-    const auto &font = QFont(getConfig().integratedClient.font);
+    const QFont font(getConfig().integratedClient.font);
     const QFontMetrics fm(font);
     const int x = fm.averageCharWidth() * 80;
     const int y = fm.lineSpacing() * 24;
@@ -92,15 +118,13 @@ QPlainTextEdit *RemoteEditWidget::createTextEdit(QVBoxLayout *const mainLayout)
     pTextEdit->setPlainText(m_body);
     pTextEdit->setReadOnly(!m_editSession);
     pTextEdit->setMinimumSize(QSize(x, y));
-    mainLayout->addWidget(pTextEdit);
-    return pTextEdit;
-}
 
-void RemoteEditWidget::addMenuBar(QVBoxLayout *const mainLayout, const QPlainTextEdit *pTextEdit)
-{
-    auto *const menuBar = new QMenuBar(this);
-    mainLayout->setMenuBar(menuBar);
-    addFileMenu(menuBar, pTextEdit);
+    new LineHighlighter(pTextEdit->document());
+
+    setCentralWidget(pTextEdit);
+    addStatusBar(pTextEdit);
+    addFileMenu(menuBar(), pTextEdit);
+    return pTextEdit;
 }
 
 void RemoteEditWidget::addFileMenu(QMenuBar *const menuBar, const QPlainTextEdit *pTextEdit)
@@ -119,6 +143,7 @@ void RemoteEditWidget::addEditMenu(QMenuBar *const menuBar, const QPlainTextEdit
     addCut(editMenu, pTextEdit);
     addCopy(editMenu, pTextEdit);
     addPaste(editMenu, pTextEdit);
+    addJustify(editMenu);
 }
 
 void RemoteEditWidget::addSave(QMenu *const fileMenu)
@@ -128,6 +153,7 @@ void RemoteEditWidget::addSave(QMenu *const fileMenu)
                                             tr("&Submit"),
                                             this);
     saveAction->setShortcut(tr("Ctrl+S"));
+    saveAction->setStatusTip(tr("Submit changes to MUME"));
     fileMenu->addAction(saveAction);
     connect(saveAction, &QAction::triggered, this, &RemoteEditWidget::finishEdit);
 }
@@ -139,6 +165,7 @@ void RemoteEditWidget::addExit(QMenu *const fileMenu)
                                             tr("E&xit"),
                                             this);
     quitAction->setShortcut(tr("Ctrl+Q"));
+    quitAction->setStatusTip(tr("Cancel and do not submit changes to MUME"));
     fileMenu->addAction(quitAction);
     connect(quitAction, &QAction::triggered, this, &RemoteEditWidget::cancelEdit);
 }
@@ -178,18 +205,63 @@ void RemoteEditWidget::addPaste(QMenu *const editMenu, const QPlainTextEdit *pTe
     pasteAct->setDisabled(!m_editSession);
 }
 
-void RemoteEditWidget::addStatusBar(QVBoxLayout *mainLayout, const QPlainTextEdit *pTextEdit)
+void RemoteEditWidget::addJustify(QMenu *editMenu)
 {
-    QStatusBar *statusBar = new QStatusBar(this);
-    statusBar->showMessage(tr("Ready"));
-    mainLayout->addWidget(statusBar);
+    QAction *const justifyAct = new QAction(tr("&Justify"), this);
+    justifyAct->setShortcut(tr("Ctrl+J"));
+    justifyAct->setStatusTip(tr("Justify text to 80 characters"));
+    editMenu->addAction(justifyAct);
+    connect(justifyAct, &QAction::triggered, this, &RemoteEditWidget::justifyText);
+    justifyAct->setDisabled(!m_editSession);
+}
 
-    connect(pTextEdit, &QPlainTextEdit::cursorPositionChanged, this, [pTextEdit, statusBar]() {
-        const int column = pTextEdit->textCursor().columnNumber() + 1;
-        const int row = pTextEdit->textCursor().blockNumber() + 1;
-        QString text = QString("Line %1, Column %2").arg(row).arg(column);
-        statusBar->showMessage(text);
-    });
+void RemoteEditWidget::addStatusBar(const QPlainTextEdit *pTextEdit)
+{
+    QStatusBar *status = statusBar();
+    status->showMessage(tr("Ready"));
+
+    connect(pTextEdit,
+            &QPlainTextEdit::cursorPositionChanged,
+            this,
+            &RemoteEditWidget::updateStatusBar);
+    connect(pTextEdit, &QPlainTextEdit::selectionChanged, this, &RemoteEditWidget::updateStatusBar);
+}
+
+void RemoteEditWidget::updateStatusBar()
+{
+    static const QRegularExpression newlineRx(R"((?!\r)\n)");
+    auto cursor = m_textEdit->textCursor();
+    const int column = cursor.columnNumber() + 1;
+    const int row = cursor.blockNumber() + 1;
+    const QString selection = cursor.selection().toPlainText();
+    const int selectionLength = selection.length();
+    const int selectionLines = selection.count(newlineRx);
+    const QString text = QString("Line %1, Column %2, Selection %3 | %4")
+                             .arg(row)
+                             .arg(column)
+                             .arg(selectionLength)
+                             .arg(selectionLines);
+    statusBar()->showMessage(text);
+}
+
+void RemoteEditWidget::justifyText()
+{
+    QString text;
+    for (const QStringRef &line : m_textEdit->toPlainText().splitRef('\n')) {
+        if (!line.isEmpty() && line.length() > MAX_LENGTH && !s_ansiRx.match(text).hasMatch()) {
+            int i = 0;
+            QStringRef remainder = line.mid(i * MAX_LENGTH, MAX_LENGTH);
+            do {
+                text.append(remainder.mid(0, MAX_LENGTH));
+                text.append("\n");
+                remainder = line.mid(++i * MAX_LENGTH, MAX_LENGTH);
+            } while (!remainder.isEmpty());
+        } else {
+            text.append(line);
+            text.append("\n");
+        }
+    }
+    m_textEdit->setPlainText(text);
 }
 
 RemoteEditWidget::~RemoteEditWidget()

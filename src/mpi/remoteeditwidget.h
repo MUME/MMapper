@@ -27,7 +27,7 @@
 #define REMOTEEDITWIDGET_H
 
 #include <QAction>
-#include <QDialog>
+#include <QMainWindow>
 #include <QPlainTextEdit>
 #include <QScopedPointer>
 #include <QSize>
@@ -43,11 +43,10 @@ class QMenu;
 class QMenuBar;
 class QObject;
 class QPlainTextEdit;
-class QVBoxLayout;
 class QWidget;
 class QStatusBar;
 
-class RemoteEditWidget : public QDialog
+class RemoteEditWidget : public QMainWindow
 {
     Q_OBJECT
 
@@ -67,6 +66,8 @@ protected slots:
     void finishEdit();
     bool maybeCancel();
     bool contentsChanged() const;
+    void updateStatusBar();
+    void justifyText();
 
 signals:
     void cancel();
@@ -74,10 +75,7 @@ signals:
 
 private:
     QPlainTextEdit *createTextEdit();
-    QVBoxLayout *createLayout();
-    QPlainTextEdit *createTextEdit(QVBoxLayout *mainLayout);
 
-    void addMenuBar(QVBoxLayout *mainLayout, const QPlainTextEdit *pTextEdit);
     void addFileMenu(QMenuBar *menuBar, const QPlainTextEdit *pTextEdit);
     void addEditMenu(QMenuBar *menuBar, const QPlainTextEdit *pTextEdit);
     void addSave(QMenu *fileMenu);
@@ -85,7 +83,8 @@ private:
     void addCut(QMenu *editMenu, const QPlainTextEdit *pTextEdit);
     void addCopy(QMenu *editMenu, const QPlainTextEdit *pTextEdit);
     void addPaste(QMenu *editMenu, const QPlainTextEdit *pTextEdit);
-    void addStatusBar(QVBoxLayout *mainLayout, const QPlainTextEdit *pTextEdit);
+    void addJustify(QMenu *editMenu);
+    void addStatusBar(const QPlainTextEdit *pTextEdit);
 
 private:
     const bool m_editSession;
