@@ -603,6 +603,17 @@ endif(WIN32)
 # Apple Install Settings
 if(APPLE)
     set(CMAKE_MACOSX_BUNDLE ON)
+
+    if(Qt5Core_VERSION VERSION_LESS 5.12.0)
+        # Minimum version of OS X that supports c++14 is 10.9 "Mavericks"
+        set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9")
+        set(MACOSX_PREVENT_DARK_MODE "true")
+    else()
+        # Dark mode requires "Sierra" and Qt 5.12
+        set(CMAKE_OSX_DEPLOYMENT_TARGET "10.12")
+        set(MACOSX_PREVENT_DARK_MODE "false")
+    endif()
+
     set_source_files_properties(resources/macosx/m.icns PROPERTIES
     MACOSX_PACKAGE_LOCATION Resources)
     set_target_properties(mmapper PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/MacOSXBundleInfo.plist.in )

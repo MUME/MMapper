@@ -209,10 +209,6 @@ if(CMAKE_COMPILER_IS_GNUCXX)
         add_compile_options(-Werror=return-type)
         add_compile_options(-Werror=sign-compare)
     endif(MMAPPER_IS_DEBUG)
-    if(APPLE)
-        # Minimum version of OS X that supports c++14 is 10.6 "Snow Leopard" with GCC
-        set(CMAKE_OSX_DEPLOYMENT_TARGET "10.6")
-    endif()
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     message(STATUS "Building with Clang (${CMAKE_CXX_COMPILER})")
     add_compile_options(-fno-standalone-debug)
@@ -264,10 +260,6 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         add_compile_options(-Werror=unused-result) # required for c++17 [[nodiscard]]
         add_compile_options(-Werror=weak-vtables) # can result in crashes for ODR violations.
     endif(MMAPPER_IS_DEBUG)
-    if(APPLE)
-        # Minimum version of OS X that supports c++14 is 10.9 "Mavericks" with Clang
-        set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9")
-    endif()
 endif()
 
 # Download arda.mm2
