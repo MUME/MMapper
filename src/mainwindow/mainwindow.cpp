@@ -278,9 +278,7 @@ void MainWindow::readSettings()
     restoreGeometry(settings.windowGeometry);
     restoreState(settings.windowState);
     alwaysOnTopAct->setChecked(settings.alwaysOnTop);
-    if (settings.alwaysOnTop) {
-        alwaysOnTop();
-    }
+    setWindowFlag(Qt::WindowStaysOnTopHint, settings.alwaysOnTop);
 }
 
 void MainWindow::writeSettings()
@@ -288,7 +286,6 @@ void MainWindow::writeSettings()
     auto &savedConfig = setConfig().general;
     savedConfig.windowGeometry = saveGeometry();
     savedConfig.windowState = saveState();
-    savedConfig.alwaysOnTop = static_cast<bool>(windowFlags() & Qt::WindowStaysOnTopHint);
 }
 
 void MainWindow::wireConnections()
@@ -1099,6 +1096,7 @@ void MainWindow::showContextMenu(const QPoint &pos)
 void MainWindow::alwaysOnTop()
 {
     setWindowFlags(windowFlags() ^ Qt::WindowStaysOnTopHint);
+    setConfig().general.alwaysOnTop = static_cast<bool>(windowFlags() & Qt::WindowStaysOnTopHint);
     show();
 }
 

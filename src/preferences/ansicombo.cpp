@@ -129,7 +129,7 @@ AnsiCombo::AnsiColor AnsiCombo::colorFromString(const QString &colString)
     if (colString.isEmpty())
         return color;
 
-    QRegularExpression re(R"(^\[((?:\d+;)*\d+)m$)");
+    static const QRegularExpression re(R"(^\[((?:\d+;)*\d+)m$)");
     if (!re.match(colString).hasMatch()) {
         qWarning() << "String did not contain valid ANSI: " << colString;
         return color;

@@ -26,7 +26,7 @@
 #ifndef CLIENTWIDGET_H
 #define CLIENTWIDGET_H
 
-#include <QDialog>
+#include <QMainWindow>
 #include <QSize>
 #include <QString>
 #include <QtCore>
@@ -36,12 +36,11 @@ class QCloseEvent;
 class QEvent;
 class QObject;
 class QSplitter;
-class QStatusBar;
 class QWidget;
 class StackedInputWidget;
 class ClientTelnet;
 
-class ClientWidget final : public QDialog
+class ClientWidget final : public QMainWindow
 {
 private:
     Q_OBJECT
@@ -81,7 +80,6 @@ private:
     DisplayWidget *m_display = nullptr;
     StackedInputWidget *m_input = nullptr;
     ClientTelnet *m_telnet = nullptr;
-    QStatusBar *m_statusBar = nullptr;
 };
 
 #endif /* CLIENTWIDGET_H */

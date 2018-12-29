@@ -38,20 +38,16 @@
 #include "stackedinputwidget.h"
 
 ClientWidget::ClientWidget(QWidget *parent)
-    : QDialog(parent)
+    : QMainWindow(parent)
 {
     setWindowTitle("MMapper Client");
-    setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
-    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
-
-    auto *layout = new QVBoxLayout(this);
-    layout->setAlignment(Qt::AlignTop);
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->setSpacing(0);
+    setWindowFlag(Qt::WindowType::Widget, true);
+    setWindowFlag(Qt::WindowStaysOnTopHint, false);
+    setWindowFlag(Qt::WindowContextHelpButtonHint, false);
 
     m_splitter = new QSplitter(this);
     m_splitter->setOrientation(Qt::Vertical);
-    layout->addWidget(m_splitter);
+    setCentralWidget(m_splitter);
 
     // Add the primary widgets to the smart splitter
     m_display = new DisplayWidget(this);
@@ -62,9 +58,7 @@ ClientWidget::ClientWidget(QWidget *parent)
     m_splitter->addWidget(m_input);
     m_splitter->setCollapsible(m_splitter->indexOf(m_input), false);
 
-    m_statusBar = new QStatusBar(this);
-    m_statusBar->showMessage(tr("Ready"), 5000);
-    layout->addWidget(m_statusBar);
+    statusBar()->showMessage(tr("Ready"), 5000);
 
     // Keyboard input on the display widget should be redirected to the input widget
     m_display->setFocusProxy(m_input);
@@ -82,62 +76,50 @@ ClientWidget::ClientWidget(QWidget *parent)
     // Input
     connect(m_input, &StackedInputWidget::sendUserInput, this, &ClientWidget::sendToMud);
     connect(m_telnet, &ClientTelnet::echoModeChanged, m_input, &StackedInputWidget::toggleEchoMode);
-    connect(m_input, &StackedInputWidget::showMessage, m_statusBar, &QStatusBar::showMessage);
+    connect(m_input, &StackedInputWidget::showMessage, statusBar(), &QStatusBar::showMessage);
 
     // Display
     connect(m_input, &StackedInputWidget::displayMessage, m_display, &DisplayWidget::displayText);
     connect(this, &ClientWidget::sendToUser, m_display, &DisplayWidget::displayText);
     connect(m_telnet, &ClientTelnet::sendToUser, m_display, &DisplayWidget::displayText);
-    connect(m_display, &DisplayWidget::showMessage, m_statusBar, &QStatusBar::showMessage);
+    connect(m_display, &DisplayWidget::showMessage, statusBar(), &QStatusBar::showMessage);
     connect(m_display,
             &DisplayWidget::windowSizeChanged,
             m_telnet,
             &ClientTelnet::onWindowSizeChanged);
     readSettings();
 
-    auto *menuBar = new QMenuBar(this);
-    layout->setMenuBar(menuBar);
-
-    QMenu *fileMenu = menuBar->addMenu("&File");
+    QMenu *fileMenu = menuBar()->addMenu("&File");
 
     QAction *connectAct = new QAction(QIcon(":/icons/online.png"), tr("Co&nnect"), this);
     connectAct->setShortcut(QKeySequence(tr("Ctrl+N")));
     connect(connectAct, &QAction::triggered, this, &ClientWidget::connectToHost);
-    connect(connectAct, &QAction::hovered, [this]() {
-        m_statusBar->showMessage(tr("Connect to the remote host"), 1000);
-    });
+    connectAct->setStatusTip(tr("Connect to the remote host"));
 
     QAction *disconnectAct = new QAction(QIcon(":/icons/offline.png"), tr("&Disconnect"), this);
     disconnectAct->setShortcut(QKeySequence(tr("Ctrl+D")));
     connect(disconnectAct, &QAction::triggered, this, &ClientWidget::disconnectFromHost);
-    connect(disconnectAct, &QAction::hovered, [this]() {
-        m_statusBar->showMessage(tr("Disconnect from the remote host"), 1000);
-    });
-
+    disconnectAct->setStatusTip(tr("Disconnect from the remote host"));
     QAction *saveLog = new QAction(QIcon::fromTheme("document-save", QIcon(":/icons/save.png")),
                                    tr("&Save log as..."),
                                    this);
     saveLog->setShortcut(QKeySequence(tr("Ctrl+S")));
     connect(saveLog, &QAction::triggered, this, &ClientWidget::saveLog);
-    connect(saveLog, &QAction::hovered, [this]() {
-        m_statusBar->showMessage(tr("Save log as file"), 1000);
-    });
+    saveLog->setStatusTip(tr("Save log as file"));
 
     QAction *closeAct = new QAction(QIcon::fromTheme("window-close", QIcon(":/icons/exit.png")),
                                     tr("E&xit"),
                                     this);
     closeAct->setShortcut(QKeySequence(tr("Ctrl+Q")));
     connect(closeAct, &QAction::triggered, this, &ClientWidget::close);
-    connect(closeAct, &QAction::hovered, [this]() {
-        m_statusBar->showMessage(tr("Close the mud client"), 1000);
-    });
+    closeAct->setStatusTip(tr("Close the mud client"));
 
     fileMenu->addAction(connectAct);
     fileMenu->addAction(disconnectAct);
     fileMenu->addAction(saveLog);
     fileMenu->addAction(closeAct);
 
-    QMenu *editMenu = menuBar->addMenu("&Edit");
+    QMenu *editMenu = menuBar()->addMenu("&Edit");
     QAction *cutAct = new QAction(QIcon::fromTheme("edit-cut", QIcon(":/icons/cut.png")),
                                   tr("Cu&t"),
                                   this);
@@ -172,12 +154,16 @@ ClientWidget::~ClientWidget()
     delete m_display;
     delete m_input;
     delete m_splitter;
-    delete m_statusBar;
 }
 
 void ClientWidget::readSettings()
 {
-    restoreGeometry(getConfig().integratedClient.geometry);
+    if (!restoreGeometry(getConfig().integratedClient.geometry)) {
+        setGeometry(QStyle::alignedRect(Qt::LeftToRight,
+                                        Qt::AlignCenter,
+                                        size(),
+                                        qApp->desktop()->availableGeometry()));
+    }
 }
 
 void ClientWidget::writeSettings() const
@@ -297,13 +283,13 @@ void ClientWidget::saveLog()
     const auto &fileNames = result.filenames;
 
     if (fileNames.isEmpty()) {
-        m_statusBar->showMessage(tr("No filename provided"), 2000);
+        statusBar()->showMessage(tr("No filename provided"), 2000);
         return;
     }
 
     QFile document(fileNames[0]);
     if (!document.open(QFile::WriteOnly | QFile::Text)) {
-        m_statusBar->showMessage(QString("Error occurred while opening %1").arg(document.fileName()),
+        statusBar()->showMessage(QString("Error occurred while opening %1").arg(document.fileName()),
                                  2000);
         return;
     }
