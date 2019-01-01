@@ -3,7 +3,7 @@ Download MMapper {{ site.github.latest_release.tag_name }}
 {% for asset in site.github.latest_release.assets %}
   {% if asset.name != 'arda.mm2' %}
 <a href="{{ asset.browser_download_url }}" title="Download {{ asset.name }}">
-  <img src="https://img.shields.io/github/downloads/{{ site.github.owner_name }}/{{ site.github.repository_name }}/latest/{{ asset.name }}.svg"/></a><br>
+  <img src="https://img.shields.io/github/downloads/{{ site.github.owner_name }}/{{ site.github.repository_name }}/latest/{{ asset.name }}.svg"/></a>
   {% endif %}
 {% endfor %}
 
@@ -23,7 +23,8 @@ Download MMapper {{ site.github.latest_release.tag_name }}
 Please set up your client according to this [guide](https://github.com/MUME/MMapper/wiki)
 
 ## Frequently Asked Questions
-[Troubleshooting](https://github.com/MUME/MMapper/wiki/Troubleshooting)
+1.  [Troubleshooting](https://github.com/MUME/MMapper/wiki/Troubleshooting)
+2.  What is [MUME](http://mume.org/mume.php)?
 
 ## Found a bug?
 Please report it [here](https://github.com/MUME/MMapper/issues)
