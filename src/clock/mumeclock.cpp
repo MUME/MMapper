@@ -137,45 +137,46 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
     if (mumeTime.at(0).isDigit()) {
         // 3pm on Highday, the 18th of Halimath, year 3030 of the Third Age.
         static const QRegularExpression rx(
-            R"((\d+)(am|pm) on \w+, the (\d+).{2} of (\w+), year (\d+) of the Third Age.)");
+            R"(^(\d+)(am|pm) on \w+, the (\d+).{2} of (\w+), year (\d+) of the Third Age.$)");
         auto match = rx.match(mumeTime);
-        if (match.hasMatch()) {
-            hour = match.captured(1).toInt();
-            if (match.captured(2).at(0) == 'p') {
-                // pm
-                if (hour != 12) {
-                    // add 12 if not noon
-                    hour += 12;
-                }
-            } else if (hour == 12) {
-                // midnight
-                hour = 0;
+        if (!match.hasMatch())
+            return;
+        hour = match.captured(1).toInt();
+        if (match.captured(2).at(0) == 'p') {
+            // pm
+            if (hour != 12) {
+                // add 12 if not noon
+                hour += 12;
             }
-            day = match.captured(3).toInt() - 1;
-            month = s_westronMonthNames.keyToValue(match.captured(4).toLatin1().data());
-            if (month == static_cast<int>(WestronMonthNames::UnknownWestronMonth)) {
-                month = s_sindarinMonthNames.keyToValue(match.captured(4).toLatin1().data());
-            }
-            year = match.captured(5).toInt();
-            if (m_precision <= MumeClockPrecision::MUMECLOCK_DAY) {
-                m_precision = MumeClockPrecision::MUMECLOCK_HOUR;
-            }
+        } else if (hour == 12) {
+            // midnight
+            hour = 0;
         }
+        day = match.captured(3).toInt() - 1;
+        month = s_westronMonthNames.keyToValue(match.captured(4).toLatin1().data());
+        if (month == static_cast<int>(WestronMonthNames::UnknownWestronMonth)) {
+            month = s_sindarinMonthNames.keyToValue(match.captured(4).toLatin1().data());
+        }
+        year = match.captured(5).toInt();
+        if (m_precision <= MumeClockPrecision::MUMECLOCK_DAY) {
+            m_precision = MumeClockPrecision::MUMECLOCK_HOUR;
+        }
+
     } else {
         // "Highday, the 18th of Halimath, year 3030 of the Third Age."
         static const QRegularExpression rx(
-            R"(\w+, the (\d+).{2} of (\w+), year (\d+) of the Third Age.)");
+            R"(^\w+, the (\d+).{2} of (\w+), year (\d+) of the Third Age.$)");
         auto match = rx.match(mumeTime);
-        if (match.hasMatch()) {
-            day = match.captured(1).toInt() - 1;
-            month = s_westronMonthNames.keyToValue(match.captured(2).toLatin1().data());
-            if (month == static_cast<int>(WestronMonthNames::UnknownWestronMonth)) {
-                month = s_sindarinMonthNames.keyToValue(match.captured(2).toLatin1().data());
-            }
-            year = match.captured(3).toInt();
-            if (m_precision <= MumeClockPrecision::MUMECLOCK_UNSET) {
-                m_precision = MumeClockPrecision::MUMECLOCK_DAY;
-            }
+        if (!match.hasMatch())
+            return;
+        day = match.captured(1).toInt() - 1;
+        month = s_westronMonthNames.keyToValue(match.captured(2).toLatin1().data());
+        if (month == static_cast<int>(WestronMonthNames::UnknownWestronMonth)) {
+            month = s_sindarinMonthNames.keyToValue(match.captured(2).toLatin1().data());
+        }
+        year = match.captured(3).toInt();
+        if (m_precision <= MumeClockPrecision::MUMECLOCK_UNSET) {
+            m_precision = MumeClockPrecision::MUMECLOCK_DAY;
         }
     }
 
