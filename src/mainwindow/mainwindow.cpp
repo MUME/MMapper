@@ -410,6 +410,7 @@ void MainWindow::wireConnections()
 void MainWindow::log(const QString &module, const QString &message)
 {
     logWindow->append("[" + module + "] " + message);
+    logWindow->moveCursor(QTextCursor::MoveOperation::End);
     logWindow->ensureCursorVisible();
     logWindow->update();
 }
