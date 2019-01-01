@@ -27,6 +27,7 @@
 #include "configuration.h"
 
 #include <cassert>
+#include <mutex>
 #include <QByteArray>
 #include <QChar>
 #include <QHostInfo>
@@ -96,12 +97,125 @@ Configuration::Configuration()
 ConstString SETTINGS_ORGANIZATION = "Caligor soft";
 ConstString SETTINGS_APPLICATION = "MMapper2";
 
-/* QSettings has a deleted copy constructor, so we can't write
- * `auto conf = getSettings();` until C++17's guaranteed RVO
- * elides the copy/move constructors. */
-/* Also note: Avoiding using global QSettings& getSettings()
- * because the QSettings object maintains some state. */
-#define SETTINGS(conf) QSettings conf(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION)
+class Settings final
+{
+private:
+    static constexpr const char *const MMAPPER_PROFILE_PATH = "MMAPPER_PROFILE_PATH";
+
+private:
+    // TODO: switch to std::optional<QSettings> in C++17.
+    alignas(alignof(QSettings)) char m_buffer[sizeof(QSettings)];
+    bool m_isConstructed = false;
+
+private:
+    static bool isValid(const QFile &file)
+    {
+        const QFileInfo info{file};
+        return !info.isDir() && info.exists() && info.isReadable() && info.isWritable();
+    }
+
+    static bool isValid(const QString &fileName)
+    {
+        const QFile file{fileName};
+        return isValid(file);
+    }
+
+private:
+    void initSettings();
+
+public:
+    DELETE_CTORS_AND_ASSIGN_OPS(Settings);
+    explicit Settings() { initSettings(); }
+    ~Settings()
+    {
+        static_cast<QSettings &>(*this).~QSettings();
+        m_isConstructed = false;
+    }
+    explicit operator QSettings &()
+    {
+        if (!m_isConstructed)
+            throw std::runtime_error("object does not exist");
+        return *reinterpret_cast<QSettings *>(m_buffer);
+    }
+};
+
+void Settings::initSettings()
+{
+    if (m_isConstructed)
+        throw std::runtime_error("object already exists");
+
+    // NOTE: mutex guards read/write access to g_path from multiple threads,
+    // since the static variable can be set to nullptr on spurious failure.
+    static std::mutex g_mutex;
+    std::lock_guard<std::mutex> lock{g_mutex};
+
+    static auto g_path = qgetenv(MMAPPER_PROFILE_PATH);
+
+    if (g_path != nullptr) {
+        // NOTE: QMessageLogger quotes QString by default, but doesn't quote const char*.
+        const QString pathString{g_path};
+
+        static std::once_flag attempt_flag;
+        std::call_once(attempt_flag, [&pathString] {
+            qInfo() << "Attempting to use settings from" << pathString
+                    << "(specified by environment variable" << QString{MMAPPER_PROFILE_PATH}
+                    << ")...";
+        });
+
+        if (!isValid(pathString)) {
+            qWarning() << "Falling back to default settings path because" << pathString
+                       << "is not a writable file.";
+            g_path = nullptr;
+        } else {
+            try {
+                new (m_buffer) QSettings(pathString, QSettings::IniFormat);
+                m_isConstructed = true;
+            } catch (...) {
+                qInfo() << "Exception loading settings for " << pathString
+                        << "; falling back to default settings...";
+                g_path = nullptr;
+            }
+        }
+    }
+
+    if (!m_isConstructed) {
+        new (m_buffer) QSettings(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
+        m_isConstructed = true;
+    }
+
+    static std::once_flag success_flag;
+    std::call_once(success_flag, [this] {
+        decltype(auto) info = qInfo();
+        info << "Using settings from" << QString{static_cast<QSettings &>(*this).fileName()};
+        if (g_path == nullptr)
+            info << "(Hint: Environment variable" << QString{MMAPPER_PROFILE_PATH}
+                 << "overrides the default).";
+        else
+            info << ".";
+    });
+}
+
+//
+// NOTES:
+//
+// * Avoiding using global QSettings& getSettings() because the QSettings object
+//   maintains some state, so it's better to construct a new one each time.
+//
+// * Declaring an object via macro instead of just calling a function is necessary
+//   until c++17 which isn't required to call the move/copy ctor upon return.
+//
+// * Using a separate reference because macros use "conf.beginGroup()", but
+//   "operator T&" is never selected when used with (non-existent) "operator.".
+//   Instead, we could use "conf->beginGroup()" with "QSettings* operator->()"
+//   to avoid needing to declare a QSettings& reference.
+//
+// c++17 version could look like:
+//  - SETTINGS(conf)
+//  + QSettings conf = getSettings();
+//
+#define SETTINGS(conf) \
+    Settings settings; \
+    QSettings &conf = static_cast<QSettings &>(settings);
 
 ConstString GRP_AUTO_LOAD_WORLD = "Auto load world";
 ConstString GRP_CANVAS = "Canvas";
