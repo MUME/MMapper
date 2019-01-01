@@ -94,8 +94,10 @@ Configuration::Configuration()
  * Also, don't use space, because it will be a file name on disk.
  */
 #define ConstString static constexpr const char *const
-ConstString SETTINGS_ORGANIZATION = "Caligor soft";
+ConstString SETTINGS_ORGANIZATION = "MUME";
+ConstString OLD_SETTINGS_ORGANIZATION = "Caligor soft";
 ConstString SETTINGS_APPLICATION = "MMapper2";
+ConstString SETTINGS_FIRST_TIME_KEY = "General/Run first time";
 
 class Settings final
 {
@@ -120,6 +122,8 @@ private:
         return isValid(file);
     }
 
+    static void tryCopyOldSettings();
+
 private:
     void initSettings();
 
@@ -138,6 +142,20 @@ public:
         return *reinterpret_cast<QSettings *>(m_buffer);
     }
 };
+
+void Settings::tryCopyOldSettings()
+{
+    QSettings sNew(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
+    if (!sNew.allKeys().contains(SETTINGS_FIRST_TIME_KEY)) {
+        const QSettings sOld(OLD_SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
+        if (!sOld.allKeys().isEmpty()) {
+            qInfo() << "Copying old config" << sOld.fileName() << "to" << sNew.fileName() << "...";
+            for (const QString &key : sOld.allKeys()) {
+                sNew.setValue(key, sOld.value(key));
+            }
+        }
+    }
+}
 
 void Settings::initSettings()
 {
@@ -179,6 +197,7 @@ void Settings::initSettings()
     }
 
     if (!m_isConstructed) {
+        tryCopyOldSettings();
         new (m_buffer) QSettings(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
         m_isConstructed = true;
     }
