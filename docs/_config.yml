@@ -1,1 +1,4 @@
 theme: jekyll-theme-minimal
+title: Play MUME with MMapper
+description: MMapper is a mud mapper especially written for the mud MUME
+logo: https://raw.githubusercontent.com/MUME/MMapper/master/appdata/screenshot1.png
