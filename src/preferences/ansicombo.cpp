@@ -329,7 +329,7 @@ template<typename Derived, typename Base>
 static inline Derived *qdynamic_downcast(Base *ptr)
 {
     static_assert(std::is_base_of<Base, Derived>::value, "");
-    return dynamic_cast<Derived *>(qobject_cast<Derived *>(ptr));
+    return qobject_cast<Derived *>(ptr);
 }
 
 void AnsiCombo::makeWidgetColoured(QWidget *const pWidget,

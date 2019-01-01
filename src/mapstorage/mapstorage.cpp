@@ -341,7 +341,7 @@ bool MapStorage::mergeData()
             && version != MMAPPER_2_0_4_SCHEMA && version != MMAPPER_2_0_2_SCHEMA
             && version != MMAPPER_2_0_0_SCHEMA) {
             const bool isNewer = version >= CURRENT_SCHEMA;
-            QMessageBox::critical(dynamic_cast<QWidget *>(parent()),
+            QMessageBox::critical(checked_dynamic_downcast<QWidget *>(parent()),
                                   "MapStorage Error",
                                   QString("This map has schema version %1 which is too %2.\r\n\r\n"
                                           "Please %3 MMapper.")
@@ -374,7 +374,7 @@ bool MapStorage::mergeData()
                      QString("Uncompressed map using %1").arg(qCompressed ? "qUncompress" : "zlib"));
 
         } else if (!USE_ZLIB && zlibCompressed) {
-            QMessageBox::critical(dynamic_cast<QWidget *>(parent()),
+            QMessageBox::critical(checked_dynamic_downcast<QWidget *>(parent()),
                                   "MapStorage Error",
                                   "MMapper could not load this map because it is too old.\r\n\r\n"
                                   "Please recompile MMapper with USE_ZLIB.");

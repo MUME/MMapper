@@ -41,7 +41,7 @@ ClientWidget::ClientWidget(QWidget *parent)
     : QMainWindow(parent)
 {
     setWindowTitle("MMapper Client");
-    setWindowFlags(windowFlags() ^ Qt::WindowType::Widget);
+    setWindowFlags(windowFlags() | Qt::WindowType::Widget);
     setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 

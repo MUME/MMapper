@@ -1012,7 +1012,7 @@ void MapCanvas::initializeGL()
     m_opengl.initializeOpenGLFunctions();
     const auto getString = [this](const GLint id) -> QByteArray {
         const unsigned char *s = m_opengl.glGetString(static_cast<GLenum>(id));
-        return QByteArray{reinterpret_cast<const char *>(s)};
+        return QByteArray{as_cstring(s)};
     };
 
     const auto version = getString(GL_VERSION);

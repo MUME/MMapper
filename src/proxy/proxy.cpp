@@ -219,8 +219,8 @@ void Proxy::start()
     m_userSocket->write(ba);
 
     m_mudSocket = (NO_OPEN_SSL || !getConfig().connection.tlsEncryption)
-                      ? dynamic_cast<MumeSocket *>(new MumeTcpSocket(this))
-                      : dynamic_cast<MumeSocket *>(new MumeSslSocket(this));
+                      ? checked_static_upcast<MumeSocket *>(new MumeTcpSocket(this))
+                      : checked_static_upcast<MumeSocket *>(new MumeSslSocket(this));
 
     connect(m_mudSocket, &MumeSocket::connected, this, &Proxy::onMudConnected);
     connect(m_mudSocket, &MumeSocket::connected, m_userTelnet, &UserTelnet::onConnected);

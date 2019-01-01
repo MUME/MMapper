@@ -79,4 +79,67 @@ inline T &deref(const std::unique_ptr<T> &ptr)
     return *ptr;
 }
 
+///  Can throw NullPointerException or std::bad_cast
+template<typename /* must be specified */ Derived, typename /* deduced */ Base>
+Derived checked_dynamic_downcast(Base ptr) noexcept(false)
+{
+    // TODO: convert to _t and _v instead of ::type and ::value when we switch to c++17,
+    // and get rid of the `, ""` since c++17 allows single-arg static_assert.
+    static_assert(std::is_same<Base, typename std::remove_reference<Base>::type>::value, "");
+    static_assert(std::is_same<Derived, typename std::remove_reference<Derived>::type>::value, "");
+    static_assert(std::is_pointer<Base>::value, "");
+    static_assert(std::is_pointer<Derived>::value, "");
+    static_assert(!std::is_same<Base, Derived>::value, "");
+
+    using actual_base = typename std::remove_pointer<Base>::type;
+    using actual_derived = typename std::remove_pointer<Derived>::type;
+
+    static_assert(!std::is_same<actual_base, actual_derived>::value, "");
+    static_assert(std::is_base_of<actual_base, actual_derived>::value, "");
+    static_assert(std::is_const<actual_base>::value == std::is_const<actual_derived>::value, "");
+
+    // Using reference to force dynamic_cast to throw.
+    return &dynamic_cast<actual_derived &>(deref(ptr));
+}
+
+///  Can throw NullPointerException
+template<typename /* must be specified */ Base, typename /* deduced */ Derived>
+Base checked_static_upcast(Derived ptr) noexcept(false)
+{
+    // TODO: convert to _t and _v instead of ::type and ::value when we switch to c++17,
+    // and get rid of the `, ""` since c++17 allows single-arg static_assert.
+    static_assert(std::is_same<Derived, typename std::remove_reference<Derived>::type>::value, "");
+    static_assert(std::is_same<Base, typename std::remove_reference<Base>::type>::value, "");
+    static_assert(std::is_pointer<Derived>::value, "");
+    static_assert(std::is_pointer<Base>::value, "");
+    static_assert(!std::is_same<Derived, Base>::value, "");
+
+    using actual_derived = typename std::remove_pointer<Derived>::type;
+    using actual_base = typename std::remove_pointer<Base>::type;
+
+    static_assert(!std::is_same<actual_derived, actual_base>::value, "");
+    static_assert(std::is_base_of<actual_base, actual_derived>::value, "");
+    static_assert(std::is_const<actual_derived>::value == std::is_const<actual_base>::value, "");
+
+    return static_cast<Base>(&deref(ptr));
+}
+
+template<typename T>
+inline auto as_unsigned_cstring(T s) = delete;
+
+template<>
+inline auto as_unsigned_cstring(const char *const s)
+{
+    return reinterpret_cast<const unsigned char *>(s);
+}
+
+template<typename T>
+inline auto as_cstring(T s) = delete;
+
+template<>
+inline auto as_cstring(const unsigned char *const s)
+{
+    return reinterpret_cast<const char *>(s);
+}
+
 #endif // MMAPPER_UTILS_H

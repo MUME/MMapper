@@ -279,7 +279,7 @@ void MainWindow::readSettings()
     restoreState(settings.windowState);
     alwaysOnTopAct->setChecked(settings.alwaysOnTop);
     if (settings.alwaysOnTop)
-        setWindowFlags(windowFlags() ^ Qt::WindowStaysOnTopHint);
+        setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
 }
 
 void MainWindow::writeSettings()
@@ -1096,7 +1096,7 @@ void MainWindow::showContextMenu(const QPoint &pos)
 
 void MainWindow::alwaysOnTop()
 {
-    setWindowFlags(windowFlags() ^ Qt::WindowStaysOnTopHint);
+    setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
     setConfig().general.alwaysOnTop = static_cast<bool>(windowFlags() & Qt::WindowStaysOnTopHint);
     show();
 }

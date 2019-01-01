@@ -34,6 +34,7 @@
 #include <QXmlStreamWriter>
 
 #include "../configuration/configuration.h"
+#include "../global/utils.h"
 #include "CGroup.h"
 #include "GroupServer.h"
 #include "GroupSocket.h"
@@ -298,12 +299,12 @@ void CGroupCommunicator::relayLog(const QString &str)
 
 CGroup *CGroupCommunicator::getGroup()
 {
-    auto *group = reinterpret_cast<Mmapper2Group *>(this->parent());
+    auto *group = checked_dynamic_downcast<Mmapper2Group*>(this->parent());
     return group->getGroup();
 }
 
 GroupAuthority *CGroupCommunicator::getAuthority()
 {
-    auto *group = reinterpret_cast<Mmapper2Group *>(this->parent());
+    auto *group = checked_dynamic_downcast<Mmapper2Group*>(this->parent());
     return group->getAuthority();
 }

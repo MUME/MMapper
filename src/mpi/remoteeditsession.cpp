@@ -30,6 +30,7 @@
 #include <QScopedPointer>
 #include <QString>
 
+#include "../global/utils.h"
 #include "remoteedit.h"
 #include "remoteeditprocess.h"
 #include "remoteeditwidget.h"
@@ -59,7 +60,7 @@ RemoteEditInternalSession::RemoteEditInternalSession(
     , m_widget(new RemoteEditWidget(isEditSession(),
                                     title,
                                     body,
-                                    reinterpret_cast<QWidget *>(parent->parent()) // MainWindow
+                                    checked_dynamic_downcast<QWidget*>(parent->parent()) // MainWindow
                                     ))
 {
     const auto widget = m_widget.data();

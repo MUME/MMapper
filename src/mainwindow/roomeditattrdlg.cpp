@@ -69,9 +69,9 @@ void installWidgets(T &array,
 {
     fixMissing(array, name);
     widget.clear();
-    for (RoomListWidgetItem *x : array) {
+    for (RoomListWidgetItem *const x : array) {
         x->setFlags(flags);
-        widget.addItem(dynamic_cast<QListWidgetItem *>(x));
+        widget.addItem(checked_static_upcast<QListWidgetItem *>(x));
     }
 }
 
@@ -1298,7 +1298,7 @@ void RoomEditAttrDlg::mobFlagsListItemChanged(QListWidgetItem *const item)
 {
     deref(item);
     RoomMobFlag flag{};
-    if (!mobListItems.findIndexOf(dynamic_cast<RoomListWidgetItem *>(item), flag)) {
+    if (!mobListItems.findIndexOf(checked_dynamic_downcast<RoomListWidgetItem *>(item), flag)) {
         qWarning() << "oops" << __FILE__ << ":" << __LINE__;
         return;
     }
@@ -1348,7 +1348,7 @@ void RoomEditAttrDlg::loadFlagsListItemChanged(QListWidgetItem *const item)
 {
     deref(item);
     RoomLoadFlag flag{};
-    if (!loadListItems.findIndexOf(dynamic_cast<RoomListWidgetItem *>(item), flag)) {
+    if (!loadListItems.findIndexOf(checked_dynamic_downcast<RoomListWidgetItem *>(item), flag)) {
         qWarning() << "oops: " << __FILE__ << ":" << __LINE__;
         return;
     }
@@ -1398,7 +1398,7 @@ void RoomEditAttrDlg::exitFlagsListItemChanged(QListWidgetItem *const item)
 {
     deref(item);
     ExitFlag flag{};
-    if (!exitListItems.findIndexOf(dynamic_cast<RoomListWidgetItem *>(item), flag)) {
+    if (!exitListItems.findIndexOf(checked_dynamic_downcast<RoomListWidgetItem *>(item), flag)) {
         qWarning() << "oops: " << __FILE__ << ":" << __LINE__;
         return;
     }
@@ -1459,7 +1459,7 @@ void RoomEditAttrDlg::doorFlagsListItemChanged(QListWidgetItem *const item)
 {
     deref(item);
     DoorFlag flag{};
-    if (!doorListItems.findIndexOf(dynamic_cast<RoomListWidgetItem *>(item), flag)) {
+    if (!doorListItems.findIndexOf(checked_dynamic_downcast<RoomListWidgetItem *>(item), flag)) {
         qWarning() << "oops: " << __FILE__ << ":" << __LINE__;
         return;
     }

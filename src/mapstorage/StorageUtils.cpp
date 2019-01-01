@@ -35,6 +35,17 @@
 namespace StorageUtils {
 
 #ifndef MMAPPER_NO_ZLIB
+
+template<typename T>
+Bytef *as_far_byte_array(T s) = delete;
+
+template<>
+inline Bytef *as_far_byte_array(char *const s)
+{
+    static_assert(alignof(char) == alignof(Bytef), "");
+    return reinterpret_cast<Bytef *>(s);
+}
+
 QByteArray inflate(QByteArray &data)
 {
     const auto get_zlib_error_str = [](const int ret, const z_stream &strm) {
@@ -53,7 +64,7 @@ QByteArray inflate(QByteArray &data)
     strm.zfree = nullptr;
     strm.opaque = nullptr;
     strm.avail_in = static_cast<uInt>(data.size());
-    strm.next_in = reinterpret_cast<Bytef *>(data.data());
+    strm.next_in = as_far_byte_array(data.data());
     int ret = inflateInit(&strm);
     if (ret != Z_OK) {
         throw std::runtime_error("Unable to initialize zlib");
@@ -62,7 +73,7 @@ QByteArray inflate(QByteArray &data)
     /* decompress until deflate stream ends */
     do {
         strm.avail_out = CHUNK;
-        strm.next_out = reinterpret_cast<Bytef *>(out);
+        strm.next_out = as_far_byte_array(out);
         ret = inflate(&strm, Z_NO_FLUSH);
         assert(ret != Z_STREAM_ERROR); /* state not clobbered */
         switch (ret) {

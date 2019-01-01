@@ -31,6 +31,7 @@
 
 #include "../configuration/configuration.h"
 #include "../global/enums.h"
+#include "../global/utils.h"
 #include "GroupSocket.h"
 
 #ifndef MMAPPER_NO_OPENSSL
@@ -104,21 +105,21 @@ static X509_ptr generateX509(const EVP_PKEY_ptr &pkey)
     X509_NAME_add_entry_by_txt(name,
                                "O",
                                MBSTRING_ASC,
-                               reinterpret_cast<const unsigned char *>(GROUP_ORGANIZATION),
+                               as_unsigned_cstring(GROUP_ORGANIZATION),
                                -1,
                                -1,
                                0);
     X509_NAME_add_entry_by_txt(name,
                                "OU",
                                MBSTRING_ASC,
-                               reinterpret_cast<const unsigned char *>(GROUP_ORGANIZATIONAL_UNIT),
+                               as_unsigned_cstring(GROUP_ORGANIZATIONAL_UNIT),
                                -1,
                                -1,
                                0);
     X509_NAME_add_entry_by_txt(name,
                                "CN",
                                MBSTRING_ASC,
-                               reinterpret_cast<const unsigned char *>(GROUP_COMMON_NAME),
+                               as_unsigned_cstring(GROUP_COMMON_NAME),
                                -1,
                                -1,
                                0);

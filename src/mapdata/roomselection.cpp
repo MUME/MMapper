@@ -105,7 +105,7 @@ bool RoomSelection::isMovable(const Coordinate &offset) const
 
 void RoomSelection::genericSearch(const RoomFilter &f)
 {
-    m_mapData.genericSearch(dynamic_cast<RoomRecipient *>(this), f);
+    m_mapData.genericSearch(checked_static_upcast<RoomRecipient *>(this), f);
 }
 
 SharedRoomSelection RoomSelection::createSelection(MapData &mapData)
