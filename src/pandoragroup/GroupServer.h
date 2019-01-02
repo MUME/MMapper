@@ -86,6 +86,8 @@ private:
     void parseLoginInformation(GroupSocket *socket, const QVariantMap &data);
     void sendGroupInformation(GroupSocket *socket);
     void kickConnection(GroupSocket *socket, const QString &message);
+    void tryAddPortMapping(quint16 port);
+    void tryDeletePortMapping(quint16 port);
 
 protected slots:
     void onIncomingConnection(qintptr socketDescriptor);

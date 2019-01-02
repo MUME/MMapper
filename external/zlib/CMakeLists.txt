@@ -1,7 +1,7 @@
 include(ExternalProject)
 ExternalProject_Add(zlib
-    URL "https://github.com/madler/zlib/archive/v1.2.11.zip"
-    URL_HASH SHA1=eba1cd6f2e3c7a75fe33a8b02b4d7e4b1ad58481
+    URL "https://zlib.net/zlib-1.2.11.tar.gz"
+    URL_HASH SHA256=c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1
 
     SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/zlib-src"
     BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/zlib-build"
@@ -12,14 +12,13 @@ ExternalProject_Add(zlib
     UPDATE_COMMAND ""
     ALWAYS 0
     )
+ExternalProject_Get_Property(zlib SOURCE_DIR)
+ExternalProject_Get_Property(zlib BINARY_DIR)
 if(WIN32)
     set(ZLIB_STATIC_LIBRARY_NAME zlibstatic)
 else()
     set(ZLIB_STATIC_LIBRARY_NAME z)
 endif()
-set(ZLIB_STATIC_LIBRARY ${CMAKE_CURRENT_BINARY_DIR}/zlib-build/${CMAKE_STATIC_LIBRARY_PREFIX}${ZLIB_STATIC_LIBRARY_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
+set(ZLIB_STATIC_LIBRARY ${BINARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}${ZLIB_STATIC_LIBRARY_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
 set(ZLIB_LIBRARIES ${ZLIB_STATIC_LIBRARY} PARENT_SCOPE)
-set(ZLIB_INCLUDE_DIRS
-    ${CMAKE_CURRENT_BINARY_DIR}/zlib-src
-    ${CMAKE_CURRENT_BINARY_DIR}/zlib-build
-    PARENT_SCOPE)
+set(ZLIB_INCLUDE_DIRS ${SOURCE_DIR} ${BINARY_DIR} PARENT_SCOPE)

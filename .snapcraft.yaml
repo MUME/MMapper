@@ -39,10 +39,12 @@ parts:
       - libssl-dev
       - libqt5opengl5-dev
       - qttools5-dev-tools
+      - libminiupnpc-dev
     stage-packages:
       - zlib1g
       - libssl1.0.0
       - qtwayland5
+      - libminiupnpc10
     override-build: |
       snapcraftctl build
       sed -i 's|Icon=mmapper|Icon=${SNAP}/usr/share/icons/hicolor/256x256/apps/mmapper.png|g' $SNAPCRAFT_PART_INSTALL/usr/share/applications/mmapper.desktop

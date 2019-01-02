@@ -302,6 +302,10 @@ if(WITH_OPENSSL)
     include_directories(SYSTEM ${OPENSSL_INCLUDE_DIR})
 endif()
 
+if(WITH_MINIUPNPC)
+    include_directories(SYSTEM ${MINIUPNPC_INCLUDE_DIR})
+endif()
+
 if(MMAPPER_IS_DEBUG)
     if(NOT DEFINED CHECK_ODR)
         set(CHECK_ODR YES)
@@ -381,6 +385,13 @@ if(WITH_OPENSSL)
     target_link_libraries(mmapper ${OPENSSL_LIBRARIES})
     if(NOT OPENSSL_FOUND)
         add_dependencies(mmapper openssl)
+    endif()
+endif()
+
+if(WITH_MINIUPNPC)
+    target_link_libraries(mmapper ${MINIUPNPC_LIBRARY})
+    if(NOT MINIUPNPC_FOUND)
+        add_dependencies(mmapper miniupnpc)
     endif()
 endif()
 
@@ -517,6 +528,9 @@ if(UNIX AND NOT APPLE)
             set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libssl1.1")
         endif()
     endif()
+    if(WITH_MINIUPNPC)
+        set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libminiupnpc10")
+    endif()
 
     set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_FILE_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
 endif(UNIX AND NOT APPLE)
@@ -603,17 +617,6 @@ endif(WIN32)
 # Apple Install Settings
 if(APPLE)
     set(CMAKE_MACOSX_BUNDLE ON)
-
-    if(Qt5Core_VERSION VERSION_LESS 5.12.0)
-        # Minimum version of OS X that supports c++14 is 10.9 "Mavericks"
-        set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9")
-        set(MACOSX_PREVENT_DARK_MODE "true")
-    else()
-        # Dark mode requires "Sierra" and Qt 5.12
-        set(CMAKE_OSX_DEPLOYMENT_TARGET "10.12")
-        set(MACOSX_PREVENT_DARK_MODE "false")
-    endif()
-
     set_source_files_properties(resources/macosx/m.icns PROPERTIES
     MACOSX_PACKAGE_LOCATION Resources)
     set_target_properties(mmapper PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/MacOSXBundleInfo.plist.in )
