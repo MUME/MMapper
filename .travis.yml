@@ -102,7 +102,7 @@ before_script:
   # Mac
   - '[[ "$TRAVIS_OS_NAME" != osx   || "$CXX" != clang++ ]] || export QMAKESPEC=macx-clang'
   - '[[ "$TRAVIS_OS_NAME" != osx   || "$CXX" != g++     ]] || export QMAKESPEC=macx-g++'
-  - '[ "$TRAVIS_OS_NAME" != osx ] || export MMAPPER_CMAKE_EXTRA=-DOPENSSL_ROOT_DIR=/usr/local/opt/openssl@1.1 -DMINIUPNPC_PREFER_STATIC_LIB=1'
+  - '[ "$TRAVIS_OS_NAME" != osx ] || export MMAPPER_CMAKE_EXTRA=-DOPENSSL_ROOT_DIR=/usr/local/opt/openssl@1.1'
   # Code style check
   - $CLANG_FORMAT -version
   - find . -type f -name *.cpp -o -name *.h -exec $CLANG_FORMAT -style=file -i {} \;

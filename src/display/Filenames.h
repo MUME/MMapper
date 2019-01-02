@@ -38,6 +38,4 @@ QString getPixmapFilename(RoomMobFlag);
 QString getPixmapFilename(TaggedRoad);
 QString getPixmapFilename(TaggedTrail);
 
-
-
 #endif // MMAPPER_FILENAMES_H
