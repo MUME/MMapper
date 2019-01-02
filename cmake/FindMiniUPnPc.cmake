@@ -36,7 +36,7 @@ if(MINIUPNPC_INCLUDE_DIR)
     if(MINIUPNPC_LIBRARY)
         # Or maybe it's miniupnp 1.6
         if(NOT DEFINED MINIUPNPC_API_VERSION)
-            file(WRITE ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckMiniUPnPC_1.6.c
+            file(WRITE ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckMiniUPnPC_1.6.cpp
                 "
                 #include <stdlib.h>
                 #include <errno.h>
@@ -60,7 +60,7 @@ if(MINIUPNPC_INCLUDE_DIR)
                 ")
             try_compile(_MINIUPNPC_HAVE_VERSION_1_6
                 ${CMAKE_BINARY_DIR}
-                ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckMiniUPnPC_1.6.c
+                ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckMiniUPnPC_1.6.cpp
                 COMPILE_DEFINITIONS -DINCLUDE_DIRECTORIES=${MINIUPNPC_INCLUDE_DIR}
                 LINK_LIBRARIES ${MINIUPNPC_LIBRARY}
                 OUTPUT_VARIABLE OUTPUT)
@@ -74,7 +74,7 @@ if(MINIUPNPC_INCLUDE_DIR)
 
         # Or maybe it's miniupnp 1.5
         if(NOT DEFINED MINIUPNPC_API_VERSION)
-            file(WRITE ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckMiniUPnPC_1.5.c
+            file(WRITE ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckMiniUPnPC_1.5.cpp
                 "
                 #include <stdlib.h>
                 #include <miniupnpc/miniupnpc.h>
@@ -97,7 +97,7 @@ if(MINIUPNPC_INCLUDE_DIR)
                 ")
             try_compile(_MINIUPNPC_HAVE_VERSION_1_5
                 ${CMAKE_BINARY_DIR}
-                ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckMiniUPnPC_1.5.c
+                ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckMiniUPnPC_1.5.cpp
                 COMPILE_DEFINITIONS -DINCLUDE_DIRECTORIES=${MlINIUPNPC_INCLUDE_DIR}
                 LINK_LIBRARIES ${MINIUPNPC_LIBRARY}
                 OUTPUT_VARIABLE OUTPUT)
