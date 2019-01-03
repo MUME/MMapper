@@ -481,11 +481,6 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         if (m_descriptionReady) {
             parsePrompt(normalizeStringCopy(m_stringBuffer));
             move();
-        } else {
-            if (!queue.isEmpty()) {
-                queue.dequeue();
-                emit showPath(queue, true);
-            }
         }
 
         toUser.append(ch);
@@ -553,17 +548,22 @@ void MumeXmlParser::parseMudCommands(const QString &str)
             markCurrentCommand();
             return;
         } else if (str.startsWith("You failed to climb")) {
-            if (!queue.isEmpty()) {
+            if (!queue.isEmpty())
                 queue.dequeue();
-            }
-            queue.prepend(CommandIdType::NONE);
+            queue.prepend(CommandIdType::NONE); // REVISIT: Do we need this?
             emit showPath(queue, true);
             return;
         } else if (str.startsWith("You flee head")) {
-            queue.enqueue(m_move);
+            queue.enqueue(CommandIdType::LOOK);
             return;
         } else if (str.startsWith("You follow")) {
-            queue.enqueue(m_move);
+            queue.enqueue(CommandIdType::LOOK);
+            return;
+        } else if (str.startsWith("You need to swim to go there.")
+                   || str.startsWith("You cannot ride there.")) {
+            if (!queue.isEmpty())
+                queue.dequeue();
+            emit showPath(queue, true);
             return;
         } else if (str.startsWith("You quietly scout")) {
             queue.prepend(CommandIdType::SCOUT);
@@ -572,6 +572,36 @@ void MumeXmlParser::parseMudCommands(const QString &str)
     } else if (str.at(0) == 'T') {
         if (str.startsWith("The current time is")) {
             m_mumeClock->parseClockTime(str);
+        } else if (str.endsWith("seems to be closed.")
+                   || str.endsWith("is too steep, you need to climb to go there.")) {
+            if (!queue.isEmpty())
+                queue.dequeue();
+            emit showPath(queue, true);
+        }
+    } else if (str.at(0) == 'A') {
+        if (str.startsWith("Alas, you cannot go that way...")) {
+            if (!queue.isEmpty())
+                queue.dequeue();
+            emit showPath(queue, true);
+        }
+    } else if (str.at(0) == 'N') {
+        if (str.startsWith("No way! You are fighting for your life!")
+            || str.startsWith("Nah... You feel too relaxed to do that.")) {
+            if (!queue.isEmpty())
+                queue.dequeue();
+            emit showPath(queue, true);
+        }
+    } else if (str.at(0) == 'M') {
+        if (str.startsWith("Maybe you should get on your feet first?")) {
+            if (!queue.isEmpty())
+                queue.dequeue();
+            emit showPath(queue, true);
+        }
+    } else if (str.at(0) == 'I') {
+        if (str.startsWith("In your dreams, or what?")) {
+            if (!queue.isEmpty())
+                queue.dequeue();
+            emit showPath(queue, true);
         }
     }
     if (str.endsWith("of the Third Age.")) {
@@ -584,7 +614,7 @@ void MumeXmlParser::parseMudCommands(const QString &str)
         m_mumeClock->parseWeather(str);
     }
 
-    // parse regexps which force new char move
+    // REVISIT: Is this even necessary? We have <movement/> tags now
     if (Patterns::matchMoveForcePatterns(str)) {
         queue.enqueue(CommandIdType::NONE);
         emit showPath(queue, true);
