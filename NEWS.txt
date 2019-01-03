@@ -1,4 +1,21 @@
 ================================
+MMapper 2.7.4 (January 2, 2019)
+================================
+
+New features:
+ - Group manager hosts will now have their ports automatically forwarded using UPnP
+ - A red highlight is displayed below remote edit text that needs to be justified
+ - Remote edit widget can now justify text to 80 characters (like MUME's %j)
+ - Added toggle to prevent the group manager from autostarting
+
+Bug fixes:
+ - Improved Mac OS X 10.9 and dark mode support
+ - Refactored configuration to support multiple profiles for power users
+ - Log view now correctly scrolls down on updates
+ - The account "time" command will not unsync the clock
+ - Last remembered prompt is now cleared on disconnect
+
+================================
 MMapper 2.7.3 (December 26, 2018)
 ================================
 
