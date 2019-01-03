@@ -40,20 +40,24 @@
 #include "GroupServer.h"
 #include "groupauthority.h"
 
+static constexpr const bool THREADED = true;
+
 Mmapper2Group::Mmapper2Group(QObject *const /* parent */)
     : QObject(nullptr)
     , networkLock(QMutex::Recursive)
-    , thread(new QThread)
+    , thread(THREADED ? new QThread : nullptr)
 {
-    connect(thread.get(), &QThread::started, this, [this]() {
-        emit log("GroupManager", "Initialized Group Manager service");
-    });
-    connect(thread.get(), &QThread::finished, thread.get(), &QObject::deleteLater);
-    connect(thread.get(), &QThread::destroyed, this, [this]() {
-        thread.release();
-        deleteLater();
-        qInfo() << "Terminated Group Manager service";
-    });
+    if (thread) {
+        connect(thread.get(), &QThread::started, this, [this]() {
+            emit log("GroupManager", "Initialized Group Manager service");
+        });
+        connect(thread.get(), &QThread::finished, thread.get(), &QObject::deleteLater);
+        connect(thread.get(), &QThread::destroyed, this, [this]() {
+            thread.release();
+            deleteLater();
+            qInfo() << "Terminated Group Manager service";
+        });
+    }
 }
 
 Mmapper2Group::~Mmapper2Group()

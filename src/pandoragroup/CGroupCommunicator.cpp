@@ -62,6 +62,7 @@ QByteArray CGroupCommunicator::formMessageBlock(const Messages message, const QV
 {
     QByteArray block;
     QXmlStreamWriter xml(&block);
+    xml.setCodec("ISO 8859-1");
     xml.setAutoFormatting(LOG_MESSAGE_INFO);
     xml.writeStartDocument();
     xml.writeStartElement("datagram");
@@ -299,12 +300,12 @@ void CGroupCommunicator::relayLog(const QString &str)
 
 CGroup *CGroupCommunicator::getGroup()
 {
-    auto *group = checked_dynamic_downcast<Mmapper2Group*>(this->parent());
+    auto *group = checked_dynamic_downcast<Mmapper2Group *>(this->parent());
     return group->getGroup();
 }
 
 GroupAuthority *CGroupCommunicator::getAuthority()
 {
-    auto *group = checked_dynamic_downcast<Mmapper2Group*>(this->parent());
+    auto *group = checked_dynamic_downcast<Mmapper2Group *>(this->parent());
     return group->getAuthority();
 }

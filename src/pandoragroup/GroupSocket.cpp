@@ -235,38 +235,43 @@ void GroupSocket::onTimeout()
 void GroupSocket::onReadyRead()
 {
     io::readAllAvailable(socket, ioBuffer, [this](const QByteArray &byteArray) {
-        buffer += byteArray;
-        while (currentMessageLen < buffer.size()) {
-            cutMessageFromBuffer();
+        for (const auto &c : byteArray) {
+            onReadInternal(c);
         }
     });
 }
 
-void GroupSocket::cutMessageFromBuffer()
+void GroupSocket::onReadInternal(const char c)
 {
-    // REVISIT: Turn this into a state machine
-    if (currentMessageLen == 0) {
-        // Find the next message length
-        int spaceIndex = buffer.indexOf(' ');
-        QString messageLengthStr = buffer.left(spaceIndex + 1);
-        currentMessageLen = messageLengthStr.toInt();
+    switch (state) {
+    case GroupMessageState::MESSAGE_LENGTH:
+        if (c == ' ' && currentMessageLen > 0) {
+            // Terminating space received
+            state = GroupMessageState::MESSAGE_PAYLOAD;
+        } else if (c >= '0' && c <= '9') {
+            // Digit received
+            currentMessageLen *= 10;
+            currentMessageLen += static_cast<unsigned int>(c - '0');
+        } else {
+            // Reset due to garbage
+            currentMessageLen = 0;
+        }
+        break;
+    case GroupMessageState::MESSAGE_PAYLOAD:
+        buffer.append(c);
+        if (static_cast<unsigned int>(buffer.size()) == currentMessageLen) {
+            // Cut message from buffer
+            if (DEBUG)
+                qDebug() << "Incoming message:" << buffer;
+            emit incomingData(this, buffer);
 
-        // Update buffer with remainder
-        buffer = buffer.right(buffer.size() - spaceIndex - 1);
-
-        // Do we have enough for a message?
-        if (currentMessageLen == buffer.size())
-            cutMessageFromBuffer();
-        return;
+            // Reset state machine
+            buffer.clear();
+            currentMessageLen = 0;
+            state = GroupMessageState::MESSAGE_LENGTH;
+        }
+        break;
     }
-
-    // Cut message from buffer
-    QByteArray message = buffer.left(currentMessageLen);
-    if (DEBUG)
-        qDebug() << "Incoming message:" << message;
-    emit incomingData(this, message);
-    buffer = buffer.right(buffer.size() - currentMessageLen);
-    currentMessageLen = 0;
 }
 
 /*
@@ -294,5 +299,6 @@ void GroupSocket::reset()
     buffer.clear();
     secret.clear();
     name.clear();
+    state = GroupMessageState::MESSAGE_LENGTH;
     currentMessageLen = 0;
 }

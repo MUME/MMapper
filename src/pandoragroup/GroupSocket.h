@@ -94,16 +94,24 @@ private:
     QSslSocket socket;
     QTimer timer;
     GroupAuthority *authority;
-    void cutMessageFromBuffer();
+    void onReadInternal(const char c);
 
     ProtocolState protocolState = ProtocolState::Unconnected;
     ProtocolVersion protocolVersion = 102;
+
+    enum class GroupMessageState {
+        /// integer string representing the messge length
+        MESSAGE_LENGTH,
+        /// message payload
+        MESSAGE_PAYLOAD
+    } state
+        = GroupMessageState::MESSAGE_LENGTH;
 
     io::null_padded_buffer<(1 << 15)> ioBuffer{};
     QByteArray buffer{};
     QByteArray secret{};
     QByteArray name{};
-    int currentMessageLen = 0;
+    unsigned int currentMessageLen = 0;
 };
 
 #endif /*GROUPSOCKET_H_*/
