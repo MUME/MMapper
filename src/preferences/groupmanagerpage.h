@@ -57,7 +57,6 @@ public slots:
     void shareSelfChanged(int);
 
 signals:
-    void setGroupManagerType(GroupManagerState);
     void updatedSelf();
     void refresh();
 

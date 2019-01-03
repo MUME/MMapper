@@ -46,7 +46,6 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
     connect(authority, &GroupAuthority::secretRefreshed, this, [this](const GroupSecret &secret) {
         secretLineEdit->setText(secret);
         refreshButton->setEnabled(true);
-        emit setGroupManagerType(GroupManagerState::Off);
     });
 
     // Character Section
@@ -145,7 +144,6 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
     rulesWarning->setChecked(groupManager.rulesWarning);
 
     // Inform Group Manager of changes
-    connect(this, &GroupManagerPage::setGroupManagerType, m_groupManager, &Mmapper2Group::setMode);
     connect(this, &GroupManagerPage::updatedSelf, m_groupManager, &Mmapper2Group::updateSelf);
 }
 
@@ -231,10 +229,6 @@ void GroupManagerPage::remoteHostTextChanged()
     const auto currentHost = remoteHost->text().toLatin1();
     if (currentHost != savedHost) {
         savedHost = currentHost;
-
-        if (m_groupManager->getMode() == GroupManagerState::Client) {
-            emit setGroupManagerType(GroupManagerState::Off);
-        }
     }
 }
 
@@ -244,10 +238,6 @@ void GroupManagerPage::remotePortValueChanged(int /*unused*/)
     const auto currentRemotePort = static_cast<quint16>(remotePort->value());
     if (currentRemotePort != savedRemotePort) {
         savedRemotePort = currentRemotePort;
-
-        if (m_groupManager->getMode() == GroupManagerState::Client) {
-            emit setGroupManagerType(GroupManagerState::Off);
-        }
     }
 }
 
@@ -262,10 +252,6 @@ void GroupManagerPage::localPortValueChanged(int /*unused*/)
     const auto currentLocalPort = static_cast<quint16>(this->localPort->value());
     if (currentLocalPort != savedLocalPort) {
         savedLocalPort = currentLocalPort;
-
-        if (m_groupManager->getMode() == GroupManagerState::Server) {
-            emit setGroupManagerType(GroupManagerState::Off);
-        }
     }
 }
 

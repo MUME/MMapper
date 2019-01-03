@@ -196,6 +196,7 @@ public:
         QMap<QString, QVariant> secretMetadata{};
         QString groupTellColor{}; // ANSI color
         bool lockGroup = false;
+        bool autoStart = false;
 
     private:
         SUBGROUP();

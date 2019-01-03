@@ -256,6 +256,7 @@ ConstString KEY_AUTHORIZATION_REQUIRED = "Authorization required";
 ConstString KEY_AUTHORIZED_SECRETS = "Authorized secrets";
 ConstString KEY_AUTO_LOAD = "Auto load";
 ConstString KEY_AUTO_RESIZE_TERMINAL = "Auto resize terminal";
+ConstString KEY_AUTO_START_GROUP_MANAGER = "Auto start group manager";
 ConstString KEY_BACKGROUND_COLOR = "Background color";
 ConstString KEY_RSA_X509_CERTIFICATE = "RSA X509 certificate";
 ConstString KEY_CHARACTER_ENCODING = "Character encoding";
@@ -620,6 +621,7 @@ void Configuration::GroupManagerSettings::read(QSettings &conf)
     secretMetadata = conf.value(KEY_SECRET_METADATA).toMap();
     groupTellColor = conf.value(KEY_GROUP_TELL_ANSI_COLOR, QString(ANSI_GREEN)).toString();
     lockGroup = conf.value(KEY_LOCK_GROUP, false).toBool();
+    autoStart = conf.value(KEY_AUTO_START_GROUP_MANAGER, false).toBool();
 }
 
 void Configuration::MumeClockSettings::read(QSettings &conf)
@@ -750,6 +752,7 @@ void Configuration::GroupManagerSettings::write(QSettings &conf) const
     conf.setValue(KEY_SECRET_METADATA, secretMetadata);
     conf.setValue(KEY_GROUP_TELL_ANSI_COLOR, groupTellColor);
     conf.setValue(KEY_LOCK_GROUP, lockGroup);
+    conf.setValue(KEY_AUTO_START_GROUP_MANAGER, autoStart);
 }
 
 void Configuration::MumeClockSettings::write(QSettings &conf) const

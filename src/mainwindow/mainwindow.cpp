@@ -253,8 +253,9 @@ void MainWindow::startServices()
     }
 
     m_groupManager->start();
+    const auto &groupConfig = getConfig().groupManager;
     groupNetwork.networkStopAct->setChecked(true);
-    switch (getConfig().groupManager.state) {
+    switch (groupConfig.state) {
     case GroupManagerState::Off:
         groupMode.groupOffAct->setChecked(true);
         onModeGroupOff();
@@ -262,14 +263,14 @@ void MainWindow::startServices()
     case GroupManagerState::Client:
         groupMode.groupClientAct->setChecked(true);
         onModeGroupClient();
-        groupNetwork.networkStartAct->trigger();
         break;
     case GroupManagerState::Server:
         groupMode.groupServerAct->setChecked(true);
         onModeGroupServer();
-        groupNetwork.networkStartAct->trigger();
         break;
     }
+    if (groupConfig.state != GroupManagerState::Off && groupConfig.autoStart)
+        groupNetwork.networkStartAct->trigger();
 }
 
 void MainWindow::readSettings()

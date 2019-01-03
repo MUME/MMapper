@@ -74,6 +74,9 @@ GeneralPage::GeneralPage(QWidget *parent)
     connect(showLaunchPanelCheckBox, &QCheckBox::stateChanged, this, [this]() {
         setConfig().general.noLaunchPanel = !showLaunchPanelCheckBox->isChecked();
     });
+    connect(autoStartGroupManagerCheckBox, &QCheckBox::stateChanged, this, [this]() {
+        setConfig().groupManager.autoStart = autoStartGroupManagerCheckBox->isChecked();
+    });
     connect(autoLoadFileName,
             &QLineEdit::textChanged,
             this,
@@ -129,6 +132,7 @@ GeneralPage::GeneralPage(QWidget *parent)
     showNotesCheckBox->setChecked(mumeNative.showNotes);
 
     showLaunchPanelCheckBox->setChecked(!config.general.noLaunchPanel);
+    autoStartGroupManagerCheckBox->setChecked(config.groupManager.autoStart);
     autoLoadFileName->setText(autoLoad.fileName);
     autoLoadCheck->setChecked(autoLoad.autoLoadMap);
     autoLoadFileName->setEnabled(autoLoad.autoLoadMap);
