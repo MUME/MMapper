@@ -573,7 +573,7 @@ void GroupServer::onRevokeWhitelist(const QByteArray &secret)
 using UPNPDev_ptr = std::unique_ptr<UPNPDev, decltype(&::freeUPNPDevlist)>;
 
 static constexpr const auto UPNP_DESCRIPTION = "MMapper";
-static constexpr const auto UPNP_PROTO = "UDP";
+static constexpr const auto UPNP_WHITELISTED_PROTO = "TCP";
 static constexpr const auto UPNP_PERMANENT_LEASE = "0";
 
 void GroupServer::tryAddPortMapping(quint16 port)
@@ -587,7 +587,7 @@ void GroupServer::tryAddPortMapping(quint16 port)
 #endif
     UPNPUrls urls;
     IGDdatas igdData;
-    char lanAddress[64], externalip[16];
+    char lanAddress[64], externalAddress[16];
     result = UPNP_GetValidIGD(deviceList.get(), &urls, &igdData, lanAddress, sizeof lanAddress);
     if (result != 0) {
         if (result == 1) {
@@ -598,18 +598,20 @@ void GroupServer::tryAddPortMapping(quint16 port)
                                          portString.constData(),
                                          lanAddress,
                                          UPNP_DESCRIPTION,
-                                         UPNP_PROTO,
+                                         UPNP_WHITELISTED_PROTO,
                                          nullptr,
                                          UPNP_PERMANENT_LEASE);
             if (result != 0) {
                 qWarning() << "UPNP_AddPortMapping failed with result code" << result;
             } else {
                 // REVISIT: Expose this in the preferences?
-                if (UPNP_GetExternalIPAddress(urls.controlURL, igdData.first.servicetype, externalip)
+                if (UPNP_GetExternalIPAddress(urls.controlURL,
+                                              igdData.first.servicetype,
+                                              externalAddress)
                     != 0)
-                    externalip[0] = '\0';
+                    externalAddress[0] = '\0';
                 emit sendLog(QString("Added port mapping to UPnP router with external IP: %1")
-                                 .arg(externalip));
+                                 .arg(externalAddress));
                 qDebug() << "Added IGD port mapping";
             }
         } else if (result == 2) {
@@ -620,7 +622,7 @@ void GroupServer::tryAddPortMapping(quint16 port)
             qWarning() << "UPNP_GetValidIGD returned an unknown result code";
         }
     } else {
-        qInfo() << "NO IGD found";
+        qInfo() << "No IGD found";
     }
     FreeUPNPUrls(&urls);
 }
@@ -644,7 +646,7 @@ void GroupServer::tryDeletePortMapping(quint16 port)
             result = UPNP_DeletePortMapping(urls.controlURL,
                                             igdData.first.servicetype,
                                             portString.constData(),
-                                            UPNP_PROTO,
+                                            UPNP_WHITELISTED_PROTO,
                                             nullptr);
             if (result != 0) {
                 qWarning() << "UPNP_DeletePortMapping failed with result code" << result;
@@ -660,7 +662,7 @@ void GroupServer::tryDeletePortMapping(quint16 port)
             qWarning() << "UPNP_GetValidIGD returned an unknown result code";
         }
     } else {
-        qInfo() << "NO IGD found";
+        qInfo() << "No IGD found";
     }
     FreeUPNPUrls(&urls);
 }
