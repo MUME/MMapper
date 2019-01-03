@@ -132,7 +132,6 @@ signals:
     void log(const QString &, const QString &);
     void onDataLoaded();
     void onDataChanged();
-    void updateCanvas();
 
 public slots:
     void setFileName(QString filename) { m_fileName = filename; }

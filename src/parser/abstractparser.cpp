@@ -732,7 +732,7 @@ void AbstractParser::searchCommand(const RoomFilter &f)
 {
     search_rs = RoomSelection::createSelection(*m_mapData);
     search_rs->genericSearch(f);
-    emit m_mapData->updateCanvas();
+    emit showPath(queue, true);
     sendToUser(QString("%1 room%2 found.\r\n")
                    .arg(search_rs->size())
                    .arg((search_rs->size() == 1) ? "" : "s"));
@@ -751,7 +751,7 @@ void AbstractParser::dirsCommand(const RoomFilter &f)
 void AbstractParser::markCurrentCommand()
 {
     search_rs = RoomSelection::createSelection(*m_mapData, getPosition());
-    emit m_mapData->updateCanvas();
+    emit showPath(queue, true);
 }
 
 DirectionType AbstractParser::tryGetDir(StringView &view)
@@ -1620,6 +1620,7 @@ void AbstractParser::nameDoorCommand(const QString &doorname, DirectionType dire
     // if (doorname.isEmpty()) toggleExitFlagCommand(ExitFlag::DOOR, direction);
     m_mapData->setDoorName(c, doorname, static_cast<ExitDirection>(direction));
     sendToUser("--->Doorname set to: " + doorname.toLatin1() + "\r\n");
+    emit showPath(queue, true);
 }
 
 void AbstractParser::toggleExitFlagCommand(const ExitFlag flag, const DirectionType direction)
@@ -1633,6 +1634,7 @@ void AbstractParser::toggleExitFlagCommand(const ExitFlag flag, const DirectionT
     const QByteArray flagname = getFlagName(flag);
 
     sendToUser("--->" + flagname + " exit " + toggle + "\r\n");
+    emit showPath(queue, true);
 }
 
 bool AbstractParser::getField(const Coordinate &c,
@@ -1652,6 +1654,7 @@ void AbstractParser::toggleDoorFlagCommand(const DoorFlag flag, const DirectionT
     const auto toggle = enabledString(getField(c, direction, var));
     const QByteArray flagname = getFlagName(flag);
     sendToUser("--->" + flagname + " door " + toggle + "\r\n");
+    emit showPath(queue, true);
 }
 
 void AbstractParser::setRoomFieldCommand(const QVariant &flag, const RoomField field)
@@ -1661,6 +1664,7 @@ void AbstractParser::setRoomFieldCommand(const QVariant &flag, const RoomField f
     m_mapData->setRoomField(c, flag, field);
 
     sendToUser("--->Room field set\r\n");
+    emit showPath(queue, true);
 }
 
 ExitFlags AbstractParser::getExitFlags(const DirectionType dir) const
@@ -1692,6 +1696,7 @@ void AbstractParser::toggleRoomFlagCommand(const uint flag, const RoomField fiel
     const QString toggle = enabledString(m_mapData->getRoomFlag(c, flag, field));
 
     sendToUser("--->Room flag " + toggle.toLatin1() + "\r\n");
+    emit showPath(queue, true);
 }
 
 void AbstractParser::printRoomInfo(const RoomFields fieldset)
