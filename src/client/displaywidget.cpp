@@ -70,12 +70,10 @@ DisplayWidget::DisplayWidget(QWidget *parent)
     setDefaultFormat(m_format);
     m_cursor.setCharFormat(m_format);
 
-    QFontMetrics fm(m_serverOutputFont);
-    int x = fm.averageCharWidth() * settings.columns;
-    int y = fm.lineSpacing() * settings.rows;
     // Add an extra character for the scrollbars
-    x += 1;
-    y += 1;
+    QFontMetrics fm(m_serverOutputFont);
+    int x = fm.averageCharWidth() * (settings.columns + 1);
+    int y = fm.lineSpacing() * (settings.rows + 1);
     setMinimumSize(QSize(x + contentsMargins().left() + contentsMargins().right(),
                          y + contentsMargins().top() + contentsMargins().bottom()));
     setLineWrapMode(QTextEdit::FixedColumnWidth);

@@ -44,37 +44,76 @@
 
 class QWidget;
 
-static constexpr const auto MAX_LENGTH = 80;
-static const QRegularExpression s_ansiRx(R"(^\[((?:\d+;)*\d+)m$)");
+static int breakLine(const QString &line, const int maxLength)
+{
+    // Check if line is a quote and avoid breaking it
+    static const QRegularExpression quotedText(R"(^[[:space:]]*>)");
+    if (quotedText.match(line).hasMatch()) {
+        return -1;
+    }
+
+    // Break line into ANSI and text components
+    QStringList textList, ansiList;
+    const auto extract_parts = [&textList, &ansiList](const QString &line) {
+        int textIndex = 0, ansiIndex = 0;
+        static const QRegularExpression ansiRx(R"(\x1b\[(?:\d+;)*\d+m)");
+        QRegularExpressionMatchIterator it = ansiRx.globalMatch(line);
+        while (it.hasNext()) {
+            QRegularExpressionMatch match = it.next();
+            ansiIndex = match.capturedStart(0);
+            textList << line.mid(textIndex, ansiIndex - textIndex);
+            textIndex = match.capturedEnd(0);
+            ansiList << line.mid(ansiIndex, textIndex - ansiIndex);
+        }
+        if (textIndex < line.length()) {
+            textList << line.mid(textIndex);
+        }
+    };
+    extract_parts(line);
+
+    // Find break point in components for a given length
+    const auto extract_break_pos = [&textList, &ansiList](const int maxLength) {
+        int textPos = 0;
+        int ansiAddition = 0;
+        QStringListIterator textIterator(textList), ansiIterator(ansiList);
+        while (textIterator.hasNext()) {
+            textPos += textIterator.next().length();
+            if (textPos > maxLength)
+                return maxLength + ansiAddition;
+            if (ansiIterator.hasNext())
+                ansiAddition += ansiIterator.next().length();
+        }
+        return -1;
+    };
+    return extract_break_pos(maxLength);
+}
 
 class LineHighlighter final : public QSyntaxHighlighter
 {
 public:
-    explicit LineHighlighter(QTextDocument *parent);
+    explicit LineHighlighter(int maxLength, QTextDocument *parent);
     virtual ~LineHighlighter() override;
 
     void highlightBlock(const QString &text) override
     {
-        static const QRegularExpression quotedText(R"(^[[:space:]]*>)");
-        if (quotedText.match(text).hasMatch()) {
-            setCurrentBlockState(1);
-            return;
-        }
-        if (s_ansiRx.match(text).hasMatch())
-            return;
-        if (text.length() >= MAX_LENGTH) {
+        const int breakPos = breakLine(text, maxLength);
+        if (breakPos > 0) {
             QTextCharFormat underlineFormat;
             underlineFormat.setFontUnderline(true);
             underlineFormat.setUnderlineStyle(QTextCharFormat::UnderlineStyle::WaveUnderline);
             underlineFormat.setUnderlineColor(Qt::red);
-            auto length = text.length() - MAX_LENGTH;
-            setFormat(MAX_LENGTH, length, underlineFormat);
+            auto length = text.length() - breakPos;
+            setFormat(breakPos, length, underlineFormat);
         }
     }
+
+private:
+    const int maxLength;
 };
 
-LineHighlighter::LineHighlighter(QTextDocument *const parent)
+LineHighlighter::LineHighlighter(int maxLength, QTextDocument *const parent)
     : QSyntaxHighlighter(parent)
+    , maxLength(maxLength)
 {}
 
 LineHighlighter::~LineHighlighter() = default;
@@ -93,6 +132,13 @@ RemoteEditWidget::RemoteEditWidget(const bool editSession,
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
     setWindowTitle(m_title + " - MMapper " + (m_editSession ? "Editor" : "Viewer"));
 
+    // Figure out what length we should limit ourselves to
+    static const QRegularExpression titleLengthLimit79(
+        R"(^(Enter new whois|Enter new description)$)");
+    if (titleLengthLimit79.match(m_title).hasMatch()) {
+        m_maxLength = 79;
+    }
+
     // REVISIT: can this be called as an initializer?
     m_textEdit.reset(createTextEdit());
 
@@ -110,16 +156,20 @@ QPlainTextEdit *RemoteEditWidget::createTextEdit()
 {
     const QFont font(getConfig().integratedClient.font);
     const QFontMetrics fm(font);
-    const int x = fm.averageCharWidth() * 80;
-    const int y = fm.lineSpacing() * 24;
+    const int x = fm.averageCharWidth() * (80 + 1);
+    const int y = fm.lineSpacing() * (24 + 1);
 
     const auto pTextEdit = new QPlainTextEdit(this);
     pTextEdit->setFont(font);
     pTextEdit->setPlainText(m_body);
     pTextEdit->setReadOnly(!m_editSession);
-    pTextEdit->setMinimumSize(QSize(x, y));
+    pTextEdit->setMinimumSize(QSize(x + contentsMargins().left() + contentsMargins().right(),
+                                    y + contentsMargins().top() + contentsMargins().bottom()));
+    pTextEdit->setLineWrapMode(QPlainTextEdit::LineWrapMode::NoWrap);
+    pTextEdit->setSizeIncrement(fm.averageCharWidth(), fm.lineSpacing());
+    pTextEdit->setTabStopWidth(fm.width(" ") * 8); // A tab is 8 spaces wide
 
-    new LineHighlighter(pTextEdit->document());
+    new LineHighlighter(m_maxLength, pTextEdit->document());
 
     setCentralWidget(pTextEdit);
     addStatusBar(pTextEdit);
@@ -246,20 +296,24 @@ void RemoteEditWidget::updateStatusBar()
 
 void RemoteEditWidget::justifyText()
 {
+    const QString &old = m_textEdit->toPlainText();
     QString text;
-    for (const QStringRef &line : m_textEdit->toPlainText().splitRef('\n')) {
-        if (!line.isEmpty() && line.length() > MAX_LENGTH && !s_ansiRx.match(text).hasMatch()) {
-            int i = 0;
-            QStringRef remainder = line.mid(i * MAX_LENGTH, MAX_LENGTH);
-            do {
-                text.append(remainder.mid(0, MAX_LENGTH));
-                text.append("\n");
-                remainder = line.mid(++i * MAX_LENGTH, MAX_LENGTH);
-            } while (!remainder.isEmpty());
-        } else {
+    text.reserve(old.length());
+    for (const QString &line : old.split('\n')) {
+        if (line.length() <= m_maxLength) {
             text.append(line);
-            text.append("\n");
+
+        } else {
+            QString remainder = line;
+            int breakPos = -1;
+            while ((breakPos = breakLine(remainder, m_maxLength)) > 0) {
+                text.append(remainder.mid(0, breakPos));
+                text.append("\n");
+                remainder = remainder.mid(breakPos);
+            }
+            text.append(remainder);
         }
+        text.append("\n");
     }
     m_textEdit->setPlainText(text);
 }
