@@ -34,9 +34,11 @@
 #include <QTcpSocket>
 
 #include "../configuration/configuration.h"
+#include "../display/mapcanvas.h"
 #include "../display/prespammedpath.h"
 #include "../expandoracommon/parseevent.h"
 #include "../global/io.h"
+#include "../mainwindow/mainwindow.h"
 #include "../mpi/mpifilter.h"
 #include "../mpi/remoteedit.h"
 #include "../pandoragroup/mmapper2group.h"
@@ -54,6 +56,7 @@ Proxy::Proxy(MapData *const md,
              PrespammedPath *const pp,
              Mmapper2Group *const gm,
              MumeClock *mc,
+             MapCanvas *mca,
              qintptr &socketDescriptor,
              ConnectionListener *const listener)
     : QObject(nullptr)
@@ -63,6 +66,7 @@ Proxy::Proxy(MapData *const md,
     , m_prespammedPath(pp)
     , m_groupManager(gm)
     , m_mumeClock(mc)
+    , m_mapCanvas(mca)
     , m_listener(listener)
 {
     // REVISIT: Move instantiation to MainWindow
@@ -104,10 +108,8 @@ Proxy::~Proxy()
 
 void Proxy::start()
 {
-    connect(this,
-            SIGNAL(log(const QString &, const QString &)),
-            m_listener->parent(),
-            SLOT(log(const QString &, const QString &)));
+    MainWindow *mw = dynamic_cast<MainWindow *>(m_listener->parent());
+    connect(this, &Proxy::log, mw, &MainWindow::log);
 
     m_userSocket.reset(new QTcpSocket(this));
     if (!m_userSocket->setSocketDescriptor(m_socketDescriptor)) {
@@ -176,10 +178,11 @@ void Proxy::start()
             m_pathMachine,
             &PathMachine::releaseAllPaths);
     connect(m_parserXml, &AbstractParser::showPath, m_prespammedPath, &PrespammedPath::setPath);
+    connect(m_parserXml, &AbstractParser::log, mw, &MainWindow::log);
     connect(m_parserXml,
-            SIGNAL(log(const QString &, const QString &)),
-            m_listener->parent(),
-            SLOT(log(const QString &, const QString &)));
+            &AbstractParser::newRoomSelection,
+            m_mapCanvas,
+            &MapCanvas::setRoomSelection);
     connect(m_userSocket.data(),
             &QAbstractSocket::disconnected,
             m_parserXml,
@@ -230,10 +233,7 @@ void Proxy::start()
     connect(m_mudSocket, &MumeSocket::disconnected, this, &Proxy::mudTerminatedConnection);
     connect(m_mudSocket, &MumeSocket::disconnected, m_parserXml, &AbstractParser::reset);
     connect(m_mudSocket, &MumeSocket::processMudStream, m_mudTelnet, &MudTelnet::onAnalyzeMudStream);
-    connect(m_mudSocket,
-            SIGNAL(log(const QString &, const QString &)),
-            m_listener->parent(),
-            SLOT(log(const QString &, const QString &)));
+    connect(m_mudSocket, &MumeSocket::log, mw, &MainWindow::log);
     if (getConfig().general.mapMode != MapMode::OFFLINE)
         m_mudSocket->connectToHost();
     else {

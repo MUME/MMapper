@@ -737,12 +737,12 @@ ShortestPathEmitter::~ShortestPathEmitter() = default;
 
 void AbstractParser::searchCommand(const RoomFilter &f)
 {
-    search_rs = RoomSelection::createSelection(*m_mapData);
-    search_rs->genericSearch(f);
+    const auto tmpSel = RoomSelection::createSelection(*m_mapData);
+    tmpSel->genericSearch(f);
     emit showPath(queue, true);
-    sendToUser(QString("%1 room%2 found.\r\n")
-                   .arg(search_rs->size())
-                   .arg((search_rs->size() == 1) ? "" : "s"));
+    sendToUser(
+        QString("%1 room%2 found.\r\n").arg(tmpSel->size()).arg((tmpSel->size() == 1) ? "" : "s"));
+    emit newRoomSelection(SigRoomSelection{tmpSel});
 }
 
 void AbstractParser::dirsCommand(const RoomFilter &f)
@@ -757,8 +757,8 @@ void AbstractParser::dirsCommand(const RoomFilter &f)
 
 void AbstractParser::markCurrentCommand()
 {
-    search_rs = RoomSelection::createSelection(*m_mapData, getTailPosition());
-    emit showPath(queue, true);
+    const auto tmpSel = RoomSelection::createSelection(*m_mapData, getTailPosition());
+    emit newRoomSelection(SigRoomSelection{tmpSel});
 }
 
 DirectionType AbstractParser::tryGetDir(StringView &view)

@@ -74,7 +74,6 @@ protected:
 
 private:
     MapData *m_mapData = nullptr;
-    SharedRoomSelection search_rs;
 
 private:
     using HelpCallback = std::function<void(const std::string &name)>;
@@ -129,6 +128,7 @@ signals:
 
     // for map
     void showPath(CommandQueue, bool);
+    void newRoomSelection(const SigRoomSelection &rs);
 
     // for user commands
     void command(const QByteArray &, const Coordinate &);

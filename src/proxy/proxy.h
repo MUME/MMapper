@@ -40,6 +40,7 @@
 
 class UserTelnet;
 class ConnectionListener;
+class MapCanvas;
 class MapData;
 class Mmapper2Group;
 class Mmapper2PathMachine;
@@ -66,6 +67,7 @@ public:
                    PrespammedPath *,
                    Mmapper2Group *,
                    MumeClock *,
+                   MapCanvas *,
                    qintptr &,
                    ConnectionListener *);
     ~Proxy();
@@ -115,6 +117,7 @@ private:
     PrespammedPath *m_prespammedPath = nullptr;
     Mmapper2Group *m_groupManager = nullptr;
     MumeClock *m_mumeClock = nullptr;
+    MapCanvas *m_mapCanvas = nullptr;
 
     ConnectionListener *m_listener = nullptr;
 };

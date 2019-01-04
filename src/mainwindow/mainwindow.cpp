@@ -206,6 +206,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
                                         m_prespammedPath,
                                         m_groupManager,
                                         m_mumeClock,
+                                        m_mapWindow->getCanvas(),
                                         this);
     m_listener->setMaxPendingConnections(1);
 
@@ -389,10 +390,7 @@ void MainWindow::wireConnections()
     connect(m_mumeClock, &MumeClock::log, this, &MainWindow::log);
 
     connect(m_launchWidget, &WelcomeWidget::playMumeClicked, this, &MainWindow::onLaunchClient);
-    connect(m_listener,
-            &ConnectionListener::clientSuccessfullyConnected,
-            m_launchWidget,
-            &QWidget::hide);
+    connect(m_listener, &ConnectionListener::log, this, &MainWindow::log);
     connect(m_listener,
             &ConnectionListener::clientSuccessfullyConnected,
             m_dockLaunch,

@@ -1165,8 +1165,7 @@ void MapCanvas::drawCharacter(const Coordinate &c, const QColor &color)
     m_opengl.apply(XEnable{XOption::BLEND});
     m_opengl.apply(XDisable{XOption::DEPTH_TEST});
 
-    if (((x < m_visible1.x - 1.0f) || (x > m_visible2.x + 1.0f))
-        || ((y < m_visible1.y - 1.0f) || (y > m_visible2.y + 1.0f))) {
+    if ((x < m_visible1.x) || (x > m_visible2.x) || (y < m_visible1.y) || (y > m_visible2.y)) {
         // Player is distant
         const float cameraCenterX = (m_visible1.x + m_visible2.x) / 2.0f;
         const float cameraCenterY = (m_visible1.y + m_visible2.y) / 2.0f;
@@ -1192,7 +1191,6 @@ void MapCanvas::drawCharacter(const Coordinate &c, const QColor &color)
 
         m_opengl.apply(XColor4f{color});
         m_opengl.callList(m_gllist.character_hint.outline);
-
     } else if (layer != 0) {
         // Player is not on the same layer
         m_opengl.glTranslatef(x, y - 0.5f, m_currentLayer + 0.1f);
@@ -1431,12 +1429,36 @@ void MapCanvas::paintSelectedRoom(const Room *const room)
     qint32 layer = z - m_currentLayer;
 
     m_opengl.glPushMatrix();
-    m_opengl.glTranslatef(x - 0.5f, y - 0.5f, ROOM_Z_DISTANCE * layer);
+    m_opengl.apply(XEnable{XOption::BLEND});
+    m_opengl.apply(XDisable{XOption::DEPTH_TEST});
+
+    if ((x < m_visible1.x) || (x > m_visible2.x) || (y < m_visible1.y) || (y > m_visible2.y)) {
+        // Room is distant
+        const float cameraCenterX = (m_visible1.x + m_visible2.x) / 2.0f;
+        const float cameraCenterY = (m_visible1.y + m_visible2.y) / 2.0f;
+
+        // Calculate degrees from camera center to room
+        const float adjacent = cameraCenterY - y;
+        const float opposite = cameraCenterX - x;
+        const float radians = std::atan2(adjacent, opposite);
+        const float degrees = radians * static_cast<float>(180.0 / M_PI);
+
+        // Identify room hint coordinates using an elipse to represent the screen
+        const auto radiusX = (m_visible2.x - m_visible1.x) / 2.0f - 0.25f;
+        const auto radiusY = (m_visible2.y - m_visible1.y) / 2.0f - 0.25f;
+        const float roomHintX = cameraCenterX + (std::cos(radians) * radiusX * -1);
+        const float roomHintY = cameraCenterY + (std::sin(radians) * radiusY * -1);
+
+        // Draw character and rotate according to angle
+        m_opengl.glTranslatef(roomHintX, roomHintY, m_currentLayer + 0.1f);
+        m_opengl.glRotatef(degrees, 0.0f, 0.0f, 1.0f);
+    } else {
+        // Room is close
+        m_opengl.glTranslatef(x - 0.5f, y - 0.5f, ROOM_Z_DISTANCE * layer);
+    }
 
     m_opengl.apply(XColor4f{Qt::black, 0.4f});
 
-    m_opengl.apply(XEnable{XOption::BLEND});
-    m_opengl.apply(XDisable{XOption::DEPTH_TEST});
     m_opengl.callList(m_gllist.room);
 
     const float len = 0.2f;
@@ -1473,7 +1495,6 @@ void MapCanvas::paintSelectedRoom(const Room *const room)
 
     m_opengl.apply(XDisable{XOption::BLEND});
     m_opengl.apply(XEnable{XOption::DEPTH_TEST});
-
     m_opengl.glPopMatrix();
 }
 

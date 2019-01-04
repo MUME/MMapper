@@ -35,6 +35,7 @@
 #include <QtCore>
 #include <QtGlobal>
 
+class MapCanvas;
 class MapData;
 class Mmapper2Group;
 class Mmapper2PathMachine;
@@ -51,6 +52,7 @@ public:
                                 PrespammedPath *,
                                 Mmapper2Group *,
                                 MumeClock *,
+                                MapCanvas *,
                                 QObject *parent);
     virtual ~ConnectionListener() override;
 
@@ -70,6 +72,7 @@ private:
     PrespammedPath *m_prespammedPath = nullptr;
     Mmapper2Group *m_groupManager = nullptr;
     MumeClock *m_mumeClock = nullptr;
+    MapCanvas *m_mapCanvas = nullptr;
     std::unique_ptr<Proxy> m_proxy;
     std::unique_ptr<QThread> m_thread;
 

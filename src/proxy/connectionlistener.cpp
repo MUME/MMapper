@@ -37,6 +37,7 @@ ConnectionListener::ConnectionListener(MapData *md,
                                        PrespammedPath *pp,
                                        Mmapper2Group *gm,
                                        MumeClock *mc,
+                                       MapCanvas *mca,
                                        QObject *parent)
     : QTcpServer(parent)
 {
@@ -45,11 +46,7 @@ ConnectionListener::ConnectionListener(MapData *md,
     m_prespammedPath = pp;
     m_groupManager = gm;
     m_mumeClock = mc;
-
-    connect(this,
-            SIGNAL(log(const QString &, const QString &)),
-            parent,
-            SLOT(log(const QString &, const QString &)));
+    m_mapCanvas = mca;
 }
 
 ConnectionListener::~ConnectionListener()
@@ -76,6 +73,7 @@ void ConnectionListener::incomingConnection(qintptr socketDescriptor)
                                 m_prespammedPath,
                                 m_groupManager,
                                 m_mumeClock,
+                                m_mapCanvas,
                                 socketDescriptor,
                                 this));
 
