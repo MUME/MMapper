@@ -436,7 +436,7 @@ void AbstractParser::parseExits()
     }
 
     auto rs = RoomSelection(*m_mapData);
-    if (const Room *const room = rs.getRoom(getPosition())) {
+    if (const Room *const room = rs.getRoom(getNextPosition())) {
         const QByteArray cn = enhanceExits(room);
         sendToUser(exitsByteArray.simplified() + cn);
 
@@ -459,22 +459,29 @@ QString AbstractParser::normalizeStringCopy(QString string)
     return string;
 }
 
-const Coordinate AbstractParser::getPosition()
+const Coordinate AbstractParser::getNextPosition()
 {
     CommandQueue tmpqueue;
-
     if (!queue.isEmpty()) {
+        // Next position in the prespammed path
         tmpqueue.enqueue(queue.head());
     }
 
     QList<Coordinate> cl = m_mapData->getPath(tmpqueue);
-    return !cl.isEmpty() ? cl.back() : m_mapData->getPosition();
+    return cl.isEmpty() ? m_mapData->getPosition() : cl.back();
+}
+
+const Coordinate AbstractParser::getTailPosition()
+{
+    // Position at the end of the prespammed path
+    QList<Coordinate> cl = m_mapData->getPath(queue);
+    return cl.isEmpty() ? m_mapData->getPosition() : cl.back();
 }
 
 void AbstractParser::emulateExits()
 {
     auto rs = RoomSelection(*m_mapData);
-    if (const Room *const r = rs.getRoom(getPosition()))
+    if (const Room *const r = rs.getRoom(getNextPosition()))
         sendRoomExitsInfoToUser(r);
 }
 
@@ -743,14 +750,14 @@ void AbstractParser::dirsCommand(const RoomFilter &f)
     ShortestPathEmitter sp_emitter(*this);
 
     auto rs = RoomSelection(*m_mapData);
-    if (const Room *const r = rs.getRoom(getPosition())) {
+    if (const Room *const r = rs.getRoom(getTailPosition())) {
         m_mapData->shortestPathSearch(r, &sp_emitter, f, 10, 0);
     }
 }
 
 void AbstractParser::markCurrentCommand()
 {
-    search_rs = RoomSelection::createSelection(*m_mapData, getPosition());
+    search_rs = RoomSelection::createSelection(*m_mapData, getTailPosition());
     emit showPath(queue, true);
 }
 
@@ -1481,7 +1488,8 @@ void AbstractParser::sendPromptToUser()
 
     // Emulate prompt mode
     auto rs = RoomSelection(*m_mapData);
-    if (const Room *const r = rs.getRoom(getPosition()))
+    if (const Room *const r = rs.getRoom(
+            getNextPosition())) // REVISIT: Should this be the current position?
         sendPromptToUser(*r);
     else
         sendPromptToUser('?', '?');
@@ -1516,7 +1524,7 @@ void AbstractParser::sendPromptToUser(const char light, const char terrain)
 
 void AbstractParser::performDoorCommand(const DirectionType direction, const DoorActionType action)
 {
-    Coordinate c = getPosition();
+    Coordinate c = getTailPosition();
 
     auto cn = getCommandName(action) + " ";
     auto dn = m_mapData->getDoorName(c, direction).toLatin1();
@@ -1573,7 +1581,7 @@ void AbstractParser::performDoorCommand(const DirectionType direction, const Doo
 void AbstractParser::genericDoorCommand(QString command, const DirectionType direction)
 {
     QByteArray cn = emptyByteArray;
-    Coordinate c = getPosition();
+    Coordinate c = getTailPosition();
 
     auto dn = m_mapData->getDoorName(c, direction).toLatin1();
 
@@ -1615,7 +1623,7 @@ void AbstractParser::genericDoorCommand(QString command, const DirectionType dir
 
 void AbstractParser::nameDoorCommand(const QString &doorname, DirectionType direction)
 {
-    Coordinate c = getPosition();
+    Coordinate c = getTailPosition();
 
     // if (doorname.isEmpty()) toggleExitFlagCommand(ExitFlag::DOOR, direction);
     m_mapData->setDoorName(c, doorname, static_cast<ExitDirection>(direction));
@@ -1625,7 +1633,7 @@ void AbstractParser::nameDoorCommand(const QString &doorname, DirectionType dire
 
 void AbstractParser::toggleExitFlagCommand(const ExitFlag flag, const DirectionType direction)
 {
-    const Coordinate c = getPosition();
+    const Coordinate c = getTailPosition();
 
     const ExitFieldVariant var{ExitFlags{flag}};
     m_mapData->toggleExitFlag(c, static_cast<ExitDirection>(direction), var);
@@ -1646,7 +1654,7 @@ bool AbstractParser::getField(const Coordinate &c,
 
 void AbstractParser::toggleDoorFlagCommand(const DoorFlag flag, const DirectionType direction)
 {
-    const Coordinate c = getPosition();
+    const Coordinate c = getTailPosition();
 
     const ExitFieldVariant var{DoorFlags{flag}};
     m_mapData->toggleExitFlag(c, static_cast<ExitDirection>(direction), var);
@@ -1659,7 +1667,7 @@ void AbstractParser::toggleDoorFlagCommand(const DoorFlag flag, const DirectionT
 
 void AbstractParser::setRoomFieldCommand(const QVariant &flag, const RoomField field)
 {
-    const Coordinate c = getPosition();
+    const Coordinate c = getTailPosition();
 
     m_mapData->setRoomField(c, flag, field);
 
@@ -1689,7 +1697,7 @@ void AbstractParser::setConnectedRoomFlag(const DirectionalLightType light, cons
 
 void AbstractParser::toggleRoomFlagCommand(const uint flag, const RoomField field)
 {
-    const Coordinate c = getPosition();
+    const Coordinate c = getTailPosition();
 
     m_mapData->toggleRoomFlag(c, flag, field);
 
@@ -1705,7 +1713,7 @@ void AbstractParser::printRoomInfo(const RoomFields fieldset)
         return;
 
     auto rs = RoomSelection(*m_mapData);
-    if (const Room *const r = rs.getRoom(getPosition())) {
+    if (const Room *const r = rs.getRoom(getNextPosition())) {
         // TODO: use QStringBuilder (or std::ostringstream)?
         QString result;
 

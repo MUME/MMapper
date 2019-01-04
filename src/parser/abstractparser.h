@@ -155,7 +155,8 @@ protected:
     void sendPromptToUser(RoomLightType lightType, RoomTerrainType terrainType);
 
     void sendRoomExitsInfoToUser(const Room *r);
-    const Coordinate getPosition();
+    const Coordinate getNextPosition();
+    const Coordinate getTailPosition();
 
     // command handling
     void performDoorCommand(DirectionType direction, DoorActionType action);
