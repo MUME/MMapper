@@ -560,7 +560,11 @@ void MumeXmlParser::parseMudCommands(const QString &str)
             queue.enqueue(CommandIdType::LOOK);
             return;
         } else if (str.startsWith("You need to swim to go there.")
-                   || str.startsWith("You cannot ride there.")) {
+                   || str.startsWith("You cannot ride there.")
+                   || str.startsWith("You are too exhausted.")
+                   || str.startsWith("You are too exhausted to ride.")
+                   || str.startsWith("Your mount refuses to follow your orders!")
+                   || str.startsWith("You failed swimming there.")) {
             if (!queue.isEmpty())
                 queue.dequeue();
             emit showPath(queue, true);
@@ -572,14 +576,18 @@ void MumeXmlParser::parseMudCommands(const QString &str)
     } else if (str.at(0) == 'T') {
         if (str.startsWith("The current time is")) {
             m_mumeClock->parseClockTime(str);
+            // The door
         } else if (str.endsWith("seems to be closed.")
+                   // The (a|de)scent
                    || str.endsWith("is too steep, you need to climb to go there.")) {
             if (!queue.isEmpty())
                 queue.dequeue();
             emit showPath(queue, true);
         }
     } else if (str.at(0) == 'A') {
-        if (str.startsWith("Alas, you cannot go that way...")) {
+        if (str.startsWith("Alas, you cannot go that way...")
+            // A pack horse
+            || str.endsWith("is too exhausted.")) {
             if (!queue.isEmpty())
                 queue.dequeue();
             emit showPath(queue, true);
@@ -599,6 +607,17 @@ void MumeXmlParser::parseMudCommands(const QString &str)
         }
     } else if (str.at(0) == 'I') {
         if (str.startsWith("In your dreams, or what?")) {
+            if (!queue.isEmpty())
+                queue.dequeue();
+            emit showPath(queue, true);
+        }
+    } else if (str.at(0) == 'Z') {
+        // pack horse
+        if (str.endsWith("doesn't want you riding him anymore.")
+            // donkey
+            || str.endsWith("doesn't want you riding her anymore.")
+            // hungry warg
+            || str.endsWith("doesn't want you riding it anymore.")) {
             if (!queue.isEmpty())
                 queue.dequeue();
             emit showPath(queue, true);
