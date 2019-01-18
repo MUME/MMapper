@@ -1,5 +1,4 @@
 name: mmapper
-base: core16
 version: 2.6.0+git
 version-script: git describe --tags --always --long
 icon: src/resources/icons/m.png
@@ -13,6 +12,7 @@ description: |
 
 grade: stable
 confinement: strict
+base: core18
 
 apps:
   mmapper-desktop:
@@ -26,7 +26,8 @@ apps:
       - opengl
       - x11
       - desktop
-      - wayland
+      - desktop-legacy
+      - unity7
     environment:
       DISABLE_WAYLAND: 1
 
@@ -40,16 +41,37 @@ parts:
       - build-essential
       - zlib1g-dev
       - libssl-dev
+      - qtbase5-dev
       - libqt5opengl5-dev
       - qttools5-dev-tools
       - libminiupnpc-dev
     stage-packages:
       - zlib1g
-      - libssl1.0.0
+      - libssl1.1
       - qtwayland5
       - libminiupnpc10
     override-build: |
       snapcraftctl build
       sed -i 's|Icon=mmapper|Icon=${SNAP}/usr/share/icons/hicolor/256x256/apps/mmapper.png|g' $SNAPCRAFT_PART_INSTALL/usr/share/applications/mmapper.desktop
-    after:
-      - desktop-qt5
+    after: [desktop-qt5]
+  desktop-qt5:
+    source: https://github.com/ubuntu/snapcraft-desktop-helpers.git
+    source-subdir: qt
+    plugin: make
+    make-parameters: ["FLAVOR=qt5"]
+    build-packages:
+      - qtbase5-dev
+      - dpkg-dev
+    stage-packages:
+      - libxkbcommon0
+      - ttf-ubuntu-font-family
+      - dmz-cursor-theme
+      - light-themes
+      - adwaita-icon-theme
+      - gnome-themes-standard
+      - shared-mime-info
+      - libqt5gui5
+      - libgdk-pixbuf2.0-0
+      - libqt5svg5
+      - locales-all
+      - xdg-user-dirs
