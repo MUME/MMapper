@@ -1,4 +1,5 @@
 name: mmapper
+base: core16
 version: 2.6.0+git
 version-script: git describe --tags --always --long
 icon: src/resources/icons/m.png
@@ -19,11 +20,13 @@ apps:
     desktop: usr/share/applications/mmapper.desktop
     plugs:
       - home
+      - gsettings
       - network
       - network-bind
       - opengl
       - x11
-      - gsettings
+      - desktop
+      - wayland
     environment:
       DISABLE_WAYLAND: 1
 
