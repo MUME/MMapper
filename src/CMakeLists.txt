@@ -171,6 +171,8 @@ set(mmapper_SRCS
     pandoragroup/CGroup.h
     pandoragroup/GroupClient.cpp
     pandoragroup/GroupClient.h
+    pandoragroup/GroupPortMapper.cpp
+    pandoragroup/GroupPortMapper.h
     pandoragroup/GroupServer.cpp
     pandoragroup/GroupServer.h
     pandoragroup/GroupSocket.cpp

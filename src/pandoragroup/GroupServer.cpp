@@ -34,11 +34,6 @@
 #include <QString>
 #include <QVariantMap>
 
-#ifndef MMAPPER_NO_MINIUPNPC
-#include <miniupnpc/miniupnpc.h>
-#include <miniupnpc/upnpcommands.h>
-#endif
-
 #include "../configuration/configuration.h"
 #include "CGroup.h"
 #include "CGroupChar.h"
@@ -170,7 +165,9 @@ GroupServer::~GroupServer()
                &GroupServer::onRevokeWhitelist);
     closeAll();
     const auto localPort = static_cast<quint16>(getConfig().groupManager.localPort);
-    tryDeletePortMapping(localPort);
+    if (portMapper.tryDeletePortMapping(localPort)) {
+        emit sendLog("Deleted port mapping from UPnP IGD router");
+    }
 }
 
 void GroupServer::connectionClosed(GroupSocket *const socket)
@@ -506,7 +503,11 @@ bool GroupServer::start()
         server.close();
     }
     const auto localPort = static_cast<quint16>(getConfig().groupManager.localPort);
-    tryAddPortMapping(localPort);
+    if (portMapper.tryAddPortMapping(localPort)) {
+        QByteArray externalIp = portMapper.tryGetExternalIp();
+        emit sendLog(QString("Added port mapping to UPnP IGD router with external IP: %1")
+                         .arg(externalIp.constData()));
+    }
     emit sendLog(QString("Listening on port %1").arg(localPort));
     if (!server.listen(QHostAddress::Any, localPort)) {
         emit sendLog("Failed to start a group Manager server");
@@ -568,105 +569,3 @@ void GroupServer::onRevokeWhitelist(const QByteArray &secret)
         }
     }
 }
-
-#ifndef MMAPPER_NO_MINIUPNPC
-using UPNPDev_ptr = std::unique_ptr<UPNPDev, decltype(&::freeUPNPDevlist)>;
-
-static constexpr const auto UPNP_DESCRIPTION = "MMapper";
-static constexpr const auto UPNP_WHITELISTED_PROTO = "TCP";
-static constexpr const auto UPNP_PERMANENT_LEASE = "0";
-
-void GroupServer::tryAddPortMapping(quint16 port)
-{
-    int result;
-#if MINIUPNPC_API_VERSION < 14
-    UPNPDev_ptr deviceList(upnpDiscover(1000, nullptr, nullptr, 0, 0, &result), ::freeUPNPDevlist);
-#else
-    UPNPDev_ptr deviceList(upnpDiscover(1000, nullptr, nullptr, 0, 0, 2, &result),
-                           ::freeUPNPDevlist);
-#endif
-    UPNPUrls urls;
-    IGDdatas igdData;
-    char lanAddress[64], externalAddress[16];
-    result = UPNP_GetValidIGD(deviceList.get(), &urls, &igdData, lanAddress, sizeof lanAddress);
-    if (result != 0) {
-        if (result == 1) {
-            const auto portString = QString("%1").arg(port).toLocal8Bit();
-            result = UPNP_AddPortMapping(urls.controlURL,
-                                         igdData.first.servicetype,
-                                         portString.constData(),
-                                         portString.constData(),
-                                         lanAddress,
-                                         UPNP_DESCRIPTION,
-                                         UPNP_WHITELISTED_PROTO,
-                                         nullptr,
-                                         UPNP_PERMANENT_LEASE);
-            if (result != 0) {
-                qWarning() << "UPNP_AddPortMapping failed with result code" << result;
-            } else {
-                // REVISIT: Expose this in the preferences?
-                if (UPNP_GetExternalIPAddress(urls.controlURL,
-                                              igdData.first.servicetype,
-                                              externalAddress)
-                    != 0)
-                    externalAddress[0] = '\0';
-                emit sendLog(QString("Added port mapping to UPnP router with external IP: %1")
-                                 .arg(externalAddress));
-                qDebug() << "Added IGD port mapping";
-            }
-        } else if (result == 2) {
-            qInfo() << "Valid IGD has been found but it reported as not connected";
-        } else if (result == 3) {
-            qInfo() << "UPnP device has been found but was not recognized as an IGD";
-        } else {
-            qWarning() << "UPNP_GetValidIGD returned an unknown result code";
-        }
-    } else {
-        qInfo() << "No IGD found";
-    }
-    FreeUPNPUrls(&urls);
-}
-
-void GroupServer::tryDeletePortMapping(quint16 port)
-{
-    int result;
-#if MINIUPNPC_API_VERSION < 14
-    UPNPDev_ptr deviceList(upnpDiscover(1000, nullptr, nullptr, 0, 0, &result), ::freeUPNPDevlist);
-#else
-    UPNPDev_ptr deviceList(upnpDiscover(1000, nullptr, nullptr, 0, 0, 2, &result),
-                           ::freeUPNPDevlist);
-#endif
-    UPNPUrls urls;
-    IGDdatas igdData;
-    char lanAddress[64];
-    result = UPNP_GetValidIGD(deviceList.get(), &urls, &igdData, lanAddress, sizeof lanAddress);
-    if (result != 0) {
-        if (result == 1) {
-            const auto portString = QString("%1").arg(port).toLocal8Bit();
-            result = UPNP_DeletePortMapping(urls.controlURL,
-                                            igdData.first.servicetype,
-                                            portString.constData(),
-                                            UPNP_WHITELISTED_PROTO,
-                                            nullptr);
-            if (result != 0) {
-                qWarning() << "UPNP_DeletePortMapping failed with result code" << result;
-            } else {
-                emit sendLog("Deleted port mapping from UPnP router");
-                qDebug() << "Deleted IGD port mapping";
-            }
-        } else if (result == 2) {
-            qInfo() << "Valid IGD has been found but it reported as not connected";
-        } else if (result == 3) {
-            qInfo() << "UPnP device has been found but was not recognized as an IGD";
-        } else {
-            qWarning() << "UPNP_GetValidIGD returned an unknown result code";
-        }
-    } else {
-        qInfo() << "No IGD found";
-    }
-    FreeUPNPUrls(&urls);
-}
-#else
-void GroupServer::tryAddPortMapping(quint16) {}
-void GroupServer::tryDeletePortMapping(quint16) {}
-#endif

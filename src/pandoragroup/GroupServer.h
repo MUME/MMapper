@@ -28,6 +28,7 @@
 #define GROUPSERVER_H_
 
 #include "CGroupCommunicator.h"
+#include "GroupPortMapper.h"
 
 #include <QByteArray>
 #include <QList>
@@ -86,8 +87,6 @@ private:
     void parseLoginInformation(GroupSocket *socket, const QVariantMap &data);
     void sendGroupInformation(GroupSocket *socket);
     void kickConnection(GroupSocket *socket, const QString &message);
-    void tryAddPortMapping(quint16 port);
-    void tryDeletePortMapping(quint16 port);
 
 protected slots:
     void onIncomingConnection(qintptr socketDescriptor);
@@ -103,6 +102,7 @@ private:
 
     QList<GroupSocket *> clientsList{};
     GroupTcpServer server;
+    GroupPortMapper portMapper;
 };
 
 #endif /*GROUPSERVER_H_*/

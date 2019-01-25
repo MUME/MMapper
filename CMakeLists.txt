@@ -321,7 +321,7 @@ message("") # blank line
 include(FeatureSummary)
 add_feature_info("WITH_ZLIB" WITH_ZLIB "backwards compatability with old .mm2 saves")
 add_feature_info("WITH_OPENSSL" WITH_OPENSSL "encrypt connection to MUME with TLS")
-add_feature_info("WITH_MINIUPNPC" WITH_MINIUPNPC "port forwarding for group manager with UPnP")
+add_feature_info("WITH_MINIUPNPC" WITH_MINIUPNPC "port forwarding for group manager with UPnP IGD")
 add_feature_info("USE_TIDY" USE_TIDY "")
 add_feature_info("USE_IWYU" USE_IWYU "")
 add_feature_info("USE_DISTCC" USE_DISTCC "")
