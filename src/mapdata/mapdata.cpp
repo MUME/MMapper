@@ -194,6 +194,9 @@ QList<Coordinate> MapData::getPath(const QList<CommandIdType> &dirs)
         QListIterator<CommandIdType> iter(dirs);
         while (iter.hasNext()) {
             const CommandIdType cmd = iter.next();
+            if (cmd == CommandIdType::LOOK)
+                continue;
+
             if (!isDirectionNESWUD(cmd)) {
                 break;
             }

@@ -368,6 +368,7 @@ static bool isCommand(const QString &str, const CommandIdType cmd)
     case CommandIdType::UP:
     case CommandIdType::DOWN:
     case CommandIdType::FLEE:
+        // REVISIT: Add support for 'charge' and 'escape' commands
         return isCommand(str, Abbrev{getLowercase(cmd), 1});
 
     case CommandIdType::SCOUT:
@@ -420,9 +421,17 @@ bool AbstractParser::parseSimpleCommand(const QString &str)
         case CommandIdType::WEST:
         case CommandIdType::UP:
         case CommandIdType::DOWN:
-        case CommandIdType::LOOK:
             doMove(cmd);
             return isOnline;
+
+        case CommandIdType::LOOK: {
+            // if 'look' has arguments then it isn't valid for prespam
+            auto view = StringView{str}.trim();
+            if (view.countWords() == 1) {
+                doMove(cmd);
+                return isOnline;
+            }
+        } break;
 
         case CommandIdType::FLEE:
             if (!isOnline) {
