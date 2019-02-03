@@ -11,12 +11,12 @@ clone_folder: c:\Build\MMapper
 environment:
   matrix:
   - arch: x86
-    cc: MinGW
+    compiler: MinGW
     QTDIR: C:\Qt\5.11\mingw53_32
     toolchain_version: 530
 
   - arch: x64
-    cc: VS2017
+    compiler: VS2017
     QTDIR: C:\Qt\5.11\msvc2017_64
 
 image: Visual Studio 2017
@@ -24,12 +24,12 @@ image: Visual Studio 2017
 init:
   - set vcarch=%arch%
   - if "%arch%" == "x64" set vcarch=amd64
-  - if %cc%==VS2017 (
+  - if %compiler%==VS2017 (
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %vcarch%
-    ) else if not %cc%==MinGW (
+    ) else if not %compiler%==MinGW (
       call "C:\Program Files (x86)\Microsoft Visual Studio %toolchain_version%.0\VC\vcvarsall.bat" %vcarch%
     )
-  - if %cc%==MinGW (
+  - if %compiler%==MinGW (
       set CMAKE_GENERATOR="MinGW Makefiles"
     ) else (
       set CMAKE_GENERATOR="NMake Makefiles"
@@ -46,7 +46,7 @@ install:
 
 before_build:
   - set PATH=%QTDIR%\bin;%PATH%
-  - if %cc%==MinGW set PATH=C:\Qt\Tools\mingw%toolchain_version%_32\bin;%PATH%
+  - if %compiler%==MinGW set PATH=C:\Qt\Tools\mingw%toolchain_version%_32\bin;%PATH:C:\Program Files\Git\usr\bin;=%
   - echo PATH=%PATH%
  
 build:
