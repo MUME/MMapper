@@ -33,6 +33,7 @@
 #include <utility>
 #include <QGestureEvent>
 #include <QMatrix4x4>
+#include <QMessageBox>
 #include <QMessageLogContext>
 #include <QOpenGLDebugMessage>
 #include <QSize>
@@ -1009,7 +1010,19 @@ void MapCanvas::zoomReset()
 
 void MapCanvas::initializeGL()
 {
-    m_opengl.initializeOpenGLFunctions();
+    if (!m_opengl.initializeOpenGLFunctions()) {
+        qWarning() << "Unable to initialize OpenGL functions";
+        if (!getConfig().canvas.softwareOpenGL) {
+            setConfig().canvas.softwareOpenGL = true;
+            setConfig().write();
+            QMessageBox::critical(this,
+                                  "OpenGL Error",
+                                  "Please restart MMapper to enable software rendering");
+        } else {
+            QMessageBox::critical(this, "OpenGL Error", "Please upgrade your video card drivers");
+        }
+        return;
+    }
     const auto getString = [this](const GLint id) -> QByteArray {
         const unsigned char *s = m_opengl.glGetString(static_cast<GLenum>(id));
         return QByteArray{as_cstring(s)};
@@ -1034,6 +1047,18 @@ void MapCanvas::initializeGL()
     contextStr.append((context()->isValid() ? "(valid)" : "(invalid)"));
     qInfo() << "Current OpenGL Context: " << contextStr;
     emit log("MapCanvas", "Current OpenGL Context: " + contextStr);
+
+    if (getCurrentPlatform() == Platform::Win32 && vendor == "Microsoft Corporation"
+        && renderer == "GDI Generic") {
+        setConfig().canvas.softwareOpenGL = true;
+        setConfig().write();
+        hide();
+        doneCurrent();
+        QMessageBox::critical(this,
+                              "OpenGL Driver Blacklisted",
+                              "Please restart MMapper to enable software rendering");
+        return;
+    }
 
     m_logger = new QOpenGLDebugLogger(this);
     connect(m_logger,
