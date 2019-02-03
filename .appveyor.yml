@@ -55,7 +55,7 @@ build_script:
   - cd c:\Build\MMapper
   - md winbuild
   - cd winbuild
-  - cmake .. "-G %CMAKE_GENERATOR%" "-DCMAKE_PREFIX_PATH=%QTDIR%"
+  - cmake .. -G %CMAKE_GENERATOR% "-DCMAKE_PREFIX_PATH=%QTDIR%"
   - cmake --build . -j %NUMBER_OF_PROCESSORS%
   - cpack
 
