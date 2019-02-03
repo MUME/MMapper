@@ -1,4 +1,4 @@
-if(MSVC OR MINGW)
+if(MINGW)
     include(ExternalProject)
     if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
         ExternalProject_Add(drmingw

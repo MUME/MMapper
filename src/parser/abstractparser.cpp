@@ -1208,7 +1208,7 @@ void AbstractParser::doOfflineCharacterMove()
 
     const bool flee = direction == CommandIdType::FLEE;
     const bool scout = direction == CommandIdType::SCOUT;
-    const bool onlyUseActualExits = true;
+    static constexpr const bool onlyUseActualExits = true;
 
     // Note: flee and scout are mutually exclusive.
     if (flee) {

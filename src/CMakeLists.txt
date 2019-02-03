@@ -539,6 +539,7 @@ endif(UNIX AND NOT APPLE)
 
 # Windows Install Settings
 if(WIN32)
+    include(InstallRequiredSystemLibraries)
     set(CMAKE_WIN32_EXECUTABLE ON)
 
     # Install Executables
@@ -577,6 +578,11 @@ if(WIN32)
         DESTINATION .
         COMPONENT libraries
     )
+    if(MSVC)
+        get_filename_component(vcredist_name "${MSVC_REDIST}" NAME)
+        install(FILES ${MSVC_REDIST} DESTINATION bin COMPONENT libraries)
+        set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "ExecWait '\\\"$INSTDIR\\\\bin\\\\${vcredist_name}\\\"'")
+    endif()
 
     if(WITH_DRMINGW)
         # Include shortcut to crash logs
@@ -614,6 +620,12 @@ if(WIN32)
     set(CPACK_NSIS_MUI_FINISHPAGE_RUN "mmapper.exe")
     set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "Caligor soft")
 
+    if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
+        set(TARGET_ARCHITECTURE "x64")
+    else()
+        set(TARGET_ARCHITECTURE "x86")
+    endif()
+    set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_FILE_NAME}-${TARGET_ARCHITECTURE}")
 endif(WIN32)
 
 # Apple Install Settings

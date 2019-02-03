@@ -3,6 +3,13 @@ if(OPENSSL_FOUND)
     if(WIN32)
         # Ensure that we package OpenSSL DLLs with MMapper for Windows
         file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/src/bin)
+        if(NOT OPENSSL_ROOT_DIR)
+            if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
+                set(OPENSSL_ROOT_DIR "C:\\OpenSSL-Win64")
+            else()
+                set(OPENSSL_ROOT_DIR "C:\\OpenSSL-Win32")
+            endif()
+        endif()
         find_file(LIB_EAY_BIN
                 NAMES
                 libeay32.dll
@@ -32,12 +39,12 @@ if(OPENSSL_FOUND)
     endif()
 else()
     if(WIN32)
-        message(STATUS "OpenSSL NOT Found: download Win32 OpenSSL v1.0.2: https://slproweb.com/products/Win32OpenSSL.html")
+        message(STATUS "OpenSSL NOT Found: download OpenSSL v1.0.2: https://slproweb.com/products/Win32OpenSSL.html")
         message(STATUS "     or")
     endif()
     message(FATAL_ERROR "OpenSSL NOT found: use `-DWITH_OPENSSL=OFF` to build without TLS encryption")
 
-    # Note: Qt 5.11 is still being built against OpenSSL 1.0.2 so the below DLLs won't work :(
+    # Note: Qt 5.12 is still being built against OpenSSL 1.0.2 so the below DLLs won't work :(
     # Consider re-enabling it at a later time
     if(NOT WIN32)
         message(FATAL_ERROR "OpenSSL NOT found: use `-DWITH_OPENSSL=OFF` to build without TLS encryption")

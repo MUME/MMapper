@@ -15,11 +15,9 @@ REM ####
 REM #### COMPILER SELECTION
 REM ####
 FOR /f %%j in ("cl.exe") DO SET CL_EXISTS=%%~dp$PATH:j
-IF /i "%CL_EXISTS%" NEQ "" SET QMAKESPEC=win32-msvc && GOTO :msvc
+IF /i "%CL_EXISTS%" NEQ "" GOTO :msvc
 FOR /f %%j in ("mingw32-make.exe") DO SET MINGW32_EXISTS=%%~dp$PATH:j
-IF /i "%MINGW32_EXISTS%" NEQ "" SET QMAKESPEC=win32-g++ && GOTO :mingw
-FOR /f %%j in ("mingw64-make.exe") DO SET MINGW64_EXISTS=%%~dp$PATH:j
-IF /i "%MINGW64_EXISTS%" NEQ "" SET QMAKESPEC=win64-g++ && GOTO :mingw
+IF /i "%MINGW32_EXISTS%" NEQ "" GOTO :mingw
 ECHO -- No compiler found
 GOTO :end
 
@@ -28,7 +26,6 @@ REM #### BUILD FOR MINGW
 REM ####
 :mingw
 ECHO -- MingW compiler found
-IF /i "%QMAKESPEC%" == "" GOTO :noqmakespec
 IF NOT EXIST winbuild MKDIR winbuild
 CD winbuild
 cmake ../ -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DCMAKE_INSTALL_PREFIX=. -G "MinGW Makefiles"
@@ -41,7 +38,6 @@ REM #### BUILD FOR MS VISUAL C++
 REM ####
 :msvc
 ECHO -- Microsoft Visual C++ compiler found
-IF /i "%QMAKESPEC%" == "" GOTO :noqmakespec
 IF NOT EXIST winbuild MKDIR winbuild
 CD winbuild
 cmake ../ -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DCMAKE_INSTALL_PREFIX=. -G "NMake Makefiles"
@@ -53,14 +49,6 @@ GOTO :success
 SET CL=/MP
 nmake /NOLOGO && nmake /NOLOGO install
 GOTO :success
-
-
-REM ####
-REM #### NO QMAKESPEC
-REM ####
-:noqmakespec
-ECHO No QMAKESPEC environmental variable found. (e.g. win32-g++, win32-msvc)
-goto :end
 
 
 REM ####

@@ -10,31 +10,48 @@ clone_folder: c:\Build\MMapper
 
 environment:
   matrix:
-  - CMAKE_GENERATOR: "MinGW Makefiles"
+  - arch: x86
+    cc: MinGW
     QTDIR: C:\Qt\5.11\mingw53_32
-    MINGW_PATH: C:\Qt\Tools\mingw530_32
+    toolchain_version: 530
+
+  - arch: x64
+    cc: VS2017
+    QTDIR: C:\Qt\5.11\msvc2017_64
 
 image: Visual Studio 2017
 
 init:
+  - set vcarch=%arch%
+  - if "%arch%" == "x64" set vcarch=amd64
+  - if %cc%==VS2017 (
+      call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %vcarch%
+    ) else if not %cc%==MinGW (
+      call "C:\Program Files (x86)\Microsoft Visual Studio %toolchain_version%.0\VC\vcvarsall.bat" %vcarch%
+    )
+  - if %cc%==MinGW (
+      set CMAKE_GENERATOR="MinGW Makefiles"
+    ) else (
+      set CMAKE_GENERATOR="NMake Makefiles"
+    )
   - git config --global core.autocrlf input
   - echo NUMBER_OF_PROCESSORS=%NUMBER_OF_PROCESSORS%
   - echo PROCESSOR_IDENTIFIER=%PROCESSOR_IDENTIFIER%
   - echo QTDIR=%QTDIR%
+  - echo CMAKE_GENERATOR=%CMAKE_GENERATOR%
 
 install:
-  - ps: $env:package_version = (Get-Content -Raw -Path MMAPPER_VERSION).trim()
+  - ps: $env:package_version = git describe --tags --always --long
   - ps: Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
 
 before_build:
   - set PATH=%QTDIR%\bin;%PATH%
-  - if "%CMAKE_GENERATOR%" == "MinGW Makefiles" set PATH=%MINGW_PATH%\bin;%PATH:C:\Program Files\Git\usr\bin;=%
+  - if %cc%==MinGW set PATH=C:\Qt\Tools\mingw%toolchain_version%_32\bin;%PATH%
   - echo PATH=%PATH%
  
 build:
 
 build_script:
-  - if "%CMAKE_GENERATOR%" == "MinGW Makefiles" echo "Using MinGW"
   - cd c:\Build\MMapper
   - md winbuild
   - cd winbuild
@@ -46,8 +63,8 @@ test_script:
   - cmd: ctest -V
 
 artifacts:
-  - path: winbuild\mmapper-$(package_version)-Windows.exe
+  - path: winbuild\mmapper-$(package_version)-Windows-$(arch).exe
     name: MMapper Installer
   
-  - path: winbuild\mmapper-$(package_version)-Windows.zip
+  - path: winbuild\mmapper-$(package_version)-Windows-$(arch).zip
     name: MMapper ZIP
