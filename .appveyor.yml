@@ -10,29 +10,29 @@ clone_folder: c:\Build\MMapper
 
 environment:
   matrix:
-  - arch: x86
-    compiler: MinGW
+  - ARCH: x86
+    COMPILER: MinGW
     QTDIR: C:\Qt\5.11\mingw53_32
-    toolchain_version: 530
+    TOOLCHAIN_VERSION: 530
 
-  - arch: x64
-    compiler: VS2017
+  - ARCH: x64
+    COMPILER: VS2017
     QTDIR: C:\Qt\5.11\msvc2017_64
 
 image: Visual Studio 2017
 
 init:
-  - set vcarch=%arch%
-  - if "%arch%" == "x64" set vcarch=amd64
-  - if %compiler%==VS2017 (
-      call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %vcarch%
-    ) else if not %compiler%==MinGW (
-      call "C:\Program Files (x86)\Microsoft Visual Studio %toolchain_version%.0\VC\vcvarsall.bat" %vcarch%
+  - set VCARCH=%ARCH%
+  - if "%ARCH%" == "x64" set VCARCH=amd64
+  - if %COMPILER%==VS2017 (
+      call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %VCARCH%
+    ) else if not %COMPILER%==MinGW (
+      call "C:\Program Files (x86)\Microsoft Visual Studio %TOOLCHAIN_VERSION%.0\VC\vcvarsall.bat" %VCARCH%
     )
-  - if %compiler%==MinGW (
+  - if %COMPILER%==MinGW (
       set CMAKE_GENERATOR="MinGW Makefiles"
     ) else (
-      set CMAKE_GENERATOR="NMake Makefiles"
+      set CMAKE_GENERATOR="NMake Makefiles JOM"
     )
   - git config --global core.autocrlf input
   - echo NUMBER_OF_PROCESSORS=%NUMBER_OF_PROCESSORS%
@@ -46,7 +46,11 @@ install:
 
 before_build:
   - set PATH=%QTDIR%\bin;%PATH%
-  - if %compiler%==MinGW set PATH=C:\Qt\Tools\mingw%toolchain_version%_32\bin;%PATH:C:\Program Files\Git\usr\bin;=%
+  - if %COMPILER%==MinGW (
+      set PATH=C:\Qt\Tools\mingw%TOOLCHAIN_VERSION%_32\bin;%PATH:C:\Program Files\Git\usr\bin;=%
+    ) else (
+      set PATH=C:\Qt\Tools\QtCreator\bin;%PATH%
+    )
   - echo PATH=%PATH%
  
 build:
@@ -63,8 +67,8 @@ test_script:
   - cmd: ctest -V
 
 artifacts:
-  - path: winbuild\mmapper-$(package_version)-Windows-$(arch).exe
+  - path: winbuild\mmapper-$(package_version)-Windows-$(ARCH).exe
     name: MMapper Installer
   
-  - path: winbuild\mmapper-$(package_version)-Windows-$(arch).zip
+  - path: winbuild\mmapper-$(package_version)-Windows-$(ARCH).zip
     name: MMapper ZIP
