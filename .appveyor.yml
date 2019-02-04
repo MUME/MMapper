@@ -45,12 +45,8 @@ install:
   - ps: Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
 
 before_build:
-  - set PATH=%QTDIR%\bin;%PATH%
-  - if %COMPILER%==MinGW (
-      set PATH=C:\Qt\Tools\mingw%TOOLCHAIN_VERSION%_32\bin;%PATH:C:\Program Files\Git\usr\bin;=%
-    ) else (
-      set PATH=C:\Qt\Tools\QtCreator\bin;%PATH%
-    )
+  - set PATH=%QTDIR%\bin;C:\Qt\Tools\QtCreator\bin;%PATH%
+  - if %COMPILER%==MinGW set PATH=C:\Qt\Tools\mingw%TOOLCHAIN_VERSION%_32\bin;%PATH:C:\Program Files\Git\usr\bin;=%
   - echo PATH=%PATH%
  
 build:
