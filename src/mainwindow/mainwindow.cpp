@@ -1096,8 +1096,10 @@ void MainWindow::showContextMenu(const QPoint &pos)
 
 void MainWindow::alwaysOnTop()
 {
-    setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
-    setConfig().general.alwaysOnTop = static_cast<bool>(windowFlags() & Qt::WindowStaysOnTopHint);
+    const bool alwaysOnTop = this->alwaysOnTopAct->isChecked();
+    qInfo() << "Setting AlwaysOnTop flag to " << alwaysOnTop;
+    setWindowFlag(Qt::WindowStaysOnTopHint, alwaysOnTop);
+    setConfig().general.alwaysOnTop = alwaysOnTop;
     show();
 }
 
