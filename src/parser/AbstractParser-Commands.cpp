@@ -549,7 +549,7 @@ bool AbstractParser::parseField(StringView words)
 #define PARSE_FIELD(X) \
     for (const auto x : DEFINED_ROOM_##X##_TYPES) { \
         if (getParserCommandName(x).matches(firstWord)) { \
-            setRoomFieldCommand(x, RoomField::X##_TYPE); \
+            toggleRoomFlagCommand(x); \
             return true; \
         } \
     }
@@ -582,7 +582,7 @@ bool AbstractParser::parseMobFlags(StringView words)
 
     for (const RoomMobFlag mobFlag : ALL_MOB_FLAGS) {
         if (getParserCommandName(mobFlag).matches(firstWord)) {
-            toggleRoomFlagCommand(mobFlag, RoomField::MOB_FLAGS);
+            toggleRoomFlagCommand(RoomMobFlags{mobFlag});
             return true;
         }
     }
@@ -599,7 +599,7 @@ bool AbstractParser::parseLoadFlags(StringView words)
 
     for (const RoomLoadFlag loadFlag : ALL_LOAD_FLAGS) {
         if (getParserCommandName(loadFlag).matches(firstWord)) {
-            toggleRoomFlagCommand(loadFlag, RoomField::LOAD_FLAGS);
+            toggleRoomFlagCommand(RoomLoadFlags{loadFlag});
             return true;
         }
     }
@@ -870,12 +870,11 @@ void AbstractParser::initSpecialCommandMap()
     do { \
         for (const auto x : DEFINED_ROOM_##X##_TYPES) { \
             if (auto cmd = getParserCommandName(x)) { \
-                auto type = RoomField::X##_TYPE; \
                 add(cmd, \
-                    [this, x, type](const std::vector<StringView> & /*s*/, StringView rest) { \
+                    [this, x](const std::vector<StringView> & /*s*/, StringView rest) { \
                         if (!rest.isEmpty()) \
                             return false; \
-                        setRoomFieldCommand(x, type); \
+                        toggleRoomFlagCommand(x); \
                         return true; \
                     }, \
                     makeSimpleHelp("Sets " #X " flag: " + std::string{cmd.getCommand()})); \
@@ -895,7 +894,7 @@ void AbstractParser::initSpecialCommandMap()
                 [this, x](const std::vector<StringView> & /*s*/, StringView rest) {
                     if (!rest.isEmpty())
                         return false;
-                    toggleRoomFlagCommand(x, RoomField::MOB_FLAGS);
+                    toggleRoomFlagCommand(RoomMobFlags{x});
                     return true;
                 },
                 makeSimpleHelp("Sets room mob flag: " + std::string{cmd.getCommand()}));
@@ -908,7 +907,7 @@ void AbstractParser::initSpecialCommandMap()
                 [this, x](const std::vector<StringView> & /*s*/, StringView rest) {
                     if (!rest.isEmpty())
                         return false;
-                    toggleRoomFlagCommand(x, RoomField::LOAD_FLAGS);
+                    toggleRoomFlagCommand(RoomLoadFlags{x});
                     return true;
                 },
                 makeSimpleHelp("Sets room load flag: " + std::string{cmd.getCommand()}));

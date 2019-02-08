@@ -38,6 +38,7 @@
 #include "../expandoracommon/parseevent.h"
 #include "../global/roomid.h"
 #include "../mapdata/ExitDirection.h"
+#include "../mapdata/RoomFieldVariant.h"
 #include "../mapdata/mmapper2exit.h"
 #include "../mapdata/mmapper2room.h"
 
@@ -167,43 +168,16 @@ public:
 class UpdateRoomField final : public virtual AbstractAction
 {
 public:
-    explicit UpdateRoomField(RoomAlignType rat, RoomField rf)
-        : UpdateRoomField{QVariant{static_cast<uint>(rat)}, static_cast<uint>(rf)}
-    {}
-    explicit UpdateRoomField(RoomLightType rlt, RoomField rf)
-        : UpdateRoomField{QVariant{static_cast<uint>(rlt)}, static_cast<uint>(rf)}
-    {}
-    explicit UpdateRoomField(RoomPortableType rpt, RoomField rf)
-        : UpdateRoomField{QVariant{static_cast<uint>(rpt)}, static_cast<uint>(rf)}
-    {}
-    explicit UpdateRoomField(RoomRidableType rrt, RoomField rf)
-        : UpdateRoomField{QVariant{static_cast<uint>(rrt)}, static_cast<uint>(rf)}
-    {}
-    explicit UpdateRoomField(RoomSundeathType rst, RoomField rf)
-        : UpdateRoomField{QVariant{static_cast<uint>(rst)}, static_cast<uint>(rf)}
-    {}
-    explicit UpdateRoomField(RoomTerrainType rtt, RoomField rf)
-        : UpdateRoomField{QVariant{static_cast<uint>(rtt)}, static_cast<uint>(rf)}
-    {}
-
-    explicit UpdateRoomField(QString type, RoomField rf)
-        : UpdateRoomField{QVariant{type}, static_cast<uint>(rf)}
-    {}
-
-public:
-    [[deprecated]] explicit UpdateRoomField(const QVariant &type, RoomField rf)
-        : UpdateRoomField{type, static_cast<uint>(rf)}
-    {}
-
-private:
-    explicit UpdateRoomField(const QVariant &update, uint fieldNum);
+    explicit UpdateRoomField(const RoomFieldVariant &var);
+#define X_DECLARE_CONSTRUCTORS(UPPER_CASE, CamelCase, Type) explicit UpdateRoomField(Type type);
+    X_FOREACH_ROOM_FIELD(X_DECLARE_CONSTRUCTORS)
+#undef X_DECLARE_CONSTRUCTORS
 
 public:
     virtual void exec(RoomId id) override;
 
 protected:
-    const QVariant update;
-    const uint fieldNum;
+    RoomFieldVariant var;
 };
 
 class Update final : public virtual AbstractAction

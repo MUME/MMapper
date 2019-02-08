@@ -138,50 +138,66 @@ void MapData::toggleExitFlag(const Coordinate &pos, const ExitDirection dir, Exi
     }
 }
 
-void MapData::toggleRoomFlag(const Coordinate &pos, const uint flag, const RoomField field)
+void MapData::toggleRoomFlag(const Coordinate &pos, RoomFieldVariant var)
 {
     QMutexLocker locker(&mapLock);
     if (Room *room = map.get(pos)) {
-        if (field < RoomField::LAST) {
-            setDataChanged();
-            MapAction *action = new SingleRoomAction(new ModifyRoomFlags(flag,
-                                                                         field,
-                                                                         FlagModifyMode::TOGGLE),
-                                                     room->getId());
-            scheduleAction(action);
-        }
+        setDataChanged();
+        // REVISIT: Consolidate ModifyRoomFlags and UpdateRoomField
+        MapAction *action = (var.getType() == RoomField::MOB_FLAGS
+                             || var.getType() == RoomField::LOAD_FLAGS)
+                                ? new SingleRoomAction(new ModifyRoomFlags(var,
+                                                                           FlagModifyMode::TOGGLE),
+                                                       room->getId())
+                                : new SingleRoomAction(new UpdateRoomField(var), room->getId());
+        scheduleAction(action);
     }
 }
 
-bool MapData::getRoomFlag(const Coordinate &pos, const uint flag, const RoomField field)
+bool MapData::getRoomFlag(const Coordinate &pos, RoomFieldVariant var)
 {
-    const QVariant val = getRoomField(pos, field);
-    return !val.isNull() && IS_SET(val.toUInt(), flag);
-}
-
-void MapData::setRoomField(const Coordinate &pos, const QVariant &flag, const RoomField field)
-{
+    // REVISIT: Use macros
     QMutexLocker locker(&mapLock);
     if (Room *const room = map.get(pos)) {
-        if (field < RoomField::LAST) {
-            setDataChanged();
-            MapAction *action = new SingleRoomAction(new UpdateRoomField(flag, field),
-                                                     room->getId());
-            scheduleAction(action);
+        switch (var.getType()) {
+        case RoomField::NOTE: {
+            return var.getNote() == room->getNote();
+        }
+        case RoomField::MOB_FLAGS: {
+            const auto ef = room->getMobFlags();
+            if (IS_SET(ef, var.getMobFlags())) {
+                return true;
+            }
+            break;
+        }
+        case RoomField::LOAD_FLAGS: {
+            const auto ef = room->getLoadFlags();
+            if (IS_SET(ef, var.getLoadFlags())) {
+                return true;
+            }
+            break;
+        }
+        case RoomField::ALIGN_TYPE:
+            return var.getAlignType() == room->getAlignType();
+        case RoomField::LIGHT_TYPE:
+            return var.getLightType() == room->getLightType();
+        case RoomField::PORTABLE_TYPE:
+            return var.getPortableType() == room->getPortableType();
+        case RoomField::RIDABLE_TYPE:
+            return var.getRidableType() == room->getRidableType();
+        case RoomField::SUNDEATH_TYPE:
+            return var.getSundeathType() == room->getSundeathType();
+        case RoomField::TERRAIN_TYPE:
+            return var.getTerrainType() == room->getTerrainType();
+        case RoomField::NAME:
+        case RoomField::DESC:
+        case RoomField::DYNAMIC_DESC:
+        case RoomField::LAST:
+        case RoomField::RESERVED:
+            throw std::runtime_error("impossible");
         }
     }
-}
-
-QVariant MapData::getRoomField(const Coordinate &pos, const RoomField field)
-{
-    QMutexLocker locker(&mapLock);
-    /* REVISIT: is it wise to just ignore bad data here? */
-    if (field < RoomField::LAST) {
-        if (Room *const room = map.get(pos)) {
-            return room->at(field);
-        }
-    }
-    return QVariant();
+    return false;
 }
 
 QList<Coordinate> MapData::getPath(const QList<CommandIdType> &dirs)

@@ -42,6 +42,7 @@
 #include "../global/roomid.h"
 #include "../global/utils.h"
 #include "../mapdata/ExitFieldVariant.h"
+#include "../mapdata/RoomFieldVariant.h"
 #include "../mapdata/customaction.h"
 #include "../mapdata/enums.h"
 #include "../mapdata/mapdata.h"
@@ -969,13 +970,11 @@ void RoomEditAttrDlg::neutralRadioButtonToggled(bool val)
     if (val) {
         const Room *r = getSelectedRoom();
         if (r != nullptr) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomAlignType::NEUTRAL,
-                                                                        RoomField::ALIGN_TYPE),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomAlignType::NEUTRAL),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomAlignType::NEUTRAL,
-                                                                      RoomField::ALIGN_TYPE),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomAlignType::NEUTRAL),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -990,13 +989,11 @@ void RoomEditAttrDlg::goodRadioButtonToggled(bool val)
     if (val) {
         const Room *r = getSelectedRoom();
         if (r != nullptr) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomAlignType::GOOD,
-                                                                        RoomField::ALIGN_TYPE),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomAlignType::GOOD),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomAlignType::GOOD,
-                                                                      RoomField::ALIGN_TYPE),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomAlignType::GOOD),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1011,13 +1008,11 @@ void RoomEditAttrDlg::evilRadioButtonToggled(bool val)
     if (val) {
         const Room *r = getSelectedRoom();
         if (r != nullptr) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomAlignType::EVIL,
-                                                                        RoomField::ALIGN_TYPE),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomAlignType::EVIL),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomAlignType::EVIL,
-                                                                      RoomField::ALIGN_TYPE),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomAlignType::EVIL),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1032,13 +1027,11 @@ void RoomEditAttrDlg::alignUndefRadioButtonToggled(bool val)
     if (val) {
         const Room *r = getSelectedRoom();
         if (r != nullptr) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomAlignType::UNDEFINED,
-                                                                        RoomField::ALIGN_TYPE),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomAlignType::UNDEFINED),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomAlignType::UNDEFINED,
-                                                                      RoomField::ALIGN_TYPE),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomAlignType::UNDEFINED),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1052,14 +1045,13 @@ void RoomEditAttrDlg::noPortRadioButtonToggled(bool val)
 {
     if (val) {
         if (const Room *r = getSelectedRoom()) {
-            m_mapData
-                ->execute(new SingleRoomAction(new UpdateRoomField(RoomPortableType::NOT_PORTABLE,
-                                                                   RoomField::PORTABLE_TYPE),
-                                               r->getId()),
-                          m_roomSelection);
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(
+                                                        RoomPortableType::NOT_PORTABLE),
+                                                    r->getId()),
+                               m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomPortableType::NOT_PORTABLE,
-                                                                      RoomField::PORTABLE_TYPE),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(
+                                                      RoomPortableType::NOT_PORTABLE),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1074,13 +1066,11 @@ void RoomEditAttrDlg::portableRadioButtonToggled(bool val)
     if (val) {
         const Room *r = getSelectedRoom();
         if (r != nullptr) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomPortableType::PORTABLE,
-                                                                        RoomField::PORTABLE_TYPE),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomPortableType::PORTABLE),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomPortableType::PORTABLE,
-                                                                      RoomField::PORTABLE_TYPE),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomPortableType::PORTABLE),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1095,13 +1085,11 @@ void RoomEditAttrDlg::portUndefRadioButtonToggled(bool val)
     if (val) {
         const Room *r = getSelectedRoom();
         if (r != nullptr) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomPortableType::UNDEFINED,
-                                                                        RoomField::PORTABLE_TYPE),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomPortableType::UNDEFINED),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomPortableType::UNDEFINED,
-                                                                      RoomField::PORTABLE_TYPE),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomPortableType::UNDEFINED),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1116,13 +1104,12 @@ void RoomEditAttrDlg::noRideRadioButtonToggled(bool val)
     if (val) {
         const Room *r = getSelectedRoom();
         if (r != nullptr) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomRidableType::NOT_RIDABLE,
-                                                                        RoomField::RIDABLE_TYPE),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(
+                                                        RoomRidableType::NOT_RIDABLE),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomRidableType::NOT_RIDABLE,
-                                                                      RoomField::RIDABLE_TYPE),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomRidableType::NOT_RIDABLE),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1136,13 +1123,11 @@ void RoomEditAttrDlg::ridableRadioButtonToggled(bool val)
 {
     if (val) {
         if (const Room *r = getSelectedRoom()) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomRidableType::RIDABLE,
-                                                                        RoomField::RIDABLE_TYPE),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomRidableType::RIDABLE),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomRidableType::RIDABLE,
-                                                                      RoomField::RIDABLE_TYPE),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomRidableType::RIDABLE),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1156,13 +1141,11 @@ void RoomEditAttrDlg::rideUndefRadioButtonToggled(bool val)
 {
     if (val) {
         if (const Room *r = getSelectedRoom()) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomRidableType::UNDEFINED,
-                                                                        RoomField::RIDABLE_TYPE),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomRidableType::UNDEFINED),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomRidableType::UNDEFINED,
-                                                                      RoomField::RIDABLE_TYPE),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomRidableType::UNDEFINED),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1176,13 +1159,11 @@ void RoomEditAttrDlg::litRadioButtonToggled(bool val)
 {
     if (val) {
         if (const Room *r = getSelectedRoom()) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomLightType::LIT,
-                                                                        RoomField::LIGHT_TYPE),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomLightType::LIT),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomLightType::LIT,
-                                                                      RoomField::LIGHT_TYPE),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomLightType::LIT),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1196,13 +1177,11 @@ void RoomEditAttrDlg::darkRadioButtonToggled(bool val)
 {
     if (val) {
         if (const Room *r = getSelectedRoom()) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomLightType::DARK,
-                                                                        RoomField::LIGHT_TYPE),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomLightType::DARK),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomLightType::DARK,
-                                                                      RoomField::LIGHT_TYPE),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomLightType::DARK),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1216,13 +1195,11 @@ void RoomEditAttrDlg::lightUndefRadioButtonToggled(bool val)
 {
     if (val) {
         if (const Room *r = getSelectedRoom()) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomLightType::UNDEFINED,
-                                                                        RoomField::LIGHT_TYPE),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomLightType::UNDEFINED),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomLightType::UNDEFINED,
-                                                                      RoomField::LIGHT_TYPE),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomLightType::UNDEFINED),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1236,13 +1213,11 @@ void RoomEditAttrDlg::sundeathRadioButtonToggled(bool val)
 {
     if (val) {
         if (const Room *r = getSelectedRoom()) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomSundeathType::SUNDEATH,
-                                                                        RoomField::SUNDEATH_TYPE),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomSundeathType::SUNDEATH),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomSundeathType::SUNDEATH,
-                                                                      RoomField::SUNDEATH_TYPE),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomSundeathType::SUNDEATH),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1257,13 +1232,12 @@ void RoomEditAttrDlg::noSundeathRadioButtonToggled(bool val)
     if (val) {
         const Room *r = getSelectedRoom();
         if (r != nullptr) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomSundeathType::NO_SUNDEATH,
-                                                                        RoomField::SUNDEATH_TYPE),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(
+                                                        RoomSundeathType::NO_SUNDEATH),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomSundeathType::NO_SUNDEATH,
-                                                                      RoomField::SUNDEATH_TYPE),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomSundeathType::NO_SUNDEATH),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1278,13 +1252,11 @@ void RoomEditAttrDlg::sundeathUndefRadioButtonToggled(bool val)
     if (val) {
         const Room *r = getSelectedRoom();
         if (r != nullptr) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomSundeathType::UNDEFINED,
-                                                                        RoomField::SUNDEATH_TYPE),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomSundeathType::UNDEFINED),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomSundeathType::UNDEFINED,
-                                                                      RoomField::SUNDEATH_TYPE),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomSundeathType::UNDEFINED),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1309,15 +1281,12 @@ void RoomEditAttrDlg::mobFlagsListItemChanged(QListWidgetItem *const item)
     switch (item->checkState()) {
     case Qt::Unchecked:
         if (r != nullptr) {
-            m_mapData->execute(new SingleRoomAction(new ModifyRoomFlags(flags.asUint32(),
-                                                                        RoomField::MOB_FLAGS,
+            m_mapData->execute(new SingleRoomAction(new ModifyRoomFlags(flags,
                                                                         FlagModifyMode::UNSET),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new ModifyRoomFlags(flags.asUint32(),
-                                                                      RoomField::MOB_FLAGS,
-                                                                      FlagModifyMode::UNSET),
+            m_mapData->execute(new GroupMapAction(new ModifyRoomFlags(flags, FlagModifyMode::UNSET),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1326,15 +1295,11 @@ void RoomEditAttrDlg::mobFlagsListItemChanged(QListWidgetItem *const item)
         break;
     case Qt::Checked:
         if (r != nullptr) {
-            m_mapData->execute(new SingleRoomAction(new ModifyRoomFlags(flags.asUint32(),
-                                                                        RoomField::MOB_FLAGS,
-                                                                        FlagModifyMode::SET),
+            m_mapData->execute(new SingleRoomAction(new ModifyRoomFlags(flags, FlagModifyMode::SET),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new ModifyRoomFlags(flags.asUint32(),
-                                                                      RoomField::MOB_FLAGS,
-                                                                      FlagModifyMode::SET),
+            m_mapData->execute(new GroupMapAction(new ModifyRoomFlags(flags, FlagModifyMode::SET),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1359,15 +1324,12 @@ void RoomEditAttrDlg::loadFlagsListItemChanged(QListWidgetItem *const item)
     switch (item->checkState()) {
     case Qt::Unchecked:
         if (r != nullptr) {
-            m_mapData->execute(new SingleRoomAction(new ModifyRoomFlags(flags.asUint32(),
-                                                                        RoomField::LOAD_FLAGS,
+            m_mapData->execute(new SingleRoomAction(new ModifyRoomFlags(flags,
                                                                         FlagModifyMode::UNSET),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new ModifyRoomFlags(flags.asUint32(),
-                                                                      RoomField::LOAD_FLAGS,
-                                                                      FlagModifyMode::UNSET),
+            m_mapData->execute(new GroupMapAction(new ModifyRoomFlags(flags, FlagModifyMode::UNSET),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1376,15 +1338,11 @@ void RoomEditAttrDlg::loadFlagsListItemChanged(QListWidgetItem *const item)
         break;
     case Qt::Checked:
         if (r != nullptr) {
-            m_mapData->execute(new SingleRoomAction(new ModifyRoomFlags(flags.asUint32(),
-                                                                        RoomField::LOAD_FLAGS,
-                                                                        FlagModifyMode::SET),
+            m_mapData->execute(new SingleRoomAction(new ModifyRoomFlags(flags, FlagModifyMode::SET),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new ModifyRoomFlags(flags.asUint32(),
-                                                                      RoomField::LOAD_FLAGS,
-                                                                      FlagModifyMode::SET),
+            m_mapData->execute(new GroupMapAction(new ModifyRoomFlags(flags, FlagModifyMode::SET),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1562,12 +1520,10 @@ void RoomEditAttrDlg::terrainToolButtonToggled(bool val)
     terrainLabel->setPixmap(QPixmap(getPixmapFilename(rtt)));
 
     if (r != nullptr) {
-        m_mapData->execute(new SingleRoomAction(new UpdateRoomField(rtt, RoomField::TERRAIN_TYPE),
-                                                r->getId()),
+        m_mapData->execute(new SingleRoomAction(new UpdateRoomField(rtt), r->getId()),
                            m_roomSelection);
     } else {
-        m_mapData->execute(new GroupMapAction(new UpdateRoomField(rtt, RoomField::TERRAIN_TYPE),
-                                              m_roomSelection),
+        m_mapData->execute(new GroupMapAction(new UpdateRoomField(rtt), m_roomSelection),
                            m_roomSelection);
     }
 
@@ -1579,14 +1535,12 @@ void RoomEditAttrDlg::roomNoteChanged()
 {
     const Room *r = getSelectedRoom();
 
-    const QString note = roomNoteTextEdit->document()->toPlainText();
+    const RoomNote note = roomNoteTextEdit->document()->toPlainText();
     if (r != nullptr) {
-        m_mapData->execute(new SingleRoomAction(new UpdateRoomField(note, RoomField::NOTE),
-                                                r->getId()),
+        m_mapData->execute(new SingleRoomAction(new UpdateRoomField(note), r->getId()),
                            m_roomSelection);
     } else {
-        m_mapData->execute(new GroupMapAction(new UpdateRoomField(note, RoomField::NOTE),
-                                              m_roomSelection),
+        m_mapData->execute(new GroupMapAction(new UpdateRoomField(note), m_roomSelection),
                            m_roomSelection);
     }
 

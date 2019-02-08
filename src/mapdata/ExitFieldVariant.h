@@ -23,8 +23,8 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_EXITFLAGVARIANT_H
-#define MMAPPER_EXITFLAGVARIANT_H
+#ifndef MMAPPER_EXITFIELDVARIANT_H
+#define MMAPPER_EXITFIELDVARIANT_H
 
 #include <algorithm>
 #include <array>
@@ -90,4 +90,4 @@ public:
     DoorFlags getDoorFlags() const;
 };
 
-#endif // MMAPPER_EXITFLAGVARIANT_H
+#endif // MMAPPER_EXITFIELDVARIANT_H

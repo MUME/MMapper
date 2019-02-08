@@ -58,6 +58,7 @@ class MapAction;
 class MapCanvasRoomDrawer;
 class QObject;
 class Room;
+class RoomFieldVariant;
 class RoomFilter;
 class RoomRecipient;
 class ShortestPathRecipient;
@@ -123,10 +124,8 @@ public:
     void toggleExitFlag(const Coordinate &pos, ExitDirection dir, ExitFieldVariant var);
 
 public:
-    [[deprecated]] void setRoomField(const Coordinate &pos, const QVariant &flag, RoomField field);
-    [[deprecated]] QVariant getRoomField(const Coordinate &pos, RoomField field);
-    [[deprecated]] void toggleRoomFlag(const Coordinate &pos, uint flag, RoomField field);
-    [[deprecated]] bool getRoomFlag(const Coordinate &pos, uint flag, RoomField field);
+    bool getRoomFlag(const Coordinate &pos, RoomFieldVariant var);
+    void toggleRoomFlag(const Coordinate &pos, RoomFieldVariant var);
 
 signals:
     void log(const QString &, const QString &);

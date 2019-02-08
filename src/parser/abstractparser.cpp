@@ -59,6 +59,7 @@
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/ExitFieldVariant.h"
 #include "../mapdata/ExitFlags.h"
+#include "../mapdata/RoomFieldVariant.h"
 #include "../mapdata/enums.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/mmapper2room.h"
@@ -801,7 +802,8 @@ void AbstractParser::showSyntax(const char *rest)
 
 void AbstractParser::setNote(const QString &note)
 {
-    setRoomFieldCommand(note, RoomField::NOTE);
+    RoomFieldVariant var(note);
+    m_mapData->toggleRoomFlag(getTailPosition(), var);
     if (note.isEmpty()) {
         sendToUser("Note cleared!\r\n");
     } else {
@@ -1665,16 +1667,6 @@ void AbstractParser::toggleDoorFlagCommand(const DoorFlag flag, const DirectionT
     emit showPath(queue, true);
 }
 
-void AbstractParser::setRoomFieldCommand(const QVariant &flag, const RoomField field)
-{
-    const Coordinate c = getTailPosition();
-
-    m_mapData->setRoomField(c, flag, field);
-
-    sendToUser("--->Room field set\r\n");
-    emit showPath(queue, true);
-}
-
 ExitFlags AbstractParser::getExitFlags(const DirectionType dir) const
 {
     return m_exitsFlags.get(static_cast<ExitDirection>(dir));
@@ -1693,18 +1685,6 @@ void AbstractParser::setExitFlags(const ExitFlags ef, const DirectionType dir)
 void AbstractParser::setConnectedRoomFlag(const DirectionalLightType light, const DirectionType dir)
 {
     m_connectedRoomFlags.setDirectionalLight(dir, light);
-}
-
-void AbstractParser::toggleRoomFlagCommand(const uint flag, const RoomField field)
-{
-    const Coordinate c = getTailPosition();
-
-    m_mapData->toggleRoomFlag(c, flag, field);
-
-    const QString toggle = enabledString(m_mapData->getRoomFlag(c, flag, field));
-
-    sendToUser("--->Room flag " + toggle.toLatin1() + "\r\n");
-    emit showPath(queue, true);
 }
 
 void AbstractParser::printRoomInfo(const RoomFields fieldset)
@@ -1740,47 +1720,18 @@ void AbstractParser::sendGTellToUser(const QByteArray &ba)
     sendPromptToUser();
 }
 
-void AbstractParser::setRoomFieldCommand(const RoomAlignType rat, const RoomField field)
-{
-    assert(field == RoomField::ALIGN_TYPE);
-    setRoomFieldCommand(static_cast<QVariant>(static_cast<uint>(rat)), field);
-}
-
-void AbstractParser::setRoomFieldCommand(const RoomLightType rlt, const RoomField field)
-{
-    assert(field == RoomField::LIGHT_TYPE);
-    setRoomFieldCommand(static_cast<QVariant>(static_cast<uint>(rlt)), field);
-}
-
-void AbstractParser::setRoomFieldCommand(const RoomPortableType rpt, const RoomField field)
-{
-    assert(field == RoomField::PORTABLE_TYPE);
-    setRoomFieldCommand(static_cast<QVariant>(static_cast<uint>(rpt)), field);
-}
-
-void AbstractParser::setRoomFieldCommand(const RoomRidableType rrt, const RoomField field)
-{
-    assert(field == RoomField::RIDABLE_TYPE);
-    setRoomFieldCommand(static_cast<QVariant>(static_cast<uint>(rrt)), field);
-}
-
-void AbstractParser::setRoomFieldCommand(const RoomSundeathType rst, const RoomField field)
-{
-    assert(field == RoomField::SUNDEATH_TYPE);
-    setRoomFieldCommand(static_cast<QVariant>(static_cast<uint>(rst)), field);
-}
-
-void AbstractParser::toggleRoomFlagCommand(const RoomMobFlag flag, const RoomField field)
-{
-    assert(field == RoomField::MOB_FLAGS);
-    toggleRoomFlagCommand(RoomMobFlags{flag}.asUint32(), field);
-}
-
-void AbstractParser::toggleRoomFlagCommand(const RoomLoadFlag flag, const RoomField field)
-{
-    assert(field == RoomField::LOAD_FLAGS);
-    toggleRoomFlagCommand(RoomLoadFlags{flag}.asUint32(), field);
-}
+#define X_DECLARE_ROOM_FIELD_TOGGLERS(UPPER_CASE, CamelCase, Type) \
+    void AbstractParser::toggleRoomFlagCommand(Type flag) \
+    { \
+        const Coordinate c = getTailPosition(); \
+        RoomFieldVariant var(flag); \
+        m_mapData->toggleRoomFlag(c, var); \
+        const QString toggle = enabledString(m_mapData->getRoomFlag(c, var)); \
+        sendToUser("--->Room flag " + toggle.toLatin1() + "\r\n"); \
+        emit showPath(queue, true); \
+    }
+X_FOREACH_ROOM_FIELD(X_DECLARE_ROOM_FIELD_TOGGLERS)
+#undef X_DECLARE_ROOM_FIELD_TOGGLERS
 
 void AbstractParser::printRoomInfo(const RoomField field)
 {

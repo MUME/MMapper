@@ -251,11 +251,20 @@ void ConnectToNeighbours::connectRooms(Room *const center,
     }
 }
 
-ModifyRoomFlags::ModifyRoomFlags(const uint in_flags,
-                                 const RoomField in_fieldNum,
-                                 const FlagModifyMode in_mode)
-    : flags(in_flags)
-    , fieldNum(in_fieldNum)
+ModifyRoomFlags::ModifyRoomFlags(const RoomFieldVariant in_flags, const FlagModifyMode in_mode)
+    : var{in_flags}
+    , mode(in_mode)
+{
+    // TODO: Assert non-supported
+}
+
+ModifyRoomFlags::ModifyRoomFlags(const RoomMobFlags in_flags, const FlagModifyMode in_mode)
+    : var{in_flags}
+    , mode(in_mode)
+{}
+
+ModifyRoomFlags::ModifyRoomFlags(const RoomLoadFlags in_flags, const FlagModifyMode in_mode)
+    : var{in_flags}
     , mode(in_mode)
 {}
 
@@ -275,12 +284,31 @@ static Flags modifyFlags(const Flags flags, const Flag x, const FlagModifyMode m
 
 void ModifyRoomFlags::exec(const RoomId id)
 {
-    if (Room *room = roomIndex(id)) {
-        /* REVISIT: should there be an error here if the field really contains a string? */
-        const auto field = this->fieldNum;
-        room->modifyUint(field, [this](uint roomFlags) {
-            return modifyFlags(roomFlags, this->flags, this->mode);
-        });
+    if (Room *const room = roomIndex(id)) {
+        switch (var.getType()) {
+        case RoomField::MOB_FLAGS:
+            room->setMobFlags(modifyFlags(room->getMobFlags(), var.getMobFlags(), mode));
+            break;
+        case RoomField::LOAD_FLAGS:
+            room->setLoadFlags(modifyFlags(room->getLoadFlags(), var.getLoadFlags(), mode));
+            break;
+        case RoomField::NOTE:
+            // TODO: Re-use logic from modifyDoorName(ex, var, mode);
+        case RoomField::TERRAIN_TYPE:
+        case RoomField::PORTABLE_TYPE:
+        case RoomField::LIGHT_TYPE:
+        case RoomField::RIDABLE_TYPE:
+        case RoomField::SUNDEATH_TYPE:
+        case RoomField::ALIGN_TYPE:
+        case RoomField::NAME:
+        case RoomField::DESC:
+        case RoomField::DYNAMIC_DESC:
+        case RoomField::LAST:
+        case RoomField::RESERVED:
+        default:
+            /* this can't happen */
+            throw std::runtime_error("impossible");
+        }
     }
 }
 

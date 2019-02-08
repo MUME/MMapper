@@ -240,13 +240,11 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
                 auto bThisRoom = bFlags.getDirectionalLight(dir);
                 if (IS_SET(bThisRoom, DirectionalLightType::DIRECT_SUN_ROOM)) {
                     emit scheduleAction(
-                        new SingleRoomAction(new UpdateRoomField(RoomSundeathType::SUNDEATH,
-                                                                 RoomField::SUNDEATH_TYPE),
+                        new SingleRoomAction(new UpdateRoomField(RoomSundeathType::SUNDEATH),
                                              connectedRoomId));
                 } else if (IS_SET(bThisRoom, DirectionalLightType::INDIRECT_SUN_ROOM)) {
                     emit scheduleAction(
-                        new SingleRoomAction(new UpdateRoomField(RoomSundeathType::NO_SUNDEATH,
-                                                                 RoomField::SUNDEATH_TYPE),
+                        new SingleRoomAction(new UpdateRoomField(RoomSundeathType::NO_SUNDEATH),
                                              connectedRoomId));
                 }
             }

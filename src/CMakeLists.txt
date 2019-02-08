@@ -110,6 +110,8 @@ set(mmapper_SRCS
     mapdata/ExitFieldVariant.cpp
     mapdata/ExitFieldVariant.h
     mapdata/ExitFlags.h
+    mapdata/RoomFieldVariant.cpp
+    mapdata/RoomFieldVariant.h
     mapdata/infomark.h
     mapdata/mapdata.cpp
     mapdata/mapdata.h

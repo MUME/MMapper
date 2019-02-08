@@ -119,16 +119,38 @@ void MakePermanent::exec(const RoomId id)
     }
 }
 
-UpdateRoomField::UpdateRoomField(const QVariant &in_update, const uint in_fieldNum)
-    : update(std::move(in_update))
-    , fieldNum(in_fieldNum)
+UpdateRoomField::UpdateRoomField(const RoomFieldVariant &var)
+    : var{var}
 {}
+
+#define X_DECLARE_CONSTRUCTORS(UPPER_CASE, CamelCase, Type) \
+    UpdateRoomField::UpdateRoomField(Type type) \
+        : UpdateRoomField{RoomFieldVariant{type}} \
+    {}
+X_FOREACH_ROOM_FIELD(X_DECLARE_CONSTRUCTORS)
+#undef X_DECLARE_CONSTRUCTORS
 
 void UpdateRoomField::exec(const RoomId id)
 {
-    /* TODO: update directly */
     if (Room *const room = roomIndex(id)) {
-        room->replace(static_cast<RoomField>(fieldNum), update);
+        switch (var.getType()) {
+#define X_CASE(UPPER_CASE, CamelCase, Class) \
+    { \
+    case RoomField::UPPER_CASE: \
+        room->set##CamelCase(var.get##CamelCase()); \
+        break; \
+    }
+            X_FOREACH_ROOM_FIELD(X_CASE)
+#undef X_CASE
+        case RoomField::NAME:
+        case RoomField::DESC:
+        case RoomField::DYNAMIC_DESC:
+        case RoomField::LAST:
+        case RoomField::RESERVED:
+        default:
+            /* this can't happen */
+            throw std::runtime_error("impossible");
+        }
     }
 }
 

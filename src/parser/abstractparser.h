@@ -41,6 +41,7 @@
 #include "../global/StringView.h"
 #include "../mapdata/DoorFlags.h"
 #include "../mapdata/ExitFieldVariant.h"
+#include "../mapdata/RoomFieldVariant.h"
 #include "../mapdata/mmapper2room.h"
 #include "../mapdata/roomselection.h"
 #include "../proxy/telnetfilter.h"
@@ -55,6 +56,7 @@ class ParseEvent;
 class MapData;
 class Room;
 class Coordinate;
+class RoomFieldVariant;
 class RoomFilter;
 
 using CommandQueue = QQueue<CommandIdType>;
@@ -164,21 +166,17 @@ protected:
     void nameDoorCommand(const QString &doorname, DirectionType direction);
     void toggleDoorFlagCommand(DoorFlag flag, DirectionType direction);
     void toggleExitFlagCommand(ExitFlag flag, DirectionType direction);
-    [[deprecated]] void setRoomFieldCommand(const QVariant &flag, RoomField field);
-    void setRoomFieldCommand(RoomAlignType rat, RoomField field);
-    void setRoomFieldCommand(RoomLightType rlt, RoomField field);
-    void setRoomFieldCommand(RoomPortableType rpt, RoomField field);
-    void setRoomFieldCommand(RoomRidableType rrt, RoomField field);
-    void setRoomFieldCommand(RoomSundeathType rst, RoomField field);
 
+public:
+#define X_DECLARE_ROOM_FIELD_TOGGLERS(UPPER_CASE, CamelCase, Type) void toggleRoomFlagCommand(Type);
+    X_FOREACH_ROOM_FIELD(X_DECLARE_ROOM_FIELD_TOGGLERS)
+#undef X_DECLARE_ROOM_FIELD_TOGGLERS
+
+public:
     ExitFlags getExitFlags(DirectionType dir) const;
     DirectionalLightType getConnectedRoomFlags(DirectionType dir) const;
     void setExitFlags(ExitFlags flag, DirectionType dir);
     void setConnectedRoomFlag(DirectionalLightType light, DirectionType dir);
-
-    [[deprecated]] void toggleRoomFlagCommand(uint flag, RoomField field);
-    void toggleRoomFlagCommand(RoomMobFlag flag, RoomField field);
-    void toggleRoomFlagCommand(RoomLoadFlag flag, RoomField field);
 
     void printRoomInfo(RoomFields fieldset);
     void printRoomInfo(RoomField field);

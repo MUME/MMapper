@@ -37,6 +37,7 @@
 #include "../mapfrontend/mapaction.h"
 #include "ExitDirection.h"
 #include "ExitFieldVariant.h"
+#include "RoomFieldVariant.h"
 #include "mmapper2exit.h"
 #include "mmapper2room.h"
 #include "roomselection.h"
@@ -149,13 +150,14 @@ private:
 class ModifyRoomFlags final : public AbstractAction
 {
 public:
-    explicit ModifyRoomFlags(uint flags, RoomField fieldNum, FlagModifyMode);
+    explicit ModifyRoomFlags(RoomFieldVariant flags, FlagModifyMode);
+    explicit ModifyRoomFlags(RoomMobFlags flags, FlagModifyMode);
+    explicit ModifyRoomFlags(RoomLoadFlags flags, FlagModifyMode);
 
     virtual void exec(RoomId id) override;
 
 protected:
-    const uint flags = 0u;
-    const RoomField fieldNum = RoomField::NAME;
+    const RoomFieldVariant var;
     const FlagModifyMode mode{};
 };
 
