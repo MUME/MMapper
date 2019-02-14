@@ -47,7 +47,7 @@ enum class Environment { Unknown, Env32Bit, Env64Bit };
 static inline constexpr Platform getCurrentPlatform()
 {
 #if defined(Q_OS_WIN)
-    return Platform::Win32;
+    return Platform::Windows;
 #elif defined(Q_OS_MAC)
     return Platform::Mac;
 #elif defined(Q_OS_LINUX)
