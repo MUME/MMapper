@@ -68,7 +68,15 @@ static QByteArray getPlatformLoadDir()
 {
     switch (CURRENT_PLATFORM) {
     case Platform::Win32:
-        return "C:/Program Files (x86)/MMapper";
+        switch (CURRENT_ENVIRONMENT) {
+        case Environment::Env32Bit:
+            return "C:/Program Files (x86)/MMapper";
+        case Environment::Env64Bit:
+            return "C:/Program Files/MMapper";
+        case Environment::Unknown:
+        default:
+            return "";
+        };
 
     case Platform::Linux:
         return qgetenv("SNAP").append("/usr/share/games/mmapper");
@@ -541,6 +549,10 @@ void Configuration::AutoLoadSettings::read(QSettings &conf)
 {
     autoLoadMap = conf.value(KEY_AUTO_LOAD, false).toBool();
     fileName = conf.value(KEY_FILE_NAME, "arda.mm2").toString();
+    if (getCurrentPlatform() == Platform::Win32 && getCurrentEnvironment() == Environment::Env64Bit
+        && fileName.contains("Program Files (x86)")) {
+        fileName.replace("Program Files (x86)", "Program Files");
+    }
     lastMapDirectory = conf.value(KEY_LAST_MAP_LOAD_DIRECTORY, getPlatformLoadDir()).toString();
 }
 

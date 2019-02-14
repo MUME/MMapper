@@ -42,6 +42,7 @@
 enum class MapMode { PLAY, MAP, OFFLINE };
 enum class Platform { Unknown, Win32, Mac, Linux };
 enum class CharacterEncoding { LATIN1, UTF8, ASCII };
+enum class Environment { Unknown, Env32Bit, Env64Bit };
 
 static inline constexpr Platform getCurrentPlatform()
 {
@@ -56,6 +57,18 @@ static inline constexpr Platform getCurrentPlatform()
 #endif
 }
 static constexpr const Platform CURRENT_PLATFORM = getCurrentPlatform();
+
+static inline constexpr Environment getCurrentEnvironment()
+{
+#if Q_PROCESSOR_WORDSIZE == 4
+    return Environment::Env32Bit;
+#elif Q_PROCESSOR_WORDSIZE == 8
+    return Environment::Env64Bit;
+#else
+    throw std::runtime_error("unsupported environment");
+#endif
+}
+static constexpr const Environment CURRENT_ENVIRONMENT = getCurrentEnvironment();
 
 #if defined(MMAPPER_NO_OPENSSL) && MMAPPER_NO_OPENSSL
 static constexpr const bool NO_OPEN_SSL = true;
