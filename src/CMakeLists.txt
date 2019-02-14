@@ -380,7 +380,7 @@ target_link_libraries(mmapper
 
 set_target_properties(
   mmapper PROPERTIES
-  CXX_STANDARD 14
+  CXX_STANDARD 17
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
   COMPILE_FLAGS "${WARNING_FLAGS}"
