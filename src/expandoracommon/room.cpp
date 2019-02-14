@@ -38,6 +38,7 @@ ExitDirConstRef::ExitDirConstRef(const ExitDirection dir, const Exit &exit)
     , exit{exit}
 {}
 
+#if __cplusplus < 201703L
 OptionalExitDirConstRef::OptionalExitDirConstRef(const ExitDirConstRef &dir)
 {
     new (buf) ExitDirConstRef{dir.dir, dir.exit};
@@ -79,6 +80,7 @@ const ExitDirConstRef &OptionalExitDirConstRef::value() const
         throw std::runtime_error("invalid");
     return reinterpret_cast<const ExitDirConstRef &>(buf);
 }
+#endif
 
 std::vector<ExitDirection> Room::getOutExits() const
 {
