@@ -33,6 +33,7 @@
 #include <QMessageLogContext>
 #include <QObject>
 #include <QString>
+#include <QSysInfo>
 
 #include "../configuration/configuration.h"
 #include "../global/utils.h"
@@ -182,7 +183,7 @@ void AbstractTelnet::setTerminalType(const QByteArray &terminalType)
         case Platform::Mac:
             return "Mac";
 
-        case Platform::Win32:
+        case Platform::Windows:
             return "Windows";
 
         case Platform::Unknown:
@@ -190,8 +191,12 @@ void AbstractTelnet::setTerminalType(const QByteArray &terminalType)
             return "Unknown";
         };
     };
+
     QString temp = terminalType;
-    temp.append(QString("/MMapper-%1/%2").arg(MMAPPER_VERSION).arg(get_os_string()));
+    temp.append(QString("/MMapper-%1/%2/%3")
+                    .arg(MMAPPER_VERSION)
+                    .arg(get_os_string())
+                    .arg(QSysInfo::currentCpuArchitecture()));
     termType = temp.toLatin1();
 }
 

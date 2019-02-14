@@ -40,7 +40,7 @@
 #include "../pandoragroup/mmapper2group.h"
 
 enum class MapMode { PLAY, MAP, OFFLINE };
-enum class Platform { Unknown, Win32, Mac, Linux };
+enum class Platform { Unknown, Windows, Mac, Linux };
 enum class CharacterEncoding { LATIN1, UTF8, ASCII };
 enum class Environment { Unknown, Env32Bit, Env64Bit };
 

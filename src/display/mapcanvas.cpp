@@ -1048,7 +1048,7 @@ void MapCanvas::initializeGL()
     qInfo() << "Current OpenGL Context: " << contextStr;
     emit log("MapCanvas", "Current OpenGL Context: " + contextStr);
 
-    if (getCurrentPlatform() == Platform::Win32 && vendor == "Microsoft Corporation"
+    if (getCurrentPlatform() == Platform::Windows && vendor == "Microsoft Corporation"
         && renderer == "GDI Generic") {
         setConfig().canvas.softwareOpenGL = true;
         setConfig().write();

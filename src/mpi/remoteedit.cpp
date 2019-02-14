@@ -48,7 +48,7 @@ void RemoteEdit::remoteEdit(const int key, const QString &title, const QString &
 
 void RemoteEdit::addSession(const int key, const QString &title, QString body)
 {
-    if (CURRENT_PLATFORM == Platform::Win32)
+    if (CURRENT_PLATFORM == Platform::Windows)
         body.replace(s_lineFeedNewlineRx, "\r\n");
 
     uint sessionId = getSessionCount();
@@ -97,7 +97,7 @@ void RemoteEdit::save(const RemoteEditSession *session)
     assert(session != nullptr);
     if (session->isEditSession()) {
         QString content = session->getContent();
-        if (CURRENT_PLATFORM == Platform::Win32)
+        if (CURRENT_PLATFORM == Platform::Windows)
             content.replace(s_lineFeedNewlineRx, "\n");
         // The body contents have to be followed by a LF if they are not empty
         if (!content.isEmpty() && !content.endsWith('\n')) {

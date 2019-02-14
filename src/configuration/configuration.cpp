@@ -40,7 +40,7 @@
 static const char *getPlatformEditor()
 {
     switch (CURRENT_PLATFORM) {
-    case Platform::Win32:
+    case Platform::Windows:
         return "notepad";
 
     case Platform::Mac:
@@ -67,7 +67,7 @@ static const char *getPlatformEditor()
 static QByteArray getPlatformLoadDir()
 {
     switch (CURRENT_PLATFORM) {
-    case Platform::Win32:
+    case Platform::Windows:
         switch (CURRENT_ENVIRONMENT) {
         case Environment::Env32Bit:
             return "C:/Program Files (x86)/MMapper";
@@ -541,7 +541,7 @@ void Configuration::CanvasSettings::read(QSettings &conf)
     backgroundColor = QColor(conf.value(KEY_BACKGROUND_COLOR, QColor("#2e3436").name()).toString());
     antialiasingSamples = conf.value(KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES, 0).toInt();
     trilinearFiltering = conf.value(KEY_USE_TRILINEAR_FILTERING, false).toBool();
-    softwareOpenGL = conf.value(KEY_USE_SOFTWARE_OPENGL, getCurrentPlatform() == Platform::Win32)
+    softwareOpenGL = conf.value(KEY_USE_SOFTWARE_OPENGL, getCurrentPlatform() == Platform::Windows)
                          .toBool();
 }
 
@@ -549,7 +549,8 @@ void Configuration::AutoLoadSettings::read(QSettings &conf)
 {
     autoLoadMap = conf.value(KEY_AUTO_LOAD, false).toBool();
     fileName = conf.value(KEY_FILE_NAME, "arda.mm2").toString();
-    if (getCurrentPlatform() == Platform::Win32 && getCurrentEnvironment() == Environment::Env64Bit
+    if (getCurrentPlatform() == Platform::Windows
+        && getCurrentEnvironment() == Environment::Env64Bit
         && fileName.contains("Program Files (x86)")) {
         fileName.replace("Program Files (x86)", "Program Files");
     }
