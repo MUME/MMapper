@@ -48,15 +48,8 @@ endif()
 
 if(APPLE)
     set(CMAKE_MACOSX_RPATH ON)
-    if(Qt5Core_VERSION VERSION_LESS 5.12.0)
-        # Minimum version of OS X that supports c++14 is 10.9 "Mavericks"
-        set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9")
-        set(MACOSX_PREVENT_DARK_MODE "true")
-    else()
-        # Dark mode requires "Sierra" and Qt 5.12
-        set(CMAKE_OSX_DEPLOYMENT_TARGET "10.12")
-        set(MACOSX_PREVENT_DARK_MODE "false")
-    endif()
+    # C++17 std::optional requires macOS 10.14
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14")
 endif()
 
 if(WIN32)

@@ -33,7 +33,7 @@
 	<key>NSHumanReadableCopyright</key>
 	<string>${MACOSX_BUNDLE_COPYRIGHT}</string>
 	<key>NSRequiresAquaSystemAppearance</key>
-	<${MACOSX_PREVENT_DARK_MODE}/>
+	<false/>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
         <key>NSHighResolutionCapable</key>
