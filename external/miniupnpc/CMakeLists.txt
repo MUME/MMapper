@@ -1,5 +1,4 @@
 include(ExternalProject)
-mark_as_advanced(CLEAR MINIUPNPC_INCLUDE_DIR MINIUPNPC_LIBRARY)
 ExternalProject_Add(miniupnpc
     URL "http://miniupnp.free.fr/files/download.php?file=miniupnpc-2.1.tar.gz"
     URL "https://miniupnp.tuxfamily.org/files/download.php?file=miniupnpc-2.1.tar.gz"
@@ -8,18 +7,35 @@ ExternalProject_Add(miniupnpc
     SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/miniupnpc"
     BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/miniupnpc-build"
     INSTALL_COMMAND ""
-    CMAKE_ARGS "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DUPNPC_BUILD_SAMPLE=FALSE -DUPNPC_BUILD_TESTS=FALSE -DUPNPC_BUILD_SHARED=FALSE"
+    CMAKE_ARGS "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
     CMAKE_CACHE_ARGS -DCMAKE_OSX_DEPLOYMENT_TARGET:STRING=${CMAKE_OSX_DEPLOYMENT_TARGET}
                      -DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}
+                     -DUPNPC_BUILD_SAMPLE:BOOL=OFF
+                     -DUPNPC_BUILD_TESTS:BOOL=OFF
+                     -DUPNPC_BUILD_SHARED:BOOL=ON
+                     -DUPNPC_BUILD_STATIC:BOOL=ON
 
     UPDATE_COMMAND ""
     ALWAYS 0
     )
 ExternalProject_Get_Property(miniupnpc SOURCE_DIR)
 ExternalProject_Get_Property(miniupnpc BINARY_DIR)
+set(MINIUPNPC_SHARED_LIBRARY ${BINARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}miniupnpc${CMAKE_SHARED_LIBRARY_SUFFIX})
 set(MINIUPNPC_STATIC_LIBRARY ${BINARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}miniupnpc${CMAKE_STATIC_LIBRARY_SUFFIX})
-set(MINIUPNPC_LIBRARIES ${MINIUPNPC_STATIC_LIBRARY})
-set(MINIUPNPC_LIBRARY ${MINIUPNPC_STATIC_LIBRARY})
+set(MINIUPNPC_LIBRARIES ${MINIUPNPC_SHARED_LIBRARY} ${MINIUPNPC_STATIC_LIBRARY})
+if(MSVC OR APPLE OR MINIUPNPC_PREFER_STATIC_LIB)
+    set(MINIUPNPC_LIBRARY ${MINIUPNPC_STATIC_LIBRARY})
+else()
+    set(MINIUPNPC_LIBRARY ${MINIUPNPC_SHARED_LIBRARY})
+    if(WIN32)
+        add_custom_command(
+            TARGET miniupnpc
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E echo Deploying MiniUPnPc binary
+            COMMAND ${CMAKE_COMMAND} -E copy ${MINIUPNPC_SHARED_LIBRARY} ${CMAKE_BINARY_DIR}/src/bin/
+            )
+    endif()
+endif()
 
 message(STATUS "MiniUPnPc library: ${MINIUPNPC_LIBRARY}")
 set(MINIUPNPC_LIBRARIES ${MINIUPNPC_LIBRARIES} PARENT_SCOPE)
