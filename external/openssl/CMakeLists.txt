@@ -36,6 +36,20 @@ if(OPENSSL_FOUND)
             configure_file(${SSL_EAY_BIN} ${CMAKE_BINARY_DIR}/src/bin/ssleay32.dll COPYONLY)
             message(STATUS "   Copied ${SSL_EAY_BIN} to src/bin/")
         endif()
+        # Shining Light Productions OpenSSL requires the VC++2013 runtime
+        find_file(MSVCR120_BIN
+                NAMES
+                msvcr120.dll
+                HINTS
+                ${OPENSSL_ROOT_DIR}
+                PATH_SUFFIXES
+                bin)
+        if(MSVCR120_BIN-NOTFOUND)
+            message(FATAL_ERROR "OpenSSL dependency msvcr120.dll was NOT found")
+        else()
+            configure_file(${SSL_EAY_BIN} ${CMAKE_BINARY_DIR}/src/bin/msvcr120.dll COPYONLY)
+            message(STATUS "   Copied ${MSVCR120_BIN} to src/bin/")
+        endif()
     endif()
 else()
     if(WIN32)
