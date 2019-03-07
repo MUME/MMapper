@@ -39,14 +39,14 @@ enum class MumeSeason {
     SEASON_AUTUMN
 };
 
-class QString;
-
 class MumeMoment
 {
 public:
     explicit MumeMoment(int year, int month, int day, int hour, int minute);
     static MumeMoment sinceMumeEpoch(int64_t secsSinceMumeStartEpoch);
 
+    int dayOfYear() const;
+    int weekDay() const;
     int toSeconds() const;
     MumeSeason toSeason() const;
     MumeTime toTimeOfDay() const;

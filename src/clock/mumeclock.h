@@ -114,6 +114,32 @@ public:
 
     Q_ENUM(SindarinMonthNames)
 
+    enum class WestronWeekDayNames {
+        UnknownWestronWeekDay = -1,
+        Sunday,
+        Monday,
+        Trewsday,
+        Hevensday,
+        Mersday,
+        Highday,
+        Sterday
+    };
+
+    Q_ENUM(WestronWeekDayNames)
+
+    enum class SindarinWeekDayNames {
+        UnknownSindarinWeekDay = -1,
+        Oranor,
+        Orithil,
+        Orgaladhad,
+        Ormenel,
+        Orbelain,
+        Oraearon,
+        Orgilion
+    };
+
+    Q_ENUM(SindarinWeekDayNames)
+
 private:
     static const std::array<int, NUM_MONTHS> s_dawnHour;
     static const std::array<int, NUM_MONTHS> s_duskHour;
@@ -121,6 +147,8 @@ private:
 public:
     static const QMetaEnum s_westronMonthNames;
     static const QMetaEnum s_sindarinMonthNames;
+    static const QMetaEnum s_westronWeekDayNames;
+    static const QMetaEnum s_sindarinWeekDayNames;
     static const QHash<QString, MumeTime> m_stringTimeHash;
 
 signals:

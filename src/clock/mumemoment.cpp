@@ -37,6 +37,9 @@ static constexpr const int MUME_MINUTES_PER_DAY = MUME_HOURS_PER_DAY * MUME_MINU
 static constexpr const int MUME_MINUTES_PER_MONTH = MUME_DAYS_PER_MONTH * MUME_MINUTES_PER_DAY;
 static constexpr const int MUME_MINUTES_PER_YEAR = MUME_MONTHS_PER_YEAR * MUME_MINUTES_PER_MONTH;
 
+static constexpr const int MUME_DAYS_PER_YEAR = MUME_MONTHS_PER_YEAR * MUME_DAYS_PER_MONTH;
+static_assert(MUME_DAYS_PER_YEAR == 360, "");
+
 static void maybe_warn_if_not_clamped(
     const char *const name, bool &warned, const int val, const int lo, const int hi)
 {
@@ -98,6 +101,16 @@ MumeMoment MumeMoment::sinceMumeEpoch(const int64_t secsSinceMumeStartEpoch)
                            : mumeTimeMinusYearsMonthDaysAndMinutes;
 
     return MumeMoment{year, month, day, hour, minute};
+}
+
+int MumeMoment::dayOfYear() const
+{
+    return month * MUME_DAYS_PER_MONTH + day;
+}
+
+int MumeMoment::weekDay() const
+{
+    return dayOfYear() % 7;
 }
 
 int MumeMoment::toSeconds() const
