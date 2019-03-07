@@ -327,6 +327,7 @@ public:
     GL_PROXY(glPopMatrix)
     GL_PROXY(glPushMatrix)
     GL_PROXY(glRotatef)
+    GL_PROXY(glScalef)
     GL_PROXY(glTranslatef)
 
 public:

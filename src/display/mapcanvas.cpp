@@ -233,7 +233,6 @@ void MapCanvas::layerDown()
 
 void MapCanvas::setCanvasMouseMode(const CanvasMouseMode mode)
 {
-    clearRoomSelection();
     clearConnectionSelection();
     clearInfoMarkSelection();
 
@@ -1207,9 +1206,15 @@ void MapCanvas::drawCharacter(const Coordinate &c, const QColor &color)
         const float characterHintX = cameraCenterX + (std::cos(radians) * radiusX * -1);
         const float characterHintY = cameraCenterY + (std::sin(radians) * radiusY * -1);
 
-        // Draw character and rotate according to angle
+        // Rotate according to angle
         m_opengl.glTranslatef(characterHintX, characterHintY, m_currentLayer + 0.1f);
         m_opengl.glRotatef(degrees, 0.0f, 0.0f, 1.0f);
+
+        // Scale based upon normalized distance
+        const float distance = std::sqrt((adjacent * adjacent) + (opposite * opposite));
+        const float normalized = 1.0f - (std::min(distance, BASESIZEX * 3.0f) / BASESIZEX * 3.0f);
+        const float scaleFactor = std::max(0.3f, normalized);
+        m_opengl.glScalef(scaleFactor, scaleFactor, 1.0f);
 
         m_opengl.callList(m_gllist.character_hint.filled);
         m_opengl.apply(XDisable{XOption::BLEND});
@@ -1474,9 +1479,15 @@ void MapCanvas::paintSelectedRoom(const Room *const room)
         const float roomHintX = cameraCenterX + (std::cos(radians) * radiusX * -1);
         const float roomHintY = cameraCenterY + (std::sin(radians) * radiusY * -1);
 
-        // Draw character and rotate according to angle
+        // Rotate according to angle
         m_opengl.glTranslatef(roomHintX, roomHintY, m_currentLayer + 0.1f);
         m_opengl.glRotatef(degrees, 0.0f, 0.0f, 1.0f);
+
+        // Scale based upon normalized distance
+        const float distance = std::sqrt((adjacent * adjacent) + (opposite * opposite));
+        const float normalized = 1.0f - (std::min(distance, BASESIZEX * 3.0f) / BASESIZEX * 3.0f);
+        const float scaleFactor = std::max(0.3f, normalized);
+        m_opengl.glScalef(scaleFactor, scaleFactor, 1.0f);
     } else {
         // Room is close
         m_opengl.glTranslatef(x - 0.5f, y - 0.5f, ROOM_Z_DISTANCE * layer);
