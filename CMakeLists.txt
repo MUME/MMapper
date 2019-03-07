@@ -59,9 +59,9 @@ if(APPLE)
 endif()
 
 if(WIN32)
-    # Target Windows Vista and above
-    add_definitions(/DNTDDI_VERSION=0x06000000)
-    add_definitions(/D_WIN32_WINNT=0x0600)
+    # Target Windows 7 and above
+    add_definitions(/DNTDDI_VERSION=0x06010000)
+    add_definitions(/D_WIN32_WINNT=0x0601)
 endif()
 
 # Try to find the system copy of zlib
