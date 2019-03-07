@@ -226,6 +226,7 @@ bool MumeXmlParser::element(const QByteArray &line)
             case 'r':
                 if (line.startsWith("room")) {
                     m_xmlMode = XmlMode::ROOM;
+                    m_roomName = emptyString; // 'name' tag will not show up when blinded
                 }
                 break;
             case 'm':
@@ -289,7 +290,6 @@ bool MumeXmlParser::element(const QByteArray &line)
             case 'n':
                 if (line.startsWith("name")) {
                     m_xmlMode = XmlMode::NAME;
-                    m_roomName = emptyString; // might be empty but valid room name
                 }
                 break;
             case 'd':
