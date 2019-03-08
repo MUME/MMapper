@@ -108,7 +108,7 @@ else()
 endif()
 
 # Extract git branch and revision
-find_package(Git QUIET)
+find_package(Git)
 if(EXISTS ${GIT_EXECUTABLE})
     if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
         # Get the current working branch
