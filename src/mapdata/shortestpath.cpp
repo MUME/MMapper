@@ -92,7 +92,7 @@ static double getLength(const Exit &e, const Room *curr, const Room *nextr)
 {
     double cost = terrain_cost(nextr->getTerrainType());
     auto flags = e.getExitFlags();
-    if (flags.isRandom()) {
+    if (flags.isRandom() || flags.isDamage() || flags.isFall()) {
         cost += 30;
     }
     if (flags.isDoor()) {
