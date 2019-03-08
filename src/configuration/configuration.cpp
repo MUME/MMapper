@@ -269,6 +269,7 @@ ConstString KEY_BACKGROUND_COLOR = "Background color";
 ConstString KEY_RSA_X509_CERTIFICATE = "RSA X509 certificate";
 ConstString KEY_CHARACTER_ENCODING = "Character encoding";
 ConstString KEY_CHARACTER_NAME = "character name";
+ConstString KEY_CHECK_FOR_UPDATE = "Check for update";
 ConstString KEY_CLEAR_INPUT_ON_ENTER = "Clear input on enter";
 ConstString KEY_COLOR = "color";
 ConstString KEY_COLUMNS = "Columns";
@@ -506,6 +507,7 @@ void Configuration::GeneralSettings::read(QSettings &conf)
         conf.value(KEY_MAP_MODE, static_cast<uint32_t>(MapMode::PLAY)).toUInt());
     noSplash = conf.value(KEY_NO_SPLASH, false).toBool();
     noLaunchPanel = conf.value(KEY_NO_LAUNCH_PANEL, false).toBool();
+    checkForUpdate = conf.value(KEY_CHECK_FOR_UPDATE, true).toBool();
     characterEncoding = sanitizeCharacterEncoding(
         conf.value(KEY_CHARACTER_ENCODING, static_cast<uint32_t>(CharacterEncoding::LATIN1))
             .toUInt());
@@ -678,6 +680,7 @@ void Configuration::GeneralSettings::write(QSettings &conf) const
     conf.setValue(KEY_MAP_MODE, static_cast<uint32_t>(mapMode));
     conf.setValue(KEY_NO_SPLASH, noSplash);
     conf.setValue(KEY_NO_LAUNCH_PANEL, noLaunchPanel);
+    conf.setValue(KEY_CHECK_FOR_UPDATE, checkForUpdate);
     conf.setValue(KEY_CHARACTER_ENCODING, static_cast<uint32_t>(characterEncoding));
 }
 

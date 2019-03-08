@@ -68,6 +68,7 @@ class QToolBar;
 class QWidget;
 class RoomSelection;
 class WelcomeWidget;
+class UpdateDialog;
 
 class DockWidget : public QDockWidget
 {
@@ -186,6 +187,7 @@ private:
 
     ClientWidget *m_client = nullptr;
     WelcomeWidget *m_launchWidget = nullptr;
+    UpdateDialog *m_updateDialog = nullptr;
 
     SharedRoomSelection m_roomSelection;
     ConnectionSelection *m_connectionSelection = nullptr;

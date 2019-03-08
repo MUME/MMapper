@@ -77,6 +77,7 @@
 #include "../preferences/configdialog.h"
 #include "../proxy/connectionlistener.h"
 #include "../proxy/telnetfilter.h"
+#include "UpdateDialog.h"
 #include "aboutdialog.h"
 #include "findroomsdlg.h"
 #include "infomarkseditdlg.h"
@@ -189,7 +190,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     m_findRoomsDlg = new FindRoomsDlg(m_mapData, this);
     m_findRoomsDlg->setObjectName("FindRoomsDlg");
 
-    m_mumeClock = new MumeClock(getConfig().mumeClock.startEpoch);
+    m_mumeClock = new MumeClock(getConfig().mumeClock.startEpoch, this);
+    m_updateDialog = new UpdateDialog(this);
 
     createActions();
     setupToolBars();
@@ -217,7 +219,6 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     // Re-hide or re-show docks that might have been restored
     m_dockDialogGroup->hide();
     if (getConfig().general.noLaunchPanel) {
-        m_launchWidget->hide();
         m_dockLaunch->hide();
     } else {
         m_dockLaunch->show();
@@ -272,6 +273,10 @@ void MainWindow::startServices()
     }
     if (groupConfig.state != GroupManagerState::Off && groupConfig.autoStart)
         groupNetwork.networkStartAct->trigger();
+
+    // Raise the update dialog if an update is found
+    if (getConfig().general.checkForUpdate)
+        m_updateDialog->open();
 }
 
 void MainWindow::readSettings()
@@ -1628,7 +1633,6 @@ void MainWindow::onFindRoom()
 
 void MainWindow::onLaunchClient()
 {
-    m_launchWidget->hide();
     m_dockLaunch->hide();
 
     m_client->show();
@@ -1881,7 +1885,8 @@ void MainWindow::onConnectToNeighboursRoomSelection()
 
 void MainWindow::onCheckForUpdate()
 {
-    QDesktopServices::openUrl(QUrl("https://github.com/MUME/MMapper/releases"));
+    m_updateDialog->show();
+    m_updateDialog->open();
 }
 
 void MainWindow::voteForMUMEOnTMC()

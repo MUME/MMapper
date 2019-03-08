@@ -86,6 +86,8 @@ set(mmapper_SRCS
     global/utils.h
     global/WinSock.cpp
     global/WinSock.h
+    mainwindow/UpdateDialog.cpp
+    mainwindow/UpdateDialog.h
     mainwindow/aboutdialog.cpp
     mainwindow/aboutdialog.h
     mainwindow/findroomsdlg.cpp

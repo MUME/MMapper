@@ -98,6 +98,7 @@ public:
         MapMode mapMode = MapMode::PLAY;
         bool noSplash = false;
         bool noLaunchPanel = false;
+        bool checkForUpdate = true;
         CharacterEncoding characterEncoding = CharacterEncoding::LATIN1;
 
     private:
