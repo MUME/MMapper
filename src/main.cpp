@@ -70,13 +70,21 @@ public:
         : pixmap(getPixmapFilenameRaw("splash20.png"))
         , splash(pixmap)
     {
-        const auto message = QString("%1").arg(MMAPPER_VERSION, -9);
+        const auto message = QString("%1").arg(getVersion(), -9);
         splash.showMessage(message, Qt::AlignBottom | Qt::AlignRight, Qt::yellow);
         splash.show();
     }
     virtual ~Splash() override;
 
     void finish(QWidget *w) override { splash.finish(w); }
+    QString getVersion() const
+    {
+#ifdef GIT_TAG_COMMIT_HASH
+        return QLatin1Literal(GIT_TAG_COMMIT_HASH);
+#else
+        return QLatin1Literal(MMAPPER_VERSION);
+#endif
+    }
 };
 
 Splash::~Splash() = default;

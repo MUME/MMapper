@@ -48,7 +48,7 @@ init:
   - echo CMAKE_GENERATOR=%CMAKE_GENERATOR%
 
 install:
-  - ps: $env:package_version = (Get-Content -Raw -Path MMAPPER_VERSION).trim()
+  - ps: $env:package_version = ("$(git describe --tags --always --long)").trim()
   - ps: Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
 
 before_build:
@@ -70,8 +70,8 @@ test_script:
   - cmd: ctest -V
 
 artifacts:
-  - path: winbuild\mmapper-$(package_version)-Windows-$(ARCH).exe
+  - path: winbuild\mmapper-*-Windows-$(ARCH).exe
     name: MMapper Installer
   
-  - path: winbuild\mmapper-$(package_version)-Windows-$(ARCH).zip
+  - path: winbuild\mmapper-*-Windows-$(ARCH).zip
     name: MMapper ZIP

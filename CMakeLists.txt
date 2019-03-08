@@ -119,11 +119,11 @@ if(EXISTS ${GIT_EXECUTABLE})
           OUTPUT_STRIP_TRAILING_WHITESPACE
         )
 
-        # Get the latest abbreviated commit hash of the working branch
+        # Get the latest tag, number of commits since, and abbreviated commit hash
         execute_process(
-          COMMAND ${GIT_EXECUTABLE} log -1 --format=%h
+          COMMAND ${GIT_EXECUTABLE} describe --tags --always --long
           WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-          OUTPUT_VARIABLE GIT_COMMIT_HASH
+          OUTPUT_VARIABLE GIT_TAG_COMMIT_HASH
           OUTPUT_STRIP_TRAILING_WHITESPACE
         )
 
@@ -135,8 +135,8 @@ if(EXISTS ${GIT_EXECUTABLE})
           OUTPUT_STRIP_TRAILING_WHITESPACE
         )
 
-        message(STATUS "Building from branch ${GIT_BRANCH} on commit ${GIT_COMMIT_HASH}")
-        add_definitions(-DGIT_COMMIT_HASH="${GIT_COMMIT_HASH}")
+        message(STATUS "Building from branch ${GIT_BRANCH} with ref ${GIT_TAG_COMMIT_HASH}")
+        add_definitions(-DGIT_TAG_COMMIT_HASH="${GIT_TAG_COMMIT_HASH}")
         add_definitions(-DGIT_BRANCH="${GIT_BRANCH}")
     endif()
 endif()
