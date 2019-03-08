@@ -52,24 +52,13 @@ public:
     }
 
 public:
-    bool operator<(const CompareVersion &other) const
+    bool operator>(const CompareVersion &other) const
     {
-        if (major_ < other.major_)
+        if (major_ > other.major_)
             return true;
-        if (minor_ < other.minor_)
+        if (minor_ > other.minor_)
             return true;
-        if (patch_ < other.patch_)
-            return true;
-        return false;
-    }
-
-    bool operator<=(const CompareVersion &other) const
-    {
-        if (major_ >= other.major_)
-            return true;
-        if (minor_ >= other.minor_)
-            return true;
-        if (patch_ >= other.patch_)
+        if (patch_ > other.patch_)
             return true;
         return false;
     }
@@ -139,7 +128,10 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
     if (current == latest) {
         text->setText("You are up to date!");
 
-    } else if (current < latest) {
+    } else if (current > latest) {
+        text->setText("No newer update available.");
+
+    } else {
         text->setText(QString("A new version of MMapper is available!"
                               "\n"
                               "\n"
@@ -151,9 +143,6 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
         show();
         raise();
         activateWindow();
-
-    } else {
-        text->setText("No newer update available.");
     }
     reply->deleteLater();
 }
