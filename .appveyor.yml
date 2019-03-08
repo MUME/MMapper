@@ -48,6 +48,7 @@ init:
   - echo CMAKE_GENERATOR=%CMAKE_GENERATOR%
 
 install:
+  - cd c:\Build\MMapper
   - ps: $env:package_version = ("$(git describe --tags --always --long)").trim()
   - ps: Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
 
