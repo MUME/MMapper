@@ -1,4 +1,23 @@
 ================================
+MMapper 2.8.0 (March 7, 2019)
+================================
+
+New features:
+ - Remote edit justify now understands ANSI and various lengths
+ - _search and _mark commands now select and show distant rooms
+ - Map immediately reflects changes from internal commands (i.e. _noride)
+ - MMapper now checks for upgrades on Github
+
+Bug fixes:
+ - Fix syncing when player is blinded
+ - _dirs command is now aware of damage/fall exits and tries to avoid them
+ - Prespammed directions are more resilient to non-movement commands
+ - Internal commands now trigger on the tail position of prespam (i.e. _open)
+ - Blacklist certain OpenGL drivers and fallback to software rendering on Windows
+ - Fix "Always on top" action
+ - Package missing msvcr120.dll on Windows
+
+================================
 MMapper 2.7.4 (January 2, 2019)
 ================================
 
