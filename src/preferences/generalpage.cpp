@@ -77,6 +77,9 @@ GeneralPage::GeneralPage(QWidget *parent)
     connect(autoStartGroupManagerCheckBox, &QCheckBox::stateChanged, this, [this]() {
         setConfig().groupManager.autoStart = autoStartGroupManagerCheckBox->isChecked();
     });
+    connect(checkForUpdateCheckBox, &QCheckBox::stateChanged, this, [this]() {
+        setConfig().general.checkForUpdate = checkForUpdateCheckBox->isChecked();
+    });
     connect(autoLoadFileName,
             &QLineEdit::textChanged,
             this,
@@ -133,6 +136,7 @@ GeneralPage::GeneralPage(QWidget *parent)
 
     showLaunchPanelCheckBox->setChecked(!config.general.noLaunchPanel);
     autoStartGroupManagerCheckBox->setChecked(config.groupManager.autoStart);
+    checkForUpdateCheckBox->setChecked(config.general.checkForUpdate);
     autoLoadFileName->setText(autoLoad.fileName);
     autoLoadCheck->setChecked(autoLoad.autoLoadMap);
     autoLoadFileName->setEnabled(autoLoad.autoLoadMap);

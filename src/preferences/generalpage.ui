@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>454</width>
-    <height>603</height>
+    <height>683</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -187,51 +187,6 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBox_exits">
-     <property name="title">
-      <string>Emulated Exits</string>
-     </property>
-     <layout class="QGridLayout" name="gridLayout_6">
-      <property name="leftMargin">
-       <number>9</number>
-      </property>
-      <property name="topMargin">
-       <number>9</number>
-      </property>
-      <property name="rightMargin">
-       <number>9</number>
-      </property>
-      <property name="bottomMargin">
-       <number>9</number>
-      </property>
-      <property name="spacing">
-       <number>6</number>
-      </property>
-      <item row="1" column="0">
-       <widget class="QCheckBox" name="emulatedExitsCheckBox">
-        <property name="text">
-         <string>Show emulated exits</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QCheckBox" name="showHiddenExitFlagsCheckBox">
-        <property name="text">
-         <string>Show hidden exit flags</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QCheckBox" name="showNotesCheckBox">
-        <property name="text">
-         <string>Show notes</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
       <string>Startup</string>
@@ -252,48 +207,85 @@
       <property name="spacing">
        <number>6</number>
       </property>
-      <item row="2" column="0">
-       <widget class="QCheckBox" name="autoLoadCheck">
+      <item row="4" column="0">
+       <widget class="QCheckBox" name="autoStartGroupManagerCheckBox">
         <property name="text">
-         <string>Auto load world:</string>
+         <string>Start group manager</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
-       <widget class="QLineEdit" name="autoLoadFileName">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
+      <item row="3" column="0">
        <widget class="QCheckBox" name="showLaunchPanelCheckBox">
         <property name="text">
          <string>Show launch panel</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="2">
-       <widget class="QPushButton" name="selectWorldFileButton">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
+      <item row="3" column="1">
+       <widget class="QCheckBox" name="checkForUpdateCheckBox">
         <property name="text">
-         <string>&amp;Select</string>
+         <string>Check for update</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0" colspan="2">
-       <widget class="QCheckBox" name="autoStartGroupManagerCheckBox">
-        <property name="text">
-         <string>Start group manager</string>
+      <item row="5" column="0" colspan="2">
+       <widget class="QFrame" name="autoLoadFileFrame">
+        <property name="frameShape">
+         <enum>QFrame::NoFrame</enum>
         </property>
+        <property name="frameShadow">
+         <enum>QFrame::Plain</enum>
+        </property>
+        <property name="lineWidth">
+         <number>0</number>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <property name="spacing">
+          <number>0</number>
+         </property>
+         <item row="2" column="0">
+          <widget class="QCheckBox" name="autoLoadCheck">
+           <property name="text">
+            <string>Auto load world:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="autoLoadFileName">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QPushButton" name="selectWorldFileButton">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>&amp;Select</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
      </layout>
@@ -324,6 +316,51 @@
        <widget class="QCheckBox" name="displayMumeClockCheckBox">
         <property name="text">
          <string>Show Mume clock</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_exits">
+     <property name="title">
+      <string>Emulated Exits</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_6">
+      <property name="leftMargin">
+       <number>9</number>
+      </property>
+      <property name="topMargin">
+       <number>9</number>
+      </property>
+      <property name="rightMargin">
+       <number>9</number>
+      </property>
+      <property name="bottomMargin">
+       <number>9</number>
+      </property>
+      <property name="spacing">
+       <number>6</number>
+      </property>
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="emulatedExitsCheckBox">
+        <property name="text">
+         <string>Show emulated exits</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QCheckBox" name="showNotesCheckBox">
+        <property name="text">
+         <string>Show notes</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QCheckBox" name="showHiddenExitFlagsCheckBox">
+        <property name="text">
+         <string>Show hidden exit flags</string>
         </property>
        </widget>
       </item>
@@ -402,11 +439,6 @@
   <tabstop>emulatedExitsCheckBox</tabstop>
   <tabstop>showHiddenExitFlagsCheckBox</tabstop>
   <tabstop>showNotesCheckBox</tabstop>
-  <tabstop>showLaunchPanelCheckBox</tabstop>
-  <tabstop>autoStartGroupManagerCheckBox</tabstop>
-  <tabstop>autoLoadCheck</tabstop>
-  <tabstop>autoLoadFileName</tabstop>
-  <tabstop>selectWorldFileButton</tabstop>
   <tabstop>displayMumeClockCheckBox</tabstop>
   <tabstop>proxyThreadedCheckBox</tabstop>
   <tabstop>proxyConnectionStatusCheckBox</tabstop>
