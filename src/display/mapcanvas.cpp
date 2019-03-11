@@ -233,6 +233,7 @@ void MapCanvas::layerDown()
 
 void MapCanvas::setCanvasMouseMode(const CanvasMouseMode mode)
 {
+    clearRoomSelection();
     clearConnectionSelection();
     clearInfoMarkSelection();
 
