@@ -178,11 +178,11 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     m_dockDialogLog->hide();
 
     m_groupWidget = new GroupWidget(m_groupManager, m_mapData, this);
-    m_dockDialogGroup = new DockWidget(tr("Group Manager"), this);
+    m_dockDialogGroup = new DockWidget(tr("Group Panel"), this);
     m_dockDialogGroup->setObjectName("DockWidgetGroup");
     m_dockDialogGroup->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
-    m_dockDialogGroup->setFeatures(QDockWidget::DockWidgetMovable
-                                   | QDockWidget::DockWidgetFloatable);
+    m_dockDialogGroup->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
+                                   | QDockWidget::DockWidgetClosable);
     addDockWidget(Qt::TopDockWidgetArea, m_dockDialogGroup);
     m_dockDialogGroup->setWidget(m_groupWidget);
     m_dockDialogGroup->hide();
@@ -1008,10 +1008,10 @@ void MainWindow::setupMenuBar()
     toolbars->addAction(connectionToolBar->toggleViewAction());
     toolbars->addAction(groupToolBar->toggleViewAction());
     toolbars->addAction(settingsToolBar->toggleViewAction());
-    QMenu *sidebars = viewMenu->addMenu(tr("&Sidebars"));
-    sidebars->addAction(m_dockDialogLog->toggleViewAction());
-    sidebars->addAction(m_dockLaunch->toggleViewAction());
-    sidebars->addAction(m_dockDialogGroup->toggleViewAction());
+    QMenu *sidepanels = viewMenu->addMenu(tr("&Side Panels"));
+    sidepanels->addAction(m_dockDialogLog->toggleViewAction());
+    sidepanels->addAction(m_dockLaunch->toggleViewAction());
+    sidepanels->addAction(m_dockDialogGroup->toggleViewAction());
     viewMenu->addSeparator();
     viewMenu->addAction(zoomInAct);
     viewMenu->addAction(zoomOutAct);

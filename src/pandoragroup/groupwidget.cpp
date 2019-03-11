@@ -212,7 +212,6 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
 
     m_table = new QTableView(this);
     m_table->setSelectionMode(QAbstractItemView::NoSelection);
-    m_table->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     m_table->horizontalHeader()->setStretchLastSection(true);
     m_table->setModel(&m_model);
     layout->addWidget(m_table);
