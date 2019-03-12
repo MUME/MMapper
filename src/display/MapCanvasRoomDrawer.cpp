@@ -180,17 +180,13 @@ static XColor4f getWallExitColor(const qint32 layer)
     else if (layer > 0)
         return XColor4f{0.3f, 0.3f, 0.3f, 0.6f};
     else
-        return XColor4f{Qt::black,
-                        0.5f - 0.03f * static_cast<float>(layer)}; // REVISIT: Can go negative!
+        return XColor4f{Qt::black, std::max(0.0f, 0.5f - 0.03f * static_cast<float>(layer))};
 }
 
 static XColor4f getRoomColor(const qint32 layer, bool isDark = false, bool hasNoSunDeath = false)
 {
     if (layer > 0)
-        return XColor4f{0.3f,
-                        0.3f,
-                        0.3f,
-                        0.6f - 0.2f * static_cast<float>(layer)}; // REVISIT: Can go negative!
+        return XColor4f{0.3f, 0.3f, 0.3f, std::max(0.0f, 0.6f - 0.2f * static_cast<float>(layer))};
 
     const float alpha = (layer < 0) ? 1.0f : 0.9f;
     if (isDark)
