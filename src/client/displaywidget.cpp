@@ -58,7 +58,7 @@ DisplayWidget::DisplayWidget(QWidget *parent)
     m_backgroundColor = settings.backgroundColor;
 
     // Default Font
-    m_serverOutputFont = QFont(settings.font);
+    m_serverOutputFont.fromString(settings.font);
 
     QTextFrameFormat frameFormat = document()->rootFrame()->frameFormat();
     frameFormat.setBackground(m_backgroundColor);

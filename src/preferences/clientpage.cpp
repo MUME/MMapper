@@ -95,9 +95,11 @@ ClientPage::~ClientPage()
 void ClientPage::updateFontAndColors()
 {
     const auto &settings = getConfig().integratedClient;
-    ui->exampleLabel->setFont(settings.font);
+    QFont font;
+    font.fromString(settings.font);
+    ui->exampleLabel->setFont(font);
 
-    QFontInfo fi(settings.font);
+    QFontInfo fi(font);
     ui->fontPushButton->setText(
         QString("%1 %2, %3").arg(fi.family()).arg(fi.styleName()).arg(fi.pointSize()));
 
@@ -119,16 +121,18 @@ void ClientPage::updateFontAndColors()
 
 void ClientPage::onChangeFont()
 {
-    auto &font = setConfig().integratedClient.font;
+    auto &fontDescription = setConfig().integratedClient.font;
+    QFont oldFont;
+    oldFont.fromString(fontDescription);
 
     bool ok = false;
     const QFont newFont = QFontDialog::getFont(&ok,
-                                               QFont(font),
+                                               oldFont,
                                                this,
                                                "Select Font",
                                                QFontDialog::MonospacedFonts);
     if (ok) {
-        font = newFont.toString();
+        fontDescription = newFont.toString();
         updateFontAndColors();
     }
 }

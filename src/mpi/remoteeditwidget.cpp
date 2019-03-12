@@ -154,7 +154,8 @@ RemoteEditWidget::RemoteEditWidget(const bool editSession,
 
 QPlainTextEdit *RemoteEditWidget::createTextEdit()
 {
-    const QFont font(getConfig().integratedClient.font);
+    QFont font;
+    font.fromString(getConfig().integratedClient.font);
     const QFontMetrics fm(font);
     const int x = fm.averageCharWidth() * (80 + 1);
     const int y = fm.lineSpacing() * (24 + 1);
