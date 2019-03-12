@@ -755,7 +755,8 @@ void MapCanvasRoomDrawer::drawBoost(const Room *const room, const RoomLocks &loc
     m_opengl.glTranslatef(0, 0, ROOM_BOOST_BUMP);
     if (layer < 0) {
         m_opengl.apply(XEnable{XOption::BLEND});
-        m_opengl.apply(XColor4f{Qt::black, 0.5f - 0.03f * static_cast<float>(layer)});
+        m_opengl.apply(
+            XColor4f{Qt::black, std::max(0.0f, 0.5f - 0.03f * static_cast<float>(layer))});
         m_opengl.callList(m_gllist.room);
         m_opengl.apply(XDisable{XOption::BLEND});
     } else if (layer > 0) {
