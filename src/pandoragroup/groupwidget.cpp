@@ -216,6 +216,10 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
     m_table->setModel(&m_model);
     layout->addWidget(m_table);
 
+    // Minimize row height
+    m_table->verticalHeader()->setDefaultSectionSize(
+        m_table->verticalHeader()->minimumSectionSize());
+
     m_kick = new QAction(QIcon(":/icons/offline.png"), tr("&Kick"), this);
     connect(m_kick, &QAction::triggered, this, [this]() { emit kickCharacter(selectedCharacter); });
 
