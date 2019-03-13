@@ -490,7 +490,6 @@ void GroupServer::stop()
 {
     closeAll();
     emit scheduleAction(new ResetCharacters());
-    // REVISIT: Delete UPNP port mapping here too?
     deleteLater();
 }
 

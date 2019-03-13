@@ -141,6 +141,8 @@ public:
                 qDebug() << "Added IGD port mapping";
                 return true;
             }
+        } else {
+            qDebug() << "No IGD found to add a port mapping to";
         }
         return false;
     }
@@ -160,6 +162,8 @@ public:
                 qDebug() << "Deleted IGD port mapping";
                 return true;
             }
+        } else {
+            qDebug() << "No IGD found to remove a port mapping from";
         }
         return false;
     }
