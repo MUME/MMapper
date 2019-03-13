@@ -104,7 +104,8 @@ void Mmapper2Group::stop()
 {
     QMutexLocker locker(&networkLock);
     if (thread) {
-        network->stop();
+        if (network)
+            network->stop();
         thread->quit();
         if (QThread::currentThread() != thread->thread())
             thread->wait();
