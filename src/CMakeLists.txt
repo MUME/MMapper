@@ -312,6 +312,10 @@ if(WITH_MINIUPNPC)
     include_directories(SYSTEM ${MINIUPNPC_INCLUDE_DIR})
 endif()
 
+if(WITH_DRMINGW)
+    include_directories(SYSTEM ${DRMINGW_INCLUDE_DIR})
+endif()
+
 if(MMAPPER_IS_DEBUG)
     if(NOT DEFINED CHECK_ODR)
         set(CHECK_ODR YES)
@@ -402,6 +406,7 @@ if(WITH_MINIUPNPC)
 endif()
 
 if(WITH_DRMINGW)
+    target_link_libraries(mmapper ${DRMINGW_LIBRARY})
     add_dependencies(mmapper drmingw)
 endif()
 
