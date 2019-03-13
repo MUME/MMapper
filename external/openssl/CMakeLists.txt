@@ -6,8 +6,10 @@ if(OPENSSL_FOUND)
         if(NOT OPENSSL_ROOT_DIR)
             if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
                 set(OPENSSL_ROOT_DIR "C:\\OpenSSL-Win64")
+                set(MSVCR120_ROOT_DIR "C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\VC\\redist\\x64\\Microsoft.VC120.CRT")
             else()
                 set(OPENSSL_ROOT_DIR "C:\\OpenSSL-Win32")
+                set(MSVCR120_ROOT_DIR "C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\VC\\redist\\x86\\Microsoft.VC120.CRT")
             endif()
         endif()
         find_file(LIB_EAY_BIN
@@ -42,6 +44,7 @@ if(OPENSSL_FOUND)
                 msvcr120.dll
                 HINTS
                 ${OPENSSL_ROOT_DIR}
+                ${MSVCR120_ROOT_DIR}
                 PATH_SUFFIXES
                 bin)
         if(MSVCR120_BIN-NOTFOUND)
