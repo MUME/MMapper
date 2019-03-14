@@ -47,6 +47,34 @@ AboutDialog::AboutDialog(QWidget *parent)
     aboutTabLayout->setAlignment(Qt::AlignHCenter);
 
     /* About tab */
+    const auto about_text = []() -> QString {
+        return "<p align=\"center\">"
+               "<h3>"
+               "<u>"
+               + tr("MMapper %1").arg(getVersion())
+               + "</h3>"
+                 "</u>"
+                 "</p>"
+                 "<p align=\"center\">"
+#ifdef GIT_BRANCH
+               + tr("Built on branch %1 ").arg(GIT_BRANCH)
+#ifdef __clang__
+               + tr("using Clang %1.%2.%3")
+                     .arg(__clang_major__)
+                     .arg(__clang_minor__)
+                     .arg(__clang_patchlevel__)
+#elif __GNUC__
+               + tr("using GCC %1.%2.%3").arg(__GNUC__).arg(__GNUC_MINOR__).arg(__GNUC_PATCHLEVEL__)
+#elif defined(_MSC_VER)
+               + tr("using MSVC %1").arg(_MSC_VER)
+#endif
+               + "<br>"
+#endif
+               + tr("Based on Qt %1 (%2 bit)")
+                     .arg(QT_VERSION_STR)
+                     .arg(static_cast<size_t>(QSysInfo::WordSize))
+               + "</p>";
+    };
     pixmapLabel->setPixmap(QPixmap(":/pixmaps/splash20.png"));
     pixmapLabel->setFixedSize(
         QSize(pixmapLabel->pixmap()->width(), pixmapLabel->pixmap()->height()));
@@ -56,26 +84,7 @@ AboutDialog::AboutDialog(QWidget *parent)
     aboutText->setTextFormat(Qt::RichText);
     aboutText->setOpenExternalLinks(true);
     aboutText->setTextInteractionFlags(Qt::TextBrowserInteraction);
-    aboutText->setText(
-        "<p align=\"center\"><b>" + tr("MMapper %1").arg(getVersion()) + "</b></p>"
-        + "<p align=\"center\">"
-#ifdef GIT_BRANCH
-        + tr("Built on branch %1 ").arg(GIT_BRANCH)
-#endif
-#ifdef __clang__
-        + tr("using Clang %1.%2.%3").arg(__clang_major__).arg(__clang_minor__).arg(__clang_patchlevel__)
-#elif __GNUC__
-        + tr("using GCC %1.%2.%3").arg(__GNUC__).arg(__GNUC_MINOR__).arg(__GNUC_PATCHLEVEL__)
-#elif defined(_MSC_VER)
-        + tr("using MSVC %1").arg(_MSC_VER)
-#endif
-        + "<br>"
-        + tr("Based on Qt %1 (%2 bit)")
-              .arg(QT_VERSION_STR)
-              .arg(static_cast<size_t>(QSysInfo::WordSize))
-
-        // REVISIT: warning: expansion of date or time macro is not reproducible [-Wdate-time]
-        + "<br>" + tr("Built on %1 at %2").arg(QString(__DATE__)).arg(QString(__TIME__)) + "</p>");
+    aboutText->setText(about_text());
 
     /* Authors tab */
     authorsView->setOpenExternalLinks(true);
