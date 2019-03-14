@@ -144,6 +144,7 @@
         <file>pixmaps/load-whiteword.png</file>
         <file>pixmaps/load-darkword.png</file>
         <file>pixmaps/load-equipment.png</file>
+        <file>pixmaps/load-coach.png</file>
         <file>fonts/DejaVuSansMono.ttf</file>
         <file>fonts/LICENSE</file>
     </qresource>

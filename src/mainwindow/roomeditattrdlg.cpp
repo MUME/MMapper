@@ -138,6 +138,7 @@ static QString getName(const RoomLoadFlag flag)
         CASE2(WHITE_WORD, "White word");
         CASE2(DARK_WORD, "Dark word");
         CASE2(EQUIPMENT, "Equipment");
+        CASE2(COACH, "Coach");
     }
     return QString::asprintf("(RoomLoadFlag)%d", static_cast<int>(flag));
 #undef CASE2
