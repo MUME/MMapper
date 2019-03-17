@@ -234,6 +234,7 @@ Abbrev getParserCommandName(const RoomLoadFlag x)
         CASE3(DARK_WORD, "darkword", -1);
         CASE3(EQUIPMENT, "equipment", -1);
         CASE3(COACH, "coach", -1);
+        CASE3(FERRY, "ferry", -1);
     }
     return Abbrev{};
 #undef CASE3

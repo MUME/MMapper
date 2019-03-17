@@ -145,6 +145,7 @@
         <file>pixmaps/load-darkword.png</file>
         <file>pixmaps/load-equipment.png</file>
         <file>pixmaps/load-coach.png</file>
+        <file>pixmaps/load-ferry.png</file>
         <file>fonts/DejaVuSansMono.ttf</file>
         <file>fonts/LICENSE</file>
     </qresource>
