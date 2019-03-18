@@ -450,6 +450,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         m_staticRoomDesc = nullString;
         m_exits = nullString;
         m_exitsFlags.reset();
+        m_connectedRoomFlags.reset();
 
         toUser.append(ch);
         break;
