@@ -1643,13 +1643,11 @@ void MainWindow::onLaunchClient()
 void MainWindow::groupNetworkStatus(const bool status)
 {
     if (status) {
-        qDebug() << "Network up";
         m_dockDialogGroup->show();
         groupNetwork.networkStopAct->setShortcut(tr("Ctrl+G"));
         groupNetwork.networkStartAct->setChecked(true);
         groupNetwork.networkStartAct->setShortcut(tr(""));
     } else {
-        qDebug() << "Network down";
         m_dockDialogGroup->hide();
         groupNetwork.networkStartAct->setShortcut(tr("Ctrl+G"));
         groupNetwork.networkStopAct->setChecked(true);

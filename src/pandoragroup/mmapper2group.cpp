@@ -51,27 +51,29 @@ Mmapper2Group::Mmapper2Group(QObject *const /* parent */)
         connect(thread.get(), &QThread::started, this, [this]() {
             emit log("GroupManager", "Initialized Group Manager service");
         });
-        connect(thread.get(), &QThread::finished, thread.get(), &QObject::deleteLater);
+        connect(thread.get(), &QThread::finished, this, [this]() {
+            thread.get()->deleteLater();
+            qInfo() << "Group Manager thread stopped";
+        });
         connect(thread.get(), &QThread::destroyed, this, [this]() {
             thread.release();
             deleteLater();
-            qInfo() << "Terminated Group Manager service";
         });
     }
 }
 
 Mmapper2Group::~Mmapper2Group()
 {
+    // Stop the network
+    stop();
+
+    // Release resources
     authority.reset(nullptr);
     group.reset(nullptr);
-    if (network) {
-        network->stop();
-        network.reset(nullptr);
-    }
-    if (thread) {
-        thread->quit();
-        thread.release(); // finished() and destroyed() signals will destruct the thread
-    }
+    network.reset(nullptr);
+    thread.reset(nullptr);
+
+    qInfo() << "Terminated Group Manager service";
 }
 
 void Mmapper2Group::start()
@@ -102,13 +104,14 @@ bool Mmapper2Group::init()
 
 void Mmapper2Group::stop()
 {
-    QMutexLocker locker(&networkLock);
-    if (thread) {
-        if (network)
-            network->stop();
+    // Call stopNetwork() using the Group thread
+    QMetaObject::invokeMethod(this, "stopNetwork", Qt::BlockingQueuedConnection);
+
+    // Wait until the thread is halted
+    if (thread && thread->isRunning()) {
         thread->quit();
-        if (QThread::currentThread() != thread->thread())
-            thread->wait();
+        thread->wait(1000);
+        thread.release(); // finished() and destroyed() signals will destruct the thread
     }
 }
 
@@ -453,8 +456,10 @@ void Mmapper2Group::startNetwork()
                             "according to RULES ACTIONS.\n\nBe sure to disable the "
                             "GroupManager under such conditions.");
         }
+        qDebug() << "Network up";
     } else {
         network->stop();
+        qDebug() << "Network failed to start";
     }
 }
 
@@ -463,6 +468,7 @@ void Mmapper2Group::stopNetwork()
     QMutexLocker locker(&networkLock);
     if (network) {
         network->stop();
+        qDebug() << "Network down";
     }
 }
 
@@ -476,10 +482,8 @@ void Mmapper2Group::setMode(GroupManagerState newMode)
     if (currentState == newMode)
         return; // Do not bother changing states if we're already in it
 
-    // Delete previous network if it changed
-    if (network) {
-        network->stop();
-    }
+    // Stop previous network if it changed
+    stopNetwork();
 
     qDebug() << "Network type set to" << static_cast<int>(newMode);
 }
