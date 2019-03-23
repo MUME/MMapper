@@ -19,7 +19,6 @@ matrix:
             - miniupnpc
             - lcov
             - openssl
-          update: true
       env:
         - MATRIX_EVAL=""
         - CLANG_FORMAT=clang-format
