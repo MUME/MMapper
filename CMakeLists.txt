@@ -23,6 +23,7 @@ option(WITH_MINIUPNPC "Use MiniUPnPc for group manager port forwarding" ON)
 option(USE_TIDY "Run clang-tidy with the compiler" OFF)
 option(USE_IWYU "Run include-what-you-use with the compiler" OFF)
 option(USE_DISTCC "Use distcc for distributed builds" OFF)
+option(USE_CODE_COVERAGE "Run code coverage reporting" OFF)
 if(WIN32 AND MINGW)
    option(WITH_DRMINGW "Include Dr. Mingw crash dumping (Windows only)" ON)
 endif()
@@ -156,6 +157,23 @@ if(WITH_DRMINGW)
         add_definitions(/DWITH_DRMINGW)
     else()
         message(FATAL "Build MISSING debug symbols: use `-DWITH_DRMINGW=OFF` to build without crash reporting")
+    endif()
+endif()
+
+# Code Coverage Configuration
+add_library(coverage_config INTERFACE)
+if(USE_CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    message(STATUS "Enabling code coverage reporting")
+    # Add required flags (GCC & LLVM/Clang)
+    target_compile_options(coverage_config INTERFACE
+        -O0        # no optimization
+        -g         # generate debug info
+        --coverage # sets all required flags
+    )
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
+        target_link_options(coverage_config INTERFACE --coverage)
+    else()
+        target_link_libraries(coverage_config INTERFACE --coverage)
     endif()
 endif()
 
@@ -325,6 +343,7 @@ add_feature_info("WITH_MINIUPNPC" WITH_MINIUPNPC "port forwarding for group mana
 add_feature_info("USE_TIDY" USE_TIDY "")
 add_feature_info("USE_IWYU" USE_IWYU "")
 add_feature_info("USE_DISTCC" USE_DISTCC "")
+add_feature_info("USE_CODE_COVERAGE" USE_CODE_COVERAGE "")
 if(WIN32 AND MINGW)
     add_feature_info("WITH_DRMINGW" WITH_DRMINGW "crash logging with Dr. Mingw (Windows only)")
 endif()

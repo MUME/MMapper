@@ -14,7 +14,7 @@ set(clock_SRCS
     )
 set(TestClock_SRCS testclock.cpp)
 add_executable(TestClock ${TestClock_SRCS} ${clock_SRCS})
-target_link_libraries(TestClock Qt5::Test)
+target_link_libraries(TestClock Qt5::Test coverage_config)
 add_test(NAME TestClock COMMAND TestClock)
 
 # Expandora
@@ -33,7 +33,7 @@ file(GLOB_RECURSE expandoracommon_SRCS
     )
 set(TestExpandoraCommon_SRCS testexpandoracommon.cpp)
 add_executable(TestExpandoraCommon ${TestExpandoraCommon_SRCS} ${expandoracommon_SRCS})
-target_link_libraries(TestExpandoraCommon Qt5::Test)
+target_link_libraries(TestExpandoraCommon Qt5::Test coverage_config)
 add_test(NAME TestExpandoraCommon COMMAND TestExpandoraCommon)
 
 # Parser
@@ -54,5 +54,5 @@ set(parser_SRCS
     )
 set(TestParser_SRCS testparser.cpp)
 add_executable(TestParser ${TestParser_SRCS} ${parser_SRCS})
-target_link_libraries(TestParser Qt5::Test)
+target_link_libraries(TestParser Qt5::Test coverage_config)
 add_test(NAME TestParser COMMAND TestParser)

@@ -84,10 +84,10 @@ before_install:
   - '[ "$TRAVIS_OS_NAME" != linux ] || sudo apt-get -qy update'
 
 install:
-  - '[ "$TRAVIS_OS_NAME" != linux ] || sudo apt-get -qy install cmake libminiupnpc-dev'
+  - '[ "$TRAVIS_OS_NAME" != linux ] || sudo apt-get -qy install cmake libminiupnpc-dev lcov'
   - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" != */opt-* ]] || sudo apt-get -qy install qt${QT}base'
   - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" == */opt-* ]] || sudo apt-get -qy install qt5-qmake qtbase5-dev'
-  - '[ "$TRAVIS_OS_NAME" != osx ] || brew install qt5 clang-format miniupnpc'
+  - '[ "$TRAVIS_OS_NAME" != osx ] || brew install qt5 clang-format miniupnpc lcov'
   - '[ "$TRAVIS_OS_NAME" != osx ] || brew upgrade openssl@1.1'
   - '[ "$TRAVIS_OS_NAME" != osx ] || brew link --force qt5'
   - '[ "$TRAVIS_OS_NAME" != osx ] || export PATH=/usr/local/opt/qt5/bin:$PATH'
@@ -125,5 +125,10 @@ script:
   - make -j2
 
 after_success:
+  - lcov  --zerocounters  --directory .
   - ctest -V
+  - lcov --remove coverage.info '/usr/*' "${HOME}"'/.cache/*' --output-file coverage.info
+  - lcov --directory . --capture --output-file coverage.info
+  - lcov --list coverage.info
+  - bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
   - cpack
