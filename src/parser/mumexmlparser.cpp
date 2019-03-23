@@ -227,6 +227,12 @@ bool MumeXmlParser::element(const QByteArray &line)
                 if (line.startsWith("room")) {
                     m_xmlMode = XmlMode::ROOM;
                     m_roomName = emptyString; // 'name' tag will not show up when blinded
+                    m_descriptionReady = false;
+                    m_dynamicRoomDesc = nullString;
+                    m_staticRoomDesc = nullString;
+                    m_exits = nullString;
+                    m_exitsFlags.reset();
+                    m_connectedRoomFlags.reset();
                 }
                 break;
             case 'm':
@@ -442,16 +448,8 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         if (m_descriptionReady) {
             move();
         }
-
         m_readingRoomDesc = true; // start of read desc mode
-        m_descriptionReady = false;
         m_roomName = normalizeStringCopy(m_stringBuffer);
-        m_dynamicRoomDesc = nullString;
-        m_staticRoomDesc = nullString;
-        m_exits = nullString;
-        m_exitsFlags.reset();
-        m_connectedRoomFlags.reset();
-
         toUser.append(ch);
         break;
 

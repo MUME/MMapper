@@ -102,7 +102,7 @@ ComparisonResult RoomFactory::compareStrings(const QString &room,
     auto descWords = StringView{room}.trim();
     auto eventWords = StringView{event}.trim();
 
-    if (!eventWords.isEmpty()) { // if event is empty we don't compare
+    if (!eventWords.isEmpty()) { // if event is empty we don't compare (due to blindness)
         while (tolerance >= 0) {
             if (descWords.isEmpty()) {
                 if (updated) { // if notUpdated the desc is allowed to be shorter than the event
