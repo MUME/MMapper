@@ -1,6 +1,6 @@
 language: cpp
 
-dist: trusty
+dist: xenial
 
 # https://docs.travis-ci.com/user/languages/cpp/
 matrix:
@@ -10,8 +10,18 @@ matrix:
     #
     - os: osx
       compiler: clang
+      addons:
+        homebrew:
+          packages:
+            - cmake
+            - qt5
+            - clang-format
+            - miniupnpc
+            - lcov
+            - openssl
+          update: true
       env:
-        - MATRIX_EVAL="brew update"
+        - MATRIX_EVAL=""
         - CLANG_FORMAT=clang-format
     #
     # Linux GCC 5
@@ -22,12 +32,17 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-6.0
+            - llvm-toolchain-xenial-6.0
+            - ppa:beineri/opt-qt597-xenial
           packages:
             - g++-5
             - clang-format-6.0
+            - cmake
+            - libminiupnpc-dev
+            - lcov
+            - qt59base
       env:
-        - QT=59 PPA=beineri/opt-qt596-trusty MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+        - QT=59 MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
         - CLANG_FORMAT=clang-format-6.0
     #
     # Linux GCC 6
@@ -38,12 +53,13 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-6.0
+            - llvm-toolchain-xenial-6.0
+            - ppa:beineri/opt-qt597-xenial
           packages:
             - g++-6
             - clang-format-6.0
       env:
-        - QT=59 PPA=beineri/opt-qt596-trusty MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+        - QT=59 MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
         - CLANG_FORMAT=clang-format-6.0
     #
     # Linux GCC 7
@@ -54,12 +70,13 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-6.0
+            - llvm-toolchain-xenial-6.0
+            - ppa:beineri/opt-qt597-xenial
           packages:
             - g++-7
             - clang-format-6.0
       env:
-        - QT=59 PPA=beineri/opt-qt596-trusty MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+        - QT=59 MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
         - CLANG_FORMAT=clang-format-6.0
     #
     # Linux GCC 8
@@ -70,25 +87,19 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-6.0
+            - llvm-toolchain-xenial-6.0
+            - ppa:beineri/opt-qt597-xenial
           packages:
             - g++-8
             - clang-format-6.0
       env:
-        - QT=59 PPA=beineri/opt-qt596-trusty MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+        - QT=59 MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
         - CLANG_FORMAT=clang-format-6.0
 
 before_install:
   - eval "${MATRIX_EVAL}"
-  - '[[ "$TRAVIS_OS_NAME" != linux || -z "$PPA" ]] || sudo add-apt-repository -y ppa:$PPA'
-  - '[ "$TRAVIS_OS_NAME" != linux ] || sudo apt-get -qy update'
 
 install:
-  - '[ "$TRAVIS_OS_NAME" != linux ] || sudo apt-get -qy install cmake libminiupnpc-dev lcov'
-  - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" != */opt-* ]] || sudo apt-get -qy install qt${QT}base'
-  - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" == */opt-* ]] || sudo apt-get -qy install qt5-qmake qtbase5-dev'
-  - '[ "$TRAVIS_OS_NAME" != osx ] || brew install qt5 clang-format miniupnpc lcov'
-  - '[ "$TRAVIS_OS_NAME" != osx ] || brew upgrade openssl@1.1'
   - '[ "$TRAVIS_OS_NAME" != osx ] || brew link --force qt5'
   - '[ "$TRAVIS_OS_NAME" != osx ] || export PATH=/usr/local/opt/qt5/bin:$PATH'
   - qmake -v
@@ -97,12 +108,12 @@ before_script:
   # Linux
   - '[[ "$TRAVIS_OS_NAME" != linux || "$CXX" != clang++ ]] || export QMAKESPEC=linux-clang'
   - '[[ "$TRAVIS_OS_NAME" != linux || "$CXX" != g++     ]] || export QMAKESPEC=linux-g++'
-  - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" != */opt-* ]] || . /opt/qt$QT/bin/qt$QT-env.sh'
-  - '[[ "$TRAVIS_OS_NAME" != linux || "$PPA" == */opt-* ]] || export QT_SELECT=qt5'
+  - '[ "$TRAVIS_OS_NAME" != linux ] || . /opt/qt$QT/bin/qt$QT-env.sh'
+  - '[ "$TRAVIS_OS_NAME" != linux ] || export QT_SELECT=qt5'
   # Mac
-  - '[[ "$TRAVIS_OS_NAME" != osx   || "$CXX" != clang++ ]] || export QMAKESPEC=macx-clang'
-  - '[[ "$TRAVIS_OS_NAME" != osx   || "$CXX" != g++     ]] || export QMAKESPEC=macx-g++'
-  - '[ "$TRAVIS_OS_NAME" != osx ] || export MMAPPER_CMAKE_EXTRA=-DOPENSSL_ROOT_DIR=/usr/local/opt/openssl@1.1'
+  - '[[ "$TRAVIS_OS_NAME" != osx || "$CXX" != clang++ ]] || export QMAKESPEC=macx-clang'
+  - '[[ "$TRAVIS_OS_NAME" != osx || "$CXX" != g++     ]] || export QMAKESPEC=macx-g++'
+  - '[ "$TRAVIS_OS_NAME" != osx ] || export MMAPPER_CMAKE_EXTRA=-DOPENSSL_ROOT_DIR=/usr/local/opt/openssl'
   # Code style check
   - $CLANG_FORMAT -version
   - find . -type f -name *.cpp -o -name *.h -exec $CLANG_FORMAT -style=file -i {} \;
