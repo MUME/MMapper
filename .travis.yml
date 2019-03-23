@@ -33,7 +33,7 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-xenial-6.0
-            - ppa:beineri/opt-qt597-xenial
+            - sourceline: 'ppa:beineri/opt-qt597-xenial'
           packages:
             - g++-5
             - clang-format-6.0
@@ -54,7 +54,7 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-xenial-6.0
-            - ppa:beineri/opt-qt597-xenial
+            - sourceline: 'ppa:beineri/opt-qt597-xenial'
           packages:
             - g++-6
             - clang-format-6.0
@@ -71,7 +71,7 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-xenial-6.0
-            - ppa:beineri/opt-qt597-xenial
+            - sourceline: 'ppa:beineri/opt-qt597-xenial'
           packages:
             - g++-7
             - clang-format-6.0
@@ -88,7 +88,7 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-xenial-6.0
-            - ppa:beineri/opt-qt597-xenial
+            - sourceline: 'ppa:beineri/opt-qt597-xenial'
           packages:
             - g++-8
             - clang-format-6.0
