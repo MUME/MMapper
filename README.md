@@ -2,8 +2,8 @@ MMapper
 ============================
 [![Build Status](https://travis-ci.org/MUME/MMapper.svg?branch=master)](https://travis-ci.org/MUME/MMapper)
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/MUME/mmapper?branch=master&svg=true)](https://ci.appveyor.com/project/nschimme/MMapper)
-[![Code Coverage](https://codecov.io/gh/MUME/MMapper/branch/master/graph/badge.svg)](https://codecov.io/gh/MUME/MMapper
-![GitHub](https://img.shields.io/github/license/MUME/MMapper.svg)
+[![Code Coverage](https://codecov.io/gh/MUME/MMapper/branch/master/graph/badge.svg)](https://codecov.io/gh/MUME/MMapper)
+[![GitHub](https://img.shields.io/github/license/MUME/MMapper.svg)](https://github.com/MUME/MMapper/blob/master/COPYING.txt)
 
 [![MMapper Screenshot](/../master/appdata/screenshot1.png?raw=true "MMapper")<br>Download the latest version of MMapper](https://github.com/MUME/MMapper/releases)
 

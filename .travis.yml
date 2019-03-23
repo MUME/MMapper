@@ -119,7 +119,7 @@ before_script:
   - mkdir build
   - cd build
   - cmake --version
-  - cmake .. $MMAPPER_CMAKE_EXTRA
+  - cmake .. $MMAPPER_CMAKE_EXTRA -DUSE_CODE_COVERAGE=true
 
 script:
   - make -j2
