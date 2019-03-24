@@ -42,7 +42,6 @@ private:
 
 public:
     static bool matchScore(const QString &str);
-    static bool matchMoveForcePatterns(const QString &);
     static bool matchNoDescriptionPatterns(const QString &);
     static bool matchPasswordPatterns(const QByteArray &);
     static bool matchLoginPatterns(const QByteArray &);

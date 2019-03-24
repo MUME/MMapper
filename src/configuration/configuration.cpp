@@ -295,7 +295,6 @@ ConstString KEY_LOCAL_PORT_NUMBER = "Local port number";
 ConstString KEY_LOCK_GROUP = "Lock current group members";
 ConstString KEY_MAP_MODE = "Map Mode";
 ConstString KEY_MAXIMUM_NUMBER_OF_PATHS = "maximum number of paths";
-ConstString KEY_MOVE_FORCE_PATTERNS_FOR_XML = "Move force patterns for XML";
 ConstString KEY_MULTIPLE_CONNECTIONS_PENALTY = "multiple connections penalty";
 ConstString KEY_MUME_START_EPOCH = "Mume start epoch";
 ConstString KEY_NO_LAUNCH_PANEL = "No launch panel";
@@ -570,16 +569,7 @@ void Configuration::ParserSettings::read(QSettings &conf)
                                  QString(ANSI_RESET));
     prefixChar = conf.value(KEY_COMMAND_PREFIX_CHAR, QChar::fromLatin1('_')).toChar().toLatin1();
     removeXmlTags = conf.value(KEY_REMOVE_XML_TAGS, true).toBool();
-    moveForcePatternsList = conf.value(KEY_MOVE_FORCE_PATTERNS_FOR_XML).toStringList();
     noDescriptionPatternsList = conf.value(KEY_NO_ROOM_DESCRIPTION_PATTERNS).toStringList();
-
-    auto &forced = moveForcePatternsList;
-    if (forced.isEmpty()) {
-        forced.append("#?leads you out");
-        forced.append("#<Suddenly an explosion of ancient rhymes");
-        forced.append("#=You board the ferry."); // Grey Havens
-        forced.append("#=You leave the ferry.");
-    }
 
     auto &nodesc = noDescriptionPatternsList;
     if (nodesc.isEmpty()) {
@@ -720,7 +710,6 @@ void Configuration::ParserSettings::write(QSettings &conf) const
     conf.setValue(KEY_ROOM_DESC_ANSI_COLOR, roomDescColor);
     conf.setValue(KEY_REMOVE_XML_TAGS, removeXmlTags);
     conf.setValue(KEY_COMMAND_PREFIX_CHAR, QChar::fromLatin1(prefixChar));
-    conf.setValue(KEY_MOVE_FORCE_PATTERNS_FOR_XML, moveForcePatternsList);
     conf.setValue(KEY_NO_ROOM_DESCRIPTION_PATTERNS, noDescriptionPatternsList);
 }
 

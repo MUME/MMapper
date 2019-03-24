@@ -111,16 +111,6 @@ bool Patterns::matchScore(const QString &str)
     return re.match(str).hasMatch();
 }
 
-bool Patterns::matchMoveForcePatterns(const QString &str)
-{
-    for (auto &pattern : parserConfig.moveForcePatternsList) {
-        if (matchPattern(pattern, str)) {
-            return true;
-        }
-    }
-    return false;
-}
-
 bool Patterns::matchNoDescriptionPatterns(const QString &str)
 {
     for (auto &pattern : parserConfig.noDescriptionPatternsList) {

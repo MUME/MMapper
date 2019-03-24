@@ -89,21 +89,14 @@ ParserPage::ParserPage(QWidget *const parent)
     suppressXmlTagsCheckBox->setChecked(settings.removeXmlTags);
     suppressXmlTagsCheckBox->setEnabled(true);
 
-    forcePatternsList->clear();
-    forcePatternsList->addItems(settings.moveForcePatternsList);
     endDescPatternsList->clear();
     endDescPatternsList->addItems(settings.noDescriptionPatternsList);
 
-    connect(removeForcePattern,
-            &QAbstractButton::clicked,
-            this,
-            &ParserPage::removeForcePatternClicked);
     connect(removeEndDescPattern,
             &QAbstractButton::clicked,
             this,
             &ParserPage::removeEndDescPatternClicked);
 
-    connect(addForcePattern, &QAbstractButton::clicked, this, &ParserPage::addForcePatternClicked);
     connect(addEndDescPattern,
             &QAbstractButton::clicked,
             this,
@@ -112,10 +105,6 @@ ParserPage::ParserPage(QWidget *const parent)
     connect(testPattern, &QAbstractButton::clicked, this, &ParserPage::testPatternClicked);
     connect(validPattern, &QAbstractButton::clicked, this, &ParserPage::validPatternClicked);
 
-    connect(forcePatternsList,
-            static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::activated),
-            this,
-            &ParserPage::forcePatternsListActivated);
     connect(endDescPatternsList,
             static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::activated),
             this,
@@ -159,14 +148,7 @@ void ParserPage::savePatterns()
     };
 
     auto &settings = setConfig().parser;
-    settings.moveForcePatternsList = save(forcePatternsList);
     settings.noDescriptionPatternsList = save(endDescPatternsList);
-}
-
-void ParserPage::removeForcePatternClicked()
-{
-    forcePatternsList->removeItem(forcePatternsList->currentIndex());
-    savePatterns();
 }
 
 void ParserPage::removeEndDescPatternClicked()
@@ -242,24 +224,9 @@ void ParserPage::validPatternClicked()
                              nullptr);
 }
 
-void ParserPage::forcePatternsListActivated(const QString &str)
-{
-    newPattern->setText(str);
-}
-
 void ParserPage::endDescPatternsListActivated(const QString &str)
 {
     newPattern->setText(str);
-}
-
-void ParserPage::addForcePatternClicked()
-{
-    QString str;
-    if ((str = newPattern->text()) != "") {
-        forcePatternsList->addItem(str);
-        forcePatternsList->setCurrentIndex(forcePatternsList->count() - 1);
-    }
-    savePatterns();
 }
 
 void ParserPage::addEndDescPatternClicked()

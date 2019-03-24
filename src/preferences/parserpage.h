@@ -44,13 +44,10 @@ class ParserPage : public QWidget, private Ui::ParserPage
 public slots:
     void roomNameColorClicked();
     void roomDescColorClicked();
-    void removeForcePatternClicked();
     void removeEndDescPatternClicked();
-    void addForcePatternClicked();
     void addEndDescPatternClicked();
     void testPatternClicked();
     void validPatternClicked();
-    void forcePatternsListActivated(const QString &);
     void endDescPatternsListActivated(const QString &);
     void suppressXmlTagsCheckBoxStateChanged(int);
 

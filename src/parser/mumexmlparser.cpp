@@ -633,11 +633,4 @@ void MumeXmlParser::parseMudCommands(const QString &str)
         m_readWeatherTag = false;
         m_mumeClock->parseWeather(str);
     }
-
-    // REVISIT: Is this even necessary? We have <movement/> tags now
-    if (Patterns::matchMoveForcePatterns(str)) {
-        queue.enqueue(CommandIdType::NONE);
-        emit showPath(queue, true);
-        return;
-    }
 }
