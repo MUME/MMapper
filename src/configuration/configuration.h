@@ -159,6 +159,8 @@ public:
         bool drawUpperLayersTextured = false;
         bool drawDoorNames = false;
         QColor backgroundColor{};
+        QColor roomDarkColor{};
+        QColor roomDarkLitColor{};
         int antialiasingSamples = 0;
         bool trilinearFiltering = false;
         bool softwareOpenGL = false;

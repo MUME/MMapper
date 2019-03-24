@@ -309,6 +309,8 @@ ConstString KEY_REMOTE_PORT_NUMBER = "Remote port number";
 ConstString KEY_REMOTE_PORT = "remote port";
 ConstString KEY_REMOVE_XML_TAGS = "Remove XML tags";
 ConstString KEY_ROOM_CREATION_PENALTY = "room creation penalty";
+ConstString KEY_ROOM_DARK_COLOR = "Room dark color";
+ConstString KEY_ROOM_DARK_LIT_COLOR = "Room dark lit color";
 ConstString KEY_ROOM_DESC_ANSI_COLOR = "Room desc ansi color";
 ConstString KEY_ROOM_MATCHING_TOLERANCE = "room matching tolerance";
 ConstString KEY_ROOM_NAME_ANSI_COLOR = "Room name ansi color";
@@ -540,6 +542,9 @@ void Configuration::CanvasSettings::read(QSettings &conf)
     drawUpperLayersTextured = conf.value(KEY_DRAW_UPPER_LAYERS_TEXTURED, false).toBool();
     drawDoorNames = conf.value(KEY_DRAW_DOOR_NAMES, true).toBool();
     backgroundColor = QColor(conf.value(KEY_BACKGROUND_COLOR, QColor("#2e3436").name()).toString());
+    roomDarkColor = QColor(conf.value(KEY_ROOM_DARK_COLOR, QColor("#a19494").name()).toString());
+    roomDarkLitColor = QColor(
+        conf.value(KEY_ROOM_DARK_LIT_COLOR, QColor("#d4c7c7").name()).toString());
     antialiasingSamples = conf.value(KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES, 0).toInt();
     trilinearFiltering = conf.value(KEY_USE_TRILINEAR_FILTERING, false).toBool();
     softwareOpenGL = conf.value(KEY_USE_SOFTWARE_OPENGL, getCurrentPlatform() == Platform::Windows)
@@ -692,6 +697,8 @@ void Configuration::CanvasSettings::write(QSettings &conf) const
     conf.setValue(KEY_DRAW_UPPER_LAYERS_TEXTURED, drawUpperLayersTextured);
     conf.setValue(KEY_DRAW_DOOR_NAMES, drawDoorNames);
     conf.setValue(KEY_BACKGROUND_COLOR, backgroundColor.name());
+    conf.setValue(KEY_ROOM_DARK_COLOR, roomDarkColor.name());
+    conf.setValue(KEY_ROOM_DARK_LIT_COLOR, roomDarkLitColor.name());
     conf.setValue(KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES, antialiasingSamples);
     conf.setValue(KEY_USE_TRILINEAR_FILTERING, trilinearFiltering);
     conf.setValue(KEY_USE_SOFTWARE_OPENGL, softwareOpenGL);

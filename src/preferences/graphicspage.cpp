@@ -39,7 +39,15 @@ GraphicsPage::GraphicsPage(QWidget *parent)
 
     ui->setupUi(this);
 
-    connect(ui->changeColor, &QAbstractButton::clicked, this, &GraphicsPage::changeColorClicked);
+    connect(ui->bgChangeColor, &QAbstractButton::clicked, this, [this]() {
+        changeColorClicked(setConfig().canvas.backgroundColor, ui->bgChangeColor);
+    });
+    connect(ui->darkPushButton, &QAbstractButton::clicked, this, [this]() {
+        changeColorClicked(setConfig().canvas.roomDarkColor, ui->darkPushButton);
+    });
+    connect(ui->darkLitPushButton, &QAbstractButton::clicked, this, [this]() {
+        changeColorClicked(setConfig().canvas.roomDarkLitColor, ui->darkLitPushButton);
+    });
     connect(ui->antialiasingSamplesComboBox,
             &QComboBox::currentTextChanged,
             this,
@@ -73,7 +81,13 @@ GraphicsPage::GraphicsPage(QWidget *parent)
 
     QPixmap bgPix(16, 16);
     bgPix.fill(settings.backgroundColor);
-    ui->changeColor->setIcon(QIcon(bgPix));
+    ui->bgChangeColor->setIcon(QIcon(bgPix));
+    QPixmap darkRoomPix(16, 16);
+    darkRoomPix.fill(settings.roomDarkColor);
+    ui->darkPushButton->setIcon(QIcon(darkRoomPix));
+    QPixmap darkRoomLitPix(16, 16);
+    darkRoomLitPix.fill(settings.roomDarkLitColor);
+    ui->darkLitPushButton->setIcon(QIcon(darkRoomLitPix));
 
     const QString antiAliasingSamples = QString::number(settings.antialiasingSamples);
     const int index = std::max(0, ui->antialiasingSamplesComboBox->findText(antiAliasingSamples));
@@ -92,15 +106,14 @@ GraphicsPage::GraphicsPage(QWidget *parent)
     ui->drawDoorNames->setChecked(settings.drawDoorNames);
 }
 
-void GraphicsPage::changeColorClicked()
+void GraphicsPage::changeColorClicked(QColor &oldColor, QPushButton *pushButton)
 {
-    auto &backgroundColor = setConfig().canvas.backgroundColor;
-    const QColor newColor = QColorDialog::getColor(backgroundColor, this);
-    if (newColor.isValid() && newColor != backgroundColor) {
-        QPixmap bgPix(16, 16);
-        bgPix.fill(newColor);
-        ui->changeColor->setIcon(QIcon(bgPix));
-        backgroundColor = newColor;
+    const QColor newColor = QColorDialog::getColor(oldColor, this);
+    if (newColor.isValid() && newColor != oldColor) {
+        QPixmap pix(16, 16);
+        pix.fill(newColor);
+        pushButton->setIcon(QIcon(pix));
+        oldColor = newColor;
     }
 }
 

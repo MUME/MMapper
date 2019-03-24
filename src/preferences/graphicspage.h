@@ -48,7 +48,6 @@ public:
 signals:
 
 public slots:
-    void changeColorClicked();
     void antialiasingSamplesTextChanged(const QString &);
     void trilinearFilteringStateChanged(int);
     void softwareOpenGLStateChanged(int);
@@ -60,6 +59,7 @@ public slots:
     void drawUpperLayersTexturedStateChanged(int);
 
 private:
+    void changeColorClicked(QColor &color, QPushButton *pushButton);
     Ui::GraphicsPage *ui;
 };
 

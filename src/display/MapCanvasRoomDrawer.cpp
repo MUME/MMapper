@@ -189,10 +189,10 @@ static XColor4f getRoomColor(const qint32 layer, bool isDark = false, bool hasNo
         return XColor4f{0.3f, 0.3f, 0.3f, std::max(0.0f, 0.6f - 0.2f * static_cast<float>(layer))};
 
     const float alpha = (layer < 0) ? 1.0f : 0.9f;
-    if (isDark)
-        return XColor4f{0.63f, 0.58f, 0.58f, alpha};
-    else if (hasNoSunDeath) {
-        return XColor4f{0.83f, 0.78f, 0.78f, alpha};
+    if (isDark) {
+        return XColor4f{getConfig().canvas.roomDarkColor, alpha};
+    } else if (hasNoSunDeath) {
+        return XColor4f{getConfig().canvas.roomDarkLitColor, alpha};
     }
     return XColor4f{Qt::white, alpha};
 }
