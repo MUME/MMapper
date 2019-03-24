@@ -565,7 +565,8 @@ void MumeXmlParser::parseMudCommands(const QString &str)
                    || str.startsWith("You are too exhausted.")
                    || str.startsWith("You are too exhausted to ride.")
                    || str.startsWith("Your mount refuses to follow your orders!")
-                   || str.startsWith("You failed swimming there.")) {
+                   || str.startsWith("You failed swimming there.")
+                   || str.startsWith("You can't go into deep water!")) {
             if (!queue.isEmpty())
                 queue.dequeue();
             emit showPath(queue, true);
