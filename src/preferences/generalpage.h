@@ -32,11 +32,13 @@
 #include <QWidget>
 #include <QtCore>
 
-#include "ui_generalpage.h"
+namespace Ui {
+class GeneralPage;
+}
 
 class QObject;
 
-class GeneralPage : public QWidget, private Ui::GeneralPage
+class GeneralPage : public QWidget
 {
     Q_OBJECT
 
@@ -60,6 +62,10 @@ public slots:
 
 public:
     explicit GeneralPage(QWidget *parent = nullptr);
+    ~GeneralPage();
+
+private:
+    Ui::GeneralPage *ui = nullptr;
 };
 
 #endif

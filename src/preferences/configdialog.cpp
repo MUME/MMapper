@@ -58,20 +58,20 @@ ConfigDialog::ConfigDialog(Mmapper2Group *gm, QWidget *parent)
     createIcons();
 
     pagesWidget = new QStackedWidget(this);
-    pagesWidget->setMinimumWidth(500);
-    pagesWidget->setMinimumHeight(500);
     pagesWidget->addWidget(new GeneralPage(this));
+    pagesWidget->addWidget(new GraphicsPage(this));
+    pagesWidget->addWidget(new ParserPage(this));
+    pagesWidget->addWidget(new ClientPage(this));
+    pagesWidget->addWidget(new GroupManagerPage(m_groupManager, this));
+    pagesWidget->addWidget(new MumeProtocolPage(this));
+    pagesWidget->addWidget(new PathmachinePage(this));
     pagesWidget->setCurrentIndex(0);
 
-    ui->pagesScrollArea->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     ui->pagesScrollArea->setMinimumWidth(520);
     ui->pagesScrollArea->setWidget(pagesWidget);
 
     ui->contentsWidget->setCurrentItem(ui->contentsWidget->item(0));
-    connect(ui->contentsWidget,
-            &QListWidget::currentItemChanged,
-            this,
-            &ConfigDialog::changePage);
+    connect(ui->contentsWidget, &QListWidget::currentItemChanged, this, &ConfigDialog::changePage);
     connect(ui->closeButton, &QAbstractButton::clicked, this, &QWidget::close);
 }
 
@@ -130,17 +130,6 @@ void ConfigDialog::changePage(QListWidgetItem *current, QListWidgetItem *previou
     if (current == nullptr) {
         current = previous;
     }
-
-    if (pagesWidget->count() <= 1) {
-        pagesWidget->addWidget(new GraphicsPage(this));
-        pagesWidget->addWidget(new ParserPage(this));
-        pagesWidget->addWidget(new ClientPage(this));
-        pagesWidget->addWidget(new GroupManagerPage(m_groupManager, this));
-        pagesWidget->addWidget(new MumeProtocolPage(this));
-        pagesWidget->addWidget(new PathmachinePage(this));
-    }
-
     ui->pagesScrollArea->verticalScrollBar()->setSliderPosition(0);
-
     pagesWidget->setCurrentIndex(ui->contentsWidget->row(current));
 }
