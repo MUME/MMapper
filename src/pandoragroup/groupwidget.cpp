@@ -110,7 +110,7 @@ QVariant GroupModel::dataForCharacter(CGroupChar *const character, ColumnType co
 
         case ColumnType::ROOM_NAME:
             if (character->pos != DEFAULT_ROOMID && character->pos != INVALID_ROOMID
-                && !m_map->isEmpty() && m_mapLoaded) {
+                && !m_map->isEmpty() && m_mapLoaded && character->pos <= m_map->getMaxId()) {
                 auto roomSelection = RoomSelection(*m_map);
                 if (const Room *const r = roomSelection.getRoom(character->pos)) {
                     return r->getName();
