@@ -281,6 +281,20 @@ void GroupWidget::updateLabels()
 {
     m_model.resetModel();
     m_table->resizeColumnsToContents();
+
+    // Hide unnecessary columns like mana if everyone is a zorc/troll
+    const auto one_character_had_mana = [this]() -> bool {
+        auto selection = m_group->getGroup()->selectAll();
+        for (const auto &character : *selection) {
+            if (character->mana > 0) {
+                return true;
+            }
+        }
+        return false;
+    };
+    const bool hide_mana = !one_character_had_mana();
+    m_table->setColumnHidden(static_cast<int>(GroupModel::ColumnType::MANA), hide_mana);
+    m_table->setColumnHidden(static_cast<int>(GroupModel::ColumnType::MANA_PERCENT), hide_mana);
 }
 
 void GroupWidget::messageBox(const QString &title, const QString &message)
