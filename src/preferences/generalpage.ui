@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>453</width>
-    <height>645</height>
+    <height>651</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -380,10 +380,16 @@
   <tabstop>tlsEncryptionCheckBox</tabstop>
   <tabstop>localPort</tabstop>
   <tabstop>charsetComboBox</tabstop>
+  <tabstop>showLaunchPanelCheckBox</tabstop>
+  <tabstop>checkForUpdateCheckBox</tabstop>
+  <tabstop>autoStartGroupManagerCheckBox</tabstop>
+  <tabstop>autoLoadCheck</tabstop>
+  <tabstop>autoLoadFileName</tabstop>
+  <tabstop>selectWorldFileButton</tabstop>
+  <tabstop>displayMumeClockCheckBox</tabstop>
   <tabstop>emulatedExitsCheckBox</tabstop>
   <tabstop>showHiddenExitFlagsCheckBox</tabstop>
   <tabstop>showNotesCheckBox</tabstop>
-  <tabstop>displayMumeClockCheckBox</tabstop>
   <tabstop>proxyThreadedCheckBox</tabstop>
   <tabstop>proxyConnectionStatusCheckBox</tabstop>
   <tabstop>configurationResetButton</tabstop>
