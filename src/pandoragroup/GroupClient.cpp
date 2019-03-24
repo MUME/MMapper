@@ -289,7 +289,10 @@ void GroupClient::connectionEncrypted()
 
     sendLoginInformation();
 
-    if (validSecret) {
+    if (validCert) {
+        // Assume that anyone connecting to a host will trust them (if auth is not required)
+        if (!validSecret)
+            getAuthority()->add(secret);
         // Update metadata
         getAuthority()->setMetadata(secret,
                                     GroupMetadata::IP_ADDRESS,
@@ -300,6 +303,9 @@ void GroupClient::connectionEncrypted()
         getAuthority()->setMetadata(secret,
                                     GroupMetadata::CERTIFICATE,
                                     socket.getPeerCertificate().toPem());
+        getAuthority()->setMetadata(secret,
+                                    GroupMetadata::PORT,
+                                    QString("%1").arg(socket.getPeerPort()));
     }
 }
 

@@ -60,6 +60,8 @@ public:
 
     QByteArray getSecret() const { return secret; }
     QHostAddress getPeerAddress() const { return socket.peerAddress(); }
+    quint16 getPeerPort() const { return socket.peerPort(); }
+
     QAbstractSocket::SocketError getSocketError() const { return socket.error(); }
     QSslCertificate getPeerCertificate() const { return socket.peerCertificate(); }
 

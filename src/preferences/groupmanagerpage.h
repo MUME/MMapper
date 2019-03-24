@@ -36,11 +36,16 @@
 class Mmapper2Group;
 class QObject;
 
-class GroupManagerPage : public QWidget, private Ui::GroupManagerPage
+namespace Ui {
+class GroupManagerPage;
+}
+
+class GroupManagerPage : public QWidget
 {
     Q_OBJECT
 public:
-    GroupManagerPage(Mmapper2Group *, QWidget *parent = nullptr);
+    explicit GroupManagerPage(Mmapper2Group *, QWidget *parent = nullptr);
+    ~GroupManagerPage();
 
 public slots:
     void changeColorClicked();
@@ -49,9 +54,7 @@ public slots:
     void allowedSecretsChanged();
 
     void remoteHostTextChanged();
-    void remotePortValueChanged(int);
     void localPortValueChanged(int);
-    void localHostLinkActivated(const QString &);
 
     void rulesWarningChanged(int);
     void shareSelfChanged(int);
@@ -62,6 +65,7 @@ signals:
 
 private:
     Mmapper2Group *m_groupManager = nullptr;
+    Ui::GroupManagerPage *ui = nullptr;
 };
 
 #endif

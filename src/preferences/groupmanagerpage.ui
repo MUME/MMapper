@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>456</width>
-    <height>763</height>
+    <height>784</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -164,6 +164,35 @@
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="clientGroupBox">
+     <property name="title">
+      <string>Client Mode</string>
+     </property>
+     <layout class="QGridLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Remote address:</string>
+        </property>
+        <property name="buddy">
+         <cstring>remoteHost</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" colspan="2">
+       <widget class="QComboBox" name="remoteHost">
+        <property name="toolTip">
+         <string>Edit this field or select entries auto-populated by Authorized Contacts</string>
+        </property>
+        <property name="editable">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QGroupBox" name="allowedGroupBox">
      <property name="title">
       <string>Authorized Contacts</string>
@@ -278,7 +307,7 @@
    <item>
     <widget class="QGroupBox" name="hostGroupBox">
      <property name="title">
-      <string>Host Settings</string>
+      <string>Host Mode</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -410,64 +439,6 @@ p, li { white-space: pre-wrap; }
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="clientGroupBox">
-     <property name="title">
-      <string>Client Settings</string>
-     </property>
-     <layout class="QGridLayout">
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>Remote port:</string>
-        </property>
-        <property name="buddy">
-         <cstring>remotePort</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>Remote address:</string>
-        </property>
-        <property name="buddy">
-         <cstring>remoteHost</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1" colspan="2">
-       <widget class="QLineEdit" name="remoteHost"/>
-      </item>
-      <item row="1" column="1">
-       <widget class="QSpinBox" name="remotePort">
-        <property name="minimum">
-         <number>1</number>
-        </property>
-        <property name="maximum">
-         <number>10000</number>
-        </property>
-        <property name="value">
-         <number>4243</number>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <spacer>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
       <string>Group Tells</string>
@@ -561,6 +532,7 @@ p, li { white-space: pre-wrap; }
   <tabstop>changeColor</tabstop>
   <tabstop>secretLineEdit</tabstop>
   <tabstop>refreshButton</tabstop>
+  <tabstop>remoteHost</tabstop>
   <tabstop>authorizationCheckBox</tabstop>
   <tabstop>allowedComboBox</tabstop>
   <tabstop>allowSecret</tabstop>
@@ -568,8 +540,6 @@ p, li { white-space: pre-wrap; }
   <tabstop>localPort</tabstop>
   <tabstop>lockGroupCheckBox</tabstop>
   <tabstop>shareSelfCheckBox</tabstop>
-  <tabstop>remoteHost</tabstop>
-  <tabstop>remotePort</tabstop>
   <tabstop>groupTellColorPushButton</tabstop>
   <tabstop>rulesWarning</tabstop>
  </tabstops>

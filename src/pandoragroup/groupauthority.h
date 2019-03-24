@@ -32,7 +32,7 @@
 #include <QSslKey>
 #include <QStringListModel>
 
-enum class GroupMetadata { LAST_LOGIN, NAME, IP_ADDRESS, CERTIFICATE };
+enum class GroupMetadata { LAST_LOGIN, NAME, IP_ADDRESS, CERTIFICATE, PORT };
 static constexpr const auto NUM_GROUP_METADATA = 4u;
 
 namespace enums {

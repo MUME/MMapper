@@ -241,6 +241,8 @@ static inline QString getMetadataKey(const GroupSecret &secret, const GroupMetad
             return "ip";
         case GroupMetadata::LAST_LOGIN:
             return "last_login";
+        case GroupMetadata::PORT:
+            return "port";
         default:
             abort();
         }
