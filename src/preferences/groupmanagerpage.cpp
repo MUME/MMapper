@@ -102,6 +102,9 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
     allowedSecretsChanged();
 
     // Host Section
+    connect(ui->localHost, &QLabel::linkActivated, this, [](const QString &link) {
+        QDesktopServices::openUrl(QUrl::fromEncoded(link.toLatin1()));
+    });
     connect(ui->localPort,
             static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
             this,
