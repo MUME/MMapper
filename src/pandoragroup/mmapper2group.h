@@ -39,6 +39,7 @@ class GroupAuthority;
 class CGroupCommunicator;
 class CGroup;
 class Mmapper2Group;
+class CommandQueue;
 enum class GroupManagerState { Off = 0, Client = 1, Server = 2 };
 
 class Mmapper2Group final : public QObject
@@ -76,6 +77,7 @@ public slots:
     void kickCharacter(const QByteArray &character);
     void parseScoreInformation(QByteArray score);
     void parsePromptInformation(QByteArray prompt);
+    void setPath(CommandQueue, bool);
 
 protected slots:
     // Communicator

@@ -59,10 +59,10 @@
 #include "../pandoragroup/groupselection.h"
 #include "../pandoragroup/mmapper2group.h"
 #include "../parser/CommandId.h"
+#include "../parser/CommandQueue.h"
 #include "../parser/ConnectedRoomFlags.h"
 #include "../parser/ExitsFlags.h"
 #include "../parser/PromptFlags.h"
-#include "../parser/abstractparser.h"
 #include "Filenames.h"
 #include "InfoMarkSelection.h"
 #include "MapCanvasData.h"
@@ -1173,7 +1173,11 @@ void MapCanvas::drawGroupCharacters()
         if (character->getName() != getConfig().groupManager.charName) {
             auto roomSelection = RoomSelection(*m_data);
             if (const Room *const r = roomSelection.getRoom(id)) {
-                drawCharacter(r->getPosition(), character->getColor());
+                const auto pos = r->getPosition();
+                const auto color = character->getColor();
+                drawCharacter(pos, color);
+                const auto prespam = m_data->getPath(pos, character->prespam);
+                drawPreSpammedPath(pos, prespam, color);
             }
         }
     }
@@ -1286,7 +1290,9 @@ void MapCanvas::paintGL()
         const QColor color = getConfig().groupManager.color;
         drawCharacter(m_data->getPosition(), color);
 
-        drawPreSpammedPath();
+        // paint prespam
+        const auto prespam = m_data->getPath(m_data->getPosition(), m_prespammedPath->getQueue());
+        drawPreSpammedPath(m_data->getPosition(), prespam, color);
     }
 }
 
@@ -1608,25 +1614,24 @@ void MapCanvas::paintSelectedInfoMark(const InfoMark *const marker)
     m_opengl.glPopMatrix();
 }
 
-void MapCanvas::drawPreSpammedPath()
+void MapCanvas::drawPreSpammedPath(const Coordinate &c1,
+                                   const QList<Coordinate> &path,
+                                   const QColor &color)
 {
-    if (m_prespammedPath->isEmpty())
+    if (path.isEmpty())
         return;
 
     std::vector<Vec3f> verts{};
-    QList<Coordinate> path = m_data->getPath(m_prespammedPath->getQueue());
-    Coordinate c1, c2;
     float dx = 0.0f, dy = 0.0f, dz = 0.0;
     bool anypath = false;
 
-    c1 = m_data->getPosition();
     auto it = path.begin();
     while (it != path.end()) {
         if (!anypath) {
-            drawPathStart(c1, verts);
+            drawPathStart(c1, verts, color);
             anypath = true;
         }
-        c2 = *it;
+        const Coordinate c2 = *it;
         if (!drawPath(c1, c2, dx, dy, dz, verts)) {
             break;
         }
@@ -1637,7 +1642,7 @@ void MapCanvas::drawPreSpammedPath()
     }
 }
 
-void MapCanvas::drawPathStart(const Coordinate &sc, std::vector<Vec3f> &verts)
+void MapCanvas::drawPathStart(const Coordinate &sc, std::vector<Vec3f> &verts, const QColor &color)
 {
     const qint32 x1 = sc.x;
     const qint32 y1 = sc.y;
@@ -1647,8 +1652,6 @@ void MapCanvas::drawPathStart(const Coordinate &sc, std::vector<Vec3f> &verts)
     m_opengl.glPushMatrix();
     m_opengl.glTranslatef(x1, y1, 0);
 
-    // Use the player's color
-    const QColor color = getConfig().groupManager.color;
     m_opengl.apply(XColor4f{color});
     m_opengl.apply(XEnable{XOption::BLEND});
     m_opengl.apply(XDevicePointSize{4.0});

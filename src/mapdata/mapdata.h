@@ -43,7 +43,7 @@
 #include "../global/roomid.h"
 #include "../mapfrontend/mapfrontend.h"
 #include "../parser/CommandId.h"
-#include "../parser/abstractparser.h"
+#include "../parser/CommandQueue.h"
 #include "ExitDirection.h"
 #include "mmapper2exit.h"
 #include "mmapper2room.h"
@@ -98,7 +98,7 @@ public:
     bool isEmpty() const { return (greatestUsedId == INVALID_ROOMID) && m_markers.isEmpty(); }
     bool dataChanged() const { return m_dataChanged; }
     const QString &getFileName() const { return m_fileName; }
-    QList<Coordinate> getPath(const QList<CommandIdType> &dirs);
+    QList<Coordinate> getPath(const Coordinate &start, const CommandQueue &dirs);
     virtual void clear() override;
 
     // search for matches

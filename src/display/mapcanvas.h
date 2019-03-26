@@ -172,7 +172,7 @@ protected:
     void wheelEvent(QWheelEvent *event) override;
     bool event(QEvent *e) override;
 
-    void drawPathStart(const Coordinate &, std::vector<Vec3f> &verts);
+    void drawPathStart(const Coordinate &, std::vector<Vec3f> &verts, const QColor &color);
     bool drawPath(const Coordinate &sc,
                   const Coordinate &dc,
                   float &dx,
@@ -189,7 +189,9 @@ private:
 
     void setTrilinear(const std::unique_ptr<QOpenGLTexture> &x) const;
 
-    void drawPreSpammedPath();
+    void drawPreSpammedPath(const Coordinate &c1,
+                            const QList<Coordinate> &path,
+                            const QColor &color);
     void paintSelection();
     void paintSelectedRooms();
     void paintSelectedRoom(const Room *room);

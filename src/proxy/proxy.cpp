@@ -205,6 +205,7 @@ void Proxy::start()
             &AbstractParser::sendGroupKickEvent,
             m_groupManager,
             &Mmapper2Group::kickCharacter);
+    connect(m_parserXml, &AbstractParser::showPath, m_groupManager, &Mmapper2Group::setPath);
     // Group Tell
     connect(m_groupManager,
             &Mmapper2Group::displayGroupTellEvent,

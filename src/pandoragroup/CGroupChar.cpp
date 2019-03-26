@@ -30,6 +30,7 @@
 #include <QMessageLogContext>
 
 #include "../global/roomid.h"
+#include "../parser/abstractparser.h"
 
 #define KEY static constexpr const char *const
 KEY playerDataKey = "playerData";
@@ -38,6 +39,7 @@ KEY nameKey = "name";
 KEY roomKey = "room";
 KEY colorKey = "color";
 KEY stateKey = "state";
+KEY prespamKey = "prespam";
 
 #undef KEY
 
@@ -58,6 +60,7 @@ const QVariantMap CGroupChar::toVariantMap() const
     playerData["maxmoves"] = maxmoves;
     playerData[stateKey] = static_cast<int>(state);
     playerData[roomKey] = pos.asUint32();
+    playerData[prespamKey] = prespam.toByteArray();
 
     QVariantMap root;
     root[playerDataKey] = playerData;
@@ -126,6 +129,14 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
 #define TRY_UPDATE_STRING(s) tryUpdateString(#s, (s))
 
     TRY_UPDATE_STRING(name);
+
+    if (playerData.contains(prespamKey) && playerData[colorKey].canConvert(QMetaType::QByteArray)) {
+        const QByteArray &ba = playerData[prespamKey].toByteArray();
+        if (ba != prespam.toByteArray()) {
+            updated = true;
+            prespam = ba;
+        }
+    }
 
     if (playerData.contains(colorKey) && playerData[colorKey].canConvert(QMetaType::QString)) {
         const QString &str = playerData[colorKey].toString();

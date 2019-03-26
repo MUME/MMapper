@@ -72,6 +72,7 @@
 #include "AbstractParser-Commands.h"
 #include "AbstractParser-Utils.h"
 #include "CommandId.h"
+#include "CommandQueue.h"
 #include "ConnectedRoomFlags.h"
 #include "DoorAction.h"
 #include "ExitsFlags.h"
@@ -468,14 +469,14 @@ const Coordinate AbstractParser::getNextPosition()
         tmpqueue.enqueue(queue.head());
     }
 
-    QList<Coordinate> cl = m_mapData->getPath(tmpqueue);
+    QList<Coordinate> cl = m_mapData->getPath(m_mapData->getPosition(), tmpqueue);
     return cl.isEmpty() ? m_mapData->getPosition() : cl.back();
 }
 
 const Coordinate AbstractParser::getTailPosition()
 {
     // Position at the end of the prespammed path
-    QList<Coordinate> cl = m_mapData->getPath(queue);
+    QList<Coordinate> cl = m_mapData->getPath(m_mapData->getPosition(), queue);
     return cl.isEmpty() ? m_mapData->getPosition() : cl.back();
 }
 

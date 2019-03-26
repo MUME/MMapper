@@ -46,6 +46,7 @@
 #include "../mapdata/roomselection.h"
 #include "../proxy/telnetfilter.h"
 #include "CommandId.h"
+#include "CommandQueue.h"
 #include "ConnectedRoomFlags.h"
 #include "DoorAction.h"
 #include "ExitsFlags.h"
@@ -58,8 +59,6 @@ class Room;
 class Coordinate;
 class RoomFieldVariant;
 class RoomFilter;
-
-using CommandQueue = QQueue<CommandIdType>;
 
 class AbstractParser : public QObject
 {

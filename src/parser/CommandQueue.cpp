@@ -1,8 +1,6 @@
-#pragma once
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
-**            Marek Krejza <krejza@gmail.com> (Caligor)
+** Authors:   Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
@@ -24,36 +22,26 @@
 **
 ************************************************************************/
 
-#ifndef PRESPAMMEDPATH_H_
-#define PRESPAMMEDPATH_H_
+#include "CommandQueue.h"
 
-#include <QObject>
-#include <QString>
-#include <QtCore>
+#include "../mapdata/ExitDirection.h"
 
-#include "../parser/CommandQueue.h"
-
-class MapCanvas;
-class MapData;
-
-class PrespammedPath : public QObject
+QByteArray CommandQueue::toByteArray() const
 {
-    Q_OBJECT
-public:
-    explicit PrespammedPath(QObject *parent = nullptr);
-    ~PrespammedPath();
+    QByteArray dirs;
+    for (int i = 0; i < base::size(); i++) {
+        const auto cmd = base::at(i);
+        // REVISIT: Serialize/deserialize directions more intelligently
+        dirs.append(Mmapper2Exit::charForDir(static_cast<ExitDirection>(cmd)));
+    }
+    return dirs;
+}
 
-public:
-    auto &getQueue() const { return m_queue; }
-
-signals:
-    void update();
-
-public slots:
-    void setPath(CommandQueue, bool);
-
-private:
-    CommandQueue m_queue{};
-};
-
-#endif
+CommandQueue &CommandQueue::operator=(const QByteArray &dirs)
+{
+    base::clear();
+    for (int i = 0; i < dirs.length(); i++) {
+        base::enqueue(static_cast<CommandIdType>(Mmapper2Exit::dirForChar(dirs.at(i))));
+    }
+    return *this;
+}

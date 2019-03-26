@@ -201,6 +201,8 @@ set(mmapper_SRCS
     parser/AbstractParser-Utils.h
     parser/CommandId.cpp
     parser/CommandId.h
+    parser/CommandQueue.cpp
+    parser/CommandQueue.h
     parser/ConnectedRoomFlags.h
     parser/DoorAction.cpp
     parser/DoorAction.h

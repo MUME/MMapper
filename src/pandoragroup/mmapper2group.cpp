@@ -34,6 +34,7 @@
 
 #include "../configuration/configuration.h"
 #include "../global/roomid.h"
+#include "../parser/CommandQueue.h"
 #include "CGroup.h"
 #include "CGroupChar.h"
 #include "GroupClient.h"
@@ -396,6 +397,11 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
 #undef X_SCORE
 
     issueLocalCharUpdate();
+}
+
+void Mmapper2Group::setPath(CommandQueue dirs, bool)
+{
+    group->getSelf()->prespam = std::move(dirs);
 }
 
 void Mmapper2Group::sendLog(const QString &text)

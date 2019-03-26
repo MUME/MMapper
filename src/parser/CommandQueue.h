@@ -1,8 +1,7 @@
 #pragma once
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
-**            Marek Krejza <krejza@gmail.com> (Caligor)
+** Authors:   Nils Schimmelmann <nschimme@gmail.com>
 **
 ** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
@@ -24,36 +23,37 @@
 **
 ************************************************************************/
 
-#ifndef PRESPAMMEDPATH_H_
-#define PRESPAMMEDPATH_H_
+#ifndef COMMANDQUEUE_H
+#define COMMANDQUEUE_H
 
-#include <QObject>
-#include <QString>
-#include <QtCore>
+#include <QQueue>
 
-#include "../parser/CommandQueue.h"
+#include "CommandId.h"
 
-class MapCanvas;
-class MapData;
-
-class PrespammedPath : public QObject
+class CommandQueue : private QQueue<CommandIdType>
 {
-    Q_OBJECT
-public:
-    explicit PrespammedPath(QObject *parent = nullptr);
-    ~PrespammedPath();
-
-public:
-    auto &getQueue() const { return m_queue; }
-
-signals:
-    void update();
-
-public slots:
-    void setPath(CommandQueue, bool);
-
 private:
-    CommandQueue m_queue{};
+    using base = QQueue<CommandIdType>;
+
+public:
+    using QQueue<CommandIdType>::QQueue;
+
+public:
+    QByteArray toByteArray() const;
+    CommandQueue &operator=(const QByteArray &dirs);
+
+public:
+    using base::begin;
+    using base::end;
+    using base::head;
+    using base::isEmpty;
+
+public:
+    using base::append;
+    using base::clear;
+    using base::dequeue;
+    using base::enqueue;
+    using base::prepend;
 };
 
-#endif
+#endif // COMMANDQUEUE_H

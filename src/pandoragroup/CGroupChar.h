@@ -33,6 +33,7 @@
 
 #include "../global/RuleOf5.h"
 #include "../global/roomid.h"
+#include "../parser/CommandQueue.h"
 
 class CGroupChar final
 {
@@ -55,6 +56,7 @@ public:
     int mana = 0, maxmana = 0;
     int moves = 0, maxmoves = 0;
     CharacterStates state = CharacterStates::NORMAL;
+    CommandQueue prespam{};
 
     explicit CGroupChar();
     virtual ~CGroupChar();

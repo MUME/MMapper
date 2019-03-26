@@ -200,16 +200,14 @@ bool MapData::getRoomFlag(const Coordinate &pos, RoomFieldVariant var)
     return false;
 }
 
-QList<Coordinate> MapData::getPath(const QList<CommandIdType> &dirs)
+QList<Coordinate> MapData::getPath(const Coordinate &start, const CommandQueue &dirs)
 {
     QMutexLocker locker(&mapLock);
     QList<Coordinate> ret;
 
     //* NOTE: room is used and then reassigned inside the loop.
-    if (Room *room = map.get(m_position)) {
-        QListIterator<CommandIdType> iter(dirs);
-        while (iter.hasNext()) {
-            const CommandIdType cmd = iter.next();
+    if (Room *room = map.get(start)) {
+        for (const auto cmd : dirs) {
             if (cmd == CommandIdType::LOOK)
                 continue;
 
