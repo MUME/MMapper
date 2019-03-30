@@ -1469,7 +1469,8 @@ void MapCanvas::paintSelectedRoom(const Room *const room)
     m_opengl.apply(XEnable{XOption::BLEND});
     m_opengl.apply(XDisable{XOption::DEPTH_TEST});
 
-    if ((x < m_visible1.x) || (x > m_visible2.x) || (y < m_visible1.y) || (y > m_visible2.y)) {
+    if (!m_roomSelectionMove.inUse
+        && ((x < m_visible1.x) || (x > m_visible2.x) || (y < m_visible1.y) || (y > m_visible2.y))) {
         // Room is distant
         const float cameraCenterX = (m_visible1.x + m_visible2.x) / 2.0f;
         const float cameraCenterY = (m_visible1.y + m_visible2.y) / 2.0f;
