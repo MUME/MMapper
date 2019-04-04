@@ -29,10 +29,7 @@
 
 #include <QVariant>
 #include <QVector>
-
-#if __cplusplus >= 201703L
 #include <optional>
-#endif
 
 #include "../global/DirectionType.h"
 #include "../global/EnumIndexedArray.h"
@@ -78,33 +75,7 @@ struct ExitDirConstRef final
     explicit ExitDirConstRef(const ExitDirection dir, const Exit &exit);
 };
 
-#if __cplusplus >= 201703L
 using OptionalExitDirConstRef = std::optional<ExitDirConstRef>;
-#else
-class OptionalExitDirConstRef final
-{
-private:
-    alignas(alignof(ExitDirConstRef)) char buf[sizeof(ExitDirConstRef)];
-    bool isValid = false;
-
-public:
-    explicit OptionalExitDirConstRef() = default;
-    explicit OptionalExitDirConstRef(const ExitDirConstRef &dir);
-    ~OptionalExitDirConstRef();
-    DEFAULT_CTORS_AND_ASSIGN_OPS(OptionalExitDirConstRef);
-
-public:
-    void reset();
-
-public:
-    bool hasValue() const;
-    explicit operator bool() const;
-
-public:
-    ExitDirConstRef &value();
-    const ExitDirConstRef &value() const;
-};
-#endif
 
 class Room final
 {

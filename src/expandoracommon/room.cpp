@@ -38,50 +38,6 @@ ExitDirConstRef::ExitDirConstRef(const ExitDirection dir, const Exit &exit)
     , exit{exit}
 {}
 
-#if __cplusplus < 201703L
-OptionalExitDirConstRef::OptionalExitDirConstRef(const ExitDirConstRef &dir)
-{
-    new (buf) ExitDirConstRef{dir.dir, dir.exit};
-    isValid = true;
-}
-
-OptionalExitDirConstRef::~OptionalExitDirConstRef()
-{
-    reset();
-}
-
-void OptionalExitDirConstRef::reset()
-{
-    if (std::exchange(isValid, false)) {
-        reinterpret_cast<ExitDirConstRef &>(buf).~ExitDirConstRef();
-    }
-}
-
-bool OptionalExitDirConstRef::hasValue() const
-{
-    return isValid;
-}
-
-OptionalExitDirConstRef::operator bool() const
-{
-    return hasValue();
-}
-
-ExitDirConstRef &OptionalExitDirConstRef::value()
-{
-    if (!hasValue())
-        throw std::runtime_error("invalid");
-    return reinterpret_cast<ExitDirConstRef &>(buf);
-}
-
-const ExitDirConstRef &OptionalExitDirConstRef::value() const
-{
-    if (!hasValue())
-        throw std::runtime_error("invalid");
-    return reinterpret_cast<const ExitDirConstRef &>(buf);
-}
-#endif
-
 std::vector<ExitDirection> Room::getOutExits() const
 {
     std::vector<ExitDirection> result;

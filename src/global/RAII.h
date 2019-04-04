@@ -31,22 +31,14 @@
 
 #include "RuleOf5.h"
 
-#ifndef NODISCARD
-#if __cplusplus >= 201703L
-#define NODISCARD [[nodiscard]]
-#else
-#define NODISCARD
-#endif
-#endif
-
-class NODISCARD RAIIBool final
+class [[nodiscard]] RAIIBool final
 {
 private:
     bool &ref;
     bool moved = false;
 
 public:
-    NODISCARD explicit RAIIBool(bool &b);
+    explicit RAIIBool(bool &b);
     ~RAIIBool();
 
 public:
@@ -56,7 +48,7 @@ public:
     DELETE_ASSIGN_OPS(RAIIBool);
 };
 
-class NODISCARD RAIICallback final
+class [[nodiscard]] RAIICallback final
 {
 private:
     using Callback = std::function<void()>;
@@ -70,7 +62,7 @@ public:
     DELETE_ASSIGN_OPS(RAIICallback);
 
 public:
-    NODISCARD explicit RAIICallback(Callback &&callback);
+    explicit RAIICallback(Callback &&callback);
     ~RAIICallback() noexcept(false);
 };
 

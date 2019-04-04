@@ -10,8 +10,8 @@ environment:
   matrix:
   - ARCH: x86
     COMPILER: MinGW
-    QTDIR: C:\Qt\5.11\mingw53_32
-    TOOLCHAIN_VERSION: 530_32
+    QTDIR: C:\Qt\5.12\mingw73_32
+    TOOLCHAIN_VERSION: 730_32
 
   - ARCH: x64
     COMPILER: MinGW
