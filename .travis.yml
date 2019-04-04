@@ -9,6 +9,7 @@ matrix:
     # Mac
     #
     - os: osx
+      osx_image: xcode10
       compiler: clang
       addons:
         homebrew:

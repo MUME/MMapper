@@ -24,6 +24,7 @@
 ************************************************************************/
 
 #include <cassert>
+#include <cctype>
 #include <string>
 #include <QRegularExpression>
 #include <QString>
