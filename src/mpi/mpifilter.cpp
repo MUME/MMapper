@@ -137,7 +137,7 @@ void MpiFilter::parseEditMessage(const QByteArray &buffer)
     QString title = QString::fromLatin1(description);
     QString body = QString::fromLatin1(payload);
 
-    qDebug() << "Edit" << sessionId << title << body;
+    qDebug() << "Edit" << sessionId << title << "body.length=" << body.length();
     emit editMessage(sessionId, title, body);
 }
 
@@ -155,6 +155,6 @@ void MpiFilter::parseViewMessage(const QByteArray &buffer)
     QString title = QString::fromLatin1(description);
     QString body = QString::fromLatin1(payload);
 
-    qDebug() << "Message" << title << body;
+    qDebug() << "Message" << title << "body.length=" << body.length();
     emit viewMessage(title, body);
 }

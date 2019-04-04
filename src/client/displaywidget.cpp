@@ -82,7 +82,7 @@ DisplayWidget::DisplayWidget(QWidget *parent)
     setSizeIncrement(fm.averageCharWidth(), fm.lineSpacing());
     setTabStopWidth(fm.width(" ") * 8); // A tab is 8 spaces wide
 
-    QScrollBar *scrollbar = verticalScrollBar();
+    QScrollBar *const scrollbar = verticalScrollBar();
     scrollbar->setSingleStep(fm.lineSpacing());
     scrollbar->setPageStep(y);
 }

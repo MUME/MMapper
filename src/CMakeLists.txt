@@ -67,6 +67,8 @@ set(mmapper_SRCS
     global/DirectionType.cpp
     global/DirectionType.h
     global/EnumIndexedArray.h
+    global/entities.cpp
+    global/entities.h
     global/enums.h
     global/Flags.h
     global/io.cpp
@@ -82,6 +84,8 @@ set(mmapper_SRCS
     global/RuleOf5.h
     global/StringView.cpp
     global/StringView.h
+    global/TextUtils.cpp
+    global/TextUtils.h
     global/utils.cpp
     global/utils.h
     global/WinSock.cpp
