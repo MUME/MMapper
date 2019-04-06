@@ -76,6 +76,7 @@ void PathMachine::setCurrentRoom(const RoomId id, bool update)
         // WARNING: This copies the current values of the room.
         mostLikelyRoom = *perhaps;
         emit playerMoved(mostLikelyRoom.getPosition());
+        emit setCharPosition(mostLikelyRoom.getId());
         state = PathState::APPROVED;
     }
 }
@@ -341,5 +342,6 @@ void PathMachine::evaluatePaths()
             state = PathState::EXPERIMENTING;
         }
         emit playerMoved(mostLikelyRoom.getPosition());
+        emit setCharPosition(mostLikelyRoom.getId());
     }
 }
