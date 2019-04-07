@@ -426,7 +426,6 @@ void MainWindow::createActions()
     newAct = new QAction(QIcon::fromTheme("document-new", QIcon(":/icons/new.png")),
                          tr("&New"),
                          this);
-    newAct->setShortcut(tr("Ctrl+N"));
     newAct->setStatusTip(tr("Create a new file"));
     connect(newAct, &QAction::triggered, this, &MainWindow::newFile);
 
