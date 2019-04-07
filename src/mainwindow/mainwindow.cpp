@@ -170,6 +170,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     m_dockDialogLog->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
     m_dockDialogLog->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
                                  | QDockWidget::DockWidgetClosable);
+    m_dockDialogLog->toggleViewAction()->setShortcut(tr("Ctrl+L"));
+
     addDockWidget(Qt::BottomDockWidgetArea, m_dockDialogLog);
 
     logWindow = new QTextBrowser(m_dockDialogLog);
