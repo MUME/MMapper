@@ -83,7 +83,7 @@ Abbrev getParserCommandName(const DoorFlag x)
         CASE3(NO_PICK, "nopick", -1);
         CASE3(DELAYED, "delayed", 5);
         CASE3(CALLABLE, "callable", 4);
-        CASE3(KNOCKABLE, "knockable", 5);
+        CASE3(KNOCKABLE, "knockable", 6);
         CASE3(MAGIC, "magic", 3);
         CASE3(ACTION, "action", 3);
         CASE3(NO_BASH, "nobash", -1);
@@ -287,6 +287,7 @@ QByteArray getCommandName(const DoorActionType action)
         CASE2(BASH, "bash");
         CASE2(BREAK, "cast 'break door'");
         CASE2(BLOCK, "cast 'block door'");
+        CASE2(KNOCK, "knock");
 
     case DoorActionType::NONE:
         break;
@@ -314,6 +315,7 @@ Abbrev getParserCommandName(const DoorActionType action)
         CASE3(BASH, "bash", -1);
         CASE3(BREAK, "break", -1);
         CASE3(BLOCK, "block", -1);
+        CASE3(KNOCK, "knock", -1);
     case DoorActionType::NONE:
         break;
     }

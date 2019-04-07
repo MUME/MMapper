@@ -29,10 +29,22 @@
 #include <array>
 #include <cstddef>
 
-enum class DoorActionType { OPEN, CLOSE, LOCK, UNLOCK, PICK, ROCK, BASH, BREAK, BLOCK, NONE };
+enum class DoorActionType {
+    OPEN,
+    CLOSE,
+    LOCK,
+    UNLOCK,
+    PICK,
+    ROCK,
+    BASH,
+    BREAK,
+    BLOCK,
+    KNOCK,
+    NONE
+};
 
 /* does not include NONE */
-static constexpr const size_t NUM_DOOR_ACTION_TYPES = 9;
+static constexpr const size_t NUM_DOOR_ACTION_TYPES = 10;
 
 namespace enums {
 #define ALL_DOOR_ACTION_TYPES ::enums::getAllDoorActionTypes()
