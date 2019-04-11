@@ -67,7 +67,7 @@ private:
 
 public:
     explicit Splash()
-        : pixmap(getPixmapFilenameRaw("splash20.png"))
+        : pixmap(getPixmapFilenameRaw("splash.png"))
         , splash(pixmap)
     {
         const auto message = QString("%1").arg(getVersion(), -9);

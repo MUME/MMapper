@@ -75,7 +75,7 @@ AboutDialog::AboutDialog(QWidget *parent)
                      .arg(static_cast<size_t>(QSysInfo::WordSize))
                + "</p>";
     };
-    pixmapLabel->setPixmap(QPixmap(":/pixmaps/splash20.png"));
+    pixmapLabel->setPixmap(QPixmap(":/pixmaps/splash.png"));
     pixmapLabel->setFixedSize(
         QSize(pixmapLabel->pixmap()->width(), pixmapLabel->pixmap()->height()));
     pixmapLabel->setAlignment(Qt::AlignCenter);
