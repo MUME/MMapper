@@ -283,6 +283,8 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
     updatedCheckBox->setText("Room has not been online updated yet!!!");
 
     readSettings();
+
+    connect(closeButton, &QAbstractButton::clicked, this, &RoomEditAttrDlg::closeClicked);
 }
 
 RoomEditAttrDlg::~RoomEditAttrDlg()
@@ -470,6 +472,11 @@ void RoomEditAttrDlg::connectAll()
 
     connect(m_hiddenShortcut, &QShortcut::activated, this, &RoomEditAttrDlg::toggleHiddenDoor);
 
+    connect(roomListComboBox,
+            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+            this,
+            &RoomEditAttrDlg::roomListCurrentIndexChanged);
+
     connect(updatedCheckBox, &QCheckBox::toggled, this, [this](bool checked) {
         const Room *r = getSelectedRoom();
         if (r != nullptr) {
@@ -644,6 +651,11 @@ void RoomEditAttrDlg::disconnectAll()
     disconnect(roomNoteTextEdit, &QTextEdit::textChanged, this, &RoomEditAttrDlg::roomNoteChanged);
 
     disconnect(m_hiddenShortcut, &QShortcut::activated, this, &RoomEditAttrDlg::toggleHiddenDoor);
+
+    disconnect(roomListComboBox,
+               static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+               this,
+               &RoomEditAttrDlg::roomListCurrentIndexChanged);
 }
 
 const Room *RoomEditAttrDlg::getSelectedRoom()
@@ -683,12 +695,6 @@ ExitDirection RoomEditAttrDlg::getSelectedExit()
 
 void RoomEditAttrDlg::roomListCurrentIndexChanged(int /*unused*/)
 {
-    disconnectAll();
-    alignUndefRadioButton->setChecked(true);
-    portUndefRadioButton->setChecked(true);
-    lightUndefRadioButton->setChecked(true);
-    connectAll();
-
     updateDialog(getSelectedRoom());
 }
 
@@ -704,32 +710,22 @@ void RoomEditAttrDlg::setRoomSelection(const SharedRoomSelection &rs,
 
     if (rs == nullptr)
         return;
-
-    if (rs->size() > 1) {
-        tabWidget->setCurrentWidget(selectionTab);
-        roomListComboBox->addItem("All", 0);
-        updateDialog(nullptr);
-
-        disconnectAll();
-        alignUndefRadioButton->setChecked(true);
-        portUndefRadioButton->setChecked(true);
-        lightUndefRadioButton->setChecked(true);
-        connectAll();
-    } else if (rs->size() == 1) {
+    else if (rs->size() == 1) {
         tabWidget->setCurrentWidget(attributesTab);
         updateDialog(m_roomSelection->first());
+    } else {
+        tabWidget->setCurrentWidget(selectionTab);
+        roomListComboBox->addItem("All", 0);
+        for (const Room *room : *m_roomSelection) {
+            roomListComboBox->addItem(room->getName(), room->getId().asUint32());
+        }
+        updateDialog(nullptr);
     }
 
-    for (const Room *room : *m_roomSelection) {
-        roomListComboBox->addItem(room->getName(), room->getId().asUint32());
-    }
-
-    connect(roomListComboBox,
-            SIGNAL(currentIndexChanged(int)),
-            this,
-            SLOT(roomListCurrentIndexChanged(int)));
-    connect(closeButton, &QAbstractButton::clicked, this, &RoomEditAttrDlg::closeClicked);
-    connect(this, SIGNAL(mapChanged()), m_mapCanvas, SLOT(update()));
+    connect(this,
+            &RoomEditAttrDlg::mapChanged,
+            m_mapCanvas,
+            static_cast<void (QWidget::*)(void)>(&QWidget::update));
 }
 
 template<typename T, typename Flags>
@@ -769,6 +765,12 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         terrainLabel->setPixmap(QPixmap(getPixmapFilename(RoomTerrainType::UNDEFINED)));
 
         exitsFrame->setEnabled(false);
+
+        rideUndefRadioButton->setChecked(true);
+        alignUndefRadioButton->setChecked(true);
+        portUndefRadioButton->setChecked(true);
+        lightUndefRadioButton->setChecked(true);
+        sundeathUndefRadioButton->setChecked(true);
 
         for (auto x : loadListItems) {
             x->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsTristate);
