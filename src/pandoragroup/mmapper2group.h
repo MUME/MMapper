@@ -78,6 +78,7 @@ public slots:
     void parseScoreInformation(QByteArray score);
     void parsePromptInformation(QByteArray prompt);
     void setPath(CommandQueue, bool);
+    void reset();
 
 protected slots:
     // Communicator

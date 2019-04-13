@@ -404,6 +404,27 @@ void Mmapper2Group::setPath(CommandQueue dirs, bool)
     group->getSelf()->prespam = std::move(dirs);
 }
 
+void Mmapper2Group::reset()
+{
+    QMutexLocker locker(&networkLock);
+
+    // Reset prompt
+    lastPrompt.textHP = {};
+    lastPrompt.textMana = {};
+    lastPrompt.textMoves = {};
+
+    // Reset character
+    CGroupChar *self = getGroup()->getSelf();
+    self->hp = 0;
+    self->maxhp = 0;
+    self->mana = 0;
+    self->maxmana = 0;
+    self->moves = 0;
+    self->maxmoves = 0;
+    self->pos = INVALID_ROOMID;
+    issueLocalCharUpdate();
+}
+
 void Mmapper2Group::sendLog(const QString &text)
 {
     emit log("GroupManager", text);

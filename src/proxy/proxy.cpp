@@ -232,8 +232,10 @@ void Proxy::start()
     connect(m_mudSocket, &MumeSocket::connected, this, &Proxy::onMudConnected);
     connect(m_mudSocket, &MumeSocket::socketError, this, &Proxy::onMudError);
     connect(m_mudSocket, &MumeSocket::socketError, m_parserXml, &AbstractParser::reset);
+    connect(m_mudSocket, &MumeSocket::socketError, m_groupManager, &Mmapper2Group::reset);
     connect(m_mudSocket, &MumeSocket::disconnected, this, &Proxy::mudTerminatedConnection);
     connect(m_mudSocket, &MumeSocket::disconnected, m_parserXml, &AbstractParser::reset);
+    connect(m_mudSocket, &MumeSocket::disconnected, m_groupManager, &Mmapper2Group::reset);
     connect(m_mudSocket, &MumeSocket::processMudStream, m_mudTelnet, &MudTelnet::onAnalyzeMudStream);
     connect(m_mudSocket, &MumeSocket::log, mw, &MainWindow::log);
     if (getConfig().general.mapMode != MapMode::OFFLINE)
