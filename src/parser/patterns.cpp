@@ -31,8 +31,6 @@
 
 const Configuration::ParserSettings &Patterns::parserConfig = getConfig().parser;
 
-using PO = QRegularExpression::PatternOption;
-
 bool Patterns::matchPattern(QString pattern, const QString &str)
 {
     if (pattern.at(0) != '#') {
@@ -106,8 +104,7 @@ bool Patterns::matchPattern(QByteArray pattern, const QByteArray &str)
 
 bool Patterns::matchScore(const QString &str)
 {
-    static const QRegularExpression re(R"(\d+/\d+ hits(?:, \d+/\d+ mana,)? and \d+/\d+ moves.)",
-                                       PO::OptimizeOnFirstUsageOption);
+    static const QRegularExpression re(R"(\d+/\d+ hits(?:, \d+/\d+ mana,)? and \d+/\d+ moves.)");
     return re.match(str).hasMatch();
 }
 
@@ -123,20 +120,18 @@ bool Patterns::matchNoDescriptionPatterns(const QString &str)
 
 bool Patterns::matchPasswordPatterns(const QByteArray &str)
 {
-    static const QRegularExpression re(R"(^Account pass phrase:? $)",
-                                       PO::OptimizeOnFirstUsageOption);
+    static const QRegularExpression re(R"(^Account pass phrase:? $)");
     return re.match(str).hasMatch();
 }
 
 bool Patterns::matchLoginPatterns(const QByteArray &str)
 {
-    static const QRegularExpression re(R"(^By what name do you wish to be known\?? $)",
-                                       PO::OptimizeOnFirstUsageOption);
+    static const QRegularExpression re(R"(^By what name do you wish to be known\?? $)");
     return re.match(str).hasMatch();
 }
 
 bool Patterns::matchMenuPromptPatterns(const QByteArray &str)
 {
-    static const QRegularExpression re(R"(^Account(>|&gt;)? $)", PO::OptimizeOnFirstUsageOption);
+    static const QRegularExpression re(R"(^Account(>|&gt;)? $)");
     return re.match(str).hasMatch();
 }
