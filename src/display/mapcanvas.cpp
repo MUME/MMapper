@@ -189,7 +189,7 @@ private:
     QOpenGLWidget &m_glWidget;
 
 public:
-    explicit MakeCurrentRaii(QOpenGLWidget &widget)
+    explicit MakeCurrentRaii(QOpenGLWidget & widget)
         : m_glWidget{widget}
     {
         m_glWidget.makeCurrent();
@@ -1655,6 +1655,7 @@ void MapCanvas::drawPathStart(const Coordinate &sc, std::vector<Vec3f> &verts, c
 
     m_opengl.apply(XColor4f{color});
     m_opengl.apply(XEnable{XOption::BLEND});
+    m_opengl.apply(XDisable{XOption::DEPTH_TEST});
     m_opengl.apply(XDevicePointSize{4.0});
     m_opengl.apply(XDeviceLineWidth{4.0});
 
@@ -1704,6 +1705,7 @@ void MapCanvas::drawPathEnd(const float dx,
     m_opengl.apply(XDeviceLineWidth{2.0});
     m_opengl.apply(XDevicePointSize{2.0});
     m_opengl.apply(XDisable{XOption::BLEND});
+    m_opengl.apply(XEnable{XOption::DEPTH_TEST});
     m_opengl.glPopMatrix();
 }
 
