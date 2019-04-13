@@ -342,7 +342,10 @@ void MainWindow::wireConnections()
     // moved to mapwindow
     connect(m_mapData, &MapData::mapSizeChanged, m_mapWindow, &MapWindow::setScrollBars);
 
-    connect(m_prespammedPath, SIGNAL(update()), m_mapWindow->getCanvas(), SLOT(update()));
+    connect(m_prespammedPath,
+            &PrespammedPath::update,
+            m_mapWindow->getCanvas(),
+            static_cast<void (QWidget::*)(void)>(&QWidget::update));
 
     connect(m_mapData, &MapData::log, this, &MainWindow::log);
     connect(m_mapWindow->getCanvas(), &MapCanvas::log, this, &MainWindow::log);
@@ -378,9 +381,9 @@ void MainWindow::wireConnections()
             &Mmapper2Group::setCharPosition,
             Qt::QueuedConnection);
     connect(m_groupManager,
-            SIGNAL(drawCharacters()),
+            &Mmapper2Group::drawCharacters,
             m_mapWindow->getCanvas(),
-            SLOT(update()),
+            static_cast<void (QWidget::*)(void)>(&QWidget::update),
             Qt::QueuedConnection);
     connect(this,
             &MainWindow::setGroupMode,

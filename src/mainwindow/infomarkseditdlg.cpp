@@ -71,15 +71,18 @@ void InfoMarksEditDlg::writeSettings()
 
 void InfoMarksEditDlg::connectAll()
 {
-    connect(this, SIGNAL(mapChanged()), m_mapCanvas, SLOT(update()));
+    connect(this,
+            &InfoMarksEditDlg::mapChanged,
+            m_mapCanvas,
+            static_cast<void (QWidget::*)(void)>(&QWidget::update));
     connect(objectsList,
-            SIGNAL(currentIndexChanged(const QString &)),
+            static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged),
             this,
-            SLOT(objectListCurrentIndexChanged(const QString &)));
+            &InfoMarksEditDlg::objectListCurrentIndexChanged);
     connect(objectType,
-            SIGNAL(currentIndexChanged(const QString &)),
+            static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged),
             this,
-            SLOT(objectTypeCurrentIndexChanged(const QString &)));
+            &InfoMarksEditDlg::objectTypeCurrentIndexChanged);
     connect(objectCreate, &QAbstractButton::clicked, this, &InfoMarksEditDlg::createClicked);
     connect(objectModify, &QAbstractButton::clicked, this, &InfoMarksEditDlg::modifyClicked);
 }
@@ -149,15 +152,18 @@ void InfoMarksEditDlg::modifyClicked()
 
 void InfoMarksEditDlg::disconnectAll()
 {
-    disconnect(this, SIGNAL(mapChanged()), m_mapCanvas, SLOT(update()));
+    disconnect(this,
+               &InfoMarksEditDlg::mapChanged,
+               m_mapCanvas,
+               static_cast<void (QWidget::*)(void)>(&QWidget::update));
     disconnect(objectsList,
-               SIGNAL(currentIndexChanged(const QString &)),
+               static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged),
                this,
-               SLOT(objectListCurrentIndexChanged(const QString &)));
+               &InfoMarksEditDlg::objectListCurrentIndexChanged);
     disconnect(objectType,
-               SIGNAL(currentIndexChanged(const QString &)),
+               static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged),
                this,
-               SLOT(objectTypeCurrentIndexChanged(const QString &)));
+               &InfoMarksEditDlg::objectTypeCurrentIndexChanged);
     disconnect(objectCreate, &QAbstractButton::clicked, this, &InfoMarksEditDlg::createClicked);
     disconnect(objectModify, &QAbstractButton::clicked, this, &InfoMarksEditDlg::modifyClicked);
 }
