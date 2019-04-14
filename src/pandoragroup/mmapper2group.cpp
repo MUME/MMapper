@@ -421,7 +421,7 @@ void Mmapper2Group::reset()
     self->maxmana = 0;
     self->moves = 0;
     self->maxmoves = 0;
-    self->pos = INVALID_ROOMID;
+    self->pos = DEFAULT_ROOMID;
     issueLocalCharUpdate();
 }
 

@@ -51,7 +51,7 @@ public:
     static constexpr const int MAX_STATE = static_cast<int>(CharacterStates::DEAD);
 
 public:
-    RoomId pos = INVALID_ROOMID;
+    RoomId pos = DEFAULT_ROOMID;
     int hp = 0, maxhp = 0;
     int mana = 0, maxmana = 0;
     int moves = 0, maxmoves = 0;
