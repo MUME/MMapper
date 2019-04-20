@@ -97,7 +97,7 @@ if(WITH_MINIUPNPC)
         endif()
     endif()
 else()
-    message(STATUS "Building without OpenSSL TLS encryption")
+    message(STATUS "Building without MiniUPnPc group manager port forwarding")
     add_definitions(/DMMAPPER_NO_MINIUPNPC)
 endif()
 
