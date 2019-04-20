@@ -24,6 +24,7 @@
 
 #include "groupmanagerpage.h"
 
+#include <QSet>
 #include <QString>
 #include <QtGui>
 #include <QtWidgets>
@@ -129,6 +130,9 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
     ui->lockGroupCheckBox->setChecked(groupManager.lockGroup);
 
     // Client Section
+    const auto remoteHostText
+        = QString("%1:%2").arg(groupManager.host.constData()).arg(groupManager.remotePort);
+    QSet<QString> contacts;
     for (int i = 0; i < authority->getItemModel()->rowCount(); i++) {
         // Pre-populate entries from Authorized Contacts
         const auto key = authority->getItemModel()->index(i, 0).data(Qt::DisplayRole).toByteArray();
@@ -137,26 +141,26 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
         if (ip.isEmpty() || port <= 0)
             continue;
         const auto remoteHostText = QString("%1:%2").arg(ip).arg(port);
+        if (contacts.contains(remoteHostText))
+            continue;
+        contacts.insert(remoteHostText);
         ui->remoteHost->addItem(remoteHostText);
         const auto name = authority->getMetadata(key, GroupMetadata::NAME);
         ui->remoteHost->setItemData(i, name.isEmpty() ? "Unknown" : name, Qt::ToolTipRole);
     }
-    // Add the entry from config if it wasn't already prepopulated
-    const auto savedRemoteHostText
-        = QString("%1:%2").arg(groupManager.host.constData()).arg(groupManager.remotePort);
-    bool sawSavedRemoteHost = false;
-    for (int i = 0; i < ui->remoteHost->count(); i++) {
-        const auto itemText = ui->remoteHost->itemText(i);
-        if (savedRemoteHostText.compare(itemText, Qt::CaseInsensitive) == 0) {
-            sawSavedRemoteHost = true;
-            ui->remoteHost->setCurrentIndex(i);
-            break;
-        }
-    }
-    if (!sawSavedRemoteHost) {
-        ui->remoteHost->addItem(savedRemoteHostText);
+    if (!contacts.contains(remoteHostText)) {
+        // Add the entry from config if it wasn't already prepopulated
+        ui->remoteHost->addItem(remoteHostText);
         ui->remoteHost->setItemData(ui->remoteHost->count() - 1, "Unknown", Qt::ToolTipRole);
         ui->remoteHost->setCurrentIndex(ui->remoteHost->count() - 1);
+    } else {
+        for (int i = 0; i < ui->remoteHost->count(); i++) {
+            const auto itemText = ui->remoteHost->itemText(i);
+            if (remoteHostText.compare(itemText, Qt::CaseInsensitive) == 0) {
+                ui->remoteHost->setCurrentIndex(i);
+                break;
+            }
+        }
     }
     connect(ui->remoteHost,
             &QComboBox::editTextChanged,
