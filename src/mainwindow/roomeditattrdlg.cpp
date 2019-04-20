@@ -712,7 +712,9 @@ void RoomEditAttrDlg::setRoomSelection(const SharedRoomSelection &rs,
         return;
     else if (rs->size() == 1) {
         tabWidget->setCurrentWidget(attributesTab);
-        updateDialog(m_roomSelection->first());
+        const auto room = m_roomSelection->first();
+        roomListComboBox->addItem(room->getName(), room->getId().asUint32());
+        updateDialog(room);
     } else {
         tabWidget->setCurrentWidget(selectionTab);
         roomListComboBox->addItem("All", 0);
