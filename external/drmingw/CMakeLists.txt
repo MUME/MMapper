@@ -8,6 +8,7 @@ if(MINGW)
             INSTALL_DIR "${CMAKE_BINARY_DIR}/src/bin"
             CONFIGURE_COMMAND ""
             BUILD_COMMAND ${CMAKE_COMMAND} -E echo Deploying Dr. Mingw 64-bit binary and dependencies
+            INSTALL_COMMAND ${CMAKE_COMMAND} -E copy <SOURCE_DIR>/bin/dbgcore.dll ${CMAKE_BINARY_DIR}/src/bin/
             INSTALL_COMMAND ${CMAKE_COMMAND} -E copy <SOURCE_DIR>/bin/dbghelp.dll ${CMAKE_BINARY_DIR}/src/bin/
                     COMMAND ${CMAKE_COMMAND} -E copy <SOURCE_DIR>/bin/exchndl.dll ${CMAKE_BINARY_DIR}/src/bin/
                     COMMAND ${CMAKE_COMMAND} -E copy <SOURCE_DIR>/bin/mgwhelp.dll ${CMAKE_BINARY_DIR}/src/bin/
@@ -25,6 +26,7 @@ if(MINGW)
             INSTALL_DIR "${CMAKE_BINARY_DIR}/src/bin"
             CONFIGURE_COMMAND ""
             BUILD_COMMAND ${CMAKE_COMMAND} -E echo Deploying Dr. Mingw 32-bit binary and dependencies
+            INSTALL_COMMAND ${CMAKE_COMMAND} -E copy <SOURCE_DIR>/bin/dbgcore.dll ${CMAKE_BINARY_DIR}/src/bin/
             INSTALL_COMMAND ${CMAKE_COMMAND} -E copy <SOURCE_DIR>/bin/dbghelp.dll ${CMAKE_BINARY_DIR}/src/bin/
                     COMMAND ${CMAKE_COMMAND} -E copy <SOURCE_DIR>/bin/exchndl.dll ${CMAKE_BINARY_DIR}/src/bin/
                     COMMAND ${CMAKE_COMMAND} -E copy <SOURCE_DIR>/bin/mgwhelp.dll ${CMAKE_BINARY_DIR}/src/bin/
