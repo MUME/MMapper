@@ -1,4 +1,32 @@
 ================================
+MMapper 19.04.0 (April 22, 2019)
+================================
+
+New features:
+ - Updated map to include the Tower Hills
+ - Improvements to the builtin editor (justification, whitespace, ansi, tabbing, and more!)
+ - Group manager now shows player prespam
+ - Add _knock action to parser
+ - Colors for dark/sunsafe rooms are now configurable under the Graphics preferences
+ - Introduce coach and ferry load flags
+ - Group manager rows and columns are smaller and autohide if necessary
+ - Group manager remembers previous hosts as Authorized Contacts
+ - Improved room texture resolution by 2x through artificial intelligence
+
+Bug fixes:
+ - Really fix syncing when player is blinded
+ - Remove group manager UPnP mapping from the router on shutdown
+ - Mapper now syncs movement when a one-way is scouted
+ - Connected room flags are now reset for followers with mapping mode
+ - Add more common failed movement message to prespam
+ - Update group position when movement is forced (i.e. river flow)
+ - Remote edit widget now grabs focus
+ - Only show rooms as distant if they are not being moved
+ - Fix rendering artifacts when swapping rooms in room editor
+ - Reset group manager character info on MUME disconnect
+ - Changing the client font is now correctly saved
+
+================================
 MMapper 2.8.0 (March 7, 2019)
 ================================
 
