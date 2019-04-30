@@ -294,6 +294,9 @@ void InputWidget::backwardHistory()
 
 void InputWidget::tabComplete()
 {
+    if (m_tabCompletionDictionary.isEmpty())
+        return;
+
     QTextCursor current = textCursor();
     current.select(QTextCursor::WordUnderCursor);
     if (!m_tabbing) {
@@ -302,9 +305,11 @@ void InputWidget::tabComplete()
         m_tabbing = true;
     }
 
-    // If we reach the end then loop back to the beginning
-    if (!m_tabIterator->hasPrevious() && !m_tabCompletionDictionary.isEmpty()) {
+    // If we reach the end then loop back to the beginning and clear the selected text again
+    if (!m_tabIterator->hasPrevious()) {
+        textCursor().removeSelectedText();
         m_tabIterator->toBack();
+        return;
     }
 
     // Iterate through all previous words
