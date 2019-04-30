@@ -768,6 +768,7 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
 
         exitsFrame->setEnabled(false);
 
+        // REVISIT: Check state of all entries and set it if they all match that state
         rideUndefRadioButton->setChecked(true);
         alignUndefRadioButton->setChecked(true);
         portUndefRadioButton->setChecked(true);
