@@ -190,4 +190,19 @@ void TestClock::parseClockTimeTest()
     QCOMPARE(clock.toMumeTime(clock.getMumeMoment()), midnight);
 }
 
+void TestClock::precsionTimeoutTest()
+{
+    MumeClock clock;
+    QCOMPARE(clock.getPrecision(), MumeClockPrecision::MUMECLOCK_UNSET);
+
+    clock.setPrecision(MumeClockPrecision::MUMECLOCK_DAY);
+    QCOMPARE(clock.getPrecision(), MumeClockPrecision::MUMECLOCK_DAY);
+
+    clock.setPrecision(MumeClockPrecision::MUMECLOCK_HOUR);
+    QCOMPARE(clock.getPrecision(), MumeClockPrecision::MUMECLOCK_DAY);
+
+    clock.setPrecision(MumeClockPrecision::MUMECLOCK_MINUTE);
+    QCOMPARE(clock.getPrecision(), MumeClockPrecision::MUMECLOCK_DAY);
+}
+
 QTEST_MAIN(TestClock)

@@ -42,6 +42,7 @@ private Q_SLOTS:
     void parseWeatherTest();
     void parseWeatherClockSkewTest();
     void parseClockTimeTest();
+    void precsionTimeoutTest();
 };
 
 #endif

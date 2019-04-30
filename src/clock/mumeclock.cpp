@@ -361,9 +361,8 @@ static const char *getOrdinalSuffix(const int day)
 
 MumeClockPrecision MumeClock::getPrecision()
 {
-    // TODO: Unit test this
     const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toTime_t();
-    if (m_precision == MumeClockPrecision::MUMECLOCK_MINUTE
+    if (m_precision >= MumeClockPrecision::MUMECLOCK_HOUR
         && secsSinceEpoch - m_lastSyncEpoch > ONE_RL_DAY_IN_SECONDS) {
         m_precision = MumeClockPrecision::MUMECLOCK_DAY;
         emit log("MumeClock", "Precision lowered because clock has not been synced recently.");
