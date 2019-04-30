@@ -26,10 +26,23 @@
 #ifndef UPDATEDIALOG_H
 #define UPDATEDIALOG_H
 
+#include <array>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QLabel>
 #include <QNetworkAccessManager>
+
+class CompareVersion final
+{
+public:
+    explicit CompareVersion(const QString &versionStr) noexcept;
+    bool operator>(const CompareVersion &other) const;
+    bool operator==(const CompareVersion &other) const;
+    operator QString() const;
+
+private:
+    std::array<int, 3> parts;
+};
 
 class UpdateDialog : public QDialog
 {

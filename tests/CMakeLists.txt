@@ -3,6 +3,7 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/../src/expandoracommon
 	${CMAKE_CURRENT_SOURCE_DIR}/../src/parser
 	${CMAKE_CURRENT_SOURCE_DIR}/../src/global
+        ${CMAKE_CURRENT_SOURCE_DIR}/../src/mainwindow
 )
 
 # Clock
@@ -56,3 +57,13 @@ set(TestParser_SRCS testparser.cpp)
 add_executable(TestParser ${TestParser_SRCS} ${parser_SRCS})
 target_link_libraries(TestParser Qt5::Test coverage_config)
 add_test(NAME TestParser COMMAND TestParser)
+
+# MainWindow
+set(mainwindow_SRCS
+    ../src/mainwindow/UpdateDialog.cpp
+    ../src/mainwindow/UpdateDialog.h
+    )
+set(TestMainWindow_SRCS TestMainWindow.cpp)
+add_executable(TestMainWindow ${TestMainWindow_SRCS} ${mainwindow_SRCS})
+target_link_libraries(TestMainWindow Qt5::Widgets Qt5::Network Qt5::Test coverage_config)
+add_test(NAME TestMainWindow COMMAND TestMainWindow)

@@ -32,44 +32,41 @@
 #include <QPushButton>
 #include <QRegularExpression>
 
-class CompareVersion final
+CompareVersion::CompareVersion(const QString &versionStr) noexcept
 {
-private:
-    int major_ = -1;
-    int minor_ = -1;
-    int patch_ = -1;
-
-public:
-    explicit CompareVersion(const QString &versionStr) noexcept
-    {
-        static const QRegularExpression versionRx(R"(v?(\d+)\.(\d+)\.(\d+))");
-        auto result = versionRx.match(versionStr);
-        if (result.hasMatch()) {
-            major_ = result.captured(1).toInt();
-            minor_ = result.captured(2).toInt();
-            patch_ = result.captured(3).toInt();
-        }
+    static const QRegularExpression versionRx(R"(v?(\d+)\.(\d+)\.(\d+))");
+    auto result = versionRx.match(versionStr);
+    if (result.hasMatch()) {
+        parts[0] = result.captured(1).toInt();
+        parts[1] = result.captured(2).toInt();
+        parts[2] = result.captured(3).toInt();
     }
+}
 
-public:
-    bool operator>(const CompareVersion &other) const
-    {
-        if (major_ > other.major_)
+bool CompareVersion::operator>(const CompareVersion &other) const
+{
+    for (size_t i = 0; i < parts.size(); i++) {
+        auto myPart = parts.at(i);
+        auto otherPart = other.parts.at(i);
+        if (myPart == otherPart)
+            continue;
+        if (myPart > otherPart)
             return true;
-        if (minor_ > other.minor_)
-            return true;
-        if (patch_ > other.patch_)
-            return true;
-        return false;
+        break;
     }
+    return false;
+}
 
-    bool operator==(const CompareVersion &other) const
-    {
-        return major_ == other.major_ && minor_ == other.minor_ && patch_ == other.patch_;
-    }
+bool CompareVersion::operator==(const CompareVersion &other) const
+{
+    return parts.at(0) == other.parts.at(0) && parts.at(1) == other.parts.at(1)
+           && parts.at(2) == other.parts.at(2);
+}
 
-    operator QString() const { return QString("%1.%2.%3").arg(major_).arg(minor_).arg(patch_); }
-};
+CompareVersion::operator QString() const
+{
+    return QString("%1.%2.%3").arg(parts.at(0)).arg(parts.at(1)).arg(parts.at(2));
+}
 
 UpdateDialog::UpdateDialog(QWidget *const parent)
     : QDialog(parent)
