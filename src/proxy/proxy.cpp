@@ -214,12 +214,10 @@ void Proxy::start()
 
     emit log("Proxy", "Connection to client established ...");
 
-    QByteArray ba
-        = QString(
-              "\033[1;37;46mWelcome to MMapper!\033[0;37;46m"
-              "   Type \033[1m%1help\033[0m\033[37;46m for help or \033[1m%1vote\033[0m\033[37;46m to vote!\033[0m\r\n")
-              .arg(getConfig().parser.prefixChar)
-              .toLatin1();
+    QByteArray ba = QString("\033[1;37;46mWelcome to MMapper!\033[0;37;46m"
+                            "   Type \033[1m%1help\033[0m\033[37;46m for help.\033[0m\r\n")
+                        .arg(getConfig().parser.prefixChar)
+                        .toLatin1();
     m_userSocket->write(ba);
 
     m_mudSocket = (NO_OPEN_SSL || !getConfig().connection.tlsEncryption)
@@ -286,16 +284,15 @@ void Proxy::onMudError(const QString &errorStr)
     if (getConfig().connection.proxyConnectionStatus) {
         if (getConfig().general.mapMode == MapMode::OFFLINE) {
             sendToUser("\r\n"
-                       "\033[1;37;46mYou are now exploring the world map offline.\033[0m\r\n");
+                       "\033[1;37;46mYou are now exploring the map offline.\033[0m\r\n");
             m_parserXml->sendPromptToUser();
         } else {
             // Terminate connection
             deleteLater();
         }
     } else {
-        sendToUser(
-            "\r\n"
-            "\033[1;37;46mYou can explore world map offline or reconnect again...\033[0m\r\n");
+        sendToUser("\r\n"
+                   "\033[1;37;46mYou can explore the map offline or reconnect again...\033[0m\r\n");
         m_parserXml->sendPromptToUser();
     }
 }
@@ -321,16 +318,15 @@ void Proxy::mudTerminatedConnection()
     if (getConfig().connection.proxyConnectionStatus) {
         if (getConfig().general.mapMode == MapMode::OFFLINE) {
             sendToUser("\r\n"
-                       "\033[1;37;46mYou are now exploring the world map offline.\033[0m\r\n");
+                       "\033[1;37;46mYou are now exploring the map offline.\033[0m\r\n");
             m_parserXml->sendPromptToUser();
         } else {
             // Terminate connection
             deleteLater();
         }
     } else {
-        sendToUser(
-            "\r\n"
-            "\033[1;37;46mYou can explore world map offline or reconnect again...\033[0m\r\n");
+        sendToUser("\r\n"
+                   "\033[1;37;46mYou can explore the map offline or reconnect again...\033[0m\r\n");
         m_parserXml->sendPromptToUser();
     }
 }
