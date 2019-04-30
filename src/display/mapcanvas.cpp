@@ -311,12 +311,6 @@ void MapCanvas::wheelEvent(QWheelEvent *const event)
     if (event->delta() > 100) {
         switch (m_canvasMouseMode) {
         case CanvasMouseMode::MOVE:
-            if ((event->modifiers() & Qt::CTRL) != 0u) {
-                layerDown();
-            } else {
-                zoomIn();
-            }
-            break;
         case CanvasMouseMode::SELECT_INFOMARKS:
         case CanvasMouseMode::CREATE_INFOMARKS:
         case CanvasMouseMode::SELECT_ROOMS:
@@ -324,7 +318,11 @@ void MapCanvas::wheelEvent(QWheelEvent *const event)
         case CanvasMouseMode::CREATE_ROOMS:
         case CanvasMouseMode::CREATE_CONNECTIONS:
         case CanvasMouseMode::CREATE_ONEWAY_CONNECTIONS:
-            layerDown();
+            if ((event->modifiers() & Qt::CTRL) != 0u) {
+                layerDown();
+            } else {
+                zoomIn();
+            }
             break;
 
         case CanvasMouseMode::NONE:
@@ -336,12 +334,6 @@ void MapCanvas::wheelEvent(QWheelEvent *const event)
     if (event->delta() < -100) {
         switch (m_canvasMouseMode) {
         case CanvasMouseMode::MOVE:
-            if ((event->modifiers() & Qt::CTRL) != 0u) {
-                layerUp();
-            } else {
-                zoomOut();
-            }
-            break;
         case CanvasMouseMode::SELECT_INFOMARKS:
         case CanvasMouseMode::CREATE_INFOMARKS:
         case CanvasMouseMode::SELECT_ROOMS:
@@ -349,7 +341,11 @@ void MapCanvas::wheelEvent(QWheelEvent *const event)
         case CanvasMouseMode::CREATE_ROOMS:
         case CanvasMouseMode::CREATE_CONNECTIONS:
         case CanvasMouseMode::CREATE_ONEWAY_CONNECTIONS:
-            layerUp();
+            if ((event->modifiers() & Qt::CTRL) != 0u) {
+                layerUp();
+            } else {
+                zoomOut();
+            }
             break;
 
         case CanvasMouseMode::NONE:
