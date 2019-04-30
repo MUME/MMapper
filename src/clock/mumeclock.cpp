@@ -36,6 +36,7 @@
 
 static constexpr const int DEFAULT_MUME_START_EPOCH = 1517443173;
 static constexpr const int DEFAULT_TOLERANCE_LIMIT = 10;
+static constexpr const int ONE_RL_DAY_IN_SECONDS = 86400;
 
 static inline int am(int h)
 {
@@ -193,6 +194,9 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
         }
     }
 
+    // Update last sync timestamp
+    m_lastSyncEpoch = secsSinceEpoch;
+
     // Calculate start of Mume epoch
     auto capturedMoment = MumeMoment(year, month, day, hour, minute);
     const int mumeSecsSinceEpoch = capturedMoment.toSeconds();
@@ -222,6 +226,9 @@ void MumeClock::parseWeather(const QString &str, int64_t secsSinceEpoch)
     if (!m_stringTimeHash.contains(str)) {
         return;
     }
+
+    // Update last sync timestamp
+    m_lastSyncEpoch = secsSinceEpoch;
 
     const MumeTime time = m_stringTimeHash.value(str);
     auto moment = MumeMoment::sinceMumeEpoch(secsSinceEpoch - m_mumeStartEpoch);
@@ -350,6 +357,18 @@ static const char *getOrdinalSuffix(const int day)
     default:
         return "th";
     }
+}
+
+MumeClockPrecision MumeClock::getPrecision()
+{
+    // TODO: Unit test this
+    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toTime_t();
+    if (m_precision == MumeClockPrecision::MUMECLOCK_MINUTE
+        && secsSinceEpoch - m_lastSyncEpoch > ONE_RL_DAY_IN_SECONDS) {
+        m_precision = MumeClockPrecision::MUMECLOCK_DAY;
+        emit log("MumeClock", "Precision lowered because clock has not been synced recently.");
+    }
+    return m_precision;
 }
 
 const QString MumeClock::toMumeTime(const MumeMoment &moment)

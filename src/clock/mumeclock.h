@@ -70,7 +70,7 @@ public:
     // TODO: #ifdef TEST?
     MumeMoment getMumeMoment(int64_t secsSinceUnixEpoch);
 
-    MumeClockPrecision getPrecision() { return m_precision; }
+    MumeClockPrecision getPrecision();
 
     const QString toMumeTime(const MumeMoment &moment);
 
@@ -175,6 +175,7 @@ protected:
 private:
     MumeMoment &unknownTimeTick(MumeMoment &moment);
 
+    int64_t m_lastSyncEpoch = 0;
     int64_t m_mumeStartEpoch = 0;
     MumeClockPrecision m_precision{};
     int m_clockTolerance = 0;
