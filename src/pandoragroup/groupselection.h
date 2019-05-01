@@ -72,6 +72,7 @@ public:
     auto cend() const { return chars.cend(); }
     auto end() const { return chars.end(); }
     auto size() const { return chars.size(); }
+    auto empty() const { return chars.empty(); }
 
 private:
     GroupAdmin *m_admin = nullptr;

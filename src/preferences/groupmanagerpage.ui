@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>456</width>
+    <width>465</width>
     <height>784</height>
    </rect>
   </property>
@@ -441,20 +441,27 @@ p, li { white-space: pre-wrap; }
    <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string>Group Tells</string>
+      <string>Group Tell Color</string>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_3">
-      <item>
-       <widget class="QLabel" name="label_11">
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="1" column="3">
+       <widget class="QPushButton" name="groupTellColorPushButton">
         <property name="text">
-         <string>Color:</string>
-        </property>
-        <property name="buddy">
-         <cstring>groupTellColorPushButton</cstring>
+         <string>Select</string>
         </property>
        </widget>
       </item>
-      <item>
+      <item row="1" column="1">
+       <widget class="QRadioButton" name="groupTellColorGlobalRadioButton">
+        <property name="text">
+         <string>Global:</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
        <widget class="QLabel" name="groupTellColorLabel">
         <property name="frameShape">
          <enum>QFrame::StyledPanel</enum>
@@ -476,14 +483,7 @@ p, li { white-space: pre-wrap; }
         </property>
        </widget>
       </item>
-      <item>
-       <widget class="QPushButton" name="groupTellColorPushButton">
-        <property name="text">
-         <string>Select</string>
-        </property>
-       </widget>
-      </item>
-      <item>
+      <item row="1" column="4">
        <spacer name="horizontalSpacer_2">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -495,6 +495,16 @@ p, li { white-space: pre-wrap; }
          </size>
         </property>
        </spacer>
+      </item>
+      <item row="2" column="1" colspan="3">
+       <widget class="QRadioButton" name="groupTellColorAnsi256RadioButton">
+        <property name="toolTip">
+         <string>Map character color to cloest 8bit ANSI 256 color</string>
+        </property>
+        <property name="text">
+         <string>Use character color</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
@@ -540,7 +550,9 @@ p, li { white-space: pre-wrap; }
   <tabstop>localPort</tabstop>
   <tabstop>lockGroupCheckBox</tabstop>
   <tabstop>shareSelfCheckBox</tabstop>
+  <tabstop>groupTellColorGlobalRadioButton</tabstop>
   <tabstop>groupTellColorPushButton</tabstop>
+  <tabstop>groupTellColorAnsi256RadioButton</tabstop>
   <tabstop>rulesWarning</tabstop>
  </tabstops>
  <resources/>

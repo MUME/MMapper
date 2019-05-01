@@ -64,8 +64,10 @@ protected:
 private:
     QColor m_foregroundColor{}, m_backgroundColor{};
     QFont m_serverOutputFont{};
-
-    bool m_backspace{};
+    // TODO: Create state machine
+    bool m_ansi256Foreground{false};
+    bool m_ansi256Background{false};
+    bool m_backspace{false};
 
     void setDefaultFormat(QTextCharFormat &format);
     void updateFormat(QTextCharFormat &format, int ansiCode);

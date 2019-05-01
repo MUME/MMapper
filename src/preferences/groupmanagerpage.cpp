@@ -130,8 +130,6 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
     ui->lockGroupCheckBox->setChecked(groupManager.lockGroup);
 
     // Client Section
-    const auto remoteHostText
-        = QString("%1:%2").arg(groupManager.host.constData()).arg(groupManager.remotePort);
     QSet<QString> contacts;
     for (int i = 0; i < authority->getItemModel()->rowCount(); i++) {
         // Pre-populate entries from Authorized Contacts
@@ -148,6 +146,8 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
         const auto name = authority->getMetadata(key, GroupMetadata::NAME);
         ui->remoteHost->setItemData(i, name.isEmpty() ? "Unknown" : name, Qt::ToolTipRole);
     }
+    const auto remoteHostText
+        = QString("%1:%2").arg(groupManager.host.constData()).arg(groupManager.remotePort);
     if (!contacts.contains(remoteHostText)) {
         // Add the entry from config if it wasn't already prepopulated
         ui->remoteHost->addItem(remoteHostText);
@@ -174,6 +174,12 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
                                                        this);
         AnsiCombo::makeWidgetColoured(ui->groupTellColorLabel, ansiString, false);
         setConfig().groupManager.groupTellColor = ansiString;
+    });
+    ui->groupTellColorAnsi256RadioButton->setChecked(
+        getConfig().groupManager.useGroupTellAnsi256Color);
+    connect(ui->groupTellColorAnsi256RadioButton, &QAbstractButton::toggled, this, [this]() {
+        setConfig().groupManager.useGroupTellAnsi256Color = ui->groupTellColorAnsi256RadioButton
+                                                                ->isChecked();
     });
 
     // Other Sections

@@ -286,6 +286,7 @@ ConstString KEY_FILE_NAME = "File name";
 ConstString KEY_FONT = "Font";
 ConstString KEY_FOREGROUND_COLOR = "Foreground color";
 ConstString KEY_GROUP_TELL_ANSI_COLOR = "Group tell ansi color";
+ConstString KEY_GROUP_TELL_USE_256_ANSI_COLOR = "Use group tell 256 ansi color";
 ConstString KEY_HOST = "host";
 ConstString KEY_LAST_MAP_LOAD_DIRECTORY = "Last map load directory";
 ConstString KEY_LINES_OF_INPUT_HISTORY = "Lines of input history";
@@ -630,6 +631,7 @@ void Configuration::GroupManagerSettings::read(QSettings &conf)
     geometry = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
     secretMetadata = conf.value(KEY_SECRET_METADATA).toMap();
     groupTellColor = conf.value(KEY_GROUP_TELL_ANSI_COLOR, QString(ANSI_GREEN)).toString();
+    useGroupTellAnsi256Color = conf.value(KEY_GROUP_TELL_USE_256_ANSI_COLOR, false).toBool();
     lockGroup = conf.value(KEY_LOCK_GROUP, false).toBool();
     autoStart = conf.value(KEY_AUTO_START_GROUP_MANAGER, false).toBool();
 }
@@ -763,6 +765,7 @@ void Configuration::GroupManagerSettings::write(QSettings &conf) const
     conf.setValue(KEY_WINDOW_GEOMETRY, geometry);
     conf.setValue(KEY_SECRET_METADATA, secretMetadata);
     conf.setValue(KEY_GROUP_TELL_ANSI_COLOR, groupTellColor);
+    conf.setValue(KEY_GROUP_TELL_USE_256_ANSI_COLOR, useGroupTellAnsi256Color);
     conf.setValue(KEY_LOCK_GROUP, lockGroup);
     conf.setValue(KEY_AUTO_START_GROUP_MANAGER, autoStart);
 }

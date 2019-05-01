@@ -123,4 +123,49 @@ static inline QColor textColor(const QColor color)
     return percentage < 65 ? QColor(Qt::white) : QColor(Qt::black);
 }
 
+static inline QColor ansi256toRgb(const int ansi)
+{
+    // 232-255: grayscale from black to white in 24 steps
+    if (ansi >= 232) {
+        const auto c = (ansi - 232) * 10 + 8;
+        return QColor(c, c, c);
+    }
+
+    // 16-231: 6 x 6 x 6 cube (216 colors): 16 + 36 * r + 6 * g + b
+    const auto colors = ansi - 16;
+    const auto remainder = colors % 36;
+    const auto r = static_cast<int>(floor(colors / 36) / 5 * 255);
+    const auto g = static_cast<int>(floor(remainder / 6) / 5 * 255);
+    const auto b = (remainder % 6) / 5 * 255;
+
+    return QColor(r, g, b);
+}
+
+static inline int rgbToAnsi256(const int r, const int g, const int b)
+{
+    // https://stackoverflow.com/questions/15682537/ansi-color-specific-rgb-sequence-bash
+    // we use the extended greyscale palette here, with the exception of
+    // black and white. normal palette only has 4 greyscale shades.
+    if (r == g && g == b) {
+        if (r < 8) {
+            return 16;
+        }
+
+        if (r > 248) {
+            return 231;
+        }
+
+        return static_cast<int>(round(((r - 8) / 247.0) * 24) + 232);
+    }
+    return static_cast<int>(16 + 36 * round(r / 255.0 * 5) + 6 * round(g / 255.0 * 5)
+                            + round(b / 255.0 * 5));
+}
+
+static inline QString rgbToAnsi256String(const QColor rgb, bool foreground = true)
+{
+    return QString("[%1;5;%2m")
+        .arg(foreground ? "38" : QString("%1;48").arg(textColor(rgb) == Qt::white ? "37" : "30"))
+        .arg(rgbToAnsi256(rgb.red(), rgb.green(), rgb.blue()));
+}
+
 #endif // MMAPPER_COLOR_H

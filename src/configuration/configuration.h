@@ -210,6 +210,7 @@ public:
         QByteArray geometry{};
         QMap<QString, QVariant> secretMetadata{};
         QString groupTellColor{}; // ANSI color
+        bool useGroupTellAnsi256Color = false;
         bool lockGroup = false;
         bool autoStart = false;
 

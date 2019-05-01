@@ -188,10 +188,26 @@ void DisplayWidget::displayText(const QString &str)
 
 void DisplayWidget::updateFormat(QTextCharFormat &format, int ansiCode)
 {
+    if (m_ansi256Foreground) {
+        if (ansiCode == 5)
+            return;
+        format.setForeground(ansi256toRgb(ansiCode));
+        m_ansi256Foreground = false;
+        return;
+    }
+    if (m_ansi256Background) {
+        if (ansiCode == 5)
+            return;
+        format.setBackground(ansi256toRgb(ansiCode));
+        m_ansi256Background = false;
+        return;
+    }
     switch (ansiCode) {
     case 0:
         // turn ANSI off (i.e. return to normal defaults)
         setDefaultFormat(format);
+        m_ansi256Background = false;
+        m_ansi256Foreground = false;
         break;
     case 1:
         // bold
@@ -290,6 +306,10 @@ void DisplayWidget::updateFormat(QTextCharFormat &format, int ansiCode)
         // gray foreground
         format.setForeground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 30)));
         break;
+    case 38:
+        // 256 color foreground
+        m_ansi256Foreground = true;
+        break;
     case 40:
         // black background
         format.setBackground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 40)));
@@ -321,6 +341,10 @@ void DisplayWidget::updateFormat(QTextCharFormat &format, int ansiCode)
     case 47:
         // gray background
         format.setBackground(ansiColor(static_cast<AnsiColorTable>(ansiCode - 40)));
+        break;
+    case 48:
+        // 256 color background
+        m_ansi256Background = true;
         break;
     case 90:
         // high-black foreground
