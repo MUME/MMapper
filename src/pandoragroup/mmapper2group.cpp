@@ -207,19 +207,17 @@ void Mmapper2Group::gTellArrived(const QVariantMap &node)
     }
     const QString &text = node["text"].toString();
 
-    auto name = from;
     auto color = getConfig().groupManager.groupTellColor;
     auto selection = getGroup()->selectByName(from);
     if (getConfig().groupManager.useGroupTellAnsi256Color && !selection->empty()) {
         auto character = selection->at(0);
-        name = character->getName().constData();
         color = rgbToAnsi256String(character->getColor(), false);
     }
-    emit log("GroupManager", QString("GTell from %1 arrived: %2").arg(name.constData()).arg(text));
+    emit log("GroupManager", QString("GTell from %1 arrived: %2").arg(from.constData()).arg(text));
 
     const QByteArray tell = QString("\x1b%1%2 tells you [GT] '%3'\x1b[0m")
                                 .arg(color)
-                                .arg(name.constData())
+                                .arg(from.constData())
                                 .arg(text)
                                 .toLatin1();
 

@@ -499,7 +499,7 @@ p, li { white-space: pre-wrap; }
       <item row="2" column="1" colspan="3">
        <widget class="QRadioButton" name="groupTellColorAnsi256RadioButton">
         <property name="toolTip">
-         <string>Map character color to cloest 8bit ANSI 256 color</string>
+         <string>Map character color to closest 8bit ANSI 256 color</string>
         </property>
         <property name="text">
          <string>Use character color</string>
