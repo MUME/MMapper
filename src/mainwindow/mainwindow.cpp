@@ -63,6 +63,7 @@
 #include "../mapdata/roomselection.h"
 #include "../mapfrontend/mapaction.h"
 #include "../mapfrontend/mapfrontend.h"
+#include "../mapstorage/MmpMapStorage.h"
 #include "../mapstorage/abstractmapstorage.h"
 #include "../mapstorage/filesaver.h"
 #include "../mapstorage/jsonmapstorage.h"
@@ -457,15 +458,17 @@ void MainWindow::createActions()
     saveAsAct->setStatusTip(tr("Save the document under a new name"));
     connect(saveAsAct, &QAction::triggered, this, &MainWindow::saveAs);
 
-    exportBaseMapAct = new QAction(QIcon::fromTheme("document-send"),
-                                   tr("Export &Base Map As..."),
-                                   this);
+    exportBaseMapAct = new QAction(tr("Export &Base Map As..."), this);
     exportBaseMapAct->setStatusTip(tr("Save a copy of the map with no secrets"));
     connect(exportBaseMapAct, &QAction::triggered, this, &MainWindow::exportBaseMap);
 
     exportWebMapAct = new QAction(tr("Export &Web Map As..."), this);
     exportWebMapAct->setStatusTip(tr("Save a copy of the map for webclients"));
     connect(exportWebMapAct, &QAction::triggered, this, &MainWindow::exportWebMap);
+
+    exportMmpMapAct = new QAction(tr("Export &MMP Map As..."), this);
+    exportMmpMapAct->setStatusTip(tr("Save a copy of the map in the MMP format"));
+    connect(exportMmpMapAct, &QAction::triggered, this, &MainWindow::exportMmpMap);
 
     mergeAct = new QAction(QIcon(":/icons/merge.png"), tr("&Merge..."), this);
     // mergeAct->setShortcut(tr("Ctrl+M"));
@@ -500,7 +503,7 @@ void MainWindow::createActions()
                                  tr("&Preferences"),
                                  this);
     preferencesAct->setShortcut(tr("Ctrl+P"));
-    preferencesAct->setStatusTip(tr("MMapper2 configuration"));
+    preferencesAct->setStatusTip(tr("MMapper preferences"));
     connect(preferencesAct, &QAction::triggered, this, &MainWindow::onPreferences);
 
     mmapperCheckForUpdateAct = new QAction(QIcon(":/icons/m.png"), tr("Check for &update"), this);
@@ -913,6 +916,7 @@ void MainWindow::disableActions(bool value)
     saveAsAct->setDisabled(value);
     exportBaseMapAct->setDisabled(value);
     exportWebMapAct->setDisabled(value);
+    exportMmpMapAct->setDisabled(value);
     exitAct->setDisabled(value);
     // cutAct->setDisabled(value);
     // copyAct->setDisabled(value);
@@ -949,8 +953,10 @@ void MainWindow::setupMenuBar()
     fileMenu->addAction(saveAct);
     fileMenu->addAction(saveAsAct);
     fileMenu->addSeparator();
-    fileMenu->addAction(exportBaseMapAct);
-    fileMenu->addAction(exportWebMapAct);
+    QMenu *exportMenu = fileMenu->addMenu(QIcon::fromTheme("document-send"), tr("&Export"));
+    exportMenu->addAction(exportBaseMapAct);
+    exportMenu->addAction(exportWebMapAct);
+    exportMenu->addAction(exportMmpMapAct);
     fileMenu->addAction(mergeAct);
     fileMenu->addSeparator();
     fileMenu->addAction(exitAct);
@@ -1274,7 +1280,7 @@ void MainWindow::merge()
     QString fileName = QFileDialog::getOpenFileName(this,
                                                     "Choose map file ...",
                                                     "",
-                                                    "MMapper2 (*.mm2);;MMapper (*.map)");
+                                                    "MMapper Maps (*.mm2)");
     if (!fileName.isEmpty()) {
         auto *file = new QFile(fileName);
 
@@ -1348,7 +1354,7 @@ void MainWindow::open()
     const QString fileName = QFileDialog::getOpenFileName(this,
                                                           "Choose map file ...",
                                                           savedLastMapDir,
-                                                          "MMapper2 (*.mm2);;MMapper (*.map)");
+                                                          "MMapper Maps (*.mm2)");
     if (!fileName.isEmpty()) {
         QFileInfo file(fileName);
         savedLastMapDir = file.dir().absolutePath();
@@ -1376,7 +1382,7 @@ std::unique_ptr<QFileDialog> MainWindow::createDefaultSaveDialog()
     auto save = std::make_unique<QFileDialog>(this, "Choose map file name ...");
     save->setFileMode(QFileDialog::AnyFile);
     save->setDirectory(QDir::current());
-    save->setNameFilter("MMapper2 (*.mm2)");
+    save->setNameFilter("MMapper Maps (*.mm2)");
     save->setDefaultSuffix("mm2");
     save->setAcceptMode(QFileDialog::AcceptSave);
     return save;
@@ -1449,6 +1455,28 @@ bool MainWindow::exportWebMap()
     }
 
     return saveFile(fileNames[0], SaveMode::SAVEM_BASEMAP, SaveFormat::SAVEF_WEB);
+}
+
+bool MainWindow::exportMmpMap()
+{
+    const auto makeSaveDialog = [this]() {
+        auto save = std::make_unique<QFileDialog>(this,
+                                                  "Choose map file name ...",
+                                                  QDir::current().absolutePath());
+        save->setFileMode(QFileDialog::AnyFile);
+        save->setDirectory(QDir::current());
+        save->setNameFilter("MMP Maps (*.xml)");
+        save->setDefaultSuffix("xml");
+        save->setAcceptMode(QFileDialog::AcceptSave);
+        return save;
+    };
+
+    const auto fileNames = getSaveFileNames(makeSaveDialog());
+    if (fileNames.isEmpty()) {
+        statusBar()->showMessage(tr("No filename provided"), 2000);
+        return false;
+    }
+    return saveFile(fileNames[0], SaveMode::SAVEM_FULL, SaveFormat::SAVEF_MMP);
 }
 
 void MainWindow::about()
@@ -1561,14 +1589,20 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode, SaveFormat for
     }
 
     std::unique_ptr<AbstractMapStorage> storage;
-    if (format == SaveFormat::SAVEF_WEB) {
-        storage.reset(
-            static_cast<AbstractMapStorage *>(new JsonMapStorage(*m_mapData, fileName, this)));
-    } else {
+    switch (format) {
+    case SaveFormat::SAVEF_MM2:
         storage.reset(static_cast<AbstractMapStorage *>(
             new MapStorage(*m_mapData, fileName, &saver.file(), this)));
+        break;
+    case SaveFormat::SAVEF_MMP:
+        storage.reset(static_cast<AbstractMapStorage *>(
+            new MmpMapStorage(*m_mapData, fileName, &saver.file(), this)));
+        break;
+    case SaveFormat::SAVEF_WEB:
+        storage.reset(
+            static_cast<AbstractMapStorage *>(new JsonMapStorage(*m_mapData, fileName, this)));
+        break;
     }
-
     if (!storage->canSave()) {
         return false;
     }

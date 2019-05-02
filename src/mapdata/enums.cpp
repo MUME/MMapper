@@ -56,6 +56,7 @@ DEFINE_GETTER_DEFINED(RoomSundeathType, NUM_SUNDEATH_TYPES, getDefinedRoomSundea
 DEFINE_GETTER_DEFINED(RoomPortableType, NUM_PORTABLE_TYPES, getDefinedRoomPortbleTypes)
 DEFINE_GETTER_DEFINED(RoomRidableType, NUM_RIDABLE_TYPES, getDefinedRoomRidableTypes)
 DEFINE_GETTER_DEFINED(RoomAlignType, NUM_ALIGN_TYPES, getDefinedRoomAlignTypes)
+DEFINE_GETTER(RoomTerrainType, NUM_ROOM_TERRAIN_TYPES, getAllTerrainTypes)
 DEFINE_GETTER(RoomMobFlag, NUM_ROOM_MOB_FLAGS, getAllMobFlags)
 DEFINE_GETTER(RoomLoadFlag, NUM_ROOM_LOAD_FLAGS, getAllLoadFlags)
 DEFINE_GETTER(DoorFlag, NUM_DOOR_FLAGS, getAllDoorFlags)

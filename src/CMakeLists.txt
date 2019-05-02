@@ -155,6 +155,8 @@ set(mmapper_SRCS
     mapstorage/jsonmapstorage.h
     mapstorage/mapstorage.cpp
     mapstorage/mapstorage.h
+    mapstorage/MmpMapStorage.cpp
+    mapstorage/MmpMapStorage.h
     mapstorage/progresscounter.cpp
     mapstorage/progresscounter.h
     mapstorage/roomsaver.cpp

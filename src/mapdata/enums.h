@@ -42,6 +42,7 @@ DECL_GETTER_DEFINED(RoomSundeathType, NUM_SUNDEATH_TYPES, getDefinedRoomSundeath
 DECL_GETTER_DEFINED(RoomPortableType, NUM_PORTABLE_TYPES, getDefinedRoomPortbleTypes)
 DECL_GETTER_DEFINED(RoomRidableType, NUM_RIDABLE_TYPES, getDefinedRoomRidableTypes)
 DECL_GETTER_DEFINED(RoomAlignType, NUM_ALIGN_TYPES, getDefinedRoomAlignTypes)
+DECL_GETTER(RoomTerrainType, NUM_ROOM_TERRAIN_TYPES, getAllTerrainTypes)
 DECL_GETTER(RoomMobFlag, NUM_ROOM_MOB_FLAGS, getAllMobFlags)
 DECL_GETTER(RoomLoadFlag, NUM_ROOM_LOAD_FLAGS, getAllLoadFlags)
 DECL_GETTER(DoorFlag, NUM_DOOR_FLAGS, getAllDoorFlags)
@@ -51,6 +52,7 @@ DECL_GETTER(ExitFlag, NUM_EXIT_FLAGS, getAllExitFlags)
 #undef DECL_GETTER
 #undef DECL_GETTER_DEFINED
 
+#define ALL_TERRAIN_TYPES ::enums::getAllTerrainTypes()
 #define ALL_DOOR_FLAGS ::enums::getAllDoorFlags()
 #define ALL_EXIT_FLAGS ::enums::getAllExitFlags()
 #define ALL_MOB_FLAGS ::enums::getAllMobFlags()

@@ -91,7 +91,7 @@ public:
     ~MainWindow() override;
 
     enum class SaveMode { SAVEM_FULL, SAVEM_BASEMAP };
-    enum class SaveFormat { SAVEF_MM2, SAVEF_WEB };
+    enum class SaveFormat { SAVEF_MM2, SAVEF_WEB, SAVEF_MMP };
     bool saveFile(const QString &fileName, SaveMode mode, SaveFormat format);
     void loadFile(const QString &fileName);
     void setCurrentFile(const QString &fileName);
@@ -111,6 +111,7 @@ public slots:
     bool saveAs();
     bool exportBaseMap();
     bool exportWebMap();
+    bool exportMmpMap();
     void about();
 
     void percentageChanged(quint32);
@@ -228,6 +229,7 @@ private:
     QAction *saveAsAct = nullptr;
     QAction *exportBaseMapAct = nullptr;
     QAction *exportWebMapAct = nullptr;
+    QAction *exportMmpMapAct = nullptr;
     QAction *exitAct = nullptr;
     // QAction *cutAct;
     // QAction *copyAct;
