@@ -55,6 +55,7 @@ public:
     static const char *parse_help;
 
     bool filter(const Room *r) const;
+    pattern_kinds patternKind() const { return kind; }
 
 protected:
     QString pattern{};

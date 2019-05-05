@@ -739,6 +739,11 @@ ShortestPathEmitter::~ShortestPathEmitter() = default;
 
 void AbstractParser::searchCommand(const RoomFilter &f)
 {
+    if (f.patternKind() == pattern_kinds::NONE) {
+        emit newRoomSelection(SigRoomSelection{});
+        sendToUser("OK. Rooms unselected.\r\n");
+        return;
+    }
     const auto tmpSel = RoomSelection::createSelection(*m_mapData);
     tmpSel->genericSearch(f);
     emit showPath(queue, true);
@@ -1079,8 +1084,8 @@ void AbstractParser::showHelp()
                      "\r\nOther commands:\n"
                      "  %1vote                      - vote for MUME on TMC!\r\n"
                      "  %1dirs [-options] pattern   - directions to matching rooms\r\n"
-                     "  %1search [-options] pattern - highlight matching rooms\r\n"
-                     "  %1markcurrent               - highlight the room you are currently in\r\n"
+                     "  %1search [-options] pattern - select matching rooms\r\n"
+                     "  %1markcurrent               - select the room you are currently in\r\n"
                      "  %1time                      - display current MUME time\r\n"
                      "  %1set [prefix [punct-char]] - change command prefix\r\n");
 

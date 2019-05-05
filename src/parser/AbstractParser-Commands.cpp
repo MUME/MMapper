@@ -728,7 +728,7 @@ void AbstractParser::parseGroupKick(const StringView &view)
 void AbstractParser::parseSearch(StringView view)
 {
     if (view.isEmpty())
-        showSyntax("search [-(name|desc|dyncdesc|note|exits|all)] pattern");
+        showSyntax("search [-(name|desc|dyncdesc|note|exits|all|clear)] pattern");
     else
         doSearchCommand(view);
 }

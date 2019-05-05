@@ -31,7 +31,7 @@
 #include "mmapper2room.h"
 
 const char *RoomFilter::parse_help
-    = "Parse error; format is: [-(name|desc|dyndesc|note|exits|all)] pattern\r\n";
+    = "Parse error; format is: [-(name|desc|dyndesc|note|exits|all|clear)] pattern\r\n";
 
 bool RoomFilter::parseRoomFilter(const QString &line, RoomFilter &output)
 {
@@ -51,13 +51,18 @@ bool RoomFilter::parseRoomFilter(const QString &line, RoomFilter &output)
             kind = pattern_kinds::NOTE;
         } else if (kindstr == "-all" || kindstr == "-a") {
             kind = pattern_kinds::ALL;
+        } else if (kindstr == "-clear" || kindstr == "-c") {
+            kind = pattern_kinds::NONE;
         } else {
             return false;
         }
 
-        pattern = line.section(" ", 1);
-        if (pattern.isEmpty()) {
-            return false;
+        // Require pattern text in addition to arguments
+        if (kind != pattern_kinds::NONE) {
+            pattern = line.section(" ", 1);
+            if (pattern.isEmpty()) {
+                return false;
+            }
         }
     }
     output = RoomFilter(pattern, Qt::CaseInsensitive, kind);
