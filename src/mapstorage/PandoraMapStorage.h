@@ -23,37 +23,38 @@
 **
 ************************************************************************/
 
-#ifndef MMPMAPSTORAGE_H
-#define MMPMAPSTORAGE_H
+#ifndef PANDORAMAPSTORAGE_H
+#define PANDORAMAPSTORAGE_H
 
 #include <QString>
 #include <QtCore>
 
+#include "../expandoracommon/coordinate.h"
+#include "../mapdata/roomfactory.h"
 #include "abstractmapstorage.h"
 
 class MapData;
 class QObject;
-class QXmlStreamWriter;
 
-/*! \brief MMP export for other clients
+/*! \brief Pandora Mapper XML save loader
  *
- * This saves to a XML file following the MMP Specification defined at:
- * https://wiki.mudlet.org/w/Standards:MMP
+ * This loads XML files given the schema provided in the default Pandora Mapper file:
+ * https://raw.githubusercontent.com/MUME/PandoraMapper/master/deploy/mume.xml
  */
-class MmpMapStorage : public AbstractMapStorage
+class PandoraMapStorage : public AbstractMapStorage
 {
     Q_OBJECT
 
 public:
-    explicit MmpMapStorage(MapData &, const QString &, QFile *, QObject *parent = nullptr);
-    ~MmpMapStorage() override;
+    explicit PandoraMapStorage(MapData &, const QString &, QFile *, QObject *parent = nullptr);
+    ~PandoraMapStorage() override;
 
 public:
-    explicit MmpMapStorage() = delete;
+    explicit PandoraMapStorage() = delete;
 
 private:
-    virtual bool canLoad() const override { return false; }
-    virtual bool canSave() const override { return true; }
+    virtual bool canLoad() const override { return true; }
+    virtual bool canSave() const override { return false; }
 
     virtual void newData() override;
     virtual bool loadData() override;
@@ -61,7 +62,14 @@ private:
     virtual bool mergeData() override;
 
 private:
-    void saveRoom(const Room &room, QXmlStreamWriter &stream);
+    Room *loadRoom(QXmlStreamReader &);
+    void loadExits(Room &, QXmlStreamReader &);
+
+private:
+    RoomFactory factory{};
+
+    uint32_t baseId = 0u;
+    Coordinate basePosition{};
 };
 
-#endif // MMPMAPSTORAGE_H
+#endif // PANDORAMAPSTORAGE_H

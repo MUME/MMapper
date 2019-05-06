@@ -1,8 +1,6 @@
 /************************************************************************
 **
-** Authors:   Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve),
-**            Marek Krejza <krejza@gmail.com> (Caligor),
-**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
+** Authors:   Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
 ** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
@@ -30,6 +28,7 @@
 #include <cstddef>
 #include <stdexcept>
 #include <QString>
+#include <QXmlStreamWriter>
 
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/exit.h"
@@ -58,7 +57,7 @@ MmpMapStorage::~MmpMapStorage() = default;
 
 void MmpMapStorage::newData()
 {
-    static_assert("MmpMapStorage does not implement newData()" != nullptr, "");
+    static_assert("MmpMapStorage does not implement newData()" != nullptr);
 }
 
 bool MmpMapStorage::loadData()

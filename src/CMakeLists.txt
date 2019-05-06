@@ -157,6 +157,8 @@ set(mmapper_SRCS
     mapstorage/mapstorage.h
     mapstorage/MmpMapStorage.cpp
     mapstorage/MmpMapStorage.h
+    mapstorage/PandoraMapStorage.cpp
+    mapstorage/PandoraMapStorage.h
     mapstorage/progresscounter.cpp
     mapstorage/progresscounter.h
     mapstorage/roomsaver.cpp

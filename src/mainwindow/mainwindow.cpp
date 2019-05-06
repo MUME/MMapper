@@ -64,6 +64,7 @@
 #include "../mapfrontend/mapaction.h"
 #include "../mapfrontend/mapfrontend.h"
 #include "../mapstorage/MmpMapStorage.h"
+#include "../mapstorage/PandoraMapStorage.h"
 #include "../mapstorage/abstractmapstorage.h"
 #include "../mapstorage/filesaver.h"
 #include "../mapstorage/jsonmapstorage.h"
@@ -1351,10 +1352,11 @@ void MainWindow::open()
         return;
 
     auto &savedLastMapDir = setConfig().autoLoad.lastMapDirectory;
-    const QString fileName = QFileDialog::getOpenFileName(this,
-                                                          "Choose map file ...",
-                                                          savedLastMapDir,
-                                                          "MMapper Maps (*.mm2)");
+    const QString fileName
+        = QFileDialog::getOpenFileName(this,
+                                       "Choose map file ...",
+                                       savedLastMapDir,
+                                       "MMapper Maps (*.mm2);;Pandora Maps (*.xml)");
     if (!fileName.isEmpty()) {
         QFileInfo file(fileName);
         savedLastMapDir = file.dir().absolutePath();
@@ -1530,19 +1532,29 @@ void MainWindow::loadFile(const QString &fileName)
     progressDlg->setValue(0);
     progressDlg->show();
 
-    auto *storage = static_cast<AbstractMapStorage *>(
-        new MapStorage(*m_mapData, fileName, file, this));
+    bool isPandoraMap = fileName.toLower().contains("xml");
+    std::unique_ptr<AbstractMapStorage> storage;
+    if (isPandoraMap) {
+        storage.reset(static_cast<AbstractMapStorage *>(
+            new PandoraMapStorage(*m_mapData, fileName, file, this)));
+    } else {
+        storage.reset(
+            static_cast<AbstractMapStorage *>(new MapStorage(*m_mapData, fileName, file, this)));
+    }
     // REVISIT: refactor the connections to a common function?
-    connect(storage,
+    connect(storage.get(),
             &AbstractMapStorage::onDataLoaded,
             m_mapWindow->getCanvas(),
             &MapCanvas::dataLoaded);
-    connect(storage, &AbstractMapStorage::onDataLoaded, m_groupWidget, &GroupWidget::mapLoaded);
+    connect(storage.get(),
+            &AbstractMapStorage::onDataLoaded,
+            m_groupWidget,
+            &GroupWidget::mapLoaded);
     connect(&storage->getProgressCounter(),
             &ProgressCounter::onPercentageChanged,
             this,
             &MainWindow::percentageChanged);
-    connect(storage, &AbstractMapStorage::log, this, &MainWindow::log);
+    connect(storage.get(), &AbstractMapStorage::log, this, &MainWindow::log);
 
     disableActions(true);
     m_mapWindow->getCanvas()->hide();
@@ -1555,10 +1567,10 @@ void MainWindow::loadFile(const QString &fileName)
     // copyAct->setEnabled(false);
     // pasteAct->setEnabled(false);
 
-    delete storage;
     delete progressDlg;
 
-    setCurrentFile(fileName);
+    setCurrentFile(m_mapData->getFileName());
+
     statusBar()->showMessage(tr("File loaded"), 2000);
     delete file;
 }
