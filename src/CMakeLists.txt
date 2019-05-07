@@ -181,6 +181,8 @@ set(mmapper_SRCS
     pandoragroup/CGroupCommunicator.h
     pandoragroup/CGroup.cpp
     pandoragroup/CGroup.h
+    pandoragroup/enums.cpp
+    pandoragroup/enums.h
     pandoragroup/GroupClient.cpp
     pandoragroup/GroupClient.h
     pandoragroup/GroupPortMapper.cpp

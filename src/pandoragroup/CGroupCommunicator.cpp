@@ -86,6 +86,7 @@ QByteArray CGroupCommunicator::formMessageBlock(const Messages message, const QV
         xml.writeAttribute("maxmoves", playerData["maxmoves"].toString());
         xml.writeAttribute("room", playerData["room"].toString());
         xml.writeAttribute("prespam", playerData["prespam"].toString());
+        xml.writeAttribute("affects", playerData["affects"].toString());
         // REVISIT: Use static keys
         xml.writeEndElement();
     };
@@ -240,6 +241,7 @@ void CGroupCommunicator::incomingData(GroupSocket *const socket, const QByteArra
                 playerData["color"] = attributes.value("color").toString();
                 playerData["room"] = attributes.value("room").toUInt();
                 playerData["prespam"] = attributes.value("prespam").toString().toLatin1();
+                playerData["affects"] = attributes.value("affects").toUInt();
                 data["playerData"] = playerData;
             }
             break;

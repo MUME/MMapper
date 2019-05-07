@@ -44,6 +44,7 @@ public:
     int mana = 0, maxmana = 0;
     int moves = 0, maxmoves = 0;
     CharacterPosition position = CharacterPosition::UNDEFINED;
+    CharacterAffects affects{};
     CommandQueue prespam{};
 
     explicit CGroupChar();

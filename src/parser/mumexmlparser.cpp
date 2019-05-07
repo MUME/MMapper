@@ -541,26 +541,63 @@ void MumeXmlParser::move()
 
 void MumeXmlParser::parseMudCommands(const QString &str)
 {
-    if (str.at(0) == ('Y')) {
-        if (str.startsWith("You are dead!")) {
+    // REVISIT: Replace this if/else tree with a smarter data structure
+    // REVISIT: Utilize the XML tag for more context?
+    switch (str.at(0).toLatin1()) {
+    case 'Y':
+        if (str.startsWith("Your head stops stinging.")) {
+            emit sendCharacterAffectEvent(CharacterAffect::BASHED, false);
+            return;
+
+        } else if (str.startsWith("You feel a cloak of blindness dissolve.")) {
+            emit sendCharacterAffectEvent(CharacterAffect::BLIND, false);
+            return;
+
+        } else if (str.startsWith("You have been blinded!")) {
+            emit sendCharacterAffectEvent(CharacterAffect::BLIND, true);
+            return;
+
+        } else if (str.startsWith("You feel very sleepy... zzzzzz")) {
+            emit sendCharacterPositionEvent(CharacterPosition::SLEEPING);
+            emit sendCharacterAffectEvent(CharacterAffect::SLEPT, true);
+            return;
+
+        } else if (str.startsWith("You feel less tired.")) {
+            emit sendCharacterAffectEvent(CharacterAffect::SLEPT, false);
+            return;
+
+        } else if (str.startsWith(
+                       "Your body turns numb as the poison speeds to your brain!") // Arachnia
+                   || str.startsWith("You feel bad.")                              // ?
+                   || str.startsWith("You feel very sick.")                        // ?
+                   || str.startsWith("You suddenly feel a terrible headache!")     // Psylonia
+        ) {
+            emit sendCharacterAffectEvent(CharacterAffect::POISONED, true);
+            return;
+
+        } else if (str.startsWith("You are dead!")) {
             queue.clear();
             emit showPath(queue, true);
             emit releaseAllPaths();
             markCurrentCommand();
             emit sendCharacterPositionEvent(CharacterPosition::DEAD);
             return;
+
         } else if (str.startsWith("You failed to climb")) {
             if (!queue.isEmpty())
                 queue.dequeue();
             queue.prepend(CommandIdType::NONE); // REVISIT: Do we need this?
             emit showPath(queue, true);
             return;
+
         } else if (str.startsWith("You flee head")) {
             queue.enqueue(CommandIdType::LOOK);
             return;
+
         } else if (str.startsWith("You follow")) {
             queue.enqueue(CommandIdType::LOOK);
             return;
+
         } else if (str.startsWith("You need to swim to go there.")
                    || str.startsWith("You cannot ride there.")
                    || str.startsWith("You are too exhausted.")
@@ -572,28 +609,33 @@ void MumeXmlParser::parseMudCommands(const QString &str)
                 queue.dequeue();
             emit showPath(queue, true);
             return;
+
         } else if (str.startsWith("You quietly scout")) {
             queue.prepend(CommandIdType::SCOUT);
             return;
+
         } else if (str.startsWith("You go to sleep.")
-                   || str.startsWith("You are already sound asleep.")
-                   || str.startsWith("You feel very sleepy... zzzzzz")) {
+                   || str.startsWith("You are already sound asleep.")) {
             emit sendCharacterPositionEvent(CharacterPosition::SLEEPING);
+            return;
 
         } else if (str.startsWith("You wake, and sit up.") || str.startsWith("You sit down.")
                    || str.startsWith("You stop resting and sit up.")
                    || str.startsWith("You're sitting already.")) {
             emit sendCharacterPositionEvent(CharacterPosition::SITTING);
+            return;
 
         } else if (str.startsWith("You rest your tired bones.")
                    || str.startsWith("You sit down and rest your tired bones.")
                    || str.startsWith("You are already resting.")) {
             emit sendCharacterPositionEvent(CharacterPosition::RESTING);
+            return;
 
         } else if (str.startsWith("You stop resting and stand up.")
                    || str.startsWith("You stand up.")
                    || str.startsWith("You are already standing.")) {
             emit sendCharacterPositionEvent(CharacterPosition::STANDING);
+            return;
 
         } else if (str.startsWith("You are incapacitated and will slowly die, if not aided.")
                    || str.startsWith("You are in a pretty bad shape, unable to do anything!")
@@ -601,10 +643,14 @@ void MumeXmlParser::parseMudCommands(const QString &str)
                        "You're stunned and will probably die soon if no-one helps you.")
                    || str.startsWith("You are mortally wounded and will die soon if not aided.")) {
             emit sendCharacterPositionEvent(CharacterPosition::INCAPACITATED);
+            return;
         }
-    } else if (str.at(0) == 'T') {
+        break;
+    case 'T':
         if (str.startsWith("The current time is")) {
             m_mumeClock->parseClockTime(str);
+            return;
+
             // The door
         } else if (str.endsWith("seems to be closed.")
                    // The (a|de)scent
@@ -612,53 +658,89 @@ void MumeXmlParser::parseMudCommands(const QString &str)
             if (!queue.isEmpty())
                 queue.dequeue();
             emit showPath(queue, true);
+            return;
+
+        } else if (str.startsWith("The venom enters your body!")) {
+            emit sendCharacterAffectEvent(CharacterAffect::POISONED, true);
+            return;
         }
-    } else if (str.at(0) == 'A') {
+        break;
+    case 'A':
         if (str.startsWith("Alas, you cannot go that way...")
             // A pack horse
             || str.endsWith("is too exhausted.")) {
             if (!queue.isEmpty())
                 queue.dequeue();
             emit showPath(queue, true);
+            return;
+
+        } else if (str.startsWith("A warm feeling runs through your body, you feel better.")) {
+            // Remove poison <magic>
+            emit sendCharacterAffectEvent(CharacterAffect::POISONED, false);
+            return;
+
+        } else if (str.startsWith("A warm feeling fills your body.")) {
+            // Heal <magic>
+            emit sendCharacterAffectEvent(CharacterAffect::POISONED, false);
+            return;
         }
-    } else if (str.at(0) == 'N') {
+        break;
+
+    case 'N':
         if (str.startsWith("No way! You are fighting for your life!")
             || str.startsWith("Nah... You feel too relaxed to do that.")) {
             if (!queue.isEmpty())
                 queue.dequeue();
             emit showPath(queue, true);
+            return;
         }
-    } else if (str.at(0) == 'M') {
+        break;
+    case 'M':
         if (str.startsWith("Maybe you should get on your feet first?")) {
             if (!queue.isEmpty())
                 queue.dequeue();
             emit showPath(queue, true);
+            return;
         }
-    } else if (str.at(0) == 'I') {
+        break;
+    case 'I':
         if (str.startsWith("In your dreams, or what?")) {
             if (!queue.isEmpty())
                 queue.dequeue();
             emit showPath(queue, true);
+            return;
         }
-    } else if (str.at(0) == 'Z') {
-        // pack horse
-        if (str.endsWith("doesn't want you riding him anymore.")
-            // donkey
-            || str.endsWith("doesn't want you riding her anymore.")
-            // hungry warg
-            || str.endsWith("doesn't want you riding it anymore.")) {
+        break;
+    case 'Z':
+        // ZBLAM!
+        if (str.endsWith("doesn't want you riding him anymore.")    // pack horse / pony
+            || str.endsWith("doesn't want you riding her anymore.") // donkey
+            || str.endsWith("doesn't want you riding it anymore.")  // hungry warg
+        ) {
             if (!queue.isEmpty())
                 queue.dequeue();
             emit showPath(queue, true);
+            return;
         }
-    }
+        break;
+    };
+
     if (str.endsWith("of the Third Age.")) {
         m_mumeClock->parseMumeTime(str);
+        return;
+    }
+
+    // REVISIT: Move this to only be detected on <damage> XML tag?
+    // What about custom mob bashes?
+    if (str.endsWith("sends you sprawling with a powerful bash.")) {
+        emit sendCharacterAffectEvent(CharacterAffect::BASHED, true);
+        return;
     }
 
     // Certain weather events happen on ticks
     if (m_readWeatherTag) {
         m_readWeatherTag = false;
         m_mumeClock->parseWeather(str);
+        return;
     }
 }

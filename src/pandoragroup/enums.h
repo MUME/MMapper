@@ -23,22 +23,31 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_FILENAMES_H
-#define MMAPPER_FILENAMES_H
+#ifndef MMAPPER_PANDORAGROUP_ENUMS_H
+#define MMAPPER_PANDORAGROUP_ENUMS_H
 
-#include <QtCore/QString>
+#include <array>
+#include <vector>
 
-#include "../mapdata/mmapper2room.h"
-#include "../pandoragroup/mmapper2character.h"
-#include "RoadIndex.h"
+#include "groupauthority.h"
+#include "mmapper2character.h"
 
-QString getPixmapFilenameRaw(QString name);
-QString getPixmapFilename(RoomTerrainType);
-QString getPixmapFilename(RoomLoadFlag);
-QString getPixmapFilename(RoomMobFlag);
-QString getPixmapFilename(TaggedRoad);
-QString getPixmapFilename(TaggedTrail);
-QString getIconFilename(CharacterPosition);
-QString getIconFilename(CharacterAffect);
+#define DECL_GETTER(E, N, name) const std::array<E, N> &name();
+#define DECL_GETTER_DEFINED(E, N, name) const std::vector<E> &name();
 
-#endif // MMAPPER_FILENAMES_H
+namespace enums {
+DECL_GETTER_DEFINED(CharacterPosition, NUM_CHARACTER_POSITIONS, getAllCharacterPositions)
+DECL_GETTER(GroupMetadata, NUM_GROUP_METADATA, getAllGroupMetadata)
+DECL_GETTER(CharacterAffect, NUM_CHARACTER_AFFECTS, getAllCharacterAffects)
+} // namespace enums
+
+#undef DECL_GETTER
+#undef DECL_GETTER_DEFINED
+
+#define ALL_GROUP_METADATA enums::getAllGroupMetadata()
+#define ALL_CHARACTER_AFFECTS ::enums::getAllCharacterAffects()
+
+/* NOTE: These are actually used; but they're hidden in macros as DEFINED_CHARACTER_##X##_TYPES */
+#define DEFINED_CHARACTER_POSITIONS ::enums::getDefinedCharacterPositions()
+
+#endif // MMAPPER_PANDORAGROUP_ENUMS_H

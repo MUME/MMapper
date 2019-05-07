@@ -47,7 +47,9 @@ class GroupStateData
 {
 public:
     explicit GroupStateData() = default;
-    explicit GroupStateData(const QColor &color, const CharacterPosition position);
+    explicit GroupStateData(const QColor &color,
+                            const CharacterPosition position,
+                            const CharacterAffects affects);
 
 public:
     void paint(QPainter *painter, const QRect &rect);
@@ -56,6 +58,8 @@ public:
 private:
     QColor color;
     CharacterPosition position;
+    CharacterAffects affects;
+    int imageCount;
 };
 Q_DECLARE_METATYPE(GroupStateData)
 

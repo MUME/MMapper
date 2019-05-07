@@ -217,68 +217,68 @@ void AbstractParser::parsePrompt(const QString &prompt)
     m_promptFlags.reset();
     int index = 0;
 
-    switch (static_cast<int>(prompt[index].toLatin1())) {
-    case 42:
+    switch (prompt[index].toLatin1()) {
+    case '*': // indoor/sun (direct and indirect)
         index++;
         m_promptFlags.setLit();
-        break; // *  indoor/sun (direct and indirect)
-    case 33:
+        break;
+    case '!': // artifical light
         index++;
-        break; // !  artifical light
-    case 41:
+        break;
+    case ')': // moon (direct and indirect)
         index++;
         m_promptFlags.setLit();
-        break; // )  moon (direct and indirect)
-    case 111:
-        index++; // o  darkness
+        break;
+    case 'o': // darkness
+        index++;
         m_promptFlags.setDark();
         break;
     default:;
     }
 
-    switch (static_cast<int>(prompt[index].toLatin1())) {
-    case 91:
+    switch (prompt[index].toLatin1()) {
+    case '[':
         m_promptFlags.setTerrainType(RoomTerrainType::INDOORS);
-        break; // [  // indoors
-    case 35:
+        break;
+    case '#':
         m_promptFlags.setTerrainType(RoomTerrainType::CITY);
-        break; // #  // city
-    case 46:
+        break;
+    case '.':
         m_promptFlags.setTerrainType(RoomTerrainType::FIELD);
-        break; // .  // field
-    case 102:
+        break;
+    case 'f':
         m_promptFlags.setTerrainType(RoomTerrainType::FOREST);
-        break; // f  // forest
-    case 40:
+        break;
+    case '(':
         m_promptFlags.setTerrainType(RoomTerrainType::HILLS);
-        break; // (  // hills
-    case 60:
+        break;
+    case '<':
         m_promptFlags.setTerrainType(RoomTerrainType::MOUNTAINS);
-        break; // <  // mountains
-    case 37:
+        break;
+    case '%':
         m_promptFlags.setTerrainType(RoomTerrainType::SHALLOW);
-        break; // %  // shallow
-    case 126:
+        break;
+    case '~':
         m_promptFlags.setTerrainType(RoomTerrainType::WATER);
-        break; // ~  // water
-    case 87:
+        break;
+    case 'W':
         m_promptFlags.setTerrainType(RoomTerrainType::RAPIDS);
-        break; // W  // rapids
-    case 85:
+        break;
+    case 'U':
         m_promptFlags.setTerrainType(RoomTerrainType::UNDERWATER);
-        break; // U  // underwater
-    case 43:
+        break;
+    case '+':
         m_promptFlags.setTerrainType(RoomTerrainType::ROAD);
-        break; // +  // road
-    case 61:
+        break;
+    case '=':
         m_promptFlags.setTerrainType(RoomTerrainType::TUNNEL);
-        break; // =  // tunnel
-    case 79:
+        break;
+    case 'O':
         m_promptFlags.setTerrainType(RoomTerrainType::CAVERN);
-        break; // O  // cavern
-    case 58:
+        break;
+    case ':':
         m_promptFlags.setTerrainType(RoomTerrainType::BRUSH);
-        break; // :  // brush
+        break;
     default:
         break;
     }
@@ -308,44 +308,44 @@ void AbstractParser::parseExits()
     }
     int length = str.length();
     for (int i = 7; i < length; i++) {
-        switch (static_cast<int>(str.at(i).toLatin1())) {
-        case 40:
+        switch (str.at(i).toLatin1()) {
+        case '(': // open door
             doors = true;
-            break; // (  // open door
-        case 91:
+            break;
+        case '[': // closed door
             doors = true;
             closed = true;
-            break; // [  // closed door
-        case 35:
+            break;
+        case '#': // broken door
             doors = true;
-            break; // #  // broken door
-        case 61:
+            break;
+        case '=': // road
             road = true;
-            break; // =  // road
-        case 45:
+            break;
+        case '-': // trail
             road = true;
-            break; // -  // trail
-        case 47:
+            break;
+        case '/': // upward climb
             climb = true;
-            break; // /  // upward climb
-        case 92:
+            break;
+        case '\\': // downward climb
             climb = true;
-            break; // \  // downward climb
-        case 123:
+            break;
+        case '{': // portal
             portal = true;
-            break; // {  // portal
-        case 42:
+            break;
+        case '*': // sunlit room (troll/orc only)
             directSun = true;
-            break; // *  // sunlit room (troll/orc only)
-        case 94:
-            directSun = true; // ^  // outdoors room (troll only)
+            break;
+        case '^': // outdoors room (troll only)
+            directSun = true;
             if (!m_trollExitMapping) {
                 emit log("Parser", "Autoenabling troll exit mapping mode.");
             }
             m_trollExitMapping = true;
             break;
 
-        case 32: // empty space means reset for next exit
+        case ' ': // empty space means reset for next exit
             doors = false;
             closed = false;
             road = false;
@@ -355,7 +355,7 @@ void AbstractParser::parseExits()
             dir = DirectionType::UNKNOWN;
             break;
 
-        case 110:                                                        // n
+        case 'n':
             if ((i + 2) < length && (str.at(i + 2).toLatin1()) == 'r') { // north
                 i += 5;
                 dir = DirectionType::NORTH;
@@ -365,27 +365,27 @@ void AbstractParser::parseExits()
             }
             break;
 
-        case 115: // s
+        case 's':
             i += 5;
             dir = DirectionType::SOUTH;
             break;
 
-        case 101: // e
+        case 'e':
             i += 4;
             dir = DirectionType::EAST;
             break;
 
-        case 119: // w
+        case 'w':
             i += 4;
             dir = DirectionType::WEST;
             break;
 
-        case 117: // u
+        case 'u':
             i += 2;
             dir = DirectionType::UP;
             break;
 
-        case 100: // d
+        case 'd':
             i += 4;
             dir = DirectionType::DOWN;
             break;

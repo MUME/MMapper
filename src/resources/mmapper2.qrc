@@ -153,6 +153,10 @@
         <file>icons/group-sleeping.png</file>
         <file>icons/group-incapacitated.png</file>
         <file>icons/group-dead.png</file>
+        <file>icons/group-blind.png</file>
+        <file>icons/group-bashed.png</file>
+        <file>icons/group-slept.png</file>
+        <file>icons/group-poisoned.png</file>
         <file>fonts/DejaVuSansMono.ttf</file>
         <file>fonts/LICENSE</file>
     </qresource>

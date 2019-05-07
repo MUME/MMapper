@@ -173,6 +173,8 @@ public:
     bool containsAll(CRTP rhs) const noexcept { return (flags & rhs.flags) == rhs.flags; }
 
     void insert(Flag flag) noexcept { crtp_self() |= flag; }
+
+    void remove(Flag flag) noexcept { crtp_self() &= ~CRTP{flag}; }
 };
 } // namespace enums
 

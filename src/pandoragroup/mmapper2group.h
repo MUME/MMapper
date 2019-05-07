@@ -79,6 +79,7 @@ public slots:
     void parseScoreInformation(const QByteArray &score);
     void parsePromptInformation(const QByteArray &prompt);
     void updateCharacterPosition(CharacterPosition);
+    void updateCharacterAffect(CharacterAffect, bool);
     void setPath(CommandQueue, bool);
     void reset();
 

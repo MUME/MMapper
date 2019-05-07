@@ -26,7 +26,6 @@
 #ifndef GROUPCERTIFICATE_H
 #define GROUPCERTIFICATE_H
 
-#include <array>
 #include <QObject>
 #include <QSslCertificate>
 #include <QSslKey>
@@ -34,13 +33,6 @@
 
 enum class GroupMetadata { LAST_LOGIN, NAME, IP_ADDRESS, CERTIFICATE, PORT };
 static constexpr const auto NUM_GROUP_METADATA = 4u;
-
-namespace enums {
-const std::array<GroupMetadata, NUM_GROUP_METADATA> &getAllGroupMetadata();
-
-#define ALL_GROUP_METADATA enums::getAllGroupMetadata()
-
-} // namespace enums
 
 using GroupSecret = QByteArray;
 

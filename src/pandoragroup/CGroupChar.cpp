@@ -40,6 +40,7 @@ KEY roomKey = "room";
 KEY colorKey = "color";
 KEY stateKey = "state";
 KEY prespamKey = "prespam";
+KEY affectsKey = "affects";
 
 #undef KEY
 
@@ -61,6 +62,7 @@ const QVariantMap CGroupChar::toVariantMap() const
     playerData[stateKey] = static_cast<int>(position);
     playerData[roomKey] = roomId.asUint32();
     playerData[prespamKey] = prespam.toByteArray();
+    playerData[affectsKey] = affects.asUint32();
 
     QVariantMap root;
     root[playerDataKey] = playerData;
@@ -212,6 +214,19 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
             setPosition(static_cast<CharacterPosition>(n));
         }
     }
+
+    const auto setAffects = [&affects = this->affects, &updated](const CharacterAffects newAffects) {
+        if (newAffects != affects) {
+            updated = true;
+            affects = newAffects;
+        }
+    };
+
+    if (playerData.contains(affectsKey) && playerData[affectsKey].canConvert(QMetaType::UInt)) {
+        const uint32_t i = playerData[affectsKey].toUInt();
+        setAffects(static_cast<CharacterAffects>(i));
+    }
+
     return updated;
 
 #undef UPDATE_AND_BOUNDS_CHECK

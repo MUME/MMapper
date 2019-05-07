@@ -178,9 +178,22 @@ static const char *getFilenameSuffix(const CharacterPosition position)
     return "";
 #undef CASE2
 }
-
-// template<>
-// const char *getFilenameSuffix(CharacterPosition);
+static const char *getFilenameSuffix(const CharacterAffect affect)
+{
+#define CASE2(UPPER, s) \
+    do { \
+    case CharacterAffect::UPPER: \
+        return s; \
+    } while (false)
+    switch (affect) {
+        CASE2(BLIND, "blind");
+        CASE2(BASHED, "bashed");
+        CASE2(SLEPT, "slept");
+        CASE2(POISONED, "poisoned");
+    }
+    return "";
+#undef CASE2
+}
 template<typename E>
 static QString getIconFilename(const char *const prefix, const E x)
 {
@@ -195,6 +208,10 @@ static QString getIconFilename(const char *const prefix, const E x)
 }
 
 QString getIconFilename(const CharacterPosition x)
+{
+    return getIconFilename("group", x);
+}
+QString getIconFilename(const CharacterAffect x)
 {
     return getIconFilename("group", x);
 }

@@ -25,6 +25,7 @@
 #include "groupwidget.h"
 
 #include <QAction>
+#include <QHeaderView>
 #include <QMessageLogContext>
 #include <QString>
 #include <QStyledItemDelegate>
@@ -39,6 +40,7 @@
 #include "../mapdata/roomselection.h"
 #include "CGroup.h"
 #include "CGroupChar.h"
+#include "enums.h"
 #include "groupselection.h"
 #include "mmapper2group.h"
 
@@ -46,15 +48,27 @@ static constexpr const int GROUP_COLUMN_COUNT = 9;
 static_assert(GROUP_COLUMN_COUNT == static_cast<int>(GroupModel::ColumnType::ROOM_NAME) + 1,
               "# of columns");
 
-GroupStateData::GroupStateData(const QColor &color, const CharacterPosition position)
+GroupStateData::GroupStateData(const QColor &color,
+                               const CharacterPosition position,
+                               const CharacterAffects affects)
     : color(std::move(color))
     , position(position)
-{}
+    , affects(affects)
+    , imageCount(1)
+{
+    // Increment imageCount for each active affect
+    for (const auto affect : ALL_CHARACTER_AFFECTS) {
+        if (affects.contains(affect)) {
+            imageCount++;
+        }
+    }
+}
 
 void GroupStateData::paint(QPainter *const painter, const QRect &rect)
 {
     painter->fillRect(rect, color);
 
+    // REVISIT: Create questionmark icon?
     if (position == CharacterPosition::UNDEFINED)
         return;
 
@@ -63,17 +77,34 @@ void GroupStateData::paint(QPainter *const painter, const QRect &rect)
     if (textColor(color) == Qt::white)
         image.invertPixels();
 
+    int currentImage = 0;
+
     // Draw image in center
-    QRect pixRect = QRect(rect.x() + (rect.right() - rect.x() - rect.height()) / 2,
-                          rect.y(),
-                          rect.height(),
-                          rect.height());
+    const int rectWidth = rect.right() - rect.x();
+    const int imagesWidth = rect.height() * imageCount;
+    int x1 = rect.x() + (rectWidth - imagesWidth) / 2;
+    QRect pixRect = QRect(x1, rect.y(), rect.height(), rect.height());
     painter->drawImage(pixRect, image);
+    currentImage++;
+
+    for (const auto affect : ALL_CHARACTER_AFFECTS) {
+        if (affects.contains(affect)) {
+            auto image = QImage(getIconFilename(affect));
+            if (textColor(color) == Qt::white)
+                image.invertPixels();
+
+            QRect pixRect = QRect(x1 + (currentImage++ * rect.height()),
+                                  rect.y(),
+                                  rect.height(),
+                                  rect.height());
+            painter->drawImage(pixRect, image);
+        }
+    }
 }
 
 QSize GroupStateData::sizeHint() const
 {
-    return QSize(32, 32);
+    return QSize(32 * imageCount, 32);
 }
 
 GroupDelegate::GroupDelegate(QObject *parent)
@@ -98,8 +129,8 @@ void GroupDelegate::paint(QPainter *const painter,
 QSize GroupDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     if (index.data().canConvert<GroupStateData>()) {
-        GroupStateData delegate = qvariant_cast<GroupStateData>(index.data());
-        return delegate.sizeHint();
+        GroupStateData stateData = qvariant_cast<GroupStateData>(index.data());
+        return stateData.sizeHint();
     } else {
         return QStyledItemDelegate::sizeHint(option, index);
     }
@@ -168,6 +199,22 @@ static QString getPrettyName(const CharacterPosition position)
     return QString::asprintf("CharacterPosition(%d)", static_cast<int>(position));
 #undef CASE2
 }
+static QString getPrettyName(const CharacterAffect affect)
+{
+#define CASE2(UPPER, s) \
+    do { \
+    case CharacterAffect::UPPER: \
+        return s; \
+    } while (false)
+    switch (affect) {
+        CASE2(BLIND, "Blind");
+        CASE2(BASHED, "Bashed");
+        CASE2(SLEPT, "Slept");
+        CASE2(POISONED, "Poisoned");
+    }
+    return QString::asprintf("CharacterAffect(%d)", static_cast<int>(affect));
+#undef CASE2
+}
 
 QVariant GroupModel::dataForCharacter(CGroupChar *const character, ColumnType column, int role) const
 {
@@ -190,7 +237,8 @@ QVariant GroupModel::dataForCharacter(CGroupChar *const character, ColumnType co
         case ColumnType::MOVES:
             return calculateRatio(character->moves, character->maxmoves);
         case ColumnType::STATE:
-            return QVariant::fromValue(GroupStateData(character->getColor(), character->position));
+            return QVariant::fromValue(
+                GroupStateData(character->getColor(), character->position, character->affects));
         case ColumnType::ROOM_NAME:
             if (character->roomId != DEFAULT_ROOMID && character->roomId != INVALID_ROOMID
                 && !m_map->isEmpty() && m_mapLoaded && character->roomId <= m_map->getMaxId()) {
@@ -228,8 +276,15 @@ QVariant GroupModel::dataForCharacter(CGroupChar *const character, ColumnType co
             return calculateRatio(character->mana, character->maxmana);
         case ColumnType::MOVES_PERCENT:
             return calculateRatio(character->moves, character->maxmoves);
-        case ColumnType::STATE:
-            return getPrettyName(character->position);
+        case ColumnType::STATE: {
+            QString prettyName = getPrettyName(character->position);
+            for (const auto affect : ALL_CHARACTER_AFFECTS) {
+                if (character->affects.contains(affect)) {
+                    prettyName.append(", ").append(getPrettyName(affect));
+                }
+            }
+            return prettyName;
+        };
         default:
             break;
         };
@@ -274,7 +329,7 @@ QVariant GroupModel::headerData(int section, Qt::Orientation orientation, int ro
             case ColumnType::MANA_PERCENT:
                 return "Mana";
             case ColumnType::MOVES_PERCENT:
-                return "Move";
+                return "Moves";
             case ColumnType::HP:
                 return "HP";
             case ColumnType::MANA:
@@ -313,6 +368,7 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
     m_table = new QTableView(this);
     m_table->setSelectionMode(QAbstractItemView::NoSelection);
     m_table->horizontalHeader()->setStretchLastSection(true);
+    m_table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     m_table->setModel(&m_model);
     m_table->setItemDelegate(new GroupDelegate(this));
     layout->addWidget(m_table);
@@ -368,7 +424,6 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
             Qt::QueuedConnection);
 
     readSettings();
-    m_table->resizeColumnsToContents();
 }
 
 GroupWidget::~GroupWidget()
@@ -381,7 +436,6 @@ GroupWidget::~GroupWidget()
 void GroupWidget::updateLabels()
 {
     m_model.resetModel();
-    m_table->resizeColumnsToContents();
 
     // Hide unnecessary columns like mana if everyone is a zorc/troll
     const auto one_character_had_mana = [this]() -> bool {

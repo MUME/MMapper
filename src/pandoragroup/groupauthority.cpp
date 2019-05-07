@@ -33,6 +33,7 @@
 #include "../global/enums.h"
 #include "../global/utils.h"
 #include "GroupSocket.h"
+#include "enums.h"
 
 #ifndef MMAPPER_NO_OPENSSL
 #include <openssl/bio.h>
@@ -218,16 +219,6 @@ void GroupAuthority::refresh()
     setConfig().groupManager.privateKey = "";
 }
 #endif
-
-namespace enums {
-
-const std::array<GroupMetadata, NUM_GROUP_METADATA> &getAllGroupMetadata()
-{
-    static const auto g_all_types = genEnumValues<GroupMetadata, NUM_GROUP_METADATA>();
-    return g_all_types;
-}
-
-} // namespace enums
 
 static inline QString getMetadataKey(const GroupSecret &secret, const GroupMetadata meta)
 {

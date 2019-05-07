@@ -48,6 +48,21 @@ static_assert(NUM_CHARACTER_POSITIONS == 8);
 DEFINE_ENUM_COUNT(CharacterPosition, NUM_CHARACTER_POSITIONS)
 Q_DECLARE_METATYPE(CharacterPosition)
 
-// TODO: States for BLIND BASHED SLEPT POISONED BLEEDING CASTING
+// TODO: States for BLEEDING CASTING FLUSHING DISEASED HUNGRY THIRSTY
+enum class CharacterAffect { BLIND, BASHED, SLEPT, POISONED };
+static constexpr const int NUM_CHARACTER_AFFECTS = static_cast<int>(CharacterAffect::POISONED) + 1;
+static_assert(NUM_CHARACTER_AFFECTS == 4);
+DEFINE_ENUM_COUNT(CharacterAffect, NUM_CHARACTER_AFFECTS)
+Q_DECLARE_METATYPE(CharacterAffect)
+
+class CharacterAffects final : public enums::Flags<CharacterAffects, CharacterAffect, uint32_t>
+{
+    using Flags::Flags;
+};
+
+inline constexpr const CharacterAffects operator|(CharacterAffect lhs, CharacterAffect rhs) noexcept
+{
+    return CharacterAffects{lhs} | CharacterAffects{rhs};
+}
 
 #endif // MMAPPER2CHARACTER_H

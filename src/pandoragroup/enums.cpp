@@ -1,4 +1,3 @@
-#pragma once
 /************************************************************************
 **
 ** Authors:   Nils Schimmelmann <nschimme@gmail.com>
@@ -23,22 +22,38 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_FILENAMES_H
-#define MMAPPER_FILENAMES_H
+#include "enums.h"
 
-#include <QtCore/QString>
+#include <vector>
 
-#include "../mapdata/mmapper2room.h"
-#include "../pandoragroup/mmapper2character.h"
-#include "RoadIndex.h"
+#include "../global/enums.h"
+#include "groupauthority.h"
+#include "mmapper2character.h"
 
-QString getPixmapFilenameRaw(QString name);
-QString getPixmapFilename(RoomTerrainType);
-QString getPixmapFilename(RoomLoadFlag);
-QString getPixmapFilename(RoomMobFlag);
-QString getPixmapFilename(TaggedRoad);
-QString getPixmapFilename(TaggedTrail);
-QString getIconFilename(CharacterPosition);
-QString getIconFilename(CharacterAffect);
+#define DEFINE_GETTER(E, N, name) \
+    const std::array<E, N> &name() \
+    { \
+        static const auto things = ::enums::genEnumValues<E, N>(); \
+        return things; \
+    }
+#define DEFINE_GETTER_DEFINED(E, N, name) \
+    const std::vector<E> &name() \
+    { \
+        static const auto things = []() { \
+            std::vector<E> result; \
+            for (auto x : ::enums::genEnumValues<E, N>()) \
+                if (x != E::UNDEFINED) \
+                    result.emplace_back(x); \
+            return result; \
+        }(); \
+        return things; \
+    }
 
-#endif // MMAPPER_FILENAMES_H
+namespace enums {
+DEFINE_GETTER_DEFINED(CharacterPosition, NUM_CHARACTER_POSITIONS, getAllCharacterPositions)
+DEFINE_GETTER(GroupMetadata, NUM_GROUP_METADATA, getAllGroupMetadata)
+DEFINE_GETTER(CharacterAffect, NUM_CHARACTER_AFFECTS, getAllCharacterAffects)
+} // namespace enums
+
+#undef DEFINE_GETTER
+#undef DEFINE_GETTER_DEFINED

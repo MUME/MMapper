@@ -106,6 +106,7 @@ signals:
     void sendPromptLineEvent(QByteArray);
     void mumeTime(QString);
     void sendCharacterPositionEvent(CharacterPosition);
+    void sendCharacterAffectEvent(CharacterAffect, bool);
 };
 
 #endif

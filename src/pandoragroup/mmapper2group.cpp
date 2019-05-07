@@ -52,6 +52,7 @@ Mmapper2Group::Mmapper2Group(QObject *const /* parent */)
     , thread(THREADED ? new QThread : nullptr)
 {
     qRegisterMetaType<CharacterPosition>("CharacterPosition");
+    qRegisterMetaType<CharacterAffect>("CharacterAffect");
 
     if (thread) {
         connect(thread.get(), &QThread::started, this, [this]() {
@@ -417,10 +418,32 @@ void Mmapper2Group::updateCharacterPosition(CharacterPosition position)
     if (oldPosition == position)
         return; // No update needed
 
+    // Reset affects on death
+    if (position == CharacterPosition::DEAD)
+        group->getSelf()->affects = CharacterAffects{};
+
     if (oldPosition == CharacterPosition::DEAD && position != CharacterPosition::STANDING)
         return; // Prefer dead state until we finish recovering some hp (i.e. stand)
 
     oldPosition = position;
+    issueLocalCharUpdate();
+}
+
+void Mmapper2Group::updateCharacterAffect(CharacterAffect affect, bool enable)
+{
+    if (!group || getMode() == GroupManagerState::Off) {
+        return;
+    }
+
+    CharacterAffects &affects = getGroup()->self->affects;
+    if (enable == affects.contains(affect))
+        return; // No update needed
+
+    if (enable)
+        affects.insert(affect);
+    else
+        affects.remove(affect);
+
     issueLocalCharUpdate();
 }
 
@@ -437,6 +460,7 @@ void Mmapper2Group::reset()
     lastPrompt.textHP = {};
     lastPrompt.textMana = {};
     lastPrompt.textMoves = {};
+    lastPrompt.inCombat = false;
 
     // Reset character
     CGroupChar *self = getGroup()->getSelf();
@@ -448,6 +472,7 @@ void Mmapper2Group::reset()
     self->maxmoves = 0;
     self->roomId = DEFAULT_ROOMID;
     self->position = CharacterPosition::UNDEFINED;
+    self->affects = CharacterAffects{};
     issueLocalCharUpdate();
 }
 
