@@ -29,10 +29,12 @@
 #include <vector>
 #include <QAbstractTableModel>
 #include <QString>
+#include <QStyledItemDelegate>
 #include <QWidget>
 #include <QtCore>
 
 #include "groupselection.h"
+#include "mmapper2character.h"
 
 class QAction;
 class MapData;
@@ -40,6 +42,36 @@ class CGroupChar;
 class Mmapper2Group;
 class QObject;
 class QTableView;
+
+class GroupStateData
+{
+public:
+    explicit GroupStateData() = default;
+    explicit GroupStateData(const QColor &color, const CharacterPosition position);
+
+public:
+    void paint(QPainter *painter, const QRect &rect);
+    QSize sizeHint() const;
+
+private:
+    QColor color;
+    CharacterPosition position;
+};
+Q_DECLARE_METATYPE(GroupStateData)
+
+class GroupDelegate final : public QStyledItemDelegate
+{
+    Q_OBJECT
+
+public:
+    explicit GroupDelegate(QObject *parent = nullptr);
+    ~GroupDelegate() override;
+
+    void paint(QPainter *painter,
+               const QStyleOptionViewItem &option,
+               const QModelIndex &index) const override;
+    QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override;
+};
 
 class GroupModel final : public QAbstractTableModel
 {
@@ -54,6 +86,7 @@ public:
         HP,
         MANA,
         MOVES,
+        STATE,
         ROOM_NAME
     };
 

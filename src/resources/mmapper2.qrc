@@ -146,6 +146,13 @@
         <file>pixmaps/load-equipment.png</file>
         <file>pixmaps/load-coach.png</file>
         <file>pixmaps/load-ferry.png</file>
+        <file>icons/group-fighting.png</file>
+        <file>icons/group-standing.png</file>
+        <file>icons/group-resting.png</file>
+        <file>icons/group-sitting.png</file>
+        <file>icons/group-sleeping.png</file>
+        <file>icons/group-incapacitated.png</file>
+        <file>icons/group-dead.png</file>
         <file>fonts/DejaVuSansMono.ttf</file>
         <file>fonts/LICENSE</file>
     </qresource>

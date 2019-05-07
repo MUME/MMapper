@@ -58,8 +58,8 @@ const QVariantMap CGroupChar::toVariantMap() const
     playerData["maxmana"] = maxmana;
     playerData["moves"] = moves;
     playerData["maxmoves"] = maxmoves;
-    playerData[stateKey] = static_cast<int>(state);
-    playerData[roomKey] = pos.asUint32();
+    playerData[stateKey] = static_cast<int>(position);
+    playerData[roomKey] = roomId.asUint32();
     playerData[prespamKey] = prespam.toByteArray();
 
     QVariantMap root;
@@ -101,18 +101,18 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
         // Instead, this should serialize the room coordinates + name/desc/exits.
 
         // NOTE: We don't have access to the map here, so we can't verify the room #.
-        const auto newpos = [i]() {
-            auto newpos = RoomId{i};
-            if (newpos == INVALID_ROOMID) {
+        const auto newRoomId = [i]() {
+            auto newRoomId = RoomId{i};
+            if (newRoomId == INVALID_ROOMID) {
                 qWarning() << "Invalid room changed to default room.";
-                newpos = DEFAULT_ROOMID;
+                newRoomId = DEFAULT_ROOMID;
             }
-            return newpos;
+            return newRoomId;
         }();
 
-        if (newpos != pos) {
+        if (newRoomId != roomId) {
             updated = true;
-            pos = newpos;
+            roomId = newRoomId;
         }
     }
 
@@ -194,20 +194,22 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
     UPDATE_AND_BOUNDS_CHECK(mana);
     UPDATE_AND_BOUNDS_CHECK(moves);
 
-    const auto setState = [&state = this->state, &updated](const CharacterStates newState) {
-        if (newState != state) {
+    const auto setPosition = [&position = this->position,
+                              &updated](const CharacterPosition newPosition) {
+        if (newPosition != position) {
             updated = true;
-            state = newState;
+            position = newPosition;
         }
     };
 
     if (playerData.contains(stateKey) && playerData[stateKey].canConvert(QMetaType::Int)) {
         const int n = playerData[stateKey].toInt();
-        if (n < static_cast<int>(CharacterStates::NORMAL) || n > MAX_STATE) {
-            qWarning() << "Invalid input state (" << n << ") is changed to NORMAL.";
-            setState(CharacterStates::NORMAL);
+        if (n < static_cast<int>(CharacterPosition::UNDEFINED)
+            || n >= static_cast<int>(NUM_CHARACTER_POSITIONS)) {
+            qWarning() << "Invalid input state (" << n << ") is changed to UNDEFINED.";
+            setPosition(CharacterPosition::UNDEFINED);
         } else {
-            setState(static_cast<CharacterStates>(n));
+            setPosition(static_cast<CharacterPosition>(n));
         }
     }
     return updated;

@@ -105,12 +105,17 @@ static const char *getFilenameSuffix(const E x)
     return getParserCommandName(x).getCommand();
 }
 
+static QString getResourceFilenameRaw(const QString dir, const QString name)
+{
+    const auto filename = QString(":/%1/%2").arg(dir).arg(name);
+    if (!QFile{filename}.exists())
+        qWarning() << "WARNING:" << dir << filename << "does not exist.";
+    return filename;
+}
+
 QString getPixmapFilenameRaw(const QString name)
 {
-    const auto filename = QString(":/pixmaps/").append(name);
-    if (!QFile{filename}.exists())
-        qWarning() << "WARNING: pixmap" << filename << "does not exist.";
-    return filename;
+    return getResourceFilenameRaw("pixmaps", name);
 }
 
 template<typename E>
@@ -145,4 +150,51 @@ QString getPixmapFilename(const TaggedRoad x)
 QString getPixmapFilename(const TaggedTrail x)
 {
     return getPixmapFilename("trail", x);
+}
+
+static QString getIconFilenameRaw(const QString name)
+{
+    return getResourceFilenameRaw("icons", name);
+}
+
+static const char *getFilenameSuffix(const CharacterPosition position)
+{
+#define CASE2(UPPER, s) \
+    do { \
+    case CharacterPosition::UPPER: \
+        return s; \
+    } while (false)
+    switch (position) {
+        CASE2(STANDING, "standing");
+        CASE2(FIGHTING, "fighting");
+        CASE2(RESTING, "resting");
+        CASE2(SITTING, "sitting");
+        CASE2(SLEEPING, "sleeping");
+        CASE2(INCAPACITATED, "incapacitated");
+        CASE2(DEAD, "dead");
+    case CharacterPosition::UNDEFINED:
+        break;
+    }
+    return "";
+#undef CASE2
+}
+
+// template<>
+// const char *getFilenameSuffix(CharacterPosition);
+template<typename E>
+static QString getIconFilename(const char *const prefix, const E x)
+{
+    if (prefix == nullptr)
+        throw NullPointerException();
+
+    const char *const suffix = getFilenameSuffix(x);
+    if (suffix == nullptr)
+        throw NullPointerException();
+
+    return getIconFilenameRaw(QString::asprintf("%s-%s.png", prefix, suffix));
+}
+
+QString getIconFilename(const CharacterPosition x)
+{
+    return getIconFilename("group", x);
 }

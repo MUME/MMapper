@@ -198,6 +198,10 @@ void Proxy::start()
             m_groupManager,
             &Mmapper2Group::parsePromptInformation);
     connect(m_parserXml,
+            &MumeXmlParser::sendCharacterPositionEvent,
+            m_groupManager,
+            &Mmapper2Group::updateCharacterPosition);
+    connect(m_parserXml,
             &AbstractParser::sendGroupTellEvent,
             m_groupManager,
             &Mmapper2Group::sendGroupTell);

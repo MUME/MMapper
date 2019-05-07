@@ -547,6 +547,7 @@ void MumeXmlParser::parseMudCommands(const QString &str)
             emit showPath(queue, true);
             emit releaseAllPaths();
             markCurrentCommand();
+            emit sendCharacterPositionEvent(CharacterPosition::DEAD);
             return;
         } else if (str.startsWith("You failed to climb")) {
             if (!queue.isEmpty())
@@ -574,6 +575,32 @@ void MumeXmlParser::parseMudCommands(const QString &str)
         } else if (str.startsWith("You quietly scout")) {
             queue.prepend(CommandIdType::SCOUT);
             return;
+        } else if (str.startsWith("You go to sleep.")
+                   || str.startsWith("You are already sound asleep.")
+                   || str.startsWith("You feel very sleepy... zzzzzz")) {
+            emit sendCharacterPositionEvent(CharacterPosition::SLEEPING);
+
+        } else if (str.startsWith("You wake, and sit up.") || str.startsWith("You sit down.")
+                   || str.startsWith("You stop resting and sit up.")
+                   || str.startsWith("You're sitting already.")) {
+            emit sendCharacterPositionEvent(CharacterPosition::SITTING);
+
+        } else if (str.startsWith("You rest your tired bones.")
+                   || str.startsWith("You sit down and rest your tired bones.")
+                   || str.startsWith("You are already resting.")) {
+            emit sendCharacterPositionEvent(CharacterPosition::RESTING);
+
+        } else if (str.startsWith("You stop resting and stand up.")
+                   || str.startsWith("You stand up.")
+                   || str.startsWith("You are already standing.")) {
+            emit sendCharacterPositionEvent(CharacterPosition::STANDING);
+
+        } else if (str.startsWith("You are incapacitated and will slowly die, if not aided.")
+                   || str.startsWith("You are in a pretty bad shape, unable to do anything!")
+                   || str.startsWith(
+                       "You're stunned and will probably die soon if no-one helps you.")
+                   || str.startsWith("You are mortally wounded and will die soon if not aided.")) {
+            emit sendCharacterPositionEvent(CharacterPosition::INCAPACITATED);
         }
     } else if (str.at(0) == 'T') {
         if (str.startsWith("The current time is")) {

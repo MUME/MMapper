@@ -34,6 +34,7 @@
 #include <QVariantMap>
 
 #include "../global/roomid.h"
+#include "mmapper2character.h"
 
 class GroupAuthority;
 class CGroupCommunicator;
@@ -67,7 +68,7 @@ public:
     CGroup *getGroup() { return group.get(); }
 
 public slots:
-    void setCharPosition(RoomId pos);
+    void setCharacterRoomId(RoomId pos);
     void setMode(GroupManagerState newState);
     void startNetwork();
     void stopNetwork();
@@ -75,8 +76,9 @@ public slots:
 
     void sendGroupTell(const QByteArray &tell); // sends gtell from local user
     void kickCharacter(const QByteArray &character);
-    void parseScoreInformation(QByteArray score);
-    void parsePromptInformation(QByteArray prompt);
+    void parseScoreInformation(const QByteArray &score);
+    void parsePromptInformation(const QByteArray &prompt);
+    void updateCharacterPosition(CharacterPosition);
     void setPath(CommandQueue, bool);
     void reset();
 
@@ -94,6 +96,7 @@ private:
         QByteArray textHP{};
         QByteArray textMoves{};
         QByteArray textMana{};
+        bool inCombat{false};
     } lastPrompt;
 
     bool init();

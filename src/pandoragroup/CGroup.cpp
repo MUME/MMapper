@@ -46,7 +46,7 @@ CGroup::CGroup(QObject *parent)
     self = new CGroupChar();
     const Configuration::GroupManagerSettings &groupManager = getConfig().groupManager;
     self->setName(groupManager.charName);
-    self->setPosition(DEFAULT_ROOMID);
+    self->setRoomId(DEFAULT_ROOMID);
     self->setColor(groupManager.color);
     charIndex.push_back(self);
 }

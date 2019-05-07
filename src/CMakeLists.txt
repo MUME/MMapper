@@ -199,6 +199,7 @@ set(mmapper_SRCS
     pandoragroup/groupwidget.h
     pandoragroup/mmapper2group.cpp
     pandoragroup/mmapper2group.h
+    pandoragroup/mmapper2character.h
     parser/Abbrev.cpp
     parser/Abbrev.h
     parser/AbstractParser-Commands.cpp

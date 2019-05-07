@@ -1,7 +1,8 @@
 #pragma once
 /************************************************************************
 **
-** Authors:   Nils Schimmelmann <nschimme@gmail.com>
+** Authors:   Azazello <lachupe@gmail.com>,
+**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 **
 ** This file is part of the MMapper project.
 ** Maintained by Nils Schimmelmann <nschimme@gmail.com>
@@ -23,21 +24,30 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_FILENAMES_H
-#define MMAPPER_FILENAMES_H
+#ifndef MMAPPER2CHARACTER_H
+#define MMAPPER2CHARACTER_H
 
-#include <QtCore/QString>
+#include <QMetaType>
+#include <QtGlobal>
 
-#include "../mapdata/mmapper2room.h"
-#include "../pandoragroup/mmapper2character.h"
-#include "RoadIndex.h"
+#include "../global/Flags.h"
 
-QString getPixmapFilenameRaw(QString name);
-QString getPixmapFilename(RoomTerrainType);
-QString getPixmapFilename(RoomLoadFlag);
-QString getPixmapFilename(RoomMobFlag);
-QString getPixmapFilename(TaggedRoad);
-QString getPixmapFilename(TaggedTrail);
-QString getIconFilename(CharacterPosition);
+enum class CharacterPosition {
+    UNDEFINED = 0,
+    FIGHTING,
+    STANDING,
+    SITTING,
+    RESTING,
+    SLEEPING,
+    INCAPACITATED,
+    DEAD
+};
+static constexpr const size_t NUM_CHARACTER_POSITIONS = static_cast<size_t>(CharacterPosition::DEAD)
+                                                        + 1u;
+static_assert(NUM_CHARACTER_POSITIONS == 8);
+DEFINE_ENUM_COUNT(CharacterPosition, NUM_CHARACTER_POSITIONS)
+Q_DECLARE_METATYPE(CharacterPosition)
 
-#endif // MMAPPER_FILENAMES_H
+// TODO: States for BLIND BASHED SLEPT POISONED BLEEDING CASTING
+
+#endif // MMAPPER2CHARACTER_H

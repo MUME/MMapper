@@ -34,28 +34,16 @@
 #include "../global/RuleOf5.h"
 #include "../global/roomid.h"
 #include "../parser/CommandQueue.h"
+#include "mmapper2character.h"
 
 class CGroupChar final
 {
 public:
-    enum class CharacterStates {
-        NORMAL,
-        FIGHTING,
-        RESTING,
-        SLEEPING,
-        CASTING,
-        INCAPACITATED,
-        DEAD
-        // TODO: Add BLIND BASHED SLEPT POISONED BLEEDING
-    };
-    static constexpr const int MAX_STATE = static_cast<int>(CharacterStates::DEAD);
-
-public:
-    RoomId pos = DEFAULT_ROOMID;
+    RoomId roomId = DEFAULT_ROOMID;
     int hp = 0, maxhp = 0;
     int mana = 0, maxmana = 0;
     int moves = 0, maxmoves = 0;
-    CharacterStates state = CharacterStates::NORMAL;
+    CharacterPosition position = CharacterPosition::UNDEFINED;
     CommandQueue prespam{};
 
     explicit CGroupChar();
@@ -67,8 +55,8 @@ public:
     const QColor &getColor() const { return color; }
     const QVariantMap toVariantMap() const;
     bool updateFromVariantMap(const QVariantMap &);
-    void setPosition(RoomId id) { pos = id; }
-    RoomId getPosition() const { return pos; }
+    void setRoomId(RoomId id) { roomId = id; }
+    RoomId getRoomId() const { return roomId; }
     static QByteArray getNameFromUpdateChar(const QVariantMap &);
 
     void setScore(int _hp, int _maxhp, int _mana, int _maxmana, int _moves, int _maxmoves)

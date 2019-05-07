@@ -34,6 +34,7 @@
 #include <QtCore>
 #include <QtGlobal>
 
+#include "../pandoragroup/mmapper2character.h"
 #include "CommandId.h"
 #include "abstractparser.h"
 
@@ -104,6 +105,7 @@ signals:
     void sendScoreLineEvent(QByteArray);
     void sendPromptLineEvent(QByteArray);
     void mumeTime(QString);
+    void sendCharacterPositionEvent(CharacterPosition);
 };
 
 #endif

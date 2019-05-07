@@ -42,6 +42,7 @@
 #include "GroupServer.h"
 #include "groupauthority.h"
 #include "groupselection.h"
+#include "mmapper2character.h"
 
 static constexpr const bool THREADED = true;
 
@@ -50,6 +51,8 @@ Mmapper2Group::Mmapper2Group(QObject *const /* parent */)
     , networkLock(QMutex::Recursive)
     , thread(THREADED ? new QThread : nullptr)
 {
+    qRegisterMetaType<CharacterPosition>("CharacterPosition");
+
     if (thread) {
         connect(thread.get(), &QThread::started, this, [this]() {
             emit log("GroupManager", "Initialized Group Manager service");
@@ -160,15 +163,15 @@ void Mmapper2Group::updateSelf()
     }
 }
 
-void Mmapper2Group::setCharPosition(RoomId pos)
+void Mmapper2Group::setCharacterRoomId(RoomId roomId)
 {
     QMutexLocker locker(&networkLock);
     if (!group || getMode() == GroupManagerState::Off) {
         return;
     }
 
-    if (group->getSelf()->getPosition() != pos) {
-        group->getSelf()->setPosition(pos);
+    if (group->getSelf()->getRoomId() != roomId) {
+        group->getSelf()->setRoomId(roomId);
         issueLocalCharUpdate();
     }
 }
@@ -240,105 +243,101 @@ void Mmapper2Group::sendGroupTell(const QByteArray &tell)
     }
 }
 
-void Mmapper2Group::parseScoreInformation(QByteArray score)
+void Mmapper2Group::parseScoreInformation(const QByteArray &score)
 {
     if (!group || getMode() == GroupManagerState::Off) {
         return;
     }
-    emit log("GroupManager", QString("Caught a score line: %1").arg(score.constData()));
+    static const QRegularExpression sRx(R"(^(\d+)\/(\d+) hits)"         // Group 1/2 hits
+                                        R"(,?(?: (\d+)\/(\d+) mana,)?)" // Group 3/4 mana
+                                        R"( and (\d+)\/(\d+) moves.)"); // Group 5/6 moves
 
-    if (score.contains("mana, ")) {
-        score.replace(" hits, ", "/");
-        score.replace(" mana, and ", "/");
-        score.replace(" moves.", "");
+    QRegularExpressionMatch match = sRx.match(score);
+    if (!match.hasMatch())
+        return;
+    const int hp = match.captured(1).toInt();
+    const int maxhp = match.captured(2).toInt();
+    const int mana = match.captured(3).toInt();
+    const int maxmana = match.captured(4).toInt();
+    const int moves = match.captured(5).toInt();
+    const int maxmoves = match.captured(6).toInt();
 
-        QString temp = score;
-        QStringList list = temp.split('/');
+    CGroupChar *self = getGroup()->getSelf();
+    if (self->hp == hp && self->maxhp == maxhp && self->mana == mana && self->maxmana == maxmana
+        && self->moves == moves && self->maxmoves == maxmoves)
+        return; // No update needed
 
-        /*
-        qDebug( "Hp: %s", (const char *) list[0].toLatin1());
-        qDebug( "Hp max: %s", (const char *) list[1].toLatin1());
-        qDebug( "Mana: %s", (const char *) list[2].toLatin1());
-        qDebug( "Max Mana: %s", (const char *) list[3].toLatin1());
-        qDebug( "Moves: %s", (const char *) list[4].toLatin1());
-        qDebug( "Max Moves: %s", (const char *) list[5].toLatin1());
-        */
+    emit log("GroupManager",
+             QString("Updated score: %1/%2 hits, %3/%4 mana, and %5/%6 moves.")
+                 .arg(hp)
+                 .arg(maxhp)
+                 .arg(mana)
+                 .arg(maxmana)
+                 .arg(moves)
+                 .arg(maxmoves));
 
-        group->getSelf()->setScore(list[0].toInt(),
-                                   list[1].toInt(),
-                                   list[2].toInt(),
-                                   list[3].toInt(),
-                                   list[4].toInt(),
-                                   list[5].toInt());
+    self->setScore(hp, maxhp, mana, maxmana, moves, maxmoves);
 
-    } else {
-        // 399/529 hits and 121/133 moves.
-        score.replace(" hits and ", "/");
-        score.replace(" moves.", "");
-
-        QString temp = score;
-        QStringList list = temp.split('/');
-
-        /*
-        qDebug( "Hp: %s", (const char *) list[0].toLatin1());
-        qDebug( "Hp max: %s", (const char *) list[1].toLatin1());
-        qDebug( "Moves: %s", (const char *) list[2].toLatin1());
-        qDebug( "Max Moves: %s", (const char *) list[3].toLatin1());
-        */
-        group->getSelf()
-            ->setScore(list[0].toInt(), list[1].toInt(), 0, 0, list[2].toInt(), list[3].toInt());
-    }
     issueLocalCharUpdate();
 }
 
-void Mmapper2Group::parsePromptInformation(QByteArray prompt)
+void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
 {
     if (!group || getMode() == GroupManagerState::Off) {
         return;
-    }
-
-    if (!prompt.contains('>')) {
-        return; // false prompt
     }
 
     CGroupChar *self = getGroup()->getSelf();
     QByteArray textHP{}, textMana{}, textMoves{};
 
-    int next = 0;
-    int index = prompt.indexOf("HP:", next);
-    if (index != -1) {
-        int k = index + 3;
-        while (prompt[k] != ' ' && prompt[k] != '>') {
-            textHP += prompt[k++];
-        }
-        next = k;
-    }
+    static const QRegularExpression pRx(R"(^)"
+                                        R"(([\*@\!\)o])"            // Group 1: light
+                                        R"([\[#\.f\(<%~WU\+:=O]?))" //          terrain
+                                        R"(([~'"]?[-=]?)"           // Group 2: weather
+                                        R"( ?[Cc]?[Rr]?[Ss]?W?)"    //          movement
+                                        R"((?: i[^ >]+)?)"          //          wizinvis
+                                        R"((?: NN)?(?: NS)?)"       //          no narrate / no song
+                                        R"((?: \d+\[\d+:\d+\]))?)"  //          god zone / room info
+                                        R"((?: HP:([^ >]+))?)"      // Group 3: HP
+                                        R"((?: Mana:([^ >]+))?)"    // Group 4: Mana
+                                        R"((?: Move:([^ >]+))?)"    // Group 5: Move
+                                        R"((?: Mount:([^ >]+))?)"   // Group 6: Mount
+                                        R"((?: [^>:]+:([^ >]+))?)"  // Group 7: Target
+                                        R"((?: [^>:]+:([^ >]+))?)"  // Group 8: Buffer
+                                        R"(>)");
+    QRegularExpressionMatch match = pRx.match(prompt);
+    if (!match.hasMatch())
+        return;
 
-    index = prompt.indexOf("Mana:", next);
-    if (index != -1) {
-        int k = index + 5;
-        while (prompt[k] != ' ' && prompt[k] != '>') {
-            textMana += prompt[k++];
-        }
-        next = k;
-    }
-
-    index = prompt.indexOf("Move:", next);
-    if (index != -1) {
-        int k = index + 5;
-        while (prompt[k] != ' ' && prompt[k] != '>') {
-            textMoves += prompt[k++];
-        }
-    }
+    // REVISIT: Use remaining captures for more purposes and move this code to parser (?)
+    textHP = match.captured(3).toLatin1();
+    textMana = match.captured(4).toLatin1();
+    textMoves = match.captured(5).toLatin1();
+    bool inCombat = !match.captured(7).isEmpty();
 
     if (textHP == lastPrompt.textHP && textMana == lastPrompt.textMana
-        && textMoves == lastPrompt.textMoves)
+        && textMoves == lastPrompt.textMoves && inCombat == lastPrompt.inCombat)
         return; // No update needed
+
+    if (textHP == "Dying" || self->position == CharacterPosition::INCAPACITATED) {
+        // Incapacitated state overrides fighting state
+        self->position = CharacterPosition::INCAPACITATED;
+
+    } else if (inCombat) {
+        self->position = CharacterPosition::FIGHTING;
+
+    } else if (self->position != CharacterPosition::DEAD) {
+        // Recover standing state if we're done fighting (unless we died because we're dead)
+        if (lastPrompt.inCombat) {
+            self->position = CharacterPosition::STANDING;
+        }
+    }
 
     // Update last prompt values
     lastPrompt.textHP = textHP;
     lastPrompt.textMana = textMana;
     lastPrompt.textMoves = textMoves;
+    lastPrompt.inCombat = inCombat;
 
 #define X_SCORE(target, lower, upper) \
     do { \
@@ -366,7 +365,7 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
             X_SCORE("Wounded", 0.26, 0.45);
             X_SCORE("Bad", 0.11, 0.25);
             X_SCORE("Awful", 0.01, 0.10);
-            return 0.0; // Incap
+            return 0.0; // Dying
         };
         self->hp = static_cast<int>(calc_hp(textHP, self->hp, self->maxhp));
     }
@@ -407,6 +406,24 @@ void Mmapper2Group::parsePromptInformation(QByteArray prompt)
     issueLocalCharUpdate();
 }
 
+void Mmapper2Group::updateCharacterPosition(CharacterPosition position)
+{
+    if (!group || getMode() == GroupManagerState::Off) {
+        return;
+    }
+
+    CharacterPosition &oldPosition = group->getSelf()->position;
+
+    if (oldPosition == position)
+        return; // No update needed
+
+    if (oldPosition == CharacterPosition::DEAD && position != CharacterPosition::STANDING)
+        return; // Prefer dead state until we finish recovering some hp (i.e. stand)
+
+    oldPosition = position;
+    issueLocalCharUpdate();
+}
+
 void Mmapper2Group::setPath(CommandQueue dirs, bool)
 {
     group->getSelf()->prespam = std::move(dirs);
@@ -429,7 +446,8 @@ void Mmapper2Group::reset()
     self->maxmana = 0;
     self->moves = 0;
     self->maxmoves = 0;
-    self->pos = DEFAULT_ROOMID;
+    self->roomId = DEFAULT_ROOMID;
+    self->position = CharacterPosition::UNDEFINED;
     issueLocalCharUpdate();
 }
 

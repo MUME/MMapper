@@ -27,9 +27,11 @@
 #include <QAction>
 #include <QMessageLogContext>
 #include <QString>
+#include <QStyledItemDelegate>
 #include <QtWidgets>
 
 #include "../configuration/configuration.h"
+#include "../display/Filenames.h"
 #include "../expandoracommon/room.h"
 #include "../global/Color.h"
 #include "../global/roomid.h"
@@ -40,9 +42,68 @@
 #include "groupselection.h"
 #include "mmapper2group.h"
 
-static constexpr const int GROUP_COLUMN_COUNT = 8;
+static constexpr const int GROUP_COLUMN_COUNT = 9;
 static_assert(GROUP_COLUMN_COUNT == static_cast<int>(GroupModel::ColumnType::ROOM_NAME) + 1,
               "# of columns");
+
+GroupStateData::GroupStateData(const QColor &color, const CharacterPosition position)
+    : color(std::move(color))
+    , position(position)
+{}
+
+void GroupStateData::paint(QPainter *const painter, const QRect &rect)
+{
+    painter->fillRect(rect, color);
+
+    if (position == CharacterPosition::UNDEFINED)
+        return;
+
+    // REVISIT: Build images ahead of time
+    auto image = QImage(getIconFilename(position));
+    if (textColor(color) == Qt::white)
+        image.invertPixels();
+
+    // Draw image in center
+    QRect pixRect = QRect(rect.x() + (rect.right() - rect.x() - rect.height()) / 2,
+                          rect.y(),
+                          rect.height(),
+                          rect.height());
+    painter->drawImage(pixRect, image);
+}
+
+QSize GroupStateData::sizeHint() const
+{
+    return QSize(32, 32);
+}
+
+GroupDelegate::GroupDelegate(QObject *parent)
+    : QStyledItemDelegate(parent)
+{}
+
+GroupDelegate::~GroupDelegate() = default;
+
+void GroupDelegate::paint(QPainter *const painter,
+                          const QStyleOptionViewItem &option,
+                          const QModelIndex &index) const
+{
+    if (index.data().canConvert<GroupStateData>()) {
+        GroupStateData stateData = qvariant_cast<GroupStateData>(index.data());
+        stateData.paint(painter, option.rect);
+
+    } else {
+        QStyledItemDelegate::paint(painter, option, index);
+    }
+}
+
+QSize GroupDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
+{
+    if (index.data().canConvert<GroupStateData>()) {
+        GroupStateData delegate = qvariant_cast<GroupStateData>(index.data());
+        return delegate.sizeHint();
+    } else {
+        return QStyledItemDelegate::sizeHint(option, index);
+    }
+}
 
 GroupModel::GroupModel(MapData *const md, Mmapper2Group *const group, QObject *const parent)
     : QAbstractTableModel(parent)
@@ -87,6 +148,27 @@ static QString calculateRatio(const int numerator, const int denomenator)
     return QString("%1/%2").arg(numerator).arg(denomenator);
 }
 
+static QString getPrettyName(const CharacterPosition position)
+{
+#define CASE2(UPPER, s) \
+    do { \
+    case CharacterPosition::UPPER: \
+        return s; \
+    } while (false)
+    switch (position) {
+        CASE2(STANDING, "Standing");
+        CASE2(FIGHTING, "Fighting");
+        CASE2(RESTING, "Resting");
+        CASE2(SITTING, "Sitting");
+        CASE2(SLEEPING, "Sleeping");
+        CASE2(INCAPACITATED, "Incapacitated");
+        CASE2(DEAD, "Dead");
+        CASE2(UNDEFINED, "No state available");
+    }
+    return QString::asprintf("CharacterPosition(%d)", static_cast<int>(position));
+#undef CASE2
+}
+
 QVariant GroupModel::dataForCharacter(CGroupChar *const character, ColumnType column, int role) const
 {
     // Map column to data
@@ -107,12 +189,13 @@ QVariant GroupModel::dataForCharacter(CGroupChar *const character, ColumnType co
             return calculateRatio(character->mana, character->maxmana);
         case ColumnType::MOVES:
             return calculateRatio(character->moves, character->maxmoves);
-
+        case ColumnType::STATE:
+            return QVariant::fromValue(GroupStateData(character->getColor(), character->position));
         case ColumnType::ROOM_NAME:
-            if (character->pos != DEFAULT_ROOMID && character->pos != INVALID_ROOMID
-                && !m_map->isEmpty() && m_mapLoaded && character->pos <= m_map->getMaxId()) {
+            if (character->roomId != DEFAULT_ROOMID && character->roomId != INVALID_ROOMID
+                && !m_map->isEmpty() && m_mapLoaded && character->roomId <= m_map->getMaxId()) {
                 auto roomSelection = RoomSelection(*m_map);
-                if (const Room *const r = roomSelection.getRoom(character->pos)) {
+                if (const Room *const r = roomSelection.getRoom(character->roomId)) {
                     return r->getName();
                 }
             }
@@ -135,6 +218,21 @@ QVariant GroupModel::dataForCharacter(CGroupChar *const character, ColumnType co
             // NOTE: There's no QVariant(AlignmentFlag) constructor.
             return static_cast<int>(Qt::AlignCenter);
         }
+        break;
+
+    case Qt::ToolTipRole:
+        switch (column) {
+        case ColumnType::HP_PERCENT:
+            return calculateRatio(character->hp, character->maxhp);
+        case ColumnType::MANA_PERCENT:
+            return calculateRatio(character->mana, character->maxmana);
+        case ColumnType::MOVES_PERCENT:
+            return calculateRatio(character->moves, character->maxmoves);
+        case ColumnType::STATE:
+            return getPrettyName(character->position);
+        default:
+            break;
+        };
         break;
 
     default:
@@ -172,17 +270,19 @@ QVariant GroupModel::headerData(int section, Qt::Orientation orientation, int ro
             case ColumnType::NAME:
                 return "Name";
             case ColumnType::HP_PERCENT:
-                return "HP %";
+                return "HP";
             case ColumnType::MANA_PERCENT:
-                return "Mana %";
+                return "Mana";
             case ColumnType::MOVES_PERCENT:
-                return "Moves %";
+                return "Move";
             case ColumnType::HP:
                 return "HP";
             case ColumnType::MANA:
                 return "Mana";
             case ColumnType::MOVES:
                 return "Moves";
+            case ColumnType::STATE:
+                return "State";
             case ColumnType::ROOM_NAME:
                 return "Room Name";
             default:
@@ -214,6 +314,7 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
     m_table->setSelectionMode(QAbstractItemView::NoSelection);
     m_table->horizontalHeader()->setStretchLastSection(true);
     m_table->setModel(&m_model);
+    m_table->setItemDelegate(new GroupDelegate(this));
     layout->addWidget(m_table);
 
     // Minimize row height

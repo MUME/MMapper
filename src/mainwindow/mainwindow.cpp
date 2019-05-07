@@ -380,7 +380,7 @@ void MainWindow::wireConnections()
     connect(m_pathMachine,
             &PathMachine::setCharPosition,
             m_groupManager,
-            &Mmapper2Group::setCharPosition,
+            &Mmapper2Group::setCharacterRoomId,
             Qt::QueuedConnection);
     connect(m_groupManager,
             &Mmapper2Group::drawCharacters,
