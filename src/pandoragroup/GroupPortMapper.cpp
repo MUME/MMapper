@@ -90,19 +90,23 @@ public:
                                          &igdData,
                                          lanAddress,
                                          sizeof lanAddress);
-        if (validIGDState != 0) {
-            if (validIGDState == 1) {
-                qInfo() << "Valid IGD found";
-            } else if (result == 2) {
-                qInfo() << "Valid IGD has been found but it reported as not connected";
-            } else if (result == 3) {
-                qInfo() << "UPnP device has been found but was not recognized as an IGD";
-            } else {
-                qWarning() << "UPNP_GetValidIGD returned an unknown result code";
-            }
-        } else {
+        switch (validIGDState) {
+        case 0:
             qInfo() << "No IGD found";
-        }
+            break;
+        case 1:
+            qInfo() << "Valid IGD found";
+            break;
+        case 2:
+            qInfo() << "Valid IGD has been found but it reported as not connected";
+            break;
+        case 3:
+            qInfo() << "UPnP device has been found but was not recognized as an IGD";
+            break;
+        default:
+            qWarning() << "UPNP_GetValidIGD returned an unknown result code" << validIGDState;
+            break;
+        };
     }
     virtual ~MiniUPnPcPortMapper() override;
 
@@ -110,14 +114,21 @@ public:
     {
         if (validIGDState == 1) {
             // REVISIT: Expose the external IP in the preferences?
-            char externalAddress[16];
-            if (UPNP_GetExternalIPAddress(urls.controlURL,
-                                          igdData.first.servicetype,
-                                          externalAddress)
-                != UPNPCOMMAND_SUCCESS)
-                externalAddress[0] = '\0';
-            qDebug() << "IGD reported external IP" << externalAddress;
-            return QByteArray::fromRawData(externalAddress, 16);
+            static const constexpr int EXTERNAL_IP_ADDRESS_BYTES = 40;
+            char externalAddress[EXTERNAL_IP_ADDRESS_BYTES];
+            int result = UPNP_GetExternalIPAddress(urls.controlURL,
+                                                   igdData.first.servicetype,
+                                                   externalAddress);
+            if (result != UPNPCOMMAND_SUCCESS) {
+                qWarning() << "UPNP_GetExternalIPAddress returned" << result;
+
+            } else if (externalAddress[0]) {
+                qDebug() << "IGD reported external IP" << externalAddress;
+                return QByteArray::fromRawData(externalAddress, EXTERNAL_IP_ADDRESS_BYTES);
+
+            } else {
+                qWarning() << "IGD unable to retrieve external IP";
+            }
         }
         return QByteArray("");
     }
@@ -137,6 +148,7 @@ public:
                                              UPNP_PERMANENT_LEASE);
             if (result != UPNPCOMMAND_SUCCESS) {
                 qWarning() << "UPNP_AddPortMapping failed with result code" << result;
+
             } else {
                 qDebug() << "Added IGD port mapping";
                 return true;
@@ -158,6 +170,7 @@ public:
                                                 nullptr);
             if (result != UPNPCOMMAND_SUCCESS) {
                 qWarning() << "UPNP_DeletePortMapping failed with result code" << result;
+
             } else {
                 qDebug() << "Deleted IGD port mapping";
                 return true;
