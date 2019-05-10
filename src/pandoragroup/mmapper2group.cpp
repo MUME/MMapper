@@ -298,13 +298,13 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
                                         R"( ?[Cc]?[Rr]?[Ss]?W?)"    //          movement
                                         R"((?: i[^ >]+)?)"          //          wizinvis
                                         R"((?: NN)?(?: NS)?)"       //          no narrate / no song
-                                        R"((?: \d+\[\d+:\d+\]))?)"  //          god zone / room info
+                                        R"((?: \d+\[\d+:\d+\])?)?)" //          god zone / room info
                                         R"((?: HP:([^ >]+))?)"      // Group 3: HP
                                         R"((?: Mana:([^ >]+))?)"    // Group 4: Mana
                                         R"((?: Move:([^ >]+))?)"    // Group 5: Move
                                         R"((?: Mount:([^ >]+))?)"   // Group 6: Mount
-                                        R"((?: [^>:]+:([^ >]+))?)"  // Group 7: Target
-                                        R"((?: [^>:]+:([^ >]+))?)"  // Group 8: Buffer
+                                        R"((?: ([^>:]+):([^ >]+))?)" // Group 7/8: Target / health
+                                        R"((?: ([^>:]+):([^ >]+))?)" // Group 9/10: Buffer / health
                                         R"(>)");
     QRegularExpressionMatch match = pRx.match(prompt);
     if (!match.hasMatch())
