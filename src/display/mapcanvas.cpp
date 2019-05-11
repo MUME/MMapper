@@ -36,6 +36,7 @@
 #include <QMessageBox>
 #include <QMessageLogContext>
 #include <QOpenGLDebugMessage>
+#include <QSet>
 #include <QSize>
 #include <QString>
 #include <QtGui>
@@ -1160,6 +1161,8 @@ void MapCanvas::drawGroupCharacters()
         return;
     }
 
+    // Omit player so that they know group members are below them
+    QSet<RoomId> drawnRoomIds;
     auto selection = group->selectAll();
     for (auto &character : *selection) {
         const RoomId id = character->getRoomId();
@@ -1171,15 +1174,17 @@ void MapCanvas::drawGroupCharacters()
             if (const Room *const r = roomSelection.getRoom(id)) {
                 const auto pos = r->getPosition();
                 const auto color = character->getColor();
-                drawCharacter(pos, color);
+                const bool fill = !drawnRoomIds.contains(r->getId());
+                drawCharacter(pos, color, fill);
                 const auto prespam = m_data->getPath(pos, character->prespam);
                 drawPreSpammedPath(pos, prespam, color);
+                drawnRoomIds.insert(r->getId());
             }
         }
     }
 }
 
-void MapCanvas::drawCharacter(const Coordinate &c, const QColor &color)
+void MapCanvas::drawCharacter(const Coordinate &c, const QColor &color, bool fill)
 {
     const float x = static_cast<float>(c.x);
     const float y = static_cast<float>(c.y);
@@ -1217,7 +1222,8 @@ void MapCanvas::drawCharacter(const Coordinate &c, const QColor &color)
         const float scaleFactor = std::max(0.3f, normalized);
         m_opengl.glScalef(scaleFactor, scaleFactor, 1.0f);
 
-        m_opengl.callList(m_gllist.character_hint.filled);
+        if (fill)
+            m_opengl.callList(m_gllist.character_hint.filled);
         m_opengl.apply(XDisable{XOption::BLEND});
 
         m_opengl.apply(XColor4f{color});
@@ -1227,7 +1233,8 @@ void MapCanvas::drawCharacter(const Coordinate &c, const QColor &color)
         m_opengl.glTranslatef(x, y - 0.5f, m_currentLayer + 0.1f);
         m_opengl.glRotatef(270.0f, 0.0f, 0.0f, 1.0f);
 
-        m_opengl.callList(m_gllist.character_hint.filled);
+        if (fill)
+            m_opengl.callList(m_gllist.character_hint.filled);
         m_opengl.apply(XDisable{XOption::BLEND});
 
         m_opengl.apply(XColor4f{color});
@@ -1236,7 +1243,8 @@ void MapCanvas::drawCharacter(const Coordinate &c, const QColor &color)
         // Player is on the same layer and visible
         m_opengl.glTranslatef(x - 0.5f, y - 0.5f, ROOM_Z_DISTANCE * layer + 0.1f);
 
-        m_opengl.callList(m_gllist.room_selection.filled);
+        if (fill)
+            m_opengl.callList(m_gllist.room_selection.filled);
         m_opengl.apply(XDisable{XOption::BLEND});
 
         m_opengl.apply(XColor4f{color});

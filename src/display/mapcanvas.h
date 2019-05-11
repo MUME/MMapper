@@ -163,7 +163,7 @@ protected:
     void paintGL() override;
 
     void drawGroupCharacters();
-    void drawCharacter(const Coordinate &c, const QColor &color);
+    void drawCharacter(const Coordinate &c, const QColor &color, bool fill = true);
 
     void resizeGL(int width, int height) override;
     void mousePressEvent(QMouseEvent *event) override;
