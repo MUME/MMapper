@@ -130,6 +130,8 @@ void FindRoomsDlg::findClicked()
         kind = pattern_kinds::EXITS;
     } else if (notesRadioButton->isChecked()) {
         kind = pattern_kinds::NOTE;
+    } else if (flagsRadioButton->isChecked()) {
+        kind = pattern_kinds::FLAGS;
     }
 
     auto tmpSel = RoomSelection(*m_mapData);

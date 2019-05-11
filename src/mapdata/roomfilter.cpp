@@ -27,6 +27,8 @@
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
 #include "../global/utils.h"
+#include "../mapdata/enums.h"
+#include "../parser/AbstractParser-Commands.h"
 #include "ExitFieldVariant.h"
 #include "mmapper2room.h"
 
@@ -53,6 +55,8 @@ bool RoomFilter::parseRoomFilter(const QString &line, RoomFilter &output)
             kind = pattern_kinds::ALL;
         } else if (kindstr == "-clear" || kindstr == "-c") {
             kind = pattern_kinds::NONE;
+        } else if (kindstr == "-flags" || kindstr == "-f") {
+            kind = pattern_kinds::FLAGS;
         } else {
             return false;
         }
@@ -98,6 +102,65 @@ bool RoomFilter::filter(const Room *const pr) const
             }
             return false;
 
+        case pattern_kinds::FLAGS:
+            for (const auto &e : r.getExitsList()) {
+                for (const auto flag : ALL_DOOR_FLAGS) {
+                    if (!e.getDoorFlags().contains(flag))
+                        continue;
+                    if (QString(getParserCommandName(flag).getCommand()).contains(pattern, cs))
+                        return true;
+                }
+                for (const auto flag : ALL_EXIT_FLAGS) {
+                    if (!e.getExitFlags().contains(flag))
+                        continue;
+                    if (QString(getParserCommandName(flag).getCommand()).contains(pattern, cs))
+                        return true;
+                }
+            }
+            for (const auto flag : ALL_MOB_FLAGS) {
+                if (!r.getMobFlags().contains(flag))
+                    continue;
+                if (QString(getParserCommandName(flag).getCommand()).contains(pattern, cs))
+                    return true;
+            }
+            for (const auto flag : ALL_LOAD_FLAGS) {
+                if (!r.getLoadFlags().contains(flag))
+                    continue;
+                if (QString(getParserCommandName(flag).getCommand()).contains(pattern, cs))
+                    return true;
+            }
+            for (const auto flag : DEFINED_ROOM_LIGHT_TYPES) {
+                if (r.getLightType() != flag)
+                    continue;
+                if (QString(getParserCommandName(flag).getCommand()).contains(pattern, cs))
+                    return true;
+            }
+            for (const auto flag : DEFINED_ROOM_SUNDEATH_TYPES) {
+                if (r.getSundeathType() != flag)
+                    continue;
+                if (QString(getParserCommandName(flag).getCommand()).contains(pattern, cs))
+                    return true;
+            }
+            for (const auto flag : DEFINED_ROOM_PORTABLE_TYPES) {
+                if (r.getPortableType() != flag)
+                    continue;
+                if (QString(getParserCommandName(flag).getCommand()).contains(pattern, cs))
+                    return true;
+            }
+            for (const auto flag : DEFINED_ROOM_RIDABLE_TYPES) {
+                if (r.getRidableType() != flag)
+                    continue;
+                if (QString(getParserCommandName(flag).getCommand()).contains(pattern, cs))
+                    return true;
+            }
+            for (const auto flag : DEFINED_ROOM_ALIGN_TYPES) {
+                if (r.getAlignType() != flag)
+                    continue;
+                if (QString(getParserCommandName(flag).getCommand()).contains(pattern, cs))
+                    return true;
+            }
+            return false;
+
         case pattern_kinds::NONE:
             return false;
         }
@@ -109,7 +172,8 @@ bool RoomFilter::filter(const Room *const pr) const
                          pattern_kinds::DYN_DESC,
                          pattern_kinds::NAME,
                          pattern_kinds::NOTE,
-                         pattern_kinds::EXITS})
+                         pattern_kinds::EXITS,
+                         pattern_kinds::FLAGS})
             if (filter_kind(r, pat))
                 return true;
         return false;

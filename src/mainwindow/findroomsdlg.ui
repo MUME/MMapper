@@ -49,10 +49,24 @@
             <string>Search</string>
            </property>
            <layout class="QGridLayout" name="gridLayout">
-            <item row="1" column="0">
-             <widget class="QRadioButton" name="descRadioButton">
+            <item row="1" column="1">
+             <widget class="QRadioButton" name="notesRadioButton">
               <property name="text">
-               <string>&amp;Description</string>
+               <string>N&amp;otes</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QRadioButton" name="exitsRadioButton">
+              <property name="text">
+               <string>E&amp;xits</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QRadioButton" name="flagsRadioButton">
+              <property name="text">
+               <string>Fla&amp;gs</string>
               </property>
              </widget>
             </item>
@@ -66,27 +80,10 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="1">
-             <widget class="QRadioButton" name="exitsRadioButton">
+            <item row="1" column="0">
+             <widget class="QRadioButton" name="descRadioButton">
               <property name="text">
-               <string>E&amp;xits</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="1">
-             <widget class="QRadioButton" name="allRadioButton">
-              <property name="text">
-               <string>A&amp;ll</string>
-              </property>
-              <property name="checked">
-               <bool>false</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QRadioButton" name="notesRadioButton">
-              <property name="text">
-               <string>N&amp;otes</string>
+               <string>&amp;Description</string>
               </property>
              </widget>
             </item>
@@ -94,6 +91,16 @@
              <widget class="QRadioButton" name="dynDescRadioButton">
               <property name="text">
                <string>D&amp;ynamic description</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0" colspan="2">
+             <widget class="QRadioButton" name="allRadioButton">
+              <property name="text">
+               <string>A&amp;ll</string>
+              </property>
+              <property name="checked">
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -250,7 +257,6 @@
   <tabstop>descRadioButton</tabstop>
   <tabstop>notesRadioButton</tabstop>
   <tabstop>dynDescRadioButton</tabstop>
-  <tabstop>allRadioButton</tabstop>
   <tabstop>caseCheckBox</tabstop>
   <tabstop>resultTable</tabstop>
   <tabstop>selectButton</tabstop>
