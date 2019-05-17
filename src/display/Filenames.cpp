@@ -159,41 +159,31 @@ static QString getIconFilenameRaw(const QString name)
 
 static const char *getFilenameSuffix(const CharacterPosition position)
 {
-#define CASE2(UPPER, s) \
+#define X_CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
     do { \
-    case CharacterPosition::UPPER: \
-        return s; \
-    } while (false)
+    case CharacterPosition::UPPER_CASE: \
+        return #lower_case; \
+    } while (false);
     switch (position) {
-        CASE2(STANDING, "standing");
-        CASE2(FIGHTING, "fighting");
-        CASE2(RESTING, "resting");
-        CASE2(SITTING, "sitting");
-        CASE2(SLEEPING, "sleeping");
-        CASE2(INCAPACITATED, "incapacitated");
-        CASE2(DEAD, "dead");
-    case CharacterPosition::UNDEFINED:
-        break;
+        X_FOREACH_CHARACTER_POSITION(X_CASE)
     }
     return "";
-#undef CASE2
+#undef X_CASE
 }
 static const char *getFilenameSuffix(const CharacterAffect affect)
 {
-#define CASE2(UPPER, s) \
+#define X_CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
     do { \
-    case CharacterAffect::UPPER: \
-        return s; \
-    } while (false)
+    case CharacterAffect::UPPER_CASE: \
+        return #lower_case; \
+    } while (false);
     switch (affect) {
-        CASE2(BLIND, "blind");
-        CASE2(BASHED, "bashed");
-        CASE2(SLEPT, "slept");
-        CASE2(POISONED, "poisoned");
+        X_FOREACH_CHARACTER_AFFECT(X_CASE)
     }
     return "";
-#undef CASE2
+#undef X_CASE
 }
+
 template<typename E>
 static QString getIconFilename(const char *const prefix, const E x)
 {
@@ -209,9 +199,9 @@ static QString getIconFilename(const char *const prefix, const E x)
 
 QString getIconFilename(const CharacterPosition x)
 {
-    return getIconFilename("group", x);
+    return getIconFilename("position", x);
 }
 QString getIconFilename(const CharacterAffect x)
 {
-    return getIconFilename("group", x);
+    return getIconFilename("affect", x);
 }

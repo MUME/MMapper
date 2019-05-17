@@ -29,8 +29,10 @@
 
 #include <memory>
 #include <QArgument>
+#include <QMap>
 #include <QMutex>
 #include <QObject>
+#include <QTimer>
 #include <QVariantMap>
 
 #include "../global/roomid.h"
@@ -53,7 +55,8 @@ signals:
     void displayGroupTellEvent(const QByteArray &tell); // displays gtell from remote user
     void messageBox(QString title, QString message);
     void networkStatus(bool);
-    void drawCharacters(); // redraw the opengl screen
+    void updateWidget();    // update group widget
+    void updateMapCanvas(); // redraw the opengl screen
 
 public:
     explicit Mmapper2Group(QObject *parent = nullptr);
@@ -91,6 +94,8 @@ protected slots:
 
     void characterChanged();
 
+    void onAffectTimeout();
+
 private:
     struct
     {
@@ -99,6 +104,11 @@ private:
         QByteArray textMana{};
         bool inCombat{false};
     } lastPrompt;
+
+    QTimer affectTimer;
+    QMap<CharacterAffect, uint64_t> affectLastSeenMs;
+    using AffectTimeout = QMap<CharacterAffect, int>;
+    static const AffectTimeout s_affectTimeout;
 
     bool init();
     void issueLocalCharUpdate();

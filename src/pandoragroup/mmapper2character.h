@@ -32,32 +32,63 @@
 
 #include "../global/Flags.h"
 
+// X(UPPER_CASE, lower_case, CamelCase, "Friendly Name")
+#define X_FOREACH_CHARACTER_POSITION(X) \
+    X(UNDEFINED, undefined, Undefined, "No state available") \
+    X(FIGHTING, fighting, Fighting, "Fighting") \
+    X(STANDING, standing, Standing, "Standing") \
+    X(SITTING, sitting, Sitting, "Sitting") \
+    X(RESTING, resting, Resting, "Resting") \
+    X(SLEEPING, sleeping, Sleeping, "Sleeping") \
+    X(INCAPACITATED, incapacitated, Incapacitated, "Incapacitated") \
+    X(DEAD, dead, Dead, "Dead") \
+    /* define character positions above */
+
 enum class CharacterPosition {
-    UNDEFINED = 0,
-    FIGHTING,
-    STANDING,
-    SITTING,
-    RESTING,
-    SLEEPING,
-    INCAPACITATED,
-    DEAD
+#define X_DECL_CHARACTER_POSITION(UPPER_CASE, lower_case, CamelCase, friendly) UPPER_CASE,
+    X_FOREACH_CHARACTER_POSITION(X_DECL_CHARACTER_POSITION)
+#undef X_DECL_CHARACTER_POSITION
 };
-static constexpr const size_t NUM_CHARACTER_POSITIONS = static_cast<size_t>(CharacterPosition::DEAD)
-                                                        + 1u;
-static_assert(NUM_CHARACTER_POSITIONS == 8);
+
+#define X_COUNT(UPPER_CASE, lower_case, CamelCase, friendly) +1
+static constexpr const int NUM_CHARACTER_POSITIONS = X_FOREACH_CHARACTER_POSITION(X_COUNT);
+#undef X_COUNT
 DEFINE_ENUM_COUNT(CharacterPosition, NUM_CHARACTER_POSITIONS)
 Q_DECLARE_METATYPE(CharacterPosition)
 
-// TODO: States for BLEEDING CASTING FLUSHING DISEASED HUNGRY THIRSTY
-enum class CharacterAffect { BLIND, BASHED, SLEPT, POISONED };
-static constexpr const int NUM_CHARACTER_AFFECTS = static_cast<int>(CharacterAffect::POISONED) + 1;
-static_assert(NUM_CHARACTER_AFFECTS == 4);
+// X(UPPER_CASE, lower_case, CamelCase, "Friendly Name")
+#define X_FOREACH_CHARACTER_AFFECT(X) \
+    X(BLIND, blind, Blind, "Blind") \
+    X(BASHED, bashed, Bashed, "Bashed") \
+    X(SLEPT, slept, Slept, "Slept") \
+    X(POISONED, poisoned, Poisoned, "Poisoned") \
+    X(BLEEDING, bleeding, Bleeding, "Bleeding") \
+    X(HUNGRY, hungry, Hungry, "Hungry") \
+    X(THIRSTY, thirsty, Thirsty, "Thirsty") \
+    /* define character affects above */
+
+// TODO: States for CASTING FLUSHING DISEASED
+enum class CharacterAffect {
+#define X_DECL_CHARACTER_AFFECT(UPPER_CASE, lower_case, CamelCase, friendly) UPPER_CASE,
+    X_FOREACH_CHARACTER_AFFECT(X_DECL_CHARACTER_AFFECT)
+#undef X_DECL_CHARACTER_AFFECT
+};
+
+#define X_COUNT(UPPER_CASE, lower_case, CamelCase, friendly) +1
+static constexpr const int NUM_CHARACTER_AFFECTS = X_FOREACH_CHARACTER_AFFECT(X_COUNT);
+#undef X_COUNT
 DEFINE_ENUM_COUNT(CharacterAffect, NUM_CHARACTER_AFFECTS)
 Q_DECLARE_METATYPE(CharacterAffect)
 
 class CharacterAffects final : public enums::Flags<CharacterAffects, CharacterAffect, uint32_t>
 {
     using Flags::Flags;
+
+public:
+#define X_DEFINE_ACCESSORS(UPPER_CASE, lower_case, CamelCase, friendly) \
+    bool is##CamelCase() const { return contains(CharacterAffect::UPPER_CASE); }
+    X_FOREACH_CHARACTER_AFFECT(X_DEFINE_ACCESSORS)
+#undef X_DEFINE_ACCESSORS
 };
 
 inline constexpr const CharacterAffects operator|(CharacterAffect lhs, CharacterAffect rhs) noexcept

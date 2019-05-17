@@ -88,20 +88,6 @@
 
 class RoomRecipient;
 
-DockWidget::DockWidget(const QString &title, QWidget *parent, Qt::WindowFlags flags)
-    : QDockWidget(title, parent, flags)
-{}
-
-QSize DockWidget::minimumSizeHint() const
-{
-    return {200, 0};
-}
-
-QSize DockWidget::sizeHint() const
-{
-    return {500, 130};
-}
-
 static void addApplicationFont()
 {
     const auto id = QFontDatabase::addApplicationFont(":/fonts/DejaVuSansMono.ttf");
@@ -160,14 +146,14 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
 
     m_launchWidget = new WelcomeWidget(this);
     m_launchWidget->setObjectName("WelcomeWidget");
-    m_dockLaunch = new DockWidget("Launch Panel", this);
+    m_dockLaunch = new QDockWidget("Launch Panel", this);
     m_dockLaunch->setObjectName("DockWelcome");
     m_dockLaunch->setAllowedAreas(Qt::LeftDockWidgetArea);
     m_dockLaunch->setFeatures(QDockWidget::DockWidgetClosable);
     addDockWidget(Qt::LeftDockWidgetArea, m_dockLaunch);
     m_dockLaunch->setWidget(m_launchWidget);
 
-    m_dockDialogLog = new DockWidget(tr("Log Panel"), this);
+    m_dockDialogLog = new QDockWidget(tr("Log Panel"), this);
     m_dockDialogLog->setObjectName("DockWidgetLog");
     m_dockDialogLog->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
     m_dockDialogLog->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
@@ -182,7 +168,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     m_dockDialogLog->hide();
 
     m_groupWidget = new GroupWidget(m_groupManager, m_mapData, this);
-    m_dockDialogGroup = new DockWidget(tr("Group Panel"), this);
+    m_dockDialogGroup = new QDockWidget(tr("Group Panel"), this);
     m_dockDialogGroup->setObjectName("DockWidgetGroup");
     m_dockDialogGroup->setAllowedAreas(Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea);
     m_dockDialogGroup->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable
@@ -220,8 +206,6 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     wireConnections();
     readSettings();
 
-    // Re-hide or re-show docks that might have been restored
-    m_dockDialogGroup->hide();
     if (getConfig().general.noLaunchPanel) {
         m_dockLaunch->hide();
     } else {
@@ -383,7 +367,7 @@ void MainWindow::wireConnections()
             &Mmapper2Group::setCharacterRoomId,
             Qt::QueuedConnection);
     connect(m_groupManager,
-            &Mmapper2Group::drawCharacters,
+            &Mmapper2Group::updateMapCanvas,
             m_mapWindow->getCanvas(),
             static_cast<void (QWidget::*)(void)>(&QWidget::update),
             Qt::QueuedConnection);
@@ -1697,7 +1681,6 @@ void MainWindow::groupNetworkStatus(const bool status)
         groupNetwork.networkStartAct->setChecked(true);
         groupNetwork.networkStartAct->setShortcut(tr(""));
     } else {
-        m_dockDialogGroup->hide();
         groupNetwork.networkStartAct->setShortcut(tr("Ctrl+G"));
         groupNetwork.networkStopAct->setChecked(true);
         groupNetwork.networkStopAct->setShortcut(tr(""));

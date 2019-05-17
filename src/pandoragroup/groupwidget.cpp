@@ -181,39 +181,29 @@ static QString calculateRatio(const int numerator, const int denomenator)
 
 static QString getPrettyName(const CharacterPosition position)
 {
-#define CASE2(UPPER, s) \
+#define X_CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
     do { \
-    case CharacterPosition::UPPER: \
-        return s; \
-    } while (false)
+    case CharacterPosition::UPPER_CASE: \
+        return friendly; \
+    } while (false);
     switch (position) {
-        CASE2(STANDING, "Standing");
-        CASE2(FIGHTING, "Fighting");
-        CASE2(RESTING, "Resting");
-        CASE2(SITTING, "Sitting");
-        CASE2(SLEEPING, "Sleeping");
-        CASE2(INCAPACITATED, "Incapacitated");
-        CASE2(DEAD, "Dead");
-        CASE2(UNDEFINED, "No state available");
+        X_FOREACH_CHARACTER_POSITION(X_CASE)
     }
-    return QString::asprintf("CharacterPosition(%d)", static_cast<int>(position));
-#undef CASE2
+    return QString::asprintf("(CharacterPosition)%d", static_cast<int>(position));
+#undef X_CASE
 }
 static QString getPrettyName(const CharacterAffect affect)
 {
-#define CASE2(UPPER, s) \
+#define X_CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
     do { \
-    case CharacterAffect::UPPER: \
-        return s; \
-    } while (false)
+    case CharacterAffect::UPPER_CASE: \
+        return friendly; \
+    } while (false);
     switch (affect) {
-        CASE2(BLIND, "Blind");
-        CASE2(BASHED, "Bashed");
-        CASE2(SLEPT, "Slept");
-        CASE2(POISONED, "Poisoned");
+        X_FOREACH_CHARACTER_AFFECT(X_CASE)
     }
-    return QString::asprintf("CharacterAffect(%d)", static_cast<int>(affect));
-#undef CASE2
+    return QString::asprintf("(CharacterAffect)%d", static_cast<int>(affect));
+#undef X_CASE
 }
 
 QVariant GroupModel::dataForCharacter(CGroupChar *const character, ColumnType column, int role) const
@@ -408,7 +398,7 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
     });
 
     connect(m_group,
-            &Mmapper2Group::drawCharacters,
+            &Mmapper2Group::updateWidget,
             this,
             &GroupWidget::updateLabels,
             Qt::QueuedConnection);

@@ -26,6 +26,7 @@
 #include "mmapper2group.h"
 
 #include <QColor>
+#include <QDateTime>
 #include <QMessageLogContext>
 #include <QMutex>
 #include <QThread>
@@ -45,14 +46,28 @@
 #include "mmapper2character.h"
 
 static constexpr const bool THREADED = true;
+static constexpr const auto ONE_SECOND = 1000;
+static constexpr const auto ONE_MINUTE = 60 * ONE_SECOND;
+const Mmapper2Group::AffectTimeout Mmapper2Group::s_affectTimeout
+    = {{CharacterAffect::BASHED, 4 * ONE_SECOND},
+       {CharacterAffect::BLIND, 30 * ONE_MINUTE},
+       {CharacterAffect::POISONED, 5 * ONE_MINUTE},
+       {CharacterAffect::SLEPT, 30 * ONE_MINUTE},
+       {CharacterAffect::BLEEDING, 2 * ONE_MINUTE},
+       {CharacterAffect::HUNGRY, 2 * ONE_MINUTE},
+       {CharacterAffect::THIRSTY, 2 * ONE_MINUTE}};
 
 Mmapper2Group::Mmapper2Group(QObject *const /* parent */)
     : QObject(nullptr)
+    , affectTimer{this}
     , networkLock(QMutex::Recursive)
     , thread(THREADED ? new QThread : nullptr)
 {
     qRegisterMetaType<CharacterPosition>("CharacterPosition");
     qRegisterMetaType<CharacterAffect>("CharacterAffect");
+    affectTimer.setInterval(ONE_SECOND);
+    affectTimer.setSingleShot(false);
+    connect(&affectTimer, &QTimer::timeout, this, &Mmapper2Group::onAffectTimeout);
 
     if (thread) {
         connect(thread.get(), &QThread::started, this, [this]() {
@@ -106,11 +121,16 @@ bool Mmapper2Group::init()
             this,
             &Mmapper2Group::characterChanged,
             Qt::QueuedConnection);
+
+    affectTimer.start();
+    emit updateWidget();
     return true;
 }
 
 void Mmapper2Group::stop()
 {
+    affectTimer.stop();
+
     // Call stopNetwork() using the Group thread
     QMetaObject::invokeMethod(this, "stopNetwork", Qt::BlockingQueuedConnection);
 
@@ -124,9 +144,8 @@ void Mmapper2Group::stop()
 
 void Mmapper2Group::characterChanged()
 {
-    if (getMode() != GroupManagerState::Off) {
-        emit drawCharacters();
-    }
+    emit updateWidget();
+    emit updateMapCanvas();
 }
 
 void Mmapper2Group::updateSelf()
@@ -159,15 +178,13 @@ void Mmapper2Group::updateSelf()
         return;
     }
 
-    if (getMode() != GroupManagerState::Off) {
-        issueLocalCharUpdate();
-    }
+    issueLocalCharUpdate();
 }
 
 void Mmapper2Group::setCharacterRoomId(RoomId roomId)
 {
     QMutexLocker locker(&networkLock);
-    if (!group || getMode() == GroupManagerState::Off) {
+    if (!group) {
         return;
     }
 
@@ -179,6 +196,8 @@ void Mmapper2Group::setCharacterRoomId(RoomId roomId)
 
 void Mmapper2Group::issueLocalCharUpdate()
 {
+    emit updateWidget();
+
     QMutexLocker locker(&networkLock);
     if (!group || getMode() == GroupManagerState::Off) {
         return;
@@ -187,7 +206,6 @@ void Mmapper2Group::issueLocalCharUpdate()
     if (network) {
         const QVariantMap &data = group->getSelf()->toVariantMap();
         network->sendCharUpdate(data);
-        emit drawCharacters();
     }
 }
 
@@ -246,9 +264,8 @@ void Mmapper2Group::sendGroupTell(const QByteArray &tell)
 
 void Mmapper2Group::parseScoreInformation(const QByteArray &score)
 {
-    if (!group || getMode() == GroupManagerState::Off) {
+    if (!group)
         return;
-    }
     static const QRegularExpression sRx(R"(^(\d+)\/(\d+) hits)"         // Group 1/2 hits
                                         R"(,?(?: (\d+)\/(\d+) mana,)?)" // Group 3/4 mana
                                         R"( and (\d+)\/(\d+) moves.)"); // Group 5/6 moves
@@ -284,9 +301,8 @@ void Mmapper2Group::parseScoreInformation(const QByteArray &score)
 
 void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
 {
-    if (!group || getMode() == GroupManagerState::Off) {
+    if (!group)
         return;
-    }
 
     CGroupChar *self = getGroup()->getSelf();
     QByteArray textHP{}, textMana{}, textMoves{};
@@ -361,8 +377,8 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
             [](const QByteArray &text, const double current, const double max) -> double {
             if (text.isEmpty() || text == "Healthy")
                 return max;
-            X_SCORE("Fine", 0.66, 0.99);
-            X_SCORE("Hurt", 0.45, 0.65);
+            X_SCORE("Fine", 0.71, 0.99);
+            X_SCORE("Hurt", 0.45, 0.70);
             X_SCORE("Wounded", 0.26, 0.45);
             X_SCORE("Bad", 0.11, 0.25);
             X_SCORE("Awful", 0.01, 0.10);
@@ -409,9 +425,8 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
 
 void Mmapper2Group::updateCharacterPosition(CharacterPosition position)
 {
-    if (!group || getMode() == GroupManagerState::Off) {
+    if (!group)
         return;
-    }
 
     CharacterPosition &oldPosition = group->getSelf()->position;
 
@@ -431,20 +446,49 @@ void Mmapper2Group::updateCharacterPosition(CharacterPosition position)
 
 void Mmapper2Group::updateCharacterAffect(CharacterAffect affect, bool enable)
 {
-    if (!group || getMode() == GroupManagerState::Off) {
+    if (!group)
         return;
-    }
+
+    if (enable)
+        affectLastSeenMs.insert(affect, QDateTime::QDateTime::currentDateTimeUtc().toTime_t());
 
     CharacterAffects &affects = getGroup()->self->affects;
     if (enable == affects.contains(affect))
         return; // No update needed
 
-    if (enable)
+    if (enable) {
         affects.insert(affect);
-    else
+    } else {
         affects.remove(affect);
+        affectLastSeenMs.remove(affect);
+    }
 
     issueLocalCharUpdate();
+}
+
+void Mmapper2Group::onAffectTimeout()
+{
+    if (affectLastSeenMs.isEmpty())
+        return;
+
+    bool removedAtLeastOneAffect = false;
+    CharacterAffects &affects = getGroup()->self->affects;
+    const auto now = QDateTime::QDateTime::currentDateTimeUtc().toTime_t();
+    for (CharacterAffect affect : affectLastSeenMs.keys()) {
+        const auto lastSeenMs = affectLastSeenMs.value(affect, 0);
+        const int elapsedMs = static_cast<int>(now - lastSeenMs);
+        static constexpr const int THIRTY_MINUTES = 30 * ONE_MINUTE;
+        if (elapsedMs > s_affectTimeout.value(affect, THIRTY_MINUTES)) {
+            if (!affects.contains(affect))
+                qWarning() << "Affect" << static_cast<int>(affect)
+                           << "timed out but was not present";
+            removedAtLeastOneAffect = true;
+            affects.remove(affect);
+            affectLastSeenMs.remove(affect);
+        }
+    }
+    if (removedAtLeastOneAffect)
+        issueLocalCharUpdate();
 }
 
 void Mmapper2Group::setPath(CommandQueue dirs, bool)
@@ -526,7 +570,7 @@ void Mmapper2Group::startNetwork()
     // REVISIT: What about if the network is already started?
     if (network->start()) {
         emit networkStatus(true);
-        emit drawCharacters();
+        emit updateWidget();
 
         if (getConfig().groupManager.rulesWarning) {
             emit messageBox("Warning: MUME Rules",

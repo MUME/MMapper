@@ -70,18 +70,6 @@ class RoomSelection;
 class WelcomeWidget;
 class UpdateDialog;
 
-class DockWidget : public QDockWidget
-{
-    Q_OBJECT
-public:
-    explicit DockWidget(const QString &title,
-                        QWidget *parent = nullptr,
-                        Qt::WindowFlags flags = Qt::WindowFlags{});
-
-    virtual QSize minimumSizeHint() const override;
-    virtual QSize sizeHint() const override;
-};
-
 class MainWindow final : public QMainWindow
 {
     Q_OBJECT
@@ -171,9 +159,9 @@ protected:
 private:
     MapWindow *m_mapWindow = nullptr;
     QTextBrowser *logWindow = nullptr;
-    DockWidget *m_dockDialogLog = nullptr;
-    DockWidget *m_dockDialogGroup = nullptr;
-    DockWidget *m_dockLaunch = nullptr;
+    QDockWidget *m_dockDialogLog = nullptr;
+    QDockWidget *m_dockDialogGroup = nullptr;
+    QDockWidget *m_dockLaunch = nullptr;
 
     ConnectionListener *m_listener = nullptr;
     Mmapper2PathMachine *m_pathMachine = nullptr;
