@@ -106,7 +106,7 @@ private:
     } lastPrompt;
 
     QTimer affectTimer;
-    QMap<CharacterAffect, uint64_t> affectLastSeenMs;
+    QMap<CharacterAffect, uint64_t> affectLastSeen;
     using AffectTimeout = QMap<CharacterAffect, int>;
     static const AffectTimeout s_affectTimeout;
 

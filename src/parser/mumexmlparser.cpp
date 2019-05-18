@@ -748,7 +748,7 @@ void MumeXmlParser::parseMudCommands(const QString &str)
         if (str.startsWith("- poison (type: poison).")) {
             emit sendCharacterAffectEvent(CharacterAffect::POISONED, true);
             return;
-        } else if (!str.startsWith("- a light wound") && !str.endsWith("(bound)")
+        } else if (!str.startsWith("- a light wound") && !str.endsWith("bound)")
                    && str.contains("wound at the")) {
             emit sendCharacterAffectEvent(CharacterAffect::BLEEDING, true);
             return;

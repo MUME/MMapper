@@ -46,13 +46,13 @@
 #include "mmapper2character.h"
 
 static constexpr const bool THREADED = true;
-static constexpr const auto ONE_SECOND = 1000;
-static constexpr const auto ONE_MINUTE = 60 * ONE_SECOND;
+static constexpr const auto ONE_MINUTE = 60;
+static constexpr const int THIRTY_MINUTES = 30 * ONE_MINUTE;
 const Mmapper2Group::AffectTimeout Mmapper2Group::s_affectTimeout
-    = {{CharacterAffect::BASHED, 4 * ONE_SECOND},
-       {CharacterAffect::BLIND, 30 * ONE_MINUTE},
+    = {{CharacterAffect::BASHED, 4},
+       {CharacterAffect::BLIND, THIRTY_MINUTES},
        {CharacterAffect::POISONED, 5 * ONE_MINUTE},
-       {CharacterAffect::SLEPT, 30 * ONE_MINUTE},
+       {CharacterAffect::SLEPT, THIRTY_MINUTES},
        {CharacterAffect::BLEEDING, 2 * ONE_MINUTE},
        {CharacterAffect::HUNGRY, 2 * ONE_MINUTE},
        {CharacterAffect::THIRSTY, 2 * ONE_MINUTE}};
@@ -65,8 +65,7 @@ Mmapper2Group::Mmapper2Group(QObject *const /* parent */)
 {
     qRegisterMetaType<CharacterPosition>("CharacterPosition");
     qRegisterMetaType<CharacterAffect>("CharacterAffect");
-    affectTimer.setInterval(ONE_SECOND);
-    affectTimer.setSingleShot(false);
+    affectTimer.setInterval(1);
     connect(&affectTimer, &QTimer::timeout, this, &Mmapper2Group::onAffectTimeout);
 
     if (thread) {
@@ -122,7 +121,7 @@ bool Mmapper2Group::init()
             &Mmapper2Group::characterChanged,
             Qt::QueuedConnection);
 
-    affectTimer.start();
+    affectTimer.start(1);
     emit updateWidget();
     return true;
 }
@@ -450,7 +449,7 @@ void Mmapper2Group::updateCharacterAffect(CharacterAffect affect, bool enable)
         return;
 
     if (enable)
-        affectLastSeenMs.insert(affect, QDateTime::QDateTime::currentDateTimeUtc().toTime_t());
+        affectLastSeen.insert(affect, QDateTime::QDateTime::currentDateTimeUtc().toTime_t());
 
     CharacterAffects &affects = getGroup()->self->affects;
     if (enable == affects.contains(affect))
@@ -460,7 +459,7 @@ void Mmapper2Group::updateCharacterAffect(CharacterAffect affect, bool enable)
         affects.insert(affect);
     } else {
         affects.remove(affect);
-        affectLastSeenMs.remove(affect);
+        affectLastSeen.remove(affect);
     }
 
     issueLocalCharUpdate();
@@ -468,23 +467,20 @@ void Mmapper2Group::updateCharacterAffect(CharacterAffect affect, bool enable)
 
 void Mmapper2Group::onAffectTimeout()
 {
-    if (affectLastSeenMs.isEmpty())
+    if (affectLastSeen.isEmpty())
         return;
 
     bool removedAtLeastOneAffect = false;
     CharacterAffects &affects = getGroup()->self->affects;
     const auto now = QDateTime::QDateTime::currentDateTimeUtc().toTime_t();
-    for (CharacterAffect affect : affectLastSeenMs.keys()) {
-        const auto lastSeenMs = affectLastSeenMs.value(affect, 0);
-        const int elapsedMs = static_cast<int>(now - lastSeenMs);
-        static constexpr const int THIRTY_MINUTES = 30 * ONE_MINUTE;
-        if (elapsedMs > s_affectTimeout.value(affect, THIRTY_MINUTES)) {
-            if (!affects.contains(affect))
-                qWarning() << "Affect" << static_cast<int>(affect)
-                           << "timed out but was not present";
+    for (CharacterAffect affect : affectLastSeen.keys()) {
+        const auto lastSeen = affectLastSeen.value(affect, 0);
+        const int elapsed = static_cast<int>(now - lastSeen);
+        const int timeout = s_affectTimeout.value(affect, THIRTY_MINUTES);
+        if (elapsed > timeout) {
             removedAtLeastOneAffect = true;
             affects.remove(affect);
-            affectLastSeenMs.remove(affect);
+            affectLastSeen.remove(affect);
         }
     }
     if (removedAtLeastOneAffect)
