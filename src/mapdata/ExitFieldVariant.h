@@ -61,15 +61,17 @@ private:
                                                           std::max(sizeof(ExitFlags),
                                                                    sizeof(DoorFlags)));
 
-    alignas(STORAGE_ALIGNMENT) char storage[STORAGE_SIZE]{};
-    ExitField type{};
+    std::aligned_storage_t<STORAGE_SIZE, STORAGE_ALIGNMENT> storage_;
+    static_assert(sizeof(storage_) >= STORAGE_SIZE);
+    ExitField type_{};
 
 public:
     ExitFieldVariant() = delete;
 
 public:
     /* NOTE: Adding move support would be a pain for little gain.
-     * You'd at least a boolean indicating that the object is in moved-from state. */
+     * You'd at least need a boolean indicating that the object
+     * is in moved-from state, or a reserved enum value. */
     DELETE_MOVE_CTOR(ExitFieldVariant);
     DELETE_MOVE_ASSIGN_OP(ExitFieldVariant);
 
@@ -84,7 +86,7 @@ public:
 
     ~ExitFieldVariant();
 
-    inline ExitField getType() const { return type; }
+    inline ExitField getType() const { return type_; }
     DoorName getDoorName() const;
     ExitFlags getExitFlags() const;
     DoorFlags getDoorFlags() const;

@@ -52,6 +52,7 @@ RoomFieldVariant::RoomFieldVariant(const RoomFieldVariant &rhs)
 
 RoomFieldVariant &RoomFieldVariant::operator=(const RoomFieldVariant &rhs)
 {
+    // FIXME: This is not kosher.
     this->~RoomFieldVariant();
     new (this) RoomFieldVariant(rhs);
     return *this;
@@ -85,7 +86,10 @@ RoomFieldVariant::~RoomFieldVariant()
         break;
     }
 
+#ifndef NDEBUG
+    // only useful for debugging
     ::memset(&storage_, 0, sizeof(storage_));
+#endif
 }
 
 #define X_DECLARE_ACCESSORS(UPPER_CASE, CamelCase, Type) \

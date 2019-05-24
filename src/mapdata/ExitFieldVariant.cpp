@@ -32,17 +32,17 @@
 #include "ExitFlags.h"
 
 ExitFieldVariant::ExitFieldVariant(const ExitFieldVariant &rhs)
-    : type{rhs.type}
+    : type_{rhs.type_}
 {
-    switch (type) {
+    switch (type_) {
     case ExitField::DOOR_NAME:
-        new (storage) DoorName(rhs.getDoorName());
+        new (&storage_) DoorName{rhs.getDoorName()};
         return;
     case ExitField::EXIT_FLAGS:
-        new (storage) ExitFlags(rhs.getExitFlags());
+        new (&storage_) ExitFlags{rhs.getExitFlags()};
         return;
     case ExitField::DOOR_FLAGS:
-        new (storage) DoorFlags(rhs.getDoorFlags());
+        new (&storage_) DoorFlags{rhs.getDoorFlags()};
         return;
     }
     throw std::runtime_error("bad type");
@@ -50,62 +50,67 @@ ExitFieldVariant::ExitFieldVariant(const ExitFieldVariant &rhs)
 
 ExitFieldVariant &ExitFieldVariant::operator=(const ExitFieldVariant &rhs)
 {
+    // FIXME: This is not kosher.
     this->~ExitFieldVariant();
     new (this) ExitFieldVariant(rhs);
     return *this;
 }
 
 ExitFieldVariant::ExitFieldVariant(DoorName doorName)
-    : type{ExitField::DOOR_NAME}
+    : type_{ExitField::DOOR_NAME}
 {
-    new (storage) DoorName(std::move(doorName));
+    new (&storage_) DoorName{std::move(doorName)};
 }
 
 ExitFieldVariant::ExitFieldVariant(const ExitFlags exitFlags)
-    : type{ExitField::EXIT_FLAGS}
+    : type_{ExitField::EXIT_FLAGS}
 {
-    new (storage) ExitFlags(exitFlags);
+    new (&storage_) ExitFlags{exitFlags};
 }
 
 ExitFieldVariant::ExitFieldVariant(const DoorFlags doorFlags)
-    : type{ExitField::DOOR_FLAGS}
+    : type_{ExitField::DOOR_FLAGS}
 {
-    new (storage) DoorFlags(doorFlags);
+    new (&storage_) DoorFlags{doorFlags};
 }
 
 ExitFieldVariant::~ExitFieldVariant()
 {
-    switch (type) {
+    switch (type_) {
     case ExitField::DOOR_NAME:
-        reinterpret_cast<DoorName *>(storage)->~DoorName();
+        reinterpret_cast<DoorName *>(&storage_)->~DoorName();
         break;
     case ExitField::EXIT_FLAGS:
-        reinterpret_cast<ExitFlags *>(storage)->~ExitFlags();
+        reinterpret_cast<ExitFlags *>(&storage_)->~ExitFlags();
         break;
     case ExitField::DOOR_FLAGS:
-        reinterpret_cast<DoorFlags *>(storage)->~DoorFlags();
+        reinterpret_cast<DoorFlags *>(&storage_)->~DoorFlags();
         break;
     }
-    ::memset(storage, 0, sizeof(storage));
+
+#ifndef NDEBUG
+    // only useful for debugging
+    ::memset(&storage_, 0, sizeof(storage_));
+#endif
 }
 
 DoorName ExitFieldVariant::getDoorName() const
 {
-    if (type != ExitField::DOOR_NAME)
+    if (type_ != ExitField::DOOR_NAME)
         throw std::runtime_error("bad type");
-    return *reinterpret_cast<const DoorName *>(storage);
+    return *reinterpret_cast<const DoorName *>(&storage_);
 }
 
 ExitFlags ExitFieldVariant::getExitFlags() const
 {
-    if (type != ExitField::EXIT_FLAGS)
+    if (type_ != ExitField::EXIT_FLAGS)
         throw std::runtime_error("bad type");
-    return *reinterpret_cast<const ExitFlags *>(storage);
+    return *reinterpret_cast<const ExitFlags *>(&storage_);
 }
 
 DoorFlags ExitFieldVariant::getDoorFlags() const
 {
-    if (type != ExitField::DOOR_FLAGS)
+    if (type_ != ExitField::DOOR_FLAGS)
         throw std::runtime_error("bad type");
-    return *reinterpret_cast<const DoorFlags *>(storage);
+    return *reinterpret_cast<const DoorFlags *>(&storage_);
 }
