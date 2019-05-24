@@ -390,13 +390,8 @@ struct AnsiTokenizer final
     public:
         explicit Iterator(const QString &_str, size_type _pos = 0);
 
-        // c++17 could do:
-        // bool operator!=(std::nullptr_t) const { return hasNext(); }
-        bool operator!=(const Iterator &other) const
-        {
-            assert(&str_ == &other.str_);
-            return pos_ != other.pos_;
-        }
+        bool operator!=(std::nullptr_t) const { return hasNext(); }
+        bool operator!=(const Iterator &other) const = delete;
 
         /*
          * NOTE: The `operator*()` and `operator++()` paradigm is subtly
@@ -407,7 +402,6 @@ struct AnsiTokenizer final
          *     // your code here
          *   }
          * becomes:
-         *   // note: iterator types can be different in C++17!
          *   auto _it = std::begin(yourRange); // defaults to yourRange.begin()
          *   auto _end = std::end(yourRange);  // defaults to yourRange.end()
          *   while (_it != _end) {             // calls _it.operator!=(_end)
@@ -468,9 +462,7 @@ struct AnsiTokenizer final
     {}
 
     Iterator begin() { return Iterator{str_, 0}; }
-    /* In c++17 this can be auto end() { return nullptr; },
-     * and then use bool Iterator::operator!=(std::nullptr) const; */
-    Iterator end() { return Iterator{str_, str_.size()}; }
+    auto end() { return nullptr; }
 };
 
 static constexpr int tab_advance(int col)
