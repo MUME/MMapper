@@ -28,6 +28,7 @@
 
 #include <cassert>
 #include <mutex>
+#include <optional>
 #include <QByteArray>
 #include <QChar>
 #include <QHostInfo>
