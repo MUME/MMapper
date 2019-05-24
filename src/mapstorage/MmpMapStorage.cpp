@@ -57,7 +57,7 @@ MmpMapStorage::~MmpMapStorage() = default;
 
 void MmpMapStorage::newData()
 {
-    static_assert("MmpMapStorage does not implement newData()" != nullptr);
+    qWarning() << "MmpMapStorage does not implement newData()";
 }
 
 bool MmpMapStorage::loadData()

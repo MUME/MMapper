@@ -48,7 +48,7 @@ PandoraMapStorage::~PandoraMapStorage() = default;
 
 void PandoraMapStorage::newData()
 {
-    static_assert("PandoraMapStorage does not implement newData()" != nullptr);
+    qWarning() << "PandoraMapStorage does not implement newData()";
 }
 
 bool PandoraMapStorage::loadData()

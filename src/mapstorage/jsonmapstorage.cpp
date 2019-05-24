@@ -462,7 +462,7 @@ JsonMapStorage::~JsonMapStorage() = default;
 
 void JsonMapStorage::newData()
 {
-    static_assert("JsonMapStorage does not implement newData()" != nullptr, "");
+    qWarning() << "JsonMapStorage does not implement newData()";
 }
 
 bool JsonMapStorage::loadData()
