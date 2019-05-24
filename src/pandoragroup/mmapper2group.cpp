@@ -65,6 +65,13 @@ Mmapper2Group::Mmapper2Group(QObject *const /* parent */)
 {
     qRegisterMetaType<CharacterPosition>("CharacterPosition");
     qRegisterMetaType<CharacterAffect>("CharacterAffect");
+
+    connect(this,
+            &Mmapper2Group::sig_invokeStopInternal,
+            this,
+            &Mmapper2Group::slot_stopInternal,
+            Qt::ConnectionType::BlockingQueuedConnection);
+
     affectTimer.setInterval(1);
     connect(&affectTimer, &QTimer::timeout, this, &Mmapper2Group::onAffectTimeout);
 
@@ -126,12 +133,19 @@ bool Mmapper2Group::init()
     return true;
 }
 
+void Mmapper2Group::slot_stopInternal()
+{
+    assert(QThread::currentThread() == QObject::thread());
+    assert(QThread::currentThread() == Mmapper2Group::thread.get() || !Mmapper2Group::thread);
+    affectTimer.stop();
+    stopNetwork();
+    ++m_calledStopInternal;
+}
+
 void Mmapper2Group::stop()
 {
-    affectTimer.stop();
-
-    // Call stopNetwork() using the Group thread
-    QMetaObject::invokeMethod(this, "stopNetwork", Qt::BlockingQueuedConnection);
+    emit sig_invokeStopInternal();
+    assert(m_calledStopInternal > 0);
 
     // Wait until the thread is halted
     if (thread && thread->isRunning()) {

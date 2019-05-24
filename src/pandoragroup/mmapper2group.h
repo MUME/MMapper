@@ -57,6 +57,7 @@ signals:
     void networkStatus(bool);
     void updateWidget();    // update group widget
     void updateMapCanvas(); // redraw the opengl screen
+    void sig_invokeStopInternal();
 
 public:
     explicit Mmapper2Group(QObject *parent = nullptr);
@@ -91,10 +92,9 @@ protected slots:
     void gTellArrived(const QVariantMap &node);
     void relayMessageBox(const QString &message);
     void sendLog(const QString &);
-
     void characterChanged();
-
     void onAffectTimeout();
+    void slot_stopInternal();
 
 private:
     struct
@@ -105,6 +105,7 @@ private:
         bool inCombat{false};
     } lastPrompt;
 
+    std::atomic_int m_calledStopInternal{0};
     QTimer affectTimer;
     QMap<CharacterAffect, uint64_t> affectLastSeen;
     using AffectTimeout = QMap<CharacterAffect, int>;
