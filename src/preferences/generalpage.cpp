@@ -33,9 +33,9 @@
 #include "ui_generalpage.h"
 
 // Order of entries in charsetComboBox drop down
-static_assert(static_cast<int>(CharacterEncoding::LATIN1) == 0, "");
-static_assert(static_cast<int>(CharacterEncoding::UTF8) == 1, "");
-static_assert(static_cast<int>(CharacterEncoding::ASCII) == 2, "");
+static_assert(static_cast<int>(CharacterEncoding::LATIN1) == 0);
+static_assert(static_cast<int>(CharacterEncoding::UTF8) == 1);
+static_assert(static_cast<int>(CharacterEncoding::ASCII) == 2);
 
 GeneralPage::GeneralPage(QWidget *parent)
     : QWidget(parent)

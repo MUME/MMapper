@@ -1276,12 +1276,14 @@ void RoomEditAttrDlg::sundeathUndefRadioButtonToggled(bool val)
 void RoomEditAttrDlg::mobFlagsListItemChanged(QListWidgetItem *const item)
 {
     deref(item);
-    RoomMobFlag flag{};
-    if (!mobListItems.findIndexOf(checked_dynamic_downcast<RoomListWidgetItem *>(item), flag)) {
+    const auto optFlag = mobListItems.findIndexOf(
+        checked_dynamic_downcast<RoomListWidgetItem *>(item));
+    if (!optFlag) {
         qWarning() << "oops" << __FILE__ << ":" << __LINE__;
         return;
     }
 
+    const RoomMobFlag &flag = optFlag.value();
     const auto flags = RoomMobFlags{flag};
     const Room *r = getSelectedRoom();
 
@@ -1319,12 +1321,15 @@ void RoomEditAttrDlg::mobFlagsListItemChanged(QListWidgetItem *const item)
 void RoomEditAttrDlg::loadFlagsListItemChanged(QListWidgetItem *const item)
 {
     deref(item);
-    RoomLoadFlag flag{};
-    if (!loadListItems.findIndexOf(checked_dynamic_downcast<RoomListWidgetItem *>(item), flag)) {
+
+    const auto optFlag = loadListItems.findIndexOf(
+        checked_dynamic_downcast<RoomListWidgetItem *>(item));
+    if (!optFlag) {
         qWarning() << "oops: " << __FILE__ << ":" << __LINE__;
         return;
     }
 
+    const RoomLoadFlag &flag = optFlag.value();
     const auto flags = RoomLoadFlags{flag};
     const Room *const r = getSelectedRoom();
 
@@ -1362,12 +1367,15 @@ void RoomEditAttrDlg::loadFlagsListItemChanged(QListWidgetItem *const item)
 void RoomEditAttrDlg::exitFlagsListItemChanged(QListWidgetItem *const item)
 {
     deref(item);
-    ExitFlag flag{};
-    if (!exitListItems.findIndexOf(checked_dynamic_downcast<RoomListWidgetItem *>(item), flag)) {
+
+    const auto optFlag = exitListItems.findIndexOf(
+        checked_dynamic_downcast<RoomListWidgetItem *>(item));
+    if (!optFlag) {
         qWarning() << "oops: " << __FILE__ << ":" << __LINE__;
         return;
     }
 
+    const ExitFlag &flag = optFlag.value();
     const Room *const r = getSelectedRoom();
     const auto flags = ExitFlags{flag};
     auto dir = getSelectedExit();
@@ -1423,12 +1431,15 @@ void RoomEditAttrDlg::doorNameLineEditTextChanged(const QString /*unused*/ &)
 void RoomEditAttrDlg::doorFlagsListItemChanged(QListWidgetItem *const item)
 {
     deref(item);
-    DoorFlag flag{};
-    if (!doorListItems.findIndexOf(checked_dynamic_downcast<RoomListWidgetItem *>(item), flag)) {
+
+    const auto optFlag = doorListItems.findIndexOf(
+        checked_dynamic_downcast<RoomListWidgetItem *>(item));
+    if (!optFlag) {
         qWarning() << "oops: " << __FILE__ << ":" << __LINE__;
         return;
     }
 
+    const DoorFlag &flag = optFlag.value();
     const Room *const r = getSelectedRoom();
     deref(r);
 

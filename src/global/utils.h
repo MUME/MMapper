@@ -53,7 +53,7 @@ int round_ftoi(float f);
 template<typename Base, typename Derived>
 std::unique_ptr<Base> static_upcast(std::unique_ptr<Derived> &&ptr)
 {
-    static_assert(std::is_base_of<Base, Derived>::value, "");
+    static_assert(std::is_base_of_v<Base, Derived>);
     return std::unique_ptr<Base>(ptr.release());
 }
 
@@ -83,20 +83,18 @@ inline T &deref(const std::unique_ptr<T> &ptr)
 template<typename /* must be specified */ Derived, typename /* deduced */ Base>
 Derived checked_dynamic_downcast(Base ptr) noexcept(false)
 {
-    // TODO: convert to _t and _v instead of ::type and ::value when we switch to c++17,
-    // and get rid of the `, ""` since c++17 allows single-arg static_assert.
-    static_assert(std::is_same<Base, typename std::remove_reference<Base>::type>::value, "");
-    static_assert(std::is_same<Derived, typename std::remove_reference<Derived>::type>::value, "");
-    static_assert(std::is_pointer<Base>::value, "");
-    static_assert(std::is_pointer<Derived>::value, "");
-    static_assert(!std::is_same<Base, Derived>::value, "");
+    static_assert(std::is_same_v<Base, std::remove_reference_t<Base>>);
+    static_assert(std::is_same_v<Derived, std::remove_reference_t<Derived>>);
+    static_assert(std::is_pointer_v<Base>);
+    static_assert(std::is_pointer_v<Derived>);
+    static_assert(!std::is_same_v<Base, Derived>);
 
-    using actual_base = typename std::remove_pointer<Base>::type;
-    using actual_derived = typename std::remove_pointer<Derived>::type;
+    using actual_base = std::remove_pointer_t<Base>;
+    using actual_derived = std::remove_pointer_t<Derived>;
 
-    static_assert(!std::is_same<actual_base, actual_derived>::value, "");
-    static_assert(std::is_base_of<actual_base, actual_derived>::value, "");
-    static_assert(std::is_const<actual_base>::value == std::is_const<actual_derived>::value, "");
+    static_assert(!std::is_same_v<actual_base, actual_derived>);
+    static_assert(std::is_base_of_v<actual_base, actual_derived>);
+    static_assert(std::is_const_v<actual_base> == std::is_const_v<actual_derived>);
 
     // Using reference to force dynamic_cast to throw.
     return &dynamic_cast<actual_derived &>(deref(ptr));
@@ -106,20 +104,18 @@ Derived checked_dynamic_downcast(Base ptr) noexcept(false)
 template<typename /* must be specified */ Base, typename /* deduced */ Derived>
 Base checked_static_upcast(Derived ptr) noexcept(false)
 {
-    // TODO: convert to _t and _v instead of ::type and ::value when we switch to c++17,
-    // and get rid of the `, ""` since c++17 allows single-arg static_assert.
-    static_assert(std::is_same<Derived, typename std::remove_reference<Derived>::type>::value, "");
-    static_assert(std::is_same<Base, typename std::remove_reference<Base>::type>::value, "");
-    static_assert(std::is_pointer<Derived>::value, "");
-    static_assert(std::is_pointer<Base>::value, "");
-    static_assert(!std::is_same<Derived, Base>::value, "");
+    static_assert(std::is_same_v<Derived, std::remove_reference_t<Derived>>);
+    static_assert(std::is_same_v<Base, std::remove_reference_t<Base>>);
+    static_assert(std::is_pointer_v<Derived>);
+    static_assert(std::is_pointer_v<Base>);
+    static_assert(!std::is_same_v<Derived, Base>);
 
-    using actual_derived = typename std::remove_pointer<Derived>::type;
-    using actual_base = typename std::remove_pointer<Base>::type;
+    using actual_derived = std::remove_pointer_t<Derived>;
+    using actual_base = std::remove_pointer_t<Base>;
 
-    static_assert(!std::is_same<actual_derived, actual_base>::value, "");
-    static_assert(std::is_base_of<actual_base, actual_derived>::value, "");
-    static_assert(std::is_const<actual_derived>::value == std::is_const<actual_base>::value, "");
+    static_assert(!std::is_same_v<actual_derived, actual_base>);
+    static_assert(std::is_base_of_v<actual_base, actual_derived>);
+    static_assert(std::is_const_v<actual_derived> == std::is_const_v<actual_base>);
 
     return static_cast<Base>(&deref(ptr));
 }

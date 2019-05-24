@@ -135,8 +135,7 @@ static FontFormatFlags getFontFormatFlags(InfoMarkClass infoMarkClass)
     return FontFormatFlags::NONE;
 }
 
-// TODO: change to std::optional<QColor> in C++17 instead of returning transparent
-static QColor getWallColor(const ExitFlags &flags)
+static std::optional<QColor> getWallColor(const ExitFlags &flags)
 {
     const auto drawNoMatchExits = getConfig().canvas.drawNoMatchExits;
 
@@ -155,12 +154,12 @@ static QColor getWallColor(const ExitFlags &flags)
     } else if (drawNoMatchExits && flags.isNoMatch()) {
         return WALL_COLOR_NO_MATCH;
     } else {
-        return Qt::transparent;
+        return std::nullopt;
     }
 }
 
 // REVISIT: merge this with getWallColor()?
-static QColor getVerticalColor(const ExitFlags &flags, const QColor &noFleeColor)
+static std::optional<QColor> getVerticalColor(const ExitFlags &flags, const QColor &noFleeColor)
 {
     // REVISIT: is it a bug that the NO_FLEE and NO_MATCH colors have 100% opacity?
     if (flags.isNoFlee()) {
@@ -543,9 +542,11 @@ void MapCanvasRoomDrawer::drawExit(const Room *const room,
     if (isExit && drawNotMappedExits && exit.outIsEmpty()) { // zero outgoing connections
         drawListWithLineStipple(wallList, WALL_COLOR_NOTMAPPED);
     } else {
-        const auto color = getWallColor(flags);
-        if (color != Qt::transparent)
+        if (const auto optColor = getWallColor(flags)) {
+            const auto &color = optColor.value();
+            assert(color != Qt::transparent);
             drawListWithLineStipple(wallList, color);
+        }
 
         if (flags.isFlow()) {
             drawFlow(room, rooms, dir);
@@ -912,9 +913,11 @@ void MapCanvasRoomDrawer::drawVertical(
         return;
     }
 
-    const auto color = getVerticalColor(flags, m_mapCanvasData.g_noFleeColor);
-    if (color != Qt::transparent)
+    if (const auto optColor = getVerticalColor(flags, m_mapCanvasData.g_noFleeColor)) {
+        const auto &color = optColor.value();
+        assert(color != Qt::transparent);
         drawListWithLineStipple(transparent, color);
+    }
 
     /* NOTE: semi-bugfix: The opaque display list modifies color to black,
      * but the transparent display list doesn't.

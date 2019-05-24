@@ -333,7 +333,7 @@ DEFINE_CHAR_CONST(OPEN_BRACKET, '[');
 DEFINE_CHAR_CONST(SEMICOLON, ';');
 DEFINE_CHAR_CONST(SPACE, ' ');
 DEFINE_CHAR_CONST(TAB, '\t');
-static_assert(C_SPACE == 0x20, "");
+static_assert(C_SPACE == 0x20);
 
 #undef DEFINE_CHAR_CONST
 
@@ -472,9 +472,9 @@ static constexpr int next_tab_stop(int col)
 {
     return col + tab_advance(col);
 }
-static_assert(next_tab_stop(0) == 8, "");
-static_assert(next_tab_stop(1) == 8, "");
-static_assert(next_tab_stop(7) == 8, "");
-static_assert(next_tab_stop(8) == 16, "");
-static_assert(next_tab_stop(9) == 16, "");
-static_assert(next_tab_stop(15) == 16, "");
+static_assert(next_tab_stop(0) == 8);
+static_assert(next_tab_stop(1) == 8);
+static_assert(next_tab_stop(7) == 8);
+static_assert(next_tab_stop(8) == 16);
+static_assert(next_tab_stop(9) == 16);
+static_assert(next_tab_stop(15) == 16);

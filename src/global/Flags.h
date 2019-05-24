@@ -33,6 +33,7 @@
 
 namespace enums {
 
+// REVISIT: add CountOf_v ?
 template<typename E>
 struct CountOf
 {};
@@ -41,7 +42,7 @@ struct CountOf
     template<> \
     struct CountOf<E> \
     { \
-        static_assert(std::is_enum<E>::value, ""); \
+        static_assert(std::is_enum_v<E>); \
         static constexpr const size_t value = N; \
     }; \
     }
@@ -52,12 +53,12 @@ class Flags
 public:
     using Flag = _Flag;
     using underlying_type = _UnderlyingType;
-    static_assert(std::is_enum<Flag>::value, "");
-    static_assert(std::is_integral<underlying_type>::value, "");
-    static_assert(!std::numeric_limits<underlying_type>::is_signed, "");
+    static_assert(std::is_enum_v<Flag>);
+    static_assert(std::is_integral_v<underlying_type>);
+    static_assert(!std::numeric_limits<underlying_type>::is_signed);
     static constexpr const size_t NUM_FLAGS = CountOf<Flag>::value;
-    static_assert(NUM_FLAGS != 0u, "");
-    static_assert(NUM_FLAGS <= std::numeric_limits<underlying_type>::digits, "");
+    static_assert(NUM_FLAGS != 0u);
+    static_assert(NUM_FLAGS <= std::numeric_limits<underlying_type>::digits);
 
 private:
     static constexpr const underlying_type MASK = static_cast<underlying_type>(

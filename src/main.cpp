@@ -114,30 +114,24 @@ static bool tryLoad(MainWindow &mw,
                     const QString &input_filename,
                     const bool updateSettings)
 {
-    struct OptionalQString
-    {
-        QString filename;
-        bool isValid;
-    };
-
     const auto getAbsoluteFileName = [](const QDir &dir,
-                                        const QString &input_filename) -> OptionalQString {
+                                        const QString &input_filename) -> std::optional<QString> {
         if (QFileInfo{input_filename}.isAbsolute())
-            return OptionalQString{input_filename, true};
+            return input_filename;
 
         if (!dir.exists()) {
             qInfo() << "[main] Directory" << dir.absolutePath() << "does not exist.";
-            return {{}, false};
+            return std::nullopt;
         }
 
-        return OptionalQString{dir.absoluteFilePath(input_filename), true};
+        return dir.absoluteFilePath(input_filename);
     };
 
     const auto maybeFilename = getAbsoluteFileName(dir, input_filename);
-    if (!maybeFilename.isValid)
+    if (!maybeFilename)
         return false;
 
-    const auto absoluteFilePath = maybeFilename.filename;
+    const auto absoluteFilePath = maybeFilename.value();
     if (!QFile{absoluteFilePath}.exists()) {
         qInfo() << "[main] File " << absoluteFilePath << "does not exist.";
         return false;

@@ -546,7 +546,7 @@ static const char *translit(const QChar qc)
         return "^";
 
     case XmlEntityId::XID_empty: {
-        static_assert(static_cast<uint16_t>(XmlEntityId::XID_oslash) == 0xf8, "");
+        static_assert(static_cast<uint16_t>(XmlEntityId::XID_oslash) == 0xf8);
         return "\xf8";
     }
 
@@ -660,8 +660,7 @@ static OptQChar tryParseDec(const QChar *const beg, const QChar *const end)
 
     using val_type = uint32_t;
     static_assert(std::numeric_limits<val_type>::max()
-                      >= static_cast<uint64_t>(MAX_UNICODE_CODEPOINT) * 10 + 9,
-                  "");
+                  >= static_cast<uint64_t>(MAX_UNICODE_CODEPOINT) * 10 + 9);
 
     val_type val = 0;
     for (const QChar *it = beg; it < end; ++it) {
@@ -689,8 +688,7 @@ static OptQChar tryParseHex(const QChar *const beg, const QChar *const end)
 
     using val_type = uint32_t;
     static_assert(std::numeric_limits<val_type>::max()
-                      >= static_cast<uint64_t>(MAX_UNICODE_CODEPOINT) * 16 + 15,
-                  "");
+                  >= static_cast<uint64_t>(MAX_UNICODE_CODEPOINT) * 16 + 15);
 
     val_type val = 0;
     for (const QChar *it = beg; it < end; ++it) {
@@ -741,7 +739,9 @@ void entities::foreachEntity(const QStringRef &input, EntityCallback &callback)
                 if (it < end && *it == ';') {
                     ++it;
 
-                    callback.decodedEntity(ampStart, static_cast<int>(it - amp), tryParseHex(amp + 3, it - 1));
+                    callback.decodedEntity(ampStart,
+                                           static_cast<int>(it - amp),
+                                           tryParseHex(amp + 3, it - 1));
                     continue;
                 }
 
@@ -752,7 +752,9 @@ void entities::foreachEntity(const QStringRef &input, EntityCallback &callback)
 
                 if (it < end && *it == ';') {
                     ++it;
-                    callback.decodedEntity(ampStart, static_cast<int>(it - amp), tryParseDec(amp + 2, it - 1));
+                    callback.decodedEntity(ampStart,
+                                           static_cast<int>(it - amp),
+                                           tryParseDec(amp + 2, it - 1));
                     continue;
                 }
             }

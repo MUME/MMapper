@@ -83,9 +83,9 @@ bool isAnsiColor(const QString &ansi)
 static int parsePositiveInt(const QStringRef &number)
 {
     static constexpr int MAX = std::numeric_limits<int>::max();
-    static_assert(MAX == 2147483647, "");
+    static_assert(MAX == 2147483647);
     static constexpr int LIMIT = MAX / 10;
-    static_assert(LIMIT == 214748364, "");
+    static_assert(LIMIT == 214748364);
 
     int n = 0;
     for (const QChar &qc : number) {
@@ -288,7 +288,7 @@ AnsiString AnsiString::get_reset_string()
     return reset;
 }
 
-static_assert(sizeof(raw_ansi) == sizeof(uint16_t), "");
+static_assert(sizeof(raw_ansi) == sizeof(uint16_t));
 
 uint16_t raw_ansi::get_bits_raw() const
 {

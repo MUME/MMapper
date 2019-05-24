@@ -46,7 +46,7 @@ class ExitsFlagsType
 public:
     static constexpr const uint32_t MASK
         = (ExitFlag::EXIT | ExitFlag::DOOR | ExitFlag::ROAD | ExitFlag::CLIMB).asUint32();
-    static_assert(MASK == 0b1111, "");
+    static_assert(MASK == 0b1111);
     static constexpr const int SHIFT = 4;
     static constexpr const int NUM_DIRS = 6;
 
@@ -79,10 +79,9 @@ public:
             return result;
         } else {
             static constexpr const uint32_t FULL_MASK = 0x40FFFFFFu;
-            static_assert(FULL_MASK
-                              == (static_cast<uint32_t>(EXITS_FLAGS_VALID)
-                                  | ((1u << (SHIFT * NUM_DIRS)) - 1u)),
-                          "");
+            static_assert(
+                FULL_MASK
+                == (static_cast<uint32_t>(EXITS_FLAGS_VALID) | ((1u << (SHIFT * NUM_DIRS)) - 1u)));
 
             ExitsFlagsType result{};
             result.value = value & FULL_MASK;

@@ -42,7 +42,7 @@ Bytef *as_far_byte_array(T s) = delete;
 template<>
 inline Bytef *as_far_byte_array(char *const s)
 {
-    static_assert(alignof(char) == alignof(Bytef), "");
+    static_assert(alignof(char) == alignof(Bytef));
     return reinterpret_cast<Bytef *>(s);
 }
 

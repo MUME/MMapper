@@ -63,14 +63,14 @@ enum class MaskFlags : uint32_t {
 
 DEFINE_ENUM_COUNT(MaskFlags, 8)
 
-static_assert(static_cast<uint32_t>(MaskFlags::NONE) == 0u, "");
-static_assert(static_cast<uint32_t>(MaskFlags::NAME) == 1u, "");
-static_assert(static_cast<uint32_t>(MaskFlags::DESC) == 2u, "");
-static_assert(static_cast<uint32_t>(MaskFlags::NAME_DESC) == 3u, "");
-static_assert(static_cast<uint32_t>(MaskFlags::TERRAIN) == 4u, "");
-static_assert(static_cast<uint32_t>(MaskFlags::NAME_TERRAIN) == 5u, "");
-static_assert(static_cast<uint32_t>(MaskFlags::DESC_TERRAIN) == 6u, "");
-static_assert(static_cast<uint32_t>(MaskFlags::NAME_DESC_TERRAIN) == 7u, "");
+static_assert(static_cast<uint32_t>(MaskFlags::NONE) == 0u);
+static_assert(static_cast<uint32_t>(MaskFlags::NAME) == 1u);
+static_assert(static_cast<uint32_t>(MaskFlags::DESC) == 2u);
+static_assert(static_cast<uint32_t>(MaskFlags::NAME_DESC) == 3u);
+static_assert(static_cast<uint32_t>(MaskFlags::TERRAIN) == 4u);
+static_assert(static_cast<uint32_t>(MaskFlags::NAME_TERRAIN) == 5u);
+static_assert(static_cast<uint32_t>(MaskFlags::DESC_TERRAIN) == 6u);
+static_assert(static_cast<uint32_t>(MaskFlags::NAME_DESC_TERRAIN) == 7u);
 
 static MaskFlags getKeyMask(const ParseEvent &event)
 {

@@ -30,6 +30,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 
 #include "Flags.h"
 
@@ -59,17 +60,15 @@ public:
     using base::end;
 
 public:
-    // TODO: return std::optional<E> in c++17
-    bool findIndexOf(const T element, E &out) const
+    std::optional<E> findIndexOf(const T element) const
     {
         const auto beg = this->begin();
         const auto end = this->end();
         const auto it = std::find(beg, end, element);
         if (it == end)
-            return false;
+            return std::nullopt;
 
-        out = static_cast<E>(it - beg);
-        return true;
+        return static_cast<E>(it - beg);
     }
 };
 

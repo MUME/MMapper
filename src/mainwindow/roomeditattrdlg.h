@@ -136,10 +136,10 @@ private:
     EnumIndexedArray<RoomListWidgetItem *, DoorFlag> doorListItems{};
 
 #define NUM_ELEMENTS(arr) (decltype(arr)::SIZE)
-    static_assert(NUM_ELEMENTS(loadListItems) <= 32u, "");
-    static_assert(NUM_ELEMENTS(mobListItems) <= 32u, "");
-    static_assert(NUM_ELEMENTS(exitListItems) <= 16u, "");
-    static_assert(NUM_ELEMENTS(doorListItems) <= 16u, "");
+    static_assert(NUM_ELEMENTS(loadListItems) <= 32u);
+    static_assert(NUM_ELEMENTS(mobListItems) <= 32u);
+    static_assert(NUM_ELEMENTS(exitListItems) <= 16u);
+    static_assert(NUM_ELEMENTS(doorListItems) <= 16u);
 #undef NUM_ELEMENTS
 
     SharedRoomSelection m_roomSelection;

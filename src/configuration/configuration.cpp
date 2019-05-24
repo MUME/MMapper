@@ -113,9 +113,7 @@ private:
     static constexpr const char *const MMAPPER_PROFILE_PATH = "MMAPPER_PROFILE_PATH";
 
 private:
-    // TODO: switch to std::optional<QSettings> in C++17.
-    alignas(alignof(QSettings)) char m_buffer[sizeof(QSettings)];
-    bool m_isConstructed = false;
+    std::optional<QSettings> m_settings;
 
 private:
     static bool isValid(const QFile &file)
@@ -138,16 +136,12 @@ private:
 public:
     DELETE_CTORS_AND_ASSIGN_OPS(Settings);
     explicit Settings() { initSettings(); }
-    ~Settings()
-    {
-        static_cast<QSettings &>(*this).~QSettings();
-        m_isConstructed = false;
-    }
+    ~Settings() = default;
     explicit operator QSettings &()
     {
-        if (!m_isConstructed)
+        if (!m_settings)
             throw std::runtime_error("object does not exist");
-        return *reinterpret_cast<QSettings *>(m_buffer);
+        return m_settings.value();
     }
 };
 
@@ -167,7 +161,7 @@ void Settings::tryCopyOldSettings()
 
 void Settings::initSettings()
 {
-    if (m_isConstructed)
+    if (m_settings)
         throw std::runtime_error("object already exists");
 
     // NOTE: mutex guards read/write access to g_path from multiple threads,
@@ -194,8 +188,7 @@ void Settings::initSettings()
             g_path = nullptr;
         } else {
             try {
-                new (m_buffer) QSettings(pathString, QSettings::IniFormat);
-                m_isConstructed = true;
+                m_settings.emplace(pathString, QSettings::IniFormat);
             } catch (...) {
                 qInfo() << "Exception loading settings for " << pathString
                         << "; falling back to default settings...";
@@ -204,10 +197,9 @@ void Settings::initSettings()
         }
     }
 
-    if (!m_isConstructed) {
+    if (!m_settings) {
         tryCopyOldSettings();
-        new (m_buffer) QSettings(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
-        m_isConstructed = true;
+        m_settings.emplace(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
     }
 
     static std::once_flag success_flag;
@@ -229,17 +221,15 @@ void Settings::initSettings()
 //   maintains some state, so it's better to construct a new one each time.
 //
 // * Declaring an object via macro instead of just calling a function is necessary
-//   until c++17 which isn't required to call the move/copy ctor upon return.
+//   because we have two object construction paths, and we attempt to access the
+//   value after its construction, so we can't use RVO to avoid copy/move
+//   construction of the QSettings object.
 //
 // * Using a separate reference because macros use "conf.beginGroup()", but
 //   "operator T&" is never selected when used with (non-existent) "operator.".
 //   Instead, we could use "conf->beginGroup()" with "QSettings* operator->()"
 //   to avoid needing to declare a QSettings& reference.
-//
-// c++17 version could look like:
-//  - SETTINGS(conf)
-//  + QSettings conf = getSettings();
-//
+
 #define SETTINGS(conf) \
     Settings settings; \
     QSettings &conf = static_cast<QSettings &>(settings);

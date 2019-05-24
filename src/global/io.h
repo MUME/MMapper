@@ -45,7 +45,7 @@ namespace io {
 template<size_t N>
 struct /* TODO: alignas(4096) */ null_padded_buffer final
 {
-    static_assert(N >= 4096, "");
+    static_assert(N >= 4096);
     /* TODO: alignas(4096) */
     std::array<char, N + 1u> array{};
 };
@@ -116,7 +116,7 @@ public:
     const char *getErrorMessage() const { return str; }
     int getErrorNumber() const { return error_number; }
 };
-static_assert(sizeof(ErrorNumberMessage) == 1024, "");
+static_assert(sizeof(ErrorNumberMessage) == 1024);
 
 bool fsync(QFile &) noexcept(false);
 

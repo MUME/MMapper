@@ -449,9 +449,8 @@ enum class CallbackResult { KEEP_GOING, STOP };
 template<typename Callback>
 static void foreach_partly_selected_block_until(QTextCursor cur, Callback &&callback)
 {
-    static_assert(std::is_same<CallbackResult,
-                               decltype(callback(std::declval<const QTextCursor &>()))>::value,
-                  "");
+    static_assert(
+        std::is_same_v<CallbackResult, decltype(callback(std::declval<const QTextCursor &>()))>);
 
     auto beg = LineRange::beg(cur);
     auto end = LineRange::end(cur);
@@ -469,8 +468,7 @@ static void foreach_partly_selected_block_until(QTextCursor cur, Callback &&call
 template<typename Callback>
 bool exists_partly_selected_block(QTextCursor cur, Callback &&callback)
 {
-    static_assert(std::is_same<bool, decltype(callback(std::declval<const QTextCursor &>()))>::value,
-                  "");
+    static_assert(std::is_same_v<bool, decltype(callback(std::declval<const QTextCursor &>()))>);
 
     bool result = false;
     foreach_partly_selected_block_until(cur, [&result, &callback](QTextCursor it) -> CallbackResult {

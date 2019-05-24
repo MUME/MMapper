@@ -94,7 +94,7 @@ private:
 #undef X_DECLARE_TYPES
 private:
     std::aligned_storage_t<STORAGE_SIZE, STORAGE_ALIGNMENT> storage_;
-    static_assert(sizeof(storage_) >= STORAGE_SIZE, "");
+    static_assert(sizeof(storage_) >= STORAGE_SIZE);
     RoomField type_{};
 
 public:

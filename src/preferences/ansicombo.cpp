@@ -328,7 +328,7 @@ bool AnsiCombo::colorFromNumber(int numColor, QColor &col, QString &intelligible
 template<typename Derived, typename Base>
 static inline Derived *qdynamic_downcast(Base *ptr)
 {
-    static_assert(std::is_base_of<Base, Derived>::value, "");
+    static_assert(std::is_base_of_v<Base, Derived>);
     return qobject_cast<Derived *>(ptr);
 }
 

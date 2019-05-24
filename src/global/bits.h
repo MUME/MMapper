@@ -37,9 +37,9 @@
 #define DEFINE_BITS(x) static constexpr const uint32_t bit##x = (1u << ((x) -1));
 BIT32_FOREACH(DEFINE_BITS)
 #define ADD(x) +1
-static_assert(BIT32_FOREACH(ADD) == 32, "");
-static_assert(bit1 == 1u, "");
-static_assert(bit32 == 2147483648u, "");
+static_assert(BIT32_FOREACH(ADD) == 32);
+static_assert(bit1 == 1u);
+static_assert(bit32 == 2147483648u);
 #undef ADD
 #undef DEFINE_BITS
 
