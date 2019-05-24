@@ -391,7 +391,7 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
             if (text.isEmpty() || text == "Healthy")
                 return max;
             X_SCORE("Fine", 0.71, 0.99);
-            X_SCORE("Hurt", 0.45, 0.70);
+            X_SCORE("Hurt", 0.46, 0.70);
             X_SCORE("Wounded", 0.26, 0.45);
             X_SCORE("Bad", 0.11, 0.25);
             X_SCORE("Awful", 0.01, 0.10);
