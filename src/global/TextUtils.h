@@ -321,10 +321,8 @@ TextBuffer normalizeAnsi(const QString &str);
     static constexpr const char C_##NAME{(val)}; \
     static constexpr const QChar QC_##NAME{(C_##NAME)}; \
     static constexpr const char ARR_##NAME[2]{C_##NAME, C_NUL}; \
-    static constexpr const char *const S_##NAME { ARR_##NAME }
-
-// REVISIT: can we add this to DEFINE_CHAR_CONST in c++17?
-// static constexpr const std::string_view SV_##NAME { ARR_##NAME }
+    static constexpr const char *const S_##NAME{ARR_##NAME}; \
+    static constexpr const std::string_view SV_##NAME { ARR_##NAME }
 
 static constexpr const char C_NUL = 0;
 DEFINE_CHAR_CONST(ESC, '\x1b');
