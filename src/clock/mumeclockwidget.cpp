@@ -73,8 +73,45 @@ void MumeClockWidget::updateLabel()
     MumeMoment moment = m_clock->getMumeMoment();
     MumeClockPrecision precision = m_clock->getPrecision();
 
-    seasonLabel->setStatusTip(m_clock->toMumeTime(moment));
+    MumeMoonVisibility moonVisibility = moment.toMoonVisibility();
+    QString moonStyleSheet = (moonVisibility == MumeMoonVisibility::MOON_INVISIBLE)
+                                 ? "color:black;background:grey"
+                                 : "color:black;background:white";
+    moonPhaseLabel->setStyleSheet(moonStyleSheet);
 
+    MumeMoonPhase phase = moment.toMoonPhase();
+    switch (phase) {
+    case MumeMoonPhase::PHASE_WAXING_CRESCENT:
+        moonPhaseLabel->setText(QString::fromUtf8("\xf0\x9f\x8c\x92"));
+        break;
+    case MumeMoonPhase::PHASE_FIRST_QUARTER:
+        moonPhaseLabel->setText(QString::fromUtf8("\xf0\x9f\x8c\x93"));
+        break;
+    case MumeMoonPhase::PHASE_WAXING_GIBBOUS:
+        moonPhaseLabel->setText(QString::fromUtf8("\xf0\x9f\x8c\x94"));
+        break;
+    case MumeMoonPhase::PHASE_FULL_MOON:
+        moonPhaseLabel->setText(QString::fromUtf8("\xf0\x9f\x8c\x95"));
+        break;
+    case MumeMoonPhase::PHASE_WANING_GIBBOUS:
+        moonPhaseLabel->setText(QString::fromUtf8("\xf0\x9f\x8c\x96"));
+        break;
+    case MumeMoonPhase::PHASE_THIRD_QUARTER:
+        moonPhaseLabel->setText(QString::fromUtf8("\xf0\x9f\x8c\x97"));
+        break;
+    case MumeMoonPhase::PHASE_WANING_CRESCENT:
+        moonPhaseLabel->setText(QString::fromUtf8("\xf0\x9f\x8c\x98"));
+        break;
+    case MumeMoonPhase::PHASE_NEW_MOON:
+        moonPhaseLabel->setText(QString::fromUtf8("\xf0\x9f\x8c\x91"));
+        break;
+    case MumeMoonPhase::PHASE_UNKNOWN:
+        moonPhaseLabel->setText("");
+        break;
+    }
+    moonPhaseLabel->setStatusTip(moment.toMumeMoonTime());
+
+    seasonLabel->setStatusTip(m_clock->toMumeTime(moment));
     MumeSeason season = moment.toSeason();
     if (season != m_lastSeason) {
         m_lastSeason = season;
@@ -104,7 +141,6 @@ void MumeClockWidget::updateLabel()
         seasonLabel->setStyleSheet(styleSheet);
         seasonLabel->setText(text);
     }
-
     MumeTime time = moment.toTimeOfDay();
     if (time != m_lastTime || precision != m_lastPrecision) {
         m_lastTime = time;

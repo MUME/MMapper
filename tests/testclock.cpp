@@ -205,4 +205,87 @@ void TestClock::precsionTimeoutTest()
     QCOMPARE(clock.getPrecision(), MumeClockPrecision::MUMECLOCK_DAY);
 }
 
+void TestClock::moonClockTest()
+{
+    MumeClock clock;
+    QString snapShot1 = "7pm on Hevensday, the 21st of Winterfilth, year 2929 of the Third Age.";
+    clock.parseMumeTime(snapShot1);
+    auto moment = clock.getMumeMoment();
+    QCOMPARE(moment.moonLevel(), 2);
+    QCOMPARE(moment.moonPosition(), 11);
+    QCOMPARE(moment.moonRise(), 8);
+    QCOMPARE(moment.moonCycle(), 2);
+    QString mumeMoonStr1 = "You can see a New Moon (waxing) in the western part of the sky.";
+    QCOMPARE(clock.getMumeMoment().toMumeMoonTime(), mumeMoonStr1);
+
+    QString snapShot2 = "11am on Sterday, the 24th of Winterfilth, year 2929 of the Third Age.";
+    clock.parseMumeTime(snapShot2);
+    moment = clock.getMumeMoment();
+    QCOMPARE(moment.moonLevel(), 5);
+    QCOMPARE(moment.moonPosition(), 0);
+    QCOMPARE(moment.moonRise(), 11);
+    QCOMPARE(moment.moonCycle(), 5);
+    QString mumeMoonStr2 = "You can see a Quarter Moon (waxing) in the eastern part of the sky.";
+    QCOMPARE(clock.getMumeMoment().toMumeMoonTime(), mumeMoonStr2);
+
+    QString snapShot3 = "4pm on Sterday, the 24th of Winterfilth, year 2929 of the Third Age.";
+    clock.parseMumeTime(snapShot3);
+    moment = clock.getMumeMoment();
+    QCOMPARE(moment.moonRise(), 11);
+    QCOMPARE(moment.moonLevel(), 5);
+    QCOMPARE(moment.moonPosition(), 5);
+    QString mumeMoonStr3 = "You can see a Quarter Moon (waxing) in the southern part of the sky.";
+    QCOMPARE(clock.getMumeMoment().toMumeMoonTime(), mumeMoonStr3);
+
+    QString snapShot4 = "7pm on Sterday, the 24th of Winterfilth, year 2929 of the Third Age.";
+    clock.parseMumeTime(snapShot4);
+    moment = clock.getMumeMoment();
+    QCOMPARE(moment.moonRise(), 11);
+    QCOMPARE(moment.moonLevel(), 5);
+    QCOMPARE(moment.moonPosition(), 8);
+    QString mumeMoonStr4 = "You can see a Quarter Moon (waxing) in the western part of the sky.";
+    QCOMPARE(clock.getMumeMoment().toMumeMoonTime(), mumeMoonStr4);
+
+    QString snapShot5 = "12pm on Sunday, the 25th of Winterfilth, year 2929 of the Third Age.";
+    clock.parseMumeTime(snapShot5);
+    moment = clock.getMumeMoment();
+    QCOMPARE(moment.moonRise(), 12);
+    QCOMPARE(moment.moonLevel(), 6);
+    QCOMPARE(moment.moonPosition(), 0);
+    QCOMPARE(moment.moonCycle(), 6);
+    QString mumeMoonStr5 = "You can see a Half Moon (waxing) in the eastern part of the sky.";
+    QCOMPARE(clock.getMumeMoment().toMumeMoonTime(), mumeMoonStr5);
+
+    QString snapShot6 = "12am on Hevensday, the 28th of Winterfilth, year 2929 of the Third Age.";
+    clock.parseMumeTime(snapShot6);
+    moment = clock.getMumeMoment();
+    QCOMPARE(moment.moonRise(), 15);
+    QCOMPARE(moment.moonLevel(), 9);
+    QCOMPARE(moment.moonPosition(), 9);
+    QCOMPARE(moment.moonCycle(), 9);
+    QString mumeMoonStr6
+        = "You can see a Three-Quarter Moon (waxing) in the western part of the sky.";
+    QCOMPARE(clock.getMumeMoment().toMumeMoonTime(), mumeMoonStr6);
+
+    QString snapShot7 = "1am on Sterday, the 1st of Blotmath, year 2929 of the Third Age.";
+    clock.parseMumeTime(snapShot7);
+    moment = clock.getMumeMoment();
+    QCOMPARE(moment.moonRise(), 18);
+    QCOMPARE(moment.moonLevel(), 12);
+    QCOMPARE(moment.moonPosition(), 7);
+    QCOMPARE(moment.moonCycle(), 12);
+    QString mumeMoonStr7 = "You can see a Full Moon (waning) in the southern part of the sky.";
+    QCOMPARE(clock.getMumeMoment().toMumeMoonTime(), mumeMoonStr7);
+
+    QString snapShot8 = "1am on Sterday, the 8th of Blotmath, year 2929 of the Third Age.";
+    clock.parseMumeTime(snapShot8);
+    moment = clock.getMumeMoment();
+    QCOMPARE(moment.moonRise(), 1);
+    QCOMPARE(moment.moonLevel(), 5);
+    QCOMPARE(moment.moonPosition(), 0);
+    QCOMPARE(moment.moonCycle(), 19);
+    QString mumeMoonStr8 = "You can see a Quarter Moon (waning) in the eastern part of the sky.";
+    QCOMPARE(clock.getMumeMoment().toMumeMoonTime(), mumeMoonStr8);
+}
+
 QTEST_MAIN(TestClock)

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>140</width>
+    <width>148</width>
     <height>22</height>
    </rect>
   </property>
@@ -46,6 +46,13 @@
      <property name="rightMargin">
       <number>6</number>
      </property>
+     <item>
+      <widget class="QLabel" name="moonPhaseLabel">
+       <property name="text">
+        <string>Moon Phase</string>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QLabel" name="seasonLabel">
        <property name="text">

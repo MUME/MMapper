@@ -1109,8 +1109,23 @@ void AbstractParser::showMumeTime()
         } else {
             data += "\033[33mday\033[0m";
         }
-
         data += " for " + m_mumeClock->toCountdown(moment).toLatin1() + " more ticks.\r\n";
+
+        // Moon data
+        data += moment.toMumeMoonTime() + "\r\n";
+        data += "The moon ";
+        switch (moment.toMoonVisibility()) {
+        case MumeMoonVisibility::MOON_INVISIBLE:
+        case MumeMoonVisibility::MOON_POSITION_UNKNOWN:
+            data += "will rise in";
+            break;
+        case MumeMoonVisibility::MOON_RISE:
+        case MumeMoonVisibility::MOON_SET:
+        case MumeMoonVisibility::MOON_VISIBLE:
+            data += "will set in";
+            break;
+        };
+        data += " " + moment.toMoonCountDown() + " more ticks.\r\n";
     }
     sendToUser(data);
 }
@@ -1373,8 +1388,9 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
     if (r == nullptr) {
         return;
     }
-    char sunCharacter = (m_mumeClock->getMumeMoment().toTimeOfDay() <= MumeTime::TIME_DAY) ? '*'
-                                                                                           : '^';
+    const char sunCharacter = (m_mumeClock->getMumeMoment().toTimeOfDay() <= MumeTime::TIME_DAY)
+                                  ? '*'
+                                  : '^';
     uint exitCount = 0;
     QString etmp = "Exits/emulated:";
     for (int i = 0; i < 6; i++) {
@@ -1513,7 +1529,12 @@ void AbstractParser::sendPromptToUser(const Room &r)
 void AbstractParser::sendPromptToUser(const RoomLightType lightType,
                                       const RoomTerrainType terrainType)
 {
-    const char light = getLightSymbol(lightType);
+    char light = getLightSymbol(lightType);
+    if (light == 'o'
+        && m_mumeClock->getMumeMoment().toMoonVisibility() != MumeMoonVisibility::MOON_INVISIBLE) {
+        // Moon is out
+        light = ')';
+    }
     const char terrain = getTerrainSymbol(terrainType);
     sendPromptToUser(light, terrain);
 }
