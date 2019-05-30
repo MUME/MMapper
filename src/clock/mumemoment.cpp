@@ -224,9 +224,9 @@ MumeMoonPhase MumeMoment::toMoonPhase() const
 
 MumeMoonVisibility MumeMoment::toMoonVisibility() const
 {
-    // Moon is not visible because of its illumination level or position in the sky
+    // Moon is not visible because of its position in the sky
     if (moonPosition() >= 12)
-        return MumeMoonVisibility::MOON_INVISIBLE;
+        return MumeMoonVisibility::MOON_HIDDEN;
 
     if (hour == moonRise())
         return MumeMoonVisibility::MOON_RISE;
@@ -238,46 +238,40 @@ MumeMoonVisibility MumeMoment::toMoonVisibility() const
 
 QString MumeMoment::toMumeMoonTime() const
 {
-    QString visibility = moonPosition() < 12 ? "can" : "can not";
+    const int pos = moonPosition();
+    QString visibility = pos < 12 ? "can" : "can not";
 
-    QString phase = "unknown";
+    QString phase = "Moon";
     switch (toMoonPhase()) {
     case MumeMoonPhase::PHASE_WAXING_CRESCENT:
-        phase = "Quarter Moon (waxing)";
+    case MumeMoonPhase::PHASE_WANING_CRESCENT:
+        phase = "Quarter Moon";
         break;
     case MumeMoonPhase::PHASE_FIRST_QUARTER:
-        phase = "Half Moon (waxing)";
+    case MumeMoonPhase::PHASE_THIRD_QUARTER:
+        phase = "Half Moon";
         break;
     case MumeMoonPhase::PHASE_WAXING_GIBBOUS:
-        phase = "Three-Quarter Moon (waxing)";
+    case MumeMoonPhase::PHASE_WANING_GIBBOUS:
+        phase = "Three-Quarter Moon";
         break;
     case MumeMoonPhase::PHASE_FULL_MOON:
-        phase = "Full Moon (waning)";
-        break;
-    case MumeMoonPhase::PHASE_WANING_GIBBOUS:
-        phase = "Three-Quarter Moon (waning)";
-        break;
-    case MumeMoonPhase::PHASE_THIRD_QUARTER:
-        phase = "Half Moon (waning)";
-        break;
-    case MumeMoonPhase::PHASE_WANING_CRESCENT:
-        phase = "Quarter Moon (waning)";
+        phase = "Full Moon";
         break;
     case MumeMoonPhase::PHASE_NEW_MOON:
-        if (moonCycle() < 12)
-            phase = "New Moon (waxing)";
-        else
-            phase = "New Moon (waning)";
+        phase = "New Moon";
         break;
     case MumeMoonPhase::PHASE_UNKNOWN:
+    default:
         break;
     }
+    phase.append((moonCycle() < 12) ? " (waxing)" : " (waning)");
 
     QString positionInSky = "sky";
-    if (moonPosition() < 12) {
-        if (moonPosition() <= 3) {
+    if (pos < 12) {
+        if (pos <= 3) {
             positionInSky = "eastern part of the sky";
-        } else if (moonPosition() >= 8) {
+        } else if (pos >= 8) {
             positionInSky = "western part of the sky";
         } else {
             positionInSky = "southern part of the sky";

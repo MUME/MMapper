@@ -53,6 +53,8 @@ private:
 
     MumeTime m_lastTime = MumeTime::TIME_UNKNOWN;
     MumeSeason m_lastSeason = MumeSeason::SEASON_UNKNOWN;
+    MumeMoonPhase m_lastPhase = MumeMoonPhase::PHASE_UNKNOWN;
+    MumeMoonVisibility m_lastVisibility = MumeMoonVisibility::MOON_POSITION_UNKNOWN;
     MumeClockPrecision m_lastPrecision = MumeClockPrecision::MUMECLOCK_UNSET;
 };
 

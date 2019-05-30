@@ -1115,7 +1115,7 @@ void AbstractParser::showMumeTime()
         data += moment.toMumeMoonTime() + "\r\n";
         data += "The moon ";
         switch (moment.toMoonVisibility()) {
-        case MumeMoonVisibility::MOON_INVISIBLE:
+        case MumeMoonVisibility::MOON_HIDDEN:
         case MumeMoonVisibility::MOON_POSITION_UNKNOWN:
             data += "will rise in";
             break;
@@ -1530,8 +1530,7 @@ void AbstractParser::sendPromptToUser(const RoomLightType lightType,
                                       const RoomTerrainType terrainType)
 {
     char light = getLightSymbol(lightType);
-    if (light == 'o'
-        && m_mumeClock->getMumeMoment().toMoonVisibility() != MumeMoonVisibility::MOON_INVISIBLE) {
+    if (light == 'o' && m_mumeClock->getMumeMoment().moonLevel() > 4) {
         // Moon is out
         light = ')';
     }

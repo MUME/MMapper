@@ -53,10 +53,10 @@ enum class MumeMoonPhase {
 };
 enum class MumeMoonVisibility {
     MOON_POSITION_UNKNOWN = -1,
+    MOON_HIDDEN,
     MOON_RISE,
     MOON_VISIBLE,
-    MOON_SET,
-    MOON_INVISIBLE
+    MOON_SET
 };
 
 class MumeMoment
