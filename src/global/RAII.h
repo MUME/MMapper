@@ -43,7 +43,7 @@ public:
 
 public:
     /* move ctor */
-    RAIIBool(RAIIBool &&rhs);
+    RAIIBool(RAIIBool && rhs);
     DELETE_COPY_CTOR(RAIIBool);
     DELETE_ASSIGN_OPS(RAIIBool);
 };
@@ -57,12 +57,12 @@ private:
 
 public:
     /* move ctor */
-    RAIICallback(RAIICallback &&rhs);
+    RAIICallback(RAIICallback && rhs);
     DELETE_COPY_CTOR(RAIICallback);
     DELETE_ASSIGN_OPS(RAIICallback);
 
 public:
-    explicit RAIICallback(Callback &&callback);
+    explicit RAIICallback(Callback && callback);
     ~RAIICallback() noexcept(false);
 };
 

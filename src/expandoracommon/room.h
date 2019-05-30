@@ -27,9 +27,9 @@
 #ifndef ROOM_H
 #define ROOM_H
 
+#include <optional>
 #include <QVariant>
 #include <QVector>
-#include <optional>
 
 #include "../global/DirectionType.h"
 #include "../global/EnumIndexedArray.h"
