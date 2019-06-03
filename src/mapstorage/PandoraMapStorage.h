@@ -68,7 +68,6 @@ private:
 private:
     RoomFactory factory{};
 
-    uint32_t baseId = 0u;
     Coordinate basePosition{};
 };
 

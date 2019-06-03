@@ -172,8 +172,6 @@ bool PandoraMapStorage::mergeData()
     {
         MapFrontendBlocker blocker(m_mapData);
 
-        /* NOTE: This relies on the maxID being ~0u, so adding 1 brings us back to 0u. */
-        baseId = m_mapData.getMaxId().asUint32() + 1u;
         basePosition = m_mapData.getLrb();
         if (basePosition.x + basePosition.y + basePosition.z != 0) {
             basePosition.y = 0;
