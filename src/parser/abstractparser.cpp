@@ -1530,7 +1530,9 @@ void AbstractParser::sendPromptToUser(const RoomLightType lightType,
                                       const RoomTerrainType terrainType)
 {
     char light = getLightSymbol(lightType);
-    if (light == 'o' && m_mumeClock->getMumeMoment().moonLevel() > 4) {
+    MumeMoment moment = m_mumeClock->getMumeMoment();
+    if (light == 'o' && moment.moonLevel() > 4
+        && moment.toMoonVisibility() > MumeMoonVisibility::MOON_HIDDEN) {
         // Moon is out
         light = ')';
     }

@@ -283,11 +283,12 @@ QString MumeMoment::toMumeMoonTime() const
 QString MumeMoment::toMoonCountDown() const
 {
     int secondsToCountdown = 60 - minute;
-    if (moonPosition() < 12) {
+    const int pos = moonPosition();
+    if (pos < 12) {
         // Moon visible
-        secondsToCountdown += (12 - moonPosition() - 1) * 60;
+        secondsToCountdown += (12 - pos - 1) * 60;
     } else {
-        secondsToCountdown += (24 - moonPosition() - 1) * 60;
+        secondsToCountdown += (24 - pos - 1) * 60;
     }
     return QString("%1:%2")
         .arg(secondsToCountdown / 60)
