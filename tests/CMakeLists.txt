@@ -67,3 +67,12 @@ set(TestMainWindow_SRCS TestMainWindow.cpp)
 add_executable(TestMainWindow ${TestMainWindow_SRCS} ${mainwindow_SRCS})
 target_link_libraries(TestMainWindow Qt5::Widgets Qt5::Network Qt5::Test coverage_config)
 add_test(NAME TestMainWindow COMMAND TestMainWindow)
+
+# Global
+set(global_SRCS
+    ../src/global/Color.h
+    )
+set(TestGlobal_SRCS TestGlobal.cpp)
+add_executable(TestGlobal ${TestGlobal_SRCS} ${global_SRCS})
+target_link_libraries(TestGlobal Qt5::Widgets Qt5::Test coverage_config)
+add_test(NAME TestGlobal COMMAND TestGlobal)

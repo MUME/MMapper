@@ -132,13 +132,22 @@ static inline QColor ansi256toRgb(const int ansi)
     }
 
     // 16-231: 6 x 6 x 6 cube (216 colors): 16 + 36 * r + 6 * g + b
-    const auto colors = ansi - 16;
-    const auto remainder = colors % 36;
-    const auto r = static_cast<int>(floor(colors / 36) / 5 * 255);
-    const auto g = static_cast<int>(floor(remainder / 6) / 5 * 255);
-    const auto b = (remainder % 6) / 5 * 255;
+    if (ansi >= 16) {
+        const auto colors = ansi - 16;
+        const auto remainder = colors % 36;
+        const auto r = static_cast<int>(floor(colors / 36) / 5 * 255);
+        const auto g = static_cast<int>(floor(remainder / 6) / 5 * 255);
+        const auto b = (remainder % 6) / 5 * 255;
+        return QColor(r, g, b);
+    }
 
-    return QColor(r, g, b);
+    // 8-15: highlighted colors
+    if (ansi >= 8) {
+        return ansiColor(static_cast<AnsiColorTable>(ansi - 8 + 60));
+    }
+
+    // 0-7: normal colors
+    return ansiColor(static_cast<AnsiColorTable>(ansi));
 }
 
 static inline int rgbToAnsi256(const int r, const int g, const int b)
@@ -155,10 +164,12 @@ static inline int rgbToAnsi256(const int r, const int g, const int b)
             return 231;
         }
 
-        return static_cast<int>(round(((r - 8) / 247.0) * 24) + 232);
+        return static_cast<int>(round((static_cast<double>(r - 8) / 247) * 24)) + 232;
     }
-    return static_cast<int>(16 + 36 * round(r / 255.0 * 5) + 6 * round(g / 255.0 * 5)
-                            + round(b / 255.0 * 5));
+    const int red = 36 * static_cast<int>(round(static_cast<double>(r) / 255 * 5));
+    const int green = 6 * static_cast<int>(round(static_cast<double>(g) / 255 * 5));
+    const int blue = static_cast<int>(round(static_cast<double>(b) / 255 * 5));
+    return 16 + red + green + blue;
 }
 
 static inline QString rgbToAnsi256String(const QColor rgb, bool foreground = true)
