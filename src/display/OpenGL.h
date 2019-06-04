@@ -244,7 +244,7 @@ public:
     {}
 };
 
-class XDisplayList final
+class NODISCARD XDisplayList final
 {
 private:
     friend class OpenGL;
@@ -259,6 +259,11 @@ private:
 
 public:
     explicit XDisplayList() = default;
+    ~XDisplayList() = default;
+    DELETE_COPY_CTOR(XDisplayList);
+    DELETE_COPY_ASSIGN_OP(XDisplayList);
+    DEFAULT_MOVE_CTOR(XDisplayList);
+    DEFAULT_MOVE_ASSIGN_OP(XDisplayList);
 
 public:
     bool isValid() const { return list != 0u; }
@@ -337,7 +342,7 @@ public:
     void setMatrix(MatrixType type, const QMatrix4x4 &m);
 
 public:
-    void callList(XDisplayList list) { m_opengl.glCallList(list.list); }
+    void callList(const XDisplayList &list) { m_opengl.glCallList(list.list); }
 
 private:
     static GLuint getGLType(const DrawType type)

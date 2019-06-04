@@ -102,7 +102,7 @@ public:
                       qint32 layer,
                       ExitDirection direction,
                       const MapCanvasData::DrawLists::ExitUpDown::OpaqueTransparent &exlists,
-                      XDisplayList doorlist);
+                      const XDisplayList &doorlist);
 
     void drawExit(const Room *const room, const RoomIndex &rooms, qint32 layer, ExitDirection dir);
     void drawRoomConnectionsAndDoors(const Room *room, const RoomIndex &rooms);
@@ -117,7 +117,7 @@ public:
 
     void alphaOverlayTexture(QOpenGLTexture *texture);
     void drawLineStrip(const std::vector<Vec3f> &points);
-    void drawListWithLineStipple(XDisplayList list, const QColor &color);
+    void drawListWithLineStipple(const XDisplayList &list, const QColor &color);
 
     void drawTextBox(const QString &name, float x, float y, float width, float height);
     void drawRoom(const Room *room, bool wantExtraDetail);

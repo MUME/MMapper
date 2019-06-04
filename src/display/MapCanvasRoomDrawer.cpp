@@ -529,8 +529,8 @@ void MapCanvasRoomDrawer::drawExit(const Room *const room,
 {
     const auto drawNotMappedExits = getConfig().canvas.drawNotMappedExits;
 
-    const auto wallList = m_gllist.wall[dir];
-    const auto doorList = m_gllist.door[dir];
+    const auto &wallList = m_gllist.wall[dir];
+    const auto &doorList = m_gllist.door[dir];
     assert(wallList.isValid());
     assert(doorList.isValid());
 
@@ -894,13 +894,13 @@ void MapCanvasRoomDrawer::drawVertical(
     const qint32 layer,
     const ExitDirection direction,
     const MapCanvasData::DrawLists::ExitUpDown::OpaqueTransparent &exlists,
-    const XDisplayList doorlist)
+    const XDisplayList &doorlist)
 {
     if (!isUpDown(direction))
         throw std::invalid_argument("dir");
 
-    const auto transparent = exlists.transparent;
-    const auto opaque = exlists.opaque;
+    const auto &transparent = exlists.transparent;
+    const auto &opaque = exlists.opaque;
 
     const Exit &roomExit = room->exit(direction);
     const auto flags = roomExit.getExitFlags();
@@ -934,7 +934,7 @@ void MapCanvasRoomDrawer::drawVertical(
     }
 }
 
-void MapCanvasRoomDrawer::drawListWithLineStipple(const XDisplayList list, const QColor &color)
+void MapCanvasRoomDrawer::drawListWithLineStipple(const XDisplayList &list, const QColor &color)
 {
     if (color.alphaF() != 1.0)
         qWarning() << __FUNCTION__ << color;
