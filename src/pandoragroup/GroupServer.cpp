@@ -75,7 +75,7 @@ void GroupServer::errorInConnection(GroupSocket *const socket, const QString &er
     if (getGroup()->isNamePresent(name)) {
         sendRemoveUserNotification(socket, name);
         emit sendLog(QString("'%1' encountered an error: %2")
-                         .arg(socket->getName().constData())
+                         .arg(QString::fromLatin1(socket->getName()))
                          .arg(errorMessage));
         emit scheduleAction(new RemoveCharacter(name));
     }
@@ -192,6 +192,7 @@ void GroupServer::retrieveData(GroupSocket *const socket,
                                const Messages message,
                                const QVariantMap &data)
 {
+    const QString nameStr = QString::fromLatin1(socket->getName());
     // ---------------------- AwaitingLogin  --------------------
     if (socket->getProtocolState() == ProtocolState::AwaitingLogin) {
         // Login state. either REQ_HANDSHAKE, UPDATE_CHAR, or ACK should come
@@ -217,14 +218,13 @@ void GroupServer::retrieveData(GroupSocket *const socket,
             sendMessage(socket, Messages::REQ_ACK);
         } else if (message == Messages::ACK) {
             socket->setProtocolState(ProtocolState::Logged);
-            emit sendLog(
-                QString("'%1' has successfully logged in.").arg(socket->getName().constData()));
+            emit sendLog(QString("'%1' has successfully logged in.").arg(nameStr));
             sendMessage(socket, Messages::STATE_LOGGED);
             if (!NO_OPEN_SSL && socket->getProtocolVersion() == PROTOCOL_VERSION_102) {
                 QVariantMap root;
                 root["text"] = QString("WARNING: %1 joined the group with an insecure connection "
                                        "and needs to upgrade MMapper!")
-                                   .arg(socket->getName().constData());
+                                   .arg(nameStr);
                 root["from"] = "MMapper";
                 sendGroupTellMessage(root);
                 emit gTellArrived(root);
@@ -239,22 +239,18 @@ void GroupServer::retrieveData(GroupSocket *const socket,
     } else if (socket->getProtocolState() == ProtocolState::Logged) {
         // usual update situation. receive update, unpack, apply.
         if (message == Messages::UPDATE_CHAR) {
-            const QString &updateName = CGroupChar::getNameFromUpdateChar(data);
-            if (updateName.compare(socket->getName(), Qt::CaseInsensitive) != 0) {
-                emit sendLog(QString("WARNING: '%1' spoofed as '%2'")
-                                 .arg(socket->getName().constData())
-                                 .arg(updateName));
+            const QString &updateName = QString::fromLatin1(CGroupChar::getNameFromUpdateChar(data));
+            if (updateName.compare(nameStr, Qt::CaseInsensitive) != 0) {
+                emit sendLog(QString("WARNING: '%1' spoofed as '%2'").arg(nameStr).arg(updateName));
                 return;
             }
             emit scheduleAction(new UpdateCharacter(data));
             relayMessage(socket, Messages::UPDATE_CHAR, data);
 
         } else if (message == Messages::GTELL) {
-            const auto &fromName = data["from"].toString().simplified();
-            if (fromName.compare(socket->getName(), Qt::CaseInsensitive) != 0) {
-                emit sendLog(QString("WARNING: '%1' spoofed as '%2'")
-                                 .arg(socket->getName().constData())
-                                 .arg(fromName));
+            const auto &fromName = QString::fromLatin1(data["from"].toByteArray()).simplified();
+            if (fromName.compare(nameStr, Qt::CaseInsensitive) != 0) {
+                emit sendLog(QString("WARNING: '%1' spoofed as '%2'").arg(nameStr).arg(fromName));
                 return;
             }
             emit gTellArrived(data);
@@ -264,15 +260,13 @@ void GroupServer::retrieveData(GroupSocket *const socket,
             sendMessage(socket, Messages::ACK);
 
         } else if (message == Messages::RENAME_CHAR) {
-            const QString oldName = data["oldname"].toString().simplified();
-            if (oldName.compare(socket->getName(), Qt::CaseInsensitive) != 0) {
+            const QString oldName = QString::fromLatin1(data["oldname"].toByteArray()).simplified();
+            if (oldName.compare(nameStr, Qt::CaseInsensitive) != 0) {
                 kickConnection(socket,
-                               QString("Name spoof detected: %1 != %2")
-                                   .arg(oldName)
-                                   .arg(socket->getName().constData()));
+                               QString("Name spoof detected: %1 != %2").arg(oldName).arg(nameStr));
                 return;
             }
-            const QString &newName = data["newname"].toString().simplified();
+            const QString &newName = QString::fromLatin1(data["newname"].toByteArray()).simplified();
             if (newName.compare(data["newname"].toByteArray(), Qt::CaseInsensitive) != 0) {
                 kickConnection(socket, "Your name must not include any whitespace");
                 return;
@@ -280,7 +274,8 @@ void GroupServer::retrieveData(GroupSocket *const socket,
             for (auto &target : clientsList) {
                 if (socket == target)
                     continue;
-                if (newName.compare(target->getName(), Qt::CaseInsensitive) != 0) {
+                if (newName.compare(QString::fromLatin1(target->getName()), Qt::CaseInsensitive)
+                    != 0) {
                     kickConnection(socket, "Someone was already using that name");
                     return;
                 }
@@ -351,11 +346,10 @@ void GroupServer::parseLoginInformation(GroupSocket *socket, const QVariantMap &
         kickConnection(socket, "Payload did not include 'name' attribute.");
         return;
     }
-    const QByteArray name = playerData["name"].toByteArray();
-    const QString tempName = QString("%1-%2").arg(name.constData()).arg(rand() % 1000); //NOLINT
+    const QString nameStr = QString::fromLatin1(playerData["name"].toByteArray());
+    const QString tempName = QString("%1-%2").arg(nameStr).arg(rand() % 1000); //NOLINT
     socket->setName(tempName.toLatin1());
-    emit sendLog(
-        QString("'%1' is trying to join the group as '%2'.").arg(tempName).arg(name.constData()));
+    emit sendLog(QString("'%1' is trying to join the group as '%2'.").arg(tempName).arg(nameStr));
 
     // Check credentials
     const auto secret = socket->getSecret();
@@ -400,24 +394,24 @@ void GroupServer::parseLoginInformation(GroupSocket *socket, const QVariantMap &
         kickConnection(socket, "Host does not trust your compromised secret.");
         return;
     }
-    QString simplifiedName = QString(name).simplified();
-    if (simplifiedName.compare(name, Qt::CaseInsensitive) != 0) {
+    QString simplifiedName = nameStr.simplified();
+    if (simplifiedName.compare(nameStr, Qt::CaseInsensitive) != 0) {
         kickConnection(socket, "Your name must not include any whitespace");
         return;
     }
-    if (getGroup()->isNamePresent(name)) {
+    if (getGroup()->isNamePresent(nameStr.toLatin1())) {
         kickConnection(socket, "The name you picked is already present!");
         return;
     } else {
         // Allow this name to now take effect
-        emit sendLog(QString("'%1' will now be known as '%2'").arg(tempName).arg(name.constData()));
-        socket->setName(name);
+        emit sendLog(QString("'%1' will now be known as '%2'").arg(tempName).arg(nameStr));
+        socket->setName(nameStr.toLatin1());
     }
 
     // Client is allowed to log in
     if (isEncrypted && validSecret) {
         // Update metadata
-        getAuthority()->setMetadata(secret, GroupMetadata::NAME, name);
+        getAuthority()->setMetadata(secret, GroupMetadata::NAME, nameStr);
         getAuthority()->setMetadata(secret,
                                     GroupMetadata::IP_ADDRESS,
                                     socket->getPeerAddress().toString());
@@ -503,9 +497,9 @@ bool GroupServer::start()
     }
     const auto localPort = static_cast<quint16>(getConfig().groupManager.localPort);
     if (portMapper.tryAddPortMapping(localPort)) {
-        QByteArray externalIp = portMapper.tryGetExternalIp();
-        emit sendLog(QString("Added port mapping to UPnP IGD router with external IP: %1")
-                         .arg(externalIp.constData()));
+        const QString externalIp = QString::fromLocal8Bit(portMapper.tryGetExternalIp());
+        emit sendLog(
+            QString("Added port mapping to UPnP IGD router with external IP: %1").arg(externalIp));
     }
     emit sendLog(QString("Listening on port %1").arg(localPort));
     if (!server.listen(QHostAddress::Any, localPort)) {
@@ -545,8 +539,8 @@ void GroupServer::kickConnection(GroupSocket *const socket, const QString &messa
     } else {
         sendMessage(socket, Messages::STATE_KICKED, message.toLatin1());
     }
-    QString identifier = socket->getName().isEmpty() ? socket->getPeerAddress().toString()
-                                                     : socket->getName();
+    const QString nameStr = QString::fromLatin1(socket->getName());
+    const QString identifier = nameStr.isEmpty() ? socket->getPeerAddress().toString() : nameStr;
     qDebug() << "Kicking" << identifier << "for" << message;
     emit sendLog(QString("'%1' was kicked: %2").arg(identifier).arg(message));
 

@@ -235,12 +235,13 @@ void Mmapper2Group::gTellArrived(const QVariantMap &node)
         return;
     }
     const QByteArray &from = node["from"].toByteArray();
+    const QString fromStr = QString::fromLatin1(from);
 
     if (!node.contains("text") && node["text"].canConvert(QMetaType::QByteArray)) {
         qWarning() << "Text not found" << node;
         return;
     }
-    const QString &text = node["text"].toString();
+    const QString &text = QString::fromLatin1(node["text"].toByteArray());
 
     auto color = getConfig().groupManager.groupTellColor;
     auto selection = getGroup()->selectByName(from);
@@ -248,13 +249,10 @@ void Mmapper2Group::gTellArrived(const QVariantMap &node)
         auto character = selection->at(0);
         color = rgbToAnsi256String(character->getColor(), false);
     }
-    emit log("GroupManager", QString("GTell from %1 arrived: %2").arg(from.constData()).arg(text));
+    emit log("GroupManager", QString("GTell from %1 arrived: %2").arg(fromStr).arg(text));
 
-    const QByteArray tell = QString("\x1b%1%2 tells you [GT] '%3'\x1b[0m")
-                                .arg(color)
-                                .arg(from.constData())
-                                .arg(text)
-                                .toLatin1();
+    const QByteArray tell
+        = QString("\x1b%1%2 tells you [GT] '%3'\x1b[0m").arg(color).arg(fromStr).arg(text).toLatin1();
 
     emit displayGroupTellEvent(tell);
 }
