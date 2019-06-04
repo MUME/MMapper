@@ -26,7 +26,6 @@
 #ifndef MMAPPER_OPENGL_H
 #define MMAPPER_OPENGL_H
 
-#include "FontFormatFlags.h"
 #include <algorithm>
 #include <stdexcept>
 #include <vector>
@@ -41,6 +40,7 @@
 #include <QtGui/qopengl.h>
 
 #include "../global/utils.h"
+#include "FontFormatFlags.h"
 
 struct Vec2f
 {

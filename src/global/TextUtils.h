@@ -29,7 +29,7 @@
 #include <QRegularExpression>
 #include <QString>
 
-#include "../global/utils.h"
+#include "utils.h"
 
 bool containsAnsi(const QStringRef &str);
 bool containsAnsi(const QString &str);

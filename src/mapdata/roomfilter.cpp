@@ -27,9 +27,9 @@
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
 #include "../global/utils.h"
-#include "../mapdata/enums.h"
 #include "../parser/AbstractParser-Commands.h"
 #include "ExitFieldVariant.h"
+#include "enums.h"
 #include "mmapper2room.h"
 
 const char *RoomFilter::parse_help
