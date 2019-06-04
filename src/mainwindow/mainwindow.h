@@ -116,6 +116,7 @@ public slots:
     void onModeCreateOnewayConnectionSelect();
     void onLayerUp();
     void onLayerDown();
+    void onLayerReset();
     void onCreateRoom();
     void onEditRoomSelection();
     void onEditInfoMarkSelection();
@@ -241,6 +242,7 @@ private:
 
     QAction *layerUpAct = nullptr;
     QAction *layerDownAct = nullptr;
+    QAction *layerResetAct = nullptr;
 
     struct MouseModeActions
     {

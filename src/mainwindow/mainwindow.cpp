@@ -565,6 +565,12 @@ void MainWindow::createActions()
     layerDownAct->setStatusTip(tr("Layer Down"));
     connect(layerDownAct, &QAction::triggered, this, &MainWindow::onLayerDown);
 
+    layerResetAct = new QAction(QIcon::fromTheme("go-home", QIcon(":/icons/layerhome.png")),
+                                tr("Layer Reset"),
+                                this);
+    layerResetAct->setStatusTip(tr("Layer Reset"));
+    connect(layerResetAct, &QAction::triggered, this, &MainWindow::onLayerReset);
+
     mouseMode.modeConnectionSelectAct = new QAction(QIcon(":/icons/connectionselection.png"),
                                                     tr("Select Connection"),
                                                     this);
@@ -922,6 +928,7 @@ void MainWindow::disableActions(bool value)
     mouseMode.modeCreateInfoMarkAct->setDisabled(value);
     layerUpAct->setDisabled(value);
     layerDownAct->setDisabled(value);
+    layerResetAct->setDisabled(value);
     mouseMode.modeCreateRoomAct->setDisabled(value);
     mouseMode.modeCreateConnectionAct->setDisabled(value);
     mouseMode.modeCreateOnewayConnectionAct->setDisabled(value);
@@ -1014,6 +1021,7 @@ void MainWindow::setupMenuBar()
     viewMenu->addSeparator();
     viewMenu->addAction(layerUpAct);
     viewMenu->addAction(layerDownAct);
+    viewMenu->addAction(layerResetAct);
     viewMenu->addSeparator();
     viewMenu->addAction(alwaysOnTopAct);
 
@@ -1152,8 +1160,10 @@ void MainWindow::setupToolBars()
     viewToolBar->setObjectName("ViewToolBar");
     viewToolBar->addAction(zoomInAct);
     viewToolBar->addAction(zoomOutAct);
+    viewToolBar->addAction(zoomResetAct);
     viewToolBar->addAction(layerUpAct);
     viewToolBar->addAction(layerDownAct);
+    viewToolBar->addAction(layerResetAct);
     viewToolBar->hide();
 
     pathMachineToolBar = addToolBar(tr("Path Machine"));
@@ -1739,6 +1749,11 @@ void MainWindow::onLayerUp()
 void MainWindow::onLayerDown()
 {
     m_mapWindow->getCanvas()->layerDown();
+}
+
+void MainWindow::onLayerReset()
+{
+    m_mapWindow->getCanvas()->layerReset();
 }
 
 void MainWindow::onModeConnectionSelect()

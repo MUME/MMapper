@@ -232,6 +232,12 @@ void MapCanvas::layerDown()
     update();
 }
 
+void MapCanvas::layerReset()
+{
+    m_currentLayer = 0;
+    update();
+}
+
 void MapCanvas::setCanvasMouseMode(const CanvasMouseMode mode)
 {
     clearRoomSelection();

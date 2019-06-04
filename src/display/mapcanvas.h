@@ -124,6 +124,7 @@ public slots:
     void zoomReset();
     void layerUp();
     void layerDown();
+    void layerReset();
 
     void setRoomSelection(const SigRoomSelection &);
     void clearRoomSelection() { setRoomSelection(SigRoomSelection{}); }

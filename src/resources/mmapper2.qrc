@@ -45,6 +45,7 @@
         <file>icons/mapmove.png</file>
         <file>icons/layerup.png</file>
         <file>icons/layerdown.png</file>
+        <file>icons/layerhome.png</file>
         <file>icons/force.png</file>
         <file>icons/groupoff.png</file>
         <file>icons/groupclient.png</file>
