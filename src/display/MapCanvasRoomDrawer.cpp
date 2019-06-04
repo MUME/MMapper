@@ -272,68 +272,69 @@ void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
         return;
     }
 
-    m_opengl.glPushMatrix();
-    m_opengl.glTranslatef(x1, y1, 0.0f);
+    auto &gl = getOpenGL();
+    gl.glPushMatrix();
+    gl.glTranslatef(x1, y1, 0.0f);
 
     switch (infoMarkType) {
     case InfoMarkType::TEXT:
         // Render background
-        m_opengl.apply(XColor4f{color});
-        m_opengl.apply(XEnable{XOption::BLEND});
-        m_opengl.apply(XDisable{XOption::DEPTH_TEST});
-        m_opengl.draw(DrawType::TRIANGLE_STRIP,
-                      std::vector<Vec3f>{
-                          Vec3f{0.0f, 0.0f, 1.0f},
-                          Vec3f{0.0f, 0.25f + height, 1.0f},
-                          Vec3f{0.2f + width, 0.0f, 1.0f},
-                          Vec3f{0.2f + width, 0.25f + height, 1.0f},
-                      });
-        m_opengl.apply(XDisable{XOption::BLEND});
+        gl.apply(XColor4f{color});
+        gl.apply(XEnable{XOption::BLEND});
+        gl.apply(XDisable{XOption::DEPTH_TEST});
+        gl.draw(DrawType::TRIANGLE_STRIP,
+                std::vector<Vec3f>{
+                    Vec3f{0.0f, 0.0f, 1.0f},
+                    Vec3f{0.0f, 0.25f + height, 1.0f},
+                    Vec3f{0.2f + width, 0.0f, 1.0f},
+                    Vec3f{0.2f + width, 0.25f + height, 1.0f},
+                });
+        gl.apply(XDisable{XOption::BLEND});
 
         // Render text proper
-        m_opengl.glTranslatef(-x1 / 2.0f, -y1 / 2.0f, 0.0f);
+        gl.glTranslatef(-x1 / 2.0f, -y1 / 2.0f, 0.0f);
         renderText(x1 + 0.1f,
                    y1 + 0.3f,
                    marker->getText(),
                    textColor(color),
                    fontFormatFlag,
                    marker->getRotationAngle());
-        m_opengl.apply(XEnable{XOption::DEPTH_TEST});
+        gl.apply(XEnable{XOption::DEPTH_TEST});
         break;
     case InfoMarkType::LINE:
-        m_opengl.apply(XColor4f{color});
-        m_opengl.apply(XEnable{XOption::BLEND});
-        m_opengl.apply(XDisable{XOption::DEPTH_TEST});
-        m_opengl.apply(XDevicePointSize{2.0});
-        m_opengl.apply(XDeviceLineWidth{2.0});
-        m_opengl.draw(DrawType::LINES,
-                      std::vector<Vec3f>{
-                          Vec3f{0.0f, 0.0f, 0.1f},
-                          Vec3f{dx, dy, 0.1f},
-                      });
-        m_opengl.apply(XDisable{XOption::BLEND});
-        m_opengl.apply(XEnable{XOption::DEPTH_TEST});
+        gl.apply(XColor4f{color});
+        gl.apply(XEnable{XOption::BLEND});
+        gl.apply(XDisable{XOption::DEPTH_TEST});
+        gl.apply(XDevicePointSize{2.0});
+        gl.apply(XDeviceLineWidth{2.0});
+        gl.draw(DrawType::LINES,
+                std::vector<Vec3f>{
+                    Vec3f{0.0f, 0.0f, 0.1f},
+                    Vec3f{dx, dy, 0.1f},
+                });
+        gl.apply(XDisable{XOption::BLEND});
+        gl.apply(XEnable{XOption::DEPTH_TEST});
         break;
     case InfoMarkType::ARROW:
-        m_opengl.apply(XColor4f{color});
-        m_opengl.apply(XEnable{XOption::BLEND});
-        m_opengl.apply(XDisable{XOption::DEPTH_TEST});
-        m_opengl.apply(XDevicePointSize{2.0});
-        m_opengl.apply(XDeviceLineWidth{2.0});
-        m_opengl.draw(DrawType::LINE_STRIP,
-                      std::vector<Vec3f>{Vec3f{0.0f, 0.05f, 1.0f},
-                                         Vec3f{dx - 0.2f, dy + 0.1f, 1.0f},
-                                         Vec3f{dx - 0.1f, dy + 0.1f, 1.0f}});
-        m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3f>{Vec3f{dx - 0.1f, dy + 0.1f - 0.07f, 1.0f},
-                                         Vec3f{dx - 0.1f, dy + 0.1f + 0.07f, 1.0f},
-                                         Vec3f{dx + 0.1f, dy + 0.1f, 1.0f}});
-        m_opengl.apply(XDisable{XOption::BLEND});
-        m_opengl.apply(XEnable{XOption::DEPTH_TEST});
+        gl.apply(XColor4f{color});
+        gl.apply(XEnable{XOption::BLEND});
+        gl.apply(XDisable{XOption::DEPTH_TEST});
+        gl.apply(XDevicePointSize{2.0});
+        gl.apply(XDeviceLineWidth{2.0});
+        gl.draw(DrawType::LINE_STRIP,
+                std::vector<Vec3f>{Vec3f{0.0f, 0.05f, 1.0f},
+                                   Vec3f{dx - 0.2f, dy + 0.1f, 1.0f},
+                                   Vec3f{dx - 0.1f, dy + 0.1f, 1.0f}});
+        gl.draw(DrawType::TRIANGLES,
+                std::vector<Vec3f>{Vec3f{dx - 0.1f, dy + 0.1f - 0.07f, 1.0f},
+                                   Vec3f{dx - 0.1f, dy + 0.1f + 0.07f, 1.0f},
+                                   Vec3f{dx + 0.1f, dy + 0.1f, 1.0f}});
+        gl.apply(XDisable{XOption::BLEND});
+        gl.apply(XEnable{XOption::DEPTH_TEST});
         break;
     }
 
-    m_opengl.glPopMatrix();
+    gl.glPopMatrix();
 }
 
 void MapCanvasRoomDrawer::alphaOverlayTexture(QOpenGLTexture *texture)
@@ -341,7 +342,7 @@ void MapCanvasRoomDrawer::alphaOverlayTexture(QOpenGLTexture *texture)
     if (texture != nullptr) {
         texture->bind();
     }
-    m_opengl.callList(m_gllist.room);
+    getOpenGL().callList(m_gllist.room);
 }
 
 void MapCanvasRoomDrawer::drawRoomDoorName(const Room *const sourceRoom,
@@ -453,28 +454,29 @@ void MapCanvasRoomDrawer::drawTextBox(
         return;
     }
 
-    m_opengl.glPushMatrix();
+    auto &gl = getOpenGL();
+    gl.glPushMatrix();
 
-    m_opengl.glTranslatef(x /*-0.5*/, y /*-0.5*/, 0);
+    gl.glTranslatef(x /*-0.5*/, y /*-0.5*/, 0);
 
     // Render background
-    m_opengl.apply(XColor4f{0, 0, 0, 0.3f});
-    m_opengl.apply(XEnable{XOption::BLEND});
-    m_opengl.draw(DrawType::TRIANGLE_STRIP,
-                  std::vector<Vec3f>{
-                      Vec3f{0.0f, 0.0f, 1.0f},
-                      Vec3f{0.0f, 0.25f + height, 1.0f},
-                      Vec3f{0.2f + width, 0.0f, 1.0f},
-                      Vec3f{0.2f + width, 0.25f + height, 1.0f},
-                  });
-    m_opengl.apply(XDisable{XOption::BLEND});
+    gl.apply(XColor4f{0, 0, 0, 0.3f});
+    gl.apply(XEnable{XOption::BLEND});
+    gl.draw(DrawType::TRIANGLE_STRIP,
+            std::vector<Vec3f>{
+                Vec3f{0.0f, 0.0f, 1.0f},
+                Vec3f{0.0f, 0.25f + height, 1.0f},
+                Vec3f{0.2f + width, 0.0f, 1.0f},
+                Vec3f{0.2f + width, 0.25f + height, 1.0f},
+            });
+    gl.apply(XDisable{XOption::BLEND});
 
     // text
-    m_opengl.glTranslatef(-x / 2.0f, -y / 2.0f, 0.0f);
+    gl.glTranslatef(-x / 2.0f, -y / 2.0f, 0.0f);
     renderText(x + 0.1f, y + 0.3f, name);
-    m_opengl.apply(XEnable{XOption::DEPTH_TEST});
+    gl.apply(XEnable{XOption::DEPTH_TEST});
 
-    m_opengl.glPopMatrix();
+    gl.glPopMatrix();
 }
 
 void MapCanvasRoomDrawer::drawFlow(const Room *const room,
@@ -482,18 +484,19 @@ void MapCanvasRoomDrawer::drawFlow(const Room *const room,
                                    const ExitDirection exitDirection)
 {
     // Start drawing
-    m_opengl.glPushMatrix();
+    auto &gl = getOpenGL();
+    gl.glPushMatrix();
 
     // Prepare pen
     QColor color = QColor(76, 216, 255);
-    m_opengl.apply(XColor4f{color});
-    m_opengl.apply(XEnable{XOption::BLEND});
-    m_opengl.apply(XDevicePointSize{4.0});
-    m_opengl.apply(XDeviceLineWidth{1.0f});
+    gl.apply(XColor4f{color});
+    gl.apply(XEnable{XOption::BLEND});
+    gl.apply(XDevicePointSize{4.0});
+    gl.apply(XDeviceLineWidth{1.0f});
 
     // Draw part in this room
     if (room->getPosition().z == m_currentLayer) {
-        m_opengl.callList(m_gllist.flow.begin[exitDirection]);
+        gl.callList(m_gllist.flow.begin[exitDirection]);
     }
 
     // Draw part in adjacent room
@@ -506,20 +509,20 @@ void MapCanvasRoomDrawer::drawFlow(const Room *const room,
         const Room *const targetRoom = rooms[targetId];
         const auto &pos = targetRoom->getPosition();
         if (pos.z == m_currentLayer) {
-            m_opengl.setMatrix(MatrixType::MODELVIEW, getTranslationMatrix(pos.x, pos.y));
-            m_opengl.callList(m_gllist.flow.end[targetDir]);
+            gl.setMatrix(MatrixType::MODELVIEW, getTranslationMatrix(pos.x, pos.y));
+            gl.callList(m_gllist.flow.end[targetDir]);
         }
     }
 
     // Finish pen
-    m_opengl.apply(XDeviceLineWidth{2.0});
-    m_opengl.apply(XDevicePointSize{2.0});
-    m_opengl.apply(XDisable{XOption::BLEND});
+    gl.apply(XDeviceLineWidth{2.0});
+    gl.apply(XDevicePointSize{2.0});
+    gl.apply(XDisable{XOption::BLEND});
 
     // Terminate drawing
     color = Qt::black;
-    m_opengl.apply(XColor4f{color});
-    m_opengl.glPopMatrix();
+    gl.apply(XColor4f{color});
+    gl.glPopMatrix();
 }
 
 void MapCanvasRoomDrawer::drawExit(const Room *const room,
@@ -553,19 +556,21 @@ void MapCanvasRoomDrawer::drawExit(const Room *const room,
         }
     }
 
+    auto &gl = getOpenGL();
+
     // wall
     if (!isExit || isDoor) {
         if (!isDoor && !exit.outIsEmpty()) {
             drawListWithLineStipple(wallList, WALL_COLOR_WALL_DOOR);
         } else {
-            m_opengl.apply(getWallExitColor(layer));
-            m_opengl.callList(wallList);
+            gl.apply(getWallExitColor(layer));
+            gl.callList(wallList);
         }
     }
     // door
     if (isDoor) {
-        m_opengl.apply(getWallExitColor(layer));
-        m_opengl.callList(doorList);
+        gl.apply(getWallExitColor(layer));
+        gl.callList(doorList);
     }
 }
 
@@ -603,35 +608,35 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room, bool wantExtraDetail)
     const auto z = room->getPosition().z;
     const auto layer = z - m_currentLayer;
 
-    m_opengl.glPushMatrix();
-    m_opengl.glTranslatef(static_cast<float>(x) - 0.5f,
-                          static_cast<float>(y) - 0.5f,
-                          ROOM_Z_DISTANCE * static_cast<float>(layer));
+    auto &gl = getOpenGL();
+    gl.glPushMatrix();
+    gl.glTranslatef(static_cast<float>(x) - 0.5f,
+                    static_cast<float>(y) - 0.5f,
+                    ROOM_Z_DISTANCE * static_cast<float>(layer));
 
     // TODO(nschimme): https://stackoverflow.com/questions/6017176/gllinestipple-deprecated-in-opengl-3-1
-    m_opengl.apply(LineStippleType::TWO);
+    gl.apply(LineStippleType::TWO);
 
     const auto roomColor = getRoomColor(layer);
 
     // Make dark and troll safe rooms look dark
     const bool isDark = room->getLightType() == RoomLightType::DARK;
     const bool hasNoSundeath = room->getSundeathType() == RoomSundeathType::NO_SUNDEATH;
-    m_opengl.apply((isDark || hasNoSundeath) ? getRoomColor(layer, isDark, hasNoSundeath)
-                                             : roomColor);
+    gl.apply((isDark || hasNoSundeath) ? getRoomColor(layer, isDark, hasNoSundeath) : roomColor);
 
     if (layer > 0) {
         if (!getConfig().canvas.drawUpperLayersTextured) {
-            m_opengl.apply(XEnable{XOption::BLEND});
-            m_opengl.callList(m_gllist.room);
-            m_opengl.apply(XDisable{XOption::BLEND});
-            m_opengl.glPopMatrix();
+            gl.apply(XEnable{XOption::BLEND});
+            gl.callList(m_gllist.room);
+            gl.apply(XDisable{XOption::BLEND});
+            gl.glPopMatrix();
             return;
         }
-        m_opengl.apply(XEnable{XOption::POLYGON_STIPPLE});
+        gl.apply(XEnable{XOption::POLYGON_STIPPLE});
     }
 
-    m_opengl.apply(XEnable{XOption::BLEND});
-    m_opengl.apply(XEnable{XOption::TEXTURE_2D});
+    gl.apply(XEnable{XOption::BLEND});
+    gl.apply(XEnable{XOption::TEXTURE_2D});
 
     const auto roomTerrainType = room->getTerrainType();
     const RoadIndex roadIndex = getRoadIndex(*room);
@@ -639,67 +644,67 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room, bool wantExtraDetail)
                                         ? m_textures.road[roadIndex].get()
                                         : m_textures.terrain[roomTerrainType].get();
     texture->bind();
-    m_opengl.callList(m_gllist.room);
+    gl.callList(m_gllist.room);
 
-    m_opengl.apply(XDisable{XOption::TEXTURE_2D});
+    gl.apply(XDisable{XOption::TEXTURE_2D});
 
     // REVISIT: Turn this into a texture or move it into a different rendering stage
     // Draw a little dark red cross on noride rooms
     if (room->getRidableType() == RoomRidableType::NOT_RIDABLE) {
-        m_opengl.glTranslatef(0, 0, ROOM_Z_LAYER_BUMP);
-        m_opengl.apply(XColor4f{0.5f, 0.0f, 0.0f, 0.9f});
-        m_opengl.apply(XDeviceLineWidth{3.0});
-        m_opengl.draw(DrawType::LINES,
-                      std::vector<Vec3f>{
-                          Vec3f{0.6f, 0.2f, 0.0f},
-                          Vec3f{0.8f, 0.4f, 0.0f},
-                          Vec3f{0.8f, 0.2f, 0.0f},
-                          Vec3f{0.6f, 0.4f, 0.0f},
-                      });
+        gl.glTranslatef(0, 0, ROOM_Z_LAYER_BUMP);
+        gl.apply(XColor4f{0.5f, 0.0f, 0.0f, 0.9f});
+        gl.apply(XDeviceLineWidth{3.0});
+        gl.draw(DrawType::LINES,
+                std::vector<Vec3f>{
+                    Vec3f{0.6f, 0.2f, 0.0f},
+                    Vec3f{0.8f, 0.4f, 0.0f},
+                    Vec3f{0.8f, 0.2f, 0.0f},
+                    Vec3f{0.6f, 0.4f, 0.0f},
+                });
     }
 
     // Only display at a certain scale
     if (wantExtraDetail) {
         // Restore room color from dark room or noride red cross
-        m_opengl.apply(XEnable{XOption::TEXTURE_2D});
-        m_opengl.apply(roomColor);
+        gl.apply(XEnable{XOption::TEXTURE_2D});
+        gl.apply(roomColor);
 
         const RoomMobFlags mf = room->getMobFlags();
         const RoomLoadFlags lf = room->getLoadFlags();
 
         // Trail Support
         if (roadIndex != RoadIndex::NONE && roomTerrainType != RoomTerrainType::ROAD) {
-            m_opengl.glTranslatef(0, 0, ROOM_Z_LAYER_BUMP);
+            gl.glTranslatef(0, 0, ROOM_Z_LAYER_BUMP);
             alphaOverlayTexture(m_textures.trail[roadIndex].get());
         }
 
         for (const RoomMobFlag flag : ALL_MOB_FLAGS) {
             if (mf.contains(flag)) {
-                m_opengl.glTranslatef(0, 0, ROOM_Z_LAYER_BUMP);
+                gl.glTranslatef(0, 0, ROOM_Z_LAYER_BUMP);
                 alphaOverlayTexture(m_textures.mob[flag].get());
             }
         }
 
         for (const RoomLoadFlag flag : ALL_LOAD_FLAGS) {
             if (lf.contains(flag)) {
-                m_opengl.glTranslatef(0, 0, ROOM_Z_LAYER_BUMP);
+                gl.glTranslatef(0, 0, ROOM_Z_LAYER_BUMP);
                 alphaOverlayTexture(m_textures.load[flag].get());
             }
         }
 
         if (getConfig().canvas.showUpdated && !room->isUpToDate()) {
-            m_opengl.glTranslatef(0, 0, ROOM_Z_LAYER_BUMP);
+            gl.glTranslatef(0, 0, ROOM_Z_LAYER_BUMP);
             alphaOverlayTexture(m_textures.update.get());
         }
-        m_opengl.apply(XDisable{XOption::BLEND});
+        gl.apply(XDisable{XOption::BLEND});
 
-        m_opengl.apply(XDisable{XOption::TEXTURE_2D});
+        gl.apply(XDisable{XOption::TEXTURE_2D});
     }
 
     if (layer > 0)
-        m_opengl.apply(XDisable{XOption::POLYGON_STIPPLE});
+        gl.apply(XDisable{XOption::POLYGON_STIPPLE});
 
-    m_opengl.glPopMatrix();
+    gl.glPopMatrix();
 }
 
 void MapCanvasRoomDrawer::drawWallsAndExits(const Room *room, const RoomIndex &rooms)
@@ -708,26 +713,27 @@ void MapCanvasRoomDrawer::drawWallsAndExits(const Room *room, const RoomIndex &r
     const auto y = room->getPosition().y;
     const auto layer = room->getPosition().z - m_currentLayer;
 
-    m_opengl.glPushMatrix();
-    m_opengl.glTranslatef(static_cast<float>(x) - 0.5f,
-                          static_cast<float>(y) - 0.5f,
-                          ROOM_Z_DISTANCE * static_cast<float>(layer));
+    auto &gl = getOpenGL();
+    gl.glPushMatrix();
+    gl.glTranslatef(static_cast<float>(x) - 0.5f,
+                    static_cast<float>(y) - 0.5f,
+                    ROOM_Z_DISTANCE * static_cast<float>(layer));
 
     // walls
-    m_opengl.glTranslatef(0, 0, ROOM_WALLS_BUMP);
+    gl.glTranslatef(0, 0, ROOM_WALLS_BUMP);
 
     if (layer > 0)
-        m_opengl.apply(XEnable{XOption::BLEND});
+        gl.apply(XEnable{XOption::BLEND});
 
-    m_opengl.apply(XDevicePointSize{3.0});
-    m_opengl.apply(XDeviceLineWidth{2.4f});
+    gl.apply(XDevicePointSize{3.0});
+    gl.apply(XDeviceLineWidth{2.4f});
 
     for (auto dir : ALL_EXITS_NESW) {
         drawExit(room, rooms, layer, dir);
     }
 
-    m_opengl.apply(XDevicePointSize{3.0});
-    m_opengl.apply(XDeviceLineWidth{2.0});
+    gl.apply(XDevicePointSize{3.0});
+    gl.apply(XDeviceLineWidth{2.0});
 
     for (auto dir : {ExitDirection ::UP, ExitDirection::DOWN}) {
         const auto &exitList = m_gllist.exit;
@@ -736,9 +742,9 @@ void MapCanvasRoomDrawer::drawWallsAndExits(const Room *room, const RoomIndex &r
     }
 
     if (layer > 0)
-        m_opengl.apply(XDisable{XOption::BLEND});
+        gl.apply(XDisable{XOption::BLEND});
 
-    m_opengl.glPopMatrix();
+    gl.glPopMatrix();
 }
 
 void MapCanvasRoomDrawer::drawBoost(const Room *const room, const RoomLocks &locks)
@@ -747,34 +753,34 @@ void MapCanvasRoomDrawer::drawBoost(const Room *const room, const RoomLocks &loc
     const auto y = room->getPosition().y;
     const auto layer = room->getPosition().z - m_currentLayer;
 
-    m_opengl.glPushMatrix();
-    m_opengl.glTranslatef(static_cast<float>(x) - 0.5f,
-                          static_cast<float>(y) - 0.5f,
-                          ROOM_Z_DISTANCE * static_cast<float>(layer));
+    auto &gl = getOpenGL();
+    gl.glPushMatrix();
+    gl.glTranslatef(static_cast<float>(x) - 0.5f,
+                    static_cast<float>(y) - 0.5f,
+                    ROOM_Z_DISTANCE * static_cast<float>(layer));
 
     // Boost the colors of rooms that are on a different layer
-    m_opengl.glTranslatef(0, 0, ROOM_BOOST_BUMP);
+    gl.glTranslatef(0, 0, ROOM_BOOST_BUMP);
     if (layer < 0) {
-        m_opengl.apply(XEnable{XOption::BLEND});
-        m_opengl.apply(
-            XColor4f{Qt::black, std::max(0.0f, 0.5f - 0.03f * static_cast<float>(layer))});
-        m_opengl.callList(m_gllist.room);
-        m_opengl.apply(XDisable{XOption::BLEND});
+        gl.apply(XEnable{XOption::BLEND});
+        gl.apply(XColor4f{Qt::black, std::max(0.0f, 0.5f - 0.03f * static_cast<float>(layer))});
+        gl.callList(m_gllist.room);
+        gl.apply(XDisable{XOption::BLEND});
     } else if (layer > 0) {
-        m_opengl.apply(XEnable{XOption::BLEND});
-        m_opengl.apply(XColor4f{Qt::white, 0.1f});
-        m_opengl.callList(m_gllist.room);
-        m_opengl.apply(XDisable{XOption::BLEND});
+        gl.apply(XEnable{XOption::BLEND});
+        gl.apply(XColor4f{Qt::white, 0.1f});
+        gl.callList(m_gllist.room);
+        gl.apply(XDisable{XOption::BLEND});
     }
     // Locked rooms have a red hint
     if (!locks[room->getId()].empty()) {
-        m_opengl.apply(XEnable{XOption::BLEND});
-        m_opengl.apply(XColor4f{0.6f, 0.0f, 0.0f, 0.2f});
-        m_opengl.callList(m_gllist.room);
-        m_opengl.apply(XDisable{XOption::BLEND});
+        gl.apply(XEnable{XOption::BLEND});
+        gl.apply(XColor4f{0.6f, 0.0f, 0.0f, 0.2f});
+        gl.callList(m_gllist.room);
+        gl.apply(XDisable{XOption::BLEND});
     }
 
-    m_opengl.glPopMatrix();
+    gl.glPopMatrix();
 }
 
 void MapCanvasRoomDrawer::drawRoomConnectionsAndDoors(const Room *const room, const RoomIndex &rooms)
@@ -919,14 +925,16 @@ void MapCanvasRoomDrawer::drawVertical(
         drawListWithLineStipple(transparent, color);
     }
 
+    auto &gl = getOpenGL();
+
     /* NOTE: semi-bugfix: The opaque display list modifies color to black,
      * but the transparent display list doesn't.
      * Door display list doesn't set its own color, but flow does. */
     const auto useTransparent = layer > 0;
-    m_opengl.apply(getWallExitColor(layer), useTransparent ? transparent : opaque);
+    gl.apply(getWallExitColor(layer), useTransparent ? transparent : opaque);
 
     if (flags.isDoor()) {
-        m_opengl.callList(doorlist);
+        gl.callList(doorlist);
     }
 
     if (flags.isFlow()) {
@@ -939,10 +947,11 @@ void MapCanvasRoomDrawer::drawListWithLineStipple(const XDisplayList &list, cons
     if (color.alphaF() != 1.0)
         qWarning() << __FUNCTION__ << color;
 
-    m_opengl.apply(XEnable{XOption::LINE_STIPPLE});
-    m_opengl.apply(XColor4f{color});
-    m_opengl.callList(list);
-    m_opengl.apply(XDisable{XOption::LINE_STIPPLE});
+    auto &gl = getOpenGL();
+    gl.apply(XEnable{XOption::LINE_STIPPLE});
+    gl.apply(XColor4f{color});
+    gl.callList(list);
+    gl.apply(XDisable{XOption::LINE_STIPPLE});
 }
 
 void MapCanvasRoomDrawer::drawConnection(const Room *leftRoom,
@@ -999,14 +1008,15 @@ void MapCanvasRoomDrawer::drawConnection(const Room *leftRoom,
         neighbours = true;
     }
 
-    m_opengl.glPushMatrix();
-    m_opengl.glTranslatef(leftX - 0.5f, leftY - 0.5f, 0.0f);
+    auto &gl = getOpenGL();
+    gl.glPushMatrix();
+    gl.glTranslatef(leftX - 0.5f, leftY - 0.5f, 0.0f);
 
-    m_opengl.apply(XColor4f{inExitFlags ? Qt::white : Qt::red, 0.70f});
+    gl.apply(XColor4f{inExitFlags ? Qt::white : Qt::red, 0.70f});
 
-    m_opengl.apply(XEnable{XOption::BLEND});
-    m_opengl.apply(XDevicePointSize{2.0});
-    m_opengl.apply(XDeviceLineWidth{2.0});
+    gl.apply(XEnable{XOption::BLEND});
+    gl.apply(XDevicePointSize{2.0});
+    gl.apply(XDeviceLineWidth{2.0});
 
     const float srcZ = ROOM_Z_DISTANCE * static_cast<float>(leftLayer) + 0.3f;
     const float dstZ = ROOM_Z_DISTANCE * static_cast<float>(rightLayer) + 0.3f;
@@ -1014,9 +1024,9 @@ void MapCanvasRoomDrawer::drawConnection(const Room *leftRoom,
     drawConnectionLine(startDir, endDir, oneway, neighbours, dX, dY, srcZ, dstZ);
     drawConnectionTriangles(startDir, endDir, oneway, dX, dY, srcZ, dstZ);
 
-    m_opengl.apply(XDisable{XOption::BLEND});
-    m_opengl.apply(XColor4f{Qt::white, 0.70f});
-    m_opengl.glPopMatrix();
+    gl.apply(XDisable{XOption::BLEND});
+    gl.apply(XColor4f{Qt::white, 0.70f});
+    gl.glPopMatrix();
 }
 
 void MapCanvasRoomDrawer::drawConnectionTriangles(const ExitDirection startDir,
@@ -1063,43 +1073,45 @@ void MapCanvasRoomDrawer::drawConnectionLine(const ExitDirection startDir,
 
 void MapCanvasRoomDrawer::drawLineStrip(const std::vector<Vec3f> &points)
 {
-    m_opengl.draw(DrawType::LINE_STRIP, points);
+    getOpenGL().draw(DrawType::LINE_STRIP, points);
 }
 
 void MapCanvasRoomDrawer::drawConnStartTri(const ExitDirection startDir, const float srcZ)
 {
+    auto &gl = getOpenGL();
+
     switch (startDir) {
     case ExitDirection::NORTH:
-        m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3f>{
-                          Vec3f{0.68f, +0.1f, srcZ},
-                          Vec3f{0.82f, +0.1f, srcZ},
-                          Vec3f{0.75f, +0.3f, srcZ},
-                      });
+        gl.draw(DrawType::TRIANGLES,
+                std::vector<Vec3f>{
+                    Vec3f{0.68f, +0.1f, srcZ},
+                    Vec3f{0.82f, +0.1f, srcZ},
+                    Vec3f{0.75f, +0.3f, srcZ},
+                });
         break;
     case ExitDirection::SOUTH:
-        m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3f>{
-                          Vec3f{0.18f, 0.9f, srcZ},
-                          Vec3f{0.32f, 0.9f, srcZ},
-                          Vec3f{0.25f, 0.7f, srcZ},
-                      });
+        gl.draw(DrawType::TRIANGLES,
+                std::vector<Vec3f>{
+                    Vec3f{0.18f, 0.9f, srcZ},
+                    Vec3f{0.32f, 0.9f, srcZ},
+                    Vec3f{0.25f, 0.7f, srcZ},
+                });
         break;
     case ExitDirection::EAST:
-        m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3f>{
-                          Vec3f{0.9f, 0.18f, srcZ},
-                          Vec3f{0.9f, 0.32f, srcZ},
-                          Vec3f{0.7f, 0.25f, srcZ},
-                      });
+        gl.draw(DrawType::TRIANGLES,
+                std::vector<Vec3f>{
+                    Vec3f{0.9f, 0.18f, srcZ},
+                    Vec3f{0.9f, 0.32f, srcZ},
+                    Vec3f{0.7f, 0.25f, srcZ},
+                });
         break;
     case ExitDirection::WEST:
-        m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3f>{
-                          Vec3f{0.1f, 0.68f, srcZ},
-                          Vec3f{0.1f, 0.82f, srcZ},
-                          Vec3f{0.3f, 0.75f, srcZ},
-                      });
+        gl.draw(DrawType::TRIANGLES,
+                std::vector<Vec3f>{
+                    Vec3f{0.1f, 0.68f, srcZ},
+                    Vec3f{0.1f, 0.82f, srcZ},
+                    Vec3f{0.3f, 0.75f, srcZ},
+                });
         break;
 
     case ExitDirection::UP:
@@ -1115,38 +1127,40 @@ void MapCanvasRoomDrawer::drawConnEndTri(const ExitDirection endDir,
                                          const qint32 dY,
                                          const float dstZ)
 {
+    auto &gl = getOpenGL();
+
     switch (endDir) {
     case ExitDirection::NORTH:
-        m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3f>{
-                          Vec3f{dX + 0.68f, dY + 0.1f, dstZ},
-                          Vec3f{dX + 0.82f, dY + 0.1f, dstZ},
-                          Vec3f{dX + 0.75f, dY + 0.3f, dstZ},
-                      });
+        gl.draw(DrawType::TRIANGLES,
+                std::vector<Vec3f>{
+                    Vec3f{dX + 0.68f, dY + 0.1f, dstZ},
+                    Vec3f{dX + 0.82f, dY + 0.1f, dstZ},
+                    Vec3f{dX + 0.75f, dY + 0.3f, dstZ},
+                });
         break;
     case ExitDirection::SOUTH:
-        m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3f>{
-                          Vec3f{dX + 0.18f, dY + 0.9f, dstZ},
-                          Vec3f{dX + 0.32f, dY + 0.9f, dstZ},
-                          Vec3f{dX + 0.25f, dY + 0.7f, dstZ},
-                      });
+        gl.draw(DrawType::TRIANGLES,
+                std::vector<Vec3f>{
+                    Vec3f{dX + 0.18f, dY + 0.9f, dstZ},
+                    Vec3f{dX + 0.32f, dY + 0.9f, dstZ},
+                    Vec3f{dX + 0.25f, dY + 0.7f, dstZ},
+                });
         break;
     case ExitDirection::EAST:
-        m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3f>{
-                          Vec3f{dX + 0.9f, dY + 0.18f, dstZ},
-                          Vec3f{dX + 0.9f, dY + 0.32f, dstZ},
-                          Vec3f{dX + 0.7f, dY + 0.25f, dstZ},
-                      });
+        gl.draw(DrawType::TRIANGLES,
+                std::vector<Vec3f>{
+                    Vec3f{dX + 0.9f, dY + 0.18f, dstZ},
+                    Vec3f{dX + 0.9f, dY + 0.32f, dstZ},
+                    Vec3f{dX + 0.7f, dY + 0.25f, dstZ},
+                });
         break;
     case ExitDirection::WEST:
-        m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3f>{
-                          Vec3f{dX + 0.1f, dY + 0.68f, dstZ},
-                          Vec3f{dX + 0.1f, dY + 0.82f, dstZ},
-                          Vec3f{dX + 0.3f, dY + 0.75f, dstZ},
-                      });
+        gl.draw(DrawType::TRIANGLES,
+                std::vector<Vec3f>{
+                    Vec3f{dX + 0.1f, dY + 0.68f, dstZ},
+                    Vec3f{dX + 0.1f, dY + 0.82f, dstZ},
+                    Vec3f{dX + 0.3f, dY + 0.75f, dstZ},
+                });
         break;
 
     case ExitDirection::UP:
@@ -1168,38 +1182,40 @@ void MapCanvasRoomDrawer::drawConnEndTri1Way(const ExitDirection endDir,
                                              const qint32 dY,
                                              const float dstZ)
 {
+    auto &gl = getOpenGL();
+
     switch (endDir) {
     case ExitDirection::NORTH:
-        m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3f>{
-                          Vec3f{dX + 0.18f, dY + 0.1f, dstZ},
-                          Vec3f{dX + 0.32f, dY + 0.1f, dstZ},
-                          Vec3f{dX + 0.25f, dY + 0.3f, dstZ},
-                      });
+        gl.draw(DrawType::TRIANGLES,
+                std::vector<Vec3f>{
+                    Vec3f{dX + 0.18f, dY + 0.1f, dstZ},
+                    Vec3f{dX + 0.32f, dY + 0.1f, dstZ},
+                    Vec3f{dX + 0.25f, dY + 0.3f, dstZ},
+                });
         break;
     case ExitDirection::SOUTH:
-        m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3f>{
-                          Vec3f{dX + 0.68f, dY + 0.9f, dstZ},
-                          Vec3f{dX + 0.82f, dY + 0.9f, dstZ},
-                          Vec3f{dX + 0.75f, dY + 0.7f, dstZ},
-                      });
+        gl.draw(DrawType::TRIANGLES,
+                std::vector<Vec3f>{
+                    Vec3f{dX + 0.68f, dY + 0.9f, dstZ},
+                    Vec3f{dX + 0.82f, dY + 0.9f, dstZ},
+                    Vec3f{dX + 0.75f, dY + 0.7f, dstZ},
+                });
         break;
     case ExitDirection::EAST:
-        m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3f>{
-                          Vec3f{dX + 0.9f, dY + 0.68f, dstZ},
-                          Vec3f{dX + 0.9f, dY + 0.82f, dstZ},
-                          Vec3f{dX + 0.7f, dY + 0.75f, dstZ},
-                      });
+        gl.draw(DrawType::TRIANGLES,
+                std::vector<Vec3f>{
+                    Vec3f{dX + 0.9f, dY + 0.68f, dstZ},
+                    Vec3f{dX + 0.9f, dY + 0.82f, dstZ},
+                    Vec3f{dX + 0.7f, dY + 0.75f, dstZ},
+                });
         break;
     case ExitDirection::WEST:
-        m_opengl.draw(DrawType::TRIANGLES,
-                      std::vector<Vec3f>{
-                          Vec3f{dX + 0.1f, dY + 0.18f, dstZ},
-                          Vec3f{dX + 0.1f, dY + 0.32f, dstZ},
-                          Vec3f{dX + 0.3f, dY + 0.25f, dstZ},
-                      });
+        gl.draw(DrawType::TRIANGLES,
+                std::vector<Vec3f>{
+                    Vec3f{dX + 0.1f, dY + 0.18f, dstZ},
+                    Vec3f{dX + 0.1f, dY + 0.32f, dstZ},
+                    Vec3f{dX + 0.3f, dY + 0.25f, dstZ},
+                });
         break;
 
     case ExitDirection::UP:
@@ -1217,22 +1233,22 @@ void MapCanvasRoomDrawer::drawConnEndTri1Way(const ExitDirection endDir,
 
 void MapCanvasRoomDrawer::drawConnEndTriNone(qint32 dX, qint32 dY, float dstZ)
 {
-    m_opengl.draw(DrawType::TRIANGLES,
-                  std::vector<Vec3f>{
-                      Vec3f{dX + 0.5f, dY + 0.5f, dstZ},
-                      Vec3f{dX + 0.7f, dY + 0.55f, dstZ},
-                      Vec3f{dX + 0.55f, dY + 0.7f, dstZ},
-                  });
+    getOpenGL().draw(DrawType::TRIANGLES,
+                     std::vector<Vec3f>{
+                         Vec3f{dX + 0.5f, dY + 0.5f, dstZ},
+                         Vec3f{dX + 0.7f, dY + 0.55f, dstZ},
+                         Vec3f{dX + 0.55f, dY + 0.7f, dstZ},
+                     });
 }
 
 void MapCanvasRoomDrawer::drawConnEndTriUpDownUnknown(qint32 dX, qint32 dY, float dstZ)
 {
-    m_opengl.draw(DrawType::TRIANGLES,
-                  std::vector<Vec3f>{
-                      Vec3f{dX + 0.5f, dY + 0.5f, dstZ},
-                      Vec3f{dX + 0.7f, dY + 0.55f, dstZ},
-                      Vec3f{dX + 0.55f, dY + 0.7f, dstZ},
-                  });
+    getOpenGL().draw(DrawType::TRIANGLES,
+                     std::vector<Vec3f>{
+                         Vec3f{dX + 0.5f, dY + 0.5f, dstZ},
+                         Vec3f{dX + 0.7f, dY + 0.55f, dstZ},
+                         Vec3f{dX + 0.55f, dY + 0.7f, dstZ},
+                     });
 }
 
 void MapCanvasRoomDrawer::renderText(const float x,
@@ -1247,5 +1263,17 @@ void MapCanvasRoomDrawer::renderText(const float x,
     const auto textPosX = projected.x();
     const auto textPosY = static_cast<float>(m_mapCanvasData.height())
                           - projected.y(); // y is inverted
-    m_opengl.renderTextAt(textPosX, textPosY, text, color, fontFormatFlag, rotationAngle);
+    getOpenGL().renderTextAt(textPosX, textPosY, text, color, fontFormatFlag, rotationAngle);
+}
+
+float MapCanvasRoomDrawer::getScaledFontWidth(const QString &x, FontFormatFlags flags) const
+{
+    return getOpenGL().getFontWidth(x, flags) * 0.022f / m_mapCanvasData.m_scaleFactor
+           * m_mapCanvasData.m_currentStepScaleFactor;
+}
+
+float MapCanvasRoomDrawer::getScaledFontHeight() const
+{
+    return getOpenGL().getFontHeight() * 0.007f / m_mapCanvasData.m_scaleFactor
+           * m_mapCanvasData.m_currentStepScaleFactor;
 }

@@ -94,6 +94,7 @@ public:
     ~MapCanvas() override;
 
 private:
+    auto &getOpenGL() { return m_opengl; }
     void cleanupOpenGL();
     void makeCurrentAndUpdate();
 

@@ -298,6 +298,7 @@ private:
 private:
     float devicePixelRatio_ = 1.0f;
     float devicePixelRatio() { return devicePixelRatio_; }
+    auto &getLegacy() { return m_opengl; }
 
 public:
     ~OpenGL();
@@ -310,7 +311,7 @@ public:
     template<typename... Args> \
     auto f(Args... args) \
     { \
-        return m_opengl.f(args...); \
+        return getLegacy().f(args...); \
     }
 
 public:
@@ -342,7 +343,7 @@ public:
     void setMatrix(MatrixType type, const QMatrix4x4 &m);
 
 public:
-    void callList(const XDisplayList &list) { m_opengl.glCallList(list.list); }
+    void callList(const XDisplayList &list) { getLegacy().glCallList(list.list); }
 
 private:
     static GLuint getGLType(const DrawType type)
@@ -385,22 +386,24 @@ private:
 public:
     void draw(DrawType type, const std::vector<Vec3f> &args)
     {
-        m_opengl.glBegin(getGLType(type));
+        auto &gl = getLegacy();
+        gl.glBegin(getGLType(type));
         for (auto v : args) {
-            m_opengl.glVertex3f(v.x, v.y, v.z);
+            gl.glVertex3f(v.x, v.y, v.z);
         }
-        m_opengl.glEnd();
+        gl.glEnd();
     }
 
 private:
     void draw(DrawType type, const std::vector<TexVert> &args)
     {
-        m_opengl.glBegin(getGLType(type));
+        auto &gl = getLegacy();
+        gl.glBegin(getGLType(type));
         for (auto v : args) {
-            m_opengl.glTexCoord2f(v.tex.x, v.tex.y);
-            m_opengl.glVertex3f(v.vert.x, v.vert.y, v.vert.z);
+            gl.glTexCoord2f(v.tex.x, v.tex.y);
+            gl.glVertex3f(v.vert.x, v.vert.y, v.vert.z);
         }
-        m_opengl.glEnd();
+        gl.glEnd();
     }
 
 public:
@@ -429,36 +432,37 @@ public:
     void apply(const XColor4f &color, const Args &... args)
     {
         color.check();
-        m_opengl.glColor4f(color.getR(), color.getG(), color.getB(), color.getA());
+        getLegacy().glColor4f(color.getR(), color.getG(), color.getB(), color.getA());
         apply(args...);
     }
 
     template<typename... Args>
     void apply(const XDeviceLineWidth &width, const Args &... args)
     {
-        m_opengl.glLineWidth(devicePixelRatio() * static_cast<float>(width.width));
+        getLegacy().glLineWidth(devicePixelRatio() * static_cast<float>(width.width));
         apply(args...);
     }
     template<typename... Args>
     void apply(const XDevicePointSize &size, const Args &... args)
     {
-        m_opengl.glPointSize(devicePixelRatio() * static_cast<float>(size.size));
+        getLegacy().glPointSize(devicePixelRatio() * static_cast<float>(size.size));
         apply(args...);
     }
 
     template<typename... Args>
     void apply(const XEnable &enable, const Args &... args)
     {
-        m_opengl.glEnable(getOpt(enable.option));
+        auto &gl = getLegacy();
+        gl.glEnable(getOpt(enable.option));
         if (enable.option == XOption::BLEND)
-            m_opengl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            gl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         apply(args...);
     }
 
     template<typename... Args>
     void apply(const XDisable &disable, const Args &... args)
     {
-        m_opengl.glDisable(getOpt(disable.option));
+        getLegacy().glDisable(getOpt(disable.option));
         apply(args...);
     }
 
@@ -474,7 +478,7 @@ public:
             }
             return 1.0;
         };
-        m_opengl.glLineStipple(getFactor(stipple), static_cast<GLushort>(0xAAAAu));
+        getLegacy().glLineStipple(getFactor(stipple), static_cast<GLushort>(0xAAAAu));
         apply(args...);
     }
 
@@ -489,17 +493,18 @@ public:
     template<typename... Args>
     XDisplayList compile(const Args &... args)
     {
-        const auto list = m_opengl.glGenLists(1);
-        m_opengl.glNewList(list, GL_COMPILE);
+        auto &gl = getLegacy();
+        const auto list = gl.glGenLists(1);
+        gl.glNewList(list, GL_COMPILE);
         apply(args...);
-        m_opengl.glEndList();
+        gl.glEndList();
         return XDisplayList{this, list};
     }
 
     void destroyList(GLuint list)
     {
         if (list != 0u)
-            m_opengl.glDeleteLists(list, 1);
+            getLegacy().glDeleteLists(list, 1);
     }
 
 public:
@@ -507,21 +512,9 @@ public:
      * so this isn't the best place to put font functions. */
     void initFont(QPaintDevice *paintDevice);
 
-    template<typename T>
-    int getFontWidth(T x, FontFormatFlags flags) const
-    {
-        switch (flags) {
-        case FontFormatFlags::ITALICS:
-            return deref(m_glFont.italicMetrics).width(x);
+    int getFontWidth(const QString &x, FontFormatFlags flags) const;
 
-        case FontFormatFlags::NONE:
-        case FontFormatFlags::UNDERLINE:
-        default:
-            return deref(m_glFont.metrics).width(x);
-        }
-    }
-
-    int getFontHeight() const { return deref(m_glFont.metrics).height(); }
+    int getFontHeight() const;
 
     void renderTextAt(const float x,
                       const float y,

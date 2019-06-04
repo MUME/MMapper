@@ -79,6 +79,10 @@ public:
         , m_textures{m_mapCanvasData.m_textures}
     {}
 
+private:
+    auto &getOpenGL() const { return m_opengl; }
+
+public:
     void drawRooms(const LayerToRooms &layerToRooms,
                    const RoomIndex &roomIndex,
                    const RoomLocks &locks);
@@ -151,18 +155,8 @@ private:
                                  float dstZ);
 
 public:
-    template<typename T>
-    float getScaledFontWidth(T x, FontFormatFlags flags = FontFormatFlags::NONE) const
-    {
-        return m_opengl.getFontWidth(x, flags) * 0.022f / m_mapCanvasData.m_scaleFactor
-               * m_mapCanvasData.m_currentStepScaleFactor;
-    }
-
-    float getScaledFontHeight() const
-    {
-        return m_opengl.getFontHeight() * 0.007f / m_mapCanvasData.m_scaleFactor
-               * m_mapCanvasData.m_currentStepScaleFactor;
-    }
+    float getScaledFontWidth(const QString &x, FontFormatFlags flags = FontFormatFlags::NONE) const;
+    float getScaledFontHeight() const;
 };
 
 #endif // MMAPPER_MAP_CANVAS_ROOM_DRAWER_H

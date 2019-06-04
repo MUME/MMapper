@@ -86,6 +86,24 @@ void OpenGL::initFont(QPaintDevice *const paintDevice)
     m_glFont.init(paintDevice);
 }
 
+int OpenGL::getFontWidth(const QString &x, FontFormatFlags flags) const
+{
+    switch (flags) {
+    case FontFormatFlags::ITALICS:
+        return deref(m_glFont.italicMetrics).width(x);
+
+    case FontFormatFlags::NONE:
+    case FontFormatFlags::UNDERLINE:
+    default:
+        return deref(m_glFont.metrics).width(x);
+    }
+}
+
+int OpenGL::getFontHeight() const
+{
+    return deref(m_glFont.metrics).height();
+}
+
 // http://stackoverflow.com/questions/28216001/how-to-render-text-with-qopenglwidget/28517897
 // They couldn't find a slower way to do this I guess
 void OpenGL::renderTextAt(const float x,
@@ -139,6 +157,7 @@ void OpenGL::setMatrix(const MatrixType type, const QMatrix4x4 &m)
         mat[index] = data[index];
     }
 
-    m_opengl.glMatrixMode(getType(type));
-    m_opengl.glLoadMatrixf(mat);
+    auto &gl = getLegacy();
+    gl.glMatrixMode(getType(type));
+    gl.glLoadMatrixf(mat);
 }
