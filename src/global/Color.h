@@ -115,9 +115,9 @@ static inline QColor textColor(const QColor color)
     constexpr const auto divisor = redMagic + greenMagic + blueMagic;
 
     // Calculate a brightness value in 3d color space between 0 and 255
-    const auto brightness = sqrt(((pow(color.red(), 2) * redMagic)
-                                  + (pow(color.green(), 2) * greenMagic)
-                                  + (pow(color.blue(), 2) * blueMagic))
+    const auto brightness = std::sqrt(((std::pow(color.red(), 2) * redMagic)
+                                  + (std::pow(color.green(), 2) * greenMagic)
+                                  + (std::pow(color.blue(), 2) * blueMagic))
                                  / divisor);
     const auto percentage = 100 * brightness / 255;
     return percentage < 65 ? QColor(Qt::white) : QColor(Qt::black);
