@@ -39,6 +39,7 @@
 #include <QtGui/QOpenGLFunctions_1_0>
 #include <QtGui/qopengl.h>
 
+#include "../global/type_utils.h"
 #include "../global/utils.h"
 #include "FontFormatFlags.h"
 
@@ -493,6 +494,11 @@ public:
     template<typename... Args>
     XDisplayList compile(const Args &... args)
     {
+        // statically prove that there are only the following commands in the display lists.
+        using VT = type_utils::
+            ValidTypes<XDraw, XDrawTextured, XColor4f, XDeviceLineWidth, XDevicePointSize>;
+        static_assert(VT::check<Args...>());
+
         auto &gl = getLegacy();
         const auto list = gl.glGenLists(1);
         gl.glNewList(list, GL_COMPILE);
@@ -522,6 +528,26 @@ public:
                       const QColor &color,
                       const FontFormatFlags fontFormatFlag,
                       const float rotationAngle);
+};
+
+class NODISCARD CompileOnly
+{
+private:
+    OpenGL &m_gl;
+
+public:
+    explicit CompileOnly(OpenGL &gl)
+        : m_gl{gl}
+    {}
+    ~CompileOnly() = default;
+    DELETE_CTORS_AND_ASSIGN_OPS(CompileOnly);
+
+public:
+    template<typename... Args>
+    NODISCARD auto compile(Args &&... args)
+    {
+        return m_gl.compile(std::forward<Args>(args)...);
+    }
 };
 
 #endif // MMAPPER_OPENGL_H

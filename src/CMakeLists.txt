@@ -86,6 +86,7 @@ set(mmapper_SRCS
     global/StringView.h
     global/TextUtils.cpp
     global/TextUtils.h
+    global/type_utils.h
     global/utils.cpp
     global/utils.h
     global/WinSock.cpp

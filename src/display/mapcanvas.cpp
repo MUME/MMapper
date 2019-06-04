@@ -1774,7 +1774,7 @@ void MapCanvas::initTextures()
 // and we'll want to use instanced rendering.
 void MapCanvas::makeGlLists()
 {
-    auto &gl = getOpenGL();
+    CompileOnly gl{getOpenGL()};
 
     EnumIndexedArray<int, ExitDirection, NUM_EXITS_NESW> rotationDegrees;
     rotationDegrees[ExitDirection::NORTH] = 0;
