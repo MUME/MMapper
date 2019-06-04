@@ -73,31 +73,36 @@ void GroupStateData::paint(QPainter *const painter, const QRect &rect)
         return;
 
     // REVISIT: Build images ahead of time
-    auto image = QImage(getIconFilename(position));
-    if (textColor(color) == Qt::white)
-        image.invertPixels();
+
+    const bool invert = textColor(color) == Qt::white;
+    const int x1 = [this, &rect]() {
+        const int rectWidth = rect.right() - rect.x();
+        const int imagesWidth = rect.height() * imageCount;
+        return rect.x() + (rectWidth - imagesWidth) / 2;
+    }();
 
     int currentImage = 0;
+    const auto drawOne = [painter, &rect, invert, x1, &currentImage](auto &&filename) -> void {
+        const auto getImage = [invert](auto &filename) {
+            QImage image{filename};
+            if (invert)
+                image.invertPixels();
+            return image;
+        };
 
-    // Draw image in center
-    const int rectWidth = rect.right() - rect.x();
-    const int imagesWidth = rect.height() * imageCount;
-    int x1 = rect.x() + (rectWidth - imagesWidth) / 2;
-    QRect pixRect = QRect(x1, rect.y(), rect.height(), rect.height());
-    painter->drawImage(pixRect, image);
-    currentImage++;
+        QRect pixRect{x1 + currentImage * rect.height(),
+                      rect.y(),
+                      rect.height(), // REVISIT: width()?
+                      rect.height()};
+        painter->drawImage(pixRect, getImage(filename));
+        currentImage++;
+    };
+
+    drawOne(getIconFilename(position));
 
     for (const auto affect : ALL_CHARACTER_AFFECTS) {
         if (affects.contains(affect)) {
-            auto image = QImage(getIconFilename(affect));
-            if (textColor(color) == Qt::white)
-                image.invertPixels();
-
-            QRect pixRect = QRect(x1 + (currentImage++ * rect.height()),
-                                  rect.y(),
-                                  rect.height(),
-                                  rect.height());
-            painter->drawImage(pixRect, image);
+            drawOne(getIconFilename(affect));
         }
     }
 }
