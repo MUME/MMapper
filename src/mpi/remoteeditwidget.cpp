@@ -75,7 +75,7 @@ static int measureTabAndAnsiAware(const QString &s)
 class QWidget;
 
 /// Groups everything in the scope as a single undo action.
-class [[nodiscard]] RaiiGroupUndoActions final
+class NODISCARD RaiiGroupUndoActions final
 {
 private:
     QTextCursor cursor_;

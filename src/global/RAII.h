@@ -30,8 +30,9 @@
 #include <functional>
 
 #include "RuleOf5.h"
+#include "utils.h"
 
-class [[nodiscard]] RAIIBool final
+class NODISCARD RAIIBool final
 {
 private:
     bool &ref;
@@ -43,12 +44,12 @@ public:
 
 public:
     /* move ctor */
-    RAIIBool(RAIIBool && rhs);
+    RAIIBool(RAIIBool &&rhs);
     DELETE_COPY_CTOR(RAIIBool);
     DELETE_ASSIGN_OPS(RAIIBool);
 };
 
-class [[nodiscard]] RAIICallback final
+class NODISCARD RAIICallback final
 {
 private:
     using Callback = std::function<void()>;
@@ -57,12 +58,12 @@ private:
 
 public:
     /* move ctor */
-    RAIICallback(RAIICallback && rhs);
+    RAIICallback(RAIICallback &&rhs);
     DELETE_COPY_CTOR(RAIICallback);
     DELETE_ASSIGN_OPS(RAIICallback);
 
 public:
-    explicit RAIICallback(Callback && callback);
+    explicit RAIICallback(Callback &&callback);
     ~RAIICallback() noexcept(false);
 };
 

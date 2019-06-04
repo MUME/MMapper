@@ -45,19 +45,19 @@ class Room;
 class RoomAdmin;
 class Coordinate;
 class MapData;
-class[[nodiscard]] RoomSelection final : public QMap<RoomId, const Room *>, public RoomRecipient
+class NODISCARD RoomSelection final : public QMap<RoomId, const Room *>, public RoomRecipient
 {
 public:
-    void receiveRoom(RoomAdmin * admin, const Room *aRoom) override;
+    void receiveRoom(RoomAdmin *admin, const Room *aRoom) override;
 
 private:
     MapData &m_mapData;
     bool m_moved = false;
 
 public:
-    explicit RoomSelection(MapData & mapData);
-    explicit RoomSelection(MapData & mapData, const Coordinate &c);
-    explicit RoomSelection(MapData & mapData, const Coordinate &ulf, const Coordinate &lrb);
+    explicit RoomSelection(MapData &mapData);
+    explicit RoomSelection(MapData &mapData, const Coordinate &c);
+    explicit RoomSelection(MapData &mapData, const Coordinate &ulf, const Coordinate &lrb);
     ~RoomSelection() override;
 
 public:
@@ -79,9 +79,9 @@ public:
     void genericSearch(const RoomFilter &f);
 
 public:
-    static SharedRoomSelection createSelection(MapData & mapData);
-    static SharedRoomSelection createSelection(MapData & mapData, const Coordinate &c);
-    static SharedRoomSelection createSelection(MapData & mapData,
+    static SharedRoomSelection createSelection(MapData &mapData);
+    static SharedRoomSelection createSelection(MapData &mapData, const Coordinate &c);
+    static SharedRoomSelection createSelection(MapData &mapData,
                                                const Coordinate &ulf,
                                                const Coordinate &lrb);
 

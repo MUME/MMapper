@@ -184,13 +184,13 @@ MapCanvas::~MapCanvas()
     cleanupOpenGL();
 }
 
-class [[nodiscard]] MakeCurrentRaii final
+class NODISCARD MakeCurrentRaii final
 {
 private:
     QOpenGLWidget &m_glWidget;
 
 public:
-    explicit MakeCurrentRaii(QOpenGLWidget & widget)
+    explicit MakeCurrentRaii(QOpenGLWidget &widget)
         : m_glWidget{widget}
     {
         m_glWidget.makeCurrent();

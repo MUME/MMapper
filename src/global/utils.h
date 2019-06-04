@@ -138,4 +138,8 @@ inline auto as_cstring(const unsigned char *const s)
     return reinterpret_cast<const char *>(s);
 }
 
+// This macro only exists to keep clang-format from losing its mind
+// when it encounters a c++11 attribute.
+#define NODISCARD [[nodiscard]]
+
 #endif // MMAPPER_UTILS_H

@@ -814,16 +814,14 @@ void AbstractParser::initSpecialCommandMap()
 
     // help is important, so it comes first
 
-    add(
-        cmdHelp,
+    add(cmdHelp,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             this->parseHelp(rest);
             return true;
         },
         // TODO: create a parse tree, and show all of the help topics.
         makeSimpleHelp("Provides help."));
-    add(
-        cmdMapHelp,
+    add(cmdMapHelp,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             if (!rest.isEmpty())
                 return false;
@@ -831,8 +829,7 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Help for mapping console commands."));
-    add(
-        cmdDoorHelp,
+    add(cmdDoorHelp,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             if (!rest.isEmpty())
                 return false;
@@ -840,8 +837,7 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Help for door console commands."));
-    add(
-        cmdGroupHelp,
+    add(cmdGroupHelp,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             if (!rest.isEmpty())
                 return false;
@@ -853,8 +849,7 @@ void AbstractParser::initSpecialCommandMap()
     // door actions
     for (const DoorActionType x : ALL_DOOR_ACTION_TYPES) {
         if (auto cmd = getParserCommandName(x))
-            add(
-                cmd,
+            add(cmd,
                 [this, x](const std::vector<StringView> & /*s*/, StringView rest) {
                     return parseDoorAction(x, rest);
                 },
@@ -863,8 +858,7 @@ void AbstractParser::initSpecialCommandMap()
 
     for (const DoorFlag x : ALL_DOOR_FLAGS) {
         if (auto cmd = getParserCommandName(x))
-            add(
-                getParserCommandName(x),
+            add(getParserCommandName(x),
                 [this, x](const std::vector<StringView> & /*s*/, StringView rest) {
                     return parseDoorFlag(x, rest);
                 },
@@ -873,8 +867,7 @@ void AbstractParser::initSpecialCommandMap()
 
     for (const ExitFlag x : ALL_EXIT_FLAGS) {
         if (auto cmd = getParserCommandName(x))
-            add(
-                cmd,
+            add(cmd,
                 [this, x](const std::vector<StringView> & /*s*/, StringView rest) {
                     return parseExitFlag(x, rest);
                 },
@@ -885,8 +878,7 @@ void AbstractParser::initSpecialCommandMap()
     do { \
         for (const auto x : DEFINED_ROOM_##X##_TYPES) { \
             if (auto cmd = getParserCommandName(x)) { \
-                add( \
-                    cmd, \
+                add(cmd, \
                     [this, x](const std::vector<StringView> & /*s*/, StringView rest) { \
                         if (!rest.isEmpty()) \
                             return false; \
@@ -906,8 +898,7 @@ void AbstractParser::initSpecialCommandMap()
 
     for (const RoomMobFlag x : ALL_MOB_FLAGS) {
         if (auto cmd = getParserCommandName(x)) {
-            add(
-                cmd,
+            add(cmd,
                 [this, x](const std::vector<StringView> & /*s*/, StringView rest) {
                     if (!rest.isEmpty())
                         return false;
@@ -920,8 +911,7 @@ void AbstractParser::initSpecialCommandMap()
 
     for (const RoomLoadFlag x : ALL_LOAD_FLAGS) {
         if (auto cmd = getParserCommandName(x))
-            add(
-                cmd,
+            add(cmd,
                 [this, x](const std::vector<StringView> & /*s*/, StringView rest) {
                     if (!rest.isEmpty())
                         return false;
@@ -933,8 +923,7 @@ void AbstractParser::initSpecialCommandMap()
 
     // misc commands
 
-    add(
-        cmdBack,
+    add(cmdBack,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             if (!rest.isEmpty())
                 return false;
@@ -942,22 +931,19 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Delete prespammed commands from queue."));
-    add(
-        cmdDirections,
+    add(cmdDirections,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             this->parseDirections(rest);
             return true;
         },
         makeSimpleHelp("Prints directions to matching rooms."));
-    add(
-        cmdGroupKick,
+    add(cmdGroupKick,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             this->parseGroupKick(rest);
             return true;
         },
         makeSimpleHelp("Kick [player] from the group."));
-    add(
-        cmdGroupLock,
+    add(cmdGroupLock,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             if (!rest.isEmpty())
                 return false;
@@ -965,15 +951,13 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Toggle the lock on the group."));
-    add(
-        cmdGroupTell,
+    add(cmdGroupTell,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             this->parseGroupTell(rest);
             return true;
         },
         makeSimpleHelp("Send a grouptell with the [message]."));
-    add(
-        cmdMarkCurrent,
+    add(cmdMarkCurrent,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             if (!rest.isEmpty())
                 return false;
@@ -981,23 +965,20 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Highlight the room you are currently in."));
-    add(
-        cmdName,
+    add(cmdName,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             this->parseName(rest);
             return true;
         },
         makeSimpleHelp(
             "Arguments: <dir> <name>;  Sets the name of door in direction <dir> with <name>."));
-    add(
-        cmdNote,
+    add(cmdNote,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             this->parseNoteCmd(rest);
             return true;
         },
         makeSimpleHelp("Sets the note for the current room."));
-    add(
-        cmdRemoveDoorNames,
+    add(cmdRemoveDoorNames,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             if (!rest.isEmpty())
                 return false;
@@ -1006,15 +987,13 @@ void AbstractParser::initSpecialCommandMap()
         },
         makeSimpleHelp(
             "Removes all secret door names from the current map (WARNING: destructive)!"));
-    add(
-        cmdSearch,
+    add(cmdSearch,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             this->parseSearch(rest);
             return true;
         },
         makeSimpleHelp("Highlight matching rooms on the map."));
-    add(
-        cmdSet,
+    add(cmdSet,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             this->parseSetCommand(rest);
             return true;
@@ -1045,8 +1024,7 @@ void AbstractParser::initSpecialCommandMap()
                            .arg(QString::fromStdString(name))
                            .arg(QString::fromStdString(help)));
         });
-    add(
-        cmdTime,
+    add(cmdTime,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             if (!rest.isEmpty())
                 return false;
@@ -1054,8 +1032,7 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Displays the current MUME time."));
-    add(
-        cmdTrollExit,
+    add(cmdTrollExit,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             if (!rest.isEmpty())
                 return false;
@@ -1063,8 +1040,7 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Toggles troll-only exit mapping for direct sunlight."));
-    add(
-        cmdVote,
+    add(cmdVote,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             if (!rest.isEmpty())
                 return false;
@@ -1074,13 +1050,11 @@ void AbstractParser::initSpecialCommandMap()
         makeSimpleHelp("Launches a web browser so you can vote for MUME on TMC!"));
 
     /* print commands */
-    add(
-        cmdPrint,
+    add(cmdPrint,
         [this](const std::vector<StringView> & /*s*/, StringView rest) { return parsePrint(rest); },
         makeSimpleHelp("There is no help for this command yet."));
 
-    add(
-        cmdPDynamic,
+    add(cmdPDynamic,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             if (!rest.isEmpty())
                 return false;
@@ -1088,8 +1062,7 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Prints current room description."));
-    add(
-        cmdPStatic,
+    add(cmdPStatic,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             if (!rest.isEmpty())
                 return false;
@@ -1098,8 +1071,7 @@ void AbstractParser::initSpecialCommandMap()
         },
         makeSimpleHelp("Prints current room description without movable items."));
 
-    add(
-        cmdPNote,
+    add(cmdPNote,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             if (!rest.isEmpty())
                 return false;
