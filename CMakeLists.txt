@@ -106,6 +106,8 @@ else()
     add_definitions(/DMMAPPER_NO_MINIUPNPC)
 endif()
 
+add_subdirectory(external/glm)
+
 # Extract git branch and revision
 if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
     find_package(Git)

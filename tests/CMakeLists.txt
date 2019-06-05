@@ -2,6 +2,8 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/../src
 )
 
+include_directories(SYSTEM ${GLM_INCLUDE_DIR})
+
 # Clock
 set(clock_SRCS
     ../src/clock/mumeclock.cpp
@@ -30,6 +32,7 @@ file(GLOB_RECURSE expandoracommon_SRCS
     )
 set(TestExpandoraCommon_SRCS testexpandoracommon.cpp)
 add_executable(TestExpandoraCommon ${TestExpandoraCommon_SRCS} ${expandoracommon_SRCS})
+add_dependencies(TestExpandoraCommon glm)
 target_link_libraries(TestExpandoraCommon Qt5::Test coverage_config)
 add_test(NAME TestExpandoraCommon COMMAND TestExpandoraCommon)
 
@@ -51,6 +54,7 @@ set(parser_SRCS
     )
 set(TestParser_SRCS testparser.cpp)
 add_executable(TestParser ${TestParser_SRCS} ${parser_SRCS})
+add_dependencies(TestParser glm)
 target_link_libraries(TestParser Qt5::Test coverage_config)
 add_test(NAME TestParser COMMAND TestParser)
 

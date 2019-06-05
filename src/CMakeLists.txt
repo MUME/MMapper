@@ -386,6 +386,9 @@ set_target_properties(
   COMPILE_FLAGS "${WARNING_FLAGS}"
 )
 
+target_include_directories(mmapper SYSTEM PUBLIC ${GLM_INCLUDE_DIR})
+add_dependencies(mmapper glm)
+
 if(WIN32)
     target_link_libraries(mmapper PUBLIC ws2_32)
 endif()

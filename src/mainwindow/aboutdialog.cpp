@@ -128,11 +128,18 @@ AboutDialog::AboutDialog(QWidget *parent)
           "<pre>"
         + loadLicenseResource(":/LICENSE.MINIUPNPC")
         + "</pre>"
-          "<hr/><h1>OpenSSL License</h1>"
-          "<p>Some versions of this product contains code from the "
-          "<a href=\"https://www.openssl.org/\">OpenSSL toolkit</a>"
-          ".</p>"
+          "<hr/><h1>GLM License</h1>"
+          "<p>This product contains code from the "
+          "<a href=\"https://glm.g-truc.net/\">OpenGL Mathematics (GLM)</a>"
+          " project.</p>"
           "<pre>"
+        + loadLicenseResource(":/LICENSE.GLM")
+        + +"</pre>"
+           "<hr/><h1>OpenSSL License</h1>"
+           "<p>Some versions of this product contains code from the "
+           "<a href=\"https://www.openssl.org/\">OpenSSL toolkit</a>"
+           ".</p>"
+           "<pre>"
         + loadLicenseResource(":/LICENSE.OPENSSL") + "</pre>");
 
     licenseView->setMinimumWidth(700);
