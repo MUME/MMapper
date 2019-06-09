@@ -155,10 +155,11 @@ void Mmapper2Group::stop()
     }
 }
 
-void Mmapper2Group::characterChanged()
+void Mmapper2Group::characterChanged(bool updateCanvas)
 {
     emit updateWidget();
-    emit updateMapCanvas();
+    if (updateCanvas)
+        emit updateMapCanvas();
 }
 
 void Mmapper2Group::updateSelf()

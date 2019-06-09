@@ -92,7 +92,7 @@ protected slots:
     void gTellArrived(const QVariantMap &node);
     void relayMessageBox(const QString &message);
     void sendLog(const QString &);
-    void characterChanged();
+    void characterChanged(bool updateCanvas);
     void onAffectTimeout();
     void slot_stopInternal();
 

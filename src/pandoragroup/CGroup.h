@@ -79,7 +79,7 @@ public slots:
 
 signals:
     void log(const QString &);
-    void characterChanged();
+    void characterChanged(bool updateCanvas);
 
 protected:
     void executeActions();

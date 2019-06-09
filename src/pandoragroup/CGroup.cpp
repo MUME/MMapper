@@ -129,7 +129,7 @@ void CGroup::resetChars()
     charIndex.clear();
     charIndex.push_back(self);
 
-    emit characterChanged();
+    emit characterChanged(true);
 }
 
 bool CGroup::addChar(const QVariantMap &map)
@@ -145,7 +145,7 @@ bool CGroup::addChar(const QVariantMap &map)
     }
     emit log(QString("'%1' joined the group.").arg(newChar->getName().constData()));
     charIndex.push_back(newChar);
-    emit characterChanged();
+    emit characterChanged(true);
     return true;
 }
 
@@ -163,7 +163,7 @@ void CGroup::removeChar(const QByteArray &name)
             emit log(QString("Removing '%1' from the group.").arg(character->getName().constData()));
             charIndex.erase(it);
             delete character;
-            emit characterChanged();
+            emit characterChanged(true);
             return;
         }
     }
@@ -202,8 +202,12 @@ void CGroup::updateChar(const QVariantMap &map)
         return;
     }
 
-    if (ch->updateFromVariantMap(map)) {
-        emit characterChanged();
+    const auto oldRoomId = ch->getRoomId();
+    const bool change = ch->updateFromVariantMap(map);
+    if (change) {
+        // Update canvas only if the character moved
+        const bool updateCanvas = ch->getRoomId() != oldRoomId;
+        emit characterChanged(updateCanvas);
     }
 }
 
@@ -232,5 +236,5 @@ void CGroup::renameChar(const QVariantMap &map)
     }
 
     ch->setName(newname.toLatin1());
-    emit characterChanged();
+    emit characterChanged(false);
 }
