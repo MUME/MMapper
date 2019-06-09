@@ -26,6 +26,7 @@
 #ifndef CLIENTWIDGET_H
 #define CLIENTWIDGET_H
 
+#include <memory>
 #include <QMainWindow>
 #include <QSize>
 #include <QString>
@@ -79,7 +80,7 @@ private:
     QSplitter *m_splitter = nullptr;
     DisplayWidget *m_display = nullptr;
     StackedInputWidget *m_input = nullptr;
-    ClientTelnet *m_telnet = nullptr;
+    std::unique_ptr<ClientTelnet> m_telnet;
 };
 
 #endif /* CLIENTWIDGET_H */

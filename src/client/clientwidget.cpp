@@ -68,24 +68,25 @@ ClientWidget::ClientWidget(QWidget *parent)
     m_input->setFocus();
 
     // Connect the signals/slots
-    m_telnet = new ClientTelnet(this);
-    connect(m_telnet, &ClientTelnet::disconnected, this, &ClientWidget::onDisconnected);
-    connect(m_telnet, &ClientTelnet::connected, this, &ClientWidget::onConnected);
-    connect(m_telnet, &ClientTelnet::socketError, this, &ClientWidget::onSocketError);
+    m_telnet = std::make_unique<ClientTelnet>(this);
+    ClientTelnet *const telnet = m_telnet.get();
+    connect(telnet, &ClientTelnet::disconnected, this, &ClientWidget::onDisconnected);
+    connect(telnet, &ClientTelnet::connected, this, &ClientWidget::onConnected);
+    connect(telnet, &ClientTelnet::socketError, this, &ClientWidget::onSocketError);
 
     // Input
     connect(m_input, &StackedInputWidget::sendUserInput, this, &ClientWidget::sendToMud);
-    connect(m_telnet, &ClientTelnet::echoModeChanged, m_input, &StackedInputWidget::toggleEchoMode);
+    connect(telnet, &ClientTelnet::echoModeChanged, m_input, &StackedInputWidget::toggleEchoMode);
     connect(m_input, &StackedInputWidget::showMessage, statusBar(), &QStatusBar::showMessage);
 
     // Display
     connect(m_input, &StackedInputWidget::displayMessage, m_display, &DisplayWidget::displayText);
     connect(this, &ClientWidget::sendToUser, m_display, &DisplayWidget::displayText);
-    connect(m_telnet, &ClientTelnet::sendToUser, m_display, &DisplayWidget::displayText);
+    connect(telnet, &ClientTelnet::sendToUser, m_display, &DisplayWidget::displayText);
     connect(m_display, &DisplayWidget::showMessage, statusBar(), &QStatusBar::showMessage);
     connect(m_display,
             &DisplayWidget::windowSizeChanged,
-            m_telnet,
+            telnet,
             &ClientTelnet::onWindowSizeChanged);
     readSettings();
 
