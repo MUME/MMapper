@@ -80,6 +80,8 @@ public:
     MumeMoonVisibility toMoonVisibility() const;
     QString toMumeMoonTime() const;
     QString toMoonCountDown() const;
+    bool isMoonVisible() const { return toMoonVisibility() > MumeMoonVisibility::MOON_HIDDEN; }
+    bool isMoonBright() const { return moonLevel() > 4; }
 
     int year = 0;
     int month = 0;

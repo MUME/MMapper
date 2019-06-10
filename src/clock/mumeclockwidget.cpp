@@ -73,15 +73,7 @@ void MumeClockWidget::updateLabel()
     MumeMoment moment = m_clock->getMumeMoment();
     MumeClockPrecision precision = m_clock->getPrecision();
 
-    MumeMoonVisibility moonVisibility = moment.toMoonVisibility();
-    if (moonVisibility != m_lastVisibility) {
-        m_lastVisibility = moonVisibility;
-        QString moonStyleSheet = (moonVisibility == MumeMoonVisibility::MOON_HIDDEN)
-                                     ? "color:black;background:grey"
-                                     : "color:black;background:white";
-        moonPhaseLabel->setStyleSheet(moonStyleSheet);
-    }
-
+    bool updateMoonText = false;
     MumeMoonPhase phase = moment.toMoonPhase();
     if (phase != m_lastPhase) {
         m_lastPhase = phase;
@@ -114,7 +106,7 @@ void MumeClockWidget::updateLabel()
             moonPhaseLabel->setText("");
             break;
         }
-        moonPhaseLabel->setStatusTip(moment.toMumeMoonTime());
+        updateMoonText = true;
     }
 
     seasonLabel->setStatusTip(m_clock->toMumeTime(moment));
@@ -147,6 +139,8 @@ void MumeClockWidget::updateLabel()
         seasonLabel->setStyleSheet(styleSheet);
         seasonLabel->setText(text);
     }
+
+    bool updateMoonStyleSheet = false;
     MumeTime time = moment.toTimeOfDay();
     if (time != m_lastTime || precision != m_lastPrecision) {
         m_lastTime = time;
@@ -168,6 +162,22 @@ void MumeClockWidget::updateLabel()
         }
         timeLabel->setStyleSheet(styleSheet);
         timeLabel->setStatusTip(statusTip);
+        updateMoonStyleSheet = true;
     }
     timeLabel->setText(m_clock->toCountdown(moment));
+
+    MumeMoonVisibility moonVisibility = moment.toMoonVisibility();
+    if (moonVisibility != m_lastVisibility || updateMoonStyleSheet) {
+        m_lastVisibility = moonVisibility;
+        QString moonStyleSheet = (moonVisibility == MumeMoonVisibility::MOON_HIDDEN)
+                                     ? "color:black;background:grey"
+                                     : ((moment.isMoonBright() && time >= MumeTime::TIME_DUSK)
+                                            ? "color:black;background:yellow"
+                                            : "color:black;background:white");
+        moonPhaseLabel->setStyleSheet(moonStyleSheet);
+        updateMoonText = true;
+    }
+
+    if (updateMoonText)
+        moonPhaseLabel->setStatusTip(moment.toMumeMoonTime());
 }
