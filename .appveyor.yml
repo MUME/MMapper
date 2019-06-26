@@ -55,7 +55,7 @@ install:
   - if %COMPILER%==MinGW if %ARCH%==x86 if exist "mingw32.7z" 7z x -y "mingw32.7z" > nul
 
 cache:
-  #- C:\mingw-w64\i686-8.1.0-posix-seh-rt_v6-rev0\mingw32
+  - C:\mingw-w64\i686-8.1.0-posix-seh-rt_v6-rev0\mingw32
 
 before_build:
   - set PATH=%QTDIR%\bin;C:\Qt\Tools\QtCreator\bin;%PATH%
