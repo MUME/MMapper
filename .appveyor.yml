@@ -56,7 +56,7 @@ install:
 
 before_build:
   - set PATH=%QTDIR%\bin;C:\Qt\Tools\QtCreator\bin;%PATH%
-  - if %COMPILER%==MinGW set PATH=C:\mingw-w64\%MINGWARCH%-8.1.0-posix-seh-rt_v6-rev0;C:\Qt\Tools\mingw%TOOLCHAIN_VERSION%\bin;%PATH:C:\Program Files\Git\usr\bin;=%
+  - if %COMPILER%==MinGW set PATH=C:\mingw-w64\%MINGWARCH%-8.1.0-posix-seh-rt_v6-rev0\bin;C:\Qt\Tools\mingw%TOOLCHAIN_VERSION%\bin;%PATH:C:\Program Files\Git\usr\bin;=%
   - echo PATH=%PATH%
  
 build:
