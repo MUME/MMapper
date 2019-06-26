@@ -30,13 +30,13 @@ image: Visual Studio 2017
 
 init:
   - if %ARCH%==x64 (
-      set VCARCH=amd64
-      set MINGWARCH=x86_64
+      set VCARCH="amd64"
+      set MINGWARCH="x86_64"
     ) else (
-      set VCARCH=x86
-      set MINGWARCH=i686
+      set VCARCH="x86"
+      set MINGWARCH="i686"
     )
-  - if %COMPILER%==VS2017 (
+  - if %COMPILER%==VS2017 {
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %VCARCH%
     )
   - if %COMPILER%==MinGW (
@@ -49,6 +49,8 @@ init:
   - echo PROCESSOR_IDENTIFIER=%PROCESSOR_IDENTIFIER%
   - echo QTDIR=%QTDIR%
   - echo CMAKE_GENERATOR=%CMAKE_GENERATOR%
+  - echo %VCARCH%
+  - echo %MINGWARCH%
 
 install:
   - ps: $env:package_version = ("$(git describe --tags --always --long)").trim()
