@@ -38,7 +38,7 @@
 #include "groupauthority.h"
 
 static constexpr const bool DEBUG = false;
-static constexpr const auto FIVE_SECOND_TIMEOUT = 5000;
+static constexpr const auto THIRTY_SECOND_TIMEOUT = 30000;
 
 GroupSocket::GroupSocket(GroupAuthority *authority, QObject *parent)
     : QObject(parent)
@@ -46,7 +46,7 @@ GroupSocket::GroupSocket(GroupAuthority *authority, QObject *parent)
     , timer{this}
     , authority(authority)
 {
-    timer.setInterval(FIVE_SECOND_TIMEOUT);
+    timer.setInterval(THIRTY_SECOND_TIMEOUT);
     timer.setSingleShot(true);
     connect(&timer, &QTimer::timeout, this, &GroupSocket::onTimeout);
 
