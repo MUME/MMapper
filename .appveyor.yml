@@ -33,7 +33,7 @@ init:
   - set MINGWARCH=i686
   - if %ARCH%==x64 set VCARCH=amd64
   - if %ARCH%==x64 set MINGWARCH=x86_64
-  - if %COMPILER%==VS2017 {
+  - if %COMPILER%==VS2017 (
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %VCARCH%
     )
   - if %COMPILER%==MinGW (
@@ -55,7 +55,7 @@ install:
 
 before_build:
   - set PATH=%QTDIR%\bin;C:\Qt\Tools\QtCreator\bin;%PATH%
-  - if %COMPILER%==MinGW set PATH=C:\mingw-w64\%MINGWARCH%-8.1.0-posix-seh-rt_v6-rev0\bin;C:\Qt\Tools\mingw%TOOLCHAIN_VERSION%\bin;%PATH:C:\Program Files\Git\usr\bin;=%
+  - if %COMPILER%==MinGW set PATH=C:\mingw-w64\%MINGWARCH%-8.1.0-posix-seh-rt_v6-rev0\mingw64\bin;C:\Qt\Tools\mingw%TOOLCHAIN_VERSION%\bin;%PATH:C:\Program Files\Git\usr\bin;=%
   - echo PATH=%PATH%
  
 build:
