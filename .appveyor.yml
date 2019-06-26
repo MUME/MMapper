@@ -48,6 +48,12 @@ init:
 install:
   - ps: $env:package_version = ("$(git describe --tags --always --long)").trim()
   - ps: Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
+  - cd C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0
+  - if %COMPILER%=="MinGW" if %ARCH%==x86 if not exist "mingw32" appveyor-retry appveyor DownloadFile "http://downloads.sourceforge.net/mingw-w64/i686-8.1.0-release-posix-dwarf-rt_v6-rev0.7z" -FileName "mingw32.7z"
+  - if %COMPILER%=="MinGW" if %ARCH%==x86 if exist "mingw32.7z" 7z x -y "mingw32.7z" > nul
+
+cache:
+  - C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw32
 
 before_build:
   - set PATH=%QTDIR%\bin;C:\Qt\Tools\QtCreator\bin;%PATH%
