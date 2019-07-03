@@ -41,8 +41,8 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
 if(Qt5Core_FOUND)
-    if(Qt5Core_VERSION VERSION_LESS 5.5.0)
-        message(FATAL_ERROR "Minimum supported Qt version is 5.5")
+    if(Qt5Core_VERSION VERSION_LESS 5.9.0)
+        message(FATAL_ERROR "Minimum supported Qt version is 5.9")
     endif()
 endif()
 

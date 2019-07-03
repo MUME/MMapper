@@ -652,7 +652,7 @@ RemoteEditWidget::RemoteEditWidget(const bool editSession,
     setGeometry(QStyle::alignedRect(Qt::LeftToRight,
                                     Qt::AlignCenter,
                                     size(),
-                                    qApp->desktop()->availableGeometry()));
+                                    qApp->primaryScreen()->availableGeometry()));
 
     show();
     raise();

@@ -233,7 +233,7 @@ QVariant GroupModel::dataForCharacter(CGroupChar *const character, ColumnType co
     case Qt::BackgroundRole:
         return character->getColor();
 
-    case Qt::TextColorRole:
+    case Qt::ForegroundRole:
         return textColor(character->getColor());
 
     case Qt::TextAlignmentRole:

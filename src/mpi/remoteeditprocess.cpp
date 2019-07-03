@@ -25,7 +25,7 @@ RemoteEditProcess::RemoteEditProcess(const bool editSession,
     , m_body(body)
     , m_editSession(editSession)
 {
-    m_process.setReadChannelMode(QProcess::MergedChannels);
+    m_process.setProcessChannelMode(QProcess::MergedChannels);
 
     // Signals/Slots
     connect(&m_process,

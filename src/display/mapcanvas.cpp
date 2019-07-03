@@ -1065,15 +1065,8 @@ void MapCanvas::initializeGL()
 
     initTextures();
 
-    // setDevicePixelRatio() must be before makeGlLists()
-    gl.setDevicePixelRatio([this]() {
-    // REVISIT: What version of QT do we require?
-#if QT_VERSION >= 0x050600
-        return static_cast<float>(devicePixelRatioF());
-#else
-        return static_cast<float>(devicePixelRatio());
-#endif
-    }());
+    // NOTE: setDevicePixelRatio() must be before makeGlLists()
+    gl.setDevicePixelRatio(static_cast<float>(QPaintDevice::devicePixelRatioF()));
 
     // <= OpenGL 3.0
     makeGlLists(); // TODO(nschimme): Convert these GlLists into shaders
