@@ -148,9 +148,7 @@ void MumeClockWidget::updateLabel()
         // The current time is 12:15 am.
         QString styleSheet = "";
         QString statusTip = "";
-        if (precision <= MumeClockPrecision::MUMECLOCK_DAY) {
-            statusTip = "Please run \"time\" to sync the clock";
-        } else if (time == MumeTime::TIME_DAWN) {
+        if (time == MumeTime::TIME_DAWN) {
             styleSheet = "color:white;background:red";
             statusTip = "Ticks left until day";
         } else if (time >= MumeTime::TIME_DUSK) {
@@ -160,11 +158,18 @@ void MumeClockWidget::updateLabel()
             styleSheet = "color:black;background:yellow";
             statusTip = "Ticks left until night";
         }
+        if (precision <= MumeClockPrecision::MUMECLOCK_DAY) {
+            statusTip = "Please be patient... the clock is still syncing with MUME!";
+        }
         timeLabel->setStyleSheet(styleSheet);
         timeLabel->setStatusTip(statusTip);
         updateMoonStyleSheet = true;
     }
-    timeLabel->setText(m_clock->toCountdown(moment));
+    if (precision <= MumeClockPrecision::MUMECLOCK_DAY) {
+        // Prepend warning emoji to countdown
+        timeLabel->setText(QString::fromUtf8("\xe2\x9a\xa0").append(m_clock->toCountdown(moment)));
+    } else
+        timeLabel->setText(m_clock->toCountdown(moment));
 
     MumeMoonVisibility moonVisibility = moment.toMoonVisibility();
     if (moonVisibility != m_lastVisibility || updateMoonStyleSheet) {
