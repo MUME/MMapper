@@ -202,14 +202,20 @@ void GroupManagerPage::charNameTextChanged()
 {
     // REVISIT: Remove non-valid characters (numbers, punctuation, etc)
     const QByteArray newName = ui->charName->text().toLatin1().simplified();
-    setConfig().groupManager.charName = newName;
 
     // Correct any UTF-8 characters that we do not understand
     QString newNameStr = QString::fromLatin1(newName);
+
+    // Force first character to be uppercase
+    if (newNameStr.length() > 0)
+        newNameStr.replace(0, 1, newNameStr[0].toUpper());
+
+    // Apply corrections back to the input field
     if (ui->charName->text() != newNameStr) {
         ui->charName->setText(newNameStr);
     }
 
+    setConfig().groupManager.charName = newNameStr.toLatin1();
     emit updatedSelf();
 }
 
