@@ -108,7 +108,7 @@ static inline QColor ansiColor(const AnsiColorTable i)
 static inline QColor textColor(const QColor color)
 {
     // Dynamically select text color according to the background color
-    // https://gist.github.com/jlong/f06f5843104ee10006fe
+    // http://www.nbdtech.com/Blog/archive/2008/04/27/Calculating-the-Perceived-Brightness-of-a-Color.aspx
     constexpr const auto redMagic = 241;
     constexpr const auto greenMagic = 691;
     constexpr const auto blueMagic = 68;
@@ -116,11 +116,11 @@ static inline QColor textColor(const QColor color)
 
     // Calculate a brightness value in 3d color space between 0 and 255
     const auto brightness = std::sqrt(((std::pow(color.red(), 2) * redMagic)
-                                  + (std::pow(color.green(), 2) * greenMagic)
-                                  + (std::pow(color.blue(), 2) * blueMagic))
-                                 / divisor);
+                                       + (std::pow(color.green(), 2) * greenMagic)
+                                       + (std::pow(color.blue(), 2) * blueMagic))
+                                      / divisor);
     const auto percentage = 100 * brightness / 255;
-    return percentage < 65 ? QColor(Qt::white) : QColor(Qt::black);
+    return percentage < 50 ? QColor(Qt::white) : QColor(Qt::black);
 }
 
 static inline QColor ansi256toRgb(const int ansi)
