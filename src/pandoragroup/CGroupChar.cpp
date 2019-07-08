@@ -119,8 +119,8 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
     }
 
     const auto tryUpdateString = [&playerData, &updated](const char *const attr, QByteArray &arr) {
-        if (playerData.contains(attr) && playerData[attr].canConvert(QMetaType::QByteArray)) {
-            const auto &s = playerData[attr].toByteArray();
+        if (playerData.contains(attr) && playerData[attr].canConvert(QMetaType::QString)) {
+            const auto &s = playerData[attr].toString().toLatin1();
             if (s != arr) {
                 updated = true;
                 arr = s;
@@ -132,8 +132,8 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
 
     TRY_UPDATE_STRING(name);
 
-    if (playerData.contains(prespamKey) && playerData[colorKey].canConvert(QMetaType::QByteArray)) {
-        const QByteArray &ba = playerData[prespamKey].toByteArray();
+    if (playerData.contains(prespamKey) && playerData[prespamKey].canConvert(QMetaType::QString)) {
+        const QByteArray &ba = playerData[prespamKey].toString().toLatin1();
         if (ba != prespam.toByteArray()) {
             updated = true;
             prespam = ba;

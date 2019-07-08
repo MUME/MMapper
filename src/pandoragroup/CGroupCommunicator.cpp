@@ -156,10 +156,10 @@ QByteArray CGroupCommunicator::formMessageBlock(const Messages message, const QV
 
 void CGroupCommunicator::sendMessage(GroupSocket *const socket,
                                      const Messages message,
-                                     const QByteArray &map)
+                                     const QByteArray &text)
 {
     QVariantMap root;
-    root["text"] = QString::fromLatin1(map);
+    root["text"] = QString::fromLatin1(text);
     sendMessage(socket, message, root);
 }
 
@@ -205,14 +205,14 @@ void CGroupCommunicator::incomingData(GroupSocket *const socket, const QByteArra
         switch (message) {
         case Messages::GTELL:
             if (xml.name() == QLatin1String("gtell")) {
-                data["from"] = xml.attributes().value("from").toString().toLatin1();
-                data["text"] = xml.readElementText().toLatin1();
+                data["from"] = xml.attributes().value("from").toString();
+                data["text"] = xml.readElementText();
             }
             break;
 
         case Messages::REQ_HANDSHAKE:
             if (xml.name() == QLatin1String("protocolVersion")) {
-                data["protocolVersion"] = xml.readElementText().toLatin1();
+                data["protocolVersion"] = xml.readElementText();
             }
             break;
         case Messages::UPDATE_CHAR:
@@ -237,10 +237,10 @@ void CGroupCommunicator::incomingData(GroupSocket *const socket, const QByteArra
                 playerData["mana"] = attributes.value("mana").toInt();
                 playerData["maxmana"] = attributes.value("maxmana").toInt();
                 playerData["state"] = attributes.value("state").toUInt();
-                playerData["name"] = attributes.value("name").toString().toLatin1();
+                playerData["name"] = attributes.value("name").toString();
                 playerData["color"] = attributes.value("color").toString();
                 playerData["room"] = attributes.value("room").toUInt();
-                playerData["prespam"] = attributes.value("prespam").toString().toLatin1();
+                playerData["prespam"] = attributes.value("prespam").toString();
                 playerData["affects"] = attributes.value("affects").toUInt();
                 data["playerData"] = playerData;
             }
@@ -249,8 +249,8 @@ void CGroupCommunicator::incomingData(GroupSocket *const socket, const QByteArra
         case Messages::RENAME_CHAR:
             if (xml.name() == QLatin1String("rename")) {
                 const auto &attributes = xml.attributes();
-                data["oldname"] = attributes.value("oldname").toLatin1();
-                data["newname"] = attributes.value("newname").toLatin1();
+                data["oldname"] = attributes.value("oldname").toString();
+                data["newname"] = attributes.value("newname").toString();
             }
             break;
 

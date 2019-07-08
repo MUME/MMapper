@@ -342,11 +342,11 @@ void GroupServer::parseLoginInformation(GroupSocket *socket, const QVariantMap &
         return;
     }
     const QVariantMap &playerData = data["playerData"].toMap();
-    if (!playerData.contains("name") || !playerData["name"].canConvert(QMetaType::QByteArray)) {
+    if (!playerData.contains("name") || !playerData["name"].canConvert(QMetaType::QString)) {
         kickConnection(socket, "Payload did not include 'name' attribute.");
         return;
     }
-    const QString nameStr = QString::fromLatin1(playerData["name"].toByteArray());
+    const QString &nameStr = playerData["name"].toString();
     const QString tempName = QString("%1-%2").arg(nameStr).arg(rand() % 1000); //NOLINT
     socket->setName(tempName.toLatin1());
     emit sendLog(QString("'%1' is trying to join the group as '%2'.").arg(tempName).arg(nameStr));

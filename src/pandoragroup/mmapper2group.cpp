@@ -231,29 +231,28 @@ void Mmapper2Group::relayMessageBox(const QString &message)
 
 void Mmapper2Group::gTellArrived(const QVariantMap &node)
 {
-    if (!node.contains("from") && node["from"].canConvert(QMetaType::QByteArray)) {
+    if (!node.contains("from") && node["from"].canConvert(QMetaType::QString)) {
         qWarning() << "From not found" << node;
         return;
     }
-    const QByteArray &from = node["from"].toByteArray();
-    const QString fromStr = QString::fromLatin1(from);
+    const QString &from = node["from"].toString();
 
-    if (!node.contains("text") && node["text"].canConvert(QMetaType::QByteArray)) {
+    if (!node.contains("text") && node["text"].canConvert(QMetaType::QString)) {
         qWarning() << "Text not found" << node;
         return;
     }
-    const QString &text = QString::fromLatin1(node["text"].toByteArray());
+    const QString &text = node["text"].toString();
 
     auto color = getConfig().groupManager.groupTellColor;
-    auto selection = getGroup()->selectByName(from);
+    auto selection = getGroup()->selectByName(from.toLatin1());
     if (getConfig().groupManager.useGroupTellAnsi256Color && !selection->empty()) {
         auto character = selection->at(0);
         color = rgbToAnsi256String(character->getColor(), false);
     }
-    emit log("GroupManager", QString("GTell from %1 arrived: %2").arg(fromStr).arg(text));
+    emit log("GroupManager", QString("GTell from %1 arrived: %2").arg(from).arg(text));
 
     const QByteArray tell
-        = QString("\x1b%1%2 tells you [GT] '%3'\x1b[0m").arg(color).arg(fromStr).arg(text).toLatin1();
+        = QString("\x1b%1%2 tells you [GT] '%3'\x1b[0m").arg(color).arg(from).arg(text).toLatin1();
 
     emit displayGroupTellEvent(tell);
 }
