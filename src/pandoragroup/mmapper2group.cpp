@@ -370,12 +370,10 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
 #define X_SCORE(target, lower, upper) \
     do { \
         if (text == target) { \
-            const auto ub = max * upper; \
-            const auto lb = max * lower; \
-            if (current >= ub) \
-                return ub; \
-            else if (current <= lb) \
-                return lb; \
+            if (current >= upper) \
+                return upper; \
+            else if (current <= lower) \
+                return lower; \
             else \
                 return current; \
         } \
@@ -383,16 +381,16 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
 
     // Estimate new numerical scores using prompt
     if (self->maxhp != 0) {
-        // NOTE: This avoids capture so it can be lifted out more easily later.
+        // REVISIT: Replace this if/else tree with a data structure
         const auto calc_hp =
             [](const QByteArray &text, const double current, const double max) -> double {
             if (text.isEmpty() || text == "Healthy")
                 return max;
-            X_SCORE("Fine", 0.71, 0.99);
-            X_SCORE("Hurt", 0.46, 0.70);
-            X_SCORE("Wounded", 0.26, 0.45);
-            X_SCORE("Bad", 0.11, 0.25);
-            X_SCORE("Awful", 0.01, 0.10);
+            X_SCORE("Fine", max * 0.71, max * 0.99);
+            X_SCORE("Hurt", max * 0.46, max * 0.70);
+            X_SCORE("Wounded", max * 0.26, max * 0.45);
+            X_SCORE("Bad", max * 0.11, max * 0.25);
+            X_SCORE("Awful", max * 0.01, max * 0.10);
             return 0.0; // Dying
         };
         self->hp = static_cast<int>(calc_hp(textHP, self->hp, self->maxhp));
@@ -402,32 +400,30 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
             [](const QByteArray &text, const double current, const double max) -> double {
             if (text.isEmpty())
                 return max;
-            X_SCORE("Burning", 0.76, 0.99);
-            X_SCORE("Hot", 0.46, 0.75);
-            X_SCORE("Warm", 0.26, 0.45);
-            X_SCORE("Cold", 0.11, 0.25);
-            X_SCORE("Icy", 0.01, 0.10);
+            X_SCORE("Burning", max * 0.76, max * 0.99);
+            X_SCORE("Hot", max * 0.46, max * 0.75);
+            X_SCORE("Warm", max * 0.26, max * 0.45);
+            X_SCORE("Cold", max * 0.11, max * 0.25);
+            X_SCORE("Icy", max * 0.01, max * 0.10);
             return 0.0; // Frozen
         };
         self->mana = static_cast<int>(calc_mana(textMana, self->mana, self->maxmana));
     }
     if (self->maxmoves != 0) {
-        const auto calc_moves =
-            [](const QByteArray &text, const double current, const double max) -> double {
+        const auto calc_moves = [](const QByteArray &text, const int current) -> int {
             if (text.isEmpty()) {
-                const double lb = max * 0.43;
-                if (current <= lb)
-                    return lb;
+                if (current <= 50)
+                    return 50;
                 else
                     return current;
             }
-            X_SCORE("Tired", 0.32, 0.42);
-            X_SCORE("Slow", 0.13, 0.31);
-            X_SCORE("Weak", 0.06, 0.12);
-            X_SCORE("Fainting", 0.01, 0.05);
-            return 0.0; // Exhausted
+            X_SCORE("Tired", 30, 49);
+            X_SCORE("Slow", 15, 29);
+            X_SCORE("Weak", 5, 14);
+            X_SCORE("Fainting", 1, 4);
+            return 0; // Exhausted
         };
-        self->moves = static_cast<int>(calc_moves(textMoves, self->moves, self->maxmoves));
+        self->moves = calc_moves(textMoves, self->moves);
     }
 #undef X_SCORE
 
