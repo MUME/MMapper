@@ -16,7 +16,7 @@
 
 struct Map::Pimpl
 {
-    explicit Pimpl() = default;
+    Pimpl() = default;
     virtual ~Pimpl();
     virtual void clear() = 0;
     virtual void getRooms(AbstractRoomVisitor &stream,
@@ -74,7 +74,7 @@ private:
     std::map<int, std::map<int, std::map<int, Room *>>> map{};
 
 public:
-    explicit MapOrderedTree() = default;
+    MapOrderedTree() = default;
     virtual ~MapOrderedTree() override;
 
     void clear() override { map.clear(); }

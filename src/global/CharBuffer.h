@@ -13,7 +13,7 @@ protected:
     char buffer[N + 1];
 
 public:
-    explicit CharBuffer() = delete;
+    CharBuffer() = delete;
     explicit CharBuffer(const char (&data)[N])
         : buffer{}
     {

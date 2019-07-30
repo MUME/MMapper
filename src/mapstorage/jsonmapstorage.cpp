@@ -206,7 +206,7 @@ class JsonRoomIdsCache
     JsonRoomId m_nextJsonId = 0u;
 
 public:
-    explicit JsonRoomIdsCache();
+    JsonRoomIdsCache();
     void addRoom(RoomId mm2RoomId) { m_cache[mm2RoomId] = m_nextJsonId++; }
     JsonRoomId operator[](RoomId roomId) const;
     uint size() const;
@@ -237,7 +237,7 @@ class JsonWorld
     void addExits(const Room &room, QJsonObject &jr) const;
 
 public:
-    explicit JsonWorld();
+    JsonWorld();
     ~JsonWorld();
     void addRooms(const ConstRoomList &roomList,
                   BaseMapSaveFilter &filter,

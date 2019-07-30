@@ -13,7 +13,7 @@ class CGroup;
 class GroupAction
 {
 public:
-    explicit GroupAction();
+    GroupAction();
     virtual ~GroupAction();
     virtual void exec() = 0;
     void setGroup(CGroup *in) { this->group = in; }
@@ -75,7 +75,7 @@ private:
 class ResetCharacters final : public GroupAction
 {
 public:
-    explicit ResetCharacters();
+    ResetCharacters();
 
 protected:
     void exec() override;

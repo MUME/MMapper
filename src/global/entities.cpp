@@ -344,7 +344,7 @@ struct XmlEntity final
     QByteArray full_name;
     XmlEntityId id = XmlEntityId::INVALID;
 
-    explicit XmlEntity() = default;
+    XmlEntity() = default;
     explicit XmlEntity(const char *const _short_name,
                        const char *const _full_name,
                        const XmlEntityId _id)

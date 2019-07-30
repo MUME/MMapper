@@ -160,7 +160,7 @@ protected:
 class Update final : public virtual AbstractAction
 {
 public:
-    explicit Update();
+    Update();
 
     explicit Update(const SigParseEvent &sigParseEvent);
 

@@ -29,7 +29,7 @@ private:
     uint16_t flags{};
 
 public:
-    explicit ConnectedRoomFlagsType() {}
+    ConnectedRoomFlagsType() = default;
     explicit ConnectedRoomFlagsType(uint16_t flags)
         : flags{flags}
     {

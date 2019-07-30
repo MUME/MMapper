@@ -32,7 +32,7 @@ private:
     virtual void receiveRoom(RoomAdmin *, const Room *room) override;
 
 public:
-    explicit BaseMapSaveFilter();
+    BaseMapSaveFilter();
     virtual ~BaseMapSaveFilter() override;
 
     //! The map data to work on

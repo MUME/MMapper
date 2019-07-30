@@ -11,7 +11,7 @@
 class RandomEngine final : public std::mt19937
 {
 private:
-    explicit RandomEngine();
+    RandomEngine();
 
 public:
     ~RandomEngine() = default;

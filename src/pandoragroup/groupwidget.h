@@ -23,7 +23,7 @@ class QTableView;
 class GroupStateData
 {
 public:
-    explicit GroupStateData() = default;
+    GroupStateData() = default;
     explicit GroupStateData(const QColor &color,
                             const CharacterPosition position,
                             const CharacterAffects affects);

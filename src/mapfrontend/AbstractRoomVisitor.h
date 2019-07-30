@@ -10,7 +10,7 @@
 class AbstractRoomVisitor
 {
 public:
-    explicit AbstractRoomVisitor();
+    AbstractRoomVisitor();
     virtual ~AbstractRoomVisitor();
 
 public:

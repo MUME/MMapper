@@ -29,7 +29,7 @@ private:
     }
 
 public:
-    explicit PromptFlagsType() = default;
+    PromptFlagsType() = default;
 
 public:
     /// NOTE: This sets the valid flag on the result.

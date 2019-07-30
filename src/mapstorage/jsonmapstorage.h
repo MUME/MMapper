@@ -31,7 +31,7 @@ public:
     ~JsonMapStorage() override;
 
 public:
-    explicit JsonMapStorage() = delete;
+    JsonMapStorage() = delete;
 
 private:
     virtual bool canLoad() const override { return false; }

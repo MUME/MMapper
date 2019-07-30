@@ -256,7 +256,7 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(Configuration);
 
 private:
-    explicit Configuration();
+    Configuration();
     friend Configuration &setConfig();
 };
 

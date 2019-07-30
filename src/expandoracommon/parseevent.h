@@ -41,7 +41,7 @@ private:
     using LUP = ListCycler<UP, DUP>;
     struct Cycler final : LUP
     {
-        explicit Cycler() = default;
+        Cycler() = default;
         virtual ~Cycler() override;
 
         DEFAULT_CTORS_AND_ASSIGN_OPS(Cycler);

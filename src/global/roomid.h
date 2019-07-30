@@ -15,7 +15,7 @@ private:
     uint32_t value{};
 
 public:
-    explicit RoomId() = default;
+    RoomId() = default;
     constexpr explicit RoomId(uint32_t value) noexcept
         : value{value}
     {}

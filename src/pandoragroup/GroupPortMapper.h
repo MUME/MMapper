@@ -17,7 +17,7 @@ private:
     std::unique_ptr<Pimpl> m_pimpl;
 
 public:
-    explicit GroupPortMapper();
+    GroupPortMapper();
     ~GroupPortMapper();
     DELETE_CTORS_AND_ASSIGN_OPS(GroupPortMapper);
 

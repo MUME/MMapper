@@ -28,7 +28,7 @@ private:
     std::unique_ptr<Pimpl> m_pimpl;
 
 public:
-    explicit Map();
+    Map();
     ~Map();
     DELETE_CTORS_AND_ASSIGN_OPS(Map);
 

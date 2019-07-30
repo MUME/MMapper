@@ -21,7 +21,7 @@ private:
     int len = 0;
 
 public:
-    explicit Abbrev() = default;
+    Abbrev() = default;
     explicit Abbrev(std::nullptr_t) = delete;
     explicit Abbrev(std::nullptr_t, int) = delete;
     explicit Abbrev(const char *const arg_command, const int arg_minAbbrev = -1);

@@ -24,7 +24,7 @@ public:
     CharacterAffects affects{};
     CommandQueue prespam{};
 
-    explicit CGroupChar();
+    CGroupChar();
     virtual ~CGroupChar();
 
     const QByteArray &getName() const { return name; }

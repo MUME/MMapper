@@ -82,7 +82,7 @@ private:
     const char *str = nullptr;
 
 public:
-    explicit ErrorNumberMessage() = default;
+    ErrorNumberMessage() = default;
     explicit ErrorNumberMessage(int error_number) noexcept;
 
 public:

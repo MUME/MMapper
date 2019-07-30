@@ -26,7 +26,7 @@ public:
     ~MmpMapStorage() override;
 
 public:
-    explicit MmpMapStorage() = delete;
+    MmpMapStorage() = delete;
 
 private:
     virtual bool canLoad() const override { return false; }

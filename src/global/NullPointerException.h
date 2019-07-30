@@ -10,7 +10,7 @@
 
 struct NullPointerException final : public std::runtime_error
 {
-    explicit NullPointerException();
+    NullPointerException();
     virtual ~NullPointerException() override;
     DEFAULT_CTORS_AND_ASSIGN_OPS(NullPointerException);
 };

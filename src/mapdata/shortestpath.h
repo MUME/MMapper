@@ -21,7 +21,7 @@ public:
     int parent = 0;
     double dist = 0.0;
     ExitDirection lastdir{};
-    explicit SPNode() = default;
+    SPNode() = default;
     explicit SPNode(const Room *r, const int parent, double dist, ExitDirection lastdir)
         : r(r)
         , parent(parent)

@@ -119,7 +119,7 @@ struct MapCanvasData
     {
         Coordinate2i pos{};
         bool wrongPlace = false;
-        explicit RoomSelMove()
+        RoomSelMove()
             : pos{}
         {}
     };
@@ -131,7 +131,7 @@ struct MapCanvasData
     struct InfoMarkSelectionMove final
     {
         Coordinate2f pos{};
-        explicit InfoMarkSelectionMove()
+        InfoMarkSelectionMove()
             : pos{}
         {}
     };

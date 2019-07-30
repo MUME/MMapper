@@ -22,7 +22,7 @@
 
 struct ParseTree::Pimpl
 {
-    explicit Pimpl() = default;
+    Pimpl() = default;
     virtual ~Pimpl();
     virtual SharedRoomCollection insertRoom(ParseEvent &event) = 0;
     virtual void getRooms(AbstractRoomVisitor &stream, ParseEvent &event) = 0;

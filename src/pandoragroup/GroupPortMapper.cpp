@@ -14,7 +14,7 @@
 
 struct GroupPortMapper::Pimpl
 {
-    explicit Pimpl() = default;
+    Pimpl() = default;
     virtual ~Pimpl();
     virtual QByteArray tryGetExternalIp() = 0;
     virtual bool tryAddPortMapping(const quint16 port) = 0;
@@ -26,7 +26,7 @@ GroupPortMapper::Pimpl::~Pimpl() = default;
 class NoopPortMapper final : public GroupPortMapper::Pimpl
 {
 public:
-    explicit NoopPortMapper() = default;
+    NoopPortMapper() = default;
     virtual ~NoopPortMapper() override;
 
     QByteArray tryGetExternalIp() override
@@ -56,7 +56,7 @@ private:
     int validIGDState = 0;
 
 public:
-    explicit MiniUPnPcPortMapper()
+    MiniUPnPcPortMapper()
     {
         int result;
 #if MINIUPNPC_API_VERSION < 14

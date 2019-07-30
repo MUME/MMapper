@@ -16,7 +16,7 @@ private:
     bool valid = false;
 
 public:
-    explicit OptQChar() = default;
+    OptQChar() = default;
     explicit OptQChar(QChar _qc)
         : qc{_qc}
         , valid{true}

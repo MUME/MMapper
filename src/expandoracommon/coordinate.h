@@ -8,7 +8,7 @@ struct Coordinate2i final
 {
     int x = 0;
     int y = 0;
-    explicit Coordinate2i() = default;
+    Coordinate2i() = default;
     explicit Coordinate2i(const int x, const int y)
         : x{x}
         , y{y}
@@ -24,7 +24,7 @@ struct Coordinate2f final
 {
     float x = 0.0f;
     float y = 0.0f;
-    explicit Coordinate2f() = default;
+    Coordinate2f() = default;
     explicit Coordinate2f(const float x, const float y)
         : x{x}
         , y{y}
@@ -55,7 +55,7 @@ public:
     void clear();
 
 public:
-    explicit Coordinate() = default;
+    Coordinate() = default;
     explicit Coordinate(const Coordinate2i &in_xy, const int in_z)
         : x(in_xy.x)
         , y(in_xy.y)

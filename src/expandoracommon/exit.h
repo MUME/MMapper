@@ -31,7 +31,7 @@ protected:
 
 public:
     // This has to exist as long as ExitsList uses QVector<Exit>.
-    explicit Exit() = default;
+    Exit() = default;
     explicit Exit(bool hasFields)
         : hasFields{hasFields}
     {}

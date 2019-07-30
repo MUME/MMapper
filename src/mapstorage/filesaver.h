@@ -19,7 +19,7 @@ class FileSaver final
     QFile m_file{}; // disables copying
 
 public:
-    explicit FileSaver() = default;
+    FileSaver() = default;
     ~FileSaver();
 
 public:

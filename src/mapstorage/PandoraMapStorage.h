@@ -27,7 +27,7 @@ public:
     ~PandoraMapStorage() override;
 
 public:
-    explicit PandoraMapStorage() = delete;
+    PandoraMapStorage() = delete;
 
 private:
     virtual bool canLoad() const override { return true; }

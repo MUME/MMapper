@@ -38,7 +38,7 @@ public:
     }
 
 public:
-    explicit MmQtHandle() = default; /* required by QT */
+    MmQtHandle() = default; /* required by QT */
     DEFAULT_RULE_OF_5(MmQtHandle);
 
 public:

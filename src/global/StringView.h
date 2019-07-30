@@ -25,7 +25,7 @@ private:
     const_iterator end_ = nullptr;
 
 public:
-    explicit StringView() noexcept = default;
+    StringView() noexcept = default;
     explicit StringView(const const_iterator beg, const const_iterator end) noexcept;
     explicit StringView(const QString &s) noexcept(false);
 

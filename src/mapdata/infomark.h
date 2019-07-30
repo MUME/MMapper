@@ -30,7 +30,7 @@ using MarkerTimeStamp = QDateTime;
 class InfoMark
 {
 public:
-    explicit InfoMark() = default;
+    InfoMark() = default;
     ~InfoMark() = default;
 
     const InfoMarkName &getName() const { return m_name; }

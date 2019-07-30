@@ -17,7 +17,7 @@ class RoomAdmin;
 class RoomRecipient
 {
 public:
-    explicit RoomRecipient();
+    RoomRecipient();
     virtual ~RoomRecipient();
     virtual void receiveRoom(RoomAdmin *admin, const Room *room) = 0;
 

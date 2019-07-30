@@ -87,7 +87,7 @@ private:
 
 public:
     DELETE_CTORS_AND_ASSIGN_OPS(Settings);
-    explicit Settings() { initSettings(); }
+    Settings() { initSettings(); }
     ~Settings() = default;
     explicit operator QSettings &()
     {

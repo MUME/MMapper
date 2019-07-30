@@ -25,7 +25,7 @@ struct MouseSel final
     Coordinate2f pos{};
     int layer = 0;
 
-    explicit MouseSel() = default;
+    MouseSel() = default;
     explicit MouseSel(const Coordinate2f &pos, const int layer)
         : pos{pos}
         , layer{layer}
@@ -50,7 +50,7 @@ public:
     };
 
     explicit ConnectionSelection(MapFrontend *mf, const MouseSel &sel);
-    explicit ConnectionSelection();
+    ConnectionSelection();
     ~ConnectionSelection() override;
 
     void setFirst(MapFrontend *mf, RoomId RoomId, ExitDirection dir);

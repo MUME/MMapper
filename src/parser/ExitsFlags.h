@@ -37,7 +37,7 @@ private:
     }
 
 public:
-    explicit ExitsFlagsType() {}
+    ExitsFlagsType() = default;
     explicit operator uint32_t() const { return value; }
     static ExitsFlagsType create_unsafe(const uint32_t value)
     {

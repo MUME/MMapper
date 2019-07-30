@@ -142,10 +142,6 @@ static constexpr const uint8_t TNSB_TTABLE_NAK = 7;
 
 struct AppendBuffer : public QByteArray
 {
-    explicit AppendBuffer()
-        : QByteArray()
-    {}
-
     AppendBuffer(QByteArray &&rhs)
         : QByteArray{std::move(rhs)}
     {}

@@ -49,7 +49,7 @@ private:
     QSplashScreen splash;
 
 public:
-    explicit Splash()
+    Splash()
         : pixmap(getPixmapFilenameRaw("splash.png"))
         , splash(pixmap)
     {

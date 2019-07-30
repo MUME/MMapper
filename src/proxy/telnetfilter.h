@@ -26,7 +26,7 @@ enum class TelnetDataType {
 
 struct IncomingData
 {
-    explicit IncomingData() = default;
+    IncomingData() = default;
     QByteArray line{};
     TelnetDataType type = TelnetDataType::SPLIT;
 };

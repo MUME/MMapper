@@ -21,7 +21,7 @@ class Room;
 class RoomFactory final : public AbstractRoomFactory
 {
 public:
-    explicit RoomFactory();
+    RoomFactory();
     virtual Room *createRoom() const override;
     virtual Room *createRoom(const ParseEvent &) const override;
     virtual ComparisonResult compare(const Room *,

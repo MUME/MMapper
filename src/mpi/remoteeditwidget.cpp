@@ -730,7 +730,7 @@ struct EditCommand2 final
     const char *shortcut = nullptr;
     EditCmdType2 cmd_type = EditCmdType2::SPACER;
 
-    constexpr explicit EditCommand2() = default;
+    constexpr EditCommand2() = default;
     constexpr explicit EditCommand2(const mem_fn_ptr_type _mem_fn_ptr,
                                     const char *const _theme,
                                     const char *const _icon,

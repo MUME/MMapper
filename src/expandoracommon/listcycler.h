@@ -14,7 +14,7 @@ template<class T, class C>
 class ListCycler : public C
 {
 public:
-    explicit ListCycler() = default;
+    ListCycler() = default;
     DEFAULT_CTORS_AND_ASSIGN_OPS(ListCycler);
 
     explicit ListCycler(const C &data)

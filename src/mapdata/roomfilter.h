@@ -18,7 +18,7 @@ static_assert(PATTERN_KINDS_LENGTH == 8);
 class RoomFilter
 {
 public:
-    explicit RoomFilter() = default;
+    RoomFilter() = default;
     explicit RoomFilter(const QString &pattern,
                         const Qt::CaseSensitivity &cs,
                         const pattern_kinds kind)

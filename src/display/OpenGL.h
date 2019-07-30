@@ -23,7 +23,7 @@
 struct Vec2f
 {
     float x = 0.0f, y = 0.0f;
-    explicit Vec2f() = default;
+    Vec2f() = default;
     explicit Vec2f(float x, float y)
         : x{x}
         , y{y}
@@ -33,7 +33,7 @@ struct Vec2f
 struct Vec3f
 {
     float x = 0.0f, y = 0.0f, z = 0.0f;
-    explicit Vec3f() = default;
+    Vec3f() = default;
     explicit Vec3f(Vec2f v, float z)
         : Vec3f(v.x, v.y, z)
     {}
@@ -236,7 +236,7 @@ private:
     {}
 
 public:
-    explicit XDisplayList() = default;
+    XDisplayList() = default;
     ~XDisplayList() = default;
     DELETE_COPY_CTOR(XDisplayList);
     DELETE_COPY_ASSIGN_OP(XDisplayList);
