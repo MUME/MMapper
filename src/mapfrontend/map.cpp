@@ -32,6 +32,41 @@ struct Map::Pimpl
 
 Map::Pimpl::~Pimpl() = default;
 
+struct NODISCARD CoordinateMinMax final
+{
+    Coordinate min;
+    Coordinate max;
+
+    CoordinateMinMax expandCopy(const Coordinate &radius) const
+    {
+        auto copy = *this;
+        copy.min -= radius;
+        copy.max += radius;
+        return copy;
+    }
+
+    static Coordinate getMin(const Coordinate &a, const Coordinate &b)
+    {
+        const int xmin = std::min(a.x, b.x);
+        const int ymin = std::min(a.y, b.y);
+        const int zmin = std::min(a.z, b.z);
+        return Coordinate{xmin, ymin, zmin};
+    }
+
+    static Coordinate getMax(const Coordinate &a, const Coordinate &b)
+    {
+        const int xmax = std::max(a.x, b.x);
+        const int ymax = std::max(a.y, b.y);
+        const int zmax = std::max(a.z, b.z);
+        return Coordinate{xmax, ymax, zmax};
+    }
+
+    static CoordinateMinMax get(const Coordinate &a, const Coordinate &b)
+    {
+        return CoordinateMinMax{getMin(a, b), getMax(a, b)};
+    }
+};
+
 class MapOrderedTree final : public Map::Pimpl
 {
 private:
@@ -48,21 +83,16 @@ public:
                   const Coordinate &ulf,
                   const Coordinate &lrb) const override
     {
-        const int xmin = (ulf.x < lrb.x ? ulf.x : lrb.x) - 1;
-        const int xmax = (ulf.x > lrb.x ? ulf.x : lrb.x) + 1;
-        const int ymin = (ulf.y < lrb.y ? ulf.y : lrb.y) - 1;
-        const int ymax = (ulf.y > lrb.y ? ulf.y : lrb.y) + 1;
-        const int zmin = (ulf.z < lrb.z ? ulf.z : lrb.z) - 1;
-        const int zmax = (ulf.z > lrb.z ? ulf.z : lrb.z) + 1;
+        const auto range = CoordinateMinMax::get(ulf, lrb).expandCopy(Coordinate{1, 1, 1});
 
-        auto zUpper = map.lower_bound(zmax);
-        for (auto z = map.upper_bound(zmin); z != zUpper; ++z) {
-            auto &ymap = (*z).second;
-            auto yUpper = ymap.lower_bound(ymax);
-            for (auto y = ymap.upper_bound(ymin); y != yUpper; ++y) {
-                auto &xmap = (*y).second;
-                auto xUpper = xmap.lower_bound(xmax);
-                for (auto x = xmap.upper_bound(xmin); x != xUpper; ++x) {
+        const auto zUpper = map.lower_bound(range.max.z);
+        for (auto z = map.upper_bound(range.min.z); z != zUpper; ++z) {
+            const auto &ymap = (*z).second;
+            const auto yUpper = ymap.lower_bound(range.max.y);
+            for (auto y = ymap.upper_bound(range.min.y); y != yUpper; ++y) {
+                const auto &xmap = (*y).second;
+                const auto xUpper = xmap.lower_bound(range.max.x);
+                for (auto x = xmap.upper_bound(range.min.x); x != xUpper; ++x) {
                     stream.visit(x->second);
                 }
             }
@@ -73,16 +103,11 @@ public:
                   const Coordinate &ulf,
                   const Coordinate &lrb) override
     {
-        const int xmin = ulf.x < lrb.x ? ulf.x : lrb.x;
-        const int xmax = ulf.x > lrb.x ? ulf.x : lrb.x;
-        const int ymin = ulf.y < lrb.y ? ulf.y : lrb.y;
-        const int ymax = ulf.y > lrb.y ? ulf.y : lrb.y;
-        const int zmin = ulf.z < lrb.z ? ulf.z : lrb.z;
-        const int zmax = ulf.z > lrb.z ? ulf.z : lrb.z;
+        const auto range = CoordinateMinMax::get(ulf, lrb);
 
-        for (int z = zmin; z <= zmax; ++z) {
-            for (int y = ymin; y <= ymax; ++y) {
-                for (int x = xmin; x <= xmax; ++x) {
+        for (int z = range.min.z; z <= range.max.z; ++z) {
+            for (int y = range.min.y; y <= range.max.y; ++y) {
+                for (int x = range.min.x; x <= range.max.x; ++x) {
                     Room *&room = map[z][y][x];
                     if (room == nullptr) {
                         room = factory->createRoom();
