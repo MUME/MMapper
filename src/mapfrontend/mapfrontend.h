@@ -68,11 +68,11 @@ public:
 
     // removes the lock on a room
     // after the last lock is removed, the room is deleted
-    virtual void releaseRoom(RoomRecipient &, RoomId) override;
+    void releaseRoom(RoomRecipient &, RoomId) final;
 
     // makes a lock on a room permanent and anonymous.
     // Like that the room can't be deleted via releaseRoom anymore.
-    virtual void keepRoom(RoomRecipient &, RoomId) override;
+    void keepRoom(RoomRecipient &, RoomId) final;
 
     virtual void lockRoom(RoomRecipient *, RoomId);
 
@@ -98,7 +98,7 @@ public slots:
     virtual void createRoom(const SigParseEvent &, const Coordinate &);
     virtual void createEmptyRooms(const Coordinate &, const Coordinate &);
 
-    virtual void scheduleAction(MapAction *action) override;
+    void scheduleAction(MapAction *action) final;
 
 signals:
 
