@@ -14,24 +14,6 @@
 #include <memory>
 #include <utility>
 
-struct Map::Pimpl
-{
-    Pimpl() = default;
-    virtual ~Pimpl();
-    virtual void clear() = 0;
-    virtual void getRooms(AbstractRoomVisitor &stream,
-                          const Coordinate &min,
-                          const Coordinate &max) const = 0;
-    virtual void fillArea(AbstractRoomFactory *factory, const Coordinate &min, const Coordinate &max)
-        = 0;
-    virtual bool defined(const Coordinate &c) const = 0;
-    virtual void set(const Coordinate &c, Room *room) = 0;
-    virtual void remove(const Coordinate &c) = 0;
-    virtual Room *get(const Coordinate &c) const = 0;
-};
-
-Map::Pimpl::~Pimpl() = default;
-
 struct NODISCARD CoordinateMinMax final
 {
     Coordinate min;
@@ -67,7 +49,7 @@ struct NODISCARD CoordinateMinMax final
     }
 };
 
-class MapOrderedTree final : public Map::Pimpl
+class Map::MapOrderedTree final
 {
 private:
     // REVISIT: consider using something more efficient
@@ -75,13 +57,11 @@ private:
 
 public:
     MapOrderedTree() = default;
-    virtual ~MapOrderedTree() override;
+    ~MapOrderedTree();
 
-    void clear() override { map.clear(); }
+    void clear() { map.clear(); }
 
-    void getRooms(AbstractRoomVisitor &stream,
-                  const Coordinate &min,
-                  const Coordinate &max) const override
+    void getRooms(AbstractRoomVisitor &stream, const Coordinate &min, const Coordinate &max) const
     {
         const auto range = CoordinateMinMax::get(min, max).expandCopy(Coordinate{1, 1, 1});
 
@@ -99,9 +79,7 @@ public:
         }
     }
 
-    void fillArea(AbstractRoomFactory *factory,
-                  const Coordinate &min,
-                  const Coordinate &max) override
+    void fillArea(AbstractRoomFactory *factory, const Coordinate &min, const Coordinate &max)
     {
         const auto range = CoordinateMinMax::get(min, max);
 
@@ -120,7 +98,7 @@ public:
     /**
      * doesn't modify c
      */
-    bool defined(const Coordinate &c) const override
+    bool defined(const Coordinate &c) const
     {
         const auto &z = map.find(c.z);
         if (z != map.end()) {
@@ -136,7 +114,7 @@ public:
         return false;
     }
 
-    Room *get(const Coordinate &c) const override
+    Room *get(const Coordinate &c) const
     { // map<K,V>::operator[] is not const!
         //    if (!defined(c)) {
         //        return nullptr;
@@ -161,18 +139,18 @@ public:
         return x->second;
     }
 
-    void remove(const Coordinate &c) override { map[c.z][c.y].erase(c.x); }
+    void remove(const Coordinate &c) { map[c.z][c.y].erase(c.x); }
 
     /**
      * doesn't modify c
      */
-    void set(const Coordinate &c, Room *room) override { map[c.z][c.y][c.x] = room; }
+    void set(const Coordinate &c, Room *room) { map[c.z][c.y][c.x] = room; }
 };
 
-MapOrderedTree::~MapOrderedTree() = default;
+Map::MapOrderedTree::~MapOrderedTree() = default;
 
 Map::Map()
-    : m_pimpl{std::unique_ptr<Pimpl>(static_cast<Pimpl *>(new MapOrderedTree()))}
+    : m_pimpl{std::make_unique<MapOrderedTree>()}
 {}
 
 Map::~Map() = default;

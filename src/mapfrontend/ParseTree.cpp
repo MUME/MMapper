@@ -20,16 +20,6 @@
 #include "../global/utils.h"
 #include "roomcollection.h"
 
-struct ParseTree::Pimpl
-{
-    Pimpl() = default;
-    virtual ~Pimpl();
-    virtual SharedRoomCollection insertRoom(ParseEvent &event) = 0;
-    virtual void getRooms(AbstractRoomVisitor &stream, ParseEvent &event) = 0;
-};
-
-ParseTree::Pimpl::~Pimpl() = default;
-
 enum class MaskFlagsEnum : uint32_t {
     NONE = 0u,
     NAME = 0b001u,
@@ -154,7 +144,7 @@ static auto makeKey(ParseEvent &event, const MaskFlagsEnum maskFlags, const bool
     return key;
 }
 
-class ParseHashMap final : public ParseTree::Pimpl
+class ParseTree::ParseHashMap final
 {
 private:
     using Key = std::string;
@@ -171,9 +161,9 @@ public:
         : m_useVerboseKeys{useVerboseKeys}
     {}
 
-    virtual ~ParseHashMap() override;
+    virtual ~ParseHashMap();
 
-    SharedRoomCollection insertRoom(ParseEvent &event_) override
+    SharedRoomCollection insertRoom(ParseEvent &event_)
     {
         const auto &event = event_;
         assert(event.size() == 3);
@@ -198,7 +188,7 @@ public:
         return result;
     }
 
-    void getRooms(AbstractRoomVisitor &stream, ParseEvent &event_) override
+    void getRooms(AbstractRoomVisitor &stream, ParseEvent &event_)
     {
         const auto &event = event_;
 
@@ -220,15 +210,13 @@ public:
                 home->forEach(stream);
             }
         }
-
-        return;
     }
 };
 
-ParseHashMap::~ParseHashMap() = default;
+ParseTree::ParseHashMap::~ParseHashMap() = default;
 
 ParseTree::ParseTree(const bool useVerboseKeys)
-    : m_pimpl{std::unique_ptr<Pimpl>(static_cast<Pimpl *>(new ParseHashMap(useVerboseKeys)))}
+    : m_pimpl{std::make_unique<ParseHashMap>(useVerboseKeys)}
 {}
 ParseTree::~ParseTree() = default;
 

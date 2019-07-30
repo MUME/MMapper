@@ -22,16 +22,17 @@ class Room;
 class Map final
 {
 public:
-    struct Pimpl;
+    class MapOrderedTree;
 
 private:
-    std::unique_ptr<Pimpl> m_pimpl;
+    std::unique_ptr<MapOrderedTree> m_pimpl;
 
 public:
     Map();
     ~Map();
     DELETE_CTORS_AND_ASSIGN_OPS(Map);
 
+public:
     bool defined(const Coordinate &c) const;
     Coordinate setNearest(const Coordinate &c, Room &room);
     Room *get(const Coordinate &c) const;

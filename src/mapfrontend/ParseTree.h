@@ -23,13 +23,13 @@ class ParseEvent;
 class ParseTree final
 {
 public:
-    struct Pimpl;
+    struct ParseHashMap;
 
 private:
-    std::unique_ptr<Pimpl> m_pimpl;
+    std::unique_ptr<ParseHashMap> m_pimpl;
 
 public:
-    explicit ParseTree(const bool useVerboseKeys = false);
+    explicit ParseTree(bool useVerboseKeys = false);
     ~ParseTree();
     DELETE_CTORS_AND_ASSIGN_OPS(ParseTree);
 
