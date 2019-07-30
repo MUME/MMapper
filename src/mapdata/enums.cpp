@@ -4,6 +4,7 @@
 
 #include "enums.h"
 
+#include <array>
 #include <vector>
 
 #include "../global/enums.h"

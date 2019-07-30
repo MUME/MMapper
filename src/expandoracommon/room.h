@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
 #include <optional>
+#include <vector>
 #include <QVariant>
 #include <QVector>
 

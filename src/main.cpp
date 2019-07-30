@@ -6,6 +6,8 @@
 
 #include <cstdlib>
 #include <memory>
+#include <optional>
+#include <set>
 #include <thread>
 #include <QPixmap>
 #include <QtCore>

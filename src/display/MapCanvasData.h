@@ -3,6 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include <memory>
 #include <QWidget>
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QMouseEvent>

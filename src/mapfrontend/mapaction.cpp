@@ -6,6 +6,7 @@
 #include "mapaction.h"
 
 #include <memory>
+#include <stack>
 #include <utility>
 #include <QMutableVectorIterator>
 

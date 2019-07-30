@@ -7,8 +7,10 @@
 #include <array>
 #include <cassert>
 #include <cstdlib>
+#include <optional>
 #include <set>
 #include <stdexcept>
+#include <vector>
 #include <QMessageLogContext>
 #include <QtGui/qopengl.h>
 #include <QtGui>

@@ -5,6 +5,7 @@
 
 #include <cassert>
 #include <cctype>
+#include <optional>
 #include <string>
 #include <QRegularExpression>
 #include <QString>

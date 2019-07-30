@@ -3,8 +3,11 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "groupselection.h"
-#include "CGroupChar.h"
+
 #include <cassert>
+#include <vector>
+
+#include "CGroupChar.h"
 
 GroupAdmin::~GroupAdmin() = default;
 GroupRecipient::~GroupRecipient() = default;

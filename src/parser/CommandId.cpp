@@ -4,6 +4,7 @@
 
 #include "CommandId.h"
 
+#include <array>
 #include <stdexcept>
 
 #include "../global/enums.h"

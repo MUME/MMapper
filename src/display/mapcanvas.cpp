@@ -9,8 +9,10 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <memory>
 #include <stdexcept>
 #include <utility>
+#include <vector>
 #include <QGestureEvent>
 #include <QMatrix4x4>
 #include <QMessageBox>

@@ -5,6 +5,7 @@
 #include "remoteedit.h"
 
 #include <cassert>
+#include <memory>
 #include <type_traits>
 #include <utility>
 #include <QMessageLogContext>

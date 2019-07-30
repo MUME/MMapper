@@ -5,6 +5,8 @@
 
 #include "room.h"
 
+#include <vector>
+
 #include "../global/random.h"
 
 ExitsList::ExitsList(const bool isDummy)

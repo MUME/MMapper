@@ -5,6 +5,7 @@
 #include "remoteeditwidget.h"
 
 #include <cassert>
+#include <optional>
 #include <utility>
 #include <QAction>
 #include <QMenu>

@@ -4,6 +4,7 @@
 
 #include "GroupPortMapper.h"
 
+#include <memory>
 #include <QDebug>
 
 #ifndef MMAPPER_NO_MINIUPNPC
