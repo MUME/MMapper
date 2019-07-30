@@ -198,6 +198,10 @@ Coordinate Map::setNearest(const Coordinate &in_c, Room &room)
 
 Coordinate Map::getNearestFree(const Coordinate &p)
 {
+    if (!m_pimpl->defined(p)) {
+        return p;
+    }
+
     Coordinate c;
     const int sum1 = (p.x + p.y + p.z) / 2;
     const int sum2 = (p.x + p.y + p.z + 1) / 2;
