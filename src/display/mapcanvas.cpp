@@ -430,12 +430,10 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
             InfoMarkSelection tmpSel(m_data, c1);
             if (m_infoMarkSelection != nullptr && !tmpSel.isEmpty()
                 && m_infoMarkSelection->contains(tmpSel.front())) {
-                m_infoMarkSelectionMove.inUse = true;
-                m_infoMarkSelectionMove.pos = Coordinate2f{};
-
+                m_infoMarkSelectionMove.emplace();
             } else {
                 m_selectedArea = false;
-                m_infoMarkSelectionMove.inUse = false;
+                m_infoMarkSelectionMove.reset();
             }
         }
         update();
@@ -470,11 +468,9 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
                 const auto tmpSel = RoomSelection::createSelection(*m_data, m_sel1.getCoordinate());
                 if ((m_roomSelection != nullptr) && !tmpSel->isEmpty()
                     && m_roomSelection->contains(tmpSel->begin().key())) {
-                    m_roomSelectionMove.pos = Coordinate2i{};
-                    m_roomSelectionMove.inUse = true;
-                    m_roomSelectionMove.wrongPlace = false;
+                    m_roomSelectionMove.emplace();
                 } else {
-                    m_roomSelectionMove.inUse = false;
+                    m_roomSelectionMove.reset();
                     m_selectedArea = false;
                     clearRoomSelection();
                 }
@@ -571,8 +567,8 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
     switch (m_canvasMouseMode) {
     case CanvasMouseMode::SELECT_INFOMARKS:
         if ((event->buttons() & Qt::LeftButton) != 0u) {
-            if (m_infoMarkSelectionMove.inUse) {
-                m_infoMarkSelectionMove.pos = m_sel2.pos - m_sel1.pos;
+            if (m_infoMarkSelectionMove.has_value()) {
+                m_infoMarkSelectionMove->pos = m_sel2.pos - m_sel1.pos;
                 setCursor(Qt::ClosedHandCursor);
 
             } else {
@@ -607,12 +603,12 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
 
     case CanvasMouseMode::SELECT_ROOMS:
         if ((event->buttons() & Qt::LeftButton) != 0u) {
-            if (m_roomSelectionMove.inUse) {
+            if (m_roomSelectionMove.has_value()) {
                 const auto diff = m_sel2.pos.round() - m_sel1.pos.round();
                 const auto wrongPlace = !m_roomSelection->isMovable(Coordinate{diff, 0});
 
-                m_roomSelectionMove.pos = diff;
-                m_roomSelectionMove.wrongPlace = wrongPlace;
+                m_roomSelectionMove->pos = diff;
+                m_roomSelectionMove->wrongPlace = wrongPlace;
 
                 setCursor(wrongPlace ? Qt::ForbiddenCursor : Qt::ClosedHandCursor);
             } else {
@@ -692,11 +688,11 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
         setCursor(Qt::ArrowCursor);
         if (m_mouseLeftPressed) {
             m_mouseLeftPressed = false;
-            if (m_infoMarkSelectionMove.inUse) {
-                m_infoMarkSelectionMove.inUse = false;
+            if (m_infoMarkSelectionMove.has_value()) {
+                const auto pos = m_infoMarkSelectionMove->pos;
+                m_infoMarkSelectionMove.reset();
                 if (m_infoMarkSelection != nullptr) {
-                    const auto offset
-                        = Coordinate{(m_infoMarkSelectionMove.pos * INFOMARK_SCALE).round(), 0};
+                    const auto offset = Coordinate{(pos * INFOMARK_SCALE).round(), 0};
 
                     // Update infomark location
                     for (auto mark : *m_infoMarkSelection) {
@@ -748,13 +744,16 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
         if (m_mouseLeftPressed) {
             m_mouseLeftPressed = false;
 
-            if (m_roomSelectionMove.inUse) {
-                m_roomSelectionMove.inUse = false;
-                if (!m_roomSelectionMove.wrongPlace && (m_roomSelection != nullptr)) {
-                    const Coordinate moverel(m_roomSelectionMove.pos, 0);
+            if (m_roomSelectionMove.has_value()) {
+                const auto pos = m_roomSelectionMove->pos;
+                const bool wrongPlace = m_roomSelectionMove->wrongPlace;
+                m_roomSelectionMove.reset();
+                if (!wrongPlace && (m_roomSelection != nullptr)) {
+                    const Coordinate moverel{pos, 0};
                     m_data->execute(new GroupMapAction(new MoveRelative(moverel), m_roomSelection),
                                     m_roomSelection);
                 }
+
             } else {
                 if (m_roomSelection == nullptr) {
                     // add rooms to default selections
@@ -1466,7 +1465,7 @@ void MapCanvas::paintSelectedRoom(const Room *const room)
     gl.apply(XEnable{XOption::BLEND});
     gl.apply(XDisable{XOption::DEPTH_TEST});
 
-    if (!m_roomSelectionMove.inUse
+    if (!m_roomSelectionMove.has_value()
         && ((x < m_visible1.x) || (x > m_visible2.x) || (y < m_visible1.y) || (y > m_visible2.y))) {
         // Room is distant
         const float cameraCenterX = (m_visible1.x + m_visible2.x) / 2.0f;
@@ -1521,16 +1520,10 @@ void MapCanvas::paintSelectedRoom(const Room *const room)
                                Vec3f{1, 0, 0.005f},
                                Vec3f{1, 0 + len, 0.005f}});
 
-    if (m_roomSelectionMove.inUse) {
-        if (m_roomSelectionMove.wrongPlace) {
-            gl.apply(XColor4f{Qt::red, 0.4f});
-        } else {
-            gl.apply(XColor4f{Qt::white, 0.4f});
-        }
-
-        gl.glTranslatef(m_roomSelectionMove.pos.x,
-                        m_roomSelectionMove.pos.y,
-                        ROOM_Z_DISTANCE * layer);
+    if (m_roomSelectionMove.has_value()) {
+        gl.apply(XColor4f{m_roomSelectionMove->wrongPlace ? Qt::red : Qt::white, 0.4f});
+        const auto &pos = m_roomSelectionMove->pos;
+        gl.glTranslatef(pos.x, pos.y, ROOM_Z_DISTANCE * layer);
         gl.callList(m_gllist.room);
     }
 
@@ -1602,8 +1595,8 @@ void MapCanvas::paintSelectedInfoMark(const InfoMark *const marker)
 
     draw_info_mark(marker, dx, dy);
 
-    if (m_infoMarkSelectionMove.inUse) {
-        gl.glTranslatef(m_infoMarkSelectionMove.pos.x, m_infoMarkSelectionMove.pos.y, 0.0f);
+    if (m_infoMarkSelectionMove.has_value()) {
+        gl.glTranslatef(m_infoMarkSelectionMove->pos.x, m_infoMarkSelectionMove->pos.y, 0.0f);
         draw_info_mark(marker, dx, dy);
     }
 

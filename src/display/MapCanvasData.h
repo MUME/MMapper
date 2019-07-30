@@ -4,6 +4,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include <memory>
+#include <optional>
 #include <QWidget>
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QMouseEvent>
@@ -117,18 +118,24 @@ struct MapCanvasData
     struct RoomSelMove final
     {
         Coordinate2i pos{};
-        bool inUse = false;
         bool wrongPlace = false;
-    } m_roomSelectionMove{};
+        explicit RoomSelMove()
+            : pos{}
+        {}
+    };
+
+    std::optional<RoomSelMove> m_roomSelectionMove{};
 
     InfoMarkSelection *m_infoMarkSelection = nullptr;
 
     struct InfoMarkSelectionMove final
     {
         Coordinate2f pos{};
-        bool inUse = false;
-
-    } m_infoMarkSelectionMove{};
+        explicit InfoMarkSelectionMove()
+            : pos{}
+        {}
+    };
+    std::optional<InfoMarkSelectionMove> m_infoMarkSelectionMove{};
 
     ConnectionSelection *m_connectionSelection = nullptr;
 

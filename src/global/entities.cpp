@@ -7,6 +7,7 @@
 #include <cassert>
 #include <cstdint>
 #include <initializer_list>
+#include <optional>
 #include <unordered_map>
 #include <QByteArray>
 #include <QHash>
@@ -354,25 +355,7 @@ struct XmlEntity final
     DEFAULT_RULE_OF_5(XmlEntity);
 };
 
-struct OptQByteArray
-{
-    QByteArray arr;
-    bool valid = false;
-
-    explicit OptQByteArray() = default;
-    explicit OptQByteArray(QByteArray _arr)
-        : arr{_arr}
-        , valid{true}
-    {}
-
-    explicit operator bool() const { return valid; }
-
-    void value() && = delete;
-    void value() const && = delete;
-
-    QByteArray &value() & { return arr; }
-    const QByteArray &value() const & { return arr; }
-};
+using OptQByteArray = std::optional<QByteArray>;
 
 struct EntityTable final
 {
@@ -444,7 +427,7 @@ OptQByteArray EntityTable::lookup_entity_short_name_by_id(const XmlEntityId id) 
     const auto it = map.find(id);
     if (it != map.end())
         return OptQByteArray{it->second.short_name};
-    return OptQByteArray{};
+    return std::nullopt;
 }
 
 OptQByteArray EntityTable::lookup_entity_full_name_by_id(const XmlEntityId id) const
@@ -453,7 +436,7 @@ OptQByteArray EntityTable::lookup_entity_full_name_by_id(const XmlEntityId id) c
     const auto it = map.find(id);
     if (it != map.end())
         return OptQByteArray{it->second.full_name};
-    return OptQByteArray{};
+    return std::nullopt;
 }
 
 static const char *translit(const QChar qc)
