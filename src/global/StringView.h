@@ -15,7 +15,7 @@
  * TODO: Convert this to 8bit and use std::string instead of QString,
  * and allow views of string constants and character arrays.
  */
-struct StringView
+struct StringView final
 {
 public:
     using const_iterator = QString::const_iterator;
@@ -26,7 +26,7 @@ private:
 
 public:
     StringView() noexcept = default;
-    explicit StringView(const const_iterator beg, const const_iterator end) noexcept;
+    explicit StringView(const_iterator beg, const_iterator end) noexcept;
     explicit StringView(const QString &s) noexcept(false);
 
 public:

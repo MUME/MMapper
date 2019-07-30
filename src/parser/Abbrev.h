@@ -11,7 +11,7 @@
 
 #include "../global/StringView.h"
 
-bool isAbbrev(StringView input, const char *const command, const int minAbbrev);
+bool isAbbrev(StringView input, const char *command, int minAbbrev);
 
 struct Abbrev
 {
@@ -24,7 +24,7 @@ public:
     Abbrev() = default;
     explicit Abbrev(std::nullptr_t) = delete;
     explicit Abbrev(std::nullptr_t, int) = delete;
-    explicit Abbrev(const char *const arg_command, const int arg_minAbbrev = -1);
+    explicit Abbrev(const char *arg_command, int arg_minAbbrev = -1);
 
     bool matches(StringView input) const { return ::isAbbrev(input, command, minAbbrev); }
     explicit operator bool() const;

@@ -23,7 +23,7 @@ class ParseEvent;
 class ParseTree final
 {
 public:
-    struct ParseHashMap;
+    class ParseHashMap;
 
 private:
     std::unique_ptr<ParseHashMap> m_pimpl;

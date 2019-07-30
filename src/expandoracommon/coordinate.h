@@ -22,8 +22,8 @@ struct Coordinate2i final
 
 struct Coordinate2f final
 {
-    float x = 0.0f;
-    float y = 0.0f;
+    float x = 0.f;
+    float y = 0.f;
     Coordinate2f() = default;
     explicit Coordinate2f(const float x, const float y)
         : x{x}
@@ -37,7 +37,7 @@ struct Coordinate2f final
         return Coordinate2f{this->x - rhs.x, this->y - rhs.y};
     }
     Coordinate2f operator*(const float f) const { return Coordinate2f{f * x, f * y}; }
-    Coordinate2f operator/(const float f) const;
+    Coordinate2f operator/(float f) const;
 };
 
 // Basis vectors: ESU (x=east, y=south, z=up).

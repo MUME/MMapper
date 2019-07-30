@@ -94,7 +94,7 @@ public slots:
 
 public:
     explicit RoomEditAttrDlg(QWidget *parent = nullptr);
-    ~RoomEditAttrDlg();
+    ~RoomEditAttrDlg() override;
 
     void readSettings();
     void writeSettings();

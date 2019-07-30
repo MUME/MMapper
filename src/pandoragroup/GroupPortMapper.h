@@ -8,7 +8,7 @@
 #include <memory>
 #include <QByteArray>
 
-class GroupPortMapper
+class GroupPortMapper final
 {
 public:
     struct Pimpl;
@@ -22,6 +22,6 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(GroupPortMapper);
 
     QByteArray tryGetExternalIp();
-    bool tryAddPortMapping(const quint16 port);
-    bool tryDeletePortMapping(const quint16 port);
+    bool tryAddPortMapping(quint16 port);
+    bool tryDeletePortMapping(quint16 port);
 };

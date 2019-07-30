@@ -50,7 +50,7 @@ struct ExitDirConstRef final
 {
     const ExitDirEnum dir;
     const Exit &exit;
-    explicit ExitDirConstRef(const ExitDirEnum dir, const Exit &exit);
+    explicit ExitDirConstRef(ExitDirEnum dir, const Exit &exit);
 };
 
 using OptionalExitDirConstRef = std::optional<ExitDirConstRef>;

@@ -18,7 +18,7 @@ static constexpr const ExitFlagExtEnum EXITS_FLAGS_VALID = ExitFlagExtEnum::EXIT
 
 /* FIXME: This name creates a lot of confusion with ExitFlags.
  * Maybe just make it an array of ExitFlags? */
-class ExitsFlagsType
+class ExitsFlagsType final
 {
 public:
     static constexpr const uint32_t MASK = (ExitFlagEnum::EXIT | ExitFlagEnum::DOOR
@@ -31,7 +31,7 @@ public:
 private:
     uint32_t value = 0u;
 
-    static int getShift(ExitDirEnum dir)
+    static int getShift(const ExitDirEnum dir)
     {
         assert(static_cast<int>(dir) < NUM_DIRS);
         return static_cast<int>(dir) * SHIFT;

@@ -96,7 +96,7 @@ class GroupWidget final : public QWidget
     Q_OBJECT
 public:
     explicit GroupWidget(Mmapper2Group *group, MapData *md, QWidget *parent = nullptr);
-    virtual ~GroupWidget();
+    virtual ~GroupWidget() override;
 
 public slots:
     void updateLabels();

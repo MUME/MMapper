@@ -121,7 +121,7 @@ public slots:
     void onModeGroupOff();
     void onModeGroupClient();
     void onModeGroupServer();
-    void groupNetworkStatus(const bool toggle);
+    void groupNetworkStatus(bool toggle);
 
     void onCheckForUpdate();
     void voteForMUMEOnTMC();

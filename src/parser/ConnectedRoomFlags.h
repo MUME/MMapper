@@ -23,7 +23,7 @@ inline DirectionalLightEnum operator|(DirectionalLightEnum lhs, DirectionalLight
 static constexpr const auto ANY_DIRECT_SUNLIGHT = (bit1 | bit3 | bit5 | bit7 | bit9 | bit11);
 static constexpr const auto CONNECTED_ROOM_FLAGS_VALID = bit15;
 
-class ConnectedRoomFlagsType
+class ConnectedRoomFlagsType final
 {
 private:
     uint16_t flags = 0;

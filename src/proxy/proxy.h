@@ -47,7 +47,7 @@ public:
                    MapCanvas *,
                    qintptr &,
                    ConnectionListener *);
-    ~Proxy();
+    ~Proxy() override;
 
 public slots:
     void start();

@@ -19,13 +19,13 @@ Coordinate2i Coordinate2f::round() const
 
 Coordinate2f Coordinate2f::operator/(const float f) const
 {
-    if (f == 0.0f)
+    if (f == 0.f)
         throw std::runtime_error("division by zero");
 
     if (std::isnan(f))
         throw std::runtime_error("division by NaN");
 
-    return operator*(1.0f / f);
+    return operator*(1.f / f);
 }
 
 bool Coordinate::operator==(const Coordinate &other) const

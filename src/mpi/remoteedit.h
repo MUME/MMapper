@@ -25,7 +25,7 @@ public:
     explicit RemoteEdit(QObject *parent = nullptr)
         : QObject(parent)
     {}
-    ~RemoteEdit() = default;
+    ~RemoteEdit() override = default;
 
 public slots:
     void remoteView(const QString &, const QString &);

@@ -71,7 +71,7 @@ public:
 
 public:
     static IOException withCurrentErrno();
-    static IOException withErrorNumber(const int error_number);
+    static IOException withErrorNumber(int error_number);
 };
 
 class ErrorNumberMessage final

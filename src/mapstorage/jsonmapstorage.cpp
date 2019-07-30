@@ -39,7 +39,7 @@ static constexpr const int ZONE_WIDTH = 20;
  * MD5 is for convenience (easily available in all languages), the rest makes
  * the hash resilient to trivial typo fixes by the builders.
  */
-class WebHasher
+class WebHasher final
 {
     QCryptographicHash m_hash;
 
@@ -71,7 +71,7 @@ public:
 
 // Lets the webclient locate and load the useful zones only, not the whole
 // world at once.
-class RoomHashIndex
+class RoomHashIndex final
 {
 public:
     using Index = QMultiMap<QByteArray, Coordinate>;
@@ -93,7 +93,7 @@ public:
 };
 
 // Splits the world in zones easier to download and load
-class ZoneIndex
+class ZoneIndex final
 {
 public:
     using Index = QMap<QString, ConstRoomList>;
@@ -143,7 +143,7 @@ void writeJson(const QString &filePath, JsonT json, const QString &what)
     }
 }
 
-class RoomIndexStore
+class RoomIndexStore final
 {
     const QDir m_dir;
     QJsonObject m_hashes;
@@ -227,7 +227,7 @@ uint JsonRoomIdsCache::size() const
 }
 
 // Expects that a RoomSaver locks the Rooms for the lifetime of this object!
-class JsonWorld
+class JsonWorld final
 {
     JsonRoomIdsCache m_jRoomIds;
     RoomHashIndex m_roomHashIndex;

@@ -36,9 +36,9 @@ const MMapper::Array<CommandEnum, NUM_COMMANDS> &getAllCommands();
 
 } // namespace enums
 
-bool isDirectionNESWUD(const CommandEnum cmd);
-bool isDirection7(const CommandEnum cmd);
-ExitDirEnum getDirection(const CommandEnum cmd);
+bool isDirectionNESWUD(CommandEnum cmd);
+bool isDirection7(CommandEnum cmd);
+ExitDirEnum getDirection(CommandEnum cmd);
 
-const char *getUppercase(const CommandEnum cmd);
-const char *getLowercase(const CommandEnum cmd);
+const char *getUppercase(CommandEnum cmd);
+const char *getLowercase(CommandEnum cmd);

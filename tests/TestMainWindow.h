@@ -4,12 +4,12 @@
 
 #include <QObject>
 
-class TestMainWindow : public QObject
+class TestMainWindow final : public QObject
 {
     Q_OBJECT
 public:
     TestMainWindow();
-    ~TestMainWindow();
+    ~TestMainWindow() override;
 
 private:
 private Q_SLOTS:

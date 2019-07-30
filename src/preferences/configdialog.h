@@ -25,7 +25,7 @@ class ConfigDialog : public QDialog
 
 public:
     explicit ConfigDialog(Mmapper2Group *, QWidget *parent = nullptr);
-    ~ConfigDialog();
+    ~ConfigDialog() override;
 
 public slots:
     void changePage(QListWidgetItem *current, QListWidgetItem *previous);

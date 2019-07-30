@@ -60,7 +60,7 @@ class RemoteEditInternalSession : public RemoteEditSession
 public:
     explicit RemoteEditInternalSession(
         uint sessionId, int key, const QString &title, const QString &body, RemoteEdit *remoteEdit);
-    ~RemoteEditInternalSession();
+    ~RemoteEditInternalSession() override;
 
 private:
     QScopedPointer<RemoteEditWidget> m_widget;
@@ -72,7 +72,7 @@ class RemoteEditExternalSession : public RemoteEditSession
 public:
     explicit RemoteEditExternalSession(
         uint sessionId, int key, const QString &title, const QString &body, RemoteEdit *remoteEdit);
-    ~RemoteEditExternalSession();
+    ~RemoteEditExternalSession() override;
 
 private:
     QScopedPointer<RemoteEditProcess> m_process;

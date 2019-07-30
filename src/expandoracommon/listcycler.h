@@ -36,7 +36,7 @@ template<class T, class C>
 const T &ListCycler<T, C>::next()
 {
     static const T invalid{};
-    const uint32_t nSize = static_cast<uint32_t>(C::size());
+    const auto nSize = static_cast<uint32_t>(C::size());
 
     if (pos >= nSize)
         pos = 0;
@@ -53,7 +53,7 @@ template<class T, class C>
 const T &ListCycler<T, C>::prev()
 {
     static const T invalid{};
-    const uint32_t nSize = static_cast<uint32_t>(C::size());
+    const auto nSize = static_cast<uint32_t>(C::size());
 
     if (pos == 0) {
         pos = nSize;

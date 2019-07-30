@@ -77,7 +77,7 @@ void MapStorage::newData()
     Coordinate pos;
     m_mapData.setPosition(pos);
 
-    //clear previous map
+    // clear previous map
     m_mapData.clear();
     emit onNewData();
 }
@@ -272,7 +272,7 @@ void MapStorage::loadExits(Room &room, QDataStream &stream, const uint32_t versi
 
 bool MapStorage::loadData()
 {
-    //clear previous map
+    // clear previous map
     m_mapData.clear();
     try {
         return mergeData();
@@ -294,9 +294,6 @@ bool MapStorage::mergeData()
         baseId = m_mapData.getMaxId().asUint32() + 1u;
         basePosition = m_mapData.getMax();
         if (basePosition.x + basePosition.y + basePosition.z != 0) {
-            //basePosition.y++;
-            //basePosition.x = 0;
-            //basePosition.z = 0;
             basePosition.y = 0;
             basePosition.x = 0;
             basePosition.z = -1;
@@ -544,11 +541,11 @@ bool MapStorage::saveData(bool baseMapOnly)
     QDataStream stream(&buffer);
     stream.setVersion(QDataStream::Qt_4_8);
 
-    //write counters
+    // write counters
     stream << static_cast<quint32>(roomsCount);
     stream << static_cast<quint32>(marksCount);
 
-    //write selected room x,y
+    // write selected room x,y
     Coordinate &self = m_mapData.getPosition();
     stream << static_cast<qint32>(self.x);
     stream << static_cast<qint32>(self.y);

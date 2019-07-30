@@ -30,7 +30,7 @@ private:
 
 public:
     RoomSignalHandler() = delete;
-    RoomSignalHandler(QObject *parent)
+    explicit RoomSignalHandler(QObject *parent)
         : QObject(parent)
     {}
     /* receiving from our clients: */

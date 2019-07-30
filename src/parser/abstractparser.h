@@ -209,9 +209,9 @@ private:
     bool parseDoorAction(StringView words);
     bool parseDoorFlags(StringView words);
     bool parseExitFlags(StringView words);
-    bool parseField(const StringView view);
-    bool parseMobFlags(const StringView view);
-    bool parseLoadFlags(const StringView view);
+    bool parseField(StringView view);
+    bool parseMobFlags(StringView view);
+    bool parseLoadFlags(StringView view);
     void parseSetCommand(StringView view);
     void parseName(StringView view);
     void parseNoteCmd(StringView view);

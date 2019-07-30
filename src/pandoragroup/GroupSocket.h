@@ -27,7 +27,7 @@ class GroupSocket final : public QObject
     Q_OBJECT
 public:
     explicit GroupSocket(GroupAuthority *authority, QObject *parent);
-    virtual ~GroupSocket();
+    virtual ~GroupSocket() override;
 
     void setSocket(qintptr socketDescriptor);
     void connectToHost();

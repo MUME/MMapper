@@ -38,7 +38,7 @@ signals:
 
 public:
     explicit Mmapper2Group(QObject *parent = nullptr);
-    virtual ~Mmapper2Group();
+    ~Mmapper2Group() override;
 
     void start();
     void stop();

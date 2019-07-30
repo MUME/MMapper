@@ -18,7 +18,7 @@ class AnsiColorDialog : public QDialog
 public:
     explicit AnsiColorDialog(const QString &ansiString, QWidget *parent = nullptr);
     explicit AnsiColorDialog(QWidget *parent = nullptr);
-    ~AnsiColorDialog();
+    ~AnsiColorDialog() override;
 
     QString getAnsiString() const { return ansiString; }
 

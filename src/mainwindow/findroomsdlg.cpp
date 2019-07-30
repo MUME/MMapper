@@ -88,7 +88,8 @@ FindRoomsDlg::~FindRoomsDlg()
 
 void FindRoomsDlg::findClicked()
 {
-    Qt::CaseSensitivity cs = caseCheckBox->isChecked() ? Qt::CaseSensitive : Qt::CaseInsensitive;
+    const Qt::CaseSensitivity cs = caseCheckBox->isChecked() ? Qt::CaseSensitive
+                                                             : Qt::CaseInsensitive;
     QString text = lineEdit->text();
     // remove latin1
     text = ParserUtils::latinToAsciiInPlace(text);
@@ -134,7 +135,8 @@ void FindRoomsDlg::findClicked()
                                  .arg((resultTable->topLevelItemCount() == 1) ? "" : "s"));
 }
 
-QString FindRoomsDlg::constructToolTip(const Room *r)
+// FIXME: This code is almost identical to the code in MapCanvas::mouseReleaseEvent. Refactor!
+QString FindRoomsDlg::constructToolTip(const Room *const r)
 {
     // taken from MapCanvas:
     QString etmp = "Exits:";

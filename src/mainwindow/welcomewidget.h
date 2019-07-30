@@ -13,13 +13,13 @@ namespace Ui {
 class WelcomeWidget;
 }
 
-class WelcomeWidget : public QWidget
+class WelcomeWidget final : public QWidget
 {
     Q_OBJECT
 
 public:
     explicit WelcomeWidget(QWidget *parent = nullptr);
-    ~WelcomeWidget();
+    ~WelcomeWidget() override;
 
 public slots:
     void onPlayButtonClicked(bool);

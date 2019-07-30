@@ -20,7 +20,7 @@ class MumeClockWidget : public QWidget, private Ui::MumeClockWidget
     Q_OBJECT
 public:
     explicit MumeClockWidget(MumeClock *clock = nullptr, QWidget *parent = nullptr);
-    ~MumeClockWidget();
+    ~MumeClockWidget() override;
 
 public slots:
     void updateLabel();

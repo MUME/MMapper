@@ -56,13 +56,13 @@ public:
 
 protected:
     void sendCharUpdate(GroupSocket *, const QVariantMap &);
-    void sendMessage(GroupSocket *, const MessagesEnum, const QByteArray & = "");
-    void sendMessage(GroupSocket *, const MessagesEnum, const QVariantMap &);
+    void sendMessage(GroupSocket *, MessagesEnum, const QByteArray & = "");
+    void sendMessage(GroupSocket *, MessagesEnum, const QVariantMap &);
 
     virtual void sendGroupTellMessage(const QVariantMap &map) = 0;
     virtual void sendCharRename(const QVariantMap &map) = 0;
 
-    QByteArray formMessageBlock(const MessagesEnum message, const QVariantMap &data);
+    QByteArray formMessageBlock(MessagesEnum message, const QVariantMap &data);
     CGroup *getGroup();
     GroupAuthority *getAuthority();
 

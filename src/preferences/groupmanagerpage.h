@@ -22,7 +22,7 @@ class GroupManagerPage : public QWidget
     Q_OBJECT
 public:
     explicit GroupManagerPage(Mmapper2Group *, QWidget *parent = nullptr);
-    ~GroupManagerPage();
+    ~GroupManagerPage() override;
 
 public slots:
     void changeColorClicked();

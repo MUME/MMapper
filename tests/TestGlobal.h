@@ -4,12 +4,12 @@
 
 #include <QObject>
 
-class TestGlobal : public QObject
+class TestGlobal final : public QObject
 {
     Q_OBJECT
 public:
     TestGlobal();
-    ~TestGlobal();
+    ~TestGlobal() override;
 
 private Q_SLOTS:
     void ansi256ColorTest();

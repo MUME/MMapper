@@ -17,7 +17,7 @@ class QXmlStreamWriter;
  * This saves to a XML file following the MMP Specification defined at:
  * https://wiki.mudlet.org/w/Standards:MMP
  */
-class MmpMapStorage : public AbstractMapStorage
+class MmpMapStorage final : public AbstractMapStorage
 {
     Q_OBJECT
 

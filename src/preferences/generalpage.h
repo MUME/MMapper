@@ -39,7 +39,7 @@ public slots:
 
 public:
     explicit GeneralPage(QWidget *parent = nullptr);
-    ~GeneralPage();
+    ~GeneralPage() override;
 
 private:
     Ui::GeneralPage *ui = nullptr;

@@ -70,10 +70,11 @@ public:
     {}
 
 public:
-    ParseEvent(ParseEvent &&) = default;
-    explicit ParseEvent(const ParseEvent &other);
+    DEFAULT_MOVE_CTOR(ParseEvent);
+    ParseEvent(const ParseEvent &other);
 
 public:
+    /* NOTE: This handles both the move and copy assignment operators. */
     ParseEvent &operator=(ParseEvent);
     static void swap(ParseEvent &lhs, ParseEvent &rhs);
     ParseEvent clone() const { return ParseEvent{*this}; }
@@ -107,7 +108,7 @@ public:
     ConnectedRoomFlagsType getConnectedRoomFlags() const;
 
 public:
-    static SharedParseEvent createEvent(const CommandEnum c,
+    static SharedParseEvent createEvent(CommandEnum c,
                                         const QString &roomName,
                                         const QString &dynamicDesc,
                                         const QString &staticDesc,

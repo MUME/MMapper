@@ -5,6 +5,7 @@
 #include "remoteeditwidget.h"
 
 #include <cassert>
+#include <cctype>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -244,7 +245,7 @@ public:
                         // but they could also be intended, so they're not errors.
                         // TODO: add a feature to fix these on a case-by-case basis?
                         setFormat(pos - 1, 2, get_utf8_fmt());
-                    } else if (::iscntrl(c) || (!::isprint(c) && !::isspace(c))) {
+                    } else if (std::iscntrl(c) || (!std::isprint(c) && !std::isspace(c))) {
                         setFormat(pos, 1, get_unprintable_fmt());
                     }
                 }

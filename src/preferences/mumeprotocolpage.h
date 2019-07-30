@@ -13,13 +13,13 @@ namespace Ui {
 class MumeProtocolPage;
 }
 
-class MumeProtocolPage : public QWidget
+class MumeProtocolPage final : public QWidget
 {
     Q_OBJECT
 
 public:
     explicit MumeProtocolPage(QWidget *parent = nullptr);
-    ~MumeProtocolPage();
+    ~MumeProtocolPage() override;
 
 public slots:
     void remoteEditCheckBoxStateChanged(int);

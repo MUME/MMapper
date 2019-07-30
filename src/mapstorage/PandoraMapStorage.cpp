@@ -33,7 +33,7 @@ void PandoraMapStorage::newData()
 
 bool PandoraMapStorage::loadData()
 {
-    //clear previous map
+    // clear previous map
     m_mapData.clear();
     try {
         return mergeData();

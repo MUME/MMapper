@@ -9,7 +9,7 @@
 #include "../global/utils.h"
 #include "../mapdata/mmapper2room.h"
 
-class PromptFlagsType
+class PromptFlagsType final
 {
 public:
     // bit0-3 -> char representation of RoomTerrainEnum

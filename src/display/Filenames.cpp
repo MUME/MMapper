@@ -68,7 +68,7 @@ static const char *getFilenameSuffix(const RoadIndexMaskEnum x)
 }
 
 template<RoadTagEnum Tag>
-static inline const char *getFilenameSuffix(TaggedRoadIndex<Tag> x)
+static inline const char *getFilenameSuffix(const TaggedRoadIndex<Tag> &x)
 {
     return getFilenameSuffix(x.index);
 }

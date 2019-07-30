@@ -22,7 +22,7 @@ class QObject;
  * - v1/roomindex/ss.json (room sums -> zone coords).
  * - v1/zone/xx-yy.json (full info on the NxN rooms zone at coords xx,yy).
  */
-class JsonMapStorage : public AbstractMapStorage
+class JsonMapStorage final : public AbstractMapStorage
 {
     Q_OBJECT
 

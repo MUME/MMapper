@@ -24,21 +24,21 @@ enum class TelnetDataEnum {
     UNKNOWN
 };
 
-struct IncomingData
+struct IncomingData final
 {
     IncomingData() = default;
     QByteArray line;
     TelnetDataEnum type = TelnetDataEnum::SPLIT;
 };
 
-class TelnetFilter : public QObject
+class TelnetFilter final : public QObject
 {
     Q_OBJECT
     using TelnetIncomingDataQueue = QQueue<IncomingData>;
 
 public:
     explicit TelnetFilter(QObject *parent);
-    ~TelnetFilter() = default;
+    ~TelnetFilter() override = default;
 
 public slots:
     void onAnalyzeMudStream(const QByteArray &ba, bool goAhead);

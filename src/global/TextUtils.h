@@ -159,8 +159,8 @@ bool isValidAnsiColor(const QString &ansi);
 int countLines(const QString &input);
 int countLines(const QStringRef &input);
 
-int measureExpandedTabsOneLine(const QStringRef &line, const int starting_at);
-int measureExpandedTabsOneLine(const QString &line, const int starting_at);
+int measureExpandedTabsOneLine(const QStringRef &line, int starting_at);
+int measureExpandedTabsOneLine(const QString &line, int starting_at);
 int measureExpandedTabsMultiline(const QStringRef &old);
 int measureExpandedTabsMultiline(const QString &old);
 

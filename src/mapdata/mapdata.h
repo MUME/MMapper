@@ -44,7 +44,7 @@ using ConstRoomList = QList<const Room *>;
 using MarkerList = QLinkedList<InfoMark *>;
 using MarkerListIterator = QLinkedListIterator<InfoMark *>;
 
-class MapData : public MapFrontend
+class MapData final : public MapFrontend
 {
     Q_OBJECT
     friend class RoomSelection;

@@ -38,13 +38,13 @@ public:
     /// get currently selected ANSI code like 32 for green colour
     int getAnsiCode() const;
 
-    void setAnsiCode(const int);
+    void setAnsiCode(int);
 
     static constexpr const char *NONE = "none";
     static constexpr const int DEFAULT_FG = 254;
     static constexpr const int DEFAULT_BG = 255;
 
-    struct AnsiColor
+    struct AnsiColor final
     {
         QColor colFg = ansiColor(AnsiColorTableEnum::white);
         QColor colBg = ansiColor(AnsiColorTableEnum::black);

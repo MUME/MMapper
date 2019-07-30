@@ -22,7 +22,7 @@ public:
 class GroupRecipient
 {
 public:
-    virtual void receiveCharacters(GroupAdmin *, const std::vector<CGroupChar *>) = 0;
+    virtual void receiveCharacters(GroupAdmin *, std::vector<CGroupChar *>) = 0;
     virtual ~GroupRecipient();
 };
 

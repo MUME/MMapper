@@ -17,8 +17,8 @@ struct GroupPortMapper::Pimpl
     Pimpl() = default;
     virtual ~Pimpl();
     virtual QByteArray tryGetExternalIp() = 0;
-    virtual bool tryAddPortMapping(const quint16 port) = 0;
-    virtual bool tryDeletePortMapping(const quint16 port) = 0;
+    virtual bool tryAddPortMapping(quint16 port) = 0;
+    virtual bool tryDeletePortMapping(quint16 port) = 0;
 };
 
 GroupPortMapper::Pimpl::~Pimpl() = default;

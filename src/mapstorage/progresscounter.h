@@ -17,7 +17,7 @@ class ProgressCounter final : public QObject
 public:
     ProgressCounter() = default;
     explicit ProgressCounter(QObject *parent);
-    virtual ~ProgressCounter() = default;
+    virtual ~ProgressCounter() override = default;
 
 public:
     void step(quint32 steps = 1u);

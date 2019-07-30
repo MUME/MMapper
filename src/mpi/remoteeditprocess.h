@@ -22,7 +22,7 @@ public:
                                const QString &title,
                                const QString &body,
                                QObject *parent = nullptr);
-    ~RemoteEditProcess();
+    ~RemoteEditProcess() override;
 
 protected slots:
     virtual void onError(QProcess::ProcessError);

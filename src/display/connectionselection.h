@@ -38,12 +38,12 @@ struct MouseSel final
     }
 };
 
-class ConnectionSelection : public QObject, public RoomRecipient
+class ConnectionSelection final : public QObject, public RoomRecipient
 {
     Q_OBJECT
 
 public:
-    struct ConnectionDescriptor
+    struct ConnectionDescriptor final
     {
         const Room *room = nullptr;
         ExitDirEnum direction = ExitDirEnum::NONE;
