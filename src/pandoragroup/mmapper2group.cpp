@@ -5,6 +5,7 @@
 
 #include "mmapper2group.h"
 
+#include <memory>
 #include <QColor>
 #include <QDateTime>
 #include <QMessageLogContext>
@@ -77,10 +78,10 @@ Mmapper2Group::~Mmapper2Group()
     stop();
 
     // Release resources
-    authority.reset(nullptr);
-    group.reset(nullptr);
-    network.reset(nullptr);
-    thread.reset(nullptr);
+    authority.reset();
+    group.reset();
+    network.reset();
+    thread.reset();
 
     qInfo() << "Terminated Group Manager service";
 }
@@ -99,8 +100,8 @@ void Mmapper2Group::start()
 
 bool Mmapper2Group::init()
 {
-    group.reset(new CGroup(this));
-    authority.reset(new GroupAuthority(this));
+    group = std::make_unique<CGroup>(this);
+    authority = std::make_unique<GroupAuthority>(this);
 
     connect(group.get(), &CGroup::log, this, &Mmapper2Group::sendLog);
     connect(group.get(),
@@ -532,10 +533,10 @@ void Mmapper2Group::startNetwork()
         // Create network
         switch (getConfig().groupManager.state) {
         case GroupManagerStateEnum::Server:
-            network.reset(new GroupServer(this));
+            network = std::make_unique<GroupServer>(this);
             break;
         case GroupManagerStateEnum::Client:
-            network.reset(new GroupClient(this));
+            network = std::make_unique<GroupClient>(this);
             break;
         case GroupManagerStateEnum::Off:
             return;

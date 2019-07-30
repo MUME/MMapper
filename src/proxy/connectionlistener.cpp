@@ -6,6 +6,7 @@
 
 #include "connectionlistener.h"
 
+#include <memory>
 #include <QTcpSocket>
 #include <QThread>
 
@@ -48,17 +49,17 @@ void ConnectionListener::incomingConnection(qintptr socketDescriptor)
         m_accept = false;
         emit clientSuccessfullyConnected();
 
-        m_proxy.reset(new Proxy(m_mapData,
-                                m_pathMachine,
-                                m_prespammedPath,
-                                m_groupManager,
-                                m_mumeClock,
-                                m_mapCanvas,
-                                socketDescriptor,
-                                this));
+        m_proxy = std::make_unique<Proxy>(m_mapData,
+                                          m_pathMachine,
+                                          m_prespammedPath,
+                                          m_groupManager,
+                                          m_mumeClock,
+                                          m_mapCanvas,
+                                          socketDescriptor,
+                                          this);
 
         if (getConfig().connection.proxyThreaded) {
-            m_thread.reset(new QThread);
+            m_thread = std::make_unique<QThread>();
             m_proxy->moveToThread(m_thread.get());
 
             // Proxy destruction stops the thread which then destroys itself on completion

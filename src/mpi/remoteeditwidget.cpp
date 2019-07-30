@@ -5,6 +5,7 @@
 #include "remoteeditwidget.h"
 
 #include <cassert>
+#include <memory>
 #include <optional>
 #include <utility>
 #include <QAction>
@@ -647,6 +648,10 @@ RemoteEditWidget::RemoteEditWidget(const bool editSession,
     }
 
     // REVISIT: can this be called as an initializer?
+    // Probably not. In fact this may be too early, since it accesses contentsMargins(),
+    // which assumes this object is fully constructed and initialized.
+    //
+    // REVISIT: does this have to be QScopedPointer, or can it be std::unique_ptr?
     m_textEdit.reset(createTextEdit());
 
     // REVISIT: Restore geometry from config?

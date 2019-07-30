@@ -170,11 +170,11 @@ MiniUPnPcPortMapper::~MiniUPnPcPortMapper()
 }
 
 GroupPortMapper::GroupPortMapper()
-    : m_pimpl{std::unique_ptr<Pimpl>(static_cast<Pimpl *>(new MiniUPnPcPortMapper()))}
+    : m_pimpl{std::make_unique<MiniUPnPcPortMapper>()}
 {}
 #else
 GroupPortMapper::GroupPortMapper()
-    : m_pimpl{std::unique_ptr<Pimpl>(static_cast<Pimpl *>(new NoopPortMapper()))}
+    : m_pimpl{std::make_unique<NoopPortMapper>()}
 {}
 #endif
 

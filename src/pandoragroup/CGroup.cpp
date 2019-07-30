@@ -77,7 +77,7 @@ void CGroup::releaseCharacters(GroupRecipient *sender)
 std::unique_ptr<GroupSelection> CGroup::selectAll()
 {
     QMutexLocker locker(&characterLock);
-    std::unique_ptr<GroupSelection> selection(new GroupSelection(this));
+    auto selection = std::make_unique<GroupSelection>(this);
     locks.insert(selection.get());
     selection->receiveCharacters(this, charIndex);
     return selection;
@@ -86,7 +86,7 @@ std::unique_ptr<GroupSelection> CGroup::selectAll()
 std::unique_ptr<GroupSelection> CGroup::selectByName(const QByteArray &name)
 {
     QMutexLocker locker(&characterLock);
-    std::unique_ptr<GroupSelection> selection(new GroupSelection(this));
+    auto selection = std::make_unique<GroupSelection>(this);
     locks.insert(selection.get());
     CGroupChar *character = getCharByName(name);
     if (character != nullptr) {

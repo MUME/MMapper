@@ -1498,11 +1498,9 @@ void MainWindow::loadFile(const QString &fileName)
     bool isPandoraMap = fileName.toLower().contains("xml");
     std::unique_ptr<AbstractMapStorage> storage;
     if (isPandoraMap) {
-        storage.reset(static_cast<AbstractMapStorage *>(
-            new PandoraMapStorage(*m_mapData, fileName, file, this)));
+        storage = std::make_unique<PandoraMapStorage>(*m_mapData, fileName, file, this);
     } else {
-        storage.reset(
-            static_cast<AbstractMapStorage *>(new MapStorage(*m_mapData, fileName, file, this)));
+        storage = std::make_unique<MapStorage>(*m_mapData, fileName, file, this);
     }
     // REVISIT: refactor the connections to a common function?
     connect(storage.get(),
@@ -1568,18 +1566,16 @@ bool MainWindow::saveFile(const QString &fileName,
     std::unique_ptr<AbstractMapStorage> storage;
     switch (format) {
     case SaveFormatEnum::MM2:
-        storage.reset(static_cast<AbstractMapStorage *>(
-            new MapStorage(*m_mapData, fileName, &saver.file(), this)));
+        storage = std::make_unique<MapStorage>(*m_mapData, fileName, &saver.file(), this);
         break;
     case SaveFormatEnum::MMP:
-        storage.reset(static_cast<AbstractMapStorage *>(
-            new MmpMapStorage(*m_mapData, fileName, &saver.file(), this)));
+        storage = std::make_unique<MmpMapStorage>(*m_mapData, fileName, &saver.file(), this);
         break;
     case SaveFormatEnum::WEB:
-        storage.reset(
-            static_cast<AbstractMapStorage *>(new JsonMapStorage(*m_mapData, fileName, this)));
+        storage = std::make_unique<JsonMapStorage>(*m_mapData, fileName, this);
         break;
     }
+
     if (!storage->canSave()) {
         return false;
     }

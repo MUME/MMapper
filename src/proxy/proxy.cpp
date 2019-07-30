@@ -6,6 +6,7 @@
 
 #include "proxy.h"
 
+#include <memory>
 #include <stdexcept>
 #include <QByteArray>
 #include <QMessageLogContext>
@@ -91,9 +92,10 @@ void Proxy::start()
     MainWindow *mw = dynamic_cast<MainWindow *>(m_listener->parent());
     connect(this, &Proxy::log, mw, &MainWindow::log);
 
+    // REVISIT: can this use std::unique_ptr instead of QScopedPointer?
     m_userSocket.reset(new QTcpSocket(this));
     if (!m_userSocket->setSocketDescriptor(m_socketDescriptor)) {
-        m_userSocket.reset(nullptr);
+        m_userSocket.reset();
         deleteLater();
         return;
     }

@@ -60,7 +60,7 @@ static AnsiItem initAnsiItem(int ansiCode)
         pix.fill(col);
 
         // Draw border
-        std::unique_ptr<QPainter> paint(new QPainter(&pix));
+        auto paint = std::make_unique<QPainter>(&pix);
         paint->setPen(Qt::black);
         paint->drawRect(0, 0, 19, 19);
 
