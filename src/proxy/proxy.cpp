@@ -6,6 +6,7 @@
 
 #include "proxy.h"
 
+#include <cassert>
 #include <memory>
 #include <stdexcept>
 #include <QByteArray>
@@ -89,7 +90,13 @@ Proxy::~Proxy()
 
 void Proxy::start()
 {
-    MainWindow *mw = dynamic_cast<MainWindow *>(m_listener->parent());
+    auto *const mw = dynamic_cast<MainWindow *>(m_listener->parent());
+    if (mw == nullptr) {
+        // dynamic cast can fail
+        assert(false);
+        return;
+    }
+
     connect(this, &Proxy::log, mw, &MainWindow::log);
 
     // REVISIT: can this use std::unique_ptr instead of QScopedPointer?
