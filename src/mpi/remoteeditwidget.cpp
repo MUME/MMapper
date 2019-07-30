@@ -177,8 +177,7 @@ public:
                     if (!decoded)
                         return red;
                     const auto val = decoded.value().unicode();
-                    return (val < 256) ? yellow
-                                       : ((val < MAX_UNICODE_CODEPOINT) ? darkOrange : red);
+                    return (val < 256) ? yellow : darkOrange;
                 };
 
                 self.setFormat(start, len, get_fmt());
