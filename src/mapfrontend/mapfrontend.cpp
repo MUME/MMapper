@@ -15,7 +15,6 @@
 #include "../expandoracommon/AbstractRoomFactory.h"
 #include "../expandoracommon/RoomRecipient.h"
 #include "../expandoracommon/coordinate.h"
-#include "../expandoracommon/frustum.h"
 #include "../expandoracommon/parseevent.h"
 #include "../expandoracommon/room.h"
 #include "../global/roomid.h"
@@ -111,20 +110,6 @@ void MapFrontend::executeActions(const RoomId roomId)
     }
     for (auto action : executedActions) {
         removeAction(action);
-    }
-}
-
-void MapFrontend::lookingForRooms(RoomRecipient &recipient, const Frustum &frustum)
-{
-    QMutexLocker locker(&mapLock);
-    for (auto &room : roomIndex) {
-        if (room != nullptr) {
-            const Coordinate rc = room->getPosition();
-            if (frustum.pointInFrustum(rc)) {
-                locks[room->getId()].insert(&recipient);
-                recipient.receiveRoom(this, room);
-            }
-        }
     }
 }
 

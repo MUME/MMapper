@@ -269,7 +269,6 @@ private:
 
     QAction *createRoomAct = nullptr;
     QAction *editRoomSelectionAct = nullptr;
-    QAction *editConnectionSelectionAct = nullptr;
     QAction *deleteRoomSelectionAct = nullptr;
     QAction *deleteConnectionSelectionAct = nullptr;
 

@@ -20,7 +20,6 @@
 #include "map.h"
 
 class AbstractRoomFactory;
-class Frustum;
 class MapAction;
 class ParseEvent;
 class QObject;
@@ -90,7 +89,6 @@ public slots:
     virtual void lookingForRooms(RoomRecipient &, const SigParseEvent &);
     virtual void lookingForRooms(RoomRecipient &, RoomId); // by id
     virtual void lookingForRooms(RoomRecipient &, const Coordinate &);
-    virtual void lookingForRooms(RoomRecipient &, const Frustum &);
     virtual void lookingForRooms(RoomRecipient &,
                                  const Coordinate &,
                                  const Coordinate &); // by bounding box
