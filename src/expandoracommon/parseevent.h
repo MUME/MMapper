@@ -12,6 +12,7 @@
 #include <string>
 #include <QByteArrayDataPtr>
 #include <QCharRef>
+#include <QDebug>
 #include <QString>
 #include <QVariant>
 #include <QtGlobal>
@@ -80,7 +81,9 @@ public:
     ParseEvent clone() const { return ParseEvent{*this}; }
 
 public:
-    operator QString() const;
+    QString toQString() const;
+    explicit operator QString() const { return toQString(); }
+    friend QDebug operator<<(QDebug os, const ParseEvent &ev) { return os << ev.toQString(); }
 
 public:
     virtual ~ParseEvent();

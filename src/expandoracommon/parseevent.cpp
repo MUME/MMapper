@@ -115,7 +115,7 @@ static std::string getPromptBytes(const PromptFlagsType &promptFlags)
     return promptBytes;
 }
 
-ParseEvent::operator QString() const
+QString ParseEvent::toQString() const
 {
     QString exitsStr;
     // REVISIT: Duplicate code with AbstractParser

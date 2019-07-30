@@ -45,7 +45,7 @@ bool CompareVersion::operator==(const CompareVersion &other) const
            && parts.at(2) == other.parts.at(2);
 }
 
-CompareVersion::operator QString() const
+QString CompareVersion::toQString() const
 {
     return QString("%1.%2.%3").arg(parts.at(0)).arg(parts.at(1)).arg(parts.at(2));
 }

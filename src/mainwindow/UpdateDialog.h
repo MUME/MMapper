@@ -3,6 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include <QDebug>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QLabel>
@@ -16,7 +17,12 @@ public:
     explicit CompareVersion(const QString &versionStr) noexcept;
     bool operator>(const CompareVersion &other) const;
     bool operator==(const CompareVersion &other) const;
-    operator QString() const;
+    QString toQString() const;
+    explicit operator QString() const { return toQString(); }
+    friend QDebug operator<<(QDebug os, const CompareVersion &compareVersion)
+    {
+        return os << compareVersion.toQString();
+    }
 
 private:
     MMapper::Array<int, 3> parts;
@@ -32,6 +38,7 @@ public:
 
 private slots:
     void managerFinished(QNetworkReply *reply);
+    // FIXME: This hides the QDialog::accepted() signal.
     void accepted();
 
 private:
