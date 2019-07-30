@@ -37,6 +37,10 @@ GroupClient::GroupClient(Mmapper2Group *parent)
 
 GroupClient::~GroupClient()
 {
+    // TODO: remove these manual disconnects.
+    // Destroying an object is supposed to remove its connections.
+    // (If removing the disconnects causes segfaults, then you may
+    // have a race condition that needs to be fixed elsewhere.)
     disconnect(&socket, &GroupSocket::incomingData, this, &GroupClient::incomingData);
     disconnect(&socket, &GroupSocket::sendLog, this, &GroupClient::relayLog);
     disconnect(&socket, &GroupSocket::errorInConnection, this, &GroupClient::errorInConnection);

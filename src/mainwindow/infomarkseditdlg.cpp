@@ -174,7 +174,16 @@ void InfoMarksEditDlg::updateMarkers()
 
 void InfoMarksEditDlg::updateDialog()
 {
-    disconnectAll();
+    struct NODISCARD DisconnectReconnectAntiPattern final
+    {
+        InfoMarksEditDlg &self;
+        explicit DisconnectReconnectAntiPattern(InfoMarksEditDlg &self)
+            : self{self}
+        {
+            self.disconnectAll();
+        }
+        ~DisconnectReconnectAntiPattern() { self.connectAll(); }
+    } antiPattern{*this};
 
     InfoMark *const im = getCurrentInfoMark();
     if (im != nullptr) {
@@ -230,8 +239,6 @@ void InfoMarksEditDlg::updateDialog()
         objectCreate->setEnabled(false);
         objectModify->setEnabled(true);
     }
-
-    connectAll();
 }
 
 InfoMarkType InfoMarksEditDlg::getType()

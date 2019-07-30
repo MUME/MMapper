@@ -732,7 +732,16 @@ void setFlags(T &array, const QFlags<Qt::ItemFlag> &flags)
 
 void RoomEditAttrDlg::updateDialog(const Room *r)
 {
-    disconnectAll();
+    struct NODISCARD DisconnectReconnectAntiPattern final
+    {
+        RoomEditAttrDlg &self;
+        explicit DisconnectReconnectAntiPattern(RoomEditAttrDlg &self)
+            : self{self}
+        {
+            self.disconnectAll();
+        }
+        ~DisconnectReconnectAntiPattern() { self.connectAll(); }
+    } antiPattern{*this};
 
     if (r == nullptr) {
         roomDescriptionTextEdit->clear();
@@ -942,8 +951,6 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
             break;
         }
     }
-
-    connectAll();
 }
 
 // attributes page
