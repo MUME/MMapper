@@ -25,11 +25,11 @@ GeneralPage::GeneralPage(QWidget *parent)
 
     connect(ui->remoteName, &QLineEdit::textChanged, this, &GeneralPage::remoteNameTextChanged);
     connect(ui->remotePort,
-            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            QOverload<int>::of(&QSpinBox::valueChanged),
             this,
             &GeneralPage::remotePortValueChanged);
     connect(ui->localPort,
-            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            QOverload<int>::of(&QSpinBox::valueChanged),
             this,
             &GeneralPage::localPortValueChanged);
     connect(ui->tlsEncryptionCheckBox,
@@ -37,7 +37,7 @@ GeneralPage::GeneralPage(QWidget *parent)
             this,
             &GeneralPage::tlsEncryptionCheckBoxStateChanged);
     connect(ui->charsetComboBox,
-            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+            QOverload<int>::of(&QComboBox::currentIndexChanged),
             this,
             [](const int index) {
                 setConfig().general.characterEncoding = static_cast<CharacterEncoding>(index);

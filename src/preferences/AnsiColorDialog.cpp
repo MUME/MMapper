@@ -22,12 +22,12 @@ AnsiColorDialog::AnsiColorDialog(const QString &ansiString, QWidget *parent)
     updateColors();
 
     connect(ui->foregroundAnsiCombo,
-            static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::activated),
+            QOverload<const QString &>::of(&QComboBox::activated),
             this,
             &AnsiColorDialog::ansiComboChange);
 
     connect(ui->backgroundAnsiCombo,
-            static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::activated),
+            QOverload<const QString &>::of(&QComboBox::activated),
             this,
             &AnsiColorDialog::ansiComboChange);
 

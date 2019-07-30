@@ -79,15 +79,14 @@ MumeSslSocket::MumeSslSocket(QObject *parent)
     };
     m_socket.setSslConfiguration(get_ssl_config());
     connect(&m_socket,
-            static_cast<void (QAbstractSocket::*)()>(&QAbstractSocket::connected),
+            QOverload<>::of(&QAbstractSocket::connected),
             this,
             &MumeSslSocket::onConnect);
     connect(&m_socket, &QIODevice::readyRead, this, &MumeSslSocket::onReadyRead);
     connect(&m_socket, &QAbstractSocket::disconnected, this, &MumeSslSocket::onDisconnect);
     connect(&m_socket, &QSslSocket::encrypted, this, &MumeSslSocket::onEncrypted);
     connect(&m_socket,
-            static_cast<void (QAbstractSocket::*)(QAbstractSocket::SocketError)>(
-                &QAbstractSocket::error),
+            QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error),
             this,
             &MumeSslSocket::onError);
     connect(&m_socket, &QSslSocket::peerVerifyError, this, &MumeSslSocket::onPeerVerifyError);

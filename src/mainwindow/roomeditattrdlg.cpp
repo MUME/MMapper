@@ -453,7 +453,7 @@ void RoomEditAttrDlg::connectAll()
     connect(m_hiddenShortcut, &QShortcut::activated, this, &RoomEditAttrDlg::toggleHiddenDoor);
 
     connect(roomListComboBox,
-            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+            QOverload<int>::of(&QComboBox::currentIndexChanged),
             this,
             &RoomEditAttrDlg::roomListCurrentIndexChanged);
 
@@ -633,7 +633,7 @@ void RoomEditAttrDlg::disconnectAll()
     disconnect(m_hiddenShortcut, &QShortcut::activated, this, &RoomEditAttrDlg::toggleHiddenDoor);
 
     disconnect(roomListComboBox,
-               static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+               QOverload<int>::of(&QComboBox::currentIndexChanged),
                this,
                &RoomEditAttrDlg::roomListCurrentIndexChanged);
 }

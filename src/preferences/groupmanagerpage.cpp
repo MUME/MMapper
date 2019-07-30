@@ -87,7 +87,7 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
         QDesktopServices::openUrl(QUrl::fromEncoded(link.toLatin1()));
     });
     connect(ui->localPort,
-            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            QOverload<int>::of(&QSpinBox::valueChanged),
             this,
             &GroupManagerPage::localPortValueChanged);
     connect(ui->shareSelfCheckBox,
@@ -95,7 +95,7 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
             this,
             &GroupManagerPage::shareSelfChanged);
     connect(ui->localPort,
-            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            QOverload<int>::of(&QSpinBox::valueChanged),
             this,
             &GroupManagerPage::localPortValueChanged);
     connect(ui->shareSelfCheckBox,

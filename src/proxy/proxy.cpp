@@ -150,7 +150,7 @@ void Proxy::start()
     connect(m_parserXml, &MumeXmlParser::sig_sendToUser, m_userTelnet, &UserTelnet::onSendToUser);
 
     connect(m_parserXml,
-            static_cast<void (MumeXmlParser::*)(const SigParseEvent &)>(&MumeXmlParser::event),
+            QOverload<const SigParseEvent &>::of(&MumeXmlParser::event),
             m_pathMachine,
             &Mmapper2PathMachine::event);
     connect(m_parserXml,

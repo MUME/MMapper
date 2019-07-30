@@ -278,11 +278,10 @@ void MainWindow::wireConnections()
             m_mapData,
             SLOT(lookingForRooms(RoomRecipient &, const Coordinate &)));
     connect(m_pathMachine,
-            static_cast<void (Mmapper2PathMachine::*)(RoomRecipient &, const SigParseEvent &)>(
+            QOverload<RoomRecipient &, const SigParseEvent &>::of(
                 &Mmapper2PathMachine::lookingForRooms),
             m_mapData,
-            static_cast<void (MapData::*)(RoomRecipient &, const SigParseEvent &)>(
-                &MapData::lookingForRooms));
+            QOverload<RoomRecipient &, const SigParseEvent &>::of(&MapData::lookingForRooms));
     connect(m_pathMachine,
             SIGNAL(lookingForRooms(RoomRecipient &, RoomId)),
             m_mapData,

@@ -56,11 +56,11 @@ void InfoMarksEditDlg::connectAll()
             m_mapCanvas,
             static_cast<void (QWidget::*)(void)>(&QWidget::update));
     connect(objectsList,
-            static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged),
+            QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
             this,
             &InfoMarksEditDlg::objectListCurrentIndexChanged);
     connect(objectType,
-            static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged),
+            QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
             this,
             &InfoMarksEditDlg::objectTypeCurrentIndexChanged);
     connect(objectCreate, &QAbstractButton::clicked, this, &InfoMarksEditDlg::createClicked);
@@ -137,11 +137,11 @@ void InfoMarksEditDlg::disconnectAll()
                m_mapCanvas,
                static_cast<void (QWidget::*)(void)>(&QWidget::update));
     disconnect(objectsList,
-               static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged),
+               QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
                this,
                &InfoMarksEditDlg::objectListCurrentIndexChanged);
     disconnect(objectType,
-               static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged),
+               QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
                this,
                &InfoMarksEditDlg::objectTypeCurrentIndexChanged);
     disconnect(objectCreate, &QAbstractButton::clicked, this, &InfoMarksEditDlg::createClicked);

@@ -68,8 +68,7 @@ GroupSocket::GroupSocket(GroupAuthority *authority, QObject *parent)
     });
     connect(&socket, &QIODevice::readyRead, this, &GroupSocket::onReadyRead);
     connect(&socket,
-            static_cast<void (QAbstractSocket::*)(QAbstractSocket::SocketError)>(
-                &QAbstractSocket::error),
+            QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error),
             this,
             &GroupSocket::onError);
     connect(&socket, &QSslSocket::peerVerifyError, this, &GroupSocket::onPeerVerifyError);
