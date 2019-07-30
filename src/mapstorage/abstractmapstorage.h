@@ -34,7 +34,7 @@ public:
     virtual void newData() = 0;
     virtual bool loadData() = 0;
     virtual bool mergeData() = 0;
-    virtual bool saveData(bool baseMapOnly = false) = 0;
+    virtual bool saveData(bool baseMapOnly) = 0;
     ProgressCounter &getProgressCounter() const;
 
 signals:
