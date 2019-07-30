@@ -9,8 +9,6 @@
 
 #include "../configuration/configuration.h"
 
-const Configuration::ParserSettings &Patterns::parserConfig = getConfig().parser;
-
 bool Patterns::matchPattern(QString pattern, const QString &str)
 {
     if (pattern.at(0) != '#') {
@@ -90,7 +88,7 @@ bool Patterns::matchScore(const QString &str)
 
 bool Patterns::matchNoDescriptionPatterns(const QString &str)
 {
-    for (auto &pattern : parserConfig.noDescriptionPatternsList) {
+    for (auto &pattern : getConfig().parser.noDescriptionPatternsList) {
         if (matchPattern(pattern, str)) {
             return true;
         }

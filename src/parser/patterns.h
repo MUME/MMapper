@@ -6,17 +6,11 @@
 
 #include <QtCore>
 
-#include "../configuration/configuration.h"
-
 class QByteArray;
 class QString;
 
 class Patterns
 {
-private:
-    // If these were moved to .cpp file, then we wouldn't need to include headers.
-    static const Configuration::ParserSettings &parserConfig;
-
 public:
     static bool matchScore(const QString &str);
     static bool matchNoDescriptionPatterns(const QString &);
