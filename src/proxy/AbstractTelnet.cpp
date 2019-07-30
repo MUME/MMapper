@@ -119,7 +119,7 @@ struct TelnetFormatter final : public AppendBuffer
         static constexpr const auto hi = static_cast<int>(std::numeric_limits<uint16_t>::max());
         static_assert(lo == 0);
         static_assert(hi == 65535);
-        addTwoByteEscaped(static_cast<uint16_t>(clamp(n, lo, hi)));
+        addTwoByteEscaped(static_cast<uint16_t>(std::clamp(n, lo, hi)));
     }
 
     void addEscapedBytes(const QByteArray &s)

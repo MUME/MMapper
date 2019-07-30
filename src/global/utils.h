@@ -12,12 +12,6 @@
 #define IS_SET(src, bit) static_cast<bool>((src) & (bit))
 
 template<typename T>
-T clamp(T x, T lo, T hi)
-{
-    return std::max(lo, std::min(x, hi));
-}
-
-template<typename T>
 bool isClamped(T x, T lo, T hi)
 {
     return x >= lo && x <= hi;

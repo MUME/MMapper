@@ -25,7 +25,7 @@ private:
 private:
     static uint8_t encodeTerrainType(const RoomTerrainType rtt)
     {
-        return static_cast<uint8_t>(clamp(static_cast<int>(rtt), 0, 15));
+        return static_cast<uint8_t>(std::clamp(static_cast<int>(rtt), 0, 15));
     }
 
 public:
