@@ -95,7 +95,7 @@ static int parsePositiveInt(const QStringRef &number)
     }
 
     return n;
-};
+}
 
 void AnsiColorParser::for_each(QStringRef ansi) const
 {
@@ -441,8 +441,8 @@ const char *raw_ansi::describe(const int code)
                         + (lower##_hi ? ANSI_##UPPER##_COLOR_HI : ANSI_##UPPER##_COLOR)); \
     }
 
-REPORT(fg, FG);
-REPORT(bg, BG);
+REPORT(fg, FG)
+REPORT(bg, BG)
 
 #undef REPORT
 

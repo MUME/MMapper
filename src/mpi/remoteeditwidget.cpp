@@ -51,7 +51,7 @@ static int measureTabAndAnsiAware(const QString &s)
         }
     }
     return col;
-};
+}
 
 class QWidget;
 
@@ -990,7 +990,7 @@ static bool linesHaveTabs(const QTextCursor &cur)
     return exists_partly_selected_block(cur, [](const QTextCursor &it) -> bool {
         return lineHasTabs(it);
     });
-};
+}
 
 static bool linesHaveTrailingSpace(const QTextCursor &cur)
 {
@@ -999,7 +999,7 @@ static bool linesHaveTrailingSpace(const QTextCursor &cur)
         const auto &line = block.text();
         return findTrailingWhitespace(line) >= 0;
     });
-};
+}
 
 static bool hasLongLines(const QTextCursor &cur)
 {
