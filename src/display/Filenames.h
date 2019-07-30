@@ -9,7 +9,8 @@
 #include "../pandoragroup/mmapper2character.h"
 #include "RoadIndex.h"
 
-QString getPixmapFilenameRaw(QString name);
+QString getResourceFilenameRaw(const QString &dir, const QString &name);
+QString getPixmapFilenameRaw(const QString &name);
 QString getPixmapFilename(RoomTerrainEnum);
 QString getPixmapFilename(RoomLoadFlagEnum);
 QString getPixmapFilename(RoomMobFlagEnum);

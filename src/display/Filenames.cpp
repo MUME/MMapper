@@ -85,7 +85,7 @@ static const char *getFilenameSuffix(const E x)
     return getParserCommandName(x).getCommand();
 }
 
-static QString getResourceFilenameRaw(const QString dir, const QString name)
+QString getResourceFilenameRaw(const QString &dir, const QString &name)
 {
     const auto filename = QString(":/%1/%2").arg(dir).arg(name);
     if (!QFile{filename}.exists())
@@ -93,7 +93,7 @@ static QString getResourceFilenameRaw(const QString dir, const QString name)
     return filename;
 }
 
-QString getPixmapFilenameRaw(const QString name)
+QString getPixmapFilenameRaw(const QString &name)
 {
     return getResourceFilenameRaw("pixmaps", name);
 }
@@ -132,7 +132,7 @@ QString getPixmapFilename(const TaggedTrail x)
     return getPixmapFilename("trail", x);
 }
 
-static QString getIconFilenameRaw(const QString name)
+static QString getIconFilenameRaw(const QString &name)
 {
     return getResourceFilenameRaw("icons", name);
 }
