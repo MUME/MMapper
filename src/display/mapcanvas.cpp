@@ -1029,16 +1029,17 @@ void MapCanvas::initializeGL()
     qInfo() << "Current OpenGL Context: " << contextStr;
     emit log("MapCanvas", "Current OpenGL Context: " + contextStr);
 
-    if (getCurrentPlatform() == Platform::Windows && vendor == "Microsoft Corporation"
-        && renderer == "GDI Generic") {
-        setConfig().canvas.softwareOpenGL = true;
-        setConfig().write();
-        hide();
-        doneCurrent();
-        QMessageBox::critical(this,
-                              "OpenGL Driver Blacklisted",
-                              "Please restart MMapper to enable software rendering");
-        return;
+    if constexpr (CURRENT_PLATFORM == Platform::Windows) {
+        if (vendor == "Microsoft Corporation" && renderer == "GDI Generic") {
+            setConfig().canvas.softwareOpenGL = true;
+            setConfig().write();
+            hide();
+            doneCurrent();
+            QMessageBox::critical(this,
+                                  "OpenGL Driver Blacklisted",
+                                  "Please restart MMapper to enable software rendering");
+            return;
+        }
     }
 
     m_logger = new QOpenGLDebugLogger(this);

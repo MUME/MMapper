@@ -132,7 +132,7 @@ static constexpr const bool IS_DEBUG_BUILD = false;
 
 int main(int argc, char **argv)
 {
-    if (IS_DEBUG_BUILD) {
+    if constexpr (IS_DEBUG_BUILD) {
         // see http://doc.qt.io/qt-5/qtglobal.html#qSetMessagePattern
         // also allows environment variable QT_MESSAGE_PATTERN
         qSetMessagePattern(
@@ -147,7 +147,7 @@ int main(int argc, char **argv)
     const auto &config = getConfig();
     if (config.canvas.softwareOpenGL) {
         app.setAttribute(Qt::AA_UseSoftwareOpenGL);
-        if (CURRENT_PLATFORM == Platform::Linux) {
+        if constexpr (CURRENT_PLATFORM == Platform::Linux) {
             qputenv("LIBGL_ALWAYS_SOFTWARE", "1");
         }
     } else {

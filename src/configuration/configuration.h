@@ -21,6 +21,7 @@ enum class Platform { Unknown, Windows, Mac, Linux };
 enum class CharacterEncoding { LATIN1, UTF8, ASCII };
 enum class Environment { Unknown, Env32Bit, Env64Bit };
 
+// Do not call this directly; use CURRENT_PLATFORM.
 static inline constexpr Platform getCurrentPlatform()
 {
 #if defined(Q_OS_WIN)
@@ -35,6 +36,7 @@ static inline constexpr Platform getCurrentPlatform()
 }
 static constexpr const Platform CURRENT_PLATFORM = getCurrentPlatform();
 
+// Do not call this directly; use CURRENT_ENVIRONMENT.
 static inline constexpr Environment getCurrentEnvironment()
 {
 #if Q_PROCESSOR_WORDSIZE == 4

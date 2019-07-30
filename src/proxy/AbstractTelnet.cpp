@@ -155,20 +155,16 @@ AbstractTelnet::AbstractTelnet(TextCodec textCodec, bool debug, QObject *const p
 void AbstractTelnet::setTerminalType(const QByteArray &terminalType)
 {
     const auto get_os_string = []() {
-        switch (getCurrentPlatform()) {
-        case Platform::Linux:
+        if constexpr (CURRENT_PLATFORM == Platform::Linux)
             return "Linux";
-
-        case Platform::Mac:
+        else if constexpr (CURRENT_PLATFORM == Platform::Mac)
             return "Mac";
-
-        case Platform::Windows:
+        else if constexpr (CURRENT_PLATFORM == Platform::Windows)
             return "Windows";
-
-        case Platform::Unknown:
-        default:
+        else {
+            assert(CURRENT_PLATFORM == Platform::Unknown);
             return "Unknown";
-        };
+        }
     };
 
     QString temp = terminalType;

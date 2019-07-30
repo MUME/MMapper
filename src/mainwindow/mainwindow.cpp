@@ -395,6 +395,7 @@ void MainWindow::log(const QString &module, const QString &message)
     logWindow->update();
 }
 
+// TODO: clean up all this copy/paste by using helper functions and X-macros
 void MainWindow::createActions()
 {
     newAct = new QAction(QIcon::fromTheme("document-new", QIcon(":/icons/new.png")),
@@ -536,21 +537,24 @@ void MainWindow::createActions()
     layerUpAct = new QAction(QIcon::fromTheme("go-up", QIcon(":/icons/layerup.png")),
                              tr("Layer Up"),
                              this);
-#ifdef __APPLE__
-    layerUpAct->setShortcut(tr("Meta+Tab"));
-#else
-    layerUpAct->setShortcut(tr("Ctrl+Tab"));
-#endif
+    layerUpAct->setShortcut(tr([]() -> const char * {
+        // Technically tr() could convert Ctrl to Meta, right?
+        if constexpr (CURRENT_PLATFORM == Platform::Mac)
+            return "Meta+Tab";
+        return "Ctrl+Tab";
+    }()));
     layerUpAct->setStatusTip(tr("Layer Up"));
     connect(layerUpAct, &QAction::triggered, this, &MainWindow::onLayerUp);
     layerDownAct = new QAction(QIcon::fromTheme("go-down", QIcon(":/icons/layerdown.png")),
                                tr("Layer Down"),
                                this);
-#ifdef __APPLE__
-    layerDownAct->setShortcut(tr("Meta+Shift+Tab"));
-#else
-    layerDownAct->setShortcut(tr("Ctrl+Shift+Tab"));
-#endif
+
+    layerDownAct->setShortcut(tr([]() -> const char * {
+        // Technically tr() could convert Ctrl to Meta, right?
+        if constexpr (CURRENT_PLATFORM == Platform::Mac)
+            return "Meta+Shift+Tab";
+        return "Ctrl+Shift+Tab";
+    }()));
     layerDownAct->setStatusTip(tr("Layer Down"));
     connect(layerDownAct, &QAction::triggered, this, &MainWindow::onLayerDown);
 
