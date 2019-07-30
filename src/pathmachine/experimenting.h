@@ -12,9 +12,9 @@
 #include "../global/RuleOf5.h"
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/mmapper2exit.h"
+#include "path.h"
 
 class AbstractRoomFactory;
-class Path;
 class PathMachine;
 class PathParameters;
 class Room;
@@ -26,8 +26,8 @@ protected:
     void augmentPath(Path *path, RoomAdmin *map, const Room *room);
     Coordinate direction{};
     ExitDirection dirCode = ExitDirection::UNKNOWN;
-    std::list<Path *> *shortPaths = nullptr;
-    std::list<Path *> *paths = nullptr;
+    PathList *shortPaths = nullptr;
+    PathList *paths = nullptr;
     Path *best = nullptr;
     Path *second = nullptr;
     PathParameters &params;
@@ -35,13 +35,13 @@ protected:
     AbstractRoomFactory *factory = nullptr;
 
 public:
-    explicit Experimenting(std::list<Path *> *paths,
+    explicit Experimenting(PathList *paths,
                            ExitDirection dirCode,
                            PathParameters &params,
                            AbstractRoomFactory *factory);
     virtual ~Experimenting() override;
 
-    std::list<Path *> *evaluate();
+    PathList *evaluate();
     virtual void receiveRoom(RoomAdmin *, const Room *) override = 0;
 
 public:

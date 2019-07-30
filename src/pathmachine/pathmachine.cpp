@@ -42,7 +42,7 @@ PathMachine::PathMachine(AbstractRoomFactory *const in_factory, QObject *const p
     , pathRoot{Room::tagDummy}
     , mostLikelyRoom{Room::tagDummy}
     , lastEvent{ParseEvent::createDummyEvent()}
-    , paths{new std::list<Path *>}
+    , paths{new PathList}
 {
     connect(&signaler, &RoomSignalHandler::scheduleAction, this, &PathMachine::scheduleAction);
 }

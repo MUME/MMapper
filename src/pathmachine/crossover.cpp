@@ -13,7 +13,7 @@ class PathParameters;
 class Room;
 class RoomAdmin;
 
-Crossover::Crossover(std::list<Path *> *paths,
+Crossover::Crossover(PathList *paths,
                      ExitDirection dirCode,
                      PathParameters &params,
                      AbstractRoomFactory *in_factory)

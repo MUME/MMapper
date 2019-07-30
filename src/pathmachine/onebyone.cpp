@@ -21,7 +21,7 @@ OneByOne::OneByOne(AbstractRoomFactory *const in_factory,
                    const SigParseEvent &sigParseEvent,
                    PathParameters &in_params,
                    RoomSignalHandler *const in_handler)
-    : Experimenting{new std::list<Path *>,
+    : Experimenting{new PathList,
                     getDirection(sigParseEvent.deref().getMoveType()),
                     in_params,
                     in_factory}

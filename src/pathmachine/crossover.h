@@ -9,9 +9,9 @@
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/mmapper2exit.h"
 #include "experimenting.h"
+#include "path.h"
 
 class AbstractRoomFactory;
-class Path;
 class PathParameters;
 class Room;
 class RoomAdmin;
@@ -19,7 +19,7 @@ class RoomAdmin;
 class Crossover : public Experimenting
 {
 public:
-    Crossover(std::list<Path *> *paths,
+    Crossover(PathList *paths,
               ExitDirection dirCode,
               PathParameters &params,
               AbstractRoomFactory *factory);

@@ -12,6 +12,7 @@
 
 #include "../expandoracommon/parseevent.h"
 #include "../expandoracommon/room.h"
+#include "path.h"
 #include "pathparameters.h"
 #include "roomsignalhandler.h"
 
@@ -20,7 +21,6 @@ class Approved;
 class Coordinate;
 class Exit;
 class MapAction;
-class Path;
 class QEvent;
 class QObject;
 class RoomRecipient;
@@ -71,7 +71,7 @@ protected:
     Room mostLikelyRoom;
     SigParseEvent lastEvent{};
     PathState state = PathState::SYNCING;
-    std::list<Path *> *paths = nullptr;
+    PathList *paths = nullptr;
 
 private:
     // avoid warning about signal hiding this function

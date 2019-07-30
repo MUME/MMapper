@@ -10,14 +10,14 @@
 #include "path.h"
 #include "pathparameters.h"
 
-Experimenting::Experimenting(std::list<Path *> *const pat,
+Experimenting::Experimenting(PathList *const pat,
                              const ExitDirection in_dirCode,
                              PathParameters &in_params,
                              AbstractRoomFactory *const in_factory)
     : direction(RoomFactory::exitDir(in_dirCode))
     , dirCode(in_dirCode)
     , shortPaths(pat)
-    , paths(new std::list<Path *>)
+    , paths(new PathList)
     , params(in_params)
     , factory(in_factory)
 {}
@@ -43,7 +43,7 @@ void Experimenting::augmentPath(Path *const path, RoomAdmin *const map, const Ro
     numPaths++;
 }
 
-std::list<Path *> *Experimenting::evaluate()
+PathList *Experimenting::evaluate()
 {
     for (Path *working = nullptr; !shortPaths->empty();) {
         working = shortPaths->front();

@@ -9,8 +9,8 @@
 
 #include "../expandoracommon/RoomRecipient.h"
 #include "../global/RuleOf5.h"
+#include "path.h"
 
-class Path;
 class PathParameters;
 class Room;
 class RoomAdmin;
@@ -22,13 +22,13 @@ private:
     RoomSignalHandler *signaler = nullptr;
     uint numPaths = 0u;
     PathParameters &params;
-    std::list<Path *> *paths = nullptr;
+    PathList *paths = nullptr;
     Path *parent = nullptr;
 
 public:
-    explicit Syncing(PathParameters &p, std::list<Path *> *paths, RoomSignalHandler *signaler);
+    explicit Syncing(PathParameters &p, PathList *paths, RoomSignalHandler *signaler);
     void receiveRoom(RoomAdmin *, const Room *) override;
-    std::list<Path *> *evaluate();
+    PathList *evaluate();
     ~Syncing() override;
 
 public:

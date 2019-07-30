@@ -7,6 +7,7 @@
 
 #include "../mapdata/ExitDirection.h"
 #include <climits>
+#include <list>
 #include <set>
 #include <QtGlobal>
 
@@ -21,7 +22,7 @@ class RoomAdmin;
 class RoomRecipient;
 class RoomSignalHandler;
 
-class Path
+class Path final
 {
 public:
     static constexpr const auto INVALID_DIRECTION = static_cast<ExitDirection>(UINT_MAX);
@@ -62,3 +63,5 @@ private:
     ExitDirection dir = INVALID_DIRECTION;
     ~Path() {}
 };
+
+using PathList = std::list<Path *>;
