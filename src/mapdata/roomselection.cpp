@@ -21,13 +21,13 @@ RoomSelection::RoomSelection(MapData &admin, const Coordinate &c)
     m_mapData.lookingForRooms(*this, c);
 }
 
-RoomSelection::RoomSelection(MapData &admin, const Coordinate &ulf, const Coordinate &lrb)
+RoomSelection::RoomSelection(MapData &admin, const Coordinate &min, const Coordinate &max)
     : RoomSelection(admin)
 {
-    m_mapData.lookingForRooms(*this, ulf, lrb);
+    m_mapData.lookingForRooms(*this, min, max);
 }
 
-void RoomSelection::receiveRoom(RoomAdmin *admin, const Room *aRoom)
+void RoomSelection::receiveRoom(RoomAdmin *const admin, const Room *const aRoom)
 {
     assert(admin == &m_mapData);
     insert(aRoom->getId(), aRoom);
@@ -99,8 +99,8 @@ SharedRoomSelection RoomSelection::createSelection(MapData &mapData, const Coord
 }
 
 SharedRoomSelection RoomSelection::createSelection(MapData &mapData,
-                                                   const Coordinate &ulf,
-                                                   const Coordinate &lrb)
+                                                   const Coordinate &min,
+                                                   const Coordinate &max)
 {
-    return std::make_shared<RoomSelection>(mapData, ulf, lrb);
+    return std::make_shared<RoomSelection>(mapData, min, max);
 }

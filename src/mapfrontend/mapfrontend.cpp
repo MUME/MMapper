@@ -55,7 +55,7 @@ void MapFrontend::unblock()
 
 void MapFrontend::checkSize()
 {
-    emit mapSizeChanged(ulf, lrb);
+    emit mapSizeChanged(m_min, m_max);
 }
 
 void MapFrontend::scheduleAction(MapAction *const action)
@@ -144,9 +144,9 @@ void MapFrontend::clear()
         unusedIds.pop();
     }
     greatestUsedId = INVALID_ROOMID;
-    ulf.clear();
-    lrb.clear();
-    emit mapSizeChanged(ulf, lrb);
+    m_min.clear();
+    m_max.clear();
+    emit mapSizeChanged(m_min, m_max);
 }
 
 void MapFrontend::lookingForRooms(RoomRecipient &recipient, const RoomId id)
@@ -192,12 +192,12 @@ RoomId MapFrontend::assignId(Room *const room, const SharedRoomCollection &roomH
 }
 
 void MapFrontend::lookingForRooms(RoomRecipient &recipient,
-                                  const Coordinate &input_ulf,
-                                  const Coordinate &input_lrb)
+                                  const Coordinate &input_min,
+                                  const Coordinate &input_max)
 {
     QMutexLocker locker(&mapLock);
     RoomLocker ret(recipient, *this);
-    map.getRooms(ret, input_ulf, input_lrb);
+    map.getRooms(ret, input_min, input_max);
 }
 
 void MapFrontend::insertPredefinedRoom(Room &room)
@@ -233,34 +233,29 @@ RoomId MapFrontend::createEmptyRoom(const Coordinate &c)
 
 void MapFrontend::checkSize(const Coordinate &c)
 {
-    // lrb = lower right back, and ulf = upper left front.
-    Coordinate lrbBackup(lrb);
-    Coordinate ulfBackup(ulf);
+#define MINMAX(xyz) \
+    do { \
+        auto &lo = min.xyz; \
+        auto &hi = max.xyz; \
+        lo = std::min(lo, c.xyz); \
+        hi = std::max(hi, c.xyz); \
+    } while (false)
 
-    if (c.x < ulf.x) {
-        ulf.x = c.x; // left(-X) == west
-    } else if (c.x > lrb.x) {
-        lrb.x = c.x; // right(+X) == east
-    }
-    if (c.y < ulf.y) {
-        ulf.y = c.y; // upper(-Y) == north
-    } else if (c.y > lrb.y) {
-        lrb.y = c.y; // lower(+Y) == south
-    }
-    if (c.z < ulf.z) {
-        ulf.z = c.z; // front(-Z) == up
-    } else if (c.z > lrb.z) {
-        lrb.z = c.z; // back(+Z) == down
+    auto &min = m_min;
+    auto &max = m_max;
+
+    const Coordinate oldMin{min};
+    const Coordinate oldMax{max};
+
+    MINMAX(x);
+    MINMAX(y);
+    MINMAX(z);
+
+    if (min != oldMin || max != oldMax) {
+        emit mapSizeChanged(min, max);
     }
 
-    if (ulf != ulfBackup || lrb != lrbBackup) {
-        emit mapSizeChanged(ulf, lrb);
-    }
-}
-
-void MapFrontend::createEmptyRooms(const Coordinate &input_ulf, const Coordinate &input_lrb)
-{
-    map.fillArea(factory, input_ulf, input_lrb);
+#undef MINMAX
 }
 
 void MapFrontend::createRoom(const SigParseEvent &sigParseEvent, const Coordinate &expectedPosition)

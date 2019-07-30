@@ -292,7 +292,7 @@ bool MapStorage::mergeData()
 
         /* NOTE: This relies on the maxID being ~0u, so adding 1 brings us back to 0u. */
         baseId = m_mapData.getMaxId().asUint32() + 1u;
-        basePosition = m_mapData.getLrb();
+        basePosition = m_mapData.getMax();
         if (basePosition.x + basePosition.y + basePosition.z != 0) {
             //basePosition.y++;
             //basePosition.x = 0;

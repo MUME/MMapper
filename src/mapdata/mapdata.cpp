@@ -242,11 +242,11 @@ const Room *MapData::getRoom(const RoomId id, RoomSelection &selection)
     return nullptr;
 }
 
-void MapData::draw(const Coordinate &ulf, const Coordinate &lrb, MapCanvasRoomDrawer &screen)
+void MapData::draw(const Coordinate &min, const Coordinate &max, MapCanvasRoomDrawer &screen)
 {
     QMutexLocker locker(&mapLock);
     DrawStream drawer(screen, roomIndex, locks);
-    map.getRooms(drawer, ulf, lrb);
+    map.getRooms(drawer, min, max);
     drawer.draw();
 }
 

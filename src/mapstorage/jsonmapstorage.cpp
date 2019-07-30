@@ -302,14 +302,17 @@ static constexpr const char *getNameUpper(const ExitDirEnum dir)
 
 void JsonWorld::writeMetadata(const QFileInfo &path, const MapData &mapData) const
 {
+    const Coordinate &min = mapData.getMin();
+    const Coordinate &max = mapData.getMax();
+
     QJsonObject meta;
     meta["roomsCount"] = static_cast<qint64>(m_jRoomIds.size());
-    meta["minX"] = mapData.getUlf().x;
-    meta["minY"] = mapData.getUlf().y;
-    meta["minZ"] = mapData.getUlf().z;
-    meta["maxX"] = mapData.getLrb().x;
-    meta["maxY"] = mapData.getLrb().y;
-    meta["maxZ"] = mapData.getLrb().z;
+    meta["minX"] = min.x;
+    meta["minY"] = min.y;
+    meta["minZ"] = min.z;
+    meta["maxX"] = max.x;
+    meta["maxY"] = max.y;
+    meta["maxZ"] = max.z;
 
     meta["directions"] = []() {
         static constexpr const auto SIZE = static_cast<size_t>(ExitDirEnum::NONE);

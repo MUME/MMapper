@@ -40,6 +40,12 @@ struct Coordinate2f final
     Coordinate2f operator/(const float f) const;
 };
 
+// Basis vectors: ESU (x=east, y=south, z=up).
+// WARNING: This is a LEFT-HANDED coordinate system.
+//
+// NOTE: Most geographical systems use right-handed ENU (x=east, y=north, z=up).
+//
+// TODO: change this to be east, north, up, or add a conversion type.
 class Coordinate final
 {
 public:

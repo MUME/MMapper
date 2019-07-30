@@ -37,8 +37,8 @@ public:
     Room *get(const Coordinate &c) const;
     void remove(const Coordinate &c);
     void clear();
-    void getRooms(AbstractRoomVisitor &stream, const Coordinate &ulf, const Coordinate &lrb) const;
-    void fillArea(AbstractRoomFactory *factory, const Coordinate &ulf, const Coordinate &lrb);
+    void getRooms(AbstractRoomVisitor &stream, const Coordinate &min, const Coordinate &max) const;
+    void fillArea(AbstractRoomFactory *factory, const Coordinate &min, const Coordinate &max);
 
 private:
     void set(const Coordinate &c, Room *room);

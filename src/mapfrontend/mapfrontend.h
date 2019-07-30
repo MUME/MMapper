@@ -46,8 +46,8 @@ protected:
 
     RoomId greatestUsedId = INVALID_ROOMID;
     QMutex mapLock;
-    Coordinate ulf;
-    Coordinate lrb;
+    Coordinate m_min;
+    Coordinate m_max;
     AbstractRoomFactory *factory = nullptr;
 
     void executeActions(RoomId roomId);
@@ -82,8 +82,8 @@ public:
 
     virtual RoomId getMaxId() { return greatestUsedId; }
 
-    virtual const Coordinate &getUlf() const { return ulf; }
-    virtual const Coordinate &getLrb() const { return lrb; }
+    virtual const Coordinate &getMin() const { return m_min; }
+    virtual const Coordinate &getMax() const { return m_max; }
 public slots:
     // looking for rooms leads to a bunch of foundRoom() signals
     virtual void lookingForRooms(RoomRecipient &, const SigParseEvent &);
@@ -96,7 +96,6 @@ public slots:
     // createRoom creates a room without a lock
     // it will get deleted if no one looks for it for a certain time
     virtual void createRoom(const SigParseEvent &, const Coordinate &);
-    virtual void createEmptyRooms(const Coordinate &, const Coordinate &);
 
     void scheduleAction(MapAction *action) final;
 

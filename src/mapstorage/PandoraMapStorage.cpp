@@ -152,7 +152,7 @@ bool PandoraMapStorage::mergeData()
     {
         MapFrontendBlocker blocker(m_mapData);
 
-        basePosition = m_mapData.getLrb();
+        basePosition = m_mapData.getMax();
         if (basePosition.x + basePosition.y + basePosition.z != 0) {
             basePosition.y = 0;
             basePosition.x = 0;

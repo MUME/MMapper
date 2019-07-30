@@ -218,10 +218,10 @@ void MapWindow::resizeEvent(QResizeEvent * /*event*/)
     setScrollBars(m_scrollBarMinimumVisible, m_scrollBarMaximumVisible);
 }
 
-void MapWindow::setScrollBars(const Coordinate &ulf, const Coordinate &lrb)
+void MapWindow::setScrollBars(const Coordinate &min, const Coordinate &max)
 {
-    m_scrollBarMinimumVisible = ulf;
-    m_scrollBarMaximumVisible = lrb;
+    m_scrollBarMinimumVisible = min;
+    m_scrollBarMaximumVisible = max;
 
     // TODO: clean up all this code duplication.
 
@@ -229,24 +229,24 @@ void MapWindow::setScrollBars(const Coordinate &ulf, const Coordinate &lrb)
     const float dhp = m_canvas->getDH();
 
     const float scrollfactor = MapCanvas::SCROLLFACTOR();
-    const auto horizontalMax = static_cast<int>((static_cast<float>(lrb.x) - dwp / 2.0f + 1.5f)
+    const auto horizontalMax = static_cast<int>((static_cast<float>(max.x) - dwp / 2.0f + 1.5f)
                                                 / scrollfactor);
-    const auto horizontalMin = static_cast<int>((static_cast<float>(ulf.x) + dwp / 2.0f - 2.0f)
+    const auto horizontalMin = static_cast<int>((static_cast<float>(min.x) + dwp / 2.0f - 2.0f)
                                                 / scrollfactor);
-    const auto verticalMax = static_cast<int>((static_cast<float>(lrb.y) - dhp / 2.0f + 1.5f)
+    const auto verticalMax = static_cast<int>((static_cast<float>(max.y) - dhp / 2.0f + 1.5f)
                                               / scrollfactor);
-    const auto verticalMin = static_cast<int>((static_cast<float>(ulf.y) + dhp / 2.0f - 2.0f)
+    const auto verticalMin = static_cast<int>((static_cast<float>(min.y) + dhp / 2.0f - 2.0f)
                                               / scrollfactor);
 
     m_horizontalScrollBar->setRange(horizontalMin, horizontalMax);
-    if (static_cast<float>(lrb.x - ulf.x + 1) > dwp) {
+    if (static_cast<float>(max.x - min.x + 1) > dwp) {
         m_horizontalScrollBar->show();
     } else {
         m_horizontalScrollBar->hide();
     }
 
     m_verticalScrollBar->setRange(verticalMin, verticalMax);
-    if (static_cast<float>(lrb.y - ulf.y + 1) > dhp) {
+    if (static_cast<float>(max.y - min.y + 1) > dhp) {
         m_verticalScrollBar->show();
     } else {
         m_verticalScrollBar->hide();

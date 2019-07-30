@@ -58,7 +58,7 @@ public:
     explicit MapData(QObject *parent = nullptr);
     virtual ~MapData() override;
 
-    void draw(const Coordinate &ulf, const Coordinate &lrb, MapCanvasRoomDrawer &screen);
+    void draw(const Coordinate &min, const Coordinate &max, MapCanvasRoomDrawer &screen);
 
     bool execute(MapAction *action, const SharedRoomSelection &unlock);
 

@@ -20,9 +20,9 @@ struct Map::Pimpl
     virtual ~Pimpl();
     virtual void clear() = 0;
     virtual void getRooms(AbstractRoomVisitor &stream,
-                          const Coordinate &ulf,
-                          const Coordinate &lrb) const = 0;
-    virtual void fillArea(AbstractRoomFactory *factory, const Coordinate &ulf, const Coordinate &lrb)
+                          const Coordinate &min,
+                          const Coordinate &max) const = 0;
+    virtual void fillArea(AbstractRoomFactory *factory, const Coordinate &min, const Coordinate &max)
         = 0;
     virtual bool defined(const Coordinate &c) const = 0;
     virtual void set(const Coordinate &c, Room *room) = 0;
@@ -80,10 +80,10 @@ public:
     void clear() override { map.clear(); }
 
     void getRooms(AbstractRoomVisitor &stream,
-                  const Coordinate &ulf,
-                  const Coordinate &lrb) const override
+                  const Coordinate &min,
+                  const Coordinate &max) const override
     {
-        const auto range = CoordinateMinMax::get(ulf, lrb).expandCopy(Coordinate{1, 1, 1});
+        const auto range = CoordinateMinMax::get(min, max).expandCopy(Coordinate{1, 1, 1});
 
         const auto zUpper = map.lower_bound(range.max.z);
         for (auto z = map.upper_bound(range.min.z); z != zUpper; ++z) {
@@ -100,10 +100,10 @@ public:
     }
 
     void fillArea(AbstractRoomFactory *factory,
-                  const Coordinate &ulf,
-                  const Coordinate &lrb) override
+                  const Coordinate &min,
+                  const Coordinate &max) override
     {
-        const auto range = CoordinateMinMax::get(ulf, lrb);
+        const auto range = CoordinateMinMax::get(min, max);
 
         for (int z = range.min.z; z <= range.max.z; ++z) {
             for (int y = range.min.y; y <= range.max.y; ++y) {
@@ -197,14 +197,14 @@ void Map::clear()
     return m_pimpl->clear();
 }
 
-void Map::getRooms(AbstractRoomVisitor &stream, const Coordinate &ulf, const Coordinate &lrb) const
+void Map::getRooms(AbstractRoomVisitor &stream, const Coordinate &min, const Coordinate &max) const
 {
-    return m_pimpl->getRooms(stream, ulf, lrb);
+    return m_pimpl->getRooms(stream, min, max);
 }
 
-void Map::fillArea(AbstractRoomFactory *factory, const Coordinate &ulf, const Coordinate &lrb)
+void Map::fillArea(AbstractRoomFactory *factory, const Coordinate &min, const Coordinate &max)
 {
-    return m_pimpl->fillArea(factory, ulf, lrb);
+    return m_pimpl->fillArea(factory, min, max);
 }
 
 /**

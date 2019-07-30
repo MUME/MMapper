@@ -124,7 +124,7 @@ signals:
     void onCenter(qint32 x, qint32 y);
 
     void mapMove(int dx, int dy);
-    void setScrollBars(const Coordinate &ulf, const Coordinate &lrb);
+    void setScrollBars(const Coordinate &min, const Coordinate &max);
 
     void log(const QString &, const QString &);
 

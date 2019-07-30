@@ -35,7 +35,7 @@ private:
 public:
     explicit RoomSelection(MapData &mapData);
     explicit RoomSelection(MapData &mapData, const Coordinate &c);
-    explicit RoomSelection(MapData &mapData, const Coordinate &ulf, const Coordinate &lrb);
+    explicit RoomSelection(MapData &mapData, const Coordinate &min, const Coordinate &max);
     ~RoomSelection() override;
 
 public:
@@ -60,8 +60,8 @@ public:
     static SharedRoomSelection createSelection(MapData &mapData);
     static SharedRoomSelection createSelection(MapData &mapData, const Coordinate &c);
     static SharedRoomSelection createSelection(MapData &mapData,
-                                               const Coordinate &ulf,
-                                               const Coordinate &lrb);
+                                               const Coordinate &min,
+                                               const Coordinate &max);
 
 public:
     RoomSelection(RoomSelection &&);
