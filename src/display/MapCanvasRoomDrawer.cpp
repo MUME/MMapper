@@ -717,7 +717,7 @@ void MapCanvasRoomDrawer::drawWallsAndExits(const Room *room, const RoomIndex &r
     gl.apply(XDevicePointSize{3.0});
     gl.apply(XDeviceLineWidth{2.0});
 
-    for (auto dir : {ExitDirection ::UP, ExitDirection::DOWN}) {
+    for (auto dir : {ExitDirection::UP, ExitDirection::DOWN}) {
         const auto &exitList = m_gllist.exit;
         const auto &updown = dir == ExitDirection::UP ? exitList.up : exitList.down;
         drawVertical(room, rooms, layer, dir, updown, m_gllist.door[dir]);

@@ -78,7 +78,7 @@ Coordinate Coordinate::operator-(const Coordinate &other) const
     return ret;
 }
 
-Coordinate Coordinate ::operator*(const int scalar) const
+Coordinate Coordinate::operator*(const int scalar) const
 {
     Coordinate ret = *this;
     ret.x *= scalar;
