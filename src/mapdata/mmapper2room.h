@@ -7,12 +7,23 @@
 #include <QtGlobal>
 
 #include "../global/Flags.h"
+#include "../global/TaggedString.h"
 
 class Room;
 
-using RoomName = QString;
-using RoomDescription = QString;
-using RoomNote = QString;
+struct RoomNameTag final
+{};
+struct RoomDynamicDescTag final
+{};
+struct RoomStaticDescTag final
+{};
+struct RoomNoteTag final
+{};
+
+using RoomName = TaggedString<RoomNameTag>;
+using RoomDynamicDesc = TaggedString<RoomDynamicDescTag>;
+using RoomStaticDesc = TaggedString<RoomStaticDescTag>;
+using RoomNote = TaggedString<RoomNoteTag>;
 
 enum class RoomTerrainEnum {
     UNDEFINED = 0,

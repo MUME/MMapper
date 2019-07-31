@@ -9,10 +9,14 @@
 #include <QString>
 
 #include "../global/RuleOf5.h"
+#include "../global/TaggedString.h"
 #include "DoorFlags.h"
 #include "ExitFlags.h"
 
-using DoorName = QString;
+struct DoorNameTag final
+{};
+
+using DoorName = TaggedString<DoorNameTag>;
 
 //
 // X(UPPER_CASE, CamelCase)

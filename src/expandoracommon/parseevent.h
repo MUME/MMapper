@@ -55,9 +55,9 @@ private:
 
 private:
     Cycler m_cycler;
-    QString m_roomName;
-    QString m_dynamicDesc;
-    QString m_staticDesc;
+    RoomName m_roomName;
+    RoomDynamicDesc m_dynamicDesc;
+    RoomStaticDesc m_staticDesc;
     ExitsFlagsType m_exitsFlags;
     PromptFlagsType m_promptFlags;
     ConnectedRoomFlagsType m_connectedRoomFlags;
@@ -103,18 +103,18 @@ public:
     auto size() const { return m_cycler.size(); }
 
 public:
-    const QString &getRoomName() const;
-    const QString &getDynamicDesc() const;
-    const QString &getStaticDesc() const;
+    const RoomName &getRoomName() const;
+    const RoomDynamicDesc &getDynamicDesc() const;
+    const RoomStaticDesc &getStaticDesc() const;
     ExitsFlagsType getExitsFlags() const;
     PromptFlagsType getPromptFlags() const;
     ConnectedRoomFlagsType getConnectedRoomFlags() const;
 
 public:
     static SharedParseEvent createEvent(CommandEnum c,
-                                        const QString &roomName,
-                                        const QString &dynamicDesc,
-                                        const QString &staticDesc,
+                                        RoomName roomName,
+                                        RoomDynamicDesc dynamicDesc,
+                                        RoomStaticDesc staticDesc,
                                         const ExitsFlagsType &exitsFlags,
                                         const PromptFlagsType &promptFlags,
                                         const ConnectedRoomFlagsType &connectedRoomFlags);

@@ -77,7 +77,7 @@ Room *PandoraMapStorage::loadRoom(QXmlStreamReader &xml)
 {
     Room *room = factory.createRoom();
     room->setPermanent();
-    room->setDynamicDescription("");
+    room->setDynamicDescription(RoomDynamicDesc{});
     room->setUpToDate();
     while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "room")) {
         if (xml.tokenType() == QXmlStreamReader::StartElement) {
@@ -95,11 +95,11 @@ Room *PandoraMapStorage::loadRoom(QXmlStreamReader &xml)
                 room->setPosition(Coordinate{x, y, z} + basePosition);
 
             } else if (xml.name() == "roomname") {
-                room->setName(xml.readElementText());
+                room->setName(RoomName{xml.readElementText()});
             } else if (xml.name() == "desc") {
-                room->setStaticDescription(xml.readElementText().replace("|", "\n"));
+                room->setStaticDescription(RoomStaticDesc{xml.readElementText().replace("|", "\n")});
             } else if (xml.name() == "note") {
-                room->setNote(xml.readElementText());
+                room->setNote(RoomNote{xml.readElementText()});
             } else if (xml.name() == "exits") {
                 loadExits(*room, xml);
             }
@@ -135,7 +135,7 @@ void PandoraMapStorage::loadExits(Room &room, QXmlStreamReader &xml)
                         exit.updateExit(ExitFlags{ExitFlagEnum::DOOR});
                         if (doorName != "exit") {
                             exit.setDoorFlags(DoorFlags{DoorFlagEnum::HIDDEN});
-                            exit.setDoorName(doorName);
+                            exit.setDoorName(DoorName{doorName});
                         }
                     }
                 } else {

@@ -39,8 +39,8 @@ public:
     static const Coordinate &exitDir(ExitDirEnum dir);
 
 private:
-    static ComparisonResultEnum compareStrings(const QString &room,
-                                               const QString &event,
+    static ComparisonResultEnum compareStrings(const std::string &room,
+                                               const std::string &event,
                                                int prevTolerance,
                                                bool updated = true);
 };

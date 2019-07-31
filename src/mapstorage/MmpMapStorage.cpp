@@ -209,7 +209,7 @@ void MmpMapStorage::saveRoom(const Room &room, QXmlStreamWriter &stream)
     stream.writeStartElement("room");
     stream.writeAttribute("id", toMmpRoomId(room.getId()));
     stream.writeAttribute("area", "1");
-    stream.writeAttribute("title", room.getName());
+    stream.writeAttribute("title", room.getName().toQString());
     stream.writeAttribute("environment", QString("%1").arg(static_cast<int>(room.getTerrainType())));
     if (room.getLoadFlags().contains(RoomLoadFlagEnum::ATTENTION))
         stream.writeAttribute("important", "1");

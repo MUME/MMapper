@@ -119,7 +119,7 @@ void FindRoomsDlg::findClicked()
     for (const Room *const room : tmpSel) {
         QString id;
         id.setNum(room->getId().asUint32());
-        QString roomName = room->getName();
+        QString roomName = room->getName().toQString();
         QString toolTip = constructToolTip(room);
 
         item = new QTreeWidgetItem(resultTable);
@@ -153,16 +153,16 @@ QString FindRoomsDlg::constructToolTip(const Room *const r)
             etmp += lowercaseDirection(j);
         }
         if (door) {
-            const QString doorName = r->exit(j).getDoorName();
+            const auto &doorName = r->exit(j).getDoorName();
             if (!doorName.isEmpty()) {
-                etmp += "/" + doorName;
+                etmp += "/" + doorName.toQByteArray();
             }
             etmp += ")";
         }
     }
     etmp += ".\n";
 
-    QString note = r->getNote();
+    auto note = r->getNote().toQByteArray();
     if (!note.isEmpty()) {
         note = "Note: " + note;
     }

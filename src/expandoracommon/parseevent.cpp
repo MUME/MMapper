@@ -149,9 +149,9 @@ QString ParseEvent::toQString() const
     }
 
     return QString("[%1,%2,%3,%4,%5,%6,%7]")
-        .arg(m_roomName)
-        .arg(m_dynamicDesc)
-        .arg(m_staticDesc)
+        .arg(m_roomName.toQString())
+        .arg(m_dynamicDesc.toQString())
+        .arg(m_staticDesc.toQString())
         .arg(exitsStr)
         .arg(promptStr)
         .arg(getUppercase(moveType))
@@ -160,27 +160,30 @@ QString ParseEvent::toQString() const
 }
 
 SharedParseEvent ParseEvent::createEvent(const CommandEnum c,
-                                         const QString &roomName,
-                                         const QString &dynamicDesc,
-                                         const QString &staticDesc,
+                                         RoomName moved_roomName,
+                                         RoomDynamicDesc moved_dynamicDesc,
+                                         RoomStaticDesc moved_staticDesc,
                                          const ExitsFlagsType &exitsFlags,
                                          const PromptFlagsType &promptFlags,
                                          const ConnectedRoomFlagsType &connectedRoomFlags)
 {
     auto event = std::make_shared<ParseEvent>(c);
-    event->m_roomName = roomName;
-    event->m_dynamicDesc = dynamicDesc;
-    event->m_staticDesc = staticDesc;
+
+    // the moved strings are used by const ref here before they're moved.
+    auto &cycler = event->m_cycler;
+    cycler.addProperty(moved_roomName.getStdString());
+    cycler.addProperty(moved_staticDesc.getStdString());
+    cycler.addProperty(getPromptBytes(promptFlags));
+    assert(cycler.size() == 3);
+
+    // After this block, the moved values are gone.
+    event->m_roomName = std::exchange(moved_roomName, {});
+    event->m_dynamicDesc = std::exchange(moved_dynamicDesc, {});
+    event->m_staticDesc = std::exchange(moved_staticDesc, {});
     event->m_exitsFlags = exitsFlags;
     event->m_promptFlags = promptFlags;
     event->m_connectedRoomFlags = connectedRoomFlags;
     event->countSkipped();
-
-    auto &cycler = event->m_cycler;
-    cycler.addProperty(roomName);
-    cycler.addProperty(staticDesc);
-    cycler.addProperty(getPromptBytes(promptFlags));
-    assert(cycler.size() == 3);
 
     return event;
 }
@@ -188,25 +191,25 @@ SharedParseEvent ParseEvent::createEvent(const CommandEnum c,
 SharedParseEvent ParseEvent::createDummyEvent()
 {
     return createEvent(CommandEnum::UNKNOWN,
-                       QString{},
-                       QString{},
-                       QString{},
+                       RoomName{},
+                       RoomDynamicDesc{},
+                       RoomStaticDesc{},
                        ExitsFlagsType{},
                        PromptFlagsType{},
                        ConnectedRoomFlagsType{});
 }
 
-const QString &ParseEvent::getRoomName() const
+const RoomName &ParseEvent::getRoomName() const
 {
     return m_roomName;
 }
 
-const QString &ParseEvent::getDynamicDesc() const
+const RoomDynamicDesc &ParseEvent::getDynamicDesc() const
 {
     return m_dynamicDesc;
 }
 
-const QString &ParseEvent::getStaticDesc() const
+const RoomStaticDesc &ParseEvent::getStaticDesc() const
 {
     return m_staticDesc;
 }

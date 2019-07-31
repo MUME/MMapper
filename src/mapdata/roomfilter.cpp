@@ -63,20 +63,20 @@ bool RoomFilter::filter(const Room *const pr) const
             throw std::invalid_argument("pat");
 
         case PatternKindsEnum::DESC:
-            return r.getStaticDescription().contains(pattern, cs);
+            return r.getStaticDescription().toQString().contains(pattern, cs);
 
         case PatternKindsEnum::DYN_DESC:
-            return r.getDynamicDescription().contains(pattern, cs);
+            return r.getDynamicDescription().toQString().contains(pattern, cs);
 
         case PatternKindsEnum::NAME:
-            return r.getName().contains(pattern, cs);
+            return r.getName().toQString().contains(pattern, cs);
 
         case PatternKindsEnum::NOTE:
-            return r.getNote().contains(pattern, cs);
+            return r.getNote().toQString().contains(pattern, cs);
 
         case PatternKindsEnum::EXITS:
             for (const auto &e : r.getExitsList()) {
-                if (e.getDoorName().contains(pattern, cs)) {
+                if (e.getDoorName().toQString().contains(pattern, cs)) {
                     return true;
                 }
             }

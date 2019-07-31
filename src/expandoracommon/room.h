@@ -61,8 +61,8 @@ private:
     struct RoomFields final
     {
         RoomName name;
-        RoomDescription staticDescription;
-        RoomDescription dynamicDescription;
+        RoomStaticDesc staticDescription;
+        RoomDynamicDesc dynamicDescription;
         RoomNote note;
         RoomMobFlags mobFlags;
         RoomLoadFlags loadFlags;
@@ -113,10 +113,10 @@ public:
     void setOutDated() { upToDate = false; }
 
 public:
-    RoomName getName() const;
-    RoomDescription getStaticDescription() const;
-    RoomDescription getDynamicDescription() const;
-    RoomNote getNote() const;
+    const RoomName &getName() const;
+    const RoomStaticDesc &getStaticDescription() const;
+    const RoomDynamicDesc &getDynamicDescription() const;
+    const RoomNote &getNote() const;
     RoomMobFlags getMobFlags() const;
     RoomLoadFlags getLoadFlags() const;
     RoomTerrainEnum getTerrainType() const;
@@ -127,8 +127,8 @@ public:
     RoomSundeathEnum getSundeathType() const;
 
     void setName(RoomName value);
-    void setStaticDescription(RoomDescription value);
-    void setDynamicDescription(RoomDescription value);
+    void setStaticDescription(RoomStaticDesc value);
+    void setDynamicDescription(RoomDynamicDesc value);
     void setNote(RoomNote value);
     void setMobFlags(RoomMobFlags value);
     void setLoadFlags(RoomLoadFlags value);

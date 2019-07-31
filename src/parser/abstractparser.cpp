@@ -472,9 +472,9 @@ void AbstractParser::parseExits()
         sendToUser(right_trim(m_exits) + cn);
 
         if (getConfig().mumeNative.showNotes) {
-            const QString ns = room->getNote();
+            const auto &ns = room->getNote();
             if (!ns.isEmpty()) {
-                const QString note = QString("Note: %1\r\n").arg(ns);
+                const QString note = QString("Note: %1\r\n").arg(ns.toQString());
                 sendToUser(note);
             }
         }
@@ -629,7 +629,7 @@ QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
         }
 
         // Extract door names
-        QByteArray dn = e.getDoorName().toLatin1();
+        QByteArray dn = e.getDoorName().toQByteArray();
         if (!dn.isEmpty() || !etmp.isEmpty()) {
             enhancedExits = true;
             cn += " ";
@@ -855,11 +855,13 @@ void AbstractParser::showSyntax(const char *rest)
     sendToUser(QString::asprintf("Usage: %c%s\r\n", prefixChar, rest));
 }
 
-void AbstractParser::setNote(const QString &note)
+void AbstractParser::setNote(RoomNote moved_note)
 {
-    RoomFieldVariant var(note);
-    m_mapData->toggleRoomFlag(getTailPosition(), var);
-    if (note.isEmpty()) {
+    const bool wasEmpty = moved_note.isEmpty();
+    m_mapData->toggleRoomFlag(getTailPosition(), RoomFieldVariant(std::move(moved_note)));
+
+    // FIXME / BUG: This is actually a lie. The change is ignored if the room is selected.
+    if (wasEmpty) {
         sendToUser("Note cleared!\r\n");
     } else {
         sendToUser("Note set!\r\n");
@@ -1405,26 +1407,27 @@ void AbstractParser::sendRoomInfoToUser(const Room *r)
     }
 
     const auto &settings = getConfig().parser;
-    static constexpr const auto ESCAPE = "\033"; // also known as "\x1b"
+    static constexpr const auto ESCAPE = S_ESC;
 
     QByteArray roomName("\r\n");
     if (!settings.roomNameColor.isEmpty()) {
         roomName += ESCAPE + settings.roomNameColor.toLatin1();
     }
-    roomName += r->getName().toLatin1() + ESCAPE + "[0m\r\n";
+    roomName += r->getName().toQByteArray() + ESCAPE + "[0m\r\n";
     sendToUser(roomName);
 
     QByteArray roomDescription;
-    if (!r->getStaticDescription().trimmed().isEmpty()) {
+    if (!r->getStaticDescription().toQString().trimmed().isEmpty()) {
         if (!settings.roomDescColor.isEmpty()) {
             roomDescription += ESCAPE + settings.roomDescColor.toLatin1();
         }
-        roomDescription += r->getStaticDescription().trimmed().toLatin1() + ESCAPE + "[0m";
+        roomDescription += r->getStaticDescription().toQString().trimmed().toLatin1() + ESCAPE
+                           + "[0m";
         roomDescription.replace("\n", "\r\n");
         sendToUser(roomDescription + "\r\n");
     }
 
-    QByteArray dynamicDescription = r->getDynamicDescription().trimmed().toLatin1();
+    QByteArray dynamicDescription = r->getDynamicDescription().toQString().trimmed().toLatin1();
     if (!dynamicDescription.isEmpty()) {
         dynamicDescription.replace("\n", "\r\n");
         sendToUser(dynamicDescription + "\r\n");
@@ -1535,9 +1538,9 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
     sendToUser(etmp.toLatin1() + cn);
 
     if (getConfig().mumeNative.showNotes) {
-        QString ns = r->getNote();
+        const auto &ns = r->getNote();
         if (!ns.isEmpty()) {
-            QByteArray note = "Note: " + ns.toLatin1() + "\r\n";
+            QByteArray note = "Note: " + ns.toQByteArray() + "\r\n";
             sendToUser(note);
         }
     }
@@ -1604,7 +1607,7 @@ void AbstractParser::performDoorCommand(const DirectionEnum direction, const Doo
     Coordinate c = getTailPosition();
 
     auto cn = getCommandName(action) + " ";
-    auto dn = m_mapData->getDoorName(c, direction).toLatin1();
+    auto dn = m_mapData->getDoorName(c, direction).toQByteArray();
 
     bool needdir = false;
 
@@ -1614,7 +1617,7 @@ void AbstractParser::performDoorCommand(const DirectionEnum direction, const Doo
         for (int i_ = 0; i_ < 6; i_++) {
             const auto i = static_cast<DirectionEnum>(i_);
             if (getField(c, i, ExitFieldVariant{DoorFlags{DoorFlagEnum::HIDDEN}})) {
-                dn = m_mapData->getDoorName(c, i).toLatin1();
+                dn = m_mapData->getDoorName(c, i).toQByteArray();
                 secretCount++;
             }
         }
@@ -1632,7 +1635,7 @@ void AbstractParser::performDoorCommand(const DirectionEnum direction, const Doo
         // Check if we need to add a direction to the door name
         for (int i_ = 0; i_ < 6; i_++) {
             const auto i = static_cast<DirectionEnum>(i_);
-            if ((i != direction) && (m_mapData->getDoorName(c, i).toLatin1() == dn)) {
+            if ((i != direction) && (m_mapData->getDoorName(c, i).toQByteArray() == dn)) {
                 needdir = true;
             }
         }
@@ -1660,7 +1663,7 @@ void AbstractParser::genericDoorCommand(QString command, const DirectionEnum dir
     QByteArray cn = emptyByteArray;
     Coordinate c = getTailPosition();
 
-    auto dn = m_mapData->getDoorName(c, direction).toLatin1();
+    auto dn = m_mapData->getDoorName(c, direction).toQByteArray();
 
     bool needdir = false;
     if (dn.isEmpty()) {
@@ -1669,7 +1672,7 @@ void AbstractParser::genericDoorCommand(QString command, const DirectionEnum dir
     } else {
         for (int i_ = 0; i_ < 6; i_++) {
             static const auto i = static_cast<DirectionEnum>(i_);
-            if ((i != direction) && (m_mapData->getDoorName(c, i).toLatin1() == dn)) {
+            if ((i != direction) && (m_mapData->getDoorName(c, i).toQByteArray() == dn)) {
                 needdir = true;
             }
         }
@@ -1702,7 +1705,7 @@ void AbstractParser::nameDoorCommand(const StringView &doorname, const Direction
 {
     const Coordinate c = getTailPosition();
 
-    m_mapData->setDoorName(c, DoorName{doorname.toQString()}, static_cast<ExitDirEnum>(direction));
+    m_mapData->setDoorName(c, DoorName{doorname.toStdString()}, static_cast<ExitDirEnum>(direction));
     sendToUser("--->Doorname set to: " + doorname.toQByteArray() + "\r\n");
     emit showPath(queue, true);
 }
@@ -1772,16 +1775,16 @@ void AbstractParser::printRoomInfo(const RoomFields fieldset)
         QString result;
 
         if (fieldset.contains(RoomFieldEnum::NAME)) {
-            result += r->getName() + "\r\n";
+            result += r->getName().toQByteArray() + "\r\n";
         }
         if (fieldset.contains(RoomFieldEnum::DESC)) {
-            result += r->getStaticDescription();
+            result += r->getStaticDescription().toQByteArray();
         }
         if (fieldset.contains(RoomFieldEnum::DYNAMIC_DESC)) {
-            result += r->getDynamicDescription();
+            result += r->getDynamicDescription().toQByteArray();
         }
         if (fieldset.contains(RoomFieldEnum::NOTE)) {
-            result += "Note: " + r->getNote() + "\r\n";
+            result += "Note: " + r->getNote().toQByteArray() + "\r\n";
         }
 
         sendToUser(result);

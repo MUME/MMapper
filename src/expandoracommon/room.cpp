@@ -56,22 +56,22 @@ ExitDirConstRef Room::getExitMaybeRandom(const ExitDirEnum dir) const
     return ExitDirConstRef{dir, e};
 }
 
-RoomName Room::getName() const
+const RoomName &Room::getName() const
 {
     return fields.name;
 }
 
-RoomDescription Room::getStaticDescription() const
+const RoomStaticDesc &Room::getStaticDescription() const
 {
     return fields.staticDescription;
 }
 
-RoomDescription Room::getDynamicDescription() const
+const RoomDynamicDesc &Room::getDynamicDescription() const
 {
     return fields.dynamicDescription;
 }
 
-RoomNote Room::getNote() const
+const RoomNote &Room::getNote() const
 {
     return fields.note;
 }
@@ -121,12 +121,12 @@ void Room::setName(RoomName value)
     fields.name = std::move(value);
 }
 
-void Room::setStaticDescription(RoomDescription value)
+void Room::setStaticDescription(RoomStaticDesc value)
 {
     fields.staticDescription = std::move(value);
 }
 
-void Room::setDynamicDescription(RoomDescription value)
+void Room::setDynamicDescription(RoomDynamicDesc value)
 {
     fields.dynamicDescription = std::move(value);
 }

@@ -799,9 +799,9 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                             }
 
                             if (door) {
-                                const auto doorName = r->exit(j).getDoorName();
+                                const auto &doorName = r->exit(j).getDoorName();
                                 if (!doorName.isEmpty()) {
-                                    etmp += "/" + doorName + ")";
+                                    etmp += "/" + doorName.toQByteArray() + ")";
                                 } else {
                                     etmp += ")";
                                 }

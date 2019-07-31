@@ -83,8 +83,8 @@ private:
 public:
     void addRoom(const Room &room)
     {
-        m_hasher.add(room.getName() + "\n");
-        m_hasher.add(room.getStaticDescription());
+        m_hasher.add(room.getName().toQString() + "\n");
+        m_hasher.add(room.getStaticDescription().toQString());
         m_index.insert(m_hasher.result().toHex(), room.getPosition());
         m_hasher.reset();
     }
@@ -359,8 +359,8 @@ void JsonWorld::addRoom(QJsonArray &jRooms, const Room &room) const
 
     uint jsonId = m_jRoomIds[room.getId()];
     jr["id"] = QString::number(jsonId);
-    jr["name"] = room.getName();
-    jr["desc"] = room.getStaticDescription();
+    jr["name"] = room.getName().toQString();
+    jr["desc"] = room.getStaticDescription().toQString();
     jr["sector"] = static_cast<quint8>(room.getTerrainType());
     jr["light"] = static_cast<quint8>(room.getLightType());
     jr["portable"] = static_cast<quint8>(room.getPortableType());
@@ -382,7 +382,7 @@ void JsonWorld::addExits(const Room &room, QJsonObject &jr) const
         QJsonObject je;
         je["flags"] = static_cast<qint64>(e.getExitFlags().asUint32());
         je["dflags"] = static_cast<qint64>(e.getDoorFlags().asUint32());
-        je["name"] = e.getDoorName();
+        je["name"] = e.getDoorName().toQString();
 
         QJsonArray jin;
         for (auto idx : e.inRange()) {

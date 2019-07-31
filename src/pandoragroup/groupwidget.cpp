@@ -221,7 +221,7 @@ QVariant GroupModel::dataForCharacter(CGroupChar *const character,
                 && !m_map->isEmpty() && m_mapLoaded && character->roomId <= m_map->getMaxId()) {
                 auto roomSelection = RoomSelection(*m_map);
                 if (const Room *const r = roomSelection.getRoom(character->roomId)) {
-                    return r->getName();
+                    return r->getName().toQString();
                 }
             }
             return "Unknown";

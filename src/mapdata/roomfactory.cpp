@@ -68,14 +68,11 @@ static int wordDifference(StringView a, StringView b)
     return diff + a.size() + b.size();
 }
 
-ComparisonResultEnum RoomFactory::compareStrings(const QString &qroom,
-                                                 const QString &qevent,
+ComparisonResultEnum RoomFactory::compareStrings(const std::string &room,
+                                                 const std::string &event,
                                                  int prevTolerance,
                                                  const bool updated)
 {
-    const std::string room = qroom.toLatin1().toStdString();
-    const std::string event = qevent.toLatin1().toStdString();
-
     assert(prevTolerance >= 0);
     prevTolerance = std::max(0, prevTolerance);
     prevTolerance *= room.size();
@@ -116,8 +113,8 @@ ComparisonResultEnum RoomFactory::compare(const Room *const room,
                                           const ParseEvent &event,
                                           const int tolerance) const
 {
-    const QString name = room->getName();
-    const QString staticDesc = room->getStaticDescription();
+    const RoomName &name = room->getName();
+    const RoomStaticDesc &staticDesc = room->getStaticDescription();
     const RoomTerrainEnum terrainType = room->getTerrainType();
     bool updated = room->isUpToDate();
 
@@ -139,7 +136,7 @@ ComparisonResultEnum RoomFactory::compare(const Room *const room,
         }
     }
 
-    switch (compareStrings(name, event.getRoomName(), tolerance)) {
+    switch (compareStrings(name.getStdString(), event.getRoomName().getStdString(), tolerance)) {
     case ComparisonResultEnum::TOLERANCE:
         updated = false;
         break;
@@ -149,7 +146,10 @@ ComparisonResultEnum RoomFactory::compare(const Room *const room,
         break;
     }
 
-    switch (compareStrings(staticDesc, event.getStaticDesc(), tolerance, updated)) {
+    switch (compareStrings(staticDesc.getStdString(),
+                           event.getStaticDesc().getStdString(),
+                           tolerance,
+                           updated)) {
     case ComparisonResultEnum::TOLERANCE:
         updated = false;
         break;
@@ -349,14 +349,14 @@ void RoomFactory::update(Room &room, const ParseEvent &event) const
         room.setOutDated();
     }
 
-    const QString &desc = event.getStaticDesc();
+    const RoomStaticDesc &desc = event.getStaticDesc();
     if (!desc.isEmpty()) {
         room.setStaticDescription(desc);
     } else {
         room.setOutDated();
     }
 
-    const QString &name = event.getRoomName();
+    const RoomName &name = event.getRoomName();
     if (!name.isEmpty()) {
         room.setName(name);
     } else {
@@ -366,15 +366,15 @@ void RoomFactory::update(Room &room, const ParseEvent &event) const
 
 void RoomFactory::update(Room *const target, const Room *const source) const
 {
-    const QString name = source->getName();
+    const RoomName name = source->getName();
     if (!name.isEmpty()) {
         target->setName(name);
     }
-    const QString desc = source->getStaticDescription();
+    const RoomStaticDesc desc = source->getStaticDescription();
     if (!desc.isEmpty()) {
         target->setStaticDescription(desc);
     }
-    const QString dynamic = source->getDynamicDescription();
+    const RoomDynamicDesc dynamic = source->getDynamicDescription();
     if (!dynamic.isEmpty()) {
         target->setDynamicDescription(dynamic);
     }
@@ -398,8 +398,9 @@ void RoomFactory::update(Room *const target, const Room *const source) const
         target->setTerrainType(source->getTerrainType());
     }
 
-    /* REVISIT: why are these append operations, while the others replace? */
-    target->setNote(target->getNote().append(source->getNote()));
+    // REVISIT: why are these append operations, while the others replace?
+    // REVISIT: And even if we accept appending, why is the target prepended?
+    target->setNote(RoomNote{target->getNote().getStdString() + source->getNote().getStdString()});
     target->setMobFlags(target->getMobFlags() | source->getMobFlags());
     target->setLoadFlags(target->getLoadFlags() | source->getLoadFlags());
 
@@ -430,7 +431,7 @@ void RoomFactory::update(Room *const target, const Room *const source) const
             if (targetExitFlags != sourceExitFlags) {
                 targetExit.setExitFlags(targetExitFlags | sourceExitFlags);
             }
-            const QString &sourceDoorName = soureExit.getDoorName();
+            const DoorName &sourceDoorName = soureExit.getDoorName();
             if (!sourceDoorName.isEmpty()) {
                 targetExit.setDoorName(sourceDoorName);
             }

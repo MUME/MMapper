@@ -38,7 +38,7 @@ MapData::MapData(QObject *const parent)
     : MapFrontend(new RoomFactory{}, parent)
 {}
 
-QString MapData::getDoorName(const Coordinate &pos, const ExitDirEnum dir)
+const DoorName &MapData::getDoorName(const Coordinate &pos, const ExitDirEnum dir)
 {
     // REVISIT: Could this function could be made const if we make mapLock mutable?
     // Alternately, WTF are we accessing this from multiple threads?
@@ -48,19 +48,19 @@ QString MapData::getDoorName(const Coordinate &pos, const ExitDirEnum dir)
             return room->exit(dir).getDoorName();
         }
     }
-    return "exit";
+
+    static const DoorName tmp{"exit"};
+    return tmp;
 }
 
-void MapData::setDoorName(const Coordinate &pos, const QString &name, const ExitDirEnum dir)
+void MapData::setDoorName(const Coordinate &pos, DoorName moved_doorName, const ExitDirEnum dir)
 {
     QMutexLocker locker(&mapLock);
-    const auto doorName = DoorName{name};
     if (Room *const room = map.get(pos)) {
         if (dir < ExitDirEnum::UNKNOWN) {
             setDataChanged();
-            scheduleAction(
-                std::make_unique<SingleRoomAction>(std::make_unique<UpdateExitField>(doorName, dir),
-                                                   room->getId()));
+            scheduleAction(std::make_unique<SingleRoomAction>(
+                std::make_unique<UpdateExitField>(std::move(moved_doorName), dir), room->getId()));
         }
     }
 }

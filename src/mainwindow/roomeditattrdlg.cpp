@@ -710,13 +710,13 @@ void RoomEditAttrDlg::setRoomSelection(const SharedRoomSelection &rs,
     else if (rs->size() == 1) {
         tabWidget->setCurrentWidget(attributesTab);
         const auto room = m_roomSelection->first();
-        roomListComboBox->addItem(room->getName(), room->getId().asUint32());
+        roomListComboBox->addItem(room->getName().toQString(), room->getId().asUint32());
         updateDialog(room);
     } else {
         tabWidget->setCurrentWidget(selectionTab);
         roomListComboBox->addItem("All", 0);
         for (const Room *room : *m_roomSelection) {
-            roomListComboBox->addItem(room->getName(), room->getId().asUint32());
+            roomListComboBox->addItem(room->getName().toQString(), room->getId().asUint32());
         }
         updateDialog(nullptr);
     }
@@ -810,7 +810,7 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         if (e.isDoor()) {
             doorNameLineEdit->setEnabled(true);
             doorFlagsListWidget->setEnabled(true);
-            doorNameLineEdit->setText(e.getDoorName());
+            doorNameLineEdit->setText(e.getDoorName().toQString());
             setCheckStates(doorListItems, e.getDoorFlags());
 
         } else {
@@ -834,16 +834,19 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         roomDescriptionTextEdit->clear();
         roomDescriptionTextEdit->setFontItalic(false);
         {
-            QString str = r->getStaticDescription();
-            str = str.left(str.length() - 1);
+            QString str = r->getStaticDescription().toQString();
+            if (str.endsWith("\n"))
+                str = str.left(str.length() - 1);
+            else
+                assert(false);
             roomDescriptionTextEdit->append(str);
         }
         roomDescriptionTextEdit->setFontItalic(true);
-        roomDescriptionTextEdit->append(r->getDynamicDescription());
+        roomDescriptionTextEdit->append(r->getDynamicDescription().toQString());
         roomDescriptionTextEdit->scroll(-100, -100);
 
         roomNoteTextEdit->clear();
-        roomNoteTextEdit->append(r->getNote());
+        roomNoteTextEdit->append(r->getNote().toQString());
 
         const auto get_terrain_pixmap = [](RoomTerrainEnum type) -> QString {
             if (type == RoomTerrainEnum::ROAD)
@@ -1212,9 +1215,9 @@ void RoomEditAttrDlg::doorNameLineEditTextChanged(const QString /*unused*/ &)
 {
     const Room *const r = getSelectedRoom();
 
-    const DoorName doorName = doorNameLineEdit->text();
     m_mapData->execute(std::make_unique<SingleRoomAction>(
-                           std::make_unique<UpdateExitField>(doorName, getSelectedExit()),
+                           std::make_unique<UpdateExitField>(DoorName{doorNameLineEdit->text()},
+                                                             getSelectedExit()),
                            r->getId()),
                        m_roomSelection);
 }
@@ -1328,7 +1331,7 @@ void RoomEditAttrDlg::terrainToolButtonToggled(bool val)
 // note tab
 void RoomEditAttrDlg::roomNoteChanged()
 {
-    const RoomNote note = roomNoteTextEdit->document()->toPlainText();
+    const RoomNote note{roomNoteTextEdit->document()->toPlainText()};
     updateCommon(std::make_unique<UpdateRoomField>(note));
 }
 

@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <QDebug>
+#include <QString>
 #include <QtTest/QtTest>
 
 #include "../src/expandoracommon/parseevent.h"
@@ -34,9 +35,9 @@ void TestParser::latinToAsciiTest()
 
 void TestParser::createParseEventTest()
 {
-    QString roomName = "Room";
-    QString roomDescription = "Dynamic Description";
-    QString parsedRoomDescription = "Static Description";
+    RoomName roomName{"Room"};
+    RoomDynamicDesc roomDescription{"Dynamic Description"};
+    RoomStaticDesc parsedRoomDescription{"Static Description"};
     auto terrain = RoomTerrainEnum::INDOORS;
     ExitsFlagsType eFlags;
     eFlags.setValid();
@@ -63,8 +64,8 @@ void TestParser::createParseEventTest()
     QCOMPARE(e.getMoveType(), CommandEnum::NORTH);
     QCOMPARE(e.getNumSkipped(), 0u);
     QCOMPARE(e.size(), static_cast<size_t>(3));
-    QCOMPARE(QString(e.next()->data()), roomName);
-    QCOMPARE(QString(e.next()->data()), parsedRoomDescription);
+    QCOMPARE(RoomName(e.next()->data()), roomName);
+    QCOMPARE(RoomStaticDesc(e.next()->data()), parsedRoomDescription);
     QCOMPARE(QString(e.next()->data()), QString(static_cast<int>(terrain)));
     QVERIFY(e.next() == nullptr);
 }

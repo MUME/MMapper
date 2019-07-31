@@ -202,11 +202,11 @@ Room *MapStorage::loadRoom(QDataStream &stream, uint32_t version)
     auto helper = LoadRoomHelper{stream};
     Room *room = factory.createRoom();
     room->setPermanent();
-    room->setName(helper.read_string());
-    room->setStaticDescription(helper.read_string());
-    room->setDynamicDescription(helper.read_string());
+    room->setName(RoomName{helper.read_string()});
+    room->setStaticDescription(RoomStaticDesc{helper.read_string()});
+    room->setDynamicDescription(RoomDynamicDesc{helper.read_string()});
     room->setId(RoomId{helper.read_u32() + baseId});
-    room->setNote(helper.read_string());
+    room->setNote(RoomNote{helper.read_string()});
     room->setTerrainType(serialize(helper.read_u8()));
     room->setLightType(serialize<RoomLightEnum>(helper.read_u8()));
     room->setAlignType(serialize<RoomAlignEnum>(helper.read_u8()));
@@ -455,11 +455,11 @@ void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, uint32_t version)
 
 void MapStorage::saveRoom(const Room &room, QDataStream &stream)
 {
-    stream << room.getName();
-    stream << room.getStaticDescription();
-    stream << room.getDynamicDescription();
+    stream << room.getName().toQString();
+    stream << room.getStaticDescription().toQString();
+    stream << room.getDynamicDescription().toQString();
     stream << static_cast<quint32>(room.getId());
-    stream << room.getNote();
+    stream << room.getNote().toQString();
     stream << static_cast<quint8>(room.getTerrainType());
     stream << static_cast<quint8>(room.getLightType());
     stream << static_cast<quint8>(room.getAlignType());
@@ -486,7 +486,7 @@ void MapStorage::saveExits(const Room &room, QDataStream &stream)
         // to increase the size beyond 16 bits.
         stream << static_cast<uint16_t>(e.getExitFlags());
         stream << static_cast<uint16_t>(e.getDoorFlags());
-        stream << e.getDoorName();
+        stream << e.getDoorName().toQString();
         for (auto idx : e.inRange()) {
             stream << static_cast<quint32>(idx);
         }

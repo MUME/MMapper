@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include <optional>
 #include <QByteArray>
 #include <QString>
 #include <QtCore/QFile>
@@ -71,9 +72,10 @@ protected:
     bool m_exitsReady = false;
     bool m_descriptionReady = false;
 
-    QString m_roomName = nullString;
-    QString m_staticRoomDesc = nullString;
-    QString m_dynamicRoomDesc = nullString;
+    // REVISIT: Is there any point to having a distinction between null and empty?
+    std::optional<RoomName> m_roomName;
+    std::optional<RoomStaticDesc> m_staticRoomDesc;
+    std::optional<RoomDynamicDesc> m_dynamicRoomDesc;
 
 private:
     void stripXmlEntities(QByteArray &ch);

@@ -203,11 +203,11 @@ bool MumeXmlParser::element(const QByteArray &line)
             case 'r':
                 if (line.startsWith("room")) {
                     m_xmlMode = XmlModeEnum::ROOM;
-                    m_roomName = emptyString; // 'name' tag will not show up when blinded
+                    m_roomName = RoomName{}; // 'name' tag will not show up when blinded
                     m_descriptionReady = false;
                     m_exitsReady = false;
-                    m_dynamicRoomDesc = nullString;
-                    m_staticRoomDesc = nullString;
+                    m_dynamicRoomDesc.reset();
+                    m_staticRoomDesc.reset();
                     m_exits = nullString;
                     m_promptFlags.reset();
                     m_exitsFlags.reset();
@@ -289,7 +289,7 @@ bool MumeXmlParser::element(const QByteArray &line)
             case 'd':
                 if (line.startsWith("description")) {
                     m_xmlMode = XmlModeEnum::DESCRIPTION;
-                    m_staticRoomDesc = emptyString; // might be empty but valid description
+                    m_staticRoomDesc = RoomStaticDesc{""}; // might be empty but valid description
                 }
                 break;
             case 't': // terrain tag only comes up in blindness or fog
@@ -438,7 +438,9 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         break;
 
     case XmlModeEnum::ROOM: // dynamic line
-        m_dynamicRoomDesc += normalizeStringCopy(m_stringBuffer.simplified().append("\n"));
+        m_dynamicRoomDesc = RoomDynamicDesc{
+            m_dynamicRoomDesc.value_or(RoomDynamicDesc{}).toQString()
+            + normalizeStringCopy(m_stringBuffer.simplified().append("\n"))};
         toUser.append(ch);
         break;
 
@@ -446,12 +448,14 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         if (m_descriptionReady) {
             move();
         }
-        m_roomName = normalizeStringCopy(m_stringBuffer);
+        m_roomName = RoomName{normalizeStringCopy(m_stringBuffer)};
         toUser.append(ch);
         break;
 
     case XmlModeEnum::DESCRIPTION: // static line
-        m_staticRoomDesc += normalizeStringCopy(m_stringBuffer.simplified().append("\n"));
+        m_staticRoomDesc = RoomStaticDesc{
+            m_staticRoomDesc.value_or(RoomStaticDesc{}).toQString()
+            + normalizeStringCopy(m_stringBuffer.simplified().append("\n"))};
         if (!m_gratuitous) {
             toUser.append(ch);
         }
@@ -509,19 +513,20 @@ void MumeXmlParser::move()
 {
     m_descriptionReady = false;
 
-    if (m_roomName == emptyString || // blindness
+    if (!m_roomName.has_value() || // blindness
         Patterns::matchNoDescriptionPatterns(
-            m_roomName)) { // non standard end of description parsed (fog, dark or so ...)
-        m_roomName = nullString;
-        m_dynamicRoomDesc = nullString;
-        m_staticRoomDesc = nullString;
+            m_roomName.value()
+                .toQString())) { // non standard end of description parsed (fog, dark or so ...)
+        m_roomName.reset();
+        m_dynamicRoomDesc.reset();
+        m_staticRoomDesc.reset();
     }
 
     const auto emitEvent = [this]() {
         auto ev = ParseEvent::createEvent(m_move,
-                                          m_roomName,
-                                          m_dynamicRoomDesc,
-                                          m_staticRoomDesc,
+                                          m_roomName.value_or(RoomName{}),
+                                          m_dynamicRoomDesc.value_or(RoomDynamicDesc{}),
+                                          m_staticRoomDesc.value_or(RoomStaticDesc{}),
                                           m_exitsFlags,
                                           m_promptFlags,
                                           m_connectedRoomFlags);

@@ -9,7 +9,7 @@
 #include "../mapdata/ExitFieldVariant.h"
 #include "../mapdata/ExitFlags.h"
 
-DoorName Exit::getDoorName() const
+const DoorName &Exit::getDoorName() const
 {
     assert(hasFields);
     return doorName;

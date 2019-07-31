@@ -222,7 +222,7 @@ private:
     void parseGroupKick(const StringView &view);
 
     bool setCommandPrefix(char prefix);
-    void setNote(const QString &note);
+    void setNote(RoomNote note);
 
     void openVoteURL();
     void doBackCommand();

@@ -728,7 +728,7 @@ void AbstractParser::parseDirections(StringView view)
 
 void AbstractParser::parseNoteCmd(StringView view)
 {
-    setNote(view.toQString());
+    setNote(RoomNote{view.toStdString()});
 }
 
 void AbstractParser::parseHelp(StringView words)

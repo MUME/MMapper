@@ -81,7 +81,7 @@ public:
     bool containsIn(RoomId from) const { return incoming.find(from) != incoming.end(); }
     bool containsOut(RoomId to) const { return outgoing.find(to) != outgoing.end(); }
 
-    DoorName getDoorName() const;
+    const DoorName &getDoorName() const;
     bool hasDoorName() const;
     ExitFlags getExitFlags() const;
     DoorFlags getDoorFlags() const;

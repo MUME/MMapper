@@ -90,12 +90,12 @@ public:
 
     // Used in Console Commands
     void removeDoorNames();
-    QString getDoorName(const Coordinate &pos, ExitDirEnum dir);
-    QString getDoorName(const Coordinate &pos, DirectionEnum dir)
+    const DoorName &getDoorName(const Coordinate &pos, ExitDirEnum dir);
+    const DoorName &getDoorName(const Coordinate &pos, DirectionEnum dir)
     {
         return getDoorName(pos, static_cast<ExitDirEnum>(dir));
     }
-    void setDoorName(const Coordinate &pos, const QString &name, ExitDirEnum dir);
+    void setDoorName(const Coordinate &pos, DoorName name, ExitDirEnum dir);
 
 public:
     void setFileName(QString filename, bool readOnly)
