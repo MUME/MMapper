@@ -5,6 +5,7 @@
 #include "mumeclockwidget.h"
 
 #include <cassert>
+#include <memory>
 #include <QLabel>
 #include <QString>
 
@@ -20,17 +21,14 @@ MumeClockWidget::MumeClockWidget(MumeClock *clock, QWidget *parent)
     setAttribute(Qt::WA_DeleteOnClose);
     assert(testAttribute(Qt::WA_DeleteOnClose));
 
-    m_timer = new QTimer(this);
-    connect(m_timer, &QTimer::timeout, this, &MumeClockWidget::updateLabel);
+    m_timer = std::make_unique<QTimer>(this);
+    connect(m_timer.get(), &QTimer::timeout, this, &MumeClockWidget::updateLabel);
     m_timer->start(1000);
 
     updateLabel();
 }
 
-MumeClockWidget::~MumeClockWidget()
-{
-    delete m_timer;
-}
+MumeClockWidget::~MumeClockWidget() = default;
 
 void MumeClockWidget::updateLabel()
 {

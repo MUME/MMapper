@@ -3,6 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include <memory>
 #include <QString>
 #include <QWidget>
 #include <QtCore>
@@ -26,7 +27,7 @@ public slots:
 
 private:
     MumeClock *m_clock = nullptr;
-    QTimer *m_timer = nullptr;
+    std::unique_ptr<QTimer> m_timer;
 
     MumeTime m_lastTime = MumeTime::TIME_UNKNOWN;
     MumeSeason m_lastSeason = MumeSeason::SEASON_UNKNOWN;
