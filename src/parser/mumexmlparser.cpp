@@ -62,16 +62,16 @@ MumeXmlParser::~MumeXmlParser()
 void MumeXmlParser::parseNewMudInput(const IncomingData &data)
 {
     switch (data.type) {
-    case TelnetDataType::DELAY: // Twiddlers
-    case TelnetDataType::MENU_PROMPT:
-    case TelnetDataType::LOGIN:
-    case TelnetDataType::LOGIN_PASSWORD:
+    case TelnetDataEnum::DELAY: // Twiddlers
+    case TelnetDataEnum::MENU_PROMPT:
+    case TelnetDataEnum::LOGIN:
+    case TelnetDataEnum::LOGIN_PASSWORD:
         m_lastPrompt = data.line;
         stripXmlEntities(m_lastPrompt);
         parse(data);
         break;
-    case TelnetDataType::SPLIT:
-    case TelnetDataType::UNKNOWN:
+    case TelnetDataEnum::SPLIT:
+    case TelnetDataEnum::UNKNOWN:
         if (XPS_DEBUG_TO_FILE) {
             (*debugStream) << "***STYPE***";
             (*debugStream) << "OTHER";
@@ -81,10 +81,10 @@ void MumeXmlParser::parseNewMudInput(const IncomingData &data)
         parse(data);
         break;
 
-    case TelnetDataType::PROMPT:
-    case TelnetDataType::LF:
-    case TelnetDataType::LFCR:
-    case TelnetDataType::CRLF:
+    case TelnetDataEnum::PROMPT:
+    case TelnetDataEnum::LF:
+    case TelnetDataEnum::LFCR:
+    case TelnetDataEnum::CRLF:
         if (XPS_DEBUG_TO_FILE) {
             (*debugStream) << "***STYPE***";
             (*debugStream) << "CRLF";
@@ -105,9 +105,8 @@ void MumeXmlParser::parse(const IncomingData &data)
 {
     const QByteArray &line = data.line;
     m_lineToUser.clear();
-    int index;
 
-    for (index = 0; index < line.size(); index++) {
+    for (int index = 0; index < line.size(); index++) {
         if (m_readingTag) {
             if (line.at(index) == '>') {
                 // send tag
@@ -139,19 +138,19 @@ void MumeXmlParser::parse(const IncomingData &data)
         m_tempCharacters.clear();
     }
     if (!m_lineToUser.isEmpty()) {
-        const auto isGoAhead = [](TelnetDataType type) -> bool {
+        const auto isGoAhead = [](const TelnetDataEnum type) -> bool {
             switch (type) {
-            case TelnetDataType::DELAY:
-            case TelnetDataType::LOGIN:
-            case TelnetDataType::LOGIN_PASSWORD:
-            case TelnetDataType::MENU_PROMPT:
-            case TelnetDataType::PROMPT:
+            case TelnetDataEnum::DELAY:
+            case TelnetDataEnum::LOGIN:
+            case TelnetDataEnum::LOGIN_PASSWORD:
+            case TelnetDataEnum::MENU_PROMPT:
+            case TelnetDataEnum::PROMPT:
                 return true;
-            case TelnetDataType::CRLF:
-            case TelnetDataType::LFCR:
-            case TelnetDataType::LF:
-            case TelnetDataType::SPLIT:
-            case TelnetDataType::UNKNOWN:
+            case TelnetDataEnum::CRLF:
+            case TelnetDataEnum::LFCR:
+            case TelnetDataEnum::LF:
+            case TelnetDataEnum::SPLIT:
+            case TelnetDataEnum::UNKNOWN:
                 return false;
             }
             return false;
@@ -178,10 +177,10 @@ void MumeXmlParser::parse(const IncomingData &data)
 bool MumeXmlParser::element(const QByteArray &line)
 {
     const int length = line.length();
-    const XmlMode lastMode = m_xmlMode;
+    const XmlModeEnum lastMode = m_xmlMode;
 
     switch (m_xmlMode) {
-    case XmlMode::NONE:
+    case XmlModeEnum::NONE:
         if (length > 0) {
             switch (line.at(0)) {
             case '/':
@@ -192,18 +191,18 @@ bool MumeXmlParser::element(const QByteArray &line)
                 break;
             case 'p':
                 if (line.startsWith("prompt")) {
-                    m_xmlMode = XmlMode::PROMPT;
+                    m_xmlMode = XmlModeEnum::PROMPT;
                 }
                 break;
             case 'e':
                 if (line.startsWith("exits")) {
                     m_exits = nullString; // Reset string since payload can be from the 'exit' command
-                    m_xmlMode = XmlMode::EXITS;
+                    m_xmlMode = XmlModeEnum::EXITS;
                 }
                 break;
             case 'r':
                 if (line.startsWith("room")) {
-                    m_xmlMode = XmlMode::ROOM;
+                    m_xmlMode = XmlModeEnum::ROOM;
                     m_roomName = emptyString; // 'name' tag will not show up when blinded
                     m_descriptionReady = false;
                     m_exitsReady = false;
@@ -226,28 +225,28 @@ bool MumeXmlParser::element(const QByteArray &line)
                         if (length > 13) {
                             switch (line.at(13)) {
                             case 'n':
-                                m_move = CommandIdType::NORTH;
+                                m_move = CommandEnum::NORTH;
                                 break;
                             case 's':
-                                m_move = CommandIdType::SOUTH;
+                                m_move = CommandEnum::SOUTH;
                                 break;
                             case 'e':
-                                m_move = CommandIdType::EAST;
+                                m_move = CommandEnum::EAST;
                                 break;
                             case 'w':
-                                m_move = CommandIdType::WEST;
+                                m_move = CommandEnum::WEST;
                                 break;
                             case 'u':
-                                m_move = CommandIdType::UP;
+                                m_move = CommandEnum::UP;
                                 break;
                             case 'd':
-                                m_move = CommandIdType::DOWN;
+                                m_move = CommandEnum::DOWN;
                                 break;
                             };
                         }
                         break;
                     case '/':
-                        m_move = CommandIdType::NONE;
+                        m_move = CommandEnum::NONE;
                         break;
                     }
                 };
@@ -260,21 +259,21 @@ bool MumeXmlParser::element(const QByteArray &line)
             case 's':
                 if (line.startsWith("status")) {
                     m_readStatusTag = true;
-                    m_xmlMode = XmlMode::NONE;
+                    m_xmlMode = XmlModeEnum::NONE;
                 } else if (line.startsWith("snoop")) {
                     m_readSnoopTag = true;
                 }
                 break;
             case 'h':
                 if (line.startsWith("header")) {
-                    m_xmlMode = XmlMode::HEADER;
+                    m_xmlMode = XmlModeEnum::HEADER;
                 }
                 break;
             }
         };
         break;
 
-    case XmlMode::ROOM:
+    case XmlModeEnum::ROOM:
         if (length > 0) {
             switch (line.at(0)) {
             case 'g':
@@ -284,24 +283,24 @@ bool MumeXmlParser::element(const QByteArray &line)
                 break;
             case 'n':
                 if (line.startsWith("name")) {
-                    m_xmlMode = XmlMode::NAME;
+                    m_xmlMode = XmlModeEnum::NAME;
                 }
                 break;
             case 'd':
                 if (line.startsWith("description")) {
-                    m_xmlMode = XmlMode::DESCRIPTION;
+                    m_xmlMode = XmlModeEnum::DESCRIPTION;
                     m_staticRoomDesc = emptyString; // might be empty but valid description
                 }
                 break;
             case 't': // terrain tag only comes up in blindness or fog
                 if (line.startsWith("terrain")) {
-                    m_xmlMode = XmlMode::TERRAIN;
+                    m_xmlMode = XmlModeEnum::TERRAIN;
                 }
                 break;
 
             case '/':
                 if (line.startsWith("/room")) {
-                    m_xmlMode = XmlMode::NONE;
+                    m_xmlMode = XmlModeEnum::NONE;
                 } else if (line.startsWith("/gratuitous")) {
                     m_gratuitous = false;
                 }
@@ -309,63 +308,63 @@ bool MumeXmlParser::element(const QByteArray &line)
             }
         }
         break;
-    case XmlMode::NAME:
+    case XmlModeEnum::NAME:
         if (line.startsWith("/name")) {
-            m_xmlMode = XmlMode::ROOM;
+            m_xmlMode = XmlModeEnum::ROOM;
         }
         break;
-    case XmlMode::DESCRIPTION:
+    case XmlModeEnum::DESCRIPTION:
         if (length > 0) {
             switch (line.at(0)) {
             case '/':
                 if (line.startsWith("/description")) {
-                    m_xmlMode = XmlMode::ROOM;
+                    m_xmlMode = XmlModeEnum::ROOM;
                 }
                 break;
             }
         }
         break;
-    case XmlMode::EXITS:
+    case XmlModeEnum::EXITS:
         if (length > 0) {
             switch (line.at(0)) {
             case '/':
                 if (line.startsWith("/exits")) {
                     parseExits();
-                    m_xmlMode = XmlMode::NONE;
+                    m_xmlMode = XmlModeEnum::NONE;
                 }
                 break;
             }
         }
         break;
-    case XmlMode::PROMPT:
+    case XmlModeEnum::PROMPT:
         if (length > 0) {
             switch (line.at(0)) {
             case '/':
                 if (line.startsWith("/prompt")) {
-                    m_xmlMode = XmlMode::NONE;
+                    m_xmlMode = XmlModeEnum::NONE;
                     m_overrideSendPrompt = false;
                 }
                 break;
             }
         }
         break;
-    case XmlMode::TERRAIN:
+    case XmlModeEnum::TERRAIN:
         if (length > 0) {
             switch (line.at(0)) {
             case '/':
                 if (line.startsWith("/terrain")) {
-                    m_xmlMode = XmlMode::ROOM;
+                    m_xmlMode = XmlModeEnum::ROOM;
                 }
                 break;
             }
         }
         break;
-    case XmlMode::HEADER:
+    case XmlModeEnum::HEADER:
         if (length > 0) {
             switch (line.at(0)) {
             case '/':
                 if (line.startsWith("/header")) {
-                    m_xmlMode = XmlMode::NONE;
+                    m_xmlMode = XmlModeEnum::NONE;
                 }
                 break;
             }
@@ -377,7 +376,7 @@ bool MumeXmlParser::element(const QByteArray &line)
         m_lineToUser.append(lessThanChar).append(line).append(greaterThanChar);
     }
 
-    if (lastMode == XmlMode::PROMPT) {
+    if (lastMode == XmlModeEnum::PROMPT) {
         // Store prompts in case an internal command is executed
         m_lastPrompt = m_lineToUser;
     }
@@ -413,7 +412,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
     }
 
     switch (m_xmlMode) {
-    case XmlMode::NONE: // non room info
+    case XmlModeEnum::NONE: // non room info
         m_stringBuffer = normalizeStringCopy(m_stringBuffer.trimmed());
         if (m_stringBuffer.isEmpty()) { // standard end of description parsed
             if (!m_exitsReady) {
@@ -438,12 +437,12 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         toUser.append(ch);
         break;
 
-    case XmlMode::ROOM: // dynamic line
+    case XmlModeEnum::ROOM: // dynamic line
         m_dynamicRoomDesc += normalizeStringCopy(m_stringBuffer.simplified().append("\n"));
         toUser.append(ch);
         break;
 
-    case XmlMode::NAME:
+    case XmlModeEnum::NAME:
         if (m_descriptionReady) {
             move();
         }
@@ -451,14 +450,14 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         toUser.append(ch);
         break;
 
-    case XmlMode::DESCRIPTION: // static line
+    case XmlModeEnum::DESCRIPTION: // static line
         m_staticRoomDesc += normalizeStringCopy(m_stringBuffer.simplified().append("\n"));
         if (!m_gratuitous) {
             toUser.append(ch);
         }
         break;
 
-    case XmlMode::EXITS:
+    case XmlModeEnum::EXITS:
         m_exits += m_stringBuffer;
         if (!m_exitsReady) {
             m_exitsReady = true;
@@ -466,7 +465,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         }
         break;
 
-    case XmlMode::PROMPT:
+    case XmlModeEnum::PROMPT:
         emit sendPromptLineEvent(normalizeStringCopy(m_stringBuffer).toLatin1());
         if (!m_exitsReady) {     // fixes compact mode
             m_exitsReady = true; // we finished read desc mode
@@ -483,7 +482,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         toUser.append(ch);
         break;
 
-    case XmlMode::HEADER:
+    case XmlModeEnum::HEADER:
         // REVISIT: Why do this here? Can't we move this logic to </room>
         // We should get rid of m_readingRoomDesc
         if (!m_exitsReady) {
@@ -492,7 +491,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         toUser.append(ch);
         break;
 
-    case XmlMode::TERRAIN:
+    case XmlModeEnum::TERRAIN:
     default:
         toUser.append(ch);
         break;
@@ -532,10 +531,9 @@ void MumeXmlParser::move()
     if (queue.isEmpty()) {
         emitEvent();
     } else {
-        const CommandIdType c = queue.dequeue();
+        const CommandEnum c = queue.dequeue();
         // Ignore scouting unless it forced movement via a one-way
-        if (c != CommandIdType::SCOUT
-            || (c == CommandIdType::SCOUT && m_move != CommandIdType::LOOK)) {
+        if (c != CommandEnum::SCOUT || (c == CommandEnum::SCOUT && m_move != CommandEnum::LOOK)) {
             emit showPath(queue, false);
             emitEvent();
             if (c != m_move) {
@@ -543,7 +541,7 @@ void MumeXmlParser::move()
             }
         }
     }
-    m_move = CommandIdType::LOOK;
+    m_move = CommandEnum::LOOK;
 }
 
 void MumeXmlParser::parseMudCommands(const QString &str)
@@ -553,26 +551,26 @@ void MumeXmlParser::parseMudCommands(const QString &str)
     switch (str.at(0).toLatin1()) {
     case 'Y':
         if (str.startsWith("Your head stops stinging.")) {
-            emit sendCharacterAffectEvent(CharacterAffect::BASHED, false);
+            emit sendCharacterAffectEvent(CharacterAffectEnum::BASHED, false);
             return;
 
         } else if (str.startsWith("You feel a cloak of blindness dissolve.")
                    || str.startsWith(
                           "Your head stops spinning and you can see clearly again.") // flash powder
         ) {
-            emit sendCharacterAffectEvent(CharacterAffect::BLIND, false);
+            emit sendCharacterAffectEvent(CharacterAffectEnum::BLIND, false);
             return;
         } else if (str.startsWith("You have been blinded!")
                    || str.startsWith("An extremely bright flash of light stuns you!") // flash powder
         ) {
-            emit sendCharacterAffectEvent(CharacterAffect::BLIND, true);
+            emit sendCharacterAffectEvent(CharacterAffectEnum::BLIND, true);
             return;
         } else if (str.startsWith("You feel very sleepy... zzzzzz")) {
-            emit sendCharacterPositionEvent(CharacterPosition::SLEEPING);
-            emit sendCharacterAffectEvent(CharacterAffect::SLEPT, true);
+            emit sendCharacterPositionEvent(CharacterPositionEnum::SLEEPING);
+            emit sendCharacterAffectEvent(CharacterAffectEnum::SLEPT, true);
             return;
         } else if (str.startsWith("You feel less tired.")) {
-            emit sendCharacterAffectEvent(CharacterAffect::SLEPT, false);
+            emit sendCharacterAffectEvent(CharacterAffectEnum::SLEPT, false);
             return;
         } else if (str.startsWith(
                        "Your body turns numb as the poison speeds to your brain!") // Arachnia
@@ -582,26 +580,26 @@ void MumeXmlParser::parseMudCommands(const QString &str)
                    || str.startsWith("You feel sleepy.")                           // Psylonia tick
                    || str.startsWith("Your limbs are becoming cold and heavy,"     // Psylonia tick
                                      " your eyelids close.")) {
-            emit sendCharacterAffectEvent(CharacterAffect::POISONED, true);
+            emit sendCharacterAffectEvent(CharacterAffectEnum::POISONED, true);
             return;
         } else if (str.startsWith("You are dead!")) {
             queue.clear();
             emit showPath(queue, true);
             emit releaseAllPaths();
             markCurrentCommand();
-            emit sendCharacterPositionEvent(CharacterPosition::DEAD);
+            emit sendCharacterPositionEvent(CharacterPositionEnum::DEAD);
             return;
         } else if (str.startsWith("You failed to climb")) {
             if (!queue.isEmpty())
                 queue.dequeue();
-            queue.prepend(CommandIdType::NONE); // REVISIT: Do we need this?
+            queue.prepend(CommandEnum::NONE); // REVISIT: Do we need this?
             emit showPath(queue, true);
             return;
         } else if (str.startsWith("You flee head")) {
-            queue.enqueue(CommandIdType::LOOK);
+            queue.enqueue(CommandEnum::LOOK);
             return;
         } else if (str.startsWith("You follow")) {
-            queue.enqueue(CommandIdType::LOOK);
+            queue.enqueue(CommandEnum::LOOK);
             return;
         } else if (str.startsWith("You need to swim to go there.")
                    || str.startsWith("You cannot ride there.")
@@ -617,57 +615,57 @@ void MumeXmlParser::parseMudCommands(const QString &str)
             emit showPath(queue, true);
             return;
         } else if (str.startsWith("You quietly scout")) {
-            queue.prepend(CommandIdType::SCOUT);
+            queue.prepend(CommandEnum::SCOUT);
             return;
         } else if (str.startsWith("You go to sleep.")
                    || str.startsWith("You are already sound asleep.")) {
-            emit sendCharacterPositionEvent(CharacterPosition::SLEEPING);
+            emit sendCharacterPositionEvent(CharacterPositionEnum::SLEEPING);
             return;
         } else if (str.startsWith("You wake, and sit up.") || str.startsWith("You sit down.")
                    || str.startsWith("You stop resting and sit up.")
                    || str.startsWith("You're sitting already.")) {
-            emit sendCharacterPositionEvent(CharacterPosition::SITTING);
+            emit sendCharacterPositionEvent(CharacterPositionEnum::SITTING);
             return;
         } else if (str.startsWith("You rest your tired bones.")
                    || str.startsWith("You sit down and rest your tired bones.")
                    || str.startsWith("You are already resting.")) {
-            emit sendCharacterPositionEvent(CharacterPosition::RESTING);
+            emit sendCharacterPositionEvent(CharacterPositionEnum::RESTING);
             return;
         } else if (str.startsWith("You stop resting and stand up.")
                    || str.startsWith("You stand up.")
                    || str.startsWith("You are already standing.")) {
-            emit sendCharacterPositionEvent(CharacterPosition::STANDING);
+            emit sendCharacterPositionEvent(CharacterPositionEnum::STANDING);
             return;
         } else if (str.startsWith("You are incapacitated and will slowly die, if not aided.")
                    || str.startsWith("You are in a pretty bad shape, unable to do anything!")
                    || str.startsWith(
                           "You're stunned and will probably die soon if no-one helps you.")
                    || str.startsWith("You are mortally wounded and will die soon if not aided.")) {
-            emit sendCharacterPositionEvent(CharacterPosition::INCAPACITATED);
+            emit sendCharacterPositionEvent(CharacterPositionEnum::INCAPACITATED);
             return;
         } else if (str.startsWith("You bleed from open wounds.")) {
-            emit sendCharacterAffectEvent(CharacterAffect::BLEEDING, true);
+            emit sendCharacterAffectEvent(CharacterAffectEnum::BLEEDING, true);
             return;
         } else if (str.startsWith("You begin to feel hungry.")
                    || str.startsWith("You are hungry.")) {
-            emit sendCharacterAffectEvent(CharacterAffect::HUNGRY, true);
+            emit sendCharacterAffectEvent(CharacterAffectEnum::HUNGRY, true);
             return;
         } else if (str.startsWith("You begin to feel thirsty.")
                    || str.startsWith("You are thirsty.")) {
-            emit sendCharacterAffectEvent(CharacterAffect::THIRSTY, true);
+            emit sendCharacterAffectEvent(CharacterAffectEnum::THIRSTY, true);
             return;
         } else if (str.startsWith("You do not feel thirsty anymore.")
                    || str.startsWith("You feel less thirsty.") // create water
         ) {
-            emit sendCharacterAffectEvent(CharacterAffect::THIRSTY, false);
+            emit sendCharacterAffectEvent(CharacterAffectEnum::THIRSTY, false);
             return;
         } else if (str.startsWith("You are full.")) {
-            emit sendCharacterAffectEvent(CharacterAffect::HUNGRY, false);
+            emit sendCharacterAffectEvent(CharacterAffectEnum::HUNGRY, false);
             return;
         } else if (str.startsWith("You can feel the broken bones within you heal "
                                   "and reshape themselves") // cure critic
         ) {
-            emit sendCharacterAffectEvent(CharacterAffect::BLEEDING, false);
+            emit sendCharacterAffectEvent(CharacterAffectEnum::BLEEDING, false);
             return;
         }
         break;
@@ -688,7 +686,7 @@ void MumeXmlParser::parseMudCommands(const QString &str)
         } else if (str.startsWith("The venom enters your body!")        // Venom
                    || str.startsWith("The venom runs into your veins!") // Venom tick
         ) {
-            emit sendCharacterAffectEvent(CharacterAffect::POISONED, true);
+            emit sendCharacterAffectEvent(CharacterAffectEnum::POISONED, true);
             return;
         }
         break;
@@ -703,15 +701,15 @@ void MumeXmlParser::parseMudCommands(const QString &str)
 
         } else if (str.startsWith("A warm feeling runs through your body, you feel better.")) {
             // Remove poison <magic>
-            emit sendCharacterAffectEvent(CharacterAffect::POISONED, false);
+            emit sendCharacterAffectEvent(CharacterAffectEnum::POISONED, false);
             return;
 
         } else if (str.startsWith("A warm feeling fills your body.")) {
             // Heal <magic>
-            emit sendCharacterAffectEvent(CharacterAffect::POISONED, false);
+            emit sendCharacterAffectEvent(CharacterAffectEnum::POISONED, false);
             return;
         } else if (str.startsWith("A hot flush overwhelms your brain and makes you dizzy.")) {
-            emit sendCharacterAffectEvent(CharacterAffect::POISONED, true);
+            emit sendCharacterAffectEvent(CharacterAffectEnum::POISONED, true);
             return;
         }
         break;
@@ -755,11 +753,11 @@ void MumeXmlParser::parseMudCommands(const QString &str)
         break;
     case '-':
         if (str.startsWith("- poison (type: poison).")) {
-            emit sendCharacterAffectEvent(CharacterAffect::POISONED, true);
+            emit sendCharacterAffectEvent(CharacterAffectEnum::POISONED, true);
             return;
         } else if (!str.startsWith("- a light wound") && !str.endsWith("bound)")
                    && str.contains("wound at the")) {
-            emit sendCharacterAffectEvent(CharacterAffect::BLEEDING, true);
+            emit sendCharacterAffectEvent(CharacterAffectEnum::BLEEDING, true);
             return;
         }
     };
@@ -776,7 +774,7 @@ void MumeXmlParser::parseMudCommands(const QString &str)
         || str.endsWith("whips its tail around, and sends you sprawling!") // cave-worm
         || str.endsWith("sends you sprawling.")                            // various trees
     ) {
-        emit sendCharacterAffectEvent(CharacterAffect::BASHED, true);
+        emit sendCharacterAffectEvent(CharacterAffectEnum::BASHED, true);
         return;
     }
 

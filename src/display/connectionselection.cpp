@@ -50,9 +50,9 @@ bool ConnectionSelection::isValid()
     return true;
 }
 
-ExitDirection ConnectionSelection::ComputeDirection(const Coordinate2f &mouse_f)
+ExitDirEnum ConnectionSelection::ComputeDirection(const Coordinate2f &mouse_f)
 {
-    ExitDirection dir = ExitDirection::UNKNOWN;
+    ExitDirEnum dir = ExitDirEnum::UNKNOWN;
     const auto mouse = mouse_f.round();
 
     const int x1 = mouse.x;
@@ -64,14 +64,14 @@ ExitDirection ConnectionSelection::ComputeDirection(const Coordinate2f &mouse_f)
     if (y1d > -0.2f && y1d < 0.2f) {
         // y1p = y1;
         if (x1d >= 0.2f) {
-            dir = ExitDirection::EAST;
+            dir = ExitDirEnum::EAST;
             // x1p = x1 + 0.4;
         } else {
             if (x1d <= -0.2f) {
-                dir = ExitDirection::WEST;
+                dir = ExitDirEnum::WEST;
                 // x1p = x1 - 0.4;
             } else {
-                dir = ExitDirection::UNKNOWN;
+                dir = ExitDirEnum::UNKNOWN;
                 // x1p = x1;
             }
         }
@@ -79,17 +79,17 @@ ExitDirection ConnectionSelection::ComputeDirection(const Coordinate2f &mouse_f)
         // x1p = x1;
         if (y1d >= 0.2f) {
             // y1p = y1 + 0.4;
-            dir = ExitDirection::SOUTH;
+            dir = ExitDirEnum::SOUTH;
             if (x1d <= -0.2f) {
-                dir = ExitDirection::DOWN;
+                dir = ExitDirEnum::DOWN;
                 // x1p = x1 + 0.4;
             }
         } else {
             if (y1d <= -0.2f) {
                 // y1p = y1 - 0.4;
-                dir = ExitDirection::NORTH;
+                dir = ExitDirEnum::NORTH;
                 if (x1d >= 0.2f) {
-                    dir = ExitDirection::UP;
+                    dir = ExitDirEnum::UP;
                     // x1p = x1 - 0.4;
                 }
             }
@@ -99,7 +99,7 @@ ExitDirection ConnectionSelection::ComputeDirection(const Coordinate2f &mouse_f)
     return dir;
 }
 
-void ConnectionSelection::setFirst(MapFrontend *const mf, const RoomId id, const ExitDirection dir)
+void ConnectionSelection::setFirst(MapFrontend *const mf, const RoomId id, const ExitDirEnum dir)
 {
     m_first = true;
     if (m_connectionDescriptor[0].room != nullptr) {
@@ -128,7 +128,7 @@ void ConnectionSelection::setSecond(MapFrontend *const mf, const MouseSel &sel)
     // if (m_connectionDescriptor[1].direction == ED_UNKNOWN) m_connectionDescriptor[1].direction = ED_NONE;
 }
 
-void ConnectionSelection::setSecond(MapFrontend *const mf, const RoomId id, const ExitDirection dir)
+void ConnectionSelection::setSecond(MapFrontend *const mf, const RoomId id, const ExitDirEnum dir)
 {
     m_first = false;
     if (m_connectionDescriptor[1].room != nullptr) {

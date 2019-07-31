@@ -20,9 +20,9 @@ public:
     int hp = 0, maxhp = 0;
     int mana = 0, maxmana = 0;
     int moves = 0, maxmoves = 0;
-    CharacterPosition position = CharacterPosition::UNDEFINED;
-    CharacterAffects affects{};
-    CommandQueue prespam{};
+    CharacterPositionEnum position = CharacterPositionEnum::UNDEFINED;
+    CharacterAffects affects;
+    CommandQueue prespam;
 
     CGroupChar();
     virtual ~CGroupChar();
@@ -48,8 +48,8 @@ public:
     }
 
 private:
-    QByteArray name{};
-    QColor color{};
+    QByteArray name;
+    QColor color;
 
 public:
     DELETE_CTORS_AND_ASSIGN_OPS(CGroupChar);

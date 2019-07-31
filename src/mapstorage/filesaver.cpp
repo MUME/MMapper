@@ -12,7 +12,7 @@
 #include "../configuration/configuration.h"
 #include "../global/io.h"
 
-static constexpr const bool USE_TMP_SUFFIX = CURRENT_PLATFORM != Platform::Windows;
+static constexpr const bool USE_TMP_SUFFIX = CURRENT_PLATFORM != PlatformEnum::Windows;
 
 static const char *const TMP_FILE_SUFFIX = ".tmp";
 static auto maybe_add_suffix(const QString &filename)

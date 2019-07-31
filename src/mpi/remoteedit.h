@@ -43,6 +43,6 @@ private:
     void addSession(int, const QString &, QString);
     void removeSession(uint);
 
-    uint greatestUsedId{0};
+    uint greatestUsedId = 0;
     std::map<uint, std::unique_ptr<RemoteEditSession>> m_sessions;
 };

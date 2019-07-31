@@ -71,10 +71,10 @@ protected:
     QScrollBar *m_verticalScrollBar = nullptr;
     MapCanvas *m_canvas = nullptr;
 
-    Coordinate m_scrollBarMinimumVisible{};
-    Coordinate m_scrollBarMaximumVisible{};
+    Coordinate m_scrollBarMinimumVisible;
+    Coordinate m_scrollBarMaximumVisible;
 
 private:
-    QPoint mousePressPos{};
-    QPoint scrollBarValuesOnMousePress{};
+    QPoint mousePressPos;
+    QPoint scrollBarValuesOnMousePress;
 };

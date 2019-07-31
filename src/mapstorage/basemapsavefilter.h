@@ -19,7 +19,7 @@ class ProgressCounter;
 class BaseMapSaveFilter : public RoomRecipient
 {
 public:
-    enum class Action { PASS, ALTER, REJECT };
+    enum class ActionEnum { PASS, ALTER, REJECT };
 
 private:
     struct Impl;
@@ -44,7 +44,7 @@ public:
     //! First pass over the world's room (requires mapData)
     void prepare(ProgressCounter &counter);
     //! Determines the fate of this room (requires prepare())
-    Action filter(const Room &room);
+    ActionEnum filter(const Room &room);
     //! Returns an altered Room (requires action == ALTER)
     Room alteredRoom(const Room &room);
 };

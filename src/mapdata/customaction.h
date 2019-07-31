@@ -26,7 +26,7 @@ class MapFrontend;
 class ParseEvent;
 class Room;
 
-enum class FlagModifyMode { SET, UNSET, TOGGLE };
+enum class FlagModifyModeEnum { SET, UNSET, TOGGLE };
 
 using AddOneWayExit = AddExit;
 
@@ -35,8 +35,8 @@ class AddTwoWayExit final : public AddOneWayExit
 public:
     explicit AddTwoWayExit(RoomId room1Id,
                            RoomId room2Id,
-                           ExitDirection room1Dir,
-                           ExitDirection in_room2Dir = ExitDirection::UNKNOWN)
+                           ExitDirEnum room1Dir,
+                           ExitDirEnum in_room2Dir = ExitDirEnum::UNKNOWN)
         : AddOneWayExit(room1Id, room2Id, room1Dir)
         , room2Dir(in_room2Dir)
     {}
@@ -44,7 +44,7 @@ public:
 protected:
     virtual void exec() override;
 
-    ExitDirection room2Dir = ExitDirection::UNKNOWN;
+    ExitDirEnum room2Dir = ExitDirEnum::UNKNOWN;
 };
 
 using RemoveOneWayExit = RemoveExit;
@@ -54,8 +54,8 @@ class RemoveTwoWayExit final : public RemoveOneWayExit
 public:
     explicit RemoveTwoWayExit(RoomId room1Id,
                               RoomId room2Id,
-                              ExitDirection room1Dir,
-                              ExitDirection in_room2Dir = ExitDirection::UNKNOWN)
+                              ExitDirEnum room1Dir,
+                              ExitDirEnum in_room2Dir = ExitDirEnum::UNKNOWN)
         : RemoveOneWayExit(room1Id, room2Id, room1Dir)
         , room2Dir(in_room2Dir)
     {}
@@ -63,7 +63,7 @@ public:
 protected:
     virtual void exec() override;
 
-    ExitDirection room2Dir = ExitDirection::UNKNOWN;
+    ExitDirEnum room2Dir = ExitDirEnum::UNKNOWN;
 };
 
 class GroupMapAction final : virtual public MapAction
@@ -110,7 +110,7 @@ public:
     virtual void insertAffected(RoomId id, RoomIdSet &affected) override;
 
 protected:
-    Coordinate move{};
+    Coordinate move;
 };
 
 class ConnectToNeighbours final : public AbstractAction
@@ -121,21 +121,21 @@ public:
     virtual void exec(RoomId id) override;
 
 private:
-    void connectRooms(Room *center, Coordinate &otherPos, ExitDirection dir, RoomId cid);
+    void connectRooms(Room *center, Coordinate &otherPos, ExitDirEnum dir, RoomId cid);
 };
 
 class ModifyRoomFlags final : public AbstractAction
 {
 public:
-    explicit ModifyRoomFlags(RoomFieldVariant flags, FlagModifyMode);
-    explicit ModifyRoomFlags(RoomMobFlags flags, FlagModifyMode);
-    explicit ModifyRoomFlags(RoomLoadFlags flags, FlagModifyMode);
+    explicit ModifyRoomFlags(RoomFieldVariant flags, FlagModifyModeEnum);
+    explicit ModifyRoomFlags(RoomMobFlags flags, FlagModifyModeEnum);
+    explicit ModifyRoomFlags(RoomLoadFlags flags, FlagModifyModeEnum);
 
     virtual void exec(RoomId id) override;
 
 protected:
     const RoomFieldVariant var;
-    const FlagModifyMode mode{};
+    const FlagModifyModeEnum mode;
 };
 
 class ModifyRoomUpToDate final : public AbstractAction
@@ -153,13 +153,13 @@ protected:
 class UpdateExitField final : public AbstractAction
 {
 public:
-    explicit UpdateExitField(const DoorName &update, ExitDirection dir);
+    explicit UpdateExitField(const DoorName &update, ExitDirEnum dir);
 
     virtual void exec(RoomId id) override;
 
 protected:
     const ExitFieldVariant update;
-    const ExitDirection dir = ExitDirection::UNKNOWN;
+    const ExitDirEnum dir = ExitDirEnum::UNKNOWN;
 };
 
 // Despite its name, this is also used to modify an exit's DoorFlags.
@@ -167,14 +167,14 @@ protected:
 class ModifyExitFlags final : public AbstractAction
 {
 public:
-    explicit ModifyExitFlags(ExitFieldVariant flags, ExitDirection dir, FlagModifyMode);
-    explicit ModifyExitFlags(ExitFlags flags, ExitDirection dir, FlagModifyMode);
-    explicit ModifyExitFlags(DoorFlags flags, ExitDirection dir, FlagModifyMode);
+    explicit ModifyExitFlags(ExitFieldVariant flags, ExitDirEnum dir, FlagModifyModeEnum);
+    explicit ModifyExitFlags(ExitFlags flags, ExitDirEnum dir, FlagModifyModeEnum);
+    explicit ModifyExitFlags(DoorFlags flags, ExitDirEnum dir, FlagModifyModeEnum);
 
     virtual void exec(RoomId id) override;
 
 protected:
     const ExitFieldVariant var;
-    const FlagModifyMode mode{};
-    const ExitDirection dir = ExitDirection::UNKNOWN;
+    const FlagModifyModeEnum mode;
+    const ExitDirEnum dir = ExitDirEnum::UNKNOWN;
 };

@@ -15,13 +15,13 @@ ExitFieldVariant::ExitFieldVariant(const ExitFieldVariant &rhs)
     : type_{rhs.type_}
 {
     switch (type_) {
-    case ExitField::DOOR_NAME:
+    case ExitFieldEnum::DOOR_NAME:
         new (&storage_) DoorName{rhs.getDoorName()};
         return;
-    case ExitField::EXIT_FLAGS:
+    case ExitFieldEnum::EXIT_FLAGS:
         new (&storage_) ExitFlags{rhs.getExitFlags()};
         return;
-    case ExitField::DOOR_FLAGS:
+    case ExitFieldEnum::DOOR_FLAGS:
         new (&storage_) DoorFlags{rhs.getDoorFlags()};
         return;
     }
@@ -37,19 +37,19 @@ ExitFieldVariant &ExitFieldVariant::operator=(const ExitFieldVariant &rhs)
 }
 
 ExitFieldVariant::ExitFieldVariant(DoorName doorName)
-    : type_{ExitField::DOOR_NAME}
+    : type_{ExitFieldEnum::DOOR_NAME}
 {
     new (&storage_) DoorName{std::move(doorName)};
 }
 
 ExitFieldVariant::ExitFieldVariant(const ExitFlags exitFlags)
-    : type_{ExitField::EXIT_FLAGS}
+    : type_{ExitFieldEnum::EXIT_FLAGS}
 {
     new (&storage_) ExitFlags{exitFlags};
 }
 
 ExitFieldVariant::ExitFieldVariant(const DoorFlags doorFlags)
-    : type_{ExitField::DOOR_FLAGS}
+    : type_{ExitFieldEnum::DOOR_FLAGS}
 {
     new (&storage_) DoorFlags{doorFlags};
 }
@@ -57,13 +57,13 @@ ExitFieldVariant::ExitFieldVariant(const DoorFlags doorFlags)
 ExitFieldVariant::~ExitFieldVariant()
 {
     switch (type_) {
-    case ExitField::DOOR_NAME:
+    case ExitFieldEnum::DOOR_NAME:
         reinterpret_cast<DoorName *>(&storage_)->~DoorName();
         break;
-    case ExitField::EXIT_FLAGS:
+    case ExitFieldEnum::EXIT_FLAGS:
         reinterpret_cast<ExitFlags *>(&storage_)->~ExitFlags();
         break;
-    case ExitField::DOOR_FLAGS:
+    case ExitFieldEnum::DOOR_FLAGS:
         reinterpret_cast<DoorFlags *>(&storage_)->~DoorFlags();
         break;
     }
@@ -76,21 +76,21 @@ ExitFieldVariant::~ExitFieldVariant()
 
 DoorName ExitFieldVariant::getDoorName() const
 {
-    if (type_ != ExitField::DOOR_NAME)
+    if (type_ != ExitFieldEnum::DOOR_NAME)
         throw std::runtime_error("bad type");
     return *reinterpret_cast<const DoorName *>(&storage_);
 }
 
 ExitFlags ExitFieldVariant::getExitFlags() const
 {
-    if (type_ != ExitField::EXIT_FLAGS)
+    if (type_ != ExitFieldEnum::EXIT_FLAGS)
         throw std::runtime_error("bad type");
     return *reinterpret_cast<const ExitFlags *>(&storage_);
 }
 
 DoorFlags ExitFieldVariant::getDoorFlags() const
 {
-    if (type_ != ExitField::DOOR_FLAGS)
+    if (type_ != ExitFieldEnum::DOOR_FLAGS)
         throw std::runtime_error("bad type");
     return *reinterpret_cast<const DoorFlags *>(&storage_);
 }

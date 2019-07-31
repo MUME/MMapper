@@ -5,18 +5,14 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 using uint = unsigned int;
 
-class PathParameters
+struct PathParameters
 {
-public:
-    PathParameters();
-
-    double acceptBestRelative;
-    double acceptBestAbsolute;
-    double newRoomPenalty;
-    double multipleConnectionsPenalty;
-    double correctPositionBonus;
-    double maxPaths;
-    int matchingTolerance;
-    uint maxSkipped;
-    ~PathParameters() {}
+    double acceptBestRelative = 10.0;
+    double acceptBestAbsolute = 3.0;
+    double newRoomPenalty = 5.0;
+    double multipleConnectionsPenalty = 2.0;
+    double correctPositionBonus = 5.1;
+    double maxPaths = 500.0;
+    int matchingTolerance = 5;
+    uint maxSkipped = 1;
 };

@@ -10,16 +10,16 @@
 #include "../expandoracommon/room.h"
 #include "../mapdata/ExitDirection.h"
 
-RoadIndex getRoadIndex(const ExitDirection dir)
+RoadIndexMaskEnum getRoadIndex(const ExitDirEnum dir)
 {
     if (isNESW(dir))
-        return static_cast<RoadIndex>(1 << static_cast<int>(dir));
+        return static_cast<RoadIndexMaskEnum>(1 << static_cast<int>(dir));
     throw std::invalid_argument("dir");
 }
 
-RoadIndex getRoadIndex(const Room &room)
+RoadIndexMaskEnum getRoadIndex(const Room &room)
 {
-    RoadIndex roadIndex = RoadIndex::NONE;
+    RoadIndexMaskEnum roadIndex = RoadIndexMaskEnum::NONE;
 
     for (auto dir : ALL_EXITS_NESW)
         if (room.exit(dir).exitIsRoad())

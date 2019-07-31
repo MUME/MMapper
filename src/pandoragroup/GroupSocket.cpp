@@ -51,7 +51,7 @@ GroupSocket::GroupSocket(GroupAuthority *authority, QObject *parent)
         if (io::tuneKeepAlive(socket.socketDescriptor())) {
             emit sendLog("Tuned TCP keep alive parameters for socket");
         }
-        setProtocolState(ProtocolState::AwaitingLogin);
+        setProtocolState(ProtocolStateEnum::AwaitingLogin);
         emit sendLog("Connection established...");
         emit connectionEstablished(this);
     });
@@ -106,7 +106,7 @@ void GroupSocket::disconnectFromHost()
         socket.flush();
         emit sendLog("Closing the socket. Quitting.");
         socket.disconnectFromHost();
-        setProtocolState(ProtocolState::Unconnected);
+        setProtocolState(ProtocolStateEnum::Unconnected);
     }
 }
 
@@ -122,30 +122,30 @@ void GroupSocket::setSocket(qintptr socketDescriptor)
     if (io::tuneKeepAlive(socket.socketDescriptor())) {
         emit sendLog("Tuned TCP keep alive parameters for socket");
     }
-    setProtocolState(ProtocolState::AwaitingLogin);
+    setProtocolState(ProtocolStateEnum::AwaitingLogin);
     emit connectionEstablished(this);
 }
 
-void GroupSocket::setProtocolState(const ProtocolState val)
+void GroupSocket::setProtocolState(const ProtocolStateEnum val)
 {
     timer.stop();
     if (DEBUG)
         qInfo() << "Protocol state:" << static_cast<int>(val);
     protocolState = val;
     switch (val) {
-    case ProtocolState::AwaitingLogin:
+    case ProtocolStateEnum::AwaitingLogin:
         // Restart timer to verify that info was sent
         timer.start();
         break;
-    case ProtocolState::AwaitingInfo:
+    case ProtocolStateEnum::AwaitingInfo:
         // Restart timer to verify that login occurred
         emit sendLog("Receiving group information...");
         timer.start();
         break;
-    case ProtocolState::Logged:
+    case ProtocolStateEnum::Logged:
         emit sendLog("Group information received. Login completed successfully.");
         break;
-    case ProtocolState::Unconnected:
+    case ProtocolStateEnum::Unconnected:
         break;
     default:
         abort();
@@ -178,8 +178,8 @@ void GroupSocket::onTimeout()
     switch (socket.state()) {
     case QAbstractSocket::ConnectedState:
         switch (protocolState) {
-        case ProtocolState::Unconnected:
-        case ProtocolState::AwaitingLogin:
+        case ProtocolStateEnum::Unconnected:
+        case ProtocolStateEnum::AwaitingLogin:
             if (!socket.isEncrypted()) {
                 const QString msg = socket.isEncrypted() ? socket.errorString()
                                                          : "Connection not successfully encrypted";
@@ -189,10 +189,10 @@ void GroupSocket::onTimeout()
             goto continue_common_timeout;
 
         continue_common_timeout:
-        case ProtocolState::AwaitingInfo:
+        case ProtocolStateEnum::AwaitingInfo:
             emit errorInConnection(this, "Login timed out");
             break;
-        case ProtocolState::Logged:
+        case ProtocolStateEnum::Logged:
             // Race condition? Protocol was successfully logged
             break;
         }
@@ -223,10 +223,10 @@ void GroupSocket::onReadyRead()
 void GroupSocket::onReadInternal(const char c)
 {
     switch (state) {
-    case GroupMessageState::MESSAGE_LENGTH:
+    case GroupMessageStateEnum::LENGTH:
         if (c == ' ' && currentMessageLen > 0) {
             // Terminating space received
-            state = GroupMessageState::MESSAGE_PAYLOAD;
+            state = GroupMessageStateEnum::PAYLOAD;
         } else if (c >= '0' && c <= '9') {
             // Digit received
             currentMessageLen *= 10;
@@ -236,7 +236,7 @@ void GroupSocket::onReadInternal(const char c)
             currentMessageLen = 0;
         }
         break;
-    case GroupMessageState::MESSAGE_PAYLOAD:
+    case GroupMessageStateEnum::PAYLOAD:
         buffer.append(c);
         if (static_cast<unsigned int>(buffer.size()) == currentMessageLen) {
             // Cut message from buffer
@@ -247,7 +247,7 @@ void GroupSocket::onReadInternal(const char c)
             // Reset state machine
             buffer.clear();
             currentMessageLen = 0;
-            state = GroupMessageState::MESSAGE_LENGTH;
+            state = GroupMessageStateEnum::LENGTH;
         }
         break;
     }
@@ -273,11 +273,11 @@ void GroupSocket::sendData(const QByteArray &data)
 
 void GroupSocket::reset()
 {
-    protocolState = ProtocolState::Unconnected;
+    protocolState = ProtocolStateEnum::Unconnected;
     protocolVersion = 102;
     buffer.clear();
     secret.clear();
     name.clear();
-    state = GroupMessageState::MESSAGE_LENGTH;
+    state = GroupMessageStateEnum::LENGTH;
     currentMessageLen = 0;
 }

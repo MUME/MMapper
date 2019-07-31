@@ -177,7 +177,7 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
     UPDATE_AND_BOUNDS_CHECK(moves);
 
     const auto setPosition = [&position = this->position,
-                              &updated](const CharacterPosition newPosition) {
+                              &updated](const CharacterPositionEnum newPosition) {
         if (newPosition != position) {
             updated = true;
             position = newPosition;
@@ -186,12 +186,12 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
 
     if (playerData.contains(stateKey) && playerData[stateKey].canConvert(QMetaType::Int)) {
         const int n = playerData[stateKey].toInt();
-        if (n < static_cast<int>(CharacterPosition::UNDEFINED)
+        if (n < static_cast<int>(CharacterPositionEnum::UNDEFINED)
             || n >= static_cast<int>(NUM_CHARACTER_POSITIONS)) {
             qWarning() << "Invalid input state (" << n << ") is changed to UNDEFINED.";
-            setPosition(CharacterPosition::UNDEFINED);
+            setPosition(CharacterPositionEnum::UNDEFINED);
         } else {
-            setPosition(static_cast<CharacterPosition>(n));
+            setPosition(static_cast<CharacterPositionEnum>(n));
         }
     }
 

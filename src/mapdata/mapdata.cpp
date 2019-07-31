@@ -37,25 +37,25 @@ MapData::MapData(QObject *const parent)
     : MapFrontend(new RoomFactory{}, parent)
 {}
 
-QString MapData::getDoorName(const Coordinate &pos, const ExitDirection dir)
+QString MapData::getDoorName(const Coordinate &pos, const ExitDirEnum dir)
 {
     // REVISIT: Could this function could be made const if we make mapLock mutable?
     // Alternately, WTF are we accessing this from multiple threads?
     QMutexLocker locker(&mapLock);
     if (Room *const room = map.get(pos)) {
-        if (dir < ExitDirection::UNKNOWN) {
+        if (dir < ExitDirEnum::UNKNOWN) {
             return room->exit(dir).getDoorName();
         }
     }
     return "exit";
 }
 
-void MapData::setDoorName(const Coordinate &pos, const QString &name, const ExitDirection dir)
+void MapData::setDoorName(const Coordinate &pos, const QString &name, const ExitDirEnum dir)
 {
     QMutexLocker locker(&mapLock);
     const auto doorName = DoorName{name};
     if (Room *const room = map.get(pos)) {
-        if (dir < ExitDirection::UNKNOWN) {
+        if (dir < ExitDirEnum::UNKNOWN) {
             setDataChanged();
             MapAction *action = new SingleRoomAction(new UpdateExitField(doorName, dir),
                                                      room->getId());
@@ -64,29 +64,29 @@ void MapData::setDoorName(const Coordinate &pos, const QString &name, const Exit
     }
 }
 
-bool MapData::getExitFlag(const Coordinate &pos, const ExitDirection dir, ExitFieldVariant var)
+bool MapData::getExitFlag(const Coordinate &pos, const ExitDirEnum dir, ExitFieldVariant var)
 {
-    assert(var.getType() != ExitField::DOOR_NAME);
+    assert(var.getType() != ExitFieldEnum::DOOR_NAME);
 
     QMutexLocker locker(&mapLock);
     if (Room *const room = map.get(pos)) {
-        if (dir < ExitDirection::NONE) {
+        if (dir < ExitDirEnum::NONE) {
             switch (var.getType()) {
-            case ExitField::DOOR_NAME: {
+            case ExitFieldEnum::DOOR_NAME: {
                 const auto name = room->exit(dir).getDoorName();
                 if (var.getDoorName() == name) {
                     return true;
                 }
                 break;
             }
-            case ExitField::EXIT_FLAGS: {
+            case ExitFieldEnum::EXIT_FLAGS: {
                 const auto ef = room->exit(dir).getExitFlags();
                 if (IS_SET(ef, var.getExitFlags())) {
                     return true;
                 }
                 break;
             }
-            case ExitField::DOOR_FLAGS: {
+            case ExitFieldEnum::DOOR_FLAGS: {
                 const auto df = room->exit(dir).getDoorFlags();
                 if (IS_SET(df, var.getDoorFlags())) {
                     return true;
@@ -99,20 +99,19 @@ bool MapData::getExitFlag(const Coordinate &pos, const ExitDirection dir, ExitFi
     return false;
 }
 
-void MapData::toggleExitFlag(const Coordinate &pos, const ExitDirection dir, ExitFieldVariant var)
+void MapData::toggleExitFlag(const Coordinate &pos, const ExitDirEnum dir, ExitFieldVariant var)
 {
     const auto field = var.getType();
-    assert(field != ExitField::DOOR_NAME);
+    assert(field != ExitFieldEnum::DOOR_NAME);
 
     QMutexLocker locker(&mapLock);
     if (Room *const room = map.get(pos)) {
-        if (dir < ExitDirection::NONE) {
+        if (dir < ExitDirEnum::NONE) {
             setDataChanged();
 
-            MapAction *action = new SingleRoomAction(new ModifyExitFlags(var,
-                                                                         dir,
-                                                                         FlagModifyMode::TOGGLE),
-                                                     room->getId());
+            MapAction *action
+                = new SingleRoomAction(new ModifyExitFlags(var, dir, FlagModifyModeEnum::TOGGLE),
+                                       room->getId());
             scheduleAction(action);
         }
     }
@@ -124,12 +123,12 @@ void MapData::toggleRoomFlag(const Coordinate &pos, RoomFieldVariant var)
     if (Room *room = map.get(pos)) {
         setDataChanged();
         // REVISIT: Consolidate ModifyRoomFlags and UpdateRoomField
-        MapAction *action = (var.getType() == RoomField::MOB_FLAGS
-                             || var.getType() == RoomField::LOAD_FLAGS)
-                                ? new SingleRoomAction(new ModifyRoomFlags(var,
-                                                                           FlagModifyMode::TOGGLE),
-                                                       room->getId())
-                                : new SingleRoomAction(new UpdateRoomField(var), room->getId());
+        MapAction *action
+            = (var.getType() == RoomFieldEnum::MOB_FLAGS
+               || var.getType() == RoomFieldEnum::LOAD_FLAGS)
+                  ? new SingleRoomAction(new ModifyRoomFlags(var, FlagModifyModeEnum::TOGGLE),
+                                         room->getId())
+                  : new SingleRoomAction(new UpdateRoomField(var), room->getId());
         scheduleAction(action);
     }
 }
@@ -140,40 +139,40 @@ bool MapData::getRoomFlag(const Coordinate &pos, RoomFieldVariant var)
     QMutexLocker locker(&mapLock);
     if (Room *const room = map.get(pos)) {
         switch (var.getType()) {
-        case RoomField::NOTE: {
+        case RoomFieldEnum::NOTE: {
             return var.getNote() == room->getNote();
         }
-        case RoomField::MOB_FLAGS: {
+        case RoomFieldEnum::MOB_FLAGS: {
             const auto ef = room->getMobFlags();
             if (IS_SET(ef, var.getMobFlags())) {
                 return true;
             }
             break;
         }
-        case RoomField::LOAD_FLAGS: {
+        case RoomFieldEnum::LOAD_FLAGS: {
             const auto ef = room->getLoadFlags();
             if (IS_SET(ef, var.getLoadFlags())) {
                 return true;
             }
             break;
         }
-        case RoomField::ALIGN_TYPE:
+        case RoomFieldEnum::ALIGN_TYPE:
             return var.getAlignType() == room->getAlignType();
-        case RoomField::LIGHT_TYPE:
+        case RoomFieldEnum::LIGHT_TYPE:
             return var.getLightType() == room->getLightType();
-        case RoomField::PORTABLE_TYPE:
+        case RoomFieldEnum::PORTABLE_TYPE:
             return var.getPortableType() == room->getPortableType();
-        case RoomField::RIDABLE_TYPE:
+        case RoomFieldEnum::RIDABLE_TYPE:
             return var.getRidableType() == room->getRidableType();
-        case RoomField::SUNDEATH_TYPE:
+        case RoomFieldEnum::SUNDEATH_TYPE:
             return var.getSundeathType() == room->getSundeathType();
-        case RoomField::TERRAIN_TYPE:
+        case RoomFieldEnum::TERRAIN_TYPE:
             return var.getTerrainType() == room->getTerrainType();
-        case RoomField::NAME:
-        case RoomField::DESC:
-        case RoomField::DYNAMIC_DESC:
-        case RoomField::LAST:
-        case RoomField::RESERVED:
+        case RoomFieldEnum::NAME:
+        case RoomFieldEnum::DESC:
+        case RoomFieldEnum::DYNAMIC_DESC:
+        case RoomFieldEnum::LAST:
+        case RoomFieldEnum::RESERVED:
             throw std::runtime_error("impossible");
         }
     }
@@ -188,7 +187,7 @@ QList<Coordinate> MapData::getPath(const Coordinate &start, const CommandQueue &
     //* NOTE: room is used and then reassigned inside the loop.
     if (Room *room = map.get(start)) {
         for (const auto cmd : dirs) {
-            if (cmd == CommandIdType::LOOK)
+            if (cmd == CommandEnum::LOOK)
                 continue;
 
             if (!isDirectionNESWUD(cmd)) {

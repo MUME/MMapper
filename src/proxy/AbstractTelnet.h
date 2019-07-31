@@ -93,14 +93,15 @@ else does it ;))
   *@author Tomas Mecir
 */
 
-#include "TextCodec.h"
-#include <array>
 #include <cassert>
 #include <cstdint>
 #include <QByteArray>
 #include <QObject>
 #include <QString>
 #include <QtCore>
+
+#include "../global/Array.h"
+#include "TextCodec.h"
 
 // telnet command codes (prefixed with TN_ to prevent duplicit #defines
 static constexpr const uint8_t TN_SE = 240;
@@ -217,20 +218,20 @@ protected:
 
     void setTerminalType(const QByteArray &terminalType = "unknown");
 
-    TextCodec textCodec{};
+    TextCodec textCodec;
 
     static constexpr const size_t NUM_OPTS = 256;
-    using OptionArray = std::array<bool, NUM_OPTS>;
+    using OptionArray = MMapper::Array<bool, NUM_OPTS>;
 
     /** current state of options on our side and on server side */
-    OptionArray myOptionState{};
-    OptionArray hisOptionState{};
+    OptionArray myOptionState;
+    OptionArray hisOptionState;
     /** whether we have announced WILL/WON'T for that option (if we have, we don't
         respond to DO/DON'T sent by the server -- see implementation and RFC 854
         for more information... */
-    OptionArray announcedState{};
+    OptionArray announcedState;
     /** whether the server has already announced his WILL/WON'T */
-    OptionArray heAnnouncedState{};
+    OptionArray heAnnouncedState;
 
     /** current dimensions for NAWS */
     struct
@@ -239,7 +240,7 @@ protected:
     } current{};
 
     /* Terminal Type */
-    QByteArray termType{};
+    QByteArray termType;
 
     /** amount of bytes sent up to now */
     int64_t sentBytes = 0;
@@ -253,9 +254,9 @@ private:
     /** processes a telnet subcommand payload */
     void processTelnetSubnegotiation(const AppendBuffer &payload);
 
-    AppendBuffer commandBuffer{};
-    AppendBuffer subnegBuffer{};
-    enum class TelnetState {
+    AppendBuffer commandBuffer;
+    AppendBuffer subnegBuffer;
+    enum class TelnetStateEnum {
         /// normal input
         NORMAL,
         /// received IAC

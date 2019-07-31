@@ -21,7 +21,7 @@
     X(DEAD, dead, Dead, "Dead") \
     /* define character positions above */
 
-enum class CharacterPosition {
+enum class CharacterPositionEnum {
 #define X_DECL_CHARACTER_POSITION(UPPER_CASE, lower_case, CamelCase, friendly) UPPER_CASE,
     X_FOREACH_CHARACTER_POSITION(X_DECL_CHARACTER_POSITION)
 #undef X_DECL_CHARACTER_POSITION
@@ -30,8 +30,8 @@ enum class CharacterPosition {
 #define X_COUNT(UPPER_CASE, lower_case, CamelCase, friendly) +1
 static constexpr const int NUM_CHARACTER_POSITIONS = X_FOREACH_CHARACTER_POSITION(X_COUNT);
 #undef X_COUNT
-DEFINE_ENUM_COUNT(CharacterPosition, NUM_CHARACTER_POSITIONS)
-Q_DECLARE_METATYPE(CharacterPosition)
+DEFINE_ENUM_COUNT(CharacterPositionEnum, NUM_CHARACTER_POSITIONS)
+Q_DECLARE_METATYPE(CharacterPositionEnum)
 
 // X(UPPER_CASE, lower_case, CamelCase, "Friendly Name")
 #define X_FOREACH_CHARACTER_AFFECT(X) \
@@ -45,7 +45,7 @@ Q_DECLARE_METATYPE(CharacterPosition)
     /* define character affects above */
 
 // TODO: States for CASTING FLUSHING DISEASED
-enum class CharacterAffect {
+enum class CharacterAffectEnum {
 #define X_DECL_CHARACTER_AFFECT(UPPER_CASE, lower_case, CamelCase, friendly) UPPER_CASE,
     X_FOREACH_CHARACTER_AFFECT(X_DECL_CHARACTER_AFFECT)
 #undef X_DECL_CHARACTER_AFFECT
@@ -54,21 +54,22 @@ enum class CharacterAffect {
 #define X_COUNT(UPPER_CASE, lower_case, CamelCase, friendly) +1
 static constexpr const int NUM_CHARACTER_AFFECTS = X_FOREACH_CHARACTER_AFFECT(X_COUNT);
 #undef X_COUNT
-DEFINE_ENUM_COUNT(CharacterAffect, NUM_CHARACTER_AFFECTS)
-Q_DECLARE_METATYPE(CharacterAffect)
+DEFINE_ENUM_COUNT(CharacterAffectEnum, NUM_CHARACTER_AFFECTS)
+Q_DECLARE_METATYPE(CharacterAffectEnum)
 
-class CharacterAffects final : public enums::Flags<CharacterAffects, CharacterAffect, uint32_t>
+class CharacterAffects final : public enums::Flags<CharacterAffects, CharacterAffectEnum, uint32_t>
 {
     using Flags::Flags;
 
 public:
 #define X_DEFINE_ACCESSORS(UPPER_CASE, lower_case, CamelCase, friendly) \
-    bool is##CamelCase() const { return contains(CharacterAffect::UPPER_CASE); }
+    bool is##CamelCase() const { return contains(CharacterAffectEnum::UPPER_CASE); }
     X_FOREACH_CHARACTER_AFFECT(X_DEFINE_ACCESSORS)
 #undef X_DEFINE_ACCESSORS
 };
 
-inline constexpr const CharacterAffects operator|(CharacterAffect lhs, CharacterAffect rhs) noexcept
+inline constexpr const CharacterAffects operator|(CharacterAffectEnum lhs,
+                                                  CharacterAffectEnum rhs) noexcept
 {
     return CharacterAffects{lhs} | CharacterAffects{rhs};
 }

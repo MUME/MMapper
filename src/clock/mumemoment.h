@@ -8,33 +8,21 @@
 
 static constexpr const int MUME_START_YEAR = 2850;
 
-enum class MumeTime { TIME_UNKNOWN = 0, TIME_DAWN, TIME_DAY, TIME_DUSK, TIME_NIGHT };
-enum class MumeSeason {
-    SEASON_UNKNOWN = 0,
-    SEASON_WINTER,
-    SEASON_SPRING,
-    SEASON_SUMMER,
-    SEASON_AUTUMN
-};
+enum class MumeTimeEnum { UNKNOWN = 0, DAWN, DAY, DUSK, NIGHT };
+enum class MumeSeasonEnum { UNKNOWN = 0, WINTER, SPRING, SUMMER, AUTUMN };
 
-enum class MumeMoonPhase {
-    PHASE_UNKNOWN = -1,    // Illumination Levels
-    PHASE_WAXING_CRESCENT, //  1,  2,  3
-    PHASE_FIRST_QUARTER,   //  4,  5,  6
-    PHASE_WAXING_GIBBOUS,  //  7,  8,  9
-    PHASE_FULL_MOON,       // 10, 11, 12
-    PHASE_WANING_GIBBOUS,  // 11, 10,  9
-    PHASE_THIRD_QUARTER,   //  8,  7,  6
-    PHASE_WANING_CRESCENT, //  5,  4,  3
-    PHASE_NEW_MOON         //  2,  1,  0
+enum class MumeMoonPhaseEnum {
+    UNKNOWN = -1,    // Illumination Levels
+    WAXING_CRESCENT, //  1,  2,  3
+    FIRST_QUARTER,   //  4,  5,  6
+    WAXING_GIBBOUS,  //  7,  8,  9
+    FULL_MOON,       // 10, 11, 12
+    WANING_GIBBOUS,  // 11, 10,  9
+    THIRD_QUARTER,   //  8,  7,  6
+    WANING_CRESCENT, //  5,  4,  3
+    NEW_MOON         //  2,  1,  0
 };
-enum class MumeMoonVisibility {
-    MOON_POSITION_UNKNOWN = -1,
-    MOON_HIDDEN,
-    MOON_RISE,
-    MOON_VISIBLE,
-    MOON_SET
-};
+enum class MumeMoonVisibilityEnum { POSITION_UNKNOWN = -1, HIDDEN, RISE, VISIBLE, SET };
 
 class MumeMoment
 {
@@ -45,19 +33,19 @@ public:
     int dayOfYear() const;
     int weekDay() const;
     int toSeconds() const;
-    MumeSeason toSeason() const;
-    MumeTime toTimeOfDay() const;
+    MumeSeasonEnum toSeason() const;
+    MumeTimeEnum toTimeOfDay() const;
 
     int moonCycle() const;
     int moonRise() const;
     int moonSet() const;
     int moonPosition() const;
     int moonLevel() const;
-    MumeMoonPhase toMoonPhase() const;
-    MumeMoonVisibility toMoonVisibility() const;
+    MumeMoonPhaseEnum toMoonPhase() const;
+    MumeMoonVisibilityEnum toMoonVisibility() const;
     QString toMumeMoonTime() const;
     QString toMoonCountDown() const;
-    bool isMoonVisible() const { return toMoonVisibility() > MumeMoonVisibility::MOON_HIDDEN; }
+    bool isMoonVisible() const { return toMoonVisibility() > MumeMoonVisibilityEnum::HIDDEN; }
     bool isMoonBright() const { return moonLevel() > 4; }
 
     int year = 0;

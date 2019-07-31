@@ -16,7 +16,7 @@
 class QObject;
 class QWidget;
 
-enum class AnsiMode { ANSI_FG, ANSI_BG };
+enum class AnsiModeEnum { ANSI_FG, ANSI_BG };
 
 class AnsiCombo : public QComboBox
 {
@@ -28,12 +28,12 @@ public:
                                    const QString &ansiColor,
                                    const bool changeText = true);
 
-    explicit AnsiCombo(AnsiMode mode, QWidget *parent = nullptr);
+    explicit AnsiCombo(AnsiModeEnum mode, QWidget *parent = nullptr);
     explicit AnsiCombo(QWidget *parent = nullptr);
 
-    void initColours(AnsiMode mode);
+    void initColours(AnsiModeEnum mode);
 
-    AnsiMode getMode() const { return mode; }
+    AnsiModeEnum getMode() const { return mode; }
 
     /// get currently selected ANSI code like 32 for green colour
     int getAnsiCode() const;
@@ -46,15 +46,15 @@ public:
 
     struct AnsiColor
     {
-        QColor colFg{ansiColor(AnsiColorTable::white)};
-        QColor colBg{ansiColor(AnsiColorTable::black)};
-        int ansiCodeFg{DEFAULT_FG};
-        int ansiCodeBg{DEFAULT_BG};
-        QString intelligibleNameFg{NONE};
-        QString intelligibleNameBg{NONE};
-        bool bold{false};
-        bool italic{false};
-        bool underline{false};
+        QColor colFg = ansiColor(AnsiColorTableEnum::white);
+        QColor colBg = ansiColor(AnsiColorTableEnum::black);
+        int ansiCodeFg = DEFAULT_FG;
+        int ansiCodeBg = DEFAULT_BG;
+        QString intelligibleNameFg = NONE;
+        QString intelligibleNameBg = NONE;
+        bool bold = false;
+        bool italic = false;
+        bool underline = false;
     };
 
     ///\return true if string is valid ANSI color code
@@ -64,5 +64,6 @@ public:
     static bool colorFromNumber(int numColor, QColor &col, QString &intelligibleName);
 
 private:
-    AnsiMode mode;
+    // There's not really a good default value for this.
+    AnsiModeEnum mode = AnsiModeEnum::ANSI_FG;
 };

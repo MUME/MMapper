@@ -25,11 +25,11 @@
 #include "mmapper2group.h"
 
 static constexpr const int GROUP_COLUMN_COUNT = 9;
-static_assert(GROUP_COLUMN_COUNT == static_cast<int>(GroupModel::ColumnType::ROOM_NAME) + 1,
+static_assert(GROUP_COLUMN_COUNT == static_cast<int>(GroupModel::ColumnTypeEnum::ROOM_NAME) + 1,
               "# of columns");
 
 GroupStateData::GroupStateData(const QColor &color,
-                               const CharacterPosition position,
+                               const CharacterPositionEnum position,
                                const CharacterAffects affects)
     : color(std::move(color))
     , position(position)
@@ -49,7 +49,7 @@ void GroupStateData::paint(QPainter *const painter, const QRect &rect)
     painter->fillRect(rect, color);
 
     // REVISIT: Create questionmark icon?
-    if (position == CharacterPosition::UNDEFINED)
+    if (position == CharacterPositionEnum::UNDEFINED)
         return;
 
     // REVISIT: Build images ahead of time
@@ -164,57 +164,59 @@ static QString calculateRatio(const int numerator, const int denomenator)
     return QString("%1/%2").arg(numerator).arg(denomenator);
 }
 
-static QString getPrettyName(const CharacterPosition position)
+static QString getPrettyName(const CharacterPositionEnum position)
 {
 #define X_CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
     do { \
-    case CharacterPosition::UPPER_CASE: \
+    case CharacterPositionEnum::UPPER_CASE: \
         return friendly; \
     } while (false);
     switch (position) {
         X_FOREACH_CHARACTER_POSITION(X_CASE)
     }
-    return QString::asprintf("(CharacterPosition)%d", static_cast<int>(position));
+    return QString::asprintf("(CharacterPositionEnum)%d", static_cast<int>(position));
 #undef X_CASE
 }
-static QString getPrettyName(const CharacterAffect affect)
+static QString getPrettyName(const CharacterAffectEnum affect)
 {
 #define X_CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
     do { \
-    case CharacterAffect::UPPER_CASE: \
+    case CharacterAffectEnum::UPPER_CASE: \
         return friendly; \
     } while (false);
     switch (affect) {
         X_FOREACH_CHARACTER_AFFECT(X_CASE)
     }
-    return QString::asprintf("(CharacterAffect)%d", static_cast<int>(affect));
+    return QString::asprintf("(CharacterAffectEnum)%d", static_cast<int>(affect));
 #undef X_CASE
 }
 
-QVariant GroupModel::dataForCharacter(CGroupChar *const character, ColumnType column, int role) const
+QVariant GroupModel::dataForCharacter(CGroupChar *const character,
+                                      const ColumnTypeEnum column,
+                                      const int role) const
 {
     // Map column to data
     switch (role) {
     case Qt::DisplayRole:
         switch (column) {
-        case ColumnType::NAME:
+        case ColumnTypeEnum::NAME:
             return character->getName();
-        case ColumnType::HP_PERCENT:
+        case ColumnTypeEnum::HP_PERCENT:
             return calculatePercentage(character->hp, character->maxhp);
-        case ColumnType::MANA_PERCENT:
+        case ColumnTypeEnum::MANA_PERCENT:
             return calculatePercentage(character->mana, character->maxmana);
-        case ColumnType::MOVES_PERCENT:
+        case ColumnTypeEnum::MOVES_PERCENT:
             return calculatePercentage(character->moves, character->maxmoves);
-        case ColumnType::HP:
+        case ColumnTypeEnum::HP:
             return calculateRatio(character->hp, character->maxhp);
-        case ColumnType::MANA:
+        case ColumnTypeEnum::MANA:
             return calculateRatio(character->mana, character->maxmana);
-        case ColumnType::MOVES:
+        case ColumnTypeEnum::MOVES:
             return calculateRatio(character->moves, character->maxmoves);
-        case ColumnType::STATE:
+        case ColumnTypeEnum::STATE:
             return QVariant::fromValue(
                 GroupStateData(character->getColor(), character->position, character->affects));
-        case ColumnType::ROOM_NAME:
+        case ColumnTypeEnum::ROOM_NAME:
             if (character->roomId != DEFAULT_ROOMID && character->roomId != INVALID_ROOMID
                 && !m_map->isEmpty() && m_mapLoaded && character->roomId <= m_map->getMaxId()) {
                 auto roomSelection = RoomSelection(*m_map);
@@ -237,7 +239,7 @@ QVariant GroupModel::dataForCharacter(CGroupChar *const character, ColumnType co
         return textColor(character->getColor());
 
     case Qt::TextAlignmentRole:
-        if (column != ColumnType::NAME && column != ColumnType::ROOM_NAME) {
+        if (column != ColumnTypeEnum::NAME && column != ColumnTypeEnum::ROOM_NAME) {
             // NOTE: There's no QVariant(AlignmentFlag) constructor.
             return static_cast<int>(Qt::AlignCenter);
         }
@@ -245,13 +247,13 @@ QVariant GroupModel::dataForCharacter(CGroupChar *const character, ColumnType co
 
     case Qt::ToolTipRole:
         switch (column) {
-        case ColumnType::HP_PERCENT:
+        case ColumnTypeEnum::HP_PERCENT:
             return calculateRatio(character->hp, character->maxhp);
-        case ColumnType::MANA_PERCENT:
+        case ColumnTypeEnum::MANA_PERCENT:
             return calculateRatio(character->mana, character->maxmana);
-        case ColumnType::MOVES_PERCENT:
+        case ColumnTypeEnum::MOVES_PERCENT:
             return calculateRatio(character->moves, character->maxmoves);
-        case ColumnType::STATE: {
+        case ColumnTypeEnum::STATE: {
             QString prettyName = getPrettyName(character->position);
             for (const auto affect : ALL_CHARACTER_AFFECTS) {
                 if (character->affects.contains(affect)) {
@@ -260,11 +262,11 @@ QVariant GroupModel::dataForCharacter(CGroupChar *const character, ColumnType co
             }
             return prettyName;
         };
-        case ColumnType::NAME:
-        case ColumnType::HP:
-        case ColumnType::MANA:
-        case ColumnType::MOVES:
-        case ColumnType::ROOM_NAME:
+        case ColumnTypeEnum::NAME:
+        case ColumnTypeEnum::HP:
+        case ColumnTypeEnum::MANA:
+        case ColumnTypeEnum::MOVES:
+        case ColumnTypeEnum::ROOM_NAME:
             break;
         };
         break;
@@ -288,7 +290,7 @@ QVariant GroupModel::data(const QModelIndex &index, int role) const
         // Map row to character
         if (index.row() < static_cast<int>(selection->size())) {
             CGroupChar *character = selection->at(index.row());
-            ColumnType column = static_cast<ColumnType>(index.column());
+            const auto column = static_cast<ColumnTypeEnum>(index.column());
             data = dataForCharacter(character, column, role);
         }
     }
@@ -300,24 +302,24 @@ QVariant GroupModel::headerData(int section, Qt::Orientation orientation, int ro
     switch (role) {
     case Qt::DisplayRole:
         if (orientation == Qt::Orientation::Horizontal) {
-            switch (static_cast<ColumnType>(section)) {
-            case ColumnType::NAME:
+            switch (static_cast<ColumnTypeEnum>(section)) {
+            case ColumnTypeEnum::NAME:
                 return "Name";
-            case ColumnType::HP_PERCENT:
+            case ColumnTypeEnum::HP_PERCENT:
                 return "HP";
-            case ColumnType::MANA_PERCENT:
+            case ColumnTypeEnum::MANA_PERCENT:
                 return "Mana";
-            case ColumnType::MOVES_PERCENT:
+            case ColumnTypeEnum::MOVES_PERCENT:
                 return "Moves";
-            case ColumnType::HP:
+            case ColumnTypeEnum::HP:
                 return "HP";
-            case ColumnType::MANA:
+            case ColumnTypeEnum::MANA:
                 return "Mana";
-            case ColumnType::MOVES:
+            case ColumnTypeEnum::MOVES:
                 return "Moves";
-            case ColumnType::STATE:
+            case ColumnTypeEnum::STATE:
                 return "State";
-            case ColumnType::ROOM_NAME:
+            case ColumnTypeEnum::ROOM_NAME:
                 return "Room Name";
             default:
                 qWarning() << "Unsupported column" << section;
@@ -384,7 +386,7 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
             }
 
             // Build Context menu
-            if (getConfig().groupManager.state == GroupManagerState::Server) {
+            if (getConfig().groupManager.state == GroupManagerStateEnum::Server) {
                 // All context menu actions are only actionable by the server right now
                 m_kick->setText(QString("&Kick %1").arg(selectedCharacter.constData()));
                 QMenu contextMenu(tr("Context menu"), this);
@@ -435,8 +437,8 @@ void GroupWidget::updateLabels()
         return false;
     };
     const bool hide_mana = !one_character_had_mana();
-    m_table->setColumnHidden(static_cast<int>(GroupModel::ColumnType::MANA), hide_mana);
-    m_table->setColumnHidden(static_cast<int>(GroupModel::ColumnType::MANA_PERCENT), hide_mana);
+    m_table->setColumnHidden(static_cast<int>(GroupModel::ColumnTypeEnum::MANA), hide_mana);
+    m_table->setColumnHidden(static_cast<int>(GroupModel::ColumnTypeEnum::MANA_PERCENT), hide_mana);
 }
 
 void GroupWidget::messageBox(const QString &title, const QString &message)

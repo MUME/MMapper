@@ -18,5 +18,6 @@ public:
     const Coordinate &getPosition2() const { return m_sel2; }
 
 private:
-    Coordinate m_sel1{}, m_sel2{};
+    Coordinate m_sel1;
+    Coordinate m_sel2;
 };

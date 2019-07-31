@@ -43,7 +43,7 @@ void RoomSignalHandler::release(const Room *const room)
     }
 }
 
-void RoomSignalHandler::keep(const Room *const room, const ExitDirection dir, const RoomId fromId)
+void RoomSignalHandler::keep(const Room *const room, const ExitDirEnum dir, const RoomId fromId)
 {
     deref(room);
     assert(!room->isFake());

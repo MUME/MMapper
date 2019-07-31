@@ -18,7 +18,7 @@ class Approved : public RoomRecipient
 private:
     SigParseEvent myEvent;
     const Room *matchedRoom = nullptr;
-    int matchingTolerance = 0;
+    const int matchingTolerance;
     RoomAdmin *owner = nullptr;
     bool moreThanOne = false;
     bool update = false;

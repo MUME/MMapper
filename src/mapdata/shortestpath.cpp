@@ -23,45 +23,45 @@
 #include "roomfilter.h"
 
 // Movement costs per terrain type.
-// Same order as the RoomTerrainType enum.
+// Same order as the RoomTerrainEnum enum.
 // Values taken from https://github.com/nstockton/tintin-mume/blob/master/mapperproxy/mapper/constants.py
 
 ShortestPathRecipient::~ShortestPathRecipient() = default;
 
-static double terrain_cost(const RoomTerrainType type)
+static double terrain_cost(const RoomTerrainEnum type)
 {
     switch (type) {
-    case RoomTerrainType::UNDEFINED:
+    case RoomTerrainEnum::UNDEFINED:
         return 1.0; // undefined
-    case RoomTerrainType::INDOORS:
+    case RoomTerrainEnum::INDOORS:
         return 0.75; // indoors
-    case RoomTerrainType::CITY:
+    case RoomTerrainEnum::CITY:
         return 0.75; // city
-    case RoomTerrainType::FIELD:
+    case RoomTerrainEnum::FIELD:
         return 1.5; // field
-    case RoomTerrainType::FOREST:
+    case RoomTerrainEnum::FOREST:
         return 2.15; // forest
-    case RoomTerrainType::HILLS:
+    case RoomTerrainEnum::HILLS:
         return 2.45; // hills
-    case RoomTerrainType::MOUNTAINS:
+    case RoomTerrainEnum::MOUNTAINS:
         return 2.8; // mountains
-    case RoomTerrainType::SHALLOW:
+    case RoomTerrainEnum::SHALLOW:
         return 2.45; // shallow
-    case RoomTerrainType::WATER:
+    case RoomTerrainEnum::WATER:
         return 50.0; // water
-    case RoomTerrainType::RAPIDS:
+    case RoomTerrainEnum::RAPIDS:
         return 60.0; // rapids
-    case RoomTerrainType::UNDERWATER:
+    case RoomTerrainEnum::UNDERWATER:
         return 100.0; // underwater
-    case RoomTerrainType::ROAD:
+    case RoomTerrainEnum::ROAD:
         return 0.85; // road
-    case RoomTerrainType::BRUSH:
+    case RoomTerrainEnum::BRUSH:
         return 1.5; // brush
-    case RoomTerrainType::TUNNEL:
+    case RoomTerrainEnum::TUNNEL:
         return 0.75; // tunnel
-    case RoomTerrainType::CAVERN:
+    case RoomTerrainEnum::CAVERN:
         return 0.75; // cavern
-    case RoomTerrainType::DEATHTRAP:
+    case RoomTerrainEnum::DEATHTRAP:
         return 1000.0; // deathtrap
     }
 
@@ -81,10 +81,10 @@ static double getLength(const Exit &e, const Room *curr, const Room *nextr)
     if (flags.isClimb()) {
         cost += 2;
     }
-    if (nextr->getRidableType() == RoomRidableType::NOT_RIDABLE) {
+    if (nextr->getRidableType() == RoomRidableEnum::NOT_RIDABLE) {
         cost += 3;
         // One non-ridable room means walking two rooms, plus dismount/mount.
-        if (curr->getRidableType() != RoomRidableType::NOT_RIDABLE) {
+        if (curr->getRidableType() != RoomRidableEnum::NOT_RIDABLE) {
             cost += 4;
         }
     }
@@ -104,7 +104,7 @@ void MapData::shortestPathSearch(const Room *origin,
     QVector<SPNode> sp_nodes;
     QSet<RoomId> visited;
     std::priority_queue<std::pair<double, int>> future_paths;
-    sp_nodes.push_back(SPNode(origin, -1, 0, ExitDirection::UNKNOWN));
+    sp_nodes.push_back(SPNode(origin, -1, 0, ExitDirEnum::UNKNOWN));
     future_paths.push(std::make_pair(0, 0));
     while (!future_paths.empty()) {
         int spindex = future_paths.top().second;
@@ -126,7 +126,7 @@ void MapData::shortestPathSearch(const Room *origin,
             return;
         }
         ExitsList exits = thisr->getExitsList();
-        for (const ExitDirection dir : enums::makeCountingIterator<ExitDirection>(exits)) {
+        for (const ExitDirEnum dir : enums::makeCountingIterator<ExitDirEnum>(exits)) {
             const Exit &e = exits[dir];
             if (!e.outIsUnique()) {
                 // 0: Not mapped
@@ -142,7 +142,7 @@ void MapData::shortestPathSearch(const Room *origin,
             }
             const double length = getLength(e, thisr, nextr);
             sp_nodes.push_back(
-                SPNode(nextr, spindex, thisdist + length, static_cast<ExitDirection>(dir)));
+                SPNode(nextr, spindex, thisdist + length, static_cast<ExitDirEnum>(dir)));
             future_paths.push(std::make_pair(-(thisdist + length), sp_nodes.size() - 1));
         }
     }

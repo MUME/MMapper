@@ -25,6 +25,6 @@ public:
 private:
     RoomRecipient &recipient;
     MapFrontend &data;
-    AbstractRoomFactory *factory;
-    ParseEvent *comparator;
+    AbstractRoomFactory *const factory;
+    ParseEvent *const comparator;
 };

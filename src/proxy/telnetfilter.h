@@ -11,7 +11,7 @@
 #include <QString>
 #include <QtCore>
 
-enum class TelnetDataType {
+enum class TelnetDataEnum {
     PROMPT,
     MENU_PROMPT,
     LOGIN,
@@ -27,8 +27,8 @@ enum class TelnetDataType {
 struct IncomingData
 {
     IncomingData() = default;
-    QByteArray line{};
-    TelnetDataType type = TelnetDataType::SPLIT;
+    QByteArray line;
+    TelnetDataEnum type = TelnetDataEnum::SPLIT;
 };
 
 class TelnetFilter : public QObject
@@ -54,8 +54,8 @@ private:
                               TelnetIncomingDataQueue &que,
                               const bool &goAhead);
 
-    IncomingData m_userIncomingData{};
-    IncomingData m_mudIncomingBuffer{};
-    TelnetIncomingDataQueue m_mudIncomingQue{};
-    TelnetIncomingDataQueue m_userIncomingQue{};
+    IncomingData m_userIncomingData;
+    IncomingData m_mudIncomingBuffer;
+    TelnetIncomingDataQueue m_mudIncomingQue;
+    TelnetIncomingDataQueue m_userIncomingQue;
 };

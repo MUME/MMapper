@@ -59,6 +59,7 @@ set(mmapper_SRCS
     expandoracommon/property.h
     expandoracommon/room.cpp
     expandoracommon/room.h
+    global/Array.h
     global/CharBuffer.h
     global/Color.h
     global/DirectionType.cpp
@@ -77,7 +78,6 @@ set(mmapper_SRCS
     global/Version.h
     global/WinSock.cpp
     global/WinSock.h
-    global/bits.h
     global/entities.cpp
     global/entities.h
     global/enums.h
@@ -241,7 +241,6 @@ set(mmapper_SRCS
     pathmachine/path.h
     pathmachine/pathmachine.cpp
     pathmachine/pathmachine.h
-    pathmachine/pathparameters.cpp
     pathmachine/pathparameters.h
     pathmachine/roomsignalhandler.cpp
     pathmachine/roomsignalhandler.h

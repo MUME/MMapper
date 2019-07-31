@@ -9,12 +9,12 @@
 #include "experimenting.h"
 
 class Path;
-class PathParameters;
 class Room;
 class RoomAdmin;
+struct PathParameters;
 
 Crossover::Crossover(PathList *paths,
-                     ExitDirection dirCode,
+                     ExitDirEnum dirCode,
                      PathParameters &params,
                      AbstractRoomFactory *in_factory)
     : Experimenting(paths, dirCode, params, in_factory)

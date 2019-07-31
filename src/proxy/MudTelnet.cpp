@@ -5,7 +5,7 @@
 #include "MudTelnet.h"
 
 MudTelnet::MudTelnet(QObject *const parent)
-    : AbstractTelnet(TextCodec(TextCodecStrategy::FORCE_LATIN_1), false, parent)
+    : AbstractTelnet(TextCodec(TextCodecStrategyEnum::FORCE_LATIN_1), false, parent)
 {
     // RFC 2066 states we can provide many character sets but we force Latin-1 when
     // communicating with MUME
@@ -29,7 +29,7 @@ void MudTelnet::onSendToMud(const QByteArray &ba)
     submitOverTelnet(ba, false);
 }
 
-void MudTelnet::onRelayNaws(int x, int y)
+void MudTelnet::onRelayNaws(const int x, const int y)
 {
     // remember the size - we'll need it if NAWS is currently disabled but will
     // be enabled. Also remember it if no connection exists at the moment;

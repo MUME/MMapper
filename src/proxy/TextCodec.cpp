@@ -10,21 +10,21 @@
 #include <cassert>
 #include <QDebug>
 
-TextCodec::TextCodec(TextCodecStrategy textCodecStrategy)
+TextCodec::TextCodec(const TextCodecStrategyEnum textCodecStrategy)
     : textCodecStrategy{textCodecStrategy}
 {
     switch (textCodecStrategy) {
-    case TextCodecStrategy::AUTO_SELECT_CODEC:
+    case TextCodecStrategyEnum::AUTO_SELECT_CODEC:
         setEncoding(getConfig().general.characterEncoding);
         break;
-    case TextCodecStrategy::FORCE_US_ASCII:
-        setEncoding(CharacterEncoding::ASCII);
+    case TextCodecStrategyEnum::FORCE_US_ASCII:
+        setEncoding(CharacterEncodingEnum::ASCII);
         break;
-    case TextCodecStrategy::FORCE_LATIN_1:
-        setEncoding(CharacterEncoding::LATIN1);
+    case TextCodecStrategyEnum::FORCE_LATIN_1:
+        setEncoding(CharacterEncodingEnum::LATIN1);
         break;
-    case TextCodecStrategy::FORCE_UTF_8:
-        setEncoding(CharacterEncoding::UTF8);
+    case TextCodecStrategyEnum::FORCE_UTF_8:
+        setEncoding(CharacterEncodingEnum::UTF8);
         break;
     };
 }
@@ -32,14 +32,14 @@ TextCodec::TextCodec(TextCodecStrategy textCodecStrategy)
 QStringList TextCodec::supportedEncodings() const
 {
     switch (textCodecStrategy) {
-    case TextCodecStrategy::AUTO_SELECT_CODEC:
+    case TextCodecStrategyEnum::AUTO_SELECT_CODEC:
         return QStringList() << LATIN_1_ENCODING << UTF_8_ENCODING << US_ASCII_ENCODING;
-    case TextCodecStrategy::FORCE_LATIN_1:
+    case TextCodecStrategyEnum::FORCE_LATIN_1:
         return QStringList() << LATIN_1_ENCODING;
-    case TextCodecStrategy::FORCE_UTF_8:
+    case TextCodecStrategyEnum::FORCE_UTF_8:
         return QStringList() << UTF_8_ENCODING;
     default:
-    case TextCodecStrategy::FORCE_US_ASCII:
+    case TextCodecStrategyEnum::FORCE_US_ASCII:
         return QStringList() << US_ASCII_ENCODING;
     }
 }
@@ -56,7 +56,7 @@ bool TextCodec::supports(const QByteArray &hisCharacterSet) const
 
 QByteArray TextCodec::fromUnicode(const QString &data)
 {
-    if (currentEncoding == CharacterEncoding::ASCII) {
+    if (currentEncoding == CharacterEncodingEnum::ASCII) {
         // Simplify Latin-1 characters to US-ASCII
         QString outdata = data;
         ParserUtils::latinToAsciiInPlace(outdata);
@@ -71,15 +71,15 @@ QString TextCodec::toUnicode(const QByteArray &data)
     return textCodec->toUnicode(data);
 }
 
-void TextCodec::setEncoding(CharacterEncoding encoding)
+void TextCodec::setEncoding(const CharacterEncodingEnum encoding)
 {
     switch (encoding) {
-    case CharacterEncoding::UTF8:
+    case CharacterEncodingEnum::UTF8:
         textCodec = QTextCodec::codecForName(UTF_8_ENCODING);
         break;
     default:
-    case CharacterEncoding::ASCII:
-    case CharacterEncoding::LATIN1:
+    case CharacterEncodingEnum::ASCII:
+    case CharacterEncodingEnum::LATIN1:
         textCodec = QTextCodec::codecForName(LATIN_1_ENCODING);
         break;
     }
@@ -95,20 +95,20 @@ void TextCodec::setEncodingForName(const QByteArray &encoding)
         return;
     }
 
-    if (textCodecStrategy != TextCodecStrategy::AUTO_SELECT_CODEC) {
+    if (textCodecStrategy != TextCodecStrategyEnum::AUTO_SELECT_CODEC) {
         qWarning() << "Could not switch change encoding to" << encoding << "with strategy"
                    << static_cast<int>(textCodecStrategy);
         return;
     }
 
     if (QString::compare(encoding, US_ASCII_ENCODING, Qt::CaseInsensitive) == 0) {
-        setEncoding(CharacterEncoding::ASCII);
+        setEncoding(CharacterEncodingEnum::ASCII);
 
     } else if (QString::compare(encoding, LATIN_1_ENCODING, Qt::CaseInsensitive) == 0) {
-        setEncoding(CharacterEncoding::LATIN1);
+        setEncoding(CharacterEncodingEnum::LATIN1);
 
     } else if (QString::compare(encoding, UTF_8_ENCODING, Qt::CaseInsensitive) == 0) {
-        setEncoding(CharacterEncoding::UTF8);
+        setEncoding(CharacterEncodingEnum::UTF8);
 
     } else {
         qWarning() << "Unable to switch to unsupported codec" << encoding;

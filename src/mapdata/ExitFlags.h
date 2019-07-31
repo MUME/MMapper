@@ -23,7 +23,7 @@
     X(GUARDED, guarded, Guarded, "Guarded") \
     /* define exit flags above */
 
-enum class ExitFlag {
+enum class ExitFlagEnum {
 #define X_DECL_EXIT_FLAG(UPPER_CASE, lower_case, CamelCase, friendly) UPPER_CASE,
     X_FOREACH_EXIT_FLAG(X_DECL_EXIT_FLAG)
 #undef X_DECL_EXIT_FLAG
@@ -32,21 +32,21 @@ enum class ExitFlag {
 #define X_COUNT(UPPER_CASE, lower_case, CamelCase, friendly) +1
 static constexpr const int NUM_EXIT_FLAGS = X_FOREACH_EXIT_FLAG(X_COUNT);
 #undef X_COUNT
-DEFINE_ENUM_COUNT(ExitFlag, NUM_EXIT_FLAGS)
+DEFINE_ENUM_COUNT(ExitFlagEnum, NUM_EXIT_FLAGS)
 
-class ExitFlags final : public enums::Flags<ExitFlags, ExitFlag, uint16_t>
+class ExitFlags final : public enums::Flags<ExitFlags, ExitFlagEnum, uint16_t>
 {
 public:
     using Flags::Flags;
 
 public:
 #define X_DEFINE_ACCESSORS(UPPER_CASE, lower_case, CamelCase, friendly) \
-    bool is##CamelCase() const { return contains(ExitFlag::UPPER_CASE); }
+    bool is##CamelCase() const { return contains(ExitFlagEnum::UPPER_CASE); }
     X_FOREACH_EXIT_FLAG(X_DEFINE_ACCESSORS)
 #undef X_DEFINE_ACCESSORS
 };
 
-inline constexpr const ExitFlags operator|(ExitFlag lhs, ExitFlag rhs) noexcept
+inline constexpr const ExitFlags operator|(ExitFlagEnum lhs, ExitFlagEnum rhs) noexcept
 {
     return ExitFlags{lhs} | ExitFlags{rhs};
 }

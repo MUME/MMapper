@@ -594,10 +594,10 @@ struct Prefix final
 {
 private:
     int prefixLen = 0;
-    QStringRef quotePrefix{};
+    QStringRef quotePrefix;
     bool hasPrefix2 = false;
     int bulletLength = 0;
-    QStringRef prefix2{};
+    QStringRef prefix2;
     bool valid_ = false;
 
 public:
@@ -873,7 +873,7 @@ TextBuffer normalizeAnsi(const QString &str)
     return normalizeAnsi(str.midRef(0));
 }
 
-AnsiStringToken::AnsiStringToken(AnsiStringToken::Type _type,
+AnsiStringToken::AnsiStringToken(AnsiStringToken::TokenTypeEnum _type,
                                  const QString &_text,
                                  const AnsiStringToken::size_type _offset,
                                  const AnsiStringToken::size_type _length)
@@ -895,8 +895,8 @@ QStringRef AnsiStringToken::getQStringRef() const
 
 bool AnsiStringToken::isAnsiCsi() const
 {
-    return type == Type::ANSI && length() >= 4 && at(0) == QC_ESC && at(1) == QC_OPEN_BRACKET
-           && at(length() - 1) == 'm';
+    return type == TokenTypeEnum::ANSI && length() >= 4 && at(0) == QC_ESC
+           && at(1) == QC_OPEN_BRACKET && at(length() - 1) == 'm';
 }
 
 AnsiTokenizer::Iterator::Iterator(const QString &_str, AnsiTokenizer::Iterator::size_type _pos)
@@ -923,20 +923,20 @@ AnsiStringToken AnsiTokenizer::Iterator::getCurrent()
     const auto here = pos_;
     const QChar &c = str_[here];
     if (c == QC_ESC) {
-        return AnsiStringToken{AnsiStringToken::Type::ANSI, str_, here, skip_ansi()};
+        return AnsiStringToken{AnsiStringToken::TokenTypeEnum::ANSI, str_, here, skip_ansi()};
     } else if (c == QC_NEWLINE) {
-        return AnsiStringToken{AnsiStringToken::Type::NEWLINE, str_, here, 1};
+        return AnsiStringToken{AnsiStringToken::TokenTypeEnum::NEWLINE, str_, here, 1};
     }
     // Special case to match "\r\n" as just "\n"
     else if (c == QC_CARRIAGE_RETURN && here < str_.size() && str_[here + 1] == QC_NEWLINE) {
-        return AnsiStringToken{AnsiStringToken::Type::NEWLINE, str_, here + 1, 1};
+        return AnsiStringToken{AnsiStringToken::TokenTypeEnum::NEWLINE, str_, here + 1, 1};
     } else if (c == QC_CARRIAGE_RETURN || isControl(c)) {
-        return AnsiStringToken{AnsiStringToken::Type::CONTROL, str_, here, skip_control()};
+        return AnsiStringToken{AnsiStringToken::TokenTypeEnum::CONTROL, str_, here, skip_control()};
     } else if (c.isSpace() && c != QC_NBSP) {
         // TODO: Find out of this includes control codes like form-feed ('\f') and vertical-tab ('\v').
-        return AnsiStringToken{AnsiStringToken::Type::SPACE, str_, here, skip_space()};
+        return AnsiStringToken{AnsiStringToken::TokenTypeEnum::SPACE, str_, here, skip_space()};
     } else {
-        return AnsiStringToken{AnsiStringToken::Type::WORD, str_, here, skip_word()};
+        return AnsiStringToken{AnsiStringToken::TokenTypeEnum::WORD, str_, here, skip_word()};
     }
 }
 
@@ -945,56 +945,57 @@ AnsiTokenizer::Iterator::size_type AnsiTokenizer::Iterator::skip_ansi()
     // hack to avoid having to have two separate stop return values
     // (one to stop before current value, and one to include it)
     bool sawLetter = false;
-    return skip([&sawLetter](const QChar &c) -> Result {
+    return skip([&sawLetter](const QChar &c) -> ResultEnum {
         if (sawLetter || c == QC_ESC || c == QC_NBSP || c.isSpace())
-            return Result::STOP;
+            return ResultEnum::STOP;
 
         if (c == QC_OPEN_BRACKET || c == QC_SEMICOLON || c.isDigit())
-            return Result::KEEPGOING;
+            return ResultEnum::KEEPGOING;
 
         if (c.isLetter()) {
             /* include the letter, but stop afterwards */
             sawLetter = true;
-            return Result::KEEPGOING;
+            return ResultEnum::KEEPGOING;
         }
 
         /* ill-formed ansi code */
-        return Result::STOP;
+        return ResultEnum::STOP;
     });
 }
 
 AnsiTokenizer::Iterator::size_type AnsiTokenizer::Iterator::skip_control()
 {
-    return skip(
-        [](const QChar &c) -> Result { return isControl(c) ? Result::KEEPGOING : Result::STOP; });
+    return skip([](const QChar &c) -> ResultEnum {
+        return isControl(c) ? ResultEnum::KEEPGOING : ResultEnum::STOP;
+    });
 }
 
 AnsiTokenizer::Iterator::size_type AnsiTokenizer::Iterator::skip_space()
 {
-    return skip([](const QChar &c) -> Result {
+    return skip([](const QChar &c) -> ResultEnum {
         switch (c.toLatin1()) {
         case C_ESC:
         case C_NBSP:
         case C_CARRIAGE_RETURN:
         case C_NEWLINE:
-            return Result::STOP;
+            return ResultEnum::STOP;
         default:
-            return c.isSpace() ? Result::KEEPGOING : Result::STOP;
+            return c.isSpace() ? ResultEnum::KEEPGOING : ResultEnum::STOP;
         }
     });
 }
 
 AnsiTokenizer::Iterator::size_type AnsiTokenizer::Iterator::skip_word()
 {
-    return skip([](const QChar &c) -> Result {
+    return skip([](const QChar &c) -> ResultEnum {
         switch (c.toLatin1()) {
         case C_ESC:
         case C_NBSP:
         case C_CARRIAGE_RETURN:
         case C_NEWLINE:
-            return Result::STOP;
+            return ResultEnum::STOP;
         default:
-            return (c.isSpace() || isControl(c)) ? Result::STOP : Result::KEEPGOING;
+            return (c.isSpace() || isControl(c)) ? ResultEnum::STOP : ResultEnum::KEEPGOING;
         }
     });
 }

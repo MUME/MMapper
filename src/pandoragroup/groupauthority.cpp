@@ -200,19 +200,19 @@ void GroupAuthority::refresh()
 }
 #endif
 
-static inline QString getMetadataKey(const GroupSecret &secret, const GroupMetadata meta)
+static inline QString getMetadataKey(const GroupSecret &secret, const GroupMetadataEnum meta)
 {
     const auto get_prefix = [](auto meta) {
         switch (meta) {
-        case GroupMetadata::CERTIFICATE:
+        case GroupMetadataEnum::CERTIFICATE:
             return "certificate";
-        case GroupMetadata::NAME:
+        case GroupMetadataEnum::NAME:
             return "name";
-        case GroupMetadata::IP_ADDRESS:
+        case GroupMetadataEnum::IP_ADDRESS:
             return "ip";
-        case GroupMetadata::LAST_LOGIN:
+        case GroupMetadataEnum::LAST_LOGIN:
             return "last_login";
-        case GroupMetadata::PORT:
+        case GroupMetadataEnum::PORT:
             return "port";
         default:
             abort();
@@ -317,7 +317,7 @@ bool GroupAuthority::validSecret(const GroupSecret &secret) const
 bool GroupAuthority::validCertificate(const GroupSocket *connection) const
 {
     const GroupSecret &targetSecret = connection->getSecret();
-    const QString &storedCertificate = getMetadata(targetSecret, GroupMetadata::CERTIFICATE);
+    const QString &storedCertificate = getMetadata(targetSecret, GroupMetadataEnum::CERTIFICATE);
     if (storedCertificate.isEmpty())
         return true;
 
@@ -327,14 +327,14 @@ bool GroupAuthority::validCertificate(const GroupSocket *connection) const
     return certificatesMatch;
 }
 
-QString GroupAuthority::getMetadata(const GroupSecret &secret, const GroupMetadata meta) const
+QString GroupAuthority::getMetadata(const GroupSecret &secret, GroupMetadataEnum meta) const
 {
     const auto &metadata = getConfig().groupManager.secretMetadata;
     return metadata[getMetadataKey(secret, meta)].toString();
 }
 
 void GroupAuthority::setMetadata(const GroupSecret &secret,
-                                 const GroupMetadata meta,
+                                 GroupMetadataEnum meta,
                                  const QString &value)
 {
     auto &metadata = setConfig().groupManager.secretMetadata;

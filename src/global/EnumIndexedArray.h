@@ -4,23 +4,24 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include <algorithm>
-#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <optional>
 
+#include "Array.h"
 #include "Flags.h"
 
 template<typename T, typename E, size_t _SIZE = enums::CountOf<E>::value>
-class EnumIndexedArray : private std::array<T, _SIZE>
+class EnumIndexedArray : private MMapper::Array<T, _SIZE>
 {
 public:
     using index_type = E;
-    using base = std::array<T, _SIZE>;
+    using base = typename MMapper::Array<T, _SIZE>;
     static constexpr const size_t SIZE = _SIZE;
 
 public:
-    using std::array<T, _SIZE>::array;
+    // inherits all constructors
+    using MMapper::Array<T, _SIZE>::Array;
 
 public:
     auto operator[](E e) -> decltype(auto) { return base::at(static_cast<uint32_t>(e)); }

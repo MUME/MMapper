@@ -15,11 +15,11 @@ void Approved::receiveRoom(RoomAdmin *sender, const Room *perhaps)
     auto &event = myEvent.deref();
 
     if (matchedRoom == nullptr) {
-        ComparisonResult indicator = factory->compare(perhaps, event, matchingTolerance);
-        if (indicator != ComparisonResult::DIFFERENT) {
+        const ComparisonResultEnum indicator = factory->compare(perhaps, event, matchingTolerance);
+        if (indicator != ComparisonResultEnum::DIFFERENT) {
             matchedRoom = perhaps;
             owner = sender;
-            if (indicator == ComparisonResult::TOLERANCE && event.getNumSkipped() == 0) {
+            if (indicator == ComparisonResultEnum::TOLERANCE && event.getNumSkipped() == 0) {
                 update = true;
             }
         } else {

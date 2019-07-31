@@ -12,15 +12,15 @@
 #include "path.h"
 
 class AbstractRoomFactory;
-class PathParameters;
 class Room;
 class RoomAdmin;
+struct PathParameters;
 
 class Crossover : public Experimenting
 {
 public:
     Crossover(PathList *paths,
-              ExitDirection dirCode,
+              ExitDirEnum dirCode,
               PathParameters &params,
               AbstractRoomFactory *factory);
     void receiveRoom(RoomAdmin *, const Room *) override;

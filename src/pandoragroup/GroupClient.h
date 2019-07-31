@@ -19,7 +19,7 @@ public:
 
 public slots:
     void errorInConnection(GroupSocket *socket, const QString &);
-    void retrieveData(GroupSocket *socket, const Messages message, const QVariantMap &data) override;
+    void retrieveData(GroupSocket *socket, MessagesEnum message, const QVariantMap &data) override;
     void connectionClosed(GroupSocket *socket) override;
     void connectionEncrypted();
     void connectionEstablished();
@@ -39,6 +39,6 @@ private:
 
     ProtocolVersion proposedProtocolVersion = PROTOCOL_VERSION_102;
     bool clientConnected = false;
-    int reconnectAttempts{3};
+    int reconnectAttempts = 3;
     GroupSocket socket;
 };

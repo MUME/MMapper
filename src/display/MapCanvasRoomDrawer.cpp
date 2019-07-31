@@ -49,7 +49,7 @@ static const auto WALL_COLOR_RANDOM = QColor::fromRgbF(1.0, 0.0, 0.0);    // red
 static const auto WALL_COLOR_SPECIAL = QColor::fromRgbF(0.8, 0.1, 0.8);   // lightgreen
 static const auto WALL_COLOR_WALL_DOOR = QColor::fromRgbF(0.2, 0.0, 0.0); // very dark red
 
-static bool isOdd(const ExitDirection sourceDir)
+static bool isOdd(const ExitDirEnum sourceDir)
 {
     return static_cast<int>(sourceDir) % 2 == 1;
 }
@@ -66,55 +66,56 @@ static QMatrix4x4 getTranslationMatrix(const int x, const int y)
     return getTranslationMatrix(static_cast<float>(x), static_cast<float>(y));
 }
 
-static QColor getInfoMarkColor(InfoMarkType infoMarkType, InfoMarkClass infoMarkClass)
+static QColor getInfoMarkColor(const InfoMarkTypeEnum infoMarkType,
+                               const InfoMarkClassEnum infoMarkClass)
 {
-    const QColor defaultColor = (infoMarkType == InfoMarkType::TEXT)
+    const QColor defaultColor = (infoMarkType == InfoMarkTypeEnum::TEXT)
                                     ? QColor(0, 0, 0, 76)         // Black
                                     : QColor(255, 255, 255, 178); // White
     switch (infoMarkClass) {
-    case InfoMarkClass::HERB:
+    case InfoMarkClassEnum::HERB:
         return QColor(0, 255, 0, 140); // Green
-    case InfoMarkClass::RIVER:
+    case InfoMarkClassEnum::RIVER:
         return QColor(76, 216, 255, 140); // Cyan-like
-    case InfoMarkClass::MOB:
+    case InfoMarkClassEnum::MOB:
         return QColor(255, 0, 0, 140); // Red
-    case InfoMarkClass::COMMENT:
+    case InfoMarkClassEnum::COMMENT:
         return QColor(192, 192, 192, 140); // Light grey
-    case InfoMarkClass::ROAD:
+    case InfoMarkClassEnum::ROAD:
         return QColor(140, 83, 58, 140); // Maroonish
-    case InfoMarkClass::OBJECT:
+    case InfoMarkClassEnum::OBJECT:
         return QColor(255, 255, 0, 140); // Yellow
 
-    case InfoMarkClass::GENERIC:
-    case InfoMarkClass::PLACE:
-    case InfoMarkClass::ACTION:
-    case InfoMarkClass::LOCALITY:
+    case InfoMarkClassEnum::GENERIC:
+    case InfoMarkClassEnum::PLACE:
+    case InfoMarkClassEnum::ACTION:
+    case InfoMarkClassEnum::LOCALITY:
         return defaultColor;
     }
 
     return defaultColor;
 }
 
-static FontFormatFlags getFontFormatFlags(InfoMarkClass infoMarkClass)
+static FontFormatFlags getFontFormatFlags(const InfoMarkClassEnum infoMarkClass)
 {
     switch (infoMarkClass) {
-    case InfoMarkClass::GENERIC:
-    case InfoMarkClass::HERB:
-    case InfoMarkClass::RIVER:
-    case InfoMarkClass::PLACE:
-    case InfoMarkClass::MOB:
-    case InfoMarkClass::COMMENT:
-    case InfoMarkClass::ROAD:
-    case InfoMarkClass::OBJECT:
+    case InfoMarkClassEnum::GENERIC:
+    case InfoMarkClassEnum::HERB:
+    case InfoMarkClassEnum::RIVER:
+    case InfoMarkClassEnum::PLACE:
+    case InfoMarkClassEnum::MOB:
+    case InfoMarkClassEnum::COMMENT:
+    case InfoMarkClassEnum::ROAD:
+    case InfoMarkClassEnum::OBJECT:
         break;
 
-    case InfoMarkClass::ACTION:
-        return FontFormatFlags::ITALICS;
+    case InfoMarkClassEnum::ACTION:
+        return FontFormatFlags{FontFormatFlagEnum::ITALICS};
 
-    case InfoMarkClass::LOCALITY:
-        return FontFormatFlags::UNDERLINE;
+    case InfoMarkClassEnum::LOCALITY:
+        return FontFormatFlags{FontFormatFlagEnum::UNDERLINE};
     }
-    return FontFormatFlags::NONE;
+    return {};
 }
 
 static std::optional<QColor> getWallColor(const ExitFlags &flags)
@@ -178,10 +179,10 @@ static XColor4f getRoomColor(const qint32 layer, bool isDark = false, bool hasNo
     return XColor4f{Qt::white, alpha};
 }
 
-static QString getDoorPostFix(const Room *const room, const ExitDirection dir)
+static QString getDoorPostFix(const Room *const room, const ExitDirEnum dir)
 {
-    static constexpr const auto SHOWN_FLAGS = DoorFlag::NEED_KEY | DoorFlag::NO_PICK
-                                              | DoorFlag::DELAYED;
+    static constexpr const auto SHOWN_FLAGS = DoorFlagEnum::NEED_KEY | DoorFlagEnum::NO_PICK
+                                              | DoorFlagEnum::DELAYED;
 
     const DoorFlags flags = room->exit(dir).getDoorFlags();
     if (!flags.containsAny(SHOWN_FLAGS))
@@ -193,7 +194,7 @@ static QString getDoorPostFix(const Room *const room, const ExitDirection dir)
                              flags.isDelayed() ? "d" : "");
 }
 
-static QString getPostfixedDoorName(const Room *const room, const ExitDirection dir)
+static QString getPostfixedDoorName(const Room *const room, const ExitDirEnum dir)
 {
     const auto postFix = getDoorPostFix(room, dir);
     return room->exit(dir).getDoorName() + postFix;
@@ -231,7 +232,7 @@ void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
     const QColor color = getInfoMarkColor(infoMarkType, infoMarkClass);
     const auto fontFormatFlag = getFontFormatFlags(infoMarkClass);
 
-    if (infoMarkType == InfoMarkType::TEXT) {
+    if (infoMarkType == InfoMarkTypeEnum::TEXT) {
         width = getScaledFontWidth(marker->getText(), fontFormatFlag);
         height = getScaledFontHeight();
         x2 = x1 + width;
@@ -259,7 +260,7 @@ void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
     gl.glTranslatef(x1, y1, 0.0f);
 
     switch (infoMarkType) {
-    case InfoMarkType::TEXT:
+    case InfoMarkTypeEnum::TEXT:
         // Render background
         gl.apply(XColor4f{color});
         gl.apply(XEnable{XOption::BLEND});
@@ -283,7 +284,7 @@ void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
                    marker->getRotationAngle());
         gl.apply(XEnable{XOption::DEPTH_TEST});
         break;
-    case InfoMarkType::LINE:
+    case InfoMarkTypeEnum::LINE:
         gl.apply(XColor4f{color});
         gl.apply(XEnable{XOption::BLEND});
         gl.apply(XDisable{XOption::DEPTH_TEST});
@@ -297,7 +298,7 @@ void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
         gl.apply(XDisable{XOption::BLEND});
         gl.apply(XEnable{XOption::DEPTH_TEST});
         break;
-    case InfoMarkType::ARROW:
+    case InfoMarkTypeEnum::ARROW:
         gl.apply(XColor4f{color});
         gl.apply(XEnable{XOption::BLEND});
         gl.apply(XDisable{XOption::DEPTH_TEST});
@@ -328,9 +329,9 @@ void MapCanvasRoomDrawer::alphaOverlayTexture(QOpenGLTexture *texture)
 }
 
 void MapCanvasRoomDrawer::drawRoomDoorName(const Room *const sourceRoom,
-                                           const ExitDirection sourceDir,
+                                           const ExitDirEnum sourceDir,
                                            const Room *const targetRoom,
-                                           const ExitDirection targetDir)
+                                           const ExitDirEnum targetDir)
 {
     assert(sourceRoom != nullptr);
     assert(targetRoom != nullptr);
@@ -391,27 +392,27 @@ void MapCanvasRoomDrawer::drawRoomDoorName(const Room *const sourceRoom,
     } else {
         boxX = srcX - (width / 2.0f);
         switch (sourceDir) {
-        case ExitDirection::NORTH:
+        case ExitDirEnum::NORTH:
             boxY = srcY - 0.65f;
             break;
-        case ExitDirection::SOUTH:
+        case ExitDirEnum::SOUTH:
             boxY = srcY - 0.15f;
             break;
-        case ExitDirection::WEST:
+        case ExitDirEnum::WEST:
             boxY = srcY - 0.5f;
             break;
-        case ExitDirection::EAST:
+        case ExitDirEnum::EAST:
             boxY = srcY - 0.35f;
             break;
-        case ExitDirection::UP:
+        case ExitDirEnum::UP:
             boxY = srcY - 0.85f;
             break;
-        case ExitDirection::DOWN:
+        case ExitDirEnum::DOWN:
             boxY = srcY;
             break;
 
-        case ExitDirection::UNKNOWN:
-        case ExitDirection::NONE:
+        case ExitDirEnum::UNKNOWN:
+        case ExitDirEnum::NONE:
         default:
             break;
         };
@@ -463,7 +464,7 @@ void MapCanvasRoomDrawer::drawTextBox(
 
 void MapCanvasRoomDrawer::drawFlow(const Room *const room,
                                    const RoomIndex &rooms,
-                                   const ExitDirection exitDirection)
+                                   const ExitDirEnum exitDirection)
 {
     // Start drawing
     auto &gl = getOpenGL();
@@ -482,7 +483,7 @@ void MapCanvasRoomDrawer::drawFlow(const Room *const room,
     }
 
     // Draw part in adjacent room
-    const ExitDirection targetDir = opposite(exitDirection);
+    const ExitDirEnum targetDir = opposite(exitDirection);
     const ExitsList &exitslist = room->getExitsList();
     const Exit &sourceExit = exitslist[exitDirection];
 
@@ -510,7 +511,7 @@ void MapCanvasRoomDrawer::drawFlow(const Room *const room,
 void MapCanvasRoomDrawer::drawExit(const Room *const room,
                                    const RoomIndex &rooms,
                                    const qint32 layer,
-                                   const ExitDirection dir)
+                                   const ExitDirEnum dir)
 {
     const auto drawNotMappedExits = getConfig().canvas.drawNotMappedExits;
 
@@ -602,8 +603,8 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room, bool wantExtraDetail)
     const auto roomColor = getRoomColor(layer);
 
     // Make dark and troll safe rooms look dark
-    const bool isDark = room->getLightType() == RoomLightType::DARK;
-    const bool hasNoSundeath = room->getSundeathType() == RoomSundeathType::NO_SUNDEATH;
+    const bool isDark = room->getLightType() == RoomLightEnum::DARK;
+    const bool hasNoSundeath = room->getSundeathType() == RoomSundeathEnum::NO_SUNDEATH;
     gl.apply((isDark || hasNoSundeath) ? getRoomColor(layer, isDark, hasNoSundeath) : roomColor);
 
     if (layer > 0) {
@@ -621,8 +622,8 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room, bool wantExtraDetail)
     gl.apply(XEnable{XOption::TEXTURE_2D});
 
     const auto roomTerrainType = room->getTerrainType();
-    const RoadIndex roadIndex = getRoadIndex(*room);
-    QOpenGLTexture *const texture = (roomTerrainType == RoomTerrainType::ROAD)
+    const RoadIndexMaskEnum roadIndex = getRoadIndex(*room);
+    QOpenGLTexture *const texture = (roomTerrainType == RoomTerrainEnum::ROAD)
                                         ? m_textures.road[roadIndex].get()
                                         : m_textures.terrain[roomTerrainType].get();
     texture->bind();
@@ -632,7 +633,7 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room, bool wantExtraDetail)
 
     // REVISIT: Turn this into a texture or move it into a different rendering stage
     // Draw a little dark red cross on noride rooms
-    if (room->getRidableType() == RoomRidableType::NOT_RIDABLE) {
+    if (room->getRidableType() == RoomRidableEnum::NOT_RIDABLE) {
         gl.glTranslatef(0, 0, ROOM_Z_LAYER_BUMP);
         gl.apply(XColor4f{0.5f, 0.0f, 0.0f, 0.9f});
         gl.apply(XDeviceLineWidth{3.0});
@@ -655,19 +656,19 @@ void MapCanvasRoomDrawer::drawRoom(const Room *const room, bool wantExtraDetail)
         const RoomLoadFlags lf = room->getLoadFlags();
 
         // Trail Support
-        if (roadIndex != RoadIndex::NONE && roomTerrainType != RoomTerrainType::ROAD) {
+        if (roadIndex != RoadIndexMaskEnum::NONE && roomTerrainType != RoomTerrainEnum::ROAD) {
             gl.glTranslatef(0, 0, ROOM_Z_LAYER_BUMP);
             alphaOverlayTexture(m_textures.trail[roadIndex].get());
         }
 
-        for (const RoomMobFlag flag : ALL_MOB_FLAGS) {
+        for (const RoomMobFlagEnum flag : ALL_MOB_FLAGS) {
             if (mf.contains(flag)) {
                 gl.glTranslatef(0, 0, ROOM_Z_LAYER_BUMP);
                 alphaOverlayTexture(m_textures.mob[flag].get());
             }
         }
 
-        for (const RoomLoadFlag flag : ALL_LOAD_FLAGS) {
+        for (const RoomLoadFlagEnum flag : ALL_LOAD_FLAGS) {
             if (lf.contains(flag)) {
                 gl.glTranslatef(0, 0, ROOM_Z_LAYER_BUMP);
                 alphaOverlayTexture(m_textures.load[flag].get());
@@ -717,9 +718,9 @@ void MapCanvasRoomDrawer::drawWallsAndExits(const Room *room, const RoomIndex &r
     gl.apply(XDevicePointSize{3.0});
     gl.apply(XDeviceLineWidth{2.0});
 
-    for (auto dir : {ExitDirection::UP, ExitDirection::DOWN}) {
+    for (auto dir : {ExitDirEnum::UP, ExitDirEnum::DOWN}) {
         const auto &exitList = m_gllist.exit;
-        const auto &updown = dir == ExitDirection::UP ? exitList.up : exitList.down;
+        const auto &updown = dir == ExitDirEnum::UP ? exitList.up : exitList.down;
         drawVertical(room, rooms, layer, dir, updown, m_gllist.door[dir]);
     }
 
@@ -786,7 +787,7 @@ void MapCanvasRoomDrawer::drawRoomConnectionsAndDoors(const Room *const room, co
                                    >= 0.40f);
     for (const auto i : ALL_EXITS7) {
         const auto opp = opposite(i);
-        ExitDirection targetDir = opp;
+        ExitDirEnum targetDir = opp;
         const Exit &sourceExit = exitslist[i];
         // outgoing connections
         for (const auto &outTargetId : sourceExit.outRange()) {
@@ -880,7 +881,7 @@ void MapCanvasRoomDrawer::drawVertical(
     const Room *const room,
     const RoomIndex &rooms,
     const qint32 layer,
-    const ExitDirection direction,
+    const ExitDirEnum direction,
     const MapCanvasData::DrawLists::ExitUpDown::OpaqueTransparent &exlists,
     const XDisplayList &doorlist)
 {
@@ -936,12 +937,12 @@ void MapCanvasRoomDrawer::drawListWithLineStipple(const XDisplayList &list, cons
     gl.apply(XDisable{XOption::LINE_STIPPLE});
 }
 
-void MapCanvasRoomDrawer::drawConnection(const Room *leftRoom,
-                                         const Room *rightRoom,
-                                         ExitDirection startDir,
-                                         ExitDirection endDir,
-                                         bool oneway,
-                                         bool inExitFlags)
+void MapCanvasRoomDrawer::drawConnection(const Room *const leftRoom,
+                                         const Room *const rightRoom,
+                                         const ExitDirEnum startDir,
+                                         const ExitDirEnum endDir,
+                                         const bool oneway,
+                                         const bool inExitFlags)
 {
     assert(leftRoom != nullptr);
     assert(rightRoom != nullptr);
@@ -966,25 +967,25 @@ void MapCanvasRoomDrawer::drawConnection(const Room *leftRoom,
     bool neighbours = false;
 
     if ((dX == 0) && (dY == -1) && (dZ == 0)) {
-        if ((startDir == ExitDirection::NORTH) && (endDir == ExitDirection::SOUTH) && !oneway) {
+        if ((startDir == ExitDirEnum::NORTH) && (endDir == ExitDirEnum::SOUTH) && !oneway) {
             return;
         }
         neighbours = true;
     }
     if ((dX == 0) && (dY == +1) && (dZ == 0)) {
-        if ((startDir == ExitDirection::SOUTH) && (endDir == ExitDirection::NORTH) && !oneway) {
+        if ((startDir == ExitDirEnum::SOUTH) && (endDir == ExitDirEnum::NORTH) && !oneway) {
             return;
         }
         neighbours = true;
     }
     if ((dX == +1) && (dY == 0) && (dZ == 0)) {
-        if ((startDir == ExitDirection::EAST) && (endDir == ExitDirection::WEST) && !oneway) {
+        if ((startDir == ExitDirEnum::EAST) && (endDir == ExitDirEnum::WEST) && !oneway) {
             return;
         }
         neighbours = true;
     }
     if ((dX == -1) && (dY == 0) && (dZ == 0)) {
-        if ((startDir == ExitDirection::WEST) && (endDir == ExitDirection::EAST) && !oneway) {
+        if ((startDir == ExitDirEnum::WEST) && (endDir == ExitDirEnum::EAST) && !oneway) {
             return;
         }
         neighbours = true;
@@ -1011,8 +1012,8 @@ void MapCanvasRoomDrawer::drawConnection(const Room *leftRoom,
     gl.glPopMatrix();
 }
 
-void MapCanvasRoomDrawer::drawConnectionTriangles(const ExitDirection startDir,
-                                                  const ExitDirection endDir,
+void MapCanvasRoomDrawer::drawConnectionTriangles(const ExitDirEnum startDir,
+                                                  const ExitDirEnum endDir,
                                                   const bool oneway,
                                                   const qint32 dX,
                                                   const qint32 dY,
@@ -1027,8 +1028,8 @@ void MapCanvasRoomDrawer::drawConnectionTriangles(const ExitDirection startDir,
     }
 }
 
-void MapCanvasRoomDrawer::drawConnectionLine(const ExitDirection startDir,
-                                             const ExitDirection endDir,
+void MapCanvasRoomDrawer::drawConnectionLine(const ExitDirEnum startDir,
+                                             const ExitDirEnum endDir,
                                              const bool oneway,
                                              const bool neighbours,
                                              const qint32 dX,
@@ -1058,12 +1059,12 @@ void MapCanvasRoomDrawer::drawLineStrip(const std::vector<Vec3f> &points)
     getOpenGL().draw(DrawType::LINE_STRIP, points);
 }
 
-void MapCanvasRoomDrawer::drawConnStartTri(const ExitDirection startDir, const float srcZ)
+void MapCanvasRoomDrawer::drawConnStartTri(const ExitDirEnum startDir, const float srcZ)
 {
     auto &gl = getOpenGL();
 
     switch (startDir) {
-    case ExitDirection::NORTH:
+    case ExitDirEnum::NORTH:
         gl.draw(DrawType::TRIANGLES,
                 std::vector<Vec3f>{
                     Vec3f{0.68f, +0.1f, srcZ},
@@ -1071,7 +1072,7 @@ void MapCanvasRoomDrawer::drawConnStartTri(const ExitDirection startDir, const f
                     Vec3f{0.75f, +0.3f, srcZ},
                 });
         break;
-    case ExitDirection::SOUTH:
+    case ExitDirEnum::SOUTH:
         gl.draw(DrawType::TRIANGLES,
                 std::vector<Vec3f>{
                     Vec3f{0.18f, 0.9f, srcZ},
@@ -1079,7 +1080,7 @@ void MapCanvasRoomDrawer::drawConnStartTri(const ExitDirection startDir, const f
                     Vec3f{0.25f, 0.7f, srcZ},
                 });
         break;
-    case ExitDirection::EAST:
+    case ExitDirEnum::EAST:
         gl.draw(DrawType::TRIANGLES,
                 std::vector<Vec3f>{
                     Vec3f{0.9f, 0.18f, srcZ},
@@ -1087,7 +1088,7 @@ void MapCanvasRoomDrawer::drawConnStartTri(const ExitDirection startDir, const f
                     Vec3f{0.7f, 0.25f, srcZ},
                 });
         break;
-    case ExitDirection::WEST:
+    case ExitDirEnum::WEST:
         gl.draw(DrawType::TRIANGLES,
                 std::vector<Vec3f>{
                     Vec3f{0.1f, 0.68f, srcZ},
@@ -1096,15 +1097,15 @@ void MapCanvasRoomDrawer::drawConnStartTri(const ExitDirection startDir, const f
                 });
         break;
 
-    case ExitDirection::UP:
-    case ExitDirection::DOWN:
-    case ExitDirection::UNKNOWN:
-    case ExitDirection::NONE:
+    case ExitDirEnum::UP:
+    case ExitDirEnum::DOWN:
+    case ExitDirEnum::UNKNOWN:
+    case ExitDirEnum::NONE:
         break;
     }
 }
 
-void MapCanvasRoomDrawer::drawConnEndTri(const ExitDirection endDir,
+void MapCanvasRoomDrawer::drawConnEndTri(const ExitDirEnum endDir,
                                          const qint32 dX,
                                          const qint32 dY,
                                          const float dstZ)
@@ -1112,7 +1113,7 @@ void MapCanvasRoomDrawer::drawConnEndTri(const ExitDirection endDir,
     auto &gl = getOpenGL();
 
     switch (endDir) {
-    case ExitDirection::NORTH:
+    case ExitDirEnum::NORTH:
         gl.draw(DrawType::TRIANGLES,
                 std::vector<Vec3f>{
                     Vec3f{dX + 0.68f, dY + 0.1f, dstZ},
@@ -1120,7 +1121,7 @@ void MapCanvasRoomDrawer::drawConnEndTri(const ExitDirection endDir,
                     Vec3f{dX + 0.75f, dY + 0.3f, dstZ},
                 });
         break;
-    case ExitDirection::SOUTH:
+    case ExitDirEnum::SOUTH:
         gl.draw(DrawType::TRIANGLES,
                 std::vector<Vec3f>{
                     Vec3f{dX + 0.18f, dY + 0.9f, dstZ},
@@ -1128,7 +1129,7 @@ void MapCanvasRoomDrawer::drawConnEndTri(const ExitDirection endDir,
                     Vec3f{dX + 0.25f, dY + 0.7f, dstZ},
                 });
         break;
-    case ExitDirection::EAST:
+    case ExitDirEnum::EAST:
         gl.draw(DrawType::TRIANGLES,
                 std::vector<Vec3f>{
                     Vec3f{dX + 0.9f, dY + 0.18f, dstZ},
@@ -1136,7 +1137,7 @@ void MapCanvasRoomDrawer::drawConnEndTri(const ExitDirection endDir,
                     Vec3f{dX + 0.7f, dY + 0.25f, dstZ},
                 });
         break;
-    case ExitDirection::WEST:
+    case ExitDirEnum::WEST:
         gl.draw(DrawType::TRIANGLES,
                 std::vector<Vec3f>{
                     Vec3f{dX + 0.1f, dY + 0.68f, dstZ},
@@ -1145,21 +1146,21 @@ void MapCanvasRoomDrawer::drawConnEndTri(const ExitDirection endDir,
                 });
         break;
 
-    case ExitDirection::UP:
-    case ExitDirection::DOWN:
+    case ExitDirEnum::UP:
+    case ExitDirEnum::DOWN:
         // Do not draw triangles for 2-way up/down
         break;
-    case ExitDirection::UNKNOWN:
+    case ExitDirEnum::UNKNOWN:
         // NOTE: This is drawn for both 1-way and 2-way
         drawConnEndTriUpDownUnknown(dX, dY, dstZ);
         break;
-    case ExitDirection::NONE:
+    case ExitDirEnum::NONE:
         // NOTE: This is drawn for both 1-way and 2-way
         drawConnEndTriNone(dX, dY, dstZ);
         break;
     }
 }
-void MapCanvasRoomDrawer::drawConnEndTri1Way(const ExitDirection endDir,
+void MapCanvasRoomDrawer::drawConnEndTri1Way(const ExitDirEnum endDir,
                                              const qint32 dX,
                                              const qint32 dY,
                                              const float dstZ)
@@ -1167,7 +1168,7 @@ void MapCanvasRoomDrawer::drawConnEndTri1Way(const ExitDirection endDir,
     auto &gl = getOpenGL();
 
     switch (endDir) {
-    case ExitDirection::NORTH:
+    case ExitDirEnum::NORTH:
         gl.draw(DrawType::TRIANGLES,
                 std::vector<Vec3f>{
                     Vec3f{dX + 0.18f, dY + 0.1f, dstZ},
@@ -1175,7 +1176,7 @@ void MapCanvasRoomDrawer::drawConnEndTri1Way(const ExitDirection endDir,
                     Vec3f{dX + 0.25f, dY + 0.3f, dstZ},
                 });
         break;
-    case ExitDirection::SOUTH:
+    case ExitDirEnum::SOUTH:
         gl.draw(DrawType::TRIANGLES,
                 std::vector<Vec3f>{
                     Vec3f{dX + 0.68f, dY + 0.9f, dstZ},
@@ -1183,7 +1184,7 @@ void MapCanvasRoomDrawer::drawConnEndTri1Way(const ExitDirection endDir,
                     Vec3f{dX + 0.75f, dY + 0.7f, dstZ},
                 });
         break;
-    case ExitDirection::EAST:
+    case ExitDirEnum::EAST:
         gl.draw(DrawType::TRIANGLES,
                 std::vector<Vec3f>{
                     Vec3f{dX + 0.9f, dY + 0.68f, dstZ},
@@ -1191,7 +1192,7 @@ void MapCanvasRoomDrawer::drawConnEndTri1Way(const ExitDirection endDir,
                     Vec3f{dX + 0.7f, dY + 0.75f, dstZ},
                 });
         break;
-    case ExitDirection::WEST:
+    case ExitDirEnum::WEST:
         gl.draw(DrawType::TRIANGLES,
                 std::vector<Vec3f>{
                     Vec3f{dX + 0.1f, dY + 0.18f, dstZ},
@@ -1200,13 +1201,13 @@ void MapCanvasRoomDrawer::drawConnEndTri1Way(const ExitDirection endDir,
                 });
         break;
 
-    case ExitDirection::UP:
-    case ExitDirection::DOWN:
-    case ExitDirection::UNKNOWN:
+    case ExitDirEnum::UP:
+    case ExitDirEnum::DOWN:
+    case ExitDirEnum::UNKNOWN:
         // NOTE: This is drawn for both 1-way and 2-way
         drawConnEndTriUpDownUnknown(dX, dY, dstZ);
         break;
-    case ExitDirection::NONE:
+    case ExitDirEnum::NONE:
         // NOTE: This is drawn for both 1-way and 2-way
         drawConnEndTriNone(dX, dY, dstZ);
         break;
@@ -1237,7 +1238,7 @@ void MapCanvasRoomDrawer::renderText(const float x,
                                      const float y,
                                      const QString &text,
                                      const QColor &color,
-                                     const FontFormatFlags fontFormatFlag,
+                                     const FontFormatFlags &fontFormatFlag,
                                      const float rotationAngle)
 {
     // http://stackoverflow.com/questions/28216001/how-to-render-text-with-qopenglwidget/28517897
@@ -1248,7 +1249,7 @@ void MapCanvasRoomDrawer::renderText(const float x,
     getOpenGL().renderTextAt(textPosX, textPosY, text, color, fontFormatFlag, rotationAngle);
 }
 
-float MapCanvasRoomDrawer::getScaledFontWidth(const QString &x, FontFormatFlags flags) const
+float MapCanvasRoomDrawer::getScaledFontWidth(const QString &x, const FontFormatFlags &flags) const
 {
     return getOpenGL().getFontWidth(x, flags) * 0.022f / m_mapCanvasData.m_scaleFactor
            * m_mapCanvasData.m_currentStepScaleFactor;

@@ -3,16 +3,16 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <array>
+#include "Array.h"
 #include <cstddef>
 #include <stdexcept>
 
 namespace enums {
 
 template<typename T, const size_t N>
-inline std::array<T, N> genEnumValues()
+inline MMapper::Array<T, N> genEnumValues()
 {
-    std::array<T, N> result{};
+    MMapper::Array<T, N> result;
     for (size_t i = 0u; i < N; ++i) {
         result[i] = static_cast<T>(i);
     }

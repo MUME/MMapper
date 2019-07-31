@@ -52,13 +52,13 @@ struct BaseMapSaveFilter::Impl
     MapData *mapData = nullptr;
 
     //! Rooms reachable without going through hidden doors
-    RoomIdSet baseRooms{};
+    RoomIdSet baseRooms;
 
     /*! \brief Rooms scheduled for exploration during prepare
      *
      * Order matters (can't be replaced by a set) to prevent infinite looping.
      */
-    std::list<RoomId> roomsTodo{};
+    std::list<RoomId> roomsTodo;
 
     /*! \brief Secret links noticed during the exploration (prepare).
      *
@@ -85,7 +85,7 @@ void BaseMapSaveFilter::prepare(ProgressCounter &counter)
     m_impl->mapData->genericSearch(this,
                                    RoomFilter("The Fountain Square",
                                               Qt::CaseSensitive,
-                                              pattern_kinds::NAME));
+                                              PatternKindsEnum::NAME));
 
     // Walk the whole map through non-hidden exits without recursing
     while (!m_impl->roomsTodo.empty()) {
@@ -136,7 +136,7 @@ uint32_t BaseMapSaveFilter::acceptedRoomsCount()
     return static_cast<uint32_t>(m_impl->baseRooms.size());
 }
 
-BaseMapSaveFilter::Action BaseMapSaveFilter::filter(const Room &room)
+BaseMapSaveFilter::ActionEnum BaseMapSaveFilter::filter(const Room &room)
 {
     auto &baseRooms = m_impl->baseRooms;
     assert(!baseRooms.empty());
@@ -145,23 +145,23 @@ BaseMapSaveFilter::Action BaseMapSaveFilter::filter(const Room &room)
         const ExitsList &exits = room.getExitsList();
         for (const auto &exit : exits) {
             if (exit.isHiddenExit()) {
-                return Action::ALTER;
+                return ActionEnum::ALTER;
             }
             for (auto idx : exit.outRange()) {
                 if (contains(baseRooms, idx)) {
-                    return Action::ALTER;
+                    return ActionEnum::ALTER;
                 }
             }
             for (auto idx : exit.inRange()) {
                 if (contains(baseRooms, idx)) {
-                    return Action::ALTER;
+                    return ActionEnum::ALTER;
                 }
             }
         }
 
-        return Action::PASS;
+        return ActionEnum::PASS;
     }
-    return Action::REJECT;
+    return ActionEnum::REJECT;
 }
 
 Room BaseMapSaveFilter::alteredRoom(const Room &room)

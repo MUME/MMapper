@@ -177,7 +177,7 @@ namespace test {
 
 static void testEmpty()
 {
-    StringView tmp{};
+    StringView tmp;
     TEST_ASSERT(tmp.empty());
     int count = 0;
     for (auto c : tmp) {

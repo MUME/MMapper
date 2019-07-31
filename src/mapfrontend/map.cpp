@@ -220,7 +220,7 @@ Coordinate Map::setNearest(const Coordinate &in_c, Room &room)
 
 Coordinate Map::getNearestFree(const Coordinate &p)
 {
-    Coordinate c{};
+    Coordinate c;
     const int sum1 = (p.x + p.y + p.z) / 2;
     const int sum2 = (p.x + p.y + p.z + 1) / 2;
     const bool random = (sum1 == sum2);

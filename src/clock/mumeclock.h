@@ -3,7 +3,6 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <array>
 #include <QHash>
 #include <QList>
 #include <QMetaEnum>
@@ -15,12 +14,7 @@
 
 class QMetaEnum;
 
-enum class MumeClockPrecision {
-    MUMECLOCK_UNSET = -1,
-    MUMECLOCK_DAY,
-    MUMECLOCK_HOUR,
-    MUMECLOCK_MINUTE
-};
+enum class MumeClockPrecisionEnum { UNSET = -1, DAY, HOUR, MINUTE };
 
 class MumeClock final : public QObject
 {
@@ -32,8 +26,8 @@ public:
     static constexpr const int NUM_MONTHS = 12;
     struct DawnDusk
     {
-        int dawnHour;
-        int duskHour;
+        int dawnHour = 6;
+        int duskHour = 18;
     };
     static DawnDusk getDawnDusk(int month);
 
@@ -47,7 +41,7 @@ public:
     // TODO: #ifdef TEST?
     MumeMoment getMumeMoment(int64_t secsSinceUnixEpoch);
 
-    MumeClockPrecision getPrecision();
+    MumeClockPrecisionEnum getPrecision();
 
     const QString toMumeTime(const MumeMoment &moment);
 
@@ -55,7 +49,7 @@ public:
 
     int64_t getMumeStartEpoch() { return m_mumeStartEpoch; }
 
-    enum class WestronMonthNames {
+    enum class WestronMonthNamesEnum {
         UnknownWestronMonth = -1,
         Afteryule,
         Solmath,
@@ -71,9 +65,9 @@ public:
         Foreyule
     };
 
-    Q_ENUM(WestronMonthNames)
+    Q_ENUM(WestronMonthNamesEnum)
 
-    enum class SindarinMonthNames {
+    enum class SindarinMonthNamesEnum {
         UnknownSindarinMonth = -1,
         Narwain,
         Ninui,
@@ -89,9 +83,9 @@ public:
         Girithron
     };
 
-    Q_ENUM(SindarinMonthNames)
+    Q_ENUM(SindarinMonthNamesEnum)
 
-    enum class WestronWeekDayNames {
+    enum class WestronWeekDayNamesEnum {
         UnknownWestronWeekDay = -1,
         Sunday,
         Monday,
@@ -102,9 +96,9 @@ public:
         Sterday
     };
 
-    Q_ENUM(WestronWeekDayNames)
+    Q_ENUM(WestronWeekDayNamesEnum)
 
-    enum class SindarinWeekDayNames {
+    enum class SindarinWeekDayNamesEnum {
         UnknownSindarinWeekDay = -1,
         Oranor,
         Orithil,
@@ -115,18 +109,14 @@ public:
         Orgilion
     };
 
-    Q_ENUM(SindarinWeekDayNames)
-
-private:
-    static const std::array<int, NUM_MONTHS> s_dawnHour;
-    static const std::array<int, NUM_MONTHS> s_duskHour;
+    Q_ENUM(SindarinWeekDayNamesEnum)
 
 public:
     static const QMetaEnum s_westronMonthNames;
     static const QMetaEnum s_sindarinMonthNames;
     static const QMetaEnum s_westronWeekDayNames;
     static const QMetaEnum s_sindarinWeekDayNames;
-    static const QHash<QString, MumeTime> m_stringTimeHash;
+    static const QHash<QString, MumeTimeEnum> m_stringTimeHash;
 
 signals:
 
@@ -141,7 +131,7 @@ public slots:
     void parseWeather(const QString &str);
 
 protected:
-    void setPrecision(MumeClockPrecision state) { m_precision = state; }
+    void setPrecision(MumeClockPrecisionEnum state) { m_precision = state; }
 
     void parseMumeTime(const QString &mumeTime, int64_t secsSinceEpoch);
 
@@ -154,6 +144,6 @@ private:
 
     int64_t m_lastSyncEpoch = 0;
     int64_t m_mumeStartEpoch = 0;
-    MumeClockPrecision m_precision{};
+    MumeClockPrecisionEnum m_precision = MumeClockPrecisionEnum::UNSET;
     int m_clockTolerance = 0;
 };

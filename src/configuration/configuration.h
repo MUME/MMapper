@@ -16,38 +16,38 @@
 #include "../global/RuleOf5.h"
 #include "../pandoragroup/mmapper2group.h"
 
-enum class MapMode { PLAY, MAP, OFFLINE };
-enum class Platform { Unknown, Windows, Mac, Linux };
-enum class CharacterEncoding { LATIN1, UTF8, ASCII };
-enum class Environment { Unknown, Env32Bit, Env64Bit };
+enum class MapModeEnum { PLAY, MAP, OFFLINE };
+enum class PlatformEnum { Unknown, Windows, Mac, Linux };
+enum class CharacterEncodingEnum { LATIN1, UTF8, ASCII };
+enum class EnvironmentEnum { Unknown, Env32Bit, Env64Bit };
 
 // Do not call this directly; use CURRENT_PLATFORM.
-static inline constexpr Platform getCurrentPlatform()
+static inline constexpr PlatformEnum getCurrentPlatform()
 {
 #if defined(Q_OS_WIN)
-    return Platform::Windows;
+    return PlatformEnum::Windows;
 #elif defined(Q_OS_MAC)
-    return Platform::Mac;
+    return PlatformEnum::Mac;
 #elif defined(Q_OS_LINUX)
-    return Platform::Linux;
+    return PlatformEnum::Linux;
 #else
     throw std::runtime_error("unsupported platform");
 #endif
 }
-static constexpr const Platform CURRENT_PLATFORM = getCurrentPlatform();
+static constexpr const PlatformEnum CURRENT_PLATFORM = getCurrentPlatform();
 
 // Do not call this directly; use CURRENT_ENVIRONMENT.
-static inline constexpr Environment getCurrentEnvironment()
+static inline constexpr EnvironmentEnum getCurrentEnvironment()
 {
 #if Q_PROCESSOR_WORDSIZE == 4
-    return Environment::Env32Bit;
+    return EnvironmentEnum::Env32Bit;
 #elif Q_PROCESSOR_WORDSIZE == 8
-    return Environment::Env64Bit;
+    return EnvironmentEnum::Env64Bit;
 #else
     throw std::runtime_error("unsupported environment");
 #endif
 }
-static constexpr const Environment CURRENT_ENVIRONMENT = getCurrentEnvironment();
+static constexpr const EnvironmentEnum CURRENT_ENVIRONMENT = getCurrentEnvironment();
 
 #if defined(MMAPPER_NO_OPENSSL) && MMAPPER_NO_OPENSSL
 static constexpr const bool NO_OPEN_SSL = true;
@@ -83,14 +83,14 @@ public:
     struct GeneralSettings final
     {
         bool firstRun = false;
-        QByteArray windowGeometry{};
-        QByteArray windowState{};
+        QByteArray windowGeometry;
+        QByteArray windowState;
         bool alwaysOnTop = false;
-        MapMode mapMode = MapMode::PLAY;
+        MapModeEnum mapMode = MapModeEnum::PLAY;
         bool noSplash = false;
         bool noLaunchPanel = false;
         bool checkForUpdate = true;
-        CharacterEncoding characterEncoding = CharacterEncoding::LATIN1;
+        CharacterEncodingEnum characterEncoding = CharacterEncodingEnum::LATIN1;
 
     private:
         SUBGROUP();
@@ -98,7 +98,7 @@ public:
 
     struct ConnectionSettings final
     {
-        QString remoteServerName{}; /// Remote host and port settings
+        QString remoteServerName; /// Remote host and port settings
         quint16 remotePort = 0u;
         quint16 localPort = 0u; /// Port to bind to on local machine
         bool tlsEncryption = false;
@@ -107,15 +107,15 @@ public:
 
     private:
         SUBGROUP();
-    } connection{};
+    } connection;
 
     struct ParserSettings final
     {
-        QString roomNameColor{}; // ANSI room name color
-        QString roomDescColor{}; // ANSI room descriptions color
+        QString roomNameColor; // ANSI room name color
+        QString roomDescColor; // ANSI room descriptions color
         bool removeXmlTags = false;
         char prefixChar = '_';
-        QStringList noDescriptionPatternsList{};
+        QStringList noDescriptionPatternsList;
 
     private:
         SUBGROUP();
@@ -125,11 +125,11 @@ public:
     {
         bool remoteEditing = false;
         bool internalRemoteEditor = false;
-        QString externalRemoteEditorCommand{};
+        QString externalRemoteEditorCommand;
 
     private:
         SUBGROUP();
-    } mumeClientProtocol{};
+    } mumeClientProtocol;
 
     struct MumeNativeSettings final
     {
@@ -140,7 +140,7 @@ public:
 
     private:
         SUBGROUP();
-    } mumeNative{};
+    } mumeNative;
 
     struct CanvasSettings final
     {
@@ -149,26 +149,26 @@ public:
         bool drawNoMatchExits = false;
         bool drawUpperLayersTextured = false;
         bool drawDoorNames = false;
-        QColor backgroundColor{};
-        QColor roomDarkColor{};
-        QColor roomDarkLitColor{};
+        QColor backgroundColor;
+        QColor roomDarkColor;
+        QColor roomDarkLitColor;
         int antialiasingSamples = 0;
         bool trilinearFiltering = false;
         bool softwareOpenGL = false;
 
     private:
         SUBGROUP();
-    } canvas{};
+    } canvas;
 
     struct AutoLoadSettings final
     {
         bool autoLoadMap = false;
-        QString fileName{};
-        QString lastMapDirectory{};
+        QString fileName;
+        QString lastMapDirectory;
 
     private:
         SUBGROUP();
-    } autoLoad{};
+    } autoLoad;
 
     struct PathMachineSettings final
     {
@@ -182,32 +182,32 @@ public:
 
     private:
         SUBGROUP();
-    } pathMachine{};
+    } pathMachine;
 
     struct GroupManagerSettings final
     {
-        GroupManagerState state = GroupManagerState::Off;
+        GroupManagerStateEnum state = GroupManagerStateEnum::Off;
         quint16 localPort = 0u;
         quint16 remotePort = 0u;
-        QByteArray host{};
-        QByteArray charName{};
+        QByteArray host;
+        QByteArray charName;
         bool shareSelf = false;
-        QColor color{};
+        QColor color;
         bool rulesWarning = false;
-        QByteArray certificate{};
-        QByteArray privateKey{};
-        QStringList authorizedSecrets{};
+        QByteArray certificate;
+        QByteArray privateKey;
+        QStringList authorizedSecrets;
         bool requireAuth = false;
-        QByteArray geometry{};
-        QMap<QString, QVariant> secretMetadata{};
-        QString groupTellColor{}; // ANSI color
+        QByteArray geometry;
+        QMap<QString, QVariant> secretMetadata;
+        QString groupTellColor; // ANSI color
         bool useGroupTellAnsi256Color = false;
         bool lockGroup = false;
         bool autoStart = false;
 
     private:
         SUBGROUP();
-    } groupManager{};
+    } groupManager;
 
     struct MumeClockSettings final
     {
@@ -216,13 +216,13 @@ public:
 
     private:
         SUBGROUP();
-    } mumeClock{};
+    } mumeClock;
 
     struct IntegratedMudClientSettings final
     {
-        QString font{};
-        QColor foregroundColor{};
-        QColor backgroundColor{};
+        QString font;
+        QColor foregroundColor;
+        QColor backgroundColor;
         int columns = 0;
         int rows = 0;
         int linesOfScrollback = 0;
@@ -230,27 +230,27 @@ public:
         int tabCompletionDictionarySize = 0;
         bool clearInputOnEnter = false;
         bool autoResizeTerminal = false;
-        QByteArray geometry{};
+        QByteArray geometry;
 
     private:
         SUBGROUP();
-    } integratedClient{};
+    } integratedClient;
 
     struct InfoMarksDialog final
     {
-        QByteArray geometry{};
+        QByteArray geometry;
 
     private:
         SUBGROUP();
-    } infoMarksDialog{};
+    } infoMarksDialog;
 
     struct RoomEditDialog final
     {
-        QByteArray geometry{};
+        QByteArray geometry;
 
     private:
         SUBGROUP();
-    } roomEditDialog{};
+    } roomEditDialog;
 
 public:
     DELETE_CTORS_AND_ASSIGN_OPS(Configuration);

@@ -14,7 +14,7 @@ using RoomName = QString;
 using RoomDescription = QString;
 using RoomNote = QString;
 
-enum class RoomTerrainType {
+enum class RoomTerrainEnum {
     UNDEFINED = 0,
     INDOORS,
     CITY,
@@ -33,25 +33,25 @@ enum class RoomTerrainType {
     DEATHTRAP
 };
 static constexpr const size_t NUM_ROOM_TERRAIN_TYPES = static_cast<size_t>(
-                                                           RoomTerrainType::DEATHTRAP)
+                                                           RoomTerrainEnum::DEATHTRAP)
                                                        + 1u;
 static_assert(NUM_ROOM_TERRAIN_TYPES == 16);
-DEFINE_ENUM_COUNT(RoomTerrainType, NUM_ROOM_TERRAIN_TYPES)
+DEFINE_ENUM_COUNT(RoomTerrainEnum, NUM_ROOM_TERRAIN_TYPES)
 
-enum class RoomAlignType { UNDEFINED = 0, GOOD, NEUTRAL, EVIL };
+enum class RoomAlignEnum { UNDEFINED = 0, GOOD, NEUTRAL, EVIL };
 static constexpr const int NUM_ALIGN_TYPES = 4;
 
 // REVISIT: Consider just using a single tri-state bool enums for these?
-enum class RoomLightType { UNDEFINED = 0, DARK, LIT };
-enum class RoomPortableType { UNDEFINED = 0, PORTABLE, NOT_PORTABLE };
-enum class RoomRidableType { UNDEFINED = 0, RIDABLE, NOT_RIDABLE };
-enum class RoomSundeathType { UNDEFINED = 0, SUNDEATH, NO_SUNDEATH };
+enum class RoomLightEnum { UNDEFINED = 0, DARK, LIT };
+enum class RoomPortableEnum { UNDEFINED = 0, PORTABLE, NOT_PORTABLE };
+enum class RoomRidableEnum { UNDEFINED = 0, RIDABLE, NOT_RIDABLE };
+enum class RoomSundeathEnum { UNDEFINED = 0, SUNDEATH, NO_SUNDEATH };
 static constexpr const int NUM_LIGHT_TYPES = 3;
 static constexpr const int NUM_SUNDEATH_TYPES = 3;
 static constexpr const int NUM_PORTABLE_TYPES = 3;
 static constexpr const int NUM_RIDABLE_TYPES = 3;
 
-enum class RoomMobFlag {
+enum class RoomMobFlagEnum {
     RENT,
     SHOP,
     WEAPON_SHOP,
@@ -70,16 +70,16 @@ enum class RoomMobFlag {
     ELITE_MOB,
     SUPER_MOB,
 };
-static constexpr const int NUM_ROOM_MOB_FLAGS = static_cast<int>(RoomMobFlag::SUPER_MOB) + 1;
+static constexpr const int NUM_ROOM_MOB_FLAGS = static_cast<int>(RoomMobFlagEnum::SUPER_MOB) + 1;
 static_assert(NUM_ROOM_MOB_FLAGS == 17);
-DEFINE_ENUM_COUNT(RoomMobFlag, NUM_ROOM_MOB_FLAGS)
+DEFINE_ENUM_COUNT(RoomMobFlagEnum, NUM_ROOM_MOB_FLAGS)
 
-class RoomMobFlags final : public enums::Flags<RoomMobFlags, RoomMobFlag, uint32_t>
+class RoomMobFlags final : public enums::Flags<RoomMobFlags, RoomMobFlagEnum, uint32_t>
 {
     using Flags::Flags;
 };
 
-enum class RoomLoadFlag {
+enum class RoomLoadFlagEnum {
     TREASURE,
     ARMOUR,
     WEAPON,
@@ -105,16 +105,16 @@ enum class RoomLoadFlag {
     COACH,
     FERRY
 };
-static constexpr const int NUM_ROOM_LOAD_FLAGS = static_cast<int>(RoomLoadFlag::FERRY) + 1;
+static constexpr const int NUM_ROOM_LOAD_FLAGS = static_cast<int>(RoomLoadFlagEnum::FERRY) + 1;
 static_assert(NUM_ROOM_LOAD_FLAGS == 24);
-DEFINE_ENUM_COUNT(RoomLoadFlag, NUM_ROOM_LOAD_FLAGS)
+DEFINE_ENUM_COUNT(RoomLoadFlagEnum, NUM_ROOM_LOAD_FLAGS)
 
-class RoomLoadFlags final : public enums::Flags<RoomLoadFlags, RoomLoadFlag, uint32_t>
+class RoomLoadFlags final : public enums::Flags<RoomLoadFlags, RoomLoadFlagEnum, uint32_t>
 {
     using Flags::Flags;
 };
 
-enum class RoomField {
+enum class RoomFieldEnum {
     NAME,
     /** STATIC_DESC */
     DESC,
@@ -132,17 +132,17 @@ enum class RoomField {
     LAST
 };
 
-static constexpr const int NUM_ROOM_FIELDS = static_cast<int>(RoomField::RESERVED) + 1;
-static_assert(NUM_ROOM_FIELDS == static_cast<int>(RoomField::LAST));
+static constexpr const int NUM_ROOM_FIELDS = static_cast<int>(RoomFieldEnum::RESERVED) + 1;
+static_assert(NUM_ROOM_FIELDS == static_cast<int>(RoomFieldEnum::LAST));
 static_assert(NUM_ROOM_FIELDS == 13);
 static constexpr const int NUM_ROOM_PROPS = NUM_ROOM_FIELDS;
-DEFINE_ENUM_COUNT(RoomField, NUM_ROOM_FIELDS)
-class RoomFields : public enums::Flags<RoomFields, RoomField, uint16_t>
+DEFINE_ENUM_COUNT(RoomFieldEnum, NUM_ROOM_FIELDS)
+class RoomFields : public enums::Flags<RoomFields, RoomFieldEnum, uint16_t>
 {
     using Flags::Flags;
 };
 
-inline constexpr RoomFields operator|(const RoomField lhs, const RoomField rhs) noexcept
+inline constexpr RoomFields operator|(const RoomFieldEnum lhs, const RoomFieldEnum rhs) noexcept
 {
     return RoomFields{lhs} | RoomFields{rhs};
 }

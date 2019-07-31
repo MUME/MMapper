@@ -107,7 +107,7 @@ class AddExit : public MapAction, public FrontendAccessor
 public:
     void schedule(MapFrontend *in) override { setFrontend(in); }
 
-    explicit AddExit(RoomId in_from, RoomId in_to, ExitDirection in_dir);
+    explicit AddExit(RoomId in_from, RoomId in_to, ExitDirEnum in_dir);
 
 protected:
     virtual void exec() override;
@@ -116,13 +116,13 @@ protected:
 
     RoomId from;
     RoomId to;
-    ExitDirection dir = ExitDirection::UNKNOWN;
+    ExitDirEnum dir = ExitDirEnum::UNKNOWN;
 };
 
 class RemoveExit : public MapAction, public FrontendAccessor
 {
 public:
-    explicit RemoveExit(RoomId from, RoomId to, ExitDirection dir);
+    explicit RemoveExit(RoomId from, RoomId to, ExitDirEnum dir);
 
     void schedule(MapFrontend *in) override { setFrontend(in); }
 
@@ -133,7 +133,7 @@ protected:
 
     RoomId from = DEFAULT_ROOMID;
     RoomId to = DEFAULT_ROOMID;
-    ExitDirection dir = ExitDirection::UNKNOWN;
+    ExitDirEnum dir = ExitDirEnum::UNKNOWN;
 };
 
 class MakePermanent final : public AbstractAction

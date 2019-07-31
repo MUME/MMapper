@@ -7,13 +7,13 @@
 
 #include "CommandId.h"
 
-class CommandQueue : private QQueue<CommandIdType>
+class CommandQueue : private QQueue<CommandEnum>
 {
 private:
-    using base = QQueue<CommandIdType>;
+    using base = QQueue<CommandEnum>;
 
 public:
-    using QQueue<CommandIdType>::QQueue;
+    using QQueue<CommandEnum>::QQueue;
 
 public:
     QByteArray toByteArray() const;

@@ -12,17 +12,18 @@
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/ExitFlags.h"
 
-enum class ExitFlagExt : uint32_t { EXITS_FLAGS_VALID = bit31 };
+enum class ExitFlagExtEnum : uint32_t { EXITS_FLAGS_VALID = bit31 };
 // 2nd declaration to avoid having to type "ExitFlagExt::" to use this
-static constexpr const ExitFlagExt EXITS_FLAGS_VALID = ExitFlagExt::EXITS_FLAGS_VALID;
+static constexpr const ExitFlagExtEnum EXITS_FLAGS_VALID = ExitFlagExtEnum::EXITS_FLAGS_VALID;
 
 /* FIXME: This name creates a lot of confusion with ExitFlags.
  * Maybe just make it an array of ExitFlags? */
 class ExitsFlagsType
 {
 public:
-    static constexpr const uint32_t MASK
-        = (ExitFlag::EXIT | ExitFlag::DOOR | ExitFlag::ROAD | ExitFlag::CLIMB).asUint32();
+    static constexpr const uint32_t MASK = (ExitFlagEnum::EXIT | ExitFlagEnum::DOOR
+                                            | ExitFlagEnum::ROAD | ExitFlagEnum::CLIMB)
+                                               .asUint32();
     static_assert(MASK == 0b1111);
     static constexpr const int SHIFT = 4;
     static constexpr const int NUM_DIRS = 6;
@@ -30,7 +31,7 @@ public:
 private:
     uint32_t value = 0u;
 
-    static int getShift(ExitDirection dir)
+    static int getShift(ExitDirEnum dir)
     {
         assert(static_cast<int>(dir) < NUM_DIRS);
         return static_cast<int>(dir) * SHIFT;
@@ -42,10 +43,10 @@ public:
     static ExitsFlagsType create_unsafe(const uint32_t value)
     {
         if (false) {
-            ExitsFlagsType tmp{};
+            ExitsFlagsType tmp;
             tmp.value = value;
 
-            ExitsFlagsType result{};
+            ExitsFlagsType result;
             for (const auto dir : ALL_EXITS_NESWUD)
                 result.set(dir, tmp.get(dir));
 
@@ -60,7 +61,7 @@ public:
                 FULL_MASK
                 == (static_cast<uint32_t>(EXITS_FLAGS_VALID) | ((1u << (SHIFT * NUM_DIRS)) - 1u)));
 
-            ExitsFlagsType result{};
+            ExitsFlagsType result;
             result.value = value & FULL_MASK;
             // NOTE: can't assert this, because old versions will have invalid data;
             // the whole point of the mask it to clean up the bad data.
@@ -74,13 +75,13 @@ public:
     bool operator!=(ExitsFlagsType rhs) const { return value != rhs.value; }
 
 public:
-    ExitFlags get(const ExitDirection dir) const
+    ExitFlags get(const ExitDirEnum dir) const
     {
         return static_cast<ExitFlags>((value >> getShift(dir)) & MASK);
     }
 
-    void set(const ExitDirection dir, const ExitFlag flag) { set(dir, ExitFlags{flag}); }
-    void set(const ExitDirection dir, const ExitFlags flags)
+    void set(const ExitDirEnum dir, const ExitFlagEnum flag) { set(dir, ExitFlags{flag}); }
+    void set(const ExitDirEnum dir, const ExitFlags flags)
     {
         // can't assert here, because callers expect to pass without masking
         //

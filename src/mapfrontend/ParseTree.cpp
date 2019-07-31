@@ -5,7 +5,6 @@
 #include "ParseTree.h"
 
 #include <algorithm>
-#include <array>
 #include <cassert>
 #include <cctype>
 #include <cstdio>
@@ -17,6 +16,7 @@
 
 #include "../expandoracommon/parseevent.h"
 #include "../expandoracommon/property.h"
+#include "../global/Array.h"
 #include "../global/utils.h"
 #include "roomcollection.h"
 
@@ -30,7 +30,7 @@ struct ParseTree::Pimpl
 
 ParseTree::Pimpl::~Pimpl() = default;
 
-enum class MaskFlags : uint32_t {
+enum class MaskFlagsEnum : uint32_t {
     NONE = 0u,
     NAME = 0b001u,
     DESC = 0b010u,
@@ -41,18 +41,18 @@ enum class MaskFlags : uint32_t {
     NAME_DESC_TERRAIN = NAME | DESC | TERRAIN
 };
 
-DEFINE_ENUM_COUNT(MaskFlags, 8)
+DEFINE_ENUM_COUNT(MaskFlagsEnum, 8)
 
-static_assert(static_cast<uint32_t>(MaskFlags::NONE) == 0u);
-static_assert(static_cast<uint32_t>(MaskFlags::NAME) == 1u);
-static_assert(static_cast<uint32_t>(MaskFlags::DESC) == 2u);
-static_assert(static_cast<uint32_t>(MaskFlags::NAME_DESC) == 3u);
-static_assert(static_cast<uint32_t>(MaskFlags::TERRAIN) == 4u);
-static_assert(static_cast<uint32_t>(MaskFlags::NAME_TERRAIN) == 5u);
-static_assert(static_cast<uint32_t>(MaskFlags::DESC_TERRAIN) == 6u);
-static_assert(static_cast<uint32_t>(MaskFlags::NAME_DESC_TERRAIN) == 7u);
+static_assert(static_cast<uint32_t>(MaskFlagsEnum::NONE) == 0u);
+static_assert(static_cast<uint32_t>(MaskFlagsEnum::NAME) == 1u);
+static_assert(static_cast<uint32_t>(MaskFlagsEnum::DESC) == 2u);
+static_assert(static_cast<uint32_t>(MaskFlagsEnum::NAME_DESC) == 3u);
+static_assert(static_cast<uint32_t>(MaskFlagsEnum::TERRAIN) == 4u);
+static_assert(static_cast<uint32_t>(MaskFlagsEnum::NAME_TERRAIN) == 5u);
+static_assert(static_cast<uint32_t>(MaskFlagsEnum::DESC_TERRAIN) == 6u);
+static_assert(static_cast<uint32_t>(MaskFlagsEnum::NAME_DESC_TERRAIN) == 7u);
 
-static MaskFlags getKeyMask(const ParseEvent &event)
+static MaskFlagsEnum getKeyMask(const ParseEvent &event)
 {
     assert(event.size() == 3);
     auto cloned = event.clone();
@@ -66,61 +66,61 @@ static MaskFlags getKeyMask(const ParseEvent &event)
 
     assert((mask & 0b111) == mask);
 
-    const auto flags = static_cast<MaskFlags>(mask);
-    if (flags == MaskFlags::DESC) {
+    const auto flags = static_cast<MaskFlagsEnum>(mask);
+    if (flags == MaskFlagsEnum::DESC) {
         // The only one never seen in the wild
-        std::cout << "MaskFlags::DESC observed in the wild!" << std::endl;
+        std::cout << "MaskFlagsEnum::DESC observed in the wild!" << std::endl;
     }
     return flags;
 }
 
-static bool isMatchedByTree(const MaskFlags mask)
+static bool isMatchedByTree(const MaskFlagsEnum mask)
 {
     switch (mask) {
-    case MaskFlags::NAME:      // Not observed in the wild?
-    case MaskFlags::NAME_DESC: // Offline movement
-    case MaskFlags::NAME_DESC_TERRAIN:
+    case MaskFlagsEnum::NAME:      // Not observed in the wild?
+    case MaskFlagsEnum::NAME_DESC: // Offline movement
+    case MaskFlagsEnum::NAME_DESC_TERRAIN:
         return true;
 
-    case MaskFlags::NONE:
-    case MaskFlags::DESC:
-    case MaskFlags::TERRAIN:
-    case MaskFlags::NAME_TERRAIN:
-    case MaskFlags::DESC_TERRAIN:
+    case MaskFlagsEnum::NONE:
+    case MaskFlagsEnum::DESC:
+    case MaskFlagsEnum::TERRAIN:
+    case MaskFlagsEnum::NAME_TERRAIN:
+    case MaskFlagsEnum::DESC_TERRAIN:
     default:
         return false;
     }
 }
 
-static MaskFlags reduceMask(const MaskFlags mask)
+static MaskFlagsEnum reduceMask(const MaskFlagsEnum mask)
 {
     switch (mask) {
-    case MaskFlags::NONE:
-    case MaskFlags::NAME:
-    case MaskFlags::DESC:
-    case MaskFlags::DESC_TERRAIN:
-    case MaskFlags::TERRAIN:
-        return MaskFlags::NONE;
+    case MaskFlagsEnum::NONE:
+    case MaskFlagsEnum::NAME:
+    case MaskFlagsEnum::DESC:
+    case MaskFlagsEnum::DESC_TERRAIN:
+    case MaskFlagsEnum::TERRAIN:
+        return MaskFlagsEnum::NONE;
 
-    case MaskFlags::NAME_DESC:
-    case MaskFlags::NAME_TERRAIN: // Not supported by tree
-        return MaskFlags::NAME;
+    case MaskFlagsEnum::NAME_DESC:
+    case MaskFlagsEnum::NAME_TERRAIN: // Not supported by tree
+        return MaskFlagsEnum::NAME;
 
-    case MaskFlags::NAME_DESC_TERRAIN:
-        return MaskFlags::NAME_DESC;
+    case MaskFlagsEnum::NAME_DESC_TERRAIN:
+        return MaskFlagsEnum::NAME_DESC;
     }
 
     throw std::invalid_argument("mask");
 }
 
-static auto makeKey(ParseEvent &event, const MaskFlags maskFlags, const bool verbose)
+static auto makeKey(ParseEvent &event, const MaskFlagsEnum maskFlags, const bool verbose)
 {
     char buf[64];
 
     const auto mask = static_cast<uint32_t>(maskFlags);
     assert(event.size() == 3);
     event.reset();
-    std::string key{};
+    std::string key;
 
     std::snprintf(buf, sizeof(buf), "^K%u", mask);
     key += buf;
@@ -162,8 +162,8 @@ private:
     using Primary = std::unordered_map<Key, PV>;
     using SV = std::unordered_set<PV>;
     using Secondary = std::unordered_map<Key, SV>;
-    Primary m_primary{};
-    EnumIndexedArray<Secondary, MaskFlags> m_secondary{};
+    Primary m_primary;
+    EnumIndexedArray<Secondary, MaskFlagsEnum> m_secondary;
     const bool m_useVerboseKeys = false;
 
 public:
@@ -177,18 +177,18 @@ public:
     {
         const auto &event = event_;
         assert(event.size() == 3);
-        const MaskFlags mask = getKeyMask(event);
+        const MaskFlagsEnum mask = getKeyMask(event);
 
         if (!isMatchedByTree(mask))
             return nullptr;
 
         auto tmp = event.clone();
-        auto pk = makeKey(tmp, MaskFlags::NAME_DESC_TERRAIN, m_useVerboseKeys);
+        auto pk = makeKey(tmp, MaskFlagsEnum::NAME_DESC_TERRAIN, m_useVerboseKeys);
         auto &result = m_primary[pk];
         if (result == nullptr)
             result = std::make_shared<RoomCollection>();
 
-        for (auto subMask = mask; subMask != MaskFlags::NONE; subMask = reduceMask(subMask)) {
+        for (auto subMask = mask; subMask != MaskFlagsEnum::NONE; subMask = reduceMask(subMask)) {
             auto key = makeKey(tmp, subMask, m_useVerboseKeys);
             Secondary &reference = m_secondary[subMask];
             SV &bucket = reference[key];
@@ -203,7 +203,7 @@ public:
         const auto &event = event_;
 
         assert(event.size() == 3);
-        const MaskFlags mask = getKeyMask(event);
+        const MaskFlagsEnum mask = getKeyMask(event);
 
         if (!isMatchedByTree(mask))
             return;

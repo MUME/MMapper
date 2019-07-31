@@ -96,22 +96,22 @@ void FindRoomsDlg::findClicked()
     roomsFoundLabel->clear();
 
     /*  for an absolute match do the below:
-    m_mapData->lookingForRooms(this, createEvent(CommandIdType::UNKNOWN, text, nullString, nullString, 0, 0));
+    m_mapData->lookingForRooms(this, createEvent(CommandEnum::UNKNOWN, text, nullString, nullString, 0, 0));
     */
 
-    auto kind = pattern_kinds::ALL;
+    auto kind = PatternKindsEnum::ALL;
     if (nameRadioButton->isChecked()) {
-        kind = pattern_kinds::NAME;
+        kind = PatternKindsEnum::NAME;
     } else if (descRadioButton->isChecked()) {
-        kind = pattern_kinds::DESC;
+        kind = PatternKindsEnum::DESC;
     } else if (dynDescRadioButton->isChecked()) {
-        kind = pattern_kinds::DYN_DESC;
+        kind = PatternKindsEnum::DYN_DESC;
     } else if (exitsRadioButton->isChecked()) {
-        kind = pattern_kinds::EXITS;
+        kind = PatternKindsEnum::EXITS;
     } else if (notesRadioButton->isChecked()) {
-        kind = pattern_kinds::NOTE;
+        kind = PatternKindsEnum::NOTE;
     } else if (flagsRadioButton->isChecked()) {
-        kind = pattern_kinds::FLAGS;
+        kind = PatternKindsEnum::FLAGS;
     }
 
     auto tmpSel = RoomSelection(*m_mapData);

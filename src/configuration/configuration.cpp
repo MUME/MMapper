@@ -22,19 +22,19 @@
 static const char *getPlatformEditor()
 {
     switch (CURRENT_PLATFORM) {
-    case Platform::Windows:
+    case PlatformEnum::Windows:
         return "notepad";
 
-    case Platform::Mac:
+    case PlatformEnum::Mac:
         return "open -W -n -t";
 
-    case Platform::Linux:
+    case PlatformEnum::Linux:
         // add .txt extension and use xdg-open instead?
         // or if xdg-open doesn't exist, then you can
         // look for gnome-open, mate-open, etc.
         return "gedit";
 
-    case Platform::Unknown:
+    case PlatformEnum::Unknown:
     default:
         return "";
     }
@@ -303,34 +303,34 @@ static bool isValidAnsi(const QString &input)
     return true;
 }
 
-static bool isValidGroupManagerState(const GroupManagerState state)
+static bool isValidGroupManagerState(const GroupManagerStateEnum state)
 {
     switch (state) {
-    case GroupManagerState::Off:
-    case GroupManagerState::Client:
-    case GroupManagerState::Server:
+    case GroupManagerStateEnum::Off:
+    case GroupManagerStateEnum::Client:
+    case GroupManagerStateEnum::Server:
         return true;
     }
     return false;
 }
 
-static bool isValidMapMode(const MapMode mode)
+static bool isValidMapMode(const MapModeEnum mode)
 {
     switch (mode) {
-    case MapMode::PLAY:
-    case MapMode::MAP:
-    case MapMode::OFFLINE:
+    case MapModeEnum::PLAY:
+    case MapModeEnum::MAP:
+    case MapModeEnum::OFFLINE:
         return true;
     }
     return false;
 }
 
-static bool isValidCharacterEncoding(const CharacterEncoding encoding)
+static bool isValidCharacterEncoding(const CharacterEncodingEnum encoding)
 {
     switch (encoding) {
-    case CharacterEncoding::ASCII:
-    case CharacterEncoding::LATIN1:
-    case CharacterEncoding::UTF8:
+    case CharacterEncodingEnum::ASCII:
+    case CharacterEncodingEnum::LATIN1:
+    case CharacterEncodingEnum::UTF8:
         return true;
     }
     return false;
@@ -348,34 +348,34 @@ static QString sanitizeAnsi(const QString &input, const QString &defaultValue)
     return defaultValue;
 }
 
-static GroupManagerState sanitizeGroupManagerState(const int input)
+static GroupManagerStateEnum sanitizeGroupManagerState(const int input)
 {
-    const auto state = static_cast<GroupManagerState>(input);
+    const auto state = static_cast<GroupManagerStateEnum>(input);
     if (isValidGroupManagerState(state))
         return state;
 
-    qWarning() << "invalid GroupManagerState:" << input;
-    return GroupManagerState::Off;
+    qWarning() << "invalid GroupManagerStateEnum:" << input;
+    return GroupManagerStateEnum::Off;
 }
 
-static MapMode sanitizeMapMode(const uint32_t input)
+static MapModeEnum sanitizeMapMode(const uint32_t input)
 {
-    const auto mode = static_cast<MapMode>(input);
+    const auto mode = static_cast<MapModeEnum>(input);
     if (isValidMapMode(mode))
         return mode;
 
     qWarning() << "invalid MapMode:" << input;
-    return MapMode::PLAY;
+    return MapModeEnum::PLAY;
 }
 
-static CharacterEncoding sanitizeCharacterEncoding(const uint32_t input)
+static CharacterEncodingEnum sanitizeCharacterEncoding(const uint32_t input)
 {
-    const auto encoding = static_cast<CharacterEncoding>(input);
+    const auto encoding = static_cast<CharacterEncodingEnum>(input);
     if (isValidCharacterEncoding(encoding))
         return encoding;
 
-    qWarning() << "invalid CharacterEncoding:" << input;
-    return CharacterEncoding::LATIN1;
+    qWarning() << "invalid CharacterEncodingEnum:" << input;
+    return CharacterEncodingEnum::LATIN1;
 }
 
 static uint16_t sanitizeUint16(const int input, const uint16_t defaultValue)
@@ -464,12 +464,12 @@ void Configuration::GeneralSettings::read(QSettings &conf)
     windowState = conf.value(KEY_WINDOW_STATE).toByteArray();
     alwaysOnTop = conf.value(KEY_ALWAYS_ON_TOP, false).toBool();
     mapMode = sanitizeMapMode(
-        conf.value(KEY_MAP_MODE, static_cast<uint32_t>(MapMode::PLAY)).toUInt());
+        conf.value(KEY_MAP_MODE, static_cast<uint32_t>(MapModeEnum::PLAY)).toUInt());
     noSplash = conf.value(KEY_NO_SPLASH, false).toBool();
     noLaunchPanel = conf.value(KEY_NO_LAUNCH_PANEL, false).toBool();
     checkForUpdate = conf.value(KEY_CHECK_FOR_UPDATE, true).toBool();
     characterEncoding = sanitizeCharacterEncoding(
-        conf.value(KEY_CHARACTER_ENCODING, static_cast<uint32_t>(CharacterEncoding::LATIN1))
+        conf.value(KEY_CHARACTER_ENCODING, static_cast<uint32_t>(CharacterEncodingEnum::LATIN1))
             .toUInt());
 }
 
@@ -562,7 +562,7 @@ void Configuration::GroupManagerSettings::read(QSettings &conf)
     static constexpr const char *const ANSI_GREEN = "[32m";
 
     state = sanitizeGroupManagerState(
-        conf.value(KEY_STATE, static_cast<int>(GroupManagerState::Off)).toInt());
+        conf.value(KEY_STATE, static_cast<int>(GroupManagerStateEnum::Off)).toInt());
     localPort = sanitizeUint16(conf.value(KEY_LOCAL_PORT, DEFAULT_PORT).toInt(), DEFAULT_PORT);
     remotePort = sanitizeUint16(conf.value(KEY_REMOTE_PORT, DEFAULT_PORT).toInt(), DEFAULT_PORT);
     host = conf.value(KEY_HOST, "localhost").toByteArray();
@@ -750,7 +750,7 @@ void Configuration::RoomEditDialog::write(QSettings &conf) const
 
 Configuration &setConfig()
 {
-    static Configuration conf{};
+    static Configuration conf;
     return conf;
 }
 

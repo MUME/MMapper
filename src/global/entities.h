@@ -12,7 +12,7 @@ static constexpr const uint32_t MAX_UNICODE_CODEPOINT = 0x10FFFFu;
 class OptQChar final
 {
 private:
-    QChar qc{};
+    QChar qc;
     bool valid = false;
 
 public:
@@ -63,8 +63,8 @@ struct EncodedLatin1 : QByteArray
     EncodedLatin1(const DecodedUnicode &) = delete;
 };
 
-enum class EncodingType { Translit, Lossless };
-EncodedLatin1 encode(const DecodedUnicode &name, EncodingType encodingType = EncodingType::Translit);
+enum class EncodingEnum { Translit, Lossless };
+EncodedLatin1 encode(const DecodedUnicode &name, EncodingEnum encodingType = EncodingEnum::Translit);
 DecodedUnicode decode(const EncodedLatin1 &input);
 
 struct EntityCallback

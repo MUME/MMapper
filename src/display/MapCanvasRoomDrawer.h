@@ -69,24 +69,24 @@ public:
     void drawInfoMark(InfoMark *);
 
     void drawRoomDoorName(const Room *sourceRoom,
-                          ExitDirection sourceDir,
+                          ExitDirEnum sourceDir,
                           const Room *targetRoom,
-                          ExitDirection targetDir);
+                          ExitDirEnum targetDir);
     void drawConnection(const Room *leftRoom,
                         const Room *rightRoom,
-                        ExitDirection startDir,
-                        ExitDirection endDir,
+                        ExitDirEnum startDir,
+                        ExitDirEnum endDir,
                         bool oneway,
                         bool inExitFlags = true);
-    void drawFlow(const Room *room, const RoomIndex &rooms, ExitDirection exitDirection);
+    void drawFlow(const Room *room, const RoomIndex &rooms, ExitDirEnum exitDirection);
     void drawVertical(const Room *room,
                       const RoomIndex &rooms,
                       qint32 layer,
-                      ExitDirection direction,
+                      ExitDirEnum direction,
                       const MapCanvasData::DrawLists::ExitUpDown::OpaqueTransparent &exlists,
                       const XDisplayList &doorlist);
 
-    void drawExit(const Room *const room, const RoomIndex &rooms, qint32 layer, ExitDirection dir);
+    void drawExit(const Room *room, const RoomIndex &rooms, qint32 layer, ExitDirEnum dir);
     void drawRoomConnectionsAndDoors(const Room *room, const RoomIndex &rooms);
     void drawInfoMarks();
 
@@ -94,7 +94,7 @@ public:
                     float y,
                     const QString &text,
                     const QColor &color = Qt::white,
-                    FontFormatFlags fontFormatFlag = FontFormatFlags::NONE,
+                    const FontFormatFlags &fontFormatFlags = {},
                     float rotationAngle = 0.0f);
 
     void alphaOverlayTexture(QOpenGLTexture *texture);
@@ -110,13 +110,13 @@ private:
     void drawConnEndTriNone(qint32 dX, qint32 dY, float dstZ);
 
 private:
-    void drawConnStartTri(ExitDirection startDir, float srcZ);
-    void drawConnEndTri(ExitDirection endDir, qint32 dX, qint32 dY, float dstZ);
-    void drawConnEndTri1Way(ExitDirection endDir, qint32 dX, qint32 dY, float dstZ);
+    void drawConnStartTri(ExitDirEnum startDir, float srcZ);
+    void drawConnEndTri(ExitDirEnum endDir, qint32 dX, qint32 dY, float dstZ);
+    void drawConnEndTri1Way(ExitDirEnum endDir, qint32 dX, qint32 dY, float dstZ);
 
 private:
-    void drawConnectionLine(ExitDirection startDir,
-                            ExitDirection endDir,
+    void drawConnectionLine(ExitDirEnum startDir,
+                            ExitDirEnum endDir,
                             bool oneway,
                             bool neighbours,
                             qint32 dX,
@@ -124,8 +124,8 @@ private:
                             float srcZ,
                             float dstZ);
 
-    void drawConnectionTriangles(ExitDirection startDir,
-                                 ExitDirection endDir,
+    void drawConnectionTriangles(ExitDirEnum startDir,
+                                 ExitDirEnum endDir,
                                  bool oneway,
                                  qint32 dX,
                                  qint32 dY,
@@ -133,6 +133,6 @@ private:
                                  float dstZ);
 
 public:
-    float getScaledFontWidth(const QString &x, FontFormatFlags flags = FontFormatFlags::NONE) const;
+    float getScaledFontWidth(const QString &x, const FontFormatFlags &flags = {}) const;
     float getScaledFontHeight() const;
 };

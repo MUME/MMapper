@@ -39,8 +39,8 @@ private:
     const QString m_body;
     const bool m_editSession;
 
-    QProcess m_process{};
-    QTemporaryFile m_file{};
-    QString m_newBody{};
-    QDateTime m_previousTime{};
+    QProcess m_process;
+    QTemporaryFile m_file;
+    QString m_newBody;
+    QDateTime m_previousTime;
 };

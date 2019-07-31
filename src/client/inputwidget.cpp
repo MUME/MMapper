@@ -18,7 +18,7 @@ static constexpr const int MIN_WORD_LENGTH = 3;
 
 static const QRegularExpression s_whitespaceRx(R"(\W+)");
 
-InputWidget::InputWidget(QWidget *parent)
+InputWidget::InputWidget(QWidget *const parent)
     : QPlainTextEdit(parent)
 {
     // Size Policy
@@ -53,7 +53,7 @@ InputWidget::~InputWidget()
     delete m_tabIterator;
 }
 
-void InputWidget::keyPressEvent(QKeyEvent *event)
+void InputWidget::keyPressEvent(QKeyEvent *const event)
 {
     const auto currentKey = event->key();
     const auto currentModifiers = event->modifiers();
@@ -95,7 +95,7 @@ void InputWidget::keyPressEvent(QKeyEvent *event)
         }
 
     } else if (currentModifiers == Qt::KeypadModifier) {
-        if constexpr (CURRENT_PLATFORM != Platform::Mac) {
+        if constexpr (CURRENT_PLATFORM != PlatformEnum::Mac) {
             // NOTE: MacOS does not differentiate between arrow keys and the keypad keys
             // and as such we disable keypad movement functionality in favor of history
             switch (currentKey) {
@@ -120,7 +120,7 @@ void InputWidget::keyPressEvent(QKeyEvent *event)
     base::keyPressEvent(event);
 }
 
-void InputWidget::keypadMovement(int key)
+void InputWidget::keypadMovement(const int key)
 {
     switch (key) {
     case Qt::Key_Up:
@@ -163,7 +163,7 @@ void InputWidget::keypadMovement(int key)
     };
 }
 
-void InputWidget::wordHistory(int key)
+void InputWidget::wordHistory(const int key)
 {
     QTextCursor cursor = textCursor();
     switch (key) {

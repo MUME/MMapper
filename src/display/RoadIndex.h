@@ -13,8 +13,8 @@ class Room;
 static constexpr const int NUM_COMPASS_DIRS = 4;
 static constexpr const int NUM_ROAD_INDICES = 1 << NUM_COMPASS_DIRS;
 
-enum class RoadIndex : uint32_t {
-#define BIT_FROM_EXDIR(x) x = (1 << static_cast<int>(ExitDirection::x))
+enum class RoadIndexMaskEnum : uint32_t {
+#define BIT_FROM_EXDIR(x) x = (1 << static_cast<int>(ExitDirEnum::x))
     NONE = 0,
     BIT_FROM_EXDIR(NORTH),
     BIT_FROM_EXDIR(SOUTH),
@@ -23,41 +23,45 @@ enum class RoadIndex : uint32_t {
     ALL = NUM_ROAD_INDICES - 1
 #undef BIT_FROM_EXDIR
 };
-static_assert(static_cast<int>(RoadIndex::ALL) == 15);
-DEFINE_ENUM_COUNT(RoadIndex, NUM_ROAD_INDICES)
+static_assert(static_cast<int>(RoadIndexMaskEnum::ALL) == 15);
+DEFINE_ENUM_COUNT(RoadIndexMaskEnum, NUM_ROAD_INDICES)
 
-inline constexpr RoadIndex operator|(RoadIndex lhs, RoadIndex rhs) noexcept
+inline constexpr RoadIndexMaskEnum operator|(const RoadIndexMaskEnum lhs,
+                                             const RoadIndexMaskEnum rhs) noexcept
 {
-    return static_cast<RoadIndex>(static_cast<uint32_t>(lhs) | static_cast<uint32_t>(rhs));
+    return static_cast<RoadIndexMaskEnum>(static_cast<uint32_t>(lhs) | static_cast<uint32_t>(rhs));
 }
-inline constexpr RoadIndex &operator|=(RoadIndex &lhs, RoadIndex rhs) noexcept
+inline constexpr RoadIndexMaskEnum &operator|=(RoadIndexMaskEnum &lhs,
+                                               const RoadIndexMaskEnum rhs) noexcept
 {
     return lhs = (lhs | rhs);
 }
-inline constexpr RoadIndex operator&(RoadIndex lhs, RoadIndex rhs)
+inline constexpr RoadIndexMaskEnum operator&(const RoadIndexMaskEnum lhs,
+                                             const RoadIndexMaskEnum rhs)
 {
-    return static_cast<RoadIndex>(static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs));
+    return static_cast<RoadIndexMaskEnum>(static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs));
 }
-inline constexpr RoadIndex operator~(RoadIndex x)
+inline constexpr RoadIndexMaskEnum operator~(const RoadIndexMaskEnum x)
 {
-    return static_cast<RoadIndex>(static_cast<uint32_t>(x) ^ static_cast<uint32_t>(RoadIndex::ALL));
+    return static_cast<RoadIndexMaskEnum>(static_cast<uint32_t>(x)
+                                          ^ static_cast<uint32_t>(RoadIndexMaskEnum::ALL));
 }
-static_assert(~RoadIndex::ALL == RoadIndex::NONE);
-static_assert(~RoadIndex::NONE == RoadIndex::ALL);
+static_assert(~RoadIndexMaskEnum::ALL == RoadIndexMaskEnum::NONE);
+static_assert(~RoadIndexMaskEnum::NONE == RoadIndexMaskEnum::ALL);
 
-RoadIndex getRoadIndex(const ExitDirection dir);
-RoadIndex getRoadIndex(const Room &room);
+RoadIndexMaskEnum getRoadIndex(ExitDirEnum dir);
+RoadIndexMaskEnum getRoadIndex(const Room &room);
 
-enum class RoadIndexType { ROAD, TRAIL };
-template<RoadIndexType Tag>
+enum class RoadTagEnum { ROAD, TRAIL };
+template<RoadTagEnum Tag>
 struct TaggedRoadIndex final
 {
-    static constexpr const RoadIndexType tag_type = Tag;
-    RoadIndex index;
-    explicit constexpr TaggedRoadIndex(const RoadIndex i)
+    static constexpr const RoadTagEnum tag_type = Tag;
+    const RoadIndexMaskEnum index;
+    explicit constexpr TaggedRoadIndex(const RoadIndexMaskEnum i)
         : index{i}
     {}
 };
 
-using TaggedRoad = TaggedRoadIndex<RoadIndexType::ROAD>;
-using TaggedTrail = TaggedRoadIndex<RoadIndexType::TRAIL>;
+using TaggedRoad = TaggedRoadIndex<RoadTagEnum::ROAD>;
+using TaggedTrail = TaggedRoadIndex<RoadTagEnum::TRAIL>;

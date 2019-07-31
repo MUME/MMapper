@@ -20,9 +20,9 @@ public:
     const Room *r = nullptr;
     int parent = 0;
     double dist = 0.0;
-    ExitDirection lastdir{};
+    ExitDirEnum lastdir = ExitDirEnum::NONE;
     SPNode() = default;
-    explicit SPNode(const Room *r, const int parent, double dist, ExitDirection lastdir)
+    explicit SPNode(const Room *r, const int parent, double dist, ExitDirEnum lastdir)
         : r(r)
         , parent(parent)
         , dist(dist)

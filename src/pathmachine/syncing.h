@@ -11,10 +11,10 @@
 #include "../global/RuleOf5.h"
 #include "path.h"
 
-class PathParameters;
 class Room;
 class RoomAdmin;
 class RoomSignalHandler;
+struct PathParameters;
 
 class Syncing : public RoomRecipient
 {

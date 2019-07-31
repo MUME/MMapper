@@ -42,7 +42,7 @@ private:
     virtual bool loadData() override;
     virtual bool saveData(bool baseMapOnly) override;
 
-    RoomFactory factory{};
+    RoomFactory factory;
     Room *loadRoom(QDataStream &stream, uint32_t version);
     void loadExits(Room &room, QDataStream &stream, uint32_t version);
     void loadMark(InfoMark *mark, QDataStream &stream, uint32_t version);
@@ -51,7 +51,7 @@ private:
     void saveExits(const Room &room, QDataStream &stream);
 
     uint32_t baseId = 0u;
-    Coordinate basePosition{};
+    Coordinate basePosition;
 };
 
 class MapFrontendBlocker final

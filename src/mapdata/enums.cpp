@@ -13,7 +13,7 @@
 #include "mmapper2room.h"
 
 #define DEFINE_GETTER(E, N, name) \
-    const std::array<E, N> &name() \
+    const MMapper::Array<E, N> &name() \
     { \
         static const auto things = ::enums::genEnumValues<E, N>(); \
         return things; \
@@ -32,16 +32,16 @@
     }
 
 namespace enums {
-DEFINE_GETTER_DEFINED(RoomLightType, NUM_LIGHT_TYPES, getDefinedRoomLightTypes)
-DEFINE_GETTER_DEFINED(RoomSundeathType, NUM_SUNDEATH_TYPES, getDefinedRoomSundeathTypes)
-DEFINE_GETTER_DEFINED(RoomPortableType, NUM_PORTABLE_TYPES, getDefinedRoomPortbleTypes)
-DEFINE_GETTER_DEFINED(RoomRidableType, NUM_RIDABLE_TYPES, getDefinedRoomRidableTypes)
-DEFINE_GETTER_DEFINED(RoomAlignType, NUM_ALIGN_TYPES, getDefinedRoomAlignTypes)
-DEFINE_GETTER(RoomTerrainType, NUM_ROOM_TERRAIN_TYPES, getAllTerrainTypes)
-DEFINE_GETTER(RoomMobFlag, NUM_ROOM_MOB_FLAGS, getAllMobFlags)
-DEFINE_GETTER(RoomLoadFlag, NUM_ROOM_LOAD_FLAGS, getAllLoadFlags)
-DEFINE_GETTER(DoorFlag, NUM_DOOR_FLAGS, getAllDoorFlags)
-DEFINE_GETTER(ExitFlag, NUM_EXIT_FLAGS, getAllExitFlags)
+DEFINE_GETTER_DEFINED(RoomLightEnum, NUM_LIGHT_TYPES, getDefinedRoomLightTypes)
+DEFINE_GETTER_DEFINED(RoomSundeathEnum, NUM_SUNDEATH_TYPES, getDefinedRoomSundeathTypes)
+DEFINE_GETTER_DEFINED(RoomPortableEnum, NUM_PORTABLE_TYPES, getDefinedRoomPortbleTypes)
+DEFINE_GETTER_DEFINED(RoomRidableEnum, NUM_RIDABLE_TYPES, getDefinedRoomRidableTypes)
+DEFINE_GETTER_DEFINED(RoomAlignEnum, NUM_ALIGN_TYPES, getDefinedRoomAlignTypes)
+DEFINE_GETTER(RoomTerrainEnum, NUM_ROOM_TERRAIN_TYPES, getAllTerrainTypes)
+DEFINE_GETTER(RoomMobFlagEnum, NUM_ROOM_MOB_FLAGS, getAllMobFlags)
+DEFINE_GETTER(RoomLoadFlagEnum, NUM_ROOM_LOAD_FLAGS, getAllLoadFlags)
+DEFINE_GETTER(DoorFlagEnum, NUM_DOOR_FLAGS, getAllDoorFlags)
+DEFINE_GETTER(ExitFlagEnum, NUM_EXIT_FLAGS, getAllExitFlags)
 } // namespace enums
 
 #undef DEFINE_GETTER

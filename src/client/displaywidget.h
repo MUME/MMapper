@@ -33,18 +33,19 @@ public slots:
     void displayText(const QString &str);
 
 protected:
-    QTextCursor m_cursor{};
-    QTextCharFormat m_format{};
+    QTextCursor m_cursor;
+    QTextCharFormat m_format;
 
     void resizeEvent(QResizeEvent *event) override;
 
 private:
-    QColor m_foregroundColor{}, m_backgroundColor{};
-    QFont m_serverOutputFont{};
+    QColor m_foregroundColor;
+    QColor m_backgroundColor;
+    QFont m_serverOutputFont;
     // TODO: Create state machine
-    bool m_ansi256Foreground{false};
-    bool m_ansi256Background{false};
-    bool m_backspace{false};
+    bool m_ansi256Foreground = false;
+    bool m_ansi256Background = false;
+    bool m_backspace = false;
 
     void setDefaultFormat(QTextCharFormat &format);
     void updateFormat(QTextCharFormat &format, int ansiCode);

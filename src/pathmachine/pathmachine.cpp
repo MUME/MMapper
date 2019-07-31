@@ -57,7 +57,7 @@ void PathMachine::setCurrentRoom(const RoomId id, bool update)
         mostLikelyRoom = *perhaps;
         emit playerMoved(mostLikelyRoom.getPosition());
         emit setCharPosition(mostLikelyRoom.getId());
-        state = PathState::APPROVED;
+        state = PathStateEnum::APPROVED;
     }
 }
 
@@ -68,7 +68,7 @@ void PathMachine::releaseAllPaths()
     }
     paths->clear();
 
-    state = PathState::SYNCING;
+    state = PathStateEnum::SYNCING;
 }
 
 void PathMachine::event(const SigParseEvent &sigParseEvent)
@@ -79,13 +79,13 @@ void PathMachine::event(const SigParseEvent &sigParseEvent)
     lastEvent.requireValid();
 
     switch (state) {
-    case PathState::APPROVED:
+    case PathStateEnum::APPROVED:
         approved(sigParseEvent);
         break;
-    case PathState::EXPERIMENTING:
+    case PathStateEnum::EXPERIMENTING:
         experimenting(sigParseEvent);
         break;
-    case PathState::SYNCING:
+    case PathStateEnum::SYNCING:
         syncing(sigParseEvent);
         break;
     }
@@ -96,14 +96,14 @@ void PathMachine::tryExits(const Room *const room,
                            ParseEvent &event,
                            const bool out)
 {
-    const CommandIdType move = event.getMoveType();
+    const CommandEnum move = event.getMoveType();
     if (isDirection7(move)) {
         const Exit &possible = room->exit(getDirection(move));
         tryExit(possible, recipient, out);
     } else {
         // Only check the current room for LOOK
         emit lookingForRooms(recipient, room->getId());
-        if (move >= CommandIdType::FLEE) {
+        if (move >= CommandEnum::FLEE) {
             // Only try all possible exits for commands FLEE, SCOUT, and NONE
             for (const auto &possible : room->getExitsList()) {
                 tryExit(possible, recipient, out);
@@ -121,8 +121,8 @@ void PathMachine::tryExit(const Exit &possible, RoomRecipient &recipient, const 
 
 void PathMachine::tryCoordinate(const Room *const room, RoomRecipient &recipient, ParseEvent &event)
 {
-    const CommandIdType moveCode = event.getMoveType();
-    if (moveCode < CommandIdType::FLEE) {
+    const CommandEnum moveCode = event.getMoveType();
+    if (moveCode < CommandEnum::FLEE) {
         // LOOK, UNKNOWN will have an empty offset
         auto offset = RoomFactory::exitDir(getDirection(moveCode));
         const Coordinate c = room->getPosition() + offset;
@@ -132,8 +132,8 @@ void PathMachine::tryCoordinate(const Room *const room, RoomRecipient &recipient
         const Coordinate roomPos = room->getPosition();
         // REVISIT: Should this enumerate 6 or 7 values?
         // NOTE: This previously enumerated 8 values instead of 7,
-        // which meant it was asking for exitDir(ExitDirection::NONE),
-        // even though both ExitDirection::UNKNOWN and ExitDirection::NONE
+        // which meant it was asking for exitDir(ExitDirEnum::NONE),
+        // even though both ExitDirEnum::UNKNOWN and ExitDirEnum::NONE
         // both have Coordinate(0, 0, 0).
         for (const auto dir : ALL_EXITS7) {
             emit lookingForRooms(recipient, roomPos + RoomFactory::exitDir(dir));
@@ -148,7 +148,7 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
     Approved appr(factory, sigParseEvent, params.matchingTolerance);
     const Room *perhaps = nullptr;
 
-    if (event.getMoveType() == CommandIdType::LOOK) {
+    if (event.getMoveType() == CommandEnum::LOOK) {
         emit lookingForRooms(appr, mostLikelyRoom.getId());
 
     } else {
@@ -172,12 +172,12 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
                 // FIXME: need stronger type checking here.
 
                 const auto cmd = event.getMoveType();
-                // NOTE: This allows ExitDirection::UNKNOWN,
+                // NOTE: This allows ExitDirEnum::UNKNOWN,
                 // which means the coordinate can be Coordinate(0,0,0).
                 const Coordinate &eDir = RoomFactory::exitDir(getDirection(cmd));
 
                 // CAUTION: This test seems to mean it wants only NESW,
-                // but it would also accept ExitDirection::UNKNOWN,
+                // but it would also accept ExitDirEnum::UNKNOWN,
                 // which in the context of this function would mean "no move."
                 if (eDir.z == 0) {
                     appr.reset();
@@ -199,11 +199,11 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
     }
     if (perhaps != nullptr) {
         // Update the exit from the previous room to the current room
-        const CommandIdType move = event.getMoveType();
+        const CommandEnum move = event.getMoveType();
         if (static_cast<uint32_t>(move) < NUM_EXITS) {
             emit scheduleAction(new AddExit(mostLikelyRoom.getId(),
                                             perhaps->getId(),
-                                            static_cast<ExitDirection>(move)));
+                                            static_cast<ExitDirEnum>(move)));
         }
 
         // Update most likely room with player's current location
@@ -219,13 +219,13 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
                 }
                 RoomId connectedRoomId = e.outFirst();
                 auto bThisRoom = bFlags.getDirectionalLight(dir);
-                if (IS_SET(bThisRoom, DirectionalLightType::DIRECT_SUN_ROOM)) {
+                if (IS_SET(bThisRoom, DirectionalLightEnum::DIRECT_SUN_ROOM)) {
                     emit scheduleAction(
-                        new SingleRoomAction(new UpdateRoomField(RoomSundeathType::SUNDEATH),
+                        new SingleRoomAction(new UpdateRoomField(RoomSundeathEnum::SUNDEATH),
                                              connectedRoomId));
-                } else if (IS_SET(bThisRoom, DirectionalLightType::INDIRECT_SUN_ROOM)) {
+                } else if (IS_SET(bThisRoom, DirectionalLightEnum::INDIRECT_SUN_ROOM)) {
                     emit scheduleAction(
-                        new SingleRoomAction(new UpdateRoomField(RoomSundeathType::NO_SUNDEATH),
+                        new SingleRoomAction(new UpdateRoomField(RoomSundeathEnum::NO_SUNDEATH),
                                              connectedRoomId));
                 }
             }
@@ -243,7 +243,7 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
         emit setCharPosition(mostLikelyRoom.getId());
     } else {
         // couldn't match, give up
-        state = PathState::EXPERIMENTING;
+        state = PathStateEnum::EXPERIMENTING;
         pathRoot = mostLikelyRoom;
         auto *const root = new Path(&pathRoot, nullptr, nullptr, &signaler);
         paths->push_front(root);
@@ -268,8 +268,8 @@ void PathMachine::experimenting(const SigParseEvent &sigParseEvent)
 {
     ParseEvent &event = sigParseEvent.deref();
 
-    std::unique_ptr<Experimenting> exp = nullptr;
-    const CommandIdType moveCode = event.getMoveType();
+    std::unique_ptr<Experimenting> exp;
+    const CommandEnum moveCode = event.getMoveType();
 
     const auto dir = getDirection(moveCode);
     const Coordinate &move = RoomFactory::exitDir(dir);
@@ -277,7 +277,7 @@ void PathMachine::experimenting(const SigParseEvent &sigParseEvent)
     // only create rooms if no properties are skipped and
     // the move coordinate is not 0,0,0
 
-    if (event.getNumSkipped() == 0 && moveCode < CommandIdType::FLEE && !mostLikelyRoom.isFake()
+    if (event.getNumSkipped() == 0 && moveCode < CommandEnum::FLEE && !mostLikelyRoom.isFake()
         && !move.isNull()) {
         exp = std::make_unique<Crossover>(paths, dir, params, factory);
         std::set<const Room *> pathEnds{};
@@ -311,15 +311,15 @@ void PathMachine::experimenting(const SigParseEvent &sigParseEvent)
 void PathMachine::evaluatePaths()
 {
     if (paths->empty()) {
-        state = PathState::SYNCING;
+        state = PathStateEnum::SYNCING;
     } else {
         mostLikelyRoom = *(paths->front()->getRoom());
         if (++paths->begin() == paths->end()) {
-            state = PathState::APPROVED;
+            state = PathStateEnum::APPROVED;
             paths->front()->approve();
             paths->pop_front();
         } else {
-            state = PathState::EXPERIMENTING;
+            state = PathStateEnum::EXPERIMENTING;
         }
         emit playerMoved(mostLikelyRoom.getPosition());
         emit setCharPosition(mostLikelyRoom.getId());

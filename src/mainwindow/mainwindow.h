@@ -55,15 +55,15 @@ public:
     explicit MainWindow(QWidget *parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags{});
     ~MainWindow() override;
 
-    enum class SaveMode { SAVEM_FULL, SAVEM_BASEMAP };
-    enum class SaveFormat { SAVEF_MM2, SAVEF_WEB, SAVEF_MMP };
-    bool saveFile(const QString &fileName, SaveMode mode, SaveFormat format);
+    enum class SaveModeEnum { FULL, BASEMAP };
+    enum class SaveFormatEnum { MM2, WEB, MMP };
+    bool saveFile(const QString &fileName, SaveModeEnum mode, SaveFormatEnum format);
     void loadFile(const QString &fileName);
     void setCurrentFile(const QString &fileName);
     void startServices();
 
 signals:
-    void setGroupMode(GroupManagerState);
+    void setGroupMode(GroupManagerStateEnum);
     void startGroupNetwork();
     void stopGroupNetwork();
 
@@ -163,7 +163,6 @@ private:
     QProgressDialog *progressDlg = nullptr;
 
     QToolBar *fileToolBar = nullptr;
-    QToolBar *editToolBar = nullptr;
     QToolBar *mouseModeToolBar = nullptr;
     QToolBar *mapperModeToolBar = nullptr;
     QToolBar *viewToolBar = nullptr;
@@ -179,7 +178,6 @@ private:
     QMenu *roomMenu = nullptr;
     QMenu *connectionMenu = nullptr;
     QMenu *viewMenu = nullptr;
-    QMenu *searchMenu = nullptr;
     QMenu *settingsMenu = nullptr;
     QMenu *helpMenu = nullptr;
     QMenu *mumeMenu = nullptr;
@@ -197,9 +195,6 @@ private:
     QAction *exportWebMapAct = nullptr;
     QAction *exportMmpMapAct = nullptr;
     QAction *exitAct = nullptr;
-    // QAction *cutAct;
-    // QAction *copyAct;
-    // QAction *pasteAct;
     QAction *voteAct = nullptr;
     QAction *mmapperCheckForUpdateAct = nullptr;
     QAction *mumeWebsiteAct = nullptr;
@@ -209,8 +204,6 @@ private:
     QAction *newbieAct = nullptr;
     QAction *aboutAct = nullptr;
     QAction *aboutQtAct = nullptr;
-    QAction *prevWindowAct = nullptr;
-    QAction *nextWindowAct = nullptr;
     QAction *zoomInAct = nullptr;
     QAction *zoomOutAct = nullptr;
     QAction *zoomResetAct = nullptr;

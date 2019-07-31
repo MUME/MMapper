@@ -42,7 +42,7 @@ Room *RoomFactory::createRoom(const ParseEvent &ev) const
 
 SharedParseEvent RoomFactory::getEvent(const Room *const room) const
 {
-    ExitsFlagsType exitFlags{};
+    ExitsFlagsType exitFlags;
     for (auto dir : ALL_EXITS_NESWUD) {
         const Exit &e = room->exit(dir);
         const ExitFlags eFlags = e.getExitFlags();
@@ -50,7 +50,7 @@ SharedParseEvent RoomFactory::getEvent(const Room *const room) const
     }
     exitFlags.setValid();
 
-    return ParseEvent::createEvent(CommandIdType::UNKNOWN,
+    return ParseEvent::createEvent(CommandEnum::UNKNOWN,
                                    room->getName(),
                                    room->getDynamicDescription(),
                                    room->getStaticDescription(),
@@ -68,10 +68,10 @@ static int wordDifference(StringView a, StringView b)
     return diff + a.size() + b.size();
 }
 
-ComparisonResult RoomFactory::compareStrings(const QString &room,
-                                             const QString &event,
-                                             int prevTolerance,
-                                             const bool updated)
+ComparisonResultEnum RoomFactory::compareStrings(const QString &room,
+                                                 const QString &event,
+                                                 int prevTolerance,
+                                                 const bool updated)
 {
     assert(prevTolerance >= 0);
     prevTolerance = std::max(0, prevTolerance);
@@ -100,81 +100,81 @@ ComparisonResult RoomFactory::compareStrings(const QString &room,
     }
 
     if (tolerance < 0) {
-        return ComparisonResult::DIFFERENT;
+        return ComparisonResultEnum::DIFFERENT;
     } else if (static_cast<int>(prevTolerance) != tolerance) {
-        return ComparisonResult::TOLERANCE;
+        return ComparisonResultEnum::TOLERANCE;
     } else if (event.size() != room.size()) { // differences in amount of whitespace
-        return ComparisonResult::TOLERANCE;
+        return ComparisonResultEnum::TOLERANCE;
     }
-    return ComparisonResult::EQUAL;
+    return ComparisonResultEnum::EQUAL;
 }
 
-ComparisonResult RoomFactory::compare(const Room *const room,
-                                      const ParseEvent &event,
-                                      const int tolerance) const
+ComparisonResultEnum RoomFactory::compare(const Room *const room,
+                                          const ParseEvent &event,
+                                          const int tolerance) const
 {
     const QString name = room->getName();
     const QString staticDesc = room->getStaticDescription();
-    const RoomTerrainType terrainType = room->getTerrainType();
+    const RoomTerrainEnum terrainType = room->getTerrainType();
     bool updated = room->isUpToDate();
 
     //    if (event == nullptr) {
-    //        return ComparisonResult::EQUAL;
+    //        return ComparisonResultEnum::EQUAL;
     //    }
 
     if (name.isEmpty() && staticDesc.isEmpty() && (!updated)) {
         // user-created
-        return ComparisonResult::TOLERANCE;
+        return ComparisonResultEnum::TOLERANCE;
     }
 
     const PromptFlagsType pf = event.getPromptFlags();
     if (pf.isValid()) {
         if (pf.getTerrainType() != terrainType) {
             if (room->isUpToDate()) {
-                return ComparisonResult::DIFFERENT;
+                return ComparisonResultEnum::DIFFERENT;
             }
         }
     }
 
     switch (compareStrings(name, event.getRoomName(), tolerance)) {
-    case ComparisonResult::TOLERANCE:
+    case ComparisonResultEnum::TOLERANCE:
         updated = false;
         break;
-    case ComparisonResult::DIFFERENT:
-        return ComparisonResult::DIFFERENT;
-    case ComparisonResult::EQUAL:
+    case ComparisonResultEnum::DIFFERENT:
+        return ComparisonResultEnum::DIFFERENT;
+    case ComparisonResultEnum::EQUAL:
         break;
     }
 
     switch (compareStrings(staticDesc, event.getStaticDesc(), tolerance, updated)) {
-    case ComparisonResult::TOLERANCE:
+    case ComparisonResultEnum::TOLERANCE:
         updated = false;
         break;
-    case ComparisonResult::DIFFERENT:
-        return ComparisonResult::DIFFERENT;
-    case ComparisonResult::EQUAL:
+    case ComparisonResultEnum::DIFFERENT:
+        return ComparisonResultEnum::DIFFERENT;
+    case ComparisonResultEnum::EQUAL:
         break;
     }
 
     switch (compareWeakProps(room, event, 0)) {
-    case ComparisonResult::DIFFERENT:
-        return ComparisonResult::DIFFERENT;
-    case ComparisonResult::TOLERANCE:
+    case ComparisonResultEnum::DIFFERENT:
+        return ComparisonResultEnum::DIFFERENT;
+    case ComparisonResultEnum::TOLERANCE:
         updated = false;
         break;
-    case ComparisonResult::EQUAL:
+    case ComparisonResultEnum::EQUAL:
         break;
     }
 
     if (updated) {
-        return ComparisonResult::EQUAL;
+        return ComparisonResultEnum::EQUAL;
     }
-    return ComparisonResult::TOLERANCE;
+    return ComparisonResultEnum::TOLERANCE;
 }
 
-ComparisonResult RoomFactory::compareWeakProps(const Room *const room,
-                                               const ParseEvent &event,
-                                               int /*tolerance*/) const
+ComparisonResultEnum RoomFactory::compareWeakProps(const Room *const room,
+                                                   const ParseEvent &event,
+                                                   int /*tolerance*/) const
 {
     bool exitsValid = room->isUpToDate();
     // REVISIT: Should tolerance be an integer given known 'weak' params like hidden
@@ -184,17 +184,17 @@ ComparisonResult RoomFactory::compareWeakProps(const Room *const room,
     const ConnectedRoomFlagsType connectedRoomFlags = event.getConnectedRoomFlags();
     const PromptFlagsType pFlags = event.getPromptFlags();
     if (pFlags.isValid()) {
-        const RoomLightType lightType = room->getLightType();
-        const RoomSundeathType sunType = room->getSundeathType();
-        if (pFlags.isLit() && lightType != RoomLightType::LIT
-            && sunType == RoomSundeathType::NO_SUNDEATH) {
+        const RoomLightEnum lightType = room->getLightType();
+        const RoomSundeathEnum sunType = room->getSundeathType();
+        if (pFlags.isLit() && lightType != RoomLightEnum::LIT
+            && sunType == RoomSundeathEnum::NO_SUNDEATH) {
             // Allow prompt sunlight to override rooms without LIT flag if we know the room
             // is troll safe and obviously not in permanent darkness
             qDebug() << "Updating room to be LIT";
             tolerance = true;
 
-        } else if (pFlags.isDark() && lightType != RoomLightType::DARK
-                   && sunType == RoomSundeathType::NO_SUNDEATH && connectedRoomFlags.isValid()
+        } else if (pFlags.isDark() && lightType != RoomLightEnum::DARK
+                   && sunType == RoomSundeathEnum::NO_SUNDEATH && connectedRoomFlags.isValid()
                    && connectedRoomFlags.hasAnyDirectSunlight()) {
             // Allow prompt sunlight to override rooms without DARK flag if we know the room
             // has at least one sunlit exit and the room is troll safe
@@ -213,7 +213,7 @@ ComparisonResult RoomFactory::compareWeakProps(const Room *const room,
                 // exits are considered valid as soon as one exit is found (or if the room is updated)
                 exitsValid = true;
                 if (previousDifference) {
-                    return ComparisonResult::DIFFERENT;
+                    return ComparisonResultEnum::DIFFERENT;
                 }
             }
             if (roomExitFlags.isNoMatch()) {
@@ -229,7 +229,7 @@ ComparisonResult RoomFactory::compareWeakProps(const Room *const room,
                     if (tolerance) {
                         // Do not be tolerant for multiple differences
                         qDebug() << "Found too many differences" << event;
-                        return ComparisonResult::DIFFERENT;
+                        return ComparisonResultEnum::DIFFERENT;
 
                     } else if (!roomExitFlags.isExit() && eventExitFlags.isDoor()) {
                         // No exit exists on the map so we probably found a secret door
@@ -243,12 +243,12 @@ ComparisonResult RoomFactory::compareWeakProps(const Room *const room,
                     } else {
                         qWarning() << "Unknown exit/door tolerance condition to the"
                                    << lowercaseDirection(dir) << event;
-                        return ComparisonResult::DIFFERENT;
+                        return ComparisonResultEnum::DIFFERENT;
                     }
                 }
             } else if (diff.isRoad()) {
                 if (roomExitFlags.isRoad() && connectedRoomFlags.isValid()
-                    && connectedRoomFlags.hasDirectionalSunlight(static_cast<DirectionType>(dir))) {
+                    && connectedRoomFlags.hasDirectionalSunlight(static_cast<DirectionEnum>(dir))) {
                     // Orcs/trolls can only see trails/roads if it is dark (but can see climbs)
                     qDebug() << "Orc/troll could not see trail to the" << lowercaseDirection(dir);
 
@@ -291,9 +291,9 @@ ComparisonResult RoomFactory::compareWeakProps(const Room *const room,
         }
     }
     if (tolerance || !exitsValid) {
-        return ComparisonResult::TOLERANCE;
+        return ComparisonResultEnum::TOLERANCE;
     }
-    return ComparisonResult::EQUAL;
+    return ComparisonResultEnum::EQUAL;
 }
 
 void RoomFactory::update(Room &room, const ParseEvent &event) const
@@ -311,13 +311,13 @@ void RoomFactory::update(Room &room, const ParseEvent &event) const
             if (!room.isUpToDate()) {
                 if (roomExit.isDoor() && !eventExitFlags.isDoor()) {
                     // Prevent room hidden exits from being overridden
-                    eventExitFlags |= ExitFlag::DOOR | ExitFlag::EXIT;
+                    eventExitFlags |= ExitFlagEnum::DOOR | ExitFlagEnum::EXIT;
                 }
                 if (roomExit.exitIsRoad() && !eventExitFlags.isRoad()
                     && connectedRoomFlags.isValid()
-                    && connectedRoomFlags.hasDirectionalSunlight(static_cast<DirectionType>(dir))) {
+                    && connectedRoomFlags.hasDirectionalSunlight(static_cast<DirectionEnum>(dir))) {
                     // Prevent orcs/trolls from removing roads/trails if they're sunlit
-                    eventExitFlags |= ExitFlag::ROAD;
+                    eventExitFlags |= ExitFlagEnum::ROAD;
                 }
                 // Replace exits if target room is not up to date
                 roomExit.setExitFlags(eventExitFlags);
@@ -335,12 +335,12 @@ void RoomFactory::update(Room &room, const ParseEvent &event) const
     const PromptFlagsType pFlags = event.getPromptFlags();
     if (pFlags.isValid()) {
         room.setTerrainType(pFlags.getTerrainType());
-        const RoomSundeathType sunType = room.getSundeathType();
-        if (pFlags.isLit() && sunType == RoomSundeathType::NO_SUNDEATH) {
-            room.setLightType(RoomLightType::LIT);
-        } else if (pFlags.isDark() && sunType == RoomSundeathType::NO_SUNDEATH
+        const RoomSundeathEnum sunType = room.getSundeathType();
+        if (pFlags.isLit() && sunType == RoomSundeathEnum::NO_SUNDEATH) {
+            room.setLightType(RoomLightEnum::LIT);
+        } else if (pFlags.isDark() && sunType == RoomSundeathEnum::NO_SUNDEATH
                    && connectedRoomFlags.isValid() && connectedRoomFlags.hasAnyDirectSunlight()) {
-            room.setLightType(RoomLightType::DARK);
+            room.setLightType(RoomLightEnum::DARK);
         }
     } else {
         room.setOutDated();
@@ -376,22 +376,22 @@ void RoomFactory::update(Room *const target, const Room *const source) const
         target->setDynamicDescription(dynamic);
     }
 
-    if (target->getAlignType() == RoomAlignType::UNDEFINED) {
+    if (target->getAlignType() == RoomAlignEnum::UNDEFINED) {
         target->setAlignType(source->getAlignType());
     }
-    if (target->getLightType() == RoomLightType::UNDEFINED) {
+    if (target->getLightType() == RoomLightEnum::UNDEFINED) {
         target->setLightType(source->getLightType());
     }
-    if (target->getSundeathType() == RoomSundeathType::UNDEFINED) {
+    if (target->getSundeathType() == RoomSundeathEnum::UNDEFINED) {
         target->setSundeathType(source->getSundeathType());
     }
-    if (target->getPortableType() == RoomPortableType::UNDEFINED) {
+    if (target->getPortableType() == RoomPortableEnum::UNDEFINED) {
         target->setPortableType(source->getPortableType());
     }
-    if (target->getRidableType() == RoomRidableType::UNDEFINED) {
+    if (target->getRidableType() == RoomRidableEnum::UNDEFINED) {
         target->setRidableType(source->getRidableType());
     }
-    if (source->getTerrainType() != RoomTerrainType::UNDEFINED) {
+    if (source->getTerrainType() != RoomTerrainEnum::UNDEFINED) {
         target->setTerrainType(source->getTerrainType());
     }
 
@@ -409,7 +409,7 @@ void RoomFactory::update(Room *const target, const Room *const source) const
             if (targetExit.isDoor()) {
                 if (!sourceExitFlags.isDoor()) {
                     // Prevent target hidden exits from being overridden
-                    sourceExitFlags |= ExitFlag::DOOR | ExitFlag::EXIT;
+                    sourceExitFlags |= ExitFlagEnum::DOOR | ExitFlagEnum::EXIT;
                 } else {
                     targetExit.setDoorName(sourceExit.getDoorName());
                     targetExit.setDoorFlags(sourceExit.getDoorFlags());
@@ -440,7 +440,7 @@ void RoomFactory::update(Room *const target, const Room *const source) const
     }
 }
 
-using ExitCoordinates = EnumIndexedArray<Coordinate, ExitDirection, NUM_EXITS_INCLUDING_NONE>;
+using ExitCoordinates = EnumIndexedArray<Coordinate, ExitDirEnum, NUM_EXITS_INCLUDING_NONE>;
 static ExitCoordinates initExitCoordinates()
 {
     // CAUTION: This choice of coordinate system will probably
@@ -452,18 +452,18 @@ static ExitCoordinates initExitCoordinates()
     const Coordinate up(0, 0, 1);
     const Coordinate down(0, 0, -1);
 
-    ExitCoordinates exitDirs{};
-    exitDirs[ExitDirection::NORTH] = north;
-    exitDirs[ExitDirection::SOUTH] = south;
-    exitDirs[ExitDirection::EAST] = east;
-    exitDirs[ExitDirection::WEST] = west;
-    exitDirs[ExitDirection::UP] = up;
-    exitDirs[ExitDirection::DOWN] = down;
+    ExitCoordinates exitDirs;
+    exitDirs[ExitDirEnum::NORTH] = north;
+    exitDirs[ExitDirEnum::SOUTH] = south;
+    exitDirs[ExitDirEnum::EAST] = east;
+    exitDirs[ExitDirEnum::WEST] = west;
+    exitDirs[ExitDirEnum::UP] = up;
+    exitDirs[ExitDirEnum::DOWN] = down;
     return exitDirs;
 }
 
 /* TODO: move this to another namespace */
-const Coordinate &RoomFactory::exitDir(ExitDirection dir)
+const Coordinate &RoomFactory::exitDir(ExitDirEnum dir)
 {
     static const auto exitDirs = initExitCoordinates();
     return exitDirs[dir];

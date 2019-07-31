@@ -12,7 +12,7 @@
 
 class QObject;
 
-enum class UiCharset { AsciiOrLatin1, UTF8 };
+enum class UiCharsetEnum { AsciiOrLatin1, UTF8 };
 
 class ParserPage : public QWidget, private Ui::ParserPage
 {

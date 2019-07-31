@@ -4,7 +4,6 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include <algorithm>
-#include <array>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -13,6 +12,7 @@
 #include <QtGlobal>
 
 #include "../expandoracommon/room.h"
+#include "../global/Array.h"
 #include "../global/RuleOf5.h"
 
 // X(UPPER_CASE, CamelCase, Type)
@@ -20,12 +20,12 @@
     X(NOTE, Note, RoomNote) \
     X(MOB_FLAGS, MobFlags, RoomMobFlags) \
     X(LOAD_FLAGS, LoadFlags, RoomLoadFlags) \
-    X(PORTABLE_TYPE, PortableType, RoomPortableType) \
-    X(LIGHT_TYPE, LightType, RoomLightType) \
-    X(ALIGN_TYPE, AlignType, RoomAlignType) \
-    X(RIDABLE_TYPE, RidableType, RoomRidableType) \
-    X(SUNDEATH_TYPE, SundeathType, RoomSundeathType) \
-    X(TERRAIN_TYPE, TerrainType, RoomTerrainType) \
+    X(PORTABLE_TYPE, PortableType, RoomPortableEnum) \
+    X(LIGHT_TYPE, LightType, RoomLightEnum) \
+    X(ALIGN_TYPE, AlignType, RoomAlignEnum) \
+    X(RIDABLE_TYPE, RidableType, RoomRidableEnum) \
+    X(SUNDEATH_TYPE, SundeathType, RoomSundeathEnum) \
+    X(TERRAIN_TYPE, TerrainType, RoomTerrainEnum) \
     /* define room fields above */
 
 template<typename T, typename... Rest>
@@ -72,14 +72,14 @@ private:
 private:
     std::aligned_storage_t<STORAGE_SIZE, STORAGE_ALIGNMENT> storage_;
     static_assert(sizeof(storage_) >= STORAGE_SIZE);
-    RoomField type_{};
+    RoomFieldEnum type_ = RoomFieldEnum::NAME; // There is no good default value
 
 public:
     RoomFieldVariant() = delete;
 
 public:
     /* NOTE: Adding move support would be a pain for little gain.
-     * You'd at least a boolean indicating that the object is in moved-from state. */
+     * You'd at least need a boolean indicating that the object is in moved-from state. */
     DELETE_MOVE_CTOR(RoomFieldVariant);
     DELETE_MOVE_ASSIGN_OP(RoomFieldVariant);
 
@@ -94,7 +94,7 @@ public:
     ~RoomFieldVariant();
 
 public:
-    inline RoomField getType() const { return type_; }
+    inline RoomFieldEnum getType() const { return type_; }
 
 public:
 #define X_DECLARE_ACCESSORS(UPPER_CASE, CamelCase, Type) Type get##CamelCase() const;

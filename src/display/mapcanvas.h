@@ -93,7 +93,7 @@ public slots:
     void forceMapperToRoom();
     void createRoom();
 
-    void setCanvasMouseMode(CanvasMouseMode);
+    void setCanvasMouseMode(CanvasMouseModeEnum);
 
     void setHorizontalScroll(int x);
     void setVerticalScroll(int y);

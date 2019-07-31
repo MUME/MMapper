@@ -23,13 +23,13 @@ class CGroupCommunicator : public QObject
 {
     Q_OBJECT
 public:
-    explicit CGroupCommunicator(GroupManagerState mode, Mmapper2Group *parent);
+    explicit CGroupCommunicator(GroupManagerStateEnum mode, Mmapper2Group *parent);
 
     static constexpr const ProtocolVersion PROTOCOL_VERSION_103 = 103;
     static constexpr const ProtocolVersion PROTOCOL_VERSION_102 = 102;
 
     // TODO: password and encryption options
-    enum class Messages {
+    enum class MessagesEnum {
         NONE, // Unused
         ACK,
         REQ_LOGIN,
@@ -46,7 +46,7 @@ public:
         RENAME_CHAR
     };
 
-    GroupManagerState getMode() const { return mode; }
+    GroupManagerStateEnum getMode() const { return mode; }
     void sendSelfRename(const QByteArray &, const QByteArray &);
 
     virtual void stop() = 0;
@@ -56,13 +56,13 @@ public:
 
 protected:
     void sendCharUpdate(GroupSocket *, const QVariantMap &);
-    void sendMessage(GroupSocket *, const Messages, const QByteArray & = "");
-    void sendMessage(GroupSocket *, const Messages, const QVariantMap &);
+    void sendMessage(GroupSocket *, const MessagesEnum, const QByteArray & = "");
+    void sendMessage(GroupSocket *, const MessagesEnum, const QVariantMap &);
 
     virtual void sendGroupTellMessage(const QVariantMap &map) = 0;
     virtual void sendCharRename(const QVariantMap &map) = 0;
 
-    QByteArray formMessageBlock(const Messages message, const QVariantMap &data);
+    QByteArray formMessageBlock(const MessagesEnum message, const QVariantMap &data);
     CGroup *getGroup();
     GroupAuthority *getAuthority();
 
@@ -70,7 +70,7 @@ public slots:
     void incomingData(GroupSocket *, const QByteArray &);
     void sendGroupTell(const QByteArray &);
     void relayLog(const QString &);
-    virtual void retrieveData(GroupSocket *, const Messages, const QVariantMap &) = 0;
+    virtual void retrieveData(GroupSocket *, MessagesEnum, const QVariantMap &) = 0;
     virtual void connectionClosed(GroupSocket *) = 0;
 
 signals:
@@ -80,5 +80,5 @@ signals:
     void sendLog(const QString &);
 
 private:
-    GroupManagerState mode = GroupManagerState::Off;
+    GroupManagerStateEnum mode = GroupManagerStateEnum::Off;
 };

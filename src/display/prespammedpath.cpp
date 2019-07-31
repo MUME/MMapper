@@ -20,13 +20,13 @@ static constexpr const bool USE_TEST = false;
 PrespammedPath::PrespammedPath(QObject * /*unused*/)
 {
     if (USE_TEST) {
-        m_queue.append(CommandIdType::DOWN);
-        m_queue.append(CommandIdType::EAST);
-        m_queue.append(CommandIdType::SOUTH);
-        m_queue.append(CommandIdType::SOUTH);
-        m_queue.append(CommandIdType::WEST);
-        m_queue.append(CommandIdType::NORTH);
-        m_queue.append(CommandIdType::WEST);
+        m_queue.append(CommandEnum::DOWN);
+        m_queue.append(CommandEnum::EAST);
+        m_queue.append(CommandEnum::SOUTH);
+        m_queue.append(CommandEnum::SOUTH);
+        m_queue.append(CommandEnum::WEST);
+        m_queue.append(CommandEnum::NORTH);
+        m_queue.append(CommandEnum::WEST);
     }
 }
 

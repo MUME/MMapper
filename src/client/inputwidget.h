@@ -45,8 +45,8 @@ private:
 
     InputHistoryIterator *m_lineIterator = nullptr;
     bool m_newInput = false;
-    QLinkedList<QString> m_lineHistory{};
-    QLinkedList<QString> m_tabCompletionDictionary{};
+    QLinkedList<QString> m_lineHistory;
+    QLinkedList<QString> m_tabCompletionDictionary;
 
     void addLineHistory(const InputHistoryEntry &);
     void forwardHistory();
@@ -54,9 +54,9 @@ private:
 
     void tabComplete();
 
-    bool m_tabbing{};
+    bool m_tabbing = false;
     QString m_tabFragment;
-    TabCompletionIterator *m_tabIterator;
+    TabCompletionIterator *m_tabIterator = nullptr;
     void addTabHistory(const WordHistoryEntry &);
 
 signals:

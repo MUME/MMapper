@@ -70,15 +70,15 @@ signals:
 
 private:
 #ifdef PROXY_STREAM_DEBUG_INPUT_TO_FILE
-    QDataStream *debugStream;
-    QFile *file;
+    QDataStream *debugStream = nullptr;
+    QFile *file = nullptr;
 #endif
 
-    io::null_padded_buffer<(1 << 13)> m_buffer{};
+    io::null_padded_buffer<(1 << 13)> m_buffer;
 
     qintptr m_socketDescriptor = 0;
     MumeSocket *m_mudSocket = nullptr;
-    QScopedPointer<QTcpSocket> m_userSocket{};
+    QScopedPointer<QTcpSocket> m_userSocket;
 
     bool m_serverConnected = false;
 

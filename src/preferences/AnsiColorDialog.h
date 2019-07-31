@@ -33,6 +33,6 @@ signals:
     void newAnsiString(const QString &);
 
 private:
-    QString ansiString{};
-    Ui::AnsiColorDialog *ui;
+    QString ansiString;
+    Ui::AnsiColorDialog *const ui;
 };

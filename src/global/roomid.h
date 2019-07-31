@@ -12,7 +12,7 @@
 struct RoomId final
 {
 private:
-    uint32_t value{};
+    uint32_t value = 0;
 
 public:
     RoomId() = default;

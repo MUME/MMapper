@@ -12,7 +12,7 @@ QByteArray CommandQueue::toByteArray() const
     for (int i = 0; i < base::size(); i++) {
         const auto cmd = base::at(i);
         // REVISIT: Serialize/deserialize directions more intelligently
-        dirs.append(Mmapper2Exit::charForDir(static_cast<ExitDirection>(cmd)));
+        dirs.append(Mmapper2Exit::charForDir(static_cast<ExitDirEnum>(cmd)));
     }
     return dirs;
 }
@@ -21,7 +21,7 @@ CommandQueue &CommandQueue::operator=(const QByteArray &dirs)
 {
     base::clear();
     for (int i = 0; i < dirs.length(); i++) {
-        base::enqueue(static_cast<CommandIdType>(Mmapper2Exit::dirForChar(dirs.at(i))));
+        base::enqueue(static_cast<CommandEnum>(Mmapper2Exit::dirForChar(dirs.at(i))));
     }
     return *this;
 }

@@ -147,7 +147,7 @@ int main(int argc, char **argv)
     const auto &config = getConfig();
     if (config.canvas.softwareOpenGL) {
         app.setAttribute(Qt::AA_UseSoftwareOpenGL);
-        if constexpr (CURRENT_PLATFORM == Platform::Linux) {
+        if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux) {
             qputenv("LIBGL_ALWAYS_SOFTWARE", "1");
         }
     } else {

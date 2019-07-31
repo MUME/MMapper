@@ -17,19 +17,19 @@
 
 struct AnsiItem
 {
-    int ansiCode{};
-    QString description{};
-    QIcon picture{};
+    int ansiCode = 0;
+    QString description;
+    QIcon picture;
 };
 using AnsiItemVector = QVector<AnsiItem>;
 
-AnsiCombo::AnsiCombo(AnsiMode mode, QWidget *parent)
+AnsiCombo::AnsiCombo(const AnsiModeEnum mode, QWidget *const parent)
     : AnsiCombo(parent)
 {
     initColours(mode);
 }
 
-AnsiCombo::AnsiCombo(QWidget *parent)
+AnsiCombo::AnsiCombo(QWidget *const parent)
     : super(parent)
 {}
 
@@ -70,22 +70,22 @@ static AnsiItem initAnsiItem(int ansiCode)
     return retVal;
 }
 
-void AnsiCombo::initColours(AnsiMode change)
+void AnsiCombo::initColours(const AnsiModeEnum change)
 {
     mode = change;
-    AnsiItemVector colours{};
+    AnsiItemVector colours;
 
     const auto high_color = [](int i) { return i + 60; };
 
     switch (mode) {
-    case AnsiMode::ANSI_FG:
+    case AnsiModeEnum::ANSI_FG:
         colours.push_back(initAnsiItem(DEFAULT_FG));
         for (int i = 30; i < 38; ++i) {
             colours.push_back(initAnsiItem(i));
             colours.push_back(initAnsiItem(high_color(i)));
         }
         break;
-    case AnsiMode::ANSI_BG:
+    case AnsiModeEnum::ANSI_BG:
         colours.push_back(initAnsiItem(DEFAULT_BG));
         for (int i = 40; i < 48; ++i) {
             colours.push_back(initAnsiItem(i));
@@ -203,7 +203,7 @@ AnsiCombo::AnsiColor AnsiCombo::colorFromString(const QString &colString)
 bool AnsiCombo::colorFromNumber(int numColor, QColor &col, QString &intelligibleName)
 {
     intelligibleName = tr("undefined!");
-    col = ansiColor(AnsiColorTable::white);
+    col = ansiColor(AnsiColorTableEnum::white);
 
     const bool foreground = (30 <= numColor && numColor <= 37) || (90 <= numColor && numColor <= 97)
                             || numColor == DEFAULT_FG;
@@ -214,91 +214,91 @@ bool AnsiCombo::colorFromNumber(int numColor, QColor &col, QString &intelligible
     /* TODO: Simplify this. E.g. se ansi_color_table[n-30], etc. */
     switch (numColor) {
     case DEFAULT_FG:
-        col = ansiColor(AnsiColorTable::white);
+        col = ansiColor(AnsiColorTableEnum::white);
         intelligibleName = tr(NONE);
         break;
     case DEFAULT_BG:
-        col = ansiColor(AnsiColorTable::black);
+        col = ansiColor(AnsiColorTableEnum::black);
         intelligibleName = tr(NONE);
         break;
     case 30:
     case 40:
-        col = ansiColor(AnsiColorTable::black);
+        col = ansiColor(AnsiColorTableEnum::black);
         intelligibleName = tr("black");
         break;
     case 31:
     case 41:
-        col = ansiColor(AnsiColorTable::red);
+        col = ansiColor(AnsiColorTableEnum::red);
         intelligibleName = tr("red");
         break;
     case 32:
     case 42:
-        col = ansiColor(AnsiColorTable::green);
+        col = ansiColor(AnsiColorTableEnum::green);
         intelligibleName = tr("green");
         break;
     case 33:
     case 43:
-        col = ansiColor(AnsiColorTable::yellow);
+        col = ansiColor(AnsiColorTableEnum::yellow);
         intelligibleName = tr("yellow");
         break;
     case 34:
     case 44:
-        col = ansiColor(AnsiColorTable::blue);
+        col = ansiColor(AnsiColorTableEnum::blue);
         intelligibleName = tr("blue");
         break;
     case 35:
     case 45:
-        col = ansiColor(AnsiColorTable::magenta);
+        col = ansiColor(AnsiColorTableEnum::magenta);
         intelligibleName = tr("magenta");
         break;
     case 36:
     case 46:
-        col = ansiColor(AnsiColorTable::cyan);
+        col = ansiColor(AnsiColorTableEnum::cyan);
         intelligibleName = tr("cyan");
         break;
     case 37:
     case 47:
-        col = ansiColor(AnsiColorTable::white);
+        col = ansiColor(AnsiColorTableEnum::white);
         intelligibleName = tr("white");
         break;
     case 90:
     case 100:
-        col = ansiColor(AnsiColorTable::BLACK);
+        col = ansiColor(AnsiColorTableEnum::BLACK);
         intelligibleName = tr("BLACK");
         break;
     case 91:
     case 101:
-        col = ansiColor(AnsiColorTable::RED);
+        col = ansiColor(AnsiColorTableEnum::RED);
         intelligibleName = tr("RED");
         break;
     case 92:
     case 102:
-        col = ansiColor(AnsiColorTable::GREEN);
+        col = ansiColor(AnsiColorTableEnum::GREEN);
         intelligibleName = tr("GREEN");
         break;
     case 93:
     case 103:
-        col = ansiColor(AnsiColorTable::YELLOW);
+        col = ansiColor(AnsiColorTableEnum::YELLOW);
         intelligibleName = tr("YELLOW");
         break;
     case 94:
     case 104:
-        col = ansiColor(AnsiColorTable::BLUE);
+        col = ansiColor(AnsiColorTableEnum::BLUE);
         intelligibleName = tr("BLUE");
         break;
     case 95:
     case 105:
-        col = ansiColor(AnsiColorTable::MAGENTA);
+        col = ansiColor(AnsiColorTableEnum::MAGENTA);
         intelligibleName = tr("MAGENTA");
         break;
     case 96:
     case 106:
-        col = ansiColor(AnsiColorTable::CYAN);
+        col = ansiColor(AnsiColorTableEnum::CYAN);
         intelligibleName = tr("CYAN");
         break;
     case 97:
     case 107:
-        col = ansiColor(AnsiColorTable::WHITE);
+        col = ansiColor(AnsiColorTableEnum::WHITE);
         intelligibleName = tr("WHITE");
         break;
     }

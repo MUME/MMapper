@@ -15,14 +15,14 @@ ExitsList::ExitsList(const bool isDummy)
         e = Exit{!isDummy};
 }
 
-ExitDirConstRef::ExitDirConstRef(const ExitDirection dir, const Exit &exit)
+ExitDirConstRef::ExitDirConstRef(const ExitDirEnum dir, const Exit &exit)
     : dir{dir}
     , exit{exit}
 {}
 
-std::vector<ExitDirection> Room::getOutExits() const
+std::vector<ExitDirEnum> Room::getOutExits() const
 {
-    std::vector<ExitDirection> result;
+    std::vector<ExitDirEnum> result;
     result.reserve(ALL_EXITS_NESWUD.size());
     for (auto dir : ALL_EXITS_NESWUD) {
         const Exit &e = this->exit(dir);
@@ -35,7 +35,7 @@ std::vector<ExitDirection> Room::getOutExits() const
 OptionalExitDirConstRef Room::getRandomExit() const
 {
     // Pick an alternative direction to randomly wander into
-    const std::vector<ExitDirection> outExits = this->getOutExits();
+    const std::vector<ExitDirEnum> outExits = this->getOutExits();
     if (!outExits.empty()) {
         const auto randomDir = chooseRandomElement(outExits);
         return OptionalExitDirConstRef{ExitDirConstRef{randomDir, this->exit(randomDir)}};
@@ -44,7 +44,7 @@ OptionalExitDirConstRef Room::getRandomExit() const
     return OptionalExitDirConstRef{};
 }
 
-ExitDirConstRef Room::getExitMaybeRandom(const ExitDirection dir) const
+ExitDirConstRef Room::getExitMaybeRandom(const ExitDirEnum dir) const
 {
     // REVISIT: The whole room (not just exits) can be flagged as random in MUME.
     const Exit &e = this->exit(dir);
@@ -86,32 +86,32 @@ RoomLoadFlags Room::getLoadFlags() const
     return fields.loadFlags;
 }
 
-RoomTerrainType Room::getTerrainType() const
+RoomTerrainEnum Room::getTerrainType() const
 {
     return fields.terrainType;
 }
 
-RoomPortableType Room::getPortableType() const
+RoomPortableEnum Room::getPortableType() const
 {
     return fields.portableType;
 }
 
-RoomLightType Room::getLightType() const
+RoomLightEnum Room::getLightType() const
 {
     return fields.lightType;
 }
 
-RoomAlignType Room::getAlignType() const
+RoomAlignEnum Room::getAlignType() const
 {
     return fields.alignType;
 }
 
-RoomRidableType Room::getRidableType() const
+RoomRidableEnum Room::getRidableType() const
 {
     return fields.ridableType;
 }
 
-RoomSundeathType Room::getSundeathType() const
+RoomSundeathEnum Room::getSundeathType() const
 {
     return fields.sundeathType;
 }
@@ -146,32 +146,32 @@ void Room::setLoadFlags(const RoomLoadFlags value)
     fields.loadFlags = value;
 }
 
-void Room::setTerrainType(const RoomTerrainType value)
+void Room::setTerrainType(const RoomTerrainEnum value)
 {
     fields.terrainType = value;
 }
 
-void Room::setPortableType(const RoomPortableType value)
+void Room::setPortableType(const RoomPortableEnum value)
 {
     fields.portableType = value;
 }
 
-void Room::setLightType(const RoomLightType value)
+void Room::setLightType(const RoomLightEnum value)
 {
     fields.lightType = value;
 }
 
-void Room::setAlignType(const RoomAlignType value)
+void Room::setAlignType(const RoomAlignEnum value)
 {
     fields.alignType = value;
 }
 
-void Room::setRidableType(const RoomRidableType value)
+void Room::setRidableType(const RoomRidableEnum value)
 {
     fields.ridableType = value;
 }
 
-void Room::setSundeathType(const RoomSundeathType value)
+void Room::setSundeathType(const RoomSundeathEnum value)
 {
     fields.sundeathType = value;
 }

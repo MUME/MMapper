@@ -37,7 +37,7 @@ GroupMapAction::GroupMapAction(AbstractAction *const action, const SharedRoomSel
 
 void AddTwoWayExit::exec()
 {
-    if (room2Dir == ExitDirection::UNKNOWN) {
+    if (room2Dir == ExitDirEnum::UNKNOWN) {
         room2Dir = opposite(dir);
     }
     AddOneWayExit::exec();
@@ -48,7 +48,7 @@ void AddTwoWayExit::exec()
 
 void RemoveTwoWayExit::exec()
 {
-    if (room2Dir == ExitDirection::UNKNOWN) {
+    if (room2Dir == ExitDirEnum::UNKNOWN) {
         room2Dir = opposite(dir);
     }
     RemoveOneWayExit::exec();
@@ -149,7 +149,7 @@ void MergeRelative::exec(const RoomId id)
             newHome->addRoom(target);
         }
         const ExitsList &exits = source->getExitsList();
-        for (const auto dir : enums::makeCountingIterator<ExitDirection>(exits)) {
+        for (const auto dir : enums::makeCountingIterator<ExitDirEnum>(exits)) {
             const Exit &e = exits[dir];
             for (const auto &oeid : e.inRange()) {
                 if (Room *const oe = roomIndex(oeid)) {
@@ -204,20 +204,20 @@ void ConnectToNeighbours::exec(const RoomId cid)
     if (Room *const center = roomIndex(cid)) {
         Coordinate other(0, -1, 0);
         other += center->getPosition();
-        connectRooms(center, other, ExitDirection::NORTH, cid);
+        connectRooms(center, other, ExitDirEnum::NORTH, cid);
         other.y += 2;
-        connectRooms(center, other, ExitDirection::SOUTH, cid);
+        connectRooms(center, other, ExitDirEnum::SOUTH, cid);
         other.y--;
         other.x--;
-        connectRooms(center, other, ExitDirection::WEST, cid);
+        connectRooms(center, other, ExitDirEnum::WEST, cid);
         other.x += 2;
-        connectRooms(center, other, ExitDirection::EAST, cid);
+        connectRooms(center, other, ExitDirEnum::EAST, cid);
     }
 }
 
 void ConnectToNeighbours::connectRooms(Room *const center,
                                        Coordinate &otherPos,
-                                       const ExitDirection dir,
+                                       const ExitDirEnum dir,
                                        const RoomId cid)
 {
     if (Room *const room = map().get(otherPos)) {
@@ -235,32 +235,32 @@ void ConnectToNeighbours::connectRooms(Room *const center,
     }
 }
 
-ModifyRoomFlags::ModifyRoomFlags(const RoomFieldVariant in_flags, const FlagModifyMode in_mode)
+ModifyRoomFlags::ModifyRoomFlags(const RoomFieldVariant in_flags, const FlagModifyModeEnum in_mode)
     : var{in_flags}
     , mode(in_mode)
 {
     // TODO: Assert non-supported
 }
 
-ModifyRoomFlags::ModifyRoomFlags(const RoomMobFlags in_flags, const FlagModifyMode in_mode)
+ModifyRoomFlags::ModifyRoomFlags(const RoomMobFlags in_flags, const FlagModifyModeEnum in_mode)
     : var{in_flags}
     , mode(in_mode)
 {}
 
-ModifyRoomFlags::ModifyRoomFlags(const RoomLoadFlags in_flags, const FlagModifyMode in_mode)
+ModifyRoomFlags::ModifyRoomFlags(const RoomLoadFlags in_flags, const FlagModifyModeEnum in_mode)
     : var{in_flags}
     , mode(in_mode)
 {}
 
 template<typename Flags, typename Flag>
-static Flags modifyFlags(const Flags flags, const Flag x, const FlagModifyMode mode)
+static Flags modifyFlags(const Flags flags, const Flag x, const FlagModifyModeEnum mode)
 {
     switch (mode) {
-    case FlagModifyMode::SET:
+    case FlagModifyModeEnum::SET:
         return flags | x;
-    case FlagModifyMode::UNSET:
+    case FlagModifyModeEnum::UNSET:
         return flags & (~x);
-    case FlagModifyMode::TOGGLE:
+    case FlagModifyModeEnum::TOGGLE:
         return flags ^ x;
     }
     return flags;
@@ -270,25 +270,25 @@ void ModifyRoomFlags::exec(const RoomId id)
 {
     if (Room *const room = roomIndex(id)) {
         switch (var.getType()) {
-        case RoomField::MOB_FLAGS:
+        case RoomFieldEnum::MOB_FLAGS:
             room->setMobFlags(modifyFlags(room->getMobFlags(), var.getMobFlags(), mode));
             break;
-        case RoomField::LOAD_FLAGS:
+        case RoomFieldEnum::LOAD_FLAGS:
             room->setLoadFlags(modifyFlags(room->getLoadFlags(), var.getLoadFlags(), mode));
             break;
-        case RoomField::NOTE:
+        case RoomFieldEnum::NOTE:
             // TODO: Re-use logic from modifyDoorName(ex, var, mode);
-        case RoomField::TERRAIN_TYPE:
-        case RoomField::PORTABLE_TYPE:
-        case RoomField::LIGHT_TYPE:
-        case RoomField::RIDABLE_TYPE:
-        case RoomField::SUNDEATH_TYPE:
-        case RoomField::ALIGN_TYPE:
-        case RoomField::NAME:
-        case RoomField::DESC:
-        case RoomField::DYNAMIC_DESC:
-        case RoomField::LAST:
-        case RoomField::RESERVED:
+        case RoomFieldEnum::TERRAIN_TYPE:
+        case RoomFieldEnum::PORTABLE_TYPE:
+        case RoomFieldEnum::LIGHT_TYPE:
+        case RoomFieldEnum::RIDABLE_TYPE:
+        case RoomFieldEnum::SUNDEATH_TYPE:
+        case RoomFieldEnum::ALIGN_TYPE:
+        case RoomFieldEnum::NAME:
+        case RoomFieldEnum::DESC:
+        case RoomFieldEnum::DYNAMIC_DESC:
+        case RoomFieldEnum::LAST:
+        case RoomFieldEnum::RESERVED:
         default:
             /* this can't happen */
             throw std::runtime_error("impossible");
@@ -310,7 +310,7 @@ void ModifyRoomUpToDate::exec(const RoomId id)
     }
 }
 
-UpdateExitField::UpdateExitField(const DoorName &update, const ExitDirection dir)
+UpdateExitField::UpdateExitField(const DoorName &update, const ExitDirEnum dir)
     : update{update}
     , dir{dir}
 {}
@@ -320,15 +320,15 @@ void UpdateExitField::exec(const RoomId id)
     if (Room *room = roomIndex(id)) {
         Exit &ex = room->exit(dir);
         switch (update.getType()) {
-        case ExitField::DOOR_NAME:
+        case ExitFieldEnum::DOOR_NAME:
             ex.setDoorName(update.getDoorName());
             break;
 
-        case ExitField::EXIT_FLAGS:
+        case ExitFieldEnum::EXIT_FLAGS:
             ex.setExitFlags(update.getExitFlags());
             break;
 
-        case ExitField::DOOR_FLAGS:
+        case ExitFieldEnum::DOOR_FLAGS:
             ex.setDoorFlags(update.getDoorFlags());
             break;
         }
@@ -336,45 +336,45 @@ void UpdateExitField::exec(const RoomId id)
 }
 
 ModifyExitFlags::ModifyExitFlags(const ExitFieldVariant in_flags,
-                                 const ExitDirection in_dir,
-                                 const FlagModifyMode in_mode)
+                                 const ExitDirEnum in_dir,
+                                 const FlagModifyModeEnum in_mode)
     : var{in_flags}
     , mode(in_mode)
     , dir(in_dir)
 {
     // The DoorName version is actually implemented, but it has never been used.
     // Test it if you use it!
-    if (in_flags.getType() == ExitField::DOOR_NAME)
+    if (in_flags.getType() == ExitFieldEnum::DOOR_NAME)
         throw std::runtime_error("not implemented");
 }
 
 ModifyExitFlags::ModifyExitFlags(const ExitFlags in_flags,
-                                 const ExitDirection in_dir,
-                                 const FlagModifyMode in_mode)
+                                 const ExitDirEnum in_dir,
+                                 const FlagModifyModeEnum in_mode)
     : var{in_flags}
     , mode(in_mode)
     , dir(in_dir)
 {}
 
 ModifyExitFlags::ModifyExitFlags(const DoorFlags in_flags,
-                                 const ExitDirection in_dir,
-                                 const FlagModifyMode in_mode)
+                                 const ExitDirEnum in_dir,
+                                 const FlagModifyModeEnum in_mode)
     : var{in_flags}
     , mode(in_mode)
     , dir(in_dir)
 {}
 
-static void modifyDoorName(Exit &ex, const ExitFieldVariant var, const FlagModifyMode mode)
+static void modifyDoorName(Exit &ex, const ExitFieldVariant var, const FlagModifyModeEnum mode)
 {
     switch (mode) {
-    case FlagModifyMode::SET:
+    case FlagModifyModeEnum::SET:
         ex.setDoorName(var.getDoorName());
         break;
-    case FlagModifyMode::UNSET:
+    case FlagModifyModeEnum::UNSET:
         // this doesn't really make sense either.
         ex.clearDoorName();
         break;
-    case FlagModifyMode::TOGGLE:
+    case FlagModifyModeEnum::TOGGLE:
         // the idea of toggling a door name doesn't make sense,
         // so this implementation is as good as any.
         if (ex.hasDoorName())
@@ -394,13 +394,13 @@ void ModifyExitFlags::exec(const RoomId id)
         Exit &ex = room->exit(dir);
 
         switch (var.getType()) {
-        case ExitField::DOOR_NAME:
+        case ExitFieldEnum::DOOR_NAME:
             modifyDoorName(ex, var, mode);
             break;
-        case ExitField::EXIT_FLAGS:
+        case ExitFieldEnum::EXIT_FLAGS:
             ex.setExitFlags(modifyFlags(ex.getExitFlags(), var.getExitFlags(), mode));
             break;
-        case ExitField::DOOR_FLAGS:
+        case ExitFieldEnum::DOOR_FLAGS:
             ex.setDoorFlags(modifyFlags(ex.getDoorFlags(), var.getDoorFlags(), mode));
             break;
         default:

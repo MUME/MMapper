@@ -58,7 +58,7 @@ private:
 public:
     MiniUPnPcPortMapper()
     {
-        int result;
+        int result = 0;
 #if MINIUPNPC_API_VERSION < 14
         deviceList = UPNPDev_ptr(upnpDiscover(1000, nullptr, nullptr, 0, 0, &result),
                                  ::freeUPNPDevlist);

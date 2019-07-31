@@ -11,7 +11,7 @@
 class Room;
 class Coordinate;
 
-enum class ComparisonResult { DIFFERENT = 0, EQUAL, TOLERANCE };
+enum class ComparisonResultEnum { DIFFERENT = 0, EQUAL, TOLERANCE };
 
 class AbstractRoomFactory
 {
@@ -19,12 +19,12 @@ public:
     virtual ~AbstractRoomFactory();
     virtual Room *createRoom() const = 0;
     virtual Room *createRoom(const ParseEvent &event) const = 0;
-    virtual ComparisonResult compare(const Room *,
-                                     const ParseEvent &props,
-                                     int tolerance = 0) const = 0;
-    virtual ComparisonResult compareWeakProps(const Room *,
-                                              const ParseEvent &props,
-                                              int tolerance = 0) const = 0;
+    virtual ComparisonResultEnum compare(const Room *,
+                                         const ParseEvent &props,
+                                         int tolerance = 0) const = 0;
+    virtual ComparisonResultEnum compareWeakProps(const Room *,
+                                                  const ParseEvent &props,
+                                                  int tolerance = 0) const = 0;
     virtual SharedParseEvent getEvent(const Room *) const = 0;
     virtual void update(Room &, const ParseEvent &event) const = 0;
     virtual void update(Room *target, const Room *source) const = 0;

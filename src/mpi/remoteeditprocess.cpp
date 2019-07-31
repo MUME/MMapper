@@ -117,7 +117,7 @@ void RemoteEditProcess::onError(QProcess::ProcessError /*error*/)
     emit cancel();
 }
 
-enum class State { Idle, Arg, QuotedArg };
+enum class StateEnum { Idle, Arg, QuotedArg };
 
 QStringList RemoteEditProcess::splitCommandLine(const QString &cmdLine)
 {
@@ -125,35 +125,35 @@ QStringList RemoteEditProcess::splitCommandLine(const QString &cmdLine)
     QStringList list;
     QString arg;
     bool escape = false;
-    State state = State::Idle;
+    StateEnum state = StateEnum::Idle;
     for (const QChar &c : cmdLine) {
         if (!escape && c == '\\') {
             escape = true;
             continue;
         }
         switch (state) {
-        case State::Idle:
+        case StateEnum::Idle:
             if (!escape && c == '"') {
-                state = State::QuotedArg;
+                state = StateEnum::QuotedArg;
             } else if (escape || !c.isSpace()) {
                 arg += c;
-                state = State::Arg;
+                state = StateEnum::Arg;
             }
             break;
-        case State::Arg:
+        case StateEnum::Arg:
             if (!escape && c == '"') {
-                state = State::QuotedArg;
+                state = StateEnum::QuotedArg;
             } else if (escape || !c.isSpace()) {
                 arg += c;
             } else {
                 list << arg;
                 arg.clear();
-                state = State::Idle;
+                state = StateEnum::Idle;
             }
             break;
-        case State::QuotedArg:
+        case StateEnum::QuotedArg:
             if (!escape && c == '"') {
-                state = arg.isEmpty() ? State::Idle : State::Arg;
+                state = arg.isEmpty() ? StateEnum::Idle : StateEnum::Arg;
             } else {
                 arg += c;
             }

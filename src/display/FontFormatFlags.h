@@ -5,8 +5,19 @@
 
 #include <cstdint>
 
-enum class FontFormatFlags { NONE = 0, ITALICS = (1 << 0), UNDERLINE = (1 << 1) };
-static inline FontFormatFlags operator&(FontFormatFlags lhs, FontFormatFlags rhs)
+#include "../global/Flags.h"
+
+enum class FontFormatFlagEnum {
+    NONE,
+    ITALICS,
+    UNDERLINE,
+    // NOTE: You must manually update the count if you add any flags.
+};
+
+DEFINE_ENUM_COUNT(FontFormatFlagEnum, 3);
+
+struct FontFormatFlags final : public enums::Flags<FontFormatFlags, FontFormatFlagEnum, uint8_t>
 {
-    return static_cast<FontFormatFlags>(static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs));
-}
+public:
+    using Flags::Flags;
+};

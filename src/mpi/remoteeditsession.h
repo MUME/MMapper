@@ -51,7 +51,7 @@ private:
     const uint m_sessionId = 0;
     const int m_key = REMOTE_EDIT_VIEW_KEY;
     RemoteEdit *m_manager = nullptr;
-    QString m_content{};
+    QString m_content;
 };
 
 class RemoteEditInternalSession : public RemoteEditSession

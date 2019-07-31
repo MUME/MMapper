@@ -81,12 +81,12 @@ static void loadPixmapArray(texture_array<E> &textures)
     }
 }
 
-template<RoadIndexType Type>
+template<RoadTagEnum Type>
 static void loadPixmapArray(road_texture_array<Type> &textures)
 {
     const auto N = textures.size();
     for (uint i = 0u; i < N; ++i) {
-        const auto x = TaggedRoadIndex<Type>{static_cast<RoadIndex>(i)};
+        const auto x = TaggedRoadIndex<Type>{static_cast<RoadIndexMaskEnum>(i)};
         textures[x] = loadTexture(getPixmapFilename(x));
     }
 }
@@ -220,29 +220,29 @@ void MapCanvas::layerReset()
     update();
 }
 
-void MapCanvas::setCanvasMouseMode(const CanvasMouseMode mode)
+void MapCanvas::setCanvasMouseMode(const CanvasMouseModeEnum mode)
 {
     clearRoomSelection();
     clearConnectionSelection();
     clearInfoMarkSelection();
 
     switch (mode) {
-    case CanvasMouseMode::MOVE:
+    case CanvasMouseModeEnum::MOVE:
         setCursor(Qt::OpenHandCursor);
         break;
 
     default:
-    case CanvasMouseMode::NONE:
-    case CanvasMouseMode::SELECT_CONNECTIONS:
-    case CanvasMouseMode::CREATE_INFOMARKS:
+    case CanvasMouseModeEnum::NONE:
+    case CanvasMouseModeEnum::SELECT_CONNECTIONS:
+    case CanvasMouseModeEnum::CREATE_INFOMARKS:
         setCursor(Qt::CrossCursor);
         break;
 
-    case CanvasMouseMode::SELECT_ROOMS:
-    case CanvasMouseMode::CREATE_ROOMS:
-    case CanvasMouseMode::CREATE_CONNECTIONS:
-    case CanvasMouseMode::CREATE_ONEWAY_CONNECTIONS:
-    case CanvasMouseMode::SELECT_INFOMARKS:
+    case CanvasMouseModeEnum::SELECT_ROOMS:
+    case CanvasMouseModeEnum::CREATE_ROOMS:
+    case CanvasMouseModeEnum::CREATE_CONNECTIONS:
+    case CanvasMouseModeEnum::CREATE_ONEWAY_CONNECTIONS:
+    case CanvasMouseModeEnum::SELECT_INFOMARKS:
         setCursor(Qt::ArrowCursor);
         break;
     }
@@ -276,7 +276,7 @@ void MapCanvas::setConnectionSelection(ConnectionSelection *const selection)
 
 void MapCanvas::setInfoMarkSelection(InfoMarkSelection *selection)
 {
-    if (selection != nullptr && m_canvasMouseMode == CanvasMouseMode::CREATE_INFOMARKS) {
+    if (selection != nullptr && m_canvasMouseMode == CanvasMouseModeEnum::CREATE_INFOMARKS) {
         qDebug() << "Creating new infomark";
     } else if (selection != nullptr && !selection->isEmpty()) {
         qDebug() << "Updated selection with" << selection->size() << "infomarks";
@@ -299,14 +299,14 @@ void MapCanvas::wheelEvent(QWheelEvent *const event)
 {
     if (event->delta() > 100) {
         switch (m_canvasMouseMode) {
-        case CanvasMouseMode::MOVE:
-        case CanvasMouseMode::SELECT_INFOMARKS:
-        case CanvasMouseMode::CREATE_INFOMARKS:
-        case CanvasMouseMode::SELECT_ROOMS:
-        case CanvasMouseMode::SELECT_CONNECTIONS:
-        case CanvasMouseMode::CREATE_ROOMS:
-        case CanvasMouseMode::CREATE_CONNECTIONS:
-        case CanvasMouseMode::CREATE_ONEWAY_CONNECTIONS:
+        case CanvasMouseModeEnum::MOVE:
+        case CanvasMouseModeEnum::SELECT_INFOMARKS:
+        case CanvasMouseModeEnum::CREATE_INFOMARKS:
+        case CanvasMouseModeEnum::SELECT_ROOMS:
+        case CanvasMouseModeEnum::SELECT_CONNECTIONS:
+        case CanvasMouseModeEnum::CREATE_ROOMS:
+        case CanvasMouseModeEnum::CREATE_CONNECTIONS:
+        case CanvasMouseModeEnum::CREATE_ONEWAY_CONNECTIONS:
             if ((event->modifiers() & Qt::CTRL) != 0u) {
                 layerDown();
             } else {
@@ -314,7 +314,7 @@ void MapCanvas::wheelEvent(QWheelEvent *const event)
             }
             break;
 
-        case CanvasMouseMode::NONE:
+        case CanvasMouseModeEnum::NONE:
         default:
             break;
         }
@@ -322,14 +322,14 @@ void MapCanvas::wheelEvent(QWheelEvent *const event)
 
     if (event->delta() < -100) {
         switch (m_canvasMouseMode) {
-        case CanvasMouseMode::MOVE:
-        case CanvasMouseMode::SELECT_INFOMARKS:
-        case CanvasMouseMode::CREATE_INFOMARKS:
-        case CanvasMouseMode::SELECT_ROOMS:
-        case CanvasMouseMode::SELECT_CONNECTIONS:
-        case CanvasMouseMode::CREATE_ROOMS:
-        case CanvasMouseMode::CREATE_CONNECTIONS:
-        case CanvasMouseMode::CREATE_ONEWAY_CONNECTIONS:
+        case CanvasMouseModeEnum::MOVE:
+        case CanvasMouseModeEnum::SELECT_INFOMARKS:
+        case CanvasMouseModeEnum::CREATE_INFOMARKS:
+        case CanvasMouseModeEnum::SELECT_ROOMS:
+        case CanvasMouseModeEnum::SELECT_CONNECTIONS:
+        case CanvasMouseModeEnum::CREATE_ROOMS:
+        case CanvasMouseModeEnum::CREATE_CONNECTIONS:
+        case CanvasMouseModeEnum::CREATE_ONEWAY_CONNECTIONS:
             if ((event->modifiers() & Qt::CTRL) != 0u) {
                 layerUp();
             } else {
@@ -337,7 +337,7 @@ void MapCanvas::wheelEvent(QWheelEvent *const event)
             }
             break;
 
-        case CanvasMouseMode::NONE:
+        case CanvasMouseModeEnum::NONE:
         default:
             break;
         }
@@ -353,7 +353,7 @@ void MapCanvas::forceMapperToRoom()
     if (m_roomSelection->size() == 1) {
         const RoomId id = m_roomSelection->getFirstRoomId();
         // Force update rooms only if we're in play or mapping mode
-        const bool update = getConfig().general.mapMode != MapMode::OFFLINE;
+        const bool update = getConfig().general.mapMode != MapModeEnum::OFFLINE;
         emit setCurrentRoom(id, update);
     }
     update();
@@ -403,7 +403,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
     m_mouseRightPressed = (event->buttons() & Qt::RightButton) != 0u;
 
     if (!m_mouseLeftPressed && m_mouseRightPressed) {
-        if (m_canvasMouseMode == CanvasMouseMode::MOVE) {
+        if (m_canvasMouseMode == CanvasMouseModeEnum::MOVE) {
             m_roomSelection = RoomSelection::createSelection(*m_data, m_sel1.getCoordinate());
             setRoomSelection(SigRoomSelection{m_roomSelection});
 
@@ -420,10 +420,10 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
     }
 
     switch (m_canvasMouseMode) {
-    case CanvasMouseMode::CREATE_INFOMARKS:
+    case CanvasMouseModeEnum::CREATE_INFOMARKS:
         update();
         break;
-    case CanvasMouseMode::SELECT_INFOMARKS:
+    case CanvasMouseModeEnum::SELECT_INFOMARKS:
         // Select infomarks
         if ((event->buttons() & Qt::LeftButton) != 0u) {
             const Coordinate c1 = m_sel1.getScaledCoordinate(INFOMARK_SCALE);
@@ -438,7 +438,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
         }
         update();
         break;
-    case CanvasMouseMode::MOVE:
+    case CanvasMouseModeEnum::MOVE:
         if ((event->buttons() & Qt::LeftButton) != 0u) {
             setCursor(Qt::ClosedHandCursor);
 
@@ -447,7 +447,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
         }
         break;
 
-    case CanvasMouseMode::SELECT_ROOMS:
+    case CanvasMouseModeEnum::SELECT_ROOMS:
         // Force mapper to room shortcut
         if (((event->buttons() & Qt::LeftButton) != 0u) && ((event->modifiers() & Qt::CTRL) != 0u)
             && ((event->modifiers() & Qt::ALT) != 0u)) {
@@ -481,8 +481,8 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
         update();
         break;
 
-    case CanvasMouseMode::CREATE_ONEWAY_CONNECTIONS:
-    case CanvasMouseMode::CREATE_CONNECTIONS:
+    case CanvasMouseModeEnum::CREATE_ONEWAY_CONNECTIONS:
+    case CanvasMouseModeEnum::CREATE_CONNECTIONS:
         // Select connection
         if ((event->buttons() & Qt::LeftButton) != 0u) {
             delete m_connectionSelection;
@@ -502,7 +502,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
         update();
         break;
 
-    case CanvasMouseMode::SELECT_CONNECTIONS:
+    case CanvasMouseModeEnum::SELECT_CONNECTIONS:
         if ((event->buttons() & Qt::LeftButton) != 0u) {
             delete m_connectionSelection;
             m_connectionSelection = new ConnectionSelection(m_data, m_sel1);
@@ -510,8 +510,8 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
                 delete m_connectionSelection;
                 m_connectionSelection = nullptr;
             } else {
-                const Room *r1 = m_connectionSelection->getFirst().room;
-                ExitDirection dir1 = m_connectionSelection->getFirst().direction;
+                const Room *const r1 = m_connectionSelection->getFirst().room;
+                const ExitDirEnum dir1 = m_connectionSelection->getFirst().direction;
 
                 if (r1->exit(dir1).outIsEmpty()) {
                     delete m_connectionSelection;
@@ -529,11 +529,11 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
         update();
         break;
 
-    case CanvasMouseMode::CREATE_ROOMS:
+    case CanvasMouseModeEnum::CREATE_ROOMS:
         createRoom();
         break;
 
-    case CanvasMouseMode::NONE:
+    case CanvasMouseModeEnum::NONE:
     default:
         break;
     }
@@ -541,7 +541,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
 
 void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
 {
-    if (m_canvasMouseMode != CanvasMouseMode::MOVE) {
+    if (m_canvasMouseMode != CanvasMouseModeEnum::MOVE) {
         qint8 hScroll, vScroll;
         if (event->pos().y() < 100) {
             vScroll = -1;
@@ -565,7 +565,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
     m_sel2 = getUnprojectedMouseSel(event);
 
     switch (m_canvasMouseMode) {
-    case CanvasMouseMode::SELECT_INFOMARKS:
+    case CanvasMouseModeEnum::SELECT_INFOMARKS:
         if ((event->buttons() & Qt::LeftButton) != 0u) {
             if (m_infoMarkSelectionMove.has_value()) {
                 m_infoMarkSelectionMove->pos = m_sel2.pos - m_sel1.pos;
@@ -577,13 +577,13 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
         }
         update();
         break;
-    case CanvasMouseMode::CREATE_INFOMARKS:
+    case CanvasMouseModeEnum::CREATE_INFOMARKS:
         if ((event->buttons() & Qt::LeftButton) != 0u) {
             m_selectedArea = true;
         }
         update();
         break;
-    case CanvasMouseMode::MOVE:
+    case CanvasMouseModeEnum::MOVE:
         if (((event->buttons() & Qt::LeftButton) != 0u) && m_mouseLeftPressed) {
             const float scrollfactor = SCROLLFACTOR();
             const Coordinate2i pos = ((m_sel2.pos - m_moveBackup.pos) / scrollfactor).round();
@@ -601,7 +601,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
         }
         break;
 
-    case CanvasMouseMode::SELECT_ROOMS:
+    case CanvasMouseModeEnum::SELECT_ROOMS:
         if ((event->buttons() & Qt::LeftButton) != 0u) {
             if (m_roomSelectionMove.has_value()) {
                 const auto diff = m_sel2.pos.round() - m_sel1.pos.round();
@@ -618,16 +618,16 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
         update();
         break;
 
-    case CanvasMouseMode::CREATE_ONEWAY_CONNECTIONS:
-    case CanvasMouseMode::CREATE_CONNECTIONS:
+    case CanvasMouseModeEnum::CREATE_ONEWAY_CONNECTIONS:
+    case CanvasMouseModeEnum::CREATE_CONNECTIONS:
         if ((event->buttons() & Qt::LeftButton) != 0u) {
             if (m_connectionSelection != nullptr) {
                 m_connectionSelection->setSecond(m_data, m_sel2);
 
-                const Room *r1 = m_connectionSelection->getFirst().room;
-                ExitDirection dir1 = m_connectionSelection->getFirst().direction;
-                const Room *r2 = m_connectionSelection->getSecond().room;
-                ExitDirection dir2 = m_connectionSelection->getSecond().direction;
+                const Room *const r1 = m_connectionSelection->getFirst().room;
+                const ExitDirEnum dir1 = m_connectionSelection->getFirst().direction;
+                const Room *const r2 = m_connectionSelection->getSecond().room;
+                const ExitDirEnum dir2 = m_connectionSelection->getSecond().direction;
 
                 if (r2 != nullptr) {
                     if ((r1->exit(dir1).containsOut(r2->getId()))
@@ -640,22 +640,22 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
         }
         break;
 
-    case CanvasMouseMode::SELECT_CONNECTIONS:
+    case CanvasMouseModeEnum::SELECT_CONNECTIONS:
         if ((event->buttons() & Qt::LeftButton) != 0u) {
             if (m_connectionSelection != nullptr) {
                 m_connectionSelection->setSecond(m_data, m_sel2);
 
-                const Room *r1 = m_connectionSelection->getFirst().room;
-                ExitDirection dir1 = m_connectionSelection->getFirst().direction;
-                const Room *r2 = m_connectionSelection->getSecond().room;
-                ExitDirection dir2 = m_connectionSelection->getSecond().direction;
+                const Room *const r1 = m_connectionSelection->getFirst().room;
+                const ExitDirEnum dir1 = m_connectionSelection->getFirst().direction;
+                const Room *const r2 = m_connectionSelection->getSecond().room;
+                const ExitDirEnum dir2 = m_connectionSelection->getSecond().direction;
 
                 if (r1 != nullptr && r2 != nullptr) {
                     if (!(r1->exit(dir1).containsOut(r2->getId()))
                         || !(r2->exit(dir2).containsOut(r1->getId()))) { // not two ways
-                        if (dir2 != ExitDirection::UNKNOWN) {
+                        if (dir2 != ExitDirEnum::UNKNOWN) {
                             m_connectionSelection->removeSecond();
-                        } else if (dir2 == ExitDirection::UNKNOWN
+                        } else if (dir2 == ExitDirEnum::UNKNOWN
                                    && (!(r1->exit(dir1).containsOut(r2->getId()))
                                        || (r1->exit(dir1).containsIn(r2->getId())))) { // not oneway
                             m_connectionSelection->removeSecond();
@@ -667,8 +667,8 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *const event)
         }
         break;
 
-    case CanvasMouseMode::CREATE_ROOMS:
-    case CanvasMouseMode::NONE:
+    case CanvasMouseModeEnum::CREATE_ROOMS:
+    case CanvasMouseModeEnum::NONE:
     default:
         break;
     }
@@ -684,7 +684,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
     }
 
     switch (m_canvasMouseMode) {
-    case CanvasMouseMode::SELECT_INFOMARKS:
+    case CanvasMouseModeEnum::SELECT_INFOMARKS:
         setCursor(Qt::ArrowCursor);
         if (m_mouseLeftPressed) {
             m_mouseLeftPressed = false;
@@ -717,7 +717,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
         }
         update();
         break;
-    case CanvasMouseMode::CREATE_INFOMARKS:
+    case CanvasMouseModeEnum::CREATE_INFOMARKS:
         if (m_mouseLeftPressed) {
             m_mouseLeftPressed = false;
             // Add infomarks to selection
@@ -729,13 +729,13 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
         }
         update();
         break;
-    case CanvasMouseMode::MOVE:
+    case CanvasMouseModeEnum::MOVE:
         setCursor(Qt::OpenHandCursor);
         if (m_mouseLeftPressed) {
             m_mouseLeftPressed = false;
         }
         break;
-    case CanvasMouseMode::SELECT_ROOMS:
+    case CanvasMouseModeEnum::SELECT_ROOMS:
         setCursor(Qt::ArrowCursor);
         if (m_ctrlPressed && m_altPressed) {
             break;
@@ -827,8 +827,8 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
         update();
         break;
 
-    case CanvasMouseMode::CREATE_ONEWAY_CONNECTIONS:
-    case CanvasMouseMode::CREATE_CONNECTIONS:
+    case CanvasMouseModeEnum::CREATE_ONEWAY_CONNECTIONS:
+    case CanvasMouseModeEnum::CREATE_CONNECTIONS:
         if (m_mouseLeftPressed) {
             m_mouseLeftPressed = false;
 
@@ -847,8 +847,8 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                 const Room *const r2 = second.room;
 
                 if (r1 != nullptr && r2 != nullptr) {
-                    const ExitDirection dir1 = first.direction;
-                    const ExitDirection dir2 = second.direction;
+                    const ExitDirEnum dir1 = first.direction;
+                    const ExitDirEnum dir2 = second.direction;
 
                     const RoomId id1 = r1->getId();
                     const RoomId &id2 = r2->getId();
@@ -860,7 +860,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                     delete std::exchange(m_connectionSelection, nullptr);
 
                     if (!(r1->exit(dir1).containsOut(id2)) || !(r2->exit(dir2).containsOut(id1))) {
-                        if (m_canvasMouseMode != CanvasMouseMode::CREATE_ONEWAY_CONNECTIONS) {
+                        if (m_canvasMouseMode != CanvasMouseModeEnum::CREATE_ONEWAY_CONNECTIONS) {
                             m_data->execute(new AddTwoWayExit(id1, id2, dir1, dir2), tmpSel);
                         } else {
                             m_data->execute(new AddOneWayExit(id1, id2, dir1), tmpSel);
@@ -877,7 +877,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
         update();
         break;
 
-    case CanvasMouseMode::SELECT_CONNECTIONS:
+    case CanvasMouseModeEnum::SELECT_CONNECTIONS:
         if (m_mouseLeftPressed) {
             m_mouseLeftPressed = false;
 
@@ -890,18 +890,18 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                 delete m_connectionSelection;
                 m_connectionSelection = nullptr;
             } else {
-                const Room *r1 = m_connectionSelection->getFirst().room;
-                ExitDirection dir1 = m_connectionSelection->getFirst().direction;
-                const Room *r2 = m_connectionSelection->getSecond().room;
-                ExitDirection dir2 = m_connectionSelection->getSecond().direction;
+                const Room *const r1 = m_connectionSelection->getFirst().room;
+                const ExitDirEnum dir1 = m_connectionSelection->getFirst().direction;
+                const Room *const r2 = m_connectionSelection->getSecond().room;
+                const ExitDirEnum dir2 = m_connectionSelection->getSecond().direction;
 
                 if (r1 != nullptr && r2 != nullptr) {
                     if (!(r1->exit(dir1).containsOut(r2->getId()))
                         || !(r2->exit(dir2).containsOut(r1->getId()))) {
-                        if (dir2 != ExitDirection::UNKNOWN) {
+                        if (dir2 != ExitDirEnum::UNKNOWN) {
                             delete m_connectionSelection;
                             m_connectionSelection = nullptr;
-                        } else if (dir2 == ExitDirection::UNKNOWN
+                        } else if (dir2 == ExitDirEnum::UNKNOWN
                                    && (!(r1->exit(dir1).containsOut(r2->getId()))
                                        || (r1->exit(dir1).containsIn(r2->getId())))) { // not oneway
                             delete m_connectionSelection;
@@ -915,13 +915,13 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
         update();
         break;
 
-    case CanvasMouseMode::CREATE_ROOMS:
+    case CanvasMouseModeEnum::CREATE_ROOMS:
         if (m_mouseLeftPressed) {
             m_mouseLeftPressed = false;
         }
         break;
 
-    case CanvasMouseMode::NONE:
+    case CanvasMouseModeEnum::NONE:
     default:
         break;
     }
@@ -1029,7 +1029,7 @@ void MapCanvas::initializeGL()
     qInfo() << "Current OpenGL Context: " << contextStr;
     emit log("MapCanvas", "Current OpenGL Context: " + contextStr);
 
-    if constexpr (CURRENT_PLATFORM == Platform::Windows) {
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
         if (vendor == "Microsoft Corporation" && renderer == "GDI Generic") {
             setConfig().canvas.softwareOpenGL = true;
             setConfig().write();
@@ -1144,7 +1144,7 @@ void MapCanvas::moveMarker(const Coordinate &c)
 void MapCanvas::drawGroupCharacters()
 {
     CGroup *const group = m_groupManager->getGroup();
-    if ((group == nullptr) || getConfig().groupManager.state == GroupManagerState::Off
+    if ((group == nullptr) || getConfig().groupManager.state == GroupManagerStateEnum::Off
         || m_data->isEmpty()) {
         return;
     }
@@ -1321,28 +1321,28 @@ void MapCanvas::paintSelectedConnection()
 
     /* TODO: factor duplicate code using vec2 return value */
     switch (m_connectionSelection->getFirst().direction) {
-    case ExitDirection::NORTH:
+    case ExitDirEnum::NORTH:
         y1p -= 0.4f;
         break;
-    case ExitDirection::SOUTH:
+    case ExitDirEnum::SOUTH:
         y1p += 0.4f;
         break;
-    case ExitDirection::EAST:
+    case ExitDirEnum::EAST:
         x1p += 0.4f;
         break;
-    case ExitDirection::WEST:
+    case ExitDirEnum::WEST:
         x1p -= 0.4f;
         break;
-    case ExitDirection::UP:
+    case ExitDirEnum::UP:
         x1p += 0.3f;
         y1p -= 0.3f;
         break;
-    case ExitDirection::DOWN:
+    case ExitDirEnum::DOWN:
         x1p -= 0.3f;
         y1p += 0.3f;
         break;
-    case ExitDirection::UNKNOWN:
-    case ExitDirection::NONE:
+    case ExitDirEnum::UNKNOWN:
+    case ExitDirEnum::NONE:
     default:
         break;
     }
@@ -1354,28 +1354,28 @@ void MapCanvas::paintSelectedConnection()
         y2p = r->getPosition().y;
 
         switch (m_connectionSelection->getSecond().direction) {
-        case ExitDirection::NORTH:
+        case ExitDirEnum::NORTH:
             y2p -= 0.4f;
             break;
-        case ExitDirection::SOUTH:
+        case ExitDirEnum::SOUTH:
             y2p += 0.4f;
             break;
-        case ExitDirection::EAST:
+        case ExitDirEnum::EAST:
             x2p += 0.4f;
             break;
-        case ExitDirection::WEST:
+        case ExitDirEnum::WEST:
             x2p -= 0.4f;
             break;
-        case ExitDirection::UP:
+        case ExitDirEnum::UP:
             x2p += 0.3f;
             y2p -= 0.3f;
             break;
-        case ExitDirection::DOWN:
+        case ExitDirEnum::DOWN:
             x2p -= 0.3f;
             y2p += 0.3f;
             break;
-        case ExitDirection::UNKNOWN:
-        case ExitDirection::NONE:
+        case ExitDirEnum::UNKNOWN:
+        case ExitDirEnum::NONE:
         default:
             break;
         }
@@ -1431,7 +1431,7 @@ void MapCanvas::paintSelection()
     }
 
     // Draw yellow guide when creating an infomark line/arrow
-    if (m_canvasMouseMode == CanvasMouseMode::CREATE_INFOMARKS && m_selectedArea) {
+    if (m_canvasMouseMode == CanvasMouseModeEnum::CREATE_INFOMARKS && m_selectedArea) {
         gl.apply(XColor4f{Qt::yellow, 1.0f});
         gl.apply(XDevicePointSize{3.0});
         gl.apply(XDeviceLineWidth{3.0});
@@ -1561,7 +1561,7 @@ void MapCanvas::paintSelectedInfoMark(const InfoMark *const marker)
 
     const auto draw_info_mark = [&gl](const InfoMark *const marker, const auto &dx, const auto &dy) {
         switch (marker->getType()) {
-        case InfoMarkType::TEXT:
+        case InfoMarkTypeEnum::TEXT:
             gl.draw(DrawType::LINE_LOOP,
                     std::vector<Vec3f>{
                         Vec3f{0.0f, 0.0f, 1.0f},
@@ -1570,7 +1570,7 @@ void MapCanvas::paintSelectedInfoMark(const InfoMark *const marker)
                         Vec3f{0.2f + dx, 0.0f, 1.0f},
                     });
             break;
-        case InfoMarkType::LINE:
+        case InfoMarkTypeEnum::LINE:
             gl.apply(XDevicePointSize{2.0});
             gl.apply(XDeviceLineWidth{2.0});
             gl.draw(DrawType::LINES,
@@ -1579,7 +1579,7 @@ void MapCanvas::paintSelectedInfoMark(const InfoMark *const marker)
                         Vec3f{dx, dy, 0.1f},
                     });
             break;
-        case InfoMarkType::ARROW:
+        case InfoMarkTypeEnum::ARROW:
             gl.apply(XDevicePointSize{2.0});
             gl.apply(XDeviceLineWidth{2.0});
             gl.draw(DrawType::LINE_STRIP,
@@ -1741,14 +1741,14 @@ void MapCanvas::makeGlLists()
 {
     CompileOnly gl{getOpenGL()};
 
-    EnumIndexedArray<int, ExitDirection, NUM_EXITS_NESW> rotationDegrees;
-    rotationDegrees[ExitDirection::NORTH] = 0;
-    rotationDegrees[ExitDirection::EAST] = 90;
-    rotationDegrees[ExitDirection::SOUTH] = 180;
-    rotationDegrees[ExitDirection::WEST] = -90;
+    EnumIndexedArray<int, ExitDirEnum, NUM_EXITS_NESW> rotationDegrees;
+    rotationDegrees[ExitDirEnum::NORTH] = 0;
+    rotationDegrees[ExitDirEnum::EAST] = 90;
+    rotationDegrees[ExitDirEnum::SOUTH] = 180;
+    rotationDegrees[ExitDirEnum::WEST] = -90;
 
-    EnumIndexedArray<QMatrix4x4, ExitDirection, NUM_EXITS_NESW> rotationMatricesAboutOrigin;
-    EnumIndexedArray<QMatrix4x4, ExitDirection, NUM_EXITS_NESW> rotationMatricesAboutRoomMidpoint;
+    EnumIndexedArray<QMatrix4x4, ExitDirEnum, NUM_EXITS_NESW> rotationMatricesAboutOrigin;
+    EnumIndexedArray<QMatrix4x4, ExitDirEnum, NUM_EXITS_NESW> rotationMatricesAboutRoomMidpoint;
     for (auto dir : ALL_EXITS_NESW) {
         if (auto deg = rotationDegrees[dir]) {
             QMatrix4x4 tmp;
@@ -1778,7 +1778,7 @@ void MapCanvas::makeGlLists()
     };
     const auto applyRotationDirectionAboutOrigin =
         [&rotationMatricesAboutOrigin, &applyRotationMatrix](const XDraw &input,
-                                                             const ExitDirection dir) -> XDraw {
+                                                             const ExitDirEnum dir) -> XDraw {
         return applyRotationMatrix(input, rotationMatricesAboutOrigin[dir]);
     };
 
@@ -1820,14 +1820,13 @@ void MapCanvas::makeGlLists()
             applyRotationDirectionAboutOrigin(northFlowEndLines, dir));
     }
 
-    m_gllist.door[ExitDirection::UP]
-        = gl.compile(XDeviceLineWidth{3.0},
-                     XDraw{DrawType::LINES,
-                           std::vector<Vec3f>{Vec3f{0.69f, 0.31f, 0.0f},
-                                              Vec3f{0.63f, 0.37f, 0.0f},
-                                              Vec3f{0.57f, 0.31f, 0.0f},
-                                              Vec3f{0.69f, 0.43f, 0.0f}}});
-    m_gllist.door[ExitDirection::DOWN]
+    m_gllist.door[ExitDirEnum::UP] = gl.compile(XDeviceLineWidth{3.0},
+                                                XDraw{DrawType::LINES,
+                                                      std::vector<Vec3f>{Vec3f{0.69f, 0.31f, 0.0f},
+                                                                         Vec3f{0.63f, 0.37f, 0.0f},
+                                                                         Vec3f{0.57f, 0.31f, 0.0f},
+                                                                         Vec3f{0.69f, 0.43f, 0.0f}}});
+    m_gllist.door[ExitDirEnum::DOWN]
         = gl.compile(XDeviceLineWidth{3.0},
                      XDraw{DrawType::LINES,
                            std::vector<Vec3f>{Vec3f{0.31f, 0.69f, 0.0f},
@@ -1835,14 +1834,14 @@ void MapCanvas::makeGlLists()
                                               Vec3f{0.31f, 0.57f, 0.0f},
                                               Vec3f{0.43f, 0.69f, 0.0f}}});
 
-    m_gllist.flow.begin[ExitDirection::UP]
+    m_gllist.flow.begin[ExitDirEnum::UP]
         = gl.compile(XDraw{DrawType::LINE_STRIP,
                            std::vector<Vec3f>{Vec3f{0.5f, 0.5f, 0.1f}, Vec3f{0.75f, 0.25f, 0.1f}}},
                      XDraw{DrawType::TRIANGLES,
                            std::vector<Vec3f>{Vec3f{0.51f, 0.42f, 0.1f},
                                               Vec3f{0.64f, 0.37f, 0.1f},
                                               Vec3f{0.60f, 0.48f, 0.1f}}});
-    m_gllist.flow.begin[ExitDirection::DOWN]
+    m_gllist.flow.begin[ExitDirEnum::DOWN]
         = gl.compile(XDraw{DrawType::LINE_STRIP,
                            std::vector<Vec3f>{Vec3f{0.5f, 0.5f, 0.1f}, Vec3f{0.25f, 0.75f, 0.1f}}},
                      XDraw{DrawType::TRIANGLES,
@@ -1850,10 +1849,10 @@ void MapCanvas::makeGlLists()
                                               Vec3f{0.33f, 0.67f, 0.1f},
                                               Vec3f{0.44f, 0.63f, 0.1f}}});
 
-    m_gllist.flow.end[ExitDirection::DOWN] = gl.compile(
+    m_gllist.flow.end[ExitDirEnum::DOWN] = gl.compile(
         XDraw{DrawType::LINE_STRIP,
               std::vector<Vec3f>{Vec3f{-0.25f, 0.25f, 0.1f}, Vec3f{0.0f, 0.0f, 0.1f}}});
-    m_gllist.flow.end[ExitDirection::UP] = gl.compile(
+    m_gllist.flow.end[ExitDirEnum::UP] = gl.compile(
         XDraw{DrawType::LINE_STRIP,
               std::vector<Vec3f>{Vec3f{0.25f, -0.25f, 0.1f}, Vec3f{0.0f, 0.0f, 0.1f}}});
 

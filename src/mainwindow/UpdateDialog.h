@@ -3,11 +3,12 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <array>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QLabel>
 #include <QNetworkAccessManager>
+
+#include "../global/Array.h"
 
 class CompareVersion final
 {
@@ -18,7 +19,7 @@ public:
     operator QString() const;
 
 private:
-    std::array<int, 3> parts;
+    MMapper::Array<int, 3> parts;
 };
 
 class UpdateDialog : public QDialog
@@ -35,6 +36,6 @@ private slots:
 
 private:
     QNetworkAccessManager manager;
-    QLabel *text;
-    QDialogButtonBox *buttonBox;
+    QLabel *text = nullptr;
+    QDialogButtonBox *buttonBox = nullptr;
 };

@@ -48,11 +48,11 @@ const Abbrev cmdPStatic{"pstatic", 3};
 const Abbrev cmdPNote{"pnote", 3};
 const Abbrev cmdPrint{"print", 3};
 
-Abbrev getParserCommandName(const DoorFlag x)
+Abbrev getParserCommandName(const DoorFlagEnum x)
 {
 #define CASE3(UPPER, s, n) \
     do { \
-    case DoorFlag::UPPER: \
+    case DoorFlagEnum::UPPER: \
         return Abbrev{s, n}; \
     } while (false)
     switch (x) {
@@ -72,11 +72,11 @@ Abbrev getParserCommandName(const DoorFlag x)
 #undef CASE3
 }
 
-Abbrev getParserCommandName(const RoomLightType x)
+Abbrev getParserCommandName(const RoomLightEnum x)
 {
 #define CASE3(UPPER, s, n) \
     do { \
-    case RoomLightType::UPPER: \
+    case RoomLightEnum::UPPER: \
         return Abbrev{s, n}; \
     } while (false)
     switch (x) {
@@ -88,11 +88,11 @@ Abbrev getParserCommandName(const RoomLightType x)
 #undef CASE3
 }
 
-Abbrev getParserCommandName(const RoomSundeathType x)
+Abbrev getParserCommandName(const RoomSundeathEnum x)
 {
 #define CASE3(UPPER, s, n) \
     do { \
-    case RoomSundeathType::UPPER: \
+    case RoomSundeathEnum::UPPER: \
         return Abbrev{s, n}; \
     } while (false)
     switch (x) {
@@ -104,11 +104,11 @@ Abbrev getParserCommandName(const RoomSundeathType x)
 #undef CASE3
 }
 
-Abbrev getParserCommandName(const RoomPortableType x)
+Abbrev getParserCommandName(const RoomPortableEnum x)
 {
 #define CASE3(UPPER, s, n) \
     do { \
-    case RoomPortableType::UPPER: \
+    case RoomPortableEnum::UPPER: \
         return Abbrev{s, n}; \
     } while (false)
     switch (x) {
@@ -120,11 +120,11 @@ Abbrev getParserCommandName(const RoomPortableType x)
 #undef CASE3
 }
 
-Abbrev getParserCommandName(const RoomRidableType x)
+Abbrev getParserCommandName(const RoomRidableEnum x)
 {
 #define CASE3(UPPER, s, n) \
     do { \
-    case RoomRidableType::UPPER: \
+    case RoomRidableEnum::UPPER: \
         return Abbrev{s, n}; \
     } while (false)
     switch (x) {
@@ -136,11 +136,11 @@ Abbrev getParserCommandName(const RoomRidableType x)
 #undef CASE3
 }
 
-Abbrev getParserCommandName(const RoomAlignType x)
+Abbrev getParserCommandName(const RoomAlignEnum x)
 {
 #define CASE3(UPPER, s, n) \
     do { \
-    case RoomAlignType::UPPER: \
+    case RoomAlignEnum::UPPER: \
         return Abbrev{s, n}; \
     } while (false)
     switch (x) {
@@ -153,11 +153,11 @@ Abbrev getParserCommandName(const RoomAlignType x)
 #undef CASE3
 }
 
-Abbrev getParserCommandName(const RoomMobFlag x)
+Abbrev getParserCommandName(const RoomMobFlagEnum x)
 {
 #define CASE3(UPPER, s, n) \
     do { \
-    case RoomMobFlag::UPPER: \
+    case RoomMobFlagEnum::UPPER: \
         return Abbrev{s, n}; \
     } while (false)
     switch (x) {
@@ -183,11 +183,11 @@ Abbrev getParserCommandName(const RoomMobFlag x)
 #undef CASE3
 }
 
-Abbrev getParserCommandName(const RoomLoadFlag x)
+Abbrev getParserCommandName(const RoomLoadFlagEnum x)
 {
 #define CASE3(UPPER, s, n) \
     do { \
-    case RoomLoadFlag::UPPER: \
+    case RoomLoadFlagEnum::UPPER: \
         return Abbrev{s, n}; \
     } while (false)
     switch (x) {
@@ -221,11 +221,11 @@ Abbrev getParserCommandName(const RoomLoadFlag x)
 }
 
 // NOTE: This isn't used by the parser (currently only used for filenames).
-Abbrev getParserCommandName(const RoomTerrainType x)
+Abbrev getParserCommandName(const RoomTerrainEnum x)
 {
 #define CASE3(UPPER, s, n) \
     do { \
-    case RoomTerrainType::UPPER: \
+    case RoomTerrainEnum::UPPER: \
         return Abbrev{s, n}; \
     } while (false)
     switch (x) {
@@ -250,11 +250,11 @@ Abbrev getParserCommandName(const RoomTerrainType x)
 #undef CASE3
 }
 
-QByteArray getCommandName(const DoorActionType action)
+QByteArray getCommandName(const DoorActionEnum action)
 {
 #define CASE2(UPPER, s) \
     do { \
-    case DoorActionType::UPPER: \
+    case DoorActionEnum::UPPER: \
         return s; \
     } while (false)
     switch (action) {
@@ -269,7 +269,7 @@ QByteArray getCommandName(const DoorActionType action)
         CASE2(BLOCK, "cast 'block door'");
         CASE2(KNOCK, "knock");
 
-    case DoorActionType::NONE:
+    case DoorActionEnum::NONE:
         break;
     }
 
@@ -278,11 +278,11 @@ QByteArray getCommandName(const DoorActionType action)
 #undef CASE2
 }
 
-Abbrev getParserCommandName(const DoorActionType action)
+Abbrev getParserCommandName(const DoorActionEnum action)
 {
 #define CASE3(UPPER, s, n) \
     do { \
-    case DoorActionType::UPPER: \
+    case DoorActionEnum::UPPER: \
         return Abbrev{s, n}; \
     } while (false)
     switch (action) {
@@ -296,7 +296,7 @@ Abbrev getParserCommandName(const DoorActionType action)
         CASE3(BREAK, "break", -1);
         CASE3(BLOCK, "block", -1);
         CASE3(KNOCK, "knock", -1);
-    case DoorActionType::NONE:
+    case DoorActionEnum::NONE:
         break;
     }
 
@@ -304,11 +304,11 @@ Abbrev getParserCommandName(const DoorActionType action)
 #undef CASE3
 }
 
-Abbrev getParserCommandName(const ExitFlag x)
+Abbrev getParserCommandName(const ExitFlagEnum x)
 {
 #define CASE3(UPPER, s, n) \
     do { \
-    case ExitFlag::UPPER: \
+    case ExitFlagEnum::UPPER: \
         return Abbrev{s, n}; \
     } while (false)
     switch (x) {
@@ -342,27 +342,27 @@ static bool isCommand(const QString &str, Abbrev abbrev)
     return abbrev.matches(word);
 }
 
-static bool isCommand(const QString &str, const CommandIdType cmd)
+static bool isCommand(const QString &str, const CommandEnum cmd)
 {
     switch (cmd) {
-    case CommandIdType::NORTH:
-    case CommandIdType::SOUTH:
-    case CommandIdType::EAST:
-    case CommandIdType::WEST:
-    case CommandIdType::UP:
-    case CommandIdType::DOWN:
-    case CommandIdType::FLEE:
+    case CommandEnum::NORTH:
+    case CommandEnum::SOUTH:
+    case CommandEnum::EAST:
+    case CommandEnum::WEST:
+    case CommandEnum::UP:
+    case CommandEnum::DOWN:
+    case CommandEnum::FLEE:
         // REVISIT: Add support for 'charge' and 'escape' commands
         return isCommand(str, Abbrev{getLowercase(cmd), 1});
 
-    case CommandIdType::SCOUT:
+    case CommandEnum::SCOUT:
         return isCommand(str, Abbrev{getLowercase(cmd), 2});
 
-    case CommandIdType::LOOK:
+    case CommandEnum::LOOK:
         return isCommand(str, Abbrev{getLowercase(cmd), 1}) || isCommand(str, Abbrev{"examine", 3});
 
-    case CommandIdType::UNKNOWN:
-    case CommandIdType::NONE:
+    case CommandEnum::UNKNOWN:
+    case CommandEnum::NONE:
         return false;
     }
 
@@ -391,24 +391,24 @@ bool AbstractParser::parseSimpleCommand(const QString &str)
 {
     const auto isOnline = ::isOnline();
 
-    for (const CommandIdType cmd : ALL_COMMANDS) {
-        if (cmd == CommandIdType::NONE || cmd == CommandIdType::UNKNOWN)
+    for (const CommandEnum cmd : ALL_COMMANDS) {
+        if (cmd == CommandEnum::NONE || cmd == CommandEnum::UNKNOWN)
             continue;
 
         if (!isCommand(str, cmd))
             continue;
 
         switch (cmd) {
-        case CommandIdType::NORTH:
-        case CommandIdType::SOUTH:
-        case CommandIdType::EAST:
-        case CommandIdType::WEST:
-        case CommandIdType::UP:
-        case CommandIdType::DOWN:
+        case CommandEnum::NORTH:
+        case CommandEnum::SOUTH:
+        case CommandEnum::EAST:
+        case CommandEnum::WEST:
+        case CommandEnum::UP:
+        case CommandEnum::DOWN:
             doMove(cmd);
             return isOnline;
 
-        case CommandIdType::LOOK: {
+        case CommandEnum::LOOK: {
             // if 'look' has arguments then it isn't valid for prespam
             auto view = StringView{str}.trim();
             if (view.countWords() == 1) {
@@ -417,24 +417,24 @@ bool AbstractParser::parseSimpleCommand(const QString &str)
             }
         } break;
 
-        case CommandIdType::FLEE:
+        case CommandEnum::FLEE:
             if (!isOnline) {
-                offlineCharacterMove(CommandIdType::FLEE);
+                offlineCharacterMove(CommandEnum::FLEE);
                 return false; // do not send command to mud server for offline mode
             }
             break;
 
-        case CommandIdType::SCOUT:
+        case CommandEnum::SCOUT:
             if (!isOnline) {
                 auto view = StringView{str}.trim();
                 if (!view.isEmpty() && !view.takeFirstWord().isEmpty()) {
-                    const auto dir = static_cast<CommandIdType>(tryGetDir(view));
-                    if (dir >= CommandIdType::UNKNOWN) {
+                    const auto dir = static_cast<CommandEnum>(tryGetDir(view));
+                    if (dir >= CommandEnum::UNKNOWN) {
                         sendToUser("In which direction do you want to scout?\r\n");
                         sendPromptToUser();
 
                     } else {
-                        queue.enqueue(CommandIdType::SCOUT);
+                        queue.enqueue(CommandEnum::SCOUT);
                         queue.enqueue(dir);
                         offlineCharacterMove();
                     }
@@ -443,8 +443,8 @@ bool AbstractParser::parseSimpleCommand(const QString &str)
             }
             break;
 
-        case CommandIdType::UNKNOWN:
-        case CommandIdType::NONE:
+        case CommandEnum::UNKNOWN:
+        case CommandEnum::NONE:
             break;
         }
 
@@ -465,7 +465,7 @@ bool AbstractParser::parseDoorAction(StringView words)
         return false;
 
     const auto firstWord = words.takeFirstWord();
-    for (const DoorActionType dat : ALL_DOOR_ACTION_TYPES) {
+    for (const DoorActionEnum dat : ALL_DOOR_ACTION_TYPES) {
         if (getParserCommandName(dat).matches(firstWord)) {
             return parseDoorAction(dat, words);
         }
@@ -473,7 +473,7 @@ bool AbstractParser::parseDoorAction(StringView words)
     return false;
 }
 
-bool AbstractParser::parseDoorAction(const DoorActionType dat, StringView words)
+bool AbstractParser::parseDoorAction(const DoorActionEnum dat, StringView words)
 {
     const auto dir = tryGetDir(words);
     if (!words.isEmpty())
@@ -488,7 +488,7 @@ bool AbstractParser::parseDoorFlags(StringView words)
         return false;
 
     const auto firstWord = words.takeFirstWord();
-    for (const DoorFlag flag : ALL_DOOR_FLAGS) {
+    for (const DoorFlagEnum flag : ALL_DOOR_FLAGS) {
         if (getParserCommandName(flag).matches(firstWord)) {
             return parseDoorFlag(flag, words);
         }
@@ -496,10 +496,10 @@ bool AbstractParser::parseDoorFlags(StringView words)
     return false;
 }
 
-bool AbstractParser::parseDoorFlag(const DoorFlag flag, StringView words)
+bool AbstractParser::parseDoorFlag(const DoorFlagEnum flag, StringView words)
 {
     const auto dir = tryGetDir(words);
-    if (dir >= DirectionType::NONE)
+    if (dir >= DirectionEnum::NONE)
         throw std::runtime_error("invalid direction");
     if (!words.isEmpty())
         return false;
@@ -513,7 +513,7 @@ bool AbstractParser::parseExitFlags(StringView words)
         return false;
 
     const auto firstWord = words.takeFirstWord();
-    for (const ExitFlag flag : ALL_EXIT_FLAGS) {
+    for (const ExitFlagEnum flag : ALL_EXIT_FLAGS) {
         if (getParserCommandName(flag).matches(firstWord)) {
             return parseExitFlag(flag, words);
         }
@@ -521,10 +521,10 @@ bool AbstractParser::parseExitFlags(StringView words)
     return false;
 }
 
-bool AbstractParser::parseExitFlag(const ExitFlag flag, StringView words)
+bool AbstractParser::parseExitFlag(const ExitFlagEnum flag, StringView words)
 {
     const auto dir = tryGetDir(words);
-    if (dir >= DirectionType::NONE)
+    if (dir >= DirectionEnum::NONE)
         throw std::runtime_error("invalid direction");
     if (!words.isEmpty())
         return false;
@@ -568,7 +568,7 @@ bool AbstractParser::parseMobFlags(StringView words)
     if (!words.isEmpty())
         return false;
 
-    for (const RoomMobFlag mobFlag : ALL_MOB_FLAGS) {
+    for (const RoomMobFlagEnum mobFlag : ALL_MOB_FLAGS) {
         if (getParserCommandName(mobFlag).matches(firstWord)) {
             toggleRoomFlagCommand(RoomMobFlags{mobFlag});
             return true;
@@ -585,7 +585,7 @@ bool AbstractParser::parseLoadFlags(StringView words)
     if (!words.isEmpty())
         return false;
 
-    for (const RoomLoadFlag loadFlag : ALL_LOAD_FLAGS) {
+    for (const RoomLoadFlagEnum loadFlag : ALL_LOAD_FLAGS) {
         if (getParserCommandName(loadFlag).matches(firstWord)) {
             toggleRoomFlagCommand(RoomLoadFlags{loadFlag});
             return true;
@@ -632,7 +632,7 @@ void AbstractParser::parseSetCommand(StringView view)
     sendToUser("That variable is not supported.");
 }
 
-bool AbstractParser::parsePrint(StringView &input)
+bool AbstractParser::parsePrint(StringView input)
 {
     const auto syntax = [this]() { sendToUser("Print what? [dynamic | static | note]\r\n"); };
 
@@ -830,7 +830,7 @@ void AbstractParser::initSpecialCommandMap()
         makeSimpleHelp("Help for group manager console commands."));
 
     // door actions
-    for (const DoorActionType x : ALL_DOOR_ACTION_TYPES) {
+    for (const DoorActionEnum x : ALL_DOOR_ACTION_TYPES) {
         if (auto cmd = getParserCommandName(x))
             add(cmd,
                 [this, x](const std::vector<StringView> & /*s*/, StringView rest) {
@@ -839,7 +839,7 @@ void AbstractParser::initSpecialCommandMap()
                 makeSimpleHelp("Sets door action: " + std::string{cmd.getCommand()}));
     }
 
-    for (const DoorFlag x : ALL_DOOR_FLAGS) {
+    for (const DoorFlagEnum x : ALL_DOOR_FLAGS) {
         if (auto cmd = getParserCommandName(x))
             add(getParserCommandName(x),
                 [this, x](const std::vector<StringView> & /*s*/, StringView rest) {
@@ -848,7 +848,7 @@ void AbstractParser::initSpecialCommandMap()
                 makeSimpleHelp("Sets door flag: " + std::string{cmd.getCommand()}));
     }
 
-    for (const ExitFlag x : ALL_EXIT_FLAGS) {
+    for (const ExitFlagEnum x : ALL_EXIT_FLAGS) {
         if (auto cmd = getParserCommandName(x))
             add(cmd,
                 [this, x](const std::vector<StringView> & /*s*/, StringView rest) {
@@ -879,7 +879,7 @@ void AbstractParser::initSpecialCommandMap()
     ADD_FIELD_CMDS(ALIGN);
 #undef ADD_FIELD_CMDS
 
-    for (const RoomMobFlag x : ALL_MOB_FLAGS) {
+    for (const RoomMobFlagEnum x : ALL_MOB_FLAGS) {
         if (auto cmd = getParserCommandName(x)) {
             add(cmd,
                 [this, x](const std::vector<StringView> & /*s*/, StringView rest) {
@@ -892,7 +892,7 @@ void AbstractParser::initSpecialCommandMap()
         }
     }
 
-    for (const RoomLoadFlag x : ALL_LOAD_FLAGS) {
+    for (const RoomLoadFlagEnum x : ALL_LOAD_FLAGS) {
         if (auto cmd = getParserCommandName(x))
             add(cmd,
                 [this, x](const std::vector<StringView> & /*s*/, StringView rest) {

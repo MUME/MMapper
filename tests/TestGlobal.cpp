@@ -56,11 +56,11 @@ void TestGlobal::ansiToRgbTest()
     QColor cyanRgb = ansi256toRgb(cyanAnsi);
     QCOMPARE(cyanRgb, QColor("#99ccff"));
 
-    int blackAnsi = static_cast<int>(AnsiColorTable::black);
+    int blackAnsi = static_cast<int>(AnsiColorTableEnum::black);
     QColor blackRgb = ansi256toRgb(blackAnsi);
     QCOMPARE(blackRgb, QColor("#2e3436"));
 
-    int highBlackAnsi = static_cast<int>(AnsiColorTable::BLACK) + 8 - 60;
+    int highBlackAnsi = static_cast<int>(AnsiColorTableEnum::BLACK) + 8 - 60;
     QColor highBlackRgb = ansi256toRgb(highBlackAnsi);
     QCOMPARE(highBlackRgb, QColor("#555753"));
 }

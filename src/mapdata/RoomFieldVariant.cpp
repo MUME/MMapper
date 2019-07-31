@@ -14,17 +14,17 @@ RoomFieldVariant::RoomFieldVariant(const RoomFieldVariant &rhs)
     switch (type_) {
 #define X_CASE(UPPER_CASE, CamelCase, Type) \
     do { \
-    case RoomField::UPPER_CASE: \
+    case RoomFieldEnum::UPPER_CASE: \
         new (&storage_) Type(rhs.get##CamelCase()); \
         return; \
     } while (false);
         X_FOREACH_ROOM_FIELD(X_CASE)
 #undef X_CASE
-    case RoomField::NAME:
-    case RoomField::DESC:
-    case RoomField::DYNAMIC_DESC:
-    case RoomField::LAST:
-    case RoomField::RESERVED:
+    case RoomFieldEnum::NAME:
+    case RoomFieldEnum::DESC:
+    case RoomFieldEnum::DYNAMIC_DESC:
+    case RoomFieldEnum::LAST:
+    case RoomFieldEnum::RESERVED:
         break;
     }
     throw std::runtime_error("bad type");
@@ -40,7 +40,7 @@ RoomFieldVariant &RoomFieldVariant::operator=(const RoomFieldVariant &rhs)
 
 #define X_DECLARE_CONSTRUCTORS(UPPER_CASE, CamelCase, Type) \
     RoomFieldVariant::RoomFieldVariant(Type type) \
-        : type_{RoomField::UPPER_CASE} \
+        : type_{RoomFieldEnum::UPPER_CASE} \
     { \
         new (&storage_) Type(std::move(type)); \
     }
@@ -52,17 +52,17 @@ RoomFieldVariant::~RoomFieldVariant()
     switch (type_) {
 #define X_CASE(UPPER_CASE, CamelCase, Type) \
     { \
-    case RoomField::UPPER_CASE: \
+    case RoomFieldEnum::UPPER_CASE: \
         reinterpret_cast<Type *>(&storage_)->~Type(); \
         break; \
     }
         X_FOREACH_ROOM_FIELD(X_CASE)
 #undef X_CASE
-    case RoomField::NAME:
-    case RoomField::DESC:
-    case RoomField::DYNAMIC_DESC:
-    case RoomField::LAST:
-    case RoomField::RESERVED:
+    case RoomFieldEnum::NAME:
+    case RoomFieldEnum::DESC:
+    case RoomFieldEnum::DYNAMIC_DESC:
+    case RoomFieldEnum::LAST:
+    case RoomFieldEnum::RESERVED:
         break;
     }
 
@@ -75,7 +75,7 @@ RoomFieldVariant::~RoomFieldVariant()
 #define X_DECLARE_ACCESSORS(UPPER_CASE, CamelCase, Type) \
     Type RoomFieldVariant::get##CamelCase() const \
     { \
-        if (type_ != RoomField::UPPER_CASE) \
+        if (type_ != RoomFieldEnum::UPPER_CASE) \
             throw std::runtime_error("bad type"); \
         return *reinterpret_cast<const Type *>(&storage_); \
     }

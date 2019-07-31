@@ -73,7 +73,7 @@ GraphicsPage::GraphicsPage(QWidget *parent)
     const int index = std::max(0, ui->antialiasingSamplesComboBox->findText(antiAliasingSamples));
     ui->antialiasingSamplesComboBox->setCurrentIndex(index);
     ui->trilinearFilteringCheckBox->setChecked(settings.trilinearFiltering);
-    if constexpr (CURRENT_PLATFORM == Platform::Mac) {
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
         ui->softwareOpenGLCheckBox->setEnabled(false);
         ui->softwareOpenGLCheckBox->setChecked(false);
     } else

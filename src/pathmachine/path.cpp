@@ -21,7 +21,7 @@ Path::Path(const Room *in_room,
            RoomAdmin *owner,
            RoomRecipient *locker,
            RoomSignalHandler *in_signaler,
-           ExitDirection direction)
+           ExitDirEnum direction)
     : room(in_room)
     , signaler(in_signaler)
     , dir(direction)
@@ -41,7 +41,7 @@ Path *Path::fork(const Room *const in_room,
                  RoomAdmin *const owner,
                  const PathParameters &p,
                  RoomRecipient *const locker,
-                 const ExitDirection direction)
+                 const ExitDirEnum direction)
 {
     auto *const ret = new Path(in_room, owner, locker, signaler, direction);
     assert(ret != parent);
@@ -80,7 +80,7 @@ Path *Path::fork(const Room *const in_room,
         } else if (static_cast<uint>(direction) < NUM_EXITS_INCLUDING_NONE) {
             /* NOTE: This is currently always true unless the data is corrupt. */
             for (uint d = 0; d < size; ++d) {
-                const Exit &e = room->exit(static_cast<ExitDirection>(d));
+                const Exit &e = room->exit(static_cast<ExitDirEnum>(d));
                 if (e.containsOut(in_room->getId())) {
                     dist = 1.0 / p.correctPositionBonus;
                     break;

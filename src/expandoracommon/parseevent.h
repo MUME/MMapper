@@ -53,19 +53,19 @@ private:
     };
 
 private:
-    Cycler m_cycler{};
-    QString m_roomName{};
-    QString m_dynamicDesc{};
-    QString m_staticDesc{};
-    ExitsFlagsType m_exitsFlags{};
-    PromptFlagsType m_promptFlags{};
-    ConnectedRoomFlagsType m_connectedRoomFlags{};
+    Cycler m_cycler;
+    QString m_roomName;
+    QString m_dynamicDesc;
+    QString m_staticDesc;
+    ExitsFlagsType m_exitsFlags;
+    PromptFlagsType m_promptFlags;
+    ConnectedRoomFlagsType m_connectedRoomFlags;
 
-    CommandIdType moveType = CommandIdType::NONE;
+    CommandEnum moveType = CommandEnum::NONE;
     uint numSkipped = 0u;
 
 public:
-    explicit ParseEvent(const CommandIdType command)
+    explicit ParseEvent(const CommandEnum command)
         : moveType(command)
     {}
 
@@ -94,7 +94,7 @@ private:
     void countSkipped();
 
 public:
-    CommandIdType getMoveType() const { return moveType; }
+    CommandEnum getMoveType() const { return moveType; }
     uint getNumSkipped() const { return numSkipped; }
     auto size() const { return m_cycler.size(); }
 
@@ -107,7 +107,7 @@ public:
     ConnectedRoomFlagsType getConnectedRoomFlags() const;
 
 public:
-    static SharedParseEvent createEvent(const CommandIdType c,
+    static SharedParseEvent createEvent(const CommandEnum c,
                                         const QString &roomName,
                                         const QString &dynamicDesc,
                                         const QString &staticDesc,

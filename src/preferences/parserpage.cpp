@@ -25,13 +25,13 @@ public:
 
     void fixup(QString &input) const override { input = input.toLatin1(); }
 
-    State validate(QString &input, int & /* pos */) const override
+    QValidator::State validate(QString &input, int & /* pos */) const override
     {
         if (input.isEmpty())
-            return State::Intermediate;
+            return QValidator::State::Intermediate;
 
         const bool valid = input.length() == 1 && isValidPrefix(input[0].toLatin1());
-        return valid ? State::Acceptable : State::Invalid;
+        return valid ? QValidator::State::Acceptable : QValidator::State::Invalid;
     }
 };
 

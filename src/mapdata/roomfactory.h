@@ -24,23 +24,23 @@ public:
     RoomFactory();
     virtual Room *createRoom() const override;
     virtual Room *createRoom(const ParseEvent &) const override;
-    virtual ComparisonResult compare(const Room *,
-                                     const ParseEvent &event,
-                                     int tolerance) const override;
-    virtual ComparisonResult compareWeakProps(const Room *,
-                                              const ParseEvent &event,
-                                              int tolerance) const override;
+    virtual ComparisonResultEnum compare(const Room *,
+                                         const ParseEvent &event,
+                                         int tolerance) const override;
+    virtual ComparisonResultEnum compareWeakProps(const Room *,
+                                                  const ParseEvent &event,
+                                                  int tolerance) const override;
     virtual SharedParseEvent getEvent(const Room *) const override;
     virtual void update(Room &, const ParseEvent &event) const override;
     virtual void update(Room *target, const Room *source) const override;
     virtual ~RoomFactory() override = default;
 
 public:
-    static const Coordinate &exitDir(ExitDirection dir);
+    static const Coordinate &exitDir(ExitDirEnum dir);
 
 private:
-    static ComparisonResult compareStrings(const QString &room,
-                                           const QString &event,
-                                           int prevTolerance,
-                                           bool updated = true);
+    static ComparisonResultEnum compareStrings(const QString &room,
+                                               const QString &event,
+                                               int prevTolerance,
+                                               bool updated = true);
 };

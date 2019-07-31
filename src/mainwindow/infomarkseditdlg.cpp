@@ -156,13 +156,13 @@ void InfoMarksEditDlg::updateMarkers()
     assert(m_selection);
     for (const auto marker : *m_selection) {
         switch (marker->getType()) {
-        case InfoMarkType::TEXT:
+        case InfoMarkTypeEnum::TEXT:
             objectsList->addItem(marker->getName());
             break;
-        case InfoMarkType::LINE:
+        case InfoMarkTypeEnum::LINE:
             objectsList->addItem(marker->getName());
             break;
-        case InfoMarkType::ARROW:
+        case InfoMarkTypeEnum::ARROW:
             objectsList->addItem(marker->getName());
             break;
         }
@@ -192,19 +192,19 @@ void InfoMarksEditDlg::updateDialog()
     }
 
     switch (getType()) {
-    case InfoMarkType::TEXT:
+    case InfoMarkTypeEnum::TEXT:
         m_x2->setEnabled(false);
         m_y2->setEnabled(false);
         m_rotationAngle->setEnabled(true);
         objectText->setEnabled(true);
         break;
-    case InfoMarkType::LINE:
+    case InfoMarkTypeEnum::LINE:
         m_x2->setEnabled(true);
         m_y2->setEnabled(true);
         m_rotationAngle->setEnabled(false);
         objectText->setEnabled(false);
         break;
-    case InfoMarkType::ARROW:
+    case InfoMarkTypeEnum::ARROW:
         m_x2->setEnabled(true);
         m_y2->setEnabled(true);
         m_rotationAngle->setEnabled(false);
@@ -241,14 +241,16 @@ void InfoMarksEditDlg::updateDialog()
     }
 }
 
-InfoMarkType InfoMarksEditDlg::getType()
+InfoMarkTypeEnum InfoMarksEditDlg::getType()
 {
-    return static_cast<InfoMarkType>(objectType->currentIndex());
+    // danger! no bounds checking
+    return static_cast<InfoMarkTypeEnum>(objectType->currentIndex());
 }
 
-InfoMarkClass InfoMarksEditDlg::getClass()
+InfoMarkClassEnum InfoMarksEditDlg::getClass()
 {
-    return static_cast<InfoMarkClass>(objectClassesList->currentIndex());
+    // danger! no bounds checking
+    return static_cast<InfoMarkClassEnum>(objectClassesList->currentIndex());
 }
 
 InfoMark *InfoMarksEditDlg::getCurrentInfoMark()

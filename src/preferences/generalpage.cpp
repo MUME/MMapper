@@ -13,9 +13,9 @@
 #include "ui_generalpage.h"
 
 // Order of entries in charsetComboBox drop down
-static_assert(static_cast<int>(CharacterEncoding::LATIN1) == 0);
-static_assert(static_cast<int>(CharacterEncoding::UTF8) == 1);
-static_assert(static_cast<int>(CharacterEncoding::ASCII) == 2);
+static_assert(static_cast<int>(CharacterEncodingEnum::LATIN1) == 0);
+static_assert(static_cast<int>(CharacterEncodingEnum::UTF8) == 1);
+static_assert(static_cast<int>(CharacterEncodingEnum::ASCII) == 2);
 
 GeneralPage::GeneralPage(QWidget *parent)
     : QWidget(parent)
@@ -40,7 +40,7 @@ GeneralPage::GeneralPage(QWidget *parent)
             QOverload<int>::of(&QComboBox::currentIndexChanged),
             this,
             [](const int index) {
-                setConfig().general.characterEncoding = static_cast<CharacterEncoding>(index);
+                setConfig().general.characterEncoding = static_cast<CharacterEncodingEnum>(index);
             });
 
     connect(ui->emulatedExitsCheckBox,

@@ -29,9 +29,9 @@ private:
     MumeClock *m_clock = nullptr;
     std::unique_ptr<QTimer> m_timer;
 
-    MumeTime m_lastTime = MumeTime::TIME_UNKNOWN;
-    MumeSeason m_lastSeason = MumeSeason::SEASON_UNKNOWN;
-    MumeMoonPhase m_lastPhase = MumeMoonPhase::PHASE_UNKNOWN;
-    MumeMoonVisibility m_lastVisibility = MumeMoonVisibility::MOON_POSITION_UNKNOWN;
-    MumeClockPrecision m_lastPrecision = MumeClockPrecision::MUMECLOCK_UNSET;
+    MumeTimeEnum m_lastTime = MumeTimeEnum::UNKNOWN;
+    MumeSeasonEnum m_lastSeason = MumeSeasonEnum::UNKNOWN;
+    MumeMoonPhaseEnum m_lastPhase = MumeMoonPhaseEnum::UNKNOWN;
+    MumeMoonVisibilityEnum m_lastVisibility = MumeMoonVisibilityEnum::POSITION_UNKNOWN;
+    MumeClockPrecisionEnum m_lastPrecision = MumeClockPrecisionEnum::UNSET;
 };

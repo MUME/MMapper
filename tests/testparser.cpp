@@ -37,13 +37,13 @@ void TestParser::createParseEventTest()
     QString roomName = "Room";
     QString roomDescription = "Dynamic Description";
     QString parsedRoomDescription = "Static Description";
-    auto terrain = RoomTerrainType::INDOORS;
-    ExitsFlagsType eFlags{};
+    auto terrain = RoomTerrainEnum::INDOORS;
+    ExitsFlagsType eFlags;
     eFlags.setValid();
     auto pFlags = PromptFlagsType::fromRoomTerrainType(terrain);
-    ConnectedRoomFlagsType cFlags{};
+    ConnectedRoomFlagsType cFlags;
     cFlags.setValid();
-    auto event = ParseEvent::createEvent(CommandIdType::NORTH,
+    auto event = ParseEvent::createEvent(CommandEnum::NORTH,
                                          roomName,
                                          roomDescription,
                                          parsedRoomDescription,
@@ -60,7 +60,7 @@ void TestParser::createParseEventTest()
     QCOMPARE(e.getPromptFlags(), pFlags);
     QCOMPARE(e.getConnectedRoomFlags(), cFlags);
 
-    QCOMPARE(e.getMoveType(), CommandIdType::NORTH);
+    QCOMPARE(e.getMoveType(), CommandEnum::NORTH);
     QCOMPARE(e.getNumSkipped(), 0u);
     QCOMPARE(e.size(), static_cast<size_t>(3));
     QCOMPARE(QString(e.next()->data()), roomName);

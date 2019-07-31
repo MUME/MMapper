@@ -8,7 +8,7 @@
 #include <QSslKey>
 #include <QStringListModel>
 
-enum class GroupMetadata { LAST_LOGIN, NAME, IP_ADDRESS, CERTIFICATE, PORT };
+enum class GroupMetadataEnum { LAST_LOGIN, NAME, IP_ADDRESS, CERTIFICATE, PORT };
 static constexpr const auto NUM_GROUP_METADATA = 4u;
 
 using GroupSecret = QByteArray;
@@ -40,8 +40,8 @@ public:
     bool validCertificate(const GroupSocket *) const;
 
 public:
-    QString getMetadata(const GroupSecret &, const GroupMetadata) const;
-    void setMetadata(const GroupSecret &, const GroupMetadata, const QString &value);
+    QString getMetadata(const GroupSecret &, GroupMetadataEnum) const;
+    void setMetadata(const GroupSecret &, GroupMetadataEnum, const QString &value);
 
 signals:
     void secretRevoked(const GroupSecret &);

@@ -114,8 +114,8 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
     for (int i = 0; i < authority->getItemModel()->rowCount(); i++) {
         // Pre-populate entries from Authorized Contacts
         const auto key = authority->getItemModel()->index(i, 0).data(Qt::DisplayRole).toByteArray();
-        const auto ip = authority->getMetadata(key, GroupMetadata::IP_ADDRESS);
-        const auto port = authority->getMetadata(key, GroupMetadata::PORT).toInt();
+        const auto ip = authority->getMetadata(key, GroupMetadataEnum::IP_ADDRESS);
+        const auto port = authority->getMetadata(key, GroupMetadataEnum::PORT).toInt();
         if (ip.isEmpty() || port <= 0)
             continue;
         const auto remoteHostText = QString("%1:%2").arg(ip).arg(port);
@@ -123,7 +123,7 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
             continue;
         contacts.insert(remoteHostText);
         ui->remoteHost->addItem(remoteHostText);
-        const auto name = authority->getMetadata(key, GroupMetadata::NAME);
+        const auto name = authority->getMetadata(key, GroupMetadataEnum::NAME);
         ui->remoteHost->setItemData(i, name.isEmpty() ? "Unknown" : name, Qt::ToolTipRole);
     }
     const auto remoteHostText
@@ -234,14 +234,14 @@ void GroupManagerPage::allowedSecretsChanged()
 
     if (correctLength && alreadyPresent) {
         const auto key = secretText.toLatin1();
-        const auto lastLogin = authority->getMetadata(key, GroupMetadata::LAST_LOGIN);
+        const auto lastLogin = authority->getMetadata(key, GroupMetadataEnum::LAST_LOGIN);
         QString line;
         if (lastLogin.isEmpty()) {
             line = "<i>Never seen before</i>";
         } else {
-            const auto name = authority->getMetadata(key, GroupMetadata::NAME);
-            const auto ip = authority->getMetadata(key, GroupMetadata::IP_ADDRESS);
-            const auto port = authority->getMetadata(key, GroupMetadata::PORT).toInt();
+            const auto name = authority->getMetadata(key, GroupMetadataEnum::NAME);
+            const auto ip = authority->getMetadata(key, GroupMetadataEnum::IP_ADDRESS);
+            const auto port = authority->getMetadata(key, GroupMetadataEnum::PORT).toInt();
             line = QString("<i>Last seen %1%2 from %3</i>")
                        .arg(lastLogin)
                        .arg(name.isEmpty() ? "" : QString(" as '%2'").arg(name))

@@ -12,7 +12,7 @@
 #include "mmapper2character.h"
 
 #define DEFINE_GETTER(E, N, name) \
-    const std::array<E, N> &name() \
+    const MMapper::Array<E, N> &name() \
     { \
         static const auto things = ::enums::genEnumValues<E, N>(); \
         return things; \
@@ -31,9 +31,9 @@
     }
 
 namespace enums {
-DEFINE_GETTER_DEFINED(CharacterPosition, NUM_CHARACTER_POSITIONS, getAllCharacterPositions)
-DEFINE_GETTER(GroupMetadata, NUM_GROUP_METADATA, getAllGroupMetadata)
-DEFINE_GETTER(CharacterAffect, NUM_CHARACTER_AFFECTS, getAllCharacterAffects)
+DEFINE_GETTER_DEFINED(CharacterPositionEnum, NUM_CHARACTER_POSITIONS, getAllCharacterPositions)
+DEFINE_GETTER(GroupMetadataEnum, NUM_GROUP_METADATA, getAllGroupMetadata)
+DEFINE_GETTER(CharacterAffectEnum, NUM_CHARACTER_AFFECTS, getAllCharacterAffects)
 } // namespace enums
 
 #undef DEFINE_GETTER

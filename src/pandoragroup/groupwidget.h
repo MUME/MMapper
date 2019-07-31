@@ -20,13 +20,13 @@ class Mmapper2Group;
 class QObject;
 class QTableView;
 
-class GroupStateData
+class GroupStateData final
 {
 public:
     GroupStateData() = default;
     explicit GroupStateData(const QColor &color,
-                            const CharacterPosition position,
-                            const CharacterAffects affects);
+                            CharacterPositionEnum position,
+                            CharacterAffects affects);
 
 public:
     void paint(QPainter *painter, const QRect &rect);
@@ -34,9 +34,9 @@ public:
 
 private:
     QColor color;
-    CharacterPosition position;
+    CharacterPositionEnum position = CharacterPositionEnum::UNDEFINED;
     CharacterAffects affects;
-    int imageCount;
+    int imageCount = 0;
 };
 Q_DECLARE_METATYPE(GroupStateData)
 
@@ -59,7 +59,7 @@ class GroupModel final : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    enum class ColumnType {
+    enum class ColumnTypeEnum {
         NAME = 0,
         HP_PERCENT,
         MANA_PERCENT,
@@ -74,7 +74,7 @@ public:
     explicit GroupModel(MapData *md, Mmapper2Group *group, QObject *parent = nullptr);
 
     void resetModel();
-    QVariant dataForCharacter(CGroupChar *character, ColumnType column, int role) const;
+    QVariant dataForCharacter(CGroupChar *character, ColumnTypeEnum column, int role) const;
 
     int rowCount(const QModelIndex &parent) const override;
     int columnCount(const QModelIndex &parent) const override;
@@ -91,7 +91,7 @@ private:
     bool m_mapLoaded = false;
 };
 
-class GroupWidget : public QWidget
+class GroupWidget final : public QWidget
 {
     Q_OBJECT
 public:
@@ -120,5 +120,5 @@ private:
 
 private:
     QAction *m_kick = nullptr;
-    QByteArray selectedCharacter{};
+    QByteArray selectedCharacter;
 };

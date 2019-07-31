@@ -10,9 +10,9 @@
 
 namespace enums {
 
-const std::array<DoorActionType, NUM_DOOR_ACTION_TYPES> &getAllDoorActionTypes()
+const MMapper::Array<DoorActionEnum, NUM_DOOR_ACTION_TYPES> &getAllDoorActionTypes()
 {
-    static const auto g_door_actions = genEnumValues<DoorActionType, NUM_DOOR_ACTION_TYPES>();
+    static const auto g_door_actions = genEnumValues<DoorActionEnum, NUM_DOOR_ACTION_TYPES>();
     return g_door_actions;
 }
 

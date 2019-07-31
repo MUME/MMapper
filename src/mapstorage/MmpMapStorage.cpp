@@ -50,11 +50,11 @@ bool MmpMapStorage::mergeData()
     return false;
 }
 
-static QString getTerrainTypeName(const RoomTerrainType x)
+static QString getTerrainTypeName(const RoomTerrainEnum x)
 {
 #define CASE2(UPPER, PrettyName) \
     do { \
-    case RoomTerrainType::UPPER: \
+    case RoomTerrainEnum::UPPER: \
         return QString{PrettyName}; \
     } while (false)
     switch (x) {
@@ -79,11 +79,11 @@ static QString getTerrainTypeName(const RoomTerrainType x)
 #undef CASE2
 }
 
-static QString getTerrainTypeColor(const RoomTerrainType x)
+static QString getTerrainTypeColor(const RoomTerrainEnum x)
 {
 #define CASE2(UPPER, Color) \
     do { \
-    case RoomTerrainType::UPPER: \
+    case RoomTerrainEnum::UPPER: \
         return QString{Color}; \
     } while (false)
     switch (x) {
@@ -121,7 +121,7 @@ bool MmpMapStorage::saveData(bool baseMapOnly)
     // directly apparently and we have to go through a RoomSaver which receives
     // them from a sort of callback function.
     // The RoomSaver acts as a lock on the rooms.
-    ConstRoomList roomList{};
+    ConstRoomList roomList;
     RoomSaver saver(m_mapData, roomList);
     for (uint i = 0; i < m_mapData.getRoomsCount(); ++i) {
         m_mapData.lookingForRooms(saver, RoomId{i});
@@ -164,9 +164,9 @@ bool MmpMapStorage::saveData(bool baseMapOnly)
         const Room &room = deref(pRoom);
 
         if (baseMapOnly) {
-            BaseMapSaveFilter::Action action = filter.filter(room);
-            if (!room.isTemporary() && action != BaseMapSaveFilter::Action::REJECT) {
-                if (action == BaseMapSaveFilter::Action::ALTER) {
+            const BaseMapSaveFilter::ActionEnum action = filter.filter(room);
+            if (!room.isTemporary() && action != BaseMapSaveFilter::ActionEnum::REJECT) {
+                if (action == BaseMapSaveFilter::ActionEnum::ALTER) {
                     Room copy = filter.alteredRoom(room);
                     saveRoom(copy, stream);
                 } else { // action == PASS
@@ -211,7 +211,7 @@ void MmpMapStorage::saveRoom(const Room &room, QXmlStreamWriter &stream)
     stream.writeAttribute("area", "1");
     stream.writeAttribute("title", room.getName());
     stream.writeAttribute("environment", QString("%1").arg(static_cast<int>(room.getTerrainType())));
-    if (room.getLoadFlags().contains(RoomLoadFlag::ATTENTION))
+    if (room.getLoadFlags().contains(RoomLoadFlagEnum::ATTENTION))
         stream.writeAttribute("important", "1");
 
     stream.writeStartElement("coord");

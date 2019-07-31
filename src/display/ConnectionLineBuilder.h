@@ -32,7 +32,7 @@ private:
     void drawConnEndLineDown(bool neighbours, qint32 dX, qint32 dY, float dstZ);
 
 public:
-    void drawConnLineStart(ExitDirection dir, bool neighbours, float srcZ);
-    void drawConnLineEnd2Way(ExitDirection endDir, bool neighbours, qint32 dX, qint32 dY, float dstZ);
-    void drawConnLineEnd1Way(ExitDirection endDir, qint32 dX, qint32 dY, float dstZ);
+    void drawConnLineStart(ExitDirEnum dir, bool neighbours, float srcZ);
+    void drawConnLineEnd2Way(ExitDirEnum endDir, bool neighbours, qint32 dX, qint32 dY, float dstZ);
+    void drawConnLineEnd1Way(ExitDirEnum endDir, qint32 dX, qint32 dY, float dstZ);
 };

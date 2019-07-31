@@ -76,5 +76,7 @@ private:
     std::queue<GroupAction *> actionSchedule;
 
     std::vector<CGroupChar *> charIndex;
-    CGroupChar *self;
+
+    // deleted in destructor as member of charIndex
+    CGroupChar *const self;
 };

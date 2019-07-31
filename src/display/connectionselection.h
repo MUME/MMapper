@@ -22,7 +22,7 @@ struct RoomId;
 
 struct MouseSel final
 {
-    Coordinate2f pos{};
+    Coordinate2f pos;
     int layer = 0;
 
     MouseSel() = default;
@@ -46,15 +46,15 @@ public:
     struct ConnectionDescriptor
     {
         const Room *room = nullptr;
-        ExitDirection direction{};
+        ExitDirEnum direction = ExitDirEnum::NONE;
     };
 
     explicit ConnectionSelection(MapFrontend *mf, const MouseSel &sel);
     ConnectionSelection();
     ~ConnectionSelection() override;
 
-    void setFirst(MapFrontend *mf, RoomId RoomId, ExitDirection dir);
-    void setSecond(MapFrontend *mf, RoomId RoomId, ExitDirection dir);
+    void setFirst(MapFrontend *mf, RoomId RoomId, ExitDirEnum dir);
+    void setSecond(MapFrontend *mf, RoomId RoomId, ExitDirEnum dir);
     void setSecond(MapFrontend *mf, const MouseSel &sel);
     void removeSecond();
 
@@ -73,10 +73,10 @@ signals:
 
 protected:
 private:
-    static ExitDirection ComputeDirection(const Coordinate2f &mouse_f);
+    static ExitDirEnum ComputeDirection(const Coordinate2f &mouse_f);
 
     // REVISIT: give these enum names?
-    std::array<ConnectionDescriptor, 2> m_connectionDescriptor{};
+    MMapper::Array<ConnectionDescriptor, 2> m_connectionDescriptor;
 
     bool m_first = true;
     RoomAdmin *m_admin = nullptr;

@@ -66,17 +66,12 @@ void OpenGL::initFont(QPaintDevice *const paintDevice)
     m_glFont.init(paintDevice);
 }
 
-int OpenGL::getFontWidth(const QString &x, FontFormatFlags flags) const
+int OpenGL::getFontWidth(const QString &x, const FontFormatFlags &flags) const
 {
-    switch (flags) {
-    case FontFormatFlags::ITALICS:
+    if (flags.contains(FontFormatFlagEnum::ITALICS))
         return deref(m_glFont.italicMetrics).width(x);
-
-    case FontFormatFlags::NONE:
-    case FontFormatFlags::UNDERLINE:
-    default:
+    else
         return deref(m_glFont.metrics).width(x);
-    }
 }
 
 int OpenGL::getFontHeight() const
@@ -90,7 +85,7 @@ void OpenGL::renderTextAt(const float x,
                           const float y,
                           const QString &text,
                           const QColor &color,
-                          const FontFormatFlags fontFormatFlag,
+                          const FontFormatFlags &fontFormatFlags,
                           const float rotationAngle)
 {
     deref(m_paintDevice);
@@ -102,10 +97,10 @@ void OpenGL::renderTextAt(const float x,
     painter.translate(QPointF(static_cast<qreal>(x), static_cast<qreal>(y)));
     painter.rotate(static_cast<qreal>(rotationAngle));
     painter.setPen(color);
-    if (IS_SET(fontFormatFlag, FontFormatFlags::ITALICS)) {
+    if (fontFormatFlags.contains(FontFormatFlagEnum::ITALICS)) {
         font.setItalic(true);
     }
-    if (IS_SET(fontFormatFlag, FontFormatFlags::UNDERLINE)) {
+    if (fontFormatFlags.contains(FontFormatFlagEnum::UNDERLINE)) {
         font.setUnderline(true);
     }
     painter.setFont(font);

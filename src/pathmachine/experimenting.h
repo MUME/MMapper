@@ -16,27 +16,27 @@
 
 class AbstractRoomFactory;
 class PathMachine;
-class PathParameters;
 class Room;
 class RoomAdmin;
+struct PathParameters;
 
 class Experimenting : public RoomRecipient
 {
 protected:
     void augmentPath(Path *path, RoomAdmin *map, const Room *room);
-    Coordinate direction{};
-    ExitDirection dirCode = ExitDirection::UNKNOWN;
+    const Coordinate direction;
+    const ExitDirEnum dirCode;
+    PathList *const paths;
+    PathParameters &params;
     PathList *shortPaths = nullptr;
-    PathList *paths = nullptr;
     Path *best = nullptr;
     Path *second = nullptr;
-    PathParameters &params;
     double numPaths = 0.0;
     AbstractRoomFactory *factory = nullptr;
 
 public:
     explicit Experimenting(PathList *paths,
-                           ExitDirection dirCode,
+                           ExitDirEnum dirCode,
                            PathParameters &params,
                            AbstractRoomFactory *factory);
     virtual ~Experimenting() override;

@@ -17,13 +17,13 @@
 // If we were going to use it for parsing, then we'd probably want to
 // return special ArgRoadIndex that could match the direction combinations
 // in any order (e.g. sort the word's letters using compass-ordering).
-static const char *getFilenameSuffix(const RoadIndex x)
+static const char *getFilenameSuffix(const RoadIndexMaskEnum x)
 {
-    assert(RoadIndex::NONE <= x && x <= RoadIndex::ALL);
+    assert(RoadIndexMaskEnum::NONE <= x && x <= RoadIndexMaskEnum::ALL);
 
-    if (x == RoadIndex::NONE)
+    if (x == RoadIndexMaskEnum::NONE)
         return "none";
-    else if (x == RoadIndex::ALL)
+    else if (x == RoadIndexMaskEnum::ALL)
         return "all";
 
     struct CustomDeleter final
@@ -32,27 +32,27 @@ static const char *getFilenameSuffix(const RoadIndex x)
     };
     using UniqueCString = std::unique_ptr<char, CustomDeleter>;
 
-    static EnumIndexedArray<UniqueCString, RoadIndex> names{};
+    static EnumIndexedArray<UniqueCString, RoadIndexMaskEnum> names;
 
     // Make the write thread safe to avoid accidentally freeing pointers
     // we've already given away. (Probably overkill, but it won't hurt.)
-    static std::mutex mutex{};
+    static std::mutex mutex;
     std::lock_guard<std::mutex> lock{mutex};
 
     if (names[x] == nullptr) {
         char buf[8] = "";
         char *ptr = buf;
 
-        if ((x & RoadIndex::NORTH) != RoadIndex::NONE) {
+        if ((x & RoadIndexMaskEnum::NORTH) != RoadIndexMaskEnum::NONE) {
             *ptr++ = 'n';
         }
-        if ((x & RoadIndex::EAST) != RoadIndex::NONE) {
+        if ((x & RoadIndexMaskEnum::EAST) != RoadIndexMaskEnum::NONE) {
             *ptr++ = 'e';
         }
-        if ((x & RoadIndex::SOUTH) != RoadIndex::NONE) {
+        if ((x & RoadIndexMaskEnum::SOUTH) != RoadIndexMaskEnum::NONE) {
             *ptr++ = 's';
         }
-        if ((x & RoadIndex::WEST) != RoadIndex::NONE) {
+        if ((x & RoadIndexMaskEnum::WEST) != RoadIndexMaskEnum::NONE) {
             *ptr++ = 'w';
         }
 
@@ -67,18 +67,18 @@ static const char *getFilenameSuffix(const RoadIndex x)
     return names[x].get();
 }
 
-template<RoadIndexType Type>
-static inline const char *getFilenameSuffix(TaggedRoadIndex<Type> x)
+template<RoadTagEnum Tag>
+static inline const char *getFilenameSuffix(TaggedRoadIndex<Tag> x)
 {
     return getFilenameSuffix(x.index);
 }
 
 // template<>
-// const char *getFilenameSuffix(RoomTerrainType);
+// const char *getFilenameSuffix(RoomTerrainEnum);
 // template<>
-// const char *getFilenameSuffix(RoomLoadFlag);
+// const char *getFilenameSuffix(RoomLoadFlagEnum);
 // template<>
-// const char *getFilenameSuffix(RoomMobFlag);
+// const char *getFilenameSuffix(RoomMobFlagEnum);
 template<typename E>
 static const char *getFilenameSuffix(const E x)
 {
@@ -111,15 +111,15 @@ static QString getPixmapFilename(const char *const prefix, const E x)
     return getPixmapFilenameRaw(QString::asprintf("%s-%s.png", prefix, suffix));
 }
 
-QString getPixmapFilename(const RoomTerrainType x)
+QString getPixmapFilename(const RoomTerrainEnum x)
 {
     return getPixmapFilename("terrain", x);
 }
-QString getPixmapFilename(const RoomLoadFlag x)
+QString getPixmapFilename(const RoomLoadFlagEnum x)
 {
     return getPixmapFilename("load", x);
 }
-QString getPixmapFilename(const RoomMobFlag x)
+QString getPixmapFilename(const RoomMobFlagEnum x)
 {
     return getPixmapFilename("mob", x);
 }
@@ -137,11 +137,11 @@ static QString getIconFilenameRaw(const QString name)
     return getResourceFilenameRaw("icons", name);
 }
 
-static const char *getFilenameSuffix(const CharacterPosition position)
+static const char *getFilenameSuffix(const CharacterPositionEnum position)
 {
 #define X_CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
     do { \
-    case CharacterPosition::UPPER_CASE: \
+    case CharacterPositionEnum::UPPER_CASE: \
         return #lower_case; \
     } while (false);
     switch (position) {
@@ -150,11 +150,11 @@ static const char *getFilenameSuffix(const CharacterPosition position)
     return "";
 #undef X_CASE
 }
-static const char *getFilenameSuffix(const CharacterAffect affect)
+static const char *getFilenameSuffix(const CharacterAffectEnum affect)
 {
 #define X_CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
     do { \
-    case CharacterAffect::UPPER_CASE: \
+    case CharacterAffectEnum::UPPER_CASE: \
         return #lower_case; \
     } while (false);
     switch (affect) {
@@ -177,11 +177,11 @@ static QString getIconFilename(const char *const prefix, const E x)
     return getIconFilenameRaw(QString::asprintf("%s-%s.png", prefix, suffix));
 }
 
-QString getIconFilename(const CharacterPosition x)
+QString getIconFilename(const CharacterPositionEnum x)
 {
     return getIconFilename("position", x);
 }
-QString getIconFilename(const CharacterAffect x)
+QString getIconFilename(const CharacterAffectEnum x)
 {
     return getIconFilename("affect", x);
 }

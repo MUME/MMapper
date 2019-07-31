@@ -4,13 +4,13 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include <algorithm>
-#include <array>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <QString>
 #include <QtGlobal>
 
+#include "../global/Array.h"
 #include "../global/RuleOf5.h"
 #include "DoorFlags.h"
 #include "ExitDirection.h"
@@ -18,7 +18,7 @@
 
 using DoorName = QString;
 
-enum class ExitField { DOOR_NAME = 0, EXIT_FLAGS, DOOR_FLAGS };
+enum class ExitFieldEnum { DOOR_NAME = 0, EXIT_FLAGS, DOOR_FLAGS };
 static constexpr const int NUM_EXIT_PROPS = 3;
 
 /* REVISIT: Replace this hacky variant.
@@ -40,7 +40,7 @@ private:
 
     std::aligned_storage_t<STORAGE_SIZE, STORAGE_ALIGNMENT> storage_;
     static_assert(sizeof(storage_) >= STORAGE_SIZE);
-    ExitField type_{};
+    ExitFieldEnum type_ = ExitFieldEnum::DOOR_NAME; // There is no good default value
 
 public:
     ExitFieldVariant() = delete;
@@ -63,7 +63,7 @@ public:
 
     ~ExitFieldVariant();
 
-    inline ExitField getType() const { return type_; }
+    inline ExitFieldEnum getType() const { return type_; }
     DoorName getDoorName() const;
     ExitFlags getExitFlags() const;
     DoorFlags getDoorFlags() const;

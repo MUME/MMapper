@@ -77,8 +77,8 @@ public:
     using Index = QMultiMap<QByteArray, Coordinate>;
 
 private:
-    Index m_index{};
-    WebHasher m_hasher{};
+    Index m_index;
+    WebHasher m_hasher;
 
 public:
     void addRoom(const Room &room)
@@ -99,7 +99,7 @@ public:
     using Index = QMap<QString, ConstRoomList>;
 
 private:
-    Index m_index{};
+    Index m_index;
 
 public:
     void addRoom(const Room &room)
@@ -146,8 +146,8 @@ void writeJson(const QString &filePath, JsonT json, const QString &what)
 class RoomIndexStore
 {
     const QDir m_dir;
-    QJsonObject m_hashes{};
-    QByteArray m_prefix{};
+    QJsonObject m_hashes;
+    QByteArray m_prefix;
 
 public:
     RoomIndexStore() = delete;
@@ -202,7 +202,7 @@ using JsonRoomId = uint;
 class JsonRoomIdsCache
 {
     using CacheT = QMap<RoomId, JsonRoomId>;
-    CacheT m_cache{};
+    CacheT m_cache;
     JsonRoomId m_nextJsonId = 0u;
 
 public:
@@ -229,9 +229,9 @@ uint JsonRoomIdsCache::size() const
 // Expects that a RoomSaver locks the Rooms for the lifetime of this object!
 class JsonWorld
 {
-    JsonRoomIdsCache m_jRoomIds{};
-    RoomHashIndex m_roomHashIndex{};
-    ZoneIndex m_zoneIndex{};
+    JsonRoomIdsCache m_jRoomIds;
+    RoomHashIndex m_roomHashIndex;
+    ZoneIndex m_zoneIndex;
 
     void addRoom(QJsonArray &jRooms, const Room &room) const;
     void addExits(const Room &room, QJsonObject &jr) const;
@@ -265,8 +265,8 @@ void JsonWorld::addRooms(const ConstRoomList &roomList,
         progressCounter.step();
 
         if (baseMapOnly) {
-            BaseMapSaveFilter::Action action = filter.filter(room);
-            if (room.isTemporary() || action == BaseMapSaveFilter::Action::REJECT) {
+            BaseMapSaveFilter::ActionEnum action = filter.filter(room);
+            if (room.isTemporary() || action == BaseMapSaveFilter::ActionEnum::REJECT) {
                 continue;
             }
         }
@@ -277,10 +277,10 @@ void JsonWorld::addRooms(const ConstRoomList &roomList,
     }
 }
 
-static constexpr const char *getNameUpper(const ExitDirection dir)
+static constexpr const char *getNameUpper(const ExitDirEnum dir)
 {
 #define CASE(x) \
-    case ExitDirection::x: \
+    case ExitDirEnum::x: \
         return #x
     switch (dir) {
         CASE(NORTH);
@@ -292,8 +292,8 @@ static constexpr const char *getNameUpper(const ExitDirection dir)
         CASE(UNKNOWN);
         CASE(NONE);
 
-    /* Please keep this here in case invalid type is cast to ExitDirection.
-             * Consider changing it to an assertion, throw, or abort(). */
+    /* Please keep this here in case invalid type is cast to ExitDirEnum.
+    * Consider changing it to an assertion, throw, or abort(). */
     default:
         return "*ERROR*";
     }
@@ -312,13 +312,13 @@ void JsonWorld::writeMetadata(const QFileInfo &path, const MapData &mapData) con
     meta["maxZ"] = mapData.getLrb().z;
 
     meta["directions"] = []() {
-        static constexpr const auto SIZE = static_cast<size_t>(ExitDirection::NONE);
-        QJsonArray arr{};
+        static constexpr const auto SIZE = static_cast<size_t>(ExitDirEnum::NONE);
+        QJsonArray arr;
         // why is there no QJsonArray::resize()?
         for (size_t i = 0; i <= SIZE; ++i)
             arr.push_back(QString{});
         for (size_t i = 0; i <= SIZE; ++i)
-            arr[static_cast<int>(i)] = getNameUpper(static_cast<ExitDirection>(i));
+            arr[static_cast<int>(i)] = getNameUpper(static_cast<ExitDirEnum>(i));
         return arr;
     }();
 
@@ -413,12 +413,12 @@ void JsonWorld::writeZones(const QDir &dir,
         for (const Room *const pRoom : rooms) {
             const Room &room = deref(pRoom);
             if (baseMapOnly) {
-                BaseMapSaveFilter::Action action = filter.filter(room);
-                if (action == BaseMapSaveFilter::Action::ALTER) {
-                    Room copy = filter.alteredRoom(room);
+                const BaseMapSaveFilter::ActionEnum action = filter.filter(room);
+                if (action == BaseMapSaveFilter::ActionEnum::ALTER) {
+                    const Room copy = filter.alteredRoom(room);
                     addRoom(jRooms, copy);
                 } else {
-                    assert(action == BaseMapSaveFilter::Action::PASS);
+                    assert(action == BaseMapSaveFilter::ActionEnum::PASS);
                     addRoom(jRooms, room);
                 }
             } else {
@@ -463,7 +463,7 @@ bool JsonMapStorage::saveData(bool baseMapOnly)
     // directly apparently and we have to go through a RoomSaver which receives
     // them from a sort of callback function.
     // The RoomSaver acts as a lock on the rooms.
-    ConstRoomList roomList{};
+    ConstRoomList roomList;
     MarkerList &markerList = m_mapData.getMarkersList();
     RoomSaver saver(m_mapData, roomList);
     for (uint i = 0; i < m_mapData.getRoomsCount(); ++i) {

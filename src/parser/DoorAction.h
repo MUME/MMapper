@@ -3,10 +3,11 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <array>
 #include <cstddef>
 
-enum class DoorActionType {
+#include "../global/Array.h"
+
+enum class DoorActionEnum {
     OPEN,
     CLOSE,
     LOCK,
@@ -25,6 +26,6 @@ static constexpr const size_t NUM_DOOR_ACTION_TYPES = 10;
 
 namespace enums {
 #define ALL_DOOR_ACTION_TYPES ::enums::getAllDoorActionTypes()
-const std::array<DoorActionType, NUM_DOOR_ACTION_TYPES> &getAllDoorActionTypes();
+const MMapper::Array<DoorActionEnum, NUM_DOOR_ACTION_TYPES> &getAllDoorActionTypes();
 
 } // namespace enums

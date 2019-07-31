@@ -6,7 +6,7 @@
 #include <cmath>
 #include <QColor>
 
-enum class AnsiColorTable {
+enum class AnsiColorTableEnum {
     black = 0,
     red,
     green,
@@ -25,7 +25,7 @@ enum class AnsiColorTable {
     WHITE
 };
 
-static inline QColor ansiColor(const AnsiColorTable i)
+static inline QColor ansiColor(const AnsiColorTableEnum i)
 {
     static QColor black("#2e3436");
     static QColor BLACK("#555753");
@@ -45,37 +45,37 @@ static inline QColor ansiColor(const AnsiColorTable i)
     static QColor WHITE("#eeeeec");
 
     switch (i) {
-    case AnsiColorTable::black:
+    case AnsiColorTableEnum::black:
         return black;
-    case AnsiColorTable::red:
+    case AnsiColorTableEnum::red:
         return red;
-    case AnsiColorTable::green:
+    case AnsiColorTableEnum::green:
         return green;
-    case AnsiColorTable::yellow:
+    case AnsiColorTableEnum::yellow:
         return yellow;
-    case AnsiColorTable::blue:
+    case AnsiColorTableEnum::blue:
         return blue;
-    case AnsiColorTable::magenta:
+    case AnsiColorTableEnum::magenta:
         return magenta;
-    case AnsiColorTable::cyan:
+    case AnsiColorTableEnum::cyan:
         return cyan;
-    case AnsiColorTable::white:
+    case AnsiColorTableEnum::white:
         return white;
-    case AnsiColorTable::BLACK:
+    case AnsiColorTableEnum::BLACK:
         return BLACK;
-    case AnsiColorTable::RED:
+    case AnsiColorTableEnum::RED:
         return RED;
-    case AnsiColorTable::GREEN:
+    case AnsiColorTableEnum::GREEN:
         return GREEN;
-    case AnsiColorTable::YELLOW:
+    case AnsiColorTableEnum::YELLOW:
         return YELLOW;
-    case AnsiColorTable::BLUE:
+    case AnsiColorTableEnum::BLUE:
         return BLUE;
-    case AnsiColorTable::MAGENTA:
+    case AnsiColorTableEnum::MAGENTA:
         return MAGENTA;
-    case AnsiColorTable::CYAN:
+    case AnsiColorTableEnum::CYAN:
         return CYAN;
-    case AnsiColorTable::WHITE:
+    case AnsiColorTableEnum::WHITE:
         return WHITE;
     default:
         return white;
@@ -120,11 +120,11 @@ static inline QColor ansi256toRgb(const int ansi)
 
     // 8-15: highlighted colors
     if (ansi >= 8) {
-        return ansiColor(static_cast<AnsiColorTable>(ansi - 8 + 60));
+        return ansiColor(static_cast<AnsiColorTableEnum>(ansi - 8 + 60));
     }
 
     // 0-7: normal colors
-    return ansiColor(static_cast<AnsiColorTable>(ansi));
+    return ansiColor(static_cast<AnsiColorTableEnum>(ansi));
 }
 
 static inline int rgbToAnsi256(const int r, const int g, const int b)

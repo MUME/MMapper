@@ -25,7 +25,7 @@ RoomLocker::~RoomLocker() = default;
 void RoomLocker::visit(const Room *room)
 {
     if ((factory != nullptr) && (comparator != nullptr)) {
-        if (factory->compareWeakProps(room, *comparator) != ComparisonResult::DIFFERENT) {
+        if (factory->compareWeakProps(room, *comparator) != ComparisonResultEnum::DIFFERENT) {
             data.lockRoom(&recipient, room->getId());
             recipient.receiveRoom(&data, room);
         }

@@ -22,7 +22,7 @@ ParseEvent::Cycler::~Cycler() = default;
 
 ParseEvent::Cycler ParseEvent::Cycler::clone() const
 {
-    ParseEvent::Cycler result{};
+    ParseEvent::Cycler result;
     const DUP &from = *this;
     for (const UP &p : from) {
         if (p != nullptr) {
@@ -131,9 +131,9 @@ ParseEvent::operator QString() const
                     exitsStr.append("=");
                 if (exitFlags.isDoor())
                     exitsStr.append("(");
-                const DirectionalLightType lightType = m_connectedRoomFlags.getDirectionalLight(
-                    static_cast<DirectionType>(dir));
-                if (lightType == DirectionalLightType::DIRECT_SUN_ROOM)
+                const DirectionalLightEnum lightType = m_connectedRoomFlags.getDirectionalLight(
+                    static_cast<DirectionEnum>(dir));
+                if (lightType == DirectionalLightEnum::DIRECT_SUN_ROOM)
                     exitsStr.append("^");
                 exitsStr.append("]");
             }
@@ -159,7 +159,7 @@ ParseEvent::operator QString() const
         .replace("\n", "\\n");
 }
 
-SharedParseEvent ParseEvent::createEvent(const CommandIdType c,
+SharedParseEvent ParseEvent::createEvent(const CommandEnum c,
                                          const QString &roomName,
                                          const QString &dynamicDesc,
                                          const QString &staticDesc,
@@ -187,7 +187,7 @@ SharedParseEvent ParseEvent::createEvent(const CommandIdType c,
 
 SharedParseEvent ParseEvent::createDummyEvent()
 {
-    return createEvent(CommandIdType::UNKNOWN,
+    return createEvent(CommandEnum::UNKNOWN,
                        QString{},
                        QString{},
                        QString{},

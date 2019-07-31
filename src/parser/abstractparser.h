@@ -65,20 +65,20 @@ private:
         HelpCallback help;
     };
     std::map<std::string, ParserRecord> m_specialCommandMap{};
-    QByteArray m_newLineTerminator{};
+    QByteArray m_newLineTerminator;
     const char &prefixChar;
 
 protected:
     QString m_exits = nullString;
-    ExitsFlagsType m_exitsFlags{};
-    PromptFlagsType m_promptFlags{};
-    ConnectedRoomFlagsType m_connectedRoomFlags{};
+    ExitsFlagsType m_exitsFlags;
+    PromptFlagsType m_promptFlags;
+    ConnectedRoomFlagsType m_connectedRoomFlags;
 
 protected:
-    QByteArray m_lastPrompt{};
+    QByteArray m_lastPrompt;
     bool m_compactMode = false;
     bool m_overrideSendPrompt = false;
-    CommandQueue queue{};
+    CommandQueue queue;
 
 private:
     bool m_trollExitMapping = false;
@@ -88,7 +88,7 @@ public:
     explicit AbstractParser(MapData *, MumeClock *, QObject *parent = nullptr);
     ~AbstractParser() override;
 
-    void doMove(CommandIdType cmd);
+    void doMove(CommandEnum cmd);
     void sendPromptToUser();
 
 public:
@@ -127,22 +127,22 @@ protected slots:
     void doOfflineCharacterMove();
 
 protected:
-    void offlineCharacterMove(CommandIdType direction = CommandIdType::UNKNOWN);
+    void offlineCharacterMove(CommandEnum direction = CommandEnum::UNKNOWN);
     void sendRoomInfoToUser(const Room *);
     void sendPromptToUser(const Room &r);
     void sendPromptToUser(char light, char terrain);
-    void sendPromptToUser(RoomLightType lightType, RoomTerrainType terrainType);
+    void sendPromptToUser(RoomLightEnum lightType, RoomTerrainEnum terrainType);
 
     void sendRoomExitsInfoToUser(const Room *r);
     const Coordinate getNextPosition();
     const Coordinate getTailPosition();
 
     // command handling
-    void performDoorCommand(DirectionType direction, DoorActionType action);
-    void genericDoorCommand(QString command, DirectionType direction);
-    void nameDoorCommand(const QString &doorname, DirectionType direction);
-    void toggleDoorFlagCommand(DoorFlag flag, DirectionType direction);
-    void toggleExitFlagCommand(ExitFlag flag, DirectionType direction);
+    void performDoorCommand(DirectionEnum direction, DoorActionEnum action);
+    void genericDoorCommand(QString command, DirectionEnum direction);
+    void nameDoorCommand(const QString &doorname, DirectionEnum direction);
+    void toggleDoorFlagCommand(DoorFlagEnum flag, DirectionEnum direction);
+    void toggleExitFlagCommand(ExitFlagEnum flag, DirectionEnum direction);
 
 public:
 #define X_DECLARE_ROOM_FIELD_TOGGLERS(UPPER_CASE, CamelCase, Type) void toggleRoomFlagCommand(Type);
@@ -150,15 +150,15 @@ public:
 #undef X_DECLARE_ROOM_FIELD_TOGGLERS
 
 public:
-    ExitFlags getExitFlags(DirectionType dir) const;
-    DirectionalLightType getConnectedRoomFlags(DirectionType dir) const;
-    void setExitFlags(ExitFlags flag, DirectionType dir);
-    void setConnectedRoomFlag(DirectionalLightType light, DirectionType dir);
+    ExitFlags getExitFlags(DirectionEnum dir) const;
+    DirectionalLightEnum getConnectedRoomFlags(DirectionEnum dir) const;
+    void setExitFlags(ExitFlags flag, DirectionEnum dir);
+    void setConnectedRoomFlag(DirectionalLightEnum light, DirectionEnum dir);
 
     void printRoomInfo(RoomFields fieldset);
-    void printRoomInfo(RoomField field);
+    void printRoomInfo(RoomFieldEnum field);
 
-    void emulateExits(const CommandIdType move);
+    void emulateExits(const CommandEnum move);
     QByteArray enhanceExits(const Room *);
 
     void parseExits();
@@ -200,10 +200,10 @@ private:
     void showHeader(const QString &s);
 
     bool getField(const Coordinate &c,
-                  const DirectionType &direction,
+                  const DirectionEnum &direction,
                   const ExitFieldVariant &var) const;
 
-    DirectionType tryGetDir(StringView &words);
+    DirectionEnum tryGetDir(StringView &words);
     bool parseDoorAction(StringView words);
     bool parseDoorFlags(StringView words);
     bool parseExitFlags(StringView words);
@@ -238,11 +238,11 @@ private:
     bool evalSpecialCommandMap(StringView args);
 
     void parseHelp(StringView words);
-    bool parsePrint(StringView &input);
+    bool parsePrint(StringView input);
 
-    bool parseDoorAction(DoorActionType dat, StringView words);
-    bool parseDoorFlag(DoorFlag flag, StringView words);
-    bool parseExitFlag(ExitFlag flag, StringView words);
+    bool parseDoorAction(DoorActionEnum dat, StringView words);
+    bool parseDoorFlag(DoorFlagEnum flag, StringView words);
+    bool parseExitFlag(ExitFlagEnum flag, StringView words);
 
 public:
     inline void sendToUser(const QByteArray &arr, bool goAhead = false)

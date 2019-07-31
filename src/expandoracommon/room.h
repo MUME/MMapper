@@ -19,20 +19,20 @@
 #include "exit.h"
 
 // REVISIT: can't trivially make this
-// `using ExitsList = EnumIndexedArray<Exit, ExitDirection, NUM_EXITS>`
+// `using ExitsList = EnumIndexedArray<Exit, ExitDirEnum, NUM_EXITS>`
 // until we get rid of the concept of dummy exits and rooms,
 // because the Exit still needs to be told if it has fields.
 class ExitsList final
 {
 private:
-    EnumIndexedArray<Exit, ExitDirection, NUM_EXITS> exits{};
+    EnumIndexedArray<Exit, ExitDirEnum, NUM_EXITS> exits;
 
 public:
     explicit ExitsList(bool isDummy);
 
 public:
-    Exit &operator[](const ExitDirection idx) { return exits[idx]; }
-    const Exit &operator[](const ExitDirection idx) const { return exits[idx]; }
+    Exit &operator[](const ExitDirEnum idx) { return exits[idx]; }
+    const Exit &operator[](const ExitDirEnum idx) const { return exits[idx]; }
 
 public:
     auto size() const { return exits.size(); }
@@ -48,9 +48,9 @@ public:
 
 struct ExitDirConstRef final
 {
-    ExitDirection dir;
+    const ExitDirEnum dir;
     const Exit &exit;
-    explicit ExitDirConstRef(const ExitDirection dir, const Exit &exit);
+    explicit ExitDirConstRef(const ExitDirEnum dir, const Exit &exit);
 };
 
 using OptionalExitDirConstRef = std::optional<ExitDirConstRef>;
@@ -60,42 +60,43 @@ class Room final
 private:
     struct RoomFields final
     {
-        RoomName name{};
-        RoomDescription staticDescription{};
-        RoomDescription dynamicDescription{};
-        RoomNote note{};
-        RoomMobFlags mobFlags{};
-        RoomLoadFlags loadFlags{};
-        RoomTerrainType terrainType{};
-        RoomPortableType portableType{};
-        RoomLightType lightType{};
-        RoomAlignType alignType{};
-        RoomRidableType ridableType{};
-        RoomSundeathType sundeathType{};
+        RoomName name;
+        RoomDescription staticDescription;
+        RoomDescription dynamicDescription;
+        RoomNote note;
+        RoomMobFlags mobFlags;
+        RoomLoadFlags loadFlags;
+        RoomTerrainEnum terrainType = RoomTerrainEnum::UNDEFINED;
+        RoomPortableEnum portableType = RoomPortableEnum::UNDEFINED;
+        RoomLightEnum lightType = RoomLightEnum::UNDEFINED;
+        RoomAlignEnum alignType = RoomAlignEnum::UNDEFINED;
+        RoomRidableEnum ridableType = RoomRidableEnum::UNDEFINED;
+        RoomSundeathEnum sundeathType = RoomSundeathEnum::UNDEFINED;
     };
 
 private:
     RoomId id = INVALID_ROOMID;
-    Coordinate position{};
+    Coordinate position;
     bool temporary = true;
     bool upToDate = false;
-    RoomFields fields{};
+    RoomFields fields;
     ExitsList exits;
-    bool isDummy_;
+    // always initialized, but making it const means we can't reassign a room.
+    bool isDummy_ = false;
 
 public:
-    // TODO: merge DirectionType and ExitDirection enums
-    Exit &exit(DirectionType dir) { return exits[static_cast<ExitDirection>(dir)]; }
-    Exit &exit(ExitDirection dir) { return exits[dir]; }
-    const Exit &exit(DirectionType dir) const { return exits[static_cast<ExitDirection>(dir)]; }
-    const Exit &exit(ExitDirection dir) const { return exits[dir]; }
+    // TODO: merge DirectionEnum and ExitDirEnum enums
+    Exit &exit(DirectionEnum dir) { return exits[static_cast<ExitDirEnum>(dir)]; }
+    Exit &exit(ExitDirEnum dir) { return exits[dir]; }
+    const Exit &exit(DirectionEnum dir) const { return exits[static_cast<ExitDirEnum>(dir)]; }
+    const Exit &exit(ExitDirEnum dir) const { return exits[dir]; }
 
     ExitsList &getExitsList() { return exits; }
     const ExitsList &getExitsList() const { return exits; }
 
-    std::vector<ExitDirection> getOutExits() const;
+    std::vector<ExitDirEnum> getOutExits() const;
     OptionalExitDirConstRef getRandomExit() const;
-    ExitDirConstRef getExitMaybeRandom(ExitDirection dir) const;
+    ExitDirConstRef getExitMaybeRandom(ExitDirEnum dir) const;
 
     void setId(const RoomId in) { id = in; }
     void setPosition(const Coordinate &in_c) { position = in_c; }
@@ -118,12 +119,12 @@ public:
     RoomNote getNote() const;
     RoomMobFlags getMobFlags() const;
     RoomLoadFlags getLoadFlags() const;
-    RoomTerrainType getTerrainType() const;
-    RoomPortableType getPortableType() const;
-    RoomLightType getLightType() const;
-    RoomAlignType getAlignType() const;
-    RoomRidableType getRidableType() const;
-    RoomSundeathType getSundeathType() const;
+    RoomTerrainEnum getTerrainType() const;
+    RoomPortableEnum getPortableType() const;
+    RoomLightEnum getLightType() const;
+    RoomAlignEnum getAlignType() const;
+    RoomRidableEnum getRidableType() const;
+    RoomSundeathEnum getSundeathType() const;
 
     void setName(RoomName value);
     void setStaticDescription(RoomDescription value);
@@ -131,12 +132,12 @@ public:
     void setNote(RoomNote value);
     void setMobFlags(RoomMobFlags value);
     void setLoadFlags(RoomLoadFlags value);
-    void setTerrainType(RoomTerrainType value);
-    void setPortableType(RoomPortableType value);
-    void setLightType(RoomLightType value);
-    void setAlignType(RoomAlignType value);
-    void setRidableType(RoomRidableType value);
-    void setSundeathType(RoomSundeathType value);
+    void setTerrainType(RoomTerrainEnum value);
+    void setPortableType(RoomPortableEnum value);
+    void setLightType(RoomLightEnum value);
+    void setAlignType(RoomAlignEnum value);
+    void setRidableType(RoomRidableEnum value);
+    void setSundeathType(RoomSundeathEnum value);
 
 public:
     Room() = delete;

@@ -188,14 +188,14 @@ E serialize(const uint32_t value)
     return static_cast<E>(value);
 }
 
-static RoomTerrainType serialize(const uint32_t value)
+static RoomTerrainEnum serialize(const uint32_t value)
 {
     if (value >= NUM_ROOM_TERRAIN_TYPES) {
         static std::once_flag flag;
         std::call_once(flag, []() { qWarning() << "Detected out of bounds terrain type!"; });
-        return RoomTerrainType::UNDEFINED;
+        return RoomTerrainEnum::UNDEFINED;
     }
-    return static_cast<RoomTerrainType>(value);
+    return static_cast<RoomTerrainEnum>(value);
 }
 
 Room *MapStorage::loadRoom(QDataStream &stream, uint32_t version)
@@ -209,12 +209,12 @@ Room *MapStorage::loadRoom(QDataStream &stream, uint32_t version)
     room->setId(RoomId{helper.read_u32() + baseId});
     room->setNote(helper.read_string());
     room->setTerrainType(serialize(helper.read_u8()));
-    room->setLightType(serialize<RoomLightType>(helper.read_u8()));
-    room->setAlignType(serialize<RoomAlignType>(helper.read_u8()));
-    room->setPortableType(serialize<RoomPortableType>(helper.read_u8()));
-    room->setRidableType(serialize<RoomRidableType>(
+    room->setLightType(serialize<RoomLightEnum>(helper.read_u8()));
+    room->setAlignType(serialize<RoomAlignEnum>(helper.read_u8()));
+    room->setPortableType(serialize<RoomPortableEnum>(helper.read_u8()));
+    room->setRidableType(serialize<RoomRidableEnum>(
         (version >= MMAPPER_2_0_2_SCHEMA) ? helper.read_u8() : uint8_t{0}));
-    room->setSundeathType(serialize<RoomSundeathType>(
+    room->setSundeathType(serialize<RoomSundeathEnum>(
         (version >= MMAPPER_2_4_0_SCHEMA) ? helper.read_u8() : uint8_t{0}));
     room->setMobFlags(serialize<RoomMobFlags>(
         (version >= MMAPPER_2_4_0_SCHEMA) ? helper.read_u32() : helper.read_u16()));
@@ -242,7 +242,7 @@ void MapStorage::loadExits(Room &room, QDataStream &stream, const uint32_t versi
         } else {
             auto flags = serialize<ExitFlags>(helper.read_u8());
             if (flags.isDoor()) {
-                flags |= ExitFlag::EXIT;
+                flags |= ExitFlagEnum::EXIT;
             }
             e.setExitFlags(flags);
         }
@@ -250,7 +250,7 @@ void MapStorage::loadExits(Room &room, QDataStream &stream, const uint32_t versi
         // Exits saved after MMAPPER_2_0_4_SCHEMA were offset by 1 bit causing
         // corruption and excessive NO_MATCH exits. We need to clean them and version the schema.
         if (version >= MMAPPER_2_0_4_SCHEMA && version < MMAPPER_2_5_1_SCHEMA) {
-            e.setExitFlags(e.getExitFlags() & ~ExitFlags{ExitFlag::NO_MATCH});
+            e.setExitFlags(e.getExitFlags() & ~ExitFlags{ExitFlagEnum::NO_MATCH});
         }
 
         e.setDoorFlags(serialize<DoorFlags>((version >= MMAPPER_2_3_7_SCHEMA)
@@ -340,7 +340,7 @@ bool MapStorage::mergeData()
 
         /* Caution! Stream requires buffer to have extended lifetime for new version,
          * so don't be tempted to move this inside the scope. */
-        QBuffer buffer{};
+        QBuffer buffer;
         const bool qCompressed = (version >= MMAPPER_2_4_3_SCHEMA);
         const bool zlibCompressed = (version >= MMAPPER_2_0_4_SCHEMA
                                      && version <= MMAPPER_2_4_0_SCHEMA);
@@ -370,7 +370,7 @@ bool MapStorage::mergeData()
         progressCounter.increaseTotalStepsBy(roomsCount + marksCount);
 
         {
-            Coordinate pos{};
+            Coordinate pos;
             pos.x = helper.read_i32();
             pos.y = helper.read_i32();
             pos.z = helper.read_i32();
@@ -431,9 +431,10 @@ void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, uint32_t version)
     mark->setText(helper.read_string());
     mark->setTimeStamp(helper.read_datetime());
 
-    mark->setType(static_cast<InfoMarkType>(helper.read_u8()));
+    // REVISIT: type safety
+    mark->setType(static_cast<InfoMarkTypeEnum>(helper.read_u8()));
     if (version >= MMAPPER_2_3_7_SCHEMA) {
-        mark->setClass(static_cast<InfoMarkClass>(helper.read_u8()));
+        mark->setClass(static_cast<InfoMarkClassEnum>(helper.read_u8()));
         /* REVISIT: was this intended to be divided by 100.0? */
         mark->setRotationAngle(helper.read_u32() / INFOMARK_SCALE);
     }
@@ -560,9 +561,9 @@ bool MapStorage::saveData(bool baseMapOnly)
         const Room &room = deref(pRoom);
 
         if (baseMapOnly) {
-            BaseMapSaveFilter::Action action = filter.filter(room);
-            if (!room.isTemporary() && action != BaseMapSaveFilter::Action::REJECT) {
-                if (action == BaseMapSaveFilter::Action::ALTER) {
+            const BaseMapSaveFilter::ActionEnum action = filter.filter(room);
+            if (!room.isTemporary() && action != BaseMapSaveFilter::ActionEnum::REJECT) {
+                if (action == BaseMapSaveFilter::ActionEnum::ALTER) {
                     Room copy = filter.alteredRoom(room);
                     saveRoom(copy, stream);
                 } else { // action == PASS

@@ -22,11 +22,11 @@
 #include "groupauthority.h"
 #include "mmapper2group.h"
 
-using Messages = CGroupCommunicator::Messages;
+using MessagesEnum = CGroupCommunicator::MessagesEnum;
 
 constexpr const bool LOG_MESSAGE_INFO = false;
 
-CGroupCommunicator::CGroupCommunicator(GroupManagerState mode, Mmapper2Group *parent)
+CGroupCommunicator::CGroupCommunicator(const GroupManagerStateEnum mode, Mmapper2Group *const parent)
     : QObject(parent)
     , mode(mode)
 {}
@@ -38,7 +38,7 @@ CGroupCommunicator::CGroupCommunicator(GroupManagerState mode, Mmapper2Group *pa
 //
 // Low level. Message forming and messaging
 //
-QByteArray CGroupCommunicator::formMessageBlock(const Messages message, const QVariantMap &data)
+QByteArray CGroupCommunicator::formMessageBlock(const MessagesEnum message, const QVariantMap &data)
 {
     QByteArray block;
     QXmlStreamWriter xml(&block);
@@ -72,7 +72,7 @@ QByteArray CGroupCommunicator::formMessageBlock(const Messages message, const QV
     };
 
     switch (message) {
-    case Messages::REQ_HANDSHAKE:
+    case MessagesEnum::REQ_HANDSHAKE:
         xml.writeStartElement("handshake");
         xml.writeStartElement("protocolVersion");
         xml.writeCharacters(data["protocolVersion"].toString());
@@ -80,7 +80,7 @@ QByteArray CGroupCommunicator::formMessageBlock(const Messages message, const QV
         xml.writeEndElement();
         break;
 
-    case Messages::UPDATE_CHAR:
+    case MessagesEnum::UPDATE_CHAR:
         if (data.contains("loginData") && data["loginData"].canConvert(QMetaType::QVariantMap)) {
             // Client needs to submit loginData and nested playerData
             xml.writeStartElement("loginData");
@@ -94,33 +94,33 @@ QByteArray CGroupCommunicator::formMessageBlock(const Messages message, const QV
         }
         break;
 
-    case Messages::GTELL:
+    case MessagesEnum::GTELL:
         xml.writeStartElement("gtell");
         xml.writeAttribute("from", data["from"].toString());
         xml.writeCharacters(data["text"].toString());
         xml.writeEndElement();
         break;
 
-    case Messages::REMOVE_CHAR:
-    case Messages::ADD_CHAR:
+    case MessagesEnum::REMOVE_CHAR:
+    case MessagesEnum::ADD_CHAR:
         write_player_data(xml, data);
         break;
 
-    case Messages::RENAME_CHAR:
+    case MessagesEnum::RENAME_CHAR:
         xml.writeStartElement("rename");
         xml.writeAttribute("oldname", data["oldname"].toString());
         xml.writeAttribute("newname", data["newname"].toString());
         xml.writeEndElement();
         break;
 
-    case Messages::NONE:
-    case Messages::ACK:
-    case Messages::REQ_ACK:
-    case Messages::REQ_INFO:
-    case Messages::REQ_LOGIN:
-    case Messages::PROT_VERSION:
-    case Messages::STATE_LOGGED:
-    case Messages::STATE_KICKED:
+    case MessagesEnum::NONE:
+    case MessagesEnum::ACK:
+    case MessagesEnum::REQ_ACK:
+    case MessagesEnum::REQ_INFO:
+    case MessagesEnum::REQ_LOGIN:
+    case MessagesEnum::PROT_VERSION:
+    case MessagesEnum::STATE_LOGGED:
+    case MessagesEnum::STATE_KICKED:
         xml.writeTextElement("text", data["text"].toString());
         break;
     }
@@ -135,7 +135,7 @@ QByteArray CGroupCommunicator::formMessageBlock(const Messages message, const QV
 }
 
 void CGroupCommunicator::sendMessage(GroupSocket *const socket,
-                                     const Messages message,
+                                     const MessagesEnum message,
                                      const QByteArray &text)
 {
     QVariantMap root;
@@ -144,7 +144,7 @@ void CGroupCommunicator::sendMessage(GroupSocket *const socket,
 }
 
 void CGroupCommunicator::sendMessage(GroupSocket *const socket,
-                                     const Messages message,
+                                     const MessagesEnum message,
                                      const QVariantMap &node)
 {
     socket->sendData(formMessageBlock(message, node));
@@ -172,7 +172,8 @@ void CGroupCommunicator::incomingData(GroupSocket *const socket, const QByteArra
     }
 
     // TODO: need stronger type checking
-    const Messages message = static_cast<Messages>(xml.attributes().value("message").toInt());
+    const MessagesEnum message = static_cast<MessagesEnum>(
+        xml.attributes().value("message").toInt());
 
     if (xml.readNextStartElement() && xml.name() != QLatin1String("data")) {
         qWarning() << "'datagram' element did not have a 'data' child element" << buff;
@@ -183,19 +184,19 @@ void CGroupCommunicator::incomingData(GroupSocket *const socket, const QByteArra
     QVariantMap data;
     while (xml.readNextStartElement()) {
         switch (message) {
-        case Messages::GTELL:
+        case MessagesEnum::GTELL:
             if (xml.name() == QLatin1String("gtell")) {
                 data["from"] = xml.attributes().value("from").toString();
                 data["text"] = xml.readElementText();
             }
             break;
 
-        case Messages::REQ_HANDSHAKE:
+        case MessagesEnum::REQ_HANDSHAKE:
             if (xml.name() == QLatin1String("protocolVersion")) {
                 data["protocolVersion"] = xml.readElementText();
             }
             break;
-        case Messages::UPDATE_CHAR:
+        case MessagesEnum::UPDATE_CHAR:
             if (xml.name() == QLatin1String("loginData")) {
                 const auto &attributes = xml.attributes();
                 if (attributes.hasAttribute("protocolVersion"))
@@ -205,8 +206,8 @@ void CGroupCommunicator::incomingData(GroupSocket *const socket, const QByteArra
             goto common_update_char; // effectively a fall-thru
 
         common_update_char:
-        case Messages::REMOVE_CHAR:
-        case Messages::ADD_CHAR:
+        case MessagesEnum::REMOVE_CHAR:
+        case MessagesEnum::ADD_CHAR:
             if (xml.name() == QLatin1String("playerData")) {
                 const auto &attributes = xml.attributes();
                 QVariantMap playerData;
@@ -226,7 +227,7 @@ void CGroupCommunicator::incomingData(GroupSocket *const socket, const QByteArra
             }
             break;
 
-        case Messages::RENAME_CHAR:
+        case MessagesEnum::RENAME_CHAR:
             if (xml.name() == QLatin1String("rename")) {
                 const auto &attributes = xml.attributes();
                 data["oldname"] = attributes.value("oldname").toString();
@@ -234,14 +235,14 @@ void CGroupCommunicator::incomingData(GroupSocket *const socket, const QByteArra
             }
             break;
 
-        case Messages::NONE:
-        case Messages::ACK:
-        case Messages::REQ_ACK:
-        case Messages::REQ_INFO:
-        case Messages::REQ_LOGIN:
-        case Messages::PROT_VERSION:
-        case Messages::STATE_LOGGED:
-        case Messages::STATE_KICKED:
+        case MessagesEnum::NONE:
+        case MessagesEnum::ACK:
+        case MessagesEnum::REQ_ACK:
+        case MessagesEnum::REQ_INFO:
+        case MessagesEnum::REQ_LOGIN:
+        case MessagesEnum::PROT_VERSION:
+        case MessagesEnum::STATE_LOGGED:
+        case MessagesEnum::STATE_KICKED:
             if (xml.name() == QLatin1String("text")) {
                 data["text"] = xml.readElementText();
             }
@@ -267,7 +268,7 @@ void CGroupCommunicator::sendGroupTell(const QByteArray &tell)
 
 void CGroupCommunicator::sendCharUpdate(GroupSocket *const socket, const QVariantMap &map)
 {
-    sendMessage(socket, Messages::UPDATE_CHAR, map);
+    sendMessage(socket, MessagesEnum::UPDATE_CHAR, map);
 }
 
 void CGroupCommunicator::sendSelfRename(const QByteArray &oldName, const QByteArray &newName)

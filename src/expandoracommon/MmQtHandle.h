@@ -25,7 +25,7 @@ public:
     using shared_type = std::shared_ptr<contained_type>;
 
 private:
-    shared_type m_shared{};
+    shared_type m_shared;
 
 public:
     explicit MmQtHandle(std::nullptr_t) {}

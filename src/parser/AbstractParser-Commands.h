@@ -12,8 +12,8 @@
 #include "Abbrev.h"
 #include "DoorAction.h"
 
-static constexpr const auto staticRoomFields = RoomField::NAME | RoomField::DESC;
-static constexpr const auto dynamicRoomFields = staticRoomFields | RoomField::DYNAMIC_DESC;
+static constexpr const auto staticRoomFields = RoomFieldEnum::NAME | RoomFieldEnum::DESC;
+static constexpr const auto dynamicRoomFields = staticRoomFields | RoomFieldEnum::DYNAMIC_DESC;
 
 extern const Abbrev cmdBack;
 extern const Abbrev cmdDirections;
@@ -36,16 +36,16 @@ extern const Abbrev cmdPStatic;
 extern const Abbrev cmdPNote;
 extern const Abbrev cmdPrint;
 
-QByteArray getCommandName(DoorActionType action);
+QByteArray getCommandName(DoorActionEnum action);
 
-Abbrev getParserCommandName(DoorActionType action);
-Abbrev getParserCommandName(DoorFlag x);
-Abbrev getParserCommandName(ExitFlag x);
-Abbrev getParserCommandName(RoomAlignType x);
-Abbrev getParserCommandName(RoomLightType x);
-Abbrev getParserCommandName(RoomLoadFlag x);
-Abbrev getParserCommandName(RoomMobFlag x);
-Abbrev getParserCommandName(RoomPortableType x);
-Abbrev getParserCommandName(RoomRidableType x);
-Abbrev getParserCommandName(RoomSundeathType x);
-Abbrev getParserCommandName(RoomTerrainType x);
+Abbrev getParserCommandName(DoorActionEnum action);
+Abbrev getParserCommandName(DoorFlagEnum x);
+Abbrev getParserCommandName(ExitFlagEnum x);
+Abbrev getParserCommandName(RoomAlignEnum x);
+Abbrev getParserCommandName(RoomLightEnum x);
+Abbrev getParserCommandName(RoomLoadFlagEnum x);
+Abbrev getParserCommandName(RoomMobFlagEnum x);
+Abbrev getParserCommandName(RoomPortableEnum x);
+Abbrev getParserCommandName(RoomRidableEnum x);
+Abbrev getParserCommandName(RoomSundeathEnum x);
+Abbrev getParserCommandName(RoomTerrainEnum x);

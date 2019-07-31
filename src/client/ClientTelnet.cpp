@@ -18,18 +18,18 @@
 #include "../global/utils.h"
 #include "../proxy/TextCodec.h"
 
-static TextCodecStrategy getStrategyFromConfig()
+static TextCodecStrategyEnum getStrategyFromConfig()
 {
     const auto characterEncoding = getConfig().general.characterEncoding;
     switch (characterEncoding) {
-    case CharacterEncoding::ASCII:
-        return TextCodecStrategy::FORCE_US_ASCII;
-    case CharacterEncoding::LATIN1:
-        return TextCodecStrategy::FORCE_LATIN_1;
-    case CharacterEncoding::UTF8:
-        return TextCodecStrategy::FORCE_UTF_8;
+    case CharacterEncodingEnum::ASCII:
+        return TextCodecStrategyEnum::FORCE_US_ASCII;
+    case CharacterEncodingEnum::LATIN1:
+        return TextCodecStrategyEnum::FORCE_LATIN_1;
+    case CharacterEncodingEnum::UTF8:
+        return TextCodecStrategyEnum::FORCE_UTF_8;
     }
-    return TextCodecStrategy::AUTO_SELECT_CODEC;
+    return TextCodecStrategyEnum::AUTO_SELECT_CODEC;
 }
 
 ClientTelnet::ClientTelnet(QObject *const parent)

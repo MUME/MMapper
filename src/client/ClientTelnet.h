@@ -54,5 +54,5 @@ private:
     void sendRawData(const QByteArray &data) override;
 
     io::null_padded_buffer<(1 << 15)> buffer{};
-    QTcpSocket socket{};
+    QTcpSocket socket;
 };

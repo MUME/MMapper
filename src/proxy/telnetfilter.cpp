@@ -56,10 +56,10 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
         switch (val1) {
         case ASCII_DEL:
             buffer.line.append(static_cast<char>(ASCII_DEL));
-            buffer.type = TelnetDataType::DELAY;
+            buffer.type = TelnetDataEnum::DELAY;
             que.enqueue(buffer);
             buffer.line.clear();
-            buffer.type = TelnetDataType::SPLIT;
+            buffer.type = TelnetDataEnum::SPLIT;
             index++;
             break;
 
@@ -69,10 +69,10 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
                 switch (val2) {
                 case ASCII_LF:
                     buffer.line.append(static_cast<char>(ASCII_CR));
-                    buffer.type = TelnetDataType::LFCR;
+                    buffer.type = TelnetDataEnum::LFCR;
                     que.enqueue(buffer);
                     buffer.line.clear();
-                    buffer.type = TelnetDataType::SPLIT;
+                    buffer.type = TelnetDataEnum::SPLIT;
                     index++;
                     break;
 
@@ -94,10 +94,10 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
                 switch (val2) {
                 case ASCII_CR:
                     buffer.line.append(static_cast<char>(ASCII_LF));
-                    buffer.type = TelnetDataType::CRLF;
+                    buffer.type = TelnetDataEnum::CRLF;
                     que.enqueue(buffer);
                     buffer.line.clear();
-                    buffer.type = TelnetDataType::SPLIT;
+                    buffer.type = TelnetDataEnum::SPLIT;
                     index++;
                     break;
 
@@ -115,10 +115,10 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
 
         default:
             if (!buffer.line.isEmpty() && buffer.line.right(1).at(0) == ASCII_LF) {
-                buffer.type = TelnetDataType::LF;
+                buffer.type = TelnetDataEnum::LF;
                 que.enqueue(buffer);
                 buffer.line.clear();
-                buffer.type = TelnetDataType::SPLIT;
+                buffer.type = TelnetDataEnum::SPLIT;
             }
 
             buffer.line.append(static_cast<char>(val1));
@@ -127,31 +127,31 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
         }
     }
 
-    if (!buffer.line.isEmpty() && (goAhead || buffer.type == TelnetDataType::SPLIT)) {
+    if (!buffer.line.isEmpty() && (goAhead || buffer.type == TelnetDataEnum::SPLIT)) {
         {
             if (goAhead) {
                 const auto get_type = [&buffer]() {
                     if (Patterns::matchPasswordPatterns(buffer.line))
-                        return TelnetDataType::LOGIN_PASSWORD;
+                        return TelnetDataEnum::LOGIN_PASSWORD;
                     else if (Patterns::matchMenuPromptPatterns(buffer.line))
-                        return TelnetDataType::MENU_PROMPT;
-                    return TelnetDataType::PROMPT;
+                        return TelnetDataEnum::MENU_PROMPT;
+                    return TelnetDataEnum::PROMPT;
                 };
                 buffer.type = get_type();
                 que.enqueue(buffer);
                 buffer.line.clear();
-                buffer.type = TelnetDataType::SPLIT;
+                buffer.type = TelnetDataEnum::SPLIT;
             } else if (buffer.line.endsWith(char(ASCII_LF))) {
-                buffer.type = TelnetDataType::LF;
+                buffer.type = TelnetDataEnum::LF;
                 que.enqueue(buffer);
                 buffer.line.clear();
-                buffer.type = TelnetDataType::SPLIT;
+                buffer.type = TelnetDataEnum::SPLIT;
             } else if (Patterns::matchLoginPatterns(buffer.line)) {
                 // IAC-GA usually take effect after the login screen
-                buffer.type = TelnetDataType::LOGIN;
+                buffer.type = TelnetDataEnum::LOGIN;
                 que.enqueue(buffer);
                 buffer.line.clear();
-                buffer.type = TelnetDataType::SPLIT;
+                buffer.type = TelnetDataEnum::SPLIT;
             }
         }
     }

@@ -10,10 +10,10 @@
 #include "RoadIndex.h"
 
 QString getPixmapFilenameRaw(QString name);
-QString getPixmapFilename(RoomTerrainType);
-QString getPixmapFilename(RoomLoadFlag);
-QString getPixmapFilename(RoomMobFlag);
+QString getPixmapFilename(RoomTerrainEnum);
+QString getPixmapFilename(RoomLoadFlagEnum);
+QString getPixmapFilename(RoomMobFlagEnum);
 QString getPixmapFilename(TaggedRoad);
 QString getPixmapFilename(TaggedTrail);
-QString getIconFilename(CharacterPosition);
-QString getIconFilename(CharacterAffect);
+QString getIconFilename(CharacterPositionEnum);
+QString getIconFilename(CharacterAffectEnum);

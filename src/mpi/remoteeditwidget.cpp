@@ -35,7 +35,7 @@ static int measureTabAndAnsiAware(const QString &s)
 {
     int col = 0;
     for (auto token : AnsiTokenizer{s}) {
-        using Type = AnsiStringToken::Type;
+        using Type = AnsiStringToken::TokenTypeEnum;
         switch (token.type) {
         case Type::ANSI:
             break;
@@ -419,24 +419,24 @@ static void foreach_partly_selected_block(QTextCursor cur, Callback &&callback)
     }
 }
 
-enum class CallbackResult { KEEP_GOING, STOP };
+enum class CallbackResultEnum { KEEP_GOING, STOP };
 
 // Caller is responsible for not invalidating the end cursor.
 ///
-/// CallbackResult callback(QTextCursor);
+/// CallbackResultEnum callback(QTextCursor);
 /// -or-
-/// CallbackResult callback(const QTextCursor&);
+/// CallbackResultEnum callback(const QTextCursor&);
 template<typename Callback>
 static void foreach_partly_selected_block_until(QTextCursor cur, Callback &&callback)
 {
     static_assert(
-        std::is_same_v<CallbackResult, decltype(callback(std::declval<const QTextCursor &>()))>);
+        std::is_same_v<CallbackResultEnum, decltype(callback(std::declval<const QTextCursor &>()))>);
 
     auto beg = LineRange::beg(cur);
     auto end = LineRange::end(cur);
     for (auto it = beg; !it.isNull() && it < end;) {
         if (it.block().isValid()) {
-            if (callback(static_cast<const QTextCursor &>(it)) == CallbackResult::STOP)
+            if (callback(static_cast<const QTextCursor &>(it)) == CallbackResultEnum::STOP)
                 return;
         }
         if (!it.movePosition(QTextCursor::NextBlock)) {
@@ -451,13 +451,14 @@ bool exists_partly_selected_block(QTextCursor cur, Callback &&callback)
     static_assert(std::is_same_v<bool, decltype(callback(std::declval<const QTextCursor &>()))>);
 
     bool result = false;
-    foreach_partly_selected_block_until(cur, [&result, &callback](QTextCursor it) -> CallbackResult {
-        if (callback(it)) {
-            result = true;
-            return CallbackResult::STOP;
-        }
-        return CallbackResult::KEEP_GOING;
-    });
+    foreach_partly_selected_block_until(cur,
+                                        [&result, &callback](QTextCursor it) -> CallbackResultEnum {
+                                            if (callback(it)) {
+                                                result = true;
+                                                return CallbackResultEnum::STOP;
+                                            }
+                                            return CallbackResultEnum::KEEP_GOING;
+                                        });
     return result;
 }
 
@@ -700,14 +701,14 @@ void RemoteEditWidget::addFileMenu(QMenuBar *const menuBar, const Editor *const 
 struct EditViewCommand final
 {
     using mem_fn_ptr_type = void (RemoteEditWidget::*)();
-    mem_fn_ptr_type mem_fn_ptr;
-    EditViewCmdType cmd_type;
-    const char *action;
-    const char *status;
-    const char *shortcut;
+    const mem_fn_ptr_type mem_fn_ptr;
+    const EditViewCmdEnum cmd_type;
+    const char *const action;
+    const char *const status;
+    const char *const shortcut;
 
     constexpr explicit EditViewCommand(const mem_fn_ptr_type _mem_fn_ptr,
-                                       const EditViewCmdType _cmd_type,
+                                       const EditViewCmdEnum _cmd_type,
                                        const char *const _action,
                                        const char *const _status,
                                        const char *const _shortcut)
@@ -728,7 +729,7 @@ struct EditCommand2 final
     const char *action = nullptr;
     const char *status = nullptr;
     const char *shortcut = nullptr;
-    EditCmdType2 cmd_type = EditCmdType2::SPACER;
+    EditCmd2Enum cmd_type = EditCmd2Enum::SPACER;
 
     constexpr EditCommand2() = default;
     constexpr explicit EditCommand2(const mem_fn_ptr_type _mem_fn_ptr,
@@ -737,7 +738,7 @@ struct EditCommand2 final
                                     const char *const _action,
                                     const char *const _status,
                                     const char *const _shortcut,
-                                    const EditCmdType2 _cmd_type)
+                                    const EditCmd2Enum _cmd_type)
         : mem_fn_ptr{_mem_fn_ptr}
         , theme{_theme}
         , icon{_icon}
@@ -761,7 +762,7 @@ void RemoteEditWidget::addEditAndViewMenus(QMenuBar *const menuBar, const Editor
                      "&Undo",
                      "Undo previous typing or commands",
                      "Ctrl+Z",
-                     EditCmdType2::EDIT_ONLY},
+                     EditCmd2Enum::EDIT_ONLY},
         EditCommand2{&Editor::redo,
                      "edit-redo",
                      ":/icons/redo.png",
@@ -771,7 +772,7 @@ void RemoteEditWidget::addEditAndViewMenus(QMenuBar *const menuBar, const Editor
                      // but it might be Ctrl+Y by default on other desktops?
                      "Redo previous typing or commands",
                      "Ctrl+Shift+Z",
-                     EditCmdType2::EDIT_ONLY},
+                     EditCmd2Enum::EDIT_ONLY},
         EditCommand2{},
         EditCommand2{&Editor::selectAll,
                      "edit-select-all",
@@ -779,7 +780,7 @@ void RemoteEditWidget::addEditAndViewMenus(QMenuBar *const menuBar, const Editor
                      "&Select All",
                      "Select the entire document",
                      "Ctrl+A",
-                     EditCmdType2::EDIT_OR_VIEW},
+                     EditCmd2Enum::EDIT_OR_VIEW},
         EditCommand2{},
         EditCommand2{&Editor::cut,
                      "edit-cut",
@@ -787,34 +788,34 @@ void RemoteEditWidget::addEditAndViewMenus(QMenuBar *const menuBar, const Editor
                      "Cu&t",
                      "Cut the current selection's contents to the clipboard",
                      "Ctrl+X",
-                     EditCmdType2::EDIT_ONLY},
+                     EditCmd2Enum::EDIT_ONLY},
         EditCommand2{&Editor::copy,
                      "edit-copy",
                      ":/icons/copy.png",
                      "&Copy",
                      "Copy the current selection's contents to the clipboard",
                      "Ctrl+C",
-                     EditCmdType2::EDIT_OR_VIEW},
+                     EditCmd2Enum::EDIT_OR_VIEW},
         EditCommand2{&Editor::paste,
                      "edit-paste",
                      ":/icons/paste.png",
                      "&Paste",
                      "Paste the clipboard's contents into the current selection",
                      "Ctrl+V",
-                     EditCmdType2::EDIT_ONLY},
+                     EditCmd2Enum::EDIT_ONLY},
 
         EditCommand2{}};
 
     for (auto &cmd : cmds) {
         switch (cmd.cmd_type) {
-        case EditCmdType2::SPACER:
+        case EditCmd2Enum::SPACER:
             editMenu->addSeparator();
             break;
-        case EditCmdType2::EDIT_ONLY:
+        case EditCmd2Enum::EDIT_ONLY:
             if (m_editSession)
                 addToMenu(editMenu, cmd, pTextEdit);
             break;
-        case EditCmdType2::EDIT_OR_VIEW:
+        case EditCmd2Enum::EDIT_OR_VIEW:
             addToMenu(editMenu, cmd, pTextEdit);
             break;
         }
@@ -826,15 +827,15 @@ void RemoteEditWidget::addEditAndViewMenus(QMenuBar *const menuBar, const Editor
     QMenu *const colorsMenu = m_editSession ? editMenu->addMenu("&Colors") : nullptr;
     QMenu *const whitespaceMenu = m_editSession ? editMenu->addMenu("&Whitespace") : nullptr;
 
-    const auto getMenu = [=](EditViewCmdType cmd) -> QMenu * {
+    const auto getMenu = [=](EditViewCmdEnum cmd) -> QMenu * {
         switch (cmd) {
-        case EditViewCmdType::VIEW_OPTION:
+        case EditViewCmdEnum::VIEW_OPTION:
             return viewMenu;
-        case EditViewCmdType::EDIT_ALIGNMENT:
+        case EditViewCmdEnum::EDIT_ALIGNMENT:
             return alignmentMenu;
-        case EditViewCmdType::EDIT_COLORS:
+        case EditViewCmdEnum::EDIT_COLORS:
             return colorsMenu;
-        case EditViewCmdType::EDIT_WHITESPACE:
+        case EditViewCmdEnum::EDIT_WHITESPACE:
             return whitespaceMenu;
         default:
             return editMenu;
@@ -939,7 +940,7 @@ static CursorColumnInfo getCursorColumn(QTextCursor &cursor)
     const auto &block = cursor.block();
     const auto &text = block.text().left(pos);
 
-    CursorColumnInfo cci{};
+    CursorColumnInfo cci;
     cci.actual = pos;
     cci.tab_aware = measureExpandedTabsOneLine(text, 0);
     cci.tab_and_ansi_aware = measureTabAndAnsiAware(text);
@@ -948,8 +949,8 @@ static CursorColumnInfo getCursorColumn(QTextCursor &cursor)
 
 struct CursorAnsiInfo final
 {
-    TextBuffer buffer{};
-    raw_ansi ansi{};
+    TextBuffer buffer;
+    raw_ansi ansi;
 
     explicit operator bool() const { return !buffer.isEmpty(); }
 };
@@ -958,7 +959,7 @@ static CursorAnsiInfo getCursorAnsi(QTextCursor cursor)
 {
     const int pos = cursor.positionInBlock();
 
-    CursorAnsiInfo result{};
+    CursorAnsiInfo result;
     const auto &line = cursor.block().text();
     foreachAnsi(line, [pos, &result](int start, const QStringRef &ref) {
         if (result || pos < start || pos >= start + ref.length())

@@ -4,9 +4,9 @@
 
 #include "mumemoment.h"
 
-#include <array>
 #include <iostream>
 
+#include "../global/Array.h"
 #include "mumeclock.h"
 
 static constexpr const int MUME_MINUTES_PER_HOUR = 60;
@@ -103,46 +103,46 @@ int MumeMoment::toSeconds() const
            + month * MUME_MINUTES_PER_MONTH + (year - MUME_START_YEAR) * MUME_MINUTES_PER_YEAR;
 }
 
-MumeSeason MumeMoment::toSeason() const
+MumeSeasonEnum MumeMoment::toSeason() const
 {
-    using WMN = typename MumeClock::WestronMonthNames;
+    using WMN = typename MumeClock::WestronMonthNamesEnum;
     switch (static_cast<WMN>(month)) {
     case WMN::Afteryule:
     case WMN::Solmath:
     case WMN::Rethe:
-        return MumeSeason::SEASON_WINTER;
+        return MumeSeasonEnum::WINTER;
     case WMN::Astron:
     case WMN::Thrimidge:
     case WMN::Forelithe:
-        return MumeSeason::SEASON_SPRING;
+        return MumeSeasonEnum::SPRING;
     case WMN::Afterlithe:
     case WMN::Wedmath:
     case WMN::Halimath:
-        return MumeSeason::SEASON_SUMMER;
+        return MumeSeasonEnum::SUMMER;
     case WMN::Winterfilth:
     case WMN::Blotmath:
     case WMN::Foreyule:
-        return MumeSeason::SEASON_AUTUMN;
+        return MumeSeasonEnum::AUTUMN;
 
-    case MumeClock::WestronMonthNames::UnknownWestronMonth:
+    case MumeClock::WestronMonthNamesEnum::UnknownWestronMonth:
         break;
     };
-    return MumeSeason::SEASON_UNKNOWN;
+    return MumeSeasonEnum::UNKNOWN;
 }
 
-MumeTime MumeMoment::toTimeOfDay() const
+MumeTimeEnum MumeMoment::toTimeOfDay() const
 {
     const auto dawnDusk = MumeClock::getDawnDusk(month);
     const int dawn = dawnDusk.dawnHour;
     const int dusk = dawnDusk.duskHour;
     if (hour == dawn) {
-        return MumeTime::TIME_DAWN;
+        return MumeTimeEnum::DAWN;
     } else if (hour == dusk) {
-        return MumeTime::TIME_DUSK;
+        return MumeTimeEnum::DUSK;
     } else if (hour < dawn || hour > dusk) {
-        return MumeTime::TIME_NIGHT;
+        return MumeTimeEnum::NIGHT;
     }
-    return MumeTime::TIME_DAY;
+    return MumeTimeEnum::DAY;
 }
 
 int MumeMoment::moonCycle() const
@@ -180,41 +180,41 @@ int MumeMoment::moonLevel() const
         return MUME_DAYS_PER_MOON_CYCLE - dayOfCycle; // Decreasing illumination
 }
 
-MumeMoonPhase MumeMoment::toMoonPhase() const
+MumeMoonPhaseEnum MumeMoment::toMoonPhase() const
 {
     const int dayOfCycle = moonCycle();
     if (dayOfCycle <= 2)
-        return MumeMoonPhase::PHASE_NEW_MOON;
+        return MumeMoonPhaseEnum::NEW_MOON;
     else if (dayOfCycle >= 3 && dayOfCycle <= 5)
-        return MumeMoonPhase::PHASE_WAXING_CRESCENT;
+        return MumeMoonPhaseEnum::WAXING_CRESCENT;
     else if (dayOfCycle >= 6 && dayOfCycle <= 8)
-        return MumeMoonPhase::PHASE_FIRST_QUARTER;
+        return MumeMoonPhaseEnum::FIRST_QUARTER;
     else if (dayOfCycle >= 9 && dayOfCycle <= 11)
-        return MumeMoonPhase::PHASE_WAXING_GIBBOUS;
+        return MumeMoonPhaseEnum::WAXING_GIBBOUS;
     else if (dayOfCycle == 12)
-        return MumeMoonPhase::PHASE_FULL_MOON;
+        return MumeMoonPhaseEnum::FULL_MOON;
     else if (dayOfCycle >= 13 && dayOfCycle <= 15)
-        return MumeMoonPhase::PHASE_WANING_GIBBOUS;
+        return MumeMoonPhaseEnum::WANING_GIBBOUS;
     else if (dayOfCycle >= 16 && dayOfCycle <= 18)
-        return MumeMoonPhase::PHASE_THIRD_QUARTER;
+        return MumeMoonPhaseEnum::THIRD_QUARTER;
     else if (dayOfCycle >= 19 && dayOfCycle <= 21)
-        return MumeMoonPhase::PHASE_WANING_CRESCENT;
+        return MumeMoonPhaseEnum::WANING_CRESCENT;
     else
-        return MumeMoonPhase::PHASE_NEW_MOON;
+        return MumeMoonPhaseEnum::NEW_MOON;
 }
 
-MumeMoonVisibility MumeMoment::toMoonVisibility() const
+MumeMoonVisibilityEnum MumeMoment::toMoonVisibility() const
 {
     // Moon is not visible because of its position in the sky
     if (moonPosition() >= 12)
-        return MumeMoonVisibility::MOON_HIDDEN;
+        return MumeMoonVisibilityEnum::HIDDEN;
 
     if (hour == moonRise())
-        return MumeMoonVisibility::MOON_RISE;
+        return MumeMoonVisibilityEnum::RISE;
     else if (hour == moonSet())
-        return MumeMoonVisibility::MOON_SET;
+        return MumeMoonVisibilityEnum::SET;
     else
-        return MumeMoonVisibility::MOON_VISIBLE;
+        return MumeMoonVisibilityEnum::VISIBLE;
 }
 
 QString MumeMoment::toMumeMoonTime() const
@@ -224,25 +224,25 @@ QString MumeMoment::toMumeMoonTime() const
 
     QString phase = "Moon";
     switch (toMoonPhase()) {
-    case MumeMoonPhase::PHASE_WAXING_CRESCENT:
-    case MumeMoonPhase::PHASE_WANING_CRESCENT:
+    case MumeMoonPhaseEnum::WAXING_CRESCENT:
+    case MumeMoonPhaseEnum::WANING_CRESCENT:
         phase = "Quarter Moon";
         break;
-    case MumeMoonPhase::PHASE_FIRST_QUARTER:
-    case MumeMoonPhase::PHASE_THIRD_QUARTER:
+    case MumeMoonPhaseEnum::FIRST_QUARTER:
+    case MumeMoonPhaseEnum::THIRD_QUARTER:
         phase = "Half Moon";
         break;
-    case MumeMoonPhase::PHASE_WAXING_GIBBOUS:
-    case MumeMoonPhase::PHASE_WANING_GIBBOUS:
+    case MumeMoonPhaseEnum::WAXING_GIBBOUS:
+    case MumeMoonPhaseEnum::WANING_GIBBOUS:
         phase = "Three-Quarter Moon";
         break;
-    case MumeMoonPhase::PHASE_FULL_MOON:
+    case MumeMoonPhaseEnum::FULL_MOON:
         phase = "Full Moon";
         break;
-    case MumeMoonPhase::PHASE_NEW_MOON:
+    case MumeMoonPhaseEnum::NEW_MOON:
         phase = "New Moon";
         break;
-    case MumeMoonPhase::PHASE_UNKNOWN:
+    case MumeMoonPhaseEnum::UNKNOWN:
     default:
         break;
     }

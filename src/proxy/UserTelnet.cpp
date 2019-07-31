@@ -6,7 +6,7 @@
 #include "../configuration/configuration.h"
 
 UserTelnet::UserTelnet(QObject *const parent)
-    : AbstractTelnet(TextCodec(TextCodecStrategy::AUTO_SELECT_CODEC), false, parent)
+    : AbstractTelnet(TextCodec(TextCodecStrategyEnum::AUTO_SELECT_CODEC), false, parent)
 {}
 
 void UserTelnet::onConnected()
@@ -28,7 +28,7 @@ void UserTelnet::onSendToUser(const QByteArray &ba, const bool goAhead)
     QString temp = QString::fromLatin1(ba);
 
     // Switch codec if RFC 2066 was not negotiated and the configuration was altered
-    const CharacterEncoding configEncoding = getConfig().general.characterEncoding;
+    const CharacterEncodingEnum configEncoding = getConfig().general.characterEncoding;
     if (!hisOptionState[OPT_CHARSET] && configEncoding != textCodec.getEncoding()) {
         textCodec.setEncoding(configEncoding);
     }

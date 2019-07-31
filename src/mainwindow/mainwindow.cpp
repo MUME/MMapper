@@ -97,9 +97,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     qRegisterMetaType<RoomId>("RoomId");
     qRegisterMetaType<IncomingData>("IncomingData");
     qRegisterMetaType<CommandQueue>("CommandQueue");
-    qRegisterMetaType<DirectionType>("DirectionType");
-    qRegisterMetaType<DoorActionType>("DoorActionType");
-    qRegisterMetaType<GroupManagerState>("GroupManagerState");
+    qRegisterMetaType<DirectionEnum>("DirectionEnum");
+    qRegisterMetaType<DoorActionEnum>("DoorActionEnum");
+    qRegisterMetaType<GroupManagerStateEnum>("GroupManagerStateEnum");
     qRegisterMetaType<SigParseEvent>("SigParseEvent");
     qRegisterMetaType<SigRoomSelection>("SigRoomSelection");
 
@@ -196,15 +196,15 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     }
 
     switch (getConfig().general.mapMode) {
-    case MapMode::PLAY:
+    case MapModeEnum::PLAY:
         mapperMode.playModeAct->setChecked(true);
         onPlayMode();
         break;
-    case MapMode::MAP:
+    case MapModeEnum::MAP:
         mapperMode.mapModeAct->setChecked(true);
         onMapMode();
         break;
-    case MapMode::OFFLINE:
+    case MapModeEnum::OFFLINE:
         mapperMode.offlineModeAct->setChecked(true);
         onOfflineMode();
         break;
@@ -229,20 +229,20 @@ void MainWindow::startServices()
     const auto &groupConfig = getConfig().groupManager;
     groupNetwork.networkStopAct->setChecked(true);
     switch (groupConfig.state) {
-    case GroupManagerState::Off:
+    case GroupManagerStateEnum::Off:
         groupMode.groupOffAct->setChecked(true);
         onModeGroupOff();
         break;
-    case GroupManagerState::Client:
+    case GroupManagerStateEnum::Client:
         groupMode.groupClientAct->setChecked(true);
         onModeGroupClient();
         break;
-    case GroupManagerState::Server:
+    case GroupManagerStateEnum::Server:
         groupMode.groupServerAct->setChecked(true);
         onModeGroupServer();
         break;
     }
-    if (groupConfig.state != GroupManagerState::Off && groupConfig.autoStart)
+    if (groupConfig.state != GroupManagerStateEnum::Off && groupConfig.autoStart)
         groupNetwork.networkStartAct->trigger();
 
     if constexpr (!NO_UPDATER) {
@@ -511,7 +511,7 @@ void MainWindow::createActions()
                              this);
     layerUpAct->setShortcut(tr([]() -> const char * {
         // Technically tr() could convert Ctrl to Meta, right?
-        if constexpr (CURRENT_PLATFORM == Platform::Mac)
+        if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac)
             return "Meta+Tab";
         return "Ctrl+Tab";
     }()));
@@ -523,7 +523,7 @@ void MainWindow::createActions()
 
     layerDownAct->setShortcut(tr([]() -> const char * {
         // Technically tr() could convert Ctrl to Meta, right?
-        if constexpr (CURRENT_PLATFORM == Platform::Mac)
+        if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac)
             return "Meta+Shift+Tab";
         return "Ctrl+Shift+Tab";
     }()));
@@ -831,7 +831,7 @@ void MainWindow::onPlayMode()
                &Mmapper2PathMachine::scheduleAction,
                m_mapData,
                &MapData::scheduleAction);
-    setConfig().general.mapMode = MapMode::PLAY;
+    setConfig().general.mapMode = MapModeEnum::PLAY;
     modeMenu->setIcon(mapperMode.playModeAct->icon());
 }
 
@@ -843,7 +843,7 @@ void MainWindow::onMapMode()
             &Mmapper2PathMachine::scheduleAction,
             m_mapData,
             &MapData::scheduleAction);
-    setConfig().general.mapMode = MapMode::MAP;
+    setConfig().general.mapMode = MapModeEnum::MAP;
     modeMenu->setIcon(mapperMode.mapModeAct->icon());
 }
 
@@ -855,7 +855,7 @@ void MainWindow::onOfflineMode()
                &Mmapper2PathMachine::scheduleAction,
                m_mapData,
                &MapData::scheduleAction);
-    setConfig().general.mapMode = MapMode::OFFLINE;
+    setConfig().general.mapMode = MapModeEnum::OFFLINE;
     modeMenu->setIcon(mapperMode.offlineModeAct->icon());
 }
 
@@ -1311,7 +1311,7 @@ bool MainWindow::save()
     if (m_mapData->getFileName().isEmpty() || m_mapData->isFileReadOnly()) {
         return saveAs();
     }
-    return saveFile(m_mapData->getFileName(), SaveMode::SAVEM_FULL, SaveFormat::SAVEF_MM2);
+    return saveFile(m_mapData->getFileName(), SaveModeEnum::FULL, SaveFormatEnum::MM2);
 }
 
 std::unique_ptr<QFileDialog> MainWindow::createDefaultSaveDialog()
@@ -1355,7 +1355,7 @@ bool MainWindow::saveAs()
     }
 
     QFileInfo file(fileNames[0]);
-    bool success = saveFile(file.absoluteFilePath(), SaveMode::SAVEM_FULL, SaveFormat::SAVEF_MM2);
+    bool success = saveFile(file.absoluteFilePath(), SaveModeEnum::FULL, SaveFormatEnum::MM2);
     if (success) {
         // Update last directory
         auto &config = setConfig().autoLoad;
@@ -1393,7 +1393,7 @@ bool MainWindow::exportBaseMap()
         return false;
     }
 
-    return saveFile(fileNames[0], SaveMode::SAVEM_BASEMAP, SaveFormat::SAVEF_MM2);
+    return saveFile(fileNames[0], SaveModeEnum::BASEMAP, SaveFormatEnum::MM2);
 }
 
 bool MainWindow::exportWebMap()
@@ -1415,7 +1415,7 @@ bool MainWindow::exportWebMap()
         return false;
     }
 
-    return saveFile(fileNames[0], SaveMode::SAVEM_BASEMAP, SaveFormat::SAVEF_WEB);
+    return saveFile(fileNames[0], SaveModeEnum::BASEMAP, SaveFormatEnum::WEB);
 }
 
 bool MainWindow::exportMmpMap()
@@ -1441,7 +1441,7 @@ bool MainWindow::exportMmpMap()
         statusBar()->showMessage(tr("No filename provided"), 2000);
         return false;
     }
-    return saveFile(fileNames[0], SaveMode::SAVEM_FULL, SaveFormat::SAVEF_MMP);
+    return saveFile(fileNames[0], SaveModeEnum::FULL, SaveFormatEnum::MMP);
 }
 
 void MainWindow::about()
@@ -1548,10 +1548,12 @@ void MainWindow::percentageChanged(quint32 p)
     qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 }
 
-bool MainWindow::saveFile(const QString &fileName, SaveMode mode, SaveFormat format)
+bool MainWindow::saveFile(const QString &fileName,
+                          const SaveModeEnum mode,
+                          const SaveFormatEnum format)
 {
     FileSaver saver;
-    if (format != SaveFormat::SAVEF_WEB) { // Web uses a whole directory
+    if (format != SaveFormatEnum::WEB) { // Web uses a whole directory
         try {
             saver.open(fileName);
         } catch (std::exception &e) {
@@ -1565,15 +1567,15 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode, SaveFormat for
 
     std::unique_ptr<AbstractMapStorage> storage;
     switch (format) {
-    case SaveFormat::SAVEF_MM2:
+    case SaveFormatEnum::MM2:
         storage.reset(static_cast<AbstractMapStorage *>(
             new MapStorage(*m_mapData, fileName, &saver.file(), this)));
         break;
-    case SaveFormat::SAVEF_MMP:
+    case SaveFormatEnum::MMP:
         storage.reset(static_cast<AbstractMapStorage *>(
             new MmpMapStorage(*m_mapData, fileName, &saver.file(), this)));
         break;
-    case SaveFormat::SAVEF_WEB:
+    case SaveFormatEnum::WEB:
         storage.reset(
             static_cast<AbstractMapStorage *>(new JsonMapStorage(*m_mapData, fileName, this)));
         break;
@@ -1605,13 +1607,14 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode, SaveFormat for
 
     disableActions(true);
     // m_mapWindow->getCanvas()->hide();
-    const bool saveOk = storage->saveData(mode == SaveMode::SAVEM_BASEMAP);
+    const bool saveOk = storage->saveData(mode == SaveModeEnum::BASEMAP);
     //m_mapWindow->getCanvas()->show();
     disableActions(false);
     //cutAct->setEnabled(false);
     //copyAct->setEnabled(false);
     //pasteAct->setEnabled(false);
 
+    // *sigh*
     delete progressDlg;
 
     try {
@@ -1625,7 +1628,7 @@ bool MainWindow::saveFile(const QString &fileName, SaveMode mode, SaveFormat for
     }
 
     if (saveOk) {
-        if (mode == SaveMode::SAVEM_FULL && format == SaveFormat::SAVEF_MM2) {
+        if (mode == SaveModeEnum::FULL && format == SaveFormatEnum::MM2) {
             setCurrentFile(fileName);
         }
         statusBar()->showMessage(tr("File saved"), 2000);
@@ -1672,7 +1675,7 @@ void MainWindow::onModeGroupOff()
     groupNetwork.groupNetworkGroup->setEnabled(false);
     groupNetwork.networkStartAct->setText("Start");
     groupNetwork.networkStopAct->setText("Stop");
-    emit setGroupMode(GroupManagerState::Off);
+    emit setGroupMode(GroupManagerStateEnum::Off);
 }
 
 void MainWindow::onModeGroupClient()
@@ -1681,7 +1684,7 @@ void MainWindow::onModeGroupClient()
     groupNetwork.groupNetworkGroup->setEnabled(true);
     groupNetwork.networkStartAct->setText("&Connect to a friend's map");
     groupNetwork.networkStopAct->setText("&Disconnect");
-    emit setGroupMode(GroupManagerState::Client);
+    emit setGroupMode(GroupManagerStateEnum::Client);
 }
 
 void MainWindow::onModeGroupServer()
@@ -1690,7 +1693,7 @@ void MainWindow::onModeGroupServer()
     groupNetwork.groupNetworkGroup->setEnabled(true);
     groupNetwork.networkStartAct->setText("&Host your map with friends");
     groupNetwork.networkStopAct->setText("&Disconnect");
-    emit setGroupMode(GroupManagerState::Server);
+    emit setGroupMode(GroupManagerStateEnum::Server);
 }
 
 void MainWindow::setCurrentFile(const QString &fileName)
@@ -1727,42 +1730,42 @@ void MainWindow::onLayerReset()
 
 void MainWindow::onModeConnectionSelect()
 {
-    m_mapWindow->getCanvas()->setCanvasMouseMode(CanvasMouseMode::SELECT_CONNECTIONS);
+    m_mapWindow->getCanvas()->setCanvasMouseMode(CanvasMouseModeEnum::SELECT_CONNECTIONS);
 }
 
 void MainWindow::onModeRoomSelect()
 {
-    m_mapWindow->getCanvas()->setCanvasMouseMode(CanvasMouseMode::SELECT_ROOMS);
+    m_mapWindow->getCanvas()->setCanvasMouseMode(CanvasMouseModeEnum::SELECT_ROOMS);
 }
 
 void MainWindow::onModeMoveSelect()
 {
-    m_mapWindow->getCanvas()->setCanvasMouseMode(CanvasMouseMode::MOVE);
+    m_mapWindow->getCanvas()->setCanvasMouseMode(CanvasMouseModeEnum::MOVE);
 }
 
 void MainWindow::onModeCreateRoomSelect()
 {
-    m_mapWindow->getCanvas()->setCanvasMouseMode(CanvasMouseMode::CREATE_ROOMS);
+    m_mapWindow->getCanvas()->setCanvasMouseMode(CanvasMouseModeEnum::CREATE_ROOMS);
 }
 
 void MainWindow::onModeCreateConnectionSelect()
 {
-    m_mapWindow->getCanvas()->setCanvasMouseMode(CanvasMouseMode::CREATE_CONNECTIONS);
+    m_mapWindow->getCanvas()->setCanvasMouseMode(CanvasMouseModeEnum::CREATE_CONNECTIONS);
 }
 
 void MainWindow::onModeCreateOnewayConnectionSelect()
 {
-    m_mapWindow->getCanvas()->setCanvasMouseMode(CanvasMouseMode::CREATE_ONEWAY_CONNECTIONS);
+    m_mapWindow->getCanvas()->setCanvasMouseMode(CanvasMouseModeEnum::CREATE_ONEWAY_CONNECTIONS);
 }
 
 void MainWindow::onModeInfoMarkSelect()
 {
-    m_mapWindow->getCanvas()->setCanvasMouseMode(CanvasMouseMode::SELECT_INFOMARKS);
+    m_mapWindow->getCanvas()->setCanvasMouseMode(CanvasMouseModeEnum::SELECT_INFOMARKS);
 }
 
 void MainWindow::onModeCreateInfoMarkSelect()
 {
-    m_mapWindow->getCanvas()->setCanvasMouseMode(CanvasMouseMode::CREATE_INFOMARKS);
+    m_mapWindow->getCanvas()->setCanvasMouseMode(CanvasMouseModeEnum::CREATE_INFOMARKS);
 }
 
 void MainWindow::onEditInfoMarkSelection()
@@ -1821,8 +1824,8 @@ void MainWindow::onDeleteConnectionSelection()
         const Room *const r1 = first.room;
         const Room *const r2 = second.room;
         if (r1 != nullptr && r2 != nullptr) {
-            const ExitDirection dir1 = first.direction;
-            const ExitDirection dir2 = second.direction;
+            const ExitDirEnum dir1 = first.direction;
+            const ExitDirEnum dir2 = second.direction;
             const RoomId &id1 = r1->getId();
             const RoomId &id2 = r2->getId();
 

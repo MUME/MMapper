@@ -43,7 +43,6 @@ private:
     void loadExits(Room &, QXmlStreamReader &);
 
 private:
-    RoomFactory factory{};
-
-    Coordinate basePosition{};
+    RoomFactory factory;
+    Coordinate basePosition;
 };

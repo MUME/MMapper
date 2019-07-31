@@ -14,15 +14,16 @@ static constexpr const char *const LATIN_1_ENCODING = "ISO-8859-1";
 static constexpr const char *const UTF_8_ENCODING = "UTF-8";
 static constexpr const char *const US_ASCII_ENCODING = "US-ASCII";
 
-enum class TextCodecStrategy { FORCE_US_ASCII, FORCE_LATIN_1, FORCE_UTF_8, AUTO_SELECT_CODEC };
+enum class TextCodecStrategyEnum { FORCE_US_ASCII, FORCE_LATIN_1, FORCE_UTF_8, AUTO_SELECT_CODEC };
 
-class TextCodec
+class TextCodec final
 {
 public:
-    explicit TextCodec(TextCodecStrategy textCodecStrategy = TextCodecStrategy::AUTO_SELECT_CODEC);
+    explicit TextCodec(
+        TextCodecStrategyEnum textCodecStrategy = TextCodecStrategyEnum::AUTO_SELECT_CODEC);
 
-    CharacterEncoding getEncoding() const { return currentEncoding; }
-    void setEncoding(CharacterEncoding encoding);
+    CharacterEncodingEnum getEncoding() const { return currentEncoding; }
+    void setEncoding(CharacterEncodingEnum encoding);
 
     QByteArray fromUnicode(const QString &);
     QString toUnicode(const QByteArray &);
@@ -32,7 +33,8 @@ public:
     QStringList supportedEncodings() const;
 
 private:
-    CharacterEncoding currentEncoding;
+    // This might not be a good default value. Make this optional?
+    CharacterEncodingEnum currentEncoding = CharacterEncodingEnum::LATIN1;
     QTextCodec *textCodec = nullptr;
-    TextCodecStrategy textCodecStrategy{TextCodecStrategy::AUTO_SELECT_CODEC};
+    TextCodecStrategyEnum textCodecStrategy = TextCodecStrategyEnum::AUTO_SELECT_CODEC;
 };

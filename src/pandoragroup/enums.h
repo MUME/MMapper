@@ -3,19 +3,19 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <array>
 #include <vector>
 
+#include "../global/Array.h"
 #include "groupauthority.h"
 #include "mmapper2character.h"
 
-#define DECL_GETTER(E, N, name) const std::array<E, N> &name();
+#define DECL_GETTER(E, N, name) const MMapper::Array<E, N> &name();
 #define DECL_GETTER_DEFINED(E, N, name) const std::vector<E> &name();
 
 namespace enums {
-DECL_GETTER_DEFINED(CharacterPosition, NUM_CHARACTER_POSITIONS, getAllCharacterPositions)
-DECL_GETTER(GroupMetadata, NUM_GROUP_METADATA, getAllGroupMetadata)
-DECL_GETTER(CharacterAffect, NUM_CHARACTER_AFFECTS, getAllCharacterAffects)
+DECL_GETTER_DEFINED(CharacterPositionEnum, NUM_CHARACTER_POSITIONS, getAllCharacterPositions)
+DECL_GETTER(GroupMetadataEnum, NUM_GROUP_METADATA, getAllGroupMetadata)
+DECL_GETTER(CharacterAffectEnum, NUM_CHARACTER_AFFECTS, getAllCharacterAffects)
 } // namespace enums
 
 #undef DECL_GETTER

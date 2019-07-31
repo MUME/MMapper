@@ -30,5 +30,5 @@ public slots:
     void setPath(CommandQueue, bool);
 
 private:
-    CommandQueue m_queue{};
+    CommandQueue m_queue;
 };

@@ -29,7 +29,7 @@ void Syncing::receiveRoom(RoomAdmin *sender, const Room *in_room)
             parent = nullptr;
         }
     } else {
-        auto *p = new Path(in_room, sender, this, signaler, ExitDirection::NONE);
+        auto *p = new Path(in_room, sender, this, signaler, ExitDirEnum::NONE);
         p->setParent(parent);
         parent->insertChild(p);
         paths->push_back(p);

@@ -20,14 +20,14 @@
 class Exit final
 {
 private:
-    DoorName doorName{};
-    ExitFlags exitFlags{};
-    DoorFlags doorFlags{};
+    DoorName doorName;
+    ExitFlags exitFlags;
+    DoorFlags doorFlags;
     bool hasFields = false;
 
 protected:
-    RoomIdSet incoming{};
-    RoomIdSet outgoing{};
+    RoomIdSet incoming;
+    RoomIdSet outgoing;
 
 public:
     // This has to exist as long as ExitsList uses QVector<Exit>.

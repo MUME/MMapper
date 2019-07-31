@@ -73,12 +73,12 @@ bool fsync(QFile &file) noexcept(false)
     return true;
 }
 
-IOResult fsyncNoexcept(QFile &file) noexcept
+IOResultEnum fsyncNoexcept(QFile &file) noexcept
 {
     try {
-        return fsync(file) ? IOResult::SUCCESS : IOResult::FAILURE;
+        return fsync(file) ? IOResultEnum::SUCCESS : IOResultEnum::FAILURE;
     } catch (...) {
-        return IOResult::EXCEPTION;
+        return IOResultEnum::EXCEPTION;
     }
 }
 

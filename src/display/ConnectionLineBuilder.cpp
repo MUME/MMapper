@@ -6,37 +6,37 @@
 
 #include "../mapdata/ExitDirection.h"
 
-void ConnectionLineBuilder::drawConnLineStart(const ExitDirection dir,
+void ConnectionLineBuilder::drawConnLineStart(const ExitDirEnum dir,
                                               const bool neighbours,
                                               const float srcZ)
 {
     switch (dir) {
-    case ExitDirection::NORTH:
+    case ExitDirEnum::NORTH:
         addVertex(0.75f, 0.1f, srcZ);
         addVertex(0.75f, -0.1f, srcZ);
         break;
-    case ExitDirection::SOUTH:
+    case ExitDirEnum::SOUTH:
         addVertex(0.25f, 0.9f, srcZ);
         addVertex(0.25f, 1.1f, srcZ);
         break;
-    case ExitDirection::EAST:
+    case ExitDirEnum::EAST:
         addVertex(0.9f, 0.25f, srcZ);
         addVertex(1.1f, 0.25f, srcZ);
         break;
-    case ExitDirection::WEST:
+    case ExitDirEnum::WEST:
         addVertex(0.1f, 0.75f, srcZ);
         addVertex(-0.1f, 0.75f, srcZ);
         break;
 
-    case ExitDirection::UP:
+    case ExitDirEnum::UP:
         drawConnStartLineUp(neighbours, srcZ);
         break;
-    case ExitDirection::DOWN:
+    case ExitDirEnum::DOWN:
         drawConnStartLineDown(neighbours, srcZ);
         break;
 
-    case ExitDirection::UNKNOWN:
-    case ExitDirection::NONE:
+    case ExitDirEnum::UNKNOWN:
+    case ExitDirEnum::NONE:
         // REVISIT: Should UNKNOWN/NONE have a starting point?
     default:
         break;
@@ -63,37 +63,40 @@ void ConnectionLineBuilder::drawConnStartLineUp(const bool neighbours, const flo
     }
 }
 
-void ConnectionLineBuilder::drawConnLineEnd2Way(
-    ExitDirection endDir, bool neighbours, qint32 dX, qint32 dY, float dstZ)
+void ConnectionLineBuilder::drawConnLineEnd2Way(const ExitDirEnum endDir,
+                                                const bool neighbours,
+                                                const qint32 dX,
+                                                const qint32 dY,
+                                                const float dstZ)
 {
     switch (endDir) {
-    case ExitDirection::NORTH:
+    case ExitDirEnum::NORTH:
         addVertex(dX + 0.75f, dY - 0.1f, dstZ);
         addVertex(dX + 0.75f, dY + 0.1f, dstZ);
         break;
-    case ExitDirection::SOUTH:
+    case ExitDirEnum::SOUTH:
         addVertex(dX + 0.25f, dY + 1.1f, dstZ);
         addVertex(dX + 0.25f, dY + 0.9f, dstZ);
         break;
-    case ExitDirection::EAST:
+    case ExitDirEnum::EAST:
         addVertex(dX + 1.1f, dY + 0.25f, dstZ);
         addVertex(dX + 0.9f, dY + 0.25f, dstZ);
         break;
-    case ExitDirection::WEST:
+    case ExitDirEnum::WEST:
         addVertex(dX - 0.1f, dY + 0.75f, dstZ);
         addVertex(dX + 0.1f, dY + 0.75f, dstZ);
         break;
-    case ExitDirection::UP:
+    case ExitDirEnum::UP:
         drawConnEndLineUp(neighbours, dX, dY, dstZ);
         break;
-    case ExitDirection::DOWN:
+    case ExitDirEnum::DOWN:
         drawConnEndLineDown(neighbours, dX, dY, dstZ);
         break;
-    case ExitDirection::UNKNOWN:
+    case ExitDirEnum::UNKNOWN:
         addVertex(dX + 0.75f, dY + 0.75f, dstZ);
         addVertex(dX + 0.5f, dY + 0.5f, dstZ);
         break;
-    case ExitDirection::NONE:
+    case ExitDirEnum::NONE:
         addVertex(dX + 0.75f, dY + 0.75f, dstZ);
         addVertex(dX + 0.5f, dY + 0.5f, dstZ);
         break;
@@ -126,35 +129,35 @@ void ConnectionLineBuilder::drawConnEndLineUp(const bool neighbours,
     }
 }
 
-void ConnectionLineBuilder::drawConnLineEnd1Way(const ExitDirection endDir,
+void ConnectionLineBuilder::drawConnLineEnd1Way(const ExitDirEnum endDir,
                                                 const qint32 dX,
                                                 const qint32 dY,
                                                 const float dstZ)
 {
     switch (endDir) {
-    case ExitDirection::NORTH:
+    case ExitDirEnum::NORTH:
         addVertex(dX + 0.25f, dY - 0.1f, dstZ);
         addVertex(dX + 0.25f, dY + 0.1f, dstZ);
         break;
-    case ExitDirection::SOUTH:
+    case ExitDirEnum::SOUTH:
         addVertex(dX + 0.75f, dY + 1.1f, dstZ);
         addVertex(dX + 0.75f, dY + 0.9f, dstZ);
         break;
-    case ExitDirection::EAST:
+    case ExitDirEnum::EAST:
         addVertex(dX + 1.1f, dY + 0.75f, dstZ);
         addVertex(dX + 0.9f, dY + 0.75f, dstZ);
         break;
-    case ExitDirection::WEST:
+    case ExitDirEnum::WEST:
         addVertex(dX - 0.1f, dY + 0.25f, dstZ);
         addVertex(dX + 0.1f, dY + 0.25f, dstZ);
         break;
-    case ExitDirection::UP:
-    case ExitDirection::DOWN:
+    case ExitDirEnum::UP:
+    case ExitDirEnum::DOWN:
         addVertex(dX + 0.75f, dY + 0.75f, dstZ);
         addVertex(dX + 0.5f, dY + 0.5f, dstZ);
         break;
-    case ExitDirection::UNKNOWN:
-    case ExitDirection::NONE:
+    case ExitDirEnum::UNKNOWN:
+    case ExitDirEnum::NONE:
         // REVISIT: Original code used the UP/DOWN logic for UNKNOWN/NONE but has no starting point
         break;
     }

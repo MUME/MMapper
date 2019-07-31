@@ -31,10 +31,10 @@ protected:
     void parseViewMessage(const QByteArray &buffer);
 
 private:
-    TelnetDataType m_previousType = TelnetDataType::UNKNOWN;
+    TelnetDataEnum m_previousType = TelnetDataEnum::UNKNOWN;
     bool m_parsingMpi = false;
 
-    char m_command{}; /* '\0' */
+    char m_command = '\0';
     int m_remaining = 0;
-    QByteArray m_buffer{};
+    QByteArray m_buffer;
 };

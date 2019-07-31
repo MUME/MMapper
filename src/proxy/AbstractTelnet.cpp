@@ -155,14 +155,14 @@ AbstractTelnet::AbstractTelnet(TextCodec textCodec, bool debug, QObject *const p
 void AbstractTelnet::setTerminalType(const QByteArray &terminalType)
 {
     const auto get_os_string = []() {
-        if constexpr (CURRENT_PLATFORM == Platform::Linux)
+        if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux)
             return "Linux";
-        else if constexpr (CURRENT_PLATFORM == Platform::Mac)
+        else if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac)
             return "Mac";
-        else if constexpr (CURRENT_PLATFORM == Platform::Windows)
+        else if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows)
             return "Windows";
         else {
-            assert(CURRENT_PLATFORM == Platform::Unknown);
+            assert(CURRENT_PLATFORM == PlatformEnum::Unknown);
             return "Unknown";
         }
     };
@@ -184,7 +184,7 @@ void AbstractTelnet::reset()
 
     // reset telnet status
     setTerminalType();
-    state = TelnetState::NORMAL;
+    state = TelnetStateEnum::NORMAL;
     commandBuffer.clear();
     subnegBuffer.clear();
     sentBytes = 0;
@@ -594,7 +594,7 @@ void AbstractTelnet::onReadInternal(const QByteArray &data)
     // yes, but WHY are we clearing it?
     recvdGA = false;
 
-    AppendBuffer cleanData{};
+    AppendBuffer cleanData;
     cleanData.reserve(data.size());
 
     for (const auto &c : data) {
@@ -644,41 +644,41 @@ void AbstractTelnet::onReadInternal(const QByteArray &data)
 void AbstractTelnet::onReadInternal2(AppendBuffer &cleanData, const uint8_t c)
 {
     switch (state) {
-    case TelnetState::NORMAL:
+    case TelnetStateEnum::NORMAL:
         if (c == TN_IAC) {
             // this is IAC, previous character was regular data
-            state = TelnetState::IAC;
+            state = TelnetStateEnum::IAC;
             commandBuffer.append(c);
         } else {
             // plaintext
             cleanData.append(c);
         }
         break;
-    case TelnetState::IAC:
+    case TelnetStateEnum::IAC:
         // seq. of two IACs
         if (c == TN_IAC) {
-            state = TelnetState::NORMAL;
+            state = TelnetStateEnum::NORMAL;
             cleanData.append(c);
             commandBuffer.clear();
         }
         // IAC DO/DONT/WILL/WONT
         else if ((c == TN_WILL) || (c == TN_WONT) || (c == TN_DO) || (c == TN_DONT)) {
-            state = TelnetState::COMMAND;
+            state = TelnetStateEnum::COMMAND;
             commandBuffer.append(c);
         }
         // IAC SB
         else if (c == TN_SB) {
-            state = TelnetState::SUBNEG;
+            state = TelnetStateEnum::SUBNEG;
             commandBuffer.clear();
         }
         // IAC SE without IAC SB - error - ignored
         else if (c == TN_SE) {
-            state = TelnetState::NORMAL;
+            state = TelnetStateEnum::NORMAL;
             commandBuffer.clear();
         }
         // IAC fol. by something else than IAC, SB, SE, DO, DONT, WILL, WONT
         else {
-            state = TelnetState::NORMAL;
+            state = TelnetStateEnum::NORMAL;
             commandBuffer.append(c);
             processTelnetCommand(commandBuffer);
             // this could have set receivedGA to true; we'll handle that later
@@ -686,52 +686,52 @@ void AbstractTelnet::onReadInternal2(AppendBuffer &cleanData, const uint8_t c)
             commandBuffer.clear();
         }
         break;
-    case TelnetState::COMMAND:
+    case TelnetStateEnum::COMMAND:
         // IAC DO/DONT/WILL/WONT <command code>
-        state = TelnetState::NORMAL;
+        state = TelnetStateEnum::NORMAL;
         commandBuffer.append(c);
         processTelnetCommand(commandBuffer);
         commandBuffer.clear();
         break;
 
-    case TelnetState::SUBNEG:
+    case TelnetStateEnum::SUBNEG:
         if (c == TN_IAC) {
             // this is IAC, previous character was option payload
-            state = TelnetState::SUBNEG_IAC;
+            state = TelnetStateEnum::SUBNEG_IAC;
             commandBuffer.append(c);
         } else {
             // option payload
             subnegBuffer.append(c);
         }
         break;
-    case TelnetState::SUBNEG_IAC:
+    case TelnetStateEnum::SUBNEG_IAC:
         // seq. of two IACs
         if (c == TN_IAC) {
-            state = TelnetState::SUBNEG;
+            state = TelnetStateEnum::SUBNEG;
             subnegBuffer.append(c);
             commandBuffer.clear();
         }
         // IAC DO/DONT/WILL/WONT
         else if ((c == TN_WILL) || (c == TN_WONT) || (c == TN_DO) || (c == TN_DONT)) {
-            state = TelnetState::SUBNEG_COMMAND;
+            state = TelnetStateEnum::SUBNEG_COMMAND;
             commandBuffer.append(c);
         }
         // IAC SE - end of subcommand
         else if (c == TN_SE) {
-            state = TelnetState::NORMAL;
+            state = TelnetStateEnum::NORMAL;
             processTelnetSubnegotiation(subnegBuffer);
             commandBuffer.clear();
             subnegBuffer.clear();
         }
         // IAC SB within IAC SB - error - ignored
         else if (c == TN_SB) {
-            state = TelnetState::NORMAL;
+            state = TelnetStateEnum::NORMAL;
             commandBuffer.clear();
             subnegBuffer.clear();
         }
         // IAC fol. by something else than IAC, SB, SE, DO, DONT, WILL, WONT
         else {
-            state = TelnetState::SUBNEG;
+            state = TelnetStateEnum::SUBNEG;
             commandBuffer.append(c);
             processTelnetCommand(commandBuffer);
             // this could have set receivedGA to true; we'll handle that later
@@ -739,9 +739,9 @@ void AbstractTelnet::onReadInternal2(AppendBuffer &cleanData, const uint8_t c)
             commandBuffer.clear();
         }
         break;
-    case TelnetState::SUBNEG_COMMAND:
+    case TelnetStateEnum::SUBNEG_COMMAND:
         // IAC DO/DONT/WILL/WONT <command code>
-        state = TelnetState::SUBNEG;
+        state = TelnetStateEnum::SUBNEG;
         commandBuffer.append(c);
         processTelnetCommand(commandBuffer);
         commandBuffer.clear();

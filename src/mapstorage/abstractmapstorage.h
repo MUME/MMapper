@@ -46,7 +46,7 @@ signals:
 protected:
     QFile *m_file = nullptr;
     MapData &m_mapData;
-    QString m_fileName{};
+    QString m_fileName;
 
 private:
     // REVISIT: This could be probably be converted to a regular member,
@@ -55,5 +55,5 @@ private:
     // It needs to be private if it's a unique_ptr, but it might as well
     // be public if it's a regular member. If so, rename it to remove the
     // m_ protected/private member prefix, and remove getProgressCounter().
-    std::unique_ptr<ProgressCounter> m_progressCounter{};
+    std::unique_ptr<ProgressCounter> m_progressCounter;
 };

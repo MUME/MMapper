@@ -11,58 +11,58 @@
 #include "../mapdata/ExitDirection.h"
 
 namespace enums {
-const std::array<CommandIdType, NUM_COMMANDS> &getAllCommands()
+const MMapper::Array<CommandEnum, NUM_COMMANDS> &getAllCommands()
 {
-    static const auto g_all_commands = genEnumValues<CommandIdType, NUM_COMMANDS>();
+    static const auto g_all_commands = genEnumValues<CommandEnum, NUM_COMMANDS>();
     return g_all_commands;
 }
 } // namespace enums
 
-bool isDirectionNESWUD(const CommandIdType cmd)
+bool isDirectionNESWUD(const CommandEnum cmd)
 {
     switch (cmd) {
-    case CommandIdType::NORTH:
-    case CommandIdType::SOUTH:
-    case CommandIdType::EAST:
-    case CommandIdType::WEST:
-    case CommandIdType::UP:
-    case CommandIdType::DOWN:
+    case CommandEnum::NORTH:
+    case CommandEnum::SOUTH:
+    case CommandEnum::EAST:
+    case CommandEnum::WEST:
+    case CommandEnum::UP:
+    case CommandEnum::DOWN:
         return true;
 
-    case CommandIdType::UNKNOWN:
-    case CommandIdType::LOOK:
-    case CommandIdType::FLEE:
-    case CommandIdType::SCOUT:
-    case CommandIdType::NONE:
+    case CommandEnum::UNKNOWN:
+    case CommandEnum::LOOK:
+    case CommandEnum::FLEE:
+    case CommandEnum::SCOUT:
+    case CommandEnum::NONE:
     default:
         return false;
     }
 }
-bool isDirection7(const CommandIdType cmd)
+bool isDirection7(const CommandEnum cmd)
 {
     switch (cmd) {
-    case CommandIdType::NORTH:
-    case CommandIdType::SOUTH:
-    case CommandIdType::EAST:
-    case CommandIdType::WEST:
-    case CommandIdType::UP:
-    case CommandIdType::DOWN:
-    case CommandIdType::UNKNOWN:
+    case CommandEnum::NORTH:
+    case CommandEnum::SOUTH:
+    case CommandEnum::EAST:
+    case CommandEnum::WEST:
+    case CommandEnum::UP:
+    case CommandEnum::DOWN:
+    case CommandEnum::UNKNOWN:
         return true;
 
-    case CommandIdType::LOOK:
-    case CommandIdType::FLEE:
-    case CommandIdType::SCOUT:
-    case CommandIdType::NONE:
+    case CommandEnum::LOOK:
+    case CommandEnum::FLEE:
+    case CommandEnum::SCOUT:
+    case CommandEnum::NONE:
     default:
         return false;
     }
 }
-ExitDirection getDirection(const CommandIdType cmd)
+ExitDirEnum getDirection(const CommandEnum cmd)
 {
 #define CASE(x) \
-    case CommandIdType::x: \
-        return ExitDirection::x
+    case CommandEnum::x: \
+        return ExitDirEnum::x
     switch (cmd) {
         CASE(NORTH);
         CASE(SOUTH);
@@ -72,20 +72,20 @@ ExitDirection getDirection(const CommandIdType cmd)
         CASE(DOWN);
         CASE(UNKNOWN);
 
-    case CommandIdType::LOOK:
-    case CommandIdType::FLEE:
-    case CommandIdType::SCOUT:
-    case CommandIdType::NONE:
+    case CommandEnum::LOOK:
+    case CommandEnum::FLEE:
+    case CommandEnum::SCOUT:
+    case CommandEnum::NONE:
     default:
-        return ExitDirection::NONE;
+        return ExitDirEnum::NONE;
     }
 #undef CASE
 }
 
-const char *getUppercase(const CommandIdType cmd)
+const char *getUppercase(const CommandEnum cmd)
 {
 #define CASE(x) \
-    case CommandIdType::x: \
+    case CommandEnum::x: \
         return #x
     switch (cmd) {
         CASE(NORTH);
@@ -105,10 +105,10 @@ const char *getUppercase(const CommandIdType cmd)
     throw std::runtime_error("missing name for command");
 }
 
-const char *getLowercase(const CommandIdType cmd)
+const char *getLowercase(const CommandEnum cmd)
 {
 #define CASE(UPPER, lower) \
-    case CommandIdType::UPPER: \
+    case CommandEnum::UPPER: \
         return #lower
     switch (cmd) {
         CASE(NORTH, north);

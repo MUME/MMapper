@@ -20,10 +20,10 @@
 #include "groupauthority.h"
 #include "mmapper2group.h"
 
-using Messages = CGroupCommunicator::Messages;
+using MessagesEnum = CGroupCommunicator::MessagesEnum;
 
 GroupClient::GroupClient(Mmapper2Group *parent)
-    : CGroupCommunicator(GroupManagerState::Client, parent)
+    : CGroupCommunicator(GroupManagerStateEnum::Client, parent)
     , socket(parent->getAuthority(), this)
 {
     emit sendLog("Client mode has been selected");
@@ -122,59 +122,59 @@ void GroupClient::errorInConnection(GroupSocket *const /* socket */, const QStri
 }
 
 void GroupClient::retrieveData(GroupSocket *const /* socket */,
-                               const Messages message,
+                               const MessagesEnum message,
                                const QVariantMap &data)
 {
-    if (message == Messages::STATE_KICKED) {
+    if (message == MessagesEnum::STATE_KICKED) {
         emit messageBox(QString("You got kicked! Reason: %1").arg(data["text"].toString()));
         stop();
         return;
     }
-    if (socket.getProtocolState() == ProtocolState::AwaitingLogin) {
+    if (socket.getProtocolState() == ProtocolStateEnum::AwaitingLogin) {
         // Login state. either REQ_HANDSHAKE, REQ_LOGIN, or ACK should come
-        if (message == Messages::REQ_HANDSHAKE) {
+        if (message == MessagesEnum::REQ_HANDSHAKE) {
             sendHandshake(data);
-        } else if (message == Messages::REQ_LOGIN) {
+        } else if (message == MessagesEnum::REQ_LOGIN) {
             assert(!NO_OPEN_SSL);
             socket.setProtocolVersion(proposedProtocolVersion);
             socket.startClientEncrypted();
-        } else if (message == Messages::ACK) {
+        } else if (message == MessagesEnum::ACK) {
             // aha! logged on!
-            sendMessage(&socket, Messages::REQ_INFO);
-            socket.setProtocolState(ProtocolState::AwaitingInfo);
+            sendMessage(&socket, MessagesEnum::REQ_INFO);
+            socket.setProtocolState(ProtocolStateEnum::AwaitingInfo);
         } else {
             // ERROR: unexpected message marker!
             // try to ignore?
             qWarning("(AwaitingLogin) Unexpected message marker. Trying to ignore.");
         }
 
-    } else if (socket.getProtocolState() == ProtocolState::AwaitingInfo) {
+    } else if (socket.getProtocolState() == ProtocolStateEnum::AwaitingInfo) {
         // almost connected. awaiting full information about the connection
-        if (message == Messages::UPDATE_CHAR) {
+        if (message == MessagesEnum::UPDATE_CHAR) {
             emit scheduleAction(new AddCharacter(data));
-        } else if (message == Messages::STATE_LOGGED) {
-            socket.setProtocolState(ProtocolState::Logged);
-        } else if (message == Messages::REQ_ACK) {
-            sendMessage(&socket, Messages::ACK);
+        } else if (message == MessagesEnum::STATE_LOGGED) {
+            socket.setProtocolState(ProtocolStateEnum::Logged);
+        } else if (message == MessagesEnum::REQ_ACK) {
+            sendMessage(&socket, MessagesEnum::ACK);
         } else {
             // ERROR: unexpected message marker!
             // try to ignore?
             qWarning("(AwaitingInfo) Unexpected message marker. Trying to ignore.");
         }
 
-    } else if (socket.getProtocolState() == ProtocolState::Logged) {
-        if (message == Messages::ADD_CHAR) {
+    } else if (socket.getProtocolState() == ProtocolStateEnum::Logged) {
+        if (message == MessagesEnum::ADD_CHAR) {
             emit scheduleAction(new AddCharacter(data));
-        } else if (message == Messages::REMOVE_CHAR) {
+        } else if (message == MessagesEnum::REMOVE_CHAR) {
             emit scheduleAction(new RemoveCharacter(data));
-        } else if (message == Messages::UPDATE_CHAR) {
+        } else if (message == MessagesEnum::UPDATE_CHAR) {
             emit scheduleAction(new UpdateCharacter(data));
-        } else if (message == Messages::RENAME_CHAR) {
+        } else if (message == MessagesEnum::RENAME_CHAR) {
             emit scheduleAction(new RenameCharacter(data));
-        } else if (message == Messages::GTELL) {
+        } else if (message == MessagesEnum::GTELL) {
             emit gTellArrived(data);
-        } else if (message == Messages::REQ_ACK) {
-            sendMessage(&socket, Messages::ACK);
+        } else if (message == MessagesEnum::REQ_ACK) {
+            sendMessage(&socket, MessagesEnum::ACK);
         } else {
             // ERROR: unexpected message marker!
             // try to ignore?
@@ -232,7 +232,7 @@ void GroupClient::sendHandshake(const QVariantMap &data)
     } else {
         QVariantMap handshake;
         handshake["protocolVersion"] = proposedProtocolVersion;
-        sendMessage(&socket, Messages::REQ_HANDSHAKE, handshake);
+        sendMessage(&socket, MessagesEnum::REQ_HANDSHAKE, handshake);
     }
 }
 
@@ -247,7 +247,7 @@ void GroupClient::sendLoginInformation()
     }
     QVariantMap root;
     root["loginData"] = loginData;
-    sendMessage(&socket, Messages::UPDATE_CHAR, root);
+    sendMessage(&socket, MessagesEnum::UPDATE_CHAR, root);
 }
 
 void GroupClient::connectionEncrypted()
@@ -279,16 +279,16 @@ void GroupClient::connectionEncrypted()
             getAuthority()->add(secret);
         // Update metadata
         getAuthority()->setMetadata(secret,
-                                    GroupMetadata::IP_ADDRESS,
+                                    GroupMetadataEnum::IP_ADDRESS,
                                     socket.getPeerAddress().toString());
         getAuthority()->setMetadata(secret,
-                                    GroupMetadata::LAST_LOGIN,
+                                    GroupMetadataEnum::LAST_LOGIN,
                                     QDateTime::currentDateTime().toString());
         getAuthority()->setMetadata(secret,
-                                    GroupMetadata::CERTIFICATE,
+                                    GroupMetadataEnum::CERTIFICATE,
                                     socket.getPeerCertificate().toPem());
         getAuthority()->setMetadata(secret,
-                                    GroupMetadata::PORT,
+                                    GroupMetadataEnum::PORT,
                                     QString("%1").arg(socket.getPeerPort()));
     }
 }
@@ -312,7 +312,7 @@ void GroupClient::tryReconnecting()
 
 void GroupClient::sendGroupTellMessage(const QVariantMap &root)
 {
-    sendMessage(&socket, Messages::GTELL, root);
+    sendMessage(&socket, MessagesEnum::GTELL, root);
 }
 
 void GroupClient::sendCharUpdate(const QVariantMap &map)
@@ -322,7 +322,7 @@ void GroupClient::sendCharUpdate(const QVariantMap &map)
 
 void GroupClient::sendCharRename(const QVariantMap &map)
 {
-    sendMessage(&socket, Messages::RENAME_CHAR, map);
+    sendMessage(&socket, MessagesEnum::RENAME_CHAR, map);
 }
 
 void GroupClient::stop()

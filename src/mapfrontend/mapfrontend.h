@@ -36,18 +36,18 @@ class MapFrontend : public QObject, public RoomAdmin
     friend class FrontendAccessor;
 
 protected:
-    ParseTree parseTree{};
-    Map map{};
-    RoomIndex roomIndex{};
-    std::stack<RoomId> unusedIds{};
-    std::map<RoomId, std::set<MapAction *>> actionSchedule{};
-    RoomHomes roomHomes{};
-    RoomLocks locks{};
+    ParseTree parseTree;
+    Map map;
+    RoomIndex roomIndex;
+    std::stack<RoomId> unusedIds;
+    std::map<RoomId, std::set<MapAction *>> actionSchedule;
+    RoomHomes roomHomes;
+    RoomLocks locks;
 
     RoomId greatestUsedId = INVALID_ROOMID;
-    QMutex mapLock{};
-    Coordinate ulf{};
-    Coordinate lrb{};
+    QMutex mapLock;
+    Coordinate ulf;
+    Coordinate lrb;
     AbstractRoomFactory *factory = nullptr;
 
     void executeActions(RoomId roomId);

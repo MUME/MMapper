@@ -3,7 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <array>
+#include "Array.h"
 #include <cassert>
 #include <cstddef>
 #include <stdexcept>
@@ -24,13 +24,13 @@ struct /* TODO: alignas(4096) */ null_padded_buffer final
 {
     static_assert(N >= 4096);
     /* TODO: alignas(4096) */
-    std::array<char, N + 1u> array{};
+    MMapper::Array<char, N + 1u> array;
 };
 
-enum class IOResult { SUCCESS, FAILURE, EXCEPTION };
+enum class IOResultEnum { SUCCESS, FAILURE, EXCEPTION };
 
 template<size_t N, typename Callback>
-IOResult readAllAvailable(QIODevice &dev, null_padded_buffer<N> &buffer, Callback &&callback)
+IOResultEnum readAllAvailable(QIODevice &dev, null_padded_buffer<N> &buffer, Callback &&callback)
 {
     char *const data = buffer.array.data();
     const auto maxSize = static_cast<qint64>(buffer.array.size()) - 1;
@@ -38,7 +38,7 @@ IOResult readAllAvailable(QIODevice &dev, null_padded_buffer<N> &buffer, Callbac
         const auto got = dev.read(data, maxSize);
         if (got < 0) {
             callback(QByteArray::fromRawData(data, 0));
-            return IOResult::FAILURE;
+            return IOResultEnum::FAILURE;
         }
 
         if (got == 0)
@@ -51,7 +51,7 @@ IOResult readAllAvailable(QIODevice &dev, null_padded_buffer<N> &buffer, Callbac
         callback(QByteArray::fromRawData(data, igot));
     }
     callback(QByteArray::fromRawData(data, 0));
-    return IOResult::SUCCESS;
+    return IOResultEnum::SUCCESS;
 }
 
 class IOException : public std::runtime_error
@@ -97,7 +97,7 @@ static_assert(sizeof(ErrorNumberMessage) == 1024);
 
 bool fsync(QFile &) noexcept(false);
 
-IOResult fsyncNoexcept(QFile &) noexcept;
+IOResultEnum fsyncNoexcept(QFile &) noexcept;
 
 bool tuneKeepAlive(qintptr socketDescriptor, int maxIdle = 60, int count = 4, int interval = 60);
 

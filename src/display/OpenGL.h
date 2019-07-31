@@ -495,16 +495,16 @@ public:
      * so this isn't the best place to put font functions. */
     void initFont(QPaintDevice *paintDevice);
 
-    int getFontWidth(const QString &x, FontFormatFlags flags) const;
+    int getFontWidth(const QString &x, const FontFormatFlags &flags) const;
 
     int getFontHeight() const;
 
-    void renderTextAt(const float x,
-                      const float y,
+    void renderTextAt(float x,
+                      float y,
                       const QString &text,
                       const QColor &color,
-                      const FontFormatFlags fontFormatFlag,
-                      const float rotationAngle);
+                      const FontFormatFlags &fontFormatFlag,
+                      float rotationAngle);
 };
 
 class NODISCARD CompileOnly

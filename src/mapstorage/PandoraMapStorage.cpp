@@ -46,12 +46,12 @@ bool PandoraMapStorage::loadData()
     }
 }
 
-static RoomTerrainType toTerrainType(const QString &str)
+static RoomTerrainEnum toTerrainType(const QString &str)
 {
 #define CASE2(UPPER, s) \
     do { \
         if (str == s) \
-            return RoomTerrainType::UPPER; \
+            return RoomTerrainEnum::UPPER; \
     } while (false)
     CASE2(UNDEFINED, "undefined");
     CASE2(INDOORS, "indoors");
@@ -70,7 +70,7 @@ static RoomTerrainType toTerrainType(const QString &str)
     CASE2(CAVERN, "cavern");
     CASE2(DEATHTRAP, "deathtrap"); // Not supported by Pandora
 #undef CASE3
-    return RoomTerrainType::UNDEFINED;
+    return RoomTerrainEnum::UNDEFINED;
 }
 
 Room *PandoraMapStorage::loadRoom(QXmlStreamReader &xml)
@@ -121,7 +121,7 @@ void PandoraMapStorage::loadExits(Room &room, QXmlStreamReader &xml)
                     const auto dirStr = xml.attributes().value("dir").toString();
                     const auto dir = Mmapper2Exit::dirForChar(dirStr.at(0).toLatin1());
                     Exit &exit = eList[dir];
-                    exit.updateExit(ExitFlags{ExitFlag::EXIT});
+                    exit.updateExit(ExitFlags{ExitFlagEnum::EXIT});
 
                     const auto to = xml.attributes().value("to").toString();
                     if (to == "DEATH") {
@@ -132,9 +132,9 @@ void PandoraMapStorage::loadExits(Room &room, QXmlStreamReader &xml)
 
                     const auto doorName = xml.attributes().value("door").toString();
                     if (doorName != nullptr && !doorName.isEmpty()) {
-                        exit.updateExit(ExitFlags{ExitFlag::DOOR});
+                        exit.updateExit(ExitFlags{ExitFlagEnum::DOOR});
                         if (doorName != "exit") {
-                            exit.setDoorFlags(DoorFlags{DoorFlag::HIDDEN});
+                            exit.setDoorFlags(DoorFlags{DoorFlagEnum::HIDDEN});
                             exit.setDoorName(doorName);
                         }
                     }

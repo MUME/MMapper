@@ -24,7 +24,7 @@ struct IncomingData;
 
 // #define XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
 
-enum class XmlMode { NONE, ROOM, NAME, DESCRIPTION, EXITS, PROMPT, TERRAIN, HEADER };
+enum class XmlModeEnum { NONE, ROOM, NAME, DESCRIPTION, EXITS, PROMPT, TERRAIN, HEADER };
 
 class MumeXmlParser : public AbstractParser
 {
@@ -55,14 +55,14 @@ protected:
     QByteArray characters(QByteArray &ch);
     bool element(const QByteArray &);
 
-    CommandIdType m_move = CommandIdType::LOOK;
-    XmlMode m_xmlMode = XmlMode::NONE;
+    CommandEnum m_move = CommandEnum::LOOK;
+    XmlModeEnum m_xmlMode = XmlModeEnum::NONE;
 
     void move();
-    QByteArray m_lineToUser{};
-    QByteArray m_tempCharacters{};
-    QByteArray m_tempTag{};
-    QString m_stringBuffer{};
+    QByteArray m_lineToUser;
+    QByteArray m_tempCharacters;
+    QByteArray m_tempTag;
+    QString m_stringBuffer;
     bool m_readingTag = false;
     bool m_readStatusTag = false;
     bool m_readWeatherTag = false;
@@ -82,6 +82,6 @@ signals:
     void sendScoreLineEvent(QByteArray);
     void sendPromptLineEvent(QByteArray);
     void mumeTime(QString);
-    void sendCharacterPositionEvent(CharacterPosition);
-    void sendCharacterAffectEvent(CharacterAffect, bool);
+    void sendCharacterPositionEvent(CharacterPositionEnum);
+    void sendCharacterAffectEvent(CharacterAffectEnum, bool);
 };

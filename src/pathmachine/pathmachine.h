@@ -26,7 +26,7 @@ class QObject;
 class RoomRecipient;
 struct RoomId;
 
-enum class PathState { APPROVED = 0, EXPERIMENTING = 1, SYNCING = 2 };
+enum class PathStateEnum { APPROVED = 0, EXPERIMENTING = 1, SYNCING = 2 };
 
 /**
  * the parser determines the relations between incoming move- and room-events
@@ -55,7 +55,7 @@ public:
     explicit PathMachine(AbstractRoomFactory *factory, QObject *parent = nullptr);
 
 protected:
-    PathParameters params{};
+    PathParameters params;
     void experimenting(const SigParseEvent &sigParseEvent);
     void syncing(const SigParseEvent &sigParseEvent);
     void approved(const SigParseEvent &sigParseEvent);
@@ -63,14 +63,17 @@ protected:
     void tryExits(const Room *, RoomRecipient &, ParseEvent &, bool out);
     void tryExit(const Exit &possible, RoomRecipient &recipient, bool out);
     void tryCoordinate(const Room *, RoomRecipient &, ParseEvent &);
-    AbstractRoomFactory *factory;
+    AbstractRoomFactory *factory = nullptr;
 
     RoomSignalHandler signaler;
     /* REVISIT: pathRoot and mostLikelyRoom should probably be of type RoomId */
     Room pathRoot;
     Room mostLikelyRoom;
-    SigParseEvent lastEvent{};
-    PathState state = PathState::SYNCING;
+    SigParseEvent lastEvent;
+    PathStateEnum state = PathStateEnum::SYNCING;
+
+    // TODO: use smart pointer to manage this.
+    // It looks like it might be leaked because it's reassigned.
     PathList *paths = nullptr;
 
 private:

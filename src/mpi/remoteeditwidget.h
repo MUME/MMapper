@@ -26,58 +26,58 @@ class QPlainTextEdit;
 class QWidget;
 class QStatusBar;
 
-enum class EditViewCmdType { VIEW_OPTION, EDIT_ALIGNMENT, EDIT_COLORS, EDIT_WHITESPACE };
-enum class EditCmdType2 { EDIT_ONLY, EDIT_OR_VIEW, SPACER };
+enum class EditViewCmdEnum { VIEW_OPTION, EDIT_ALIGNMENT, EDIT_COLORS, EDIT_WHITESPACE };
+enum class EditCmd2Enum { EDIT_ONLY, EDIT_OR_VIEW, SPACER };
 
 // NOTE: Ctrl+A is "Select All" by default.
 #define XFOREACH_REMOTE_EDIT_MENU_ITEM(X) \
     X(justifyText, \
-      EditViewCmdType::EDIT_ALIGNMENT, \
+      EditViewCmdEnum::EDIT_ALIGNMENT, \
       "&Justify Entire Message", \
       "Justify text to 80 characters", \
       nullptr) \
     X(justifyLines, \
-      EditViewCmdType::EDIT_ALIGNMENT, \
+      EditViewCmdEnum::EDIT_ALIGNMENT, \
       "Justify &Selection", \
       "Justify selection to 80 characters", \
       "Ctrl+J") \
     X(expandTabs, \
-      EditViewCmdType::EDIT_WHITESPACE, \
+      EditViewCmdEnum::EDIT_WHITESPACE, \
       "&Expand Tabs", \
       "Expand tabs to 8-character tabstops", \
       "Ctrl+E") \
     X(removeTrailingWhitespace, \
-      EditViewCmdType::EDIT_WHITESPACE, \
+      EditViewCmdEnum::EDIT_WHITESPACE, \
       "Remove Trailing &Whitespace", \
       "Remove trailing whitespace", \
       "Ctrl+W") \
     X(removeDuplicateSpaces, \
-      EditViewCmdType::EDIT_WHITESPACE, \
+      EditViewCmdEnum::EDIT_WHITESPACE, \
       "Remove &Duplicate Spaces", \
       "Remove duplicate spaces in any partly-selected lines", \
       "Ctrl+D") \
     X(normalizeAnsi, \
-      EditViewCmdType::EDIT_COLORS, \
+      EditViewCmdEnum::EDIT_COLORS, \
       "&Normalize Ansi Codes", \
       "Normalize ansi codes.", \
       "Ctrl+N") \
     X(insertAnsiReset, \
-      EditViewCmdType::EDIT_COLORS, \
+      EditViewCmdEnum::EDIT_COLORS, \
       "&Insert Ansi Reset Code", \
       "Insert an ansi reset code (ESC[0m).", \
       "Ctrl+I") \
     X(joinLines, \
-      EditViewCmdType::EDIT_ALIGNMENT, \
+      EditViewCmdEnum::EDIT_ALIGNMENT, \
       "Joi&n Lines", \
       "Join all partly-selected lines.", \
       "Ctrl+Shift+J") \
     X(quoteLines, \
-      EditViewCmdType::EDIT_ALIGNMENT, \
+      EditViewCmdEnum::EDIT_ALIGNMENT, \
       "&Quote Lines", \
       "Add a quote prefix to all partly-selected lines.", \
       "Ctrl+>" /* aka "Ctrl+Shift+." */) \
     X(toggleWhitespace, \
-      EditViewCmdType::VIEW_OPTION, \
+      EditViewCmdEnum::VIEW_OPTION, \
       "Toggle &Whitespace", \
       "Toggle the display of whitespace.", \
       "Ctrl+Shift+W")
@@ -178,5 +178,5 @@ private:
     int m_maxLength = 80;
 
     bool m_submitted = false;
-    QScopedPointer<Editor> m_textEdit{};
+    QScopedPointer<Editor> m_textEdit;
 };

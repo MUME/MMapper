@@ -9,15 +9,15 @@
 #include "../global/bits.h"
 #include "../global/utils.h"
 
-enum class DirectionalLightType { NONE = 0, DIRECT_SUN_ROOM = 1, INDIRECT_SUN_ROOM = 2, BOTH = 3 };
+enum class DirectionalLightEnum { NONE = 0, DIRECT_SUN_ROOM = 1, INDIRECT_SUN_ROOM = 2, BOTH = 3 };
 
-inline DirectionalLightType operator&(DirectionalLightType lhs, DirectionalLightType rhs)
+inline DirectionalLightEnum operator&(DirectionalLightEnum lhs, DirectionalLightEnum rhs)
 {
-    return static_cast<DirectionalLightType>(static_cast<uint8_t>(lhs) & static_cast<uint8_t>(rhs));
+    return static_cast<DirectionalLightEnum>(static_cast<uint8_t>(lhs) & static_cast<uint8_t>(rhs));
 }
-inline DirectionalLightType operator|(DirectionalLightType lhs, DirectionalLightType rhs)
+inline DirectionalLightEnum operator|(DirectionalLightEnum lhs, DirectionalLightEnum rhs)
 {
-    return static_cast<DirectionalLightType>(static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs));
+    return static_cast<DirectionalLightEnum>(static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs));
 }
 
 static constexpr const auto ANY_DIRECT_SUNLIGHT = (bit1 | bit3 | bit5 | bit7 | bit9 | bit11);
@@ -26,7 +26,7 @@ static constexpr const auto CONNECTED_ROOM_FLAGS_VALID = bit15;
 class ConnectedRoomFlagsType
 {
 private:
-    uint16_t flags{};
+    uint16_t flags = 0;
 
 public:
     ConnectedRoomFlagsType() = default;
@@ -55,13 +55,13 @@ public:
 
 private:
     static constexpr const auto MASK = static_cast<uint8_t>(
-        static_cast<uint8_t>(DirectionalLightType::DIRECT_SUN_ROOM)
-        | static_cast<uint8_t>(DirectionalLightType::INDIRECT_SUN_ROOM));
+        static_cast<uint8_t>(DirectionalLightEnum::DIRECT_SUN_ROOM)
+        | static_cast<uint8_t>(DirectionalLightEnum::INDIRECT_SUN_ROOM));
 
-    static int getShift(DirectionType dir) { return static_cast<int>(dir) * 2; }
+    static int getShift(DirectionEnum dir) { return static_cast<int>(dir) * 2; }
 
 public:
-    void setDirectionalLight(DirectionType dir, DirectionalLightType light)
+    void setDirectionalLight(DirectionEnum dir, DirectionalLightEnum light)
     {
         const auto shift = getShift(dir);
         using flag_type = decltype(flags);
@@ -69,14 +69,14 @@ public:
         flags = static_cast<flag_type>(flags | ((static_cast<uint8_t>(light) & MASK) << shift));
     }
 
-    DirectionalLightType getDirectionalLight(DirectionType dir) const
+    DirectionalLightEnum getDirectionalLight(DirectionEnum dir) const
     {
         const auto shift = getShift(dir);
-        return static_cast<DirectionalLightType>((flags >> shift) & MASK);
+        return static_cast<DirectionalLightEnum>((flags >> shift) & MASK);
     }
 
-    bool hasDirectionalSunlight(DirectionType dir) const
+    bool hasDirectionalSunlight(DirectionEnum dir) const
     {
-        return getDirectionalLight(dir) == DirectionalLightType::DIRECT_SUN_ROOM;
+        return getDirectionalLight(dir) == DirectionalLightEnum::DIRECT_SUN_ROOM;
     }
 };

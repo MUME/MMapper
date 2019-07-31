@@ -32,7 +32,7 @@ protected:
     void exec() override;
 
 private:
-    QVariantMap map{};
+    QVariantMap map;
 };
 
 class RemoveCharacter final : public GroupAction
@@ -45,7 +45,7 @@ protected:
     void exec() override;
 
 private:
-    QByteArray name{};
+    QByteArray name;
 };
 
 class UpdateCharacter final : public GroupAction
@@ -57,7 +57,7 @@ protected:
     void exec() override;
 
 private:
-    QVariantMap map{};
+    QVariantMap map;
 };
 
 class RenameCharacter final : public GroupAction
@@ -69,7 +69,7 @@ protected:
     void exec() override;
 
 private:
-    QVariantMap map{};
+    QVariantMap map;
 };
 
 class ResetCharacters final : public GroupAction

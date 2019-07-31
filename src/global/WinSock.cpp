@@ -66,7 +66,7 @@ bool WinSock::tuneKeepAlive(unsigned int socket,
     }
 
     // Verify that keepalive option is enabled
-    char optVal;
+    char optVal = '\0';
     int optLen = sizeof(optVal);
     ret = getsockopt(socket, SOL_SOCKET, SO_KEEPALIVE, &optVal, &optLen);
     if (ret != 0) {

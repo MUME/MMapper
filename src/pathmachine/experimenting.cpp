@@ -11,14 +11,14 @@
 #include "pathparameters.h"
 
 Experimenting::Experimenting(PathList *const pat,
-                             const ExitDirection in_dirCode,
+                             const ExitDirEnum in_dirCode,
                              PathParameters &in_params,
                              AbstractRoomFactory *const in_factory)
     : direction(RoomFactory::exitDir(in_dirCode))
     , dirCode(in_dirCode)
-    , shortPaths(pat)
     , paths(new PathList)
     , params(in_params)
+    , shortPaths(pat)
     , factory(in_factory)
 {}
 

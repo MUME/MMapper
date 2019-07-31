@@ -223,7 +223,7 @@ void Proxy::start()
     connect(m_mudSocket, &MumeSocket::disconnected, m_groupManager, &Mmapper2Group::reset);
     connect(m_mudSocket, &MumeSocket::processMudStream, m_mudTelnet, &MudTelnet::onAnalyzeMudStream);
     connect(m_mudSocket, &MumeSocket::log, mw, &MainWindow::log);
-    if (getConfig().general.mapMode != MapMode::OFFLINE)
+    if (getConfig().general.mapMode != MapModeEnum::OFFLINE)
         m_mudSocket->connectToHost();
     else {
         sendToUser(
@@ -232,7 +232,7 @@ void Proxy::start()
             "\r\n"
             "Welcome to the land of Middle-earth. May your visit here be... interesting.\r\n"
             "Never forget! Try to role-play...\r\n");
-        m_parserXml->doMove(CommandIdType::LOOK);
+        m_parserXml->doMove(CommandEnum::LOOK);
     }
 }
 
@@ -269,7 +269,7 @@ void Proxy::onMudError(const QString &errorStr)
     sendToUser("\r\n\033[1;37;46m" + errorStr.toLocal8Bit() + "\033[0m\r\n");
 
     if (getConfig().connection.proxyConnectionStatus) {
-        if (getConfig().general.mapMode == MapMode::OFFLINE) {
+        if (getConfig().general.mapMode == MapModeEnum::OFFLINE) {
             sendToUser("\r\n"
                        "\033[1;37;46mYou are now exploring the map offline.\033[0m\r\n");
             m_parserXml->sendPromptToUser();
@@ -303,7 +303,7 @@ void Proxy::mudTerminatedConnection()
     sendToUser("\r\n\033[1;37;46mMUME closed the connection.\033[0m\r\n");
 
     if (getConfig().connection.proxyConnectionStatus) {
-        if (getConfig().general.mapMode == MapMode::OFFLINE) {
+        if (getConfig().general.mapMode == MapModeEnum::OFFLINE) {
             sendToUser("\r\n"
                        "\033[1;37;46mYou are now exploring the map offline.\033[0m\r\n");
             m_parserXml->sendPromptToUser();

@@ -15,8 +15,9 @@
  */
 class FileSaver final
 {
-    QString m_filename{};
-    QFile m_file{}; // disables copying
+private:
+    QString m_filename;
+    QFile m_file; // old comment says "disables copying" ... why? and how?
 
 public:
     FileSaver() = default;

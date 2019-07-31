@@ -18,31 +18,31 @@ const char *RoomFilter::parse_help
 bool RoomFilter::parseRoomFilter(const QString &line, RoomFilter &output)
 {
     QString pattern = line;
-    auto kind = pattern_kinds::NAME;
+    auto kind = PatternKindsEnum::NAME;
     if (line.size() >= 2 && line[0] == '-') {
         QString kindstr = line.section(" ", 0, 0);
         if (kindstr == "-desc" || kindstr.startsWith("-d")) {
-            kind = pattern_kinds::DESC;
+            kind = PatternKindsEnum::DESC;
         } else if (kindstr == "-dyndesc" || kindstr.startsWith("-dy")) {
-            kind = pattern_kinds::DYN_DESC;
+            kind = PatternKindsEnum::DYN_DESC;
         } else if (kindstr == "-name") {
-            kind = pattern_kinds::NAME;
+            kind = PatternKindsEnum::NAME;
         } else if (kindstr == "-exits" || kindstr == "-e") {
-            kind = pattern_kinds::EXITS;
+            kind = PatternKindsEnum::EXITS;
         } else if (kindstr == "-note" || kindstr == "-n") {
-            kind = pattern_kinds::NOTE;
+            kind = PatternKindsEnum::NOTE;
         } else if (kindstr == "-all" || kindstr == "-a") {
-            kind = pattern_kinds::ALL;
+            kind = PatternKindsEnum::ALL;
         } else if (kindstr == "-clear" || kindstr == "-c") {
-            kind = pattern_kinds::NONE;
+            kind = PatternKindsEnum::NONE;
         } else if (kindstr == "-flags" || kindstr == "-f") {
-            kind = pattern_kinds::FLAGS;
+            kind = PatternKindsEnum::FLAGS;
         } else {
             return false;
         }
 
         // Require pattern text in addition to arguments
-        if (kind != pattern_kinds::NONE) {
+        if (kind != PatternKindsEnum::NONE) {
             pattern = line.section(" ", 1);
             if (pattern.isEmpty()) {
                 return false;
@@ -57,24 +57,24 @@ bool RoomFilter::filter(const Room *const pr) const
 {
     auto &r = deref(pr);
 
-    const auto filter_kind = [this](const Room &r, const pattern_kinds pat) -> bool {
+    const auto filter_kind = [this](const Room &r, const PatternKindsEnum pat) -> bool {
         switch (pat) {
-        case pattern_kinds::ALL:
+        case PatternKindsEnum::ALL:
             throw std::invalid_argument("pat");
 
-        case pattern_kinds::DESC:
+        case PatternKindsEnum::DESC:
             return r.getStaticDescription().contains(pattern, cs);
 
-        case pattern_kinds::DYN_DESC:
+        case PatternKindsEnum::DYN_DESC:
             return r.getDynamicDescription().contains(pattern, cs);
 
-        case pattern_kinds::NAME:
+        case PatternKindsEnum::NAME:
             return r.getName().contains(pattern, cs);
 
-        case pattern_kinds::NOTE:
+        case PatternKindsEnum::NOTE:
             return r.getNote().contains(pattern, cs);
 
-        case pattern_kinds::EXITS:
+        case PatternKindsEnum::EXITS:
             for (const auto &e : r.getExitsList()) {
                 if (e.getDoorName().contains(pattern, cs)) {
                     return true;
@@ -82,7 +82,7 @@ bool RoomFilter::filter(const Room *const pr) const
             }
             return false;
 
-        case pattern_kinds::FLAGS:
+        case PatternKindsEnum::FLAGS:
             for (const auto &e : r.getExitsList()) {
                 for (const auto flag : ALL_DOOR_FLAGS) {
                     if (!e.getDoorFlags().contains(flag))
@@ -141,19 +141,19 @@ bool RoomFilter::filter(const Room *const pr) const
             }
             return false;
 
-        case pattern_kinds::NONE:
+        case PatternKindsEnum::NONE:
             return false;
         }
         return false;
     };
 
-    if (kind == pattern_kinds::ALL) {
-        for (auto pat : {pattern_kinds::DESC,
-                         pattern_kinds::DYN_DESC,
-                         pattern_kinds::NAME,
-                         pattern_kinds::NOTE,
-                         pattern_kinds::EXITS,
-                         pattern_kinds::FLAGS})
+    if (kind == PatternKindsEnum::ALL) {
+        for (auto pat : {PatternKindsEnum::DESC,
+                         PatternKindsEnum::DYN_DESC,
+                         PatternKindsEnum::NAME,
+                         PatternKindsEnum::NOTE,
+                         PatternKindsEnum::EXITS,
+                         PatternKindsEnum::FLAGS})
             if (filter_kind(r, pat))
                 return true;
         return false;

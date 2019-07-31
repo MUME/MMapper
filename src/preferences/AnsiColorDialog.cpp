@@ -16,8 +16,8 @@ AnsiColorDialog::AnsiColorDialog(const QString &ansiString, QWidget *parent)
 {
     ui->setupUi(this);
 
-    ui->foregroundAnsiCombo->initColours(AnsiMode::ANSI_FG);
-    ui->backgroundAnsiCombo->initColours(AnsiMode::ANSI_BG);
+    ui->foregroundAnsiCombo->initColours(AnsiModeEnum::ANSI_FG);
+    ui->backgroundAnsiCombo->initColours(AnsiModeEnum::ANSI_BG);
 
     updateColors();
 

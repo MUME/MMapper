@@ -12,24 +12,24 @@
 #include "../configuration/configuration.h"
 #include "../proxy/telnetfilter.h"
 
-MpiFilter::MpiFilter(QObject *parent)
+MpiFilter::MpiFilter(QObject *const parent)
     : QObject(parent)
 {}
 
-static bool endsInLinefeed(TelnetDataType type)
+static bool endsInLinefeed(const TelnetDataEnum type)
 {
     switch (type) {
-    case TelnetDataType::LF:
-    case TelnetDataType::CRLF:
+    case TelnetDataEnum::LF:
+    case TelnetDataEnum::CRLF:
         return true;
-    case TelnetDataType::PROMPT:
-    case TelnetDataType::MENU_PROMPT:
-    case TelnetDataType::LOGIN:
-    case TelnetDataType::LOGIN_PASSWORD:
-    case TelnetDataType::LFCR:
-    case TelnetDataType::DELAY:
-    case TelnetDataType::SPLIT:
-    case TelnetDataType::UNKNOWN:
+    case TelnetDataEnum::PROMPT:
+    case TelnetDataEnum::MENU_PROMPT:
+    case TelnetDataEnum::LOGIN:
+    case TelnetDataEnum::LOGIN_PASSWORD:
+    case TelnetDataEnum::LFCR:
+    case TelnetDataEnum::DELAY:
+    case TelnetDataEnum::SPLIT:
+    case TelnetDataEnum::UNKNOWN:
     default:
         return false;
     }

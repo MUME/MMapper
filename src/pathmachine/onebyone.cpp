@@ -31,7 +31,8 @@ OneByOne::OneByOne(AbstractRoomFactory *const in_factory,
 
 void OneByOne::receiveRoom(RoomAdmin *const admin, const Room *const room)
 {
-    if (factory->compare(room, deref(event), params.matchingTolerance) == ComparisonResult::EQUAL) {
+    if (factory->compare(room, deref(event), params.matchingTolerance)
+        == ComparisonResultEnum::EQUAL) {
         augmentPath(shortPaths->back(), admin, room);
     } else {
         // needed because the memory address is not unique and

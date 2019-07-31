@@ -170,7 +170,7 @@ int findTrailingWhitespace(const QString &line);
 class TextBuffer final
 {
 private:
-    QString text_{};
+    QString text_;
 
 public:
     void reserve(int len) { text_.reserve(len); }
@@ -197,7 +197,7 @@ public:
 class AnsiString final
 {
 private:
-    std::string buffer_{};
+    std::string buffer_;
 
 public:
     AnsiString();
@@ -305,6 +305,7 @@ TextBuffer normalizeAnsi(const QString &str);
     static constexpr const char *const S_##NAME{ARR_##NAME}; \
     static constexpr const std::string_view SV_##NAME { ARR_##NAME }
 
+// TODO: put these in a string constants namespace
 static constexpr const char C_NUL = 0;
 DEFINE_CHAR_CONST(ESC, '\x1b');
 DEFINE_CHAR_CONST(CARRIAGE_RETURN, '\r');
@@ -323,17 +324,20 @@ class AnsiStringToken final
 public:
     using size_type = decltype(std::declval<QString>().size());
 
-    enum class Type { ANSI, CONTROL, NEWLINE, SPACE, WORD };
-    Type type;
+    enum class TokenTypeEnum { ANSI, CONTROL, NEWLINE, SPACE, WORD };
+    TokenTypeEnum type = TokenTypeEnum::ANSI; // There is no good default value.
 
 private:
     /* TODO: convert to QStringRef? */
     const QString *text_;
-    size_type offset_;
-    size_type length_;
+    const size_type offset_;
+    const size_type length_;
 
 public:
-    explicit AnsiStringToken(Type _type, const QString &_text, size_type _offset, size_type _length);
+    explicit AnsiStringToken(TokenTypeEnum _type,
+                             const QString &_text,
+                             size_type _offset,
+                             size_type _length);
     size_type length() const { return length_; }
     size_type start_offset() const { return offset_; }
     size_type end_offset() const { return offset_ + length_; }
@@ -412,7 +416,7 @@ struct AnsiTokenizer final
         AnsiStringToken getCurrent();
 
     private:
-        enum class Result { KEEPGOING, STOP };
+        enum class ResultEnum { KEEPGOING, STOP };
 
         template<typename Callback>
         size_type skip(Callback &&check)
@@ -422,7 +426,7 @@ struct AnsiTokenizer final
             assert(isClamped(start, 0, len));
             auto it = start + 1;
             for (; it < len; ++it)
-                if (check(str_[it]) == Result::STOP)
+                if (check(str_[it]) == ResultEnum::STOP)
                     break;
             assert(isClamped(it, start, len));
             return it - start;

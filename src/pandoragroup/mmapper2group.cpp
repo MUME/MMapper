@@ -29,13 +29,13 @@ static constexpr const bool THREADED = true;
 static constexpr const auto ONE_MINUTE = 60;
 static constexpr const int THIRTY_MINUTES = 30 * ONE_MINUTE;
 const Mmapper2Group::AffectTimeout Mmapper2Group::s_affectTimeout
-    = {{CharacterAffect::BASHED, 4},
-       {CharacterAffect::BLIND, THIRTY_MINUTES},
-       {CharacterAffect::POISONED, 5 * ONE_MINUTE},
-       {CharacterAffect::SLEPT, THIRTY_MINUTES},
-       {CharacterAffect::BLEEDING, 2 * ONE_MINUTE},
-       {CharacterAffect::HUNGRY, 2 * ONE_MINUTE},
-       {CharacterAffect::THIRSTY, 2 * ONE_MINUTE}};
+    = {{CharacterAffectEnum::BASHED, 4},
+       {CharacterAffectEnum::BLIND, THIRTY_MINUTES},
+       {CharacterAffectEnum::POISONED, 5 * ONE_MINUTE},
+       {CharacterAffectEnum::SLEPT, THIRTY_MINUTES},
+       {CharacterAffectEnum::BLEEDING, 2 * ONE_MINUTE},
+       {CharacterAffectEnum::HUNGRY, 2 * ONE_MINUTE},
+       {CharacterAffectEnum::THIRSTY, 2 * ONE_MINUTE}};
 
 Mmapper2Group::Mmapper2Group(QObject *const /* parent */)
     : QObject(nullptr)
@@ -43,8 +43,8 @@ Mmapper2Group::Mmapper2Group(QObject *const /* parent */)
     , networkLock(QMutex::Recursive)
     , thread(THREADED ? new QThread : nullptr)
 {
-    qRegisterMetaType<CharacterPosition>("CharacterPosition");
-    qRegisterMetaType<CharacterAffect>("CharacterAffect");
+    qRegisterMetaType<CharacterPositionEnum>("CharacterPositionEnum");
+    qRegisterMetaType<CharacterAffectEnum>("CharacterAffectEnum");
 
     connect(this,
             &Mmapper2Group::sig_invokeStopInternal,
@@ -193,7 +193,7 @@ void Mmapper2Group::issueLocalCharUpdate()
     emit updateWidget();
 
     QMutexLocker locker(&networkLock);
-    if (!group || getMode() == GroupManagerState::Off) {
+    if (!group || getMode() == GroupManagerStateEnum::Off) {
         return;
     }
 
@@ -295,8 +295,10 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
     if (!group)
         return;
 
-    CGroupChar *self = getGroup()->getSelf();
-    QByteArray textHP{}, textMana{}, textMoves{};
+    CGroupChar *const self = getGroup()->getSelf();
+    QByteArray textHP;
+    QByteArray textMana;
+    QByteArray textMoves;
 
     static const QRegularExpression pRx(R"(^)"
                                         R"(([\*@\!\)o])"            // Group 1: light
@@ -327,17 +329,17 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
         && textMoves == lastPrompt.textMoves && inCombat == lastPrompt.inCombat)
         return; // No update needed
 
-    if (textHP == "Dying" || self->position == CharacterPosition::INCAPACITATED) {
+    if (textHP == "Dying" || self->position == CharacterPositionEnum::INCAPACITATED) {
         // Incapacitated state overrides fighting state
-        self->position = CharacterPosition::INCAPACITATED;
+        self->position = CharacterPositionEnum::INCAPACITATED;
 
     } else if (inCombat) {
-        self->position = CharacterPosition::FIGHTING;
+        self->position = CharacterPositionEnum::FIGHTING;
 
-    } else if (self->position != CharacterPosition::DEAD) {
+    } else if (self->position != CharacterPositionEnum::DEAD) {
         // Recover standing state if we're done fighting (unless we died because we're dead)
         if (lastPrompt.inCombat) {
-            self->position = CharacterPosition::STANDING;
+            self->position = CharacterPositionEnum::STANDING;
         }
     }
 
@@ -410,28 +412,30 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
     issueLocalCharUpdate();
 }
 
-void Mmapper2Group::updateCharacterPosition(CharacterPosition position)
+void Mmapper2Group::updateCharacterPosition(const CharacterPositionEnum position)
 {
     if (!group)
         return;
 
-    CharacterPosition &oldPosition = group->getSelf()->position;
+    // This naming convention for a reference is an anti-pattern;
+    // the name implies it's a const value, but then we modify it.
+    CharacterPositionEnum &oldPosition = group->getSelf()->position;
 
     if (oldPosition == position)
         return; // No update needed
 
     // Reset affects on death
-    if (position == CharacterPosition::DEAD)
+    if (position == CharacterPositionEnum::DEAD)
         group->getSelf()->affects = CharacterAffects{};
 
-    if (oldPosition == CharacterPosition::DEAD && position != CharacterPosition::STANDING)
+    if (oldPosition == CharacterPositionEnum::DEAD && position != CharacterPositionEnum::STANDING)
         return; // Prefer dead state until we finish recovering some hp (i.e. stand)
 
     oldPosition = position;
     issueLocalCharUpdate();
 }
 
-void Mmapper2Group::updateCharacterAffect(CharacterAffect affect, bool enable)
+void Mmapper2Group::updateCharacterAffect(const CharacterAffectEnum affect, const bool enable)
 {
     if (!group)
         return;
@@ -463,7 +467,7 @@ void Mmapper2Group::onAffectTimeout()
     bool removedAtLeastOneAffect = false;
     CharacterAffects &affects = getGroup()->self->affects;
     const auto now = QDateTime::QDateTime::currentDateTimeUtc().toTime_t();
-    for (CharacterAffect affect : affectLastSeen.keys()) {
+    for (const CharacterAffectEnum affect : affectLastSeen.keys()) {
         const auto lastSeen = affectLastSeen.value(affect, 0);
         const int elapsed = static_cast<int>(now - lastSeen);
         const int timeout = s_affectTimeout.value(affect, THIRTY_MINUTES);
@@ -504,7 +508,7 @@ void Mmapper2Group::reset()
     self->moves = 0;
     self->maxmoves = 0;
     self->roomId = DEFAULT_ROOMID;
-    self->position = CharacterPosition::UNDEFINED;
+    self->position = CharacterPositionEnum::UNDEFINED;
     self->affects = CharacterAffects{};
     issueLocalCharUpdate();
 }
@@ -514,10 +518,10 @@ void Mmapper2Group::sendLog(const QString &text)
     emit log("GroupManager", text);
 }
 
-GroupManagerState Mmapper2Group::getMode()
+GroupManagerStateEnum Mmapper2Group::getMode()
 {
     QMutexLocker locker(&networkLock);
-    return network ? network->getMode() : GroupManagerState::Off;
+    return network ? network->getMode() : GroupManagerStateEnum::Off;
 }
 
 void Mmapper2Group::startNetwork()
@@ -527,13 +531,13 @@ void Mmapper2Group::startNetwork()
     if (!network) {
         // Create network
         switch (getConfig().groupManager.state) {
-        case GroupManagerState::Server:
+        case GroupManagerStateEnum::Server:
             network.reset(new GroupServer(this));
             break;
-        case GroupManagerState::Client:
+        case GroupManagerStateEnum::Client:
             network.reset(new GroupClient(this));
             break;
-        case GroupManagerState::Off:
+        case GroupManagerStateEnum::Off:
             return;
         }
 
@@ -583,7 +587,7 @@ void Mmapper2Group::stopNetwork()
     }
 }
 
-void Mmapper2Group::setMode(GroupManagerState newMode)
+void Mmapper2Group::setMode(const GroupManagerStateEnum newMode)
 {
     QMutexLocker locker(&networkLock);
 

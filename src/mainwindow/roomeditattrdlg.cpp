@@ -57,11 +57,11 @@ void installWidgets(T &array,
 }
 
 /* TODO: merge this with human-readable names used in parser output */
-static QString getName(const RoomMobFlag flag)
+static QString getName(const RoomMobFlagEnum flag)
 {
 #define CASE2(UPPER, desc) \
     do { \
-    case RoomMobFlag::UPPER: \
+    case RoomMobFlagEnum::UPPER: \
         return desc; \
     } while (false)
     switch (flag) {
@@ -83,16 +83,16 @@ static QString getName(const RoomMobFlag flag)
         CASE2(ELITE_MOB, "Elite mob");
         CASE2(SUPER_MOB, "Super mob");
     }
-    return QString::asprintf("(RoomMobFlag)%d", static_cast<int>(flag));
+    return QString::asprintf("(RoomMobFlagEnum)%d", static_cast<int>(flag));
 #undef CASE2
 }
 
 /* TODO: merge this with human-readable names used in parser output */
-static QString getName(const RoomLoadFlag flag)
+static QString getName(const RoomLoadFlagEnum flag)
 {
 #define CASE2(UPPER, desc) \
     do { \
-    case RoomLoadFlag::UPPER: \
+    case RoomLoadFlagEnum::UPPER: \
         return desc; \
     } while (false)
     switch (flag) {
@@ -121,37 +121,37 @@ static QString getName(const RoomLoadFlag flag)
         CASE2(COACH, "Coach");
         CASE2(FERRY, "Ferry");
     }
-    return QString::asprintf("(RoomLoadFlag)%d", static_cast<int>(flag));
+    return QString::asprintf("(RoomLoadFlagEnum)%d", static_cast<int>(flag));
 #undef CASE2
 }
 
 /* TODO: merge this with human-readable names used in parser output */
-static QString getName(const ExitFlag flag)
+static QString getName(const ExitFlagEnum flag)
 {
 #define X_CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
     do { \
-    case ExitFlag::UPPER_CASE: \
+    case ExitFlagEnum::UPPER_CASE: \
         return friendly; \
     } while (false);
     switch (flag) {
         X_FOREACH_EXIT_FLAG(X_CASE)
     }
-    return QString::asprintf("(ExitFlag)%d", static_cast<int>(flag));
+    return QString::asprintf("(ExitFlagEnum)%d", static_cast<int>(flag));
 #undef X_CASE
 }
 
 /* TODO: merge this with human-readable names used in parser output */
-static QString getName(const DoorFlag flag)
+static QString getName(const DoorFlagEnum flag)
 {
 #define X_CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
     do { \
-    case DoorFlag::UPPER_CASE: \
+    case DoorFlagEnum::UPPER_CASE: \
         return friendly; \
     } while (false);
     switch (flag) {
         X_FOREACH_DOOR_FLAG(X_CASE)
     }
-    return QString::asprintf("(DoorFlag)%d", static_cast<int>(flag));
+    return QString::asprintf("(DoorFlagEnum)%d", static_cast<int>(flag));
 #undef X_CASE
 }
 
@@ -171,11 +171,11 @@ static QIcon getIcon(T flag)
     }
 }
 
-static int getPriority(const RoomMobFlag flag)
+static int getPriority(const RoomMobFlagEnum flag)
 {
 #define X_POS(UPPER, pos) \
     do { \
-        if (flag == RoomMobFlag::UPPER) \
+        if (flag == RoomMobFlagEnum::UPPER) \
             return NUM_ROOM_MOB_FLAGS * -1 + pos; \
     } while (false)
     X_POS(PASSIVE_MOB, 0);
@@ -187,11 +187,11 @@ static int getPriority(const RoomMobFlag flag)
     return static_cast<int>(flag);
 }
 
-static int getPriority(const RoomLoadFlag flag)
+static int getPriority(const RoomLoadFlagEnum flag)
 {
 #define X_POS(UPPER, pos) \
     do { \
-        if (flag == RoomLoadFlag::UPPER) \
+        if (flag == RoomLoadFlagEnum::UPPER) \
             return NUM_ROOM_LOAD_FLAGS * -1 + pos; \
     } while (false)
     X_POS(TREASURE, 0);
@@ -202,13 +202,13 @@ static int getPriority(const RoomLoadFlag flag)
     return static_cast<int>(flag);
 }
 
-RoomListWidgetItem::RoomListWidgetItem(const QString &text, int priority)
+RoomListWidgetItem::RoomListWidgetItem(const QString &text, const int priority)
     : QListWidgetItem(text)
 {
     setData(Qt::UserRole, priority);
 }
 
-RoomListWidgetItem::RoomListWidgetItem(const QIcon &icon, const QString &text, int priority)
+RoomListWidgetItem::RoomListWidgetItem(const QIcon &icon, const QString &text, const int priority)
     : QListWidgetItem(icon, text)
 {
     setData(Qt::UserRole, priority);
@@ -237,7 +237,6 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
         loadListItems[flag] = new RoomListWidgetItem(getIcon(flag),
                                                      getName(flag),
                                                      getPriority(flag));
-
     installWidgets(loadListItems,
                    "load list",
                    *loadFlagsListWidget,
@@ -650,27 +649,27 @@ const Room *RoomEditAttrDlg::getSelectedRoom()
         RoomId{roomListComboBox->itemData(roomListComboBox->currentIndex()).toUInt()});
 }
 
-ExitDirection RoomEditAttrDlg::getSelectedExit()
+ExitDirEnum RoomEditAttrDlg::getSelectedExit()
 {
     if (exitNButton->isChecked()) {
-        return ExitDirection::NORTH;
+        return ExitDirEnum::NORTH;
     }
     if (exitSButton->isChecked()) {
-        return ExitDirection::SOUTH;
+        return ExitDirEnum::SOUTH;
     }
     if (exitEButton->isChecked()) {
-        return ExitDirection::EAST;
+        return ExitDirEnum::EAST;
     }
     if (exitWButton->isChecked()) {
-        return ExitDirection::WEST;
+        return ExitDirEnum::WEST;
     }
     if (exitUButton->isChecked()) {
-        return ExitDirection::UP;
+        return ExitDirEnum::UP;
     }
     if (exitDButton->isChecked()) {
-        return ExitDirection::DOWN;
+        return ExitDirEnum::DOWN;
     }
-    return ExitDirection::UNKNOWN;
+    return ExitDirEnum::UNKNOWN;
 }
 
 void RoomEditAttrDlg::roomListCurrentIndexChanged(int /*unused*/)
@@ -753,7 +752,7 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         roomNoteTextEdit->clear();
         roomNoteTextEdit->setEnabled(false);
 
-        terrainLabel->setPixmap(QPixmap(getPixmapFilename(RoomTerrainType::UNDEFINED)));
+        terrainLabel->setPixmap(QPixmap(getPixmapFilename(RoomTerrainEnum::UNDEFINED)));
 
         exitsFrame->setEnabled(false);
 
@@ -828,125 +827,125 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         roomNoteTextEdit->clear();
         roomNoteTextEdit->append(r->getNote());
 
-        const auto get_terrain_pixmap = [](RoomTerrainType type) -> QString {
-            if (type == RoomTerrainType::ROAD)
-                return getPixmapFilename(
-                    TaggedRoad{RoadIndex::NORTH | RoadIndex::EAST | RoadIndex::SOUTH});
+        const auto get_terrain_pixmap = [](RoomTerrainEnum type) -> QString {
+            if (type == RoomTerrainEnum::ROAD)
+                return getPixmapFilename(TaggedRoad{
+                    RoadIndexMaskEnum::NORTH | RoadIndexMaskEnum::EAST | RoadIndexMaskEnum::SOUTH});
             else
                 return getPixmapFilename(type);
         };
         terrainLabel->setPixmap(get_terrain_pixmap(r->getTerrainType()));
 
         switch (r->getAlignType()) {
-        case RoomAlignType::GOOD:
+        case RoomAlignEnum::GOOD:
             goodRadioButton->setChecked(true);
             break;
-        case RoomAlignType::NEUTRAL:
+        case RoomAlignEnum::NEUTRAL:
             neutralRadioButton->setChecked(true);
             break;
-        case RoomAlignType::EVIL:
+        case RoomAlignEnum::EVIL:
             evilRadioButton->setChecked(true);
             break;
-        case RoomAlignType::UNDEFINED:
+        case RoomAlignEnum::UNDEFINED:
             alignUndefRadioButton->setChecked(true);
             break;
         }
 
         switch (r->getPortableType()) {
-        case RoomPortableType::PORTABLE:
+        case RoomPortableEnum::PORTABLE:
             portableRadioButton->setChecked(true);
             break;
-        case RoomPortableType::NOT_PORTABLE:
+        case RoomPortableEnum::NOT_PORTABLE:
             noPortRadioButton->setChecked(true);
             break;
-        case RoomPortableType::UNDEFINED:
+        case RoomPortableEnum::UNDEFINED:
             portUndefRadioButton->setChecked(true);
             break;
         }
 
         switch (r->getRidableType()) {
-        case RoomRidableType::RIDABLE:
+        case RoomRidableEnum::RIDABLE:
             ridableRadioButton->setChecked(true);
             break;
-        case RoomRidableType::NOT_RIDABLE:
+        case RoomRidableEnum::NOT_RIDABLE:
             noRideRadioButton->setChecked(true);
             break;
-        case RoomRidableType::UNDEFINED:
+        case RoomRidableEnum::UNDEFINED:
             rideUndefRadioButton->setChecked(true);
             break;
         }
 
         switch (r->getLightType()) {
-        case RoomLightType::DARK:
+        case RoomLightEnum::DARK:
             darkRadioButton->setChecked(true);
             break;
-        case RoomLightType::LIT:
+        case RoomLightEnum::LIT:
             litRadioButton->setChecked(true);
             break;
-        case RoomLightType::UNDEFINED:
+        case RoomLightEnum::UNDEFINED:
             lightUndefRadioButton->setChecked(true);
             break;
         }
 
         switch (r->getSundeathType()) {
-        case RoomSundeathType::NO_SUNDEATH:
+        case RoomSundeathEnum::NO_SUNDEATH:
             noSundeathRadioButton->setChecked(true);
             break;
-        case RoomSundeathType::SUNDEATH:
+        case RoomSundeathEnum::SUNDEATH:
             sundeathRadioButton->setChecked(true);
             break;
-        case RoomSundeathType::UNDEFINED:
+        case RoomSundeathEnum::UNDEFINED:
             sundeathUndefRadioButton->setChecked(true);
             break;
         }
 
         switch (r->getTerrainType()) {
-        case RoomTerrainType::UNDEFINED:
+        case RoomTerrainEnum::UNDEFINED:
             toolButton00->setChecked(true);
             break;
-        case RoomTerrainType::INDOORS:
+        case RoomTerrainEnum::INDOORS:
             toolButton01->setChecked(true);
             break;
-        case RoomTerrainType::CITY:
+        case RoomTerrainEnum::CITY:
             toolButton02->setChecked(true);
             break;
-        case RoomTerrainType::FIELD:
+        case RoomTerrainEnum::FIELD:
             toolButton03->setChecked(true);
             break;
-        case RoomTerrainType::FOREST:
+        case RoomTerrainEnum::FOREST:
             toolButton04->setChecked(true);
             break;
-        case RoomTerrainType::HILLS:
+        case RoomTerrainEnum::HILLS:
             toolButton05->setChecked(true);
             break;
-        case RoomTerrainType::MOUNTAINS:
+        case RoomTerrainEnum::MOUNTAINS:
             toolButton06->setChecked(true);
             break;
-        case RoomTerrainType::SHALLOW:
+        case RoomTerrainEnum::SHALLOW:
             toolButton07->setChecked(true);
             break;
-        case RoomTerrainType::WATER:
+        case RoomTerrainEnum::WATER:
             toolButton08->setChecked(true);
             break;
-        case RoomTerrainType::RAPIDS:
+        case RoomTerrainEnum::RAPIDS:
             toolButton09->setChecked(true);
             break;
-        case RoomTerrainType::UNDERWATER:
+        case RoomTerrainEnum::UNDERWATER:
             toolButton10->setChecked(true);
             break;
-        case RoomTerrainType::ROAD:
+        case RoomTerrainEnum::ROAD:
             toolButton11->setChecked(true);
             break;
-        case RoomTerrainType::BRUSH:
+        case RoomTerrainEnum::BRUSH:
             toolButton12->setChecked(true);
             break;
-        case RoomTerrainType::TUNNEL:
+        case RoomTerrainEnum::TUNNEL:
             toolButton13->setChecked(true);
             break;
-        case RoomTerrainType::CAVERN:
+        case RoomTerrainEnum::CAVERN:
             toolButton14->setChecked(true);
             break;
-        case RoomTerrainType::DEATHTRAP:
+        case RoomTerrainEnum::DEATHTRAP:
             toolButton15->setChecked(true);
             break;
         }
@@ -964,11 +963,11 @@ void RoomEditAttrDlg::neutralRadioButtonToggled(bool val)
     if (val) {
         const Room *r = getSelectedRoom();
         if (r != nullptr) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomAlignType::NEUTRAL),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomAlignEnum::NEUTRAL),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomAlignType::NEUTRAL),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomAlignEnum::NEUTRAL),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -983,11 +982,11 @@ void RoomEditAttrDlg::goodRadioButtonToggled(bool val)
     if (val) {
         const Room *r = getSelectedRoom();
         if (r != nullptr) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomAlignType::GOOD),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomAlignEnum::GOOD),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomAlignType::GOOD),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomAlignEnum::GOOD),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1002,11 +1001,11 @@ void RoomEditAttrDlg::evilRadioButtonToggled(bool val)
     if (val) {
         const Room *r = getSelectedRoom();
         if (r != nullptr) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomAlignType::EVIL),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomAlignEnum::EVIL),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomAlignType::EVIL),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomAlignEnum::EVIL),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1021,11 +1020,11 @@ void RoomEditAttrDlg::alignUndefRadioButtonToggled(bool val)
     if (val) {
         const Room *r = getSelectedRoom();
         if (r != nullptr) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomAlignType::UNDEFINED),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomAlignEnum::UNDEFINED),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomAlignType::UNDEFINED),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomAlignEnum::UNDEFINED),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1040,12 +1039,12 @@ void RoomEditAttrDlg::noPortRadioButtonToggled(bool val)
     if (val) {
         if (const Room *r = getSelectedRoom()) {
             m_mapData->execute(new SingleRoomAction(new UpdateRoomField(
-                                                        RoomPortableType::NOT_PORTABLE),
+                                                        RoomPortableEnum::NOT_PORTABLE),
                                                     r->getId()),
                                m_roomSelection);
         } else {
             m_mapData->execute(new GroupMapAction(new UpdateRoomField(
-                                                      RoomPortableType::NOT_PORTABLE),
+                                                      RoomPortableEnum::NOT_PORTABLE),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1060,11 +1059,11 @@ void RoomEditAttrDlg::portableRadioButtonToggled(bool val)
     if (val) {
         const Room *r = getSelectedRoom();
         if (r != nullptr) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomPortableType::PORTABLE),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomPortableEnum::PORTABLE),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomPortableType::PORTABLE),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomPortableEnum::PORTABLE),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1079,11 +1078,11 @@ void RoomEditAttrDlg::portUndefRadioButtonToggled(bool val)
     if (val) {
         const Room *r = getSelectedRoom();
         if (r != nullptr) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomPortableType::UNDEFINED),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomPortableEnum::UNDEFINED),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomPortableType::UNDEFINED),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomPortableEnum::UNDEFINED),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1099,11 +1098,11 @@ void RoomEditAttrDlg::noRideRadioButtonToggled(bool val)
         const Room *r = getSelectedRoom();
         if (r != nullptr) {
             m_mapData->execute(new SingleRoomAction(new UpdateRoomField(
-                                                        RoomRidableType::NOT_RIDABLE),
+                                                        RoomRidableEnum::NOT_RIDABLE),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomRidableType::NOT_RIDABLE),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomRidableEnum::NOT_RIDABLE),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1117,11 +1116,11 @@ void RoomEditAttrDlg::ridableRadioButtonToggled(bool val)
 {
     if (val) {
         if (const Room *r = getSelectedRoom()) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomRidableType::RIDABLE),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomRidableEnum::RIDABLE),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomRidableType::RIDABLE),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomRidableEnum::RIDABLE),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1135,11 +1134,11 @@ void RoomEditAttrDlg::rideUndefRadioButtonToggled(bool val)
 {
     if (val) {
         if (const Room *r = getSelectedRoom()) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomRidableType::UNDEFINED),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomRidableEnum::UNDEFINED),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomRidableType::UNDEFINED),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomRidableEnum::UNDEFINED),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1153,11 +1152,11 @@ void RoomEditAttrDlg::litRadioButtonToggled(bool val)
 {
     if (val) {
         if (const Room *r = getSelectedRoom()) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomLightType::LIT),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomLightEnum::LIT),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomLightType::LIT),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomLightEnum::LIT),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1171,11 +1170,11 @@ void RoomEditAttrDlg::darkRadioButtonToggled(bool val)
 {
     if (val) {
         if (const Room *r = getSelectedRoom()) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomLightType::DARK),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomLightEnum::DARK),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomLightType::DARK),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomLightEnum::DARK),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1189,11 +1188,11 @@ void RoomEditAttrDlg::lightUndefRadioButtonToggled(bool val)
 {
     if (val) {
         if (const Room *r = getSelectedRoom()) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomLightType::UNDEFINED),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomLightEnum::UNDEFINED),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomLightType::UNDEFINED),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomLightEnum::UNDEFINED),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1207,11 +1206,11 @@ void RoomEditAttrDlg::sundeathRadioButtonToggled(bool val)
 {
     if (val) {
         if (const Room *r = getSelectedRoom()) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomSundeathType::SUNDEATH),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomSundeathEnum::SUNDEATH),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomSundeathType::SUNDEATH),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomSundeathEnum::SUNDEATH),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1227,11 +1226,11 @@ void RoomEditAttrDlg::noSundeathRadioButtonToggled(bool val)
         const Room *r = getSelectedRoom();
         if (r != nullptr) {
             m_mapData->execute(new SingleRoomAction(new UpdateRoomField(
-                                                        RoomSundeathType::NO_SUNDEATH),
+                                                        RoomSundeathEnum::NO_SUNDEATH),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomSundeathType::NO_SUNDEATH),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomSundeathEnum::NO_SUNDEATH),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1246,11 +1245,11 @@ void RoomEditAttrDlg::sundeathUndefRadioButtonToggled(bool val)
     if (val) {
         const Room *r = getSelectedRoom();
         if (r != nullptr) {
-            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomSundeathType::UNDEFINED),
+            m_mapData->execute(new SingleRoomAction(new UpdateRoomField(RoomSundeathEnum::UNDEFINED),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomSundeathType::UNDEFINED),
+            m_mapData->execute(new GroupMapAction(new UpdateRoomField(RoomSundeathEnum::UNDEFINED),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1270,19 +1269,20 @@ void RoomEditAttrDlg::mobFlagsListItemChanged(QListWidgetItem *const item)
         return;
     }
 
-    const RoomMobFlag &flag = optFlag.value();
+    const RoomMobFlagEnum flag = optFlag.value();
     const auto flags = RoomMobFlags{flag};
-    const Room *r = getSelectedRoom();
+    const Room *const r = getSelectedRoom();
 
     switch (item->checkState()) {
     case Qt::Unchecked:
         if (r != nullptr) {
             m_mapData->execute(new SingleRoomAction(new ModifyRoomFlags(flags,
-                                                                        FlagModifyMode::UNSET),
+                                                                        FlagModifyModeEnum::UNSET),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new ModifyRoomFlags(flags, FlagModifyMode::UNSET),
+            m_mapData->execute(new GroupMapAction(new ModifyRoomFlags(flags,
+                                                                      FlagModifyModeEnum::UNSET),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1291,11 +1291,13 @@ void RoomEditAttrDlg::mobFlagsListItemChanged(QListWidgetItem *const item)
         break;
     case Qt::Checked:
         if (r != nullptr) {
-            m_mapData->execute(new SingleRoomAction(new ModifyRoomFlags(flags, FlagModifyMode::SET),
+            m_mapData->execute(new SingleRoomAction(new ModifyRoomFlags(flags,
+                                                                        FlagModifyModeEnum::SET),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new ModifyRoomFlags(flags, FlagModifyMode::SET),
+            m_mapData->execute(new GroupMapAction(new ModifyRoomFlags(flags,
+                                                                      FlagModifyModeEnum::SET),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1316,7 +1318,7 @@ void RoomEditAttrDlg::loadFlagsListItemChanged(QListWidgetItem *const item)
         return;
     }
 
-    const RoomLoadFlag &flag = optFlag.value();
+    const RoomLoadFlagEnum flag = optFlag.value();
     const auto flags = RoomLoadFlags{flag};
     const Room *const r = getSelectedRoom();
 
@@ -1324,11 +1326,12 @@ void RoomEditAttrDlg::loadFlagsListItemChanged(QListWidgetItem *const item)
     case Qt::Unchecked:
         if (r != nullptr) {
             m_mapData->execute(new SingleRoomAction(new ModifyRoomFlags(flags,
-                                                                        FlagModifyMode::UNSET),
+                                                                        FlagModifyModeEnum::UNSET),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new ModifyRoomFlags(flags, FlagModifyMode::UNSET),
+            m_mapData->execute(new GroupMapAction(new ModifyRoomFlags(flags,
+                                                                      FlagModifyModeEnum::UNSET),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1337,11 +1340,13 @@ void RoomEditAttrDlg::loadFlagsListItemChanged(QListWidgetItem *const item)
         break;
     case Qt::Checked:
         if (r != nullptr) {
-            m_mapData->execute(new SingleRoomAction(new ModifyRoomFlags(flags, FlagModifyMode::SET),
+            m_mapData->execute(new SingleRoomAction(new ModifyRoomFlags(flags,
+                                                                        FlagModifyModeEnum::SET),
                                                     r->getId()),
                                m_roomSelection);
         } else {
-            m_mapData->execute(new GroupMapAction(new ModifyRoomFlags(flags, FlagModifyMode::SET),
+            m_mapData->execute(new GroupMapAction(new ModifyRoomFlags(flags,
+                                                                      FlagModifyModeEnum::SET),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1362,7 +1367,7 @@ void RoomEditAttrDlg::exitFlagsListItemChanged(QListWidgetItem *const item)
         return;
     }
 
-    const ExitFlag &flag = optFlag.value();
+    const ExitFlagEnum flag = optFlag.value();
     const Room *const r = getSelectedRoom();
     const auto flags = ExitFlags{flag};
     auto dir = getSelectedExit();
@@ -1371,13 +1376,13 @@ void RoomEditAttrDlg::exitFlagsListItemChanged(QListWidgetItem *const item)
         if (r != nullptr) {
             m_mapData->execute(new SingleRoomAction(new ModifyExitFlags(flags,
                                                                         dir,
-                                                                        FlagModifyMode::UNSET),
+                                                                        FlagModifyModeEnum::UNSET),
                                                     r->getId()),
                                m_roomSelection);
         } else {
             m_mapData->execute(new GroupMapAction(new ModifyExitFlags(flags,
                                                                       dir,
-                                                                      FlagModifyMode::UNSET),
+                                                                      FlagModifyModeEnum::UNSET),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1388,13 +1393,13 @@ void RoomEditAttrDlg::exitFlagsListItemChanged(QListWidgetItem *const item)
         if (r != nullptr) {
             m_mapData->execute(new SingleRoomAction(new ModifyExitFlags(flags,
                                                                         dir,
-                                                                        FlagModifyMode::SET),
+                                                                        FlagModifyModeEnum::SET),
                                                     r->getId()),
                                m_roomSelection);
         } else {
             m_mapData->execute(new GroupMapAction(new ModifyExitFlags(flags,
                                                                       dir,
-                                                                      FlagModifyMode::SET),
+                                                                      FlagModifyModeEnum::SET),
                                                   m_roomSelection),
                                m_roomSelection);
         }
@@ -1426,7 +1431,7 @@ void RoomEditAttrDlg::doorFlagsListItemChanged(QListWidgetItem *const item)
         return;
     }
 
-    const DoorFlag &flag = optFlag.value();
+    const DoorFlagEnum flag = optFlag.value();
     const Room *const r = getSelectedRoom();
     deref(r);
 
@@ -1436,14 +1441,16 @@ void RoomEditAttrDlg::doorFlagsListItemChanged(QListWidgetItem *const item)
     case Qt::Unchecked:
         m_mapData->execute(new SingleRoomAction(new ModifyExitFlags(flags,
                                                                     dir,
-                                                                    FlagModifyMode::UNSET),
+                                                                    FlagModifyModeEnum::UNSET),
                                                 r->getId()),
                            m_roomSelection);
         break;
     case Qt::PartiallyChecked:
         break;
     case Qt::Checked:
-        m_mapData->execute(new SingleRoomAction(new ModifyExitFlags(flags, dir, FlagModifyMode::SET),
+        m_mapData->execute(new SingleRoomAction(new ModifyExitFlags(flags,
+                                                                    dir,
+                                                                    FlagModifyModeEnum::SET),
                                                 r->getId()),
                            m_roomSelection);
         break;
@@ -1455,9 +1462,9 @@ void RoomEditAttrDlg::doorFlagsListItemChanged(QListWidgetItem *const item)
 void RoomEditAttrDlg::toggleHiddenDoor()
 {
     if (doorFlagsListWidget->isEnabled()) {
-        doorListItems[DoorFlag::HIDDEN]->setCheckState(
-            doorListItems[DoorFlag::HIDDEN]->checkState() == Qt::Unchecked ? Qt::Checked
-                                                                           : Qt::Unchecked);
+        doorListItems[DoorFlagEnum::HIDDEN]->setCheckState(
+            doorListItems[DoorFlagEnum::HIDDEN]->checkState() == Qt::Unchecked ? Qt::Checked
+                                                                               : Qt::Unchecked);
     }
 }
 
@@ -1520,7 +1527,7 @@ void RoomEditAttrDlg::terrainToolButtonToggled(bool val)
     }
 
     /* WARNING: there are more than 16 room terrain types */
-    const auto rtt = static_cast<RoomTerrainType>(index);
+    const auto rtt = static_cast<RoomTerrainEnum>(index);
 
     terrainLabel->setPixmap(QPixmap(getPixmapFilename(rtt)));
 

@@ -22,8 +22,8 @@
 CGroup::CGroup(QObject *parent)
     : QObject(parent)
     , characterLock(QMutex::Recursive)
+    , self{new CGroupChar}
 {
-    self = new CGroupChar();
     const Configuration::GroupManagerSettings &groupManager = getConfig().groupManager;
     self->setName(groupManager.charName);
     self->setRoomId(DEFAULT_ROOMID);
@@ -208,8 +208,7 @@ void CGroup::renameChar(const QVariantMap &map)
 
     emit log(QString("Renaming '%1' to '%2'").arg(oldname).arg(newname));
 
-    CGroupChar *ch;
-    ch = getCharByName(oldname.toLatin1());
+    CGroupChar *const ch = getCharByName(oldname.toLatin1());
     if (ch == nullptr) {
         qWarning() << "Unable to find old name" << oldname;
         return;

@@ -20,7 +20,7 @@ class CGroupCommunicator;
 class CGroup;
 class Mmapper2Group;
 class CommandQueue;
-enum class GroupManagerState { Off = 0, Client = 1, Server = 2 };
+enum class GroupManagerStateEnum { Off = 0, Client = 1, Server = 2 };
 
 class Mmapper2Group final : public QObject
 {
@@ -43,14 +43,14 @@ public:
     void start();
     void stop();
 
-    GroupManagerState getMode();
+    GroupManagerStateEnum getMode();
 
     GroupAuthority *getAuthority() { return authority.get(); }
     CGroup *getGroup() { return group.get(); }
 
 public slots:
     void setCharacterRoomId(RoomId pos);
-    void setMode(GroupManagerState newState);
+    void setMode(GroupManagerStateEnum newState);
     void startNetwork();
     void stopNetwork();
     void updateSelf(); // changing settings
@@ -59,8 +59,8 @@ public slots:
     void kickCharacter(const QByteArray &character);
     void parseScoreInformation(const QByteArray &score);
     void parsePromptInformation(const QByteArray &prompt);
-    void updateCharacterPosition(CharacterPosition);
-    void updateCharacterAffect(CharacterAffect, bool);
+    void updateCharacterPosition(CharacterPositionEnum);
+    void updateCharacterAffect(CharacterAffectEnum, bool);
     void setPath(CommandQueue, bool);
     void reset();
 
@@ -76,22 +76,22 @@ protected slots:
 private:
     struct
     {
-        QByteArray textHP{};
-        QByteArray textMoves{};
-        QByteArray textMana{};
-        bool inCombat{false};
+        QByteArray textHP;
+        QByteArray textMoves;
+        QByteArray textMana;
+        bool inCombat = false;
     } lastPrompt;
 
     std::atomic_int m_calledStopInternal{0};
     QTimer affectTimer;
-    QMap<CharacterAffect, uint64_t> affectLastSeen;
-    using AffectTimeout = QMap<CharacterAffect, int>;
+    QMap<CharacterAffectEnum, uint64_t> affectLastSeen;
+    using AffectTimeout = QMap<CharacterAffectEnum, int>;
     static const AffectTimeout s_affectTimeout;
 
     bool init();
     void issueLocalCharUpdate();
 
-    QMutex networkLock{};
+    QMutex networkLock;
     std::unique_ptr<QThread> thread;
     std::unique_ptr<GroupAuthority> authority;
     std::unique_ptr<CGroupCommunicator> network;

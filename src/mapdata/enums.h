@@ -3,27 +3,27 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <array>
 #include <vector>
 
+#include "../global/Array.h"
 #include "DoorFlags.h"
 #include "ExitFlags.h"
 #include "mmapper2room.h"
 
-#define DECL_GETTER(E, N, name) const std::array<E, N> &name();
+#define DECL_GETTER(E, N, name) const MMapper::Array<E, N> &name();
 #define DECL_GETTER_DEFINED(E, N, name) const std::vector<E> &name();
 
 namespace enums {
-DECL_GETTER_DEFINED(RoomLightType, NUM_LIGHT_TYPES, getDefinedRoomLightTypes)
-DECL_GETTER_DEFINED(RoomSundeathType, NUM_SUNDEATH_TYPES, getDefinedRoomSundeathTypes)
-DECL_GETTER_DEFINED(RoomPortableType, NUM_PORTABLE_TYPES, getDefinedRoomPortbleTypes)
-DECL_GETTER_DEFINED(RoomRidableType, NUM_RIDABLE_TYPES, getDefinedRoomRidableTypes)
-DECL_GETTER_DEFINED(RoomAlignType, NUM_ALIGN_TYPES, getDefinedRoomAlignTypes)
-DECL_GETTER(RoomTerrainType, NUM_ROOM_TERRAIN_TYPES, getAllTerrainTypes)
-DECL_GETTER(RoomMobFlag, NUM_ROOM_MOB_FLAGS, getAllMobFlags)
-DECL_GETTER(RoomLoadFlag, NUM_ROOM_LOAD_FLAGS, getAllLoadFlags)
-DECL_GETTER(DoorFlag, NUM_DOOR_FLAGS, getAllDoorFlags)
-DECL_GETTER(ExitFlag, NUM_EXIT_FLAGS, getAllExitFlags)
+DECL_GETTER_DEFINED(RoomLightEnum, NUM_LIGHT_TYPES, getDefinedRoomLightTypes)
+DECL_GETTER_DEFINED(RoomSundeathEnum, NUM_SUNDEATH_TYPES, getDefinedRoomSundeathTypes)
+DECL_GETTER_DEFINED(RoomPortableEnum, NUM_PORTABLE_TYPES, getDefinedRoomPortbleTypes)
+DECL_GETTER_DEFINED(RoomRidableEnum, NUM_RIDABLE_TYPES, getDefinedRoomRidableTypes)
+DECL_GETTER_DEFINED(RoomAlignEnum, NUM_ALIGN_TYPES, getDefinedRoomAlignTypes)
+DECL_GETTER(RoomTerrainEnum, NUM_ROOM_TERRAIN_TYPES, getAllTerrainTypes)
+DECL_GETTER(RoomMobFlagEnum, NUM_ROOM_MOB_FLAGS, getAllMobFlags)
+DECL_GETTER(RoomLoadFlagEnum, NUM_ROOM_LOAD_FLAGS, getAllLoadFlags)
+DECL_GETTER(DoorFlagEnum, NUM_DOOR_FLAGS, getAllDoorFlags)
+DECL_GETTER(ExitFlagEnum, NUM_EXIT_FLAGS, getAllExitFlags)
 } // namespace enums
 
 #undef DECL_GETTER

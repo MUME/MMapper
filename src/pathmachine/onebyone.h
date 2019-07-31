@@ -10,10 +10,10 @@
 class AbstractRoomFactory;
 class ParseEvent;
 class Path;
-class PathParameters;
 class Room;
 class RoomAdmin;
 class RoomSignalHandler;
+struct PathParameters;
 
 class OneByOne final : public Experimenting
 {

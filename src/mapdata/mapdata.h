@@ -88,12 +88,12 @@ public:
 
     // Used in Console Commands
     void removeDoorNames();
-    QString getDoorName(const Coordinate &pos, ExitDirection dir);
-    QString getDoorName(const Coordinate &pos, DirectionType dir)
+    QString getDoorName(const Coordinate &pos, ExitDirEnum dir);
+    QString getDoorName(const Coordinate &pos, DirectionEnum dir)
     {
-        return getDoorName(pos, static_cast<ExitDirection>(dir));
+        return getDoorName(pos, static_cast<ExitDirEnum>(dir));
     }
-    void setDoorName(const Coordinate &pos, const QString &name, ExitDirection dir);
+    void setDoorName(const Coordinate &pos, const QString &name, ExitDirEnum dir);
 
 public:
     void setFileName(QString filename, bool readOnly)
@@ -105,8 +105,8 @@ public:
     bool isFileReadOnly() const { return m_fileReadOnly; }
 
 public:
-    bool getExitFlag(const Coordinate &pos, ExitDirection dir, ExitFieldVariant var);
-    void toggleExitFlag(const Coordinate &pos, ExitDirection dir, ExitFieldVariant var);
+    bool getExitFlag(const Coordinate &pos, ExitDirEnum dir, ExitFieldVariant var);
+    void toggleExitFlag(const Coordinate &pos, ExitDirEnum dir, ExitFieldVariant var);
 
 public:
     bool getRoomFlag(const Coordinate &pos, RoomFieldVariant var);
@@ -123,10 +123,10 @@ public slots:
     void setPosition(const Coordinate &pos) { m_position = pos; }
 
 protected:
-    MarkerList m_markers{};
+    MarkerList m_markers;
     // changed data?
     bool m_dataChanged = false;
     bool m_fileReadOnly = false;
-    QString m_fileName{};
-    Coordinate m_position{};
+    QString m_fileName;
+    Coordinate m_position;
 };

@@ -44,10 +44,10 @@ public:
     ~GroupServer() override;
 
 protected slots:
-    void relayMessage(GroupSocket *socket, const Messages message, const QVariantMap &data);
+    void relayMessage(GroupSocket *socket, MessagesEnum message, const QVariantMap &data);
     void connectionEstablished(GroupSocket *socket);
     void onRevokeWhitelist(const QByteArray &secret);
-    void retrieveData(GroupSocket *socket, const Messages message, const QVariantMap &data) override;
+    void retrieveData(GroupSocket *socket, MessagesEnum message, const QVariantMap &data) override;
     void connectionClosed(GroupSocket *socket) override;
 
 protected:

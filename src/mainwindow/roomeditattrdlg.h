@@ -104,13 +104,13 @@ private:
     void disconnectAll();
 
     const Room *getSelectedRoom();
-    ExitDirection getSelectedExit();
+    ExitDirEnum getSelectedExit();
     void updateDialog(const Room *r);
 
-    EnumIndexedArray<RoomListWidgetItem *, RoomLoadFlag> loadListItems{};
-    EnumIndexedArray<RoomListWidgetItem *, RoomMobFlag> mobListItems{};
-    EnumIndexedArray<RoomListWidgetItem *, ExitFlag> exitListItems{};
-    EnumIndexedArray<RoomListWidgetItem *, DoorFlag> doorListItems{};
+    EnumIndexedArray<RoomListWidgetItem *, RoomLoadFlagEnum> loadListItems;
+    EnumIndexedArray<RoomListWidgetItem *, RoomMobFlagEnum> mobListItems;
+    EnumIndexedArray<RoomListWidgetItem *, ExitFlagEnum> exitListItems;
+    EnumIndexedArray<RoomListWidgetItem *, DoorFlagEnum> doorListItems;
 
 #define NUM_ELEMENTS(arr) (decltype(arr)::SIZE)
     static_assert(NUM_ELEMENTS(loadListItems) <= 32u);

@@ -15,11 +15,11 @@
 #include "pathmachine.h"
 #include "pathparameters.h"
 
-static const char *stateName(const PathState state)
+static const char *stateName(const PathStateEnum state)
 {
 #define CASE(x) \
     do { \
-    case PathState::x: \
+    case PathStateEnum::x: \
         return #x; \
     } while (0)
     switch (state) {

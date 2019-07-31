@@ -37,7 +37,7 @@ const RoomIdSet &SingleRoomAction::getAffectedRooms()
     return affectedRooms;
 }
 
-AddExit::AddExit(const RoomId in_from, const RoomId in_to, const ExitDirection in_dir)
+AddExit::AddExit(const RoomId in_from, const RoomId in_to, const ExitDirEnum in_dir)
     : from(in_from)
     , to(in_to)
     , dir(in_dir)
@@ -67,7 +67,7 @@ Room *AddExit::tryExec()
     return rfrom;
 }
 
-RemoveExit::RemoveExit(const RoomId in_from, const RoomId in_to, const ExitDirection in_dir)
+RemoveExit::RemoveExit(const RoomId in_from, const RoomId in_to, const ExitDirEnum in_dir)
     : from(in_from)
     , to(in_to)
     , dir(in_dir)
@@ -117,17 +117,17 @@ void UpdateRoomField::exec(const RoomId id)
         switch (var.getType()) {
 #define X_CASE(UPPER_CASE, CamelCase, Class) \
     { \
-    case RoomField::UPPER_CASE: \
+    case RoomFieldEnum::UPPER_CASE: \
         room->set##CamelCase(var.get##CamelCase()); \
         break; \
     }
             X_FOREACH_ROOM_FIELD(X_CASE)
 #undef X_CASE
-        case RoomField::NAME:
-        case RoomField::DESC:
-        case RoomField::DYNAMIC_DESC:
-        case RoomField::LAST:
-        case RoomField::RESERVED:
+        case RoomFieldEnum::NAME:
+        case RoomFieldEnum::DESC:
+        case RoomFieldEnum::DYNAMIC_DESC:
+        case RoomFieldEnum::LAST:
+        case RoomFieldEnum::RESERVED:
         default:
             /* this can't happen */
             throw std::runtime_error("impossible");
@@ -136,13 +136,13 @@ void UpdateRoomField::exec(const RoomId id)
 }
 
 Update::Update()
-    : props(CommandIdType::NONE /* was effectively CommandIdType::NORTH */)
+    : props(CommandEnum::NONE /* was effectively CommandEnum::NORTH */)
 {
     props.reset();
 }
 
 Update::Update(const SigParseEvent &sigParseEvent)
-    : props{CommandIdType::NONE}
+    : props{CommandEnum::NONE}
 {
     props = sigParseEvent.deref().clone();
     // assert(props.getNumSkipped() == 0);
@@ -204,7 +204,7 @@ void Remove::exec(const RoomId id)
     // don't return previously used ids for now
     // unusedIds().push(id);
     const ExitsList &exits = room->getExitsList();
-    for (const auto dir : enums::makeCountingIterator<ExitDirection>(exits)) {
+    for (const auto dir : enums::makeCountingIterator<ExitDirEnum>(exits)) {
         const Exit &e = exits[dir];
         for (const auto &idx : e.inRange()) {
             if (Room *const other = rooms[idx]) {

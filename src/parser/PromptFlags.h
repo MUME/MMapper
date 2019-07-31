@@ -12,7 +12,7 @@
 class PromptFlagsType
 {
 public:
-    // bit0-3 -> char representation of RoomTerrainType
+    // bit0-3 -> char representation of RoomTerrainEnum
     static constexpr const auto TERRAIN_TYPE = (bit1 | bit2 | bit3 | bit4);
     static constexpr const auto LIGHT_MASK = (bit5 | bit6);
     static constexpr const auto LIT_ROOM = bit5;
@@ -20,10 +20,10 @@ public:
     static constexpr const auto PROMPT_FLAGS_VALID = bit7;
 
 private:
-    uint8_t flags{};
+    uint8_t flags = 0u;
 
 private:
-    static uint8_t encodeTerrainType(const RoomTerrainType rtt)
+    static uint8_t encodeTerrainType(const RoomTerrainEnum rtt)
     {
         return static_cast<uint8_t>(std::clamp(static_cast<int>(rtt), 0, 15));
     }
@@ -33,9 +33,9 @@ public:
 
 public:
     /// NOTE: This sets the valid flag on the result.
-    static PromptFlagsType fromRoomTerrainType(const RoomTerrainType rtt)
+    static PromptFlagsType fromRoomTerrainType(const RoomTerrainEnum rtt)
     {
-        PromptFlagsType result{};
+        PromptFlagsType result;
         result.setTerrainType(rtt);
         result.setValid();
         return result;
@@ -53,9 +53,9 @@ public:
 public:
     auto getTerrainType() const
     {
-        return static_cast<RoomTerrainType>(flags & static_cast<uint8_t>(TERRAIN_TYPE));
+        return static_cast<RoomTerrainEnum>(flags & static_cast<uint8_t>(TERRAIN_TYPE));
     }
-    void setTerrainType(const RoomTerrainType type)
+    void setTerrainType(const RoomTerrainEnum type)
     {
         using flags_type = decltype(flags);
         flags = static_cast<flags_type>(flags & ~TERRAIN_TYPE);

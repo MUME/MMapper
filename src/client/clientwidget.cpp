@@ -242,7 +242,7 @@ void ClientWidget::saveLog()
 {
     struct Result
     {
-        QStringList filenames{};
+        QStringList filenames;
         bool isHtml = false;
     };
     const auto getFileNames = [this]() {

@@ -333,7 +333,7 @@ static bool isNameChar(const QChar c)
 #define X(name, value) XID_##name = value
 #define SEP_COMMA() ,
 
-enum class XmlEntityId : uint16_t { INVALID = 0, X_FOREACH_ENTITY(X, SEP_COMMA) };
+enum class XmlEntityEnum : uint16_t { INVALID = 0, X_FOREACH_ENTITY(X, SEP_COMMA) };
 
 #undef X
 #undef SEP_COMMA
@@ -342,12 +342,12 @@ struct XmlEntity final
 {
     QByteArray short_name;
     QByteArray full_name;
-    XmlEntityId id = XmlEntityId::INVALID;
+    XmlEntityEnum id = XmlEntityEnum::INVALID;
 
     XmlEntity() = default;
     explicit XmlEntity(const char *const _short_name,
                        const char *const _full_name,
-                       const XmlEntityId _id)
+                       const XmlEntityEnum _id)
         : short_name{_short_name}
         , full_name{_full_name}
         , id{_id}
@@ -359,26 +359,26 @@ using OptQByteArray = std::optional<QByteArray>;
 
 struct EntityTable final
 {
-    struct MyHash
+    struct MyHash final
     {
         uint32_t operator()(const QString &qs) const { return qHash(qs); }
     };
 
-    // REVISIT (perf/alloc): provide hash and equality template parameters?
     std::unordered_map<QString, XmlEntity, MyHash> by_short_name;
     std::unordered_map<QString, XmlEntity, MyHash> by_full_name;
-    std::unordered_map<XmlEntityId, XmlEntity> by_id;
+    std::unordered_map<XmlEntityEnum, XmlEntity> by_id;
 
-    XmlEntityId lookup_entity_id_by_short_name(const QString &entity) const;
-    XmlEntityId lookup_entity_id_by_full_name(const QString &entity) const;
-    OptQByteArray lookup_entity_short_name_by_id(const XmlEntityId id) const;
-    OptQByteArray lookup_entity_full_name_by_id(const XmlEntityId id) const;
+    XmlEntityEnum lookup_entity_id_by_short_name(const QString &entity) const;
+    XmlEntityEnum lookup_entity_id_by_full_name(const QString &entity) const;
+    OptQByteArray lookup_entity_short_name_by_id(XmlEntityEnum id) const;
+    OptQByteArray lookup_entity_full_name_by_id(XmlEntityEnum id) const;
 };
 
 static EntityTable initEntityTable()
 {
+    // prefixed enum class is an antipattern, but we may not be able to avoid it in this case.
 #define X(name, value) \
-    XmlEntity { #name, "&" #name ";", XmlEntityId::XID_##name }
+    XmlEntity { #name, "&" #name ";", XmlEntityEnum::XID_##name }
 #define SEP_COMMA() ,
 
     const std::initializer_list<XmlEntity> all_entities{X_FOREACH_ENTITY(X, SEP_COMMA)};
@@ -403,25 +403,25 @@ static const EntityTable &getEntityTable()
     return g_entityTable;
 }
 
-XmlEntityId EntityTable::lookup_entity_id_by_short_name(const QString &entity) const
+XmlEntityEnum EntityTable::lookup_entity_id_by_short_name(const QString &entity) const
 {
     const auto &map = by_short_name;
     const auto it = map.find(entity);
     if (it != map.end())
         return it->second.id;
-    return XmlEntityId::INVALID;
+    return XmlEntityEnum::INVALID;
 }
 
-XmlEntityId EntityTable::lookup_entity_id_by_full_name(const QString &entity) const
+XmlEntityEnum EntityTable::lookup_entity_id_by_full_name(const QString &entity) const
 {
     const auto &map = by_full_name;
     const auto it = map.find(entity);
     if (it != map.end())
         return it->second.id;
-    return XmlEntityId::INVALID;
+    return XmlEntityEnum::INVALID;
 }
 
-OptQByteArray EntityTable::lookup_entity_short_name_by_id(const XmlEntityId id) const
+OptQByteArray EntityTable::lookup_entity_short_name_by_id(const XmlEntityEnum id) const
 {
     const auto &map = by_id;
     const auto it = map.find(id);
@@ -430,7 +430,7 @@ OptQByteArray EntityTable::lookup_entity_short_name_by_id(const XmlEntityId id) 
     return std::nullopt;
 }
 
-OptQByteArray EntityTable::lookup_entity_full_name_by_id(const XmlEntityId id) const
+OptQByteArray EntityTable::lookup_entity_full_name_by_id(const XmlEntityEnum id) const
 {
     const auto &map = by_id;
     const auto it = map.find(id);
@@ -444,89 +444,89 @@ static const char *translit(const QChar qc)
     // not fully implemented
     // note: some of these might be better off just giving the entity
 
-    switch (static_cast<XmlEntityId>(qc.unicode())) {
-    case XmlEntityId::XID_lang:
-    case XmlEntityId::XID_laquo:
-    case XmlEntityId::XID_lsaquo:
+    switch (static_cast<XmlEntityEnum>(qc.unicode())) {
+    case XmlEntityEnum::XID_lang:
+    case XmlEntityEnum::XID_laquo:
+    case XmlEntityEnum::XID_lsaquo:
         return "<";
-    case XmlEntityId::XID_rang:
-    case XmlEntityId::XID_raquo:
-    case XmlEntityId::XID_rsaquo:
+    case XmlEntityEnum::XID_rang:
+    case XmlEntityEnum::XID_raquo:
+    case XmlEntityEnum::XID_rsaquo:
         return ">";
 
-    case XmlEntityId::XID_loz:
+    case XmlEntityEnum::XID_loz:
         return "<>";
 
-    case XmlEntityId::XID_larr:
+    case XmlEntityEnum::XID_larr:
         return "<-";
-    case XmlEntityId::XID_harr:
+    case XmlEntityEnum::XID_harr:
         return "<->";
-    case XmlEntityId::XID_rarr:
+    case XmlEntityEnum::XID_rarr:
         return "->";
 
-    case XmlEntityId::XID_lArr:
+    case XmlEntityEnum::XID_lArr:
         return "<=";
-    case XmlEntityId::XID_hArr:
+    case XmlEntityEnum::XID_hArr:
         return "<=>";
-    case XmlEntityId::XID_rArr:
+    case XmlEntityEnum::XID_rArr:
         return "=>";
 
-    case XmlEntityId::XID_thinsp:
-    case XmlEntityId::XID_ensp:
-    case XmlEntityId::XID_emsp:
+    case XmlEntityEnum::XID_thinsp:
+    case XmlEntityEnum::XID_ensp:
+    case XmlEntityEnum::XID_emsp:
         return " ";
 
-    case XmlEntityId::XID_ndash:
-    case XmlEntityId::XID_mdash:
-        // case XmlEntityId::XID_oline:
+    case XmlEntityEnum::XID_ndash:
+    case XmlEntityEnum::XID_mdash:
+        // case XmlEntityEnum::XID_oline:
         return "-";
 
-    case XmlEntityId::XID_horbar:
+    case XmlEntityEnum::XID_horbar:
         return "--";
 
-    case XmlEntityId::XID_lsquo:
-    case XmlEntityId::XID_rsquo:
-    case XmlEntityId::XID_prime:
+    case XmlEntityEnum::XID_lsquo:
+    case XmlEntityEnum::XID_rsquo:
+    case XmlEntityEnum::XID_prime:
         return "\'";
 
-    case XmlEntityId::XID_ldquo:
-    case XmlEntityId::XID_rdquo:
-    case XmlEntityId::XID_bdquo:
-    case XmlEntityId::XID_Prime:
+    case XmlEntityEnum::XID_ldquo:
+    case XmlEntityEnum::XID_rdquo:
+    case XmlEntityEnum::XID_bdquo:
+    case XmlEntityEnum::XID_Prime:
         return "\"";
 
-    case XmlEntityId::XID_frasl:
+    case XmlEntityEnum::XID_frasl:
         return "/";
 
-    case XmlEntityId::XID_sdot:
+    case XmlEntityEnum::XID_sdot:
         return ".";
 
-    case XmlEntityId::XID_hellip:
+    case XmlEntityEnum::XID_hellip:
         return "...";
 
-    case XmlEntityId::XID_and:
-    case XmlEntityId::XID_circ:
+    case XmlEntityEnum::XID_and:
+    case XmlEntityEnum::XID_circ:
         return "^";
 
-    case XmlEntityId::XID_empty: {
-        static_assert(static_cast<uint16_t>(XmlEntityId::XID_oslash) == 0xf8);
+    case XmlEntityEnum::XID_empty: {
+        static_assert(static_cast<uint16_t>(XmlEntityEnum::XID_oslash) == 0xf8);
         return "\xf8";
     }
 
-    case XmlEntityId::XID_lowast:
-    case XmlEntityId::XID_bull:
+    case XmlEntityEnum::XID_lowast:
+    case XmlEntityEnum::XID_bull:
         return "*";
 
-    case XmlEntityId::XID_tilde:
-    case XmlEntityId::XID_sim:
+    case XmlEntityEnum::XID_tilde:
+    case XmlEntityEnum::XID_sim:
         return "~";
 
-    case XmlEntityId::XID_ge:
+    case XmlEntityEnum::XID_ge:
         return ">=";
-    case XmlEntityId::XID_le:
+    case XmlEntityEnum::XID_le:
         return "<=";
 
-    case XmlEntityId::XID_trade:
+    case XmlEntityEnum::XID_trade:
         return "TM";
 
     default:
@@ -536,7 +536,7 @@ static const char *translit(const QChar qc)
     return nullptr;
 }
 
-auto entities::encode(const DecodedUnicode &name, const EncodingType encodingType) -> EncodedLatin1
+auto entities::encode(const DecodedUnicode &name, const EncodingEnum encodingType) -> EncodedLatin1
 {
     const auto &tab = getEntityTable();
 
@@ -579,7 +579,7 @@ auto entities::encode(const DecodedUnicode &name, const EncodingType encodingTyp
         }
 
         // first try transliteration
-        if (encodingType == EncodingType::Translit)
+        if (encodingType == EncodingEnum::Translit)
             if (const char *const subst = translit(qc)) {
                 out += subst;
                 continue;
@@ -587,7 +587,7 @@ auto entities::encode(const DecodedUnicode &name, const EncodingType encodingTyp
 
         // then try named XML entities
         if (auto full_name = tab.lookup_entity_full_name_by_id(
-                static_cast<XmlEntityId>(codepoint))) {
+                static_cast<XmlEntityEnum>(codepoint))) {
             out += full_name.value();
             continue;
         }
@@ -732,8 +732,8 @@ void entities::foreachEntity(const QStringRef &input, EntityCallback &callback)
                 const auto ampLen = static_cast<int>(it - amp);
                 const auto full = input.mid(ampStart, ampLen).toString();
                 assert(full.size() == ampLen);
-                const XmlEntityId id = tab.lookup_entity_id_by_full_name(full);
-                if (id != XmlEntityId::INVALID) {
+                const XmlEntityEnum id = tab.lookup_entity_id_by_full_name(full);
+                if (id != XmlEntityEnum::INVALID) {
                     const auto bits = static_cast<uint16_t>(id);
                     const QChar qc(bits);
                     assert(qc.unicode() == bits);
@@ -759,7 +759,7 @@ auto entities::decode(const EncodedLatin1 &input) -> DecodedUnicode
     struct MyEntityCallback final : EntityCallback
     {
         const EncodedLatin1 &input;
-        DecodedUnicode out{};
+        DecodedUnicode out;
         int pos = 0;
 
         explicit MyEntityCallback(const EncodedLatin1 &_input)
@@ -845,7 +845,7 @@ static bool self_test = []() -> bool {
     testEncode("\x0B", "&#xB;"); // Note: chooses hex (#xB) over decimal (#11).
     {
         QString in;
-        in += QChar{static_cast<uint16_t>(XmlEntityId::XID_trade)};
+        in += QChar{static_cast<uint16_t>(XmlEntityEnum::XID_trade)};
         const auto out = encode(DecodedUnicode{in});
         const auto expected = EncodedLatin1{"TM"};
         if (out != expected)
@@ -853,8 +853,8 @@ static bool self_test = []() -> bool {
     }
     {
         QString in;
-        in += QChar{static_cast<uint16_t>(XmlEntityId::XID_trade)};
-        const auto out = encode(DecodedUnicode{in}, EncodingType::Lossless);
+        in += QChar{static_cast<uint16_t>(XmlEntityEnum::XID_trade)};
+        const auto out = encode(DecodedUnicode{in}, EncodingEnum::Lossless);
         const auto expected = EncodedLatin1{"&trade;"};
         if (out != expected)
             throw std::runtime_error("test failed");

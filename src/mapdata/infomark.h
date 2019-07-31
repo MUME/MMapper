@@ -11,8 +11,8 @@ static constexpr const auto INFOMARK_SCALE = 100;
 
 using InfoMarkName = QString;
 using InfoMarkText = QString;
-enum class InfoMarkType { TEXT, LINE, ARROW };
-enum class InfoMarkClass {
+enum class InfoMarkTypeEnum { TEXT, LINE, ARROW };
+enum class InfoMarkClassEnum {
     GENERIC,
     HERB,
     RIVER,
@@ -35,8 +35,8 @@ public:
 
     const InfoMarkName &getName() const { return m_name; }
     const InfoMarkText &getText() const { return m_text; }
-    InfoMarkType getType() const { return m_type; }
-    InfoMarkClass getClass() const { return m_class; }
+    InfoMarkTypeEnum getType() const { return m_type; }
+    InfoMarkClassEnum getClass() const { return m_class; }
     const Coordinate &getPosition1() const { return m_pos1; }
     const Coordinate &getPosition2() const { return m_pos2; }
     float getRotationAngle() const { return m_rotationAngle; }
@@ -47,20 +47,20 @@ public:
     void setRotationAngle(float rotationAngle) { m_rotationAngle = rotationAngle; }
     void setName(InfoMarkName name) { m_name = name; }
     void setText(InfoMarkText text) { m_text = text; }
-    void setType(InfoMarkType type) { m_type = type; }
-    void setClass(InfoMarkClass markClass) { m_class = markClass; }
+    void setType(InfoMarkTypeEnum type) { m_type = type; }
+    void setClass(InfoMarkClassEnum markClass) { m_class = markClass; }
 
     void setTimeStamp(MarkerTimeStamp timeStamp) { m_timeStamp = timeStamp; }
 
 private:
-    InfoMarkName m_name{};
-    InfoMarkType m_type = InfoMarkType::TEXT;
-    InfoMarkText m_text{};
-    InfoMarkClass m_class = InfoMarkClass::GENERIC;
+    InfoMarkName m_name;
+    InfoMarkText m_text;
+    InfoMarkTypeEnum m_type = InfoMarkTypeEnum::TEXT;
+    InfoMarkClassEnum m_class = InfoMarkClassEnum::GENERIC;
 
-    MarkerTimeStamp m_timeStamp{};
+    MarkerTimeStamp m_timeStamp;
 
-    Coordinate m_pos1{};
-    Coordinate m_pos2{};
+    Coordinate m_pos1;
+    Coordinate m_pos2;
     float m_rotationAngle = 0.0; // in degrees
 };

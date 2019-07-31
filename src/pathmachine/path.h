@@ -16,21 +16,21 @@
 
 class AbstractRoomFactory;
 class Coordinate;
-class PathParameters;
 class Room;
 class RoomAdmin;
 class RoomRecipient;
 class RoomSignalHandler;
+struct PathParameters;
 
 class Path final
 {
 public:
-    static constexpr const auto INVALID_DIRECTION = static_cast<ExitDirection>(UINT_MAX);
+    static constexpr const auto INVALID_DIRECTION = static_cast<ExitDirEnum>(UINT_MAX);
     explicit Path(const Room *room,
                   RoomAdmin *owner,
                   RoomRecipient *locker,
                   RoomSignalHandler *signaler,
-                  ExitDirection direction = INVALID_DIRECTION);
+                  ExitDirEnum direction = INVALID_DIRECTION);
     void insertChild(Path *p);
     void removeChild(Path *p);
     void setParent(Path *p);
@@ -43,7 +43,7 @@ public:
                RoomAdmin *owner,
                const PathParameters &params,
                RoomRecipient *locker,
-               ExitDirection dir);
+               ExitDirEnum dir);
     double getProb() const { return probability; }
     void approve();
 
@@ -60,7 +60,7 @@ private:
     const Room *room
         = nullptr; // in fact a path only has one room, one parent and some children (forks).
     RoomSignalHandler *signaler = nullptr;
-    ExitDirection dir = INVALID_DIRECTION;
+    ExitDirEnum dir = INVALID_DIRECTION;
     ~Path() {}
 };
 

@@ -42,11 +42,11 @@ struct texture_array : public EnumIndexedArray<std::unique_ptr<QOpenGLTexture>, 
     }
 };
 
-template<RoadIndexType Type>
-struct road_texture_array : private texture_array<RoadIndex>
+template<RoadTagEnum Tag>
+struct road_texture_array : private texture_array<RoadIndexMaskEnum>
 {
-    using base = texture_array<RoadIndex>;
-    decltype(auto) operator[](TaggedRoadIndex<Type> x) { return base::operator[](x.index); }
+    using base = texture_array<RoadIndexMaskEnum>;
+    decltype(auto) operator[](TaggedRoadIndex<Tag> x) { return base::operator[](x.index); }
     using base::operator[];
     using base::begin;
     using base::destroyAll;
@@ -54,7 +54,7 @@ struct road_texture_array : private texture_array<RoadIndex>
     using base::size;
 };
 
-enum class CanvasMouseMode {
+enum class CanvasMouseModeEnum {
     NONE,
     MOVE,
     SELECT_ROOMS,
@@ -86,11 +86,11 @@ struct MapCanvasData
 
     struct Textures final
     {
-        texture_array<RoomTerrainType> terrain{};
-        texture_array<RoomLoadFlag> load{};
-        texture_array<RoomMobFlag> mob{};
-        road_texture_array<RoadIndexType::TRAIL> trail{};
-        road_texture_array<RoadIndexType::ROAD> road{};
+        texture_array<RoomTerrainEnum> terrain{};
+        texture_array<RoomLoadFlagEnum> load{};
+        texture_array<RoomMobFlagEnum> mob{};
+        road_texture_array<RoadTagEnum::TRAIL> trail{};
+        road_texture_array<RoadTagEnum::ROAD> road{};
         std::unique_ptr<QOpenGLTexture> update = nullptr;
 
         void destroyAll();
@@ -102,12 +102,12 @@ struct MapCanvasData
     qint16 m_currentLayer = 0;
     Coordinate2f m_visible1{}, m_visible2{};
 
-    bool m_mouseRightPressed{false};
-    bool m_mouseLeftPressed{false};
-    bool m_altPressed{false};
-    bool m_ctrlPressed{false};
+    bool m_mouseRightPressed = false;
+    bool m_mouseLeftPressed = false;
+    bool m_altPressed = false;
+    bool m_ctrlPressed = false;
 
-    CanvasMouseMode m_canvasMouseMode{CanvasMouseMode::MOVE};
+    CanvasMouseModeEnum m_canvasMouseMode = CanvasMouseModeEnum::MOVE;
 
     // mouse selection
     MouseSel m_sel1{}, m_sel2{}, m_moveBackup{};
@@ -144,7 +144,7 @@ struct MapCanvasData
 
     struct DrawLists final
     {
-        EnumIndexedArray<XDisplayList, ExitDirection, NUM_EXITS_NESW> wall{};
+        EnumIndexedArray<XDisplayList, ExitDirEnum, NUM_EXITS_NESW> wall{};
 
         struct ExitUpDown final
         {
@@ -165,7 +165,7 @@ struct MapCanvasData
             }
         } exit{};
 
-        EnumIndexedArray<XDisplayList, ExitDirection, NUM_EXITS_NESWUD> door{};
+        EnumIndexedArray<XDisplayList, ExitDirEnum, NUM_EXITS_NESWUD> door{};
 
         XDisplayList room{};
         struct
@@ -182,8 +182,8 @@ struct MapCanvasData
 
         struct
         {
-            EnumIndexedArray<XDisplayList, ExitDirection, NUM_EXITS_NESWUD> begin{};
-            EnumIndexedArray<XDisplayList, ExitDirection, NUM_EXITS_NESWUD> end{};
+            EnumIndexedArray<XDisplayList, ExitDirEnum, NUM_EXITS_NESWUD> begin{};
+            EnumIndexedArray<XDisplayList, ExitDirEnum, NUM_EXITS_NESWUD> end{};
             void destroyAll()
             {
                 for (auto &x : begin)

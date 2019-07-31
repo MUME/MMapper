@@ -4,108 +4,107 @@
 
 #include "ExitDirection.h"
 
-#include <array>
-
+#include "../global/Array.h"
 #include "../global/enums.h"
 
 namespace enums {
-const std::array<ExitDirection, NUM_EXITS_NESW> &getAllExitsNESW()
+const MMapper::Array<ExitDirEnum, NUM_EXITS_NESW> &getAllExitsNESW()
 {
-    static const auto g_all_exits = genEnumValues<ExitDirection, NUM_EXITS_NESW>();
+    static const auto g_all_exits = genEnumValues<ExitDirEnum, NUM_EXITS_NESW>();
     return g_all_exits;
 }
-const std::array<ExitDirection, NUM_EXITS_NESWUD> &getAllExitsNESWUD()
+const MMapper::Array<ExitDirEnum, NUM_EXITS_NESWUD> &getAllExitsNESWUD()
 {
-    static const auto g_all_exits = genEnumValues<ExitDirection, NUM_EXITS_NESWUD>();
+    static const auto g_all_exits = genEnumValues<ExitDirEnum, NUM_EXITS_NESWUD>();
     return g_all_exits;
 }
-const std::array<ExitDirection, NUM_EXITS> &getAllExits7()
+const MMapper::Array<ExitDirEnum, NUM_EXITS> &getAllExits7()
 {
-    static const auto g_all_exits = genEnumValues<ExitDirection, NUM_EXITS>();
+    static const auto g_all_exits = genEnumValues<ExitDirEnum, NUM_EXITS>();
     return g_all_exits;
 }
 
 } // namespace enums
 
-bool isNESW(const ExitDirection dir)
+bool isNESW(const ExitDirEnum dir)
 {
     switch (dir) {
-    case ExitDirection::NORTH:
-    case ExitDirection::SOUTH:
-    case ExitDirection::EAST:
-    case ExitDirection::WEST:
+    case ExitDirEnum::NORTH:
+    case ExitDirEnum::SOUTH:
+    case ExitDirEnum::EAST:
+    case ExitDirEnum::WEST:
         return true;
 
-    case ExitDirection::UP:
-    case ExitDirection::DOWN:
-    case ExitDirection::UNKNOWN:
-    case ExitDirection::NONE:
+    case ExitDirEnum::UP:
+    case ExitDirEnum::DOWN:
+    case ExitDirEnum::UNKNOWN:
+    case ExitDirEnum::NONE:
     default:
         return false;
     }
 }
-bool isUpDown(const ExitDirection dir)
+bool isUpDown(const ExitDirEnum dir)
 {
     switch (dir) {
-    case ExitDirection::UP:
-    case ExitDirection::DOWN:
+    case ExitDirEnum::UP:
+    case ExitDirEnum::DOWN:
         return true;
 
-    case ExitDirection::NORTH:
-    case ExitDirection::SOUTH:
-    case ExitDirection::EAST:
-    case ExitDirection::WEST:
-    case ExitDirection::UNKNOWN:
-    case ExitDirection::NONE:
+    case ExitDirEnum::NORTH:
+    case ExitDirEnum::SOUTH:
+    case ExitDirEnum::EAST:
+    case ExitDirEnum::WEST:
+    case ExitDirEnum::UNKNOWN:
+    case ExitDirEnum::NONE:
     default:
         return false;
     }
 }
 
-bool isNESWUD(const ExitDirection dir)
+bool isNESWUD(const ExitDirEnum dir)
 {
     switch (dir) {
-    case ExitDirection::NORTH:
-    case ExitDirection::SOUTH:
-    case ExitDirection::EAST:
-    case ExitDirection::WEST:
-    case ExitDirection::UP:
-    case ExitDirection::DOWN:
+    case ExitDirEnum::NORTH:
+    case ExitDirEnum::SOUTH:
+    case ExitDirEnum::EAST:
+    case ExitDirEnum::WEST:
+    case ExitDirEnum::UP:
+    case ExitDirEnum::DOWN:
         return true;
 
-    case ExitDirection::UNKNOWN:
-    case ExitDirection::NONE:
+    case ExitDirEnum::UNKNOWN:
+    case ExitDirEnum::NONE:
         break;
     }
     return false;
 }
 
 // TODO: merge this with other implementations
-ExitDirection opposite(const ExitDirection in)
+ExitDirEnum opposite(const ExitDirEnum in)
 {
 #define PAIR(A, B) \
     do { \
-    case ExitDirection::A: \
-        return ExitDirection::B; \
-    case ExitDirection::B: \
-        return ExitDirection::A; \
+    case ExitDirEnum::A: \
+        return ExitDirEnum::B; \
+    case ExitDirEnum::B: \
+        return ExitDirEnum::A; \
     } while (false)
     switch (in) {
         PAIR(NORTH, SOUTH);
         PAIR(WEST, EAST);
         PAIR(UP, DOWN);
-    case ExitDirection::UNKNOWN:
-    case ExitDirection::NONE:
+    case ExitDirEnum::UNKNOWN:
+    case ExitDirEnum::NONE:
         break;
     }
-    return ExitDirection::UNKNOWN;
+    return ExitDirEnum::UNKNOWN;
 #undef PAIR
 }
 
-const char *lowercaseDirection(const ExitDirection dir)
+const char *lowercaseDirection(const ExitDirEnum dir)
 {
 #define CASE(UPPER, lower) \
-    case ExitDirection::UPPER: \
+    case ExitDirEnum::UPPER: \
         return #lower
     switch (dir) {
         CASE(NORTH, north);
@@ -123,43 +122,43 @@ const char *lowercaseDirection(const ExitDirection dir)
 
 namespace Mmapper2Exit {
 
-ExitDirection dirForChar(const char dir)
+ExitDirEnum dirForChar(const char dir)
 {
     switch (dir) {
     case 'n':
-        return ExitDirection::NORTH;
+        return ExitDirEnum::NORTH;
     case 's':
-        return ExitDirection::SOUTH;
+        return ExitDirEnum::SOUTH;
     case 'e':
-        return ExitDirection::EAST;
+        return ExitDirEnum::EAST;
     case 'w':
-        return ExitDirection::WEST;
+        return ExitDirEnum::WEST;
     case 'u':
-        return ExitDirection::UP;
+        return ExitDirEnum::UP;
     case 'd':
-        return ExitDirection::DOWN;
+        return ExitDirEnum::DOWN;
     default:
-        return ExitDirection::UNKNOWN;
+        return ExitDirEnum::UNKNOWN;
     }
 }
 
-char charForDir(ExitDirection dir)
+char charForDir(ExitDirEnum dir)
 {
     switch (dir) {
-    case ExitDirection::NORTH:
+    case ExitDirEnum::NORTH:
         return 'n';
-    case ExitDirection::SOUTH:
+    case ExitDirEnum::SOUTH:
         return 's';
-    case ExitDirection::EAST:
+    case ExitDirEnum::EAST:
         return 'e';
-    case ExitDirection::WEST:
+    case ExitDirEnum::WEST:
         return 'w';
-    case ExitDirection::UP:
+    case ExitDirEnum::UP:
         return 'u';
-    case ExitDirection::DOWN:
+    case ExitDirEnum::DOWN:
         return 'd';
-    case ExitDirection::UNKNOWN:
-    case ExitDirection::NONE:
+    case ExitDirEnum::UNKNOWN:
+    case ExitDirEnum::NONE:
         break;
     }
     return '?';

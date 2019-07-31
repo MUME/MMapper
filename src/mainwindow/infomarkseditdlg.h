@@ -50,8 +50,8 @@ private:
     void readSettings();
     void writeSettings();
 
-    InfoMarkType getType();
-    InfoMarkClass getClass();
+    InfoMarkTypeEnum getType();
+    InfoMarkClassEnum getClass();
     InfoMark *getInfoMark(const QString &name);
     InfoMark *getCurrentInfoMark();
     void setCurrentInfoMark(InfoMark *m);

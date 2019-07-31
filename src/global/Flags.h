@@ -50,12 +50,14 @@ private:
     }
 
 public:
-    explicit constexpr Flags() noexcept = default;
+    /* implicit */ constexpr Flags() noexcept = default;
 
     explicit constexpr Flags(underlying_type flags) noexcept
         : flags{narrow(flags & MASK)}
     {}
 
+    // This might be tempting to make implcit, but it's not worth it because it doesn't enable the
+    // `Flags binop(Flag, Flag)` helper operators (see below).
     explicit constexpr Flags(Flag flag) noexcept
         : Flags{narrow(underlying_type{1u} << static_cast<int>(flag))}
     {}
@@ -75,10 +77,25 @@ public:
 
     friend inline bool operator!=(CRTP lhs, CRTP rhs) noexcept { return lhs.flags != rhs.flags; }
 
+    // REVISIT: These `Flags binop(Flag, Flag)` helper operators are not effective without `using namespace enums;`,
+    // because the scoping rules require inline friends to be defined in the enclosing namepace of the class
+    // that defines them, which ends up being `::enums` in our case. :(
+    // Note: The others operators that use a Flags argument work because of ADL.
 public:
+    friend inline constexpr CRTP operator&(Flag lhs, Flag rhs) noexcept
+    {
+        return CRTP{lhs} & CRTP{rhs};
+    }
+
     friend inline constexpr CRTP operator|(Flag lhs, Flag rhs) noexcept
     {
         return CRTP{lhs} | CRTP{rhs};
+    }
+
+    friend inline constexpr CRTP operator^(Flag lhs, Flag rhs) noexcept
+    {
+        /* parens to keep clang-format from formatting this strangely */
+        return CRTP{lhs} ^ (CRTP{rhs});
     }
 
 public:

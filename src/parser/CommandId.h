@@ -3,11 +3,11 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <array>
+#include "../global/Array.h"
 
 #include "../mapdata/ExitDirection.h"
 
-enum class CommandIdType {
+enum class CommandEnum {
     NORTH = 0,
     SOUTH,
     EAST,
@@ -21,10 +21,10 @@ enum class CommandIdType {
     /*SYNC, RESET, */
     NONE
 };
-static_assert(CommandIdType::FLEE > CommandIdType::UNKNOWN, "Code expects FLEE to be above UNKNOWN");
-static_assert(CommandIdType::FLEE > CommandIdType::LOOK, "Code expects FLEE to be above LOOK");
-static_assert(CommandIdType::FLEE < CommandIdType::SCOUT, "Code expects FLEE to be below SCOUT");
-static_assert(CommandIdType::FLEE < CommandIdType::NONE, "Code expects FLEE to be below NONE");
+static_assert(CommandEnum::FLEE > CommandEnum::UNKNOWN, "Code expects FLEE to be above UNKNOWN");
+static_assert(CommandEnum::FLEE > CommandEnum::LOOK, "Code expects FLEE to be above LOOK");
+static_assert(CommandEnum::FLEE < CommandEnum::SCOUT, "Code expects FLEE to be below SCOUT");
+static_assert(CommandEnum::FLEE < CommandEnum::NONE, "Code expects FLEE to be below NONE");
 
 /* does not include NONE */
 static constexpr const int NUM_COMMANDS = 10;
@@ -32,13 +32,13 @@ static constexpr const int NUM_COMMANDS = 10;
 namespace enums {
 
 #define ALL_COMMANDS ::enums::getAllCommands()
-const std::array<CommandIdType, NUM_COMMANDS> &getAllCommands();
+const MMapper::Array<CommandEnum, NUM_COMMANDS> &getAllCommands();
 
 } // namespace enums
 
-bool isDirectionNESWUD(const CommandIdType cmd);
-bool isDirection7(const CommandIdType cmd);
-ExitDirection getDirection(const CommandIdType cmd);
+bool isDirectionNESWUD(const CommandEnum cmd);
+bool isDirection7(const CommandEnum cmd);
+ExitDirEnum getDirection(const CommandEnum cmd);
 
-const char *getUppercase(const CommandIdType cmd);
-const char *getLowercase(const CommandIdType cmd);
+const char *getUppercase(const CommandEnum cmd);
+const char *getLowercase(const CommandEnum cmd);

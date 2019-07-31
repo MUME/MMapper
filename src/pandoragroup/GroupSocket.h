@@ -19,7 +19,7 @@
 
 class GroupAuthority;
 
-enum class ProtocolState { Unconnected, AwaitingLogin, AwaitingInfo, Logged };
+enum class ProtocolStateEnum { Unconnected, AwaitingLogin, AwaitingInfo, Logged };
 using ProtocolVersion = uint32_t;
 
 class GroupSocket final : public QObject
@@ -42,8 +42,8 @@ public:
     QAbstractSocket::SocketError getSocketError() const { return socket.error(); }
     QSslCertificate getPeerCertificate() const { return socket.peerCertificate(); }
 
-    void setProtocolState(const ProtocolState val);
-    ProtocolState getProtocolState() const { return protocolState; }
+    void setProtocolState(ProtocolStateEnum val);
+    ProtocolStateEnum getProtocolState() const { return protocolState; }
 
     void setProtocolVersion(const ProtocolVersion val) { protocolVersion = val; }
     ProtocolVersion getProtocolVersion() { return protocolVersion; }
@@ -72,23 +72,23 @@ private:
 
     QSslSocket socket;
     QTimer timer;
-    GroupAuthority *authority;
-    void onReadInternal(const char c);
+    GroupAuthority *const authority;
+    void onReadInternal(char c);
 
-    ProtocolState protocolState = ProtocolState::Unconnected;
+    ProtocolStateEnum protocolState = ProtocolStateEnum::Unconnected;
     ProtocolVersion protocolVersion = 102;
 
-    enum class GroupMessageState {
+    enum class GroupMessageStateEnum {
         /// integer string representing the messge length
-        MESSAGE_LENGTH,
+        LENGTH,
         /// message payload
-        MESSAGE_PAYLOAD
+        PAYLOAD
     } state
-        = GroupMessageState::MESSAGE_LENGTH;
+        = GroupMessageStateEnum::LENGTH;
 
     io::null_padded_buffer<(1 << 15)> ioBuffer{};
-    QByteArray buffer{};
-    QByteArray secret{};
-    QByteArray name{};
+    QByteArray buffer;
+    QByteArray secret;
+    QByteArray name;
     unsigned int currentMessageLen = 0;
 };

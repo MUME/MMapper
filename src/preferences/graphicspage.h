@@ -37,5 +37,5 @@ public slots:
 
 private:
     void changeColorClicked(QColor &color, QPushButton *pushButton);
-    Ui::GraphicsPage *ui;
+    Ui::GraphicsPage *const ui;
 };

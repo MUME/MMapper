@@ -20,7 +20,7 @@ static QString testMumeStartEpochTime(MumeClock &clock, int64_t time)
 void TestClock::mumeClockTest()
 {
     MumeClock clock;
-    clock.setPrecision(MumeClockPrecision::MUMECLOCK_HOUR);
+    clock.setPrecision(MumeClockPrecisionEnum::HOUR);
 
     QString zeroTime = "12am on Sunday, the 1st of Afteryule, year 2850 of the Third Age.";
     QString actualTime = testMumeStartEpochTime(clock, 0);
@@ -198,16 +198,16 @@ void TestClock::parseClockTimeTest()
 void TestClock::precsionTimeoutTest()
 {
     MumeClock clock;
-    QCOMPARE(clock.getPrecision(), MumeClockPrecision::MUMECLOCK_UNSET);
+    QCOMPARE(clock.getPrecision(), MumeClockPrecisionEnum::UNSET);
 
-    clock.setPrecision(MumeClockPrecision::MUMECLOCK_DAY);
-    QCOMPARE(clock.getPrecision(), MumeClockPrecision::MUMECLOCK_DAY);
+    clock.setPrecision(MumeClockPrecisionEnum::DAY);
+    QCOMPARE(clock.getPrecision(), MumeClockPrecisionEnum::DAY);
 
-    clock.setPrecision(MumeClockPrecision::MUMECLOCK_HOUR);
-    QCOMPARE(clock.getPrecision(), MumeClockPrecision::MUMECLOCK_DAY);
+    clock.setPrecision(MumeClockPrecisionEnum::HOUR);
+    QCOMPARE(clock.getPrecision(), MumeClockPrecisionEnum::DAY);
 
-    clock.setPrecision(MumeClockPrecision::MUMECLOCK_MINUTE);
-    QCOMPARE(clock.getPrecision(), MumeClockPrecision::MUMECLOCK_DAY);
+    clock.setPrecision(MumeClockPrecisionEnum::MINUTE);
+    QCOMPARE(clock.getPrecision(), MumeClockPrecisionEnum::DAY);
 }
 
 void TestClock::moonClockTest()
