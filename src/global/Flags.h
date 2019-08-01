@@ -39,8 +39,8 @@ public:
 
 private:
     static constexpr const underlying_type MASK = static_cast<underlying_type>(
-        ~static_cast<underlying_type>(static_cast<underlying_type>(~underlying_type{0u})
-                                      << NUM_FLAGS));
+        static_cast<underlying_type>(static_cast<underlying_type>(~underlying_type{0u})
+                                     >> (std::numeric_limits<underlying_type>::digits - NUM_FLAGS)));
     underlying_type flags = 0u;
 
     template<typename T>
