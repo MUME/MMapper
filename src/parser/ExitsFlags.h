@@ -8,11 +8,10 @@
 #include <stdexcept>
 
 #include "../global/Flags.h"
-#include "../global/bits.h"
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/ExitFlags.h"
 
-enum class ExitFlagExtEnum : uint32_t { EXITS_FLAGS_VALID = bit31 };
+enum class ExitFlagExtEnum : uint32_t { EXITS_FLAGS_VALID = (1u << 30) };
 // 2nd declaration to avoid having to type "ExitFlagExt::" to use this
 static constexpr const ExitFlagExtEnum EXITS_FLAGS_VALID = ExitFlagExtEnum::EXITS_FLAGS_VALID;
 

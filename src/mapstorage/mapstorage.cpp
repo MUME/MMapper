@@ -20,7 +20,6 @@
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
 #include "../global/Flags.h"
-#include "../global/bits.h"
 #include "../global/io.h"
 #include "../global/roomid.h"
 #include "../global/utils.h"

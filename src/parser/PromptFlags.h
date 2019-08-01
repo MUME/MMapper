@@ -5,7 +5,6 @@
 
 #include <cstdint>
 
-#include "../global/bits.h"
 #include "../global/utils.h"
 #include "../mapdata/mmapper2room.h"
 
@@ -13,11 +12,11 @@ class PromptFlagsType final
 {
 public:
     // bit0-3 -> char representation of RoomTerrainEnum
-    static constexpr const auto TERRAIN_TYPE = (bit1 | bit2 | bit3 | bit4);
-    static constexpr const auto LIGHT_MASK = (bit5 | bit6);
-    static constexpr const auto LIT_ROOM = bit5;
-    static constexpr const auto DARK_ROOM = bit6;
-    static constexpr const auto PROMPT_FLAGS_VALID = bit7;
+    static constexpr const auto TERRAIN_TYPE = 0xFu;
+    static constexpr const auto LIT_ROOM = 1u << 4;
+    static constexpr const auto DARK_ROOM = 1u << 5;
+    static constexpr const auto LIGHT_MASK = LIT_ROOM | DARK_ROOM;
+    static constexpr const auto PROMPT_FLAGS_VALID = 1u << 6;
 
 private:
     uint8_t flags = 0u;

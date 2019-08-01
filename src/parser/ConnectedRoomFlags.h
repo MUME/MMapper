@@ -6,7 +6,6 @@
 #include <cstdint>
 
 #include "../global/DirectionType.h"
-#include "../global/bits.h"
 #include "../global/utils.h"
 
 enum class DirectionalLightEnum { NONE = 0, DIRECT_SUN_ROOM = 1, INDIRECT_SUN_ROOM = 2, BOTH = 3 };
@@ -20,8 +19,11 @@ inline DirectionalLightEnum operator|(DirectionalLightEnum lhs, DirectionalLight
     return static_cast<DirectionalLightEnum>(static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs));
 }
 
-static constexpr const auto ANY_DIRECT_SUNLIGHT = (bit1 | bit3 | bit5 | bit7 | bit9 | bit11);
-static constexpr const auto CONNECTED_ROOM_FLAGS_VALID = bit15;
+static constexpr const auto ANY_DIRECT_SUNLIGHT = 0b10101010101u;
+static constexpr const auto CONNECTED_ROOM_FLAGS_VALID = 1u << 14;
+
+// every other bit for all 6 directions.
+static_assert(ANY_DIRECT_SUNLIGHT == ((1u << (2 * 6)) - 1u) / 3u);
 
 class ConnectedRoomFlagsType final
 {
