@@ -260,7 +260,11 @@ QVariant GroupModel::dataForCharacter(CGroupChar *const character, ColumnType co
             }
             return prettyName;
         };
-        default:
+        case ColumnType::NAME:
+        case ColumnType::HP:
+        case ColumnType::MANA:
+        case ColumnType::MOVES:
+        case ColumnType::ROOM_NAME:
             break;
         };
         break;
