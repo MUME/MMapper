@@ -9,63 +9,65 @@ if(OPENSSL_FOUND)
         endif()
         # Ensure that we package OpenSSL DLLs with MMapper for Windows
         file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/src/bin)
-        if(NOT OPENSSL_ROOT_DIR)
+        if (OPENSSL_VERSION VERSION_LESS 1.1.0)
+            set(OPENSSL_CRYPTO_LIBRARY_FILE "libeay32.dll")
+            set(OPENSSL_SSL_LIBRARY_FILE "ssleay32.dll")
             if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
-                if (OPENSSL_VERSION VERSION_LESS 1.1.0)
-                    set(OPENSSL_ROOT_DIR "C:\\OpenSSL-Win64")
-                else()
-                    set(OPENSSL_ROOT_DIR "C:\\OpenSSL-v111-Win64")
-                endif()
-                set(MSVCR120_ROOT_DIR "C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\VC\\redist\\x64\\Microsoft.VC120.CRT")
-            else()
-                if (OPENSSL_VERSION VERSION_LESS 1.1.0)
-                    set(OPENSSL_ROOT_DIR "C:\\OpenSSL-Win32")
-                else()
-                    set(OPENSSL_ROOT_DIR "C:\\OpenSSL-v111-Win32")
-                endif()
                 set(MSVCR120_ROOT_DIR "C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\VC\\redist\\x86\\Microsoft.VC120.CRT")
+            else()
+                set(MSVCR120_ROOT_DIR "C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\VC\\redist\\x64\\Microsoft.VC120.CRT")
+            endif()
+        else()
+            if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
+                set(OPENSSL_CRYPTO_LIBRARY_FILE "libcrypto-1_1-x64.dll")
+                set(OPENSSL_SSL_LIBRARY_FILE "libssl-1_1-x64.dll")
+            else()
+                set(OPENSSL_CRYPTO_LIBRARY_FILE "libcrypto-1_1.dll")
+                set(OPENSSL_SSL_LIBRARY_FILE "libssl-1_1.dll")
             endif()
         endif()
-        find_file(LIB_EAY_BIN
-                NAMES
-                libeay32.dll
-                HINTS
-                ${OPENSSL_ROOT_DIR}
-                PATH_SUFFIXES
-                bin)
-        if(LIB_EAY_BIN-NOTFOUND)
-            message(FATAL_ERROR "OpenSSL libeay32.dll was NOT found")
-        else()
-            configure_file(${LIB_EAY_BIN} ${CMAKE_BINARY_DIR}/src/bin/libeay32.dll COPYONLY)
-            message(STATUS "   Copied ${LIB_EAY_BIN} to src/bin/")
+        if (OPENSSL_VERSION VERSION_LESS 1.1.0)
+            # Shining Light Productions OpenSSL 1.0.x requires the VC++2013 runtime
+            find_file(MSVCR120_BIN
+                    NAMES
+                    msvcr120.dll
+                    HINTS
+                    ${OPENSSL_ROOT_DIR}
+                    ${MSVCR120_ROOT_DIR}
+                    PATH_SUFFIXES
+                    bin)
+            if(NOT MSVCR120_BIN)
+                message(FATAL_ERROR "OpenSSL dependency msvcr120.dll was NOT found")
+            else()
+                configure_file(${MSVCR120_BIN} ${CMAKE_BINARY_DIR}/src/bin/msvcr120.dll COPYONLY)
+                message(STATUS "   Copied ${MSVCR120_BIN} to src/bin/")
+            endif()
         endif()
-        find_file(SSL_EAY_BIN
+        find_file(CRYPTO_LIB_BIN
                 NAMES
-                ssleay32.dll
+                ${OPENSSL_CRYPTO_LIBRARY_FILE}
                 HINTS
                 ${OPENSSL_ROOT_DIR}
                 PATH_SUFFIXES
                 bin)
-        if(SSL_EAY_BIN-NOTFOUND)
-            message(FATAL_ERROR "OpenSSL ssleay32.dll was NOT found")
+        if(NOT CRYPTO_LIB_BIN)
+            message(FATAL_ERROR "OpenSSL ${OPENSSL_CRYPTO_LIBRARY_FILE} was NOT found")
         else()
-            configure_file(${SSL_EAY_BIN} ${CMAKE_BINARY_DIR}/src/bin/ssleay32.dll COPYONLY)
-            message(STATUS "   Copied ${SSL_EAY_BIN} to src/bin/")
+            configure_file(${CRYPTO_LIB_BIN} ${CMAKE_BINARY_DIR}/src/bin/${OPENSSL_CRYPTO_LIBRARY_FILE} COPYONLY)
+            message(STATUS "   Copied ${CRYPTO_LIB_BIN} to src/bin/")
         endif()
-        # Shining Light Productions OpenSSL requires the VC++2013 runtime
-        find_file(MSVCR120_BIN
+        find_file(SSL_LIB_BIN
                 NAMES
-                msvcr120.dll
+                ${OPENSSL_SSL_LIBRARY_FILE}
                 HINTS
                 ${OPENSSL_ROOT_DIR}
-                ${MSVCR120_ROOT_DIR}
                 PATH_SUFFIXES
                 bin)
-        if(MSVCR120_BIN-NOTFOUND)
-            message(FATAL_ERROR "OpenSSL dependency msvcr120.dll was NOT found")
+        if(NOT SSL_LIB_BIN)
+            message(FATAL_ERROR "OpenSSL ${OPENSSL_SSL_LIBRARY_FILE} was NOT found")
         else()
-            configure_file(${MSVCR120_BIN} ${CMAKE_BINARY_DIR}/src/bin/msvcr120.dll COPYONLY)
-            message(STATUS "   Copied ${MSVCR120_BIN} to src/bin/")
+            configure_file(${SSL_LIB_BIN} ${CMAKE_BINARY_DIR}/src/bin/${OPENSSL_SSL_LIBRARY_FILE} COPYONLY)
+            message(STATUS "   Copied ${SSL_LIB_BIN} to src/bin/")
         endif()
     endif()
 elseif(MINGW AND Qt5Core_VERSION VERSION_GREATER 5.12.3)
