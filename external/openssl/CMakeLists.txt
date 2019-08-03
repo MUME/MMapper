@@ -12,10 +12,11 @@ if(OPENSSL_FOUND)
         if (OPENSSL_VERSION VERSION_LESS 1.1.0)
             set(OPENSSL_CRYPTO_LIBRARY_FILE "libeay32.dll")
             set(OPENSSL_SSL_LIBRARY_FILE "ssleay32.dll")
+            set(MSVCR_LIBRARY_FILE "msvcr120.dll")
             if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
-                set(MSVCR120_ROOT_DIR "C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\VC\\redist\\x86\\Microsoft.VC120.CRT")
+                set(MSVCR_ROOT_DIR "C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\VC\\redist\\x86\\Microsoft.VC120.CRT")
             else()
-                set(MSVCR120_ROOT_DIR "C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\VC\\redist\\x64\\Microsoft.VC120.CRT")
+                set(MSVCR_ROOT_DIR "C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\VC\\redist\\x64\\Microsoft.VC120.CRT")
             endif()
         else()
             if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
@@ -25,23 +26,27 @@ if(OPENSSL_FOUND)
                 set(OPENSSL_CRYPTO_LIBRARY_FILE "libcrypto-1_1.dll")
                 set(OPENSSL_SSL_LIBRARY_FILE "libssl-1_1.dll")
             endif()
-        endif()
-        if (OPENSSL_VERSION VERSION_LESS 1.1.0)
-            # Shining Light Productions OpenSSL 1.0.x requires the VC++2013 runtime
-            find_file(MSVCR120_BIN
-                    NAMES
-                    msvcr120.dll
-                    HINTS
-                    ${OPENSSL_ROOT_DIR}
-                    ${MSVCR120_ROOT_DIR}
-                    PATH_SUFFIXES
-                    bin)
-            if(NOT MSVCR120_BIN)
-                message(FATAL_ERROR "OpenSSL dependency msvcr120.dll was NOT found")
+            set(MSVCR_LIBRARY_FILE "vcruntime140.dll")
+            if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
+                set(MSVCR_ROOT_DIR "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x86\\Microsoft.VC140.CRT")
             else()
-                configure_file(${MSVCR120_BIN} ${CMAKE_BINARY_DIR}/src/bin/msvcr120.dll COPYONLY)
-                message(STATUS "   Copied ${MSVCR120_BIN} to src/bin/")
+                set(MSVCR_ROOT_DIR "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x64\\Microsoft.VC140.CRT")
             endif()
+        endif()
+        # Shining Light Productions OpenSSL requires the VC++ runtime
+        find_file(MSVCR_LIB_BIN
+                NAMES
+                ${MSVCR_LIBRARY_FILE}
+                HINTS
+                ${OPENSSL_ROOT_DIR}
+                ${MSVCR_ROOT_DIR}
+                PATH_SUFFIXES
+                bin)
+        if(NOT MSVCR_LIB_BIN)
+            message(FATAL_ERROR "OpenSSL dependency ${MSVCR_LIBRARY_FILE} was NOT found")
+        else()
+            configure_file(${MSVCR_LIB_BIN} ${CMAKE_BINARY_DIR}/src/bin/${MSVCR_LIBRARY_FILE} COPYONLY)
+            message(STATUS "   Copied ${MSVCR_LIB_BIN} to src/bin/")
         endif()
         find_file(CRYPTO_LIB_BIN
                 NAMES
