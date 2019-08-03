@@ -232,7 +232,7 @@ void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
     const auto fontFormatFlag = getFontFormatFlags(infoMarkClass);
 
     if (infoMarkType == InfoMarkTypeEnum::TEXT) {
-        width = getScaledFontWidth(marker->getText(), fontFormatFlag);
+        width = getScaledFontWidth(marker->getText().toQString(), fontFormatFlag);
         height = getScaledFontHeight();
         x2 = x1 + width;
         y2 = y1 + height;
@@ -277,7 +277,7 @@ void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
         gl.glTranslatef(-x1 / 2.0f, -y1 / 2.0f, 0.0f);
         renderText(x1 + 0.1f,
                    y1 + 0.3f,
-                   marker->getText(),
+                   marker->getText().toQString(),
                    textColor(color),
                    fontFormatFlag,
                    marker->getRotationAngle());

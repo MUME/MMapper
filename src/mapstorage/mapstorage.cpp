@@ -424,13 +424,13 @@ void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, uint32_t version)
         if (postfix != 0 && postfix != 1) {
             name += QString("_m%1").arg(postfix).toLatin1();
         }
-        mark->setName(name);
+        mark->setName(InfoMarkName(name));
     }
 
-    mark->setText(helper.read_string());
+    mark->setText(InfoMarkText(helper.read_string()));
     mark->setTimeStamp(helper.read_datetime());
 
-    // REVISIT: type safety
+    // REVISIT: type safety! Jahara fix this! You need to bounds check these enums.
     mark->setType(static_cast<InfoMarkTypeEnum>(helper.read_u8()));
     if (version >= MMAPPER_2_3_7_SCHEMA) {
         mark->setClass(static_cast<InfoMarkClassEnum>(helper.read_u8()));
@@ -606,8 +606,8 @@ bool MapStorage::saveData(bool baseMapOnly)
 
 void MapStorage::saveMark(InfoMark *mark, QDataStream &stream)
 {
-    stream << QString(mark->getName());
-    stream << QString(mark->getText());
+    stream << QString(mark->getName().toQString());
+    stream << QString(mark->getText().toQString());
     stream << QDateTime(mark->getTimeStamp());
     stream << static_cast<quint8>(mark->getType());
     stream << static_cast<quint8>(mark->getClass());

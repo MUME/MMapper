@@ -8,11 +8,18 @@
 #include <QDateTime>
 
 #include "../expandoracommon/coordinate.h"
+#include "../global/TaggedString.h"
 
 static constexpr const auto INFOMARK_SCALE = 100;
 
-using InfoMarkName = QString;
-using InfoMarkText = QString;
+struct InfomarkNameTag
+{};
+struct InfomarkTextTag
+{};
+
+using InfoMarkName = TaggedString<InfomarkNameTag>;
+using InfoMarkText = TaggedString<InfomarkTextTag>;
+
 enum class InfoMarkTypeEnum { TEXT, LINE, ARROW };
 enum class InfoMarkClassEnum {
     GENERIC,
@@ -61,12 +68,14 @@ public:
     void setPosition1(const Coordinate &pos) { m_pos1 = pos; }
     void setPosition2(const Coordinate &pos) { m_pos2 = pos; }
     void setRotationAngle(float rotationAngle) { m_rotationAngle = rotationAngle; }
-    void setName(InfoMarkName name) { m_name = name; }
-    void setText(InfoMarkText text) { m_text = text; }
+    void setName(InfoMarkName name) { m_name = std::move(name); }
+    void setText(InfoMarkText text) { m_text = std::move(text); }
     void setType(InfoMarkTypeEnum type) { m_type = type; }
     void setClass(InfoMarkClassEnum markClass) { m_class = markClass; }
 
-    void setTimeStamp(MarkerTimeStamp timeStamp) { m_timeStamp = timeStamp; }
+    // REVISIT: what's the timestamp for? It looks like it's only loaded and saved.
+    // Just remove it from the next schema?
+    void setTimeStamp(MarkerTimeStamp timeStamp) { m_timeStamp = std::move(timeStamp); }
 
 private:
     InfoMarkName m_name;

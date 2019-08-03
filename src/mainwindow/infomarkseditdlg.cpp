@@ -96,7 +96,7 @@ void InfoMarksEditDlg::createClicked()
     }
 
     for (const auto &marker : ml) {
-        if (marker->getName() == name) {
+        if (marker->getName().toQString() == name) {
             QMessageBox::critical(this, tr("MMapper2"), tr("Object with this name already exists!"));
             return;
         }
@@ -105,8 +105,8 @@ void InfoMarksEditDlg::createClicked()
     auto im = InfoMark::alloc();
 
     im->setType(getType());
-    im->setName(name);
-    im->setText(objectText->text());
+    im->setName(InfoMarkName{name});
+    im->setText(InfoMarkText{objectText->text()});
     im->setClass(getClass());
     const Coordinate pos1(m_x1->value(), m_y1->value(), m_layer->value());
     const Coordinate pos2(m_x2->value(), m_y2->value(), m_layer->value());
@@ -127,8 +127,8 @@ void InfoMarksEditDlg::modifyClicked()
     InfoMark *const im = getCurrentInfoMark();
 
     im->setType(getType());
-    im->setName(objectNameStr->text());
-    im->setText(objectText->text());
+    im->setName(InfoMarkName(objectNameStr->text()));
+    im->setText(InfoMarkText(objectText->text()));
     im->setClass(getClass());
     const Coordinate pos1(m_x1->value(), m_y1->value(), m_layer->value());
     const Coordinate pos2(m_x2->value(), m_y2->value(), m_layer->value());
@@ -166,13 +166,9 @@ void InfoMarksEditDlg::updateMarkers()
     for (const auto &marker : *m_selection) {
         switch (marker->getType()) {
         case InfoMarkTypeEnum::TEXT:
-            objectsList->addItem(marker->getName());
-            break;
         case InfoMarkTypeEnum::LINE:
-            objectsList->addItem(marker->getName());
-            break;
         case InfoMarkTypeEnum::ARROW:
-            objectsList->addItem(marker->getName());
+            objectsList->addItem(marker->getName().toQString());
             break;
         }
     }
@@ -236,8 +232,8 @@ void InfoMarksEditDlg::updateDialog()
         objectCreate->setEnabled(true);
         objectModify->setEnabled(false);
     } else {
-        objectNameStr->setText(marker->getName());
-        objectText->setText(marker->getText());
+        objectNameStr->setText(marker->getName().toQString());
+        objectText->setText(marker->getText().toQString());
         m_x1->setValue(marker->getPosition1().x);
         m_y1->setValue(marker->getPosition1().y);
         m_x2->setValue(marker->getPosition2().x);
@@ -252,13 +248,13 @@ void InfoMarksEditDlg::updateDialog()
 
 InfoMarkTypeEnum InfoMarksEditDlg::getType()
 {
-    // danger! no bounds checking
+    // FIXME: This needs bounds checking.
     return static_cast<InfoMarkTypeEnum>(objectType->currentIndex());
 }
 
 InfoMarkClassEnum InfoMarksEditDlg::getClass()
 {
-    // danger! no bounds checking
+    // FIXME: This needs bounds checking.
     return static_cast<InfoMarkClassEnum>(objectClassesList->currentIndex());
 }
 
@@ -272,15 +268,16 @@ InfoMark *InfoMarksEditDlg::getCurrentInfoMark()
 
 void InfoMarksEditDlg::setCurrentInfoMark(InfoMark *m)
 {
-    int i = objectsList->findText(m->getName());
+    int i = objectsList->findText(m->getName().toQString());
     if (i == -1) {
         i = 0;
     }
     objectsList->setCurrentIndex(i);
 }
 
-InfoMark *InfoMarksEditDlg::getInfoMark(const QString &name)
+InfoMark *InfoMarksEditDlg::getInfoMark(const QString &qname)
 {
+    const auto &name = InfoMarkName{qname.toStdString()};
     for (const auto &marker : m_mapData->getMarkersList()) {
         if (marker->getName() == name) {
             return marker.get();

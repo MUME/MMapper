@@ -703,9 +703,10 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                 const auto c2 = m_sel2.getScaledCoordinate(INFOMARK_SCALE);
                 auto tmpSel = InfoMarkSelection::alloc(m_data, c1, c2);
                 if (tmpSel && tmpSel->size() == 1) {
+                    const std::shared_ptr<InfoMark> &firstMark = tmpSel->front();
                     QString ctemp = QString("Selected Info Mark: %1 %2")
-                                        .arg(tmpSel->front()->getName())
-                                        .arg(tmpSel->front()->getText());
+                                        .arg(firstMark->getName().toQString())
+                                        .arg(firstMark->getText().toQString());
                     emit log("MapCanvas", ctemp);
                 }
                 setInfoMarkSelection(tmpSel);
