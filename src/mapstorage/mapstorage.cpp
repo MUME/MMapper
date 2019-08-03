@@ -387,11 +387,14 @@ bool MapStorage::mergeData()
         emit log("MapStorage", QString("Number of info items: %1").arg(marksCount));
 
         MarkerList &markerList = m_mapData.getMarkersList();
+        // If you turn this into a vector, reserve here.
+        // markerList.reserve(markerList.size() + static_cast<size_t>(marksCount));
+
         // create all pointers to items
         for (uint32_t index = 0; index < marksCount; ++index) {
-            auto mark = new InfoMark();
-            loadMark(mark, stream, version);
-            markerList.append(mark);
+            auto mark = InfoMark::alloc();
+            loadMark(mark.get(), stream, version);
+            markerList.emplace_back(mark);
 
             progressCounter.step();
         }
@@ -575,11 +578,8 @@ bool MapStorage::saveData(bool baseMapOnly)
     }
 
     // save items
-    MarkerListIterator markerit(markerList);
-    while (markerit.hasNext()) {
-        InfoMark *mark = markerit.next();
-        saveMark(mark, stream);
-
+    for (auto &mark : markerList) {
+        saveMark(mark.get(), stream);
         progressCounter.step();
     }
 

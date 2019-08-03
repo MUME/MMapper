@@ -1177,7 +1177,7 @@ void MainWindow::newInfoMarkSelection(InfoMarkSelection *const is)
     m_infoMarkSelection = is;
     infoMarkActions.infoMarkGroup->setEnabled(m_infoMarkSelection != nullptr);
 
-    if (m_infoMarkSelection && m_infoMarkSelection->isEmpty()) {
+    if (m_infoMarkSelection && m_infoMarkSelection->empty()) {
         // Create a new infomark if its an empty selection
         onEditInfoMarkSelection();
     }
@@ -1792,15 +1792,16 @@ void MainWindow::onEditRoomSelection()
 
 void MainWindow::onDeleteInfoMarkSelection()
 {
-    if (m_infoMarkSelection != nullptr) {
-        while (!m_infoMarkSelection->isEmpty()) {
-            auto im = m_infoMarkSelection->front();
-            m_mapData->removeMarker(im);
-            m_infoMarkSelection->pop_front();
-        }
-        m_mapWindow->getCanvas()->clearInfoMarkSelection();
-        m_mapWindow->getCanvas()->update();
+    if (m_infoMarkSelection == nullptr)
+        return;
+
+    while (!m_infoMarkSelection->empty()) {
+        auto im = m_infoMarkSelection->front();
+        m_mapData->removeMarker(im);
+        m_infoMarkSelection->pop_front();
     }
+
+    m_mapWindow->getCanvas()->clearInfoMarkSelection();
 }
 
 void MainWindow::onDeleteRoomSelection()

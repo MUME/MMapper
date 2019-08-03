@@ -24,16 +24,13 @@ InfoMarkSelection::InfoMarkSelection(MapData *const mapData,
     const auto bx2 = std::max(c1.x, c2.x) + margin;
     const auto by2 = std::max(c1.y, c2.y) + margin;
 
-    bool firstInside = false;
-    bool secondInside = false;
-
     assert(mapData);
-    for (const auto marker : mapData->getMarkersList()) {
+    for (const auto &marker : mapData->getMarkersList()) {
         const Coordinate pos1 = marker->getPosition1();
         const Coordinate pos2 = marker->getPosition2();
 
-        firstInside = false;
-        secondInside = false;
+        bool firstInside = false;
+        bool secondInside = false;
 
         if (pos1.x > bx1 && pos1.x < bx2 && pos1.y > by1 && pos1.y < by2) {
             firstInside = true;
@@ -42,7 +39,7 @@ InfoMarkSelection::InfoMarkSelection(MapData *const mapData,
             secondInside = true;
         }
         if (c1.z == pos1.z && c2.z == pos2.z && (firstInside || secondInside)) {
-            append(marker);
+            emplace_back(marker);
         }
     }
 }

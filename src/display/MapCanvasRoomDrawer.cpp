@@ -202,9 +202,8 @@ static QString getPostfixedDoorName(const Room *const room, const ExitDirEnum di
 
 void MapCanvasRoomDrawer::drawInfoMarks()
 {
-    MarkerListIterator m(m_mapCanvasData.m_data->getMarkersList());
-    while (m.hasNext()) {
-        drawInfoMark(m.next());
+    for (const auto &m : m_mapCanvasData.m_data->getMarkersList()) {
+        drawInfoMark(m.get());
     }
 }
 

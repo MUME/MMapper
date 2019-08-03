@@ -25,11 +25,19 @@ InfoMarksEditDlg::InfoMarksEditDlg(QWidget *const parent)
     connect(closeButton, &QAbstractButton::clicked, this, [this]() { this->accept(); });
 }
 
-void InfoMarksEditDlg::setInfoMarkSelection(InfoMarkSelection *is, MapData *md, MapCanvas *mc)
+void InfoMarksEditDlg::setInfoMarkSelection(InfoMarkSelection *const is,
+                                            MapData *const md,
+                                            MapCanvas *const mc)
 {
+    assert(is != nullptr);
+    assert(md != nullptr);
+    assert(mc != nullptr);
+
+    // NOTE: We don't own these.
     m_selection = is;
     m_mapData = md;
     m_mapCanvas = mc;
+
     updateMarkers();
     updateDialog();
 }
@@ -79,21 +87,21 @@ void InfoMarksEditDlg::objectTypeCurrentIndexChanged(const QString & /*unused*/)
 
 void InfoMarksEditDlg::createClicked()
 {
-    MarkerList ml = m_mapData->getMarkersList();
+    const MarkerList &ml = m_mapData->getMarkersList();
     QString name = objectNameStr->text();
 
     if (name == "") {
         QMessageBox::critical(this, tr("MMapper2"), tr("Can't create objects with empty name!"));
     }
 
-    for (const auto marker : ml) {
+    for (const auto &marker : ml) {
         if (marker->getName() == name) {
             QMessageBox::critical(this, tr("MMapper2"), tr("Object with this name already exists!"));
             return;
         }
     }
 
-    auto *const im = new InfoMark();
+    auto im = InfoMark::alloc();
 
     im->setType(getType());
     im->setName(name);
@@ -105,11 +113,11 @@ void InfoMarksEditDlg::createClicked()
     im->setPosition2(pos2);
     im->setRotationAngle(static_cast<float>(m_rotationAngle->value()));
 
-    m_mapData->addMarker(im);
+    m_mapData->addMarker(im.get());
 
     emit mapChanged();
     updateMarkers();
-    setCurrentInfoMark(im);
+    setCurrentInfoMark(im.get());
     updateDialog();
 }
 
@@ -154,7 +162,7 @@ void InfoMarksEditDlg::updateMarkers()
     objectsList->addItem("Create New Marker");
 
     assert(m_selection);
-    for (const auto marker : *m_selection) {
+    for (const auto &marker : *m_selection) {
         switch (marker->getType()) {
         case InfoMarkTypeEnum::TEXT:
             objectsList->addItem(marker->getName());
@@ -169,7 +177,7 @@ void InfoMarksEditDlg::updateMarkers()
     }
 
     if (m_selection->size() == 1)
-        objectsList->setCurrentIndex(m_selection->size());
+        objectsList->setCurrentIndex(static_cast<int>(m_selection->size()));
 }
 
 void InfoMarksEditDlg::updateDialog()
@@ -272,9 +280,9 @@ void InfoMarksEditDlg::setCurrentInfoMark(InfoMark *m)
 
 InfoMark *InfoMarksEditDlg::getInfoMark(const QString &name)
 {
-    for (const auto marker : m_mapData->getMarkersList()) {
+    for (const auto &marker : m_mapData->getMarkersList()) {
         if (marker->getName() == name) {
-            return marker;
+            return marker.get();
         }
     }
     return nullptr;

@@ -285,9 +285,7 @@ bool MapData::execute(std::unique_ptr<MapAction> action, const SharedRoomSelecti
 void MapData::clear()
 {
     MapFrontend::clear();
-    while (!m_markers.isEmpty()) {
-        delete m_markers.takeFirst();
-    }
+    m_markers.clear();
     emit log("MapData", "cleared MapData");
 }
 
@@ -321,20 +319,28 @@ void MapData::genericSearch(RoomRecipient *recipient, const RoomFilter &f)
     }
 }
 
-MapData::~MapData()
-{
-    while (!m_markers.isEmpty()) {
-        delete m_markers.takeFirst();
-    }
-}
+MapData::~MapData() = default;
 
 void MapData::removeMarker(InfoMark *im)
 {
-    m_markers.removeAll(im);
-    delete im;
+    if (im != nullptr)
+        m_markers.remove(im->shared_from_this());
 }
 
 void MapData::addMarker(InfoMark *im)
 {
-    m_markers.append(im);
+    if (im != nullptr)
+        m_markers.emplace_back(im->shared_from_this());
+}
+
+void MapData::removeMarker(const std::shared_ptr<InfoMark> &im)
+{
+    if (im != nullptr)
+        m_markers.remove(im);
+}
+
+void MapData::addMarker(const std::shared_ptr<InfoMark> &im)
+{
+    if (im != nullptr)
+        m_markers.emplace_back(im);
 }

@@ -42,8 +42,7 @@ class RoomRecipient;
 class ShortestPathRecipient;
 
 using ConstRoomList = QList<const Room *>;
-using MarkerList = QLinkedList<InfoMark *>;
-using MarkerListIterator = QLinkedListIterator<InfoMark *>;
+using MarkerList = std::list<std::shared_ptr<InfoMark>>;
 
 class MapData final : public MapFrontend
 {
@@ -72,8 +71,10 @@ public:
 
     void addMarker(InfoMark *im);
     void removeMarker(InfoMark *im);
+    void addMarker(const std::shared_ptr<InfoMark> &im);
+    void removeMarker(const std::shared_ptr<InfoMark> &im);
 
-    bool isEmpty() const { return (greatestUsedId == INVALID_ROOMID) && m_markers.isEmpty(); }
+    bool isEmpty() const { return (greatestUsedId == INVALID_ROOMID) && m_markers.empty(); }
     bool dataChanged() const { return m_dataChanged; }
     QList<Coordinate> getPath(const Coordinate &start, const CommandQueue &dirs);
     virtual void clear() override;

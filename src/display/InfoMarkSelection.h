@@ -3,6 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../mapdata/infomark.h"
 #include "../mapdata/mapdata.h"
 
 class InfoMarkSelection final : public MarkerList
@@ -16,6 +17,12 @@ public:
 
     const Coordinate &getPosition1() const { return m_sel1; }
     const Coordinate &getPosition2() const { return m_sel2; }
+
+    bool contains(InfoMark *im) const
+    {
+        const auto endIt = this->end();
+        return std::find(begin(), endIt, im->shared_from_this()) != endIt;
+    }
 
 private:
     Coordinate m_sel1;

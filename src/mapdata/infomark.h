@@ -4,8 +4,10 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include "../expandoracommon/coordinate.h"
+#include <memory>
 #include <QDateTime>
+
+#include "../expandoracommon/coordinate.h"
 
 static constexpr const auto INFOMARK_SCALE = 100;
 
@@ -27,12 +29,26 @@ enum class InfoMarkClassEnum {
 
 using MarkerTimeStamp = QDateTime;
 
-class InfoMark
+class InfoMark final : public std::enable_shared_from_this<InfoMark>
 {
-public:
-    InfoMark() = default;
-    ~InfoMark() = default;
+private:
+    struct this_is_private final
+    {
+        explicit this_is_private(int) {}
+    };
 
+public:
+    static std::shared_ptr<InfoMark> alloc()
+    {
+        return std::make_shared<InfoMark>(this_is_private{0});
+    }
+
+public:
+    explicit InfoMark(this_is_private) {}
+    ~InfoMark() = default;
+    DELETE_CTORS_AND_ASSIGN_OPS(InfoMark);
+
+public:
     const InfoMarkName &getName() const { return m_name; }
     const InfoMarkText &getText() const { return m_text; }
     InfoMarkTypeEnum getType() const { return m_type; }

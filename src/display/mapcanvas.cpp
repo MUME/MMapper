@@ -278,7 +278,7 @@ void MapCanvas::setInfoMarkSelection(InfoMarkSelection *selection)
 {
     if (selection != nullptr && m_canvasMouseMode == CanvasMouseModeEnum::CREATE_INFOMARKS) {
         qDebug() << "Creating new infomark";
-    } else if (selection != nullptr && !selection->isEmpty()) {
+    } else if (selection != nullptr && !selection->empty()) {
         qDebug() << "Updated selection with" << selection->size() << "infomarks";
     } else {
         qDebug() << "Cleared infomark selection";
@@ -428,8 +428,8 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
         if ((event->buttons() & Qt::LeftButton) != 0u) {
             const Coordinate c1 = m_sel1.getScaledCoordinate(INFOMARK_SCALE);
             InfoMarkSelection tmpSel(m_data, c1);
-            if (m_infoMarkSelection != nullptr && !tmpSel.isEmpty()
-                && m_infoMarkSelection->contains(tmpSel.front())) {
+            if (m_infoMarkSelection != nullptr && !tmpSel.empty()
+                && m_infoMarkSelection->contains(tmpSel.front().get())) {
                 m_infoMarkSelectionMove.emplace();
             } else {
                 m_selectedArea = false;
@@ -695,7 +695,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                     const auto offset = Coordinate{(pos * INFOMARK_SCALE).round(), 0};
 
                     // Update infomark location
-                    for (auto mark : *m_infoMarkSelection) {
+                    for (const auto &mark : *m_infoMarkSelection) {
                         mark->setPosition1(mark->getPosition1() + offset);
                         mark->setPosition2(mark->getPosition2() + offset);
                     }
@@ -1541,8 +1541,8 @@ void MapCanvas::paintSelectedInfoMarks()
     if (m_infoMarkSelection == nullptr)
         return;
 
-    for (const auto marker : *m_infoMarkSelection) {
-        paintSelectedInfoMark(marker);
+    for (const auto &marker : *m_infoMarkSelection) {
+        paintSelectedInfoMark(marker.get());
     }
 }
 
