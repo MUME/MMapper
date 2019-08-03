@@ -6,6 +6,7 @@
 #include "infomarkseditdlg.h"
 
 #include <cassert>
+#include <memory>
 #include <QString>
 #include <QtWidgets>
 
@@ -25,11 +26,11 @@ InfoMarksEditDlg::InfoMarksEditDlg(QWidget *const parent)
     connect(closeButton, &QAbstractButton::clicked, this, [this]() { this->accept(); });
 }
 
-void InfoMarksEditDlg::setInfoMarkSelection(InfoMarkSelection *const is,
+void InfoMarksEditDlg::setInfoMarkSelection(const std::shared_ptr<InfoMarkSelection> &is,
                                             MapData *const md,
                                             MapCanvas *const mc)
 {
-    assert(is != nullptr);
+    // NOTE: the selection is allowed to be null.
     assert(md != nullptr);
     assert(mc != nullptr);
 

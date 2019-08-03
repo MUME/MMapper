@@ -274,19 +274,25 @@ void MapCanvas::setConnectionSelection(ConnectionSelection *const selection)
     update();
 }
 
-void MapCanvas::setInfoMarkSelection(InfoMarkSelection *selection)
+void MapCanvas::setInfoMarkSelection(const std::shared_ptr<InfoMarkSelection> &selection)
 {
-    if (selection != nullptr && m_canvasMouseMode == CanvasMouseModeEnum::CREATE_INFOMARKS) {
-        qDebug() << "Creating new infomark";
-    } else if (selection != nullptr && !selection->empty()) {
-        qDebug() << "Updated selection with" << selection->size() << "infomarks";
-    } else {
+    // NOTE: previous code didn't check size at all for new infomarks. The assertions below
+    // are there to catch mistakes bugs that would have been permitted by the old code.
+    if (selection == nullptr || selection->empty()) {
+        assert(m_canvasMouseMode != CanvasMouseModeEnum::CREATE_INFOMARKS);
         qDebug() << "Cleared infomark selection";
-        delete std::exchange(selection, nullptr);
+        m_infoMarkSelection = nullptr;
+    } else {
+        if (m_canvasMouseMode == CanvasMouseModeEnum::CREATE_INFOMARKS) {
+            assert(selection->size() == 1); // Fix logic elsewhere when/if this triggers.
+            qDebug() << "Creating new infomark";
+        } else {
+            qDebug() << "Updated selection with" << selection->size() << "infomarks";
+        }
+        m_infoMarkSelection = selection;
     }
 
-    delete std::exchange(m_infoMarkSelection, selection);
-    emit newInfoMarkSelection(selection);
+    emit newInfoMarkSelection(m_infoMarkSelection.get());
     update();
 }
 
@@ -409,9 +415,8 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
 
             // Select infomarks under the cursor
             const Coordinate infoCoord = m_sel1.getScaledCoordinate(INFOMARK_SCALE);
+            setInfoMarkSelection(InfoMarkSelection::alloc(m_data, infoCoord));
 
-            // TODO: use RAII to avoid leaking this allocation.
-            setInfoMarkSelection(new InfoMarkSelection(m_data, infoCoord));
             update();
         }
         m_mouseRightPressed = false;
@@ -427,10 +432,11 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
         // Select infomarks
         if ((event->buttons() & Qt::LeftButton) != 0u) {
             const Coordinate c1 = m_sel1.getScaledCoordinate(INFOMARK_SCALE);
-            InfoMarkSelection tmpSel(m_data, c1);
-            if (m_infoMarkSelection != nullptr && !tmpSel.empty()
-                && m_infoMarkSelection->contains(tmpSel.front().get())) {
-                m_infoMarkSelectionMove.emplace();
+            auto tmpSel = InfoMarkSelection::alloc(m_data, c1);
+            if (m_infoMarkSelection != nullptr && tmpSel && !tmpSel->empty()
+                && m_infoMarkSelection->contains(tmpSel->front().get())) {
+                m_infoMarkSelectionMove.reset();   // dtor, if necessary
+                m_infoMarkSelectionMove.emplace(); // ctor
             } else {
                 m_selectedArea = false;
                 m_infoMarkSelectionMove.reset();
@@ -704,7 +710,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                 // Add infomarks to selection
                 const auto c1 = m_sel1.getScaledCoordinate(INFOMARK_SCALE);
                 const auto c2 = m_sel2.getScaledCoordinate(INFOMARK_SCALE);
-                InfoMarkSelection *tmpSel = new InfoMarkSelection(m_data, c1, c2);
+                auto tmpSel = InfoMarkSelection::alloc(m_data, c1, c2);
                 if (tmpSel && tmpSel->size() == 1) {
                     QString ctemp = QString("Selected Info Mark: %1 %2")
                                         .arg(tmpSel->front()->getName())
@@ -723,7 +729,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
             // Add infomarks to selection
             const auto c1 = m_sel1.getScaledCoordinate(INFOMARK_SCALE);
             const auto c2 = m_sel2.getScaledCoordinate(INFOMARK_SCALE);
-            InfoMarkSelection *tmpSel = new InfoMarkSelection(m_data, c1, c2, 0);
+            auto tmpSel = InfoMarkSelection::alloc(m_data, c1, c2, 0);
             tmpSel->clear(); // REVISIT: Should creation workflow require the selection to be empty?
             setInfoMarkSelection(tmpSel);
         }

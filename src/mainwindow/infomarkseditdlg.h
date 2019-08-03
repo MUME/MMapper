@@ -4,6 +4,7 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
+#include <memory>
 #include <QDialog>
 #include <QString>
 #include <QtCore>
@@ -27,7 +28,9 @@ public:
     explicit InfoMarksEditDlg(QWidget *parent = nullptr);
     ~InfoMarksEditDlg() override;
 
-    void setInfoMarkSelection(InfoMarkSelection *is, MapData *md, MapCanvas *mc);
+    void setInfoMarkSelection(const std::shared_ptr<InfoMarkSelection> &is,
+                              MapData *md,
+                              MapCanvas *mc);
 
 signals:
     void mapChanged();
@@ -40,7 +43,7 @@ public slots:
     void modifyClicked();
 
 private:
-    InfoMarkSelection *m_selection = nullptr;
+    std::shared_ptr<InfoMarkSelection> m_selection;
     MapData *m_mapData = nullptr;
     MapCanvas *m_mapCanvas = nullptr;
 

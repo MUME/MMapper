@@ -1174,7 +1174,7 @@ void MainWindow::newConnectionSelection(ConnectionSelection *const cs)
 
 void MainWindow::newInfoMarkSelection(InfoMarkSelection *const is)
 {
-    m_infoMarkSelection = is;
+    m_infoMarkSelection = (is != nullptr) ? is->shared_from_this() : nullptr;
     infoMarkActions.infoMarkGroup->setEnabled(m_infoMarkSelection != nullptr);
 
     if (m_infoMarkSelection && m_infoMarkSelection->empty()) {

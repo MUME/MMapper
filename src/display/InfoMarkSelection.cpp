@@ -11,7 +11,8 @@
 #include "../mapdata/infomark.h"
 #include "../mapdata/mapdata.h"
 
-InfoMarkSelection::InfoMarkSelection(MapData *const mapData,
+InfoMarkSelection::InfoMarkSelection(this_is_private,
+                                     MapData *const mapData,
                                      const Coordinate &c1,
                                      const Coordinate &c2,
                                      const int margin)
@@ -42,10 +43,4 @@ InfoMarkSelection::InfoMarkSelection(MapData *const mapData,
             emplace_back(marker);
         }
     }
-}
-
-InfoMarkSelection::InfoMarkSelection(MapData *const mapData, const Coordinate &c)
-    : InfoMarkSelection(mapData, c, c, 100)
-{
-    // REVISIT: What margin should we pick?
 }

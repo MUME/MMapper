@@ -126,7 +126,7 @@ struct MapCanvasData
 
     std::optional<RoomSelMove> m_roomSelectionMove{};
 
-    InfoMarkSelection *m_infoMarkSelection = nullptr;
+    std::shared_ptr<InfoMarkSelection> m_infoMarkSelection;
 
     struct InfoMarkSelectionMove final
     {

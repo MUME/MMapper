@@ -158,7 +158,7 @@ private:
 
     SharedRoomSelection m_roomSelection;
     ConnectionSelection *m_connectionSelection = nullptr;
-    InfoMarkSelection *m_infoMarkSelection = nullptr;
+    std::shared_ptr<InfoMarkSelection> m_infoMarkSelection;
 
     QProgressDialog *progressDlg = nullptr;
 

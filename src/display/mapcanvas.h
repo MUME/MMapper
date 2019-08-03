@@ -109,7 +109,7 @@ public slots:
     void clearRoomSelection() { setRoomSelection(SigRoomSelection{}); }
     void setConnectionSelection(ConnectionSelection *);
     void clearConnectionSelection() { setConnectionSelection(nullptr); }
-    void setInfoMarkSelection(InfoMarkSelection *);
+    void setInfoMarkSelection(const std::shared_ptr<InfoMarkSelection> &);
     void clearInfoMarkSelection() { setInfoMarkSelection(nullptr); }
 
     // void worldChanged();
