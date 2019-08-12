@@ -68,7 +68,7 @@ protected:
     bool m_readWeatherTag = false;
     bool m_gratuitous = false;
     bool m_readSnoopTag = false;
-    bool m_readingRoomDesc = false;
+    bool m_exitsReady = false;
     bool m_descriptionReady = false;
 
     QString m_roomName = nullString;

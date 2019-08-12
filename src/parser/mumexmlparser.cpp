@@ -206,14 +206,20 @@ bool MumeXmlParser::element(const QByteArray &line)
                     m_xmlMode = XmlMode::ROOM;
                     m_roomName = emptyString; // 'name' tag will not show up when blinded
                     m_descriptionReady = false;
+                    m_exitsReady = false;
                     m_dynamicRoomDesc = nullString;
                     m_staticRoomDesc = nullString;
                     m_exits = nullString;
+                    m_promptFlags.reset();
                     m_exitsFlags.reset();
                     m_connectedRoomFlags.reset();
                 }
                 break;
             case 'm':
+                if (m_descriptionReady) {
+                    // We are most likely in a fall room where the prompt is not shown
+                    move();
+                }
                 if (length > 8) {
                     switch (line.at(8)) {
                     case ' ':
@@ -349,7 +355,6 @@ bool MumeXmlParser::element(const QByteArray &line)
             case '/':
                 if (line.startsWith("/terrain")) {
                     m_xmlMode = XmlMode::ROOM;
-                    m_readingRoomDesc = true;
                 }
                 break;
             }
@@ -411,8 +416,8 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
     case XmlMode::NONE: // non room info
         m_stringBuffer = normalizeStringCopy(m_stringBuffer.trimmed());
         if (m_stringBuffer.isEmpty()) { // standard end of description parsed
-            if (m_readingRoomDesc) {
-                m_readingRoomDesc = false; // we finished read desc mode
+            if (!m_exitsReady) {
+                m_exitsReady = true; // we finished read desc mode
                 m_descriptionReady = true;
                 if (config.mumeNative.emulatedExits) {
                     emulateExits(m_move);
@@ -442,7 +447,6 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         if (m_descriptionReady) {
             move();
         }
-        m_readingRoomDesc = true; // start of read desc mode
         m_roomName = normalizeStringCopy(m_stringBuffer);
         toUser.append(ch);
         break;
@@ -456,16 +460,16 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
 
     case XmlMode::EXITS:
         m_exits += m_stringBuffer;
-        if (m_readingRoomDesc) {
-            m_readingRoomDesc = false;
+        if (!m_exitsReady) {
+            m_exitsReady = true;
             m_descriptionReady = true;
         }
         break;
 
     case XmlMode::PROMPT:
         emit sendPromptLineEvent(normalizeStringCopy(m_stringBuffer).toLatin1());
-        if (m_readingRoomDesc) {       // fixes compact mode
-            m_readingRoomDesc = false; // we finished read desc mode
+        if (!m_exitsReady) {     // fixes compact mode
+            m_exitsReady = true; // we finished read desc mode
             m_descriptionReady = true;
             if (config.mumeNative.emulatedExits) {
                 emulateExits(m_move);
@@ -482,8 +486,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
     case XmlMode::HEADER:
         // REVISIT: Why do this here? Can't we move this logic to </room>
         // We should get rid of m_readingRoomDesc
-        if (m_readingRoomDesc) {
-            m_readingRoomDesc = false;
+        if (!m_exitsReady) {
             m_descriptionReady = true;
         }
         toUser.append(ch);
