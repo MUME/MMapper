@@ -12,5 +12,6 @@ public:
     ~TestGlobal();
 
 private Q_SLOTS:
-    void colorTest();
+    void ansi256ColorTest();
+    void ansiToRgbTest();
 };

@@ -12,7 +12,7 @@ TestGlobal::TestGlobal() = default;
 
 TestGlobal::~TestGlobal() = default;
 
-void TestGlobal::colorTest()
+void TestGlobal::ansi256ColorTest()
 {
     int blackAnsi = rgbToAnsi256(0, 0, 0);
     QCOMPARE(blackAnsi, 16);
@@ -48,6 +48,21 @@ void TestGlobal::colorTest()
     QCOMPARE(grayAnsi, 244);
     QColor grayRgb = ansi256toRgb(grayAnsi);
     QCOMPARE(grayRgb, QColor(Qt::darkGray));
+}
+
+void TestGlobal::ansiToRgbTest()
+{
+    int cyanAnsi = 153;
+    QColor cyanRgb = ansi256toRgb(cyanAnsi);
+    QCOMPARE(cyanRgb, QColor("#99ccff"));
+
+    int blackAnsi = static_cast<int>(AnsiColorTable::black);
+    QColor blackRgb = ansi256toRgb(blackAnsi);
+    QCOMPARE(blackRgb, QColor("#2e3436"));
+
+    int highBlackAnsi = static_cast<int>(AnsiColorTable::BLACK) + 8 - 60;
+    QColor highBlackRgb = ansi256toRgb(highBlackAnsi);
+    QCOMPARE(highBlackRgb, QColor("#555753"));
 }
 
 QTEST_MAIN(TestGlobal)

@@ -110,11 +110,11 @@ static inline QColor ansi256toRgb(const int ansi)
 
     // 16-231: 6 x 6 x 6 cube (216 colors): 16 + 36 * r + 6 * g + b
     if (ansi >= 16) {
-        const auto colors = ansi - 16;
-        const auto remainder = colors % 36;
-        const auto r = static_cast<int>(floor(colors / 36) / 5 * 255);
-        const auto g = static_cast<int>(floor(remainder / 6) / 5 * 255);
-        const auto b = (remainder % 6) / 5 * 255;
+        const int colors = ansi - 16;
+        const int remainder = colors % 36;
+        const auto r = (colors / 36) * 255 / 5;
+        const auto g = (remainder / 6) * 255 / 5;
+        const auto b = (remainder % 6) * 255 / 5;
         return QColor(r, g, b);
     }
 
