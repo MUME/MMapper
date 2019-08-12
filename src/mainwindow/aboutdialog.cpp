@@ -126,7 +126,15 @@ AboutDialog::AboutDialog(QWidget *parent)
           "<a href=\"https://github.com/miniupnp/miniupnp/\">MiniUPnPc</a>"
           " project.</p>"
           "<pre>"
-        + loadLicenseResource(":/LICENSE.MINIUPNPC") + "</pre>");
+        + loadLicenseResource(":/LICENSE.MINIUPNPC")
+        + "</pre>"
+          "<hr/><h1>OpenSSL License</h1>"
+          "<p>Some versions of this product contains code from the "
+          "<a href=\"https://www.openssl.org/\">OpenSSL toolkit</a>"
+          ".</p>"
+          "<pre>"
+        + loadLicenseResource(":/LICENSE.OPENSSL") + "</pre>");
+
     licenseView->setMinimumWidth(700);
 
     setMaximumSize(sizeHint());

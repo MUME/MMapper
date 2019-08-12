@@ -3,6 +3,7 @@
         <file>LICENSE.GPL2</file>
         <file>LICENSE.LGPL</file>
         <file>LICENSE.MINIUPNPC</file>
+        <file>LICENSE.OPENSSL</file>
         <file>icons/m.png</file>
         <file>icons/online.png</file>
         <file>icons/offline.png</file>
