@@ -254,6 +254,12 @@ AnsiString AnsiString::copy_as_reset() const
     if (size() >= 2) {
         assert(buffer_[0] == C_ANSI_ESCAPE);
         assert(buffer_[1] == C_OPEN_BRACKET);
+        assert(result.size() == 4);
+        assert(result.buffer_[0] == C_ANSI_ESCAPE);
+        assert(result.buffer_[1] == C_OPEN_BRACKET);
+        assert(result.buffer_[2] == '0');
+        assert(result.buffer_[3] == 'm');
+        result.buffer_.pop_back(); // 'm'
         result.buffer_ += C_SEMICOLON;
         result.buffer_ += buffer_.c_str() + 2; /* skip ESC[ */
         assert(result.size() == size() + 2);
