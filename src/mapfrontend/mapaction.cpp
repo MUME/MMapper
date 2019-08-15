@@ -104,25 +104,28 @@ UpdateRoomField::UpdateRoomField(const RoomFieldVariant &var)
     : var{var}
 {}
 
+#define NOP()
 #define X_DECLARE_CONSTRUCTORS(UPPER_CASE, CamelCase, Type) \
     UpdateRoomField::UpdateRoomField(Type type) \
         : UpdateRoomField{RoomFieldVariant{type}} \
     {}
-X_FOREACH_ROOM_FIELD(X_DECLARE_CONSTRUCTORS)
+X_FOREACH_ROOM_FIELD(X_DECLARE_CONSTRUCTORS, NOP)
 #undef X_DECLARE_CONSTRUCTORS
+#undef NOP
 
 void UpdateRoomField::exec(const RoomId id)
 {
-    if (Room *const room = roomIndex(id)) {
-        switch (var.getType()) {
+#define NOP()
 #define X_CASE(UPPER_CASE, CamelCase, Class) \
     { \
     case RoomFieldEnum::UPPER_CASE: \
         room->set##CamelCase(var.get##CamelCase()); \
         break; \
     }
-            X_FOREACH_ROOM_FIELD(X_CASE)
-#undef X_CASE
+
+    if (Room *const room = roomIndex(id)) {
+        switch (var.getType()) {
+            X_FOREACH_ROOM_FIELD(X_CASE, NOP)
         case RoomFieldEnum::NAME:
         case RoomFieldEnum::DESC:
         case RoomFieldEnum::DYNAMIC_DESC:
@@ -133,6 +136,8 @@ void UpdateRoomField::exec(const RoomId id)
             throw std::runtime_error("impossible");
         }
     }
+#undef X_CASE
+#undef NOP
 }
 
 Update::Update()

@@ -107,10 +107,8 @@ set(mmapper_SRCS
     mapdata/DoorFlags.h
     mapdata/ExitDirection.cpp
     mapdata/ExitDirection.h
-    mapdata/ExitFieldVariant.cpp
     mapdata/ExitFieldVariant.h
     mapdata/ExitFlags.h
-    mapdata/RoomFieldVariant.cpp
     mapdata/RoomFieldVariant.h
     mapdata/customaction.cpp
     mapdata/customaction.h

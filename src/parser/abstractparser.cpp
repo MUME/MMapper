@@ -1788,6 +1788,7 @@ void AbstractParser::sendGTellToUser(const QByteArray &ba)
     sendPromptToUser();
 }
 
+#define NOP()
 #define X_DECLARE_ROOM_FIELD_TOGGLERS(UPPER_CASE, CamelCase, Type) \
     void AbstractParser::toggleRoomFlagCommand(Type flag) \
     { \
@@ -1798,8 +1799,9 @@ void AbstractParser::sendGTellToUser(const QByteArray &ba)
         sendToUser("--->Room flag " + toggle.toLatin1() + "\r\n"); \
         emit showPath(queue, true); \
     }
-X_FOREACH_ROOM_FIELD(X_DECLARE_ROOM_FIELD_TOGGLERS)
+X_FOREACH_ROOM_FIELD(X_DECLARE_ROOM_FIELD_TOGGLERS, NOP)
 #undef X_DECLARE_ROOM_FIELD_TOGGLERS
+#undef NOP
 
 void AbstractParser::printRoomInfo(const RoomFieldEnum field)
 {

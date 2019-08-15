@@ -3,68 +3,80 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <algorithm>
-#include <cassert>
 #include <cstddef>
-#include <cstdint>
+#include <cstdlib>
+#include <variant>
 #include <QString>
-#include <QtGlobal>
 
-#include "../global/Array.h"
 #include "../global/RuleOf5.h"
 #include "DoorFlags.h"
-#include "ExitDirection.h"
 #include "ExitFlags.h"
 
 using DoorName = QString;
 
-enum class ExitFieldEnum { DOOR_NAME = 0, EXIT_FLAGS, DOOR_FLAGS };
-static constexpr const int NUM_EXIT_PROPS = 3;
+//
+// X(UPPER_CASE, CamelCase)
+// SEP()
+//
+// CamelCase is the same as the Type, so it's not repeated.
+//
+// NOTE: SEP() is required because of the use in std::variant<> declaration,
+// which cannot accept trailing commas.
+#define X_FOREACH_EXIT_FIELD(X, SEP) \
+    X(DOOR_NAME, DoorName) \
+    SEP() \
+    X(EXIT_FLAGS, ExitFlags) \
+    SEP() \
+    X(DOOR_FLAGS, DoorFlags)
 
-/* REVISIT: Replace this hacky variant.
- *
- * std::variant isn't available until c++17, but clang can't compile
- * the basic std::variant examples, so it's not really an option even on c++17.
- *
- * Consider using boost's templated variant, or one from another open source project?
- */
+#define DECL_ENUM(UPPER_CASE, CamelCase) UPPER_CASE
+#define COMMA() ,
+enum class ExitFieldEnum { X_FOREACH_EXIT_FIELD(DECL_ENUM, COMMA) };
+#undef COMMA
+#undef DECL_ENUM
+
 class ExitFieldVariant final
 {
 private:
-    static constexpr const size_t STORAGE_ALIGNMENT = std::max(alignof(DoorName),
-                                                               std::max(alignof(ExitFlags),
-                                                                        alignof(DoorFlags)));
-    static constexpr const size_t STORAGE_SIZE = std::max(sizeof(DoorName),
-                                                          std::max(sizeof(ExitFlags),
-                                                                   sizeof(DoorFlags)));
-
-    std::aligned_storage_t<STORAGE_SIZE, STORAGE_ALIGNMENT> storage_;
-    static_assert(sizeof(storage_) >= STORAGE_SIZE);
-    ExitFieldEnum type_ = ExitFieldEnum::DOOR_NAME; // There is no good default value
+#define COMMA() ,
+#define DECL_VAR_TYPES(UPPER_CASE, CamelCase) CamelCase
+    std::variant<X_FOREACH_EXIT_FIELD(DECL_VAR_TYPES, COMMA)> m_data;
+#undef DECL_VAR_TYPES
+#undef COMMA
 
 public:
     ExitFieldVariant() = delete;
+    DEFAULT_RULE_OF_5(ExitFieldVariant);
 
 public:
-    /* NOTE: Adding move support would be a pain for little gain.
-     * You'd at least need a boolean indicating that the object
-     * is in moved-from state, or a reserved enum value. */
-    DELETE_MOVE_CTOR(ExitFieldVariant);
-    DELETE_MOVE_ASSIGN_OP(ExitFieldVariant);
+#define NOP()
+#define DEFINE_CTOR_AND_GETTER(UPPER_CASE, CamelCase) \
+    explicit ExitFieldVariant(CamelCase val) \
+        : m_data{std::move(val)} \
+    {} \
+    const CamelCase &get##CamelCase() const { return std::get<CamelCase>(m_data); }
+    X_FOREACH_EXIT_FIELD(DEFINE_CTOR_AND_GETTER, NOP)
+#undef DEFINE_CTOR_AND_GETTER
+#undef NOP
 
 public:
-    ExitFieldVariant(const ExitFieldVariant &rhs);
-    ExitFieldVariant &operator=(const ExitFieldVariant &rhs);
+    ExitFieldEnum getType() const noexcept
+    {
+#define NOP()
+#define CASE(UPPER_CASE, CamelCase) \
+    case static_cast<size_t>(ExitFieldEnum::UPPER_CASE): { \
+        static_assert( \
+            std::is_same_v<std::variant_alternative_t<static_cast<size_t>(ExitFieldEnum::UPPER_CASE), \
+                                                      decltype(m_data)>, \
+                           CamelCase>); \
+        return ExitFieldEnum::UPPER_CASE; \
+    }
+        switch (const auto index = m_data.index()) {
+            X_FOREACH_EXIT_FIELD(CASE, NOP);
+        }
+#undef CASE
+#undef NOP
 
-public:
-    explicit ExitFieldVariant(DoorName doorName);
-    explicit ExitFieldVariant(ExitFlags exitFlags);
-    explicit ExitFieldVariant(DoorFlags doorFlags);
-
-    ~ExitFieldVariant();
-
-    inline ExitFieldEnum getType() const { return type_; }
-    DoorName getDoorName() const;
-    ExitFlags getExitFlags() const;
-    DoorFlags getDoorFlags() const;
+        std::abort(); /* crash */
+    }
 };

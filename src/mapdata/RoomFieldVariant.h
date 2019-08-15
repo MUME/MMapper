@@ -3,101 +3,87 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <algorithm>
-#include <cassert>
 #include <cstddef>
-#include <cstdint>
-#include <type_traits>
-#include <QString>
-#include <QtGlobal>
+#include <cstdlib>
 
 #include "../expandoracommon/room.h"
-#include "../global/Array.h"
 #include "../global/RuleOf5.h"
 
+//
 // X(UPPER_CASE, CamelCase, Type)
-#define X_FOREACH_ROOM_FIELD(X) \
+// SEP()
+//
+// NOTE: SEP() is required because of the use in std::variant<> declaration,
+// which cannot accept trailing commas.
+#define X_FOREACH_ROOM_FIELD(X, SEP) \
     X(NOTE, Note, RoomNote) \
+    SEP() \
     X(MOB_FLAGS, MobFlags, RoomMobFlags) \
+    SEP() \
     X(LOAD_FLAGS, LoadFlags, RoomLoadFlags) \
+    SEP() \
     X(PORTABLE_TYPE, PortableType, RoomPortableEnum) \
+    SEP() \
     X(LIGHT_TYPE, LightType, RoomLightEnum) \
+    SEP() \
     X(ALIGN_TYPE, AlignType, RoomAlignEnum) \
+    SEP() \
     X(RIDABLE_TYPE, RidableType, RoomRidableEnum) \
+    SEP() \
     X(SUNDEATH_TYPE, SundeathType, RoomSundeathEnum) \
+    SEP() \
     X(TERRAIN_TYPE, TerrainType, RoomTerrainEnum) \
     /* define room fields above */
 
-template<typename T, typename... Rest>
-struct max_align;
+#define DECL_ENUM(UPPER_CASE, CamelCase, Type) UPPER_CASE
+#define COMMA() ,
+enum class RoomFieldVariantOrderEnum { X_FOREACH_ROOM_FIELD(DECL_ENUM, COMMA) };
+#undef COMMA
+#undef DECL_ENUM
 
-template<typename T>
-struct max_align<T> : std::integral_constant<size_t, alignof(T)>
-{};
-
-template<typename T, typename U, typename... Rest>
-struct max_align<T, U, Rest...>
-    : std::integral_constant<size_t, std::max(max_align<T>::value, max_align<U, Rest...>::value)>
-{};
-
-template<typename T, typename... Rest>
-struct max_size;
-
-template<typename T>
-struct max_size<T> : std::integral_constant<size_t, sizeof(T)>
-{};
-
-template<typename T, typename U, typename... Rest>
-struct max_size<T, U, Rest...>
-    : std::integral_constant<size_t, std::max(max_size<T>::value, max_size<U, Rest...>::value)>
-{};
-
-/* REVISIT: Replace this hacky variant.
- *
- * std::variant isn't available until c++17, but clang can't compile
- * the basic std::variant examples, so it's not really an option even on c++17.
- *
- * Consider using boost's templated variant, or one from another open source project?
- */
 class RoomFieldVariant final
 {
 private:
-#define X_DECLARE_TYPES(UPPER_CASE, CamelCase, Type) Type,
-    // char type is added because of the trailing comma
-#define TYPES X_FOREACH_ROOM_FIELD(X_DECLARE_TYPES) char
-    static constexpr const size_t STORAGE_ALIGNMENT = max_align<TYPES>::value;
-    static constexpr const size_t STORAGE_SIZE = max_size<TYPES>::value;
-#undef TYPES
-#undef X_DECLARE_TYPES
-private:
-    std::aligned_storage_t<STORAGE_SIZE, STORAGE_ALIGNMENT> storage_;
-    static_assert(sizeof(storage_) >= STORAGE_SIZE);
-    RoomFieldEnum type_ = RoomFieldEnum::NAME; // There is no good default value
+#define COMMA() ,
+#define DECL_VAR_TYPES(UPPER_CASE, CamelCase, Type) Type
+    std::variant<X_FOREACH_ROOM_FIELD(DECL_VAR_TYPES, COMMA)> m_data;
+#undef DECL_VAR_TYPES
+#undef COMMA
 
 public:
     RoomFieldVariant() = delete;
+    DEFAULT_RULE_OF_5(RoomFieldVariant);
 
 public:
-    /* NOTE: Adding move support would be a pain for little gain.
-     * You'd at least need a boolean indicating that the object is in moved-from state. */
-    DELETE_MOVE_CTOR(RoomFieldVariant);
-    DELETE_MOVE_ASSIGN_OP(RoomFieldVariant);
+#define NOP()
+#define DEFINE_CTOR_AND_GETTER(UPPER_CASE, CamelCase, Type) \
+    explicit RoomFieldVariant(Type val) \
+        : m_data{std::move(val)} \
+    {} \
+    const Type &get##CamelCase() const { return std::get<Type>(m_data); }
+    X_FOREACH_ROOM_FIELD(DEFINE_CTOR_AND_GETTER, NOP)
+#undef DEFINE_CTOR_AND_GETTER
+#undef NOP
 
 public:
-    RoomFieldVariant(const RoomFieldVariant &rhs);
-    RoomFieldVariant &operator=(const RoomFieldVariant &rhs);
+    RoomFieldEnum getType() const noexcept
+    {
+#define NOP()
+#define CASE(UPPER_CASE, CamelCase, Type) \
+    case static_cast<size_t>(RoomFieldVariantOrderEnum::UPPER_CASE): { \
+        static_assert( \
+            std::is_same_v<std::variant_alternative_t<static_cast<size_t>( \
+                                                          RoomFieldVariantOrderEnum::UPPER_CASE), \
+                                                      decltype(m_data)>, \
+                           Type>); \
+        return RoomFieldEnum::UPPER_CASE; \
+    }
+        switch (const auto index = m_data.index()) {
+            X_FOREACH_ROOM_FIELD(CASE, NOP);
+        }
+#undef CASE
+#undef NOP
 
-public:
-#define X_DECLARE_CONSTRUCTORS(UPPER_CASE, CamelCase, Type) explicit RoomFieldVariant(Type);
-    X_FOREACH_ROOM_FIELD(X_DECLARE_CONSTRUCTORS)
-#undef X_DECLARE_CONSTRUCTORS
-    ~RoomFieldVariant();
-
-public:
-    inline RoomFieldEnum getType() const { return type_; }
-
-public:
-#define X_DECLARE_ACCESSORS(UPPER_CASE, CamelCase, Type) Type get##CamelCase() const;
-    X_FOREACH_ROOM_FIELD(X_DECLARE_ACCESSORS)
-#undef X_DECLARE_ACCESSORS
+        std::abort(); /* crash */
+    }
 };

@@ -145,9 +145,11 @@ protected:
     void toggleExitFlagCommand(ExitFlagEnum flag, DirectionEnum direction);
 
 public:
+#define NOP()
 #define X_DECLARE_ROOM_FIELD_TOGGLERS(UPPER_CASE, CamelCase, Type) void toggleRoomFlagCommand(Type);
-    X_FOREACH_ROOM_FIELD(X_DECLARE_ROOM_FIELD_TOGGLERS)
+    X_FOREACH_ROOM_FIELD(X_DECLARE_ROOM_FIELD_TOGGLERS, NOP)
 #undef X_DECLARE_ROOM_FIELD_TOGGLERS
+#undef NOP
 
 public:
     ExitFlags getExitFlags(DirectionEnum dir) const;
