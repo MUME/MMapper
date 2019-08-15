@@ -100,7 +100,9 @@ static int parsePositiveInt(const QStringRef &number)
 void AnsiColorParser::for_each(QStringRef ansi) const
 {
     if (!isAnsiColor(ansi)) {
-        assert(false);
+        // It's okay for this to be something that's not an ansi color.
+        // For example, if someone types "\033[42am" in the editor
+        // and then normalizes it, you'll get "\033[42a" as the escape code.
         return;
     }
 
