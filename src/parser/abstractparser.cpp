@@ -287,8 +287,6 @@ void AbstractParser::parsePrompt(const QString &prompt)
 
 void AbstractParser::parseExits()
 {
-    QByteArray exitsByteArray = m_exits.toLatin1();
-
     QString str = normalizeStringCopy(m_exits);
     m_connectedRoomFlags.reset();
     m_exitsFlags.reset();
@@ -301,14 +299,42 @@ void AbstractParser::parseExits()
     bool directSun = false;
     auto dir = DirectionType::UNKNOWN;
 
-    if (str.length() > 5 && str.at(5).toLatin1() != ':') {
-        // Ainur exits
-        sendToUser(exitsByteArray);
-        return;
-    }
-    int length = str.length();
-    for (int i = 7; i < length; i++) {
-        switch (str.at(i).toLatin1()) {
+    const auto reset_exit_flags = [&doors, &closed, &road, &climb, &portal, &directSun, &dir]() {
+        doors = false;
+        closed = false;
+        road = false;
+        climb = false;
+        portal = false;
+        directSun = false;
+        dir = DirectionType::UNKNOWN;
+    };
+
+    const auto set_exit_flags =
+        [this, &closedDoorFlag, &climb, &doors, &closed, &road, &directSun, &dir]() {
+            if (dir < DirectionType::NONE) {
+                ExitFlags exitFlags{ExitFlag::EXIT};
+                if (climb) {
+                    exitFlags |= ExitFlag::CLIMB;
+                }
+                if (doors) {
+                    exitFlags |= ExitFlag::DOOR;
+                    if (closed) {
+                        closedDoorFlag.set(static_cast<ExitDirection>(dir), ExitFlag::DOOR);
+                    }
+                }
+                if (road) {
+                    exitFlags |= ExitFlag::ROAD;
+                }
+                if (directSun) {
+                    setConnectedRoomFlag(DirectionalLightType::DIRECT_SUN_ROOM, dir);
+                }
+                setExitFlags(exitFlags, dir);
+            }
+        };
+
+    const auto parse_exit_flag =
+        [this, &doors, &closed, &road, &climb, &portal, &directSun](const char sign) -> bool {
+        switch (sign) {
         case '(': // open door
             doors = true;
             break;
@@ -344,77 +370,90 @@ void AbstractParser::parseExits()
             }
             m_trollExitMapping = true;
             break;
-
-        case ' ': // empty space means reset for next exit
-            doors = false;
-            closed = false;
-            road = false;
-            climb = false;
-            portal = false;
-            directSun = false;
-            dir = DirectionType::UNKNOWN;
-            break;
-
-        case 'n':
-            if ((i + 2) < length && (str.at(i + 2).toLatin1()) == 'r') { // north
-                i += 5;
-                dir = DirectionType::NORTH;
-            } else {
-                i += 4; // none
-                dir = DirectionType::NONE;
-            }
-            break;
-
-        case 's':
-            i += 5;
-            dir = DirectionType::SOUTH;
-            break;
-
-        case 'e':
-            i += 4;
-            dir = DirectionType::EAST;
-            break;
-
-        case 'w':
-            i += 4;
-            dir = DirectionType::WEST;
-            break;
-
-        case 'u':
-            i += 2;
-            dir = DirectionType::UP;
-            break;
-
-        case 'd':
-            i += 4;
-            dir = DirectionType::DOWN;
-            break;
-        default:;
+        default:
+            return false;
         }
-        if (dir < DirectionType::NONE) {
-            ExitFlags exitFlags{ExitFlag::EXIT};
-            if (climb) {
-                exitFlags |= ExitFlag::CLIMB;
+        return true;
+    };
+
+    if (str.length() > 5 && str.at(5).toLatin1() != ':') {
+        // Ainur exits
+        static QRegularExpression rx(R"(^\s*([\^\*{#~\-=\[\(\\\/]+)?([A-za-z]+))");
+        static QRegularExpression newline(R"(\r?\n)");
+        for (const auto &part : str.split(newline)) {
+            const auto match = rx.match(part);
+            if (match.hasMatch()) {
+                // Parse exit flag
+                const auto &signs = match.captured(1);
+                for (int i = 0; i < signs.length(); i++)
+                    parse_exit_flag(signs.toLatin1().at(i));
+
+                // Set exit flags to direction
+                const auto &exit = match.captured(2);
+                dir = static_cast<DirectionType>(
+                    Mmapper2Exit::dirForChar(exit.at(0).toLower().toLatin1()));
+                set_exit_flags();
+
+                // Reset for next exit
+                reset_exit_flags();
             }
-            if (doors) {
-                exitFlags |= ExitFlag::DOOR;
-                if (closed) {
-                    closedDoorFlag.set(static_cast<ExitDirection>(dir), ExitFlag::DOOR);
+        }
+    } else {
+        // Player exits
+        const int length = str.length();
+        for (int i = 7; i < length; i++) {
+            const char c = str.at(i).toLatin1();
+            if (!parse_exit_flag(c)) {
+                switch (c) {
+                case ' ': // empty space means reset for next exit
+                    reset_exit_flags();
+                    break;
+
+                case 'n':
+                    if ((i + 2) < length && (str.at(i + 2).toLatin1()) == 'r') { // north
+                        i += 5;
+                        dir = DirectionType::NORTH;
+                    } else {
+                        i += 4; // none
+                        dir = DirectionType::NONE;
+                    }
+                    break;
+
+                case 's':
+                    i += 5;
+                    dir = DirectionType::SOUTH;
+                    break;
+
+                case 'e':
+                    i += 4;
+                    dir = DirectionType::EAST;
+                    break;
+
+                case 'w':
+                    i += 4;
+                    dir = DirectionType::WEST;
+                    break;
+
+                case 'u':
+                    i += 2;
+                    dir = DirectionType::UP;
+                    break;
+
+                case 'd':
+                    i += 4;
+                    dir = DirectionType::DOWN;
+                    break;
+                default:;
                 }
+                set_exit_flags();
             }
-            if (road) {
-                exitFlags |= ExitFlag::ROAD;
-            }
-            if (directSun) {
-                setConnectedRoomFlag(DirectionalLightType::DIRECT_SUN_ROOM, dir);
-            }
-            setExitFlags(exitFlags, dir);
         }
     }
 
     // If there is't a portal then we can trust the exits
     if (!portal) {
         m_exitsFlags.setValid();
+        // REVISIT: Detect if there is weather in the prompt before setting connected room flags as valid
         m_connectedRoomFlags.setValid();
 
         // Orcs and trolls can detect exits with direct sunlight
@@ -440,12 +479,20 @@ void AbstractParser::parseExits()
     auto rs = RoomSelection(*m_mapData);
     if (const Room *const room = rs.getRoom(getNextPosition())) {
         const QByteArray cn = enhanceExits(room);
-        sendToUser(exitsByteArray.simplified() + cn);
+        const auto right_trim = [](const QString &str) -> QString {
+            for (int n = str.size() - 1; n >= 0; --n) {
+                if (!str.at(n).isSpace()) {
+                    return str.left(n + 1);
+                }
+            }
+            return "";
+        };
+        sendToUser(right_trim(m_exits) + cn);
 
         if (getConfig().mumeNative.showNotes) {
             const QString ns = room->getNote();
             if (!ns.isEmpty()) {
-                const QByteArray note = "Note: " + ns.toLatin1() + "\r\n";
+                const QString note = QString("Note: %1\r\n").arg(ns);
                 sendToUser(note);
             }
         }

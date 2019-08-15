@@ -279,6 +279,11 @@ bool MumeXmlParser::element(const QByteArray &line)
                     m_readSnoopTag = true;
                 }
                 break;
+            case 'h':
+                if (line.startsWith("header")) {
+                    m_xmlMode = XmlMode::HEADER;
+                }
+                break;
             }
         };
         break;
@@ -365,6 +370,17 @@ bool MumeXmlParser::element(const QByteArray &line)
                 if (line.startsWith("/terrain")) {
                     m_xmlMode = XmlMode::ROOM;
                     m_readingRoomDesc = true;
+                }
+                break;
+            }
+        }
+        break;
+    case XmlMode::HEADER:
+        if (length > 0) {
+            switch (line.at(0)) {
+            case '/':
+                if (line.startsWith("/header")) {
+                    m_xmlMode = XmlMode::NONE;
                 }
                 break;
             }
@@ -480,6 +496,16 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
             move();
         }
 
+        toUser.append(ch);
+        break;
+
+    case XmlMode::HEADER:
+        // REVISIT: Why do this here? Can't we move this logic to </room>
+        // We should get rid of m_readingRoomDesc
+        if (m_readingRoomDesc) {
+            m_readingRoomDesc = false;
+            m_descriptionReady = true;
+        }
         toUser.append(ch);
         break;
 
