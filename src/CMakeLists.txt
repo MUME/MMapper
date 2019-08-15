@@ -20,29 +20,34 @@ set(mmapper_SRCS
     configuration/configuration.h
     display/ConnectionLineBuilder.cpp
     display/ConnectionLineBuilder.h
-    display/connectionselection.cpp
-    display/connectionselection.h
     display/Filenames.cpp
     display/Filenames.h
     display/FontFormatFlags.h
     display/InfoMarkSelection.cpp
     display/InfoMarkSelection.h
-    display/mapcanvas.cpp
     display/MapCanvasData.cpp
     display/MapCanvasData.h
-    display/mapcanvas.h
     display/MapCanvasRoomDrawer.cpp
     display/MapCanvasRoomDrawer.h
-    display/mapwindow.cpp
-    display/mapwindow.h
     display/OpenGL.cpp
     display/OpenGL.h
-    display/prespammedpath.cpp
-    display/prespammedpath.h
     display/RoadIndex.cpp
     display/RoadIndex.h
+    display/connectionselection.cpp
+    display/connectionselection.h
+    display/mapcanvas.cpp
+    display/mapcanvas.h
+    display/mapwindow.cpp
+    display/mapwindow.h
+    display/prespammedpath.cpp
+    display/prespammedpath.h
     expandoracommon/AbstractRoomFactory.cpp
     expandoracommon/AbstractRoomFactory.h
+    expandoracommon/MmQtHandle.h
+    expandoracommon/RoomAdmin.cpp
+    expandoracommon/RoomAdmin.h
+    expandoracommon/RoomRecipient.cpp
+    expandoracommon/RoomRecipient.h
     expandoracommon/coordinate.cpp
     expandoracommon/coordinate.h
     expandoracommon/exit.cpp
@@ -50,48 +55,43 @@ set(mmapper_SRCS
     expandoracommon/frustum.cpp
     expandoracommon/frustum.h
     expandoracommon/listcycler.h
-    expandoracommon/MmQtHandle.h
     expandoracommon/parseevent.cpp
     expandoracommon/parseevent.h
     expandoracommon/property.cpp
     expandoracommon/property.h
-    expandoracommon/RoomAdmin.cpp
-    expandoracommon/RoomAdmin.h
     expandoracommon/room.cpp
     expandoracommon/room.h
-    expandoracommon/RoomRecipient.cpp
-    expandoracommon/RoomRecipient.h
-    global/bits.h
     global/CharBuffer.h
     global/Color.h
     global/DirectionType.cpp
     global/DirectionType.h
     global/EnumIndexedArray.h
-    global/entities.cpp
-    global/entities.h
-    global/enums.h
     global/Flags.h
-    global/io.cpp
-    global/io.h
     global/NullPointerException.cpp
     global/NullPointerException.h
     global/RAII.cpp
     global/RAII.h
-    global/random.cpp
-    global/random.h
-    global/range.h
-    global/roomid.h
     global/RuleOf5.h
     global/StringView.cpp
     global/StringView.h
     global/TextUtils.cpp
     global/TextUtils.h
-    global/type_utils.h
-    global/utils.cpp
-    global/utils.h
     global/Version.h
     global/WinSock.cpp
     global/WinSock.h
+    global/bits.h
+    global/entities.cpp
+    global/entities.h
+    global/enums.h
+    global/io.cpp
+    global/io.h
+    global/random.cpp
+    global/random.h
+    global/range.h
+    global/roomid.h
+    global/type_utils.h
+    global/utils.cpp
+    global/utils.h
     mainwindow/UpdateDialog.cpp
     mainwindow/UpdateDialog.h
     mainwindow/aboutdialog.cpp
@@ -106,13 +106,7 @@ set(mmapper_SRCS
     mainwindow/roomeditattrdlg.h
     mainwindow/welcomewidget.cpp
     mainwindow/welcomewidget.h
-    mapdata/customaction.cpp
-    mapdata/customaction.h
     mapdata/DoorFlags.h
-    mapdata/drawstream.cpp
-    mapdata/drawstream.h
-    mapdata/enums.cpp
-    mapdata/enums.h
     mapdata/ExitDirection.cpp
     mapdata/ExitDirection.h
     mapdata/ExitFieldVariant.cpp
@@ -120,6 +114,12 @@ set(mmapper_SRCS
     mapdata/ExitFlags.h
     mapdata/RoomFieldVariant.cpp
     mapdata/RoomFieldVariant.h
+    mapdata/customaction.cpp
+    mapdata/customaction.h
+    mapdata/drawstream.cpp
+    mapdata/drawstream.h
+    mapdata/enums.cpp
+    mapdata/enums.h
     mapdata/infomark.h
     mapdata/mapdata.cpp
     mapdata/mapdata.h
@@ -135,18 +135,24 @@ set(mmapper_SRCS
     mapdata/shortestpath.h
     mapfrontend/AbstractRoomVisitor.cpp
     mapfrontend/AbstractRoomVisitor.h
-    mapfrontend/mapaction.cpp
-    mapfrontend/mapaction.h
-    mapfrontend/map.cpp
-    mapfrontend/mapfrontend.cpp
-    mapfrontend/mapfrontend.h
-    mapfrontend/map.h
     mapfrontend/ParseTree.cpp
     mapfrontend/ParseTree.h
+    mapfrontend/map.cpp
+    mapfrontend/map.h
+    mapfrontend/mapaction.cpp
+    mapfrontend/mapaction.h
+    mapfrontend/mapfrontend.cpp
+    mapfrontend/mapfrontend.h
     mapfrontend/roomcollection.cpp
     mapfrontend/roomcollection.h
     mapfrontend/roomlocker.cpp
     mapfrontend/roomlocker.h
+    mapstorage/MmpMapStorage.cpp
+    mapstorage/MmpMapStorage.h
+    mapstorage/PandoraMapStorage.cpp
+    mapstorage/PandoraMapStorage.h
+    mapstorage/StorageUtils.cpp
+    mapstorage/StorageUtils.h
     mapstorage/abstractmapstorage.cpp
     mapstorage/abstractmapstorage.h
     mapstorage/basemapsavefilter.cpp
@@ -157,16 +163,10 @@ set(mmapper_SRCS
     mapstorage/jsonmapstorage.h
     mapstorage/mapstorage.cpp
     mapstorage/mapstorage.h
-    mapstorage/MmpMapStorage.cpp
-    mapstorage/MmpMapStorage.h
-    mapstorage/PandoraMapStorage.cpp
-    mapstorage/PandoraMapStorage.h
     mapstorage/progresscounter.cpp
     mapstorage/progresscounter.h
     mapstorage/roomsaver.cpp
     mapstorage/roomsaver.h
-    mapstorage/StorageUtils.cpp
-    mapstorage/StorageUtils.h
     mpi/mpifilter.cpp
     mpi/mpifilter.h
     mpi/remoteedit.cpp
@@ -177,14 +177,12 @@ set(mmapper_SRCS
     mpi/remoteeditsession.h
     mpi/remoteeditwidget.cpp
     mpi/remoteeditwidget.h
+    pandoragroup/CGroup.cpp
+    pandoragroup/CGroup.h
     pandoragroup/CGroupChar.cpp
     pandoragroup/CGroupChar.h
     pandoragroup/CGroupCommunicator.cpp
     pandoragroup/CGroupCommunicator.h
-    pandoragroup/CGroup.cpp
-    pandoragroup/CGroup.h
-    pandoragroup/enums.cpp
-    pandoragroup/enums.h
     pandoragroup/GroupClient.cpp
     pandoragroup/GroupClient.h
     pandoragroup/GroupPortMapper.cpp
@@ -193,6 +191,8 @@ set(mmapper_SRCS
     pandoragroup/GroupServer.h
     pandoragroup/GroupSocket.cpp
     pandoragroup/GroupSocket.h
+    pandoragroup/enums.cpp
+    pandoragroup/enums.h
     pandoragroup/groupaction.cpp
     pandoragroup/groupaction.h
     pandoragroup/groupauthority.cpp
@@ -201,15 +201,13 @@ set(mmapper_SRCS
     pandoragroup/groupselection.h
     pandoragroup/groupwidget.cpp
     pandoragroup/groupwidget.h
+    pandoragroup/mmapper2character.h
     pandoragroup/mmapper2group.cpp
     pandoragroup/mmapper2group.h
-    pandoragroup/mmapper2character.h
     parser/Abbrev.cpp
     parser/Abbrev.h
     parser/AbstractParser-Commands.cpp
     parser/AbstractParser-Commands.h
-    parser/abstractparser.cpp
-    parser/abstractparser.h
     parser/AbstractParser-Utils.cpp
     parser/AbstractParser-Utils.h
     parser/CommandId.cpp
@@ -220,13 +218,15 @@ set(mmapper_SRCS
     parser/DoorAction.cpp
     parser/DoorAction.h
     parser/ExitsFlags.h
+    parser/PromptFlags.h
+    parser/abstractparser.cpp
+    parser/abstractparser.h
     parser/mumexmlparser.cpp
     parser/mumexmlparser.h
     parser/parserutils.cpp
     parser/parserutils.h
     parser/patterns.cpp
     parser/patterns.h
-    parser/PromptFlags.h
     pathmachine/approved.cpp
     pathmachine/approved.h
     pathmachine/crossover.cpp
@@ -249,10 +249,10 @@ set(mmapper_SRCS
     pathmachine/roomsignalhandler.h
     pathmachine/syncing.cpp
     pathmachine/syncing.h
-    preferences/ansicombo.cpp
-    preferences/ansicombo.h
     preferences/AnsiColorDialog.cpp
     preferences/AnsiColorDialog.h
+    preferences/ansicombo.cpp
+    preferences/ansicombo.h
     preferences/clientpage.cpp
     preferences/clientpage.h
     preferences/configdialog.cpp
@@ -271,20 +271,20 @@ set(mmapper_SRCS
     preferences/pathmachinepage.h
     proxy/AbstractTelnet.cpp
     proxy/AbstractTelnet.h
-    proxy/connectionlistener.cpp
-    proxy/connectionlistener.h
     proxy/MudTelnet.cpp
     proxy/MudTelnet.h
+    proxy/TextCodec.cpp
+    proxy/TextCodec.h
+    proxy/UserTelnet.cpp
+    proxy/UserTelnet.h
+    proxy/connectionlistener.cpp
+    proxy/connectionlistener.h
     proxy/mumesocket.cpp
     proxy/mumesocket.h
     proxy/proxy.cpp
     proxy/proxy.h
     proxy/telnetfilter.cpp
     proxy/telnetfilter.h
-    proxy/TextCodec.cpp
-    proxy/TextCodec.h
-    proxy/UserTelnet.cpp
-    proxy/UserTelnet.h
 )
 
 set(mmapper_RCS
