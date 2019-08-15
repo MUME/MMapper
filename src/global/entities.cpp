@@ -615,13 +615,13 @@ auto entities::encode(const DecodedUnicode &name, const EncodingType encodingTyp
         assert(masked == codepoint);
 
         char decbuf[16];
-        sprintf(decbuf, "&#%d;", masked);
+        std::snprintf(decbuf, sizeof(decbuf), "&#%d;", masked);
         const size_t declen = strlen(decbuf);
         assert(declen <= 10);
 
         // finally, use hex-encoding "&x0100;" to "&x10FFFF;"
         char hexbuf[16];
-        sprintf(hexbuf, "&#x%X;", masked);
+        std::snprintf(hexbuf, sizeof(hexbuf), "&#x%X;", masked);
         const size_t hexlen = strlen(hexbuf);
         assert(hexlen <= 10);
 

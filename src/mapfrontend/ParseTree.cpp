@@ -122,7 +122,7 @@ static auto makeKey(ParseEvent &event, const MaskFlags maskFlags, const bool ver
     event.reset();
     std::string key{};
 
-    sprintf(buf, "^K%u", mask);
+    std::snprintf(buf, sizeof(buf), "^K%u", mask);
     key += buf;
 
     for (int i = 0; i < 3; ++i) {
@@ -131,7 +131,7 @@ static auto makeKey(ParseEvent &event, const MaskFlags maskFlags, const bool ver
 
         if (!prop.isSkipped() && (mask & (1u << i))) {
             if (verbose) {
-                sprintf(buf, ";Property %d:(%zu)[", i, prop.size());
+                std::snprintf(buf, sizeof(buf), ";Property %d:(%zu)[", i, prop.size());
                 key.append(buf);
                 for (auto c : prop)
                     if (c == ' ')
@@ -139,12 +139,12 @@ static auto makeKey(ParseEvent &event, const MaskFlags maskFlags, const bool ver
                     else if (std::isprint(c) && !std::isspace(c) && c != '+' && c != '%')
                         key += c;
                     else {
-                        sprintf(buf, "%%%02X", c & 0xff);
+                        std::snprintf(buf, sizeof(buf), "%%%02X", c & 0xff);
                         key += buf;
                     }
                 key += "]\n";
             } else {
-                sprintf(buf, ";P%d:%zu:", i, prop.size());
+                std::snprintf(buf, sizeof(buf), ";P%d:%zu:", i, prop.size());
                 key += buf;
                 key += prop;
             }

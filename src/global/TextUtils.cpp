@@ -235,7 +235,7 @@ void AnsiString::add_code(const int code)
     }
 
     char tmp[16];
-    sprintf(tmp, "%dm", code);
+    std::snprintf(tmp, sizeof(tmp), "%dm", code);
     buffer_ += tmp;
 }
 

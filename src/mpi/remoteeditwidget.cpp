@@ -322,7 +322,7 @@ void RemoteTextEdit::handle_toolTip(QEvent *const event) const
 
     const auto c = text.at(pos);
     char unicode_buf[8];
-    sprintf(unicode_buf, "U+%04x", static_cast<int>(c.unicode()));
+    std::snprintf(unicode_buf, sizeof(unicode_buf), "U+%04x", static_cast<int>(c.unicode()));
 
     // REVISIT: Why doesn't this get the tooltip we applied in the LineHighlighter?
     // Apparently it's a reported bug that Qt refuses to acknowledge.
