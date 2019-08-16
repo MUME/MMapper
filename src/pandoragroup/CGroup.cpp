@@ -44,7 +44,7 @@ CGroup::~CGroup()
  * @brief CGroup::scheduleAction
  * @param action to be scheduled once all locks are gone
  */
-void CGroup::scheduleAction(GroupAction *action)
+void CGroup::slot_scheduleAction(std::shared_ptr<GroupAction> action)
 {
     QMutexLocker locker(&characterLock);
     action->schedule(this);
@@ -57,10 +57,9 @@ void CGroup::scheduleAction(GroupAction *action)
 void CGroup::executeActions()
 {
     while (!actionSchedule.empty()) {
-        GroupAction *action = actionSchedule.front();
-        action->exec();
-        delete action;
+        std::shared_ptr<GroupAction> action = actionSchedule.front();
         actionSchedule.pop();
+        action->exec();
     }
 }
 

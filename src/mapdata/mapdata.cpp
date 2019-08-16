@@ -9,6 +9,7 @@
 #include <cassert>
 #include <list>
 #include <map>
+#include <memory>
 #include <set>
 #include <QList>
 #include <QString>
@@ -57,9 +58,9 @@ void MapData::setDoorName(const Coordinate &pos, const QString &name, const Exit
     if (Room *const room = map.get(pos)) {
         if (dir < ExitDirEnum::UNKNOWN) {
             setDataChanged();
-            MapAction *action = new SingleRoomAction(new UpdateExitField(doorName, dir),
-                                                     room->getId());
-            scheduleAction(action);
+            scheduleAction(
+                std::make_unique<SingleRoomAction>(std::make_unique<UpdateExitField>(doorName, dir),
+                                                   room->getId()));
         }
     }
 }
@@ -108,11 +109,9 @@ void MapData::toggleExitFlag(const Coordinate &pos, const ExitDirEnum dir, ExitF
     if (Room *const room = map.get(pos)) {
         if (dir < ExitDirEnum::NONE) {
             setDataChanged();
-
-            MapAction *action
-                = new SingleRoomAction(new ModifyExitFlags(var, dir, FlagModifyModeEnum::TOGGLE),
-                                       room->getId());
-            scheduleAction(action);
+            scheduleAction(std::make_shared<SingleRoomAction>(
+                std::make_unique<ModifyExitFlags>(var, dir, FlagModifyModeEnum::TOGGLE),
+                room->getId()));
         }
     }
 }
@@ -123,12 +122,14 @@ void MapData::toggleRoomFlag(const Coordinate &pos, RoomFieldVariant var)
     if (Room *room = map.get(pos)) {
         setDataChanged();
         // REVISIT: Consolidate ModifyRoomFlags and UpdateRoomField
-        MapAction *action
-            = (var.getType() == RoomFieldEnum::MOB_FLAGS
-               || var.getType() == RoomFieldEnum::LOAD_FLAGS)
-                  ? new SingleRoomAction(new ModifyRoomFlags(var, FlagModifyModeEnum::TOGGLE),
-                                         room->getId())
-                  : new SingleRoomAction(new UpdateRoomField(var), room->getId());
+        auto action = (var.getType() == RoomFieldEnum::MOB_FLAGS
+                       || var.getType() == RoomFieldEnum::LOAD_FLAGS)
+                          ? std::make_shared<SingleRoomAction>(
+                                std::make_unique<ModifyRoomFlags>(var, FlagModifyModeEnum::TOGGLE),
+                                room->getId())
+                          : std::make_shared<SingleRoomAction>(std::make_unique<UpdateRoomField>(
+                                                                   var),
+                                                               room->getId());
         scheduleAction(action);
     }
 }
@@ -250,7 +251,7 @@ void MapData::draw(const Coordinate &min, const Coordinate &max, MapCanvasRoomDr
     drawer.draw();
 }
 
-bool MapData::execute(MapAction *const action, const SharedRoomSelection &selection)
+bool MapData::execute(std::unique_ptr<MapAction> action, const SharedRoomSelection &selection)
 {
     QMutexLocker locker(&mapLock);
     action->schedule(this);
@@ -264,11 +265,12 @@ bool MapData::execute(MapAction *const action, const SharedRoomSelection &select
     }
     selection->clear();
 
-    const bool executable = isExecutable(action);
+    MapAction *const pAction = action.get();
+    const bool executable = isExecutable(pAction);
     if (executable) {
-        executeAction(action);
+        executeAction(pAction);
     } else {
-        qWarning() << "Unable to execute action" << action;
+        qWarning() << "Unable to execute action" << pAction;
     }
 
     for (auto id : selectedIds) {
@@ -277,7 +279,6 @@ bool MapData::execute(MapAction *const action, const SharedRoomSelection &select
             selection->insert(id, room);
         }
     }
-    delete action;
     return executable;
 }
 
@@ -298,11 +299,13 @@ void MapData::removeDoorNames()
     for (auto &room : roomIndex) {
         if (room != nullptr) {
             for (const auto dir : ALL_EXITS_NESWUD) {
-                MapAction *action = new SingleRoomAction(new UpdateExitField(noName, dir),
-                                                         room->getId());
-                scheduleAction(action);
+                scheduleAction(
+                    std::make_unique<SingleRoomAction>(std::make_unique<UpdateExitField>(noName,
+                                                                                         dir),
+                                                       room->getId()));
             }
         }
+        // REVISIT: this isn't true if room was nullptr
         setDataChanged();
     }
 }

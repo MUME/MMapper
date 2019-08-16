@@ -556,9 +556,9 @@ void Mmapper2Group::startNetwork()
             emit networkStatus(false);
         });
         connect(network.get(),
-                &CGroupCommunicator::scheduleAction,
+                &CGroupCommunicator::sig_scheduleAction,
                 getGroup(),
-                &CGroup::scheduleAction);
+                &CGroup::slot_scheduleAction);
     }
 
     // REVISIT: What about if the network is already started?

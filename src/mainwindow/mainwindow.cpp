@@ -828,9 +828,9 @@ void MainWindow::onPlayMode()
 {
     disconnect(m_pathMachine, &Mmapper2PathMachine::createRoom, m_mapData, &MapData::createRoom);
     disconnect(m_pathMachine,
-               &Mmapper2PathMachine::scheduleAction,
+               &Mmapper2PathMachine::sig_scheduleAction,
                m_mapData,
-               &MapData::scheduleAction);
+               &MapData::slot_scheduleAction);
     setConfig().general.mapMode = MapModeEnum::PLAY;
     modeMenu->setIcon(mapperMode.playModeAct->icon());
 }
@@ -840,9 +840,9 @@ void MainWindow::onMapMode()
     log("MainWindow", "Map mode selected - new rooms are created when entering unmapped areas.");
     connect(m_pathMachine, &Mmapper2PathMachine::createRoom, m_mapData, &MapData::createRoom);
     connect(m_pathMachine,
-            &Mmapper2PathMachine::scheduleAction,
+            &Mmapper2PathMachine::sig_scheduleAction,
             m_mapData,
-            &MapData::scheduleAction);
+            &MapData::slot_scheduleAction);
     setConfig().general.mapMode = MapModeEnum::MAP;
     modeMenu->setIcon(mapperMode.mapModeAct->icon());
 }
@@ -852,9 +852,9 @@ void MainWindow::onOfflineMode()
     log("MainWindow", "Offline emulation mode selected - learn new areas safely.");
     disconnect(m_pathMachine, &Mmapper2PathMachine::createRoom, m_mapData, &MapData::createRoom);
     disconnect(m_pathMachine,
-               &Mmapper2PathMachine::scheduleAction,
+               &Mmapper2PathMachine::sig_scheduleAction,
                m_mapData,
-               &MapData::scheduleAction);
+               &MapData::slot_scheduleAction);
     setConfig().general.mapMode = MapModeEnum::OFFLINE;
     modeMenu->setIcon(mapperMode.offlineModeAct->icon());
 }
@@ -1806,7 +1806,9 @@ void MainWindow::onDeleteInfoMarkSelection()
 void MainWindow::onDeleteRoomSelection()
 {
     if (m_roomSelection != nullptr) {
-        m_mapData->execute(new GroupMapAction(new Remove(), m_roomSelection), m_roomSelection);
+        m_mapData->execute(std::make_unique<GroupMapAction>(std::make_unique<Remove>(),
+                                                            m_roomSelection),
+                           m_roomSelection);
         m_mapWindow->getCanvas()->clearRoomSelection();
         m_mapWindow->getCanvas()->update();
     }
@@ -1829,9 +1831,9 @@ void MainWindow::onDeleteConnectionSelection()
             tmpSel->getRoom(id1);
             tmpSel->getRoom(id2);
             m_mapWindow->getCanvas()->clearConnectionSelection();
-            m_mapData->execute(new RemoveTwoWayExit(id1, id2, dir1, dir2), tmpSel);
+            m_mapData->execute(std::make_unique<RemoveTwoWayExit>(id1, id2, dir1, dir2), tmpSel);
             if ((false))
-                m_mapData->execute(new RemoveExit(id2, id1, dir2), tmpSel);
+                m_mapData->execute(std::make_unique<RemoveExit>(id2, id1, dir2), tmpSel);
         }
     }
 
@@ -1844,7 +1846,8 @@ void MainWindow::onMoveUpRoomSelection()
         return;
     }
     Coordinate moverel(0, 0, 1);
-    m_mapData->execute(new GroupMapAction(new MoveRelative(moverel), m_roomSelection),
+    m_mapData->execute(std::make_unique<GroupMapAction>(std::make_unique<MoveRelative>(moverel),
+                                                        m_roomSelection),
                        m_roomSelection);
     onLayerUp();
     m_mapWindow->getCanvas()->update();
@@ -1856,7 +1859,8 @@ void MainWindow::onMoveDownRoomSelection()
         return;
     }
     Coordinate moverel(0, 0, -1);
-    m_mapData->execute(new GroupMapAction(new MoveRelative(moverel), m_roomSelection),
+    m_mapData->execute(std::make_unique<GroupMapAction>(std::make_unique<MoveRelative>(moverel),
+                                                        m_roomSelection),
                        m_roomSelection);
     onLayerDown();
     m_mapWindow->getCanvas()->update();
@@ -1868,7 +1872,8 @@ void MainWindow::onMergeUpRoomSelection()
         return;
     }
     Coordinate moverel(0, 0, 1);
-    m_mapData->execute(new GroupMapAction(new MergeRelative(moverel), m_roomSelection),
+    m_mapData->execute(std::make_unique<GroupMapAction>(std::make_unique<MergeRelative>(moverel),
+                                                        m_roomSelection),
                        m_roomSelection);
     onLayerUp();
     onModeRoomSelect();
@@ -1880,7 +1885,8 @@ void MainWindow::onMergeDownRoomSelection()
         return;
     }
     Coordinate moverel(0, 0, -1);
-    m_mapData->execute(new GroupMapAction(new MergeRelative(moverel), m_roomSelection),
+    m_mapData->execute(std::make_unique<GroupMapAction>(std::make_unique<MergeRelative>(moverel),
+                                                        m_roomSelection),
                        m_roomSelection);
     onLayerDown();
     onModeRoomSelect();
@@ -1891,7 +1897,8 @@ void MainWindow::onConnectToNeighboursRoomSelection()
     if (m_roomSelection == nullptr) {
         return;
     }
-    m_mapData->execute(new GroupMapAction(new ConnectToNeighbours, m_roomSelection),
+    m_mapData->execute(std::make_unique<GroupMapAction>(std::make_unique<ConnectToNeighbours>(),
+                                                        m_roomSelection),
                        m_roomSelection);
     m_mapWindow->getCanvas()->update();
 }

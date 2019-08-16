@@ -58,7 +58,7 @@ void MapFrontend::checkSize()
     emit mapSizeChanged(m_min, m_max);
 }
 
-void MapFrontend::scheduleAction(MapAction *const action)
+void MapFrontend::scheduleAction(const std::shared_ptr<MapAction> &action)
 {
     QMutexLocker locker(&mapLock);
     action->schedule(this);
@@ -71,7 +71,7 @@ void MapFrontend::scheduleAction(MapAction *const action)
         }
     }
     if (executable) {
-        executeAction(action);
+        executeAction(action.get());
         removeAction(action);
     }
 }
@@ -81,12 +81,11 @@ void MapFrontend::executeAction(MapAction *const action)
     action->exec();
 }
 
-void MapFrontend::removeAction(MapAction *const action)
+void MapFrontend::removeAction(const std::shared_ptr<MapAction> &action)
 {
     for (auto roomId : action->getAffectedRooms()) {
         actionSchedule[roomId].erase(action);
     }
-    delete action;
 }
 
 bool MapFrontend::isExecutable(MapAction *const action)
@@ -101,14 +100,14 @@ bool MapFrontend::isExecutable(MapAction *const action)
 
 void MapFrontend::executeActions(const RoomId roomId)
 {
-    std::set<MapAction *> executedActions;
-    for (auto action : actionSchedule[roomId]) {
-        if (isExecutable(action)) {
-            executeAction(action);
+    std::set<std::shared_ptr<MapAction>> executedActions;
+    for (const auto &action : actionSchedule[roomId]) {
+        if (isExecutable(action.get())) {
+            executeAction(action.get());
             executedActions.insert(action);
         }
     }
-    for (auto action : executedActions) {
+    for (const auto &action : executedActions) {
         removeAction(action);
     }
 }
@@ -306,13 +305,14 @@ void MapFrontend::releaseRoom(RoomRecipient &sender, const RoomId id)
         executeActions(id);
         if (Room *const room = roomIndex[id]) {
             if (room->isTemporary()) {
-                MapAction *const r = new SingleRoomAction(new Remove, id);
-                scheduleAction(r);
+                scheduleAction(std::make_shared<SingleRoomAction>(std::make_unique<Remove>(), id));
             }
         }
     }
 }
 
+// REVISIT: This is sent too often. Hunt down and kill the unnecessary cases (probably most of them).
+//
 // makes a lock on a room permanent and anonymous.
 // Like that the room can't be deleted via releaseRoom anymore.
 void MapFrontend::keepRoom(RoomRecipient &sender, const RoomId id)
@@ -320,8 +320,7 @@ void MapFrontend::keepRoom(RoomRecipient &sender, const RoomId id)
     QMutexLocker lock(&mapLock);
     auto &lock_ref = locks[id];
     lock_ref.erase(&sender);
-    MapAction *const mp = new SingleRoomAction(new MakePermanent, id);
-    scheduleAction(mp);
+    scheduleAction(std::make_shared<SingleRoomAction>(std::make_unique<MakePermanent>(), id));
     if (lock_ref.empty()) {
         executeActions(id);
     }

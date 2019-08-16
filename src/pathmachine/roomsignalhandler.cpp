@@ -6,6 +6,7 @@
 #include "roomsignalhandler.h"
 
 #include <cassert>
+#include <memory>
 
 #include "../expandoracommon/RoomAdmin.h"
 #include "../expandoracommon/room.h"
@@ -51,7 +52,7 @@ void RoomSignalHandler::keep(const Room *const room, const ExitDirEnum dir, cons
 
     RoomAdmin *const rcv = owners[room];
     if (static_cast<uint32_t>(dir) < NUM_EXITS) {
-        emit scheduleAction(new AddExit(fromId, room->getId(), dir));
+        emit sig_scheduleAction(std::make_shared<AddExit>(fromId, room->getId(), dir));
     }
 
     if (!lockers[room].empty()) {

@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
 #include <map>
+#include <memory>
 #include <set>
 #include <QObject>
 #include <QString>
@@ -50,5 +51,5 @@ public:
     auto getNumLockers(const Room *room) { return lockers[room].size(); }
 
 signals:
-    void scheduleAction(MapAction *);
+    void sig_scheduleAction(std::shared_ptr<MapAction>);
 };

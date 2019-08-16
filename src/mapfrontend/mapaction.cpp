@@ -26,9 +26,9 @@
 AbstractAction::~AbstractAction() = default;
 MapAction::~MapAction() = default;
 
-SingleRoomAction::SingleRoomAction(AbstractAction *const ex, const RoomId in_id)
+SingleRoomAction::SingleRoomAction(std::unique_ptr<AbstractAction> moved_ex, const RoomId in_id)
     : id(in_id)
-    , executor(ex)
+    , executor(std::move(moved_ex))
 {}
 
 const RoomIdSet &SingleRoomAction::getAffectedRooms()

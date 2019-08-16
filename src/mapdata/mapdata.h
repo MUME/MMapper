@@ -6,6 +6,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include <map>
+#include <memory>
 #include <QLinkedList>
 #include <QList>
 #include <QString>
@@ -60,7 +61,7 @@ public:
 
     void draw(const Coordinate &min, const Coordinate &max, MapCanvasRoomDrawer &screen);
 
-    bool execute(MapAction *action, const SharedRoomSelection &unlock);
+    bool execute(std::unique_ptr<MapAction> action, const SharedRoomSelection &unlock);
 
     Coordinate &getPosition() { return m_position; }
     MarkerList &getMarkersList() { return m_markers; }
@@ -121,6 +122,10 @@ public slots:
     void unsetDataChanged() { m_dataChanged = false; }
     void setDataChanged() { m_dataChanged = true; }
     void setPosition(const Coordinate &pos) { m_position = pos; }
+    void slot_scheduleAction(std::shared_ptr<MapAction> action)
+    {
+        MapFrontend::scheduleAction(action);
+    }
 
 protected:
     MarkerList m_markers;

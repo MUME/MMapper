@@ -5,6 +5,7 @@
 
 #include "GroupServer.h"
 
+#include <memory>
 #include <QAbstractSocket>
 #include <QByteArray>
 #include <QHostAddress>
@@ -57,7 +58,7 @@ void GroupServer::errorInConnection(GroupSocket *const socket, const QString &er
         emit sendLog(QString("'%1' encountered an error: %2")
                          .arg(QString::fromLatin1(socket->getName()))
                          .arg(errorMessage));
-        emit scheduleAction(new RemoveCharacter(name));
+        emit sig_scheduleAction(std::make_shared<RemoveCharacter>(name));
     }
     closeOne(socket);
 }
@@ -156,7 +157,7 @@ void GroupServer::connectionClosed(GroupSocket *const socket)
     if (getGroup()->isNamePresent(name)) {
         sendRemoveUserNotification(socket, name);
         emit sendLog(QString("'%1' closed their connection and quit.").arg(QString(name)));
-        emit scheduleAction(new RemoveCharacter(name));
+        emit sig_scheduleAction(std::make_shared<RemoveCharacter>(name));
     }
     closeOne(socket);
 }
@@ -224,7 +225,7 @@ void GroupServer::retrieveData(GroupSocket *const socket,
                 emit sendLog(QString("WARNING: '%1' spoofed as '%2'").arg(nameStr).arg(updateName));
                 return;
             }
-            emit scheduleAction(new UpdateCharacter(data));
+            emit sig_scheduleAction(std::make_shared<UpdateCharacter>(data));
             relayMessage(socket, MessagesEnum::UPDATE_CHAR, data);
 
         } else if (message == MessagesEnum::GTELL) {
@@ -261,7 +262,7 @@ void GroupServer::retrieveData(GroupSocket *const socket,
                 }
             }
             socket->setName(newName.toLatin1());
-            emit scheduleAction(new RenameCharacter(data));
+            emit sig_scheduleAction(std::make_shared<RenameCharacter>(data));
             relayMessage(socket, MessagesEnum::RENAME_CHAR, data);
 
         } else {
@@ -406,7 +407,7 @@ void GroupServer::parseLoginInformation(GroupSocket *socket, const QVariantMap &
     // Strip protocolVersion from original QVariantMap
     QVariantMap charNode;
     charNode["playerData"] = playerData;
-    emit scheduleAction(new AddCharacter(charNode));
+    emit sig_scheduleAction(std::make_shared<AddCharacter>(charNode));
     relayMessage(socket, MessagesEnum::ADD_CHAR, charNode);
     sendMessage(socket, MessagesEnum::ACK);
     socket->setProtocolState(ProtocolStateEnum::AwaitingInfo);
@@ -463,7 +464,7 @@ void GroupServer::sendCharRename(const QVariantMap &map)
 void GroupServer::stop()
 {
     closeAll();
-    emit scheduleAction(new ResetCharacters());
+    emit sig_scheduleAction(std::make_shared<ResetCharacters>());
     deleteLater();
 }
 
@@ -527,7 +528,7 @@ void GroupServer::kickConnection(GroupSocket *const socket, const QString &messa
     const auto &name = socket->getName();
     if (getGroup()->isNamePresent(name)) {
         sendRemoveUserNotification(socket, name);
-        emit scheduleAction(new RemoveCharacter(name));
+        emit sig_scheduleAction(std::make_shared<RemoveCharacter>(name));
     }
     closeOne(socket);
 }

@@ -4,6 +4,7 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
+#include <memory>
 #include <set>
 #include <stack>
 #include <vector>
@@ -82,11 +83,9 @@ protected:
 class SingleRoomAction final : public MapAction
 {
 public:
-    explicit SingleRoomAction(AbstractAction *ex, RoomId id);
+    explicit SingleRoomAction(std::unique_ptr<AbstractAction> ex, RoomId id);
 
     void schedule(MapFrontend *in) override { executor->setFrontend(in); }
-
-    virtual ~SingleRoomAction() override { delete executor; }
 
 protected:
     virtual void exec() override
@@ -99,7 +98,7 @@ protected:
 
 private:
     RoomId id = INVALID_ROOMID;
-    AbstractAction *executor = nullptr;
+    std::unique_ptr<AbstractAction> executor;
 };
 
 class AddExit : public MapAction, public FrontendAccessor

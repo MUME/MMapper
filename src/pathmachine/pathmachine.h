@@ -41,6 +41,7 @@ public slots:
     virtual void event(const SigParseEvent &);
     virtual void releaseAllPaths();
     virtual void setCurrentRoom(RoomId id, bool update);
+    void slot_scheduleAction(const std::shared_ptr<MapAction> &action) { scheduleAction(action); }
 
 signals:
     void lookingForRooms(RoomRecipient &, const SigParseEvent &);
@@ -48,11 +49,14 @@ signals:
     void lookingForRooms(RoomRecipient &, const Coordinate &);
     void playerMoved(const Coordinate &);
     void createRoom(const SigParseEvent &, const Coordinate &);
-    void scheduleAction(MapAction *);
+    void sig_scheduleAction(std::shared_ptr<MapAction>);
     void setCharPosition(RoomId id);
 
 public:
     explicit PathMachine(AbstractRoomFactory *factory, QObject *parent = nullptr);
+
+private:
+    void scheduleAction(const std::shared_ptr<MapAction> &action);
 
 protected:
     PathParameters params;

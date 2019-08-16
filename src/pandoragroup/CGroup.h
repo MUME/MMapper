@@ -52,7 +52,7 @@ public:
     std::unique_ptr<GroupSelection> selectByName(const QByteArray &);
 
 public slots:
-    void scheduleAction(GroupAction *action);
+    void slot_scheduleAction(std::shared_ptr<GroupAction> action);
 
 signals:
     void log(const QString &);
@@ -73,7 +73,7 @@ private:
 
     QMutex characterLock;
     std::set<GroupRecipient *> locks;
-    std::queue<GroupAction *> actionSchedule;
+    std::queue<std::shared_ptr<GroupAction>> actionSchedule;
 
     std::vector<CGroupChar *> charIndex;
 

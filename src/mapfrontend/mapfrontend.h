@@ -6,6 +6,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include <map>
+#include <memory>
 #include <set>
 #include <stack>
 #include <QMutex>
@@ -40,7 +41,7 @@ protected:
     Map map;
     RoomIndex roomIndex;
     std::stack<RoomId> unusedIds;
-    std::map<RoomId, std::set<MapAction *>> actionSchedule;
+    std::map<RoomId, std::set<std::shared_ptr<MapAction>>> actionSchedule;
     RoomHomes roomHomes;
     RoomLocks locks;
 
@@ -53,7 +54,7 @@ protected:
     void executeActions(RoomId roomId);
     void executeAction(MapAction *action);
     bool isExecutable(MapAction *action);
-    void removeAction(MapAction *action);
+    void removeAction(const std::shared_ptr<MapAction> &action);
 
     virtual RoomId assignId(Room *room, const SharedRoomCollection &roomHome);
     virtual void checkSize(const Coordinate &);
@@ -84,6 +85,10 @@ public:
 
     virtual const Coordinate &getMin() const { return m_min; }
     virtual const Coordinate &getMax() const { return m_max; }
+
+public:
+    void scheduleAction(const std::shared_ptr<MapAction> &action) final;
+
 public slots:
     // looking for rooms leads to a bunch of foundRoom() signals
     virtual void lookingForRooms(RoomRecipient &, const SigParseEvent &);
@@ -97,7 +102,7 @@ public slots:
     // it will get deleted if no one looks for it for a certain time
     virtual void createRoom(const SigParseEvent &, const Coordinate &);
 
-    void scheduleAction(MapAction *action) final;
+    void slot_scheduleAction(std::shared_ptr<MapAction> action) { scheduleAction(action); }
 
 signals:
 

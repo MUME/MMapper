@@ -750,7 +750,9 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                 m_roomSelectionMove.reset();
                 if (!wrongPlace && (m_roomSelection != nullptr)) {
                     const Coordinate moverel{pos, 0};
-                    m_data->execute(new GroupMapAction(new MoveRelative(moverel), m_roomSelection),
+                    m_data->execute(std::make_unique<GroupMapAction>(std::make_unique<MoveRelative>(
+                                                                         moverel),
+                                                                     m_roomSelection),
                                     m_roomSelection);
                 }
 
@@ -861,9 +863,10 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
 
                     if (!(r1->exit(dir1).containsOut(id2)) || !(r2->exit(dir2).containsOut(id1))) {
                         if (m_canvasMouseMode != CanvasMouseModeEnum::CREATE_ONEWAY_CONNECTIONS) {
-                            m_data->execute(new AddTwoWayExit(id1, id2, dir1, dir2), tmpSel);
+                            m_data->execute(std::make_unique<AddTwoWayExit>(id1, id2, dir1, dir2),
+                                            tmpSel);
                         } else {
-                            m_data->execute(new AddOneWayExit(id1, id2, dir1), tmpSel);
+                            m_data->execute(std::make_unique<AddOneWayExit>(id1, id2, dir1), tmpSel);
                         }
                         m_connectionSelection = new ConnectionSelection();
                         m_connectionSelection->setFirst(m_data, id1, dir1);

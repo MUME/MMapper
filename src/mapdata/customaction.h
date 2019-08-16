@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
 #include <list>
+#include <memory>
 #include <QVariant>
 #include <QtCore>
 #include <QtGlobal>
@@ -69,11 +70,10 @@ protected:
 class GroupMapAction final : virtual public MapAction
 {
 public:
-    explicit GroupMapAction(AbstractAction *ex, const SharedRoomSelection &selection);
+    explicit GroupMapAction(std::unique_ptr<AbstractAction> ex,
+                            const SharedRoomSelection &selection);
 
     void schedule(MapFrontend *in) override { executor->setFrontend(in); }
-
-    virtual ~GroupMapAction() override { delete executor; }
 
 protected:
     virtual void exec() override;
@@ -82,7 +82,7 @@ protected:
 
 private:
     std::list<RoomId> selectedRooms{};
-    AbstractAction *executor = nullptr;
+    std::unique_ptr<AbstractAction> executor;
 };
 
 class MoveRelative final : public AbstractAction

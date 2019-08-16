@@ -4,6 +4,8 @@
 
 #include "forced.h"
 
+#include <memory>
+
 #include "../expandoracommon/RoomAdmin.h"
 #include "../expandoracommon/room.h"
 #include "../mapfrontend/mapaction.h"
@@ -15,7 +17,9 @@ void Forced::receiveRoom(RoomAdmin *sender, const Room *perhaps)
         owner = sender;
         if (update) {
             // Force update room with last event
-            owner->scheduleAction(new SingleRoomAction(new Update(myEvent), perhaps->getId()));
+            owner->scheduleAction(
+                std::make_shared<SingleRoomAction>(std::make_unique<Update>(myEvent),
+                                                   perhaps->getId()));
         }
     } else {
         sender->releaseRoom(*this, perhaps->getId());

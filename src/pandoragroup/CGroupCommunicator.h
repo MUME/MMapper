@@ -5,6 +5,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include <cstdint>
+#include <memory>
 #include <QByteArray>
 #include <QList>
 #include <QObject>
@@ -75,7 +76,7 @@ public slots:
 
 signals:
     void messageBox(QString message);
-    void scheduleAction(GroupAction *action);
+    void sig_scheduleAction(std::shared_ptr<GroupAction> action);
     void gTellArrived(QVariantMap node);
     void sendLog(const QString &);
 

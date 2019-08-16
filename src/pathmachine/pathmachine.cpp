@@ -44,7 +44,10 @@ PathMachine::PathMachine(AbstractRoomFactory *const in_factory, QObject *const p
     , lastEvent{ParseEvent::createDummyEvent()}
     , paths{new PathList}
 {
-    connect(&signaler, &RoomSignalHandler::scheduleAction, this, &PathMachine::scheduleAction);
+    connect(&signaler,
+            &RoomSignalHandler::sig_scheduleAction,
+            this,
+            &PathMachine::slot_scheduleAction);
 }
 
 void PathMachine::setCurrentRoom(const RoomId id, bool update)
@@ -201,9 +204,9 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
         // Update the exit from the previous room to the current room
         const CommandEnum move = event.getMoveType();
         if (static_cast<uint32_t>(move) < NUM_EXITS) {
-            emit scheduleAction(new AddExit(mostLikelyRoom.getId(),
-                                            perhaps->getId(),
-                                            static_cast<ExitDirEnum>(move)));
+            emit scheduleAction(std::make_unique<AddExit>(mostLikelyRoom.getId(),
+                                                          perhaps->getId(),
+                                                          static_cast<ExitDirEnum>(move)));
         }
 
         // Update most likely room with player's current location
@@ -220,13 +223,15 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
                 RoomId connectedRoomId = e.outFirst();
                 auto bThisRoom = bFlags.getDirectionalLight(dir);
                 if (IS_SET(bThisRoom, DirectionalLightEnum::DIRECT_SUN_ROOM)) {
-                    emit scheduleAction(
-                        new SingleRoomAction(new UpdateRoomField(RoomSundeathEnum::SUNDEATH),
-                                             connectedRoomId));
+                    scheduleAction(
+                        std::make_unique<SingleRoomAction>(std::make_unique<UpdateRoomField>(
+                                                               RoomSundeathEnum::SUNDEATH),
+                                                           connectedRoomId));
                 } else if (IS_SET(bThisRoom, DirectionalLightEnum::INDIRECT_SUN_ROOM)) {
-                    emit scheduleAction(
-                        new SingleRoomAction(new UpdateRoomField(RoomSundeathEnum::NO_SUNDEATH),
-                                             connectedRoomId));
+                    scheduleAction(
+                        std::make_unique<SingleRoomAction>(std::make_unique<UpdateRoomField>(
+                                                               RoomSundeathEnum::NO_SUNDEATH),
+                                                           connectedRoomId));
                 }
             }
         }
@@ -234,7 +239,8 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
         // Update the room if we had a tolerant match rather than an exact match
         if (appr.needsUpdate()) {
             emit scheduleAction(
-                new SingleRoomAction(new Update(sigParseEvent), mostLikelyRoom.getId()));
+                std::make_unique<SingleRoomAction>(std::make_unique<Update>(sigParseEvent),
+                                                   mostLikelyRoom.getId()));
         }
 
         // Send updates
@@ -306,6 +312,11 @@ void PathMachine::experimenting(const SigParseEvent &sigParseEvent)
 
     paths = exp->evaluate();
     evaluatePaths();
+}
+
+void PathMachine::scheduleAction(const std::shared_ptr<MapAction> &action)
+{
+    emit sig_scheduleAction(action);
 }
 
 void PathMachine::evaluatePaths()

@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include <memory>
 #include <QDialog>
 #include <QString>
 #include <QtCore>
@@ -19,6 +20,7 @@
 #include "../mapdata/roomselection.h"
 #include "ui_roomeditattrdlg.h"
 
+class AbstractAction;
 class MapCanvas;
 class MapData;
 class QListWidgetItem;
@@ -107,6 +109,15 @@ private:
     ExitDirEnum getSelectedExit();
     void updateDialog(const Room *r);
 
+private:
+    void updateCommon(std::unique_ptr<AbstractAction> moved_action);
+    void updateRoomAlign(RoomAlignEnum value);
+    void updateRoomPortable(RoomPortableEnum value);
+    void updateRoomRideable(RoomRidableEnum value);
+    void updateRoomLight(RoomLightEnum value);
+    void updateRoomSundeath(RoomSundeathEnum value);
+
+private:
     EnumIndexedArray<RoomListWidgetItem *, RoomLoadFlagEnum> loadListItems;
     EnumIndexedArray<RoomListWidgetItem *, RoomMobFlagEnum> mobListItems;
     EnumIndexedArray<RoomListWidgetItem *, ExitFlagEnum> exitListItems;
@@ -122,5 +133,5 @@ private:
     SharedRoomSelection m_roomSelection;
     MapData *m_mapData = nullptr;
     MapCanvas *m_mapCanvas = nullptr;
-    QShortcut *m_hiddenShortcut = nullptr;
+    std::unique_ptr<QShortcut> m_hiddenShortcut;
 };

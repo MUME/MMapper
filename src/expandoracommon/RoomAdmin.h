@@ -4,6 +4,8 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
+#include <memory>
+
 #include "room.h"
 
 class RoomRecipient;
@@ -22,5 +24,5 @@ public:
     // Like that the room can't be deleted via releaseRoom anymore.
     virtual void keepRoom(RoomRecipient &, RoomId) = 0;
 
-    virtual void scheduleAction(MapAction *action) = 0;
+    virtual void scheduleAction(const std::shared_ptr<MapAction> &action) = 0;
 };

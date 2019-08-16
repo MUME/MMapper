@@ -24,8 +24,9 @@
 #include "ExitFlags.h"
 #include "roomselection.h"
 
-GroupMapAction::GroupMapAction(AbstractAction *const action, const SharedRoomSelection &selection)
-    : executor(action)
+GroupMapAction::GroupMapAction(std::unique_ptr<AbstractAction> action,
+                               const SharedRoomSelection &selection)
+    : executor(std::move(action))
 {
     QMapIterator<RoomId, const Room *> roomIter(*selection);
     while (roomIter.hasNext()) {

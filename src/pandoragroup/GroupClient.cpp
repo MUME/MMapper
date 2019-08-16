@@ -5,6 +5,7 @@
 
 #include "GroupClient.h"
 
+#include <memory>
 #include <QAbstractSocket>
 #include <QByteArray>
 #include <QMessageLogContext>
@@ -151,7 +152,7 @@ void GroupClient::retrieveData(GroupSocket *const /* socket */,
     } else if (socket.getProtocolState() == ProtocolStateEnum::AwaitingInfo) {
         // almost connected. awaiting full information about the connection
         if (message == MessagesEnum::UPDATE_CHAR) {
-            emit scheduleAction(new AddCharacter(data));
+            emit sig_scheduleAction(std::make_shared<AddCharacter>(data));
         } else if (message == MessagesEnum::STATE_LOGGED) {
             socket.setProtocolState(ProtocolStateEnum::Logged);
         } else if (message == MessagesEnum::REQ_ACK) {
@@ -164,13 +165,13 @@ void GroupClient::retrieveData(GroupSocket *const /* socket */,
 
     } else if (socket.getProtocolState() == ProtocolStateEnum::Logged) {
         if (message == MessagesEnum::ADD_CHAR) {
-            emit scheduleAction(new AddCharacter(data));
+            emit sig_scheduleAction(std::make_shared<AddCharacter>(data));
         } else if (message == MessagesEnum::REMOVE_CHAR) {
-            emit scheduleAction(new RemoveCharacter(data));
+            emit sig_scheduleAction(std::make_shared<RemoveCharacter>(data));
         } else if (message == MessagesEnum::UPDATE_CHAR) {
-            emit scheduleAction(new UpdateCharacter(data));
+            emit sig_scheduleAction(std::make_shared<UpdateCharacter>(data));
         } else if (message == MessagesEnum::RENAME_CHAR) {
-            emit scheduleAction(new RenameCharacter(data));
+            emit sig_scheduleAction(std::make_shared<RenameCharacter>(data));
         } else if (message == MessagesEnum::GTELL) {
             emit gTellArrived(data);
         } else if (message == MessagesEnum::REQ_ACK) {
@@ -306,7 +307,7 @@ void GroupClient::tryReconnecting()
 
     // Retry
     reconnectAttempts--;
-    emit scheduleAction(new ResetCharacters());
+    emit sig_scheduleAction(std::make_shared<ResetCharacters>());
     socket.connectToHost();
 }
 
@@ -329,7 +330,7 @@ void GroupClient::stop()
 {
     clientConnected = false;
     socket.disconnectFromHost();
-    emit scheduleAction(new ResetCharacters());
+    emit sig_scheduleAction(std::make_shared<ResetCharacters>());
     deleteLater();
 }
 
