@@ -73,6 +73,7 @@ set(mmapper_SRCS
     global/RuleOf5.h
     global/StringView.cpp
     global/StringView.h
+    global/TaggedString.h
     global/TextUtils.cpp
     global/TextUtils.h
     global/Version.h
