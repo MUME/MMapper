@@ -20,9 +20,7 @@
 #include "../mapdata/roomselection.h"
 #include "../parser/parserutils.h"
 
-const QString FindRoomsDlg::nullString;
-
-FindRoomsDlg::FindRoomsDlg(MapData *md, QWidget *parent)
+FindRoomsDlg::FindRoomsDlg(MapData *const md, QWidget *const parent)
     : QDialog(parent)
 {
     setupUi(this);

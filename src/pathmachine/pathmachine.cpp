@@ -200,61 +200,61 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
             }
         }
     }
-    if (perhaps != nullptr) {
-        // Update the exit from the previous room to the current room
-        const CommandEnum move = event.getMoveType();
-        if (static_cast<uint32_t>(move) < NUM_EXITS) {
-            emit scheduleAction(std::make_unique<AddExit>(mostLikelyRoom.getId(),
-                                                          perhaps->getId(),
-                                                          static_cast<ExitDirEnum>(move)));
-        }
 
-        // Update most likely room with player's current location
-        mostLikelyRoom = *perhaps;
-
-        // Update rooms behind exits now that we are certain about our current location
-        const ConnectedRoomFlagsType bFlags = event.getConnectedRoomFlags();
-        if (bFlags.isValid()) {
-            for (const auto dir : ALL_DIRECTIONS6) {
-                const Exit &e = mostLikelyRoom.exit(dir);
-                if (!e.outIsUnique()) {
-                    continue;
-                }
-                RoomId connectedRoomId = e.outFirst();
-                auto bThisRoom = bFlags.getDirectionalLight(dir);
-                if (IS_SET(bThisRoom, DirectionalLightEnum::DIRECT_SUN_ROOM)) {
-                    scheduleAction(
-                        std::make_unique<SingleRoomAction>(std::make_unique<UpdateRoomField>(
-                                                               RoomSundeathEnum::SUNDEATH),
-                                                           connectedRoomId));
-                } else if (IS_SET(bThisRoom, DirectionalLightEnum::INDIRECT_SUN_ROOM)) {
-                    scheduleAction(
-                        std::make_unique<SingleRoomAction>(std::make_unique<UpdateRoomField>(
-                                                               RoomSundeathEnum::NO_SUNDEATH),
-                                                           connectedRoomId));
-                }
-            }
-        }
-
-        // Update the room if we had a tolerant match rather than an exact match
-        if (appr.needsUpdate()) {
-            emit scheduleAction(
-                std::make_unique<SingleRoomAction>(std::make_unique<Update>(sigParseEvent),
-                                                   mostLikelyRoom.getId()));
-        }
-
-        // Send updates
-        emit playerMoved(mostLikelyRoom.getPosition());
-        // GroupManager
-        emit setCharPosition(mostLikelyRoom.getId());
-    } else {
+    if (perhaps == nullptr) {
         // couldn't match, give up
         state = PathStateEnum::EXPERIMENTING;
         pathRoot = mostLikelyRoom;
         auto *const root = new Path(&pathRoot, nullptr, nullptr, &signaler);
         paths->push_front(root);
         experimenting(sigParseEvent);
+        return;
     }
+
+    // Update the exit from the previous room to the current room
+    const CommandEnum move = event.getMoveType();
+    if (static_cast<uint32_t>(move) < NUM_EXITS) {
+        scheduleAction(std::make_unique<AddExit>(mostLikelyRoom.getId(),
+                                                 perhaps->getId(),
+                                                 static_cast<ExitDirEnum>(move)));
+    }
+
+    // Update most likely room with player's current location
+    mostLikelyRoom = *perhaps;
+
+    // Update rooms behind exits now that we are certain about our current location
+    const ConnectedRoomFlagsType bFlags = event.getConnectedRoomFlags();
+    if (bFlags.isValid()) {
+        for (const auto dir : ALL_DIRECTIONS6) {
+            const Exit &e = mostLikelyRoom.exit(dir);
+            if (!e.outIsUnique()) {
+                continue;
+            }
+            RoomId connectedRoomId = e.outFirst();
+            auto bThisRoom = bFlags.getDirectionalLight(dir);
+            if (IS_SET(bThisRoom, DirectionalLightEnum::DIRECT_SUN_ROOM)) {
+                scheduleAction(std::make_unique<SingleRoomAction>(std::make_unique<UpdateRoomField>(
+                                                                      RoomSundeathEnum::SUNDEATH),
+                                                                  connectedRoomId));
+            } else if (IS_SET(bThisRoom, DirectionalLightEnum::INDIRECT_SUN_ROOM)) {
+                scheduleAction(std::make_unique<SingleRoomAction>(std::make_unique<UpdateRoomField>(
+                                                                      RoomSundeathEnum::NO_SUNDEATH),
+                                                                  connectedRoomId));
+            }
+        }
+    }
+
+    // Update the room if we had a tolerant match rather than an exact match
+    if (appr.needsUpdate()) {
+        emit scheduleAction(
+            std::make_unique<SingleRoomAction>(std::make_unique<Update>(sigParseEvent),
+                                               mostLikelyRoom.getId()));
+    }
+
+    // Send updates
+    emit playerMoved(mostLikelyRoom.getPosition());
+    // GroupManager
+    emit setCharPosition(mostLikelyRoom.getId());
 }
 
 void PathMachine::syncing(const SigParseEvent &sigParseEvent)

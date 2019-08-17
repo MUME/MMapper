@@ -47,8 +47,6 @@ private:
 
     void adjustResultTable();
 
-    static const QString nullString;
-
 private slots:
     QString constructToolTip(const Room *);
     void on_lineEdit_textChanged();

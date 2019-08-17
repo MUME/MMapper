@@ -1194,18 +1194,19 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::newFile()
 {
-    if (maybeSave()) {
-        auto *storage = static_cast<AbstractMapStorage *>(new MapStorage(*m_mapData, "", this));
-        connect(storage,
-                &AbstractMapStorage::onNewData,
-                m_mapWindow->getCanvas(),
-                &MapCanvas::dataLoaded);
-        connect(storage, &AbstractMapStorage::onDataLoaded, m_groupWidget, &GroupWidget::mapLoaded);
-        connect(storage, &AbstractMapStorage::log, this, &MainWindow::log);
-        storage->newData();
-        delete storage;
-        setCurrentFile("");
-    }
+    if (!maybeSave())
+        return;
+
+    auto *storage = static_cast<AbstractMapStorage *>(new MapStorage(*m_mapData, "", this));
+    connect(storage,
+            &AbstractMapStorage::onNewData,
+            m_mapWindow->getCanvas(),
+            &MapCanvas::dataLoaded);
+    connect(storage, &AbstractMapStorage::onDataLoaded, m_groupWidget, &GroupWidget::mapLoaded);
+    connect(storage, &AbstractMapStorage::log, this, &MainWindow::log);
+    storage->newData();
+    delete storage;
+    setCurrentFile("");
 }
 
 void MainWindow::merge()
@@ -1214,68 +1215,67 @@ void MainWindow::merge()
                                                     "Choose map file ...",
                                                     "",
                                                     "MMapper Maps (*.mm2)");
-    if (!fileName.isEmpty()) {
-        auto *file = new QFile(fileName);
+    if (fileName.isEmpty())
+        return;
 
-        if (!file->open(QFile::ReadOnly)) {
-            QMessageBox::warning(this,
-                                 tr("Application"),
-                                 tr("Cannot read file %1:\n%2.")
-                                     .arg(fileName)
-                                     .arg(file->errorString()));
+    auto *file = new QFile(fileName);
 
-            m_mapWindow->getCanvas()->setEnabled(true);
-            delete file;
-            return;
-        }
+    if (!file->open(QFile::ReadOnly)) {
+        QMessageBox::warning(this,
+                             tr("Application"),
+                             tr("Cannot read file %1:\n%2.").arg(fileName).arg(file->errorString()));
 
-        // MERGE
-        progressDlg = new QProgressDialog(this);
-        QPushButton *cb = new QPushButton("Abort ...");
-        cb->setEnabled(false);
-        progressDlg->setCancelButton(cb);
-        progressDlg->setLabelText("Importing map...");
-        progressDlg->setCancelButtonText("Abort");
-        progressDlg->setMinimum(0);
-        progressDlg->setMaximum(100);
-        progressDlg->setValue(0);
-        progressDlg->show();
-
-        m_mapWindow->getCanvas()->clearRoomSelection();
-        m_mapWindow->getCanvas()->clearConnectionSelection();
-        m_mapWindow->getCanvas()->clearInfoMarkSelection();
-
-        auto real_storage = std::make_unique<MapStorage>(*m_mapData, fileName, file, this);
-        auto storage = static_cast<AbstractMapStorage *>(real_storage.get());
-        connect(storage,
-                &AbstractMapStorage::onDataLoaded,
-                m_mapWindow->getCanvas(),
-                &MapCanvas::dataLoaded);
-        connect(storage, &AbstractMapStorage::onDataLoaded, m_groupWidget, &GroupWidget::mapLoaded);
-        connect(&storage->getProgressCounter(),
-                &ProgressCounter::onPercentageChanged,
-                this,
-                &MainWindow::percentageChanged);
-        connect(storage, &AbstractMapStorage::log, this, &MainWindow::log);
-
-        disableActions(true);
-        m_mapWindow->getCanvas()->hide();
-        if (storage->canLoad()) {
-            storage->mergeData();
-        }
-        m_mapWindow->getCanvas()->show();
-        disableActions(false);
-        // cutAct->setEnabled(false);
-        // copyAct->setEnabled(false);
-        // pasteAct->setEnabled(false);
-
-        storage = nullptr;
-        real_storage.reset();
-        delete progressDlg;
-
-        statusBar()->showMessage(tr("File merged"), 2000);
+        m_mapWindow->getCanvas()->setEnabled(true);
         delete file;
+        return;
     }
+
+    // MERGE
+    progressDlg = new QProgressDialog(this);
+    QPushButton *cb = new QPushButton("Abort ...");
+    cb->setEnabled(false);
+    progressDlg->setCancelButton(cb);
+    progressDlg->setLabelText("Importing map...");
+    progressDlg->setCancelButtonText("Abort");
+    progressDlg->setMinimum(0);
+    progressDlg->setMaximum(100);
+    progressDlg->setValue(0);
+    progressDlg->show();
+
+    m_mapWindow->getCanvas()->clearRoomSelection();
+    m_mapWindow->getCanvas()->clearConnectionSelection();
+    m_mapWindow->getCanvas()->clearInfoMarkSelection();
+
+    auto real_storage = std::make_unique<MapStorage>(*m_mapData, fileName, file, this);
+    auto storage = static_cast<AbstractMapStorage *>(real_storage.get());
+    connect(storage,
+            &AbstractMapStorage::onDataLoaded,
+            m_mapWindow->getCanvas(),
+            &MapCanvas::dataLoaded);
+    connect(storage, &AbstractMapStorage::onDataLoaded, m_groupWidget, &GroupWidget::mapLoaded);
+    connect(&storage->getProgressCounter(),
+            &ProgressCounter::onPercentageChanged,
+            this,
+            &MainWindow::percentageChanged);
+    connect(storage, &AbstractMapStorage::log, this, &MainWindow::log);
+
+    disableActions(true);
+    m_mapWindow->getCanvas()->hide();
+    if (storage->canLoad()) {
+        storage->mergeData();
+    }
+    m_mapWindow->getCanvas()->show();
+    disableActions(false);
+    // cutAct->setEnabled(false);
+    // copyAct->setEnabled(false);
+    // pasteAct->setEnabled(false);
+
+    storage = nullptr;
+    real_storage.reset();
+    delete progressDlg;
+
+    statusBar()->showMessage(tr("File merged"), 2000);
+    delete file;
 }
 
 void MainWindow::open()
@@ -1449,22 +1449,22 @@ void MainWindow::about()
 
 bool MainWindow::maybeSave()
 {
-    if (m_mapData->dataChanged()) {
-        int ret = QMessageBox::warning(this,
-                                       tr("mmapper"),
-                                       tr("The document has been modified.\n"
-                                          "Do you want to save your changes?"),
-                                       QMessageBox::Yes | QMessageBox::Default,
-                                       QMessageBox::No,
-                                       QMessageBox::Cancel | QMessageBox::Escape);
-        if (ret == QMessageBox::Yes) {
-            return save();
-        }
-        if (ret == QMessageBox::Cancel) {
-            return false;
-        }
+    if (!m_mapData->dataChanged())
+        return true;
+
+    const int ret = QMessageBox::warning(this,
+                                         tr("mmapper"),
+                                         tr("The document has been modified.\n"
+                                            "Do you want to save your changes?"),
+                                         QMessageBox::Yes | QMessageBox::Default,
+                                         QMessageBox::No,
+                                         QMessageBox::Cancel | QMessageBox::Escape);
+    if (ret == QMessageBox::Yes) {
+        return save();
     }
-    return true;
+
+    // REVISIT: is it a bug if this returns true? (Shouldn't this always be false?)
+    return ret != QMessageBox::Cancel;
 }
 
 void MainWindow::loadFile(const QString &fileName)
@@ -1535,9 +1535,9 @@ void MainWindow::loadFile(const QString &fileName)
 
 void MainWindow::percentageChanged(quint32 p)
 {
-    if (progressDlg == nullptr) {
+    if (progressDlg == nullptr)
         return;
-    }
+
     progressDlg->setValue(static_cast<int>(p));
 
     qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
@@ -1763,12 +1763,13 @@ void MainWindow::onModeCreateInfoMarkSelect()
 
 void MainWindow::onEditInfoMarkSelection()
 {
-    if (m_infoMarkSelection != nullptr) {
-        InfoMarksEditDlg dlg(this);
-        dlg.setInfoMarkSelection(m_infoMarkSelection, m_mapData, m_mapWindow->getCanvas());
-        dlg.exec();
-        dlg.show();
-    }
+    if (m_infoMarkSelection == nullptr)
+        return;
+
+    InfoMarksEditDlg dlg(this);
+    dlg.setInfoMarkSelection(m_infoMarkSelection, m_mapData, m_mapWindow->getCanvas());
+    dlg.exec();
+    dlg.show();
 }
 
 void MainWindow::onCreateRoom()
@@ -1779,12 +1780,13 @@ void MainWindow::onCreateRoom()
 
 void MainWindow::onEditRoomSelection()
 {
-    if (m_roomSelection != nullptr) {
-        RoomEditAttrDlg roomEditDialog(this);
-        roomEditDialog.setRoomSelection(m_roomSelection, m_mapData, m_mapWindow->getCanvas());
-        roomEditDialog.exec();
-        roomEditDialog.show();
-    }
+    if (m_roomSelection == nullptr)
+        return;
+
+    RoomEditAttrDlg roomEditDialog(this);
+    roomEditDialog.setRoomSelection(m_roomSelection, m_mapData, m_mapWindow->getCanvas());
+    roomEditDialog.exec();
+    roomEditDialog.show();
 }
 
 void MainWindow::onDeleteInfoMarkSelection()
@@ -1803,46 +1805,46 @@ void MainWindow::onDeleteInfoMarkSelection()
 
 void MainWindow::onDeleteRoomSelection()
 {
-    if (m_roomSelection != nullptr) {
-        m_mapData->execute(std::make_unique<GroupMapAction>(std::make_unique<Remove>(),
-                                                            m_roomSelection),
-                           m_roomSelection);
-        m_mapWindow->getCanvas()->clearRoomSelection();
-        m_mapWindow->getCanvas()->update();
-    }
+    if (m_roomSelection == nullptr)
+        return;
+
+    m_mapData->execute(std::make_unique<GroupMapAction>(std::make_unique<Remove>(), m_roomSelection),
+                       m_roomSelection);
+    m_mapWindow->getCanvas()->clearRoomSelection();
+    m_mapWindow->getCanvas()->update();
 }
 
 void MainWindow::onDeleteConnectionSelection()
 {
-    if (m_connectionSelection != nullptr) {
-        const auto &first = m_connectionSelection->getFirst();
-        const auto &second = m_connectionSelection->getSecond();
-        const Room *const r1 = first.room;
-        const Room *const r2 = second.room;
-        if (r1 != nullptr && r2 != nullptr) {
-            const ExitDirEnum dir1 = first.direction;
-            const ExitDirEnum dir2 = second.direction;
-            const RoomId &id1 = r1->getId();
-            const RoomId &id2 = r2->getId();
+    if (m_connectionSelection == nullptr)
+        return; // previously called mapChanged for no good reason
 
-            const auto tmpSel = RoomSelection::createSelection(*m_mapData);
-            tmpSel->getRoom(id1);
-            tmpSel->getRoom(id2);
-            m_mapWindow->getCanvas()->clearConnectionSelection();
-            m_mapData->execute(std::make_unique<RemoveTwoWayExit>(id1, id2, dir1, dir2), tmpSel);
-            if ((false))
-                m_mapData->execute(std::make_unique<RemoveExit>(id2, id1, dir2), tmpSel);
-        }
-    }
+    const auto &first = m_connectionSelection->getFirst();
+    const auto &second = m_connectionSelection->getSecond();
+    const Room *const r1 = first.room;
+    const Room *const r2 = second.room;
+    if (r1 == nullptr || r2 == nullptr)
+        return; // previously called mapChanged for no good reason
+
+    const ExitDirEnum dir1 = first.direction;
+    const ExitDirEnum dir2 = second.direction;
+    const RoomId &id1 = r1->getId();
+    const RoomId &id2 = r2->getId();
+
+    const auto tmpSel = RoomSelection::createSelection(*m_mapData);
+    tmpSel->getRoom(id1);
+    tmpSel->getRoom(id2);
+    m_mapWindow->getCanvas()->clearConnectionSelection();
+    m_mapData->execute(std::make_unique<RemoveTwoWayExit>(id1, id2, dir1, dir2), tmpSel);
 
     m_mapWindow->getCanvas()->update();
 }
 
 void MainWindow::onMoveUpRoomSelection()
 {
-    if (m_roomSelection == nullptr) {
+    if (m_roomSelection == nullptr)
         return;
-    }
+
     Coordinate moverel(0, 0, 1);
     m_mapData->execute(std::make_unique<GroupMapAction>(std::make_unique<MoveRelative>(moverel),
                                                         m_roomSelection),
@@ -1853,9 +1855,9 @@ void MainWindow::onMoveUpRoomSelection()
 
 void MainWindow::onMoveDownRoomSelection()
 {
-    if (m_roomSelection == nullptr) {
+    if (m_roomSelection == nullptr)
         return;
-    }
+
     Coordinate moverel(0, 0, -1);
     m_mapData->execute(std::make_unique<GroupMapAction>(std::make_unique<MoveRelative>(moverel),
                                                         m_roomSelection),
@@ -1866,9 +1868,9 @@ void MainWindow::onMoveDownRoomSelection()
 
 void MainWindow::onMergeUpRoomSelection()
 {
-    if (m_roomSelection == nullptr) {
+    if (m_roomSelection == nullptr)
         return;
-    }
+
     Coordinate moverel(0, 0, 1);
     m_mapData->execute(std::make_unique<GroupMapAction>(std::make_unique<MergeRelative>(moverel),
                                                         m_roomSelection),
@@ -1879,9 +1881,9 @@ void MainWindow::onMergeUpRoomSelection()
 
 void MainWindow::onMergeDownRoomSelection()
 {
-    if (m_roomSelection == nullptr) {
+    if (m_roomSelection == nullptr)
         return;
-    }
+
     Coordinate moverel(0, 0, -1);
     m_mapData->execute(std::make_unique<GroupMapAction>(std::make_unique<MergeRelative>(moverel),
                                                         m_roomSelection),
@@ -1892,9 +1894,9 @@ void MainWindow::onMergeDownRoomSelection()
 
 void MainWindow::onConnectToNeighboursRoomSelection()
 {
-    if (m_roomSelection == nullptr) {
+    if (m_roomSelection == nullptr)
         return;
-    }
+
     m_mapData->execute(std::make_unique<GroupMapAction>(std::make_unique<ConnectToNeighbours>(),
                                                         m_roomSelection),
                        m_roomSelection);
