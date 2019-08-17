@@ -673,8 +673,11 @@ void AbstractParser::parseName(StringView view)
 
 void AbstractParser::parseSpecialCommand(StringView wholeCommand)
 {
-    if (wholeCommand.isEmpty())
-        throw std::runtime_error("input is empty");
+    // TODO: Just use '\n' and transform to "\r\n" elsewhere if necessary.
+    if (wholeCommand.isEmpty()) {
+        sendToUser("Error: special command input is empty.\r\n");
+        return;
+    }
 
     if (evalSpecialCommandMap(wholeCommand))
         return;
