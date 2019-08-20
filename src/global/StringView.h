@@ -3,6 +3,8 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include <string>
+#include <string_view>
 #include <vector>
 #include <QByteArray>
 #include <QChar>
@@ -11,32 +13,32 @@
 /*
  * NOTE: As a view, it requires the string object to remain valid and unchanged for the entire lifetime.
  *
- * NOTE: This is does not fill the same role as QStringView.
- * TODO: Convert this to 8bit and use std::string instead of QString,
- * and allow views of string constants and character arrays.
+ * NOTE: This is does not fill the same role as QStringView or std::string_view.
  */
 struct StringView final
 {
 public:
-    using const_iterator = QString::const_iterator;
+    using const_iterator = std::string_view::const_iterator;
 
 private:
-    const_iterator begin_ = nullptr;
-    const_iterator end_ = nullptr;
+    std::string_view m_sv;
 
 public:
     StringView() noexcept = default;
-    explicit StringView(const_iterator beg, const_iterator end) noexcept;
-    explicit StringView(const QString &s) noexcept(false);
+    explicit StringView(const std::string_view &sv) noexcept;
+    explicit StringView(const std::string &s) noexcept;
+    explicit StringView(std::string &&) = delete;
+    explicit StringView(const QString &) = delete;
 
 public:
-    inline const_iterator begin() const noexcept { return begin_; }
-    inline const_iterator end() const noexcept { return end_; }
-    inline auto size() const noexcept { return static_cast<int>(end_ - begin_); }
-    inline bool isEmpty() const noexcept { return begin_ == end_; }
-    inline bool empty() const noexcept { return isEmpty(); }
+    inline const_iterator begin() const noexcept { return m_sv.begin(); }
+    inline const_iterator end() const noexcept { return m_sv.end(); }
+    inline auto size() const noexcept { return static_cast<int>(m_sv.size()); }
+    inline bool isEmpty() const noexcept { return empty(); }
+    inline bool empty() const noexcept { return m_sv.empty(); }
 
 public:
+    std::string toStdString() const noexcept(false);
     QString toQString() const noexcept(false);
     QByteArray toQByteArray() const noexcept(false);
 
@@ -47,13 +49,15 @@ public:
 
 private:
     void mustNotBeEmpty() const noexcept(false);
+    void eatFirst();
+    void eatLast();
 
 public:
-    QChar firstChar() const noexcept(false);
-    QChar lastChar() const noexcept(false);
+    char firstChar() const noexcept(false);
+    char lastChar() const noexcept(false);
 
 public:
-    QChar takeFirstLetter() noexcept(false);
+    char takeFirstLetter() noexcept(false);
 
 public:
     StringView takeFirstWord() noexcept(false);
@@ -62,6 +66,7 @@ public:
     int countNonSpaceChars() const noexcept;
     int countWords() const noexcept(false);
     std::vector<StringView> getWords() const noexcept(false);
+    std::vector<std::string> getWordsAsStdStrings() const noexcept(false);
     std::vector<QString> getWordsAsQStrings() const noexcept(false);
 
 public:

@@ -140,7 +140,7 @@ protected:
     // command handling
     void performDoorCommand(DirectionEnum direction, DoorActionEnum action);
     void genericDoorCommand(QString command, DirectionEnum direction);
-    void nameDoorCommand(const QString &doorname, DirectionEnum direction);
+    void nameDoorCommand(const StringView &doorname, DirectionEnum direction);
     void toggleDoorFlagCommand(DoorFlagEnum flag, DirectionEnum direction);
     void toggleExitFlagCommand(ExitFlagEnum flag, DirectionEnum direction);
 
@@ -166,6 +166,7 @@ public:
     void parseExits();
     void parsePrompt(const QString &prompt);
     virtual bool parseUserCommands(const QString &command);
+    static std::string normalizeStringCopy(std::string str);
     static QString normalizeStringCopy(QString str);
 
     void searchCommand(const RoomFilter &f);
@@ -254,6 +255,10 @@ public:
     inline void sendToUser(const char *s, bool goAhead = false)
     {
         sendToUser(QByteArray{s}, goAhead);
+    }
+    inline void sendToUser(const std::string &s, bool goAhead = false)
+    {
+        sendToUser(QString::fromStdString(s), goAhead);
     }
     inline void sendToUser(const QString &s, bool goAhead = false)
     {

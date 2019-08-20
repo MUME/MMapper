@@ -24,7 +24,7 @@ bool isAbbrev(StringView input, const char *const command, const int minAbbrev)
 
     int matched = 0;
     for (auto cmdIt = command; !input.isEmpty() && *cmdIt != '\0'; ++matched)
-        if (std::tolower(input.takeFirstLetter().toLatin1()) != std::tolower(*cmdIt++))
+        if (std::tolower(input.takeFirstLetter()) != std::tolower(*cmdIt++))
             return false;
 
     if (!input.isEmpty())

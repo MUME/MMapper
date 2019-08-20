@@ -33,6 +33,7 @@
 #include "../global/DirectionType.h"
 #include "../global/RAII.h"
 #include "../global/StringView.h"
+#include "../global/TextUtils.h"
 #include "../global/random.h"
 #include "../global/utils.h"
 #include "../mapdata/DoorFlags.h"
@@ -487,6 +488,12 @@ QString AbstractParser::normalizeStringCopy(QString string)
     ParserUtils::removeAnsiMarksInPlace(string);
     ParserUtils::latinToAsciiInPlace(string);
     return string;
+}
+
+std::string AbstractParser::normalizeStringCopy(std::string string)
+{
+    // TODO: make a std::string version of this.
+    return normalizeStringCopy(QString::fromStdString(string)).toStdString();
 }
 
 const Coordinate AbstractParser::getNextPosition()
@@ -1691,13 +1698,12 @@ void AbstractParser::genericDoorCommand(QString command, const DirectionEnum dir
     }
 }
 
-void AbstractParser::nameDoorCommand(const QString &doorname, DirectionEnum direction)
+void AbstractParser::nameDoorCommand(const StringView &doorname, const DirectionEnum direction)
 {
-    Coordinate c = getTailPosition();
+    const Coordinate c = getTailPosition();
 
-    // if (doorname.isEmpty()) toggleExitFlagCommand(ExitFlagEnum::DOOR, direction);
-    m_mapData->setDoorName(c, doorname, static_cast<ExitDirEnum>(direction));
-    sendToUser("--->Doorname set to: " + doorname.toLatin1() + "\r\n");
+    m_mapData->setDoorName(c, DoorName{doorname.toQString()}, static_cast<ExitDirEnum>(direction));
+    sendToUser("--->Doorname set to: " + doorname.toQByteArray() + "\r\n");
     emit showPath(queue, true);
 }
 

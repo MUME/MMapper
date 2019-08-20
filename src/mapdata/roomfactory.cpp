@@ -68,11 +68,14 @@ static int wordDifference(StringView a, StringView b)
     return diff + a.size() + b.size();
 }
 
-ComparisonResultEnum RoomFactory::compareStrings(const QString &room,
-                                                 const QString &event,
+ComparisonResultEnum RoomFactory::compareStrings(const QString &qroom,
+                                                 const QString &qevent,
                                                  int prevTolerance,
                                                  const bool updated)
 {
+    const std::string room = qroom.toLatin1().toStdString();
+    const std::string event = qevent.toLatin1().toStdString();
+
     assert(prevTolerance >= 0);
     prevTolerance = std::max(0, prevTolerance);
     prevTolerance *= room.size();

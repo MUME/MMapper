@@ -329,7 +329,7 @@ Abbrev getParserCommandName(const ExitFlagEnum x)
 #undef CASE3
 }
 
-static bool isCommand(const QString &str, Abbrev abbrev)
+static bool isCommand(const std::string &str, Abbrev abbrev)
 {
     if (!abbrev)
         return false;
@@ -342,7 +342,7 @@ static bool isCommand(const QString &str, Abbrev abbrev)
     return abbrev.matches(word);
 }
 
-static bool isCommand(const QString &str, const CommandEnum cmd)
+static bool isCommand(const std::string &str, const CommandEnum cmd)
 {
     switch (cmd) {
     case CommandEnum::NORTH:
@@ -375,7 +375,8 @@ bool AbstractParser::parseUserCommands(const QString &input)
         return false;
 
     if (input.startsWith(prefixChar)) {
-        auto view = StringView{input}.trim();
+        std::string s = input.toLatin1().toStdString();
+        auto view = StringView{s}.trim();
         if (view.isEmpty() || view.takeFirstLetter() != prefixChar)
             sendToUser("Internal error. Sorry.\r\n");
         else
@@ -387,8 +388,9 @@ bool AbstractParser::parseUserCommands(const QString &input)
     return parseSimpleCommand(input);
 }
 
-bool AbstractParser::parseSimpleCommand(const QString &str)
+bool AbstractParser::parseSimpleCommand(const QString &qstr)
 {
+    const std::string str = qstr.toLatin1().toStdString();
     const auto isOnline = ::isOnline();
 
     for (const CommandEnum cmd : ALL_COMMANDS) {
@@ -612,14 +614,14 @@ void AbstractParser::parseSetCommand(StringView view)
         if (next.size() == 3) {
             auto quote = next.takeFirstLetter();
             const bool validQuote = quote == '\'' || quote == '"';
-            const auto prefix = next.takeFirstLetter().toLatin1();
+            const auto prefix = next.takeFirstLetter();
 
             if (validQuote && isValidPrefix(prefix) && quote == next.takeFirstLetter()
                 && quote != prefix && setCommandPrefix(prefix)) {
                 return;
             }
         } else if (next.size() == 1) {
-            const auto prefix = next.takeFirstLetter().toLatin1();
+            const auto prefix = next.takeFirstLetter();
             if (setCommandPrefix(prefix)) {
                 return;
             }
@@ -663,7 +665,7 @@ void AbstractParser::parseName(StringView view)
         auto dir = tryGetDir(view);
         if (!view.isEmpty()) {
             auto name = view.takeFirstWord();
-            nameDoorCommand(name.toQString(), dir);
+            nameDoorCommand(name, dir);
             return;
         }
     }
@@ -747,7 +749,7 @@ void AbstractParser::parseHelp(StringView words)
     }
 
     auto &map = m_specialCommandMap;
-    auto name = next.toQString().toStdString();
+    auto name = next.toStdString();
     auto it = map.find(name);
     if (it != map.end()) {
         it->second.help(name);
@@ -1101,14 +1103,14 @@ bool AbstractParser::evalSpecialCommandMap(StringView args)
     auto first = args.takeFirstWord();
     auto &map = m_specialCommandMap;
 
-    const std::string key = first.toQString().toStdString();
+    const std::string key = first.toStdString();
     auto it = map.find(key);
     if (it == map.end())
         return false;
 
     // REVISIT: add # of calls to the record?
     ParserRecord &rec = it->second;
-    const auto qs = QString::fromStdString(rec.fullCommand);
-    const auto matched = std::vector<StringView>{StringView{qs}};
+    const auto &s = rec.fullCommand;
+    const auto matched = std::vector<StringView>{StringView{s}};
     return rec.callback(matched, args);
 }

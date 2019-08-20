@@ -5,75 +5,99 @@
 #include "StringView.h"
 
 #include <cassert>
+#include <cctype>
 #include <iostream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 #include <QString>
 
-StringView::StringView(StringView::const_iterator const beg,
-                       StringView::const_iterator const end) noexcept
-    : begin_{beg}
-    , end_{end}
+#include "TextUtils.h"
+
+static bool is_space(char c)
+{
+    return std::isspace(static_cast<uint8_t>(c) & 0xff) || c == C_NBSP;
+}
+
+StringView::StringView(const std::string_view &sv) noexcept
+    : m_sv{sv}
 {}
 
-StringView::StringView(const QString &s) noexcept(false)
-    : StringView{s.constBegin(), s.constEnd()}
+StringView::StringView(const std::string &s) noexcept
+    : m_sv{s}
 {}
+
+std::string StringView::toStdString() const noexcept(false)
+{
+    return std::string(m_sv);
+}
 
 QString StringView::toQString() const noexcept(false)
 {
-    return QString{begin_, size()};
+    return QString::fromStdString(toStdString());
 }
 
 QByteArray StringView::toQByteArray() const noexcept(false)
 {
-    return toQString().toLatin1();
+    return QByteArray(m_sv.data(), static_cast<int>(m_sv.size()));
+}
+
+void StringView::eatFirst()
+{
+    assert(!isEmpty());
+    m_sv.remove_prefix(1);
+}
+
+void StringView::eatLast()
+{
+    assert(!isEmpty());
+    m_sv.remove_suffix(1);
 }
 
 StringView &StringView::trimLeft() noexcept
 {
-    for (; begin_ < end_; ++begin_)
-        if (!firstChar().isSpace())
+    for (; !isEmpty(); eatFirst())
+        if (!is_space(firstChar()))
             break;
     return *this;
 }
 
 StringView &StringView::trimRight() noexcept
 {
-    for (; begin_ < end_; --end_)
-        if (!lastChar().isSpace())
+    for (; !isEmpty(); eatLast())
+        if (!is_space(lastChar()))
             break;
     return *this;
 }
 
 void StringView::mustNotBeEmpty() const noexcept(false)
 {
-    if (isEmpty() || !(begin_ < end_))
+    if (isEmpty())
         throw std::runtime_error("StringView is empty");
 }
 
-QChar StringView::firstChar() const noexcept(false)
+char StringView::firstChar() const noexcept(false)
 {
     mustNotBeEmpty();
-    return *begin_;
+    return *m_sv.cbegin();
 }
 
-QChar StringView::lastChar() const noexcept(false)
+char StringView::lastChar() const noexcept(false)
 {
     mustNotBeEmpty();
-    return *(end_ - 1);
+    return *m_sv.crbegin();
 }
 
-QChar StringView::takeFirstLetter() noexcept(false)
+// is NOT allowed to be a space
+char StringView::takeFirstLetter() noexcept(false)
 {
     mustNotBeEmpty();
 
     const auto c = firstChar();
-    if (c.isSpace())
+    if (is_space(c))
         throw std::runtime_error("space");
 
-    ++begin_;
+    m_sv.remove_prefix(1);
     return c;
 }
 
@@ -82,23 +106,23 @@ StringView StringView::takeFirstWord() noexcept(false)
     trimLeft();
     mustNotBeEmpty();
 
-    assert(!lastChar().isSpace());
+    assert(!is_space(lastChar()));
 
-    const auto it = begin_;
-    for (; begin_ != end_; ++begin_)
-        if (firstChar().isSpace())
+    size_t len = 0;
+    const auto before = m_sv;
+    for (; !isEmpty(); eatFirst(), ++len)
+        if (is_space(firstChar()))
             break;
 
-    const auto result = StringView{it, begin_};
     trimLeft();
-    return result;
+    return StringView{before.substr(0, len)};
 }
 
 int StringView::countNonSpaceChars() const noexcept
 {
     int result = 0;
-    for (auto it = begin_; it != end_; ++it)
-        if (!it->isSpace())
+    for (char c : m_sv)
+        if (!is_space(c))
             ++result;
     return result;
 }
@@ -127,6 +151,23 @@ std::vector<StringView> StringView::getWords() const noexcept(false)
 
     while (!tmp.isEmpty())
         result.emplace_back(tmp.takeFirstWord());
+
+    assert(static_cast<int>(result.size()) == numWords);
+    return result;
+}
+
+std::vector<std::string> StringView::getWordsAsStdStrings() const noexcept(false)
+{
+    const auto numWords = countWords();
+    assert(numWords >= 0);
+    std::vector<std::string> result{};
+    result.reserve(static_cast<size_t>(numWords));
+
+    auto tmp = *this;
+    tmp.trim();
+
+    while (!tmp.isEmpty())
+        result.emplace_back(tmp.takeFirstWord().m_sv);
 
     assert(static_cast<int>(result.size()) == numWords);
     return result;
@@ -196,7 +237,7 @@ static void testEmpty()
 
 static void testLazyDog(const bool verbose = false)
 {
-    const QString s = "The quick brown fox\njumps \t\tover\t\t the lazy dog.\n";
+    const std::string s = "The quick brown fox\njumps \t\tover\t\t the lazy dog.\n";
     const auto view = StringView{s}.trim();
     const auto words = view.countWords();
     if (verbose)
@@ -211,13 +252,13 @@ static void testLazyDog(const bool verbose = false)
     if (verbose)
         std::cout << "---\n";
     int seenWords = 0;
-    for (const auto &w : view.getWordsAsQStrings()) {
+    for (const auto &w : view.getWordsAsStdStrings()) {
         if (seenWords++ > 0) {
             if (verbose)
                 std::cout << " ";
         }
         if (verbose)
-            std::cout << "[" << w.toStdString() << "]";
+            std::cout << "[" << w << "]";
     }
     TEST_ASSERT(seenWords == words);
     if (verbose) {
