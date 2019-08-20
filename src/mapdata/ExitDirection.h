@@ -34,6 +34,13 @@ bool isNESWUD(ExitDirEnum dir);
 ExitDirEnum opposite(ExitDirEnum in);
 const char *lowercaseDirection(ExitDirEnum dir);
 
+struct ExitDirections final
+    : enums::Flags<ExitDirections, ExitDirEnum, uint8_t, NUM_EXITS_INCLUDING_NONE>
+{
+public:
+    using Flags::Flags;
+};
+
 namespace Mmapper2Exit {
 
 ExitDirEnum dirForChar(char dir);

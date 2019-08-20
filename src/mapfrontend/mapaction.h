@@ -20,7 +20,6 @@
 #include "../mapdata/mmapper2exit.h"
 #include "../mapdata/mmapper2room.h"
 
-class AbstractRoomFactory;
 class Map;
 class MapFrontend;
 class ParseTree;
@@ -48,8 +47,6 @@ protected:
     const SharedRoomCollection &roomHomes(RoomId) const;
 
     std::stack<RoomId> &unusedIds();
-
-    AbstractRoomFactory *factory();
 };
 
 class AbstractAction : public virtual FrontendAccessor

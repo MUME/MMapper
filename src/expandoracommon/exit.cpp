@@ -11,49 +11,47 @@
 
 const DoorName &Exit::getDoorName() const
 {
-    assert(hasFields);
     return doorName;
 }
+
 bool Exit::hasDoorName() const
 {
-    assert(hasFields);
     return !doorName.isEmpty();
 }
+
 ExitFlags Exit::getExitFlags() const
 {
-    assert(hasFields);
     return exitFlags;
 }
+
 DoorFlags Exit::getDoorFlags() const
 {
-    assert(hasFields);
     return doorFlags;
 }
 
 void Exit::setDoorName(const DoorName name)
 {
-    assert(hasFields);
     doorName = name;
 }
+
 void Exit::setExitFlags(const ExitFlags flags)
 {
-    assert(hasFields);
     exitFlags = flags;
 }
+
 void Exit::setDoorFlags(const DoorFlags flags)
 {
-    assert(hasFields);
     doorFlags = flags;
 }
 
 void Exit::clearDoorName()
 {
     setDoorName(DoorName{});
+    assert(!hasDoorName());
 }
 
 void Exit::updateExit(ExitFlags flags)
 {
-    assert(hasFields);
     if (flags ^ exitFlags) {
         exitFlags |= flags;
     }
@@ -74,4 +72,32 @@ X_FOREACH_DOOR_FLAG(X_DEFINE_ACCESSORS)
 bool Exit::doorNeedsKey() const
 {
     return isDoor() && getDoorFlags().needsKey();
+}
+
+bool Exit::operator==(const Exit &rhs) const
+{
+    return doorName == rhs.doorName && exitFlags == rhs.exitFlags && doorFlags == rhs.doorFlags
+           && incoming == rhs.incoming && outgoing == rhs.outgoing;
+}
+
+bool Exit::operator!=(const Exit &rhs) const
+{
+    return !(rhs == *this);
+}
+
+template<typename T>
+inline void maybeUpdate(T &x, const T &value)
+{
+    if (x != value)
+        x = value;
+}
+
+void Exit::assignFrom(const Exit &rhs)
+{
+    maybeUpdate(doorName, rhs.doorName);
+    doorFlags = rhs.doorFlags; // no allocation required
+    exitFlags = rhs.exitFlags; // no allocation required
+    maybeUpdate(incoming, rhs.incoming);
+    maybeUpdate(outgoing, rhs.outgoing);
+    assert(*this == rhs);
 }

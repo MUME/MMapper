@@ -44,7 +44,6 @@
 #include "../mapdata/enums.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/mmapper2room.h"
-#include "../mapdata/roomfactory.h"
 #include "../mapdata/roomfilter.h"
 #include "../mapdata/roomselection.h"
 #include "../mapdata/shortestpath.h"
@@ -713,7 +712,7 @@ static QString compressDirections(QString original)
         ans.append(curval);
 
         const auto dir = Mmapper2Exit::dirForChar(curval.toLatin1());
-        delta += RoomFactory::exitDir(dir) * curnum;
+        delta += Room::exitDir(dir) * curnum;
     };
 
     for (auto c : original) {

@@ -4,19 +4,43 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
+#include <cassert>
+#include <memory>
 #include <optional>
-#include <vector>
 #include <QVariant>
 #include <QVector>
 
 #include "../global/DirectionType.h"
 #include "../global/EnumIndexedArray.h"
+#include "../global/Flags.h"
 #include "../global/RuleOf5.h"
 #include "../global/roomid.h"
 #include "../mapdata/mmapper2exit.h"
 #include "../mapdata/mmapper2room.h"
 #include "coordinate.h"
 #include "exit.h"
+
+class ExitFieldVariant;
+class ParseEvent;
+
+enum class FlagModifyModeEnum { SET, UNSET, TOGGLE };
+enum class ComparisonResultEnum { DIFFERENT = 0, EQUAL, TOLERANCE };
+
+template<typename Flags, typename Flag>
+static inline Flags modifyFlags(const Flags flags, const Flag x, const FlagModifyModeEnum mode)
+{
+    switch (mode) {
+    case FlagModifyModeEnum::SET:
+        return flags | x;
+    case FlagModifyModeEnum::UNSET:
+        return flags & (~x);
+    case FlagModifyModeEnum::TOGGLE:
+        return flags ^ x;
+    }
+    // REVISIT: convert to std::abort() ?
+    assert(false);
+    return flags;
+}
 
 // REVISIT: can't trivially make this
 // `using ExitsList = EnumIndexedArray<Exit, ExitDirEnum, NUM_EXITS>`
@@ -25,25 +49,22 @@
 class ExitsList final
 {
 private:
-    EnumIndexedArray<Exit, ExitDirEnum, NUM_EXITS> exits;
+    EnumIndexedArray<Exit, ExitDirEnum, NUM_EXITS> m_exits;
 
 public:
-    explicit ExitsList(bool isDummy);
+    Exit &operator[](const ExitDirEnum idx) { return m_exits[idx]; }
+    const Exit &operator[](const ExitDirEnum idx) const { return m_exits[idx]; }
 
 public:
-    Exit &operator[](const ExitDirEnum idx) { return exits[idx]; }
-    const Exit &operator[](const ExitDirEnum idx) const { return exits[idx]; }
+    auto size() const { return m_exits.size(); }
 
 public:
-    auto size() const { return exits.size(); }
-
-public:
-    auto begin() { return exits.begin(); }
-    auto end() { return exits.end(); }
-    auto begin() const { return exits.begin(); }
-    auto end() const { return exits.end(); }
-    auto cbegin() const { return exits.cbegin(); }
-    auto cend() const { return exits.cend(); }
+    auto begin() { return m_exits.begin(); }
+    auto end() { return m_exits.end(); }
+    auto begin() const { return m_exits.begin(); }
+    auto end() const { return m_exits.end(); }
+    auto cbegin() const { return m_exits.cbegin(); }
+    auto cend() const { return m_exits.cend(); }
 };
 
 struct ExitDirConstRef final
@@ -55,116 +76,200 @@ struct ExitDirConstRef final
 
 using OptionalExitDirConstRef = std::optional<ExitDirConstRef>;
 
-class Room final
+class Room;
+
+enum class RoomUpdateEnum {
+    Id,
+    Coord,
+    NodeLookupKey,
+
+    Mesh,
+    ConnectionsIn,
+    ConnectionsOut,
+
+    Name,
+    StaticDesc,
+    DynamicDesc,
+    Note,
+    Terrain,
+
+    DoorFlags,
+    DoorName,
+    ExitFlags,
+    LoadFlags,
+    MobFlags,
+
+    Borked,
+};
+
+static constexpr const size_t NUM_ROOM_UPDATE_TYPES = 17;
+static_assert(NUM_ROOM_UPDATE_TYPES == static_cast<int>(RoomUpdateEnum::Borked) + 1);
+DEFINE_ENUM_COUNT(RoomUpdateEnum, NUM_ROOM_UPDATE_TYPES)
+
+struct RoomUpdateFlags final : enums::Flags<RoomUpdateFlags, RoomUpdateEnum, uint32_t>
+{
+    using Flags::Flags;
+};
+
+class RoomModificationTracker
 {
 private:
+    bool m_isModified = false;
+    bool m_needsMapUpdate = false;
+
+public:
+    virtual ~RoomModificationTracker();
+
+public:
+    void notifyModified(Room &room, RoomUpdateFlags updateFlags);
+    virtual void virt_onNotifyModified(Room & /*room*/, RoomUpdateFlags /*updateFlags*/) {}
+
+public:
+    bool isModified() const { return m_isModified; }
+    void clearModified() { m_isModified = false; }
+
+public:
+    bool getNeedsMapUpdate() const { return m_needsMapUpdate; }
+    void clearNeedsMapUpdate() { m_needsMapUpdate = false; }
+};
+
+// NOTE: Names are capitalized for use with getRoomName() and setRoomName(),
+// which means they'll be capitalized as RoomFields::RoomName.
+#define XFOREACH_ROOM_PROPERTY(X) \
+    X(RoomName, Name, ) \
+    X(RoomStaticDesc, StaticDescription, ) \
+    X(RoomDynamicDesc, DynamicDescription, ) \
+    X(RoomNote, Note, ) \
+    X(RoomMobFlags, MobFlags, ) \
+    X(RoomLoadFlags, LoadFlags, ) \
+    X(RoomTerrainEnum, TerrainType, = RoomTerrainEnum::UNDEFINED) \
+    X(RoomPortableEnum, PortableType, = RoomPortableEnum::UNDEFINED) \
+    X(RoomLightEnum, LightType, = RoomLightEnum::UNDEFINED) \
+    X(RoomAlignEnum, AlignType, = RoomAlignEnum::UNDEFINED) \
+    X(RoomRidableEnum, RidableType, = RoomRidableEnum::UNDEFINED) \
+    X(RoomSundeathEnum, SundeathType, = RoomSundeathEnum::UNDEFINED)
+
+class Room;
+using SharedRoom = std::shared_ptr<Room>;
+using SharedConstRoom = std::shared_ptr<const Room>;
+enum class RoomStatusEnum : uint8_t { Zombie, Temporary, Permanent };
+
+class Room final : public std::enable_shared_from_this<Room>
+{
+private:
+    struct this_is_private final
+    {
+        explicit this_is_private(int) {}
+    };
+
     struct RoomFields final
     {
-        RoomName name;
-        RoomStaticDesc staticDescription;
-        RoomDynamicDesc dynamicDescription;
-        RoomNote note;
-        RoomMobFlags mobFlags;
-        RoomLoadFlags loadFlags;
-        RoomTerrainEnum terrainType = RoomTerrainEnum::UNDEFINED;
-        RoomPortableEnum portableType = RoomPortableEnum::UNDEFINED;
-        RoomLightEnum lightType = RoomLightEnum::UNDEFINED;
-        RoomAlignEnum alignType = RoomAlignEnum::UNDEFINED;
-        RoomRidableEnum ridableType = RoomRidableEnum::UNDEFINED;
-        RoomSundeathEnum sundeathType = RoomSundeathEnum::UNDEFINED;
+#define DECL_FIELD(_Type, _Prop, _OptInit) _Type _Prop _OptInit;
+        XFOREACH_ROOM_PROPERTY(DECL_FIELD)
+#undef DECL_FIELD
     };
 
 private:
-    RoomId id = INVALID_ROOMID;
-    Coordinate position;
-    bool temporary = true;
-    bool upToDate = false;
-    RoomFields fields;
-    ExitsList exits;
-    // always initialized, but making it const means we can't reassign a room.
-    bool isDummy_ = false;
+    RoomModificationTracker &m_tracker;
+    Coordinate m_position;
+    RoomFields m_fields;
+    ExitsList m_exits;
+    RoomId m_id = INVALID_ROOMID;
+    RoomStatusEnum m_status = RoomStatusEnum::Zombie;
+    bool m_borked = true;
+
+private:
+    // TODO: merge DirectionEnum and ExitDirEnum enums
+    Exit &exit(DirectionEnum dir) { return m_exits[static_cast<ExitDirEnum>(dir)]; }
+    Exit &exit(ExitDirEnum dir) { return m_exits[dir]; }
 
 public:
-    // TODO: merge DirectionEnum and ExitDirEnum enums
-    Exit &exit(DirectionEnum dir) { return exits[static_cast<ExitDirEnum>(dir)]; }
-    Exit &exit(ExitDirEnum dir) { return exits[dir]; }
-    const Exit &exit(DirectionEnum dir) const { return exits[static_cast<ExitDirEnum>(dir)]; }
-    const Exit &exit(ExitDirEnum dir) const { return exits[dir]; }
+    const Exit &exit(DirectionEnum dir) const { return m_exits[static_cast<ExitDirEnum>(dir)]; }
+    const Exit &exit(ExitDirEnum dir) const { return m_exits[dir]; }
+    const ExitsList &getExitsList() const { return m_exits; }
 
-    ExitsList &getExitsList() { return exits; }
-    const ExitsList &getExitsList() const { return exits; }
+public:
+    void setExitsList(const ExitsList &newExits);
 
-    std::vector<ExitDirEnum> getOutExits() const;
+public:
+    void addInExit(ExitDirEnum dir, RoomId id);
+    void addOutExit(ExitDirEnum dir, RoomId id);
+    void addInOutExit(ExitDirEnum dir, RoomId id)
+    {
+        addInExit(dir, id);
+        addOutExit(dir, id);
+    }
+
+public:
+    void removeInExit(ExitDirEnum dir, RoomId id);
+    void removeOutExit(ExitDirEnum dir, RoomId id);
+
+public:
+    void updateExitField(ExitDirEnum dir, const ExitFieldVariant &update);
+    void modifyExitFlags(ExitDirEnum dir, FlagModifyModeEnum mode, const ExitFieldVariant &var);
+
+public:
+    ExitDirections getOutExits() const;
     OptionalExitDirConstRef getRandomExit() const;
     ExitDirConstRef getExitMaybeRandom(ExitDirEnum dir) const;
 
-    void setId(const RoomId in) { id = in; }
-    void setPosition(const Coordinate &in_c) { position = in_c; }
-    RoomId getId() const { return id; }
-    const Coordinate &getPosition() const { return position; }
-    bool isTemporary() const
-    {
-        return temporary; // room is new if no exits are present
-    }
-    /* NOTE: This won't convert a "dummy" room to a valid room. */
-    void setPermanent() { temporary = false; }
-    bool isUpToDate() const { return upToDate; }
-    void setUpToDate() { upToDate = true; }
-    void setOutDated() { upToDate = false; }
+public:
+    void setId(RoomId id);
+    void setPosition(const Coordinate &c);
+    RoomId getId() const { return m_id; }
+    const Coordinate &getPosition() const { return m_position; }
+    // Temporary rooms are created by the path machine during experimentation.
+    // It's not clear why it can't track their "temporary" status itself.
+    bool isTemporary() const { return m_status == RoomStatusEnum::Temporary; }
+    void setPermanent();
+
+    void setAboutToDie();
+
+    // "isn't suspected of being borked?"
+    bool isUpToDate() const { return !m_borked; }
+    // "setNotProbablyBorked"
+    void setUpToDate();
+    // "setProbablyBorked"
+    void setOutDated();
+
+    void setModified(RoomUpdateFlags updateFlags);
 
 public:
-    const RoomName &getName() const;
-    const RoomStaticDesc &getStaticDescription() const;
-    const RoomDynamicDesc &getDynamicDescription() const;
-    const RoomNote &getNote() const;
-    RoomMobFlags getMobFlags() const;
-    RoomLoadFlags getLoadFlags() const;
-    RoomTerrainEnum getTerrainType() const;
-    RoomPortableEnum getPortableType() const;
-    RoomLightEnum getLightType() const;
-    RoomAlignEnum getAlignType() const;
-    RoomRidableEnum getRidableType() const;
-    RoomSundeathEnum getSundeathType() const;
-
-    void setName(RoomName value);
-    void setStaticDescription(RoomStaticDesc value);
-    void setDynamicDescription(RoomDynamicDesc value);
-    void setNote(RoomNote value);
-    void setMobFlags(RoomMobFlags value);
-    void setLoadFlags(RoomLoadFlags value);
-    void setTerrainType(RoomTerrainEnum value);
-    void setPortableType(RoomPortableEnum value);
-    void setLightType(RoomLightEnum value);
-    void setAlignType(RoomAlignEnum value);
-    void setRidableType(RoomRidableEnum value);
-    void setSundeathType(RoomSundeathEnum value);
+#define DECL_GETTERS_AND_SETTERS(_Type, _Prop, _OptInit) \
+    inline const _Type &get##_Prop() const { return m_fields._Prop; } \
+    void set##_Prop(_Type value);
+    XFOREACH_ROOM_PROPERTY(DECL_GETTERS_AND_SETTERS)
+#undef DECL_GETTERS_AND_SETTERS
 
 public:
     Room() = delete;
-    static constexpr const struct TagDummy
-    {
-    } tagDummy{};
-    static constexpr const struct TagValid
-    {
-    } tagValid{};
-    explicit Room(TagDummy)
-        : exits{true}
-        , isDummy_{true}
-    {
-        assert(isFake());
-    }
-    explicit Room(TagValid)
-        : exits{false}
-        , isDummy_{false}
-    {
-        assert(!isFake());
-    }
-
-    ~Room() = default;
+    explicit Room(this_is_private, RoomModificationTracker &tracker, RoomStatusEnum status);
+    ~Room();
 
     // REVISIT: copies should be more explicit (e.g. room.copy(const Room& other)).
     DEFAULT_CTORS_AND_ASSIGN_OPS(Room);
 
 public:
-    bool isFake() const { return isDummy_; }
+    static void update(Room &, const ParseEvent &event);
+    static void update(Room *target, const Room *source);
+
+public:
+public:
+    static std::shared_ptr<Room> createPermanentRoom(RoomModificationTracker &tracker);
+    static std::shared_ptr<Room> createTemporaryRoom(RoomModificationTracker &tracker,
+                                                     const ParseEvent &);
+
+public:
+    static ComparisonResultEnum compare(const Room *, const ParseEvent &event, int tolerance);
+    static ComparisonResultEnum compareWeakProps(const Room *, const ParseEvent &event);
+    static std::shared_ptr<ParseEvent> getEvent(const Room *);
+
+public:
+    static const Coordinate &exitDir(ExitDirEnum dir);
+
+private:
+    static ComparisonResultEnum compareStrings(const std::string &room,
+                                               const std::string &event,
+                                               int prevTolerance,
+                                               bool updated = true);
 };

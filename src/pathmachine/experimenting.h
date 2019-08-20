@@ -14,7 +14,6 @@
 #include "../mapdata/mmapper2exit.h"
 #include "path.h"
 
-class AbstractRoomFactory;
 class PathMachine;
 class Room;
 class RoomAdmin;
@@ -32,13 +31,9 @@ protected:
     Path *best = nullptr;
     Path *second = nullptr;
     double numPaths = 0.0;
-    AbstractRoomFactory *factory = nullptr;
 
 public:
-    explicit Experimenting(PathList *paths,
-                           ExitDirEnum dirCode,
-                           PathParameters &params,
-                           AbstractRoomFactory *factory);
+    explicit Experimenting(PathList *paths, ExitDirEnum dirCode, PathParameters &params);
     virtual ~Experimenting() override;
 
     PathList *evaluate();

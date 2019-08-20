@@ -7,7 +7,6 @@
 #include "../expandoracommon/parseevent.h"
 #include "experimenting.h"
 
-class AbstractRoomFactory;
 class ParseEvent;
 class Path;
 class Room;
@@ -18,8 +17,7 @@ struct PathParameters;
 class OneByOne final : public Experimenting
 {
 public:
-    explicit OneByOne(AbstractRoomFactory *factory,
-                      const SigParseEvent &sigParseEvent,
+    explicit OneByOne(const SigParseEvent &sigParseEvent,
                       PathParameters &in_params,
                       RoomSignalHandler *handler);
     void receiveRoom(RoomAdmin *admin, const Room *room) override;

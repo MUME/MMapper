@@ -7,6 +7,7 @@
 
 #include <map>
 #include <memory>
+#include <vector>
 #include <QLinkedList>
 #include <QList>
 #include <QString>
@@ -41,7 +42,7 @@ class RoomFilter;
 class RoomRecipient;
 class ShortestPathRecipient;
 
-using ConstRoomList = QList<const Room *>;
+using ConstRoomList = std::vector<std::shared_ptr<const Room>>;
 using MarkerList = std::list<std::shared_ptr<InfoMark>>;
 
 class MapData final : public MapFrontend
@@ -69,8 +70,6 @@ public:
         return (greatestUsedId == INVALID_ROOMID) ? 0u : (greatestUsedId.asUint32() + 1u);
     }
 
-    void addMarker(InfoMark *im);
-    void removeMarker(InfoMark *im);
     void addMarker(const std::shared_ptr<InfoMark> &im);
     void removeMarker(const std::shared_ptr<InfoMark> &im);
 
@@ -109,10 +108,24 @@ public:
 public:
     bool getExitFlag(const Coordinate &pos, ExitDirEnum dir, ExitFieldVariant var);
     void toggleExitFlag(const Coordinate &pos, ExitDirEnum dir, ExitFieldVariant var);
+    ExitDirections getExitDirections(const Coordinate &pos);
 
 public:
+    const Room *getRoom(const Coordinate &pos);
     bool getRoomFlag(const Coordinate &pos, RoomFieldVariant var);
     void toggleRoomFlag(const Coordinate &pos, RoomFieldVariant var);
+
+private:
+    // REVISIT: This might be the equivalent of blocking Qt signals.
+    bool m_ignoreModifications = false;
+    void virt_onNotifyModified(Room &room, const RoomUpdateFlags updateFlags) override
+    {
+        RoomModificationTracker::virt_onNotifyModified(room, updateFlags);
+        if (!m_ignoreModifications) {
+            // TODO: Do something here. I guess you might have to emit a Qt signal (ugg).
+            setDataChanged();
+        }
+    }
 
 signals:
     void log(const QString &, const QString &);
@@ -121,7 +134,11 @@ signals:
 
 public slots:
     void unsetDataChanged() { m_dataChanged = false; }
-    void setDataChanged() { m_dataChanged = true; }
+    void setDataChanged()
+    {
+        m_dataChanged = true;
+        emit onDataChanged();
+    }
     void setPosition(const Coordinate &pos) { m_position = pos; }
     void slot_scheduleAction(std::shared_ptr<MapAction> action)
     {

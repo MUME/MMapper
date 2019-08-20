@@ -20,7 +20,6 @@
 #include "ParseTree.h"
 #include "map.h"
 
-class AbstractRoomFactory;
 class MapAction;
 class ParseEvent;
 class QObject;
@@ -49,18 +48,17 @@ protected:
     QMutex mapLock;
     Coordinate m_min;
     Coordinate m_max;
-    AbstractRoomFactory *factory = nullptr;
 
     void executeActions(RoomId roomId);
     void executeAction(MapAction *action);
     bool isExecutable(MapAction *action);
     void removeAction(const std::shared_ptr<MapAction> &action);
 
-    virtual RoomId assignId(Room *room, const SharedRoomCollection &roomHome);
-    virtual void checkSize(const Coordinate &);
+    RoomId assignId(const SharedRoom &room, const SharedRoomCollection &roomHome);
+    void checkSize(const Coordinate &);
 
 public:
-    explicit MapFrontend(AbstractRoomFactory *factory, QObject *parent = nullptr);
+    explicit MapFrontend(QObject *parent = nullptr);
     virtual ~MapFrontend() override;
     virtual void clear();
     void block();
@@ -75,16 +73,12 @@ public:
     // Like that the room can't be deleted via releaseRoom anymore.
     void keepRoom(RoomRecipient &, RoomId) final;
 
-    virtual void lockRoom(RoomRecipient *, RoomId);
-
-    virtual RoomId createEmptyRoom(const Coordinate &);
-
-    virtual void insertPredefinedRoom(Room &);
-
-    virtual RoomId getMaxId() { return greatestUsedId; }
-
-    virtual const Coordinate &getMin() const { return m_min; }
-    virtual const Coordinate &getMax() const { return m_max; }
+    void lockRoom(RoomRecipient *, RoomId);
+    RoomId createEmptyRoom(const Coordinate &);
+    void insertPredefinedRoom(const SharedRoom &);
+    RoomId getMaxId() { return greatestUsedId; }
+    const Coordinate &getMin() const { return m_min; }
+    const Coordinate &getMax() const { return m_max; }
 
 public:
     void scheduleAction(const std::shared_ptr<MapAction> &action) final;

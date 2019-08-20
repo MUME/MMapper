@@ -6,6 +6,7 @@
 #include "roomcollection.h"
 
 #include <cassert>
+#include <memory>
 
 #include "../global/RAII.h"
 #include "AbstractRoomVisitor.h"
@@ -18,18 +19,26 @@
 
 #define DEBUG_LOCK() DEBUG_ONLY(assert(!m_inUse); const RAIIBool useLock{m_inUse})
 
-IRoomCollection::~IRoomCollection() = default;
-
 void RoomCollection::addRoom(Room *room)
 {
+    if (room == nullptr) {
+        assert(false);
+        return;
+    }
+
     DEBUG_LOCK();
-    m_rooms.insert(room);
+    m_rooms.insert(room->shared_from_this());
 }
 
 void RoomCollection::removeRoom(Room *room)
 {
+    if (room == nullptr) {
+        assert(false);
+        return;
+    }
+
     DEBUG_LOCK();
-    m_rooms.erase(room);
+    m_rooms.erase(room->shared_from_this());
 }
 
 void RoomCollection::clear()
@@ -41,7 +50,7 @@ void RoomCollection::clear()
 void RoomCollection::forEach(AbstractRoomVisitor &stream) const
 {
     DEBUG_LOCK();
-    for (Room *const room : m_rooms) {
-        stream.visit(room);
+    for (const std::shared_ptr<Room> &room : m_rooms) {
+        stream.visit(room.get());
     }
 }

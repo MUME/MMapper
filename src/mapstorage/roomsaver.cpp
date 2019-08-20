@@ -20,14 +20,13 @@ void RoomSaver::receiveRoom(RoomAdmin *admin, const Room *room)
     if (room->isTemporary()) {
         m_admin.releaseRoom(*this, room->getId());
     } else {
-        m_roomList.append(room);
-        m_roomsCount++;
+        m_roomList.emplace_back(room->shared_from_this());
     }
 }
 
 quint32 RoomSaver::getRoomsCount()
 {
-    return m_roomsCount;
+    return static_cast<quint32>(m_roomList.size());
 }
 
 RoomSaver::~RoomSaver()

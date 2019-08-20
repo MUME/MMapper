@@ -20,6 +20,7 @@
 #include "../display/mapcanvas.h"
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
+#include "../global/SignalBlocker.h"
 #include "../global/roomid.h"
 #include "../global/utils.h"
 #include "../mapdata/ExitFieldVariant.h"
@@ -224,7 +225,25 @@ bool RoomListWidgetItem::operator<(const QListWidgetItem &other) const
 RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
     : QDialog(parent)
 {
+#define NUM_ELEMENTS(arr) (decltype(arr)::SIZE)
+    static_assert(NUM_ELEMENTS(loadListItems) <= 32u);
+    static_assert(NUM_ELEMENTS(mobListItems) <= 32u);
+    static_assert(NUM_ELEMENTS(exitListItems) <= 16u);
+    static_assert(NUM_ELEMENTS(doorListItems) <= 16u);
+    static_assert(NUM_ELEMENTS(roomTerrainButtons) == NUM_ROOM_TERRAIN_TYPES);
+    static_assert(NUM_ROOM_TERRAIN_TYPES == 16);
+#undef NUM_ELEMENTS
+
     setupUi(this);
+
+    // NOTE: Another option would be to just initialize them all directly here,
+    // and then get rid of have getTerrainToolButton() index into the array,
+    // or get rid of the function entirely.
+    for (size_t i = 0; i < NUM_ROOM_TERRAIN_TYPES; ++i) {
+        const auto rtt = static_cast<RoomTerrainEnum>(i);
+        roomTerrainButtons[rtt] = getTerrainToolButton(rtt);
+    }
+
     roomDescriptionTextEdit->setLineWrapMode(QTextEdit::NoWrap);
 
     for (const auto flag : ALL_MOB_FLAGS)
@@ -295,364 +314,159 @@ void RoomEditAttrDlg::writeSettings()
 
 void RoomEditAttrDlg::connectAll()
 {
-    connect(neutralRadioButton,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::neutralRadioButtonToggled);
-    connect(goodRadioButton,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::goodRadioButtonToggled);
-    connect(evilRadioButton,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::evilRadioButtonToggled);
-    connect(alignUndefRadioButton,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::alignUndefRadioButtonToggled);
+    // TODO: If we're going to insist on using the connect/disconnect antipattern,
+    // then let's at least turn these into X-macros.
+    m_connections += connect(neutralRadioButton,
+                             &QAbstractButton::toggled,
+                             this,
+                             &RoomEditAttrDlg::neutralRadioButtonToggled);
+    m_connections += connect(goodRadioButton,
+                             &QAbstractButton::toggled,
+                             this,
+                             &RoomEditAttrDlg::goodRadioButtonToggled);
+    m_connections += connect(evilRadioButton,
+                             &QAbstractButton::toggled,
+                             this,
+                             &RoomEditAttrDlg::evilRadioButtonToggled);
+    m_connections += connect(alignUndefRadioButton,
+                             &QAbstractButton::toggled,
+                             this,
+                             &RoomEditAttrDlg::alignUndefRadioButtonToggled);
 
-    connect(noPortRadioButton,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::noPortRadioButtonToggled);
-    connect(portableRadioButton,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::portableRadioButtonToggled);
-    connect(portUndefRadioButton,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::portUndefRadioButtonToggled);
+    m_connections += connect(noPortRadioButton,
+                             &QAbstractButton::toggled,
+                             this,
+                             &RoomEditAttrDlg::noPortRadioButtonToggled);
+    m_connections += connect(portableRadioButton,
+                             &QAbstractButton::toggled,
+                             this,
+                             &RoomEditAttrDlg::portableRadioButtonToggled);
+    m_connections += connect(portUndefRadioButton,
+                             &QAbstractButton::toggled,
+                             this,
+                             &RoomEditAttrDlg::portUndefRadioButtonToggled);
 
-    connect(noRideRadioButton,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::noRideRadioButtonToggled);
-    connect(ridableRadioButton,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::ridableRadioButtonToggled);
-    connect(rideUndefRadioButton,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::rideUndefRadioButtonToggled);
+    m_connections += connect(noRideRadioButton,
+                             &QAbstractButton::toggled,
+                             this,
+                             &RoomEditAttrDlg::noRideRadioButtonToggled);
+    m_connections += connect(ridableRadioButton,
+                             &QAbstractButton::toggled,
+                             this,
+                             &RoomEditAttrDlg::ridableRadioButtonToggled);
+    m_connections += connect(rideUndefRadioButton,
+                             &QAbstractButton::toggled,
+                             this,
+                             &RoomEditAttrDlg::rideUndefRadioButtonToggled);
 
-    connect(litRadioButton,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::litRadioButtonToggled);
-    connect(darkRadioButton,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::darkRadioButtonToggled);
-    connect(lightUndefRadioButton,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::lightUndefRadioButtonToggled);
+    m_connections += connect(litRadioButton,
+                             &QAbstractButton::toggled,
+                             this,
+                             &RoomEditAttrDlg::litRadioButtonToggled);
+    m_connections += connect(darkRadioButton,
+                             &QAbstractButton::toggled,
+                             this,
+                             &RoomEditAttrDlg::darkRadioButtonToggled);
+    m_connections += connect(lightUndefRadioButton,
+                             &QAbstractButton::toggled,
+                             this,
+                             &RoomEditAttrDlg::lightUndefRadioButtonToggled);
 
-    connect(sundeathRadioButton,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::sundeathRadioButtonToggled);
-    connect(noSundeathRadioButton,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::noSundeathRadioButtonToggled);
-    connect(sundeathUndefRadioButton,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::sundeathUndefRadioButtonToggled);
+    m_connections += connect(sundeathRadioButton,
+                             &QAbstractButton::toggled,
+                             this,
+                             &RoomEditAttrDlg::sundeathRadioButtonToggled);
+    m_connections += connect(noSundeathRadioButton,
+                             &QAbstractButton::toggled,
+                             this,
+                             &RoomEditAttrDlg::noSundeathRadioButtonToggled);
+    m_connections += connect(sundeathUndefRadioButton,
+                             &QAbstractButton::toggled,
+                             this,
+                             &RoomEditAttrDlg::sundeathUndefRadioButtonToggled);
 
-    connect(mobFlagsListWidget,
-            &QListWidget::itemChanged,
-            this,
-            &RoomEditAttrDlg::mobFlagsListItemChanged);
-    connect(loadFlagsListWidget,
-            &QListWidget::itemChanged,
-            this,
-            &RoomEditAttrDlg::loadFlagsListItemChanged);
+    m_connections += connect(mobFlagsListWidget,
+                             &QListWidget::itemChanged,
+                             this,
+                             &RoomEditAttrDlg::mobFlagsListItemChanged);
+    m_connections += connect(loadFlagsListWidget,
+                             &QListWidget::itemChanged,
+                             this,
+                             &RoomEditAttrDlg::loadFlagsListItemChanged);
 
-    connect(exitNButton, &QAbstractButton::toggled, this, &RoomEditAttrDlg::exitButtonToggled);
-    connect(exitSButton, &QAbstractButton::toggled, this, &RoomEditAttrDlg::exitButtonToggled);
-    connect(exitEButton, &QAbstractButton::toggled, this, &RoomEditAttrDlg::exitButtonToggled);
-    connect(exitWButton, &QAbstractButton::toggled, this, &RoomEditAttrDlg::exitButtonToggled);
-    connect(exitUButton, &QAbstractButton::toggled, this, &RoomEditAttrDlg::exitButtonToggled);
-    connect(exitDButton, &QAbstractButton::toggled, this, &RoomEditAttrDlg::exitButtonToggled);
+    m_connections += connect(exitNButton,
+                             &QAbstractButton::toggled,
+                             this,
+                             &RoomEditAttrDlg::exitButtonToggled);
+    m_connections += connect(exitSButton,
+                             &QAbstractButton::toggled,
+                             this,
+                             &RoomEditAttrDlg::exitButtonToggled);
+    m_connections += connect(exitEButton,
+                             &QAbstractButton::toggled,
+                             this,
+                             &RoomEditAttrDlg::exitButtonToggled);
+    m_connections += connect(exitWButton,
+                             &QAbstractButton::toggled,
+                             this,
+                             &RoomEditAttrDlg::exitButtonToggled);
+    m_connections += connect(exitUButton,
+                             &QAbstractButton::toggled,
+                             this,
+                             &RoomEditAttrDlg::exitButtonToggled);
+    m_connections += connect(exitDButton,
+                             &QAbstractButton::toggled,
+                             this,
+                             &RoomEditAttrDlg::exitButtonToggled);
 
-    connect(exitFlagsListWidget,
-            &QListWidget::itemChanged,
-            this,
-            &RoomEditAttrDlg::exitFlagsListItemChanged);
-    connect(doorFlagsListWidget,
-            &QListWidget::itemChanged,
-            this,
-            &RoomEditAttrDlg::doorFlagsListItemChanged);
+    m_connections += connect(exitFlagsListWidget,
+                             &QListWidget::itemChanged,
+                             this,
+                             &RoomEditAttrDlg::exitFlagsListItemChanged);
+    m_connections += connect(doorFlagsListWidget,
+                             &QListWidget::itemChanged,
+                             this,
+                             &RoomEditAttrDlg::doorFlagsListItemChanged);
 
-    connect(doorNameLineEdit,
-            &QLineEdit::textChanged,
-            this,
-            &RoomEditAttrDlg::doorNameLineEditTextChanged);
+    m_connections += connect(doorNameLineEdit,
+                             &QLineEdit::editingFinished,
+                             this,
+                             &RoomEditAttrDlg::doorNameLineEditTextChanged);
 
-    connect(toolButton00,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::terrainToolButtonToggled);
-    connect(toolButton01,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::terrainToolButtonToggled);
-    connect(toolButton02,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::terrainToolButtonToggled);
-    connect(toolButton03,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::terrainToolButtonToggled);
-    connect(toolButton04,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::terrainToolButtonToggled);
-    connect(toolButton05,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::terrainToolButtonToggled);
-    connect(toolButton06,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::terrainToolButtonToggled);
-    connect(toolButton07,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::terrainToolButtonToggled);
-    connect(toolButton08,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::terrainToolButtonToggled);
-    connect(toolButton09,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::terrainToolButtonToggled);
-    connect(toolButton10,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::terrainToolButtonToggled);
-    connect(toolButton11,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::terrainToolButtonToggled);
-    connect(toolButton12,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::terrainToolButtonToggled);
-    connect(toolButton13,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::terrainToolButtonToggled);
-    connect(toolButton14,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::terrainToolButtonToggled);
-    connect(toolButton15,
-            &QAbstractButton::toggled,
-            this,
-            &RoomEditAttrDlg::terrainToolButtonToggled);
+    for (QToolButton *const toolButton : roomTerrainButtons)
+        m_connections += connect(toolButton,
+                                 &QAbstractButton::toggled,
+                                 this,
+                                 &RoomEditAttrDlg::terrainToolButtonToggled);
 
-    connect(roomNoteTextEdit, &QTextEdit::textChanged, this, &RoomEditAttrDlg::roomNoteChanged);
+    m_connections += connect(roomNoteTextEdit,
+                             &QTextEdit::textChanged,
+                             this,
+                             &RoomEditAttrDlg::roomNoteChanged);
 
-    connect(m_hiddenShortcut.get(), &QShortcut::activated, this, &RoomEditAttrDlg::toggleHiddenDoor);
+    m_connections += connect(m_hiddenShortcut.get(),
+                             &QShortcut::activated,
+                             this,
+                             &RoomEditAttrDlg::toggleHiddenDoor);
 
-    connect(roomListComboBox,
-            QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this,
-            &RoomEditAttrDlg::roomListCurrentIndexChanged);
+    m_connections += connect(roomListComboBox,
+                             QOverload<int>::of(&QComboBox::currentIndexChanged),
+                             this,
+                             &RoomEditAttrDlg::roomListCurrentIndexChanged);
 
-    connect(updatedCheckBox, &QCheckBox::toggled, this, [this](bool checked) {
-        const Room *r = getSelectedRoom();
-        auto moved_action = std::make_unique<ModifyRoomUpToDate>(checked);
-        if (r != nullptr) {
-            m_mapData->execute(std::make_unique<SingleRoomAction>(std::exchange(moved_action, {}),
-                                                                  r->getId()),
-                               m_roomSelection);
-        } else {
-            m_mapData->execute(std::make_unique<GroupMapAction>(std::exchange(moved_action, {}),
-                                                                m_roomSelection),
-                               m_roomSelection);
-        }
+    m_connections += connect(updatedCheckBox, &QCheckBox::toggled, this, [this](bool checked) {
+        updateCommon(std::make_unique<ModifyRoomUpToDate>(checked));
         if (checked) {
             updatedCheckBox->setText("Room has been forced updated.");
         } else {
             updatedCheckBox->setText("Room has been forced outdated.");
         }
-        emit mapChanged();
     });
 }
 
 void RoomEditAttrDlg::disconnectAll()
 {
-    disconnect(neutralRadioButton,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::neutralRadioButtonToggled);
-    disconnect(goodRadioButton,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::goodRadioButtonToggled);
-    disconnect(evilRadioButton,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::evilRadioButtonToggled);
-    disconnect(alignUndefRadioButton,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::alignUndefRadioButtonToggled);
-
-    disconnect(noPortRadioButton,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::noPortRadioButtonToggled);
-    disconnect(portableRadioButton,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::portableRadioButtonToggled);
-    disconnect(portUndefRadioButton,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::portUndefRadioButtonToggled);
-
-    disconnect(noRideRadioButton,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::noRideRadioButtonToggled);
-    disconnect(ridableRadioButton,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::ridableRadioButtonToggled);
-    disconnect(rideUndefRadioButton,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::rideUndefRadioButtonToggled);
-
-    disconnect(litRadioButton,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::litRadioButtonToggled);
-    disconnect(darkRadioButton,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::darkRadioButtonToggled);
-    disconnect(lightUndefRadioButton,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::lightUndefRadioButtonToggled);
-
-    disconnect(mobFlagsListWidget,
-               &QListWidget::itemChanged,
-               this,
-               &RoomEditAttrDlg::mobFlagsListItemChanged);
-    disconnect(loadFlagsListWidget,
-               &QListWidget::itemChanged,
-               this,
-               &RoomEditAttrDlg::loadFlagsListItemChanged);
-
-    disconnect(exitNButton, &QAbstractButton::toggled, this, &RoomEditAttrDlg::exitButtonToggled);
-    disconnect(exitSButton, &QAbstractButton::toggled, this, &RoomEditAttrDlg::exitButtonToggled);
-    disconnect(exitEButton, &QAbstractButton::toggled, this, &RoomEditAttrDlg::exitButtonToggled);
-    disconnect(exitWButton, &QAbstractButton::toggled, this, &RoomEditAttrDlg::exitButtonToggled);
-    disconnect(exitUButton, &QAbstractButton::toggled, this, &RoomEditAttrDlg::exitButtonToggled);
-    disconnect(exitDButton, &QAbstractButton::toggled, this, &RoomEditAttrDlg::exitButtonToggled);
-
-    disconnect(exitFlagsListWidget,
-               &QListWidget::itemChanged,
-               this,
-               &RoomEditAttrDlg::exitFlagsListItemChanged);
-    disconnect(doorFlagsListWidget,
-               &QListWidget::itemChanged,
-               this,
-               &RoomEditAttrDlg::doorFlagsListItemChanged);
-
-    disconnect(doorNameLineEdit,
-               &QLineEdit::textChanged,
-               this,
-               &RoomEditAttrDlg::doorNameLineEditTextChanged);
-
-    disconnect(toolButton00,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::terrainToolButtonToggled);
-    disconnect(toolButton01,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::terrainToolButtonToggled);
-    disconnect(toolButton02,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::terrainToolButtonToggled);
-    disconnect(toolButton03,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::terrainToolButtonToggled);
-    disconnect(toolButton04,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::terrainToolButtonToggled);
-    disconnect(toolButton05,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::terrainToolButtonToggled);
-    disconnect(toolButton06,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::terrainToolButtonToggled);
-    disconnect(toolButton07,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::terrainToolButtonToggled);
-    disconnect(toolButton08,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::terrainToolButtonToggled);
-    disconnect(toolButton09,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::terrainToolButtonToggled);
-    disconnect(toolButton10,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::terrainToolButtonToggled);
-    disconnect(toolButton11,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::terrainToolButtonToggled);
-    disconnect(toolButton12,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::terrainToolButtonToggled);
-    disconnect(toolButton13,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::terrainToolButtonToggled);
-    disconnect(toolButton14,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::terrainToolButtonToggled);
-    disconnect(toolButton15,
-               &QAbstractButton::toggled,
-               this,
-               &RoomEditAttrDlg::terrainToolButtonToggled);
-
-    disconnect(roomNoteTextEdit, &QTextEdit::textChanged, this, &RoomEditAttrDlg::roomNoteChanged);
-
-    disconnect(m_hiddenShortcut.get(),
-               &QShortcut::activated,
-               this,
-               &RoomEditAttrDlg::toggleHiddenDoor);
-
-    disconnect(roomListComboBox,
-               QOverload<int>::of(&QComboBox::currentIndexChanged),
-               this,
-               &RoomEditAttrDlg::roomListCurrentIndexChanged);
+    m_connections.disconnectAll(*this);
 }
 
 const Room *RoomEditAttrDlg::getSelectedRoom()
@@ -721,10 +535,7 @@ void RoomEditAttrDlg::setRoomSelection(const SharedRoomSelection &rs,
         updateDialog(nullptr);
     }
 
-    connect(this,
-            &RoomEditAttrDlg::mapChanged,
-            m_mapCanvas,
-            static_cast<void (QWidget::*)(void)>(&QWidget::update));
+    connect(this, &RoomEditAttrDlg::requestUpdate, m_mapCanvas, &MapCanvas::requestUpdate);
 }
 
 template<typename T, typename Flags>
@@ -752,8 +563,10 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
     struct NODISCARD DisconnectReconnectAntiPattern final
     {
         RoomEditAttrDlg &self;
+        SignalBlocker signalBlocker;
         explicit DisconnectReconnectAntiPattern(RoomEditAttrDlg &self)
             : self{self}
+            , signalBlocker{self}
         {
             self.disconnectAll();
         }
@@ -835,10 +648,10 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         roomDescriptionTextEdit->setFontItalic(false);
         {
             QString str = r->getStaticDescription().toQString();
+            // note: older rooms may not have a trailing newline
+            // REVISIT: what if they have \r\n?
             if (str.endsWith("\n"))
                 str = str.left(str.length() - 1);
-            else
-                assert(false);
             roomDescriptionTextEdit->append(str);
         }
         roomDescriptionTextEdit->setFontItalic(true);
@@ -857,120 +670,129 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         };
         terrainLabel->setPixmap(get_terrain_pixmap(r->getTerrainType()));
 
-        switch (r->getAlignType()) {
-        case RoomAlignEnum::GOOD:
-            goodRadioButton->setChecked(true);
-            break;
-        case RoomAlignEnum::NEUTRAL:
-            neutralRadioButton->setChecked(true);
-            break;
-        case RoomAlignEnum::EVIL:
-            evilRadioButton->setChecked(true);
-            break;
-        case RoomAlignEnum::UNDEFINED:
-            alignUndefRadioButton->setChecked(true);
-            break;
+        if (auto *const button = getAlignRadioButton(r->getAlignType())) {
+            button->setChecked(true);
         }
-
-        switch (r->getPortableType()) {
-        case RoomPortableEnum::PORTABLE:
-            portableRadioButton->setChecked(true);
-            break;
-        case RoomPortableEnum::NOT_PORTABLE:
-            noPortRadioButton->setChecked(true);
-            break;
-        case RoomPortableEnum::UNDEFINED:
-            portUndefRadioButton->setChecked(true);
-            break;
+        if (auto *const button = getPortableRadioButton(r->getPortableType())) {
+            button->setChecked(true);
         }
-
-        switch (r->getRidableType()) {
-        case RoomRidableEnum::RIDABLE:
-            ridableRadioButton->setChecked(true);
-            break;
-        case RoomRidableEnum::NOT_RIDABLE:
-            noRideRadioButton->setChecked(true);
-            break;
-        case RoomRidableEnum::UNDEFINED:
-            rideUndefRadioButton->setChecked(true);
-            break;
+        if (auto *const button = getRideableRadioButton(r->getRidableType())) {
+            button->setChecked(true);
         }
-
-        switch (r->getLightType()) {
-        case RoomLightEnum::DARK:
-            darkRadioButton->setChecked(true);
-            break;
-        case RoomLightEnum::LIT:
-            litRadioButton->setChecked(true);
-            break;
-        case RoomLightEnum::UNDEFINED:
-            lightUndefRadioButton->setChecked(true);
-            break;
+        if (auto *const button = getLightRadioButton(r->getLightType())) {
+            button->setChecked(true);
         }
-
-        switch (r->getSundeathType()) {
-        case RoomSundeathEnum::NO_SUNDEATH:
-            noSundeathRadioButton->setChecked(true);
-            break;
-        case RoomSundeathEnum::SUNDEATH:
-            sundeathRadioButton->setChecked(true);
-            break;
-        case RoomSundeathEnum::UNDEFINED:
-            sundeathUndefRadioButton->setChecked(true);
-            break;
+        if (auto *const button = getSundeathRadioButton(r->getSundeathType())) {
+            button->setChecked(true);
         }
-
-        switch (r->getTerrainType()) {
-        case RoomTerrainEnum::UNDEFINED:
-            toolButton00->setChecked(true);
-            break;
-        case RoomTerrainEnum::INDOORS:
-            toolButton01->setChecked(true);
-            break;
-        case RoomTerrainEnum::CITY:
-            toolButton02->setChecked(true);
-            break;
-        case RoomTerrainEnum::FIELD:
-            toolButton03->setChecked(true);
-            break;
-        case RoomTerrainEnum::FOREST:
-            toolButton04->setChecked(true);
-            break;
-        case RoomTerrainEnum::HILLS:
-            toolButton05->setChecked(true);
-            break;
-        case RoomTerrainEnum::MOUNTAINS:
-            toolButton06->setChecked(true);
-            break;
-        case RoomTerrainEnum::SHALLOW:
-            toolButton07->setChecked(true);
-            break;
-        case RoomTerrainEnum::WATER:
-            toolButton08->setChecked(true);
-            break;
-        case RoomTerrainEnum::RAPIDS:
-            toolButton09->setChecked(true);
-            break;
-        case RoomTerrainEnum::UNDERWATER:
-            toolButton10->setChecked(true);
-            break;
-        case RoomTerrainEnum::ROAD:
-            toolButton11->setChecked(true);
-            break;
-        case RoomTerrainEnum::BRUSH:
-            toolButton12->setChecked(true);
-            break;
-        case RoomTerrainEnum::TUNNEL:
-            toolButton13->setChecked(true);
-            break;
-        case RoomTerrainEnum::CAVERN:
-            toolButton14->setChecked(true);
-            break;
-        case RoomTerrainEnum::DEATHTRAP:
-            toolButton15->setChecked(true);
-            break;
+        if (auto button = getTerrainToolButton(r->getTerrainType())) {
+            button->setChecked(true);
         }
     }
+}
+
+QRadioButton *RoomEditAttrDlg::getAlignRadioButton(const RoomAlignEnum value) const
+{
+    switch (value) {
+    case RoomAlignEnum::GOOD:
+        return goodRadioButton;
+    case RoomAlignEnum::NEUTRAL:
+        return neutralRadioButton;
+    case RoomAlignEnum::EVIL:
+        return evilRadioButton;
+    case RoomAlignEnum::UNDEFINED:
+        return alignUndefRadioButton;
+    }
+    return nullptr;
+}
+
+QRadioButton *RoomEditAttrDlg::getPortableRadioButton(const RoomPortableEnum value) const
+{
+    switch (value) {
+    case RoomPortableEnum::PORTABLE:
+        return portableRadioButton;
+    case RoomPortableEnum::NOT_PORTABLE:
+        return noPortRadioButton;
+    case RoomPortableEnum::UNDEFINED:
+        return portUndefRadioButton;
+    }
+    return nullptr;
+}
+QRadioButton *RoomEditAttrDlg::getRideableRadioButton(const RoomRidableEnum value) const
+{
+    switch (value) {
+    case RoomRidableEnum::RIDABLE:
+        return ridableRadioButton;
+    case RoomRidableEnum::NOT_RIDABLE:
+        return noRideRadioButton;
+    case RoomRidableEnum::UNDEFINED:
+        return rideUndefRadioButton;
+    }
+    return nullptr;
+}
+QRadioButton *RoomEditAttrDlg::getLightRadioButton(const RoomLightEnum value) const
+{
+    switch (value) {
+    case RoomLightEnum::DARK:
+        return darkRadioButton;
+    case RoomLightEnum::LIT:
+        return litRadioButton;
+    case RoomLightEnum::UNDEFINED:
+        return lightUndefRadioButton;
+    }
+    return nullptr;
+}
+QRadioButton *RoomEditAttrDlg::getSundeathRadioButton(const RoomSundeathEnum value) const
+{
+    switch (value) {
+    case RoomSundeathEnum::NO_SUNDEATH:
+        return noSundeathRadioButton;
+    case RoomSundeathEnum::SUNDEATH:
+        return sundeathRadioButton;
+    case RoomSundeathEnum::UNDEFINED:
+        return sundeathUndefRadioButton;
+    }
+    return nullptr;
+}
+
+QToolButton *RoomEditAttrDlg::getTerrainToolButton(const RoomTerrainEnum value) const
+{
+    switch (value) {
+    case RoomTerrainEnum::UNDEFINED:
+        return toolButton00;
+    case RoomTerrainEnum::INDOORS:
+        return toolButton01;
+    case RoomTerrainEnum::CITY:
+        return toolButton02;
+    case RoomTerrainEnum::FIELD:
+        return toolButton03;
+    case RoomTerrainEnum::FOREST:
+        return toolButton04;
+    case RoomTerrainEnum::HILLS:
+        return toolButton05;
+    case RoomTerrainEnum::MOUNTAINS:
+        return toolButton06;
+    case RoomTerrainEnum::SHALLOW:
+        return toolButton07;
+    case RoomTerrainEnum::WATER:
+        return toolButton08;
+    case RoomTerrainEnum::RAPIDS:
+        return toolButton09;
+    case RoomTerrainEnum::UNDERWATER:
+        return toolButton10;
+    case RoomTerrainEnum::ROAD:
+        return toolButton11;
+    case RoomTerrainEnum::BRUSH:
+        return toolButton12;
+    case RoomTerrainEnum::TUNNEL:
+        return toolButton13;
+    case RoomTerrainEnum::CAVERN:
+        return toolButton14;
+    case RoomTerrainEnum::DEATHTRAP:
+        return toolButton15;
+    }
+
+    return nullptr;
 }
 
 // attributes page
@@ -979,10 +801,10 @@ void RoomEditAttrDlg::exitButtonToggled(bool /*unused*/)
     updateDialog(getSelectedRoom());
 }
 
-void RoomEditAttrDlg::updateCommon(std::unique_ptr<AbstractAction> moved_action)
+void RoomEditAttrDlg::updateCommon(std::unique_ptr<AbstractAction> moved_action,
+                                   bool onlyExecuteAction)
 {
-    const Room *r = getSelectedRoom();
-    if (r != nullptr) {
+    if (const Room *const r = getSelectedRoom()) {
         m_mapData->execute(std::make_unique<SingleRoomAction>(std::exchange(moved_action, {}),
                                                               r->getId()),
                            m_roomSelection);
@@ -992,8 +814,10 @@ void RoomEditAttrDlg::updateCommon(std::unique_ptr<AbstractAction> moved_action)
                            m_roomSelection);
     }
 
-    emit mapChanged();
-    updateDialog(getSelectedRoom());
+    if (!onlyExecuteAction) {
+        updateDialog(getSelectedRoom());
+        emit requestUpdate();
+    }
 }
 
 void RoomEditAttrDlg::updateRoomAlign(const RoomAlignEnum value)
@@ -1179,8 +1003,6 @@ void RoomEditAttrDlg::loadFlagsListItemChanged(QListWidgetItem *const item)
         updateCommon(std::make_unique<ModifyRoomFlags>(flags, FlagModifyModeEnum::SET));
         break;
     }
-
-    emit mapChanged();
 }
 
 void RoomEditAttrDlg::exitFlagsListItemChanged(QListWidgetItem *const item)
@@ -1208,10 +1030,9 @@ void RoomEditAttrDlg::exitFlagsListItemChanged(QListWidgetItem *const item)
     }
 
     updateDialog(getSelectedRoom());
-    emit mapChanged();
 }
 
-void RoomEditAttrDlg::doorNameLineEditTextChanged(const QString /*unused*/ &)
+void RoomEditAttrDlg::doorNameLineEditTextChanged()
 {
     const Room *const r = getSelectedRoom();
 
@@ -1220,6 +1041,7 @@ void RoomEditAttrDlg::doorNameLineEditTextChanged(const QString /*unused*/ &)
                                                              getSelectedExit()),
                            r->getId()),
                        m_roomSelection);
+    emit requestUpdate();
 }
 
 void RoomEditAttrDlg::doorFlagsListItemChanged(QListWidgetItem *const item)
@@ -1241,7 +1063,7 @@ void RoomEditAttrDlg::doorFlagsListItemChanged(QListWidgetItem *const item)
             std::make_unique<SingleRoomAction>(std::make_unique<ModifyExitFlags>(flags, dir, mode),
                                                deref(getSelectedRoom()).getId()),
             m_roomSelection);
-        emit mapChanged();
+        emit requestUpdate();
     };
 
     switch (item->checkState()) {
@@ -1271,59 +1093,18 @@ void RoomEditAttrDlg::terrainToolButtonToggled(bool val)
     if (!val)
         return;
 
-    uint index = 0;
-    if (toolButton00->isChecked()) {
-        index = 0;
-    }
-    if (toolButton01->isChecked()) {
-        index = 1;
-    }
-    if (toolButton02->isChecked()) {
-        index = 2;
-    }
-    if (toolButton03->isChecked()) {
-        index = 3;
-    }
-    if (toolButton04->isChecked()) {
-        index = 4;
-    }
-    if (toolButton05->isChecked()) {
-        index = 5;
-    }
-    if (toolButton06->isChecked()) {
-        index = 6;
-    }
-    if (toolButton07->isChecked()) {
-        index = 7;
-    }
-    if (toolButton08->isChecked()) {
-        index = 8;
-    }
-    if (toolButton09->isChecked()) {
-        index = 9;
-    }
-    if (toolButton10->isChecked()) {
-        index = 10;
-    }
-    if (toolButton11->isChecked()) {
-        index = 11;
-    }
-    if (toolButton12->isChecked()) {
-        index = 12;
-    }
-    if (toolButton13->isChecked()) {
-        index = 13;
-    }
-    if (toolButton14->isChecked()) {
-        index = 14;
-    }
-    if (toolButton15->isChecked()) {
-        index = 15;
-    }
+    const RoomTerrainEnum rtt = [this]() -> RoomTerrainEnum {
+        // returns the first one that's checked, or UNDEFINED.
+        for (uint i = 0; i < NUM_ROOM_TERRAIN_TYPES; ++i) {
+            const auto rtt = static_cast<RoomTerrainEnum>(i);
+            if (const QToolButton *const ptr = roomTerrainButtons[rtt])
+                if (ptr->isChecked())
+                    return rtt;
+        }
 
-    /* WARNING: there are more than 16 room terrain types */
-    const auto rtt = static_cast<RoomTerrainEnum>(index);
-
+        // oops
+        return RoomTerrainEnum::UNDEFINED;
+    }();
     terrainLabel->setPixmap(QPixmap(getPixmapFilename(rtt)));
     updateCommon(std::make_unique<UpdateRoomField>(rtt));
 }
@@ -1331,8 +1112,10 @@ void RoomEditAttrDlg::terrainToolButtonToggled(bool val)
 // note tab
 void RoomEditAttrDlg::roomNoteChanged()
 {
+    // TODO: Change this so you can't leave the tab without clicking "Update" or "Cancel",
+    // and then only modify the note on update.
     const RoomNote note{roomNoteTextEdit->document()->toPlainText()};
-    updateCommon(std::make_unique<UpdateRoomField>(note));
+    updateCommon(std::make_unique<UpdateRoomField>(note), true);
 }
 
 // all tabs

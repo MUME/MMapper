@@ -11,7 +11,6 @@
 #include "experimenting.h"
 #include "path.h"
 
-class AbstractRoomFactory;
 class Room;
 class RoomAdmin;
 struct PathParameters;
@@ -19,9 +18,6 @@ struct PathParameters;
 class Crossover : public Experimenting
 {
 public:
-    Crossover(PathList *paths,
-              ExitDirEnum dirCode,
-              PathParameters &params,
-              AbstractRoomFactory *factory);
+    Crossover(PathList *paths, ExitDirEnum dirCode, PathParameters &params);
     void receiveRoom(RoomAdmin *, const Room *) override;
 };

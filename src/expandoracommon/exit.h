@@ -23,27 +23,27 @@ private:
     DoorName doorName;
     ExitFlags exitFlags;
     DoorFlags doorFlags;
-    bool hasFields = false;
 
-protected:
+private:
     RoomIdSet incoming;
     RoomIdSet outgoing;
 
 public:
     // This has to exist as long as ExitsList uses QVector<Exit>.
     Exit() = default;
-    explicit Exit(bool hasFields)
-        : hasFields{hasFields}
-    {}
+    ~Exit() = default;
 
 public:
     void clearFields()
     {
-        assert(hasFields);
         doorName = DoorName{};
         exitFlags = ExitFlags{};
         doorFlags = DoorFlags{};
     }
+
+public:
+    const RoomIdSet &getIncoming() const { return incoming; }
+    const RoomIdSet &getOutgoing() const { return outgoing; }
 
 public:
     auto inSize() const { return incoming.size(); }
@@ -112,4 +112,21 @@ public:
 #undef X_DECLARE_ACCESSORS
 
     bool doorNeedsKey() const; // REVISIT: This name is not like the others
+
+public:
+    bool operator==(const Exit &rhs) const;
+    bool operator!=(const Exit &rhs) const;
+
+public:
+    Exit(Exit &&) = default;
+    Exit(const Exit &) = default;
+    Exit &operator=(Exit &&) = default;
+    Exit &operator=(const Exit &rhs)
+    {
+        assignFrom(rhs);
+        return *this;
+    }
+
+private:
+    void assignFrom(const Exit &rhs);
 };

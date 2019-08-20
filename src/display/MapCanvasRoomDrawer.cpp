@@ -488,7 +488,7 @@ void MapCanvasRoomDrawer::drawFlow(const Room *const room,
 
     // For each outgoing connections
     for (auto targetId : sourceExit.outRange()) {
-        const Room *const targetRoom = rooms[targetId];
+        const SharedConstRoom &targetRoom = rooms[targetId];
         const auto &pos = targetRoom->getPosition();
         if (pos.z == m_currentLayer) {
             gl.setMatrix(MatrixType::MODELVIEW, getTranslationMatrix(pos.x, pos.y));
@@ -767,14 +767,8 @@ void MapCanvasRoomDrawer::drawBoost(const Room *const room, const RoomLocks &loc
 
 void MapCanvasRoomDrawer::drawRoomConnectionsAndDoors(const Room *const room, const RoomIndex &rooms)
 {
-    /* If a room isn't fake, then we know its ExitsList will have NUM_EXITS elements */
-    if (deref(room).isFake()) {
-        qWarning() << "Fake room? How did that happen?";
-        return;
-    }
-
     auto sourceId = room->getId();
-    const Room *targetRoom = nullptr;
+    SharedConstRoom targetRoom;
     const ExitsList &exitslist = room->getExitsList();
     bool oneway = false;
     float rx = 0;
@@ -815,10 +809,15 @@ void MapCanvasRoomDrawer::drawRoomConnectionsAndDoors(const Room *const room, co
                     }
                 }
                 if (oneway) {
-                    drawConnection(room, targetRoom, i, targetDir, true, room->exit(i).isExit());
+                    drawConnection(room,
+                                   targetRoom.get(),
+                                   i,
+                                   targetDir,
+                                   true,
+                                   room->exit(i).isExit());
                 } else {
                     drawConnection(room,
-                                   targetRoom,
+                                   targetRoom.get(),
                                    i,
                                    targetDir,
                                    false,
@@ -834,7 +833,7 @@ void MapCanvasRoomDrawer::drawRoomConnectionsAndDoors(const Room *const room, co
                     }
                 }
                 if (oneway) {
-                    drawConnection(room, targetRoom, i, opp, true, sourceExit.isExit());
+                    drawConnection(room, targetRoom.get(), i, opp, true, sourceExit.isExit());
                 }
             }
 
@@ -847,7 +846,7 @@ void MapCanvasRoomDrawer::drawRoomConnectionsAndDoors(const Room *const room, co
                 if (((rx < m_visible1.x - 1.0f) || (rx > m_visible2.x + 1.0f))
                     || ((ry < m_visible1.y - 1.0f) || (ry > m_visible2.y + 1.0f))) {
                     if (!targetRoom->exit(opp).containsIn(sourceId)) {
-                        drawConnection(targetRoom,
+                        drawConnection(targetRoom.get(),
                                        room,
                                        opp,
                                        i,
@@ -870,7 +869,7 @@ void MapCanvasRoomDrawer::drawRoomConnectionsAndDoors(const Room *const room, co
                         }
                     }
                 }
-                drawRoomDoorName(room, i, targetRoom, targetDir);
+                drawRoomDoorName(room, i, targetRoom.get(), targetDir);
             }
         }
     }

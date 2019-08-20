@@ -115,6 +115,7 @@ public slots:
     // void worldChanged();
 
     void dataLoaded();
+    void requestUpdate() { update(); }
     void moveMarker(const Coordinate &);
 
     void slot_onMessageLoggedDirect(const QOpenGLDebugMessage &message);

@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
 #include <cassert>
+#include <memory>
 #include <set>
 
 #include "../global/RAII.h"
@@ -13,40 +14,26 @@
 class AbstractRoomVisitor;
 class Room;
 
-struct IRoomCollection
-{
-public:
-    virtual ~IRoomCollection();
-    virtual void addRoom(Room *room) = 0;
-    virtual void removeRoom(Room *room) = 0;
-
-public:
-    virtual void clear() = 0;
-    virtual size_t size() const = 0;
-
-public:
-    /* NOTE: It's not safe for the stream to modify this
-     * collection during this function call. */
-    virtual void forEach(AbstractRoomVisitor &stream) const = 0;
-};
-
-class RoomCollection final : public IRoomCollection
+class RoomCollection final
 {
 private:
-    using RoomSet = std::set<Room *>;
+    using RoomSet = std::set<std::shared_ptr<Room>>;
     RoomSet m_rooms;
     mutable bool m_inUse = false;
 
 public:
-    void addRoom(Room *room) override;
-    void removeRoom(Room *room) override;
+    void addRoom(Room *room);
+    void removeRoom(Room *room);
+
+    void addRoom(const SharedRoom &room) { addRoom(room.get()); }
+    void removeRoom(const SharedRoom &room) { removeRoom(room.get()); }
 
 public:
-    void clear() override;
-    size_t size() const override { return m_rooms.size(); }
+    void clear();
+    size_t size() const { return m_rooms.size(); }
 
 public:
     /* NOTE: It's not safe for the stream to modify this
      * collection during this function call. */
-    void forEach(AbstractRoomVisitor &stream) const override;
+    void forEach(AbstractRoomVisitor &stream) const;
 };

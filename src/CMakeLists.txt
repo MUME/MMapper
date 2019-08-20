@@ -41,8 +41,6 @@ set(mmapper_SRCS
     display/mapwindow.h
     display/prespammedpath.cpp
     display/prespammedpath.h
-    expandoracommon/AbstractRoomFactory.cpp
-    expandoracommon/AbstractRoomFactory.h
     expandoracommon/MmQtHandle.h
     expandoracommon/RoomAdmin.cpp
     expandoracommon/RoomAdmin.h
@@ -71,6 +69,8 @@ set(mmapper_SRCS
     global/RAII.cpp
     global/RAII.h
     global/RuleOf5.h
+    global/SignalBlocker.cpp
+    global/SignalBlocker.h
     global/StringView.cpp
     global/StringView.h
     global/TaggedString.h
@@ -122,8 +122,6 @@ set(mmapper_SRCS
     mapdata/mapdata.h
     mapdata/mmapper2exit.h
     mapdata/mmapper2room.h
-    mapdata/roomfactory.cpp
-    mapdata/roomfactory.h
     mapdata/roomfilter.cpp
     mapdata/roomfilter.h
     mapdata/roomselection.cpp

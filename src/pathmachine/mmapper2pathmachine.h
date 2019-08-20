@@ -11,6 +11,7 @@
 #include "pathmachine.h"
 
 class Configuration;
+class MapData;
 class ParseEvent;
 class QObject;
 class QTime;
@@ -25,7 +26,7 @@ public slots:
     void event(const SigParseEvent &) override;
 
 public:
-    explicit Mmapper2PathMachine(QObject *parent = nullptr);
+    explicit Mmapper2PathMachine(MapData *mapData, QObject *parent);
 
 signals:
     void log(const QString &, const QString &);

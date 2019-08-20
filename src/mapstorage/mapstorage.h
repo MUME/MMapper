@@ -14,7 +14,6 @@
 #include "../expandoracommon/coordinate.h"
 #include "../global/RuleOf5.h"
 #include "../mapdata/mapdata.h"
-#include "../mapdata/roomfactory.h"
 #include "../mapfrontend/mapfrontend.h"
 #include "abstractmapstorage.h"
 
@@ -42,8 +41,7 @@ private:
     virtual bool loadData() override;
     virtual bool saveData(bool baseMapOnly) override;
 
-    RoomFactory factory;
-    Room *loadRoom(QDataStream &stream, uint32_t version);
+    SharedRoom loadRoom(QDataStream &stream, uint32_t version);
     void loadExits(Room &room, QDataStream &stream, uint32_t version);
     void loadMark(InfoMark *mark, QDataStream &stream, uint32_t version);
     void saveMark(InfoMark *mark, QDataStream &stream);

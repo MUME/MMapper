@@ -7,6 +7,7 @@
 
 #include <list>
 #include <memory>
+#include <optional>
 #include <QString>
 #include <QtCore>
 
@@ -16,11 +17,11 @@
 #include "pathparameters.h"
 #include "roomsignalhandler.h"
 
-class AbstractRoomFactory;
 class Approved;
 class Coordinate;
 class Exit;
 class MapAction;
+class MapData;
 class QEvent;
 class QObject;
 class RoomRecipient;
@@ -53,13 +54,15 @@ signals:
     void setCharPosition(RoomId id);
 
 public:
-    explicit PathMachine(AbstractRoomFactory *factory, QObject *parent = nullptr);
+    explicit PathMachine(MapData *mapData, QObject *parent);
 
 private:
     void scheduleAction(const std::shared_ptr<MapAction> &action);
 
 protected:
     PathParameters params;
+    MapData &m_mapData;
+
     void experimenting(const SigParseEvent &sigParseEvent);
     void syncing(const SigParseEvent &sigParseEvent);
     void approved(const SigParseEvent &sigParseEvent);
@@ -67,18 +70,30 @@ protected:
     void tryExits(const Room *, RoomRecipient &, ParseEvent &, bool out);
     void tryExit(const Exit &possible, RoomRecipient &recipient, bool out);
     void tryCoordinate(const Room *, RoomRecipient &, ParseEvent &);
-    AbstractRoomFactory *factory = nullptr;
 
     RoomSignalHandler signaler;
     /* REVISIT: pathRoot and mostLikelyRoom should probably be of type RoomId */
-    Room pathRoot;
-    Room mostLikelyRoom;
     SigParseEvent lastEvent;
     PathStateEnum state = PathStateEnum::SYNCING;
 
     // TODO: use smart pointer to manage this.
     // It looks like it might be leaked because it's reassigned.
     PathList *paths = nullptr;
+
+private:
+    std::optional<Coordinate> m_pathRootPos;
+    std::optional<Coordinate> m_mostLikelyRoomPos;
+
+private:
+    void clearMostLikelyRoom() { m_mostLikelyRoomPos.reset(); }
+    void setMostLikelyRoom(const Room &room) { m_mostLikelyRoomPos = room.getPosition(); }
+
+protected:
+    bool hasMostLikelyRoom() const { return m_mostLikelyRoomPos.has_value(); }
+    const Room *getPathRoot() const;
+    const Room *getMostLikelyRoom() const;
+    RoomId getMostLikelyRoomId() const;
+    const Coordinate &getMostLikelyRoomPosition() const;
 
 private:
     // avoid warning about signal hiding this function

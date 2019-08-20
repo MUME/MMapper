@@ -3,11 +3,11 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include <memory>
 #include <QString>
 #include <QtCore>
 
 #include "../expandoracommon/coordinate.h"
-#include "../mapdata/roomfactory.h"
 #include "abstractmapstorage.h"
 
 class MapData;
@@ -39,10 +39,9 @@ private:
     virtual bool mergeData() override;
 
 private:
-    Room *loadRoom(QXmlStreamReader &);
+    std::shared_ptr<Room> loadRoom(QXmlStreamReader &);
     void loadExits(Room &, QXmlStreamReader &);
 
 private:
-    RoomFactory factory;
     Coordinate basePosition;
 };

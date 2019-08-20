@@ -114,7 +114,7 @@ void InfoMarksEditDlg::createClicked()
     im->setPosition2(pos2);
     im->setRotationAngle(static_cast<float>(m_rotationAngle->value()));
 
-    m_mapData->addMarker(im.get());
+    m_mapData->addMarker(im);
 
     emit mapChanged();
     updateMarkers();

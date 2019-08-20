@@ -116,7 +116,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     m_mapWindow = new MapWindow(m_mapData, m_prespammedPath, m_groupManager, this);
     setCentralWidget(m_mapWindow);
 
-    m_pathMachine = new Mmapper2PathMachine(this);
+    m_pathMachine = new Mmapper2PathMachine(m_mapData, this);
     m_pathMachine->setObjectName("Mmapper2PathMachine");
 
     m_client = new ClientWidget(this);
@@ -1207,6 +1207,7 @@ void MainWindow::newFile()
     storage->newData();
     delete storage;
     setCurrentFile("");
+    setWindowModified(false);
 }
 
 void MainWindow::merge()
@@ -1305,6 +1306,7 @@ void MainWindow::reload()
 
 bool MainWindow::save()
 {
+    setWindowModified(false);
     if (m_mapData->getFileName().isEmpty() || m_mapData->isFileReadOnly()) {
         return saveAs();
     }
@@ -1527,6 +1529,7 @@ void MainWindow::loadFile(const QString &fileName)
 
     delete progressDlg;
 
+    setWindowModified(false);
     setCurrentFile(m_mapData->getFileName());
 
     statusBar()->showMessage(tr("File loaded"), 2000);

@@ -59,12 +59,11 @@ public:
 };
 
 class Room;
-using RoomIndex = roomid_vector<Room *>;
+using RoomIndex = roomid_vector<std::shared_ptr<Room>>;
 
 class RoomRecipient;
 using RoomLocks = roomid_vector<std::set<RoomRecipient *>>;
 
-struct IRoomCollection;
 class RoomCollection;
-using SharedRoomCollection = std::shared_ptr<IRoomCollection>;
+using SharedRoomCollection = std::shared_ptr<RoomCollection>;
 using RoomHomes = roomid_vector<SharedRoomCollection>;

@@ -8,6 +8,7 @@
 
 #include <climits>
 #include <cstdint>
+#include <memory>
 #include <mutex>
 #include <stdexcept>
 #include <type_traits>
@@ -29,7 +30,6 @@
 #include "../mapdata/infomark.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/mmapper2room.h"
-#include "../mapdata/roomfactory.h"
 #include "../parser/patterns.h"
 #include "StorageUtils.h"
 #include "abstractmapstorage.h"
@@ -197,11 +197,11 @@ static RoomTerrainEnum serialize(const uint32_t value)
     return static_cast<RoomTerrainEnum>(value);
 }
 
-Room *MapStorage::loadRoom(QDataStream &stream, uint32_t version)
+SharedRoom MapStorage::loadRoom(QDataStream &stream, const uint32_t version)
 {
-    auto helper = LoadRoomHelper{stream};
-    Room *room = factory.createRoom();
-    room->setPermanent();
+    // TODO: change schema to just store size and latin1 bytes for strings.
+    LoadRoomHelper helper{stream};
+    const SharedRoom room = Room::createPermanentRoom(m_mapData);
     room->setName(RoomName{helper.read_string()});
     room->setStaticDescription(RoomStaticDesc{helper.read_string()});
     room->setDynamicDescription(RoomDynamicDesc{helper.read_string()});
@@ -231,7 +231,7 @@ void MapStorage::loadExits(Room &room, QDataStream &stream, const uint32_t versi
 {
     auto helper = LoadRoomHelper{stream};
 
-    ExitsList &eList = room.getExitsList();
+    ExitsList eList;
     for (const auto i : ALL_EXITS7) {
         Exit &e = eList[i];
 
@@ -267,6 +267,8 @@ void MapStorage::loadExits(Room &room, QDataStream &stream, const uint32_t versi
             e.addOut(RoomId{connection + baseId});
         }
     }
+
+    room.setExitsList(eList);
 }
 
 bool MapStorage::loadData()
@@ -377,10 +379,10 @@ bool MapStorage::mergeData()
         emit log("MapStorage", QString("Number of rooms: %1").arg(roomsCount));
 
         for (uint32_t i = 0; i < roomsCount; ++i) {
-            Room *room = loadRoom(stream, version);
+            SharedRoom room = loadRoom(stream, version);
 
             progressCounter.step();
-            m_mapData.insertPredefinedRoom(*room);
+            m_mapData.insertPredefinedRoom(room);
         }
 
         emit log("MapStorage", QString("Number of info items: %1").arg(marksCount));
@@ -520,6 +522,8 @@ bool MapStorage::saveData(bool baseMapOnly)
     // directly apparently and we have to go through a RoomSaver which receives
     // them from a sort of callback function.
     ConstRoomList roomList;
+    roomList.reserve(m_mapData.getRoomsCount());
+
     MarkerList &markerList = m_mapData.getMarkersList();
     RoomSaver saver(m_mapData, roomList);
     for (uint i = 0; i < m_mapData.getRoomsCount(); ++i) {
@@ -565,9 +569,7 @@ bool MapStorage::saveData(bool baseMapOnly)
     stream << static_cast<qint32>(self.z);
 
     // save rooms
-    QListIterator<const Room *> roomit(roomList);
-    while (roomit.hasNext()) {
-        const Room *const pRoom = roomit.next();
+    for (const std::shared_ptr<const Room> &pRoom : roomList) {
         const Room &room = deref(pRoom);
 
         if (baseMapOnly) {

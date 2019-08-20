@@ -10,7 +10,6 @@
 #include <utility>
 #include <QMutableVectorIterator>
 
-#include "../expandoracommon/AbstractRoomFactory.h"
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/parseevent.h"
 #include "../expandoracommon/room.h"
@@ -53,17 +52,17 @@ void AddExit::exec()
 
 Room *AddExit::tryExec()
 {
-    Room *rfrom = roomIndex(from);
+    Room *const rfrom = roomIndex(from);
     if (rfrom == nullptr) {
         return nullptr;
     }
-    Room *rto = roomIndex(to);
+    Room *const rto = roomIndex(to);
     if (rto == nullptr) {
         return nullptr;
     }
 
-    rfrom->exit(dir).addOut(to);
-    rto->exit(opposite(dir)).addIn(from);
+    rfrom->addOutExit(dir, to);
+    rto->addInExit(opposite(dir), from);
     return rfrom;
 }
 
@@ -83,12 +82,12 @@ void RemoveExit::exec()
 
 Room *RemoveExit::tryExec()
 {
-    Room *rfrom = roomIndex(from);
+    Room *const rfrom = roomIndex(from);
     if (rfrom != nullptr) {
-        rfrom->exit(dir).removeOut(to);
+        rfrom->removeOutExit(dir, to);
     }
-    if (Room *rto = roomIndex(to)) {
-        rto->exit(opposite(dir)).removeIn(from);
+    if (Room *const rto = roomIndex(to)) {
+        rto->removeInExit(opposite(dir), from);
     }
     return rfrom;
 }
@@ -156,7 +155,7 @@ Update::Update(const SigParseEvent &sigParseEvent)
 void Update::exec(const RoomId id)
 {
     if (Room *const room = roomIndex(id)) {
-        factory()->update(*room, props);
+        Room::update(*room, props);
         auto newHome = getParseTree().insertRoom(props);
 
         // NOTE: This requires a reference.
@@ -197,14 +196,14 @@ void Remove::exec(const RoomId id)
 {
     // This still needs a reference so it can set it to nullptr
     auto &rooms = roomIndex();
-    Room *const room = std::exchange(rooms[id], nullptr);
+    const SharedRoom room = std::exchange(rooms[id], nullptr);
     if (room == nullptr) {
         return;
     }
 
     map().remove(room->getPosition());
     if (SharedRoomCollection home = roomHomes(id)) {
-        home->removeRoom(room);
+        home->removeRoom(room.get());
     }
     // don't return previously used ids for now
     // unusedIds().push(id);
@@ -212,17 +211,18 @@ void Remove::exec(const RoomId id)
     for (const auto dir : enums::makeCountingIterator<ExitDirEnum>(exits)) {
         const Exit &e = exits[dir];
         for (const auto &idx : e.inRange()) {
-            if (Room *const other = rooms[idx]) {
-                other->exit(opposite(dir)).removeOut(id);
+            if (const SharedRoom &other = rooms[idx]) {
+                other->removeOutExit(opposite(dir), id);
             }
         }
         for (const auto &idx : e.outRange()) {
-            if (Room *const other = rooms[idx]) {
-                other->exit(opposite(dir)).removeIn(id);
+            if (const SharedRoom &other = rooms[idx]) {
+                other->removeInExit(opposite(dir), id);
             }
         }
     }
-    delete room;
+
+    room->setAboutToDie();
 }
 
 void FrontendAccessor::setFrontend(MapFrontend *const in)
@@ -246,7 +246,7 @@ RoomIndex &FrontendAccessor::roomIndex()
 }
 Room *FrontendAccessor::roomIndex(const RoomId id) const
 {
-    return m_frontend->roomIndex[id];
+    return m_frontend->roomIndex[id].get();
 }
 
 RoomHomes &FrontendAccessor::roomHomes()
@@ -261,9 +261,4 @@ const SharedRoomCollection &FrontendAccessor::roomHomes(const RoomId id) const
 std::stack<RoomId> &FrontendAccessor::unusedIds()
 {
     return m_frontend->unusedIds;
-}
-
-AbstractRoomFactory *FrontendAccessor::factory()
-{
-    return m_frontend->factory;
 }

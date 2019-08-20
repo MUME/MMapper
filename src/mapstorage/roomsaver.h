@@ -26,7 +26,6 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(RoomSaver);
 
 private:
-    quint32 m_roomsCount = 0u;
     ConstRoomList &m_roomList;
     RoomAdmin &m_admin;
 };

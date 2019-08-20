@@ -30,12 +30,11 @@
 #include "drawstream.h"
 #include "infomark.h"
 #include "mmapper2room.h"
-#include "roomfactory.h"
 #include "roomfilter.h"
 #include "roomselection.h"
 
 MapData::MapData(QObject *const parent)
-    : MapFrontend(new RoomFactory{}, parent)
+    : MapFrontend(parent)
 {}
 
 const DoorName &MapData::getDoorName(const Coordinate &pos, const ExitDirEnum dir)
@@ -43,7 +42,7 @@ const DoorName &MapData::getDoorName(const Coordinate &pos, const ExitDirEnum di
     // REVISIT: Could this function could be made const if we make mapLock mutable?
     // Alternately, WTF are we accessing this from multiple threads?
     QMutexLocker locker(&mapLock);
-    if (Room *const room = map.get(pos)) {
+    if (const Room *const room = map.get(pos)) {
         if (dir < ExitDirEnum::UNKNOWN) {
             return room->exit(dir).getDoorName();
         }
@@ -58,11 +57,23 @@ void MapData::setDoorName(const Coordinate &pos, DoorName moved_doorName, const 
     QMutexLocker locker(&mapLock);
     if (Room *const room = map.get(pos)) {
         if (dir < ExitDirEnum::UNKNOWN) {
-            setDataChanged();
             scheduleAction(std::make_unique<SingleRoomAction>(
                 std::make_unique<UpdateExitField>(std::move(moved_doorName), dir), room->getId()));
         }
     }
+}
+
+ExitDirections MapData::getExitDirections(const Coordinate &pos)
+{
+    ExitDirections result;
+    QMutexLocker locker(&mapLock);
+    if (const Room *const room = map.get(pos)) {
+        for (auto dir : ALL_EXITS7) {
+            if (room->exit(dir).isExit())
+                result |= dir;
+        }
+    }
+    return result;
 }
 
 bool MapData::getExitFlag(const Coordinate &pos, const ExitDirEnum dir, ExitFieldVariant var)
@@ -70,7 +81,7 @@ bool MapData::getExitFlag(const Coordinate &pos, const ExitDirEnum dir, ExitFiel
     assert(var.getType() != ExitFieldEnum::DOOR_NAME);
 
     QMutexLocker locker(&mapLock);
-    if (Room *const room = map.get(pos)) {
+    if (const Room *const room = map.get(pos)) {
         if (dir < ExitDirEnum::NONE) {
             switch (var.getType()) {
             case ExitFieldEnum::DOOR_NAME: {
@@ -108,7 +119,6 @@ void MapData::toggleExitFlag(const Coordinate &pos, const ExitDirEnum dir, ExitF
     QMutexLocker locker(&mapLock);
     if (Room *const room = map.get(pos)) {
         if (dir < ExitDirEnum::NONE) {
-            setDataChanged();
             scheduleAction(std::make_shared<SingleRoomAction>(
                 std::make_unique<ModifyExitFlags>(var, dir, FlagModifyModeEnum::TOGGLE),
                 room->getId()));
@@ -120,7 +130,6 @@ void MapData::toggleRoomFlag(const Coordinate &pos, RoomFieldVariant var)
 {
     QMutexLocker locker(&mapLock);
     if (Room *room = map.get(pos)) {
-        setDataChanged();
         // REVISIT: Consolidate ModifyRoomFlags and UpdateRoomField
         auto action = (var.getType() == RoomFieldEnum::MOB_FLAGS
                        || var.getType() == RoomFieldEnum::LOAD_FLAGS)
@@ -132,6 +141,12 @@ void MapData::toggleRoomFlag(const Coordinate &pos, RoomFieldVariant var)
                                                                room->getId());
         scheduleAction(action);
     }
+}
+
+const Room *MapData::getRoom(const Coordinate &pos)
+{
+    QMutexLocker locker(&mapLock);
+    return map.get(pos);
 }
 
 bool MapData::getRoomFlag(const Coordinate &pos, RoomFieldVariant var)
@@ -186,7 +201,7 @@ QList<Coordinate> MapData::getPath(const Coordinate &start, const CommandQueue &
     QList<Coordinate> ret;
 
     //* NOTE: room is used and then reassigned inside the loop.
-    if (Room *room = map.get(start)) {
+    if (const Room *room = map.get(start)) {
         for (const auto cmd : dirs) {
             if (cmd == CommandEnum::LOOK)
                 continue;
@@ -195,7 +210,7 @@ QList<Coordinate> MapData::getPath(const Coordinate &start, const CommandQueue &
                 break;
             }
 
-            Exit &e = room->exit(getDirection(cmd));
+            const Exit &e = room->exit(getDirection(cmd));
             if (!e.isExit()) {
                 // REVISIT: why does this continue but all of the others break?
                 continue;
@@ -205,11 +220,13 @@ QList<Coordinate> MapData::getPath(const Coordinate &start, const CommandQueue &
                 break;
             }
 
-            // WARNING: room is reassigned here!
-            room = roomIndex[e.outFirst()];
+            const SharedConstRoom &tmp = roomIndex[e.outFirst()];
             if (room == nullptr) {
                 break;
             }
+
+            // WARNING: room is reassigned here!
+            room = tmp.get();
             ret.append(room->getPosition());
         }
     }
@@ -232,13 +249,14 @@ const Room *MapData::getRoom(const Coordinate &pos, RoomSelection &selection)
 const Room *MapData::getRoom(const RoomId id, RoomSelection &selection)
 {
     QMutexLocker locker(&mapLock);
-    if (Room *const room = roomIndex[id]) {
+    if (const SharedRoom &room = roomIndex[id]) {
         const RoomId roomId = room->getId();
         assert(id == roomId);
 
         lockRoom(&selection, roomId);
-        selection.insert(roomId, room);
-        return room;
+        Room *const pRoom = room.get();
+        selection.insert(roomId, pRoom);
+        return pRoom;
     }
     return nullptr;
 }
@@ -274,9 +292,9 @@ bool MapData::execute(std::unique_ptr<MapAction> action, const SharedRoomSelecti
     }
 
     for (auto id : selectedIds) {
-        if (Room *const room = roomIndex[id]) {
+        if (const SharedRoom &room = roomIndex[id]) {
             locks[id].insert(selection.get());
-            selection->insert(id, room);
+            selection->insert(id, room.get());
         }
     }
     return executable;
@@ -303,35 +321,24 @@ void MapData::removeDoorNames()
                                                        room->getId()));
             }
         }
-        // REVISIT: this isn't true if room was nullptr
-        setDataChanged();
     }
 }
 
 void MapData::genericSearch(RoomRecipient *recipient, const RoomFilter &f)
 {
     QMutexLocker locker(&mapLock);
-    for (auto &room : roomIndex) {
-        if (room != nullptr && f.filter(room)) {
-            locks[room->getId()].insert(recipient);
-            recipient->receiveRoom(this, room);
-        }
+    for (const SharedRoom &room : roomIndex) {
+        if (room == nullptr)
+            continue;
+        Room *const r = room.get();
+        if (!f.filter(r))
+            continue;
+        locks[room->getId()].insert(recipient);
+        recipient->receiveRoom(this, r);
     }
 }
 
 MapData::~MapData() = default;
-
-void MapData::removeMarker(InfoMark *im)
-{
-    if (im != nullptr)
-        m_markers.remove(im->shared_from_this());
-}
-
-void MapData::addMarker(InfoMark *im)
-{
-    if (im != nullptr)
-        m_markers.emplace_back(im->shared_from_this());
-}
 
 void MapData::removeMarker(const std::shared_ptr<InfoMark> &im)
 {

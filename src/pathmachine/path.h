@@ -14,7 +14,6 @@
 #include "../mapdata/mmapper2exit.h"
 #include "pathparameters.h"
 
-class AbstractRoomFactory;
 class Coordinate;
 class Room;
 class RoomAdmin;

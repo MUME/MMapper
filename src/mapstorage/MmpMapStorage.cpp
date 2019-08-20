@@ -158,9 +158,7 @@ bool MmpMapStorage::saveData(bool baseMapOnly)
 
     // save rooms
     stream.writeStartElement("rooms");
-    QListIterator<const Room *> roomit(roomList);
-    while (roomit.hasNext()) {
-        const Room *const pRoom = roomit.next();
+    for (const auto &pRoom : roomList) {
         const Room &room = deref(pRoom);
 
         if (baseMapOnly) {

@@ -6,6 +6,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include <memory>
+#include <vector>
 #include <QDialog>
 #include <QString>
 #include <QtCore>
@@ -43,7 +44,7 @@ class RoomEditAttrDlg final : public QDialog, private Ui::RoomEditAttrDlg
     Q_OBJECT
 
 signals:
-    void mapChanged();
+    void requestUpdate();
 
 public slots:
     void setRoomSelection(const SharedRoomSelection &, MapData *, MapCanvas *);
@@ -80,7 +81,7 @@ public slots:
 
     void exitFlagsListItemChanged(QListWidgetItem *);
 
-    void doorNameLineEditTextChanged(const QString &);
+    void doorNameLineEditTextChanged();
     void doorFlagsListItemChanged(QListWidgetItem *);
 
     void toggleHiddenDoor();
@@ -102,6 +103,25 @@ public:
     void writeSettings();
 
 private:
+    struct Connections final
+    {
+    private:
+        std::vector<QMetaObject::Connection> m_connections;
+
+    public:
+        Connections &operator+=(QMetaObject::Connection c)
+        {
+            m_connections.emplace_back(std::move(c));
+            return *this;
+        }
+        void disconnectAll(QObject &o)
+        {
+            for (auto &c : m_connections)
+                o.disconnect(c);
+            m_connections.clear();
+        }
+    };
+    Connections m_connections;
     void connectAll();
     void disconnectAll();
 
@@ -110,7 +130,7 @@ private:
     void updateDialog(const Room *r);
 
 private:
-    void updateCommon(std::unique_ptr<AbstractAction> moved_action);
+    void updateCommon(std::unique_ptr<AbstractAction> moved_action, bool onlyExecuteAction = false);
     void updateRoomAlign(RoomAlignEnum value);
     void updateRoomPortable(RoomPortableEnum value);
     void updateRoomRideable(RoomRidableEnum value);
@@ -118,17 +138,19 @@ private:
     void updateRoomSundeath(RoomSundeathEnum value);
 
 private:
+    QRadioButton *getAlignRadioButton(RoomAlignEnum value) const;
+    QRadioButton *getPortableRadioButton(RoomPortableEnum value) const;
+    QRadioButton *getRideableRadioButton(RoomRidableEnum value) const;
+    QRadioButton *getLightRadioButton(RoomLightEnum value) const;
+    QRadioButton *getSundeathRadioButton(RoomSundeathEnum value) const;
+    QToolButton *getTerrainToolButton(RoomTerrainEnum value) const;
+
+private:
     EnumIndexedArray<RoomListWidgetItem *, RoomLoadFlagEnum> loadListItems;
     EnumIndexedArray<RoomListWidgetItem *, RoomMobFlagEnum> mobListItems;
     EnumIndexedArray<RoomListWidgetItem *, ExitFlagEnum> exitListItems;
     EnumIndexedArray<RoomListWidgetItem *, DoorFlagEnum> doorListItems;
-
-#define NUM_ELEMENTS(arr) (decltype(arr)::SIZE)
-    static_assert(NUM_ELEMENTS(loadListItems) <= 32u);
-    static_assert(NUM_ELEMENTS(mobListItems) <= 32u);
-    static_assert(NUM_ELEMENTS(exitListItems) <= 16u);
-    static_assert(NUM_ELEMENTS(doorListItems) <= 16u);
-#undef NUM_ELEMENTS
+    EnumIndexedArray<QToolButton *, RoomTerrainEnum> roomTerrainButtons;
 
     SharedRoomSelection m_roomSelection;
     MapData *m_mapData = nullptr;

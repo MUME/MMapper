@@ -7,8 +7,8 @@
 
 #include <list>
 
-#include "../expandoracommon/AbstractRoomFactory.h"
 #include "../expandoracommon/parseevent.h"
+#include "../expandoracommon/room.h"
 #include "../global/utils.h"
 #include "../parser/CommandId.h"
 #include "experimenting.h"
@@ -17,22 +17,17 @@
 
 class Path;
 
-OneByOne::OneByOne(AbstractRoomFactory *const in_factory,
-                   const SigParseEvent &sigParseEvent,
+OneByOne::OneByOne(const SigParseEvent &sigParseEvent,
                    PathParameters &in_params,
                    RoomSignalHandler *const in_handler)
-    : Experimenting{new PathList,
-                    getDirection(sigParseEvent.deref().getMoveType()),
-                    in_params,
-                    in_factory}
+    : Experimenting{new PathList, getDirection(sigParseEvent.deref().getMoveType()), in_params}
     , event{sigParseEvent.getShared()}
     , handler{in_handler}
 {}
 
 void OneByOne::receiveRoom(RoomAdmin *const admin, const Room *const room)
 {
-    if (factory->compare(room, deref(event), params.matchingTolerance)
-        == ComparisonResultEnum::EQUAL) {
+    if (Room::compare(room, deref(event), params.matchingTolerance) == ComparisonResultEnum::EQUAL) {
         augmentPath(shortPaths->back(), admin, room);
     } else {
         // needed because the memory address is not unique and

@@ -13,11 +13,8 @@ class Room;
 class RoomAdmin;
 struct PathParameters;
 
-Crossover::Crossover(PathList *paths,
-                     ExitDirEnum dirCode,
-                     PathParameters &params,
-                     AbstractRoomFactory *in_factory)
-    : Experimenting(paths, dirCode, params, in_factory)
+Crossover::Crossover(PathList *paths, ExitDirEnum dirCode, PathParameters &params)
+    : Experimenting(paths, dirCode, params)
 {}
 
 void Crossover::receiveRoom(RoomAdmin *map, const Room *room)

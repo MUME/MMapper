@@ -5,7 +5,6 @@
 
 #include "approved.h"
 
-#include "../expandoracommon/AbstractRoomFactory.h"
 #include "../expandoracommon/RoomAdmin.h"
 #include "../expandoracommon/room.h"
 #include "../mapfrontend/mapaction.h"
@@ -15,7 +14,7 @@ void Approved::receiveRoom(RoomAdmin *sender, const Room *perhaps)
     auto &event = myEvent.deref();
 
     if (matchedRoom == nullptr) {
-        const ComparisonResultEnum indicator = factory->compare(perhaps, event, matchingTolerance);
+        const ComparisonResultEnum indicator = Room::compare(perhaps, event, matchingTolerance);
         if (indicator != ComparisonResultEnum::DIFFERENT) {
             matchedRoom = perhaps;
             owner = sender;
@@ -42,12 +41,9 @@ Approved::~Approved()
     }
 }
 
-Approved::Approved(AbstractRoomFactory *const in_factory,
-                   const SigParseEvent &sigParseEvent,
-                   const int tolerance)
+Approved::Approved(const SigParseEvent &sigParseEvent, const int tolerance)
     : myEvent{sigParseEvent.requireValid()}
     , matchingTolerance{tolerance}
-    , factory{in_factory}
 {}
 
 const Room *Approved::oneMatch() const

@@ -172,8 +172,8 @@ Room BaseMapSaveFilter::alteredRoom(const Room &room)
 
     Room copy = room;
 
-    ExitsList &exits = copy.getExitsList();
-    for (auto &exit : exits) {
+    ExitsList copiedExits = copy.getExitsList();
+    for (auto &exit : copiedExits) {
         auto outLinks = exit.outClone();
         auto inLinks = exit.inClone();
 
@@ -205,5 +205,6 @@ Room BaseMapSaveFilter::alteredRoom(const Room &room)
         }
     }
 
+    copy.setExitsList(copiedExits);
     return copy;
 }

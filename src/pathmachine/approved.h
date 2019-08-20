@@ -8,7 +8,6 @@
 #include "../expandoracommon/parseevent.h"
 #include "../global/RuleOf5.h"
 
-class AbstractRoomFactory;
 class ParseEvent;
 class Room;
 class RoomAdmin;
@@ -22,12 +21,9 @@ private:
     RoomAdmin *owner = nullptr;
     bool moreThanOne = false;
     bool update = false;
-    AbstractRoomFactory *factory = nullptr;
 
 public:
-    explicit Approved(AbstractRoomFactory *in_factory,
-                      const SigParseEvent &sigParseEvent,
-                      int matchingTolerance);
+    explicit Approved(const SigParseEvent &sigParseEvent, int matchingTolerance);
     ~Approved() override;
     void receiveRoom(RoomAdmin *, const Room *) override;
     const Room *oneMatch() const;

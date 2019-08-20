@@ -11,10 +11,12 @@
 class RoomRecipient;
 class MapAction;
 
-class RoomAdmin
+// TODO: Collapse RoomModificationTracker, RoomAdmin, MapFrontend, and MapData into a single class,
+// and eliminate dependency on QObject.
+class RoomAdmin : public RoomModificationTracker
 {
 public:
-    virtual ~RoomAdmin();
+    ~RoomAdmin() override;
 
     // removes the lock on a room
     // after the last lock is removed, the room is deleted

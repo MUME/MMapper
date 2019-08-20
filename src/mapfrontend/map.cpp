@@ -5,7 +5,6 @@
 
 #include "map.h"
 
-#include "../expandoracommon/AbstractRoomFactory.h"
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/room.h"
 #include "AbstractRoomVisitor.h"
@@ -74,22 +73,6 @@ public:
                 const auto xUpper = xmap.lower_bound(range.max.x);
                 for (auto x = xmap.upper_bound(range.min.x); x != xUpper; ++x) {
                     stream.visit(x->second);
-                }
-            }
-        }
-    }
-
-    void fillArea(AbstractRoomFactory *factory, const Coordinate &min, const Coordinate &max)
-    {
-        const auto range = CoordinateMinMax::get(min, max);
-
-        for (int z = range.min.z; z <= range.max.z; ++z) {
-            for (int y = range.min.y; y <= range.max.y; ++y) {
-                for (int x = range.min.x; x <= range.max.x; ++x) {
-                    Room *&room = map[z][y][x];
-                    if (room == nullptr) {
-                        room = factory->createRoom();
-                    }
                 }
             }
         }
@@ -178,11 +161,6 @@ void Map::clear()
 void Map::getRooms(AbstractRoomVisitor &stream, const Coordinate &min, const Coordinate &max) const
 {
     return m_pimpl->getRooms(stream, min, max);
-}
-
-void Map::fillArea(AbstractRoomFactory *factory, const Coordinate &min, const Coordinate &max)
-{
-    return m_pimpl->fillArea(factory, min, max);
 }
 
 /**

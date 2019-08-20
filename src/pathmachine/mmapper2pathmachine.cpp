@@ -11,7 +11,6 @@
 
 #include "../configuration/configuration.h"
 #include "../expandoracommon/parseevent.h"
-#include "../mapdata/roomfactory.h"
 #include "pathmachine.h"
 #include "pathparameters.h"
 
@@ -59,6 +58,6 @@ void Mmapper2PathMachine::event(const SigParseEvent &sigParseEvent)
                  .arg(time.elapsed()));
 }
 
-Mmapper2PathMachine::Mmapper2PathMachine(QObject *const parent)
-    : PathMachine(new RoomFactory, parent)
+Mmapper2PathMachine::Mmapper2PathMachine(MapData *const mapData, QObject *const parent)
+    : PathMachine(mapData, parent)
 {}

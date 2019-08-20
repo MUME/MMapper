@@ -12,7 +12,6 @@
 #include <utility>
 #include <QMutex>
 
-#include "../expandoracommon/AbstractRoomFactory.h"
 #include "../expandoracommon/RoomRecipient.h"
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/parseevent.h"
@@ -24,21 +23,15 @@
 #include "roomcollection.h"
 #include "roomlocker.h"
 
-MapFrontend::MapFrontend(AbstractRoomFactory *const in_factory, QObject *const parent)
+MapFrontend::MapFrontend(QObject *const parent)
     : QObject(parent)
     , mapLock(QMutex::Recursive)
-    , factory(in_factory)
 {}
 
 MapFrontend::~MapFrontend()
 {
     QMutexLocker locker(&mapLock);
     emit clearingMap();
-
-    for (uint i = 0; i < roomIndex.size(); ++i) {
-        /* NOTE: you're allowed to delete nullptr, so no conditional is required */
-        delete std::exchange(roomIndex[RoomId{i}], nullptr);
-    }
 }
 
 void MapFrontend::block()
@@ -126,15 +119,19 @@ void MapFrontend::clear()
     QMutexLocker locker(&mapLock);
     emit clearingMap();
 
-    for (uint i = 0; i < roomIndex.size(); ++i) {
-        const auto roomId = RoomId{i};
-        if (roomIndex[roomId] != nullptr) {
-            delete std::exchange(roomIndex[roomId], nullptr);
-            if (auto h = std::exchange(roomHomes[roomId], nullptr)) {
-                h->clear();
-            }
-            locks[roomId].clear();
+    for (size_t i = 0, size = roomIndex.size(); i < size; ++i) {
+        const auto roomId = RoomId{static_cast<uint32_t>(i)};
+
+        auto &ref = roomIndex[roomId];
+        if (ref == nullptr)
+            continue;
+
+        std::exchange(ref, nullptr)->setAboutToDie();
+
+        if (SharedRoomCollection h = std::exchange(roomHomes[roomId], nullptr)) {
+            h->clear();
         }
+        locks[roomId].clear();
     }
 
     map.clear();
@@ -152,14 +149,14 @@ void MapFrontend::lookingForRooms(RoomRecipient &recipient, const RoomId id)
 {
     QMutexLocker locker(&mapLock);
     if (greatestUsedId >= id) {
-        if (Room *r = roomIndex[id]) {
+        if (const SharedRoom &r = roomIndex[id]) {
             locks[id].insert(&recipient);
-            recipient.receiveRoom(this, r);
+            recipient.receiveRoom(this, r.get());
         }
     }
 }
 
-RoomId MapFrontend::assignId(Room *const room, const SharedRoomCollection &roomHome)
+RoomId MapFrontend::assignId(const SharedRoom &room, const SharedRoomCollection &roomHome)
 {
     /* REVISIT: move all of the objects modified in this function to a sub-object? */
 
@@ -168,12 +165,12 @@ RoomId MapFrontend::assignId(Room *const room, const SharedRoomCollection &roomH
             /* avoid adding operator++ to RoomId, to help avoid mistakes */
             return greatestUsedId = RoomId{greatestUsedId.asUint32() + 1u};
         } else {
-            auto id = unusedIds.top();
+            const auto result = unusedIds.top();
             unusedIds.pop();
-            if (id > greatestUsedId || greatestUsedId == INVALID_ROOMID) {
-                greatestUsedId = id;
+            if (result > greatestUsedId || greatestUsedId == INVALID_ROOMID) {
+                greatestUsedId = result;
             }
-            return id;
+            return result;
         }
     }();
 
@@ -199,13 +196,15 @@ void MapFrontend::lookingForRooms(RoomRecipient &recipient,
     map.getRooms(ret, input_min, input_max);
 }
 
-void MapFrontend::insertPredefinedRoom(Room &room)
+void MapFrontend::insertPredefinedRoom(const SharedRoom &sharedRoom)
 {
+    Room &room = deref(sharedRoom);
+
     QMutexLocker locker(&mapLock);
     assert(signalsBlocked());
     const auto id = room.getId();
     const Coordinate &c = room.getPosition();
-    auto event = factory->getEvent(&room);
+    auto event = Room::getEvent(&room);
 
     assert(roomIndex.size() <= id.asUint32() || roomIndex[id] == nullptr);
 
@@ -213,21 +212,19 @@ void MapFrontend::insertPredefinedRoom(Room &room)
     map.setNearest(c, room);
     checkSize(room.getPosition());
     unusedIds.push(id);
-    assignId(&room, roomHome);
+    assignId(sharedRoom, roomHome);
     if (roomHome != nullptr) {
-        roomHome->addRoom(&room);
+        roomHome->addRoom(sharedRoom);
     }
 }
 
 RoomId MapFrontend::createEmptyRoom(const Coordinate &c)
 {
     QMutexLocker locker(&mapLock);
-    Room *const room = factory->createRoom();
-    room->setPermanent();
+    SharedRoom room = Room::createPermanentRoom(*this);
     map.setNearest(c, *room);
     checkSize(room->getPosition());
-    const RoomId id = assignId(room, nullptr);
-    return id;
+    return assignId(room, nullptr);
 }
 
 void MapFrontend::checkSize(const Coordinate &c)
@@ -264,7 +261,7 @@ void MapFrontend::createRoom(const SigParseEvent &sigParseEvent, const Coordinat
     QMutexLocker locker(&mapLock);
     checkSize(expectedPosition); // still hackish but somewhat better
     if (SharedRoomCollection roomHome = parseTree.insertRoom(event)) {
-        Room *const room = factory->createRoom(event);
+        SharedRoom room = Room::createTemporaryRoom(*this, event);
         roomHome->addRoom(room);
         map.setNearest(expectedPosition, *room);
         assignId(room, roomHome);
@@ -284,7 +281,7 @@ void MapFrontend::lookingForRooms(RoomRecipient &recipient, const SigParseEvent 
         }
     }
 
-    RoomLocker ret(recipient, *this, factory, &event);
+    RoomLocker ret(recipient, *this, &event);
     parseTree.getRooms(ret, event);
     event.reset();
 }
@@ -303,7 +300,10 @@ void MapFrontend::releaseRoom(RoomRecipient &sender, const RoomId id)
     room_locks_ref.erase(&sender);
     if (room_locks_ref.empty()) {
         executeActions(id);
-        if (Room *const room = roomIndex[id]) {
+        if (const SharedRoom &room = roomIndex[id]) {
+            // REVISIT: Why do temporary rooms exist?
+            // Also, note: After the conversion to SharedRoom, it's no longer necessary
+            // to explicitly delete rooms. Just release all references to them.
             if (room->isTemporary()) {
                 scheduleAction(std::make_shared<SingleRoomAction>(std::make_unique<Remove>(), id));
             }

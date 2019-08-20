@@ -27,8 +27,6 @@ class MapFrontend;
 class ParseEvent;
 class Room;
 
-enum class FlagModifyModeEnum { SET, UNSET, TOGGLE };
-
 using AddOneWayExit = AddExit;
 
 class AddTwoWayExit final : public AddOneWayExit

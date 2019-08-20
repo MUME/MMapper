@@ -9,6 +9,7 @@
 #include <cassert>
 #include <cstddef>
 #include <stdexcept>
+#include <unordered_map>
 #include <QString>
 
 #include "../expandoracommon/coordinate.h"
@@ -92,11 +93,28 @@ public:
     const Index &index() const { return m_index; }
 };
 
+static std::string getZoneKey(const Coordinate &c)
+{
+    static constexpr const auto calcZoneCoord = [](const int n) -> int {
+        auto f = [](const int x) -> int { return (x / ZONE_WIDTH) * ZONE_WIDTH; };
+        return f((n < 0) ? (n + 1 - ZONE_WIDTH) : n);
+    };
+    static_assert(calcZoneCoord(-ZONE_WIDTH - 1) == -2 * ZONE_WIDTH);
+    static_assert(calcZoneCoord(-ZONE_WIDTH) == -ZONE_WIDTH);
+    static_assert(calcZoneCoord(-1) == -ZONE_WIDTH);
+    static_assert(calcZoneCoord(0) == 0);
+    static_assert(calcZoneCoord(ZONE_WIDTH - 1) == 0);
+    static_assert(calcZoneCoord(ZONE_WIDTH) == ZONE_WIDTH);
+
+    // REVISIT: consider sprintf here instead of std::string concatenation if this shows up in perf.
+    return std::to_string(calcZoneCoord(c.x)) + "," + std::to_string(calcZoneCoord(c.y));
+}
+
 // Splits the world in zones easier to download and load
 class ZoneIndex final
 {
 public:
-    using Index = QMap<QString, ConstRoomList>;
+    using Index = std::unordered_map<std::string, ConstRoomList>;
 
 private:
     Index m_index;
@@ -104,18 +122,14 @@ private:
 public:
     void addRoom(const Room &room)
     {
-        Coordinate coords = room.getPosition();
-        QString zone(QString("%1,%2")
-                         .arg(coords.x - coords.x % ZONE_WIDTH)
-                         .arg(coords.y - coords.y % ZONE_WIDTH));
-
-        Index::iterator iter = m_index.find(zone);
+        const auto zone = getZoneKey(room.getPosition());
+        const auto iter = m_index.find(zone);
         if (iter == m_index.end()) {
             ConstRoomList list;
-            list.push_back(&room);
-            m_index.insert(zone, list);
+            list.emplace_back(room.shared_from_this());
+            m_index.emplace(zone, std::move(list));
         } else {
-            iter.value().push_back(&room);
+            iter->second.emplace_back(room.shared_from_this());
         }
     }
 
@@ -260,7 +274,7 @@ void JsonWorld::addRooms(const ConstRoomList &roomList,
                          ProgressCounter &progressCounter,
                          bool baseMapOnly)
 {
-    for (const Room *const pRoom : roomList) {
+    for (const SharedConstRoom &pRoom : roomList) {
         const Room &room = deref(pRoom);
         progressCounter.step();
 
@@ -407,13 +421,12 @@ void JsonWorld::writeZones(const QDir &dir,
                            ProgressCounter &progressCounter,
                            bool baseMapOnly) const
 {
-    using ZoneIterT = ZoneIndex::Index::const_iterator;
     const ZoneIndex::Index &index = m_zoneIndex.index();
 
-    for (ZoneIterT zIter = index.cbegin(); zIter != index.cend(); ++zIter) {
-        const ConstRoomList &rooms = zIter.value();
+    for (auto &kv : index) {
+        const ConstRoomList &rooms = kv.second;
         QJsonArray jRooms;
-        for (const Room *const pRoom : rooms) {
+        for (const auto &pRoom : rooms) {
             const Room &room = deref(pRoom);
             if (baseMapOnly) {
                 const BaseMapSaveFilter::ActionEnum action = filter.filter(room);
@@ -430,7 +443,7 @@ void JsonWorld::writeZones(const QDir &dir,
             progressCounter.step();
         }
 
-        QString filePath = dir.filePath(zIter.key() + ".json");
+        QString filePath = dir.filePath(QString::fromStdString(kv.first + ".json"));
         writeJson(filePath, jRooms, "zone");
     }
 }
@@ -467,6 +480,8 @@ bool JsonMapStorage::saveData(bool baseMapOnly)
     // them from a sort of callback function.
     // The RoomSaver acts as a lock on the rooms.
     ConstRoomList roomList;
+    roomList.reserve(m_mapData.getRoomsCount());
+
     MarkerList &markerList = m_mapData.getMarkersList();
     RoomSaver saver(m_mapData, roomList);
     for (uint i = 0; i < m_mapData.getRoomsCount(); ++i) {

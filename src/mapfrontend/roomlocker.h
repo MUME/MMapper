@@ -9,7 +9,6 @@
 class Room;
 class MapFrontend;
 class ParseEvent;
-class AbstractRoomFactory;
 class RoomRecipient;
 
 class RoomLocker final : public AbstractRoomVisitor
@@ -17,7 +16,6 @@ class RoomLocker final : public AbstractRoomVisitor
 public:
     explicit RoomLocker(RoomRecipient &forward,
                         MapFrontend &frontend,
-                        AbstractRoomFactory *factory = nullptr,
                         ParseEvent *compare = nullptr);
     virtual void visit(const Room *room) override;
     virtual ~RoomLocker() override;
@@ -25,6 +23,5 @@ public:
 private:
     RoomRecipient &recipient;
     MapFrontend &data;
-    AbstractRoomFactory *const factory;
     ParseEvent *const comparator;
 };

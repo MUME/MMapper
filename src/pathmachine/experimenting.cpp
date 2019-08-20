@@ -6,20 +6,17 @@
 #include "experimenting.h"
 
 #include "../expandoracommon/room.h"
-#include "../mapdata/roomfactory.h"
 #include "path.h"
 #include "pathparameters.h"
 
 Experimenting::Experimenting(PathList *const pat,
                              const ExitDirEnum in_dirCode,
-                             PathParameters &in_params,
-                             AbstractRoomFactory *const in_factory)
-    : direction(RoomFactory::exitDir(in_dirCode))
+                             PathParameters &in_params)
+    : direction(Room::exitDir(in_dirCode))
     , dirCode(in_dirCode)
     , paths(new PathList)
     , params(in_params)
     , shortPaths(pat)
-    , factory(in_factory)
 {}
 
 Experimenting::~Experimenting() = default;

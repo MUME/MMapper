@@ -136,13 +136,13 @@ void MapData::shortestPathSearch(const Room *origin,
             if (!e.isExit()) {
                 continue;
             }
-            const Room *const nextr = roomIndex[e.outFirst()];
+            const SharedConstRoom &nextr = roomIndex[e.outFirst()];
             if (visited.contains(nextr->getId())) {
                 continue;
             }
-            const double length = getLength(e, thisr, nextr);
+            const double length = getLength(e, thisr, nextr.get());
             sp_nodes.push_back(
-                SPNode(nextr, spindex, thisdist + length, static_cast<ExitDirEnum>(dir)));
+                SPNode(nextr.get(), spindex, thisdist + length, static_cast<ExitDirEnum>(dir)));
             future_paths.push(std::make_pair(-(thisdist + length), sp_nodes.size() - 1));
         }
     }

@@ -23,8 +23,12 @@ file(GLOB_RECURSE expandoracommon_SRCS
     ../src/parser/CommandId.h
     ../src/mapdata/ExitDirection.cpp
     ../src/mapdata/ExitDirection.h
+    ../src/mapdata/ExitFieldVariant.cpp
+    ../src/mapdata/ExitFieldVariant.h
     ../src/global/NullPointerException.cpp
     ../src/global/NullPointerException.h
+    ../src/global/StringView.cpp
+    ../src/global/StringView.h
     ../src/global/random.cpp
     ../src/global/random.h
     ../src/global/utils.cpp
