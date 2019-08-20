@@ -4,55 +4,71 @@
         <file>LICENSE.LGPL</file>
         <file>LICENSE.MINIUPNPC</file>
         <file>LICENSE.OPENSSL</file>
-        <file>icons/online.png</file>
-        <file>icons/offline.png</file>
-        <file>icons/play.png</file>
-        <file>icons/map.png</file>
-        <file>icons/preferences.png</file>
+        <file>fonts/DejaVuSansMono.ttf</file>
+        <file>fonts/LICENSE</file>
+        <file>icons/affect-bashed.png</file>
+        <file>icons/affect-bleeding.png</file>
+        <file>icons/affect-blind.png</file>
+        <file>icons/affect-hungry.png</file>
+        <file>icons/affect-poisoned.png</file>
+        <file>icons/affect-slept.png</file>
+        <file>icons/affect-thirsty.png</file>
         <file>icons/cancel.png</file>
-        <file>icons/generalcfg.png</file>
-        <file>icons/parsercfg.png</file>
-        <file>icons/pathmachinecfg.png</file>
+        <file>icons/connectioncreate.png</file>
+        <file>icons/connectiondelete.png</file>
+        <file>icons/connectionedit.png</file>
+        <file>icons/connectionselection.png</file>
         <file>icons/copy.png</file>
         <file>icons/cut.png</file>
-        <file>icons/new.png</file>
-        <file>icons/open.png</file>
-        <file>icons/merge.png</file>
-        <file>icons/paste.png</file>
-        <file>icons/save.png</file>
-        <file>icons/viewmag+.png</file>
-        <file>icons/viewmag-.png</file>
-        <file>icons/viewmagfit.png</file>
-        <file>icons/roomselection.png</file>
-        <file>icons/roomedit.png</file>
-        <file>icons/roomdelete.png</file>
-        <file>icons/roomcreate.png</file>
-        <file>icons/roommoveup.png</file>
-        <file>icons/roommovedown.png</file>
-        <file>icons/roommergeup.png</file>
-        <file>icons/roommergedown.png</file>
-        <file>icons/roomconnecttoneighbours.png</file>
-        <file>icons/roomfind.png</file>
-        <file>icons/connectionselection.png</file>
-        <file>icons/connectionedit.png</file>
+        <file>icons/exit.png</file>
+        <file>icons/force.png</file>
+        <file>icons/generalcfg.png</file>
+        <file>icons/graphicscfg.png</file>
+        <file>icons/groupcfg.png</file>
+        <file>icons/groupclient.png</file>
+        <file>icons/groupmanager.png</file>
+        <file>icons/groupoff.png</file>
+        <file>icons/groupserver.png</file>
         <file>icons/infomarkcreate.png</file>
-        <file>icons/infomarkedit.png</file>
         <file>icons/infomarkdelete.png</file>
+        <file>icons/infomarkedit.png</file>
         <file>icons/infomarkselection.png</file>
-        <file>icons/connectioncreate.png</file>
-        <file>icons/onewayconnectioncreate.png</file>
-        <file>icons/connectiondelete.png</file>
-        <file>icons/mapmove.png</file>
-        <file>icons/layerup.png</file>
         <file>icons/layerdown.png</file>
         <file>icons/layerhome.png</file>
-        <file>icons/force.png</file>
-        <file>icons/groupoff.png</file>
-        <file>icons/groupclient.png</file>
-        <file>icons/groupserver.png</file>
-        <file>icons/groupcfg.png</file>
-        <file>icons/groupmanager.png</file>
+        <file>icons/layerup.png</file>
+        <file>icons/map.png</file>
+        <file>icons/mapmove.png</file>
+        <file>icons/merge.png</file>
+        <file>icons/mumeprotocolcfg.png</file>
+        <file>icons/new.png</file>
+        <file>icons/offline.png</file>
+        <file>icons/onewayconnectioncreate.png</file>
+        <file>icons/online.png</file>
+        <file>icons/open.png</file>
+        <file>icons/parsercfg.png</file>
+        <file>icons/paste.png</file>
+        <file>icons/pathmachinecfg.png</file>
+        <file>icons/play.png</file>
+        <file>icons/position-dead.png</file>
+        <file>icons/position-fighting.png</file>
+        <file>icons/position-incapacitated.png</file>
+        <file>icons/position-resting.png</file>
+        <file>icons/position-sitting.png</file>
+        <file>icons/position-sleeping.png</file>
+        <file>icons/position-standing.png</file>
+        <file>icons/preferences.png</file>
         <file>icons/reload.png</file>
+        <file>icons/roomconnecttoneighbours.png</file>
+        <file>icons/roomcreate.png</file>
+        <file>icons/roomdelete.png</file>
+        <file>icons/roomedit.png</file>
+        <file>icons/roomfind.png</file>
+        <file>icons/roommergedown.png</file>
+        <file>icons/roommergeup.png</file>
+        <file>icons/roommovedown.png</file>
+        <file>icons/roommoveup.png</file>
+        <file>icons/roomselection.png</file>
+        <file>icons/save.png</file>
         <file>icons/terminal.png</file>
         <file>icons/exit.png</file>
         <file>pixmaps/mellon.png</file>
@@ -90,79 +106,95 @@
         <file>pixmaps/road-all.png</file>
         <file>pixmaps/load-treasure.png</file>
         <file>pixmaps/load-armour.png</file>
-        <file>pixmaps/load-weapon.png</file>
-        <file>pixmaps/load-water.png</file>
-        <file>pixmaps/load-food.png</file>
-        <file>pixmaps/load-herb.png</file>
-        <file>pixmaps/load-key.png</file>
-        <file>pixmaps/load-mule.png</file>
-        <file>pixmaps/load-horse.png</file>
-        <file>pixmaps/load-pack.png</file>
-        <file>pixmaps/load-trained.png</file>
-        <file>pixmaps/load-rohirrim.png</file>
-        <file>pixmaps/load-warg.png</file>
-        <file>pixmaps/load-boat.png</file>
         <file>pixmaps/load-attention.png</file>
-        <file>pixmaps/load-watch.png</file>
+        <file>pixmaps/load-boat.png</file>
         <file>pixmaps/load-clock.png</file>
-        <file>pixmaps/load-mail.png</file>
-        <file>pixmaps/mob-rent.png</file>
-        <file>pixmaps/mob-shop.png</file>
-        <file>pixmaps/mob-weaponshop.png</file>
-        <file>pixmaps/mob-armourshop.png</file>
-        <file>pixmaps/mob-foodshop.png</file>
-        <file>pixmaps/mob-petshop.png</file>
-        <file>pixmaps/mob-guild.png</file>
-        <file>pixmaps/mob-scoutguild.png</file>
-        <file>pixmaps/mob-mageguild.png</file>
-        <file>pixmaps/mob-clericguild.png</file>
-        <file>pixmaps/mob-warriorguild.png</file>
-        <file>pixmaps/mob-rangerguild.png</file>
-        <file>pixmaps/mob-aggmob.png</file>
-        <file>pixmaps/mob-questmob.png</file>
-        <file>pixmaps/mob-passivemob.png</file>
-        <file>pixmaps/mob-elitemob.png</file>
-        <file>pixmaps/mob-smob.png</file>
-        <file>pixmaps/update0.png</file>
-        <file>pixmaps/trail-none.png</file>
-        <file>pixmaps/trail-n.png</file>
-        <file>pixmaps/trail-s.png</file>
-        <file>pixmaps/trail-ns.png</file>
-        <file>pixmaps/trail-e.png</file>
-        <file>pixmaps/trail-ne.png</file>
-        <file>pixmaps/trail-es.png</file>
-        <file>pixmaps/trail-nes.png</file>
-        <file>pixmaps/trail-w.png</file>
-        <file>pixmaps/trail-nw.png</file>
-        <file>pixmaps/trail-sw.png</file>
-        <file>pixmaps/trail-nsw.png</file>
-        <file>pixmaps/trail-ew.png</file>
-        <file>pixmaps/trail-new.png</file>
-        <file>pixmaps/trail-esw.png</file>
-        <file>pixmaps/trail-all.png</file>
-        <file>icons/mumeprotocolcfg.png</file>
-        <file>icons/graphicscfg.png</file>
-        <file>pixmaps/load-stable.png</file>
-        <file>pixmaps/load-whiteword.png</file>
+        <file>pixmaps/load-coach.png</file>
         <file>pixmaps/load-darkword.png</file>
         <file>pixmaps/load-equipment.png</file>
-        <file>pixmaps/load-coach.png</file>
         <file>pixmaps/load-ferry.png</file>
-        <file>icons/position-fighting.png</file>
-        <file>icons/position-standing.png</file>
-        <file>icons/position-resting.png</file>
-        <file>icons/position-sitting.png</file>
-        <file>icons/position-sleeping.png</file>
-        <file>icons/position-incapacitated.png</file>
-        <file>icons/position-dead.png</file>
-        <file>icons/affect-blind.png</file>
-        <file>icons/affect-bashed.png</file>
-        <file>icons/affect-slept.png</file>
-        <file>icons/affect-poisoned.png</file>
-        <file>icons/affect-bleeding.png</file>
-        <file>icons/affect-hungry.png</file>
-        <file>icons/affect-thirsty.png</file>
-        <file>fonts/DejaVuSansMono.ttf</file>
-        <file>fonts/LICENSE</file>
+        <file>pixmaps/load-food.png</file>
+        <file>pixmaps/load-herb.png</file>
+        <file>pixmaps/load-horse.png</file>
+        <file>pixmaps/load-key.png</file>
+        <file>pixmaps/load-mail.png</file>
+        <file>pixmaps/load-mule.png</file>
+        <file>pixmaps/load-pack.png</file>
+        <file>pixmaps/load-rohirrim.png</file>
+        <file>pixmaps/load-stable.png</file>
+        <file>pixmaps/load-trained.png</file>
+        <file>pixmaps/load-treasure.png</file>
+        <file>pixmaps/load-warg.png</file>
+        <file>pixmaps/load-watch.png</file>
+        <file>pixmaps/load-water.png</file>
+        <file>pixmaps/load-weapon.png</file>
+        <file>pixmaps/load-whiteword.png</file>
+        <file>pixmaps/mellon.png</file>
+        <file>pixmaps/mob-aggmob.png</file>
+        <file>pixmaps/mob-armourshop.png</file>
+        <file>pixmaps/mob-clericguild.png</file>
+        <file>pixmaps/mob-elitemob.png</file>
+        <file>pixmaps/mob-foodshop.png</file>
+        <file>pixmaps/mob-guild.png</file>
+        <file>pixmaps/mob-mageguild.png</file>
+        <file>pixmaps/mob-passivemob.png</file>
+        <file>pixmaps/mob-petshop.png</file>
+        <file>pixmaps/mob-questmob.png</file>
+        <file>pixmaps/mob-rangerguild.png</file>
+        <file>pixmaps/mob-rent.png</file>
+        <file>pixmaps/mob-scoutguild.png</file>
+        <file>pixmaps/mob-shop.png</file>
+        <file>pixmaps/mob-smob.png</file>
+        <file>pixmaps/mob-warriorguild.png</file>
+        <file>pixmaps/mob-weaponshop.png</file>
+        <file>pixmaps/road-all.png</file>
+        <file>pixmaps/road-e.png</file>
+        <file>pixmaps/road-es.png</file>
+        <file>pixmaps/road-esw.png</file>
+        <file>pixmaps/road-ew.png</file>
+        <file>pixmaps/road-n.png</file>
+        <file>pixmaps/road-ne.png</file>
+        <file>pixmaps/road-nes.png</file>
+        <file>pixmaps/road-new.png</file>
+        <file>pixmaps/road-none.png</file>
+        <file>pixmaps/road-ns.png</file>
+        <file>pixmaps/road-nsw.png</file>
+        <file>pixmaps/road-nw.png</file>
+        <file>pixmaps/road-s.png</file>
+        <file>pixmaps/road-sw.png</file>
+        <file>pixmaps/road-w.png</file>
+        <file>pixmaps/terrain-brush.png</file>
+        <file>pixmaps/terrain-cavern.png</file>
+        <file>pixmaps/terrain-city.png</file>
+        <file>pixmaps/terrain-deathtrap.png</file>
+        <file>pixmaps/terrain-field.png</file>
+        <file>pixmaps/terrain-forest.png</file>
+        <file>pixmaps/terrain-hills.png</file>
+        <file>pixmaps/terrain-indoors.png</file>
+        <file>pixmaps/terrain-mountains.png</file>
+        <file>pixmaps/terrain-rapids.png</file>
+        <file>pixmaps/terrain-road.png</file>
+        <file>pixmaps/terrain-shallow.png</file>
+        <file>pixmaps/terrain-tunnel.png</file>
+        <file>pixmaps/terrain-undefined.png</file>
+        <file>pixmaps/terrain-underwater.png</file>
+        <file>pixmaps/terrain-water.png</file>
+        <file>pixmaps/trail-all.png</file>
+        <file>pixmaps/trail-e.png</file>
+        <file>pixmaps/trail-es.png</file>
+        <file>pixmaps/trail-esw.png</file>
+        <file>pixmaps/trail-ew.png</file>
+        <file>pixmaps/trail-n.png</file>
+        <file>pixmaps/trail-ne.png</file>
+        <file>pixmaps/trail-nes.png</file>
+        <file>pixmaps/trail-new.png</file>
+        <file>pixmaps/trail-none.png</file>
+        <file>pixmaps/trail-ns.png</file>
+        <file>pixmaps/trail-nsw.png</file>
+        <file>pixmaps/trail-nw.png</file>
+        <file>pixmaps/trail-s.png</file>
+        <file>pixmaps/trail-sw.png</file>
+        <file>pixmaps/trail-w.png</file>
+        <file>pixmaps/update0.png</file>
     </qresource>
 </RCC>
