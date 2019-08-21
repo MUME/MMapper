@@ -1,2 +1,3 @@
 *.cpp	diff=cpp
 *.[ch]	diff=cpp
+*.glsl	diff=cpp
