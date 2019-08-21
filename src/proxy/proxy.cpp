@@ -215,7 +215,6 @@ void Proxy::start()
     connect(m_mudSocket, &MumeSocket::connected, this, &Proxy::onMudConnected);
     connect(m_mudSocket, &MumeSocket::connected, m_userTelnet, &UserTelnet::onConnected);
     connect(m_mudSocket, &MumeSocket::connected, m_mudTelnet, &MudTelnet::onConnected);
-    connect(m_mudSocket, &MumeSocket::connected, this, &Proxy::onMudConnected);
     connect(m_mudSocket, &MumeSocket::socketError, this, &Proxy::onMudError);
     connect(m_mudSocket, &MumeSocket::socketError, m_parserXml, &AbstractParser::reset);
     connect(m_mudSocket, &MumeSocket::socketError, m_groupManager, &Mmapper2Group::reset);
