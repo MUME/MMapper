@@ -58,6 +58,7 @@
         <file>icons/position-sleeping.png</file>
         <file>icons/position-standing.png</file>
         <file>icons/preferences.png</file>
+        <file>icons/raypick.png</file>
         <file>icons/reload.png</file>
         <file>icons/roomconnecttoneighbours.png</file>
         <file>icons/roomcreate.png</file>
@@ -71,6 +72,21 @@
         <file>icons/roomselection.png</file>
         <file>icons/save.png</file>
         <file>icons/terminal.png</file>
+        <file>icons/viewmag+.png</file>
+        <file>icons/viewmag-.png</file>
+        <file>icons/viewmagfit.png</file>
+        <file>pixmaps/char-arrows.png</file>
+        <file>pixmaps/char-room-sel.png</file>
+        <file>pixmaps/door-down.png</file>
+        <file>pixmaps/door-east.png</file>
+        <file>pixmaps/door-north.png</file>
+        <file>pixmaps/door-south.png</file>
+        <file>pixmaps/door-up.png</file>
+        <file>pixmaps/door-west.png</file>
+        <file>pixmaps/exit-climb-down.png</file>
+        <file>pixmaps/exit-climb-up.png</file>
+        <file>pixmaps/exit-down.png</file>
+        <file>pixmaps/exit-up.png</file>
         <file>pixmaps/load-armour.png</file>
         <file>pixmaps/load-attention.png</file>
         <file>pixmaps/load-boat.png</file>
@@ -113,6 +129,7 @@
         <file>pixmaps/mob-smob.png</file>
         <file>pixmaps/mob-warriorguild.png</file>
         <file>pixmaps/mob-weaponshop.png</file>
+        <file>pixmaps/no-ride.png</file>
         <file>pixmaps/road-all.png</file>
         <file>pixmaps/road-e.png</file>
         <file>pixmaps/road-es.png</file>
@@ -129,6 +146,22 @@
         <file>pixmaps/road-s.png</file>
         <file>pixmaps/road-sw.png</file>
         <file>pixmaps/road-w.png</file>
+        <file>pixmaps/room-sel-distant.png</file>
+        <file>pixmaps/room-sel-move-bad.png</file>
+        <file>pixmaps/room-sel-move-good.png</file>
+        <file>pixmaps/room-sel.png</file>
+        <file>pixmaps/stream-in-down.png</file>
+        <file>pixmaps/stream-in-east.png</file>
+        <file>pixmaps/stream-in-north.png</file>
+        <file>pixmaps/stream-in-south.png</file>
+        <file>pixmaps/stream-in-up.png</file>
+        <file>pixmaps/stream-in-west.png</file>
+        <file>pixmaps/stream-out-down.png</file>
+        <file>pixmaps/stream-out-east.png</file>
+        <file>pixmaps/stream-out-north.png</file>
+        <file>pixmaps/stream-out-south.png</file>
+        <file>pixmaps/stream-out-up.png</file>
+        <file>pixmaps/stream-out-west.png</file>
         <file>pixmaps/terrain-brush.png</file>
         <file>pixmaps/terrain-cavern.png</file>
         <file>pixmaps/terrain-city.png</file>
@@ -162,5 +195,9 @@
         <file>pixmaps/trail-sw.png</file>
         <file>pixmaps/trail-w.png</file>
         <file>pixmaps/update0.png</file>
+        <file>pixmaps/wall-east.png</file>
+        <file>pixmaps/wall-north.png</file>
+        <file>pixmaps/wall-south.png</file>
+        <file>pixmaps/wall-west.png</file>
     </qresource>
 </RCC>
