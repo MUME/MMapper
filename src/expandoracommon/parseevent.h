@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef PARSEEVENT
-#define PARSEEVENT
-
 #include <cstddef>
 #include <cstdint>
 #include <deque>
@@ -140,5 +137,3 @@ public:
 
     static SharedParseEvent createDummyEvent();
 };
-
-#endif

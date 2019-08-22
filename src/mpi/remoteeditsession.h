@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef REMOTEEDITSESSION_H
-#define REMOTEEDITSESSION_H
-
 #include <algorithm>
 #include <QObject>
 #include <QScopedPointer>
@@ -100,5 +97,3 @@ public:
 private:
     QScopedPointer<RemoteEditProcess> m_process;
 };
-
-#endif /* REMOTEEDITSESSION_H */

@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef USERTELNET_H
-#define USERTELNET_H
-
 #include "AbstractTelnet.h"
 #include <QByteArray>
 #include <QObject>
@@ -56,5 +53,3 @@ private:
     void receiveWindowSize(int, int) override;
     void sendRawData(const QByteArray &data) override;
 };
-
-#endif // USERTELNET_H

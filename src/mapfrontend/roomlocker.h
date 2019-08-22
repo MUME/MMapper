@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef LOCKINGRECIPIENT_H
-#define LOCKINGRECIPIENT_H
-
 #include "AbstractRoomVisitor.h"
 
 class Room;
@@ -51,5 +48,3 @@ private:
     AbstractRoomFactory *factory;
     ParseEvent *comparator;
 };
-
-#endif

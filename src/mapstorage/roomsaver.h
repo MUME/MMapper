@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef ROOMSAVER_H
-#define ROOMSAVER_H
-
 #include <QtGlobal>
 
 #include "../expandoracommon/RoomRecipient.h"
@@ -53,5 +50,3 @@ private:
     ConstRoomList &m_roomList;
     RoomAdmin &m_admin;
 };
-
-#endif

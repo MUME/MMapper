@@ -23,13 +23,8 @@
 **
 ************************************************************************/
 
-#ifndef STORAGEUTILS_H
-#define STORAGEUTILS_H
-
 class QByteArray;
 
 namespace StorageUtils {
 QByteArray inflate(QByteArray &);
 } // namespace StorageUtils
-
-#endif // STORAGEUTILS_H

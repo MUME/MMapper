@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_ROADINDEX_H
-#define MMAPPER_ROADINDEX_H
-
 #include <cstdint>
 
 #include "../global/Flags.h"
@@ -84,5 +81,3 @@ struct TaggedRoadIndex final
 
 using TaggedRoad = TaggedRoadIndex<RoadIndexType::ROAD>;
 using TaggedTrail = TaggedRoadIndex<RoadIndexType::TRAIL>;
-
-#endif

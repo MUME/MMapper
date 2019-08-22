@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef ROOMFILTER_H
-#define ROOMFILTER_H
-
 #include <cassert>
 #include <QString>
 #include <QtCore>
@@ -62,5 +59,3 @@ protected:
     Qt::CaseSensitivity cs{};
     pattern_kinds kind = pattern_kinds::NONE;
 };
-
-#endif

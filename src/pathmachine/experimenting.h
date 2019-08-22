@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef EXPERIMENTING_H
-#define EXPERIMENTING_H
-
 #include <list>
 #include <QtGlobal>
 
@@ -71,5 +68,3 @@ public:
     Experimenting() = delete;
     DELETE_CTORS_AND_ASSIGN_OPS(Experimenting);
 };
-
-#endif

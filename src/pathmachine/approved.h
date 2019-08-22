@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef APPROVED_H
-#define APPROVED_H
-
 #include "../expandoracommon/RoomRecipient.h"
 #include "../expandoracommon/parseevent.h"
 #include "../global/RuleOf5.h"
@@ -62,5 +59,3 @@ public:
     Approved() = delete;
     DELETE_CTORS_AND_ASSIGN_OPS(Approved);
 };
-
-#endif

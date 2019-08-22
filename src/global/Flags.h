@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_FLAGS_H
-#define MMAPPER_FLAGS_H
-
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -178,5 +175,3 @@ public:
     void remove(Flag flag) noexcept { crtp_self() &= ~CRTP{flag}; }
 };
 } // namespace enums
-
-#endif // MMAPPER_FLAGS_H

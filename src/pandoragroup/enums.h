@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_PANDORAGROUP_ENUMS_H
-#define MMAPPER_PANDORAGROUP_ENUMS_H
-
 #include <array>
 #include <vector>
 
@@ -49,5 +46,3 @@ DECL_GETTER(CharacterAffect, NUM_CHARACTER_AFFECTS, getAllCharacterAffects)
 
 /* NOTE: These are actually used; but they're hidden in macros as DEFINED_CHARACTER_##X##_TYPES */
 #define DEFINED_CHARACTER_POSITIONS ::enums::getDefinedCharacterPositions()
-
-#endif // MMAPPER_PANDORAGROUP_ENUMS_H

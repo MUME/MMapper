@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef ROOM_H
-#define ROOM_H
-
 #include <optional>
 #include <QVariant>
 #include <QVector>
@@ -189,5 +186,3 @@ public:
 public:
     bool isFake() const { return isDummy_; }
 };
-
-#endif

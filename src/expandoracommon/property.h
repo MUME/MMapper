@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef PROPERTYH
-#define PROPERTYH
-
 #include <string>
 
 #include "../global/RuleOf5.h"
@@ -52,5 +49,3 @@ public:
 private:
     bool m_skipped = false;
 };
-
-#endif

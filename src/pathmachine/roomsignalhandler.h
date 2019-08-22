@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef ROOMSIGNALHANDLER
-#define ROOMSIGNALHANDLER
-
 #include <map>
 #include <set>
 #include <QObject>
@@ -75,5 +72,3 @@ public:
 signals:
     void scheduleAction(MapAction *);
 };
-
-#endif

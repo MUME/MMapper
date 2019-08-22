@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_DOORFLAGS_H
-#define MMAPPER_DOORFLAGS_H
-
 #include <cstdint>
 
 #include "../global/Flags.h"
@@ -76,5 +73,3 @@ inline constexpr const DoorFlags operator|(DoorFlag lhs, DoorFlag rhs) noexcept
 {
     return DoorFlags{lhs} | DoorFlags{rhs};
 }
-
-#endif // MMAPPER_DOORFLAGS_H

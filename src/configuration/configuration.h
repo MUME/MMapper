@@ -25,9 +25,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_CONFIGURATION_H
-#define MMAPPER_CONFIGURATION_H
-
 #include <QByteArray>
 #include <QColor>
 #include <QMap>
@@ -274,4 +271,3 @@ Configuration &setConfig();
 const Configuration &getConfig();
 
 #undef SUBGROUP
-#endif

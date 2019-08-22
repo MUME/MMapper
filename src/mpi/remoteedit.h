@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef REMOTEEDIT_H
-#define REMOTEEDIT_H
-
 #include <climits>
 #include <map>
 #include <memory>
@@ -69,5 +66,3 @@ private:
     uint greatestUsedId{0};
     std::map<uint, std::unique_ptr<RemoteEditSession>> m_sessions;
 };
-
-#endif /* REMOTEEDIT_H */

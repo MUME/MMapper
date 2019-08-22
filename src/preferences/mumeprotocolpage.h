@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MUMEPROTOCOLPAGE_H
-#define MUMEPROTOCOLPAGE_H
-
 #include <QString>
 #include <QWidget>
 #include <QtCore>
@@ -52,5 +49,3 @@ public slots:
 private:
     Ui::MumeProtocolPage *ui = nullptr;
 };
-
-#endif // MUMEPROTOCOLPAGE_H

@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MUMEMOMENT_H
-#define MUMEMOMENT_H
-
 #include <cstdint>
 #include <QString>
 
@@ -89,5 +86,3 @@ public:
     int hour = 0;
     int minute = 0;
 };
-
-#endif // MUMEMOMENT_H

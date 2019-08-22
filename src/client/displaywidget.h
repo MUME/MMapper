@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef DISPLAYWIDGET_H
-#define DISPLAYWIDGET_H
-
 #include <QColor>
 #include <QFont>
 #include <QString>
@@ -77,5 +74,3 @@ signals:
     void showMessage(const QString &, int);
     void windowSizeChanged(int, int);
 };
-
-#endif /* DISPLAYWIDGET_H */

@@ -26,9 +26,6 @@
 ************************************************************************/
 
 #include "../mapdata/ExitDirection.h"
-#ifndef PATH
-#define PATH
-
 #include <climits>
 #include <set>
 #include <QtGlobal>
@@ -85,5 +82,3 @@ private:
     ExitDirection dir = INVALID_DIRECTION;
     ~Path() {}
 };
-
-#endif

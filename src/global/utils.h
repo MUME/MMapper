@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_UTILS_H
-#define MMAPPER_UTILS_H
-
 #include <algorithm>
 #include <memory>
 #include <type_traits>
@@ -141,5 +138,3 @@ inline auto as_cstring(const unsigned char *const s)
 // This macro only exists to keep clang-format from losing its mind
 // when it encounters a c++11 attribute.
 #define NODISCARD [[nodiscard]]
-
-#endif // MMAPPER_UTILS_H

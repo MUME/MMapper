@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef CUSTOMACTION_H
-#define CUSTOMACTION_H
-
 #include <list>
 #include <QVariant>
 #include <QtCore>
@@ -201,5 +198,3 @@ protected:
     const FlagModifyMode mode{};
     const ExitDirection dir = ExitDirection::UNKNOWN;
 };
-
-#endif

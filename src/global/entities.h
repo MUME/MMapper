@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_GLOBAL_ENTITIES_H
-#define MMAPPER_GLOBAL_ENTITIES_H
-
 #include <functional>
 #include <QByteArray>
 #include <QString>
@@ -98,5 +95,3 @@ struct EntityCallback
 void foreachEntity(const QStringRef &line, EntityCallback &callback);
 
 } // namespace entities
-
-#endif // MMAPPER_GLOBAL_ENTITIES_H

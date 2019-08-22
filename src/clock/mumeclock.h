@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MUMECLOCK_H
-#define MUMECLOCK_H
-
 #include <array>
 #include <QHash>
 #include <QList>
@@ -180,5 +177,3 @@ private:
     MumeClockPrecision m_precision{};
     int m_clockTolerance = 0;
 };
-
-#endif // MUMECLOCK_H

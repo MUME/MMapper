@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_FILENAMES_H
-#define MMAPPER_FILENAMES_H
-
 #include <QtCore/QString>
 
 #include "../mapdata/mmapper2room.h"
@@ -40,5 +37,3 @@ QString getPixmapFilename(TaggedRoad);
 QString getPixmapFilename(TaggedTrail);
 QString getIconFilename(CharacterPosition);
 QString getIconFilename(CharacterAffect);
-
-#endif // MMAPPER_FILENAMES_H

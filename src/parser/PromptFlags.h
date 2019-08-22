@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_PROMPTFLAGS_H
-#define MMAPPER_PROMPTFLAGS_H
-
 #include <cstdint>
 
 #include "../global/bits.h"
@@ -104,5 +101,3 @@ public:
 public:
     void reset() { flags = uint8_t{0}; }
 };
-
-#endif // MMAPPER_PROMPTFLAGS_H

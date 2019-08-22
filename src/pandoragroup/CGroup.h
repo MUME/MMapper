@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef CGROUP_H_
-#define CGROUP_H_
-
 #include <memory>
 #include <set>
 #include <vector>
@@ -101,5 +98,3 @@ private:
     std::vector<CGroupChar *> charIndex;
     CGroupChar *self;
 };
-
-#endif /*CGROUP_H_*/

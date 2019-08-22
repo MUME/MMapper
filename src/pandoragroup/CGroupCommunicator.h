@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef CGROUPCOMMUNICATOR_H_
-#define CGROUPCOMMUNICATOR_H_
-
 #include <cstdint>
 #include <QByteArray>
 #include <QList>
@@ -105,5 +102,3 @@ signals:
 private:
     GroupManagerState mode = GroupManagerState::Off;
 };
-
-#endif /*CGROUPCOMMUNICATOR_H_*/

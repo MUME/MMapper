@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_CONNECTION_LINE_BUILDER_H
-#define MMAPPER_CONNECTION_LINE_BUILDER_H
-
 #include <vector>
 
 #include "../mapdata/ExitDirection.h"
@@ -59,5 +56,3 @@ public:
     void drawConnLineEnd2Way(ExitDirection endDir, bool neighbours, qint32 dX, qint32 dY, float dstZ);
     void drawConnLineEnd1Way(ExitDirection endDir, qint32 dX, qint32 dY, float dstZ);
 };
-
-#endif // MMAPPER_CONNECTION_LINE_BUILDER_H

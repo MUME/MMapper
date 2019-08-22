@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef UPDATEDIALOG_H
-#define UPDATEDIALOG_H
-
 #include <array>
 #include <QDialog>
 #include <QDialogButtonBox>
@@ -61,5 +58,3 @@ private:
     QLabel *text;
     QDialogButtonBox *buttonBox;
 };
-
-#endif // UPDATEDIALOG_H

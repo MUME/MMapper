@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef STACKEDINPUTWIDGET_H
-#define STACKEDINPUTWIDGET_H
-
 #include <QStackedWidget>
 #include <QString>
 #include <QtCore>
@@ -64,5 +61,3 @@ private:
     InputWidget *m_inputWidget = nullptr;
     QLineEdit *m_passwordWidget = nullptr;
 };
-
-#endif /* STACKEDINPUTWIDGET_H */

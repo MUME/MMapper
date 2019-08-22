@@ -25,9 +25,6 @@
 **
 ************************************************************************/
 
-#ifndef ABSTRACTMAPSTORAGE_H
-#define ABSTRACTMAPSTORAGE_H
-
 #include <memory>
 #include <QObject>
 #include <QString>
@@ -80,5 +77,3 @@ private:
     // m_ protected/private member prefix, and remove getProgressCounter().
     std::unique_ptr<ProgressCounter> m_progressCounter{};
 };
-
-#endif

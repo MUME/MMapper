@@ -25,9 +25,6 @@
 **
 ************************************************************************/
 
-#ifndef ROOMEDITATTRDLG_H
-#define ROOMEDITATTRDLG_H
-
 #include <QDialog>
 #include <QString>
 #include <QtCore>
@@ -147,5 +144,3 @@ private:
     MapCanvas *m_mapCanvas = nullptr;
     QShortcut *m_hiddenShortcut = nullptr;
 };
-
-#endif

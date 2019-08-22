@@ -25,9 +25,6 @@
 **
 ************************************************************************/
 
-#ifndef MUMEXMLPARSER_H
-#define MUMEXMLPARSER_H
-
 #include <QByteArray>
 #include <QString>
 #include <QtCore/QFile>
@@ -108,5 +105,3 @@ signals:
     void sendCharacterPositionEvent(CharacterPosition);
     void sendCharacterAffectEvent(CharacterAffect, bool);
 };
-
-#endif

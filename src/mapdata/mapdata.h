@@ -25,9 +25,6 @@
 **
 ************************************************************************/
 
-#ifndef MAPDATA_H
-#define MAPDATA_H
-
 #include <map>
 #include <QLinkedList>
 #include <QList>
@@ -145,5 +142,3 @@ protected:
     QString m_fileName{};
     Coordinate m_position{};
 };
-
-#endif

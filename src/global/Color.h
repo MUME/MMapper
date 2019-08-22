@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_COLOR_H
-#define MMAPPER_COLOR_H
-
 #include <cmath>
 #include <QColor>
 
@@ -178,5 +175,3 @@ static inline QString rgbToAnsi256String(const QColor rgb, bool foreground = tru
         .arg(foreground ? "38" : QString("%1;48").arg(textColor(rgb) == Qt::white ? "37" : "30"))
         .arg(rgbToAnsi256(rgb.red(), rgb.green(), rgb.blue()));
 }
-
-#endif // MMAPPER_COLOR_H

@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_RANDOM_H
-#define MMAPPER_RANDOM_H
-
 #include <random>
 #include <stdexcept>
 
@@ -55,5 +52,3 @@ decltype(auto) chooseRandomElement(T &container)
     const auto dir = getRandom(container.size() - 1u);
     return container[dir];
 }
-
-#endif // MMAPPER_RANDOM_H

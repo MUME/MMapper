@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_WINSOCK_H
-#define MMAPPER_WINSOCK_H
-
 class WinSock final
 {
 public:
@@ -36,5 +33,3 @@ public:
                               unsigned long maxIdleMillis,
                               unsigned long intervalMillis);
 };
-
-#endif // MMAPPER_WINSOCK_H

@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef GROUPMANAGERPAGE_H
-#define GROUPMANAGERPAGE_H
-
 #include <QString>
 #include <QWidget>
 #include <QtCore>
@@ -67,5 +64,3 @@ private:
     Mmapper2Group *m_groupManager = nullptr;
     Ui::GroupManagerPage *ui = nullptr;
 };
-
-#endif

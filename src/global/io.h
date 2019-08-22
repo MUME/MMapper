@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_IO_H
-#define MMAPPER_IO_H
-
 #include <array>
 #include <cassert>
 #include <cstddef>
@@ -125,4 +122,3 @@ IOResult fsyncNoexcept(QFile &) noexcept;
 bool tuneKeepAlive(qintptr socketDescriptor, int maxIdle = 60, int count = 4, int interval = 60);
 
 } // namespace io
-#endif // MMAPPER_IO_H

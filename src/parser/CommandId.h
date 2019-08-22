@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_COMMANDID_H
-#define MMAPPER_COMMANDID_H
-
 #include <array>
 
 #include "../mapdata/ExitDirection.h"
@@ -65,5 +62,3 @@ ExitDirection getDirection(const CommandIdType cmd);
 
 const char *getUppercase(const CommandIdType cmd);
 const char *getLowercase(const CommandIdType cmd);
-
-#endif // MMAPPER_COMMANDID_H

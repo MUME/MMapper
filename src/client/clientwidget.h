@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef CLIENTWIDGET_H
-#define CLIENTWIDGET_H
-
 #include <memory>
 #include <QMainWindow>
 #include <QSize>
@@ -82,5 +79,3 @@ private:
     StackedInputWidget *m_input = nullptr;
     std::unique_ptr<ClientTelnet> m_telnet;
 };
-
-#endif /* CLIENTWIDGET_H */

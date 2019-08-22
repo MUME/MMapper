@@ -25,9 +25,6 @@
 **
 ************************************************************************/
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
-
 #include <memory>
 #include <QActionGroup>
 #include <QDockWidget>
@@ -323,5 +320,3 @@ private:
     bool maybeSave();
     std::unique_ptr<QFileDialog> createDefaultSaveDialog();
 };
-
-#endif

@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef INCLUDED_FILESAVER_H
-#define INCLUDED_FILESAVER_H
-
 #include <QFile>
 #include <QString>
 
@@ -60,5 +57,3 @@ public:
      */
     void close() noexcept(false);
 };
-
-#endif /* INCLUDED_FILESAVER_H */

@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef GROUPACTION_H
-#define GROUPACTION_H
-
 #include <QByteArray>
 #include <QByteArrayDataPtr>
 #include <QString>
@@ -103,5 +100,3 @@ public:
 protected:
     void exec() override;
 };
-
-#endif // GROUPACTION_H

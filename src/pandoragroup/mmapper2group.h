@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER2GROUP_H
-#define MMAPPER2GROUP_H
-
 #include <memory>
 #include <QArgument>
 #include <QMap>
@@ -120,5 +117,3 @@ private:
     std::unique_ptr<CGroupCommunicator> network;
     std::unique_ptr<CGroup> group;
 };
-
-#endif // MMAPPER2GROUP_H

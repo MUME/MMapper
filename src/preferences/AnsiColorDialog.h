@@ -25,9 +25,6 @@
 **
 ************************************************************************/
 
-#ifndef ANSICOLORDIALOG_H
-#define ANSICOLORDIALOG_H
-
 #include <QDialog>
 
 namespace Ui {
@@ -59,5 +56,3 @@ private:
     QString ansiString{};
     Ui::AnsiColorDialog *ui;
 };
-
-#endif // ANSICOLORDIALOG_H

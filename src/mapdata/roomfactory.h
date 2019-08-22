@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef ROOMFACTORY
-#define ROOMFACTORY
-
 #include <QString>
 #include <QVector>
 #include <QtCore>
@@ -67,5 +64,3 @@ private:
                                            int prevTolerance,
                                            bool updated = true);
 };
-
-#endif

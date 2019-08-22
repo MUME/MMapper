@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef ONEBYONE_H
-#define ONEBYONE_H
-
 #include "../expandoracommon/parseevent.h"
 #include "experimenting.h"
 
@@ -52,5 +49,3 @@ private:
     SharedParseEvent event;
     RoomSignalHandler *handler = nullptr;
 };
-
-#endif

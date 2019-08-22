@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_ABBREV_H
-#define MMAPPER_ABBREV_H
-
 #include <cassert>
 #include <cstddef>
 #include <cstring>
@@ -56,5 +53,3 @@ public:
     int getLength() const { return len; }
     QString describe() const;
 };
-
-#endif // MMAPPER_ABBREV_H

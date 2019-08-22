@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef ROOMSELECTION_H
-#define ROOMSELECTION_H
-
 #include <QMap>
 
 #include "../expandoracommon/MmQtHandle.h"
@@ -90,5 +87,3 @@ public:
     DELETE_COPY_CTOR(RoomSelection);
     DELETE_MOVE_ASSIGN_OP(RoomSelection);
 };
-
-#endif // ROOMSELECTION_H

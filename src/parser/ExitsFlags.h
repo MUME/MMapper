@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_EXITSFLAGS_H
-#define MMAPPER_EXITSFLAGS_H
-
 #include <cassert>
 #include <cstdint>
 #include <stdexcept>
@@ -122,5 +119,3 @@ public:
 public:
     void reset() { value = 0u; }
 };
-
-#endif // MMAPPER_EXITSFLAGS_H

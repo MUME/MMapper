@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef COORDINATE
-#define COORDINATE
-
 struct Coordinate2i final
 {
     int x = 0;
@@ -95,5 +92,3 @@ public:
     int y = 0;
     int z = 0;
 };
-
-#endif

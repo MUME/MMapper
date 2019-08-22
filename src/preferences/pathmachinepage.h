@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef PATHMACHINEPAGE_H
-#define PATHMACHINEPAGE_H
-
 #include <QString>
 #include <QWidget>
 #include <QtCore>
@@ -51,5 +48,3 @@ public slots:
     void maxPathsValueChanged(int);
     void matchingToleranceSpinBoxValueChanged(int);
 };
-
-#endif

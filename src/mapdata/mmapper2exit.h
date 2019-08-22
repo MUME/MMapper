@@ -24,12 +24,7 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER2EXIT_H
-#define MMAPPER2EXIT_H
-
 #include "DoorFlags.h"
 #include "ExitDirection.h"
 #include "ExitFieldVariant.h"
 #include "ExitFlags.h"
-
-#endif

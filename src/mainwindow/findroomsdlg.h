@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef FINDDIALOG_H
-#define FINDDIALOG_H
-
 #include <QDialog>
 #include <QString>
 #include <QtCore>
@@ -80,5 +77,3 @@ private slots:
     void itemDoubleClicked(QTreeWidgetItem *inputItem);
     void showSelectedRoom();
 };
-
-#endif

@@ -25,9 +25,6 @@
 **
 ************************************************************************/
 
-#ifndef MAPSTORAGE_H
-#define MAPSTORAGE_H
-
 #include <cstdint>
 #include <QArgument>
 #include <QObject>
@@ -94,5 +91,3 @@ public:
 private:
     MapFrontend &data;
 };
-
-#endif

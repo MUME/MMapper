@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef LISTCYCLER
-#define LISTCYCLER
-
 #include <climits>
 #include <cstdint>
 #include <sys/types.h>
@@ -97,5 +94,3 @@ const T &ListCycler<T, C>::current()
         return invalid;
     return C::operator[](pos);
 }
-
-#endif

@@ -25,9 +25,6 @@
 **
 ************************************************************************/
 
-#ifndef CONFIGDIALOG_H
-#define CONFIGDIALOG_H
-
 #include <QDialog>
 #include <QString>
 #include <QtCore>
@@ -62,5 +59,3 @@ private:
 
     Mmapper2Group *m_groupManager = nullptr;
 };
-
-#endif

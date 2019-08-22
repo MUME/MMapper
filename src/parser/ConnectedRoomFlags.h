@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_CONNECTEDROOMFLAGS_H
-#define MMAPPER_CONNECTEDROOMFLAGS_H
-
 #include <cstdint>
 
 #include "../global/DirectionType.h"
@@ -103,5 +100,3 @@ public:
         return getDirectionalLight(dir) == DirectionalLightType::DIRECT_SUN_ROOM;
     }
 };
-
-#endif // MMAPPER_CONNECTEDROOMFLAGS_H

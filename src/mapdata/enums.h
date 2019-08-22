@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_MAPDATA_ENUMS_H
-#define MMAPPER_MAPDATA_ENUMS_H
-
 #include <array>
 #include <vector>
 
@@ -64,5 +61,3 @@ DECL_GETTER(ExitFlag, NUM_EXIT_FLAGS, getAllExitFlags)
 #define DEFINED_ROOM_PORTABLE_TYPES ::enums::getDefinedRoomPortbleTypes()
 #define DEFINED_ROOM_RIDABLE_TYPES ::enums::getDefinedRoomRidableTypes()
 #define DEFINED_ROOM_ALIGN_TYPES ::enums::getDefinedRoomAlignTypes()
-
-#endif // MMAPPER_MAPDATA_ENUMS_H

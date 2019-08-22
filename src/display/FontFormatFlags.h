@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_FORMAT_FLAGS_H
-#define MMAPPER_FORMAT_FLAGS_H
-
 #include <cstdint>
 
 enum class FontFormatFlags { NONE = 0, ITALICS = (1 << 0), UNDERLINE = (1 << 1) };
@@ -33,5 +30,3 @@ static inline FontFormatFlags operator&(FontFormatFlags lhs, FontFormatFlags rhs
 {
     return static_cast<FontFormatFlags>(static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs));
 }
-
-#endif // MMAPPER_FORMAT_FLAGS_H

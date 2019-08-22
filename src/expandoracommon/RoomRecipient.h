@@ -25,9 +25,6 @@
 **
 ************************************************************************/
 
-#ifndef ROOMRECIPIENT_H
-#define ROOMRECIPIENT_H
-
 #include "../global/RuleOf5.h"
 
 class Room;
@@ -47,5 +44,3 @@ public:
 public:
     DELETE_CTORS_AND_ASSIGN_OPS(RoomRecipient);
 };
-
-#endif

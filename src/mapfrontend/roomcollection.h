@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef ROOMCOLLECTION
-#define ROOMCOLLECTION
-
 #include <cassert>
 #include <set>
 
@@ -73,5 +70,3 @@ public:
      * collection during this function call. */
     void forEach(AbstractRoomVisitor &stream) const override;
 };
-
-#endif

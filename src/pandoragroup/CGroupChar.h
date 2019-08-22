@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef CGROUPCHAR_H_
-#define CGROUPCHAR_H_
-
 #include <QByteArray>
 #include <QColor>
 #include <QVariantMap>
@@ -77,5 +74,3 @@ private:
 public:
     DELETE_CTORS_AND_ASSIGN_OPS(CGroupChar);
 };
-
-#endif /*CGROUPCHAR_H_*/

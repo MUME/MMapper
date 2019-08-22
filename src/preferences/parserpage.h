@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef PARSERPAGE_H
-#define PARSERPAGE_H
-
 #include <QString>
 #include <QWidget>
 #include <QtCore>
@@ -57,5 +54,3 @@ public:
 private:
     void savePatterns();
 };
-
-#endif

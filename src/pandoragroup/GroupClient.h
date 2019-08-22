@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef GROUPCLIENT_H
-#define GROUPCLIENT_H
-
 #include "CGroupCommunicator.h"
 #include "GroupSocket.h"
 #include <QVariantMap>
@@ -65,5 +62,3 @@ private:
     int reconnectAttempts{3};
     GroupSocket socket;
 };
-
-#endif // GROUPCLIENT_H

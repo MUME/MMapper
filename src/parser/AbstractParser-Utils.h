@@ -23,12 +23,7 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_ABSTRACTPARSER_UTILS_H
-#define MMAPPER_ABSTRACTPARSER_UTILS_H
-
 bool isOffline();
 bool isOnline();
 const char *enabledString(bool isEnabled);
 bool isValidPrefix(char c);
-
-#endif // MMAPPER_ABSTRACTPARSER_UTILS_H

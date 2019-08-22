@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_ABSTRACTPARSER_COMMANDS_H
-#define MMAPPER_ABSTRACTPARSER_COMMANDS_H
-
 #include <QByteArray>
 
 #include "../global/Flags.h"
@@ -72,5 +69,3 @@ Abbrev getParserCommandName(RoomPortableType x);
 Abbrev getParserCommandName(RoomRidableType x);
 Abbrev getParserCommandName(RoomSundeathType x);
 Abbrev getParserCommandName(RoomTerrainType x);
-
-#endif // MMAPPER_ABSTRACTPARSER_COMMANDS_H

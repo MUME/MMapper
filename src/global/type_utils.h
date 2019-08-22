@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_TYPE_UTILS_H
-#define MMAPPER_TYPE_UTILS_H
-
 #include <type_traits>
 
 namespace type_utils {
@@ -67,5 +64,3 @@ struct ValidTypes
 };
 
 } // namespace type_utils
-
-#endif // MMAPPER_TYPE_UTILS_H

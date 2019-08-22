@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef ABSTRACTEXIT_H
-#define ABSTRACTEXIT_H
-
 #include <cassert>
 #include <set>
 #include <stdexcept>
@@ -136,5 +133,3 @@ public:
 
     bool doorNeedsKey() const; // REVISIT: This name is not like the others
 };
-
-#endif

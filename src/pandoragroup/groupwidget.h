@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef GROUPWIDGET_H
-#define GROUPWIDGET_H
-
 #include <vector>
 #include <QAbstractTableModel>
 #include <QString>
@@ -144,5 +141,3 @@ private:
     QAction *m_kick = nullptr;
     QByteArray selectedCharacter{};
 };
-
-#endif // GROUPWIDGET_H

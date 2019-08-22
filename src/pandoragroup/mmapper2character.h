@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER2CHARACTER_H
-#define MMAPPER2CHARACTER_H
-
 #include <QMetaType>
 #include <QtGlobal>
 
@@ -95,5 +92,3 @@ inline constexpr const CharacterAffects operator|(CharacterAffect lhs, Character
 {
     return CharacterAffects{lhs} | CharacterAffects{rhs};
 }
-
-#endif // MMAPPER2CHARACTER_H

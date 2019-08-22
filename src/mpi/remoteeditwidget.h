@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef REMOTEEDITWIDGET_H
-#define REMOTEEDITWIDGET_H
-
 #include <QAction>
 #include <QMainWindow>
 #include <QPlainTextEdit>
@@ -203,5 +200,3 @@ private:
     bool m_submitted = false;
     QScopedPointer<Editor> m_textEdit{};
 };
-
-#endif // REMOTEEDITWIDGET_H

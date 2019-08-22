@@ -25,9 +25,6 @@
 **
 ************************************************************************/
 
-#ifndef CONNECTIONLISTENER
-#define CONNECTIONLISTENER
-
 #include <memory>
 #include <QString>
 #include <QTcpServer>
@@ -78,5 +75,3 @@ private:
 
     bool m_accept = true;
 };
-
-#endif

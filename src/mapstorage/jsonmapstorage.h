@@ -25,9 +25,6 @@
 **
 ************************************************************************/
 
-#ifndef JSONMAPSTORAGE_H
-#define JSONMAPSTORAGE_H
-
 #include <QString>
 #include <QtCore>
 
@@ -67,5 +64,3 @@ private:
 
     // void saveMark(InfoMark * mark, QJsonObject &jRoom, const JsonRoomIdsCache &jRoomIds);
 };
-
-#endif

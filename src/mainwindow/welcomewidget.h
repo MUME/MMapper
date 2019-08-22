@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef WELCOMEWIDGET_H
-#define WELCOMEWIDGET_H
-
 #include <QString>
 #include <QWidget>
 #include <QtCore>
@@ -53,5 +50,3 @@ signals:
 private:
     Ui::WelcomeWidget *ui = nullptr;
 };
-
-#endif // WELCOMEWIDGET_H

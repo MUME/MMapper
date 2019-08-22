@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef CONNECTIONSELECTION_H
-#define CONNECTIONSELECTION_H
-
 #include <array>
 #include <QObject>
 #include <QString>
@@ -104,5 +101,3 @@ private:
     bool m_first = true;
     RoomAdmin *m_admin = nullptr;
 };
-
-#endif

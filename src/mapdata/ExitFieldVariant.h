@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_EXITFIELDVARIANT_H
-#define MMAPPER_EXITFIELDVARIANT_H
-
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -91,5 +88,3 @@ public:
     ExitFlags getExitFlags() const;
     DoorFlags getDoorFlags() const;
 };
-
-#endif // MMAPPER_EXITFIELDVARIANT_H

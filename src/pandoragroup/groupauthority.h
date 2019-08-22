@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef GROUPCERTIFICATE_H
-#define GROUPCERTIFICATE_H
-
 #include <QObject>
 #include <QSslCertificate>
 #include <QSslKey>
@@ -75,5 +72,3 @@ private:
     QSslCertificate certificate;
     QSslKey key;
 };
-
-#endif // GROUPCERTIFICATE_H

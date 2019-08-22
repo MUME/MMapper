@@ -25,9 +25,6 @@
 **
 ************************************************************************/
 
-#ifndef PARSER
-#define PARSER
-
 #include <list>
 #include <memory>
 #include <QString>
@@ -100,5 +97,3 @@ private:
     // avoid warning about signal hiding this function
     virtual bool event(QEvent *e) final override { return QObject::event(e); }
 };
-
-#endif

@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef CROSSOVER_H
-#define CROSSOVER_H
-
 #include <list>
 
 #include "../mapdata/ExitDirection.h"
@@ -48,5 +45,3 @@ public:
               AbstractRoomFactory *factory);
     void receiveRoom(RoomAdmin *, const Room *) override;
 };
-
-#endif

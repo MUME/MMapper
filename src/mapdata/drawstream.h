@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef DRAWSTREAM_H
-#define DRAWSTREAM_H
-
 #include <map>
 #include <vector>
 
@@ -50,5 +47,3 @@ private:
     const RoomIndex &roomIndex;
     const RoomLocks &locks;
 };
-
-#endif

@@ -115,9 +115,6 @@ else does it ;))
   *@author Tomas Mecir
 */
 
-#ifndef ABSTRACTTELNET_H
-#define ABSTRACTTELNET_H
-
 #include "TextCodec.h"
 #include <array>
 #include <cassert>
@@ -304,5 +301,3 @@ private:
 
     bool debug = false;
 };
-
-#endif /* ABSTRACTTELNET_H */

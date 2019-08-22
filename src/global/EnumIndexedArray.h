@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_ENUMINDEXEDARRAY_H
-#define MMAPPER_ENUMINDEXEDARRAY_H
-
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -71,5 +68,3 @@ public:
         return static_cast<E>(it - beg);
     }
 };
-
-#endif // MMAPPER_ENUMINDEXEDARRAY_H

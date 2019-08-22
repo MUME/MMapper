@@ -25,9 +25,6 @@
 **
 ************************************************************************/
 
-#ifndef MAP_H
-#define MAP_H
-
 #include "../expandoracommon/coordinate.h"
 #include "../global/RuleOf5.h"
 
@@ -79,5 +76,3 @@ private:
     int threshold = 1;
     int state = 7;
 };
-
-#endif // MAP_H

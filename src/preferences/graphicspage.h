@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef GRAPHICSPAGE_H
-#define GRAPHICSPAGE_H
-
 #include <QString>
 #include <QWidget>
 #include <QtCore>
@@ -62,5 +59,3 @@ private:
     void changeColorClicked(QColor &color, QPushButton *pushButton);
     Ui::GraphicsPage *ui;
 };
-
-#endif // GRAPHICSPAGE_H

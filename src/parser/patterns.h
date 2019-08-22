@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef PATTERNS_H
-#define PATTERNS_H
-
 #include <QtCore>
 
 #include "../configuration/configuration.h"
@@ -50,5 +47,3 @@ public:
     static bool matchPattern(QString pattern, const QString &str);
     static bool matchPattern(QByteArray pattern, const QByteArray &str);
 };
-
-#endif // PATTERNS_H

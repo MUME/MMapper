@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER2PARSER_H
-#define MMAPPER2PARSER_H
-
 #include <QString>
 #include <QtCore>
 
@@ -56,5 +53,3 @@ signals:
 private:
     QTime time;
 };
-
-#endif

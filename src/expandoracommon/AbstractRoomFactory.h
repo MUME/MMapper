@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef ABSTRACTROOMFACTORY_H
-#define ABSTRACTROOMFACTORY_H
-
 #include "../mapdata/mmapper2exit.h"
 #include "parseevent.h"
 #include <QtGlobal>
@@ -52,5 +49,3 @@ public:
     virtual void update(Room &, const ParseEvent &event) const = 0;
     virtual void update(Room *target, const Room *source) const = 0;
 };
-
-#endif

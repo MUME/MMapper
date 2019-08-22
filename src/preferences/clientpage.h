@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef CLIENTPAGE_H
-#define CLIENTPAGE_H
-
 #include <QString>
 #include <QWidget>
 #include <QtCore>
@@ -61,5 +58,3 @@ signals:
 private:
     Ui::ClientPage *ui = nullptr;
 };
-
-#endif // CLIENTPAGE_H

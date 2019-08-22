@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_EXITFLAGS_H
-#define MMAPPER_EXITFLAGS_H
-
 #include <cstdint>
 
 #include "../global/Flags.h"
@@ -73,5 +70,3 @@ inline constexpr const ExitFlags operator|(ExitFlag lhs, ExitFlag rhs) noexcept
 {
     return ExitFlags{lhs} | ExitFlags{rhs};
 }
-
-#endif // MMAPPER_EXITFLAGS_H

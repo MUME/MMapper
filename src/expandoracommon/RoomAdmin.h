@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef ROOMADMIN_H
-#define ROOMADMIN_H
-
 #include "room.h"
 
 class RoomRecipient;
@@ -47,5 +44,3 @@ public:
 
     virtual void scheduleAction(MapAction *action) = 0;
 };
-
-#endif

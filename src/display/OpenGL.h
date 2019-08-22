@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_OPENGL_H
-#define MMAPPER_OPENGL_H
-
 #include <algorithm>
 #include <stdexcept>
 #include <vector>
@@ -549,5 +546,3 @@ public:
         return m_gl.compile(std::forward<Args>(args)...);
     }
 };
-
-#endif // MMAPPER_OPENGL_H

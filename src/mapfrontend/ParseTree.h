@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_PARSETREE_H
-#define MMAPPER_PARSETREE_H
-
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -62,5 +59,3 @@ public:
     SharedRoomCollection insertRoom(ParseEvent &event);
     void getRooms(AbstractRoomVisitor &stream, ParseEvent &event);
 };
-
-#endif // MMAPPER_PARSETREE_H

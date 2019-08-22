@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef GROUPSELECTION_H
-#define GROUPSELECTION_H
-
 #include <cassert>
 #include <cstdint>
 #include <vector>
@@ -78,5 +75,3 @@ private:
     GroupAdmin *m_admin = nullptr;
     std::vector<CGroupChar *> chars;
 };
-
-#endif // GROUPSELECTION_H

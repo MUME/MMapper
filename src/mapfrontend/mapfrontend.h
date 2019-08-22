@@ -25,9 +25,6 @@
 **
 ************************************************************************/
 
-#ifndef MAPFRONTEND_H
-#define MAPFRONTEND_H
-
 #include <map>
 #include <set>
 #include <stack>
@@ -132,5 +129,3 @@ signals:
     void mapSizeChanged(const Coordinate &, const Coordinate &);
     void clearingMap();
 };
-
-#endif

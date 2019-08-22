@@ -25,9 +25,6 @@
 **
 ************************************************************************/
 
-#ifndef MAPWINDOW_H
-#define MAPWINDOW_H
-
 #include <QPoint>
 #include <QString>
 #include <QWidget>
@@ -101,5 +98,3 @@ private:
     QPoint mousePressPos{};
     QPoint scrollBarValuesOnMousePress{};
 };
-
-#endif

@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_ROOMID_H
-#define MMAPPER_ROOMID_H
-
 #include <climits>
 #include <cstdint>
 #include <memory>
@@ -91,5 +88,3 @@ struct IRoomCollection;
 class RoomCollection;
 using SharedRoomCollection = std::shared_ptr<IRoomCollection>;
 using RoomHomes = roomid_vector<SharedRoomCollection>;
-
-#endif // MMAPPER_ROOMID_H

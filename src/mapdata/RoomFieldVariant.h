@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_ROOMFIELDVARIANT_H
-#define MMAPPER_ROOMFIELDVARIANT_H
-
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -124,5 +121,3 @@ public:
     X_FOREACH_ROOM_FIELD(X_DECLARE_ACCESSORS)
 #undef X_DECLARE_ACCESSORS
 };
-
-#endif // MMAPPER_ROOMFIELDVARIANT_H

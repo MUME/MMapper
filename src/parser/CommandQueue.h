@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef COMMANDQUEUE_H
-#define COMMANDQUEUE_H
-
 #include <QQueue>
 
 #include "CommandId.h"
@@ -55,5 +52,3 @@ public:
     using base::enqueue;
     using base::prepend;
 };
-
-#endif // COMMANDQUEUE_H

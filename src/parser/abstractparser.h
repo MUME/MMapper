@@ -25,9 +25,6 @@
 **
 ************************************************************************/
 
-#ifndef ABSTRACTPARSER_H
-#define ABSTRACTPARSER_H
-
 #include <functional>
 #include <map>
 #include <string>
@@ -280,5 +277,3 @@ public:
         sendToUser(s.toLatin1(), goAhead);
     }
 };
-
-#endif

@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_RAII_H
-#define MMAPPER_RAII_H
-
 #include <algorithm>
 #include <functional>
 
@@ -66,5 +63,3 @@ public:
     explicit RAIICallback(Callback &&callback);
     ~RAIICallback() noexcept(false);
 };
-
-#endif // MMAPPER_RAII_H

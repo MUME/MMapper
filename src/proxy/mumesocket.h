@@ -25,9 +25,6 @@
 **
 ************************************************************************/
 
-#ifndef MUMESOCKET_H
-#define MUMESOCKET_H
-
 #include <QAbstractSocket>
 #include <QByteArray>
 #include <QObject>
@@ -106,5 +103,3 @@ public:
 protected slots:
     void onConnect() override;
 };
-
-#endif // MUMESOCKET_H

@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef SYNCING_H
-#define SYNCING_H
-
 #include <list>
 #include <QtGlobal>
 
@@ -58,5 +55,3 @@ public:
     Syncing() = delete;
     DELETE_CTORS_AND_ASSIGN_OPS(Syncing);
 };
-
-#endif

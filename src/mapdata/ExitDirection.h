@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_EXITDIRECTION_H
-#define MMAPPER_EXITDIRECTION_H
-
 #include <array>
 #include <cstdint>
 
@@ -61,5 +58,3 @@ ExitDirection dirForChar(const char dir);
 
 char charForDir(ExitDirection dir);
 } // namespace Mmapper2Exit
-
-#endif // MMAPPER_EXITDIRECTION_H

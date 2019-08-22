@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef INFOMARK_H
-#define INFOMARK_H
-
 #include "../expandoracommon/coordinate.h"
 #include <QDateTime>
 
@@ -87,5 +84,3 @@ private:
     Coordinate m_pos2{};
     float m_rotationAngle = 0.0; // in degrees
 };
-
-#endif

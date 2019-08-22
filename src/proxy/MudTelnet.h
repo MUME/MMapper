@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MUDTELNET_H
-#define MUDTELNET_H
-
 #include "AbstractTelnet.h"
 #include <QByteArray>
 #include <QObject>
@@ -54,5 +51,3 @@ private:
     void receiveEchoMode(bool toggle) override;
     void sendRawData(const QByteArray &data) override;
 };
-
-#endif // MUDTELNET_H

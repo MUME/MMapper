@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_RULEOF5_H
-#define MMAPPER_RULEOF5_H
-
 #define DTOR(T) ~T()
 #define MOVE_CTOR(T) T(T &&)
 #define COPY_CTOR(T) T(const T &)
@@ -73,5 +70,3 @@
 #define DELETE_RULE_OF_5(T) \
     DTOR(T) = delete; \
     DELETE_CTORS_AND_ASSIGN_OPS(T)
-
-#endif // MMAPPER_RULEOF5_H

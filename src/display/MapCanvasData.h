@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_MAP_CANVAS_DATA_H
-#define MMAPPER_MAP_CANVAS_DATA_H
-
 #include <QWidget>
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QMouseEvent>
@@ -224,5 +221,3 @@ struct MapCanvasData
 
     void destroyAllGLObjects();
 };
-
-#endif // MMAPPER_MAP_CANVAS_DATA_H

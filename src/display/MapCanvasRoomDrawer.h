@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_MAP_CANVAS_ROOM_DRAWER_H
-#define MMAPPER_MAP_CANVAS_ROOM_DRAWER_H
-
 #include <vector>
 #include <QColor>
 #include <QtCore>
@@ -158,5 +155,3 @@ public:
     float getScaledFontWidth(const QString &x, FontFormatFlags flags = FontFormatFlags::NONE) const;
     float getScaledFontHeight() const;
 };
-
-#endif // MMAPPER_MAP_CANVAS_ROOM_DRAWER_H

@@ -25,14 +25,9 @@
 **
 ************************************************************************/
 
-#ifndef PARSERUTILS_H
-#define PARSERUTILS_H
-
 class QString;
 
 namespace ParserUtils {
 QString &removeAnsiMarksInPlace(QString &str);
 QString &latinToAsciiInPlace(QString &str);
 } // namespace ParserUtils
-
-#endif

@@ -25,9 +25,6 @@
 **
 ************************************************************************/
 
-#ifndef PROXY
-#define PROXY
-
 #include <QByteArray>
 #include <QObject>
 #include <QScopedPointer>
@@ -121,5 +118,3 @@ private:
 
     ConnectionListener *m_listener = nullptr;
 };
-
-#endif

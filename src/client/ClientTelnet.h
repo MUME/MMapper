@@ -26,9 +26,6 @@
 **
 ************************************************************************/
 
-#ifndef CLIENTTELNET_H
-#define CLIENTTELNET_H
-
 #include <QAbstractSocket>
 #include <QTcpSocket>
 
@@ -81,5 +78,3 @@ private:
     io::null_padded_buffer<(1 << 15)> buffer{};
     QTcpSocket socket{};
 };
-
-#endif /* CLIENTTELNET_H */

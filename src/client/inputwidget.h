@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef INPUTWIDGET_H
-#define INPUTWIDGET_H
-
 #include <QEvent>
 #include <QLinkedList>
 #include <QObject>
@@ -87,5 +84,3 @@ signals:
     void displayMessage(const QString &);
     void showMessage(const QString &, int);
 };
-
-#endif /* INPUTWIDGET_H */

@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef INCLUDED_BASEMAPSAVEFILTER_H
-#define INCLUDED_BASEMAPSAVEFILTER_H
-
 #include "../expandoracommon/RoomRecipient.h"
 #include <cstdint>
 #include <memory>
@@ -70,5 +67,3 @@ public:
     //! Returns an altered Room (requires action == ALTER)
     Room alteredRoom(const Room &room);
 };
-
-#endif /* INCLUDED_BASEMAPSAVEFILTER_H */

@@ -24,8 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef PATHPARAMETERS_H
-#define PATHPARAMETERS_H
 using uint = unsigned int;
 
 class PathParameters
@@ -43,5 +41,3 @@ public:
     uint maxSkipped;
     ~PathParameters() {}
 };
-
-#endif

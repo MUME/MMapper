@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef GROUPSOCKET_H_
-#define GROUPSOCKET_H_
-
 #include <QAbstractSocket>
 #include <QByteArray>
 #include <QHostAddress>
@@ -115,5 +112,3 @@ private:
     QByteArray name{};
     unsigned int currentMessageLen = 0;
 };
-
-#endif /*GROUPSOCKET_H_*/

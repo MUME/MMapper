@@ -22,9 +22,6 @@
 ** 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **
 ************************************************************************/
-#ifndef ABOUTDIALOG_H
-#define ABOUTDIALOG_H
-
 #include <QDialog>
 #include <QString>
 #include <QtCore>
@@ -45,5 +42,3 @@ public:
 private:
     void setFixedFont(QTextBrowser *browser);
 };
-
-#endif // ABOUTDIALOG_H

@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef INFOMARKSELECTION_H
-#define INFOMARKSELECTION_H
-
 #include "../mapdata/mapdata.h"
 
 class InfoMarkSelection final : public MarkerList
@@ -43,5 +40,3 @@ public:
 private:
     Coordinate m_sel1{}, m_sel2{};
 };
-
-#endif // INFOMARKSELECTION_H

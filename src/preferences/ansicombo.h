@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef ANSI_COMBO_H
-#define ANSI_COMBO_H
-
 #include <QColor>
 #include <QComboBox>
 #include <QIcon>
@@ -89,5 +86,3 @@ public:
 private:
     AnsiMode mode;
 };
-
-#endif

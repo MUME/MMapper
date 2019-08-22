@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef SHORTESTPATH_H
-#define SHORTESTPATH_H
-
 #include <QSet>
 #include <QVector>
 
@@ -59,5 +56,3 @@ public:
     virtual void receiveShortestPath(RoomAdmin *admin, QVector<SPNode> spnodes, int endpoint) = 0;
     virtual ~ShortestPathRecipient();
 };
-
-#endif

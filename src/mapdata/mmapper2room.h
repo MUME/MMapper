@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER2ROOM_H
-#define MMAPPER2ROOM_H
-
 #include <QtGlobal>
 
 #include "../global/Flags.h"
@@ -169,5 +166,3 @@ inline constexpr RoomFields operator|(const RoomField lhs, const RoomField rhs) 
 {
     return RoomFields{lhs} | RoomFields{rhs};
 }
-
-#endif

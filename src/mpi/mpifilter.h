@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MPIFILTER_H
-#define MPIFILTER_H
-
 #include <QByteArray>
 #include <QObject>
 #include <QString>
@@ -61,5 +58,3 @@ private:
     int m_remaining = 0;
     QByteArray m_buffer{};
 };
-
-#endif // MPIFILTER_H

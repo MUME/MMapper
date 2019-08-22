@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef GROUPSERVER_H_
-#define GROUPSERVER_H_
-
 #include "CGroupCommunicator.h"
 #include "GroupPortMapper.h"
 
@@ -104,5 +101,3 @@ private:
     GroupTcpServer server;
     GroupPortMapper portMapper;
 };
-
-#endif /*GROUPSERVER_H_*/

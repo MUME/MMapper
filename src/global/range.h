@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_RANGE_H
-#define MMAPPER_RANGE_H
-
 #include <iterator> // IWYU pragma: keep (std::rbegin)
 
 template<typename It>
@@ -49,5 +46,3 @@ auto make_reverse_range(T &&container)
 {
     return make_range(std::rbegin(container), std::rend(container));
 }
-
-#endif // MMAPPER_RANGE_H

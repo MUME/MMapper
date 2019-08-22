@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef ROOMSTREAM_H
-#define ROOMSTREAM_H
-
 #include "../expandoracommon/room.h"
 #include "../global/RuleOf5.h"
 
@@ -42,5 +39,3 @@ public:
 public:
     DELETE_CTORS_AND_ASSIGN_OPS(AbstractRoomVisitor);
 };
-
-#endif

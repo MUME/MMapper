@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef PRESPAMMEDPATH_H_
-#define PRESPAMMEDPATH_H_
-
 #include <QObject>
 #include <QString>
 #include <QtCore>
@@ -55,5 +52,3 @@ public slots:
 private:
     CommandQueue m_queue{};
 };
-
-#endif

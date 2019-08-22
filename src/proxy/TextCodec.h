@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef TEXTCODEC_H
-#define TEXTCODEC_H
-
 #include "../configuration/configuration.h"
 #include <QTextCodec>
 
@@ -58,5 +55,3 @@ private:
     QTextCodec *textCodec = nullptr;
     TextCodecStrategy textCodecStrategy{TextCodecStrategy::AUTO_SELECT_CODEC};
 };
-
-#endif // TEXTCODEC_H

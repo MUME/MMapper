@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_BITS_H
-#define MMAPPER_BITS_H
-
 #include <cstdint>
 
 #define BIT32_FOREACH(x) \
@@ -42,5 +39,3 @@ static_assert(bit1 == 1u);
 static_assert(bit32 == 2147483648u);
 #undef ADD
 #undef DEFINE_BITS
-
-#endif // MMAPPER_BITS_H

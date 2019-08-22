@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_ENUMS_H
-#define MMAPPER_ENUMS_H
-
 #include <array>
 #include <cstddef>
 
@@ -92,5 +89,3 @@ auto makeCountingIterator(T &&container)
 }
 
 } // namespace enums
-
-#endif // MMAPPER_ENUMS_H

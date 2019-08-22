@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef FORCED_H
-#define FORCED_H
-
 #include "../expandoracommon/RoomRecipient.h"
 #include "../expandoracommon/parseevent.h"
 #include "../global/RuleOf5.h"
@@ -52,5 +49,3 @@ public:
     Forced() = delete;
     DELETE_CTORS_AND_ASSIGN_OPS(Forced);
 };
-
-#endif

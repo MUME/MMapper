@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMPMAPSTORAGE_H
-#define MMPMAPSTORAGE_H
-
 #include <QString>
 #include <QtCore>
 
@@ -63,5 +60,3 @@ private:
 private:
     void saveRoom(const Room &room, QXmlStreamWriter &stream);
 };
-
-#endif // MMPMAPSTORAGE_H

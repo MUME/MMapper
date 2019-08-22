@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_EXCEPTIONS_H // include guards are worthless and stupid; just use #pragma once.
-#define MMAPPER_EXCEPTIONS_H
-
 #include <stdexcept>
 
 #include "RuleOf5.h"
@@ -37,5 +34,3 @@ struct NullPointerException final : public std::runtime_error
     virtual ~NullPointerException() override;
     DEFAULT_CTORS_AND_ASSIGN_OPS(NullPointerException);
 };
-
-#endif // MMAPPER_EXCEPTIONS_H

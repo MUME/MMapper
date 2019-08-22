@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MUMECLOCKWIDGET_H
-#define MUMECLOCKWIDGET_H
-
 #include <QString>
 #include <QWidget>
 #include <QtCore>
@@ -57,5 +54,3 @@ private:
     MumeMoonVisibility m_lastVisibility = MumeMoonVisibility::MOON_POSITION_UNKNOWN;
     MumeClockPrecision m_lastPrecision = MumeClockPrecision::MUMECLOCK_UNSET;
 };
-
-#endif

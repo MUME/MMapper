@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef PANDORAMAPSTORAGE_H
-#define PANDORAMAPSTORAGE_H
-
 #include <QString>
 #include <QtCore>
 
@@ -70,5 +67,3 @@ private:
 
     Coordinate basePosition{};
 };
-
-#endif // PANDORAMAPSTORAGE_H

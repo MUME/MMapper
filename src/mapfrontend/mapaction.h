@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef MAPACTION_H
-#define MAPACTION_H
-
 #include <set>
 #include <stack>
 #include <vector>
@@ -204,5 +201,3 @@ class Remove : public ExitsAffecter
 protected:
     virtual void exec(RoomId id) override;
 };
-
-#endif

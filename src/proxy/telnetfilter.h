@@ -25,9 +25,6 @@
 **
 ************************************************************************/
 
-#ifndef TELNETFILTER
-#define TELNETFILTER
-
 #include <QByteArray>
 #include <QObject>
 #include <QQueue>
@@ -82,5 +79,3 @@ private:
     TelnetIncomingDataQueue m_mudIncomingQue{};
     TelnetIncomingDataQueue m_userIncomingQue{};
 };
-
-#endif

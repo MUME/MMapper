@@ -25,9 +25,6 @@
 **
 ************************************************************************/
 
-#ifndef GENERALPAGE_H
-#define GENERALPAGE_H
-
 #include <QString>
 #include <QWidget>
 #include <QtCore>
@@ -67,5 +64,3 @@ public:
 private:
     Ui::GeneralPage *ui = nullptr;
 };
-
-#endif

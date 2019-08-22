@@ -25,9 +25,6 @@
 **
 ************************************************************************/
 
-#ifndef MAPCANVAS_H
-#define MAPCANVAS_H
-
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -203,4 +200,3 @@ private:
 
     void drawRooms(MapCanvasRoomDrawer &drawer);
 };
-#endif

@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_STRINGVIEW_H
-#define MMAPPER_STRINGVIEW_H
-
 #include <vector>
 #include <QByteArray>
 #include <QChar>
@@ -94,5 +91,3 @@ public:
 namespace test {
 void testStringView();
 } // namespace test
-
-#endif // MMAPPER_STRINGVIEW_H

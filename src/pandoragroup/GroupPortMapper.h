@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef GROUPPORTMAPPER_H
-#define GROUPPORTMAPPER_H
-
 #include "../global/RuleOf5.h"
 
 #include <memory>
@@ -48,5 +45,3 @@ public:
     bool tryAddPortMapping(const quint16 port);
     bool tryDeletePortMapping(const quint16 port);
 };
-
-#endif // GROUPPORTMAPPER_H

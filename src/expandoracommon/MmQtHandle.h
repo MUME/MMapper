@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_MMQTHANDLE_H
-#define MMAPPER_MMQTHANDLE_H
-
 #include <cstddef>
 #include <memory>
 
@@ -102,5 +99,3 @@ public:
         return ::deref(m_shared);
     }
 };
-
-#endif // MMAPPER_MMQTHANDLE_H

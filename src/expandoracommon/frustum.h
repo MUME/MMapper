@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef FRUSTUM_H
-#define FRUSTUM_H
-
 #include "../global/EnumIndexedArray.h"
 #include "../global/Flags.h"
 
@@ -81,5 +78,3 @@ private:
     using Plane = EnumIndexedArray<float, PlaneData>;
     EnumIndexedArray<Plane, FrustumSide> frustum{};
 };
-
-#endif

@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_CHARBUFFER_H
-#define MMAPPER_CHARBUFFER_H
-
 #include <cstddef>
 #include <cstring>
 
@@ -70,5 +67,3 @@ CharBuffer<N> makeCharBuffer(const char (&data)[N])
 {
     return CharBuffer<N>{data};
 }
-
-#endif // MMAPPER_CHARBUFFER_H

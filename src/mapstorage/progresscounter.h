@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef INCLUDED_STEPCOUNTER_H
-#define INCLUDED_STEPCOUNTER_H
-
 #include <QObject>
 #include <QString>
 #include <QtCore>
@@ -50,5 +47,3 @@ public:
 signals:
     void onPercentageChanged(quint32);
 };
-
-#endif /* INCLUDED_STEPCOUNTER_H */

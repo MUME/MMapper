@@ -23,9 +23,6 @@
 **
 ************************************************************************/
 
-#ifndef MMAPPER_DOORACTION_H
-#define MMAPPER_DOORACTION_H
-
 #include <array>
 #include <cstddef>
 
@@ -51,5 +48,3 @@ namespace enums {
 const std::array<DoorActionType, NUM_DOOR_ACTION_TYPES> &getAllDoorActionTypes();
 
 } // namespace enums
-
-#endif // MMAPPER_DOORACTION_H

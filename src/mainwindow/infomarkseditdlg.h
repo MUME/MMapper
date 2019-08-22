@@ -24,9 +24,6 @@
 **
 ************************************************************************/
 
-#ifndef INFOMARKSEDITDLG_H
-#define INFOMARKSEDITDLG_H
-
 #include <QDialog>
 #include <QString>
 #include <QtCore>
@@ -82,5 +79,3 @@ private:
     void updateMarkers();
     void updateDialog();
 };
-
-#endif
