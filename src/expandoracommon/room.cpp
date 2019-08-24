@@ -256,8 +256,7 @@ void Room::setExitsList(const ExitsList &newExits)
 
     RoomUpdateFlags flags;
 
-    for (size_t i = 0; i < NUM_EXITS; ++i) {
-        const auto dir = static_cast<ExitDirEnum>(i);
+    for (const auto dir : ALL_EXITS7) {
         Exit &ex = m_exits[dir];
         const Exit &newValue = newExits[dir];
         if (ex == newValue)
@@ -590,7 +589,7 @@ ComparisonResultEnum Room::compareWeakProps(const Room *const room, const ParseE
                 }
             } else if (diff.isRoad()) {
                 if (roomExitFlags.isRoad() && connectedRoomFlags.isValid()
-                    && connectedRoomFlags.hasDirectionalSunlight(static_cast<DirectionEnum>(dir))) {
+                    && connectedRoomFlags.hasDirectionalSunlight(dir)) {
                     // Orcs/trolls can only see trails/roads if it is dark (but can see climbs)
                     qDebug() << "Orc/troll could not see trail to the" << lowercaseDirection(dir);
 
@@ -660,7 +659,7 @@ void Room::update(Room &room, const ParseEvent &event)
                 }
                 if (roomExit.exitIsRoad() && !eventExitFlags.isRoad()
                     && connectedRoomFlags.isValid()
-                    && connectedRoomFlags.hasDirectionalSunlight(static_cast<DirectionEnum>(dir))) {
+                    && connectedRoomFlags.hasDirectionalSunlight(dir)) {
                     // Prevent orcs/trolls from removing roads/trails if they're sunlit
                     eventExitFlags |= ExitFlagEnum::ROAD;
                 }

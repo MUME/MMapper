@@ -12,7 +12,7 @@ QByteArray CommandQueue::toByteArray() const
     for (int i = 0; i < base::size(); i++) {
         const auto cmd = base::at(i);
         // REVISIT: Serialize/deserialize directions more intelligently
-        dirs.append(Mmapper2Exit::charForDir(static_cast<ExitDirEnum>(cmd)));
+        dirs.append(Mmapper2Exit::charForDir(getDirection(cmd)));
     }
     return dirs;
 }

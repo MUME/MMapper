@@ -14,7 +14,6 @@
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
-#include "../global/DirectionType.h"
 #include "../global/roomid.h"
 #include "../global/utils.h"
 #include "../mapdata/ExitDirection.h"
@@ -231,13 +230,13 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
 
     // Update the exit from the previous room to the current room
     const CommandEnum move = event.getMoveType();
-    if (static_cast<uint32_t>(move) < NUM_EXITS) {
+    if (isDirection7(move)) {
         if (const Room *const pRoom = getMostLikelyRoom()) {
-            const auto &mostLikelyExit = pRoom->exit(getDirection(move));
+            const auto dir = getDirection(move);
+            const auto &mostLikelyExit = pRoom->exit(dir);
             if (!mostLikelyExit.containsOut(perhaps->getId())) {
-                scheduleAction(std::make_shared<AddExit>(getMostLikelyRoomId(),
-                                                         perhaps->getId(),
-                                                         static_cast<ExitDirEnum>(move)));
+                scheduleAction(
+                    std::make_shared<AddExit>(getMostLikelyRoomId(), perhaps->getId(), dir));
             }
         }
     }
@@ -248,7 +247,7 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
     // Update rooms behind exits now that we are certain about our current location
     const ConnectedRoomFlagsType bFlags = event.getConnectedRoomFlags();
     if (bFlags.isValid()) {
-        for (const auto dir : ALL_DIRECTIONS6) {
+        for (const auto dir : ALL_EXITS_NESWUD) {
             // guaranteed to succeed, since it's set above.
             const Exit &e = getMostLikelyRoom()->exit(dir);
             if (!e.outIsUnique()) {

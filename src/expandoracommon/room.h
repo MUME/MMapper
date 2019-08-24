@@ -10,7 +10,6 @@
 #include <QVariant>
 #include <QVector>
 
-#include "../global/DirectionType.h"
 #include "../global/EnumIndexedArray.h"
 #include "../global/Flags.h"
 #include "../global/RuleOf5.h"
@@ -180,12 +179,9 @@ private:
     bool m_borked = true;
 
 private:
-    // TODO: merge DirectionEnum and ExitDirEnum enums
-    Exit &exit(DirectionEnum dir) { return m_exits[static_cast<ExitDirEnum>(dir)]; }
     Exit &exit(ExitDirEnum dir) { return m_exits[dir]; }
 
 public:
-    const Exit &exit(DirectionEnum dir) const { return m_exits[static_cast<ExitDirEnum>(dir)]; }
     const Exit &exit(ExitDirEnum dir) const { return m_exits[dir]; }
     const ExitsList &getExitsList() const { return m_exits; }
 

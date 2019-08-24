@@ -138,11 +138,11 @@ protected:
     const Coordinate getTailPosition();
 
     // command handling
-    void performDoorCommand(DirectionEnum direction, DoorActionEnum action);
-    void genericDoorCommand(QString command, DirectionEnum direction);
-    void nameDoorCommand(const StringView &doorname, DirectionEnum direction);
-    void toggleDoorFlagCommand(DoorFlagEnum flag, DirectionEnum direction);
-    void toggleExitFlagCommand(ExitFlagEnum flag, DirectionEnum direction);
+    void performDoorCommand(ExitDirEnum direction, DoorActionEnum action);
+    void genericDoorCommand(QString command, ExitDirEnum direction);
+    void nameDoorCommand(const StringView &doorname, ExitDirEnum direction);
+    void toggleDoorFlagCommand(DoorFlagEnum flag, ExitDirEnum direction);
+    void toggleExitFlagCommand(ExitFlagEnum flag, ExitDirEnum direction);
 
 public:
 #define NOP()
@@ -152,10 +152,10 @@ public:
 #undef NOP
 
 public:
-    ExitFlags getExitFlags(DirectionEnum dir) const;
-    DirectionalLightEnum getConnectedRoomFlags(DirectionEnum dir) const;
-    void setExitFlags(ExitFlags flag, DirectionEnum dir);
-    void setConnectedRoomFlag(DirectionalLightEnum light, DirectionEnum dir);
+    ExitFlags getExitFlags(ExitDirEnum dir) const;
+    DirectionalLightEnum getConnectedRoomFlags(ExitDirEnum dir) const;
+    void setExitFlags(ExitFlags flag, ExitDirEnum dir);
+    void setConnectedRoomFlag(DirectionalLightEnum light, ExitDirEnum dir);
 
     void printRoomInfo(RoomFields fieldset);
     void printRoomInfo(RoomFieldEnum field);
@@ -203,10 +203,10 @@ private:
     void showHeader(const QString &s);
 
     bool getField(const Coordinate &c,
-                  const DirectionEnum &direction,
+                  const ExitDirEnum &direction,
                   const ExitFieldVariant &var) const;
 
-    DirectionEnum tryGetDir(StringView &words);
+    ExitDirEnum tryGetDir(StringView &words);
     bool parseDoorAction(StringView words);
     bool parseDoorFlags(StringView words);
     bool parseExitFlags(StringView words);

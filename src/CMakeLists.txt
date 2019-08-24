@@ -60,8 +60,6 @@ set(mmapper_SRCS
     global/AnsiColor.h
     global/Array.h
     global/CharBuffer.h
-    global/DirectionType.cpp
-    global/DirectionType.h
     global/EnumIndexedArray.h
     global/Flags.h
     global/NullPointerException.cpp

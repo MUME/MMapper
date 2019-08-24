@@ -34,7 +34,6 @@
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/parseevent.h"
 #include "../expandoracommon/room.h"
-#include "../global/DirectionType.h"
 #include "../global/NullPointerException.h"
 #include "../global/Version.h"
 #include "../global/roomid.h"
@@ -97,8 +96,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     qRegisterMetaType<RoomId>("RoomId");
     qRegisterMetaType<IncomingData>("IncomingData");
     qRegisterMetaType<CommandQueue>("CommandQueue");
-    qRegisterMetaType<DirectionEnum>("DirectionEnum");
     qRegisterMetaType<DoorActionEnum>("DoorActionEnum");
+    qRegisterMetaType<ExitDirEnum>("ExitDirEnum");
     qRegisterMetaType<GroupManagerStateEnum>("GroupManagerStateEnum");
     qRegisterMetaType<SigParseEvent>("SigParseEvent");
     qRegisterMetaType<SigRoomSelection>("SigRoomSelection");

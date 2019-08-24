@@ -127,3 +127,41 @@ const char *getLowercase(const CommandEnum cmd)
 
     throw std::runtime_error("missing name for command");
 }
+
+namespace {
+#define TEST(a, b) static_assert(static_cast<int>(a) == (b), "")
+
+// NORTH
+TEST(ExitDirEnum::NORTH, 0);
+TEST(CommandEnum::NORTH, 0);
+
+// SOUTH
+TEST(ExitDirEnum::SOUTH, 1);
+TEST(CommandEnum::SOUTH, 1);
+
+// EAST
+TEST(ExitDirEnum::EAST, 2);
+TEST(CommandEnum::EAST, 2);
+
+// WEST
+TEST(ExitDirEnum::WEST, 3);
+TEST(CommandEnum::WEST, 3);
+
+// UP
+TEST(ExitDirEnum::UP, 4);
+TEST(CommandEnum::UP, 4);
+
+// DOWN
+TEST(ExitDirEnum::DOWN, 5);
+TEST(CommandEnum::DOWN, 5);
+
+// UNKNOWN
+TEST(ExitDirEnum::UNKNOWN, 6);
+TEST(CommandEnum::UNKNOWN, 6);
+
+// NONE
+TEST(ExitDirEnum::NONE, 7);
+TEST(CommandEnum::NONE, 10);
+
+#undef TEST
+} // namespace

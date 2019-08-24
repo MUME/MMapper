@@ -501,7 +501,7 @@ bool AbstractParser::parseDoorFlags(StringView words)
 bool AbstractParser::parseDoorFlag(const DoorFlagEnum flag, StringView words)
 {
     const auto dir = tryGetDir(words);
-    if (dir >= DirectionEnum::NONE)
+    if (!isNESWUD(dir))
         throw std::runtime_error("invalid direction");
     if (!words.isEmpty())
         return false;
@@ -526,7 +526,7 @@ bool AbstractParser::parseExitFlags(StringView words)
 bool AbstractParser::parseExitFlag(const ExitFlagEnum flag, StringView words)
 {
     const auto dir = tryGetDir(words);
-    if (dir >= DirectionEnum::NONE)
+    if (!isNESWUD(dir))
         throw std::runtime_error("invalid direction");
     if (!words.isEmpty())
         return false;

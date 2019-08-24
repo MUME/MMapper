@@ -329,12 +329,11 @@ void JsonWorld::writeMetadata(const QFileInfo &path, const MapData &mapData) con
     meta["maxZ"] = max.z;
 
     meta["directions"] = []() {
-        static constexpr const auto SIZE = static_cast<size_t>(ExitDirEnum::NONE);
         QJsonArray arr;
         // why is there no QJsonArray::resize()?
-        for (size_t i = 0; i <= SIZE; ++i)
+        for (size_t i = 0; i <= NUM_EXITS; ++i)
             arr.push_back(QString{});
-        for (size_t i = 0; i <= SIZE; ++i)
+        for (size_t i = 0; i <= NUM_EXITS; ++i)
             arr[static_cast<int>(i)] = getNameUpper(static_cast<ExitDirEnum>(i));
         return arr;
     }();

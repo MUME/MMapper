@@ -18,7 +18,6 @@
 
 #include "../display/OpenGL.h"
 #include "../expandoracommon/coordinate.h"
-#include "../global/DirectionType.h"
 #include "../global/roomid.h"
 #include "../mapfrontend/mapfrontend.h"
 #include "../parser/CommandId.h"
@@ -90,10 +89,6 @@ public:
     // Used in Console Commands
     void removeDoorNames();
     const DoorName &getDoorName(const Coordinate &pos, ExitDirEnum dir);
-    const DoorName &getDoorName(const Coordinate &pos, DirectionEnum dir)
-    {
-        return getDoorName(pos, static_cast<ExitDirEnum>(dir));
-    }
     void setDoorName(const Coordinate &pos, DoorName name, ExitDirEnum dir);
 
 public:

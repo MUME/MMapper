@@ -30,7 +30,6 @@
 #include "../expandoracommon/parseevent.h"
 #include "../expandoracommon/room.h"
 #include "../global/CharBuffer.h"
-#include "../global/DirectionType.h"
 #include "../global/RAII.h"
 #include "../global/StringView.h"
 #include "../global/TextUtils.h"
@@ -277,7 +276,7 @@ void AbstractParser::parseExits()
     bool climb = false;
     bool portal = false;
     bool directSun = false;
-    auto dir = DirectionEnum::UNKNOWN;
+    auto dir = ExitDirEnum::UNKNOWN;
 
     const auto reset_exit_flags = [&doors, &closed, &road, &climb, &portal, &directSun, &dir]() {
         doors = false;
@@ -286,12 +285,12 @@ void AbstractParser::parseExits()
         climb = false;
         portal = false;
         directSun = false;
-        dir = DirectionEnum::UNKNOWN;
+        dir = ExitDirEnum::UNKNOWN;
     };
 
     const auto set_exit_flags =
         [this, &closedDoorFlag, &climb, &doors, &closed, &road, &directSun, &dir]() {
-            if (dir < DirectionEnum::NONE) {
+            if (isNESWUD(dir)) {
                 ExitFlags exitFlags{ExitFlagEnum::EXIT};
                 if (climb) {
                     exitFlags |= ExitFlagEnum::CLIMB;
@@ -299,7 +298,7 @@ void AbstractParser::parseExits()
                 if (doors) {
                     exitFlags |= ExitFlagEnum::DOOR;
                     if (closed) {
-                        closedDoorFlag.set(static_cast<ExitDirEnum>(dir), ExitFlagEnum::DOOR);
+                        closedDoorFlag.set(dir, ExitFlagEnum::DOOR);
                     }
                 }
                 if (road) {
@@ -371,8 +370,7 @@ void AbstractParser::parseExits()
 
                 // Set exit flags to direction
                 const auto &exit = match.captured(2);
-                dir = static_cast<DirectionEnum>(
-                    Mmapper2Exit::dirForChar(exit.at(0).toLower().toLatin1()));
+                dir = Mmapper2Exit::dirForChar(exit.at(0).toLower().toLatin1());
                 set_exit_flags();
 
                 // Reset for next exit
@@ -393,36 +391,36 @@ void AbstractParser::parseExits()
                 case 'n':
                     if ((i + 2) < length && (str.at(i + 2).toLatin1()) == 'r') { // north
                         i += 5;
-                        dir = DirectionEnum::NORTH;
+                        dir = ExitDirEnum::NORTH;
                     } else {
                         i += 4; // none
-                        dir = DirectionEnum::NONE;
+                        dir = ExitDirEnum::NONE;
                     }
                     break;
 
                 case 's':
                     i += 5;
-                    dir = DirectionEnum::SOUTH;
+                    dir = ExitDirEnum::SOUTH;
                     break;
 
                 case 'e':
                     i += 4;
-                    dir = DirectionEnum::EAST;
+                    dir = ExitDirEnum::EAST;
                     break;
 
                 case 'w':
                     i += 4;
-                    dir = DirectionEnum::WEST;
+                    dir = ExitDirEnum::WEST;
                     break;
 
                 case 'u':
                     i += 2;
-                    dir = DirectionEnum::UP;
+                    dir = ExitDirEnum::UP;
                     break;
 
                 case 'd':
                     i += 4;
-                    dir = DirectionEnum::DOWN;
+                    dir = ExitDirEnum::DOWN;
                     break;
                 default:;
                 }
@@ -440,9 +438,9 @@ void AbstractParser::parseExits()
         // Orcs and trolls can detect exits with direct sunlight
         bool foundDirectSunlight = m_connectedRoomFlags.hasAnyDirectSunlight();
         if (foundDirectSunlight || m_trollExitMapping) {
-            for (const auto alt_dir : ALL_DIRECTIONS6) {
+            for (const auto alt_dir : ALL_EXITS_NESWUD) {
                 auto eThisExit = getExitFlags(alt_dir);
-                auto eThisClosed = closedDoorFlag.get(static_cast<ExitDirEnum>(alt_dir));
+                auto eThisClosed = closedDoorFlag.get(alt_dir);
                 auto cOtherRoom = getConnectedRoomFlags(alt_dir);
 
                 // Do not flag indirect sunlight if there was a closed door, no exit, or we saw direct sunlight
@@ -518,10 +516,10 @@ void AbstractParser::emulateExits(const CommandEnum move)
 {
     const auto nextCoordinate = [this, &move]() {
         // Use movement direction to find the next coordinate
-        if (move < CommandEnum::UNKNOWN) {
+        if (isDirectionNESWUD(move)) {
             auto rs = RoomSelection(*m_mapData);
             if (const Room *const sourceRoom = rs.getRoom(m_mapData->getPosition())) {
-                const auto &exit = sourceRoom->exit(static_cast<ExitDirEnum>(move));
+                const auto &exit = sourceRoom->exit(getDirection(move));
                 if (exit.isExit() && !exit.outIsEmpty())
                     if (const Room *const targetRoom = rs.getRoom(exit.outFirst()))
                         return targetRoom->getPosition();
@@ -816,14 +814,14 @@ void AbstractParser::markCurrentCommand()
     emit newRoomSelection(SigRoomSelection{tmpSel});
 }
 
-DirectionEnum AbstractParser::tryGetDir(StringView &view)
+ExitDirEnum AbstractParser::tryGetDir(StringView &view)
 {
     if (view.isEmpty())
-        return DirectionEnum::UNKNOWN;
+        return ExitDirEnum::UNKNOWN;
 
     auto word = view.takeFirstWord();
-    for (auto dir : ALL_DIRECTIONS6) {
-        auto lower = lowercaseDirection(static_cast<ExitDirEnum>(dir));
+    for (auto dir : ALL_EXITS_NESWUD) {
+        auto lower = lowercaseDirection(dir);
         if (lower != nullptr && Abbrev{lower, 1}.matches(word))
             return dir;
     }
@@ -1230,9 +1228,8 @@ bool AbstractParser::tryParseGenericDoorCommand(const QString &str)
         return false;
 
     const char pattern[] = "$$DOOR_X$$";
-    for (auto dir : ALL_DIRECTIONS6) {
-        const auto c = static_cast<char>(
-            std::toupper(Mmapper2Exit::charForDir(static_cast<ExitDirEnum>(dir))));
+    for (auto dir : ALL_EXITS_NESWUD) {
+        const auto c = static_cast<char>(std::toupper(Mmapper2Exit::charForDir(dir)));
         auto buf = makeCharBuffer(pattern);
         buf.replaceAll('X', c);
         if (str.contains(buf.getBuffer())) {
@@ -1247,7 +1244,7 @@ static ExitDirEnum convert_to_ExitDirection(const CommandEnum dir)
 {
     if (!isDirectionNESWUD(dir))
         throw std::invalid_argument("dir");
-    return static_cast<ExitDirEnum>(dir);
+    return getDirection(dir);
 }
 
 static CommandEnum convert_to_CommandIdType(const ExitDirEnum dir)
@@ -1443,8 +1440,7 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
                                   : '^';
     uint exitCount = 0;
     QString etmp = "Exits/emulated:";
-    for (int i = 0; i < 6; i++) {
-        const auto direction = static_cast<ExitDirEnum>(i);
+    for (const auto direction : ALL_EXITS_NESWUD) {
         bool door = false;
         bool exit = false;
         bool road = false;
@@ -1601,7 +1597,7 @@ void AbstractParser::sendPromptToUser(const char light, const char terrain)
     sendToUser(prompt, true);
 }
 
-void AbstractParser::performDoorCommand(const DirectionEnum direction, const DoorActionEnum action)
+void AbstractParser::performDoorCommand(const ExitDirEnum direction, const DoorActionEnum action)
 {
     Coordinate c = getTailPosition();
 
@@ -1610,11 +1606,10 @@ void AbstractParser::performDoorCommand(const DirectionEnum direction, const Doo
 
     bool needdir = false;
 
-    if (direction == DirectionEnum::UNKNOWN) {
+    if (direction == ExitDirEnum::UNKNOWN) {
         // If there is only one secret assume that is what needs opening
         auto secretCount = 0;
-        for (int i_ = 0; i_ < 6; i_++) {
-            const auto i = static_cast<DirectionEnum>(i_);
+        for (const auto i : ALL_EXITS_NESWUD) {
             if (getField(c, i, ExitFieldVariant{DoorFlags{DoorFlagEnum::HIDDEN}})) {
                 dn = m_mapData->getDoorName(c, i).toQByteArray();
                 secretCount++;
@@ -1632,8 +1627,7 @@ void AbstractParser::performDoorCommand(const DirectionEnum direction, const Doo
         dn = "exit";
     } else {
         // Check if we need to add a direction to the door name
-        for (int i_ = 0; i_ < 6; i_++) {
-            const auto i = static_cast<DirectionEnum>(i_);
+        for (const auto i : ALL_EXITS_NESWUD) {
             if ((i != direction) && (m_mapData->getDoorName(c, i).toQByteArray() == dn)) {
                 needdir = true;
             }
@@ -1641,9 +1635,9 @@ void AbstractParser::performDoorCommand(const DirectionEnum direction, const Doo
     }
 
     cn += dn;
-    if (needdir && direction < DirectionEnum::NONE) {
+    if (needdir && isNESWUD(direction)) {
         cn += " ";
-        cn += Mmapper2Exit::charForDir(static_cast<ExitDirEnum>(direction));
+        cn += Mmapper2Exit::charForDir(direction);
     }
     cn += m_newLineTerminator;
 
@@ -1657,7 +1651,7 @@ void AbstractParser::performDoorCommand(const DirectionEnum direction, const Doo
     }
 }
 
-void AbstractParser::genericDoorCommand(QString command, const DirectionEnum direction)
+void AbstractParser::genericDoorCommand(QString command, const ExitDirEnum direction)
 {
     QByteArray cn = emptyByteArray;
     Coordinate c = getTailPosition();
@@ -1669,15 +1663,14 @@ void AbstractParser::genericDoorCommand(QString command, const DirectionEnum dir
         dn = "exit";
         needdir = true;
     } else {
-        for (int i_ = 0; i_ < 6; i_++) {
-            static const auto i = static_cast<DirectionEnum>(i_);
+        for (const auto i : ALL_EXITS_NESWUD) {
             if ((i != direction) && (m_mapData->getDoorName(c, i).toQByteArray() == dn)) {
                 needdir = true;
             }
         }
     }
-    if (direction < DirectionEnum::NONE) {
-        QChar dirChar = Mmapper2Exit::charForDir(static_cast<ExitDirEnum>(direction));
+    if (isNESWUD(direction)) {
+        QChar dirChar = Mmapper2Exit::charForDir(direction);
         cn += dn;
         if (needdir) {
             cn += " ";
@@ -1685,7 +1678,7 @@ void AbstractParser::genericDoorCommand(QString command, const DirectionEnum dir
         }
         cn += m_newLineTerminator;
         command = command.replace(QString("$$DOOR_%1$$").arg(dirChar.toUpper()), cn);
-    } else if (direction == DirectionEnum::UNKNOWN) {
+    } else if (direction == ExitDirEnum::UNKNOWN) {
         cn += dn + m_newLineTerminator;
         command = command.replace("$$DOOR$$", cn);
     }
@@ -1700,21 +1693,21 @@ void AbstractParser::genericDoorCommand(QString command, const DirectionEnum dir
     }
 }
 
-void AbstractParser::nameDoorCommand(const StringView &doorname, const DirectionEnum direction)
+void AbstractParser::nameDoorCommand(const StringView &doorname, const ExitDirEnum direction)
 {
     const Coordinate c = getTailPosition();
 
-    m_mapData->setDoorName(c, DoorName{doorname.toStdString()}, static_cast<ExitDirEnum>(direction));
+    m_mapData->setDoorName(c, DoorName{doorname.toStdString()}, direction);
     sendToUser("--->Doorname set to: " + doorname.toQByteArray() + "\r\n");
     emit showPath(queue, true);
 }
 
-void AbstractParser::toggleExitFlagCommand(const ExitFlagEnum flag, const DirectionEnum direction)
+void AbstractParser::toggleExitFlagCommand(const ExitFlagEnum flag, const ExitDirEnum direction)
 {
     const Coordinate c = getTailPosition();
 
     const ExitFieldVariant var{ExitFlags{flag}};
-    m_mapData->toggleExitFlag(c, static_cast<ExitDirEnum>(direction), var);
+    m_mapData->toggleExitFlag(c, direction, var);
 
     const auto toggle = enabledString(getField(c, direction, var));
     const QByteArray flagname = getFlagName(flag);
@@ -1724,18 +1717,18 @@ void AbstractParser::toggleExitFlagCommand(const ExitFlagEnum flag, const Direct
 }
 
 bool AbstractParser::getField(const Coordinate &c,
-                              const DirectionEnum &direction,
+                              const ExitDirEnum &direction,
                               const ExitFieldVariant &var) const
 {
-    return m_mapData->getExitFlag(c, static_cast<ExitDirEnum>(direction), var);
+    return m_mapData->getExitFlag(c, direction, var);
 }
 
-void AbstractParser::toggleDoorFlagCommand(const DoorFlagEnum flag, const DirectionEnum direction)
+void AbstractParser::toggleDoorFlagCommand(const DoorFlagEnum flag, const ExitDirEnum direction)
 {
     const Coordinate c = getTailPosition();
 
     const ExitFieldVariant var{DoorFlags{flag}};
-    m_mapData->toggleExitFlag(c, static_cast<ExitDirEnum>(direction), var);
+    m_mapData->toggleExitFlag(c, direction, var);
 
     const auto toggle = enabledString(getField(c, direction, var));
     const QByteArray flagname = getFlagName(flag);
@@ -1743,22 +1736,22 @@ void AbstractParser::toggleDoorFlagCommand(const DoorFlagEnum flag, const Direct
     emit showPath(queue, true);
 }
 
-ExitFlags AbstractParser::getExitFlags(const DirectionEnum dir) const
+ExitFlags AbstractParser::getExitFlags(const ExitDirEnum dir) const
 {
-    return m_exitsFlags.get(static_cast<ExitDirEnum>(dir));
+    return m_exitsFlags.get(dir);
 }
 
-DirectionalLightEnum AbstractParser::getConnectedRoomFlags(const DirectionEnum dir) const
+DirectionalLightEnum AbstractParser::getConnectedRoomFlags(const ExitDirEnum dir) const
 {
     return m_connectedRoomFlags.getDirectionalLight(dir);
 }
 
-void AbstractParser::setExitFlags(const ExitFlags ef, const DirectionEnum dir)
+void AbstractParser::setExitFlags(const ExitFlags ef, const ExitDirEnum dir)
 {
-    m_exitsFlags.set(static_cast<ExitDirEnum>(dir), ef);
+    m_exitsFlags.set(dir, ef);
 }
 
-void AbstractParser::setConnectedRoomFlag(const DirectionalLightEnum light, const DirectionEnum dir)
+void AbstractParser::setConnectedRoomFlag(const DirectionalLightEnum light, const ExitDirEnum dir)
 {
     m_connectedRoomFlags.setDirectionalLight(dir, light);
 }

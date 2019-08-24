@@ -141,8 +141,7 @@ void MapData::shortestPathSearch(const Room *origin,
                 continue;
             }
             const double length = getLength(e, thisr, nextr.get());
-            sp_nodes.push_back(
-                SPNode(nextr.get(), spindex, thisdist + length, static_cast<ExitDirEnum>(dir)));
+            sp_nodes.push_back(SPNode(nextr.get(), spindex, thisdist + length, dir));
             future_paths.push(std::make_pair(-(thisdist + length), sp_nodes.size() - 1));
         }
     }
