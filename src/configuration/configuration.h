@@ -59,6 +59,12 @@ static constexpr const bool NO_UPDATER = true;
 static constexpr const bool NO_UPDATER = false;
 #endif
 
+#if defined(MMAPPER_NO_MAP) && MMAPPER_NO_MAP
+static constexpr const bool NO_MAP_RESOURCE = true;
+#else
+static constexpr const bool NO_MAP_RESOURCE = false;
+#endif
+
 #define SUBGROUP() \
     friend class Configuration; \
     void read(QSettings &conf); \

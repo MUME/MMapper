@@ -1356,7 +1356,7 @@ void MainWindow::reload()
 
 bool MainWindow::save()
 {
-    if (m_mapData->getFileName().isEmpty()) {
+    if (m_mapData->getFileName().isEmpty() || m_mapData->getFileName().startsWith(":/")) {
         return saveAs();
     }
     return saveFile(m_mapData->getFileName(), SaveMode::SAVEM_FULL, SaveFormat::SAVEF_MM2);
@@ -1366,7 +1366,7 @@ std::unique_ptr<QFileDialog> MainWindow::createDefaultSaveDialog()
 {
     auto save = std::make_unique<QFileDialog>(this, "Choose map file name ...");
     save->setFileMode(QFileDialog::AnyFile);
-    save->setDirectory(QDir::current());
+    save->setDirectory(QDir(getConfig().autoLoad.lastMapDirectory));
     save->setNameFilter("MMapper Maps (*.mm2)");
     save->setDefaultSuffix("mm2");
     save->setAcceptMode(QFileDialog::AcceptSave);
@@ -1391,7 +1391,25 @@ bool MainWindow::saveAs()
         return false;
     }
 
-    return saveFile(fileNames[0], SaveMode::SAVEM_FULL, SaveFormat::SAVEF_MM2);
+    QFileInfo file(fileNames[0]);
+    bool success = saveFile(file.absoluteFilePath(), SaveMode::SAVEM_FULL, SaveFormat::SAVEF_MM2);
+    if (success) {
+        // Update last directory
+        auto &config = setConfig().autoLoad;
+        config.lastMapDirectory = file.absoluteDir().absolutePath();
+
+        // Check if this should be the new autoload map
+        QMessageBox dlg(QMessageBox::Question,
+                        "Autoload Map?",
+                        "Autoload this map when MMapper starts?",
+                        QMessageBox::StandardButtons{QMessageBox::Yes | QMessageBox::No},
+                        this);
+        if (dlg.exec() == QMessageBox::Yes) {
+            config.autoLoadMap = true;
+            config.fileName = file.absoluteFilePath();
+        }
+    }
+    return success;
 }
 
 bool MainWindow::exportBaseMap()
@@ -1400,7 +1418,6 @@ bool MainWindow::exportBaseMap()
         auto saveDialog = createDefaultSaveDialog();
         QFileInfo currentFile(m_mapData->getFileName());
         if (currentFile.exists()) {
-            saveDialog->setDirectory(currentFile.absoluteDir());
             saveDialog->selectFile(
                 currentFile.fileName().replace(QRegularExpression(R"(\.mm2$)"), "-base.mm2"));
         }
@@ -1425,11 +1442,7 @@ bool MainWindow::exportWebMap()
         save->setFileMode(QFileDialog::Directory);
         save->setOption(QFileDialog::ShowDirsOnly, true);
         save->setAcceptMode(QFileDialog::AcceptSave);
-
-        QFileInfo currentFile(m_mapData->getFileName());
-        if (currentFile.exists()) {
-            save->setDirectory(currentFile.absoluteDir());
-        }
+        save->setDirectory(QDir(getConfig().autoLoad.lastMapDirectory));
         return save;
     };
 
@@ -1449,7 +1462,7 @@ bool MainWindow::exportMmpMap()
                                                   "Choose map file name ...",
                                                   QDir::current().absolutePath());
         save->setFileMode(QFileDialog::AnyFile);
-        save->setDirectory(QDir::current());
+        save->setDirectory(QDir(getConfig().autoLoad.lastMapDirectory));
         save->setNameFilter("MMP Maps (*.xml)");
         save->setDefaultSuffix("xml");
         save->setAcceptMode(QFileDialog::AcceptSave);
@@ -1715,19 +1728,22 @@ void MainWindow::onModeGroupServer()
 
 void MainWindow::setCurrentFile(const QString &fileName)
 {
+    QFileInfo file(fileName);
+
     QString shownName;
     if (fileName.isEmpty()) {
         shownName = "untitled.mm2";
     } else {
-        shownName = strippedName(fileName);
+        shownName = file.fileName();
     }
+    QString suffix = file.isWritable() ? "" : " [read-only]";
 
-    setWindowTitle(QString("%1[*] - %2").arg(shownName).arg("MMapper"));
-}
-
-QString MainWindow::strippedName(const QString &fullFileName)
-{
-    return QFileInfo(fullFileName).fileName();
+    // [*] is Qt black magic for only showing the '*' if the document has been modified.
+    // From https://doc.qt.io/qt-5/qwidget.html:
+    // > The window title must contain a "[*]" placeholder, which indicates where the '*' should appear.
+    // > Normally, it should appear right after the file name (e.g., "document1.txt[*] - Text Editor").
+    // > If the window isn't modified, the placeholder is simply removed.
+    setWindowTitle(QString("%1%2[*] - MMapper").arg(shownName).arg(suffix));
 }
 
 void MainWindow::onLayerUp()

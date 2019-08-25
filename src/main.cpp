@@ -80,10 +80,7 @@ static void tryInitDrMingw()
 #endif
 }
 
-static bool tryLoad(MainWindow &mw,
-                    const QDir &dir,
-                    const QString &input_filename,
-                    const bool updateSettings)
+static bool tryLoad(MainWindow &mw, const QDir &dir, const QString &input_filename)
 {
     const auto getAbsoluteFileName = [](const QDir &dir,
                                         const QString &input_filename) -> std::optional<QString> {
@@ -109,49 +106,19 @@ static bool tryLoad(MainWindow &mw,
     }
 
     mw.loadFile(absoluteFilePath);
-
-    if (updateSettings) {
-        // REVISIT: We probably shouldn't update if the load failed.
-        auto &savedSettings = setConfig().autoLoad;
-
-        QFileInfo file(absoluteFilePath);
-        savedSettings.autoLoadMap = true;
-        savedSettings.fileName = file.fileName();
-        savedSettings.lastMapDirectory = file.dir().absolutePath();
-    }
-
     return true;
-}
-
-static void firstRun(MainWindow &mw)
-{
-    const auto cd = [](QDir dir, QString subdir) -> QDir {
-        return QDir{dir.absoluteFilePath(subdir)};
-    };
-
-    /* REVISIT: may want both .exe directory and the cwd, since they might be different! */
-    std::set<QString> seen;
-    for (const auto &dir : {QDir{getConfig().autoLoad.lastMapDirectory},
-                            QDir::current(),
-                            cd(QDir::current(), "map")}) {
-        const auto name = dir.absolutePath();
-        if (seen.find(name) != seen.end())
-            continue;
-        seen.emplace(name);
-        if (tryLoad(mw, dir, "arda.mm2", true))
-            break;
-    }
 }
 
 static void tryAutoLoad(MainWindow &mw)
 {
-    const auto &config = getConfig();
-    const auto &settings = config.autoLoad;
-
-    if (settings.autoLoadMap && !settings.fileName.isEmpty()) {
-        tryLoad(mw, QDir{settings.lastMapDirectory}, settings.fileName, false);
-    } else if (config.general.firstRun) {
-        firstRun(mw);
+    const auto &settings = getConfig().autoLoad;
+    if (settings.autoLoadMap) {
+        if (!settings.fileName.isEmpty()
+            && tryLoad(mw, QDir{settings.lastMapDirectory}, settings.fileName))
+            return;
+        if (!NO_MAP_RESOURCE && tryLoad(mw, QDir(":/"), "arda.mm2"))
+            return;
+        qInfo() << "[main] Unable to autoload map";
     }
 }
 
@@ -171,7 +138,6 @@ int main(int argc, char **argv)
     }
 
     QApplication app(argc, argv);
-    Q_INIT_RESOURCE(mmapper2);
     tryInitDrMingw();
     tryUseHighDpi(app);
     auto tryLoadingWinSock = std::make_unique<WinSock>();

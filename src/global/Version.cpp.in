@@ -1,0 +1,13 @@
+// This generated file exists to set the MMapper version.
+
+#include "global/Version.h"
+
+const char *getMMapperVersion()
+{
+    return "${GIT_TAG_COMMIT_HASH}";
+}
+
+const char *getMMapperBranch()
+{
+    return "${GIT_BRANCH}";
+}

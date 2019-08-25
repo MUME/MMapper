@@ -11,6 +11,7 @@
 #include <optional>
 #include <QByteArray>
 #include <QChar>
+#include <QDir>
 #include <QHostInfo>
 #include <QString>
 #include <QStringList>
@@ -33,36 +34,6 @@ static const char *getPlatformEditor()
         // look for gnome-open, mate-open, etc.
         return "gedit";
 
-    case Platform::Unknown:
-    default:
-        return "";
-    }
-}
-
-// REVISIT: Why not just check the path of the binary?
-// Windows: GetModuleFileName(NULL, ...).
-// Linux: readlink /proc/self/exe
-// Mac: _NSGetExecutablePath
-// All: argv[0] may also work as a last resort.
-// OR maybe: github.com/gpakosz/whereami
-static QByteArray getPlatformLoadDir()
-{
-    switch (CURRENT_PLATFORM) {
-    case Platform::Windows:
-        switch (CURRENT_ENVIRONMENT) {
-        case Environment::Env32Bit:
-            return "C:/Program Files (x86)/MMapper";
-        case Environment::Env64Bit:
-            return "C:/Program Files/MMapper";
-        case Environment::Unknown:
-        default:
-            return "";
-        };
-
-    case Platform::Linux:
-        return qgetenv("SNAP").append("/usr/share/games/mmapper");
-
-    case Platform::Mac:
     case Platform::Unknown:
     default:
         return "";
@@ -525,14 +496,9 @@ void Configuration::CanvasSettings::read(QSettings &conf)
 
 void Configuration::AutoLoadSettings::read(QSettings &conf)
 {
-    autoLoadMap = conf.value(KEY_AUTO_LOAD, false).toBool();
-    fileName = conf.value(KEY_FILE_NAME, "arda.mm2").toString();
-    if (getCurrentPlatform() == Platform::Windows
-        && getCurrentEnvironment() == Environment::Env64Bit
-        && fileName.contains("Program Files (x86)")) {
-        fileName.replace("Program Files (x86)", "Program Files");
-    }
-    lastMapDirectory = conf.value(KEY_LAST_MAP_LOAD_DIRECTORY, getPlatformLoadDir()).toString();
+    autoLoadMap = conf.value(KEY_AUTO_LOAD, true).toBool();
+    fileName = conf.value(KEY_FILE_NAME, "").toString();
+    lastMapDirectory = conf.value(KEY_LAST_MAP_LOAD_DIRECTORY, QDir::homePath()).toString();
 }
 
 void Configuration::ParserSettings::read(QSettings &conf)

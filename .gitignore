@@ -8,7 +8,7 @@ build/
 *Thumbs.db
 Makefile
 .qmake.stash
-map/arda.mm2
+**.mm2
 **/.DS_Store
 .idea
 

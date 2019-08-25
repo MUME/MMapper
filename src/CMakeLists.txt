@@ -297,6 +297,11 @@ set(mmapper_RCS
     resources/icons/hi48-app-mmapper.png
 )
 
+if(WITH_MAP)
+    configure_file(resources/arda.qrc ${CMAKE_BINARY_DIR}/map/arda.qrc COPYONLY)
+    list(APPEND mmapper_RCS "${CMAKE_BINARY_DIR}/map/arda.qrc")
+endif()
+
 set(mmapper_UIS
     mainwindow/aboutdialog.ui
     mainwindow/findroomsdlg.ui
@@ -324,11 +329,7 @@ if(MMAPPER_IS_DEBUG)
     endif()
 endif()
 
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/Version.cpp
-    "// This generated file exists to set the MMapper version.\n\n"
-    "#include \"global/Version.h\"\n\n"
-    "const char *getMMapperVersion() { return \"${GIT_TAG_COMMIT_HASH}\"; }\n"
-    "const char *getMMapperBranch() { return \"${GIT_BRANCH}\"; }\n")
+configure_file(global/Version.cpp.in ${CMAKE_CURRENT_BINARY_DIR}/Version.cpp)
 list(APPEND mmapper_SRCS "${CMAKE_CURRENT_BINARY_DIR}/Version.cpp")
 
 if(CHECK_ODR)
@@ -361,7 +362,7 @@ endif()
 set(mmapper_DATA
     org.mume.MMapper.desktop
     MacOSXBundleInfo.plist.in
-    display/OpenGL.cpp)
+    global/Version.cpp.in)
 
 # Build the executable
 add_executable(mmapper WIN32 MACOSX_BUNDLE
@@ -512,13 +513,6 @@ if(UNIX AND NOT APPLE)
         COMPONENT applications
     )
 
-    # Install Map
-    install(
-        FILES ${MMAPPER_MAP_FILE}
-        DESTINATION share/games/mmapper
-        COMPONENT map
-    )
-
     # Linux Desktop Integration
     install(FILES org.mume.MMapper.desktop
             DESTINATION share/applications
@@ -576,13 +570,6 @@ if(WIN32)
         TARGETS mmapper RUNTIME
         DESTINATION bin
         COMPONENT applications
-    )
-
-    # Install Map
-    install(
-        FILES ${MMAPPER_MAP_FILE}
-        DESTINATION .
-        COMPONENT map
     )
 
     # Bundle Library Files
@@ -684,13 +671,6 @@ if(APPLE)
         COMPONENT applications
     )
 
-    # Install Map
-    install(
-        FILES ${MMAPPER_MAP_FILE}
-        DESTINATION MMapper
-        COMPONENT map
-    )
-
     # Install Help Documentation
     install(FILES
         "${PROJECT_SOURCE_DIR}/appdata/Installation Guide.URL"
@@ -730,14 +710,10 @@ else()
     set(CPACK_STRIP_FILES TRUE)
 endif()
 # Applications Component
-set(CPACK_COMPONENTS_ALL applications map libraries help)
+set(CPACK_COMPONENTS_ALL applications libraries help)
 set(CPACK_COMPONENT_APPLICATIONS_DISPLAY_NAME "MMapper")
 set(CPACK_COMPONENT_APPLICATIONS_DESCRIPTION "A mud mapper especially written for the mud MUME")
 set(CPACK_COMPONENT_APPLICATIONS_REQUIRED TRUE)
-
-# Map Component
-set(CPACK_COMPONENT_MAP_DISPLAY_NAME "Included Map")
-set(CPACK_COMPONENT_MAP_DESCRIPTION "A base map of Arda")
 
 # Libraries Component
 set(CPACK_COMPONENT_LIBRARIES_DISPLAY_NAME "Runtime Libraries")

@@ -296,7 +296,6 @@ private:
     void readSettings();
     void writeSettings();
 
-    QString strippedName(const QString &fullFileName);
     bool maybeSave();
     std::unique_ptr<QFileDialog> createDefaultSaveDialog();
 };
