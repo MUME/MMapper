@@ -74,7 +74,6 @@ public:
 
     bool isEmpty() const { return (greatestUsedId == INVALID_ROOMID) && m_markers.isEmpty(); }
     bool dataChanged() const { return m_dataChanged; }
-    const QString &getFileName() const { return m_fileName; }
     QList<Coordinate> getPath(const Coordinate &start, const CommandQueue &dirs);
     virtual void clear() override;
 
@@ -97,6 +96,15 @@ public:
     void setDoorName(const Coordinate &pos, const QString &name, ExitDirection dir);
 
 public:
+    void setFileName(QString filename, bool readOnly)
+    {
+        m_fileName = filename;
+        m_fileReadOnly = readOnly;
+    }
+    const QString &getFileName() const { return m_fileName; }
+    bool isFileReadOnly() const { return m_fileReadOnly; }
+
+public:
     bool getExitFlag(const Coordinate &pos, ExitDirection dir, ExitFieldVariant var);
     void toggleExitFlag(const Coordinate &pos, ExitDirection dir, ExitFieldVariant var);
 
@@ -110,7 +118,6 @@ signals:
     void onDataChanged();
 
 public slots:
-    void setFileName(QString filename) { m_fileName = filename; }
     void unsetDataChanged() { m_dataChanged = false; }
     void setDataChanged() { m_dataChanged = true; }
     void setPosition(const Coordinate &pos) { m_position = pos; }
@@ -119,6 +126,7 @@ protected:
     MarkerList m_markers{};
     // changed data?
     bool m_dataChanged = false;
+    bool m_fileReadOnly = false;
     QString m_fileName{};
     Coordinate m_position{};
 };

@@ -203,7 +203,7 @@ bool PandoraMapStorage::mergeData()
             return false;
         }
 
-        m_mapData.setFileName(m_fileName.replace(QRegularExpression(R"(\.xml$)"), "-import.mm2"));
+        m_mapData.setFileName(m_fileName, true);
         m_mapData.unsetDataChanged();
     }
 

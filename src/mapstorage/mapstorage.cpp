@@ -72,7 +72,7 @@ void MapStorage::newData()
 {
     m_mapData.unsetDataChanged();
 
-    m_mapData.setFileName(m_fileName);
+    m_mapData.setFileName(m_fileName, false);
 
     Coordinate pos;
     m_mapData.setPosition(pos);
@@ -406,7 +406,7 @@ bool MapStorage::mergeData()
             return false;
         }
 
-        m_mapData.setFileName(m_fileName);
+        m_mapData.setFileName(m_fileName, !QFileInfo(m_fileName).isWritable());
         m_mapData.unsetDataChanged();
     }
 

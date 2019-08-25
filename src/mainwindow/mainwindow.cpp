@@ -1356,7 +1356,7 @@ void MainWindow::reload()
 
 bool MainWindow::save()
 {
-    if (m_mapData->getFileName().isEmpty() || m_mapData->getFileName().startsWith(":/")) {
+    if (m_mapData->getFileName().isEmpty() || m_mapData->isFileReadOnly()) {
         return saveAs();
     }
     return saveFile(m_mapData->getFileName(), SaveMode::SAVEM_FULL, SaveFormat::SAVEF_MM2);
@@ -1385,7 +1385,18 @@ static QStringList getSaveFileNames(std::unique_ptr<QFileDialog> &&ptr)
 
 bool MainWindow::saveAs()
 {
-    const QStringList fileNames = getSaveFileNames(createDefaultSaveDialog());
+    const auto makeSaveDialog = [this]() {
+        auto saveDialog = createDefaultSaveDialog();
+        QFileInfo currentFile(m_mapData->getFileName());
+        if (currentFile.exists()) {
+            QString suggestedFileName = currentFile.fileName()
+                                            .replace(QRegularExpression(R"(\.mm2$)"), "-copy.mm2")
+                                            .replace(QRegularExpression(R"(\.xml$)"), "-import.mm2");
+            saveDialog->selectFile(suggestedFileName);
+        }
+        return saveDialog;
+    };
+    const QStringList fileNames = getSaveFileNames(makeSaveDialog());
     if (fileNames.isEmpty()) {
         statusBar()->showMessage(tr("No filename provided"), 2000);
         return false;
@@ -1466,6 +1477,10 @@ bool MainWindow::exportMmpMap()
         save->setNameFilter("MMP Maps (*.xml)");
         save->setDefaultSuffix("xml");
         save->setAcceptMode(QFileDialog::AcceptSave);
+        save->selectFile(QFileInfo(m_mapData->getFileName())
+                             .fileName()
+                             .replace(QRegularExpression(R"(\.mm2$)"), "-mmp.xml"));
+
         return save;
     };
 
@@ -1736,7 +1751,7 @@ void MainWindow::setCurrentFile(const QString &fileName)
     } else {
         shownName = file.fileName();
     }
-    QString suffix = file.isWritable() ? "" : " [read-only]";
+    QString suffix = (m_mapData->isFileReadOnly() || !file.isWritable()) ? " [read-only]" : "";
 
     // [*] is Qt black magic for only showing the '*' if the document has been modified.
     // From https://doc.qt.io/qt-5/qwidget.html:
