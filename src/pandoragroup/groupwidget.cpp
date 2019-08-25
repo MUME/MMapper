@@ -360,25 +360,33 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
             return;
         }
 
-        if (getConfig().groupManager.state != GroupManagerState::Server) {
-            // All context menu actions are only actionable by the server right now
-            return;
-        }
-
-        // Identify kick target
+        // Identify target
         if (auto group = m_group->getGroup()) {
             auto selection = group->selectAll();
             // Map row to character
             if (index.row() < static_cast<int>(selection->size())) {
                 CGroupChar *character = selection->at(index.row());
                 selectedCharacter = character->getName();
+
+                // Center map on the clicked character
+                if (character->roomId != DEFAULT_ROOMID && character->roomId != INVALID_ROOMID
+                    && !m_map->isEmpty() && character->roomId <= m_map->getMaxId()) {
+                    auto roomSelection = RoomSelection(*m_map);
+                    if (const Room *const r = roomSelection.getRoom(character->roomId)) {
+                        const Coordinate &c = r->getPosition();
+                        emit sig_center(c.x, c.y); // connects to MapWindow
+                    }
+                }
             }
 
             // Build Context menu
-            m_kick->setText(QString("&Kick %1").arg(selectedCharacter.constData()));
-            QMenu contextMenu(tr("Context menu"), this);
-            contextMenu.addAction(m_kick);
-            contextMenu.exec(QCursor::pos());
+            if (getConfig().groupManager.state == GroupManagerState::Server) {
+                // All context menu actions are only actionable by the server right now
+                m_kick->setText(QString("&Kick %1").arg(selectedCharacter.constData()));
+                QMenu contextMenu(tr("Context menu"), this);
+                contextMenu.addAction(m_kick);
+                contextMenu.exec(QCursor::pos());
+            }
         }
     });
 

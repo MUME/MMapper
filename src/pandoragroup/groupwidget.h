@@ -106,6 +106,7 @@ public slots:
 
 signals:
     void kickCharacter(const QByteArray &);
+    void sig_center(int x, int y);
 
 private:
     void readSettings();

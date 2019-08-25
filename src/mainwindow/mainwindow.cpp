@@ -156,6 +156,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     addDockWidget(Qt::TopDockWidgetArea, m_dockDialogGroup);
     m_dockDialogGroup->setWidget(m_groupWidget);
     m_dockDialogGroup->hide();
+    connect(m_groupWidget, &GroupWidget::sig_center, m_mapWindow, &MapWindow::center);
 
     m_findRoomsDlg = new FindRoomsDlg(m_mapData, this);
     m_findRoomsDlg->setObjectName("FindRoomsDlg");
