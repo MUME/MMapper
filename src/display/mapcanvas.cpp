@@ -257,9 +257,19 @@ void MapCanvas::setRoomSelection(const SigRoomSelection &selection)
     if (selection.isValid()) {
         m_roomSelection = selection.getShared();
         qDebug() << "Updated selection with" << m_roomSelection->size() << "rooms";
+        if (m_roomSelection->size() == 1) {
+            const Room *const r = m_roomSelection->first();
+            const Coordinate &roomPos = r->getPosition();
+            const auto x = roomPos.x;
+            const auto y = roomPos.y;
+            emit log("MapCanvas",
+                     QString("Selected Room Coordinates: %1 %2\n%3")
+                         .arg(x)
+                         .arg(y)
+                         .arg(r->toQString()));
+        }
     } else {
         m_roomSelection.reset();
-        qDebug() << "Cleared room selection";
     }
 
     // Let the MainWindow know
@@ -772,51 +782,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                 }
 
                 if (!m_roomSelection->empty()) {
-                    emit newRoomSelection(SigRoomSelection{m_roomSelection});
-                    if (m_roomSelection->size() == 1) {
-                        const Room *const r = m_roomSelection->first();
-                        const auto x = r->getPosition().x;
-                        const auto y = r->getPosition().y;
-
-                        // REVISIT: use a StringBuilder of some sort?
-                        QString etmp = "Exits:";
-                        for (const auto j : ALL_EXITS7) {
-                            bool door = false;
-                            if (r->exit(j).isDoor()) {
-                                door = true;
-                                etmp += " (";
-                            }
-
-                            if (r->exit(j).isExit()) {
-                                if (!door) {
-                                    etmp += " ";
-                                }
-
-                                etmp += lowercaseDirection(j);
-                            }
-
-                            if (door) {
-                                const auto &doorName = r->exit(j).getDoorName();
-                                if (!doorName.isEmpty()) {
-                                    etmp += "/" + doorName.toQByteArray() + ")";
-                                } else {
-                                    etmp += ")";
-                                }
-                            }
-                        }
-                        etmp += ".\n";
-                        QString ctemp = QString("Selected Room Coordinates: %1 %2").arg(x).arg(y);
-                        emit log("MapCanvas",
-                                 ctemp + "\n" + r->getName() + "\n" + r->getStaticDescription()
-                                     + r->getDynamicDescription() + etmp);
-
-                        /*
-                        if (r->isUpToDate())
-                        emit log( "MapCanvas", "Room is Online Updated ...");
-                        else
-                        emit log( "MapCanvas", "Room is not Online Updated ...");
-                        */
-                    }
+                    setRoomSelection(SigRoomSelection{m_roomSelection});
                 }
             }
             m_selectedArea = false;

@@ -136,39 +136,7 @@ void FindRoomsDlg::findClicked()
 // FIXME: This code is almost identical to the code in MapCanvas::mouseReleaseEvent. Refactor!
 QString FindRoomsDlg::constructToolTip(const Room *const r)
 {
-    // taken from MapCanvas:
-    QString etmp = "Exits:";
-    for (const auto j : ALL_EXITS7) {
-        bool door = false;
-        if (r->exit(j).isDoor()) {
-            door = true;
-            etmp += " (";
-        }
-
-        if (r->exit(j).isExit()) {
-            if (!door) {
-                etmp += " ";
-            }
-
-            etmp += lowercaseDirection(j);
-        }
-        if (door) {
-            const auto &doorName = r->exit(j).getDoorName();
-            if (!doorName.isEmpty()) {
-                etmp += "/" + doorName.toQByteArray();
-            }
-            etmp += ")";
-        }
-    }
-    etmp += ".\n";
-
-    auto note = r->getNote().toQByteArray();
-    if (!note.isEmpty()) {
-        note = "Note: " + note;
-    }
-
-    return QString("Selected Room ID: %1").arg(r->getId().asUint32()) + "\n" + r->getName() + "\n"
-           + r->getStaticDescription() + r->getDynamicDescription() + etmp + note;
+    return QString("Selected Room ID: %1\n%2").arg(r->getId().asUint32()).arg(r->toQString());
 }
 
 void FindRoomsDlg::showSelectedRoom()

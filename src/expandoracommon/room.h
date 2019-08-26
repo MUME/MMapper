@@ -7,6 +7,7 @@
 #include <cassert>
 #include <memory>
 #include <optional>
+#include <QDebug>
 #include <QVariant>
 #include <QVector>
 
@@ -250,6 +251,11 @@ public:
     static void update(Room *target, const Room *source);
 
 public:
+    std::string toStdString() const;
+    QString toQString() const { return QString::fromStdString(toStdString()); }
+    explicit operator QString() const { return toQString(); }
+    friend QDebug operator<<(QDebug os, const Room &r) { return os << r.toQString(); }
+
 public:
     static std::shared_ptr<Room> createPermanentRoom(RoomModificationTracker &tracker);
     static std::shared_ptr<Room> createTemporaryRoom(RoomModificationTracker &tracker,

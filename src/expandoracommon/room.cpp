@@ -6,12 +6,13 @@
 #include "room.h"
 
 #include <memory>
+#include <sstream>
 #include <vector>
 
-#include "../expandoracommon/parseevent.h"
 #include "../global/StringView.h"
 #include "../global/random.h"
 #include "../mapdata/ExitFieldVariant.h"
+#include "parseevent.h"
 
 static constexpr const auto default_updateFlags = RoomUpdateFlags{}; /* none */
 static constexpr const auto mesh_updateFlags = RoomUpdateFlags{RoomUpdateEnum::Mesh};
@@ -441,7 +442,7 @@ ComparisonResultEnum Room::compareStrings(const std::string &room,
 
     if (tolerance < 0) {
         return ComparisonResultEnum::DIFFERENT;
-    } else if (static_cast<int>(prevTolerance) != tolerance) {
+    } else if (prevTolerance != tolerance) {
         return ComparisonResultEnum::TOLERANCE;
     } else if (event.size() != room.size()) { // differences in amount of whitespace
         return ComparisonResultEnum::TOLERANCE;
@@ -560,16 +561,30 @@ ComparisonResultEnum Room::compareWeakProps(const Room *const room, const ParseE
             if (roomExitFlags.isNoMatch()) {
                 continue;
             }
+            const bool hasLight = connectedRoomFlags.isValid()
+                                  && connectedRoomFlags.hasDirectionalSunlight(dir);
             const auto eventExitFlags = eventExitsFlags.get(dir);
             const auto diff = eventExitFlags ^ roomExitFlags;
+            /* MUME has two logic flows for displaying signs on exits:
+             *
+             * 1) Display one sign for a portal {} or closed door []
+             *    i.e. {North} [South]
+             *
+             * 2) Display two signs from each list in the following order:
+             *    a) one option of: * ^ = - ~
+             *    b) one option of: open door () or climb up /\ or climb down \/
+             *    i.e. *(North)* -/South\- ~East~ *West*
+             *
+             * You can combine the two flows for each exit: {North} ~East~ *(West)*
+            */
             if (diff.isExit() || diff.isDoor()) {
                 if (!exitsValid) {
-                    // Room was not isUpToDate or the exits/doors do not match
+                    // Room was not isUpToDate and no exits were present in the room
                     previousDifference = true;
                 } else {
                     if (tolerance) {
                         // Do not be tolerant for multiple differences
-                        qDebug() << "Found too many differences" << event;
+                        qDebug() << "Found too many differences" << event << *room;
                         return ComparisonResultEnum::DIFFERENT;
 
                     } else if (!roomExitFlags.isExit() && eventExitFlags.isDoor()) {
@@ -581,15 +596,20 @@ ComparisonResultEnum Room::compareWeakProps(const Room *const room, const ParseE
                     } else if (roomExit.isHiddenExit() && !eventExitFlags.isDoor()) {
                         qDebug() << "Secret exit hidden to the" << lowercaseDirection(dir);
 
+                    } else if (roomExitFlags.isExit() && roomExitFlags.isDoor()
+                               && !eventExitFlags.isExit()) {
+                        qDebug() << "Door to the" << lowercaseDirection(dir)
+                                 << "is likely a secret";
+                        tolerance = true;
+
                     } else {
                         qWarning() << "Unknown exit/door tolerance condition to the"
-                                   << lowercaseDirection(dir) << event;
+                                   << lowercaseDirection(dir) << event << *room;
                         return ComparisonResultEnum::DIFFERENT;
                     }
                 }
             } else if (diff.isRoad()) {
-                if (roomExitFlags.isRoad() && connectedRoomFlags.isValid()
-                    && connectedRoomFlags.hasDirectionalSunlight(dir)) {
+                if (roomExitFlags.isRoad() && hasLight) {
                     // Orcs/trolls can only see trails/roads if it is dark (but can see climbs)
                     qDebug() << "Orc/troll could not see trail to the" << lowercaseDirection(dir);
 
@@ -607,25 +627,17 @@ ComparisonResultEnum Room::compareWeakProps(const Room *const room, const ParseE
 
                 } else {
                     qWarning() << "Unknown road tolerance condition to the"
-                               << lowercaseDirection(dir) << event;
+                               << lowercaseDirection(dir) << event << *room;
                     tolerance = true;
                 }
             } else if (diff.isClimb()) {
-                if (roomExitFlags.isClimb() && !eventExitFlags.isClimb() && roomExitFlags.isDoor()
-                    && eventExitFlags.isDoor()) {
+                if (roomExitFlags.isDoor() && roomExitFlags.isClimb()) {
                     // A closed door is hiding the climb that we know is there
-                    qDebug() << "Closed door masking climb to the" << lowercaseDirection(dir);
-
-                } else if (!roomExitFlags.isClimb() && eventExitFlags.isClimb()
-                           && roomExitFlags.isDoor() && eventExitFlags.isDoor()) {
-                    // A known door was previously mapped closed and a new climb exit flag was found
-                    qDebug() << "Previously closed door was hiding climb to the"
-                             << lowercaseDirection(dir);
-                    tolerance = true;
+                    qDebug() << "Door masking climb to the" << lowercaseDirection(dir);
 
                 } else {
                     qWarning() << "Unknown climb tolerance condition to the"
-                               << lowercaseDirection(dir) << event;
+                               << lowercaseDirection(dir) << event << *room;
                     tolerance = true;
                 }
             }
@@ -786,6 +798,44 @@ void Room::update(Room *const target, const Room *const source)
     if (source->isUpToDate()) {
         target->setUpToDate();
     }
+}
+
+std::string Room::toStdString() const
+{
+    std::stringstream ss;
+    ss << getName() + "\n"
+       << getStaticDescription().getStdString() << getDynamicDescription().getStdString();
+
+    ss << "Exits:";
+    for (const auto j : ALL_EXITS7) {
+        const ExitFlags &exitFlags = exit(j).getExitFlags();
+        if (!exitFlags.isExit())
+            continue;
+        ss << " ";
+
+        bool climb = exit(j).getExitFlags().isClimb();
+        if (climb)
+            ss << "|";
+        bool door = exit(j).isDoor();
+        if (door)
+            ss << "(";
+        ss << lowercaseDirection(j);
+        if (door) {
+            const auto doorName = exit(j).getDoorName();
+            if (!doorName.isEmpty()) {
+                ss << "/" << doorName.getStdString();
+            }
+            ss << ")";
+        }
+        if (climb)
+            ss << "|";
+    }
+    ss << ".\n";
+    if (!getNote().isEmpty()) {
+        ss << "Note: " << getNote().getStdString();
+    }
+
+    return ss.str();
 }
 
 using ExitCoordinates = EnumIndexedArray<Coordinate, ExitDirEnum, NUM_EXITS_INCLUDING_NONE>;

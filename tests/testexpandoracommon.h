@@ -4,6 +4,14 @@
 
 #include <QObject>
 
+#include "../src/expandoracommon/parseevent.h"
+#include "../src/expandoracommon/property.h"
+#include "../src/expandoracommon/room.h"
+
+Q_DECLARE_METATYPE(SharedRoom)
+Q_DECLARE_METATYPE(SharedParseEvent)
+Q_DECLARE_METATYPE(ComparisonResultEnum)
+
 class TestExpandoraCommon : public QObject
 {
     Q_OBJECT
@@ -15,4 +23,6 @@ private:
 private Q_SLOTS:
     void skippablePropertyTest();
     void stringPropertyTest();
+    void roomCompareTest_data();
+    void roomCompareTest();
 };
