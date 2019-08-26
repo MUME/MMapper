@@ -1058,24 +1058,32 @@ void MainWindow::showContextMenu(const QPoint &pos)
 {
     QMenu contextMenu(tr("Context menu"), this);
     if (m_connectionSelection != nullptr) {
+        // Connections cannot be selected alongside rooms and infomarks
         contextMenu.addAction(deleteConnectionSelectionAct);
-    } else if (m_infoMarkSelection != nullptr && !m_infoMarkSelection->isEmpty()) {
-        contextMenu.addAction(infoMarkActions.editInfoMarkAct);
-        contextMenu.addAction(infoMarkActions.deleteInfoMarkAct);
-    } else if (m_roomSelection != nullptr) {
-        contextMenu.addAction(editRoomSelectionAct);
-        contextMenu.addAction(moveUpRoomSelectionAct);
-        contextMenu.addAction(moveDownRoomSelectionAct);
-        contextMenu.addAction(mergeUpRoomSelectionAct);
-        contextMenu.addAction(mergeDownRoomSelectionAct);
-        contextMenu.addAction(deleteRoomSelectionAct);
-        contextMenu.addAction(connectToNeighboursRoomSelectionAct);
-        contextMenu.addSeparator();
-        contextMenu.addAction(forceRoomAct);
-    } else if (m_connectionSelection == nullptr && m_roomSelection == nullptr
-               && (m_infoMarkSelection == nullptr || m_infoMarkSelection->isEmpty())) {
-        contextMenu.addAction(createRoomAct);
-        //TODO: contextMenu.addAction(createInfoMarkAct);
+
+    } else {
+        // However, both rooms and infomarks can be selected at once
+        if (m_roomSelection != nullptr) {
+            if (m_roomSelection->empty()) {
+                contextMenu.addAction(createRoomAct);
+            } else {
+                contextMenu.addAction(editRoomSelectionAct);
+                contextMenu.addAction(moveUpRoomSelectionAct);
+                contextMenu.addAction(moveDownRoomSelectionAct);
+                contextMenu.addAction(mergeUpRoomSelectionAct);
+                contextMenu.addAction(mergeDownRoomSelectionAct);
+                contextMenu.addAction(deleteRoomSelectionAct);
+                contextMenu.addAction(connectToNeighboursRoomSelectionAct);
+                contextMenu.addSeparator();
+                contextMenu.addAction(forceRoomAct);
+            }
+        }
+        if (m_infoMarkSelection != nullptr && !m_infoMarkSelection->empty()) {
+            if (m_roomSelection != nullptr)
+                contextMenu.addSeparator();
+            contextMenu.addAction(infoMarkActions.editInfoMarkAct);
+            contextMenu.addAction(infoMarkActions.deleteInfoMarkAct);
+        }
     }
     contextMenu.addSeparator();
     QMenu *mouseMenu = contextMenu.addMenu(QIcon::fromTheme("input-mouse"), "Mouse Mode");

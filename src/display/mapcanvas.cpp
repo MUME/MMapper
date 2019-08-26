@@ -402,18 +402,14 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
 
     if (!m_mouseLeftPressed && m_mouseRightPressed) {
         if (m_canvasMouseMode == CanvasMouseMode::MOVE) {
+            m_roomSelection = RoomSelection::createSelection(*m_data, m_sel1.getCoordinate());
+            setRoomSelection(SigRoomSelection{m_roomSelection});
+
             // Select infomarks under the cursor
             const Coordinate infoCoord = m_sel1.getScaledCoordinate(INFOMARK_SCALE);
 
             // TODO: use RAII to avoid leaking this allocation.
             setInfoMarkSelection(new InfoMarkSelection(m_data, infoCoord));
-
-            if (m_infoMarkSelection == nullptr) {
-                // Select the room under the cursor
-                m_roomSelection = RoomSelection::createSelection(*m_data, m_sel1.getCoordinate());
-                emit newRoomSelection(SigRoomSelection{m_roomSelection});
-            }
-
             update();
         }
         m_mouseRightPressed = false;
