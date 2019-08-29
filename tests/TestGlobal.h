@@ -1,5 +1,6 @@
-#ifndef TESTGLOBAL_H
-#define TESTGLOBAL_H
+#pragma once
+// SPDX-License-Identifier: GPL-2.0-or-later
+// Copyright (C) 2019 The MMapper Authors
 
 #include <QObject>
 
@@ -13,5 +14,3 @@ public:
 private Q_SLOTS:
     void colorTest();
 };
-
-#endif // TESTGLOBAL_H
