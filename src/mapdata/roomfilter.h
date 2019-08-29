@@ -4,6 +4,8 @@
 // Author: 'Ethorondil' <ethorondil@gmail.com> (Elval)
 
 #include <cassert>
+#include <optional>
+#include <regex>
 #include <QString>
 #include <QtCore>
 
@@ -15,27 +17,21 @@ enum class PatternKindsEnum { NONE, DESC, DYN_DESC, NAME, NOTE, EXITS, FLAGS, AL
 static constexpr const auto PATTERN_KINDS_LENGTH = static_cast<size_t>(PatternKindsEnum::ALL) + 1u;
 static_assert(PATTERN_KINDS_LENGTH == 8);
 
-class RoomFilter
+class RoomFilter final
 {
 public:
-    RoomFilter() = default;
-    explicit RoomFilter(const QString &pattern,
-                        const Qt::CaseSensitivity &cs,
-                        const PatternKindsEnum kind)
-        : pattern(pattern)
-        , cs(cs)
-        , kind(kind)
-    {}
+    static const char *const parse_help;
+    static std::optional<RoomFilter> parseRoomFilter(const QString &line);
 
-    // Return false on parse failure
-    static bool parseRoomFilter(const QString &line, RoomFilter &output);
-    static const char *parse_help;
+public:
+    RoomFilter() = delete;
+    explicit RoomFilter(QString str, const Qt::CaseSensitivity cs, const PatternKindsEnum kind);
 
+public:
     bool filter(const Room *r) const;
     PatternKindsEnum patternKind() const { return kind; }
 
-protected:
-    QString pattern;
-    Qt::CaseSensitivity cs;
-    PatternKindsEnum kind = PatternKindsEnum::NONE;
+private:
+    const std::regex regex;
+    const PatternKindsEnum kind;
 };

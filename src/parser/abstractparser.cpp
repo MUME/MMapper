@@ -12,6 +12,7 @@
 #include <cstdlib>
 #include <iterator>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -890,22 +891,20 @@ void AbstractParser::toggleTrollMapping()
 void AbstractParser::doSearchCommand(StringView view)
 {
     QString pattern_str = view.toQString();
-    RoomFilter f;
-    if (!RoomFilter::parseRoomFilter(pattern_str, f)) {
-        sendToUser(RoomFilter::parse_help);
+    if (std::optional<RoomFilter> optFilter = RoomFilter::parseRoomFilter(pattern_str)) {
+        searchCommand(optFilter.value());
     } else {
-        searchCommand(f);
+        sendToUser(RoomFilter::parse_help);
     }
 }
 
 void AbstractParser::doGetDirectionsCommand(StringView view)
 {
     QString pattern_str = view.toQString();
-    RoomFilter f;
-    if (!RoomFilter::parseRoomFilter(pattern_str, f)) {
-        sendToUser(RoomFilter::parse_help);
+    if (std::optional<RoomFilter> optFilter = RoomFilter::parseRoomFilter(pattern_str)) {
+        dirsCommand(optFilter.value());
     } else {
-        dirsCommand(f);
+        sendToUser(RoomFilter::parse_help);
     }
 }
 
