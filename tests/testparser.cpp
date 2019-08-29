@@ -4,23 +4,14 @@
 #include <QDebug>
 #include <QtTest/QtTest>
 
+#include "../src/expandoracommon/parseevent.h"
+#include "../src/expandoracommon/property.h"
 #include "../src/mapdata/mmapper2room.h"
-#include "parseevent.h"
-#include "parserutils.h"
-#include "property.h"
+#include "../src/parser/parserutils.h"
 
 TestParser::TestParser() = default;
 
 TestParser::~TestParser() = default;
-
-/* unused */
-static time_t convertMumeRealTime(const QString &realTime)
-{
-    // Real time is Wed Dec 20 07:03:27 2017 UTC.
-    QString dateString = realTime.mid(13, 24);
-    QDateTime parsedTime = QDateTime::fromString(dateString, "ddd MMM dd hh:mm:ss yyyy");
-    return static_cast<time_t>(parsedTime.toTime_t());
-}
 
 void TestParser::removeAnsiMarksTest()
 {

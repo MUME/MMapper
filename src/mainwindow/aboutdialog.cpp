@@ -9,13 +9,28 @@
 #include <QtGui>
 #include <QtWidgets>
 
-static QString getVersion()
+#include "../global/Version.h"
+
+static QString getBuildInformation()
 {
-#ifdef GIT_TAG_COMMIT_HASH
-    return QLatin1Literal(GIT_TAG_COMMIT_HASH);
+    const auto get_compiler = []() -> QString {
+#ifdef __clang__
+        return QString("Clang %1.%2.%3")
+            .arg(__clang_major__)
+            .arg(__clang_minor__)
+            .arg(__clang_patchlevel__);
+#elif __GNUC__
+        return QString("GCC %1.%2.%3").arg(__GNUC__).arg(__GNUC_MINOR__).arg(__GNUC_PATCHLEVEL__);
+#elif defined(_MSC_VER)
+        return QString("MSVC %1").arg(_MSC_VER);
 #else
-    return QLatin1Literal(MMAPPER_VERSION);
+        return "an unknown compiler";
 #endif
+    };
+
+    return QString("Built on branch %1 using %2<br>")
+        .arg(QLatin1String(getMMapperBranch()))
+        .arg(get_compiler());
 }
 
 AboutDialog::AboutDialog(QWidget *parent)
@@ -31,25 +46,12 @@ AboutDialog::AboutDialog(QWidget *parent)
         return "<p align=\"center\">"
                "<h3>"
                "<u>"
-               + tr("MMapper %1").arg(getVersion())
+               + tr("MMapper %1").arg(QLatin1String(getMMapperVersion()))
                + "</h3>"
                  "</u>"
                  "</p>"
                  "<p align=\"center\">"
-#ifdef GIT_BRANCH
-               + tr("Built on branch %1 ").arg(GIT_BRANCH)
-#ifdef __clang__
-               + tr("using Clang %1.%2.%3")
-                     .arg(__clang_major__)
-                     .arg(__clang_minor__)
-                     .arg(__clang_patchlevel__)
-#elif __GNUC__
-               + tr("using GCC %1.%2.%3").arg(__GNUC__).arg(__GNUC_MINOR__).arg(__GNUC_PATCHLEVEL__)
-#elif defined(_MSC_VER)
-               + tr("using MSVC %1").arg(_MSC_VER)
-#endif
-               + "<br>"
-#endif
+               + getBuildInformation()
                + tr("Based on Qt %1 (%2 bit)")
                      .arg(QT_VERSION_STR)
                      .arg(static_cast<size_t>(QSysInfo::WordSize))

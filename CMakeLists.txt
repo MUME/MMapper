@@ -13,7 +13,6 @@ endif()
 
 # Version
 file(STRINGS "MMAPPER_VERSION" MMAPPER_VERSION)
-add_definitions(-DMMAPPER_VERSION="${MMAPPER_VERSION}")
 message(STATUS "MMapper version ${MMAPPER_VERSION} (${CMAKE_BUILD_TYPE} distribution)")
 
 # Options
@@ -130,9 +129,13 @@ if(EXISTS ${GIT_EXECUTABLE})
         )
 
         message(STATUS "Building from branch ${GIT_BRANCH} with ref ${GIT_TAG_COMMIT_HASH}")
-        add_definitions(-DGIT_TAG_COMMIT_HASH="${GIT_TAG_COMMIT_HASH}")
-        add_definitions(-DGIT_BRANCH="${GIT_BRANCH}")
     endif()
+endif()
+if(NOT GIT_TAG_COMMIT_HASH)
+    set(GIT_TAG_COMMIT_HASH "${MMAPPER_VERSION}")
+endif()
+if(NOT GIT_BRANCH)
+    set(GIT_BRANCH "unknown")
 endif()
 
 string(TOUPPER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_UPPER)

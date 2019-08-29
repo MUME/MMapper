@@ -13,6 +13,7 @@
 
 #include "configuration/configuration.h"
 #include "display/Filenames.h"
+#include "global/Version.h"
 #include "global/WinSock.h"
 #include "global/utils.h"
 #include "mainwindow/mainwindow.h"
@@ -50,21 +51,13 @@ public:
         : pixmap(getPixmapFilenameRaw("splash.png"))
         , splash(pixmap)
     {
-        const auto message = QString("%1").arg(getVersion(), -9);
+        const auto message = QString("%1").arg(QLatin1String(getMMapperVersion()), -9);
         splash.showMessage(message, Qt::AlignBottom | Qt::AlignRight, Qt::yellow);
         splash.show();
     }
     virtual ~Splash() override;
 
     void finish(QWidget *w) override { splash.finish(w); }
-    QString getVersion() const
-    {
-#ifdef GIT_TAG_COMMIT_HASH
-        return QLatin1Literal(GIT_TAG_COMMIT_HASH);
-#else
-        return QLatin1Literal(MMAPPER_VERSION);
-#endif
-    }
 };
 
 Splash::~Splash() = default;

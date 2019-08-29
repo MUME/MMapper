@@ -2,8 +2,8 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
-/* ROFLCOPTER:**            Nils Schimmelmann <nschimme@gmail.com> (Jahara)
-*/#include "mumexmlparser.h"
+
+#include "mumexmlparser.h"
 
 #include <QByteArray>
 #include <QString>

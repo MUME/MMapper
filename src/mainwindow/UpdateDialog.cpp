@@ -12,6 +12,8 @@
 #include <QPushButton>
 #include <QRegularExpression>
 
+#include "../global/Version.h"
+
 CompareVersion::CompareVersion(const QString &versionStr) noexcept
 {
     static const QRegularExpression versionRx(R"(v?(\d+)\.(\d+)\.(\d+))");
@@ -98,7 +100,7 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
 
     QJsonObject obj = doc.object();
     const QString latestTag = obj["tag_name"].toString();
-    const QString currentVersion = QLatin1Literal(MMAPPER_VERSION);
+    const QString currentVersion = QLatin1String(getMMapperVersion());
     const CompareVersion latest(latestTag);
     static const CompareVersion current(currentVersion);
     qDebug() << "Updater comparing: CURRENT=" << current << "LATEST=" << latest;

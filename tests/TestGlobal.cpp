@@ -1,8 +1,9 @@
 #include "TestGlobal.h"
-#include "Color.h"
 
 #include <QDebug>
 #include <QtTest/QtTest>
+
+#include "../src/global/Color.h"
 
 TestGlobal::TestGlobal() = default;
 

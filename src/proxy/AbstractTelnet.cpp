@@ -14,6 +14,7 @@
 #include <QSysInfo>
 
 #include "../configuration/configuration.h"
+#include "../global/Version.h"
 #include "../global/utils.h"
 #include "TextCodec.h"
 
@@ -172,7 +173,7 @@ void AbstractTelnet::setTerminalType(const QByteArray &terminalType)
 
     QString temp = terminalType;
     temp.append(QString("/MMapper-%1/%2/%3")
-                    .arg(MMAPPER_VERSION)
+                    .arg(QLatin1String(getMMapperVersion()))
                     .arg(get_os_string())
                     .arg(QSysInfo::currentCpuArchitecture()));
     termType = temp.toLatin1();

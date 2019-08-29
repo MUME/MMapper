@@ -1,6 +1,8 @@
 #include "testexpandoracommon.h"
-#include "property.h"
+
 #include <QtTest/QtTest>
+
+#include "../src/expandoracommon/property.h"
 
 TestExpandoraCommon::TestExpandoraCommon() = default;
 

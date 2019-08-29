@@ -89,6 +89,7 @@ set(mmapper_SRCS
     global/type_utils.h
     global/utils.cpp
     global/utils.h
+    global/Version.h
     global/WinSock.cpp
     global/WinSock.h
     mainwindow/UpdateDialog.cpp
@@ -338,6 +339,13 @@ if(MMAPPER_IS_DEBUG)
         set(CHECK_MISSING_INCLUDES YES)
     endif()
 endif()
+
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/Version.cpp
+    "// This generated file exists to set the MMapper version.\n\n"
+    "#include \"global/Version.h\"\n\n"
+    "const char *getMMapperVersion() { return \"${GIT_TAG_COMMIT_HASH}\"; }\n"
+    "const char *getMMapperBranch() { return \"${GIT_BRANCH}\"; }\n")
+list(APPEND mmapper_SRCS "${CMAKE_CURRENT_BINARY_DIR}/Version.cpp")
 
 if(CHECK_ODR)
     message(STATUS "Will check headers for ODR violations (slow)")

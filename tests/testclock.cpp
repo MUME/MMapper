@@ -1,7 +1,9 @@
 #include "testclock.h"
-#include "mumeclock.h"
+
 #include <QDebug>
 #include <QtTest/QtTest>
+
+#include "../src/clock/mumeclock.h"
 
 TestClock::TestClock() = default;
 

@@ -1,8 +1,20 @@
 #include "TestMainWindow.h"
-#include "UpdateDialog.h"
 
 #include <QDebug>
 #include <QtTest/QtTest>
+
+#include "../src/global/Version.h"
+#include "../src/mainwindow/UpdateDialog.h"
+
+const char *getMMapperVersion()
+{
+    return "v19.04.0-72-ga16c196";
+}
+
+const char *getMMapperBranch()
+{
+    return "master";
+}
 
 TestMainWindow::TestMainWindow() = default;
 
@@ -10,7 +22,7 @@ TestMainWindow::~TestMainWindow() = default;
 
 void TestMainWindow::updaterTest()
 {
-    CompareVersion version{MMAPPER_VERSION};
+    CompareVersion version{QLatin1String(getMMapperVersion())};
     QVERIFY2(version == version, "Version compared to itself matches");
 
     CompareVersion current{"2.8.0"};
