@@ -132,6 +132,7 @@ public:
     {
         uint32_t result;
         stream >> result;
+        check_status();
         return result;
     }
     auto read_i32()
