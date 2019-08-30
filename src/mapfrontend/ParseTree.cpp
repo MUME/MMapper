@@ -108,7 +108,7 @@ static MaskFlagsEnum reduceMask(const MaskFlagsEnum mask)
     throw std::invalid_argument("mask");
 }
 
-static auto makeKey(ParseEvent &event, const MaskFlagsEnum maskFlags, const bool verbose)
+static auto makeKey(ParseEvent &event, const MaskFlagsEnum maskFlags)
 {
     char buf[64];
 
@@ -125,24 +125,9 @@ static auto makeKey(ParseEvent &event, const MaskFlagsEnum maskFlags, const bool
         prop.reset();
 
         if (!prop.isSkipped() && (mask & (1u << i))) {
-            if (verbose) {
-                std::snprintf(buf, sizeof(buf), ";Property %d:(%zu)[", i, prop.size());
-                key.append(buf);
-                for (auto c : prop)
-                    if (c == ' ')
-                        key += '+';
-                    else if (std::isprint(c) && !std::isspace(c) && c != '+' && c != '%')
-                        key += c;
-                    else {
-                        std::snprintf(buf, sizeof(buf), "%%%02X", c & 0xff);
-                        key += buf;
-                    }
-                key += "]\n";
-            } else {
-                std::snprintf(buf, sizeof(buf), ";P%d:%zu:", i, prop.size());
-                key += buf;
-                key += prop;
-            }
+            std::snprintf(buf, sizeof(buf), ";P%d:%zu:", i, prop.size());
+            key += buf;
+            key += prop;
         }
     }
 
@@ -159,18 +144,13 @@ private:
     using Secondary = std::unordered_map<Key, SV>;
     Primary m_primary;
     EnumIndexedArray<Secondary, MaskFlagsEnum> m_secondary;
-    const bool m_useVerboseKeys = false;
 
 public:
-    explicit ParseHashMap(bool useVerboseKeys = false)
-        : m_useVerboseKeys{useVerboseKeys}
-    {}
-
+    ParseHashMap() = default;
     virtual ~ParseHashMap();
 
-    SharedRoomCollection insertRoom(ParseEvent &event_)
+    SharedRoomCollection insertRoom(const ParseEvent &event)
     {
-        const auto &event = event_;
         assert(event.size() == 3);
         const MaskFlagsEnum mask = getKeyMask(event);
 
@@ -178,13 +158,13 @@ public:
             return nullptr;
 
         auto tmp = event.clone();
-        auto pk = makeKey(tmp, MaskFlagsEnum::NAME_DESC_TERRAIN, m_useVerboseKeys);
+        auto pk = makeKey(tmp, MaskFlagsEnum::NAME_DESC_TERRAIN);
         auto &result = m_primary[pk];
         if (result == nullptr)
             result = std::make_shared<RoomCollection>();
 
         for (auto subMask = mask; subMask != MaskFlagsEnum::NONE; subMask = reduceMask(subMask)) {
-            auto key = makeKey(tmp, subMask, m_useVerboseKeys);
+            auto key = makeKey(tmp, subMask);
             Secondary &reference = m_secondary[subMask];
             SV &bucket = reference[key];
             bucket.emplace(result);
@@ -193,10 +173,8 @@ public:
         return result;
     }
 
-    void getRooms(AbstractRoomVisitor &stream, ParseEvent &event_)
+    void getRooms(AbstractRoomVisitor &stream, const ParseEvent &event)
     {
-        const auto &event = event_;
-
         assert(event.size() == 3);
         const MaskFlagsEnum mask = getKeyMask(event);
 
@@ -206,7 +184,7 @@ public:
         auto tmp = event.clone();
         tmp.reset();
 
-        auto key = makeKey(tmp, mask, m_useVerboseKeys);
+        auto key = makeKey(tmp, mask);
 
         Secondary &thislevel = m_secondary[mask];
         SV &homes = thislevel[key];
@@ -220,17 +198,17 @@ public:
 
 ParseTree::ParseHashMap::~ParseHashMap() = default;
 
-ParseTree::ParseTree(const bool useVerboseKeys)
-    : m_pimpl{std::make_unique<ParseHashMap>(useVerboseKeys)}
+ParseTree::ParseTree()
+    : m_pimpl{std::make_unique<ParseHashMap>()}
 {}
 ParseTree::~ParseTree() = default;
 
-SharedRoomCollection ParseTree::insertRoom(ParseEvent &event)
+SharedRoomCollection ParseTree::insertRoom(const ParseEvent &event)
 {
     return m_pimpl->insertRoom(event);
 }
 
-void ParseTree::getRooms(AbstractRoomVisitor &stream, ParseEvent &event)
+void ParseTree::getRooms(AbstractRoomVisitor &stream, const ParseEvent &event)
 {
     m_pimpl->getRooms(stream, event);
 }
