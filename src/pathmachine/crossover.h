@@ -4,7 +4,7 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include <list>
+#include <memory>
 
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/mmapper2exit.h"
@@ -18,6 +18,6 @@ struct PathParameters;
 class Crossover : public Experimenting
 {
 public:
-    Crossover(PathList *paths, ExitDirEnum dirCode, PathParameters &params);
+    Crossover(std::shared_ptr<PathList> paths, ExitDirEnum dirCode, PathParameters &params);
     void receiveRoom(RoomAdmin *, const Room *) override;
 };

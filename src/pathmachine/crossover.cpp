@@ -5,6 +5,8 @@
 
 #include "crossover.h"
 
+#include <memory>
+
 #include "../mapdata/ExitDirection.h"
 #include "experimenting.h"
 
@@ -13,8 +15,8 @@ class Room;
 class RoomAdmin;
 struct PathParameters;
 
-Crossover::Crossover(PathList *paths, ExitDirEnum dirCode, PathParameters &params)
-    : Experimenting(paths, dirCode, params)
+Crossover::Crossover(std::shared_ptr<PathList> paths, ExitDirEnum dirCode, PathParameters &params)
+    : Experimenting(std::move(paths), dirCode, params)
 {}
 
 void Crossover::receiveRoom(RoomAdmin *map, const Room *room)

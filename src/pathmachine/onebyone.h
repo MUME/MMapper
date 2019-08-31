@@ -4,6 +4,8 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
+#include <memory>
+
 #include "../expandoracommon/parseevent.h"
 #include "experimenting.h"
 
@@ -21,7 +23,7 @@ public:
                       PathParameters &in_params,
                       RoomSignalHandler *handler);
     void receiveRoom(RoomAdmin *admin, const Room *room) override;
-    void addPath(Path *path);
+    void addPath(std::shared_ptr<Path> path);
 
 private:
     SharedParseEvent event;

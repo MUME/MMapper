@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
 #include <list>
+#include <memory>
 #include <QtGlobal>
 
 #include "../expandoracommon/RoomRecipient.h"
@@ -22,13 +23,16 @@ private:
     RoomSignalHandler *signaler = nullptr;
     uint numPaths = 0u;
     PathParameters &params;
-    PathList *paths = nullptr;
-    Path *parent = nullptr;
+    const std::shared_ptr<PathList> paths;
+    // This is not our parent; it's the parent we assign to new objects.
+    std::shared_ptr<Path> parent;
 
 public:
-    explicit Syncing(PathParameters &p, PathList *paths, RoomSignalHandler *signaler);
+    explicit Syncing(PathParameters &p,
+                     std::shared_ptr<PathList> paths,
+                     RoomSignalHandler *signaler);
     void receiveRoom(RoomAdmin *, const Room *) override;
-    PathList *evaluate();
+    std::shared_ptr<PathList> evaluate();
     ~Syncing() override;
 
 public:

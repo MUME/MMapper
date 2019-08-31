@@ -6,6 +6,7 @@
 #include "onebyone.h"
 
 #include <list>
+#include <memory>
 
 #include "../expandoracommon/parseevent.h"
 #include "../expandoracommon/room.h"
@@ -20,7 +21,7 @@ class Path;
 OneByOne::OneByOne(const SigParseEvent &sigParseEvent,
                    PathParameters &in_params,
                    RoomSignalHandler *const in_handler)
-    : Experimenting{new PathList, getDirection(sigParseEvent.deref().getMoveType()), in_params}
+    : Experimenting{PathList::alloc(), getDirection(sigParseEvent.deref().getMoveType()), in_params}
     , event{sigParseEvent.getShared()}
     , handler{in_handler}
 {}
@@ -37,7 +38,7 @@ void OneByOne::receiveRoom(RoomAdmin *const admin, const Room *const room)
     }
 }
 
-void OneByOne::addPath(Path *const path)
+void OneByOne::addPath(std::shared_ptr<Path> path)
 {
-    shortPaths->push_back(path);
+    shortPaths->emplace_back(std::move(path));
 }

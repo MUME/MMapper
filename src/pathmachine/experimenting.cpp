@@ -5,26 +5,30 @@
 
 #include "experimenting.h"
 
+#include <memory>
+
 #include "../expandoracommon/room.h"
 #include "path.h"
 #include "pathparameters.h"
 
-Experimenting::Experimenting(PathList *const pat,
+Experimenting::Experimenting(std::shared_ptr<PathList> pat,
                              const ExitDirEnum in_dirCode,
                              PathParameters &in_params)
     : direction(Room::exitDir(in_dirCode))
     , dirCode(in_dirCode)
-    , paths(new PathList)
+    , paths(PathList::alloc())
     , params(in_params)
-    , shortPaths(pat)
+    , shortPaths(std::move(pat))
 {}
 
 Experimenting::~Experimenting() = default;
 
-void Experimenting::augmentPath(Path *const path, RoomAdmin *const map, const Room *const room)
+void Experimenting::augmentPath(const std::shared_ptr<Path> &path,
+                                RoomAdmin *const map,
+                                const Room *const room)
 {
     const Coordinate c = path->getRoom()->getPosition() + direction;
-    Path *const working = path->fork(room, c, map, params, this, dirCode);
+    const auto working = path->fork(room, c, map, params, this, dirCode);
     if (best == nullptr) {
         best = working;
     } else if (working->getProb() > best->getProb()) {
@@ -40,9 +44,9 @@ void Experimenting::augmentPath(Path *const path, RoomAdmin *const map, const Ro
     numPaths++;
 }
 
-PathList *Experimenting::evaluate()
+std::shared_ptr<PathList> Experimenting::evaluate()
 {
-    for (Path *working = nullptr; !shortPaths->empty();) {
+    for (std::shared_ptr<Path> working = nullptr; !shortPaths->empty();) {
         working = shortPaths->front();
         shortPaths->pop_front();
         if (!(working->hasChildren())) {
@@ -61,7 +65,7 @@ PathList *Experimenting::evaluate()
         } else {
             paths->push_back(best);
 
-            for (Path *working = paths->front(); working != best;) {
+            for (std::shared_ptr<Path> working = paths->front(); working != best;) {
                 paths->pop_front();
                 // throw away if the probability is very low or not
                 // distinguishable from best. Don't keep paths with equal
@@ -79,7 +83,6 @@ PathList *Experimenting::evaluate()
         }
     }
     second = nullptr;
-    delete shortPaths;
     shortPaths = nullptr;
     best = nullptr;
     return paths;

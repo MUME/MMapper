@@ -5,12 +5,15 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "../mapdata/ExitDirection.h"
+#include <cassert>
 #include <climits>
 #include <list>
-#include <set>
+#include <memory>
+#include <optional>
+#include <vector>
 #include <QtGlobal>
 
+#include "../mapdata/ExitDirection.h"
 #include "../mapdata/mmapper2exit.h"
 #include "pathparameters.h"
 
@@ -21,46 +24,99 @@ class RoomRecipient;
 class RoomSignalHandler;
 struct PathParameters;
 
-class Path final
+class Path final : public std::enable_shared_from_this<Path>
 {
+private:
+    struct this_is_private final
+    {
+        explicit this_is_private(int) {}
+    };
+
 public:
-    static constexpr const auto INVALID_DIRECTION = static_cast<ExitDirEnum>(UINT_MAX);
-    explicit Path(const Room *room,
+    static std::shared_ptr<Path> alloc(const Room *room,
+                                       RoomAdmin *owner,
+                                       RoomRecipient *locker,
+                                       RoomSignalHandler *signaler,
+                                       std::optional<ExitDirEnum> direction);
+
+public:
+    explicit Path(this_is_private,
+                  const Room *room,
                   RoomAdmin *owner,
                   RoomRecipient *locker,
                   RoomSignalHandler *signaler,
-                  ExitDirEnum direction = INVALID_DIRECTION);
-    void insertChild(Path *p);
-    void removeChild(Path *p);
-    void setParent(Path *p);
-    bool hasChildren() const { return (!children.empty()); }
-    const Room *getRoom() const { return room; }
+                  std::optional<ExitDirEnum> direction);
+    DELETE_CTORS_AND_ASSIGN_OPS(Path);
+
+    void insertChild(const std::shared_ptr<Path> &p);
+    void removeChild(const std::shared_ptr<Path> &p);
+    void setParent(const std::shared_ptr<Path> &p);
+    bool hasChildren() const
+    {
+        assert(!m_zombie);
+        return !m_children.empty();
+    }
+    const Room *getRoom() const
+    {
+        assert(!m_zombie);
+        return m_room;
+    }
 
     // new Path is created, distance between rooms is calculated and probability is set accordingly
-    Path *fork(const Room *room,
-               const Coordinate &expectedCoordinate,
-               RoomAdmin *owner,
-               const PathParameters &params,
-               RoomRecipient *locker,
-               ExitDirEnum dir);
-    double getProb() const { return probability; }
+    std::shared_ptr<Path> fork(const Room *room,
+                               const Coordinate &expectedCoordinate,
+                               RoomAdmin *owner,
+                               const PathParameters &params,
+                               RoomRecipient *locker,
+                               ExitDirEnum dir);
+    double getProb() const
+    {
+        assert(!m_zombie);
+        return m_probability;
+    }
     void approve();
 
     // deletes this path and all parents up to the next branch
     void deny();
-    void setProb(double p) { probability = p; }
+    void setProb(double p)
+    {
+        assert(!m_zombie);
+        m_probability = p;
+    }
 
-    Path *getParent() const { return parent; }
+    const std::shared_ptr<Path> &getParent() const
+    {
+        assert(!m_zombie);
+        return m_parent;
+    }
 
 private:
-    Path *parent = nullptr;
-    std::set<Path *> children{};
-    double probability = 1.0;
-    const Room *room
-        = nullptr; // in fact a path only has one room, one parent and some children (forks).
-    RoomSignalHandler *signaler = nullptr;
-    ExitDirEnum dir = INVALID_DIRECTION;
-    ~Path() {}
+    std::shared_ptr<Path> m_parent;
+    std::vector<std::weak_ptr<Path>> m_children;
+    double m_probability = 1.0;
+    // in fact a path only has one room, one parent and some children (forks).
+    const Room *const m_room;
+    RoomSignalHandler *const m_signaler;
+    const std::optional<ExitDirEnum> m_dir;
+    bool m_zombie = false;
 };
 
-using PathList = std::list<Path *>;
+struct PathList : public std::list<std::shared_ptr<Path>>,
+                  public std::enable_shared_from_this<PathList>
+{
+private:
+    struct this_is_private final
+    {
+        explicit this_is_private(int) {}
+    };
+
+public:
+    static std::shared_ptr<PathList> alloc()
+    {
+        return std::make_shared<PathList>(this_is_private{0});
+    }
+
+public:
+    explicit PathList(this_is_private) {}
+    DELETE_CTORS_AND_ASSIGN_OPS(PathList);
+};

@@ -75,10 +75,7 @@ protected:
     /* REVISIT: pathRoot and mostLikelyRoom should probably be of type RoomId */
     SigParseEvent lastEvent;
     PathStateEnum state = PathStateEnum::SYNCING;
-
-    // TODO: use smart pointer to manage this.
-    // It looks like it might be leaked because it's reassigned.
-    PathList *paths = nullptr;
+    std::shared_ptr<PathList> paths;
 
 private:
     std::optional<Coordinate> m_pathRootPos;

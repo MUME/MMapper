@@ -7,6 +7,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <memory>
 
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/exit.h"
@@ -17,17 +18,32 @@
 #include "pathparameters.h"
 #include "roomsignalhandler.h"
 
-Path::Path(const Room *in_room,
-           RoomAdmin *owner,
-           RoomRecipient *locker,
-           RoomSignalHandler *in_signaler,
-           ExitDirEnum direction)
-    : room(in_room)
-    , signaler(in_signaler)
-    , dir(direction)
+std::shared_ptr<Path> Path::alloc(const Room *const room,
+                                  RoomAdmin *const owner,
+                                  RoomRecipient *const locker,
+                                  RoomSignalHandler *const signaler,
+                                  std::optional<ExitDirEnum> moved_direction)
 {
-    if (dir != INVALID_DIRECTION) {
-        signaler->hold(room, owner, locker);
+    return std::make_shared<Path>(this_is_private{0},
+                                  room,
+                                  owner,
+                                  locker,
+                                  signaler,
+                                  std::move(moved_direction));
+}
+
+Path::Path(this_is_private,
+           const Room *const in_room,
+           RoomAdmin *const owner,
+           RoomRecipient *const locker,
+           RoomSignalHandler *const in_signaler,
+           std::optional<ExitDirEnum> moved_direction)
+    : m_room(in_room)
+    , m_signaler(in_signaler)
+    , m_dir(std::move(moved_direction))
+{
+    if (m_dir.has_value()) {
+        m_signaler->hold(m_room, owner, locker);
     }
 }
 
@@ -36,22 +52,23 @@ Path::Path(const Room *in_room,
  * distance between rooms is calculated
  * and probability is updated accordingly
  */
-Path *Path::fork(const Room *const in_room,
-                 const Coordinate &expectedCoordinate,
-                 RoomAdmin *const owner,
-                 const PathParameters &p,
-                 RoomRecipient *const locker,
-                 const ExitDirEnum direction)
+std::shared_ptr<Path> Path::fork(const Room *const in_room,
+                                 const Coordinate &expectedCoordinate,
+                                 RoomAdmin *const owner,
+                                 const PathParameters &p,
+                                 RoomRecipient *const locker,
+                                 const ExitDirEnum direction)
 {
-    auto *const ret = new Path(in_room, owner, locker, signaler, direction);
-    assert(ret != parent);
+    assert(!m_zombie);
+
+    auto ret = Path::alloc(in_room, owner, locker, m_signaler, direction);
     assert(isClamped(static_cast<uint32_t>(direction), 0u, NUM_EXITS));
 
-    ret->setParent(this);
-    children.insert(ret);
+    ret->setParent(shared_from_this());
+    insertChild(ret);
 
     double dist = expectedCoordinate.distance(in_room->getPosition());
-    const auto size = static_cast<uint>(room->getExitsList().size());
+    const auto size = static_cast<uint>(m_room->getExitsList().size());
     // NOTE: we can probably assert that size is nonzero (room is not a dummy).
     assert(size == 0u /* dummy */ || size == NUM_EXITS /* valid */);
 
@@ -64,11 +81,11 @@ Path *Path::fork(const Room *const in_room,
         }
     } else {
         if (static_cast<uint>(direction) < size) {
-            const Exit &e = room->exit(direction);
+            const Exit &e = m_room->exit(direction);
             auto oid = in_room->getId();
             if (e.containsOut(oid)) {
                 dist = 1.0 / p.correctPositionBonus;
-            } else if (!e.outIsEmpty() || oid == room->getId()) {
+            } else if (!e.outIsEmpty() || oid == m_room->getId()) {
                 dist *= p.multipleConnectionsPenalty;
             } else {
                 const Exit &oe = in_room->exit(opposite(direction));
@@ -80,7 +97,7 @@ Path *Path::fork(const Room *const in_room,
         } else if (static_cast<uint>(direction) < NUM_EXITS_INCLUDING_NONE) {
             /* NOTE: This is currently always true unless the data is corrupt. */
             for (uint d = 0; d < size; ++d) {
-                const Exit &e = room->exit(static_cast<ExitDirEnum>(d));
+                const Exit &e = m_room->exit(static_cast<ExitDirEnum>(d));
                 if (e.containsOut(in_room->getId())) {
                     dist = 1.0 / p.correctPositionBonus;
                     break;
@@ -88,39 +105,46 @@ Path *Path::fork(const Room *const in_room,
             }
         }
     }
-    dist /= static_cast<double>(signaler->getNumLockers(in_room));
+    dist /= static_cast<double>(m_signaler->getNumLockers(in_room));
     if (in_room->isTemporary()) {
         dist *= p.newRoomPenalty;
     }
-    ret->setProb(probability / dist);
+    ret->setProb(m_probability / dist);
 
     return ret;
 }
 
-void Path::setParent(Path *p)
+void Path::setParent(const std::shared_ptr<Path> &p)
 {
-    parent = p;
+    assert(!m_zombie);
+    assert(!p->m_zombie);
+    m_parent = p;
 }
 
 void Path::approve()
 {
+    assert(!m_zombie);
+
+    const auto &parent = getParent();
     if (parent == nullptr) {
-        assert(dir == INVALID_DIRECTION);
+        assert(!m_dir.has_value());
     } else {
+        assert(m_dir.has_value());
         const Room *const proom = parent->getRoom();
         const auto pId = (proom == nullptr) ? INVALID_ROOMID : proom->getId();
-        signaler->keep(room, dir, pId);
-        parent->removeChild(this);
+        m_signaler->keep(m_room, m_dir.value(), pId);
+        parent->removeChild(this->shared_from_this());
         parent->approve();
     }
 
-    for (Path *const child : children) {
-        if (child != nullptr)
+    for (const std::weak_ptr<Path> &weak_child : m_children) {
+        if (auto child = weak_child.lock()) {
             child->setParent(nullptr);
+        }
     }
 
-    // UGG!
-    delete this;
+    // was: `delete this`
+    this->m_zombie = true;
 }
 
 /** removes this path and all parents up to the next branch
@@ -128,25 +152,44 @@ void Path::approve()
  */
 void Path::deny()
 {
-    if (!children.empty()) {
+    assert(!m_zombie);
+
+    if (!m_children.empty()) {
         return;
     }
-    if (dir != INVALID_DIRECTION) {
-        signaler->release(room);
+    if (m_dir.has_value()) {
+        m_signaler->release(m_room);
     }
-    if (parent != nullptr) {
-        parent->removeChild(this);
+    if (const auto &parent = getParent()) {
+        parent->removeChild(shared_from_this());
         parent->deny();
     }
-    delete this;
+
+    // was: `delete this`
+    this->m_zombie = true;
 }
 
-void Path::insertChild(Path *p)
+void Path::insertChild(const std::shared_ptr<Path> &p)
 {
-    children.insert(p);
+    assert(!m_zombie);
+    assert(!p->m_zombie);
+    m_children.emplace_back(p);
 }
 
-void Path::removeChild(Path *p)
+void Path::removeChild(const std::shared_ptr<Path> &p)
 {
-    children.erase(p);
+    assert(!m_zombie);
+    assert(!p->m_zombie);
+
+    const auto end = m_children.end();
+    const auto it = std::remove_if(m_children.begin(), end, [&p](const auto &weak) {
+        if (auto shared = weak.lock()) {
+            return shared == p; // remove p
+        } else {
+            return true; // also remove any expired children
+        }
+    });
+    if (it != end) {
+        m_children.erase(it, end);
+    }
 }

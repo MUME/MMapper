@@ -5,17 +5,21 @@
 
 #include "syncing.h"
 
+#include <memory>
+
 #include "../mapdata/ExitDirection.h"
 #include "path.h"
 #include "pathparameters.h"
 
 class Room;
 
-Syncing::Syncing(PathParameters &in_p, PathList *in_paths, RoomSignalHandler *in_signaler)
+Syncing::Syncing(PathParameters &in_p,
+                 std::shared_ptr<PathList> moved_paths,
+                 RoomSignalHandler *in_signaler)
     : signaler(in_signaler)
     , params(in_p)
-    , paths(in_paths)
-    , parent(new Path(nullptr, nullptr, this, signaler))
+    , paths(std::move(moved_paths))
+    , parent(Path::alloc(nullptr, nullptr, this, signaler, std::nullopt))
 {}
 
 void Syncing::receiveRoom(RoomAdmin *sender, const Room *in_room)
@@ -29,14 +33,14 @@ void Syncing::receiveRoom(RoomAdmin *sender, const Room *in_room)
             parent = nullptr;
         }
     } else {
-        auto *p = new Path(in_room, sender, this, signaler, ExitDirEnum::NONE);
+        auto p = Path::alloc(in_room, sender, this, signaler, ExitDirEnum::NONE);
         p->setParent(parent);
         parent->insertChild(p);
         paths->push_back(p);
     }
 }
 
-PathList *Syncing::evaluate()
+std::shared_ptr<PathList> Syncing::evaluate()
 {
     return paths;
 }

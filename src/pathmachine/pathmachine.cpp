@@ -39,7 +39,7 @@ PathMachine::PathMachine(MapData *const mapData, QObject *const parent)
     , m_mapData{deref(mapData)}
     , signaler{this}
     , lastEvent{ParseEvent::createDummyEvent()}
-    , paths{new PathList}
+    , paths{PathList::alloc()}
 {
     connect(&signaler,
             &RoomSignalHandler::sig_scheduleAction,
@@ -223,8 +223,7 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
             return;
         }
 
-        auto *const root = new Path(pathRoot, nullptr, nullptr, &signaler);
-        paths->push_front(root);
+        paths->push_front(Path::alloc(pathRoot, nullptr, nullptr, &signaler, std::nullopt));
         experimenting(sigParseEvent);
 
         return;
