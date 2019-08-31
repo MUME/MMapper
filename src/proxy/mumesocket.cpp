@@ -176,7 +176,7 @@ void MumeSslSocket::onPeerVerifyError(const QSslError &error)
 void MumeSslSocket::onReadyRead()
 {
     io::readAllAvailable(m_socket, m_buffer, [this](const QByteArray &byteArray) {
-        if (byteArray.size() != 0)
+        if (!byteArray.isEmpty())
             emit processMudStream(byteArray);
     });
 }

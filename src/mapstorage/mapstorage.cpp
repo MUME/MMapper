@@ -590,7 +590,7 @@ bool MapStorage::saveData(bool baseMapOnly)
     QByteArray uncompressedData(buffer.data());
     QByteArray compressedData = qCompress(uncompressedData);
     progressCounter.step();
-    double compressionRatio = (compressedData.size() == 0)
+    double compressionRatio = (compressedData.isEmpty())
                                   ? 1.0
                                   : (static_cast<double>(uncompressedData.size())
                                      / static_cast<double>(compressedData.size()));

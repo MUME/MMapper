@@ -186,7 +186,7 @@ public:
             return;
         }
 
-        assert(m_prefix.size() != 0);
+        assert(!m_prefix.isEmpty());
         QString filePath = m_dir.filePath(QString::fromLocal8Bit(m_prefix) + ".json");
 
         writeJson(filePath, m_hashes, "room index");

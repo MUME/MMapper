@@ -322,7 +322,7 @@ void Proxy::processUserStream()
 {
     if (m_userSocket != nullptr) {
         io::readAllAvailable(*m_userSocket, m_buffer, [this](const QByteArray &byteArray) {
-            if (byteArray.size() != 0)
+            if (!byteArray.isEmpty())
                 emit analyzeUserStream(byteArray);
         });
     }
