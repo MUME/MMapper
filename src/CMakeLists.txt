@@ -315,22 +315,6 @@ set(mmapper_UIS
     preferences/mumeprotocolpage.ui
 )
 
-if(WITH_ZLIB)
-    include_directories(SYSTEM ${ZLIB_INCLUDE_DIRS})
-endif()
-
-if(WITH_OPENSSL)
-    include_directories(SYSTEM ${OPENSSL_INCLUDE_DIR})
-endif()
-
-if(WITH_MINIUPNPC)
-    include_directories(SYSTEM ${MINIUPNPC_INCLUDE_DIR})
-endif()
-
-if(WITH_DRMINGW)
-    include_directories(SYSTEM ${DRMINGW_INCLUDE_DIR})
-endif()
-
 if(MMAPPER_IS_DEBUG)
     if(NOT DEFINED CHECK_ODR)
         set(CHECK_ODR YES)
@@ -387,7 +371,7 @@ add_executable(mmapper WIN32 MACOSX_BUNDLE
     ${mmapper_DATA}
 )
 
-target_link_libraries(mmapper
+target_link_libraries(mmapper PUBLIC
     Qt5::Core
     Qt5::Widgets
     Qt5::Network
@@ -407,28 +391,32 @@ if(WIN32)
 endif()
 
 if(WITH_ZLIB)
-    target_link_libraries(mmapper ${ZLIB_LIBRARIES})
+    target_include_directories(mmapper SYSTEM PUBLIC ${ZLIB_INCLUDE_DIRS})
+    target_link_libraries(mmapper PUBLIC ${ZLIB_LIBRARIES})
     if(NOT ZLIB_FOUND)
         add_dependencies(mmapper zlib)
     endif()
 endif()
 
 if(WITH_OPENSSL)
-    target_link_libraries(mmapper ${OPENSSL_LIBRARIES})
+    target_include_directories(mmapper SYSTEM PUBLIC ${OPENSSL_INCLUDE_DIR})
+    target_link_libraries(mmapper PUBLIC ${OPENSSL_LIBRARIES})
     if(NOT OPENSSL_FOUND)
         add_dependencies(mmapper openssl)
     endif()
 endif()
 
 if(WITH_MINIUPNPC)
-    target_link_libraries(mmapper ${MINIUPNPC_LIBRARY})
+    target_include_directories(mmapper SYSTEM PUBLIC ${MINIUPNPC_INCLUDE_DIR})
+    target_link_libraries(mmapper PUBLIC ${MINIUPNPC_LIBRARY})
     if(NOT MINIUPNPC_FOUND)
         add_dependencies(mmapper miniupnpc)
     endif()
 endif()
 
 if(WITH_DRMINGW)
-    target_link_libraries(mmapper ${DRMINGW_LIBRARY})
+    target_include_directories(mmapper SYSTEM PUBLIC ${DRMINGW_INCLUDE_DIR})
+    target_link_libraries(mmapper PUBLIC ${DRMINGW_LIBRARY})
     add_dependencies(mmapper drmingw)
 endif()
 
