@@ -387,7 +387,7 @@ set_target_properties(
 )
 
 if(WIN32)
-    target_link_libraries(mmapper ws2_32)
+    target_link_libraries(mmapper PUBLIC ws2_32)
 endif()
 
 if(WITH_ZLIB)
