@@ -5,8 +5,12 @@
 
 #include <cassert>
 #include <cctype>
+#include <iosfwd>
 #include <optional>
 #include <string>
+#include <string_view>
+#include <variant>
+#include <vector>
 #include <QRegularExpression>
 #include <QString>
 
@@ -463,3 +467,60 @@ static_assert(next_tab_stop(7) == 8);
 static_assert(next_tab_stop(8) == 16);
 static_assert(next_tab_stop(9) == 16);
 static_assert(next_tab_stop(15) == 16);
+
+char toLowerLatin1(char c);
+bool isPrintLatin1(char c);
+bool requiresQuote(const std::string_view &str);
+std::ostream &print_char(std::ostream &os, char c, bool doubleQuote);
+std::ostream &print_string_quoted(std::ostream &os, const std::string_view &sv);
+std::ostream &print_string_smartquote(std::ostream &os, const std::string_view &sv);
+
+struct QuotedChar final
+{
+private:
+    char m_c = '\0';
+
+public:
+    explicit QuotedChar(char c)
+        : m_c(c)
+    {}
+
+    friend std::ostream &operator<<(std::ostream &os, const QuotedChar &quotedChar)
+    {
+        return print_char(os, quotedChar.m_c, false);
+    }
+};
+
+// Use this instead of std::quoted()
+// NOTE: The reason there's no QuotedStringView is because it's not possible to guard against xvalues.
+struct QuotedString final
+{
+private:
+    std::string m_str;
+
+public:
+    explicit QuotedString(std::string s)
+        : m_str(std::move(s))
+    {}
+
+    friend std::ostream &operator<<(std::ostream &os, const QuotedString &quotedString)
+    {
+        return print_string_quoted(os, quotedString.m_str);
+    }
+};
+
+struct SmartQuotedString final
+{
+private:
+    std::string m_str;
+
+public:
+    explicit SmartQuotedString(std::string s)
+        : m_str(std::move(s))
+    {}
+
+    friend std::ostream &operator<<(std::ostream &os, const SmartQuotedString &smartQuotedString)
+    {
+        return print_string_smartquote(os, smartQuotedString.m_str);
+    }
+};

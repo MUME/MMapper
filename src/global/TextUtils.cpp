@@ -4,7 +4,14 @@
 
 #include "TextUtils.h"
 
+#include <cassert>
+#include <cctype>
+#include <cstdint>
 #include <cstring>
+#include <iomanip>
+#include <iostream>
+#include <optional>
+#include <vector>
 #include <QRegularExpression>
 #include <QString>
 
@@ -998,4 +1005,92 @@ AnsiTokenizer::Iterator::size_type AnsiTokenizer::Iterator::skip_word()
             return (c.isSpace() || isControl(c)) ? ResultEnum::STOP : ResultEnum::KEEPGOING;
         }
     });
+}
+
+char toLowerLatin1(char c)
+{
+    return static_cast<char>(std::tolower(c));
+}
+
+// std::isprint is only ASCII
+bool isPrintLatin1(char c)
+{
+    const auto uc = static_cast<uint8_t>(c);
+    return uc >= ((uc < 0x7f) ? 0x20 : 0xa0);
+}
+
+bool requiresQuote(const std::string_view &str)
+{
+    for (auto &c : str) {
+        if (std::isspace(c) || !isPrintLatin1(c))
+            return true;
+    }
+    return false;
+}
+
+std::ostream &print_char(std::ostream &os, char c, bool doubleQuote)
+{
+    switch (c) {
+    case C_ESC:
+        os << "\\e"; // Not valid C++, but borrowed from /bin/echo.
+        break;
+    case '\a':
+        os << "\\a";
+        break;
+    case '\b':
+        os << "\\b";
+        break;
+    case '\f':
+        os << "\\f";
+        break;
+    case '\n':
+        os << "\\n";
+        break;
+    case '\r':
+        os << "\\r";
+        break;
+    case '\t':
+        os << "\\t";
+        break;
+    case '\v':
+        os << "\\v";
+        break;
+    case '\\':
+        os << "\\\\";
+        break;
+    case '\0':
+        // NOTE: If we were generating C++, this could emit incorrect results (e.g. '0' followed by '0'),
+        // but this format only allows octal values with '\o###'.
+        os << "\\0";
+        break;
+    default:
+        if (isPrintLatin1(c)) {
+            if (c == (doubleQuote ? '"' : '\''))
+                os << '\\';
+            os << c;
+        } else {
+            // NOTE: This form can generate invalid C++.
+            os << "\\x" << std::hex << std::setw(2) << std::setfill('0') << (c & 0xff) << std::dec
+               << std::setfill(' ');
+        }
+        break;
+    }
+    return os;
+}
+
+std::ostream &print_string_quoted(std::ostream &os, const std::string_view &sv)
+{
+    os << '"';
+    for (const auto &c : sv) {
+        print_char(os, c, true);
+    }
+    return os << '"';
+}
+
+std::ostream &print_string_smartquote(std::ostream &os, const std::string_view &sv)
+{
+    if (!requiresQuote(sv)) {
+        return os << sv;
+    }
+    return print_string_quoted(os, sv);
 }
