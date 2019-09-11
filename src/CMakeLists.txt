@@ -277,6 +277,27 @@ set(mmapper_SRCS
     proxy/proxy.h
     proxy/telnetfilter.cpp
     proxy/telnetfilter.h
+    syntax/Accept.cpp
+    syntax/Accept.h
+    syntax/IArgument.cpp
+    syntax/IArgument.h
+    syntax/IMatchErrorLogger.h
+    syntax/MatchResult.cpp
+    syntax/MatchResult.h
+    syntax/ParseResult.h
+    syntax/ParserInput.cpp
+    syntax/ParserInput.h
+    syntax/Sublist.cpp
+    syntax/Sublist.h
+    syntax/SyntaxArgs.cpp
+    syntax/SyntaxArgs.h
+    syntax/TokenMatcher.cpp
+    syntax/TokenMatcher.h
+    syntax/TreeParser.cpp
+    syntax/TreeParser.h
+    syntax/User.h
+    syntax/Value.cpp
+    syntax/Value.h
 )
 
 set(mmapper_RCS

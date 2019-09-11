@@ -4,6 +4,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include <algorithm>
+#include <cstring>
 #include <memory>
 #include <type_traits>
 
@@ -113,3 +114,16 @@ inline auto as_cstring(const unsigned char *const s)
 // when it encounters a c++11 attribute.
 #define NODISCARD [[nodiscard]]
 #define DEPRECATED [[deprecated]]
+
+namespace utils {
+// Use this if you're tired of having to use memcmp()
+// to avoid compiler complaining about float comparison.
+template<typename T>
+bool equals(const T &a, const T &b)
+{
+    if constexpr (std::is_floating_point_v<T>)
+        return std::memcmp(&a, &b, sizeof(T)) == 0;
+    else
+        return a == b;
+}
+} // namespace utils
