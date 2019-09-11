@@ -402,11 +402,11 @@ SharedParseEvent Room::getEvent(const Room *const room)
 
 static int wordDifference(StringView a, StringView b)
 {
-    int diff = 0;
+    size_t diff = 0;
     while (!a.isEmpty() && !b.isEmpty())
         if (a.takeFirstLetter() != b.takeFirstLetter())
             ++diff;
-    return diff + a.size() + b.size();
+    return static_cast<int>(diff + a.size() + b.size());
 }
 
 ComparisonResultEnum Room::compareStrings(const std::string &room,

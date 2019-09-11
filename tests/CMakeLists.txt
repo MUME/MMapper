@@ -76,6 +76,8 @@ add_test(NAME TestMainWindow COMMAND TestMainWindow)
 # Global
 set(global_SRCS
     ../src/global/AnsiColor.h
+    ../src/global/StringView.cpp
+    ../src/global/StringView.h
     )
 set(TestGlobal_SRCS TestGlobal.cpp)
 add_executable(TestGlobal ${TestGlobal_SRCS} ${global_SRCS})

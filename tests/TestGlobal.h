@@ -14,4 +14,5 @@ public:
 private Q_SLOTS:
     void ansi256ColorTest();
     void ansiToRgbTest();
+    void stringViewTest();
 };

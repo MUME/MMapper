@@ -7,6 +7,7 @@
 #include <QtTest/QtTest>
 
 #include "../src/global/AnsiColor.h"
+#include "../src/global/StringView.h"
 
 TestGlobal::TestGlobal() = default;
 
@@ -63,6 +64,12 @@ void TestGlobal::ansiToRgbTest()
     int highBlackAnsi = static_cast<int>(AnsiColorTableEnum::BLACK) + 8 - 60;
     QColor highBlackRgb = ansi256toRgb(highBlackAnsi);
     QCOMPARE(highBlackRgb, QColor("#555753"));
+}
+
+void TestGlobal::stringViewTest()
+{
+    // REVISIT: Test is meaningless during release builds
+    test::testStringView();
 }
 
 QTEST_MAIN(TestGlobal)

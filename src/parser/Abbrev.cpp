@@ -20,7 +20,7 @@ bool isAbbrev(StringView input, const char *const command, const int minAbbrev)
     assert(minAbbrev <= cmdLen);
 
     if (minAbbrev == -1 || minAbbrev == cmdLen)
-        return input == command;
+        return input.fuzzyEquals(command);
 
     int matched = 0;
     for (auto cmdIt = command; !input.isEmpty() && *cmdIt != '\0'; ++matched)

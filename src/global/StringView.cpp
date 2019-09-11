@@ -4,7 +4,6 @@
 
 #include "StringView.h"
 
-#include <cassert>
 #include <cctype>
 #include <iostream>
 #include <stdexcept>
@@ -16,7 +15,7 @@
 
 static bool is_space(char c)
 {
-    return std::isspace(static_cast<uint8_t>(c) & 0xff) || c == C_NBSP;
+    return std::isspace(static_cast<uint8_t>(c) & 0xff);
 }
 
 StringView::StringView(const std::string_view &sv) noexcept
@@ -101,7 +100,7 @@ char StringView::takeFirstLetter() noexcept(false)
     return c;
 }
 
-StringView StringView::takeFirstWord() noexcept(false)
+StringView StringView::takeFirstWordNoPostTrim() noexcept(false)
 {
     trimLeft();
     mustNotBeEmpty();
@@ -114,8 +113,14 @@ StringView StringView::takeFirstWord() noexcept(false)
         if (is_space(firstChar()))
             break;
 
-    trimLeft();
     return StringView{before.substr(0, len)};
+}
+
+StringView StringView::takeFirstWord() noexcept(false)
+{
+    auto result = takeFirstWordNoPostTrim();
+    trimLeft();
+    return result;
 }
 
 int StringView::countNonSpaceChars() const noexcept
@@ -190,7 +195,10 @@ std::vector<QString> StringView::getWordsAsQStrings() const noexcept(false)
     return result;
 }
 
-bool StringView::operator==(const char *s) const noexcept
+/// CAUTION: This isn't quite the same as `*this == std::string_view((s == nullptr) ? "" : s)`,
+/// because it requires the string to not contain leading spaces, which means it can throw
+/// if you try to compare it to a string with spaces. (Weird and VERY unexpected.)
+bool StringView::fuzzyEquals(const char *s) const noexcept
 {
     if (s == nullptr)
         return isEmpty();
@@ -204,6 +212,262 @@ bool StringView::operator==(const char *s) const noexcept
             return false;
 
     return tmp.isEmpty() && (*s == '\0'); // both are empty
+}
+
+StringView StringView::substr(const size_t pos, const size_t len) const
+{
+    assert(pos <= m_sv.size() || pos == std::string_view::npos);
+    assert(len <= m_sv.size() || len == std::string_view::npos);
+    assert(pos + len <= m_sv.size() || pos == std::string_view::npos
+           || len == std::string_view::npos);
+    return StringView{m_sv.substr(pos, len)};
+}
+
+StringView StringView::left(const size_t len) const
+{
+    return substr(0, len);
+}
+
+StringView StringView::mid(const size_t pos) const
+{
+    return substr(pos);
+}
+
+StringView StringView::rmid(const size_t pos) const
+{
+    if (pos == std::string_view::npos)
+        return *this;
+
+    assert(pos <= m_sv.size());
+    return substr(0, m_sv.size() - pos);
+}
+
+StringView StringView::right(const size_t len) const
+{
+    if (len == std::string_view::npos)
+        return *this;
+
+    assert(len <= m_sv.size());
+    return substr(m_sv.size() - len);
+}
+
+bool StringView::startsWith(const std::string_view &other) const
+{
+    if (m_sv.size() < other.size())
+        return false;
+
+    return left(other.size()) == other;
+}
+
+bool StringView::endsWith(const std::string_view &other) const
+{
+    if (m_sv.size() < other.size())
+        return false;
+
+    return right(other.size()) == other;
+}
+
+void StringView::remove_suffix(const size_t n)
+{
+    assert(m_sv.size() >= n);
+    m_sv.remove_suffix(n);
+}
+
+StringView &StringView::operator++()
+{
+    m_sv.remove_prefix(1);
+    return *this;
+}
+
+StringView StringView::operator++(int)
+{
+    auto result = *this;
+    m_sv.remove_prefix(1);
+    return result;
+}
+
+char StringView::operator[](size_t pos) const
+{
+    return m_sv[pos];
+}
+
+namespace detail {
+
+namespace intersection {
+
+static constexpr bool intersects(const uintptr_t x, const uintptr_t lo, const uintptr_t hi)
+{
+    return lo <= hi && lo <= x && x <= hi;
+}
+
+static constexpr bool intersects(const uintptr_t abeg,
+                                 const uintptr_t aend,
+                                 const uintptr_t bbeg,
+                                 const uintptr_t bend)
+{
+    if (abeg == aend) { // empty
+        if (bbeg == bend) {
+            return abeg == bbeg;
+        }
+        return ::detail::intersection::intersects(abeg, bbeg, bend);
+    } else if (bbeg == bend) { // empty
+        return ::detail::intersection::intersects(bbeg, abeg, aend);
+    }
+
+    return abeg <= aend && bbeg <= bend && abeg < bend && bbeg < aend;
+}
+
+static constexpr bool test_intersects(const uintptr_t abeg,
+                                      const uintptr_t aend,
+                                      const uintptr_t bbeg,
+                                      const uintptr_t bend)
+{
+    return ::detail::intersection::intersects(abeg, aend, bbeg, bend)
+           && ::detail::intersection::intersects(bbeg, bend, abeg, aend);
+}
+
+static constexpr bool test_does_not_intersect(const uintptr_t abeg,
+                                              const uintptr_t aend,
+                                              const uintptr_t bbeg,
+                                              const uintptr_t bend)
+{
+    return !::detail::intersection::intersects(abeg, aend, bbeg, bend)
+           && !::detail::intersection::intersects(bbeg, bend, abeg, aend);
+}
+
+//
+static_assert(::detail::intersection::test_intersects(0, 0, 0, 0)); // special case
+static_assert(::detail::intersection::test_intersects(1, 1, 1, 1)); // special case
+                                                                    //
+static_assert(::detail::intersection::test_intersects(0, 0, 0, 1));
+static_assert(::detail::intersection::test_intersects(0, 1, 0, 1));
+static_assert(::detail::intersection::test_intersects(1, 1, 0, 1)); // special case
+                                                                    //
+static_assert(::detail::intersection::test_does_not_intersect(0, 0, 1, 2));
+static_assert(::detail::intersection::test_does_not_intersect(0, 1, 1, 2));
+static_assert(::detail::intersection::test_intersects(0, 2, 1, 2));
+static_assert(::detail::intersection::test_intersects(1, 1, 1, 2));
+static_assert(::detail::intersection::test_intersects(1, 2, 1, 2));
+static_assert(::detail::intersection::test_intersects(2, 2, 1, 2)); // special case
+static_assert(::detail::intersection::test_does_not_intersect(2, 3, 1, 2));
+//
+static_assert(::detail::intersection::test_intersects(0, 0, 0, 2));
+static_assert(::detail::intersection::test_intersects(0, 1, 0, 2));
+static_assert(::detail::intersection::test_intersects(0, 2, 0, 2));
+static_assert(::detail::intersection::test_intersects(1, 1, 0, 2));
+static_assert(::detail::intersection::test_intersects(1, 2, 0, 2));
+static_assert(::detail::intersection::test_intersects(2, 2, 0, 2)); // special case
+                                                                    //
+static_assert(
+    ::detail::intersection::test_does_not_intersect(0, 0, 1, 1)); // strictly non-intersecting
+static_assert(::detail::intersection::test_does_not_intersect(
+    0, 1, 1, 2)); // overlapping at non-included boundary
+static_assert(::detail::intersection::test_does_not_intersect(1, 0, 0, 1)); // backwards range
+
+static bool intersects(const char *const abeg,
+                       const char *const aend,
+                       const char *const bbeg,
+                       const char *const bend)
+{
+    return ::detail::intersection::intersects(reinterpret_cast<uintptr_t>(abeg),
+                                              reinterpret_cast<uintptr_t>(aend),
+                                              reinterpret_cast<uintptr_t>(bbeg),
+                                              reinterpret_cast<uintptr_t>(bend));
+}
+
+static bool intersects(const char *const a,
+                       const size_t alen,
+                       const char *const b,
+                       const size_t blen)
+{
+    return ::detail::intersection::intersects(a, a + alen, b, b + blen);
+}
+
+} // namespace intersection
+
+namespace substring {
+
+// a is a substring of b
+static constexpr bool isSubstringOf(const uintptr_t abeg,
+                                    const uintptr_t aend,
+                                    const uintptr_t bbeg,
+                                    const uintptr_t bend)
+{
+    return abeg <= aend && bbeg <= bend && bbeg <= abeg && aend <= bend;
+}
+
+// a is a substring of b
+static bool isSubstringOf(const char *const abeg,
+                          const char *const aend,
+                          const char *const bbeg,
+                          const char *const bend)
+{
+    return ::detail::substring::isSubstringOf(reinterpret_cast<uintptr_t>(abeg),
+                                              reinterpret_cast<uintptr_t>(aend),
+                                              reinterpret_cast<uintptr_t>(bbeg),
+                                              reinterpret_cast<uintptr_t>(bend));
+}
+
+// a is a substring of b
+static bool isSubstringOf(const char *const a,
+                          const size_t alen,
+                          const char *const b,
+                          const size_t blen)
+{
+    return ::detail::substring::isSubstringOf(a, a + alen, b, b + blen);
+}
+} // namespace substring
+
+} // namespace detail
+
+bool StringView::intersects(const StringView &other) const
+{
+    return ::detail::intersection::intersects(m_sv.data(),
+                                              m_sv.size(),
+                                              other.m_sv.data(),
+                                              other.m_sv.size());
+}
+
+bool StringView::isSubstringOf(const StringView &other) const
+{
+    return ::detail::substring::isSubstringOf(m_sv.data(),
+                                              m_sv.size(),
+                                              other.m_sv.data(),
+                                              other.m_sv.size());
+}
+
+StringView StringView::beforeSubstring(const StringView &other) const
+{
+    assert(other.isSubstringOf(*this));
+    const auto end = other.m_sv.data() - m_sv.data();
+    assert(end >= 0 && static_cast<size_t>(end) <= m_sv.length());
+    return left(static_cast<size_t>(end));
+}
+
+StringView StringView::startingWithSubstring(const StringView &other) const
+{
+    assert(other.isSubstringOf(*this));
+    const auto end = other.m_sv.data() - m_sv.data();
+    assert(end >= 0 && static_cast<size_t>(end) <= m_sv.length());
+    return mid(static_cast<size_t>(end));
+}
+
+StringView StringView::upToAndIncludingSubstring(const StringView &other) const
+{
+    assert(other.isSubstringOf(*this));
+    const auto end = other.m_sv.data() + other.m_sv.size();
+    const auto offset = end - m_sv.data();
+    assert(offset >= 0 && static_cast<size_t>(offset) <= m_sv.length());
+    return left(static_cast<size_t>(offset));
+}
+
+StringView StringView::afterSubstring(const StringView &other) const
+{
+    assert(other.isSubstringOf(*this));
+    const auto end = other.m_sv.data() + other.m_sv.size();
+    const auto offset = end - m_sv.data();
+    assert(offset >= 0 && static_cast<size_t>(offset) <= m_sv.length());
+    return mid(static_cast<size_t>(offset));
 }
 
 namespace test {
@@ -237,41 +501,78 @@ static void testEmpty()
 
 static void testLazyDog(const bool verbose = false)
 {
+    std::ostream &os = std::cout;
     const std::string s = "The quick brown fox\njumps \t\tover\t\t the lazy dog.\n";
     const auto view = StringView{s}.trim();
     const auto words = view.countWords();
     if (verbose)
-        std::cout << "# words: " << words << "\n";
+        os << "# words: " << words << "\n";
     TEST_ASSERT(words == 9);
 
     const auto nonSpaceChars = view.countNonSpaceChars();
     if (verbose)
-        std::cout << "# non-space chars: " << nonSpaceChars << "\n";
+        os << "# non-space chars: " << nonSpaceChars << "\n";
     TEST_ASSERT(nonSpaceChars == 36);
 
     if (verbose)
-        std::cout << "---\n";
+        os << "---\n";
     int seenWords = 0;
     for (const auto &w : view.getWordsAsStdStrings()) {
         if (seenWords++ > 0) {
             if (verbose)
-                std::cout << " ";
+                os << " ";
         }
         if (verbose)
-            std::cout << "[" << w << "]";
+            os << "[" << w << "]";
     }
     TEST_ASSERT(seenWords == words);
     if (verbose) {
-        std::cout << "\n---\n";
-        std::cout << std::flush;
+        os << "\n---\n";
+        os << std::flush;
         std::cerr << std::flush;
     }
+}
+
+static void testIntersect()
+{
+    const std::string s = "test";
+    const StringView sv{s};
+    assert(sv.intersects(sv.left(0)));      // "test" vs "" (at position 0)
+    assert(sv.intersects(sv.substr(2, 0))); // "test" vs "" (at position 2)
+    assert(sv.intersects(sv.right(0)));     // "test" vs "" (at position 4)
+    //
+    assert(sv.left(3).intersects(sv.right(2)));  // "tes" vs "st"
+    assert(sv.left(2).intersects(sv.right(3)));  // "te" vs "est"
+    assert(!sv.left(2).intersects(sv.right(2))); // "te" vs "st" does not intersect
+    //
+    assert(sv.left(0).intersects(sv.mid(0)));  // same as sv.intersects(sv.left(0));
+    assert(!sv.left(1).intersects(sv.mid(1))); // "t" vs "est" does not intersect
+    assert(!sv.left(2).intersects(sv.mid(2))); // "te" vs "st" does not intersect
+    assert(!sv.left(3).intersects(sv.mid(3))); // "tes" vs "t" does not intersect
+    assert(sv.left(4).intersects(sv.mid(4)));  // same as sv.intersects(sv.right(0));
+}
+
+static void testSubstring()
+{
+    const std::string s = "test";
+    const StringView sv{s};
+    assert(sv.isSubstringOf(sv));
+
+    assert(!sv.isSubstringOf(sv.left(0)));
+    assert(!sv.isSubstringOf(sv.substr(2, 0)));
+    assert(!sv.isSubstringOf(sv.right(0)));
+
+    assert(sv.left(0).isSubstringOf(sv.left(0)));
+    assert(sv.substr(2, 0).isSubstringOf(sv));
+    assert(sv.right(0).isSubstringOf(sv));
 }
 
 void testStringView()
 {
     testEmpty();
     testLazyDog();
+    testIntersect();
+    testSubstring();
     std::cout << "Test \"" << __FUNCTION__ << "\" passed.\n" << std::flush;
     std::cerr << std::flush;
 }
