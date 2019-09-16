@@ -655,7 +655,8 @@ RemoteEditWidget::RemoteEditWidget(const bool editSession,
                                     qApp->desktop()->availableGeometry()));
 
     show();
-    focusWidget();
+    raise();
+    activateWindow();
     m_textEdit->setFocus(); // REVISIT: can this be done in the creation function?
 }
 
