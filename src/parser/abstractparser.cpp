@@ -508,10 +508,24 @@ const Coordinate AbstractParser::getTailPosition()
     return cl.isEmpty() ? m_mapData->getPosition() : cl.back();
 }
 
-void AbstractParser::emulateExits()
+void AbstractParser::emulateExits(const CommandIdType move)
 {
+    const auto nextCoordinate = [this, &move]() {
+        // Use movement direction to find the next coordinate
+        if (move < CommandIdType::UNKNOWN) {
+            auto rs = RoomSelection(*m_mapData);
+            if (const Room *const sourceRoom = rs.getRoom(m_mapData->getPosition())) {
+                const auto &exit = sourceRoom->exit(static_cast<ExitDirection>(move));
+                if (exit.isExit() && !exit.outIsEmpty())
+                    if (const Room *const targetRoom = rs.getRoom(exit.outFirst()))
+                        return targetRoom->getPosition();
+            }
+        }
+        // Fallback to next position in prespammed path
+        return getNextPosition();
+    }();
     auto rs = RoomSelection(*m_mapData);
-    if (const Room *const r = rs.getRoom(getNextPosition()))
+    if (const Room *const r = rs.getRoom(nextCoordinate))
         sendRoomExitsInfoToUser(r);
 }
 
@@ -1035,7 +1049,6 @@ void AbstractParser::showRoomMobFlagsHelp()
 void AbstractParser::showRoomSimpleFlagsHelp()
 {
     showHeader("Basic room flag commands");
-
 #define SHOW(X) \
     for (auto x : DEFINED_ROOM_##X##_TYPES) { \
         if (const Abbrev cmd = getParserCommandName(x)) \

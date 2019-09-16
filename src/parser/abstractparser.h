@@ -157,7 +157,7 @@ public:
     void printRoomInfo(RoomFields fieldset);
     void printRoomInfo(RoomField field);
 
-    void emulateExits();
+    void emulateExits(const CommandIdType move);
     QByteArray enhanceExits(const Room *);
 
     void parseExits();

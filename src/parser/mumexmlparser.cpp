@@ -415,7 +415,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
                 m_readingRoomDesc = false; // we finished read desc mode
                 m_descriptionReady = true;
                 if (config.mumeNative.emulatedExits) {
-                    emulateExits();
+                    emulateExits(m_move);
                 }
             }
         } else {
@@ -468,7 +468,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
             m_readingRoomDesc = false; // we finished read desc mode
             m_descriptionReady = true;
             if (config.mumeNative.emulatedExits) {
-                emulateExits();
+                emulateExits(m_move);
             }
         }
         if (m_descriptionReady) {
