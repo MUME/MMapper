@@ -53,6 +53,12 @@ static constexpr const bool NO_OPEN_SSL = true;
 static constexpr const bool NO_OPEN_SSL = false;
 #endif
 
+#if defined(MMAPPER_NO_UPDATER) && MMAPPER_NO_UPDATER
+static constexpr const bool NO_UPDATER = true;
+#else
+static constexpr const bool NO_UPDATER = false;
+#endif
+
 #define SUBGROUP() \
     friend class Configuration; \
     void read(QSettings &conf); \

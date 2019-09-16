@@ -161,7 +161,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     m_findRoomsDlg->setObjectName("FindRoomsDlg");
 
     m_mumeClock = new MumeClock(getConfig().mumeClock.startEpoch, this);
-    m_updateDialog = new UpdateDialog(this);
+    if constexpr (!NO_UPDATER)
+        m_updateDialog = new UpdateDialog(this);
 
     createActions();
     setupToolBars();
@@ -242,9 +243,11 @@ void MainWindow::startServices()
     if (groupConfig.state != GroupManagerState::Off && groupConfig.autoStart)
         groupNetwork.networkStartAct->trigger();
 
-    // Raise the update dialog if an update is found
-    if (getConfig().general.checkForUpdate)
-        m_updateDialog->open();
+    if constexpr (!NO_UPDATER) {
+        // Raise the update dialog if an update is found
+        if (getConfig().general.checkForUpdate)
+            m_updateDialog->open();
+    }
 }
 
 void MainWindow::readSettings()
@@ -471,8 +474,12 @@ void MainWindow::createActions()
     preferencesAct->setStatusTip(tr("MMapper preferences"));
     connect(preferencesAct, &QAction::triggered, this, &MainWindow::onPreferences);
 
-    mmapperCheckForUpdateAct = new QAction(QIcon(":/icons/m.png"), tr("Check for &update"), this);
-    connect(mmapperCheckForUpdateAct, &QAction::triggered, this, &MainWindow::onCheckForUpdate);
+    if constexpr (!NO_UPDATER) {
+        mmapperCheckForUpdateAct = new QAction(QIcon(":/icons/m.png"),
+                                               tr("Check for &update"),
+                                               this);
+        connect(mmapperCheckForUpdateAct, &QAction::triggered, this, &MainWindow::onCheckForUpdate);
+    }
     mumeWebsiteAct = new QAction(tr("&Website"), this);
     connect(mumeWebsiteAct, &QAction::triggered, this, &MainWindow::openMumeWebsite);
     voteAct = new QAction(QIcon::fromTheme("applications-games"), tr("V&ote for Mume"), this);
@@ -1027,7 +1034,8 @@ void MainWindow::setupMenuBar()
     helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(voteAct);
     helpMenu->addSeparator();
-    helpMenu->addAction(mmapperCheckForUpdateAct);
+    if constexpr (!NO_UPDATER)
+        helpMenu->addAction(mmapperCheckForUpdateAct);
     mumeMenu = helpMenu->addMenu(QIcon::fromTheme("help-contents"), tr("M&UME"));
     mumeMenu->addAction(mumeWebsiteAct);
     mumeMenu->addAction(mumeForumAct);
@@ -1910,6 +1918,7 @@ void MainWindow::onConnectToNeighboursRoomSelection()
 
 void MainWindow::onCheckForUpdate()
 {
+    assert(!NO_UPDATER);
     m_updateDialog->show();
     m_updateDialog->open();
 }

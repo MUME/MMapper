@@ -125,6 +125,7 @@ GeneralPage::GeneralPage(QWidget *parent)
     ui->showLaunchPanelCheckBox->setChecked(!config.general.noLaunchPanel);
     ui->autoStartGroupManagerCheckBox->setChecked(config.groupManager.autoStart);
     ui->checkForUpdateCheckBox->setChecked(config.general.checkForUpdate);
+    ui->checkForUpdateCheckBox->setDisabled(NO_UPDATER);
     ui->autoLoadFileName->setText(autoLoad.fileName);
     ui->autoLoadCheck->setChecked(autoLoad.autoLoadMap);
     ui->autoLoadFileName->setEnabled(autoLoad.autoLoadMap);

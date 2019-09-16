@@ -17,6 +17,7 @@ message(STATUS "MMapper version ${MMAPPER_VERSION} (${CMAKE_BUILD_TYPE} distribu
 
 # Options
 option(WITH_ZLIB "zlib compressed old save backwards compatability" ON)
+option(WITH_UPDATER "Check GitHub for new releases" ON)
 option(WITH_OPENSSL "Use OpenSSL for TLS encryption" ON)
 option(WITH_MINIUPNPC "Use MiniUPnPc for group manager port forwarding" ON)
 option(USE_TIDY "Run clang-tidy with the compiler" OFF)
@@ -327,6 +328,10 @@ else()
     message(STATUS "Using cached MMapper map: ${MMAPPER_MAP_FILE}")
 endif()
 
+if(NOT WITH_UPDATER)
+    add_definitions(/DMMAPPER_NO_UPDATER)
+endif()
+
 add_subdirectory(src)
 add_subdirectory(appdata)
 add_subdirectory(tests)
@@ -334,6 +339,7 @@ add_subdirectory(tests)
 message("") # blank line
 include(FeatureSummary)
 add_feature_info("WITH_ZLIB" WITH_ZLIB "backwards compatability with old .mm2 saves")
+add_feature_info("WITH_UPDATER" WITH_UPDATER "check GitHub for new releases")
 add_feature_info("WITH_OPENSSL" WITH_OPENSSL "encrypt connection to MUME with TLS")
 add_feature_info("WITH_MINIUPNPC" WITH_MINIUPNPC "port forwarding for group manager with UPnP IGD")
 add_feature_info("USE_TIDY" USE_TIDY "")
