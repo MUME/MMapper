@@ -36,7 +36,8 @@ parts:
     plugin: cmake
     source: .
     configflags:
-      - -DCMAKE_INSTALL_PREFIX=/usr -DWITH_UPDATER=false
+      - -DCMAKE_INSTALL_PREFIX=/usr
+      - -DWITH_UPDATER=false
     build-packages:
       - build-essential
       - zlib1g-dev
