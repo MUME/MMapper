@@ -9,20 +9,49 @@ matrix:
     # Mac
     #
     - os: osx
-      osx_image: xcode10.2
+      osx_image: xcode10.3
       compiler: clang
       addons:
         homebrew:
           packages:
             - cmake
             - qt5
-            - clang-format
             - miniupnpc
             - lcov
             - openssl
       env:
-        - MATRIX_EVAL=""
-        - CLANG_FORMAT=clang-format
+        - BUILD=1
+        - CODECOV=1
+    #
+    # Snapcraft
+    #
+    - os: linux
+      dist: bionic
+      compiler: gcc
+      addons:
+        snaps:
+          - name: snapcraft
+            channel: edge
+            classic: true
+        apt:
+          sources:
+            - qttools5-dev-tools
+      env:
+        - SNAPCRAFT=1
+    #
+    # Clang Format
+    #
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-xenial-6.0
+          packages:
+            - clang-format-6.0
+      env:
+        - CODESTYLE=1
+        - CLANG_FORMAT=clang-format-6.0
     #
     # Linux GCC 7
     #
@@ -32,19 +61,19 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-xenial-6.0
             - sourceline: 'ppa:beineri/opt-qt597-xenial'
           packages:
             - g++-7
-            - clang-format-6.0
             - cmake
             - libminiupnpc-dev
             - lcov
             - qt59base
             - mesa-common-dev
       env:
-        - QT=59 MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
-        - CLANG_FORMAT=clang-format-6.0
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+        - QT=59
+        - BUILD=1
+        - CODECOV=1
     #
     # Linux GCC 8
     #
@@ -54,19 +83,19 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-xenial-6.0
             - sourceline: 'ppa:beineri/opt-qt597-xenial'
           packages:
             - g++-8
-            - clang-format-6.0
             - cmake
             - libminiupnpc-dev
             - lcov
             - qt59base
             - mesa-common-dev
       env:
-        - QT=59 MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
-        - CLANG_FORMAT=clang-format-6.0
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+        - QT=59
+        - BUILD=1
+        - CODECOV=1
     #
     # Linux GCC 9
     #
@@ -76,64 +105,78 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-xenial-6.0
             - sourceline: 'ppa:beineri/opt-qt597-xenial'
           packages:
             - g++-9
-            - clang-format-6.0
             - cmake
             - libminiupnpc-dev
             - lcov
             - qt59base
             - mesa-common-dev
       env:
-        - QT=59 MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
-        - CLANG_FORMAT=clang-format-6.0
+        - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
+        - QT=59
+        - BUILD=1
+        - CODECOV=1
 
 before_install:
-  - eval "${MATRIX_EVAL}"
+  - '[[ "$MATRIX_EVAL" == "" ]] || eval "${MATRIX_EVAL}"'
 
-install:
-  - '[ "$TRAVIS_OS_NAME" != osx ] || brew link --force qt5'
-  - '[ "$TRAVIS_OS_NAME" != osx ] || export PATH=/usr/local/opt/qt5/bin:$PATH'
-  - qmake -v
+install: |
+  if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+    brew link --force qt5
+    export PATH=/usr/local/opt/qt5/bin:$PATH
+  fi
 
 before_script:
-  # Linux
-  - '[[ "$TRAVIS_OS_NAME" != linux || "$CXX" != clang++ ]] || export QMAKESPEC=linux-clang'
-  - '[[ "$TRAVIS_OS_NAME" != linux || "$CXX" != g++     ]] || export QMAKESPEC=linux-g++'
-  - '[ "$TRAVIS_OS_NAME" != linux ] || . /opt/qt$QT/bin/qt$QT-env.sh'
-  - '[ "$TRAVIS_OS_NAME" != linux ] || export QT_SELECT=qt5'
-  # Mac
-  - '[[ "$TRAVIS_OS_NAME" != osx || "$CXX" != clang++ ]] || export QMAKESPEC=macx-clang'
-  - '[[ "$TRAVIS_OS_NAME" != osx || "$CXX" != g++     ]] || export QMAKESPEC=macx-g++'
-  - '[ "$TRAVIS_OS_NAME" != osx ] || export MMAPPER_CMAKE_EXTRA=-DOPENSSL_ROOT_DIR=/usr/local/opt/openssl'
-  # Code style check
-  - $CLANG_FORMAT -version
-  - find . -type f -name *.cpp -o -name *.h -exec $CLANG_FORMAT -style=file -i {} \;
   - |
-    if  [[ -n $(git diff) ]]; then
-      echo
-      git diff
-      echo
-      echo "Please fix your code style:"
-      echo "find . -type f -name *.cpp -o -name *.h -exec clang-format -i -style=file {} \;"
-      [[ $(git diff --stat | wc -l) -lt 5 ]] || exit -1
+    if [ "$TRAVIS_OS_NAME" == "linux" ]; then
+      [[ "$CXX" != "clang++" ]] || export QMAKESPEC=linux-clang
+      [[ "$CXX" != "g++" ]] || export QMAKESPEC=linux-g++
+      . /opt/qt$QT/bin/qt$QT-env.sh
+      export QT_SELECT=qt5
     fi
-  # Prepare Makefile
-  - mkdir build
-  - cd build
-  - cmake --version
-  - cmake .. $MMAPPER_CMAKE_EXTRA -DUSE_CODE_COVERAGE=true
+  - |
+    if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+      [[ "$CXX" != "clang++" ]] || export QMAKESPEC=macx-clang
+      [[ "$CXX" != "g++" ]] || export QMAKESPEC=macx-g++
+      export MMAPPER_CMAKE_EXTRA=-DOPENSSL_ROOT_DIR=/usr/local/opt/openssl
+    fi
+  - |
+    if [ "$CODESTYLE" != "" ]; then
+      $CLANG_FORMAT -version
+      find . -type f -name *.cpp -o -name *.h -exec $CLANG_FORMAT -style=file -i {} \;
+        if  [[ -n $(git diff) ]]; then
+        echo
+        git diff
+        echo
+        echo "Please fix your code style:"
+        echo "find . -type f -name *.cpp -o -name *.h -exec clang-format -i -style=file {} \;"
+        [[ $(git diff --stat | wc -l) -lt 5 ]] || exit -1
+      fi
+    fi
+  - '[[ "$CODECOV" == "" ]] || export MMAPPER_CMAKE_EXTRA="$MMAPPER_CMAKE_EXTRA -DUSE_CODE_COVERAGE=true"'
+  - |
+    if [ "$BUILD" != "" ]; then
+      mkdir build
+      cd build
+      cmake --version
+      cmake .. $MMAPPER_CMAKE_EXTRA
+    fi
 
 script:
-  - make -j2
+  - '[[ "$BUILD" == "" ]] || make -j2'
+  - '[[ "$SNAPCRAFT" == "" ]] || snapcraft snap --destructive-mode'
 
 after_success:
-  - lcov  --zerocounters  --directory .
-  - ctest -V
-  - lcov --remove coverage.info '/usr/*' "${HOME}"'/.cache/*' --output-file coverage.info
-  - lcov --directory . --capture --output-file coverage.info
-  - lcov --list coverage.info
-  - bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
-  - cpack
+  - '[[ "$CODECOV" == "" ]] || lcov  --zerocounters  --directory .'
+  - '[[ "$BUILD" == "" ]] || ctest -V'
+  - |
+    if [ "$CODECOV" != "" ]; then
+      lcov --remove coverage.info '/usr/*' "${HOME}"'/.cache/*' --output-file coverage.info
+      lcov --directory . --capture --output-file coverage.info
+      lcov --list coverage.info
+      bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
+    fi
+  - '[[ "$BUILD" == "" ]] || cpack'
+
