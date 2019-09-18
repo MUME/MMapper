@@ -600,32 +600,15 @@ if(WIN32)
         set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "ExecWait '\\\"$INSTDIR\\\\bin\\\\${vcredist_name}\\\"'")
     endif()
 
-    if(WITH_DRMINGW)
-        # Include shortcut to crash logs
-        install(FILES
-            "${PROJECT_SOURCE_DIR}/appdata/Crash Log.lnk"
-            DESTINATION .
-            COMPONENT applications
-        )
-    endif()
-
-    # Install Help Documentation
-    install(FILES
-        "${PROJECT_SOURCE_DIR}/appdata/Installation Guide.URL"
-        "${PROJECT_SOURCE_DIR}/docs/mapping_advice.txt"
-        DESTINATION .
-        COMPONENT help
-    )
-
     # ZIP requires 7-zip
-    set(CPACK_GENERATOR "ZIP;NSIS")
+    set(CPACK_GENERATOR "NSIS;ZIP")
     set(CPACK_SOURCE_GENERATOR "ZIP")
 
     # Windows (NSIS) Settings
     set(CPACK_NSIS_EXECUTABLES_DIRECTORY "bin")
-    set(CPACK_NSIS_MENU_LINKS "bin/mmapper.exe;MMapper;Installation Guide.URL;MMapper Help;Crash Log.lnk;MMapper Crash Log")
+    set(CPACK_NSIS_MENU_LINKS "bin/mmapper.exe;MMapper")
     set(CPACK_NSIS_INSTALLED_ICON_NAME "mmapper.exe")
-    set(CPACK_NSIS_HELP_LINK "http:\\\\\\\\github.com\\\\mume\\\\mmapper")
+    set(CPACK_NSIS_HELP_LINK "http://github.com/mume/mmapper")
     set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/win32\\\\m.ico")
     set(CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/win32\\\\m.ico")
     set(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\m.png")
@@ -634,20 +617,34 @@ if(WIN32)
     set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL "ON")
     set(CPACK_NSIS_MUI_FINISHPAGE_RUN "mmapper.exe")
     set(CPACK_NSIS_DEFINES "ManifestDPIAware true")
-
     if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
         set(TARGET_ARCHITECTURE "x64")
-        set(CPACK_NSIS_DISPLAY_NAME "MMapper")
+        set(CPACK_NSIS_DISPLAY_NAME "MUME Mapper")
     else()
         set(TARGET_ARCHITECTURE "x86")
         set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "Caligor soft")
-        set(CPACK_NSIS_DISPLAY_NAME "MMapper (x86)")
+        set(CPACK_NSIS_DISPLAY_NAME "MUME Mapper (x86)")
+    endif()
+    if(WITH_DRMINGW)
+        # Include shortcut to crash logs
+        set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "
+            CreateShortCut \\\"$SMPROGRAMS\\\\${CPACK_NSIS_DISPLAY_NAME}\\\\Crash Log.lnk\\\" \\\"$PROFILE\\\\AppData\\\\Local\\\\mmappercrash.log\\\"
+            ")
+        # Delete shortcut and crash log
+        set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "
+            Delete \\\"$SMPROGRAMS\\\\${CPACK_NSIS_DISPLAY_NAME}\\\\Crash Log.lnk\\\"
+            Delete \\\"$PROFILE\\\\AppData\\\\Local\\\\mmappercrash.log\\\"
+            ")
     endif()
     set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_FILE_NAME}-${TARGET_ARCHITECTURE}")
 endif(WIN32)
 
 # Apple Install Settings
 if(APPLE)
+    if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+       set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR} CACHE PATH "Mac default path is pwd" FORCE)
+    endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+
     set(CMAKE_MACOSX_BUNDLE ON)
     set_source_files_properties(resources/macosx/m.icns PROPERTIES
     MACOSX_PACKAGE_LOCATION Resources)
@@ -667,21 +664,14 @@ if(APPLE)
     # Install Executables
     install(
         TARGETS mmapper RUNTIME BUNDLE
-        DESTINATION MMapper
+        DESTINATION .
         COMPONENT applications
-    )
-
-    # Install Help Documentation
-    install(FILES
-        "${PROJECT_SOURCE_DIR}/appdata/Installation Guide.URL"
-        "${PROJECT_SOURCE_DIR}/docs/mapping_advice.txt"
-        DESTINATION MMapper
-        COMPONENT help
     )
 
     # Package Settings
     set(CPACK_GENERATOR "DragNDrop;ZIP")
     set(CPACK_SOURCE_GENERATOR "TGZ")
+    set(CPACK_DMG_FORMAT UDBZ)
 
     # Libraries are bundled directly
     set(CPACK_COMPONENT_LIBRARIES_HIDDEN TRUE)
@@ -695,8 +685,7 @@ if(APPLE)
 endif(APPLE)
 
 # More General CPack Settings
-set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING.txt")
-#set(CPACK_RESOURCE_FILE_README  "${PROJECT_SOURCE_DIR}/INSTALL.txt")
+set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/src/resources/LICENSE.GPL2")
 set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
 set(CPACK_PACKAGE_VENDOR "Nils Schimmelmann")
 set(CPACK_PACKAGE_CONTACT "nschimme@gmail.com")
@@ -710,19 +699,14 @@ else()
     set(CPACK_STRIP_FILES TRUE)
 endif()
 # Applications Component
-set(CPACK_COMPONENTS_ALL applications libraries help)
+set(CPACK_COMPONENTS_ALL applications libraries)
 set(CPACK_COMPONENT_APPLICATIONS_DISPLAY_NAME "MMapper")
 set(CPACK_COMPONENT_APPLICATIONS_DESCRIPTION "A mud mapper especially written for the mud MUME")
 set(CPACK_COMPONENT_APPLICATIONS_REQUIRED TRUE)
 
 # Libraries Component
 set(CPACK_COMPONENT_LIBRARIES_DISPLAY_NAME "Runtime Libraries")
-set(CPACK_COMPONENT_LIBRARIES_DESCRIPTION "Qt/MingW libraries for running MMapper")
-
-# Help Component
-set(CPACK_COMPONENT_HELP_DISPLAY_NAME "Documentation")
-set(CPACK_COMPONENT_HELP_DESCRIPTION "Guide on how to set up your client")
-set(CPACK_COMPONENT_HELP_HIDDEN TRUE)
+set(CPACK_COMPONENT_LIBRARIES_DESCRIPTION "Runtime libraries for running MMapper")
 
 set(CPACK_INSTALL_CMAKE_PROJECTS "${CMAKE_CURRENT_BINARY_DIR};applications;ALL;/")
 
