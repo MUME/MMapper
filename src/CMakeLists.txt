@@ -59,9 +59,9 @@ set(mmapper_SRCS
     expandoracommon/property.h
     expandoracommon/room.cpp
     expandoracommon/room.h
+    global/AnsiColor.h
     global/Array.h
     global/CharBuffer.h
-    global/Color.h
     global/DirectionType.cpp
     global/DirectionType.h
     global/EnumIndexedArray.h

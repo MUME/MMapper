@@ -11,7 +11,7 @@
 #include <QVector>
 #include <QtCore>
 
-#include "../global/Color.h"
+#include "../global/AnsiColor.h"
 
 class QObject;
 class QWidget;

@@ -12,7 +12,7 @@
 #include <QtGui>
 
 #include "../configuration/configuration.h"
-#include "../global/Color.h"
+#include "../global/AnsiColor.h"
 
 // ANSI codes are formatted as the following:
 // escape + [ + n1 (+ n2) + m

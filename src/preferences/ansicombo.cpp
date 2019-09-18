@@ -13,7 +13,7 @@
 #include <QtGui>
 #include <QtWidgets>
 
-#include "../global/Color.h"
+#include "../global/AnsiColor.h"
 
 struct AnsiItem
 {

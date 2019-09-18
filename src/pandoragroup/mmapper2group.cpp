@@ -15,7 +15,7 @@
 #include <QtCore>
 
 #include "../configuration/configuration.h"
-#include "../global/Color.h"
+#include "../global/AnsiColor.h"
 #include "../global/roomid.h"
 #include "../parser/CommandQueue.h"
 #include "CGroup.h"

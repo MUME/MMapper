@@ -6,7 +6,7 @@
 #include <QDebug>
 #include <QtTest/QtTest>
 
-#include "../src/global/Color.h"
+#include "../src/global/AnsiColor.h"
 
 TestGlobal::TestGlobal() = default;
 
