@@ -77,6 +77,10 @@ else()
 endif()
 
 if(WITH_OPENSSL)
+    # Prevent 32bit OpenSSL linking error due to system C:/Windows/System32/libcrypto.dll
+    if(MINGW AND "${CMAKE_SIZEOF_VOID_P}" EQUAL "4")
+        set(CMAKE_FIND_LIBRARY_SUFFIXES .lib)
+    endif()
     find_package(OpenSSL)
     add_subdirectory(external/openssl)
 else()

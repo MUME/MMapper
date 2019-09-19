@@ -30,6 +30,12 @@ if(OPENSSL_FOUND)
                 set(MSVCR_ROOT_DIR "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\x86\\Microsoft.VC140.CRT")
             endif()
         endif()
+        # Find OpenSSL root directory
+        if(NOT OPENSSL_ROOT_DIR)
+            list(GET OPENSSL_LIBRARIES -1 OPENSSL_DIRECTORY)
+            get_filename_component(OPENSSL_ROOT_DIR ${OPENSSL_DIRECTORY} DIRECTORY)
+            string(REGEX REPLACE "(.:[\\/]+[^\\/]+).*" "\\1" OPENSSL_ROOT_DIR ${OPENSSL_ROOT_DIR})
+        endif()
         # Shining Light Productions OpenSSL requires the VC++ runtime
         find_file(MSVCR_LIB_BIN
                 NAMES
