@@ -101,7 +101,7 @@ static bool tryLoad(MainWindow &mw, const QDir &dir, const QString &input_filena
     if (!maybeFilename)
         return false;
 
-    const auto absoluteFilePath = maybeFilename.value();
+    const auto &absoluteFilePath = maybeFilename.value();
     if (!QFile{absoluteFilePath}.exists()) {
         qInfo() << "[main] File " << absoluteFilePath << "does not exist.";
         return false;
