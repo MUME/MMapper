@@ -254,8 +254,11 @@ void ClientWidget::saveLog()
         save->setDefaultSuffix("txt");
         save->setAcceptMode(QFileDialog::AcceptSave);
 
-        if (save->exec() == QDialog::Accepted)
-            return Result{save->selectedFiles(), save->selectedNameFilter().contains("HTML")};
+        if (save->exec() == QDialog::Accepted) {
+            const QString nameFilter = save->selectedNameFilter().toLower();
+            const bool isHtml = nameFilter.endsWith(".htm") || nameFilter.endsWith(".html");
+            return Result{save->selectedFiles(), isHtml};
+        }
 
         return Result{};
     };
