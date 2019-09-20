@@ -1,0 +1,44 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// Copyright (C) 2019 The MMapper Authors
+
+#include "OpenGLTypes.h"
+
+#include <algorithm>
+#include <memory>
+
+#include "../display/Textures.h"
+#include "../global/utils.h"
+
+IRenderable::~IRenderable() = default;
+
+TexturedRenderable::TexturedRenderable(const SharedMMTexture &tex,
+                                       std::unique_ptr<IRenderable> moved_mesh)
+    : m_texture(tex)
+    , m_mesh(std::move(moved_mesh))
+{
+    deref(m_mesh);
+}
+
+TexturedRenderable::~TexturedRenderable() = default;
+
+void TexturedRenderable::clear()
+{
+    m_mesh->clear();
+}
+
+void TexturedRenderable::reset()
+{
+    m_texture.reset();
+    m_mesh->reset();
+}
+
+bool TexturedRenderable::isEmpty() const
+{
+    return m_mesh->isEmpty();
+}
+
+void TexturedRenderable::render(const GLRenderState &renderState)
+{
+    /* overrides the texture of the provided state */
+    m_mesh->render(renderState.withTexture0(m_texture));
+}

@@ -48,4 +48,11 @@ public:
 
         return static_cast<E>(it - beg);
     }
+
+    template<typename Callback>
+    void for_each(Callback &&callback)
+    {
+        for (auto &x : *this)
+            callback(x);
+    }
 };

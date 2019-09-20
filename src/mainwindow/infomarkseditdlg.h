@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
 #include <memory>
+#include <vector>
 #include <QDialog>
 #include <QString>
 #include <QtCore>
@@ -33,7 +34,7 @@ public:
                               MapCanvas *mc);
 
 signals:
-    void mapChanged();
+    void infomarksChanged();
 
 public slots:
     void objectListCurrentIndexChanged(const QString &);
@@ -44,6 +45,7 @@ public slots:
 
 private:
     std::shared_ptr<InfoMarkSelection> m_selection;
+    std::vector<std::shared_ptr<InfoMark>> m_markers;
     MapData *m_mapData = nullptr;
     MapCanvas *m_mapCanvas = nullptr;
 
@@ -55,7 +57,6 @@ private:
 
     InfoMarkTypeEnum getType();
     InfoMarkClassEnum getClass();
-    InfoMark *getInfoMark(const QString &name);
     InfoMark *getCurrentInfoMark();
     void setCurrentInfoMark(InfoMark *m);
 

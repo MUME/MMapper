@@ -65,6 +65,11 @@ ConfigDialog::ConfigDialog(Mmapper2Group *gm, QWidget *parent)
     connect(this, &ConfigDialog::sig_loadConfig, groupManagerPage, &GroupManagerPage::loadConfig);
     connect(this, &ConfigDialog::sig_loadConfig, mumeProtocolPage, &MumeProtocolPage::loadConfig);
     connect(this, &ConfigDialog::sig_loadConfig, pathmachinePage, &PathmachinePage::loadConfig);
+
+    connect(graphicsPage,
+            &GraphicsPage::sig_graphicsSettingsChanged,
+            this,
+            &ConfigDialog::sig_graphicsSettingsChanged);
 }
 
 ConfigDialog::~ConfigDialog()

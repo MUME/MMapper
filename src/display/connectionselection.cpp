@@ -8,6 +8,7 @@
 #include <cassert>
 #include <utility>
 
+#include "../configuration/NamedConfig.h"
 #include "../expandoracommon/RoomAdmin.h"
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/room.h"
@@ -27,7 +28,7 @@ ConnectionSelection::ConnectionSelection(this_is_private, MapFrontend *mf, const
 
     const Coordinate c = sel.getCoordinate();
     mf->lookingForRooms(*this, c, c);
-    m_connectionDescriptor[0].direction = ComputeDirection(sel.pos);
+    m_connectionDescriptor[0].direction = computeDirection(sel.pos);
 }
 
 ConnectionSelection::~ConnectionSelection()
@@ -42,7 +43,7 @@ ConnectionSelection::~ConnectionSelection()
     }
 }
 
-bool ConnectionSelection::isValid()
+bool ConnectionSelection::isValid() const
 {
     for (const auto &x : m_connectionDescriptor)
         if (x.room == nullptr)
@@ -50,53 +51,36 @@ bool ConnectionSelection::isValid()
     return true;
 }
 
-ExitDirEnum ConnectionSelection::ComputeDirection(const Coordinate2f &mouse_f)
+// \NNNNNNNN/
+// W\NNNN--/E
+// WW\NN|UU|E
+// WWW\-|UU|E
+// WWW|CC--EE
+// WW--CC|EEE
+// W|DD|-\EEE
+// W|DD|SS\EE
+// W/--SSSS\E
+// /SSSSSSSS\.
+ExitDirEnum ConnectionSelection::computeDirection(const Coordinate2f &c)
 {
-    ExitDirEnum dir = ExitDirEnum::UNKNOWN;
-    const auto mouse = mouse_f.round();
+    const glm::vec2 pos = glm::fract(c.to_vec2());
+    const glm::vec2 upCenter{0.75f, 0.75f};
+    const glm::vec2 downCenter{0.25f, 0.25f};
+    const glm::vec2 actualCenter{0.5f, 0.5f};
+    const float upDownRadius = 0.15f;
+    const float centerRadius = 0.15f;
 
-    const int x1 = mouse.x;
-    const int y1 = mouse.y;
+    if (glm::distance(pos, upCenter) <= upDownRadius)
+        return ExitDirEnum::UP;
+    else if (glm::distance(pos, downCenter) <= upDownRadius)
+        return ExitDirEnum::DOWN;
+    else if (glm::distance(pos, actualCenter) <= centerRadius)
+        return ExitDirEnum::UNKNOWN;
 
-    const float x1d = mouse_f.x - static_cast<float>(x1);
-    const float y1d = mouse_f.y - static_cast<float>(y1);
-
-    if (y1d > -0.2f && y1d < 0.2f) {
-        // y1p = y1;
-        if (x1d >= 0.2f) {
-            dir = ExitDirEnum::EAST;
-            // x1p = x1 + 0.4;
-        } else {
-            if (x1d <= -0.2f) {
-                dir = ExitDirEnum::WEST;
-                // x1p = x1 - 0.4;
-            } else {
-                dir = ExitDirEnum::UNKNOWN;
-                // x1p = x1;
-            }
-        }
-    } else {
-        // x1p = x1;
-        if (y1d >= 0.2f) {
-            // y1p = y1 + 0.4;
-            dir = ExitDirEnum::SOUTH;
-            if (x1d <= -0.2f) {
-                dir = ExitDirEnum::DOWN;
-                // x1p = x1 + 0.4;
-            }
-        } else {
-            if (y1d <= -0.2f) {
-                // y1p = y1 - 0.4;
-                dir = ExitDirEnum::NORTH;
-                if (x1d >= 0.2f) {
-                    dir = ExitDirEnum::UP;
-                    // x1p = x1 - 0.4;
-                }
-            }
-        }
-    }
-
-    return dir;
+    const bool ne = pos.x >= 1.f - pos.y;
+    const bool nw = pos.x <= pos.y;
+    return ne ? (nw ? ExitDirEnum::NORTH : ExitDirEnum::EAST)
+              : (nw ? ExitDirEnum::WEST : ExitDirEnum::SOUTH);
 }
 
 void ConnectionSelection::setFirst(MapFrontend *const mf, const RoomId id, const ExitDirEnum dir)
@@ -124,7 +108,7 @@ void ConnectionSelection::setSecond(MapFrontend *const mf, const MouseSel &sel)
         m_connectionDescriptor[1].room = nullptr;
     }
     mf->lookingForRooms(*this, c, c);
-    m_connectionDescriptor[1].direction = ComputeDirection(sel.pos);
+    m_connectionDescriptor[1].direction = computeDirection(sel.pos);
     // if (m_connectionDescriptor[1].direction == ED_UNKNOWN) m_connectionDescriptor[1].direction = ED_NONE;
 }
 
@@ -152,12 +136,12 @@ void ConnectionSelection::removeSecond()
     }
 }
 
-ConnectionSelection::ConnectionDescriptor ConnectionSelection::getFirst()
+ConnectionSelection::ConnectionDescriptor ConnectionSelection::getFirst() const
 {
     return m_connectionDescriptor[0];
 }
 
-ConnectionSelection::ConnectionDescriptor ConnectionSelection::getSecond()
+ConnectionSelection::ConnectionDescriptor ConnectionSelection::getSecond() const
 {
     return m_connectionDescriptor[1];
 }
@@ -187,4 +171,43 @@ void ConnectionSelection::receiveRoom(RoomAdmin *const admin, const Room *const 
             m_connectionDescriptor[1].room = aRoom;
         }
     }
+}
+
+bool ConnectionSelection::ConnectionDescriptor::isTwoWay(const ConnectionDescriptor &first,
+                                                         const ConnectionDescriptor &second)
+{
+    const Room &r1 = deref(first.room);
+    const Room &r2 = deref(second.room);
+    const Exit &exit1 = r1.exit(first.direction);
+    const Exit &exit2 = r2.exit(second.direction);
+    const RoomId &id1 = r1.getId();
+    const RoomId &id2 = r2.getId();
+    return exit1.containsOut(id2) && exit2.containsOut(id1);
+}
+
+bool ConnectionSelection::ConnectionDescriptor::isOneWay(const ConnectionDescriptor &first,
+                                                         const ConnectionDescriptor &second)
+{
+    const Room &r1 = deref(first.room);
+    const Room &r2 = deref(second.room);
+    const ExitDirEnum dir2 = second.direction;
+    const Exit &exit1 = r1.exit(first.direction);
+    const Exit &exit2 = r2.exit(dir2);
+    const RoomId &id1 = r1.getId();
+    const RoomId &id2 = r2.getId();
+    return exit1.containsOut(id2) && dir2 == ExitDirEnum::UNKNOWN && !exit2.containsOut(id1)
+           && !exit1.containsIn(id2);
+}
+
+bool ConnectionSelection::ConnectionDescriptor::isCompleteExisting(
+    const ConnectionDescriptor &first, const ConnectionDescriptor &second)
+{
+    return isTwoWay(first, second) || isOneWay(first, second);
+}
+
+bool ConnectionSelection::ConnectionDescriptor::isCompleteNew(
+    const ConnectionSelection::ConnectionDescriptor &first,
+    const ConnectionSelection::ConnectionDescriptor &second)
+{
+    return !isTwoWay(first, second);
 }

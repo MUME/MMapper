@@ -17,14 +17,13 @@
 #include "../mapfrontend/mapfrontend.h"
 #include "abstractmapstorage.h"
 
-class Connection;
 class InfoMark;
 class QDataStream;
 class QFile;
 class QObject;
 class Room;
 
-class MapStorage : public AbstractMapStorage
+class MapStorage final : public AbstractMapStorage
 {
     Q_OBJECT
 
@@ -33,10 +32,11 @@ public:
     explicit MapStorage(MapData &, const QString &, QObject *parent = nullptr);
     bool mergeData() override;
 
-private:
+public:
     virtual bool canLoad() const override { return true; }
     virtual bool canSave() const override { return true; }
 
+private:
     virtual void newData() override;
     virtual bool loadData() override;
     virtual bool saveData(bool baseMapOnly) override;

@@ -38,7 +38,6 @@ public:
 
     MumeMoment getMumeMoment();
 
-    // TODO: #ifdef TEST?
     MumeMoment getMumeMoment(int64_t secsSinceUnixEpoch);
 
     MumeClockPrecisionEnum getPrecision();

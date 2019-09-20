@@ -37,10 +37,10 @@ public:
     Room *get(const Coordinate &c) const;
     void remove(const Coordinate &c);
     void clear();
+    void getRooms(AbstractRoomVisitor &stream) const;
     void getRooms(AbstractRoomVisitor &stream, const Coordinate &min, const Coordinate &max) const;
 
 private:
-    void set(const Coordinate &c, Room *room);
     Coordinate getNearestFree(const Coordinate &c);
 };
 

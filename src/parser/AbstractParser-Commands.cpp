@@ -29,6 +29,7 @@
 #include "abstractparser.h"
 
 const Abbrev cmdBack{"back"};
+const Abbrev cmdConfig{"config", 4};
 const Abbrev cmdConnect{"connect", 4};
 const Abbrev cmdDirections{"dirs", 3};
 const Abbrev cmdDisconnect{"disconnect", 4};
@@ -979,6 +980,12 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Delete prespammed commands from queue."));
+    add(cmdConfig,
+        [this](const std::vector<StringView> & /*s*/, StringView rest) {
+            this->doConfig(rest);
+            return true;
+        },
+        makeSimpleHelp("Configuration commands."));
     add(cmdConnect,
         [this](const std::vector<StringView> & /*s*/, StringView /*rest*/) {
             this->doConnectToHost();

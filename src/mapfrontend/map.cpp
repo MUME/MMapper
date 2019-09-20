@@ -5,46 +5,36 @@
 
 #include "map.h"
 
-#include "../expandoracommon/coordinate.h"
-#include "../expandoracommon/room.h"
-#include "AbstractRoomVisitor.h"
-
 #include <map>
 #include <memory>
 #include <utility>
+
+#include "../expandoracommon/coordinate.h"
+#include "../expandoracommon/room.h"
+#include "../global/utils.h"
+#include "AbstractRoomVisitor.h"
 
 struct NODISCARD CoordinateMinMax final
 {
     Coordinate min;
     Coordinate max;
 
+    explicit CoordinateMinMax(const Coordinate &min, const Coordinate &max)
+        : min{min}
+        , max{max}
+    {
+        assert(isValid());
+    }
+
+    bool isValid() { return glm::all(glm::lessThanEqual(min.to_vec3(), max.to_vec3())); }
+
     CoordinateMinMax expandCopy(const Coordinate &radius) const
     {
         auto copy = *this;
         copy.min -= radius;
         copy.max += radius;
+        assert(copy.isValid());
         return copy;
-    }
-
-    static Coordinate getMin(const Coordinate &a, const Coordinate &b)
-    {
-        const int xmin = std::min(a.x, b.x);
-        const int ymin = std::min(a.y, b.y);
-        const int zmin = std::min(a.z, b.z);
-        return Coordinate{xmin, ymin, zmin};
-    }
-
-    static Coordinate getMax(const Coordinate &a, const Coordinate &b)
-    {
-        const int xmax = std::max(a.x, b.x);
-        const int ymax = std::max(a.y, b.y);
-        const int zmax = std::max(a.z, b.z);
-        return Coordinate{xmax, ymax, zmax};
-    }
-
-    static CoordinateMinMax get(const Coordinate &a, const Coordinate &b)
-    {
-        return CoordinateMinMax{getMin(a, b), getMax(a, b)};
     }
 };
 
@@ -60,9 +50,20 @@ public:
 
     void clear() { map.clear(); }
 
+    void getRooms(AbstractRoomVisitor &stream) const
+    {
+        for (const auto &z : map) {
+            for (const auto &y : z.second) {
+                for (const auto &x : y.second) {
+                    stream.visit(x.second);
+                }
+            }
+        }
+    }
+
     void getRooms(AbstractRoomVisitor &stream, const Coordinate &min, const Coordinate &max) const
     {
-        const auto range = CoordinateMinMax::get(min, max).expandCopy(Coordinate{1, 1, 1});
+        const auto range = CoordinateMinMax(min, max).expandCopy(Coordinate{1, 1, 1});
 
         const auto zUpper = map.lower_bound(range.max.z);
         for (auto z = map.upper_bound(range.min.z); z != zUpper; ++z) {
@@ -156,6 +157,11 @@ void Map::remove(const Coordinate &c)
 void Map::clear()
 {
     return m_pimpl->clear();
+}
+
+void Map::getRooms(AbstractRoomVisitor &stream) const
+{
+    return m_pimpl->getRooms(stream);
 }
 
 void Map::getRooms(AbstractRoomVisitor &stream, const Coordinate &min, const Coordinate &max) const

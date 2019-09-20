@@ -50,18 +50,12 @@ void InfoMark::setPosition2(Coordinate pos)
 }
 
 // REVISIT: consider rounding rotation to 45 degrees, since that's all the dialog can handle?
-void InfoMark::setRotationAngle(float rotationAngle)
+void InfoMark::setRotationAngle(const int rotationAngle)
 {
-    if (qFloatDistance(m_fields.RotationAngle, rotationAngle) != 0) {
-        m_fields.RotationAngle = std::move(rotationAngle);
+    // mod twice avoids separate case for negative.
+    int adjusted = (rotationAngle % 360 + 360) % 360;
+    if (maybeModify(m_fields.RotationAngle, std::move(adjusted)))
         setModified(InfoMarkUpdateFlags{InfoMarkUpdateEnum::RotationAngle});
-    }
-}
-
-void InfoMark::setName(InfoMarkName name)
-{
-    if (maybeModify(m_fields.Name, std::move(name)))
-        setModified(InfoMarkUpdateFlags{InfoMarkUpdateEnum::InfoMarkName});
 }
 
 void InfoMark::setText(InfoMarkText text)
@@ -80,10 +74,4 @@ void InfoMark::setClass(InfoMarkClassEnum markClass)
 {
     if (maybeModify(m_fields.Class, std::move(markClass)))
         setModified(InfoMarkUpdateFlags{InfoMarkUpdateEnum::InfoMarkClass});
-}
-
-void InfoMark::setTimeStamp(MarkerTimeStamp time)
-{
-    if (maybeModify(m_fields.TimeStamp, std::move(time)))
-        setModified(InfoMarkUpdateFlags{InfoMarkUpdateEnum::MarkerTimeStamp});
 }

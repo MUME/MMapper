@@ -50,16 +50,16 @@ FindRoomsDlg::FindRoomsDlg(MapData *const md, QWidget *const parent)
             tmpSel->getRoom(id);
         }
         if (!tmpSel->isEmpty()) {
-            int64_t avgX = 0;
-            int64_t avgY = 0;
+            glm::vec2 sum{0.f, 0.f};
+            // FIXME: This is actually an anti-feature if the rooms are far apart,
+            // because it drops you off in the middle of nowhere.
             for (const Room *const r : *tmpSel) {
-                const Coordinate &c = r->getPosition();
-                avgX += c.x;
-                avgY += c.y;
+                sum += r->getPosition().to_vec2();
             }
-            avgX = avgX / tmpSel->size();
-            avgY = avgY / tmpSel->size();
-            emit center(static_cast<qint32>(avgX), static_cast<qint32>(avgY));
+            // note: half-room offset to the room center is applied to the average,
+            // rather than to each individual room.
+            const auto worldPos = sum / static_cast<float>(tmpSel->size()) + glm::vec2{0.5f, 0.5f};
+            emit sig_center(worldPos);
         }
         emit newRoomSelection(SigRoomSelection{tmpSel});
     });
@@ -162,7 +162,8 @@ void FindRoomsDlg::itemDoubleClicked(QTreeWidgetItem *const inputItem)
     if (const Room *const r = tmpSel.getRoom(id)) {
         if (r->getId() == id) {
             const Coordinate &c = r->getPosition();
-            emit center(c.x, c.y); // connects to MapWindow
+            const auto worldPos = c.to_vec2() + glm::vec2{0.5f, 0.5f};
+            emit sig_center(worldPos); // connects to MapWindow
         }
         emit log("FindRooms", inputItem->toolTip(0));
     }

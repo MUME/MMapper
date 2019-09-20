@@ -14,10 +14,10 @@
 #include <QtCore>
 #include <QtGlobal>
 
-#include "../display/OpenGL.h"
 #include "../expandoracommon/coordinate.h"
 #include "../global/roomid.h"
 #include "../mapfrontend/mapfrontend.h"
+#include "../opengl/OpenGL.h"
 #include "../parser/CommandId.h"
 #include "../parser/CommandQueue.h"
 #include "ExitDirection.h"
@@ -56,7 +56,7 @@ public:
     explicit MapData(QObject *parent = nullptr);
     virtual ~MapData() override;
 
-    void draw(const Coordinate &min, const Coordinate &max, MapCanvasRoomDrawer &screen);
+    void generateBatches(MapCanvasRoomDrawer &screen, const OptBounds &bounds);
 
     bool execute(std::unique_ptr<MapAction> action, const SharedRoomSelection &unlock);
 

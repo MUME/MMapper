@@ -8,7 +8,6 @@
 #include <memory>
 #include <set>
 
-#include "../global/RAII.h"
 #include "AbstractRoomVisitor.h"
 
 class AbstractRoomVisitor;
@@ -25,8 +24,8 @@ public:
     void addRoom(Room *room);
     void removeRoom(Room *room);
 
-    void addRoom(const SharedRoom &room) { addRoom(room.get()); }
-    void removeRoom(const SharedRoom &room) { removeRoom(room.get()); }
+    void addRoom(const std::shared_ptr<Room> &room) { addRoom(room.get()); }
+    void removeRoom(const std::shared_ptr<Room> &room) { removeRoom(room.get()); }
 
 public:
     void clear();

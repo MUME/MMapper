@@ -19,6 +19,8 @@
 #include "../global/utils.h"
 #include "../pandoragroup/mmapper2group.h"
 
+static std::atomic_bool config_enteredMain{false};
+
 static const char *getPlatformEditor()
 {
     switch (CURRENT_PLATFORM) {
@@ -205,7 +207,6 @@ ConstString KEY_COMMAND_PREFIX_CHAR = "Command prefix character";
 ConstString KEY_CORRECT_POSITION_BONUS = "correct position bonus";
 ConstString KEY_DISPLAY_CLOCK = "Display clock";
 ConstString KEY_DRAW_DOOR_NAMES = "Draw door names";
-ConstString KEY_DRAW_NO_MATCH_EXITS = "Draw no match exits";
 ConstString KEY_DRAW_NOT_MAPPED_EXITS = "Draw not mapped exits";
 ConstString KEY_DRAW_UPPER_LAYERS_TEXTURED = "Draw upper layers textured";
 ConstString KEY_EMULATED_EXITS = "Emulated Exits";
@@ -213,6 +214,13 @@ ConstString KEY_EXTERNAL_EDITOR_COMMAND = "External editor command";
 ConstString KEY_FILE_NAME = "File name";
 ConstString KEY_FONT = "Font";
 ConstString KEY_FOREGROUND_COLOR = "Foreground color";
+ConstString KEY_3D_CANVAS = "canvas.advanced.use3D";
+ConstString KEY_3D_AUTO_TILT = "canvas.advanced.autoTilt";
+ConstString KEY_3D_PERFSTATS = "canvas.advanced.printPerfStats";
+ConstString KEY_3D_FOV = "canvas.advanced.fov";
+ConstString KEY_3D_VERTICAL_ANGLE = "canvas.advanced.verticalAngle";
+ConstString KEY_3D_HORIZONTAL_ANGLE = "canvas.advanced.horizontalAngle";
+ConstString KEY_3D_LAYER_HEIGHT = "canvas.advanced.layerHeight";
 ConstString KEY_GROUP_TELL_ANSI_COLOR = "Group tell ansi color";
 ConstString KEY_GROUP_TELL_USE_256_ANSI_COLOR = "Use group tell 256 ansi color";
 ConstString KEY_HOST = "host";
@@ -416,8 +424,27 @@ static uint16_t sanitizeUint16(const int input, const uint16_t defaultValue)
 
 void Configuration::read()
 {
+    // reset to defaults before reading colors that might override them
+    colorSettings.resetToDefaults();
+
     SETTINGS(conf);
     FOREACH_CONFIG_GROUP(read);
+
+    // This logic only runs once on a MMapper fresh install (or factory reset)
+    // Subsequent MMapper starts will always read "firstRun" as false
+    if (general.firstRun) {
+        // New users get the 3D canvas but old users do not
+        canvas.advanced.use3D.set(true);
+    }
+
+    assert(canvas.backgroundColor == colorSettings.BACKGROUND);
+    assert(canvas.roomDarkColor == colorSettings.ROOM_DARK);
+    assert(canvas.roomDarkLitColor == colorSettings.ROOM_NO_SUNDEATH);
+
+    assert(colorSettings.TRANSPARENT.isInitialized()
+           && colorSettings.TRANSPARENT.getColor().isTransparent());
+    assert(colorSettings.BACKGROUND.isInitialized()
+           && !colorSettings.BACKGROUND.getColor().isTransparent());
 }
 
 void Configuration::write() const
@@ -487,20 +514,41 @@ void Configuration::ConnectionSettings::read(QSettings &conf)
     proxyConnectionStatus = conf.value(KEY_PROXY_CONNECTION_STATUS, false).toBool();
 }
 
+// closest well-known color is "Outer Space"
+static constexpr const std::string_view DEFAULT_BGCOLOR = "#2e3436";
+// closest well-known color is "Dusty Gray"
+static constexpr const std::string_view DEFAULT_DARK_COLOR = "#a19494";
+// closest well-known color is "Cold Turkey"
+static constexpr const std::string_view DEFAULT_NO_SUNDEATH_COLOR = "#d4c7c7";
+
 void Configuration::CanvasSettings::read(QSettings &conf)
 {
+    // REVISIT: Consider just using the "current" value of the named color object,
+    // since we can assume they're initialized before the values are read.
+    const auto lookupColor = [&conf](const char *const key, std::string_view def) {
+        // NOTE: string_view isn't guaranteed to be null-terminated,
+        // but wow... this is a complicated way of passing the exact same value.
+        const auto qdef = QColor(QString(std::string{def}.c_str())).name();
+        return Color(QColor(conf.value(key, qdef).toString()));
+    };
+
     showUpdated = conf.value(KEY_SHOW_UPDATED_ROOMS, false).toBool();
     drawNotMappedExits = conf.value(KEY_DRAW_NOT_MAPPED_EXITS, true).toBool();
-    drawNoMatchExits = conf.value(KEY_DRAW_NO_MATCH_EXITS, false).toBool();
     drawUpperLayersTextured = conf.value(KEY_DRAW_UPPER_LAYERS_TEXTURED, false).toBool();
     drawDoorNames = conf.value(KEY_DRAW_DOOR_NAMES, true).toBool();
-    backgroundColor = QColor(conf.value(KEY_BACKGROUND_COLOR, QColor("#2e3436").name()).toString());
-    roomDarkColor = QColor(conf.value(KEY_ROOM_DARK_COLOR, QColor("#a19494").name()).toString());
-    roomDarkLitColor = QColor(
-        conf.value(KEY_ROOM_DARK_LIT_COLOR, QColor("#d4c7c7").name()).toString());
+    backgroundColor = lookupColor(KEY_BACKGROUND_COLOR, DEFAULT_BGCOLOR);
+    roomDarkColor = lookupColor(KEY_ROOM_DARK_COLOR, DEFAULT_DARK_COLOR);
+    roomDarkLitColor = lookupColor(KEY_ROOM_DARK_LIT_COLOR, DEFAULT_NO_SUNDEATH_COLOR);
     antialiasingSamples = conf.value(KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES, 0).toInt();
     trilinearFiltering = conf.value(KEY_USE_TRILINEAR_FILTERING, false).toBool();
     softwareOpenGL = conf.value(KEY_USE_SOFTWARE_OPENGL, false).toBool();
+    advanced.use3D.set(conf.value(KEY_3D_CANVAS, false).toBool());
+    advanced.autoTilt.set(conf.value(KEY_3D_AUTO_TILT, true).toBool());
+    advanced.printPerfStats.set(conf.value(KEY_3D_PERFSTATS, IS_DEBUG_BUILD).toBool());
+    advanced.fov.set(conf.value(KEY_3D_FOV, 765).toInt());
+    advanced.verticalAngle.set(conf.value(KEY_3D_VERTICAL_ANGLE, 450).toInt());
+    advanced.horizontalAngle.set(conf.value(KEY_3D_HORIZONTAL_ANGLE, 0).toInt());
+    advanced.layerHeight.set(conf.value(KEY_3D_LAYER_HEIGHT, 15).toInt());
 }
 
 void Configuration::AutoLoadSettings::read(QSettings &conf)
@@ -638,19 +686,30 @@ void Configuration::ConnectionSettings::write(QSettings &conf) const
     conf.setValue(KEY_PROXY_CONNECTION_STATUS, proxyConnectionStatus);
 }
 
+static auto getQColorName(const XNamedColor &color)
+{
+    return color.getColor().getQColor().name();
+}
+
 void Configuration::CanvasSettings::write(QSettings &conf) const
 {
     conf.setValue(KEY_SHOW_UPDATED_ROOMS, showUpdated);
     conf.setValue(KEY_DRAW_NOT_MAPPED_EXITS, drawNotMappedExits);
-    conf.setValue(KEY_DRAW_NO_MATCH_EXITS, drawNoMatchExits);
     conf.setValue(KEY_DRAW_UPPER_LAYERS_TEXTURED, drawUpperLayersTextured);
     conf.setValue(KEY_DRAW_DOOR_NAMES, drawDoorNames);
-    conf.setValue(KEY_BACKGROUND_COLOR, backgroundColor.name());
-    conf.setValue(KEY_ROOM_DARK_COLOR, roomDarkColor.name());
-    conf.setValue(KEY_ROOM_DARK_LIT_COLOR, roomDarkLitColor.name());
+    conf.setValue(KEY_BACKGROUND_COLOR, getQColorName(backgroundColor));
+    conf.setValue(KEY_ROOM_DARK_COLOR, getQColorName(roomDarkColor));
+    conf.setValue(KEY_ROOM_DARK_LIT_COLOR, getQColorName(roomDarkLitColor));
     conf.setValue(KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES, antialiasingSamples);
     conf.setValue(KEY_USE_TRILINEAR_FILTERING, trilinearFiltering);
     conf.setValue(KEY_USE_SOFTWARE_OPENGL, softwareOpenGL);
+    conf.setValue(KEY_3D_CANVAS, advanced.use3D.get());
+    conf.setValue(KEY_3D_AUTO_TILT, advanced.autoTilt.get());
+    conf.setValue(KEY_3D_PERFSTATS, advanced.printPerfStats.get());
+    conf.setValue(KEY_3D_FOV, advanced.fov.get());
+    conf.setValue(KEY_3D_VERTICAL_ANGLE, advanced.verticalAngle.get());
+    conf.setValue(KEY_3D_HORIZONTAL_ANGLE, advanced.horizontalAngle.get());
+    conf.setValue(KEY_3D_LAYER_HEIGHT, advanced.layerHeight.get());
 }
 
 void Configuration::AutoLoadSettings::write(QSettings &conf) const
@@ -751,6 +810,7 @@ void Configuration::RoomEditDialog::write(QSettings &conf) const
 
 Configuration &setConfig()
 {
+    assert(config_enteredMain);
     static Configuration conf;
     return conf;
 }
@@ -758,4 +818,83 @@ Configuration &setConfig()
 const Configuration &getConfig()
 {
     return setConfig();
+}
+
+void Configuration::ColorSettings::resetToDefaults()
+{
+    assert(Colors::black.getRGB() == 0 && Colors::black.getRGBA() != 0);
+    static const auto fromHashHex = [](std::string_view sv) {
+        assert(sv.length() == 7 && sv[0] == '#');
+        return Color::fromHex(sv.substr(1));
+    };
+
+    static const Color background = fromHashHex(DEFAULT_BGCOLOR);
+    static const Color darkRoom = fromHashHex(DEFAULT_DARK_COLOR);
+    static const Color noSundeath = fromHashHex(DEFAULT_NO_SUNDEATH_COLOR);
+    static const Color road{140, 83, 58};     // closest well-known color is "Affair";
+    static const Color special{204, 25, 204}; // closest well-known color is "Red Violet"
+    static const Color noflee{123, 63, 0};    // closest well-known color is "Cinnamon"
+    static const Color water{76, 216, 255};   // closest well-known color is "Malibu"
+
+    BACKGROUND = background;
+    INFOMARK_COMMENT = Colors::gray75;
+    INFOMARK_HERB = Colors::green;
+    INFOMARK_MOB = Colors::red;
+    INFOMARK_OBJECT = Colors::yellow;
+    INFOMARK_RIVER = water;
+    INFOMARK_ROAD = road;
+    ROOM_DARK = darkRoom;
+    ROOM_NO_SUNDEATH = noSundeath;
+    STREAM = water;
+    TRANSPARENT = Color(0, 0, 0, 0);
+    VERTICAL_COLOR_CLIMB = Colors::webGray;
+    VERTICAL_COLOR_REGULAR_EXIT = Colors::white;
+    WALL_COLOR_BUG_WALL_DOOR = Colors::red20;
+    WALL_COLOR_CLIMB = Colors::gray70;
+    WALL_COLOR_FALL_DAMAGE = Colors::cyan;
+    WALL_COLOR_GUARDED = Colors::yellow;
+    WALL_COLOR_NO_FLEE = noflee;
+    WALL_COLOR_NO_MATCH = Colors::blue;
+    WALL_COLOR_NOT_MAPPED = Colors::darkOrange1;
+    WALL_COLOR_RANDOM = Colors::red;
+    WALL_COLOR_REGULAR_EXIT = Colors::black;
+    WALL_COLOR_SPECIAL = special;
+}
+
+Configuration::CanvasSettings::Advanced::Advanced()
+{
+    for (NamedConfig<bool> *const it : {&use3D, &autoTilt, &printPerfStats}) {
+        const char *const name = it->getName().c_str();
+        qInfo() << "Checking environment variable" << name;
+        if (std::optional<bool> opt = utils::getEnvBool(name)) {
+            const bool &val = opt.value();
+            qInfo() << "Using value" << val << "from environment variable" << name;
+            it->set(val);
+        }
+    }
+
+    if ((false)) {
+        for (auto *it : {&fov, &verticalAngle, &horizontalAngle, &layerHeight}) {
+            static_cast<void>(it);
+        }
+    }
+}
+
+ConnectionSet Configuration::CanvasSettings::Advanced::registerChangeCallback(
+    ChangeMonitor::Function callback)
+{
+    ConnectionSet result;
+    result += use3D.registerChangeCallback(callback);
+    result += autoTilt.registerChangeCallback(callback);
+    result += printPerfStats.registerChangeCallback(callback);
+    result += fov.registerChangeCallback(callback);
+    result += verticalAngle.registerChangeCallback(callback);
+    result += horizontalAngle.registerChangeCallback(callback);
+    result += layerHeight.registerChangeCallback(callback);
+    return result;
+}
+
+void setEnteredMain()
+{
+    config_enteredMain = true;
 }

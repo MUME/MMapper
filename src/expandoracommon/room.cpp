@@ -842,8 +842,8 @@ using ExitCoordinates = EnumIndexedArray<Coordinate, ExitDirEnum, NUM_EXITS_INCL
 static ExitCoordinates initExitCoordinates()
 {
     ExitCoordinates exitDirs;
-    exitDirs[ExitDirEnum::NORTH] = Coordinate(0, -1, 0);
-    exitDirs[ExitDirEnum::SOUTH] = Coordinate(0, 1, 0);
+    exitDirs[ExitDirEnum::NORTH] = Coordinate(0, 1, 0);
+    exitDirs[ExitDirEnum::SOUTH] = Coordinate(0, -1, 0);
     exitDirs[ExitDirEnum::EAST] = Coordinate(1, 0, 0);
     exitDirs[ExitDirEnum::WEST] = Coordinate(-1, 0, 0);
     exitDirs[ExitDirEnum::UP] = Coordinate(0, 0, 1);

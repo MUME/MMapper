@@ -237,6 +237,7 @@ private:
 
     void openVoteURL();
     void doBackCommand();
+    void doConfig(const StringView &view);
     void doConnectToHost();
     void doDisconnectFromHost();
     void doRemoveDoorNamesCommand();
@@ -279,6 +280,7 @@ public:
     }
     void pathChanged() { emit showPath(m_queue); }
     void mapChanged() { emit sig_mapChanged(); }
+    void graphicsSettingsChanged() { emit sig_graphicsSettingsChanged(); }
 
 private:
     void eval(const std::string &name,

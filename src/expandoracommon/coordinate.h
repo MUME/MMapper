@@ -4,6 +4,12 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
+#include <cassert>
+#include <glm/glm.hpp>
+#include <optional>
+
+#include "../global/utils.h"
+
 struct Coordinate2i final
 {
     int x = 0;
@@ -13,11 +19,33 @@ struct Coordinate2i final
         : x{x}
         , y{y}
     {}
+    explicit Coordinate2i(const glm::ivec2 &rhs)
+        : x{rhs.x}
+        , y{rhs.y}
+    {}
 
+    Coordinate2i operator+(const Coordinate2i &rhs) const
+    {
+        return Coordinate2i{x + rhs.x, y + rhs.y};
+    }
     Coordinate2i operator-(const Coordinate2i &rhs) const
     {
         return Coordinate2i{x - rhs.x, y - rhs.y};
     }
+    Coordinate2i &operator+=(const glm::ivec2 &rhs)
+    {
+        auto &self = *this;
+        self = self + Coordinate2i{rhs};
+        return *this;
+    }
+    Coordinate2i &operator-=(const glm::ivec2 &rhs)
+    {
+        auto &self = *this;
+        self = self - Coordinate2i{rhs};
+        return *this;
+    }
+
+    glm::ivec2 to_ivec2() const { return glm::ivec2{x, y}; }
 };
 
 struct Coordinate2f final
@@ -30,7 +58,7 @@ struct Coordinate2f final
         , y{y}
     {}
 
-    Coordinate2i round() const;
+    Coordinate2i truncate() const;
 
     Coordinate2f operator-(const Coordinate2f &rhs) const
     {
@@ -38,14 +66,11 @@ struct Coordinate2f final
     }
     Coordinate2f operator*(const float f) const { return Coordinate2f{f * x, f * y}; }
     Coordinate2f operator/(float f) const;
+    glm::vec2 to_vec2() const { return glm::vec2{x, y}; }
 };
 
-// Basis vectors: ESU (x=east, y=south, z=up).
-// WARNING: This is a LEFT-HANDED coordinate system.
-//
-// NOTE: Most geographical systems use right-handed ENU (x=east, y=north, z=up).
-//
-// TODO: change this to be east, north, up, or add a conversion type.
+// Basis vectors: ENU (x=east, y=north, z=up).
+// This is the standard RIGHT-HANDED coordinate system.
 class Coordinate final
 {
 public:
@@ -55,7 +80,8 @@ public:
     void operator-=(const Coordinate &other);
     Coordinate operator+(const Coordinate &other) const;
     Coordinate operator-(const Coordinate &other) const;
-    Coordinate operator*(const int scalar) const;
+    Coordinate operator*(int scalar) const;
+    Coordinate operator/(int scalar) const;
 
     int distance(const Coordinate &other) const;
     void clear();
@@ -72,9 +98,82 @@ public:
         , y(in_y)
         , z(in_z)
     {}
+
+public:
     bool isNull() const { return (x == 0 && y == 0 && z == 0); }
 
+public:
+    glm::ivec2 to_ivec2() const { return glm::ivec2{x, y}; }
+    glm::ivec3 to_ivec3() const { return glm::ivec3{x, y, z}; }
+
+public:
+    glm::vec2 to_vec2() const { return glm::vec2{x, y}; }
+    glm::vec3 to_vec3() const { return glm::vec3{x, y, z}; }
+
+public:
     int x = 0;
     int y = 0;
     int z = 0;
+};
+
+struct Bounds final
+{
+    Coordinate min;
+    Coordinate max;
+
+    Bounds() = default;
+    Bounds(const Coordinate &min, const Coordinate &max)
+        : min{min}
+        , max{max}
+    {}
+
+private:
+    static inline bool isBounded(const int x, const int lo, const int hi)
+    {
+        return lo <= x && x <= hi;
+    }
+
+public:
+    bool contains(const Coordinate &coord) const
+    {
+        return isBounded(coord.x, min.x, max.x)     //
+               && isBounded(coord.y, min.y, max.y)  //
+               && isBounded(coord.z, min.z, max.z); //
+    }
+};
+
+struct OptBounds final
+{
+private:
+    std::optional<Bounds> m_bounds;
+
+public:
+    OptBounds() = default;
+    OptBounds(const Coordinate &min, const Coordinate &max)
+        : m_bounds{Bounds{min, max}}
+    {
+        assert(min.x <= max.x);
+        assert(min.y <= max.y);
+        assert(min.z <= max.z);
+    }
+
+public:
+    static OptBounds fromCenterRadius(const Coordinate &center, const Coordinate &radius)
+    {
+        assert(radius.x >= 0);
+        assert(radius.y >= 0);
+        assert(radius.z >= 0);
+        return OptBounds{center - radius, center + radius};
+    }
+
+public:
+    bool isRestricted() const { return m_bounds.has_value(); }
+    const Bounds &getBounds() const { return m_bounds.value(); }
+    void reset() { m_bounds.reset(); }
+
+public:
+    bool contains(const Coordinate &coord) const
+    {
+        return !isRestricted() || getBounds().contains(coord);
+    }
 };

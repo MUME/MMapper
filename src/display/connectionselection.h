@@ -6,6 +6,7 @@
 
 #include "../expandoracommon/RoomRecipient.h"
 #include "../expandoracommon/coordinate.h" /* Coordinate2f */
+#include "../global/Array.h"
 #include "../global/roomid.h"
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/mmapper2exit.h"
@@ -26,11 +27,13 @@ struct MouseSel final
         , layer{layer}
     {}
 
-    Coordinate getCoordinate() const { return Coordinate{pos.round(), layer}; }
+    Coordinate getCoordinate() const { return Coordinate{pos.truncate(), layer}; }
     Coordinate getScaledCoordinate(const float xy_scale) const
     {
-        return Coordinate{(pos * xy_scale).round(), layer};
+        return Coordinate{(pos * xy_scale).truncate(), layer};
     }
+
+    glm::vec3 to_vec3() const { return glm::vec3{pos.to_vec2(), static_cast<float>(layer)}; }
 };
 
 class ConnectionSelection final : public RoomRecipient,
@@ -41,6 +44,13 @@ public:
     {
         const Room *room = nullptr;
         ExitDirEnum direction = ExitDirEnum::NONE;
+
+        static bool isTwoWay(const ConnectionDescriptor &first, const ConnectionDescriptor &second);
+        static bool isOneWay(const ConnectionDescriptor &first, const ConnectionDescriptor &second);
+        static bool isCompleteExisting(const ConnectionDescriptor &first,
+                                       const ConnectionDescriptor &second);
+        static bool isCompleteNew(const ConnectionDescriptor &first,
+                                  const ConnectionDescriptor &second);
     };
 
 private:
@@ -69,17 +79,28 @@ public:
     void setSecond(MapFrontend *mf, const MouseSel &sel);
     void removeSecond();
 
-    ConnectionDescriptor getFirst();
-    ConnectionDescriptor getSecond();
+    ConnectionDescriptor getFirst() const;
+    ConnectionDescriptor getSecond() const;
 
-    bool isValid();
-    bool isFirstValid() { return m_connectionDescriptor[0].room != nullptr; }
-    bool isSecondValid() { return m_connectionDescriptor[1].room != nullptr; }
+    // Valid just means the pointers aren't null.
+    bool isValid() const;
+    bool isFirstValid() const { return m_connectionDescriptor[0].room != nullptr; }
+    bool isSecondValid() const { return m_connectionDescriptor[1].room != nullptr; }
 
     void receiveRoom(RoomAdmin *admin, const Room *aRoom) override;
 
+    // Complete means it actually describes a useful oneway or twoway exit.
+    bool isCompleteExisting() const
+    {
+        return isValid() && ConnectionDescriptor::isCompleteExisting(getFirst(), getSecond());
+    }
+    bool isCompleteNew() const
+    {
+        return isValid() && ConnectionDescriptor::isCompleteNew(getFirst(), getSecond());
+    }
+
 private:
-    static ExitDirEnum ComputeDirection(const Coordinate2f &mouse_f);
+    static ExitDirEnum computeDirection(const Coordinate2f &mouse_f);
 
     // REVISIT: give these enum names?
     MMapper::Array<ConnectionDescriptor, 2> m_connectionDescriptor;

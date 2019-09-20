@@ -106,7 +106,7 @@ public slots:
 
 signals:
     void kickCharacter(const QByteArray &);
-    void sig_center(int x, int y);
+    void sig_center(glm::vec2);
 
 private:
     void readSettings();

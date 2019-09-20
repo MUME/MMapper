@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>420</width>
-    <height>455</height>
+    <width>445</width>
+    <height>504</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -173,17 +173,10 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
+      <item row="1" column="1">
        <widget class="QCheckBox" name="updated">
         <property name="text">
          <string>Show outdated room hint</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QCheckBox" name="drawNoMatchExits">
-        <property name="text">
-         <string>Draw &quot;no match&quot; exits</string>
         </property>
        </widget>
       </item>
@@ -279,6 +272,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="groupBox_Advanced">
+     <property name="title">
+      <string>Advanced Settings</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -300,9 +300,10 @@
   <tabstop>drawUpperLayersTextured</tabstop>
   <tabstop>drawNotMappedExits</tabstop>
   <tabstop>drawDoorNames</tabstop>
-  <tabstop>drawNoMatchExits</tabstop>
   <tabstop>updated</tabstop>
   <tabstop>bgChangeColor</tabstop>
+  <tabstop>darkPushButton</tabstop>
+  <tabstop>darkLitPushButton</tabstop>
  </tabstops>
  <resources/>
  <connections/>

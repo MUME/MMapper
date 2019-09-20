@@ -8,7 +8,10 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <glm/glm.hpp>
+#include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <vector>
 #include <QColor>
@@ -16,53 +19,52 @@
 #include <QOpenGLDebugMessage>
 #include <QOpenGLFunctions_1_0>
 #include <QOpenGLWidget>
-#include <QSize>
-#include <QString>
 #include <QtCore>
-#include <QtGlobal>
-#include <QtGui/qopengl.h>
 
-#include "../expandoracommon/coordinate.h"
-#include "../expandoracommon/parseevent.h"
-#include "../global/EnumIndexedArray.h"
-#include "../global/Flags.h"
-#include "../global/roomid.h"
-#include "../mapdata/ExitDirection.h"
-#include "../mapdata/mmapper2exit.h"
-#include "../mapdata/mmapper2room.h"
-#include "FontFormatFlags.h"
+#include "../mapdata/roomselection.h"
+#include "../opengl/Font.h"
+#include "../opengl/FontFormatFlags.h"
+#include "../opengl/OpenGL.h"
+#include "Infomarks.h"
 #include "MapCanvasData.h"
 #include "MapCanvasRoomDrawer.h"
-#include "OpenGL.h"
-#include "RoadIndex.h"
+#include "Textures.h"
 
+class CharacterBatch;
 class ConnectionSelection;
 class Coordinate;
+class InfoMark;
 class InfoMarkSelection;
-class MapCanvasRoomDrawer;
 class MapData;
 class Mmapper2Group;
 class PrespammedPath;
-class QFont;
-class QFontMetrics;
 class QMouseEvent;
-class QObject;
 class QOpenGLDebugLogger;
 class QOpenGLDebugMessage;
-class QOpenGLTexture;
 class QWheelEvent;
 class QWidget;
 class Room;
 struct RoomId;
+class RoomSelFakeGL;
 
-class MapCanvas final : public QOpenGLWidget, private MapCanvasData
+class MapCanvas final : public QOpenGLWidget, private MapCanvasViewport, private MapCanvasInputState
 {
-private:
     Q_OBJECT
 
 private:
+    MapScreen m_mapScreen;
     OpenGL m_opengl;
+    GLFont m_glFont;
+    Batches m_batches;
+    MapCanvasTextures m_textures;
+    MapData &m_data;
+
     Mmapper2Group *m_groupManager = nullptr;
+    struct OptionStatus final
+    {
+        std::optional<int> multisampling;
+        std::optional<bool> trilinear;
+    } graphicsOptionsStatus;
 
 public:
     explicit MapCanvas(MapData *mapData,
@@ -71,18 +73,29 @@ public:
                        QWidget *parent);
     ~MapCanvas() override;
 
+public:
+    static MapCanvas *getPrimary();
+
 private:
-    auto &getOpenGL() { return m_opengl; }
+    inline auto &getOpenGL() { return m_opengl; }
+    inline auto &getGLFont() { return m_glFont; }
     void cleanupOpenGL();
-    void makeCurrentAndUpdate();
+
+    void initSurface();
 
 public:
+    static constexpr int BASESIZE = 528; // REVISIT: Why this size? 16*33 isn't special.
     QSize minimumSizeHint() const override;
     QSize sizeHint() const override;
 
-    static float SCROLLFACTOR();
-    float getDW() const;
-    float getDH() const;
+    static constexpr const int SCROLL_SCALE = 64;
+    using MapCanvasViewport::getTotalScaleFactor;
+    void setZoom(float zoom)
+    {
+        m_scaleFactor.set(zoom);
+        zoomChanged();
+    }
+    float getRawZoom() const { return m_scaleFactor.getRaw(); }
 
 public:
     auto width() const { return QOpenGLWidget::width(); }
@@ -95,12 +108,15 @@ public slots:
 
     void setCanvasMouseMode(CanvasMouseModeEnum);
 
-    void setHorizontalScroll(int x);
-    void setVerticalScroll(int y);
-    void setScroll(int x, int y);
+    void setScroll(const glm::vec2 &worldPos);
+    // void setScroll(const glm::ivec2 &) = delete; // moc tries to call the wrong one if you define this
+    void setHorizontalScroll(float worldX);
+    void setVerticalScroll(float worldY);
+
     void zoomIn();
     void zoomOut();
     void zoomReset();
+
     void layerUp();
     void layerDown();
     void layerReset();
@@ -120,34 +136,34 @@ public slots:
     }
 
     void dataLoaded();
-    void requestUpdate() { update(); }
     void moveMarker(const Coordinate &);
 
     void slot_onMessageLoggedDirect(const QOpenGLDebugMessage &message);
 
 signals:
-    void onEnsureVisible(qint32 x, qint32 y);
-    void onCenter(qint32 x, qint32 y);
-
-    void mapMove(int dx, int dy);
-    void setScrollBars(const Coordinate &min, const Coordinate &max);
+    void sig_onCenter(const glm::vec2 &worldCoord);
+    void sig_mapMove(int dx, int dy);
+    void sig_setScrollBars(const Coordinate &min, const Coordinate &max);
+    void sig_continuousScroll(int, int);
 
     void log(const QString &, const QString &);
-
-    void continuousScroll(qint8, qint8);
 
     void newRoomSelection(const SigRoomSelection &);
     void newConnectionSelection(ConnectionSelection *);
     void newInfoMarkSelection(InfoMarkSelection *);
 
     void setCurrentRoom(RoomId id, bool update);
+    void sig_zoomChanged(float);
+
+private:
+    void reportGLVersion();
+    bool isBlacklistedDriver();
 
 protected:
     void initializeGL() override;
     void paintGL() override;
 
-    void drawGroupCharacters();
-    void drawCharacter(const Coordinate &c, const QColor &color, bool fill = true);
+    void drawGroupCharacters(CharacterBatch &characterBatch);
 
     void resizeGL(int width, int height) override;
     void mousePressEvent(QMouseEvent *event) override;
@@ -156,32 +172,61 @@ protected:
     void wheelEvent(QWheelEvent *event) override;
     bool event(QEvent *e) override;
 
-    void drawPathStart(const Coordinate &, std::vector<Vec3f> &verts, const QColor &color);
-    bool drawPath(const Coordinate &sc,
-                  const Coordinate &dc,
-                  float &dx,
-                  float &dy,
-                  float &dz,
-                  std::vector<Vec3f> &verts);
-    void drawPathEnd(float dx, float dy, float dz, std::vector<Vec3f> &verts);
-
 private:
-    QOpenGLDebugLogger *m_logger = nullptr;
+    std::unique_ptr<QOpenGLDebugLogger> m_logger;
+    void initLogger();
 
+    void resizeGL() { resizeGL(width(), height()); }
     void initTextures();
-    void makeGlLists();
+    void updateTextures();
+    void updateMultisampling();
 
-    void setTrilinear(const std::unique_ptr<QOpenGLTexture> &x) const;
+    std::shared_ptr<InfoMarkSelection> getInfoMarkSelection(const MouseSel &sel);
+    static glm::mat4 getViewProj_old(const glm::vec2 &scrollPos,
+                                     const glm::ivec2 &size,
+                                     float zoomScale,
+                                     int currentLayer);
+    static glm::mat4 getViewProj(const glm::vec2 &scrollPos,
+                                 const glm::ivec2 &size,
+                                 float zoomScale,
+                                 int currentLayer);
+    void setMvp(const glm::mat4 &viewProj);
+    void setViewportAndMvp(int width, int height);
 
-    void drawPreSpammedPath(const Coordinate &c1,
-                            const QList<Coordinate> &path,
-                            const QColor &color);
-    void paintSelection();
+    BatchedInfomarksMeshes getInfoMarksMeshes();
+    void drawInfoMark(InfomarksBatch &batch,
+                      InfoMark *marker,
+                      int currentLayer,
+                      const glm::vec2 &offset = {},
+                      const std::optional<Color> &overrideColor = std::nullopt);
+    void updateBatches();
+    void updateMapBatches();
+    void updateInfomarkBatches();
+
+    void actuallyPaintGL();
+    void paintMap();
+    void renderMapBatches();
+    void paintBatchedInfomarks();
+    void paintSelections();
+    void paintSelectionArea();
+    void paintNewInfomarkSelection();
     void paintSelectedRooms();
-    void paintSelectedRoom(const Room *room);
+    void paintSelectedRoom(RoomSelFakeGL &, const Room &room);
     void paintSelectedConnection();
+    void paintNearbyConnectionPoints();
     void paintSelectedInfoMarks();
-    void paintSelectedInfoMark(const InfoMark *marker);
+    void paintCharacters();
 
-    void drawRooms(MapCanvasRoomDrawer &drawer);
+public:
+    void mapAndInfomarksChanged();
+    void infomarksChanged();
+    void layerChanged();
+    void mapChanged();
+    void requestUpdate();
+    void selectionChanged();
+    void graphicsSettingsChanged();
+    void zoomChanged() { emit sig_zoomChanged(getRawZoom()); }
+
+public:
+    void userPressedEscape(bool);
 };

@@ -255,8 +255,3 @@ const SharedRoomCollection &FrontendAccessor::roomHomes(const RoomId id) const
 {
     return m_frontend->roomHomes[id];
 }
-
-std::stack<RoomId> &FrontendAccessor::unusedIds()
-{
-    return m_frontend->unusedIds;
-}

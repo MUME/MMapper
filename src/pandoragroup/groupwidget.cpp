@@ -380,7 +380,8 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
                     auto roomSelection = RoomSelection(*m_map);
                     if (const Room *const r = roomSelection.getRoom(character->roomId)) {
                         const Coordinate &c = r->getPosition();
-                        emit sig_center(c.x, c.y); // connects to MapWindow
+                        const auto worldPos = c.to_vec2() + glm::vec2{0.5f, 0.5f};
+                        emit sig_center(worldPos); // connects to MapWindow
                     }
                 }
             }

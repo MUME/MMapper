@@ -25,6 +25,7 @@
 
 #include "../clock/mumeclock.h"
 #include "../clock/mumemoment.h"
+#include "../configuration/NamedConfig.h"
 #include "../configuration/configuration.h"
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/exit.h"
@@ -1153,7 +1154,8 @@ void AbstractParser::showHelp()
                      "  %1time                      - display current MUME time\r\n"
                      "  %1set [prefix [punct-char]] - change command prefix\r\n"
                      "  %1connect                   - connect to the MUD\r\n"
-                     "  %1disconnect                - disconnect from the MUD\r\n");
+                     "  %1disconnect                - disconnect from the MUD\r\n"
+                     "  %1config ??                 - full syntax help for the config command\r\n");
 
     sendToUser(s.arg(prefixChar));
 }

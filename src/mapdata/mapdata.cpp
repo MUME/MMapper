@@ -262,12 +262,16 @@ const Room *MapData::getRoom(const RoomId id, RoomSelection &selection)
     return nullptr;
 }
 
-void MapData::draw(const Coordinate &min, const Coordinate &max, MapCanvasRoomDrawer &screen)
+void MapData::generateBatches(MapCanvasRoomDrawer &screen, const OptBounds &bounds)
 {
     QMutexLocker locker(&mapLock);
-    DrawStream drawer(screen, roomIndex, locks);
-    map.getRooms(drawer, min, max);
-    drawer.draw();
+    const LayerToRooms layerToRooms = [this]() -> LayerToRooms {
+        LayerToRooms ltr;
+        DrawStream drawer(ltr);
+        map.getRooms(drawer);
+        return ltr;
+    }();
+    screen.generateBatches(layerToRooms, roomIndex, bounds);
 }
 
 bool MapData::execute(std::unique_ptr<MapAction> action, const SharedRoomSelection &selection)

@@ -4,26 +4,18 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include <map>
-#include <vector>
-
-#include "../display/mapcanvas.h"
+#include "../display/MapCanvasRoomDrawer.h" // LayerToRooms
 #include "../mapfrontend/AbstractRoomVisitor.h"
+
+class Room;
 
 class DrawStream final : public AbstractRoomVisitor
 {
 public:
-    explicit DrawStream(MapCanvasRoomDrawer &in,
-                        const RoomIndex &in_rooms,
-                        const RoomLocks &in_locks);
+    explicit DrawStream(LayerToRooms &layerToRooms);
     virtual ~DrawStream() override;
     virtual void visit(const Room *room) override;
 
-    void draw() const;
-
 private:
-    LayerToRooms layerToRooms;
-    MapCanvasRoomDrawer &canvas;
-    const RoomIndex &roomIndex;
-    const RoomLocks &locks;
+    LayerToRooms &layerToRooms;
 };

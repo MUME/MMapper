@@ -7,6 +7,7 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <stack>
 #include <QMutex>
@@ -47,8 +48,12 @@ protected:
 
     RoomId greatestUsedId = INVALID_ROOMID;
     QMutex mapLock;
-    Coordinate m_min;
-    Coordinate m_max;
+    struct Bounds final
+    {
+        Coordinate min;
+        Coordinate max;
+    };
+    std::optional<Bounds> m_bounds;
 
     void executeActions(RoomId roomId);
     void executeAction(MapAction *action);
@@ -61,10 +66,12 @@ protected:
 public:
     explicit MapFrontend(QObject *parent = nullptr);
     virtual ~MapFrontend() override;
+
+public:
     virtual void clear();
     void block();
     void unblock();
-    virtual void checkSize();
+    void checkSize();
 
     // removes the lock on a room
     // after the last lock is removed, the room is deleted
@@ -78,31 +85,30 @@ public:
     RoomId createEmptyRoom(const Coordinate &);
     void insertPredefinedRoom(const SharedRoom &);
     RoomId getMaxId() { return greatestUsedId; }
-    const Coordinate &getMin() const { return m_min; }
-    const Coordinate &getMax() const { return m_max; }
+    Coordinate getMin() const { return m_bounds ? m_bounds->min : Coordinate{}; }
+    Coordinate getMax() const { return m_bounds ? m_bounds->max : Coordinate{}; }
 
 public:
     void scheduleAction(const std::shared_ptr<MapAction> &action) final;
 
 public slots:
     // looking for rooms leads to a bunch of foundRoom() signals
-    virtual void lookingForRooms(RoomRecipient &, const SigParseEvent &);
-    virtual void lookingForRooms(RoomRecipient &, RoomId); // by id
-    virtual void lookingForRooms(RoomRecipient &, const Coordinate &);
-    virtual void lookingForRooms(RoomRecipient &,
-                                 const Coordinate &,
-                                 const Coordinate &); // by bounding box
+    void lookingForRooms(RoomRecipient &, const SigParseEvent &);
+    void lookingForRooms(RoomRecipient &, RoomId); // by id
+    void lookingForRooms(RoomRecipient &, const Coordinate &);
+    void lookingForRooms(RoomRecipient &,
+                         const Coordinate &,
+                         const Coordinate &); // by bounding box
 
     // createRoom creates a room without a lock
     // it will get deleted if no one looks for it for a certain time
-    virtual void createRoom(const SigParseEvent &, const Coordinate &);
+    void createRoom(const SigParseEvent &, const Coordinate &);
 
     void slot_scheduleAction(std::shared_ptr<MapAction> action) { scheduleAction(action); }
 
 signals:
-
-    // this signal is sent out if a room is deleted. So any clients still
+    // this signal is also sent out if a room is deleted. So any clients still
     // working on this room can start some emergency action.
-    void mapSizeChanged(const Coordinate &, const Coordinate &);
-    void clearingMap();
+    void sig_mapSizeChanged(const Coordinate &, const Coordinate &);
+    void sig_clearingMap();
 };

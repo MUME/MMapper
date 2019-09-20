@@ -6,9 +6,38 @@
 #include <algorithm>
 #include <cstring>
 #include <memory>
+#include <optional>
+#include <string>
 #include <type_traits>
 
 #include "NullPointerException.h"
+
+/* Explanation by example of why CONCAT() and CONCAT2() exist:
+$ cat test.cpp
+#define CONCAT(a, b) a##b
+#define CONCAT2(a, b) CONCAT(a, b)
+#define MACRO() \
+    int foo##__LINE__; \
+    int CONCAT(foo, __LINE__); \
+    int CONCAT2(foo, __LINE__)
+int main()
+{
+    int foo##__LINE__;
+    MACRO();
+    return 0;
+}
+
+$ g++ -E test.cpp
+...
+int main()
+{
+    int foo##9;
+    int foo__LINE__; int foo__LINE__; int foo10;
+    return 0;
+}
+*/
+#define CONCAT(a, b) a##b
+#define CONCAT2(a, b) CONCAT(a, b)
 
 #define IS_SET(src, bit) static_cast<bool>((src) & (bit))
 
@@ -20,7 +49,7 @@ bool isClamped(T x, T lo, T hi)
 
 namespace utils {
 int round_ftoi(float f);
-}
+} // namespace utils
 
 template<typename Base, typename Derived>
 std::unique_ptr<Base> static_upcast(std::unique_ptr<Derived> &&ptr)
@@ -122,6 +151,12 @@ inline auto as_cstring(const unsigned char *const s)
 // when it encounters a c++11 attribute.
 #define NODISCARD [[nodiscard]]
 #define DEPRECATED [[deprecated]]
+#define FALLTHRU [[fallthrough]]
+
+namespace utils {
+NODISCARD std::optional<bool> getEnvBool(const char *key);
+NODISCARD std::optional<int> getEnvInt(const char *key);
+} // namespace utils
 
 namespace utils {
 // Use this if you're tired of having to use memcmp()

@@ -45,8 +45,6 @@ protected:
 
     RoomHomes &roomHomes();
     const SharedRoomCollection &roomHomes(RoomId) const;
-
-    std::stack<RoomId> &unusedIds();
 };
 
 class AbstractAction : public virtual FrontendAccessor

@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include <memory>
 #include <QPoint>
 #include <QString>
 #include <QWidget>
@@ -12,6 +13,8 @@
 #include <QtGlobal>
 
 #include "../expandoracommon/coordinate.h"
+#include "../global/utils.h"
+#include "mapcanvas.h"
 
 class MapCanvas;
 class MapData;
@@ -25,7 +28,7 @@ class QResizeEvent;
 class QScrollBar;
 class QTimer;
 
-class MapWindow : public QWidget
+class MapWindow final : public QWidget
 {
     Q_OBJECT
 
@@ -36,45 +39,56 @@ public:
                        QWidget *parent = nullptr);
     ~MapWindow() override;
 
+public:
+    void keyPressEvent(QKeyEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
 
     MapCanvas *getCanvas() const;
 
 signals:
-
-    void setScroll(int, int);
+    void sig_setScroll(const glm::vec2 &worldPos);
+    void sig_zoomChanged(float zoom);
 
 public slots:
     void setScrollBars(const Coordinate &, const Coordinate &);
-
-    void ensureVisible(qint32 x, qint32 y);
-    void center(qint32 x, qint32 y);
-
-    void mapMove(int, int);
-    void continuousScroll(qint8, qint8);
-
-    void verticalScroll(qint8);
-    void horizontalScroll(qint8);
+    void centerOnWorldPos(const glm::vec2 &worldPos);
+    void mapMove(int dx, int dy);
+    void continuousScroll(int dx, int dy);
 
     void scrollTimerTimeout();
+    void graphicsSettingsChanged();
+
+public:
+    void updateScrollBars();
+    void setZoom(float zoom);
+    float getZoom() const;
 
 protected:
-    //   void resizeEvent ( QResizeEvent * event );
-    //   void paintEvent ( QPaintEvent * event );
+    std::unique_ptr<QTimer> scrollTimer;
+    int m_verticalScrollStep = 0;
+    int m_horizontalScrollStep = 0;
 
-    QTimer *scrollTimer = nullptr;
-    qint8 m_verticalScrollStep = 0;
-    qint8 m_horizontalScrollStep = 0;
-
-    QGridLayout *m_gridLayout = nullptr;
-    QScrollBar *m_horizontalScrollBar = nullptr;
-    QScrollBar *m_verticalScrollBar = nullptr;
-    MapCanvas *m_canvas = nullptr;
-
-    Coordinate m_scrollBarMinimumVisible;
-    Coordinate m_scrollBarMaximumVisible;
+    std::unique_ptr<QGridLayout> m_gridLayout;
+    std::unique_ptr<QScrollBar> m_horizontalScrollBar;
+    std::unique_ptr<QScrollBar> m_verticalScrollBar;
+    std::unique_ptr<MapCanvas> m_canvas;
 
 private:
     QPoint mousePressPos;
     QPoint scrollBarValuesOnMousePress;
+    struct NODISCARD KnownMapSize final
+    {
+        glm::ivec3 min{0};
+        glm::ivec3 max{0};
+
+        glm::ivec2 size() const { return glm::ivec2{max - min}; }
+
+        glm::vec2 scrollToWorld(const glm::ivec2 &scrollPos) const;
+        glm::ivec2 worldToScroll(const glm::vec2 &worldPos) const;
+
+    } m_knownMapSize;
+
+private:
+    void centerOnScrollPos(const glm::ivec2 &scrollPos);
 };

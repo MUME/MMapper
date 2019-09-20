@@ -28,7 +28,7 @@ class FindRoomsDlg : public QDialog, private Ui::FindRoomsDlg
     Q_OBJECT
 
 signals:
-    void center(qint32 x, qint32 y);
+    void sig_center(const glm::vec2 &worldPos);
     void newRoomSelection(const SigRoomSelection &);
     void editSelection();
     void log(const QString &, const QString &);

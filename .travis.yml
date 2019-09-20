@@ -39,6 +39,18 @@ matrix:
       env:
         - SNAPCRAFT=1
     #
+    # Debian Buster i386
+    #
+    - os: linux
+      dist: bionic
+      compiler: gcc
+      services:
+        - docker
+      env:
+        - DOCKER=1
+        - TARGET_ARCHITECTURE=i386
+        - DOCKER_IMAGE=multiarch/debian-debootstrap:i386-buster
+    #
     # Clang Format
     #
     - os: linux
@@ -122,11 +134,16 @@ matrix:
 before_install:
   - '[[ "$MATRIX_EVAL" == "" ]] || eval "${MATRIX_EVAL}"'
 
-install: |
-  if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-    brew link --force qt5
-    export PATH=/usr/local/opt/qt5/bin:$PATH
-  fi
+install:
+  - |
+    if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+      brew link --force qt5
+      export PATH=/usr/local/opt/qt5/bin:$PATH
+    fi
+  - |
+    if [ "$DOCKER" != "" ]; then
+      docker run --rm --privileged multiarch/qemu-user-static:register --reset
+    fi
 
 before_script:
   - |
@@ -165,8 +182,15 @@ before_script:
     fi
 
 script:
-  - '[[ "$BUILD" == "" ]] || make -j2'
+  - |
+    if [ "$BUILD" != "" ]; then
+      make -j$(getconf _NPROCESSORS_ONLN)
+    fi
   - '[[ "$SNAPCRAFT" == "" ]] || snapcraft snap --destructive-mode'
+  - |
+    if [ "$DOCKER" != "" ]; then
+      docker run --rm -v "$(pwd)":/root/mmapper $DOCKER_IMAGE bash -c "apt update && apt upgrade -y && apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev cmake libminiupnpc-dev && cd /root/mmapper && mkdir build && cd build && cmake .. -DTARGET_ARCHITECTURE=$TARGET_ARCHITECTURE && make -j$(getconf _NPROCESSORS_ONLN) && QT_QPA_PLATFORM=offscreen ctest -V && cpack"
+    fi
 
 after_success:
   - '[[ "$CODECOV" == "" ]] || lcov  --zerocounters  --directory .'

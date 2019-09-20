@@ -53,7 +53,7 @@ matrix:
       COMPILER: MingW
     - image: Ubuntu1804
       COMPILER: VS2017
-    # arm is still not supported
+    # Following builds are disabled to prevent build timeout
     - image: Ubuntu1804
       ARCH: arm
     - image: Ubuntu1804
@@ -74,12 +74,12 @@ for:
     init:
       - sh: echo _NPROCESSORS_ONLN=$(getconf _NPROCESSORS_ONLN)
       - sh: if [[ $ARCH == x86 ]]; then export DOCKER_IMAGE=i386/ubuntu:18.04 ; fi
-      - sh: if [[ $ARCH == x86 ]]; then export TARGET_ARCHITECTURE=x86 ; fi
+      - sh: if [[ $ARCH == x86 ]]; then export TARGET_ARCHITECTURE=i386 ; fi
       - sh: if [[ $ARCH == x64 ]]; then export DOCKER_IMAGE=amd64/ubuntu:18.04 ; fi
-      - sh: if [[ $ARCH == x64 ]]; then export TARGET_ARCHITECTURE=x86_64 ; fi
-      - sh: if [[ $ARCH == arm ]]; then export DOCKER_IMAGE=arm32v7/ubuntu:18.04 ; fi
-      - sh: if [[ $ARCH == arm ]]; then export TARGET_ARCHITECTURE=arm ; fi
-      - sh: if [[ $ARCH == arm64 ]]; then export DOCKER_IMAGE=arm64v8/ubuntu:18.04 ; fi
+      - sh: if [[ $ARCH == x64 ]]; then export TARGET_ARCHITECTURE=amd64 ; fi
+      - sh: if [[ $ARCH == arm ]]; then export DOCKER_IMAGE=multiarch/debian-debootstrap:armhf-buster ; fi
+      - sh: if [[ $ARCH == arm ]]; then export TARGET_ARCHITECTURE=armhf ; fi
+      - sh: if [[ $ARCH == arm64 ]]; then export DOCKER_IMAGE=multiarch/debian-debootstrap:arm64-buster ; fi
       - sh: if [[ $ARCH == arm64 ]]; then export TARGET_ARCHITECTURE=arm64 ; fi
       - sh: echo TARGET_ARCHITECTURE=$TARGET_ARCHITECTURE
       - sh: echo DOCKER_IMAGE=$DOCKER_IMAGE
@@ -88,6 +88,7 @@ for:
       - ps: $env:package_version = ("$(git describe --tags --always --long)").trim()
       - ps: Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
       # Enable an execution of different multi-architecture containers by QEMU
+      # https://hub.docker.com/r/multiarch/qemu-user-static/
       - sh: docker run --rm --privileged multiarch/qemu-user-static:register --reset
 
     build_script:

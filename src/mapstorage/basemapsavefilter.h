@@ -38,6 +38,7 @@ public:
     BaseMapSaveFilter();
     virtual ~BaseMapSaveFilter() override;
 
+public:
     //! The map data to work on
     void setMapData(MapData *mapData);
     //! How much steps (rooms) to go through in prepare() (requires mapData)

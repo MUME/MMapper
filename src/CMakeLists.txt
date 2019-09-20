@@ -16,28 +16,37 @@ set(mmapper_SRCS
     clock/mumeclockwidget.h
     clock/mumemoment.cpp
     clock/mumemoment.h
+    configuration/NamedConfig.h
     configuration/configuration.cpp
     configuration/configuration.h
     display/CanvasMouseModeEnum.h
+    display/Characters.cpp
+    display/Characters.h
     display/ConnectionLineBuilder.cpp
     display/ConnectionLineBuilder.h
+    display/Connections.cpp
+    display/Connections.h
     display/Filenames.cpp
     display/Filenames.h
-    display/FontFormatFlags.h
     display/InfoMarkSelection.cpp
     display/InfoMarkSelection.h
+    display/Infomarks.cpp
+    display/Infomarks.h
+    display/MapCanvasConfig.h
     display/MapCanvasData.cpp
     display/MapCanvasData.h
     display/MapCanvasRoomDrawer.cpp
     display/MapCanvasRoomDrawer.h
-    display/OpenGL.cpp
-    display/OpenGL.h
     display/RoadIndex.cpp
     display/RoadIndex.h
+    display/RoomSelections.cpp
+    display/Textures.cpp
+    display/Textures.h
     display/connectionselection.cpp
     display/connectionselection.h
     display/mapcanvas.cpp
     display/mapcanvas.h
+    display/mapcanvas_gl.cpp
     display/mapwindow.cpp
     display/mapwindow.h
     display/prespammedpath.cpp
@@ -59,15 +68,21 @@ set(mmapper_SRCS
     expandoracommon/room.h
     global/AnsiColor.h
     global/Array.h
+    global/ChangeMonitor.h
     global/CharBuffer.h
+    global/Color.cpp
+    global/Color.h
     global/Debug.h
     global/EnumIndexedArray.h
     global/Flags.h
+    global/NamedColors.cpp
+    global/NamedColors.h
     global/NullPointerException.cpp
     global/NullPointerException.h
     global/RAII.cpp
     global/RAII.h
     global/RuleOf5.h
+    global/Signal.h
     global/SignalBlocker.cpp
     global/SignalBlocker.h
     global/StringView.cpp
@@ -80,6 +95,7 @@ set(mmapper_SRCS
     global/WeakHandle.h
     global/WinSock.cpp
     global/WinSock.h
+    global/bits.h
     global/entities.cpp
     global/entities.h
     global/enums.h
@@ -89,7 +105,6 @@ set(mmapper_SRCS
     global/random.h
     global/range.h
     global/roomid.h
-    global/type_utils.h
     global/unquote.cpp
     global/unquote.h
     global/utils.cpp
@@ -176,6 +191,31 @@ set(mmapper_SRCS
     mpi/remoteeditsession.h
     mpi/remoteeditwidget.cpp
     mpi/remoteeditwidget.h
+    opengl/Font.cpp
+    opengl/Font.h
+    opengl/FontFormatFlags.h
+    opengl/OpenGL.cpp
+    opengl/OpenGL.h
+    opengl/OpenGLTypes.cpp
+    opengl/OpenGLTypes.h
+    opengl/legacy/AbstractShaderProgram.cpp
+    opengl/legacy/AbstractShaderProgram.h
+    opengl/legacy/Binders.cpp
+    opengl/legacy/Binders.h
+    opengl/legacy/FontMesh3d.cpp
+    opengl/legacy/FontMesh3d.h
+    opengl/legacy/Legacy.cpp
+    opengl/legacy/Legacy.h
+    opengl/legacy/Meshes.cpp
+    opengl/legacy/Meshes.h
+    opengl/legacy/ShaderUtils.cpp
+    opengl/legacy/ShaderUtils.h
+    opengl/legacy/Shaders.cpp
+    opengl/legacy/Shaders.h
+    opengl/legacy/SimpleMesh.cpp
+    opengl/legacy/SimpleMesh.h
+    opengl/legacy/VBO.cpp
+    opengl/legacy/VBO.h
     pandoragroup/CGroup.cpp
     pandoragroup/CGroup.h
     pandoragroup/CGroupChar.cpp
@@ -207,6 +247,7 @@ set(mmapper_SRCS
     parser/Abbrev.h
     parser/AbstractParser-Commands.cpp
     parser/AbstractParser-Commands.h
+    parser/AbstractParser-Config.cpp
     parser/AbstractParser-Utils.cpp
     parser/AbstractParser-Utils.h
     parser/CommandId.cpp
@@ -247,6 +288,8 @@ set(mmapper_SRCS
     pathmachine/roomsignalhandler.h
     pathmachine/syncing.cpp
     pathmachine/syncing.h
+    preferences/AdvancedGraphics.cpp
+    preferences/AdvancedGraphics.h
     preferences/AnsiColorDialog.cpp
     preferences/AnsiColorDialog.h
     preferences/ansicombo.cpp
@@ -344,6 +387,12 @@ set(mmapper_UIS
     preferences/clientpage.ui
     preferences/mumeprotocolpage.ui
 )
+
+if(QT_HAS_OPENGL)
+    list(APPEND mmapper_SRCS "opengl/legacy/impl_gl20.cpp")
+elseif(QT_HAS_GLES_20)
+    list(APPEND mmapper_SRCS "opengl/legacy/impl_es20.cpp")
+endif()
 
 if(MMAPPER_IS_DEBUG)
     if(NOT DEFINED CHECK_ODR)

@@ -11,6 +11,7 @@
 class QWidget;
 
 // Less error-prone than QSignalBlocker, because it forbids discarding, copying, and moving.
+// NOTE: This is not related to Signal<T>, which is a simpler replacement for QT signals.
 class NODISCARD SignalBlocker final
 {
 private:

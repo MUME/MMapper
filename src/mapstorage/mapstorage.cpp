@@ -50,7 +50,8 @@ static constexpr const int MMAPPER_2_3_7_SCHEMA = 32; // 16bit DoorFlags, NoMatc
 static constexpr const int MMAPPER_2_4_0_SCHEMA = 33; // 16bit ExitsFlags, 32bit MobFlags/LoadFlags
 static constexpr const int MMAPPER_2_4_3_SCHEMA = 34; // qCompress, SunDeath flag
 static constexpr const int MMAPPER_2_5_1_SCHEMA = 35; // discard all previous NoMatch flags
-static constexpr const int CURRENT_SCHEMA = MMAPPER_2_5_1_SCHEMA;
+static constexpr const int MMAPPER_2_6_0_SCHEMA = 36; // switches to new coordinate system
+static constexpr const int CURRENT_SCHEMA = MMAPPER_2_6_0_SCHEMA;
 
 static_assert(021 == 17, "MMapper 2.0.0 Schema");
 static_assert(030 == 24, "MMapper 2.0.2 Schema");
@@ -58,6 +59,67 @@ static_assert(031 == 25, "MMapper 2.0.4 Schema");
 static_assert(040 == 32, "MMapper 2.3.7 Schema");
 static_assert(041 == 33, "MMapper 2.4.0 Schema");
 static_assert(042 == 34, "MMapper 2.4.3 Schema");
+
+static const Coordinate convertESUtoENU(Coordinate c)
+{
+    c.y *= -1;
+    return c;
+}
+
+static Coordinate transformRoomOnLoad(const uint32_t version, Coordinate c)
+{
+    if (version <= MMAPPER_2_5_1_SCHEMA) {
+        return convertESUtoENU(c);
+    }
+    return c;
+}
+
+static void transformInfomarkOnLoad(const uint32_t version, InfoMark &mark)
+{
+    if (version > MMAPPER_2_5_1_SCHEMA)
+        return;
+
+    static_assert(INFOMARK_SCALE == 100);
+    constexpr auto TWENTIETH = INFOMARK_SCALE / 20;
+    constexpr auto TENTH = INFOMARK_SCALE / 10;
+    constexpr auto HALF = INFOMARK_SCALE / 2;
+    const Coordinate halfRoomOffset{HALF, -HALF, 0}; // note: Y inverted
+
+    // simple offsets in the original ESU left-handed space
+    mark.setPosition1(mark.getPosition1() + halfRoomOffset);
+    mark.setPosition2(mark.getPosition2() + halfRoomOffset);
+
+    switch (mark.getType()) {
+    case InfoMarkTypeEnum::TEXT: {
+        const Coordinate textOffset{TENTH, 3 * TENTH, 0};
+        mark.setPosition1(mark.getPosition1() + textOffset);
+        mark.setPosition2(mark.getPosition2() + textOffset);
+        break;
+    }
+    case InfoMarkTypeEnum::LINE:
+        break;
+    case InfoMarkTypeEnum::ARROW: {
+        const Coordinate offset1{0, TWENTIETH, 0};
+        const Coordinate offset2{TENTH, TENTH, 0};
+        mark.setPosition1(mark.getPosition1() + offset1);
+        mark.setPosition2(mark.getPosition2() + offset2);
+        break;
+    }
+    }
+
+    mark.setRotationAngle(-mark.getRotationAngle());
+
+    // convert ESU to ENU
+    mark.setPosition1(convertESUtoENU(mark.getPosition1()));
+    mark.setPosition2(convertESUtoENU(mark.getPosition2()));
+}
+
+static void writeCoordinate(QDataStream &stream, const Coordinate &c)
+{
+    stream << static_cast<qint32>(c.x);
+    stream << static_cast<qint32>(c.y);
+    stream << static_cast<qint32>(c.z);
+}
 
 MapStorage::MapStorage(MapData &mapdata, const QString &filename, QFile *file, QObject *parent)
     : AbstractMapStorage(mapdata, filename, file, parent)
@@ -222,14 +284,15 @@ SharedRoom MapStorage::loadRoom(QDataStream &stream, const uint32_t version)
     if (helper.read_u8() /*roomUpdated*/ != 0u) {
         room->setUpToDate();
     }
-    room->setPosition(helper.readCoord3d() + basePosition);
+
+    room->setPosition(transformRoomOnLoad(version, helper.readCoord3d() + basePosition));
     loadExits(*room, stream, version);
     return room;
 }
 
 void MapStorage::loadExits(Room &room, QDataStream &stream, const uint32_t version)
 {
-    auto helper = LoadRoomHelper{stream};
+    LoadRoomHelper helper{stream};
 
     ExitsList eList;
     for (const auto i : ALL_EXITS7) {
@@ -288,19 +351,32 @@ bool MapStorage::loadData()
 
 bool MapStorage::mergeData()
 {
+    const auto critical = [this](const QString &msg) -> void {
+        QMessageBox::critical(checked_dynamic_downcast<QWidget *>(parent()),
+                              tr("MapStorage Error"),
+                              msg);
+    };
+
+    const auto emit_log = [this](const QString &msg) { emit log("MapStorage", msg); };
+
     {
         MapFrontendBlocker blocker(m_mapData);
 
         /* NOTE: This relies on the maxID being ~0u, so adding 1 brings us back to 0u. */
         baseId = m_mapData.getMaxId().asUint32() + 1u;
         basePosition = m_mapData.getMax();
+
+        // REVISIT: What purpose does this serve?
+        //
+        // (Also, note that `(x + y + z) != 0` is *NOT* the same as `x != 0 || y != 0 || z != 0`,
+        // so things like: [1, 2, -3] would not be affected by this.)
         if (basePosition.x + basePosition.y + basePosition.z != 0) {
             basePosition.y = 0;
             basePosition.x = 0;
             basePosition.z = -1;
         }
 
-        emit log("MapStorage", "Loading data ...");
+        emit_log("Loading data ...");
 
         auto &progressCounter = getProgressCounter();
         progressCounter.reset();
@@ -314,20 +390,32 @@ bool MapStorage::mergeData()
         if (helper.read_i32() != MMAPPER_MAGIC) {
             return false;
         }
+
         const auto version = helper.read_u32();
-        if (version != MMAPPER_2_5_1_SCHEMA && version != MMAPPER_2_4_3_SCHEMA
-            && version != MMAPPER_2_4_0_SCHEMA && version != MMAPPER_2_3_7_SCHEMA
-            && version != MMAPPER_2_0_4_SCHEMA && version != MMAPPER_2_0_2_SCHEMA
-            && version != MMAPPER_2_0_0_SCHEMA) {
+        const bool supported = [version]() -> bool {
+            switch (version) {
+            case MMAPPER_2_0_0_SCHEMA:
+            case MMAPPER_2_0_2_SCHEMA:
+            case MMAPPER_2_0_4_SCHEMA:
+            case MMAPPER_2_3_7_SCHEMA:
+            case MMAPPER_2_4_0_SCHEMA:
+            case MMAPPER_2_4_3_SCHEMA:
+            case MMAPPER_2_5_1_SCHEMA:
+            case MMAPPER_2_6_0_SCHEMA:
+                return true;
+            default:
+                break;
+            }
+            return false;
+        }();
+
+        if (!supported) {
             const bool isNewer = version >= CURRENT_SCHEMA;
-            QMessageBox::critical(checked_dynamic_downcast<QWidget *>(parent()),
-                                  "MapStorage Error",
-                                  QString("This map has schema version %1 which is too %2.\r\n\r\n"
-                                          "Please %3 MMapper.")
-                                      .arg(version)
-                                      .arg(isNewer ? "new" : "old")
-                                      .arg(isNewer ? "upgrade to the latest"
-                                                   : "try an older version of"));
+            critical(QString("This map has schema version %1 which is too %2.\r\n\r\n"
+                             "Please %3 MMapper.")
+                         .arg(version)
+                         .arg(isNewer ? "new" : "old")
+                         .arg(isNewer ? "upgrade to the latest" : "try an older version of"));
             return false;
         }
 
@@ -338,6 +426,7 @@ bool MapStorage::mergeData()
 
         /* Caution! Stream requires buffer to have extended lifetime for new version,
          * so don't be tempted to move this inside the scope. */
+        // Then shouldn't buffer be declared before stream, so it will outlive the stream?
         QBuffer buffer;
         const bool qCompressed = (version >= MMAPPER_2_4_3_SCHEMA);
         const bool zlibCompressed = (version >= MMAPPER_2_0_4_SCHEMA
@@ -349,34 +438,24 @@ bool MapStorage::mergeData()
             buffer.setData(uncompressedData);
             buffer.open(QIODevice::ReadOnly);
             stream.setDevice(&buffer);
-            emit log("MapStorage",
-                     QString("Uncompressed map using %1").arg(qCompressed ? "qUncompress" : "zlib"));
+            emit_log(QString("Uncompressed map using %1").arg(qCompressed ? "qUncompress" : "zlib"));
 
         } else if (!USE_ZLIB && zlibCompressed) {
-            QMessageBox::critical(checked_dynamic_downcast<QWidget *>(parent()),
-                                  "MapStorage Error",
-                                  "MMapper could not load this map because it is too old.\r\n\r\n"
-                                  "Please recompile MMapper with USE_ZLIB.");
+            critical("MMapper could not load this map because it is too old.\r\n\r\n"
+                     "Please recompile MMapper with USE_ZLIB.");
             return false;
         } else {
-            emit log("MapStorage", "Map was not compressed");
+            emit_log("Map was not compressed");
         }
-        emit log("MapStorage", QString("Schema version: %1").arg(version));
+        emit_log(QString("Schema version: %1").arg(version));
 
         const uint32_t roomsCount = helper.read_u32();
         const uint32_t marksCount = helper.read_u32();
         progressCounter.increaseTotalStepsBy(roomsCount + marksCount);
 
-        {
-            Coordinate pos;
-            pos.x = helper.read_i32();
-            pos.y = helper.read_i32();
-            pos.z = helper.read_i32();
-            pos += basePosition;
-            m_mapData.setPosition(pos);
-        }
+        m_mapData.setPosition(transformRoomOnLoad(version, helper.readCoord3d() + basePosition));
 
-        emit log("MapStorage", QString("Number of rooms: %1").arg(roomsCount));
+        emit_log(QString("Number of rooms: %1").arg(roomsCount));
 
         for (uint32_t i = 0; i < roomsCount; ++i) {
             SharedRoom room = loadRoom(stream, version);
@@ -385,7 +464,7 @@ bool MapStorage::mergeData()
             m_mapData.insertPredefinedRoom(room);
         }
 
-        emit log("MapStorage", QString("Number of info items: %1").arg(marksCount));
+        emit_log(QString("Number of info items: %1").arg(marksCount));
 
         // TODO: reserve the markerList with marksCount
 
@@ -398,10 +477,14 @@ bool MapStorage::mergeData()
             progressCounter.step();
         }
 
-        emit log("MapStorage", "Finished loading.");
+        emit_log("Finished loading.");
+
+        // REVISIT: Closing is probably not necessary, since you don't do it in the failure cases.
         buffer.close();
         m_file->close();
 
+        // REVISIT: Having a save-file with 0 rooms probably shouldn't be treated as an error.
+        // (Consider just removing this test)
         if (m_mapData.getRoomsCount() == 0u) {
             return false;
         }
@@ -418,17 +501,16 @@ bool MapStorage::mergeData()
 void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, uint32_t version)
 {
     auto helper = LoadRoomHelper{stream};
-    const qint32 postfix = basePosition.x + basePosition.y + basePosition.z;
-    {
-        auto name = helper.read_string();
-        if (postfix != 0 && postfix != 1) {
-            name += QString("_m%1").arg(postfix).toLatin1();
-        }
-        mark->setName(InfoMarkName(name));
+
+    if (version <= MMAPPER_2_5_1_SCHEMA) {
+        helper.read_string(); /* value ignored; called for side effect */
     }
 
     mark->setText(InfoMarkText(helper.read_string()));
-    mark->setTimeStamp(helper.read_datetime());
+
+    if (version <= MMAPPER_2_5_1_SCHEMA) {
+        helper.read_datetime(); /* value ignored; called for side effect */
+    }
 
     const auto type = [](const uint8_t value) {
         if (value >= NUM_INFOMARK_TYPES) {
@@ -451,8 +533,11 @@ void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, uint32_t version)
             return static_cast<InfoMarkClassEnum>(value);
         }(helper.read_u8());
         mark->setClass(clazz);
-        /* REVISIT: was this intended to be divided by 100.0? */
-        mark->setRotationAngle(helper.read_i32() / INFOMARK_SCALE);
+        if (version < MMAPPER_2_6_0_SCHEMA) {
+            mark->setRotationAngle(helper.read_i32() / INFOMARK_SCALE);
+        } else {
+            mark->setRotationAngle(helper.read_i32());
+        }
     }
 
     const auto read_coord = [](auto &helper, const auto &basePos) -> Coordinate {
@@ -462,6 +547,14 @@ void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, uint32_t version)
 
     mark->setPosition1(read_coord(helper, basePosition));
     mark->setPosition2(read_coord(helper, basePosition));
+
+    transformInfomarkOnLoad(version, *mark);
+
+    if (mark->getType() != InfoMarkTypeEnum::TEXT && !mark->getText().isEmpty())
+        mark->setText(InfoMarkText{});
+    // REVISIT: Just discard empty text markers?
+    else if (mark->getType() == InfoMarkTypeEnum::TEXT && mark->getText().isEmpty())
+        mark->setText(InfoMarkText{"New Marker"});
 }
 
 void MapStorage::saveRoom(const Room &room, QDataStream &stream)
@@ -480,11 +573,7 @@ void MapStorage::saveRoom(const Room &room, QDataStream &stream)
     stream << static_cast<quint32>(room.getMobFlags());
     stream << static_cast<quint32>(room.getLoadFlags());
     stream << static_cast<quint8>(room.isUpToDate());
-
-    const Coordinate &pos = room.getPosition();
-    stream << static_cast<qint32>(pos.x);
-    stream << static_cast<qint32>(pos.y);
-    stream << static_cast<qint32>(pos.z);
+    writeCoordinate(stream, room.getPosition());
     saveExits(room, stream);
 }
 
@@ -560,11 +649,8 @@ bool MapStorage::saveData(bool baseMapOnly)
     stream << static_cast<quint32>(roomsCount);
     stream << static_cast<quint32>(marksCount);
 
-    // write selected room x,y
-    const Coordinate &self = m_mapData.getPosition();
-    stream << static_cast<qint32>(self.x);
-    stream << static_cast<qint32>(self.y);
-    stream << static_cast<qint32>(self.z);
+    // write selected room x,y,z
+    writeCoordinate(stream, m_mapData.getPosition());
 
     // save rooms
     auto saveOne = [this, &stream](const Room &room) { saveRoom(room, stream); };
@@ -603,18 +689,13 @@ bool MapStorage::saveData(bool baseMapOnly)
 
 void MapStorage::saveMark(InfoMark *mark, QDataStream &stream)
 {
-    stream << QString(mark->getName().toQString());
-    stream << QString(mark->getText().toQString());
-    stream << QDateTime(mark->getTimeStamp());
-    stream << static_cast<quint8>(mark->getType());
+    // REVISIT: save type first, and then avoid saving fields that aren't necessary?
+    const InfoMarkTypeEnum type = mark->getType();
+    stream << QString((type == InfoMarkTypeEnum::TEXT) ? mark->getText().toQString() : "");
+    stream << static_cast<quint8>(type);
     stream << static_cast<quint8>(mark->getClass());
-    stream << static_cast<qint32>(mark->getRotationAngle() * INFOMARK_SCALE);
-    const Coordinate &c1 = mark->getPosition1();
-    const Coordinate &c2 = mark->getPosition2();
-    stream << static_cast<qint32>(c1.x);
-    stream << static_cast<qint32>(c1.y);
-    stream << static_cast<qint32>(c1.z);
-    stream << static_cast<qint32>(c2.x);
-    stream << static_cast<qint32>(c2.y);
-    stream << static_cast<qint32>(c2.z);
+    // REVISIT: round to 45 degrees?
+    stream << static_cast<qint32>(std::lround(mark->getRotationAngle()));
+    writeCoordinate(stream, mark->getPosition1());
+    writeCoordinate(stream, mark->getPosition2());
 }

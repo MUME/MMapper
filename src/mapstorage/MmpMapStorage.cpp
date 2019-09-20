@@ -202,7 +202,7 @@ void MmpMapStorage::saveRoom(const Room &room, QXmlStreamWriter &stream)
     stream.writeStartElement("coord");
     const Coordinate &pos = room.getPosition();
     stream.writeAttribute("x", QString("%1").arg(pos.x));
-    stream.writeAttribute("y", QString("%1").arg(pos.y * -1));
+    stream.writeAttribute("y", QString("%1").arg(pos.y));
     stream.writeAttribute("z", QString("%1").arg(pos.z));
     stream.writeEndElement(); // end coord
 

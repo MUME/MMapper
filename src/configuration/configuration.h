@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include <string_view>
 #include <QByteArray>
 #include <QColor>
 #include <QMap>
@@ -13,13 +14,21 @@
 #include <QtCore>
 #include <QtGlobal>
 
+#include "../global/Array.h"
+#include "../global/Debug.h"
+#include "../global/FixedPoint.h"
+#include "../global/NamedColors.h"
 #include "../global/RuleOf5.h"
 #include "../pandoragroup/mmapper2group.h"
+#include "NamedConfig.h"
+
+#undef TRANSPARENT // Bad dog, Microsoft; bad dog!!!
 
 enum class MapModeEnum { PLAY, MAP, OFFLINE };
 enum class PlatformEnum { Unknown, Windows, Mac, Linux };
 enum class CharacterEncodingEnum { LATIN1, UTF8, ASCII };
 enum class EnvironmentEnum { Unknown, Env32Bit, Env64Bit };
+enum class RestrictMapEnum { Never, OnlyInMapMode, Always };
 
 // Do not call this directly; use CURRENT_PLATFORM.
 static inline constexpr PlatformEnum getCurrentPlatform()
@@ -142,23 +151,98 @@ public:
         SUBGROUP();
     } mumeNative;
 
+    static constexpr const std::string_view BACKGROUND_NAME = "background";
+    static constexpr const std::string_view ROOM_DARK_NAME = "room-dark";
+    static constexpr const std::string_view ROOM_NO_SUNDEATH_NAME = "room-no-sundeath";
+
     struct CanvasSettings final
     {
         bool showUpdated = false;
         bool drawNotMappedExits = false;
-        bool drawNoMatchExits = false;
         bool drawUpperLayersTextured = false;
         bool drawDoorNames = false;
-        QColor backgroundColor;
-        QColor roomDarkColor;
-        QColor roomDarkLitColor;
+        XNamedColor backgroundColor{BACKGROUND_NAME};
+        XNamedColor roomDarkColor{ROOM_DARK_NAME};
+        XNamedColor roomDarkLitColor{ROOM_NO_SUNDEATH_NAME};
         int antialiasingSamples = 0;
         bool trilinearFiltering = false;
         bool softwareOpenGL = false;
 
+        // not saved yet:
+        bool drawCharBeacons = true;
+        float charBeaconScaleCutoff = 0.4f;
+        float doorNameScaleCutoff = 0.4f;
+        float infomarkScaleCutoff = 0.25f;
+        float extraDetailScaleCutoff = 0.15f;
+
+        MMapper::Array<int, 3> mapRadius{100, 100, 100};
+        RestrictMapEnum useRestrictedMap = RestrictMapEnum::OnlyInMapMode;
+
+        struct Advanced final
+        {
+            NamedConfig<bool> use3D{"MMAPPER_3D", true};
+            NamedConfig<bool> autoTilt{"MMAPPER_AUTO_TILT", true};
+            NamedConfig<bool> printPerfStats{"MMAPPER_GL_PERFSTATS", IS_DEBUG_BUILD};
+
+            // 5..90 degrees
+            FixedPoint<1> fov{50, 900, 765};
+            // 0..90 degrees
+            FixedPoint<1> verticalAngle{0, 900, 450};
+            // -45..45 degrees
+            FixedPoint<1> horizontalAngle{-450, 450, 0};
+            // 1..10 rooms
+            FixedPoint<1> layerHeight{10, 100, 15};
+
+        public:
+            ConnectionSet registerChangeCallback(ChangeMonitor::Function callback);
+
+            Advanced();
+        } advanced;
+
     private:
         SUBGROUP();
     } canvas;
+
+    struct ColorSettings final
+    {
+        // TODO: save color settings
+        // TODO: record which named colors require a full map update.
+        XNamedColor BACKGROUND{BACKGROUND_NAME};
+
+        XNamedColor INFOMARK_COMMENT{"infomark-comment"};
+        XNamedColor INFOMARK_HERB{"infomark-herb"};
+        XNamedColor INFOMARK_MOB{"infomark-mob"};
+        XNamedColor INFOMARK_OBJECT{"infomark-object"};
+        XNamedColor INFOMARK_RIVER{"infomark-river"};
+        XNamedColor INFOMARK_ROAD{"infomark-road"};
+
+        XNamedColor ROOM_DARK{ROOM_DARK_NAME};
+        XNamedColor ROOM_NO_SUNDEATH{ROOM_NO_SUNDEATH_NAME};
+
+        XNamedColor STREAM{"stream"};
+
+        XNamedColor TRANSPARENT{".transparent"};
+
+        XNamedColor VERTICAL_COLOR_CLIMB{"vertical-climb"};
+        XNamedColor VERTICAL_COLOR_REGULAR_EXIT{"vertical-regular"};
+
+        XNamedColor WALL_COLOR_BUG_WALL_DOOR{"wall-bug-wall-door"};
+        XNamedColor WALL_COLOR_CLIMB{"wall-climb"};
+        XNamedColor WALL_COLOR_FALL_DAMAGE{"wall-fall-damage"};
+        XNamedColor WALL_COLOR_GUARDED{"wall-guarded"};
+        XNamedColor WALL_COLOR_NO_FLEE{"wall-no-flee"};
+        XNamedColor WALL_COLOR_NO_MATCH{"wall-no-match"};
+        XNamedColor WALL_COLOR_NOT_MAPPED{"wall-not-mapped"};
+        XNamedColor WALL_COLOR_RANDOM{"wall-random"};
+        XNamedColor WALL_COLOR_REGULAR_EXIT{"wall-regular-exit"};
+        XNamedColor WALL_COLOR_SPECIAL{"wall-special"};
+
+        ColorSettings() = default;
+        void resetToDefaults();
+
+    private:
+        SUBGROUP();
+    } colorSettings;
 
     struct AutoLoadSettings final
     {
@@ -260,6 +344,9 @@ private:
     friend Configuration &setConfig();
 };
 
+/// Must be called before you can call setConfig() or getConfig().
+/// Please don't try to cheat it. Only call this function from main().
+void setEnteredMain();
 /// Returns a reference to the application configuration object.
 Configuration &setConfig();
 const Configuration &getConfig();

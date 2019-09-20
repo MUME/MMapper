@@ -6,17 +6,15 @@
 #include <vector>
 
 #include "../mapdata/ExitDirection.h"
-#include "OpenGL.h"
-
-struct Vec3f;
+#include "../opengl/OpenGL.h"
 
 class ConnectionLineBuilder
 {
 private:
-    std::vector<Vec3f> &points;
+    std::vector<glm::vec3> &points;
 
 public:
-    explicit ConnectionLineBuilder(std::vector<Vec3f> &points)
+    explicit ConnectionLineBuilder(std::vector<glm::vec3> &points)
         : points{points}
     {}
 

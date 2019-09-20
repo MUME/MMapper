@@ -107,7 +107,7 @@ static std::string getZoneKey(const Coordinate &c)
     static_assert(calcZoneCoord(ZONE_WIDTH) == ZONE_WIDTH);
 
     // REVISIT: consider sprintf here instead of std::string concatenation if this shows up in perf.
-    return std::to_string(calcZoneCoord(c.x)) + "," + std::to_string(calcZoneCoord(c.y));
+    return std::to_string(calcZoneCoord(c.x)) + "," + std::to_string(calcZoneCoord(-c.y));
 }
 
 // Splits the world in zones easier to download and load
@@ -137,8 +137,9 @@ public:
 };
 
 template<typename JsonT>
-void writeJson(const QString &filePath, JsonT json, const QString &what)
+static void writeJson(const QString &filePath, JsonT &json, const QString &what)
 {
+    static_assert(std::is_same_v<JsonT, QJsonObject> || std::is_same_v<JsonT, QJsonArray>);
     QFile file(filePath);
     if (!file.open(QIODevice::WriteOnly)) {
         QString msg(
@@ -181,7 +182,7 @@ public:
 
         QJsonArray jCoords;
         jCoords.push_back(coords.x);
-        jCoords.push_back(coords.y);
+        jCoords.push_back(coords.y * -1);
         jCoords.push_back(coords.z);
 
         QJsonObject::iterator collision = m_hashes.find(hash);
@@ -316,16 +317,17 @@ static constexpr const char *getNameUpper(const ExitDirEnum dir)
 
 void JsonWorld::writeMetadata(const QFileInfo &path, const MapData &mapData) const
 {
+    // This can give bogus data if the bounds aren't set.
     const Coordinate &min = mapData.getMin();
     const Coordinate &max = mapData.getMax();
 
     QJsonObject meta;
     meta["roomsCount"] = static_cast<qint64>(m_jRoomIds.size());
     meta["minX"] = min.x;
-    meta["minY"] = min.y;
+    meta["minY"] = std::min(-min.y, -max.y);
     meta["minZ"] = min.z;
     meta["maxX"] = max.x;
-    meta["maxY"] = max.y;
+    meta["maxY"] = std::max(-min.y, -max.y);
     meta["maxZ"] = max.z;
 
     meta["directions"] = []() {
@@ -367,7 +369,7 @@ void JsonWorld::addRoom(QJsonArray &jRooms, const Room &room) const
     const Coordinate &pos = room.getPosition();
     QJsonObject jr;
     jr["x"] = pos.x;
-    jr["y"] = pos.y;
+    jr["y"] = -pos.y;
     jr["z"] = pos.z;
 
     uint jsonId = m_jRoomIds[room.getId()];

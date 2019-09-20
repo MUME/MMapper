@@ -6,7 +6,6 @@
 
 #include <cassert>
 #include <memory>
-#include <QDateTime>
 
 #include "../expandoracommon/coordinate.h"
 #include "../global/Flags.h"
@@ -15,19 +14,16 @@
 static constexpr const auto INFOMARK_SCALE = 100;
 
 enum class InfoMarkUpdateEnum {
-    InfoMarkName,
     InfoMarkText,
     InfoMarkType,
     InfoMarkClass,
     CoordinatePosition1,
     CoordinatePosition2,
-    RotationAngle,
-    MarkerTimeStamp
+    RotationAngle
 };
 
-static constexpr const size_t NUM_INFOMARK_UPDATE_TYPES = 8;
-static_assert(NUM_INFOMARK_UPDATE_TYPES
-              == static_cast<int>(InfoMarkUpdateEnum::MarkerTimeStamp) + 1);
+static constexpr const size_t NUM_INFOMARK_UPDATE_TYPES = 6;
+static_assert(NUM_INFOMARK_UPDATE_TYPES == static_cast<int>(InfoMarkUpdateEnum::RotationAngle) + 1);
 DEFINE_ENUM_COUNT(InfoMarkUpdateEnum, NUM_INFOMARK_UPDATE_TYPES)
 
 struct InfoMarkUpdateFlags final : enums::Flags<InfoMarkUpdateFlags, InfoMarkUpdateEnum, uint32_t>
@@ -47,12 +43,9 @@ public:
     virtual void virt_onNotifyModified(InfoMark & /*mark*/, InfoMarkUpdateFlags /*updateFlags*/) {}
 };
 
-struct InfomarkNameTag
-{};
 struct InfomarkTextTag
 {};
 
-using InfoMarkName = TaggedString<InfomarkNameTag>;
 using InfoMarkText = TaggedString<InfomarkTextTag>;
 
 enum class InfoMarkTypeEnum { TEXT, LINE, ARROW };
@@ -75,17 +68,13 @@ static constexpr const size_t NUM_INFOMARK_CLASSES = static_cast<size_t>(InfoMar
                                                      + 1u;
 static_assert(NUM_INFOMARK_CLASSES == 10);
 
-using MarkerTimeStamp = QDateTime;
-
 #define XFOREACH_INFOMARK_PROPERTY(X) \
-    X(InfoMarkName, Name, ) \
     X(InfoMarkText, Text, ) \
     X(InfoMarkTypeEnum, Type, = InfoMarkTypeEnum::TEXT) \
     X(InfoMarkClassEnum, Class, = InfoMarkClassEnum::GENERIC) \
     X(Coordinate, Position1, ) \
     X(Coordinate, Position2, ) \
-    X(float, RotationAngle, = .0f) \
-    X(MarkerTimeStamp, TimeStamp, )
+    X(int, RotationAngle, = 0)
 
 class InfoMark final : public std::enable_shared_from_this<InfoMark>
 {

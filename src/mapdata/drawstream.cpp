@@ -5,23 +5,18 @@
 
 #include "drawstream.h"
 
-DrawStream::DrawStream(MapCanvasRoomDrawer &in, const RoomIndex &in_rooms, const RoomLocks &in_locks)
-    : canvas(in)
-    , roomIndex(in_rooms)
-    , locks(in_locks)
+DrawStream::DrawStream(LayerToRooms &layerToRooms)
+    : layerToRooms(layerToRooms)
 {}
 
 DrawStream::~DrawStream() = default;
 
 void DrawStream::visit(const Room *room)
 {
-    if (room != nullptr) {
-        const auto z = room->getPosition().z;
-        layerToRooms[z].emplace_back(room);
-    }
-}
+    if (room == nullptr)
+        return;
 
-void DrawStream::draw() const
-{
-    canvas.drawRooms(layerToRooms, roomIndex, locks);
+    const auto z = room->getPosition().z;
+    auto &layer = layerToRooms[z];
+    layer.emplace_back(room);
 }

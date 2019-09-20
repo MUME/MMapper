@@ -20,20 +20,13 @@ private:
 public:
     static std::shared_ptr<InfoMarkSelection> alloc(MapData *mapData,
                                                     const Coordinate &c1,
-                                                    const Coordinate &c2,
-                                                    int margin = 20)
+                                                    const Coordinate &c2)
     {
-        return std::make_shared<InfoMarkSelection>(this_is_private{0}, mapData, c1, c2, margin);
-    }
-
-    static std::shared_ptr<InfoMarkSelection> alloc(MapData *mapData, const Coordinate &c)
-    {
-        return std::make_shared<InfoMarkSelection>(this_is_private{0}, mapData, c, c, 100);
+        return std::make_shared<InfoMarkSelection>(this_is_private{0}, mapData, c1, c2);
     }
 
 public:
-    InfoMarkSelection(
-        this_is_private, MapData *, const Coordinate &c1, const Coordinate &c2, int margin);
+    InfoMarkSelection(this_is_private, MapData *, const Coordinate &c1, const Coordinate &c2);
     DELETE_CTORS_AND_ASSIGN_OPS(InfoMarkSelection);
 
     const Coordinate &getPosition1() const { return m_sel1; }

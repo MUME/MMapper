@@ -32,6 +32,7 @@ protected:
     void showEvent(QShowEvent *event) override;
 
 signals:
+    void sig_graphicsSettingsChanged();
     void sig_loadConfig();
 
 public slots:

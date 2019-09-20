@@ -9,6 +9,22 @@
 #include "../expandoracommon/room.h"
 #include "../mapfrontend/mapaction.h"
 
+Approved::Approved(const SigParseEvent &sigParseEvent, const int tolerance)
+    : myEvent{sigParseEvent.requireValid()}
+    , matchingTolerance{tolerance}
+{}
+
+Approved::~Approved()
+{
+    if (owner != nullptr) {
+        if (moreThanOne) {
+            owner->releaseRoom(*this, matchedRoom->getId());
+        } else {
+            owner->keepRoom(*this, matchedRoom->getId());
+        }
+    }
+}
+
 void Approved::receiveRoom(RoomAdmin *sender, const Room *perhaps)
 {
     auto &event = myEvent.deref();
@@ -30,22 +46,6 @@ void Approved::receiveRoom(RoomAdmin *sender, const Room *perhaps)
     }
 }
 
-Approved::~Approved()
-{
-    if (owner != nullptr) {
-        if (moreThanOne) {
-            owner->releaseRoom(*this, matchedRoom->getId());
-        } else {
-            owner->keepRoom(*this, matchedRoom->getId());
-        }
-    }
-}
-
-Approved::Approved(const SigParseEvent &sigParseEvent, const int tolerance)
-    : myEvent{sigParseEvent.requireValid()}
-    , matchingTolerance{tolerance}
-{}
-
 const Room *Approved::oneMatch() const
 {
     return moreThanOne ? nullptr : matchedRoom;
@@ -60,9 +60,4 @@ void Approved::reset()
     matchedRoom = nullptr;
     moreThanOne = false;
     owner = nullptr;
-}
-
-RoomAdmin *Approved::getOwner() const
-{
-    return moreThanOne ? nullptr : owner;
 }

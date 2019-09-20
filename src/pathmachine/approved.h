@@ -25,9 +25,10 @@ private:
 public:
     explicit Approved(const SigParseEvent &sigParseEvent, int matchingTolerance);
     ~Approved() override;
+
+public:
     void receiveRoom(RoomAdmin *, const Room *) override;
     const Room *oneMatch() const;
-    RoomAdmin *getOwner() const;
     bool needsUpdate() const { return update; }
     void reset();
 

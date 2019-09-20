@@ -8,6 +8,7 @@
 #include <cassert>
 #include <memory>
 
+#include "../expandoracommon/room.h"
 #include "../global/RAII.h"
 #include "AbstractRoomVisitor.h"
 
@@ -19,7 +20,7 @@
 
 #define DEBUG_LOCK() DEBUG_ONLY(assert(!m_inUse); const RAIIBool useLock{m_inUse})
 
-void RoomCollection::addRoom(Room *room)
+void RoomCollection::addRoom(Room *const room)
 {
     if (room == nullptr) {
         assert(false);
@@ -30,7 +31,7 @@ void RoomCollection::addRoom(Room *room)
     m_rooms.insert(room->shared_from_this());
 }
 
-void RoomCollection::removeRoom(Room *room)
+void RoomCollection::removeRoom(Room *const room)
 {
     if (room == nullptr) {
         assert(false);

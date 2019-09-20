@@ -31,7 +31,7 @@ MapFrontend::MapFrontend(QObject *const parent)
 MapFrontend::~MapFrontend()
 {
     QMutexLocker locker(&mapLock);
-    emit clearingMap();
+    emit sig_clearingMap();
 }
 
 void MapFrontend::block()
@@ -48,7 +48,7 @@ void MapFrontend::unblock()
 
 void MapFrontend::checkSize()
 {
-    emit mapSizeChanged(m_min, m_max);
+    emit sig_mapSizeChanged(getMin(), getMax());
 }
 
 void MapFrontend::scheduleAction(const std::shared_ptr<MapAction> &action)
@@ -117,7 +117,7 @@ void MapFrontend::lookingForRooms(RoomRecipient &recipient, const Coordinate &po
 void MapFrontend::clear()
 {
     QMutexLocker locker(&mapLock);
-    emit clearingMap();
+    emit sig_clearingMap();
 
     for (size_t i = 0, size = roomIndex.size(); i < size; ++i) {
         const auto roomId = RoomId{static_cast<uint32_t>(i)};
@@ -140,9 +140,8 @@ void MapFrontend::clear()
         unusedIds.pop();
     }
     greatestUsedId = INVALID_ROOMID;
-    m_min.clear();
-    m_max.clear();
-    emit mapSizeChanged(m_min, m_max);
+    m_bounds.reset();
+    checkSize(); // called for side effect of sending signal
 }
 
 void MapFrontend::lookingForRooms(RoomRecipient &recipient, const RoomId id)
@@ -165,12 +164,12 @@ RoomId MapFrontend::assignId(const SharedRoom &room, const SharedRoomCollection 
             /* avoid adding operator++ to RoomId, to help avoid mistakes */
             return greatestUsedId = RoomId{greatestUsedId.asUint32() + 1u};
         } else {
-            const auto result = unusedIds.top();
+            auto id = unusedIds.top();
             unusedIds.pop();
-            if (result > greatestUsedId || greatestUsedId == INVALID_ROOMID) {
-                greatestUsedId = result;
+            if (id > greatestUsedId || greatestUsedId == INVALID_ROOMID) {
+                greatestUsedId = id;
             }
-            return result;
+            return id;
         }
     }();
 
@@ -229,6 +228,13 @@ RoomId MapFrontend::createEmptyRoom(const Coordinate &c)
 
 void MapFrontend::checkSize(const Coordinate &c)
 {
+    if (!m_bounds) {
+        m_bounds.emplace();
+        m_bounds->min = m_bounds->max = c;
+        emit sig_mapSizeChanged(c, c);
+        return;
+    }
+
 #define MINMAX(xyz) \
     do { \
         auto &lo = min.xyz; \
@@ -237,8 +243,8 @@ void MapFrontend::checkSize(const Coordinate &c)
         hi = std::max(hi, c.xyz); \
     } while (false)
 
-    auto &min = m_min;
-    auto &max = m_max;
+    auto &min = m_bounds->min;
+    auto &max = m_bounds->max;
 
     const Coordinate oldMin{min};
     const Coordinate oldMax{max};
@@ -248,7 +254,7 @@ void MapFrontend::checkSize(const Coordinate &c)
     MINMAX(z);
 
     if (min != oldMin || max != oldMax) {
-        emit mapSizeChanged(min, max);
+        emit sig_mapSizeChanged(min, max);
     }
 
 #undef MINMAX

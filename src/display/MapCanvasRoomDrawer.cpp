@@ -4,22 +4,27 @@
 
 #include "MapCanvasRoomDrawer.h"
 
-#include <array>
 #include <cassert>
 #include <cstdlib>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <optional>
 #include <set>
 #include <stdexcept>
 #include <vector>
+#include <QColor>
 #include <QMessageLogContext>
 #include <QtGui/qopengl.h>
 #include <QtGui>
 
+#include "../configuration/NamedConfig.h"
 #include "../configuration/configuration.h"
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
 #include "../global/AnsiColor.h"
+#include "../global/Array.h"
+#include "../global/Debug.h"
 #include "../global/EnumIndexedArray.h"
 #include "../global/Flags.h"
 #include "../global/RuleOf5.h"
@@ -31,1230 +36,1041 @@
 #include "../mapdata/infomark.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/mmapper2room.h"
+#include "../opengl/FontFormatFlags.h"
+#include "../opengl/OpenGL.h"
+#include "../opengl/OpenGLTypes.h"
 #include "ConnectionLineBuilder.h"
-#include "FontFormatFlags.h"
 #include "MapCanvasData.h"
-#include "OpenGL.h"
 #include "RoadIndex.h"
+#include "mapcanvas.h" // hack, since we're now definining some of its symbols
 
-// TODO: Make all of the WALL_COLOR_XXX configurable?
-// Also, should FALL and CLIMB damage be separate colors? What about wall and door?
-static const auto WALL_COLOR_CLIMB = QColor::fromRgbF(0.7, 0.7, 0.7);       // lightgray;
-static const auto WALL_COLOR_FALL_DAMAGE = QColor::fromRgbF(0.0, 1.0, 1.0); // cyan
-static const auto WALL_COLOR_GUARDED = QColor::fromRgbF(1.0, 1.0, 0.0);     // yellow;
-static const auto WALL_COLOR_NO_FLEE = Qt::black;
-static const auto WALL_COLOR_NO_MATCH = Qt::blue;
-static const auto WALL_COLOR_NOTMAPPED = QColor::fromRgbF(1.0, 0.5, 0.0); // orange
-static const auto WALL_COLOR_RANDOM = QColor::fromRgbF(1.0, 0.0, 0.0);    // red
-static const auto WALL_COLOR_SPECIAL = QColor::fromRgbF(0.8, 0.1, 0.8);   // lightgreen
-static const auto WALL_COLOR_WALL_DOOR = QColor::fromRgbF(0.2, 0.0, 0.0); // very dark red
+enum class StreamTypeEnum { OutFlow, InFlow };
+enum class WallTypeEnum { SOLID, DOTTED, DOOR };
+static constexpr const size_t NUM_WALL_TYPES = 3;
+DEFINE_ENUM_COUNT(WallTypeEnum, NUM_WALL_TYPES)
 
-static bool isOdd(const ExitDirEnum sourceDir)
+#define LOOKUP_COLOR(X) (getConfig().colorSettings.X)
+
+static bool isTransparent(const XNamedColor &namedColor)
 {
-    return static_cast<int>(sourceDir) % 2 == 1;
+    return !namedColor.isInitialized() || namedColor == LOOKUP_COLOR(TRANSPARENT);
 }
 
-static QMatrix4x4 getTranslationMatrix(float x, float y)
+static std::optional<Color> getColor(const XNamedColor &namedColor)
 {
-    QMatrix4x4 model;
-    model.setToIdentity();
-    model.translate(x, y, 0);
-    return model;
-}
-static QMatrix4x4 getTranslationMatrix(const int x, const int y)
-{
-    return getTranslationMatrix(static_cast<float>(x), static_cast<float>(y));
-}
-
-static QColor getInfoMarkColor(const InfoMarkTypeEnum infoMarkType,
-                               const InfoMarkClassEnum infoMarkClass)
-{
-    const QColor defaultColor = (infoMarkType == InfoMarkTypeEnum::TEXT)
-                                    ? QColor(0, 0, 0, 76)         // Black
-                                    : QColor(255, 255, 255, 178); // White
-    switch (infoMarkClass) {
-    case InfoMarkClassEnum::HERB:
-        return QColor(0, 255, 0, 140); // Green
-    case InfoMarkClassEnum::RIVER:
-        return QColor(76, 216, 255, 140); // Cyan-like
-    case InfoMarkClassEnum::MOB:
-        return QColor(255, 0, 0, 140); // Red
-    case InfoMarkClassEnum::COMMENT:
-        return QColor(192, 192, 192, 140); // Light grey
-    case InfoMarkClassEnum::ROAD:
-        return QColor(140, 83, 58, 140); // Maroonish
-    case InfoMarkClassEnum::OBJECT:
-        return QColor(255, 255, 0, 140); // Yellow
-
-    case InfoMarkClassEnum::GENERIC:
-    case InfoMarkClassEnum::PLACE:
-    case InfoMarkClassEnum::ACTION:
-    case InfoMarkClassEnum::LOCALITY:
-        return defaultColor;
-    }
-
-    return defaultColor;
-}
-
-static FontFormatFlags getFontFormatFlags(const InfoMarkClassEnum infoMarkClass)
-{
-    switch (infoMarkClass) {
-    case InfoMarkClassEnum::GENERIC:
-    case InfoMarkClassEnum::HERB:
-    case InfoMarkClassEnum::RIVER:
-    case InfoMarkClassEnum::PLACE:
-    case InfoMarkClassEnum::MOB:
-    case InfoMarkClassEnum::COMMENT:
-    case InfoMarkClassEnum::ROAD:
-    case InfoMarkClassEnum::OBJECT:
-        break;
-
-    case InfoMarkClassEnum::ACTION:
-        return FontFormatFlags{FontFormatFlagEnum::ITALICS};
-
-    case InfoMarkClassEnum::LOCALITY:
-        return FontFormatFlags{FontFormatFlagEnum::UNDERLINE};
-    }
-    return {};
-}
-
-static std::optional<QColor> getWallColor(const ExitFlags &flags)
-{
-    const auto drawNoMatchExits = getConfig().canvas.drawNoMatchExits;
-
-    if (flags.isNoFlee()) {
-        return WALL_COLOR_NO_FLEE;
-    } else if (flags.isRandom()) {
-        return WALL_COLOR_RANDOM;
-    } else if (flags.isFall() || flags.isDamage()) {
-        return WALL_COLOR_FALL_DAMAGE;
-    } else if (flags.isSpecial()) {
-        return WALL_COLOR_SPECIAL;
-    } else if (flags.isClimb()) {
-        return WALL_COLOR_CLIMB;
-    } else if (flags.isGuarded()) {
-        return WALL_COLOR_GUARDED;
-    } else if (drawNoMatchExits && flags.isNoMatch()) {
-        return WALL_COLOR_NO_MATCH;
-    } else {
+    if (isTransparent(namedColor))
         return std::nullopt;
-    }
+    return namedColor.getColor();
 }
 
-// REVISIT: merge this with getWallColor()?
-static std::optional<QColor> getVerticalColor(const ExitFlags &flags, const QColor &noFleeColor)
+enum class WallOrientationEnum { HORIZONTAL, VERTICAL };
+static XNamedColor getWallNamedColorCommon(const ExitFlags &flags,
+                                           const WallOrientationEnum wallOrientation)
 {
-    // REVISIT: is it a bug that the NO_FLEE and NO_MATCH colors have 100% opacity?
+    const bool isVertical = wallOrientation == WallOrientationEnum::VERTICAL;
+
+    // Vertical colors override the horizontal case
+    // REVISIT: consider using the same set and just override the color
+    // using the same order of flag testing as the horizontal case.
+    //
+    // In other words, eliminate this `if (isVertical)` block and just use
+    //   return (isVertical ? LOOKUP_COLOR(VERTICAL_COLOR_CLIMB) : LOOKUP_COLOR(WALL_COLOR_CLIMB));
+    // in the appropriate places in the following chained test for flags.
+    if (isVertical) {
+        if (flags.isClimb()) {
+            // NOTE: This color is slightly darker than WALL_COLOR_CLIMB
+            return LOOKUP_COLOR(VERTICAL_COLOR_CLIMB);
+        }
+        /*FALL-THRU*/
+    }
+
     if (flags.isNoFlee()) {
-        return noFleeColor;
+        return LOOKUP_COLOR(WALL_COLOR_NO_FLEE);
+    } else if (flags.isRandom()) {
+        return LOOKUP_COLOR(WALL_COLOR_RANDOM);
+    } else if (flags.isFall() || flags.isDamage()) {
+        return LOOKUP_COLOR(WALL_COLOR_FALL_DAMAGE);
+    } else if (flags.isSpecial()) {
+        return LOOKUP_COLOR(WALL_COLOR_SPECIAL);
     } else if (flags.isClimb()) {
-        // NOTE: This color is slightly darker than WALL_COLOR_CLIMB
-        return QColor::fromRgbF(0.5, 0.5, 0.5); // lightgray
+        return LOOKUP_COLOR(WALL_COLOR_CLIMB);
+    } else if (flags.isGuarded()) {
+        return LOOKUP_COLOR(WALL_COLOR_GUARDED);
+    } else if (flags.isNoMatch()) {
+        return LOOKUP_COLOR(WALL_COLOR_NO_MATCH);
     } else {
-        return getWallColor(flags);
+        return LOOKUP_COLOR(TRANSPARENT);
     }
 }
 
-static XColor4f getWallExitColor(const qint32 layer)
+static XNamedColor getWallNamedColor(const ExitFlags &flags)
 {
-    if (layer == 0)
-        return XColor4f{Qt::black};
-    else if (layer > 0)
-        return XColor4f{0.3f, 0.3f, 0.3f, 0.6f};
-    else
-        return XColor4f{Qt::black, std::max(0.0f, 0.5f - 0.03f * static_cast<float>(layer))};
+    return getWallNamedColorCommon(flags, WallOrientationEnum::HORIZONTAL);
 }
 
-static XColor4f getRoomColor(const qint32 layer, bool isDark = false, bool hasNoSunDeath = false)
+static XNamedColor getVerticalNamedColor(const ExitFlags &flags)
 {
-    if (layer > 0)
-        return XColor4f{0.3f, 0.3f, 0.3f, std::max(0.0f, 0.6f - 0.2f * static_cast<float>(layer))};
+    return getWallNamedColorCommon(flags, WallOrientationEnum::VERTICAL);
+}
 
-    const float alpha = (layer < 0) ? 1.0f : 0.9f;
-    if (isDark) {
-        return XColor4f{getConfig().canvas.roomDarkColor, alpha};
-    } else if (hasNoSunDeath) {
-        return XColor4f{getConfig().canvas.roomDarkLitColor, alpha};
+// All layers
+static void generateAllLayerMeshes(MapBatches &batches,
+                                   OpenGL &gl,
+                                   GLFont &font,
+                                   const LayerToRooms &layerToRooms,
+                                   const RoomIndex &roomIndex,
+                                   const MapCanvasTextures &textures,
+                                   const OptBounds &bounds);
+
+void MapCanvasRoomDrawer::generateBatches(const LayerToRooms &layerToRooms,
+                                          const RoomIndex &roomIndex,
+                                          const OptBounds &bounds)
+{
+    m_batches.reset();   // dtor, if necessary
+    m_batches.emplace(); // ctor
+
+    generateAllLayerMeshes(m_batches.value(),
+                           getOpenGL(),
+                           getFont(),
+                           layerToRooms,
+                           roomIndex,
+                           m_textures,
+                           bounds);
+}
+
+struct TerrainAndTrail
+{
+    MMTexture *terrain = nullptr;
+    MMTexture *trail = nullptr;
+};
+
+static TerrainAndTrail getRoomTerrainAndTrail(const MapCanvasTextures &textures,
+                                              const Room *const room)
+{
+    const auto roomTerrainType = room->getTerrainType();
+    const RoadIndexMaskEnum roadIndex = getRoadIndex(*room);
+
+    TerrainAndTrail result;
+    result.terrain = (roomTerrainType == RoomTerrainEnum::ROAD)
+                         ? textures.road[roadIndex]->getRaw()
+                         : textures.terrain[roomTerrainType]->getRaw();
+
+    if (roadIndex != RoadIndexMaskEnum::NONE && roomTerrainType != RoomTerrainEnum::ROAD) {
+        result.trail = textures.trail[roadIndex]->getRaw();
     }
-    return XColor4f{Qt::white, alpha};
+    return result;
 }
 
-static QString getDoorPostFix(const Room *const room, const ExitDirEnum dir)
+struct IRoomVisitorCallbacks
 {
-    static constexpr const auto SHOWN_FLAGS = DoorFlagEnum::NEED_KEY | DoorFlagEnum::NO_PICK
-                                              | DoorFlagEnum::DELAYED;
+    virtual ~IRoomVisitorCallbacks();
 
-    const DoorFlags flags = room->exit(dir).getDoorFlags();
-    if (!flags.containsAny(SHOWN_FLAGS))
-        return QString{};
+    virtual bool acceptRoom(const Room *) const = 0;
 
-    return QString::asprintf(" [%s%s%s]",
-                             flags.needsKey() ? "L" : "",
-                             flags.isNoPick() ? "/NP" : "",
-                             flags.isDelayed() ? "d" : "");
-}
+    // Rooms
+    virtual void visitTerrainTexture(const Room *, MMTexture *) = 0;
+    virtual void visitOverlayTexture(const Room *, MMTexture *) = 0;
+    virtual void visitNamedColorTint(const Room *, RoomTintEnum) = 0;
 
-static QString getPostfixedDoorName(const Room *const room, const ExitDirEnum dir)
+    // Walls
+    virtual void visitWall(const Room *, ExitDirEnum, XNamedColor, WallTypeEnum, bool isClimb) = 0;
+
+    // Streams
+    virtual void visitStream(const Room *, ExitDirEnum, StreamTypeEnum) = 0;
+};
+
+IRoomVisitorCallbacks::~IRoomVisitorCallbacks() = default;
+
+static void visitRoom(const Room *const room,
+                      const RoomIndex &roomIndex,
+                      const MapCanvasTextures &textures,
+                      IRoomVisitorCallbacks &callbacks)
 {
-    const auto postFix = getDoorPostFix(room, dir);
-    return room->exit(dir).getDoorName() + postFix;
-}
-
-void MapCanvasRoomDrawer::drawInfoMarks()
-{
-    for (const auto &m : m_mapCanvasData.m_data->getMarkersList()) {
-        drawInfoMark(m.get());
-    }
-}
-
-void MapCanvasRoomDrawer::drawInfoMark(InfoMark *marker)
-{
-    const float x1 = static_cast<float>(marker->getPosition1().x) / INFOMARK_SCALE;
-    const float y1 = static_cast<float>(marker->getPosition1().y) / INFOMARK_SCALE;
-    const int layer = marker->getPosition1().z;
-    float x2 = static_cast<float>(marker->getPosition2().x) / INFOMARK_SCALE;
-    float y2 = static_cast<float>(marker->getPosition2().y) / INFOMARK_SCALE;
-    const float dx = x2 - x1;
-    const float dy = y2 - y1;
-
-    float width = 0;
-    float height = 0;
-
-    if (layer != m_currentLayer) {
+    if (!callbacks.acceptRoom(room))
         return;
+
+    // const auto &pos = room->getPosition();
+    const bool isDark = room->getLightType() == RoomLightEnum::DARK;
+    const bool hasNoSundeath = room->getSundeathType() == RoomSundeathEnum::NO_SUNDEATH;
+    const bool notRideable = room->getRidableType() == RoomRidableEnum::NOT_RIDABLE;
+    const auto terrainAndTrail = getRoomTerrainAndTrail(textures, room);
+    const RoomMobFlags mf = room->getMobFlags();
+    const RoomLoadFlags lf = room->getLoadFlags();
+
+    // FIXME: This requires a map update.
+    // TODO: make this a separate mesh.
+    const bool needsUpdate = getConfig().canvas.showUpdated && !room->isUpToDate();
+
+    callbacks.visitTerrainTexture(room, terrainAndTrail.terrain);
+
+    if (auto trail = terrainAndTrail.trail)
+        callbacks.visitOverlayTexture(room, trail);
+
+    if (isDark)
+        callbacks.visitNamedColorTint(room, RoomTintEnum::DARK);
+    else if (hasNoSundeath)
+        callbacks.visitNamedColorTint(room, RoomTintEnum::NO_SUNDEATH);
+
+    mf.for_each([&room, &textures, &callbacks](const RoomMobFlagEnum flag) -> void {
+        callbacks.visitOverlayTexture(room, textures.mob[flag]->getRaw());
+    });
+
+    lf.for_each([&room, &textures, &callbacks](const RoomLoadFlagEnum flag) -> void {
+        callbacks.visitOverlayTexture(room, textures.load[flag]->getRaw());
+    });
+
+    if (notRideable) {
+        callbacks.visitOverlayTexture(room, textures.no_ride->getRaw());
     }
 
-    const auto infoMarkType = marker->getType();
-    const auto infoMarkClass = marker->getClass();
-
-    // Color depends of the class of the InfoMark
-    const QColor color = getInfoMarkColor(infoMarkType, infoMarkClass);
-    const auto fontFormatFlag = getFontFormatFlags(infoMarkClass);
-
-    if (infoMarkType == InfoMarkTypeEnum::TEXT) {
-        width = getScaledFontWidth(marker->getText().toQString(), fontFormatFlag);
-        height = getScaledFontHeight();
-        x2 = x1 + width;
-        y2 = y1 + height;
-
-        // Update the text marker's X2 and Y2 position
-        // REVISIT: This should be done in the "data" stage
-        marker->setPosition2(Coordinate{static_cast<int>(x2 * INFOMARK_SCALE),
-                                        static_cast<int>(y2 * INFOMARK_SCALE),
-                                        marker->getPosition2().z});
+    // FIXME: This requires a map update.
+    if (needsUpdate) {
+        callbacks.visitOverlayTexture(room, textures.update->getRaw());
     }
 
-    // check if marker is visible
-    if (((x1 + 1.0f < m_visible1.x) || (x1 - 1.0f > m_visible2.x + 1.0f))
-        && ((x2 + 1.0f < m_visible1.x) || (x2 - 1.0f > m_visible2.x + 1))) {
-        return;
-    }
-    if (((y1 + 1.0f < m_visible1.y) || (y1 - 1.0f > m_visible2.y + 1.0f))
-        && ((y2 + 1.0f < m_visible1.y) || (y2 - 1.0f > m_visible2.y + 1.0f))) {
-        return;
-    }
-
-    auto &gl = getOpenGL();
-    gl.glPushMatrix();
-    gl.glTranslatef(x1, y1, 0.0f);
-
-    switch (infoMarkType) {
-    case InfoMarkTypeEnum::TEXT:
-        // Render background
-        gl.apply(XColor4f{color});
-        gl.apply(XEnable{XOption::BLEND});
-        gl.apply(XDisable{XOption::DEPTH_TEST});
-        gl.draw(DrawType::TRIANGLE_STRIP,
-                std::vector<Vec3f>{
-                    Vec3f{0.0f, 0.0f, 1.0f},
-                    Vec3f{0.0f, 0.25f + height, 1.0f},
-                    Vec3f{0.2f + width, 0.0f, 1.0f},
-                    Vec3f{0.2f + width, 0.25f + height, 1.0f},
-                });
-        gl.apply(XDisable{XOption::BLEND});
-
-        // Render text proper
-        gl.glTranslatef(-x1 / 2.0f, -y1 / 2.0f, 0.0f);
-        renderText(x1 + 0.1f,
-                   y1 + 0.3f,
-                   marker->getText().toQString(),
-                   textColor(color),
-                   fontFormatFlag,
-                   marker->getRotationAngle());
-        gl.apply(XEnable{XOption::DEPTH_TEST});
-        break;
-    case InfoMarkTypeEnum::LINE:
-        gl.apply(XColor4f{color});
-        gl.apply(XEnable{XOption::BLEND});
-        gl.apply(XDisable{XOption::DEPTH_TEST});
-        gl.apply(XDevicePointSize{2.0});
-        gl.apply(XDeviceLineWidth{2.0});
-        gl.draw(DrawType::LINES,
-                std::vector<Vec3f>{
-                    Vec3f{0.0f, 0.0f, 0.1f},
-                    Vec3f{dx, dy, 0.1f},
-                });
-        gl.apply(XDisable{XOption::BLEND});
-        gl.apply(XEnable{XOption::DEPTH_TEST});
-        break;
-    case InfoMarkTypeEnum::ARROW:
-        gl.apply(XColor4f{color});
-        gl.apply(XEnable{XOption::BLEND});
-        gl.apply(XDisable{XOption::DEPTH_TEST});
-        gl.apply(XDevicePointSize{2.0});
-        gl.apply(XDeviceLineWidth{2.0});
-        gl.draw(DrawType::LINE_STRIP,
-                std::vector<Vec3f>{Vec3f{0.0f, 0.05f, 1.0f},
-                                   Vec3f{dx - 0.2f, dy + 0.1f, 1.0f},
-                                   Vec3f{dx - 0.1f, dy + 0.1f, 1.0f}});
-        gl.draw(DrawType::TRIANGLES,
-                std::vector<Vec3f>{Vec3f{dx - 0.1f, dy + 0.1f - 0.07f, 1.0f},
-                                   Vec3f{dx - 0.1f, dy + 0.1f + 0.07f, 1.0f},
-                                   Vec3f{dx + 0.1f, dy + 0.1f, 1.0f}});
-        gl.apply(XDisable{XOption::BLEND});
-        gl.apply(XEnable{XOption::DEPTH_TEST});
-        break;
-    }
-
-    gl.glPopMatrix();
-}
-
-void MapCanvasRoomDrawer::alphaOverlayTexture(QOpenGLTexture *texture)
-{
-    if (texture != nullptr) {
-        texture->bind();
-    }
-    getOpenGL().callList(m_gllist.room);
-}
-
-void MapCanvasRoomDrawer::drawRoomDoorName(const Room *const sourceRoom,
-                                           const ExitDirEnum sourceDir,
-                                           const Room *const targetRoom,
-                                           const ExitDirEnum targetDir)
-{
-    assert(sourceRoom != nullptr);
-    assert(targetRoom != nullptr);
-
-    const Coordinate sourcePos = sourceRoom->getPosition();
-    const auto srcX = sourcePos.x;
-    const auto srcY = sourcePos.y;
-    const auto srcZ = sourcePos.z;
-
-    const Coordinate targetPos = targetRoom->getPosition();
-    const auto tarX = targetPos.x;
-    const auto tarY = targetPos.y;
-    const auto tarZ = targetPos.z;
-
-    if (srcZ != m_currentLayer && tarZ != m_currentLayer) {
-        return;
-    }
-
-    const auto dX = srcX - tarX;
-    const auto dY = srcY - tarY;
-
-    QString name;
-    bool together = false;
-
-    if (targetRoom->exit(targetDir).isDoor()
-        // the other room has a door?
-        && targetRoom->exit(targetDir).hasDoorName()
-        // has a door on both sides...
-        && targetRoom->exit(targetDir).isHiddenExit()
-        // is hidden
-        && std::abs(dX) <= 1 && std::abs(dY) <= 1) { // the door is close by!
-        // skip the other direction since we're printing these together
-        if (isOdd(sourceDir)) {
-            return;
+    const auto drawInFlow = [room, &roomIndex, &callbacks](const Exit &exit,
+                                                           const ExitDirEnum &dir) -> void {
+        // For each incoming connections
+        for (const auto &targetId : exit.inRange()) {
+            const SharedConstRoom &targetRoom = roomIndex[targetId];
+            if (targetRoom == nullptr)
+                continue;
+            for (const auto targetDir : ALL_EXITS_NESWUD) {
+                const Exit &targetExit = targetRoom->exit(targetDir);
+                const ExitFlags &flags = targetExit.getExitFlags();
+                if (flags.isFlow() && targetExit.containsOut(room->getId())) {
+                    callbacks.visitStream(room, dir, StreamTypeEnum::InFlow);
+                    return;
+                }
+            }
         }
+    };
 
-        together = true;
+    // drawExit()
 
-        // no need for duplicating names (its spammy)
-        const QString sourceName = getPostfixedDoorName(sourceRoom, sourceDir);
-        const QString targetName = getPostfixedDoorName(targetRoom, targetDir);
-        if (sourceName != targetName) {
-            name = sourceName + "/" + targetName;
-        } else {
-            name = sourceName;
-        }
-    } else {
-        name = getPostfixedDoorName(sourceRoom, sourceDir);
-    }
-
-    const float width = getScaledFontWidth(name);
-    const float height = getScaledFontHeight();
-
-    float boxX = 0, boxY = 0;
-    if (together) {
-        boxX = srcX - (width / 2.0f) - (dX * 0.5f);
-        boxY = srcY - 0.5f - (dY * 0.5f);
-    } else {
-        boxX = srcX - (width / 2.0f);
-        switch (sourceDir) {
-        case ExitDirEnum::NORTH:
-            boxY = srcY - 0.65f;
-            break;
-        case ExitDirEnum::SOUTH:
-            boxY = srcY - 0.15f;
-            break;
-        case ExitDirEnum::WEST:
-            boxY = srcY - 0.5f;
-            break;
-        case ExitDirEnum::EAST:
-            boxY = srcY - 0.35f;
-            break;
-        case ExitDirEnum::UP:
-            boxY = srcY - 0.85f;
-            break;
-        case ExitDirEnum::DOWN:
-            boxY = srcY;
-            break;
-
-        case ExitDirEnum::UNKNOWN:
-        case ExitDirEnum::NONE:
-        default:
-            break;
-        };
-    }
-
-    drawTextBox(name, boxX, boxY, width, height);
-}
-
-void MapCanvasRoomDrawer::drawTextBox(
-    const QString &name, const float x, const float y, const float width, const float height)
-{
-    const float boxX2 = x + width;
-    const float boxY2 = y + height;
-
-    // check if box is visible
-    if (((x + 1.0f < m_visible1.x) || (x - 1 > m_visible2.x + 1))
-        && ((boxX2 + 1 < m_visible1.x) || (boxX2 - 1.0f > m_visible2.x + 1.0f))) {
-        return;
-    }
-    if (((y + 1.0f < m_visible1.y) || (y - 1 > m_visible2.y + 1))
-        && ((boxY2 + 1.0f < m_visible1.y) || (boxY2 - 1.0f > m_visible2.y + 1.0f))) {
-        return;
-    }
-
-    auto &gl = getOpenGL();
-    gl.glPushMatrix();
-
-    gl.glTranslatef(x /*-0.5*/, y /*-0.5*/, 0);
-
-    // Render background
-    gl.apply(XColor4f{0, 0, 0, 0.3f});
-    gl.apply(XEnable{XOption::BLEND});
-    gl.draw(DrawType::TRIANGLE_STRIP,
-            std::vector<Vec3f>{
-                Vec3f{0.0f, 0.0f, 1.0f},
-                Vec3f{0.0f, 0.25f + height, 1.0f},
-                Vec3f{0.2f + width, 0.0f, 1.0f},
-                Vec3f{0.2f + width, 0.25f + height, 1.0f},
-            });
-    gl.apply(XDisable{XOption::BLEND});
-
-    // text
-    gl.glTranslatef(-x / 2.0f, -y / 2.0f, 0.0f);
-    renderText(x + 0.1f, y + 0.3f, name);
-    gl.apply(XEnable{XOption::DEPTH_TEST});
-
-    gl.glPopMatrix();
-}
-
-void MapCanvasRoomDrawer::drawFlow(const Room *const room,
-                                   const RoomIndex &rooms,
-                                   const ExitDirEnum exitDirection)
-{
-    // Start drawing
-    auto &gl = getOpenGL();
-    gl.glPushMatrix();
-
-    // Prepare pen
-    QColor color = QColor(76, 216, 255);
-    gl.apply(XColor4f{color});
-    gl.apply(XEnable{XOption::BLEND});
-    gl.apply(XDevicePointSize{4.0});
-    gl.apply(XDeviceLineWidth{1.0f});
-
-    // Draw part in this room
-    if (room->getPosition().z == m_currentLayer) {
-        gl.callList(m_gllist.flow.begin[exitDirection]);
-    }
-
-    // Draw part in adjacent room
-    const ExitDirEnum targetDir = opposite(exitDirection);
-    const ExitsList &exitslist = room->getExitsList();
-    const Exit &sourceExit = exitslist[exitDirection];
-
-    // For each outgoing connections
-    for (auto targetId : sourceExit.outRange()) {
-        const SharedConstRoom &targetRoom = rooms[targetId];
-        const auto &pos = targetRoom->getPosition();
-        if (pos.z == m_currentLayer) {
-            gl.setMatrix(MatrixType::MODELVIEW, getTranslationMatrix(pos.x, pos.y));
-            gl.callList(m_gllist.flow.end[targetDir]);
-        }
-    }
-
-    // Finish pen
-    gl.apply(XDeviceLineWidth{2.0});
-    gl.apply(XDevicePointSize{2.0});
-    gl.apply(XDisable{XOption::BLEND});
-
-    // Terminate drawing
-    color = Qt::black;
-    gl.apply(XColor4f{color});
-    gl.glPopMatrix();
-}
-
-void MapCanvasRoomDrawer::drawExit(const Room *const room,
-                                   const RoomIndex &rooms,
-                                   const qint32 layer,
-                                   const ExitDirEnum dir)
-{
+    // FIXME: This requires a map update.
+    // REVISIT: The logic of drawNotMappedExits seems a bit wonky.
     const auto drawNotMappedExits = getConfig().canvas.drawNotMappedExits;
+    for (auto &dir : ALL_EXITS_NESW) {
+        const Exit &exit = room->exit(dir);
+        const ExitFlags &flags = exit.getExitFlags();
+        const auto isExit = flags.isExit();
+        const auto isDoor = flags.isDoor();
 
-    const auto &wallList = m_gllist.wall[dir];
-    const auto &doorList = m_gllist.door[dir];
-    assert(wallList.isValid());
-    assert(doorList.isValid());
+        const bool isClimb = flags.isClimb();
 
-    const Exit &exit = room->exit(dir);
-    const ExitFlags flags = exit.getExitFlags();
-    const auto isExit = flags.isExit();
-    const auto isDoor = flags.isDoor();
+        // FIXME: This requires a map update.
+        // TODO: make "not mapped" exits a separate mesh;
+        // except what should we do for the "else" case?
+        if (isExit && drawNotMappedExits && exit.outIsEmpty()) { // zero outgoing connections
+            callbacks.visitWall(room,
+                                dir,
+                                LOOKUP_COLOR(WALL_COLOR_NOT_MAPPED),
+                                WallTypeEnum::DOTTED,
+                                isClimb);
+        } else {
+            const auto namedColor = getWallNamedColor(flags);
+            if (!isTransparent(namedColor)) {
+                callbacks.visitWall(room, dir, namedColor, WallTypeEnum::DOTTED, isClimb);
+            }
 
-    if (isExit && drawNotMappedExits && exit.outIsEmpty()) { // zero outgoing connections
-        drawListWithLineStipple(wallList, WALL_COLOR_NOTMAPPED);
-    } else {
-        if (const auto optColor = getWallColor(flags)) {
-            const auto &color = optColor.value();
-            assert(color != Qt::transparent);
-            drawListWithLineStipple(wallList, color);
+            if (flags.isFlow()) {
+                callbacks.visitStream(room, dir, StreamTypeEnum::OutFlow);
+            }
+        }
+
+        // wall
+        if (!isExit || isDoor) {
+            if (!isDoor && !exit.outIsEmpty()) {
+                callbacks.visitWall(room,
+                                    dir,
+                                    LOOKUP_COLOR(WALL_COLOR_BUG_WALL_DOOR),
+                                    WallTypeEnum::DOTTED,
+                                    isClimb);
+            } else {
+                callbacks.visitWall(room,
+                                    dir,
+                                    LOOKUP_COLOR(WALL_COLOR_REGULAR_EXIT),
+                                    WallTypeEnum::SOLID,
+                                    isClimb);
+            }
+        }
+        // door
+        if (isDoor) {
+            callbacks.visitWall(room,
+                                dir,
+                                LOOKUP_COLOR(WALL_COLOR_REGULAR_EXIT),
+                                WallTypeEnum::DOOR,
+                                isClimb);
+        }
+
+        if (!exit.inIsEmpty())
+            drawInFlow(exit, dir);
+    }
+
+    // drawVertical
+    for (auto &dir : {ExitDirEnum::UP, ExitDirEnum::DOWN}) {
+        const Exit &exit = room->exit(dir);
+        const auto &flags = exit.getExitFlags();
+        if (!flags.isExit())
+            continue;
+
+        const bool isClimb = flags.isClimb();
+
+        // FIXME: This requires a map update.
+        if (drawNotMappedExits && exit.outIsEmpty()) { // zero outgoing connections
+            callbacks.visitWall(room,
+                                dir,
+                                LOOKUP_COLOR(WALL_COLOR_NOT_MAPPED),
+                                WallTypeEnum::DOTTED,
+                                isClimb);
+            continue;
+        }
+
+        // NOTE: in the "old" version, this falls-thru and the custom color is overwritten
+        // by the regular exit; so using if-else here is a bug fix.
+        const auto namedColor = getVerticalNamedColor(flags);
+        if (!isTransparent(namedColor)) {
+            callbacks.visitWall(room, dir, namedColor, WallTypeEnum::DOTTED, isClimb);
+        } else {
+            callbacks.visitWall(room,
+                                dir,
+                                LOOKUP_COLOR(VERTICAL_COLOR_REGULAR_EXIT),
+                                WallTypeEnum::SOLID,
+                                isClimb);
+        }
+
+        if (flags.isDoor()) {
+            callbacks.visitWall(room,
+                                dir,
+                                LOOKUP_COLOR(WALL_COLOR_REGULAR_EXIT),
+                                WallTypeEnum::DOOR,
+                                isClimb);
         }
 
         if (flags.isFlow()) {
-            drawFlow(room, rooms, dir);
+            callbacks.visitStream(room, dir, StreamTypeEnum::OutFlow);
         }
+
+        if (!exit.inIsEmpty())
+            drawInFlow(exit, dir);
+    }
+}
+
+static void visitRooms(const RoomVector &rooms,
+                       const RoomIndex &roomIndex,
+                       const MapCanvasTextures &textures,
+                       IRoomVisitorCallbacks &callbacks)
+{
+    for (const auto &room : rooms) {
+        visitRoom(room, roomIndex, textures, callbacks);
+    }
+}
+
+struct RoomTex
+{
+    const Room *room = nullptr;
+    MMTexture *tex = nullptr;
+
+    explicit RoomTex(const Room *const room, MMTexture *const tex)
+        : room{room}
+        , tex{tex}
+    {
+        deref(tex);
     }
 
-    auto &gl = getOpenGL();
+    int priority() const { return deref(tex).getPriority(); }
+    GLuint textureId() const { return deref(tex).textureId(); }
 
-    // wall
-    if (!isExit || isDoor) {
-        if (!isDoor && !exit.outIsEmpty()) {
-            drawListWithLineStipple(wallList, WALL_COLOR_WALL_DOOR);
+    friend bool operator<(const RoomTex &lhs, const RoomTex &rhs)
+    {
+        // true if lhs comes strictly before rhs
+        return lhs.priority() < rhs.priority();
+    }
+};
+
+struct ColoredRoomTex : public RoomTex
+{
+    Color color;
+    ColoredRoomTex(const Room *const room, MMTexture *const tex) = delete;
+
+    explicit ColoredRoomTex(const Room *const room, MMTexture *const tex, const Color &color)
+        : RoomTex{room, tex}
+        , color{color}
+    {
+        deref(tex);
+    }
+};
+
+// Caution: Although O(n) partitioning into an array indexed by constant number of texture IDs
+// is theoretically faster than O(n log n) sorting, one naive attempt to prematurely optimize
+// this code resulted in a 50x slow-down.
+//
+// Note: sortByTexture() probably won't ever be a performance bottleneck for the default map,
+// since at the time of this comment, the full O(n log n) vector sort only takes up about 2%
+// of the total runtime of the mesh generation.
+//
+// Conclusion: Look elsewhere for optimization opportunities -- at least until profiling says
+// that sorting is at significant fraction of the total runtime.
+struct RoomTexVector final : public std::vector<RoomTex>
+{
+    // sorting stl iterators is slower than christmas with GLIBCXX_DEBUG,
+    // so we'll use pointers instead. std::stable_sort isn't
+    // necessary because everything's opaque, so we'll use
+    // vanilla std::sort, which is N log N instead of N^2 log N.
+    void sortByTexture()
+    {
+        if (size() < 2)
+            return;
+
+        RoomTex *const beg = data();
+        RoomTex *const end = beg + size();
+        // NOTE: comparison will be std::less<RoomTex>, which uses
+        // operator<() if it exists.
+        std::sort(beg, end);
+    }
+
+    bool isSorted() const
+    {
+        if (size() < 2)
+            return true;
+
+        const RoomTex *const beg = data();
+        const RoomTex *const end = beg + size();
+        return std::is_sorted(beg, end);
+    }
+};
+
+struct ColoredRoomTexVector final : public std::vector<ColoredRoomTex>
+{
+    // sorting stl iterators is slower than christmas with GLIBCXX_DEBUG,
+    // so we'll use pointers instead. std::stable_sort isn't
+    // necessary because everything's opaque, so we'll use
+    // vanilla std::sort, which is N log N instead of N^2 log N.
+    void sortByTexture()
+    {
+        if (size() < 2)
+            return;
+
+        ColoredRoomTex *const beg = data();
+        ColoredRoomTex *const end = beg + size();
+        // NOTE: comparison will be std::less<RoomTex>, which uses
+        // operator<() if it exists.
+        std::sort(beg, end);
+    }
+
+    bool isSorted() const
+    {
+        if (size() < 2)
+            return true;
+
+        const ColoredRoomTex *const beg = data();
+        const ColoredRoomTex *const end = beg + size();
+        return std::is_sorted(beg, end);
+    }
+};
+
+template<typename T, typename Callback>
+static void foreach_texture(const T &textures, Callback &&callback)
+{
+    assert(textures.isSorted());
+
+    const auto size = textures.size();
+    for (size_t beg = 0, next = size; beg < size; beg = next) {
+        const RoomTex &rtex = textures[beg];
+        const auto textureId = rtex.textureId();
+
+        size_t end = beg + 1;
+        for (; end < size; ++end)
+            if (textureId != textures[end].textureId())
+                break;
+
+        next = end;
+        /* note: creating temporaries to prevent callback from modifying beg and end */
+        callback(size_t(beg), size_t(end));
+    }
+}
+
+static UniqueMeshVector createSortedTexturedMeshes(OpenGL &gl, const RoomTexVector &textures)
+{
+    if (textures.empty())
+        return UniqueMeshVector{};
+
+    const size_t numUniqueTextures = [&textures]() -> size_t {
+        size_t texCount = 0;
+        ::foreach_texture(textures,
+                          [&texCount](size_t /* beg */, size_t /*end*/) -> void { ++texCount; });
+        return texCount;
+    }();
+
+    std::vector<UniqueMesh> result_meshes;
+    result_meshes.reserve(numUniqueTextures);
+    const auto lambda = [&gl, &result_meshes, &textures](const size_t beg,
+                                                         const size_t end) -> void {
+        const RoomTex &rtex = textures[beg];
+        const size_t count = end - beg;
+
+        std::vector<TexVert> verts;
+        verts.reserve(count * VERTS_PER_QUAD); /* quads */
+
+        // D-C
+        // | |  ccw winding
+        // A-B
+        for (size_t i = beg; i < end; ++i) {
+            const auto &pos = textures[i].room->getPosition();
+            const auto v0 = pos.to_vec3();
+#define EMIT(x, y) verts.emplace_back(glm::vec2((x), (y)), v0 + glm::vec3((x), (y), 0));
+            EMIT(0, 0);
+            EMIT(1, 0);
+            EMIT(1, 1);
+            EMIT(0, 1);
+#undef EMIT
+        }
+
+        result_meshes.emplace_back(gl.createTexturedQuadBatch(verts, rtex.tex->getShared()));
+    };
+
+    ::foreach_texture(textures, lambda);
+    assert(result_meshes.size() == numUniqueTextures);
+    return UniqueMeshVector{std::move(result_meshes)};
+}
+
+static UniqueMeshVector createSortedColoredTexturedMeshes(OpenGL &gl,
+                                                          const ColoredRoomTexVector &textures)
+{
+    if (textures.empty())
+        return UniqueMeshVector{};
+
+    const size_t numUniqueTextures = [&textures]() -> size_t {
+        size_t texCount = 0;
+        ::foreach_texture(textures,
+                          [&texCount](size_t /* beg */, size_t /*end*/) -> void { ++texCount; });
+        return texCount;
+    }();
+
+    std::vector<UniqueMesh> result_meshes;
+    result_meshes.reserve(numUniqueTextures);
+
+    const auto lambda = [&gl, &result_meshes, &textures](const size_t beg,
+                                                         const size_t end) -> void {
+        const RoomTex &rtex = textures[beg];
+        const size_t count = end - beg;
+
+        std::vector<ColoredTexVert> verts;
+        verts.reserve(count * VERTS_PER_QUAD); /* quads */
+
+        // D-C
+        // | |  ccw winding
+        // A-B
+        for (size_t i = beg; i < end; ++i) {
+            const ColoredRoomTex &thisVert = textures[i];
+            const auto &pos = thisVert.room->getPosition();
+            const auto v0 = pos.to_vec3();
+            const auto color = thisVert.color;
+
+#define EMIT(x, y) verts.emplace_back(color, glm::vec2((x), (y)), v0 + glm::vec3((x), (y), 0));
+            EMIT(0, 0);
+            EMIT(1, 0);
+            EMIT(1, 1);
+            EMIT(0, 1);
+#undef EMIT
+        }
+
+        result_meshes.emplace_back(gl.createColoredTexturedQuadBatch(verts, rtex.tex->getShared()));
+    };
+
+    ::foreach_texture(textures, lambda);
+    assert(result_meshes.size() == numUniqueTextures);
+    return UniqueMeshVector{std::move(result_meshes)};
+}
+
+struct LayerBatchMeasurements final
+{
+    size_t numTerrains = 0;
+    size_t numOverlays = 0;
+
+    size_t numSolidWalls = 0;
+    size_t numDottedWalls = 0;
+    size_t numDoors = 0;
+    size_t numUpDownExits = 0;
+
+    RoomTintArray<size_t> numTints;
+
+    size_t numStreamOuts = 0;
+    size_t numStreamIns = 0;
+};
+
+struct LayerBatchMeasurer final : public IRoomVisitorCallbacks
+{
+    LayerBatchMeasurements &measurements;
+    const OptBounds &bounds;
+
+    explicit LayerBatchMeasurer(LayerBatchMeasurements &measurements, const OptBounds &bounds)
+        : measurements(measurements)
+        , bounds{bounds}
+    {}
+    ~LayerBatchMeasurer() override;
+
+    DELETE_CTORS_AND_ASSIGN_OPS(LayerBatchMeasurer);
+
+    bool acceptRoom(const Room *const room) const override
+    {
+        return bounds.contains(room->getPosition());
+    }
+
+    void visitTerrainTexture(const Room *, MMTexture *terrain) override
+    {
+        if (terrain != nullptr)
+            ++measurements.numTerrains;
+        else
+            assert(false);
+    }
+    void visitOverlayTexture(const Room *, MMTexture *overlay) override
+    {
+        if (overlay != nullptr)
+            ++measurements.numOverlays;
+    }
+
+    void visitNamedColorTint(const Room *, RoomTintEnum tint) override
+    {
+        ++measurements.numTints[tint];
+    }
+
+    void visitWall(const Room *,
+                   const ExitDirEnum dir,
+                   const XNamedColor color,
+                   const WallTypeEnum wallType,
+                   bool /*isClimb*/) override
+    {
+        if (isTransparent(color))
+            return;
+
+        if (wallType == WallTypeEnum::DOOR) {
+            // assumes NESW doors have the same number of lines as UD doors.
+            ++measurements.numDoors;
+            return;
+        }
+
+        if (isNESW(dir)) {
+            size_t &toInc = (wallType == WallTypeEnum::SOLID) ? measurements.numSolidWalls
+                                                              : measurements.numDottedWalls;
+            ++toInc;
         } else {
-            gl.apply(getWallExitColor(layer));
-            gl.callList(wallList);
+            const bool isUp = dir == ExitDirEnum::UP;
+            assert(isUp || dir == ExitDirEnum::DOWN);
+            if (wallType == WallTypeEnum::DOTTED) {
+                // NOTE: Currently ignores dotted status of up/down.
+            }
+            ++measurements.numUpDownExits;
         }
     }
-    // door
-    if (isDoor) {
-        gl.apply(getWallExitColor(layer));
-        gl.callList(doorList);
+
+    void visitStream(const Room *, ExitDirEnum, StreamTypeEnum type) override
+    {
+        switch (type) {
+        case StreamTypeEnum::OutFlow:
+            ++measurements.numStreamOuts;
+            return;
+        case StreamTypeEnum::InFlow:
+            ++measurements.numStreamIns;
+            return;
+        default:
+            break;
+        }
+
+        assert(false);
     }
+};
+
+LayerBatchMeasurer::~LayerBatchMeasurer() = default;
+
+using ColoredLineBatch = std::vector<ColorVert>;
+using ColoredQuadBatch = std::vector<ColorVert>;
+using PlainQuadBatch = std::vector<glm::vec3>;
+
+struct LayerBatchData final
+{
+    RoomTexVector roomTerrains;
+    RoomTexVector roomOverlays;
+    // REVISIT: Consider storing up/down door lines in a separate batch,
+    // so they can be rendered thicker.
+    ColoredRoomTexVector doors;
+    ColoredRoomTexVector solidWallLines;
+    ColoredRoomTexVector dottedWallLines;
+    ColoredRoomTexVector roomUpDownExits;
+    ColoredRoomTexVector streamIns;
+    ColoredRoomTexVector streamOuts;
+    RoomTintArray<PlainQuadBatch> roomTints;
+    PlainQuadBatch roomLayerBoostQuads;
+
+    explicit LayerBatchData(const LayerBatchMeasurements &measurements)
+    {
+        roomTerrains.reserve(measurements.numTerrains);
+        roomOverlays.reserve(measurements.numOverlays);
+        roomUpDownExits.reserve(measurements.numUpDownExits);
+        doors.reserve(measurements.numDoors);
+        solidWallLines.reserve(measurements.numSolidWalls);
+        dottedWallLines.reserve(measurements.numDottedWalls);
+        streamIns.reserve(measurements.numStreamIns);
+        streamOuts.reserve(measurements.numStreamOuts);
+        for (const auto tint : ALL_ROOM_TINTS) {
+            roomTints[tint].reserve(measurements.numTints[tint] * VERTS_PER_QUAD);
+        }
+        roomLayerBoostQuads.reserve(VERTS_PER_QUAD * measurements.numTerrains);
+    }
+
+    void verifyCounts(const LayerBatchMeasurements &measurements)
+    {
+        if constexpr (IS_DEBUG_BUILD) {
+            assert(roomTerrains.size() == measurements.numTerrains);
+            assert(roomOverlays.size() == measurements.numOverlays);
+            assert(roomUpDownExits.size() == measurements.numUpDownExits);
+            assert(doors.size() == measurements.numDoors);
+            assert(solidWallLines.size() == measurements.numSolidWalls);
+            assert(dottedWallLines.size() == measurements.numDottedWalls);
+            assert(streamIns.size() == measurements.numStreamIns);
+            assert(streamOuts.size() == measurements.numStreamOuts);
+            for (const auto tint : ALL_ROOM_TINTS) {
+                assert(roomTints[tint].size() == measurements.numTints[tint] * VERTS_PER_QUAD);
+            }
+            assert(roomLayerBoostQuads.size() == VERTS_PER_QUAD * measurements.numTerrains);
+        }
+    }
+
+    ~LayerBatchData() = default;
+    DELETE_CTORS_AND_ASSIGN_OPS(LayerBatchData);
+
+    void sort()
+    {
+        /* TODO: Only sort on 2.1 path, since 3.0 can use GL_TEXTURE_2D_ARRAY. */
+        roomTerrains.sortByTexture();
+        roomOverlays.sortByTexture();
+
+        // REVISIT: We could just make two separate lists and avoid the sort.
+        // However, it may be convenient to have separate dotted vs solid texture,
+        // so we'd still need to sort in that case.
+        roomUpDownExits.sortByTexture();
+        doors.sortByTexture();
+        solidWallLines.sortByTexture();
+        dottedWallLines.sortByTexture();
+        streamIns.sortByTexture();
+        streamOuts.sortByTexture();
+    }
+
+    LayerMeshes getMeshes(OpenGL &gl)
+    {
+        LayerMeshes meshes;
+        meshes.terrain = ::createSortedTexturedMeshes(gl, roomTerrains);
+        for (const auto tint : ALL_ROOM_TINTS) {
+            meshes.tints[tint] = gl.createPlainQuadBatch(roomTints[tint]);
+        }
+        meshes.overlays = ::createSortedTexturedMeshes(gl, roomOverlays);
+        meshes.doors = ::createSortedColoredTexturedMeshes(gl, doors);
+        meshes.walls = ::createSortedColoredTexturedMeshes(gl, solidWallLines);
+        meshes.dottedWalls = ::createSortedColoredTexturedMeshes(gl, dottedWallLines);
+        meshes.upDownExits = ::createSortedColoredTexturedMeshes(gl, roomUpDownExits);
+        meshes.streamIns = ::createSortedColoredTexturedMeshes(gl, streamIns);
+        meshes.streamOuts = ::createSortedColoredTexturedMeshes(gl, streamOuts);
+        meshes.layerBoost = gl.createPlainQuadBatch(roomLayerBoostQuads);
+        meshes.isValid = true;
+        return meshes;
+    }
+};
+
+class LayerBatchBuilder final : public IRoomVisitorCallbacks
+{
+private:
+    LayerBatchData &data;
+    const MapCanvasTextures &textures;
+    const OptBounds &bounds;
+
+public:
+    explicit LayerBatchBuilder(LayerBatchData &data,
+                               const MapCanvasTextures &textures,
+                               const OptBounds &bounds)
+        : data{data}
+        , textures{textures}
+        , bounds{bounds}
+    {}
+
+    ~LayerBatchBuilder() override;
+
+    DELETE_CTORS_AND_ASSIGN_OPS(LayerBatchBuilder);
+
+    bool acceptRoom(const Room *const room) const override
+    {
+        return bounds.contains(room->getPosition());
+    }
+
+    void visitTerrainTexture(const Room *const room, MMTexture *terrain) override
+    {
+        if (terrain == nullptr)
+            return;
+
+        data.roomTerrains.emplace_back(room, terrain);
+
+        const auto v0 = room->getPosition().to_vec3();
+#define EMIT(x, y) data.roomLayerBoostQuads.emplace_back(v0 + glm::vec3((x), (y), 0));
+        EMIT(0, 0);
+        EMIT(1, 0);
+        EMIT(1, 1);
+        EMIT(0, 1);
+#undef EMIT
+    }
+
+    void visitOverlayTexture(const Room *const room, MMTexture *const overlay) override
+    {
+        if (overlay != nullptr)
+            data.roomOverlays.emplace_back(room, overlay);
+    }
+
+    void visitNamedColorTint(const Room *const room, const RoomTintEnum tint) override
+    {
+        const auto v0 = room->getPosition().to_vec3();
+#define EMIT(x, y) data.roomTints[tint].emplace_back(v0 + glm::vec3((x), (y), 0));
+        EMIT(0, 0);
+        EMIT(1, 0);
+        EMIT(1, 1);
+        EMIT(0, 1);
+#undef EMIT
+    }
+
+    void visitWall(const Room *const room,
+                   const ExitDirEnum dir,
+                   const XNamedColor color,
+                   const WallTypeEnum wallType,
+                   const bool isClimb) override
+    {
+        if (isTransparent(color))
+            return;
+
+        const std::optional<Color> optColor = getColor(color);
+        if (!optColor.has_value()) {
+            assert(false);
+            return;
+        }
+
+        // see not above about OpenGL 2.x vs 3.x and colors.
+        const auto glcolor = optColor.value();
+
+        if (wallType == WallTypeEnum::DOOR) {
+            // Note: We could use two door textures (NESW and UD), and then just rotate the
+            // texture coordinates, but doing that would require a different code path.
+            const SharedMMTexture &tex = textures.door[dir];
+            data.doors.emplace_back(room, tex->getRaw(), glcolor);
+
+        } else {
+            if (isNESW(dir)) {
+                if (wallType == WallTypeEnum::SOLID) {
+                    const SharedMMTexture &tex = textures.wall[dir];
+                    data.solidWallLines.emplace_back(room, tex->getRaw(), glcolor);
+                } else {
+                    const SharedMMTexture &tex = textures.dotted_wall[dir];
+                    data.dottedWallLines.emplace_back(room, tex->getRaw(), glcolor);
+                }
+            } else {
+                const bool isUp = dir == ExitDirEnum::UP;
+                assert(isUp || dir == ExitDirEnum::DOWN);
+
+                const SharedMMTexture &tex = isClimb
+                                                 ? (isUp ? textures.exit_climb_up
+                                                         : textures.exit_climb_down)
+                                                 : (isUp ? textures.exit_up : textures.exit_down);
+
+                data.roomUpDownExits.emplace_back(room, tex->getRaw(), glcolor);
+            }
+        }
+    }
+
+    void visitStream(const Room *const room,
+                     const ExitDirEnum dir,
+                     const StreamTypeEnum type) override
+    {
+        const Color color = LOOKUP_COLOR(STREAM).getColor();
+        switch (type) {
+        case StreamTypeEnum::OutFlow:
+            data.streamOuts.emplace_back(room, textures.stream_out[dir]->getRaw(), color);
+            return;
+        case StreamTypeEnum::InFlow:
+            data.streamIns.emplace_back(room, textures.stream_in[dir]->getRaw(), color);
+            return;
+        default:
+            break;
+        }
+
+        assert(false);
+    }
+};
+
+LayerBatchBuilder::~LayerBatchBuilder() = default;
+
+static LayerMeshes generateLayerMeshes(OpenGL &gl,
+                                       const RoomVector &rooms,
+                                       const RoomIndex &roomIndex,
+                                       const MapCanvasTextures &textures,
+                                       const OptBounds &bounds)
+{
+    const LayerBatchMeasurements measurements =
+        [&bounds, &rooms, &roomIndex, &textures]() -> LayerBatchMeasurements {
+        LayerBatchMeasurements result;
+        LayerBatchMeasurer measurer{result, bounds};
+        visitRooms(rooms, roomIndex, textures, measurer);
+        return result;
+    }();
+
+    LayerBatchData data{measurements};
+    LayerBatchBuilder builder{data, textures, bounds};
+    visitRooms(rooms, roomIndex, textures, builder);
+
+    if constexpr (IS_DEBUG_BUILD) {
+        data.verifyCounts(measurements);
+    }
+
+    data.sort();
+    return data.getMeshes(gl);
 }
 
-void MapCanvasRoomDrawer::drawRooms(const LayerToRooms &layerToRooms,
-                                    const RoomIndex &roomIndex,
-                                    const RoomLocks &locks)
+static void generateAllLayerMeshes(MapBatches &batches,
+                                   OpenGL &gl,
+                                   GLFont &font,
+                                   const LayerToRooms &layerToRooms,
+                                   const RoomIndex &roomIndex,
+                                   const MapCanvasTextures &textures,
+                                   const OptBounds &bounds)
 {
-    const auto wantExtraDetail = m_scaleFactor * m_mapCanvasData.m_currentStepScaleFactor >= 0.15f;
+    auto &batchedMeshes = batches.batchedMeshes;
+    auto &connectionDrawerBuffers = batches.connectionDrawerBuffers;
+    auto &roomNameBatches = batches.roomNameBatches;
+    auto &connectionMeshes = batches.connectionMeshes;
+
     for (const auto &layer : layerToRooms) {
-        const auto &rooms = layer.second;
-        for (const auto &room : rooms) {
-            drawRoom(room, wantExtraDetail);
-        }
-        for (const auto &room : rooms) {
-            drawWallsAndExits(room, roomIndex);
-        }
-        for (const auto &room : rooms) {
-            drawBoost(room, locks);
-        }
-    }
-    // Lines (Connections, InfoMark Lines)
-    if (wantExtraDetail) {
-        for (const auto &layer : layerToRooms) {
-            for (const auto &room : layer.second) {
-                drawRoomConnectionsAndDoors(room, roomIndex);
+        const int thisLayer = layer.first;
+        auto &layerMeshes = batchedMeshes[thisLayer];
+        auto &layerRoomNames = roomNameBatches[thisLayer];
+        auto &layerConnections = connectionMeshes[thisLayer];
+        auto &rooms = layer.second;
+
+        layerMeshes = ::generateLayerMeshes(gl, rooms, roomIndex, textures, bounds);
+
+        {
+            auto &cdb = connectionDrawerBuffers[thisLayer];
+            cdb.clear();
+
+            const auto currentLayer = thisLayer;
+
+            RoomNameBatch rnb;
+            ConnectionDrawer cd{cdb, rnb, currentLayer, bounds};
+            {
+                // pass 1: measurements
+                for (const auto &room : rooms) {
+                    cd.drawRoomConnectionsAndDoors(room, roomIndex);
+                }
+                cd.endMeasurements();
+
+                // pass 2: add to buffers
+                for (const auto &room : rooms) {
+                    cd.drawRoomConnectionsAndDoors(room, roomIndex);
+                }
+                cd.verify();
             }
+
+            layerRoomNames = rnb.getMesh(font);
+            layerConnections = cdb.getMeshes(gl);
         }
     }
 }
 
-void MapCanvasRoomDrawer::drawRoom(const Room *const room, bool wantExtraDetail)
+void LayerMeshes::render(const int thisLayer, const int focusedLayer)
 {
-    const auto x = room->getPosition().x;
-    const auto y = room->getPosition().y;
-    const auto z = room->getPosition().z;
-    const auto layer = z - m_currentLayer;
-
-    auto &gl = getOpenGL();
-    gl.glPushMatrix();
-    gl.glTranslatef(static_cast<float>(x) - 0.5f,
-                    static_cast<float>(y) - 0.5f,
-                    ROOM_Z_DISTANCE * static_cast<float>(layer));
-
-    // TODO(nschimme): https://stackoverflow.com/questions/6017176/gllinestipple-deprecated-in-opengl-3-1
-    gl.apply(LineStippleType::TWO);
-
-    const auto roomColor = getRoomColor(layer);
-
-    // Make dark and troll safe rooms look dark
-    const bool isDark = room->getLightType() == RoomLightEnum::DARK;
-    const bool hasNoSundeath = room->getSundeathType() == RoomSundeathEnum::NO_SUNDEATH;
-    gl.apply((isDark || hasNoSundeath) ? getRoomColor(layer, isDark, hasNoSundeath) : roomColor);
-
-    if (layer > 0) {
+    bool disableTextures = false;
+    if (thisLayer > focusedLayer) {
         if (!getConfig().canvas.drawUpperLayersTextured) {
-            gl.apply(XEnable{XOption::BLEND});
-            gl.callList(m_gllist.room);
-            gl.apply(XDisable{XOption::BLEND});
-            gl.glPopMatrix();
-            return;
+            // Disable texturing for this layer. We want to draw
+            // all of the squares in white (using layer boost quads),
+            // and then still draw the walls.
+            disableTextures = true;
         }
-        gl.apply(XEnable{XOption::POLYGON_STIPPLE});
     }
 
-    gl.apply(XEnable{XOption::BLEND});
-    gl.apply(XEnable{XOption::TEXTURE_2D});
+    const GLRenderState less = GLRenderState().withDepthFunction(DepthFunctionEnum::LESS);
+    const GLRenderState equal = GLRenderState().withDepthFunction(DepthFunctionEnum::EQUAL);
+    const GLRenderState lequal = GLRenderState().withDepthFunction(DepthFunctionEnum::LEQUAL);
 
-    const auto roomTerrainType = room->getTerrainType();
-    const RoadIndexMaskEnum roadIndex = getRoadIndex(*room);
-    QOpenGLTexture *const texture = (roomTerrainType == RoomTerrainEnum::ROAD)
-                                        ? m_textures.road[roadIndex].get()
-                                        : m_textures.terrain[roomTerrainType].get();
-    texture->bind();
-    gl.callList(m_gllist.room);
+    const GLRenderState less_blended = less.withBlend(BlendModeEnum::TRANSPARENCY);
+    const GLRenderState lequal_blended = lequal.withBlend(BlendModeEnum::TRANSPARENCY);
+    const GLRenderState equal_blended = equal.withBlend(BlendModeEnum::TRANSPARENCY);
+    const GLRenderState equal_multiplied = equal.withBlend(BlendModeEnum::MODULATE);
 
-    gl.apply(XDisable{XOption::TEXTURE_2D});
+    const auto color = [&thisLayer, &focusedLayer]() {
+        if (thisLayer <= focusedLayer) {
+            return Colors::white.withAlpha(0.90f);
+        }
+        return Colors::gray70.withAlpha(0.20f);
+    }();
 
-    // REVISIT: Turn this into a texture or move it into a different rendering stage
-    // Draw a little dark red cross on noride rooms
-    if (room->getRidableType() == RoomRidableEnum::NOT_RIDABLE) {
-        gl.glTranslatef(0, 0, ROOM_Z_LAYER_BUMP);
-        gl.apply(XColor4f{0.5f, 0.0f, 0.0f, 0.9f});
-        gl.apply(XDeviceLineWidth{3.0});
-        gl.draw(DrawType::LINES,
-                std::vector<Vec3f>{
-                    Vec3f{0.6f, 0.2f, 0.0f},
-                    Vec3f{0.8f, 0.4f, 0.0f},
-                    Vec3f{0.8f, 0.2f, 0.0f},
-                    Vec3f{0.6f, 0.4f, 0.0f},
-                });
+    {
+        /* REVISIT: For the modern case, we could render each layer separately,
+         * and then only blend the layers that actually overlap. Doing that would
+         * give higher contrast for the base textures.
+         */
+        if (disableTextures) {
+            const auto layerWhite = Colors::white.withAlpha((thisLayer <= focusedLayer) ? 0.90f
+                                                                                        : 0.20f);
+            layerBoost.render(less_blended.withColor(layerWhite));
+        } else {
+            terrain.render(less_blended.withColor(color));
+        }
     }
 
-    // Only display at a certain scale
-    if (wantExtraDetail) {
-        // Restore room color from dark room or noride red cross
-        gl.apply(XEnable{XOption::TEXTURE_2D});
-        gl.apply(roomColor);
-
-        const RoomMobFlags mf = room->getMobFlags();
-        const RoomLoadFlags lf = room->getLoadFlags();
-
-        // Trail Support
-        if (roadIndex != RoadIndexMaskEnum::NONE && roomTerrainType != RoomTerrainEnum::ROAD) {
-            gl.glTranslatef(0, 0, ROOM_Z_LAYER_BUMP);
-            alphaOverlayTexture(m_textures.trail[roadIndex].get());
-        }
-
-        for (const RoomMobFlagEnum flag : ALL_MOB_FLAGS) {
-            if (mf.contains(flag)) {
-                gl.glTranslatef(0, 0, ROOM_Z_LAYER_BUMP);
-                alphaOverlayTexture(m_textures.mob[flag].get());
+    // REVISIT: move trails to their own batch also colored by the tint?
+    for (const auto tint : ALL_ROOM_TINTS) {
+        static_assert(NUM_ROOM_TINTS == 2);
+        const auto namedColor = [tint]() -> XNamedColor {
+            switch (tint) {
+            case RoomTintEnum::DARK:
+                return LOOKUP_COLOR(ROOM_DARK);
+            case RoomTintEnum::NO_SUNDEATH:
+                return LOOKUP_COLOR(ROOM_NO_SUNDEATH);
             }
-        }
+            std::abort();
+        }();
 
-        for (const RoomLoadFlagEnum flag : ALL_LOAD_FLAGS) {
-            if (lf.contains(flag)) {
-                gl.glTranslatef(0, 0, ROOM_Z_LAYER_BUMP);
-                alphaOverlayTexture(m_textures.load[flag].get());
-            }
-        }
-
-        if (getConfig().canvas.showUpdated && !room->isUpToDate()) {
-            gl.glTranslatef(0, 0, ROOM_Z_LAYER_BUMP);
-            alphaOverlayTexture(m_textures.update.get());
-        }
-        gl.apply(XDisable{XOption::BLEND});
-
-        gl.apply(XDisable{XOption::TEXTURE_2D});
-    }
-
-    if (layer > 0)
-        gl.apply(XDisable{XOption::POLYGON_STIPPLE});
-
-    gl.glPopMatrix();
-}
-
-void MapCanvasRoomDrawer::drawWallsAndExits(const Room *room, const RoomIndex &rooms)
-{
-    const auto x = room->getPosition().x;
-    const auto y = room->getPosition().y;
-    const auto layer = room->getPosition().z - m_currentLayer;
-
-    auto &gl = getOpenGL();
-    gl.glPushMatrix();
-    gl.glTranslatef(static_cast<float>(x) - 0.5f,
-                    static_cast<float>(y) - 0.5f,
-                    ROOM_Z_DISTANCE * static_cast<float>(layer));
-
-    // walls
-    gl.glTranslatef(0, 0, ROOM_WALLS_BUMP);
-
-    if (layer > 0)
-        gl.apply(XEnable{XOption::BLEND});
-
-    gl.apply(XDevicePointSize{3.0});
-    gl.apply(XDeviceLineWidth{2.4f});
-
-    for (auto dir : ALL_EXITS_NESW) {
-        drawExit(room, rooms, layer, dir);
-    }
-
-    gl.apply(XDevicePointSize{3.0});
-    gl.apply(XDeviceLineWidth{2.0});
-
-    for (auto dir : {ExitDirEnum::UP, ExitDirEnum::DOWN}) {
-        const auto &exitList = m_gllist.exit;
-        const auto &updown = dir == ExitDirEnum::UP ? exitList.up : exitList.down;
-        drawVertical(room, rooms, layer, dir, updown, m_gllist.door[dir]);
-    }
-
-    if (layer > 0)
-        gl.apply(XDisable{XOption::BLEND});
-
-    gl.glPopMatrix();
-}
-
-void MapCanvasRoomDrawer::drawBoost(const Room *const room, const RoomLocks &locks)
-{
-    const auto x = room->getPosition().x;
-    const auto y = room->getPosition().y;
-    const auto layer = room->getPosition().z - m_currentLayer;
-
-    auto &gl = getOpenGL();
-    gl.glPushMatrix();
-    gl.glTranslatef(static_cast<float>(x) - 0.5f,
-                    static_cast<float>(y) - 0.5f,
-                    ROOM_Z_DISTANCE * static_cast<float>(layer));
-
-    // Boost the colors of rooms that are on a different layer
-    gl.glTranslatef(0, 0, ROOM_BOOST_BUMP);
-    if (layer < 0) {
-        gl.apply(XEnable{XOption::BLEND});
-        gl.apply(XColor4f{Qt::black, std::max(0.0f, 0.5f - 0.03f * static_cast<float>(layer))});
-        gl.callList(m_gllist.room);
-        gl.apply(XDisable{XOption::BLEND});
-    } else if (layer > 0) {
-        gl.apply(XEnable{XOption::BLEND});
-        gl.apply(XColor4f{Qt::white, 0.1f});
-        gl.callList(m_gllist.room);
-        gl.apply(XDisable{XOption::BLEND});
-    }
-    // Locked rooms have a red hint
-    if (!locks[room->getId()].empty()) {
-        gl.apply(XEnable{XOption::BLEND});
-        gl.apply(XColor4f{0.6f, 0.0f, 0.0f, 0.2f});
-        gl.callList(m_gllist.room);
-        gl.apply(XDisable{XOption::BLEND});
-    }
-
-    gl.glPopMatrix();
-}
-
-void MapCanvasRoomDrawer::drawRoomConnectionsAndDoors(const Room *const room, const RoomIndex &rooms)
-{
-    auto sourceId = room->getId();
-    SharedConstRoom targetRoom;
-    const ExitsList &exitslist = room->getExitsList();
-    bool oneway = false;
-    float rx = 0;
-    float ry = 0;
-
-    const auto wantDoorNames = getConfig().canvas.drawDoorNames
-                               && (m_mapCanvasData.m_scaleFactor
-                                       * m_mapCanvasData.m_currentStepScaleFactor
-                                   >= 0.40f);
-    for (const auto i : ALL_EXITS7) {
-        const auto opp = opposite(i);
-        ExitDirEnum targetDir = opp;
-        const Exit &sourceExit = exitslist[i];
-        // outgoing connections
-        for (const auto &outTargetId : sourceExit.outRange()) {
-            targetRoom = rooms[outTargetId];
-            if (!targetRoom) {
-                qWarning() << "Source room" << sourceId.asUint32() << "has target room"
-                           << outTargetId.asUint32() << "which does not exist!";
-                continue;
-            }
-            rx = static_cast<float>(targetRoom->getPosition().x);
-            ry = static_cast<float>(targetRoom->getPosition().y);
-            if ((outTargetId >= sourceId) || // draw exits if outTargetId >= sourceId ...
-                                             // or if target room is not visible
-                ((rx < m_visible1.x - 1.0f) || (rx > m_visible2.x + 1.0f))
-                || ((ry < m_visible1.y - 1.0f) || (ry > m_visible2.y + 1.0f))) {
-                if (targetRoom->exit(targetDir).containsOut(sourceId)) {
-                    oneway = false;
-                } else {
-                    oneway = true;
-                    for (const auto j : ALL_EXITS7) {
-                        if (targetRoom->exit(j).containsOut(sourceId)) {
-                            targetDir = j;
-                            oneway = false;
-                            break;
-                        }
-                    }
-                }
-                if (oneway) {
-                    drawConnection(room,
-                                   targetRoom.get(),
-                                   i,
-                                   targetDir,
-                                   true,
-                                   room->exit(i).isExit());
-                } else {
-                    drawConnection(room,
-                                   targetRoom.get(),
-                                   i,
-                                   targetDir,
-                                   false,
-                                   room->exit(i).isExit() && targetRoom->exit(targetDir).isExit());
-                }
-            } else if (!sourceExit.containsIn(outTargetId)) { // ... or if they are outgoing oneways
-                oneway = true;
-                for (const auto j : ALL_EXITS7) {
-                    if (targetRoom->exit(j).containsOut(sourceId)) {
-                        targetDir = j;
-                        oneway = false;
-                        break;
-                    }
-                }
-                if (oneway) {
-                    drawConnection(room, targetRoom.get(), i, opp, true, sourceExit.isExit());
-                }
-            }
-
-            // incoming connections (only for oneway connections from rooms, that are not visible)
-            for (const auto &inTargetId : exitslist[i].inRange()) {
-                targetRoom = rooms[inTargetId];
-                rx = targetRoom->getPosition().x;
-                ry = targetRoom->getPosition().y;
-
-                if (((rx < m_visible1.x - 1.0f) || (rx > m_visible2.x + 1.0f))
-                    || ((ry < m_visible1.y - 1.0f) || (ry > m_visible2.y + 1.0f))) {
-                    if (!targetRoom->exit(opp).containsIn(sourceId)) {
-                        drawConnection(targetRoom.get(),
-                                       room,
-                                       opp,
-                                       i,
-                                       true,
-                                       targetRoom->exit(opp).isExit());
-                    }
-                }
-            }
-
-            // draw door names
-            if (wantDoorNames && room->exit(i).isDoor() && room->exit(i).hasDoorName()
-                && room->exit(i).isHiddenExit()) {
-                if (targetRoom->exit(opp).containsOut(sourceId)) {
-                    targetDir = opp;
-                } else {
-                    for (const auto j : ALL_EXITS7) {
-                        if (targetRoom->exit(j).containsOut(sourceId)) {
-                            targetDir = j;
-                            break;
-                        }
-                    }
-                }
-                drawRoomDoorName(room, i, targetRoom.get(), targetDir);
-            }
+        if (const auto optColor = getColor(namedColor)) {
+            tints[tint].render(equal_multiplied.withColor(optColor.value()));
+        } else {
+            assert(false);
         }
     }
-}
 
-void MapCanvasRoomDrawer::drawVertical(
-    const Room *const room,
-    const RoomIndex &rooms,
-    const qint32 layer,
-    const ExitDirEnum direction,
-    const MapCanvasData::DrawLists::ExitUpDown::OpaqueTransparent &exlists,
-    const XDisplayList &doorlist)
-{
-    if (!isUpDown(direction))
-        throw std::invalid_argument("dir");
+    if (!disableTextures) {
+        // streams go under everything else, including trails
+        streamIns.render(lequal_blended.withColor(color));
+        streamOuts.render(lequal_blended.withColor(color));
 
-    const auto &transparent = exlists.transparent;
-    const auto &opaque = exlists.opaque;
-
-    const Exit &roomExit = room->exit(direction);
-    const auto flags = roomExit.getExitFlags();
-    if (!flags.isExit())
-        return;
-
-    const auto drawNotMappedExits = getConfig().canvas.drawNotMappedExits;
-    if (drawNotMappedExits && roomExit.outIsEmpty()) { // zero outgoing connections
-        drawListWithLineStipple(transparent, WALL_COLOR_NOTMAPPED);
-        return;
+        overlays.render(equal_blended.withColor(color));
     }
 
-    if (const auto optColor = getVerticalColor(flags, m_mapCanvasData.g_noFleeColor)) {
-        const auto &color = optColor.value();
-        assert(color != Qt::transparent);
-        drawListWithLineStipple(transparent, color);
+    // always
+    {
+        // doors and walls are considered lines, even though they're drawn with textures.
+        upDownExits.render(equal_blended.withColor(color));
+
+        // Doors are drawn on top of the up-down exits
+        doors.render(lequal_blended.withColor(color));
+        // and walls are drawn on top of doors.
+        walls.render(lequal_blended.withColor(color));
+        dottedWalls.render(lequal_blended.withColor(color));
     }
 
-    auto &gl = getOpenGL();
-
-    /* NOTE: semi-bugfix: The opaque display list modifies color to black,
-     * but the transparent display list doesn't.
-     * Door display list doesn't set its own color, but flow does. */
-    const auto useTransparent = layer > 0;
-    gl.apply(getWallExitColor(layer), useTransparent ? transparent : opaque);
-
-    if (flags.isDoor()) {
-        gl.callList(doorlist);
+    if (thisLayer != focusedLayer) {
+        // Darker when below, lighter when above
+        const auto baseAlpha = (thisLayer < focusedLayer) ? 0.5f : 0.1f;
+        const auto alpha
+            = glm::clamp(baseAlpha + 0.03f * static_cast<float>(std::abs(focusedLayer - thisLayer)),
+                         0.f,
+                         1.f);
+        const Color &baseColor = (thisLayer < focusedLayer || disableTextures) ? Colors::black
+                                                                               : Colors::white;
+        layerBoost.render(equal_blended.withColor(baseColor.withAlpha(alpha)));
     }
-
-    if (flags.isFlow()) {
-        drawFlow(room, rooms, direction);
-    }
-}
-
-void MapCanvasRoomDrawer::drawListWithLineStipple(const XDisplayList &list, const QColor &color)
-{
-    if (color.alphaF() != 1.0)
-        qWarning() << __FUNCTION__ << color;
-
-    auto &gl = getOpenGL();
-    gl.apply(XEnable{XOption::LINE_STIPPLE});
-    gl.apply(XColor4f{color});
-    gl.callList(list);
-    gl.apply(XDisable{XOption::LINE_STIPPLE});
-}
-
-void MapCanvasRoomDrawer::drawConnection(const Room *const leftRoom,
-                                         const Room *const rightRoom,
-                                         const ExitDirEnum startDir,
-                                         const ExitDirEnum endDir,
-                                         const bool oneway,
-                                         const bool inExitFlags)
-{
-    assert(leftRoom != nullptr);
-    assert(rightRoom != nullptr);
-
-    const qint32 leftX = leftRoom->getPosition().x;
-    const qint32 leftY = leftRoom->getPosition().y;
-    const qint32 leftZ = leftRoom->getPosition().z;
-    const qint32 rightX = rightRoom->getPosition().x;
-    const qint32 rightY = rightRoom->getPosition().y;
-    const qint32 rightZ = rightRoom->getPosition().z;
-    const qint32 dX = rightX - leftX;
-    const qint32 dY = rightY - leftY;
-    const qint32 dZ = rightZ - leftZ;
-
-    const qint32 leftLayer = leftZ - m_currentLayer;
-    const qint32 rightLayer = rightZ - m_currentLayer;
-
-    if ((rightZ != m_currentLayer) && (leftZ != m_currentLayer)) {
-        return;
-    }
-
-    bool neighbours = false;
-
-    if ((dX == 0) && (dY == -1) && (dZ == 0)) {
-        if ((startDir == ExitDirEnum::NORTH) && (endDir == ExitDirEnum::SOUTH) && !oneway) {
-            return;
-        }
-        neighbours = true;
-    }
-    if ((dX == 0) && (dY == +1) && (dZ == 0)) {
-        if ((startDir == ExitDirEnum::SOUTH) && (endDir == ExitDirEnum::NORTH) && !oneway) {
-            return;
-        }
-        neighbours = true;
-    }
-    if ((dX == +1) && (dY == 0) && (dZ == 0)) {
-        if ((startDir == ExitDirEnum::EAST) && (endDir == ExitDirEnum::WEST) && !oneway) {
-            return;
-        }
-        neighbours = true;
-    }
-    if ((dX == -1) && (dY == 0) && (dZ == 0)) {
-        if ((startDir == ExitDirEnum::WEST) && (endDir == ExitDirEnum::EAST) && !oneway) {
-            return;
-        }
-        neighbours = true;
-    }
-
-    auto &gl = getOpenGL();
-    gl.glPushMatrix();
-    gl.glTranslatef(leftX - 0.5f, leftY - 0.5f, 0.0f);
-
-    gl.apply(XColor4f{inExitFlags ? Qt::white : Qt::red, 0.70f});
-
-    gl.apply(XEnable{XOption::BLEND});
-    gl.apply(XDevicePointSize{2.0});
-    gl.apply(XDeviceLineWidth{2.0});
-
-    const float srcZ = ROOM_Z_DISTANCE * static_cast<float>(leftLayer) + 0.3f;
-    const float dstZ = ROOM_Z_DISTANCE * static_cast<float>(rightLayer) + 0.3f;
-
-    drawConnectionLine(startDir, endDir, oneway, neighbours, dX, dY, srcZ, dstZ);
-    drawConnectionTriangles(startDir, endDir, oneway, dX, dY, srcZ, dstZ);
-
-    gl.apply(XDisable{XOption::BLEND});
-    gl.apply(XColor4f{Qt::white, 0.70f});
-    gl.glPopMatrix();
-}
-
-void MapCanvasRoomDrawer::drawConnectionTriangles(const ExitDirEnum startDir,
-                                                  const ExitDirEnum endDir,
-                                                  const bool oneway,
-                                                  const qint32 dX,
-                                                  const qint32 dY,
-                                                  const float srcZ,
-                                                  const float dstZ)
-{
-    if (oneway) {
-        drawConnEndTri1Way(endDir, dX, dY, dstZ);
-    } else {
-        drawConnStartTri(startDir, srcZ);
-        drawConnEndTri(endDir, dX, dY, dstZ);
-    }
-}
-
-void MapCanvasRoomDrawer::drawConnectionLine(const ExitDirEnum startDir,
-                                             const ExitDirEnum endDir,
-                                             const bool oneway,
-                                             const bool neighbours,
-                                             const qint32 dX,
-                                             const qint32 dY,
-                                             const float srcZ,
-                                             const float dstZ)
-{
-    std::vector<Vec3f> points{};
-    ConnectionLineBuilder lb{points};
-    lb.drawConnLineStart(startDir, neighbours, srcZ);
-    if (points.empty())
-        return;
-
-    if (oneway)
-        lb.drawConnLineEnd1Way(endDir, dX, dY, dstZ);
-    else
-        lb.drawConnLineEnd2Way(endDir, neighbours, dX, dY, dstZ);
-
-    if (points.empty())
-        return;
-
-    drawLineStrip(points);
-}
-
-void MapCanvasRoomDrawer::drawLineStrip(const std::vector<Vec3f> &points)
-{
-    getOpenGL().draw(DrawType::LINE_STRIP, points);
-}
-
-void MapCanvasRoomDrawer::drawConnStartTri(const ExitDirEnum startDir, const float srcZ)
-{
-    auto &gl = getOpenGL();
-
-    switch (startDir) {
-    case ExitDirEnum::NORTH:
-        gl.draw(DrawType::TRIANGLES,
-                std::vector<Vec3f>{
-                    Vec3f{0.68f, +0.1f, srcZ},
-                    Vec3f{0.82f, +0.1f, srcZ},
-                    Vec3f{0.75f, +0.3f, srcZ},
-                });
-        break;
-    case ExitDirEnum::SOUTH:
-        gl.draw(DrawType::TRIANGLES,
-                std::vector<Vec3f>{
-                    Vec3f{0.18f, 0.9f, srcZ},
-                    Vec3f{0.32f, 0.9f, srcZ},
-                    Vec3f{0.25f, 0.7f, srcZ},
-                });
-        break;
-    case ExitDirEnum::EAST:
-        gl.draw(DrawType::TRIANGLES,
-                std::vector<Vec3f>{
-                    Vec3f{0.9f, 0.18f, srcZ},
-                    Vec3f{0.9f, 0.32f, srcZ},
-                    Vec3f{0.7f, 0.25f, srcZ},
-                });
-        break;
-    case ExitDirEnum::WEST:
-        gl.draw(DrawType::TRIANGLES,
-                std::vector<Vec3f>{
-                    Vec3f{0.1f, 0.68f, srcZ},
-                    Vec3f{0.1f, 0.82f, srcZ},
-                    Vec3f{0.3f, 0.75f, srcZ},
-                });
-        break;
-
-    case ExitDirEnum::UP:
-    case ExitDirEnum::DOWN:
-    case ExitDirEnum::UNKNOWN:
-    case ExitDirEnum::NONE:
-        break;
-    }
-}
-
-void MapCanvasRoomDrawer::drawConnEndTri(const ExitDirEnum endDir,
-                                         const qint32 dX,
-                                         const qint32 dY,
-                                         const float dstZ)
-{
-    auto &gl = getOpenGL();
-
-    switch (endDir) {
-    case ExitDirEnum::NORTH:
-        gl.draw(DrawType::TRIANGLES,
-                std::vector<Vec3f>{
-                    Vec3f{dX + 0.68f, dY + 0.1f, dstZ},
-                    Vec3f{dX + 0.82f, dY + 0.1f, dstZ},
-                    Vec3f{dX + 0.75f, dY + 0.3f, dstZ},
-                });
-        break;
-    case ExitDirEnum::SOUTH:
-        gl.draw(DrawType::TRIANGLES,
-                std::vector<Vec3f>{
-                    Vec3f{dX + 0.18f, dY + 0.9f, dstZ},
-                    Vec3f{dX + 0.32f, dY + 0.9f, dstZ},
-                    Vec3f{dX + 0.25f, dY + 0.7f, dstZ},
-                });
-        break;
-    case ExitDirEnum::EAST:
-        gl.draw(DrawType::TRIANGLES,
-                std::vector<Vec3f>{
-                    Vec3f{dX + 0.9f, dY + 0.18f, dstZ},
-                    Vec3f{dX + 0.9f, dY + 0.32f, dstZ},
-                    Vec3f{dX + 0.7f, dY + 0.25f, dstZ},
-                });
-        break;
-    case ExitDirEnum::WEST:
-        gl.draw(DrawType::TRIANGLES,
-                std::vector<Vec3f>{
-                    Vec3f{dX + 0.1f, dY + 0.68f, dstZ},
-                    Vec3f{dX + 0.1f, dY + 0.82f, dstZ},
-                    Vec3f{dX + 0.3f, dY + 0.75f, dstZ},
-                });
-        break;
-
-    case ExitDirEnum::UP:
-    case ExitDirEnum::DOWN:
-        // Do not draw triangles for 2-way up/down
-        break;
-    case ExitDirEnum::UNKNOWN:
-        // NOTE: This is drawn for both 1-way and 2-way
-        drawConnEndTriUpDownUnknown(dX, dY, dstZ);
-        break;
-    case ExitDirEnum::NONE:
-        // NOTE: This is drawn for both 1-way and 2-way
-        drawConnEndTriNone(dX, dY, dstZ);
-        break;
-    }
-}
-void MapCanvasRoomDrawer::drawConnEndTri1Way(const ExitDirEnum endDir,
-                                             const qint32 dX,
-                                             const qint32 dY,
-                                             const float dstZ)
-{
-    auto &gl = getOpenGL();
-
-    switch (endDir) {
-    case ExitDirEnum::NORTH:
-        gl.draw(DrawType::TRIANGLES,
-                std::vector<Vec3f>{
-                    Vec3f{dX + 0.18f, dY + 0.1f, dstZ},
-                    Vec3f{dX + 0.32f, dY + 0.1f, dstZ},
-                    Vec3f{dX + 0.25f, dY + 0.3f, dstZ},
-                });
-        break;
-    case ExitDirEnum::SOUTH:
-        gl.draw(DrawType::TRIANGLES,
-                std::vector<Vec3f>{
-                    Vec3f{dX + 0.68f, dY + 0.9f, dstZ},
-                    Vec3f{dX + 0.82f, dY + 0.9f, dstZ},
-                    Vec3f{dX + 0.75f, dY + 0.7f, dstZ},
-                });
-        break;
-    case ExitDirEnum::EAST:
-        gl.draw(DrawType::TRIANGLES,
-                std::vector<Vec3f>{
-                    Vec3f{dX + 0.9f, dY + 0.68f, dstZ},
-                    Vec3f{dX + 0.9f, dY + 0.82f, dstZ},
-                    Vec3f{dX + 0.7f, dY + 0.75f, dstZ},
-                });
-        break;
-    case ExitDirEnum::WEST:
-        gl.draw(DrawType::TRIANGLES,
-                std::vector<Vec3f>{
-                    Vec3f{dX + 0.1f, dY + 0.18f, dstZ},
-                    Vec3f{dX + 0.1f, dY + 0.32f, dstZ},
-                    Vec3f{dX + 0.3f, dY + 0.25f, dstZ},
-                });
-        break;
-
-    case ExitDirEnum::UP:
-    case ExitDirEnum::DOWN:
-    case ExitDirEnum::UNKNOWN:
-        // NOTE: This is drawn for both 1-way and 2-way
-        drawConnEndTriUpDownUnknown(dX, dY, dstZ);
-        break;
-    case ExitDirEnum::NONE:
-        // NOTE: This is drawn for both 1-way and 2-way
-        drawConnEndTriNone(dX, dY, dstZ);
-        break;
-    }
-}
-
-void MapCanvasRoomDrawer::drawConnEndTriNone(qint32 dX, qint32 dY, float dstZ)
-{
-    getOpenGL().draw(DrawType::TRIANGLES,
-                     std::vector<Vec3f>{
-                         Vec3f{dX + 0.5f, dY + 0.5f, dstZ},
-                         Vec3f{dX + 0.7f, dY + 0.55f, dstZ},
-                         Vec3f{dX + 0.55f, dY + 0.7f, dstZ},
-                     });
-}
-
-void MapCanvasRoomDrawer::drawConnEndTriUpDownUnknown(qint32 dX, qint32 dY, float dstZ)
-{
-    getOpenGL().draw(DrawType::TRIANGLES,
-                     std::vector<Vec3f>{
-                         Vec3f{dX + 0.5f, dY + 0.5f, dstZ},
-                         Vec3f{dX + 0.7f, dY + 0.55f, dstZ},
-                         Vec3f{dX + 0.55f, dY + 0.7f, dstZ},
-                     });
-}
-
-void MapCanvasRoomDrawer::renderText(const float x,
-                                     const float y,
-                                     const QString &text,
-                                     const QColor &color,
-                                     const FontFormatFlags &fontFormatFlag,
-                                     const float rotationAngle)
-{
-    // http://stackoverflow.com/questions/28216001/how-to-render-text-with-qopenglwidget/28517897
-    const QVector3D projected = m_mapCanvasData.project(QVector3D{x, y, CAMERA_Z_DISTANCE});
-    const auto textPosX = projected.x();
-    const auto textPosY = static_cast<float>(m_mapCanvasData.height())
-                          - projected.y(); // y is inverted
-    getOpenGL().renderTextAt(textPosX, textPosY, text, color, fontFormatFlag, rotationAngle);
-}
-
-float MapCanvasRoomDrawer::getScaledFontWidth(const QString &x, const FontFormatFlags &flags) const
-{
-    return getOpenGL().getFontWidth(x, flags) * 0.022f / m_mapCanvasData.m_scaleFactor
-           * m_mapCanvasData.m_currentStepScaleFactor;
-}
-
-float MapCanvasRoomDrawer::getScaledFontHeight() const
-{
-    return getOpenGL().getFontHeight() * 0.007f / m_mapCanvasData.m_scaleFactor
-           * m_mapCanvasData.m_currentStepScaleFactor;
 }

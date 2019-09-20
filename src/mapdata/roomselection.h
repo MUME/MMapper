@@ -30,7 +30,6 @@ public:
 
 private:
     MapData &m_mapData;
-    bool m_moved = false;
 
 public:
     explicit RoomSelection(MapData &mapData);
@@ -39,16 +38,13 @@ public:
     ~RoomSelection() override;
 
 public:
-    const RoomSelection &operator*() const noexcept(false);
-
-public:
     const Room *getFirstRoom() const noexcept(false);
     RoomId getFirstRoomId() const noexcept(false);
 
 public:
-    const Room *getRoom(const RoomId targetId);
+    const Room *getRoom(RoomId targetId);
     const Room *getRoom(const Coordinate &coord);
-    void unselect(const RoomId targetId);
+    void unselect(RoomId targetId);
 
 public:
     bool isMovable(const Coordinate &offset) const;
@@ -64,7 +60,5 @@ public:
                                                const Coordinate &max);
 
 public:
-    RoomSelection(RoomSelection &&);
-    DELETE_COPY_CTOR(RoomSelection);
-    DELETE_MOVE_ASSIGN_OP(RoomSelection);
+    DELETE_CTORS_AND_ASSIGN_OPS(RoomSelection);
 };

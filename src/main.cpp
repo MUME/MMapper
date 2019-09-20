@@ -127,6 +127,7 @@ static void tryAutoLoad(MainWindow &mw)
 
 int main(int argc, char **argv)
 {
+    setEnteredMain();
     if constexpr (IS_DEBUG_BUILD) {
         // see http://doc.qt.io/qt-5/qtglobal.html#qSetMessagePattern
         // also allows environment variable QT_MESSAGE_PATTERN
@@ -145,7 +146,7 @@ int main(int argc, char **argv)
         if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux) {
             qputenv("LIBGL_ALWAYS_SOFTWARE", "1");
         }
-    } else {
+    } else if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
         // Windows Intel drivers cause black screens if we don't specify OpenGL
         QApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
     }

@@ -5,6 +5,7 @@
 enum class CanvasMouseModeEnum {
     NONE,
     MOVE,
+    RAYPICK_ROOMS,
     SELECT_ROOMS,
     SELECT_CONNECTIONS,
     CREATE_ROOMS,

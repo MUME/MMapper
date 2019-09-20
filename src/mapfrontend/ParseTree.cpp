@@ -19,6 +19,7 @@
 #include "../expandoracommon/parseevent.h"
 #include "../expandoracommon/property.h"
 #include "../global/Array.h"
+#include "../global/EnumIndexedArray.h"
 #include "../global/utils.h"
 #include "roomcollection.h"
 

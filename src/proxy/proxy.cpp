@@ -178,7 +178,11 @@ void Proxy::start()
             m_pathMachine,
             &PathMachine::releaseAllPaths);
     connect(parserXml, &AbstractParser::showPath, m_prespammedPath, &PrespammedPath::setPath);
-    connect(parserXml, &AbstractParser::sig_mapChanged, m_mapCanvas, &MapCanvas::requestUpdate);
+    connect(parserXml, &AbstractParser::sig_mapChanged, m_mapCanvas, &MapCanvas::mapChanged);
+    connect(parserXml,
+            &AbstractParser::sig_graphicsSettingsChanged,
+            m_mapCanvas,
+            &MapCanvas::graphicsSettingsChanged);
     connect(parserXml, &AbstractParser::log, mw, &MainWindow::log);
     connect(parserXml, &AbstractParser::newRoomSelection, m_mapCanvas, &MapCanvas::setRoomSelection);
 

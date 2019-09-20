@@ -60,10 +60,7 @@ void InfoMarksEditDlg::writeSettings()
 
 void InfoMarksEditDlg::connectAll()
 {
-    connect(this,
-            &InfoMarksEditDlg::mapChanged,
-            m_mapCanvas,
-            static_cast<void (QWidget::*)(void)>(&QWidget::update));
+    connect(this, &InfoMarksEditDlg::infomarksChanged, m_mapCanvas, &MapCanvas::infomarksChanged);
     connect(objectsList,
             QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
             this,
@@ -88,43 +85,46 @@ void InfoMarksEditDlg::objectTypeCurrentIndexChanged(const QString & /*unused*/)
 
 void InfoMarksEditDlg::createClicked()
 {
-    const MarkerList &ml = m_mapData->getMarkersList();
-    QString name = objectNameStr->text();
-
-    if (name == "") {
-        QMessageBox::critical(this, tr("MMapper2"), tr("Can't create objects with empty name!"));
-        return;
-    }
-    for (const auto &marker : ml) {
-        if (marker->getName().toQString() == name) {
-            QMessageBox::critical(this, tr("MMapper2"), tr("Object with this name already exists!"));
-            return;
-        }
-    }
-
     auto &mapData = deref(m_mapData);
     auto im = InfoMark::alloc(mapData);
     updateMark(*im);
-    m_selection->emplace_back(im);
-    mapData.addMarker(im);
 
-    emit mapChanged();
+    mapData.addMarker(im);
+    m_selection->emplace_back(im);
     updateMarkers();
     setCurrentInfoMark(im.get());
     updateDialog();
+
+    emit infomarksChanged();
 }
 
 void InfoMarksEditDlg::updateMark(InfoMark &im)
 {
-    im.setType(getType());
-    im.setName(InfoMarkName{objectNameStr->text()});
-    im.setText(InfoMarkText{objectText->text()});
-    im.setClass(getClass());
     const Coordinate pos1(m_x1->value(), m_y1->value(), m_layer->value());
     const Coordinate pos2(m_x2->value(), m_y2->value(), m_layer->value());
+
+    const int angle = static_cast<int>(std::lround(m_rotationAngle->value()));
+    const InfoMarkTypeEnum type = getType();
+
+    QString text = objectText->text();
+    if (type == InfoMarkTypeEnum::TEXT) {
+        if (text.isEmpty()) {
+            text = "New Marker";
+            objectText->setText(text);
+        }
+    } else {
+        if (!text.isEmpty()) {
+            text = "";
+            objectText->setText(text);
+        }
+    }
+
+    im.setType(type);
+    im.setText(InfoMarkText{text});
+    im.setClass(getClass());
     im.setPosition1(pos1);
     im.setPosition2(pos2);
-    im.setRotationAngle(static_cast<float>(m_rotationAngle->value()));
+    im.setRotationAngle(angle);
 }
 
 void InfoMarksEditDlg::modifyClicked()
@@ -134,15 +134,12 @@ void InfoMarksEditDlg::modifyClicked()
         return;
 
     updateMark(*im);
-    emit mapChanged();
+    emit infomarksChanged();
 }
 
 void InfoMarksEditDlg::disconnectAll()
 {
-    disconnect(this,
-               &InfoMarksEditDlg::mapChanged,
-               m_mapCanvas,
-               static_cast<void (QWidget::*)(void)>(&QWidget::update));
+    disconnect(this, &InfoMarksEditDlg::infomarksChanged, m_mapCanvas, &MapCanvas::infomarksChanged);
     disconnect(objectsList,
                QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
                this,
@@ -157,22 +154,31 @@ void InfoMarksEditDlg::disconnectAll()
 
 void InfoMarksEditDlg::updateMarkers()
 {
+    m_markers.clear();
+    if (m_selection != nullptr) {
+        m_markers.reserve(m_selection->size());
+    }
+
     objectsList->clear();
-    objectsList->addItem("Create New Marker");
+    objectsList->addItem("Create New Marker", QVariant(-1));
 
     assert(m_selection);
+    int n = 0;
     for (const auto &marker : *m_selection) {
         switch (marker->getType()) {
         case InfoMarkTypeEnum::TEXT:
         case InfoMarkTypeEnum::LINE:
         case InfoMarkTypeEnum::ARROW:
-            objectsList->addItem(marker->getName().toQString());
+            assert(m_markers.size() == static_cast<size_t>(n));
+            m_markers.emplace_back(marker);
+            objectsList->addItem(marker->getText().toQString(), QVariant(n));
+            ++n;
             break;
         }
     }
 
     if (m_selection->size() == 1)
-        objectsList->setCurrentIndex(static_cast<int>(m_selection->size()));
+        objectsList->setCurrentIndex(1);
 }
 
 void InfoMarksEditDlg::updateDialog()
@@ -218,7 +224,6 @@ void InfoMarksEditDlg::updateDialog()
     InfoMark *marker = getCurrentInfoMark();
 
     if (marker == nullptr) {
-        objectNameStr->clear();
         objectText->clear();
         m_x1->setValue(m_selection->getPosition1().x);
         m_y1->setValue(m_selection->getPosition1().y);
@@ -230,7 +235,6 @@ void InfoMarksEditDlg::updateDialog()
         objectCreate->setEnabled(true);
         objectModify->setEnabled(false);
     } else {
-        objectNameStr->setText(marker->getName().toQString());
         objectText->setText(marker->getText().toQString());
         m_x1->setValue(marker->getPosition1().x);
         m_y1->setValue(marker->getPosition1().y);
@@ -258,28 +262,23 @@ InfoMarkClassEnum InfoMarksEditDlg::getClass()
 
 InfoMark *InfoMarksEditDlg::getCurrentInfoMark()
 {
-    if (objectsList->currentText() == "Create New Marker") {
+    bool ok = false;
+    int n = objectsList->itemData(objectsList->currentIndex()).toInt(&ok);
+    if (!ok || n == -1 || n >= static_cast<int>(m_markers.size())) {
         return nullptr;
     }
-    return getInfoMark(objectsList->currentText());
+    return m_markers.at(static_cast<size_t>(n)).get();
 }
 
 void InfoMarksEditDlg::setCurrentInfoMark(InfoMark *m)
 {
-    int i = objectsList->findText(m->getName().toQString());
-    if (i == -1) {
-        i = 0;
-    }
-    objectsList->setCurrentIndex(i);
-}
-
-InfoMark *InfoMarksEditDlg::getInfoMark(const QString &qname)
-{
-    const auto &name = InfoMarkName{qname.toStdString()};
-    for (const auto &marker : m_mapData->getMarkersList()) {
-        if (marker->getName() == name) {
-            return marker.get();
+    auto sm = m->shared_from_this();
+    int i = 0;
+    for (size_t j = 0, len = m_markers.size(); j < len; ++j)
+        if (m_markers[j] == sm) {
+            i = static_cast<int>(j) + 1;
+            break;
         }
-    }
-    return nullptr;
+
+    objectsList->setCurrentIndex(i);
 }

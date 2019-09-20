@@ -12,9 +12,9 @@
 
 #include "../global/utils.h"
 
-Coordinate2i Coordinate2f::round() const
+Coordinate2i Coordinate2f::truncate() const
 {
-    return Coordinate2i{utils::round_ftoi(x), utils::round_ftoi(y)};
+    return Coordinate2i{utils::round_ftoi(std::floor(x)), utils::round_ftoi(std::floor(y))};
 }
 
 Coordinate2f Coordinate2f::operator/(const float f) const
@@ -84,5 +84,16 @@ Coordinate Coordinate::operator*(const int scalar) const
     ret.x *= scalar;
     ret.y *= scalar;
     ret.z *= scalar;
+    return ret;
+}
+
+Coordinate Coordinate::operator/(const int scalar) const
+{
+    if (scalar == 0)
+        throw std::runtime_error("division by zero");
+    Coordinate ret = *this;
+    ret.x /= scalar;
+    ret.y /= scalar;
+    ret.z /= scalar;
     return ret;
 }

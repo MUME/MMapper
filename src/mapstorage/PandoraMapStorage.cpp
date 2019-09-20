@@ -89,7 +89,7 @@ SharedRoom PandoraMapStorage::loadRoom(QXmlStreamReader &xml)
 
                 // Coordinate
                 const auto x = xml.attributes().value("x").toInt();
-                const auto y = xml.attributes().value("y").toInt() * -1;
+                const auto y = xml.attributes().value("y").toInt();
                 const auto z = xml.attributes().value("z").toInt();
                 room->setPosition(Coordinate{x, y, z} + basePosition);
 

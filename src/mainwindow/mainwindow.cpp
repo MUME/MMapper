@@ -35,6 +35,7 @@
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/parseevent.h"
 #include "../expandoracommon/room.h"
+#include "../global/Debug.h"
 #include "../global/NullPointerException.h"
 #include "../global/SignalBlocker.h"
 #include "../global/Version.h"
@@ -103,6 +104,67 @@ static void addApplicationFont()
     }
 }
 
+class MapZoomSlider final : public QSlider
+{
+private:
+    static constexpr float SCALE = 100.f;
+    static constexpr float INV_SCALE = 1.f / SCALE;
+
+    // can't get this to work as constexpr, so we'll just inline the static min/max.
+    static int calcPos(const float zoom) noexcept
+    {
+        static const float INV_DIVISOR = 1.f / std::log2(ScaleFactor::ZOOM_STEP);
+        return static_cast<int>(std::lround(SCALE * std::log2(zoom) * INV_DIVISOR));
+    }
+    static inline const int min = calcPos(ScaleFactor::MIN_VALUE);
+    static inline const int max = calcPos(ScaleFactor::MAX_VALUE);
+    MapWindow &m_map;
+
+public:
+    explicit MapZoomSlider(MapWindow &map, QWidget *const parent)
+        : QSlider(Qt::Orientation::Horizontal, parent)
+        , m_map{map}
+    {
+        setRange(min, max);
+        setFromActual();
+
+        connect(this, &QSlider::valueChanged, this, [this](int /*value*/) {
+            requestChange();
+            setFromActual();
+        });
+
+        connect(&map, &MapWindow::sig_zoomChanged, this, [this](float) { setFromActual(); });
+        setToolTip("Zoom");
+    }
+    ~MapZoomSlider() override;
+
+public:
+    void requestChange()
+    {
+        const float desiredZoomSteps = static_cast<float>(clamp(value())) * INV_SCALE;
+        {
+            const SignalBlocker block{*this};
+            m_map.setZoom(std::pow(ScaleFactor::ZOOM_STEP, desiredZoomSteps));
+        }
+        m_map.graphicsSettingsChanged();
+    }
+
+    void setFromActual()
+    {
+        const float actualZoom = m_map.getZoom();
+        const int rounded = calcPos(actualZoom);
+        {
+            const SignalBlocker block{*this};
+            setValue(clamp(rounded));
+        }
+    }
+
+private:
+    static int clamp(int val) { return std::clamp(val, min, max); }
+};
+
+MapZoomSlider::~MapZoomSlider() = default;
+
 MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     : QMainWindow(parent, flags)
 {
@@ -169,7 +231,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     addDockWidget(Qt::TopDockWidgetArea, m_dockDialogGroup);
     m_dockDialogGroup->setWidget(m_groupWidget);
     m_dockDialogGroup->hide();
-    connect(m_groupWidget, &GroupWidget::sig_center, m_mapWindow, &MapWindow::center);
+    connect(m_groupWidget, &GroupWidget::sig_center, m_mapWindow, &MapWindow::centerOnWorldPos);
 
     m_findRoomsDlg = new FindRoomsDlg(m_mapData, this);
     m_findRoomsDlg->setObjectName("FindRoomsDlg");
@@ -312,17 +374,17 @@ void MainWindow::wireConnections()
             SIGNAL(lookingForRooms(RoomRecipient &, RoomId)),
             m_mapData,
             SLOT(lookingForRooms(RoomRecipient &, RoomId)));
-    connect(m_mapData, &MapFrontend::clearingMap, m_pathMachine, &PathMachine::releaseAllPaths);
+    connect(m_mapData, &MapFrontend::sig_clearingMap, m_pathMachine, &PathMachine::releaseAllPaths);
 
     MapCanvas *const canvas = getCanvas();
-    connect(m_mapData, &MapFrontend::clearingMap, canvas, &MapCanvas::clearAllSelections);
+    connect(m_mapData, &MapFrontend::sig_clearingMap, canvas, &MapCanvas::clearAllSelections);
 
     connect(m_pathMachine, &Mmapper2PathMachine::playerMoved, canvas, &MapCanvas::moveMarker);
 
     connect(canvas, &MapCanvas::setCurrentRoom, m_pathMachine, &PathMachine::setCurrentRoom);
 
     // moved to mapwindow
-    connect(m_mapData, &MapData::mapSizeChanged, m_mapWindow, &MapWindow::setScrollBars);
+    connect(m_mapData, &MapData::sig_mapSizeChanged, m_mapWindow, &MapWindow::setScrollBars);
 
     connect(m_prespammedPath, &PrespammedPath::update, canvas, &MapCanvas::requestUpdate);
 
@@ -366,7 +428,7 @@ void MainWindow::wireConnections()
             &MainWindow::groupNetworkStatus,
             Qt::QueuedConnection);
 
-    connect(m_mapData, &MapFrontend::clearingMap, m_groupWidget, &GroupWidget::mapUnloaded);
+    connect(m_mapData, &MapFrontend::sig_clearingMap, m_groupWidget, &GroupWidget::mapUnloaded);
 
     connect(m_mumeClock, &MumeClock::log, this, &MainWindow::log);
 
@@ -379,7 +441,7 @@ void MainWindow::wireConnections()
 
     // Find Room Dialog Connections
     connect(m_findRoomsDlg, &FindRoomsDlg::newRoomSelection, canvas, &MapCanvas::setRoomSelection);
-    connect(m_findRoomsDlg, &FindRoomsDlg::center, m_mapWindow, &MapWindow::center);
+    connect(m_findRoomsDlg, &FindRoomsDlg::sig_center, m_mapWindow, &MapWindow::centerOnWorldPos);
     connect(m_findRoomsDlg, &FindRoomsDlg::log, this, &MainWindow::log);
     connect(m_findRoomsDlg, &FindRoomsDlg::editSelection, this, &MainWindow::onEditRoomSelection);
 }
@@ -545,6 +607,13 @@ void MainWindow::createActions()
             this,
             &MainWindow::onModeConnectionSelect);
 
+    mouseMode.modeRoomRaypickAct = new QAction(QIcon(":/icons/raypick.png"),
+                                               tr("Ray-pick Rooms"),
+                                               this);
+    mouseMode.modeRoomRaypickAct->setStatusTip(tr("Ray-pick Rooms"));
+    mouseMode.modeRoomRaypickAct->setCheckable(true);
+    connect(mouseMode.modeRoomRaypickAct, &QAction::triggered, this, &MainWindow::onModeRoomRaypick);
+
     mouseMode.modeRoomSelectAct = new QAction(QIcon(":/icons/roomselection.png"),
                                               tr("Select Rooms"),
                                               this);
@@ -608,6 +677,7 @@ void MainWindow::createActions()
     mouseMode.mouseModeActGroup = new QActionGroup(this);
     mouseMode.mouseModeActGroup->setExclusive(true);
     mouseMode.mouseModeActGroup->addAction(mouseMode.modeMoveSelectAct);
+    mouseMode.mouseModeActGroup->addAction(mouseMode.modeRoomRaypickAct);
     mouseMode.mouseModeActGroup->addAction(mouseMode.modeRoomSelectAct);
     mouseMode.mouseModeActGroup->addAction(mouseMode.modeConnectionSelectAct);
     mouseMode.mouseModeActGroup->addAction(mouseMode.modeCreateRoomAct);
@@ -820,6 +890,11 @@ void MainWindow::createActions()
     groupNetwork.groupNetworkGroup->setExclusive(true);
     groupNetwork.groupNetworkGroup->addAction(groupNetwork.networkStartAct);
     groupNetwork.groupNetworkGroup->addAction(groupNetwork.networkStopAct);
+
+    rebuildMeshesAct = new QAction(QIcon(":/icons/graphicscfg.png"), tr("&Rebuild world"), this);
+    rebuildMeshesAct->setStatusTip(tr("Reconstruct the world mesh to fix graphical rendering bugs"));
+    rebuildMeshesAct->setCheckable(false);
+    connect(rebuildMeshesAct, &QAction::triggered, getCanvas(), &MapCanvas::mapAndInfomarksChanged);
 }
 
 void MainWindow::onPlayMode()
@@ -937,6 +1012,7 @@ void MainWindow::setupMenuBar()
 
     roomMenu = editMenu->addMenu(QIcon(":/icons/roomselection.png"), tr("&Rooms"));
     roomMenu->addAction(mouseMode.modeRoomSelectAct);
+    roomMenu->addAction(mouseMode.modeRoomRaypickAct);
     roomMenu->addSeparator();
     roomMenu->addAction(mouseMode.modeCreateRoomAct);
     roomMenu->addAction(editRoomSelectionAct);
@@ -982,6 +1058,8 @@ void MainWindow::setupMenuBar()
     viewMenu->addAction(layerUpAct);
     viewMenu->addAction(layerDownAct);
     viewMenu->addAction(layerResetAct);
+    viewMenu->addSeparator();
+    viewMenu->addAction(rebuildMeshesAct);
     viewMenu->addSeparator();
     viewMenu->addAction(alwaysOnTopAct);
 
@@ -1051,6 +1129,7 @@ void MainWindow::showContextMenu(const QPoint &pos)
     contextMenu.addSeparator();
     QMenu *mouseMenu = contextMenu.addMenu(QIcon::fromTheme("input-mouse"), "Mouse Mode");
     mouseMenu->addAction(mouseMode.modeMoveSelectAct);
+    mouseMenu->addAction(mouseMode.modeRoomRaypickAct);
     mouseMenu->addAction(mouseMode.modeRoomSelectAct);
     mouseMenu->addAction(mouseMode.modeInfoMarkSelectAct);
     mouseMenu->addAction(mouseMode.modeConnectionSelectAct);
@@ -1090,6 +1169,7 @@ void MainWindow::setupToolBars()
     mouseModeToolBar = addToolBar(tr("Mouse Mode"));
     mouseModeToolBar->setObjectName("ModeToolBar");
     mouseModeToolBar->addAction(mouseMode.modeMoveSelectAct);
+    mouseModeToolBar->addAction(mouseMode.modeRoomRaypickAct);
     mouseModeToolBar->addAction(mouseMode.modeRoomSelectAct);
     mouseModeToolBar->addAction(mouseMode.modeConnectionSelectAct);
     mouseModeToolBar->addAction(mouseMode.modeCreateRoomAct);
@@ -1113,6 +1193,7 @@ void MainWindow::setupToolBars()
     viewToolBar->addAction(zoomInAct);
     viewToolBar->addAction(zoomOutAct);
     viewToolBar->addAction(zoomResetAct);
+    viewToolBar->addWidget(new MapZoomSlider(deref(m_mapWindow), this));
     viewToolBar->addAction(layerUpAct);
     viewToolBar->addAction(layerDownAct);
     viewToolBar->addAction(layerResetAct);
@@ -1159,6 +1240,10 @@ void MainWindow::onPreferences()
         m_configDialog = std::make_unique<ConfigDialog>(m_groupManager, this);
     }
 
+    connect(m_configDialog.get(),
+            &ConfigDialog::sig_graphicsSettingsChanged,
+            m_mapWindow,
+            &MapWindow::graphicsSettingsChanged);
     m_configDialog->show();
 }
 
@@ -1743,6 +1828,11 @@ void MainWindow::onModeConnectionSelect()
     setCanvasMouseMode(CanvasMouseModeEnum::SELECT_CONNECTIONS);
 }
 
+void MainWindow::onModeRoomRaypick()
+{
+    setCanvasMouseMode(CanvasMouseModeEnum::RAYPICK_ROOMS);
+}
+
 void MainWindow::onModeRoomSelect()
 {
     setCanvasMouseMode(CanvasMouseModeEnum::SELECT_ROOMS);
@@ -1808,8 +1898,9 @@ void MainWindow::onEditRoomSelection()
 
 void MainWindow::onDeleteInfoMarkSelection()
 {
-    if (m_infoMarkSelection == nullptr)
+    if (m_infoMarkSelection == nullptr) {
         return;
+    }
 
     {
         const auto tmp = std::exchange(m_infoMarkSelection, nullptr);
@@ -1818,6 +1909,7 @@ void MainWindow::onDeleteInfoMarkSelection()
 
     MapCanvas *const canvas = getCanvas();
     canvas->clearInfoMarkSelection();
+    canvas->infomarksChanged();
 }
 
 void MainWindow::onDeleteRoomSelection()
@@ -1945,6 +2037,24 @@ void MainWindow::openNewbieHelp()
     QDesktopServices::openUrl(QUrl("http://mume.org/newbie.php"));
 }
 
+void MainWindow::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Escape) {
+        m_mapWindow->keyPressEvent(event);
+        return;
+    }
+    QWidget::keyPressEvent(event);
+}
+
+void MainWindow::keyReleaseEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Escape) {
+        m_mapWindow->keyReleaseEvent(event);
+        return;
+    }
+    QWidget::keyReleaseEvent(event);
+}
+
 MapCanvas *MainWindow::getCanvas() const
 {
     return m_mapWindow->getCanvas();
@@ -1953,7 +2063,7 @@ MapCanvas *MainWindow::getCanvas() const
 void MainWindow::mapChanged() const
 {
     if (MapCanvas *const canvas = getCanvas())
-        canvas->update();
+        canvas->mapChanged();
 }
 
 void MainWindow::setCanvasMouseMode(const CanvasMouseModeEnum mode)

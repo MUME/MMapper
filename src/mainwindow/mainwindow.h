@@ -89,6 +89,7 @@ public slots:
     void log(const QString &, const QString &);
 
     void onModeConnectionSelect();
+    void onModeRoomRaypick();
     void onModeRoomSelect();
     void onModeMoveSelect();
     void onModeInfoMarkSelect();
@@ -138,6 +139,8 @@ public slots:
 
 protected:
     void closeEvent(QCloseEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
 
 private:
     void forceNewFile();
@@ -228,6 +231,7 @@ private:
     {
         QActionGroup *mouseModeActGroup = nullptr;
         QAction *modeConnectionSelectAct = nullptr;
+        QAction *modeRoomRaypickAct = nullptr;
         QAction *modeRoomSelectAct = nullptr;
         QAction *modeMoveSelectAct = nullptr;
         QAction *modeInfoMarkSelectAct = nullptr;
@@ -286,6 +290,7 @@ private:
 
     QAction *forceRoomAct = nullptr;
     QAction *releaseAllPathsAct = nullptr;
+    QAction *rebuildMeshesAct = nullptr;
 
     std::unique_ptr<ConfigDialog> m_configDialog;
 
