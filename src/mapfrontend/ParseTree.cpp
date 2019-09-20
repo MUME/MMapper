@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -59,7 +60,11 @@ static MaskFlagsEnum getKeyMask(const ParseEvent &event)
     const auto flags = static_cast<MaskFlagsEnum>(mask);
     if (flags == MaskFlagsEnum::DESC) {
         // The only one never seen in the wild
-        std::cout << "MaskFlagsEnum::DESC observed in the wild!" << std::endl;
+        static std::once_flag flag;
+        std::call_once(flag, []() {
+            std::cerr << "WARNING: MaskFlagsEnum::DESC observed in the wild!" << std::endl;
+            assert(false);
+        });
     }
     return flags;
 }
