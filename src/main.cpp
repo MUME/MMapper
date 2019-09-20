@@ -64,10 +64,10 @@ public:
 
 Splash::~Splash() = default;
 
-static void tryUseHighDpi(QApplication &app)
+static void tryUseHighDpi()
 {
-    app.setAttribute(Qt::AA_UseHighDpiPixmaps);
-    app.setAttribute(Qt::AA_EnableHighDpiScaling);
+    QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
+    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 }
 
 static void tryInitDrMingw()
@@ -141,18 +141,18 @@ int main(int argc, char **argv)
 
     QApplication app(argc, argv);
     tryInitDrMingw();
-    tryUseHighDpi(app);
+    tryUseHighDpi();
     auto tryLoadingWinSock = std::make_unique<WinSock>();
 
     const auto &config = getConfig();
     if (config.canvas.softwareOpenGL) {
-        app.setAttribute(Qt::AA_UseSoftwareOpenGL);
+        QApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
         if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux) {
             qputenv("LIBGL_ALWAYS_SOFTWARE", "1");
         }
     } else {
         // Windows Intel drivers cause black screens if we don't specify OpenGL
-        app.setAttribute(Qt::AA_UseDesktopOpenGL);
+        QApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
     }
 
     std::unique_ptr<ISplash> splash = !config.general.noSplash
@@ -165,7 +165,7 @@ int main(int argc, char **argv)
     splash.reset();
 
     mw->startServices();
-    const int ret = app.exec();
+    const int ret = QApplication::exec();
     mw.reset();
     config.write();
     return ret;
