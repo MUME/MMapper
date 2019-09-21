@@ -317,7 +317,10 @@ void MainWindow::wireConnections()
     connect(m_mapData, &MapData::log, this, &MainWindow::log);
     connect(m_mapWindow->getCanvas(), &MapCanvas::log, this, &MainWindow::log);
 
-    connect(m_mapData, &MapData::onDataLoaded, m_mapWindow->getCanvas(), &MapCanvas::dataLoaded);
+    connect(m_mapData, &MapData::onDataChanged, this, [this]() {
+        setWindowModified(true);
+        saveAct->setEnabled(true);
+    });
 
     connect(zoomInAct, &QAction::triggered, m_mapWindow->getCanvas(), &MapCanvas::zoomIn);
     connect(zoomOutAct, &QAction::triggered, m_mapWindow->getCanvas(), &MapCanvas::zoomOut);
@@ -419,6 +422,7 @@ void MainWindow::createActions()
                           this);
     saveAct->setShortcut(tr("Ctrl+S"));
     saveAct->setStatusTip(tr("Save the document to disk"));
+    saveAct->setEnabled(false);
     connect(saveAct, &QAction::triggered, this, &MainWindow::save);
 
     saveAsAct = new QAction(QIcon::fromTheme("document-save-as"), tr("Save &As..."), this);
@@ -862,7 +866,6 @@ void MainWindow::disableActions(bool value)
     openAct->setDisabled(value);
     mergeAct->setDisabled(value);
     reloadAct->setDisabled(value);
-    saveAct->setDisabled(value);
     saveAsAct->setDisabled(value);
     exportBaseMapAct->setDisabled(value);
     exportWebMapAct->setDisabled(value);
@@ -1202,12 +1205,15 @@ void MainWindow::newFile()
             &AbstractMapStorage::onNewData,
             m_mapWindow->getCanvas(),
             &MapCanvas::dataLoaded);
-    connect(storage, &AbstractMapStorage::onDataLoaded, m_groupWidget, &GroupWidget::mapLoaded);
+    connect(storage, &AbstractMapStorage::onNewData, m_groupWidget, &GroupWidget::mapLoaded);
+    connect(storage, &AbstractMapStorage::onNewData, this, [this]() {
+        setWindowModified(false);
+        saveAct->setEnabled(false);
+    });
     connect(storage, &AbstractMapStorage::log, this, &MainWindow::log);
     storage->newData();
     delete storage;
     setCurrentFile("");
-    setWindowModified(false);
 }
 
 void MainWindow::merge()
@@ -1253,6 +1259,10 @@ void MainWindow::merge()
             &AbstractMapStorage::onDataLoaded,
             m_mapWindow->getCanvas(),
             &MapCanvas::dataLoaded);
+    connect(storage, &AbstractMapStorage::onDataLoaded, this, [this]() {
+        setWindowModified(false);
+        saveAct->setEnabled(false);
+    });
     connect(storage, &AbstractMapStorage::onDataLoaded, m_groupWidget, &GroupWidget::mapLoaded);
     connect(&storage->getProgressCounter(),
             &ProgressCounter::onPercentageChanged,
@@ -1306,7 +1316,6 @@ void MainWindow::reload()
 
 bool MainWindow::save()
 {
-    setWindowModified(false);
     if (m_mapData->getFileName().isEmpty() || m_mapData->isFileReadOnly()) {
         return saveAs();
     }
@@ -1471,6 +1480,11 @@ bool MainWindow::maybeSave()
 
 void MainWindow::loadFile(const QString &fileName)
 {
+    if (fileName.isEmpty()) {
+        statusBar()->showMessage(tr("No filename provided"), 2000);
+        return;
+    }
+
     auto *file = new QFile(fileName);
     if (!file->open(QFile::ReadOnly)) {
         QMessageBox::warning(this,
@@ -1506,6 +1520,10 @@ void MainWindow::loadFile(const QString &fileName)
             &AbstractMapStorage::onDataLoaded,
             m_mapWindow->getCanvas(),
             &MapCanvas::dataLoaded);
+    connect(storage.get(), &AbstractMapStorage::onDataLoaded, this, [this]() {
+        setWindowModified(false);
+        saveAct->setEnabled(false);
+    });
     connect(storage.get(),
             &AbstractMapStorage::onDataLoaded,
             m_groupWidget,
@@ -1529,7 +1547,6 @@ void MainWindow::loadFile(const QString &fileName)
 
     delete progressDlg;
 
-    setWindowModified(false);
     setCurrentFile(m_mapData->getFileName());
 
     statusBar()->showMessage(tr("File loaded"), 2000);
@@ -1634,6 +1651,8 @@ bool MainWindow::saveFile(const QString &fileName,
 
     m_mapWindow->getCanvas()->setEnabled(true);
 
+    setWindowModified(false);
+    saveAct->setEnabled(false);
     return true;
 }
 
@@ -1695,7 +1714,7 @@ void MainWindow::onModeGroupServer()
 void MainWindow::setCurrentFile(const QString &fileName)
 {
     QFileInfo file(fileName);
-    const auto shownName = fileName.isEmpty() ? "untitled.mm2" : file.fileName();
+    const auto shownName = fileName.isEmpty() ? "Untitled" : file.fileName();
     const auto fileSuffix = ((m_mapData && m_mapData->isFileReadOnly()) || !file.isWritable())
                                 ? " [read-only]"
                                 : "";

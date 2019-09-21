@@ -129,7 +129,6 @@ private:
 
 signals:
     void log(const QString &, const QString &);
-    void onDataLoaded();
     void onDataChanged();
 
 public slots:
