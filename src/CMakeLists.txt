@@ -359,7 +359,7 @@ if(CHECK_MISSING_INCLUDES)
 endif()
 
 set(mmapper_DATA
-    mmapper.desktop
+    org.mume.MMapper.desktop
     MacOSXBundleInfo.plist.in
     display/OpenGL.cpp)
 
@@ -520,7 +520,7 @@ if(UNIX AND NOT APPLE)
     )
 
     # Linux Desktop Integration
-    install(FILES mmapper.desktop
+    install(FILES org.mume.MMapper.desktop
             DESTINATION share/applications
             COMPONENT desktopintegration
     )
@@ -531,7 +531,7 @@ if(UNIX AND NOT APPLE)
             FILES resources/icons/hi${RES}-app-mmapper.png
             DESTINATION share/icons/hicolor/${RES}x${RES}/apps/
             COMPONENT desktopintegration
-            RENAME mmapper.png
+            RENAME org.mume.MMapper.png
         )
     endforeach(RES)
 
@@ -539,7 +539,7 @@ if(UNIX AND NOT APPLE)
         FILES resources/icons/m.png
         DESTINATION share/icons/hicolor/256x256/apps/
         COMPONENT desktopintegration
-        RENAME mmapper.png
+        RENAME org.mume.MMapper.png
     )
 
     set(CPACK_GENERATOR "DEB;TGZ") # Others: RPM, STGZ

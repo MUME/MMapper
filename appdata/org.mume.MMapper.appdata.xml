@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop">
-  <id>mmapper.desktop</id>
+  <id>org.mume.MMapper</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-2.0+</project_license>
   <name>MMapper</name>
@@ -31,6 +31,10 @@
       <image height="675" width="1200">https://raw.githubusercontent.com/MUME/MMapper/master/appdata/screenshot1.png</image>
     </screenshot>
   </screenshots>
+  <provides>
+    <id>mmapper.desktop</id>
+  </provides>
+  <launchable type="desktop-id">org.mume.MMapper.desktop</launchable>
   <url type="bugtracker">https://github.com/MUME/MMapper/issues</url>
   <url type="homepage">https://github.com/MUME/MMapper</url>
 </component>

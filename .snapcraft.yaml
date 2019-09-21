@@ -17,7 +17,7 @@ base: core18
 apps:
   mmapper-desktop:
     command: desktop-launch mmapper
-    desktop: usr/share/applications/mmapper.desktop
+    desktop: usr/share/applications/org.mume.MMapper.desktop
     plugs:
       - home
       - gsettings
@@ -53,7 +53,7 @@ parts:
       - libminiupnpc10
     override-build: |
       snapcraftctl build
-      sed -i 's|Icon=mmapper|Icon=${SNAP}/usr/share/icons/hicolor/256x256/apps/mmapper.png|g' $SNAPCRAFT_PART_INSTALL/usr/share/applications/mmapper.desktop
+      sed -i 's|Icon=org.mume.MMapper|Icon=${SNAP}/usr/share/icons/hicolor/256x256/apps/org.mume.MMapper.png|g' $SNAPCRAFT_PART_INSTALL/usr/share/applications/org.mume.MMapper.desktop
     after: [desktop-qt5]
   desktop-qt5:
     source: https://github.com/ubuntu/snapcraft-desktop-helpers.git
