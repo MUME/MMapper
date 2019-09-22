@@ -137,7 +137,7 @@ struct MapCanvasData
     };
     std::optional<InfoMarkSelectionMove> m_infoMarkSelectionMove{};
 
-    ConnectionSelection *m_connectionSelection = nullptr;
+    std::shared_ptr<ConnectionSelection> m_connectionSelection;
 
     MapData *m_data = nullptr;
     PrespammedPath *m_prespammedPath = nullptr;

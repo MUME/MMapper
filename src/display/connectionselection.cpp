@@ -14,13 +14,13 @@
 #include "../global/roomid.h"
 #include "../mapfrontend/mapfrontend.h"
 
-ConnectionSelection::ConnectionSelection()
+ConnectionSelection::ConnectionSelection(this_is_private)
 {
     for (auto &x : m_connectionDescriptor)
         assert(x.room == nullptr);
 }
 
-ConnectionSelection::ConnectionSelection(MapFrontend *mf, const MouseSel &sel)
+ConnectionSelection::ConnectionSelection(this_is_private, MapFrontend *mf, const MouseSel &sel)
 {
     for (auto &x : m_connectionDescriptor)
         assert(x.room == nullptr);

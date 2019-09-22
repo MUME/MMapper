@@ -267,10 +267,10 @@ void MapCanvas::setRoomSelection(const SigRoomSelection &selection)
     update();
 }
 
-void MapCanvas::setConnectionSelection(ConnectionSelection *const selection)
+void MapCanvas::setConnectionSelection(const std::shared_ptr<ConnectionSelection> &selection)
 {
-    delete std::exchange(m_connectionSelection, selection);
-    emit newConnectionSelection(selection);
+    m_connectionSelection = selection;
+    emit newConnectionSelection(selection.get());
     update();
 }
 
@@ -491,36 +491,29 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
     case CanvasMouseModeEnum::CREATE_CONNECTIONS:
         // Select connection
         if ((event->buttons() & Qt::LeftButton) != 0u) {
-            delete m_connectionSelection;
-            m_connectionSelection = new ConnectionSelection(m_data, m_sel1);
+            m_connectionSelection = ConnectionSelection::alloc(m_data, m_sel1);
             if (!m_connectionSelection->isFirstValid()) {
-                delete m_connectionSelection;
                 m_connectionSelection = nullptr;
             }
             emit newConnectionSelection(nullptr);
         }
         // Cancel
         if ((event->buttons() & Qt::RightButton) != 0u) {
-            delete m_connectionSelection;
-            m_connectionSelection = nullptr;
-            emit newConnectionSelection(m_connectionSelection);
+            clearConnectionSelection();
         }
         update();
         break;
 
     case CanvasMouseModeEnum::SELECT_CONNECTIONS:
         if ((event->buttons() & Qt::LeftButton) != 0u) {
-            delete m_connectionSelection;
-            m_connectionSelection = new ConnectionSelection(m_data, m_sel1);
+            m_connectionSelection = ConnectionSelection::alloc(m_data, m_sel1);
             if (!m_connectionSelection->isFirstValid()) {
-                delete m_connectionSelection;
                 m_connectionSelection = nullptr;
             } else {
                 const Room *const r1 = m_connectionSelection->getFirst().room;
                 const ExitDirEnum dir1 = m_connectionSelection->getFirst().direction;
 
                 if (r1->exit(dir1).outIsEmpty()) {
-                    delete m_connectionSelection;
                     m_connectionSelection = nullptr;
                 }
             }
@@ -528,9 +521,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
         }
         // Cancel
         if ((event->buttons() & Qt::RightButton) != 0u) {
-            delete m_connectionSelection;
-            m_connectionSelection = nullptr;
-            emit newConnectionSelection(m_connectionSelection);
+            clearConnectionSelection();
         }
         update();
         break;
@@ -841,12 +832,11 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
             m_mouseLeftPressed = false;
 
             if (m_connectionSelection == nullptr) {
-                m_connectionSelection = new ConnectionSelection(m_data, m_sel1);
+                m_connectionSelection = ConnectionSelection::alloc(m_data, m_sel1);
             }
             m_connectionSelection->setSecond(m_data, m_sel2);
 
             if (!m_connectionSelection->isValid()) {
-                delete m_connectionSelection;
                 m_connectionSelection = nullptr;
             } else {
                 const auto first = m_connectionSelection->getFirst();
@@ -865,7 +855,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                     tmpSel->getRoom(id1);
                     tmpSel->getRoom(id2);
 
-                    delete std::exchange(m_connectionSelection, nullptr);
+                    m_connectionSelection = nullptr;
 
                     if (!(r1->exit(dir1).containsOut(id2)) || !(r2->exit(dir2).containsOut(id1))) {
                         if (m_canvasMouseMode != CanvasMouseModeEnum::CREATE_ONEWAY_CONNECTIONS) {
@@ -874,14 +864,13 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                         } else {
                             m_data->execute(std::make_unique<AddOneWayExit>(id1, id2, dir1), tmpSel);
                         }
-                        m_connectionSelection = new ConnectionSelection();
+                        m_connectionSelection = ConnectionSelection::alloc();
                         m_connectionSelection->setFirst(m_data, id1, dir1);
                         m_connectionSelection->setSecond(m_data, id2, dir2);
                     }
                 }
             }
-
-            emit newConnectionSelection(m_connectionSelection);
+            setConnectionSelection(m_connectionSelection);
         }
         update();
         break;
@@ -891,12 +880,11 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
             m_mouseLeftPressed = false;
 
             if (m_connectionSelection == nullptr) {
-                m_connectionSelection = new ConnectionSelection(m_data, m_sel1);
+                m_connectionSelection = ConnectionSelection::alloc(m_data, m_sel1);
             }
             m_connectionSelection->setSecond(m_data, m_sel2);
 
             if (!m_connectionSelection->isValid()) {
-                delete m_connectionSelection;
                 m_connectionSelection = nullptr;
             } else {
                 const Room *const r1 = m_connectionSelection->getFirst().room;
@@ -908,18 +896,16 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                     if (!(r1->exit(dir1).containsOut(r2->getId()))
                         || !(r2->exit(dir2).containsOut(r1->getId()))) {
                         if (dir2 != ExitDirEnum::UNKNOWN) {
-                            delete m_connectionSelection;
                             m_connectionSelection = nullptr;
                         } else if (dir2 == ExitDirEnum::UNKNOWN
                                    && (!(r1->exit(dir1).containsOut(r2->getId()))
                                        || (r1->exit(dir1).containsIn(r2->getId())))) { // not oneway
-                            delete m_connectionSelection;
                             m_connectionSelection = nullptr;
                         }
                     }
                 }
             }
-            emit newConnectionSelection(m_connectionSelection);
+            setConnectionSelection(m_connectionSelection);
         }
         update();
         break;

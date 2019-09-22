@@ -103,9 +103,6 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     qRegisterMetaType<SigParseEvent>("SigParseEvent");
     qRegisterMetaType<SigRoomSelection>("SigRoomSelection");
 
-    m_roomSelection = nullptr;
-    m_connectionSelection = nullptr;
-
     // REVISIT: MapData should be destructed last due to locks
     m_mapData = new MapData();
     m_mapData->setObjectName("MapData");
@@ -1168,7 +1165,7 @@ void MainWindow::newRoomSelection(const SigRoomSelection &rs)
 
 void MainWindow::newConnectionSelection(ConnectionSelection *const cs)
 {
-    m_connectionSelection = cs;
+    m_connectionSelection = (cs != nullptr) ? cs->shared_from_this() : nullptr;
     selectedConnectionActGroup->setEnabled(m_connectionSelection != nullptr);
 }
 

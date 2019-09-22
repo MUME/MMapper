@@ -4,11 +4,6 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
-#include <array>
-#include <QObject>
-#include <QString>
-#include <QtCore>
-
 #include "../expandoracommon/RoomRecipient.h"
 #include "../expandoracommon/coordinate.h" /* Coordinate2f */
 #include "../global/roomid.h"
@@ -38,10 +33,9 @@ struct MouseSel final
     }
 };
 
-class ConnectionSelection final : public QObject, public RoomRecipient
+class ConnectionSelection final : public RoomRecipient,
+                                  public std::enable_shared_from_this<ConnectionSelection>
 {
-    Q_OBJECT
-
 public:
     struct ConnectionDescriptor final
     {
@@ -49,9 +43,26 @@ public:
         ExitDirEnum direction = ExitDirEnum::NONE;
     };
 
-    explicit ConnectionSelection(MapFrontend *mf, const MouseSel &sel);
-    ConnectionSelection();
+private:
+    struct this_is_private final
+    {
+        explicit this_is_private(int) {}
+    };
+
+public:
+    static std::shared_ptr<ConnectionSelection> alloc(MapFrontend *mf, const MouseSel &sel)
+    {
+        return std::make_shared<ConnectionSelection>(this_is_private{0}, mf, sel);
+    }
+    static std::shared_ptr<ConnectionSelection> alloc()
+    {
+        return std::make_shared<ConnectionSelection>(this_is_private{0});
+    }
+
+    explicit ConnectionSelection(this_is_private, MapFrontend *mf, const MouseSel &sel);
+    explicit ConnectionSelection(this_is_private);
     ~ConnectionSelection() override;
+    DELETE_CTORS_AND_ASSIGN_OPS(ConnectionSelection);
 
     void setFirst(MapFrontend *mf, RoomId RoomId, ExitDirEnum dir);
     void setSecond(MapFrontend *mf, RoomId RoomId, ExitDirEnum dir);
@@ -67,11 +78,6 @@ public:
 
     void receiveRoom(RoomAdmin *admin, const Room *aRoom) override;
 
-public slots:
-
-signals:
-
-protected:
 private:
     static ExitDirEnum ComputeDirection(const Coordinate2f &mouse_f);
 

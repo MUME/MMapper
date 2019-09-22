@@ -15,10 +15,7 @@ MapCanvasData::MapCanvasData(MapData *const mapData,
 
 {}
 
-MapCanvasData::~MapCanvasData()
-{
-    delete std::exchange(m_connectionSelection, nullptr);
-}
+MapCanvasData::~MapCanvasData() = default;
 
 QVector3D MapCanvasData::project(const QVector3D &v) const
 {

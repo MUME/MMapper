@@ -157,7 +157,7 @@ private:
     UpdateDialog *m_updateDialog = nullptr;
 
     SharedRoomSelection m_roomSelection;
-    ConnectionSelection *m_connectionSelection = nullptr;
+    std::shared_ptr<ConnectionSelection> m_connectionSelection;
     std::shared_ptr<InfoMarkSelection> m_infoMarkSelection;
 
     QProgressDialog *progressDlg = nullptr;
