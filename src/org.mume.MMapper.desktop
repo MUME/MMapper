@@ -2,7 +2,7 @@
 Name=MMapper
 GenericName=MUME Mapper
 Exec=mmapper
-Icon=mmapper
+Icon=org.mume.MMapper
 Terminal=false
 Type=Application
 Categories=Qt;Game;RolePlaying;
