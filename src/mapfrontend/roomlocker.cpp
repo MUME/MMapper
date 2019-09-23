@@ -9,7 +9,9 @@
 #include "../expandoracommon/room.h"
 #include "mapfrontend.h"
 
-RoomLocker::RoomLocker(RoomRecipient &forward, MapFrontend &frontend, ParseEvent *compare)
+RoomLocker::RoomLocker(RoomRecipient &forward,
+                       MapFrontend &frontend,
+                       const ParseEvent *const compare)
     : recipient(forward)
     , data(frontend)
     , comparator(compare)

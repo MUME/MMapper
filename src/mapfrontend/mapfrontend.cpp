@@ -256,7 +256,7 @@ void MapFrontend::checkSize(const Coordinate &c)
 
 void MapFrontend::createRoom(const SigParseEvent &sigParseEvent, const Coordinate &expectedPosition)
 {
-    ParseEvent &event = sigParseEvent.deref();
+    const ParseEvent &event = sigParseEvent.deref();
 
     QMutexLocker locker(&mapLock);
     checkSize(expectedPosition); // still hackish but somewhat better
@@ -266,12 +266,11 @@ void MapFrontend::createRoom(const SigParseEvent &sigParseEvent, const Coordinat
         map.setNearest(expectedPosition, *room);
         assignId(room, roomHome);
     }
-    event.reset();
 }
 
 void MapFrontend::lookingForRooms(RoomRecipient &recipient, const SigParseEvent &sigParseEvent)
 {
-    ParseEvent &event = sigParseEvent.deref();
+    const ParseEvent &event = sigParseEvent.deref();
     QMutexLocker locker(&mapLock);
     if (greatestUsedId == INVALID_ROOMID) {
         Coordinate c(0, 0, 0);
@@ -283,7 +282,6 @@ void MapFrontend::lookingForRooms(RoomRecipient &recipient, const SigParseEvent 
 
     RoomLocker ret(recipient, *this, &event);
     parseTree.getRooms(ret, event);
-    event.reset();
 }
 
 void MapFrontend::lockRoom(RoomRecipient *const recipient, const RoomId id)

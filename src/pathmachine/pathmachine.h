@@ -67,9 +67,9 @@ protected:
     void syncing(const SigParseEvent &sigParseEvent);
     void approved(const SigParseEvent &sigParseEvent);
     void evaluatePaths();
-    void tryExits(const Room *, RoomRecipient &, ParseEvent &, bool out);
+    void tryExits(const Room *, RoomRecipient &, const ParseEvent &, bool out);
     void tryExit(const Exit &possible, RoomRecipient &recipient, bool out);
-    void tryCoordinate(const Room *, RoomRecipient &, ParseEvent &);
+    void tryCoordinate(const Room *, RoomRecipient &, const ParseEvent &);
 
     RoomSignalHandler signaler;
     /* REVISIT: pathRoot and mostLikelyRoom should probably be of type RoomId */

@@ -4,10 +4,11 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
-#include <deque>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <QByteArrayDataPtr>
@@ -23,11 +24,9 @@
 #include "../parser/ExitsFlags.h"
 #include "../parser/PromptFlags.h"
 #include "MmQtHandle.h"
-#include "listcycler.h"
 #include "property.h"
 
 class ParseEvent;
-class Property;
 using SharedParseEvent = std::shared_ptr<ParseEvent>;
 using SigParseEvent = MmQtHandle<ParseEvent>;
 
@@ -36,25 +35,29 @@ using SigParseEvent = MmQtHandle<ParseEvent>;
  */
 class ParseEvent final
 {
+public:
+    static constexpr const size_t NUM_PROPS = 3;
+
 private:
-    using UP = std::unique_ptr<Property>;
-    using DUP = std::deque<UP>;
-    using LUP = ListCycler<UP, DUP>;
-    struct Cycler final : LUP
+    struct ArrayOfProperties final : public std::array<Property, NUM_PROPS>
     {
-        Cycler() = default;
-        virtual ~Cycler() override;
+    private:
+        using Base = std::array<Property, NUM_PROPS>;
 
-        DEFAULT_CTORS_AND_ASSIGN_OPS(Cycler);
-        Cycler clone() const;
+    public:
+        ArrayOfProperties();
+        ~ArrayOfProperties();
+        DEFAULT_CTORS_AND_ASSIGN_OPS(ArrayOfProperties);
 
-        void addProperty(std::string string);
-        void addProperty(const QString &string);
-        void addProperty(const QByteArray &byteArray);
+    public:
+        using std::array<Property, NUM_PROPS>::operator[];
+
+    public:
+        void setProperty(size_t pos, std::string string);
     };
 
 private:
-    Cycler m_cycler;
+    ArrayOfProperties m_properties;
     RoomName m_roomName;
     RoomDynamicDesc m_dynamicDesc;
     RoomStaticDesc m_staticDesc;
@@ -62,22 +65,20 @@ private:
     PromptFlagsType m_promptFlags;
     ConnectedRoomFlagsType m_connectedRoomFlags;
 
-    CommandEnum moveType = CommandEnum::NONE;
-    uint numSkipped = 0u;
+    CommandEnum m_moveType = CommandEnum::NONE;
+    uint m_numSkipped = 0u;
 
 public:
     explicit ParseEvent(const CommandEnum command)
-        : moveType(command)
+        : m_moveType{command}
     {}
 
 public:
-    DEFAULT_MOVE_CTOR(ParseEvent);
-    ParseEvent(const ParseEvent &other);
+    DEFAULT_CTORS_AND_ASSIGN_OPS(ParseEvent);
 
 public:
-    /* NOTE: This handles both the move and copy assignment operators. */
-    ParseEvent &operator=(ParseEvent);
-    static void swap(ParseEvent &lhs, ParseEvent &rhs);
+    // REVISIT: Cloning the event should no longer be necessary since all public methods are const;
+    // instead, we we should make ParseEvent use `shared_from_this` and just copy the shared_ptr.
     ParseEvent clone() const { return ParseEvent{*this}; }
 
 public:
@@ -88,27 +89,25 @@ public:
 public:
     virtual ~ParseEvent();
 
-public:
-    Property *current() { return m_cycler.current().get(); }
-    Property *prev() { return m_cycler.prev().get(); }
-    Property *next() { return m_cycler.next().get(); }
-    void reset();
-
 private:
+    void setProperty(const RoomName &name) { m_properties.setProperty(0, name.getStdString()); }
+    void setProperty(const RoomStaticDesc &desc)
+    {
+        m_properties.setProperty(1, desc.getStdString());
+    }
+    void setProperty(const PromptFlagsType &prompt);
     void countSkipped();
 
 public:
-    CommandEnum getMoveType() const { return moveType; }
-    uint getNumSkipped() const { return numSkipped; }
-    auto size() const { return m_cycler.size(); }
-
-public:
-    const RoomName &getRoomName() const;
-    const RoomDynamicDesc &getDynamicDesc() const;
-    const RoomStaticDesc &getStaticDesc() const;
-    ExitsFlagsType getExitsFlags() const;
-    PromptFlagsType getPromptFlags() const;
-    ConnectedRoomFlagsType getConnectedRoomFlags() const;
+    const RoomName &getRoomName() const { return m_roomName; }
+    const RoomDynamicDesc &getDynamicDesc() const { return m_dynamicDesc; }
+    const RoomStaticDesc &getStaticDesc() const { return m_staticDesc; }
+    ExitsFlagsType getExitsFlags() const { return m_exitsFlags; }
+    PromptFlagsType getPromptFlags() const { return m_promptFlags; }
+    ConnectedRoomFlagsType getConnectedRoomFlags() const { return m_connectedRoomFlags; }
+    CommandEnum getMoveType() const { return m_moveType; }
+    uint getNumSkipped() const { return m_numSkipped; }
+    const Property &operator[](const size_t pos) const { return m_properties.at(pos); }
 
 public:
     static SharedParseEvent createEvent(CommandEnum c,

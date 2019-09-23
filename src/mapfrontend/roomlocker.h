@@ -16,12 +16,12 @@ class RoomLocker final : public AbstractRoomVisitor
 public:
     explicit RoomLocker(RoomRecipient &forward,
                         MapFrontend &frontend,
-                        ParseEvent *compare = nullptr);
+                        const ParseEvent *compare = nullptr);
     virtual void visit(const Room *room) override;
     virtual ~RoomLocker() override;
 
 private:
     RoomRecipient &recipient;
     MapFrontend &data;
-    ParseEvent *const comparator;
+    const ParseEvent *const comparator;
 };

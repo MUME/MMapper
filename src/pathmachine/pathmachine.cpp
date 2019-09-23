@@ -95,7 +95,7 @@ void PathMachine::event(const SigParseEvent &sigParseEvent)
 
 void PathMachine::tryExits(const Room *const room,
                            RoomRecipient &recipient,
-                           ParseEvent &event,
+                           const ParseEvent &event,
                            const bool out)
 {
     if (room == nullptr) {
@@ -126,7 +126,9 @@ void PathMachine::tryExit(const Exit &possible, RoomRecipient &recipient, const 
     }
 }
 
-void PathMachine::tryCoordinate(const Room *const room, RoomRecipient &recipient, ParseEvent &event)
+void PathMachine::tryCoordinate(const Room *const room,
+                                RoomRecipient &recipient,
+                                const ParseEvent &event)
 {
     if (room == nullptr) {
         // most likely room doesn't exist

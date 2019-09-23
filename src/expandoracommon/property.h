@@ -4,28 +4,24 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
+#include <optional>
 #include <string>
 
 #include "../global/RuleOf5.h"
-#include "listcycler.h"
 
-class Property final : public ListCycler<char, std::string>
+class Property final
 {
-public:
-    using ListCycler::ListCycler;
-
-public:
-    const char *rest() const;
-    inline bool isSkipped() const noexcept { return m_skipped; }
-
-public:
-    static constexpr const struct TagSkip
-    {
-    } tagSkip{};
-    explicit Property(TagSkip);
-    virtual ~Property() override;
-    DEFAULT_CTORS_AND_ASSIGN_OPS(Property);
-
 private:
-    bool m_skipped = false;
+    std::string m_data;
+
+public:
+    bool isSkipped() const noexcept { return m_data.empty(); }
+    const std::string &getStdString() const { return m_data; }
+    size_t size() const { return m_data.size(); }
+
+public:
+    Property() = default;
+    explicit Property(std::string s);
+    ~Property();
+    DEFAULT_CTORS_AND_ASSIGN_OPS(Property);
 };

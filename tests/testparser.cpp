@@ -52,7 +52,7 @@ void TestParser::createParseEventTest()
                                          pFlags,
                                          cFlags);
 
-    ParseEvent &e = *event;
+    const ParseEvent &e = *event;
     qDebug() << e;
     QCOMPARE(e.getRoomName(), roomName);
     QCOMPARE(e.getDynamicDesc(), roomDescription);
@@ -63,11 +63,10 @@ void TestParser::createParseEventTest()
 
     QCOMPARE(e.getMoveType(), CommandEnum::NORTH);
     QCOMPARE(e.getNumSkipped(), 0u);
-    QCOMPARE(e.size(), static_cast<size_t>(3));
-    QCOMPARE(RoomName(e.next()->data()), roomName);
-    QCOMPARE(RoomStaticDesc(e.next()->data()), parsedRoomDescription);
-    QCOMPARE(QString(e.next()->data()), QString(static_cast<int>(terrain)));
-    QVERIFY(e.next() == nullptr);
+    QCOMPARE(RoomName(e[0].getStdString()), roomName);
+    QCOMPARE(RoomStaticDesc(e[1].getStdString()), parsedRoomDescription);
+    QCOMPARE(QString::fromStdString(e[2].getStdString()),
+             QString::fromStdString(std::string(1, static_cast<char>(terrain))));
 }
 
 QTEST_MAIN(TestParser)

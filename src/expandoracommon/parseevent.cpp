@@ -18,101 +18,41 @@
 #include "../parser/PromptFlags.h"
 #include "property.h"
 
-ParseEvent::Cycler::~Cycler() = default;
+ParseEvent::ArrayOfProperties::ArrayOfProperties() = default;
+ParseEvent::ArrayOfProperties::~ArrayOfProperties() = default;
 
-ParseEvent::Cycler ParseEvent::Cycler::clone() const
+void ParseEvent::ArrayOfProperties::setProperty(const size_t pos, std::string s)
 {
-    ParseEvent::Cycler result;
-    const DUP &from = *this;
-    for (const UP &p : from) {
-        if (p != nullptr) {
-            result.emplace_back(std::make_unique<Property>(*p));
-        } else {
-            assert(false);
-            result.emplace_back(nullptr);
-        }
-    }
-    result.pos = pos;
-    return result;
-}
-
-void ParseEvent::Cycler::addProperty(std::string s)
-{
-    if (s.empty())
-        emplace_back(std::make_unique<Property>(Property::TagSkip{}));
-    else
-        emplace_back(std::make_unique<Property>(std::move(s)));
-}
-
-void ParseEvent::Cycler::addProperty(const QByteArray &byteArray)
-{
-    addProperty(byteArray.toStdString());
-}
-
-void ParseEvent::Cycler::addProperty(const QString &string)
-{
-    addProperty(string.toStdString());
-}
-
-ParseEvent::ParseEvent(const ParseEvent &other)
-    : m_cycler{other.m_cycler.clone()}
-    , m_roomName{other.m_roomName}
-    , m_dynamicDesc{other.m_dynamicDesc}
-    , m_staticDesc{other.m_staticDesc}
-    , m_exitsFlags{other.m_exitsFlags}
-    , m_promptFlags{other.m_promptFlags}
-    , m_connectedRoomFlags{other.m_connectedRoomFlags}
-    , moveType{other.moveType}
-    , numSkipped{other.numSkipped}
-{}
-
-void ParseEvent::swap(ParseEvent &lhs, ParseEvent &rhs)
-{
-    using std::swap;
-    swap(lhs.m_cycler, rhs.m_cycler);
-    swap(lhs.m_roomName, rhs.m_roomName);
-    swap(lhs.m_dynamicDesc, rhs.m_dynamicDesc);
-    swap(lhs.m_staticDesc, rhs.m_staticDesc);
-    swap(lhs.m_exitsFlags, rhs.m_exitsFlags);
-    swap(lhs.m_promptFlags, rhs.m_promptFlags);
-    swap(lhs.m_connectedRoomFlags, rhs.m_connectedRoomFlags);
-    swap(lhs.moveType, rhs.moveType);
-    swap(lhs.numSkipped, rhs.numSkipped);
-}
-
-ParseEvent &ParseEvent::operator=(ParseEvent other)
-{
-    swap(*this, other);
-    return *this;
-}
-
-ParseEvent::~ParseEvent() = default;
-
-void ParseEvent::reset()
-{
-    m_cycler.reset();
-    for (auto &property : m_cycler) {
-        property->reset();
-    }
-}
-
-void ParseEvent::countSkipped()
-{
-    numSkipped = 0;
-    for (auto &property : m_cycler) {
-        if (property->isSkipped()) {
-            numSkipped++;
-        }
-    }
+    ArrayOfProperties::at(pos) = Property{std::move(s)};
 }
 
 static std::string getPromptBytes(const PromptFlagsType &promptFlags)
 {
-    auto promptBytes = promptFlags.isValid()
-                           ? std::string(1, static_cast<int8_t>(promptFlags.getTerrainType()))
-                           : std::string{};
-    assert(promptBytes.size() == promptFlags.isValid() ? 1 : 0);
+    const auto promptBytes = promptFlags.isValid()
+                                 ? std::string(1, static_cast<int8_t>(promptFlags.getTerrainType()))
+                                 : std::string{};
+    assert(promptBytes.size() == (promptFlags.isValid() ? 1 : 0));
     return promptBytes;
+}
+
+void ParseEvent::setProperty(const PromptFlagsType &prompt)
+{
+    m_properties.setProperty(2, getPromptBytes(prompt));
+}
+
+ParseEvent::~ParseEvent() = default;
+
+void ParseEvent::countSkipped()
+{
+    m_numSkipped = [this]() {
+        decltype(m_numSkipped) numSkipped = 0;
+        for (const auto &property : m_properties) {
+            if (property.isSkipped()) {
+                numSkipped++;
+            }
+        }
+        return numSkipped;
+    }();
 }
 
 QString ParseEvent::toQString() const
@@ -153,8 +93,8 @@ QString ParseEvent::toQString() const
         .arg(m_staticDesc.toQString())
         .arg(exitsStr)
         .arg(promptStr)
-        .arg(getUppercase(moveType))
-        .arg(numSkipped)
+        .arg(getUppercase(m_moveType))
+        .arg(m_numSkipped)
         .replace("\n", "\\n");
 }
 
@@ -166,14 +106,13 @@ SharedParseEvent ParseEvent::createEvent(const CommandEnum c,
                                          const PromptFlagsType &promptFlags,
                                          const ConnectedRoomFlagsType &connectedRoomFlags)
 {
-    auto event = std::make_shared<ParseEvent>(c);
+    auto result = std::make_shared<ParseEvent>(c);
+    ParseEvent *const event = result.get();
 
     // the moved strings are used by const ref here before they're moved.
-    auto &cycler = event->m_cycler;
-    cycler.addProperty(moved_roomName.getStdString());
-    cycler.addProperty(moved_staticDesc.getStdString());
-    cycler.addProperty(getPromptBytes(promptFlags));
-    assert(cycler.size() == 3);
+    event->setProperty(moved_roomName);
+    event->setProperty(moved_staticDesc);
+    event->setProperty(promptFlags);
 
     // After this block, the moved values are gone.
     event->m_roomName = std::exchange(moved_roomName, {});
@@ -184,7 +123,7 @@ SharedParseEvent ParseEvent::createEvent(const CommandEnum c,
     event->m_connectedRoomFlags = connectedRoomFlags;
     event->countSkipped();
 
-    return event;
+    return result;
 }
 
 SharedParseEvent ParseEvent::createDummyEvent()
@@ -196,34 +135,4 @@ SharedParseEvent ParseEvent::createDummyEvent()
                        ExitsFlagsType{},
                        PromptFlagsType{},
                        ConnectedRoomFlagsType{});
-}
-
-const RoomName &ParseEvent::getRoomName() const
-{
-    return m_roomName;
-}
-
-const RoomDynamicDesc &ParseEvent::getDynamicDesc() const
-{
-    return m_dynamicDesc;
-}
-
-const RoomStaticDesc &ParseEvent::getStaticDesc() const
-{
-    return m_staticDesc;
-}
-
-ExitsFlagsType ParseEvent::getExitsFlags() const
-{
-    return m_exitsFlags;
-}
-
-PromptFlagsType ParseEvent::getPromptFlags() const
-{
-    return m_promptFlags;
-}
-
-ConnectedRoomFlagsType ParseEvent::getConnectedRoomFlags() const
-{
-    return m_connectedRoomFlags;
 }

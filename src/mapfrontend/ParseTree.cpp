@@ -11,6 +11,7 @@
 #include <iostream>
 #include <memory>
 #include <mutex>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -45,14 +46,13 @@ static_assert(static_cast<uint32_t>(MaskFlagsEnum::NAME_DESC_TERRAIN) == 7u);
 
 static MaskFlagsEnum getKeyMask(const ParseEvent &event)
 {
-    assert(event.size() == 3);
-    auto cloned = event.clone();
-    cloned.reset();
     uint32_t mask = 0;
-    for (int i = 0; i < 3; ++i) {
-        auto &prop = deref(cloned.next());
-        if (!prop.isSkipped())
-            mask |= (1u << i);
+    for (size_t i = 0; i < ParseEvent::NUM_PROPS; ++i) {
+        const auto &prop = event[i];
+        if (prop.isSkipped()) {
+            continue;
+        }
+        mask |= (1u << i);
     }
 
     assert((mask & 0b111) == mask);
@@ -108,27 +108,27 @@ static MaskFlagsEnum reduceMask(const MaskFlagsEnum mask)
     throw std::invalid_argument("mask");
 }
 
-static auto makeKey(ParseEvent &event, const MaskFlagsEnum maskFlags)
+static auto makeKey(const ParseEvent &event, const MaskFlagsEnum maskFlags)
 {
     char buf[64];
 
     const auto mask = static_cast<uint32_t>(maskFlags);
-    assert(event.size() == 3);
-    event.reset();
     std::string key;
 
     std::snprintf(buf, sizeof(buf), "^K%u", mask);
     key += buf;
 
-    for (int i = 0; i < 3; ++i) {
-        auto &prop = deref(event.next());
-        prop.reset();
+    for (size_t i = 0; i < ParseEvent::NUM_PROPS; ++i) {
+        if (((mask >> i) & 1u) != 1u)
+            continue;
 
-        if (!prop.isSkipped() && (mask & (1u << i))) {
-            std::snprintf(buf, sizeof(buf), ";P%d:%zu:", i, prop.size());
-            key += buf;
-            key += prop;
-        }
+        const auto &prop = event[i];
+        if (prop.isSkipped())
+            continue;
+
+        std::snprintf(buf, sizeof(buf), ";P%zu:%zu:", i, prop.size());
+        key += buf;
+        key += prop.getStdString();
     }
 
     return key;
@@ -151,20 +151,18 @@ public:
 
     SharedRoomCollection insertRoom(const ParseEvent &event)
     {
-        assert(event.size() == 3);
         const MaskFlagsEnum mask = getKeyMask(event);
 
         if (!isMatchedByTree(mask))
             return nullptr;
 
-        auto tmp = event.clone();
-        auto pk = makeKey(tmp, MaskFlagsEnum::NAME_DESC_TERRAIN);
+        const auto pk = makeKey(event, MaskFlagsEnum::NAME_DESC_TERRAIN);
         auto &result = m_primary[pk];
         if (result == nullptr)
             result = std::make_shared<RoomCollection>();
 
         for (auto subMask = mask; subMask != MaskFlagsEnum::NONE; subMask = reduceMask(subMask)) {
-            auto key = makeKey(tmp, subMask);
+            const auto key = makeKey(event, subMask);
             Secondary &reference = m_secondary[subMask];
             SV &bucket = reference[key];
             bucket.emplace(result);
@@ -175,16 +173,12 @@ public:
 
     void getRooms(AbstractRoomVisitor &stream, const ParseEvent &event)
     {
-        assert(event.size() == 3);
         const MaskFlagsEnum mask = getKeyMask(event);
 
         if (!isMatchedByTree(mask))
             return;
 
-        auto tmp = event.clone();
-        tmp.reset();
-
-        auto key = makeKey(tmp, mask);
+        const auto &key = makeKey(event, mask);
 
         Secondary &thislevel = m_secondary[mask];
         SV &homes = thislevel[key];

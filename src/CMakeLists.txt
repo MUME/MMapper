@@ -50,7 +50,6 @@ set(mmapper_SRCS
     expandoracommon/coordinate.h
     expandoracommon/exit.cpp
     expandoracommon/exit.h
-    expandoracommon/listcycler.h
     expandoracommon/parseevent.cpp
     expandoracommon/parseevent.h
     expandoracommon/property.cpp

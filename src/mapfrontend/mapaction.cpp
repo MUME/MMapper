@@ -141,9 +141,7 @@ void UpdateRoomField::exec(const RoomId id)
 
 Update::Update()
     : props(CommandEnum::NONE /* was effectively CommandEnum::NORTH */)
-{
-    props.reset();
-}
+{}
 
 Update::Update(const SigParseEvent &sigParseEvent)
     : props{CommandEnum::NONE}
