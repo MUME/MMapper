@@ -48,7 +48,6 @@ ClientTelnet::ClientTelnet(QObject *const parent)
 ClientTelnet::~ClientTelnet()
 {
     socket.disconnectFromHost();
-    socket.deleteLater();
 }
 
 void ClientTelnet::connectToHost()
