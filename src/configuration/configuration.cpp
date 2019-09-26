@@ -97,20 +97,6 @@ public:
     }
 };
 
-void Settings::tryCopyOldSettings()
-{
-    QSettings sNew(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
-    if (!sNew.allKeys().contains(SETTINGS_FIRST_TIME_KEY)) {
-        const QSettings sOld(OLD_SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
-        if (!sOld.allKeys().isEmpty()) {
-            qInfo() << "Copying old config" << sOld.fileName() << "to" << sNew.fileName() << "...";
-            for (const QString &key : sOld.allKeys()) {
-                sNew.setValue(key, sOld.value(key));
-            }
-        }
-    }
-}
-
 void Settings::initSettings()
 {
     if (m_settings)
@@ -275,6 +261,26 @@ ConstString KEY_USE_SOFTWARE_OPENGL = "Use software OpenGL";
 ConstString KEY_USE_TRILINEAR_FILTERING = "Use trilinear filtering";
 ConstString KEY_WINDOW_GEOMETRY = "Window Geometry";
 ConstString KEY_WINDOW_STATE = "Window State";
+
+void Settings::tryCopyOldSettings()
+{
+    QSettings sNew(SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
+    if (!sNew.allKeys().contains(SETTINGS_FIRST_TIME_KEY)) {
+        const QSettings sOld(OLD_SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
+        if (!sOld.allKeys().isEmpty()) {
+            qInfo() << "Copying old config" << sOld.fileName() << "to" << sNew.fileName() << "...";
+            for (const QString &key : sOld.allKeys()) {
+                sNew.setValue(key, sOld.value(key));
+            }
+        }
+    }
+    // News 2340, changing domain from fire.pvv.org to mume.org:
+    sNew.beginGroup(GRP_CONNECTION);
+    if (sNew.value(KEY_SERVER_NAME, "").toString().contains("pvv.org")) {
+        sNew.setValue(KEY_SERVER_NAME, "mume.org");
+    }
+    sNew.endGroup();
+}
 
 static bool isValidAnsi(const QString &input)
 {
@@ -469,12 +475,6 @@ void Configuration::ConnectionSettings::read(QSettings &conf)
     tlsEncryption = NO_OPEN_SSL ? false : conf.value(KEY_TLS_ENCRYPTION, true).toBool();
     proxyThreaded = conf.value(KEY_PROXY_THREADED, false).toBool();
     proxyConnectionStatus = conf.value(KEY_PROXY_CONNECTION_STATUS, false).toBool();
-
-    // News 2340, changing domain from fire.pvv.org to mume.org:
-    auto &remote = remoteServerName;
-    if (remote.contains("pvv.org")) {
-        remote = "mume.org";
-    }
 }
 
 void Configuration::CanvasSettings::read(QSettings &conf)
