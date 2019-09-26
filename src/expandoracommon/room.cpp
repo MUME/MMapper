@@ -807,3 +807,32 @@ const Coordinate &Room::exitDir(ExitDirEnum dir)
     static const auto exitDirs = initExitCoordinates();
     return exitDirs[dir];
 }
+
+std::shared_ptr<Room> Room::clone(RoomModificationTracker &tracker) const
+{
+    if (m_status == RoomStatusEnum::Zombie)
+        throw std::runtime_error("Attempt to clone a zombie");
+
+    const auto copy = std::make_shared<Room>(this_is_private{0}, tracker, RoomStatusEnum::Temporary);
+#define COPY(x) \
+    do { \
+        copy->x = this->x; \
+    } while (false)
+    COPY(m_position);
+    COPY(m_fields);
+    COPY(m_exits);
+    COPY(m_id);
+    COPY(m_status);
+    COPY(m_borked);
+#undef COPY
+    switch (copy->m_status) {
+    case RoomStatusEnum::Permanent:
+        copy->m_status = RoomStatusEnum::Temporary;
+        break;
+    case RoomStatusEnum::Temporary:
+    case RoomStatusEnum::Zombie:
+        // no change
+        break;
+    }
+    return copy;
+}

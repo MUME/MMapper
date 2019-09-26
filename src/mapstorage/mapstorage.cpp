@@ -567,25 +567,11 @@ bool MapStorage::saveData(bool baseMapOnly)
     stream << static_cast<qint32>(self.x);
     stream << static_cast<qint32>(self.y);
     stream << static_cast<qint32>(self.z);
+    auto saveOne = [this, &stream](const Room &room) { saveRoom(room, stream); };
 
     // save rooms
     for (const std::shared_ptr<const Room> &pRoom : roomList) {
-        const Room &room = deref(pRoom);
-
-        if (baseMapOnly) {
-            const BaseMapSaveFilter::ActionEnum action = filter.filter(room);
-            if (!room.isTemporary() && action != BaseMapSaveFilter::ActionEnum::REJECT) {
-                if (action == BaseMapSaveFilter::ActionEnum::ALTER) {
-                    Room copy = filter.alteredRoom(room);
-                    saveRoom(copy, stream);
-                } else { // action == PASS
-                    saveRoom(room, stream);
-                }
-            }
-        } else {
-            saveRoom(room, stream);
-        }
-
+        filter.visitRoom(deref(pRoom), baseMapOnly, saveOne);
         progressCounter.step();
     }
 

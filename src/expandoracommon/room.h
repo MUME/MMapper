@@ -170,6 +170,7 @@ private:
     };
 
 private:
+    /* WARNING: If you make any changes to the data members of Room, you'll have to modify clone() */
     RoomModificationTracker &m_tracker;
     Coordinate m_position;
     RoomFields m_fields;
@@ -246,8 +247,7 @@ public:
     explicit Room(this_is_private, RoomModificationTracker &tracker, RoomStatusEnum status);
     ~Room();
 
-    // REVISIT: copies should be more explicit (e.g. room.copy(const Room& other)).
-    DEFAULT_CTORS_AND_ASSIGN_OPS(Room);
+    DELETE_CTORS_AND_ASSIGN_OPS(Room);
 
 public:
     static void update(Room &, const ParseEvent &event);
@@ -272,4 +272,7 @@ private:
                                                const std::string &event,
                                                int prevTolerance,
                                                bool updated = true);
+
+public:
+    std::shared_ptr<Room> clone(RoomModificationTracker &tracker) const;
 };

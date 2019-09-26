@@ -426,20 +426,9 @@ void JsonWorld::writeZones(const QDir &dir,
     for (auto &kv : index) {
         const ConstRoomList &rooms = kv.second;
         QJsonArray jRooms;
+        auto saveOne = [this, &jRooms](const Room &room) { addRoom(jRooms, room); };
         for (const auto &pRoom : rooms) {
-            const Room &room = deref(pRoom);
-            if (baseMapOnly) {
-                const BaseMapSaveFilter::ActionEnum action = filter.filter(room);
-                if (action == BaseMapSaveFilter::ActionEnum::ALTER) {
-                    const Room copy = filter.alteredRoom(room);
-                    addRoom(jRooms, copy);
-                } else {
-                    assert(action == BaseMapSaveFilter::ActionEnum::PASS);
-                    addRoom(jRooms, room);
-                }
-            } else {
-                addRoom(jRooms, room);
-            }
+            filter.visitRoom(deref(pRoom), baseMapOnly, saveOne);
             progressCounter.step();
         }
 

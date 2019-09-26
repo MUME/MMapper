@@ -20,11 +20,6 @@ class RoomAdmin;
 
 namespace {
 
-bool contains(const std::set<RoomId> &set, RoomId x)
-{
-    return set.find(x) == set.end();
-}
-
 struct RoomLink
 {
     RoomId from = INVALID_ROOMID, to = INVALID_ROOMID;
@@ -67,6 +62,9 @@ struct BaseMapSaveFilter::Impl
      * secret rooms, but this doesn't matter.
      */
     std::set<RoomLink> secretLinks{};
+
+    // It's considered secret if it's NOT FOUND in the set of rooms only reachable without going through hidden exits.
+    bool isSecret(RoomId id) const { return baseRooms.find(id) == baseRooms.end(); }
 };
 
 BaseMapSaveFilter::BaseMapSaveFilter()
@@ -74,6 +72,11 @@ BaseMapSaveFilter::BaseMapSaveFilter()
 {}
 
 BaseMapSaveFilter::~BaseMapSaveFilter() = default;
+
+bool BaseMapSaveFilter::isSecret(RoomId id) const
+{
+    return m_impl->isSecret(id);
+}
 
 void BaseMapSaveFilter::prepare(ProgressCounter &counter)
 {
@@ -148,12 +151,12 @@ BaseMapSaveFilter::ActionEnum BaseMapSaveFilter::filter(const Room &room)
                 return ActionEnum::ALTER;
             }
             for (auto idx : exit.outRange()) {
-                if (contains(baseRooms, idx)) {
+                if (isSecret(idx)) {
                     return ActionEnum::ALTER;
                 }
             }
             for (auto idx : exit.inRange()) {
-                if (contains(baseRooms, idx)) {
+                if (isSecret(idx)) {
                     return ActionEnum::ALTER;
                 }
             }
@@ -164,13 +167,15 @@ BaseMapSaveFilter::ActionEnum BaseMapSaveFilter::filter(const Room &room)
     return ActionEnum::REJECT;
 }
 
-Room BaseMapSaveFilter::alteredRoom(const Room &room)
+std::shared_ptr<Room> BaseMapSaveFilter::alteredRoom(RoomModificationTracker &tracker,
+                                                     const Room &room)
 {
     auto &baseRooms = m_impl->baseRooms;
     auto &secretLinks = m_impl->secretLinks;
     assert(!baseRooms.empty());
 
-    Room copy = room;
+    auto result = room.clone(tracker);
+    Room &copy = deref(result);
 
     ExitsList copiedExits = copy.getExitsList();
     for (auto &exit : copiedExits) {
@@ -179,7 +184,7 @@ Room BaseMapSaveFilter::alteredRoom(const Room &room)
 
         // Destroy links to secret rooms
         for (auto outLink : outLinks) {
-            const bool destRoomIsSecret = contains(baseRooms, outLink);
+            const bool destRoomIsSecret = isSecret(outLink);
             const bool outLinkIsSecret = (secretLinks.find(RoomLink(copy.getId(), outLink))
                                           != secretLinks.end());
             const bool linkBackIsSecret = (secretLinks.find(RoomLink(outLink, copy.getId()))
@@ -194,7 +199,7 @@ Room BaseMapSaveFilter::alteredRoom(const Room &room)
 
         // Destroy links from secret rooms to here
         for (auto inLink : inLinks) {
-            if (contains(baseRooms, inLink)) {
+            if (isSecret(inLink)) {
                 exit.removeIn(inLink);
             }
         }
@@ -206,5 +211,5 @@ Room BaseMapSaveFilter::alteredRoom(const Room &room)
     }
 
     copy.setExitsList(copiedExits);
-    return copy;
+    return result;
 }

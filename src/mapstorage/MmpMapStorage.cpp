@@ -158,23 +158,10 @@ bool MmpMapStorage::saveData(bool baseMapOnly)
 
     // save rooms
     stream.writeStartElement("rooms");
+    auto saveOne = [this, &stream](const Room &room) { saveRoom(room, stream); };
+
     for (const auto &pRoom : roomList) {
-        const Room &room = deref(pRoom);
-
-        if (baseMapOnly) {
-            const BaseMapSaveFilter::ActionEnum action = filter.filter(room);
-            if (!room.isTemporary() && action != BaseMapSaveFilter::ActionEnum::REJECT) {
-                if (action == BaseMapSaveFilter::ActionEnum::ALTER) {
-                    Room copy = filter.alteredRoom(room);
-                    saveRoom(copy, stream);
-                } else { // action == PASS
-                    saveRoom(room, stream);
-                }
-            }
-        } else {
-            saveRoom(room, stream);
-        }
-
+        filter.visitRoom(deref(pRoom), baseMapOnly, saveOne);
         progressCounter.step();
     }
     stream.writeEndElement(); // end rooms

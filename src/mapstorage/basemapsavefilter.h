@@ -3,11 +3,14 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Thomas Equeter <waba@waba.be> (Waba)
 
-#include "../expandoracommon/RoomRecipient.h"
-
 #include <cstdint>
 #include <memory>
 #include <sys/types.h>
+
+#include "../expandoracommon/RoomRecipient.h"
+#include "../expandoracommon/room.h"
+#include "../global/RuleOf5.h"
+
 class RoomAdmin;
 class MapData;
 class Room;
@@ -16,7 +19,7 @@ class ProgressCounter;
 /*! \brief Filters
  *
  */
-class BaseMapSaveFilter : public RoomRecipient
+class BaseMapSaveFilter final : public RoomRecipient
 {
 public:
     enum class ActionEnum { PASS, ALTER, REJECT };
@@ -25,11 +28,11 @@ private:
     struct Impl;
     std::unique_ptr<Impl> m_impl;
 
-    // Disallow copying because unique_ptr is used
-    BaseMapSaveFilter(const BaseMapSaveFilter &);
-    BaseMapSaveFilter &operator=(const BaseMapSaveFilter &);
-
+private:
     virtual void receiveRoom(RoomAdmin *, const Room *room) override;
+
+public:
+    DELETE_CTORS_AND_ASSIGN_OPS(BaseMapSaveFilter);
 
 public:
     BaseMapSaveFilter();
@@ -45,6 +48,34 @@ public:
     void prepare(ProgressCounter &counter);
     //! Determines the fate of this room (requires prepare())
     ActionEnum filter(const Room &room);
+
+private:
     //! Returns an altered Room (requires action == ALTER)
-    Room alteredRoom(const Room &room);
+    std::shared_ptr<Room> alteredRoom(RoomModificationTracker &tracker, const Room &room);
+    bool isSecret(RoomId) const;
+
+public:
+    template<typename Visitor>
+    void visitRoom(const Room &room, bool const baseMapOnly, Visitor &&visit)
+    {
+        if (!baseMapOnly) {
+            visit(room);
+            return;
+        }
+
+        switch (this->filter(room)) {
+        case ActionEnum::REJECT:
+            return;
+        case ActionEnum::PASS:
+            visit(room);
+            return;
+        case ActionEnum::ALTER: {
+            RoomModificationTracker rmt;
+            const auto copy = this->alteredRoom(rmt, room);
+            visit(deref(copy));
+            copy->setAboutToDie();
+            return;
+        }
+        }
+    }
 };
