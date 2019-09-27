@@ -430,23 +430,34 @@ void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, uint32_t version)
     mark->setText(InfoMarkText(helper.read_string()));
     mark->setTimeStamp(helper.read_datetime());
 
-    // REVISIT: type safety! Jahara fix this! You need to bounds check these enums.
-    mark->setType(static_cast<InfoMarkTypeEnum>(helper.read_u8()));
+    const auto type = [](const uint8_t value) {
+        if (value >= NUM_INFOMARK_TYPES) {
+            static std::once_flag flag;
+            std::call_once(flag, []() { qWarning() << "Detected out of bounds info mark type!"; });
+            return InfoMarkTypeEnum::TEXT;
+        }
+        return static_cast<InfoMarkTypeEnum>(value);
+    }(helper.read_u8());
+    mark->setType(type);
+
     if (version >= MMAPPER_2_3_7_SCHEMA) {
-        mark->setClass(static_cast<InfoMarkClassEnum>(helper.read_u8()));
+        const auto clazz = [](const uint8_t value) {
+            if (value >= NUM_INFOMARK_CLASSES) {
+                static std::once_flag flag;
+                std::call_once(flag,
+                               []() { qWarning() << "Detected out of bounds info mark class!"; });
+                return InfoMarkClassEnum::GENERIC;
+            }
+            return static_cast<InfoMarkClassEnum>(value);
+        }(helper.read_u8());
+        mark->setClass(clazz);
         /* REVISIT: was this intended to be divided by 100.0? */
-        mark->setRotationAngle(helper.read_u32() / INFOMARK_SCALE);
+        mark->setRotationAngle(helper.read_i32() / INFOMARK_SCALE);
     }
 
-    const auto read_coord = [](auto &helper, const auto &basePos) {
-        Coordinate pos;
-        pos.x = helper.read_i32();
-        pos.y = helper.read_i32();
-        pos.z = helper.read_i32();
-        pos.x += basePos.x * INFOMARK_SCALE;
-        pos.y += basePos.y * INFOMARK_SCALE;
-        pos.z += basePos.z;
-        return pos;
+    const auto read_coord = [](auto &helper, const auto &basePos) -> Coordinate {
+        return helper.readCoord3d()
+               + Coordinate{basePos.x * INFOMARK_SCALE, basePos.y * INFOMARK_SCALE, basePos.z};
     };
 
     mark->setPosition1(read_coord(helper, basePosition));

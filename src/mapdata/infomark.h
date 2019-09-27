@@ -4,6 +4,7 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
+#include <cassert>
 #include <memory>
 #include <QDateTime>
 
@@ -21,6 +22,9 @@ using InfoMarkName = TaggedString<InfomarkNameTag>;
 using InfoMarkText = TaggedString<InfomarkTextTag>;
 
 enum class InfoMarkTypeEnum { TEXT, LINE, ARROW };
+static constexpr const size_t NUM_INFOMARK_TYPES = static_cast<size_t>(InfoMarkTypeEnum::ARROW)
+                                                   + 1u;
+static_assert(NUM_INFOMARK_TYPES == 3);
 enum class InfoMarkClassEnum {
     GENERIC,
     HERB,
@@ -33,6 +37,9 @@ enum class InfoMarkClassEnum {
     ACTION,
     LOCALITY
 };
+static constexpr const size_t NUM_INFOMARK_CLASSES = static_cast<size_t>(InfoMarkClassEnum::LOCALITY)
+                                                     + 1u;
+static_assert(NUM_INFOMARK_CLASSES == 10);
 
 using MarkerTimeStamp = QDateTime;
 
