@@ -428,9 +428,19 @@ void Configuration::write() const
 
 void Configuration::reset()
 {
-    SETTINGS(conf);
-    conf.clear();
-    FOREACH_CONFIG_GROUP(read);
+    {
+        // Purge old organization settings first to prevent them from being migrated
+        QSettings oldConf(OLD_SETTINGS_ORGANIZATION, SETTINGS_APPLICATION);
+        oldConf.clear();
+    }
+    {
+        // Purge new organization settings
+        SETTINGS(conf);
+        conf.clear();
+    }
+
+    // Reload defaults
+    read();
 }
 
 #undef FOREACH_CONFIG_GROUP

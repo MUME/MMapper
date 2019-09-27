@@ -98,6 +98,7 @@ GeneralPage::GeneralPage(QWidget *parent)
                                     "Are you sure you want to perform a factory reset?",
                                     QMessageBox::Yes | QMessageBox::No);
         if (reply == QMessageBox::Yes) {
+            // REVISIT: We should refresh the configuration UI as well
             setConfig().reset();
         }
     });
