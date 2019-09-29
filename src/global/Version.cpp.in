@@ -4,10 +4,15 @@
 
 const char *getMMapperVersion()
 {
-    return "${GIT_TAG_COMMIT_HASH}";
+    return "${MMAPPER_VERSION_STRING}";
 }
 
 const char *getMMapperBranch()
 {
     return "${GIT_BRANCH}";
+}
+
+bool isMMapperBeta()
+{
+    return ${MMAPPER_BETA};
 }

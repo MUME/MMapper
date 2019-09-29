@@ -107,9 +107,9 @@ else()
 endif()
 
 # Extract git branch and revision
-find_package(Git)
-if(EXISTS ${GIT_EXECUTABLE})
-    if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
+if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
+    find_package(Git)
+    if(GIT_FOUND)
         # Get the current working branch
         execute_process(
           COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
@@ -126,19 +126,28 @@ if(EXISTS ${GIT_EXECUTABLE})
           OUTPUT_STRIP_TRAILING_WHITESPACE
         )
 
-        # Get the latest annotated tag of the working branch
+        # Detect if this checkout is a tag and extract its name if so
         execute_process(
-          COMMAND ${GIT_EXECUTABLE} describe --abbrev=0 --tags
+          COMMAND ${GIT_EXECUTABLE} name-rev --name-only --tags --no-undefined HEAD
           WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-          OUTPUT_VARIABLE GIT_ANNOTATED_TAG
+          OUTPUT_VARIABLE GIT_TAG_NAME
           OUTPUT_STRIP_TRAILING_WHITESPACE
         )
 
-        message(STATUS "Building from branch ${GIT_BRANCH} with ref ${GIT_TAG_COMMIT_HASH}")
+        if(GIT_TAG_NAME)
+           message(STATUS "Building from branch ${GIT_BRANCH} with tag ${GIT_TAG_NAME}")
+           set(MMAPPER_VERSION_STRING "${GIT_TAG_NAME}")
+           set(MMAPPER_BETA "false")
+        else()
+           message(STATUS "Building from branch ${GIT_BRANCH} with ref ${GIT_TAG_COMMIT_HASH}")
+           set(MMAPPER_VERSION_STRING "${GIT_TAG_COMMIT_HASH}")
+           set(MMAPPER_BETA "true")
+        endif()
     endif()
 endif()
-if(NOT GIT_TAG_COMMIT_HASH)
-    set(GIT_TAG_COMMIT_HASH "${MMAPPER_VERSION}")
+if(NOT MMAPPER_VERSION_STRING)
+    set(MMAPPER_VERSION_STRING "${MMAPPER_VERSION}")
+    set(MMAPPER_BETA "false")
 endif()
 if(NOT GIT_BRANCH)
     set(GIT_BRANCH "unknown")

@@ -4,7 +4,6 @@
         <file>LICENSE.LGPL</file>
         <file>LICENSE.MINIUPNPC</file>
         <file>LICENSE.OPENSSL</file>
-        <file>icons/m.png</file>
         <file>icons/online.png</file>
         <file>icons/offline.png</file>
         <file>icons/play.png</file>
@@ -56,7 +55,6 @@
         <file>icons/reload.png</file>
         <file>icons/terminal.png</file>
         <file>icons/exit.png</file>
-        <file>pixmaps/splash.png</file>
         <file>pixmaps/mellon.png</file>
         <file>pixmaps/terrain-undefined.png</file>
         <file>pixmaps/terrain-indoors.png</file>

@@ -288,14 +288,18 @@ set(mmapper_SRCS
 )
 
 set(mmapper_RCS
-    resources/mmapper2.qrc
-    resources/mmapper2.rc
-    resources/macosx/m.icns
-    resources/win32/m.ico
-    resources/icons/hi16-app-mmapper.png
-    resources/icons/hi32-app-mmapper.png
-    resources/icons/hi48-app-mmapper.png
-)
+    resources/mmapper2.qrc)
+
+if(MMAPPER_BETA)
+    list(APPEND mmapper_RCS "resources/beta.qrc")
+    list(APPEND mmapper_RCS "resources/win32/beta.rc")
+    set(MMAPPER_BRAND_SUFFIX "beta")
+else()
+    list(APPEND mmapper_RCS "resources/release.qrc")
+    list(APPEND mmapper_RCS "resources/win32/release.rc")
+    set(MMAPPER_BRAND_SUFFIX "release")
+endif()
+list(APPEND mmapper_RCS "resources/macosx/m-${MMAPPER_BRAND_SUFFIX}.icns")
 
 if(WITH_MAP)
     configure_file(resources/arda.qrc ${CMAKE_BINARY_DIR}/map/arda.qrc COPYONLY)
@@ -478,7 +482,9 @@ endif()
 
 
 # Begin CPack Settings
-if(GIT_TAG_COMMIT_HASH)
+if(GIT_TAG_NAME)
+    string(REGEX REPLACE "v(.*)" "\\1" CPACK_PACKAGE_VERSION ${GIT_TAG_NAME})
+elseif(GIT_TAG_COMMIT_HASH)
     string(REGEX REPLACE "v(.*)" "\\1" CPACK_PACKAGE_VERSION ${GIT_TAG_COMMIT_HASH})
 else()
     set(CPACK_PACKAGE_VERSION ${MMAPPER_VERSION})
@@ -522,7 +528,7 @@ if(UNIX AND NOT APPLE)
     # Install icons
     foreach(RES 16 32 48)
         install(
-            FILES resources/icons/hi${RES}-app-mmapper.png
+            FILES resources/icons/hi${RES}-app-mmapper-${MMAPPER_BRAND_SUFFIX}.png
             DESTINATION share/icons/hicolor/${RES}x${RES}/apps/
             COMPONENT desktopintegration
             RENAME org.mume.MMapper.png
@@ -530,7 +536,7 @@ if(UNIX AND NOT APPLE)
     endforeach(RES)
 
     install(
-        FILES resources/icons/m.png
+        FILES resources/icons/m-${MMAPPER_BRAND_SUFFIX}.png
         DESTINATION share/icons/hicolor/256x256/apps/
         COMPONENT desktopintegration
         RENAME org.mume.MMapper.png
@@ -609,10 +615,10 @@ if(WIN32)
     set(CPACK_NSIS_MENU_LINKS "bin/mmapper.exe;MMapper")
     set(CPACK_NSIS_INSTALLED_ICON_NAME "mmapper.exe")
     set(CPACK_NSIS_HELP_LINK "http://github.com/mume/mmapper")
-    set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/win32\\\\m.ico")
-    set(CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/win32\\\\m.ico")
-    set(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\m.png")
-    set(CPACK_NSIS_INSTALLED_ICON_NAME "${CMAKE_CURRENT_SOURCE_DIR}/resources/win32\\\\m.ico")
+    set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/win32\\\\m-${MMAPPER_BRAND_SUFFIX}.ico")
+    set(CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/win32\\\\m-${MMAPPER_BRAND_SUFFIX}.ico")
+    set(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons\\\\m-${MMAPPER_BRAND_SUFFIX}.png")
+    set(CPACK_NSIS_INSTALLED_ICON_NAME "${CMAKE_CURRENT_SOURCE_DIR}/resources/win32\\\\m-${MMAPPER_BRAND_SUFFIX}.ico")
     set(CPACK_NSIS_COMPRESSOR "/SOLID lzma")
     set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL "ON")
     set(CPACK_NSIS_MUI_FINISHPAGE_RUN "mmapper.exe")
@@ -646,7 +652,7 @@ if(APPLE)
     endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
     set(CMAKE_MACOSX_BUNDLE ON)
-    set_source_files_properties(resources/macosx/m.icns PROPERTIES
+    set_source_files_properties(resources/macosx/m-${MMAPPER_BRAND_SUFFIX}.icns PROPERTIES
     MACOSX_PACKAGE_LOCATION Resources)
     set_target_properties(mmapper PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/MacOSXBundleInfo.plist.in )
 
@@ -679,9 +685,9 @@ if(APPLE)
     # Bundle Properties
     set(MACOSX_BUNDLE_BUNDLE_NAME MMapper)
     set(MACOSX_BUNDLE_BUNDLE_VERSION ${MMAPPER_VERSION})
-    set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${MMAPPER_VERSION})
-    set(MACOSX_BUNDLE_LONG_VERSION_STRING "Version ${MMAPPER_VERSION}")
-    set(MACOSX_BUNDLE_ICON_FILE m.icns)
+    set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${MMAPPER_VERSION_STRING})
+    set(MACOSX_BUNDLE_LONG_VERSION_STRING "Version ${MMAPPER_VERSION_STRING}")
+    set(MACOSX_BUNDLE_ICON_FILE m-${MMAPPER_BRAND_SUFFIX}.icns)
 endif(APPLE)
 
 # More General CPack Settings

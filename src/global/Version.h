@@ -4,3 +4,4 @@
 
 const char *getMMapperVersion();
 const char *getMMapperBranch();
+bool isMMapperBeta();

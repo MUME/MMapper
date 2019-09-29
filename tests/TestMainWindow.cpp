@@ -19,6 +19,11 @@ const char *getMMapperBranch()
     return "master";
 }
 
+bool isMMapperBeta()
+{
+    return false;
+}
+
 TestMainWindow::TestMainWindow() = default;
 
 TestMainWindow::~TestMainWindow() = default;

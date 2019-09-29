@@ -36,6 +36,7 @@
 #include "../expandoracommon/room.h"
 #include "../global/DirectionType.h"
 #include "../global/NullPointerException.h"
+#include "../global/Version.h"
 #include "../global/roomid.h"
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/customaction.h"
@@ -90,7 +91,6 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     : QMainWindow(parent, flags)
 {
     setObjectName("MainWindow");
-    setWindowTitle("MMapper");
     setWindowIcon(QIcon(":/icons/m.png"));
     addApplicationFont();
 
@@ -109,6 +109,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     // REVISIT: MapData should be destructed last due to locks
     m_mapData = new MapData();
     m_mapData->setObjectName("MapData");
+    setCurrentFile("");
 
     m_prespammedPath = new PrespammedPath(this);
 
@@ -1752,21 +1753,18 @@ void MainWindow::onModeGroupServer()
 void MainWindow::setCurrentFile(const QString &fileName)
 {
     QFileInfo file(fileName);
-
-    QString shownName;
-    if (fileName.isEmpty()) {
-        shownName = "untitled.mm2";
-    } else {
-        shownName = file.fileName();
-    }
-    QString suffix = (m_mapData->isFileReadOnly() || !file.isWritable()) ? " [read-only]" : "";
+    const auto shownName = fileName.isEmpty() ? "untitled.mm2" : file.fileName();
+    const auto fileSuffix = ((m_mapData && m_mapData->isFileReadOnly()) || !file.isWritable())
+                                ? " [read-only]"
+                                : "";
+    const auto appSuffix = isMMapperBeta() ? " Beta" : "";
 
     // [*] is Qt black magic for only showing the '*' if the document has been modified.
     // From https://doc.qt.io/qt-5/qwidget.html:
     // > The window title must contain a "[*]" placeholder, which indicates where the '*' should appear.
     // > Normally, it should appear right after the file name (e.g., "document1.txt[*] - Text Editor").
     // > If the window isn't modified, the placeholder is simply removed.
-    setWindowTitle(QString("%1%2[*] - MMapper").arg(shownName).arg(suffix));
+    setWindowTitle(QString("%1[*]%2 - MMapper%3").arg(shownName).arg(fileSuffix).arg(appSuffix));
 }
 
 void MainWindow::onLayerUp()

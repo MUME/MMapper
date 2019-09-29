@@ -1,0 +1,6 @@
+<!DOCTYPE RCC><RCC version="1.0">
+    <qresource>
+        <file alias="icons/m.png">icons/m-beta.png</file>
+        <file alias="pixmaps/splash.png">pixmaps/splash-beta.png</file>
+    </qresource>
+</RCC>
