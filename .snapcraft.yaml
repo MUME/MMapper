@@ -1,6 +1,5 @@
 name: mmapper
-version: 2.6.0+git
-version-script: git describe --tags --always --long
+adopt-info: mmapper
 icon: src/resources/icons/m-release.png
 summary: MUME Mapper
 description: |
@@ -51,6 +50,9 @@ parts:
       - libssl1.1
       - qtwayland5
       - libminiupnpc10
+    override-pull: |
+      snapcraftctl pull
+      snapcraftctl set-version "$(git describe --tags --always --long)"
     override-build: |
       snapcraftctl build
       sed -i 's|Icon=org.mume.MMapper|Icon=${SNAP}/usr/share/icons/hicolor/256x256/apps/org.mume.MMapper.png|g' $SNAPCRAFT_PART_INSTALL/usr/share/applications/org.mume.MMapper.desktop
