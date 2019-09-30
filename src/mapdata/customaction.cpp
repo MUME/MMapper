@@ -223,11 +223,15 @@ void ConnectToNeighbours::connectRooms(Room *const center,
     if (Room *const room = map().get(otherPos)) {
         const auto oid = room->getId();
         Exit &oexit = room->exit(opposite(dir));
-        oexit.addIn(cid);
-        oexit.addOut(cid);
+        if (oexit.isExit()) {
+            oexit.addIn(cid);
+            oexit.addOut(cid);
+        }
         Exit &cexit = center->exit(dir);
-        cexit.addIn(oid);
-        cexit.addOut(oid);
+        if (cexit.isExit()) {
+            cexit.addIn(oid);
+            cexit.addOut(oid);
+        }
     }
 }
 
