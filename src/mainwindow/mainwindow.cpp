@@ -441,7 +441,6 @@ void MainWindow::createActions()
     connect(exportMmpMapAct, &QAction::triggered, this, &MainWindow::exportMmpMap);
 
     mergeAct = new QAction(QIcon(":/icons/merge.png"), tr("&Merge..."), this);
-    // mergeAct->setShortcut(tr("Ctrl+M"));
     mergeAct->setStatusTip(tr("Merge an existing file into current map"));
     connect(mergeAct, &QAction::triggered, this, &MainWindow::merge);
 
@@ -449,24 +448,6 @@ void MainWindow::createActions()
     exitAct->setShortcut(tr("Ctrl+Q"));
     exitAct->setStatusTip(tr("Exit the application"));
     connect(exitAct, &QAction::triggered, this, &QWidget::close);
-
-    /*
-    cutAct = new QAction(QIcon(":/icons/cut.png"), tr("Cu&t"), this);
-    cutAct->setShortcut(tr("Ctrl+X"));
-    cutAct->setStatusTip(tr("Cut the current selection's contents to the "
-                            "clipboard"));
-
-    copyAct = new QAction(QIcon(":/icons/copy.png"), tr("&Copy"), this);
-    copyAct->setShortcut(tr("Ctrl+C"));
-    copyAct->setStatusTip(tr("Copy the current selection's contents to the "
-                             "clipboard"));
-
-    pasteAct = new QAction(QIcon(":/icons/paste.png"), tr("&Paste"), this);
-    pasteAct->setShortcut(tr("Ctrl+V"));
-    pasteAct->setStatusTip(tr("Paste the clipboard's contents into the current "
-                              "selection"));
-    // connect(pasteAct, SIGNAL(triggered()), textEdit, SLOT(paste()));
-    */
 
     preferencesAct = new QAction(QIcon::fromTheme("preferences-desktop",
                                                   QIcon(":/icons/preferences.png")),
@@ -504,15 +485,7 @@ void MainWindow::createActions()
     aboutQtAct = new QAction(tr("About &Qt"), this);
     aboutQtAct->setStatusTip(tr("Show the Qt library's About box"));
     connect(aboutQtAct, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
-    /*
-        nextWindowAct = new QAction(tr("Ne&xt Window"), this);
-        nextWindowAct->setStatusTip(tr("Show the Next Window"));
-        connect(nextWindowAct, SIGNAL(triggered()), this, SLOT(nextWindow()));
 
-        prevWindowAct = new QAction(tr("Prev&ious Window"), this);
-        prevWindowAct->setStatusTip(tr("Show the Previous Window"));
-        connect(prevWindowAct, SIGNAL(triggered()), this, SLOT(prevWindow()));
-    */
     zoomInAct = new QAction(QIcon::fromTheme("zoom-in", QIcon(":/icons/viewmag+.png")),
                             tr("Zoom In"),
                             this);
@@ -800,10 +773,7 @@ void MainWindow::createActions()
     mapperMode.mapModeActGroup->addAction(mapperMode.offlineModeAct);
     mapperMode.mapModeActGroup->setEnabled(true);
 
-    // cutAct->setEnabled(false);
-    // copyAct->setEnabled(false);
-
-    // group Manager
+    // Group Manager
     groupMode.groupOffAct = new QAction(QIcon(":/icons/groupoff.png"),
                                         tr("Switch to &offline mode"),
                                         this);
@@ -901,13 +871,8 @@ void MainWindow::disableActions(bool value)
     exportWebMapAct->setDisabled(value);
     exportMmpMapAct->setDisabled(value);
     exitAct->setDisabled(value);
-    // cutAct->setDisabled(value);
-    // copyAct->setDisabled(value);
-    // pasteAct->setDisabled(value);
     aboutAct->setDisabled(value);
     aboutQtAct->setDisabled(value);
-    //    nextWindowAct->setDisabled(value);
-    //    prevWindowAct->setDisabled(value);
     zoomInAct->setDisabled(value);
     zoomOutAct->setDisabled(value);
     zoomResetAct->setDisabled(value);
@@ -946,9 +911,6 @@ void MainWindow::setupMenuBar()
     fileMenu->addAction(exitAct);
 
     editMenu = menuBar()->addMenu(tr("&Edit"));
-    // editMenu->addAction(cutAct);
-    // editMenu->addAction(copyAct);
-    // editMenu->addAction(pasteAct);
     modeMenu = editMenu->addMenu(QIcon(":/icons/online.png"), tr("&Mode"));
     modeMenu->addAction(mapperMode.playModeAct);
     modeMenu->addAction(mapperMode.mapModeAct);
@@ -986,14 +948,10 @@ void MainWindow::setupMenuBar()
     editMenu->addAction(findRoomsAct);
     editMenu->addAction(preferencesAct);
 
-    // editMenu->addAction(createRoomAct);
-    // editMenu->addAction(createConnectionAct);
-
     viewMenu = menuBar()->addMenu(tr("&View"));
     viewMenu->addAction(mouseMode.modeMoveSelectAct);
     QMenu *toolbars = viewMenu->addMenu(tr("&Toolbars"));
     toolbars->addAction(fileToolBar->toggleViewAction());
-    // toolbars->addAction(editToolBar->toggleViewAction());
     toolbars->addAction(mapperModeToolBar->toggleViewAction());
     toolbars->addAction(mouseModeToolBar->toggleViewAction());
     toolbars->addAction(viewToolBar->toggleViewAction());
@@ -1016,10 +974,6 @@ void MainWindow::setupMenuBar()
     viewMenu->addAction(layerResetAct);
     viewMenu->addSeparator();
     viewMenu->addAction(alwaysOnTopAct);
-
-    //    windowMenu->addAction(nextWindowAct);
-    //    windowMenu->addAction(prevWindowAct);
-    //    windowMenu->addSeparator();
 
     settingsMenu = menuBar()->addMenu(tr("&Tools"));
     settingsMenu->addAction(clientAct);
@@ -1051,11 +1005,6 @@ void MainWindow::setupMenuBar()
     helpMenu->addSeparator();
     helpMenu->addAction(aboutAct);
     helpMenu->addAction(aboutQtAct);
-
-    /*
-    searchMenu = menuBar()->addMenu(tr("Sea&rch"));
-    settingsMenu = menuBar()->addMenu(tr("&Settings"));
-    */
 }
 
 void MainWindow::showContextMenu(const QPoint &pos)
@@ -1118,16 +1067,8 @@ void MainWindow::setupToolBars()
     fileToolBar->setObjectName("FileToolBar");
     fileToolBar->addAction(newAct);
     fileToolBar->addAction(openAct);
-    //  fileToolBar->addAction(mergeAct);
-    //  fileToolBar->addAction(reloadAct);
     fileToolBar->addAction(saveAct);
     fileToolBar->hide();
-    /*
-        editToolBar = addToolBar(tr("Edit"));
-        editToolBar->addAction(cutAct);
-        editToolBar->addAction(copyAct);
-        editToolBar->addAction(pasteAct);
-    */
 
     mapperModeToolBar = addToolBar(tr("Mapper Mode"));
     mapperModeToolBar->setObjectName("MapperModeToolBar");
@@ -1172,7 +1113,6 @@ void MainWindow::setupToolBars()
     pathMachineToolBar->addAction(releaseAllPathsAct);
     pathMachineToolBar->addAction(forceRoomAct);
     pathMachineToolBar->hide();
-    // viewToolBar->addAction(m_dockDialog->toggleViewAction());
 
     roomToolBar = addToolBar(tr("Rooms"));
     roomToolBar->setObjectName("RoomsToolBar");
