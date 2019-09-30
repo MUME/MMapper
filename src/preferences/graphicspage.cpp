@@ -109,6 +109,9 @@ void GraphicsPage::trilinearFilteringStateChanged(int /*unused*/)
 
 void GraphicsPage::softwareOpenGLStateChanged(int /*unused*/)
 {
+    QMessageBox::information(this,
+                             "Restart Required",
+                             "Please restart MMapper for this change to take effect.");
     setConfig().canvas.softwareOpenGL = ui->softwareOpenGLCheckBox->isChecked();
 }
 

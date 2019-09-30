@@ -500,8 +500,7 @@ void Configuration::CanvasSettings::read(QSettings &conf)
         conf.value(KEY_ROOM_DARK_LIT_COLOR, QColor("#d4c7c7").name()).toString());
     antialiasingSamples = conf.value(KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES, 0).toInt();
     trilinearFiltering = conf.value(KEY_USE_TRILINEAR_FILTERING, false).toBool();
-    softwareOpenGL = conf.value(KEY_USE_SOFTWARE_OPENGL, getCurrentPlatform() == Platform::Windows)
-                         .toBool();
+    softwareOpenGL = conf.value(KEY_USE_SOFTWARE_OPENGL, false).toBool();
 }
 
 void Configuration::AutoLoadSettings::read(QSettings &conf)
