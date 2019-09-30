@@ -1,7 +1,7 @@
 name: mmapper
 version: 2.6.0+git
 version-script: git describe --tags --always --long
-icon: src/resources/icons/m.png
+icon: src/resources/icons/m-release.png
 summary: MUME Mapper
 description: |
   MMapper is a graphical mapper for a MUD named MUME (Multi-Users in Middle
