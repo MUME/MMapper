@@ -37,7 +37,7 @@ RoomSelection::~RoomSelection()
 {
     // Remove the lock within the map
     for (auto i = cbegin(); i != cend(); i++) {
-        m_mapData.keepRoom(*this, i.key());
+        m_mapData.releaseRoom(*this, i.key());
     }
 }
 
