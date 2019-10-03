@@ -289,7 +289,8 @@ bool MumeXmlParser::element(const QByteArray &line)
             case 'd':
                 if (line.startsWith("description")) {
                     m_xmlMode = XmlModeEnum::DESCRIPTION;
-                    m_staticRoomDesc = RoomStaticDesc{""}; // might be empty but valid description
+                    // might be empty but valid description
+                    m_staticRoomDesc = RoomStaticDesc{""};
                 }
                 break;
             case 't': // terrain tag only comes up in blindness or fog
@@ -301,6 +302,7 @@ bool MumeXmlParser::element(const QByteArray &line)
             case '/':
                 if (line.startsWith("/room")) {
                     m_xmlMode = XmlModeEnum::NONE;
+                    m_descriptionReady = true;
                 } else if (line.startsWith("/gratuitous")) {
                     m_gratuitous = false;
                 }
@@ -330,6 +332,7 @@ bool MumeXmlParser::element(const QByteArray &line)
             case '/':
                 if (line.startsWith("/exits")) {
                     parseExits();
+                    m_exitsReady = true;
                     m_xmlMode = XmlModeEnum::NONE;
                 }
                 break;
@@ -415,12 +418,9 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
     case XmlModeEnum::NONE: // non room info
         m_stringBuffer = normalizeStringCopy(m_stringBuffer.trimmed());
         if (m_stringBuffer.isEmpty()) { // standard end of description parsed
-            if (!m_exitsReady) {
-                m_exitsReady = true; // we finished read desc mode
-                m_descriptionReady = true;
-                if (config.mumeNative.emulatedExits) {
-                    emulateExits(m_move);
-                }
+            if (m_descriptionReady && !m_exitsReady && config.mumeNative.emulatedExits) {
+                m_exitsReady = true;
+                emulateExits(m_move);
             }
         } else {
             parseMudCommands(m_stringBuffer);
@@ -445,9 +445,6 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         break;
 
     case XmlModeEnum::NAME:
-        if (m_descriptionReady) {
-            move();
-        }
         m_roomName = RoomName{normalizeStringCopy(m_stringBuffer)};
         toUser.append(ch);
         break;
@@ -463,20 +460,13 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
 
     case XmlModeEnum::EXITS:
         m_exits += m_stringBuffer;
-        if (!m_exitsReady) {
-            m_exitsReady = true;
-            m_descriptionReady = true;
-        }
         break;
 
     case XmlModeEnum::PROMPT:
         emit sendPromptLineEvent(normalizeStringCopy(m_stringBuffer).toLatin1());
-        if (!m_exitsReady) {     // fixes compact mode
-            m_exitsReady = true; // we finished read desc mode
-            m_descriptionReady = true;
-            if (config.mumeNative.emulatedExits) {
-                emulateExits(m_move);
-            }
+        if (!m_exitsReady && config.mumeNative.emulatedExits) {
+            m_exitsReady = true;
+            emulateExits(m_move);
         }
         if (m_descriptionReady) {
             parsePrompt(normalizeStringCopy(m_stringBuffer));
@@ -487,14 +477,6 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         break;
 
     case XmlModeEnum::HEADER:
-        // REVISIT: Why do this here? Can't we move this logic to </room>
-        // We should get rid of m_readingRoomDesc
-        if (!m_exitsReady) {
-            m_descriptionReady = true;
-        }
-        toUser.append(ch);
-        break;
-
     case XmlModeEnum::TERRAIN:
     default:
         toUser.append(ch);
