@@ -276,19 +276,16 @@ void MapCanvas::setConnectionSelection(const std::shared_ptr<ConnectionSelection
 
 void MapCanvas::setInfoMarkSelection(const std::shared_ptr<InfoMarkSelection> &selection)
 {
-    // NOTE: previous code didn't check size at all for new infomarks. The assertions below
-    // are there to catch mistakes bugs that would have been permitted by the old code.
-    if (selection == nullptr || selection->empty()) {
-        assert(m_canvasMouseMode != CanvasMouseModeEnum::CREATE_INFOMARKS);
+    if (m_canvasMouseMode == CanvasMouseModeEnum::CREATE_INFOMARKS) {
+        qDebug() << "Creating new infomark";
+        m_infoMarkSelection = selection;
+
+    } else if (selection == nullptr || selection->empty()) {
         qDebug() << "Cleared infomark selection";
         m_infoMarkSelection = nullptr;
+
     } else {
-        if (m_canvasMouseMode == CanvasMouseModeEnum::CREATE_INFOMARKS) {
-            assert(selection->size() == 1); // Fix logic elsewhere when/if this triggers.
-            qDebug() << "Creating new infomark";
-        } else {
-            qDebug() << "Updated selection with" << selection->size() << "infomarks";
-        }
+        qDebug() << "Updated selection with" << selection->size() << "infomarks";
         m_infoMarkSelection = selection;
     }
 
