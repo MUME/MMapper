@@ -928,8 +928,8 @@ void AbstractParser::doBackCommand()
 
 void AbstractParser::openVoteURL()
 {
-    QDesktopServices::openUrl(QUrl(
-        "http://www.mudconnect.com/cgi-bin/vote_rank.cgi?mud=MUME+-+Multi+Users+In+Middle+Earth"));
+    QDesktopServices::openUrl(
+        QUrl("https://www.mudconnect.com/cgi-bin/vote.cgi?mud=MUME+-+Multi+Users+In+Middle+Earth"));
     sendToUser("--->Thank you kindly for voting!\r\n");
 }
 
