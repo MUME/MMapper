@@ -31,10 +31,6 @@ extern const Abbrev cmdSet;
 extern const Abbrev cmdTime;
 extern const Abbrev cmdTrollExit;
 extern const Abbrev cmdVote;
-extern const Abbrev cmdPDynamic;
-extern const Abbrev cmdPStatic;
-extern const Abbrev cmdPNote;
-extern const Abbrev cmdPrint;
 
 QByteArray getCommandName(DoorActionEnum action);
 

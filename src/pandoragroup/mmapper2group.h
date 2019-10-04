@@ -61,7 +61,7 @@ public slots:
     void parsePromptInformation(const QByteArray &prompt);
     void updateCharacterPosition(CharacterPositionEnum);
     void updateCharacterAffect(CharacterAffectEnum, bool);
-    void setPath(CommandQueue, bool);
+    void setPath(CommandQueue);
     void reset();
 
 protected slots:

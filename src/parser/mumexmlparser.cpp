@@ -37,8 +37,8 @@ const QByteArray MumeXmlParser::lessThanTemplate("&lt;");
 const QByteArray MumeXmlParser::ampersand("&");
 const QByteArray MumeXmlParser::ampersandTemplate("&amp;");
 
-MumeXmlParser::MumeXmlParser(MapData *md, MumeClock *mc, QObject *parent)
-    : AbstractParser(md, mc, parent)
+MumeXmlParser::MumeXmlParser(MapData *md, MumeClock *mc, ProxyParserApi proxy, QObject *parent)
+    : AbstractParser(md, mc, proxy, parent)
 {
     if (XPS_DEBUG_TO_FILE) {
         QString fileName = "xmlparser_debug.dat";
@@ -186,7 +186,7 @@ bool MumeXmlParser::element(const QByteArray &line)
             case '/':
                 if (line.startsWith("/xml")) {
                     sendToUser("[MMapper] Mapper cannot function without XML mode\n");
-                    queue.clear();
+                    m_queue.clear();
                 }
                 break;
             case 'p':
@@ -428,8 +428,8 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         if (m_readSnoopTag) {
             if (m_descriptionReady) {
                 m_promptFlags.reset(); // Don't trust god prompts
-                queue.enqueue(m_move);
-                emit showPath(queue, true);
+                m_queue.enqueue(m_move);
+                pathChanged();
                 move();
                 m_readSnoopTag = false;
             }
@@ -515,16 +515,16 @@ void MumeXmlParser::move()
         emit event(SigParseEvent{ev});
     };
 
-    if (queue.isEmpty()) {
+    if (m_queue.isEmpty()) {
         emitEvent();
     } else {
-        const CommandEnum c = queue.dequeue();
+        const CommandEnum c = m_queue.dequeue();
         // Ignore scouting unless it forced movement via a one-way
         if (c != CommandEnum::SCOUT || (c == CommandEnum::SCOUT && m_move != CommandEnum::LOOK)) {
-            emit showPath(queue, false);
+            pathChanged();
             emitEvent();
             if (c != m_move) {
-                queue.clear();
+                m_queue.clear();
             }
         }
     }
@@ -570,23 +570,23 @@ void MumeXmlParser::parseMudCommands(const QString &str)
             emit sendCharacterAffectEvent(CharacterAffectEnum::POISONED, true);
             return;
         } else if (str.startsWith("You are dead!")) {
-            queue.clear();
-            emit showPath(queue, true);
+            m_queue.clear();
+            pathChanged();
             emit releaseAllPaths();
             markCurrentCommand();
             emit sendCharacterPositionEvent(CharacterPositionEnum::DEAD);
             return;
         } else if (str.startsWith("You failed to climb")) {
-            if (!queue.isEmpty())
-                queue.dequeue();
-            queue.prepend(CommandEnum::NONE); // REVISIT: Do we need this?
-            emit showPath(queue, true);
+            if (!m_queue.isEmpty())
+                m_queue.dequeue();
+            m_queue.prepend(CommandEnum::NONE); // REVISIT: Do we need this?
+            pathChanged();
             return;
         } else if (str.startsWith("You flee head")) {
-            queue.enqueue(CommandEnum::LOOK);
+            m_queue.enqueue(CommandEnum::LOOK);
             return;
         } else if (str.startsWith("You follow")) {
-            queue.enqueue(CommandEnum::LOOK);
+            m_queue.enqueue(CommandEnum::LOOK);
             return;
         } else if (str.startsWith("You need to swim to go there.")
                    || str.startsWith("You cannot ride there.")
@@ -597,12 +597,12 @@ void MumeXmlParser::parseMudCommands(const QString &str)
                    || str.startsWith("You can't go into deep water!")
                    || str.startsWith("You unsuccessfully try to break through the ice.")
                    || str.startsWith("Your boat cannot enter this place.")) {
-            if (!queue.isEmpty())
-                queue.dequeue();
-            emit showPath(queue, true);
+            if (!m_queue.isEmpty())
+                m_queue.dequeue();
+            pathChanged();
             return;
         } else if (str.startsWith("You quietly scout")) {
-            queue.prepend(CommandEnum::SCOUT);
+            m_queue.prepend(CommandEnum::SCOUT);
             return;
         } else if (str.startsWith("You go to sleep.")
                    || str.startsWith("You are already sound asleep.")) {
@@ -665,9 +665,9 @@ void MumeXmlParser::parseMudCommands(const QString &str)
         } else if (str.endsWith("seems to be closed.")
                    // The (a|de)scent
                    || str.endsWith("is too steep, you need to climb to go there.")) {
-            if (!queue.isEmpty())
-                queue.dequeue();
-            emit showPath(queue, true);
+            if (!m_queue.isEmpty())
+                m_queue.dequeue();
+            pathChanged();
             return;
 
         } else if (str.startsWith("The venom enters your body!")        // Venom
@@ -681,9 +681,9 @@ void MumeXmlParser::parseMudCommands(const QString &str)
         if (str.startsWith("Alas, you cannot go that way...")
             // A pack horse
             || str.endsWith("is too exhausted.")) {
-            if (!queue.isEmpty())
-                queue.dequeue();
-            emit showPath(queue, true);
+            if (!m_queue.isEmpty())
+                m_queue.dequeue();
+            pathChanged();
             return;
 
         } else if (str.startsWith("A warm feeling runs through your body, you feel better.")) {
@@ -704,25 +704,25 @@ void MumeXmlParser::parseMudCommands(const QString &str)
     case 'N':
         if (str.startsWith("No way! You are fighting for your life!")
             || str.startsWith("Nah... You feel too relaxed to do that.")) {
-            if (!queue.isEmpty())
-                queue.dequeue();
-            emit showPath(queue, true);
+            if (!m_queue.isEmpty())
+                m_queue.dequeue();
+            pathChanged();
             return;
         }
         break;
     case 'M':
         if (str.startsWith("Maybe you should get on your feet first?")) {
-            if (!queue.isEmpty())
-                queue.dequeue();
-            emit showPath(queue, true);
+            if (!m_queue.isEmpty())
+                m_queue.dequeue();
+            pathChanged();
             return;
         }
         break;
     case 'I':
         if (str.startsWith("In your dreams, or what?")) {
-            if (!queue.isEmpty())
-                queue.dequeue();
-            emit showPath(queue, true);
+            if (!m_queue.isEmpty())
+                m_queue.dequeue();
+            pathChanged();
             return;
         }
         break;
@@ -732,9 +732,9 @@ void MumeXmlParser::parseMudCommands(const QString &str)
             || str.endsWith("doesn't want you riding her anymore.") // donkey
             || str.endsWith("doesn't want you riding it anymore.")  // hungry warg
         ) {
-            if (!queue.isEmpty())
-                queue.dequeue();
-            emit showPath(queue, true);
+            if (!m_queue.isEmpty())
+                m_queue.dequeue();
+            pathChanged();
             return;
         }
         break;

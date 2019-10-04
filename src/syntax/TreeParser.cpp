@@ -9,7 +9,7 @@
 #include <sstream>
 #include <vector>
 
-//#include "../global/unquote.h"
+#include "../global/unquote.h"
 #include "SyntaxArgs.h"
 #include "TokenMatcher.h"
 
@@ -394,6 +394,30 @@ void TreeParser::help(const ParserInput &input, bool isFull)
     const Sublist &node = deref(m_syntaxRoot);
     HelpFrame frame{m_user.getOstream()};
     HelpCommon{isFull}.syntaxRecurseFirst(node, input, frame).isSuccess();
+}
+
+std::string processSyntax(const syntax::SharedConstSublist &syntax,
+                          const std::string &name,
+                          const StringView &args)
+{
+    using namespace syntax;
+
+    const auto str = name + " " + args.toStdString();
+    const auto cmd = StringView{str};
+    auto v = unquote(cmd.getStdStringView(), true, false);
+    if (!v) {
+        throw std::runtime_error("input error: " + v.getUnquoteFailureReason());
+    }
+
+    const auto shared_vec = std::make_shared<const std::vector<std::string>>(v.getVectorOfStrings());
+
+    const ParserInput input(shared_vec);
+    std::stringstream ss;
+    User u{ss};
+    TreeParser parser{syntax, u};
+
+    parser.parse(input);
+    return ss.str();
 }
 
 } // namespace syntax

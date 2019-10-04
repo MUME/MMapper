@@ -7,6 +7,7 @@
 
 #include <functional>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 #include <QArgument>
@@ -22,6 +23,7 @@
 #include "../mapdata/RoomFieldVariant.h"
 #include "../mapdata/mmapper2room.h"
 #include "../mapdata/roomselection.h"
+#include "../proxy/ProxyParserApi.h"
 #include "../proxy/telnetfilter.h"
 #include "CommandId.h"
 #include "CommandQueue.h"
@@ -30,19 +32,22 @@
 #include "ExitsFlags.h"
 #include "PromptFlags.h"
 
+class Coordinate;
+class MapData;
 class MumeClock;
 class ParseEvent;
-class MapData;
 class Room;
-class Coordinate;
 class RoomFieldVariant;
 class RoomFilter;
+
+namespace syntax {
+class Sublist;
+}
 
 class AbstractParser : public QObject
 {
 protected:
     static const QString nullString;
-    static const QString emptyString;
     static const QByteArray emptyByteArray;
 
 private:
@@ -53,8 +58,9 @@ protected:
 
 private:
     MapData *m_mapData = nullptr;
+    ProxyParserApi m_proxy;
 
-private:
+public:
     using HelpCallback = std::function<void(const std::string &name)>;
     using ParserCallback
         = std::function<bool(const std::vector<StringView> &matched, StringView args)>;
@@ -64,7 +70,10 @@ private:
         ParserCallback callback;
         HelpCallback help;
     };
-    std::map<std::string, ParserRecord> m_specialCommandMap{};
+    using ParserRecordMap = std::map<std::string, ParserRecord>;
+
+private:
+    ParserRecordMap m_specialCommandMap;
     QByteArray m_newLineTerminator;
     const char &prefixChar;
 
@@ -78,14 +87,14 @@ protected:
     QByteArray m_lastPrompt;
     bool m_compactMode = false;
     bool m_overrideSendPrompt = false;
-    CommandQueue queue;
+    CommandQueue m_queue;
 
 private:
     bool m_trollExitMapping = false;
     QTimer m_offlineCommandTimer;
 
 public:
-    explicit AbstractParser(MapData *, MumeClock *, QObject *parent = nullptr);
+    explicit AbstractParser(MapData *, MumeClock *, ProxyParserApi proxy, QObject *parent = nullptr);
     ~AbstractParser() override;
 
     void doMove(CommandEnum cmd);
@@ -96,6 +105,8 @@ signals:
     // telnet
     void sendToMud(const QByteArray &);
     void sig_sendToUser(const QByteArray &, bool goAhead);
+    void sig_mapChanged();
+    void sig_graphicsSettingsChanged();
     void releaseAllPaths();
 
     // used to log
@@ -106,7 +117,7 @@ signals:
     void event(const SigParseEvent &);
 
     // for map
-    void showPath(CommandQueue, bool);
+    void showPath(CommandQueue);
     void newRoomSelection(const SigRoomSelection &rs);
 
     // for user commands
@@ -174,7 +185,7 @@ public:
     void markCurrentCommand();
 
 private:
-    // NOTE: This declaration only exists to avoids the warning
+    // NOTE: This declaration only exists to avoid the warning
     // about the "event" signal hiding this function function.
     virtual bool event(QEvent *e) final override { return QObject::event(e); }
 
@@ -226,6 +237,8 @@ private:
 
     void openVoteURL();
     void doBackCommand();
+    void doConnectToHost();
+    void doDisconnectFromHost();
     void doRemoveDoorNamesCommand();
     void doMarkCurrentCommand();
     void doSearchCommand(StringView view);
@@ -241,7 +254,7 @@ private:
     bool evalSpecialCommandMap(StringView args);
 
     void parseHelp(StringView words);
-    bool parsePrint(StringView input);
+    void parseRoom(StringView input);
 
     bool parseDoorAction(DoorActionEnum dat, StringView words);
     bool parseDoorFlag(DoorFlagEnum flag, StringView words);
@@ -264,4 +277,11 @@ public:
     {
         sendToUser(s.toLatin1(), goAhead);
     }
+    void pathChanged() { emit showPath(m_queue); }
+    void mapChanged() { emit sig_mapChanged(); }
+
+private:
+    void eval(const std::string &name,
+              const std::shared_ptr<const syntax::Sublist> &syntax,
+              StringView input);
 };

@@ -27,7 +27,7 @@ signals:
     void update();
 
 public slots:
-    void setPath(CommandQueue, bool);
+    void setPath(CommandQueue);
 
 private:
     CommandQueue m_queue;

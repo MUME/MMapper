@@ -19,6 +19,8 @@
 #include "../mapdata/ExitFlags.h"
 #include "../mapdata/enums.h"
 #include "../mapdata/mmapper2room.h"
+#include "../syntax/SyntaxArgs.h"
+#include "../syntax/TreeParser.h"
 #include "Abbrev.h"
 #include "AbstractParser-Utils.h"
 #include "CommandId.h"
@@ -26,7 +28,9 @@
 #include "abstractparser.h"
 
 const Abbrev cmdBack{"back"};
+const Abbrev cmdConnect{"connect", 4};
 const Abbrev cmdDirections{"dirs", 3};
+const Abbrev cmdDisconnect{"disconnect", 4};
 const Abbrev cmdDoorHelp{"doorhelp", 5};
 const Abbrev cmdGroupHelp{"grouphelp", 6};
 const Abbrev cmdGroupKick{"gkick", 2};
@@ -38,15 +42,12 @@ const Abbrev cmdMarkCurrent{"markcurrent", 4};
 const Abbrev cmdName{"name"};
 const Abbrev cmdNote{"note"};
 const Abbrev cmdRemoveDoorNames{"removedoornames"};
+const Abbrev cmdRoom{"room", 2};
 const Abbrev cmdSearch{"search", 3};
 const Abbrev cmdSet{"set", 2};
 const Abbrev cmdTime{"time", 2};
 const Abbrev cmdTrollExit{"trollexit", 2};
 const Abbrev cmdVote{"vote", 2};
-const Abbrev cmdPDynamic{"pdynamic", 4};
-const Abbrev cmdPStatic{"pstatic", 3};
-const Abbrev cmdPNote{"pnote", 3};
-const Abbrev cmdPrint{"print", 3};
 
 Abbrev getParserCommandName(const DoorFlagEnum x)
 {
@@ -436,8 +437,8 @@ bool AbstractParser::parseSimpleCommand(const QString &qstr)
                         sendPromptToUser();
 
                     } else {
-                        queue.enqueue(CommandEnum::SCOUT);
-                        queue.enqueue(dir);
+                        m_queue.enqueue(CommandEnum::SCOUT);
+                        m_queue.enqueue(dir);
                         offlineCharacterMove();
                     }
                     return false;
@@ -611,7 +612,7 @@ void AbstractParser::parseSetCommand(StringView view)
         }
 
         auto next = view.takeFirstWord();
-        if (next.size() == 3) {
+        if (next.length() == 3) {
             auto quote = next.takeFirstLetter();
             const bool validQuote = quote == '\'' || quote == '"';
             const auto prefix = next.takeFirstLetter();
@@ -620,7 +621,7 @@ void AbstractParser::parseSetCommand(StringView view)
                 && quote != prefix && setCommandPrefix(prefix)) {
                 return;
             }
-        } else if (next.size() == 1) {
+        } else if (next.length() == 1) {
             const auto prefix = next.takeFirstLetter();
             if (setCommandPrefix(prefix)) {
                 return;
@@ -634,29 +635,48 @@ void AbstractParser::parseSetCommand(StringView view)
     sendToUser("That variable is not supported.");
 }
 
-bool AbstractParser::parsePrint(StringView input)
+void AbstractParser::parseRoom(StringView input)
 {
-    const auto syntax = [this]() { sendToUser("Print what? [dynamic | static | note]\r\n"); };
+    using namespace ::syntax;
+    static auto abb = syntax::abbrevToken;
 
-    if (input.isEmpty()) {
-        syntax();
-        return true;
-    }
+    auto printDynamic = Accept([this](User &,
+                                      const Pair *) -> void { printRoomInfo(dynamicRoomFields); },
+                               "print room dynamic");
+    auto printStatic = Accept([this](User &,
+                                     const Pair *) -> void { printRoomInfo(staticRoomFields); },
+                              "print room static");
+    auto printNote = Accept([this](User &, const Pair *) -> void { showNote(); }, "print room note");
 
-    const auto next = input.takeFirstWord();
-    if (Abbrev{"dynamic", 1}.matches(next)) {
-        printRoomInfo(dynamicRoomFields);
-        return true;
-    } else if (Abbrev{"static", 1}.matches(next)) {
-        printRoomInfo(staticRoomFields);
-        return true;
-    } else if (Abbrev{"note", 1}.matches(next)) {
-        showNote();
-        return true;
-    } else {
-        syntax();
-        return true;
-    }
+    auto printSyntax = buildSyntax(abb("print"),
+                                   buildSyntax(abb("dynamic"), printDynamic),
+                                   buildSyntax(abb("static"), printStatic),
+                                   buildSyntax(abb("note"), printNote));
+
+    // TODO: expand the /room command.
+    //
+    //   /room
+    //
+    //     dadd <dir> <roomid> <name>      add a door
+    //     dkill <dir>                     remove a door
+    //
+    //     dig <dir> <roomid>              add a 2-way room connection
+    //     noexit <dir>                    remove an exit
+    //
+    // The rest diverges from MUME slightly
+    //
+    //     dset <dir>
+    //       ([+-=]<dflag>)+
+    //       (clear | set | toggle) <dflag>
+    //       name <rest>
+    //
+    //     "exit-flags" <dir>
+    //       (clear | set | toggle) <eflag>
+    //
+    //     flags (clear | set | toggle) <flag>
+    //
+
+    eval("room", printSyntax, input);
 }
 
 void AbstractParser::parseName(StringView view)
@@ -731,50 +751,92 @@ void AbstractParser::parseNoteCmd(StringView view)
     setNote(RoomNote{view.toStdString()});
 }
 
+class ArgHelpCommand final : public syntax::IArgument
+{
+private:
+    const AbstractParser::ParserRecordMap &m_map;
+
+public:
+    explicit ArgHelpCommand(const AbstractParser::ParserRecordMap &map)
+        : m_map(map)
+    {}
+
+private:
+    syntax::MatchResult virt_match(const syntax::ParserInput &input,
+                                   syntax::IMatchErrorLogger * /*logger*/) const override;
+
+    std::ostream &virt_to_stream(std::ostream &os) const override;
+};
+
+syntax::MatchResult ArgHelpCommand::virt_match(const syntax::ParserInput &input,
+                                               syntax::IMatchErrorLogger *) const
+{
+    auto &arg = *this;
+    if (!input.empty()) {
+        const auto &map = arg.m_map;
+        const auto &next = input.front();
+        const auto it = map.find(next);
+        if (it != map.end()) {
+            return syntax::MatchResult::success(1, input, Value(next));
+        }
+    }
+
+    return syntax::MatchResult::failure(input);
+}
+
+std::ostream &ArgHelpCommand::virt_to_stream(std::ostream &os) const
+{
+    return os << "<command>";
+}
+
 void AbstractParser::parseHelp(StringView words)
 {
-    if (words.isEmpty()) {
-        showHelp();
-        return;
-    }
+    using namespace syntax;
+    static auto abb = syntax::abbrevToken;
+    auto simpleSyntax = [](const std::string_view &name, auto &&fn) -> SharedConstSublist {
+        auto abbrev = abb(std::string(name));
+        auto helpstr = std::string("help for ") + std::string(name);
+        return buildSyntax(std::move(abbrev), Accept(fn, std::move(helpstr)));
+    };
 
-    auto next = words.takeFirstWord();
+    auto syntax = buildSyntax(
+        /* Note: The next section has optional "topic" to avoid collision. */
+        buildSyntax(TokenMatcher::alloc<ArgHelpCommand>(m_specialCommandMap),
+                    Accept(
+                        [this](User &user, const Pair *const matched) -> void {
+                            auto &os = user.getOstream();
+                            if (!matched || !matched->car.isString()) {
+                                os << "Internal error.\n";
+                                return;
+                            }
+                            const auto &map = m_specialCommandMap;
+                            const auto &name = matched->car.getString();
+                            const auto it = map.find(name);
+                            if (it == map.end()) {
+                                os << "Internal error.\n";
+                                return;
+                            }
+                            it->second.help(name);
+                        },
+                        "detailed help pages")),
 
-    if (Abbrev{"abbreviations", 2}.matches(next)) {
-        showHelpCommands(true);
-        return;
-    } else if (Abbrev{"commands", 1}.matches(next)) {
-        showHelpCommands(false);
-        return;
-    }
+        /* optional "topic" allows you to [/help topic door] to see the door help topic;
+         * alternately, "[/help doors] should work too. */
+        buildSyntax(TokenMatcher::alloc<ArgOptionalToken>(abb("topic")),
+                    simpleSyntax("abbreviations",
+                                 [this](auto &&, auto &&) { showHelpCommands(true); }),
+                    simpleSyntax("commands", [this](auto &&, auto &&) { showHelpCommands(false); }),
+                    simpleSyntax("map", [this](auto &&, auto &&) { showMapHelp(); }),
+                    simpleSyntax("doors", [this](auto &&, auto &&) { showDoorCommandHelp(); }),
+                    simpleSyntax("group", [this](auto &&, auto &&) { showGroupHelp(); }),
+                    simpleSyntax("exits", [this](auto &&, auto &&) { showExitHelp(); }),
+                    simpleSyntax("flags", [this](auto &&, auto &&) { showRoomSimpleFlagsHelp(); }),
+                    simpleSyntax("mobiles", [this](auto &&, auto &&) { showRoomMobFlagsHelp(); }),
+                    simpleSyntax("load", [this](auto &&, auto &&) { showRoomLoadFlagsHelp(); }),
+                    simpleSyntax("miscellaneous", [this](auto &&, auto &&) { showMiscHelp(); })),
+        Accept([this](auto &&, auto &&) { showHelp(); }, "general help"));
 
-    auto &map = m_specialCommandMap;
-    auto name = next.toStdString();
-    auto it = map.find(name);
-    if (it != map.end()) {
-        it->second.help(name);
-        return;
-    }
-
-    if (Abbrev{"map", 1}.matches(next))
-        showMapHelp();
-    else if (Abbrev{"door", 1}.matches(next))
-        showDoorCommandHelp();
-    else if (Abbrev{"group", 1}.matches(next))
-        showGroupHelp();
-    else if (Abbrev{"exits", 2}.matches(next))
-        showExitHelp();
-    else if (Abbrev{"flags", 1}.matches(next))
-        showRoomSimpleFlagsHelp();
-    else if (Abbrev{"mobiles", 2}.matches(next))
-        showRoomMobFlagsHelp();
-    else if (Abbrev{"load", 2}.matches(next))
-        showRoomLoadFlagsHelp();
-    else if (Abbrev{"miscellaneous", 2}.matches(next))
-        showMiscHelp();
-    else {
-        showHelp();
-    }
+    eval("help", syntax, words);
 }
 
 void AbstractParser::initSpecialCommandMap()
@@ -916,12 +978,24 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Delete prespammed commands from queue."));
+    add(cmdConnect,
+        [this](const std::vector<StringView> & /*s*/, StringView /*rest*/) {
+            this->doConnectToHost();
+            return true;
+        },
+        makeSimpleHelp("Connect to the MUD."));
     add(cmdDirections,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             this->parseDirections(rest);
             return true;
         },
         makeSimpleHelp("Prints directions to matching rooms."));
+    add(cmdDisconnect,
+        [this](const std::vector<StringView> & /*s*/, StringView /*rest*/) {
+            this->doDisconnectFromHost();
+            return true;
+        },
+        makeSimpleHelp("Disconnect from the MUD."));
     add(cmdGroupKick,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             this->parseGroupKick(rest);
@@ -1034,36 +1108,13 @@ void AbstractParser::initSpecialCommandMap()
         },
         makeSimpleHelp("Launches a web browser so you can vote for MUME on TMC!"));
 
-    /* print commands */
-    add(cmdPrint,
-        [this](const std::vector<StringView> & /*s*/, StringView rest) { return parsePrint(rest); },
-        makeSimpleHelp("There is no help for this command yet."));
-
-    add(cmdPDynamic,
+    /* room commands */
+    add(cmdRoom,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
-            if (!rest.isEmpty())
-                return false;
-            printRoomInfo(dynamicRoomFields);
+            parseRoom(rest);
             return true;
         },
-        makeSimpleHelp("Prints current room description."));
-    add(cmdPStatic,
-        [this](const std::vector<StringView> & /*s*/, StringView rest) {
-            if (!rest.isEmpty())
-                return false;
-            printRoomInfo(staticRoomFields);
-            return true;
-        },
-        makeSimpleHelp("Prints current room description without movable items."));
-
-    add(cmdPNote,
-        [this](const std::vector<StringView> & /*s*/, StringView rest) {
-            if (!rest.isEmpty())
-                return false;
-            showNote();
-            return true;
-        },
-        makeSimpleHelp("Print the note in the current room."));
+        makeSimpleHelp("View or modify properties of the current room."));
 
     qInfo() << "Total commands + abbreviations: " << map.size();
 }

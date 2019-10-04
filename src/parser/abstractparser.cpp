@@ -46,7 +46,12 @@
 #include "../mapdata/roomfilter.h"
 #include "../mapdata/roomselection.h"
 #include "../mapdata/shortestpath.h"
+#include "../proxy/proxy.h"
 #include "../proxy/telnetfilter.h"
+#include "../syntax/Accept.h"
+#include "../syntax/SyntaxArgs.h"
+#include "../syntax/TokenMatcher.h"
+#include "../syntax/TreeParser.h"
 #include "Abbrev.h"
 #include "AbstractParser-Commands.h"
 #include "AbstractParser-Utils.h"
@@ -61,7 +66,6 @@
 class RoomAdmin;
 
 const QString AbstractParser::nullString{};
-const QString AbstractParser::emptyString("");
 const QByteArray AbstractParser::emptyByteArray("");
 
 static char getTerrainSymbol(const RoomTerrainEnum type)
@@ -166,14 +170,20 @@ static const char *getFlagName(const DoorFlagEnum flag)
 #undef CASE
 }
 
-AbstractParser::AbstractParser(MapData *md, MumeClock *mc, QObject *parent)
+AbstractParser::AbstractParser(MapData *const md,
+                               MumeClock *const mc,
+                               ProxyParserApi proxy,
+                               QObject *const parent)
     : QObject(parent)
     , m_mumeClock(mc)
     , m_mapData(md)
+    , m_proxy(proxy)
     , prefixChar{getConfig().parser.prefixChar}
 {
     connect(&m_offlineCommandTimer, &QTimer::timeout, this, &AbstractParser::doOfflineCharacterMove);
-    m_offlineCommandTimer.setInterval(250); // MUME enforces 4 commands per seconds (i.e. 250ms)
+
+    // MUME only attempts up to 4 commands per second (i.e. 250ms)
+    m_offlineCommandTimer.setInterval(250);
     m_offlineCommandTimer.setSingleShot(true);
 
     initSpecialCommandMap();
@@ -188,7 +198,7 @@ void AbstractParser::reset()
         m_trollExitMapping = false;
     }
     m_lastPrompt = "";
-    queue.clear();
+    m_queue.clear();
 }
 
 void AbstractParser::parsePrompt(const QString &prompt)
@@ -496,9 +506,9 @@ std::string AbstractParser::normalizeStringCopy(std::string string)
 const Coordinate AbstractParser::getNextPosition()
 {
     CommandQueue tmpqueue;
-    if (!queue.isEmpty()) {
+    if (!m_queue.isEmpty()) {
         // Next position in the prespammed path
-        tmpqueue.enqueue(queue.head());
+        tmpqueue.enqueue(m_queue.head());
     }
 
     QList<Coordinate> cl = m_mapData->getPath(m_mapData->getPosition(), tmpqueue);
@@ -508,7 +518,7 @@ const Coordinate AbstractParser::getNextPosition()
 const Coordinate AbstractParser::getTailPosition()
 {
     // Position at the end of the prespammed path
-    QList<Coordinate> cl = m_mapData->getPath(m_mapData->getPosition(), queue);
+    QList<Coordinate> cl = m_mapData->getPath(m_mapData->getPosition(), m_queue);
     return cl.isEmpty() ? m_mapData->getPosition() : cl.back();
 }
 
@@ -792,7 +802,6 @@ void AbstractParser::searchCommand(const RoomFilter &f)
     }
     const auto tmpSel = RoomSelection::createSelection(*m_mapData);
     tmpSel->genericSearch(f);
-    emit showPath(queue, true);
     sendToUser(
         QString("%1 room%2 found.\r\n").arg(tmpSel->size()).arg((tmpSel->size() == 1) ? "" : "s"));
     emit newRoomSelection(SigRoomSelection{tmpSel});
@@ -921,9 +930,19 @@ void AbstractParser::doRemoveDoorNamesCommand()
 
 void AbstractParser::doBackCommand()
 {
-    queue.clear();
+    m_queue.clear();
     sendToUser("OK.\r\n");
-    emit showPath(queue, true);
+    pathChanged();
+}
+
+void AbstractParser::doConnectToHost()
+{
+    m_proxy.connectToMud();
+}
+
+void AbstractParser::doDisconnectFromHost()
+{
+    m_proxy.disconnectFromMud();
 }
 
 void AbstractParser::openVoteURL()
@@ -1119,12 +1138,11 @@ void AbstractParser::showHelp()
                      "  Sync commands: [exa,l] or [examine,look]\r\n"
                      "\r\nManage prespammed command queue:\r\n"
                      "  %1back        - delete prespammed commands from queue\r\n"
-                     "\r\nDescription commands:\r\n"
-                     "  %1pdynamic    - prints current room description\r\n"
-                     "  %1pstatic     - the same as previous, but without moveable items\r\n"
-                     "  %1pnote       - print the note in the current room\r\n"
+                     "\r\nRoom commands:\r\n"
+                     "  %1room        - (see \"%1room ??\" for syntax help)\r\n"
                      "\r\nHelp commands:\n"
                      "  %1help      - this help text\r\n"
+                     "  %1help ??   - full syntax help for the help command\r\n"
                      "  %1maphelp   - help for mapping console commands\r\n"
                      "  %1doorhelp  - help for door console commands\r\n"
                      "  %1grouphelp - help for group manager console commands\r\n"
@@ -1134,7 +1152,9 @@ void AbstractParser::showHelp()
                      "  %1search [-options] pattern - select matching rooms\r\n"
                      "  %1markcurrent               - select the room you are currently in\r\n"
                      "  %1time                      - display current MUME time\r\n"
-                     "  %1set [prefix [punct-char]] - change command prefix\r\n");
+                     "  %1set [prefix [punct-char]] - change command prefix\r\n"
+                     "  %1connect                   - connect to the MUD\r\n"
+                     "  %1disconnect                - disconnect from the MUD\r\n");
 
     sendToUser(s.arg(prefixChar));
 }
@@ -1216,8 +1236,8 @@ void AbstractParser::doMove(const CommandEnum cmd)
 {
     // REVISIT: should "look" commands be queued?
     assert(isDirectionNESWUD(cmd) || cmd == CommandEnum::LOOK);
-    queue.enqueue(cmd);
-    emit showPath(queue, true);
+    m_queue.enqueue(cmd);
+    pathChanged();
     if (isOffline())
         offlineCharacterMove(cmd);
 }
@@ -1262,13 +1282,13 @@ static CommandEnum getRandomDirection()
 
 void AbstractParser::doOfflineCharacterMove()
 {
-    if (queue.isEmpty()) {
+    if (m_queue.isEmpty()) {
         return;
     }
 
     const RAIICallback timerRaii{[this]() { this->m_offlineCommandTimer.start(); }};
 
-    CommandEnum direction = queue.dequeue();
+    CommandEnum direction = m_queue.dequeue();
     if (m_mapData->isEmpty()) {
         sendToUser("Alas, you cannot go that way...\r\n");
         sendPromptToUser();
@@ -1284,7 +1304,7 @@ void AbstractParser::doOfflineCharacterMove()
         sendToUser("You flee head over heels.\r\n");
         direction = getRandomDirection(); // pointless if onlyUseActualExits is true
     } else if (scout) {
-        direction = queue.dequeue();
+        direction = m_queue.dequeue();
     }
 
     const auto rs1 = RoomSelection(*m_mapData, m_mapData->getPosition());
@@ -1365,7 +1385,7 @@ void AbstractParser::doOfflineCharacterMove()
                                               otherRoom->getTerrainType()),
                                           ConnectedRoomFlagsType{});
         emit event(SigParseEvent{ev});
-        emit showPath(queue, true);
+        pathChanged();
     };
 
     const Exit &e = getExit(); /* NOTE: getExit() can modify direction */
@@ -1388,7 +1408,7 @@ void AbstractParser::doOfflineCharacterMove()
 void AbstractParser::offlineCharacterMove(const CommandEnum direction)
 {
     if (direction == CommandEnum::FLEE) {
-        queue.enqueue(direction);
+        m_queue.enqueue(direction);
     }
 
     if (!m_offlineCommandTimer.isActive()) {
@@ -1699,7 +1719,7 @@ void AbstractParser::nameDoorCommand(const StringView &doorname, const ExitDirEn
 
     m_mapData->setDoorName(c, DoorName{doorname.toStdString()}, direction);
     sendToUser("--->Doorname set to: " + doorname.toQByteArray() + "\r\n");
-    emit showPath(queue, true);
+    mapChanged();
 }
 
 void AbstractParser::toggleExitFlagCommand(const ExitFlagEnum flag, const ExitDirEnum direction)
@@ -1713,7 +1733,7 @@ void AbstractParser::toggleExitFlagCommand(const ExitFlagEnum flag, const ExitDi
     const QByteArray flagname = getFlagName(flag);
 
     sendToUser("--->" + flagname + " exit " + toggle + "\r\n");
-    emit showPath(queue, true);
+    mapChanged();
 }
 
 bool AbstractParser::getField(const Coordinate &c,
@@ -1733,7 +1753,7 @@ void AbstractParser::toggleDoorFlagCommand(const DoorFlagEnum flag, const ExitDi
     const auto toggle = enabledString(getField(c, direction, var));
     const QByteArray flagname = getFlagName(flag);
     sendToUser("--->" + flagname + " door " + toggle + "\r\n");
-    emit showPath(queue, true);
+    mapChanged();
 }
 
 ExitFlags AbstractParser::getExitFlags(const ExitDirEnum dir) const
@@ -1798,7 +1818,7 @@ void AbstractParser::sendGTellToUser(const QByteArray &ba)
         m_mapData->toggleRoomFlag(c, var); \
         const QString toggle = enabledString(m_mapData->getRoomFlag(c, var)); \
         sendToUser("--->Room flag " + toggle.toLatin1() + "\r\n"); \
-        emit showPath(queue, true); \
+        mapChanged(); \
     }
 X_FOREACH_ROOM_FIELD(X_DECLARE_ROOM_FIELD_TOGGLERS, NOP)
 #undef X_DECLARE_ROOM_FIELD_TOGGLERS
@@ -1807,4 +1827,14 @@ X_FOREACH_ROOM_FIELD(X_DECLARE_ROOM_FIELD_TOGGLERS, NOP)
 void AbstractParser::printRoomInfo(const RoomFieldEnum field)
 {
     printRoomInfo(RoomFields{field});
+}
+
+void AbstractParser::eval(const std::string &name,
+                          const std::shared_ptr<const syntax::Sublist> &syntax,
+                          StringView input)
+{
+    using namespace syntax;
+    const auto thisCommand = std::string(1, prefixChar) + name;
+    const auto completeSyntax = buildSyntax(stringToken(thisCommand), syntax);
+    sendToUser(processSyntax(completeSyntax, thisCommand, input));
 }

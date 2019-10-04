@@ -60,6 +60,7 @@ set(mmapper_SRCS
     global/AnsiColor.h
     global/Array.h
     global/CharBuffer.h
+    global/Debug.h
     global/EnumIndexedArray.h
     global/Flags.h
     global/NullPointerException.cpp
@@ -75,6 +76,8 @@ set(mmapper_SRCS
     global/TextUtils.cpp
     global/TextUtils.h
     global/Version.h
+    global/WeakHandle.cpp
+    global/WeakHandle.h
     global/WinSock.cpp
     global/WinSock.h
     global/entities.cpp
@@ -87,6 +90,8 @@ set(mmapper_SRCS
     global/range.h
     global/roomid.h
     global/type_utils.h
+    global/unquote.cpp
+    global/unquote.h
     global/utils.cpp
     global/utils.h
     mainwindow/UpdateDialog.cpp
@@ -265,6 +270,8 @@ set(mmapper_SRCS
     proxy/AbstractTelnet.h
     proxy/MudTelnet.cpp
     proxy/MudTelnet.h
+    proxy/ProxyParserApi.cpp
+    proxy/ProxyParserApi.h
     proxy/TextCodec.cpp
     proxy/TextCodec.h
     proxy/UserTelnet.cpp

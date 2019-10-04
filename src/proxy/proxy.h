@@ -5,6 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include <memory>
 #include <QByteArray>
 #include <QObject>
 #include <QScopedPointer>
@@ -13,9 +14,10 @@
 #include <QtCore>
 #include <QtGlobal>
 
+#include "../global/WeakHandle.h"
 #include "../global/io.h"
+#include "ProxyParserApi.h"
 
-class UserTelnet;
 class ConnectionListener;
 class MapCanvas;
 class MapData;
@@ -32,8 +34,9 @@ class QFile;
 class QTcpSocket;
 class RemoteEdit;
 class TelnetFilter;
+class UserTelnet;
 
-// #define PROXY_STREAM_DEBUG_INPUT_TO_FILE
+#undef ERROR // Bad dog, Microsoft; bad dog!!!
 
 class Proxy final : public QObject
 {
@@ -69,32 +72,46 @@ signals:
     void analyzeMudStream(const QByteArray &);
 
 private:
-#ifdef PROXY_STREAM_DEBUG_INPUT_TO_FILE
-    QDataStream *debugStream = nullptr;
-    QFile *file = nullptr;
-#endif
+    friend ProxyParserApi;
+    bool isConnected() const;
+    void connectToMud();
+    void disconnectFromMud();
 
+private:
     io::null_padded_buffer<(1 << 13)> m_buffer;
+    WeakHandleLifetime<Proxy> m_weakHandleLifetime{*this};
+    ProxyParserApi m_proxyParserApi{m_weakHandleLifetime.getWeakHandle()};
 
-    qintptr m_socketDescriptor = 0;
-    MumeSocket *m_mudSocket = nullptr;
-    QScopedPointer<QTcpSocket> m_userSocket;
+    MapData *const m_mapData;
+    Mmapper2PathMachine *const m_pathMachine;
+    PrespammedPath *const m_prespammedPath;
+    Mmapper2Group *const m_groupManager;
+    MumeClock *const m_mumeClock;
+    MapCanvas *const m_mapCanvas;
+    ConnectionListener *const m_listener;
+    const qintptr m_socketDescriptor;
 
-    bool m_serverConnected = false;
+    // initialized in ctor
+    QPointer<RemoteEdit> m_remoteEdit;
 
-    UserTelnet *m_userTelnet = nullptr;
-    MudTelnet *m_mudTelnet = nullptr;
-    TelnetFilter *m_telnetFilter = nullptr;
-    MpiFilter *m_mpiFilter = nullptr;
-    MumeXmlParser *m_parserXml = nullptr;
-    RemoteEdit *m_remoteEdit = nullptr;
+    // initialized in start()
+    QPointer<QTcpSocket> m_userSocket;
+    QPointer<UserTelnet> m_userTelnet;
+    QPointer<MudTelnet> m_mudTelnet;
+    QPointer<TelnetFilter> m_telnetFilter;
+    QPointer<MpiFilter> m_mpiFilter;
+    QPointer<MumeXmlParser> m_parserXml;
+    QPointer<MumeSocket> m_mudSocket;
 
-    MapData *m_mapData = nullptr;
-    Mmapper2PathMachine *m_pathMachine = nullptr;
-    PrespammedPath *m_prespammedPath = nullptr;
-    Mmapper2Group *m_groupManager = nullptr;
-    MumeClock *m_mumeClock = nullptr;
-    MapCanvas *m_mapCanvas = nullptr;
+    enum class ServerStateEnum {
+        INITIALIZED,
+        OFFLINE,
+        CONNECTING,
+        CONNECTED,
+        DISCONNECTING,
+        DISCONNECTED,
+        ERROR,
+    };
 
-    ConnectionListener *m_listener = nullptr;
+    ServerStateEnum m_serverState = ServerStateEnum::INITIALIZED;
 };

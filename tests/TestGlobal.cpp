@@ -8,6 +8,7 @@
 
 #include "../src/global/AnsiColor.h"
 #include "../src/global/StringView.h"
+#include "../src/global/unquote.h"
 
 TestGlobal::TestGlobal() = default;
 
@@ -70,6 +71,12 @@ void TestGlobal::stringViewTest()
 {
     // REVISIT: Test is meaningless during release builds
     test::testStringView();
+}
+
+void TestGlobal::unquoteTest()
+{
+    // REVISIT: Test is meaningless during release builds
+    test::test_unquote();
 }
 
 QTEST_MAIN(TestGlobal)

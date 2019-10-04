@@ -15,6 +15,7 @@
 
 #include "configuration/configuration.h"
 #include "display/Filenames.h"
+#include "global/Debug.h"
 #include "global/Version.h"
 #include "global/WinSock.h"
 #include "global/utils.h"
@@ -123,12 +124,6 @@ static void tryAutoLoad(MainWindow &mw)
         qInfo() << "[main] Unable to autoload map";
     }
 }
-
-#ifndef NDEBUG
-static constexpr const bool IS_DEBUG_BUILD = true;
-#else
-static constexpr const bool IS_DEBUG_BUILD = false;
-#endif
 
 int main(int argc, char **argv)
 {

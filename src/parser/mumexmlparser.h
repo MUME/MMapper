@@ -18,6 +18,7 @@
 
 class MapData;
 class MumeClock;
+class ProxyParserApi;
 class QDataStream;
 class QFile;
 class QObject;
@@ -32,7 +33,7 @@ class MumeXmlParser : public AbstractParser
     Q_OBJECT
 
 public:
-    explicit MumeXmlParser(MapData *, MumeClock *, QObject *parent = nullptr);
+    explicit MumeXmlParser(MapData *, MumeClock *, ProxyParserApi, QObject *parent = nullptr);
     ~MumeXmlParser() override;
 
     void parse(const IncomingData &);

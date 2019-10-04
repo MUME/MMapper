@@ -485,7 +485,7 @@ void Mmapper2Group::onAffectTimeout()
         affectTimer.start();
 }
 
-void Mmapper2Group::setPath(CommandQueue dirs, bool)
+void Mmapper2Group::setPath(CommandQueue dirs)
 {
     group->getSelf()->prespam = std::move(dirs);
 }
