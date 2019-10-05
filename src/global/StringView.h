@@ -76,8 +76,6 @@ public:
     std::vector<QString> getWordsAsQStrings() const noexcept(false);
 
 public:
-    DEPRECATED
-    bool fuzzyEquals(const char *s) const noexcept;
     bool operator==(const char *s) const noexcept = delete;
 
     bool operator==(const std::string_view &sv) const noexcept { return m_sv == sv; }

@@ -7,11 +7,12 @@
 #include <cstddef>
 #include <cstring>
 #include <stdexcept>
+#include <string_view>
 #include <QCharRef>
 
 #include "../global/StringView.h"
 
-bool isAbbrev(StringView input, const char *command, int minAbbrev);
+bool isAbbrev(StringView input, const std::string_view &command, int minAbbrev);
 
 struct Abbrev
 {

@@ -195,25 +195,6 @@ std::vector<QString> StringView::getWordsAsQStrings() const noexcept(false)
     return result;
 }
 
-/// CAUTION: This isn't quite the same as `*this == std::string_view((s == nullptr) ? "" : s)`,
-/// because it requires the string to not contain leading spaces, which means it can throw
-/// if you try to compare it to a string with spaces. (Weird and VERY unexpected.)
-bool StringView::fuzzyEquals(const char *s) const noexcept
-{
-    if (s == nullptr)
-        return isEmpty();
-
-    if (isEmpty())
-        return false;
-
-    auto tmp = *this;
-    while (!tmp.isEmpty() && *s != '\0') // both are non-empty
-        if (tmp.takeFirstLetter() != *s++)
-            return false;
-
-    return tmp.isEmpty() && (*s == '\0'); // both are empty
-}
-
 StringView StringView::substr(const size_t pos, const size_t len) const
 {
     assert(pos <= m_sv.size() || pos == std::string_view::npos);

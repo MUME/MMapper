@@ -8,24 +8,29 @@
 #include <cctype>
 #include <cstring>
 #include <stdexcept>
+#include <string_view>
 #include <QtCore>
 
 #include "../global/StringView.h"
 #include "../global/utils.h"
 
-bool isAbbrev(StringView input, const char *const command, const int minAbbrev)
+bool isAbbrev(StringView input, const std::string_view &command, const int minAbbrev)
 {
-    const auto cmdLen = static_cast<int>(std::strlen(command));
+    const auto cmdLen = static_cast<int>(command.length());
     assert(minAbbrev == -1 || minAbbrev >= 1);
     assert(minAbbrev <= cmdLen);
 
     if (minAbbrev == -1 || minAbbrev == cmdLen)
-        return input.fuzzyEquals(command);
+        return input.trim() == command;
 
     int matched = 0;
-    for (auto cmdIt = command; !input.isEmpty() && *cmdIt != '\0'; ++matched)
-        if (std::tolower(input.takeFirstLetter()) != std::tolower(*cmdIt++))
+    for (const auto c : command) {
+        if (input.isEmpty())
+            break;
+        if (std::tolower(input.takeFirstLetter()) != std::tolower(c))
             return false;
+        ++matched;
+    }
 
     if (!input.isEmpty())
         return false;

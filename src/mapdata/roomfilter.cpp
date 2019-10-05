@@ -10,6 +10,7 @@
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
 #include "../global/StringView.h"
+#include "../global/TaggedString.h"
 #include "../global/utils.h"
 #include "../parser/AbstractParser-Commands.h"
 #include "../parser/parserutils.h"
@@ -30,8 +31,8 @@ static std::regex createRegex(const std::string &input, const Qt::CaseSensitivit
 }
 
 RoomFilter::RoomFilter(QString str, const Qt::CaseSensitivity cs, const PatternKindsEnum kind)
-    : regex(createRegex(ParserUtils::latinToAsciiInPlace(str).toStdString(), cs))
-    , kind(kind)
+    : m_regex(createRegex(ParserUtils::latinToAsciiInPlace(str).toStdString(), cs))
+    , m_kind(kind)
 {}
 
 const char *const RoomFilter::parse_help
@@ -90,82 +91,41 @@ bool RoomFilter::filter(const Room *const pr) const
             break;
 
         case PatternKindsEnum::DESC:
-            return std::regex_match(r.getStaticDescription().getStdString(), regex);
+            return matches(r.getStaticDescription());
 
         case PatternKindsEnum::DYN_DESC:
-            return std::regex_match(r.getDynamicDescription().getStdString(), regex);
+            return matches(r.getDynamicDescription());
 
         case PatternKindsEnum::NAME:
-            return std::regex_match(r.getName().getStdString(), regex);
+            return matches(r.getName());
 
         case PatternKindsEnum::NOTE:
-            return std::regex_match(r.getNote().getStdString(), regex);
+            return matches(r.getNote());
 
         case PatternKindsEnum::EXITS:
             for (const auto &e : r.getExitsList()) {
-                if (std::regex_match(e.getDoorName().getStdString(), regex))
+                if (matches(e.getDoorName())) {
                     return true;
+                }
             }
             return false;
 
-        case PatternKindsEnum::FLAGS:
+        case PatternKindsEnum::FLAGS: {
             for (const auto &e : r.getExitsList()) {
-                for (const auto flag : ALL_DOOR_FLAGS) {
-                    if (!e.getDoorFlags().contains(flag))
-                        continue;
-                    if (std::regex_match(getParserCommandName(flag).getCommand(), regex))
-                        return true;
-                }
-                for (const auto flag : ALL_EXIT_FLAGS) {
-                    if (!e.getExitFlags().contains(flag))
-                        continue;
-                    if (std::regex_match(getParserCommandName(flag).getCommand(), regex))
-                        return true;
+                if (this->matchesAny(e.getDoorFlags()) //
+                    || this->matchesAny(e.getExitFlags())) {
+                    return true;
                 }
             }
-            for (const auto flag : ALL_MOB_FLAGS) {
-                if (!r.getMobFlags().contains(flag))
-                    continue;
-                if (std::regex_match(getParserCommandName(flag).getCommand(), regex))
-                    return true;
-            }
-            for (const auto flag : ALL_LOAD_FLAGS) {
-                if (!r.getLoadFlags().contains(flag))
-                    continue;
-                if (std::regex_match(getParserCommandName(flag).getCommand(), regex))
-                    return true;
-            }
-            for (const auto flag : DEFINED_ROOM_LIGHT_TYPES) {
-                if (r.getLightType() != flag)
-                    continue;
-                if (std::regex_match(getParserCommandName(flag).getCommand(), regex))
-                    return true;
-            }
-            for (const auto flag : DEFINED_ROOM_SUNDEATH_TYPES) {
-                if (r.getSundeathType() != flag)
-                    continue;
-                if (std::regex_match(getParserCommandName(flag).getCommand(), regex))
-                    return true;
-            }
-            for (const auto flag : DEFINED_ROOM_PORTABLE_TYPES) {
-                if (r.getPortableType() != flag)
-                    continue;
-                if (std::regex_match(getParserCommandName(flag).getCommand(), regex))
-                    return true;
-            }
-            for (const auto flag : DEFINED_ROOM_RIDABLE_TYPES) {
-                if (r.getRidableType() != flag)
-                    continue;
-                if (std::regex_match(getParserCommandName(flag).getCommand(), regex))
-                    return true;
-            }
-            for (const auto flag : DEFINED_ROOM_ALIGN_TYPES) {
-                if (r.getAlignType() != flag)
-                    continue;
-                if (std::regex_match(getParserCommandName(flag).getCommand(), regex))
-                    return true;
-            }
-            return false;
+
+            return this->matchesAny(r.getMobFlags())            //
+                   || this->matchesAny(r.getLoadFlags())        //
+                   || this->matchesDefined(r.getLightType())    //
+                   || this->matchesDefined(r.getSundeathType()) //
+                   || this->matchesDefined(r.getPortableType()) //
+                   || this->matchesDefined(r.getRidableType())  //
+                   || this->matchesDefined(r.getAlignType());
+        }
 
         case PatternKindsEnum::NONE:
             return false;
@@ -174,8 +134,8 @@ bool RoomFilter::filter(const Room *const pr) const
         throw std::invalid_argument("pat");
     };
 
-    if (kind != PatternKindsEnum::ALL) {
-        return filter_kind(r, kind);
+    if (m_kind != PatternKindsEnum::ALL) {
+        return filter_kind(r, m_kind);
     }
 
     // Note: This is implicitly a std::initializer_list<PatternKindsEnum>.
@@ -186,7 +146,7 @@ bool RoomFilter::filter(const Room *const pr) const
                                              PatternKindsEnum::EXITS,
                                              PatternKindsEnum::FLAGS};
     static_assert(ALL_KINDS.size() == PATTERN_KINDS_LENGTH - 2); // excludes NONE and ALL.
-    for (auto pat : ALL_KINDS) {
+    for (const auto &pat : ALL_KINDS) {
         if (filter_kind(r, pat)) {
             return true;
         }

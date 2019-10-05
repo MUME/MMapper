@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <limits>
+#include <optional>
 #include <type_traits>
 
 #include "bits.h"
@@ -231,6 +232,27 @@ public:
         }
 
         std::abort(); /* crash */
+    }
+
+    /// Syntax:
+    ///  find_first_matching([](Flag f) -> bool { /* ... */ });
+    /// Think of it as
+    ///  using Predicate = std::function<bool(Flag)>;
+    template<typename Predicate>
+    std::optional<Flag> find_first_matching(Predicate &&predicate) const
+    {
+        static constexpr underlying_type ONE = 1;
+        for (auto tmp = flags; tmp != 0;) {
+            const auto lsb = bits::leastSignificantBit(tmp);
+            assert(lsb >= 0);
+            tmp ^= (ONE << lsb);
+            const auto x = static_cast<Flag>(lsb);
+            assert(contains(x));
+            if (predicate(x)) {
+                return x;
+            }
+        }
+        return std::nullopt;
     }
 
     /// Syntax:
