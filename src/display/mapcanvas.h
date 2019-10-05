@@ -112,7 +112,12 @@ public slots:
     void setInfoMarkSelection(const std::shared_ptr<InfoMarkSelection> &);
     void clearInfoMarkSelection() { setInfoMarkSelection(nullptr); }
 
-    // void worldChanged();
+    void clearAllSelections()
+    {
+        clearRoomSelection();
+        clearConnectionSelection();
+        clearInfoMarkSelection();
+    }
 
     void dataLoaded();
     void requestUpdate() { update(); }
@@ -138,8 +143,6 @@ signals:
     void setCurrentRoom(RoomId id, bool update);
 
 protected:
-    // void closeEvent(QCloseEvent *event);
-
     void initializeGL() override;
     void paintGL() override;
 

@@ -17,6 +17,7 @@
 #include "../mapdata/mapdata.h"
 #include "../mapdata/mmapper2room.h"
 #include "../mapdata/roomselection.h"
+#include "CanvasMouseModeEnum.h"
 #include "OpenGL.h"
 #include "RoadIndex.h"
 #include "connectionselection.h"
@@ -52,18 +53,6 @@ struct road_texture_array : private texture_array<RoadIndexMaskEnum>
     using base::destroyAll;
     using base::end;
     using base::size;
-};
-
-enum class CanvasMouseModeEnum {
-    NONE,
-    MOVE,
-    SELECT_ROOMS,
-    SELECT_CONNECTIONS,
-    CREATE_ROOMS,
-    CREATE_CONNECTIONS,
-    CREATE_ONEWAY_CONNECTIONS,
-    SELECT_INFOMARKS,
-    CREATE_INFOMARKS
 };
 
 struct MapCanvasData

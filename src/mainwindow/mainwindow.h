@@ -6,6 +6,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include <memory>
+#include <optional>
 #include <QActionGroup>
 #include <QDockWidget>
 #include <QFileDialog>
@@ -17,15 +18,19 @@
 #include <QtCore>
 #include <QtGlobal>
 
+#include "../display/CanvasMouseModeEnum.h"
 #include "../mapdata/roomselection.h"
 #include "../pandoragroup/mmapper2group.h"
 
+class AbstractAction;
 class ClientWidget;
+class ConfigDialog;
 class ConnectionListener;
 class ConnectionSelection;
-class InfoMarkSelection;
 class FindRoomsDlg;
 class GroupWidget;
+class InfoMarkSelection;
+class MapCanvas;
 class MapData;
 class MapWindow;
 class Mmapper2Group;
@@ -44,8 +49,8 @@ class QTextBrowser;
 class QToolBar;
 class QWidget;
 class RoomSelection;
-class WelcomeWidget;
 class UpdateDialog;
+class WelcomeWidget;
 
 class MainWindow final : public QMainWindow
 {
@@ -135,8 +140,13 @@ protected:
     void closeEvent(QCloseEvent *event) override;
 
 private:
+    void forceNewFile();
+    void showWarning(const QString &s);
+
+private:
     MapWindow *m_mapWindow = nullptr;
     QTextBrowser *logWindow = nullptr;
+
     QDockWidget *m_dockDialogLog = nullptr;
     QDockWidget *m_dockDialogGroup = nullptr;
     QDockWidget *m_dockLaunch = nullptr;
@@ -160,7 +170,7 @@ private:
     std::shared_ptr<ConnectionSelection> m_connectionSelection;
     std::shared_ptr<InfoMarkSelection> m_infoMarkSelection;
 
-    QProgressDialog *progressDlg = nullptr;
+    std::unique_ptr<QProgressDialog> m_progressDlg;
 
     QToolBar *fileToolBar = nullptr;
     QToolBar *mouseModeToolBar = nullptr;
@@ -277,10 +287,11 @@ private:
     QAction *forceRoomAct = nullptr;
     QAction *releaseAllPathsAct = nullptr;
 
+    std::unique_ptr<ConfigDialog> m_configDialog;
+
     void wireConnections();
 
     void createActions();
-    void disableActions(bool value);
     void setupMenuBar();
     void setupToolBars();
     void setupStatusBar();
@@ -290,4 +301,64 @@ private:
 
     bool maybeSave();
     std::unique_ptr<QFileDialog> createDefaultSaveDialog();
+
+    struct NODISCARD ActionDisabler final
+    {
+    private:
+        MainWindow &self;
+
+    public:
+        explicit ActionDisabler(MainWindow &self)
+            : self(self)
+        {
+            self.disableActions(true);
+        }
+        ~ActionDisabler() { self.disableActions(false); }
+
+    public:
+        DELETE_CTORS_AND_ASSIGN_OPS(ActionDisabler);
+    };
+    void disableActions(bool value);
+
+    struct NODISCARD CanvasHider final
+    {
+    private:
+        MainWindow &self;
+
+    public:
+        explicit CanvasHider(MainWindow &self)
+            : self(self)
+        {
+            self.hideCanvas(true);
+        }
+        ~CanvasHider() { self.hideCanvas(false); }
+
+    public:
+        DELETE_CTORS_AND_ASSIGN_OPS(CanvasHider);
+    };
+    void hideCanvas(bool hide);
+
+    struct NODISCARD ProgressDialogLifetime final
+    {
+    private:
+        MainWindow &self;
+
+    public:
+        explicit ProgressDialogLifetime(MainWindow &self)
+            : self(self)
+        {}
+        ~ProgressDialogLifetime() { reset(); }
+
+    public:
+        DELETE_CTORS_AND_ASSIGN_OPS(ProgressDialogLifetime);
+
+    public:
+        void reset() { self.endProgressDialog(); }
+    };
+    ProgressDialogLifetime createNewProgressDialog(const QString &text);
+    void endProgressDialog();
+    MapCanvas *getCanvas() const;
+    void mapChanged() const;
+    void setCanvasMouseMode(CanvasMouseModeEnum mode);
+    void execSelectionGroupMapAction(std::unique_ptr<AbstractAction> action);
 };

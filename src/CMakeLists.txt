@@ -18,6 +18,7 @@ set(mmapper_SRCS
     clock/mumemoment.h
     configuration/configuration.cpp
     configuration/configuration.h
+    display/CanvasMouseModeEnum.h
     display/ConnectionLineBuilder.cpp
     display/ConnectionLineBuilder.h
     display/Filenames.cpp

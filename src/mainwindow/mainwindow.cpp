@@ -35,6 +35,7 @@
 #include "../expandoracommon/parseevent.h"
 #include "../expandoracommon/room.h"
 #include "../global/NullPointerException.h"
+#include "../global/SignalBlocker.h"
 #include "../global/Version.h"
 #include "../global/roomid.h"
 #include "../mapdata/ExitDirection.h"
@@ -67,6 +68,21 @@
 #include "welcomewidget.h"
 
 class RoomRecipient;
+
+class NODISCARD CanvasDisabler final
+{
+private:
+    MapCanvas &canvas;
+
+public:
+    explicit CanvasDisabler(MapCanvas &in_canvas)
+        : canvas{in_canvas}
+    {
+        canvas.setEnabled(false);
+    }
+    ~CanvasDisabler() { canvas.setEnabled(true); }
+    DELETE_CTORS_AND_ASSIGN_OPS(CanvasDisabler);
+};
 
 static void addApplicationFont()
 {
@@ -102,8 +118,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     qRegisterMetaType<SigParseEvent>("SigParseEvent");
     qRegisterMetaType<SigRoomSelection>("SigRoomSelection");
 
-    // REVISIT: MapData should be destructed last due to locks
-    m_mapData = new MapData();
+    m_mapData = new MapData(this);
     m_mapData->setObjectName("MapData");
     setCurrentFile("");
 
@@ -177,7 +192,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
                                         m_prespammedPath,
                                         m_groupManager,
                                         m_mumeClock,
-                                        m_mapWindow->getCanvas(),
+                                        getCanvas(),
                                         this);
     m_listener->setMaxPendingConnections(1);
 
@@ -207,7 +222,21 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     }
 }
 
-MainWindow::~MainWindow() = default;
+// depth-first recursively disconnect all children
+static void rdisconnect(QObject *const obj)
+{
+    auto &o = deref(obj);
+    for (QObject *const child : o.children()) {
+        rdisconnect(child);
+    }
+    o.disconnect();
+}
+
+MainWindow::~MainWindow()
+{
+    forceNewFile();
+    rdisconnect(this);
+}
 
 void MainWindow::startServices()
 {
@@ -283,64 +312,35 @@ void MainWindow::wireConnections()
             m_mapData,
             SLOT(lookingForRooms(RoomRecipient &, RoomId)));
     connect(m_mapData, &MapFrontend::clearingMap, m_pathMachine, &PathMachine::releaseAllPaths);
-    connect(m_mapData,
-            &MapFrontend::clearingMap,
-            m_mapWindow->getCanvas(),
-            &MapCanvas::clearRoomSelection);
-    connect(m_mapData,
-            &MapFrontend::clearingMap,
-            m_mapWindow->getCanvas(),
-            &MapCanvas::clearConnectionSelection);
-    connect(m_mapData,
-            &MapFrontend::clearingMap,
-            m_mapWindow->getCanvas(),
-            &MapCanvas::clearInfoMarkSelection);
-    connect(m_pathMachine,
-            &Mmapper2PathMachine::playerMoved,
-            m_mapWindow->getCanvas(),
-            &MapCanvas::moveMarker);
 
-    connect(m_mapWindow->getCanvas(),
-            &MapCanvas::setCurrentRoom,
-            m_pathMachine,
-            &PathMachine::setCurrentRoom);
+    MapCanvas *const canvas = getCanvas();
+    connect(m_mapData, &MapFrontend::clearingMap, canvas, &MapCanvas::clearAllSelections);
+
+    connect(m_pathMachine, &Mmapper2PathMachine::playerMoved, canvas, &MapCanvas::moveMarker);
+
+    connect(canvas, &MapCanvas::setCurrentRoom, m_pathMachine, &PathMachine::setCurrentRoom);
 
     // moved to mapwindow
     connect(m_mapData, &MapData::mapSizeChanged, m_mapWindow, &MapWindow::setScrollBars);
 
-    connect(m_prespammedPath,
-            &PrespammedPath::update,
-            m_mapWindow->getCanvas(),
-            static_cast<void (QWidget::*)(void)>(&QWidget::update));
+    connect(m_prespammedPath, &PrespammedPath::update, canvas, &MapCanvas::requestUpdate);
 
     connect(m_mapData, &MapData::log, this, &MainWindow::log);
-    connect(m_mapWindow->getCanvas(), &MapCanvas::log, this, &MainWindow::log);
+    connect(canvas, &MapCanvas::log, this, &MainWindow::log);
 
     connect(m_mapData, &MapData::onDataChanged, this, [this]() {
         setWindowModified(true);
         saveAct->setEnabled(true);
     });
 
-    connect(zoomInAct, &QAction::triggered, m_mapWindow->getCanvas(), &MapCanvas::zoomIn);
-    connect(zoomOutAct, &QAction::triggered, m_mapWindow->getCanvas(), &MapCanvas::zoomOut);
-    connect(zoomResetAct, &QAction::triggered, m_mapWindow->getCanvas(), &MapCanvas::zoomReset);
+    connect(zoomInAct, &QAction::triggered, canvas, &MapCanvas::zoomIn);
+    connect(zoomOutAct, &QAction::triggered, canvas, &MapCanvas::zoomOut);
+    connect(zoomResetAct, &QAction::triggered, canvas, &MapCanvas::zoomReset);
 
-    connect(m_mapWindow->getCanvas(),
-            &MapCanvas::newRoomSelection,
-            this,
-            &MainWindow::newRoomSelection);
-    connect(m_mapWindow->getCanvas(),
-            &MapCanvas::newConnectionSelection,
-            this,
-            &MainWindow::newConnectionSelection);
-    connect(m_mapWindow->getCanvas(),
-            &MapCanvas::newInfoMarkSelection,
-            this,
-            &MainWindow::newInfoMarkSelection);
-    connect(m_mapWindow->getCanvas(),
-            &QWidget::customContextMenuRequested,
-            this,
-            &MainWindow::showContextMenu);
+    connect(canvas, &MapCanvas::newRoomSelection, this, &MainWindow::newRoomSelection);
+    connect(canvas, &MapCanvas::newConnectionSelection, this, &MainWindow::newConnectionSelection);
+    connect(canvas, &MapCanvas::newInfoMarkSelection, this, &MainWindow::newInfoMarkSelection);
+    connect(canvas, &QWidget::customContextMenuRequested, this, &MainWindow::showContextMenu);
 
     // Group
     connect(m_groupManager, &Mmapper2Group::log, this, &MainWindow::log);
@@ -351,8 +351,8 @@ void MainWindow::wireConnections()
             Qt::QueuedConnection);
     connect(m_groupManager,
             &Mmapper2Group::updateMapCanvas,
-            m_mapWindow->getCanvas(),
-            static_cast<void (QWidget::*)(void)>(&QWidget::update),
+            canvas,
+            &MapCanvas::requestUpdate,
             Qt::QueuedConnection);
     connect(this,
             &MainWindow::setGroupMode,
@@ -364,6 +364,7 @@ void MainWindow::wireConnections()
             this,
             &MainWindow::groupNetworkStatus,
             Qt::QueuedConnection);
+
     connect(m_mapData, &MapFrontend::clearingMap, m_groupWidget, &GroupWidget::mapUnloaded);
 
     connect(m_mumeClock, &MumeClock::log, this, &MainWindow::log);
@@ -376,10 +377,7 @@ void MainWindow::wireConnections()
             &QWidget::hide);
 
     // Find Room Dialog Connections
-    connect(m_findRoomsDlg,
-            &FindRoomsDlg::newRoomSelection,
-            m_mapWindow->getCanvas(),
-            &MapCanvas::setRoomSelection);
+    connect(m_findRoomsDlg, &FindRoomsDlg::newRoomSelection, canvas, &MapCanvas::setRoomSelection);
     connect(m_findRoomsDlg, &FindRoomsDlg::center, m_mapWindow, &MapWindow::center);
     connect(m_findRoomsDlg, &FindRoomsDlg::log, this, &MainWindow::log);
     connect(m_findRoomsDlg, &FindRoomsDlg::editSelection, this, &MainWindow::onEditRoomSelection);
@@ -545,12 +543,14 @@ void MainWindow::createActions()
             &QAction::triggered,
             this,
             &MainWindow::onModeConnectionSelect);
+
     mouseMode.modeRoomSelectAct = new QAction(QIcon(":/icons/roomselection.png"),
                                               tr("Select Rooms"),
                                               this);
     mouseMode.modeRoomSelectAct->setStatusTip(tr("Select Rooms"));
     mouseMode.modeRoomSelectAct->setCheckable(true);
     connect(mouseMode.modeRoomSelectAct, &QAction::triggered, this, &MainWindow::onModeRoomSelect);
+
     mouseMode.modeMoveSelectAct = new QAction(QIcon(":/icons/mapmove.png"), tr("Move map"), this);
     mouseMode.modeMoveSelectAct->setStatusTip(tr("Move Map"));
     mouseMode.modeMoveSelectAct->setCheckable(true);
@@ -688,10 +688,7 @@ void MainWindow::createActions()
     forceRoomAct->setStatusTip(tr("Force update selected room with last movement"));
     forceRoomAct->setCheckable(false);
     forceRoomAct->setEnabled(false);
-    connect(forceRoomAct,
-            &QAction::triggered,
-            m_mapWindow->getCanvas(),
-            &MapCanvas::forceMapperToRoom);
+    connect(forceRoomAct, &QAction::triggered, getCanvas(), &MapCanvas::forceMapperToRoom);
 
     selectedRoomActGroup = new QActionGroup(this);
     selectedRoomActGroup->setExclusive(false);
@@ -892,6 +889,19 @@ void MainWindow::disableActions(bool value)
     alwaysOnTopAct->setDisabled(value);
 }
 
+void MainWindow::hideCanvas(const bool hide)
+{
+    // REVISIT: It seems that updates don't work if the canvas is hidden,
+    // so we may want to save mapChanged() and other similar requests
+    // and send them after we show the canvas.
+    if (MapCanvas *const canvas = getCanvas()) {
+        if (hide)
+            canvas->hide();
+        else
+            canvas->show();
+    }
+}
+
 void MainWindow::setupMenuBar()
 {
     fileMenu = menuBar()->addMenu(tr("&File"));
@@ -1048,7 +1058,7 @@ void MainWindow::showContextMenu(const QPoint &pos)
     mouseMenu->addAction(mouseMode.modeCreateConnectionAct);
     mouseMenu->addAction(mouseMode.modeCreateOnewayConnectionAct);
 
-    contextMenu.exec(m_mapWindow->getCanvas()->mapToGlobal(pos));
+    contextMenu.exec(getCanvas()->mapToGlobal(pos));
 }
 
 void MainWindow::alwaysOnTop()
@@ -1144,8 +1154,11 @@ void MainWindow::setupStatusBar()
 
 void MainWindow::onPreferences()
 {
-    ConfigDialog dialog(m_groupManager, this);
-    dialog.exec();
+    if (m_configDialog == nullptr) {
+        m_configDialog = std::make_unique<ConfigDialog>(m_groupManager, this);
+    }
+
+    m_configDialog->show();
 }
 
 void MainWindow::newRoomSelection(const SigRoomSelection &rs)
@@ -1155,6 +1168,7 @@ void MainWindow::newRoomSelection(const SigRoomSelection &rs)
         m_roomSelection = rs.getShared();
     else
         m_roomSelection.reset();
+
     if (m_roomSelection != nullptr) {
         selectedRoomActGroup->setEnabled(true);
         if (m_roomSelection->size() == 1) {
@@ -1196,14 +1210,16 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::newFile()
 {
-    if (!maybeSave())
-        return;
+    if (maybeSave()) {
+        forceNewFile();
+    }
+}
 
-    auto *storage = static_cast<AbstractMapStorage *>(new MapStorage(*m_mapData, "", this));
-    connect(storage,
-            &AbstractMapStorage::onNewData,
-            m_mapWindow->getCanvas(),
-            &MapCanvas::dataLoaded);
+void MainWindow::forceNewFile()
+{
+    MapStorage mapStorage(*m_mapData, "", this);
+    auto *storage = static_cast<AbstractMapStorage *>(&mapStorage);
+    connect(storage, &AbstractMapStorage::onNewData, getCanvas(), &MapCanvas::dataLoaded);
     connect(storage, &AbstractMapStorage::onNewData, m_groupWidget, &GroupWidget::mapLoaded);
     connect(storage, &AbstractMapStorage::onNewData, this, [this]() {
         setWindowModified(false);
@@ -1211,12 +1227,14 @@ void MainWindow::newFile()
     });
     connect(storage, &AbstractMapStorage::log, this, &MainWindow::log);
     storage->newData();
-    delete storage;
     setCurrentFile("");
+    mapChanged();
 }
 
 void MainWindow::merge()
 {
+    CanvasDisabler canvasDisabler{deref(getCanvas())};
+
     QString fileName = QFileDialog::getOpenFileName(this,
                                                     "Choose map file ...",
                                                     "",
@@ -1224,68 +1242,46 @@ void MainWindow::merge()
     if (fileName.isEmpty())
         return;
 
-    auto *file = new QFile(fileName);
+    QFile file(fileName);
 
-    if (!file->open(QFile::ReadOnly)) {
-        QMessageBox::warning(this,
-                             tr("Application"),
-                             tr("Cannot read file %1:\n%2.").arg(fileName).arg(file->errorString()));
+    if (!file.open(QFile::ReadOnly)) {
+        showWarning(tr("Cannot read file %1:\n%2.").arg(fileName).arg(file.errorString()));
 
-        m_mapWindow->getCanvas()->setEnabled(true);
-        delete file;
         return;
     }
 
-    // MERGE
-    progressDlg = new QProgressDialog(this);
-    QPushButton *cb = new QPushButton("Abort ...");
-    cb->setEnabled(false);
-    progressDlg->setCancelButton(cb);
-    progressDlg->setLabelText("Importing map...");
-    progressDlg->setCancelButtonText("Abort");
-    progressDlg->setMinimum(0);
-    progressDlg->setMaximum(100);
-    progressDlg->setValue(0);
-    progressDlg->show();
+    auto progressDlg = createNewProgressDialog("Importing map...");
 
-    m_mapWindow->getCanvas()->clearRoomSelection();
-    m_mapWindow->getCanvas()->clearConnectionSelection();
-    m_mapWindow->getCanvas()->clearInfoMarkSelection();
+    getCanvas()->clearAllSelections();
 
-    auto real_storage = std::make_unique<MapStorage>(*m_mapData, fileName, file, this);
-    auto storage = static_cast<AbstractMapStorage *>(real_storage.get());
-    connect(storage,
-            &AbstractMapStorage::onDataLoaded,
-            m_mapWindow->getCanvas(),
-            &MapCanvas::dataLoaded);
+    MapStorage mapStorage(*m_mapData, fileName, &file, this);
+    auto storage = static_cast<AbstractMapStorage *>(&mapStorage);
+    connect(storage, &AbstractMapStorage::onDataLoaded, getCanvas(), &MapCanvas::dataLoaded);
+    connect(storage, &AbstractMapStorage::onDataLoaded, m_groupWidget, &GroupWidget::mapLoaded);
     connect(storage, &AbstractMapStorage::onDataLoaded, this, [this]() {
         setWindowModified(false);
         saveAct->setEnabled(false);
     });
-    connect(storage, &AbstractMapStorage::onDataLoaded, m_groupWidget, &GroupWidget::mapLoaded);
     connect(&storage->getProgressCounter(),
             &ProgressCounter::onPercentageChanged,
             this,
             &MainWindow::percentageChanged);
     connect(storage, &AbstractMapStorage::log, this, &MainWindow::log);
 
-    disableActions(true);
-    m_mapWindow->getCanvas()->hide();
-    if (storage->canLoad()) {
-        storage->mergeData();
+    const bool merged = [this, &storage]() -> bool {
+        ActionDisabler actionDisabler{*this};
+        CanvasHider canvasHider{*this};
+        return storage->canLoad() && storage->mergeData();
+    }();
+
+    if (!merged) {
+        showWarning(tr("Failed to merge file %1.").arg(fileName));
+    } else {
+        mapChanged();
+        statusBar()->showMessage(tr("File merged"), 2000);
     }
-    m_mapWindow->getCanvas()->show();
-    disableActions(false);
-    // cutAct->setEnabled(false);
-    // copyAct->setEnabled(false);
-    // pasteAct->setEnabled(false);
 
-    storage = nullptr;
-    real_storage.reset();
-    delete progressDlg;
-
-    statusBar()->showMessage(tr("File merged"), 2000);
-    delete file;
+    progressDlg.reset();
 }
 
 void MainWindow::open()
@@ -1299,17 +1295,21 @@ void MainWindow::open()
                                        "Choose map file ...",
                                        savedLastMapDir,
                                        "MMapper Maps (*.mm2);;Pandora Maps (*.xml)");
-    if (!fileName.isEmpty()) {
-        QFileInfo file(fileName);
-        savedLastMapDir = file.dir().absolutePath();
-        loadFile(file.absoluteFilePath());
+    if (fileName.isEmpty()) {
+        statusBar()->showMessage(tr("No filename provided"), 2000);
+        return;
     }
+    QFileInfo file(fileName);
+    savedLastMapDir = file.dir().absolutePath();
+    loadFile(file.absoluteFilePath());
 }
 
 void MainWindow::reload()
 {
     if (maybeSave()) {
-        loadFile(m_mapData->getFileName());
+        // make a copy of the filename, since it will be modified by loadFile().
+        const QString filename = m_mapData->getFileName();
+        loadFile(filename);
     }
 }
 
@@ -1469,12 +1469,35 @@ bool MainWindow::maybeSave()
                                          QMessageBox::Yes | QMessageBox::Default,
                                          QMessageBox::No,
                                          QMessageBox::Cancel | QMessageBox::Escape);
+
     if (ret == QMessageBox::Yes) {
         return save();
     }
 
     // REVISIT: is it a bug if this returns true? (Shouldn't this always be false?)
     return ret != QMessageBox::Cancel;
+}
+
+MainWindow::ProgressDialogLifetime MainWindow::createNewProgressDialog(const QString &text)
+{
+    m_progressDlg = std::make_unique<QProgressDialog>(this);
+    {
+        QPushButton *cb = new QPushButton("Abort ...", m_progressDlg.get());
+        cb->setEnabled(false);
+        m_progressDlg->setCancelButton(cb);
+    }
+    m_progressDlg->setLabelText(text);
+    m_progressDlg->setCancelButtonText("Abort");
+    m_progressDlg->setMinimum(0);
+    m_progressDlg->setMaximum(100);
+    m_progressDlg->setValue(0);
+    m_progressDlg->show();
+    return ProgressDialogLifetime{*this};
+}
+
+void MainWindow::endProgressDialog()
+{
+    m_progressDlg.reset();
 }
 
 void MainWindow::loadFile(const QString &fileName)
@@ -1484,131 +1507,112 @@ void MainWindow::loadFile(const QString &fileName)
         return;
     }
 
-    auto *file = new QFile(fileName);
-    if (!file->open(QFile::ReadOnly)) {
-        QMessageBox::warning(this,
-                             tr("Application"),
-                             tr("Cannot read file %1:\n%2.").arg(fileName).arg(file->errorString()));
+    CanvasDisabler canvasDisabler{deref(getCanvas())};
 
-        m_mapWindow->getCanvas()->setEnabled(true);
-        delete file;
+    QFile file(fileName);
+    if (!file.open(QFile::ReadOnly)) {
+        showWarning(tr("Cannot read file %1:\n%2.").arg(fileName).arg(file.errorString()));
         return;
     }
 
-    // LOAD
-    progressDlg = new QProgressDialog(this);
-    QPushButton *cb = new QPushButton("Abort ...");
-    cb->setEnabled(false);
-    progressDlg->setCancelButton(cb);
-    progressDlg->setLabelText("Loading map...");
-    progressDlg->setCancelButtonText("Abort");
-    progressDlg->setMinimum(0);
-    progressDlg->setMaximum(100);
-    progressDlg->setValue(0);
-    progressDlg->show();
+    // Immediately discard the old map.
+    forceNewFile();
 
-    bool isPandoraMap = fileName.toLower().contains("xml");
-    std::unique_ptr<AbstractMapStorage> storage;
-    if (isPandoraMap) {
-        storage = std::make_unique<PandoraMapStorage>(*m_mapData, fileName, file, this);
-    } else {
-        storage = std::make_unique<MapStorage>(*m_mapData, fileName, file, this);
-    }
+    auto progressDlg = createNewProgressDialog("Loading map...");
+
+    const bool isPandoraMap = fileName.toLower().endsWith(".xml");
+    const auto storage =
+        [this, &fileName, &file, isPandoraMap]() -> std::unique_ptr<AbstractMapStorage> {
+        if (isPandoraMap) {
+            return std::make_unique<PandoraMapStorage>(*m_mapData, fileName, &file, this);
+        } else {
+            return std::make_unique<MapStorage>(*m_mapData, fileName, &file, this);
+        }
+    }();
+
     // REVISIT: refactor the connections to a common function?
-    connect(storage.get(),
-            &AbstractMapStorage::onDataLoaded,
-            m_mapWindow->getCanvas(),
-            &MapCanvas::dataLoaded);
-    connect(storage.get(), &AbstractMapStorage::onDataLoaded, this, [this]() {
-        setWindowModified(false);
-        saveAct->setEnabled(false);
-    });
+    connect(storage.get(), &AbstractMapStorage::onDataLoaded, getCanvas(), &MapCanvas::dataLoaded);
     connect(storage.get(),
             &AbstractMapStorage::onDataLoaded,
             m_groupWidget,
             &GroupWidget::mapLoaded);
+    connect(storage.get(), &AbstractMapStorage::onDataLoaded, this, [this]() {
+        setWindowModified(false);
+        saveAct->setEnabled(false);
+    });
     connect(&storage->getProgressCounter(),
             &ProgressCounter::onPercentageChanged,
             this,
             &MainWindow::percentageChanged);
     connect(storage.get(), &AbstractMapStorage::log, this, &MainWindow::log);
 
-    disableActions(true);
-    m_mapWindow->getCanvas()->hide();
-    if (storage->canLoad()) {
-        storage->loadData();
+    const bool loaded = [this, &storage]() -> bool {
+        ActionDisabler actionDisabler{*this};
+        CanvasHider canvasHider{*this};
+        return storage->canLoad() && storage->loadData();
+    }();
+
+    if (!loaded) {
+        showWarning(tr("Failed to load file %1.").arg(fileName));
+        return;
     }
-    m_mapWindow->getCanvas()->show();
-    disableActions(false);
-    // cutAct->setEnabled(false);
-    // copyAct->setEnabled(false);
-    // pasteAct->setEnabled(false);
 
-    delete progressDlg;
-
+    mapChanged();
     setCurrentFile(m_mapData->getFileName());
-
     statusBar()->showMessage(tr("File loaded"), 2000);
-    delete file;
 }
 
-void MainWindow::percentageChanged(quint32 p)
+void MainWindow::percentageChanged(const quint32 p)
 {
-    if (progressDlg == nullptr)
+    if (m_progressDlg == nullptr)
         return;
 
-    progressDlg->setValue(static_cast<int>(p));
-
+    m_progressDlg->setValue(static_cast<int>(p));
     qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+}
+
+void MainWindow::showWarning(const QString &s)
+{
+    // REVISIT: shouldn't the warning have "this" as parent?
+    QMessageBox::warning(nullptr, tr("Application"), s);
 }
 
 bool MainWindow::saveFile(const QString &fileName,
                           const SaveModeEnum mode,
                           const SaveFormatEnum format)
 {
+    CanvasDisabler canvasDisabler{deref(getCanvas())};
+
     FileSaver saver;
+    // REVISIT: You can still test a directory for writing...
     if (format != SaveFormatEnum::WEB) { // Web uses a whole directory
         try {
             saver.open(fileName);
-        } catch (std::exception &e) {
-            QMessageBox::warning(nullptr,
-                                 tr("Application"),
-                                 tr("Cannot write file %1:\n%2.").arg(fileName).arg(e.what()));
-            m_mapWindow->getCanvas()->setEnabled(true);
+        } catch (const std::exception &e) {
+            showWarning(tr("Cannot write file %1:\n%2.").arg(fileName).arg(e.what()));
             return false;
         }
     }
 
-    std::unique_ptr<AbstractMapStorage> storage;
-    switch (format) {
-    case SaveFormatEnum::MM2:
-        storage = std::make_unique<MapStorage>(*m_mapData, fileName, &saver.file(), this);
-        break;
-    case SaveFormatEnum::MMP:
-        storage = std::make_unique<MmpMapStorage>(*m_mapData, fileName, &saver.file(), this);
-        break;
-    case SaveFormatEnum::WEB:
-        storage = std::make_unique<JsonMapStorage>(*m_mapData, fileName, this);
-        break;
-    }
+    const auto storage = [this, format, &fileName, &saver]() -> std::unique_ptr<AbstractMapStorage> {
+        switch (format) {
+        case SaveFormatEnum::MM2:
+            return std::make_unique<MapStorage>(*m_mapData, fileName, &saver.file(), this);
+        case SaveFormatEnum::MMP:
+            return std::make_unique<MmpMapStorage>(*m_mapData, fileName, &saver.file(), this);
+        case SaveFormatEnum::WEB:
+            return std::make_unique<JsonMapStorage>(*m_mapData, fileName, this);
+        }
+        assert(false);
+        return {};
+    }();
 
-    if (!storage->canSave()) {
+    if (!storage || !storage->canSave()) {
+        showWarning(tr("Selected format cannot save."));
         return false;
     }
 
-    m_mapWindow->getCanvas()->setEnabled(false);
-
-    // SAVE
-    progressDlg = new QProgressDialog(this);
-    QPushButton *cb = new QPushButton("Abort ...");
-    cb->setEnabled(false);
-    progressDlg->setCancelButton(cb);
-    progressDlg->setLabelText("Saving map...");
-    progressDlg->setCancelButtonText("Abort");
-    progressDlg->setMinimum(0);
-    progressDlg->setMaximum(100);
-    progressDlg->setValue(0);
-    progressDlg->show();
+    auto progressDlg = createNewProgressDialog("Saving map...");
 
     // REVISIT: This is done enough times that it should probably be a function by itself.
     connect(&storage->getProgressCounter(),
@@ -1617,38 +1621,29 @@ bool MainWindow::saveFile(const QString &fileName,
             &MainWindow::percentageChanged);
     connect(storage.get(), &AbstractMapStorage::log, this, &MainWindow::log);
 
-    disableActions(true);
-    // m_mapWindow->getCanvas()->hide();
-    const bool saveOk = storage->saveData(mode == SaveModeEnum::BASEMAP);
-    //m_mapWindow->getCanvas()->show();
-    disableActions(false);
-    //cutAct->setEnabled(false);
-    //copyAct->setEnabled(false);
-    //pasteAct->setEnabled(false);
-
-    // *sigh*
-    delete progressDlg;
+    const bool saveOk = [this, mode, &storage]() -> bool {
+        ActionDisabler actionDisabler{*this};
+        // REVISIT: Does this need hide/show?
+        return storage->saveData(mode == SaveModeEnum::BASEMAP);
+    }();
+    progressDlg.reset();
 
     try {
         saver.close();
-    } catch (std::exception &e) {
-        QMessageBox::warning(nullptr,
-                             tr("Application"),
-                             tr("Cannot write file %1:\n%2.").arg(fileName).arg(e.what()));
-        m_mapWindow->getCanvas()->setEnabled(true);
+    } catch (const std::exception &e) {
+        showWarning(tr("Cannot write file %1:\n%2.").arg(fileName).arg(e.what()));
         return false;
     }
 
-    if (saveOk) {
+    if (!saveOk) {
+        showWarning(tr("Error while saving (see log)."));
+        // REVISIT: Shouldn't this return false?
+    } else {
         if (mode == SaveModeEnum::FULL && format == SaveFormatEnum::MM2) {
             setCurrentFile(fileName);
         }
         statusBar()->showMessage(tr("File saved"), 2000);
-    } else {
-        QMessageBox::warning(nullptr, tr("Application"), tr("Error while saving (see log)."));
     }
-
-    m_mapWindow->getCanvas()->setEnabled(true);
 
     setWindowModified(false);
     saveAct->setEnabled(false);
@@ -1729,57 +1724,57 @@ void MainWindow::setCurrentFile(const QString &fileName)
 
 void MainWindow::onLayerUp()
 {
-    m_mapWindow->getCanvas()->layerUp();
+    getCanvas()->layerUp();
 }
 
 void MainWindow::onLayerDown()
 {
-    m_mapWindow->getCanvas()->layerDown();
+    getCanvas()->layerDown();
 }
 
 void MainWindow::onLayerReset()
 {
-    m_mapWindow->getCanvas()->layerReset();
+    getCanvas()->layerReset();
 }
 
 void MainWindow::onModeConnectionSelect()
 {
-    m_mapWindow->getCanvas()->setCanvasMouseMode(CanvasMouseModeEnum::SELECT_CONNECTIONS);
+    setCanvasMouseMode(CanvasMouseModeEnum::SELECT_CONNECTIONS);
 }
 
 void MainWindow::onModeRoomSelect()
 {
-    m_mapWindow->getCanvas()->setCanvasMouseMode(CanvasMouseModeEnum::SELECT_ROOMS);
+    setCanvasMouseMode(CanvasMouseModeEnum::SELECT_ROOMS);
 }
 
 void MainWindow::onModeMoveSelect()
 {
-    m_mapWindow->getCanvas()->setCanvasMouseMode(CanvasMouseModeEnum::MOVE);
+    setCanvasMouseMode(CanvasMouseModeEnum::MOVE);
 }
 
 void MainWindow::onModeCreateRoomSelect()
 {
-    m_mapWindow->getCanvas()->setCanvasMouseMode(CanvasMouseModeEnum::CREATE_ROOMS);
+    setCanvasMouseMode(CanvasMouseModeEnum::CREATE_ROOMS);
 }
 
 void MainWindow::onModeCreateConnectionSelect()
 {
-    m_mapWindow->getCanvas()->setCanvasMouseMode(CanvasMouseModeEnum::CREATE_CONNECTIONS);
+    setCanvasMouseMode(CanvasMouseModeEnum::CREATE_CONNECTIONS);
 }
 
 void MainWindow::onModeCreateOnewayConnectionSelect()
 {
-    m_mapWindow->getCanvas()->setCanvasMouseMode(CanvasMouseModeEnum::CREATE_ONEWAY_CONNECTIONS);
+    setCanvasMouseMode(CanvasMouseModeEnum::CREATE_ONEWAY_CONNECTIONS);
 }
 
 void MainWindow::onModeInfoMarkSelect()
 {
-    m_mapWindow->getCanvas()->setCanvasMouseMode(CanvasMouseModeEnum::SELECT_INFOMARKS);
+    setCanvasMouseMode(CanvasMouseModeEnum::SELECT_INFOMARKS);
 }
 
 void MainWindow::onModeCreateInfoMarkSelect()
 {
-    m_mapWindow->getCanvas()->setCanvasMouseMode(CanvasMouseModeEnum::CREATE_INFOMARKS);
+    setCanvasMouseMode(CanvasMouseModeEnum::CREATE_INFOMARKS);
 }
 
 void MainWindow::onEditInfoMarkSelection()
@@ -1788,15 +1783,15 @@ void MainWindow::onEditInfoMarkSelection()
         return;
 
     InfoMarksEditDlg dlg(this);
-    dlg.setInfoMarkSelection(m_infoMarkSelection, m_mapData, m_mapWindow->getCanvas());
+    dlg.setInfoMarkSelection(m_infoMarkSelection, m_mapData, getCanvas());
     dlg.exec();
     dlg.show();
 }
 
 void MainWindow::onCreateRoom()
 {
-    m_mapWindow->getCanvas()->createRoom();
-    m_mapWindow->getCanvas()->update();
+    getCanvas()->createRoom();
+    mapChanged();
 }
 
 void MainWindow::onEditRoomSelection()
@@ -1805,7 +1800,7 @@ void MainWindow::onEditRoomSelection()
         return;
 
     RoomEditAttrDlg roomEditDialog(this);
-    roomEditDialog.setRoomSelection(m_roomSelection, m_mapData, m_mapWindow->getCanvas());
+    roomEditDialog.setRoomSelection(m_roomSelection, m_mapData, getCanvas());
     roomEditDialog.exec();
     roomEditDialog.show();
 }
@@ -1821,7 +1816,8 @@ void MainWindow::onDeleteInfoMarkSelection()
         m_infoMarkSelection->pop_front();
     }
 
-    m_mapWindow->getCanvas()->clearInfoMarkSelection();
+    getCanvas()->clearInfoMarkSelection();
+    getCanvas()->update();
 }
 
 void MainWindow::onDeleteRoomSelection()
@@ -1829,10 +1825,9 @@ void MainWindow::onDeleteRoomSelection()
     if (m_roomSelection == nullptr)
         return;
 
-    m_mapData->execute(std::make_unique<GroupMapAction>(std::make_unique<Remove>(), m_roomSelection),
-                       m_roomSelection);
-    m_mapWindow->getCanvas()->clearRoomSelection();
-    m_mapWindow->getCanvas()->update();
+    execSelectionGroupMapAction(std::make_unique<Remove>());
+    getCanvas()->clearRoomSelection();
+    mapChanged();
 }
 
 void MainWindow::onDeleteConnectionSelection()
@@ -1855,10 +1850,10 @@ void MainWindow::onDeleteConnectionSelection()
     const auto tmpSel = RoomSelection::createSelection(*m_mapData);
     tmpSel->getRoom(id1);
     tmpSel->getRoom(id2);
-    m_mapWindow->getCanvas()->clearConnectionSelection();
+    getCanvas()->clearConnectionSelection();
     m_mapData->execute(std::make_unique<RemoveTwoWayExit>(id1, id2, dir1, dir2), tmpSel);
 
-    m_mapWindow->getCanvas()->update();
+    mapChanged();
 }
 
 void MainWindow::onMoveUpRoomSelection()
@@ -1866,12 +1861,9 @@ void MainWindow::onMoveUpRoomSelection()
     if (m_roomSelection == nullptr)
         return;
 
-    Coordinate moverel(0, 0, 1);
-    m_mapData->execute(std::make_unique<GroupMapAction>(std::make_unique<MoveRelative>(moverel),
-                                                        m_roomSelection),
-                       m_roomSelection);
+    execSelectionGroupMapAction(std::make_unique<MoveRelative>(Coordinate(0, 0, 1)));
     onLayerUp();
-    m_mapWindow->getCanvas()->update();
+    mapChanged();
 }
 
 void MainWindow::onMoveDownRoomSelection()
@@ -1879,12 +1871,9 @@ void MainWindow::onMoveDownRoomSelection()
     if (m_roomSelection == nullptr)
         return;
 
-    Coordinate moverel(0, 0, -1);
-    m_mapData->execute(std::make_unique<GroupMapAction>(std::make_unique<MoveRelative>(moverel),
-                                                        m_roomSelection),
-                       m_roomSelection);
+    execSelectionGroupMapAction(std::make_unique<MoveRelative>(Coordinate(0, 0, -1)));
     onLayerDown();
-    m_mapWindow->getCanvas()->update();
+    mapChanged();
 }
 
 void MainWindow::onMergeUpRoomSelection()
@@ -1892,10 +1881,8 @@ void MainWindow::onMergeUpRoomSelection()
     if (m_roomSelection == nullptr)
         return;
 
-    Coordinate moverel(0, 0, 1);
-    m_mapData->execute(std::make_unique<GroupMapAction>(std::make_unique<MergeRelative>(moverel),
-                                                        m_roomSelection),
-                       m_roomSelection);
+    execSelectionGroupMapAction(std::make_unique<MergeRelative>(Coordinate(0, 0, 1)));
+    mapChanged();
     onLayerUp();
     onModeRoomSelect();
 }
@@ -1905,10 +1892,8 @@ void MainWindow::onMergeDownRoomSelection()
     if (m_roomSelection == nullptr)
         return;
 
-    Coordinate moverel(0, 0, -1);
-    m_mapData->execute(std::make_unique<GroupMapAction>(std::make_unique<MergeRelative>(moverel),
-                                                        m_roomSelection),
-                       m_roomSelection);
+    execSelectionGroupMapAction(std::make_unique<MergeRelative>(Coordinate(0, 0, -1)));
+    mapChanged();
     onLayerDown();
     onModeRoomSelect();
 }
@@ -1918,10 +1903,8 @@ void MainWindow::onConnectToNeighboursRoomSelection()
     if (m_roomSelection == nullptr)
         return;
 
-    m_mapData->execute(std::make_unique<GroupMapAction>(std::make_unique<ConnectToNeighbours>(),
-                                                        m_roomSelection),
-                       m_roomSelection);
-    m_mapWindow->getCanvas()->update();
+    execSelectionGroupMapAction(std::make_unique<ConnectToNeighbours>());
+    mapChanged();
 }
 
 void MainWindow::onCheckForUpdate()
@@ -1960,4 +1943,29 @@ void MainWindow::openSettingUpMmapper()
 void MainWindow::openNewbieHelp()
 {
     QDesktopServices::openUrl(QUrl("http://mume.org/newbie.php"));
+}
+
+MapCanvas *MainWindow::getCanvas() const
+{
+    return m_mapWindow->getCanvas();
+}
+
+void MainWindow::mapChanged() const
+{
+    if (MapCanvas *const canvas = getCanvas())
+        canvas->update();
+}
+
+void MainWindow::setCanvasMouseMode(const CanvasMouseModeEnum mode)
+{
+    if (MapCanvas *const canvas = getCanvas())
+        canvas->setCanvasMouseMode(mode);
+}
+
+void MainWindow::execSelectionGroupMapAction(std::unique_ptr<AbstractAction> input_action)
+{
+    deref(m_roomSelection);
+    deref(m_mapData).execute(std::make_unique<GroupMapAction>(std::move(input_action),
+                                                              m_roomSelection),
+                             m_roomSelection);
 }
