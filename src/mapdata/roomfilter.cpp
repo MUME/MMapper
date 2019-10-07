@@ -20,7 +20,7 @@
 static std::regex createRegex(const std::string &input, const Qt::CaseSensitivity cs)
 {
     // REVISIT: Add another option to support regex where we do not santize the input
-    static const std::regex escape(R"([-[\]{}()*+?.,\^$|#\s])", std::regex::optimize);
+    static const std::regex escape(R"([-[\]{}()*+?.,\^$|#])", std::regex::optimize);
     const std::string sanitized = std::regex_replace(input, escape, R"(\$&)");
     const std::string pattern = ".*" + sanitized + ".*";
     auto options = std::regex::nosubs | std::regex::optimize | std::regex::extended;
