@@ -359,7 +359,13 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
         m_table->verticalHeader()->minimumSectionSize());
 
     m_kick = new QAction(QIcon(":/icons/offline.png"), tr("&Kick"), this);
-    connect(m_kick, &QAction::triggered, this, [this]() { emit kickCharacter(selectedCharacter); });
+    connect(m_kick, &QAction::triggered, this, [this]() {
+        try {
+            m_group->getGroupManagerApi().kickCharacter(selectedCharacter);
+        } catch (const std::exception &ex) {
+            messageBox("Group Manager", QString::fromLatin1(ex.what()));
+        }
+    });
 
     connect(m_table, &QAbstractItemView::clicked, this, [this](const QModelIndex &index) {
         if (!index.isValid()) {
@@ -409,11 +415,6 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
             &Mmapper2Group::messageBox,
             this,
             &GroupWidget::messageBox,
-            Qt::QueuedConnection);
-    connect(this,
-            &GroupWidget::kickCharacter,
-            m_group,
-            &Mmapper2Group::kickCharacter,
             Qt::QueuedConnection);
 
     readSettings();

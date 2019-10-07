@@ -241,17 +241,31 @@ void Mmapper2Group::gTellArrived(const QVariantMap &node)
 void Mmapper2Group::kickCharacter(const QByteArray &character)
 {
     QMutexLocker locker(&networkLock);
-    if (network) {
-        network->kickCharacter(character);
+
+    switch (getMode()) {
+    case GroupManagerStateEnum::Off:
+        throw std::runtime_error("network is down");
+    case GroupManagerStateEnum::Client:
+        throw std::invalid_argument("Only hosts can kick players");
+        return;
+    case GroupManagerStateEnum::Server:
+        if (getGroup()->getSelf()->getName() == character)
+            throw std::invalid_argument("You can't kick yourself");
+
+        if (getGroup()->getCharByName(character) == nullptr)
+            throw std::invalid_argument("Player does not exist");
+        emit sig_kickCharacter(character);
+        return;
     }
 }
 
 void Mmapper2Group::sendGroupTell(const QByteArray &tell)
 {
     QMutexLocker locker(&networkLock);
-    if (network) {
-        network->sendGroupTell(tell);
-    }
+    if (!network)
+        throw std::runtime_error("network is down");
+
+    emit sig_sendGroupTell(tell);
 }
 
 void Mmapper2Group::parseScoreInformation(const QByteArray &score)
@@ -559,6 +573,14 @@ void Mmapper2Group::startNetwork()
                 &CGroupCommunicator::sig_scheduleAction,
                 getGroup(),
                 &CGroup::slot_scheduleAction);
+        connect(this,
+                &Mmapper2Group::sig_kickCharacter,
+                network.get(),
+                &CGroupCommunicator::kickCharacter);
+        connect(this,
+                &Mmapper2Group::sig_sendGroupTell,
+                network.get(),
+                &CGroupCommunicator::sendGroupTell);
     }
 
     // REVISIT: What about if the network is already started?

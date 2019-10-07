@@ -175,11 +175,13 @@ static const char *getFlagName(const DoorFlagEnum flag)
 AbstractParser::AbstractParser(MapData *const md,
                                MumeClock *const mc,
                                ProxyParserApi proxy,
+                               GroupManagerApi group,
                                QObject *const parent)
     : QObject(parent)
     , m_mumeClock(mc)
     , m_mapData(md)
     , m_proxy(proxy)
+    , m_group(group)
     , prefixChar{getConfig().parser.prefixChar}
 {
     connect(&m_offlineCommandTimer, &QTimer::timeout, this, &AbstractParser::doOfflineCharacterMove);
@@ -949,13 +951,6 @@ void AbstractParser::doMarkCurrentCommand()
     sendToUser("--->Current room marked temporarily on the map.\r\n");
 }
 
-void AbstractParser::doGroupLockCommand()
-{
-    bool toggle = !getConfig().groupManager.lockGroup;
-    setConfig().groupManager.lockGroup = toggle;
-    sendToUser(QString("--->Group has been %1.\r\n").arg(toggle ? "locked" : "unlocked"));
-}
-
 void AbstractParser::doRemoveDoorNamesCommand()
 {
     m_mapData->removeDoorNames();
@@ -1174,12 +1169,14 @@ void AbstractParser::showHelp()
                      "  %1back        - delete prespammed commands from queue\r\n"
                      "\r\nRoom commands:\r\n"
                      "  %1room        - (see \"%1room ??\" for syntax help)\r\n"
+                     "\r\nGroup commands:\r\n"
+                     "  %1group       - (see \"%1group ??\" for syntax help)\r\n"
+                     "  %1gtell       - send group tell\r\n"
                      "\r\nHelp commands:\n"
                      "  %1help      - this help text\r\n"
                      "  %1help ??   - full syntax help for the help command\r\n"
                      "  %1maphelp   - help for mapping console commands\r\n"
                      "  %1doorhelp  - help for door console commands\r\n"
-                     "  %1grouphelp - help for group manager console commands\r\n"
                      "\r\nOther commands:\n"
                      "  %1vote                      - vote for MUME on TMC!\r\n"
                      "  %1dirs [-options] pattern   - directions to matching rooms\r\n"

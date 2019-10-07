@@ -37,8 +37,9 @@ const QByteArray MumeXmlParser::lessThanTemplate("&lt;");
 const QByteArray MumeXmlParser::ampersand("&");
 const QByteArray MumeXmlParser::ampersandTemplate("&amp;");
 
-MumeXmlParser::MumeXmlParser(MapData *md, MumeClock *mc, ProxyParserApi proxy, QObject *parent)
-    : AbstractParser(md, mc, proxy, parent)
+MumeXmlParser::MumeXmlParser(
+    MapData *md, MumeClock *mc, ProxyParserApi proxy, GroupManagerApi group, QObject *parent)
+    : AbstractParser(md, mc, proxy, group, parent)
 {
     if (XPS_DEBUG_TO_FILE) {
         QString fileName = "xmlparser_debug.dat";

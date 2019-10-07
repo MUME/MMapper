@@ -352,8 +352,7 @@ bool GroupClient::start()
     return true;
 }
 
-bool GroupClient::kickCharacter(const QByteArray &)
+void GroupClient::kickCharacter(const QByteArray &)
 {
-    emit messageBox("Clients cannot kick players.");
-    return false;
+    throw std::runtime_error("impossible");
 }

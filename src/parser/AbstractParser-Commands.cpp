@@ -34,9 +34,7 @@ const Abbrev cmdConnect{"connect", 4};
 const Abbrev cmdDirections{"dirs", 3};
 const Abbrev cmdDisconnect{"disconnect", 4};
 const Abbrev cmdDoorHelp{"doorhelp", 5};
-const Abbrev cmdGroupHelp{"grouphelp", 6};
-const Abbrev cmdGroupKick{"gkick", 2};
-const Abbrev cmdGroupLock{"glock", 2};
+const Abbrev cmdGroup{"group", 5};
 const Abbrev cmdGroupTell{"gtell", 2};
 const Abbrev cmdHelp{"help", 2};
 const Abbrev cmdMapHelp{"maphelp", 5};
@@ -710,28 +708,6 @@ void AbstractParser::parseSpecialCommand(StringView wholeCommand)
     sendToUser(QString("Unrecognized command: %1\r\n").arg(word.toQString()));
 }
 
-void AbstractParser::parseGroupTell(const StringView &view)
-{
-    if (view.isEmpty())
-        sendToUser("What do you want to tell the group?\r\n");
-    else {
-        emit sendGroupTellEvent(view.toQByteArray());
-        sendToUser("OK.\r\n");
-    }
-}
-
-void AbstractParser::parseGroupKick(const StringView &view)
-{
-    if (view.isEmpty())
-        sendToUser("Who do you want to kick from the group?\r\n");
-    else {
-        // REVISIT: We should change GroupManager to be a "FrontEnd" in this
-        // thread and call it directly
-        emit sendGroupKickEvent(view.toQByteArray().simplified());
-        sendToUser("OK.\r\n");
-    }
-}
-
 void AbstractParser::parseSearch(StringView view)
 {
     if (view.isEmpty())
@@ -830,7 +806,6 @@ void AbstractParser::parseHelp(StringView words)
                     simpleSyntax("commands", [this](auto &&, auto &&) { showHelpCommands(false); }),
                     simpleSyntax("map", [this](auto &&, auto &&) { showMapHelp(); }),
                     simpleSyntax("doors", [this](auto &&, auto &&) { showDoorCommandHelp(); }),
-                    simpleSyntax("group", [this](auto &&, auto &&) { showGroupHelp(); }),
                     simpleSyntax("exits", [this](auto &&, auto &&) { showExitHelp(); }),
                     simpleSyntax("flags", [this](auto &&, auto &&) { showRoomSimpleFlagsHelp(); }),
                     simpleSyntax("mobiles", [this](auto &&, auto &&) { showRoomMobFlagsHelp(); }),
@@ -886,14 +861,6 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Help for door console commands."));
-    add(cmdGroupHelp,
-        [this](const std::vector<StringView> & /*s*/, StringView rest) {
-            if (!rest.isEmpty())
-                return false;
-            this->showGroupHelp();
-            return true;
-        },
-        makeSimpleHelp("Help for group manager console commands."));
 
     // door actions
     for (const DoorActionEnum x : ALL_DOOR_ACTION_TYPES) {
@@ -1004,23 +971,10 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Disconnect from the MUD."));
-    add(cmdGroupKick,
-        [this](const std::vector<StringView> & /*s*/, StringView rest) {
-            this->parseGroupKick(rest);
-            return true;
-        },
-        makeSimpleHelp("Kick [player] from the group."));
-    add(cmdGroupLock,
-        [this](const std::vector<StringView> & /*s*/, StringView rest) {
-            if (!rest.isEmpty())
-                return false;
-            this->doGroupLockCommand();
-            return true;
-        },
-        makeSimpleHelp("Toggle the lock on the group."));
     add(cmdGroupTell,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
-            this->parseGroupTell(rest);
+            const auto alias = "tell " + rest.toStdString();
+            parseGroup(StringView{alias});
             return true;
         },
         makeSimpleHelp("Send a grouptell with the [message]."));
@@ -1123,6 +1077,14 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("View or modify properties of the current room."));
+
+    /* group commands */
+    add(cmdGroup,
+        [this](const std::vector<StringView> & /*s*/, StringView rest) {
+            parseGroup(rest);
+            return true;
+        },
+        makeSimpleHelp("Perform actions on the group manager."));
 
     qInfo() << "Total commands + abbreviations: " << map.size();
 }

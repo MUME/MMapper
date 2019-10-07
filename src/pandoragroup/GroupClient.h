@@ -30,7 +30,7 @@ protected:
     void stop() override;
     void sendCharUpdate(const QVariantMap &map) override;
     void sendCharRename(const QVariantMap &map) override;
-    bool kickCharacter(const QByteArray &) override;
+    void kickCharacter(const QByteArray &) override;
 
 private:
     void sendHandshake(const QVariantMap &data);

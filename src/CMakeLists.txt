@@ -224,6 +224,8 @@ set(mmapper_SRCS
     pandoragroup/CGroupCommunicator.h
     pandoragroup/GroupClient.cpp
     pandoragroup/GroupClient.h
+    pandoragroup/GroupManagerApi.cpp
+    pandoragroup/GroupManagerApi.h
     pandoragroup/GroupPortMapper.cpp
     pandoragroup/GroupPortMapper.h
     pandoragroup/GroupServer.cpp
@@ -248,6 +250,7 @@ set(mmapper_SRCS
     parser/AbstractParser-Commands.cpp
     parser/AbstractParser-Commands.h
     parser/AbstractParser-Config.cpp
+    parser/AbstractParser-Group.cpp
     parser/AbstractParser-Utils.cpp
     parser/AbstractParser-Utils.h
     parser/CommandId.cpp

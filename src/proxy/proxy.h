@@ -16,6 +16,7 @@
 
 #include "../global/WeakHandle.h"
 #include "../global/io.h"
+#include "../pandoragroup/GroupManagerApi.h"
 #include "ProxyParserApi.h"
 
 class ConnectionListener;

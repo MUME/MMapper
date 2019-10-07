@@ -493,19 +493,14 @@ bool GroupServer::start()
     return true;
 }
 
-bool GroupServer::kickCharacter(const QByteArray &name)
+void GroupServer::kickCharacter(const QByteArray &name)
 {
-    if (getGroup()->getSelf()->getName() == name) {
-        emit messageBox("You can't kick yourself!");
-        return false;
-    }
     for (auto &connection : clientsList) {
         if (connection->getName() == name) {
             kickConnection(connection, "You have been kicked by the host!");
-            return true;
+            return;
         }
     }
-    return false;
 }
 
 void GroupServer::kickConnection(GroupSocket *const socket, const QString &message)

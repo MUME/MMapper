@@ -114,7 +114,11 @@ void Proxy::start()
     m_mudTelnet = makeQPointer<MudTelnet>(this);
     m_telnetFilter = makeQPointer<TelnetFilter>(this);
     m_mpiFilter = makeQPointer<MpiFilter>(this);
-    m_parserXml = makeQPointer<MumeXmlParser>(m_mapData, m_mumeClock, m_proxyParserApi, this);
+    m_parserXml = makeQPointer<MumeXmlParser>(m_mapData,
+                                              m_mumeClock,
+                                              m_proxyParserApi,
+                                              m_groupManager->getGroupManagerApi(),
+                                              this);
 
     m_mudSocket = (NO_OPEN_SSL || !getConfig().connection.tlsEncryption)
                       ? QPointer<MumeSocket>(makeQPointer<MumeTcpSocket>(this))
@@ -205,14 +209,6 @@ void Proxy::start()
             &MumeXmlParser::sendCharacterAffectEvent,
             m_groupManager,
             &Mmapper2Group::updateCharacterAffect);
-    connect(parserXml,
-            &AbstractParser::sendGroupTellEvent,
-            m_groupManager,
-            &Mmapper2Group::sendGroupTell);
-    connect(parserXml,
-            &AbstractParser::sendGroupKickEvent,
-            m_groupManager,
-            &Mmapper2Group::kickCharacter);
     connect(parserXml, &AbstractParser::showPath, m_groupManager, &Mmapper2Group::setPath);
     // Group Tell
     connect(m_groupManager,

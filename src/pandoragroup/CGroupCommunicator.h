@@ -53,7 +53,6 @@ public:
     virtual void stop() = 0;
     virtual bool start() = 0;
     virtual void sendCharUpdate(const QVariantMap &map) = 0;
-    virtual bool kickCharacter(const QByteArray &) = 0;
 
 protected:
     void sendCharUpdate(GroupSocket *, const QVariantMap &);
@@ -73,6 +72,7 @@ public slots:
     void relayLog(const QString &);
     virtual void retrieveData(GroupSocket *, MessagesEnum, const QVariantMap &) = 0;
     virtual void connectionClosed(GroupSocket *) = 0;
+    virtual void kickCharacter(const QByteArray &) = 0;
 
 signals:
     void messageBox(QString message);

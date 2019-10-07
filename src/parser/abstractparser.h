@@ -23,6 +23,7 @@
 #include "../mapdata/RoomFieldVariant.h"
 #include "../mapdata/mmapper2room.h"
 #include "../mapdata/roomselection.h"
+#include "../pandoragroup/GroupManagerApi.h"
 #include "../proxy/ProxyParserApi.h"
 #include "../proxy/telnetfilter.h"
 #include "AbstractParser-Utils.h"
@@ -60,6 +61,7 @@ protected:
 private:
     MapData *m_mapData = nullptr;
     ProxyParserApi m_proxy;
+    GroupManagerApi m_group;
 
 public:
     using HelpCallback = std::function<void(const std::string &name)>;
@@ -95,7 +97,8 @@ private:
     QTimer m_offlineCommandTimer;
 
 public:
-    explicit AbstractParser(MapData *, MumeClock *, ProxyParserApi proxy, QObject *parent = nullptr);
+    explicit AbstractParser(
+        MapData *, MumeClock *, ProxyParserApi, GroupManagerApi, QObject *parent = nullptr);
     ~AbstractParser() override;
 
     void doMove(CommandEnum cmd);
@@ -123,10 +126,6 @@ signals:
 
     // for user commands
     void command(const QByteArray &, const Coordinate &);
-
-    // for group manager
-    void sendGroupTellEvent(const QByteArray &);
-    void sendGroupKickEvent(const QByteArray &);
 
 public slots:
     virtual void parseNewMudInput(const IncomingData &) = 0;
@@ -229,8 +228,6 @@ private:
     void parseNoteCmd(StringView view);
     void parseDirections(StringView view);
     void parseSearch(StringView view);
-    void parseGroupTell(const StringView &view);
-    void parseGroupKick(const StringView &view);
 
     bool setCommandPrefix(char prefix);
     void setNote(RoomNote note);
@@ -244,7 +241,6 @@ private:
     void doMarkCurrentCommand();
     void doSearchCommand(StringView view);
     void doGetDirectionsCommand(StringView view);
-    void doGroupLockCommand();
     void toggleTrollMapping();
 
     void initSpecialCommandMap();
@@ -256,6 +252,7 @@ private:
 
     void parseHelp(StringView words);
     void parseRoom(StringView input);
+    void parseGroup(StringView input);
 
     bool parseDoorAction(DoorActionEnum dat, StringView words);
     bool parseDoorFlag(DoorFlagEnum flag, StringView words);

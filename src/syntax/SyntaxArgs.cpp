@@ -47,7 +47,7 @@ MatchResult ArgAbbrev::virt_match(const ParserInput &input, IMatchErrorLogger * 
             return MatchResult::failure(input);
     }
 
-    return MatchResult::success(1, input);
+    return MatchResult::success(1, input, Value{m_str});
 }
 
 std::ostream &ArgAbbrev::virt_to_stream(std::ostream &os) const

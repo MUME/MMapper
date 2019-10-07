@@ -12,7 +12,9 @@
 #include <QTimer>
 #include <QVariantMap>
 
+#include "../global/WeakHandle.h"
 #include "../global/roomid.h"
+#include "GroupManagerApi.h"
 #include "mmapper2character.h"
 
 class GroupAuthority;
@@ -35,6 +37,8 @@ signals:
     void updateWidget();    // update group widget
     void updateMapCanvas(); // redraw the opengl screen
     void sig_invokeStopInternal();
+    void sig_sendGroupTell(const QByteArray &tell);
+    void sig_kickCharacter(const QByteArray &character);
 
 public:
     explicit Mmapper2Group(QObject *parent = nullptr);
@@ -48,6 +52,18 @@ public:
     GroupAuthority *getAuthority() { return authority.get(); }
     CGroup *getGroup() { return group.get(); }
 
+public:
+    GroupManagerApi &getGroupManagerApi() { return m_groupManagerApi; }
+
+private:
+    WeakHandleLifetime<Mmapper2Group> m_weakHandleLifetime{*this};
+    GroupManagerApi m_groupManagerApi{m_weakHandleLifetime.getWeakHandle()};
+    friend GroupManagerApi;
+
+protected:
+    void sendGroupTell(const QByteArray &tell); // sends gtell from local user
+    void kickCharacter(const QByteArray &character);
+
 public slots:
     void setCharacterRoomId(RoomId pos);
     void setMode(GroupManagerStateEnum newState);
@@ -55,8 +71,6 @@ public slots:
     void stopNetwork();
     void updateSelf(); // changing settings
 
-    void sendGroupTell(const QByteArray &tell); // sends gtell from local user
-    void kickCharacter(const QByteArray &character);
     void parseScoreInformation(const QByteArray &score);
     void parsePromptInformation(const QByteArray &prompt);
     void updateCharacterPosition(CharacterPositionEnum);
