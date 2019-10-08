@@ -21,15 +21,6 @@ ClientPage::ClientPage(QWidget *parent)
 {
     ui->setupUi(this);
 
-    updateFontAndColors();
-
-    const auto &settings = getConfig().integratedClient;
-    ui->columnsSpinBox->setValue(settings.columns);
-    ui->rowsSpinBox->setValue(settings.rows);
-    ui->scrollbackSpinBox->setValue(settings.linesOfScrollback);
-    ui->clearInputCheckBox->setChecked(settings.clearInputOnEnter);
-    ui->autoResizeTerminalCheckBox->setChecked(settings.autoResizeTerminal);
-
     connect(ui->fontPushButton, &QAbstractButton::pressed, this, &ClientPage::onChangeFont);
     connect(ui->bgColorPushButton,
             &QAbstractButton::pressed,
@@ -70,6 +61,18 @@ ClientPage::ClientPage(QWidget *parent)
 ClientPage::~ClientPage()
 {
     delete ui;
+}
+
+void ClientPage::loadConfig()
+{
+    updateFontAndColors();
+
+    const auto &settings = getConfig().integratedClient;
+    ui->columnsSpinBox->setValue(settings.columns);
+    ui->rowsSpinBox->setValue(settings.rows);
+    ui->scrollbackSpinBox->setValue(settings.linesOfScrollback);
+    ui->clearInputCheckBox->setChecked(settings.clearInputOnEnter);
+    ui->autoResizeTerminalCheckBox->setChecked(settings.autoResizeTerminal);
 }
 
 void ClientPage::updateFontAndColors()

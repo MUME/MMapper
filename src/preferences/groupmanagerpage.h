@@ -25,6 +25,8 @@ public:
     ~GroupManagerPage() override;
 
 public slots:
+    void loadConfig();
+
     void changeColorClicked();
     void charNameTextChanged();
 

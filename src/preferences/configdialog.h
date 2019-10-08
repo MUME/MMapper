@@ -12,6 +12,7 @@
 class Mmapper2Group;
 class QListWidgetItem;
 class QObject;
+class QShowEvent;
 class QStackedWidget;
 class QWidget;
 
@@ -26,6 +27,12 @@ class ConfigDialog : public QDialog
 public:
     explicit ConfigDialog(Mmapper2Group *, QWidget *parent = nullptr);
     ~ConfigDialog() override;
+
+protected:
+    void showEvent(QShowEvent *event) override;
+
+signals:
+    void sig_loadConfig();
 
 public slots:
     void changePage(QListWidgetItem *current, QListWidgetItem *previous);

@@ -22,6 +22,8 @@ public:
     ~MumeProtocolPage() override;
 
 public slots:
+    void loadConfig();
+
     void remoteEditCheckBoxStateChanged(int);
     void internalEditorRadioButtonChanged(bool);
     void externalEditorCommandTextChanged(QString);

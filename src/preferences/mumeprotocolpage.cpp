@@ -29,18 +29,20 @@ MumeProtocolPage::MumeProtocolPage(QWidget *parent)
             &QLineEdit::textChanged,
             this,
             &MumeProtocolPage::externalEditorCommandTextChanged);
+}
 
+MumeProtocolPage::~MumeProtocolPage()
+{
+    delete ui;
+}
+
+void MumeProtocolPage::loadConfig() {
     const auto &settings = getConfig().mumeClientProtocol;
     ui->remoteEditCheckBox->setChecked(settings.remoteEditing);
     ui->internalEditorRadioButton->setChecked(settings.internalRemoteEditor);
     ui->externalEditorRadioButton->setChecked(!settings.internalRemoteEditor);
     ui->externalEditorCommand->setText(settings.externalRemoteEditorCommand);
     ui->externalEditorCommand->setEnabled(!settings.internalRemoteEditor);
-}
-
-MumeProtocolPage::~MumeProtocolPage()
-{
-    delete ui;
 }
 
 void MumeProtocolPage::remoteEditCheckBoxStateChanged(int /*unused*/)

@@ -24,6 +24,7 @@ public:
     void updateFontAndColors();
 
 public slots:
+    void loadConfig();
     void onChangeFont();
     void onChangeBackgroundColor();
     void onChangeForegroundColor();

@@ -98,10 +98,19 @@ GeneralPage::GeneralPage(QWidget *parent)
                                     "Are you sure you want to perform a factory reset?",
                                     QMessageBox::Yes | QMessageBox::No);
         if (reply == QMessageBox::Yes) {
-            // REVISIT: We should refresh the configuration UI as well
             setConfig().reset();
+            emit sig_factoryReset();
         }
     });
+}
+
+GeneralPage::~GeneralPage()
+{
+    delete ui;
+}
+
+void GeneralPage::loadConfig()
+{
     const auto &config = getConfig();
     const auto &connection = config.connection;
     const auto &mumeNative = config.mumeNative;
@@ -136,11 +145,6 @@ GeneralPage::GeneralPage(QWidget *parent)
 
     ui->proxyThreadedCheckBox->setChecked(connection.proxyThreaded);
     ui->proxyConnectionStatusCheckBox->setChecked(connection.proxyConnectionStatus);
-}
-
-GeneralPage::~GeneralPage()
-{
-    delete ui;
 }
 
 void GeneralPage::selectWorldFileButtonClicked()

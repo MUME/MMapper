@@ -37,14 +37,22 @@ ConfigDialog::ConfigDialog(Mmapper2Group *gm, QWidget *parent)
 
     createIcons();
 
+    auto generalPage = new GeneralPage(this);
+    auto graphicsPage = new GraphicsPage(this);
+    auto parserPage = new ParserPage(this);
+    auto clientPage = new ClientPage(this);
+    auto groupManagerPage = new GroupManagerPage(m_groupManager, this);
+    auto mumeProtocolPage = new MumeProtocolPage(this);
+    auto pathmachinePage = new PathmachinePage(this);
+
     pagesWidget = new QStackedWidget(this);
-    pagesWidget->addWidget(new GeneralPage(this));
-    pagesWidget->addWidget(new GraphicsPage(this));
-    pagesWidget->addWidget(new ParserPage(this));
-    pagesWidget->addWidget(new ClientPage(this));
-    pagesWidget->addWidget(new GroupManagerPage(m_groupManager, this));
-    pagesWidget->addWidget(new MumeProtocolPage(this));
-    pagesWidget->addWidget(new PathmachinePage(this));
+    pagesWidget->addWidget(generalPage);
+    pagesWidget->addWidget(graphicsPage);
+    pagesWidget->addWidget(parserPage);
+    pagesWidget->addWidget(clientPage);
+    pagesWidget->addWidget(groupManagerPage);
+    pagesWidget->addWidget(mumeProtocolPage);
+    pagesWidget->addWidget(pathmachinePage);
     pagesWidget->setCurrentIndex(0);
 
     ui->pagesScrollArea->setMinimumWidth(520);
@@ -53,11 +61,30 @@ ConfigDialog::ConfigDialog(Mmapper2Group *gm, QWidget *parent)
     ui->contentsWidget->setCurrentItem(ui->contentsWidget->item(0));
     connect(ui->contentsWidget, &QListWidget::currentItemChanged, this, &ConfigDialog::changePage);
     connect(ui->closeButton, &QAbstractButton::clicked, this, &QWidget::close);
+
+    connect(generalPage, &GeneralPage::sig_factoryReset, this, [this]() {
+        qDebug() << "Reloading config due to factory reset";
+        emit sig_loadConfig();
+    });
+    connect(this, &ConfigDialog::sig_loadConfig, generalPage, &GeneralPage::loadConfig);
+    connect(this, &ConfigDialog::sig_loadConfig, graphicsPage, &GraphicsPage::loadConfig);
+    connect(this, &ConfigDialog::sig_loadConfig, parserPage, &ParserPage::loadConfig);
+    connect(this, &ConfigDialog::sig_loadConfig, clientPage, &ClientPage::loadConfig);
+    connect(this, &ConfigDialog::sig_loadConfig, groupManagerPage, &GroupManagerPage::loadConfig);
+    connect(this, &ConfigDialog::sig_loadConfig, mumeProtocolPage, &MumeProtocolPage::loadConfig);
+    connect(this, &ConfigDialog::sig_loadConfig, pathmachinePage, &PathmachinePage::loadConfig);
 }
 
 ConfigDialog::~ConfigDialog()
 {
     delete ui;
+}
+
+void ConfigDialog::showEvent(QShowEvent *event)
+{
+    // Populate the preference pages from config each time the widget is shown
+    emit sig_loadConfig();
+    event->accept();
 }
 
 void ConfigDialog::createIcons()

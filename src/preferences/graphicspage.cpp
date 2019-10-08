@@ -11,12 +11,17 @@
 #include "../configuration/configuration.h"
 #include "ui_graphicspage.h"
 
+static void setIconColor(QPushButton *const button, const QColor &color)
+{
+    QPixmap bgPix(16, 16);
+    bgPix.fill(color);
+    button->setIcon(QIcon(bgPix));
+}
+
 GraphicsPage::GraphicsPage(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::GraphicsPage)
 {
-    const auto &settings = getConfig().canvas;
-
     ui->setupUi(this);
 
     connect(ui->bgChangeColor, &QAbstractButton::clicked, this, [this]() {
@@ -58,16 +63,19 @@ GraphicsPage::GraphicsPage(QWidget *parent)
             &QCheckBox::stateChanged,
             this,
             &GraphicsPage::drawUpperLayersTexturedStateChanged);
+}
 
-    QPixmap bgPix(16, 16);
-    bgPix.fill(settings.backgroundColor);
-    ui->bgChangeColor->setIcon(QIcon(bgPix));
-    QPixmap darkRoomPix(16, 16);
-    darkRoomPix.fill(settings.roomDarkColor);
-    ui->darkPushButton->setIcon(QIcon(darkRoomPix));
-    QPixmap darkRoomLitPix(16, 16);
-    darkRoomLitPix.fill(settings.roomDarkLitColor);
-    ui->darkLitPushButton->setIcon(QIcon(darkRoomLitPix));
+GraphicsPage::~GraphicsPage()
+{
+    delete ui;
+}
+
+void GraphicsPage::loadConfig()
+{
+    const auto &settings = getConfig().canvas;
+    setIconColor(ui->bgChangeColor, settings.backgroundColor);
+    setIconColor(ui->darkPushButton, settings.roomDarkColor);
+    setIconColor(ui->darkLitPushButton, settings.roomDarkLitColor);
 
     const QString antiAliasingSamples = QString::number(settings.antialiasingSamples);
     const int index = std::max(0, ui->antialiasingSamplesComboBox->findText(antiAliasingSamples));
@@ -90,9 +98,7 @@ void GraphicsPage::changeColorClicked(QColor &oldColor, QPushButton *pushButton)
 {
     const QColor newColor = QColorDialog::getColor(oldColor, this);
     if (newColor.isValid() && newColor != oldColor) {
-        QPixmap pix(16, 16);
-        pix.fill(newColor);
-        pushButton->setIcon(QIcon(pix));
+        setIconColor(pushButton, newColor);
         oldColor = newColor;
     }
 }

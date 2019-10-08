@@ -197,7 +197,7 @@
      <property name="title">
       <string>Authorized Contacts</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout_1">
+     <layout class="QGridLayout">
       <item row="3" column="1" colspan="2">
        <widget class="QFrame" name="frame_2">
         <property name="frameShape">
@@ -443,7 +443,7 @@ p, li { white-space: pre-wrap; }
      <property name="title">
       <string>Group Tell Color</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout">
+     <layout class="QGridLayout">
       <item row="1" column="3">
        <widget class="QPushButton" name="groupTellColorPushButton">
         <property name="text">
@@ -511,7 +511,7 @@ p, li { white-space: pre-wrap; }
    </item>
    <item>
     <widget class="QFrame" name="frame_4">
-     <layout class="QGridLayout" name="_2">
+     <layout class="QGridLayout">
       <item row="1" column="0">
        <widget class="QCheckBox" name="rulesWarning">
         <property name="text">

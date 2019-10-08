@@ -21,10 +21,12 @@ class GraphicsPage : public QWidget
 
 public:
     explicit GraphicsPage(QWidget *parent = nullptr);
+    ~GraphicsPage() override;
 
 signals:
 
 public slots:
+    void loadConfig();
     void antialiasingSamplesTextChanged(const QString &);
     void trilinearFilteringStateChanged(int);
     void softwareOpenGLStateChanged(int);

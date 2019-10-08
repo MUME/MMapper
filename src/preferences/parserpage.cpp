@@ -46,11 +46,6 @@ ParserPage::ParserPage(QWidget *const parent)
 {
     setupUi(this);
 
-    const auto &settings = getConfig().parser;
-
-    AnsiCombo::makeWidgetColoured(roomNameColorLabel, settings.roomNameColor);
-    AnsiCombo::makeWidgetColoured(roomDescColorLabel, settings.roomDescColor);
-
     connect(roomNameColorPushButton,
             &QAbstractButton::clicked,
             this,
@@ -63,14 +58,6 @@ ParserPage::ParserPage(QWidget *const parent)
     connect(charPrefixLineEdit, &QLineEdit::editingFinished, this, [this]() {
         setConfig().parser.prefixChar = charPrefixLineEdit->text().at(0).toLatin1();
     });
-    charPrefixLineEdit->setText(QString(getConfig().parser.prefixChar));
-    charPrefixLineEdit->setValidator(new CommandPrefixValidator(this));
-
-    suppressXmlTagsCheckBox->setChecked(settings.removeXmlTags);
-    suppressXmlTagsCheckBox->setEnabled(true);
-
-    endDescPatternsList->clear();
-    endDescPatternsList->addItems(settings.noDescriptionPatternsList);
 
     connect(removeEndDescPattern,
             &QAbstractButton::clicked,
@@ -94,6 +81,24 @@ ParserPage::ParserPage(QWidget *const parent)
             &QCheckBox::stateChanged,
             this,
             &ParserPage::suppressXmlTagsCheckBoxStateChanged);
+}
+
+void ParserPage::loadConfig()
+{
+    const auto &settings = getConfig().parser;
+
+    AnsiCombo::makeWidgetColoured(roomNameColorLabel, settings.roomNameColor);
+    AnsiCombo::makeWidgetColoured(roomDescColorLabel, settings.roomDescColor);
+
+    charPrefixLineEdit->setText(QString(settings.prefixChar));
+    charPrefixLineEdit->setValidator(new CommandPrefixValidator(this));
+
+    suppressXmlTagsCheckBox->setChecked(settings.removeXmlTags);
+    suppressXmlTagsCheckBox->setEnabled(true);
+
+    endDescPatternsList->clear();
+    endDescPatternsList->addItems(settings.noDescriptionPatternsList);
+
 }
 
 void ParserPage::roomNameColorClicked()

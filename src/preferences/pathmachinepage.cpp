@@ -40,7 +40,10 @@ PathmachinePage::PathmachinePage(QWidget *parent)
             SIGNAL(valueChanged(int)),
             this,
             SLOT(matchingToleranceSpinBoxValueChanged(int)));
+}
 
+void PathmachinePage::loadConfig()
+{
     const auto &settings = getConfig().pathMachine;
     acceptBestRelativeDoubleSpinBox->setValue(settings.acceptBestRelative);
     acceptBestAbsoluteDoubleSpinBox->setValue(settings.acceptBestAbsolute);

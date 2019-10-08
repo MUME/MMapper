@@ -19,8 +19,12 @@ class GeneralPage : public QWidget
 {
     Q_OBJECT
 
-public slots:
+public:
+    explicit GeneralPage(QWidget *parent = nullptr);
+    ~GeneralPage() override;
 
+public slots:
+    void loadConfig();
     void remoteNameTextChanged(const QString &);
     void remotePortValueChanged(int);
     void localPortValueChanged(int);
@@ -37,9 +41,8 @@ public slots:
 
     void displayMumeClockStateChanged(int);
 
-public:
-    explicit GeneralPage(QWidget *parent = nullptr);
-    ~GeneralPage() override;
+signals:
+    void sig_factoryReset();
 
 private:
     Ui::GeneralPage *ui = nullptr;

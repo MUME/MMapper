@@ -19,11 +19,10 @@
 
 GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
     : QWidget(parent)
+    , m_groupManager(gm)
     , ui(new Ui::GroupManagerPage)
 {
     ui->setupUi(this);
-    m_groupManager = gm;
-    const Configuration::GroupManagerSettings &groupManager = getConfig().groupManager;
     auto authority = m_groupManager->getAuthority();
     connect(this, &GroupManagerPage::refresh, authority, &GroupAuthority::refresh);
     connect(authority, &GroupAuthority::secretRefreshed, this, [this](const GroupSecret &secret) {
@@ -39,11 +38,6 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
         // Refreshing the SSL certificate asynchronously
         emit refresh();
     });
-    ui->charName->setText(groupManager.charName);
-    QPixmap charColorPixmap(16, 16);
-    charColorPixmap.fill(groupManager.color);
-    ui->changeColor->setIcon(QIcon(charColorPixmap));
-    ui->secretLineEdit->setText(authority->getSecret());
 
     // Authorized Secrets Section
     connect(ui->authorizationCheckBox, &QCheckBox::clicked, this, [this](const bool checked) {
@@ -71,16 +65,6 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
         auto secret = ui->allowedComboBox->currentText().simplified().toLatin1();
         authority->remove(secret);
     });
-    ui->secretLineEdit->setEnabled(!NO_OPEN_SSL);
-    ui->refreshButton->setEnabled(!NO_OPEN_SSL);
-    ui->authorizationCheckBox->setChecked(groupManager.requireAuth);
-    ui->authorizationCheckBox->setEnabled(!NO_OPEN_SSL);
-    ui->allowSecret->setEnabled(false);
-    ui->revokeSecret->setEnabled(false);
-    ui->allowedComboBox->setEnabled(groupManager.requireAuth);
-    ui->allowedComboBox->setModel(authority->getItemModel());
-    ui->allowedComboBox->setEditText("");
-    allowedSecretsChanged();
 
     // Host Section
     connect(ui->localHost, &QLabel::linkActivated, this, [](const QString &link) {
@@ -105,9 +89,61 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
     connect(ui->lockGroupCheckBox, &QCheckBox::stateChanged, this, [this]() {
         setConfig().groupManager.lockGroup = ui->lockGroupCheckBox->isChecked();
     });
-    ui->localPort->setValue(groupManager.localPort);
-    ui->shareSelfCheckBox->setChecked(groupManager.shareSelf);
-    ui->lockGroupCheckBox->setChecked(groupManager.lockGroup);
+
+    connect(ui->remoteHost,
+            &QComboBox::editTextChanged,
+            this,
+            &GroupManagerPage::remoteHostTextChanged);
+
+    // Group Tells Section
+    connect(ui->groupTellColorPushButton, &QPushButton::pressed, this, [this]() {
+        QString ansiString = AnsiColorDialog::getColor(getConfig().groupManager.groupTellColor,
+                                                       this);
+        AnsiCombo::makeWidgetColoured(ui->groupTellColorLabel, ansiString, false);
+        setConfig().groupManager.groupTellColor = ansiString;
+    });
+    connect(ui->groupTellColorAnsi256RadioButton, &QAbstractButton::toggled, this, [this]() {
+        setConfig().groupManager.useGroupTellAnsi256Color = ui->groupTellColorAnsi256RadioButton
+                                                                ->isChecked();
+    });
+
+    // Other Sections
+    connect(ui->rulesWarning,
+            &QCheckBox::stateChanged,
+            this,
+            &GroupManagerPage::rulesWarningChanged);
+
+    // Inform Group Manager of changes
+    connect(this, &GroupManagerPage::updatedSelf, m_groupManager, &Mmapper2Group::updateSelf);
+}
+
+GroupManagerPage::~GroupManagerPage()
+{
+    delete ui;
+}
+
+void GroupManagerPage::loadConfig() {
+    const Configuration::GroupManagerSettings &settings = getConfig().groupManager;
+    const auto authority = m_groupManager->getAuthority();
+    ui->charName->setText(settings.charName);
+    QPixmap charColorPixmap(16, 16);
+    charColorPixmap.fill(settings.color);
+    ui->changeColor->setIcon(QIcon(charColorPixmap));
+    ui->secretLineEdit->setText(authority->getSecret());
+    ui->secretLineEdit->setEnabled(!NO_OPEN_SSL);
+    ui->refreshButton->setEnabled(!NO_OPEN_SSL);
+    ui->authorizationCheckBox->setChecked(settings.requireAuth);
+    ui->authorizationCheckBox->setEnabled(!NO_OPEN_SSL);
+    ui->allowSecret->setEnabled(false);
+    ui->revokeSecret->setEnabled(false);
+    ui->allowedComboBox->setEnabled(settings.requireAuth);
+    ui->allowedComboBox->setModel(authority->getItemModel());
+    ui->allowedComboBox->setEditText("");
+    allowedSecretsChanged();
+
+    ui->localPort->setValue(settings.localPort);
+    ui->shareSelfCheckBox->setChecked(settings.shareSelf);
+    ui->lockGroupCheckBox->setChecked(settings.lockGroup);
 
     // Client Section
     QSet<QString> contacts;
@@ -127,7 +163,7 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
         ui->remoteHost->setItemData(i, name.isEmpty() ? "Unknown" : name, Qt::ToolTipRole);
     }
     const auto remoteHostText
-        = QString("%1:%2").arg(groupManager.host.constData()).arg(groupManager.remotePort);
+        = QString("%1:%2").arg(settings.host.constData()).arg(settings.remotePort);
     if (!contacts.contains(remoteHostText)) {
         // Add the entry from config if it wasn't already prepopulated
         ui->remoteHost->addItem(remoteHostText);
@@ -142,41 +178,13 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
             }
         }
     }
-    connect(ui->remoteHost,
-            &QComboBox::editTextChanged,
-            this,
-            &GroupManagerPage::remoteHostTextChanged);
 
-    // Group Tells Section
-    AnsiCombo::makeWidgetColoured(ui->groupTellColorLabel, groupManager.groupTellColor, false);
-    connect(ui->groupTellColorPushButton, &QPushButton::pressed, this, [this]() {
-        QString ansiString = AnsiColorDialog::getColor(getConfig().groupManager.groupTellColor,
-                                                       this);
-        AnsiCombo::makeWidgetColoured(ui->groupTellColorLabel, ansiString, false);
-        setConfig().groupManager.groupTellColor = ansiString;
-    });
-    ui->groupTellColorAnsi256RadioButton->setChecked(
-        getConfig().groupManager.useGroupTellAnsi256Color);
-    connect(ui->groupTellColorAnsi256RadioButton, &QAbstractButton::toggled, this, [this]() {
-        setConfig().groupManager.useGroupTellAnsi256Color = ui->groupTellColorAnsi256RadioButton
-                                                                ->isChecked();
-    });
+    ui->groupTellColorAnsi256RadioButton->setChecked(settings.useGroupTellAnsi256Color);
+    AnsiCombo::makeWidgetColoured(ui->groupTellColorLabel, settings.groupTellColor, false);
 
-    // Other Sections
-    connect(ui->rulesWarning,
-            &QCheckBox::stateChanged,
-            this,
-            &GroupManagerPage::rulesWarningChanged);
-    ui->rulesWarning->setChecked(groupManager.rulesWarning);
-
-    // Inform Group Manager of changes
-    connect(this, &GroupManagerPage::updatedSelf, m_groupManager, &Mmapper2Group::updateSelf);
+    ui->rulesWarning->setChecked(settings.rulesWarning);
 }
 
-GroupManagerPage::~GroupManagerPage()
-{
-    delete ui;
-}
 
 void GroupManagerPage::charNameTextChanged()
 {

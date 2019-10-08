@@ -20,6 +20,7 @@ public:
     explicit PathmachinePage(QWidget *parent = nullptr);
 
 public slots:
+    void loadConfig();
     void acceptBestRelativeDoubleSpinBoxValueChanged(double);
     void acceptBestAbsoluteDoubleSpinBoxValueChanged(double);
     void newRoomPenaltyDoubleSpinBoxValueChanged(double);
