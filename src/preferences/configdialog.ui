@@ -2,25 +2,45 @@
 <ui version="4.0">
  <class>ConfigDialog</class>
  <widget class="QWidget" name="ConfigDialog">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>400</width>
-    <height>650</height>
-   </rect>
-  </property>
-  <property name="windowTitle">
-   <string>Form</string>
-  </property>
-  <layout class="QVBoxLayout" name="verticalLayout_2">
+  <layout class="QVBoxLayout" name="_4">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
+    <layout class="QHBoxLayout" name="_3">
      <item>
-      <widget class="QListWidget" name="contentsWidget"/>
+      <widget class="QListWidget" name="contentsWidget">
+       <property name="minimumSize">
+        <size>
+         <width>110</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>110</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>70</width>
+         <height>70</height>
+        </size>
+       </property>
+       <property name="spacing">
+        <number>9</number>
+       </property>
+       <property name="viewMode">
+        <enum>QListView::IconMode</enum>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QScrollArea" name="pagesScrollArea">
+       <property name="minimumSize">
+        <size>
+         <width>520</width>
+         <height>300</height>
+        </size>
+       </property>
        <property name="widgetResizable">
         <bool>true</bool>
        </property>
@@ -29,8 +49,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>116</width>
-          <height>574</height>
+          <width>518</width>
+          <height>298</height>
          </rect>
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_3"/>
@@ -56,7 +76,7 @@
     </spacer>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <layout class="QHBoxLayout" name="_2">
      <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">

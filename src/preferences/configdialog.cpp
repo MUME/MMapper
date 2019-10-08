@@ -28,13 +28,6 @@ ConfigDialog::ConfigDialog(Mmapper2Group *gm, QWidget *parent)
 
     setWindowTitle(tr("Config Dialog"));
 
-    ui->contentsWidget->setViewMode(QListView::IconMode);
-    ui->contentsWidget->setIconSize(QSize(70, 70));
-    ui->contentsWidget->setMovement(QListView::Static);
-    ui->contentsWidget->setMaximumWidth(110);
-    ui->contentsWidget->setMinimumWidth(110);
-    ui->contentsWidget->setSpacing(9);
-
     createIcons();
 
     auto generalPage = new GeneralPage(this);
@@ -55,7 +48,6 @@ ConfigDialog::ConfigDialog(Mmapper2Group *gm, QWidget *parent)
     pagesWidget->addWidget(pathmachinePage);
     pagesWidget->setCurrentIndex(0);
 
-    ui->pagesScrollArea->setMinimumWidth(520);
     ui->pagesScrollArea->setWidget(pagesWidget);
 
     ui->contentsWidget->setCurrentItem(ui->contentsWidget->item(0));
