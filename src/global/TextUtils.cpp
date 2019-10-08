@@ -1027,6 +1027,13 @@ std::string toLowerLatin1(const std::string_view &str)
     return oss.str();
 }
 
+bool isAbbrev(const std::string_view &abbr, const std::string_view &fullText)
+{
+    return !abbr.empty()                               //
+           && abbr.size() <= fullText.size()           //
+           && abbr == fullText.substr(0, abbr.size()); //
+}
+
 // std::isprint is only ASCII
 bool isPrintLatin1(char c)
 {

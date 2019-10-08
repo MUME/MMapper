@@ -3,6 +3,10 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include <string>
+
+#include "../syntax/Value.h"
+
 bool isOffline();
 bool isOnline();
 const char *enabledString(bool isEnabled);
@@ -15,3 +19,5 @@ void send_ok(T &os)
     // Consider fixing the output to not require '\r'.
     os << "OK.\r\n";
 }
+
+std::string concatenate_unquoted(const Vector &input);

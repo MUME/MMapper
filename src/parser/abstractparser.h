@@ -152,16 +152,6 @@ protected:
     // command handling
     void performDoorCommand(ExitDirEnum direction, DoorActionEnum action);
     void genericDoorCommand(QString command, ExitDirEnum direction);
-    void nameDoorCommand(const StringView &doorname, ExitDirEnum direction);
-    void toggleDoorFlagCommand(DoorFlagEnum flag, ExitDirEnum direction);
-    void toggleExitFlagCommand(ExitFlagEnum flag, ExitDirEnum direction);
-
-public:
-#define NOP()
-#define X_DECLARE_ROOM_FIELD_TOGGLERS(UPPER_CASE, CamelCase, Type) void toggleRoomFlagCommand(Type);
-    X_FOREACH_ROOM_FIELD(X_DECLARE_ROOM_FIELD_TOGGLERS, NOP)
-#undef X_DECLARE_ROOM_FIELD_TOGGLERS
-#undef NOP
 
 public:
     ExitFlags getExitFlags(ExitDirEnum dir) const;
@@ -196,15 +186,8 @@ private:
     void showDoorCommandHelp();
     void showMumeTime();
     void showHelp();
-    void showMapHelp();
     void showGroupHelp();
-    void showExitHelp();
-    void showRoomSimpleFlagsHelp();
-    void showRoomMobFlagsHelp();
-    void showRoomLoadFlagsHelp();
     void showMiscHelp();
-    void showDoorFlagHelp();
-    void showExitFlagHelp();
     void showDoorVariableHelp();
     void showCommandPrefix();
     void showNote();
@@ -213,25 +196,13 @@ private:
 
     void showHeader(const QString &s);
 
-    bool getField(const Coordinate &c,
-                  const ExitDirEnum &direction,
-                  const ExitFieldVariant &var) const;
-
     ExitDirEnum tryGetDir(StringView &words);
     bool parseDoorAction(StringView words);
-    bool parseDoorFlags(StringView words);
-    bool parseExitFlags(StringView words);
-    bool parseField(StringView view);
-    bool parseMobFlags(StringView view);
-    bool parseLoadFlags(StringView view);
     void parseSetCommand(StringView view);
-    void parseName(StringView view);
-    void parseNoteCmd(StringView view);
     void parseDirections(StringView view);
     void parseSearch(StringView view);
 
     bool setCommandPrefix(char prefix);
-    void setNote(RoomNote note);
 
     void openVoteURL();
     void doBackCommand();
@@ -256,8 +227,6 @@ private:
     void parseGroup(StringView input);
 
     bool parseDoorAction(DoorActionEnum dat, StringView words);
-    bool parseDoorFlag(DoorFlagEnum flag, StringView words);
-    bool parseExitFlag(ExitFlagEnum flag, StringView words);
 
 public:
     inline void sendToUser(const QByteArray &arr, bool goAhead = false)

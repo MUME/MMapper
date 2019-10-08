@@ -88,7 +88,6 @@ public:
     // Used in Console Commands
     void removeDoorNames();
     const DoorName &getDoorName(const Coordinate &pos, ExitDirEnum dir);
-    void setDoorName(const Coordinate &pos, DoorName name, ExitDirEnum dir);
 
 public:
     void setFileName(QString filename, bool readOnly)
@@ -101,13 +100,10 @@ public:
 
 public:
     bool getExitFlag(const Coordinate &pos, ExitDirEnum dir, ExitFieldVariant var);
-    void toggleExitFlag(const Coordinate &pos, ExitDirEnum dir, ExitFieldVariant var);
     ExitDirections getExitDirections(const Coordinate &pos);
 
 public:
     const Room *getRoom(const Coordinate &pos);
-    bool getRoomFlag(const Coordinate &pos, RoomFieldVariant var);
-    void toggleRoomFlag(const Coordinate &pos, RoomFieldVariant var);
 
 private:
     // REVISIT: This might be the equivalent of blocking Qt signals.

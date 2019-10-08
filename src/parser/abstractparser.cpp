@@ -123,55 +123,6 @@ static char getLightSymbol(const RoomLightEnum lightType)
     return '?';
 }
 
-static const char *getFlagName(const ExitFlagEnum flag)
-{
-#define CASE(UPPER, s) \
-    do { \
-    case ExitFlagEnum::UPPER: \
-        return s; \
-    } while (false)
-    switch (flag) {
-        CASE(EXIT, "Possible");
-        CASE(DOOR, "Door");
-        CASE(ROAD, "Road");
-        CASE(CLIMB, "Climbable");
-        CASE(RANDOM, "Random");
-        CASE(SPECIAL, "Special");
-        CASE(NO_MATCH, "No match");
-        CASE(FLOW, "Water flow");
-        CASE(NO_FLEE, "No flee");
-        CASE(DAMAGE, "Damage");
-        CASE(FALL, "Fall");
-        CASE(GUARDED, "Guarded");
-    }
-    return "Unknown";
-#undef CASE
-}
-
-static const char *getFlagName(const DoorFlagEnum flag)
-{
-#define CASE(UPPER, s) \
-    do { \
-    case DoorFlagEnum::UPPER: \
-        return s; \
-    } while (false)
-    switch (flag) {
-        CASE(HIDDEN, "Hidden");
-        CASE(NEED_KEY, "Need key");
-        CASE(NO_BLOCK, "No block");
-        CASE(NO_BREAK, "No break");
-        CASE(NO_PICK, "No pick");
-        CASE(DELAYED, "Delayed");
-        CASE(CALLABLE, "Callable");
-        CASE(KNOCKABLE, "Knockable");
-        CASE(MAGIC, "Magic");
-        CASE(ACTION, "Action");
-        CASE(NO_BASH, "No bash");
-    }
-    return "Unknown";
-#undef CASE
-}
-
 AbstractParser::AbstractParser(MapData *const md,
                                MumeClock *const mc,
                                ProxyParserApi proxy,
@@ -899,20 +850,6 @@ void AbstractParser::showSyntax(const char *rest)
     sendToUser(QString::asprintf("Usage: %c%s\r\n", prefixChar, rest));
 }
 
-void AbstractParser::setNote(RoomNote moved_note)
-{
-    const bool wasEmpty = moved_note.isEmpty();
-    m_mapData->toggleRoomFlag(getTailPosition(), RoomFieldVariant(std::move(moved_note)));
-
-    // FIXME / BUG: This is actually a lie. The change is ignored if the room is selected.
-    if (wasEmpty) {
-        sendToUser("Note cleared!\r\n");
-    } else {
-        sendToUser("Note set!\r\n");
-        showNote();
-    }
-}
-
 void AbstractParser::showNote()
 {
     printRoomInfo(RoomFieldEnum::NOTE);
@@ -1047,125 +984,21 @@ void AbstractParser::showHeader(const QString &s)
     sendToUser(result);
 }
 
-void AbstractParser::showMapHelp()
-{
-    showHeader("MMapper mapping help");
-
-    showExitHelp();
-    sendToUser("\r\n");
-
-    showRoomSimpleFlagsHelp();
-    sendToUser("\r\n");
-
-    showRoomMobFlagsHelp();
-    sendToUser("\r\n");
-
-    showRoomLoadFlagsHelp();
-    showMiscHelp();
-}
-
 void AbstractParser::showMiscHelp()
 {
     showHeader("Miscellaneous commands");
-    sendToUser(QString("  %1note [note] - set a note in the room\r\n"
-                       "  %1trollexit   - toggle troll-only exit mapping for direct sunlight\r\n")
+    sendToUser(QString("  %1back        - delete prespammed commands from queue\r\n"
+                       "  %1markcurrent - select the room you are currently in\r\n"
+                       "  %1time        - display current MUME time\r\n"
+                       "  %1trollexit   - toggle troll-only exit mapping for direct sunlight\r\n"
+                       "  %1vote        - vote for MUME on TMC!\r\n")
                    .arg(prefixChar));
-}
-
-void AbstractParser::showRoomLoadFlagsHelp()
-{
-    showHeader("Room load flag commands");
-
-    for (auto x : ALL_LOAD_FLAGS) {
-        if (const Abbrev cmd = getParserCommandName(x))
-            sendToUser(QString("  %1%2 - toggle the \"%3\" load flag in the room\r\n")
-                           .arg(prefixChar)
-                           .arg(cmd.describe(), -12)
-                           .arg(cmd.getCommand()));
-    }
-}
-
-void AbstractParser::showRoomMobFlagsHelp()
-{
-    showHeader("Room mob flag commands");
-
-    for (auto x : ALL_MOB_FLAGS) {
-        if (const Abbrev cmd = getParserCommandName(x))
-            sendToUser(QString("  %1%2 - toggle the \"%3\" mob flag in the room\r\n")
-                           .arg(prefixChar)
-                           .arg(cmd.describe(), -12)
-                           .arg(cmd.getCommand()));
-    }
-}
-
-void AbstractParser::showRoomSimpleFlagsHelp()
-{
-    showHeader("Basic room flag commands");
-#define SHOW(X) \
-    for (auto x : DEFINED_ROOM_##X##_TYPES) { \
-        if (const Abbrev cmd = getParserCommandName(x)) \
-            sendToUser(QString("  %1%2 - set the room to \"%3\"\r\n") \
-                           .arg(prefixChar) \
-                           .arg(cmd.describe(), -12) \
-                           .arg(cmd.getCommand())); \
-    }
-
-    SHOW(PORTABLE)
-    SHOW(LIGHT)
-    SHOW(SUNDEATH)
-    SHOW(RIDABLE)
-    SHOW(ALIGN)
-#undef SHOW
-}
-
-void AbstractParser::showExitHelp()
-{
-    showHeader("Exit commands");
-    sendToUser(QString("  %1name <dir> <name> - name a door in direction <dir> with <name>\r\n")
-                   .arg(prefixChar));
-
-    sendToUser("\r\n");
-
-    showDoorFlagHelp();
-
-    sendToUser("\r\n");
-
-    showExitFlagHelp();
-}
-
-void AbstractParser::showExitFlagHelp()
-{
-    showHeader("Exit flags");
-    for (const ExitFlagEnum flag : ALL_EXIT_FLAGS) {
-        if (const Abbrev cmd = getParserCommandName(flag))
-            sendToUser(QString("  %1%2 <dir> - toggle \"%3\" exit flag in direction <dir>\r\n")
-                           .arg(prefixChar)
-                           .arg(cmd.describe(), -7)
-                           .arg(cmd.getCommand()));
-    }
-}
-
-void AbstractParser::showDoorFlagHelp()
-{
-    showHeader("Door flags (implies exit has door flag)");
-    for (const DoorFlagEnum flag : ALL_DOOR_FLAGS) {
-        if (const Abbrev cmd = getParserCommandName(flag))
-            sendToUser(QString("  %1%2 <dir> - toggle \"%3\" door flag in direction <dir>\r\n")
-                           .arg(prefixChar)
-                           .arg(cmd.describe(), -9)
-                           .arg(cmd.getCommand()));
-    }
 }
 
 void AbstractParser::showHelp()
 {
     auto s = QString("\r\nMMapper help:\r\n-------------\r\n"
-                     "\r\nStandard MUD commands:\r\n"
-                     "  Move commands: [n,s,...] or [north,south,...]\r\n"
-                     "  Sync commands: [exa,l] or [examine,look]\r\n"
-                     "\r\nManage prespammed command queue:\r\n"
-                     "  %1back        - delete prespammed commands from queue\r\n"
-                     "\r\nRoom commands:\r\n"
+                     "\r\nRoom mapping commands:\r\n"
                      "  %1room        - (see \"%1room ??\" for syntax help)\r\n"
                      "\r\nGroup commands:\r\n"
                      "  %1group       - (see \"%1group ??\" for syntax help)\r\n"
@@ -1173,14 +1006,10 @@ void AbstractParser::showHelp()
                      "\r\nHelp commands:\n"
                      "  %1help      - this help text\r\n"
                      "  %1help ??   - full syntax help for the help command\r\n"
-                     "  %1maphelp   - help for mapping console commands\r\n"
                      "  %1doorhelp  - help for door console commands\r\n"
                      "\r\nOther commands:\n"
-                     "  %1vote                      - vote for MUME on TMC!\r\n"
                      "  %1dirs [-options] pattern   - directions to matching rooms\r\n"
                      "  %1search [-options] pattern - select matching rooms\r\n"
-                     "  %1markcurrent               - select the room you are currently in\r\n"
-                     "  %1time                      - display current MUME time\r\n"
                      "  %1set [prefix [punct-char]] - change command prefix\r\n"
                      "  %1connect                   - connect to the MUD\r\n"
                      "  %1disconnect                - disconnect from the MUD\r\n"
@@ -1660,7 +1489,7 @@ void AbstractParser::performDoorCommand(const ExitDirEnum direction, const DoorA
         // If there is only one secret assume that is what needs opening
         auto secretCount = 0;
         for (const auto i : ALL_EXITS_NESWUD) {
-            if (getField(c, i, ExitFieldVariant{DoorFlags{DoorFlagEnum::HIDDEN}})) {
+            if (m_mapData->getExitFlag(c, i, ExitFieldVariant{DoorFlags{DoorFlagEnum::HIDDEN}})) {
                 dn = m_mapData->getDoorName(c, i).toQByteArray();
                 secretCount++;
             }
@@ -1743,49 +1572,6 @@ void AbstractParser::genericDoorCommand(QString command, const ExitDirEnum direc
     }
 }
 
-void AbstractParser::nameDoorCommand(const StringView &doorname, const ExitDirEnum direction)
-{
-    const Coordinate c = getTailPosition();
-
-    m_mapData->setDoorName(c, DoorName{doorname.toStdString()}, direction);
-    sendToUser("--->Doorname set to: " + doorname.toQByteArray() + "\r\n");
-    mapChanged();
-}
-
-void AbstractParser::toggleExitFlagCommand(const ExitFlagEnum flag, const ExitDirEnum direction)
-{
-    const Coordinate c = getTailPosition();
-
-    const ExitFieldVariant var{ExitFlags{flag}};
-    m_mapData->toggleExitFlag(c, direction, var);
-
-    const auto toggle = enabledString(getField(c, direction, var));
-    const QByteArray flagname = getFlagName(flag);
-
-    sendToUser("--->" + flagname + " exit " + toggle + "\r\n");
-    mapChanged();
-}
-
-bool AbstractParser::getField(const Coordinate &c,
-                              const ExitDirEnum &direction,
-                              const ExitFieldVariant &var) const
-{
-    return m_mapData->getExitFlag(c, direction, var);
-}
-
-void AbstractParser::toggleDoorFlagCommand(const DoorFlagEnum flag, const ExitDirEnum direction)
-{
-    const Coordinate c = getTailPosition();
-
-    const ExitFieldVariant var{DoorFlags{flag}};
-    m_mapData->toggleExitFlag(c, direction, var);
-
-    const auto toggle = enabledString(getField(c, direction, var));
-    const QByteArray flagname = getFlagName(flag);
-    sendToUser("--->" + flagname + " door " + toggle + "\r\n");
-    mapChanged();
-}
-
 ExitFlags AbstractParser::getExitFlags(const ExitDirEnum dir) const
 {
     return m_exitsFlags.get(dir);
@@ -1838,21 +1624,6 @@ void AbstractParser::sendGTellToUser(const QByteArray &ba)
     sendToUser("\r\n" + ba + "\r\n");
     sendPromptToUser();
 }
-
-#define NOP()
-#define X_DECLARE_ROOM_FIELD_TOGGLERS(UPPER_CASE, CamelCase, Type) \
-    void AbstractParser::toggleRoomFlagCommand(Type flag) \
-    { \
-        const Coordinate c = getTailPosition(); \
-        RoomFieldVariant var(flag); \
-        m_mapData->toggleRoomFlag(c, var); \
-        const QString toggle = enabledString(m_mapData->getRoomFlag(c, var)); \
-        sendToUser("--->Room flag " + toggle.toLatin1() + "\r\n"); \
-        mapChanged(); \
-    }
-X_FOREACH_ROOM_FIELD(X_DECLARE_ROOM_FIELD_TOGGLERS, NOP)
-#undef X_DECLARE_ROOM_FIELD_TOGGLERS
-#undef NOP
 
 void AbstractParser::printRoomInfo(const RoomFieldEnum field)
 {

@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <functional>
 #include <map>
+#include <ostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -37,10 +39,7 @@ const Abbrev cmdDoorHelp{"doorhelp", 5};
 const Abbrev cmdGroup{"group", 5};
 const Abbrev cmdGroupTell{"gtell", 2};
 const Abbrev cmdHelp{"help", 2};
-const Abbrev cmdMapHelp{"maphelp", 5};
 const Abbrev cmdMarkCurrent{"markcurrent", 4};
-const Abbrev cmdName{"name"};
-const Abbrev cmdNote{"note"};
 const Abbrev cmdRemoveDoorNames{"removedoornames"};
 const Abbrev cmdRoom{"room", 2};
 const Abbrev cmdSearch{"search", 3};
@@ -485,118 +484,6 @@ bool AbstractParser::parseDoorAction(const DoorActionEnum dat, StringView words)
     return true;
 }
 
-bool AbstractParser::parseDoorFlags(StringView words)
-{
-    if (words.isEmpty())
-        return false;
-
-    const auto firstWord = words.takeFirstWord();
-    for (const DoorFlagEnum flag : ALL_DOOR_FLAGS) {
-        if (getParserCommandName(flag).matches(firstWord)) {
-            return parseDoorFlag(flag, words);
-        }
-    }
-    return false;
-}
-
-bool AbstractParser::parseDoorFlag(const DoorFlagEnum flag, StringView words)
-{
-    const auto dir = tryGetDir(words);
-    if (!isNESWUD(dir))
-        throw std::runtime_error("invalid direction");
-    if (!words.isEmpty())
-        return false;
-    toggleDoorFlagCommand(flag, dir);
-    return true;
-}
-
-bool AbstractParser::parseExitFlags(StringView words)
-{
-    if (words.isEmpty())
-        return false;
-
-    const auto firstWord = words.takeFirstWord();
-    for (const ExitFlagEnum flag : ALL_EXIT_FLAGS) {
-        if (getParserCommandName(flag).matches(firstWord)) {
-            return parseExitFlag(flag, words);
-        }
-    }
-    return false;
-}
-
-bool AbstractParser::parseExitFlag(const ExitFlagEnum flag, StringView words)
-{
-    const auto dir = tryGetDir(words);
-    if (!isNESWUD(dir))
-        throw std::runtime_error("invalid direction");
-    if (!words.isEmpty())
-        return false;
-    toggleExitFlagCommand(flag, dir);
-    return true;
-}
-
-bool AbstractParser::parseField(StringView words)
-{
-#define PARSE_FIELD(X) \
-    for (const auto x : DEFINED_ROOM_##X##_TYPES) { \
-        if (getParserCommandName(x).matches(firstWord)) { \
-            toggleRoomFlagCommand(x); \
-            return true; \
-        } \
-    }
-
-    if (words.isEmpty())
-        return false;
-
-    // REVISIT: support "set room field XXX" ?
-    const auto firstWord = words.takeFirstWord();
-    if (!words.isEmpty())
-        return false;
-
-    PARSE_FIELD(LIGHT);
-    PARSE_FIELD(SUNDEATH);
-    PARSE_FIELD(PORTABLE);
-    PARSE_FIELD(RIDABLE);
-    PARSE_FIELD(ALIGN);
-    return false;
-#undef PARSE
-}
-
-bool AbstractParser::parseMobFlags(StringView words)
-{
-    if (words.isEmpty())
-        return false;
-
-    const auto firstWord = words.takeFirstWord();
-    if (!words.isEmpty())
-        return false;
-
-    for (const RoomMobFlagEnum mobFlag : ALL_MOB_FLAGS) {
-        if (getParserCommandName(mobFlag).matches(firstWord)) {
-            toggleRoomFlagCommand(RoomMobFlags{mobFlag});
-            return true;
-        }
-    }
-    return false;
-}
-bool AbstractParser::parseLoadFlags(StringView words)
-{
-    if (words.isEmpty())
-        return false;
-
-    const auto firstWord = words.takeFirstWord();
-    if (!words.isEmpty())
-        return false;
-
-    for (const RoomLoadFlagEnum loadFlag : ALL_LOAD_FLAGS) {
-        if (getParserCommandName(loadFlag).matches(firstWord)) {
-            toggleRoomFlagCommand(RoomLoadFlags{loadFlag});
-            return true;
-        }
-    }
-    return false;
-}
-
 void AbstractParser::parseSetCommand(StringView view)
 {
     if (view.isEmpty()) {
@@ -635,64 +522,6 @@ void AbstractParser::parseSetCommand(StringView view)
     sendToUser("That variable is not supported.");
 }
 
-void AbstractParser::parseRoom(StringView input)
-{
-    using namespace ::syntax;
-    static auto abb = syntax::abbrevToken;
-
-    auto printDynamic = Accept([this](User &,
-                                      const Pair *) -> void { printRoomInfo(dynamicRoomFields); },
-                               "print room dynamic");
-    auto printStatic = Accept([this](User &,
-                                     const Pair *) -> void { printRoomInfo(staticRoomFields); },
-                              "print room static");
-    auto printNote = Accept([this](User &, const Pair *) -> void { showNote(); }, "print room note");
-
-    auto printSyntax = buildSyntax(abb("print"),
-                                   buildSyntax(abb("dynamic"), printDynamic),
-                                   buildSyntax(abb("static"), printStatic),
-                                   buildSyntax(abb("note"), printNote));
-
-    // TODO: expand the /room command.
-    //
-    //   /room
-    //
-    //     dadd <dir> <roomid> <name>      add a door
-    //     dkill <dir>                     remove a door
-    //
-    //     dig <dir> <roomid>              add a 2-way room connection
-    //     noexit <dir>                    remove an exit
-    //
-    // The rest diverges from MUME slightly
-    //
-    //     dset <dir>
-    //       ([+-=]<dflag>)+
-    //       (clear | set | toggle) <dflag>
-    //       name <rest>
-    //
-    //     "exit-flags" <dir>
-    //       (clear | set | toggle) <eflag>
-    //
-    //     flags (clear | set | toggle) <flag>
-    //
-
-    eval("room", printSyntax, input);
-}
-
-void AbstractParser::parseName(StringView view)
-{
-    if (!view.isEmpty()) {
-        auto dir = tryGetDir(view);
-        if (!view.isEmpty()) {
-            auto name = view.takeFirstWord();
-            nameDoorCommand(name, dir);
-            return;
-        }
-    }
-
-    showSyntax("name <dir> <name>");
-}
-
 void AbstractParser::parseSpecialCommand(StringView wholeCommand)
 {
     // TODO: Just use '\n' and transform to "\r\n" elsewhere if necessary.
@@ -722,11 +551,6 @@ void AbstractParser::parseDirections(StringView view)
         showSyntax("dirs [-(name|desc|dyncdesc|note|exits|flags|all)] pattern");
     else
         doGetDirectionsCommand(view);
-}
-
-void AbstractParser::parseNoteCmd(StringView view)
-{
-    setNote(RoomNote{view.toStdString()});
 }
 
 class ArgHelpCommand final : public syntax::IArgument
@@ -804,12 +628,7 @@ void AbstractParser::parseHelp(StringView words)
                     simpleSyntax("abbreviations",
                                  [this](auto &&, auto &&) { showHelpCommands(true); }),
                     simpleSyntax("commands", [this](auto &&, auto &&) { showHelpCommands(false); }),
-                    simpleSyntax("map", [this](auto &&, auto &&) { showMapHelp(); }),
                     simpleSyntax("doors", [this](auto &&, auto &&) { showDoorCommandHelp(); }),
-                    simpleSyntax("exits", [this](auto &&, auto &&) { showExitHelp(); }),
-                    simpleSyntax("flags", [this](auto &&, auto &&) { showRoomSimpleFlagsHelp(); }),
-                    simpleSyntax("mobiles", [this](auto &&, auto &&) { showRoomMobFlagsHelp(); }),
-                    simpleSyntax("load", [this](auto &&, auto &&) { showRoomLoadFlagsHelp(); }),
                     simpleSyntax("miscellaneous", [this](auto &&, auto &&) { showMiscHelp(); })),
         Accept([this](auto &&, auto &&) { showHelp(); }, "general help"));
 
@@ -845,14 +664,6 @@ void AbstractParser::initSpecialCommandMap()
         },
         // TODO: create a parse tree, and show all of the help topics.
         makeSimpleHelp("Provides help."));
-    add(cmdMapHelp,
-        [this](const std::vector<StringView> & /*s*/, StringView rest) {
-            if (!rest.isEmpty())
-                return false;
-            this->showMapHelp();
-            return true;
-        },
-        makeSimpleHelp("Help for mapping console commands."));
     add(cmdDoorHelp,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             if (!rest.isEmpty())
@@ -870,71 +681,6 @@ void AbstractParser::initSpecialCommandMap()
                     return parseDoorAction(x, rest);
                 },
                 makeSimpleHelp("Sets door action: " + std::string{cmd.getCommand()}));
-    }
-
-    for (const DoorFlagEnum x : ALL_DOOR_FLAGS) {
-        if (auto cmd = getParserCommandName(x))
-            add(getParserCommandName(x),
-                [this, x](const std::vector<StringView> & /*s*/, StringView rest) {
-                    return parseDoorFlag(x, rest);
-                },
-                makeSimpleHelp("Sets door flag: " + std::string{cmd.getCommand()}));
-    }
-
-    for (const ExitFlagEnum x : ALL_EXIT_FLAGS) {
-        if (auto cmd = getParserCommandName(x))
-            add(cmd,
-                [this, x](const std::vector<StringView> & /*s*/, StringView rest) {
-                    return parseExitFlag(x, rest);
-                },
-                makeSimpleHelp("Sets exit flag: " + std::string{cmd.getCommand()}));
-    }
-
-#define ADD_FIELD_CMDS(X) \
-    do { \
-        for (const auto x : DEFINED_ROOM_##X##_TYPES) { \
-            if (auto cmd = getParserCommandName(x)) { \
-                add(cmd, \
-                    [this, x](const std::vector<StringView> & /*s*/, StringView rest) { \
-                        if (!rest.isEmpty()) \
-                            return false; \
-                        toggleRoomFlagCommand(x); \
-                        return true; \
-                    }, \
-                    makeSimpleHelp("Sets " #X " flag: " + std::string{cmd.getCommand()})); \
-            } \
-        } \
-    } while (false)
-    ADD_FIELD_CMDS(LIGHT);
-    ADD_FIELD_CMDS(SUNDEATH);
-    ADD_FIELD_CMDS(PORTABLE);
-    ADD_FIELD_CMDS(RIDABLE);
-    ADD_FIELD_CMDS(ALIGN);
-#undef ADD_FIELD_CMDS
-
-    for (const RoomMobFlagEnum x : ALL_MOB_FLAGS) {
-        if (auto cmd = getParserCommandName(x)) {
-            add(cmd,
-                [this, x](const std::vector<StringView> & /*s*/, StringView rest) {
-                    if (!rest.isEmpty())
-                        return false;
-                    toggleRoomFlagCommand(RoomMobFlags{x});
-                    return true;
-                },
-                makeSimpleHelp("Sets room mob flag: " + std::string{cmd.getCommand()}));
-        }
-    }
-
-    for (const RoomLoadFlagEnum x : ALL_LOAD_FLAGS) {
-        if (auto cmd = getParserCommandName(x))
-            add(cmd,
-                [this, x](const std::vector<StringView> & /*s*/, StringView rest) {
-                    if (!rest.isEmpty())
-                        return false;
-                    toggleRoomFlagCommand(RoomLoadFlags{x});
-                    return true;
-                },
-                makeSimpleHelp("Sets room load flag: " + std::string{cmd.getCommand()}));
     }
 
     // misc commands
@@ -986,19 +732,6 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Highlight the room you are currently in."));
-    add(cmdName,
-        [this](const std::vector<StringView> & /*s*/, StringView rest) {
-            this->parseName(rest);
-            return true;
-        },
-        makeSimpleHelp(
-            "Arguments: <dir> <name>;  Sets the name of door in direction <dir> with <name>."));
-    add(cmdNote,
-        [this](const std::vector<StringView> & /*s*/, StringView rest) {
-            this->parseNoteCmd(rest);
-            return true;
-        },
-        makeSimpleHelp("Sets the note for the current room."));
     add(cmdRemoveDoorNames,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             if (!rest.isEmpty())

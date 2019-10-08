@@ -5,6 +5,7 @@
 #include "AbstractParser-Utils.h"
 
 #include <cctype>
+#include <sstream>
 
 #include "../configuration/configuration.h"
 
@@ -27,3 +28,17 @@ bool isValidPrefix(const char c)
 {
     return std::ispunct(c);
 }
+
+std::string concatenate_unquoted(const Vector &input)
+{
+    std::ostringstream oss;
+    bool first = true;
+    for (const Value &val : input) {
+        if (first)
+            first = false;
+        else
+            oss << " ";
+        oss << val.getString();
+    }
+    return oss.str();
+};

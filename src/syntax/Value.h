@@ -11,6 +11,8 @@
 #include <vector>
 
 #include "../global/RuleOf5.h"
+#include "../mapdata/DoorFlags.h"
+#include "../mapdata/ExitFlags.h"
 
 struct Pair;
 struct Value;
@@ -56,7 +58,9 @@ public:
     X(float, float, Float) \
     X(double, double, Double) \
     X(std::string, const std::string &, String) \
-    X(Vector, const Vector &, Vector)
+    X(Vector, const Vector &, Vector) \
+    X(DoorFlagEnum, DoorFlagEnum, DoorFlag) \
+    X(ExitFlagEnum, ExitFlagEnum, ExitFlag)
 
 #define DECL_ENUM(ValueType, RefType, CamelCase) CamelCase,
     enum class IndexEnum : uint8_t { Null, X_FOREACH_VALUE_TYPE(DECL_ENUM) };

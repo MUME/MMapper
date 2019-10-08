@@ -12,18 +12,12 @@
 #include "Abbrev.h"
 #include "DoorAction.h"
 
-static constexpr const auto staticRoomFields = RoomFieldEnum::NAME | RoomFieldEnum::DESC;
-static constexpr const auto dynamicRoomFields = staticRoomFields | RoomFieldEnum::DYNAMIC_DESC;
-
 extern const Abbrev cmdBack;
 extern const Abbrev cmdDirections;
 extern const Abbrev cmdDoorHelp;
 extern const Abbrev cmdGroupTell;
 extern const Abbrev cmdHelp;
-extern const Abbrev cmdMapHelp;
 extern const Abbrev cmdMarkCurrent;
-extern const Abbrev cmdName;
-extern const Abbrev cmdNote;
 extern const Abbrev cmdRemoveDoorNames;
 extern const Abbrev cmdSearch;
 extern const Abbrev cmdSet;

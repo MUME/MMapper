@@ -114,16 +114,16 @@ MatchResult ArgChoice::virt_match(const ParserInput &input_sv, IMatchErrorLogger
 
 std::ostream &ArgChoice::virt_to_stream(std::ostream &os) const
 {
-    os << "choice< ";
+    os << "<";
     bool first = true;
     for (auto &token : m_tokens) {
         if (first)
             first = false;
         else
-            os << " | ";
+            os << "|";
         os << token;
     }
-    os << " >";
+    os << ">";
     return os;
 }
 
@@ -350,6 +350,29 @@ std::ostream &ArgFloat::virt_to_stream(std::ostream &os) const
     }
 
     return os << ">";
+}
+
+MatchResult ArgOneOrMoreToken::virt_match(const ParserInput &input, IMatchErrorLogger *logger) const
+{
+    auto &arg = *this;
+    std::vector<Value> values;
+    auto current = input;
+    while (!current.empty()) {
+        MatchResult result = arg.m_token.tryMatch(current.left(1), logger);
+        if (!result)
+            break;
+        values.emplace_back(result.optValue.value_or(Value{}));
+        current = current.mid(1);
+    }
+    if (values.empty())
+        return MatchResult::failure(input);
+    const auto size = values.size();
+    return MatchResult::success(size, input, Value(Vector(std::move(values))));
+}
+
+std::ostream &ArgOneOrMoreToken::virt_to_stream(std::ostream &os) const
+{
+    return os << "[" << m_token << "]...";
 }
 
 MatchResult ArgOptionalChar::virt_match(const ParserInput &input,

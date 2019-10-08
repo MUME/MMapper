@@ -61,6 +61,16 @@ static void print(std::ostream &os, const Vector &value)
     os << value;
 }
 
+static void print(std::ostream &os, DoorFlagEnum value)
+{
+    os << "DoorFlagEnum(" << static_cast<int>(value) << ")";
+}
+
+static void print(std::ostream &os, ExitFlagEnum value)
+{
+    os << "ExitFlagEnum(" << static_cast<int>(value) << ")";
+}
+
 } // namespace value_helper
 
 std::ostream &operator<<(std::ostream &os, const Value &value)

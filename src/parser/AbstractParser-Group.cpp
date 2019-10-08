@@ -12,20 +12,6 @@
 #include "../syntax/TreeParser.h"
 #include "AbstractParser-Utils.h"
 
-static std::string concatenate_unquoted(const Vector &input)
-{
-    std::ostringstream oss;
-    bool first = true;
-    for (const Value &val : input) {
-        if (first)
-            first = false;
-        else
-            oss << " ";
-        oss << val.getString();
-    }
-    return oss.str();
-};
-
 static QByteArray simplify(const std::string &s)
 {
     return QByteArray::fromStdString(s).simplified();

@@ -89,6 +89,21 @@ private:
     std::ostream &virt_to_stream(std::ostream &os) const override;
 };
 
+class ArgOneOrMoreToken final : public IArgument
+{
+private:
+    TokenMatcher m_token;
+
+public:
+    explicit ArgOneOrMoreToken(TokenMatcher t)
+        : m_token(std::move(t))
+    {}
+
+private:
+    MatchResult virt_match(const ParserInput &input, IMatchErrorLogger *logger) const override;
+    std::ostream &virt_to_stream(std::ostream &os) const override;
+};
+
 // always ignored.
 class ArgOptionalChar final : public IArgument
 {
