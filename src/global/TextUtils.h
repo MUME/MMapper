@@ -469,6 +469,7 @@ static_assert(next_tab_stop(9) == 16);
 static_assert(next_tab_stop(15) == 16);
 
 char toLowerLatin1(char c);
+std::string toLowerLatin1(const std::string_view &str);
 bool isPrintLatin1(char c);
 bool requiresQuote(const std::string_view &str);
 std::ostream &print_char(std::ostream &os, char c, bool doubleQuote);

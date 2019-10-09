@@ -15,6 +15,7 @@
 #include <QtCore>
 
 #include "../global/StringView.h"
+#include "../global/TextUtils.h"
 #include "../mapdata/DoorFlags.h"
 #include "../mapdata/ExitFlags.h"
 #include "../mapdata/enums.h"
@@ -1154,7 +1155,7 @@ bool AbstractParser::evalSpecialCommandMap(StringView args)
     auto first = args.takeFirstWord();
     auto &map = m_specialCommandMap;
 
-    const std::string key = first.toStdString();
+    const std::string key = toLowerLatin1(first.getStdStringView());
     auto it = map.find(key);
     if (it == map.end())
         return false;

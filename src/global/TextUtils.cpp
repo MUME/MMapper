@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <iostream>
 #include <optional>
+#include <sstream>
 #include <vector>
 #include <QRegularExpression>
 #include <QString>
@@ -1015,6 +1016,15 @@ char toLowerLatin1(const char c)
         return static_cast<char>(i + 32);
     }
     return static_cast<char>(std::tolower(c));
+}
+
+std::string toLowerLatin1(const std::string_view &str)
+{
+    std::ostringstream oss;
+    for (char c : str) {
+        oss << toLowerLatin1(c);
+    }
+    return oss.str();
 }
 
 // std::isprint is only ASCII

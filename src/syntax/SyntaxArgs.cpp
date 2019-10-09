@@ -4,7 +4,6 @@
 #include "SyntaxArgs.h"
 
 #include <cmath>
-#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -43,11 +42,7 @@ MatchResult ArgAbbrev::virt_match(const ParserInput &input, IMatchErrorLogger * 
 
 std::ostream &ArgAbbrev::virt_to_stream(std::ostream &os) const
 {
-    std::ostringstream oss;
-    for (char c : m_str) {
-        oss << toLowerLatin1(c);
-    }
-    return print_string_smartquote(os, oss.str());
+    return print_string_smartquote(os, toLowerLatin1(m_str));
 }
 
 MatchResult ArgBool::virt_match(const syntax::ParserInput &input,
@@ -56,15 +51,7 @@ MatchResult ArgBool::virt_match(const syntax::ParserInput &input,
     if (input.empty())
         return MatchResult::failure(input);
 
-    // TODO: factor out toLower() helper function
-    auto toLower = [](std::string s) {
-        for (auto &c : s) {
-            c = static_cast<char>(std::tolower(c));
-        }
-        return s;
-    };
-
-    const auto first = toLower(input.front());
+    const auto first = toLowerLatin1(input.front());
 
     if (first == "true" || first == "yes" || first == "1")
         return MatchResult::success(1, input, Value{true});
@@ -459,11 +446,7 @@ MatchResult ArgStringIgnoreCase::virt_match(const ParserInput &input,
 
 std::ostream &ArgStringIgnoreCase::virt_to_stream(std::ostream &os) const
 {
-    std::ostringstream oss;
-    for (char c : m_str) {
-        oss << toLowerLatin1(c);
-    }
-    return print_string_smartquote(os, oss.str());
+    return print_string_smartquote(os, toLowerLatin1(m_str));
 }
 
 TokenMatcher abbrevToken(std::string s)
