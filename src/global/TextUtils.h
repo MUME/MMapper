@@ -473,6 +473,7 @@ std::string toLowerLatin1(const std::string_view &str);
 bool isPrintLatin1(char c);
 bool requiresQuote(const std::string_view &str);
 std::ostream &print_char(std::ostream &os, char c, bool doubleQuote);
+std::ostream &print_char_quoted(std::ostream &os, char c);
 std::ostream &print_string_quoted(std::ostream &os, const std::string_view &sv);
 std::ostream &print_string_smartquote(std::ostream &os, const std::string_view &sv);
 
@@ -488,7 +489,7 @@ public:
 
     friend std::ostream &operator<<(std::ostream &os, const QuotedChar &quotedChar)
     {
-        return print_char(os, quotedChar.m_c, false);
+        return print_char_quoted(os, quotedChar.m_c);
     }
 };
 

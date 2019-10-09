@@ -1093,13 +1093,22 @@ std::ostream &print_char(std::ostream &os, char c, bool doubleQuote)
     return os;
 }
 
+std::ostream &print_char_quoted(std::ostream &os, const char c)
+{
+    static constexpr const char C_SQUOTE = '\'';
+    os << C_SQUOTE;
+    print_char(os, c, false);
+    return os << C_SQUOTE;
+}
+
 std::ostream &print_string_quoted(std::ostream &os, const std::string_view &sv)
 {
-    os << '"';
+    static constexpr const char C_DQUOTE = '"';
+    os << C_DQUOTE;
     for (const auto &c : sv) {
         print_char(os, c, true);
     }
-    return os << '"';
+    return os << C_DQUOTE;
 }
 
 std::ostream &print_string_smartquote(std::ostream &os, const std::string_view &sv)
