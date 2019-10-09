@@ -1007,8 +1007,13 @@ AnsiTokenizer::Iterator::size_type AnsiTokenizer::Iterator::skip_word()
     });
 }
 
-char toLowerLatin1(char c)
+char toLowerLatin1(const char c)
 {
+    const int i = static_cast<int>(static_cast<uint8_t>(c));
+    if (i >= 192 && i <= 221 && i != 215) {
+        // handle accented Latin-1 chars
+        return static_cast<char>(i + 32);
+    }
     return static_cast<char>(std::tolower(c));
 }
 
