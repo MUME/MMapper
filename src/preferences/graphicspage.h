@@ -29,7 +29,6 @@ public slots:
     void loadConfig();
     void antialiasingSamplesTextChanged(const QString &);
     void trilinearFilteringStateChanged(int);
-    void softwareOpenGLStateChanged(int);
 
     void updatedStateChanged(int);
     void drawNotMappedExitsStateChanged(int);

@@ -41,10 +41,12 @@ GraphicsPage::GraphicsPage(QWidget *parent)
             &QCheckBox::stateChanged,
             this,
             &GraphicsPage::trilinearFilteringStateChanged);
-    connect(ui->softwareOpenGLCheckBox,
-            &QCheckBox::stateChanged,
-            this,
-            &GraphicsPage::softwareOpenGLStateChanged);
+    connect(ui->softwareOpenGLCheckBox, &QCheckBox::clicked, this, [this]() {
+        QMessageBox::information(this,
+                                 "Restart Required",
+                                 "Please restart MMapper for this change to take effect.");
+        setConfig().canvas.softwareOpenGL = ui->softwareOpenGLCheckBox->isChecked();
+    });
 
     connect(ui->updated, &QCheckBox::stateChanged, this, &GraphicsPage::updatedStateChanged);
     connect(ui->drawNotMappedExits,
@@ -111,14 +113,6 @@ void GraphicsPage::antialiasingSamplesTextChanged(const QString & /*unused*/)
 void GraphicsPage::trilinearFilteringStateChanged(int /*unused*/)
 {
     setConfig().canvas.trilinearFiltering = ui->trilinearFilteringCheckBox->isChecked();
-}
-
-void GraphicsPage::softwareOpenGLStateChanged(int /*unused*/)
-{
-    QMessageBox::information(this,
-                             "Restart Required",
-                             "Please restart MMapper for this change to take effect.");
-    setConfig().canvas.softwareOpenGL = ui->softwareOpenGLCheckBox->isChecked();
 }
 
 void GraphicsPage::updatedStateChanged(int /*unused*/)
