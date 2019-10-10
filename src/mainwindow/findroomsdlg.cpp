@@ -113,20 +113,27 @@ void FindRoomsDlg::findClicked()
         kind = PatternKindsEnum::FLAGS;
     }
 
-    auto tmpSel = RoomSelection(*m_mapData);
-    tmpSel.genericSearch(RoomFilter(text, cs, kind));
+    try {
+        auto tmpSel = RoomSelection(*m_mapData);
+        tmpSel.genericSearch(RoomFilter(text, cs, kind));
 
-    for (const Room *const room : tmpSel) {
-        QString id;
-        id.setNum(room->getId().asUint32());
-        QString roomName = room->getName().toQString();
-        QString toolTip = constructToolTip(room);
+        for (const Room *const room : tmpSel) {
+            QString id;
+            id.setNum(room->getId().asUint32());
+            QString roomName = room->getName().toQString();
+            QString toolTip = constructToolTip(room);
 
-        item = new QTreeWidgetItem(resultTable);
-        item->setText(0, id);
-        item->setText(1, roomName);
-        item->setToolTip(0, toolTip);
-        item->setToolTip(1, toolTip);
+            item = new QTreeWidgetItem(resultTable);
+            item->setText(0, id);
+            item->setText(1, roomName);
+            item->setToolTip(0, toolTip);
+            item->setToolTip(1, toolTip);
+        }
+    } catch (const std::exception &ex) {
+        qWarning() << "Exception: " << ex.what();
+        QMessageBox::critical(this,
+                              "Internal Error",
+                              QString::asprintf("An exception occurred: %s\r\n", ex.what()));
     }
     roomsFoundLabel->setText(tr("%1 room%2 found")
                                  .arg(resultTable->topLevelItemCount())

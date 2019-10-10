@@ -12,6 +12,7 @@
 #include "../global/StringView.h"
 #include "../global/TaggedString.h"
 #include "../global/utils.h"
+#include "../parser/Abbrev.h"
 #include "../parser/AbstractParser-Commands.h"
 #include "../parser/parserutils.h"
 #include "ExitFieldVariant.h"
@@ -20,13 +21,27 @@
 
 static std::regex createRegex(const std::string &input, const Qt::CaseSensitivity cs)
 {
-    // REVISIT: Add another option to support regex where we do not santize the input
-    static const std::regex escape(R"([-[\]{}()*+?.,\^$|#])", std::regex::optimize);
-    const std::string sanitized = std::regex_replace(input, escape, R"(\$&)");
-    const std::string pattern = ".*" + sanitized + ".*";
+    // TODO: Switch from std::regex::exteneded to std::regex::multiline once GCC supports it
     auto options = std::regex::nosubs | std::regex::optimize | std::regex::extended;
     if (cs == Qt::CaseInsensitive)
         options |= std::regex_constants::icase;
+    const std::string pattern = [&input, &options]() -> std::string {
+        if (input.empty())
+            return R"(^$)";
+
+        // REVISIT: Add another option to support regex where we do not santize the input
+
+        const auto escape_pattern = [&options]() {
+            // Prevent user input from being interpreted as a POSIX extended regex
+            if (options & std::regex::extended)
+                return R"([.[{}()*+?|^$])";
+            // ECMAScript escape pattern (unused)
+            return R"([-[\]{}()*+?.,\^$|#\s])";
+        };
+        static const std::regex escape(escape_pattern(), std::regex::optimize);
+        const std::string sanitized = std::regex_replace(input, escape, R"(\$&)");
+        return ".*" + sanitized + ".*";
+    }();
     return std::regex(pattern, options);
 }
 
@@ -45,38 +60,40 @@ std::optional<RoomFilter> RoomFilter::parseRoomFilter(const QString &line)
     auto view = StringView{s}.trim();
     if (view.isEmpty())
         return std::nullopt;
+    else if (view.takeFirstLetter() != '-')
+        return RoomFilter{line, Qt::CaseInsensitive, PatternKindsEnum::NAME};
 
-    auto kind = PatternKindsEnum::NAME;
-    QString pattern = line;
-    if (view.takeFirstLetter() == '-') {
-        const auto sub = view.takeFirstWord();
-        const auto &subStr = sub.toStdString();
-        if (subStr == "desc" || sub.startsWith("de") || subStr == "d") {
-            kind = PatternKindsEnum::DESC;
-        } else if (subStr == "dyndesc" || sub.startsWith("dy") || subStr == "y") {
-            kind = PatternKindsEnum::DYN_DESC;
-        } else if (subStr == "name") {
-            kind = PatternKindsEnum::NAME;
-        } else if (subStr == "exits" || subStr == "e") {
-            kind = PatternKindsEnum::EXITS;
-        } else if (subStr == "note" || subStr == "n") {
-            kind = PatternKindsEnum::NOTE;
-        } else if (subStr == "all" || subStr == "a") {
-            kind = PatternKindsEnum::ALL;
-        } else if (subStr == "clear" || subStr == "c") {
-            kind = PatternKindsEnum::NONE;
-        } else if (subStr == "flags" || subStr == "f") {
-            kind = PatternKindsEnum::FLAGS;
+    const auto first = view.takeFirstWord();
+    const auto opt = [&first]() -> std::optional<PatternKindsEnum> {
+        if (Abbrev("desc", 2).matches(first)) {
+            return PatternKindsEnum::DESC;
+        } else if (Abbrev("dyndesc", 2).matches(first)) {
+            return PatternKindsEnum::DYN_DESC;
+        } else if (Abbrev("name", 2).matches(first)) {
+            return PatternKindsEnum::NAME;
+        } else if (Abbrev("exits", 1).matches(first)) {
+            return PatternKindsEnum::EXITS;
+        } else if (Abbrev("note", 2).matches(first)) {
+            return PatternKindsEnum::NOTE;
+        } else if (Abbrev("all", 1).matches(first)) {
+            return PatternKindsEnum::ALL;
+        } else if (Abbrev("clear", 1).matches(first)) {
+            return PatternKindsEnum::NONE;
+        } else if (Abbrev("flags", 1).matches(first)) {
+            return PatternKindsEnum::FLAGS;
         } else {
             return std::nullopt;
         }
+    }();
+    if (!opt.has_value())
+        return std::nullopt;
 
+    const QString pattern = view.toQString();
+    const auto kind = opt.value();
+    if (kind != PatternKindsEnum::NONE) {
         // Require pattern text in addition to arguments
-        if (kind != PatternKindsEnum::NONE) {
-            pattern = view.toQString();
-            if (pattern.isEmpty()) {
-                return std::nullopt;
-            }
+        if (pattern.isEmpty()) {
+            return std::nullopt;
         }
     }
     return RoomFilter{pattern, Qt::CaseInsensitive, kind};
