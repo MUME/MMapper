@@ -424,7 +424,9 @@ void TestExpandoraCommon::roomCompareTest()
             return "DIFFERENT";
         case ComparisonResultEnum::TOLERANCE:
             return "TOLERENACE";
+        default:
         }
+        return "?";
     };
 
     if (comparison != result) {
