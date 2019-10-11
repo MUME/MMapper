@@ -161,7 +161,7 @@ before_script:
       mkdir build
       cd build
       cmake --version
-      cmake .. $MMAPPER_CMAKE_EXTRA
+      cmake .. -DCMAKE_BUILD_TYPE=Debug $MMAPPER_CMAKE_EXTRA
     fi
 
 script:
