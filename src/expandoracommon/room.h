@@ -42,30 +42,7 @@ static inline Flags modifyFlags(const Flags flags, const Flag x, const FlagModif
     return flags;
 }
 
-// REVISIT: can't trivially make this
-// `using ExitsList = EnumIndexedArray<Exit, ExitDirEnum, NUM_EXITS>`
-// until we get rid of the concept of dummy exits and rooms,
-// because the Exit still needs to be told if it has fields.
-class ExitsList final
-{
-private:
-    EnumIndexedArray<Exit, ExitDirEnum, NUM_EXITS> m_exits;
-
-public:
-    Exit &operator[](const ExitDirEnum idx) { return m_exits[idx]; }
-    const Exit &operator[](const ExitDirEnum idx) const { return m_exits[idx]; }
-
-public:
-    auto size() const { return m_exits.size(); }
-
-public:
-    auto begin() { return m_exits.begin(); }
-    auto end() { return m_exits.end(); }
-    auto begin() const { return m_exits.begin(); }
-    auto end() const { return m_exits.end(); }
-    auto cbegin() const { return m_exits.cbegin(); }
-    auto cend() const { return m_exits.cend(); }
-};
+using ExitsList = EnumIndexedArray<Exit, ExitDirEnum, NUM_EXITS>;
 
 struct ExitDirConstRef final
 {
