@@ -317,6 +317,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         add_compile_options(-Werror=return-type)
         add_compile_options(-Werror=shorten-64-to-32)
         add_compile_options(-Werror=sign-conversion) # can warn about hard-to-spot bugs.
+        add_compile_options(-Werror=switch)
         add_compile_options(-Werror=unused-result) # required for c++17 [[nodiscard]]
         add_compile_options(-Werror=weak-vtables) # can result in crashes for ODR violations.
     endif(MMAPPER_IS_DEBUG)
