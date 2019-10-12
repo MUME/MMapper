@@ -253,7 +253,7 @@ void GroupClient::receiveGroupInformation(const QVariantMap &data)
 
 void GroupClient::sendLoginInformation()
 {
-    const CGroupChar *character = getGroup()->getSelf();
+    const SharedGroupChar &character = getGroup()->getSelf();
     QVariantMap loginData = character->toVariantMap();
     if (proposedProtocolVersion == PROTOCOL_VERSION_102) {
         // Protocol 102 does handshake and login in one step

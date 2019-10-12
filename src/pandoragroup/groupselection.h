@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "../global/RuleOf5.h"
+#include "CGroupChar.h"
 
 class CGroupChar;
 class GroupRecipient;
@@ -22,7 +23,7 @@ public:
 class GroupRecipient
 {
 public:
-    virtual void receiveCharacters(GroupAdmin *, std::vector<CGroupChar *>) = 0;
+    virtual void receiveCharacters(GroupAdmin *, GroupVector) = 0;
     virtual ~GroupRecipient();
 };
 
@@ -36,7 +37,7 @@ public:
     explicit GroupSelection(GroupAdmin *admin);
     virtual ~GroupSelection() override;
 
-    void receiveCharacters(GroupAdmin *, std::vector<CGroupChar *>) override;
+    void receiveCharacters(GroupAdmin *, GroupVector) override;
 
 public:
     auto at(int i) const
@@ -53,5 +54,5 @@ public:
 
 private:
     GroupAdmin *m_admin = nullptr;
-    std::vector<CGroupChar *> chars;
+    GroupVector chars;
 };

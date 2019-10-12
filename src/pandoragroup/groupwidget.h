@@ -74,7 +74,9 @@ public:
     explicit GroupModel(MapData *md, Mmapper2Group *group, QObject *parent = nullptr);
 
     void resetModel();
-    QVariant dataForCharacter(CGroupChar *character, ColumnTypeEnum column, int role) const;
+    QVariant dataForCharacter(const SharedGroupChar &character,
+                              ColumnTypeEnum column,
+                              int role) const;
 
     int rowCount(const QModelIndex &parent) const override;
     int columnCount(const QModelIndex &parent) const override;

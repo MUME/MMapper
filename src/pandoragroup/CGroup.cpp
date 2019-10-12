@@ -19,25 +19,16 @@
 #include "groupaction.h"
 #include "groupselection.h"
 
-CGroup::CGroup(QObject *parent)
+CGroup::CGroup(QObject *const parent)
     : QObject(parent)
     , characterLock(QMutex::Recursive)
-    , self{new CGroupChar}
+    , self{CGroupChar::alloc()}
 {
     const Configuration::GroupManagerSettings &groupManager = getConfig().groupManager;
     self->setName(groupManager.charName);
     self->setRoomId(DEFAULT_ROOMID);
     self->setColor(groupManager.color);
     charIndex.push_back(self);
-}
-
-CGroup::~CGroup()
-{
-    // Delete all characters including self
-    for (auto &character : charIndex) {
-        delete character;
-    }
-    charIndex.clear();
 }
 
 /**
@@ -87,10 +78,14 @@ std::unique_ptr<GroupSelection> CGroup::selectByName(const QByteArray &name)
     QMutexLocker locker(&characterLock);
     auto selection = std::make_unique<GroupSelection>(this);
     locks.insert(selection.get());
-    CGroupChar *character = getCharByName(name);
-    if (character != nullptr) {
-        selection->receiveCharacters(this, {character});
+    const SharedGroupChar ch = getCharByName(name);
+    if (ch == nullptr) {
+        return selection;
     }
+
+    GroupVector v;
+    v.emplace_back(ch);
+    selection->receiveCharacters(this, v);
     return selection;
 }
 
@@ -102,7 +97,7 @@ void CGroup::resetChars()
 
     for (auto &character : charIndex) {
         if (character != self) {
-            delete character;
+            // TODO: mark character as Zombie ?
         }
     }
     charIndex.clear();
@@ -114,12 +109,11 @@ void CGroup::resetChars()
 bool CGroup::addChar(const QVariantMap &map)
 {
     QMutexLocker locker(&characterLock);
-    auto *newChar = new CGroupChar();
+    auto newChar = CGroupChar::alloc();
     newChar->updateFromVariantMap(map);
     if (isNamePresent(newChar->getName()) || newChar->getName() == "") {
         emit log(QString("'%1' could not join the group because the name already existed.")
                      .arg(newChar->getName().constData()));
-        delete newChar;
         return false;
     }
     emit log(QString("'%1' joined the group.").arg(newChar->getName().constData()));
@@ -137,18 +131,17 @@ void CGroup::removeChar(const QByteArray &name)
     }
 
     for (auto it = charIndex.begin(); it != charIndex.end(); ++it) {
-        CGroupChar *character = *it;
+        SharedGroupChar character = *it;
         if (character->getName() == name) {
             emit log(QString("Removing '%1' from the group.").arg(character->getName().constData()));
             charIndex.erase(it);
-            delete character;
             emit characterChanged(true);
             return;
         }
     }
 }
 
-bool CGroup::isNamePresent(const QByteArray &name)
+bool CGroup::isNamePresent(const QByteArray &name) const
 {
     QMutexLocker locker(&characterLock);
 
@@ -162,7 +155,7 @@ bool CGroup::isNamePresent(const QByteArray &name)
     return false;
 }
 
-CGroupChar *CGroup::getCharByName(const QByteArray &name)
+SharedGroupChar CGroup::getCharByName(const QByteArray &name) const
 {
     QMutexLocker locker(&characterLock);
     for (auto &character : charIndex) {
@@ -170,24 +163,26 @@ CGroupChar *CGroup::getCharByName(const QByteArray &name)
             return character;
         }
     }
-
-    return nullptr;
+    return {};
 }
 
 void CGroup::updateChar(const QVariantMap &map)
 {
-    CGroupChar *ch = getCharByName(CGroupChar::getNameFromUpdateChar(map));
-    if (ch == nullptr) {
+    const auto sharedCh = getCharByName(CGroupChar::getNameFromUpdateChar(map));
+    if (sharedCh == nullptr) {
         return;
     }
 
-    const auto oldRoomId = ch->getRoomId();
-    const bool change = ch->updateFromVariantMap(map);
-    if (change) {
-        // Update canvas only if the character moved
-        const bool updateCanvas = ch->getRoomId() != oldRoomId;
-        emit characterChanged(updateCanvas);
+    CGroupChar &ch = *sharedCh;
+    const auto oldRoomId = ch.getRoomId();
+    const bool change = ch.updateFromVariantMap(map);
+    if (!change) {
+        return;
     }
+
+    // Update canvas only if the character moved
+    const bool updateCanvas = ch.getRoomId() != oldRoomId;
+    emit characterChanged(updateCanvas);
 }
 
 void CGroup::renameChar(const QVariantMap &map)
@@ -202,12 +197,12 @@ void CGroup::renameChar(const QVariantMap &map)
         return;
     }
 
-    QString oldname = map["oldname"].toString();
-    QString newname = map["newname"].toString();
+    const QString oldname = map["oldname"].toString();
+    const QString newname = map["newname"].toString();
 
     emit log(QString("Renaming '%1' to '%2'").arg(oldname).arg(newname));
 
-    CGroupChar *const ch = getCharByName(oldname.toLatin1());
+    const auto ch = getCharByName(oldname.toLatin1());
     if (ch == nullptr) {
         qWarning() << "Unable to find old name" << oldname;
         return;

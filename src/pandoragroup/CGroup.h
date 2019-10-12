@@ -5,6 +5,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include <memory>
+#include <optional>
 #include <set>
 #include <vector>
 #include <QByteArray>
@@ -15,9 +16,10 @@
 #include <QtCore>
 #include <queue>
 
+#include "../global/RuleOf5.h"
+#include "CGroupChar.h"
 #include "groupselection.h"
 
-class CGroupChar;
 class GroupSocket;
 class CGroupCommunicator;
 class GroupAction;
@@ -26,20 +28,13 @@ class CGroup final : public QObject, public GroupAdmin
 {
     Q_OBJECT
 
-    friend class AddCharacter;
-    friend class RemoveCharacter;
-    friend class RenameCharacter;
-    friend class UpdateCharacter;
-    friend class ResetCharacters;
-    friend class GroupClient;
-    friend class GroupServer;
-    friend class Mmapper2Group;
+public:
+    explicit CGroup(QObject *parent = nullptr);
+    ~CGroup() override = default;
+    DELETE_CTORS_AND_ASSIGN_OPS(CGroup);
 
 public:
-    explicit CGroup(QObject *parent);
-    virtual ~CGroup() override;
-
-    bool isNamePresent(const QByteArray &name);
+    bool isNamePresent(const QByteArray &name) const;
 
     // Interactions with group characters should occur through CGroupSelection due to threading
     void releaseCharacters(GroupRecipient *sender) override;
@@ -61,22 +56,22 @@ signals:
 protected:
     void executeActions();
 
-    CGroupChar *getSelf() { return self; }
+public:
+    const SharedGroupChar &getSelf() { return self; }
     void renameChar(const QVariantMap &map);
     void resetChars();
     void updateChar(const QVariantMap &map); // updates given char from the map
     void removeChar(const QByteArray &name);
     bool addChar(const QVariantMap &node);
 
-private:
-    CGroupChar *getCharByName(const QByteArray &name);
+public:
+    SharedGroupChar getCharByName(const QByteArray &name) const;
 
-    QMutex characterLock;
+private:
+    mutable QMutex characterLock;
     std::set<GroupRecipient *> locks;
     std::queue<std::shared_ptr<GroupAction>> actionSchedule;
-
-    std::vector<CGroupChar *> charIndex;
-
+    GroupVector charIndex;
     // deleted in destructor as member of charIndex
-    CGroupChar *const self;
+    SharedGroupChar self;
 };

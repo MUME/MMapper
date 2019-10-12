@@ -272,7 +272,7 @@ void Mmapper2Group::parseScoreInformation(const QByteArray &score)
     const int moves = match.captured(5).toInt();
     const int maxmoves = match.captured(6).toInt();
 
-    CGroupChar *self = getGroup()->getSelf();
+    const SharedGroupChar &self = getGroup()->getSelf();
     if (self->hp == hp && self->maxhp == maxhp && self->mana == mana && self->maxmana == maxmana
         && self->moves == moves && self->maxmoves == maxmoves)
         return; // No update needed
@@ -296,7 +296,7 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
     if (!group)
         return;
 
-    CGroupChar *const self = getGroup()->getSelf();
+    SharedGroupChar self = getGroup()->getSelf();
     QByteArray textHP;
     QByteArray textMana;
     QByteArray textMoves;
@@ -444,7 +444,7 @@ void Mmapper2Group::updateCharacterAffect(const CharacterAffectEnum affect, cons
     if (enable)
         affectLastSeen.insert(affect, QDateTime::QDateTime::currentDateTimeUtc().toTime_t());
 
-    CharacterAffects &affects = getGroup()->self->affects;
+    CharacterAffects &affects = getGroup()->getSelf()->affects;
     if (enable == affects.contains(affect))
         return; // No update needed
 
@@ -466,7 +466,7 @@ void Mmapper2Group::onAffectTimeout()
         return;
 
     bool removedAtLeastOneAffect = false;
-    CharacterAffects &affects = getGroup()->self->affects;
+    CharacterAffects &affects = getGroup()->getSelf()->affects;
     const auto now = QDateTime::QDateTime::currentDateTimeUtc().toTime_t();
     for (const CharacterAffectEnum affect : affectLastSeen.keys()) {
         const auto lastSeen = affectLastSeen.value(affect, 0);
@@ -501,7 +501,7 @@ void Mmapper2Group::reset()
     lastPrompt.inCombat = false;
 
     // Reset character
-    CGroupChar *self = getGroup()->getSelf();
+    const SharedGroupChar &self = getGroup()->getSelf();
     self->hp = 0;
     self->maxhp = 0;
     self->mana = 0;

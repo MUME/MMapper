@@ -191,7 +191,7 @@ static QString getPrettyName(const CharacterAffectEnum affect)
 #undef X_CASE
 }
 
-QVariant GroupModel::dataForCharacter(CGroupChar *const character,
+QVariant GroupModel::dataForCharacter(const SharedGroupChar &character,
                                       const ColumnTypeEnum column,
                                       const int role) const
 {
@@ -289,7 +289,7 @@ QVariant GroupModel::data(const QModelIndex &index, int role) const
 
         // Map row to character
         if (index.row() < static_cast<int>(selection->size())) {
-            CGroupChar *character = selection->at(index.row());
+            const SharedGroupChar &character = selection->at(index.row());
             const auto column = static_cast<ColumnTypeEnum>(index.column());
             data = dataForCharacter(character, column, role);
         }
@@ -371,7 +371,7 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
             auto selection = group->selectAll();
             // Map row to character
             if (index.row() < static_cast<int>(selection->size())) {
-                CGroupChar *character = selection->at(index.row());
+                const SharedGroupChar &character = selection->at(index.row());
                 selectedCharacter = character->getName();
 
                 // Center map on the clicked character
