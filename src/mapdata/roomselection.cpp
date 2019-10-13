@@ -65,7 +65,7 @@ const Room *RoomSelection::getRoom(const Coordinate &coord)
 
 void RoomSelection::unselect(const RoomId targetId)
 {
-    m_mapData.keepRoom(*this, targetId);
+    m_mapData.releaseRoom(*this, targetId);
     remove(targetId);
 }
 
