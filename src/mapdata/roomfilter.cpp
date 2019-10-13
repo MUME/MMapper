@@ -65,7 +65,7 @@ std::optional<RoomFilter> RoomFilter::parseRoomFilter(const QString &line)
 
     const auto first = view.takeFirstWord();
     const auto opt = [&first]() -> std::optional<PatternKindsEnum> {
-        if (Abbrev("desc", 2).matches(first)) {
+        if (Abbrev("desc", 1).matches(first)) {
             return PatternKindsEnum::DESC;
         } else if (Abbrev("dyndesc", 2).matches(first)) {
             return PatternKindsEnum::DYN_DESC;
@@ -73,7 +73,7 @@ std::optional<RoomFilter> RoomFilter::parseRoomFilter(const QString &line)
             return PatternKindsEnum::NAME;
         } else if (Abbrev("exits", 1).matches(first)) {
             return PatternKindsEnum::EXITS;
-        } else if (Abbrev("note", 2).matches(first)) {
+        } else if (Abbrev("note", 1).matches(first)) {
             return PatternKindsEnum::NOTE;
         } else if (Abbrev("all", 1).matches(first)) {
             return PatternKindsEnum::ALL;
