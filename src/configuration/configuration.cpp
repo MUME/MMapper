@@ -219,8 +219,8 @@ ConstString KEY_HOST = "host";
 ConstString KEY_LAST_MAP_LOAD_DIRECTORY = "Last map load directory";
 ConstString KEY_LINES_OF_INPUT_HISTORY = "Lines of input history";
 ConstString KEY_LINES_OF_SCROLLBACK = "Lines of scrollback";
-ConstString KEY_LOCAL_PORT = "local port";
-ConstString KEY_LOCAL_PORT_NUMBER = "Local port number";
+ConstString KEY_GROUP_LOCAL_PORT = "local port";
+ConstString KEY_PROXY_LOCAL_PORT = "Local port number";
 ConstString KEY_LOCK_GROUP = "Lock current group members";
 ConstString KEY_MAP_MODE = "Map Mode";
 ConstString KEY_MAXIMUM_NUMBER_OF_PATHS = "maximum number of paths";
@@ -234,8 +234,8 @@ ConstString KEY_PROXY_THREADED = "Proxy Threaded";
 ConstString KEY_PROXY_CONNECTION_STATUS = "Proxy connection status";
 ConstString KEY_RELATIVE_PATH_ACCEPTANCE = "relative path acceptance";
 ConstString KEY_REMOTE_EDITING_AND_VIEWING = "Remote editing and viewing";
-ConstString KEY_REMOTE_PORT_NUMBER = "Remote port number";
-ConstString KEY_REMOTE_PORT = "remote port";
+ConstString KEY_MUME_REMOTE_PORT = "Remote port number";
+ConstString KEY_GROUP_REMOTE_PORT = "remote port";
 ConstString KEY_REMOVE_XML_TAGS = "Remove XML tags";
 ConstString KEY_ROOM_CREATION_PENALTY = "room creation penalty";
 ConstString KEY_ROOM_DARK_COLOR = "Room dark color";
@@ -478,9 +478,9 @@ void Configuration::ConnectionSettings::read(QSettings &conf)
     static constexpr const int DEFAULT_PORT = 4242;
 
     remoteServerName = conf.value(KEY_SERVER_NAME, "mume.org").toString();
-    remotePort = sanitizeUint16(conf.value(KEY_REMOTE_PORT_NUMBER, DEFAULT_PORT).toInt(),
+    remotePort = sanitizeUint16(conf.value(KEY_MUME_REMOTE_PORT, DEFAULT_PORT).toInt(),
                                 static_cast<uint16_t>(DEFAULT_PORT));
-    localPort = sanitizeUint16(conf.value(KEY_LOCAL_PORT_NUMBER, DEFAULT_PORT).toInt(),
+    localPort = sanitizeUint16(conf.value(KEY_PROXY_LOCAL_PORT, DEFAULT_PORT).toInt(),
                                static_cast<uint16_t>(DEFAULT_PORT));
     tlsEncryption = NO_OPEN_SSL ? false : conf.value(KEY_TLS_ENCRYPTION, true).toBool();
     proxyThreaded = conf.value(KEY_PROXY_THREADED, false).toBool();
@@ -563,8 +563,9 @@ void Configuration::GroupManagerSettings::read(QSettings &conf)
 
     state = sanitizeGroupManagerState(
         conf.value(KEY_STATE, static_cast<int>(GroupManagerStateEnum::Off)).toInt());
-    localPort = sanitizeUint16(conf.value(KEY_LOCAL_PORT, DEFAULT_PORT).toInt(), DEFAULT_PORT);
-    remotePort = sanitizeUint16(conf.value(KEY_REMOTE_PORT, DEFAULT_PORT).toInt(), DEFAULT_PORT);
+    localPort = sanitizeUint16(conf.value(KEY_GROUP_LOCAL_PORT, DEFAULT_PORT).toInt(), DEFAULT_PORT);
+    remotePort = sanitizeUint16(conf.value(KEY_GROUP_REMOTE_PORT, DEFAULT_PORT).toInt(),
+                                DEFAULT_PORT);
     host = conf.value(KEY_HOST, "localhost").toByteArray();
     charName = conf.value(KEY_CHARACTER_NAME, QHostInfo::localHostName()).toByteArray();
     shareSelf = conf.value(KEY_SHARE_SELF, true).toBool();
@@ -630,8 +631,8 @@ void Configuration::GeneralSettings::write(QSettings &conf) const
 void Configuration::ConnectionSettings::write(QSettings &conf) const
 {
     conf.setValue(KEY_SERVER_NAME, remoteServerName);
-    conf.setValue(KEY_REMOTE_PORT_NUMBER, static_cast<int>(remotePort));
-    conf.setValue(KEY_LOCAL_PORT_NUMBER, static_cast<int>(localPort));
+    conf.setValue(KEY_MUME_REMOTE_PORT, static_cast<int>(remotePort));
+    conf.setValue(KEY_PROXY_LOCAL_PORT, static_cast<int>(localPort));
     conf.setValue(KEY_TLS_ENCRYPTION, tlsEncryption);
     conf.setValue(KEY_PROXY_THREADED, proxyThreaded);
     conf.setValue(KEY_PROXY_CONNECTION_STATUS, proxyConnectionStatus);
@@ -697,8 +698,8 @@ void Configuration::GroupManagerSettings::write(QSettings &conf) const
 {
     conf.setValue(KEY_STATE, static_cast<int>(state));
     // Note: There's no QVariant(quint16) constructor.
-    conf.setValue(KEY_LOCAL_PORT, static_cast<int>(localPort));
-    conf.setValue(KEY_REMOTE_PORT, static_cast<int>(remotePort));
+    conf.setValue(KEY_GROUP_LOCAL_PORT, static_cast<int>(localPort));
+    conf.setValue(KEY_GROUP_REMOTE_PORT, static_cast<int>(remotePort));
     conf.setValue(KEY_HOST, host);
     conf.setValue(KEY_CHARACTER_NAME, charName);
     conf.setValue(KEY_SHARE_SELF, shareSelf);
