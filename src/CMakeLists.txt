@@ -120,6 +120,7 @@ set(mmapper_SRCS
     mapdata/drawstream.h
     mapdata/enums.cpp
     mapdata/enums.h
+    mapdata/infomark.cpp
     mapdata/infomark.h
     mapdata/mapdata.cpp
     mapdata/mapdata.h

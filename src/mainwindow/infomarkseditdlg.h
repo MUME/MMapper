@@ -61,4 +61,5 @@ private:
 
     void updateMarkers();
     void updateDialog();
+    void updateMark(InfoMark &im);
 };

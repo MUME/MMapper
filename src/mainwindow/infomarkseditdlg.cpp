@@ -93,8 +93,8 @@ void InfoMarksEditDlg::createClicked()
 
     if (name == "") {
         QMessageBox::critical(this, tr("MMapper2"), tr("Can't create objects with empty name!"));
+        return;
     }
-
     for (const auto &marker : ml) {
         if (marker->getName().toQString() == name) {
             QMessageBox::critical(this, tr("MMapper2"), tr("Object with this name already exists!"));
@@ -102,19 +102,11 @@ void InfoMarksEditDlg::createClicked()
         }
     }
 
-    auto im = InfoMark::alloc();
-
-    im->setType(getType());
-    im->setName(InfoMarkName{name});
-    im->setText(InfoMarkText{objectText->text()});
-    im->setClass(getClass());
-    const Coordinate pos1(m_x1->value(), m_y1->value(), m_layer->value());
-    const Coordinate pos2(m_x2->value(), m_y2->value(), m_layer->value());
-    im->setPosition1(pos1);
-    im->setPosition2(pos2);
-    im->setRotationAngle(static_cast<float>(m_rotationAngle->value()));
-
-    m_mapData->addMarker(im);
+    auto &mapData = deref(m_mapData);
+    auto im = InfoMark::alloc(mapData);
+    updateMark(*im);
+    m_selection->emplace_back(im);
+    mapData.addMarker(im);
 
     emit mapChanged();
     updateMarkers();
@@ -122,20 +114,26 @@ void InfoMarksEditDlg::createClicked()
     updateDialog();
 }
 
+void InfoMarksEditDlg::updateMark(InfoMark &im)
+{
+    im.setType(getType());
+    im.setName(InfoMarkName{objectNameStr->text()});
+    im.setText(InfoMarkText{objectText->text()});
+    im.setClass(getClass());
+    const Coordinate pos1(m_x1->value(), m_y1->value(), m_layer->value());
+    const Coordinate pos2(m_x2->value(), m_y2->value(), m_layer->value());
+    im.setPosition1(pos1);
+    im.setPosition2(pos2);
+    im.setRotationAngle(static_cast<float>(m_rotationAngle->value()));
+}
+
 void InfoMarksEditDlg::modifyClicked()
 {
     InfoMark *const im = getCurrentInfoMark();
+    if (im == nullptr)
+        return;
 
-    im->setType(getType());
-    im->setName(InfoMarkName(objectNameStr->text()));
-    im->setText(InfoMarkText(objectText->text()));
-    im->setClass(getClass());
-    const Coordinate pos1(m_x1->value(), m_y1->value(), m_layer->value());
-    const Coordinate pos2(m_x2->value(), m_y2->value(), m_layer->value());
-    im->setPosition1(pos1);
-    im->setPosition2(pos2);
-    im->setRotationAngle(static_cast<float>(m_rotationAngle->value()));
-
+    updateMark(*im);
     emit mapChanged();
 }
 

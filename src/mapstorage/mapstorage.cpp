@@ -391,7 +391,7 @@ bool MapStorage::mergeData()
 
         // create all pointers to items
         for (uint32_t index = 0; index < marksCount; ++index) {
-            auto mark = InfoMark::alloc();
+            auto mark = InfoMark::alloc(m_mapData);
             loadMark(mark.get(), stream, version);
             m_mapData.addMarker(mark);
 

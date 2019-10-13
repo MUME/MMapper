@@ -17,6 +17,7 @@
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/parseevent.h"
 #include "../global/roomid.h"
+#include "../mapdata/infomark.h"
 #include "ParseTree.h"
 #include "map.h"
 
@@ -30,7 +31,7 @@ class RoomRecipient;
 /**
  * The MapFrontend organizes rooms and their relations to each other.
  */
-class MapFrontend : public QObject, public RoomAdmin
+class MapFrontend : public QObject, public RoomAdmin, public InfoMarkModificationTracker
 {
     Q_OBJECT
     friend class FrontendAccessor;

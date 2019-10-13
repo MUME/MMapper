@@ -116,7 +116,13 @@ private:
     {
         RoomModificationTracker::virt_onNotifyModified(room, updateFlags);
         if (!m_ignoreModifications) {
-            // TODO: Do something here. I guess you might have to emit a Qt signal (ugg).
+            setDataChanged();
+        }
+    }
+    void virt_onNotifyModified(InfoMark &mark, const InfoMarkUpdateFlags updateFlags) override
+    {
+        InfoMarkModificationTracker::virt_onNotifyModified(mark, updateFlags);
+        if (!m_ignoreModifications) {
             setDataChanged();
         }
     }

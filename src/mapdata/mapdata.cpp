@@ -349,6 +349,7 @@ void MapData::removeMarker(const std::shared_ptr<InfoMark> &im)
         });
         if (it != m_markers.end()) {
             m_markers.erase(it);
+            setDataChanged();
         }
     }
 }
@@ -364,6 +365,8 @@ void MapData::removeMarkers(const MarkerList &toRemove)
 
 void MapData::addMarker(const std::shared_ptr<InfoMark> &im)
 {
-    if (im != nullptr)
+    if (im != nullptr) {
         m_markers.emplace_back(im);
+        setDataChanged();
+    }
 }
