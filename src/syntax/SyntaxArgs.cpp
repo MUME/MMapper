@@ -15,6 +15,16 @@
 
 namespace syntax {
 
+static Vector toVector(const ParserInput &input)
+{
+    std::vector<Value> values;
+    values.reserve(input.size());
+    for (const std::string &s : input) {
+        values.emplace_back(s);
+    }
+    return Vector{std::exchange(values, {})};
+}
+
 ArgAbbrev::ArgAbbrev(std::string moved_str)
     : m_str(std::move(moved_str))
 {
@@ -167,8 +177,9 @@ MatchResult ArgInt::virt_match(const ParserInput &input, IMatchErrorLogger *logg
             return MatchResult::failure(input);
     }
 
-    const int minVal = arg.min.has_value() ? arg.min.value() : std::numeric_limits<int>::min();
-    const int maxVal = arg.max.has_value() ? arg.max.value() : std::numeric_limits<int>::max();
+    using Limits = std::numeric_limits<int>;
+    const int minVal = arg.min.value_or(Limits::min());
+    const int maxVal = arg.max.value_or(Limits::max());
 
     auto sv = input_sv;
     bool negative = false;
@@ -285,8 +296,9 @@ MatchResult ArgFloat::virt_match(const ParserInput &input, IMatchErrorLogger *lo
         return MatchResult::failure(input);
 
     const std::string &firstWord = input.front();
-    const float minVal = arg.min.has_value() ? arg.min.value() : std::numeric_limits<float>::min();
-    const float maxVal = arg.max.has_value() ? arg.max.value() : std::numeric_limits<float>::max();
+    using Limits = std::numeric_limits<float>;
+    const float minVal = arg.min.value_or(Limits::min());
+    const float maxVal = arg.max.value_or(Limits::max());
 
     char *end = nullptr;
     const auto beg = firstWord.data();
@@ -397,12 +409,25 @@ std::ostream &ArgOptionalToken::virt_to_stream(std::ostream &os) const
 
 MatchResult ArgRest::virt_match(const ParserInput &input, IMatchErrorLogger * /*logger*/) const
 {
-    return MatchResult::success(input, input.empty() ? OptValue{} : Value(input.concatenate()));
+    return MatchResult::success(input, Value{toVector(input)});
 }
 
 std::ostream &ArgRest::virt_to_stream(std::ostream &os) const
 {
     return os << "[...]";
+}
+
+MatchResult ArgString::virt_match(const ParserInput &input, IMatchErrorLogger * /*logger*/) const
+{
+    if (input.length() != 1)
+        return MatchResult::failure(input);
+
+    return MatchResult::success(1, input, Value{input.front()});
+}
+
+std::ostream &ArgString::virt_to_stream(std::ostream &os) const
+{
+    return os << "<string>";
 }
 
 static bool compareIgnoreCase(const std::string &a, const std::string &b)

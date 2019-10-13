@@ -34,6 +34,13 @@ public:
     Base::const_iterator end() const;
 
 public:
+    bool empty() const { return m_vector->empty(); }
+    size_t size() const { return m_vector->size(); }
+    // NOTE: at() throws if out of range.
+    const Value &at(size_t pos) const { return m_vector->at(pos); }
+    const Value &operator[](size_t pos) const { return at(pos); }
+
+public:
     friend std::ostream &operator<<(std::ostream &os, const Vector &v);
 };
 

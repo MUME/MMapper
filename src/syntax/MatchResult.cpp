@@ -41,8 +41,8 @@ MatchResult MatchResult::success(size_t numMatched, ParserInput input)
 
 MatchResult MatchResult::success(ParserInput input, OptValue optResult)
 {
-    auto left = input.left(0);
-    return success(std::move(left), std::move(input), std::move(optResult));
+    auto right = input.right(0);
+    return success(std::move(input), std::move(right), std::move(optResult));
 }
 
 } // namespace syntax

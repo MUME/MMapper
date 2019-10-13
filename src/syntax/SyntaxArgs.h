@@ -13,7 +13,7 @@ namespace syntax {
 
 class ArgAbbrev final : public IArgument
 {
-public:
+private:
     std::string m_str;
 
 public:
@@ -36,7 +36,7 @@ private:
 
 class ArgChoice final : public IArgument
 {
-public:
+private:
     std::vector<TokenMatcher> m_tokens;
     bool justPassResult = true;
 
@@ -55,7 +55,7 @@ private:
 
 class ArgInt final : public IArgument
 {
-public:
+private:
     std::optional<int> min;
     std::optional<int> max;
 
@@ -73,7 +73,7 @@ private:
 
 class ArgFloat final : public IArgument
 {
-public:
+private:
     std::optional<float> min;
     std::optional<float> max;
 
@@ -90,7 +90,7 @@ private:
 };
 
 // always ignored.
-struct ArgOptionalChar final : public IArgument
+class ArgOptionalChar final : public IArgument
 {
 private:
     char m_c = '\0';
@@ -128,6 +128,9 @@ private:
     std::ostream &virt_to_stream(std::ostream &os) const override;
 };
 
+/// Matches 0 or more arguments; result is a Vector of raw (unquoted) strings.
+///
+/// ArgRest is effectively the same as arg_rest in MUME's mudlle.
 class ArgRest final : public IArgument
 {
 private:
@@ -135,7 +138,23 @@ private:
     std::ostream &virt_to_stream(std::ostream &os) const override;
 };
 
-struct ArgStringExact final : public IArgument
+/// Matches exactly one argument; result is a raw (unquoted) string.
+///
+/// ArgString is effectively the same as arg_string in MUME's mudlle.
+///
+/// Be aware that ArgString allows whitespace in the token parsed by unquote.
+/// e.g. If the ParserInput is ["two words", "etc"], ArgString will match "two words".
+class ArgString final : public IArgument
+{
+public:
+    ArgString() = default;
+
+private:
+    MatchResult virt_match(const ParserInput &input, IMatchErrorLogger *logger) const override;
+    std::ostream &virt_to_stream(std::ostream &os) const override;
+};
+
+class ArgStringExact final : public IArgument
 {
 private:
     std::string m_str;
@@ -150,7 +169,7 @@ private:
     std::ostream &virt_to_stream(std::ostream &os) const override;
 };
 
-struct ArgStringIgnoreCase final : public IArgument
+class ArgStringIgnoreCase final : public IArgument
 {
 private:
     std::string m_str;
