@@ -213,7 +213,8 @@ void TestExpandoraCommon::roomCompareTest_data()
     {
         SharedRoom room = create_perfect_room();
         ExitsFlagsType exitFlags = get_exit_flags(room);
-        exitFlags.set(ExitDirEnum::DOWN, ExitFlags{ExitFlagEnum::DOOR | ExitFlagEnum::EXIT}); // Remove climb down
+        exitFlags.set(ExitDirEnum::DOWN,
+                      ExitFlags{ExitFlagEnum::DOOR | ExitFlagEnum::EXIT}); // Remove climb down
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
                                                          name,
                                                          dynDesc,
@@ -229,7 +230,8 @@ void TestExpandoraCommon::roomCompareTest_data()
     {
         SharedRoom room = create_perfect_room();
         ExitsFlagsType exitFlags = get_exit_flags(room);
-        exitFlags.set(ExitDirEnum::NORTH, ExitFlags{ExitFlagEnum::DOOR | ExitFlagEnum::EXIT}); // Remove road north
+        exitFlags.set(ExitDirEnum::NORTH,
+                      ExitFlags{ExitFlagEnum::DOOR | ExitFlagEnum::EXIT}); // Remove road north
         ConnectedRoomFlagsType connectedFlags;
         connectedFlags.setDirectionalLight(ExitDirEnum::NORTH,
                                            DirectionalLightEnum::DIRECT_SUN_ROOM);
@@ -283,7 +285,8 @@ void TestExpandoraCommon::roomCompareTest_data()
                                                          PromptFlagsType::fromRoomTerrainType(
                                                              room->getTerrainType()),
                                                          ConnectedRoomFlagsType{});
-        QTest::newRow("missing door and exit down") << room << event << ComparisonResultEnum::TOLERANCE;
+        QTest::newRow("missing door and exit down")
+            << room << event << ComparisonResultEnum::TOLERANCE;
     }
 
     // Missing climb e
@@ -308,7 +311,8 @@ void TestExpandoraCommon::roomCompareTest_data()
     {
         SharedRoom room = create_perfect_room();
         ExitsFlagsType exitFlags = get_exit_flags(room);
-        exitFlags.set(ExitDirEnum::EAST, ExitFlags{ExitFlagEnum::ROAD | ExitFlagEnum::EXIT}); // Event has road e
+        exitFlags.set(ExitDirEnum::EAST,
+                      ExitFlags{ExitFlagEnum::ROAD | ExitFlagEnum::EXIT}); // Event has road e
         room->modifyExitFlags(ExitDirEnum::EAST,
                               FlagModifyModeEnum::UNSET,
                               ExitFieldVariant{ExitFlags{ExitFlagEnum::ROAD}});

@@ -145,14 +145,14 @@ before_script:
   - |
     if [ "$CODESTYLE" != "" ]; then
       $CLANG_FORMAT -version
-      find . -type f -name *.cpp -o -name *.h -exec $CLANG_FORMAT -style=file -i {} \;
+      find . -iname *.h -o -iname *.c -o -iname *.cpp -o -iname *.hpp | xargs -n 1 -P 2 $CLANG_FORMAT -style=file -i -fallback-style=none
         if  [[ -n $(git diff) ]]; then
         echo
         git diff
         echo
         echo "Please fix your code style:"
-        echo "find . -type f -name *.cpp -o -name *.h -exec clang-format -i -style=file {} \;"
-        [[ $(git diff --stat | wc -l) -lt 5 ]] || exit -1
+        echo "find . -iname *.h -o -iname *.c -o -iname *.cpp -o -iname *.hpp | xargs clang-format -style=file -i -fallback-style=none"
+        exit -1
       fi
     fi
   - '[[ "$CODECOV" == "" ]] || export MMAPPER_CMAKE_EXTRA="$MMAPPER_CMAKE_EXTRA -DUSE_CODE_COVERAGE=true"'

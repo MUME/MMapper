@@ -37,11 +37,12 @@ void RemoteEditSession::cancel()
 RemoteEditInternalSession::RemoteEditInternalSession(
     uint sessionId, int key, const QString &title, const QString &body, RemoteEdit *parent)
     : RemoteEditSession(sessionId, key, parent)
-    , m_widget(new RemoteEditWidget(isEditSession(),
-                                    title,
-                                    body,
-                                    checked_dynamic_downcast<QWidget*>(parent->parent()) // MainWindow
-                                    ))
+    , m_widget(
+          new RemoteEditWidget(isEditSession(),
+                               title,
+                               body,
+                               checked_dynamic_downcast<QWidget *>(parent->parent()) // MainWindow
+                               ))
 {
     const auto widget = m_widget.data();
     connect(widget, &RemoteEditWidget::save, this, &RemoteEditSession::onSave);

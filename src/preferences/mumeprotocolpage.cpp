@@ -36,7 +36,8 @@ MumeProtocolPage::~MumeProtocolPage()
     delete ui;
 }
 
-void MumeProtocolPage::loadConfig() {
+void MumeProtocolPage::loadConfig()
+{
     const auto &settings = getConfig().mumeClientProtocol;
     ui->remoteEditCheckBox->setChecked(settings.remoteEditing);
     ui->internalEditorRadioButton->setChecked(settings.internalRemoteEditor);
