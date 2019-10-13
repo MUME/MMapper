@@ -7,8 +7,9 @@
 #include "CGroupCommunicator.h"
 #include "GroupPortMapper.h"
 
+#include <vector>
 #include <QByteArray>
-#include <QList>
+#include <QPointer>
 #include <QString>
 #include <QTcpServer>
 #include <QVariantMap>
@@ -77,7 +78,8 @@ private:
     void connectAll(GroupSocket *);
     void disconnectAll(GroupSocket *);
 
-    QList<GroupSocket *> clientsList{};
+    using ClientList = std::vector<QPointer<GroupSocket>>;
+    ClientList clientsList{};
     GroupTcpServer server;
     GroupPortMapper portMapper;
 };

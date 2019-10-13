@@ -5,7 +5,7 @@
 
 #include "GroupServer.h"
 
-#include <memory>
+#include <algorithm>
 #include <QAbstractSocket>
 #include <QByteArray>
 #include <QHostAddress>
@@ -42,10 +42,9 @@ void GroupServer::onIncomingConnection(qintptr socketDescriptor)
 {
     // connect the socket straight to the Communicator, as he handles all the state changes
     // data transfers and similar.
-    auto *socket = new GroupSocket(getAuthority(), this);
-    clientsList.append(socket);
+    clientsList.emplace_back(QPointer<GroupSocket>(new GroupSocket(getAuthority(), this)));
+    auto &socket = clientsList.back();
     connectAll(socket);
-
     socket->setSocket(socketDescriptor);
     qDebug() << "Adding incoming client" << socket->getPeerName();
 }
@@ -85,19 +84,24 @@ void GroupServer::closeAll()
         if (connection != nullptr) {
             connection->disconnectFromHost();
             disconnectAll(connection);
-            connection->deleteLater();
         }
     }
     clientsList.clear();
 }
 
-void GroupServer::closeOne(GroupSocket *const socket)
+void GroupServer::closeOne(GroupSocket *const target)
 {
-    if (clientsList.removeOne(socket)) {
-        socket->disconnectFromHost();
-        disconnectAll(socket);
-        socket->deleteLater();
+    target->disconnectFromHost();
+    disconnectAll(target);
+
+    auto it = std::find_if(clientsList.begin(), clientsList.end(), [&target](const auto &socket) {
+        return socket == target;
+    });
+    if (it == clientsList.end()) {
+        qWarning() << "Could not find" << target->getName() << "among clients";
+        return assert(false);
     }
+    clientsList.erase(it);
 }
 
 void GroupServer::connectAll(GroupSocket *const client)
@@ -252,7 +256,7 @@ void GroupServer::retrieveData(GroupSocket *const socket,
                 kickConnection(socket, "Your name must not include any whitespace");
                 return;
             }
-            for (auto &target : clientsList) {
+            for (const auto &target : clientsList) {
                 if (socket == target)
                     continue;
                 if (newName.compare(QString::fromLatin1(target->getName()), Qt::CaseInsensitive)
