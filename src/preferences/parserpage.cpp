@@ -98,7 +98,6 @@ void ParserPage::loadConfig()
 
     endDescPatternsList->clear();
     endDescPatternsList->addItems(settings.noDescriptionPatternsList);
-
 }
 
 void ParserPage::roomNameColorClicked()
