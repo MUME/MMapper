@@ -6,7 +6,6 @@
 
 #include <QAbstractSocket>
 #include <QByteArray>
-#include <QHostAddress>
 #include <QMap>
 #include <QObject>
 #include <QSslSocket>
@@ -36,7 +35,7 @@ public:
     void startClientEncrypted() { socket.startClientEncryption(); }
 
     QByteArray getSecret() const { return secret; }
-    QHostAddress getPeerAddress() const { return socket.peerAddress(); }
+    QString getPeerName() const;
     quint16 getPeerPort() const { return socket.peerPort(); }
 
     QAbstractSocket::SocketError getSocketError() const { return socket.error(); }

@@ -47,7 +47,7 @@ void GroupServer::onIncomingConnection(qintptr socketDescriptor)
     connectAll(socket);
 
     socket->setSocket(socketDescriptor);
-    qDebug() << "Adding incoming client" << socket->getPeerAddress().toString();
+    qDebug() << "Adding incoming client" << socket->getPeerName();
 }
 
 void GroupServer::errorInConnection(GroupSocket *const socket, const QString &errorMessage)
@@ -359,8 +359,7 @@ void GroupServer::parseLoginInformation(GroupSocket *socket, const QVariantMap &
             QString("<b>WARNING:</b> '%1' has no secret and their connection is not encrypted.")
                 .arg(tempName));
     }
-    emit sendLog(
-        QString("'%1's IP address: %2").arg(tempName).arg(socket->getPeerAddress().toString()));
+    emit sendLog(QString("'%1's IP address: %2").arg(tempName).arg(socket->getPeerName()));
     emit sendLog(
         QString("'%1's protocol version: %2").arg(tempName).arg(socket->getProtocolVersion()));
     if (requireAuth && !validSecret) {
@@ -393,9 +392,7 @@ void GroupServer::parseLoginInformation(GroupSocket *socket, const QVariantMap &
     if (isEncrypted && validSecret) {
         // Update metadata
         getAuthority()->setMetadata(secret, GroupMetadataEnum::NAME, nameStr);
-        getAuthority()->setMetadata(secret,
-                                    GroupMetadataEnum::IP_ADDRESS,
-                                    socket->getPeerAddress().toString());
+        getAuthority()->setMetadata(secret, GroupMetadataEnum::IP_ADDRESS, socket->getPeerName());
         getAuthority()->setMetadata(secret,
                                     GroupMetadataEnum::LAST_LOGIN,
                                     QDateTime::currentDateTime().toString());
@@ -521,7 +518,7 @@ void GroupServer::kickConnection(GroupSocket *const socket, const QString &messa
         sendMessage(socket, MessagesEnum::STATE_KICKED, message.toLatin1());
     }
     const QString nameStr = QString::fromLatin1(socket->getName());
-    const QString identifier = nameStr.isEmpty() ? socket->getPeerAddress().toString() : nameStr;
+    const QString identifier = nameStr.isEmpty() ? socket->getPeerName() : nameStr;
     qDebug() << "Kicking" << identifier << "for" << message;
     emit sendLog(QString("'%1' was kicked: %2").arg(identifier).arg(message));
 

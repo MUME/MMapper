@@ -152,7 +152,7 @@ void GroupClient::retrieveData(GroupSocket *const /* socket */,
     } else if (socket.getProtocolState() == ProtocolStateEnum::AwaitingInfo) {
         // almost connected. awaiting full information about the connection
         if (message == MessagesEnum::UPDATE_CHAR) {
-            emit sig_scheduleAction(std::make_shared<AddCharacter>(data));
+            receiveGroupInformation(data);
         } else if (message == MessagesEnum::STATE_LOGGED) {
             socket.setProtocolState(ProtocolStateEnum::Logged);
         } else if (message == MessagesEnum::REQ_ACK) {
@@ -237,6 +237,20 @@ void GroupClient::sendHandshake(const QVariantMap &data)
     }
 }
 
+void GroupClient::receiveGroupInformation(const QVariantMap &data)
+{
+    const auto &selection = getGroup()->selectAll();
+    const bool isSolo = selection->size() == 1 && getGroup()->getSelf() == *selection->begin();
+    if (isSolo) {
+        // Update metadata and assume first received character is host
+        const auto &secret = socket.getSecret();
+        const auto &nameStr = QString::fromLatin1(CGroupChar::getNameFromUpdateChar(data));
+        getAuthority()->setMetadata(secret, GroupMetadataEnum::NAME, nameStr);
+        emit sendLog("Host's name is most likely '" + nameStr + "'");
+    }
+    emit sig_scheduleAction(std::make_shared<AddCharacter>(data));
+}
+
 void GroupClient::sendLoginInformation()
 {
     const CGroupChar *character = getGroup()->getSelf();
@@ -279,9 +293,7 @@ void GroupClient::connectionEncrypted()
         if (!validSecret)
             getAuthority()->add(secret);
         // Update metadata
-        getAuthority()->setMetadata(secret,
-                                    GroupMetadataEnum::IP_ADDRESS,
-                                    socket.getPeerAddress().toString());
+        getAuthority()->setMetadata(secret, GroupMetadataEnum::IP_ADDRESS, socket.getPeerName());
         getAuthority()->setMetadata(secret,
                                     GroupMetadataEnum::LAST_LOGIN,
                                     QDateTime::currentDateTime().toString());

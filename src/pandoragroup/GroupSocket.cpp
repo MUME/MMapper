@@ -7,6 +7,7 @@
 
 #include <cassert>
 #include <QByteArray>
+#include <QHostAddress>
 #include <QMessageLogContext>
 #include <QSslConfiguration>
 #include <QString>
@@ -108,6 +109,14 @@ void GroupSocket::disconnectFromHost()
         socket.disconnectFromHost();
         setProtocolState(ProtocolStateEnum::Unconnected);
     }
+}
+
+QString GroupSocket::getPeerName() const
+{
+    const auto s = socket.peerName();
+    if (!s.isEmpty())
+        return s;
+    return socket.peerAddress().toString();
 }
 
 void GroupSocket::setSocket(qintptr socketDescriptor)

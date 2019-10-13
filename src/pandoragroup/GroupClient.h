@@ -36,6 +36,7 @@ private:
     void sendHandshake(const QVariantMap &data);
     void sendLoginInformation();
     void tryReconnecting();
+    void receiveGroupInformation(const QVariantMap &data);
 
     ProtocolVersion proposedProtocolVersion = PROTOCOL_VERSION_102;
     bool clientConnected = false;
