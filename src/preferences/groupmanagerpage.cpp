@@ -122,9 +122,11 @@ GroupManagerPage::~GroupManagerPage()
     delete ui;
 }
 
-void GroupManagerPage::loadConfig() {
+void GroupManagerPage::loadConfig()
+{
     const Configuration::GroupManagerSettings &settings = getConfig().groupManager;
     const auto authority = m_groupManager->getAuthority();
+    const auto &itemModel = authority->getItemModel();
     ui->charName->setText(settings.charName);
     QPixmap charColorPixmap(16, 16);
     charColorPixmap.fill(settings.color);
@@ -137,7 +139,7 @@ void GroupManagerPage::loadConfig() {
     ui->allowSecret->setEnabled(false);
     ui->revokeSecret->setEnabled(false);
     ui->allowedComboBox->setEnabled(settings.requireAuth);
-    ui->allowedComboBox->setModel(authority->getItemModel());
+    ui->allowedComboBox->setModel(itemModel);
     ui->allowedComboBox->setEditText("");
     allowedSecretsChanged();
 
@@ -146,10 +148,11 @@ void GroupManagerPage::loadConfig() {
     ui->lockGroupCheckBox->setChecked(settings.lockGroup);
 
     // Client Section
+    ui->remoteHost->clear();
     QSet<QString> contacts;
-    for (int i = 0; i < authority->getItemModel()->rowCount(); i++) {
+    for (int i = 0; i < itemModel->rowCount(); i++) {
         // Pre-populate entries from Authorized Contacts
-        const auto key = authority->getItemModel()->index(i, 0).data(Qt::DisplayRole).toByteArray();
+        const auto key = itemModel->index(i, 0).data(Qt::DisplayRole).toByteArray();
         const auto ip = authority->getMetadata(key, GroupMetadataEnum::IP_ADDRESS);
         const auto port = authority->getMetadata(key, GroupMetadataEnum::PORT).toInt();
         if (ip.isEmpty() || port <= 0)
@@ -184,7 +187,6 @@ void GroupManagerPage::loadConfig() {
 
     ui->rulesWarning->setChecked(settings.rulesWarning);
 }
-
 
 void GroupManagerPage::charNameTextChanged()
 {
