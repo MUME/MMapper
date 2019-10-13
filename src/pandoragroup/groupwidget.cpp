@@ -386,7 +386,10 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
             }
 
             // Build Context menu
-            if (getConfig().groupManager.state == GroupManagerStateEnum::Server) {
+            auto &settings = getConfig().groupManager;
+            const bool isServer = settings.state == GroupManagerStateEnum::Server;
+            const bool selectedSelf = settings.charName == selectedCharacter;
+            if (isServer && !selectedSelf) {
                 // All context menu actions are only actionable by the server right now
                 m_kick->setText(QString("&Kick %1").arg(selectedCharacter.constData()));
                 QMenu contextMenu(tr("Context menu"), this);
