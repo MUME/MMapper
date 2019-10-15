@@ -550,7 +550,7 @@ if(UNIX AND NOT APPLE)
     )
 
     # Install icons
-    foreach(RES 16 32 48)
+    foreach(RES 16 32 48 96 128 256)
         install(
             FILES resources/icons/hi${RES}-app-mmapper-${MMAPPER_BRAND_SUFFIX}.png
             DESTINATION share/icons/hicolor/${RES}x${RES}/apps/
@@ -561,7 +561,7 @@ if(UNIX AND NOT APPLE)
 
     install(
         FILES resources/icons/m-${MMAPPER_BRAND_SUFFIX}.png
-        DESTINATION share/icons/hicolor/256x256/apps/
+        DESTINATION share/icons/hicolor/512x512/apps/
         COMPONENT desktopintegration
         RENAME org.mume.MMapper.png
     )
