@@ -36,6 +36,10 @@ inline T &deref(T *const ptr)
         throw NullPointerException();
     return *ptr;
 }
+// Technically we could make this return move or copy of the pointed-to value,
+// but that's probably not what the caller expects.
+template<typename T>
+inline T deref(std::shared_ptr<T> &&ptr) = delete;
 template<typename T>
 inline T &deref(const std::shared_ptr<T> &ptr)
 {
@@ -43,6 +47,10 @@ inline T &deref(const std::shared_ptr<T> &ptr)
         throw NullPointerException();
     return *ptr;
 }
+// Technically we could make this return move or copy of the pointed-to value,
+// but that's probably not what the caller expects.
+template<typename T>
+inline T deref(std::unique_ptr<T> &&ptr) = delete;
 template<typename T>
 inline T &deref(const std::unique_ptr<T> &ptr)
 {
