@@ -470,7 +470,7 @@ bool JsonMapStorage::saveData(bool baseMapOnly)
     ConstRoomList roomList;
     roomList.reserve(m_mapData.getRoomsCount());
 
-    MarkerList &markerList = m_mapData.getMarkersList();
+    const MarkerList &markerList = m_mapData.getMarkersList();
     RoomSaver saver(m_mapData, roomList);
     for (uint i = 0; i < m_mapData.getRoomsCount(); ++i) {
         m_mapData.lookingForRooms(saver, RoomId{i});

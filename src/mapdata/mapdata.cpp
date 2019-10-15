@@ -6,6 +6,7 @@
 
 #include "mapdata.h"
 
+#include <algorithm>
 #include <cassert>
 #include <list>
 #include <map>
@@ -342,8 +343,23 @@ MapData::~MapData() = default;
 
 void MapData::removeMarker(const std::shared_ptr<InfoMark> &im)
 {
-    if (im != nullptr)
-        m_markers.remove(im);
+    if (im != nullptr) {
+        auto it = std::find_if(m_markers.begin(), m_markers.end(), [&im](const auto &target) {
+            return target == im;
+        });
+        if (it != m_markers.end()) {
+            m_markers.erase(it);
+        }
+    }
+}
+
+void MapData::removeMarkers(const MarkerList &toRemove)
+{
+    // If toRemove is short, this is probably "good enough." However, it may become
+    // very painful if both toRemove.size() and m_markers.size() are in the thousands.
+    for (const auto &im : toRemove) {
+        removeMarker(im);
+    }
 }
 
 void MapData::addMarker(const std::shared_ptr<InfoMark> &im)

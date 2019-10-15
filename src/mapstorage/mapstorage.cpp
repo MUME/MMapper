@@ -387,15 +387,13 @@ bool MapStorage::mergeData()
 
         emit log("MapStorage", QString("Number of info items: %1").arg(marksCount));
 
-        MarkerList &markerList = m_mapData.getMarkersList();
-        // If you turn this into a vector, reserve here.
-        // markerList.reserve(markerList.size() + static_cast<size_t>(marksCount));
+        // TODO: reserve the markerList with marksCount
 
         // create all pointers to items
         for (uint32_t index = 0; index < marksCount; ++index) {
             auto mark = InfoMark::alloc();
             loadMark(mark.get(), stream, version);
-            markerList.emplace_back(mark);
+            m_mapData.addMarker(mark);
 
             progressCounter.step();
         }
@@ -524,7 +522,7 @@ bool MapStorage::saveData(bool baseMapOnly)
     ConstRoomList roomList;
     roomList.reserve(m_mapData.getRoomsCount());
 
-    MarkerList &markerList = m_mapData.getMarkersList();
+    const MarkerList &markerList = m_mapData.getMarkersList();
     RoomSaver saver(m_mapData, roomList);
     for (uint i = 0; i < m_mapData.getRoomsCount(); ++i) {
         m_mapData.lookingForRooms(saver, RoomId{i});
@@ -563,13 +561,13 @@ bool MapStorage::saveData(bool baseMapOnly)
     stream << static_cast<quint32>(marksCount);
 
     // write selected room x,y
-    Coordinate &self = m_mapData.getPosition();
+    const Coordinate &self = m_mapData.getPosition();
     stream << static_cast<qint32>(self.x);
     stream << static_cast<qint32>(self.y);
     stream << static_cast<qint32>(self.z);
-    auto saveOne = [this, &stream](const Room &room) { saveRoom(room, stream); };
 
     // save rooms
+    auto saveOne = [this, &stream](const Room &room) { saveRoom(room, stream); };
     for (const std::shared_ptr<const Room> &pRoom : roomList) {
         filter.visitRoom(deref(pRoom), baseMapOnly, saveOne);
         progressCounter.step();

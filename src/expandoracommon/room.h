@@ -9,7 +9,6 @@
 #include <optional>
 #include <QDebug>
 #include <QVariant>
-#include <QVector>
 
 #include "../global/EnumIndexedArray.h"
 #include "../global/Flags.h"

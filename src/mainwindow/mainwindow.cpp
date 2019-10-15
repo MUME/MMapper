@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <stdexcept>
+#include <vector>
 #include <QActionGroup>
 #include <QCloseEvent>
 #include <QDesktopServices>
@@ -1810,14 +1811,13 @@ void MainWindow::onDeleteInfoMarkSelection()
     if (m_infoMarkSelection == nullptr)
         return;
 
-    while (!m_infoMarkSelection->empty()) {
-        auto im = m_infoMarkSelection->front();
-        m_mapData->removeMarker(im);
-        m_infoMarkSelection->pop_front();
+    {
+        const auto tmp = std::exchange(m_infoMarkSelection, nullptr);
+        m_mapData->removeMarkers(*tmp);
     }
 
-    getCanvas()->clearInfoMarkSelection();
-    getCanvas()->update();
+    MapCanvas *const canvas = getCanvas();
+    canvas->clearInfoMarkSelection();
 }
 
 void MainWindow::onDeleteRoomSelection()

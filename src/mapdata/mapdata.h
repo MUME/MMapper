@@ -8,11 +8,9 @@
 #include <map>
 #include <memory>
 #include <vector>
-#include <QLinkedList>
 #include <QList>
 #include <QString>
 #include <QVariant>
-#include <QVector>
 #include <QtCore>
 #include <QtGlobal>
 
@@ -42,7 +40,7 @@ class RoomRecipient;
 class ShortestPathRecipient;
 
 using ConstRoomList = std::vector<std::shared_ptr<const Room>>;
-using MarkerList = std::list<std::shared_ptr<InfoMark>>;
+using MarkerList = std::vector<std::shared_ptr<InfoMark>>;
 
 class MapData final : public MapFrontend
 {
@@ -62,8 +60,8 @@ public:
 
     bool execute(std::unique_ptr<MapAction> action, const SharedRoomSelection &unlock);
 
-    Coordinate &getPosition() { return m_position; }
-    MarkerList &getMarkersList() { return m_markers; }
+    const Coordinate &getPosition() const { return m_position; }
+    const MarkerList &getMarkersList() const { return m_markers; }
     uint getRoomsCount() const
     {
         return (greatestUsedId == INVALID_ROOMID) ? 0u : (greatestUsedId.asUint32() + 1u);
@@ -71,6 +69,7 @@ public:
 
     void addMarker(const std::shared_ptr<InfoMark> &im);
     void removeMarker(const std::shared_ptr<InfoMark> &im);
+    void removeMarkers(const MarkerList &toRemove);
 
     bool isEmpty() const { return (greatestUsedId == INVALID_ROOMID) && m_markers.empty(); }
     bool dataChanged() const { return m_dataChanged; }
