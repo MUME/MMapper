@@ -1323,7 +1323,7 @@ void AbstractParser::doOfflineCharacterMove()
     const auto getExit = [this, flee, &here, &direction]() -> const Exit & {
         if (flee && onlyUseActualExits) {
             if (auto opt = here.getRandomExit()) {
-                direction = convert_to_CommandIdType(opt.value().dir);
+                direction = convert_to_CommandIdType(opt->dir);
             } else {
                 // movement will fail; "PANIC! You couldn't escape!"
             }

@@ -178,7 +178,7 @@ public:
                 const auto get_fmt = [this, &decoded]() -> const QTextCharFormat & {
                     if (!decoded)
                         return red;
-                    const auto val = decoded.value().unicode();
+                    const auto val = decoded->unicode();
                     return (val < 256) ? yellow : darkOrange;
                 };
 

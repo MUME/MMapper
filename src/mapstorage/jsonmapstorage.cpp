@@ -190,7 +190,7 @@ public:
             array.push_back(jCoords);
             m_hashes.insert(hash, array);
         } else {
-            collision.value().toArray().push_back(jCoords);
+            collision->toArray().push_back(jCoords);
         }
     }
 

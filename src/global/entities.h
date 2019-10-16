@@ -4,26 +4,13 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include <functional>
+#include <optional>
 #include <QByteArray>
 #include <QString>
 
 static constexpr const uint32_t MAX_UNICODE_CODEPOINT = 0x10FFFFu;
 
-class OptQChar final
-{
-private:
-    QChar qc;
-    bool valid = false;
-
-public:
-    OptQChar() = default;
-    explicit OptQChar(QChar _qc)
-        : qc{_qc}
-        , valid{true}
-    {}
-    explicit operator bool() const { return valid; }
-    QChar value() const { return qc; }
-};
+using OptQChar = std::optional<const QChar>;
 
 namespace entities {
 struct EncodedLatin1;
