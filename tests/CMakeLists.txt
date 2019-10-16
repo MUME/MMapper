@@ -78,6 +78,8 @@ set(global_SRCS
     ../src/global/AnsiColor.h
     ../src/global/StringView.cpp
     ../src/global/StringView.h
+    ../src/global/TextUtils.cpp
+    ../src/global/TextUtils.h
     ../src/global/unquote.cpp
     ../src/global/unquote.h
     )

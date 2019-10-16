@@ -8,6 +8,7 @@
 
 #include "../src/global/AnsiColor.h"
 #include "../src/global/StringView.h"
+#include "../src/global/TextUtils.h"
 #include "../src/global/unquote.h"
 
 TestGlobal::TestGlobal() = default;
@@ -77,6 +78,24 @@ void TestGlobal::unquoteTest()
 {
     // REVISIT: Test is meaningless during release builds
     test::test_unquote();
+}
+
+void TestGlobal::toLowerLatin1Test()
+{
+    // Visible Latin-1 characters
+    QCOMPARE(toLowerLatin1(char(192)), char(192 + 32));
+    QCOMPARE(toLowerLatin1(char(221)), char(221 + 32));
+
+    // Non-visible Latin-1 characters
+    QCOMPARE(toLowerLatin1(char(191)), char(191));
+    QCOMPARE(toLowerLatin1(char(222)), char(222));
+
+    // Division
+    QCOMPARE(toLowerLatin1(char(215)), char(215));
+
+    QCOMPARE(toLowerLatin1('A'), 'a');
+    QCOMPARE(toLowerLatin1('Z'), 'z');
+    QCOMPARE(toLowerLatin1('-'), '-');
 }
 
 QTEST_MAIN(TestGlobal)
