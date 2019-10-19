@@ -8,23 +8,45 @@
 #include "../global/utils.h"
 #include "../mapdata/mmapper2room.h"
 
+enum class PromptWeatherEnum { UNDEFINED = 0, CLOUDS, RAIN, HEAVY_RAIN, SNOW };
+static constexpr const size_t NUM_PROMPT_WEATHER_TYPES = static_cast<size_t>(PromptWeatherEnum::SNOW)
+                                                         + 1u;
+static_assert(NUM_PROMPT_WEATHER_TYPES == 5);
+
+enum class PromptFogEnum { UNDEFINED = 0, LIGHT_FOG, HEAVY_FOG };
+static constexpr const size_t NUM_PROMPT_FOG_TYPES = static_cast<size_t>(PromptFogEnum::HEAVY_FOG)
+                                                     + 1u;
+static_assert(NUM_PROMPT_FOG_TYPES == 3);
+
 class PromptFlagsType final
 {
 public:
-    // bit0-3 -> char representation of RoomTerrainEnum
-    static constexpr const auto TERRAIN_TYPE = 0xFu;
+    // bit0-3 -> RoomTerrainEnum
+    static constexpr const auto TERRAIN_TYPE = 0b1111u;
     static constexpr const auto LIT_ROOM = 1u << 4;
     static constexpr const auto DARK_ROOM = 1u << 5;
     static constexpr const auto LIGHT_MASK = LIT_ROOM | DARK_ROOM;
     static constexpr const auto PROMPT_FLAGS_VALID = 1u << 6;
+    // bit7-8 -> PromptFogEnum
+    static constexpr const auto FOG_TYPE = 0b11u << 7;
+    // bit9-11 -> PromptWeatherEnum
+    static constexpr const auto WEATHER_TYPE = 0b111u << 9;
 
 private:
-    uint8_t flags = 0u;
+    uint32_t flags = 0u;
 
 private:
-    static uint8_t encodeTerrainType(const RoomTerrainEnum rtt)
+    static uint32_t encodeFogType(const PromptFogEnum pf)
     {
-        return static_cast<uint8_t>(std::clamp(static_cast<int>(rtt), 0, 15));
+        return std::clamp<uint32_t>(static_cast<uint32_t>(pf), 0, 3);
+    }
+    static uint32_t encodeTerrainType(const RoomTerrainEnum rtt)
+    {
+        return std::clamp<uint32_t>(static_cast<uint32_t>(rtt), 0, 15);
+    }
+    static uint32_t encodeWeatherType(const PromptWeatherEnum pw)
+    {
+        return std::clamp<uint32_t>(static_cast<uint32_t>(pw), 0, 4);
     }
 
 public:
@@ -41,24 +63,49 @@ public:
     }
 
 public:
-    explicit operator uint8_t() const { return flags; }
+    explicit operator uint32_t() const { return flags; }
     bool operator==(const PromptFlagsType rhs) const { return flags == rhs.flags; }
     bool operator!=(const PromptFlagsType rhs) const { return flags != rhs.flags; }
 
 public:
-    bool isValid() const { return flags & static_cast<uint8_t>(PROMPT_FLAGS_VALID); }
-    void setValid() { flags |= static_cast<uint8_t>(PROMPT_FLAGS_VALID); }
+    bool isValid() const { return flags & PROMPT_FLAGS_VALID; }
+    void setValid() { flags |= PROMPT_FLAGS_VALID; }
 
 public:
-    auto getTerrainType() const
-    {
-        return static_cast<RoomTerrainEnum>(flags & static_cast<uint8_t>(TERRAIN_TYPE));
-    }
+    auto getTerrainType() const { return static_cast<RoomTerrainEnum>(flags & TERRAIN_TYPE); }
     void setTerrainType(const RoomTerrainEnum type)
     {
         using flags_type = decltype(flags);
         flags = static_cast<flags_type>(flags & ~TERRAIN_TYPE);
         flags = static_cast<flags_type>(flags | (encodeTerrainType(type) & TERRAIN_TYPE));
+    }
+
+public:
+    auto getFogType() const
+    {
+        return static_cast<PromptFogEnum>(flags & static_cast<uint32_t>(FOG_TYPE));
+    }
+    void setFogType(const PromptFogEnum type)
+    {
+        using flags_type = decltype(flags);
+        flags = static_cast<flags_type>(flags & ~FOG_TYPE);
+        flags = static_cast<flags_type>(flags | (encodeFogType(type) & FOG_TYPE));
+    }
+
+public:
+    auto getWeatherType() const { return static_cast<PromptWeatherEnum>(flags & WEATHER_TYPE); }
+    void setWeatherType(const PromptWeatherEnum type)
+    {
+        using flags_type = decltype(flags);
+        flags = static_cast<flags_type>(flags & ~WEATHER_TYPE);
+        flags = static_cast<flags_type>(flags | (encodeWeatherType(type) & WEATHER_TYPE));
+    }
+
+public:
+    bool isNiceWeather() const
+    {
+        return getWeatherType() == PromptWeatherEnum::UNDEFINED
+               && getFogType() == PromptFogEnum::UNDEFINED;
     }
 
 public:
@@ -78,5 +125,5 @@ public:
     }
 
 public:
-    void reset() { flags = uint8_t{0}; }
+    void reset() { flags = uint32_t{0}; }
 };

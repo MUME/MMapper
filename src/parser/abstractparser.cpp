@@ -206,28 +206,28 @@ void AbstractParser::reset()
 void AbstractParser::parsePrompt(const QString &prompt)
 {
     m_promptFlags.reset();
-    int index = 0;
 
-    switch (prompt[index].toLatin1()) {
+    if (prompt.length() < 2)
+        return;
+
+    int index = 0;
+    switch (prompt[index++].toLatin1()) {
     case '*': // indoor/sun (direct and indirect)
-        index++;
         m_promptFlags.setLit();
         break;
     case '!': // artifical light
-        index++;
         break;
     case ')': // moon (direct and indirect)
-        index++;
         m_promptFlags.setLit();
         break;
     case 'o': // darkness
-        index++;
         m_promptFlags.setDark();
         break;
-    default:;
+    default:
+        index--;
     }
 
-    switch (prompt[index].toLatin1()) {
+    switch (prompt[index++].toLatin1()) {
     case '[':
         m_promptFlags.setTerrainType(RoomTerrainEnum::INDOORS);
         break;
@@ -271,9 +271,49 @@ void AbstractParser::parsePrompt(const QString &prompt)
         m_promptFlags.setTerrainType(RoomTerrainEnum::BRUSH);
         break;
     default:
+        index--;
         break;
     }
+
+    if (index < prompt.length()) {
+        switch (prompt[index++].toLatin1()) {
+        case '~':
+            m_promptFlags.setWeatherType(PromptWeatherEnum::CLOUDS);
+            break;
+        case '\'':
+            m_promptFlags.setWeatherType(PromptWeatherEnum::RAIN);
+            break;
+        case '"':
+            m_promptFlags.setWeatherType(PromptWeatherEnum::HEAVY_RAIN);
+            break;
+        case '*':
+            m_promptFlags.setWeatherType(PromptWeatherEnum::SNOW);
+            break;
+        default:
+            index--;
+            break;
+        }
+    }
+
+    if (index < prompt.length()) {
+        switch (prompt[index++].toLatin1()) {
+        case '-':
+            m_promptFlags.setFogType(PromptFogEnum::LIGHT_FOG);
+            break;
+        case '=':
+            m_promptFlags.setFogType(PromptFogEnum::HEAVY_FOG);
+            break;
+        default:
+            index--;
+            break;
+        }
+    }
+
     m_promptFlags.setValid();
+
+    // Connected room flags are only valid if the weather is nice
+    if (m_connectedRoomFlags.isValid() && !m_promptFlags.isNiceWeather())
+        m_connectedRoomFlags.reset();
 }
 
 void AbstractParser::parseExits()
@@ -444,7 +484,6 @@ void AbstractParser::parseExits()
     // If there is't a portal then we can trust the exits
     if (!portal) {
         m_exitsFlags.setValid();
-        // REVISIT: Detect if there is weather in the prompt before setting connected room flags as valid
         m_connectedRoomFlags.setValid();
 
         // Orcs and trolls can detect exits with direct sunlight
