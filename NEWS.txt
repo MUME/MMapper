@@ -1,4 +1,64 @@
 ================================
+MMapper 19.10.0 (October 25, 2019)
+================================
+
+New features:
+ - Faster rendering for most zoom levels with new textures and fonts
+ - "3D view" with optional tilting as you zoom in
+ - Enhanced marker and room connection editing
+ - Improved map indicators for the character and group members
+ - Added visible map mode bounds to decrease draw latency
+ - Rendering now supports OpenGL ES (e.g. Raspberry Pi 4)
+ - Added new _connect and _disconnect commands
+ - Removed old room commands in favor of new room commands
+ - Saving maps is now disabled unless the map was changed
+ - Clicking on a group character causes map to center on them
+ - Fall rooms are now supported during map and play mode
+ - Exit parsing now works for Maiar to aid in zone building
+ - Improved security by supporting OpenSSL 1.1.1
+ - Clock now displays a warning emoji if it has not been synced
+ - Releases now generate checksum files for packages
+ - View menu has a new 'Reset Layer' entry
+ - About dialog displays all licenses for included resources and libraries
+ - Clock now predicts and displays the phase of the moon
+ - Search command and Find Rooms dialog can now search flags
+ - Character state and affects are now shown in the group manager
+ - Group tells can use the character's ANSI 256 color if your client supports it
+ - Introduced support to import Pandora maps and export MMP maps
+ - Unselecting rooms can now be done via commands (i.e. _search -c)
+
+Bug fixes:
+ - Fixed left-click movement/panning precision error
+ - Graphics avoid wrapping grass onto roads at room edges
+ - Settings dialog is no longer modal
+ - Always display "no match" exit flags
+ - Fixed room dragging speed to be less aggressive
+ - Mouse wheel zoom is now centered on the mouse cursor
+ - Fixed regression during mapping that left rooms locked
+ - It is now impossible to kick yourself in the Group Manager
+ - Group Manager clients assume the first received character is the host
+ - Special commands are now allowed to have mixed case (i.e. _HeLp)
+ - Factory reset will now refresh the preference dialog settings
+ - Fixed MUME vote link to The Mud Connector
+ - Fixed regression that made the parser less tolerant of secret exits
+ - All map changes now actually ask if you want to save on close
+ - Fixed 'persistent room' bug during mapping that would leave extra rooms on the map
+ - Connection action 'Connect to neighbors' will only connect rooms if there is a valid exit
+ - Default configuration setting for 'Software rendering' is now 'off' on Windows
+ - Fixed bug that would migrated old settings from being migrated during a factory reset
+ - Infomarks and rooms can now be simultaneously selected via right click
+ - Emulated exits now use movement hint to select the correct room for followers
+ - Correctly raise, focus, and activate remote edit windows to the top of the window manager if the OS allows it
+ - Enforce that character names should start capitalized
+ - Tweak group manager character color brightness threshold to favor black text
+ - Fixed Latin-1 character encoding bug in group tells
+ - Improved integrated client autocomplete functionality to also clear
+ - Lower clock precision if there has not been a sync within the last real life day to prevent clock skew
+ - Fixed update checker to correctly compare version components
+ - The mouse wheel now behaves consistently across mouse modes
+ - Cleaned up connect/disconnect text
+
+================================
 MMapper 19.04.0 (April 22, 2019)
 ================================
 

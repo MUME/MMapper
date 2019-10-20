@@ -50,8 +50,8 @@ static constexpr const int MMAPPER_2_3_7_SCHEMA = 32; // 16bit DoorFlags, NoMatc
 static constexpr const int MMAPPER_2_4_0_SCHEMA = 33; // 16bit ExitsFlags, 32bit MobFlags/LoadFlags
 static constexpr const int MMAPPER_2_4_3_SCHEMA = 34; // qCompress, SunDeath flag
 static constexpr const int MMAPPER_2_5_1_SCHEMA = 35; // discard all previous NoMatch flags
-static constexpr const int MMAPPER_2_6_0_SCHEMA = 36; // switches to new coordinate system
-static constexpr const int CURRENT_SCHEMA = MMAPPER_2_6_0_SCHEMA;
+static constexpr const int MMAPPER_19_10_0_SCHEMA = 36; // switches to new coordinate system
+static constexpr const int CURRENT_SCHEMA = MMAPPER_19_10_0_SCHEMA;
 
 static_assert(021 == 17, "MMapper 2.0.0 Schema");
 static_assert(030 == 24, "MMapper 2.0.2 Schema");
@@ -401,7 +401,7 @@ bool MapStorage::mergeData()
             case MMAPPER_2_4_0_SCHEMA:
             case MMAPPER_2_4_3_SCHEMA:
             case MMAPPER_2_5_1_SCHEMA:
-            case MMAPPER_2_6_0_SCHEMA:
+            case MMAPPER_19_10_0_SCHEMA:
                 return true;
             default:
                 break;
@@ -533,7 +533,7 @@ void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, uint32_t version)
             return static_cast<InfoMarkClassEnum>(value);
         }(helper.read_u8());
         mark->setClass(clazz);
-        if (version < MMAPPER_2_6_0_SCHEMA) {
+        if (version < MMAPPER_19_10_0_SCHEMA) {
             mark->setRotationAngle(helper.read_i32() / INFOMARK_SCALE);
         } else {
             mark->setRotationAngle(helper.read_i32());
