@@ -298,8 +298,6 @@ void Functions::checkError()
             CASE(GL_INVALID_ENUM)
             CASE(GL_INVALID_VALUE)
             CASE(GL_INVALID_OPERATION)
-            CASE(GL_STACK_OVERFLOW)
-            CASE(GL_STACK_UNDERFLOW)
             CASE(GL_OUT_OF_MEMORY)
         default:
             qCritical() << "OpenGL error" << err;
