@@ -148,6 +148,7 @@ void GroupManagerPage::loadConfig()
     ui->lockGroupCheckBox->setChecked(settings.lockGroup);
 
     // Client Section
+    const auto oldText = ui->remoteHost->currentText();
     ui->remoteHost->clear();
     QSet<QString> contacts;
     for (int i = 0; i < itemModel->rowCount(); i++) {
@@ -181,6 +182,8 @@ void GroupManagerPage::loadConfig()
             }
         }
     }
+    if (int index = ui->remoteHost->findText(oldText) && !oldText.isEmpty())
+        ui->remoteHost->setCurrentIndex(index);
 
     ui->groupTellColorAnsi256RadioButton->setChecked(settings.useGroupTellAnsi256Color);
     AnsiCombo::makeWidgetColoured(ui->groupTellColorLabel, settings.groupTellColor, false);
