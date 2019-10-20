@@ -24,3 +24,6 @@ Set up your client according to the [wiki instructions](https://github.com/MUME/
 
 ## Build
 Check out the wiki for Linux, Windows and Mac [build instructions](https://github.com/MUME/MMapper/wiki/Build).
+
+## Contributions
+Any contribution to the development is highly welcome. Simply open a pull request on GitHub.
