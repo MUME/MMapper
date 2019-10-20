@@ -739,7 +739,10 @@ void MumeXmlParser::parseMudCommands(const QString &str)
         }
         break;
     case '-':
-        if (str.startsWith("- poison (type: poison).")) {
+        if (str.startsWith("- antidote")) {
+            emit sendCharacterAffectEvent(CharacterAffectEnum::POISONED, false);
+            return;
+        } else if (str.startsWith("- poison (type: poison).")) {
             emit sendCharacterAffectEvent(CharacterAffectEnum::POISONED, true);
             return;
         } else if (!str.startsWith("- a light wound") && !str.endsWith("bound)")
