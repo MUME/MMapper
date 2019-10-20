@@ -39,17 +39,16 @@ parts:
       - -DWITH_UPDATER=false
     build-packages:
       - build-essential
-      - zlib1g-dev
       - libssl-dev
-      - qtbase5-dev
-      - libqt5opengl5-dev
-      - qttools5-dev-tools
       - libminiupnpc-dev
+      - libqt5opengl5-dev
+      - qtbase5-dev
+      - qttools5-dev-tools
+      - zlib1g-dev
     stage-packages:
-      - zlib1g
-      - libssl1.1
-      - qtwayland5
       - libminiupnpc10
+      - libssl1.1
+      - zlib1g
     override-pull: |
       snapcraftctl pull
       snapcraftctl set-version "$(git describe --tags --always --long)"
@@ -63,18 +62,20 @@ parts:
     plugin: make
     make-parameters: ["FLAVOR=qt5"]
     build-packages:
-      - qtbase5-dev
       - dpkg-dev
+      - qtbase5-dev
     stage-packages:
-      - libxkbcommon0
-      - ttf-ubuntu-font-family
-      - dmz-cursor-theme
-      - light-themes
       - adwaita-icon-theme
+      - dmz-cursor-theme
       - gnome-themes-standard
-      - shared-mime-info
-      - libqt5gui5
+      - libxkbcommon0
+      - light-themes
       - libgdk-pixbuf2.0-0
+      - libglu1-mesa
+      - libqt5gui5
       - libqt5svg5
       - locales-all
+      - shared-mime-info
+      - ttf-ubuntu-font-family
+      - qtwayland5
       - xdg-user-dirs
