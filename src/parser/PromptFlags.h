@@ -38,7 +38,7 @@ private:
 private:
     static uint32_t encodeFogType(const PromptFogEnum pf)
     {
-        return std::clamp<uint32_t>(static_cast<uint32_t>(pf), 0, 3);
+        return std::clamp<uint32_t>(static_cast<uint32_t>(pf), 0, 2);
     }
     static uint32_t encodeTerrainType(const RoomTerrainEnum rtt)
     {
