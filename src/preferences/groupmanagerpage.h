@@ -43,6 +43,9 @@ signals:
     void refresh();
 
 private:
+    void loadRemoteHostConfig();
+
+private:
     Mmapper2Group *m_groupManager = nullptr;
     Ui::GroupManagerPage *ui = nullptr;
 };

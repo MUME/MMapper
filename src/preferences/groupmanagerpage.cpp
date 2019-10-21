@@ -148,47 +148,73 @@ void GroupManagerPage::loadConfig()
     ui->lockGroupCheckBox->setChecked(settings.lockGroup);
 
     // Client Section
+    loadRemoteHostConfig();
+
+    ui->groupTellColorAnsi256RadioButton->setChecked(settings.useGroupTellAnsi256Color);
+    AnsiCombo::makeWidgetColoured(ui->groupTellColorLabel, settings.groupTellColor, false);
+
+    ui->rulesWarning->setChecked(settings.rulesWarning);
+}
+
+void GroupManagerPage::loadRemoteHostConfig()
+{
+    const Configuration::GroupManagerSettings &settings = getConfig().groupManager;
+    const auto remoteHostText
+        = QString("%1:%2").arg(settings.host.constData()).arg(settings.remotePort);
+
+    const auto authority = m_groupManager->getAuthority();
+    const auto &itemModel = authority->getItemModel();
+
+    // Remember the old text because the combinations are going to be cleared
     const auto oldText = ui->remoteHost->currentText();
     ui->remoteHost->clear();
+    bool remoteHostIsContact = false;
     QSet<QString> contacts;
     for (int i = 0; i < itemModel->rowCount(); i++) {
         // Pre-populate entries from Authorized Contacts
         const auto key = itemModel->index(i, 0).data(Qt::DisplayRole).toByteArray();
         const auto ip = authority->getMetadata(key, GroupMetadataEnum::IP_ADDRESS);
         const auto port = authority->getMetadata(key, GroupMetadataEnum::PORT).toInt();
+        const auto name = authority->getMetadata(key, GroupMetadataEnum::NAME);
+
+        // IP and Port must be valid
         if (ip.isEmpty() || port <= 0)
             continue;
-        const auto remoteHostText = QString("%1:%2").arg(ip).arg(port);
-        if (contacts.contains(remoteHostText))
+
+        // Ignore contacts with duplicate ip/port combinations
+        const auto contact = QString("%1:%2").arg(ip).arg(port);
+        if (contacts.contains(contact))
             continue;
-        contacts.insert(remoteHostText);
-        ui->remoteHost->addItem(remoteHostText);
-        const auto name = authority->getMetadata(key, GroupMetadataEnum::NAME);
+
+        // Populate contact
+        contacts.insert(contact);
+        ui->remoteHost->addItem(contact);
         ui->remoteHost->setItemData(i, name.isEmpty() ? "Unknown" : name, Qt::ToolTipRole);
+        if (remoteHostText.compare(contact, Qt::CaseInsensitive) == 0)
+            remoteHostIsContact = true;
     }
-    const auto remoteHostText
-        = QString("%1:%2").arg(settings.host.constData()).arg(settings.remotePort);
-    if (!contacts.contains(remoteHostText)) {
+    if (!remoteHostIsContact) {
         // Add the entry from config if it wasn't already prepopulated
         ui->remoteHost->addItem(remoteHostText);
         ui->remoteHost->setItemData(ui->remoteHost->count() - 1, "Unknown", Qt::ToolTipRole);
-        ui->remoteHost->setCurrentIndex(ui->remoteHost->count() - 1);
-    } else {
-        for (int i = 0; i < ui->remoteHost->count(); i++) {
-            const auto itemText = ui->remoteHost->itemText(i);
-            if (remoteHostText.compare(itemText, Qt::CaseInsensitive) == 0) {
-                ui->remoteHost->setCurrentIndex(i);
-                break;
-            }
-        }
     }
-    if (int index = ui->remoteHost->findText(oldText) && !oldText.isEmpty())
-        ui->remoteHost->setCurrentIndex(index);
-
-    ui->groupTellColorAnsi256RadioButton->setChecked(settings.useGroupTellAnsi256Color);
-    AnsiCombo::makeWidgetColoured(ui->groupTellColorLabel, settings.groupTellColor, false);
-
-    ui->rulesWarning->setChecked(settings.rulesWarning);
+    auto find_remote_host_index = [this, &remoteHostText, &oldText]() -> int {
+        if (oldText.isEmpty()) {
+            // On first start up select the remote host in the configuration
+            for (int i = 0; i < ui->remoteHost->count(); i++) {
+                const auto itemText = ui->remoteHost->itemText(i);
+                if (remoteHostText.compare(itemText, Qt::CaseInsensitive) == 0) {
+                    return i;
+                }
+            }
+        } else {
+            const int i = ui->remoteHost->findText(oldText);
+            if (i >= 0)
+                return i;
+        }
+        return 0;
+    };
+    ui->remoteHost->setCurrentIndex(find_remote_host_index());
 }
 
 void GroupManagerPage::charNameTextChanged()
