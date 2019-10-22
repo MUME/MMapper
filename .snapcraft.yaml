@@ -68,12 +68,13 @@ parts:
       - adwaita-icon-theme
       - dmz-cursor-theme
       - gnome-themes-standard
-      - libxkbcommon0
-      - light-themes
       - libgdk-pixbuf2.0-0
+      - libgl1-mesa-dri
       - libglu1-mesa
       - libqt5gui5
       - libqt5svg5
+      - libxkbcommon0
+      - light-themes
       - locales-all
       - shared-mime-info
       - ttf-ubuntu-font-family
