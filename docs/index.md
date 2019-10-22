@@ -6,8 +6,12 @@ to represent the virtual world in user-friendly graphical environment. It acts
 as a proxy between a telnet client and a MUD server, being able to analyze game
 data in real time and show player's position in a map.
 
-{% for asset in site.github.latest_release.assets %}{% if asset.name != 'arda.mm2' %}[![Download {{ asset.name }}](https://img.shields.io/github/downloads/{{ site.github.owner_name }}/{{ site.github.repository_name }}/latest/{{ asset.name }}.svg)]({{ asset.browser_download_url }} "Download {{ asset.name }}")  
-{% endif %}{% endfor %}
+{% for asset in site.github.latest_release.assets %}
+{% if asset.name == 'arda.mm2' or asset.name contains 'sha256' %}
+{% else %}
+[![Download {{ asset.name }}](https://img.shields.io/github/downloads/{{ site.github.owner_name }}/{{ site.github.repository_name }}/latest/{{ asset.name }}.svg)]({{ asset.browser_download_url }} "Download {{ asset.name }}")
+{% endif %}
+{% endfor %}
 
 ## Features
 1.  Automatic room creation during mapping
@@ -22,7 +26,7 @@ data in real time and show player's position in a map.
 10.  Remote editing support
 
 ## Usage
-Please set up your client according to this [guide](https://github.com/MUME/MMapper/wiki)
+Please set up your client according to this [guide](https://github.com/MUME/MMapper/wiki/Installing)
 
 ## Frequently Asked Questions
 1.  [Troubleshooting](https://github.com/MUME/MMapper/wiki/Troubleshooting)
