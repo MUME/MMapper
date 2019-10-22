@@ -81,7 +81,7 @@ endif()
 if(APPLE)
     set(CMAKE_MACOSX_RPATH ON)
     # C++17 std::optional requires macOS 10.14
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14")
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment version")
 endif()
 
 if(WIN32)
