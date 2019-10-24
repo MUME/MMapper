@@ -170,6 +170,14 @@ if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
           OUTPUT_STRIP_TRAILING_WHITESPACE
         )
 
+        # Detect last annotated tag for map downloading
+        execute_process(
+          COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0
+          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+	  OUTPUT_VARIABLE GIT_LAST_ANNOTATED_TAG
+          OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+
         if(GIT_TAG_NAME)
            message(STATUS "Building from branch ${GIT_BRANCH} with tag ${GIT_TAG_NAME}")
            set(MMAPPER_VERSION_STRING "${GIT_TAG_NAME}")
@@ -370,8 +378,8 @@ if(WITH_MAP)
 
         if(MMAPPER_MAP_STATUS)
             file(REMOVE ${MMAPPER_MAP_FILE})
-            if(GIT_TAG_NAME)
-                set(MMAPPER_MAP_URL "https://github.com/MUME/MMapper/releases/download/${GIT_TAG_NAME}/arda.mm2")
+            if(GIT_LAST_ANNOTATED_TAG)
+                set(MMAPPER_MAP_URL "https://github.com/MUME/MMapper/releases/download/${GIT_LAST_ANNOTATED_TAG}/arda.mm2")
                 message(STATUS "Map not found. Fetching alternative map from: ${MMAPPER_MAP_URL}")
                 file(DOWNLOAD ${MMAPPER_MAP_URL} ${MMAPPER_MAP_FILE} STATUS MMAPPER_MAP_HTTP_STATUS)
                 list(GET MMAPPER_MAP_HTTP_STATUS 0 MMAPPER_MAP_STATUS)
