@@ -163,6 +163,7 @@ void MapCanvas::reportGLVersion()
                // FIXME: This is a bit late to report an invalid context.
                .arg(context()->isValid() ? "valid" : "invalid")
                .toUtf8());
+    logMsg("Display:", QString("%1 DPI").arg(QPaintDevice::devicePixelRatioF()).toUtf8());
 }
 
 bool MapCanvas::isBlacklistedDriver()
@@ -571,13 +572,13 @@ void MapCanvas::paintGL()
 
     const auto w = width();
     const auto h = height();
-    const auto dpr = devicePixelRatioF();
+    const auto dpr = getOpenGL().getDevicePixelRatio();
 
     auto &font = getGLFont();
     std::vector<GLText> text;
 
     const auto lineHeight = font.getFontHeight();
-    const float rightMargin = float(w) * float(dpr) - font.getGlyphAdvance('e').value_or(5);
+    const float rightMargin = float(w) * dpr - font.getGlyphAdvance('e').value_or(5);
 
     // x and y are in physical (device) pixels
     // TODO: change API to use logical pixels.
@@ -636,32 +637,6 @@ void MapCanvas::paintGL()
                             static_cast<double>(ctr.x),
                             static_cast<double>(ctr.y),
                             static_cast<double>(ctr.z)));
-
-    if ((false)) {
-        const auto half_w = double(w) * 0.5;
-        const auto half_h = double(h) * 0.5;
-
-        struct Foo final
-        {
-            const char *name = nullptr;
-            glm::vec2 offset{0};
-        };
-        const MMapper::Array<Foo, 2> foos{Foo{"X", {1, 0}}, Foo{"Y", {0, 1}}};
-        for (int i = 0; i < 2; ++i) {
-            for (const Foo &foo : foos) {
-                // project() returns a value in logical pixels, which matches the logical
-                // pixels used by width() and height(); we multiply by dpr here so we can
-                // report physical pixels to match screenshots.
-                if (auto opt_mouse = project(ctr + glm::vec3{foo.offset, i})) {
-                    print(QString::asprintf("+1%s in layer %d: (%.1f, %.1f) px",
-                                            foo.name,
-                                            m_currentLayer + i,
-                                            (static_cast<double>(opt_mouse->x) - half_w) * dpr,
-                                            (static_cast<double>(opt_mouse->y) - half_h) * dpr));
-                }
-            }
-        }
-    }
 
     font.render2dTextImmediate(text);
 }

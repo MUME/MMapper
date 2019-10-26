@@ -65,7 +65,7 @@ public:
 
 Splash::~Splash() = default;
 
-static void tryUseHighDpi()
+static void useHighDpi()
 {
     QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
@@ -127,6 +127,7 @@ static void tryAutoLoad(MainWindow &mw)
 
 int main(int argc, char **argv)
 {
+    useHighDpi();
     setEnteredMain();
     if constexpr (IS_DEBUG_BUILD) {
         // see http://doc.qt.io/qt-5/qtglobal.html#qSetMessagePattern
@@ -137,7 +138,6 @@ int main(int argc, char **argv)
 
     QApplication app(argc, argv);
     tryInitDrMingw();
-    tryUseHighDpi();
     auto tryLoadingWinSock = std::make_unique<WinSock>();
 
     const auto &config = getConfig();
