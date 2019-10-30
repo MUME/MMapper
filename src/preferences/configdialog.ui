@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>ConfigDialog</class>
  <widget class="QWidget" name="ConfigDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>666</width>
+    <height>650</height>
+   </rect>
+  </property>
   <layout class="QVBoxLayout" name="_4">
    <item>
     <layout class="QHBoxLayout" name="_3">
@@ -50,7 +58,7 @@
           <x>0</x>
           <y>0</y>
           <width>518</width>
-          <height>298</height>
+          <height>558</height>
          </rect>
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_3"/>
