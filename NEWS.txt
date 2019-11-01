@@ -1,4 +1,13 @@
 ================================
+MMapper 19.10.1 (October 31, 2019)
+================================
+
+Bug fixes:
+ - Remapped 'Road to the Grey Havens' on default map to resolve syncing
+ - Preferences dialog is larger again
+ - Fixed high DPI scaling on Windows
+
+================================
 MMapper 19.10.0 (October 25, 2019)
 ================================
 
