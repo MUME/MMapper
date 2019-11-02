@@ -27,7 +27,11 @@
 #include "groupselection.h"
 #include "mmapper2character.h"
 
+#ifndef Q_OS_WASM
 static constexpr const bool THREADED = true;
+#else
+static constexpr const bool THREADED = false;
+#endif
 static constexpr const auto ONE_MINUTE = 60;
 static constexpr const int THIRTY_MINUTES = 30 * ONE_MINUTE;
 static constexpr const int DEFAULT_EXPIRE = THIRTY_MINUTES;

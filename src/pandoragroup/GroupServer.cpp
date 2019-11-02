@@ -370,11 +370,13 @@ void GroupServer::parseLoginInformation(GroupSocket *socket, const QVariantMap &
         for (const auto &target : clientsList) {
             if (socket == target)
                 continue;
+#ifndef Q_OS_WASM
             if (socket->getPeerCertificate() == target->getPeerCertificate()) {
                 kickConnection(target, "Someone reconnected to the server using your secret!");
                 reconnect = true;
                 break;
             }
+#endif
         }
 
     } else {
@@ -423,9 +425,11 @@ void GroupServer::parseLoginInformation(GroupSocket *socket, const QVariantMap &
         getAuthority()->setMetadata(secret,
                                     GroupMetadataEnum::LAST_LOGIN,
                                     QDateTime::currentDateTime().toString());
+#ifndef Q_OS_WASM
         getAuthority()->setMetadata(secret,
                                     GroupMetadataEnum::CERTIFICATE,
                                     socket->getPeerCertificate().toPem());
+#endif
     }
 
     // Strip protocolVersion from original QVariantMap

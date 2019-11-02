@@ -492,12 +492,16 @@ add_executable(mmapper WIN32 MACOSX_BUNDLE
     ${mmapper_DATA}
 )
 
-target_link_libraries(mmapper PUBLIC
+target_link_libraries(mmapper PRIVATE
     Qt5::Core
     Qt5::Widgets
     Qt5::Network
     Qt5::OpenGL
 )
+
+if(EMSCRIPTEN)
+    link_qt_static(mmapper)
+endif()
 
 set_target_properties(
   mmapper PROPERTIES
@@ -760,6 +764,13 @@ if(WIN32)
     # NSIS always displays a license page
     set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/src/resources/LICENSE.GPL2")
 endif(WIN32)
+
+if(EMSCRIPTEN)
+    set(APPNAME mmapper)
+    configure_file("${_qt5Core_install_prefix}/plugins/platforms/wasm_shell.html" "mmapper.html")
+    configure_file("${_qt5Core_install_prefix}/plugins/platforms/qtloader.js" "qtloader.js" COPYONLY)
+    configure_file("${_qt5Core_install_prefix}/plugins/platforms/qtlogo.svg" "qtlogo.svg" COPYONLY)
+endif()
 
 # Apple Install Settings
 if(APPLE)

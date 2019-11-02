@@ -24,6 +24,11 @@
 #include <exchndl.h>
 #endif
 
+#ifdef Q_OS_WASM
+#include <QtPlugin>
+Q_IMPORT_PLUGIN(QWasmIntegrationPlugin)
+#endif
+
 // REVISIT: move splash files somewhere else?
 // (presumably not in the "root" src/ directory?)
 struct NODISCARD ISplash
@@ -176,6 +181,7 @@ int main(int argc, char **argv)
     }
 
     QApplication app(argc, argv);
+    QCoreApplication::addLibraryPath("./");
     tryInitDrMingw();
     auto tryLoadingWinSock = std::make_unique<WinSock>();
     setSurfaceFormat();

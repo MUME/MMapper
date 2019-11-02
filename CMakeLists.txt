@@ -30,6 +30,9 @@ option(USE_CODE_COVERAGE "Run code coverage reporting" OFF)
 if(WIN32 AND MINGW)
    option(WITH_DRMINGW "Include Dr. Mingw crash dumping (Windows only)" ON)
 endif()
+if(EMSCRIPTEN)
+   include(external/wasm.cmake)
+endif()
 
 find_package(Qt5 COMPONENTS REQUIRED Core Widgets Network OpenGL Test)
 

@@ -8,7 +8,11 @@
 #include <QAbstractSocket>
 #include <QByteArray>
 #include <QObject>
+#ifndef Q_OS_WASM
 #include <QSslSocket>
+#else
+#include <QTcpSocket>
+#endif
 #include <QString>
 #include <QTimer>
 #include <QtCore>
@@ -78,13 +82,21 @@ private:
 
 protected slots:
     void slot_onReadyRead();
-    void slot_onEncrypted();
-    void slot_onPeerVerifyError(const QSslError &error);
     void slot_checkTimeout();
 
+#ifndef Q_OS_WASM
+public slots:
+    void slot_onEncrypted();
+    void slot_onPeerVerifyError(const QSslError &error);
+
 protected:
-    io::buffer<(1 << 13)> m_buffer;
     QSslSocket m_socket;
+#else
+protected:
+    QTcpSocket m_socket;
+#endif
+
+    io::buffer<(1 << 13)> m_buffer;
     QTimer m_timer;
 };
 

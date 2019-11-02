@@ -40,7 +40,7 @@ NODISCARD static inline constexpr PlatformEnum getCurrentPlatform()
     return PlatformEnum::Windows;
 #elif defined(Q_OS_MAC)
     return PlatformEnum::Mac;
-#elif defined(Q_OS_LINUX)
+#elif defined(Q_OS_LINUX) or defined(Q_OS_WASM)
     return PlatformEnum::Linux;
 #else
     throw std::runtime_error("unsupported platform");

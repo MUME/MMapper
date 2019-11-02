@@ -8,7 +8,11 @@
 #include <QByteArray>
 #include <QMap>
 #include <QObject>
+#ifndef Q_OS_WASM
 #include <QSslSocket>
+#else
+#include <QTcpSocket>
+#endif
 #include <QString>
 #include <QTimer>
 #include <QtCore>
@@ -31,15 +35,22 @@ public:
     void setSocket(qintptr socketDescriptor);
     void connectToHost();
     void disconnectFromHost();
+#ifndef Q_OS_WASM
     void startServerEncrypted() { socket.startServerEncryption(); }
     void startClientEncrypted() { socket.startClientEncryption(); }
+#else
+    void startServerEncrypted() { assert(false); }
+    void startClientEncrypted() { assert(false); }
+#endif
 
     NODISCARD QByteArray getSecret() const { return secret; }
     NODISCARD QString getPeerName() const;
     NODISCARD quint16 getPeerPort() const { return socket.peerPort(); }
 
     NODISCARD QAbstractSocket::SocketError getSocketError() const { return socket.error(); }
+#ifndef Q_OS_WASM
     NODISCARD QSslCertificate getPeerCertificate() const { return socket.peerCertificate(); }
+#endif
 
     void setProtocolState(ProtocolStateEnum val);
     NODISCARD ProtocolStateEnum getProtocolState() const { return protocolState; }
@@ -54,7 +65,9 @@ public:
 
 protected slots:
     void slot_onError(QAbstractSocket::SocketError socketError);
+#ifndef Q_OS_WASM
     void slot_onPeerVerifyError(const QSslError &error);
+#endif
     void slot_onReadyRead();
     void slot_onTimeout();
 
@@ -71,7 +84,11 @@ private:
     void sendLog(const QString &msg) { emit sig_sendLog(msg); }
 
 private:
+#ifndef Q_OS_WASM
     QSslSocket socket;
+#else
+    QTcpSocket socket;
+#endif
     QTimer timer;
     GroupAuthority *const authority;
     void onReadInternal(char c);

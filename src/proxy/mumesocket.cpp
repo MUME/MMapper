@@ -74,24 +74,30 @@ MumeSslSocket::MumeSslSocket(QObject *parent)
     , m_socket{this}
     , m_timer{this}
 {
+#ifndef Q_OS_WASM
     const auto get_ssl_config = [this]() {
         auto config = m_socket.sslConfiguration();
         config.setPeerVerifyMode(QSslSocket::QueryPeer);
         return config;
     };
     m_socket.setSslConfiguration(get_ssl_config());
+#endif
     connect(&m_socket,
             QOverload<>::of(&QAbstractSocket::connected),
             this,
             &MumeSslSocket::slot_onConnect);
     connect(&m_socket, &QIODevice::readyRead, this, &MumeSslSocket::slot_onReadyRead);
     connect(&m_socket, &QAbstractSocket::disconnected, this, &MumeSslSocket::slot_onDisconnect);
+#ifndef Q_OS_WASM
     connect(&m_socket, &QSslSocket::encrypted, this, &MumeSslSocket::slot_onEncrypted);
+#endif
     connect(&m_socket,
             QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::errorOccurred),
             this,
             &MumeSslSocket::slot_onError);
+#ifndef Q_OS_WASM
     connect(&m_socket, &QSslSocket::peerVerifyError, this, &MumeSslSocket::slot_onPeerVerifyError);
+#endif
 
     m_timer.setInterval(TIMEOUT_MILLIS);
     m_timer.setSingleShot(true);
@@ -107,9 +113,12 @@ MumeSslSocket::~MumeSslSocket()
 void MumeSslSocket::virt_connectToHost()
 {
     const auto &settings = getConfig().connection;
+#ifndef Q_OS_WASM
     m_socket.connectToHostEncrypted(settings.remoteServerName,
                                     settings.remotePort,
                                     QIODevice::ReadWrite);
+    m_socket.connectToHost(settings.remoteServerName, settings.remotePort, QIODevice::ReadWrite);
+#endif
     m_timer.start();
 }
 
@@ -142,6 +151,7 @@ void MumeSslSocket::virt_onError(QAbstractSocket::SocketError e)
     }
 }
 
+#ifndef Q_OS_WASM
 void MumeSslSocket::slot_onEncrypted()
 {
     m_timer.stop();
@@ -184,6 +194,7 @@ void MumeSslSocket::slot_onPeerVerifyError(const QSslError &error)
                                        "\n");
     emit sig_processMudStream(byteArray);
 }
+#endif
 
 void MumeSslSocket::slot_onReadyRead()
 {
@@ -199,6 +210,7 @@ void MumeSslSocket::slot_checkTimeout()
 {
     switch (m_socket.state()) {
     case QAbstractSocket::ConnectedState:
+#ifndef Q_OS_WASM
         if (!m_socket.isEncrypted()) {
             slot_onError2(QAbstractSocket::SslHandshakeFailedError,
                           "Timeout during encryption handshake.");
@@ -206,6 +218,7 @@ void MumeSslSocket::slot_checkTimeout()
         } else {
             // Race condition? Connection was successfully encrypted
         }
+#endif
         break;
     case QAbstractSocket::HostLookupState:
         m_socket.abort();
