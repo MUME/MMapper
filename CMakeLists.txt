@@ -29,11 +29,7 @@ if(WIN32 AND MINGW)
    option(WITH_DRMINGW "Include Dr. Mingw crash dumping (Windows only)" ON)
 endif()
 
-find_package(Qt5Core REQUIRED)
-find_package(Qt5Widgets REQUIRED)
-find_package(Qt5Network REQUIRED)
-find_package(Qt5OpenGL REQUIRED)
-find_package(Qt5Test REQUIRED)
+find_package(Qt5 COMPONENTS REQUIRED Core Widgets Network OpenGL Test)
 
 enable_testing()
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
