@@ -5,8 +5,8 @@
 #include <string_view>
 #include <vector>
 
-#include "../global/RuleOf5.h"
-#include "../global/utils.h"
+#include "RuleOf5.h"
+#include "utils.h"
 #include "Color.h"
 
 // TODO: rename this, but to what? NamedColorHandle?
