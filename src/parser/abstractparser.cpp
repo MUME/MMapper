@@ -417,8 +417,9 @@ void AbstractParser::parseExits()
             if (match.hasMatch()) {
                 // Parse exit flag
                 const auto &signs = match.captured(1);
-                for (int i = 0; i < signs.length(); i++)
-                    parse_exit_flag(signs.toLatin1().at(i));
+                for (const QChar &qc : signs) {
+                    parse_exit_flag(qc.toLatin1());
+                }
 
                 // Set exit flags to direction
                 const auto &exit = match.captured(2);
