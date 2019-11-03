@@ -53,6 +53,6 @@ private:
     void receiveEchoMode(bool) override;
     void sendRawData(const QByteArray &data) override;
 
-    io::null_padded_buffer<(1 << 15)> buffer{};
+    io::buffer<(1 << 15)> buffer;
     QTcpSocket socket;
 };

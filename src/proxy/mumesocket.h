@@ -65,7 +65,7 @@ protected slots:
     void checkTimeout();
 
 protected:
-    io::null_padded_buffer<(1 << 13)> m_buffer{};
+    io::buffer<(1 << 13)> m_buffer;
     QSslSocket m_socket;
     QTimer m_timer;
 };

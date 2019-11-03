@@ -85,7 +85,7 @@ private:
     } state
         = GroupMessageStateEnum::LENGTH;
 
-    io::null_padded_buffer<(1 << 15)> ioBuffer{};
+    io::buffer<(1 << 15)> ioBuffer;
     QByteArray buffer;
     QByteArray secret;
     QByteArray name;

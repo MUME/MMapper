@@ -3,9 +3,10 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include "Array.h"
 #include <cassert>
 #include <cstddef>
+#include <limits>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <QtCore/QByteArray>
@@ -20,32 +21,46 @@ class QFile;
 namespace io {
 
 template<size_t N>
-struct /* TODO: alignas(4096) */ null_padded_buffer final
+class buffer final
 {
-    static_assert(N >= 4096);
-    /* TODO: alignas(4096) */
-    MMapper::Array<char, N + 1u> array;
+private:
+    static constexpr const size_t SIZE = N;
+    static constexpr const size_t ALIGNMENT = 4096;
+    static_assert(N >= ALIGNMENT);
+    static_assert((N & (N - 1)) == 0, "N must be a power of two");
+    static_assert(N <= static_cast<size_t>(std::numeric_limits<int>::max()));
+    struct alignas(ALIGNMENT) internal final
+    {
+        // uninitialized
+        alignas(ALIGNMENT) char data[N];
+    };
+    static_assert(sizeof(internal) == SIZE);
+    static_assert(alignof(internal) == ALIGNMENT);
+
+    const std::unique_ptr<internal> m_internal = std::make_unique<internal>();
+
+public:
+    buffer() = default;
+    ~buffer() = default;
+    DELETE_CTORS_AND_ASSIGN_OPS(buffer);
+    char *data() { return m_internal->data; }
 };
 
 enum class IOResultEnum { SUCCESS, FAILURE, EXCEPTION };
 
 template<size_t N, typename Callback>
-IOResultEnum readAllAvailable(QIODevice &dev, null_padded_buffer<N> &buffer, Callback &&callback)
+IOResultEnum readAllAvailable(QIODevice &dev, buffer<N> &buffer, Callback &&callback)
 {
-    char *const data = buffer.array.data();
-    const auto maxSize = static_cast<qint64>(buffer.array.size()) - 1;
-    while (dev.bytesAvailable() != 0) {
-        const auto got = dev.read(data, maxSize);
-        if (got < 0) {
+    static constexpr const auto MAX_SIZE = static_cast<qint64>(N);
+    char *const data = buffer.data();
+    while (dev.bytesAvailable() > 0) {
+        const auto got = dev.read(data, MAX_SIZE);
+        if (got <= 0) {
             callback(QByteArray::fromRawData(data, 0));
             return IOResultEnum::FAILURE;
         }
 
-        if (got == 0)
-            continue;
-
-        assert(got <= maxSize);
-        data[got] = '\0';
+        assert(got <= MAX_SIZE);
         const int igot = static_cast<int>(got);
         assert(igot >= 0 && static_cast<decltype(got)>(igot) == got);
         callback(QByteArray::fromRawData(data, igot));

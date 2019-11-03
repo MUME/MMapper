@@ -78,7 +78,7 @@ private:
     void disconnectFromMud();
 
 private:
-    io::null_padded_buffer<(1 << 13)> m_buffer;
+    io::buffer<(1 << 13)> m_buffer;
     WeakHandleLifetime<Proxy> m_weakHandleLifetime{*this};
     ProxyParserApi m_proxyParserApi{m_weakHandleLifetime.getWeakHandle()};
 
