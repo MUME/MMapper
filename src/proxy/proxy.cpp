@@ -400,7 +400,7 @@ void Proxy::connectToMud()
             m_serverState = ServerStateEnum::CONNECTING;
             sock->connectToHost();
         } else {
-            sendToUser("Internal eror while trying to connect.\r\n");
+            sendToUser("Internal error while trying to connect.\r\n");
         }
         break;
     }
@@ -427,7 +427,7 @@ void Proxy::disconnectFromMud()
             sendToUser("Disconnected.\r\n");
             m_serverState = ServerStateEnum::DISCONNECTED;
         } else {
-            sendToUser("Internal eror while trying to disconnect.\r\n");
+            sendToUser("Internal error while trying to disconnect.\r\n");
         }
         break;
     }
