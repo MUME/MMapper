@@ -183,7 +183,7 @@ void AbstractTelnet::reset()
     heAnnouncedState.fill(false);
 
     // reset telnet status
-    setTerminalType();
+    setTerminalType("unknown");
     state = TelnetStateEnum::NORMAL;
     commandBuffer.clear();
     subnegBuffer.clear();

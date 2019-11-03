@@ -216,7 +216,7 @@ protected:
 
     void onReadInternal(const QByteArray &);
 
-    void setTerminalType(const QByteArray &terminalType = "unknown");
+    void setTerminalType(const QByteArray &terminalType);
 
     TextCodec textCodec;
 
