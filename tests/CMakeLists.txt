@@ -29,6 +29,8 @@ file(GLOB_RECURSE expandoracommon_SRCS
     ../src/global/NullPointerException.h
     ../src/global/StringView.cpp
     ../src/global/StringView.h
+    ../src/global/TextUtils.cpp
+    ../src/global/TextUtils.h
     ../src/global/random.cpp
     ../src/global/random.h
     ../src/global/utils.cpp
@@ -53,6 +55,8 @@ set(parser_SRCS
     ../src/mapdata/ExitDirection.h
     ../src/global/NullPointerException.cpp
     ../src/global/NullPointerException.h
+    ../src/global/TextUtils.cpp
+    ../src/global/TextUtils.h
     ../src/global/random.cpp
     ../src/global/random.h
     )

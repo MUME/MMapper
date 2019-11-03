@@ -5,9 +5,15 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include <string>
+#include <string_view>
+
 class QString;
 
 namespace ParserUtils {
 QString &removeAnsiMarksInPlace(QString &str);
-QString &latinToAsciiInPlace(QString &str);
+QString &toAsciiInPlace(QString &str);
+std::string &latin1ToAsciiInPlace(std::string &str);
+std::string latin1ToAscii(const std::string_view &sv);
+
 } // namespace ParserUtils

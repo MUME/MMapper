@@ -49,13 +49,16 @@ const QVariantMap CGroupChar::toVariantMap() const
     return root;
 }
 
-struct QuotedString final
+struct QuotedQString final
 {
+private:
     QString str;
-    explicit QuotedString(QString input)
+
+public:
+    explicit QuotedQString(QString input)
         : str{std::move(input)}
     {}
-    friend QDebug &operator<<(QDebug &debug, const QuotedString &q)
+    friend QDebug &operator<<(QDebug &debug, const QuotedQString &q)
     {
         debug.quote();
         debug << q.str;
@@ -67,7 +70,7 @@ struct QuotedString final
 bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
 {
     if (!data.contains(playerDataKey) || !data[playerDataKey].canConvert(QMetaType::QVariantMap)) {
-        qWarning() << "Unable to find" << QuotedString(playerDataKey) << "in map" << data;
+        qWarning() << "Unable to find" << QuotedQString(playerDataKey) << "in map" << data;
         return false;
     }
     const QVariantMap &playerData = data[playerDataKey].toMap();
@@ -126,7 +129,7 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
             updated = true;
             color = QColor(str);
             if (str != color.name())
-                qWarning() << "Round trip error on color" << QuotedString(str) << "vs" << color;
+                qWarning() << "Round trip error on color" << QuotedQString(str) << "vs" << color;
         }
     }
 
@@ -152,13 +155,13 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
     const auto boundsCheck =
         [&updated](const char *const xname, auto &x, const char *const maxxname, auto &maxx) {
             if (maxx < 0) {
-                qWarning() << "[boundsCheck]" << QuotedString(maxxname) << "(" << maxx
+                qWarning() << "[boundsCheck]" << QuotedQString(maxxname) << "(" << maxx
                            << ") has been raised to 0.";
                 maxx = 0;
                 updated = true;
             }
             if (x > maxx) {
-                qWarning() << "[boundsCheck]" << QuotedString(xname) << "(" << x
+                qWarning() << "[boundsCheck]" << QuotedQString(xname) << "(" << x
                            << ") has been clamped to " << maxxname << "(" << maxx << ").";
                 x = maxx;
                 updated = true;
@@ -216,13 +219,13 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
 QByteArray CGroupChar::getNameFromUpdateChar(const QVariantMap &data)
 {
     if (!data.contains(playerDataKey) || !data[playerDataKey].canConvert(QMetaType::QVariantMap)) {
-        qWarning() << "Unable to find" << QuotedString(playerDataKey) << "in map" << data;
+        qWarning() << "Unable to find" << QuotedQString(playerDataKey) << "in map" << data;
         return "";
     }
 
     const QVariantMap &playerData = data[playerDataKey].toMap();
     if (!playerData.contains(nameKey) || !playerData[nameKey].canConvert(QMetaType::QByteArray)) {
-        qWarning() << "Unable to find" << QuotedString(nameKey) << "in map" << playerData;
+        qWarning() << "Unable to find" << QuotedQString(nameKey) << "in map" << playerData;
         return "";
     }
 

@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <memory>
 
+#include "../global/TextUtils.h"
 #include "../global/utils.h"
 #include "../mapdata/ExitDirection.h"
 #include "../parser/CommandId.h"
@@ -80,7 +81,7 @@ QString ParseEvent::toQString() const
     }
     QString promptStr;
     if (m_promptFlags.isValid()) {
-        promptStr.append(QString::fromStdString(getPromptBytes(m_promptFlags)));
+        promptStr.append(::toQStringLatin1(getPromptBytes(m_promptFlags)));
         if (m_promptFlags.isLit())
             promptStr.append("*");
         else if (m_promptFlags.isDark())

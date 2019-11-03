@@ -50,7 +50,7 @@ RemoteEditProcess::RemoteEditProcess(const bool editSession,
 
     const QString &fileName = m_file.fileName();
     qDebug() << "View session file template" << fileName;
-    m_file.write(m_body.toLatin1());
+    m_file.write(m_body.toLatin1()); // note: MUME expects all remote edit data to be Latin-1.
     m_file.flush();
     io::fsyncNoexcept(m_file);
     m_file.close();

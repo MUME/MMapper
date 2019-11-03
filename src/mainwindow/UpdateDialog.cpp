@@ -88,6 +88,7 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
     }
     QString answer = reply->readAll();
     QJsonParseError error;
+    // REVISIT: Should this be latin1 or utf8?
     QJsonDocument doc = QJsonDocument::fromJson(answer.toLatin1(), &error);
     if (doc.isNull()) {
         qWarning() << error.errorString();

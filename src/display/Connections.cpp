@@ -139,6 +139,7 @@ void ConnectionDrawer::drawRoomDoorName(const Room *const sourceRoom,
         return;
     }
 
+    // consider converting this to std::string
     QString name;
     bool together = false;
 
@@ -216,8 +217,11 @@ void ConnectionDrawer::drawRoomDoorName(const Room *const sourceRoom,
 
     static const auto bg = Colors::black.withAlpha(0.4f);
     const glm::vec3 pos{xy, m_currentLayer};
-    m_roomNameBatch.emplace_back(
-        GLText{pos, name, Colors::white, bg, FontFormatFlags{FontFormatFlagEnum::HALIGN_CENTER}});
+    m_roomNameBatch.emplace_back(GLText{pos,
+                                        ::toStdStringLatin1(name),
+                                        Colors::white,
+                                        bg,
+                                        FontFormatFlags{FontFormatFlagEnum::HALIGN_CENTER}});
 }
 
 void ConnectionDrawer::drawRoomConnectionsAndDoors(const Room *const room, const RoomIndex &rooms)

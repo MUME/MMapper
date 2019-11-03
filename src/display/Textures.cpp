@@ -42,7 +42,7 @@ static SharedMMTexture loadTexture(const QString &name)
         texture->create();
 
         if (!texture->isCreated())
-            throw std::runtime_error(("failed to create: " + name).toStdString());
+            throw std::runtime_error(::toStdStringUtf8("failed to create: " + name));
     }
 
     texture->setWrapMode(QOpenGLTexture::WrapMode::MirroredRepeat);

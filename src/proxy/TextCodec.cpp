@@ -59,7 +59,7 @@ QByteArray TextCodec::fromUnicode(const QString &data)
     if (currentEncoding == CharacterEncodingEnum::ASCII) {
         // Simplify Latin-1 characters to US-ASCII
         QString outdata = data;
-        ParserUtils::latinToAsciiInPlace(outdata);
+        ParserUtils::toAsciiInPlace(outdata);
         return textCodec->fromUnicode(outdata);
     }
 

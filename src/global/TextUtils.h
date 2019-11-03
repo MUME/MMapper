@@ -526,3 +526,10 @@ public:
         return print_string_smartquote(os, smartQuotedString.m_str);
     }
 };
+
+QString toQStringLatin1(const std::string_view &sv);
+QString toQStringUtf8(const std::string_view &sv);
+QByteArray toQByteArrayLatin1(const std::string_view &sv);
+
+std::string toStdStringLatin1(const QString &qs);
+std::string toStdStringUtf8(const QString &qs);

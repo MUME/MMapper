@@ -1118,3 +1118,28 @@ std::ostream &print_string_smartquote(std::ostream &os, const std::string_view &
     }
     return print_string_quoted(os, sv);
 }
+
+QString toQStringLatin1(const std::string_view &sv)
+{
+    return QString::fromLatin1(sv.data(), static_cast<int>(sv.size()));
+}
+
+QString toQStringUtf8(const std::string_view &sv)
+{
+    return QString::fromUtf8(sv.data(), static_cast<int>(sv.size()));
+}
+
+QByteArray toQByteArrayLatin1(const std::string_view &sv)
+{
+    return QByteArray::fromRawData(sv.data(), static_cast<int>(sv.size()));
+}
+
+std::string toStdStringLatin1(const QString &qs)
+{
+    return qs.toLatin1().toStdString();
+}
+
+std::string toStdStringUtf8(const QString &qs)
+{
+    return qs.toUtf8().toStdString();
+}

@@ -165,7 +165,7 @@ static QIcon getIcon(T flag)
         QIcon result(filename);
         if (result.isNull())
             throw std::runtime_error(
-                QString("failed to load icon '%1'").arg(filename).toStdString());
+                ::toStdStringUtf8(QString("failed to load icon '%1'").arg(filename)));
         return result;
     } catch (...) {
         qWarning() << "Oops: Unable to create icon:" << filename;

@@ -10,6 +10,7 @@
 #include <QIODevice>
 
 #include "../configuration/configuration.h"
+#include "../global/TextUtils.h"
 #include "../global/io.h"
 
 static constexpr const bool USE_TMP_SUFFIX = CURRENT_PLATFORM != PlatformEnum::Windows;
@@ -48,7 +49,7 @@ void FileSaver::open(const QString &filename) noexcept(false)
     m_file.setFileName(maybe_add_suffix(filename));
 
     if (!m_file.open(QFile::WriteOnly)) {
-        throw std::runtime_error(m_file.errorString().toStdString());
+        throw std::runtime_error(::toStdStringUtf8(m_file.errorString()));
     }
 }
 

@@ -537,7 +537,7 @@ QString AbstractParser::normalizeStringCopy(QString string)
     // Remove ANSI first, since we don't want Latin1
     // transliterations to accidentally count as ANSI.
     ParserUtils::removeAnsiMarksInPlace(string);
-    ParserUtils::latinToAsciiInPlace(string);
+    ParserUtils::toAsciiInPlace(string);
     return string;
 }
 
@@ -927,8 +927,7 @@ void AbstractParser::toggleTrollMapping()
 
 void AbstractParser::doSearchCommand(StringView view)
 {
-    QString pattern_str = view.toQString();
-    if (std::optional<RoomFilter> optFilter = RoomFilter::parseRoomFilter(pattern_str)) {
+    if (std::optional<RoomFilter> optFilter = RoomFilter::parseRoomFilter(view.getStdStringView())) {
         searchCommand(optFilter.value());
     } else {
         sendToUser(RoomFilter::parse_help);
@@ -937,8 +936,7 @@ void AbstractParser::doSearchCommand(StringView view)
 
 void AbstractParser::doGetDirectionsCommand(StringView view)
 {
-    QString pattern_str = view.toQString();
-    if (std::optional<RoomFilter> optFilter = RoomFilter::parseRoomFilter(pattern_str)) {
+    if (std::optional<RoomFilter> optFilter = RoomFilter::parseRoomFilter(view.getStdStringView())) {
         dirsCommand(optFilter.value());
     } else {
         sendToUser(RoomFilter::parse_help);

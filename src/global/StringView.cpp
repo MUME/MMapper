@@ -33,12 +33,12 @@ std::string StringView::toStdString() const noexcept(false)
 
 QString StringView::toQString() const noexcept(false)
 {
-    return QString::fromStdString(toStdString());
+    return ::toQStringLatin1(m_sv);
 }
 
 QByteArray StringView::toQByteArray() const noexcept(false)
 {
-    return QByteArray(m_sv.data(), static_cast<int>(m_sv.size()));
+    return ::toQByteArrayLatin1(m_sv);
 }
 
 void StringView::eatFirst()

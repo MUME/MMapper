@@ -45,19 +45,20 @@ static std::regex createRegex(const std::string &input, const Qt::CaseSensitivit
     return std::regex(pattern, options);
 }
 
-RoomFilter::RoomFilter(QString str, const Qt::CaseSensitivity cs, const PatternKindsEnum kind)
-    : m_regex(createRegex(ParserUtils::latinToAsciiInPlace(str).toStdString(), cs))
+RoomFilter::RoomFilter(const std::string_view &sv,
+                       const Qt::CaseSensitivity cs,
+                       const PatternKindsEnum kind)
+    : m_regex(createRegex(ParserUtils::latin1ToAscii(sv), cs))
     , m_kind(kind)
 {}
 
 const char *const RoomFilter::parse_help
     = "Parse error; format is: [-(name|desc|dyndesc|note|exits|all|clear)] pattern\r\n";
 
-std::optional<RoomFilter> RoomFilter::parseRoomFilter(const QString &line)
+std::optional<RoomFilter> RoomFilter::parseRoomFilter(const std::string_view &line)
 {
     // REVISIT: rewrite this using the new syntax tree model.
-    std::string s = line.toLatin1().toStdString();
-    auto view = StringView{s}.trim();
+    auto view = StringView{line}.trim();
     if (view.isEmpty())
         return std::nullopt;
     else if (view.takeFirstLetter() != '-')
@@ -88,15 +89,14 @@ std::optional<RoomFilter> RoomFilter::parseRoomFilter(const QString &line)
     if (!opt.has_value())
         return std::nullopt;
 
-    const QString pattern = view.toQString();
     const auto kind = opt.value();
     if (kind != PatternKindsEnum::NONE) {
         // Require pattern text in addition to arguments
-        if (pattern.isEmpty()) {
+        if (view.empty()) {
             return std::nullopt;
         }
     }
-    return RoomFilter{pattern, Qt::CaseInsensitive, kind};
+    return RoomFilter{view.toStdString(), Qt::CaseInsensitive, kind};
 }
 
 bool RoomFilter::filter(const Room *const pr) const

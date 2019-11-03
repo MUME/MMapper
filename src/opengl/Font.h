@@ -28,13 +28,6 @@ struct NODISCARD GLText final
     int rotationAngle = 0;
 
     explicit GLText(const glm::vec3 &pos,
-                    const QString &text,
-                    const Color &color = {},
-                    std::optional<Color> moved_bgcolor = {},
-                    const FontFormatFlags &fontFormatFlag = {},
-                    int rotationAngle = 0);
-
-    explicit GLText(const glm::vec3 &pos,
                     std::string moved_text,
                     const Color &color = {},
                     std::optional<Color> moved_bgcolor = {},

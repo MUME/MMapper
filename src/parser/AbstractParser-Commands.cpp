@@ -376,7 +376,7 @@ bool AbstractParser::parseUserCommands(const QString &input)
         return false;
 
     if (input.startsWith(prefixChar)) {
-        std::string s = input.toLatin1().toStdString();
+        std::string s = ::toStdStringLatin1(input);
         auto view = StringView{s}.trim();
         if (view.isEmpty() || view.takeFirstLetter() != prefixChar)
             sendToUser("Internal error. Sorry.\r\n");
@@ -391,7 +391,7 @@ bool AbstractParser::parseUserCommands(const QString &input)
 
 bool AbstractParser::parseSimpleCommand(const QString &qstr)
 {
-    const std::string str = qstr.toLatin1().toStdString();
+    const std::string str = ::toStdStringLatin1(qstr);
     const auto isOnline = ::isOnline();
 
     for (const CommandEnum cmd : ALL_COMMANDS) {
@@ -829,8 +829,8 @@ void AbstractParser::initSpecialCommandMap()
         return [this, help](const std::string &name) {
             sendToUser(QString("Help for %1%2:\r\n  %3\r\n\r\n")
                            .arg(prefixChar)
-                           .arg(QString::fromStdString(name))
-                           .arg(QString::fromStdString(help)));
+                           .arg(::toQStringLatin1(name))
+                           .arg(::toQStringLatin1(help)));
         };
     };
 
@@ -1042,8 +1042,8 @@ void AbstractParser::initSpecialCommandMap()
                   "so you cannot do ''', '\\'', \"\"\", or \"\\\"\".";
             sendToUser(QString("Help for %1%2:\r\n%3\r\n\r\n")
                            .arg(prefixChar)
-                           .arg(QString::fromStdString(name))
-                           .arg(QString::fromStdString(help)));
+                           .arg(::toQStringLatin1(name))
+                           .arg(::toQStringLatin1(help)));
         });
     add(cmdTime,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
@@ -1110,8 +1110,7 @@ void AbstractParser::addSpecialCommand(const char *const s,
         if (it == map.end())
             map.emplace(key, ParserRecord{fullName, callback, help});
         else {
-            qWarning() << ("unable to add " + QString::fromStdString(key) + " for "
-                           + abb.describe());
+            qWarning() << ("unable to add " + ::toQStringLatin1(key) + " for " + abb.describe());
         }
     }
 }

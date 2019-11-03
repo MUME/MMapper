@@ -54,14 +54,15 @@ public:
         // This is most likely unnecessary because the parser did it for us...
         // We need plain ASCII so that accentuation changes do not affect the
         // hashes and because MD5 is defined on bytes, not encoded chars.
-        ParserUtils::latinToAsciiInPlace(str);
-        // Roomdescs may see whitespacing fixes over the year (ex: removing double
-        // spaces after periods). MM2 ignores such changes when comparing rooms,
+        ParserUtils::toAsciiInPlace(str);
+        // Roomdescs may see whitespacing fixes over the years (ex: removing double
+        // spaces after periods). MMapper ignores such changes when comparing rooms,
         // but the web mapper may only look up rooms by hash. Normalizing the
-        // whitespaces make the hash resilient.
+        // whitespaces makes the hash more resilient.
         str.replace(QRegularExpression(" +"), " ");
         str.replace(QRegularExpression(" *\r?\n"), "\n");
 
+        // REVISIT: should this be latin1 or utf8?
         m_hash.addData(str.toLatin1());
     }
 
@@ -144,7 +145,7 @@ static void writeJson(const QString &filePath, JsonT &json, const QString &what)
     if (!file.open(QIODevice::WriteOnly)) {
         QString msg(
             QString("error opening %1 to %2: %3").arg(what).arg(filePath).arg(file.errorString()));
-        throw std::runtime_error(msg.toStdString());
+        throw std::runtime_error(::toStdStringUtf8(msg));
     }
 
     QJsonDocument doc(json);
@@ -154,7 +155,7 @@ static void writeJson(const QString &filePath, JsonT &json, const QString &what)
     if (!file.flush() || stream.status() != QTextStream::Ok) {
         QString msg(
             QString("error writing %1 to %2: %3").arg(what).arg(filePath).arg(file.errorString()));
-        throw std::runtime_error(msg.toStdString());
+        throw std::runtime_error(::toStdStringUtf8(msg));
     }
 }
 
@@ -433,7 +434,7 @@ void JsonWorld::writeZones(const QDir &dir,
             progressCounter.step();
         }
 
-        QString filePath = dir.filePath(QString::fromStdString(kv.first + ".json"));
+        QString filePath = dir.filePath(::toQStringUtf8(kv.first + ".json"));
         writeJson(filePath, jRooms, "zone");
     }
 }

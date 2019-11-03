@@ -194,7 +194,22 @@ script:
 
 after_success:
   - '[[ "$CODECOV" == "" ]] || lcov  --zerocounters  --directory .'
-  - '[[ "$BUILD" == "" ]] || ctest -V'
+  - |
+    if [[ "$BUILD" != "" ]]; then
+      ctest -V
+      if  [[ -n $(nm -C src/mmapper | grep -w 'QString::\(to\|from\)StdString') ]]; then
+        nm -C src/mmapper | grep -w 'QString::\(to\|from\)StdString'
+        echo
+        echo
+        echo "Please avoid using QString::fromStdString() and QString::toStdString()"
+        echo
+        echo "Both functions assume the user wants utf8, but MMapper almost always expects"
+        echo "std::string to have latin1 encoding."
+        echo
+        echo "Convert any uses to corresponding functions in TextUtils e.g. ::toQStringUtf8()"
+        exit -1
+      fi
+    fi
   - |
     if [ "$CODECOV" != "" ]; then
       lcov --remove coverage.info '/usr/*' "${HOME}"'/.cache/*' --output-file coverage.info

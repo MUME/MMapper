@@ -18,6 +18,7 @@
 
 #include "../expandoracommon/parseevent.h"
 #include "../global/StringView.h"
+#include "../global/TextUtils.h"
 #include "../mapdata/DoorFlags.h"
 #include "../mapdata/ExitFieldVariant.h"
 #include "../mapdata/RoomFieldVariant.h"
@@ -265,13 +266,9 @@ public:
     }
     inline void sendToUser(const std::string_view &s, bool goAhead = false)
     {
-        sendToUser(QByteArray{s.data(), static_cast<int>(s.length())}, goAhead);
+        sendToUser(::toQByteArrayLatin1(s), goAhead);
     }
     inline void sendToUser(const char *const s, bool goAhead = false)
-    {
-        sendToUser(std::string_view{s}, goAhead);
-    }
-    inline void sendToUser(const std::string &s, bool goAhead = false)
     {
         sendToUser(std::string_view{s}, goAhead);
     }

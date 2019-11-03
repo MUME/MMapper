@@ -13,6 +13,7 @@
 #include "../global/EnumIndexedArray.h"
 #include "../global/Flags.h"
 #include "../global/RuleOf5.h"
+#include "../global/TextUtils.h"
 #include "../global/roomid.h"
 #include "../mapdata/mmapper2exit.h"
 #include "../mapdata/mmapper2room.h"
@@ -215,7 +216,7 @@ public:
 
 public:
     std::string toStdString() const;
-    QString toQString() const { return QString::fromStdString(toStdString()); }
+    QString toQString() const { return ::toQStringLatin1(toStdString()); }
     explicit operator QString() const { return toQString(); }
     friend QDebug operator<<(QDebug os, const Room &r) { return os << r.toQString(); }
 

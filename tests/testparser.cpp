@@ -10,6 +10,7 @@
 
 #include "../src/expandoracommon/parseevent.h"
 #include "../src/expandoracommon/property.h"
+#include "../src/global/TextUtils.h"
 #include "../src/mapdata/mmapper2room.h"
 #include "../src/parser/parserutils.h"
 
@@ -27,10 +28,10 @@ void TestParser::removeAnsiMarksTest()
 
 void TestParser::latinToAsciiTest()
 {
-    QString latin("Nórui Nínui");
-    QString expectedAscii("Norui Ninui");
-    ParserUtils::latinToAsciiInPlace(latin);
-    QCOMPARE(latin, expectedAscii);
+    QString utf8("Nórui Nínui");
+    const QString expectedAscii("Norui Ninui");
+    ParserUtils::toAsciiInPlace(utf8);
+    QCOMPARE(utf8, expectedAscii);
 }
 
 void TestParser::createParseEventTest()
@@ -65,8 +66,8 @@ void TestParser::createParseEventTest()
     QCOMPARE(e.getNumSkipped(), 0u);
     QCOMPARE(RoomName(e[0].getStdString()), roomName);
     QCOMPARE(RoomStaticDesc(e[1].getStdString()), parsedRoomDescription);
-    QCOMPARE(QString::fromStdString(e[2].getStdString()),
-             QString::fromStdString(std::string(1, static_cast<char>(terrain))));
+    QCOMPARE(::toQStringLatin1(e[2].getStdString()),
+             ::toQStringLatin1(std::string(1, static_cast<char>(terrain))));
 }
 
 QTEST_MAIN(TestParser)

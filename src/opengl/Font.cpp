@@ -677,20 +677,6 @@ public:
     }
 };
 
-GLText::GLText(const glm::vec3 &pos,
-               const QString &text,
-               const Color &color,
-               std::optional<Color> moved_bgcolor,
-               const FontFormatFlags &fontFormatFlag,
-               const int rotationAngle)
-    : GLText{pos,
-             text.toLatin1().toStdString(),
-             color,
-             std::move(moved_bgcolor),
-             fontFormatFlag,
-             rotationAngle}
-{}
-
 GLFont::GLFont(OpenGL &gl)
     : m_gl(gl)
 {}
@@ -850,7 +836,7 @@ void GLFont::renderTextCentered(const QString &text,
     const auto center = glm::vec2{getScreenCenter()};
     render2dTextImmediate(
         std::vector<GLText>{GLText{glm::vec3{center, 0.f},
-                                   text,
+                                   ::toStdStringLatin1(text),
                                    color,
                                    bgcolor,
                                    FontFormatFlags{FontFormatFlagEnum::HALIGN_CENTER}}});

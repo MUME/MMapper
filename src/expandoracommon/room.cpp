@@ -714,7 +714,7 @@ void Room::update(Room *const target, const Room *const source)
 std::string Room::toStdString() const
 {
     std::stringstream ss;
-    ss << getName() + "\n"
+    ss << getName().getStdString() << "\n"
        << getStaticDescription().getStdString() << getDynamicDescription().getStdString();
 
     ss << "Exits:";

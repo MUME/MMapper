@@ -24,11 +24,11 @@ class RoomFilter final
 {
 public:
     static const char *const parse_help;
-    static std::optional<RoomFilter> parseRoomFilter(const QString &line);
+    static std::optional<RoomFilter> parseRoomFilter(const std::string_view &line);
 
 public:
     RoomFilter() = delete;
-    explicit RoomFilter(QString str, Qt::CaseSensitivity cs, PatternKindsEnum kind);
+    explicit RoomFilter(const std::string_view &str, Qt::CaseSensitivity cs, PatternKindsEnum kind);
 
 public:
     bool filter(const Room *r) const;
