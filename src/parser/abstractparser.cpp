@@ -538,12 +538,6 @@ QString AbstractParser::normalizeStringCopy(QString string)
     return string;
 }
 
-std::string AbstractParser::normalizeStringCopy(std::string string)
-{
-    // TODO: make a std::string version of this.
-    return normalizeStringCopy(QString::fromStdString(string)).toStdString();
-}
-
 const Coordinate AbstractParser::getNextPosition()
 {
     CommandQueue tmpqueue;

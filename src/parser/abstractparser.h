@@ -178,7 +178,6 @@ public:
     void parseExits();
     void parsePrompt(const QString &prompt);
     virtual bool parseUserCommands(const QString &command);
-    static std::string normalizeStringCopy(std::string str);
     static QString normalizeStringCopy(QString str);
 
     void searchCommand(const RoomFilter &f);
