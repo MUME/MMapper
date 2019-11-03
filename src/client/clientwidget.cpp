@@ -219,19 +219,20 @@ bool ClientWidget::eventFilter(QObject *obj, QEvent *event)
         return true;
     }
     if (event->type() == QEvent::KeyPress) {
-        auto *keyEvent = static_cast<QKeyEvent *>(event);
-        if (keyEvent->matches(QKeySequence::Copy)) {
-            copy();
-            keyEvent->accept();
-            return true;
-        } else if (keyEvent->matches(QKeySequence::Cut)) {
-            m_input->cut();
-            keyEvent->accept();
-            return true;
-        } else if (keyEvent->matches(QKeySequence::Paste)) {
-            m_input->paste();
-            keyEvent->accept();
-            return true;
+        if (auto *const keyEvent = dynamic_cast<QKeyEvent *>(event)) {
+            if (keyEvent->matches(QKeySequence::Copy)) {
+                copy();
+                keyEvent->accept();
+                return true;
+            } else if (keyEvent->matches(QKeySequence::Cut)) {
+                m_input->cut();
+                keyEvent->accept();
+                return true;
+            } else if (keyEvent->matches(QKeySequence::Paste)) {
+                m_input->paste();
+                keyEvent->accept();
+                return true;
+            }
         }
     }
     // Standard event processing
