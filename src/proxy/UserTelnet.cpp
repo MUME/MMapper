@@ -11,6 +11,7 @@ UserTelnet::UserTelnet(QObject *const parent)
 
 void UserTelnet::onConnected()
 {
+    reset();
     // Negotiate options
     requestTelnetOption(TN_DO, OPT_TERMINAL_TYPE);
     requestTelnetOption(TN_DO, OPT_NAWS);

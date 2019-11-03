@@ -13,6 +13,7 @@ MudTelnet::MudTelnet(QObject *const parent)
 
 void MudTelnet::onConnected()
 {
+    reset();
     // MUME opts to not send DO CHARSET due to older, broken clients
     sendTelnetOption(TN_WILL, OPT_CHARSET);
     announcedState[OPT_CHARSET] = true;

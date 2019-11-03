@@ -14,11 +14,13 @@ bool ProxyParserApi::isConnected() const
 
 void ProxyParserApi::connectToMud()
 {
+    // FIXME: This breaks the design. Disconnect + reconnect should create a new proxy object.
     m_proxy.acceptVisitor([](Proxy &proxy) { proxy.connectToMud(); });
 }
 
 void ProxyParserApi::disconnectFromMud()
 {
+    // FIXME: This breaks the design. Disconnect + reconnect should create a new proxy object.
     m_proxy.acceptVisitor([](Proxy &proxy) { proxy.disconnectFromMud(); });
 }
 

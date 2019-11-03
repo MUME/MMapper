@@ -61,6 +61,7 @@ void ClientTelnet::connectToHost()
 
 void ClientTelnet::onConnected()
 {
+    reset();
     socket.setSocketOption(QAbstractSocket::LowDelayOption, true);
     socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
     emit connected();
