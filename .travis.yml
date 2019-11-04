@@ -18,7 +18,7 @@ matrix:
             - qt5
             - miniupnpc
             - lcov
-            - openssl
+            - openssl@1.1
       env:
         - BUILD=1
         - CODECOV=1
