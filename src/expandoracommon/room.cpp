@@ -129,105 +129,16 @@ inline bool maybeModify(T &ours, T &&value)
 XFOREACH_ROOM_PROPERTY(DEFINE_SETTERS)
 #undef DEFINE_SETTERS
 
-void Room::updateExitField(const ExitDirEnum dir, const ExitFieldVariant &update)
-{
-    Exit &ex = exit(dir);
-    switch (update.getType()) {
-    case ExitFieldEnum::DOOR_NAME: {
-        const DoorName &string = update.getDoorName();
-        if (ex.getDoorName() != string) {
-            ex.setDoorName(string);
-            setModified(doorNameUpdateFlags);
-        }
-        break;
-    }
-    case ExitFieldEnum::EXIT_FLAGS: {
-        const ExitFlags &flags = update.getExitFlags();
-        if (ex.getExitFlags() != flags) {
-            ex.setExitFlags(flags);
-            setModified(exitFlagUpdateFlags);
-        }
-        break;
+#define DEFINE_SETTERS(_Type, _Prop, _OptInit) \
+    void Room::set##_Type(ExitDirEnum dir, _Type value) \
+    { \
+        ExitsList exits = getExitsList(); \
+        exits[dir].set##_Type(std::move(value)); \
+        setExitsList(exits); \
     }
 
-    case ExitFieldEnum::DOOR_FLAGS: {
-        const DoorFlags &flags = update.getDoorFlags();
-        if (ex.getDoorFlags() != flags) {
-            ex.setDoorFlags(flags);
-            setModified(doorFlagUpdateFlags);
-        }
-        break;
-    }
-    }
-}
-
-static bool modifyDoorName(Exit &ex, const ExitFieldVariant &var, const FlagModifyModeEnum mode)
-{
-    switch (mode) {
-    case FlagModifyModeEnum::SET: {
-        const DoorName &doorName = var.getDoorName();
-        if (ex.getDoorName() == doorName)
-            return false;
-        ex.setDoorName(doorName);
-        return true;
-    }
-    case FlagModifyModeEnum::UNSET: {
-        if (!ex.hasDoorName())
-            return false;
-        // this doesn't really make sense either.
-        ex.clearDoorName();
-        return true;
-    }
-    case FlagModifyModeEnum::TOGGLE: {
-        // the idea of toggling a door name doesn't make sense,
-        // so this implementation is as good as any.
-        return modifyDoorName(ex,
-                              var,
-                              !ex.hasDoorName() ? FlagModifyModeEnum::SET
-                                                : FlagModifyModeEnum::UNSET);
-    }
-    default:
-        break;
-    }
-
-    /* this can't happen */
-    throw std::runtime_error("impossible");
-}
-
-void Room::modifyExitFlags(const ExitDirEnum dir,
-                           const FlagModifyModeEnum mode,
-                           const ExitFieldVariant &var)
-{
-    Exit &ex = exit(dir);
-
-    switch (var.getType()) {
-    case ExitFieldEnum::DOOR_NAME:
-        if (modifyDoorName(ex, var, mode))
-            setModified(doorNameUpdateFlags);
-        break;
-    case ExitFieldEnum::EXIT_FLAGS: {
-        const ExitFlags &before = ex.getExitFlags();
-        const ExitFlags &after = modifyFlags(before, var.getExitFlags(), mode);
-        if (before != after) {
-            ex.setExitFlags(after);
-            setModified(exitFlagUpdateFlags);
-        }
-        break;
-    }
-    case ExitFieldEnum::DOOR_FLAGS: {
-        const DoorFlags &before = ex.getDoorFlags();
-        const DoorFlags &after = modifyFlags(before, var.getDoorFlags(), mode);
-        if (before != after) {
-            ex.setDoorFlags(after);
-            setModified(doorFlagUpdateFlags);
-        }
-        break;
-    }
-    default:
-        /* this can't happen */
-        throw std::runtime_error("impossible");
-    }
-}
+XFOREACH_EXIT_PROPERTY(DEFINE_SETTERS)
+#undef DEFINE_SETTERS
 
 void Room::setExitsList(const ExitsList &newExits)
 {

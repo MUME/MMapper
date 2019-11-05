@@ -17,6 +17,7 @@
 #include "../global/roomid.h"
 #include "../global/utils.h"
 #include "../mapdata/ExitDirection.h"
+#include "../mapdata/customaction.h"
 #include "../mapdata/mapdata.h"
 #include "../mapdata/mmapper2room.h"
 #include "../mapfrontend/mapaction.h"
@@ -257,13 +258,15 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
             RoomId connectedRoomId = e.outFirst();
             auto bThisRoom = bFlags.getDirectionalLight(dir);
             if (IS_SET(bThisRoom, DirectionalLightEnum::DIRECT_SUN_ROOM)) {
-                scheduleAction(std::make_shared<SingleRoomAction>(std::make_unique<UpdateRoomField>(
-                                                                      RoomSundeathEnum::SUNDEATH),
-                                                                  connectedRoomId));
+                scheduleAction(std::make_shared<SingleRoomAction>(
+                    std::make_unique<ModifyRoomFlags>(RoomSundeathEnum::SUNDEATH,
+                                                      FlagModifyModeEnum::SET),
+                    connectedRoomId));
             } else if (IS_SET(bThisRoom, DirectionalLightEnum::INDIRECT_SUN_ROOM)) {
-                scheduleAction(std::make_shared<SingleRoomAction>(std::make_unique<UpdateRoomField>(
-                                                                      RoomSundeathEnum::NO_SUNDEATH),
-                                                                  connectedRoomId));
+                scheduleAction(std::make_shared<SingleRoomAction>(
+                    std::make_unique<ModifyRoomFlags>(RoomSundeathEnum::NO_SUNDEATH,
+                                                      FlagModifyModeEnum::SET),
+                    connectedRoomId));
             }
         }
     }

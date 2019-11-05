@@ -9,53 +9,17 @@
 #include "../mapdata/ExitFieldVariant.h"
 #include "../mapdata/ExitFlags.h"
 
-const DoorName &Exit::getDoorName() const
-{
-    return doorName;
-}
-
-bool Exit::hasDoorName() const
-{
-    return !doorName.isEmpty();
-}
-
-ExitFlags Exit::getExitFlags() const
-{
-    return exitFlags;
-}
-
-DoorFlags Exit::getDoorFlags() const
-{
-    return doorFlags;
-}
-
-void Exit::setDoorName(const DoorName name)
-{
-    doorName = name;
-}
-
-void Exit::setExitFlags(const ExitFlags flags)
-{
-    exitFlags = flags;
-}
-
-void Exit::setDoorFlags(const DoorFlags flags)
-{
-    doorFlags = flags;
-}
-
-void Exit::clearDoorName()
-{
-    setDoorName(DoorName{});
-    assert(!hasDoorName());
-}
-
 void Exit::updateExit(ExitFlags flags)
 {
-    if (flags ^ exitFlags) {
-        exitFlags |= flags;
+    if (flags ^ getExitFlags()) {
+        setExitFlags(getExitFlags() | flags);
     }
 }
+
+#define DEFINE_SETTERS(_Type, _Prop, _OptInit) \
+    void Exit::set##_Type(_Type value) { m_fields._Prop = std::move(value); }
+XFOREACH_EXIT_PROPERTY(DEFINE_SETTERS)
+#undef DEFINE_SETTERS
 
 // bool Exit::exitXXX() const
 #define X_DEFINE_ACCESSORS(UPPER_CASE, lower_case, CamelCase, friendly) \
@@ -76,8 +40,10 @@ bool Exit::doorNeedsKey() const
 
 bool Exit::operator==(const Exit &rhs) const
 {
-    return doorName == rhs.doorName && exitFlags == rhs.exitFlags && doorFlags == rhs.doorFlags
-           && incoming == rhs.incoming && outgoing == rhs.outgoing;
+    return m_fields.doorName == rhs.m_fields.doorName
+           && m_fields.exitFlags == rhs.m_fields.exitFlags
+           && m_fields.doorFlags == rhs.m_fields.doorFlags && incoming == rhs.incoming
+           && outgoing == rhs.outgoing;
 }
 
 bool Exit::operator!=(const Exit &rhs) const
@@ -94,9 +60,9 @@ inline void maybeUpdate(T &x, const T &value)
 
 void Exit::assignFrom(const Exit &rhs)
 {
-    maybeUpdate(doorName, rhs.doorName);
-    doorFlags = rhs.doorFlags; // no allocation required
-    exitFlags = rhs.exitFlags; // no allocation required
+    maybeUpdate(m_fields.doorName, rhs.m_fields.doorName);
+    m_fields.doorFlags = rhs.m_fields.doorFlags; // no allocation required
+    m_fields.exitFlags = rhs.m_fields.exitFlags; // no allocation required
     maybeUpdate(incoming, rhs.incoming);
     maybeUpdate(outgoing, rhs.outgoing);
     assert(*this == rhs);

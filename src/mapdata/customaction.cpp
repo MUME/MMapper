@@ -23,6 +23,42 @@
 #include "ExitFlags.h"
 #include "roomselection.h"
 
+template<typename T>
+static inline TaggedString<T> modifyField(const TaggedString<T> &prev,
+                                          const TaggedString<T> &next,
+                                          const FlagModifyModeEnum mode)
+{
+    switch (mode) {
+    case FlagModifyModeEnum::SET:
+        return next;
+    case FlagModifyModeEnum::UNSET:
+        // this doesn't really make sense either.
+        return TaggedString<T>{};
+    case FlagModifyModeEnum::TOGGLE:
+        // the idea of toggling a string like a door name doesn't make sense,
+        // so this implementation is as good as any.
+        if (prev.empty())
+            return next;
+        return TaggedString<T>{};
+    }
+    std::abort();
+}
+
+template<typename Flags, typename Flag>
+static inline Flags modifyField(const Flags flags, const Flag x, const FlagModifyModeEnum mode)
+{
+    static_assert(std::is_same_v<Flags, Flag>);
+    switch (mode) {
+    case FlagModifyModeEnum::SET:
+        return flags | x;
+    case FlagModifyModeEnum::UNSET:
+        return flags & (~x);
+    case FlagModifyModeEnum::TOGGLE:
+        return flags ^ x;
+    }
+    std::abort();
+}
+
 GroupMapAction::GroupMapAction(std::unique_ptr<AbstractAction> action,
                                const SharedRoomSelection &selection)
     : executor(std::move(action))
@@ -235,38 +271,59 @@ void ConnectToNeighbours::connectRooms(Room *const center,
 ModifyRoomFlags::ModifyRoomFlags(const RoomFieldVariant in_flags, const FlagModifyModeEnum in_mode)
     : var{in_flags}
     , mode(in_mode)
-{
-    // TODO: Assert non-supported
-}
-
-ModifyRoomFlags::ModifyRoomFlags(const RoomMobFlags in_flags, const FlagModifyModeEnum in_mode)
-    : var{in_flags}
-    , mode(in_mode)
 {}
 
-ModifyRoomFlags::ModifyRoomFlags(const RoomLoadFlags in_flags, const FlagModifyModeEnum in_mode)
-    : var{in_flags}
-    , mode(in_mode)
-{}
+#define X_FOREACH_ROOM_CLASS_FIELD(X) \
+    X(NOTE, Note, RoomNote) \
+    X(MOB_FLAGS, MobFlags, RoomMobFlags) \
+    X(LOAD_FLAGS, LoadFlags, RoomLoadFlags)
+
+#define X_FOREACH_ROOM_ENUM_FIELD(X) \
+    X(PORTABLE_TYPE, PortableType, RoomPortableEnum, NUM_PORTABLE_TYPES) \
+    X(LIGHT_TYPE, LightType, RoomLightEnum, NUM_LIGHT_TYPES) \
+    X(ALIGN_TYPE, AlignType, RoomAlignEnum, NUM_ALIGN_TYPES) \
+    X(RIDABLE_TYPE, RidableType, RoomRidableEnum, NUM_RIDABLE_TYPES) \
+    X(SUNDEATH_TYPE, SundeathType, RoomSundeathEnum, NUM_SUNDEATH_TYPES) \
+    X(TERRAIN_TYPE, TerrainType, RoomTerrainEnum, NUM_ROOM_TERRAIN_TYPES)
 
 void ModifyRoomFlags::exec(const RoomId id)
 {
     if (Room *const room = roomIndex(id)) {
         switch (var.getType()) {
-        case RoomFieldEnum::MOB_FLAGS:
-            room->setMobFlags(modifyFlags(room->getMobFlags(), var.getMobFlags(), mode));
-            break;
-        case RoomFieldEnum::LOAD_FLAGS:
-            room->setLoadFlags(modifyFlags(room->getLoadFlags(), var.getLoadFlags(), mode));
-            break;
-        case RoomFieldEnum::NOTE:
-            // TODO: Re-use logic from modifyDoorName(ex, var, mode);
-        case RoomFieldEnum::TERRAIN_TYPE:
-        case RoomFieldEnum::PORTABLE_TYPE:
-        case RoomFieldEnum::LIGHT_TYPE:
-        case RoomFieldEnum::RIDABLE_TYPE:
-        case RoomFieldEnum::SUNDEATH_TYPE:
-        case RoomFieldEnum::ALIGN_TYPE:
+            // Room field classes
+#define X_CASE(UPPER_CASE, CamelCase, Type) \
+    { \
+    case RoomFieldEnum::UPPER_CASE: \
+        return room->set##CamelCase( \
+            modifyField(room->get##CamelCase(), var.get##CamelCase(), mode)); \
+    }
+            X_FOREACH_ROOM_CLASS_FIELD(X_CASE)
+#undef X_CASE
+            // Room field enums
+            // NOTE: TOGGLE assumes that the user never wants to toggle UNDEFINED enums
+#define X_CASE(UPPER_CASE, CamelCase, Type, Size) \
+    { \
+    case RoomFieldEnum::UPPER_CASE: \
+        switch (mode) { \
+        case FlagModifyModeEnum::UNSET: \
+            return room->set##CamelCase(static_cast<Type>(0)); \
+        case FlagModifyModeEnum::SET: \
+            return room->set##CamelCase(var.get##CamelCase()); \
+        case FlagModifyModeEnum::TOGGLE: { \
+            static_assert(Size >= 1); \
+            const int next = static_cast<int>(room->get##CamelCase()) + 1; \
+            if (next == Size) \
+                return room->set##CamelCase(static_cast<Type>(1)); \
+            return room->set##CamelCase(static_cast<Type>(next)); \
+        } \
+        default: \
+            std::abort(); \
+        } \
+    }
+            X_FOREACH_ROOM_ENUM_FIELD(X_CASE)
+#undef X_CASE
+
+            // REVISIT: RoomName requires that we enhance RoomFieldVariant
         case RoomFieldEnum::NAME:
         case RoomFieldEnum::DESC:
         case RoomFieldEnum::DYNAMIC_DESC:
@@ -278,6 +335,8 @@ void ModifyRoomFlags::exec(const RoomId id)
         }
     }
 }
+#undef X_FOREACH_ROOM_CLASS_FIELD
+#undef X_FOREACH_ROOM_ENUM_FIELD
 
 ModifyRoomUpToDate::ModifyRoomUpToDate(const bool in_checked)
     : checked(in_checked)
@@ -293,40 +352,7 @@ void ModifyRoomUpToDate::exec(const RoomId id)
     }
 }
 
-UpdateExitField::UpdateExitField(const DoorName &update, const ExitDirEnum dir)
-    : update{update}
-    , dir{dir}
-{}
-
-void UpdateExitField::exec(const RoomId id)
-{
-    if (Room *const room = roomIndex(id)) {
-        room->updateExitField(dir, update);
-    }
-}
-
 ModifyExitFlags::ModifyExitFlags(const ExitFieldVariant in_flags,
-                                 const ExitDirEnum in_dir,
-                                 const FlagModifyModeEnum in_mode)
-    : var{in_flags}
-    , mode(in_mode)
-    , dir(in_dir)
-{
-    // The DoorName version is actually implemented, but it has never been used.
-    // Test it if you use it!
-    if (in_flags.getType() == ExitFieldEnum::DOOR_NAME)
-        throw std::runtime_error("not implemented");
-}
-
-ModifyExitFlags::ModifyExitFlags(const ExitFlags in_flags,
-                                 const ExitDirEnum in_dir,
-                                 const FlagModifyModeEnum in_mode)
-    : var{in_flags}
-    , mode(in_mode)
-    , dir(in_dir)
-{}
-
-ModifyExitFlags::ModifyExitFlags(const DoorFlags in_flags,
                                  const ExitDirEnum in_dir,
                                  const FlagModifyModeEnum in_mode)
     : var{in_flags}
@@ -336,7 +362,23 @@ ModifyExitFlags::ModifyExitFlags(const DoorFlags in_flags,
 
 void ModifyExitFlags::exec(const RoomId id)
 {
+#define NOP()
+#define X_CASE(UPPER_CASE, CamelCase) \
+    { \
+    case ExitFieldEnum::UPPER_CASE: \
+        return room->set##CamelCase(dir, \
+                                    modifyField(room->get##CamelCase(dir), \
+                                                var.get##CamelCase(), \
+                                                mode)); \
+    }
     if (Room *const room = roomIndex(id)) {
-        room->modifyExitFlags(dir, mode, var);
+        switch (var.getType()) {
+            X_FOREACH_EXIT_FIELD(X_CASE, NOP)
+#undef X_CASE
+#undef NOP
+        default:
+            /* this can't happen */
+            throw std::runtime_error("impossible");
+        }
     }
 }

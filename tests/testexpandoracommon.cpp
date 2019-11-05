@@ -79,7 +79,7 @@ void TestExpandoraCommon::roomCompareTest_data()
         eList[ExitDirEnum::WEST].setExitFlags(ExitFlags{ExitFlagEnum::DOOR | ExitFlagEnum::EXIT});
         eList[ExitDirEnum::WEST].setDoorFlags(DoorFlags{DoorFlagEnum::HIDDEN});
         eList[ExitDirEnum::DOWN].setExitFlags(
-            ExitFlags{ExitFlagEnum::DOOR | ExitFlagEnum::CLIMB | ExitFlagEnum::EXIT});
+            ExitFlags{ExitFlagEnum::CLIMB | ExitFlagEnum::DOOR | ExitFlagEnum::EXIT});
         room->setExitsList(eList);
         return room;
     };
@@ -255,9 +255,9 @@ void TestExpandoraCommon::roomCompareTest_data()
         SharedRoom room = create_perfect_room();
         ExitsFlagsType exitFlags = get_exit_flags(room);
         exitFlags.set(ExitDirEnum::SOUTH, ExitFlags{}); // Exit is missing from event
-        QVERIFY(room->getExitsList()[ExitDirEnum::SOUTH].isExit());
-        QVERIFY(!room->getExitsList()[ExitDirEnum::SOUTH].exitIsDoor());
-        QVERIFY(!room->getExitsList()[ExitDirEnum::SOUTH].doorIsHidden());
+        QVERIFY(room->getExitFlags(ExitDirEnum::SOUTH).isExit());
+        QVERIFY(!room->getExitFlags(ExitDirEnum::SOUTH).isDoor());
+        QVERIFY(!room->getDoorFlags(ExitDirEnum::SOUTH).isHidden());
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
                                                          name,
                                                          dynDesc,
@@ -274,9 +274,9 @@ void TestExpandoraCommon::roomCompareTest_data()
         SharedRoom room = create_perfect_room();
         ExitsFlagsType exitFlags = get_exit_flags(room);
         exitFlags.set(ExitDirEnum::DOWN, ExitFlags{}); // Exit and door are missing from event
-        QVERIFY(room->getExitsList()[ExitDirEnum::DOWN].isExit());
-        QVERIFY(room->getExitsList()[ExitDirEnum::DOWN].exitIsDoor());
-        QVERIFY(!room->getExitsList()[ExitDirEnum::DOWN].doorIsHidden());
+        QVERIFY(room->getExitFlags(ExitDirEnum::DOWN).isExit());
+        QVERIFY(room->getExitFlags(ExitDirEnum::DOWN).isDoor());
+        QVERIFY(!room->getDoorFlags(ExitDirEnum::DOWN).isHidden());
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
                                                          name,
                                                          dynDesc,
@@ -294,8 +294,8 @@ void TestExpandoraCommon::roomCompareTest_data()
         SharedRoom room = create_perfect_room();
         ExitsFlagsType exitFlags = get_exit_flags(room);
         exitFlags.set(ExitDirEnum::EAST, ExitFlags{ExitFlagEnum::EXIT}); // Remove climb e
-        QVERIFY(room->getExitsList()[ExitDirEnum::EAST].isExit());
-        QVERIFY(room->getExitsList()[ExitDirEnum::EAST].exitIsClimb()); // Room has climb e
+        QVERIFY(room->getExitFlags(ExitDirEnum::EAST).isExit());
+        QVERIFY(room->getExitFlags(ExitDirEnum::EAST).isClimb()); // Room has climb e
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
                                                          name,
                                                          dynDesc,
@@ -313,11 +313,9 @@ void TestExpandoraCommon::roomCompareTest_data()
         ExitsFlagsType exitFlags = get_exit_flags(room);
         exitFlags.set(ExitDirEnum::EAST,
                       ExitFlags{ExitFlagEnum::ROAD | ExitFlagEnum::EXIT}); // Event has road e
-        room->modifyExitFlags(ExitDirEnum::EAST,
-                              FlagModifyModeEnum::UNSET,
-                              ExitFieldVariant{ExitFlags{ExitFlagEnum::ROAD}});
-        QVERIFY(room->getExitsList()[ExitDirEnum::EAST].isExit());
-        QVERIFY(!room->getExitsList()[ExitDirEnum::EAST].exitIsRoad()); // Room has no road e
+        room->setExitFlags(ExitDirEnum::EAST, ExitFlags{ExitFlagEnum::EXIT});
+        QVERIFY(room->getExitFlags(ExitDirEnum::EAST).isExit());
+        QVERIFY(!room->getExitFlags(ExitDirEnum::EAST).isRoad()); // Room has no road e
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
                                                          name,
                                                          dynDesc,
@@ -334,12 +332,11 @@ void TestExpandoraCommon::roomCompareTest_data()
         SharedRoom room = create_perfect_room();
         ExitsFlagsType exitFlags = get_exit_flags(room);
         exitFlags.set(ExitDirEnum::WEST, ExitFlags{}); // Exit and door are missing from event
-        room->modifyExitFlags(ExitDirEnum::WEST,
-                              FlagModifyModeEnum::UNSET,
-                              ExitFieldVariant{DoorFlags{DoorFlagEnum::HIDDEN}});
-        QVERIFY(room->getExitsList()[ExitDirEnum::WEST].isExit());
-        QVERIFY(room->getExitsList()[ExitDirEnum::WEST].isDoor());
-        QVERIFY(!room->getExitsList()[ExitDirEnum::WEST].isHiddenExit());
+        room->setDoorFlags(ExitDirEnum::WEST,
+                           room->getDoorFlags(ExitDirEnum::WEST) ^ DoorFlagEnum::HIDDEN);
+        QVERIFY(room->getExitFlags(ExitDirEnum::WEST).isExit());
+        QVERIFY(room->getExitFlags(ExitDirEnum::WEST).isDoor());
+        QVERIFY(!room->getDoorFlags(ExitDirEnum::WEST).isHidden());
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
                                                          name,
                                                          dynDesc,
@@ -357,7 +354,7 @@ void TestExpandoraCommon::roomCompareTest_data()
         ExitsFlagsType exitFlags = get_exit_flags(room);
         room->setOutDated();
         room->setExitsList(ExitsList{});
-        QVERIFY(!room->getExitsList()[ExitDirEnum::SOUTH].isExit());
+        QVERIFY(!room->getExitFlags(ExitDirEnum::SOUTH).isExit());
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
                                                          name,
                                                          dynDesc,

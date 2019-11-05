@@ -136,24 +136,6 @@ public:
     virtual void exec(RoomId RoomId) override;
 };
 
-class UpdateRoomField final : public virtual AbstractAction
-{
-public:
-    explicit UpdateRoomField(const RoomFieldVariant &var);
-
-#define NOP()
-#define X_DECLARE_CONSTRUCTORS(UPPER_CASE, CamelCase, Type) explicit UpdateRoomField(Type type);
-    X_FOREACH_ROOM_FIELD(X_DECLARE_CONSTRUCTORS, NOP)
-#undef X_DECLARE_CONSTRUCTORS
-#undef NOP
-
-public:
-    virtual void exec(RoomId id) override;
-
-protected:
-    RoomFieldVariant var;
-};
-
 class Update final : public virtual AbstractAction
 {
 public:

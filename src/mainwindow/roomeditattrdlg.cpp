@@ -822,7 +822,7 @@ void RoomEditAttrDlg::updateCommon(std::unique_ptr<AbstractAction> moved_action,
 
 void RoomEditAttrDlg::updateRoomAlign(const RoomAlignEnum value)
 {
-    updateCommon(std::make_unique<UpdateRoomField>(value));
+    updateCommon(std::make_unique<ModifyRoomFlags>(value, FlagModifyModeEnum::SET));
 }
 
 void RoomEditAttrDlg::neutralRadioButtonToggled(bool val)
@@ -855,7 +855,7 @@ void RoomEditAttrDlg::alignUndefRadioButtonToggled(bool val)
 
 void RoomEditAttrDlg::updateRoomPortable(RoomPortableEnum value)
 {
-    updateCommon(std::make_unique<UpdateRoomField>(value));
+    updateCommon(std::make_unique<ModifyRoomFlags>(value, FlagModifyModeEnum::SET));
 }
 
 void RoomEditAttrDlg::noPortRadioButtonToggled(bool val)
@@ -881,7 +881,7 @@ void RoomEditAttrDlg::portUndefRadioButtonToggled(bool val)
 
 void RoomEditAttrDlg::updateRoomRideable(RoomRidableEnum value)
 {
-    updateCommon(std::make_unique<UpdateRoomField>(value));
+    updateCommon(std::make_unique<ModifyRoomFlags>(value, FlagModifyModeEnum::SET));
 }
 
 void RoomEditAttrDlg::noRideRadioButtonToggled(bool val)
@@ -907,7 +907,7 @@ void RoomEditAttrDlg::rideUndefRadioButtonToggled(bool val)
 
 void RoomEditAttrDlg::updateRoomLight(RoomLightEnum value)
 {
-    updateCommon(std::make_unique<UpdateRoomField>(value));
+    updateCommon(std::make_unique<ModifyRoomFlags>(value, FlagModifyModeEnum::SET));
 }
 
 void RoomEditAttrDlg::litRadioButtonToggled(bool val)
@@ -933,7 +933,7 @@ void RoomEditAttrDlg::lightUndefRadioButtonToggled(bool val)
 
 void RoomEditAttrDlg::updateRoomSundeath(RoomSundeathEnum value)
 {
-    updateCommon(std::make_unique<UpdateRoomField>(value));
+    updateCommon(std::make_unique<ModifyRoomFlags>(value, FlagModifyModeEnum::SET));
 }
 
 void RoomEditAttrDlg::sundeathRadioButtonToggled(bool val)
@@ -1037,8 +1037,9 @@ void RoomEditAttrDlg::doorNameLineEditTextChanged()
     const Room *const r = getSelectedRoom();
 
     m_mapData->execute(std::make_unique<SingleRoomAction>(
-                           std::make_unique<UpdateExitField>(DoorName{doorNameLineEdit->text()},
-                                                             getSelectedExit()),
+                           std::make_unique<ModifyExitFlags>(DoorName{doorNameLineEdit->text()},
+                                                             getSelectedExit(),
+                                                             FlagModifyModeEnum::SET),
                            r->getId()),
                        m_roomSelection);
     emit requestUpdate();
@@ -1106,7 +1107,7 @@ void RoomEditAttrDlg::terrainToolButtonToggled(bool val)
         return RoomTerrainEnum::UNDEFINED;
     }();
     terrainLabel->setPixmap(QPixmap(getPixmapFilename(rtt)));
-    updateCommon(std::make_unique<UpdateRoomField>(rtt));
+    updateCommon(std::make_unique<ModifyRoomFlags>(rtt, FlagModifyModeEnum::SET));
 }
 
 // note tab
@@ -1115,7 +1116,7 @@ void RoomEditAttrDlg::roomNoteChanged()
     // TODO: Change this so you can't leave the tab without clicking "Update" or "Cancel",
     // and then only modify the note on update.
     const RoomNote note{roomNoteTextEdit->document()->toPlainText()};
-    updateCommon(std::make_unique<UpdateRoomField>(note), true);
+    updateCommon(std::make_unique<ModifyRoomFlags>(note, FlagModifyModeEnum::SET), true);
 }
 
 // all tabs

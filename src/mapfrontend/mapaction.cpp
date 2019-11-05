@@ -99,46 +99,6 @@ void MakePermanent::exec(const RoomId id)
     }
 }
 
-UpdateRoomField::UpdateRoomField(const RoomFieldVariant &var)
-    : var{var}
-{}
-
-#define NOP()
-#define X_DECLARE_CONSTRUCTORS(UPPER_CASE, CamelCase, Type) \
-    UpdateRoomField::UpdateRoomField(Type type) \
-        : UpdateRoomField{RoomFieldVariant{type}} \
-    {}
-X_FOREACH_ROOM_FIELD(X_DECLARE_CONSTRUCTORS, NOP)
-#undef X_DECLARE_CONSTRUCTORS
-#undef NOP
-
-void UpdateRoomField::exec(const RoomId id)
-{
-#define NOP()
-#define X_CASE(UPPER_CASE, CamelCase, Class) \
-    { \
-    case RoomFieldEnum::UPPER_CASE: \
-        room->set##CamelCase(var.get##CamelCase()); \
-        break; \
-    }
-
-    if (Room *const room = roomIndex(id)) {
-        switch (var.getType()) {
-            X_FOREACH_ROOM_FIELD(X_CASE, NOP)
-        case RoomFieldEnum::NAME:
-        case RoomFieldEnum::DESC:
-        case RoomFieldEnum::DYNAMIC_DESC:
-        case RoomFieldEnum::LAST:
-        case RoomFieldEnum::RESERVED:
-        default:
-            /* this can't happen */
-            throw std::runtime_error("impossible");
-        }
-    }
-#undef X_CASE
-#undef NOP
-}
-
 Update::Update()
     : props(CommandEnum::NONE /* was effectively CommandEnum::NORTH */)
 {}

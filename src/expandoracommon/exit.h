@@ -17,12 +17,23 @@
 #include "../mapdata/ExitFlags.h"
 #include "../mapdata/mmapper2exit.h"
 
+#define XFOREACH_EXIT_PROPERTY(X) \
+    X(DoorName, doorName, ) \
+    X(ExitFlags, exitFlags, ) \
+    X(DoorFlags, doorFlags, )
+
 class Exit final
 {
 private:
-    DoorName doorName;
-    ExitFlags exitFlags;
-    DoorFlags doorFlags;
+    struct ExitFields final
+    {
+#define DECL_FIELD(_Type, _Prop, _OptInit) _Type _Prop _OptInit;
+        XFOREACH_EXIT_PROPERTY(DECL_FIELD)
+#undef DECL_FIELD
+    };
+
+private:
+    ExitFields m_fields;
 
 private:
     RoomIdSet incoming;
@@ -36,9 +47,9 @@ public:
 public:
     void clearFields()
     {
-        doorName = DoorName{};
-        exitFlags = ExitFlags{};
-        doorFlags = DoorFlags{};
+#define CLEAR_FIELD(_Type, _Prop, _OptInit) m_fields._Prop = _Type{_OptInit};
+        XFOREACH_EXIT_PROPERTY(CLEAR_FIELD)
+#undef CLEAR_FIELD
     }
 
 public:
@@ -81,17 +92,16 @@ public:
     bool containsIn(RoomId from) const { return incoming.find(from) != incoming.end(); }
     bool containsOut(RoomId to) const { return outgoing.find(to) != outgoing.end(); }
 
-    const DoorName &getDoorName() const;
-    bool hasDoorName() const;
-    ExitFlags getExitFlags() const;
-    DoorFlags getDoorFlags() const;
+public:
+#define DECL_GETTERS_AND_SETTERS(_Type, _Prop, _OptInit) \
+    inline const _Type &get##_Type() const { return m_fields._Prop; } \
+    void set##_Type(_Type value);
+    XFOREACH_EXIT_PROPERTY(DECL_GETTERS_AND_SETTERS)
+#undef DECL_GETTERS_AND_SETTERS
 
-    void setDoorName(DoorName doorName);
-    void setExitFlags(ExitFlags flags);
-    void setDoorFlags(DoorFlags flags);
-
-    void clearDoorName();
+public:
     void updateExit(ExitFlags flags);
+    inline void clearDoorName() { setDoorName(DoorName{}); }
 
 public:
     /* older aliases */
@@ -111,7 +121,9 @@ public:
     X_FOREACH_DOOR_FLAG(X_DECLARE_ACCESSORS)
 #undef X_DECLARE_ACCESSORS
 
+    DEPRECATED
     bool doorNeedsKey() const; // REVISIT: This name is not like the others
+    inline bool hasDoorName() const { return exitIsDoor() && !getDoorName().isEmpty(); }
 
 public:
     bool operator==(const Exit &rhs) const;

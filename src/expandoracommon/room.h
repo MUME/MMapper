@@ -25,22 +25,6 @@ class ParseEvent;
 enum class FlagModifyModeEnum { SET, UNSET, TOGGLE };
 enum class ComparisonResultEnum { DIFFERENT = 0, EQUAL, TOLERANCE };
 
-template<typename Flags, typename Flag>
-static inline Flags modifyFlags(const Flags flags, const Flag x, const FlagModifyModeEnum mode)
-{
-    switch (mode) {
-    case FlagModifyModeEnum::SET:
-        return flags | x;
-    case FlagModifyModeEnum::UNSET:
-        return flags & (~x);
-    case FlagModifyModeEnum::TOGGLE:
-        return flags ^ x;
-    }
-    // REVISIT: convert to std::abort() ?
-    assert(false);
-    return flags;
-}
-
 using ExitsList = EnumIndexedArray<Exit, ExitDirEnum, NUM_EXITS>;
 
 struct ExitDirConstRef final
@@ -179,13 +163,16 @@ public:
     void removeOutExit(ExitDirEnum dir, RoomId id);
 
 public:
-    void updateExitField(ExitDirEnum dir, const ExitFieldVariant &update);
-    void modifyExitFlags(ExitDirEnum dir, FlagModifyModeEnum mode, const ExitFieldVariant &var);
-
-public:
     ExitDirections getOutExits() const;
     OptionalExitDirConstRef getRandomExit() const;
     ExitDirConstRef getExitMaybeRandom(ExitDirEnum dir) const;
+
+public:
+#define DECL_GETTERS_AND_SETTERS(_Type, _Prop, _OptInit) \
+    inline const _Type &get##_Type(ExitDirEnum dir) const { return exit(dir).get##_Type(); } \
+    void set##_Type(ExitDirEnum dir, _Type value);
+    XFOREACH_EXIT_PROPERTY(DECL_GETTERS_AND_SETTERS)
+#undef DECL_GETTERS_AND_SETTERS
 
 public:
     void setId(RoomId id);

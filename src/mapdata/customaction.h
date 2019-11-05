@@ -125,9 +125,16 @@ private:
 class ModifyRoomFlags final : public AbstractAction
 {
 public:
-    explicit ModifyRoomFlags(RoomFieldVariant flags, FlagModifyModeEnum);
-    explicit ModifyRoomFlags(RoomMobFlags flags, FlagModifyModeEnum);
-    explicit ModifyRoomFlags(RoomLoadFlags flags, FlagModifyModeEnum);
+    explicit ModifyRoomFlags(RoomFieldVariant, FlagModifyModeEnum);
+
+#define NOP()
+#define X_DECLARE_CONSTRUCTORS(UPPER_CASE, CamelCase, Type) \
+    explicit ModifyRoomFlags(Type type, FlagModifyModeEnum in_mode) \
+        : ModifyRoomFlags{RoomFieldVariant{type}, in_mode} \
+    {}
+    X_FOREACH_ROOM_FIELD(X_DECLARE_CONSTRUCTORS, NOP)
+#undef X_DECLARE_CONSTRUCTORS
+#undef NOP
 
     virtual void exec(RoomId id) override;
 
@@ -147,27 +154,20 @@ protected:
     const bool checked = false;
 };
 
-// Currently only used for DoorName, but it should work for any type.
-class UpdateExitField final : public AbstractAction
-{
-public:
-    explicit UpdateExitField(const DoorName &update, ExitDirEnum dir);
-
-    virtual void exec(RoomId id) override;
-
-protected:
-    const ExitFieldVariant update;
-    const ExitDirEnum dir = ExitDirEnum::UNKNOWN;
-};
-
-// Despite its name, this is also used to modify an exit's DoorFlags.
-// This has never been called with DoorName, so that part is not implemented.
+// Despite its name, this is also used to modify an exit's DoorFlags and door names
 class ModifyExitFlags final : public AbstractAction
 {
 public:
-    explicit ModifyExitFlags(ExitFieldVariant flags, ExitDirEnum dir, FlagModifyModeEnum);
-    explicit ModifyExitFlags(ExitFlags flags, ExitDirEnum dir, FlagModifyModeEnum);
-    explicit ModifyExitFlags(DoorFlags flags, ExitDirEnum dir, FlagModifyModeEnum);
+    explicit ModifyExitFlags(ExitFieldVariant, ExitDirEnum, FlagModifyModeEnum);
+
+#define NOP()
+#define X_DECLARE_CONSTRUCTORS(UPPER_CASE, Type) \
+    explicit ModifyExitFlags(Type type, ExitDirEnum dir, FlagModifyModeEnum in_mode) \
+        : ModifyExitFlags{ExitFieldVariant{type}, dir, in_mode} \
+    {}
+    X_FOREACH_EXIT_FIELD(X_DECLARE_CONSTRUCTORS, NOP)
+#undef X_DECLARE_CONSTRUCTORS
+#undef NOP
 
     virtual void exec(RoomId id) override;
 

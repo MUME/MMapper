@@ -59,7 +59,10 @@ void MapData::setDoorName(const Coordinate &pos, DoorName moved_doorName, const 
     if (Room *const room = map.get(pos)) {
         if (dir < ExitDirEnum::UNKNOWN) {
             scheduleAction(std::make_unique<SingleRoomAction>(
-                std::make_unique<UpdateExitField>(std::move(moved_doorName), dir), room->getId()));
+                std::make_unique<ModifyExitFlags>(std::move(moved_doorName),
+                                                  dir,
+                                                  FlagModifyModeEnum::SET),
+                room->getId()));
         }
     }
 }
@@ -131,15 +134,8 @@ void MapData::toggleRoomFlag(const Coordinate &pos, RoomFieldVariant var)
 {
     QMutexLocker locker(&mapLock);
     if (Room *room = map.get(pos)) {
-        // REVISIT: Consolidate ModifyRoomFlags and UpdateRoomField
-        auto action = (var.getType() == RoomFieldEnum::MOB_FLAGS
-                       || var.getType() == RoomFieldEnum::LOAD_FLAGS)
-                          ? std::make_shared<SingleRoomAction>(
-                                std::make_unique<ModifyRoomFlags>(var, FlagModifyModeEnum::TOGGLE),
-                                room->getId())
-                          : std::make_shared<SingleRoomAction>(std::make_unique<UpdateRoomField>(
-                                                                   var),
-                                                               room->getId());
+        auto action = std::make_shared<SingleRoomAction>(
+            std::make_unique<ModifyRoomFlags>(var, FlagModifyModeEnum::TOGGLE), room->getId());
         scheduleAction(action);
     }
 }
@@ -320,10 +316,9 @@ void MapData::removeDoorNames()
     for (auto &room : roomIndex) {
         if (room != nullptr) {
             for (const auto dir : ALL_EXITS_NESWUD) {
-                scheduleAction(
-                    std::make_unique<SingleRoomAction>(std::make_unique<UpdateExitField>(noName,
-                                                                                         dir),
-                                                       room->getId()));
+                scheduleAction(std::make_unique<SingleRoomAction>(
+                    std::make_unique<ModifyExitFlags>(noName, dir, FlagModifyModeEnum::UNSET),
+                    room->getId()));
             }
         }
     }
