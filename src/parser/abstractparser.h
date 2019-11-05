@@ -25,6 +25,7 @@
 #include "../mapdata/roomselection.h"
 #include "../proxy/ProxyParserApi.h"
 #include "../proxy/telnetfilter.h"
+#include "AbstractParser-Utils.h"
 #include "CommandId.h"
 #include "CommandQueue.h"
 #include "ConnectedRoomFlags.h"
@@ -171,7 +172,7 @@ public:
     void printRoomInfo(RoomFields fieldset);
     void printRoomInfo(RoomFieldEnum field);
 
-    void emulateExits(const CommandEnum move);
+    void emulateExits(CommandEnum move);
     QByteArray enhanceExits(const Room *);
 
     void parseExits();
@@ -266,18 +267,28 @@ public:
     {
         emit sig_sendToUser(arr, goAhead);
     }
-    inline void sendToUser(const char *s, bool goAhead = false)
+    inline void sendToUser(const std::string_view &s, bool goAhead = false)
     {
-        sendToUser(QByteArray{s}, goAhead);
+        sendToUser(QByteArray{s.data(), static_cast<int>(s.length())}, goAhead);
+    }
+    inline void sendToUser(const char *const s, bool goAhead = false)
+    {
+        sendToUser(std::string_view{s}, goAhead);
     }
     inline void sendToUser(const std::string &s, bool goAhead = false)
     {
-        sendToUser(QString::fromStdString(s), goAhead);
+        sendToUser(std::string_view{s}, goAhead);
     }
     inline void sendToUser(const QString &s, bool goAhead = false)
     {
         sendToUser(s.toLatin1(), goAhead);
     }
+    friend AbstractParser &operator<<(AbstractParser &self, const std::string_view &s)
+    {
+        self.sendToUser(s);
+        return self;
+    }
+    inline void sendOkToUser() { send_ok(*this); }
     void pathChanged() { emit showPath(m_queue); }
     void mapChanged() { emit sig_mapChanged(); }
     void graphicsSettingsChanged() { emit sig_graphicsSettingsChanged(); }

@@ -7,3 +7,11 @@ bool isOffline();
 bool isOnline();
 const char *enabledString(bool isEnabled);
 bool isValidPrefix(char c);
+
+template<typename T>
+void send_ok(T &os)
+{
+    // Consider changing this from "OK." to "Ok.", since that's what MUME uses.
+    // Consider fixing the output to not require '\r'.
+    os << "OK.\r\n";
+}

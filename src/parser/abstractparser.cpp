@@ -838,7 +838,7 @@ void AbstractParser::searchCommand(const RoomFilter &f)
 {
     if (f.patternKind() == PatternKindsEnum::NONE) {
         emit newRoomSelection(SigRoomSelection{});
-        sendToUser("OK. Rooms unselected.\r\n");
+        sendToUser("Rooms unselected.\r\n");
         return;
     }
     const auto tmpSel = RoomSelection::createSelection(*m_mapData);
@@ -925,7 +925,7 @@ void AbstractParser::toggleTrollMapping()
 {
     m_trollExitMapping = !m_trollExitMapping;
     QString toggleText = enabledString(m_trollExitMapping);
-    sendToUser("OK. Troll exit mapping is now " + toggleText + ".\r\n");
+    sendToUser("Troll exit mapping is now " + toggleText + ".\r\n");
 }
 
 void AbstractParser::doSearchCommand(StringView view)
@@ -964,13 +964,13 @@ void AbstractParser::doGroupLockCommand()
 void AbstractParser::doRemoveDoorNamesCommand()
 {
     m_mapData->removeDoorNames();
-    sendToUser("OK. Secret exits purged.\r\n");
+    sendToUser("Secret exits purged.\r\n");
 }
 
 void AbstractParser::doBackCommand()
 {
     m_queue.clear();
-    sendToUser("OK.\r\n");
+    sendOkToUser();
     pathChanged();
 }
 
@@ -1707,7 +1707,7 @@ void AbstractParser::performDoorCommand(const ExitDirEnum direction, const DoorA
         m_overrideSendPrompt = true;
     } else {
         sendToUser("--->" + cn);
-        sendToUser("OK.\r\n");
+        sendOkToUser();
     }
 }
 
@@ -1749,7 +1749,7 @@ void AbstractParser::genericDoorCommand(QString command, const ExitDirEnum direc
         m_overrideSendPrompt = true;
     } else {
         sendToUser("--->" + command);
-        sendToUser("OK.\r\n");
+        sendOkToUser();
     }
 }
 

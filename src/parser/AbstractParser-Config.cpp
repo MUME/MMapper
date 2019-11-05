@@ -15,6 +15,7 @@
 #include "../proxy/proxy.h"
 #include "../syntax/SyntaxArgs.h"
 #include "../syntax/TreeParser.h"
+#include "AbstractParser-Utils.h"
 
 class ArgNamedColor final : public syntax::IArgument
 {
@@ -322,7 +323,7 @@ void AbstractParser::doConfig(const StringView &cmd)
                         }
                         os << "Loading saved file..." << std::endl;
                         setConfig().read();
-                        os << "OK." << std::endl;
+                        send_ok(os);
                     },
                     "read config file")),
             syn("factory",
