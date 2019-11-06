@@ -168,7 +168,7 @@ before_script:
         git diff
         echo
         echo "Please fix your code style:"
-        echo "find . -iname *.h -o -iname *.c -o -iname *.cpp -o -iname *.hpp | xargs clang-format -style=file -i -fallback-style=none"
+        echo "find . -iname *.h -o -iname *.c -o -iname *.cpp -o -iname *.hpp | xargs -n 1 -P \$(getconf _NPROCESSORS_ONLN) clang-format -style=file -i -fallback-style=none"
         exit -1
       fi
     fi

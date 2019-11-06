@@ -5,9 +5,9 @@
 #include <string_view>
 #include <vector>
 
+#include "Color.h"
 #include "RuleOf5.h"
 #include "utils.h"
-#include "Color.h"
 
 // TODO: rename this, but to what? NamedColorHandle?
 class NODISCARD XNamedColor final
