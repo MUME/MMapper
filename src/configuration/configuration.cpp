@@ -540,7 +540,7 @@ void Configuration::CanvasSettings::read(QSettings &conf)
     roomDarkColor = lookupColor(KEY_ROOM_DARK_COLOR, DEFAULT_DARK_COLOR);
     roomDarkLitColor = lookupColor(KEY_ROOM_DARK_LIT_COLOR, DEFAULT_NO_SUNDEATH_COLOR);
     antialiasingSamples = conf.value(KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES, 0).toInt();
-    trilinearFiltering = conf.value(KEY_USE_TRILINEAR_FILTERING, false).toBool();
+    trilinearFiltering = conf.value(KEY_USE_TRILINEAR_FILTERING, true).toBool();
     softwareOpenGL = conf.value(KEY_USE_SOFTWARE_OPENGL, false).toBool();
     advanced.use3D.set(conf.value(KEY_3D_CANVAS, false).toBool());
     advanced.autoTilt.set(conf.value(KEY_3D_AUTO_TILT, true).toBool());
