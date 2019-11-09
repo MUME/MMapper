@@ -87,7 +87,7 @@ void TestExpandoraCommon::roomCompareTest_data()
     const auto get_exit_flags = [](const SharedRoom &room) -> ExitsFlagsType {
         ExitsFlagsType flags;
         const ExitsList &list = room->getExitsList();
-        for (auto dir : ALL_EXITS7)
+        for (auto dir : ALL_EXITS_NESWUD)
             flags.set(dir, list[dir].getExitFlags());
         flags.setValid();
         return flags;
