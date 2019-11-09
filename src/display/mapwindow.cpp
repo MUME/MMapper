@@ -29,6 +29,7 @@ MapWindow::MapWindow(MapData *const mapData,
     m_verticalScrollBar->setOrientation(Qt::Vertical);
     m_verticalScrollBar->setRange(0, 0);
     m_verticalScrollBar->hide();
+    m_verticalScrollBar->setSingleStep(MapCanvas::SCROLL_SCALE);
 
     m_gridLayout->addWidget(m_verticalScrollBar.get(), 0, 1, 1, 1);
 
@@ -36,6 +37,7 @@ MapWindow::MapWindow(MapData *const mapData,
     m_horizontalScrollBar->setOrientation(Qt::Horizontal);
     m_horizontalScrollBar->setRange(0, 0);
     m_horizontalScrollBar->hide();
+    m_horizontalScrollBar->setSingleStep(MapCanvas::SCROLL_SCALE);
 
     m_gridLayout->addWidget(m_horizontalScrollBar.get(), 1, 0, 1, 1);
 
