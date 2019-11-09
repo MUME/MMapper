@@ -81,6 +81,7 @@ matrix:
             - lcov
             - qt59base
             - mesa-common-dev
+            - binutils
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
         - QT=59
@@ -103,6 +104,7 @@ matrix:
             - lcov
             - qt59base
             - mesa-common-dev
+            - binutils
       env:
         - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
         - QT=59
@@ -125,6 +127,7 @@ matrix:
             - lcov
             - qt59base
             - mesa-common-dev
+            - binutils
       env:
         - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
         - QT=59
@@ -178,13 +181,13 @@ before_script:
       mkdir build
       cd build
       cmake --version
-      cmake .. -DCMAKE_BUILD_TYPE=Debug $MMAPPER_CMAKE_EXTRA
+      cmake .. -DCMAKE_BUILD_TYPE=Debug $MMAPPER_CMAKE_EXTRA || exit -1
     fi
 
 script:
   - |
     if [ "$BUILD" != "" ]; then
-      make -j$(getconf _NPROCESSORS_ONLN)
+      make -j$(getconf _NPROCESSORS_ONLN) || exit -1
     fi
   - '[[ "$SNAPCRAFT" == "" ]] || snapcraft snap --destructive-mode'
   - |
@@ -196,7 +199,8 @@ after_success:
   - '[[ "$CODECOV" == "" ]] || lcov  --zerocounters  --directory .'
   - |
     if [[ "$BUILD" != "" ]]; then
-      ctest -V
+      export QT_QPA_PLATFORM=offscreen
+      ctest -V || exit -1
       if  [[ -n $(nm -C src/mmapper | grep -w 'QString::\(to\|from\)StdString') ]]; then
         nm -C src/mmapper | grep -w 'QString::\(to\|from\)StdString'
         echo
