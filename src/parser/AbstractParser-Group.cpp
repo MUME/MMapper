@@ -85,16 +85,24 @@ void AbstractParser::parseGroup(StringView input)
     }();
 
     auto groupLockSyntax = []() -> SharedConstSublist {
-        // REVISIT: Allow this to also be set using a boolean?
-        auto toggleLock = Accept(
-            [](User &user, const Pair *) -> void {
+        const auto argBool = TokenMatcher::alloc<ArgBool>();
+        auto acceptLock = Accept(
+            [](User &user, const Pair *args) -> void {
+                const auto value = deref(args).car.getBool();
                 auto &os = user.getOstream();
+
+                const auto msg = (value ? "locked" : "unlocked");
                 bool &lockGroup = setConfig().groupManager.lockGroup;
-                lockGroup = !lockGroup;
-                os << "--->Group has been " << (lockGroup ? "locked" : "unlocked") << std::endl;
+                if (value == lockGroup) {
+                    os << "--->Group was already " << msg << std::endl;
+                    return;
+                }
+
+                lockGroup = value;
+                os << "--->Group has been " << msg << std::endl;
             },
-            "toggle group lock");
-        return buildSyntax(abb("lock"), toggleLock);
+            "modify group lock");
+        return buildSyntax(abb("lock"), argBool, acceptLock);
     }();
 
     auto groupTellSyntax = [this]() -> SharedConstSublist {
