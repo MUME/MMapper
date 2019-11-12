@@ -618,7 +618,7 @@ if(UNIX AND NOT APPLE)
         RENAME org.mume.MMapper.png
     )
 
-    set(CPACK_GENERATOR "DEB;TGZ") # Others: RPM, STGZ
+    set(CPACK_GENERATOR "DEB") # Others: RPM, STGZ
     set(CPACK_SOURCE_GENERATOR "TGZ")
 
     # Debian
@@ -683,7 +683,7 @@ if(WIN32)
     endif()
 
     # ZIP requires 7-zip
-    set(CPACK_GENERATOR "NSIS;ZIP")
+    set(CPACK_GENERATOR "NSIS")
     set(CPACK_SOURCE_GENERATOR "ZIP")
 
     # Windows (NSIS) Settings
@@ -751,7 +751,7 @@ if(APPLE)
     )
 
     # Package Settings
-    set(CPACK_GENERATOR "DragNDrop;ZIP")
+    set(CPACK_GENERATOR "DragNDrop")
     set(CPACK_SOURCE_GENERATOR "TGZ")
     set(CPACK_DMG_FORMAT UDBZ)
 
