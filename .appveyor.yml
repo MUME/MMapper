@@ -72,9 +72,6 @@ matrix:
       ARCH: arm
     - image: Ubuntu1804
       ARCH: arm64
-    # Temporarily disable other builds
-    - image: Ubuntu1804
-    - image: Visual Studio 2017
 
 for:
   # Ubuntu
