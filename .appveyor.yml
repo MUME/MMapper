@@ -198,7 +198,7 @@ for:
       - cpack
 
     test_script:
-      - cmd: ctest -V
+      - ctest -V
 
     artifacts:
       - path: build\mmapper-*-Mac.dmg
