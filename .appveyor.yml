@@ -56,13 +56,15 @@ matrix:
     - image: Visual Studio 2017
       COMPILER: Clang
     - image: Ubuntu1804
-      COMPILER: MingW
+      COMPILER: MinGW
     - image: Ubuntu1804
       COMPILER: VS2017
     - image: Ubuntu1804
       COMPILER: Clang
     - image: macos-mojave
       COMPILER: GCC
+    - image: macos-mojave
+      COMPILER: MinGW
     - image: macos-mojave
       COMPILER: VS2017
     # Following builds are disabled to prevent build timeout
@@ -188,7 +190,7 @@ for:
       - ps: $env:package_version = ("$(git describe --tags --always --long)").trim()
       - ps: Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
       - brew install qt5 cmake openssl@1.1
-      - brew link qt5 --force
+      - export PATH="/usr/local/opt/qt/bin:$PATH"
 
     build_script:
       - mkdir build
