@@ -201,8 +201,8 @@ for:
       - cmd: ctest -V
 
     artifacts:
-      - path: build\mmapper-*-Mac*.dmg
-        name: MMapper Debian Package
+      - path: build\mmapper-*-Mac.dmg
+        name: MMapper Mac Package
 
-      - path: build\mmapper-*-Mac*.*.sha256
+      - path: build\mmapper-*-Mac.*.sha256
         name: MMapper Checksums
