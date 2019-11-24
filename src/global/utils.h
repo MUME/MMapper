@@ -13,34 +13,65 @@
 #include "NullPointerException.h"
 #include "macros.h"
 
-/* Explanation by example of why CONCAT() and CONCAT2() exist:
-$ cat test.cpp
-#define CONCAT(a, b) a##b
-#define CONCAT2(a, b) CONCAT(a, b)
-#define MACRO() \
-    int foo##__LINE__; \
-    int CONCAT(foo, __LINE__); \
-    int CONCAT2(foo, __LINE__)
-int main()
+namespace utils {
+namespace details {
+template<typename T>
+constexpr bool isBitMask()
 {
-    int foo##__LINE__;
-    MACRO();
-    return 0;
+    return (std::is_integral_v<T> && std::is_unsigned_v<T>) || std::is_enum_v<T>;
+}
+} // namespace details
+
+template<typename T>
+constexpr bool isPowerOfTwo(const T x) noexcept
+{
+    static_assert(details::isBitMask<T>());
+    if constexpr (std::is_enum_v<T>) {
+        using U = std::underlying_type_t<T>;
+        return isPowerOfTwo<U>(static_cast<U>(x));
+    } else {
+        return x != 0u && (x & (x - 1u)) == 0u;
+    }
 }
 
-$ g++ -E test.cpp
-...
-int main()
+template<typename T>
+constexpr bool isAtLeastTwoBits(const T x) noexcept
 {
-    int foo##9;
-    int foo__LINE__; int foo__LINE__; int foo10;
-    return 0;
+    static_assert(details::isBitMask<T>());
+    if constexpr (std::is_enum_v<T>) {
+        using U = std::underlying_type_t<T>;
+        return isAtLeastTwoBits<U>(static_cast<U>(x));
+    } else {
+        return x != 0u && (x & (x - 1u)) != 0u;
+    }
 }
-*/
-#define CONCAT(a, b) a##b
-#define CONCAT2(a, b) CONCAT(a, b)
 
-#define IS_SET(src, bit) static_cast<bool>((src) & (bit))
+template<typename T>
+bool anySet(const T src, const T mask)
+{
+    static_assert(details::isBitMask<T>());
+    assert(isAtLeastTwoBits(mask));
+    return (src & mask) != T{};
+}
+
+template<typename T>
+bool allSet(const T src, const T mask)
+{
+    static_assert(details::isBitMask<T>());
+    assert(isAtLeastTwoBits(mask));
+    return (src & mask) == mask;
+}
+
+template<typename T>
+bool isSet(const T src, const T bit)
+{
+    static_assert(details::isBitMask<T>());
+    assert(isPowerOfTwo(bit));
+    // use the test for any
+    return (src & bit) != T{};
+}
+
+} // namespace utils
 
 template<typename T>
 bool isClamped(T x, T lo, T hi)

@@ -109,14 +109,14 @@ public:
     }
 
 public:
-    bool isLit() const { return IS_SET(flags, LIT_ROOM); }
+    bool isLit() const { return (flags & LIT_ROOM) != 0; }
     void setLit()
     {
         using flags_type = decltype(flags);
         flags = static_cast<flags_type>(flags & ~LIGHT_MASK);
         flags = static_cast<flags_type>(flags | (LIT_ROOM & LIGHT_MASK));
     }
-    bool isDark() const { return IS_SET(flags, DARK_ROOM); }
+    bool isDark() const { return (flags & DARK_ROOM) != 0; }
     void setDark()
     {
         using flags_type = decltype(flags);

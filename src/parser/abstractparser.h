@@ -154,10 +154,8 @@ protected:
     void genericDoorCommand(QString command, ExitDirEnum direction);
 
 public:
-    ExitFlags getExitFlags(ExitDirEnum dir) const;
-    DirectionalLightEnum getConnectedRoomFlags(ExitDirEnum dir) const;
     void setExitFlags(ExitFlags flag, ExitDirEnum dir);
-    void setConnectedRoomFlag(DirectionalLightEnum light, ExitDirEnum dir);
+    void setConnectedRoomFlag(DirectSunlightEnum light, ExitDirEnum dir);
 
     void printRoomInfo(RoomFields fieldset);
     void printRoomInfo(RoomFieldEnum field);

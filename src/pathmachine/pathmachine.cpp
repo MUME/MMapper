@@ -255,14 +255,13 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
             if (!e.outIsUnique()) {
                 continue;
             }
-            RoomId connectedRoomId = e.outFirst();
-            auto bThisRoom = bFlags.getDirectionalLight(dir);
-            if (IS_SET(bThisRoom, DirectionalLightEnum::DIRECT_SUN_ROOM)) {
+            const RoomId connectedRoomId = e.outFirst();
+            if (bFlags.hasDirectSunlight(dir)) {
                 scheduleAction(std::make_shared<SingleRoomAction>(
                     std::make_unique<ModifyRoomFlags>(RoomSundeathEnum::SUNDEATH,
                                                       FlagModifyModeEnum::SET),
                     connectedRoomId));
-            } else if (IS_SET(bThisRoom, DirectionalLightEnum::INDIRECT_SUN_ROOM)) {
+            } else if (bFlags.hasNoDirectSunlight(dir)) {
                 scheduleAction(std::make_shared<SingleRoomAction>(
                     std::make_unique<ModifyRoomFlags>(RoomSundeathEnum::NO_SUNDEATH,
                                                       FlagModifyModeEnum::SET),

@@ -8,77 +8,82 @@
 #include "../global/utils.h"
 #include "../mapdata/ExitDirection.h"
 
-enum class DirectionalLightEnum { NONE = 0, DIRECT_SUN_ROOM = 1, INDIRECT_SUN_ROOM = 2, BOTH = 3 };
+enum class DirectSunlightEnum : uint32_t {
+    UNKNOWN = 0,
+    SAW_DIRECT_SUN = 1,
+    SAW_NO_DIRECT_SUN = 2,
+};
 
-inline DirectionalLightEnum operator&(DirectionalLightEnum lhs, DirectionalLightEnum rhs)
+constexpr inline auto toUint(const DirectSunlightEnum val) noexcept
 {
-    return static_cast<DirectionalLightEnum>(static_cast<uint8_t>(lhs) & static_cast<uint8_t>(rhs));
-}
-inline DirectionalLightEnum operator|(DirectionalLightEnum lhs, DirectionalLightEnum rhs)
-{
-    return static_cast<DirectionalLightEnum>(static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs));
+    using U = uint32_t;
+    static_assert(std::is_same_v<U, std::underlying_type_t<DirectSunlightEnum>>);
+    return static_cast<U>(val);
 }
 
-static constexpr const auto ANY_DIRECT_SUNLIGHT = 0b10101010101u;
+inline constexpr DirectSunlightEnum operator&(const DirectSunlightEnum lhs,
+                                              const DirectSunlightEnum rhs)
+{
+    return static_cast<DirectSunlightEnum>(toUint(lhs) & toUint(rhs));
+}
+
+static constexpr const auto SAW_ANY_DIRECT_SUNLIGHT = 0b10101010101u;
 static constexpr const auto CONNECTED_ROOM_FLAGS_VALID = 1u << 14;
 
 // every other bit for all 6 directions.
-static_assert(ANY_DIRECT_SUNLIGHT == ((1u << (2 * 6)) - 1u) / 3u);
+static_assert(SAW_ANY_DIRECT_SUNLIGHT == ((1u << (2 * 6)) - 1u) / 3u);
+static_assert(utils::isPowerOfTwo(CONNECTED_ROOM_FLAGS_VALID));
+static_assert(CONNECTED_ROOM_FLAGS_VALID > SAW_ANY_DIRECT_SUNLIGHT);
 
 class ConnectedRoomFlagsType final
 {
 private:
-    uint16_t flags = 0;
+    uint32_t m_flags = 0;
 
 public:
     ConnectedRoomFlagsType() = default;
-    explicit ConnectedRoomFlagsType(uint16_t flags)
-        : flags{flags}
-    {
-        // REVISIT: turn this into an "unsafe" static function?
-    }
 
 public:
-    explicit operator uint16_t() const { return flags; }
-    bool operator==(const ConnectedRoomFlagsType rhs) const { return flags == rhs.flags; }
-    bool operator!=(const ConnectedRoomFlagsType rhs) const { return flags != rhs.flags; }
+    bool operator==(const ConnectedRoomFlagsType rhs) const { return m_flags == rhs.m_flags; }
+    bool operator!=(const ConnectedRoomFlagsType rhs) const { return m_flags != rhs.m_flags; }
 
 public:
-    bool isValid() const { return IS_SET(flags, CONNECTED_ROOM_FLAGS_VALID); }
-    void setValid() { flags |= CONNECTED_ROOM_FLAGS_VALID; }
+    bool isValid() const { return (m_flags & CONNECTED_ROOM_FLAGS_VALID) != 0u; }
+    void setValid() { m_flags |= CONNECTED_ROOM_FLAGS_VALID; }
 
 public:
-    void setAnyDirectSunlight() { flags |= ANY_DIRECT_SUNLIGHT; }
-
-    bool hasAnyDirectSunlight() const { return IS_SET(flags, ANY_DIRECT_SUNLIGHT); }
+    bool hasAnyDirectSunlight() const { return (m_flags & SAW_ANY_DIRECT_SUNLIGHT) != 0u; }
 
 public:
-    void reset() { flags = uint16_t{0}; }
+    void reset() { *this = ConnectedRoomFlagsType(); }
 
 private:
-    static constexpr const auto MASK = static_cast<uint8_t>(
-        static_cast<uint8_t>(DirectionalLightEnum::DIRECT_SUN_ROOM)
-        | static_cast<uint8_t>(DirectionalLightEnum::INDIRECT_SUN_ROOM));
+    static constexpr const auto MASK = static_cast<std::underlying_type_t<DirectSunlightEnum>>(
+        toUint(DirectSunlightEnum::SAW_DIRECT_SUN) | toUint(DirectSunlightEnum::SAW_NO_DIRECT_SUN));
 
-    static int getShift(ExitDirEnum dir) { return static_cast<int>(dir) * 2; }
+    static int getShift(const ExitDirEnum dir) { return static_cast<int>(dir) * 2; }
+
+    DirectSunlightEnum getDirectSunlight(const ExitDirEnum dir) const
+    {
+        const auto shift = getShift(dir);
+        return static_cast<DirectSunlightEnum>((m_flags >> shift) & MASK);
+    }
 
 public:
-    void setDirectionalLight(ExitDirEnum dir, DirectionalLightEnum light)
+    void setDirectSunlight(const ExitDirEnum dir, const DirectSunlightEnum light)
     {
         const auto shift = getShift(dir);
-        using flag_type = decltype(flags);
-        flags = static_cast<flag_type>(flags & ~(MASK << shift));
-        flags = static_cast<flag_type>(flags | ((static_cast<uint8_t>(light) & MASK) << shift));
+        m_flags &= ~(MASK << shift);
+        m_flags |= (toUint(light) & MASK) << shift;
     }
 
-    DirectionalLightEnum getDirectionalLight(ExitDirEnum dir) const
+    bool hasNoDirectSunlight(const ExitDirEnum dir) const
     {
-        const auto shift = getShift(dir);
-        return static_cast<DirectionalLightEnum>((flags >> shift) & MASK);
+        return getDirectSunlight(dir) == DirectSunlightEnum::SAW_NO_DIRECT_SUN;
     }
 
-    bool hasDirectionalSunlight(ExitDirEnum dir) const
+    bool hasDirectSunlight(const ExitDirEnum dir) const
     {
-        return getDirectionalLight(dir) == DirectionalLightEnum::DIRECT_SUN_ROOM;
+        return getDirectSunlight(dir) == DirectSunlightEnum::SAW_DIRECT_SUN;
     }
 };

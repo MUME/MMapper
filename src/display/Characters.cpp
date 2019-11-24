@@ -145,7 +145,7 @@ void CharacterBatch::CharFakeGL::drawQuadCommon(const glm::vec2 &in_a,
     const auto c = transform(in_c);
     const auto d = transform(in_d);
 
-    if (IS_SET(options, QuadOptsEnum::FILL)) {
+    if (::utils::isSet(options, QuadOptsEnum::FILL)) {
         const auto color = m_color.withAlpha(FILL_ALPHA);
         auto emitVert = [this, &color](const auto &x) -> void { m_charTris.emplace_back(color, x); };
         auto emitTri = [&emitVert](const auto &a, const auto &b, const auto &c) -> void {
@@ -157,7 +157,7 @@ void CharacterBatch::CharFakeGL::drawQuadCommon(const glm::vec2 &in_a,
         emitTri(a, c, d);
     }
 
-    if (IS_SET(options, QuadOptsEnum::BEACON)) {
+    if (::utils::isSet(options, QuadOptsEnum::BEACON)) {
         const auto color = m_color.withAlpha(BEACON_ALPHA);
 
         const glm::vec3 heightOffset{0.f, 0.f, 50.f};
@@ -192,7 +192,7 @@ void CharacterBatch::CharFakeGL::drawQuadCommon(const glm::vec2 &in_a,
         emitQuad(d, h, e, a);
     }
 
-    if (IS_SET(options, QuadOptsEnum::OUTLINE)) {
+    if (::utils::isSet(options, QuadOptsEnum::OUTLINE)) {
         const auto color = m_color.withAlpha(LINE_ALPHA);
         auto emitVert = [this, &color](const auto &x) -> void {
             m_charLines.emplace_back(color, x);

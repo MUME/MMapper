@@ -473,7 +473,7 @@ ComparisonResultEnum Room::compareWeakProps(const Room *const room, const ParseE
                 continue;
             }
             const bool hasLight = connectedRoomFlags.isValid()
-                                  && connectedRoomFlags.hasDirectionalSunlight(dir);
+                                  && connectedRoomFlags.hasDirectSunlight(dir);
             const auto eventExitFlags = eventExitsFlags.get(dir);
             const auto diff = eventExitFlags ^ roomExitFlags;
             /* MUME has two logic flows for displaying signs on exits:
@@ -581,8 +581,7 @@ void Room::update(Room &room, const ParseEvent &event)
                     eventExitFlags |= ExitFlagEnum::DOOR | ExitFlagEnum::EXIT;
                 }
                 if (roomExit.exitIsRoad() && !eventExitFlags.isRoad()
-                    && connectedRoomFlags.isValid()
-                    && connectedRoomFlags.hasDirectionalSunlight(dir)) {
+                    && connectedRoomFlags.isValid() && connectedRoomFlags.hasDirectSunlight(dir)) {
                     // Prevent orcs/trolls from removing roads/trails if they're sunlit
                     eventExitFlags |= ExitFlagEnum::ROAD;
                 }

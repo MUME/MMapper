@@ -233,11 +233,11 @@ void TestExpandoraCommon::roomCompareTest_data()
         exitFlags.set(ExitDirEnum::NORTH,
                       ExitFlags{ExitFlagEnum::DOOR | ExitFlagEnum::EXIT}); // Remove road north
         ConnectedRoomFlagsType connectedFlags;
-        connectedFlags.setDirectionalLight(ExitDirEnum::NORTH,
-                                           DirectionalLightEnum::DIRECT_SUN_ROOM);
-        connectedFlags.setDirectionalLight(ExitDirEnum::EAST, DirectionalLightEnum::DIRECT_SUN_ROOM);
-        connectedFlags.setDirectionalLight(ExitDirEnum::WEST, DirectionalLightEnum::DIRECT_SUN_ROOM);
-        connectedFlags.setDirectionalLight(ExitDirEnum::DOWN, DirectionalLightEnum::DIRECT_SUN_ROOM);
+        connectedFlags.setDirectSunlight(ExitDirEnum::NORTH,
+                                           DirectSunlightEnum::SAW_DIRECT_SUN);
+        connectedFlags.setDirectSunlight(ExitDirEnum::EAST, DirectSunlightEnum::SAW_DIRECT_SUN);
+        connectedFlags.setDirectSunlight(ExitDirEnum::WEST, DirectSunlightEnum::SAW_DIRECT_SUN);
+        connectedFlags.setDirectSunlight(ExitDirEnum::DOWN, DirectSunlightEnum::SAW_DIRECT_SUN);
         connectedFlags.setValid();
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
                                                          name,
@@ -389,8 +389,8 @@ void TestExpandoraCommon::roomCompareTest_data()
         PromptFlagsType promptFlags = PromptFlagsType::fromRoomTerrainType(room->getTerrainType());
         promptFlags.setDark();
         ConnectedRoomFlagsType connectedFlags;
-        connectedFlags.setDirectionalLight(ExitDirEnum::NORTH,
-                                           DirectionalLightEnum::DIRECT_SUN_ROOM);
+        connectedFlags.setDirectSunlight(ExitDirEnum::NORTH,
+                                           DirectSunlightEnum::SAW_DIRECT_SUN);
         connectedFlags.setValid();
         room->setLightType(RoomLightEnum::UNDEFINED);
         room->setSundeathType(RoomSundeathEnum::NO_SUNDEATH);

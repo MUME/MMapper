@@ -50,10 +50,10 @@ private:
     static constexpr const underlying_type MASK = static_cast<underlying_type>(
         static_cast<underlying_type>(static_cast<underlying_type>(~underlying_type{0u})
                                      >> (std::numeric_limits<underlying_type>::digits - NUM_FLAGS)));
-    underlying_type flags = 0u;
+    underlying_type m_flags = 0u;
 
     template<typename T>
-    NODISCARD static inline constexpr underlying_type narrow(T x) noexcept
+    NODISCARD static inline constexpr underlying_type narrow(const T x) noexcept
     {
         return static_cast<underlying_type>(x & MASK);
     }
@@ -61,13 +61,13 @@ private:
 public:
     /* implicit */ constexpr Flags() noexcept = default;
 
-    explicit constexpr Flags(underlying_type flags) noexcept
-        : flags{narrow(flags & MASK)}
+    explicit constexpr Flags(const underlying_type flags) noexcept
+        : m_flags{narrow(flags & MASK)}
     {}
 
     // This might be tempting to make implcit, but it's not worth it because it doesn't enable the
     // `Flags binop(Flag, Flag)` helper operators (see below).
-    explicit constexpr Flags(Flag flag) noexcept
+    explicit constexpr Flags(const Flag flag) noexcept
         : Flags{narrow(underlying_type{1u} << static_cast<int>(flag))}
     {}
 
@@ -76,17 +76,17 @@ private:
     NODISCARD const CRTP &crtp_self() const noexcept { return static_cast<CRTP &>(*this); }
 
 public:
-    NODISCARD explicit constexpr operator underlying_type() const noexcept { return flags; }
-    NODISCARD constexpr uint32_t asUint32() const noexcept { return flags; }
+    NODISCARD explicit constexpr operator underlying_type() const noexcept { return m_flags; }
+    NODISCARD constexpr uint32_t asUint32() const noexcept { return m_flags; }
 
 public:
-    NODISCARD friend inline bool operator==(CRTP lhs, CRTP rhs) noexcept
+    NODISCARD friend inline bool operator==(const CRTP lhs, const CRTP rhs) noexcept
     {
-        return lhs.flags == rhs.flags;
+        return lhs.m_flags == rhs.m_flags;
     }
-    NODISCARD friend inline bool operator!=(CRTP lhs, CRTP rhs) noexcept
+    NODISCARD friend inline bool operator!=(const CRTP lhs, const CRTP rhs) noexcept
     {
-        return lhs.flags != rhs.flags;
+        return lhs.m_flags != rhs.m_flags;
     }
 
     // REVISIT: These `Flags binop(Flag, Flag)` helper operators are not effective without `using namespace enums;`,
@@ -94,60 +94,60 @@ public:
     // that defines them, which ends up being `::enums` in our case. :(
     // Note: The others operators that use a Flags argument work because of ADL.
 public:
-    NODISCARD friend inline constexpr CRTP operator&(Flag lhs, Flag rhs) noexcept
+    NODISCARD friend inline constexpr CRTP operator&(const Flag lhs, const Flag rhs) noexcept
     {
         return CRTP{lhs} & CRTP{rhs};
     }
 
-    NODISCARD friend inline constexpr CRTP operator|(Flag lhs, Flag rhs) noexcept
+    NODISCARD friend inline constexpr CRTP operator|(const Flag lhs, const Flag rhs) noexcept
     {
         return CRTP{lhs} | CRTP{rhs};
     }
 
-    NODISCARD friend inline constexpr CRTP operator^(Flag lhs, Flag rhs) noexcept
+    NODISCARD friend inline constexpr CRTP operator^(const Flag lhs, const Flag rhs) noexcept
     {
         /* parens to keep clang-format from formatting this strangely */
         return CRTP{lhs} ^ (CRTP{rhs});
     }
 
 public:
-    NODISCARD friend inline constexpr CRTP operator&(CRTP lhs, Flag rhs) noexcept
+    NODISCARD friend inline constexpr CRTP operator&(const CRTP lhs, const Flag rhs) noexcept
     {
         return lhs & CRTP{rhs};
     }
-    NODISCARD friend inline constexpr CRTP operator|(CRTP lhs, Flag rhs) noexcept
+    NODISCARD friend inline constexpr CRTP operator|(const CRTP lhs, const Flag rhs) noexcept
     {
         return lhs | CRTP{rhs};
     }
-    NODISCARD friend inline constexpr CRTP operator^(CRTP lhs, Flag rhs) noexcept
+    NODISCARD friend inline constexpr CRTP operator^(const CRTP lhs, const Flag rhs) noexcept
     {
         /* parens to keep clang-format from formatting this strangely */
         return lhs ^ (CRTP{rhs});
     }
 
 public:
-    NODISCARD friend inline constexpr CRTP operator&(CRTP lhs, CRTP rhs) noexcept
+    NODISCARD friend inline constexpr CRTP operator&(const CRTP lhs, const CRTP rhs) noexcept
     {
-        return CRTP{narrow(lhs.flags & rhs.flags)};
+        return CRTP{narrow(lhs.m_flags & rhs.m_flags)};
     }
 
-    NODISCARD friend inline constexpr CRTP operator|(CRTP lhs, CRTP rhs) noexcept
+    NODISCARD friend inline constexpr CRTP operator|(const CRTP lhs, const CRTP rhs) noexcept
     {
-        return CRTP{narrow(lhs.flags | rhs.flags)};
+        return CRTP{narrow(lhs.m_flags | rhs.m_flags)};
     }
 
-    NODISCARD friend inline constexpr CRTP operator^(CRTP lhs, CRTP rhs) noexcept
+    NODISCARD friend inline constexpr CRTP operator^(const CRTP lhs, const CRTP rhs) noexcept
     {
-        return CRTP{narrow(lhs.flags ^ rhs.flags)};
+        return CRTP{narrow(lhs.m_flags ^ rhs.m_flags)};
     }
 
 public:
-    NODISCARD inline constexpr CRTP operator~() const noexcept { return CRTP{narrow(~flags)}; }
-    NODISCARD inline constexpr explicit operator bool() const noexcept { return flags != 0u; }
+    NODISCARD inline constexpr CRTP operator~() const noexcept { return CRTP{narrow(~m_flags)}; }
+    NODISCARD inline constexpr explicit operator bool() const noexcept { return m_flags != 0u; }
 
 public:
-    inline CRTP &operator&=(Flag rhs) { return crtp_self() &= CRTP{rhs}; }
-    inline CRTP &operator&=(CRTP rhs)
+    inline CRTP &operator&=(const Flag rhs) { return crtp_self() &= CRTP{rhs}; }
+    inline CRTP &operator&=(const CRTP rhs)
     {
         auto &self = crtp_self();
         self = (self & rhs);
@@ -155,8 +155,8 @@ public:
     }
 
 public:
-    inline CRTP &operator|=(Flag rhs) noexcept { return crtp_self() |= CRTP{rhs}; }
-    inline CRTP &operator|=(CRTP rhs) noexcept
+    inline CRTP &operator|=(const Flag rhs) noexcept { return crtp_self() |= CRTP{rhs}; }
+    inline CRTP &operator|=(const CRTP rhs) noexcept
     {
         auto &self = crtp_self();
         self = (self | rhs);
@@ -164,8 +164,8 @@ public:
     }
 
 public:
-    inline CRTP &operator^=(Flag rhs) noexcept { return crtp_self() ^= CRTP{rhs}; }
-    inline CRTP &operator^=(CRTP rhs) noexcept
+    inline CRTP &operator^=(const Flag rhs) noexcept { return crtp_self() ^= CRTP{rhs}; }
+    inline CRTP &operator^=(const CRTP rhs) noexcept
     {
         auto &self = crtp_self();
         self = (self ^ rhs);
@@ -173,21 +173,24 @@ public:
     }
 
 public:
-    NODISCARD inline bool contains(Flag flag) const noexcept
+    NODISCARD inline bool contains(const Flag flag) const noexcept
     {
-        return (flags & CRTP{flag}.flags) != 0u;
+        return (m_flags & CRTP{flag}.m_flags) != 0u;
     }
-    NODISCARD inline bool containsAny(CRTP rhs) const noexcept { return (flags & rhs.flags) != 0u; }
-    NODISCARD inline bool containsAll(CRTP rhs) const noexcept
+    NODISCARD inline bool containsAny(const CRTP rhs) const noexcept
     {
-        return (flags & rhs.flags) == rhs.flags;
+        return (m_flags & rhs.m_flags) != 0u;
     }
-    inline void insert(Flag flag) noexcept { crtp_self() |= flag; }
-    inline void remove(Flag flag) noexcept { crtp_self() &= ~CRTP{flag}; }
-    inline void clear() noexcept { flags = 0; }
-    NODISCARD inline bool isEmpty() const { return flags == 0; }
+    NODISCARD inline bool containsAll(const CRTP rhs) const noexcept
+    {
+        return (m_flags & rhs.m_flags) == rhs.m_flags;
+    }
+    inline void insert(const Flag flag) noexcept { crtp_self() |= flag; }
+    inline void remove(const Flag flag) noexcept { crtp_self() &= ~CRTP{flag}; }
+    inline void clear() noexcept { m_flags = 0; }
+    NODISCARD inline bool isEmpty() const { return m_flags == 0; }
     NODISCARD inline bool empty() const { return isEmpty(); }
-    NODISCARD inline size_t count() const { return static_cast<size_t>(bits::bitCount(flags)); }
+    NODISCARD inline size_t count() const { return static_cast<size_t>(bits::bitCount(m_flags)); }
     NODISCARD inline size_t size() const { return count(); }
 
     // CAUTION: This function behaves differently than you probably expect.
@@ -217,11 +220,12 @@ public:
     //    assert(letters[2] == Letter::F);
     //    assert(letters[3] == Letter::Z);
     //
-    Flag operator[](size_t n) const noexcept
+    Flag operator[](const size_t n_) const noexcept
     {
+        auto n = n_;
         assert(n < count());
         static constexpr underlying_type ONE = 1;
-        for (auto tmp = flags; tmp != 0;) {
+        for (auto tmp = m_flags; tmp != 0;) {
             const auto lsb = bits::leastSignificantBit(tmp);
             assert(lsb >= 0);
             tmp ^= (ONE << lsb);
@@ -242,7 +246,7 @@ public:
     std::optional<Flag> find_first_matching(Predicate &&predicate) const
     {
         static constexpr underlying_type ONE = 1;
-        for (auto tmp = flags; tmp != 0;) {
+        for (auto tmp = m_flags; tmp != 0;) {
             const auto lsb = bits::leastSignificantBit(tmp);
             assert(lsb >= 0);
             tmp ^= (ONE << lsb);
@@ -263,7 +267,7 @@ public:
     void for_each(Callback &&callback) const
     {
         static constexpr underlying_type ONE = 1;
-        for (auto tmp = flags; tmp != 0;) {
+        for (auto tmp = m_flags; tmp != 0;) {
             const auto lsb = bits::leastSignificantBit(tmp);
             assert(lsb >= 0);
             tmp ^= (ONE << lsb);

@@ -13,6 +13,19 @@
 #include <QByteArray>
 #include <qglobal.h>
 
+namespace utils {
+static_assert(!isPowerOfTwo(0u) && !isAtLeastTwoBits(0u));
+static_assert(isPowerOfTwo(1u) && !isAtLeastTwoBits(1u));
+static_assert(isPowerOfTwo(2u) && !isAtLeastTwoBits(2u));
+static_assert(!isPowerOfTwo(3u) && isAtLeastTwoBits(3u));
+static_assert(isPowerOfTwo(4u) && !isAtLeastTwoBits(4u));
+static_assert(!isPowerOfTwo(~0u) && isAtLeastTwoBits(~0u));
+static constexpr const auto max = std::numeric_limits<uint32_t>::max();
+static_assert(!isPowerOfTwo(max) && isAtLeastTwoBits(max));
+static constexpr const auto topbit = max ^ (max >> 1);
+static_assert(isPowerOfTwo(topbit) && !isAtLeastTwoBits(topbit));
+} // namespace utils
+
 int utils::round_ftoi(const float f)
 {
     using lim = std::numeric_limits<int>;

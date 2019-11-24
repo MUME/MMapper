@@ -310,7 +310,7 @@ void AbstractParser::parseExits()
                     exitFlags |= ExitFlagEnum::ROAD;
                 }
                 if (directSun) {
-                    setConnectedRoomFlag(DirectionalLightEnum::DIRECT_SUN_ROOM, dir);
+                    setConnectedRoomFlag(DirectSunlightEnum::SAW_DIRECT_SUN, dir);
                 }
                 setExitFlags(exitFlags, dir);
             }
@@ -441,26 +441,25 @@ void AbstractParser::parseExits()
         m_connectedRoomFlags.setValid();
 
         // Orcs and trolls can detect exits with direct sunlight
-        bool foundDirectSunlight = m_connectedRoomFlags.hasAnyDirectSunlight();
+        const bool foundDirectSunlight = m_connectedRoomFlags.hasAnyDirectSunlight();
         if (foundDirectSunlight || m_trollExitMapping) {
             for (const auto alt_dir : ALL_EXITS_NESWUD) {
-                auto eThisExit = getExitFlags(alt_dir);
-                auto eThisClosed = closedDoorFlag.get(alt_dir);
-                auto cOtherRoom = getConnectedRoomFlags(alt_dir);
+                const auto eThisExit = m_exitsFlags.get(alt_dir);
+                const auto eThisClosed = closedDoorFlag.get(alt_dir);
 
                 // Do not flag indirect sunlight if there was a closed door, no exit, or we saw direct sunlight
                 if (!eThisExit.isExit() || eThisClosed.isDoor()
-                    || IS_SET(cOtherRoom, DirectionalLightEnum::DIRECT_SUN_ROOM)) {
+                    || m_connectedRoomFlags.hasDirectSunlight(alt_dir)) {
                     continue;
                 }
 
                 // Flag indirect sun
-                setConnectedRoomFlag(DirectionalLightEnum::INDIRECT_SUN_ROOM, alt_dir);
+                setConnectedRoomFlag(DirectSunlightEnum::SAW_NO_DIRECT_SUN, alt_dir);
             }
         }
     }
 
-    auto rs = RoomSelection(*m_mapData);
+    RoomSelection rs(*m_mapData);
     if (const Room *const room = rs.getRoom(getNextPosition())) {
         const QByteArray cn = enhanceExits(room);
         const auto right_trim = [](const QString &str) -> QString {
@@ -1572,24 +1571,14 @@ void AbstractParser::genericDoorCommand(QString command, const ExitDirEnum direc
     }
 }
 
-ExitFlags AbstractParser::getExitFlags(const ExitDirEnum dir) const
-{
-    return m_exitsFlags.get(dir);
-}
-
-DirectionalLightEnum AbstractParser::getConnectedRoomFlags(const ExitDirEnum dir) const
-{
-    return m_connectedRoomFlags.getDirectionalLight(dir);
-}
-
 void AbstractParser::setExitFlags(const ExitFlags ef, const ExitDirEnum dir)
 {
     m_exitsFlags.set(dir, ef);
 }
 
-void AbstractParser::setConnectedRoomFlag(const DirectionalLightEnum light, const ExitDirEnum dir)
+void AbstractParser::setConnectedRoomFlag(const DirectSunlightEnum light, const ExitDirEnum dir)
 {
-    m_connectedRoomFlags.setDirectionalLight(dir, light);
+    m_connectedRoomFlags.setDirectSunlight(dir, light);
 }
 
 void AbstractParser::printRoomInfo(const RoomFields fieldset)

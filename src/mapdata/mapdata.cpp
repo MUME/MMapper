@@ -74,27 +74,21 @@ bool MapData::getExitFlag(const Coordinate &pos, const ExitDirEnum dir, ExitFiel
     if (const Room *const room = map.get(pos)) {
         if (dir < ExitDirEnum::NONE) {
             switch (var.getType()) {
-            case ExitFieldEnum::DOOR_NAME: {
-                const auto name = room->exit(dir).getDoorName();
-                if (var.getDoorName() == name) {
+            case ExitFieldEnum::DOOR_NAME:
+                if (var.getDoorName() == room->exit(dir).getDoorName()) {
                     return true;
                 }
                 break;
-            }
-            case ExitFieldEnum::EXIT_FLAGS: {
-                const auto ef = room->exit(dir).getExitFlags();
-                if (IS_SET(ef, var.getExitFlags())) {
+            case ExitFieldEnum::EXIT_FLAGS:
+                if (room->exit(dir).getExitFlags().containsAny(var.getExitFlags())) {
                     return true;
                 }
                 break;
-            }
-            case ExitFieldEnum::DOOR_FLAGS: {
-                const auto df = room->exit(dir).getDoorFlags();
-                if (IS_SET(df, var.getDoorFlags())) {
+            case ExitFieldEnum::DOOR_FLAGS:
+                if (room->exit(dir).getDoorFlags().containsAny(var.getDoorFlags())) {
                     return true;
                 }
                 break;
-            }
             }
         }
     }

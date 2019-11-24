@@ -164,13 +164,13 @@ private:
         }
 
     private:
-        enum class QuadOptsEnum { NONE = 0, OUTLINE = 1, FILL = 2, BEACON = 4 };
-        friend QuadOptsEnum operator|(QuadOptsEnum lhs, QuadOptsEnum rhs)
+        enum class QuadOptsEnum : uint32_t { NONE = 0, OUTLINE = 1, FILL = 2, BEACON = 4 };
+        friend QuadOptsEnum operator|(const QuadOptsEnum lhs, const QuadOptsEnum rhs)
         {
             return static_cast<QuadOptsEnum>(static_cast<uint32_t>(lhs)
                                              | static_cast<uint32_t>(rhs));
         }
-        friend QuadOptsEnum operator&(QuadOptsEnum lhs, QuadOptsEnum rhs)
+        friend QuadOptsEnum operator&(const QuadOptsEnum lhs, const QuadOptsEnum rhs)
         {
             return static_cast<QuadOptsEnum>(static_cast<uint32_t>(lhs)
                                              & static_cast<uint32_t>(rhs));

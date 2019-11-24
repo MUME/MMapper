@@ -72,8 +72,7 @@ QString ParseEvent::toQString() const
                     exitsStr.append("=");
                 if (exitFlags.isDoor())
                     exitsStr.append("(");
-                const DirectionalLightEnum lightType = m_connectedRoomFlags.getDirectionalLight(dir);
-                if (lightType == DirectionalLightEnum::DIRECT_SUN_ROOM)
+                if (m_connectedRoomFlags.hasDirectSunlight(dir))
                     exitsStr.append("^");
                 exitsStr.append("]");
             }
