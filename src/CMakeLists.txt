@@ -101,6 +101,7 @@ set(mmapper_SRCS
     global/enums.h
     global/io.cpp
     global/io.h
+    global/macros.h
     global/random.cpp
     global/random.h
     global/range.h
