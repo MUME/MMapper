@@ -337,7 +337,6 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         add_compile_options(-Wno-global-constructors -Wno-exit-time-destructors) # these go together.
         add_compile_options(-Wno-padded) # this isn't usually a mistake; it's just extra info.
         add_compile_options(-Wno-redundant-parens) # MOCs spam this.
-        add_compile_options(-Wno-shadow-field-in-constructor -Wno-shadow-uncaptured-local) # common idioms
         add_compile_options(-Wno-unreachable-code-break) # break after [[noreturn]] function is not a mistake; omitting the break is a recipe for future disaster.
 
         # always errors
@@ -346,6 +345,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         add_compile_options(-Werror=double-promotion)
         add_compile_options(-Werror=float-conversion)
         add_compile_options(-Werror=float-equal) # this is usually an error.
+        add_compile_options(-Werror=implicit-fallthrough)
         add_compile_options(-Werror=inconsistent-missing-destructor-override)
         add_compile_options(-Werror=inconsistent-missing-override)
         add_compile_options(-Werror=newline-eof)
@@ -354,6 +354,8 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         add_compile_options(-Werror=return-stack-address)
         add_compile_options(-Werror=return-type)
         add_compile_options(-Werror=reorder)
+        # ignore common idioms; otherwise shadowing is an error
+        add_compile_options(-Werror=shadow -Wno-shadow-field-in-constructor -Wno-shadow-uncaptured-local)
         add_compile_options(-Werror=shorten-64-to-32)
         add_compile_options(-Werror=sign-conversion) # can warn about hard-to-spot bugs.
         add_compile_options(-Werror=switch)
