@@ -105,7 +105,7 @@ public:
 
             } else if (externalAddress[0]) {
                 qDebug() << "IGD reported external IP" << externalAddress;
-                return QByteArray::fromRawData(externalAddress, EXTERNAL_IP_ADDRESS_BYTES);
+                return QByteArray(externalAddress, EXTERNAL_IP_ADDRESS_BYTES);
 
             } else {
                 qWarning() << "IGD unable to retrieve external IP";

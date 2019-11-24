@@ -63,6 +63,9 @@ IOResultEnum readAllAvailable(QIODevice &dev, buffer<N> &buffer, Callback &&call
         assert(got <= MAX_SIZE);
         const int igot = static_cast<int>(got);
         assert(igot >= 0 && static_cast<decltype(got)>(igot) == got);
+        // Warning: This is only a VIEW of the data; it's a bug if the callback
+        // extends the lifetime of the QByteArray, because we will replace the
+        // contents of data the next time we read into the buffer.
         callback(QByteArray::fromRawData(data, igot));
     }
     callback(QByteArray::fromRawData(data, 0));
