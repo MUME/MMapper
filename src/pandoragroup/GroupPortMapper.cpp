@@ -91,75 +91,79 @@ public:
     }
     virtual ~MiniUPnPcPortMapper() override;
 
+    bool validIGD() const { return validIGDState == 1; }
+
     QByteArray tryGetExternalIp() override
     {
-        if (validIGDState == 1) {
-            // REVISIT: Expose the external IP in the preferences?
-            static const constexpr int EXTERNAL_IP_ADDRESS_BYTES = 40;
-            char externalAddress[EXTERNAL_IP_ADDRESS_BYTES];
-            int result = UPNP_GetExternalIPAddress(urls.controlURL,
-                                                   igdData.first.servicetype,
-                                                   externalAddress);
-            if (result != UPNPCOMMAND_SUCCESS) {
-                qWarning() << "UPNP_GetExternalIPAddress returned" << result;
+        if (!validIGD())
+            return "";
 
-            } else if (externalAddress[0]) {
-                qDebug() << "IGD reported external IP" << externalAddress;
-                return QByteArray(externalAddress, EXTERNAL_IP_ADDRESS_BYTES);
-
-            } else {
-                qWarning() << "IGD unable to retrieve external IP";
-            }
+        // REVISIT: Expose the external IP in the preferences?
+        static const constexpr int EXTERNAL_IP_ADDRESS_BYTES = 46; /* ipv6 requires 45 bytes */
+        char externalAddress[EXTERNAL_IP_ADDRESS_BYTES];
+        int result = UPNP_GetExternalIPAddress(urls.controlURL,
+                                               igdData.first.servicetype,
+                                               externalAddress);
+        if (result != UPNPCOMMAND_SUCCESS) {
+            qWarning() << "UPNP_GetExternalIPAddress returned" << result;
+            return "";
         }
-        return QByteArray("");
+
+        if (!externalAddress[0]) {
+            qWarning() << "IGD unable to retrieve external IP";
+            return "";
+        }
+
+        qDebug() << "IGD reported external IP" << externalAddress;
+        return QByteArray(externalAddress, EXTERNAL_IP_ADDRESS_BYTES);
     }
 
     bool tryAddPortMapping(const quint16 port) override
     {
-        if (validIGDState == 1) {
-            const auto portString = QString("%1").arg(port).toLocal8Bit();
-            int result = UPNP_AddPortMapping(urls.controlURL,
-                                             igdData.first.servicetype,
-                                             portString.constData(),
-                                             portString.constData(),
-                                             lanAddress,
-                                             UPNP_DESCRIPTION,
-                                             UPNP_WHITELISTED_PROTO,
-                                             nullptr,
-                                             UPNP_PERMANENT_LEASE);
-            if (result != UPNPCOMMAND_SUCCESS) {
-                qWarning() << "UPNP_AddPortMapping failed with result code" << result;
-
-            } else {
-                qDebug() << "Added IGD port mapping";
-                return true;
-            }
-        } else {
+        if (!validIGD()) {
             qDebug() << "No IGD found to add a port mapping to";
+            return false;
         }
-        return false;
+
+        const auto portString = QString("%1").arg(port).toLocal8Bit();
+        int result = UPNP_AddPortMapping(urls.controlURL,
+                                         igdData.first.servicetype,
+                                         portString.constData(),
+                                         portString.constData(),
+                                         lanAddress,
+                                         UPNP_DESCRIPTION,
+                                         UPNP_WHITELISTED_PROTO,
+                                         nullptr,
+                                         UPNP_PERMANENT_LEASE);
+        if (result != UPNPCOMMAND_SUCCESS) {
+            qWarning() << "UPNP_AddPortMapping failed with result code" << result;
+            return false;
+        }
+
+        qDebug() << "Added IGD port mapping";
+        return true;
     }
 
     bool tryDeletePortMapping(const quint16 port) override
     {
-        if (validIGDState == 1) {
-            const auto portString = QString("%1").arg(port).toLocal8Bit();
-            int result = UPNP_DeletePortMapping(urls.controlURL,
-                                                igdData.first.servicetype,
-                                                portString.constData(),
-                                                UPNP_WHITELISTED_PROTO,
-                                                nullptr);
-            if (result != UPNPCOMMAND_SUCCESS) {
-                qWarning() << "UPNP_DeletePortMapping failed with result code" << result;
-
-            } else {
-                qDebug() << "Deleted IGD port mapping";
-                return true;
-            }
-        } else {
+        if (!validIGD()) {
             qDebug() << "No IGD found to remove a port mapping from";
+            return false;
         }
-        return false;
+
+        const auto portString = QString("%1").arg(port).toLocal8Bit();
+        int result = UPNP_DeletePortMapping(urls.controlURL,
+                                            igdData.first.servicetype,
+                                            portString.constData(),
+                                            UPNP_WHITELISTED_PROTO,
+                                            nullptr);
+        if (result != UPNPCOMMAND_SUCCESS) {
+            qWarning() << "UPNP_DeletePortMapping failed with result code" << result;
+            return false;
+        }
+
+        qDebug() << "Deleted IGD port mapping";
+        return true;
     }
 };
 
