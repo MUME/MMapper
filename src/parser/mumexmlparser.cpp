@@ -106,6 +106,7 @@ void MumeXmlParser::parse(const IncomingData &data)
 {
     const QByteArray &line = data.line;
     m_lineToUser.clear();
+    m_lineFlags.clear();
 
     for (int index = 0; index < line.size(); index++) {
         if (m_readingTag) {
@@ -158,19 +159,15 @@ void MumeXmlParser::parse(const IncomingData &data)
         };
         sendToUser(m_lineToUser, isGoAhead(data.type));
 
-        if (m_readStatusTag) {
-            m_readStatusTag = false;
+        {
+            // Simplify the output and run actions
             QByteArray temp = m_lineToUser;
             if (!getConfig().parser.removeXmlTags) {
                 stripXmlEntities(temp);
             }
             QString tempStr = temp;
             tempStr = normalizeStringCopy(tempStr.trimmed());
-            if (Patterns::matchScore(tempStr)) {
-                // inform groupManager
-                temp = tempStr.toLocal8Bit();
-                emit sendScoreLineEvent(temp);
-            }
+            parseMudCommands(tempStr);
         }
     }
 }
@@ -193,12 +190,14 @@ bool MumeXmlParser::element(const QByteArray &line)
             case 'p':
                 if (line.startsWith("prompt")) {
                     m_xmlMode = XmlModeEnum::PROMPT;
+                    m_lineFlags |= LineFlagEnum::PROMPT;
                 }
                 break;
             case 'e':
                 if (line.startsWith("exits")) {
                     m_exits = nullString; // Reset string since payload can be from the 'exit' command
                     m_xmlMode = XmlModeEnum::EXITS;
+                    m_lineFlags |= LineFlagEnum::EXITS;
                 }
                 break;
             case 'r':
@@ -213,6 +212,7 @@ bool MumeXmlParser::element(const QByteArray &line)
                     m_promptFlags.reset();
                     m_exitsFlags.reset();
                     m_connectedRoomFlags.reset();
+                    m_lineFlags |= LineFlagEnum::ROOM;
                 }
                 break;
             case 'm':
@@ -254,20 +254,21 @@ bool MumeXmlParser::element(const QByteArray &line)
                 break;
             case 'w':
                 if (line.startsWith("weather")) {
-                    m_readWeatherTag = true;
+                    m_lineFlags |= LineFlagEnum::WEATHER;
                 }
                 break;
             case 's':
                 if (line.startsWith("status")) {
-                    m_readStatusTag = true;
+                    m_lineFlags |= LineFlagEnum::STATUS;
                     m_xmlMode = XmlModeEnum::NONE;
                 } else if (line.startsWith("snoop")) {
-                    m_readSnoopTag = true;
+                    m_lineFlags |= LineFlagEnum::SNOOP;
                 }
                 break;
             case 'h':
                 if (line.startsWith("header")) {
                     m_xmlMode = XmlModeEnum::HEADER;
+                    m_lineFlags |= LineFlagEnum::HEADER;
                 }
                 break;
             }
@@ -285,6 +286,7 @@ bool MumeXmlParser::element(const QByteArray &line)
             case 'n':
                 if (line.startsWith("name")) {
                     m_xmlMode = XmlModeEnum::NAME;
+                    m_lineFlags |= LineFlagEnum::NAME;
                 }
                 break;
             case 'd':
@@ -292,11 +294,13 @@ bool MumeXmlParser::element(const QByteArray &line)
                     m_xmlMode = XmlModeEnum::DESCRIPTION;
                     // might be empty but valid description
                     m_staticRoomDesc = RoomStaticDesc{""};
+                    m_lineFlags |= LineFlagEnum::DESCRIPTION;
                 }
                 break;
             case 't': // terrain tag only comes up in blindness or fog
                 if (line.startsWith("terrain")) {
                     m_xmlMode = XmlModeEnum::TERRAIN;
+                    m_lineFlags |= LineFlagEnum::TERRAIN;
                 }
                 break;
 
@@ -409,7 +413,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
     const auto &config = getConfig();
     m_stringBuffer = QString::fromLatin1(ch);
 
-    if (m_readSnoopTag && m_stringBuffer.length() > 3 && m_stringBuffer.at(0) == '&'
+    if (m_lineFlags.isSnoop() && m_stringBuffer.length() > 3 && m_stringBuffer.at(0) == '&'
         && m_stringBuffer.at(2) == ' ') {
         // Remove snoop prefix (i.e. "&J Exits: north.")
         m_stringBuffer = m_stringBuffer.mid(3);
@@ -424,15 +428,14 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
                 emulateExits(m_move);
             }
         } else {
-            parseMudCommands(m_stringBuffer);
+            m_lineFlags |= LineFlagEnum::NONE;
         }
-        if (m_readSnoopTag) {
+        if (m_lineFlags.isSnoop()) {
             if (m_descriptionReady) {
                 m_promptFlags.reset(); // Don't trust god prompts
                 m_queue.enqueue(m_move);
                 pathChanged();
                 move();
-                m_readSnoopTag = false;
             }
         }
         toUser.append(ch);
@@ -534,244 +537,14 @@ void MumeXmlParser::move()
 
 void MumeXmlParser::parseMudCommands(const QString &str)
 {
-    // REVISIT: Replace this if/else tree with a smarter data structure
-    // REVISIT: Utilize the XML tag for more context?
-    switch (str.at(0).toLatin1()) {
-    case 'Y':
-        if (str.startsWith("Your head stops stinging.")) {
-            emit sendCharacterAffectEvent(CharacterAffectEnum::BASHED, false);
-            return;
-
-        } else if (str.startsWith("You feel a cloak of blindness dissolve.")
-                   || str.startsWith(
-                          "Your head stops spinning and you can see clearly again.") // flash powder
-        ) {
-            emit sendCharacterAffectEvent(CharacterAffectEnum::BLIND, false);
-            return;
-        } else if (str.startsWith("You have been blinded!")
-                   || str.startsWith("An extremely bright flash of light stuns you!") // flash powder
-        ) {
-            emit sendCharacterAffectEvent(CharacterAffectEnum::BLIND, true);
-            return;
-        } else if (str.startsWith("You feel very sleepy... zzzzzz")) {
-            emit sendCharacterPositionEvent(CharacterPositionEnum::SLEEPING);
-            emit sendCharacterAffectEvent(CharacterAffectEnum::SLEPT, true);
-            return;
-        } else if (str.startsWith("You feel less tired.")) {
-            emit sendCharacterAffectEvent(CharacterAffectEnum::SLEPT, false);
-            return;
-        } else if (str.startsWith(
-                       "Your body turns numb as the poison speeds to your brain!") // Arachnia
-                   || str.startsWith("You feel bad.")                              // Generic poison
-                   || str.startsWith("You feel very sick.")                        // Disease?
-                   || str.startsWith("You suddenly feel a terrible headache!")     // Psylonia
-                   || str.startsWith("You feel sleepy.")                           // Psylonia tick
-                   || str.startsWith("Your limbs are becoming cold and heavy,"     // Psylonia tick
-                                     " your eyelids close.")) {
-            emit sendCharacterAffectEvent(CharacterAffectEnum::POISONED, true);
-            return;
-        } else if (str.startsWith("You are dead!")) {
-            m_queue.clear();
-            pathChanged();
-            emit releaseAllPaths();
-            markCurrentCommand();
-            emit sendCharacterPositionEvent(CharacterPositionEnum::DEAD);
-            return;
-        } else if (str.startsWith("You failed to climb")) {
-            if (!m_queue.isEmpty())
-                m_queue.dequeue();
-            m_queue.prepend(CommandEnum::NONE); // REVISIT: Do we need this?
-            pathChanged();
-            return;
-        } else if (str.startsWith("You flee head")) {
-            m_queue.enqueue(CommandEnum::LOOK);
-            return;
-        } else if (str.startsWith("You follow")) {
-            m_queue.enqueue(CommandEnum::LOOK);
-            return;
-        } else if (str.startsWith("You need to swim to go there.")
-                   || str.startsWith("You cannot ride there.")
-                   || str.startsWith("You are too exhausted.")
-                   || str.startsWith("You are too exhausted to ride.")
-                   || str.startsWith("Your mount refuses to follow your orders!")
-                   || str.startsWith("You failed swimming there.")
-                   || str.startsWith("You can't go into deep water!")
-                   || str.startsWith("You unsuccessfully try to break through the ice.")
-                   || str.startsWith("Your boat cannot enter this place.")) {
-            if (!m_queue.isEmpty())
-                m_queue.dequeue();
-            pathChanged();
-            return;
-        } else if (str.startsWith("You quietly scout")) {
-            m_queue.prepend(CommandEnum::SCOUT);
-            return;
-        } else if (str.startsWith("You go to sleep.")
-                   || str.startsWith("You are already sound asleep.")) {
-            emit sendCharacterPositionEvent(CharacterPositionEnum::SLEEPING);
-            return;
-        } else if (str.startsWith("You wake, and sit up.") || str.startsWith("You sit down.")
-                   || str.startsWith("You stop resting and sit up.")
-                   || str.startsWith("You're sitting already.")) {
-            emit sendCharacterPositionEvent(CharacterPositionEnum::SITTING);
-            return;
-        } else if (str.startsWith("You rest your tired bones.")
-                   || str.startsWith("You sit down and rest your tired bones.")
-                   || str.startsWith("You are already resting.")) {
-            emit sendCharacterPositionEvent(CharacterPositionEnum::RESTING);
-            return;
-        } else if (str.startsWith("You stop resting and stand up.")
-                   || str.startsWith("You stand up.")
-                   || str.startsWith("You are already standing.")) {
-            emit sendCharacterPositionEvent(CharacterPositionEnum::STANDING);
-            return;
-        } else if (str.startsWith("You are incapacitated and will slowly die, if not aided.")
-                   || str.startsWith("You are in a pretty bad shape, unable to do anything!")
-                   || str.startsWith(
-                          "You're stunned and will probably die soon if no-one helps you.")
-                   || str.startsWith("You are mortally wounded and will die soon if not aided.")) {
-            emit sendCharacterPositionEvent(CharacterPositionEnum::INCAPACITATED);
-            return;
-        } else if (str.startsWith("You bleed from open wounds.")) {
-            emit sendCharacterAffectEvent(CharacterAffectEnum::BLEEDING, true);
-            return;
-        } else if (str.startsWith("You begin to feel hungry.")
-                   || str.startsWith("You are hungry.")) {
-            emit sendCharacterAffectEvent(CharacterAffectEnum::HUNGRY, true);
-            return;
-        } else if (str.startsWith("You begin to feel thirsty.")
-                   || str.startsWith("You are thirsty.")) {
-            emit sendCharacterAffectEvent(CharacterAffectEnum::THIRSTY, true);
-            return;
-        } else if (str.startsWith("You do not feel thirsty anymore.")
-                   || str.startsWith("You feel less thirsty.") // create water
-        ) {
-            emit sendCharacterAffectEvent(CharacterAffectEnum::THIRSTY, false);
-            return;
-        } else if (str.startsWith("You are full.")) {
-            emit sendCharacterAffectEvent(CharacterAffectEnum::HUNGRY, false);
-            return;
-        } else if (str.startsWith("You can feel the broken bones within you heal "
-                                  "and reshape themselves") // cure critic
-        ) {
-            emit sendCharacterAffectEvent(CharacterAffectEnum::BLEEDING, false);
-            return;
-        }
-        break;
-    case 'T':
-        if (str.startsWith("The current time is")) {
-            m_mumeClock->parseClockTime(str);
-            return;
-
-            // The door
-        } else if (str.endsWith("seems to be closed.")
-                   // The (a|de)scent
-                   || str.endsWith("is too steep, you need to climb to go there.")) {
-            if (!m_queue.isEmpty())
-                m_queue.dequeue();
-            pathChanged();
-            return;
-
-        } else if (str.startsWith("The venom enters your body!")        // Venom
-                   || str.startsWith("The venom runs into your veins!") // Venom tick
-        ) {
-            emit sendCharacterAffectEvent(CharacterAffectEnum::POISONED, true);
-            return;
-        }
-        break;
-    case 'A':
-        if (str.startsWith("Alas, you cannot go that way...")
-            // A pack horse
-            || str.endsWith("is too exhausted.")) {
-            if (!m_queue.isEmpty())
-                m_queue.dequeue();
-            pathChanged();
-            return;
-
-        } else if (str.startsWith("A warm feeling runs through your body, you feel better.")) {
-            // Remove poison <magic>
-            emit sendCharacterAffectEvent(CharacterAffectEnum::POISONED, false);
-            return;
-
-        } else if (str.startsWith("A warm feeling fills your body.")) {
-            // Heal <magic>
-            emit sendCharacterAffectEvent(CharacterAffectEnum::POISONED, false);
-            return;
-        } else if (str.startsWith("A hot flush overwhelms your brain and makes you dizzy.")) {
-            emit sendCharacterAffectEvent(CharacterAffectEnum::POISONED, true);
-            return;
-        }
-        break;
-
-    case 'N':
-        if (str.startsWith("No way! You are fighting for your life!")
-            || str.startsWith("Nah... You feel too relaxed to do that.")) {
-            if (!m_queue.isEmpty())
-                m_queue.dequeue();
-            pathChanged();
-            return;
-        }
-        break;
-    case 'M':
-        if (str.startsWith("Maybe you should get on your feet first?")) {
-            if (!m_queue.isEmpty())
-                m_queue.dequeue();
-            pathChanged();
-            return;
-        }
-        break;
-    case 'I':
-        if (str.startsWith("In your dreams, or what?")) {
-            if (!m_queue.isEmpty())
-                m_queue.dequeue();
-            pathChanged();
-            return;
-        }
-        break;
-    case 'Z':
-        // ZBLAM!
-        if (str.endsWith("doesn't want you riding him anymore.")    // pack horse / pony
-            || str.endsWith("doesn't want you riding her anymore.") // donkey
-            || str.endsWith("doesn't want you riding it anymore.")  // hungry warg
-        ) {
-            if (!m_queue.isEmpty())
-                m_queue.dequeue();
-            pathChanged();
-            return;
-        }
-        break;
-    case '-':
-        if (str.startsWith("- antidote")) {
-            emit sendCharacterAffectEvent(CharacterAffectEnum::POISONED, false);
-            return;
-        } else if (str.startsWith("- poison (type: poison).")) {
-            emit sendCharacterAffectEvent(CharacterAffectEnum::POISONED, true);
-            return;
-        } else if (!str.startsWith("- a light wound") && !str.endsWith("bound)")
-                   && str.contains("wound at the")) {
-            emit sendCharacterAffectEvent(CharacterAffectEnum::BLEEDING, true);
-            return;
-        }
-    };
-
-    if (str.endsWith("of the Third Age.")) {
-        m_mumeClock->parseMumeTime(str);
+    const auto stdString = str.toStdString();
+    if (evalActionMap(StringView{stdString}))
         return;
-    }
 
-    // REVISIT: Move this to only be detected on <damage> XML tag?
-    // What about custom mob bashes?
-    if (str.endsWith("sends you sprawling with a powerful bash.")          // bash
-        || str.endsWith("leaps at your throat and sends you sprawling.")   // cave-lion
-        || str.endsWith("whips its tail around, and sends you sprawling!") // cave-worm
-        || str.endsWith("sends you sprawling.")                            // various trees
-    ) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::BASHED, true);
-        return;
-    }
-
-    // Certain weather events happen on ticks
-    if (m_readWeatherTag) {
-        m_readWeatherTag = false;
+    // REVISIT: Add XML tag-based actions that match on any tag
+    // alternatively pull the parsing logic into an "action"
+    if (m_lineFlags.isWeather()) {
+        // Certain weather events happen on ticks
         m_mumeClock->parseWeather(str);
         return;
     }

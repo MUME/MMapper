@@ -247,6 +247,7 @@ set(mmapper_SRCS
     pandoragroup/mmapper2group.h
     parser/Abbrev.cpp
     parser/Abbrev.h
+    parser/AbstractParser-Actions.cpp
     parser/AbstractParser-Commands.cpp
     parser/AbstractParser-Commands.h
     parser/AbstractParser-Config.cpp
@@ -254,6 +255,8 @@ set(mmapper_SRCS
     parser/AbstractParser-Room.cpp
     parser/AbstractParser-Utils.cpp
     parser/AbstractParser-Utils.h
+    parser/Action.cpp
+    parser/Action.h
     parser/CommandId.cpp
     parser/CommandId.h
     parser/CommandQueue.cpp
@@ -262,6 +265,7 @@ set(mmapper_SRCS
     parser/DoorAction.cpp
     parser/DoorAction.h
     parser/ExitsFlags.h
+    parser/LineFlags.h
     parser/PromptFlags.h
     parser/abstractparser.cpp
     parser/abstractparser.h

@@ -841,6 +841,7 @@ void AbstractParser::addSpecialCommand(const char *const s,
         key.resize(static_cast<unsigned int>(i));
         auto it = map.find(key);
         if (it == map.end())
+
             map.emplace(key, ParserRecord{fullName, callback, help});
         else {
             qWarning() << ("unable to add " + ::toQStringLatin1(key) + " for " + abb.describe());

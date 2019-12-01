@@ -25,9 +25,11 @@
 #include "../mapdata/mmapper2room.h"
 #include "../mapdata/roomselection.h"
 #include "../pandoragroup/GroupManagerApi.h"
+#include "../pandoragroup/mmapper2character.h"
 #include "../proxy/ProxyParserApi.h"
 #include "../proxy/telnetfilter.h"
 #include "AbstractParser-Utils.h"
+#include "Action.h"
 #include "CommandId.h"
 #include "CommandQueue.h"
 #include "ConnectedRoomFlags.h"
@@ -81,6 +83,9 @@ private:
     QByteArray m_newLineTerminator;
     const char &prefixChar;
 
+private:
+    ActionRecordMap m_actionMap;
+
 protected:
     QString m_exits = nullString;
     ExitsFlagsType m_exitsFlags;
@@ -113,6 +118,13 @@ signals:
     void sig_mapChanged();
     void sig_graphicsSettingsChanged();
     void releaseAllPaths();
+    // for group manager
+    void sendScoreLineEvent(QByteArray);
+    void sendPromptLineEvent(QByteArray);
+    void sendCharacterPositionEvent(CharacterPositionEnum);
+    void sendCharacterAffectEvent(CharacterAffectEnum, bool);
+    // for clock
+    void mumeTime(QString);
 
     // used to log
     void log(const QString &, const QString &);
@@ -172,6 +184,8 @@ public:
     void dirsCommand(const RoomFilter &f);
     void markCurrentCommand();
 
+    bool evalActionMap(StringView line);
+
 private:
     // NOTE: This declaration only exists to avoid the warning
     // about the "event" signal hiding this function function.
@@ -212,6 +226,8 @@ private:
     void doSearchCommand(StringView view);
     void doGetDirectionsCommand(StringView view);
     void toggleTrollMapping();
+
+    void initActionMap();
 
     void initSpecialCommandMap();
     void addSpecialCommand(const char *s,

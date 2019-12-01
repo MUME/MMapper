@@ -142,6 +142,7 @@ AbstractParser::AbstractParser(MapData *const md,
     m_offlineCommandTimer.setSingleShot(true);
 
     initSpecialCommandMap();
+    initActionMap();
 }
 
 AbstractParser::~AbstractParser() = default;

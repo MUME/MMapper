@@ -12,8 +12,8 @@
 #include <QtCore>
 #include <QtGlobal>
 
-#include "../pandoragroup/mmapper2character.h"
 #include "CommandId.h"
+#include "LineFlags.h"
 #include "abstractparser.h"
 
 class MapData;
@@ -26,8 +26,6 @@ class QObject;
 struct IncomingData;
 
 // #define XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
-
-enum class XmlModeEnum { NONE, ROOM, NAME, DESCRIPTION, EXITS, PROMPT, TERRAIN, HEADER };
 
 class MumeXmlParser : public AbstractParser
 {
@@ -43,10 +41,11 @@ public:
 public slots:
     void parseNewMudInput(const IncomingData &data) override;
 
-protected:
+private:
     QDataStream *debugStream = nullptr;
     QFile *file = nullptr;
 
+private:
     static const QByteArray greaterThanChar;
     static const QByteArray lessThanChar;
     static const QByteArray greaterThanTemplate;
@@ -54,24 +53,28 @@ protected:
     static const QByteArray ampersand;
     static const QByteArray ampersandTemplate;
 
+private:
     void parseMudCommands(const QString &str);
 
+private:
     QByteArray characters(QByteArray &ch);
     bool element(const QByteArray &);
 
+private:
     CommandEnum m_move = CommandEnum::LOOK;
-    XmlModeEnum m_xmlMode = XmlModeEnum::NONE;
-
     void move();
+
+private:
+    enum class XmlModeEnum { NONE, ROOM, NAME, DESCRIPTION, EXITS, PROMPT, TERRAIN, HEADER };
+    XmlModeEnum m_xmlMode = XmlModeEnum::NONE;
+    LineFlags m_lineFlags;
+
     QByteArray m_lineToUser;
     QByteArray m_tempCharacters;
     QByteArray m_tempTag;
     QString m_stringBuffer;
     bool m_readingTag = false;
-    bool m_readStatusTag = false;
-    bool m_readWeatherTag = false;
     bool m_gratuitous = false;
-    bool m_readSnoopTag = false;
     bool m_exitsReady = false;
     bool m_descriptionReady = false;
 
@@ -82,11 +85,4 @@ protected:
 
 private:
     void stripXmlEntities(QByteArray &ch);
-
-signals:
-    void sendScoreLineEvent(QByteArray);
-    void sendPromptLineEvent(QByteArray);
-    void mumeTime(QString);
-    void sendCharacterPositionEvent(CharacterPositionEnum);
-    void sendCharacterAffectEvent(CharacterAffectEnum, bool);
 };

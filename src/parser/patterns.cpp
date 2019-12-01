@@ -80,12 +80,6 @@ bool Patterns::matchPattern(QByteArray pattern, const QByteArray &str)
     return false;
 }
 
-bool Patterns::matchScore(const QString &str)
-{
-    static const QRegularExpression re(R"(\d+/\d+ hits(?:, \d+/\d+ mana,)? and \d+/\d+ moves.)");
-    return re.match(str).hasMatch();
-}
-
 bool Patterns::matchNoDescriptionPatterns(const QString &str)
 {
     for (auto &pattern : getConfig().parser.noDescriptionPatternsList) {

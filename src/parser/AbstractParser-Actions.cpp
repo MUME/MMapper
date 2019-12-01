@@ -1,0 +1,264 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// Copyright (C) 2019 The MMapper Authors
+// Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
+
+#include "abstractparser.h"
+
+#include <cassert>
+#include <memory>
+
+#include "../clock/mumeclock.h"
+#include "../pandoragroup/mmapper2group.h"
+#include "Action.h"
+
+void AbstractParser::initActionMap()
+{
+    auto &map = m_actionMap;
+    map.clear();
+
+    auto addStartsWith = [&map](const std::string &match, const ActionCallback &callback) {
+        assert(!match.empty());
+        const char hint = match[0];
+        map.emplace(hint, std::make_unique<StartsWithAction>(match, callback));
+    };
+
+    auto addEndsWith = [&map](const std::string &match, const ActionCallback &callback) {
+        assert(!match.empty());
+        const char hint = 0;
+        map.emplace(hint, std::make_unique<EndsWithAction>(match, callback));
+    };
+
+    auto addRegex = [&map](const std::string &match, const ActionCallback &callback) {
+        assert(!match.empty());
+        const char hint = 0;
+        map.emplace(hint, std::make_unique<RegexAction>(match, callback));
+    };
+
+    /// Positions
+    auto sleeping = [this](StringView /*view*/) {
+        emit sendCharacterPositionEvent(CharacterPositionEnum::SLEEPING);
+    };
+    addStartsWith("You go to sleep.", sleeping);
+    addStartsWith("You are already sound asleep.", sleeping);
+    auto sitting = [this](StringView /*view*/) {
+        emit sendCharacterPositionEvent(CharacterPositionEnum::SITTING);
+    };
+    addStartsWith("You wake, and sit up.", sitting);
+    addStartsWith("You sit down.", sitting);
+    addStartsWith("You stop resting and sit up.", sitting);
+    addStartsWith("You're sitting already.", sitting);
+    addStartsWith("You feel better and sit up.", sitting); // incap -> sitting
+    auto resting = [this](StringView /*view*/) {
+        emit sendCharacterPositionEvent(CharacterPositionEnum::RESTING);
+    };
+    addStartsWith("You rest your tired bones.", resting);
+    addStartsWith("You sit down and rest your tired bones.", resting);
+    addStartsWith("You are already resting.", resting);
+    auto standing = [this](StringView /*view*/) {
+        emit sendCharacterPositionEvent(CharacterPositionEnum::STANDING);
+    };
+    addStartsWith("You stop resting and stand up.", standing);
+    addStartsWith("You stand up.", standing);
+    addStartsWith("You are already standing.", standing);
+    auto incap = [this](StringView /*view*/) {
+        emit sendCharacterPositionEvent(CharacterPositionEnum::INCAPACITATED);
+    };
+    addStartsWith("You are incapacitated and will slowly die, if not aided.", incap);
+    addStartsWith("You are in a pretty bad shape, unable to do anything!", incap);
+    addStartsWith("You're stunned and will probably die soon if no-one helps you.", incap);
+    addStartsWith("You are mortally wounded and will die soon if not aided.", incap);
+    auto dead = [this](StringView /*view*/) {
+        m_queue.clear();
+        pathChanged();
+        emit releaseAllPaths();
+        markCurrentCommand();
+        emit sendCharacterPositionEvent(CharacterPositionEnum::DEAD);
+    };
+    addStartsWith("You are dead!", dead);
+
+    /// Bash
+    auto bashOff = [this](StringView /*view*/) {
+        emit sendCharacterAffectEvent(CharacterAffectEnum::BASHED, false);
+    };
+    auto bashOn = [this](StringView /*view*/) {
+        emit sendCharacterAffectEvent(CharacterAffectEnum::BASHED, true);
+    };
+    addStartsWith("Your head stops stinging.", bashOff);
+    // No-bash mob
+    addStartsWith("You foolishly hurl yourself at", bashOn);
+    // Standard bash skill
+    addEndsWith("sends you sprawling with a powerful bash.", bashOn);
+    // cave-lion
+    addEndsWith("leaps at your throat and sends you sprawling.", bashOn);
+    // cave-worm
+    addEndsWith("whips its tail around, and sends you sprawling!", bashOn);
+    // various trees
+    addEndsWith("sends you sprawling.", bashOn);
+
+    /// Blind
+    auto blindOff = [this](StringView /*view*/) {
+        emit sendCharacterAffectEvent(CharacterAffectEnum::BLIND, false);
+    };
+    auto blindOn = [this](StringView /*view*/) {
+        emit sendCharacterAffectEvent(CharacterAffectEnum::BLIND, true);
+    };
+    // blind spell
+    addStartsWith("You have been blinded!", blindOn);
+    addStartsWith("You feel a cloak of blindness dissolve.", blindOff);
+    // flash powder
+    addStartsWith("An extremely bright flash of light stuns you!", blindOn);
+    addStartsWith("Your head stops spinning and you can see clearly again.", blindOff);
+
+    /// Bleeding
+    auto bleedOff = [this](StringView /*view*/) {
+        emit sendCharacterAffectEvent(CharacterAffectEnum::BLEEDING, false);
+    };
+    auto bleedOn = [this](StringView /*view*/) {
+        emit sendCharacterAffectEvent(CharacterAffectEnum::BLEEDING, true);
+    };
+    addStartsWith("You bleed from open wounds.", bleedOn);
+    addRegex(
+        R"(- a (deep|serious|grievous|critical) wound at the .+ \((clean|dirty|dirty, suppurating)\))",
+        bleedOn);
+    // Cure critic
+    addEndsWith("You can feel the broken bones within you heal and reshape themselves", bleedOff);
+
+    /// Slept
+    auto sleptOff = [this](StringView /*view*/) {
+        emit sendCharacterAffectEvent(CharacterAffectEnum::SLEPT, false);
+    };
+    auto sleptOn = [this](StringView /*view*/) {
+        emit sendCharacterAffectEvent(CharacterAffectEnum::SLEPT, true);
+        emit sendCharacterPositionEvent(CharacterPositionEnum::SLEEPING);
+    };
+    addStartsWith("You feel very sleepy... zzzzzz", sleptOn);
+    addStartsWith("You feel less tired.", sleptOff);
+
+    /// Poisoned
+    auto poisonOff = [this](StringView /*view*/) {
+        emit sendCharacterAffectEvent(CharacterAffectEnum::POISONED, false);
+    };
+    auto poisonOn = [this](StringView /*view*/) {
+        emit sendCharacterAffectEvent(CharacterAffectEnum::POISONED, true);
+    };
+    // REVISIT: Is this a disease message?
+    addStartsWith("You feel very sick.", poisonOn);
+    // Arachnia
+    addStartsWith("Your body turns numb as the poison speeds to your brain!", poisonOn);
+    addStartsWith("You feel sleepy.", poisonOn);
+    addStartsWith("Your limbs are becoming cold and heavy, your eyelids close.", poisonOn);
+    // Generic poison
+    addStartsWith("You feel bad.", poisonOn);
+    addStartsWith("- poison (type: poison).", poisonOn);
+    // Psylonia
+    addStartsWith("You suddenly feel a terrible headache!", poisonOn);
+    addStartsWith("A hot flush overwhelms your brain and makes you dizzy.", poisonOn);
+    // Venom
+    addStartsWith("The venom enters your body!", poisonOn);
+    addStartsWith("The venom runs into your veins!", poisonOn);
+    // Remove poison
+    addStartsWith("A warm feeling runs through your body, you feel better.", poisonOff);
+    // Heal
+    addStartsWith("A warm feeling fills your body.", poisonOff);
+    // Antidote
+    addStartsWith("- antidote", poisonOff);
+
+    /// Hungry
+    auto hungerOff = [this](StringView /*view*/) {
+        emit sendCharacterAffectEvent(CharacterAffectEnum::HUNGRY, false);
+    };
+    auto hungerOn = [this](StringView /*view*/) {
+        emit sendCharacterAffectEvent(CharacterAffectEnum::HUNGRY, true);
+    };
+    addStartsWith("You begin to feel hungry.", hungerOn);
+    addStartsWith("You are hungry.", hungerOn);
+    addStartsWith("You are full.", hungerOff);
+
+    /// Thirsty
+    auto thirstOff = [this](StringView /*view*/) {
+        emit sendCharacterAffectEvent(CharacterAffectEnum::THIRSTY, false);
+    };
+    auto thirstOn = [this](StringView /*view*/) {
+        emit sendCharacterAffectEvent(CharacterAffectEnum::THIRSTY, true);
+    };
+    addStartsWith("You begin to feel thirsty.", thirstOn);
+    addStartsWith("You are thirsty.", thirstOn);
+    addStartsWith("You do not feel thirsty anymore.", thirstOff);
+    // create water
+    addStartsWith("You feel less thirsty.", thirstOff);
+
+    /// Path Machine: Prespam
+    auto failedMovement = [this](StringView /*view*/) {
+        if (!m_queue.isEmpty())
+            m_queue.dequeue();
+        pathChanged();
+    };
+    addStartsWith("You failed to climb", failedMovement);
+    addStartsWith("You need to swim to go there.", failedMovement);
+    addStartsWith("You cannot ride there.", failedMovement);
+    addStartsWith("You are too exhausted.", failedMovement);
+    addStartsWith("You are too exhausted to ride.", failedMovement);
+    addStartsWith("Your mount refuses to follow your orders!", failedMovement);
+    addStartsWith("You failed swimming there.", failedMovement);
+    addStartsWith("You can't go into deep water!", failedMovement);
+    addStartsWith("You unsuccessfully try to break through the ice.", failedMovement);
+    addStartsWith("Your boat cannot enter this place.", failedMovement);
+    addStartsWith("Alas, you cannot go that way...", failedMovement);
+    addStartsWith("No way! You are fighting for your life!", failedMovement);
+    addStartsWith("Nah... You feel too relaxed to do that.", failedMovement);
+    addStartsWith("Maybe you should get on your feet first?", failedMovement);
+    addStartsWith("In your dreams, or what?", failedMovement);
+    addStartsWith("If you still want to try, you must 'climb' there.", failedMovement);
+    // The door
+    addEndsWith("seems to be closed.", failedMovement);
+    // The (a|de)scent
+    addEndsWith("is too steep, you need to climb to go there.", failedMovement);
+    // A pack horse
+    addEndsWith("is too exhausted.", failedMovement);
+    auto zblam = [this](StringView /*view*/) {
+        if (!m_queue.isEmpty())
+            m_queue.dequeue();
+        pathChanged();
+        emit sendCharacterPositionEvent(CharacterPositionEnum::RESTING);
+    };
+    addRegex(R"(^ZBLAM! .+ doesn't want you riding (him|her|it) anymore.$)", zblam);
+
+    auto look = [this](StringView /*view*/) { m_queue.enqueue(CommandEnum::LOOK); };
+    addStartsWith("You flee head", look);
+    addStartsWith("You follow", look);
+
+    auto scout = [this](StringView /*view*/) { m_queue.enqueue(CommandEnum::SCOUT); };
+    addStartsWith("You quietly scout", scout);
+
+    /// Time
+    addStartsWith("The current time is",
+                  [this](StringView view) { m_mumeClock->parseClockTime(view.toQString()); });
+    addEndsWith("of the Third Age.",
+                [this](StringView view) { m_mumeClock->parseMumeTime(view.toQString()); });
+
+    /// Score
+    addRegex(R"(^\d+/\d+ hits(, \d+/\d+ mana,)? and \d+/\d+ moves.$)",
+             [this](StringView view) { emit sendScoreLineEvent(view.toQByteArray()); });
+}
+
+bool AbstractParser::evalActionMap(StringView line)
+{
+    if (line.empty())
+        return false;
+
+    auto &map = m_actionMap;
+
+    auto range = map.equal_range(line.firstChar());
+    for (auto it = range.first; it != range.second; ++it) {
+        const std::unique_ptr<IAction> &action = it->second;
+        action->match(line);
+    }
+
+    range = map.equal_range(0);
+    for (auto it = range.first; it != range.second; ++it) {
+        const std::unique_ptr<IAction> &action = it->second;
+        action->match(line);
+    }
+
+    return false;
+}
