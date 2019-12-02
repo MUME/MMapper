@@ -65,7 +65,7 @@ void RemoteEdit::cancel(const RemoteEditSession *session)
         const QByteArray &buffer
             = QString("%1E%2\n%3").arg("~$#E").arg(keystr.length()).arg(keystr).toLatin1();
 
-        qDebug() << "Cancelling session" << session->getKey() << buffer;
+        qDebug() << "Cancelling session" << session->getKey();
         emit sendToSocket(buffer);
     }
 
@@ -94,7 +94,7 @@ void RemoteEdit::save(const RemoteEditSession *session)
                                        .toLatin1();
 
         // MPI is always Latin1
-        qDebug() << "Saving session" << session->getKey() << buffer;
+        qDebug() << "Saving session" << session->getKey();
         emit sendToSocket(buffer);
     } else {
         qWarning() << "Session" << session->getId()
