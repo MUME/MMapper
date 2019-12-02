@@ -233,8 +233,7 @@ void TestExpandoraCommon::roomCompareTest_data()
         exitFlags.set(ExitDirEnum::NORTH,
                       ExitFlags{ExitFlagEnum::DOOR | ExitFlagEnum::EXIT}); // Remove road north
         ConnectedRoomFlagsType connectedFlags;
-        connectedFlags.setDirectSunlight(ExitDirEnum::NORTH,
-                                           DirectSunlightEnum::SAW_DIRECT_SUN);
+        connectedFlags.setDirectSunlight(ExitDirEnum::NORTH, DirectSunlightEnum::SAW_DIRECT_SUN);
         connectedFlags.setDirectSunlight(ExitDirEnum::EAST, DirectSunlightEnum::SAW_DIRECT_SUN);
         connectedFlags.setDirectSunlight(ExitDirEnum::WEST, DirectSunlightEnum::SAW_DIRECT_SUN);
         connectedFlags.setDirectSunlight(ExitDirEnum::DOWN, DirectSunlightEnum::SAW_DIRECT_SUN);
@@ -389,8 +388,7 @@ void TestExpandoraCommon::roomCompareTest_data()
         PromptFlagsType promptFlags = PromptFlagsType::fromRoomTerrainType(room->getTerrainType());
         promptFlags.setDark();
         ConnectedRoomFlagsType connectedFlags;
-        connectedFlags.setDirectSunlight(ExitDirEnum::NORTH,
-                                           DirectSunlightEnum::SAW_DIRECT_SUN);
+        connectedFlags.setDirectSunlight(ExitDirEnum::NORTH, DirectSunlightEnum::SAW_DIRECT_SUN);
         connectedFlags.setValid();
         room->setLightType(RoomLightEnum::UNDEFINED);
         room->setSundeathType(RoomSundeathEnum::NO_SUNDEATH);

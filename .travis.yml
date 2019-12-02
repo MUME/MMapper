@@ -166,7 +166,7 @@ before_script:
     if [ "$CODESTYLE" != "" ]; then
       $CLANG_FORMAT -version
       find . -iname *.h -o -iname *.c -o -iname *.cpp -o -iname *.hpp | xargs -n 1 -P 2 $CLANG_FORMAT -style=file -i -fallback-style=none
-        if  [[ -n $(git diff) ]]; then
+      if  [[ -n $(git diff) ]]; then
         echo
         git diff
         echo
