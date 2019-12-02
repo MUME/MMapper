@@ -371,9 +371,6 @@ static bool isCommand(const std::string &str, const CommandEnum cmd)
 
 bool AbstractParser::parseUserCommands(const QString &input)
 {
-    if (tryParseGenericDoorCommand(input))
-        return false;
-
     if (input.startsWith(prefixChar)) {
         std::string s = ::toStdStringLatin1(input);
         auto view = StringView{s}.trim();
@@ -384,6 +381,9 @@ bool AbstractParser::parseUserCommands(const QString &input)
         sendPromptToUser();
         return false;
     }
+
+    if (tryParseGenericDoorCommand(input))
+        return false;
 
     return parseSimpleCommand(input);
 }
