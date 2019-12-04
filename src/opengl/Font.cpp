@@ -22,6 +22,7 @@
 #include "../display/MapCanvasData.h"
 #include "../display/Textures.h"
 #include "../global/Debug.h"
+#include "../global/hash.h"
 #include "../global/utils.h"
 #include "FontFormatFlags.h"
 #include "OpenGL.h"
@@ -59,7 +60,7 @@ struct std::hash<IntPair>
     std::size_t operator()(const IntPair &ip) const noexcept
     {
 #define CAST(i) static_cast<uint64_t>(static_cast<uint32_t>(i))
-        return std::hash<uint64_t>{}(CAST(ip.first) | (CAST(ip.second) << 32));
+        return numeric_hash(CAST(ip.first) | (CAST(ip.second) << 32));
 #undef CAST
     }
 };

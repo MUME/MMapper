@@ -99,6 +99,7 @@ set(mmapper_SRCS
     global/entities.cpp
     global/entities.h
     global/enums.h
+    global/hash.h
     global/io.cpp
     global/io.h
     global/macros.h
