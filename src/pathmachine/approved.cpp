@@ -25,24 +25,30 @@ Approved::~Approved()
     }
 }
 
-void Approved::receiveRoom(RoomAdmin *sender, const Room *perhaps)
+void Approved::receiveRoom(RoomAdmin *const sender, const Room *const perhaps)
 {
     auto &event = myEvent.deref();
 
-    if (matchedRoom == nullptr) {
-        const ComparisonResultEnum indicator = Room::compare(perhaps, event, matchingTolerance);
-        if (indicator != ComparisonResultEnum::DIFFERENT) {
-            matchedRoom = perhaps;
-            owner = sender;
-            if (indicator == ComparisonResultEnum::TOLERANCE && event.getNumSkipped() == 0) {
-                update = true;
-            }
-        } else {
-            sender->releaseRoom(*this, perhaps->getId());
-        }
-    } else {
-        moreThanOne = true;
-        sender->releaseRoom(*this, perhaps->getId());
+    const auto id = perhaps->getId();
+    const auto cmp = Room::compare(perhaps, event, matchingTolerance);
+
+    if (cmp == ComparisonResultEnum::DIFFERENT) {
+        sender->releaseRoom(*this, id);
+        return;
+    }
+
+    if (matchedRoom != nullptr) {
+        // moreThanOne should only take effect if multiple distinct rooms match
+        if (matchedRoom->getId() != id)
+            moreThanOne = true;
+        sender->releaseRoom(*this, id);
+        return;
+    }
+
+    matchedRoom = perhaps;
+    owner = sender;
+    if (cmp == ComparisonResultEnum::TOLERANCE && event.getNumSkipped() == 0) {
+        update = true;
     }
 }
 
@@ -51,8 +57,9 @@ const Room *Approved::oneMatch() const
     return moreThanOne ? nullptr : matchedRoom;
 }
 
-void Approved::reset()
+void Approved::releaseMatch()
 {
+    // Release the current candidate in order to receive additional candidates
     if (matchedRoom != nullptr) {
         owner->releaseRoom(*this, matchedRoom->getId());
     }

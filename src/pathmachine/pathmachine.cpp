@@ -174,12 +174,12 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
 
     if (perhaps == nullptr) {
         // try to match by reverse exit
-        appr.reset();
+        appr.releaseMatch();
         tryExits(getMostLikelyRoom(), appr, event, false);
         perhaps = appr.oneMatch();
         if (perhaps == nullptr) {
             // try to match by coordinate
-            appr.reset();
+            appr.releaseMatch();
             tryCoordinate(getMostLikelyRoom(), appr, event);
             perhaps = appr.oneMatch();
             if (perhaps == nullptr) {
@@ -195,7 +195,7 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
                 // but it would also accept ExitDirEnum::UNKNOWN,
                 // which in the context of this function would mean "no move."
                 if (eDir.z == 0) {
-                    appr.reset();
+                    appr.releaseMatch();
                     Coordinate c = getMostLikelyRoomPosition() + eDir;
                     c.z--;
                     emit lookingForRooms(appr, c);
@@ -203,7 +203,7 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
 
                     if (perhaps == nullptr) {
                         // try to match by coordinate one step above expected
-                        appr.reset();
+                        appr.releaseMatch();
                         c.z += 2;
                         emit lookingForRooms(appr, c);
                         perhaps = appr.oneMatch();

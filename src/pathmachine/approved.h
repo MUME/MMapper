@@ -17,8 +17,8 @@ class Approved : public RoomRecipient
 private:
     SigParseEvent myEvent;
     const Room *matchedRoom = nullptr;
-    const int matchingTolerance;
     RoomAdmin *owner = nullptr;
+    const int matchingTolerance;
     bool moreThanOne = false;
     bool update = false;
 
@@ -30,7 +30,7 @@ public:
     void receiveRoom(RoomAdmin *, const Room *) override;
     const Room *oneMatch() const;
     bool needsUpdate() const { return update; }
-    void reset();
+    void releaseMatch();
 
 public:
     Approved() = delete;
