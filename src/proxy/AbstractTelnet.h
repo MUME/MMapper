@@ -168,7 +168,10 @@ class AbstractTelnet : public QObject
     Q_OBJECT
 
 public:
-    explicit AbstractTelnet(TextCodec textCodec, bool debug = false, QObject *parent = nullptr);
+    explicit AbstractTelnet(TextCodec textCodec,
+                            bool debug = false,
+                            QObject *parent = nullptr,
+                            const QByteArray &defaultTermType = "unknown");
 
     QByteArray getTerminalType() const { return termType; }
     /* unused */
@@ -240,6 +243,7 @@ protected:
     } current{};
 
     /* Terminal Type */
+    const QByteArray m_defaultTermType;
     QByteArray termType;
 
     /** amount of bytes sent up to now */

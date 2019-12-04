@@ -144,9 +144,13 @@ struct TelnetFormatter final : public AppendBuffer
     void addSubnegEnd() { addCommand(TN_SE); }
 };
 
-AbstractTelnet::AbstractTelnet(TextCodec textCodec, bool debug, QObject *const parent)
+AbstractTelnet::AbstractTelnet(TextCodec textCodec,
+                               const bool debug,
+                               QObject *const parent,
+                               const QByteArray &defaultTermType)
     : QObject(parent)
     , textCodec{std::move(textCodec)}
+    , m_defaultTermType(defaultTermType)
     , debug{debug}
 {
     reset();
@@ -183,7 +187,7 @@ void AbstractTelnet::reset()
     heAnnouncedState.fill(false);
 
     // reset telnet status
-    setTerminalType("unknown");
+    termType = m_defaultTermType;
     state = TelnetStateEnum::NORMAL;
     commandBuffer.clear();
     subnegBuffer.clear();
