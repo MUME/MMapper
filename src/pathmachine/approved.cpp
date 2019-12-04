@@ -30,7 +30,15 @@ void Approved::receiveRoom(RoomAdmin *const sender, const Room *const perhaps)
     auto &event = myEvent.deref();
 
     const auto id = perhaps->getId();
-    const auto cmp = Room::compare(perhaps, event, matchingTolerance);
+    const auto cmp = [this, &event, &id, &perhaps]() {
+        // Cache comparisons because we regularly call releaseMatch() and try the same rooms again
+        auto it = compareCache.find(id);
+        if (it != compareCache.end())
+            return it->second;
+        const auto result = Room::compare(perhaps, event, matchingTolerance);
+        compareCache.emplace(id, result);
+        return result;
+    }();
 
     if (cmp == ComparisonResultEnum::DIFFERENT) {
         sender->releaseRoom(*this, id);

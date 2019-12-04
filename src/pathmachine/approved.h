@@ -4,9 +4,13 @@
 // Author: Ulf Hermann <ulfonk_mennhar@gmx.de> (Alve)
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
+#include <unordered_map>
+
 #include "../expandoracommon/RoomRecipient.h"
 #include "../expandoracommon/parseevent.h"
+#include "../expandoracommon/room.h"
 #include "../global/RuleOf5.h"
+#include "../global/roomid.h"
 
 class ParseEvent;
 class Room;
@@ -16,6 +20,7 @@ class Approved : public RoomRecipient
 {
 private:
     SigParseEvent myEvent;
+    std::unordered_map<RoomId, ComparisonResultEnum> compareCache;
     const Room *matchedRoom = nullptr;
     RoomAdmin *owner = nullptr;
     const int matchingTolerance;

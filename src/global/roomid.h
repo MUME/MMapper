@@ -5,9 +5,12 @@
 
 #include <climits>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <set>
 #include <vector>
+
+#include "hash.h"
 
 struct RoomId final
 {
@@ -35,6 +38,12 @@ static constexpr const RoomId INVALID_ROOMID{UINT_MAX};
 static constexpr const RoomId DEFAULT_ROOMID{0};
 
 using RoomIdSet = std::set<RoomId>;
+
+template<>
+struct std::hash<RoomId>
+{
+    std::size_t operator()(const RoomId &id) const noexcept { return numeric_hash(id.asUint32()); }
+};
 
 template<typename T>
 class roomid_vector : private std::vector<T>
