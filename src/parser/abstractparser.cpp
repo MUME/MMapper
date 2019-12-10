@@ -479,6 +479,8 @@ void AbstractParser::parseExits()
                 sendToUser(note);
             }
         }
+    } else {
+        sendToUser(m_exits);
     }
 }
 
