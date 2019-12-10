@@ -164,6 +164,10 @@ void AbstractParser::parsePrompt(const QString &prompt)
         return;
 
     int index = 0;
+    if (prompt[index] == '+') {
+        // susceptible to mudlle (Valar only)
+        index += 2;
+    }
     switch (prompt[index++].toLatin1()) {
     case '*': // indoor/sun (direct and indirect)
         m_promptFlags.setLit();
