@@ -746,6 +746,17 @@ if(APPLE)
         COMMENT "Deploying the Qt Framework onto the bundle"
         )
 
+    # Codesign the bundle without a personal certificate
+    find_program(CODESIGN_APP codesign)
+    message(" - codesign path: ${CODESIGN_APP}")
+    add_custom_command(
+        TARGET mmapper
+        POST_BUILD
+        COMMAND ${CODESIGN_APP} --deep --continue -s - ${CMAKE_CURRENT_BINARY_DIR}/mmapper.app
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Code signing the bundle"
+        )
+
     # Install Executables
     install(
         TARGETS mmapper RUNTIME BUNDLE
@@ -767,6 +778,8 @@ if(APPLE)
     set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${MMAPPER_VERSION_STRING})
     set(MACOSX_BUNDLE_LONG_VERSION_STRING "Version ${MMAPPER_VERSION_STRING}")
     set(MACOSX_BUNDLE_ICON_FILE m-${MMAPPER_BRAND_SUFFIX}.icns)
+    set(MACOSX_BUNDLE_COPYRIGHT "Copyright (c) 2019 The MMapper Team")
+    set(MACOSX_BUNDLE_GUI_IDENTIFIER "org.mume.mmapper")
 endif(APPLE)
 
 # More General CPack Settings
