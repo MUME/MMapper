@@ -760,7 +760,7 @@ void RemoteEditWidget::addEditAndViewMenus(QMenuBar *const menuBar, const Editor
     QMenu *const editMenu = menuBar->addMenu("&Edit");
     QMenu *const viewMenu = menuBar->addMenu("&View");
 
-    std::initializer_list<EditCommand2> cmds{
+    const std::vector<EditCommand2> cmds{
 
         EditCommand2{&Editor::undo,
                      "edit-undo",

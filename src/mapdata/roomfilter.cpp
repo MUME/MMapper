@@ -155,14 +155,17 @@ bool RoomFilter::filter(const Room *const pr) const
         return filter_kind(r, m_kind);
     }
 
-    // Note: This is implicitly a std::initializer_list<PatternKindsEnum>.
-    static constexpr const auto ALL_KINDS = {PatternKindsEnum::DESC,
-                                             PatternKindsEnum::DYN_DESC,
-                                             PatternKindsEnum::NAME,
-                                             PatternKindsEnum::NOTE,
-                                             PatternKindsEnum::EXITS,
-                                             PatternKindsEnum::FLAGS};
-    static_assert(ALL_KINDS.size() == PATTERN_KINDS_LENGTH - 2); // excludes NONE and ALL.
+    // NOTE: using C-style array allows static assert on the number of elements, but std::array doesn't
+    // in this case because the compiler will report excess elements but not too few elements.
+    // Alternate: make this a std::vector and then either do a regular assert, or remove the assert.
+    static constexpr const PatternKindsEnum ALL_KINDS[]{PatternKindsEnum::DESC,
+                                                        PatternKindsEnum::DYN_DESC,
+                                                        PatternKindsEnum::NAME,
+                                                        PatternKindsEnum::NOTE,
+                                                        PatternKindsEnum::EXITS,
+                                                        PatternKindsEnum::FLAGS};
+    static constexpr const size_t ALL_KINDS_SIZE = sizeof(ALL_KINDS) / sizeof(ALL_KINDS[0]);
+    static_assert(ALL_KINDS_SIZE == PATTERN_KINDS_LENGTH - 2); // excludes NONE and ALL.
     for (const auto &pat : ALL_KINDS) {
         if (filter_kind(r, pat)) {
             return true;

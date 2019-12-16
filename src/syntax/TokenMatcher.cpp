@@ -4,7 +4,6 @@
 #include "TokenMatcher.h"
 
 #include <cassert>
-#include <initializer_list>
 #include <iostream>
 #include <utility>
 

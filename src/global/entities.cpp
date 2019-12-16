@@ -6,9 +6,9 @@
 
 #include <cassert>
 #include <cstdint>
-#include <initializer_list>
 #include <optional>
 #include <unordered_map>
+#include <vector>
 #include <QByteArray>
 #include <QHash>
 #include <QString>
@@ -381,14 +381,14 @@ static EntityTable initEntityTable()
     XmlEntity { #name, "&" #name ";", XmlEntityEnum::XID_##name }
 #define SEP_COMMA() ,
 
-    const std::initializer_list<XmlEntity> all_entities{X_FOREACH_ENTITY(X, SEP_COMMA)};
+    const std::vector<XmlEntity> all_entities{X_FOREACH_ENTITY(X, SEP_COMMA)};
     assert(all_entities.size() == 258);
 
 #undef X
 #undef SEP_COMMA
 
     EntityTable entityTable;
-    for (auto &ent : all_entities) {
+    for (const auto &ent : all_entities) {
         entityTable.by_short_name[QString::fromLatin1(ent.short_name)] = ent;
         entityTable.by_full_name[QString::fromLatin1(ent.full_name)] = ent;
         entityTable.by_id[ent.id] = ent;
