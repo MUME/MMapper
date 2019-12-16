@@ -40,7 +40,7 @@ protected:
 
 private:
     void gotInput();
-    void wordHistory(int);
+    bool wordHistory(int);
     void keypadMovement(int);
 
     InputHistoryIterator *m_lineIterator = nullptr;

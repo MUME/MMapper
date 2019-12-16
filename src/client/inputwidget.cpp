@@ -89,15 +89,28 @@ void InputWidget::keyPressEvent(QKeyEvent *const event)
         case Qt::Key_Up:
         case Qt::Key_Down:
         case Qt::Key_Tab:
-            wordHistory(currentKey);
-            event->accept();
-            return;
+            if (wordHistory(currentKey)) {
+                event->accept();
+                return;
+            }
+            break;
         }
 
     } else if (currentModifiers == Qt::KeypadModifier) {
-        if constexpr (CURRENT_PLATFORM != PlatformEnum::Mac) {
+        if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac) {
             // NOTE: MacOS does not differentiate between arrow keys and the keypad keys
             // and as such we disable keypad movement functionality in favor of history
+            switch (currentKey) {
+            case Qt::Key_Up:
+            case Qt::Key_Down:
+            case Qt::Key_Tab:
+                if (wordHistory(currentKey)) {
+                    event->accept();
+                    return;
+                }
+                break;
+            }
+        } else {
             switch (currentKey) {
             case Qt::Key_Up:
             case Qt::Key_Down:
@@ -160,10 +173,10 @@ void InputWidget::keypadMovement(const int key)
     case Qt::Key_Asterisk:
     default:
         qDebug() << "! Unknown keypad movement" << key;
-    };
+    }
 }
 
-void InputWidget::wordHistory(const int key)
+bool InputWidget::wordHistory(const int key)
 {
     QTextCursor cursor = textCursor();
     switch (key) {
@@ -171,18 +184,21 @@ void InputWidget::wordHistory(const int key)
         if (!cursor.movePosition(QTextCursor::Up, QTextCursor::MoveAnchor)) {
             // At the top of the document
             backwardHistory();
+            return true;
         }
         break;
     case Qt::Key_Down:
         if (!cursor.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor)) {
             // At the end of the document
             forwardHistory();
+            return true;
         }
         break;
     case Qt::Key_Tab:
         tabComplete();
-        break;
-    };
+        return true;
+    }
+    return false;
 }
 
 void InputWidget::gotInput()
