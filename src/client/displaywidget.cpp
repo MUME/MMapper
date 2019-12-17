@@ -18,7 +18,7 @@
 // escape + [ + n1 (+ n2) + m
 static const QRegularExpression s_ansiRx(R"(\x1b\[((?:\d+;)*\d+)m)");
 
-DisplayWidget::DisplayWidget(QWidget *parent)
+DisplayWidget::DisplayWidget(QWidget *const parent)
     : QTextEdit(parent)
 {
     const auto &settings = getConfig().integratedClient;
@@ -29,7 +29,6 @@ DisplayWidget::DisplayWidget(QWidget *parent)
     setDocumentTitle("MMapper Mud Client");
     setTextInteractionFlags(Qt::TextSelectableByMouse);
     setTabChangesFocus(false);
-    setContextMenuPolicy(Qt::NoContextMenu);
 
     document()->setUndoRedoEnabled(false);
 
@@ -52,10 +51,7 @@ DisplayWidget::DisplayWidget(QWidget *parent)
 
     // Add an extra character for the scrollbars
     QFontMetrics fm(m_serverOutputFont);
-    int x = fm.averageCharWidth() * (settings.columns + 1);
     int y = fm.lineSpacing() * (settings.rows + 1);
-    setMinimumSize(QSize(x + contentsMargins().left() + contentsMargins().right(),
-                         y + contentsMargins().top() + contentsMargins().bottom()));
     setLineWrapMode(QTextEdit::FixedColumnWidth);
     setLineWrapColumnOrWidth(settings.columns);
     setWordWrapMode(QTextOption::WordWrap);
@@ -69,7 +65,7 @@ DisplayWidget::DisplayWidget(QWidget *parent)
 
 DisplayWidget::~DisplayWidget() = default;
 
-void DisplayWidget::resizeEvent(QResizeEvent *event)
+void DisplayWidget::resizeEvent(QResizeEvent *const event)
 {
     QFontMetrics fm(m_serverOutputFont);
     int x = (size().width() - contentsMargins().left() - contentsMargins().right())

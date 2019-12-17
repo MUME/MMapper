@@ -11,7 +11,7 @@
 
 class QWidget;
 
-StackedInputWidget::StackedInputWidget(QWidget *parent)
+StackedInputWidget::StackedInputWidget(QWidget *const parent)
     : QStackedWidget(parent)
 {
     // Multiline Input Widget
@@ -56,7 +56,7 @@ StackedInputWidget::~StackedInputWidget()
     m_passwordWidget->deleteLater();
 }
 
-bool StackedInputWidget::eventFilter(QObject *obj, QEvent *event)
+bool StackedInputWidget::eventFilter(QObject *const obj, QEvent *const event)
 {
     if (event->type() == QEvent::ShortcutOverride) {
         // Send shortcuts to the parent
@@ -67,7 +67,7 @@ bool StackedInputWidget::eventFilter(QObject *obj, QEvent *event)
     return QObject::eventFilter(obj, event);
 }
 
-void StackedInputWidget::toggleEchoMode(bool localEcho)
+void StackedInputWidget::toggleEchoMode(const bool localEcho)
 {
     m_localEcho = localEcho;
     m_passwordWidget->clear();

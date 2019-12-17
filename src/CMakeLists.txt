@@ -2,8 +2,8 @@ set(mmapper_SRCS
     main.cpp
     client/ClientTelnet.cpp
     client/ClientTelnet.h
-    client/clientwidget.cpp
-    client/clientwidget.h
+    client/ClientWidget.cpp
+    client/ClientWidget.h
     client/displaywidget.cpp
     client/displaywidget.h
     client/inputwidget.cpp
@@ -123,8 +123,6 @@ set(mmapper_SRCS
     mainwindow/mainwindow.h
     mainwindow/roomeditattrdlg.cpp
     mainwindow/roomeditattrdlg.h
-    mainwindow/welcomewidget.cpp
-    mainwindow/welcomewidget.h
     mapdata/DoorFlags.h
     mapdata/ExitDirection.cpp
     mapdata/ExitDirection.h
@@ -377,21 +375,21 @@ if(WITH_MAP)
 endif()
 
 set(mmapper_UIS
-    mainwindow/aboutdialog.ui
-    mainwindow/findroomsdlg.ui
-    mainwindow/infomarkseditdlg.ui
-    mainwindow/roomeditattrdlg.ui
-    mainwindow/welcomewidget.ui
+    client/ClientWidget.ui
     clock/mumeclockwidget.ui
+    mainwindow/aboutdialog.ui
+    mainwindow/infomarkseditdlg.ui
+    mainwindow/findroomsdlg.ui
+    mainwindow/roomeditattrdlg.ui
     preferences/AnsiColorDialog.ui
     preferences/configdialog.ui
+    preferences/clientpage.ui
     preferences/generalpage.ui
     preferences/groupmanagerpage.ui
     preferences/graphicspage.ui
+    preferences/mumeprotocolpage.ui
     preferences/parserpage.ui
     preferences/pathmachinepage.ui
-    preferences/clientpage.ui
-    preferences/mumeprotocolpage.ui
 )
 
 if(QT_HAS_OPENGL)

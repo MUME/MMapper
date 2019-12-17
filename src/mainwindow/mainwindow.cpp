@@ -22,7 +22,7 @@
 #include <QTextBrowser>
 #include <QtWidgets>
 
-#include "../client/clientwidget.h"
+#include "../client/ClientWidget.h"
 #include "../clock/mumeclock.h"
 #include "../clock/mumeclockwidget.h"
 #include "../configuration/configuration.h"
@@ -67,7 +67,6 @@
 #include "findroomsdlg.h"
 #include "infomarkseditdlg.h"
 #include "roomeditattrdlg.h"
-#include "welcomewidget.h"
 
 class RoomRecipient;
 
@@ -196,17 +195,16 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     m_pathMachine = new Mmapper2PathMachine(m_mapData, this);
     m_pathMachine->setObjectName("Mmapper2PathMachine");
 
-    m_client = new ClientWidget(this);
-    m_client->setObjectName("MMapper2Client");
-
-    m_launchWidget = new WelcomeWidget(this);
-    m_launchWidget->setObjectName("WelcomeWidget");
-    m_dockLaunch = new QDockWidget("Launch Panel", this);
-    m_dockLaunch->setObjectName("DockWelcome");
-    m_dockLaunch->setAllowedAreas(Qt::LeftDockWidgetArea);
-    m_dockLaunch->setFeatures(QDockWidget::DockWidgetClosable);
-    addDockWidget(Qt::LeftDockWidgetArea, m_dockLaunch);
-    m_dockLaunch->setWidget(m_launchWidget);
+    m_clientWidget = new ClientWidget(this);
+    m_clientWidget->setObjectName("InternalMudClientWidget");
+    m_dockDialogClient = new QDockWidget("Client Panel", this);
+    m_dockDialogClient->setObjectName("DockWidgetClient");
+    m_dockDialogClient->setAllowedAreas(Qt::AllDockWidgetAreas);
+    m_dockDialogClient->setFeatures(QDockWidget::DockWidgetMovable
+                                    | QDockWidget::DockWidgetFloatable
+                                    | QDockWidget::DockWidgetClosable);
+    addDockWidget(Qt::LeftDockWidgetArea, m_dockDialogClient);
+    m_dockDialogClient->setWidget(m_clientWidget);
 
     m_dockDialogLog = new QDockWidget(tr("Log Panel"), this);
     m_dockDialogLog->setObjectName("DockWidgetLog");
@@ -264,9 +262,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     readSettings();
 
     if (getConfig().general.noLaunchPanel) {
-        m_dockLaunch->hide();
+        m_dockDialogClient->hide();
     } else {
-        m_dockLaunch->show();
+        m_dockDialogClient->show();
     }
 
     switch (getConfig().general.mapMode) {
@@ -432,12 +430,18 @@ void MainWindow::wireConnections()
 
     connect(m_mumeClock, &MumeClock::log, this, &MainWindow::log);
 
-    connect(m_launchWidget, &WelcomeWidget::playMumeClicked, this, &MainWindow::onLaunchClient);
     connect(m_listener, &ConnectionListener::log, this, &MainWindow::log);
-    connect(m_listener,
-            &ConnectionListener::clientSuccessfullyConnected,
-            m_dockLaunch,
-            &QWidget::hide);
+    connect(m_dockDialogClient,
+            &QDockWidget::visibilityChanged,
+            m_clientWidget,
+            &ClientWidget::onVisibilityChanged);
+    connect(m_listener, &ConnectionListener::clientSuccessfullyConnected, this, [this]() {
+        if (!m_clientWidget->isUsingClient())
+            m_dockDialogClient->hide();
+    });
+    connect(m_clientWidget, &ClientWidget::relayMessage, this, [this](const QString &message) {
+        statusBar()->showMessage(message, 2000);
+    });
 
     // Find Room Dialog Connections
     connect(m_findRoomsDlg, &FindRoomsDlg::newRoomSelection, canvas, &MapCanvas::setRoomSelection);
@@ -744,9 +748,15 @@ void MainWindow::createActions()
     findRoomsAct->setShortcut(tr("Ctrl+F"));
     connect(findRoomsAct, &QAction::triggered, this, &MainWindow::onFindRoom);
 
-    clientAct = new QAction(QIcon(":/icons/terminal.png"), tr("Integrated Mud &Client"), this);
+    clientAct = new QAction(QIcon(":/icons/online.png"), tr("&Launch mud client"), this);
     clientAct->setStatusTip(tr("Launch the integrated mud client"));
     connect(clientAct, &QAction::triggered, this, &MainWindow::onLaunchClient);
+
+    saveLogAct = new QAction(QIcon::fromTheme("document-save", QIcon(":/icons/save.png")),
+                             tr("&Save log as..."),
+                             this);
+    connect(saveLogAct, &QAction::triggered, m_clientWidget, &ClientWidget::saveLog);
+    saveLogAct->setStatusTip(tr("Save log as file"));
 
     releaseAllPathsAct = new QAction(QIcon(":/icons/cancel.png"), tr("Release All Paths"), this);
     releaseAllPathsAct->setStatusTip(tr("Release all paths"));
@@ -1048,7 +1058,7 @@ void MainWindow::setupMenuBar()
     toolbars->addAction(settingsToolBar->toggleViewAction());
     QMenu *sidepanels = viewMenu->addMenu(tr("&Side Panels"));
     sidepanels->addAction(m_dockDialogLog->toggleViewAction());
-    sidepanels->addAction(m_dockLaunch->toggleViewAction());
+    sidepanels->addAction(m_dockDialogClient->toggleViewAction());
     sidepanels->addAction(m_dockDialogGroup->toggleViewAction());
     viewMenu->addSeparator();
     viewMenu->addAction(zoomInAct);
@@ -1064,7 +1074,10 @@ void MainWindow::setupMenuBar()
     viewMenu->addAction(alwaysOnTopAct);
 
     settingsMenu = menuBar()->addMenu(tr("&Tools"));
-    settingsMenu->addAction(clientAct);
+    QMenu *clientMenu = settingsMenu->addMenu(QIcon(":/icons/terminal.png"),
+                                              tr("&Integrated Mud Client"));
+    clientMenu->addAction(clientAct);
+    clientMenu->addAction(saveLogAct);
     groupMenu = settingsMenu->addMenu(QIcon(":/icons/groupclient.png"), tr("&Group Manager"));
     groupModeMenu = groupMenu->addMenu(tr("&Mode"));
     groupModeMenu->addAction(groupMode.groupOffAct);
@@ -1230,7 +1243,7 @@ void MainWindow::setupToolBars()
 
 void MainWindow::setupStatusBar()
 {
-    statusBar()->showMessage(tr("Welcome to MMapper ..."));
+    statusBar()->showMessage(tr("Say friend and enter..."));
     statusBar()->insertPermanentWidget(0, new MumeClockWidget(m_mumeClock, this));
 }
 
@@ -1743,11 +1756,10 @@ void MainWindow::onFindRoom()
 
 void MainWindow::onLaunchClient()
 {
-    m_dockLaunch->hide();
-
-    m_client->show();
-    m_client->focusWidget();
-    m_client->connectToHost();
+    // Hiding the client forces a disconnect
+    m_dockDialogClient->hide();
+    m_dockDialogClient->show();
+    m_clientWidget->setFocus();
 }
 
 void MainWindow::groupNetworkStatus(const bool status)

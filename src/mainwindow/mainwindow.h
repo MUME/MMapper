@@ -48,9 +48,8 @@ class QProgressDialog;
 class QTextBrowser;
 class QToolBar;
 class QWidget;
-class RoomSelection;
 class UpdateDialog;
-class WelcomeWidget;
+class RoomSelection;
 
 class MainWindow final : public QMainWindow
 {
@@ -152,7 +151,7 @@ private:
 
     QDockWidget *m_dockDialogLog = nullptr;
     QDockWidget *m_dockDialogGroup = nullptr;
-    QDockWidget *m_dockLaunch = nullptr;
+    QDockWidget *m_dockDialogClient = nullptr;
 
     ConnectionListener *m_listener = nullptr;
     Mmapper2PathMachine *m_pathMachine = nullptr;
@@ -165,8 +164,7 @@ private:
     Mmapper2Group *m_groupManager = nullptr;
     GroupWidget *m_groupWidget = nullptr;
 
-    ClientWidget *m_client = nullptr;
-    WelcomeWidget *m_launchWidget = nullptr;
+    ClientWidget *m_clientWidget = nullptr;
     UpdateDialog *m_updateDialog = nullptr;
 
     SharedRoomSelection m_roomSelection;
@@ -286,7 +284,9 @@ private:
     QAction *connectToNeighboursRoomSelectionAct = nullptr;
 
     QAction *findRoomsAct = nullptr;
+
     QAction *clientAct = nullptr;
+    QAction *saveLogAct = nullptr;
 
     QAction *forceRoomAct = nullptr;
     QAction *releaseAllPathsAct = nullptr;
