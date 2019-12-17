@@ -177,6 +177,7 @@ void Settings::initSettings()
 ConstString GRP_AUTO_LOAD_WORLD = "Auto load world";
 ConstString GRP_CANVAS = "Canvas";
 ConstString GRP_CONNECTION = "Connection";
+ConstString GRP_FINDROOMS_DIALOG = "FindRooms Dialog";
 ConstString GRP_GENERAL = "General";
 ConstString GRP_GROUP_MANAGER = "Group Manager";
 ConstString GRP_INFOMARKS_DIALOG = "InfoMarks Dialog";
@@ -420,6 +421,7 @@ static uint16_t sanitizeUint16(const int input, const uint16_t defaultValue)
         GROUP_CALLBACK(callback, GRP_INTEGRATED_MUD_CLIENT, integratedClient); \
         GROUP_CALLBACK(callback, GRP_INFOMARKS_DIALOG, infoMarksDialog); \
         GROUP_CALLBACK(callback, GRP_ROOMEDIT_DIALOG, roomEditDialog); \
+        GROUP_CALLBACK(callback, GRP_FINDROOMS_DIALOG, findRoomsDialog); \
     } while (false)
 
 void Configuration::read()
@@ -663,6 +665,11 @@ void Configuration::RoomEditDialog::read(QSettings &conf)
     geometry = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
 }
 
+void Configuration::FindRoomsDialog::read(QSettings &conf)
+{
+    geometry = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
+}
+
 void Configuration::GeneralSettings::write(QSettings &conf) const
 {
     conf.setValue(KEY_RUN_FIRST_TIME, false);
@@ -804,6 +811,11 @@ void Configuration::InfoMarksDialog::write(QSettings &conf) const
 }
 
 void Configuration::RoomEditDialog::write(QSettings &conf) const
+{
+    conf.setValue(KEY_WINDOW_GEOMETRY, geometry);
+}
+
+void Configuration::FindRoomsDialog::write(QSettings &conf) const
 {
     conf.setValue(KEY_WINDOW_GEOMETRY, geometry);
 }

@@ -336,6 +336,14 @@ public:
         SUBGROUP();
     } roomEditDialog;
 
+    struct FindRoomsDialog final
+    {
+        QByteArray geometry;
+
+    private:
+        SUBGROUP();
+    } findRoomsDialog;
+
 public:
     DELETE_CTORS_AND_ASSIGN_OPS(Configuration);
 

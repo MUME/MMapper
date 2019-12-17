@@ -10,6 +10,7 @@
 #include <QtGui>
 #include <QtWidgets>
 
+#include "../configuration/configuration.h"
 #include "../expandoracommon/coordinate.h"
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
@@ -24,6 +25,7 @@ FindRoomsDlg::FindRoomsDlg(MapData *const md, QWidget *const parent)
     : QDialog(parent)
 {
     setupUi(this);
+
     m_mapData = md;
     adjustResultTable();
 
@@ -76,12 +78,24 @@ FindRoomsDlg::FindRoomsDlg(MapData *const md, QWidget *const parent)
     setFocus();
     label->setFocusProxy(lineEdit);
     lineEdit->setFocus();
+
+    readSettings();
 }
 
 FindRoomsDlg::~FindRoomsDlg()
 {
     delete m_showSelectedRoom;
     resultTable->clear();
+}
+
+void FindRoomsDlg::readSettings()
+{
+    restoreGeometry(getConfig().findRoomsDialog.geometry);
+}
+
+void FindRoomsDlg::writeSettings()
+{
+    setConfig().findRoomsDialog.geometry = saveGeometry();
 }
 
 void FindRoomsDlg::findClicked()
@@ -187,6 +201,7 @@ void FindRoomsDlg::enableFindButton(const QString &text)
 
 void FindRoomsDlg::closeEvent(QCloseEvent *event)
 {
+    writeSettings();
     resultTable->clear();
     roomsFoundLabel->clear();
     lineEdit->setFocus();

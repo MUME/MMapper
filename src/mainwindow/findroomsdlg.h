@@ -40,6 +40,9 @@ public:
     explicit FindRoomsDlg(MapData *, QWidget *parent = nullptr);
     ~FindRoomsDlg() override;
 
+    void readSettings();
+    void writeSettings();
+
 private:
     MapData *m_mapData = nullptr;
     QTreeWidgetItem *item = nullptr;
