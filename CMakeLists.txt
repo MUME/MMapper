@@ -75,10 +75,7 @@ if(Qt5Core_FOUND)
 endif()
 
 if(APPLE)
-    set(CMAKE_SKIP_BUILD_RPATH TRUE)
-    set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-    set(CMAKE_INSTALL_RPATH "@executable_path/../Frameworks")
-    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
+    set(CMAKE_MACOSX_RPATH TRUE)
     # C++17 std::optional requires macOS 10.14
     set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment version")
 endif()
