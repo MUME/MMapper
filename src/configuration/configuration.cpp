@@ -495,7 +495,7 @@ void Configuration::GeneralSettings::read(QSettings &conf)
     mapMode = sanitizeMapMode(
         conf.value(KEY_MAP_MODE, static_cast<uint32_t>(MapModeEnum::PLAY)).toUInt());
     noSplash = conf.value(KEY_NO_SPLASH, false).toBool();
-    noLaunchPanel = conf.value(KEY_NO_LAUNCH_PANEL, false).toBool();
+    noClientPanel = conf.value(KEY_NO_LAUNCH_PANEL, false).toBool();
     checkForUpdate = conf.value(KEY_CHECK_FOR_UPDATE, true).toBool();
     characterEncoding = sanitizeCharacterEncoding(
         conf.value(KEY_CHARACTER_ENCODING, static_cast<uint32_t>(CharacterEncodingEnum::LATIN1))
@@ -652,7 +652,6 @@ void Configuration::IntegratedMudClientSettings::read(QSettings &conf)
     tabCompletionDictionarySize = conf.value(KEY_TAB_COMPLETION_DICTIONARY_SIZE, 100).toInt();
     clearInputOnEnter = conf.value(KEY_CLEAR_INPUT_ON_ENTER, true).toBool();
     autoResizeTerminal = conf.value(KEY_AUTO_RESIZE_TERMINAL, false).toBool();
-    geometry = conf.value(KEY_WINDOW_GEOMETRY).toByteArray();
 }
 
 void Configuration::InfoMarksDialog::read(QSettings &conf)
@@ -678,7 +677,7 @@ void Configuration::GeneralSettings::write(QSettings &conf) const
     conf.setValue(KEY_ALWAYS_ON_TOP, alwaysOnTop);
     conf.setValue(KEY_MAP_MODE, static_cast<uint32_t>(mapMode));
     conf.setValue(KEY_NO_SPLASH, noSplash);
-    conf.setValue(KEY_NO_LAUNCH_PANEL, noLaunchPanel);
+    conf.setValue(KEY_NO_LAUNCH_PANEL, noClientPanel);
     conf.setValue(KEY_CHECK_FOR_UPDATE, checkForUpdate);
     conf.setValue(KEY_CHARACTER_ENCODING, static_cast<uint32_t>(characterEncoding));
 }
@@ -802,7 +801,6 @@ void Configuration::IntegratedMudClientSettings::write(QSettings &conf) const
     conf.setValue(KEY_TAB_COMPLETION_DICTIONARY_SIZE, tabCompletionDictionarySize);
     conf.setValue(KEY_CLEAR_INPUT_ON_ENTER, clearInputOnEnter);
     conf.setValue(KEY_AUTO_RESIZE_TERMINAL, autoResizeTerminal);
-    conf.setValue(KEY_WINDOW_GEOMETRY, geometry);
 }
 
 void Configuration::InfoMarksDialog::write(QSettings &conf) const

@@ -56,8 +56,8 @@ GeneralPage::GeneralPage(QWidget *parent)
             this,
             &GeneralPage::showNotesStateChanged);
 
-    connect(ui->showLaunchPanelCheckBox, &QCheckBox::stateChanged, this, [this]() {
-        setConfig().general.noLaunchPanel = !ui->showLaunchPanelCheckBox->isChecked();
+    connect(ui->showClientPanelCheckBox, &QCheckBox::stateChanged, this, [this]() {
+        setConfig().general.noClientPanel = !ui->showClientPanelCheckBox->isChecked();
     });
     connect(ui->autoStartGroupManagerCheckBox, &QCheckBox::stateChanged, this, [this]() {
         setConfig().groupManager.autoStart = ui->autoStartGroupManagerCheckBox->isChecked();
@@ -132,7 +132,7 @@ void GeneralPage::loadConfig()
     ui->showHiddenExitFlagsCheckBox->setChecked(mumeNative.showHiddenExitFlags);
     ui->showNotesCheckBox->setChecked(mumeNative.showNotes);
 
-    ui->showLaunchPanelCheckBox->setChecked(!config.general.noLaunchPanel);
+    ui->showClientPanelCheckBox->setChecked(!config.general.noClientPanel);
     ui->autoStartGroupManagerCheckBox->setChecked(config.groupManager.autoStart);
     ui->checkForUpdateCheckBox->setChecked(config.general.checkForUpdate);
     ui->checkForUpdateCheckBox->setDisabled(NO_UPDATER);

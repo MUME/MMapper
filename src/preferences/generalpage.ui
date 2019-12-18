@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>453</width>
+    <width>459</width>
     <height>651</height>
    </rect>
   </property>
@@ -170,9 +170,9 @@
        </widget>
       </item>
       <item row="3" column="0">
-       <widget class="QCheckBox" name="showLaunchPanelCheckBox">
+       <widget class="QCheckBox" name="showClientPanelCheckBox">
         <property name="text">
-         <string>Show launch panel</string>
+         <string>Show client panel</string>
         </property>
        </widget>
       </item>
@@ -224,6 +224,9 @@
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
+           </property>
+           <property name="placeholderText">
+            <string>:/arda.mm2</string>
            </property>
           </widget>
          </item>
@@ -380,7 +383,7 @@
   <tabstop>tlsEncryptionCheckBox</tabstop>
   <tabstop>localPort</tabstop>
   <tabstop>charsetComboBox</tabstop>
-  <tabstop>showLaunchPanelCheckBox</tabstop>
+  <tabstop>showClientPanelCheckBox</tabstop>
   <tabstop>checkForUpdateCheckBox</tabstop>
   <tabstop>autoStartGroupManagerCheckBox</tabstop>
   <tabstop>autoLoadCheck</tabstop>

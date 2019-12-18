@@ -97,7 +97,7 @@ public:
         bool alwaysOnTop = false;
         MapModeEnum mapMode = MapModeEnum::PLAY;
         bool noSplash = false;
-        bool noLaunchPanel = false;
+        bool noClientPanel = false;
         bool checkForUpdate = true;
         CharacterEncodingEnum characterEncoding = CharacterEncodingEnum::LATIN1;
 
@@ -314,7 +314,6 @@ public:
         int tabCompletionDictionarySize = 0;
         bool clearInputOnEnter = false;
         bool autoResizeTerminal = false;
-        QByteArray geometry;
 
     private:
         SUBGROUP();

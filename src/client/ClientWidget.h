@@ -39,10 +39,6 @@ protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
 
 private:
-    void readSettings();
-    void writeSettings() const;
-
-private:
     Ui::ClientWidget *ui = nullptr;
 
     QPointer<ClientTelnet> m_telnet;

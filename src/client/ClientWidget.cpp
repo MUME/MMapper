@@ -69,28 +69,11 @@ ClientWidget::ClientWidget(QWidget *const parent)
             &DisplayWidget::windowSizeChanged,
             m_telnet,
             &ClientTelnet::onWindowSizeChanged);
-
-    readSettings();
 }
 
 ClientWidget::~ClientWidget()
 {
     delete ui;
-}
-
-void ClientWidget::readSettings()
-{
-    if (!restoreGeometry(getConfig().integratedClient.geometry)) {
-        setGeometry(QStyle::alignedRect(Qt::LeftToRight,
-                                        Qt::AlignCenter,
-                                        size(),
-                                        qApp->primaryScreen()->availableGeometry()));
-    }
-}
-
-void ClientWidget::writeSettings() const
-{
-    setConfig().integratedClient.geometry = saveGeometry();
 }
 
 void ClientWidget::onVisibilityChanged(const bool visible)
