@@ -7,6 +7,7 @@
 #include "mainwindow.h"
 
 #include <memory>
+#include <mutex>
 #include <stdexcept>
 #include <vector>
 #include <QActionGroup>
@@ -1312,8 +1313,12 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::showEvent(QShowEvent *event)
 {
-    readSettings();
-    startServices();
+    static std::once_flag flag;
+    std::call_once(flag, [this]() {
+        // Read geometry and state settings and start services on startup
+        readSettings();
+        startServices();
+    });
     event->accept();
 }
 
