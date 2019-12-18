@@ -45,6 +45,7 @@ class QMenu;
 class QObject;
 class QPoint;
 class QProgressDialog;
+class QShowEvent;
 class QTextBrowser;
 class QToolBar;
 class QWidget;
@@ -64,7 +65,6 @@ public:
     bool saveFile(const QString &fileName, SaveModeEnum mode, SaveFormatEnum format);
     void loadFile(const QString &fileName);
     void setCurrentFile(const QString &fileName);
-    void startServices();
 
 signals:
     void setGroupMode(GroupManagerStateEnum);
@@ -140,8 +140,10 @@ protected:
     void closeEvent(QCloseEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
+    void showEvent(QShowEvent *event) override;
 
 private:
+    void startServices();
     void forceNewFile();
     void showWarning(const QString &s);
 

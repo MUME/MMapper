@@ -259,13 +259,6 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
 
     // update connections
     wireConnections();
-    readSettings();
-
-    if (getConfig().general.noLaunchPanel) {
-        m_dockDialogClient->hide();
-    } else {
-        m_dockDialogClient->show();
-    }
 
     switch (getConfig().general.mapMode) {
     case MapModeEnum::PLAY:
@@ -341,11 +334,21 @@ void MainWindow::startServices()
 void MainWindow::readSettings()
 {
     const auto &settings = getConfig().general;
-    restoreGeometry(settings.windowGeometry);
-    restoreState(settings.windowState);
+    if (!restoreGeometry(settings.windowGeometry)) {
+        qWarning() << "Unable to restore window geometry";
+        setGeometry(QStyle::alignedRect(Qt::LeftToRight,
+                                        Qt::AlignCenter,
+                                        size(),
+                                        qApp->primaryScreen()->availableGeometry()));
+    }
+    if (!restoreState(settings.windowState)) {
+        qWarning() << "Unable to restore toolbars and dockwidgets state";
+    }
     alwaysOnTopAct->setChecked(settings.alwaysOnTop);
     if (settings.alwaysOnTop)
         setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
+
+    m_dockDialogClient->setHidden(settings.noClientPanel);
 }
 
 void MainWindow::writeSettings()
@@ -1305,6 +1308,13 @@ void MainWindow::closeEvent(QCloseEvent *event)
     } else {
         event->ignore();
     }
+}
+
+void MainWindow::showEvent(QShowEvent *event)
+{
+    readSettings();
+    startServices();
+    event->accept();
 }
 
 void MainWindow::newFile()

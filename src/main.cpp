@@ -159,8 +159,6 @@ int main(int argc, char **argv)
     mw->show();
     splash->finish(mw.get());
     splash.reset();
-
-    mw->startServices();
     const int ret = QApplication::exec();
     mw.reset();
     config.write();
