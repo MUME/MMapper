@@ -98,8 +98,8 @@ private:
 
     std::atomic_int m_calledStopInternal{0};
     QTimer affectTimer;
-    QMap<CharacterAffectEnum, uint64_t> affectLastSeen;
-    using AffectTimeout = QMap<CharacterAffectEnum, int>;
+    QMap<CharacterAffectEnum, int64_t> affectLastSeen;
+    using AffectTimeout = QMap<CharacterAffectEnum, int32_t>;
     static const AffectTimeout s_affectTimeout;
 
     bool init();

@@ -243,14 +243,14 @@ bool MumeXmlParser::element(const QByteArray &line)
                             case 'd':
                                 m_move = CommandEnum::DOWN;
                                 break;
-                            };
+                            }
                         }
                         break;
                     case '/':
                         m_move = CommandEnum::NONE;
                         break;
                     }
-                };
+                }
                 break;
             case 'w':
                 if (line.startsWith("weather")) {
@@ -272,7 +272,7 @@ bool MumeXmlParser::element(const QByteArray &line)
                 }
                 break;
             }
-        };
+        }
         break;
 
     case XmlModeEnum::ROOM:
@@ -467,6 +467,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         break;
 
     case XmlModeEnum::PROMPT:
+        // Send prompt to group manager
         emit sendPromptLineEvent(normalizeStringCopy(m_stringBuffer).toLatin1());
         if (!m_exitsReady && config.mumeNative.emulatedExits) {
             m_exitsReady = true;

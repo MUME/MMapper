@@ -16,7 +16,10 @@
         <file>icons/affect-blind.png</file>
         <file>icons/affect-hungry.png</file>
         <file>icons/affect-poisoned.png</file>
+        <file>icons/affect-riding.png</file>
+        <file>icons/affect-search.png</file>
         <file>icons/affect-slept.png</file>
+        <file>icons/affect-snared.png</file>
         <file>icons/affect-thirsty.png</file>
         <file>icons/cancel.png</file>
         <file>icons/connectioncreate.png</file>

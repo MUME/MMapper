@@ -261,14 +261,14 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &character,
                 }
             }
             return prettyName;
-        };
+        }
         case ColumnTypeEnum::NAME:
         case ColumnTypeEnum::HP:
         case ColumnTypeEnum::MANA:
         case ColumnTypeEnum::MOVES:
         case ColumnTypeEnum::ROOM_NAME:
             break;
-        };
+        }
         break;
 
     default:

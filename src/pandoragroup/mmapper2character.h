@@ -42,9 +42,12 @@ Q_DECLARE_METATYPE(CharacterPositionEnum)
     X(BLEEDING, bleeding, Bleeding, "Bleeding") \
     X(HUNGRY, hungry, Hungry, "Hungry") \
     X(THIRSTY, thirsty, Thirsty, "Thirsty") \
+    X(SNARED, snared, snared, "Snared") \
+    X(SEARCH, search, Search, "Searching") \
+    X(RIDING, riding, Riding, "Riding") \
     /* define character affects above */
 
-// TODO: States for CASTING FLUSHING DISEASED
+// TODO: States for CASTING DISEASED
 enum class CharacterAffectEnum {
 #define X_DECL_CHARACTER_AFFECT(UPPER_CASE, lower_case, CamelCase, friendly) UPPER_CASE,
     X_FOREACH_CHARACTER_AFFECT(X_DECL_CHARACTER_AFFECT)

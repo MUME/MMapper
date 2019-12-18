@@ -30,7 +30,11 @@ void AbstractParser::initActionMap()
 
     auto addRegex = [&map](const std::string &match, const ActionCallback &callback) {
         assert(!match.empty());
-        const char hint = 0;
+        const char hint = [&match]() -> char {
+            if (match.length() > 2 && match[0] == '^' && match[1] != '\\')
+                return match[1];
+            return 0;
+        }();
         map.emplace(hint, std::make_unique<RegexAction>(match, callback));
     };
 
@@ -118,7 +122,7 @@ void AbstractParser::initActionMap()
     };
     addStartsWith("You bleed from open wounds.", bleedOn);
     addRegex(
-        R"(- a (deep|serious|grievous|critical) wound at the .+ \((clean|dirty|dirty, suppurating)\))",
+        R"(^- a (deep|serious|grievous|critical) wound at the .+ \((clean|dirty|dirty, suppurating)\))",
         bleedOn);
     // Cure critic
     addEndsWith("You can feel the broken bones within you heal and reshape themselves", bleedOff);
@@ -239,6 +243,75 @@ void AbstractParser::initActionMap()
     /// Score
     addRegex(R"(^\d+/\d+ hits(, \d+/\d+ mana,)? and \d+/\d+ moves.$)",
              [this](StringView view) { emit sendScoreLineEvent(view.toQByteArray()); });
+
+    /// Search, reveal, and flush
+    addStartsWith("You begin to search...", [this](StringView /*view*/) {
+        emit sendCharacterAffectEvent(CharacterAffectEnum::SEARCH, true);
+    });
+
+    /// Snared
+    auto snaredOff = [this](StringView /*view*/) {
+        emit sendCharacterAffectEvent(CharacterAffectEnum::SNARED, false);
+    };
+    auto snaredOn = [this](StringView /*view*/) {
+        emit sendCharacterAffectEvent(CharacterAffectEnum::SNARED, true);
+    };
+    // water serpent
+    addEndsWith("wraps itself tightly around you and begins squeezing.", snaredOn);
+    addStartsWith("You can't escape the constricting coils!", snaredOn);
+    addStartsWith("You managed to break free!", snaredOff);
+
+    // black roots, roots
+    addRegex(R"(^You are trapped by some (black )?roots.$)", snaredOn);
+    addStartsWith("You can't seem to escape the roots!", snaredOn);
+    addStartsWith("With effort you break free from the grasp of the roots.", snaredOff);
+
+    // rotten tree
+    addStartsWith("You get entangled in numerous branches and twisting roots of a rotten tree.",
+                  snaredOn);
+    addStartsWith("You can't seem to escape the wet, rotten shrubbery!", snaredOn);
+    addStartsWith("You break free from the wet grasp of a rotten tree.", snaredOff);
+
+    // bindweed
+    addStartsWith("You are tangled in the bindweed and cannot break free.", snaredOn);
+    addStartsWith("You manage to pull away from the grasp of the bindweed.", snaredOff);
+
+    // smothering mass of vines
+    addStartsWith("You are entangled by a smothering mass of vines.", snaredOn);
+    addStartsWith("You can't seem to escape the vines!", snaredOn);
+    addStartsWith("You manage to break free of the constricting vines.", snaredOff);
+
+    // small tangle of roots
+    addStartsWith("Your feet have been snared by a tangle of roots.", snaredOn);
+    addStartsWith("You can't seem to escape the tangled roots!", snaredOn);
+    addStartsWith("With effort you break free from the grasp of the tangled roots.", snaredOff);
+
+    // Unqalome shackles
+    addStartsWith("A pair of shackles reach you and wrap tightly around your wrists!", snaredOn);
+    addStartsWith("The shackles won't let you move that easily!", snaredOn);
+    addStartsWith("You manage to shake off the shackles.", snaredOff);
+
+    // BM spiders
+    addRegex(R"(^A great, dark spider.+quickly begins to weave a tight, sticky web around your body!$)",
+             snaredOn);
+    addRegex(R"(^A great, dark spider.+burdens your movement wrapping you layer after layer!$)",
+             snaredOn);
+    addRegex(
+        R"(^You stagger for your balance as a great, dark spider.+wraps the sticky cords faster and faster around you!$)",
+        snaredOn);
+    addStartsWith("The sticky cords that surround you prevent you from doing that.", snaredOn);
+    addStartsWith("The sticky webs pull you back!", snaredOn);
+    addStartsWith("You have been cocooned.", snaredOn);
+    addStartsWith("You can't get yourself to relax while bound in such an awkward position.",
+                  snaredOn);
+    addStartsWith("After some struggle you remove the last web on you.", snaredOff);
+    addStartsWith("Someone freed you while you were away.", snaredOff);
+
+    // Kraken tentancle
+    addRegex(R"(^A tentacle.+entangles you!$)", snaredOn);
+    addStartsWith("You can't free your hands to cast any spells at all!", snaredOn);
+    addStartsWith("You are pulled back by a tentacle", snaredOn);
+    addRegex(R"(^You manage to break free of a tentacle's.+hold.$)", snaredOff);
 }
 
 bool AbstractParser::evalActionMap(StringView line)

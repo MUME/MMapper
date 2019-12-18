@@ -29,6 +29,7 @@
 static constexpr const bool THREADED = true;
 static constexpr const auto ONE_MINUTE = 60;
 static constexpr const int THIRTY_MINUTES = 30 * ONE_MINUTE;
+static constexpr const int DEFAULT_EXPIRE = THIRTY_MINUTES;
 const Mmapper2Group::AffectTimeout Mmapper2Group::s_affectTimeout
     = {{CharacterAffectEnum::BASHED, 4},
        {CharacterAffectEnum::BLIND, THIRTY_MINUTES},
@@ -179,14 +180,29 @@ void Mmapper2Group::updateSelf()
 void Mmapper2Group::setCharacterRoomId(RoomId roomId)
 {
     QMutexLocker locker(&networkLock);
-    if (!group) {
+    if (!group)
         return;
+
+    if (group->getSelf()->getRoomId() == roomId)
+        return; // No update needed
+
+    // Check if we are still snared
+    static const constexpr auto SNARED_MESSAGE_WINDOW = 1;
+    CharacterAffects &affects = getGroup()->getSelf()->affects;
+    if (affects.contains(CharacterAffectEnum::SNARED)) {
+        const int64_t now = QDateTime::QDateTime::currentDateTimeUtc().toTime_t();
+        const auto lastSeen = affectLastSeen.value(CharacterAffectEnum::SNARED, 0);
+        const bool noRecentSnareMessage = (now - lastSeen) > SNARED_MESSAGE_WINDOW;
+        if (noRecentSnareMessage) {
+            // Player is not snared after they moved and we did not get another snare message
+            affects.remove(CharacterAffectEnum::SNARED);
+            affectLastSeen.remove(CharacterAffectEnum::SNARED);
+        }
     }
 
-    if (group->getSelf()->getRoomId() != roomId) {
-        group->getSelf()->setRoomId(roomId);
-        issueLocalCharUpdate();
-    }
+    group->getSelf()->setRoomId(roomId);
+
+    issueLocalCharUpdate();
 }
 
 void Mmapper2Group::issueLocalCharUpdate()
@@ -247,7 +263,6 @@ void Mmapper2Group::kickCharacter(const QByteArray &character)
         throw std::runtime_error("network is down");
     case GroupManagerStateEnum::Client:
         throw std::invalid_argument("Only hosts can kick players");
-        return;
     case GroupManagerStateEnum::Server:
         if (getGroup()->getSelf()->getName() == character)
             throw std::invalid_argument("You can't kick yourself");
@@ -255,7 +270,7 @@ void Mmapper2Group::kickCharacter(const QByteArray &character)
         if (getGroup()->getCharByName(character) == nullptr)
             throw std::invalid_argument("Player does not exist");
         emit sig_kickCharacter(character);
-        return;
+        break;
     }
 }
 
@@ -314,8 +329,9 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
     QByteArray textHP;
     QByteArray textMana;
     QByteArray textMoves;
+    CharacterAffects &affects = self->affects;
 
-    static const QRegularExpression pRx(R"(^)"
+    static const QRegularExpression pRx(R"(^(?:\+ )?)"              //          Valar mudlle
                                         R"(([\*@\!\)o])"            // Group 1: light
                                         R"([\[#\.f\(<%~WU\+:=O]?))" //          terrain
                                         R"(([~'"]?[-=]?)"           // Group 2: weather
@@ -334,6 +350,21 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
     if (!match.hasMatch())
         return;
 
+    const bool wasRiding = affects.contains(CharacterAffectEnum::RIDING);
+    const bool isRiding = match.captured(2).contains("R");
+    if (!wasRiding && isRiding) {
+        affects.insert(CharacterAffectEnum::RIDING);
+        affectLastSeen.insert(CharacterAffectEnum::RIDING,
+                              QDateTime::QDateTime::currentDateTimeUtc().toTime_t());
+
+    } else if (wasRiding && !isRiding) {
+        affects.remove(CharacterAffectEnum::RIDING);
+    }
+
+    const bool wasSearching = affects.contains(CharacterAffectEnum::SEARCH);
+    if (wasSearching)
+        affects.remove(CharacterAffectEnum::SEARCH);
+
     // REVISIT: Use remaining captures for more purposes and move this code to parser (?)
     textHP = match.captured(3).toLatin1();
     textMana = match.captured(4).toLatin1();
@@ -341,8 +372,10 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
     bool inCombat = !match.captured(7).isEmpty();
 
     if (textHP == lastPrompt.textHP && textMana == lastPrompt.textMana
-        && textMoves == lastPrompt.textMoves && inCombat == lastPrompt.inCombat)
+        && textMoves == lastPrompt.textMoves && inCombat == lastPrompt.inCombat
+        && wasRiding == isRiding && !wasSearching) {
         return; // No update needed
+    }
 
     if (textHP == "Dying" || self->position == CharacterPositionEnum::INCAPACITATED) {
         // Incapacitated state overrides fighting state
@@ -481,12 +514,15 @@ void Mmapper2Group::onAffectTimeout()
 
     bool removedAtLeastOneAffect = false;
     CharacterAffects &affects = getGroup()->getSelf()->affects;
-    const auto now = QDateTime::QDateTime::currentDateTimeUtc().toTime_t();
+    const int64_t now = QDateTime::QDateTime::currentDateTimeUtc().toTime_t();
     for (const CharacterAffectEnum affect : affectLastSeen.keys()) {
-        const auto lastSeen = affectLastSeen.value(affect, 0);
-        const int elapsed = static_cast<int>(now - lastSeen);
-        const int timeout = s_affectTimeout.value(affect, THIRTY_MINUTES);
-        if (elapsed > timeout) {
+        const bool expired = [this, &affect, &now]() {
+            const auto lastSeen = affectLastSeen.value(affect, 0);
+            const auto timeout = s_affectTimeout.value(affect, DEFAULT_EXPIRE);
+            const auto expiringAt = lastSeen + timeout;
+            return expiringAt <= now;
+        }();
+        if (expired) {
             removedAtLeastOneAffect = true;
             affects.remove(affect);
             affectLastSeen.remove(affect);
