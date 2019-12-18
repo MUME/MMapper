@@ -29,6 +29,11 @@ public:
     explicit DisplayWidget(QWidget *parent = nullptr);
     ~DisplayWidget() override;
 
+    bool canCopy() const { return m_canCopy; }
+
+private:
+    bool m_canCopy = false;
+
 public slots:
     void displayText(const QString &str);
 

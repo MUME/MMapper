@@ -61,6 +61,10 @@ DisplayWidget::DisplayWidget(QWidget *const parent)
     QScrollBar *const scrollbar = verticalScrollBar();
     scrollbar->setSingleStep(fm.lineSpacing());
     scrollbar->setPageStep(y);
+
+    connect(this, &DisplayWidget::copyAvailable, this, [this](const bool available) {
+        m_canCopy = available;
+    });
 }
 
 DisplayWidget::~DisplayWidget() = default;

@@ -1766,8 +1766,6 @@ void MainWindow::onFindRoom()
 
 void MainWindow::onLaunchClient()
 {
-    // Hiding the client forces a disconnect
-    m_dockDialogClient->hide();
     m_dockDialogClient->show();
     m_clientWidget->setFocus();
 }

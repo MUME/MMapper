@@ -51,9 +51,12 @@ ClientTelnet::~ClientTelnet()
 
 void ClientTelnet::connectToHost()
 {
-    if (socket.state() != QAbstractSocket::UnconnectedState) {
+    if (socket.state() == QAbstractSocket::ConnectedState)
+        return;
+
+    if (socket.state() != QAbstractSocket::UnconnectedState)
         socket.abort();
-    }
+
     socket.connectToHost(QHostAddress::LocalHost, getConfig().connection.localPort);
     socket.waitForConnected(3000);
 }

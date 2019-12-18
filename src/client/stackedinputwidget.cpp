@@ -58,10 +58,15 @@ StackedInputWidget::~StackedInputWidget()
 
 bool StackedInputWidget::eventFilter(QObject *const obj, QEvent *const event)
 {
-    if (event->type() == QEvent::ShortcutOverride) {
-        // Send shortcuts to the parent
-        event->ignore();
-        return true;
+    if (event->type() == QEvent::KeyPress) {
+        if (auto *const keyEvent = dynamic_cast<QKeyEvent *>(event)) {
+            if (keyEvent->matches(QKeySequence::Copy) || keyEvent->matches(QKeySequence::Cut)
+                || keyEvent->matches(QKeySequence::Paste)) {
+                // Send event to the parent
+                event->ignore();
+                return true;
+            }
+        }
     }
     // Standard event processing
     return QObject::eventFilter(obj, event);

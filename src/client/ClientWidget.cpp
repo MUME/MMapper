@@ -33,6 +33,7 @@ ClientWidget::ClientWidget(QWidget *const parent)
 
     // Keyboard input on the display widget should be redirected to the input widget
     ui->display->setFocusProxy(ui->input);
+
     ui->input->installEventFilter(this);
 
     // Connect the signals/slots
@@ -76,17 +77,22 @@ ClientWidget::~ClientWidget()
     delete ui;
 }
 
-void ClientWidget::onVisibilityChanged(const bool visible)
+void ClientWidget::onVisibilityChanged(const bool /*visible*/)
 {
-    if (!visible) {
-        // Disconnect if the widget is closed or minimized
-        m_telnet->disconnectFromHost();
+    if (!isUsingClient())
+        return;
 
-    } else if (visible && isUsingClient()) {
-        // Connect if the client was previously activated and the widget is re-opened
-        // Delay connecting to allow the proxy a chance to purge the previous connection
-        QTimer::singleShot(500, [this]() { m_telnet->connectToHost(); });
-    }
+    // Delay connecting to verify that visibility is not just the dock popping back in
+    QTimer::singleShot(500, [this]() {
+        if (!isVisible()) {
+            // Disconnect if the widget is closed or minimized
+            m_telnet->disconnectFromHost();
+
+        } else {
+            // Connect if the client was previously activated and the widget is re-opened
+            m_telnet->connectToHost();
+        }
+    });
 }
 
 bool ClientWidget::isUsingClient() const
@@ -150,15 +156,13 @@ void ClientWidget::saveLog()
 
 bool ClientWidget::eventFilter(QObject *const obj, QEvent *const event)
 {
-    if (event->type() == QEvent::ShortcutOverride && obj != this) {
-        // Shortcuts sent from child widgets should be handled by this widget
-        event->ignore();
-        return true;
-    }
     if (event->type() == QEvent::KeyPress) {
         if (auto *const keyEvent = dynamic_cast<QKeyEvent *>(event)) {
             if (keyEvent->matches(QKeySequence::Copy)) {
-                ui->input->copy();
+                if (ui->display->canCopy())
+                    ui->display->copy();
+                else
+                    ui->input->copy();
                 keyEvent->accept();
                 return true;
             } else if (keyEvent->matches(QKeySequence::Cut)) {
