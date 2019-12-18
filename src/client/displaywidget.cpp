@@ -9,6 +9,7 @@
 #include <QScrollBar>
 #include <QString>
 #include <QTextCursor>
+#include <QToolTip>
 #include <QtGui>
 
 #include "../configuration/configuration.h"
@@ -81,11 +82,18 @@ void DisplayWidget::resizeEvent(QResizeEvent *const event)
     y -= 1;
     setLineWrapColumnOrWidth(x);
     verticalScrollBar()->setPageStep(y);
-    emit showMessage(QString("Dimensions: %1x%2").arg(x).arg(y), 1000);
+
+    // Inform user of new dimensions
+    QString message = QString("Dimensions: %1x%2").arg(x).arg(y);
+    QFontMetrics fmToolTip(QToolTip::font());
+    QPoint messageDiff(fmToolTip.width(message) / 2, fmToolTip.lineSpacing() / 2);
+    QToolTip::showText(mapToGlobal(rect().center() - messageDiff), message, this, rect(), 1000);
+
     const auto &settings = getConfig().integratedClient;
     if (settings.autoResizeTerminal) {
         emit windowSizeChanged(x, y);
     }
+
     QTextEdit::resizeEvent(event);
 }
 
@@ -393,7 +401,7 @@ void DisplayWidget::updateFormat(QTextCharFormat &format, int ansiCode)
     default:
         qWarning() << "Unknown ansicode" << ansiCode;
         format.setBackground(Qt::gray);
-    };
+    }
 }
 
 void DisplayWidget::updateFormatBoldColor(QTextCharFormat &format)
