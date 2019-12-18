@@ -19,6 +19,7 @@
 #include <QOpenGLDebugMessage>
 #include <QSize>
 #include <QString>
+#include <QToolTip>
 #include <QtGui>
 #include <QtWidgets>
 
@@ -775,6 +776,14 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
         setCursor(Qt::OpenHandCursor);
         if (m_mouseLeftPressed) {
             m_mouseLeftPressed = false;
+        }
+        // Display a room info tooltip if there was no mouse movement
+        if (hasSel1() && hasSel2() && getSel1().to_vec3() == getSel2().to_vec3()) {
+            RoomSelection tmpSel = RoomSelection(m_data, getSel1().getCoordinate());
+            if (!tmpSel.isEmpty()) {
+                QString message = tmpSel.getFirstRoom()->toQString();
+                QToolTip::showText(mapToGlobal(event->pos()), message, this, rect(), 5000);
+            }
         }
         break;
 
