@@ -260,6 +260,10 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
 
     // update connections
     wireConnections();
+    setGeometry(QStyle::alignedRect(Qt::LeftToRight,
+                                    Qt::AlignCenter,
+                                    size(),
+                                    qApp->primaryScreen()->availableGeometry()));
 
     switch (getConfig().general.mapMode) {
     case MapModeEnum::PLAY:
@@ -274,6 +278,11 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
         mapperMode.offlineModeAct->setChecked(true);
         onOfflineMode();
         break;
+    }
+
+    if (getConfig().general.alwaysOnTop) {
+        alwaysOnTopAct->setChecked(true);
+        setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
     }
 }
 
@@ -335,20 +344,10 @@ void MainWindow::startServices()
 void MainWindow::readSettings()
 {
     const auto &settings = getConfig().general;
-    if (!restoreGeometry(settings.windowGeometry)) {
+    if (!restoreGeometry(settings.windowGeometry))
         qWarning() << "Unable to restore window geometry";
-        setGeometry(QStyle::alignedRect(Qt::LeftToRight,
-                                        Qt::AlignCenter,
-                                        size(),
-                                        qApp->primaryScreen()->availableGeometry()));
-    }
-    if (!restoreState(settings.windowState)) {
+    if (!restoreState(settings.windowState))
         qWarning() << "Unable to restore toolbars and dockwidgets state";
-    }
-    alwaysOnTopAct->setChecked(settings.alwaysOnTop);
-    if (settings.alwaysOnTop)
-        setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
-
     m_dockDialogClient->setHidden(settings.noClientPanel);
 }
 
