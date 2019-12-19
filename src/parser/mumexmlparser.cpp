@@ -11,6 +11,7 @@
 #include "../clock/mumeclock.h"
 #include "../configuration/configuration.h"
 #include "../expandoracommon/parseevent.h"
+#include "../global/TextUtils.h"
 #include "../pandoragroup/mmapper2group.h"
 #include "../proxy/telnetfilter.h"
 #include "ExitsFlags.h"
@@ -538,7 +539,7 @@ void MumeXmlParser::move()
 
 void MumeXmlParser::parseMudCommands(const QString &str)
 {
-    const auto stdString = str.toStdString();
+    const auto stdString = ::toStdStringLatin1(str);
     if (evalActionMap(StringView{stdString}))
         return;
 
