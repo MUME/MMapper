@@ -19,6 +19,9 @@
 #endif
 
 #ifdef Q_OS_WIN
+#include <stdio.h>
+#include <string.h>
+
 #include "WinSock.h"
 #endif
 
@@ -28,15 +31,17 @@ ErrorNumberMessage::ErrorNumberMessage(const int error_number) noexcept
     : error_number{error_number}
 {
 #ifdef Q_OS_WIN
-    /* nop */
-#elif defined(_GNU_SOURCE)
-    /* GNU/Linux version can return a pointer to a static string */
-    str = ::strerror_r(error_number, buf, sizeof(buf));
-#else
-    /* BSD version returns 0 on success */
+    if (::strerror_s(buf, error_number) == 0) {
+        str = buf;
+    }
+#elif !defined(__GLIBC__)
+    /* BSD/XSI-compliant version returns 0 on success */
     if (::strerror_r(error_number, buf, sizeof(buf)) == 0) {
         str = buf;
     }
+#else
+    /* GNU/Linux version can return a pointer to a static string */
+    str = ::strerror_r(error_number, buf, sizeof(buf));
 #endif
 }
 
@@ -60,7 +65,9 @@ bool fsync(QFile &file) noexcept(false)
 {
     const int handle = file.handle();
 #ifdef Q_OS_WIN
-    return false;
+    if (::fflush(handle) != 0) {
+        throw IOException::withCurrentErrno();
+    }
 #elif defined(Q_OS_MAC)
     if (::fcntl(handle, F_FULLFSYNC) == -1) {
         throw IOException::withCurrentErrno();
