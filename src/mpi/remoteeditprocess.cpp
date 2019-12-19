@@ -48,8 +48,8 @@ RemoteEditProcess::RemoteEditProcess(const bool editSession,
         throw std::runtime_error("failed to start");
     }
 
-    const QString &fileName = m_file.fileName();
-    qDebug() << "View session file template" << fileName;
+    m_fileName = m_file.fileName();
+    qDebug() << "View session file template" << m_fileName;
     m_file.write(m_body.toLatin1()); // note: MUME expects all remote edit data to be Latin-1.
     m_file.flush();
     io::fsyncNoexcept(m_file);
@@ -66,7 +66,7 @@ RemoteEditProcess::RemoteEditProcess(const bool editSession,
 
     // Start the process!
     QStringList args = splitCommandLine(getConfig().mumeClientProtocol.externalRemoteEditorCommand);
-    args << fileName;
+    args << m_fileName;
     const QString &program = args.takeFirst();
     qDebug() << program << args;
     m_process.start(program, args);
@@ -82,32 +82,41 @@ RemoteEditProcess::~RemoteEditProcess()
 void RemoteEditProcess::onFinished(int exitCode, QProcess::ExitStatus status)
 {
     qDebug() << "Edit session process finished with code" << exitCode;
-    if (status == QProcess::NormalExit) {
-        if (m_editSession) {
-            if (m_file.open()) {
-                // See if the file was modified since we created it
-                QFileInfo fileInfo(m_file);
-                QDateTime currentTime = fileInfo.lastModified();
-                if (m_previousTime != currentTime) {
-                    // Read the file and submit it to MUME
-                    QString content = QString::fromLatin1(m_file.readAll());
-                    qDebug() << "Edit session had changes" << content;
-                    emit save(content);
-                } else {
-                    qDebug() << "Edit session canceled (no changes)";
-                }
-                m_file.close();
-            } else {
-                qWarning() << "Edit session unable to read file!";
-            }
-        }
-
-    } else {
+    if (status != QProcess::NormalExit) {
         qWarning() << "File process did not end normally";
         qWarning() << "Output:" << m_process.readAll();
+        emit cancel();
+        return;
     }
 
-    emit cancel();
+    if (!m_editSession) {
+        emit cancel();
+        return;
+    }
+
+    QFile read(m_fileName);
+    if (!read.open(QFile::ReadOnly)) {
+        qWarning() << "Edit session unable to read file!";
+        emit cancel();
+        return;
+    }
+
+    // See if the file was modified since we created it
+    QFileInfo fileInfo(read);
+    QDateTime currentTime = fileInfo.lastModified();
+    if (m_previousTime == currentTime) {
+        qDebug() << "Edit session canceled (no changes)";
+        emit cancel();
+        return;
+    }
+
+    // Read the file
+    QString content = QString::fromLatin1(read.readAll());
+    read.close();
+
+    // Submit it to MUME
+    qDebug() << "Edit session had changes" << content;
+    emit save(content);
 }
 
 void RemoteEditProcess::onError(QProcess::ProcessError /*error*/)

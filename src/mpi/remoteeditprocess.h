@@ -41,6 +41,6 @@ private:
 
     QProcess m_process;
     QTemporaryFile m_file;
-    QString m_newBody;
+    QString m_fileName;
     QDateTime m_previousTime;
 };
