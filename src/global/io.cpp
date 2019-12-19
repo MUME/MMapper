@@ -29,11 +29,11 @@ ErrorNumberMessage::ErrorNumberMessage(const int error_number) noexcept
 {
 #ifdef Q_OS_WIN
     /* nop */
-#elif defined(_GNU_SOURCE)
+#elif defined(__GLIBC__)
     /* GNU/Linux version can return a pointer to a static string */
     str = ::strerror_r(error_number, buf, sizeof(buf));
 #else
-    /* BSD version returns 0 on success */
+    /* XSI-compliant/BSD version version returns 0 on success */
     if (::strerror_r(error_number, buf, sizeof(buf)) == 0) {
         str = buf;
     }
