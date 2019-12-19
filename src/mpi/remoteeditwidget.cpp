@@ -411,7 +411,7 @@ static void foreach_partly_selected_block(QTextCursor cur, Callback &&callback)
 {
     auto beg = LineRange::beg(cur);
     auto end = LineRange::end(cur);
-    for (auto it = beg; !it.isNull() && it < end;) {
+    for (auto it = beg; !it.isNull() && it <= end;) {
         if (it.block().isValid()) {
             callback(static_cast<const QTextCursor &>(it));
         }
