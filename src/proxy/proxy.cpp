@@ -269,16 +269,20 @@ void Proxy::onMudError(const QString &errorStr)
     qWarning() << "Mud socket error" << errorStr;
     emit log("Proxy", errorStr);
 
-    sendToUser("\r\n\033[1;37;46m" + errorStr.toLocal8Bit() + "\033[0m\r\n");
+    sendToUser("\r\n\033[37;46m" + errorStr.toLocal8Bit() + "\033[0m\r\n");
 
     if (!getConfig().connection.proxyConnectionStatus) {
-        sendToUser("\r\n"
-                   "\033[1;37;46mYou can explore the map offline or reconnect again...\033[0m\r\n");
+        sendToUser(
+            QString(
+                "\r\n"
+                "\033[37;46mYou can type \033[1m%1connect\033[0m\033[37;46m to reconnect again.\033[0m\r\n")
+                .arg(getConfig().parser.prefixChar)
+                .toLatin1());
         m_parserXml->sendPromptToUser();
         m_serverState = ServerStateEnum::OFFLINE;
     } else if (getConfig().general.mapMode == MapModeEnum::OFFLINE) {
         sendToUser("\r\n"
-                   "\033[1;37;46mYou are now exploring the map offline.\033[0m\r\n");
+                   "\033[37;46mYou are now exploring the map offline.\033[0m\r\n");
         m_parserXml->sendPromptToUser();
         m_serverState = ServerStateEnum::OFFLINE;
     } else {
@@ -303,20 +307,24 @@ void Proxy::mudTerminatedConnection()
 
     emit log("Proxy", "Mud terminated connection ...");
 
-    sendToUser("\r\n\033[1;37;46mMUME closed the connection.\033[0m\r\n");
+    sendToUser("\r\n\033[37;46mMUME closed the connection.\033[0m\r\n");
 
     if (getConfig().connection.proxyConnectionStatus) {
         if (getConfig().general.mapMode == MapModeEnum::OFFLINE) {
             sendToUser("\r\n"
-                       "\033[1;37;46mYou are now exploring the map offline.\033[0m\r\n");
+                       "\033[37;46mYou are now exploring the map offline.\033[0m\r\n");
             m_parserXml->sendPromptToUser();
         } else {
             // Terminate connection
             deleteLater();
         }
     } else {
-        sendToUser("\r\n"
-                   "\033[1;37;46mYou can explore the map offline or reconnect again...\033[0m\r\n");
+        sendToUser(
+            QString(
+                "\r\n"
+                "\033[37;46mYou can type \033[1m%1connect\033[0m\033[37;46m to reconnect again.\033[0m\r\n")
+                .arg(getConfig().parser.prefixChar)
+                .toLatin1());
         m_parserXml->sendPromptToUser();
     }
 }
@@ -336,7 +344,11 @@ void Proxy::sendToMud(const QByteArray &ba)
     if (m_mudSocket != nullptr) {
         if (m_mudSocket->state() != QAbstractSocket::ConnectedState) {
             sendToUser(
-                "\033[1;37;46mMMapper is not connected to MUME. Please reconnect to play.\033[0m\r\n");
+                QString(
+                    "\033[37;46mMMapper is not connected to MUME. Please type \033[1m%1connect\033[0m\033[37;46m to play.\033[0m\r\n")
+                    .arg(getConfig().parser.prefixChar)
+                    .toLatin1());
+
             m_parserXml->sendPromptToUser();
         } else {
             m_mudSocket->sendToMud(ba);
@@ -382,7 +394,7 @@ void Proxy::connectToMud()
         if (getConfig().general.mapMode == MapModeEnum::OFFLINE) {
             sendToUser(
                 "\r\n"
-                "\033[1;37;46mMMapper is running in offline mode. Switch modes and reconnect to play MUME.\033[0m\r\n"
+                "\033[37;46mMMapper is running in offline mode. Switch modes and reconnect to play MUME.\033[0m\r\n"
                 "\r\n"
                 "Welcome to the land of Middle-earth. May your visit here be... interesting.\r\n"
                 "Never forget! Try to role-play...\r\n");
