@@ -71,6 +71,8 @@ void ClientPage::loadConfig()
     ui->columnsSpinBox->setValue(settings.columns);
     ui->rowsSpinBox->setValue(settings.rows);
     ui->scrollbackSpinBox->setValue(settings.linesOfScrollback);
+    ui->inputHistorySpinBox->setValue(settings.linesOfInputHistory);
+    ui->tabDictionarySpinBox->setValue(settings.tabCompletionDictionarySize);
     ui->clearInputCheckBox->setChecked(settings.clearInputOnEnter);
     ui->autoResizeTerminalCheckBox->setChecked(settings.autoResizeTerminal);
 }
