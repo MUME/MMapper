@@ -6,15 +6,9 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>698</width>
-    <height>533</height>
+    <width>550</width>
+    <height>450</height>
    </rect>
-  </property>
-  <property name="minimumSize">
-   <size>
-    <width>486</width>
-    <height>466</height>
-   </size>
   </property>
   <property name="windowTitle">
    <string>About MMapper</string>
@@ -61,22 +55,68 @@
         <number>15</number>
        </property>
        <item>
-        <widget class="QLabel" name="pixmapLabel">
-         <property name="text">
-          <string/>
+        <widget class="QScrollArea" name="scrollArea">
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
          </property>
-         <property name="pixmap">
-          <pixmap resource="../resources/mmapper2.qrc">:/pixmaps/splash.png</pixmap>
+         <property name="widgetResizable">
+          <bool>true</bool>
          </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
+         <widget class="QWidget" name="scrollAreaWidgetContents">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>494</width>
+            <height>329</height>
+           </rect>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QLabel" name="pixmapLabel">
+             <property name="minimumSize">
+              <size>
+               <width>457</width>
+               <height>320</height>
+              </size>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
         </widget>
        </item>
        <item>
         <widget class="QLabel" name="aboutText">
          <property name="text">
           <string>aboutText</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::RichText</enum>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::TextBrowserInteraction</set>
          </property>
         </widget>
        </item>
@@ -103,7 +143,11 @@
         <number>10</number>
        </property>
        <item>
-        <widget class="QTextBrowser" name="authorsView"/>
+        <widget class="QTextBrowser" name="authorsView">
+         <property name="openExternalLinks">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -128,7 +172,11 @@
         <number>10</number>
        </property>
        <item>
-        <widget class="QTextBrowser" name="licenseView"/>
+        <widget class="QTextBrowser" name="licenseView">
+         <property name="openExternalLinks">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -146,9 +194,7 @@
    </item>
   </layout>
  </widget>
- <resources>
-  <include location="../resources/mmapper2.qrc"/>
- </resources>
+ <resources/>
  <connections>
   <connection>
    <sender>buttonBox</sender>

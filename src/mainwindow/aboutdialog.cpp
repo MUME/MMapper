@@ -39,9 +39,9 @@ AboutDialog::AboutDialog(QWidget *parent)
     setWindowIcon(QIcon(":/icons/m.png"));
     setupUi(this);
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
-    aboutTabLayout->setAlignment(Qt::AlignHCenter);
 
     /* About tab */
+    pixmapLabel->setPixmap(QPixmap(":/pixmaps/splash.png"));
     const auto about_text = []() -> QString {
         return "<p align=\"center\">"
                "<h3>"
@@ -57,19 +57,9 @@ AboutDialog::AboutDialog(QWidget *parent)
                      .arg(static_cast<size_t>(QSysInfo::WordSize))
                + "</p>";
     };
-    pixmapLabel->setPixmap(QPixmap(":/pixmaps/splash.png"));
-    pixmapLabel->setFixedSize(
-        QSize(pixmapLabel->pixmap()->width(), pixmapLabel->pixmap()->height()));
-    pixmapLabel->setAlignment(Qt::AlignCenter);
-
-    aboutText->setAlignment(Qt::AlignCenter);
-    aboutText->setTextFormat(Qt::RichText);
-    aboutText->setOpenExternalLinks(true);
-    aboutText->setTextInteractionFlags(Qt::TextBrowserInteraction);
     aboutText->setText(about_text());
 
     /* Authors tab */
-    authorsView->setOpenExternalLinks(true);
     authorsView->setHtml(tr(
         "<p>Maintainer: Jahara (please report bugs <a href=\"https://github.com/MUME/MMapper/issues\">here</a>)</p>"
         "<p><u>Special thanks to:</u><br>"
@@ -90,8 +80,6 @@ AboutDialog::AboutDialog(QWidget *parent)
             return ts.readAll();
         }
     };
-    licenseView->setOpenExternalLinks(true);
-    licenseView->setTextInteractionFlags(Qt::TextBrowserInteraction);
     licenseView->setText(
         "<p>"
         "This program is free software; you can redistribute it and/or "
@@ -141,10 +129,8 @@ AboutDialog::AboutDialog(QWidget *parent)
            ".</p>"
            "<pre>"
         + loadLicenseResource(":/LICENSE.OPENSSL") + "</pre>");
+    setFixedFont(licenseView);
 
-    licenseView->setMinimumWidth(700);
-
-    setMaximumSize(sizeHint());
     adjustSize();
 }
 
