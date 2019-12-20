@@ -15,9 +15,8 @@
 #include "../configuration/configuration.h"
 #include "../global/AnsiColor.h"
 
-// ANSI codes are formatted as the following:
-// escape + [ + n1 (+ n2) + m
-static const QRegularExpression s_ansiRx(R"(\x1b\[((?:\d+;)*\d+)m)");
+static const constexpr int SCROLLBAR_BUFFER = 1;
+static const constexpr int TAB_WIDTH_SPACES = 8;
 
 DisplayWidget::DisplayWidget(QWidget *const parent)
     : QTextEdit(parent)
@@ -52,12 +51,12 @@ DisplayWidget::DisplayWidget(QWidget *const parent)
 
     // Add an extra character for the scrollbars
     QFontMetrics fm(m_serverOutputFont);
-    int y = fm.lineSpacing() * (settings.rows + 1);
+    int y = fm.lineSpacing() * (settings.rows + SCROLLBAR_BUFFER);
     setLineWrapMode(QTextEdit::FixedColumnWidth);
     setLineWrapColumnOrWidth(settings.columns);
     setWordWrapMode(QTextOption::WordWrap);
     setSizeIncrement(fm.averageCharWidth(), fm.lineSpacing());
-    setTabStopWidth(fm.width(" ") * 8); // A tab is 8 spaces wide
+    setTabStopWidth(fm.width(" ") * TAB_WIDTH_SPACES);
 
     QScrollBar *const scrollbar = verticalScrollBar();
     scrollbar->setSingleStep(fm.lineSpacing());
@@ -70,16 +69,27 @@ DisplayWidget::DisplayWidget(QWidget *const parent)
 
 DisplayWidget::~DisplayWidget() = default;
 
+QSize DisplayWidget::sizeHint() const
+{
+    const auto &settings = getConfig().integratedClient;
+    const auto &margins = contentsMargins();
+    QFontMetrics fm(m_serverOutputFont);
+    int x = fm.averageCharWidth() * (settings.columns + SCROLLBAR_BUFFER) + margins.left()
+            + margins.right();
+    int y = fm.lineSpacing() * (settings.rows + SCROLLBAR_BUFFER) + margins.top()
+            + margins.bottom();
+    return QSize(x, y);
+}
+
 void DisplayWidget::resizeEvent(QResizeEvent *const event)
 {
+    const auto &margins = contentsMargins();
     QFontMetrics fm(m_serverOutputFont);
-    int x = (size().width() - contentsMargins().left() - contentsMargins().right())
-            / fm.averageCharWidth();
-    int y = (size().height() - contentsMargins().top() - contentsMargins().bottom())
-            / fm.lineSpacing();
+    int x = (size().width() - margins.left() - margins.right()) / fm.averageCharWidth();
+    int y = (size().height() - margins.top() - margins.bottom()) / fm.lineSpacing();
     // We subtract an extra character for the scrollbars
-    x -= 1;
-    y -= 1;
+    x -= SCROLLBAR_BUFFER;
+    y -= SCROLLBAR_BUFFER;
     setLineWrapColumnOrWidth(x);
     verticalScrollBar()->setPageStep(y);
 
@@ -113,7 +123,10 @@ void DisplayWidget::displayText(const QString &str)
     // Split ansi from this text
     QStringList textList, ansiList;
     int textIndex = 0, ansiIndex = 0;
-    QRegularExpressionMatchIterator it = s_ansiRx.globalMatch(str);
+    // ANSI codes are formatted as the following:
+    // escape + [ + n1 (+ n2) + m
+    static const QRegularExpression ansiRx(R"(\x1b\[((?:\d+;)*\d+)m)");
+    QRegularExpressionMatchIterator it = ansiRx.globalMatch(str);
     while (it.hasNext()) {
         QRegularExpressionMatch match = it.next();
         ansiIndex = match.capturedStart(0);

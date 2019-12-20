@@ -5,6 +5,7 @@
 
 #include <QColor>
 #include <QFont>
+#include <QSize>
 #include <QString>
 #include <QTextCursor>
 #include <QTextEdit>
@@ -30,6 +31,7 @@ public:
     ~DisplayWidget() override;
 
     bool canCopy() const { return m_canCopy; }
+    QSize sizeHint() const override;
 
 private:
     bool m_canCopy = false;

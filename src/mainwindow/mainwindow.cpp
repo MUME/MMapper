@@ -344,10 +344,20 @@ void MainWindow::startServices()
 void MainWindow::readSettings()
 {
     const auto &settings = getConfig().general;
-    if (!restoreGeometry(settings.windowGeometry))
-        qWarning() << "Unable to restore window geometry";
-    if (!restoreState(settings.windowState))
-        qWarning() << "Unable to restore toolbars and dockwidgets state";
+    if (settings.firstRun) {
+        adjustSize();
+        setGeometry(QStyle::alignedRect(Qt::LeftToRight,
+                                        Qt::AlignCenter,
+                                        size(),
+                                        qApp->primaryScreen()->availableGeometry()));
+
+    } else {
+        if (!restoreGeometry(settings.windowGeometry))
+            qWarning() << "Unable to restore window geometry";
+        if (!restoreState(settings.windowState))
+            qWarning() << "Unable to restore toolbars and dockwidgets state";
+    }
+
     m_dockDialogClient->setHidden(settings.noClientPanel);
 }
 
