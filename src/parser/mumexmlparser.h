@@ -16,59 +16,30 @@
 #include "LineFlags.h"
 #include "abstractparser.h"
 
+class GroupManagerApi;
 class MapData;
 class MumeClock;
 class ProxyParserApi;
-class GroupManagerApi;
 class QDataStream;
 class QFile;
 class QObject;
-struct IncomingData;
+struct TelnetData;
 
 // #define XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
 
-class MumeXmlParser : public AbstractParser
+enum class XmlModeEnum { NONE, ROOM, NAME, DESCRIPTION, EXITS, PROMPT, TERRAIN, HEADER };
+
+class MumeXmlParser final : public AbstractParser
 {
+private:
     Q_OBJECT
-
-public:
-    explicit MumeXmlParser(
-        MapData *, MumeClock *, ProxyParserApi, GroupManagerApi, QObject *parent = nullptr);
-    ~MumeXmlParser() override;
-
-    void parse(const IncomingData &);
-
-public slots:
-    void parseNewMudInput(const IncomingData &data) override;
 
 private:
     QDataStream *debugStream = nullptr;
     QFile *file = nullptr;
-
-private:
-    static const QByteArray greaterThanChar;
-    static const QByteArray lessThanChar;
-    static const QByteArray greaterThanTemplate;
-    static const QByteArray lessThanTemplate;
-    static const QByteArray ampersand;
-    static const QByteArray ampersandTemplate;
-
-private:
-    void parseMudCommands(const QString &str);
-
-private:
-    QByteArray characters(QByteArray &ch);
-    bool element(const QByteArray &);
-
-private:
     CommandEnum m_move = CommandEnum::LOOK;
-    void move();
-
-private:
-    enum class XmlModeEnum { NONE, ROOM, NAME, DESCRIPTION, EXITS, PROMPT, TERRAIN, HEADER };
     XmlModeEnum m_xmlMode = XmlModeEnum::NONE;
     LineFlags m_lineFlags;
-
     QByteArray m_lineToUser;
     QByteArray m_tempCharacters;
     QByteArray m_tempTag;
@@ -82,6 +53,23 @@ private:
     std::optional<RoomName> m_roomName;
     std::optional<RoomStaticDesc> m_staticRoomDesc;
     std::optional<RoomDynamicDesc> m_dynamicRoomDesc;
+
+public:
+    explicit MumeXmlParser(
+        MapData *, MumeClock *, ProxyParserApi, GroupManagerApi, QObject *parent = nullptr);
+    ~MumeXmlParser() override;
+
+private:
+    void parse(const TelnetData &);
+
+public:
+    void parseNewMudInput(const TelnetData &data) override;
+
+private:
+    void parseMudCommands(const QString &str);
+    QByteArray characters(QByteArray &ch);
+    bool element(const QByteArray &);
+    void move();
 
 private:
     void stripXmlEntities(QByteArray &ch);

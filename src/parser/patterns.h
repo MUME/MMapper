@@ -9,15 +9,11 @@
 class QByteArray;
 class QString;
 
-class Patterns
-{
-public:
-    static bool matchScore(const QString &str);
-    static bool matchNoDescriptionPatterns(const QString &);
-    static bool matchPasswordPatterns(const QByteArray &);
-    static bool matchLoginPatterns(const QByteArray &);
-    static bool matchMenuPromptPatterns(const QByteArray &);
-
-    static bool matchPattern(QString pattern, const QString &str);
-    static bool matchPattern(QByteArray pattern, const QByteArray &str);
-};
+namespace Patterns {
+extern bool matchScore(const QString &str);
+extern bool matchNoDescriptionPatterns(const QString &);
+extern bool matchPasswordPatterns(const QByteArray &);
+extern bool matchLoginPatterns(const QByteArray &);
+extern bool matchMenuPromptPatterns(const QByteArray &);
+extern bool matchPattern(const QString &pattern, const QString &str);
+} // namespace Patterns

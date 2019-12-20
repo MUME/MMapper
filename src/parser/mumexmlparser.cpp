@@ -31,12 +31,12 @@ static constexpr const auto XPS_DEBUG_TO_FILE = false;
 #endif
 } // namespace
 
-const QByteArray MumeXmlParser::greaterThanChar(">");
-const QByteArray MumeXmlParser::lessThanChar("<");
-const QByteArray MumeXmlParser::greaterThanTemplate("&gt;");
-const QByteArray MumeXmlParser::lessThanTemplate("&lt;");
-const QByteArray MumeXmlParser::ampersand("&");
-const QByteArray MumeXmlParser::ampersandTemplate("&amp;");
+static const QByteArray greaterThanChar(">");
+static const QByteArray lessThanChar("<");
+static const QByteArray greaterThanTemplate("&gt;");
+static const QByteArray lessThanTemplate("&lt;");
+static const QByteArray ampersand("&");
+static const QByteArray ampersandTemplate("&amp;");
 
 MumeXmlParser::MumeXmlParser(
     MapData *md, MumeClock *mc, ProxyParserApi proxy, GroupManagerApi group, QObject *parent)
@@ -61,7 +61,7 @@ MumeXmlParser::~MumeXmlParser()
     }
 }
 
-void MumeXmlParser::parseNewMudInput(const IncomingData &data)
+void MumeXmlParser::parseNewMudInput(const TelnetData &data)
 {
     switch (data.type) {
     case TelnetDataEnum::DELAY: // Twiddlers
@@ -101,15 +101,15 @@ void MumeXmlParser::parseNewMudInput(const IncomingData &data)
     }
 }
 
-void MumeXmlParser::parse(const IncomingData &data)
+void MumeXmlParser::parse(const TelnetData &data)
 {
     const QByteArray &line = data.line;
     m_lineToUser.clear();
     m_lineFlags.clear();
 
-    for (int index = 0; index < line.size(); index++) {
+    for (const char c : line) {
         if (m_readingTag) {
-            if (line.at(index) == '>') {
+            if (c == '>') {
                 // send tag
                 if (!m_tempTag.isEmpty()) {
                     element(m_tempTag);
@@ -120,17 +120,17 @@ void MumeXmlParser::parse(const IncomingData &data)
                 m_readingTag = false;
                 continue;
             }
-            m_tempTag.append(line.at(index));
+            m_tempTag.append(c);
 
         } else {
-            if (line.at(index) == '<') {
+            if (c == '<') {
                 m_lineToUser.append(characters(m_tempCharacters));
                 m_tempCharacters.clear();
 
                 m_readingTag = true;
                 continue;
             }
-            m_tempCharacters.append(line.at(index));
+            m_tempCharacters.append(c);
         }
     }
 
@@ -464,8 +464,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         break;
 
     case XmlModeEnum::PROMPT:
-        // Send prompt to group manager
-        emit sendPromptLineEvent(normalizeStringCopy(m_stringBuffer).toLatin1());
+        sendPromptLineEvent(normalizeStringCopy(m_stringBuffer).toLatin1());
         if (!m_exitsReady && config.mumeNative.emulatedExits) {
             m_exitsReady = true;
             emulateExits(m_move);

@@ -29,7 +29,7 @@ static bool endsInLinefeed(const TelnetDataEnum type)
     }
 }
 
-void MpiFilter::analyzeNewMudInput(const IncomingData &data)
+void MpiFilter::analyzeNewMudInput(const TelnetData &data)
 {
     if (m_receivingMpi) {
         if (data.line.length() <= m_remaining) {
@@ -40,7 +40,7 @@ void MpiFilter::analyzeNewMudInput(const IncomingData &data)
             m_buffer.append(temp);
             m_remaining -= temp.length();
 
-            IncomingData remainingData;
+            TelnetData remainingData;
             remainingData.type = data.type;
             remainingData.line = data.line.right(m_remaining);
             emit parseNewMudInput(remainingData);

@@ -21,7 +21,7 @@ void TelnetFilter::onAnalyzeMudStream(const QByteArray &ba, bool goAhead)
     dispatchTelnetStream(ba, m_mudIncomingBuffer, m_mudIncomingQue, goAhead);
 
     // parse incoming lines in que
-    IncomingData data;
+    TelnetData data;
     while (!m_mudIncomingQue.isEmpty()) {
         data = m_mudIncomingQue.dequeue();
         emit parseNewMudInput(data);
@@ -33,7 +33,7 @@ void TelnetFilter::onAnalyzeUserStream(const QByteArray &ba, bool goAhead)
     dispatchTelnetStream(ba, m_userIncomingData, m_userIncomingQue, goAhead);
 
     // parse incoming lines in que
-    IncomingData data;
+    TelnetData data;
     while (!m_userIncomingQue.isEmpty()) {
         data = m_userIncomingQue.dequeue();
         emit parseNewUserInput(data);
@@ -41,7 +41,7 @@ void TelnetFilter::onAnalyzeUserStream(const QByteArray &ba, bool goAhead)
 }
 
 void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
-                                        IncomingData &buffer,
+                                        TelnetData &buffer,
                                         TelnetIncomingDataQueue &que,
                                         const bool &goAhead)
 {

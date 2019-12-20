@@ -173,7 +173,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     addApplicationFont();
 
     qRegisterMetaType<RoomId>("RoomId");
-    qRegisterMetaType<IncomingData>("IncomingData");
+    qRegisterMetaType<TelnetData>("TelnetData");
     qRegisterMetaType<CommandQueue>("CommandQueue");
     qRegisterMetaType<DoorActionEnum>("DoorActionEnum");
     qRegisterMetaType<ExitDirEnum>("ExitDirEnum");

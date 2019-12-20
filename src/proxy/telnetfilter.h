@@ -13,9 +13,9 @@
 
 enum class TelnetDataEnum { UNKNOWN, PROMPT, MENU_PROMPT, LOGIN, LOGIN_PASSWORD, CRLF, LF, DELAY };
 
-struct IncomingData final
+struct TelnetData final
 {
-    IncomingData() = default;
+    TelnetData() = default;
     QByteArray line;
     TelnetDataEnum type = TelnetDataEnum::UNKNOWN;
 };
@@ -23,7 +23,7 @@ struct IncomingData final
 class TelnetFilter final : public QObject
 {
     Q_OBJECT
-    using TelnetIncomingDataQueue = QQueue<IncomingData>;
+    using TelnetIncomingDataQueue = QQueue<TelnetData>;
 
 public:
     explicit TelnetFilter(QObject *const parent)
@@ -36,17 +36,17 @@ public slots:
     void onAnalyzeUserStream(const QByteArray &ba, bool goAhead);
 
 signals:
-    void parseNewMudInput(const IncomingData &);
-    void parseNewUserInput(const IncomingData &);
+    void parseNewMudInput(const TelnetData &);
+    void parseNewUserInput(const TelnetData &);
 
 private:
     void dispatchTelnetStream(const QByteArray &stream,
-                              IncomingData &m_incomingData,
+                              TelnetData &m_incomingData,
                               TelnetIncomingDataQueue &que,
                               const bool &goAhead);
 
-    IncomingData m_userIncomingData;
-    IncomingData m_mudIncomingBuffer;
+    TelnetData m_userIncomingData;
+    TelnetData m_mudIncomingBuffer;
     TelnetIncomingDataQueue m_mudIncomingQue;
     TelnetIncomingDataQueue m_userIncomingQue;
 };

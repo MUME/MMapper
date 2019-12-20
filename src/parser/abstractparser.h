@@ -136,8 +136,8 @@ signals:
     void command(const QByteArray &, const Coordinate &);
 
 public slots:
-    virtual void parseNewMudInput(const IncomingData &) = 0;
-    void parseNewUserInput(const IncomingData &);
+    virtual void parseNewMudInput(const TelnetData &) = 0;
+    void parseNewUserInput(const TelnetData &);
 
     void reset();
     void sendGTellToUser(const QByteArray &);

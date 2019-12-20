@@ -9,7 +9,7 @@
 
 #include "../configuration/configuration.h"
 
-bool Patterns::matchPattern(QString pattern, const QString &str)
+bool Patterns::matchPattern(const QString &pattern, const QString &str)
 {
     if (pattern.at(0) != '#') {
         return false;
@@ -17,61 +17,27 @@ bool Patterns::matchPattern(QString pattern, const QString &str)
 
     switch (static_cast<int>((pattern.at(1)).toLatin1())) {
     case 33: // !
-        if (QRegularExpression(pattern.remove(0, 2)).match(str).hasMatch()) {
+        if (QRegularExpression(pattern.mid(2)).match(str).hasMatch()) {
             return true;
         }
         break;
     case 60:; // <
-        if (str.startsWith(pattern.remove(0, 2))) {
+        if (str.startsWith(pattern.mid(2))) {
             return true;
         }
         break;
     case 61:; // =
-        if (str == (pattern.remove(0, 2))) {
+        if (str == (pattern.mid(2))) {
             return true;
         }
         break;
     case 62:; // >
-        if (str.endsWith(pattern.remove(0, 2))) {
+        if (str.endsWith(pattern.mid(2))) {
             return true;
         }
         break;
     case 63:; // ?
-        if (str.contains(pattern.remove(0, 2))) {
-            return true;
-        }
-        break;
-    default:;
-    }
-    return false;
-}
-
-bool Patterns::matchPattern(QByteArray pattern, const QByteArray &str)
-{
-    if (pattern.at(0) != '#') {
-        return false;
-    }
-
-    switch (static_cast<int>(pattern.at(1))) {
-    case 33: // !
-        break;
-    case 60:; // <
-        if (str.startsWith(pattern.remove(0, 2))) {
-            return true;
-        }
-        break;
-    case 61:; // =
-        if (str == (pattern.remove(0, 2))) {
-            return true;
-        }
-        break;
-    case 62:; // >
-        if (str.endsWith(pattern.remove(0, 2))) {
-            return true;
-        }
-        break;
-    case 63:; // ?
-        if (str.contains(pattern.remove(0, 2))) {
+        if (str.contains(pattern.mid(2))) {
             return true;
         }
         break;

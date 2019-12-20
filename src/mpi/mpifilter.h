@@ -28,12 +28,12 @@ public:
 
 signals:
     void sendToMud(const QByteArray &);
-    void parseNewMudInput(const IncomingData &data);
+    void parseNewMudInput(const TelnetData &data);
     void editMessage(int, const QString &, const QString &);
     void viewMessage(const QString &, const QString &);
 
 public slots:
-    void analyzeNewMudInput(const IncomingData &data);
+    void analyzeNewMudInput(const TelnetData &data);
 
 protected:
     void parseMessage(char command, const QByteArray &buffer);

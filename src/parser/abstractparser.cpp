@@ -654,7 +654,7 @@ QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
     return cn;
 }
 
-void AbstractParser::parseNewUserInput(const IncomingData &data)
+void AbstractParser::parseNewUserInput(const TelnetData &data)
 {
     auto parse_and_send = [this, &data]() {
         auto parse = [this, &data]() -> bool {
