@@ -12,19 +12,19 @@ bool ProxyParserApi::isConnected() const
     return result;
 }
 
-void ProxyParserApi::connectToMud()
+void ProxyParserApi::connectToMud() const
 {
     // FIXME: This breaks the design. Disconnect + reconnect should create a new proxy object.
     m_proxy.acceptVisitor([](Proxy &proxy) { proxy.connectToMud(); });
 }
 
-void ProxyParserApi::disconnectFromMud()
+void ProxyParserApi::disconnectFromMud() const
 {
     // FIXME: This breaks the design. Disconnect + reconnect should create a new proxy object.
     m_proxy.acceptVisitor([](Proxy &proxy) { proxy.disconnectFromMud(); });
 }
 
-void ProxyParserApi::sendToMud(const QByteArray &msg)
+void ProxyParserApi::sendToMud(const QByteArray &msg) const
 {
     if (msg.isEmpty())
         return;
@@ -32,7 +32,7 @@ void ProxyParserApi::sendToMud(const QByteArray &msg)
     m_proxy.acceptVisitor([&msg](Proxy &proxy) { proxy.sendToMud(msg); });
 }
 
-void ProxyParserApi::sendToUser(const QByteArray &msg)
+void ProxyParserApi::sendToUser(const QByteArray &msg) const
 {
     if (msg.isEmpty())
         return;
@@ -40,7 +40,7 @@ void ProxyParserApi::sendToUser(const QByteArray &msg)
     m_proxy.acceptVisitor([&msg](Proxy &proxy) { proxy.sendToUser(msg); });
 }
 
-void ProxyParserApi::sendToMud(const std::string_view &msg)
+void ProxyParserApi::sendToMud(const std::string_view &msg) const
 {
     if (msg.empty())
         return;
@@ -48,7 +48,7 @@ void ProxyParserApi::sendToMud(const std::string_view &msg)
     sendToMud(QByteArray{msg.data(), static_cast<int>(msg.length())});
 }
 
-void ProxyParserApi::sendToUser(const std::string_view &msg)
+void ProxyParserApi::sendToUser(const std::string_view &msg) const
 {
     if (msg.empty())
         return;

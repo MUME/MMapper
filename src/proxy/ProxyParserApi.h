@@ -25,14 +25,14 @@ public:
     bool isConnected() const;
 
 public:
-    void connectToMud();
-    void disconnectFromMud();
+    void connectToMud() const;
+    void disconnectFromMud() const;
 
 public:
-    void sendToMud(const QByteArray &msg);
-    void sendToUser(const QByteArray &msg);
+    void sendToMud(const QByteArray &msg) const;
+    void sendToUser(const QByteArray &msg) const;
 
 public:
-    void sendToMud(const std::string_view &msg);
-    void sendToUser(const std::string_view &msg);
+    void sendToMud(const std::string_view &msg) const;
+    void sendToUser(const std::string_view &msg) const;
 };

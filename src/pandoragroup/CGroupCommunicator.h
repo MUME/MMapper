@@ -48,11 +48,9 @@ public:
     };
 
     GroupManagerStateEnum getMode() const { return mode; }
-    void sendSelfRename(const QByteArray &, const QByteArray &);
 
     virtual void stop() = 0;
     virtual bool start() = 0;
-    virtual void sendCharUpdate(const QVariantMap &map) = 0;
 
 protected:
     void sendCharUpdate(GroupSocket *, const QVariantMap &);
@@ -73,6 +71,8 @@ public slots:
     virtual void retrieveData(GroupSocket *, MessagesEnum, const QVariantMap &) = 0;
     virtual void connectionClosed(GroupSocket *) = 0;
     virtual void kickCharacter(const QByteArray &) = 0;
+    virtual void sendCharUpdate(const QVariantMap &map) = 0;
+    void sendSelfRename(const QByteArray &, const QByteArray &);
 
 signals:
     void messageBox(QString message);

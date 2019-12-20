@@ -131,8 +131,8 @@ AbstractParser::AbstractParser(MapData *const md,
     : QObject(parent)
     , m_mumeClock(mc)
     , m_mapData(md)
-    , m_proxy(proxy)
-    , m_group(group)
+    , m_proxy(std::move(proxy))
+    , m_group(std::move(group))
     , prefixChar{getConfig().parser.prefixChar}
 {
     connect(&m_offlineCommandTimer, &QTimer::timeout, this, &AbstractParser::doOfflineCharacterMove);

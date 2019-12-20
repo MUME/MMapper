@@ -163,7 +163,7 @@ void Mmapper2Group::updateSelf()
         }
 
         if (network) {
-            network->sendSelfRename(oldname, newname);
+            emit sig_sendSelfRename(oldname, newname);
         }
         group->getSelf()->setName(newname);
 
@@ -216,7 +216,7 @@ void Mmapper2Group::issueLocalCharUpdate()
 
     if (network) {
         const QVariantMap &data = group->getSelf()->toVariantMap();
-        network->sendCharUpdate(data);
+        emit sig_sendCharUpdate(data);
     }
 }
 
@@ -617,6 +617,14 @@ void Mmapper2Group::startNetwork()
                 &Mmapper2Group::sig_sendGroupTell,
                 network.get(),
                 &CGroupCommunicator::sendGroupTell);
+        connect(this,
+                &Mmapper2Group::sig_sendCharUpdate,
+                network.get(),
+                QOverload<const QVariantMap &>::of(&CGroupCommunicator::sendCharUpdate));
+        connect(this,
+                &Mmapper2Group::sig_sendSelfRename,
+                network.get(),
+                &CGroupCommunicator::sendSelfRename);
     }
 
     // REVISIT: What about if the network is already started?

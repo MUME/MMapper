@@ -117,3 +117,23 @@ void AbstractParser::parseGroup(StringView input)
 
     eval("group", groupSyntax, input);
 }
+
+void AbstractParser::sendScoreLineEvent(const QByteArray &arr)
+{
+    m_group.sendScoreLineEvent(arr);
+}
+
+void AbstractParser::sendPromptLineEvent(const QByteArray &arr)
+{
+    m_group.sendPromptLineEvent(arr);
+}
+
+void AbstractParser::sendCharacterAffectEvent(const CharacterAffectEnum affect, const bool enable)
+{
+    m_group.sendCharacterAffectEvent(affect, enable);
+}
+
+void AbstractParser::sendCharacterPositionEvent(CharacterPositionEnum position)
+{
+    m_group.sendCharacterPositionEvent(position);
+}

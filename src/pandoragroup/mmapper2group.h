@@ -30,15 +30,32 @@ public:
     Q_OBJECT
 
 signals:
+    // MainWindow::log (via MainWindow)
     void log(const QString &, const QString &);
-    void displayGroupTellEvent(const QByteArray &tell); // displays gtell from remote user
-    void messageBox(QString title, QString message);
+    // MainWindow::groupNetworkStatus (via MainWindow)
     void networkStatus(bool);
-    void updateWidget();    // update group widget
+    // MapCanvas::requestUpdate (via MainWindow)
     void updateMapCanvas(); // redraw the opengl screen
+
+    // sent to ParserXML::sendGTellToUser (via Proxy)
+    void displayGroupTellEvent(const QByteArray &tell); // displays gtell from remote user
+
+    // GroupWidget::messageBox (via GroupWidget)
+    void messageBox(QString title, QString message);
+    // GroupWidget::updateLabels (via GroupWidget)
+    void updateWidget(); // update group widget
+
+    // Mmapper2Group::slot_stopInternal
     void sig_invokeStopInternal();
+
+    // CGroupCommunicator::sendGroupTell
     void sig_sendGroupTell(const QByteArray &tell);
+    // CGroupCommunicator::kickCharacter
     void sig_kickCharacter(const QByteArray &character);
+    // CGroupCommunicator::sendCharUpdate
+    void sig_sendCharUpdate(const QVariantMap &map);
+    // CGroupCommunicator::sendSelfRename
+    void sig_sendSelfRename(const QByteArray &, const QByteArray &);
 
 public:
     explicit Mmapper2Group(QObject *parent = nullptr);
@@ -63,6 +80,10 @@ private:
 protected:
     void sendGroupTell(const QByteArray &tell); // sends gtell from local user
     void kickCharacter(const QByteArray &character);
+    void parseScoreInformation(const QByteArray &score);
+    void parsePromptInformation(const QByteArray &prompt);
+    void updateCharacterPosition(CharacterPositionEnum);
+    void updateCharacterAffect(CharacterAffectEnum, bool);
 
 public slots:
     void setCharacterRoomId(RoomId pos);
@@ -71,10 +92,6 @@ public slots:
     void stopNetwork();
     void updateSelf(); // changing settings
 
-    void parseScoreInformation(const QByteArray &score);
-    void parsePromptInformation(const QByteArray &prompt);
-    void updateCharacterPosition(CharacterPositionEnum);
-    void updateCharacterAffect(CharacterAffectEnum, bool);
     void setPath(CommandQueue);
     void reset();
 

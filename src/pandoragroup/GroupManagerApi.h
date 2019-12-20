@@ -5,6 +5,7 @@
 #include <QByteArray>
 
 #include "../global/WeakHandle.h"
+#include "mmapper2character.h"
 
 class Mmapper2Group;
 
@@ -21,6 +22,12 @@ public:
     {}
 
 public:
-    void kickCharacter(const QByteArray &name);
-    void sendGroupTell(const QByteArray &msg);
+    void kickCharacter(const QByteArray &name) const;
+    void sendGroupTell(const QByteArray &msg) const;
+
+public:
+    void sendScoreLineEvent(const QByteArray &arr) const;
+    void sendPromptLineEvent(const QByteArray &arr) const;
+    void sendCharacterPositionEvent(CharacterPositionEnum position) const;
+    void sendCharacterAffectEvent(CharacterAffectEnum affect, bool enable) const;
 };

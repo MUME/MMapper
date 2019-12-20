@@ -193,22 +193,6 @@ void Proxy::start()
     connect(userSocket, &QAbstractSocket::disconnected, parserXml, &AbstractParser::reset);
 
     // Group Manager Support
-    connect(parserXml,
-            &MumeXmlParser::sendScoreLineEvent,
-            m_groupManager,
-            &Mmapper2Group::parseScoreInformation);
-    connect(parserXml,
-            &MumeXmlParser::sendPromptLineEvent,
-            m_groupManager,
-            &Mmapper2Group::parsePromptInformation);
-    connect(parserXml,
-            &MumeXmlParser::sendCharacterPositionEvent,
-            m_groupManager,
-            &Mmapper2Group::updateCharacterPosition);
-    connect(parserXml,
-            &MumeXmlParser::sendCharacterAffectEvent,
-            m_groupManager,
-            &Mmapper2Group::updateCharacterAffect);
     connect(parserXml, &AbstractParser::showPath, m_groupManager, &Mmapper2Group::setPath);
     // Group Tell
     connect(m_groupManager,

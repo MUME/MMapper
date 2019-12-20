@@ -63,8 +63,8 @@ protected:
 
 private:
     MapData *m_mapData = nullptr;
-    ProxyParserApi m_proxy;
-    GroupManagerApi m_group;
+    const ProxyParserApi m_proxy;
+    const GroupManagerApi m_group;
 
 public:
     using HelpCallback = std::function<void(const std::string &name)>;
@@ -109,8 +109,11 @@ public:
 
     void doMove(CommandEnum cmd);
     void sendPromptToUser();
+    void sendScoreLineEvent(const QByteArray &arr);
+    void sendPromptLineEvent(const QByteArray &arr);
+    void sendCharacterPositionEvent(CharacterPositionEnum position);
+    void sendCharacterAffectEvent(CharacterAffectEnum affect, bool enable);
 
-public:
 signals:
     // telnet
     void sendToMud(const QByteArray &);
@@ -118,13 +121,6 @@ signals:
     void sig_mapChanged();
     void sig_graphicsSettingsChanged();
     void releaseAllPaths();
-    // for group manager
-    void sendScoreLineEvent(QByteArray);
-    void sendPromptLineEvent(QByteArray);
-    void sendCharacterPositionEvent(CharacterPositionEnum);
-    void sendCharacterAffectEvent(CharacterAffectEnum, bool);
-    // for clock
-    void mumeTime(QString);
 
     // used to log
     void log(const QString &, const QString &);
