@@ -304,8 +304,11 @@ MainWindow::~MainWindow()
 
 void MainWindow::startServices()
 {
-    const auto port = getConfig().connection.localPort;
-    if (!m_listener->listen(QHostAddress::Any, port)) {
+    const auto &settings = getConfig().connection;
+    const auto address = settings.proxyListensOnAnyInterface ? QHostAddress::Any
+                                                             : QHostAddress::LocalHost;
+    const auto port = settings.localPort;
+    if (!m_listener->listen(address, port)) {
         QMessageBox::critical(this,
                               tr("mmapper"),
                               tr("Unable to start the server (switching to offline mode): %1.")

@@ -36,6 +36,10 @@ GeneralPage::GeneralPage(QWidget *parent)
             &QCheckBox::stateChanged,
             this,
             &GeneralPage::tlsEncryptionCheckBoxStateChanged);
+    connect(ui->proxyListensOnAnyInterfaceCheckBox, &QCheckBox::stateChanged, this, [this]() {
+        setConfig().connection.proxyListensOnAnyInterface = ui->proxyListensOnAnyInterfaceCheckBox
+                                                                ->isChecked();
+    });
     connect(ui->charsetComboBox,
             QOverload<int>::of(&QComboBox::currentIndexChanged),
             this,
@@ -126,6 +130,7 @@ void GeneralPage::loadConfig()
     } else {
         ui->tlsEncryptionCheckBox->setChecked(connection.tlsEncryption);
     }
+    ui->proxyListensOnAnyInterfaceCheckBox->setChecked(connection.proxyListensOnAnyInterface);
     ui->charsetComboBox->setCurrentIndex(static_cast<int>(general.characterEncoding));
 
     ui->emulatedExitsCheckBox->setChecked(mumeNative.emulatedExits);

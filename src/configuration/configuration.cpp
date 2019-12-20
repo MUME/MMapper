@@ -241,6 +241,7 @@ ConstString KEY_NO_SPLASH = "No splash screen";
 ConstString KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES = "Number of anti-aliasing samples";
 ConstString KEY_PROXY_THREADED = "Proxy Threaded";
 ConstString KEY_PROXY_CONNECTION_STATUS = "Proxy connection status";
+ConstString KEY_PROXY_LISTENS_ON_ANY_INTERFACE = "Proxy listens on any interface";
 ConstString KEY_RELATIVE_PATH_ACCEPTANCE = "relative path acceptance";
 ConstString KEY_REMOTE_EDITING_AND_VIEWING = "Remote editing and viewing";
 ConstString KEY_MUME_REMOTE_PORT = "Remote port number";
@@ -514,6 +515,7 @@ void Configuration::ConnectionSettings::read(QSettings &conf)
     tlsEncryption = NO_OPEN_SSL ? false : conf.value(KEY_TLS_ENCRYPTION, true).toBool();
     proxyThreaded = conf.value(KEY_PROXY_THREADED, false).toBool();
     proxyConnectionStatus = conf.value(KEY_PROXY_CONNECTION_STATUS, false).toBool();
+    proxyListensOnAnyInterface = conf.value(KEY_PROXY_LISTENS_ON_ANY_INTERFACE, false).toBool();
 }
 
 // closest well-known color is "Outer Space"
@@ -690,6 +692,7 @@ void Configuration::ConnectionSettings::write(QSettings &conf) const
     conf.setValue(KEY_TLS_ENCRYPTION, tlsEncryption);
     conf.setValue(KEY_PROXY_THREADED, proxyThreaded);
     conf.setValue(KEY_PROXY_CONNECTION_STATUS, proxyConnectionStatus);
+    conf.setValue(KEY_PROXY_LISTENS_ON_ANY_INTERFACE, proxyListensOnAnyInterface);
 }
 
 static auto getQColorName(const XNamedColor &color)

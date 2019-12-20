@@ -113,6 +113,7 @@ public:
         bool tlsEncryption = false;
         bool proxyThreaded = false;
         bool proxyConnectionStatus = false;
+        bool proxyListensOnAnyInterface = false;
 
     private:
         SUBGROUP();
