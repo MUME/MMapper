@@ -224,15 +224,15 @@ void Proxy::start()
                         .toLatin1();
     m_userSocket->write(ba);
 
-    connect(mudSocket, &MumeSocket::connected, this, &Proxy::onMudConnected);
     connect(mudSocket, &MumeSocket::connected, userTelnet, &UserTelnet::onConnected);
     connect(mudSocket, &MumeSocket::connected, mudTelnet, &MudTelnet::onConnected);
-    connect(mudSocket, &MumeSocket::socketError, this, &Proxy::onMudError);
+    connect(mudSocket, &MumeSocket::connected, this, &Proxy::onMudConnected);
     connect(mudSocket, &MumeSocket::socketError, parserXml, &AbstractParser::reset);
     connect(mudSocket, &MumeSocket::socketError, m_groupManager, &Mmapper2Group::reset);
-    connect(mudSocket, &MumeSocket::disconnected, this, &Proxy::mudTerminatedConnection);
+    connect(mudSocket, &MumeSocket::socketError, this, &Proxy::onMudError);
     connect(mudSocket, &MumeSocket::disconnected, parserXml, &AbstractParser::reset);
     connect(mudSocket, &MumeSocket::disconnected, m_groupManager, &Mmapper2Group::reset);
+    connect(mudSocket, &MumeSocket::disconnected, this, &Proxy::mudTerminatedConnection);
     connect(mudSocket, &MumeSocket::processMudStream, mudTelnet, &MudTelnet::onAnalyzeMudStream);
     connect(mudSocket, &MumeSocket::log, mw, &MainWindow::log);
 
