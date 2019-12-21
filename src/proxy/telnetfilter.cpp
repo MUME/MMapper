@@ -59,7 +59,7 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
             buffer.type = TelnetDataEnum::DELAY;
             que.enqueue(buffer);
             buffer.line.clear();
-            buffer.type = TelnetDataEnum::SPLIT;
+            buffer.type = TelnetDataEnum::UNKNOWN;
             index++;
             break;
 
@@ -69,10 +69,9 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
                 switch (val2) {
                 case ASCII_LF:
                     buffer.line.append(static_cast<char>(ASCII_CR));
-                    buffer.type = TelnetDataEnum::LFCR;
                     que.enqueue(buffer);
                     buffer.line.clear();
-                    buffer.type = TelnetDataEnum::SPLIT;
+                    buffer.type = TelnetDataEnum::UNKNOWN;
                     index++;
                     break;
 
@@ -97,7 +96,7 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
                     buffer.type = TelnetDataEnum::CRLF;
                     que.enqueue(buffer);
                     buffer.line.clear();
-                    buffer.type = TelnetDataEnum::SPLIT;
+                    buffer.type = TelnetDataEnum::UNKNOWN;
                     index++;
                     break;
 
@@ -118,7 +117,7 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
                 buffer.type = TelnetDataEnum::LF;
                 que.enqueue(buffer);
                 buffer.line.clear();
-                buffer.type = TelnetDataEnum::SPLIT;
+                buffer.type = TelnetDataEnum::UNKNOWN;
             }
 
             buffer.line.append(static_cast<char>(val1));
@@ -127,7 +126,7 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
         }
     }
 
-    if (!buffer.line.isEmpty() && (goAhead || buffer.type == TelnetDataEnum::SPLIT)) {
+    if (!buffer.line.isEmpty() && (goAhead || buffer.type == TelnetDataEnum::UNKNOWN)) {
         {
             if (goAhead) {
                 const auto get_type = [&buffer]() {
@@ -140,18 +139,18 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
                 buffer.type = get_type();
                 que.enqueue(buffer);
                 buffer.line.clear();
-                buffer.type = TelnetDataEnum::SPLIT;
+                buffer.type = TelnetDataEnum::UNKNOWN;
             } else if (buffer.line.endsWith(char(ASCII_LF))) {
                 buffer.type = TelnetDataEnum::LF;
                 que.enqueue(buffer);
                 buffer.line.clear();
-                buffer.type = TelnetDataEnum::SPLIT;
+                buffer.type = TelnetDataEnum::UNKNOWN;
             } else if (Patterns::matchLoginPatterns(buffer.line)) {
                 // IAC-GA usually take effect after the login screen
                 buffer.type = TelnetDataEnum::LOGIN;
                 que.enqueue(buffer);
                 buffer.line.clear();
-                buffer.type = TelnetDataEnum::SPLIT;
+                buffer.type = TelnetDataEnum::UNKNOWN;
             }
         }
     }

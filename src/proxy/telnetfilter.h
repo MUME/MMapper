@@ -11,24 +11,13 @@
 #include <QString>
 #include <QtCore>
 
-enum class TelnetDataEnum {
-    PROMPT,
-    MENU_PROMPT,
-    LOGIN,
-    LOGIN_PASSWORD,
-    CRLF,
-    LFCR,
-    LF,
-    DELAY,
-    SPLIT,
-    UNKNOWN
-};
+enum class TelnetDataEnum { UNKNOWN, PROMPT, MENU_PROMPT, LOGIN, LOGIN_PASSWORD, CRLF, LF, DELAY };
 
 struct IncomingData final
 {
     IncomingData() = default;
     QByteArray line;
-    TelnetDataEnum type = TelnetDataEnum::SPLIT;
+    TelnetDataEnum type = TelnetDataEnum::UNKNOWN;
 };
 
 class TelnetFilter final : public QObject

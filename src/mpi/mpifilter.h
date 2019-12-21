@@ -10,11 +10,21 @@
 
 #include "../proxy/telnetfilter.h"
 
-class MpiFilter : public QObject
+class MpiFilter final : public QObject
 {
     Q_OBJECT
+private:
+    TelnetDataEnum m_previousType = TelnetDataEnum::UNKNOWN;
+    bool m_receivingMpi = false;
+
+    char m_command = '\0';
+    int m_remaining = 0;
+    QByteArray m_buffer;
+
 public:
-    explicit MpiFilter(QObject *parent = nullptr);
+    explicit MpiFilter(QObject *const parent)
+        : QObject(parent)
+    {}
 
 signals:
     void sendToMud(const QByteArray &);
@@ -29,12 +39,4 @@ protected:
     void parseMessage(char command, const QByteArray &buffer);
     void parseEditMessage(const QByteArray &buffer);
     void parseViewMessage(const QByteArray &buffer);
-
-private:
-    TelnetDataEnum m_previousType = TelnetDataEnum::UNKNOWN;
-    bool m_parsingMpi = false;
-
-    char m_command = '\0';
-    int m_remaining = 0;
-    QByteArray m_buffer;
 };

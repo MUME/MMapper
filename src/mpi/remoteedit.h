@@ -16,13 +16,13 @@
 
 class RemoteEditSession;
 
-class RemoteEdit : public QObject
+class RemoteEdit final : public QObject
 {
     Q_OBJECT
     friend class RemoteEditSession;
 
 public:
-    explicit RemoteEdit(QObject *parent = nullptr)
+    explicit RemoteEdit(QObject *const parent)
         : QObject(parent)
     {}
     ~RemoteEdit() override = default;

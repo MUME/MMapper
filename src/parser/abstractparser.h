@@ -80,7 +80,6 @@ public:
 
 private:
     ParserRecordMap m_specialCommandMap;
-    QByteArray m_newLineTerminator;
     const char &prefixChar;
 
 private:

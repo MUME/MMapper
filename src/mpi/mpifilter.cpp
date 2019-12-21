@@ -12,10 +12,6 @@
 #include "../configuration/configuration.h"
 #include "../proxy/telnetfilter.h"
 
-MpiFilter::MpiFilter(QObject *const parent)
-    : QObject(parent)
-{}
-
 static bool endsInLinefeed(const TelnetDataEnum type)
 {
     switch (type) {
@@ -26,9 +22,7 @@ static bool endsInLinefeed(const TelnetDataEnum type)
     case TelnetDataEnum::MENU_PROMPT:
     case TelnetDataEnum::LOGIN:
     case TelnetDataEnum::LOGIN_PASSWORD:
-    case TelnetDataEnum::LFCR:
     case TelnetDataEnum::DELAY:
-    case TelnetDataEnum::SPLIT:
     case TelnetDataEnum::UNKNOWN:
     default:
         return false;
@@ -37,7 +31,7 @@ static bool endsInLinefeed(const TelnetDataEnum type)
 
 void MpiFilter::analyzeNewMudInput(const IncomingData &data)
 {
-    if (m_parsingMpi) {
+    if (m_receivingMpi) {
         if (data.line.length() <= m_remaining) {
             m_buffer.append(data.line);
             m_remaining -= data.line.length();
@@ -52,24 +46,24 @@ void MpiFilter::analyzeNewMudInput(const IncomingData &data)
             emit parseNewMudInput(remainingData);
         }
         if (m_remaining == 0) {
-            m_parsingMpi = false;
+            m_receivingMpi = false;
             parseMessage(m_command, m_buffer);
         }
 
     } else {
         // mume protocol spec requires LF before start of MPI message
         if (endsInLinefeed(m_previousType)) {
-            if (!m_parsingMpi && data.line.length() >= 6 && data.line.startsWith("~$#E")) {
+            if (!m_receivingMpi && data.line.length() >= 6 && data.line.startsWith("~$#E")) {
                 m_buffer.clear();
                 m_command = data.line.at(4);
                 m_remaining = data.line.mid(5).simplified().toInt();
                 if (getConfig().mumeClientProtocol.remoteEditing
                     && (m_command == 'V' || m_command == 'E')) {
-                    m_parsingMpi = true;
+                    m_receivingMpi = true;
                 }
             }
         }
-        if (!m_parsingMpi) {
+        if (!m_receivingMpi) {
             emit parseNewMudInput(data);
         }
     }

@@ -681,20 +681,11 @@ void AbstractParser::parseNewUserInput(const IncomingData &data)
     case TelnetDataEnum::MENU_PROMPT:
     case TelnetDataEnum::LOGIN:
     case TelnetDataEnum::LOGIN_PASSWORD:
-    case TelnetDataEnum::SPLIT:
     case TelnetDataEnum::UNKNOWN:
         emit sendToMud(data.line);
         break;
     case TelnetDataEnum::CRLF:
-        m_newLineTerminator = "\r\n";
-        parse_and_send();
-        break;
-    case TelnetDataEnum::LFCR:
-        m_newLineTerminator = "\n\r";
-        parse_and_send();
-        break;
     case TelnetDataEnum::LF:
-        m_newLineTerminator = "\n";
         parse_and_send();
         break;
     }
@@ -1524,7 +1515,7 @@ void AbstractParser::performDoorCommand(const ExitDirEnum direction, const DoorA
         cn += " ";
         cn += Mmapper2Exit::charForDir(direction);
     }
-    cn += m_newLineTerminator;
+    cn += "\r\n";
 
     if (isOnline()) { // online mode
         emit sendToMud(cn);
@@ -1561,10 +1552,10 @@ void AbstractParser::genericDoorCommand(QString command, const ExitDirEnum direc
             cn += " ";
             cn += dirChar.toLatin1();
         }
-        cn += m_newLineTerminator;
+        cn += "\r\n";
         command = command.replace(QString("$$DOOR_%1$$").arg(dirChar.toUpper()), cn);
     } else if (direction == ExitDirEnum::UNKNOWN) {
-        cn += dn + m_newLineTerminator;
+        cn += dn + "\r\n";
         command = command.replace("$$DOOR$$", cn);
     }
 

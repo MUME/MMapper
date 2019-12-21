@@ -72,7 +72,6 @@ void MumeXmlParser::parseNewMudInput(const IncomingData &data)
         stripXmlEntities(m_lastPrompt);
         parse(data);
         break;
-    case TelnetDataEnum::SPLIT:
     case TelnetDataEnum::UNKNOWN:
         if (XPS_DEBUG_TO_FILE) {
             (*debugStream) << "***STYPE***";
@@ -85,7 +84,6 @@ void MumeXmlParser::parseNewMudInput(const IncomingData &data)
 
     case TelnetDataEnum::PROMPT:
     case TelnetDataEnum::LF:
-    case TelnetDataEnum::LFCR:
     case TelnetDataEnum::CRLF:
         if (XPS_DEBUG_TO_FILE) {
             (*debugStream) << "***STYPE***";
@@ -150,9 +148,7 @@ void MumeXmlParser::parse(const IncomingData &data)
             case TelnetDataEnum::PROMPT:
                 return true;
             case TelnetDataEnum::CRLF:
-            case TelnetDataEnum::LFCR:
             case TelnetDataEnum::LF:
-            case TelnetDataEnum::SPLIT:
             case TelnetDataEnum::UNKNOWN:
                 return false;
             }
