@@ -16,10 +16,6 @@ static constexpr const uint8_t ASCII_DEL = 8;
 static constexpr const uint8_t ASCII_CR = 13;
 static constexpr const uint8_t ASCII_LF = 10;
 
-TelnetFilter::TelnetFilter(QObject *parent)
-    : QObject(parent)
-{}
-
 void TelnetFilter::onAnalyzeMudStream(const QByteArray &ba, bool goAhead)
 {
     dispatchTelnetStream(ba, m_mudIncomingBuffer, m_mudIncomingQue, goAhead);
@@ -64,27 +60,8 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
             break;
 
         case ASCII_CR:
-            if (!buffer.line.isEmpty()) {
-                const auto val2 = buffer.line.right(1).at(0); // get last char
-                switch (val2) {
-                case ASCII_LF:
-                    buffer.line.append(static_cast<char>(ASCII_CR));
-                    que.enqueue(buffer);
-                    buffer.line.clear();
-                    buffer.type = TelnetDataEnum::UNKNOWN;
-                    index++;
-                    break;
-
-                default:
-                    buffer.line.append(static_cast<char>(ASCII_CR));
-                    index++;
-                    break;
-                }
-            } else {
-                buffer.line.append(static_cast<char>(ASCII_CR));
-                index++;
-                break;
-            }
+            buffer.line.append(static_cast<char>(ASCII_CR));
+            index++;
             break;
 
         case ASCII_LF:

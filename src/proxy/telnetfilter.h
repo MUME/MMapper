@@ -26,7 +26,9 @@ class TelnetFilter final : public QObject
     using TelnetIncomingDataQueue = QQueue<IncomingData>;
 
 public:
-    explicit TelnetFilter(QObject *parent);
+    explicit TelnetFilter(QObject *const parent)
+        : QObject(parent)
+    {}
     ~TelnetFilter() override = default;
 
 public slots:
