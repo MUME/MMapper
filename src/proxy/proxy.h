@@ -60,8 +60,8 @@ public slots:
     void userTerminatedConnection();
     void mudTerminatedConnection();
 
-    void sendToMud(const QByteArray &);
-    void sendToUser(const QByteArray &);
+    void onSendToMudSocket(const QByteArray &);
+    void onSendToUserSocket(const QByteArray &);
 
     void onMudError(const QString &);
     void onMudConnected();
@@ -72,11 +72,16 @@ signals:
     void analyzeUserStream(const QByteArray &);
     void analyzeMudStream(const QByteArray &);
 
+    void sig_sendToMud(const QByteArray &);
+    void sig_sendToUser(const QByteArray &, bool);
+
 private:
     friend ProxyParserApi;
     bool isConnected() const;
     void connectToMud();
     void disconnectFromMud();
+    void sendToUser(const QByteArray &ba) { emit sig_sendToUser(ba, false); }
+    void sendToMud(const QByteArray &ba) { emit sig_sendToMud(ba); }
 
 private:
     io::buffer<(1 << 13)> m_buffer;

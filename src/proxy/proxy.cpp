@@ -134,6 +134,8 @@ void Proxy::start()
     auto *const remoteEdit = m_remoteEdit.data();
 
     connect(this, &Proxy::log, mw, &MainWindow::log);
+    connect(this, &Proxy::sig_sendToMud, mudTelnet, &MudTelnet::onSendToMud);
+    connect(this, &Proxy::sig_sendToUser, userTelnet, &UserTelnet::onSendToUser);
 
     connect(userSocket, &QAbstractSocket::disconnected, this, &Proxy::userTerminatedConnection);
     connect(userSocket, &QIODevice::readyRead, this, &Proxy::processUserStream);
@@ -142,7 +144,7 @@ void Proxy::start()
             &UserTelnet::analyzeUserStream,
             telnetFilter,
             &TelnetFilter::onAnalyzeUserStream);
-    connect(userTelnet, &UserTelnet::sendToSocket, this, &Proxy::sendToUser);
+    connect(userTelnet, &UserTelnet::sendToSocket, this, &Proxy::onSendToUserSocket);
     connect(userTelnet, &UserTelnet::relayNaws, mudTelnet, &MudTelnet::onRelayNaws);
     connect(userTelnet, &UserTelnet::relayTermType, mudTelnet, &MudTelnet::onRelayTermType);
 
@@ -150,7 +152,7 @@ void Proxy::start()
             &MudTelnet::analyzeMudStream,
             telnetFilter,
             &TelnetFilter::onAnalyzeMudStream);
-    connect(mudTelnet, &MudTelnet::sendToSocket, this, &Proxy::sendToMud);
+    connect(mudTelnet, &MudTelnet::sendToSocket, this, &Proxy::onSendToMudSocket);
     connect(mudTelnet, &MudTelnet::relayEchoMode, userTelnet, &UserTelnet::onRelayEchoMode);
 
     connect(this, &Proxy::analyzeUserStream, userTelnet, &UserTelnet::onAnalyzeUserStream);
@@ -206,7 +208,7 @@ void Proxy::start()
                             "   Type \033[1m%1help\033[0m\033[37;46m for help.\033[0m\r\n")
                         .arg(getConfig().parser.prefixChar)
                         .toLatin1();
-    m_userSocket->write(ba);
+    sendToUser(ba);
 
     connect(mudSocket, &MumeSocket::connected, userTelnet, &UserTelnet::onConnected);
     connect(mudSocket, &MumeSocket::connected, mudTelnet, &MudTelnet::onConnected);
@@ -323,7 +325,7 @@ void Proxy::processUserStream()
     }
 }
 
-void Proxy::sendToMud(const QByteArray &ba)
+void Proxy::onSendToMudSocket(const QByteArray &ba)
 {
     if (m_mudSocket != nullptr) {
         if (m_mudSocket->state() != QAbstractSocket::ConnectedState) {
@@ -342,7 +344,7 @@ void Proxy::sendToMud(const QByteArray &ba)
     }
 }
 
-void Proxy::sendToUser(const QByteArray &ba)
+void Proxy::onSendToUserSocket(const QByteArray &ba)
 {
     if (m_userSocket != nullptr) {
         m_userSocket->write(ba);
