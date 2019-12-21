@@ -5,6 +5,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include <QAbstractSocket>
+#include <QObject>
 #include <QTcpSocket>
 
 #include "../global/io.h"

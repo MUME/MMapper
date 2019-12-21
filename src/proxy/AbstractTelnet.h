@@ -79,7 +79,7 @@ class AbstractTelnet : public QObject
     Q_OBJECT
 
 public:
-    explicit AbstractTelnet(TextCodec textCodec,
+    explicit AbstractTelnet(TextCodecStrategyEnum strategy,
                             bool debug = false,
                             QObject *parent = nullptr,
                             const QByteArray &defaultTermType = "unknown");
@@ -132,7 +132,7 @@ protected:
 
     void setTerminalType(const QByteArray &terminalType);
 
-    TextCodec textCodec;
+    TextCodec &getTextCodec();
 
     static constexpr const size_t NUM_OPTS = 256;
     using OptionArray = MMapper::Array<bool, NUM_OPTS>;
@@ -168,6 +168,8 @@ private:
 
     /** processes a telnet subcommand payload */
     void processTelnetSubnegotiation(const AppendBuffer &payload);
+
+    TextCodec textCodec;
 
     AppendBuffer commandBuffer;
     AppendBuffer subnegBuffer;

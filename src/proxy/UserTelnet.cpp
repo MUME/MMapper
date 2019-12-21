@@ -6,7 +6,7 @@
 #include "../configuration/configuration.h"
 
 UserTelnet::UserTelnet(QObject *const parent)
-    : AbstractTelnet(TextCodec(TextCodecStrategyEnum::AUTO_SELECT_CODEC), false, parent)
+    : AbstractTelnet(TextCodecStrategyEnum::AUTO_SELECT_CODEC, false, parent)
 {}
 
 void UserTelnet::onConnected()
@@ -28,14 +28,8 @@ void UserTelnet::onSendToUser(const QByteArray &ba, const bool goAhead)
     // MMapper internally represents all data as Latin-1
     QString temp = QString::fromLatin1(ba);
 
-    // Switch codec if RFC 2066 was not negotiated and the configuration was altered
-    const CharacterEncodingEnum configEncoding = getConfig().general.characterEncoding;
-    if (!hisOptionState[OPT_CHARSET] && configEncoding != textCodec.getEncoding()) {
-        textCodec.setEncoding(configEncoding);
-    }
-
     // Convert from unicode into the client requested encoding
-    QByteArray outdata = textCodec.fromUnicode(temp);
+    QByteArray outdata = getTextCodec().fromUnicode(temp);
 
     submitOverTelnet(outdata, goAhead);
 }
@@ -44,7 +38,7 @@ void UserTelnet::sendToMapper(const QByteArray &data, const bool goAhead)
 {
     // MMapper requires all data to be Latin-1 internally
     // REVISIT: This will break things if the client is handling MPI itself
-    QByteArray outdata = textCodec.toUnicode(data).toLatin1();
+    QByteArray outdata = getTextCodec().toUnicode(data).toLatin1();
     emit analyzeUserStream(outdata, goAhead);
 }
 

@@ -83,7 +83,7 @@ static QString telnetSubnegName(uint8_t opt)
 
 static bool containsIAC(const QByteArray &arr)
 {
-    for (auto c : arr) {
+    for (const auto &c : arr) {
         if (static_cast<uint8_t>(c) == TN_IAC)
             return true;
     }
@@ -124,7 +124,7 @@ struct TelnetFormatter final : public AppendBuffer
 
     void addEscapedBytes(const QByteArray &s)
     {
-        for (auto c : s) {
+        for (const auto &c : s) {
             addEscaped(static_cast<uint8_t>(c));
         }
     }
@@ -144,13 +144,13 @@ struct TelnetFormatter final : public AppendBuffer
     void addSubnegEnd() { addCommand(TN_SE); }
 };
 
-AbstractTelnet::AbstractTelnet(TextCodec textCodec,
+AbstractTelnet::AbstractTelnet(TextCodecStrategyEnum strategy,
                                const bool debug,
                                QObject *const parent,
                                const QByteArray &defaultTermType)
     : QObject(parent)
-    , textCodec{std::move(textCodec)}
     , m_defaultTermType(defaultTermType)
+    , textCodec{strategy}
     , debug{debug}
 {
     reset();
@@ -360,7 +360,7 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
         case TN_GA:
             recvdGA = true; // signal will be emitted later
             break;
-        };
+        }
         break;
 
     case 3:
@@ -463,14 +463,14 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
             }
             myOptionState[option] = false;
             break;
-        };
+        }
         break;
 
     default:
         // other cmds should not arrive, as they were not negotiated.
         // if they do, they are merely ignored
         break;
-    };
+    }
     // other commands are simply ignored (NOP and such, see .h file for list)
 }
 
@@ -751,4 +751,16 @@ void AbstractTelnet::onReadInternal2(AppendBuffer &cleanData, const uint8_t c)
         commandBuffer.clear();
         break;
     }
+}
+
+TextCodec &AbstractTelnet::getTextCodec()
+{
+    // Switch codec if RFC 2066 was not negotiated and the configuration was altered
+    if (!hisOptionState[OPT_CHARSET]) {
+        const CharacterEncodingEnum configEncoding = getConfig().general.characterEncoding;
+        if (configEncoding != textCodec.getEncoding()) {
+            textCodec.setEncoding(configEncoding);
+        }
+    }
+    return textCodec;
 }

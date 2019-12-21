@@ -5,7 +5,7 @@
 #include "MudTelnet.h"
 
 MudTelnet::MudTelnet(QObject *const parent)
-    : AbstractTelnet(TextCodec(TextCodecStrategyEnum::FORCE_LATIN_1), false, parent)
+    : AbstractTelnet(TextCodecStrategyEnum::FORCE_LATIN_1, false, parent)
 {
     // RFC 2066 states we can provide many character sets but we force Latin-1 when
     // communicating with MUME
