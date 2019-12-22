@@ -30,13 +30,14 @@ public:
 
 public:
     void paint(QPainter *painter, const QRect &rect);
-    QSize sizeHint() const;
+    int getWidth() const { return count * height; }
 
 private:
     QColor color;
     CharacterPositionEnum position = CharacterPositionEnum::UNDEFINED;
     CharacterAffects affects;
-    int imageCount = 0;
+    int count = 1; // Start at 1 for character position
+    int height = 23;
 };
 Q_DECLARE_METATYPE(GroupStateData)
 
@@ -96,6 +97,7 @@ private:
 class GroupWidget final : public QWidget
 {
     Q_OBJECT
+
 public:
     explicit GroupWidget(Mmapper2Group *group, MapData *md, QWidget *parent = nullptr);
     virtual ~GroupWidget() override;

@@ -34,14 +34,15 @@ GroupStateData::GroupStateData(const QColor &color,
     : color(std::move(color))
     , position(position)
     , affects(affects)
-    , imageCount(1)
 {
     // Increment imageCount for each active affect
     for (const auto affect : ALL_CHARACTER_AFFECTS) {
-        if (affects.contains(affect)) {
-            imageCount++;
-        }
+        if (affects.contains(affect))
+            count++;
     }
+    // Users spam search/reveal/flush so pad an extra position to reduce eye strain
+    if (!affects.contains(CharacterAffectEnum::SEARCH))
+        count++;
 }
 
 void GroupStateData::paint(QPainter *const painter, const QRect &rect)
@@ -52,17 +53,16 @@ void GroupStateData::paint(QPainter *const painter, const QRect &rect)
     if (position == CharacterPositionEnum::UNDEFINED)
         return;
 
+    painter->save();
+    painter->translate(rect.x(), rect.y());
+    height = rect.height();
+    painter->scale(height, height); // Images are squares
+
     // REVISIT: Build images ahead of time
 
     const bool invert = textColor(color) == Qt::white;
-    const int x1 = [this, &rect]() {
-        const int rectWidth = rect.right() - rect.x();
-        const int imagesWidth = rect.height() * imageCount;
-        return rect.x() + (rectWidth - imagesWidth) / 2;
-    }();
 
-    int currentImage = 0;
-    const auto drawOne = [painter, &rect, invert, x1, &currentImage](auto &&filename) -> void {
+    const auto drawOne = [painter, invert](auto &&filename) -> void {
         const auto getImage = [invert](auto &filename) {
             QImage image{filename};
             if (invert)
@@ -70,26 +70,17 @@ void GroupStateData::paint(QPainter *const painter, const QRect &rect)
             return image;
         };
 
-        QRect pixRect{x1 + currentImage * rect.height(),
-                      rect.y(),
-                      rect.height(), // REVISIT: width()?
-                      rect.height()};
-        painter->drawImage(pixRect, getImage(filename));
-        currentImage++;
+        painter->drawImage(QRect{0, 0, 1, 1}, getImage(filename));
+        painter->translate(1, 0);
     };
 
     drawOne(getIconFilename(position));
-
     for (const auto affect : ALL_CHARACTER_AFFECTS) {
         if (affects.contains(affect)) {
             drawOne(getIconFilename(affect));
         }
     }
-}
-
-QSize GroupStateData::sizeHint() const
-{
-    return QSize(32 * imageCount, 32);
+    painter->restore();
 }
 
 GroupDelegate::GroupDelegate(QObject *parent)
@@ -115,10 +106,13 @@ QSize GroupDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIn
 {
     if (index.data().canConvert<GroupStateData>()) {
         GroupStateData stateData = qvariant_cast<GroupStateData>(index.data());
-        return stateData.sizeHint();
-    } else {
-        return QStyledItemDelegate::sizeHint(option, index);
+        QSize size = QStyledItemDelegate::sizeHint(option, index);
+        const int padding = size.width() / 2;
+        const int content = stateData.getWidth();
+        size.setWidth(padding + content);
+        return size;
     }
+    return QStyledItemDelegate::sizeHint(option, index);
 }
 
 GroupModel::GroupModel(MapData *const md, Mmapper2Group *const group, QObject *const parent)
