@@ -69,8 +69,6 @@ matrix:
       COMPILER: VS2017
     # Following builds are disabled to prevent build timeout
     - image: Ubuntu1804
-      ARCH: arm
-    - image: Ubuntu1804
       ARCH: arm64
 
 for:
