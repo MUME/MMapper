@@ -107,7 +107,7 @@ for:
 
     build_script:
       # Build MMapper within a Docker container using the current working path as a volume
-      - sh: docker run --rm -v "$(pwd)":/root/mmapper $DOCKER_IMAGE bash -c "apt update && apt upgrade -y && apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev cmake libminiupnpc-dev && cd /root/mmapper && mkdir build && cd build && cmake .. -DTARGET_ARCHITECTURE=$TARGET_ARCHITECTURE && make -j$(getconf _NPROCESSORS_ONLN) && QT_QPA_PLATFORM=offscreen ctest -V && cpack"
+      - sh: docker run --rm -v "$(pwd)":/root/mmapper $DOCKER_IMAGE bash -c "apt update && apt upgrade -y && apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev cmake libminiupnpc-dev && cd /root/mmapper && mkdir build && cd build && cmake .. -DTARGET_ARCHITECTURE=$TARGET_ARCHITECTURE -DUSE_COTIRE=true && make -j$(getconf _NPROCESSORS_ONLN) && QT_QPA_PLATFORM=offscreen ctest -V && cpack"
 
     artifacts:
       - path: build\mmapper-*-Linux-*.deb
@@ -158,7 +158,7 @@ for:
       - cmd: cd c:\Build\MMapper
       - cmd: md winbuild
       - cmd: cd winbuild
-      - cmd: cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -G %CMAKE_GENERATOR% "-DCMAKE_PREFIX_PATH=%QTDIR%" "-DOPENSSL_ROOT_DIR=%OPENSSLDIR%"
+      - cmd: cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -G %CMAKE_GENERATOR% "-DCMAKE_PREFIX_PATH=%QTDIR%" "-DOPENSSL_ROOT_DIR=%OPENSSLDIR%" -DUSE_COTIRE=true
       - cmd: cmake --build . -j %NUMBER_OF_PROCESSORS%
       - cmd: cpack
 
