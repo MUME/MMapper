@@ -37,6 +37,7 @@ parts:
     configflags:
       - -DCMAKE_INSTALL_PREFIX=/usr
       - -DWITH_UPDATER=false
+      - -DUSE_COTIRE=true
     build-packages:
       - build-essential
       - libssl-dev

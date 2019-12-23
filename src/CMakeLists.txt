@@ -461,6 +461,11 @@ target_link_libraries(mmapper PUBLIC
     Qt5::OpenGL
 )
 
+if(USE_COTIRE)
+    include(cotire)
+    cotire(mmapper)
+endif()
+
 set_target_properties(
   mmapper PROPERTIES
   CXX_STANDARD 17
