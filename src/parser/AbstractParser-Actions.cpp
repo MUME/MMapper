@@ -162,10 +162,13 @@ void AbstractParser::initActionMap()
     addStartsWith("The venom runs into your veins!", poisonOn);
     // Remove poison
     addStartsWith("A warm feeling runs through your body, you feel better.", poisonOff);
+    addStartsWith("A strange feeling runs through your body.", poisonOff);
     // Heal
     addStartsWith("A warm feeling fills your body.", poisonOff);
     // Antidote
     addStartsWith("- antidote", poisonOff);
+    addStartsWith("A warm feeling runs through your body.", poisonOff);
+    addStartsWith("You feel a strange taste in your mouth.", poisonOff);
 
     /// Hungry
     auto hungerOff = [this](StringView /*view*/) {
