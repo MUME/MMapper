@@ -1,4 +1,34 @@
 ================================
+MMapper 19.12.0 (December 28, 2019)
+================================
+
+New features:
+ - Added search, riding, and snared affects to the group manager
+ - Mouse clicks on a room during 'mouse mode' now display an information tooltip
+ - 'Find Rooms' dialog will now remember its last window position and dimensions
+ - Room mapping commands now use the syntax model. For more info type: _room ??
+ - Group manager commands now use the syntax model. For more info type: _group ??
+ - Integrated mud client is now a panel and not a non-modal window
+ - Integrated mud client now uses a centered tooltip for dimension hints
+ - Trilinear filtering is now enabled by default
+ - Promote the _connect command when MUME disconnects
+
+Bug fixes:
+ - Fixed ancient bug where mudlle'd movement would break map syncing (GH gate, Lorien, etc)
+ - Always display exits even if the player is in an unknown room
+ - Changing the character encoding within the preferences does not require a restart anymore
+ - The last remembered prompt is now correctly reset on disconnect
+ - External remote editor support is now working
+ - Scrolling on the map using the scrollbar buttons now move the map by a single room
+ - Special commands now take effect before generic door commands
+ - Refactored group manager and parser code to be more correct and maintainable
+ - Group manager now correctly extracts the external IP
+ - Fixed integrated mud client preferences page to restore all settings
+ - Fixed restoring main window size on startup
+ - Fixed regression with internal mud client up/down key press behavior on Mac
+ - Fixed room syncing for Valar
+
+================================
 MMapper 19.10.1 (October 31, 2019)
 ================================
 
