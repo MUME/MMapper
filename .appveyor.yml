@@ -31,12 +31,12 @@ environment:
       OPENSSLDIR: C:\OpenSSL-v111-Win64
 
     - ARCH: x86
-      COMPILER: VS2017
+      COMPILER: VS2019
       QTDIR: C:\Qt\5.13\msvc2017
       OPENSSLDIR: C:\OpenSSL-v111-Win32
 
     - ARCH: x64
-      COMPILER: VS2017
+      COMPILER: VS2019
       QTDIR: C:\Qt\5.13\msvc2017_64
       OPENSSLDIR: C:\OpenSSL-v111-Win64
 
@@ -44,21 +44,21 @@ environment:
       COMPILER: Clang
 
 image:
-  - Visual Studio 2017
+  - Visual Studio 2019
   - Ubuntu1804
   - macos-mojave
 
 matrix:
   exclude:
     # Exclude invalid options
-    - image: Visual Studio 2017
+    - image: Visual Studio 2019
       COMPILER: GCC
-    - image: Visual Studio 2017
+    - image: Visual Studio 2019
       COMPILER: Clang
     - image: Ubuntu1804
       COMPILER: MinGW
     - image: Ubuntu1804
-      COMPILER: VS2017
+      COMPILER: VS2019
     - image: Ubuntu1804
       COMPILER: Clang
     - image: macos-mojave
@@ -66,7 +66,7 @@ matrix:
     - image: macos-mojave
       COMPILER: MinGW
     - image: macos-mojave
-      COMPILER: VS2017
+      COMPILER: VS2019
     # Following builds are disabled to prevent build timeout
     - image: Ubuntu1804
       ARCH: arm
@@ -120,7 +120,7 @@ for:
   -
     matrix:
       only:
-        - image: Visual Studio 2017
+        - image: Visual Studio 2019
 
     clone_folder: c:\Build\MMapper
 
@@ -129,7 +129,7 @@ for:
     init:
       - cmd: set VCARCH=%ARCH%
       - cmd: if %ARCH%==x64 set VCARCH=amd64
-      - cmd: if %COMPILER%==VS2017 call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %VCARCH%
+      - cmd: if %COMPILER%==VS2019 call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" %VCARCH%
       - cmd: if %COMPILER%==MinGW set CMAKE_GENERATOR="MinGW Makefiles"
       - cmd: if NOT %COMPILER%==MinGW set CMAKE_GENERATOR="NMake Makefiles JOM"
       - cmd: git config --global core.autocrlf input
