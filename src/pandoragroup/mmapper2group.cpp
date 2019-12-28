@@ -55,7 +55,8 @@ Mmapper2Group::Mmapper2Group(QObject *const /* parent */)
             Qt::ConnectionType::BlockingQueuedConnection);
 
     affectTimer.setInterval(1000);
-    affectTimer.setSingleShot(true);
+    affectTimer.setSingleShot(false);
+    affectTimer.start();
     connect(&affectTimer, &QTimer::timeout, this, &Mmapper2Group::onAffectTimeout);
 
     if (thread) {
@@ -497,8 +498,6 @@ void Mmapper2Group::updateCharacterAffect(const CharacterAffectEnum affect, cons
 
     if (enable) {
         affects.insert(affect);
-        if (!affectTimer.isActive())
-            affectTimer.start();
     } else {
         affects.remove(affect);
         affectLastSeen.remove(affect);
@@ -530,9 +529,6 @@ void Mmapper2Group::onAffectTimeout()
     }
     if (removedAtLeastOneAffect)
         issueLocalCharUpdate();
-
-    if (!affectTimer.isActive())
-        affectTimer.start();
 }
 
 void Mmapper2Group::setPath(CommandQueue dirs)
