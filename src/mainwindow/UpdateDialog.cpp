@@ -120,7 +120,7 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
                 if constexpr (CURRENT_ENVIRONMENT == EnvironmentEnum::Env32Bit)
                     return R"((arm(?!64)|armhf|i386|x86(?!_64)))";
                 if constexpr (CURRENT_ENVIRONMENT == EnvironmentEnum::Env64Bit)
-                    return R"((aarch64|amd64|arm64|x86_64))";
+                    return R"((aarch64|amd64|arm64|x86_64|x64))";
                 abort();
             }(),
             QRegularExpression::PatternOption::CaseInsensitiveOption);

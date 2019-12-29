@@ -166,10 +166,10 @@ for:
       - cmd: ctest -V
 
     artifacts:
-      - path: winbuild\mmapper-*-Windows-$(ARCH).exe
+      - path: winbuild\mmapper-*-Windows-*.exe
         name: MMapper Installer
 
-      - path: winbuild\mmapper-*-Windows-$(ARCH).*.sha256
+      - path: winbuild\mmapper-*-Windows-*.*.sha256
         name: MMapper Checksums
 
   # Mac
