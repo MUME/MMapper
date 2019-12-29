@@ -129,5 +129,6 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
 
 void UpdateDialog::accepted()
 {
-    QDesktopServices::openUrl(QUrl("https://github.com/MUME/MMapper/releases"));
+    if (QDesktopServices::openUrl(QUrl("https://github.com/MUME/MMapper/releases")))
+        close();
 }
