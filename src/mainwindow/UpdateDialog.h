@@ -8,29 +8,40 @@
 #include <QDialogButtonBox>
 #include <QLabel>
 #include <QNetworkAccessManager>
+#include <QString>
 
 #include "../global/Array.h"
 
 class CompareVersion final
 {
+private:
+    MMapper::Array<int, 3> parts;
+
 public:
     explicit CompareVersion(const QString &versionStr) noexcept;
+
+public:
     bool operator>(const CompareVersion &other) const;
     bool operator==(const CompareVersion &other) const;
+
+public:
     QString toQString() const;
     explicit operator QString() const { return toQString(); }
     friend QDebug operator<<(QDebug os, const CompareVersion &compareVersion)
     {
         return os << compareVersion.toQString();
     }
-
-private:
-    MMapper::Array<int, 3> parts;
 };
 
 class UpdateDialog : public QDialog
 {
     Q_OBJECT
+private:
+    QNetworkAccessManager manager;
+    QString downloadUrl;
+    QLabel *text = nullptr;
+    QDialogButtonBox *buttonBox = nullptr;
+
 public:
     explicit UpdateDialog(QWidget *parent = nullptr);
 
@@ -40,9 +51,4 @@ private slots:
     void managerFinished(QNetworkReply *reply);
     // FIXME: This hides the QDialog::accepted() signal.
     void accepted();
-
-private:
-    QNetworkAccessManager manager;
-    QLabel *text = nullptr;
-    QDialogButtonBox *buttonBox = nullptr;
 };

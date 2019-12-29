@@ -6,12 +6,14 @@
 
 #include <QDesktopServices>
 #include <QGridLayout>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QNetworkReply>
 #include <QPushButton>
 #include <QRegularExpression>
 
+#include "../configuration/configuration.h"
 #include "../global/Version.h"
 
 CompareVersion::CompareVersion(const QString &versionStr) noexcept
@@ -86,10 +88,10 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
         qWarning() << reply->errorString();
         return;
     }
-    QString answer = reply->readAll();
+    const QString answer = reply->readAll();
     QJsonParseError error;
     // REVISIT: Should this be latin1 or utf8?
-    QJsonDocument doc = QJsonDocument::fromJson(answer.toLatin1(), &error);
+    const QJsonDocument doc = QJsonDocument::fromJson(answer.toLatin1(), &error);
     if (doc.isNull()) {
         qWarning() << error.errorString();
         return;
@@ -99,7 +101,50 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
         return;
     }
 
-    QJsonObject obj = doc.object();
+    const QJsonObject obj = doc.object();
+    downloadUrl = [&obj]() -> QString {
+        // Regular expressions to detect if this download matches the current install
+        const auto platformRegex = QRegularExpression(
+            []() {
+                if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac)
+                    return R"(^mmapper\-.+Mac.+\.dmg$)";
+                if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux)
+                    return R"(^mmapper\-.+Linux.+\.deb$)"; // REVISIT: What about other distributions?
+                if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows)
+                    return R"(^mmapper\-.+Windows.+\.exe$)";
+                abort();
+            }(),
+            QRegularExpression::PatternOption::CaseInsensitiveOption);
+        const auto environmentRegex = QRegularExpression(
+            []() {
+                if constexpr (CURRENT_ENVIRONMENT == EnvironmentEnum::Env32Bit)
+                    return R"((arm(?!64)|armhf|i386|x86(?!_64)))";
+                if constexpr (CURRENT_ENVIRONMENT == EnvironmentEnum::Env64Bit)
+                    return R"((aarch64|amd64|arm64|x86_64))";
+                abort();
+            }(),
+            QRegularExpression::PatternOption::CaseInsensitiveOption);
+
+        if (obj.contains("assets") && obj["assets"].isArray()) {
+            for (auto item : obj["assets"].toArray()) {
+                const QJsonObject itemObj = item.toObject();
+                if (itemObj.contains("name") && itemObj["name"].isString()
+                    && itemObj.contains("browser_download_url")
+                    && itemObj["browser_download_url"].isString()) {
+                    const QString name = itemObj["name"].toString();
+                    if (!name.contains(platformRegex) || !name.contains(environmentRegex))
+                        continue;
+                    return itemObj["browser_download_url"].toString();
+                }
+            }
+        }
+        if (obj.contains("html_url") && obj["html_url"].isString())
+            return obj["html_url"].toString();
+        return "https://github.com/MUME/MMapper/releases";
+    }();
+
+    if (!obj.contains("tag_name") || !obj["tag_name"].isString())
+        return;
     const QString latestTag = obj["tag_name"].toString();
     const QString currentVersion = QLatin1String(getMMapperVersion());
     const CompareVersion latest(latestTag);
@@ -115,7 +160,7 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
         text->setText(QString("A new version of MMapper is available!"
                               "\n"
                               "\n"
-                              "Press 'Upgrade' to grab MMapper %1!")
+                              "Press 'Upgrade' to download MMapper %1!")
                           .arg(latestTag));
         buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
 
@@ -129,6 +174,6 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
 
 void UpdateDialog::accepted()
 {
-    if (QDesktopServices::openUrl(QUrl("https://github.com/MUME/MMapper/releases")))
+    if (QDesktopServices::openUrl(downloadUrl))
         close();
 }
