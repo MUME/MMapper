@@ -21,7 +21,7 @@ environment:
     - ARCH: x86
       COMPILER: MinGW
       QTDIR: C:\Qt\5.13\mingw73_32
-      MINGWDIR: C:\mingw-w64\i686-8.1.0-posix-seh-rt_v6-rev0\mingw32
+      MINGWDIR: C:\mingw-w64\i686-8.1.0-posix-dwarf-rt_v6-rev0\mingw32
       OPENSSLDIR: C:\OpenSSL-v111-Win32
 
     - ARCH: x64
@@ -124,7 +124,9 @@ for:
 
     clone_folder: c:\Build\MMapper
 
-    cache: C:\mingw-w64\i686-8.1.0-posix-seh-rt_v6-rev0\mingw32
+    cache:
+      - C:\mingw-w64\i686-8.1.0-posix-dwarf-rt_v6-rev0\mingw32
+      - C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64
 
     init:
       - cmd: set VCARCH=%ARCH%
@@ -143,11 +145,19 @@ for:
       - ps: $env:package_version = ("$(git describe --tags --always --long)").trim()
       - ps: Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
       # Install x86 MingW 8.1.0 if it is not available
-      - cmd: if %COMPILER%==MinGW if %ARCH%==x86 if not exist "C:\mingw-w64\i686-8.1.0-posix-seh-rt_v6-rev0" md C:\mingw-w64\i686-8.1.0-posix-seh-rt_v6-rev0
-      - cmd: if %COMPILER%==MinGW if %ARCH%==x86 cd C:\mingw-w64\i686-8.1.0-posix-seh-rt_v6-rev0
+      - cmd: if %COMPILER%==MinGW if %ARCH%==x86 if not exist "C:\mingw-w64\i686-8.1.0-posix-dwarf-rt_v6-rev0" md C:\mingw-w64\i686-8.1.0-posix-dwarf-rt_v6-rev0
+      - cmd: if %COMPILER%==MinGW if %ARCH%==x86 cd C:\mingw-w64\i686-8.1.0-posix-dwarf-rt_v6-rev0
       - cmd: if %COMPILER%==MinGW if %ARCH%==x86 dir
       - cmd: if %COMPILER%==MinGW if %ARCH%==x86 if not exist "mingw32" appveyor-retry appveyor DownloadFile "http://downloads.sourceforge.net/mingw-w64/i686-8.1.0-release-posix-dwarf-rt_v6-rev0.7z" -FileName "mingw32.7z"
       - cmd: if %COMPILER%==MinGW if %ARCH%==x86 if exist "mingw32.7z" 7z x -y "mingw32.7z" > nul
+      # Install x64 MingW 8.1.0 if it is not available
+      - cmd: if %COMPILER%==MinGW if %ARCH%==x64 if not exist "C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0" md C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0
+      - cmd: if %COMPILER%==MinGW if %ARCH%==x64 cd C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0
+      - cmd: if %COMPILER%==MinGW if %ARCH%==x64 dir
+      - cmd: if %COMPILER%==MinGW if %ARCH%==x64 if not exist "mingw64" appveyor-retry appveyor DownloadFile "http://downloads.sourceforge.net/mingw-w64/x86_64-8.1.0-release-posix-seh-rt_v6-rev0.7z" -FileName "mingw64.7z"
+      - cmd: if %COMPILER%==MinGW if %ARCH%==x64 if exist "mingw64.7z" 7z x -y "mingw64.7z" > nul
+
+
 
     before_build:
       - cmd: set PATH=%QTDIR%\bin;C:\Qt\Tools\QtCreator\bin;%PATH%
