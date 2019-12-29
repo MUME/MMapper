@@ -36,7 +36,7 @@ private:
     QColor color;
     CharacterPositionEnum position = CharacterPositionEnum::UNDEFINED;
     CharacterAffects affects;
-    int count = 1; // Start at 1 for character position
+    int count = 0;
     int height = 23;
 };
 Q_DECLARE_METATYPE(GroupStateData)

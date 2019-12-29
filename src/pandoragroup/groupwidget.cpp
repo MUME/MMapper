@@ -35,6 +35,8 @@ GroupStateData::GroupStateData(const QColor &color,
     , position(position)
     , affects(affects)
 {
+    if (position != CharacterPositionEnum::UNDEFINED)
+        count++;
     // Increment imageCount for each active affect
     for (const auto affect : ALL_CHARACTER_AFFECTS) {
         if (affects.contains(affect))
@@ -48,10 +50,6 @@ GroupStateData::GroupStateData(const QColor &color,
 void GroupStateData::paint(QPainter *const painter, const QRect &rect)
 {
     painter->fillRect(rect, color);
-
-    // REVISIT: Create questionmark icon?
-    if (position == CharacterPositionEnum::UNDEFINED)
-        return;
 
     painter->save();
     painter->translate(rect.x(), rect.y());
@@ -74,7 +72,8 @@ void GroupStateData::paint(QPainter *const painter, const QRect &rect)
         painter->translate(1, 0);
     };
 
-    drawOne(getIconFilename(position));
+    if (position != CharacterPositionEnum::UNDEFINED)
+        drawOne(getIconFilename(position));
     for (const auto affect : ALL_CHARACTER_AFFECTS) {
         if (affects.contains(affect)) {
             drawOne(getIconFilename(affect));
