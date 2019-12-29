@@ -180,6 +180,7 @@ void AbstractParser::initActionMap()
     addStartsWith("You begin to feel hungry.", hungerOn);
     addStartsWith("You are hungry.", hungerOn);
     addStartsWith("You are full.", hungerOff);
+    addStartsWith("You are too full to eat more!", hungerOff);
 
     /// Thirsty
     auto thirstOff = [this](StringView /*view*/) {
@@ -191,8 +192,10 @@ void AbstractParser::initActionMap()
     addStartsWith("You begin to feel thirsty.", thirstOn);
     addStartsWith("You are thirsty.", thirstOn);
     addStartsWith("You do not feel thirsty anymore.", thirstOff);
+    addStartsWith("Your stomach can't contain anymore!", thirstOff);
     // create water
     addStartsWith("You feel less thirsty.", thirstOff);
+    addStartsWith("You are not thirsty anymore.", thirstOff);
 
     /// Path Machine: Prespam
     auto failedMovement = [this](StringView /*view*/) {
