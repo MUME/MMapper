@@ -590,6 +590,7 @@ if(NOT TARGET_ARCHITECTURE)
     set(TARGET_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}")
 endif()
 message(STATUS "Packaging for target: ${CPACK_SYSTEM_NAME} ${TARGET_ARCHITECTURE}")
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_FILE_NAME}-${TARGET_ARCHITECTURE}")
 
 # Linux Install Settings
 if(UNIX AND NOT APPLE)
@@ -648,8 +649,6 @@ if(UNIX AND NOT APPLE)
     if(WITH_MINIUPNPC)
         set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, libminiupnpc${MINIUPNPC_API_VERSION}")
     endif()
-
-    set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_FILE_NAME}-${TARGET_ARCHITECTURE}")
 endif(UNIX AND NOT APPLE)
 
 # Windows Install Settings
@@ -728,7 +727,6 @@ if(WIN32)
             Delete \\\"$PROFILE\\\\AppData\\\\Local\\\\mmappercrash.log\\\"
             ")
     endif()
-    set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_FILE_NAME}-${TARGET_ARCHITECTURE}")
 endif(WIN32)
 
 # Apple Install Settings
