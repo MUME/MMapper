@@ -150,7 +150,13 @@ if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
           OUTPUT_STRIP_TRAILING_WHITESPACE
         )
 
-        # Get the latest tag, number of commits since, and abbreviated commit hash
+        # Fetch the latest tags
+        execute_process(
+          COMMAND ${GIT_EXECUTABLE} fetch --tags
+          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        )
+
+        # Describe the most recent tag, number of commits since, and abbreviated commit hash
         execute_process(
           COMMAND ${GIT_EXECUTABLE} describe --tags --always --long
           WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
@@ -164,6 +170,7 @@ if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
           WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
           OUTPUT_VARIABLE GIT_TAG_NAME
           OUTPUT_STRIP_TRAILING_WHITESPACE
+          ERROR_QUIET
         )
 
         # Detect last annotated tag for map downloading
