@@ -37,6 +37,7 @@ else()
             TARGET miniupnpc
             POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E echo Deploying MiniUPnPc binary
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/src/bin/
             COMMAND ${CMAKE_COMMAND} -E copy ${MINIUPNPC_SHARED_LIBRARY} ${CMAKE_BINARY_DIR}/src/bin/
             )
     endif()

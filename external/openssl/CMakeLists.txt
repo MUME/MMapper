@@ -1,3 +1,7 @@
+if(WIN32 AND NOT OPENSSL_FOUND)
+    # Perl is required if we want to try building from the local source tree
+    find_package(Perl)
+endif()
 if(OPENSSL_FOUND)
     message(STATUS "OpenSSL ${OPENSSL_VERSION} found: ${OPENSSL_LIBRARIES}")
     if(WIN32)
@@ -78,47 +82,86 @@ if(OPENSSL_FOUND)
             message(STATUS "   Copied ${SSL_LIB_BIN} to src/bin/")
         endif()
     endif()
-elseif(MINGW AND Qt5Core_VERSION VERSION_GREATER 5.12.3)
-    message(STATUS "Could not find a local OpenSSL; downloading a precompiled library")
+elseif(WIN32 AND PERL_FOUND AND Qt5Core_VERSION VERSION_GREATER 5.12.3)
+    message(STATUS "Could not find a local OpenSSL; building from local source tree")
     include(ExternalProject)
-    set(OPENSSL_VERSION 1.1.1a)
-    if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
+    set(OPENSSL_VERSION 1.1.1d)
+    set(OPENSSL_URL_HASH 056057782325134b76d1931c48f2c7e6595d7ef4)
+    # Build the shared library
+    set(OPENSSL_CONFIGURATION no-tests no-unit-test shared)
+    # Improve security by disabling weak ciphers
+    set(OPENSSL_CONFIGURATION no-weak-ssl-ciphers no-idea no-mdc2 no-rc5 ${OPENSSL_CONFIGURATION})
+    if(MINGW)
+        if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
+            # Additional options taken from: https://github.com/curl/curl-for-win/blob/master/openssl.sh
+            set(OPENSSL_CONFIGURATION ${OPENSSL_CONFIGURATION} no-asm enable-ec_nistp_64_gcc_128 mingw64)
+        else()
+            set(OPENSSL_CONFIGURATION ${OPENSSL_CONFIGURATION} mingw)
+        endif()
         ExternalProject_Add(openssl
-            URL https://bintray.com/vszakats/generic/download_file?file_path=openssl-${OPENSSL_VERSION}-win64-mingw.zip
-            URL_HASH SHA1=dcb33213d739d01ffa892ee39516add37f995129
+            URL https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz
+            URL_HASH SHA1=${OPENSSL_URL_HASH}
 
             SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/openssl-src"
-            INSTALL_DIR "${CMAKE_BINARY_DIR}/src/bin"
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND ${CMAKE_COMMAND} -E echo Deploying OpenSSL 64-bit binary and dependencies
-            INSTALL_COMMAND ${CMAKE_COMMAND} -E copy <SOURCE_DIR>/libcrypto-1_1-x64.dll ${CMAKE_BINARY_DIR}/src/bin/
-                    COMMAND ${CMAKE_COMMAND} -E copy <SOURCE_DIR>/libssl-1_1-x64.dll ${CMAKE_BINARY_DIR}/src/bin/
+            INSTALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/openssl-bin"
+            CONFIGURE_COMMAND ${PERL_EXECUTABLE} Configure --prefix=<INSTALL_DIR> --openssldir=<INSTALL_DIR> ${OPENSSL_CONFIGURATION}
+
+            BUILD_COMMAND make depend COMMAND make
+            INSTALL_COMMAND make install_sw
 
             UPDATE_COMMAND ""
+            BUILD_IN_SOURCE 1
             ALWAYS 0
         )
-    else()
+        ExternalProject_Get_Property(openssl INSTALL_DIR)
+        set(OPENSSL_LIBRARIES
+            ${INSTALL_DIR}/lib/libcrypto.dll.a
+            ${INSTALL_DIR}/lib/libssl.dll.a
+            PARENT_SCOPE)
+    elseif(MSVC)
+        if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
+            set(OPENSSL_CONFIGURATION ${OPENSSL_CONFIGURATION} VC-WIN64A)
+        else()
+            set(OPENSSL_CONFIGURATION ${OPENSSL_CONFIGURATION} VC-WIN32)
+        endif()
         ExternalProject_Add(openssl
-            URL https://bintray.com/vszakats/generic/download_file?file_path=openssl-${OPENSSL_VERSION}-win32-mingw.zip
-            URL_HASH SHA1=632c92a048bca7aa35ba07c2db514bf9a10907a3
+            URL https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz
+            URL_HASH SHA1=${OPENSSL_URL_HASH}
 
             SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/openssl-src"
-            INSTALL_DIR "${CMAKE_BINARY_DIR}/src/bin"
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND ${CMAKE_COMMAND} -E echo Deploying OpenSSL 32-bit binary and dependencies
-            INSTALL_COMMAND ${CMAKE_COMMAND} -E copy <SOURCE_DIR>/libcrypto-1_1.dll ${CMAKE_BINARY_DIR}/src/bin/
-                    COMMAND ${CMAKE_COMMAND} -E copy <SOURCE_DIR>/libssl-1_1.dll ${CMAKE_BINARY_DIR}/src/bin/
+            INSTALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/openssl-bin"
+            CONFIGURE_COMMAND ${PERL_EXECUTABLE} Configure --prefix=<INSTALL_DIR> --openssldir=<INSTALL_DIR> ${OPENSSL_CONFIGURATION}
+
+            BUILD_COMMAND nmake
+            INSTALL_COMMAND nmake install_sw
 
             UPDATE_COMMAND ""
+            BUILD_IN_SOURCE 1
             ALWAYS 0
         )
+        ExternalProject_Get_Property(openssl INSTALL_DIR)
+        set(OPENSSL_LIBRARIES
+            ${INSTALL_DIR}/lib/libcrypto.lib
+            ${INSTALL_DIR}/lib/libssl.lib
+            PARENT_SCOPE)
     endif()
-    set(OPENSSL_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/openssl-src/include" PARENT_SCOPE)
-    set(OPENSSL_LIBRARIES
-        ${CMAKE_CURRENT_BINARY_DIR}/openssl-src/lib/libcrypto.dll.a
-        ${CMAKE_CURRENT_BINARY_DIR}/openssl-src/lib/libssl.dll.a
-        PARENT_SCOPE)
+    set(OPENSSL_INCLUDE_DIR "${INSTALL_DIR}/include" PARENT_SCOPE)
     set(OPENSSL_VERSION ${OPENSSL_VERSION} PARENT_SCOPE)
+    if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
+        set(OPENSSL_CRYPTO_LIBRARY_FILE "libcrypto-1_1-x64.dll")
+        set(OPENSSL_SSL_LIBRARY_FILE "libssl-1_1-x64.dll")
+    else()
+        set(OPENSSL_CRYPTO_LIBRARY_FILE "libcrypto-1_1.dll")
+        set(OPENSSL_SSL_LIBRARY_FILE "libssl-1_1.dll")
+    endif()
+    add_custom_command(
+        TARGET openssl
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E echo Deploying OpenSSL binary
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/src/bin/
+        COMMAND ${CMAKE_COMMAND} -E copy ${INSTALL_DIR}/bin/${OPENSSL_CRYPTO_LIBRARY_FILE} ${CMAKE_BINARY_DIR}/src/bin/
+        COMMAND ${CMAKE_COMMAND} -E copy ${INSTALL_DIR}/bin/${OPENSSL_SSL_LIBRARY_FILE} ${CMAKE_BINARY_DIR}/src/bin/
+     )
 else()
     if(WIN32)
         if(Qt5Core_VERSION VERSION_GREATER 5.12.3)
