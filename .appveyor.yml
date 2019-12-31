@@ -41,25 +41,25 @@ environment:
 
 image:
   # AppVeyor builds are ordered by the image list:
-  - Visual Studio 2019
+  - Visual Studio 2017
   - macos-mojave
   - Ubuntu1804
-  - Visual Studio 2017
+  - Previous Visual Studio 2017
 
 matrix:
   exclude:
     # Exclude invalid options
-    - image: Visual Studio 2017
+    - image: Previous Visual Studio 2017
       COMPILER: Clang
-    - image: Visual Studio 2017
+    - image: Previous Visual Studio 2017
       COMPILER: GCC
-    - image: Visual Studio 2017
+    - image: Previous Visual Studio 2017
       COMPILER: MinGW
-    - image: Visual Studio 2019
+    - image: Visual Studio 2017
       COMPILER: Clang
-    - image: Visual Studio 2019
+    - image: Visual Studio 2017
       COMPILER: GCC
-    - image: Visual Studio 2019
+    - image: Visual Studio 2017
       COMPILER: VS2017
     - image: Ubuntu1804
       COMPILER: Clang
@@ -126,7 +126,7 @@ for:
   -
     matrix:
       only:
-        - image: Visual Studio 2017
+        - image: Previous Visual Studio 2017
 
     clone_folder: c:\Build\MMapper
 
@@ -175,7 +175,7 @@ for:
   -
     matrix:
       only:
-        - image: Visual Studio 2019
+        - image: Visual Studio 2017
 
     clone_folder: c:\Build\MMapper
 
