@@ -660,6 +660,9 @@ endif(UNIX AND NOT APPLE)
 
 # Windows Install Settings
 if(WIN32)
+    if(WITH_DRMINGW)
+        set(CMAKE_INSTALL_UCRT_LIBRARIES ON)
+    endif()
     include(InstallRequiredSystemLibraries)
     set(CMAKE_WIN32_EXECUTABLE ON)
 
@@ -695,7 +698,7 @@ if(WIN32)
     if(MSVC)
         get_filename_component(vcredist_name "${MSVC_REDIST}" NAME)
         install(FILES ${MSVC_REDIST} DESTINATION bin COMPONENT libraries)
-        set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "ExecWait '\\\"$INSTDIR\\\\bin\\\\${vcredist_name}\\\"'")
+        set(CPACK_NSIS_EXTRA_PREINSTALL_COMMANDS "ExecWait '\\\"$INSTDIR\\\\bin\\\\${vcredist_name}\\\"'")
     endif()
 
     # ZIP requires 7-zip
@@ -723,11 +726,11 @@ if(WIN32)
     endif()
     if(WITH_DRMINGW)
         # Include shortcut to crash logs
-        set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "
+        set(CPACK_NSIS_CREATE_ICONS_EXTRA "
             CreateShortCut \\\"$SMPROGRAMS\\\\${CPACK_NSIS_DISPLAY_NAME}\\\\Crash Log.lnk\\\" \\\"$PROFILE\\\\AppData\\\\Local\\\\mmappercrash.log\\\"
             ")
         # Delete shortcut and crash log
-        set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "
+        set(CPACK_NSIS_DELETE_ICONS_EXTRA "
             Delete \\\"$SMPROGRAMS\\\\${CPACK_NSIS_DISPLAY_NAME}\\\\Crash Log.lnk\\\"
             Delete \\\"$PROFILE\\\\AppData\\\\Local\\\\mmappercrash.log\\\"
             ")
