@@ -732,6 +732,8 @@ if(WIN32)
             Delete \\\"$PROFILE\\\\AppData\\\\Local\\\\mmappercrash.log\\\"
             ")
     endif()
+    # NSIS always displays a license page
+    set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/src/resources/LICENSE.GPL2")
 endif(WIN32)
 
 # Apple Install Settings
