@@ -1,4 +1,13 @@
 ================================
+MMapper 19.12.1 (December 31, 2019)
+================================
+
+Bug fixes:
+ - Fix missing messages for hunger/thirst on group manager
+ - Group manager affects are now always visible for new group members
+ - Update dialog will now correctly close and download the relevant upgrade link
+
+================================
 MMapper 19.12.0 (December 28, 2019)
 ================================
 
