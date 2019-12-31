@@ -14,7 +14,7 @@ class Configuration;
 class MapData;
 class ParseEvent;
 class QObject;
-class QTime;
+class QElapsedTimer;
 
 /**
 @author alve,,,
@@ -32,5 +32,5 @@ signals:
     void log(const QString &, const QString &);
 
 private:
-    QTime time;
+    QElapsedTimer time;
 };

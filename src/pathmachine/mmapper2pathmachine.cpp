@@ -6,8 +6,8 @@
 #include "mmapper2pathmachine.h"
 
 #include <cassert>
+#include <QElapsedTimer>
 #include <QString>
-#include <QTime>
 
 #include "../configuration/configuration.h"
 #include "../expandoracommon/parseevent.h"
