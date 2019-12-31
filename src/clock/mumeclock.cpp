@@ -376,7 +376,7 @@ const QString MumeClock::toMumeTime(const MumeMoment &moment)
     case MumeClockPrecisionEnum::MINUTE:
         time = QString("%1:%2%3 on %4")
                    .arg(hour)
-                   .arg(QString().sprintf("%02d", moment.minute))
+                   .arg(moment.minute, 2, 10, QChar('0'))
                    .arg(period)
                    .arg(weekDay);
         break;
@@ -422,7 +422,7 @@ const QString MumeClock::toCountdown(const MumeMoment &moment)
     }
     return QString("%1:%2")
         .arg(secondsToCountdown / 60)
-        .arg(QString().sprintf("%02d", secondsToCountdown % 60));
+        .arg(secondsToCountdown % 60, 2, 10, QChar('0'));
 }
 
 MumeClock::DawnDusk MumeClock::getDawnDusk(const int month)

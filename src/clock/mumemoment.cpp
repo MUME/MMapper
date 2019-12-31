@@ -126,7 +126,7 @@ MumeSeasonEnum MumeMoment::toSeason() const
 
     case MumeClock::WestronMonthNamesEnum::UnknownWestronMonth:
         break;
-    };
+    }
     return MumeSeasonEnum::UNKNOWN;
 }
 
@@ -273,5 +273,5 @@ QString MumeMoment::toMoonCountDown() const
     }
     return QString("%1:%2")
         .arg(secondsToCountdown / 60)
-        .arg(QString().sprintf("%02d", secondsToCountdown % 60));
+        .arg(secondsToCountdown % 60, 2, 10, QChar('0'));
 }
