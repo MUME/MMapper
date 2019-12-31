@@ -105,7 +105,7 @@ void MumeXmlParser::parse(const TelnetData &data)
 {
     const QByteArray &line = data.line;
     m_lineToUser.clear();
-    m_lineFlags.clear();
+    m_lineFlags.remove(LineFlagEnum::NONE);
 
     for (const char c : line) {
         if (m_readingTag) {
@@ -179,22 +179,39 @@ bool MumeXmlParser::element(const QByteArray &line)
         if (length > 0) {
             switch (line.at(0)) {
             case '/':
-                if (line.startsWith("/xml")) {
+                if (line.startsWith("/snoop")) {
+                    m_lineFlags.remove(LineFlagEnum::SNOOP);
+                    if (m_descriptionReady) {
+                        m_promptFlags.reset(); // Don't trust god prompts
+                        m_queue.enqueue(m_move);
+                        move();
+                    }
+
+                } else if (line.startsWith("/status")) {
+                    m_lineFlags.remove(LineFlagEnum::STATUS);
+
+                } else if (line.startsWith("/weather")) {
+                    m_lineFlags.remove(LineFlagEnum::WEATHER);
+                    // Certain weather events happen on ticks
+                    m_mumeClock->parseWeather(m_stringBuffer);
+
+                } else if (line.startsWith("/xml")) {
                     sendToUser("[MMapper] Mapper cannot function without XML mode\n");
                     m_queue.clear();
+                    m_lineFlags.clear();
                 }
                 break;
             case 'p':
                 if (line.startsWith("prompt")) {
                     m_xmlMode = XmlModeEnum::PROMPT;
-                    m_lineFlags |= LineFlagEnum::PROMPT;
+                    m_lineFlags.insert(LineFlagEnum::PROMPT);
                 }
                 break;
             case 'e':
                 if (line.startsWith("exits")) {
                     m_exits = nullString; // Reset string since payload can be from the 'exit' command
                     m_xmlMode = XmlModeEnum::EXITS;
-                    m_lineFlags |= LineFlagEnum::EXITS;
+                    m_lineFlags.insert(LineFlagEnum::EXITS);
                 }
                 break;
             case 'r':
@@ -209,7 +226,7 @@ bool MumeXmlParser::element(const QByteArray &line)
                     m_promptFlags.reset();
                     m_exitsFlags.reset();
                     m_connectedRoomFlags.reset();
-                    m_lineFlags |= LineFlagEnum::ROOM;
+                    m_lineFlags.insert(LineFlagEnum::ROOM);
                 }
                 break;
             case 'm':
@@ -251,21 +268,21 @@ bool MumeXmlParser::element(const QByteArray &line)
                 break;
             case 'w':
                 if (line.startsWith("weather")) {
-                    m_lineFlags |= LineFlagEnum::WEATHER;
+                    m_lineFlags.insert(LineFlagEnum::WEATHER);
                 }
                 break;
             case 's':
                 if (line.startsWith("status")) {
-                    m_lineFlags |= LineFlagEnum::STATUS;
-                    m_xmlMode = XmlModeEnum::NONE;
+                    m_lineFlags.insert(LineFlagEnum::STATUS);
+
                 } else if (line.startsWith("snoop")) {
-                    m_lineFlags |= LineFlagEnum::SNOOP;
+                    m_lineFlags.insert(LineFlagEnum::SNOOP);
                 }
                 break;
             case 'h':
                 if (line.startsWith("header")) {
                     m_xmlMode = XmlModeEnum::HEADER;
-                    m_lineFlags |= LineFlagEnum::HEADER;
+                    m_lineFlags.insert(LineFlagEnum::HEADER);
                 }
                 break;
             }
@@ -283,7 +300,7 @@ bool MumeXmlParser::element(const QByteArray &line)
             case 'n':
                 if (line.startsWith("name")) {
                     m_xmlMode = XmlModeEnum::NAME;
-                    m_lineFlags |= LineFlagEnum::NAME;
+                    m_lineFlags.insert(LineFlagEnum::NAME);
                 }
                 break;
             case 'd':
@@ -291,19 +308,20 @@ bool MumeXmlParser::element(const QByteArray &line)
                     m_xmlMode = XmlModeEnum::DESCRIPTION;
                     // might be empty but valid description
                     m_staticRoomDesc = RoomStaticDesc{""};
-                    m_lineFlags |= LineFlagEnum::DESCRIPTION;
+                    m_lineFlags.insert(LineFlagEnum::DESCRIPTION);
                 }
                 break;
             case 't': // terrain tag only comes up in blindness or fog
                 if (line.startsWith("terrain")) {
                     m_xmlMode = XmlModeEnum::TERRAIN;
-                    m_lineFlags |= LineFlagEnum::TERRAIN;
+                    m_lineFlags.insert(LineFlagEnum::TERRAIN);
                 }
                 break;
 
             case '/':
                 if (line.startsWith("/room")) {
                     m_xmlMode = XmlModeEnum::NONE;
+                    m_lineFlags.remove(LineFlagEnum::ROOM);
                     m_descriptionReady = true;
                 } else if (line.startsWith("/gratuitous")) {
                     m_gratuitous = false;
@@ -315,6 +333,7 @@ bool MumeXmlParser::element(const QByteArray &line)
     case XmlModeEnum::NAME:
         if (line.startsWith("/name")) {
             m_xmlMode = XmlModeEnum::ROOM;
+            m_lineFlags.remove(LineFlagEnum::NAME);
         }
         break;
     case XmlModeEnum::DESCRIPTION:
@@ -323,6 +342,7 @@ bool MumeXmlParser::element(const QByteArray &line)
             case '/':
                 if (line.startsWith("/description")) {
                     m_xmlMode = XmlModeEnum::ROOM;
+                    m_lineFlags.remove(LineFlagEnum::DESCRIPTION);
                 }
                 break;
             }
@@ -335,6 +355,7 @@ bool MumeXmlParser::element(const QByteArray &line)
                 if (line.startsWith("/exits")) {
                     parseExits();
                     m_exitsReady = true;
+                    m_lineFlags.remove(LineFlagEnum::EXITS);
                     m_xmlMode = XmlModeEnum::NONE;
                 }
                 break;
@@ -347,6 +368,7 @@ bool MumeXmlParser::element(const QByteArray &line)
             case '/':
                 if (line.startsWith("/prompt")) {
                     m_xmlMode = XmlModeEnum::NONE;
+                    m_lineFlags.remove(LineFlagEnum::PROMPT);
                     m_overrideSendPrompt = false;
                 }
                 break;
@@ -359,6 +381,7 @@ bool MumeXmlParser::element(const QByteArray &line)
             case '/':
                 if (line.startsWith("/terrain")) {
                     m_xmlMode = XmlModeEnum::ROOM;
+                    m_lineFlags.remove(LineFlagEnum::TERRAIN);
                 }
                 break;
             }
@@ -370,6 +393,7 @@ bool MumeXmlParser::element(const QByteArray &line)
             case '/':
                 if (line.startsWith("/header")) {
                     m_xmlMode = XmlModeEnum::NONE;
+                    m_lineFlags.remove(LineFlagEnum::HEADER);
                 }
                 break;
             }
@@ -425,15 +449,7 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
                 emulateExits(m_move);
             }
         } else {
-            m_lineFlags |= LineFlagEnum::NONE;
-        }
-        if (m_lineFlags.isSnoop()) {
-            if (m_descriptionReady) {
-                m_promptFlags.reset(); // Don't trust god prompts
-                m_queue.enqueue(m_move);
-                pathChanged();
-                move();
-            }
+            m_lineFlags.insert(LineFlagEnum::NONE);
         }
         toUser.append(ch);
         break;
@@ -534,15 +550,8 @@ void MumeXmlParser::move()
 
 void MumeXmlParser::parseMudCommands(const QString &str)
 {
+    // REVISIT: Add XML tag-based actions that match on a given LineFlag
     const auto stdString = ::toStdStringLatin1(str);
     if (evalActionMap(StringView{stdString}))
         return;
-
-    // REVISIT: Add XML tag-based actions that match on any tag
-    // alternatively pull the parsing logic into an "action"
-    if (m_lineFlags.isWeather()) {
-        // Certain weather events happen on ticks
-        m_mumeClock->parseWeather(str);
-        return;
-    }
 }
