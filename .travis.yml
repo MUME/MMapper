@@ -6,9 +6,39 @@ dist: xenial
 matrix:
   include:
     #
+    # Clang Format
+    #
+    - os: linux
+      name: Code Style
+      dist: bionic
+      addons:
+        apt:
+          packages:
+            - clang-format-6.0
+      env:
+        - CODESTYLE=1
+        - CLANG_FORMAT=clang-format-6.0
+    #
+    # Snapcraft
+    #
+    - os: linux
+      name: Snapcraft
+      dist: bionic
+      addons:
+        snaps:
+          - name: snapcraft
+            channel: edge
+            classic: true
+        apt:
+          sources:
+            - qttools5-dev-tools
+      env:
+        - SNAPCRAFT=1
+    #
     # Mac
     #
     - os: osx
+      name: Mac Brew
       osx_image: xcode11.2
       compiler: clang
       addons:
@@ -23,27 +53,25 @@ matrix:
         - BUILD=1
         - CODECOV=1
     #
-    # Snapcraft
+    # Debian Buster armhf
     #
     - os: linux
+      name: Debian Buster armhf
       dist: bionic
-      compiler: gcc
-      addons:
-        snaps:
-          - name: snapcraft
-            channel: edge
-            classic: true
-        apt:
-          sources:
-            - qttools5-dev-tools
+      arch: arm64
+      services:
+        - docker
       env:
-        - SNAPCRAFT=1
+        - DOCKER=1
+        - TARGET_ARCHITECTURE=armhf
+        - DOCKER_IMAGE=multiarch/debian-debootstrap:armhf-buster
     #
     # Debian Buster i386
     #
     - os: linux
+      name: Debian Buster i386
       dist: bionic
-      compiler: gcc
+      arch: amd64
       services:
         - docker
       env:
@@ -51,23 +79,33 @@ matrix:
         - TARGET_ARCHITECTURE=i386
         - DOCKER_IMAGE=multiarch/debian-debootstrap:i386-buster
     #
-    # Clang Format
+    # Linux Clang 6
     #
     - os: linux
-      compiler: gcc
+      name: Linux Clang 6
+      dist: bionic
+      compiler: clang
       addons:
         apt:
-          sources:
-            - llvm-toolchain-xenial-6.0
           packages:
-            - clang-format-6.0
+            - clang
+            - cmake
+            - libminiupnpc-dev
+            - lcov
+            - libqt5opengl5-dev
+            - qt5-default
+            - mesa-common-dev
+            - binutils
       env:
-        - CODESTYLE=1
-        - CLANG_FORMAT=clang-format-6.0
+        - MATRIX_EVAL="CC=clang-6.0 && CXX=clang++-6.0"
+        - QT=59
+        - BUILD=1
+        - CODECOV=1
     #
     # Linux GCC 7
     #
     - os: linux
+      name: Linux GCC 7
       compiler: gcc
       addons:
         apt:
@@ -91,6 +129,7 @@ matrix:
     # Linux GCC 8
     #
     - os: linux
+      name: Linux GCC 8
       compiler: gcc
       addons:
         apt:
@@ -114,6 +153,7 @@ matrix:
     # Linux GCC 9
     #
     - os: linux
+      name: Linux GCC 9
       compiler: gcc
       addons:
         apt:
@@ -143,17 +183,14 @@ install:
       brew link --force qt5
       export PATH=/usr/local/opt/qt5/bin:$PATH
     fi
-  - |
-    if [ "$DOCKER" != "" ]; then
-      docker run --rm --privileged multiarch/qemu-user-static:register --reset
-    fi
+  - '[[ "$TRAVIS_CPU_ARCH" != "amd64" ]] || [[ "$DOCKER" == "" ]] || docker run --rm --privileged multiarch/qemu-user-static:register --reset'
 
 before_script:
   - |
     if [ "$TRAVIS_OS_NAME" == "linux" ]; then
       [[ "$CXX" != "clang++" ]] || export QMAKESPEC=linux-clang
       [[ "$CXX" != "g++" ]] || export QMAKESPEC=linux-g++
-      . /opt/qt$QT/bin/qt$QT-env.sh
+      [[ "$QT" == "" ]] || . /opt/qt$QT/bin/qt$QT-env.sh
       export QT_SELECT=qt5
       export MMAPPER_CMAKE_EXTRA=-DUSE_COTIRE=true
     fi

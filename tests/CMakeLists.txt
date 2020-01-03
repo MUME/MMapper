@@ -74,6 +74,7 @@ set(mainwindow_SRCS
     )
 set(TestMainWindow_SRCS TestMainWindow.cpp)
 add_executable(TestMainWindow ${TestMainWindow_SRCS} ${mainwindow_SRCS})
+add_dependencies(TestMainWindow glm)
 target_link_libraries(TestMainWindow Qt5::Widgets Qt5::Network Qt5::Test coverage_config)
 add_test(NAME TestMainWindow COMMAND TestMainWindow)
 
@@ -89,5 +90,6 @@ set(global_SRCS
     )
 set(TestGlobal_SRCS TestGlobal.cpp)
 add_executable(TestGlobal ${TestGlobal_SRCS} ${global_SRCS})
+add_dependencies(TestGlobal glm)
 target_link_libraries(TestGlobal Qt5::Widgets Qt5::Test coverage_config)
 add_test(NAME TestGlobal COMMAND TestGlobal)
