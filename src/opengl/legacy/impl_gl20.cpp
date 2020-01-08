@@ -59,10 +59,9 @@ bool Functions::tryEnableMultisampling(const int requestedSamples)
 
         Base::glEnable(GL_POINT_SMOOTH);
         Base::glEnable(GL_LINE_SMOOTH);
-        Base::glEnable(GL_POLYGON_SMOOTH);
+        Base::glDisable(GL_POLYGON_SMOOTH);
         Base::glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
         Base::glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-        Base::glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
 
         return true;
     } else {
@@ -72,10 +71,9 @@ bool Functions::tryEnableMultisampling(const int requestedSamples)
         if (requestedSamples > 0) {
             Base::glEnable(GL_POINT_SMOOTH);
             Base::glEnable(GL_LINE_SMOOTH);
-            Base::glEnable(GL_POLYGON_SMOOTH);
+            Base::glDisable(GL_POLYGON_SMOOTH);
             Base::glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
             Base::glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-            Base::glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
             return true;
         } else {
             Base::glDisable(GL_POINT_SMOOTH);
