@@ -20,12 +20,12 @@ environment:
 
     - ARCH: x86
       COMPILER: MinGW
-      QTDIR: C:\Qt\5.13\mingw73_32
+      QTDIR: C:\Qt\5.14\mingw73_32
       MINGWDIR: C:\mingw-w64\i686-8.1.0-posix-dwarf-rt_v6-rev0\mingw32
 
     - ARCH: x64
       COMPILER: MinGW
-      QTDIR: C:\Qt\5.13\mingw73_64
+      QTDIR: C:\Qt\5.14\mingw73_64
       MINGWDIR: C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64
 
     - ARCH: x86
@@ -41,25 +41,25 @@ environment:
 
 image:
   # AppVeyor builds are ordered by the image list:
-  - Visual Studio 2017
+  - Visual Studio 2019
   - macos-mojave
   - Ubuntu1804
-  - Previous Visual Studio 2017
+  - Visual Studio 2017
 
 matrix:
   exclude:
     # Exclude invalid options
-    - image: Previous Visual Studio 2017
+    - image: Visual Studio 2017
       COMPILER: Clang
-    - image: Previous Visual Studio 2017
+    - image: Visual Studio 2017
       COMPILER: GCC
-    - image: Previous Visual Studio 2017
+    - image: Visual Studio 2017
       COMPILER: MinGW
-    - image: Visual Studio 2017
+    - image: Visual Studio 2019
       COMPILER: Clang
-    - image: Visual Studio 2017
+    - image: Visual Studio 2019
       COMPILER: GCC
-    - image: Visual Studio 2017
+    - image: Visual Studio 2019
       COMPILER: VS2017
     - image: Ubuntu1804
       COMPILER: Clang
@@ -126,7 +126,7 @@ for:
   -
     matrix:
       only:
-        - image: Previous Visual Studio 2017
+        - image: Visual Studio 2017
 
     clone_folder: c:\Build\MMapper
 
@@ -175,7 +175,7 @@ for:
   -
     matrix:
       only:
-        - image: Visual Studio 2017
+        - image: Visual Studio 2019
 
     clone_folder: c:\Build\MMapper
 
