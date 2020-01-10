@@ -125,7 +125,7 @@ void AbstractParser::initActionMap()
         R"(^- a (deep|serious|grievous|critical) wound at the .+ \((clean|dirty|dirty, suppurating)\))",
         bleedOn);
     // Cure critic
-    addEndsWith("You can feel the broken bones within you heal and reshape themselves", bleedOff);
+    addStartsWith("You can feel the broken bones within you heal and reshape themselves.", bleedOff);
 
     /// Slept
     auto sleptOff = [this](StringView /*view*/) {
