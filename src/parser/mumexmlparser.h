@@ -5,13 +5,13 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include <optional>
 #include <string_view>
 #include <QByteArray>
 #include <QString>
 #include <QtCore/QFile>
 #include <QtCore>
 #include <QtGlobal>
-#include <optional>
 
 #include "CommandId.h"
 #include "LineFlags.h"
