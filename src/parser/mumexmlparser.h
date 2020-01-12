@@ -5,12 +5,13 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <optional>
+#include <string_view>
 #include <QByteArray>
 #include <QString>
 #include <QtCore/QFile>
 #include <QtCore>
 #include <QtGlobal>
+#include <optional>
 
 #include "CommandId.h"
 #include "LineFlags.h"
@@ -44,6 +45,7 @@ private:
     QByteArray m_tempCharacters;
     QByteArray m_tempTag;
     QString m_stringBuffer;
+    std::optional<char> m_snoopChar;
     bool m_readingTag = false;
     bool m_gratuitous = false;
     bool m_exitsReady = false;
@@ -70,6 +72,7 @@ private:
     QByteArray characters(QByteArray &ch);
     bool element(const QByteArray &);
     void move();
+    std::string snoopToUser(const std::string_view &str);
 
 private:
     void stripXmlEntities(QByteArray &ch);

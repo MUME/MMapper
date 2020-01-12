@@ -5,6 +5,7 @@
 
 #include "mumexmlparser.h"
 
+#include <sstream>
 #include <QByteArray>
 #include <QString>
 
@@ -182,10 +183,17 @@ bool MumeXmlParser::element(const QByteArray &line)
                 if (line.startsWith("/snoop")) {
                     m_lineFlags.remove(LineFlagEnum::SNOOP);
                     if (m_descriptionReady) {
+                        if (!m_exitsReady && getConfig().mumeNative.emulatedExits) {
+                            m_exitsReady = true;
+                            std::ostringstream os;
+                            emulateExits(os, m_move);
+                            sendToUser(::toQByteArrayLatin1(snoopToUser(os.str())));
+                        }
                         m_promptFlags.reset(); // Don't trust god prompts
                         m_queue.enqueue(m_move);
                         move();
                     }
+                    m_snoopChar.reset();
 
                 } else if (line.startsWith("/status")) {
                     m_lineFlags.remove(LineFlagEnum::STATUS);
@@ -277,12 +285,19 @@ bool MumeXmlParser::element(const QByteArray &line)
 
                 } else if (line.startsWith("snoop")) {
                     m_lineFlags.insert(LineFlagEnum::SNOOP);
+                    if (length > 13) {
+                        m_snoopChar = line.at(13);
+                    }
                 }
                 break;
             case 'h':
                 if (line.startsWith("header")) {
                     m_xmlMode = XmlModeEnum::HEADER;
                     m_lineFlags.insert(LineFlagEnum::HEADER);
+                    if (m_descriptionReady) {
+                        // Prevent emulated exits from firing due to god exits
+                        m_exitsReady = true;
+                    }
                 }
                 break;
             }
@@ -353,7 +368,9 @@ bool MumeXmlParser::element(const QByteArray &line)
             switch (line.at(0)) {
             case '/':
                 if (line.startsWith("/exits")) {
-                    parseExits();
+                    std::ostringstream os;
+                    parseExits(os);
+                    m_lineToUser.append(::toQByteArrayLatin1(snoopToUser(os.str())));
                     m_exitsReady = true;
                     m_lineFlags.remove(LineFlagEnum::EXITS);
                     m_xmlMode = XmlModeEnum::NONE;
@@ -446,7 +463,9 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         if (m_stringBuffer.isEmpty()) { // standard end of description parsed
             if (m_descriptionReady && !m_exitsReady && config.mumeNative.emulatedExits) {
                 m_exitsReady = true;
-                emulateExits(m_move);
+                std::ostringstream os;
+                emulateExits(os, m_move);
+                sendToUser(::toQByteArrayLatin1(snoopToUser(os.str())));
             }
         } else {
             m_lineFlags.insert(LineFlagEnum::NONE);
@@ -483,7 +502,9 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         sendPromptLineEvent(normalizeStringCopy(m_stringBuffer).toLatin1());
         if (!m_exitsReady && config.mumeNative.emulatedExits) {
             m_exitsReady = true;
-            emulateExits(m_move);
+            std::ostringstream os;
+            emulateExits(os, m_move);
+            sendToUser(::toQByteArrayLatin1(snoopToUser(os.str())));
         }
         if (m_descriptionReady) {
             parsePrompt(normalizeStringCopy(m_stringBuffer));
@@ -554,4 +575,20 @@ void MumeXmlParser::parseMudCommands(const QString &str)
     const auto stdString = ::toStdStringLatin1(str);
     if (evalActionMap(StringView{stdString}))
         return;
+}
+
+std::string MumeXmlParser::snoopToUser(const std::string_view &str)
+{
+    std::ostringstream os;
+    bool snoopPrefix = m_snoopChar.has_value();
+    for (const auto c : str) {
+        if (snoopPrefix) {
+            os << '&' << m_snoopChar.value() << ' ';
+            snoopPrefix = false;
+        }
+        os << c;
+        if (c == '\n' && m_snoopChar.has_value())
+            snoopPrefix = true;
+    }
+    return os.str();
 }

@@ -8,6 +8,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <ostream>
 #include <string>
 #include <vector>
 #include <QArgument>
@@ -152,6 +153,7 @@ protected:
     void sendPromptToUser(char light, char terrain);
     void sendPromptToUser(RoomLightEnum lightType, RoomTerrainEnum terrainType);
 
+    void sendRoomExitsInfoToUser(std::ostream &, const Room *r);
     void sendRoomExitsInfoToUser(const Room *r);
     const Coordinate getNextPosition();
     const Coordinate getTailPosition();
@@ -167,10 +169,10 @@ public:
     void printRoomInfo(RoomFields fieldset);
     void printRoomInfo(RoomFieldEnum field);
 
-    void emulateExits(CommandEnum move);
+    void emulateExits(std::ostream &, CommandEnum move);
     QByteArray enhanceExits(const Room *);
 
-    void parseExits();
+    void parseExits(std::ostream &);
     void parsePrompt(const QString &prompt);
     virtual bool parseUserCommands(const QString &command);
     static QString normalizeStringCopy(QString str);

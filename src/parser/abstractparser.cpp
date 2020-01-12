@@ -13,6 +13,7 @@
 #include <iterator>
 #include <memory>
 #include <optional>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -274,7 +275,7 @@ void AbstractParser::parsePrompt(const QString &prompt)
         m_connectedRoomFlags.reset();
 }
 
-void AbstractParser::parseExits()
+void AbstractParser::parseExits(std::ostream &os)
 {
     QString str = normalizeStringCopy(m_exits);
     m_connectedRoomFlags.reset();
@@ -475,17 +476,17 @@ void AbstractParser::parseExits()
             }
             return "";
         };
-        sendToUser(right_trim(m_exits) + cn);
+        os << ::toStdStringLatin1(right_trim(m_exits) + cn);
 
         if (getConfig().mumeNative.showNotes) {
             const auto &ns = room->getNote();
             if (!ns.isEmpty()) {
                 const QString note = QString("Note: %1\r\n").arg(ns.toQString());
-                sendToUser(note);
+                os << ::toStdStringLatin1(note);
             }
         }
     } else {
-        sendToUser(m_exits);
+        os << ::toStdStringLatin1(m_exits);
     }
 }
 
@@ -517,7 +518,7 @@ const Coordinate AbstractParser::getTailPosition()
     return cl.isEmpty() ? m_mapData->getPosition() : cl.back();
 }
 
-void AbstractParser::emulateExits(const CommandEnum move)
+void AbstractParser::emulateExits(std::ostream &os, const CommandEnum move)
 {
     const auto nextCoordinate = [this, &move]() {
         // Use movement direction to find the next coordinate
@@ -535,7 +536,7 @@ void AbstractParser::emulateExits(const CommandEnum move)
     }();
     auto rs = RoomSelection(*m_mapData);
     if (const Room *const r = rs.getRoom(nextCoordinate))
-        sendRoomExitsInfoToUser(r);
+        sendRoomExitsInfoToUser(os, r);
 }
 
 QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
@@ -1306,7 +1307,14 @@ void AbstractParser::sendRoomInfoToUser(const Room *r)
     }
 }
 
-void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
+void AbstractParser::sendRoomExitsInfoToUser(const Room *const r)
+{
+    std::ostringstream os;
+    sendRoomExitsInfoToUser(os, r);
+    sendToUser(::toQByteArrayLatin1(os.str()));
+}
+
+void AbstractParser::sendRoomExitsInfoToUser(std::ostream &os, const Room *const r)
 {
     if (r == nullptr) {
         return;
@@ -1406,13 +1414,13 @@ void AbstractParser::sendRoomExitsInfoToUser(const Room *r)
     }
 
     QByteArray cn = enhanceExits(r);
-    sendToUser(etmp.toLatin1() + cn);
+    os << ::toStdStringLatin1(etmp.toLatin1() + cn);
 
     if (getConfig().mumeNative.showNotes) {
         const auto &ns = r->getNote();
         if (!ns.isEmpty()) {
             QByteArray note = "Note: " + ns.toQByteArray() + "\r\n";
-            sendToUser(note);
+            os << ::toStdStringLatin1(note);
         }
     }
 }
