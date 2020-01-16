@@ -81,6 +81,12 @@ void ConfigDialog::showEvent(QShowEvent *event)
 {
     // Populate the preference pages from config each time the widget is shown
     emit sig_loadConfig();
+
+    // Move widget to center of parent's location
+    auto pos = parentWidget()->pos();
+    pos.setX(pos.x() + (parentWidget()->width() / 2) - (width() / 2));
+    move(pos);
+
     event->accept();
 }
 
