@@ -68,6 +68,7 @@ parts:
       - libssl-dev
       - libminiupnpc-dev
       - libqt5opengl5-dev
+      - libqt5websockets5-dev
       - qtbase5-dev
       - qttools5-dev-tools
       - zlib1g-dev

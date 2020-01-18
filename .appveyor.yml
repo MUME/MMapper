@@ -146,7 +146,7 @@ for:
       - ps: $env:package_version = ("$(git describe --tags --always --long)").trim()
       - ps: Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
       - sh: sudo apt update -qq
-      - sh: sudo apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev cmake ninja-build libminiupnpc-dev
+      - sh: sudo apt install -y build-essential git qt5-qmake libqt5opengl5-dev libqt5websockets5-dev zlib1g-dev libssl-dev cmake ninja-build libminiupnpc-dev
 
     build_script:
       - sh: mkdir build
@@ -201,7 +201,7 @@ for:
 
     build_script:
       # Build MMapper within a Docker container using the current working path as a volume
-      - sh: docker run --rm -v "$(pwd)":/root/mmapper $DOCKER_IMAGE bash -c "apt update -qq && apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev cmake ninja-build libminiupnpc-dev && cd /root/mmapper && mkdir -p build && cd build && cmake .. -G \"Ninja\" -DTARGET_ARCHITECTURE=$TARGET_ARCHITECTURE && cmake --build . && QT_QPA_PLATFORM=offscreen ctest -V --no-compress-output -T test && cpack"
+      - sh: docker run --rm -v "$(pwd)":/root/mmapper $DOCKER_IMAGE bash -c "apt update -qq && apt install -y build-essential git qt5-qmake libqt5opengl5-dev libqt5websockets5-dev zlib1g-dev libssl-dev cmake ninja-build libminiupnpc-dev && cd /root/mmapper && mkdir -p build && cd build && cmake .. -G \"Ninja\" -DTARGET_ARCHITECTURE=$TARGET_ARCHITECTURE && cmake --build . && QT_QPA_PLATFORM=offscreen ctest -V --no-compress-output -T test && cpack"
       - sh: sudo mv build/*.deb* .
 
     test_script:

@@ -85,6 +85,12 @@ static constexpr const bool NO_ZLIB = true;
 static constexpr const bool NO_ZLIB = false;
 #endif
 
+#if defined(MMAPPER_NO_WEBSOCKETS) && MMAPPER_NO_WEBSOCKETS
+static constexpr const bool NO_WEBSOCKETS = true;
+#else
+static constexpr const bool NO_WEBSOCKETS = false;
+#endif
+
 #define SUBGROUP() \
     friend class Configuration; \
     void read(QSettings &conf); \
@@ -126,6 +132,7 @@ public:
         bool proxyThreaded = false;
         bool proxyConnectionStatus = false;
         bool proxyListensOnAnyInterface = false;
+        bool webSocket = false;
 
     private:
         SUBGROUP();
