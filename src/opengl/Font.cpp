@@ -688,7 +688,13 @@ static QString getFontFilename(const float devicePixelRatio)
 {
     const char *const FONT_KEY = "MMAPPER_FONT";
     const char *const font = "Cantarell";
-    const char *const size = (devicePixelRatio > 1.f) ? "36" : "18";
+    const char *const size = [&devicePixelRatio]() {
+        if (devicePixelRatio > 1.75f)
+            return "36";
+        if (devicePixelRatio > 1.25f)
+            return "27";
+        return "18";
+    }();
     const QString fontFilename = QString(":/fonts/%1%2.fnt").arg(font).arg(size);
     if (qEnvironmentVariableIsSet(FONT_KEY)) {
         const QString tmp = qgetenv(FONT_KEY);
