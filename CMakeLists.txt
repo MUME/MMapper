@@ -318,6 +318,12 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     message(STATUS "Building with Clang (${CMAKE_CXX_COMPILER})")
     add_compile_options(-fno-standalone-debug)
 
+    if(WIN32)
+        # Clang on MSYS2 need an additional option to work
+        add_compile_options(-femulated-tls)
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -femulated-tls")
+    endif()
+
     if(MMAPPER_IS_DEBUG)
         if(FALSE)
             # segfaults in ASAN initializer on 32-bit Ubuntu 18.04.1 with clang 6.0
@@ -332,6 +338,12 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
             message(STATUS "Building with Clang undefined behavior sanitizer")
             add_compile_options(-fsanitize=undefined)
             set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined")
+        endif()
+
+        if(WIN32)
+            # Clang on MSYS2 needs an additional option for UBSAN to work
+            add_compile_options(-fsanitize-undefined-trap-on-error)
+            set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize-undefined-trap-on-error")
         endif()
 
         add_compile_options(-Weverything)

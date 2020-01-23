@@ -6,6 +6,7 @@
 
 #include <cassert>
 
+#include "../global/macros.h"
 #include "../mapdata/ExitDirection.h"
 
 void ConnectionLineBuilder::drawConnLineStart(const ExitDirEnum dir,
@@ -44,6 +45,7 @@ void ConnectionLineBuilder::drawConnLineStart(const ExitDirEnum dir,
 
     case ExitDirEnum::NONE:
         assert(false);
+        FALLTHRU;
     default:
         break;
     }
