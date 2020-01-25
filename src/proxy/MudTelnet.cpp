@@ -4,8 +4,43 @@
 
 #include "MudTelnet.h"
 
+#include <sstream>
+#include <string>
+#include <string_view>
+#include <QByteArray>
+#include <QSysInfo>
+
+#include "../configuration/configuration.h"
+#include "../global/TextUtils.h"
+#include "../global/Version.h"
+
+static QByteArray addTerminalTypeSuffix(const std::string_view &prefix)
+{
+    const auto get_os_string = []() {
+        if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux)
+            return "Linux";
+        else if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac)
+            return "Mac";
+        else if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows)
+            return "Windows";
+        else {
+            assert(CURRENT_PLATFORM == PlatformEnum::Unknown);
+            return "Unknown";
+        }
+    };
+    const auto arch = QSysInfo::currentCpuArchitecture().toLatin1();
+
+    std::stringstream ss;
+    ss << prefix << "/MMapper-" << getMMapperVersion() << "/" << get_os_string() << "/"
+       << arch.constData();
+    return ::toQByteArrayLatin1(ss.str());
+}
+
 MudTelnet::MudTelnet(QObject *const parent)
-    : AbstractTelnet(TextCodecStrategyEnum::FORCE_LATIN_1, false, parent)
+    : AbstractTelnet(TextCodecStrategyEnum::FORCE_LATIN_1,
+                     false,
+                     parent,
+                     addTerminalTypeSuffix("unknown"))
 {
     // RFC 2066 states we can provide many character sets but we force Latin-1 when
     // communicating with MUME
@@ -44,9 +79,10 @@ void MudTelnet::onRelayNaws(const int x, const int y)
     }
 }
 
-void MudTelnet::onRelayTermType(QByteArray terminalType)
+void MudTelnet::onRelayTermType(const QByteArray &terminalType)
 {
-    setTerminalType(terminalType);
+    // Append the MMapper version suffix to the terminal type
+    setTerminalType(addTerminalTypeSuffix(terminalType.constData()));
     if (myOptionState[OPT_TERMINAL_TYPE]) {
         sendTerminalType(getTerminalType());
     }

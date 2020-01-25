@@ -130,7 +130,7 @@ protected:
 
     void onReadInternal(const QByteArray &);
 
-    void setTerminalType(const QByteArray &terminalType);
+    void setTerminalType(const QByteArray &terminalType) { termType = terminalType; }
 
     TextCodec &getTextCodec();
 

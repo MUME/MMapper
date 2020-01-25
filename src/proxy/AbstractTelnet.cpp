@@ -11,10 +11,8 @@
 #include <QMessageLogContext>
 #include <QObject>
 #include <QString>
-#include <QSysInfo>
 
 #include "../configuration/configuration.h"
-#include "../global/Version.h"
 #include "../global/utils.h"
 #include "TextCodec.h"
 
@@ -154,29 +152,6 @@ AbstractTelnet::AbstractTelnet(TextCodecStrategyEnum strategy,
     , debug{debug}
 {
     reset();
-}
-
-void AbstractTelnet::setTerminalType(const QByteArray &terminalType)
-{
-    const auto get_os_string = []() {
-        if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux)
-            return "Linux";
-        else if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac)
-            return "Mac";
-        else if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows)
-            return "Windows";
-        else {
-            assert(CURRENT_PLATFORM == PlatformEnum::Unknown);
-            return "Unknown";
-        }
-    };
-
-    QString temp = terminalType;
-    temp.append(QString("/MMapper-%1/%2/%3")
-                    .arg(QLatin1String(getMMapperVersion()))
-                    .arg(get_os_string())
-                    .arg(QSysInfo::currentCpuArchitecture()));
-    termType = temp.toLatin1();
 }
 
 void AbstractTelnet::reset()

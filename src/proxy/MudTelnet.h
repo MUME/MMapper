@@ -20,7 +20,7 @@ public slots:
     void onSendToMud(const QByteArray &);
     void onConnected();
     void onRelayNaws(int, int);
-    void onRelayTermType(QByteArray);
+    void onRelayTermType(const QByteArray &);
 
 signals:
     void analyzeMudStream(const QByteArray &, bool goAhead);
