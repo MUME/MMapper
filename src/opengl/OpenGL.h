@@ -35,6 +35,7 @@ public:
     void initializeOpenGLFunctions();
     void initializeRenderer(float devicePixelRatio);
     const char *glGetString(GLenum name);
+    void setDevicePixelRatio(float devicePixelRatio);
     float getDevicePixelRatio() const;
     bool isRendererInitialized() const { return m_rendererInitialized; }
 

@@ -1327,6 +1327,12 @@ void MainWindow::showEvent(QShowEvent *event)
         // Read geometry and state settings and start services on startup
         readSettings();
         startServices();
+
+        connect(window()->windowHandle(), &QWindow::screenChanged, this, [this]() {
+            MapCanvas &canvas = deref(getCanvas());
+            CanvasDisabler canvasDisabler{canvas};
+            canvas.screenChanged();
+        });
     });
     event->accept();
 }

@@ -223,6 +223,7 @@ public:
     void layerChanged();
     void mapChanged();
     void requestUpdate();
+    void screenChanged();
     void selectionChanged();
     void graphicsSettingsChanged();
     void zoomChanged() { emit sig_zoomChanged(getRawZoom()); }

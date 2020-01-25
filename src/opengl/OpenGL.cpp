@@ -176,8 +176,7 @@ void OpenGL::cleanup()
 
 void OpenGL::initializeRenderer(const float devicePixelRatio)
 {
-    auto &functions = getFunctions();
-    functions.setDevicePixelRatio(devicePixelRatio);
+    setDevicePixelRatio(devicePixelRatio);
     m_rendererInitialized = true;
 }
 
@@ -204,4 +203,10 @@ float OpenGL::getDevicePixelRatio() const
 void OpenGL::glViewport(GLint x, GLint y, GLsizei w, GLsizei h)
 {
     getFunctions().glViewport(x, y, w, h);
+}
+
+void OpenGL::setDevicePixelRatio(const float devicePixelRatio)
+{
+    auto &functions = getFunctions();
+    functions.setDevicePixelRatio(devicePixelRatio);
 }

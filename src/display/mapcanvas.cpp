@@ -1030,6 +1030,22 @@ void MapCanvas::requestUpdate()
     update();
 }
 
+void MapCanvas::screenChanged()
+{
+    auto &gl = getOpenGL();
+    const auto newDpi = static_cast<float>(QPaintDevice::devicePixelRatioF());
+    const auto oldDpi = gl.getDevicePixelRatio();
+    if (!utils::equals(newDpi, oldDpi)) {
+        emit log("MapCanvas", QString("Display: %1 DPI").arg(static_cast<double>(newDpi)));
+        m_batches.resetAll();
+        gl.setDevicePixelRatio(newDpi);
+        auto &font = getGLFont();
+        font.cleanup();
+        font.init();
+        update();
+    }
+}
+
 void MapCanvas::selectionChanged()
 {
     update();
