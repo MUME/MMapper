@@ -1,3 +1,8 @@
+if(WIN32)
+    set(ZLIB_STATIC_LIBRARY_NAME zlibstatic)
+else()
+    set(ZLIB_STATIC_LIBRARY_NAME z)
+endif()
 include(ExternalProject)
 ExternalProject_Add(zlib
     URL "https://zlib.net/zlib-1.2.11.tar.gz"
@@ -11,14 +16,11 @@ ExternalProject_Add(zlib
 
     UPDATE_COMMAND ""
     ALWAYS 0
+
+    BUILD_BYPRODUCTS "<BINARY_DIR>/${CMAKE_STATIC_LIBRARY_PREFIX}${ZLIB_STATIC_LIBRARY_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX}"
     )
 ExternalProject_Get_Property(zlib SOURCE_DIR)
 ExternalProject_Get_Property(zlib BINARY_DIR)
-if(WIN32)
-    set(ZLIB_STATIC_LIBRARY_NAME zlibstatic)
-else()
-    set(ZLIB_STATIC_LIBRARY_NAME z)
-endif()
 set(ZLIB_STATIC_LIBRARY ${BINARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}${ZLIB_STATIC_LIBRARY_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
 set(ZLIB_LIBRARIES ${ZLIB_STATIC_LIBRARY} PARENT_SCOPE)
 set(ZLIB_INCLUDE_DIRS ${SOURCE_DIR} ${BINARY_DIR} PARENT_SCOPE)

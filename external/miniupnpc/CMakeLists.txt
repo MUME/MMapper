@@ -17,6 +17,9 @@ ExternalProject_Add(miniupnpc
 
     UPDATE_COMMAND ""
     ALWAYS 0
+
+    BUILD_BYPRODUCTS "<BINARY_DIR>/${CMAKE_SHARED_LIBRARY_PREFIX}miniupnpc${CMAKE_SHARED_LIBRARY_SUFFIX}"
+    BUILD_BYPRODUCTS "<BINARY_DIR>/${CMAKE_STATIC_LIBRARY_PREFIX}miniupnpc${CMAKE_STATIC_LIBRARY_SUFFIX}"
     )
 ExternalProject_Get_Property(miniupnpc SOURCE_DIR)
 ExternalProject_Get_Property(miniupnpc BINARY_DIR)
