@@ -17,6 +17,8 @@ if(MINGW)
 
             UPDATE_COMMAND ""
             ALWAYS 0
+
+            BUILD_BYPRODUCTS "<SOURCE_DIR>/bin/exchndl.dll"
         )
     else()
         ExternalProject_Add(drmingw
@@ -35,6 +37,8 @@ if(MINGW)
 
             UPDATE_COMMAND ""
             ALWAYS 0
+
+            BUILD_BYPRODUCTS "<SOURCE_DIR>/bin/exchndl.dll"
         )
     endif()
     ExternalProject_Get_Property(drmingw SOURCE_DIR)

@@ -112,6 +112,9 @@ elseif(WIN32 AND PERL_FOUND AND Qt5Core_VERSION VERSION_GREATER 5.12.3)
             UPDATE_COMMAND ""
             BUILD_IN_SOURCE 1
             ALWAYS 0
+
+            BUILD_BYPRODUCTS "<INSTALL_DIR>/lib/libcrypto.dll.a"
+            BUILD_BYPRODUCTS "<INSTALL_DIR>/lib/libssl.dll.a"
         )
         ExternalProject_Get_Property(openssl INSTALL_DIR)
         set(OPENSSL_LIBRARIES
@@ -138,6 +141,9 @@ elseif(WIN32 AND PERL_FOUND AND Qt5Core_VERSION VERSION_GREATER 5.12.3)
             UPDATE_COMMAND ""
             BUILD_IN_SOURCE 1
             ALWAYS 0
+
+            BUILD_BYPRODUCTS "<INSTALL_DIR>/lib/libcrypto.lib"
+            BUILD_BYPRODUCTS "<INSTALL_DIR>/lib/libssl.lib"
         )
         ExternalProject_Get_Property(openssl INSTALL_DIR)
         set(OPENSSL_LIBRARIES

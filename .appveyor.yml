@@ -29,11 +29,11 @@ environment:
       MINGWDIR: C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64
 
     - ARCH: x86
-      COMPILER: VS2017
+      COMPILER: VS2019
       QTDIR: C:\Qt\5.13\msvc2017
 
     - ARCH: x64
-      COMPILER: VS2017
+      COMPILER: VS2019
       QTDIR: C:\Qt\5.13\msvc2017_64
 
     - ARCH: x64
@@ -41,38 +41,38 @@ environment:
 
 image:
   # AppVeyor builds are ordered by the image list:
-  - Visual Studio 2017
+  - Visual Studio 2019
   - macos-mojave
   - Ubuntu1804
-  - Previous Visual Studio 2017
+  - Previous Visual Studio 2019
 
 matrix:
   exclude:
     # Exclude invalid options
-    - image: Previous Visual Studio 2017
+    - image: Previous Visual Studio 2019
       COMPILER: Clang
-    - image: Previous Visual Studio 2017
+    - image: Previous Visual Studio 2019
       COMPILER: GCC
-    - image: Previous Visual Studio 2017
+    - image: Previous Visual Studio 2019
       COMPILER: MinGW
-    - image: Visual Studio 2017
+    - image: Visual Studio 2019
       COMPILER: Clang
-    - image: Visual Studio 2017
+    - image: Visual Studio 2019
       COMPILER: GCC
-    - image: Visual Studio 2017
-      COMPILER: VS2017
+    - image: Visual Studio 2019
+      COMPILER: VS2019
     - image: Ubuntu1804
       COMPILER: Clang
     - image: Ubuntu1804
       COMPILER: MinGW
     - image: Ubuntu1804
-      COMPILER: VS2017
+      COMPILER: VS2019
     - image: macos-mojave
       COMPILER: GCC
     - image: macos-mojave
       COMPILER: MinGW
     - image: macos-mojave
-      COMPILER: VS2017
+      COMPILER: VS2019
     # Following builds are disabled to prevent build timeout
     - image: Ubuntu1804
       ARCH: arm
@@ -126,14 +126,16 @@ for:
   -
     matrix:
       only:
-        - image: Previous Visual Studio 2017
+        - image: Previous Visual Studio 2019
 
     clone_folder: c:\Build\MMapper
 
     init:
-      - cmd: if %COMPILER%==VS2017 if %ARCH%==x86 call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
-      - cmd: if %COMPILER%==VS2017 if %ARCH%==x64 call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
-      - cmd: if %COMPILER%==VS2017 set CMAKE_GENERATOR="NMake Makefiles JOM"
+      - cmd: if %COMPILER%==VS2019 if %ARCH%==x86 call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
+      - cmd: if %COMPILER%==VS2019 if %ARCH%==x64 call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+      - cmd: if %COMPILER%==VS2019 set CMAKE_GENERATOR="NMake Makefiles JOM"
+      - cmd: if %ARCH%==x86 set OPENSSLDIR=C:\OpenSSL-v111-Win32
+      - cmd: if %ARCH%==x64 set OPENSSLDIR=C:\OpenSSL-v111-Win64
       - cmd: git config --global core.autocrlf input
       - cmd: echo NUMBER_OF_PROCESSORS=%NUMBER_OF_PROCESSORS%
       - cmd: echo PROCESSOR_IDENTIFIER=%PROCESSOR_IDENTIFIER%
@@ -157,7 +159,7 @@ for:
       - cmd: cd c:\Build\MMapper
       - cmd: md winbuild
       - cmd: cd winbuild
-      - cmd: cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -G %CMAKE_GENERATOR% "-DCMAKE_PREFIX_PATH=%QTDIR%" -DUSE_COTIRE=true
+      - cmd: cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -G %CMAKE_GENERATOR% "-DCMAKE_PREFIX_PATH=%QTDIR%" -DUSE_COTIRE=true "-DOPENSSL_ROOT_DIR=%OPENSSLDIR%"
       - cmd: cmake --build . -j %NUMBER_OF_PROCESSORS%
       - cmd: cpack
 
@@ -175,7 +177,7 @@ for:
   -
     matrix:
       only:
-        - image: Visual Studio 2017
+        - image: Visual Studio 2019
 
     clone_folder: c:\Build\MMapper
 
