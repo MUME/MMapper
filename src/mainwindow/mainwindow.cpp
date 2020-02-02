@@ -1323,8 +1323,11 @@ void MainWindow::closeEvent(QCloseEvent *event)
     }
 }
 
-void MainWindow::showEvent(QShowEvent *event)
+void MainWindow::showEvent(QShowEvent *const event)
 {
+    // Check screen DPI each time MMapper's window is shown
+    getCanvas()->screenChanged();
+
     static std::once_flag flag;
     std::call_once(flag, [this]() {
         // Read geometry and state settings and start services on startup
