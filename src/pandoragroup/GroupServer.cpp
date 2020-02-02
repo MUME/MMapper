@@ -27,7 +27,7 @@
 
 using MessagesEnum = CGroupCommunicator::MessagesEnum;
 
-GroupTcpServer::GroupTcpServer(GroupServer *parent)
+GroupTcpServer::GroupTcpServer(GroupServer *const parent)
     : QTcpServer(parent)
 {}
 

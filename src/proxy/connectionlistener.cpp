@@ -11,16 +11,28 @@
 #include <QThread>
 
 #include "../configuration/configuration.h"
+#include "../global/TextUtils.h"
 #include "proxy.h"
 
-ConnectionListener::ConnectionListener(MapData *md,
-                                       Mmapper2PathMachine *pm,
-                                       PrespammedPath *pp,
-                                       Mmapper2Group *gm,
-                                       MumeClock *mc,
-                                       MapCanvas *mca,
-                                       QObject *parent)
+ConnectionListenerTcpServer::ConnectionListenerTcpServer(ConnectionListener *const parent)
     : QTcpServer(parent)
+{}
+
+ConnectionListenerTcpServer::~ConnectionListenerTcpServer() = default;
+
+void ConnectionListenerTcpServer::incomingConnection(qintptr socketDescriptor)
+{
+    emit signal_incomingConnection(socketDescriptor);
+}
+
+ConnectionListener::ConnectionListener(MapData *const md,
+                                       Mmapper2PathMachine *const pm,
+                                       PrespammedPath *const pp,
+                                       Mmapper2Group *const gm,
+                                       MumeClock *const mc,
+                                       MapCanvas *const mca,
+                                       QObject *const parent)
+    : QObject(parent)
 {
     m_mapData = md;
     m_pathMachine = pm;
@@ -42,7 +54,42 @@ ConnectionListener::~ConnectionListener()
     }
 }
 
-void ConnectionListener::incomingConnection(qintptr socketDescriptor)
+void ConnectionListener::listen()
+{
+    const auto &settings = getConfig().connection;
+    const auto hostAdress = settings.proxyListensOnAnyInterface ? QHostAddress::Any
+                                                                : QHostAddress::LocalHost;
+    const auto port = settings.localPort;
+
+    const auto createServer = [this]() {
+        QPointer<ConnectionListenerTcpServer> server(new ConnectionListenerTcpServer(this));
+        server->setMaxPendingConnections(1);
+        connect(server, &ConnectionListenerTcpServer::acceptError, this, [this, server]() {
+            emit log("Listener", QString("Encountered an error: %1").arg(server->errorString()));
+        });
+        connect(server,
+                &ConnectionListenerTcpServer::signal_incomingConnection,
+                this,
+                &ConnectionListener::onIncomingConnection);
+        return server;
+    };
+
+    // Construct the first server
+    m_servers.emplace_back(createServer());
+    auto &server = m_servers.back();
+    if (!server->listen(hostAdress, port))
+        throw std::runtime_error(::toStdStringLatin1(server->errorString()));
+
+    // Construct a second server for localhost IPv6 if we're only listening on localhost IPv4
+    if (!settings.proxyListensOnAnyInterface) {
+        m_servers.emplace_back(createServer());
+        auto &serverIPv6 = m_servers.back();
+        if (!serverIPv6->listen(QHostAddress::LocalHostIPv6, port))
+            throw std::runtime_error(::toStdStringLatin1(serverIPv6->errorString()));
+    }
+}
+
+void ConnectionListener::onIncomingConnection(qintptr socketDescriptor)
 {
     if (m_accept) {
         emit log("Listener", "New connection: accepted.");

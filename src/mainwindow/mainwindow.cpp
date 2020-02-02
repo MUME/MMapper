@@ -256,7 +256,6 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
                                         m_mumeClock,
                                         getCanvas(),
                                         this);
-    m_listener->setMaxPendingConnections(1);
 
     // update connections
     wireConnections();
@@ -304,17 +303,15 @@ MainWindow::~MainWindow()
 
 void MainWindow::startServices()
 {
-    const auto &settings = getConfig().connection;
-    const auto address = settings.proxyListensOnAnyInterface ? QHostAddress::Any
-                                                             : QHostAddress::LocalHost;
-    const auto port = settings.localPort;
-    if (!m_listener->listen(address, port)) {
-        QMessageBox::critical(this,
-                              tr("mmapper"),
-                              tr("Unable to start the server (switching to offline mode): %1.")
-                                  .arg(m_listener->errorString()));
-    } else {
-        log("ConnectionListener", tr("Server bound on localhost to port: %2.").arg(port));
+    try {
+        m_listener->listen();
+        log("ConnectionListener",
+            tr("Server bound on localhost to port: %1.").arg(getConfig().connection.localPort));
+    } catch (const std::exception &e) {
+        const QString errorMsg = QString(
+                                     "Unable to start the server (switching to offline mode): %1.")
+                                     .arg(QString::fromLatin1(e.what()));
+        QMessageBox::critical(this, tr("mmapper"), errorMsg);
     }
 
     m_groupManager->start();

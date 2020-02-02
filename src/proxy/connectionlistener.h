@@ -6,12 +6,15 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include <memory>
+#include <vector>
+#include <QHostAddress>
+#include <QPointer>
 #include <QString>
 #include <QTcpServer>
-#include <QTcpSocket>
 #include <QtCore>
 #include <QtGlobal>
 
+class ConnectionListener;
 class MapCanvas;
 class MapData;
 class Mmapper2Group;
@@ -21,7 +24,23 @@ class PrespammedPath;
 class Proxy;
 class QObject;
 
-class ConnectionListener : public QTcpServer
+class ConnectionListenerTcpServer final : public QTcpServer
+{
+public:
+    explicit ConnectionListenerTcpServer(ConnectionListener *parent);
+    virtual ~ConnectionListenerTcpServer() override;
+
+private:
+    Q_OBJECT
+
+protected:
+    void incomingConnection(qintptr socketDescriptor) override;
+
+signals:
+    void signal_incomingConnection(qintptr socketDescriptor);
+};
+
+class ConnectionListener final : public QObject
 {
 public:
     explicit ConnectionListener(MapData *,
@@ -33,15 +52,18 @@ public:
                                 QObject *parent);
     virtual ~ConnectionListener() override;
 
+private:
+    Q_OBJECT
+
+public:
+    void listen();
+
 signals:
     void log(const QString &, const QString &);
     void clientSuccessfullyConnected();
 
-protected:
-    void incomingConnection(qintptr socketDescriptor) override;
-
-private:
-    Q_OBJECT
+protected slots:
+    void onIncomingConnection(qintptr socketDescriptor);
 
 private:
     MapData *m_mapData = nullptr;
@@ -50,6 +72,8 @@ private:
     Mmapper2Group *m_groupManager = nullptr;
     MumeClock *m_mumeClock = nullptr;
     MapCanvas *m_mapCanvas = nullptr;
+    using ServerList = std::vector<QPointer<ConnectionListenerTcpServer>>;
+    ServerList m_servers;
     std::unique_ptr<Proxy> m_proxy;
     std::unique_ptr<QThread> m_thread;
 
