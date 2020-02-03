@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-#ifndef MMAPPER_TAGGEDSTRING_H
-#define MMAPPER_TAGGEDSTRING_H
-
 #include <cassert>
 #include <string>
 #include <QByteArray>
@@ -79,5 +76,3 @@ public:
     bool empty() const { return m_str.empty(); }
     bool isEmpty() const { return empty(); }
 };
-
-#endif //MMAPPER_TAGGEDSTRING_H
