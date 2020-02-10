@@ -40,20 +40,25 @@ if(OPENSSL_FOUND)
             get_filename_component(OPENSSL_ROOT_DIR ${OPENSSL_DIRECTORY} DIRECTORY)
             string(REGEX REPLACE "(.:[\\/]+[^\\/]+).*" "\\1" OPENSSL_ROOT_DIR ${OPENSSL_ROOT_DIR})
         endif()
-        # Shining Light Productions OpenSSL requires the VC++ runtime
-        find_file(MSVCR_LIB_BIN
-                NAMES
-                ${MSVCR_LIBRARY_FILE}
-                HINTS
-                ${OPENSSL_ROOT_DIR}
-                ${MSVCR_ROOT_DIR}
-                PATH_SUFFIXES
-                bin)
-        if(NOT MSVCR_LIB_BIN)
-            message(FATAL_ERROR "OpenSSL dependency ${MSVCR_LIBRARY_FILE} was NOT found")
+        if(${OPENSSL_ROOT_DIR} MATCHES ".*[Mm][Ss][Yy][Ss]64.*")
+            message(STATUS "   Detected MSYS2 MinGW compiled OpenSSL library")
         else()
-            configure_file(${MSVCR_LIB_BIN} ${CMAKE_BINARY_DIR}/src/bin/${MSVCR_LIBRARY_FILE} COPYONLY)
-            message(STATUS "   Copied ${MSVCR_LIB_BIN} to src/bin/")
+            message(STATUS "   Assuming Shining Light Productions MSVC compiled OpenSSL library")
+            # Shining Light Productions OpenSSL requires the VC++ runtime
+            find_file(MSVCR_LIB_BIN
+                    NAMES
+                    ${MSVCR_LIBRARY_FILE}
+                    HINTS
+                    ${OPENSSL_ROOT_DIR}
+                    ${MSVCR_ROOT_DIR}
+                    PATH_SUFFIXES
+                    bin)
+            if(NOT MSVCR_LIB_BIN)
+                message(FATAL_ERROR "OpenSSL dependency ${MSVCR_LIBRARY_FILE} was NOT found")
+            else()
+                configure_file(${MSVCR_LIB_BIN} ${CMAKE_BINARY_DIR}/src/bin/${MSVCR_LIBRARY_FILE} COPYONLY)
+                message(STATUS "   Copied ${MSVCR_LIB_BIN} to src/bin/")
+            endif()
         endif()
         find_file(CRYPTO_LIB_BIN
                 NAMES
