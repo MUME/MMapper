@@ -4,7 +4,9 @@
 
 #include "remoteeditprocess.h"
 
+#include <sstream>
 #include <stdexcept>
+#include <string>
 #include <utility>
 #include <QDateTime>
 #include <QMessageLogContext>
@@ -14,7 +16,22 @@
 #include <QStringList>
 
 #include "../configuration/configuration.h"
+#include "../global/TextUtils.h"
 #include "../global/io.h"
+
+static constexpr const std::string_view VALID
+    = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+static constexpr const auto VALID_LEN = static_cast<int>(VALID.length());
+
+static std::string randomString(int length)
+{
+    std::ostringstream os;
+    for (int i = 0; i < length; i++) {
+        const int index = std::rand() % VALID_LEN; // NOLINT
+        os << VALID[static_cast<size_t>(index)];
+    }
+    return os.str();
+}
 
 RemoteEditProcess::RemoteEditProcess(const bool editSession,
                                      const QString &title,
@@ -36,25 +53,27 @@ RemoteEditProcess::RemoteEditProcess(const bool editSession,
             SLOT(onError(QProcess::ProcessError)));
 
     // Set the file template
-    QString fileTemplate = QString("%1MMapper.%2.pid%3.XXXXXX")
+    QString fileTemplate = QString("%1MMapper.%2.pid%3.%4")
                                .arg(QDir::tempPath() + QDir::separator()) // %1
                                .arg(m_editSession ? "edit" : "view")      // %2
-                               .arg(QCoreApplication::applicationPid());  // %3
-    m_file.setFileTemplate(fileTemplate);
+                               .arg(QCoreApplication::applicationPid())   // %3
+                               .arg(::toQStringLatin1(randomString(6)));  // %4
+    QFile file(fileTemplate);
 
     // Try opening up the temporary file
-    if (!m_file.open()) {
+    if (!file.open(QFile::WriteOnly)) {
         qCritical() << "View session was unable to create a temporary file";
         throw std::runtime_error("failed to start");
     }
 
-    m_fileName = m_file.fileName();
+    m_fileName = file.fileName();
     qDebug() << "View session file template" << m_fileName;
-    m_file.write(m_body.toLatin1()); // note: MUME expects all remote edit data to be Latin-1.
-    m_file.flush();
-    io::fsyncNoexcept(m_file);
-    m_file.close();
-    m_previousTime = QFileInfo{m_file}.lastModified();
+    file.write(m_body.toLatin1()); // note: MUME expects all remote edit data to be Latin-1.
+    file.flush();
+    io::fsyncNoexcept(file);
+    file.close();
+    m_previousTime = QFileInfo{m_fileName}.lastModified();
+    qDebug() << "File written with last modified timestamp" << m_previousTime;
 
     // Set the TITLE environmental variable
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
@@ -77,6 +96,8 @@ RemoteEditProcess::RemoteEditProcess(const bool editSession,
 RemoteEditProcess::~RemoteEditProcess()
 {
     qInfo() << "Destroyed RemoteEditProcess";
+    QFile file(m_fileName);
+    file.remove();
 }
 
 void RemoteEditProcess::onFinished(int exitCode, QProcess::ExitStatus status)
@@ -94,16 +115,15 @@ void RemoteEditProcess::onFinished(int exitCode, QProcess::ExitStatus status)
         return;
     }
 
-    QFile read(m_fileName);
-    if (!read.open(QFile::ReadOnly)) {
+    QFile file(m_fileName);
+    if (!file.open(QFile::ReadOnly)) {
         qWarning() << "Edit session unable to read file!";
         emit cancel();
         return;
     }
 
     // See if the file was modified since we created it
-    QFileInfo fileInfo(read);
-    QDateTime currentTime = fileInfo.lastModified();
+    QDateTime currentTime = QFileInfo{file}.lastModified();
     if (m_previousTime == currentTime) {
         qDebug() << "Edit session canceled (no changes)";
         emit cancel();
@@ -111,8 +131,8 @@ void RemoteEditProcess::onFinished(int exitCode, QProcess::ExitStatus status)
     }
 
     // Read the file
-    QString content = QString::fromLatin1(read.readAll());
-    read.close();
+    QString content = QString::fromLatin1(file.readAll());
+    file.close();
 
     // Submit it to MUME
     qDebug() << "Edit session had changes" << content;

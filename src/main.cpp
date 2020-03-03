@@ -5,6 +5,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include <cstdlib>
+#include <ctime>
 #include <memory>
 #include <optional>
 #include <set>
@@ -64,6 +65,12 @@ public:
 };
 
 Splash::~Splash() = default;
+
+static void seedRandomNumberGenerator()
+{
+    // Seed random number generator with current time
+    std::srand(static_cast<unsigned int>(std::time(0)));
+}
 
 static void useHighDpi()
 {
@@ -135,6 +142,7 @@ static void tryAutoLoad(MainWindow &mw)
 
 int main(int argc, char **argv)
 {
+    seedRandomNumberGenerator();
     useHighDpi();
     trySetHighDpiScaleFactorRoundingPolicy();
     setEnteredMain();

@@ -8,7 +8,6 @@
 #include <QProcess>
 #include <QString>
 #include <QStringList>
-#include <QTemporaryFile>
 #include <QtCore>
 
 #include "remoteeditsession.h"
@@ -40,7 +39,6 @@ private:
     const bool m_editSession;
 
     QProcess m_process;
-    QTemporaryFile m_file;
     QString m_fileName;
     QDateTime m_previousTime;
 };
