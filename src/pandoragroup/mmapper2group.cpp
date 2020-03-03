@@ -378,7 +378,7 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
         return; // No update needed
     }
 
-    if (textHP == "Dying" || self->position == CharacterPositionEnum::INCAPACITATED) {
+    if (textHP == "Dying") {
         // Incapacitated state overrides fighting state
         self->position = CharacterPositionEnum::INCAPACITATED;
 
