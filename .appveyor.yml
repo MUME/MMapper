@@ -182,9 +182,6 @@ for:
 
     clone_folder: c:\Build\MMapper
 
-    cache:
-      - C:\Users\appveyor\AppData\Roaming\.ccache
-
     init:
       - cmd: if %COMPILER%==MinGW set CMAKE_GENERATOR="MSYS Makefiles"
       - cmd: git config --global core.autocrlf input
@@ -199,11 +196,11 @@ for:
     install:
       - ps: $env:package_version = ("$(git describe --tags --always --long)").trim()
       - ps: Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
-      # Install MingW and ccache
+      # Install MingW
       - cmd: if %COMPILER%==MinGW set "PATH=C:/msys64/usr/bin;%PATH%"
       - cmd: if %COMPILER%==MinGW if %ARCH%==x86 pacman -Syu --noconfirm --noprogressbar --needed
-      - cmd: if %COMPILER%==MinGW if %ARCH%==x86 pacman -Sy --noconfirm --noprogressbar --needed mingw-w64-i686-ccache mingw-w64-i686-toolchain mingw-w64-i686-miniupnpc
-      - cmd: if %COMPILER%==MinGW if %ARCH%==x64 pacman -Sy --noconfirm --noprogressbar --needed mingw-w64-x86_64-ccache mingw-w64-x86_64-toolchain mingw-w64-x86_64-miniupnpc
+      - cmd: if %COMPILER%==MinGW if %ARCH%==x86 pacman -Sy --noconfirm --noprogressbar --needed mingw-w64-i686-toolchain mingw-w64-i686-miniupnpc
+      - cmd: if %COMPILER%==MinGW if %ARCH%==x64 pacman -Sy --noconfirm --noprogressbar --needed mingw-w64-x86_64-toolchain mingw-w64-x86_64-miniupnpc
 
         before_build:
       - cmd: if %COMPILER%==MinGW if %ARCH%==x86 set "PATH=C:/msys64/mingw32/bin;%PATH%"
@@ -211,14 +208,12 @@ for:
       - cmd: set PATH=%QTDIR%\bin;%PATH%;C:\Qt\Tools\QtCreator\bin
       - cmd: if %COMPILER%==MinGW set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
       - cmd: echo PATH=%PATH%
-      - cmd: if %COMPILER%==MinGW ccache -M 1
-      - cmd: if %COMPILER%==MinGW ccache -s
 
     build_script:
       - cmd: cd c:\Build\MMapper
       - cmd: md winbuild
       - cmd: cd winbuild
-      - cmd: cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -G %CMAKE_GENERATOR% "-DCMAKE_PREFIX_PATH=%QTDIR%" -DUSE_COTIRE=true -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      - cmd: cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -G %CMAKE_GENERATOR% "-DCMAKE_PREFIX_PATH=%QTDIR%" -DUSE_COTIRE=true
       - cmd: cmake --build . -j %NUMBER_OF_PROCESSORS%
       - cmd: cpack
 
