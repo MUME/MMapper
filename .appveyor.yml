@@ -204,7 +204,9 @@ for:
       # Install Qt
       - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/build-images/master/scripts/Windows/install_qt_module.ps1'))
       - ps: if ($env:ARCH -eq 'x86') { Install-QtComponent -Version '5.14.1' -Name 'win32_mingw73' -ExcludeDocs -ExcludeExamples }
+      - ps: if ($env:ARCH -eq 'x86') { Install-QtComponent -Version '5.14.1' -Name 'qtvirtualkeyboard.win32_mingw73' -ExcludeDocs -ExcludeExamples }
       - ps: if ($env:ARCH -eq 'x64') { Install-QtComponent -Version '5.14.1' -Name 'win64_mingw73' -ExcludeDocs -ExcludeExamples }
+      - ps: if ($env:ARCH -eq 'x64') { Install-QtComponent -Version '5.14.1' -Name 'qtvirtualkeyboard.win64_mingw73' -ExcludeDocs -ExcludeExamples }
       - ps: ConfigureQtVersion 'C:\Qt' '5.14.1'
 
         before_build:
