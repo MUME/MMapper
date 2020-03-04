@@ -8,6 +8,7 @@ environment:
   global:
     APPVEYOR_SAVE_CACHE_ON_ERROR: true
     APPVEYOR_CACHE_ENTRY_ZIP_ARGS: -t7z -m0=lzma -mx=4
+    APPVEYOR_RDP_PASSWORD: PL4YMUM3!
   matrix:
     - ARCH: x86
       COMPILER: GCC
@@ -93,6 +94,7 @@ for:
       - docker
 
     init:
+      - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
       - sh: echo _NPROCESSORS_ONLN=$(getconf _NPROCESSORS_ONLN)
       - sh: if [[ $ARCH == x86 ]]; then export DOCKER_IMAGE=i386/ubuntu:18.04 ; fi
       - sh: if [[ $ARCH == x86 ]]; then export TARGET_ARCHITECTURE=i386 ; fi
@@ -132,6 +134,7 @@ for:
     clone_folder: c:\Build\MMapper
 
     init:
+      - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
       - cmd: if %COMPILER%==VS2019 if %ARCH%==x86 call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
       - cmd: if %COMPILER%==VS2019 if %ARCH%==x64 call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
       - cmd: if %COMPILER%==VS2019 set CMAKE_GENERATOR="NMake Makefiles JOM"
@@ -183,6 +186,7 @@ for:
     clone_folder: c:\Build\MMapper
 
     init:
+      - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
       - cmd: if %COMPILER%==MinGW set CMAKE_GENERATOR="MSYS Makefiles"
       - cmd: git config --global core.autocrlf input
       - cmd: echo NUMBER_OF_PROCESSORS=%NUMBER_OF_PROCESSORS%
