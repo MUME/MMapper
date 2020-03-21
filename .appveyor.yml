@@ -5,6 +5,10 @@ branches:
     - master
 
 environment:
+  global:
+    APPVEYOR_SAVE_CACHE_ON_ERROR: true
+    APPVEYOR_CACHE_ENTRY_ZIP_ARGS: -t7z -m0=lzma -mx=4
+    APPVEYOR_RDP_PASSWORD: PL4YMUM3!
   matrix:
     - ARCH: x86
       COMPILER: GCC
@@ -234,6 +238,10 @@ for:
 
       - path: winbuild\mmapper-*-Windows-*.*.sha256
         name: MMapper Checksums
+
+    on_failure:
+      # Change false to true to block build and investigate build failures
+      - ps: $blockRdp = $false; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
   # Mac
   -
