@@ -5,9 +5,6 @@ branches:
     - master
 
 environment:
-  global:
-    APPVEYOR_SAVE_CACHE_ON_ERROR: true
-    APPVEYOR_CACHE_ENTRY_ZIP_ARGS: -t7z -m0=lzma -mx=4
   matrix:
     - ARCH: x86
       COMPILER: GCC
@@ -23,26 +20,28 @@ environment:
 
     - ARCH: x86
       COMPILER: MinGW
-      QTDIR: C:\Qt\5.14.1\mingw73_32
+      QTDIR: C:\Qt\5.14\mingw73_32
+      MINGWDIR: C:\mingw-w64\i686-8.1.0-posix-dwarf-rt_v6-rev0\mingw32
 
     - ARCH: x64
       COMPILER: MinGW
-      QTDIR: C:\Qt\5.14.1\mingw73_64
+      QTDIR: C:\Qt\5.14\mingw73_64
+      MINGWDIR: C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64
 
     - ARCH: x86
       COMPILER: VS2019
-      QTDIR: C:\Qt\5.14\msvc2017
+      QTDIR: C:\Qt\5.13\msvc2017
 
     - ARCH: x64
       COMPILER: VS2019
-      QTDIR: C:\Qt\5.14\msvc2017_64
+      QTDIR: C:\Qt\5.13\msvc2017_64
 
     - ARCH: x64
       COMPILER: Clang
 
 image:
   # AppVeyor builds are ordered by the image list:
-  - Visual Studio 2017
+  - Visual Studio 2019
   - macos-mojave
   - Ubuntu1804
   - Previous Visual Studio 2019
@@ -56,11 +55,11 @@ matrix:
       COMPILER: GCC
     - image: Previous Visual Studio 2019
       COMPILER: MinGW
-    - image: Visual Studio 2017
+    - image: Visual Studio 2019
       COMPILER: Clang
-    - image: Visual Studio 2017
+    - image: Visual Studio 2019
       COMPILER: GCC
-    - image: Visual Studio 2017
+    - image: Visual Studio 2019
       COMPILER: VS2019
     - image: Ubuntu1804
       COMPILER: Clang
@@ -178,9 +177,13 @@ for:
   -
     matrix:
       only:
-        - image: Visual Studio 2017
+        - image: Visual Studio 2019
 
     clone_folder: c:\Build\MMapper
+
+    cache:
+      - C:\mingw-w64\i686-8.1.0-posix-dwarf-rt_v6-rev0\mingw32
+      - C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64
 
     init:
       - cmd: if %COMPILER%==MinGW set CMAKE_GENERATOR="MSYS Makefiles"
@@ -196,22 +199,22 @@ for:
     install:
       - ps: $env:package_version = ("$(git describe --tags --always --long)").trim()
       - ps: Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
-      # Install MingW
-      - cmd: if %COMPILER%==MinGW set "PATH=C:/msys64/usr/bin;%PATH%"
-      - cmd: if %COMPILER%==MinGW if %ARCH%==x86 pacman -Syu --noconfirm --noprogressbar --needed
-      - cmd: if %COMPILER%==MinGW if %ARCH%==x86 pacman -Sy --noconfirm --noprogressbar --needed mingw-w64-i686-toolchain mingw-w64-i686-miniupnpc
-      - cmd: if %COMPILER%==MinGW if %ARCH%==x64 pacman -Sy --noconfirm --noprogressbar --needed mingw-w64-x86_64-toolchain mingw-w64-x86_64-miniupnpc
-      # Install Qt
-      - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/build-images/master/scripts/Windows/install_qt_module.ps1'))
-      - ps: if ($env:ARCH -eq 'x86') { Install-QtComponent -Version '5.14.1' -Name 'win32_mingw73' -ExcludeDocs -ExcludeExamples }
-      - ps: if ($env:ARCH -eq 'x64') { Install-QtComponent -Version '5.14.1' -Name 'win64_mingw73' -ExcludeDocs -ExcludeExamples }
-      - ps: ConfigureQtVersion 'C:\Qt' '5.14.1'
+      # Install x86 MingW 8.1.0 if it is not available
+      - cmd: if %COMPILER%==MinGW if %ARCH%==x86 if not exist "C:\mingw-w64\i686-8.1.0-posix-dwarf-rt_v6-rev0" md C:\mingw-w64\i686-8.1.0-posix-dwarf-rt_v6-rev0
+      - cmd: if %COMPILER%==MinGW if %ARCH%==x86 cd C:\mingw-w64\i686-8.1.0-posix-dwarf-rt_v6-rev0
+      - cmd: if %COMPILER%==MinGW if %ARCH%==x86 dir
+      - cmd: if %COMPILER%==MinGW if %ARCH%==x86 if not exist "mingw32" appveyor-retry appveyor DownloadFile "http://downloads.sourceforge.net/mingw-w64/i686-8.1.0-release-posix-dwarf-rt_v6-rev0.7z" -FileName "mingw32.7z"
+      - cmd: if %COMPILER%==MinGW if %ARCH%==x86 if exist "mingw32.7z" 7z x -y "mingw32.7z" > nul
+      # Install x64 MingW 8.1.0 if it is not available
+      - cmd: if %COMPILER%==MinGW if %ARCH%==x64 if not exist "C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0" md C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0
+      - cmd: if %COMPILER%==MinGW if %ARCH%==x64 cd C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0
+      - cmd: if %COMPILER%==MinGW if %ARCH%==x64 dir
+      - cmd: if %COMPILER%==MinGW if %ARCH%==x64 if not exist "mingw64" appveyor-retry appveyor DownloadFile "http://downloads.sourceforge.net/mingw-w64/x86_64-8.1.0-release-posix-seh-rt_v6-rev0.7z" -FileName "mingw64.7z"
+      - cmd: if %COMPILER%==MinGW if %ARCH%==x64 if exist "mingw64.7z" 7z x -y "mingw64.7z" > nul
 
-        before_build:
-      - cmd: if %COMPILER%==MinGW if %ARCH%==x86 set "PATH=C:/msys64/mingw32/bin;%PATH%"
-      - cmd: if %COMPILER%==MinGW if %ARCH%==x64 set "PATH=C:/msys64/mingw64/bin;%PATH%"
-      - cmd: set PATH=%QTDIR%\bin;%PATH%;C:\Qt\Tools\QtCreator\bin
-      - cmd: if %COMPILER%==MinGW set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
+    before_build:
+      - cmd: set PATH=%QTDIR%\bin;C:\Qt\Tools\QtCreator\bin;%PATH%
+      - cmd: if %COMPILER%==MinGW set PATH=%MINGWDIR%\bin;C:/msys64/usr/bin;%PATH:C:\Program Files\Git\usr\bin;=%
       - cmd: echo PATH=%PATH%
 
     build_script:
