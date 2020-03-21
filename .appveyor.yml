@@ -24,11 +24,11 @@ environment:
 
     - ARCH: x86
       COMPILER: MinGW
-      QTDIR: C:\Qt\5.14.1\mingw73_32
+      QTDIR: C:\Qt\5.14\mingw73_32
 
     - ARCH: x64
       COMPILER: MinGW
-      QTDIR: C:\Qt\5.14.1\mingw73_64
+      QTDIR: C:\Qt\5.14\mingw73_64
 
     - ARCH: x86
       COMPILER: VS2019
@@ -43,7 +43,7 @@ environment:
 
 image:
   # AppVeyor builds are ordered by the image list:
-  - Visual Studio 2017
+  - Visual Studio 2019
   - macos-mojave
   - Ubuntu1804
   - Previous Visual Studio 2019
@@ -57,11 +57,11 @@ matrix:
       COMPILER: GCC
     - image: Previous Visual Studio 2019
       COMPILER: MinGW
-    - image: Visual Studio 2017
+    - image: Visual Studio 2019
       COMPILER: Clang
-    - image: Visual Studio 2017
+    - image: Visual Studio 2019
       COMPILER: GCC
-    - image: Visual Studio 2017
+    - image: Visual Studio 2019
       COMPILER: VS2019
     - image: Ubuntu1804
       COMPILER: Clang
@@ -179,7 +179,7 @@ for:
   -
     matrix:
       only:
-        - image: Visual Studio 2017
+        - image: Visual Studio 2019
 
     clone_folder: c:\Build\MMapper
 
@@ -202,12 +202,6 @@ for:
       - cmd: if %COMPILER%==MinGW if %ARCH%==x86 pacman -Syu --noconfirm --noprogressbar --needed
       - cmd: if %COMPILER%==MinGW if %ARCH%==x86 pacman -Sy --noconfirm --noprogressbar --needed mingw-w64-i686-toolchain mingw-w64-i686-miniupnpc
       - cmd: if %COMPILER%==MinGW if %ARCH%==x64 pacman -Sy --noconfirm --noprogressbar --needed mingw-w64-x86_64-toolchain mingw-w64-x86_64-miniupnpc
-      # Install Qt
-      - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/build-images/master/scripts/Windows/install_qt_module.ps1'))
-      - ps: if ($env:ARCH -eq 'x86') { Install-QtComponent -Version '5.14.1' -Name 'win32_mingw73' -ExcludeDocs -ExcludeExamples }
-      - ps: if ($env:ARCH -eq 'x64') { Install-QtComponent -Version '5.14.1' -Name 'win64_mingw73' -ExcludeDocs -ExcludeExamples }
-      - ps: ConfigureQtVersion 'C:\Qt' '5.14.1'
-      - cmd: '%QTDIR%\bin\qtenv2.bat'
 
         before_build:
       - cmd: if %COMPILER%==MinGW if %ARCH%==x86 set "PATH=C:/msys64/mingw32/bin;%PATH%"
