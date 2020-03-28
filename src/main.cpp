@@ -69,7 +69,7 @@ Splash::~Splash() = default;
 static void seedRandomNumberGenerator()
 {
     // Seed random number generator with current time
-    std::srand(static_cast<unsigned int>(std::time(0)));
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
 }
 
 static void useHighDpi()
