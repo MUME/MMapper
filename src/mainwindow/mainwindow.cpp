@@ -1772,6 +1772,7 @@ bool MainWindow::saveFile(const QString &fileName,
         // REVISIT: Shouldn't this return false?
     } else {
         if (mode == SaveModeEnum::FULL && format == SaveFormatEnum::MM2) {
+            m_mapData->setFileName(fileName, !QFileInfo(fileName).isWritable());
             setCurrentFile(fileName);
         }
         statusBar()->showMessage(tr("File saved"), 2000);
