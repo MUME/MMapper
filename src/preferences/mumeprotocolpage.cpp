@@ -29,6 +29,10 @@ MumeProtocolPage::MumeProtocolPage(QWidget *parent)
             &QLineEdit::textChanged,
             this,
             &MumeProtocolPage::externalEditorCommandTextChanged);
+    connect(ui->externalEditorBrowseButton,
+            &QAbstractButton::clicked,
+            this,
+            &MumeProtocolPage::externalEditorBrowseButtonClicked);
 }
 
 MumeProtocolPage::~MumeProtocolPage()
@@ -44,26 +48,45 @@ void MumeProtocolPage::loadConfig()
     ui->externalEditorRadioButton->setChecked(!settings.internalRemoteEditor);
     ui->externalEditorCommand->setText(settings.externalRemoteEditorCommand);
     ui->externalEditorCommand->setEnabled(!settings.internalRemoteEditor);
+    ui->externalEditorBrowseButton->setEnabled(!settings.internalRemoteEditor);
 }
 
 void MumeProtocolPage::remoteEditCheckBoxStateChanged(int /*unused*/)
 {
-    const auto useExternalEditor = ui->remoteEditCheckBox->isChecked();
+    const auto useRemoteEdit = ui->remoteEditCheckBox->isChecked();
 
-    setConfig().mumeClientProtocol.remoteEditing = useExternalEditor;
+    setConfig().mumeClientProtocol.remoteEditing = useRemoteEdit;
 
-    ui->externalEditorRadioButton->setEnabled(useExternalEditor);
-    ui->internalEditorRadioButton->setEnabled(useExternalEditor);
-    ui->externalEditorCommand->setEnabled(!ui->internalEditorRadioButton->isChecked());
+    ui->externalEditorRadioButton->setEnabled(useRemoteEdit);
+    ui->internalEditorRadioButton->setEnabled(useRemoteEdit);
+    ui->externalEditorBrowseButton->setEnabled(useRemoteEdit);
+    ui->externalEditorCommand->setEnabled(useRemoteEdit);
 }
 
 void MumeProtocolPage::internalEditorRadioButtonChanged(bool /*unused*/)
 {
-    setConfig().mumeClientProtocol.internalRemoteEditor = ui->internalEditorRadioButton->isChecked();
-    ui->externalEditorCommand->setEnabled(!ui->internalEditorRadioButton->isChecked());
+    const bool useInternalEditor = ui->internalEditorRadioButton->isChecked();
+
+    setConfig().mumeClientProtocol.internalRemoteEditor = useInternalEditor;
+
+    ui->externalEditorCommand->setEnabled(!useInternalEditor);
+    ui->externalEditorBrowseButton->setEnabled(!useInternalEditor);
 }
 
 void MumeProtocolPage::externalEditorCommandTextChanged(QString text)
 {
     setConfig().mumeClientProtocol.externalRemoteEditorCommand = std::move(text);
+}
+
+void MumeProtocolPage::externalEditorBrowseButtonClicked(bool /*unused*/)
+{
+    auto &command = setConfig().mumeClientProtocol.externalRemoteEditorCommand;
+    QFileInfo dirInfo(command);
+    const auto dir = dirInfo.exists() ? dirInfo.absoluteDir().absolutePath() : QDir::homePath();
+    QString fileName = QFileDialog::getOpenFileName(this, "Choose editor...", dir, "Editor (*)");
+    if (!fileName.isEmpty()) {
+        QString quotedFileName = QString(R"("%1")").arg(fileName.replace(R"(")", R"(\")"));
+        ui->externalEditorCommand->setText(quotedFileName);
+        command = quotedFileName;
+    }
 }

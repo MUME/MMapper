@@ -27,6 +27,7 @@ public slots:
     void remoteEditCheckBoxStateChanged(int);
     void internalEditorRadioButtonChanged(bool);
     void externalEditorCommandTextChanged(QString);
+    void externalEditorBrowseButtonClicked(bool);
 
 private:
     Ui::MumeProtocolPage *ui = nullptr;

@@ -110,16 +110,6 @@
       <string>Remote Editing</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_1">
-      <item row="2" column="0">
-       <widget class="QRadioButton" name="internalEditorRadioButton">
-        <property name="text">
-         <string>Internal editor</string>
-        </property>
-        <attribute name="buttonGroup">
-         <string notr="true">buttonGroup</string>
-        </attribute>
-       </widget>
-      </item>
       <item row="3" column="0">
        <widget class="QRadioButton" name="externalEditorRadioButton">
         <property name="text">
@@ -132,6 +122,23 @@
       </item>
       <item row="3" column="1">
        <widget class="QLineEdit" name="externalEditorCommand"/>
+      </item>
+      <item row="3" column="2">
+       <widget class="QPushButton" name="externalEditorBrowseButton">
+        <property name="text">
+         <string>&amp;Browse</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="3">
+       <widget class="QRadioButton" name="internalEditorRadioButton">
+        <property name="text">
+         <string>Internal editor</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">buttonGroup</string>
+        </attribute>
+       </widget>
       </item>
      </layout>
     </widget>
