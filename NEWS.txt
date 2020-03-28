@@ -1,4 +1,24 @@
 ================================
+MMapper 20.03.0 (March 28, 2020)
+================================
+
+New features:
+ - Default map now includes Southern Mirkwood zones
+ - Overhauled textures to be 250% larger and have more detail
+ - Introduced 150% fractional scaling support for users with 4K monitors
+ - Added a browse button to select 3rd party programs as your remote editor
+ - Reduced Mac security dialogs by only listening on the local interface by default
+
+Bug fixes:
+ - Screen DPI changes are now detected when MMapper is moved across monitors
+ - Preferences dialog will now reposition itself on each open
+ - Fixed off-by-one error in the internal remote editor
+ - Fixed the saving of new maps to be less tedious with each subsequent save
+ - Fixed a loop where players could get stuck as incapacitated
+ - PowTTY terminal type will now include more information than simply 'unknown'
+ - Squished bugs around snooping for Valar
+
+================================
 MMapper 19.12.1 (December 31, 2019)
 ================================
 
