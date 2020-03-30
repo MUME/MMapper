@@ -6,6 +6,7 @@ to represent the virtual world in user-friendly graphical environment. It acts
 as a proxy between a telnet client and a MUD server, being able to analyze game
 data in real time and show player's position in a map.
 
+Latest release {{ site.github.latest_release.tag_name }} ({{ site.github.latest_release.published_at | date_to_string }})
 {% for asset in site.github.latest_release.assets %}
 {% if asset.name == 'arda.mm2' or asset.name contains 'sha256' %}
 {% else %}
