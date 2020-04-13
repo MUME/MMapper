@@ -12,6 +12,8 @@
 #include <QtCore>
 
 #include "../global/Array.h"
+#include "GmcpMessage.h"
+#include "GmcpModule.h"
 #include "TextCodec.h"
 
 // telnet command codes (prefixed with TN_ to prevent duplicit #defines
@@ -40,6 +42,7 @@ static constexpr const uint8_t OPT_TIMING_MARK = 6;
 static constexpr const uint8_t OPT_TERMINAL_TYPE = 24;
 static constexpr const uint8_t OPT_NAWS = 31;
 static constexpr const uint8_t OPT_CHARSET = 42;
+static constexpr const uint8_t OPT_GMCP = 201;
 
 // telnet SB suboption types
 static constexpr const uint8_t TNSB_IS = 0;
@@ -88,6 +91,8 @@ public:
     /* unused */
     int64_t getSentBytes() const { return sentBytes; }
 
+    bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &name);
+
 protected:
     void sendCharsetRequest(const QStringList &myCharacterSet);
 
@@ -105,6 +110,8 @@ protected:
 
     void sendTerminalTypeRequest();
 
+    void sendGmcpMessage(const GmcpMessage &msg);
+
     void requestTelnetOption(unsigned char type, unsigned char subnegBuffer);
 
     /** Prepares data, doubles IACs, sends it using sendRawData. */
@@ -114,9 +121,13 @@ protected:
 
     virtual void receiveEchoMode(bool) {}
 
+    virtual void receiveGmcpMessage(const GmcpMessage &) {}
+
     virtual void receiveTerminalType(const QByteArray &) {}
 
     virtual void receiveWindowSize(int, int) {}
+
+    virtual void onGmcpEnabled() {}
 
     /** Send out the data. Does not double IACs, this must be done
             by caller if needed. This function is suitable for sending
@@ -127,6 +138,10 @@ protected:
     void sendTelnetOption(unsigned char type, unsigned char subnegBuffer);
 
     void reset();
+
+    void resetGmcpModules();
+
+    void receiveGmcpModule(const GmcpModule &, bool);
 
     void onReadInternal(const QByteArray &);
 
@@ -152,6 +167,15 @@ protected:
     {
         int x = 80, y = 24;
     } current{};
+
+    /** modules for GMCP */
+    struct
+    {
+        /** MMapper relevant modules and their version */
+        GmcpModuleVersionList supported;
+        /** All GMCP modules */
+        GmcpModuleSet modules;
+    } gmcp{};
 
     /* Terminal Type */
     const QByteArray m_defaultTermType;

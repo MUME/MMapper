@@ -21,14 +21,18 @@ public slots:
     void onConnected();
     void onRelayNaws(int, int);
     void onRelayTermType(const QByteArray &);
+    void onGmcpToMud(const GmcpMessage &);
 
 signals:
     void analyzeMudStream(const QByteArray &, bool goAhead);
     void sendToSocket(const QByteArray &);
     void relayEchoMode(bool);
+    void relayGmcp(const GmcpMessage &);
 
 private:
     void sendToMapper(const QByteArray &data, bool goAhead) override;
     void receiveEchoMode(bool toggle) override;
+    void receiveGmcpMessage(const GmcpMessage &) override;
+    void onGmcpEnabled() override;
     void sendRawData(const QByteArray &data) override;
 };

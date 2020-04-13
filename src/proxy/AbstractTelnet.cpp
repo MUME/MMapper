@@ -56,6 +56,7 @@ static QString telnetOptionName(uint8_t opt)
         CASE(TERMINAL_TYPE);
         CASE(NAWS);
         CASE(CHARSET);
+        CASE(GMCP);
     }
     return QString::asprintf("%u", opt);
 #undef CASE
@@ -165,8 +166,40 @@ void AbstractTelnet::reset()
     termType = m_defaultTermType;
     state = TelnetStateEnum::NORMAL;
     commandBuffer.clear();
+    resetGmcpModules();
     subnegBuffer.clear();
     sentBytes = 0;
+}
+
+void AbstractTelnet::resetGmcpModules()
+{
+    if (debug)
+        qDebug() << "Clearing GMCP modules";
+#define X_CASE(UPPER_CASE, CamelCase, normalized, friendly) \
+    gmcp.supported[GmcpModuleTypeEnum::UPPER_CASE] = DEFAULT_GMCP_MODULE_VERSION;
+    X_FOREACH_GMCP_MODULE_TYPE(X_CASE)
+#undef X_CASE
+    gmcp.modules.clear();
+}
+
+void AbstractTelnet::receiveGmcpModule(const GmcpModule &module, const bool enabled)
+{
+    if (enabled) {
+        if (!module.hasVersion())
+            throw std::runtime_error("missing version");
+        if (debug)
+            qDebug() << "Adding GMCP module" << ::toQByteArrayLatin1(module.toStdString());
+        gmcp.modules.insert(module);
+        if (module.isSupported())
+            gmcp.supported[module.getType()] = module.getVersion();
+
+    } else {
+        if (debug)
+            qDebug() << "Removing GMCP module" << ::toQByteArrayLatin1(module.toStdString());
+        gmcp.modules.erase(module);
+        if (module.isSupported())
+            gmcp.supported[module.getType()] = DEFAULT_GMCP_MODULE_VERSION;
+    }
 }
 
 void AbstractTelnet::submitOverTelnet(const QByteArray &data, const bool goAhead)
@@ -218,7 +251,8 @@ void AbstractTelnet::sendTelnetOption(unsigned char type, unsigned char option)
 
 void AbstractTelnet::requestTelnetOption(unsigned char type, unsigned char option)
 {
-    myOptionState[option] = true;
+    if (type == TN_DO)
+        myOptionState[option] = true;
     announcedState[option] = true;
     sendTelnetOption(type, option);
 }
@@ -235,6 +269,26 @@ void AbstractTelnet::sendCharsetRequest(const QStringList &myCharacterSets)
         s.addEscapedBytes(delimeter);
         s.addEscapedBytes(characterSet.toLocal8Bit());
     }
+    s.addSubnegEnd();
+    sendRawData(s);
+}
+
+bool AbstractTelnet::isGmcpModuleEnabled(const GmcpModuleTypeEnum &name)
+{
+    if (!myOptionState[OPT_GMCP])
+        return false;
+
+    return gmcp.supported[name] != DEFAULT_GMCP_MODULE_VERSION;
+}
+
+void AbstractTelnet::sendGmcpMessage(const GmcpMessage &msg)
+{
+    auto payload = msg.toRawBytes();
+    if (debug)
+        qDebug() << "Sending GMCP:" << payload;
+    TelnetFormatter s;
+    s.addSubnegBegin(OPT_GMCP);
+    s.addEscapedBytes(payload);
     s.addSubnegEnd();
     sendRawData(s);
 }
@@ -359,7 +413,7 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
                 {
                     if ((option == OPT_SUPPRESS_GA) || (option == OPT_STATUS)
                         || (option == OPT_TERMINAL_TYPE) || (option == OPT_NAWS)
-                        || (option == OPT_ECHO) || (option == OPT_CHARSET))
+                        || (option == OPT_ECHO) || (option == OPT_CHARSET) || (option == OPT_GMCP))
                     // these options are supported
                     {
                         sendTelnetOption(TN_DO, option);
@@ -405,8 +459,8 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
             // only if the option is currently disabled
             {
                 if ((option == OPT_SUPPRESS_GA) || (option == OPT_STATUS)
-                    || (option == OPT_TERMINAL_TYPE) || (option == OPT_NAWS)
-                    || (option == OPT_CHARSET) || (option == OPT_ECHO)) {
+                    || (option == OPT_TERMINAL_TYPE) || (option == OPT_NAWS) || (option == OPT_ECHO)
+                    || (option == OPT_CHARSET) || (option == OPT_GMCP)) {
                     sendTelnetOption(TN_WILL, option);
                     myOptionState[option] = true;
                     announcedState[option] = true;
@@ -427,6 +481,8 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
             } else if (myOptionState[OPT_CHARSET] && option == OPT_CHARSET) {
                 sendCharsetRequest(textCodec.supportedEncodings());
                 // TODO: RFC 2066 states to queue all subsequent data until ACCEPTED / REJECTED
+            } else if (myOptionState[OPT_GMCP] && option == OPT_GMCP) {
+                onGmcpEnabled();
             }
             break;
         case TN_DONT:
@@ -458,7 +514,8 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
     }
 
     // subnegotiation - we analyze and respond...
-    switch (payload[0]) {
+    const uint8_t option = static_cast<uint8_t>(payload[0]);
+    switch (option) {
     case OPT_STATUS:
         // see OPT_TERMINAL_TYPE for explanation why I'm doing this
         if (true /*myOptionState[OPT_STATUS]*/) {
@@ -536,6 +593,27 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
             }
         }
         break;
+    case OPT_GMCP:
+        if (myOptionState[OPT_GMCP]) {
+            // Package[.SubPackages].Message <data>
+            if (payload.length() <= 1) {
+                qWarning() << "Invalid GMCP received" << payload;
+                break;
+            }
+            try {
+                GmcpMessage msg = GmcpMessage::fromRawBytes(payload.mid(1));
+                if (debug) {
+                    qDebug() << "Received GMCP message" << msg.getName().toQString()
+                             << (msg.getJson() ? msg.getJson()->toQString() : "");
+                }
+                receiveGmcpMessage(msg);
+
+            } catch (const std::exception &e) {
+                qWarning() << "Corrupted GMCP received" << payload << e.what();
+            }
+        }
+        break;
+
     case OPT_NAWS:
         if (myOptionState[OPT_NAWS]) {
             // NAWS <16-bit value> <16-bit value>

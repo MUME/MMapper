@@ -1141,6 +1141,11 @@ QByteArray toQByteArrayLatin1(const std::string_view &sv)
     return QByteArray(sv.data(), static_cast<int>(sv.size()));
 }
 
+QByteArray toQByteArrayUtf8(const std::string_view &sv)
+{
+    return toQStringUtf8(sv).toUtf8();
+}
+
 std::string toStdStringLatin1(const QString &qs)
 {
     return qs.toLatin1().toStdString();

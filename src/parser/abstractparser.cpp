@@ -49,6 +49,8 @@
 #include "../mapdata/roomfilter.h"
 #include "../mapdata/roomselection.h"
 #include "../mapdata/shortestpath.h"
+#include "../proxy/GmcpMessage.h"
+#include "../proxy/GmcpUtils.h"
 #include "../proxy/proxy.h"
 #include "../proxy/telnetfilter.h"
 #include "../syntax/Accept.h"

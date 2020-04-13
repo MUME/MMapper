@@ -320,6 +320,12 @@ set(mmapper_SRCS
     preferences/pathmachinepage.h
     proxy/AbstractTelnet.cpp
     proxy/AbstractTelnet.h
+    proxy/GmcpMessage.cpp
+    proxy/GmcpMessage.h
+    proxy/GmcpModule.cpp
+    proxy/GmcpModule.h
+    proxy/GmcpUtils.cpp
+    proxy/GmcpUtils.h
     proxy/MudTelnet.cpp
     proxy/MudTelnet.h
     proxy/ProxyParserApi.cpp

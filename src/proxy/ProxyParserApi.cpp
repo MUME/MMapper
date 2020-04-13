@@ -55,3 +55,21 @@ void ProxyParserApi::sendToUser(const std::string_view &msg) const
 
     sendToUser(QByteArray{msg.data(), static_cast<int>(msg.length())});
 }
+
+void ProxyParserApi::gmcpToMud(const GmcpMessage &msg) const
+{
+    m_proxy.acceptVisitor([&msg](Proxy &proxy) { proxy.gmcpToMud(msg); });
+}
+
+void ProxyParserApi::gmcpToUser(const GmcpMessage &msg) const
+{
+    m_proxy.acceptVisitor([&msg](Proxy &proxy) { proxy.gmcpToUser(msg); });
+}
+
+bool ProxyParserApi::isGmcpModuleEnabled(const GmcpModuleTypeEnum &module) const
+{
+    bool result = false;
+    m_proxy.acceptVisitor(
+        [&module, &result](Proxy &proxy) { result = proxy.isGmcpModuleEnabled(module); });
+    return result;
+}

@@ -27,6 +27,7 @@
 #include "../parser/abstractparser.h"
 #include "../parser/mumexmlparser.h"
 #include "../pathmachine/mmapper2pathmachine.h"
+#include "GmcpUtils.h"
 #include "MudTelnet.h"
 #include "UserTelnet.h"
 #include "connectionlistener.h"
@@ -136,7 +137,8 @@ void Proxy::start()
     connect(this, &Proxy::log, mw, &MainWindow::log);
     connect(this, &Proxy::sig_sendToMud, mudTelnet, &MudTelnet::onSendToMud);
     connect(this, &Proxy::sig_sendToUser, userTelnet, &UserTelnet::onSendToUser);
-
+    connect(this, &Proxy::sig_gmcpToMud, mudTelnet, &MudTelnet::onGmcpToMud);
+    connect(this, &Proxy::sig_gmcpToUser, userTelnet, &UserTelnet::onGmcpToUser);
     connect(userSocket, &QAbstractSocket::disconnected, this, &Proxy::userTerminatedConnection);
     connect(userSocket, &QIODevice::readyRead, this, &Proxy::processUserStream);
 
@@ -145,6 +147,7 @@ void Proxy::start()
             telnetFilter,
             &TelnetFilter::onAnalyzeUserStream);
     connect(userTelnet, &UserTelnet::sendToSocket, this, &Proxy::onSendToUserSocket);
+    connect(userTelnet, &UserTelnet::relayGmcp, mudTelnet, &MudTelnet::onGmcpToMud);
     connect(userTelnet, &UserTelnet::relayNaws, mudTelnet, &MudTelnet::onRelayNaws);
     connect(userTelnet, &UserTelnet::relayTermType, mudTelnet, &MudTelnet::onRelayTermType);
 
@@ -154,6 +157,7 @@ void Proxy::start()
             &TelnetFilter::onAnalyzeMudStream);
     connect(mudTelnet, &MudTelnet::sendToSocket, this, &Proxy::onSendToMudSocket);
     connect(mudTelnet, &MudTelnet::relayEchoMode, userTelnet, &UserTelnet::onRelayEchoMode);
+    connect(mudTelnet, &MudTelnet::relayGmcp, userTelnet, &UserTelnet::onGmcpToUser);
 
     connect(this, &Proxy::analyzeUserStream, userTelnet, &UserTelnet::onAnalyzeUserStream);
 
@@ -436,4 +440,9 @@ void Proxy::disconnectFromMud()
         sendToUser("Error: You're not connected.\r\n");
         break;
     }
+}
+
+bool Proxy::isGmcpModuleEnabled(const GmcpModuleTypeEnum &module) const
+{
+    return m_userTelnet->isGmcpModuleEnabled(module);
 }

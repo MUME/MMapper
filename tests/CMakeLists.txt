@@ -66,6 +66,23 @@ add_dependencies(TestParser glm)
 target_link_libraries(TestParser Qt5::Test coverage_config)
 add_test(NAME TestParser COMMAND TestParser)
 
+# Proxy
+set(proxy_SRCS
+    ../src/proxy/GmcpMessage.cpp
+    ../src/proxy/GmcpMessage.h
+    ../src/proxy/GmcpModule.cpp
+    ../src/proxy/GmcpModule.h
+    ../src/proxy/GmcpUtils.cpp
+    ../src/proxy/GmcpUtils.h
+    ../src/global/TextUtils.cpp
+    ../src/global/TextUtils.h
+    )
+set(TestProxy_SRCS TestProxy.cpp)
+add_executable(TestProxy ${TestProxy_SRCS} ${proxy_SRCS})
+add_dependencies(TestProxy glm)
+target_link_libraries(TestProxy Qt5::Test coverage_config)
+add_test(NAME TestProxy COMMAND TestProxy)
+
 # MainWindow
 set(mainwindow_SRCS
     ../src/global/Version.h

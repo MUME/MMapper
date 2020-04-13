@@ -20,16 +20,19 @@ public slots:
     void onAnalyzeUserStream(const QByteArray &);
     void onConnected();
     void onRelayEchoMode(bool);
+    void onGmcpToUser(const GmcpMessage &);
 
 signals:
     void analyzeUserStream(const QByteArray &, bool goAhead);
     void sendToSocket(const QByteArray &);
 
+    void relayGmcp(const GmcpMessage &);
     void relayNaws(int, int);
     void relayTermType(QByteArray);
 
 private:
     void sendToMapper(const QByteArray &data, bool goAhead) override;
+    void receiveGmcpMessage(const GmcpMessage &) override;
     void receiveTerminalType(const QByteArray &) override;
     void receiveWindowSize(int, int) override;
     void sendRawData(const QByteArray &data) override;

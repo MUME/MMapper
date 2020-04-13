@@ -6,6 +6,8 @@
 #include <QByteArray>
 
 #include "../global/WeakHandle.h"
+#include "../proxy/GmcpMessage.h"
+#include "../proxy/GmcpModule.h"
 
 class Proxy;
 
@@ -35,4 +37,9 @@ public:
 public:
     void sendToMud(const std::string_view &msg) const;
     void sendToUser(const std::string_view &msg) const;
+
+public:
+    void gmcpToMud(const GmcpMessage &msg) const;
+    void gmcpToUser(const GmcpMessage &msg) const;
+    bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &module) const;
 };

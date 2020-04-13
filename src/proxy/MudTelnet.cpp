@@ -13,6 +13,7 @@
 #include "../configuration/configuration.h"
 #include "../global/TextUtils.h"
 #include "../global/Version.h"
+#include "GmcpUtils.h"
 
 static QByteArray addTerminalTypeSuffix(const std::string_view &prefix)
 {
@@ -50,8 +51,9 @@ void MudTelnet::onConnected()
 {
     reset();
     // MUME opts to not send DO CHARSET due to older, broken clients
-    sendTelnetOption(TN_WILL, OPT_CHARSET);
-    announcedState[OPT_CHARSET] = true;
+    requestTelnetOption(TN_WILL, OPT_CHARSET);
+    // Assume MUME will also opt to not send DO GMCP similar to CHARSET
+    requestTelnetOption(TN_WILL, OPT_GMCP);
 }
 
 void MudTelnet::onAnalyzeMudStream(const QByteArray &data)
@@ -63,6 +65,12 @@ void MudTelnet::onSendToMud(const QByteArray &ba)
 {
     // Bytes are already Latin-1 so we just send it to MUME
     submitOverTelnet(ba, false);
+}
+
+void MudTelnet::onGmcpToMud(const GmcpMessage &msg)
+{
+    if (myOptionState[OPT_GMCP])
+        sendGmcpMessage(msg);
 }
 
 void MudTelnet::onRelayNaws(const int x, const int y)
@@ -96,6 +104,18 @@ void MudTelnet::sendToMapper(const QByteArray &data, bool goAhead)
 void MudTelnet::receiveEchoMode(bool toggle)
 {
     emit relayEchoMode(toggle);
+}
+
+void MudTelnet::receiveGmcpMessage(const GmcpMessage &msg)
+{
+    emit relayGmcp(msg);
+}
+
+void MudTelnet::onGmcpEnabled()
+{
+    sendGmcpMessage(GmcpMessage(GmcpMessageTypeEnum::CORE_HELLO,
+                                QString(R"({ "client": "MMapper", "version": "%1" })")
+                                    .arg(GmcpUtils::escapeGmcpStringData(getMMapperVersion()))));
 }
 
 /** Send out the data. Does not double IACs, this must be done

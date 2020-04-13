@@ -531,6 +531,6 @@ public:
 QString toQStringLatin1(const std::string_view &sv);
 QString toQStringUtf8(const std::string_view &sv);
 QByteArray toQByteArrayLatin1(const std::string_view &sv);
-
+QByteArray toQByteArrayUtf8(const std::string_view &sv);
 std::string toStdStringLatin1(const QString &qs);
 std::string toStdStringUtf8(const QString &qs);

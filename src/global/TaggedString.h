@@ -76,3 +76,42 @@ public:
     bool empty() const { return m_str.empty(); }
     bool isEmpty() const { return empty(); }
 };
+
+// UTF-8
+template<typename T>
+class TaggedStringUtf8 : private TaggedString<T>
+{
+private:
+    using base = TaggedString<T>;
+
+public:
+    explicit TaggedStringUtf8(std::string s)
+        : TaggedString<T>(std::move(s))
+    {}
+    explicit TaggedStringUtf8(const QString &s)
+        : TaggedString<T>(::toStdStringUtf8(s))
+    {}
+
+public:
+    using base::operator==;
+    using base::operator!=;
+
+public:
+    friend auto operator+(const TaggedStringUtf8 &taggedString, const QString &qs)
+    {
+        return taggedString.toQString() + qs;
+    }
+    friend auto operator+(const QString &qs, const TaggedStringUtf8 &taggedString)
+    {
+        return qs + taggedString.toQString();
+    }
+
+public:
+    using base::getStdString;
+    QByteArray toQByteArray() const { return ::toQByteArrayUtf8(getStdString()); }
+    QString toQString() const { return ::toQStringUtf8(getStdString()); }
+
+public:
+    using base::empty;
+    using base::isEmpty;
+};

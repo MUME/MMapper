@@ -17,6 +17,7 @@
 #include "../global/WeakHandle.h"
 #include "../global/io.h"
 #include "../pandoragroup/GroupManagerApi.h"
+#include "GmcpMessage.h"
 #include "ProxyParserApi.h"
 
 class ConnectionListener;
@@ -75,6 +76,9 @@ signals:
     void sig_sendToMud(const QByteArray &);
     void sig_sendToUser(const QByteArray &, bool);
 
+    void sig_gmcpToMud(const GmcpMessage &);
+    void sig_gmcpToUser(const GmcpMessage &);
+
 private:
     friend ProxyParserApi;
     bool isConnected() const;
@@ -82,6 +86,9 @@ private:
     void disconnectFromMud();
     void sendToUser(const QByteArray &ba) { emit sig_sendToUser(ba, false); }
     void sendToMud(const QByteArray &ba) { emit sig_sendToMud(ba); }
+    void gmcpToUser(const GmcpMessage &msg) { emit sig_gmcpToUser(msg); }
+    void gmcpToMud(const GmcpMessage &msg) { emit sig_gmcpToMud(msg); }
+    bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &module) const;
 
 private:
     io::buffer<(1 << 13)> m_buffer;
