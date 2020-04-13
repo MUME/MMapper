@@ -11,8 +11,12 @@
 #include "../global/Flags.h"
 #include "../global/RuleOf5.h"
 
+// TODO: Comm, Event
+
 // X(UPPER_CASE, CamelCase, "normalized name", "friendly name")
-#define X_FOREACH_GMCP_MODULE_TYPE(X) /* define gmcp module types above */
+#define X_FOREACH_GMCP_MODULE_TYPE(X) \
+    X(MMAPPER_GROUPTELL, MmapperGroupTell, "mmapper.grouptell", "MMapper.GroupTell") \
+    /* define gmcp module types above */
 
 enum class GmcpModuleTypeEnum {
     UNKNOWN = -1,
@@ -21,8 +25,8 @@ enum class GmcpModuleTypeEnum {
 #undef X_DECL_GMCP_MODULE_TYPE
 };
 
-static constexpr const size_t NUM_GMCP_MODULES = 0u;
-static_assert(NUM_GMCP_MODULES == static_cast<int>(GmcpModuleTypeEnum::UNKNOWN) + 1);
+static constexpr const size_t NUM_GMCP_MODULES = 1u;
+static_assert(NUM_GMCP_MODULES == static_cast<int>(GmcpModuleTypeEnum::MMAPPER_GROUPTELL) + 1);
 DEFINE_ENUM_COUNT(GmcpModuleTypeEnum, NUM_GMCP_MODULES)
 
 struct GmcpModuleVersion final

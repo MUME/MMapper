@@ -38,7 +38,7 @@ signals:
     void updateMapCanvas(); // redraw the opengl screen
 
     // sent to ParserXML::sendGTellToUser (via Proxy)
-    void displayGroupTellEvent(const QByteArray &tell); // displays gtell from remote user
+    void displayGroupTellEvent(const QString &color, const QString &name, const QString &message);
 
     // GroupWidget::messageBox (via GroupWidget)
     void messageBox(QString title, QString message);

@@ -141,7 +141,7 @@ public slots:
     void parseNewUserInput(const TelnetData &);
 
     void reset();
-    void sendGTellToUser(const QByteArray &);
+    void sendGTellToUser(const QString &, const QString &, const QString &);
 
 protected slots:
     void doOfflineCharacterMove();
