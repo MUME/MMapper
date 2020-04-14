@@ -153,7 +153,7 @@ void AbstractParser::initActionMap()
     addStartsWith("Your limbs are becoming cold and heavy, your eyelids close.", poisonOn);
     // Generic poison
     addStartsWith("You feel bad.", poisonOn);
-    addStartsWith("- poison (type: poison).", poisonOn);
+    addStartsWith("- poison (type: ", poisonOn);
     // Psylonia
     addStartsWith("You suddenly feel a terrible headache!", poisonOn);
     addStartsWith("A hot flush overwhelms your brain and makes you dizzy.", poisonOn);
