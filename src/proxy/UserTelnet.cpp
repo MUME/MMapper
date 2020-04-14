@@ -20,7 +20,8 @@ void UserTelnet::onConnected()
     requestTelnetOption(TN_DO, OPT_TERMINAL_TYPE);
     requestTelnetOption(TN_DO, OPT_NAWS);
     requestTelnetOption(TN_DO, OPT_CHARSET);
-    requestTelnetOption(TN_DO, OPT_GMCP);
+    // Most clients expect the server (i.e. MMapper) to send IAC WILL GMCP
+    requestTelnetOption(TN_WILL, OPT_GMCP);
 }
 
 void UserTelnet::onAnalyzeUserStream(const QByteArray &data)

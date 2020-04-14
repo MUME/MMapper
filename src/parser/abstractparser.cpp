@@ -1618,12 +1618,8 @@ void AbstractParser::printRoomInfo(const RoomFields fieldset)
 
 void AbstractParser::sendGTellToUser(const QString &color, const QString &from, const QString &text)
 {
-    const QString tell = QString("\r\n"
-                                 "\x1b%1%2 tells you [GT] '%3'\x1b[0m"
-                                 "\r\n")
-                             .arg(color)
-                             .arg(from)
-                             .arg(text);
+    const QString tell
+        = QString("\x1b%1%2 tells you [GT] '%3'\x1b[0m").arg(color).arg(from).arg(text);
 
     if (m_proxy.isGmcpModuleEnabled(GmcpModuleTypeEnum::MMAPPER_GROUPTELL)) {
         m_proxy.gmcpToUser(GmcpMessage(GmcpMessageTypeEnum::MMAPPER_GROUPTELL,
@@ -1633,7 +1629,7 @@ void AbstractParser::sendGTellToUser(const QString &color, const QString &from, 
         return;
     }
 
-    sendToUser(tell.toLatin1());
+    sendToUser("\r\n" + tell.toLatin1() + "\r\n");
     sendPromptToUser();
 }
 

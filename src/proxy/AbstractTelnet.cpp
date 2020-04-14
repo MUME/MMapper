@@ -251,8 +251,7 @@ void AbstractTelnet::sendTelnetOption(unsigned char type, unsigned char option)
 
 void AbstractTelnet::requestTelnetOption(unsigned char type, unsigned char option)
 {
-    if (type == TN_DO)
-        myOptionState[option] = true;
+    myOptionState[option] = true;
     announcedState[option] = true;
     sendTelnetOption(type, option);
 }

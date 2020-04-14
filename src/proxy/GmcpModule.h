@@ -92,7 +92,7 @@ struct GmcpModuleEqualTo
 {
     bool operator()(const GmcpModule &lhs, const GmcpModule &rhs) const
     {
-        return lhs.getNormalizedName() == rhs.getNormalizedName();
+        return lhs.getNormalizedName().compare(rhs.getNormalizedName()) == 0;
     }
 };
 
