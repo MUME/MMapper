@@ -153,6 +153,7 @@ public:
     } mumeNative;
 
     static constexpr const std::string_view BACKGROUND_NAME = "background";
+    static constexpr const std::string_view CONNECTION_NORMAL_NAME = "connection-normal";
     static constexpr const std::string_view ROOM_DARK_NAME = "room-dark";
     static constexpr const std::string_view ROOM_NO_SUNDEATH_NAME = "room-no-sundeath";
 
@@ -163,6 +164,7 @@ public:
         bool drawUpperLayersTextured = false;
         bool drawDoorNames = false;
         XNamedColor backgroundColor{BACKGROUND_NAME};
+        XNamedColor connectionNormalColor{CONNECTION_NORMAL_NAME};
         XNamedColor roomDarkColor{ROOM_DARK_NAME};
         XNamedColor roomDarkLitColor{ROOM_NO_SUNDEATH_NAME};
         int antialiasingSamples = 0;
@@ -217,6 +219,7 @@ public:
         XNamedColor INFOMARK_RIVER{"infomark-river"};
         XNamedColor INFOMARK_ROAD{"infomark-road"};
 
+        XNamedColor CONNECTION_NORMAL{CONNECTION_NORMAL_NAME};
         XNamedColor ROOM_DARK{ROOM_DARK_NAME};
         XNamedColor ROOM_NO_SUNDEATH{ROOM_NO_SUNDEATH_NAME};
 

@@ -205,6 +205,7 @@ ConstString KEY_CLEAR_INPUT_ON_ENTER = "Clear input on enter";
 ConstString KEY_COLOR = "color";
 ConstString KEY_COLUMNS = "Columns";
 ConstString KEY_COMMAND_PREFIX_CHAR = "Command prefix character";
+ConstString KEY_CONNECTION_NORMAL_COLOR = "Connection normal color";
 ConstString KEY_CORRECT_POSITION_BONUS = "correct position bonus";
 ConstString KEY_DISPLAY_CLOCK = "Display clock";
 ConstString KEY_DRAW_DOOR_NAMES = "Draw door names";
@@ -541,6 +542,7 @@ void Configuration::CanvasSettings::read(QSettings &conf)
     drawUpperLayersTextured = conf.value(KEY_DRAW_UPPER_LAYERS_TEXTURED, false).toBool();
     drawDoorNames = conf.value(KEY_DRAW_DOOR_NAMES, true).toBool();
     backgroundColor = lookupColor(KEY_BACKGROUND_COLOR, DEFAULT_BGCOLOR);
+    connectionNormalColor = lookupColor(KEY_CONNECTION_NORMAL_COLOR, Colors::white.toHex());
     roomDarkColor = lookupColor(KEY_ROOM_DARK_COLOR, DEFAULT_DARK_COLOR);
     roomDarkLitColor = lookupColor(KEY_ROOM_DARK_LIT_COLOR, DEFAULT_NO_SUNDEATH_COLOR);
     antialiasingSamples = conf.value(KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES, 0).toInt();
@@ -709,6 +711,7 @@ void Configuration::CanvasSettings::write(QSettings &conf) const
     conf.setValue(KEY_BACKGROUND_COLOR, getQColorName(backgroundColor));
     conf.setValue(KEY_ROOM_DARK_COLOR, getQColorName(roomDarkColor));
     conf.setValue(KEY_ROOM_DARK_LIT_COLOR, getQColorName(roomDarkLitColor));
+    conf.setValue(KEY_CONNECTION_NORMAL_COLOR, getQColorName(connectionNormalColor));
     conf.setValue(KEY_NUMBER_OF_ANTI_ALIASING_SAMPLES, antialiasingSamples);
     conf.setValue(KEY_USE_TRILINEAR_FILTERING, trilinearFiltering);
     conf.setValue(KEY_USE_SOFTWARE_OPENGL, softwareOpenGL);
@@ -856,6 +859,7 @@ void Configuration::ColorSettings::resetToDefaults()
     INFOMARK_OBJECT = Colors::yellow;
     INFOMARK_RIVER = water;
     INFOMARK_ROAD = road;
+    CONNECTION_NORMAL = Colors::white;
     ROOM_DARK = darkRoom;
     ROOM_NO_SUNDEATH = noSundeath;
     STREAM = water;

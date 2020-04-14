@@ -12,6 +12,7 @@
 #include <QMessageLogContext>
 #include <QtCore>
 
+#include "../configuration/configuration.h"
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
 #include "../global/Flags.h"
@@ -594,7 +595,7 @@ void ConnectionMeshes::render(const int thisLayer, const int focusedLayer)
 {
     const auto color = [&thisLayer, &focusedLayer]() {
         if (thisLayer == focusedLayer) {
-            return Colors::white;
+            return getConfig().canvas.connectionNormalColor.getColor();
         }
         return Colors::gray70.withAlpha(FAINT_CONNECTION_ALPHA);
     }();
@@ -745,7 +746,8 @@ void ConnectionDrawer::ConnectionFakeGL::drawTriangle(const glm::vec3 &a,
         return;
     }
 
-    const auto &color = isNormal() ? Colors::white : Colors::red;
+    const auto &color = isNormal() ? getConfig().canvas.connectionNormalColor.getColor()
+                                   : Colors::red;
     auto &verts = deref(m_currentBuffer).triVerts;
     verts.emplace_back(color, a + m_offset);
     verts.emplace_back(color, b + m_offset);
@@ -767,7 +769,8 @@ void ConnectionDrawer::ConnectionFakeGL::drawLineStrip(const std::vector<glm::ve
         return;
     }
 
-    const auto &color = isNormal() ? Colors::white : Colors::red;
+    const auto &color = isNormal() ? getConfig().canvas.connectionNormalColor.getColor()
+                                   : Colors::red;
 
     assert(points.size() >= 2);
     const auto transform = [this](const glm::vec3 &vert) { return vert + m_offset; };

@@ -4,6 +4,7 @@
 #include "Color.h"
 
 #include <iomanip>
+#include <sstream>
 #include <QColor>
 
 #include "utils.h"
@@ -124,6 +125,13 @@ Color Color::fromHex(const std::string_view sv)
     const int g = decode(sv.substr(2, 2));
     const int b = decode(sv.substr(4, 2));
     return Color(r, g, b);
+}
+
+std::string Color::toHex() const
+{
+    std::ostringstream oss;
+    toHex(oss);
+    return oss.str();
 }
 
 std::ostream &Color::toHex(std::ostream &os) const

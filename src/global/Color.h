@@ -80,6 +80,7 @@ public:
 
 public:
     static Color fromHex(std::string_view sv);
+    std::string toHex() const;
     std::ostream &toHex(std::ostream &os) const;
     friend std::ostream &operator<<(std::ostream &os, const Color &c) { return c.toHex(os); }
 };

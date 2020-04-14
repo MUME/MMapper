@@ -204,6 +204,16 @@
       <property name="spacing">
        <number>6</number>
       </property>
+      <item row="0" column="0">
+       <widget class="QLabel" name="bgLabel">
+        <property name="text">
+         <string>Background:</string>
+        </property>
+        <property name="buddy">
+         <cstring>bgChangeColor</cstring>
+        </property>
+       </widget>
+      </item>
       <item row="1" column="0">
        <widget class="QLabel" name="darkLabel">
         <property name="text">
@@ -211,6 +221,13 @@
         </property>
         <property name="buddy">
          <cstring>darkPushButton</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QPushButton" name="darkLitPushButton">
+        <property name="text">
+         <string>Select</string>
         </property>
        </widget>
       </item>
@@ -226,23 +243,6 @@
          </size>
         </property>
        </spacer>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="bgLabel">
-        <property name="text">
-         <string>Background:</string>
-        </property>
-        <property name="buddy">
-         <cstring>bgChangeColor</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QPushButton" name="bgChangeColor">
-        <property name="text">
-         <string>Select</string>
-        </property>
-       </widget>
       </item>
       <item row="2" column="0">
        <widget class="QLabel" name="darkLitLabel">
@@ -261,8 +261,25 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
-       <widget class="QPushButton" name="darkLitPushButton">
+      <item row="0" column="1">
+       <widget class="QPushButton" name="bgChangeColor">
+        <property name="text">
+         <string>Select</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="connectionNormalLabel">
+        <property name="text">
+         <string>Normal Connection:</string>
+        </property>
+        <property name="buddy">
+         <cstring>connectionNormalPushButton</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QPushButton" name="connectionNormalPushButton">
         <property name="text">
          <string>Select</string>
         </property>

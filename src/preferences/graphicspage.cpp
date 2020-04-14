@@ -41,6 +41,10 @@ GraphicsPage::GraphicsPage(QWidget *parent)
         changeColorClicked(setConfig().canvas.roomDarkLitColor, ui->darkLitPushButton);
         graphicsSettingsChanged();
     });
+    connect(ui->connectionNormalPushButton, &QAbstractButton::clicked, this, [this]() {
+        changeColorClicked(setConfig().canvas.connectionNormalColor, ui->connectionNormalPushButton);
+        graphicsSettingsChanged();
+    });
     connect(ui->antialiasingSamplesComboBox,
             &QComboBox::currentTextChanged,
             this,
@@ -87,6 +91,7 @@ void GraphicsPage::loadConfig()
     setIconColor(ui->bgChangeColor, settings.backgroundColor);
     setIconColor(ui->darkPushButton, settings.roomDarkColor);
     setIconColor(ui->darkLitPushButton, settings.roomDarkLitColor);
+    setIconColor(ui->connectionNormalPushButton, settings.connectionNormalColor);
 
     const QString antiAliasingSamples = QString::number(settings.antialiasingSamples);
     const int index = std::max(0, ui->antialiasingSamplesComboBox->findText(antiAliasingSamples));
