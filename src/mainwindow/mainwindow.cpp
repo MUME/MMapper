@@ -2053,22 +2053,22 @@ void MainWindow::onCheckForUpdate()
 void MainWindow::voteForMUMEOnTMC()
 {
     QDesktopServices::openUrl(QUrl(
-        "http://www.mudconnect.com/cgi-bin/vote_rank.cgi?mud=MUME+-+Multi+Users+In+Middle+Earth"));
+        "https://www.mudconnect.com/cgi-bin/search.cgi?mode=mud_listing&mud=MUME+-+Multi+Users+In+Middle+Earth"));
 }
 
 void MainWindow::openMumeWebsite()
 {
-    QDesktopServices::openUrl(QUrl("http://mume.org/"));
+    QDesktopServices::openUrl(QUrl("https://mume.org/"));
 }
 
 void MainWindow::openMumeForum()
 {
-    QDesktopServices::openUrl(QUrl("http://mume.org/forum/"));
+    QDesktopServices::openUrl(QUrl("https://mume.org/forum/"));
 }
 
 void MainWindow::openMumeWiki()
 {
-    QDesktopServices::openUrl(QUrl("http://mume.org/wiki/"));
+    QDesktopServices::openUrl(QUrl("https://mume.org/wiki/"));
 }
 
 void MainWindow::openSettingUpMmapper()
@@ -2078,7 +2078,7 @@ void MainWindow::openSettingUpMmapper()
 
 void MainWindow::openNewbieHelp()
 {
-    QDesktopServices::openUrl(QUrl("http://mume.org/newbie.php"));
+    QDesktopServices::openUrl(QUrl("https://mume.org/newbie.php"));
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
