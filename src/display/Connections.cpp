@@ -387,7 +387,7 @@ void ConnectionDrawer::drawConnection(const Room *leftRoom,
     gl.setOffset(leftX, leftY, 0.f);
 
     if (inExitFlags)
-        gl.setWhite();
+        gl.setNormal();
     else
         gl.setRed();
 
@@ -400,7 +400,7 @@ void ConnectionDrawer::drawConnection(const Room *leftRoom,
     }
 
     gl.setOffset(0, 0, 0);
-    gl.setWhite();
+    gl.setNormal();
 }
 
 void ConnectionDrawer::drawConnectionTriangles(const ExitDirEnum startDir,
@@ -583,8 +583,8 @@ void ConnectionDrawer::drawConnEndTriUpDownUnknown(int dX, int dY, float dstZ)
 ConnectionMeshes ConnectionDrawerBuffers::getMeshes(OpenGL &gl)
 {
     ConnectionMeshes result;
-    result.whiteLines = gl.createColoredLineBatch(white.lineVerts);
-    result.whiteTris = gl.createColoredTriBatch(white.triVerts);
+    result.normalLines = gl.createColoredLineBatch(normal.lineVerts);
+    result.normalTris = gl.createColoredTriBatch(normal.triVerts);
     result.redLines = gl.createColoredLineBatch(red.lineVerts);
     result.redTris = gl.createColoredTriBatch(red.triVerts);
     return result;
@@ -607,8 +607,8 @@ void ConnectionMeshes::render(const int thisLayer, const int focusedLayer)
     // the reason for having separate lines is so red will always be on top.
     // If you don't think that's important, you can combine the batches.
 
-    whiteLines.render(common_style);
-    whiteTris.render(common_style);
+    normalLines.render(common_style);
+    normalTris.render(common_style);
     redLines.render(common_style);
     redTris.render(common_style);
 }
@@ -736,6 +736,22 @@ static bool isLongLine(const glm::vec3 &a, const glm::vec3 &b)
     return glm::length(a - b) >= LONG_LINE_LEN;
 }
 
+void ConnectionDrawer::ConnectionFakeGL::drawTriangle(const glm::vec3 &a,
+                                                      const glm::vec3 &b,
+                                                      const glm::vec3 &c)
+{
+    if (m_measureOnly) {
+        m_expectedTriVerts[isNormal() ? 0 : 1] += 3;
+        return;
+    }
+
+    const auto &color = isNormal() ? Colors::white : Colors::red;
+    auto &verts = deref(m_currentBuffer).triVerts;
+    verts.emplace_back(color, a + m_offset);
+    verts.emplace_back(color, b + m_offset);
+    verts.emplace_back(color, c + m_offset);
+}
+
 void ConnectionDrawer::ConnectionFakeGL::drawLineStrip(const std::vector<glm::vec3> &points)
 {
     static const size_t LONG_LINE_DIVISONS = 3;
@@ -747,11 +763,11 @@ void ConnectionDrawer::ConnectionFakeGL::drawLineStrip(const std::vector<glm::ve
                 count += (LONG_LINE_DIVISONS - 1) * VERTS_PER_LINE;
             }
         }
-        m_expectedLineVerts[isWhite() ? 0 : 1] += count;
+        m_expectedLineVerts[isNormal() ? 0 : 1] += count;
         return;
     }
 
-    const auto &color = isWhite() ? Colors::white : Colors::red;
+    const auto &color = isNormal() ? Colors::white : Colors::red;
 
     assert(points.size() >= 2);
     const auto transform = [this](const glm::vec3 &vert) { return vert + m_offset; };

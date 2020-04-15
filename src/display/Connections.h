@@ -66,8 +66,8 @@ struct NODISCARD ConnectionDrawerColorBuffer final
 
 struct NODISCARD ConnectionMeshes final
 {
-    UniqueMesh whiteLines;
-    UniqueMesh whiteTris;
+    UniqueMesh normalLines;
+    UniqueMesh normalTris;
     UniqueMesh redLines;
     UniqueMesh redTris;
 
@@ -80,7 +80,7 @@ struct NODISCARD ConnectionMeshes final
 
 struct NODISCARD ConnectionDrawerBuffers final
 {
-    ConnectionDrawerColorBuffer white;
+    ConnectionDrawerColorBuffer normal;
     ConnectionDrawerColorBuffer red;
 
     ConnectionDrawerBuffers() = default;
@@ -89,10 +89,10 @@ struct NODISCARD ConnectionDrawerBuffers final
 
     void clear()
     {
-        white.clear();
+        normal.clear();
         red.clear();
     }
-    NODISCARD bool empty() const { return red.empty() && white.empty(); }
+    NODISCARD bool empty() const { return red.empty() && normal.empty(); }
 
     ConnectionMeshes getMeshes(OpenGL &gl);
 };
@@ -114,7 +114,7 @@ private:
     public:
         explicit ConnectionFakeGL(ConnectionDrawerBuffers &buffers)
             : m_buffers{buffers}
-            , m_currentBuffer{&m_buffers.white}
+            , m_currentBuffer{&m_buffers.normal}
         {}
 
         ~ConnectionFakeGL() = default;
@@ -126,16 +126,16 @@ private:
             m_measureOnly = false;
 
             assert(m_buffers.empty());
-            m_buffers.white.lineVerts.reserve(m_expectedLineVerts[0]);
-            m_buffers.white.triVerts.reserve(m_expectedTriVerts[0]);
+            m_buffers.normal.lineVerts.reserve(m_expectedLineVerts[0]);
+            m_buffers.normal.triVerts.reserve(m_expectedTriVerts[0]);
             m_buffers.red.lineVerts.reserve(m_expectedLineVerts[1]);
             m_buffers.red.triVerts.reserve(m_expectedTriVerts[1]);
         }
 
         void verify()
         {
-            assert(m_buffers.white.lineVerts.size() == m_expectedLineVerts[0]);
-            assert(m_buffers.white.triVerts.size() == m_expectedTriVerts[0]);
+            assert(m_buffers.normal.lineVerts.size() == m_expectedLineVerts[0]);
+            assert(m_buffers.normal.triVerts.size() == m_expectedTriVerts[0]);
             assert(m_buffers.red.lineVerts.size() == m_expectedLineVerts[1]);
             assert(m_buffers.red.triVerts.size() == m_expectedTriVerts[1]);
         }
@@ -143,24 +143,11 @@ private:
     public:
         void setOffset(float x, float y, float z) { m_offset = glm::vec3{x, y, z}; }
         void setRed() { m_currentBuffer = &m_buffers.red; }
-        void setWhite() { m_currentBuffer = &m_buffers.white; }
-        bool isWhite() const { return m_currentBuffer == &m_buffers.white; }
+        void setNormal() { m_currentBuffer = &m_buffers.normal; }
+        bool isNormal() const { return m_currentBuffer == &m_buffers.normal; }
 
     public:
-        void drawTriangle(const glm::vec3 &a, const glm::vec3 &b, const glm::vec3 &c)
-        {
-            if (m_measureOnly) {
-                m_expectedTriVerts[isWhite() ? 0 : 1] += 3;
-                return;
-            }
-
-            const auto &color = isWhite() ? Colors::white : Colors::red;
-            auto &verts = deref(m_currentBuffer).triVerts;
-            verts.emplace_back(color, a + m_offset);
-            verts.emplace_back(color, b + m_offset);
-            verts.emplace_back(color, c + m_offset);
-        }
-
+        void drawTriangle(const glm::vec3 &a, const glm::vec3 &b, const glm::vec3 &c);
         void drawLineStrip(const std::vector<glm::vec3> &points);
     };
 
