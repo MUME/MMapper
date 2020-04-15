@@ -115,7 +115,15 @@ for:
 
     build_script:
       # Build MMapper within a Docker container using the current working path as a volume
-      - sh: docker run --rm -v "$(pwd)":/root/mmapper $DOCKER_IMAGE bash -c "apt update && apt upgrade -y && apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev cmake libminiupnpc-dev && cd /root/mmapper && mkdir build && cd build && cmake .. -DTARGET_ARCHITECTURE=$TARGET_ARCHITECTURE -DUSE_COTIRE=true && make -j$(getconf _NPROCESSORS_ONLN) && QT_QPA_PLATFORM=offscreen ctest -V && cpack"
+      - sh: docker run --rm -v "$(pwd)":/root/mmapper $DOCKER_IMAGE bash -c "apt update && apt upgrade -y && apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev cmake libminiupnpc-dev && cd /root/mmapper && mkdir build && cd build && cmake .. -DTARGET_ARCHITECTURE=$TARGET_ARCHITECTURE -DUSE_COTIRE=true && make -j$(getconf _NPROCESSORS_ONLN) && QT_QPA_PLATFORM=offscreen ctest -V --no-compress-output -T test && cpack"
+
+    test_script:
+      # Transform test results from ctest to junit format
+      - ps: $XSLInputElement = New-Object System.Xml.Xsl.XslCompiledTransform
+      - ps: $XSLInputElement.Load("https://raw.githubusercontent.com/rpavlik/jenkins-ctest-plugin/master/ctest-to-junit.xsl")
+      - ps: $XSLInputElement.Transform((Resolve-Path .\build\Testing\*\Test.xml), (Join-Path (Resolve-Path .) "ctest-to-junit-results.xml"))
+      - ps: $wc = New-Object 'System.Net.WebClient'
+      - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\ctest-to-junit-results.xml))
 
     artifacts:
       - path: build\mmapper-*-Linux-*.deb
@@ -166,7 +174,13 @@ for:
       - cmd: cpack
 
     test_script:
-      - cmd: ctest -V
+      - cmd: ctest -V --no-compress-output -T Test
+      # Transform test results from ctest to junit format
+      - ps: $XSLInputElement = New-Object System.Xml.Xsl.XslCompiledTransform
+      - ps: $XSLInputElement.Load("https://raw.githubusercontent.com/rpavlik/jenkins-ctest-plugin/master/ctest-to-junit.xsl")
+      - ps: $XSLInputElement.Transform((Resolve-Path .\Testing\*\Test.xml), (Join-Path (Resolve-Path .) "ctest-to-junit-results.xml"))
+      - ps: $wc = New-Object 'System.Net.WebClient'
+      - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\ctest-to-junit-results.xml))
 
     artifacts:
       - path: winbuild\mmapper-*-Windows-*.exe
@@ -224,7 +238,13 @@ for:
       - cmd: cpack
 
     test_script:
-      - cmd: ctest -V
+      - cmd: ctest -V --no-compress-output -T test
+      # Transform test results from ctest to junit format
+      - ps: $XSLInputElement = New-Object System.Xml.Xsl.XslCompiledTransform
+      - ps: $XSLInputElement.Load("https://raw.githubusercontent.com/rpavlik/jenkins-ctest-plugin/master/ctest-to-junit.xsl")
+      - ps: $XSLInputElement.Transform((Resolve-Path .\Testing\*\Test.xml), (Join-Path (Resolve-Path .) "ctest-to-junit-results.xml"))
+      - ps: $wc = New-Object 'System.Net.WebClient'
+      - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\ctest-to-junit-results.xml))
 
     artifacts:
       - path: winbuild\mmapper-*-Windows-*.exe
@@ -263,7 +283,13 @@ for:
       - cpack
 
     test_script:
-      - ctest -V
+      - ctest -V --no-compress-output -T test
+      # Transform test results from ctest to junit format
+      - ps: $XSLInputElement = New-Object System.Xml.Xsl.XslCompiledTransform
+      - ps: $XSLInputElement.Load("https://raw.githubusercontent.com/rpavlik/jenkins-ctest-plugin/master/ctest-to-junit.xsl")
+      - ps: $XSLInputElement.Transform((Resolve-Path .\Testing\*\Test.xml), (Join-Path (Resolve-Path .) "ctest-to-junit-results.xml"))
+      - ps: $wc = New-Object 'System.Net.WebClient'
+      - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\ctest-to-junit-results.xml))
 
     artifacts:
       - path: build\mmapper-*-Mac-*.dmg
