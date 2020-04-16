@@ -161,8 +161,9 @@ for:
 
     before_build:
       - cmd: set PATH=%QTDIR%\bin;C:\Qt\Tools\QtCreator\bin;%PATH%
-      - cmd: chocolatey install -y nasm
-      - cmd: set PATH=%PROGRAMFILES%\nasm;%PATH%
+      # Install NASM to compile OpenSSL using MSVC
+      #- cmd: chocolatey install -y nasm
+      #- cmd: set PATH=%PROGRAMFILES%\nasm;%PATH%
       - cmd: echo PATH=%PATH%
 
     build_script:
