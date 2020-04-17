@@ -500,17 +500,16 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
 
     case XmlModeEnum::PROMPT:
         sendPromptLineEvent(normalizeStringCopy(m_stringBuffer).toLatin1());
-        if (!m_exitsReady && config.mumeNative.emulatedExits) {
-            m_exitsReady = true;
-            std::ostringstream os;
-            emulateExits(os, m_move);
-            sendToUser(::toQByteArrayLatin1(snoopToUser(os.str())));
-        }
         if (m_descriptionReady) {
+            if (!m_exitsReady && config.mumeNative.emulatedExits) {
+                m_exitsReady = true;
+                std::ostringstream os;
+                emulateExits(os, m_move);
+                sendToUser(::toQByteArrayLatin1(snoopToUser(os.str())));
+            }
             parsePrompt(normalizeStringCopy(m_stringBuffer));
             move();
         }
-
         toUser.append(ch);
         break;
 
