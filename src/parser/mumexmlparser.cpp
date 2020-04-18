@@ -173,7 +173,6 @@ void MumeXmlParser::parse(const TelnetData &data)
 bool MumeXmlParser::element(const QByteArray &line)
 {
     const int length = line.length();
-    const XmlModeEnum lastMode = m_xmlMode;
 
     switch (m_xmlMode) {
     case XmlModeEnum::NONE:
@@ -422,11 +421,6 @@ bool MumeXmlParser::element(const QByteArray &line)
         m_lineToUser.append(lessThanChar).append(line).append(greaterThanChar);
     }
 
-    if (lastMode == XmlModeEnum::PROMPT) {
-        // Store prompts in case an internal command is executed
-        m_lastPrompt = m_lineToUser;
-    }
-
     return true;
 }
 
@@ -499,6 +493,14 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         break;
 
     case XmlModeEnum::PROMPT:
+        // Store prompts in case an internal command is executed
+        m_lastPrompt = m_stringBuffer.toLatin1();
+        if (!getConfig().parser.removeXmlTags) {
+            m_lastPrompt.replace(ampersand, ampersandTemplate);
+            m_lastPrompt.replace(greaterThanChar, greaterThanTemplate);
+            m_lastPrompt.replace(lessThanChar, lessThanTemplate);
+            m_lastPrompt = "<prompt>" + m_lastPrompt + "</prompt>";
+        }
         sendPromptLineEvent(normalizeStringCopy(m_stringBuffer).toLatin1());
         if (m_descriptionReady) {
             if (!m_exitsReady && config.mumeNative.emulatedExits) {
