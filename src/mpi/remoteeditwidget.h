@@ -175,7 +175,6 @@ private:
     const bool m_editSession;
     const QString m_title;
     const QString m_body;
-    int m_maxLength = 80;
 
     bool m_submitted = false;
     QScopedPointer<Editor> m_textEdit;

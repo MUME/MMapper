@@ -32,6 +32,8 @@
 
 static constexpr const bool USE_TOOLTIPS = false;
 static constexpr const char S_TWO_SPACES[3]{C_SPACE, C_SPACE, C_NUL};
+// REVISIT: Figure out how to tweak logic to accept actual maximum length of 80
+static constexpr const int MAX_LENGTH = 79;
 
 static int measureTabAndAnsiAware(const QString &s)
 {
@@ -641,13 +643,6 @@ RemoteEditWidget::RemoteEditWidget(const bool editSession,
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
     setWindowTitle(m_title + " - MMapper " + (m_editSession ? "Editor" : "Viewer"));
 
-    // Figure out what length we should limit ourselves to
-    static const QRegularExpression titleLengthLimit79(
-        R"(^(Enter new whois|Enter new description)$)");
-    if (titleLengthLimit79.match(m_title).hasMatch()) {
-        m_maxLength = 79;
-    }
-
     // REVISIT: can this be called as an initializer?
     // Probably not. In fact this may be too early, since it accesses contentsMargins(),
     // which assumes this object is fully constructed and initialized.
@@ -686,7 +681,7 @@ auto RemoteEditWidget::createTextEdit() -> Editor *
     pTextEdit->showWhitespace(false);
 
     auto *const doc = pTextEdit->document();
-    new LineHighlighter(m_maxLength, doc);
+    new LineHighlighter(MAX_LENGTH, doc);
 
     setCentralWidget(pTextEdit);
     addStatusBar(pTextEdit);
@@ -1081,7 +1076,7 @@ void RemoteEditWidget::justifyText()
     const QString &old = m_textEdit->toPlainText();
     TextBuffer text;
     text.reserve(2 * old.length()); // Just a wild guess in case there's a lot of wrapping.
-    foreachLine(old, [&text, maxLen = m_maxLength](const QStringRef &line, bool /*hasNewline*/) {
+    foreachLine(old, [&text, maxLen = MAX_LENGTH](const QStringRef &line, bool /*hasNewline*/) {
         text.appendJustified(line, maxLen);
         text.append('\n');
     });
@@ -1173,7 +1168,7 @@ void RemoteEditWidget::toggleWhitespace()
 
 void RemoteEditWidget::justifyLines()
 {
-    m_textEdit->justifyLines(m_maxLength);
+    m_textEdit->justifyLines(MAX_LENGTH);
 }
 
 RemoteEditWidget::~RemoteEditWidget()
