@@ -14,6 +14,7 @@
 #include <QtCore>
 #include <QtGlobal>
 
+class AutoLogger;
 class ConnectionListener;
 class MapCanvas;
 class MapData;
@@ -48,6 +49,7 @@ public:
                                 PrespammedPath *,
                                 Mmapper2Group *,
                                 MumeClock *,
+                                AutoLogger *,
                                 MapCanvas *,
                                 QObject *parent);
     virtual ~ConnectionListener() override;
@@ -71,6 +73,7 @@ private:
     PrespammedPath *m_prespammedPath = nullptr;
     Mmapper2Group *m_groupManager = nullptr;
     MumeClock *m_mumeClock = nullptr;
+    AutoLogger *m_autoLogger = nullptr;
     MapCanvas *m_mapCanvas = nullptr;
     using ServerList = std::vector<QPointer<ConnectionListenerTcpServer>>;
     ServerList m_servers;

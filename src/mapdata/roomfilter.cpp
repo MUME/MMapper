@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
-// Author: 'Ethorondil' <ethorondil@gmail.com> (Elval)
+// Author: 'Elval' <ethorondil@gmail.com> (Elval)
 
 #include "roomfilter.h"
 

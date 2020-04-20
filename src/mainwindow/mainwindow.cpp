@@ -41,6 +41,7 @@
 #include "../global/SignalBlocker.h"
 #include "../global/Version.h"
 #include "../global/roomid.h"
+#include "../logger/autologger.h"
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/customaction.h"
 #include "../mapdata/mapdata.h"
@@ -253,11 +254,14 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     setCorner(Qt::TopRightCorner, Qt::TopDockWidgetArea);
     setCorner(Qt::BottomRightCorner, Qt::BottomDockWidgetArea);
 
+    m_logger = new AutoLogger(this);
+
     m_listener = new ConnectionListener(m_mapData,
                                         m_pathMachine,
                                         m_prespammedPath,
                                         m_groupManager,
                                         m_mumeClock,
+                                        m_logger,
                                         getCanvas(),
                                         this);
 
@@ -1459,9 +1463,15 @@ bool MainWindow::save()
 
 std::unique_ptr<QFileDialog> MainWindow::createDefaultSaveDialog()
 {
+    const auto &path = getConfig().autoLoad.lastMapDirectory;
+    QDir dir;
+    if (dir.mkpath(path))
+        dir.setPath(path);
+    else
+        dir.setPath(QDir::homePath());
     auto save = std::make_unique<QFileDialog>(this, "Choose map file name ...");
     save->setFileMode(QFileDialog::AnyFile);
-    save->setDirectory(QDir(getConfig().autoLoad.lastMapDirectory));
+    save->setDirectory(dir);
     save->setNameFilter("MMapper Maps (*.mm2)");
     save->setDefaultSuffix("mm2");
     save->setAcceptMode(QFileDialog::AcceptSave);

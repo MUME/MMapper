@@ -20,6 +20,7 @@
 #include "GmcpMessage.h"
 #include "ProxyParserApi.h"
 
+class AutoLogger;
 class ConnectionListener;
 class MapCanvas;
 class MapData;
@@ -49,6 +50,7 @@ public:
                    PrespammedPath *,
                    Mmapper2Group *,
                    MumeClock *,
+                   AutoLogger *,
                    MapCanvas *,
                    qintptr &,
                    ConnectionListener *);
@@ -100,6 +102,7 @@ private:
     PrespammedPath *const m_prespammedPath;
     Mmapper2Group *const m_groupManager;
     MumeClock *const m_mumeClock;
+    AutoLogger *const m_logger;
     MapCanvas *const m_mapCanvas;
     ConnectionListener *const m_listener;
     const qintptr m_socketDescriptor;

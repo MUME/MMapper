@@ -22,6 +22,7 @@
 #include "../mapdata/roomselection.h"
 #include "../pandoragroup/mmapper2group.h"
 
+class AutoLogger;
 class AbstractAction;
 class ClientWidget;
 class ConfigDialog;
@@ -155,6 +156,7 @@ private:
     QDockWidget *m_dockDialogGroup = nullptr;
     QDockWidget *m_dockDialogClient = nullptr;
 
+    AutoLogger *m_logger = nullptr;
     ConnectionListener *m_listener = nullptr;
     Mmapper2PathMachine *m_pathMachine = nullptr;
     MapData *m_mapData = nullptr;
