@@ -175,6 +175,7 @@ void Settings::initSettings()
     QSettings &conf = static_cast<QSettings &>(settings);
 
 ConstString GRP_AUTO_LOAD_WORLD = "Auto load world";
+ConstString GRP_AUTO_LOG = "Auto log";
 ConstString GRP_CANVAS = "Canvas";
 ConstString GRP_CONNECTION = "Connection";
 ConstString GRP_FINDROOMS_DIALOG = "FindRooms Dialog";
@@ -214,6 +215,13 @@ ConstString KEY_DRAW_UPPER_LAYERS_TEXTURED = "Draw upper layers textured";
 ConstString KEY_EMULATED_EXITS = "Emulated Exits";
 ConstString KEY_EXTERNAL_EDITOR_COMMAND = "External editor command";
 ConstString KEY_FILE_NAME = "File name";
+ConstString KEY_AUTO_LOG = "Auto log";
+ConstString KEY_AUTO_LOG_ASK_DELETE = "Auto log ask before deleting";
+ConstString KEY_AUTO_LOG_CLEANUP_STRATEGY = "Auto log cleanup strategy";
+ConstString KEY_AUTO_LOG_DELETE_AFTER_DAYS = "Auto log delete after X days";
+ConstString KEY_AUTO_LOG_DELETE_AFTER_BYTES = "Auto log delete after X bytes";
+ConstString KEY_AUTO_LOG_DIRECTORY = "Auto log directory";
+ConstString KEY_AUTO_LOG_ROTATE_SIZE_BYTES = "Auto log rotate after X bytes";
 ConstString KEY_FONT = "Font";
 ConstString KEY_FOREGROUND_COLOR = "Foreground color";
 ConstString KEY_3D_CANVAS = "canvas.advanced.use3D";
@@ -347,6 +355,17 @@ static bool isValidCharacterEncoding(const CharacterEncodingEnum encoding)
     return false;
 }
 
+static bool isValidAutoLoggerState(const AutoLoggerEnum strategy)
+{
+    switch (strategy) {
+    case AutoLoggerEnum::DeleteDays:
+    case AutoLoggerEnum::DeleteSize:
+    case AutoLoggerEnum::KeepForever:
+        return true;
+    }
+    return false;
+}
+
 static QString sanitizeAnsi(const QString &input, const QString &defaultValue)
 {
     assert(isValidAnsi(defaultValue));
@@ -389,6 +408,16 @@ static CharacterEncodingEnum sanitizeCharacterEncoding(const uint32_t input)
     return CharacterEncodingEnum::LATIN1;
 }
 
+static AutoLoggerEnum sanitizeAutoLoggerState(const int input)
+{
+    const auto state = static_cast<AutoLoggerEnum>(input);
+    if (isValidAutoLoggerState(state))
+        return state;
+
+    qWarning() << "invalid AutoLoggerEnum:" << input;
+    return AutoLoggerEnum::DeleteDays;
+}
+
 static uint16_t sanitizeUint16(const int input, const uint16_t defaultValue)
 {
     static constexpr const auto MIN = static_cast<int>(std::numeric_limits<uint16_t>::min());
@@ -414,6 +443,7 @@ static uint16_t sanitizeUint16(const int input, const uint16_t defaultValue)
         GROUP_CALLBACK(callback, GRP_CONNECTION, connection); \
         GROUP_CALLBACK(callback, GRP_CANVAS, canvas); \
         GROUP_CALLBACK(callback, GRP_AUTO_LOAD_WORLD, autoLoad); \
+        GROUP_CALLBACK(callback, GRP_AUTO_LOG, autoLog); \
         GROUP_CALLBACK(callback, GRP_PARSER, parser); \
         GROUP_CALLBACK(callback, GRP_MUME_CLIENT_PROTOCOL, mumeClientProtocol); \
         GROUP_CALLBACK(callback, GRP_MUME_NATIVE, mumeNative); \
@@ -439,6 +469,9 @@ void Configuration::read()
     if (general.firstRun) {
         // New users get the 3D canvas but old users do not
         canvas.advanced.use3D.set(true);
+
+        // New users get autologger turned on by default
+        autoLog.autoLog = true;
     }
 
     assert(canvas.backgroundColor == colorSettings.BACKGROUND);
@@ -557,11 +590,39 @@ void Configuration::CanvasSettings::read(QSettings &conf)
     advanced.layerHeight.set(conf.value(KEY_3D_LAYER_HEIGHT, 15).toInt());
 }
 
+ConstString DEFAULT_MMAPPER_SUBDIR = "/MMapper";
+ConstString DEFAULT_LOGS_SUBDIR = "/Logs";
+
+static QString getDefaultDirectory()
+{
+    return QDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).absolutePath();
+}
+
 void Configuration::AutoLoadSettings::read(QSettings &conf)
 {
     autoLoadMap = conf.value(KEY_AUTO_LOAD, true).toBool();
     fileName = conf.value(KEY_FILE_NAME, "").toString();
-    lastMapDirectory = conf.value(KEY_LAST_MAP_LOAD_DIRECTORY, QDir::homePath()).toString();
+    lastMapDirectory = conf.value(KEY_LAST_MAP_LOAD_DIRECTORY,
+                                  getDefaultDirectory().append(DEFAULT_MMAPPER_SUBDIR))
+                           .toString();
+}
+
+void Configuration::AutoLogSettings::read(QSettings &conf)
+{
+    autoLogDirectory = conf.value(KEY_AUTO_LOG_DIRECTORY,
+                                  getDefaultDirectory()
+                                      .append(DEFAULT_MMAPPER_SUBDIR)
+                                      .append(DEFAULT_LOGS_SUBDIR))
+                           .toString();
+    autoLog = conf.value(KEY_AUTO_LOG, false).toBool();
+    rotateWhenLogsReachBytes = conf.value(KEY_AUTO_LOG_ROTATE_SIZE_BYTES, 10 * 1000000)
+                                   .toInt(); // 10 Megabytes
+    askDelete = conf.value(KEY_AUTO_LOG_ASK_DELETE, false).toBool();
+    cleanupStrategy = sanitizeAutoLoggerState(
+        conf.value(KEY_AUTO_LOG_CLEANUP_STRATEGY, static_cast<int>(AutoLoggerEnum::DeleteDays))
+            .toInt());
+    deleteWhenLogsReachDays = conf.value(KEY_AUTO_LOG_DELETE_AFTER_DAYS, 30).toInt();
+    deleteWhenLogsReachBytes = conf.value(KEY_AUTO_LOG_DELETE_AFTER_BYTES, 100 * 1000000).toInt();
 }
 
 void Configuration::ParserSettings::read(QSettings &conf)
@@ -729,6 +790,17 @@ void Configuration::AutoLoadSettings::write(QSettings &conf) const
     conf.setValue(KEY_AUTO_LOAD, autoLoadMap);
     conf.setValue(KEY_FILE_NAME, fileName);
     conf.setValue(KEY_LAST_MAP_LOAD_DIRECTORY, lastMapDirectory);
+}
+
+void Configuration::AutoLogSettings::write(QSettings &conf) const
+{
+    conf.setValue(KEY_AUTO_LOG, autoLog);
+    conf.setValue(KEY_AUTO_LOG_CLEANUP_STRATEGY, static_cast<int>(cleanupStrategy));
+    conf.setValue(KEY_AUTO_LOG_DIRECTORY, autoLogDirectory);
+    conf.setValue(KEY_AUTO_LOG_ROTATE_SIZE_BYTES, rotateWhenLogsReachBytes);
+    conf.setValue(KEY_AUTO_LOG_ASK_DELETE, askDelete);
+    conf.setValue(KEY_AUTO_LOG_DELETE_AFTER_DAYS, deleteWhenLogsReachDays);
+    conf.setValue(KEY_AUTO_LOG_DELETE_AFTER_BYTES, deleteWhenLogsReachBytes);
 }
 
 void Configuration::ParserSettings::write(QSettings &conf) const

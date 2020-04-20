@@ -29,6 +29,7 @@ enum class PlatformEnum { Unknown, Windows, Mac, Linux };
 enum class CharacterEncodingEnum { LATIN1, UTF8, ASCII };
 enum class EnvironmentEnum { Unknown, Env32Bit, Env64Bit };
 enum class RestrictMapEnum { Never, OnlyInMapMode, Always };
+enum class AutoLoggerEnum { KeepForever, DeleteDays, DeleteSize };
 
 // Do not call this directly; use CURRENT_PLATFORM.
 static inline constexpr PlatformEnum getCurrentPlatform()
@@ -263,6 +264,20 @@ public:
     private:
         SUBGROUP();
     } autoLoad;
+
+    struct AutoLogSettings final
+    {
+        QString autoLogDirectory;
+        bool autoLog = false;
+        AutoLoggerEnum cleanupStrategy = AutoLoggerEnum::DeleteDays;
+        int deleteWhenLogsReachDays = 0;
+        int deleteWhenLogsReachBytes = 0;
+        bool askDelete = false;
+        int rotateWhenLogsReachBytes = 0;
+
+    private:
+        SUBGROUP();
+    } autoLog;
 
     struct PathMachineSettings final
     {

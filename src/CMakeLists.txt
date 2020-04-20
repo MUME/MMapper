@@ -111,6 +111,8 @@ set(mmapper_SRCS
     global/unquote.h
     global/utils.cpp
     global/utils.h
+    logger/autologger.cpp
+    logger/autologger.h
     mainwindow/UpdateDialog.cpp
     mainwindow/UpdateDialog.h
     mainwindow/aboutdialog.cpp
@@ -302,6 +304,8 @@ set(mmapper_SRCS
     preferences/AnsiColorDialog.h
     preferences/ansicombo.cpp
     preferences/ansicombo.h
+    preferences/autologpage.cpp
+    preferences/autologpage.h
     preferences/clientpage.cpp
     preferences/clientpage.h
     preferences/configdialog.cpp
@@ -392,6 +396,7 @@ set(mmapper_UIS
     mainwindow/findroomsdlg.ui
     mainwindow/roomeditattrdlg.ui
     preferences/AnsiColorDialog.ui
+    preferences/autologpage.ui
     preferences/configdialog.ui
     preferences/clientpage.ui
     preferences/generalpage.ui

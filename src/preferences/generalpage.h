@@ -36,8 +36,7 @@ public slots:
 
     void autoLoadFileNameTextChanged(const QString &);
     void autoLoadCheckStateChanged(int);
-
-    void selectWorldFileButtonClicked();
+    void selectWorldFileButtonClicked(bool);
 
     void displayMumeClockStateChanged(int);
 

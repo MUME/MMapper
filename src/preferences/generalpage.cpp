@@ -77,7 +77,6 @@ GeneralPage::GeneralPage(QWidget *parent)
             &QCheckBox::stateChanged,
             this,
             &GeneralPage::autoLoadCheckStateChanged);
-
     connect(ui->selectWorldFileButton,
             &QAbstractButton::clicked,
             this,
@@ -152,7 +151,7 @@ void GeneralPage::loadConfig()
     ui->proxyConnectionStatusCheckBox->setChecked(connection.proxyConnectionStatus);
 }
 
-void GeneralPage::selectWorldFileButtonClicked()
+void GeneralPage::selectWorldFileButtonClicked(bool /*unused*/)
 {
     QString fileName = QFileDialog::getOpenFileName(this,
                                                     "Choose map file ...",

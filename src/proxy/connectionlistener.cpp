@@ -30,6 +30,7 @@ ConnectionListener::ConnectionListener(MapData *const md,
                                        PrespammedPath *const pp,
                                        Mmapper2Group *const gm,
                                        MumeClock *const mc,
+                                       AutoLogger *const al,
                                        MapCanvas *const mca,
                                        QObject *const parent)
     : QObject(parent)
@@ -39,6 +40,7 @@ ConnectionListener::ConnectionListener(MapData *const md,
     m_prespammedPath = pp;
     m_groupManager = gm;
     m_mumeClock = mc;
+    m_autoLogger = al;
     m_mapCanvas = mca;
 }
 
@@ -101,6 +103,7 @@ void ConnectionListener::onIncomingConnection(qintptr socketDescriptor)
                                           m_prespammedPath,
                                           m_groupManager,
                                           m_mumeClock,
+                                          m_autoLogger,
                                           m_mapCanvas,
                                           socketDescriptor,
                                           this);

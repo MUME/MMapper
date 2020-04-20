@@ -10,6 +10,7 @@
 #include <QListWidget>
 #include <QtWidgets>
 
+#include "autologpage.h"
 #include "clientpage.h"
 #include "generalpage.h"
 #include "graphicspage.h"
@@ -35,6 +36,7 @@ ConfigDialog::ConfigDialog(Mmapper2Group *gm, QWidget *parent)
     auto parserPage = new ParserPage(this);
     auto clientPage = new ClientPage(this);
     auto groupManagerPage = new GroupManagerPage(m_groupManager, this);
+    auto autoLogPage = new AutoLogPage(this);
     auto mumeProtocolPage = new MumeProtocolPage(this);
     auto pathmachinePage = new PathmachinePage(this);
 
@@ -44,6 +46,7 @@ ConfigDialog::ConfigDialog(Mmapper2Group *gm, QWidget *parent)
     pagesWidget->addWidget(parserPage);
     pagesWidget->addWidget(clientPage);
     pagesWidget->addWidget(groupManagerPage);
+    pagesWidget->addWidget(autoLogPage);
     pagesWidget->addWidget(mumeProtocolPage);
     pagesWidget->addWidget(pathmachinePage);
     pagesWidget->setCurrentIndex(0);
@@ -63,6 +66,7 @@ ConfigDialog::ConfigDialog(Mmapper2Group *gm, QWidget *parent)
     connect(this, &ConfigDialog::sig_loadConfig, parserPage, &ParserPage::loadConfig);
     connect(this, &ConfigDialog::sig_loadConfig, clientPage, &ClientPage::loadConfig);
     connect(this, &ConfigDialog::sig_loadConfig, groupManagerPage, &GroupManagerPage::loadConfig);
+    connect(this, &ConfigDialog::sig_loadConfig, autoLogPage, &AutoLogPage::loadConfig);
     connect(this, &ConfigDialog::sig_loadConfig, mumeProtocolPage, &MumeProtocolPage::loadConfig);
     connect(this, &ConfigDialog::sig_loadConfig, pathmachinePage, &PathmachinePage::loadConfig);
 
@@ -121,6 +125,12 @@ void ConfigDialog::createIcons()
     groupButton->setText(tr("Group\nManager"));
     groupButton->setTextAlignment(Qt::AlignHCenter);
     groupButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+
+    auto *autoLogButton = new QListWidgetItem(ui->contentsWidget);
+    autoLogButton->setIcon(QIcon(":/icons/autologgercfg.png"));
+    autoLogButton->setText(tr("Auto\nLogger"));
+    autoLogButton->setTextAlignment(Qt::AlignHCenter);
+    autoLogButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
     auto *mpiButton = new QListWidgetItem(ui->contentsWidget);
     mpiButton->setIcon(QIcon(":/icons/mumeprotocolcfg.png"));

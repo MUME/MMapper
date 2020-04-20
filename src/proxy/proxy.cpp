@@ -20,6 +20,7 @@
 #include "../display/prespammedpath.h"
 #include "../expandoracommon/parseevent.h"
 #include "../global/io.h"
+#include "../logger/autologger.h"
 #include "../mainwindow/mainwindow.h"
 #include "../mpi/mpifilter.h"
 #include "../mpi/remoteedit.h"
@@ -50,8 +51,9 @@ Proxy::Proxy(MapData *const md,
              Mmapper2PathMachine *const pm,
              PrespammedPath *const pp,
              Mmapper2Group *const gm,
-             MumeClock *mc,
-             MapCanvas *mca,
+             MumeClock *const mc,
+             AutoLogger *const al,
+             MapCanvas *const mca,
              qintptr &socketDescriptor,
              ConnectionListener *const listener)
     : QObject(nullptr)
@@ -60,6 +62,7 @@ Proxy::Proxy(MapData *const md,
     , m_prespammedPath(pp)
     , m_groupManager(gm)
     , m_mumeClock(mc)
+    , m_logger(al)
     , m_mapCanvas(mca)
     , m_listener(listener)
     , m_socketDescriptor(socketDescriptor)
@@ -178,6 +181,11 @@ void Proxy::start()
 
     connect(parserXml, &MumeXmlParser::sendToMud, mudTelnet, &MudTelnet::onSendToMud);
     connect(parserXml, &MumeXmlParser::sig_sendToUser, userTelnet, &UserTelnet::onSendToUser);
+
+    connect(parserXml, &MumeXmlParser::sig_sendToUser, m_logger, &AutoLogger::writeToLog);
+    connect(parserXml, &MumeXmlParser::sendToMud, m_logger, &AutoLogger::writeToLog);
+    connect(mudTelnet, &MudTelnet::relayEchoMode, m_logger, &AutoLogger::shouldLog);
+    connect(mudSocket, &MumeSocket::connected, m_logger, &AutoLogger::onConnected);
 
     connect(parserXml,
             QOverload<const SigParseEvent &>::of(&MumeXmlParser::event),
