@@ -196,9 +196,8 @@ static SharedMMTexture createDottedWall(const ExitDirEnum dir)
         }
     };
 
-    return MMTexture::alloc(QOpenGLTexture::Target::Target2D,
-                            [&init](QOpenGLTexture &tex) { return init(tex); },
-                            true);
+    return MMTexture::alloc(
+        QOpenGLTexture::Target::Target2D, [&init](QOpenGLTexture &tex) { return init(tex); }, true);
 }
 
 void MapCanvas::initTextures()

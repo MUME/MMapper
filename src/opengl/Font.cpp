@@ -493,9 +493,9 @@ private:
             , rotation{(rotationDegrees == 0)
                            ? std::optional<glm::mat4>(std::nullopt)
                            : std::optional<glm::mat4>(
-                                 glm::rotate(glm::mat4(1),
-                                             glm::radians(static_cast<float>(rotationDegrees)),
-                                             glm::vec3(0, 0, 1)))}
+                               glm::rotate(glm::mat4(1),
+                                           glm::radians(static_cast<float>(rotationDegrees)),
+                                           glm::vec3(0, 0, 1)))}
         {}
     };
 
@@ -729,21 +729,19 @@ void GLFont::init()
         qWarning() << "invalid font filename" << imageFilename;
     }
 
-    m_texture
-        = MMTexture::alloc(QOpenGLTexture::Target::Target2D,
-                           [&fm, &imageFilename](QOpenGLTexture &tex) -> void {
-                               QImage img{imageFilename};
-                               fm.tryAddSyntheticGlyphs(img);
-                               img = img.mirrored();
+    m_texture = MMTexture::alloc(
+        QOpenGLTexture::Target::Target2D,
+        [&fm, &imageFilename](QOpenGLTexture &tex) -> void {
+            QImage img{imageFilename};
+            fm.tryAddSyntheticGlyphs(img);
+            img = img.mirrored();
 
-                               tex.setMinMagFilters(QOpenGLTexture::Filter::Linear,
-                                                    QOpenGLTexture::Filter::Linear);
-                               tex.setAutoMipMapGenerationEnabled(false);
-                               tex.setMipLevels(0);
-                               tex.setData(img,
-                                           QOpenGLTexture::MipMapGeneration::DontGenerateMipMaps);
-                           },
-                           true);
+            tex.setMinMagFilters(QOpenGLTexture::Filter::Linear, QOpenGLTexture::Filter::Linear);
+            tex.setAutoMipMapGenerationEnabled(false);
+            tex.setMipLevels(0);
+            tex.setData(img, QOpenGLTexture::MipMapGeneration::DontGenerateMipMaps);
+        },
+        true);
 }
 
 void GLFont::cleanup()

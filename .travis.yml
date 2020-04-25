@@ -13,10 +13,10 @@ matrix:
       addons:
         apt:
           packages:
-            - clang-format-6.0
+            - clang-format-9
       env:
         - CODESTYLE=1
-        - CLANG_FORMAT=clang-format-6.0
+        - CLANG_FORMAT=clang-format-9
     #
     # Snapcraft
     #
@@ -213,7 +213,7 @@ before_script:
   - |
     if [ "$CODESTYLE" != "" ]; then
       $CLANG_FORMAT -version
-      find . -iname *.h -o -iname *.c -o -iname *.cpp -o -iname *.hpp | xargs -n 1 -P 2 $CLANG_FORMAT -style=file -i -fallback-style=none
+      find . -iname *.h -o -iname *.c -o -iname *.cpp -o -iname *.hpp | xargs -n 1 -P $(getconf _NPROCESSORS_ONLN) $CLANG_FORMAT -style=file -i -fallback-style=none
       if  [[ -n $(git diff) ]]; then
         echo
         git diff
