@@ -1,7 +1,7 @@
 include(ExternalProject)
 ExternalProject_Add(glm
-    URL "https://github.com/g-truc/glm/archive/0.9.9-a2.zip"
-    URL_HASH SHA1=8220869d0a85cba4f1e4f6da77ce9c4ada18f5bf
+    URL "https://github.com/g-truc/glm/releases/download/0.9.9.7/glm-0.9.9.7.zip"
+    URL_HASH SHA1=CCA9124F1E06FAB44B17D0C0BE651977E508F3AC
 
     SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/glm"
     UPDATE_COMMAND ""

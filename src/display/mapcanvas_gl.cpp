@@ -298,8 +298,7 @@ glm::mat4 MapCanvas::getViewProj(const glm::vec2 &scrollPos,
                                  const float zoomScale,
                                  const int currentLayer)
 {
-    static_assert(GLM_COORDINATE_SYSTEM == GLM_RIGHT_HANDED);
-    static_assert(GLM_DEPTH_CLIP_SPACE == GLM_DEPTH_NEGATIVE_ONE_TO_ONE);
+    static_assert(GLM_CONFIG_CLIP_CONTROL == GLM_CLIP_CONTROL_RH_NO);
 
     const int width = size.x;
     const int height = size.y;
