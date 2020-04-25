@@ -4,6 +4,8 @@ dist: bionic
 
 # https://docs.travis-ci.com/user/languages/cpp/
 matrix:
+  allow_failures:
+    - env: ALLOW_FAILURES=1
   include:
     #
     # Clang Format
@@ -209,10 +211,6 @@ matrix:
         - BUILD=1
         - CODECOV=1
         - ALLOW_FAILURES=1
-
-jobs:
-  allow_failures:
-    - env: ALLOW_FAILURES=1
 
 before_install:
   - '[[ "$MATRIX_EVAL" == "" ]] || eval "${MATRIX_EVAL}"'
