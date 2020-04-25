@@ -1,6 +1,6 @@
 language: cpp
 
-dist: xenial
+dist: bionic
 
 # https://docs.travis-ci.com/user/languages/cpp/
 matrix:
@@ -10,7 +10,6 @@ matrix:
     #
     - os: linux
       name: Code Style
-      dist: bionic
       addons:
         apt:
           packages:
@@ -23,7 +22,6 @@ matrix:
     #
     - os: linux
       name: Snapcraft
-      dist: bionic
       addons:
         snaps:
           - name: snapcraft
@@ -57,7 +55,6 @@ matrix:
     #
     - os: linux
       name: Debian Buster armhf
-      dist: bionic
       arch: arm64
       services:
         - docker
@@ -70,7 +67,6 @@ matrix:
     #
     - os: linux
       name: Debian Buster i386
-      dist: bionic
       arch: amd64
       services:
         - docker
@@ -83,7 +79,6 @@ matrix:
     #
     - os: linux
       name: Linux Clang 6
-      dist: bionic
       compiler: clang
       addons:
         apt:
@@ -98,59 +93,73 @@ matrix:
             - binutils
       env:
         - MATRIX_EVAL="CC=clang-6.0 && CXX=clang++-6.0"
-        - QT=59
         - BUILD=1
         - CODECOV=1
     #
-    # Linux GCC 7
+    # Linux Clang 9
+    #
+    - os: linux
+      name: Linux Clang 9
+      compiler: clang
+      addons:
+        apt:
+          packages:
+            - clang-9
+            - cmake
+            - libminiupnpc-dev
+            - lcov
+            - libqt5opengl5-dev
+            - qt5-default
+            - mesa-common-dev
+            - binutils
+      env:
+        - MATRIX_EVAL="CC=clang-9 && CXX=clang++-9"
+        - BUILD=1
+        - CODECOV=1
+    #
+    # Linux GCC 7 (Ubuntu 18.04)
     #
     - os: linux
       name: Linux GCC 7
       compiler: gcc
       addons:
         apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - sourceline: 'ppa:beineri/opt-qt597-xenial'
           packages:
             - g++-7
             - cmake
             - libminiupnpc-dev
             - lcov
-            - qt59base
+            - libqt5opengl5-dev
+            - qt5-default
             - mesa-common-dev
             - binutils
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
-        - QT=59
         - BUILD=1
         - CODECOV=1
     #
-    # Linux GCC 8
+    # Linux GCC 8 (Debian Buster)
     #
     - os: linux
       name: Linux GCC 8
       compiler: gcc
       addons:
         apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - sourceline: 'ppa:beineri/opt-qt597-xenial'
           packages:
             - g++-8
             - cmake
             - libminiupnpc-dev
             - lcov
-            - qt59base
+            - libqt5opengl5-dev
+            - qt5-default
             - mesa-common-dev
             - binutils
       env:
         - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
-        - QT=59
         - BUILD=1
         - CODECOV=1
     #
-    # Linux GCC 9
+    # Linux GCC 9 (Ubuntu 20.04)
     #
     - os: linux
       name: Linux GCC 9
@@ -159,20 +168,51 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - sourceline: 'ppa:beineri/opt-qt597-xenial'
+            - sourceline: 'ppa:beineri/opt-qt-5.12.8-bionic'
           packages:
             - g++-9
             - cmake
+            - libgl1-mesa-dev
             - libminiupnpc-dev
             - lcov
-            - qt59base
+            - qt512-meta-minimal
             - mesa-common-dev
             - binutils
       env:
         - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
-        - QT=59
+        - QT=512
         - BUILD=1
         - CODECOV=1
+    #
+    # Linux GCC 10
+    #
+    - os: linux
+      name: Linux GCC 10
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - sourceline: 'ppa:beineri/opt-qt-5.12.8-bionic'
+          packages:
+            - g++-10
+            - cmake
+            - libgl1-mesa-dev
+            - libminiupnpc-dev
+            - lcov
+            - qt512-meta-minimal
+            - mesa-common-dev
+            - binutils
+      env:
+        - MATRIX_EVAL="CC=gcc-10 && CXX=g++-10"
+        - QT=512
+        - BUILD=1
+        - CODECOV=1
+        - ALLOW_FAILURES=1
+
+jobs:
+  allow_failures:
+    - env: ALLOW_FAILURES=1
 
 before_install:
   - '[[ "$MATRIX_EVAL" == "" ]] || eval "${MATRIX_EVAL}"'
