@@ -14,10 +14,10 @@ matrix:
       addons:
         apt:
           packages:
-            - clang-format
+            - clang-format-10
       env:
         - CODESTYLE=1
-        - CLANG_FORMAT=clang-format
+        - CLANG_FORMAT=clang-format-10
     #
     # Snapcraft
     #
