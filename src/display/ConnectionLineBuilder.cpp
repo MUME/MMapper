@@ -73,8 +73,8 @@ void ConnectionLineBuilder::drawConnStartLineUp(const bool neighbours, const flo
 
 void ConnectionLineBuilder::drawConnLineEnd2Way(const ExitDirEnum endDir,
                                                 const bool neighbours,
-                                                const qint32 dX,
-                                                const qint32 dY,
+                                                const float dX,
+                                                const float dY,
                                                 const float dstZ)
 {
     switch (endDir) {
@@ -113,8 +113,8 @@ void ConnectionLineBuilder::drawConnLineEnd2Way(const ExitDirEnum endDir,
 }
 
 void ConnectionLineBuilder::drawConnEndLineDown(const bool neighbours,
-                                                const qint32 dX,
-                                                const qint32 dY,
+                                                const float dX,
+                                                const float dY,
                                                 const float dstZ)
 {
     if (!neighbours) {
@@ -126,8 +126,8 @@ void ConnectionLineBuilder::drawConnEndLineDown(const bool neighbours,
 }
 
 void ConnectionLineBuilder::drawConnEndLineUp(const bool neighbours,
-                                              const qint32 dX,
-                                              const qint32 dY,
+                                              const float dX,
+                                              const float dY,
                                               const float dstZ)
 {
     if (!neighbours) {
@@ -139,8 +139,8 @@ void ConnectionLineBuilder::drawConnEndLineUp(const bool neighbours,
 }
 
 void ConnectionLineBuilder::drawConnLineEnd1Way(const ExitDirEnum endDir,
-                                                const qint32 dX,
-                                                const qint32 dY,
+                                                const float dX,
+                                                const float dY,
                                                 const float dstZ)
 {
     switch (endDir) {

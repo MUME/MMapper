@@ -228,7 +228,7 @@ float MapWindow::getZoom() const
 glm::vec2 MapWindow::KnownMapSize::scrollToWorld(const glm::ivec2 &scrollPos) const
 {
     auto worldPos = glm::vec2{scrollPos} / static_cast<float>(MapCanvas::SCROLL_SCALE);
-    worldPos.y = size().y - worldPos.y; // negate Y
+    worldPos.y = static_cast<float>(size().y) - worldPos.y; // negate Y
     worldPos += glm::vec2{min};
     return worldPos;
 }
@@ -237,7 +237,7 @@ glm::ivec2 MapWindow::KnownMapSize::worldToScroll(const glm::vec2 &worldPos_in) 
 {
     auto worldPos = worldPos_in;
     worldPos -= glm::vec2{min};
-    worldPos.y = size().y - worldPos.y; // negate Y
+    worldPos.y = static_cast<float>(size().y) - worldPos.y; // negate Y
     const glm::ivec2 scrollPos{worldPos * static_cast<float>(MapCanvas::SCROLL_SCALE)};
     return scrollPos;
 }

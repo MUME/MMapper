@@ -577,11 +577,12 @@ void MapCanvas::paintGL()
     std::vector<GLText> text;
 
     const auto lineHeight = font.getFontHeight();
-    const float rightMargin = float(w) * dpr - font.getGlyphAdvance('e').value_or(5);
+    const float rightMargin = float(w) * dpr
+                              - static_cast<float>(font.getGlyphAdvance('e').value_or(5));
 
     // x and y are in physical (device) pixels
     // TODO: change API to use logical pixels.
-    float y = lineHeight;
+    auto y = lineHeight;
     const auto print = [lineHeight, rightMargin, &text, &y](const QString &msg) {
         text.emplace_back(glm::vec3(rightMargin, y, 0),
                           ::toStdStringLatin1(msg),

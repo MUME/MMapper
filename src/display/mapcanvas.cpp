@@ -979,7 +979,7 @@ void MapCanvas::dataLoaded()
 {
     const Coordinate &pos = m_data.getPosition();
     m_currentLayer = pos.z;
-    emit sig_onCenter(glm::vec2{pos.x + 0.5f, pos.y + 0.5f});
+    emit sig_onCenter(pos.to_vec2() + glm::vec2{0.5f, 0.5f});
     {
         // REVISIT: is the makeCurrent necessary for calling update()?
         // MakeCurrentRaii makeCurrentRaii{*this};

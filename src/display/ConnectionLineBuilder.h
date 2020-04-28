@@ -26,11 +26,11 @@ private:
     void drawConnStartLineDown(bool neighbours, float srcZ);
 
 private:
-    void drawConnEndLineUp(bool neighbours, qint32 dX, qint32 dY, float dstZ);
-    void drawConnEndLineDown(bool neighbours, qint32 dX, qint32 dY, float dstZ);
+    void drawConnEndLineUp(bool neighbours, float dX, float dY, float dstZ);
+    void drawConnEndLineDown(bool neighbours, float dX, float dY, float dstZ);
 
 public:
     void drawConnLineStart(ExitDirEnum dir, bool neighbours, float srcZ);
-    void drawConnLineEnd2Way(ExitDirEnum endDir, bool neighbours, qint32 dX, qint32 dY, float dstZ);
-    void drawConnLineEnd1Way(ExitDirEnum endDir, qint32 dX, qint32 dY, float dstZ);
+    void drawConnLineEnd2Way(ExitDirEnum endDir, bool neighbours, float dX, float dY, float dstZ);
+    void drawConnLineEnd1Way(ExitDirEnum endDir, float dX, float dY, float dstZ);
 };

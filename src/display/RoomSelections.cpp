@@ -36,6 +36,10 @@ public:
         auto &m = m_modelView;
         m = glm::rotate(m, glm::radians(degrees), glm::vec3(x, y, z));
     }
+    void glTranslatef(int x, int y, int z)
+    {
+        glTranslatef(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
+    }
     void glTranslatef(float x, float y, float z)
     {
         auto &m = m_modelView;

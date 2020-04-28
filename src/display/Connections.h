@@ -210,28 +210,28 @@ public:
                         bool oneway,
                         bool inExitFlags = true);
 
-    void drawConnEndTriUpDownUnknown(int dX, int dY, float dstZ);
+    void drawConnEndTriUpDownUnknown(float dX, float dY, float dstZ);
 
     void drawConnStartTri(ExitDirEnum startDir, float srcZ);
 
-    void drawConnEndTri(ExitDirEnum endDir, int dX, int dY, float dstZ);
+    void drawConnEndTri(ExitDirEnum endDir, float dX, float dY, float dstZ);
 
-    void drawConnEndTri1Way(ExitDirEnum endDir, int dX, int dY, float dstZ);
+    void drawConnEndTri1Way(ExitDirEnum endDir, float dX, float dY, float dstZ);
 
     void drawConnectionLine(ExitDirEnum startDir,
                             ExitDirEnum endDir,
                             bool oneway,
                             bool neighbours,
-                            int dX,
-                            int dY,
+                            float dX,
+                            float dY,
                             float srcZ,
                             float dstZ);
 
     void drawConnectionTriangles(ExitDirEnum startDir,
                                  ExitDirEnum endDir,
                                  bool oneway,
-                                 int dX,
-                                 int dY,
+                                 float dX,
+                                 float dY,
                                  float srcZ,
                                  float dstZ);
 };

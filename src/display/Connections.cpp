@@ -385,7 +385,7 @@ void ConnectionDrawer::drawConnection(const Room *leftRoom,
 
     auto &gl = getFakeGL();
 
-    gl.setOffset(leftX, leftY, 0.f);
+    gl.setOffset(static_cast<float>(leftX), static_cast<float>(leftY), 0.f);
 
     if (inExitFlags)
         gl.setNormal();
@@ -396,8 +396,21 @@ void ConnectionDrawer::drawConnection(const Room *leftRoom,
         const auto srcZ = static_cast<float>(leftZ);
         const auto dstZ = static_cast<float>(rightZ);
 
-        drawConnectionLine(startDir, endDir, oneway, neighbours, dX, dY, srcZ, dstZ);
-        drawConnectionTriangles(startDir, endDir, oneway, dX, dY, srcZ, dstZ);
+        drawConnectionLine(startDir,
+                           endDir,
+                           oneway,
+                           neighbours,
+                           static_cast<float>(dX),
+                           static_cast<float>(dY),
+                           srcZ,
+                           dstZ);
+        drawConnectionTriangles(startDir,
+                                endDir,
+                                oneway,
+                                static_cast<float>(dX),
+                                static_cast<float>(dY),
+                                srcZ,
+                                dstZ);
     }
 
     gl.setOffset(0, 0, 0);
@@ -407,8 +420,8 @@ void ConnectionDrawer::drawConnection(const Room *leftRoom,
 void ConnectionDrawer::drawConnectionTriangles(const ExitDirEnum startDir,
                                                const ExitDirEnum endDir,
                                                const bool oneway,
-                                               const int dX,
-                                               const int dY,
+                                               const float dX,
+                                               const float dY,
                                                const float srcZ,
                                                const float dstZ)
 {
@@ -424,8 +437,8 @@ void ConnectionDrawer::drawConnectionLine(const ExitDirEnum startDir,
                                           const ExitDirEnum endDir,
                                           const bool oneway,
                                           const bool neighbours,
-                                          const int dX,
-                                          const int dY,
+                                          const float dX,
+                                          const float dY,
                                           const float srcZ,
                                           const float dstZ)
 {
@@ -491,8 +504,8 @@ void ConnectionDrawer::drawConnStartTri(const ExitDirEnum startDir, const float 
 }
 
 void ConnectionDrawer::drawConnEndTri(const ExitDirEnum endDir,
-                                      const int dX,
-                                      const int dY,
+                                      const float dX,
+                                      const float dY,
                                       const float dstZ)
 {
     auto &gl = getFakeGL();
@@ -534,8 +547,8 @@ void ConnectionDrawer::drawConnEndTri(const ExitDirEnum endDir,
 }
 
 void ConnectionDrawer::drawConnEndTri1Way(const ExitDirEnum endDir,
-                                          const int dX,
-                                          const int dY,
+                                          const float dX,
+                                          const float dY,
                                           const float dstZ)
 {
     auto &gl = getFakeGL();
@@ -574,7 +587,7 @@ void ConnectionDrawer::drawConnEndTri1Way(const ExitDirEnum endDir,
     }
 }
 
-void ConnectionDrawer::drawConnEndTriUpDownUnknown(int dX, int dY, float dstZ)
+void ConnectionDrawer::drawConnEndTriUpDownUnknown(float dX, float dY, float dstZ)
 {
     getFakeGL().drawTriangle(glm::vec3{dX + 0.5f, dY + 0.5f, dstZ},
                              glm::vec3{dX + 0.55f, dY + 0.3f, dstZ},
