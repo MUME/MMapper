@@ -10,13 +10,14 @@ matrix:
     #
     - os: linux
       name: Code Style
+      dist: focal
       addons:
         apt:
           packages:
-            - clang-format-9
+            - clang-format-10
       env:
         - CODESTYLE=1
-        - CLANG_FORMAT=clang-format-9
+        - CLANG_FORMAT=clang-format-10
     #
     # Snapcraft
     #
@@ -75,7 +76,7 @@ matrix:
         - TARGET_ARCHITECTURE=i386
         - DOCKER_IMAGE=multiarch/debian-debootstrap:i386-buster
     #
-    # Linux Clang 6
+    # Linux Clang 6 (Ubuntu 18.04)
     #
     - os: linux
       name: Linux Clang 6
@@ -96,15 +97,16 @@ matrix:
         - BUILD=1
         - CODECOV=1
     #
-    # Linux Clang 9
+    # Linux Clang 10 (Ubuntu 20.04)
     #
     - os: linux
-      name: Linux Clang 9
+      name: Linux Clang 10
+      dist: focal
       compiler: clang
       addons:
         apt:
           packages:
-            - clang-9
+            - clang-10
             - cmake
             - libminiupnpc-dev
             - lcov
@@ -113,7 +115,7 @@ matrix:
             - mesa-common-dev
             - binutils
       env:
-        - MATRIX_EVAL="CC=clang-9 && CXX=clang++-9"
+        - MATRIX_EVAL="CC=clang-10 && CXX=clang++-10"
         - BUILD=1
         - CODECOV=1
     #
@@ -163,24 +165,21 @@ matrix:
     #
     - os: linux
       name: Linux GCC 9
+      dist: focal
       compiler: gcc
       addons:
         apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - sourceline: 'ppa:beineri/opt-qt-5.12.8-bionic'
           packages:
             - g++-9
             - cmake
-            - libgl1-mesa-dev
             - libminiupnpc-dev
             - lcov
-            - qt512-meta-minimal
+            - libqt5opengl5-dev
+            - qt5-default
             - mesa-common-dev
             - binutils
       env:
         - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
-        - QT=512
         - BUILD=1
         - CODECOV=1
 
