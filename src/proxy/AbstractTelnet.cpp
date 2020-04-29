@@ -56,6 +56,7 @@ static QString telnetOptionName(uint8_t opt)
         CASE(TERMINAL_TYPE);
         CASE(NAWS);
         CASE(CHARSET);
+        CASE(COMPRESS2);
         CASE(GMCP);
     }
     return QString::asprintf("%u", opt);
@@ -170,6 +171,7 @@ void AbstractTelnet::reset()
     subnegBuffer.clear();
     sentBytes = 0;
     recvdGA = false;
+    resetCompress();
 }
 
 void AbstractTelnet::resetGmcpModules()
@@ -413,7 +415,8 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
                 {
                     if ((option == OPT_SUPPRESS_GA) || (option == OPT_STATUS)
                         || (option == OPT_TERMINAL_TYPE) || (option == OPT_NAWS)
-                        || (option == OPT_ECHO) || (option == OPT_CHARSET) || (option == OPT_GMCP))
+                        || (option == OPT_ECHO) || (option == OPT_CHARSET)
+                        || (option == OPT_COMPRESS2 && !NO_ZLIB) || (option == OPT_GMCP))
                     // these options are supported
                     {
                         sendTelnetOption(TN_DO, option);
@@ -480,7 +483,10 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
 
             } else if (myOptionState[OPT_CHARSET] && option == OPT_CHARSET) {
                 sendCharsetRequest(textCodec.supportedEncodings());
-                // TODO: RFC 2066 states to queue all subsequent data until ACCEPTED / REJECTED
+                // REVISIT: RFC 2066 states to queue all subsequent data until ACCEPTED / REJECTED
+            } else if (myOptionState[OPT_COMPRESS2] && option == OPT_COMPRESS2 && !NO_ZLIB) {
+                // REVISIT: Start deflating after sending IAC SB COMPRESS2 IAC SE
+
             } else if (myOptionState[OPT_GMCP] && option == OPT_GMCP) {
                 onGmcpEnabled();
             }
@@ -507,10 +513,14 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
 
 void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
 {
-    if (debug && payload.length() >= 2) {
-        qDebug() << "* Processing Telnet Subnegotiation:"
-                 << telnetOptionName(payload.unsigned_at(0))
-                 << telnetSubnegName(payload.unsigned_at(1));
+    if (debug) {
+        if (payload.length() == 1)
+            qDebug() << "* Processing Telnet Subnegotiation:"
+                     << telnetOptionName(payload.unsigned_at(0));
+        else if (payload.length() >= 2)
+            qDebug() << "* Processing Telnet Subnegotiation:"
+                     << telnetOptionName(payload.unsigned_at(0))
+                     << telnetSubnegName(payload.unsigned_at(1));
     }
 
     // subnegotiation - we analyze and respond...
@@ -529,6 +539,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
             }
         }
         break;
+
     case OPT_TERMINAL_TYPE:
         if (myOptionState[OPT_TERMINAL_TYPE]) {
             switch (payload[1]) {
@@ -544,6 +555,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
             }
         }
         break;
+
     case OPT_CHARSET:
         if (myOptionState[OPT_CHARSET]) {
             switch (payload[1]) {
@@ -593,6 +605,21 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
             }
         }
         break;
+
+    case OPT_COMPRESS2:
+        assert(!NO_ZLIB);
+        if (hisOptionState[OPT_COMPRESS2]) {
+            if (debug) {
+                if (inflateTelnet) {
+                    qDebug() << "Compression was already enabled";
+                    break;
+                }
+                qDebug() << "Starting compression";
+            }
+            recvdCompress = true;
+        }
+        break;
+
     case OPT_GMCP:
         if (myOptionState[OPT_GMCP]) {
             // Package[.SubPackages].Message <data>
@@ -649,8 +676,20 @@ void AbstractTelnet::onReadInternal(const QByteArray &data)
     AppendBuffer cleanData;
     cleanData.reserve(data.size());
 
-    for (const auto &c : data) {
-        onReadInternal2(cleanData, static_cast<unsigned char>(c));
+    for (int pos = 0; pos < data.size();) {
+        if (inflateTelnet) {
+            int remaining = onReadInternalInflate(data.data() + pos, data.size() - pos, cleanData);
+            pos = data.length() - remaining;
+            continue;
+        }
+
+        onReadInternal2(cleanData, static_cast<unsigned char>(data.at(pos++)));
+
+        if (recvdCompress) {
+            initCompress();
+            recvdCompress = false;
+            continue;
+        }
 
         if (recvdGA) {
             sendToMapper(cleanData, recvdGA); // with GO-AHEAD
@@ -809,4 +848,88 @@ TextCodec &AbstractTelnet::getTextCodec()
         }
     }
     return textCodec;
+}
+
+int AbstractTelnet::onReadInternalInflate(const char *data,
+                                          const int length,
+                                          AppendBuffer &cleanData)
+{
+#ifdef MMAPPER_NO_ZLIB
+    abort();
+#else
+    static constexpr const int CHUNK = 1024;
+    char out[CHUNK];
+
+    stream.avail_in = static_cast<uInt>(length);
+    stream.next_in = reinterpret_cast<const Bytef *>(data);
+
+    /* decompress until deflate stream ends */
+    do {
+        stream.avail_out = CHUNK;
+        stream.next_out = reinterpret_cast<Bytef *>(out);
+        int ret = inflate(&stream, Z_SYNC_FLUSH);
+        assert(ret != Z_STREAM_ERROR); /* state not clobbered */
+        switch (ret) {
+        case Z_NEED_DICT:
+        case Z_DATA_ERROR:
+        case Z_MEM_ERROR:
+        case Z_STREAM_END:
+            /* clean up and return */
+            inflateEnd(&stream);
+            resetCompress();
+            if (debug)
+                qDebug() << "Ending compression";
+            throw std::runtime_error(stream.msg);
+        default:
+            break;
+        }
+
+        const int outLen = CHUNK - static_cast<int>(stream.avail_out);
+        for (auto i = 0; i < outLen; i++) {
+            onReadInternal2(cleanData, static_cast<unsigned char>(out[i]));
+
+            if (recvdGA) {
+                sendToMapper(cleanData, recvdGA); // with GO-AHEAD
+                cleanData.clear();
+                recvdGA = false;
+            }
+        }
+
+        if (debug && outLen > 0) {
+            const double compressionRatio = static_cast<double>(outLen)
+                                            / static_cast<double>(length);
+            qDebug() << QString("zlib compression ratio of %1:1")
+                            .arg(QString::number(compressionRatio, 'f', 1));
+        }
+
+    } while (stream.avail_out == 0);
+    return static_cast<int>(stream.avail_in);
+#endif
+}
+
+void AbstractTelnet::resetCompress()
+{
+    inflateTelnet = false;
+    recvdCompress = false;
+    hisOptionState[OPT_COMPRESS2] = false;
+}
+
+void AbstractTelnet::initCompress()
+{
+#ifdef MMAPPER_NO_ZLIB
+    abort();
+#else
+    inflateTelnet = true;
+
+    /* allocate inflate state */
+    stream.zalloc = Z_NULL;
+    stream.zfree = Z_NULL;
+    stream.opaque = Z_NULL;
+    stream.avail_in = 0;
+    stream.next_in = Z_NULL;
+    int ret = inflateInit(&stream);
+    if (ret != Z_OK) {
+        throw std::runtime_error("Unable to initialize zlib");
+    }
+#endif
 }

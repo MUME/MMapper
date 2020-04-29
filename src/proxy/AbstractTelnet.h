@@ -11,6 +11,10 @@
 #include <QString>
 #include <QtCore>
 
+#ifndef MMAPPER_NO_ZLIB
+#include <zlib.h>
+#endif
+
 #include "../global/Array.h"
 #include "GmcpMessage.h"
 #include "GmcpModule.h"
@@ -42,6 +46,7 @@ static constexpr const uint8_t OPT_TIMING_MARK = 6;
 static constexpr const uint8_t OPT_TERMINAL_TYPE = 24;
 static constexpr const uint8_t OPT_NAWS = 31;
 static constexpr const uint8_t OPT_CHARSET = 42;
+static constexpr const uint8_t OPT_COMPRESS2 = 86;
 static constexpr const uint8_t OPT_GMCP = 201;
 
 // telnet SB suboption types
@@ -65,6 +70,7 @@ struct AppendBuffer : public QByteArray
     {}
 
     using QByteArray::QByteArray;
+    using QByteArray::size;
     using QByteArray::operator=;
 
     void append(const uint8_t c) { QByteArray::append(static_cast<char>(c)); }
@@ -216,4 +222,15 @@ private:
     bool recvdGA = false;
 
     bool debug = false;
+
+private:
+    int onReadInternalInflate(const char *, const int, AppendBuffer &);
+    void resetCompress();
+    void initCompress();
+
+#ifndef MMAPPER_NO_ZLIB
+    z_stream stream;
+#endif
+    bool inflateTelnet = false;
+    bool recvdCompress = false;
 };
