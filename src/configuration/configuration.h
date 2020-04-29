@@ -76,6 +76,12 @@ static constexpr const bool NO_MAP_RESOURCE = true;
 static constexpr const bool NO_MAP_RESOURCE = false;
 #endif
 
+#if defined(MMAPPER_NO_ZLIB) && MMAPPER_NO_ZLIB
+static constexpr const bool NO_ZLIB = true;
+#else
+static constexpr const bool NO_ZLIB = false;
+#endif
+
 #define SUBGROUP() \
     friend class Configuration; \
     void read(QSettings &conf); \

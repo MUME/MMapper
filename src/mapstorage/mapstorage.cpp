@@ -18,6 +18,7 @@
 #include <QtCore>
 #include <QtWidgets>
 
+#include "../configuration/configuration.h"
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
 #include "../global/Flags.h"
@@ -36,12 +37,6 @@
 #include "basemapsavefilter.h"
 #include "progresscounter.h"
 #include "roomsaver.h"
-
-#ifndef MMAPPER_NO_ZLIB
-static constexpr const bool USE_ZLIB = true;
-#else
-static constexpr const bool USE_ZLIB = false;
-#endif
 
 static constexpr const int MMAPPER_2_0_0_SCHEMA = 17; // Initial schema
 static constexpr const int MMAPPER_2_0_2_SCHEMA = 24; // Ridable flag
@@ -431,7 +426,7 @@ bool MapStorage::mergeData()
         const bool qCompressed = (version >= MMAPPER_2_4_3_SCHEMA);
         const bool zlibCompressed = (version >= MMAPPER_2_0_4_SCHEMA
                                      && version <= MMAPPER_2_4_0_SCHEMA);
-        if (qCompressed || (USE_ZLIB && zlibCompressed)) {
+        if (qCompressed || (!NO_ZLIB && zlibCompressed)) {
             QByteArray compressedData(stream.device()->readAll());
             QByteArray uncompressedData = qCompressed ? qUncompress(compressedData)
                                                       : StorageUtils::inflate(compressedData);
@@ -440,7 +435,7 @@ bool MapStorage::mergeData()
             stream.setDevice(&buffer);
             emit_log(QString("Uncompressed map using %1").arg(qCompressed ? "qUncompress" : "zlib"));
 
-        } else if (!USE_ZLIB && zlibCompressed) {
+        } else if (NO_ZLIB && zlibCompressed) {
             critical("MMapper could not load this map because it is too old.\r\n\r\n"
                      "Please recompile MMapper with USE_ZLIB.");
             return false;
