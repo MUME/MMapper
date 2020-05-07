@@ -3,6 +3,7 @@
 // Copyright (C) 2019 The MMapper Authors
 
 #include <array>
+#include <cstddef>
 
 #include "RuleOf5.h"
 
