@@ -182,6 +182,28 @@ matrix:
         - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
         - BUILD=1
         - CODECOV=1
+    #
+    # Linux GCC 10
+    #
+    - os: linux
+      name: Linux GCC 10
+      dist: focal
+      compiler: gcc
+      addons:
+        apt:
+          packages:
+            - g++-10
+            - cmake
+            - libminiupnpc-dev
+            - lcov
+            - libqt5opengl5-dev
+            - qt5-default
+            - mesa-common-dev
+            - binutils
+      env:
+        - MATRIX_EVAL="CC=gcc-10 && CXX=g++-10"
+        - BUILD=1
+        - CODECOV=1
 
 before_install:
   - '[[ "$MATRIX_EVAL" == "" ]] || eval "${MATRIX_EVAL}"'
