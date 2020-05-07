@@ -169,6 +169,7 @@ void AbstractTelnet::reset()
     resetGmcpModules();
     subnegBuffer.clear();
     sentBytes = 0;
+    recvdGA = false;
 }
 
 void AbstractTelnet::resetGmcpModules()
@@ -638,17 +639,12 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
 
 void AbstractTelnet::onReadInternal(const QByteArray &data)
 {
-    // REVISIT: should this still clear recvdGA even if the string is empty?
     if (data.isEmpty())
         return;
 
     // now we have the data, but we cannot forward it to next stage of processing,
     // because the data contains telnet commands
     // so we parse the text and process all telnet commands:
-
-    // clear the GO-AHEAD flag
-    // yes, but WHY are we clearing it?
-    recvdGA = false;
 
     AppendBuffer cleanData;
     cleanData.reserve(data.size());
@@ -668,8 +664,6 @@ void AbstractTelnet::onReadInternal(const QByteArray &data)
         sendToMapper(cleanData, recvdGA); // without GO-AHEAD
         cleanData.clear();
     }
-
-    // REVISIT: should recvdGA be cleared at exit?
 }
 
 /*
