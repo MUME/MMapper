@@ -105,7 +105,7 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
     downloadUrl = [&obj]() -> QString {
         // Regular expressions to detect if this download matches the current install
         const auto platformRegex = QRegularExpression(
-            []() {
+            []() -> const char * {
                 if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac)
                     return R"(^mmapper\-.+Mac.+\.dmg$)";
                 if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux)
@@ -116,7 +116,7 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
             }(),
             QRegularExpression::PatternOption::CaseInsensitiveOption);
         const auto environmentRegex = QRegularExpression(
-            []() {
+            []() -> const char * {
                 if constexpr (CURRENT_ENVIRONMENT == EnvironmentEnum::Env32Bit)
                     return R"((arm(?!64)|armhf|i386|x86(?!_64)))";
                 if constexpr (CURRENT_ENVIRONMENT == EnvironmentEnum::Env64Bit)
