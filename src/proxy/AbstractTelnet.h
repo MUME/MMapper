@@ -229,6 +229,7 @@ private:
     void initCompress();
 
 #ifndef MMAPPER_NO_ZLIB
+    // REVIST: Refactor this to use PImpl
     z_stream stream;
 #endif
     bool inflateTelnet = false;

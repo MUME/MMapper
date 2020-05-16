@@ -676,18 +676,24 @@ void AbstractTelnet::onReadInternal(const QByteArray &data)
     AppendBuffer cleanData;
     cleanData.reserve(data.size());
 
-    for (int pos = 0; pos < data.size();) {
+    int pos = 0;
+    while (pos < data.size()) {
         if (inflateTelnet) {
             int remaining = onReadInternalInflate(data.data() + pos, data.size() - pos, cleanData);
             pos = data.length() - remaining;
+            // Continue because there might be additional chunks left to inflate
             continue;
         }
 
-        onReadInternal2(cleanData, static_cast<unsigned char>(data.at(pos++)));
+        // Process character by character
+        const uint8_t c = static_cast<unsigned char>(data.at(pos));
+        onReadInternal2(cleanData, c);
+        pos++;
 
         if (recvdCompress) {
             initCompress();
             recvdCompress = false;
+            // Start inflating at the next position
             continue;
         }
 
@@ -886,7 +892,9 @@ int AbstractTelnet::onReadInternalInflate(const char *data,
 
         const int outLen = CHUNK - static_cast<int>(stream.avail_out);
         for (auto i = 0; i < outLen; i++) {
-            onReadInternal2(cleanData, static_cast<unsigned char>(out[i]));
+            // Process character by character
+            const uint8_t c = static_cast<unsigned char>(out[i]);
+            onReadInternal2(cleanData, c);
 
             if (recvdGA) {
                 sendToMapper(cleanData, recvdGA); // with GO-AHEAD
