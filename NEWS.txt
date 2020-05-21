@@ -1,4 +1,23 @@
 ================================
+MMapper 20.05.0 (May 20, 2020)
+================================
+
+New features:
+ - Support for Generic Mud Communication Protocol (GMCP) and MMapper.GroupTell module
+ - Support for Mud Client Compression Protocol (MCCP2)
+ - Ability to change the color of normal connections
+
+Bug fixes:
+ - Fixed MUME clock and time output parsing
+ - Remote edit widget justifies at 80 characters rather than 81
+ - Group poison affect now triggers on any poison message in status
+ - Prompt and exits detection has been improved
+ - External links use HTTPS over HTTP
+ - Mud Connector voting works again
+ - Disabled unnecessary scrollbars on MMapper logo in About dialog
+ - Linux snap now runs succesfully on the Raspberry Pi
+
+================================
 MMapper 20.03.0 (March 28, 2020)
 ================================
 
