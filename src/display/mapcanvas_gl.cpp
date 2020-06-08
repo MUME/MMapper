@@ -275,7 +275,7 @@ glm::mat4 MapCanvas::getViewProj_old(const glm::vec2 &scrollPos,
     const float shp = zoomScale * baseSize / static_cast<float>(size.y);
 
     QMatrix4x4 proj;
-    proj.frustum(-0.5f, +0.5f, -0.5f, 0.5f, 5.f, 80.f);
+    proj.frustum(-0.5f, +0.5f, -0.5f, 0.5f, 5.f, 10000.f);
     proj.scale(swp, shp, 1.f);
     proj.translate(-scrollPos.x, -scrollPos.y, -FIXED_VIEW_DISTANCE);
     proj.scale(1.f, 1.f, ROOM_Z_SCALE);
