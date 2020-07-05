@@ -402,7 +402,7 @@ void AbstractParser::parseRoom(StringView input)
             if (!hasDoor(dir))
                 throw std::runtime_error("exit is missing exitflag 'door'");
 
-            const DoorName name(v[2].getString());
+            const DoorName name(v[4].getString());
 
             const auto rs = RoomSelection::createSelection(*m_mapData, getTailPosition());
             const RoomId roomId = [&rs]() {
