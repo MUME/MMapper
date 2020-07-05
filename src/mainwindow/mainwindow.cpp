@@ -96,8 +96,12 @@ static void addApplicationFont()
         // Utilize the application font here because we can gaurantee that resources have been loaded
         // REVISIT: Move this to the configuration?
         if (getConfig().integratedClient.font.isEmpty()) {
-            QFont defaultClientFont = QFont(family.front());
-            defaultClientFont.setPointSize(12);
+            QFont defaultClientFont;
+            defaultClientFont.setFamily(family.front());
+            if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac)
+                defaultClientFont.setPointSize(12);
+            else
+                defaultClientFont.setPointSize(10);
             defaultClientFont.setStyleStrategy(QFont::PreferAntialias);
             setConfig().integratedClient.font = defaultClientFont.toString();
         }
