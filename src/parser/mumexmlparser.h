@@ -38,7 +38,6 @@ private:
 private:
     QDataStream *debugStream = nullptr;
     QFile *file = nullptr;
-    CommandEnum m_move = CommandEnum::LOOK;
     XmlModeEnum m_xmlMode = XmlModeEnum::NONE;
     LineFlags m_lineFlags;
     QByteArray m_lineToUser;

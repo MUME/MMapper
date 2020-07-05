@@ -81,6 +81,26 @@ ExitDirEnum getDirection(const CommandEnum cmd)
     }
 #undef CASE
 }
+CommandEnum getCommand(const ExitDirEnum dir)
+{
+#define CASE(x) \
+    case ExitDirEnum::x: \
+        return CommandEnum::x
+    switch (dir) {
+        CASE(NORTH);
+        CASE(SOUTH);
+        CASE(EAST);
+        CASE(WEST);
+        CASE(UP);
+        CASE(DOWN);
+        CASE(UNKNOWN);
+        CASE(NONE);
+
+    default:
+        return CommandEnum::LOOK;
+    }
+#undef CASE
+}
 
 const char *getUppercase(const CommandEnum cmd)
 {

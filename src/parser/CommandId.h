@@ -39,6 +39,7 @@ const MMapper::Array<CommandEnum, NUM_COMMANDS> &getAllCommands();
 bool isDirectionNESWUD(CommandEnum cmd);
 bool isDirection7(CommandEnum cmd);
 ExitDirEnum getDirection(CommandEnum cmd);
+CommandEnum getCommand(ExitDirEnum dir);
 
 const char *getUppercase(CommandEnum cmd);
 const char *getLowercase(CommandEnum cmd);

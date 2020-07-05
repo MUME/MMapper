@@ -93,6 +93,7 @@ protected:
     ConnectedRoomFlagsType m_connectedRoomFlags;
 
 protected:
+    CommandEnum m_move = CommandEnum::LOOK;
     QByteArray m_lastPrompt;
     bool m_compactMode = false;
     bool m_overrideSendPrompt = false;
