@@ -107,6 +107,8 @@ void MumeXmlParser::parse(const TelnetData &data)
     const QByteArray &line = data.line;
     m_lineToUser.clear();
     m_lineFlags.remove(LineFlagEnum::NONE);
+    if (!m_lineFlags.isSnoop())
+        m_snoopChar.reset();
 
     for (const char c : line) {
         if (m_readingTag) {
@@ -165,6 +167,11 @@ void MumeXmlParser::parse(const TelnetData &data)
             }
             QString tempStr = temp;
             tempStr = normalizeStringCopy(tempStr.trimmed());
+            if (m_snoopChar.has_value() && tempStr.length() > 3 && tempStr.at(0) == '&'
+                && tempStr.at(1) == m_snoopChar.value() && tempStr.at(2) == ' ') {
+                // Remove snoop prefix (i.e. "&J Exits: north.")
+                tempStr = tempStr.mid(3);
+            }
             parseMudCommands(tempStr);
         }
     }
@@ -189,10 +196,10 @@ bool MumeXmlParser::element(const QByteArray &line)
                             sendToUser(::toQByteArrayLatin1(snoopToUser(os.str())));
                         }
                         m_promptFlags.reset(); // Don't trust god prompts
-                        m_queue.enqueue(m_move);
+                        if (m_move != CommandEnum::LOOK)
+                            m_queue.enqueue(m_move);
                         move();
                     }
-                    m_snoopChar.reset();
 
                 } else if (line.startsWith("/status")) {
                     m_lineFlags.remove(LineFlagEnum::STATUS);
