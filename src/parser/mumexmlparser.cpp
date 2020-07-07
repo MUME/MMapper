@@ -65,6 +65,7 @@ MumeXmlParser::~MumeXmlParser()
 void MumeXmlParser::parseNewMudInput(const TelnetData &data)
 {
     switch (data.type) {
+    case TelnetDataEnum::DELAY: // Twiddlers
     case TelnetDataEnum::MENU_PROMPT:
     case TelnetDataEnum::LOGIN:
     case TelnetDataEnum::LOGIN_PASSWORD:
@@ -72,7 +73,6 @@ void MumeXmlParser::parseNewMudInput(const TelnetData &data)
         stripXmlEntities(m_lastPrompt);
         parse(data);
         break;
-    case TelnetDataEnum::DELAY: // Twiddlers
     case TelnetDataEnum::UNKNOWN:
         if (XPS_DEBUG_TO_FILE) {
             (*debugStream) << "***STYPE***";
@@ -144,12 +144,12 @@ void MumeXmlParser::parse(const TelnetData &data)
     if (!m_lineToUser.isEmpty()) {
         const auto isGoAhead = [](const TelnetDataEnum type) -> bool {
             switch (type) {
+            case TelnetDataEnum::DELAY:
             case TelnetDataEnum::LOGIN:
             case TelnetDataEnum::LOGIN_PASSWORD:
             case TelnetDataEnum::MENU_PROMPT:
             case TelnetDataEnum::PROMPT:
                 return true;
-            case TelnetDataEnum::DELAY:
             case TelnetDataEnum::CRLF:
             case TelnetDataEnum::LF:
             case TelnetDataEnum::UNKNOWN:
