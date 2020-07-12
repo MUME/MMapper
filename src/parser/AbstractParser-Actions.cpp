@@ -31,7 +31,7 @@ void AbstractParser::initActionMap()
     auto addRegex = [&map](const std::string &match, const ActionCallback &callback) {
         assert(!match.empty());
         const char hint = [&match]() -> char {
-            if (match.length() > 2 && match[0] == '^' && match[1] != '\\')
+            if (match.length() > 2 && match[0] == '^' && match[1] != '\\' && match[1] != '(')
                 return match[1];
             return 0;
         }();
@@ -270,7 +270,7 @@ void AbstractParser::initActionMap()
                 [this](StringView view) { m_mumeClock->parseMumeTime(view.toQString()); });
 
     /// Score
-    addRegex(R"(^\d+/\d+ hits(, \d+/\d+ mana,)? and \d+/\d+ moves.$)",
+    addRegex(R"(^(You have )?\d+/\d+ hits?(, \d+/\d+ mana,)? and \d+/\d+ move(ment point)?s.$)",
              [this](StringView view) { emit sendScoreLineEvent(view.toQByteArray()); });
 
     /// Search, reveal, and flush
