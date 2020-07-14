@@ -24,11 +24,11 @@ environment:
 
     - ARCH: x86
       COMPILER: MinGW
-      QTDIR: C:\Qt\5.14.2\mingw73_32
+      QTDIR: C:\Qt\5.15\mingw81_32
 
     - ARCH: x64
       COMPILER: MinGW
-      QTDIR: C:\Qt\5.14.2\mingw73_64
+      QTDIR: C:\Qt\5.15\mingw81_64
 
     - ARCH: x86
       COMPILER: VS2019
@@ -43,9 +43,9 @@ environment:
 
 image:
   # AppVeyor builds are ordered by the image list:
-  - Visual Studio 2017
+  - Visual Studio 2019
   - macos-mojave
-  - Ubuntu1804
+  - Ubuntu2004
   - Previous Visual Studio 2019
 
 matrix:
@@ -57,17 +57,17 @@ matrix:
       COMPILER: GCC
     - image: Previous Visual Studio 2019
       COMPILER: MinGW
-    - image: Visual Studio 2017
+    - image: Visual Studio 2019
       COMPILER: Clang
-    - image: Visual Studio 2017
+    - image: Visual Studio 2019
       COMPILER: GCC
-    - image: Visual Studio 2017
+    - image: Visual Studio 2019
       COMPILER: VS2019
-    - image: Ubuntu1804
+    - image: Ubuntu2004
       COMPILER: Clang
-    - image: Ubuntu1804
+    - image: Ubuntu2004
       COMPILER: MinGW
-    - image: Ubuntu1804
+    - image: Ubuntu2004
       COMPILER: VS2019
     - image: macos-mojave
       COMPILER: GCC
@@ -76,9 +76,9 @@ matrix:
     - image: macos-mojave
       COMPILER: VS2019
     # Following builds are disabled to prevent build timeout
-    - image: Ubuntu1804
+    - image: Ubuntu2004
       ARCH: arm
-    - image: Ubuntu1804
+    - image: Ubuntu2004
       ARCH: arm64
 
 for:
@@ -86,7 +86,7 @@ for:
   -
     matrix:
       only:
-        - image: Ubuntu1804
+        - image: Ubuntu2004
 
     clone_folder: ~/mmapper
 
@@ -160,10 +160,7 @@ for:
       - ps: Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
 
     before_build:
-      - cmd: set PATH=%QTDIR%\bin;C:\Qt\Tools\QtCreator\bin;%PATH%
-      # Install NASM to compile OpenSSL using MSVC
-      #- cmd: chocolatey install -y nasm
-      #- cmd: set PATH=%PROGRAMFILES%\nasm;%PATH%
+      - cmd: set PATH=%QTDIR%\bin;%PATH%;C:\Qt\Tools\QtCreator\bin
       - cmd: echo PATH=%PATH%
 
     build_script:
@@ -194,7 +191,7 @@ for:
   -
     matrix:
       only:
-        - image: Visual Studio 2017
+        - image: Visual Studio 2019
 
     clone_folder: c:\Build\MMapper
 
@@ -214,21 +211,9 @@ for:
       - ps: Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
       # Install MingW
       - cmd: if %COMPILER%==MinGW set "PATH=C:/msys64/usr/bin;%PATH%"
-      # Update pacman manually from old MSYS2.
-      # See also: https://github.com/msys2/MSYS2-packages/issues/1960
-      - cmd: if %COMPILER%==MinGW pacman -Sy --noconfirm --noprogressbar zstd
-      - cmd: if %COMPILER%==MinGW wget -q http://repo.msys2.org/msys/x86_64/pacman-5.2.1-7-x86_64.pkg.tar.zst
-      - cmd: if %COMPILER%==MinGW zstd -d pacman-5.2.1-7-x86_64.pkg.tar.zst
-      - cmd: if %COMPILER%==MinGW gzip pacman-5.2.1-7-x86_64.pkg.tar
-      - cmd: if %COMPILER%==MinGW pacman --noconfirm --upgrade ./pacman-5.2.1-7-x86_64.pkg.tar.gz
       - cmd: if %COMPILER%==MinGW pacman -Su --noconfirm --noprogressbar
       - cmd: if %COMPILER%==MinGW if %ARCH%==x86 pacman -Sy --noconfirm --noprogressbar --needed mingw-w64-i686-toolchain mingw-w64-i686-miniupnpc
       - cmd: if %COMPILER%==MinGW if %ARCH%==x64 pacman -Sy --noconfirm --noprogressbar --needed mingw-w64-x86_64-toolchain mingw-w64-x86_64-miniupnpc
-      # Install Qt
-      - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/build-images/master/scripts/Windows/install_qt_module.ps1'))
-      - ps: if ($env:ARCH -eq 'x86') { Install-QtComponent -Version '5.14.2' -Name 'win32_mingw73' -ExcludeDocs -ExcludeExamples }
-      - ps: if ($env:ARCH -eq 'x64') { Install-QtComponent -Version '5.14.2' -Name 'win64_mingw73' -ExcludeDocs -ExcludeExamples }
-      - ps: ConfigureQtVersion 'C:\Qt' '5.14.2'
 
         before_build:
       - cmd: if %COMPILER%==MinGW if %ARCH%==x86 set "PATH=C:/msys64/mingw32/bin;%PATH%"
