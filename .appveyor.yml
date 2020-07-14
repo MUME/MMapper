@@ -218,7 +218,7 @@ for:
         before_build:
       - cmd: if %COMPILER%==MinGW if %ARCH%==x86 set "PATH=C:/msys64/mingw32/bin;%PATH%"
       - cmd: if %COMPILER%==MinGW if %ARCH%==x64 set "PATH=C:/msys64/mingw64/bin;%PATH%"
-      - cmd: set PATH=%QTDIR%\bin;C:\Qt\Tools\QtCreator\bin;%PATH%
+      - cmd: set PATH=%QTDIR%\bin;%PATH%;C:\Qt\Tools\QtCreator\bin
       - cmd: if %COMPILER%==MinGW set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
       - cmd: echo PATH=%PATH%
 
