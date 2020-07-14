@@ -211,13 +211,6 @@ for:
       - ps: Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
       # Install MingW
       - cmd: if %COMPILER%==MinGW set "PATH=C:/msys64/usr/bin;%PATH%"
-      # Update pacman manually from old MSYS2.
-      # See also: https://github.com/msys2/MSYS2-packages/issues/1960
-      - cmd: if %COMPILER%==MinGW pacman -Sy --noconfirm --noprogressbar zstd
-      - cmd: if %COMPILER%==MinGW wget -q http://repo.msys2.org/msys/x86_64/pacman-5.2.1-7-x86_64.pkg.tar.zst
-      - cmd: if %COMPILER%==MinGW zstd -d pacman-5.2.1-7-x86_64.pkg.tar.zst
-      - cmd: if %COMPILER%==MinGW gzip pacman-5.2.1-7-x86_64.pkg.tar
-      - cmd: if %COMPILER%==MinGW pacman --noconfirm --upgrade ./pacman-5.2.1-7-x86_64.pkg.tar.gz
       - cmd: if %COMPILER%==MinGW pacman -Su --noconfirm --noprogressbar
       - cmd: if %COMPILER%==MinGW if %ARCH%==x86 pacman -Sy --noconfirm --noprogressbar --needed mingw-w64-i686-toolchain mingw-w64-i686-miniupnpc
       - cmd: if %COMPILER%==MinGW if %ARCH%==x64 pacman -Sy --noconfirm --noprogressbar --needed mingw-w64-x86_64-toolchain mingw-w64-x86_64-miniupnpc
