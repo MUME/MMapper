@@ -67,7 +67,7 @@ matrix:
       COMPILER: Clang
     - image: Ubuntu2004
       COMPILER: MinGW
-    - image: Ubuntu1804
+    - image: Ubuntu2004
       COMPILER: VS2019
     - image: macos-mojave
       COMPILER: GCC
