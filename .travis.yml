@@ -268,7 +268,7 @@ before_script:
     fi
     if [ "$TRAVIS_OS_NAME" == "windows" ]; then
       export QMAKESPEC=win32-msvc2017
-      export MMAPPER_CMAKE_EXTRA=-G\ \"NMake Makefiles JOM\"\ -DUSE_COTIRE=true\ -DCMAKE_PREFIX_PATH=/c/Qt/5.14.2/msvc2017_64
+      export MMAPPER_CMAKE_EXTRA=-G\ \"NMake\ Makefiles\ JOM\"\ -DUSE_COTIRE=true\ -DCMAKE_PREFIX_PATH=/c/Qt/5.14.2/msvc2017_64
       #-DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake
     fi
   - |
