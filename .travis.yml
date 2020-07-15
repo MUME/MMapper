@@ -237,16 +237,16 @@ install:
       export PATH=/usr/local/opt/qt5/bin:$PATH
     fi
     if [ "$TRAVIS_OS_NAME" == "windows" ]; then
-      choco install nsis 7zip jom -y
+      choco install 7zip jom nsis openssl -y
       export PATH=/c/Program\ Files\ \(x86\)/NSIS/:/c/Program\ Files/NSIS:/c/ProgramData/chocolatey/lib/jom/tools:$PATH
       git clone https://github.com/Microsoft/vcpkg.git
-      cd vcpkg
-      export VCPKG_DEFAULT_TRIPLET=x86-windows
-      ./bootstrap-vcpkg.bat
-      ./vcpkg integrate install
-      ./vcpkg install zlib openssl
-      cd ..
-      powershell -Command "iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/build-images/master/scripts/Windows/install_qt_module.ps1')) ; Install-QtComponent -Version '5.14.2' -Name 'msvc2017_32' -ExcludeDocs -ExcludeExamples ; ConfigureQtVersion 'C:\Qt' '5.14.2'"
+      #cd vcpkg
+      #export VCPKG_DEFAULT_TRIPLET=x86-windows
+      #./bootstrap-vcpkg.bat
+      #./vcpkg integrate install
+      #./vcpkg install zlib openssl
+      #cd ..
+      powershell -Command "iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/build-images/master/scripts/Windows/install_qt_module.ps1')) ; Install-QtComponent -Version '5.14.2' -Name 'msvc2017' -ExcludeDocs -ExcludeExamples ; ConfigureQtVersion 'C:\Qt' '5.14.2'"
       export PATH=c/Qt/5.14.2/bin:$PATH
     fi
   - '[[ "$TRAVIS_CPU_ARCH" != "amd64" ]] || [[ "$DOCKER" == "" ]] || docker run --rm --privileged multiarch/qemu-user-static:register --reset'
@@ -268,7 +268,8 @@ before_script:
     fi
     if [ "$TRAVIS_OS_NAME" == "windows" ]; then
       export QMAKESPEC=win32-msvc2017
-      export MMAPPER_CMAKE_EXTRA=-G "NMake Makefiles JOM" -DUSE_COTIRE=true -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake
+      export MMAPPER_CMAKE_EXTRA=-G "NMake Makefiles JOM" -DUSE_COTIRE=true -DCMAKE_PREFIX_PATH=/c/Qt/5.14.2/msvc2017
+      #-DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake
     fi
   - |
     if [ "$CODESTYLE" != "" ]; then
