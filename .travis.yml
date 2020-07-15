@@ -246,7 +246,7 @@ install:
       powershell -Command "Set-ExecutionPolicy RemoteSigned -scope CurrentUser"
       echo "iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/build-images/master/scripts/Windows/install_qt_module.ps1'))" > temp.ps1
       echo "Install-QtComponent -Version '5.14.2' -Name 'msvc2017_64' -ExcludeDocs -ExcludeExamples" >> temp.ps1
-      echo "ConfigureQtVersion 'C:\Qt' '5.14.2'" >> temp.ps1
+      echo "ConfigureQtVersion '/c/Qt' '5.14.2'" >> temp.ps1
       powershell -File "temp.ps1"
       export PATH=c/Qt/5.14.2/bin:$PATH
       echo PATH=$PATH
@@ -270,7 +270,7 @@ before_script:
     fi
     if [ "$TRAVIS_OS_NAME" == "windows" ]; then
       export QMAKESPEC=win32-msvc2017
-      export MMAPPER_CMAKE_EXTRA="-G 'NMake Makefiles JOM' -DUSE_COTIRE=true -DCMAKE_PREFIX_PATH=/c/Qt/5.14.2/msvc2017_64"
+      export MMAPPER_CMAKE_EXTRA="-G 'NMake\ Makefiles\ JOM' -DUSE_COTIRE=true -DCMAKE_PREFIX_PATH=/c/Qt/5.14.2/msvc2017_64"
       #-DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake
     fi
   - |
