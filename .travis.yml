@@ -52,6 +52,13 @@ matrix:
         - BUILD=1
         - CODECOV=1
     #
+    # Windows
+    #
+    - os: windows
+      name: Windows MSVC 2017
+      env:
+        - BUILD=1
+    #
     # Debian Buster armhf
     #
     - os: linux
@@ -226,6 +233,17 @@ install:
       brew link --force qt5
       export PATH=/usr/local/opt/qt5/bin:$PATH
     fi
+    if [ "$TRAVIS_OS_NAME" == "windows" ]; then
+      choco install nsis -y
+      export PATH=/c/Program Files (x86)/NSIS/:/c/Program Files/NSIS/:$PATH
+      git clone https://github.com/Microsoft/vcpkg.git
+      cd vcpkg
+      export VCPKG_DEFAULT_TRIPLET=x86-windows
+      ./bootstrap-vcpkg.bat
+      ./vcpkg integrate install
+      ./vcpkg install zlib openssl qt5
+      cd ..
+    fi
   - '[[ "$TRAVIS_CPU_ARCH" != "amd64" ]] || [[ "$DOCKER" == "" ]] || docker run --rm --privileged multiarch/qemu-user-static:register --reset'
 
 before_script:
@@ -242,6 +260,10 @@ before_script:
       [[ "$CXX" != "clang++" ]] || export QMAKESPEC=macx-clang
       [[ "$CXX" != "g++" ]] || export QMAKESPEC=macx-g++
       export MMAPPER_CMAKE_EXTRA=-DOPENSSL_ROOT_DIR=/usr/local/opt/openssl\@1.1
+    fi
+    if [ "$TRAVIS_OS_NAME" == "windows" ]; then
+      export QMAKESPEC=win32-msvc2017
+      export MMAPPER_CMAKE_EXTRA=-G "NMake Makefiles" -DUSE_COTIRE=true -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake
     fi
   - |
     if [ "$CODESTYLE" != "" ]; then
