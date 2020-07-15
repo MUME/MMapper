@@ -56,6 +56,9 @@ matrix:
     #
     - os: windows
       name: Windows MSVC 2017
+      cache:
+        directories:
+          - /c/Users/travis/AppData/Local/vcpkg
       env:
         - BUILD=1
     #
@@ -234,7 +237,7 @@ install:
       export PATH=/usr/local/opt/qt5/bin:$PATH
     fi
     if [ "$TRAVIS_OS_NAME" == "windows" ]; then
-      choco install nsis -y
+      choco install nsis 7zip jom -y
       export PATH=/c/Program\ Files\ \(x86\)/NSIS/:/c/Program\ Files/NSIS/:$PATH
       git clone https://github.com/Microsoft/vcpkg.git
       cd vcpkg
@@ -263,7 +266,7 @@ before_script:
     fi
     if [ "$TRAVIS_OS_NAME" == "windows" ]; then
       export QMAKESPEC=win32-msvc2017
-      export MMAPPER_CMAKE_EXTRA=-G "NMake Makefiles" -DUSE_COTIRE=true -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake
+      export MMAPPER_CMAKE_EXTRA=-G "NMake Makefiles JOM" -DUSE_COTIRE=true -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake
     fi
   - |
     if [ "$CODESTYLE" != "" ]; then
