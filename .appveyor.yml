@@ -125,8 +125,8 @@ for:
       - sh: wget https://github.com/probonopd/linuxdeployqt/releases/download/6/linuxdeployqt-6-x86_64.AppImage
       - sh: chmod a+x linuxdeployqt-6-x86_64.AppImage
       - sh: ./linuxdeployqt-6-x86_64.AppImage appdir/usr/share/applications/org.mume.MMapper.desktop -unsupported-allow-new-glibc -appimage
-      - sh: export FILE=$(find . -type f -name MMapper*.AppImage)
-      - sh: sha256sum $FILE | cut -d ' ' -f 1 > $FILE.sha256
+      - sh: export FILE=$(find . -type f -name MMapper*.AppImage | sed 's#./##')
+      - sh: sha256sum $FILE > $FILE.sha256
       - sh: mv *.AppImage* ../
 
     test_script:
