@@ -133,7 +133,7 @@ for:
       # Transform test results from ctest to junit format
       - ps: $XSLInputElement = New-Object System.Xml.Xsl.XslCompiledTransform
       - ps: $XSLInputElement.Load("https://raw.githubusercontent.com/rpavlik/jenkins-ctest-plugin/master/ctest-to-junit.xsl")
-      - ps: $XSLInputElement.Transform((Resolve-Path .\build\Testing\*\Test.xml), (Join-Path (Resolve-Path .) "ctest-to-junit-results.xml"))
+      - ps: $XSLInputElement.Transform((Resolve-Path .\Testing\*\Test.xml), (Join-Path (Resolve-Path .) "ctest-to-junit-results.xml"))
       - ps: $wc = New-Object 'System.Net.WebClient'
       - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\ctest-to-junit-results.xml))
 
