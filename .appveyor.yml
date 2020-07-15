@@ -118,7 +118,7 @@ for:
     build_script:
       - sh: mkdir build
       - sh: cd build
-      - sh: cmake .. -DUSE_COTIRE=true -DCMAKE_INSTALL_PREFIX=/usr
+      - sh: cmake .. -DUSE_COTIRE=true -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
       - sh: make -j$(getconf _NPROCESSORS_ONLN) DESTDIR=appdir install
       # Build AppImage
       - sh: export VERSION=$(grep "SET(CPACK_PACKAGE_VERSION " CPackConfig.cmake | cut -d'"' -f 2)
@@ -177,7 +177,7 @@ for:
 
     build_script:
       # Build MMapper within a Docker container using the current working path as a volume
-      - sh: docker run --rm -v "$(pwd)":/root/mmapper $DOCKER_IMAGE bash -c "apt update -qq && apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev cmake ninja-build libminiupnpc-dev && cd /root/mmapper && mkdir -p build && cd build && cmake .. -G \"Ninja\" -DTARGET_ARCHITECTURE=$TARGET_ARCHITECTURE -DUSE_COTIRE=true && cmake --build . -j$(getconf _NPROCESSORS_ONLN) && QT_QPA_PLATFORM=offscreen ctest -V --no-compress-output -T test && cpack"
+      - sh: docker run --rm -v "$(pwd)":/root/mmapper $DOCKER_IMAGE bash -c "apt update -qq && apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev cmake ninja-build libminiupnpc-dev && cd /root/mmapper && mkdir -p build && cd build && cmake .. -G \"Ninja\" -DTARGET_ARCHITECTURE=$TARGET_ARCHITECTURE -DUSE_COTIRE=true && cmake --build . && QT_QPA_PLATFORM=offscreen ctest -V --no-compress-output -T test && cpack"
 
     test_script:
       # Transform test results from ctest to junit format
