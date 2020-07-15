@@ -9,7 +9,7 @@ data in real time and show player's position in a map.
 ### Windows
 {% for asset in site.github.latest_release.assets %}
 {% if asset.name == 'arda.mm2' or asset.name contains 'sha256' %}
-{% elif asset.name contains 'exe' %}
+{% elsif asset.name contains 'exe' %}
 [![Download {{ asset.name }}](https://img.shields.io/github/downloads/{{ site.github.owner_name }}/{{ site.github.repository_name }}/latest/{{ asset.name }}.svg)]({{ asset.browser_download_url }} "Download {{ asset.name }}")
 {% else %}
 {% endif %}
@@ -17,7 +17,7 @@ data in real time and show player's position in a map.
 ### Mac
 {% for asset in site.github.latest_release.assets %}
 {% if asset.name == 'arda.mm2' or asset.name contains 'sha256' %}
-{% elif asset.name contains 'dmg' %}
+{% elsif asset.name contains 'dmg' %}
 [![Download {{ asset.name }}](https://img.shields.io/github/downloads/{{ site.github.owner_name }}/{{ site.github.repository_name }}/latest/{{ asset.name }}.svg)]({{ asset.browser_download_url }} "Download {{ asset.name }}")
 {% else %}
 {% endif %}
@@ -25,7 +25,7 @@ data in real time and show player's position in a map.
 ### Linux
 {% for asset in site.github.latest_release.assets %}
 {% if asset.name == 'arda.mm2' or asset.name contains 'sha256' %}
-{% elif asset.name contains 'AppImage' or asset.name contains 'deb' %}
+{% elsif asset.name contains 'AppImage' or asset.name contains 'deb' %}
 [![Download {{ asset.name }}](https://img.shields.io/github/downloads/{{ site.github.owner_name }}/{{ site.github.repository_name }}/latest/{{ asset.name }}.svg)]({{ asset.browser_download_url }} "Download {{ asset.name }}")
 {% else %}
 {% endif %}
