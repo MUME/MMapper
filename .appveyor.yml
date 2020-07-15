@@ -127,6 +127,7 @@ for:
       - sh: ./linuxdeployqt-6-x86_64.AppImage appdir/usr/share/applications/org.mume.MMapper.desktop -unsupported-allow-new-glibc -appimage
       - sh: export FILE=$(find . -type f -name MMapper*.AppImage)
       - sh: sha256sum $FILE | cut -d ' ' -f 1 > $FILE.sha256
+      - sh: mv *.AppImage* ../
 
     test_script:
       - sh: QT_QPA_PLATFORM=offscreen ctest -V --no-compress-output -T test
@@ -138,10 +139,10 @@ for:
       - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\ctest-to-junit-results.xml))
 
     artifacts:
-      - path: build\MMapper-*.AppImage
+      - path: MMapper-*.AppImage
         name: MMapper AppImage Package
 
-      - path: build\MMapper-*.AppImage.sha256
+      - path: MMapper-*.AppImage.sha256
         name: MMapper Checksums
 
   # Ubuntu (Docker)
@@ -178,6 +179,7 @@ for:
     build_script:
       # Build MMapper within a Docker container using the current working path as a volume
       - sh: docker run --rm -v "$(pwd)":/root/mmapper $DOCKER_IMAGE bash -c "apt update -qq && apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev cmake ninja-build libminiupnpc-dev && cd /root/mmapper && mkdir -p build && cd build && cmake .. -G \"Ninja\" -DTARGET_ARCHITECTURE=$TARGET_ARCHITECTURE -DUSE_COTIRE=true && cmake --build . && QT_QPA_PLATFORM=offscreen ctest -V --no-compress-output -T test && cpack"
+      - sh: mv *.deb* ../
 
     test_script:
       # Transform test results from ctest to junit format
@@ -188,10 +190,10 @@ for:
       - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\ctest-to-junit-results.xml))
 
     artifacts:
-      - path: build\mmapper-*-Linux-*.deb
+      - path: mmapper-*-Linux-*.deb
         name: MMapper Debian Package
 
-      - path: build\mmapper-*-Linux-*.*.sha256
+      - path: mmapper-*-Linux-*.*.sha256
         name: MMapper Checksums
 
   # Windows (MSVC)
@@ -232,6 +234,7 @@ for:
       - cmd: cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -G %CMAKE_GENERATOR% "-DCMAKE_PREFIX_PATH=%QTDIR%" -DUSE_COTIRE=true "-DOPENSSL_ROOT_DIR=%OPENSSLDIR%"
       - cmd: cmake --build . -j %NUMBER_OF_PROCESSORS%
       - cmd: cpack
+      - ps: move *.exe* ../
 
     test_script:
       - cmd: ctest -V --no-compress-output -T Test
@@ -243,10 +246,10 @@ for:
       - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\ctest-to-junit-results.xml))
 
     artifacts:
-      - path: winbuild\mmapper-*-Windows-*.exe
+      - path: mmapper-*-Windows-*.exe
         name: MMapper Installer
 
-      - path: winbuild\mmapper-*-Windows-*.*.sha256
+      - path: mmapper-*-Windows-*.*.sha256
         name: MMapper Checksums
 
   # Windows (MinGW)
@@ -291,6 +294,7 @@ for:
       - cmd: cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -G %CMAKE_GENERATOR% "-DCMAKE_PREFIX_PATH=%QTDIR%" -DUSE_COTIRE=true
       - cmd: cmake --build . -j %NUMBER_OF_PROCESSORS%
       - cmd: cpack
+      - ps: move *.exe* ../
 
     test_script:
       - cmd: ctest -V --no-compress-output -T test
@@ -302,10 +306,10 @@ for:
       - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\ctest-to-junit-results.xml))
 
     artifacts:
-      - path: winbuild\mmapper-*-Windows-*.exe
+      - path: mmapper-*-Windows-*.exe
         name: MMapper Installer
 
-      - path: winbuild\mmapper-*-Windows-*.*.sha256
+      - path: mmapper-*-Windows-*.*.sha256
         name: MMapper Checksums
 
     on_failure:
@@ -336,6 +340,7 @@ for:
       - cmake .. -DCMAKE_PREFIX_PATH=/usr/local/opt/qt5/bin/ -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl\@1.1
       - make -j$(getconf _NPROCESSORS_ONLN)
       - cpack
+      - mv *.dmg* ../
 
     test_script:
       - ctest -V --no-compress-output -T test
@@ -347,8 +352,8 @@ for:
       - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\ctest-to-junit-results.xml))
 
     artifacts:
-      - path: build\mmapper-*-Mac-*.dmg
+      - path: mmapper-*-Mac-*.dmg
         name: MMapper Mac Package
 
-      - path: build\mmapper-*-Mac-*.*.sha256
+      - path: mmapper-*-Mac-*.*.sha256
         name: MMapper Checksums
