@@ -64,17 +64,13 @@ matrix:
       COMPILER: GCC
     - image: Visual Studio 2019
       COMPILER: VS2019
-    - image: Ubuntu2004
-      COMPILER: Clang
-    - image: Ubuntu2004
+    - image: Ubuntu1804
       COMPILER: MinGW
-    - image: Ubuntu2004
+    - image: Ubuntu1804
       COMPILER: VS2019
-    - image: Ubuntu1804
-      COMPILER: Clang
-    - image: Ubuntu1804
+    - image: Ubuntu2004
       COMPILER: MinGW
-    - image: Ubuntu1804
+    - image: Ubuntu2004
       COMPILER: VS2019
     - image: macos-mojave
       COMPILER: GCC
@@ -83,6 +79,10 @@ matrix:
     - image: macos-mojave
       COMPILER: VS2019
     # Following builds are disabled to prevent build timeouts
+    - image: Ubuntu1804
+      COMPILER: Clang
+    - image: Ubuntu2004
+      COMPILER: Clang
     - image: Ubuntu2004
       ARCH: arm
     - image: Ubuntu2004
