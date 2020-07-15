@@ -6,10 +6,28 @@ to represent the virtual world in user-friendly graphical environment. It acts
 as a proxy between a telnet client and a MUD server, being able to analyze game
 data in real time and show player's position in a map.
 
+### Windows
 {% for asset in site.github.latest_release.assets %}
 {% if asset.name == 'arda.mm2' or asset.name contains 'sha256' %}
-{% else %}
+{% elsif asset.name contains 'exe' %}
 [![Download {{ asset.name }}](https://img.shields.io/github/downloads/{{ site.github.owner_name }}/{{ site.github.repository_name }}/latest/{{ asset.name }}.svg)]({{ asset.browser_download_url }} "Download {{ asset.name }}")
+{% else %}
+{% endif %}
+{% endfor %}
+### Mac
+{% for asset in site.github.latest_release.assets %}
+{% if asset.name == 'arda.mm2' or asset.name contains 'sha256' %}
+{% elsif asset.name contains 'dmg' %}
+[![Download {{ asset.name }}](https://img.shields.io/github/downloads/{{ site.github.owner_name }}/{{ site.github.repository_name }}/latest/{{ asset.name }}.svg)]({{ asset.browser_download_url }} "Download {{ asset.name }}")
+{% else %}
+{% endif %}
+{% endfor %}
+### Linux
+{% for asset in site.github.latest_release.assets %}
+{% if asset.name == 'arda.mm2' or asset.name contains 'sha256' %}
+{% elsif asset.name contains 'AppImage' or asset.name contains 'deb' %}
+[![Download {{ asset.name }}](https://img.shields.io/github/downloads/{{ site.github.owner_name }}/{{ site.github.repository_name }}/latest/{{ asset.name }}.svg)]({{ asset.browser_download_url }} "Download {{ asset.name }}")
+{% else %}
 {% endif %}
 {% endfor %}
 

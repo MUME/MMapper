@@ -109,7 +109,7 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
                 if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac)
                     return R"(^mmapper\-.+Mac.+\.dmg$)";
                 if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux)
-                    return R"(^mmapper\-.+Linux.+\.deb$)"; // REVISIT: What about other distributions?
+                    return R"(^mmapper\-.+Linux.+\.(deb|AppImage)$)";
                 if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows)
                     return R"(^mmapper\-.+Windows.+\.exe$)";
                 abort();
