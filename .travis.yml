@@ -276,7 +276,7 @@ script:
       docker run --rm -v "$(pwd)":/root/mmapper $DOCKER_IMAGE bash -c "apt update && apt upgrade -y && apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev cmake libminiupnpc-dev && cd /root/mmapper && mkdir build && cd build && cmake .. -DTARGET_ARCHITECTURE=$TARGET_ARCHITECTURE -DCMAKE_BUILD_TYPE=Debug -DUSE_COTIRE=true && make -j$(getconf _NPROCESSORS_ONLN) && QT_QPA_PLATFORM=offscreen ctest -V && cpack"
       cd build
       export FILE=$(find . -type f -name *.deb)
-      curl --upload-file $FILE https://transfer.sh/$FILE
+      curl --progress-bar --upload-file "$FILE" "https://transfer.sh/$FILE"
     fi
 
 after_success:

@@ -120,7 +120,6 @@ for:
       - sh: cd build
       - sh: cmake .. -DUSE_COTIRE=true -DCMAKE_INSTALL_PREFIX=/usr
       - sh: make -j$(getconf _NPROCESSORS_ONLN) DESTDIR=appdir install
-      - sh: QT_QPA_PLATFORM=offscreen ctest -V --no-compress-output -T test
       # Build AppImage
       - sh: export VERSION=$(grep "SET(CPACK_PACKAGE_VERSION " CPackConfig.cmake | cut -d'"' -f 2)
       - sh: wget https://github.com/probonopd/linuxdeployqt/releases/download/6/linuxdeployqt-6-x86_64.AppImage
@@ -130,6 +129,7 @@ for:
       - sh: sha256sum $FILE | cut -d ' ' -f 1 > $FILE.sha256
 
     test_script:
+      - sh: ctest -V --no-compress-output -T test
       # Transform test results from ctest to junit format
       - ps: $XSLInputElement = New-Object System.Xml.Xsl.XslCompiledTransform
       - ps: $XSLInputElement.Load("https://raw.githubusercontent.com/rpavlik/jenkins-ctest-plugin/master/ctest-to-junit.xsl")
