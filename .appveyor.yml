@@ -145,7 +145,6 @@ for:
       - path: build\MMapper-*.AppImage.sha256
         name: MMapper Checksums
 
-for:
   # Ubuntu (Docker)
   -
     matrix:
