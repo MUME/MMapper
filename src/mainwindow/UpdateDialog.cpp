@@ -107,11 +107,11 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
         const auto platformRegex = QRegularExpression(
             []() -> const char * {
                 if constexpr (CURRENT_PLATFORM == PlatformEnum::Mac)
-                    return R"(^mmapper\-.+Mac.+\.dmg$)";
+                    return R"(^.+\.dmg$)";
                 if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux)
-                    return R"(^mmapper\-.+Linux.+\.(deb|AppImage)$)";
+                    return R"(^.+\.(deb|AppImage)$)";
                 if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows)
-                    return R"(^mmapper\-.+Windows.+\.exe$)";
+                    return R"(^.+\.exe$)";
                 abort();
             }(),
             QRegularExpression::PatternOption::CaseInsensitiveOption);
