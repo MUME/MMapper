@@ -243,8 +243,11 @@ install:
       #./vcpkg integrate install
       #./vcpkg install zlib openssl
       #cd ..
-      powershell -Command "iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/build-images/master/scripts/Windows/install_qt_module.ps1')) ; Install-QtComponent -Version '5.14.2' -Name 'msvc2017_64' -ExcludeDocs -ExcludeExamples ; ConfigureQtVersion 'C:\Qt' '5.14.2'"
+      powershell -Command "iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/build-images/master/scripts/Windows/install_qt_module.ps1'))"
+      powershell -Command "Install-QtComponent -Version '5.14.2' -Name 'msvc2017_64' -ExcludeDocs -ExcludeExamples"
+      powershell -Command "ConfigureQtVersion 'C:\Qt' '5.14.2'"
       export PATH=c/Qt/5.14.2/bin:$PATH
+      echo PATH=$PATH
     fi
   - '[[ "$TRAVIS_CPU_ARCH" != "amd64" ]] || [[ "$DOCKER" == "" ]] || docker run --rm --privileged multiarch/qemu-user-static:register --reset'
 
