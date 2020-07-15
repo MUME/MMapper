@@ -273,11 +273,7 @@ script:
   - '[[ "$SNAPCRAFT" == "" ]] || snapcraft snap --destructive-mode'
   - |
     if [ "$DOCKER" != "" ]; then
-      docker run --rm -v "$(pwd)":/root/mmapper $DOCKER_IMAGE bash -c "apt update -qq && apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev cmake ninja-build libminiupnpc-dev && cd /root/mmapper && mkdir -p build && cd build && cmake .. -G \"Ninja\" -DTARGET_ARCHITECTURE=$TARGET_ARCHITECTURE -DUSE_COTIRE=true && cmake --build . && QT_QPA_PLATFORM=offscreen ctest -V && cpack"
-      cd build
-      export FILE=$(find . -maxdepth 1 -type f -name *.deb | sed 's#.*/##')
-      echo $FILE
-      curl --progress-bar --upload-file $FILE https://transfer.sh/$FILE || exit 0
+      docker run --rm -v "$(pwd)":/root/mmapper $DOCKER_IMAGE bash -c "apt update -qq && apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev cmake ninja-build libminiupnpc-dev && cd /root/mmapper && mkdir -p build && cd build && cmake .. -G \"Ninja\" -DCMAKE_BUILD_TYPE=Debug -DTARGET_ARCHITECTURE=$TARGET_ARCHITECTURE -DUSE_COTIRE=true && cmake --build . && QT_QPA_PLATFORM=offscreen ctest -V && cpack"
     fi
 
 after_success:
