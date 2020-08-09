@@ -43,10 +43,10 @@ environment:
 
 image:
   # AppVeyor builds are ordered by the image list:
-  - Ubuntu1804
   - Visual Studio 2019
   - macos-mojave
   - Ubuntu2004
+  - Ubuntu1804
   - Previous Visual Studio 2019
 
 matrix:

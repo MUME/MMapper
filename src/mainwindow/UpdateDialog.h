@@ -49,6 +49,4 @@ public:
 
 private slots:
     void managerFinished(QNetworkReply *reply);
-    // FIXME: This hides the QDialog::accepted() signal.
-    void accepted();
 };
