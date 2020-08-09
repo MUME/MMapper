@@ -196,6 +196,8 @@ bool MumeXmlParser::element(const QByteArray &line)
                             sendToUser(::toQByteArrayLatin1(snoopToUser(os.str())));
                         }
                         m_promptFlags.reset(); // Don't trust god prompts
+                        if (!m_queue.isEmpty() && m_move != CommandEnum::LOOK) // Remove follows
+                            m_queue.dequeue();
                         if (m_move != CommandEnum::LOOK)
                             m_queue.enqueue(m_move);
                         move();
