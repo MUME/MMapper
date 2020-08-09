@@ -16,6 +16,8 @@
 #include "../configuration/configuration.h"
 #include "../global/Version.h"
 
+static constexpr const char *APPIMAGE_KEY = "APPIMAGE";
+
 CompareVersion::CompareVersion(const QString &versionStr) noexcept
 {
     static const QRegularExpression versionRx(R"(v?(\d+)\.(\d+)\.(\d+))");
@@ -62,6 +64,9 @@ UpdateDialog::UpdateDialog(QWidget *const parent)
     buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     buttonBox->button(QDialogButtonBox::Ok)->setText(tr("&Upgrade"));
     connect(buttonBox, &QDialogButtonBox::accepted, this, &UpdateDialog::accepted);
+    connect(buttonBox, &QDialogButtonBox::accepted, this, [this]() {
+        QDesktopServices::openUrl(downloadUrl);
+    });
     connect(buttonBox, &QDialogButtonBox::rejected, this, &UpdateDialog::reject);
 
     QGridLayout *mainLayout = new QGridLayout(this);
@@ -90,8 +95,7 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
     }
     const QString answer = reply->readAll();
     QJsonParseError error;
-    // REVISIT: Should this be latin1 or utf8?
-    const QJsonDocument doc = QJsonDocument::fromJson(answer.toLatin1(), &error);
+    const QJsonDocument doc = QJsonDocument::fromJson(answer.toUtf8(), &error);
     if (doc.isNull()) {
         qWarning() << error.errorString();
         return;
@@ -134,6 +138,15 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
                     const QString name = itemObj["name"].toString();
                     if (!name.contains(platformRegex) || !name.contains(environmentRegex))
                         continue;
+                    if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux) {
+                        // If MMapper is an AppImage then only select AppImage assets
+                        // Similarly, if MMapper is not an AppImage then skip AppImage assets
+                        const bool assetAppImage
+                            = name.contains("AppImage", Qt::CaseSensitivity::CaseInsensitive);
+                        const bool envAppImage = qgetenv(APPIMAGE_KEY) != nullptr;
+                        if ((envAppImage && !assetAppImage) || (!envAppImage && assetAppImage))
+                            continue;
+                    }
                     return itemObj["browser_download_url"].toString();
                 }
             }
@@ -149,7 +162,8 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
     const QString currentVersion = QLatin1String(getMMapperVersion());
     const CompareVersion latest(latestTag);
     static const CompareVersion current(currentVersion);
-    qDebug() << "Updater comparing: CURRENT=" << current << "LATEST=" << latest;
+    qInfo() << "Updater comparing: CURRENT=" << current << "LATEST=" << latest
+            << "URL=" << downloadUrl;
     if (current == latest) {
         text->setText("You are up to date!");
 
@@ -170,10 +184,4 @@ void UpdateDialog::managerFinished(QNetworkReply *reply)
         activateWindow();
     }
     reply->deleteLater();
-}
-
-void UpdateDialog::accepted()
-{
-    if (QDesktopServices::openUrl(downloadUrl))
-        close();
 }
