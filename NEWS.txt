@@ -1,4 +1,21 @@
 ================================
+MMapper 20.08.0 (August 9, 2020)
+================================
+
+New features:
+ - MMapper can now automatically log play sessions to disk
+ - Reworked underwater terrain sectors to be more identifiable
+ - Flow flags now predict the movement into the next river room
+ - Group Manager pulls health, mana, and move information from 'info' as well
+ - AppImage Linux binaries are now packaged
+
+Bug fixes:
+ - Increased draw distance for maps with many layers
+ - Fixed setting door names using the CLI
+ - Reduced the default client font size on Linux/Windows
+ - Fixed bug where twiddlers were not being prompt detected
+
+================================
 MMapper 20.05.0 (May 20, 2020)
 ================================
 
