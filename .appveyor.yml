@@ -32,11 +32,11 @@ environment:
 
     - ARCH: x86
       COMPILER: VS2019
-      QTDIR: C:\Qt\5.14\msvc2017
+      QTDIR: C:\Qt\5.15\msvc2019
 
     - ARCH: x64
       COMPILER: VS2019
-      QTDIR: C:\Qt\5.14\msvc2017_64
+      QTDIR: C:\Qt\5.15\msvc2019_64
 
     - ARCH: x64
       COMPILER: Clang
