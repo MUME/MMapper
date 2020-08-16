@@ -48,6 +48,7 @@ static constexpr const uint8_t OPT_NAWS = 31;
 static constexpr const uint8_t OPT_CHARSET = 42;
 static constexpr const uint8_t OPT_COMPRESS2 = 86;
 static constexpr const uint8_t OPT_GMCP = 201;
+static constexpr const uint8_t OPT_MSSP = 70;
 
 // telnet SB suboption types
 static constexpr const uint8_t TNSB_IS = 0;

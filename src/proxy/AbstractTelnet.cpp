@@ -58,6 +58,7 @@ static QString telnetOptionName(uint8_t opt)
         CASE(CHARSET);
         CASE(COMPRESS2);
         CASE(GMCP);
+        CASE(MSSP);
     }
     return QString::asprintf("%u", opt);
 #undef CASE
@@ -416,7 +417,8 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
                     if ((option == OPT_SUPPRESS_GA) || (option == OPT_STATUS)
                         || (option == OPT_TERMINAL_TYPE) || (option == OPT_NAWS)
                         || (option == OPT_ECHO) || (option == OPT_CHARSET)
-                        || (option == OPT_COMPRESS2 && !NO_ZLIB) || (option == OPT_GMCP))
+                        || (option == OPT_COMPRESS2 && !NO_ZLIB) || (option == OPT_GMCP)
+                        || (option == OPT_MSSP))
                     // these options are supported
                     {
                         sendTelnetOption(TN_DO, option);
@@ -638,6 +640,12 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
             } catch (const std::exception &e) {
                 qWarning() << "Corrupted GMCP received" << payload << e.what();
             }
+        }
+        break;
+
+    case OPT_MSSP:
+        if (hisOptionState[OPT_MSSP]) {
+            qDebug() << "Received MSSP message" << payload;
         }
         break;
 
