@@ -552,8 +552,8 @@ void MainWindow::createActions()
     mumeWebsiteAct = new QAction(tr("&Website"), this);
     connect(mumeWebsiteAct, &QAction::triggered, this, &MainWindow::openMumeWebsite);
     voteAct = new QAction(QIcon::fromTheme("applications-games"), tr("V&ote for Mume"), this);
-    voteAct->setStatusTip(tr("Please vote for MUME on \"The Mud Connector\""));
-    connect(voteAct, &QAction::triggered, this, &MainWindow::voteForMUMEOnTMC);
+    voteAct->setStatusTip(tr("Please vote for MUME on \"The Mud Connector\" and \"Top Mud Sites\""));
+    connect(voteAct, &QAction::triggered, this, &MainWindow::voteForMUME);
     mumeWebsiteAct = new QAction(tr("&Website"), this);
     connect(mumeWebsiteAct, &QAction::triggered, this, &MainWindow::openMumeWebsite);
     mumeForumAct = new QAction(tr("&Forum"), this);
@@ -2064,10 +2064,11 @@ void MainWindow::onCheckForUpdate()
     m_updateDialog->open();
 }
 
-void MainWindow::voteForMUMEOnTMC()
+void MainWindow::voteForMUME()
 {
     QDesktopServices::openUrl(QUrl(
         "https://www.mudconnect.com/cgi-bin/search.cgi?mode=mud_listing&mud=MUME+-+Multi+Users+In+Middle+Earth"));
+    QDesktopServices::openUrl(QUrl("http://www.topmudsites.com/vote-MUME.html"));
 }
 
 void MainWindow::openMumeWebsite()

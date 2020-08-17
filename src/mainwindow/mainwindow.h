@@ -130,7 +130,7 @@ public slots:
     void groupNetworkStatus(bool toggle);
 
     void onCheckForUpdate();
-    void voteForMUMEOnTMC();
+    void voteForMUME();
     void openMumeWebsite();
     void openMumeForum();
     void openMumeWiki();
