@@ -501,13 +501,14 @@ bool JsonMapStorage::saveData(bool baseMapOnly)
     QDir roomIndexDir(QFileInfo(destDir, "roomindex").filePath());
     QDir zoneDir(QFileInfo(destDir, "zone").filePath());
     try {
-        if (!saveDir.mkdir("v1")) {
+        QDir dir;
+        if (!dir.mkpath(destDir.path())) {
             throw std::runtime_error("error creating dir v1");
         }
-        if (!destDir.mkdir("roomindex")) {
+        if (!dir.mkpath(roomIndexDir.path())) {
             throw std::runtime_error("error creating dir v1/roomindex");
         }
-        if (!destDir.mkdir("zone")) {
+        if (!dir.mkpath(zoneDir.path())) {
             throw std::runtime_error("error creating dir v1/zone");
         }
 
