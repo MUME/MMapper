@@ -59,6 +59,7 @@ static QString telnetOptionName(uint8_t opt)
         CASE(COMPRESS2);
         CASE(GMCP);
         CASE(MSSP);
+        CASE(LINEMODE);
     }
     return QString::asprintf("%u", opt);
 #undef CASE
@@ -70,7 +71,7 @@ static QString telnetSubnegName(uint8_t opt)
         return #x
     switch (opt) {
         CASE(IS);
-        CASE(SEND); // TODO: conflict between SEND and REQUEST
+        CASE(SEND); // TODO: conflict between SEND, REQUEST, EDIT, MODE
         CASE(ACCEPTED);
         CASE(REJECTED);
         CASE(TTABLE_IS);
@@ -296,6 +297,18 @@ void AbstractTelnet::sendGmcpMessage(const GmcpMessage &msg)
     sendRawData(s);
 }
 
+void AbstractTelnet::sendLineModeEdit()
+{
+    if (debug)
+        qDebug() << "Sending Linemode EDIT";
+    TelnetFormatter s;
+    s.addSubnegBegin(OPT_LINEMODE);
+    s.addRaw(TNSB_MODE);
+    s.addRaw(TNSB_EDIT);
+    s.addSubnegEnd();
+    sendRawData(s);
+}
+
 void AbstractTelnet::sendTerminalType(const QByteArray &terminalType)
 {
     if (debug)
@@ -418,13 +431,15 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
                         || (option == OPT_TERMINAL_TYPE) || (option == OPT_NAWS)
                         || (option == OPT_ECHO) || (option == OPT_CHARSET)
                         || (option == OPT_COMPRESS2 && !NO_ZLIB) || (option == OPT_GMCP)
-                        || (option == OPT_MSSP))
+                        || (option == OPT_MSSP) || (option == OPT_LINEMODE))
                     // these options are supported
                     {
                         sendTelnetOption(TN_DO, option);
                         hisOptionState[option] = true;
                         if (option == OPT_ECHO) {
                             receiveEchoMode(false);
+                        } else if (option == OPT_LINEMODE) {
+                            sendLineModeEdit();
                         }
                     } else {
                         sendTelnetOption(TN_DONT, option);
@@ -463,9 +478,11 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
             } else if (!myOptionState[option])
             // only if the option is currently disabled
             {
+                // Ignore attempts to enable OPT_ECHO
                 if ((option == OPT_SUPPRESS_GA) || (option == OPT_STATUS)
-                    || (option == OPT_TERMINAL_TYPE) || (option == OPT_NAWS) || (option == OPT_ECHO)
-                    || (option == OPT_CHARSET) || (option == OPT_GMCP)) {
+                    || (option == OPT_TERMINAL_TYPE) || (option == OPT_NAWS)
+                    || (option == OPT_CHARSET) || (option == OPT_GMCP)
+                    || (option == OPT_LINEMODE)) {
                     sendTelnetOption(TN_WILL, option);
                     myOptionState[option] = true;
                     announcedState[option] = true;
@@ -491,6 +508,8 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
 
             } else if (myOptionState[OPT_GMCP] && option == OPT_GMCP) {
                 onGmcpEnabled();
+            } else if (myOptionState[OPT_LINEMODE] && option == OPT_LINEMODE) {
+                sendLineModeEdit();
             }
             break;
         case TN_DONT:

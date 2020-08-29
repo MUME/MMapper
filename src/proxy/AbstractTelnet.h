@@ -45,22 +45,24 @@ static constexpr const uint8_t OPT_STATUS = 5;
 static constexpr const uint8_t OPT_TIMING_MARK = 6;
 static constexpr const uint8_t OPT_TERMINAL_TYPE = 24;
 static constexpr const uint8_t OPT_NAWS = 31;
+static constexpr const uint8_t OPT_LINEMODE = 34;
 static constexpr const uint8_t OPT_CHARSET = 42;
+static constexpr const uint8_t OPT_MSSP = 70;
 static constexpr const uint8_t OPT_COMPRESS2 = 86;
 static constexpr const uint8_t OPT_GMCP = 201;
-static constexpr const uint8_t OPT_MSSP = 70;
 
 // telnet SB suboption types
 static constexpr const uint8_t TNSB_IS = 0;
 static constexpr const uint8_t TNSB_SEND = 1;
 static constexpr const uint8_t TNSB_REQUEST = 1;
+static constexpr const uint8_t TNSB_MODE = 1;
+static constexpr const uint8_t TNSB_EDIT = 1;
 static constexpr const uint8_t TNSB_ACCEPTED = 2;
 static constexpr const uint8_t TNSB_REJECTED = 3;
 static constexpr const uint8_t TNSB_TTABLE_IS = 4;
 static constexpr const uint8_t TNSB_TTABLE_REJECTED = 5;
 static constexpr const uint8_t TNSB_TTABLE_ACK = 6;
 static constexpr const uint8_t TNSB_TTABLE_NAK = 7;
-
 struct AppendBuffer : public QByteArray
 {
     AppendBuffer(QByteArray &&rhs)
@@ -118,6 +120,8 @@ protected:
     void sendTerminalTypeRequest();
 
     void sendGmcpMessage(const GmcpMessage &msg);
+
+    void sendLineModeEdit();
 
     void requestTelnetOption(unsigned char type, unsigned char subnegBuffer);
 
