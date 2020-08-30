@@ -22,6 +22,8 @@ void UserTelnet::onConnected()
     requestTelnetOption(TN_DO, OPT_CHARSET);
     // Most clients expect the server (i.e. MMapper) to send IAC WILL GMCP
     requestTelnetOption(TN_WILL, OPT_GMCP);
+    // Request permission to replace IAC GA with IAC EOR
+    requestTelnetOption(TN_WILL, OPT_EOR);
 }
 
 void UserTelnet::onAnalyzeUserStream(const QByteArray &data)

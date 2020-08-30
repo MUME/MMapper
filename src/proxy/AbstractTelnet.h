@@ -21,6 +21,7 @@
 #include "TextCodec.h"
 
 // telnet command codes (prefixed with TN_ to prevent duplicit #defines
+static constexpr const uint8_t TN_EOR = 239;
 static constexpr const uint8_t TN_SE = 240;
 static constexpr const uint8_t TN_NOP = 241;
 static constexpr const uint8_t TN_DM = 242;
@@ -44,6 +45,7 @@ static constexpr const uint8_t OPT_SUPPRESS_GA = 3;
 static constexpr const uint8_t OPT_STATUS = 5;
 static constexpr const uint8_t OPT_TIMING_MARK = 6;
 static constexpr const uint8_t OPT_TERMINAL_TYPE = 24;
+static constexpr const uint8_t OPT_EOR = 25;
 static constexpr const uint8_t OPT_NAWS = 31;
 static constexpr const uint8_t OPT_LINEMODE = 34;
 static constexpr const uint8_t OPT_CHARSET = 42;

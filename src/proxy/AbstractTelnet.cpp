@@ -38,6 +38,7 @@ static QString telnetCommandName(uint8_t cmd)
         CASE(DO);
         CASE(DONT);
         CASE(IAC);
+        CASE(EOR);
     }
     return QString::asprintf("%u", cmd);
 #undef CASE
@@ -60,6 +61,7 @@ static QString telnetOptionName(uint8_t opt)
         CASE(GMCP);
         CASE(MSSP);
         CASE(LINEMODE);
+        CASE(EOR);
     }
     return QString::asprintf("%u", opt);
 #undef CASE
@@ -219,9 +221,12 @@ void AbstractTelnet::submitOverTelnet(const QByteArray &data, const bool goAhead
     }
 
     // Add IAC GA unless they are suppressed
-    if (goAhead && !hisOptionState[OPT_SUPPRESS_GA]) {
+    if (goAhead && (!myOptionState[OPT_SUPPRESS_GA] || myOptionState[OPT_EOR])) {
         outdata += TN_IAC;
-        outdata += TN_GA;
+        if (myOptionState[OPT_EOR])
+            outdata += TN_EOR;
+        else
+            outdata += TN_GA;
     }
 
     // data ready, send it
@@ -256,8 +261,23 @@ void AbstractTelnet::sendTelnetOption(unsigned char type, unsigned char option)
 
 void AbstractTelnet::requestTelnetOption(unsigned char type, unsigned char option)
 {
-    myOptionState[option] = true;
-    announcedState[option] = true;
+    // Set my option state correctly
+    if (type == TN_DO || type == TN_DONT) {
+        // He already announced or accepted this option so ignore
+        if (heAnnouncedState[option] || hisOptionState[option])
+            return;
+
+        myOptionState[option] = (type == TN_DO);
+    }
+
+    // Remember if we are annnouncing this
+    if (type == TN_WILL || type == TN_WONT) {
+        // I already announced or accepted this option so ignore
+        if (announcedState[option] || myOptionState[option])
+            return;
+
+        announcedState[option] = true;
+    }
     sendTelnetOption(type, option);
 }
 
@@ -395,7 +415,7 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
     case 1:
         break;
     case 2:
-        if (ch != TN_GA && debug)
+        if (ch != TN_GA && ch != TN_EOR && debug)
             qDebug() << "* Processing Telnet Command:" << telnetCommandName(ch);
 
         switch (ch) {
@@ -403,6 +423,7 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
             sendAreYouThere();
             break;
         case TN_GA:
+        case TN_EOR:
             recvdGA = true; // signal will be emitted later
             break;
         }
@@ -431,7 +452,7 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
                         || (option == OPT_TERMINAL_TYPE) || (option == OPT_NAWS)
                         || (option == OPT_ECHO) || (option == OPT_CHARSET)
                         || (option == OPT_COMPRESS2 && !NO_ZLIB) || (option == OPT_GMCP)
-                        || (option == OPT_MSSP) || (option == OPT_LINEMODE))
+                        || (option == OPT_MSSP) || (option == OPT_LINEMODE) || (option == OPT_EOR))
                     // these options are supported
                     {
                         sendTelnetOption(TN_DO, option);
@@ -481,8 +502,8 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
                 // Ignore attempts to enable OPT_ECHO
                 if ((option == OPT_SUPPRESS_GA) || (option == OPT_STATUS)
                     || (option == OPT_TERMINAL_TYPE) || (option == OPT_NAWS)
-                    || (option == OPT_CHARSET) || (option == OPT_GMCP)
-                    || (option == OPT_LINEMODE)) {
+                    || (option == OPT_CHARSET) || (option == OPT_GMCP) || (option == OPT_LINEMODE)
+                    || (option == OPT_EOR)) {
                     sendTelnetOption(TN_WILL, option);
                     myOptionState[option] = true;
                     announcedState[option] = true;
