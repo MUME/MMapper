@@ -7,6 +7,7 @@
 #include <cassert>
 #include <cstdint>
 #include <optional>
+#include <stdexcept>
 #include <unordered_map>
 #include <vector>
 #include <QByteArray>
