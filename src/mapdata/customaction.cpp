@@ -240,9 +240,9 @@ void ConnectToNeighbours::exec(const RoomId cid)
     if (Room *const center = roomIndex(cid)) {
         Coordinate other(0, -1, 0);
         other += center->getPosition();
-        connectRooms(center, other, ExitDirEnum::NORTH, cid);
-        other.y += 2;
         connectRooms(center, other, ExitDirEnum::SOUTH, cid);
+        other.y += 2;
+        connectRooms(center, other, ExitDirEnum::NORTH, cid);
         other.y--;
         other.x--;
         connectRooms(center, other, ExitDirEnum::WEST, cid);
