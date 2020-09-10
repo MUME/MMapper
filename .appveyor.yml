@@ -261,7 +261,7 @@ for:
     clone_folder: c:\Build\MMapper
 
     init:
-      - cmd: if %COMPILER%==MinGW set CMAKE_GENERATOR="MSYS Makefiles"
+      - cmd: if %COMPILER%==MinGW set CMAKE_GENERATOR="Ninja"
       - cmd: git config --global core.autocrlf input
       - cmd: echo NUMBER_OF_PROCESSORS=%NUMBER_OF_PROCESSORS%
       - cmd: echo PROCESSOR_IDENTIFIER=%PROCESSOR_IDENTIFIER%
@@ -277,8 +277,8 @@ for:
       # Install MingW
       - cmd: if %COMPILER%==MinGW set "PATH=C:/msys64/usr/bin;%PATH%"
       - cmd: if %COMPILER%==MinGW pacman -Su --noconfirm --noprogressbar
-      - cmd: if %COMPILER%==MinGW if %ARCH%==x86 pacman -Sy --noconfirm --noprogressbar --needed mingw-w64-i686-toolchain mingw-w64-i686-miniupnpc
-      - cmd: if %COMPILER%==MinGW if %ARCH%==x64 pacman -Sy --noconfirm --noprogressbar --needed mingw-w64-x86_64-toolchain mingw-w64-x86_64-miniupnpc
+      - cmd: if %COMPILER%==MinGW if %ARCH%==x86 pacman -Sy --noconfirm --noprogressbar --needed mingw-w64-i686-toolchain mingw-w64-i686-miniupnpc ninja-build
+      - cmd: if %COMPILER%==MinGW if %ARCH%==x64 pacman -Sy --noconfirm --noprogressbar --needed mingw-w64-x86_64-toolchain mingw-w64-x86_64-miniupnpc ninja-build
 
         before_build:
       - cmd: if %COMPILER%==MinGW if %ARCH%==x86 set "PATH=C:/msys64/mingw32/bin;%PATH%"
