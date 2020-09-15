@@ -1,5 +1,6 @@
 winbuild/
 build/
+out/
 **CMakeFiles/
 **.bak
 *.user
@@ -11,6 +12,8 @@ Makefile
 **.mm2
 **/.DS_Store
 .idea
+.vs
+CMakeSettings.json
 
 # snapcraft
 parts/
