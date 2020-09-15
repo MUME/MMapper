@@ -30,10 +30,6 @@ else()
         set(ZLIB_STATIC_LIBRARY_NAME z)
         message(FATAL_ERROR "zlib NOT found: use `-DWITH_ZLIB=OFF` to build without old map backwards compatability")
     endif()
-    string(TOUPPER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_UPPER)
-    if(MSVC AND CMAKE_BUILD_TYPE_UPPER MATCHES "^(DEBUG|RELWITHDEBINFO)$")
-      set(ZLIB_STATIC_LIBRARY_NAME "${ZLIB_STATIC_LIBRARY_NAME}d")
-    endif()
     message(STATUS "Could not find system zlib; building as a static library")
     include(ExternalProject)
     ExternalProject_Add(zlib
@@ -43,7 +39,7 @@ else()
         SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/zlib-src"
         BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/zlib-build"
         INSTALL_COMMAND ""
-        CMAKE_ARGS "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+        CMAKE_ARGS "-DCMAKE_BUILD_TYPE=Release"
         CMAKE_CACHE_ARGS -DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}
                          -DBUILD_SHARED_LIBS:BOOL==OFF
 
