@@ -188,11 +188,28 @@ namespace utils {
 // Use this if you're tired of having to use memcmp()
 // to avoid compiler complaining about float comparison.
 template<typename T>
-bool equals(const T &a, const T &b)
+NODISCARD constexpr bool equals(const T a, const T b)
 {
-    if constexpr (std::is_floating_point_v<T>)
-        return std::memcmp(&a, &b, sizeof(T)) == 0;
-    else
+    if constexpr (std::is_floating_point_v<T>) {
+#ifdef _MSC_VER
+#pragma warning(push, 0)
+#elif defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wfloat-equal"
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
         return a == b;
+#ifdef _MSC_VER
+#pragma warning(pop)
+#elif defined(__clang__)
+#pragma clang diagnostic pop
+#else
+#pragma GCC diagnostic pop
+#endif
+    } else {
+        return a == b;
+    }
 }
 } // namespace utils

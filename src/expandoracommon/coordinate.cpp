@@ -19,7 +19,7 @@ Coordinate2i Coordinate2f::truncate() const
 
 Coordinate2f Coordinate2f::operator/(const float f) const
 {
-    if (f == 0.f)
+    if (utils::equals(f, 0.f))
         throw std::runtime_error("division by zero");
 
     if (std::isnan(f))

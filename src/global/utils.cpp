@@ -66,3 +66,8 @@ std::optional<int> utils::getEnvInt(const char *const key)
 
     return value;
 }
+
+static_assert(!utils::equals(0.0, 1.0));
+static_assert(utils::equals(1.0, 1.0));
+static_assert(utils::equals(0.0, 0.0));
+static_assert(utils::equals(0.0, -0.0));
