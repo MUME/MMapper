@@ -257,14 +257,18 @@ void ConnectToNeighbours::connectRooms(Room *const center,
                                        const RoomId cid)
 {
     if (Room *const room = map().get(otherPos)) {
+        const auto &cExit = center->getExitsList()[dir];
+        const auto cFirstOut = cExit.isExit() && cExit.outIsEmpty();
         const ExitDirEnum oDir = opposite(dir);
         const auto &oExit = room->getExitsList()[oDir];
-        // REVISIT: Should this logic happen within addInOutExit() ?
-        if (oExit.isExit())
-            room->addInOutExit(oDir, cid);
-        const auto &cExit = center->getExitsList()[dir];
-        if (cExit.isExit())
+        const auto oFirstOut = oExit.isExit() && oExit.outIsEmpty();
+        if (cFirstOut && oFirstOut) { // Add a two way exit
             center->addInOutExit(dir, room->getId());
+            room->addInOutExit(oDir, cid);
+        } else if (cFirstOut && !oFirstOut) { // Add a one way exit
+            center->addOutExit(dir, room->getId());
+            room->addInExit(oDir, cid);
+        }
     }
 }
 
