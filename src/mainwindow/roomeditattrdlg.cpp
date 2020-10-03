@@ -1020,6 +1020,16 @@ void RoomEditAttrDlg::exitFlagsListItemChanged(QListWidgetItem *const item)
     auto dir = getSelectedExit();
     switch (item->checkState()) {
     case Qt::Unchecked:
+        if (flags.isExit()) {
+            // Remove connections when the exit is removed
+            const auto &from = getSelectedRoom()->getId();
+            const auto &e = getSelectedRoom()->exit(dir);
+            const auto outgoing = e.getOutgoing();
+            for (const auto &to : outgoing) {
+                m_mapData->execute(std::make_unique<RemoveOneWayExit>(from, to, dir),
+                                   m_roomSelection);
+            }
+        }
         updateCommon(std::make_unique<ModifyExitFlags>(flags, dir, FlagModifyModeEnum::UNSET));
         break;
     case Qt::PartiallyChecked:
