@@ -61,6 +61,10 @@ Room *AddExit::tryExec()
         return nullptr;
     }
 
+    auto &ef = rfrom->getExitFlags(dir);
+    if (!ef.isExit())
+        rfrom->setExitFlags(dir, ef | ExitFlagEnum::EXIT);
+
     rfrom->addOutExit(dir, to);
     rto->addInExit(opposite(dir), from);
     return rfrom;
