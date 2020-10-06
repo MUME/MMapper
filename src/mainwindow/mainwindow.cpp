@@ -1290,6 +1290,10 @@ void MainWindow::newRoomSelection(const SigRoomSelection &rs)
         m_roomSelection.reset();
 
     if (m_roomSelection != nullptr) {
+        statusBar()->showMessage(QString("Selection: %1 room%2")
+                                     .arg(m_roomSelection->size())
+                                     .arg((m_roomSelection->size() != 1) ? "s" : ""),
+                                 5000);
         selectedRoomActGroup->setEnabled(true);
         if (m_roomSelection->size() == 1) {
             forceRoomAct->setEnabled(true);
@@ -1310,9 +1314,15 @@ void MainWindow::newInfoMarkSelection(InfoMarkSelection *const is)
     m_infoMarkSelection = (is != nullptr) ? is->shared_from_this() : nullptr;
     infoMarkActions.infoMarkGroup->setEnabled(m_infoMarkSelection != nullptr);
 
-    if (m_infoMarkSelection && m_infoMarkSelection->empty()) {
-        // Create a new infomark if its an empty selection
-        onEditInfoMarkSelection();
+    if (m_infoMarkSelection != nullptr) {
+        statusBar()->showMessage(QString("Selection: %1 mark%2")
+                                     .arg(m_infoMarkSelection->size())
+                                     .arg((m_infoMarkSelection->size() != 1) ? "s" : ""),
+                                 5000);
+        if (m_infoMarkSelection->empty()) {
+            // Create a new infomark if its an empty selection
+            onEditInfoMarkSelection();
+        }
     }
 }
 
