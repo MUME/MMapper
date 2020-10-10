@@ -1024,8 +1024,7 @@ void RoomEditAttrDlg::exitFlagsListItemChanged(QListWidgetItem *const item)
             // Remove connections when the exit is removed
             const auto &from = getSelectedRoom()->getId();
             const auto &e = getSelectedRoom()->exit(dir);
-            const auto outgoing = e.getOutgoing();
-            for (const auto &to : outgoing) {
+            for (const auto &to : e.outClone()) {
                 m_mapData->execute(std::make_unique<RemoveOneWayExit>(from, to, dir),
                                    m_roomSelection);
             }
