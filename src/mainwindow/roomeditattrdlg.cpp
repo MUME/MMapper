@@ -587,12 +587,11 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
 
         exitsFrame->setEnabled(false);
 
-        // REVISIT: Check state of all entries and set it if they all match that state
-        rideUndefRadioButton->setChecked(true);
-        alignUndefRadioButton->setChecked(true);
-        portUndefRadioButton->setChecked(true);
-        lightUndefRadioButton->setChecked(true);
-        sundeathUndefRadioButton->setChecked(true);
+        rideGroupBox->setChecked(false);
+        alignGroupBox->setChecked(false);
+        teleportGroupBox->setChecked(false);
+        lightGroupBox->setChecked(false);
+        sunGroupBox->setChecked(false);
 
         for (const auto &x : loadListItems) {
             x->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsTristate);
