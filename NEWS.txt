@@ -1,4 +1,24 @@
 ================================
+MMapper 20.10.0 (October 13, 2020)
+================================
+
+New features:
+ - Exits are now automatically generated during "Create New Connection" modes
+ - Connections are now automatically deleted when a room exit is removed
+ - Introduced End of Record (EOR) telnet protocol for Mudlet
+ - Added Linemode (RFC 1116) telnet protocol for Putty and BSD Telnet
+ - Selecting rooms and marks now displays the total count
+ 
+Bug fixes:
+ - Fixed 'Connect room(s) to its neighbour rooms' to connect north/south and one-way exits
+ - Selecting the "Undefined" radio buttons when editing multiple rooms now works
+ - Connection dots when selecting outgoing exits are now correctly displayed
+ - Fixed directory creation when exporting a web map for 'Play MUME'
+ - Added Top Mud Sites link to '_vote' command
+ - Suppress Go Ahead (SGA) telnet protocol now actually works
+ - Updated links to use HTTPS
+
+================================
 MMapper 20.08.0 (August 9, 2020)
 ================================
 
