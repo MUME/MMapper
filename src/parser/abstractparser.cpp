@@ -742,7 +742,7 @@ static QString compressDirections(QString original)
         } else {
             ans += " (total:";
             addNumber(delta.x, 'e', 'w');
-            addNumber(delta.y, 's', 'n');
+            addNumber(delta.y, 'n', 's');
             addNumber(delta.z, 'u', 'd');
             ans += ")";
         }
