@@ -17,7 +17,8 @@
 static constexpr const auto default_updateFlags = RoomUpdateFlags{}; /* none */
 static constexpr const auto mesh_updateFlags = RoomUpdateFlags{RoomUpdateEnum::Mesh};
 static constexpr const auto key_updateFlags = RoomUpdateFlags{RoomUpdateEnum::NodeLookupKey};
-static constexpr const auto borked_updateFlags = RoomUpdateFlags{RoomUpdateEnum::Borked};
+static constexpr const auto borked_updateFlags = RoomUpdateFlags{RoomUpdateEnum::Borked}
+                                                 | RoomUpdateEnum::Mesh;
 
 static constexpr auto RoomName_updateFlags = key_updateFlags | RoomUpdateEnum::Name;
 static constexpr auto RoomStaticDesc_updateFlags = RoomUpdateFlags{RoomUpdateEnum::NodeLookupKey}
