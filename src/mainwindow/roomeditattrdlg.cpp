@@ -581,8 +581,8 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         roomDescriptionTextEdit->clear();
         roomDescriptionTextEdit->setEnabled(false);
 
-        updatedCheckBox->setCheckable(false);
-        updatedCheckBox->setText("");
+        updatedCheckBox->setCheckable(true);
+        updatedCheckBox->setText("Online update status has not been changed.");
 
         roomNoteTextEdit->clear();
         roomNoteTextEdit->setEnabled(false);
