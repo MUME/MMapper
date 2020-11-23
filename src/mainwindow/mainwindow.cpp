@@ -364,6 +364,9 @@ void MainWindow::readSettings()
             qWarning() << "Unable to restore window geometry";
         if (!restoreState(settings.windowState))
             qWarning() << "Unable to restore toolbars and dockwidgets state";
+
+        // Check if the window was moved to a screen with a different DPI
+        getCanvas()->screenChanged();
     }
 
     m_dockDialogClient->setHidden(settings.noClientPanel);
