@@ -191,7 +191,7 @@ void Mmapper2Group::setCharacterRoomId(RoomId roomId)
     static const constexpr auto SNARED_MESSAGE_WINDOW = 1;
     CharacterAffects &affects = getGroup()->getSelf()->affects;
     if (affects.contains(CharacterAffectEnum::SNARED)) {
-        const int64_t now = QDateTime::QDateTime::currentDateTimeUtc().toTime_t();
+        const int64_t now = QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
         const auto lastSeen = affectLastSeen.value(CharacterAffectEnum::SNARED, 0);
         const bool noRecentSnareMessage = (now - lastSeen) > SNARED_MESSAGE_WINDOW;
         if (noRecentSnareMessage) {
@@ -354,7 +354,7 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
     if (!wasRiding && isRiding) {
         affects.insert(CharacterAffectEnum::RIDING);
         affectLastSeen.insert(CharacterAffectEnum::RIDING,
-                              QDateTime::QDateTime::currentDateTimeUtc().toTime_t());
+                              QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch());
 
     } else if (wasRiding && !isRiding) {
         affects.remove(CharacterAffectEnum::RIDING);
@@ -488,7 +488,7 @@ void Mmapper2Group::updateCharacterAffect(const CharacterAffectEnum affect, cons
         return;
 
     if (enable)
-        affectLastSeen.insert(affect, QDateTime::QDateTime::currentDateTimeUtc().toTime_t());
+        affectLastSeen.insert(affect, QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch());
 
     CharacterAffects &affects = getGroup()->getSelf()->affects;
     if (enable == affects.contains(affect))
@@ -511,7 +511,7 @@ void Mmapper2Group::onAffectTimeout()
 
     bool removedAtLeastOneAffect = false;
     CharacterAffects &affects = getGroup()->getSelf()->affects;
-    const int64_t now = QDateTime::QDateTime::currentDateTimeUtc().toTime_t();
+    const int64_t now = QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
     for (const CharacterAffectEnum affect : affectLastSeen.keys()) {
         const bool expired = [this, &affect, &now]() {
             const auto lastSeen = affectLastSeen.value(affect, 0);

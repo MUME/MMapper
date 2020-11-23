@@ -221,6 +221,9 @@ endif()
 if(MMAPPER_IS_DEBUG)
     set(CMAKE_VERBOSE_MAKEFILE true)
 
+    # disable all the deprecated APIs in Qt <= 5.9
+    add_compile_options(-DQT_DISABLE_DEPRECATED_BEFORE=0x050900)
+
     if(NOT MSVC)
         # common options for gcc and clang
         add_compile_options(-O0)

@@ -91,7 +91,7 @@ MumeClock::MumeClock(QObject *parent)
 
 MumeMoment MumeClock::getMumeMoment()
 {
-    const int64_t t = QDateTime::currentDateTimeUtc().toTime_t();
+    const int64_t t = QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
     return MumeMoment::sinceMumeEpoch(t - m_mumeStartEpoch);
 }
 
@@ -107,7 +107,7 @@ MumeMoment MumeClock::getMumeMoment(const int64_t secsSinceUnixEpoch)
 
 void MumeClock::parseMumeTime(const QString &mumeTime)
 {
-    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toTime_t();
+    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
     parseMumeTime(mumeTime, secsSinceEpoch);
 }
 
@@ -198,7 +198,7 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
 
 void MumeClock::parseWeather(const QString &str)
 {
-    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toTime_t();
+    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
     parseWeather(str, secsSinceEpoch);
 }
 
@@ -281,7 +281,7 @@ MumeMoment &MumeClock::unknownTimeTick(MumeMoment &moment)
 
 void MumeClock::parseClockTime(const QString &clockTime)
 {
-    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toTime_t();
+    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
     parseClockTime(clockTime, secsSinceEpoch);
 }
 
@@ -342,7 +342,7 @@ static const char *getOrdinalSuffix(const int day)
 
 MumeClockPrecisionEnum MumeClock::getPrecision()
 {
-    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toTime_t();
+    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
     if (m_precision >= MumeClockPrecisionEnum::HOUR
         && secsSinceEpoch - m_lastSyncEpoch > ONE_RL_DAY_IN_SECONDS) {
         m_precision = MumeClockPrecisionEnum::DAY;

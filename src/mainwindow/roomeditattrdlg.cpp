@@ -251,7 +251,7 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
     installWidgets(mobListItems,
                    "mob room flags",
                    *mobFlagsListWidget,
-                   Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsTristate);
+                   Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsAutoTristate);
 
     for (const auto flag : ALL_LOAD_FLAGS)
         loadListItems[flag] = new RoomListWidgetItem(getIcon(flag),
@@ -260,7 +260,7 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
     installWidgets(loadListItems,
                    "load list",
                    *loadFlagsListWidget,
-                   Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsTristate);
+                   Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsAutoTristate);
 
     for (const auto flag : ALL_EXIT_FLAGS)
         exitListItems[flag] = new RoomListWidgetItem(getName(flag));
@@ -594,12 +594,12 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         sunGroupBox->setChecked(false);
 
         for (const auto &x : loadListItems) {
-            x->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsTristate);
+            x->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsAutoTristate);
             x->setCheckState(Qt::PartiallyChecked);
         }
 
         for (const auto &x : mobListItems) {
-            x->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsTristate);
+            x->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsAutoTristate);
             x->setCheckState(Qt::PartiallyChecked);
         }
     } else {
