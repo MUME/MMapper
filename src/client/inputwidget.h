@@ -3,8 +3,9 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include <iterator>
+#include <list>
 #include <QEvent>
-#include <QLinkedList>
 #include <QObject>
 #include <QPlainTextEdit>
 #include <QSize>
@@ -16,10 +17,51 @@ class QKeyEvent;
 class QObject;
 class QWidget;
 
-using InputHistoryEntry = QString;
-using InputHistoryIterator = QMutableLinkedListIterator<InputHistoryEntry>;
-using WordHistoryEntry = QString;
-using TabCompletionIterator = QMutableLinkedListIterator<WordHistoryEntry>;
+class InputHistory final : private std::list<QString>
+{
+public:
+    InputHistory() { m_iterator = begin(); }
+
+public:
+    void addInputLine(const QString &);
+
+public:
+    void forward() { std::advance(m_iterator, 1); }
+    void backward() { std::advance(m_iterator, -1); }
+
+public:
+    const QString &value() const { return *m_iterator; }
+
+public:
+    bool atFront() const { return m_iterator == begin(); }
+    bool atEnd() const { return m_iterator == end(); }
+
+private:
+    std::list<QString>::iterator m_iterator;
+};
+
+class TabHistory final : private std::list<QString>
+{
+public:
+    TabHistory() { m_iterator = begin(); }
+
+public:
+    void addInputLine(const QString &);
+
+public:
+    void forward() { std::advance(m_iterator, 1); }
+    void reset() { m_iterator = begin(); }
+
+public:
+    const QString &value() const { return *m_iterator; }
+
+public:
+    using std::list<QString>::empty;
+    bool atEnd() const { return m_iterator == end(); }
+
+private:
+    std::list<QString>::iterator m_iterator;
+};
 
 class InputWidget final : public QPlainTextEdit
 {
@@ -40,24 +82,19 @@ protected:
 
 private:
     void gotInput();
-    bool wordHistory(int);
+    bool tryHistory(int);
     void keypadMovement(int);
 
-    InputHistoryIterator *m_lineIterator = nullptr;
-    bool m_newInput = false;
-    QLinkedList<QString> m_lineHistory;
-    QLinkedList<QString> m_tabCompletionDictionary;
-
-    void addLineHistory(const InputHistoryEntry &);
-    void forwardHistory();
-    void backwardHistory();
-
+private:
     void tabComplete();
-
     bool m_tabbing = false;
     QString m_tabFragment;
-    TabCompletionIterator *m_tabIterator = nullptr;
-    void addTabHistory(const WordHistoryEntry &);
+    TabHistory m_tabHistory;
+
+private:
+    void forwardHistory();
+    void backwardHistory();
+    InputHistory m_inputHistory;
 
 signals:
     void sendUserInput(const QString &);
