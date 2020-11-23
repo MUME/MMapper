@@ -376,9 +376,9 @@ void AbstractParser::parseRoom(StringView input)
 
                 const auto rs = RoomSelection::createSelection(*m_mapData, getTailPosition());
                 const RoomId roomId = [&rs]() {
-                    if (rs->count() != 1)
+                    if (rs->size() != 1)
                         throw std::runtime_error("unable to select current room");
-                    return rs->firstKey();
+                    return rs->getFirstRoomId();
                 }();
 
                 if (!m_mapData->execute(std::make_unique<SingleRoomAction>(
@@ -406,9 +406,9 @@ void AbstractParser::parseRoom(StringView input)
 
             const auto rs = RoomSelection::createSelection(*m_mapData, getTailPosition());
             const RoomId roomId = [&rs]() {
-                if (rs->count() != 1)
+                if (rs->size() != 1)
                     throw std::runtime_error("unable to select current room");
-                return rs->firstKey();
+                return rs->getFirstRoomId();
             }();
 
             if (!m_mapData->execute(std::make_unique<SingleRoomAction>(
@@ -433,9 +433,9 @@ void AbstractParser::parseRoom(StringView input)
 
             const auto rs = RoomSelection::createSelection(*m_mapData, getTailPosition());
             const RoomId roomId = [&rs]() {
-                if (rs->count() != 1)
+                if (rs->size() != 1)
                     throw std::runtime_error("unable to select current room");
-                return rs->firstKey();
+                return rs->getFirstRoomId();
             }();
 
             if (!m_mapData
@@ -491,9 +491,9 @@ void AbstractParser::parseRoom(StringView input)
 
                 const auto rs = RoomSelection::createSelection(*m_mapData, getTailPosition());
                 const RoomId roomId = [&rs]() {
-                    if (rs->count() != 1)
+                    if (rs->size() != 1)
                         throw std::runtime_error("unable to select current room");
-                    return rs->firstKey();
+                    return rs->getFirstRoomId();
                 }();
 
                 if (!m_mapData->execute(std::make_unique<SingleRoomAction>(
@@ -532,9 +532,9 @@ void AbstractParser::parseRoom(StringView input)
 
                 const auto rs = RoomSelection::createSelection(*m_mapData, getTailPosition());
                 const RoomId roomId = [&rs]() {
-                    if (rs->count() != 1)
+                    if (rs->size() != 1)
                         throw std::runtime_error("unable to select current room");
-                    return rs->firstKey();
+                    return rs->getFirstRoomId();
                 }();
 
                 if (!m_mapData->execute(std::make_unique<SingleRoomAction>(
@@ -570,9 +570,9 @@ void AbstractParser::parseRoom(StringView input)
 
             const auto rs = RoomSelection::createSelection(*m_mapData, getTailPosition());
             const RoomId roomId = [&rs]() {
-                if (rs->count() != 1)
+                if (rs->size() != 1)
                     throw std::runtime_error("unable to select current room");
-                return rs->firstKey();
+                return rs->getFirstRoomId();
             }();
 
             const auto &old = rs->getFirstRoom()->getNote();
@@ -594,9 +594,9 @@ void AbstractParser::parseRoom(StringView input)
 
             const auto rs = RoomSelection::createSelection(*m_mapData, getTailPosition());
             const RoomId roomId = [&rs]() {
-                if (rs->count() != 1)
+                if (rs->size() != 1)
                     throw std::runtime_error("unable to select current room");
-                return rs->firstKey();
+                return rs->getFirstRoomId();
             }();
 
             if (!m_mapData
@@ -626,9 +626,9 @@ void AbstractParser::parseRoom(StringView input)
 
             const auto rs = RoomSelection::createSelection(*m_mapData, getTailPosition());
             const RoomId roomId = [&rs]() {
-                if (rs->count() != 1)
+                if (rs->size() != 1)
                     throw std::runtime_error("unable to select current room");
-                return rs->firstKey();
+                return rs->getFirstRoomId();
             }();
 
             if (!m_mapData->execute(std::make_unique<SingleRoomAction>(

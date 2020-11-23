@@ -51,12 +51,12 @@ FindRoomsDlg::FindRoomsDlg(MapData *const md, QWidget *const parent)
             const auto id = RoomId{selectedItem->text(0).toUInt()};
             tmpSel->getRoom(id);
         }
-        if (!tmpSel->isEmpty()) {
+        if (!tmpSel->empty()) {
             glm::vec2 sum{0.f, 0.f};
             // FIXME: This is actually an anti-feature if the rooms are far apart,
             // because it drops you off in the middle of nowhere.
-            for (const Room *const r : *tmpSel) {
-                sum += r->getPosition().to_vec2();
+            for (const auto &[rid, room] : *tmpSel) {
+                sum += room->getPosition().to_vec2();
             }
             // note: half-room offset to the room center is applied to the average,
             // rather than to each individual room.
@@ -131,9 +131,9 @@ void FindRoomsDlg::findClicked()
         auto tmpSel = RoomSelection(*m_mapData);
         tmpSel.genericSearch(RoomFilter(text, cs, kind));
 
-        for (const Room *const room : tmpSel) {
+        for (const auto &[rid, room] : tmpSel) {
             QString id;
-            id.setNum(room->getId().asUint32());
+            id.setNum(rid.asUint32());
             QString roomName = room->getName().toQString();
             QString toolTip = constructToolTip(room);
 

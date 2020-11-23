@@ -63,9 +63,7 @@ GroupMapAction::GroupMapAction(std::unique_ptr<AbstractAction> action,
                                const SharedRoomSelection &selection)
     : executor(std::move(action))
 {
-    QMapIterator<RoomId, const Room *> roomIter(*selection);
-    while (roomIter.hasNext()) {
-        RoomId rid = roomIter.next().key();
+    for (const auto &[rid, room] : *selection) {
         affectedRooms.insert(rid);
         selectedRooms.push_back(rid);
     }

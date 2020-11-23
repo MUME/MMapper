@@ -475,10 +475,14 @@ const Room *RoomEditAttrDlg::getSelectedRoom()
         return nullptr;
     }
     if (m_roomSelection->size() == 1) {
-        return m_roomSelection->first();
+        return m_roomSelection->getFirstRoom();
     }
-    return m_roomSelection->value(
-        RoomId{roomListComboBox->itemData(roomListComboBox->currentIndex()).toUInt()});
+    if (auto it = m_roomSelection->find(
+            RoomId{roomListComboBox->itemData(roomListComboBox->currentIndex()).toUInt()});
+        it != m_roomSelection->end()) {
+        return it->second;
+    }
+    return nullptr;
 }
 
 ExitDirEnum RoomEditAttrDlg::getSelectedExit()
@@ -523,13 +527,13 @@ void RoomEditAttrDlg::setRoomSelection(const SharedRoomSelection &rs,
         return;
     else if (rs->size() == 1) {
         tabWidget->setCurrentWidget(attributesTab);
-        const auto room = m_roomSelection->first();
+        const auto room = m_roomSelection->getFirstRoom();
         roomListComboBox->addItem(room->getName().toQString(), room->getId().asUint32());
         updateDialog(room);
     } else {
         tabWidget->setCurrentWidget(selectionTab);
         roomListComboBox->addItem("All", 0);
-        for (const Room *room : *m_roomSelection) {
+        for (const auto &[rid, room] : *m_roomSelection) {
             roomListComboBox->addItem(room->getName().toQString(), room->getId().asUint32());
         }
         updateDialog(nullptr);

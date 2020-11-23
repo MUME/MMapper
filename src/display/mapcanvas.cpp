@@ -150,7 +150,7 @@ void MapCanvas::setRoomSelection(const SigRoomSelection &selection)
         m_roomSelection = selection.getShared();
         qDebug() << "Updated selection with" << m_roomSelection->size() << "rooms";
         if (m_roomSelection->size() == 1) {
-            const Room *const r = m_roomSelection->first();
+            const Room *const r = m_roomSelection->getFirstRoom();
             const Coordinate &roomPos = r->getPosition();
             const auto x = roomPos.x;
             const auto y = roomPos.y;
@@ -213,9 +213,9 @@ void MapCanvas::wheelEvent(QWheelEvent *const event)
     case CanvasMouseModeEnum::CREATE_CONNECTIONS:
     case CanvasMouseModeEnum::CREATE_ONEWAY_CONNECTIONS:
         if (hasCtrl) {
-            if (event->delta() > 100)
+            if (event->angleDelta().y() > 100)
                 layerDown();
-            else if (event->delta() < -100)
+            else if (event->angleDelta().y() < -100)
                 layerUp();
         } else {
             const auto zoomAndMaybeRecenter = [this, event](const int numSteps) -> bool {
@@ -342,7 +342,7 @@ void MapCanvas::createRoom()
         return;
     const Coordinate c = getSel1().getCoordinate();
     RoomSelection tmpSel = RoomSelection(m_data, c);
-    if (tmpSel.isEmpty()) {
+    if (tmpSel.empty()) {
         m_data.createEmptyRoom(Coordinate{c.x, c.y, m_currentLayer});
     }
     mapChanged();
@@ -520,8 +520,8 @@ void MapCanvas::mousePressEvent(QMouseEvent *const event)
             if (!hasCtrl) {
                 const auto tmpSel = RoomSelection::createSelection(m_data,
                                                                    getSel1().getCoordinate());
-                if ((m_roomSelection != nullptr) && !tmpSel->isEmpty()
-                    && m_roomSelection->contains(tmpSel->begin().key())) {
+                if ((m_roomSelection != nullptr) && !tmpSel->empty()
+                    && m_roomSelection->contains(tmpSel->getFirstRoomId())) {
                     m_roomSelectionMove.emplace(RoomSelMove{});
                 } else {
                     m_roomSelectionMove.reset();
@@ -780,7 +780,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
         // Display a room info tooltip if there was no mouse movement
         if (hasSel1() && hasSel2() && getSel1().to_vec3() == getSel2().to_vec3()) {
             RoomSelection tmpSel = RoomSelection(m_data, getSel1().getCoordinate());
-            if (!tmpSel.isEmpty()) {
+            if (!tmpSel.empty()) {
                 QString message = tmpSel.getFirstRoom()->toQString();
                 QToolTip::showText(mapToGlobal(event->pos()), message, this, rect(), 5000);
             }
@@ -824,7 +824,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                     } else {
                         // add or remove rooms to/from default selection
                         const auto tmpSel = RoomSelection(m_data, c1, c2);
-                        for (const RoomId &key : tmpSel.keys()) {
+                        for (const auto &[key, value] : tmpSel) {
                             if (m_roomSelection->contains(key)) {
                                 m_roomSelection->unselect(key);
                             } else {

@@ -143,12 +143,12 @@ void MapCanvas::paintSelectedRoom(RoomSelFakeGL &gl, const Room &room)
 
 void MapCanvas::paintSelectedRooms()
 {
-    if (!m_roomSelection || m_roomSelection->isEmpty())
+    if (!m_roomSelection || m_roomSelection->empty())
         return;
 
     RoomSelFakeGL gl;
 
-    for (const Room *const room : *m_roomSelection) {
+    for (const auto &[rid, room] : *m_roomSelection) {
         if (room != nullptr) {
             gl.resetMatrix();
             paintSelectedRoom(gl, *room);

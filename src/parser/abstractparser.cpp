@@ -1039,7 +1039,7 @@ void AbstractParser::showMumeTime()
         data += " for " + m_mumeClock->toCountdown(moment).toLatin1() + " more ticks.\r\n";
 
         // Moon data
-        data += moment.toMumeMoonTime() + "\r\n";
+        data += moment.toMumeMoonTime().toLatin1() + "\r\n";
         data += "The moon ";
         switch (moment.toMoonVisibility()) {
         case MumeMoonVisibilityEnum::HIDDEN:
@@ -1052,7 +1052,7 @@ void AbstractParser::showMumeTime()
             data += "will set in";
             break;
         };
-        data += " " + moment.toMoonCountDown() + " more ticks.\r\n";
+        data += " " + moment.toMoonCountDown().toLatin1() + " more ticks.\r\n";
     }
     sendToUser(data);
 }
@@ -1168,7 +1168,7 @@ void AbstractParser::doOfflineCharacterMove()
     }
 
     const auto rs1 = RoomSelection(*m_mapData, m_mapData->getPosition());
-    if (rs1.isEmpty()) {
+    if (rs1.empty()) {
         sendToUser("Alas, you cannot go that way...\r\n");
         return;
     }

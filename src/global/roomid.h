@@ -32,6 +32,7 @@ public:
     inline constexpr bool operator!=(RoomId rhs) const { return value != rhs.value; }
 
 public:
+    // TODO: Is this still needed?
     friend inline uint32_t qHash(RoomId id) { return id.asUint32(); }
 };
 static constexpr const RoomId INVALID_ROOMID{UINT_MAX};

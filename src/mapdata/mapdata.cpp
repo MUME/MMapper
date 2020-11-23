@@ -146,7 +146,7 @@ const Room *MapData::getRoom(const Coordinate &pos, RoomSelection &selection)
     if (Room *const room = map.get(pos)) {
         auto id = room->getId();
         lockRoom(&selection, id);
-        selection.insert(id, room);
+        selection.emplace(id, room);
         return room;
     }
     return nullptr;
@@ -161,7 +161,7 @@ const Room *MapData::getRoom(const RoomId id, RoomSelection &selection)
 
         lockRoom(&selection, roomId);
         Room *const pRoom = room.get();
-        selection.insert(roomId, pRoom);
+        selection.emplace(roomId, pRoom);
         return pRoom;
     }
     return nullptr;
@@ -185,8 +185,8 @@ bool MapData::execute(std::unique_ptr<MapAction> action, const SharedRoomSelecti
     action->schedule(this);
     std::list<RoomId> selectedIds;
 
-    for (auto i = selection->begin(); i != selection->end();) {
-        const Room *room = *i++;
+    for (auto i = selection->begin(); i != selection->end(); i++) {
+        const Room *room = i->second;
         const auto id = room->getId();
         locks[id].erase(selection.get());
         selectedIds.push_back(id);
@@ -204,7 +204,7 @@ bool MapData::execute(std::unique_ptr<MapAction> action, const SharedRoomSelecti
     for (auto id : selectedIds) {
         if (const SharedRoom &room = roomIndex[id]) {
             locks[id].insert(selection.get());
-            selection->insert(id, room.get());
+            selection->emplace(id, room.get());
         }
     }
     return executable;
