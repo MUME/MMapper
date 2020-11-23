@@ -62,23 +62,23 @@ void InfoMarksEditDlg::connectAll()
 {
     connect(this, &InfoMarksEditDlg::infomarksChanged, m_mapCanvas, &MapCanvas::infomarksChanged);
     connect(objectsList,
-            QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
+            QOverload<int>::of(&QComboBox::currentIndexChanged),
             this,
             &InfoMarksEditDlg::objectListCurrentIndexChanged);
     connect(objectType,
-            QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
+            QOverload<int>::of(&QComboBox::currentIndexChanged),
             this,
             &InfoMarksEditDlg::objectTypeCurrentIndexChanged);
     connect(objectCreate, &QAbstractButton::clicked, this, &InfoMarksEditDlg::createClicked);
     connect(objectModify, &QAbstractButton::clicked, this, &InfoMarksEditDlg::modifyClicked);
 }
 
-void InfoMarksEditDlg::objectListCurrentIndexChanged(const QString & /*unused*/)
+void InfoMarksEditDlg::objectListCurrentIndexChanged(int /*unused*/)
 {
     updateDialog();
 }
 
-void InfoMarksEditDlg::objectTypeCurrentIndexChanged(const QString & /*unused*/)
+void InfoMarksEditDlg::objectTypeCurrentIndexChanged(int /*unused*/)
 {
     updateDialog();
 }
@@ -141,11 +141,11 @@ void InfoMarksEditDlg::disconnectAll()
 {
     disconnect(this, &InfoMarksEditDlg::infomarksChanged, m_mapCanvas, &MapCanvas::infomarksChanged);
     disconnect(objectsList,
-               QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
+               QOverload<int>::of(&QComboBox::currentIndexChanged),
                this,
                &InfoMarksEditDlg::objectListCurrentIndexChanged);
     disconnect(objectType,
-               QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
+               QOverload<int>::of(&QComboBox::currentIndexChanged),
                this,
                &InfoMarksEditDlg::objectTypeCurrentIndexChanged);
     disconnect(objectCreate, &QAbstractButton::clicked, this, &InfoMarksEditDlg::createClicked);

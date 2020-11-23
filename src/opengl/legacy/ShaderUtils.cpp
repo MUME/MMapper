@@ -113,7 +113,7 @@ static void checkProgramInfo(Functions &gl, const GLuint programID)
                 os << &programErrorMessage[0] << std::endl;
                 qWarning() << os.str().c_str();
             }
-            return ba.size();
+            return static_cast<int>(ba.size());
         }
         return 0;
     }();
@@ -148,7 +148,7 @@ static void checkShaderInfo(Functions &gl, const GLuint shaderId)
                 os << &shaderErrorMessage[0] << std::endl;
                 qWarning() << os.str().c_str();
             }
-            return ba.size();
+            return static_cast<int>(ba.size());
         }
         return 0;
     }();
@@ -181,7 +181,7 @@ static GLuint compileShader(Functions &gl, const GLenum type, const Source &sour
     std::array<const char *, 3> ptrs = {Functions::getShaderVersion(),
                                         "#line 1\n",
                                         source.source.c_str()};
-    gl.glShaderSource(shaderId, ptrs.size(), ptrs.data(), nullptr);
+    gl.glShaderSource(shaderId, static_cast<GLsizei>(ptrs.size()), ptrs.data(), nullptr);
     gl.glCompileShader(shaderId);
     checkShaderInfo(gl, shaderId);
 

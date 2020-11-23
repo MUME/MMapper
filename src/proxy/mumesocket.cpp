@@ -7,6 +7,7 @@
 #include "mumesocket.h"
 
 #include <QByteArray>
+#include <QLocale>
 #include <QMessageLogContext>
 #include <QSslSocket>
 #include <QString>
@@ -151,8 +152,7 @@ void MumeSslSocket::onEncrypted()
         const auto commonNameList = cert.subjectInfo(cert.CommonName);
         const auto commonName = commonNameList.isEmpty() ? "(n/a)" : commonNameList.front();
         const auto sha1 = cert.digest(QCryptographicHash::Algorithm::Sha1).toHex(':').toStdString();
-        const auto exp = cert.expiryDate();
-        const auto expStr = exp.toLocalTime().toString(Qt::DateFormat::SystemLocaleLongDate);
+        const auto expStr = QLocale::system().toString(cert.expiryDate(), QLocale::LongFormat);
         emit log("Proxy", QString("Peer certificate common name: %1.").arg(commonName));
         emit log("Proxy", QString("Peer certificate SHA1: %1.").arg(sha1.c_str()));
         emit log("Proxy", QString("Peer certificate expires: %1.").arg(expStr));
@@ -168,7 +168,7 @@ void MumeSslSocket::onPeerVerifyError(const QSslError &error)
 
     // Warn user of possible compromise
     QByteArray byteArray = QByteArray("\r\n\033[1;37;41mENCRYPTION WARNING:\033[0;37;41m ")
-                               .append(error.errorString())
+                               .append(error.errorString().toLatin1())
                                .append("!\033[0m\r\n\r\n");
     emit processMudStream(byteArray);
 }

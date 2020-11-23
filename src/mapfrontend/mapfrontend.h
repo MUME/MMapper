@@ -47,7 +47,8 @@ protected:
     RoomLocks locks;
 
     RoomId greatestUsedId = INVALID_ROOMID;
-    QMutex mapLock;
+    QMutex mapLock{QMutex::Recursive};
+
     struct Bounds final
     {
         Coordinate min;

@@ -37,8 +37,8 @@ signals:
     void infomarksChanged();
 
 public slots:
-    void objectListCurrentIndexChanged(const QString &);
-    void objectTypeCurrentIndexChanged(const QString &);
+    void objectListCurrentIndexChanged(int);
+    void objectTypeCurrentIndexChanged(int);
 
     void createClicked();
     void modifyClicked();

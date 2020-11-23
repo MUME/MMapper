@@ -122,7 +122,7 @@ private:
     bool init();
     void issueLocalCharUpdate();
 
-    QMutex networkLock;
+    QMutex networkLock{QMutex::Recursive};
     std::unique_ptr<QThread> thread;
     std::unique_ptr<GroupAuthority> authority;
     std::unique_ptr<CGroupCommunicator> network;

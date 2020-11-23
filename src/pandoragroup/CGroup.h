@@ -67,7 +67,7 @@ public:
     SharedGroupChar getCharByName(const QByteArray &name) const;
 
 private:
-    mutable QMutex characterLock;
+    mutable QMutex characterLock{QMutex::Recursive};
     std::set<GroupRecipient *> locks;
     std::queue<std::shared_ptr<GroupAction>> actionSchedule;
     GroupVector charIndex;

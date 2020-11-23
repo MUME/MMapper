@@ -161,11 +161,11 @@ static SharedMMTexture createDottedWall(const ExitDirEnum dir)
 
             if (dir == ExitDirEnum::EAST || dir == ExitDirEnum::WEST) {
                 const auto halfSize = static_cast<double>(size) * 0.5;
-                QMatrix matrix;
+                QTransform matrix;
                 matrix.translate(halfSize, halfSize);
                 matrix.rotate(90);
                 matrix.translate(-halfSize, -halfSize);
-                images[i] = image.transformed(matrix);
+                images[i] = image.transformed(matrix, Qt::FastTransformation);
             } else {
                 images[i] = image;
             }

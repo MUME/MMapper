@@ -21,7 +21,6 @@
 
 CGroup::CGroup(QObject *const parent)
     : QObject(parent)
-    , characterLock(QMutex::Recursive)
     , self{CGroupChar::alloc()}
 {
     const Configuration::GroupManagerSettings &groupManager = getConfig().groupManager;

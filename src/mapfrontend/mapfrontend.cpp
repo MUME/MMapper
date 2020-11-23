@@ -25,7 +25,6 @@
 
 MapFrontend::MapFrontend(QObject *const parent)
     : QObject(parent)
-    , mapLock(QMutex::Recursive)
 {}
 
 MapFrontend::~MapFrontend()

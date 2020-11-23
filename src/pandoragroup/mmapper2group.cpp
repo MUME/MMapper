@@ -42,7 +42,6 @@ const Mmapper2Group::AffectTimeout Mmapper2Group::s_affectTimeout
 Mmapper2Group::Mmapper2Group(QObject *const /* parent */)
     : QObject(nullptr)
     , affectTimer{this}
-    , networkLock(QMutex::Recursive)
     , thread(THREADED ? new QThread : nullptr)
 {
     qRegisterMetaType<CharacterPositionEnum>("CharacterPositionEnum");

@@ -23,7 +23,7 @@ MapWindow::MapWindow(MapData *const mapData,
 {
     m_gridLayout = std::make_unique<QGridLayout>(this);
     m_gridLayout->setSpacing(0);
-    m_gridLayout->setMargin(0);
+    m_gridLayout->setContentsMargins(0, 0, 0, 0);
 
     m_verticalScrollBar = std::make_unique<QScrollBar>(this);
     m_verticalScrollBar->setOrientation(Qt::Vertical);
