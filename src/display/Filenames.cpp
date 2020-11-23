@@ -13,6 +13,11 @@
 #include "../global/NullPointerException.h"
 #include "../parser/AbstractParser-Commands.h"
 
+#ifdef _MSC_VER
+// Ignore warning C4996 around 'strdup'
+#pragma warning(disable : 4996)
+#endif
+
 // NOTE: This isn't used by the parser (currently only used for filenames).
 // If we were going to use it for parsing, then we'd probably want to
 // return special ArgRoadIndex that could match the direction combinations
