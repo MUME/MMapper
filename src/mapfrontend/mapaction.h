@@ -8,7 +8,6 @@
 #include <set>
 #include <stack>
 #include <vector>
-#include <QCharRef>
 #include <QString>
 #include <QVariant>
 #include <QtGlobal>

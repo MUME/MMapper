@@ -16,7 +16,6 @@
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QStringList>
-#include <QStringListIterator>
 
 static std::string generateRunId()
 {
@@ -95,7 +94,7 @@ bool AutoLogger::writeLine(const QByteArray &ba)
 
     m_logFile << line;
     m_logFile.flush();
-    m_curBytes += line.length();
+    m_curBytes += static_cast<int>(line.length());
 
     return true;
 }

@@ -8,7 +8,6 @@
 #include <cstring>
 #include <stdexcept>
 #include <string_view>
-#include <QCharRef>
 
 #include "../global/StringView.h"
 

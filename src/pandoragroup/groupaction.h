@@ -4,7 +4,6 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include <QByteArray>
-#include <QByteArrayDataPtr>
 #include <QString>
 #include <QVariantMap>
 

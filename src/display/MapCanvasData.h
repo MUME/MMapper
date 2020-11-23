@@ -7,10 +7,10 @@
 #include <memory>
 #include <optional>
 #include <unordered_map>
+#include <QOpenGLTexture>
 #include <QWidget>
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QMouseEvent>
-#include <QtGui/QOpenGLTexture>
 #include <QtGui/qopengl.h>
 #include <QtGui>
 

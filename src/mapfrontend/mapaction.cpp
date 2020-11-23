@@ -8,7 +8,6 @@
 #include <memory>
 #include <stack>
 #include <utility>
-#include <QMutableVectorIterator>
 
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/parseevent.h"

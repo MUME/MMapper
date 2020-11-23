@@ -11,7 +11,6 @@
 #include <stack>
 #include <vector>
 #include <QColor>
-#include <QListData>
 
 #include "../expandoracommon/coordinate.h"
 #include "../global/RuleOf5.h"

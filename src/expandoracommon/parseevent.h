@@ -11,8 +11,6 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <QByteArrayDataPtr>
-#include <QCharRef>
 #include <QDebug>
 #include <QString>
 #include <QVariant>

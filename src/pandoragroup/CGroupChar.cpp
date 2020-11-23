@@ -5,7 +5,6 @@
 
 #include "CGroupChar.h"
 
-#include <QCharRef>
 #include <QDebug>
 #include <QMessageLogContext>
 
