@@ -5,6 +5,7 @@
 #include "PandoraMapStorage.h"
 
 #include <cassert>
+#include <QLatin1String>
 #include <QRegularExpression>
 #include <QXmlStreamReader>
 
@@ -78,9 +79,10 @@ SharedRoom PandoraMapStorage::loadRoom(QXmlStreamReader &xml)
     SharedRoom room = Room::createPermanentRoom(m_mapData);
     room->setDynamicDescription(RoomDynamicDesc{});
     room->setUpToDate();
-    while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "room")) {
+    while (
+        !(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == QLatin1String("room"))) {
         if (xml.tokenType() == QXmlStreamReader::StartElement) {
-            if (xml.name() == "room") {
+            if (xml.name() == QLatin1String("room")) {
                 room->setId(RoomId{static_cast<uint32_t>(xml.attributes().value("id").toInt())});
 
                 // Terrain
@@ -93,13 +95,13 @@ SharedRoom PandoraMapStorage::loadRoom(QXmlStreamReader &xml)
                 const auto z = xml.attributes().value("z").toInt();
                 room->setPosition(Coordinate{x, y, z} + basePosition);
 
-            } else if (xml.name() == "roomname") {
+            } else if (xml.name() == QLatin1String("roomname")) {
                 room->setName(RoomName{xml.readElementText()});
-            } else if (xml.name() == "desc") {
+            } else if (xml.name() == QLatin1String("desc")) {
                 room->setStaticDescription(RoomStaticDesc{xml.readElementText().replace("|", "\n")});
-            } else if (xml.name() == "note") {
+            } else if (xml.name() == QLatin1String("note")) {
                 room->setNote(RoomNote{xml.readElementText()});
-            } else if (xml.name() == "exits") {
+            } else if (xml.name() == QLatin1String("exits")) {
                 loadExits(*room, xml);
             }
         }
@@ -111,9 +113,10 @@ SharedRoom PandoraMapStorage::loadRoom(QXmlStreamReader &xml)
 void PandoraMapStorage::loadExits(Room &room, QXmlStreamReader &xml)
 {
     ExitsList copiedExits = room.getExitsList();
-    while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "exits")) {
+    while (!(xml.tokenType() == QXmlStreamReader::EndElement
+             && xml.name() == QLatin1String("exits"))) {
         if (xml.tokenType() == QXmlStreamReader::StartElement) {
-            if (xml.name() == "exit") {
+            if (xml.name() == QLatin1String("exit")) {
                 const auto attr = xml.attributes();
                 if (attr.hasAttribute("dir") && attr.hasAttribute("to")
                     && attr.hasAttribute("door")) {
@@ -184,7 +187,7 @@ bool PandoraMapStorage::mergeData()
 
         for (uint32_t i = 0; i < roomsCount; i++) {
             while (xml.readNextStartElement() && !xml.hasError()) {
-                if (xml.name() == "room") {
+                if (xml.name() == QLatin1String("room")) {
                     SharedRoom room = loadRoom(xml);
                     progressCounter.step();
                     m_mapData.insertPredefinedRoom(room);

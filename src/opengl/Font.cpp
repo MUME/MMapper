@@ -13,6 +13,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <QLatin1String>
 #include <QtCore>
 #include <QtGui>
 
@@ -354,7 +355,7 @@ QString FontMetrics::init(const QString &fontFilename)
     while (!xml.atEnd() && !xml.hasError()) {
         if (xml.readNextStartElement()) {
             const auto &attr = xml.attributes();
-            if (xml.name() == "common") {
+            if (xml.name() == QLatin1String("common")) {
                 if (hasCommon) {
                     assert(false);
                     continue;
@@ -373,7 +374,7 @@ QString FontMetrics::init(const QString &fontFilename)
                 }
                 common = Common{lineHeight, base, scaleW, scaleH, marginX, marginY};
 
-            } else if (xml.name() == "char") {
+            } else if (xml.name() == QLatin1String("char")) {
                 if (!hasCommon) {
                     assert(false);
                     continue;
@@ -406,7 +407,7 @@ QString FontMetrics::init(const QString &fontFilename)
 
                 raw_glyphs.emplace_back(id, x, y2, width, height, xoffset, yoffset2, xadvance);
 
-            } else if (xml.name() == "kerning") {
+            } else if (xml.name() == QLatin1String("kerning")) {
                 if (!hasCommon) {
                     assert(false);
                     continue;
@@ -420,7 +421,7 @@ QString FontMetrics::init(const QString &fontFilename)
                     qDebug() << "Kerning" << PrintedChar{first} << PrintedChar{second} << amount;
                 }
                 raw_kernings.emplace_back(first, second, amount);
-            } else if (xml.name() == "page") {
+            } else if (xml.name() == QLatin1String("page")) {
                 const int id = attr.value("id").toInt();
                 if (id != 0) {
                     continue;
@@ -780,7 +781,7 @@ std::vector<FontVert3d> GLFont::getFontBatchRawData(const GLText *const text, co
     const size_t expectedVerts = [text, end]() -> size_t {
         int numGlyphs = 0;
         for (const GLText *it = text; it != end; ++it) {
-            numGlyphs += it->text.size() + (it->bgcolor.has_value() ? 1 : 0)
+            numGlyphs += static_cast<int>(it->text.size()) + (it->bgcolor.has_value() ? 1 : 0)
                          + (it->fontFormatFlag.contains(FontFormatFlagEnum::UNDERLINE) ? 1 : 0);
         }
         return static_cast<size_t>(4 * numGlyphs);
