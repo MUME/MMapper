@@ -761,23 +761,4 @@ void MapCanvas::renderMapBatches()
         }
         drawLayer(thisLayer, m_currentLayer);
     }
-
-    // Draw the bounds that will cause a mesh rebuild
-    if (batches.redrawMargin.isRestricted()) {
-        const auto &bounds = batches.redrawMargin.getBounds();
-        const auto &pos1 = bounds.min.to_vec2();
-        const auto &pos2 = bounds.max.to_vec2();
-        const glm::vec3 A{pos1, m_currentLayer};
-        const glm::vec3 B{pos2.x, pos1.y, m_currentLayer};
-        const glm::vec3 C{pos2, m_currentLayer};
-        const glm::vec3 D{pos1.x, pos2.y, m_currentLayer};
-
-        const auto rs
-            = GLRenderState().withBlend(BlendModeEnum::TRANSPARENCY).withDepthFunction(std::nullopt);
-        const auto innerBoundsColor = Colors::darkOrange1;
-        static constexpr float BOUNDS_LINE_WIDTH = 2.f;
-        const auto lineStyle = rs.withLineParams(LineParams{BOUNDS_LINE_WIDTH});
-        const std::vector<glm::vec3> verts{A, B, B, C, C, D, D, A};
-        gl.renderPlainLines(verts, lineStyle.withColor(innerBoundsColor));
-    }
 }
