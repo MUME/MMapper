@@ -206,7 +206,7 @@ std::shared_ptr<Room> BaseMapSaveFilter::alteredRoom(RoomModificationTracker &tr
 
         // Remove names on hidden exits to areas reachable through visible doors
         if (exit.isHiddenExit()) {
-            exit.clearDoorName();
+            exit.setDoorName(DoorName{});
         }
     }
 

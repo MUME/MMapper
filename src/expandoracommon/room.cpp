@@ -593,6 +593,7 @@ void Room::update(Room &room, const ParseEvent &event)
                 // Update exits if target room is up to date
                 roomExit.updateExit(eventExitFlags);
             }
+            room.setModified(exitFlagUpdateFlags);
         }
         isUpToDate = true;
     }

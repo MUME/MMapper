@@ -100,8 +100,7 @@ public:
 #undef DECL_GETTERS_AND_SETTERS
 
 public:
-    void updateExit(ExitFlags flags);
-    inline void clearDoorName() { setDoorName(DoorName{}); }
+    void updateExit(ExitFlags flags); // REVISIT: Does not update mesh
 
 public:
     /* older aliases */
