@@ -271,10 +271,6 @@ void AbstractParser::parsePrompt(const QString &prompt)
     }
 
     m_promptFlags.setValid();
-
-    // Connected room flags are only valid if the weather is nice
-    if (m_connectedRoomFlags.isValid() && !m_promptFlags.isNiceWeather())
-        m_connectedRoomFlags.reset();
 }
 
 void AbstractParser::parseExits(std::ostream &os)
@@ -446,11 +442,10 @@ void AbstractParser::parseExits(std::ostream &os)
     // If there is't a portal then we can trust the exits
     if (!portal) {
         m_exitsFlags.setValid();
-        m_connectedRoomFlags.setValid();
 
-        // Orcs and trolls can detect exits with direct sunlight
-        const bool foundDirectSunlight = m_connectedRoomFlags.hasAnyDirectSunlight();
-        if (foundDirectSunlight || m_trollExitMapping) {
+        // Trolls can detect exits with direct sunlight
+        if (m_trollExitMapping) {
+            m_connectedRoomFlags.setValid();
             for (const auto alt_dir : ALL_EXITS_NESWUD) {
                 const auto eThisExit = m_exitsFlags.get(alt_dir);
                 const auto eThisClosed = closedDoorFlag.get(alt_dir);
