@@ -13,11 +13,6 @@
 #include "../global/NullPointerException.h"
 #include "../parser/AbstractParser-Commands.h"
 
-#ifdef _MSC_VER
-// Ignore warning C4996 around 'strdup'
-#pragma warning(disable : 4996)
-#endif
-
 // NOTE: This isn't used by the parser (currently only used for filenames).
 // If we were going to use it for parsing, then we'd probably want to
 // return special ArgRoadIndex that could match the direction combinations
@@ -31,45 +26,32 @@ static const char *getFilenameSuffix(const RoadIndexMaskEnum x)
     else if (x == RoadIndexMaskEnum::ALL)
         return "all";
 
-    struct CustomDeleter final
-    {
-        void operator()(char *ptr) const { std::free(ptr); }
-    };
-    using UniqueCString = std::unique_ptr<char, CustomDeleter>;
-
-    static EnumIndexedArray<UniqueCString, RoadIndexMaskEnum> names;
-
-    // Make the write thread safe to avoid accidentally freeing pointers
-    // we've already given away. (Probably overkill, but it won't hurt.)
-    static std::mutex mutex;
-    std::lock_guard<std::mutex> lock{mutex};
-
-    if (names[x] == nullptr) {
-        char buf[8] = "";
-        char *ptr = buf;
-
-        if ((x & RoadIndexMaskEnum::NORTH) != RoadIndexMaskEnum::NONE) {
-            *ptr++ = 'n';
+    // note: static variable initialized by IIFE guarantees thread safety.
+    static const auto names = []() {
+        using CharArray = char[8];
+        static_assert(sizeof(CharArray) >= NUM_COMPASS_DIRS + 1);
+        EnumIndexedArray<CharArray, RoadIndexMaskEnum> arr{};
+        for (size_t i = 0; i < NUM_ROAD_INDICES; ++i) {
+            const auto e = static_cast<RoadIndexMaskEnum>(i);
+            char *ptr = arr[e];
+            if ((e & RoadIndexMaskEnum::NORTH) != RoadIndexMaskEnum::NONE) {
+                *ptr++ = 'n';
+            }
+            if ((e & RoadIndexMaskEnum::EAST) != RoadIndexMaskEnum::NONE) {
+                *ptr++ = 'e';
+            }
+            if ((e & RoadIndexMaskEnum::SOUTH) != RoadIndexMaskEnum::NONE) {
+                *ptr++ = 's';
+            }
+            if ((e & RoadIndexMaskEnum::WEST) != RoadIndexMaskEnum::NONE) {
+                *ptr++ = 'w';
+            }
+            *ptr = '\0';
         }
-        if ((x & RoadIndexMaskEnum::EAST) != RoadIndexMaskEnum::NONE) {
-            *ptr++ = 'e';
-        }
-        if ((x & RoadIndexMaskEnum::SOUTH) != RoadIndexMaskEnum::NONE) {
-            *ptr++ = 's';
-        }
-        if ((x & RoadIndexMaskEnum::WEST) != RoadIndexMaskEnum::NONE) {
-            *ptr++ = 'w';
-        }
+        return arr;
+    }();
 
-        assert(ptr > buf);
-        assert(ptr <= buf + 4);
-        *ptr = '\0';
-
-        names[x] = UniqueCString{strdup(buf)};
-    }
-
-    assert(names[x] != nullptr);
-    return names[x].get();
+    return names[x];
 }
 
 template<RoadTagEnum Tag>
