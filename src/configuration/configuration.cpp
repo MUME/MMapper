@@ -274,7 +274,6 @@ ConstString KEY_SHOW_NOTES = "Show notes";
 ConstString KEY_SHOW_UPDATED_ROOMS = "Show updated rooms";
 ConstString KEY_STATE = "state";
 ConstString KEY_TAB_COMPLETION_DICTIONARY_SIZE = "Tab completion dictionary size";
-ConstString KEY_TLS_ENCRYPTION = "TLS encryption";
 ConstString KEY_USE_INTERNAL_EDITOR = "Use internal editor";
 ConstString KEY_USE_SOFTWARE_OPENGL = "Use software OpenGL";
 ConstString KEY_USE_TRILINEAR_FILTERING = "Use trilinear filtering";
@@ -546,7 +545,7 @@ void Configuration::ConnectionSettings::read(QSettings &conf)
                                 static_cast<uint16_t>(DEFAULT_PORT));
     localPort = sanitizeUint16(conf.value(KEY_PROXY_LOCAL_PORT, DEFAULT_PORT).toInt(),
                                static_cast<uint16_t>(DEFAULT_PORT));
-    tlsEncryption = NO_OPEN_SSL ? false : conf.value(KEY_TLS_ENCRYPTION, true).toBool();
+    tlsEncryption = NO_OPEN_SSL ? false : true;
     proxyThreaded = conf.value(KEY_PROXY_THREADED, false).toBool();
     proxyConnectionStatus = conf.value(KEY_PROXY_CONNECTION_STATUS, false).toBool();
     proxyListensOnAnyInterface = conf.value(KEY_PROXY_LISTENS_ON_ANY_INTERFACE, false).toBool();
@@ -752,7 +751,6 @@ void Configuration::ConnectionSettings::write(QSettings &conf) const
     conf.setValue(KEY_SERVER_NAME, remoteServerName);
     conf.setValue(KEY_MUME_REMOTE_PORT, static_cast<int>(remotePort));
     conf.setValue(KEY_PROXY_LOCAL_PORT, static_cast<int>(localPort));
-    conf.setValue(KEY_TLS_ENCRYPTION, tlsEncryption);
     conf.setValue(KEY_PROXY_THREADED, proxyThreaded);
     conf.setValue(KEY_PROXY_CONNECTION_STATUS, proxyConnectionStatus);
     conf.setValue(KEY_PROXY_LISTENS_ON_ANY_INTERFACE, proxyListensOnAnyInterface);

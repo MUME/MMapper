@@ -234,5 +234,16 @@ void MumeTcpSocket::onConnect()
     if (io::tuneKeepAlive(m_socket.socketDescriptor())) {
         emit log("Proxy", "Tuned TCP keep alive parameters for socket");
     }
+
+    if (!NO_OPEN_SSL) {
+        // Warn user of the insecure connection
+        QByteArray byteArray = QByteArray(
+            "\r\n\033[1;37;41mWARNING:\033[0;37;41m "
+            "This connection is not secure! Disconnect and enable TLS encryption under the MMapper"
+            " preferences to get rid of this message."
+            "\033[0m\r\n\r\n");
+        emit processMudStream(byteArray);
+    }
+
     MumeSocket::onConnect();
 }
