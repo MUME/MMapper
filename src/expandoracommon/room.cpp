@@ -572,11 +572,24 @@ void Room::update(Room &room, const ParseEvent &event)
         isUpToDate = false;
     } else {
         eventExitsFlags.removeValid();
-        for (const auto dir : ALL_EXITS_NESWUD) {
-            ExitFlags eventExitFlags = eventExitsFlags.get(dir);
-            Exit &roomExit = room.exit(dir);
+        ExitsList copiedExits = room.getExitsList();
+        if (room.isUpToDate()) {
+            // Append exit flags if target room is up to date
+            for (const auto dir : ALL_EXITS_NESWUD) {
+                Exit &roomExit = copiedExits[dir];
+                const ExitFlags &roomExitFlags = roomExit.getExitFlags();
+                const ExitFlags &eventExitFlags = eventExitsFlags.get(dir);
+                if (eventExitFlags ^ roomExitFlags) {
+                    roomExit.setExitFlags(roomExitFlags | eventExitFlags);
+                }
+            }
 
-            if (!room.isUpToDate()) {
+        } else {
+            // Replace exit flags if target room is not up to date
+            for (const auto dir : ALL_EXITS_NESWUD) {
+                Exit &roomExit = copiedExits[dir];
+                ExitFlags eventExitFlags = eventExitsFlags.get(dir);
+                // ... but take care of the following exceptions
                 if (roomExit.isDoor() && !eventExitFlags.isDoor()) {
                     // Prevent room hidden exits from being overridden
                     eventExitFlags |= ExitFlagEnum::DOOR | ExitFlagEnum::EXIT;
@@ -586,15 +599,10 @@ void Room::update(Room &room, const ParseEvent &event)
                     // Prevent orcs/trolls from removing roads/trails if they're sunlit
                     eventExitFlags |= ExitFlagEnum::ROAD;
                 }
-                // Replace exits if target room is not up to date
                 roomExit.setExitFlags(eventExitFlags);
-
-            } else {
-                // Update exits if target room is up to date
-                roomExit.updateExit(eventExitFlags);
             }
-            room.setModified(exitFlagUpdateFlags);
         }
+        room.setExitsList(copiedExits);
         isUpToDate = true;
     }
 

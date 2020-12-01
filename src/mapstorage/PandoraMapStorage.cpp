@@ -123,7 +123,7 @@ void PandoraMapStorage::loadExits(Room &room, QXmlStreamReader &xml)
                     const auto dirStr = xml.attributes().value("dir").toString();
                     const auto dir = Mmapper2Exit::dirForChar(dirStr.at(0).toLatin1());
                     Exit &exit = copiedExits[dir];
-                    exit.updateExit(ExitFlags{ExitFlagEnum::EXIT});
+                    exit.setExitFlags(exit.getExitFlags() | ExitFlagEnum::EXIT);
 
                     const auto to = xml.attributes().value("to").toString();
                     if (to == "DEATH") {
@@ -134,7 +134,7 @@ void PandoraMapStorage::loadExits(Room &room, QXmlStreamReader &xml)
 
                     const auto doorName = xml.attributes().value("door").toString();
                     if (doorName != nullptr && !doorName.isEmpty()) {
-                        exit.updateExit(ExitFlags{ExitFlagEnum::DOOR});
+                        exit.setExitFlags(exit.getExitFlags() | ExitFlagEnum::DOOR);
                         if (doorName != "exit") {
                             exit.setDoorFlags(DoorFlags{DoorFlagEnum::HIDDEN});
                             exit.setDoorName(DoorName{doorName});

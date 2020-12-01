@@ -95,12 +95,9 @@ public:
 public:
 #define DECL_GETTERS_AND_SETTERS(_Type, _Prop, _OptInit) \
     inline const _Type &get##_Type() const { return m_fields._Prop; } \
-    void set##_Type(_Type value);
+    void set##_Type(_Type value); // REVISIT: Does not update mesh
     XFOREACH_EXIT_PROPERTY(DECL_GETTERS_AND_SETTERS)
 #undef DECL_GETTERS_AND_SETTERS
-
-public:
-    void updateExit(ExitFlags flags); // REVISIT: Does not update mesh
 
 public:
     /* older aliases */

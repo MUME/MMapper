@@ -9,13 +9,6 @@
 #include "../mapdata/ExitFieldVariant.h"
 #include "../mapdata/ExitFlags.h"
 
-void Exit::updateExit(ExitFlags flags)
-{
-    if (flags ^ getExitFlags()) {
-        setExitFlags(getExitFlags() | flags);
-    }
-}
-
 #define DEFINE_SETTERS(_Type, _Prop, _OptInit) \
     void Exit::set##_Type(_Type value) { m_fields._Prop = std::move(value); }
 XFOREACH_EXIT_PROPERTY(DEFINE_SETTERS)
