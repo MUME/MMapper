@@ -23,14 +23,12 @@ matrix:
     #
     - os: linux
       name: Snapcraft
+      dist: focal
       addons:
         snaps:
           - name: snapcraft
-            channel: edge
             classic: true
-        apt:
-          sources:
-            - qttools5-dev-tools
+          - name: multipass
       env:
         - SNAPCRAFT=1
     #
@@ -270,7 +268,7 @@ script:
     if [ "$BUILD" != "" ]; then
       make -j$(getconf _NPROCESSORS_ONLN) || exit -1
     fi
-  - '[[ "$SNAPCRAFT" == "" ]] || snapcraft snap --destructive-mode'
+  - '[[ "$SNAPCRAFT" == "" ]] || snapcraft'
   - |
     if [ "$DOCKER" != "" ]; then
       docker run --rm -v "$(pwd)":/root/mmapper $DOCKER_IMAGE bash -c "apt update -qq && apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev cmake ninja-build libminiupnpc-dev && cd /root/mmapper && mkdir -p build && cd build && cmake .. -G \"Ninja\" -DCMAKE_BUILD_TYPE=Debug -DTARGET_ARCHITECTURE=$TARGET_ARCHITECTURE -DUSE_COTIRE=true && cmake --build . && QT_QPA_PLATFORM=offscreen ctest -V && cpack"
