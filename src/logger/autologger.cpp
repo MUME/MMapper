@@ -113,7 +113,7 @@ void AutoLogger::deleteOldLogs()
 
     // Sort files so we can delete the oldest
     std::sort(fileInfoList.begin(), fileInfoList.end(), [](const auto &a, const auto &b) {
-        return a.created() < b.created();
+        return a.birthTime() < b.birthTime();
     });
 
     qint64 totalFileSize = 0, deleteFileSize = 0;
@@ -124,7 +124,7 @@ void AutoLogger::deleteOldLogs()
         bool deleteFile = false;
         switch (conf.cleanupStrategy) {
         case AutoLoggerEnum::DeleteDays:
-            if (fileInfo.created().date().daysTo(today) >= conf.deleteWhenLogsReachDays)
+            if (fileInfo.birthTime().date().daysTo(today) >= conf.deleteWhenLogsReachDays)
                 deleteFile = true;
             break;
         case AutoLoggerEnum::DeleteSize:

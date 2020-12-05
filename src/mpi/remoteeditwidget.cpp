@@ -677,7 +677,7 @@ auto RemoteEditWidget::createTextEdit() -> Editor *
                                     y + contentsMargins().top() + contentsMargins().bottom()));
     pTextEdit->setLineWrapMode(Editor::LineWrapMode::NoWrap);
     pTextEdit->setSizeIncrement(fm.averageCharWidth(), fm.lineSpacing());
-    pTextEdit->setTabStopWidth(fm.width(" ") * 8); // A tab is 8 spaces wide
+    pTextEdit->setTabStopDistance(fm.horizontalAdvance(" ") * 8); // A tab is 8 spaces wide
     pTextEdit->showWhitespace(false);
 
     auto *const doc = pTextEdit->document();
