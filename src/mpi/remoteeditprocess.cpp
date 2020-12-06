@@ -18,17 +18,17 @@
 #include "../configuration/configuration.h"
 #include "../global/TextUtils.h"
 #include "../global/io.h"
+#include "../global/random.h"
 
 static constexpr const std::string_view VALID
     = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-static constexpr const auto VALID_LEN = static_cast<int>(VALID.length());
+static constexpr const auto VALID_LEN = VALID.length();
 
 static std::string randomString(int length)
 {
     std::ostringstream os;
     for (int i = 0; i < length; i++) {
-        const int index = std::rand() % VALID_LEN; // NOLINT
-        os << VALID[static_cast<size_t>(index)];
+        os << VALID[getRandom(VALID_LEN)];
     }
     return os.str();
 }

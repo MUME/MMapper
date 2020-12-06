@@ -16,6 +16,7 @@
 #include <QVariantMap>
 
 #include "../configuration/configuration.h"
+#include "../global/random.h"
 #include "CGroup.h"
 #include "CGroupChar.h"
 #include "CGroupCommunicator.h"
@@ -332,7 +333,7 @@ void GroupServer::parseLoginInformation(GroupSocket *socket, const QVariantMap &
         return;
     }
     const QString &nameStr = playerData["name"].toString();
-    const QString tempName = QString("%1-%2").arg(nameStr).arg(rand() % 1000); //NOLINT
+    const QString tempName = QString("%1-%2").arg(nameStr).arg(getRandom(1000));
     socket->setName(tempName.toLatin1());
     emit sendLog(QString("'%1' is trying to join the group as '%2'.").arg(tempName).arg(nameStr));
 
