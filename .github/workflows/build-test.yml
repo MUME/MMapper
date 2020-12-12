@@ -103,12 +103,12 @@ jobs:
       #
     - if: steps.changes.outputs.COVERAGE
       name: Prepare lcov counters
-      run: 'lcov --zerocounters --directory .'
+      run: lcov --zerocounters --directory .
     - name: Run unit tests
-      run: 'ctest -V'
+      run: ctest -V
       env:
         QT_QPA_PLATFORM: offscreen
-     - if: steps.changes.outputs.COVERAGE
+    - if: steps.changes.outputs.COVERAGE
       name: Run lcov
       run: |
         lcov --remove coverage.info '/usr/*' "${HOME}"'/.cache/*' --output-file coverage.info
@@ -136,4 +136,4 @@ jobs:
       # Package
       # 
     - name: Package MMapper
-      run: 'cpack'
+      run: cpack
