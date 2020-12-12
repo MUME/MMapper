@@ -13,7 +13,6 @@
 #include <string>
 #include <QDebug>
 #include <QString>
-#include <QVariant>
 #include <QtGlobal>
 
 #include "../mapdata/mmapper2exit.h"

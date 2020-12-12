@@ -10,7 +10,6 @@
 #include <vector>
 #include <QList>
 #include <QString>
-#include <QVariant>
 #include <QtCore>
 #include <QtGlobal>
 

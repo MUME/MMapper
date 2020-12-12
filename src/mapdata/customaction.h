@@ -6,9 +6,6 @@
 
 #include <list>
 #include <memory>
-#include <QVariant>
-#include <QtCore>
-#include <QtGlobal>
 
 #include "../expandoracommon/coordinate.h"
 #include "../global/roomid.h"

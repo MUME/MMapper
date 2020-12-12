@@ -7,8 +7,6 @@
 #include <cassert>
 #include <set>
 #include <stdexcept>
-#include <QVariant>
-#include <QVector>
 
 #include "../global/range.h"
 #include "../global/roomid.h"
@@ -40,7 +38,7 @@ private:
     RoomIdSet outgoing;
 
 public:
-    // This has to exist as long as ExitsList uses QVector<Exit>.
+    // This has to exist as long as ExitsList uses EnumIndexedArray<Exit>.
     Exit() = default;
     ~Exit() = default;
 
