@@ -246,6 +246,11 @@ void ConnectToNeighbours::exec(const RoomId cid)
         connectRooms(center, other, ExitDirEnum::WEST, cid);
         other.x += 2;
         connectRooms(center, other, ExitDirEnum::EAST, cid);
+        other.x--;
+        other.z--;
+        connectRooms(center, other, ExitDirEnum::DOWN, cid);
+        other.z += 2;
+        connectRooms(center, other, ExitDirEnum::UP, cid);
     }
 }
 
