@@ -33,7 +33,7 @@ jobs:
       run: |
         sudo apt update -qq
         sudo apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev cmake ninja-build libminiupnpc-dev
-       export MMAPPER_CMAKE_EXTRA=-DUSE_COTIRE=true
+        export MMAPPER_CMAKE_EXTRA=-DUSE_COTIRE=true
     - if: contains( matrix.os, 'ubuntu' ) && matrix.compiler == 'gcc'
       name: Install GCC
       run: |
