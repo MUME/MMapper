@@ -122,9 +122,9 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
     int weekDay = -1;
 
     if (mumeTime.at(0).isDigit()) {
-        // 3pm on Highday, the 18th of Halimath, year 3030 of the Third Age.
+        // 3 pm on Highday, the 18th of Halimath, year 3030 of the Third Age.
         static const QRegularExpression rx(
-            R"(^(\d+)\W*(am|pm) on (\w+), the (\d+).{2} of (\w+), year (\d+) of the Third Age.$)");
+            R"(^(\d+)(?::\d{2})?\W*(am|pm) on (\w+), the (\d+).{2} of (\w+), year (\d+) of the Third Age.$)");
         auto match = rx.match(mumeTime);
         if (!match.hasMatch())
             return;
