@@ -127,12 +127,13 @@ QList<Coordinate> MapData::getPath(const Coordinate &start, const CommandQueue &
             }
 
             const SharedConstRoom &tmp = roomIndex[e.outFirst()];
-            if (room == nullptr) {
-                break;
-            }
 
             // WARNING: room is reassigned here!
             room = tmp.get();
+
+            if (room == nullptr) {
+                break;
+            }
             ret.append(room->getPosition());
         }
     }
