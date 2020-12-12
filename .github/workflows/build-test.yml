@@ -1,0 +1,142 @@
+name: Build MMapper
+
+on:
+  push:
+    branches:
+      - master
+    tags-ignore:
+      - '*'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.experimental }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        compiler: ['clang', 'gcc']
+      exclude:
+        - os: macos-latest
+          compiler: 'gcc'
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+
+      #
+      # Install Packages (Ubuntu)
+      #
+   - if: contains( matrix.os, 'ubuntu')
+      name: Install Packages
+      run: |
+        sudo apt update -qq
+        sudo apt install -y build-essential git qt5-qmake libqt5opengl5-dev zlib1g-dev libssl-dev cmake ninja-build libminiupnpc-dev
+        export MMAPPER_CMAKE_EXTRA=-DUSE_COTIRE=true
+   - if: contains( matrix.os, 'ubuntu') && matrix.compiler == 'gcc' )
+     name: Install GCC
+     run: |
+       sudo apt install -y g++-10
+       export QMAKESPEC=linux-g++
+       export CC=gcc-10
+       export CXX=g++-10
+   - if: contains( matrix.os, 'ubuntu') && matrix.compiler == 'clang' )
+     name: Install Clang
+     run: |
+       sudo apt install -y clang-10 clang-format lcov binutils
+       export QMAKESPEC=linux-clang
+       export CC=clang-10
+       export CXX=clang++-10
+       export MMAPPER_CMAKE_EXTRA="$MMAPPER_CMAKE_EXTRA -DUSE_CODE_COVERAGE=true"
+       COVERAGE='true'
+       STYLE='true'
+       echo ::set-output name=COVERAGE::${COVERAGE}
+       echo ::set-output name=STYLE::${STYLE}
+
+
+      #
+      # Install Packages (Mac)
+      #
+    - if: contains( matrix.os, 'mac')
+      name: Install Packages
+      run: |
+        brew install qt5 cmake openssl\@1.1 lcov miniupnpc ninja
+        brew link qt5 --force
+        export PATH=/usr/local/opt/qt5/bin:$PATH
+        export QMAKESPEC=macx-clang
+        export MMAPPER_CMAKE_EXTRA=-DOPENSSL_ROOT_DIR=/usr/local/opt/openssl\@1.1
+
+
+       #
+       # Code Style
+       #
+    - if: steps.changes.outputs.STYLE
+      name: Check Code Style
+      run: |
+        clang-format -version
+        find . -iname *.h -o -iname *.c -o -iname *.cpp -o -iname *.hpp | xargs -n 1 -P $(getconf _NPROCESSORS_ONLN) $CLANG_FORMAT -style=file -i -fallback-style=none
+        if  [[ -n $(git diff) ]]; then
+          echo
+          git diff
+          echo
+          echo "Please fix your code style:"
+          echo "find . -iname *.h -o -iname *.c -o -iname *.cpp -o -iname *.hpp | xargs -n 1 -P \$(getconf _NPROCESSORS_ONLN) clang-format -style=file -i -fallback-style=none"
+          exit -1
+        fi
+
+
+       #
+       # Build
+       #
+    - name: Build MMapper
+      run: |
+        mkdir build
+        cd build
+        cmake --version
+        cmake .. -DCMAKE_BUILD_TYPE=Debug -G 'Ninja' $MMAPPER_CMAKE_EXTRA || exit -1
+        cmake --build .
+
+
+      #
+      # Run tests
+      #
+    - if: steps.changes.outputs.COVERAGE
+      name: Prepare lcov counters
+      run: |
+        lcov --zerocounters --directory .
+    - name: Run unit tests
+      run: |
+        QT_QPA_PLATFORM=offscreen ctest -V
+     - if: steps.changes.outputs.COVERAGE
+      name: Run lcov
+      run: |
+        lcov --remove coverage.info '/usr/*' "${HOME}"'/.cache/*' --output-file coverage.info
+        lcov --directory . --capture --output-file coverage.info
+        lcov --list coverage.info
+        bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "codecov.io did not collect coverage reports" 
+    - if: steps.changes.outputs.STYLE
+      name: Text Encoding Sanity Check
+      run: |
+        if  [[ -n $(nm -C src/mmapper | grep -w 'QString::\(to\|from\)StdString') ]]; then
+          nm -C src/mmapper | grep -w 'QString::\(to\|from\)StdString'
+          echo
+          echo
+          echo "Please avoid using QString::fromStdString() and QString::toStdString()"
+          echo
+          echo "Both functions assume the user wants utf8, but MMapper almost always expects"
+          echo "std::string to have latin1 encoding."
+          echo
+          echo "Convert any uses to corresponding functions in TextUtils e.g. ::toQStringUtf8()"
+          exit -1
+        fi
+
+
+      #
+      # Package
+      # 
+    - name: Package MMapper
+      run: |
+        cpack
