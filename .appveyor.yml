@@ -110,9 +110,9 @@ for:
     install:
       - ps: $env:package_version = ("$(git describe --tags --always --long)").trim()
       - ps: Update-AppveyorBuild -Version "$env:package_version-$env:APPVEYOR_BUILD_NUMBER"
-      - sh: sudo add-apt-repository ppa:beineri/opt-qt-5.14.2-bionic -y
+      - sh: sudo add-apt-repository ppa:beineri/opt-qt-5.15.2-bionic -y
       - sh: sudo apt update -qq
-      - sh: sudo apt install -y qt514base libgl1-mesa-dev build-essential git zlib1g-dev libssl-dev wget fuse cmake libminiupnpc-dev
+      - sh: sudo apt install -y qt515base libgl1-mesa-dev build-essential git zlib1g-dev libssl-dev wget fuse cmake libminiupnpc-dev
       - sh: source /opt/qt*/bin/qt*-env.sh
 
     build_script:
