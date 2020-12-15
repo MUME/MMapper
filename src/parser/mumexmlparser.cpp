@@ -157,7 +157,7 @@ void MumeXmlParser::parse(const TelnetData &data)
             }
             return false;
         };
-        sendToUser(m_lineToUser, isGoAhead(data.type));
+        //sendToUser(m_lineToUser, isGoAhead(data.type));
 
         {
             // Simplify the output and run actions
