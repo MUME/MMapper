@@ -137,12 +137,6 @@ signals:
     // for user commands
     void command(const QByteArray &, const Coordinate &);
 
-    // Tue 15 Dec 2020 02:37:29 PM EST  these are connected to MainWindow
-    // for commands that set the mode (emulation, play, map)
-    void setEmulationMode();
-    void setPlayMode();
-    void setMapMode();
-
 public slots:
     virtual void parseNewMudInput(const TelnetData &) = 0;
     void parseNewUserInput(const TelnetData &);
@@ -189,13 +183,6 @@ public:
     void markCurrentCommand();
 
     bool evalActionMap(StringView line);
-
-    // Tue 15 Dec 2020 03:10:16 PM EST  handle mode commands
-    // these need to be public.  could implement them inline here.
-    void doSetEmulationMode();
-    void doSetPlayMode();
-    void doSetMapMode();
-
 
 private:
     // NOTE: This declaration only exists to avoid the warning

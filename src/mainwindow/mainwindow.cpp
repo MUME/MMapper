@@ -940,8 +940,6 @@ void MainWindow::onPlayMode()
                &MapData::slot_scheduleAction);
     setConfig().general.mapMode = MapModeEnum::PLAY;
     modeMenu->setIcon(mapperMode.playModeAct->icon());
-    // needed so that the menu updates to reflect state set by commands
-    mapperMode.playModeAct->setChecked(true);
 }
 
 void MainWindow::onMapMode()
@@ -954,8 +952,6 @@ void MainWindow::onMapMode()
             &MapData::slot_scheduleAction);
     setConfig().general.mapMode = MapModeEnum::MAP;
     modeMenu->setIcon(mapperMode.mapModeAct->icon());
-    // needed so that the menu updates to reflect state set by commands
-    mapperMode.mapModeAct->setChecked(true);
 }
 
 void MainWindow::onOfflineMode()
@@ -968,8 +964,6 @@ void MainWindow::onOfflineMode()
                &MapData::slot_scheduleAction);
     setConfig().general.mapMode = MapModeEnum::OFFLINE;
     modeMenu->setIcon(mapperMode.offlineModeAct->icon());
-    // needed so that the menu updates to reflect state set by commands
-    mapperMode.offlineModeAct->setChecked(true);
 }
 
 void MainWindow::disableActions(bool value)
