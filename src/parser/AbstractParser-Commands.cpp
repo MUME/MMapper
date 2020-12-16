@@ -914,8 +914,6 @@ bool AbstractParser::evalSpecialCommandMap(StringView args)
     return rec.callback(matched, args);
 }
 
-
-// Tue 15 Dec 2020 03:09:04 PM EST  handle mode commands
 // these signals are connected to the mainwindow
 void AbstractParser::doSetEmulationMode() {
     qInfo() << "set emulation mode";

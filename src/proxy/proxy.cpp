@@ -235,7 +235,6 @@ void Proxy::start()
     connect(mudSocket, &MumeSocket::log, mw, &MainWindow::log);
 
 
-    // Tue 15 Dec 2020 02:31:07 PM EST
     // connect signals emitted from user commands to change mode;
     // they are connected here because proxy knows about both the parser
     // (within which commands are handled) and the mainwindow, where the mode
