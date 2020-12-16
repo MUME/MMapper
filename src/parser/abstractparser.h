@@ -195,7 +195,6 @@ public:
     void doSetPlayMode();
     void doSetMapMode();
 
-
 private:
     // NOTE: This declaration only exists to avoid the warning
     // about the "event" signal hiding this function function.

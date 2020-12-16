@@ -915,15 +915,18 @@ bool AbstractParser::evalSpecialCommandMap(StringView args)
 }
 
 // these signals are connected to the mainwindow
-void AbstractParser::doSetEmulationMode() {
+void AbstractParser::doSetEmulationMode()
+{
     qInfo() << "set emulation mode";
     emit setEmulationMode();
 }
 
-void AbstractParser::doSetPlayMode() {
+void AbstractParser::doSetPlayMode()
+{
     emit setPlayMode();
 }
 
-void AbstractParser::doSetMapMode() {
+void AbstractParser::doSetMapMode()
+{
     emit setMapMode();
 }
