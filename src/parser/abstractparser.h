@@ -137,6 +137,12 @@ signals:
     // for user commands
     void command(const QByteArray &, const Coordinate &);
 
+    // for commands that set the mode (emulation, play, map)
+    // these are connected to MainWindow
+    void setEmulationMode();
+    void setPlayMode();
+    void setMapMode();
+
 public slots:
     virtual void parseNewMudInput(const TelnetData &) = 0;
     void parseNewUserInput(const TelnetData &);
@@ -183,6 +189,11 @@ public:
     void markCurrentCommand();
 
     bool evalActionMap(StringView line);
+
+    // these need to be public.  could implement them inline here.
+    void doSetEmulationMode();
+    void doSetPlayMode();
+    void doSetMapMode();
 
 private:
     // NOTE: This declaration only exists to avoid the warning

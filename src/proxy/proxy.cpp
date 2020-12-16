@@ -234,6 +234,14 @@ void Proxy::start()
     connect(mudSocket, &MumeSocket::processMudStream, mudTelnet, &MudTelnet::onAnalyzeMudStream);
     connect(mudSocket, &MumeSocket::log, mw, &MainWindow::log);
 
+    // connect signals emitted from user commands to change mode;
+    // they are connected here because proxy knows about both the parser
+    // (within which commands are handled) and the mainwindow, where the mode
+    // state is stored.
+    connect(parserXml, &AbstractParser::setEmulationMode, mw, &MainWindow::onOfflineMode);
+    connect(parserXml, &AbstractParser::setPlayMode, mw, &MainWindow::onPlayMode);
+    connect(parserXml, &AbstractParser::setMapMode, mw, &MainWindow::onMapMode);
+
     connectToMud();
 }
 
@@ -255,7 +263,6 @@ void Proxy::onMudConnected()
         emit log("Proxy", "Sent MUME Protocol Initiator remote editing request");
         sendToMud(idRemoteEditing);
     }
-
     sendToMud(QByteArray("~$#EX2\n3G\n"));
     emit log("Proxy", "Sent MUME Protocol Initiator XML request");
 }
