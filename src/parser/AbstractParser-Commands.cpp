@@ -21,6 +21,7 @@
 #include "../mapdata/DoorFlags.h"
 #include "../mapdata/ExitFlags.h"
 #include "../mapdata/enums.h"
+#include "../mapdata/infomark.h"
 #include "../mapdata/mmapper2room.h"
 #include "../syntax/SyntaxArgs.h"
 #include "../syntax/TreeParser.h"
@@ -39,7 +40,7 @@ const Abbrev cmdDoorHelp{"doorhelp", 5};
 const Abbrev cmdGroup{"group", 5};
 const Abbrev cmdGroupTell{"gtell", 2};
 const Abbrev cmdHelp{"help", 2};
-const Abbrev cmdMarkCurrent{"markcurrent", 4};
+const Abbrev cmdMark{"mark", 2};
 const Abbrev cmdRemoveDoorNames{"remove-secret-door-names"};
 const Abbrev cmdRoom{"room", 2};
 const Abbrev cmdSearch{"search", 3};
@@ -325,6 +326,29 @@ Abbrev getParserCommandName(const ExitFlagEnum x)
         CASE3(DAMAGE, "damage", -1);
         CASE3(FALL, "fall", -1);
         CASE3(GUARDED, "guarded", 5);
+    }
+    return Abbrev{};
+#undef CASE3
+}
+
+Abbrev getParserCommandName(const InfoMarkClassEnum x)
+{
+#define CASE3(UPPER, s, n) \
+    do { \
+    case InfoMarkClassEnum::UPPER: \
+        return Abbrev{s, n}; \
+    } while (false)
+    switch (x) {
+        CASE3(GENERIC, "generic", -1);
+        CASE3(HERB, "herb", -1);
+        CASE3(RIVER, "river", 2);
+        CASE3(PLACE, "place", -1);
+        CASE3(MOB, "mob", -1);
+        CASE3(COMMENT, "comment", -1);
+        CASE3(ROAD, "road", 2);
+        CASE3(OBJECT, "object", -1);
+        CASE3(ACTION, "action", -1);
+        CASE3(LOCALITY, "locality", -1);
     }
     return Abbrev{};
 #undef CASE3
@@ -722,15 +746,6 @@ void AbstractParser::initSpecialCommandMap()
         },
         makeSimpleHelp("Send a grouptell with the [message]."));
     add(
-        cmdMarkCurrent,
-        [this](const std::vector<StringView> & /*s*/, StringView rest) {
-            if (!rest.isEmpty())
-                return false;
-            this->doMarkCurrentCommand();
-            return true;
-        },
-        makeSimpleHelp("Highlight the room you are currently in."));
-    add(
         cmdRemoveDoorNames,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             if (!rest.isEmpty())
@@ -809,6 +824,15 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Launches a web browser so you can vote for MUME on TMC!"));
+
+    /* mark commands */
+    add(
+        cmdMark,
+        [this](const std::vector<StringView> & /*s*/, StringView rest) {
+            parseMark(rest);
+            return true;
+        },
+        makeSimpleHelp("Perform actions on the current marks."));
 
     /* room commands */
     add(

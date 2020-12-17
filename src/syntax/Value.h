@@ -13,6 +13,7 @@
 #include "../global/RuleOf5.h"
 #include "../mapdata/DoorFlags.h"
 #include "../mapdata/ExitFlags.h"
+#include "../mapdata/infomark.h"
 
 struct Pair;
 struct Value;
@@ -60,7 +61,8 @@ public:
     X(std::string, const std::string &, String) \
     X(Vector, const Vector &, Vector) \
     X(DoorFlagEnum, DoorFlagEnum, DoorFlag) \
-    X(ExitFlagEnum, ExitFlagEnum, ExitFlag)
+    X(ExitFlagEnum, ExitFlagEnum, ExitFlag) \
+    X(InfoMarkClassEnum, InfoMarkClassEnum, InfoMarkClass)
 
 #define DECL_ENUM(ValueType, RefType, CamelCase) CamelCase,
     enum class NODISCARD IndexEnum : uint8_t { Null, X_FOREACH_VALUE_TYPE(DECL_ENUM) };

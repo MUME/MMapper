@@ -804,12 +804,6 @@ void AbstractParser::dirsCommand(const RoomFilter &f)
     }
 }
 
-void AbstractParser::markCurrentCommand()
-{
-    const auto tmpSel = RoomSelection::createSelection(m_mapData, getTailPosition());
-    emit sig_newRoomSelection(SigRoomSelection{tmpSel});
-}
-
 ExitDirEnum AbstractParser::tryGetDir(StringView &view)
 {
     if (view.isEmpty())
@@ -875,12 +869,6 @@ void AbstractParser::doGetDirectionsCommand(StringView view)
     } else {
         sendToUser(RoomFilter::parse_help);
     }
-}
-
-void AbstractParser::doMarkCurrentCommand()
-{
-    markCurrentCommand();
-    sendToUser("--->Current room marked temporarily on the map.\n");
 }
 
 void AbstractParser::doRemoveDoorNamesCommand()
@@ -976,7 +964,6 @@ void AbstractParser::showMiscHelp()
 {
     showHeader("Miscellaneous commands");
     sendToUser(QString("  %1back        - delete prespammed commands from queue\n"
-                       "  %1markcurrent - select the room you are currently in\n"
                        "  %1time        - display current MUME time\n"
                        "  %1trollexit   - toggle troll-only exit mapping for direct sunlight\n"
                        "  %1vote        - vote for MUME on TMC!\n")
@@ -989,8 +976,9 @@ void AbstractParser::showHelp()
                      "MMapper help:\n"
                      "-------------\n"
                      "\n"
-                     "Room mapping commands:\n"
+                     "Mapping commands:\n"
                      "  %1room        - (see \"%1room ??\" for syntax help)\n"
+                     "  %1mark        - (see \"%1mark ??\" for syntax help)\n"
                      "\n"
                      "Group commands:\n"
                      "  %1group       - (see \"%1group ??\" for syntax help)\n"

@@ -138,6 +138,9 @@ signals:
     // these are connected to MainWindow
     void sig_setMode(MapModeEnum);
 
+    // emitted when new infomark added by comand
+    void sig_infoMarksChanged();
+
 public slots:
     void slot_parseNewUserInput(const TelnetData &);
 
@@ -181,7 +184,6 @@ public:
 
     void searchCommand(const RoomFilter &f);
     void dirsCommand(const RoomFilter &f);
-    void markCurrentCommand();
 
     NODISCARD bool evalActionMap(StringView line);
 
@@ -217,7 +219,6 @@ private:
     void doConnectToHost();
     void doDisconnectFromHost();
     void doRemoveDoorNamesCommand();
-    void doMarkCurrentCommand();
     void doSearchCommand(StringView view);
     void doGetDirectionsCommand(StringView view);
     void toggleTrollMapping();
@@ -232,6 +233,7 @@ private:
     NODISCARD bool evalSpecialCommandMap(StringView args);
 
     void parseHelp(StringView words);
+    void parseMark(StringView input);
     void parseRoom(StringView input);
     void parseGroup(StringView input);
 

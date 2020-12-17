@@ -75,7 +75,11 @@ void AbstractParser::initActionMap()
         m_queue.clear();
         pathChanged();
         emit sig_releaseAllPaths();
-        markCurrentCommand();
+
+        // Highlight the current room
+        const auto tmpSel = RoomSelection::createSelection(m_mapData, getTailPosition());
+        emit sig_newRoomSelection(SigRoomSelection{tmpSel});
+
         m_group.sendEvent(CharacterPositionEnum::DEAD);
     };
     addStartsWith("You are dead!", dead);

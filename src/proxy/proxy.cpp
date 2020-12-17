@@ -261,6 +261,12 @@ void Proxy::slot_start()
     // state is stored.
     connect(parserXml, &AbstractParser::sig_setMode, mw, &MainWindow::slot_setMode);
 
+    // emitted after modifying infomarks for _infomark command
+    connect(parserXml,
+            &AbstractParser::sig_infoMarksChanged,
+            &m_mapCanvas,
+            &MapCanvas::infomarksChanged);
+
     connectToMud();
 }
 

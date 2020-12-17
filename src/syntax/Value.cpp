@@ -71,6 +71,11 @@ static void print(std::ostream &os, ExitFlagEnum value)
     os << "ExitFlagEnum(" << static_cast<int>(value) << ")";
 }
 
+static void print(std::ostream &os, InfoMarkClassEnum value)
+{
+    os << "InfoMarkClassEnum(" << static_cast<int>(value) << ")";
+}
+
 } // namespace value_helper
 
 std::ostream &operator<<(std::ostream &os, const Value &value)

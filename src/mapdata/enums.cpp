@@ -43,6 +43,8 @@ DEFINE_GETTER(RoomMobFlagEnum, NUM_ROOM_MOB_FLAGS, getAllMobFlags)
 DEFINE_GETTER(RoomLoadFlagEnum, NUM_ROOM_LOAD_FLAGS, getAllLoadFlags)
 DEFINE_GETTER(DoorFlagEnum, NUM_DOOR_FLAGS, getAllDoorFlags)
 DEFINE_GETTER(ExitFlagEnum, NUM_EXIT_FLAGS, getAllExitFlags)
+DEFINE_GETTER(InfoMarkClassEnum, NUM_INFOMARK_CLASSES, getAllInfoMarkClasses)
+DEFINE_GETTER(InfoMarkTypeEnum, NUM_INFOMARK_TYPES, getAllInfoMarkTypes)
 } // namespace enums
 
 #undef DEFINE_GETTER

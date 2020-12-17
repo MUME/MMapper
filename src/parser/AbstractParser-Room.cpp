@@ -652,7 +652,24 @@ void AbstractParser::parseRoom(StringView input)
                       buildSyntax(abb("clear"), clearRoomNote),
                       buildSyntax(abb("set"), TokenMatcher::alloc<ArgRest>(), setRoomNote));
 
-    auto roomSyntax = buildSyntax(doorSyntax, exitFlagsSyntax, flagsSyntax, noteSyntax, printSyntax);
+    auto selectRoom = Accept(
+        [this](User &user, const Pair *const /*args*/) {
+            auto &os = user.getOstream();
+            const auto tmpSel = RoomSelection::createSelection(m_mapData, getTailPosition());
+            emit sig_newRoomSelection(SigRoomSelection{tmpSel});
+            os << "--->Current room marked temporarily on the map." << std::endl;
+            send_ok(os);
+        },
+        "select room");
+
+    auto selectSyntax = buildSyntax(abb("select"), selectRoom);
+
+    auto roomSyntax = buildSyntax(doorSyntax,
+                                  exitFlagsSyntax,
+                                  flagsSyntax,
+                                  noteSyntax,
+                                  printSyntax,
+                                  selectSyntax);
 
     eval("room", roomSyntax, input);
 }

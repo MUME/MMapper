@@ -8,6 +8,7 @@
 #include "../global/Flags.h"
 #include "../mapdata/DoorFlags.h"
 #include "../mapdata/ExitFlags.h"
+#include "../mapdata/infomark.h"
 #include "../mapdata/mmapper2room.h"
 #include "Abbrev.h"
 #include "DoorAction.h"
@@ -30,6 +31,7 @@ NODISCARD QByteArray getCommandName(DoorActionEnum action);
 NODISCARD Abbrev getParserCommandName(DoorActionEnum action);
 NODISCARD Abbrev getParserCommandName(DoorFlagEnum x);
 NODISCARD Abbrev getParserCommandName(ExitFlagEnum x);
+NODISCARD Abbrev getParserCommandName(InfoMarkClassEnum x);
 NODISCARD Abbrev getParserCommandName(RoomAlignEnum x);
 NODISCARD Abbrev getParserCommandName(RoomLightEnum x);
 NODISCARD Abbrev getParserCommandName(RoomLoadFlagEnum x);
