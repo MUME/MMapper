@@ -40,12 +40,12 @@ void AbstractParser::initActionMap()
 
     /// Positions
     auto sleeping = [this](StringView /*view*/) {
-        emit sendCharacterPositionEvent(CharacterPositionEnum::SLEEPING);
+        m_group.sendEvent(CharacterPositionEnum::SLEEPING);
     };
     addStartsWith("You go to sleep.", sleeping);
     addStartsWith("You are already sound asleep.", sleeping);
     auto sitting = [this](StringView /*view*/) {
-        emit sendCharacterPositionEvent(CharacterPositionEnum::SITTING);
+        m_group.sendEvent(CharacterPositionEnum::SITTING);
     };
     addStartsWith("You wake, and sit up.", sitting);
     addStartsWith("You sit down.", sitting);
@@ -53,19 +53,19 @@ void AbstractParser::initActionMap()
     addStartsWith("You're sitting already.", sitting);
     addStartsWith("You feel better and sit up.", sitting); // incap -> sitting
     auto resting = [this](StringView /*view*/) {
-        emit sendCharacterPositionEvent(CharacterPositionEnum::RESTING);
+        m_group.sendEvent(CharacterPositionEnum::RESTING);
     };
     addStartsWith("You rest your tired bones.", resting);
     addStartsWith("You sit down and rest your tired bones.", resting);
     addStartsWith("You are already resting.", resting);
     auto standing = [this](StringView /*view*/) {
-        emit sendCharacterPositionEvent(CharacterPositionEnum::STANDING);
+        m_group.sendEvent(CharacterPositionEnum::STANDING);
     };
     addStartsWith("You stop resting and stand up.", standing);
     addStartsWith("You stand up.", standing);
     addStartsWith("You are already standing.", standing);
     auto incap = [this](StringView /*view*/) {
-        emit sendCharacterPositionEvent(CharacterPositionEnum::INCAPACITATED);
+        m_group.sendEvent(CharacterPositionEnum::INCAPACITATED);
     };
     addStartsWith("You are incapacitated and will slowly die, if not aided.", incap);
     addStartsWith("You are in a pretty bad shape, unable to do anything!", incap);
@@ -76,7 +76,7 @@ void AbstractParser::initActionMap()
         pathChanged();
         emit releaseAllPaths();
         markCurrentCommand();
-        emit sendCharacterPositionEvent(CharacterPositionEnum::DEAD);
+        m_group.sendEvent(CharacterPositionEnum::DEAD);
     };
     addStartsWith("You are dead!", dead);
 
@@ -133,7 +133,7 @@ void AbstractParser::initActionMap()
     };
     auto sleptOn = [this](StringView /*view*/) {
         emit sendCharacterAffectEvent(CharacterAffectEnum::SLEPT, true);
-        emit sendCharacterPositionEvent(CharacterPositionEnum::SLEEPING);
+        m_group.sendEvent(CharacterPositionEnum::SLEEPING);
     };
     addStartsWith("You feel very sleepy... zzzzzz", sleptOn);
     addStartsWith("You feel less tired.", sleptOff);
@@ -229,7 +229,7 @@ void AbstractParser::initActionMap()
         if (!m_queue.isEmpty())
             m_queue.dequeue();
         pathChanged();
-        emit sendCharacterPositionEvent(CharacterPositionEnum::RESTING);
+        m_group.sendEvent(CharacterPositionEnum::RESTING);
     };
     addRegex(R"(^ZBLAM! .+ doesn't want you riding (him|her|it) anymore.$)", zblam);
 

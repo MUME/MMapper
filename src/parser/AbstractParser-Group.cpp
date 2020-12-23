@@ -132,8 +132,3 @@ void AbstractParser::sendCharacterAffectEvent(const CharacterAffectEnum affect, 
 {
     m_group.sendCharacterAffectEvent(affect, enable);
 }
-
-void AbstractParser::sendCharacterPositionEvent(CharacterPositionEnum position)
-{
-    m_group.sendCharacterPositionEvent(position);
-}

@@ -28,6 +28,6 @@ public:
 public:
     void sendScoreLineEvent(const QByteArray &arr) const;
     void sendPromptLineEvent(const QByteArray &arr) const;
-    void sendCharacterPositionEvent(CharacterPositionEnum position) const;
+    void sendEvent(CharacterPositionEnum position) const;
     void sendCharacterAffectEvent(CharacterAffectEnum affect, bool enable) const;
 };
