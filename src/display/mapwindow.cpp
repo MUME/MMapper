@@ -165,7 +165,6 @@ void MapWindow::graphicsSettingsChanged()
 
 void MapWindow::centerOnWorldPos(const glm::vec2 &worldPos)
 {
-    // CHANGE: previously this function didn't emit a signal.
     const auto scrollPos = m_knownMapSize.worldToScroll(worldPos);
     centerOnScrollPos(scrollPos);
 }
