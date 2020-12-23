@@ -127,8 +127,3 @@ void AbstractParser::sendPromptLineEvent(const QByteArray &arr)
 {
     m_group.sendPromptLineEvent(arr);
 }
-
-void AbstractParser::sendCharacterAffectEvent(const CharacterAffectEnum affect, const bool enable)
-{
-    m_group.sendCharacterAffectEvent(affect, enable);
-}

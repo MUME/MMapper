@@ -29,5 +29,5 @@ public:
     void sendScoreLineEvent(const QByteArray &arr) const;
     void sendPromptLineEvent(const QByteArray &arr) const;
     void sendEvent(CharacterPositionEnum position) const;
-    void sendCharacterAffectEvent(CharacterAffectEnum affect, bool enable) const;
+    void sendEvent(CharacterAffectEnum affect, bool enable) const;
 };

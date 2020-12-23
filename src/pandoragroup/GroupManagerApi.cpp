@@ -39,8 +39,7 @@ void GroupManagerApi::sendEvent(const CharacterPositionEnum pos) const
     m_group.acceptVisitor([pos](Mmapper2Group &group) { group.updateCharacterPosition(pos); });
 }
 
-void GroupManagerApi::sendCharacterAffectEvent(const CharacterAffectEnum affect,
-                                               const bool enable) const
+void GroupManagerApi::sendEvent(const CharacterAffectEnum affect, const bool enable) const
 {
     m_group.acceptVisitor(
         [affect, enable](Mmapper2Group &group) { group.updateCharacterAffect(affect, enable); });

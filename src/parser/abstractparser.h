@@ -112,7 +112,6 @@ public:
     void sendPromptToUser();
     void sendScoreLineEvent(const QByteArray &arr);
     void sendPromptLineEvent(const QByteArray &arr);
-    void sendCharacterAffectEvent(CharacterAffectEnum affect, bool enable);
 
 signals:
     // telnet

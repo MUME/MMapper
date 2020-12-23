@@ -82,10 +82,10 @@ void AbstractParser::initActionMap()
 
     /// Bash
     auto bashOff = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::BASHED, false);
+        m_group.sendEvent(CharacterAffectEnum::BASHED, false);
     };
     auto bashOn = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::BASHED, true);
+        m_group.sendEvent(CharacterAffectEnum::BASHED, true);
     };
     addStartsWith("Your head stops stinging.", bashOff);
     // No-bash mob
@@ -101,10 +101,10 @@ void AbstractParser::initActionMap()
 
     /// Blind
     auto blindOff = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::BLIND, false);
+        m_group.sendEvent(CharacterAffectEnum::BLIND, false);
     };
     auto blindOn = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::BLIND, true);
+        m_group.sendEvent(CharacterAffectEnum::BLIND, true);
     };
     // blind spell
     addStartsWith("You have been blinded!", blindOn);
@@ -115,10 +115,10 @@ void AbstractParser::initActionMap()
 
     /// Bleeding
     auto bleedOff = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::BLEEDING, false);
+        m_group.sendEvent(CharacterAffectEnum::BLEEDING, false);
     };
     auto bleedOn = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::BLEEDING, true);
+        m_group.sendEvent(CharacterAffectEnum::BLEEDING, true);
     };
     addStartsWith("You bleed from open wounds.", bleedOn);
     addRegex(
@@ -129,10 +129,10 @@ void AbstractParser::initActionMap()
 
     /// Slept
     auto sleptOff = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::SLEPT, false);
+        m_group.sendEvent(CharacterAffectEnum::SLEPT, false);
     };
     auto sleptOn = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::SLEPT, true);
+        m_group.sendEvent(CharacterAffectEnum::SLEPT, true);
         m_group.sendEvent(CharacterPositionEnum::SLEEPING);
     };
     addStartsWith("You feel very sleepy... zzzzzz", sleptOn);
@@ -140,10 +140,10 @@ void AbstractParser::initActionMap()
 
     /// Poisoned
     auto poisonOff = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::POISONED, false);
+        m_group.sendEvent(CharacterAffectEnum::POISONED, false);
     };
     auto poisonOn = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::POISONED, true);
+        m_group.sendEvent(CharacterAffectEnum::POISONED, true);
     };
     // REVISIT: Is this a disease message?
     addStartsWith("You feel very sick.", poisonOn);
@@ -172,10 +172,10 @@ void AbstractParser::initActionMap()
 
     /// Hungry
     auto hungerOff = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::HUNGRY, false);
+        m_group.sendEvent(CharacterAffectEnum::HUNGRY, false);
     };
     auto hungerOn = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::HUNGRY, true);
+        m_group.sendEvent(CharacterAffectEnum::HUNGRY, true);
     };
     addStartsWith("You begin to feel hungry.", hungerOn);
     addStartsWith("You are hungry.", hungerOn);
@@ -184,10 +184,10 @@ void AbstractParser::initActionMap()
 
     /// Thirsty
     auto thirstOff = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::THIRSTY, false);
+        m_group.sendEvent(CharacterAffectEnum::THIRSTY, false);
     };
     auto thirstOn = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::THIRSTY, true);
+        m_group.sendEvent(CharacterAffectEnum::THIRSTY, true);
     };
     addStartsWith("You begin to feel thirsty.", thirstOn);
     addStartsWith("You are thirsty.", thirstOn);
@@ -275,15 +275,15 @@ void AbstractParser::initActionMap()
 
     /// Search, reveal, and flush
     addStartsWith("You begin to search...", [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::SEARCH, true);
+        m_group.sendEvent(CharacterAffectEnum::SEARCH, true);
     });
 
     /// Snared
     auto snaredOff = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::SNARED, false);
+        m_group.sendEvent(CharacterAffectEnum::SNARED, false);
     };
     auto snaredOn = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::SNARED, true);
+        m_group.sendEvent(CharacterAffectEnum::SNARED, true);
     };
     // water serpent
     addEndsWith("wraps itself tightly around you and begins squeezing.", snaredOn);
