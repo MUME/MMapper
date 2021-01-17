@@ -45,8 +45,8 @@ image:
   # AppVeyor builds are ordered by the image list:
   - Visual Studio 2019
   - macos-mojave
-  - Ubuntu2004
   - Ubuntu1804
+  - Ubuntu2004
   - Previous Visual Studio 2019
 
 matrix:
