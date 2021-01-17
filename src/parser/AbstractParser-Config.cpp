@@ -299,6 +299,28 @@ void AbstractParser::doConfig(const StringView &cmd)
     };
 
     const auto configSyntax = syn(
+        syn("mode",
+            syn("play",
+                Accept(
+                    [this](User &user, auto) {
+                        doSetPlayMode();
+                        send_ok(user.getOstream());
+                    },
+                    "play mode")),
+            syn("mapping",
+                Accept(
+                    [this](User &user, auto) {
+                        doSetMapMode();
+                        send_ok(user.getOstream());
+                    },
+                    "mapping mode")),
+            syn("emulation",
+                Accept(
+                    [this](User &user, auto) {
+                        doSetEmulationMode();
+                        send_ok(user.getOstream());
+                    },
+                    "offline emulation mode"))),
         syn("file",
             // TODO: add a command to show what's different from the factory default values,
             // and another command to show what's different from the current save file,
@@ -364,4 +386,20 @@ void AbstractParser::doConfig(const StringView &cmd)
                     makeFixedPointArg(advanced.layerHeight, "layer-height")))));
 
     eval("config", configSyntax, cmd);
+}
+
+// these signals are connected to the mainwindow
+void AbstractParser::doSetEmulationMode()
+{
+    emit setEmulationMode();
+}
+
+void AbstractParser::doSetPlayMode()
+{
+    emit setPlayMode();
+}
+
+void AbstractParser::doSetMapMode()
+{
+    emit setMapMode();
 }

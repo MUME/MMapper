@@ -47,9 +47,6 @@ const Abbrev cmdSet{"set", 2};
 const Abbrev cmdTime{"time", 2};
 const Abbrev cmdTrollExit{"trollexit", 2};
 const Abbrev cmdVote{"vote", 2};
-const Abbrev cmdMap("map", 3);
-const Abbrev cmdPlay("play", 2);
-const Abbrev cmdEmulate("emulate", 3);
 
 Abbrev getParserCommandName(const DoorFlagEnum x)
 {
@@ -729,14 +726,6 @@ void AbstractParser::initSpecialCommandMap()
         },
         makeSimpleHelp("Disconnect from the MUD."));
     add(
-        cmdEmulate,
-        [this](const std::vector<StringView> & /*s*/, StringView /*rest*/) {
-            // enter emulation mode
-            this->doSetEmulationMode();
-            return true;
-        },
-        makeSimpleHelp("Set MMapper to emulation mode."));
-    add(
         cmdGroupTell,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             const auto alias = "tell " + rest.toStdString();
@@ -744,14 +733,6 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Send a grouptell with the [message]."));
-    add(
-        cmdMap,
-        [this](const std::vector<StringView> & /*s*/, StringView /*rest*/) {
-            // enter mapping mode
-            this->doSetMapMode();
-            return true;
-        },
-        makeSimpleHelp("Set MMapper to mapping mode."));
     add(
         cmdMarkCurrent,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
@@ -761,14 +742,6 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Highlight the room you are currently in."));
-    add(
-        cmdPlay,
-        [this](const std::vector<StringView> & /*s*/, StringView /*rest*/) {
-            // enter play mode
-            this->doSetPlayMode();
-            return true;
-        },
-        makeSimpleHelp("Set MMapper to play mode."));
     add(
         cmdRemoveDoorNames,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
@@ -912,21 +885,4 @@ bool AbstractParser::evalSpecialCommandMap(StringView args)
     const auto &s = rec.fullCommand;
     const auto matched = std::vector<StringView>{StringView{s}};
     return rec.callback(matched, args);
-}
-
-// these signals are connected to the mainwindow
-void AbstractParser::doSetEmulationMode()
-{
-    qInfo() << "set emulation mode";
-    emit setEmulationMode();
-}
-
-void AbstractParser::doSetPlayMode()
-{
-    emit setPlayMode();
-}
-
-void AbstractParser::doSetMapMode()
-{
-    emit setMapMode();
 }

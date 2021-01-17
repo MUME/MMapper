@@ -999,10 +999,8 @@ void AbstractParser::showHelp()
                      "\r\nGroup commands:\r\n"
                      "  %1group       - (see \"%1group ??\" for syntax help)\r\n"
                      "  %1gtell       - send group tell\r\n"
-                     "\r\nMode commands:\r\n"
-                     "  %1emulate    - enter emulation mode\r\n"
-                     "  %1map        - start mapping mode\r\n"
-                     "  %1play       - set to play mode\r\n"
+                     "\r\nConfig commands:\r\n"
+                     "  %1config      - (see \"%1config ??\" for syntax help)\r\n"
                      "\r\nHelp commands:\n"
                      "  %1help      - this help text\r\n"
                      "  %1help ??   - full syntax help for the help command\r\n"
@@ -1012,8 +1010,7 @@ void AbstractParser::showHelp()
                      "  %1search [-options] pattern - select matching rooms\r\n"
                      "  %1set [prefix [punct-char]] - change command prefix\r\n"
                      "  %1connect                   - connect to the MUD\r\n"
-                     "  %1disconnect                - disconnect from the MUD\r\n"
-                     "  %1config ??                 - full syntax help for the config command\r\n");
+                     "  %1disconnect                - disconnect from the MUD\r\n");
 
     sendToUser(s.arg(prefixChar));
 }
