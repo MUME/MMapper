@@ -320,6 +320,13 @@ bool MumeXmlParser::element(const QByteArray &line)
                     m_gratuitous = true;
                 }
                 break;
+            case 'e':
+                if (line.startsWith("exits")) {
+                    m_exits = nullString; // Reset string since payload can be from the 'exit' command
+                    m_xmlMode = XmlModeEnum::EXITS;
+                    m_lineFlags.insert(LineFlagEnum::EXITS);
+                }
+                break;
             case 'n':
                 if (line.startsWith("name")) {
                     m_xmlMode = XmlModeEnum::NAME;
@@ -381,7 +388,10 @@ bool MumeXmlParser::element(const QByteArray &line)
                     m_lineToUser.append(::toQByteArrayLatin1(snoopToUser(os.str())));
                     m_exitsReady = true;
                     m_lineFlags.remove(LineFlagEnum::EXITS);
-                    m_xmlMode = XmlModeEnum::NONE;
+                    if (m_lineFlags.contains(LineFlagEnum::ROOM))
+                        m_xmlMode = XmlModeEnum::ROOM;
+                    else
+                        m_xmlMode = XmlModeEnum::NONE;
                 }
                 break;
             }
