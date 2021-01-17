@@ -1,4 +1,27 @@
 ================================
+MMapper 21.01.0 (January 17, 2021)
+================================
+
+New features:
+ - Play, emulation, and mapping modes can be changed with: _config ??
+ - An insecure connection warning will now be displayed if TLS encryption is disabled
+ - Selecting rooms and marks now displays the total count
+
+Bug fixes:
+ - Fix autoexits parsing to support the new MUME XML format
+ - Room online update status can now be changed when multiple rooms are selected
+ - UI now allow remote and local ports above 10000
+ - Connect room(s) to its neighbour rooms now works with up/down
+ - Allow clock to sync with Ainur
+ - Fixed rare crash when a connection was not bi-directional
+ - The world mesh is now updated during a tolerant room updates
+ - Only troll exits are trusted for detecting direct sunlit exits, thereby improving accurancy
+ - Removed the confusing orange bounds that resulted in a mesh rebuild
+ - The display is now updated when changing a room's up to date flag.
+ - DPI is checked when MMapper is started up
+ - Fix _dirs command by swapping n/s
+ 
+================================
 MMapper 20.10.0 (October 13, 2020)
 ================================
 
