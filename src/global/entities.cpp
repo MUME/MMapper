@@ -6,6 +6,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <limits>
 #include <optional>
 #include <stdexcept>
 #include <unordered_map>
