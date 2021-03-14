@@ -70,6 +70,8 @@ set(mmapper_SRCS
     global/Array.h
     global/ChangeMonitor.h
     global/CharBuffer.h
+    global/Charset.cpp
+    global/Charset.h
     global/Color.cpp
     global/Color.h
     global/Debug.h
