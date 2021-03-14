@@ -89,7 +89,7 @@ void UserTelnet::receiveGmcpMessage(const GmcpMessage &msg)
                 const GmcpModule module(moduleStr);
                 receiveGmcpModule(module, !msg.isCoreSupportsRemove());
 
-            } catch (std::exception &e) {
+            } catch (const std::exception &e) {
                 qWarning() << "Module" << moduleStr
                            << (msg.isCoreSupportsRemove() ? "remove" : "add")
                            << "error because:" << e.what();

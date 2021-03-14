@@ -311,7 +311,7 @@ UnquoteResult unquote(const std::string_view &input,
         case ReasonEnum::UNBALANCED_QUOTES:
             return UnquoteResult{UnquoteFailureReason{"unquote: unbalanced quotes"}};
         }
-    } catch (std::exception &ex) {
+    } catch (const std::exception &ex) {
         return UnquoteResult{UnquoteFailureReason{std::string("exception: ") + ex.what()}};
     } catch (...) {
     }

@@ -515,7 +515,7 @@ bool JsonMapStorage::saveData(bool baseMapOnly)
         world.writeMetadata(QFileInfo(destDir, "arda.json"), m_mapData);
         world.writeRoomIndex(roomIndexDir);
         world.writeZones(zoneDir, filter, progressCounter, baseMapOnly);
-    } catch (std::exception &e) {
+    } catch (const std::exception &e) {
         emit log("JsonMapStorage", e.what());
         return false;
     }
