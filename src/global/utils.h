@@ -18,7 +18,12 @@ namespace details {
 template<typename T>
 constexpr bool isBitMask()
 {
-    return (std::is_integral_v<T> && std::is_unsigned_v<T>) || std::is_enum_v<T>;
+    if constexpr (std::is_integral_v<T> && std::is_unsigned_v<T>)
+        return true;
+    else if constexpr (std::is_enum_v<T>)
+        return isBitMask<std::underlying_type_t<T>>();
+    else
+        return false;
 }
 } // namespace details
 
@@ -29,8 +34,10 @@ constexpr bool isPowerOfTwo(const T x) noexcept
     if constexpr (std::is_enum_v<T>) {
         using U = std::underlying_type_t<T>;
         return isPowerOfTwo<U>(static_cast<U>(x));
-    } else {
+    } else if constexpr (std::is_integral_v<T> && std::is_unsigned_v<T>) {
         return x != 0u && (x & (x - 1u)) == 0u;
+    } else {
+        throw std::invalid_argument("x");
     }
 }
 
@@ -41,8 +48,10 @@ constexpr bool isAtLeastTwoBits(const T x) noexcept
     if constexpr (std::is_enum_v<T>) {
         using U = std::underlying_type_t<T>;
         return isAtLeastTwoBits<U>(static_cast<U>(x));
-    } else {
+    } else if constexpr (std::is_integral_v<T> && std::is_unsigned_v<T>) {
         return x != 0u && (x & (x - 1u)) != 0u;
+    } else {
+        throw std::invalid_argument("x");
     }
 }
 
