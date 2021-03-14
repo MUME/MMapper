@@ -197,19 +197,17 @@ public:
         const auto yellow = getBackgroundFormat(Qt::yellow);
         const auto cyan = getBackgroundFormat(Qt::cyan);
 
-        using OptFmt = std::pair<QTextCharFormat, bool>; // poor-man's std::optional
+        using OptFmt = std::optional<QTextCharFormat>;
 #define DECL_FMT(name, color, tooltip) \
     OptFmt opt_##name{}; \
     const auto get_##name##_fmt = [&opt_##name, &color]() -> const QTextCharFormat & { \
-        auto &first = opt_##name.first; \
-        auto &second = opt_##name.second; \
-        if (!second) { \
-            second = true; \
-            first = color; \
+        auto &opt = opt_##name; \
+        if (!opt) { \
+            opt = color; \
             if (USE_TOOLTIPS) \
-                first.setToolTip(tooltip); \
+                opt.value().setToolTip(tooltip); \
         } \
-        return first; \
+        return opt.value(); \
     }
         DECL_FMT(unicode, red, "Unicode");
         DECL_FMT(nbsp, cyan, "NBSP");
