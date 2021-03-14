@@ -163,7 +163,7 @@ public:
 
         m_functions.checkError();
 
-        if (const auto optMode = Functions::toGLenum(m_drawMode)) {
+        if (const std::optional<GLenum> &optMode = Functions::toGLenum(m_drawMode)) {
             m_functions.glDrawArrays(optMode.value(), 0, m_numVerts);
         } else {
             assert(false);

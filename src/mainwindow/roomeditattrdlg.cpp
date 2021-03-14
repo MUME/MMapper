@@ -246,14 +246,14 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
 
     roomDescriptionTextEdit->setLineWrapMode(QTextEdit::NoWrap);
 
-    for (const auto flag : ALL_MOB_FLAGS)
+    for (const RoomMobFlagEnum flag : ALL_MOB_FLAGS)
         mobListItems[flag] = new RoomListWidgetItem(getIcon(flag), getName(flag), getPriority(flag));
     installWidgets(mobListItems,
                    "mob room flags",
                    *mobFlagsListWidget,
                    Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsAutoTristate);
 
-    for (const auto flag : ALL_LOAD_FLAGS)
+    for (const RoomLoadFlagEnum flag : ALL_LOAD_FLAGS)
         loadListItems[flag] = new RoomListWidgetItem(getIcon(flag),
                                                      getName(flag),
                                                      getPriority(flag));
@@ -262,14 +262,14 @@ RoomEditAttrDlg::RoomEditAttrDlg(QWidget *parent)
                    *loadFlagsListWidget,
                    Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsAutoTristate);
 
-    for (const auto flag : ALL_EXIT_FLAGS)
+    for (const ExitFlagEnum flag : ALL_EXIT_FLAGS)
         exitListItems[flag] = new RoomListWidgetItem(getName(flag));
     installWidgets(exitListItems,
                    "exit list",
                    *exitFlagsListWidget,
                    Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
 
-    for (const auto flag : ALL_DOOR_FLAGS)
+    for (const DoorFlagEnum flag : ALL_DOOR_FLAGS)
         doorListItems[flag] = new RoomListWidgetItem(getName(flag));
     installWidgets(doorListItems,
                    "door list",

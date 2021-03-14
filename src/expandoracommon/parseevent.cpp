@@ -61,7 +61,7 @@ QString ParseEvent::toQString() const
     QString exitsStr;
     // REVISIT: Duplicate code with AbstractParser
     if (m_exitsFlags.isValid() && m_connectedRoomFlags.isValid()) {
-        for (const auto &dir : enums::getAllExitsNESWUD()) {
+        for (const ExitDirEnum dir : enums::getAllExitsNESWUD()) {
             const ExitFlags exitFlags = m_exitsFlags.get(dir);
             if (exitFlags.isExit()) {
                 exitsStr.append("[");

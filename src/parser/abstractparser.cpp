@@ -446,7 +446,7 @@ void AbstractParser::parseExits(std::ostream &os)
         // Trolls can detect exits with direct sunlight
         if (m_trollExitMapping) {
             m_connectedRoomFlags.setValid();
-            for (const auto alt_dir : ALL_EXITS_NESWUD) {
+            for (const ExitDirEnum alt_dir : ALL_EXITS_NESWUD) {
                 const auto eThisExit = m_exitsFlags.get(alt_dir);
                 const auto eThisClosed = closedDoorFlag.get(alt_dir);
 

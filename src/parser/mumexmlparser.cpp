@@ -601,7 +601,7 @@ std::string MumeXmlParser::snoopToUser(const std::string_view &str)
 {
     std::ostringstream os;
     bool snoopPrefix = m_snoopChar.has_value();
-    for (const auto c : str) {
+    for (const char c : str) {
         if (snoopPrefix) {
             os << '&' << m_snoopChar.value() << ' ';
             snoopPrefix = false;
