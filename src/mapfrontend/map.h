@@ -45,12 +45,12 @@ private:
 
 class NODISCARD CoordinateIterator final
 {
-public:
-    CoordinateIterator() = default;
-    NODISCARD Coordinate &next();
-
 private:
     Coordinate c;
     int threshold = 1;
     int state = 7;
+
+public:
+    CoordinateIterator() = default;
+    NODISCARD Coordinate &next();
 };

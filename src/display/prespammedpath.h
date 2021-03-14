@@ -16,6 +16,10 @@ class MapData;
 class PrespammedPath : public QObject
 {
     Q_OBJECT
+
+private:
+    CommandQueue m_queue;
+
 public:
     explicit PrespammedPath(QObject *parent = nullptr);
     ~PrespammedPath();
@@ -28,7 +32,4 @@ signals:
 
 public slots:
     void setPath(CommandQueue);
-
-private:
-    CommandQueue m_queue;
 };

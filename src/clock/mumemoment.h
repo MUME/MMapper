@@ -29,6 +29,13 @@ enum class NODISCARD MumeMoonVisibilityEnum { POSITION_UNKNOWN = -1, HIDDEN, RIS
 class NODISCARD MumeMoment
 {
 public:
+    int year = 0;
+    int month = 0;
+    int day = 0;
+    int hour = 0;
+    int minute = 0;
+
+public:
     explicit MumeMoment(int year, int month, int day, int hour, int minute);
     NODISCARD static MumeMoment sinceMumeEpoch(int64_t secsSinceMumeStartEpoch);
 
@@ -52,10 +59,4 @@ public:
         return toMoonVisibility() > MumeMoonVisibilityEnum::HIDDEN;
     }
     NODISCARD bool isMoonBright() const { return moonLevel() > 4; }
-
-    int year = 0;
-    int month = 0;
-    int day = 0;
-    int hour = 0;
-    int minute = 0;
 };

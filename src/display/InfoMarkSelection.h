@@ -12,6 +12,10 @@ class NODISCARD InfoMarkSelection final : public MarkerList,
                                           public std::enable_shared_from_this<InfoMarkSelection>
 {
 private:
+    Coordinate m_sel1;
+    Coordinate m_sel2;
+
+private:
     struct NODISCARD this_is_private final
     {
         explicit this_is_private(int) {}
@@ -37,8 +41,4 @@ public:
         const auto endIt = this->end();
         return std::find(begin(), endIt, im->shared_from_this()) != endIt;
     }
-
-private:
-    Coordinate m_sel1;
-    Coordinate m_sel2;
 };

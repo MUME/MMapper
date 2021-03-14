@@ -51,6 +51,10 @@ class MapCanvas final : public QOpenGLWidget, private MapCanvasViewport, private
 {
     Q_OBJECT
 
+public:
+    static constexpr const int BASESIZE = 528; // REVISIT: Why this size? 16*33 isn't special.
+    static constexpr const int SCROLL_SCALE = 64;
+
 private:
     MapScreen m_mapScreen;
     OpenGL m_opengl;
@@ -65,6 +69,8 @@ private:
         std::optional<int> multisampling;
         std::optional<bool> trilinear;
     } graphicsOptionsStatus;
+
+    std::unique_ptr<QOpenGLDebugLogger> m_logger;
 
 public:
     explicit MapCanvas(MapData *mapData,
@@ -84,11 +90,9 @@ private:
     void initSurface();
 
 public:
-    static constexpr int BASESIZE = 528; // REVISIT: Why this size? 16*33 isn't special.
     NODISCARD QSize minimumSizeHint() const override;
     NODISCARD QSize sizeHint() const override;
 
-    static constexpr const int SCROLL_SCALE = 64;
     using MapCanvasViewport::getTotalScaleFactor;
     void setZoom(float zoom)
     {
@@ -173,7 +177,6 @@ protected:
     bool event(QEvent *e) override;
 
 private:
-    std::unique_ptr<QOpenGLDebugLogger> m_logger;
     void initLogger();
 
     void resizeGL() { resizeGL(width(), height()); }

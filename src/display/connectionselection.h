@@ -64,6 +64,13 @@ private:
         explicit this_is_private(int) {}
     };
 
+private:
+    // REVISIT: give these enum names?
+    MMapper::Array<ConnectionDescriptor, 2> m_connectionDescriptor;
+
+    bool m_first = true;
+    RoomAdmin *m_admin = nullptr;
+
 public:
     NODISCARD static std::shared_ptr<ConnectionSelection> alloc(MapFrontend *mf, const MouseSel &sel)
     {
@@ -106,10 +113,4 @@ public:
 
 private:
     NODISCARD static ExitDirEnum computeDirection(const Coordinate2f &mouse_f);
-
-    // REVISIT: give these enum names?
-    MMapper::Array<ConnectionDescriptor, 2> m_connectionDescriptor;
-
-    bool m_first = true;
-    RoomAdmin *m_admin = nullptr;
 };

@@ -12,8 +12,11 @@
 
 struct NODISCARD Coordinate2i final
 {
+public:
     int x = 0;
     int y = 0;
+
+public:
     Coordinate2i() = default;
     explicit Coordinate2i(const int x, const int y)
         : x{x}
@@ -50,8 +53,11 @@ struct NODISCARD Coordinate2i final
 
 struct NODISCARD Coordinate2f final
 {
+public:
     float x = 0.f;
     float y = 0.f;
+
+public:
     Coordinate2f() = default;
     explicit Coordinate2f(const float x, const float y)
         : x{x}
@@ -74,17 +80,9 @@ struct NODISCARD Coordinate2f final
 class NODISCARD Coordinate final
 {
 public:
-    NODISCARD bool operator==(const Coordinate &other) const;
-    NODISCARD bool operator!=(const Coordinate &other) const;
-    void operator+=(const Coordinate &other);
-    void operator-=(const Coordinate &other);
-    NODISCARD Coordinate operator+(const Coordinate &other) const;
-    NODISCARD Coordinate operator-(const Coordinate &other) const;
-    NODISCARD Coordinate operator*(int scalar) const;
-    NODISCARD Coordinate operator/(int scalar) const;
-
-    NODISCARD int distance(const Coordinate &other) const;
-    void clear();
+    int x = 0;
+    int y = 0;
+    int z = 0;
 
 public:
     Coordinate() = default;
@@ -111,9 +109,17 @@ public:
     NODISCARD glm::vec3 to_vec3() const { return glm::vec3{x, y, z}; }
 
 public:
-    int x = 0;
-    int y = 0;
-    int z = 0;
+    NODISCARD bool operator==(const Coordinate &other) const;
+    NODISCARD bool operator!=(const Coordinate &other) const;
+    void operator+=(const Coordinate &other);
+    void operator-=(const Coordinate &other);
+    NODISCARD Coordinate operator+(const Coordinate &other) const;
+    NODISCARD Coordinate operator-(const Coordinate &other) const;
+    NODISCARD Coordinate operator*(int scalar) const;
+    NODISCARD Coordinate operator/(int scalar) const;
+
+    NODISCARD int distance(const Coordinate &other) const;
+    void clear();
 };
 
 struct NODISCARD Bounds final
