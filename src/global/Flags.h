@@ -86,11 +86,11 @@ public:
     }
 
 public:
-    NODISCARD friend inline bool operator==(const CRTP lhs, const CRTP rhs) noexcept
+    NODISCARD friend inline constexpr bool operator==(const CRTP lhs, const CRTP rhs) noexcept
     {
         return lhs.m_flags == rhs.m_flags;
     }
-    NODISCARD friend inline bool operator!=(const CRTP lhs, const CRTP rhs) noexcept
+    NODISCARD friend inline constexpr bool operator!=(const CRTP lhs, const CRTP rhs) noexcept
     {
         return lhs.m_flags != rhs.m_flags;
     }
