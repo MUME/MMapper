@@ -1394,9 +1394,11 @@ void MainWindow::merge()
 {
     CanvasDisabler canvasDisabler{deref(getCanvas())};
 
+    // FIXME: code duplication
+    const auto &savedLastMapDir = setConfig().autoLoad.lastMapDirectory;
     QString fileName = QFileDialog::getOpenFileName(this,
                                                     "Choose map file ...",
-                                                    "",
+                                                    savedLastMapDir,
                                                     "MMapper Maps (*.mm2)");
     if (fileName.isEmpty())
         return;
@@ -1448,6 +1450,7 @@ void MainWindow::open()
     if (!maybeSave())
         return;
 
+    // FIXME: code duplication
     auto &savedLastMapDir = setConfig().autoLoad.lastMapDirectory;
     const QString fileName
         = QFileDialog::getOpenFileName(this,
@@ -1571,6 +1574,7 @@ bool MainWindow::exportBaseMap()
 bool MainWindow::exportWebMap()
 {
     const auto makeSaveDialog = [this]() {
+        // FIXME: code duplication
         auto save = std::make_unique<QFileDialog>(this,
                                                   "Choose map file name ...",
                                                   QDir::current().absolutePath());
@@ -1593,6 +1597,7 @@ bool MainWindow::exportWebMap()
 bool MainWindow::exportMmpMap()
 {
     const auto makeSaveDialog = [this]() {
+        // FIXME: code duplication
         auto save = std::make_unique<QFileDialog>(this,
                                                   "Choose map file name ...",
                                                   QDir::current().absolutePath());

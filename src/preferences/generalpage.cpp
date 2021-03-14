@@ -153,9 +153,11 @@ void GeneralPage::loadConfig()
 
 void GeneralPage::selectWorldFileButtonClicked(bool /*unused*/)
 {
+    // FIXME: code duplication
+    const auto &savedLastMapDir = setConfig().autoLoad.lastMapDirectory;
     QString fileName = QFileDialog::getOpenFileName(this,
                                                     "Choose map file ...",
-                                                    "",
+                                                    savedLastMapDir,
                                                     "MMapper2 (*.mm2);;MMapper (*.map)");
     if (!fileName.isEmpty()) {
         ui->autoLoadFileName->setText(fileName);
