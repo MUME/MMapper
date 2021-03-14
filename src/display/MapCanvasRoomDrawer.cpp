@@ -372,11 +372,11 @@ struct RoomTex
     const Room *room = nullptr;
     MMTexture *tex = nullptr;
 
-    explicit RoomTex(const Room *const room, MMTexture *const tex)
-        : room{room}
-        , tex{tex}
+    explicit RoomTex(const Room *const _room, MMTexture *const _tex)
+        : room{_room}
+        , tex{_tex}
     {
-        deref(tex);
+        deref(_tex);
     }
 
     int priority() const { return deref(tex).getPriority(); }
@@ -394,11 +394,11 @@ struct ColoredRoomTex : public RoomTex
     Color color;
     ColoredRoomTex(const Room *const room, MMTexture *const tex) = delete;
 
-    explicit ColoredRoomTex(const Room *const room, MMTexture *const tex, const Color &color)
-        : RoomTex{room, tex}
-        , color{color}
+    explicit ColoredRoomTex(const Room *const _room, MMTexture *const _tex, const Color &_color)
+        : RoomTex{_room, _tex}
+        , color{_color}
     {
-        deref(tex);
+        deref(_tex);
     }
 };
 
