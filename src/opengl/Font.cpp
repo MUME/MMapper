@@ -631,7 +631,8 @@ public:
             };
 
             const auto quad = [&add](const Color &c, const Rect &vert, const Rect tc) {
-#define ADD(a, b) add(c, glm::ivec2{vert.a.x, vert.b.y}, glm::ivec2{tc.a.x, tc.b.y});
+#define ADD(a, b) add(c, glm::ivec2{vert.a.x, vert.b.y}, glm::ivec2{tc.a.x, tc.b.y})
+                // note: lo and hi refer to members of vert and tc.
                 ADD(lo, lo);
                 ADD(hi, lo);
                 ADD(hi, hi);

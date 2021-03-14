@@ -108,7 +108,7 @@ static char getTerrainSymbol(const RoomTerrainEnum type)
         return ':'; // :  // brush
     case RoomTerrainEnum::DEATHTRAP:
         return 'X';
-    };
+    }
 
     return ' ';
 }
@@ -1037,7 +1037,7 @@ void AbstractParser::showMumeTime()
         case MumeMoonVisibilityEnum::VISIBLE:
             data += "will set in";
             break;
-        };
+        }
         data += " " + moment.toMoonCountDown().toLatin1() + " more ticks.\r\n";
     }
     sendToUser(data);

@@ -199,7 +199,7 @@ void ConnectionDrawer::drawRoomDoorName(const Room *const sourceRoom,
         case ExitDirEnum::UNKNOWN:
         case ExitDirEnum::NONE:
             break;
-        };
+        }
 
         assert(false);
         return 0.f;
@@ -807,12 +807,12 @@ void ConnectionDrawer::ConnectionFakeGL::drawLineStrip(const std::vector<glm::ve
         const auto mid1 = glm::mix(start, end, faintCutoff);
         const auto mid2 = glm::mix(start, end, 1.f - faintCutoff);
         const auto faint = color.withAlpha(FAINT_CONNECTION_ALPHA);
-#define LINE(color, a, b) \
-    verts.emplace_back((color), (a)); \
-    verts.emplace_back((color), (b));
-        LINE(color, start, mid1);
-        LINE(faint, mid1, mid2);
-        LINE(color, mid2, end);
-#undef LINE
+        auto drawLine = [&verts](const Color &color, const glm::vec3 &a, const glm::vec3 &b) {
+            verts.emplace_back(color, a);
+            verts.emplace_back(color, b);
+        };
+        drawLine(color, start, mid1);
+        drawLine(faint, mid1, mid2);
+        drawLine(color, mid2, end);
     }
 }

@@ -79,7 +79,7 @@ public:
         return RoomFieldEnum::UPPER_CASE; \
     }
         switch (const auto index = m_data.index()) {
-            X_FOREACH_ROOM_FIELD(CASE, NOP);
+            X_FOREACH_ROOM_FIELD(CASE, NOP)
         }
 #undef CASE
 #undef NOP

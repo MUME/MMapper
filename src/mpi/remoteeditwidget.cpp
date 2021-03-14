@@ -210,11 +210,11 @@ public:
                 first.setToolTip(tooltip); \
         } \
         return first; \
-    };
+    }
         DECL_FMT(unicode, red, "Unicode");
         DECL_FMT(nbsp, cyan, "NBSP");
         DECL_FMT(utf8, yellow, "UTF-8");
-        DECL_FMT(unprintable, darkOrange, "(unprintable)")
+        DECL_FMT(unprintable, darkOrange, "(unprintable)");
 
 #undef DECL_FMT
 

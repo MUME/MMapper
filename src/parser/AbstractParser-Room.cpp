@@ -180,7 +180,7 @@ static bool isAddFlag(StringView &sv)
         return true;
     default:
         return true;
-    };
+    }
 }
 
 class ArgDoorFlag final : public syntax::IArgument

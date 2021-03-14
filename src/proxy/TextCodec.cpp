@@ -26,7 +26,7 @@ TextCodec::TextCodec(const TextCodecStrategyEnum textCodecStrategy)
     case TextCodecStrategyEnum::FORCE_UTF_8:
         setEncoding(CharacterEncodingEnum::UTF8);
         break;
-    };
+    }
 }
 
 QStringList TextCodec::supportedEncodings() const

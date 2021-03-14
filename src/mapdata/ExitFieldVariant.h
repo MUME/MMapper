@@ -76,7 +76,7 @@ public:
         return ExitFieldEnum::UPPER_CASE; \
     }
         switch (const auto index = m_data.index()) {
-            X_FOREACH_EXIT_FIELD(CASE, NOP);
+            X_FOREACH_EXIT_FIELD(CASE, NOP)
         }
 #undef CASE
 #undef NOP

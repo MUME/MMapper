@@ -519,7 +519,7 @@ static UniqueMeshVector createSortedTexturedMeshes(OpenGL &gl, const RoomTexVect
         for (size_t i = beg; i < end; ++i) {
             const auto &pos = textures[i].room->getPosition();
             const auto v0 = pos.to_vec3();
-#define EMIT(x, y) verts.emplace_back(glm::vec2((x), (y)), v0 + glm::vec3((x), (y), 0));
+#define EMIT(x, y) verts.emplace_back(glm::vec2((x), (y)), v0 + glm::vec3((x), (y), 0))
             EMIT(0, 0);
             EMIT(1, 0);
             EMIT(1, 1);
@@ -568,7 +568,7 @@ static UniqueMeshVector createSortedColoredTexturedMeshes(OpenGL &gl,
             const auto v0 = pos.to_vec3();
             const auto color = thisVert.color;
 
-#define EMIT(x, y) verts.emplace_back(color, glm::vec2((x), (y)), v0 + glm::vec3((x), (y), 0));
+#define EMIT(x, y) verts.emplace_back(color, glm::vec2((x), (y)), v0 + glm::vec3((x), (y), 0))
             EMIT(0, 0);
             EMIT(1, 0);
             EMIT(1, 1);
@@ -808,7 +808,7 @@ public:
         data.roomTerrains.emplace_back(room, terrain);
 
         const auto v0 = room->getPosition().to_vec3();
-#define EMIT(x, y) data.roomLayerBoostQuads.emplace_back(v0 + glm::vec3((x), (y), 0));
+#define EMIT(x, y) data.roomLayerBoostQuads.emplace_back(v0 + glm::vec3((x), (y), 0))
         EMIT(0, 0);
         EMIT(1, 0);
         EMIT(1, 1);
@@ -825,7 +825,7 @@ public:
     void visitNamedColorTint(const Room *const room, const RoomTintEnum tint) override
     {
         const auto v0 = room->getPosition().to_vec3();
-#define EMIT(x, y) data.roomTints[tint].emplace_back(v0 + glm::vec3((x), (y), 0));
+#define EMIT(x, y) data.roomTints[tint].emplace_back(v0 + glm::vec3((x), (y), 0))
         EMIT(0, 0);
         EMIT(1, 0);
         EMIT(1, 1);

@@ -762,7 +762,7 @@ void TextBuffer::appendExpandedTabs(const QStringRef &line, const int start_at)
             col += 1;
             append(c);
         }
-    };
+    }
 }
 
 void TextBuffer::appendWithoutTrailingWhitespace(QStringRef line)

@@ -172,7 +172,7 @@ void Settings::initSettings()
 
 #define SETTINGS(conf) \
     Settings settings; \
-    QSettings &conf = static_cast<QSettings &>(settings);
+    QSettings &conf = static_cast<QSettings &>(settings)
 
 ConstString GRP_AUTO_LOAD_WORLD = "Auto load world";
 ConstString GRP_AUTO_LOG = "Auto log";
