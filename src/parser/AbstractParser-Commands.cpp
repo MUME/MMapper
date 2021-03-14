@@ -375,7 +375,7 @@ bool AbstractParser::parseUserCommands(const QString &input)
         std::string s = ::toStdStringLatin1(input);
         auto view = StringView{s}.trim();
         if (view.isEmpty() || view.takeFirstLetter() != prefixChar)
-            sendToUser("Internal error. Sorry.\r\n");
+            sendToUser("Internal error. Sorry.\n");
         else
             parseSpecialCommand(view);
         sendPromptToUser();
@@ -432,7 +432,7 @@ bool AbstractParser::parseSimpleCommand(const QString &qstr)
                 if (!view.isEmpty() && !view.takeFirstWord().isEmpty()) {
                     const auto dir = static_cast<CommandEnum>(tryGetDir(view));
                     if (dir >= CommandEnum::UNKNOWN) {
-                        sendToUser("In which direction do you want to scout?\r\n");
+                        sendToUser("In which direction do you want to scout?\n");
                         sendPromptToUser();
 
                     } else {
@@ -454,7 +454,7 @@ bool AbstractParser::parseSimpleCommand(const QString &qstr)
     }
 
     if (!isOnline) {
-        sendToUser("Arglebargle, glop-glyf!?!\r\n");
+        sendToUser("Arglebargle, glop-glyf!?!\n");
         sendPromptToUser();
     }
 
@@ -473,7 +473,7 @@ bool AbstractParser::parseDoorAction(const DoorActionEnum dat, StringView words)
 void AbstractParser::parseSetCommand(StringView view)
 {
     if (view.isEmpty()) {
-        sendToUser(QString("Syntax: %1set prefix [punct-char]\r\n").arg(prefixChar));
+        sendToUser(QString("Syntax: %1set prefix [punct-char]\n").arg(prefixChar));
         return;
     }
 
@@ -501,7 +501,7 @@ void AbstractParser::parseSetCommand(StringView view)
             }
         }
 
-        sendToUser("Invalid prefix.\r\n");
+        sendToUser("Invalid prefix.\n");
         return;
     }
 
@@ -510,9 +510,8 @@ void AbstractParser::parseSetCommand(StringView view)
 
 void AbstractParser::parseSpecialCommand(StringView wholeCommand)
 {
-    // TODO: Just use '\n' and transform to "\r\n" elsewhere if necessary.
     if (wholeCommand.isEmpty()) {
-        sendToUser("Error: special command input is empty.\r\n");
+        sendToUser("Error: special command input is empty.\n");
         return;
     }
 
@@ -520,7 +519,7 @@ void AbstractParser::parseSpecialCommand(StringView wholeCommand)
         return;
 
     const auto word = wholeCommand.takeFirstWord();
-    sendToUser(QString("Unrecognized command: %1\r\n").arg(word.toQString()));
+    sendToUser(QString("Unrecognized command: %1\n").arg(word.toQString()));
 }
 
 void AbstractParser::parseSearch(StringView view)
@@ -632,7 +631,9 @@ void AbstractParser::initSpecialCommandMap()
 
     const auto makeSimpleHelp = [this](const std::string &help) {
         return [this, help](const std::string &name) {
-            sendToUser(QString("Help for %1%2:\r\n  %3\r\n\r\n")
+            sendToUser(QString("Help for %1%2:\n"
+                               "  %3\n"
+                               "\n")
                            .arg(prefixChar)
                            .arg(::toQStringLatin1(name))
                            .arg(::toQStringLatin1(help)));
@@ -753,26 +754,29 @@ void AbstractParser::initSpecialCommandMap()
         },
         [this](const std::string &name) {
             const char help[]
-                = "Subcommands:\r\n"
-                  "\tprefix              # Displays the current prefix.\r\n"
-                  "\tprefix <punct-char> # Changes the current prefix.\r\n"
-                  "\r\n"
+                = "Subcommands:\n"
+                  "\tprefix              # Displays the current prefix.\n"
+                  "\tprefix <punct-char> # Changes the current prefix.\n"
+                  "\n"
                   // REVISIT: Does it actually support LATIN-1 punctuation like the degree symbol?
-                  "Note: <punct-char> may be any ASCII punctuation character,\r\n"
-                  "      which can be optionally single- or double-quoted.\r\n"
-                  "\r\n"
-                  "Examples to set prefix:\r\n"
-                  "\tprefix /   # slash character\r\n"
-                  "\tprefix '/' # single-quoted slash character\r\n"
-                  "\tprefix \"/\" # double-quoted slash character\r\n"
-                  "\tprefix '   # bare single-quote character\r\n"
-                  "\tprefix \"'\" # double-quoted single-quote character\r\n"
-                  "\tprefix \"   # bare double-quote character\r\n"
-                  "\tprefix '\"' # single-quoted double-quote character\r\n"
-                  "\r\n"
-                  "Note: Quoted versions do not allow escape codes,\r\n"
+                  "Note: <punct-char> may be any ASCII punctuation character,\n"
+                  "      which can be optionally single- or double-quoted.\n"
+                  "\n"
+                  "Examples to set prefix:\n"
+                  "\tprefix /   # slash character\n"
+                  "\tprefix '/' # single-quoted slash character\n"
+                  "\tprefix \"/\" # double-quoted slash character\n"
+                  "\tprefix '   # bare single-quote character\n"
+                  "\tprefix \"'\" # double-quoted single-quote character\n"
+                  "\tprefix \"   # bare double-quote character\n"
+                  "\tprefix '\"' # single-quoted double-quote character\n"
+                  "\n"
+                  "Note: Quoted versions do not allow escape codes,\n"
                   "so you cannot do ''', '\\'', \"\"\", or \"\\\"\".";
-            sendToUser(QString("Help for %1%2:\r\n%3\r\n\r\n")
+
+            sendToUser(QString("Help for %1%2:\n"
+                               "%3\n"
+                               "\n")
                            .arg(prefixChar)
                            .arg(::toQStringLatin1(name))
                            .arg(::toQStringLatin1(help)));

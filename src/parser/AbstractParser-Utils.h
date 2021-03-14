@@ -15,9 +15,8 @@ NODISCARD bool isValidPrefix(char c);
 template<typename T>
 void send_ok(T &os)
 {
-    // Consider changing this from "OK." to "Ok.", since that's what MUME uses.
-    // Consider fixing the output to not require '\r'.
-    os << "OK.\r\n";
+    // Note: MUME uses "Ok." rahter than "OK."
+    os << "Ok.\n";
 }
 
 NODISCARD std::string concatenate_unquoted(const Vector &input);

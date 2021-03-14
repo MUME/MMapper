@@ -19,6 +19,51 @@
 NODISCARD bool containsAnsi(const QStringRef &str);
 NODISCARD bool containsAnsi(const QString &str);
 
+// Callback = void(string_view);
+// callback is either a span excluding c, or a span of contiguous c's.
+template<typename Callback>
+void foreachChar(const std::string_view &input, const char c, Callback &&callback)
+{
+    std::string_view sv = input;
+    while (!sv.empty()) {
+        if (const auto next = sv.find(c); next == std::string_view::npos) {
+            callback(sv);
+            break;
+        } else if (next > 0) {
+            callback(sv.substr(0, next));
+            sv.remove_prefix(next);
+        }
+        assert(!sv.empty() && sv.front() == c);
+        if (const auto span = sv.find_first_not_of(c); span == std::string_view::npos) {
+            callback(sv);
+            break;
+        } else {
+            callback(sv.substr(0, span));
+            sv.remove_prefix(span);
+        }
+    }
+}
+
+// Callback = void(string_view);
+template<typename Callback>
+void foreachLine(const std::string_view &input, Callback &&callback)
+{
+    constexpr char C_NEWLINE = '\n';
+    const size_t len = input.size();
+    size_t pos = 0;
+    while (pos < len) {
+        const auto next = input.find(C_NEWLINE, pos);
+        if (next == std::string_view::npos)
+            break;
+        assert(next >= pos);
+        assert(input[next] == C_NEWLINE);
+        callback(input.substr(pos, next - pos + 1));
+        pos = next + 1;
+    }
+    if (pos < len)
+        callback(input.substr(pos, len - pos));
+}
+
 // Callback is void(int pos)
 template<typename Callback>
 void foreachChar(const QStringRef &input, char c, Callback &&callback)
@@ -537,3 +582,5 @@ NODISCARD extern QByteArray toQByteArrayLatin1(const std::string_view &sv);
 NODISCARD extern QByteArray toQByteArrayUtf8(const std::string_view &sv);
 NODISCARD extern std::string toStdStringLatin1(const QString &qs);
 NODISCARD extern std::string toStdStringUtf8(const QString &qs);
+NODISCARD extern std::string_view toStdStringViewLatin1(const QByteArray &arr);
+NODISCARD extern std::string_view toStdStringViewLatin1(const QByteArray &&) = delete;

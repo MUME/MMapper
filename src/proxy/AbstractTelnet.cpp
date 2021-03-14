@@ -7,12 +7,14 @@
 
 #include <cassert>
 #include <limits>
+#include <sstream>
 #include <QByteArray>
 #include <QMessageLogContext>
 #include <QObject>
 #include <QString>
 
 #include "../configuration/configuration.h"
+#include "../global/TextUtils.h"
 #include "../global/utils.h"
 #include "TextCodec.h"
 
@@ -85,13 +87,9 @@ NODISCARD static QString telnetSubnegName(uint8_t opt)
 #undef CASE
 }
 
-NODISCARD static bool containsIAC(const QByteArray &arr)
+NODISCARD static bool containsIAC(const std::string_view &arr)
 {
-    for (const auto &c : arr) {
-        if (static_cast<uint8_t>(c) == TN_IAC)
-            return true;
-    }
-    return false;
+    return arr.find(char(TN_IAC)) != std::string_view::npos;
 }
 
 struct NODISCARD TelnetFormatter final : public AppendBuffer
@@ -207,28 +205,54 @@ void AbstractTelnet::receiveGmcpModule(const GmcpModule &module, const bool enab
     }
 }
 
-void AbstractTelnet::submitOverTelnet(const QByteArray &data, const bool goAhead)
+static void doubleIacs(std::ostream &os, const std::string_view &input)
 {
-    AppendBuffer outdata = data; /* copy */
-
     // IAC byte must be doubled
-    if (containsIAC(outdata)) {
-        TelnetFormatter d;
-        d.addEscapedBytes(outdata);
-        outdata = d;
+    static constexpr const auto IAC = static_cast<char>(TN_IAC);
+    foreachChar(input, IAC, [&os](std::string_view sv) {
+        if (sv.empty())
+            return;
+
+        if (sv.front() != IAC) {
+            os << sv;
+            return;
+        }
+
+        for (auto c : sv) {
+            assert(c == IAC);
+            os << IAC << c;
+        }
+    });
+}
+
+void AbstractTelnet::submitOverTelnet(const std::string_view &data, const bool goAhead)
+{
+    auto getGoAhead = [this, goAhead]() -> std::optional<std::array<char, 2>> {
+        if (goAhead && (!myOptionState[OPT_SUPPRESS_GA] || myOptionState[OPT_EOR])) {
+            return std::array<char, 2>{char(TN_IAC), char(myOptionState[OPT_EOR] ? TN_EOR : TN_GA)};
+        }
+
+        return std::nullopt;
+    };
+
+    if (!containsIAC(data)) {
+        sendRawData(data);
+        if (auto ga = getGoAhead()) {
+            sendRawData(std::string_view{ga->data(), ga->size()});
+        }
+        return;
     }
 
+    std::ostringstream os;
+    doubleIacs(os, data);
+
     // Add IAC GA unless they are suppressed
-    if (goAhead && (!myOptionState[OPT_SUPPRESS_GA] || myOptionState[OPT_EOR])) {
-        outdata += TN_IAC;
-        if (myOptionState[OPT_EOR])
-            outdata += TN_EOR;
-        else
-            outdata += TN_GA;
+    if (auto ga = getGoAhead()) {
+        os.write(ga->data(), static_cast<std::streamsize>(ga->size()));
     }
 
     // data ready, send it
-    sendRawData(outdata);
+    sendRawData(os.str());
 }
 
 void AbstractTelnet::sendWindowSizeChanged(const int x, const int y)
@@ -385,7 +409,7 @@ void AbstractTelnet::sendOptionStatus()
 
 void AbstractTelnet::sendAreYouThere()
 {
-    sendRawData("I'm here! Please be more patient!\r\n");
+    sendRawData("I'm here! Please be more patient!\n");
     // well, this should never be executed, as the response would probably
     // be treated as a command. But that's server's problem, not ours...
     // If the server wasn't capable of handling this, it wouldn't have

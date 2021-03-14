@@ -34,5 +34,5 @@ private:
     void virt_receiveGmcpMessage(const GmcpMessage &) final;
     void virt_receiveTerminalType(const QByteArray &) final;
     void virt_receiveWindowSize(int, int) final;
-    void virt_sendRawData(const QByteArray &data) final;
+    void virt_sendRawData(const std::string_view &data) final;
 };

@@ -13,6 +13,7 @@
 #include <QString>
 
 #include "../configuration/configuration.h"
+#include "../global/TextUtils.h"
 #include "remoteeditsession.h"
 
 static const QRegularExpression s_lineFeedNewlineRx(R"((?!\r)\n)");
@@ -29,8 +30,10 @@ void RemoteEdit::slot_remoteEdit(const int key, const QString &title, const QStr
 
 void RemoteEdit::addSession(const int key, const QString &title, QString body)
 {
-    if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows)
+    if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
+        // REVISIT: This can actually be handled by opening a file in text mode.
         body.replace(s_lineFeedNewlineRx, "\r\n");
+    }
 
     uint sessionId = getSessionCount();
     std::unique_ptr<RemoteEditSession> session;
@@ -78,11 +81,13 @@ void RemoteEdit::save(const RemoteEditSession *session)
     assert(session != nullptr);
     if (session->isEditSession()) {
         QString content = session->getContent();
-        if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows)
-            content.replace(s_lineFeedNewlineRx, "\n");
+        if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
+            content.replace(s_lineFeedNewlineRx, S_NEWLINE);
+        }
+
         // The body contents have to be followed by a LF if they are not empty
-        if (!content.isEmpty() && !content.endsWith('\n')) {
-            content.append('\n');
+        if (!content.isEmpty() && !content.endsWith(C_NEWLINE)) {
+            content.append(C_NEWLINE);
         }
 
         const QString &keystr = QString("E%1\n").arg(session->getKey());

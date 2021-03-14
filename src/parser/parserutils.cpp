@@ -6,7 +6,8 @@
 
 #include "parserutils.h"
 
-#include <iostream>
+#include <array>
+#include <cassert>
 #include <stdexcept>
 #include <QRegularExpression>
 #include <QtCore>

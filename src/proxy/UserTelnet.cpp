@@ -3,11 +3,54 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "UserTelnet.h"
-#include "../configuration/configuration.h"
-#include "../global/TextUtils.h"
 
 #include <sstream>
 #include <QJsonDocument>
+
+#include "../global/Charset.h"
+#include "../global/TextUtils.h"
+
+// REVISIT: Does this belong somewhere else?
+static void normalizeForUser(std::ostream &os,
+                             const CharacterEncodingEnum encoding,
+                             const std::string_view &sv)
+{
+    // REVISIT: perform ANSI normalization in this function, too?
+    foreachLine(sv, [&os, encoding](std::string_view sv) {
+        if (sv.empty())
+            return;
+
+        const bool hasNewline = sv.back() == C_NEWLINE;
+        if (hasNewline) {
+            sv.remove_suffix(1);
+        }
+
+        if (!sv.empty() && sv.back() == C_CARRIAGE_RETURN) {
+            sv.remove_suffix(1);
+        }
+
+        if (!sv.empty()) {
+            foreachChar(sv, C_CARRIAGE_RETURN, [&os, encoding](std::string_view txt) {
+                if (!txt.empty() && txt.front() != C_CARRIAGE_RETURN) {
+                    convertFromLatin1(os, encoding, txt);
+                }
+            });
+        }
+
+        if (hasNewline) {
+            os << C_CARRIAGE_RETURN;
+            os << C_NEWLINE;
+        }
+    });
+}
+
+NODISCARD static std::string encodeForUser(const CharacterEncodingEnum encoding,
+                                           const QByteArray &ba)
+{
+    std::ostringstream oss;
+    normalizeForUser(oss, encoding, ::toStdStringViewLatin1(ba));
+    return oss.str();
+}
 
 UserTelnet::UserTelnet(QObject *const parent)
     : AbstractTelnet(TextCodecStrategyEnum::AUTO_SELECT_CODEC, parent, "unknown")
@@ -33,12 +76,8 @@ void UserTelnet::slot_onAnalyzeUserStream(const QByteArray &data)
 
 void UserTelnet::slot_onSendToUser(const QByteArray &ba, const bool goAhead)
 {
-    // MMapper internally represents all data as Latin-1
-    QString temp = QString::fromLatin1(ba);
-
-    // Convert from unicode into the client requested encoding
-    QByteArray outdata = getTextCodec().fromUnicode(temp);
-
+    // NOTE: We could avoid some overhead by sending one line at a time with a custom ostream.
+    auto outdata = encodeForUser(getTextCodec().getEncoding(), ba);
     submitOverTelnet(outdata, goAhead);
 }
 
@@ -131,8 +170,8 @@ void UserTelnet::virt_receiveWindowSize(const int x, const int y)
 /** Send out the data. Does not double IACs, this must be done
             by caller if needed. This function is suitable for sending
             telnet sequences. */
-void UserTelnet::virt_sendRawData(const QByteArray &data)
+void UserTelnet::virt_sendRawData(const std::string_view &data)
 {
     sentBytes += data.length();
-    emit sig_sendToSocket(data);
+    emit sig_sendToSocket(::toQByteArrayLatin1(data));
 }

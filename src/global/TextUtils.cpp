@@ -1156,3 +1156,8 @@ std::string toStdStringUtf8(const QString &qs)
 {
     return qs.toUtf8().toStdString();
 }
+
+std::string_view toStdStringViewLatin1(const QByteArray &arr)
+{
+    return std::string_view{arr.data(), static_cast<size_t>(arr.size())};
+}

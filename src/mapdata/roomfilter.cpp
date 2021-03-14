@@ -53,7 +53,7 @@ RoomFilter::RoomFilter(const std::string_view &sv,
 {}
 
 const char *const RoomFilter::parse_help
-    = "Parse error; format is: [-(name|desc|dyndesc|note|exits|all|clear)] pattern\r\n";
+    = "Parse error; format is: [-(name|desc|dyndesc|note|exits|all|clear)] pattern\n";
 
 std::optional<RoomFilter> RoomFilter::parseRoomFilter(const std::string_view &line)
 {

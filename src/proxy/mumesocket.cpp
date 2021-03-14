@@ -37,7 +37,8 @@ void MumeSocket::virt_onError2(QAbstractSocket::SocketError e, const QString &er
     case QAbstractSocket::SslInvalidUserDataError:
     case QAbstractSocket::SslInternalError:
     case QAbstractSocket::SslHandshakeFailedError:
-        errorStr += "\r\n\r\n"
+        errorStr += "\n"
+                    "\n"
                     "Uncheck TLS encryption under the MMapper preferences at your own risk.";
         break;
 
@@ -171,9 +172,16 @@ void MumeSslSocket::slot_onPeerVerifyError(const QSslError &error)
     qWarning() << "onPeerVerifyError" << m_socket.errorString() << error.errorString();
 
     // Warn user of possible compromise
-    QByteArray byteArray = QByteArray("\r\n\033[1;37;41mENCRYPTION WARNING:\033[0;37;41m ")
+    QByteArray byteArray = QByteArray("\n"
+                                      "\033[0;1;37;41m"
+                                      "ENCRYPTION WARNING:"
+                                      "\033[0;37;41m"
+                                      " ")
                                .append(error.errorString().toLatin1())
-                               .append("!\033[0m\r\n\r\n");
+                               .append("!"
+                                       "\033[0m"
+                                       "\n"
+                                       "\n");
     emit sig_processMudStream(byteArray);
 }
 
@@ -244,10 +252,16 @@ void MumeTcpSocket::virt_onConnect()
     if (!NO_OPEN_SSL) {
         // Warn user of the insecure connection
         QByteArray byteArray = QByteArray(
-            "\r\n\033[1;37;41mWARNING:\033[0;37;41m "
+            "\n"
+            "\033[0;1;37;41m"
+            "WARNING:"
+            "\033[0;37;41m"
+            " "
             "This connection is not secure! Disconnect and enable TLS encryption under the MMapper"
             " preferences to get rid of this message."
-            "\033[0m\r\n\r\n");
+            "\033[0m"
+            "\n"
+            "\n");
         emit sig_processMudStream(byteArray);
     }
 

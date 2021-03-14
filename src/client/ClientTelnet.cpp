@@ -82,13 +82,13 @@ void ClientTelnet::slot_sendToMud(const QString &data)
 {
     // MMapper will later convert to Latin-1 within UserTelnet
     const QByteArray ba = getTextCodec().fromUnicode(data);
-    submitOverTelnet(ba, false);
+    submitOverTelnet(::toStdStringViewLatin1(ba), false);
 }
 
-void ClientTelnet::virt_sendRawData(const QByteArray &data)
+void ClientTelnet::virt_sendRawData(const std::string_view &data)
 {
     sentBytes += data.length();
-    socket.write(data);
+    socket.write(::toQByteArrayLatin1(data));
 }
 
 void ClientTelnet::slot_onWindowSizeChanged(int x, int y)

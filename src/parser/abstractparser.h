@@ -257,9 +257,11 @@ protected:
     void pathChanged() { emit sig_showPath(m_queue); }
     void mapChanged() { emit sig_mapChanged(); }
 
+protected:
+    void log(const QString &a, const QString &b) { emit sig_log(a, b); }
+
 private:
     void graphicsSettingsChanged() { emit sig_graphicsSettingsChanged(); }
-    void log(const QString &a, const QString &b) { emit sig_log(a, b); }
     void sendToMud(const QByteArray &msg) { emit sig_sendToMud(msg); }
 
 private:

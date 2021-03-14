@@ -404,7 +404,8 @@ bool MapStorage::mergeData()
 
         if (!supported) {
             const bool isNewer = version >= CURRENT_SCHEMA;
-            critical(QString("This map has schema version %1 which is too %2.\r\n\r\n"
+            critical(QString("This map has schema version %1 which is too %2.\n"
+                             "\n"
                              "Please %3 MMapper.")
                          .arg(version)
                          .arg(isNewer ? "new" : "old")
@@ -434,7 +435,8 @@ bool MapStorage::mergeData()
             log(QString("Uncompressed map using %1").arg(qCompressed ? "qUncompress" : "zlib"));
 
         } else if (NO_ZLIB && zlibCompressed) {
-            critical("MMapper could not load this map because it is too old.\r\n\r\n"
+            critical("MMapper could not load this map because it is too old.\n"
+                     "\n"
                      "Please recompile MMapper with USE_ZLIB.");
             return false;
         } else {

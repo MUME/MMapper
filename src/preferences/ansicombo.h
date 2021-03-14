@@ -57,7 +57,7 @@ public:
         bool underline = false;
     };
 
-    ///\return true if string is valid ANSI color code
+    /// \return true if string is valid ANSI color code
     NODISCARD static AnsiColor colorFromString(const QString &ansiString);
 
     ///\return true, if index is valid color code

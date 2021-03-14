@@ -146,7 +146,7 @@ void FindRoomsDlg::slot_findClicked()
         qWarning() << "Exception: " << ex.what();
         QMessageBox::critical(this,
                               "Internal Error",
-                              QString::asprintf("An exception occurred: %s\r\n", ex.what()));
+                              QString::asprintf("An exception occurred: %s\n", ex.what()));
     }
     roomsFoundLabel->setText(tr("%1 room%2 found")
                                  .arg(resultTable->topLevelItemCount())

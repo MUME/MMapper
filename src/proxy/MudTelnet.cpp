@@ -61,7 +61,7 @@ void MudTelnet::slot_onAnalyzeMudStream(const QByteArray &data)
 void MudTelnet::slot_onSendToMud(const QByteArray &ba)
 {
     // Bytes are already Latin-1 so we just send it to MUME
-    submitOverTelnet(ba, false);
+    submitOverTelnet(::toStdStringViewLatin1(ba), false);
 }
 
 void MudTelnet::slot_onGmcpToMud(const GmcpMessage &msg)
@@ -118,8 +118,8 @@ void MudTelnet::virt_onGmcpEnabled()
 /** Send out the data. Does not double IACs, this must be done
             by caller if needed. This function is suitable for sending
             telnet sequences. */
-void MudTelnet::virt_sendRawData(const QByteArray &data)
+void MudTelnet::virt_sendRawData(const std::string_view &data)
 {
     sentBytes += data.length();
-    emit sig_sendToSocket(data);
+    emit sig_sendToSocket(::toQByteArrayLatin1(data));
 }

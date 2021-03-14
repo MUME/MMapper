@@ -225,8 +225,16 @@ void Proxy::slot_start()
 
     log("Connection to client established ...");
 
-    QByteArray ba = QString("\033[1;37;46mWelcome to MMapper!\033[0;37;46m"
-                            "   Type \033[1m%1help\033[0m\033[37;46m for help.\033[0m\r\n")
+    QByteArray ba = QString("\033[0;1;37;46m"
+                            "Welcome to MMapper!"
+                            "\033[0;37;46m"
+                            "   Type "
+                            "\033[1m"
+                            "%1help"
+                            "\033[0m;37;46m"
+                            " for help."
+                            "\033[0m"
+                            "\n")
                         .arg(getConfig().parser.prefixChar)
                         .toLatin1();
     sendToUser(ba);
@@ -284,20 +292,32 @@ void Proxy::slot_onMudError(const QString &errorStr)
     qWarning() << "Mud socket error" << errorStr;
     log(errorStr);
 
-    sendToUser("\r\n\033[37;46m" + errorStr.toLocal8Bit() + "\033[0m\r\n");
+    sendToUser("\n"
+               "\033[0;37;46m"
+               + errorStr.toLocal8Bit()
+               + "\033[0m"
+                 "\n");
 
     if (!getConfig().connection.proxyConnectionStatus) {
-        sendToUser(
-            QString(
-                "\r\n"
-                "\033[37;46mYou can type \033[1m%1connect\033[0m\033[37;46m to reconnect again.\033[0m\r\n")
-                .arg(getConfig().parser.prefixChar)
-                .toLatin1());
+        sendToUser(QString("\n"
+                           "\033[0;37;46m"
+                           "You can type "
+                           "\033[1m"
+                           "%1connect"
+                           "\033[0m\033[37;46m"
+                           " to reconnect again."
+                           "\033[0m"
+                           "\n")
+                       .arg(getConfig().parser.prefixChar)
+                       .toLatin1());
         m_parserXml->sendPromptToUser();
         m_serverState = ServerStateEnum::OFFLINE;
     } else if (getConfig().general.mapMode == MapModeEnum::OFFLINE) {
-        sendToUser("\r\n"
-                   "\033[37;46mYou are now exploring the map offline.\033[0m\r\n");
+        sendToUser("\n"
+                   "\033[0;37;46m"
+                   "You are now exploring the map offline."
+                   "\033[0m"
+                   "\n");
         m_parserXml->sendPromptToUser();
         m_serverState = ServerStateEnum::OFFLINE;
     } else {
@@ -324,24 +344,36 @@ void Proxy::slot_mudTerminatedConnection()
 
     log("Mud terminated connection ...");
 
-    sendToUser("\r\n\033[37;46mMUME closed the connection.\033[0m\r\n");
+    sendToUser("\n"
+               "\033[0;37;46m"
+               "MUME closed the connection."
+               "\033[0m"
+               "\n");
 
     if (getConfig().connection.proxyConnectionStatus) {
         if (getConfig().general.mapMode == MapModeEnum::OFFLINE) {
-            sendToUser("\r\n"
-                       "\033[37;46mYou are now exploring the map offline.\033[0m\r\n");
+            sendToUser("\n"
+                       "\033[0;37;46m"
+                       "You are now exploring the map offline."
+                       "\033[0m"
+                       "\n");
             m_parserXml->sendPromptToUser();
         } else {
             // Terminate connection
             deleteLater();
         }
     } else {
-        sendToUser(
-            QString(
-                "\r\n"
-                "\033[37;46mYou can type \033[1m%1connect\033[0m\033[37;46m to reconnect again.\033[0m\r\n")
-                .arg(getConfig().parser.prefixChar)
-                .toLatin1());
+        sendToUser(QString("\n"
+                           "\033[0;37;46m"
+                           "You can type "
+                           "\033[1m"
+                           "%1connect"
+                           "\033[0;37;46m"
+                           " to reconnect again."
+                           "\033[0m"
+                           "\n")
+                       .arg(getConfig().parser.prefixChar)
+                       .toLatin1());
         m_parserXml->sendPromptToUser();
     }
 }
@@ -363,11 +395,16 @@ void Proxy::slot_onSendToMudSocket(const QByteArray &ba)
 {
     if (m_mudSocket != nullptr) {
         if (m_mudSocket->state() != QAbstractSocket::ConnectedState) {
-            sendToUser(
-                QString(
-                    "\033[37;46mMMapper is not connected to MUME. Please type \033[1m%1connect\033[0m\033[37;46m to play.\033[0m\r\n")
-                    .arg(getConfig().parser.prefixChar)
-                    .toLatin1());
+            sendToUser(QString("\033[0;37;46m"
+                               "MMapper is not connected to MUME. Please type "
+                               "\033[1m"
+                               "%1connect"
+                               "\033[0;37;46m"
+                               " to play."
+                               "\033[0m"
+                               "\n")
+                           .arg(getConfig().parser.prefixChar)
+                           .toLatin1());
 
             m_parserXml->sendPromptToUser();
         } else {
@@ -396,15 +433,15 @@ void Proxy::connectToMud()
 {
     switch (m_serverState) {
     case ServerStateEnum::CONNECTING:
-        sendToUser("Error: You're still connecting.\r\n");
+        sendToUser("Error: You're still connecting.\n");
         break;
 
     case ServerStateEnum::CONNECTED:
-        sendToUser("Error: You're already connected.\r\n");
+        sendToUser("Error: You're already connected.\n");
         break;
 
     case ServerStateEnum::DISCONNECTING:
-        sendToUser("Error: You're still disconnecting.\r\n");
+        sendToUser("Error: You're still disconnecting.\n");
         break;
 
     case ServerStateEnum::INITIALIZED:
@@ -413,22 +450,25 @@ void Proxy::connectToMud()
     case ServerStateEnum::ERROR: {
         if (getConfig().general.mapMode == MapModeEnum::OFFLINE) {
             sendToUser(
-                "\r\n"
-                "\033[37;46mMMapper is running in offline mode. Switch modes and reconnect to play MUME.\033[0m\r\n"
-                "\r\n"
-                "Welcome to the land of Middle-earth. May your visit here be... interesting.\r\n"
-                "Never forget! Try to role-play...\r\n");
+                "\n"
+                "\033[37;46m"
+                "MMapper is running in offline mode. Switch modes and reconnect to play MUME."
+                "\033[0m"
+                "\n"
+                "\n"
+                "Welcome to the land of Middle-earth. May your visit here be... interesting.\n"
+                "Never forget! Try to role-play...\n");
             m_parserXml->doMove(CommandEnum::LOOK);
             m_serverState = ServerStateEnum::OFFLINE;
             break;
         }
 
         if (auto sock = m_mudSocket.data()) {
-            sendToUser("Connecting...\r\n");
+            sendToUser("Connecting...\n");
             m_serverState = ServerStateEnum::CONNECTING;
             sock->connectToHost();
         } else {
-            sendToUser("Internal error while trying to connect.\r\n");
+            sendToUser("Internal error while trying to connect.\n");
         }
         break;
     }
@@ -441,35 +481,35 @@ void Proxy::disconnectFromMud()
 
     switch (m_serverState) {
     case ServerStateEnum::CONNECTING:
-        sendToUser("Error: You're still connecting.\r\n");
+        sendToUser("Error: You're still connecting.\n");
         break;
 
     case ServerStateEnum::OFFLINE:
         m_serverState = ServerStateEnum::INITIALIZED;
-        sendToUser("You disconnect your simulated link.\r\n");
+        sendToUser("You disconnect your simulated link.\n");
         break;
 
     case ServerStateEnum::CONNECTED: {
         if (auto sock = m_mudSocket.data()) {
-            sendToUser("Disconnecting...\r\n");
+            sendToUser("Disconnecting...\n");
             m_serverState = ServerStateEnum::DISCONNECTING;
             sock->disconnectFromHost();
-            sendToUser("Disconnected.\r\n");
+            sendToUser("Disconnected.\n");
             m_serverState = ServerStateEnum::DISCONNECTED;
         } else {
-            sendToUser("Internal error while trying to disconnect.\r\n");
+            sendToUser("Internal error while trying to disconnect.\n");
         }
         break;
     }
 
     case ServerStateEnum::DISCONNECTING:
-        sendToUser("Error: You're still disconnecting.\r\n");
+        sendToUser("Error: You're still disconnecting.\n");
         break;
 
     case ServerStateEnum::INITIALIZED:
     case ServerStateEnum::DISCONNECTED:
     case ServerStateEnum::ERROR:
-        sendToUser("Error: You're not connected.\r\n");
+        sendToUser("Error: You're not connected.\n");
         break;
     }
 }
