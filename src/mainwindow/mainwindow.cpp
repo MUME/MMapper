@@ -1690,9 +1690,8 @@ void MainWindow::loadFile(const QString &fileName)
 
     auto progressDlg = createNewProgressDialog("Loading map...");
 
-    const bool isPandoraMap = fileName.toLower().endsWith(".xml");
-    const auto storage =
-        [this, &fileName, &file, isPandoraMap]() -> std::unique_ptr<AbstractMapStorage> {
+    const auto storage = [this, &fileName, &file]() -> std::unique_ptr<AbstractMapStorage> {
+        const bool isPandoraMap = fileName.toLower().endsWith(".xml");
         if (isPandoraMap) {
             return std::make_unique<PandoraMapStorage>(*m_mapData, fileName, &file, this);
         } else {
