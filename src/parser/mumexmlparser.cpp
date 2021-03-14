@@ -578,7 +578,7 @@ void MumeXmlParser::move()
     } else {
         const CommandEnum c = m_queue.dequeue();
         // Ignore scouting unless it forced movement via a one-way
-        if (c != CommandEnum::SCOUT || (c == CommandEnum::SCOUT && m_move != CommandEnum::LOOK)) {
+        if (c != CommandEnum::SCOUT || m_move != CommandEnum::LOOK) {
             pathChanged();
             emitEvent();
             if (c != m_move) {
