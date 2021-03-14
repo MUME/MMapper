@@ -14,17 +14,17 @@ class Room;
 namespace tags {
 struct NODISCARD RoomNameTag final
 {};
-struct NODISCARD RoomDynamicDescTag final
-{};
 struct NODISCARD RoomStaticDescTag final
+{};
+struct NODISCARD RoomDynamicDescTag final
 {};
 struct NODISCARD RoomNoteTag final
 {};
 } // namespace tags
 
 using RoomName = TaggedString<tags::RoomNameTag>;
-using RoomDynamicDesc = TaggedString<tags::RoomDynamicDescTag>;
 using RoomStaticDesc = TaggedString<tags::RoomStaticDescTag>;
+using RoomDynamicDesc = TaggedString<tags::RoomDynamicDescTag>;
 using RoomNote = TaggedString<tags::RoomNoteTag>;
 
 #define X_FOREACH_RoomTerrainEnum(X) \

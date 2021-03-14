@@ -562,15 +562,15 @@ void MumeXmlParser::move()
             m_roomName.value()
                 .toQString())) { // non standard end of description parsed (fog, dark or so ...)
         m_roomName.reset();
-        m_dynamicRoomDesc.reset();
         m_staticRoomDesc.reset();
+        m_dynamicRoomDesc.reset();
     }
 
     const auto emitEvent = [this]() {
         auto ev = ParseEvent::createEvent(m_move,
                                           m_roomName.value_or(RoomName{}),
-                                          m_dynamicRoomDesc.value_or(RoomDynamicDesc{}),
                                           m_staticRoomDesc.value_or(RoomStaticDesc{}),
+                                          m_dynamicRoomDesc.value_or(RoomDynamicDesc{}),
                                           m_exitsFlags,
                                           m_promptFlags,
                                           m_connectedRoomFlags);

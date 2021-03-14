@@ -56,8 +56,8 @@ private:
 private:
     ArrayOfProperties m_properties;
     RoomName m_roomName;
-    RoomDynamicDesc m_dynamicDesc;
     RoomStaticDesc m_staticDesc;
+    RoomDynamicDesc m_dynamicDesc;
     ExitsFlagsType m_exitsFlags;
     PromptFlagsType m_promptFlags;
     ConnectedRoomFlagsType m_connectedRoomFlags;
@@ -97,8 +97,8 @@ private:
 
 public:
     NODISCARD const RoomName &getRoomName() const { return m_roomName; }
-    NODISCARD const RoomDynamicDesc &getDynamicDesc() const { return m_dynamicDesc; }
     NODISCARD const RoomStaticDesc &getStaticDesc() const { return m_staticDesc; }
+    NODISCARD const RoomDynamicDesc &getDynamicDesc() const { return m_dynamicDesc; }
     NODISCARD ExitsFlagsType getExitsFlags() const { return m_exitsFlags; }
     NODISCARD PromptFlagsType getPromptFlags() const { return m_promptFlags; }
     NODISCARD ConnectedRoomFlagsType getConnectedRoomFlags() const { return m_connectedRoomFlags; }
@@ -109,8 +109,8 @@ public:
 public:
     static SharedParseEvent createEvent(CommandEnum c,
                                         RoomName roomName,
-                                        RoomDynamicDesc dynamicDesc,
                                         RoomStaticDesc staticDesc,
+                                        RoomDynamicDesc dynamicDesc,
                                         const ExitsFlagsType &exitsFlags,
                                         const PromptFlagsType &promptFlags,
                                         const ConnectedRoomFlagsType &connectedRoomFlags);

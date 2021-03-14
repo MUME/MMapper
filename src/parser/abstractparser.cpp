@@ -1224,8 +1224,8 @@ void AbstractParser::doOfflineCharacterMove()
         // Create character move event for main move/search algorithm
         auto ev = ParseEvent::createEvent(direction,
                                           otherRoom->getName(),
-                                          otherRoom->getDynamicDescription(),
                                           otherRoom->getStaticDescription(),
+                                          otherRoom->getDynamicDescription(),
                                           ExitsFlagsType{},
                                           PromptFlagsType::fromRoomTerrainType(
                                               otherRoom->getTerrainType()),

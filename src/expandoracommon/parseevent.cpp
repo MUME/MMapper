@@ -89,8 +89,8 @@ QString ParseEvent::toQString() const
 
     return QString("[%1,%2,%3,%4,%5,%6,%7]")
         .arg(m_roomName.toQString())
-        .arg(m_dynamicDesc.toQString())
         .arg(m_staticDesc.toQString())
+        .arg(m_dynamicDesc.toQString())
         .arg(exitsStr)
         .arg(promptStr)
         .arg(getUppercase(m_moveType))
@@ -100,8 +100,8 @@ QString ParseEvent::toQString() const
 
 SharedParseEvent ParseEvent::createEvent(const CommandEnum c,
                                          RoomName moved_roomName,
-                                         RoomDynamicDesc moved_dynamicDesc,
                                          RoomStaticDesc moved_staticDesc,
+                                         RoomDynamicDesc moved_dynamicDesc,
                                          const ExitsFlagsType &exitsFlags,
                                          const PromptFlagsType &promptFlags,
                                          const ConnectedRoomFlagsType &connectedRoomFlags)
@@ -116,8 +116,8 @@ SharedParseEvent ParseEvent::createEvent(const CommandEnum c,
 
     // After this block, the moved values are gone.
     event->m_roomName = std::exchange(moved_roomName, {});
-    event->m_dynamicDesc = std::exchange(moved_dynamicDesc, {});
     event->m_staticDesc = std::exchange(moved_staticDesc, {});
+    event->m_dynamicDesc = std::exchange(moved_dynamicDesc, {});
     event->m_exitsFlags = exitsFlags;
     event->m_promptFlags = promptFlags;
     event->m_connectedRoomFlags = connectedRoomFlags;
@@ -130,8 +130,8 @@ SharedParseEvent ParseEvent::createDummyEvent()
 {
     return createEvent(CommandEnum::UNKNOWN,
                        RoomName{},
-                       RoomDynamicDesc{},
                        RoomStaticDesc{},
+                       RoomDynamicDesc{},
                        ExitsFlagsType{},
                        PromptFlagsType{},
                        ConnectedRoomFlagsType{});

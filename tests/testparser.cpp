@@ -37,8 +37,8 @@ void TestParser::latinToAsciiTest()
 void TestParser::createParseEventTest()
 {
     RoomName roomName{"Room"};
-    RoomDynamicDesc roomDescription{"Dynamic Description"};
     RoomStaticDesc parsedRoomDescription{"Static Description"};
+    RoomDynamicDesc roomDescription{"Dynamic Description"};
     auto terrain = RoomTerrainEnum::INDOORS;
     ExitsFlagsType eFlags;
     eFlags.setValid();
@@ -47,8 +47,8 @@ void TestParser::createParseEventTest()
     cFlags.setValid();
     auto event = ParseEvent::createEvent(CommandEnum::NORTH,
                                          roomName,
-                                         roomDescription,
                                          parsedRoomDescription,
+                                         roomDescription,
                                          eFlags,
                                          pFlags,
                                          cFlags);
@@ -56,8 +56,8 @@ void TestParser::createParseEventTest()
     const ParseEvent &e = *event;
     qDebug() << e;
     QCOMPARE(e.getRoomName(), roomName);
-    QCOMPARE(e.getDynamicDesc(), roomDescription);
     QCOMPARE(e.getStaticDesc(), parsedRoomDescription);
+    QCOMPARE(e.getDynamicDesc(), roomDescription);
     QCOMPARE(e.getExitsFlags(), eFlags);
     QCOMPARE(e.getPromptFlags(), pFlags);
     QCOMPARE(e.getConnectedRoomFlags(), cFlags);

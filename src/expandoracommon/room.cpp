@@ -305,8 +305,8 @@ SharedParseEvent Room::getEvent(const Room *const room)
 
     return ParseEvent::createEvent(CommandEnum::UNKNOWN,
                                    room->getName(),
-                                   room->getDynamicDescription(),
                                    room->getStaticDescription(),
+                                   room->getDynamicDescription(),
                                    exitFlags,
                                    PromptFlagsType::fromRoomTerrainType(room->getTerrainType()),
                                    ConnectedRoomFlagsType{});
