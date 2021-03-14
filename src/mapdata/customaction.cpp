@@ -334,7 +334,6 @@ void ModifyRoomFlags::exec(const RoomId id)
         case RoomFieldEnum::NAME:
         case RoomFieldEnum::DESC:
         case RoomFieldEnum::DYNAMIC_DESC:
-        case RoomFieldEnum::LAST:
         case RoomFieldEnum::RESERVED:
         default:
             /* this can't happen */

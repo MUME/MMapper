@@ -23,7 +23,13 @@
 class ExitFieldVariant;
 class ParseEvent;
 
-enum class FlagModifyModeEnum { SET, UNSET, TOGGLE };
+#define X_FOREACH_FlagModifyModeEnum(X) \
+    X(SET) \
+    X(UNSET) \
+    X(TOGGLE)
+#define DECL(X) X,
+enum class FlagModifyModeEnum { X_FOREACH_FlagModifyModeEnum(DECL) };
+#undef DECL
 enum class ComparisonResultEnum { DIFFERENT = 0, EQUAL, TOLERANCE };
 
 using ExitsList = EnumIndexedArray<Exit, ExitDirEnum, NUM_EXITS>;

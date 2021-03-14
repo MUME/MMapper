@@ -8,14 +8,28 @@
 #include "../global/utils.h"
 #include "../mapdata/mmapper2room.h"
 
-enum class PromptWeatherEnum { UNDEFINED = 0, CLOUDS, RAIN, HEAVY_RAIN, SNOW };
-static constexpr const size_t NUM_PROMPT_WEATHER_TYPES = static_cast<size_t>(PromptWeatherEnum::SNOW)
-                                                         + 1u;
-static_assert(NUM_PROMPT_WEATHER_TYPES == 5);
+#define X_FOREACH_PROMT_WEATHER_ENUM(X) \
+    X(UNDEFINED) \
+    X(CLOUDS) \
+    X(RAIN) \
+    X(HEAVY_RAIN) \
+    X(SNOW)
+#define X_FOREACH_PROMT_FOG_ENUM(X) \
+    X(UNDEFINED) \
+    X(LIGHT_FOG) \
+    X(HEAVY_FOG)
 
-enum class PromptFogEnum { UNDEFINED = 0, LIGHT_FOG, HEAVY_FOG };
-static constexpr const size_t NUM_PROMPT_FOG_TYPES = static_cast<size_t>(PromptFogEnum::HEAVY_FOG)
-                                                     + 1u;
+#define DECL(X) X,
+enum class PromptWeatherEnum { X_FOREACH_PROMT_WEATHER_ENUM(DECL) };
+enum class PromptFogEnum { X_FOREACH_PROMT_FOG_ENUM(DECL) };
+#undef DECL
+
+#define ADD(X) +1
+static constexpr const size_t NUM_PROMPT_WEATHER_TYPES = (X_FOREACH_PROMT_WEATHER_ENUM(ADD));
+static constexpr const size_t NUM_PROMPT_FOG_TYPES = (X_FOREACH_PROMT_FOG_ENUM(ADD));
+#undef ADD
+
+static_assert(NUM_PROMPT_WEATHER_TYPES == 5);
 static_assert(NUM_PROMPT_FOG_TYPES == 3);
 
 class PromptFlagsType final
