@@ -33,7 +33,7 @@
 #include "../mapfrontend/mapaction.h"
 
 template<typename T>
-void fixMissing(T &array, const char *name)
+void fixMissing(T &array, const char *const name)
 {
     for (auto &x : array) { // reference to pointer so we can add missing elements
         if (x != nullptr)
@@ -46,7 +46,7 @@ void fixMissing(T &array, const char *name)
 
 template<typename T>
 void installWidgets(T &array,
-                    const char *name,
+                    const char *const name,
                     QListWidget &widget,
                     const QFlags<Qt::ItemFlag> &flags)
 {
@@ -546,8 +546,8 @@ template<typename T, typename Flags>
 void setCheckStates(T &array, const Flags &flags)
 {
     for (size_t i = 0, len = array.size(); i < len; ++i) {
-        auto flag = static_cast<typename T::index_type>(i);
-        if (auto *x = array[flag]) {
+        const auto flag = static_cast<typename T::index_type>(i);
+        if (auto *const x = array[flag]) {
             x->setCheckState(flags.contains(flag) ? Qt::CheckState::Checked
                                                   : Qt::CheckState::Unchecked);
         }
@@ -827,35 +827,35 @@ void RoomEditAttrDlg::updateRoomAlign(const RoomAlignEnum value)
     updateCommon(std::make_unique<ModifyRoomFlags>(value, FlagModifyModeEnum::SET));
 }
 
-void RoomEditAttrDlg::neutralRadioButtonToggled(bool val)
+void RoomEditAttrDlg::neutralRadioButtonToggled(const bool val)
 {
     if (val) {
         updateRoomAlign(RoomAlignEnum::NEUTRAL);
     }
 }
 
-void RoomEditAttrDlg::goodRadioButtonToggled(bool val)
+void RoomEditAttrDlg::goodRadioButtonToggled(const bool val)
 {
     if (val) {
         updateRoomAlign(RoomAlignEnum::GOOD);
     }
 }
 
-void RoomEditAttrDlg::evilRadioButtonToggled(bool val)
+void RoomEditAttrDlg::evilRadioButtonToggled(const bool val)
 {
     if (val) {
         updateRoomAlign(RoomAlignEnum::EVIL);
     }
 }
 
-void RoomEditAttrDlg::alignUndefRadioButtonToggled(bool val)
+void RoomEditAttrDlg::alignUndefRadioButtonToggled(const bool val)
 {
     if (val) {
         updateRoomAlign(RoomAlignEnum::UNDEFINED);
     }
 }
 
-void RoomEditAttrDlg::updateRoomPortable(RoomPortableEnum value)
+void RoomEditAttrDlg::updateRoomPortable(const RoomPortableEnum value)
 {
     updateCommon(std::make_unique<ModifyRoomFlags>(value, FlagModifyModeEnum::SET));
 }
@@ -867,92 +867,92 @@ void RoomEditAttrDlg::noPortRadioButtonToggled(bool val)
     }
 }
 
-void RoomEditAttrDlg::portableRadioButtonToggled(bool val)
+void RoomEditAttrDlg::portableRadioButtonToggled(const bool val)
 {
     if (val) {
         updateRoomPortable(RoomPortableEnum::PORTABLE);
     }
 }
 
-void RoomEditAttrDlg::portUndefRadioButtonToggled(bool val)
+void RoomEditAttrDlg::portUndefRadioButtonToggled(const bool val)
 {
     if (val) {
         updateRoomPortable(RoomPortableEnum::UNDEFINED);
     }
 }
 
-void RoomEditAttrDlg::updateRoomRideable(RoomRidableEnum value)
+void RoomEditAttrDlg::updateRoomRideable(const RoomRidableEnum value)
 {
     updateCommon(std::make_unique<ModifyRoomFlags>(value, FlagModifyModeEnum::SET));
 }
 
-void RoomEditAttrDlg::noRideRadioButtonToggled(bool val)
+void RoomEditAttrDlg::noRideRadioButtonToggled(const bool val)
 {
     if (val) {
         updateRoomRideable(RoomRidableEnum::NOT_RIDABLE);
     }
 }
 
-void RoomEditAttrDlg::ridableRadioButtonToggled(bool val)
+void RoomEditAttrDlg::ridableRadioButtonToggled(const bool val)
 {
     if (val) {
         updateRoomRideable(RoomRidableEnum::RIDABLE);
     }
 }
 
-void RoomEditAttrDlg::rideUndefRadioButtonToggled(bool val)
+void RoomEditAttrDlg::rideUndefRadioButtonToggled(const bool val)
 {
     if (val) {
         updateRoomRideable(RoomRidableEnum::UNDEFINED);
     }
 }
 
-void RoomEditAttrDlg::updateRoomLight(RoomLightEnum value)
+void RoomEditAttrDlg::updateRoomLight(const RoomLightEnum value)
 {
     updateCommon(std::make_unique<ModifyRoomFlags>(value, FlagModifyModeEnum::SET));
 }
 
-void RoomEditAttrDlg::litRadioButtonToggled(bool val)
+void RoomEditAttrDlg::litRadioButtonToggled(const bool val)
 {
     if (val) {
         updateRoomLight(RoomLightEnum::LIT);
     }
 }
 
-void RoomEditAttrDlg::darkRadioButtonToggled(bool val)
+void RoomEditAttrDlg::darkRadioButtonToggled(const bool val)
 {
     if (val) {
         updateRoomLight(RoomLightEnum::DARK);
     }
 }
 
-void RoomEditAttrDlg::lightUndefRadioButtonToggled(bool val)
+void RoomEditAttrDlg::lightUndefRadioButtonToggled(const bool val)
 {
     if (val) {
         updateRoomLight(RoomLightEnum::UNDEFINED);
     }
 }
 
-void RoomEditAttrDlg::updateRoomSundeath(RoomSundeathEnum value)
+void RoomEditAttrDlg::updateRoomSundeath(const RoomSundeathEnum value)
 {
     updateCommon(std::make_unique<ModifyRoomFlags>(value, FlagModifyModeEnum::SET));
 }
 
-void RoomEditAttrDlg::sundeathRadioButtonToggled(bool val)
+void RoomEditAttrDlg::sundeathRadioButtonToggled(const bool val)
 {
     if (val) {
         updateRoomSundeath(RoomSundeathEnum::SUNDEATH);
     }
 }
 
-void RoomEditAttrDlg::noSundeathRadioButtonToggled(bool val)
+void RoomEditAttrDlg::noSundeathRadioButtonToggled(const bool val)
 {
     if (val) {
         updateRoomSundeath(RoomSundeathEnum::NO_SUNDEATH);
     }
 }
 
-void RoomEditAttrDlg::sundeathUndefRadioButtonToggled(bool val)
+void RoomEditAttrDlg::sundeathUndefRadioButtonToggled(const bool val)
 {
     if (val) {
         updateRoomSundeath(RoomSundeathEnum::UNDEFINED);
