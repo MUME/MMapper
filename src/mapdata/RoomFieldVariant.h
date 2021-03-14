@@ -86,4 +86,11 @@ public:
 
         std::abort(); /* crash */
     }
+
+public:
+    NODISCARD bool operator==(const RoomFieldVariant &other) const
+    {
+        return m_data == other.m_data;
+    }
+    NODISCARD bool operator!=(const RoomFieldVariant &other) const { return !operator==(other); }
 };

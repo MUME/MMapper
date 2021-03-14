@@ -57,4 +57,11 @@ public:
         for (auto &x : *this)
             callback(x);
     }
+
+public:
+    NODISCARD bool operator==(const EnumIndexedArray &other) const
+    {
+        return static_cast<const base &>(*this) == static_cast<const base &>(other);
+    }
+    NODISCARD bool operator!=(const EnumIndexedArray &other) const { return !operator==(other); }
 };

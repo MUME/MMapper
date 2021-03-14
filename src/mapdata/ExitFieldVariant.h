@@ -83,4 +83,11 @@ public:
 
         std::abort(); /* crash */
     }
+
+public:
+    NODISCARD bool operator==(const ExitFieldVariant &other) const
+    {
+        return m_data == other.m_data;
+    }
+    NODISCARD bool operator!=(const ExitFieldVariant &other) const { return !operator==(other); }
 };
