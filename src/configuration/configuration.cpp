@@ -144,7 +144,7 @@ void Settings::initSettings()
 
     static std::once_flag success_flag;
     std::call_once(success_flag, [this] {
-        decltype(auto) info = qInfo();
+        auto &&info = qInfo();
         info << "Using settings from" << QString{static_cast<QSettings &>(*this).fileName()};
         if (g_path == nullptr)
             info << "(Hint: Environment variable" << QString{MMAPPER_PROFILE_PATH}
