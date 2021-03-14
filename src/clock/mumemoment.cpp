@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include "../global/Array.h"
+#include "../global/Debug.h"
 #include "mumeclock.h"
 
 static constexpr const int MUME_MINUTES_PER_HOUR = 60;
@@ -33,9 +34,9 @@ static void maybe_warn_if_not_clamped(
     if (val >= lo && val < hi)
         return;
 
-#ifndef NDEBUG
-    std::cerr << "[at " << __FILE__ << ":" << __LINE__ << "] ";
-#endif
+    if constexpr (IS_DEBUG_BUILD) {
+        std::cerr << "[at " << __FILE__ << ":" << __LINE__ << "] ";
+    }
     std::cerr << "WARNING: soft assertion failure: " << name << "(" << val
               << ") is not in the half-open interval '[" << lo << ".." << hi << ")'" << std::endl;
     warned = true;
