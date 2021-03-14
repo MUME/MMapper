@@ -106,6 +106,25 @@ inline T &deref(T *const ptr)
         throw NullPointerException();
     return *ptr;
 }
+template<typename T>
+inline T deref(std::optional<T> &&ptr)
+{
+    // note: this can throw bad_optional_access
+    return std::move(ptr).value();
+}
+template<typename T>
+inline T &deref(std::optional<T> &ptr)
+{
+    // note: this can throw bad_optional_access
+    return ptr.value();
+}
+template<typename T>
+inline const T &deref(const std::optional<T> &ptr)
+{
+    // note: this can throw bad_optional_access
+    return ptr.value();
+}
+
 // Technically we could make this return move or copy of the pointed-to value,
 // but that's probably not what the caller expects.
 template<typename T>
