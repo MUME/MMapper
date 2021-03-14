@@ -24,8 +24,8 @@ public:
     using MMapper::Array<T, _SIZE>::Array;
 
 public:
-    auto operator[](E e) -> decltype(auto) { return base::at(static_cast<uint32_t>(e)); }
-    auto operator[](E e) const -> decltype(auto) { return base::at(static_cast<uint32_t>(e)); }
+    decltype(auto) operator[](E e) { return base::at(static_cast<uint32_t>(e)); }
+    decltype(auto) operator[](E e) const { return base::at(static_cast<uint32_t>(e)); }
 
 public:
     using base::data;

@@ -56,8 +56,8 @@ public:
     using std::vector<T>::vector;
 
 public:
-    auto operator[](RoomId roomId) -> decltype(auto) { return base::at(roomId.asUint32()); }
-    auto operator[](RoomId roomId) const -> decltype(auto) { return base::at(roomId.asUint32()); }
+    decltype(auto) operator[](RoomId roomId) { return base::at(roomId.asUint32()); }
+    decltype(auto) operator[](RoomId roomId) const { return base::at(roomId.asUint32()); }
 
 public:
     using base::begin;
