@@ -101,7 +101,7 @@ public:
 };
 
 // NOTE: Names are capitalized for use with getRoomName() and setRoomName(),
-// which means they'll be capitalized as RoomFields::RoomName.
+// which means they'll be capitalized as RoomFieldFlags::RoomName.
 #define XFOREACH_ROOM_PROPERTY(X) \
     X(RoomName, Name, ) \
     X(RoomStaticDesc, StaticDescription, ) \

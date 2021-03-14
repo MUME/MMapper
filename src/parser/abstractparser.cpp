@@ -1576,7 +1576,7 @@ void AbstractParser::setConnectedRoomFlag(const DirectSunlightEnum light, const 
     m_connectedRoomFlags.setDirectSunlight(dir, light);
 }
 
-void AbstractParser::printRoomInfo(const RoomFields fieldset)
+void AbstractParser::printRoomInfo(const RoomFieldFlags fieldset)
 {
     if (m_mapData->isEmpty())
         return;
@@ -1622,7 +1622,7 @@ void AbstractParser::sendGTellToUser(const QString &color, const QString &from, 
 
 void AbstractParser::printRoomInfo(const RoomFieldEnum field)
 {
-    printRoomInfo(RoomFields{field});
+    printRoomInfo(RoomFieldFlags{field});
 }
 
 void AbstractParser::eval(const std::string &name,

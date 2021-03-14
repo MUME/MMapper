@@ -213,13 +213,14 @@ static constexpr const int NUM_ROOM_FIELDS = (X_FOREACH_ROOM_FIELD_ENUM(ADD));
 static_assert(NUM_ROOM_FIELDS == static_cast<int>(RoomFieldEnum::RESERVED) + 1);
 static_assert(NUM_ROOM_FIELDS == 13);
 DEFINE_ENUM_COUNT(RoomFieldEnum, NUM_ROOM_FIELDS)
-class NODISCARD RoomFields final : public enums::Flags<RoomFields, RoomFieldEnum, uint16_t>
+
+class NODISCARD RoomFieldFlags final : public enums::Flags<RoomFieldFlags, RoomFieldEnum, uint16_t>
 {
     using Flags::Flags;
 };
 
-NODISCARD inline constexpr RoomFields operator|(const RoomFieldEnum lhs,
-                                                const RoomFieldEnum rhs) noexcept
+NODISCARD inline constexpr RoomFieldFlags operator|(const RoomFieldEnum lhs,
+                                                    const RoomFieldEnum rhs) noexcept
 {
-    return RoomFields{lhs} | RoomFields{rhs};
+    return RoomFieldFlags{lhs} | RoomFieldFlags{rhs};
 }

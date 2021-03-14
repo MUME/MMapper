@@ -171,7 +171,7 @@ public:
     void setExitFlags(ExitFlags flag, ExitDirEnum dir);
     void setConnectedRoomFlag(DirectSunlightEnum light, ExitDirEnum dir);
 
-    void printRoomInfo(RoomFields fieldset);
+    void printRoomInfo(RoomFieldFlags fieldset);
     void printRoomInfo(RoomFieldEnum field);
 
     void emulateExits(std::ostream &, CommandEnum move);
