@@ -1366,7 +1366,7 @@ void AbstractParser::sendRoomExitsInfoToUser(std::ostream &os, const Room *const
                 }
             }
 
-            if (!road && e.getExitFlags().isRoad()) {
+            if (!road && e.exitIsRoad()) {
                 if (sourceTerrain == RoomTerrainEnum::ROAD) {
                     road = true;
                     etmp += "=";
@@ -1379,7 +1379,7 @@ void AbstractParser::sendRoomExitsInfoToUser(std::ostream &os, const Room *const
             if (e.isDoor()) {
                 door = true;
                 etmp += "{";
-            } else if (e.getExitFlags().isClimb()) {
+            } else if (e.exitIsClimb()) {
                 climb = true;
                 etmp += "|";
             }
