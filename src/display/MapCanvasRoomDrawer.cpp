@@ -848,7 +848,6 @@ public:
             return;
         }
 
-        // see not above about OpenGL 2.x vs 3.x and colors.
         const auto glcolor = optColor.value();
 
         if (wallType == WallTypeEnum::DOOR) {
