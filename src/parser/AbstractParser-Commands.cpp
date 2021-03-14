@@ -461,20 +461,6 @@ bool AbstractParser::parseSimpleCommand(const QString &qstr)
     return isOnline; // only forward command to mud server if online
 }
 
-bool AbstractParser::parseDoorAction(StringView words)
-{
-    if (words.isEmpty())
-        return false;
-
-    const auto firstWord = words.takeFirstWord();
-    for (const DoorActionEnum dat : ALL_DOOR_ACTION_TYPES) {
-        if (getParserCommandName(dat).matches(firstWord)) {
-            return parseDoorAction(dat, words);
-        }
-    }
-    return false;
-}
-
 bool AbstractParser::parseDoorAction(const DoorActionEnum dat, StringView words)
 {
     const auto dir = tryGetDir(words);

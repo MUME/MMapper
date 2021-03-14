@@ -959,16 +959,6 @@ void AbstractParser::showHelpCommands(const bool showAbbreviations)
     }
 }
 
-void AbstractParser::showGroupHelp()
-{
-    showHeader("MMapper group manager help");
-    showHeader("Group commands");
-    sendToUser(QString("  %1GKick [player]      - kick [player] from the group\r\n"
-                       "  %1GLock               - Toggle lock on group\r\n"
-                       "  %1GTell [message]     - send a grouptell with the [message]\r\n")
-                   .arg(prefixChar));
-}
-
 void AbstractParser::showHeader(const QString &s)
 {
     QString result;

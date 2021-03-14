@@ -465,11 +465,7 @@ void MapCanvas::updateMapBatches()
                    : OptBounds{};                                //
     }();
 
-    MapCanvasRoomDrawer drawer{static_cast<MapCanvasViewport &>(*this),
-                               m_textures,
-                               getOpenGL(),
-                               getGLFont(),
-                               opt_mapBatches};
+    MapCanvasRoomDrawer drawer{m_textures, getOpenGL(), getGLFont(), opt_mapBatches};
 
     /// The following ends up calling MapCanvasRoomDrawer::generateBatches()
     m_data.generateBatches(drawer, bounds);

@@ -684,8 +684,6 @@ struct LayerBatchMeasurer final : public IRoomVisitorCallbacks
 
 LayerBatchMeasurer::~LayerBatchMeasurer() = default;
 
-using ColoredLineBatch = std::vector<ColorVert>;
-using ColoredQuadBatch = std::vector<ColorVert>;
 using PlainQuadBatch = std::vector<glm::vec3>;
 
 struct LayerBatchData final

@@ -115,8 +115,6 @@ public:
     X_FOREACH_DOOR_FLAG(X_DECLARE_ACCESSORS)
 #undef X_DECLARE_ACCESSORS
 
-    DEPRECATED
-    bool doorNeedsKey() const; // REVISIT: This name is not like the others
     inline bool hasDoorName() const { return exitIsDoor() && !getDoorName().isEmpty(); }
 
 public:

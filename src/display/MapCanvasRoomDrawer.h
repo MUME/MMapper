@@ -68,19 +68,16 @@ class MapCanvasRoomDrawer final
 private:
     OpenGL &m_opengl;
     GLFont &m_font;
-    const float m_totalScaleFactor;
     const MapCanvasTextures &m_textures;
     std::optional<MapBatches> &m_batches;
 
 public:
-    explicit MapCanvasRoomDrawer(const MapCanvasViewport &viewport,
-                                 const MapCanvasTextures &textures,
+    explicit MapCanvasRoomDrawer(const MapCanvasTextures &textures,
                                  OpenGL &opengl,
                                  GLFont &font,
                                  std::optional<MapBatches> &batches)
         : m_opengl{opengl}
         , m_font{font}
-        , m_totalScaleFactor{viewport.getTotalScaleFactor()}
         , m_textures{textures}
         , m_batches{batches}
     {}

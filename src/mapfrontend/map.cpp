@@ -139,11 +139,6 @@ Map::Map()
 
 Map::~Map() = default;
 
-bool Map::defined(const Coordinate &c) const
-{
-    return m_pimpl->defined(c);
-}
-
 Room *Map::get(const Coordinate &c) const
 {
     return m_pimpl->get(c);
@@ -169,15 +164,11 @@ void Map::getRooms(AbstractRoomVisitor &stream, const Coordinate &min, const Coo
     return m_pimpl->getRooms(stream, min, max);
 }
 
-/**
- * gets a new coordinate but doesn't return the old one ... should probably be changed ...
- */
-Coordinate Map::setNearest(const Coordinate &in_c, Room &room)
+void Map::setNearest(const Coordinate &in_c, Room &room)
 {
     const Coordinate c = getNearestFree(in_c);
     m_pimpl->set(c, &room);
     room.setPosition(c);
-    return c;
 }
 
 Coordinate Map::getNearestFree(const Coordinate &p)

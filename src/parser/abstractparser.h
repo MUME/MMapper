@@ -205,7 +205,6 @@ private:
     void showDoorCommandHelp();
     void showMumeTime();
     void showHelp();
-    void showGroupHelp();
     void showMiscHelp();
     void showDoorVariableHelp();
     void showCommandPrefix();
@@ -216,7 +215,6 @@ private:
     void showHeader(const QString &s);
 
     ExitDirEnum tryGetDir(StringView &words);
-    bool parseDoorAction(StringView words);
     void parseSetCommand(StringView view);
     void parseDirections(StringView view);
     void parseSearch(StringView view);

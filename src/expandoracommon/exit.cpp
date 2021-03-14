@@ -26,11 +26,6 @@ X_FOREACH_EXIT_FLAG(X_DEFINE_ACCESSORS)
 X_FOREACH_DOOR_FLAG(X_DEFINE_ACCESSORS)
 #undef X_DEFINE_ACCESSORS
 
-bool Exit::doorNeedsKey() const
-{
-    return isDoor() && getDoorFlags().needsKey();
-}
-
 bool Exit::operator==(const Exit &rhs) const
 {
     return m_fields.doorName == rhs.m_fields.doorName

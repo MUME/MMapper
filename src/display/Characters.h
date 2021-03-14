@@ -142,7 +142,6 @@ private:
             auto &m = m_stack.top().modelView;
             m = glm::translate(m, v);
         }
-        void glTranslatef(float x, float y, float z) { glTranslatef(glm::vec3{x, y, z}); }
         void drawArrow(bool fill, bool beacon);
         void drawBox(const Coordinate &coord, bool fill, bool beacon, bool isFar);
         void addScreenSpaceArrow(const glm::vec3 &pos, float degrees, const Color &color, bool fill);

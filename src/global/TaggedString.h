@@ -43,20 +43,6 @@ public:
     bool operator==(const TaggedString &rhs) const { return m_str == rhs.m_str; }
     bool operator!=(const TaggedString &rhs) const { return !(rhs == *this); }
 
-#if 0
-public:
-    template<typename U>
-    friend auto operator+(const TaggedString &taggedString, const U &x)
-    {
-        return taggedString.getStdString() + x;
-    }
-    template<typename U>
-    friend auto operator+(const U &x, const TaggedString &taggedString)
-    {
-        return x + taggedString.getStdString();
-    }
-#endif
-
 public:
     friend auto operator+(const TaggedString &taggedString, const QString &qs)
     {
