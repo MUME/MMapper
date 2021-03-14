@@ -85,6 +85,13 @@ public:
     }
 
 public:
+    template<typename Visitor>
+    void acceptVisitor(Visitor &&visitor) const
+    {
+        std::visit(std::forward<Visitor>(visitor), m_data);
+    }
+
+public:
     NODISCARD bool operator==(const ExitFieldVariant &other) const
     {
         return m_data == other.m_data;
