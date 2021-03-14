@@ -38,7 +38,7 @@
 #undef ERROR // Bad dog, Microsoft; bad dog!!!
 
 template<typename T, typename... Args>
-static inline auto makeQPointer(Args &&... args)
+static inline auto makeQPointer(Args &&...args)
 {
     static_assert(std::is_base_of_v<QObject, T>);
     auto tmp = std::make_unique<T>(std::forward<Args>(args)...);
