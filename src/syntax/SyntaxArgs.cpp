@@ -40,9 +40,12 @@ MatchResult ArgAbbrev::virt_match(const ParserInput &input, IMatchErrorLogger * 
         return MatchResult::failure(input);
 
     const auto input_sv = StringView{input.front()};
+    const size_t inputLen = input_sv.size();
     const size_t strlen = m_str.length();
-    const size_t minLen = std::min(strlen, input_sv.length());
-    for (size_t i = 0; i < minLen; ++i) {
+    if (inputLen > strlen)
+        return MatchResult::failure(input);
+
+    for (size_t i = 0; i < inputLen; ++i) {
         if (toLowerLatin1(m_str[i]) != toLowerLatin1(input_sv[i]))
             return MatchResult::failure(input);
     }
