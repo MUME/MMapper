@@ -81,10 +81,10 @@ void PathmachinePage::multipleConnectionsPenaltyDoubleSpinBoxValueChanged(const 
 
 void PathmachinePage::maxPathsValueChanged(const int val)
 {
-    setConfig().pathMachine.maxPaths = val;
+    setConfig().pathMachine.maxPaths = utils::clampNonNegative(val);
 }
 
 void PathmachinePage::matchingToleranceSpinBoxValueChanged(const int val)
 {
-    setConfig().pathMachine.matchingTolerance = val;
+    setConfig().pathMachine.matchingTolerance = utils::clampNonNegative(val);
 }

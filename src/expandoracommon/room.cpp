@@ -326,8 +326,7 @@ ComparisonResultEnum Room::compareStrings(const std::string &room,
                                           int prevTolerance,
                                           const bool updated)
 {
-    assert(prevTolerance >= 0);
-    prevTolerance = std::max(0, prevTolerance);
+    prevTolerance = utils::clampNonNegative(prevTolerance);
     prevTolerance *= static_cast<int>(room.size());
     prevTolerance /= 100;
     int tolerance = prevTolerance;

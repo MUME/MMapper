@@ -667,8 +667,8 @@ void Configuration::PathMachineSettings::read(QSettings &conf)
     newRoomPenalty = conf.value(KEY_ROOM_CREATION_PENALTY, 5).toDouble();
     correctPositionBonus = conf.value(KEY_CORRECT_POSITION_BONUS, 5).toDouble();
     multipleConnectionsPenalty = conf.value(KEY_MULTIPLE_CONNECTIONS_PENALTY, 2.0).toDouble();
-    maxPaths = std::max(0, conf.value(KEY_MAXIMUM_NUMBER_OF_PATHS, 1000).toInt());
-    matchingTolerance = std::max(0, conf.value(KEY_ROOM_MATCHING_TOLERANCE, 8).toInt());
+    maxPaths = utils::clampNonNegative(conf.value(KEY_MAXIMUM_NUMBER_OF_PATHS, 1000).toInt());
+    matchingTolerance = utils::clampNonNegative(conf.value(KEY_ROOM_MATCHING_TOLERANCE, 8).toInt());
 }
 
 void Configuration::GroupManagerSettings::read(QSettings &conf)
@@ -832,8 +832,8 @@ void Configuration::PathMachineSettings::write(QSettings &conf) const
     conf.setValue(KEY_ABSOLUTE_PATH_ACCEPTANCE, acceptBestAbsolute);
     conf.setValue(KEY_ROOM_CREATION_PENALTY, newRoomPenalty);
     conf.setValue(KEY_CORRECT_POSITION_BONUS, correctPositionBonus);
-    conf.setValue(KEY_MAXIMUM_NUMBER_OF_PATHS, maxPaths);
-    conf.setValue(KEY_ROOM_MATCHING_TOLERANCE, matchingTolerance);
+    conf.setValue(KEY_MAXIMUM_NUMBER_OF_PATHS, utils::clampNonNegative(maxPaths));
+    conf.setValue(KEY_ROOM_MATCHING_TOLERANCE, utils::clampNonNegative(matchingTolerance));
     conf.setValue(KEY_MULTIPLE_CONNECTIONS_PENALTY, multipleConnectionsPenalty);
 }
 

@@ -249,4 +249,11 @@ NODISCARD inline constexpr auto rotate_bits64(const uint64_t x) noexcept
     return (x << N) | (x >> (64 - N));
 }
 
+template<typename T>
+NODISCARD static inline T clampNonNegative(T x)
+{
+    static_assert((std::is_integral_v<T> && std::is_signed_v<T>) || std::is_floating_point_v<T>);
+    return std::max(T(0), x);
+}
+
 } // namespace utils

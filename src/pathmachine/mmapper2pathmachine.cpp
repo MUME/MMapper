@@ -41,12 +41,13 @@ void Mmapper2PathMachine::event(const SigParseEvent &sigParseEvent)
      */
     const auto &settings = getConfig().pathMachine;
 
+    // Note: clamping here isn't necessary if all writes are clamped.
     params.acceptBestRelative = settings.acceptBestRelative;
     params.acceptBestAbsolute = settings.acceptBestAbsolute;
     params.newRoomPenalty = settings.newRoomPenalty;
     params.correctPositionBonus = settings.correctPositionBonus;
-    params.maxPaths = settings.maxPaths;
-    params.matchingTolerance = std::max(0, settings.matchingTolerance);
+    params.maxPaths = utils::clampNonNegative(settings.maxPaths);
+    params.matchingTolerance = utils::clampNonNegative(settings.matchingTolerance);
     params.multipleConnectionsPenalty = settings.multipleConnectionsPenalty;
 
     time.restart();
