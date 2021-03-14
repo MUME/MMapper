@@ -106,7 +106,7 @@ QList<Coordinate> MapData::getPath(const Coordinate &start, const CommandQueue &
     QMutexLocker locker(&mapLock);
     QList<Coordinate> ret;
 
-    //* NOTE: room is used and then reassigned inside the loop.
+    // NOTE: room is used and then reassigned inside the loop.
     if (const Room *room = map.get(start)) {
         for (const auto cmd : dirs) {
             if (cmd == CommandEnum::LOOK)
