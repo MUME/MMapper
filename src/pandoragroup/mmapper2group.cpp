@@ -538,22 +538,11 @@ void Mmapper2Group::reset()
     QMutexLocker locker(&networkLock);
 
     // Reset prompt
-    lastPrompt.textHP = {};
-    lastPrompt.textMana = {};
-    lastPrompt.textMoves = {};
-    lastPrompt.inCombat = false;
+    lastPrompt.reset();
 
     // Reset character
-    const SharedGroupChar &self = getGroup()->getSelf();
-    self->hp = 0;
-    self->maxhp = 0;
-    self->mana = 0;
-    self->maxmana = 0;
-    self->moves = 0;
-    self->maxmoves = 0;
-    self->roomId = INVALID_ROOMID;
-    self->position = CharacterPositionEnum::UNDEFINED;
-    self->affects = CharacterAffectFlags{};
+    deref(getGroup()->getSelf()).reset();
+
     issueLocalCharUpdate();
 }
 

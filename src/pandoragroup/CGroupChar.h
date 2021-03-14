@@ -42,20 +42,42 @@ public:
     CharacterAffectFlags affects;
     CommandQueue prespam;
 
+private:
+    struct NODISCARD Internal final
+    {
+        QByteArray name;
+        QColor color;
+    };
+    Internal m_internal;
+
 public:
     CGroupChar() = delete;
     explicit CGroupChar(this_is_private);
     virtual ~CGroupChar();
-    DELETE_CTORS_AND_ASSIGN_OPS(CGroupChar);
+    DELETE_CTORS(CGroupChar);
+    DELETE_COPY_ASSIGN_OP(CGroupChar);
+
+private:
+    DEFAULT_MOVE_ASSIGN_OP(CGroupChar);
+
+public:
+    // uses private move assignment operator
+    // TODO: encapsulate the public members in a struct so they can be reset separately.
+    void reset()
+    {
+        const Internal saved = m_internal;
+        *this = CGroupChar{this_is_private{0}};
+        m_internal = saved;
+    }
 
 public:
     static SharedGroupChar alloc() { return std::make_shared<CGroupChar>(this_is_private{0}); }
 
 public:
-    NODISCARD const QByteArray &getName() const { return name; }
-    void setName(QByteArray _name) { name = _name; }
-    void setColor(QColor col) { color = col; }
-    NODISCARD const QColor &getColor() const { return color; }
+    NODISCARD const QByteArray &getName() const { return m_internal.name; }
+    void setName(QByteArray name) { m_internal.name = name; }
+    void setColor(QColor col) { m_internal.color = col; }
+    NODISCARD const QColor &getColor() const { return m_internal.color; }
     NODISCARD const QVariantMap toVariantMap() const;
     bool updateFromVariantMap(const QVariantMap &);
     void setRoomId(RoomId id) { roomId = id; }
@@ -71,8 +93,4 @@ public:
         moves = _moves;
         maxmoves = _maxmoves;
     }
-
-private:
-    QByteArray name;
-    QColor color;
 };

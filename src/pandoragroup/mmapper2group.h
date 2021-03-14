@@ -105,13 +105,16 @@ protected slots:
     void slot_stopInternal();
 
 private:
-    struct
+    struct NODISCARD LastPrompt final
     {
         QByteArray textHP;
         QByteArray textMoves;
         QByteArray textMana;
         bool inCombat = false;
-    } lastPrompt;
+
+        void reset() { *this = LastPrompt{}; }
+    };
+    LastPrompt lastPrompt;
 
     std::atomic_int m_calledStopInternal{0};
     QTimer affectTimer;
