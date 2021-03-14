@@ -30,7 +30,7 @@ static_assert(GROUP_COLUMN_COUNT == static_cast<int>(GroupModel::ColumnTypeEnum:
 
 GroupStateData::GroupStateData(const QColor &color,
                                const CharacterPositionEnum position,
-                               const CharacterAffects affects)
+                               const CharacterAffectFlags affects)
     : color(std::move(color))
     , position(position)
     , affects(affects)

@@ -60,8 +60,8 @@ static constexpr const int NUM_CHARACTER_AFFECTS = X_FOREACH_CHARACTER_AFFECT(X_
 DEFINE_ENUM_COUNT(CharacterAffectEnum, NUM_CHARACTER_AFFECTS)
 Q_DECLARE_METATYPE(CharacterAffectEnum)
 
-class NODISCARD CharacterAffects final
-    : public enums::Flags<CharacterAffects, CharacterAffectEnum, uint32_t>
+class NODISCARD CharacterAffectFlags final
+    : public enums::Flags<CharacterAffectFlags, CharacterAffectEnum, uint32_t>
 {
     using Flags::Flags;
 
@@ -72,8 +72,8 @@ public:
 #undef X_DEFINE_ACCESSORS
 };
 
-NODISCARD inline constexpr const CharacterAffects operator|(CharacterAffectEnum lhs,
-                                                            CharacterAffectEnum rhs) noexcept
+NODISCARD inline constexpr const CharacterAffectFlags operator|(CharacterAffectEnum lhs,
+                                                                CharacterAffectEnum rhs) noexcept
 {
-    return CharacterAffects{lhs} | CharacterAffects{rhs};
+    return CharacterAffectFlags{lhs} | CharacterAffectFlags{rhs};
 }

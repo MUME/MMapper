@@ -188,7 +188,7 @@ void Mmapper2Group::setCharacterRoomId(RoomId roomId)
 
     // Check if we are still snared
     static const constexpr auto SNARED_MESSAGE_WINDOW = 1;
-    CharacterAffects &affects = getGroup()->getSelf()->affects;
+    CharacterAffectFlags &affects = getGroup()->getSelf()->affects;
     if (affects.contains(CharacterAffectEnum::SNARED)) {
         const int64_t now = QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
         const auto lastSeen = affectLastSeen.value(CharacterAffectEnum::SNARED, 0);
@@ -327,7 +327,7 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
     QByteArray textHP;
     QByteArray textMana;
     QByteArray textMoves;
-    CharacterAffects &affects = self->affects;
+    CharacterAffectFlags &affects = self->affects;
 
     static const QRegularExpression pRx(R"(^(?:\+ )?)"              //          Valar mudlle
                                         R"(([\*@\!\)o])"            // Group 1: light
@@ -472,7 +472,7 @@ void Mmapper2Group::updateCharacterPosition(const CharacterPositionEnum position
 
     // Reset affects on death
     if (position == CharacterPositionEnum::DEAD)
-        group->getSelf()->affects = CharacterAffects{};
+        group->getSelf()->affects = CharacterAffectFlags{};
 
     if (oldPosition == CharacterPositionEnum::DEAD && position != CharacterPositionEnum::STANDING)
         return; // Prefer dead state until we finish recovering some hp (i.e. stand)
@@ -489,7 +489,7 @@ void Mmapper2Group::updateCharacterAffect(const CharacterAffectEnum affect, cons
     if (enable)
         affectLastSeen.insert(affect, QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch());
 
-    CharacterAffects &affects = getGroup()->getSelf()->affects;
+    CharacterAffectFlags &affects = getGroup()->getSelf()->affects;
     if (enable == affects.contains(affect))
         return; // No update needed
 
@@ -509,7 +509,7 @@ void Mmapper2Group::onAffectTimeout()
         return;
 
     bool removedAtLeastOneAffect = false;
-    CharacterAffects &affects = getGroup()->getSelf()->affects;
+    CharacterAffectFlags &affects = getGroup()->getSelf()->affects;
     const int64_t now = QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
     for (const CharacterAffectEnum affect : affectLastSeen.keys()) {
         const bool expired = [this, &affect, &now]() {
@@ -553,7 +553,7 @@ void Mmapper2Group::reset()
     self->maxmoves = 0;
     self->roomId = DEFAULT_ROOMID;
     self->position = CharacterPositionEnum::UNDEFINED;
-    self->affects = CharacterAffects{};
+    self->affects = CharacterAffectFlags{};
     issueLocalCharUpdate();
 }
 

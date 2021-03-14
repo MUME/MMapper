@@ -198,7 +198,8 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
         }
     }
 
-    const auto setAffects = [&affects = this->affects, &updated](const CharacterAffects newAffects) {
+    const auto setAffects = [&affects = this->affects,
+                             &updated](const CharacterAffectFlags newAffects) {
         if (newAffects != affects) {
             updated = true;
             affects = newAffects;
@@ -207,7 +208,7 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
 
     if (playerData.contains(affectsKey) && playerData[affectsKey].canConvert(QMetaType::UInt)) {
         const uint32_t i = playerData[affectsKey].toUInt();
-        setAffects(static_cast<CharacterAffects>(i));
+        setAffects(static_cast<CharacterAffectFlags>(i));
     }
 
     return updated;

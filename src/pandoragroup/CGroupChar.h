@@ -36,7 +36,7 @@ public:
     int mana = 0, maxmana = 0;
     int moves = 0, maxmoves = 0;
     CharacterPositionEnum position = CharacterPositionEnum::UNDEFINED;
-    CharacterAffects affects;
+    CharacterAffectFlags affects;
     CommandQueue prespam;
 
 public:

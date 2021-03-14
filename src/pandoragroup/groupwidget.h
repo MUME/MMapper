@@ -26,7 +26,7 @@ public:
     GroupStateData() = default;
     explicit GroupStateData(const QColor &color,
                             CharacterPositionEnum position,
-                            CharacterAffects affects);
+                            CharacterAffectFlags affects);
 
 public:
     void paint(QPainter *painter, const QRect &rect);
@@ -35,7 +35,7 @@ public:
 private:
     QColor color;
     CharacterPositionEnum position = CharacterPositionEnum::UNDEFINED;
-    CharacterAffects affects;
+    CharacterAffectFlags affects;
     int count = 0;
     int height = 23;
 };
