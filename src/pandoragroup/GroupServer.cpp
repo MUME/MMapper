@@ -100,7 +100,8 @@ void GroupServer::closeOne(GroupSocket *const target)
     });
     if (it == clientsList.end()) {
         qWarning() << "Could not find" << target->getName() << "among clients";
-        return assert(false);
+        assert(false);
+        return;
     }
     clientsList.erase(it);
 }
