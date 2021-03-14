@@ -148,7 +148,7 @@ static_assert(NUM_ROOM_FIELDS == static_cast<int>(RoomFieldEnum::LAST));
 static_assert(NUM_ROOM_FIELDS == 13);
 static constexpr const int NUM_ROOM_PROPS = NUM_ROOM_FIELDS;
 DEFINE_ENUM_COUNT(RoomFieldEnum, NUM_ROOM_FIELDS)
-class RoomFields : public enums::Flags<RoomFields, RoomFieldEnum, uint16_t>
+class RoomFields final : public enums::Flags<RoomFields, RoomFieldEnum, uint16_t>
 {
     using Flags::Flags;
 };
