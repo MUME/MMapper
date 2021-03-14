@@ -936,7 +936,7 @@ AnsiStringToken AnsiTokenizer::Iterator::getCurrent()
         return AnsiStringToken{AnsiStringToken::TokenTypeEnum::NEWLINE, str_, here, 1};
     }
     // Special case to match "\r\n" as just "\n"
-    else if (c == QC_CARRIAGE_RETURN && here < str_.size() && str_[here + 1] == QC_NEWLINE) {
+    else if (c == QC_CARRIAGE_RETURN && here + 1 < str_.size() && str_[here + 1] == QC_NEWLINE) {
         return AnsiStringToken{AnsiStringToken::TokenTypeEnum::NEWLINE, str_, here + 1, 1};
     } else if (c == QC_CARRIAGE_RETURN || isControl(c)) {
         return AnsiStringToken{AnsiStringToken::TokenTypeEnum::CONTROL, str_, here, skip_control()};
