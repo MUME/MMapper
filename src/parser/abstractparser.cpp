@@ -1234,8 +1234,8 @@ void AbstractParser::slot_doOfflineCharacterMove()
         // Create character move event for main move/search algorithm
         auto ev = ParseEvent::createEvent(direction,
                                           otherRoom->getName(),
-                                          otherRoom->getStaticDescription(),
-                                          otherRoom->getDynamicDescription(),
+                                          otherRoom->getDescription(),
+                                          otherRoom->getContents(),
                                           ExitsFlagsType{},
                                           PromptFlagsType::fromRoomTerrainType(
                                               otherRoom->getTerrainType()),
@@ -1291,16 +1291,15 @@ void AbstractParser::sendRoomInfoToUser(const Room *r)
     sendToUser(roomName);
 
     QByteArray roomDescription;
-    if (!r->getStaticDescription().toQString().trimmed().isEmpty()) {
+    if (const QString &desc = r->getDescription().toQString(); !desc.trimmed().isEmpty()) {
         if (!settings.roomDescColor.isEmpty()) {
             roomDescription += ESCAPE + settings.roomDescColor.toLatin1();
         }
-        roomDescription += r->getStaticDescription().toQString().trimmed().toLatin1() + ESCAPE
-                           + "[0m";
+        roomDescription += desc.trimmed().toLatin1() + ESCAPE + "[0m";
         sendToUser(roomDescription + "\n");
     }
 
-    QByteArray dynamicDescription = r->getDynamicDescription().toQString().trimmed().toLatin1();
+    QByteArray dynamicDescription = r->getContents().toQString().trimmed().toLatin1();
     if (!dynamicDescription.isEmpty()) {
         sendToUser(dynamicDescription + "\n");
     }
@@ -1600,10 +1599,10 @@ void AbstractParser::printRoomInfo(const RoomFieldFlags fieldset)
             result += r->getName().toQByteArray() + "\n";
         }
         if (fieldset.contains(RoomFieldEnum::DESC)) {
-            result += r->getStaticDescription().toQByteArray();
+            result += r->getDescription().toQByteArray();
         }
-        if (fieldset.contains(RoomFieldEnum::DYNAMIC_DESC)) {
-            result += r->getDynamicDescription().toQByteArray();
+        if (fieldset.contains(RoomFieldEnum::CONTENTS)) {
+            result += r->getContents().toQByteArray();
         }
         if (fieldset.contains(RoomFieldEnum::NOTE)) {
             result += "Note: " + r->getNote().toQByteArray() + "\n";

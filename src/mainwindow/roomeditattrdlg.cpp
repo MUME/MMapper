@@ -650,7 +650,7 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         roomDescriptionTextEdit->clear();
         roomDescriptionTextEdit->setFontItalic(false);
         {
-            QString str = r->getStaticDescription().toQString();
+            QString str = r->getDescription().toQString();
             // note: older rooms may not have a trailing newline
             // REVISIT: what if they have \r\n?
             if (str.endsWith("\n"))
@@ -658,7 +658,7 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
             roomDescriptionTextEdit->append(str);
         }
         roomDescriptionTextEdit->setFontItalic(true);
-        roomDescriptionTextEdit->append(r->getDynamicDescription().toQString());
+        roomDescriptionTextEdit->append(r->getContents().toQString());
 
         roomNoteTextEdit->clear();
         roomNoteTextEdit->append(r->getNote().toQString());

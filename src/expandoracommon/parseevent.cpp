@@ -89,8 +89,8 @@ QString ParseEvent::toQString() const
 
     return QString("[%1,%2,%3,%4,%5,%6,%7]")
         .arg(m_roomName.toQString())
-        .arg(m_staticDesc.toQString())
-        .arg(m_dynamicDesc.toQString())
+        .arg(m_roomDesc.toQString())
+        .arg(m_roomContents.toQString())
         .arg(exitsStr)
         .arg(promptStr)
         .arg(getUppercase(m_moveType))
@@ -100,8 +100,8 @@ QString ParseEvent::toQString() const
 
 SharedParseEvent ParseEvent::createEvent(const CommandEnum c,
                                          RoomName moved_roomName,
-                                         RoomStaticDesc moved_staticDesc,
-                                         RoomDynamicDesc moved_dynamicDesc,
+                                         RoomDesc moved_roomDesc,
+                                         RoomContents moved_roomContents,
                                          const ExitsFlagsType &exitsFlags,
                                          const PromptFlagsType &promptFlags,
                                          const ConnectedRoomFlagsType &connectedRoomFlags)
@@ -111,13 +111,13 @@ SharedParseEvent ParseEvent::createEvent(const CommandEnum c,
 
     // the moved strings are used by const ref here before they're moved.
     event->setProperty(moved_roomName);
-    event->setProperty(moved_staticDesc);
+    event->setProperty(moved_roomDesc);
     event->setProperty(promptFlags);
 
     // After this block, the moved values are gone.
     event->m_roomName = std::exchange(moved_roomName, {});
-    event->m_staticDesc = std::exchange(moved_staticDesc, {});
-    event->m_dynamicDesc = std::exchange(moved_dynamicDesc, {});
+    event->m_roomDesc = std::exchange(moved_roomDesc, {});
+    event->m_roomContents = std::exchange(moved_roomContents, {});
     event->m_exitsFlags = exitsFlags;
     event->m_promptFlags = promptFlags;
     event->m_connectedRoomFlags = connectedRoomFlags;
@@ -130,8 +130,8 @@ SharedParseEvent ParseEvent::createDummyEvent()
 {
     return createEvent(CommandEnum::UNKNOWN,
                        RoomName{},
-                       RoomStaticDesc{},
-                       RoomDynamicDesc{},
+                       RoomDesc{},
+                       RoomContents{},
                        ExitsFlagsType{},
                        PromptFlagsType{},
                        ConnectedRoomFlagsType{});

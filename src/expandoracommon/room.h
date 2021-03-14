@@ -55,8 +55,8 @@ enum class NODISCARD RoomUpdateEnum {
     ConnectionsOut,
 
     Name,
-    StaticDesc,
-    DynamicDesc,
+    Desc,
+    Contents,
     Note,
     Terrain,
 
@@ -104,8 +104,8 @@ public:
 // which means they'll be capitalized as RoomFieldFlags::RoomName.
 #define XFOREACH_ROOM_PROPERTY(X) \
     X(RoomName, Name, ) \
-    X(RoomStaticDesc, StaticDescription, ) \
-    X(RoomDynamicDesc, DynamicDescription, ) \
+    X(RoomDesc, Description, ) \
+    X(RoomContents, Contents, ) \
     X(RoomNote, Note, ) \
     X(RoomMobFlags, MobFlags, ) \
     X(RoomLoadFlags, LoadFlags, ) \

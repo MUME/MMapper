@@ -14,17 +14,17 @@ class Room;
 namespace tags {
 struct NODISCARD RoomNameTag final
 {};
-struct NODISCARD RoomStaticDescTag final
+struct NODISCARD RoomDescTag final
 {};
-struct NODISCARD RoomDynamicDescTag final
+struct NODISCARD RoomContentsTag final
 {};
 struct NODISCARD RoomNoteTag final
 {};
 } // namespace tags
 
 using RoomName = TaggedString<tags::RoomNameTag>;
-using RoomStaticDesc = TaggedString<tags::RoomStaticDescTag>;
-using RoomDynamicDesc = TaggedString<tags::RoomDynamicDescTag>;
+using RoomDesc = TaggedString<tags::RoomDescTag>;
+using RoomContents = TaggedString<tags::RoomContentsTag>;
 using RoomNote = TaggedString<tags::RoomNoteTag>;
 
 #define X_FOREACH_RoomTerrainEnum(X) \
@@ -186,12 +186,13 @@ class NODISCARD RoomLoadFlags final : public enums::Flags<RoomLoadFlags, RoomLoa
     using Flags::Flags;
 };
 
+// REVISIT: Why are these in a different order than the other XMACRO(), and why don't we just use that one?
 #define X_FOREACH_ROOM_FIELD_ENUM(X) \
     X(NAME) \
     /* Note: DESC could also be called STATIC_DESC */ \
     X(DESC) \
     X(TERRAIN_TYPE) \
-    X(DYNAMIC_DESC) \
+    X(CONTENTS) \
     X(NOTE) \
     X(MOB_FLAGS) \
     X(LOAD_FLAGS) \

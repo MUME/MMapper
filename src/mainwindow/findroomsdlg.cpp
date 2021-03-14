@@ -116,8 +116,8 @@ void FindRoomsDlg::slot_findClicked()
         kind = PatternKindsEnum::NAME;
     } else if (descRadioButton->isChecked()) {
         kind = PatternKindsEnum::DESC;
-    } else if (dynDescRadioButton->isChecked()) {
-        kind = PatternKindsEnum::DYN_DESC;
+    } else if (contentsRadioButton->isChecked()) {
+        kind = PatternKindsEnum::CONTENTS;
     } else if (exitsRadioButton->isChecked()) {
         kind = PatternKindsEnum::EXITS;
     } else if (notesRadioButton->isChecked()) {

@@ -260,8 +260,8 @@ SharedRoom MapStorage::loadRoom(QDataStream &stream, const uint32_t version)
     LoadRoomHelper helper{stream};
     const SharedRoom room = Room::createPermanentRoom(m_mapData);
     room->setName(RoomName{helper.read_string()});
-    room->setStaticDescription(RoomStaticDesc{helper.read_string()});
-    room->setDynamicDescription(RoomDynamicDesc{helper.read_string()});
+    room->setDescription(RoomDesc{helper.read_string()});
+    room->setContents(RoomContents{helper.read_string()});
     room->setId(RoomId{helper.read_u32() + baseId});
     room->setNote(RoomNote{helper.read_string()});
     room->setTerrainType(serialize(helper.read_u8()));
@@ -557,8 +557,8 @@ void MapStorage::loadMark(InfoMark &mark, QDataStream &stream, uint32_t version)
 void MapStorage::saveRoom(const Room &room, QDataStream &stream)
 {
     stream << room.getName().toQString();
-    stream << room.getStaticDescription().toQString();
-    stream << room.getDynamicDescription().toQString();
+    stream << room.getDescription().toQString();
+    stream << room.getContents().toQString();
     stream << static_cast<quint32>(room.getId());
     stream << room.getNote().toQString();
     stream << static_cast<quint8>(room.getTerrainType());

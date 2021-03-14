@@ -335,7 +335,7 @@ void ModifyRoomFlags::exec(const RoomId id)
             // REVISIT: RoomName requires that we enhance RoomFieldVariant
         case RoomFieldEnum::NAME:
         case RoomFieldEnum::DESC:
-        case RoomFieldEnum::DYNAMIC_DESC:
+        case RoomFieldEnum::CONTENTS:
         case RoomFieldEnum::RESERVED:
         default:
             /* this can't happen */

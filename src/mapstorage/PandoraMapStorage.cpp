@@ -77,7 +77,7 @@ NODISCARD static RoomTerrainEnum toTerrainType(const QString &str)
 SharedRoom PandoraMapStorage::loadRoom(QXmlStreamReader &xml)
 {
     SharedRoom room = Room::createPermanentRoom(m_mapData);
-    room->setDynamicDescription(RoomDynamicDesc{});
+    room->setContents(RoomContents{});
     room->setUpToDate();
     while (
         !(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == QLatin1String("room"))) {
@@ -98,7 +98,7 @@ SharedRoom PandoraMapStorage::loadRoom(QXmlStreamReader &xml)
             } else if (xml.name() == QLatin1String("roomname")) {
                 room->setName(RoomName{xml.readElementText()});
             } else if (xml.name() == QLatin1String("desc")) {
-                room->setStaticDescription(RoomStaticDesc{xml.readElementText().replace("|", "\n")});
+                room->setDescription(RoomDesc{xml.readElementText().replace("|", "\n")});
             } else if (xml.name() == QLatin1String("note")) {
                 room->setNote(RoomNote{xml.readElementText()});
             } else if (xml.name() == QLatin1String("exits")) {

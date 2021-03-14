@@ -26,7 +26,7 @@
 #include "AbstractParser-Utils.h"
 
 static constexpr const auto staticRoomFields = RoomFieldEnum::NAME | RoomFieldEnum::DESC;
-static constexpr const auto dynamicRoomFields = staticRoomFields | RoomFieldEnum::DYNAMIC_DESC;
+static constexpr const auto dynamicRoomFields = staticRoomFields | RoomFieldEnum::CONTENTS;
 
 NODISCARD static const char *getFlagName(const ExitFlagEnum flag)
 {

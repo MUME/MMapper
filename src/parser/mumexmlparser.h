@@ -52,8 +52,8 @@ private:
 
     // REVISIT: Is there any point to having a distinction between null and empty?
     std::optional<RoomName> m_roomName;
-    std::optional<RoomStaticDesc> m_staticRoomDesc;
-    std::optional<RoomDynamicDesc> m_dynamicRoomDesc;
+    std::optional<RoomDesc> m_roomDesc;
+    std::optional<RoomContents> m_roomContents;
 
 public:
     explicit MumeXmlParser(MapData &, MumeClock &, ProxyParserApi, GroupManagerApi, QObject *parent);

@@ -56,8 +56,8 @@ private:
 private:
     ArrayOfProperties m_properties;
     RoomName m_roomName;
-    RoomStaticDesc m_staticDesc;
-    RoomDynamicDesc m_dynamicDesc;
+    RoomDesc m_roomDesc;
+    RoomContents m_roomContents;
     ExitsFlagsType m_exitsFlags;
     PromptFlagsType m_promptFlags;
     ConnectedRoomFlagsType m_connectedRoomFlags;
@@ -88,17 +88,14 @@ public:
 
 private:
     void setProperty(const RoomName &name) { m_properties.setProperty(0, name.getStdString()); }
-    void setProperty(const RoomStaticDesc &desc)
-    {
-        m_properties.setProperty(1, desc.getStdString());
-    }
+    void setProperty(const RoomDesc &desc) { m_properties.setProperty(1, desc.getStdString()); }
     void setProperty(const PromptFlagsType &prompt);
     void countSkipped();
 
 public:
     NODISCARD const RoomName &getRoomName() const { return m_roomName; }
-    NODISCARD const RoomStaticDesc &getStaticDesc() const { return m_staticDesc; }
-    NODISCARD const RoomDynamicDesc &getDynamicDesc() const { return m_dynamicDesc; }
+    NODISCARD const RoomDesc &getRoomDesc() const { return m_roomDesc; }
+    NODISCARD const RoomContents &getRoomContents() const { return m_roomContents; }
     NODISCARD ExitsFlagsType getExitsFlags() const { return m_exitsFlags; }
     NODISCARD PromptFlagsType getPromptFlags() const { return m_promptFlags; }
     NODISCARD ConnectedRoomFlagsType getConnectedRoomFlags() const { return m_connectedRoomFlags; }
@@ -109,8 +106,8 @@ public:
 public:
     static SharedParseEvent createEvent(CommandEnum c,
                                         RoomName roomName,
-                                        RoomStaticDesc staticDesc,
-                                        RoomDynamicDesc dynamicDesc,
+                                        RoomDesc roomDesc,
+                                        RoomContents roomContents,
                                         const ExitsFlagsType &exitsFlags,
                                         const PromptFlagsType &promptFlags,
                                         const ConnectedRoomFlagsType &connectedRoomFlags);

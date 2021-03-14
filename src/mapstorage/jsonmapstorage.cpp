@@ -86,7 +86,7 @@ public:
     void addRoom(const Room &room)
     {
         m_hasher.add(room.getName().toQString() + "\n");
-        m_hasher.add(room.getStaticDescription().toQString());
+        m_hasher.add(room.getDescription().toQString());
         m_index.insert(m_hasher.result().toHex(), room.getPosition());
         m_hasher.reset();
     }
@@ -376,7 +376,7 @@ void JsonWorld::addRoom(QJsonArray &jRooms, const Room &room) const
     uint jsonId = m_jRoomIds[room.getId()];
     jr["id"] = QString::number(jsonId);
     jr["name"] = room.getName().toQString();
-    jr["desc"] = room.getStaticDescription().toQString();
+    jr["desc"] = room.getDescription().toQString();
     jr["sector"] = static_cast<quint8>(room.getTerrainType());
     jr["light"] = static_cast<quint8>(room.getLightType());
     jr["portable"] = static_cast<quint8>(room.getPortableType());
