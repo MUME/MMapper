@@ -412,7 +412,7 @@ void MapCanvas::drawGroupCharacters(CharacterBatch &batch)
     for (const auto &character : *selection) {
         const RoomId id = character->getRoomId();
         // Do not draw the character if they're in an "Unknown" room
-        if (id == DEFAULT_ROOMID || id == INVALID_ROOMID || id > m_data.getMaxId())
+        if (id == INVALID_ROOMID || id > m_data.getMaxId())
             continue;
         if (character->getName() != getConfig().groupManager.charName) {
             auto roomSelection = RoomSelection(m_data);

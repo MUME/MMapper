@@ -210,8 +210,8 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &character,
             return QVariant::fromValue(
                 GroupStateData(character->getColor(), character->position, character->affects));
         case ColumnTypeEnum::ROOM_NAME:
-            if (character->roomId != DEFAULT_ROOMID && character->roomId != INVALID_ROOMID
-                && !m_map->isEmpty() && m_mapLoaded && character->roomId <= m_map->getMaxId()) {
+            if (character->roomId != INVALID_ROOMID && !m_map->isEmpty() && m_mapLoaded
+                && character->roomId <= m_map->getMaxId()) {
                 auto roomSelection = RoomSelection(*m_map);
                 if (const Room *const r = roomSelection.getRoom(character->roomId)) {
                     return r->getName().toQString();
@@ -374,8 +374,8 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
                 selectedCharacter = character->getName();
 
                 // Center map on the clicked character
-                if (character->roomId != DEFAULT_ROOMID && character->roomId != INVALID_ROOMID
-                    && !m_map->isEmpty() && character->roomId <= m_map->getMaxId()) {
+                if (character->roomId != INVALID_ROOMID && !m_map->isEmpty()
+                    && character->roomId <= m_map->getMaxId()) {
                     auto roomSelection = RoomSelection(*m_map);
                     if (const Room *const r = roomSelection.getRoom(character->roomId)) {
                         const Coordinate &c = r->getPosition();

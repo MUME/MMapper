@@ -31,10 +31,13 @@ private:
     };
 
 public:
-    RoomId roomId = DEFAULT_ROOMID;
-    int hp = 0, maxhp = 0;
-    int mana = 0, maxmana = 0;
-    int moves = 0, maxmoves = 0;
+    RoomId roomId = INVALID_ROOMID;
+    int hp = 0;
+    int maxhp = 0;
+    int mana = 0;
+    int maxmana = 0;
+    int moves = 0;
+    int maxmoves = 0;
     CharacterPositionEnum position = CharacterPositionEnum::UNDEFINED;
     CharacterAffectFlags affects;
     CommandQueue prespam;

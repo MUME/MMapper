@@ -551,7 +551,7 @@ void Mmapper2Group::reset()
     self->maxmana = 0;
     self->moves = 0;
     self->maxmoves = 0;
-    self->roomId = DEFAULT_ROOMID;
+    self->roomId = INVALID_ROOMID;
     self->position = CharacterPositionEnum::UNDEFINED;
     self->affects = CharacterAffectFlags{};
     issueLocalCharUpdate();
