@@ -1059,9 +1059,9 @@ void AbstractParser::showDoorCommandHelp()
     showDoorVariableHelp();
 
     showHeader("Destructive commands");
-    sendToUser(
-        QString("  %1removedoornames   - removes all secret door names from the current map\r\n")
-            .arg(prefixChar));
+    sendToUser(QString("  %1%2   - removes all secret door names from the current map\r\n")
+                   .arg(prefixChar)
+                   .arg(cmdRemoveDoorNames.getCommand()));
 }
 
 void AbstractParser::showDoorVariableHelp()
