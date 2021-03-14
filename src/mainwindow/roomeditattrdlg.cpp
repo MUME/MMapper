@@ -659,7 +659,6 @@ void RoomEditAttrDlg::updateDialog(const Room *r)
         }
         roomDescriptionTextEdit->setFontItalic(true);
         roomDescriptionTextEdit->append(r->getDynamicDescription().toQString());
-        roomDescriptionTextEdit->scroll(-100, -100);
 
         roomNoteTextEdit->clear();
         roomNoteTextEdit->append(r->getNote().toQString());
