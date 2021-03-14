@@ -92,13 +92,32 @@ NODISCARD static bool containsIAC(const std::string_view &arr)
     return arr.find(char(TN_IAC)) != std::string_view::npos;
 }
 
-struct NODISCARD TelnetFormatter final : public AppendBuffer
+// Emits output via AbstractTelnet::sendRawData() as RAII callback in dtor.
+struct NODISCARD TelnetFormatter final
 {
-    void addRaw(const uint8_t byte)
+private:
+    AbstractTelnet &m_telnet;
+    std::ostringstream m_os;
+
+public:
+    explicit TelnetFormatter(AbstractTelnet &telnet)
+        : m_telnet{telnet}
+    {}
+    ~TelnetFormatter() noexcept(false)
     {
-        auto &s = static_cast<AppendBuffer &>(*this);
-        s += byte;
+        try {
+            m_telnet.sendRawData(m_os.str());
+        } catch (const std::exception &ex) {
+            qWarning() << "Exception while sending raw data:" << ex.what();
+        } catch (...) {
+            qWarning() << "Unknown exception while sending raw data.";
+        }
     }
+
+    DELETE_CTORS_AND_ASSIGN_OPS(TelnetFormatter);
+
+public:
+    void addRaw(const uint8_t byte) { m_os << static_cast<char>(byte); }
 
     void addEscaped(const uint8_t byte)
     {
@@ -259,14 +278,14 @@ void AbstractTelnet::sendWindowSizeChanged(const int x, const int y)
 {
     if (debug)
         qDebug() << "Sending NAWS" << x << y;
+
     // RFC 1073 specifies IAC SB NAWS WIDTH[1] WIDTH[0] HEIGHT[1] HEIGHT[0] IAC SE
-    TelnetFormatter s;
+    TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_NAWS);
     // RFC855 specifies that option parameters with a byte value of 255 must be doubled
     s.addClampedTwoByteEscaped(x);
     s.addClampedTwoByteEscaped(y);
     s.addSubnegEnd();
-    sendRawData(s);
 }
 
 void AbstractTelnet::sendTelnetOption(unsigned char type, unsigned char option)
@@ -274,11 +293,11 @@ void AbstractTelnet::sendTelnetOption(unsigned char type, unsigned char option)
     if (debug)
         qDebug() << "* Sending Telnet Command: " << telnetCommandName(type)
                  << telnetOptionName(option);
-    AppendBuffer s;
-    s += TN_IAC;
-    s += type;
-    s += option;
-    sendRawData(s);
+
+    TelnetFormatter s{*this};
+    s.addRaw(TN_IAC);
+    s.addRaw(type);
+    s.addRaw(option);
 }
 
 void AbstractTelnet::requestTelnetOption(unsigned char type, unsigned char option)
@@ -307,8 +326,10 @@ void AbstractTelnet::sendCharsetRequest(const QStringList &myCharacterSets)
 {
     if (debug)
         qDebug() << "Requesting charsets" << myCharacterSets;
-    static const auto delimeter = ";";
-    TelnetFormatter s;
+
+    static constexpr const auto delimeter = ";";
+
+    TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_CHARSET);
     s.addRaw(TNSB_REQUEST);
     for (QString characterSet : myCharacterSets) {
@@ -316,7 +337,6 @@ void AbstractTelnet::sendCharsetRequest(const QStringList &myCharacterSets)
         s.addEscapedBytes(characterSet.toLocal8Bit());
     }
     s.addSubnegEnd();
-    sendRawData(s);
 }
 
 bool AbstractTelnet::isGmcpModuleEnabled(const GmcpModuleTypeEnum &name)
@@ -332,79 +352,77 @@ void AbstractTelnet::sendGmcpMessage(const GmcpMessage &msg)
     auto payload = msg.toRawBytes();
     if (debug)
         qDebug() << "Sending GMCP:" << payload;
-    TelnetFormatter s;
+
+    TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_GMCP);
     s.addEscapedBytes(payload);
     s.addSubnegEnd();
-    sendRawData(s);
 }
 
 void AbstractTelnet::sendLineModeEdit()
 {
     if (debug)
         qDebug() << "Sending Linemode EDIT";
-    TelnetFormatter s;
+
+    TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_LINEMODE);
     s.addRaw(TNSB_MODE);
     s.addRaw(TNSB_EDIT);
     s.addSubnegEnd();
-    sendRawData(s);
 }
 
 void AbstractTelnet::sendTerminalType(const QByteArray &terminalType)
 {
     if (debug)
         qDebug() << "Sending Terminal Type:" << terminalType;
-    TelnetFormatter s;
+
+    TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_TERMINAL_TYPE);
     // RFC855 specifies that option parameters with a byte value of 255 must be doubled
     s.addEscaped(TNSB_IS); /* NOTE: "IS" will never actually be escaped */
     s.addEscapedBytes(terminalType);
     s.addSubnegEnd();
-    sendRawData(s);
 }
 
 void AbstractTelnet::sendCharsetRejected()
 {
-    TelnetFormatter s;
+    TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_CHARSET);
     s.addRaw(TNSB_REJECTED);
     s.addSubnegEnd();
-    sendRawData(s);
 }
 
 void AbstractTelnet::sendCharsetAccepted(const QByteArray &characterSet)
 {
     if (debug)
         qDebug() << "Accepted Charset" << characterSet;
-    TelnetFormatter s;
+
+    TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_CHARSET);
     s.addRaw(TNSB_ACCEPTED);
     s.addEscapedBytes(characterSet);
     s.addSubnegEnd();
-    sendRawData(s);
 }
 
 void AbstractTelnet::sendOptionStatus()
 {
-    AppendBuffer s;
-    s += TN_IAC;
-    s += TN_SB;
-    s += OPT_STATUS;
-    s += TNSB_IS;
+    TelnetFormatter s{*this};
+    s.addRaw(TN_IAC);
+    s.addRaw(TN_SB);
+    s.addRaw(OPT_STATUS);
+    s.addRaw(TNSB_IS);
     for (size_t i = 0; i < NUM_OPTS; ++i) {
         if (myOptionState[i]) {
-            s += TN_WILL;
-            s += static_cast<unsigned char>(i);
+            s.addRaw(TN_WILL);
+            s.addRaw(static_cast<unsigned char>(i));
         }
         if (hisOptionState[i]) {
-            s += TN_DO;
-            s += static_cast<unsigned char>(i);
+            s.addRaw(TN_DO);
+            s.addRaw(static_cast<unsigned char>(i));
         }
     }
-    s += TN_IAC;
-    s += TN_SE;
-    sendRawData(s);
+    s.addRaw(TN_IAC);
+    s.addRaw(TN_SE);
 }
 
 void AbstractTelnet::sendAreYouThere()
@@ -419,11 +437,10 @@ void AbstractTelnet::sendAreYouThere()
 
 void AbstractTelnet::sendTerminalTypeRequest()
 {
-    TelnetFormatter s;
+    TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_TERMINAL_TYPE);
     s.addEscaped(TNSB_SEND);
     s.addSubnegEnd();
-    sendRawData(s);
 }
 
 void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)

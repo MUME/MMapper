@@ -68,10 +68,10 @@ static constexpr const uint8_t TNSB_TTABLE_NAK = 7;
 
 struct NODISCARD AppendBuffer : public QByteArray
 {
-    AppendBuffer(QByteArray &&rhs)
+    explicit AppendBuffer(QByteArray &&rhs)
         : QByteArray{std::move(rhs)}
     {}
-    AppendBuffer(const QByteArray &rhs)
+    explicit AppendBuffer(const QByteArray &rhs)
         : QByteArray{rhs}
     {}
 
@@ -89,9 +89,13 @@ struct NODISCARD AppendBuffer : public QByteArray
     }
 };
 
+struct TelnetFormatter;
 class AbstractTelnet : public QObject
 {
     Q_OBJECT
+
+private:
+    friend TelnetFormatter;
 
 public:
     explicit AbstractTelnet(TextCodecStrategyEnum strategy,
@@ -143,11 +147,6 @@ protected:
     /// by caller if needed. This function is suitable for sending
     /// telnet sequences.
     void sendRawData(const std::string_view &ba) { virt_sendRawData(ba); }
-    void sendRawData(const char *const s) { sendRawData(std::string_view{s}); }
-
-private:
-    // DEPRECATED_MSG("use STL functions")
-    void sendRawData(const QByteArray &arr) { sendRawData(::toStdStringViewLatin1(arr)); }
 
 protected:
     void sendToMapper(const QByteArray &ba, bool goAhead) { virt_sendToMapper(ba, goAhead); }
