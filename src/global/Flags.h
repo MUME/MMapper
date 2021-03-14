@@ -226,7 +226,9 @@ public:
     //    assert(letters[2] == Letter::F);
     //    assert(letters[3] == Letter::Z);
     //
-    Flag operator[](const size_t n_) const noexcept
+    NODISCARD Flag operator[](const size_t n) const noexcept { return at(n); }
+    // Note: both [] and at() perform bounds checking in debug mode.
+    NODISCARD Flag at(const size_t n_) const noexcept
     {
         auto n = n_;
         assert(n < count());
@@ -282,5 +284,39 @@ public:
             callback(x);
         }
     }
+
+public:
+    struct NODISCARD Iterator final
+    {
+    private:
+        Flags::underlying_type m_bits = 0;
+        size_t m_pos = 0;
+
+    public:
+        Iterator(const Flags &flags, const size_t pos)
+            : m_bits{flags.m_flags}
+            , m_pos{pos}
+        {}
+
+    public:
+        NODISCARD Flag operator*() const { return Flags{m_bits}.at(m_pos); }
+        Iterator operator++()
+        {
+            assert(m_pos < Flags{m_bits}.size());
+            ++m_pos;
+            return *this;
+        }
+        void operator++(int) = delete;
+        NODISCARD bool operator==(const Iterator &rhs) const
+        {
+            return m_bits == rhs.m_bits && m_pos == rhs.m_pos;
+        }
+        NODISCARD bool operator!=(const Iterator &rhs) const { return !(rhs == *this); }
+    };
+
+public:
+    NODISCARD Iterator begin() const { return Iterator{*this, 0}; }
+    NODISCARD Iterator end() const { return Iterator{*this, size()}; }
 };
+
 } // namespace enums
