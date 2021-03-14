@@ -514,7 +514,7 @@ void MapCanvas::paintSelections()
 
 void MapCanvas::paintGL()
 {
-    static double longestBatchMs = 0.0;
+    static thread_local double longestBatchMs = 0.0;
 
     const bool showPerfStats = MapCanvasConfig::getShowPerfStats();
 

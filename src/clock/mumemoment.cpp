@@ -50,8 +50,8 @@ MumeMoment::MumeMoment(
     , hour{hour}
     , minute{minute}
 {
-    static bool year_warned = false, month_warned = false, day_warned = false, hour_warned = false,
-                minute_warned = false;
+    static thread_local bool year_warned = false, month_warned = false, day_warned = false,
+                             hour_warned = false, minute_warned = false;
 
 #define soft_assert_clamped(x, lo, hi) maybe_warn_if_not_clamped(#x, x##_warned, (x), (lo), (hi))
     soft_assert_clamped(year, 2100, 4100);
