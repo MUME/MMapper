@@ -170,7 +170,7 @@ public:
     void removeOutExit(ExitDirEnum dir, RoomId id);
 
 public:
-    NODISCARD ExitDirections getOutExits() const;
+    NODISCARD ExitDirFlags getOutExits() const;
     NODISCARD OptionalExitDirConstRef getRandomExit() const;
     NODISCARD ExitDirConstRef getExitMaybeRandom(ExitDirEnum dir) const;
 

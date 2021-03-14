@@ -632,8 +632,8 @@ void MapCanvas::paintNearbyConnectionPoints()
     const bool isSelection = m_canvasMouseMode == CanvasMouseModeEnum::SELECT_CONNECTIONS;
     using CD = ConnectionSelection::ConnectionDescriptor;
 
-    static const ExitDirections allExits = []() {
-        ExitDirections tmp;
+    static const ExitDirFlags allExits = []() {
+        ExitDirFlags tmp;
         for (auto dir : ALL_EXITS7) {
             tmp |= dir;
         }
@@ -672,7 +672,7 @@ void MapCanvas::paintNearbyConnectionPoints()
                 if (room == nullptr)
                     continue;
 
-                ExitDirections dirs = isSelection ? m_data.getExitDirections(roomCoord) : allExits;
+                ExitDirFlags dirs = isSelection ? m_data.getExitDirections(roomCoord) : allExits;
                 if (optFirst)
                     dirs |= ExitDirEnum::UNKNOWN;
 

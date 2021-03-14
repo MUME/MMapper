@@ -75,9 +75,9 @@ Room::~Room()
         assert(m_status == RoomStatusEnum::Zombie);
 }
 
-ExitDirections Room::getOutExits() const
+ExitDirFlags Room::getOutExits() const
 {
-    ExitDirections result;
+    ExitDirFlags result;
     for (auto dir : ALL_EXITS_NESWUD) {
         const Exit &e = this->exit(dir);
         if (e.isExit() && !e.outIsEmpty())

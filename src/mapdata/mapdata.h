@@ -99,7 +99,7 @@ public:
 
 public:
     bool getExitFlag(const Coordinate &pos, ExitDirEnum dir, ExitFieldVariant var);
-    ExitDirections getExitDirections(const Coordinate &pos);
+    ExitDirFlags getExitDirections(const Coordinate &pos);
 
 public:
     const Room *getRoom(const Coordinate &pos);

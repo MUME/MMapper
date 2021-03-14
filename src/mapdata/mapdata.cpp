@@ -53,9 +53,9 @@ const DoorName &MapData::getDoorName(const Coordinate &pos, const ExitDirEnum di
     return tmp;
 }
 
-ExitDirections MapData::getExitDirections(const Coordinate &pos)
+ExitDirFlags MapData::getExitDirections(const Coordinate &pos)
 {
-    ExitDirections result;
+    ExitDirFlags result;
     QMutexLocker locker(&mapLock);
     if (const Room *const room = map.get(pos)) {
         for (auto dir : ALL_EXITS7) {
