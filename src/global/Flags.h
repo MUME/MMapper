@@ -77,7 +77,13 @@ private:
 
 public:
     NODISCARD explicit constexpr operator underlying_type() const noexcept { return m_flags; }
-    NODISCARD constexpr uint32_t asUint32() const noexcept { return m_flags; }
+    NODISCARD constexpr uint32_t asUint32() const noexcept
+    {
+        // Note: static_assert here isn't checked unless you call this function.
+        static_assert(sizeof(underlying_type) <= sizeof(uint32_t),
+                      "asUint32() is disabled because the underlying type is larger than 32-bits");
+        return m_flags;
+    }
 
 public:
     NODISCARD friend inline bool operator==(const CRTP lhs, const CRTP rhs) noexcept
