@@ -166,7 +166,7 @@ void AutoLogger::deleteOldLogs()
 
 void AutoLogger::deleteLogs(const QFileInfoList &files)
 {
-    for (auto fileInfo : files) {
+    for (const auto &fileInfo : files) {
         QString filepath = fileInfo.absoluteFilePath();
         QDir deletefile;
         deletefile.setPath(filepath);

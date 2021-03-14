@@ -158,7 +158,7 @@ QStringList RemoteEditProcess::splitCommandLine(const QString &cmdLine)
     QString arg;
     bool escape = false;
     StateEnum state = StateEnum::Idle;
-    for (const QChar &c : cmdLine) {
+    for (const QChar c : cmdLine) {
         if (!escape && c == '\\') {
             escape = true;
             continue;

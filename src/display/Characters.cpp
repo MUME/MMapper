@@ -409,7 +409,7 @@ void MapCanvas::drawGroupCharacters(CharacterBatch &batch)
     // Omit player so that they know group members are below them
     QSet<RoomId> drawnRoomIds;
     auto selection = group->selectAll();
-    for (auto &character : *selection) {
+    for (const auto &character : *selection) {
         const RoomId id = character->getRoomId();
         // Do not draw the character if they're in an "Unknown" room
         if (id == DEFAULT_ROOMID || id == INVALID_ROOMID || id > m_data.getMaxId())

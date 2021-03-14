@@ -209,12 +209,12 @@ void MapCanvas::initTextures()
     loadPixmapArray(textures.trail);
     loadPixmapArray(textures.mob);
     loadPixmapArray(textures.load);
-    for (auto &dir : ALL_EXITS_NESW) {
+    for (const ExitDirEnum dir : ALL_EXITS_NESW) {
         textures.dotted_wall[dir] = createDottedWall(dir);
         textures.wall[dir] = loadTexture(
             getPixmapFilenameRaw(QString::asprintf("wall-%s.png", lowercaseDirection(dir))));
     }
-    for (auto &dir : ALL_EXITS_NESWUD) {
+    for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
         textures.door[dir] = loadTexture(
             getPixmapFilenameRaw(QString::asprintf("door-%s.png", lowercaseDirection(dir))));
         textures.stream_in[dir] = loadTexture(

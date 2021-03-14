@@ -290,7 +290,7 @@ void MapStorage::loadExits(Room &room, QDataStream &stream, const uint32_t versi
     LoadRoomHelper helper{stream};
 
     ExitsList eList;
-    for (const auto i : ALL_EXITS7) {
+    for (const ExitDirEnum i : ALL_EXITS7) {
         Exit &e = eList[i];
 
         // Read the exit flags

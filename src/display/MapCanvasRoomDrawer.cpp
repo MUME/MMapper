@@ -235,7 +235,7 @@ static void visitRoom(const Room *const room,
             const SharedConstRoom &targetRoom = roomIndex[targetId];
             if (targetRoom == nullptr)
                 continue;
-            for (const auto targetDir : ALL_EXITS_NESWUD) {
+            for (const ExitDirEnum targetDir : ALL_EXITS_NESWUD) {
                 const Exit &targetExit = targetRoom->exit(targetDir);
                 const ExitFlags &flags = targetExit.getExitFlags();
                 if (flags.isFlow() && targetExit.containsOut(room->getId())) {
@@ -251,7 +251,7 @@ static void visitRoom(const Room *const room,
     // FIXME: This requires a map update.
     // REVISIT: The logic of drawNotMappedExits seems a bit wonky.
     const auto drawNotMappedExits = getConfig().canvas.drawNotMappedExits;
-    for (auto &dir : ALL_EXITS_NESW) {
+    for (const ExitDirEnum dir : ALL_EXITS_NESW) {
         const Exit &exit = room->exit(dir);
         const ExitFlags &flags = exit.getExitFlags();
         const auto isExit = flags.isExit();
@@ -309,7 +309,7 @@ static void visitRoom(const Room *const room,
     }
 
     // drawVertical
-    for (auto &dir : {ExitDirEnum::UP, ExitDirEnum::DOWN}) {
+    for (const ExitDirEnum dir : {ExitDirEnum::UP, ExitDirEnum::DOWN}) {
         const Exit &exit = room->exit(dir);
         const auto &flags = exit.getExitFlags();
         if (!flags.isExit())
@@ -712,7 +712,7 @@ struct NODISCARD LayerBatchData final
         dottedWallLines.reserve(measurements.numDottedWalls);
         streamIns.reserve(measurements.numStreamIns);
         streamOuts.reserve(measurements.numStreamOuts);
-        for (const auto tint : ALL_ROOM_TINTS) {
+        for (const RoomTintEnum tint : ALL_ROOM_TINTS) {
             roomTints[tint].reserve(measurements.numTints[tint] * VERTS_PER_QUAD);
         }
         roomLayerBoostQuads.reserve(VERTS_PER_QUAD * measurements.numTerrains);
@@ -729,7 +729,7 @@ struct NODISCARD LayerBatchData final
             assert(dottedWallLines.size() == measurements.numDottedWalls);
             assert(streamIns.size() == measurements.numStreamIns);
             assert(streamOuts.size() == measurements.numStreamOuts);
-            for (const auto tint : ALL_ROOM_TINTS) {
+            for (const RoomTintEnum tint : ALL_ROOM_TINTS) {
                 assert(roomTints[tint].size() == measurements.numTints[tint] * VERTS_PER_QUAD);
             }
             assert(roomLayerBoostQuads.size() == VERTS_PER_QUAD * measurements.numTerrains);
@@ -760,7 +760,7 @@ struct NODISCARD LayerBatchData final
     {
         LayerMeshes meshes;
         meshes.terrain = ::createSortedTexturedMeshes(gl, roomTerrains);
-        for (const auto tint : ALL_ROOM_TINTS) {
+        for (const RoomTintEnum tint : ALL_ROOM_TINTS) {
             meshes.tints[tint] = gl.createPlainQuadBatch(roomTints[tint]);
         }
         meshes.overlays = ::createSortedTexturedMeshes(gl, roomOverlays);
@@ -1021,7 +1021,7 @@ void LayerMeshes::render(const int thisLayer, const int focusedLayer)
     }
 
     // REVISIT: move trails to their own batch also colored by the tint?
-    for (const auto tint : ALL_ROOM_TINTS) {
+    for (const RoomTintEnum tint : ALL_ROOM_TINTS) {
         static_assert(NUM_ROOM_TINTS == 2);
         const auto namedColor = [tint]() -> XNamedColor {
             switch (tint) {

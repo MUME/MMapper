@@ -206,7 +206,7 @@ void MmpMapStorage::saveRoom(const Room &room, QXmlStreamWriter &stream)
     stream.writeAttribute("z", QString("%1").arg(pos.z));
     stream.writeEndElement(); // end coord
 
-    for (auto dir : ALL_EXITS_NESWUD) {
+    for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
         const Exit &e = room.exit(dir);
         if (e.isExit() && !e.outIsEmpty()) {
             stream.writeStartElement("exit");

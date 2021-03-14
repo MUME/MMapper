@@ -234,7 +234,7 @@ void ConnectionDrawer::drawRoomConnectionsAndDoors(const Room *const room, const
     const auto sourceId = room->getId();
     const ExitsList &exitslist = room->getExitsList();
 
-    for (const auto sourceDir : ALL_EXITS7) {
+    for (const ExitDirEnum sourceDir : ALL_EXITS7) {
         const Exit &sourceExit = exitslist[sourceDir];
         // outgoing connections
         if (sourceWithinBounds) {
@@ -305,7 +305,7 @@ void ConnectionDrawer::drawRoomConnectionsAndDoors(const Room *const room, const
 
             // Detect if this is a oneway
             bool oneway = true;
-            for (const auto tempSourceDir : ALL_EXITS7) {
+            for (const ExitDirEnum tempSourceDir : ALL_EXITS7) {
                 const Exit &tempSourceExit = exitslist[tempSourceDir];
                 if (tempSourceExit.containsOut(inTargetId)) {
                     oneway = false;
@@ -313,7 +313,7 @@ void ConnectionDrawer::drawRoomConnectionsAndDoors(const Room *const room, const
             }
             if (oneway) {
                 // Always draw one way connections for each target exit to the source room
-                for (const auto targetDir : ALL_EXITS7) {
+                for (const ExitDirEnum targetDir : ALL_EXITS7) {
                     const Exit &targetExit = targetRoom->exit(targetDir);
                     if (targetExit.containsOut(sourceId)) {
                         drawConnection(targetRoom,
@@ -634,7 +634,7 @@ void MapCanvas::paintNearbyConnectionPoints()
 
     static const ExitDirFlags allExits = []() {
         ExitDirFlags tmp;
-        for (auto dir : ALL_EXITS7) {
+        for (const ExitDirEnum dir : ALL_EXITS7) {
             tmp |= dir;
         }
         return tmp;

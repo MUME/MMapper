@@ -169,7 +169,7 @@ void Remove::exec(const RoomId id)
     // don't return previously used ids for now
     // unusedIds().push(id);
     const ExitsList &exits = room->getExitsList();
-    for (const auto dir : enums::makeCountingIterator<ExitDirEnum>(exits)) {
+    for (const ExitDirEnum dir : enums::makeCountingIterator<ExitDirEnum>(exits)) {
         const Exit &e = exits[dir];
         for (const auto &idx : e.inRange()) {
             if (const SharedRoom &other = rooms[idx]) {

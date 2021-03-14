@@ -374,7 +374,7 @@ void AbstractParser::parseExits(std::ostream &os)
             if (match.hasMatch()) {
                 // Parse exit flag
                 const auto &signs = match.captured(1);
-                for (const QChar &qc : signs) {
+                for (const QChar qc : signs) {
                     parse_exit_flag(qc.toLatin1());
                 }
 
@@ -542,7 +542,7 @@ QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
     bool enhancedExits = false;
 
     auto sourceId = sourceRoom->getId();
-    for (auto i : ALL_EXITS_NESWUD) {
+    for (const ExitDirEnum i : ALL_EXITS_NESWUD) {
         const Exit &e = sourceRoom->exit(i);
         const ExitFlags ef = e.getExitFlags();
         if (!ef.isExit()) {
@@ -594,7 +594,7 @@ QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
                     if (!targetRoom->exit(opposite(i)).containsOut(sourceId)) {
                         oneWay = true;
                     }
-                    for (auto j : ALL_EXITS_NESWUD) {
+                    for (const ExitDirEnum j : ALL_EXITS_NESWUD) {
                         const Exit &targetExit = targetRoom->exit(j);
                         if (!targetExit.getExitFlags().isExit()) {
                             continue;
@@ -707,7 +707,7 @@ NODISCARD static QString compressDirections(QString original)
         delta += Room::exitDir(dir) * curnum;
     };
 
-    for (auto c : original) {
+    for (const QChar c : original) {
         if (curnum != 0 && curval == c) {
             curnum++;
         } else {
@@ -813,7 +813,7 @@ ExitDirEnum AbstractParser::tryGetDir(StringView &view)
         return ExitDirEnum::UNKNOWN;
 
     auto word = view.takeFirstWord();
-    for (auto dir : ALL_EXITS_NESWUD) {
+    for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
         auto lower = lowercaseDirection(dir);
         if (lower != nullptr && Abbrev{lower, 1}.matches(word))
             return dir;
@@ -923,7 +923,7 @@ void AbstractParser::showHelpCommands(const bool showAbbreviations)
     };
 
     std::vector<record> records;
-    for (auto &kv : map) {
+    for (const auto &kv : map) {
         const auto &from = kv.first;
         const auto &to = kv.second.fullCommand;
         if (from.empty() || to.empty())
@@ -1048,7 +1048,7 @@ void AbstractParser::showDoorCommandHelp()
     showHeader("MMapper door help");
 
     showHeader("Door commands");
-    for (auto dat : ALL_DOOR_ACTION_TYPES) {
+    for (const DoorActionEnum dat : ALL_DOOR_ACTION_TYPES) {
         const int cmdWidth = 6;
         sendToUser(QString("  %1%2 [dir] - executes \"%3 ... [dir]\"\r\n")
                        .arg(prefixChar)
@@ -1067,7 +1067,7 @@ void AbstractParser::showDoorCommandHelp()
 void AbstractParser::showDoorVariableHelp()
 {
     showHeader("Door variables");
-    for (auto dir : ALL_EXITS_NESWUD) {
+    for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
         auto lower = lowercaseDirection(dir);
         if (lower == nullptr)
             continue;
@@ -1094,7 +1094,7 @@ bool AbstractParser::tryParseGenericDoorCommand(const QString &str)
         return false;
 
     const char pattern[] = "$$DOOR_X$$";
-    for (auto dir : ALL_EXITS_NESWUD) {
+    for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
         const auto c = static_cast<char>(std::toupper(Mmapper2Exit::charForDir(dir)));
         auto buf = makeCharBuffer(pattern);
         buf.replaceAll('X', c);
@@ -1313,7 +1313,7 @@ void AbstractParser::sendRoomExitsInfoToUser(std::ostream &os, const Room *const
                                   : '^';
     uint exitCount = 0;
     QString etmp = "Exits/emulated:";
-    for (const auto direction : ALL_EXITS_NESWUD) {
+    for (const ExitDirEnum direction : ALL_EXITS_NESWUD) {
         bool door = false;
         bool exit = false;
         bool road = false;
@@ -1482,7 +1482,7 @@ void AbstractParser::performDoorCommand(const ExitDirEnum direction, const DoorA
     if (direction == ExitDirEnum::UNKNOWN) {
         // If there is only one secret assume that is what needs opening
         auto secretCount = 0;
-        for (const auto i : ALL_EXITS_NESWUD) {
+        for (const ExitDirEnum i : ALL_EXITS_NESWUD) {
             if (m_mapData->getExitFlag(c, i, ExitFieldVariant{DoorFlags{DoorFlagEnum::HIDDEN}})) {
                 dn = m_mapData->getDoorName(c, i).toQByteArray();
                 secretCount++;
@@ -1500,7 +1500,7 @@ void AbstractParser::performDoorCommand(const ExitDirEnum direction, const DoorA
         dn = "exit";
     } else {
         // Check if we need to add a direction to the door name
-        for (const auto i : ALL_EXITS_NESWUD) {
+        for (const ExitDirEnum i : ALL_EXITS_NESWUD) {
             if ((i != direction) && (m_mapData->getDoorName(c, i).toQByteArray() == dn)) {
                 needdir = true;
             }
@@ -1536,7 +1536,7 @@ void AbstractParser::genericDoorCommand(QString command, const ExitDirEnum direc
         dn = "exit";
         needdir = true;
     } else {
-        for (const auto i : ALL_EXITS_NESWUD) {
+        for (const ExitDirEnum i : ALL_EXITS_NESWUD) {
             if ((i != direction) && (m_mapData->getDoorName(c, i).toQByteArray() == dn)) {
                 needdir = true;
             }

@@ -301,7 +301,7 @@ bool GroupAuthority::remove(const GroupSecret &secret)
             auto &conf = setConfig().groupManager;
             conf.authorizedSecrets = model.stringList();
 
-            for (auto type : ALL_GROUP_METADATA) {
+            for (const GroupMetadataEnum type : ALL_GROUP_METADATA) {
                 conf.secretMetadata.remove(getMetadataKey(secret, type));
             }
             return true;

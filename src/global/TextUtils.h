@@ -436,7 +436,7 @@ struct NODISCARD AnsiTokenizer final
             return it - start;
         }
         size_type skip_ansi();
-        NODISCARD static bool isControl(const QChar &c)
+        NODISCARD static bool isControl(const QChar c)
         {
             return std::iscntrl(c.toLatin1()) && c != QC_NBSP;
         }

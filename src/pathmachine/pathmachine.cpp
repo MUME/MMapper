@@ -150,7 +150,7 @@ void PathMachine::tryCoordinate(const Room *const room,
         // which meant it was asking for exitDir(ExitDirEnum::NONE),
         // even though both ExitDirEnum::UNKNOWN and ExitDirEnum::NONE
         // both have Coordinate(0, 0, 0).
-        for (const auto dir : ALL_EXITS7) {
+        for (const ExitDirEnum dir : ALL_EXITS7) {
             emit lookingForRooms(recipient, roomPos + Room::exitDir(dir));
         }
     }
@@ -249,7 +249,7 @@ void PathMachine::approved(const SigParseEvent &sigParseEvent)
     // Update rooms behind exits now that we are certain about our current location
     const ConnectedRoomFlagsType bFlags = event.getConnectedRoomFlags();
     if (bFlags.isValid()) {
-        for (const auto dir : ALL_EXITS_NESWUD) {
+        for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
             // guaranteed to succeed, since it's set above.
             const Exit &e = getMostLikelyRoom()->exit(dir);
             if (!e.outIsUnique()) {

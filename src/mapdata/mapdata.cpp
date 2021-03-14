@@ -58,7 +58,7 @@ ExitDirFlags MapData::getExitDirections(const Coordinate &pos)
     ExitDirFlags result;
     QMutexLocker locker(&mapLock);
     if (const Room *const room = map.get(pos)) {
-        for (auto dir : ALL_EXITS7) {
+        for (const ExitDirEnum dir : ALL_EXITS7) {
             if (room->exit(dir).isExit())
                 result |= dir;
         }
@@ -108,7 +108,7 @@ QList<Coordinate> MapData::getPath(const Coordinate &start, const CommandQueue &
 
     // NOTE: room is used and then reassigned inside the loop.
     if (const Room *room = map.get(start)) {
-        for (const auto cmd : dirs) {
+        for (const CommandEnum cmd : dirs) {
             if (cmd == CommandEnum::LOOK)
                 continue;
 
@@ -225,7 +225,7 @@ void MapData::removeDoorNames()
     const auto noName = DoorName{};
     for (auto &room : roomIndex) {
         if (room != nullptr) {
-            for (const auto dir : ALL_EXITS_NESWUD) {
+            for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
                 scheduleAction(std::make_unique<SingleRoomAction>(
                     std::make_unique<ModifyExitFlags>(noName, dir, FlagModifyModeEnum::UNSET),
                     room->getId()));

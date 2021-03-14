@@ -17,13 +17,13 @@
 
 ConnectionSelection::ConnectionSelection(this_is_private)
 {
-    for (auto &x : m_connectionDescriptor)
+    for (const auto &x : m_connectionDescriptor)
         assert(x.room == nullptr);
 }
 
 ConnectionSelection::ConnectionSelection(this_is_private, MapFrontend *mf, const MouseSel &sel)
 {
-    for (auto &x : m_connectionDescriptor)
+    for (const auto &x : m_connectionDescriptor)
         assert(x.room == nullptr);
 
     const Coordinate c = sel.getCoordinate();

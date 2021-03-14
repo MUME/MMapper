@@ -24,7 +24,7 @@ bool isAbbrev(StringView input, const std::string_view &command, const int minAb
         return input.trim() == command;
 
     int matched = 0;
-    for (const auto c : command) {
+    for (const char c : command) {
         if (input.isEmpty())
             break;
         if (std::tolower(input.takeFirstLetter()) != std::tolower(c))

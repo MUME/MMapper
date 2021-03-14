@@ -100,7 +100,7 @@ void UserTelnet::receiveGmcpMessage(const GmcpMessage &msg)
         std::ostringstream oss;
         oss << "[ ";
         bool comma = false;
-        for (auto &module : gmcp.modules) {
+        for (const GmcpModule &module : gmcp.modules) {
             // REVISIT: Are some MMapper supported modules not supposed to be filtered?
             if (module.isSupported())
                 continue;

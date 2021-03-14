@@ -78,7 +78,7 @@ Room::~Room()
 ExitDirFlags Room::getOutExits() const
 {
     ExitDirFlags result;
-    for (auto dir : ALL_EXITS_NESWUD) {
+    for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
         const Exit &e = this->exit(dir);
         if (e.isExit() && !e.outIsEmpty())
             result |= dir;
@@ -169,7 +169,7 @@ void Room::setExitsList(const ExitsList &newExits)
 
     RoomUpdateFlags flags;
 
-    for (const auto dir : ALL_EXITS7) {
+    for (const ExitDirEnum dir : ALL_EXITS7) {
         Exit &ex = m_exits[dir];
         const Exit &newValue = newExits[dir];
         if (ex == newValue)
@@ -296,7 +296,7 @@ SharedRoom Room::createTemporaryRoom(RoomModificationTracker &tracker, const Par
 SharedParseEvent Room::getEvent(const Room *const room)
 {
     ExitsFlagsType exitFlags;
-    for (auto dir : ALL_EXITS_NESWUD) {
+    for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
         const Exit &e = room->exit(dir);
         const ExitFlags eFlags = e.getExitFlags();
         exitFlags.set(dir, eFlags);
@@ -460,7 +460,7 @@ ComparisonResultEnum Room::compareWeakProps(const Room *const room, const ParseE
     const ExitsFlagsType eventExitsFlags = event.getExitsFlags();
     if (eventExitsFlags.isValid()) {
         bool previousDifference = false;
-        for (auto dir : ALL_EXITS_NESWUD) {
+        for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
             const Exit &roomExit = room->exit(dir);
             const ExitFlags roomExitFlags = roomExit.getExitFlags();
             if (roomExitFlags) {
@@ -575,7 +575,7 @@ void Room::update(Room &room, const ParseEvent &event)
         ExitsList copiedExits = room.getExitsList();
         if (room.isUpToDate()) {
             // Append exit flags if target room is up to date
-            for (const auto dir : ALL_EXITS_NESWUD) {
+            for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
                 Exit &roomExit = copiedExits[dir];
                 const ExitFlags &roomExitFlags = roomExit.getExitFlags();
                 const ExitFlags &eventExitFlags = eventExitsFlags.get(dir);
@@ -586,7 +586,7 @@ void Room::update(Room &room, const ParseEvent &event)
 
         } else {
             // Replace exit flags if target room is not up to date
-            for (const auto dir : ALL_EXITS_NESWUD) {
+            for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
                 Exit &roomExit = copiedExits[dir];
                 ExitFlags eventExitFlags = eventExitsFlags.get(dir);
                 // ... but take care of the following exceptions
@@ -682,7 +682,7 @@ void Room::update(Room *const target, const Room *const source)
 
     if (!target->isUpToDate()) {
         // Replace data if target room is not up to date
-        for (const auto dir : ALL_EXITS_NESWUD) {
+        for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
             const Exit &sourceExit = source->exit(dir);
             Exit &targetExit = target->exit(dir);
             ExitFlags sourceExitFlags = sourceExit.getExitFlags();
@@ -699,7 +699,7 @@ void Room::update(Room *const target, const Room *const source)
         }
     } else {
         // Combine data if target room is up to date
-        for (const auto dir : ALL_EXITS_NESWUD) {
+        for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
             const Exit &soureExit = source->exit(dir);
             Exit &targetExit = target->exit(dir);
             const ExitFlags sourceExitFlags = soureExit.getExitFlags();
@@ -727,7 +727,7 @@ std::string Room::toStdString() const
        << getStaticDescription().getStdString() << getDynamicDescription().getStdString();
 
     ss << "Exits:";
-    for (const auto j : ALL_EXITS7) {
+    for (const ExitDirEnum j : ALL_EXITS7) {
         const ExitFlags &exitFlags = exit(j).getExitFlags();
         if (!exitFlags.isExit())
             continue;

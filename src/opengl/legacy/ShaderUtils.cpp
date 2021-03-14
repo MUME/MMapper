@@ -205,7 +205,7 @@ GLuint loadShaders(Functions &gl, const Source &vert, const Source &frag)
     }
 
     const GLuint prog = gl.glCreateProgram();
-    for (auto s : shaders) {
+    for (const GLuint s : shaders) {
         if (is_valid(s)) {
             gl.glAttachShader(prog, s);
         }
@@ -214,7 +214,7 @@ GLuint loadShaders(Functions &gl, const Source &vert, const Source &frag)
     gl.glLinkProgram(prog);
     checkProgramInfo(gl, prog);
 
-    for (auto s : shaders) {
+    for (const GLuint s : shaders) {
         if (is_valid(s)) {
             gl.glDetachShader(prog, s);
             gl.glDeleteShader(s);

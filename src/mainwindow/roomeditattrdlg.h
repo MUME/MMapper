@@ -116,7 +116,7 @@ private:
         }
         void disconnectAll(QObject &o)
         {
-            for (auto &c : m_connections)
+            for (const auto &c : m_connections)
                 o.disconnect(c);
             m_connections.clear();
         }

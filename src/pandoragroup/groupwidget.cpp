@@ -38,7 +38,7 @@ GroupStateData::GroupStateData(const QColor &color,
     if (position != CharacterPositionEnum::UNDEFINED)
         count++;
     // Increment imageCount for each active affect
-    for (const auto affect : ALL_CHARACTER_AFFECTS) {
+    for (const CharacterAffectEnum affect : ALL_CHARACTER_AFFECTS) {
         if (affects.contains(affect))
             count++;
     }
@@ -74,7 +74,7 @@ void GroupStateData::paint(QPainter *const painter, const QRect &rect)
 
     if (position != CharacterPositionEnum::UNDEFINED)
         drawOne(getIconFilename(position));
-    for (const auto affect : ALL_CHARACTER_AFFECTS) {
+    for (const CharacterAffectEnum affect : ALL_CHARACTER_AFFECTS) {
         if (affects.contains(affect)) {
             drawOne(getIconFilename(affect));
         }
@@ -248,7 +248,7 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &character,
             return calculateRatio(character->moves, character->maxmoves);
         case ColumnTypeEnum::STATE: {
             QString prettyName = getPrettyName(character->position);
-            for (const auto affect : ALL_CHARACTER_AFFECTS) {
+            for (const CharacterAffectEnum affect : ALL_CHARACTER_AFFECTS) {
                 if (character->affects.contains(affect)) {
                     prettyName.append(", ").append(getPrettyName(affect));
                 }

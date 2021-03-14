@@ -185,7 +185,7 @@ void MergeRelative::exec(const RoomId id)
             newHome->addRoom(target);
         }
         const ExitsList &exits = source->getExitsList();
-        for (const auto dir : enums::makeCountingIterator<ExitDirEnum>(exits)) {
+        for (const ExitDirEnum dir : enums::makeCountingIterator<ExitDirEnum>(exits)) {
             const Exit &e = exits[dir];
             for (const auto &oeid : e.inRange()) {
                 if (Room *const oe = roomIndex(oeid)) {

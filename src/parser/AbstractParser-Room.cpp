@@ -83,7 +83,7 @@ NODISCARD static std::optional<ExitDirEnum> findLowercaseDirAbbrev(const std::st
         return std::nullopt;
     }
 
-    for (const auto &dir : ALL_EXITS_NESWUD) {
+    for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
         if (isAbbrev(input, lowercaseDirection(dir))) {
             return dir;
         }
@@ -100,6 +100,7 @@ NODISCARD static std::optional<RoomFieldVariant> evalRoomField(const std::string
 
         auto add = [&result](auto &&flags, auto &&convert) {
             for (const auto flag : flags) {
+                static_assert(std::is_enum_v<decltype(flag)>);
                 const auto abb = getParserCommandName(flag);
                 if (!abb)
                     throw std::invalid_argument("flag");

@@ -459,7 +459,7 @@ static void testEmpty()
     StringView tmp;
     TEST_ASSERT(tmp.empty());
     int count = 0;
-    for (auto c : tmp) {
+    for (const char c : tmp) {
         ++count;
         static_cast<void>(c); /* unused */
     }

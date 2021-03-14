@@ -350,7 +350,7 @@ void GroupServer::parseLoginInformation(GroupSocket *socket, const QVariantMap &
         emit sendLog(QString("'%1's secret: %2").arg(tempName).arg(secret.constData()));
 
         // Verify only one secret can be connected at once
-        for (auto &target : clientsList) {
+        for (const auto &target : clientsList) {
             if (socket == target)
                 continue;
             if (socket->getPeerCertificate() == target->getPeerCertificate()) {

@@ -251,7 +251,7 @@ void AbstractParser::initActionMap()
         // Predict our movement given what we know about flow flags
         auto rs = RoomSelection(*m_mapData);
         if (const Room *const r = rs.getRoom(getNextPosition())) {
-            for (auto i : ALL_EXITS_NESWUD) {
+            for (const ExitDirEnum i : ALL_EXITS_NESWUD) {
                 const Exit &e = r->exit(i);
                 const ExitFlags ef = e.getExitFlags();
                 if (!ef.isExit())

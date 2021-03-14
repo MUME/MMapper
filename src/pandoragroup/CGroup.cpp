@@ -94,7 +94,7 @@ void CGroup::resetChars()
 
     emit log("You have left the group.");
 
-    for (auto &character : charIndex) {
+    for (const auto &character : charIndex) {
         if (character != self) {
             // TODO: mark character as Zombie ?
         }
@@ -145,7 +145,7 @@ bool CGroup::isNamePresent(const QByteArray &name) const
     QMutexLocker locker(&characterLock);
 
     const QString nameStr = name.simplified();
-    for (auto &character : charIndex) {
+    for (const auto &character : charIndex) {
         if (nameStr.compare(character->getName(), Qt::CaseInsensitive) == 0) {
             return true;
         }
@@ -157,7 +157,7 @@ bool CGroup::isNamePresent(const QByteArray &name) const
 SharedGroupChar CGroup::getCharByName(const QByteArray &name) const
 {
     QMutexLocker locker(&characterLock);
-    for (auto &character : charIndex) {
+    for (const auto &character : charIndex) {
         if (character->getName() == name) {
             return character;
         }

@@ -17,22 +17,22 @@
 
 #include "RuleOf5.h"
 
-NODISCARD static bool isLatin1(const QChar &qc)
+NODISCARD static bool isLatin1(const QChar qc)
 {
     return qc.unicode() < 256;
 }
 
-NODISCARD static bool isLatin1Digit(const QChar &qc)
+NODISCARD static bool isLatin1Digit(const QChar qc)
 {
     return isLatin1(qc) && isdigit(qc.toLatin1());
 }
 
-NODISCARD static bool isLatin1HexDigit(const QChar &qc)
+NODISCARD static bool isLatin1HexDigit(const QChar qc)
 {
     return isLatin1(qc) && isxdigit(qc.toLatin1());
 }
 
-NODISCARD static bool isLatin1Alpha(const QChar &qc)
+NODISCARD static bool isLatin1Alpha(const QChar qc)
 {
     return isLatin1(qc) && isalpha(qc.toLatin1());
 }
@@ -545,7 +545,7 @@ auto entities::encode(const DecodedUnicode &name, const EncodingEnum encodingTyp
     EncodedLatin1 out;
     out.reserve(name.length());
 
-    for (const QChar &qc : name) {
+    for (const QChar qc : name) {
         const auto codepoint = qc.unicode();
         if (codepoint < 256) {
             const char c = qc.toLatin1();
@@ -629,7 +629,7 @@ NODISCARD static OptQChar tryParseDec(const QChar *const beg, const QChar *const
 
     val_type val = 0;
     for (const QChar *it = beg; it < end; ++it) {
-        const QChar &qc = *it;
+        const QChar qc = *it;
         if (!isLatin1(qc))
             return OptQChar{};
         const char c = qc.toLatin1();
@@ -657,7 +657,7 @@ NODISCARD static OptQChar tryParseHex(const QChar *const beg, const QChar *const
 
     val_type val = 0;
     for (const QChar *it = beg; it < end; ++it) {
-        const QChar &qc = *it;
+        const QChar qc = *it;
         if (!isLatin1(qc))
             return OptQChar{};
         const char c = qc.toLatin1();

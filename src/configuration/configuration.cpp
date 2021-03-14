@@ -310,7 +310,7 @@ NODISCARD static bool isValidAnsi(const QString &input)
     }
 
     for (const auto &part : input.mid(1, input.length() - 2).split(";")) {
-        for (const QChar &c : part)
+        for (const QChar c : part)
             if (!c.isDigit())
                 return false;
         bool ok = false;
@@ -963,7 +963,7 @@ Configuration::CanvasSettings::Advanced::Advanced()
     }
 
     if ((false)) {
-        for (auto *it : {&fov, &verticalAngle, &horizontalAngle, &layerHeight}) {
+        for (const auto *it : {&fov, &verticalAngle, &horizontalAngle, &layerHeight}) {
             static_cast<void>(it);
         }
     }

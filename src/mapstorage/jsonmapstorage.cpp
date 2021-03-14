@@ -425,7 +425,7 @@ void JsonWorld::writeZones(const QDir &dir,
 {
     const ZoneIndex::Index &index = m_zoneIndex.index();
 
-    for (auto &kv : index) {
+    for (const auto &kv : index) {
         const ConstRoomList &rooms = kv.second;
         QJsonArray jRooms;
         auto saveOne = [this, &jRooms](const Room &room) { addRoom(jRooms, room); };

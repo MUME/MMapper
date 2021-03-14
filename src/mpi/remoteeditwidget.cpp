@@ -805,7 +805,7 @@ void RemoteEditWidget::addEditAndViewMenus(QMenuBar *const menuBar, const Editor
 
         EditCommand2{}};
 
-    for (auto &cmd : cmds) {
+    for (const EditCommand2 &cmd : cmds) {
         switch (cmd.cmd_type) {
         case EditCmd2Enum::SPACER:
             editMenu->addSeparator();

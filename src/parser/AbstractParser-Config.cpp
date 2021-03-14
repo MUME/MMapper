@@ -68,7 +68,7 @@ syntax::MatchResult ArgHexColor::virt_match(const syntax::ParserInput &input,
         return syntax::MatchResult::failure(input);
     ++arg;
 
-    for (auto &c : arg) {
+    for (const char c : arg) {
         if (!std::isxdigit(c))
             return syntax::MatchResult::failure(input);
     }
