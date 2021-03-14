@@ -630,7 +630,7 @@ public:
                 verts3d.emplace_back(opts.pos, c, tc, vert);
             };
 
-            const auto quad = [&add](const Color &c, const Rect &vert, const Rect tc) {
+            const auto quad = [&add](const Color &c, const Rect &vert, const Rect &tc) {
 #define ADD(a, b) add(c, glm::ivec2{vert.a.x, vert.b.y}, glm::ivec2{tc.a.x, tc.b.y})
                 // note: lo and hi refer to members of vert and tc.
                 ADD(lo, lo);
