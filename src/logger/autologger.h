@@ -8,7 +8,6 @@
 #include <QFileInfoList>
 #include <QObject>
 
-class MainWindow;
 
 class AutoLogger : public QObject
 {

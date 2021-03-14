@@ -167,7 +167,8 @@ Base checked_static_upcast(Derived ptr) noexcept(false)
     static_assert(std::is_base_of_v<actual_base, actual_derived>);
     static_assert(std::is_const_v<actual_derived> == std::is_const_v<actual_base>);
 
-    return static_cast<Base>(&deref(ptr));
+    deref(ptr); // called for side-effect (might throw)
+    return static_cast<Base>(ptr);
 }
 
 template<typename T>

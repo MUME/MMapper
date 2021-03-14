@@ -11,8 +11,6 @@
 #include "abstractmapstorage.h"
 
 class MapData;
-class QJsonArray;
-class QJsonObject;
 class QObject;
 
 /*! \brief JSON export for web clients.

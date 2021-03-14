@@ -117,7 +117,7 @@ void ClientTelnet::sendToMapper(const QByteArray &data, bool /*goAhead*/)
     QString out = getTextCodec().toUnicode(data);
 
     // Replace BEL character with an application beep
-    static constexpr const QChar BEL('\a');
+    static constexpr const QChar BEL{'\a'};
     if (out.contains(BEL)) {
         out.remove(BEL);
         QApplication::beep();

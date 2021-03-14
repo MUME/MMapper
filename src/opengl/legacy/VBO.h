@@ -39,7 +39,6 @@ using WeakVbo = std::weak_ptr<VBO>;
 
 class NODISCARD StaticVbos final : private std::vector<SharedVbo>
 {
-public:
 private:
     using base = std::vector<SharedVbo>;
 

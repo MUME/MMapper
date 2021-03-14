@@ -6,8 +6,8 @@
 #include <QByteArray>
 
 #include "../global/WeakHandle.h"
-#include "../proxy/GmcpMessage.h"
-#include "../proxy/GmcpModule.h"
+#include "GmcpMessage.h"
+#include "GmcpModule.h"
 
 class Proxy;
 

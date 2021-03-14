@@ -32,8 +32,6 @@ class MumeClock;
 class MumeSocket;
 class MumeXmlParser;
 class PrespammedPath;
-class QDataStream;
-class QFile;
 class QTcpSocket;
 class RemoteEdit;
 class TelnetFilter;
