@@ -171,7 +171,7 @@ MatchResult ArgInt::virt_match(const ParserInput &input, IMatchErrorLogger *logg
         if (!std::isdigit(firstChar) && firstChar != '-' && firstChar != '+')
             return MatchResult::failure(input);
 
-        stringView++;
+        ++stringView;
         for (char c : stringView)
             if (!std::isdigit(c))
                 return MatchResult::failure(input);
@@ -188,10 +188,10 @@ MatchResult ArgInt::virt_match(const ParserInput &input, IMatchErrorLogger *logg
     bool negative = false;
     switch (sv.firstChar()) {
     case '+':
-        sv++;
+        ++sv;
         break;
     case '-':
-        sv++;
+        ++sv;
         negative = true;
         break;
     default:

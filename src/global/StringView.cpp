@@ -260,13 +260,6 @@ StringView &StringView::operator++()
     return *this;
 }
 
-StringView StringView::operator++(int)
-{
-    auto result = *this;
-    m_sv.remove_prefix(1);
-    return result;
-}
-
 char StringView::operator[](size_t pos) const
 {
     return m_sv[pos];
