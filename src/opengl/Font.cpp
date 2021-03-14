@@ -61,7 +61,7 @@ struct std::hash<IntPair>
     std::size_t operator()(const IntPair &ip) const noexcept
     {
 #define CAST(i) static_cast<uint64_t>(static_cast<uint32_t>(i))
-        return numeric_hash(CAST(ip.first) | (CAST(ip.second) << 32));
+        return numeric_hash(CAST(ip.first) | (CAST(ip.second) << 32u));
 #undef CAST
     }
 };
@@ -785,7 +785,7 @@ std::vector<FontVert3d> GLFont::getFontBatchRawData(const GLText *const text, co
             numGlyphs += static_cast<int>(it->text.size()) + (it->bgcolor.has_value() ? 1 : 0)
                          + (it->fontFormatFlag.contains(FontFormatFlagEnum::UNDERLINE) ? 1 : 0);
         }
-        return static_cast<size_t>(4 * numGlyphs);
+        return 4 * static_cast<size_t>(numGlyphs);
     }();
 
     result.reserve(expectedVerts);
