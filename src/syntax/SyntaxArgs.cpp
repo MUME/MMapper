@@ -233,6 +233,10 @@ MatchResult ArgInt::virt_match(const ParserInput &input, IMatchErrorLogger *logg
         }
     }
 
+    if (negative) {
+        result = -result;
+    }
+
     if (fail) {
         return MatchResult::failure(input);
     }
