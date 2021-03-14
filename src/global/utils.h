@@ -83,7 +83,7 @@ bool isSet(const T src, const T bit)
 } // namespace utils
 
 template<typename T>
-bool isClamped(T x, T lo, T hi)
+constexpr bool isClamped(T x, T lo, T hi)
 {
     return x >= lo && x <= hi;
 }
