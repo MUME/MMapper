@@ -12,6 +12,6 @@
 struct NODISCARD NullPointerException final : public std::runtime_error
 {
     NullPointerException();
-    virtual ~NullPointerException() override;
+    ~NullPointerException() final;
     DEFAULT_CTORS_AND_ASSIGN_OPS(NullPointerException);
 };

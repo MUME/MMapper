@@ -23,22 +23,29 @@ class QTreeWidgetItem;
 class QWidget;
 class Room;
 
-class FindRoomsDlg : public QDialog, private Ui::FindRoomsDlg
+class FindRoomsDlg final : public QDialog, private Ui::FindRoomsDlg
 {
     Q_OBJECT
 
 signals:
     void sig_center(const glm::vec2 &worldPos);
-    void newRoomSelection(const SigRoomSelection &);
-    void editSelection();
-    void log(const QString &, const QString &);
+    void sig_newRoomSelection(const SigRoomSelection &);
+    void sig_editSelection();
+    void sig_log(const QString &, const QString &);
 
 public slots:
-    void closeEvent(QCloseEvent *event) override;
+    void slot_closeEvent(QCloseEvent *event)
+    {
+        /* virtual */
+        closeEvent(event);
+    }
+
+private:
+    void closeEvent(QCloseEvent *event) final;
 
 public:
     explicit FindRoomsDlg(MapData *, QWidget *parent = nullptr);
-    ~FindRoomsDlg() override;
+    ~FindRoomsDlg() final;
 
     void readSettings();
     void writeSettings();
@@ -51,10 +58,10 @@ private:
     void adjustResultTable();
 
 private slots:
-    QString constructToolTip(const Room *);
-    void on_lineEdit_textChanged();
-    void findClicked();
-    void enableFindButton(const QString &text);
-    void itemDoubleClicked(QTreeWidgetItem *inputItem);
-    void showSelectedRoom();
+    QString slot_constructToolTip(const Room *);
+    void slot_on_lineEdit_textChanged();
+    void slot_findClicked();
+    void slot_enableFindButton(const QString &text);
+    void slot_itemDoubleClicked(QTreeWidgetItem *inputItem);
+    void slot_showSelectedRoom();
 };

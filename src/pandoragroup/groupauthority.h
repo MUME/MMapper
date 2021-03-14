@@ -26,8 +26,11 @@ class GroupAuthority : public QObject
 public:
     explicit GroupAuthority(QObject *parent = nullptr);
 
-public slots:
+private:
     void refresh();
+
+public slots:
+    void slot_refresh() { refresh(); }
 
 public:
     NODISCARD GroupSecret getSecret() const;
@@ -46,8 +49,8 @@ public:
     static void setMetadata(const GroupSecret &, GroupMetadataEnum, const QString &value);
 
 signals:
-    void secretRevoked(const GroupSecret &);
-    void secretRefreshed(const GroupSecret &);
+    void sig_secretRevoked(const GroupSecret &);
+    void sig_secretRefreshed(const GroupSecret &);
 
 private:
     QStringListModel model;

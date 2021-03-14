@@ -62,7 +62,7 @@ MumeXmlParser::~MumeXmlParser()
     }
 }
 
-void MumeXmlParser::parseNewMudInput(const TelnetData &data)
+void MumeXmlParser::slot_parseNewMudInput(const TelnetData &data)
 {
     switch (data.type) {
     case TelnetDataEnum::DELAY: // Twiddlers
@@ -574,7 +574,7 @@ void MumeXmlParser::move()
                                           m_exitsFlags,
                                           m_promptFlags,
                                           m_connectedRoomFlags);
-        emit event(SigParseEvent{ev});
+        emit sig_handleParseEvent(SigParseEvent{ev});
     };
 
     if (m_queue.isEmpty()) {

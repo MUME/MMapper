@@ -26,14 +26,14 @@ public:
     explicit RemoteEdit(QObject *const parent)
         : QObject(parent)
     {}
-    ~RemoteEdit() override = default;
+    ~RemoteEdit() final = default;
 
 public slots:
-    void remoteView(const QString &, const QString &);
-    void remoteEdit(int, const QString &, const QString &);
+    void slot_remoteView(const QString &, const QString &);
+    void slot_remoteEdit(int, const QString &, const QString &);
 
 signals:
-    void sendToSocket(const QByteArray &);
+    void sig_sendToSocket(const QByteArray &);
 
 protected:
     void cancel(const RemoteEditSession *);

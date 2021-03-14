@@ -45,8 +45,8 @@ RemoteEditInternalSession::RemoteEditInternalSession(
                                ))
 {
     const auto widget = m_widget.data();
-    connect(widget, &RemoteEditWidget::save, this, &RemoteEditSession::onSave);
-    connect(widget, &RemoteEditWidget::cancel, this, &RemoteEditSession::onCancel);
+    connect(widget, &RemoteEditWidget::sig_save, this, &RemoteEditSession::slot_onSave);
+    connect(widget, &RemoteEditWidget::sig_cancel, this, &RemoteEditSession::slot_onCancel);
 }
 
 RemoteEditInternalSession::~RemoteEditInternalSession()
@@ -62,8 +62,8 @@ RemoteEditExternalSession::RemoteEditExternalSession(
     , m_process(new RemoteEditProcess(isEditSession(), title, body, this))
 {
     const auto proc = m_process.data();
-    connect(proc, &RemoteEditProcess::save, this, &RemoteEditExternalSession::onSave);
-    connect(proc, &RemoteEditProcess::cancel, this, &RemoteEditExternalSession::onCancel);
+    connect(proc, &RemoteEditProcess::sig_save, this, &RemoteEditExternalSession::slot_onSave);
+    connect(proc, &RemoteEditProcess::sig_cancel, this, &RemoteEditExternalSession::slot_onCancel);
 }
 
 RemoteEditExternalSession::~RemoteEditExternalSession()

@@ -40,7 +40,7 @@ bool PandoraMapStorage::loadData()
         return mergeData();
     } catch (const std::exception &ex) {
         const auto msg = QString::asprintf("Exception: %s", ex.what());
-        emit log("PandoraMapStorage", msg);
+        log(msg);
         qWarning().noquote() << msg;
         m_mapData.clear();
         return false;
@@ -162,7 +162,7 @@ bool PandoraMapStorage::mergeData()
             basePosition.z = -1;
         }
 
-        emit log("PandoraMapStorage", "Loading data ...");
+        log("Loading data ...");
 
         auto &progressCounter = getProgressCounter();
         progressCounter.reset();
@@ -183,7 +183,7 @@ bool PandoraMapStorage::mergeData()
         }
         const uint32_t roomsCount = static_cast<uint32_t>(xml.attributes().value("rooms").toInt());
         progressCounter.increaseTotalStepsBy(roomsCount);
-        emit log("PandoraMapStorage", QString("Number of rooms: %1").arg(roomsCount));
+        log(QString("Number of rooms: %1").arg(roomsCount));
 
         for (uint32_t i = 0; i < roomsCount; i++) {
             while (xml.readNextStartElement() && !xml.hasError()) {
@@ -198,7 +198,7 @@ bool PandoraMapStorage::mergeData()
         // Set base position
         m_mapData.setPosition(Coordinate{});
 
-        emit log("PandoraMapStorage", "Finished loading.");
+        log("Finished loading.");
         m_file->close();
 
         if (m_mapData.getRoomsCount() == 0u) {
@@ -210,7 +210,7 @@ bool PandoraMapStorage::mergeData()
     }
 
     m_mapData.checkSize();
-    emit onDataLoaded();
+    emit sig_onDataLoaded();
     return true;
 }
 

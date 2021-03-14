@@ -25,7 +25,7 @@ struct NODISCARD UnquoteException final : public std::runtime_error
         : std::runtime_error("UnquoteException")
         , reason{reason}
     {}
-    ~UnquoteException() override;
+    ~UnquoteException() final;
 };
 UnquoteException::~UnquoteException() = default;
 

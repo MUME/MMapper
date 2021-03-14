@@ -93,7 +93,7 @@ private:
 
 public:
     explicit RemoteTextEdit(const QString &initialText, QWidget *parent = nullptr);
-    ~RemoteTextEdit() override;
+    ~RemoteTextEdit() final;
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
@@ -146,19 +146,19 @@ public:
     void setVisible(bool visible) override;
 
 protected slots:
-    void cancelEdit();
-    void finishEdit();
-    bool maybeCancel();
-    bool contentsChanged() const;
-    void updateStatusBar();
+    void slot_cancelEdit();
+    void slot_finishEdit();
+    bool slot_maybeCancel();
+    bool slot_contentsChanged() const;
+    void slot_updateStatusBar();
 
-#define X(a, b, c, d, e) void a();
+#define X(a, b, c, d, e) void slot_##a();
     XFOREACH_REMOTE_EDIT_MENU_ITEM(X)
 #undef X
 
 signals:
-    void cancel();
-    void save(const QString &);
+    void sig_cancel();
+    void sig_save(const QString &);
 
 private:
     NODISCARD Editor *createTextEdit();

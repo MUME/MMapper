@@ -32,8 +32,8 @@ PrespammedPath::PrespammedPath(QObject * /*unused*/)
 
 PrespammedPath::~PrespammedPath() = default;
 
-void PrespammedPath::setPath(CommandQueue queue)
+void PrespammedPath::slot_setPath(CommandQueue queue)
 {
     m_queue = std::move(queue);
-    emit update();
+    emit sig_update();
 }

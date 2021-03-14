@@ -119,9 +119,11 @@ public:
     static const QMetaEnum s_sindarinWeekDayNames;
     static const QHash<QString, MumeTimeEnum> m_stringTimeHash;
 
-signals:
+private:
+    void log(const QString &msg) { emit sig_log("MumeClock", msg); }
 
-    void log(const QString &, const QString &);
+signals:
+    void sig_log(const QString &, const QString &);
 
 public slots:
 

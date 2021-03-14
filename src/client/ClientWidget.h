@@ -24,18 +24,18 @@ class ClientWidget final : public QWidget
 
 public:
     explicit ClientWidget(QWidget *parent = nullptr);
-    ~ClientWidget() override;
+    ~ClientWidget() final;
 
 public:
     NODISCARD bool isUsingClient() const;
 
 signals:
-    void relayMessage(const QString &);
+    void sig_relayMessage(const QString &);
 
 public slots:
-    void onVisibilityChanged(bool);
-    void onShowMessage(const QString &);
-    void saveLog();
+    void slot_onVisibilityChanged(bool);
+    void slot_onShowMessage(const QString &);
+    void slot_saveLog();
 
 protected:
     bool eventFilter(QObject *obj, QEvent *event) override;

@@ -12,12 +12,13 @@ class ProgressCounter final : public QObject
 {
     Q_OBJECT
 
+private:
     quint32 m_totalSteps = 0u, m_steps = 0u, m_percentage = 0u;
 
 public:
     ProgressCounter() = default;
     explicit ProgressCounter(QObject *parent);
-    virtual ~ProgressCounter() override = default;
+    ~ProgressCounter() final;
 
 public:
     void step(quint32 steps = 1u);
@@ -25,5 +26,5 @@ public:
     void reset();
 
 signals:
-    void onPercentageChanged(quint32);
+    void sig_onPercentageChanged(quint32);
 };

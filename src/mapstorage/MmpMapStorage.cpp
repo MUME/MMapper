@@ -115,7 +115,7 @@ NODISCARD static QString toMmpRoomId(const RoomId &roomId)
 
 bool MmpMapStorage::saveData(bool baseMapOnly)
 {
-    emit log("MmpMapStorage", "Writing data to file ...");
+    log("Writing data to file ...");
 
     // Collect the room and marker lists. The room list can't be acquired
     // directly apparently and we have to go through a RoomSaver which receives
@@ -181,10 +181,10 @@ bool MmpMapStorage::saveData(bool baseMapOnly)
     stream.writeEndElement(); // end map
     progressCounter.step();
 
-    emit log("MmpMapStorage", "Writing data finished.");
+    log("Writing data finished.");
 
     m_mapData.unsetDataChanged();
-    emit onDataSaved();
+    emit sig_onDataSaved();
 
     return true;
 }

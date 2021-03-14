@@ -464,7 +464,7 @@ bool JsonMapStorage::mergeData()
 
 bool JsonMapStorage::saveData(bool baseMapOnly)
 {
-    emit log("JsonMapStorage", "Writing data to files ...");
+    log("Writing data to files ...");
 
     // Collect the room and marker lists. The room list can't be acquired
     // directly apparently and we have to go through a RoomSaver which receives
@@ -516,14 +516,14 @@ bool JsonMapStorage::saveData(bool baseMapOnly)
         world.writeRoomIndex(roomIndexDir);
         world.writeZones(zoneDir, filter, progressCounter, baseMapOnly);
     } catch (const std::exception &e) {
-        emit log("JsonMapStorage", e.what());
+        log(e.what());
         return false;
     }
 
-    emit log("JsonMapStorage", "Writing data finished.");
+    log("Writing data finished.");
 
     m_mapData.unsetDataChanged();
-    emit onDataSaved();
+    emit sig_onDataSaved();
 
     return true;
 }

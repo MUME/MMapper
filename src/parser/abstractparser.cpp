@@ -138,7 +138,10 @@ AbstractParser::AbstractParser(MapData *const md,
     , m_group(std::move(group))
     , prefixChar{getConfig().parser.prefixChar}
 {
-    connect(&m_offlineCommandTimer, &QTimer::timeout, this, &AbstractParser::doOfflineCharacterMove);
+    connect(&m_offlineCommandTimer,
+            &QTimer::timeout,
+            this,
+            &AbstractParser::slot_doOfflineCharacterMove);
 
     // MUME only attempts up to 4 commands per second (i.e. 250ms)
     m_offlineCommandTimer.setInterval(250);
@@ -150,10 +153,10 @@ AbstractParser::AbstractParser(MapData *const md,
 
 AbstractParser::~AbstractParser() = default;
 
-void AbstractParser::reset()
+void AbstractParser::slot_reset()
 {
     if (m_trollExitMapping) {
-        emit log("Parser", "Disabling troll exit mapping");
+        log("Parser", "Disabling troll exit mapping");
         m_trollExitMapping = false;
     }
     m_lastPrompt = "";
@@ -354,7 +357,7 @@ void AbstractParser::parseExits(std::ostream &os)
         case '^': // outdoors room (troll only)
             directSun = true;
             if (!m_trollExitMapping) {
-                emit log("Parser", "Autoenabling troll exit mapping mode.");
+                log("Parser", "Autoenabling troll exit mapping mode.");
             }
             m_trollExitMapping = true;
             break;
@@ -652,7 +655,7 @@ QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
     return cn;
 }
 
-void AbstractParser::parseNewUserInput(const TelnetData &data)
+void AbstractParser::slot_parseNewUserInput(const TelnetData &data)
 {
     auto parse_and_send = [this, &data]() {
         auto parse = [this, &data]() -> bool {
@@ -669,7 +672,7 @@ void AbstractParser::parseNewUserInput(const TelnetData &data)
         };
 
         if (parse()) {
-            emit sendToMud(data.line);
+            sendToMud(data.line);
         }
     };
 
@@ -680,7 +683,7 @@ void AbstractParser::parseNewUserInput(const TelnetData &data)
     case TelnetDataEnum::LOGIN:
     case TelnetDataEnum::LOGIN_PASSWORD:
     case TelnetDataEnum::UNKNOWN:
-        emit sendToMud(data.line);
+        sendToMud(data.line);
         break;
     case TelnetDataEnum::CRLF:
     case TelnetDataEnum::LF:
@@ -756,7 +759,10 @@ public:
     {}
     virtual ~ShortestPathEmitter() override;
 
-    void receiveShortestPath(RoomAdmin * /*admin*/, QVector<SPNode> spnodes, int endpoint) override
+private:
+    void virt_receiveShortestPath(RoomAdmin * /*admin*/,
+                                  QVector<SPNode> spnodes,
+                                  const int endpoint) final
     {
         const SPNode *spnode = &spnodes[endpoint];
         auto name = spnode->r->getName();
@@ -780,7 +786,7 @@ ShortestPathEmitter::~ShortestPathEmitter() = default;
 void AbstractParser::searchCommand(const RoomFilter &f)
 {
     if (f.patternKind() == PatternKindsEnum::NONE) {
-        emit newRoomSelection(SigRoomSelection{});
+        emit sig_newRoomSelection(SigRoomSelection{});
         sendToUser("Rooms unselected.\r\n");
         return;
     }
@@ -788,7 +794,7 @@ void AbstractParser::searchCommand(const RoomFilter &f)
     tmpSel->genericSearch(f);
     sendToUser(
         QString("%1 room%2 found.\r\n").arg(tmpSel->size()).arg((tmpSel->size() == 1) ? "" : "s"));
-    emit newRoomSelection(SigRoomSelection{tmpSel});
+    emit sig_newRoomSelection(SigRoomSelection{tmpSel});
 }
 
 void AbstractParser::dirsCommand(const RoomFilter &f)
@@ -804,7 +810,7 @@ void AbstractParser::dirsCommand(const RoomFilter &f)
 void AbstractParser::markCurrentCommand()
 {
     const auto tmpSel = RoomSelection::createSelection(*m_mapData, getTailPosition());
-    emit newRoomSelection(SigRoomSelection{tmpSel});
+    emit sig_newRoomSelection(SigRoomSelection{tmpSel});
 }
 
 ExitDirEnum AbstractParser::tryGetDir(StringView &view)
@@ -1126,7 +1132,7 @@ NODISCARD static CommandEnum getRandomDirection()
     return convert_to_CommandIdType(chooseRandomElement(ALL_EXITS_NESWUD));
 }
 
-void AbstractParser::doOfflineCharacterMove()
+void AbstractParser::slot_doOfflineCharacterMove()
 {
     if (m_queue.isEmpty()) {
         return;
@@ -1230,7 +1236,7 @@ void AbstractParser::doOfflineCharacterMove()
                                           PromptFlagsType::fromRoomTerrainType(
                                               otherRoom->getTerrainType()),
                                           ConnectedRoomFlagsType{});
-        emit event(SigParseEvent{ev});
+        emit sig_handleParseEvent(SigParseEvent{ev});
         pathChanged();
     };
 
@@ -1515,7 +1521,7 @@ void AbstractParser::performDoorCommand(const ExitDirEnum direction, const DoorA
     cn += "\r\n";
 
     if (isOnline()) { // online mode
-        emit sendToMud(cn);
+        sendToMud(cn);
         sendToUser("--->" + cn);
         m_overrideSendPrompt = true;
     } else {
@@ -1557,7 +1563,7 @@ void AbstractParser::genericDoorCommand(QString command, const ExitDirEnum direc
     }
 
     if (isOnline()) { // online mode
-        emit sendToMud(command.toLatin1());
+        sendToMud(command.toLatin1());
         sendToUser("--->" + command);
         m_overrideSendPrompt = true;
     } else {
@@ -1603,7 +1609,9 @@ void AbstractParser::printRoomInfo(const RoomFieldFlags fieldset)
     }
 }
 
-void AbstractParser::sendGTellToUser(const QString &color, const QString &from, const QString &text)
+void AbstractParser::slot_sendGTellToUser(const QString &color,
+                                          const QString &from,
+                                          const QString &text)
 {
     const QString tell
         = QString("\x1b%1%2 tells you [GT] '%3'\x1b[0m").arg(color).arg(from).arg(text);

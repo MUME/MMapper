@@ -16,7 +16,7 @@ static constexpr const uint8_t ASCII_DEL = 8;
 static constexpr const uint8_t ASCII_CR = 13;
 static constexpr const uint8_t ASCII_LF = 10;
 
-void TelnetFilter::onAnalyzeMudStream(const QByteArray &ba, bool goAhead)
+void TelnetFilter::slot_onAnalyzeMudStream(const QByteArray &ba, bool goAhead)
 {
     dispatchTelnetStream(ba, m_mudIncomingBuffer, m_mudIncomingQue, goAhead);
 
@@ -24,11 +24,11 @@ void TelnetFilter::onAnalyzeMudStream(const QByteArray &ba, bool goAhead)
     TelnetData data;
     while (!m_mudIncomingQue.isEmpty()) {
         data = m_mudIncomingQue.dequeue();
-        emit parseNewMudInput(data);
+        emit sig_parseNewMudInput(data);
     }
 }
 
-void TelnetFilter::onAnalyzeUserStream(const QByteArray &ba, bool goAhead)
+void TelnetFilter::slot_onAnalyzeUserStream(const QByteArray &ba, bool goAhead)
 {
     dispatchTelnetStream(ba, m_userIncomingData, m_userIncomingQue, goAhead);
 
@@ -36,7 +36,7 @@ void TelnetFilter::onAnalyzeUserStream(const QByteArray &ba, bool goAhead)
     TelnetData data;
     while (!m_userIncomingQue.isEmpty()) {
         data = m_userIncomingQue.dequeue();
-        emit parseNewUserInput(data);
+        emit sig_parseNewUserInput(data);
     }
 }
 

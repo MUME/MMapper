@@ -29,14 +29,17 @@ class CGroup final : public QObject, public GroupAdmin
 
 public:
     explicit CGroup(QObject *parent = nullptr);
-    ~CGroup() override = default;
+    ~CGroup() final = default;
     DELETE_CTORS_AND_ASSIGN_OPS(CGroup);
 
 public:
     NODISCARD bool isNamePresent(const QByteArray &name) const;
 
+private:
     // Interactions with group characters should occur through CGroupSelection due to threading
-    void releaseCharacters(GroupRecipient *sender) override;
+    void virt_releaseCharacters(GroupRecipient *sender) final;
+
+public:
     void unselect(GroupSelection *s)
     {
         releaseCharacters(s);
@@ -45,12 +48,16 @@ public:
     std::unique_ptr<GroupSelection> selectAll();
     std::unique_ptr<GroupSelection> selectByName(const QByteArray &);
 
+private:
+    void log(const QString &msg) { emit sig_log(msg); }
+    void characterChanged(bool updateCanvas) { emit sig_characterChanged(updateCanvas); }
+
 public slots:
     void slot_scheduleAction(std::shared_ptr<GroupAction> action);
 
 signals:
-    void log(const QString &);
-    void characterChanged(bool updateCanvas);
+    void sig_log(const QString &);
+    void sig_characterChanged(bool updateCanvas);
 
 protected:
     void executeActions();

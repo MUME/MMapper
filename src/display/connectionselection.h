@@ -99,8 +99,10 @@ public:
     bool isFirstValid() const { return m_connectionDescriptor[0].room != nullptr; }
     bool isSecondValid() const { return m_connectionDescriptor[1].room != nullptr; }
 
-    void receiveRoom(RoomAdmin *admin, const Room *aRoom) override;
+private:
+    void virt_receiveRoom(RoomAdmin *admin, const Room *aRoom) final;
 
+public:
     // Complete means it actually describes a useful oneway or twoway exit.
     NODISCARD bool isCompleteExisting() const
     {

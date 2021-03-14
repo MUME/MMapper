@@ -37,7 +37,7 @@ public:
                        PrespammedPath *pp,
                        Mmapper2Group *gm,
                        QWidget *parent = nullptr);
-    ~MapWindow() override;
+    ~MapWindow() final;
 
 public:
     void keyPressEvent(QKeyEvent *event) override;
@@ -51,13 +51,12 @@ signals:
     void sig_zoomChanged(float zoom);
 
 public slots:
-    void setScrollBars(const Coordinate &, const Coordinate &);
-    void centerOnWorldPos(const glm::vec2 &worldPos);
-    void mapMove(int dx, int dy);
-    void continuousScroll(int dx, int dy);
-
-    void scrollTimerTimeout();
-    void graphicsSettingsChanged();
+    void slot_setScrollBars(const Coordinate &, const Coordinate &);
+    void slot_centerOnWorldPos(const glm::vec2 &worldPos);
+    void slot_mapMove(int dx, int dy);
+    void slot_continuousScroll(int dx, int dy);
+    void slot_scrollTimerTimeout();
+    void slot_graphicsSettingsChanged();
 
 public:
     void updateScrollBars();

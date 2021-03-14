@@ -188,7 +188,7 @@ void GroupAuthority::refresh()
     if (key.isNull()) {
         qWarning() << "Unable to generate a valid private key" << key;
     }
-    emit secretRefreshed(getSecret());
+    emit sig_secretRefreshed(getSecret());
 }
 #else
 void GroupAuthority::refresh()
@@ -288,7 +288,7 @@ bool GroupAuthority::remove(const GroupSecret &secret)
     if (!validSecret(secret))
         return false;
 
-    emit secretRevoked(secret);
+    emit sig_secretRevoked(secret);
 
     // Remove from model
     for (int i = 0; i <= model.rowCount(); i++) {

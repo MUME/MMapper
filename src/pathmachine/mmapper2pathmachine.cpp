@@ -31,7 +31,7 @@ NODISCARD static const char *stateName(const PathStateEnum state)
     return "UNKNOWN";
 }
 
-void Mmapper2PathMachine::event(const SigParseEvent &sigParseEvent)
+void Mmapper2PathMachine::slot_handleParseEvent(const SigParseEvent &sigParseEvent)
 {
     static constexpr const char *const me = "PathMachine";
 
@@ -51,12 +51,12 @@ void Mmapper2PathMachine::event(const SigParseEvent &sigParseEvent)
     params.multipleConnectionsPenalty = settings.multipleConnectionsPenalty;
 
     time.restart();
-    emit log(me, QString("received event, state: %1").arg(stateName(state)));
-    PathMachine::event(sigParseEvent);
-    emit log(me,
-             QString("done processing event, state: %1, elapsed: %2 ms")
-                 .arg(stateName(state))
-                 .arg(time.elapsed()));
+    emit sig_log(me, QString("received event, state: %1").arg(stateName(state)));
+    PathMachine::handleParseEvent(sigParseEvent);
+    emit sig_log(me,
+                 QString("done processing event, state: %1, elapsed: %2 ms")
+                     .arg(stateName(state))
+                     .arg(time.elapsed()));
 }
 
 Mmapper2PathMachine::Mmapper2PathMachine(MapData *const mapData, QObject *const parent)

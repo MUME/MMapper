@@ -40,15 +40,15 @@ public:
     explicit TelnetFilter(QObject *const parent)
         : QObject(parent)
     {}
-    ~TelnetFilter() override = default;
+    ~TelnetFilter() final = default;
 
 public slots:
-    void onAnalyzeMudStream(const QByteArray &ba, bool goAhead);
-    void onAnalyzeUserStream(const QByteArray &ba, bool goAhead);
+    void slot_onAnalyzeMudStream(const QByteArray &ba, bool goAhead);
+    void slot_onAnalyzeUserStream(const QByteArray &ba, bool goAhead);
 
 signals:
-    void parseNewMudInput(const TelnetData &);
-    void parseNewUserInput(const TelnetData &);
+    void sig_parseNewMudInput(const TelnetData &);
+    void sig_parseNewUserInput(const TelnetData &);
 
 private:
     void dispatchTelnetStream(const QByteArray &stream,

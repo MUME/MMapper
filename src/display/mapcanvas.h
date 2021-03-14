@@ -77,7 +77,7 @@ public:
                        PrespammedPath *prespammedPath,
                        Mmapper2Group *groupManager,
                        QWidget *parent);
-    ~MapCanvas() override;
+    ~MapCanvas() final;
 
 public:
     NODISCARD static MapCanvas *getPrimary();
@@ -107,42 +107,44 @@ public:
     NODISCARD auto rect() const { return QOpenGLWidget::rect(); }
 
 public slots:
-    void forceMapperToRoom();
-    void createRoom();
+    void slot_forceMapperToRoom();
+    void slot_createRoom();
 
-    void setCanvasMouseMode(CanvasMouseModeEnum);
+    void slot_setCanvasMouseMode(CanvasMouseModeEnum mode);
 
-    void setScroll(const glm::vec2 &worldPos);
+    void slot_setScroll(const glm::vec2 &worldPos);
     // void setScroll(const glm::ivec2 &) = delete; // moc tries to call the wrong one if you define this
-    void setHorizontalScroll(float worldX);
-    void setVerticalScroll(float worldY);
+    void slot_setHorizontalScroll(float worldX);
+    void slot_setVerticalScroll(float worldY);
 
-    void zoomIn();
-    void zoomOut();
-    void zoomReset();
+    void slot_zoomIn();
+    void slot_zoomOut();
+    void slot_zoomReset();
 
-    void layerUp();
-    void layerDown();
-    void layerReset();
+    void slot_layerUp();
+    void slot_layerDown();
+    void slot_layerReset();
 
-    void setRoomSelection(const SigRoomSelection &);
-    void clearRoomSelection() { setRoomSelection(SigRoomSelection{}); }
-    void setConnectionSelection(const std::shared_ptr<ConnectionSelection> &);
-    void clearConnectionSelection() { setConnectionSelection(nullptr); }
-    void setInfoMarkSelection(const std::shared_ptr<InfoMarkSelection> &);
-    void clearInfoMarkSelection() { setInfoMarkSelection(nullptr); }
+    void slot_setRoomSelection(const SigRoomSelection &);
+    void slot_setConnectionSelection(const std::shared_ptr<ConnectionSelection> &);
+    void slot_setInfoMarkSelection(const std::shared_ptr<InfoMarkSelection> &);
 
-    void clearAllSelections()
+    void slot_clearRoomSelection() { slot_setRoomSelection(SigRoomSelection{}); }
+    void slot_clearConnectionSelection() { slot_setConnectionSelection(nullptr); }
+    void slot_clearInfoMarkSelection() { slot_setInfoMarkSelection(nullptr); }
+
+    void slot_clearAllSelections()
     {
-        clearRoomSelection();
-        clearConnectionSelection();
-        clearInfoMarkSelection();
+        slot_clearRoomSelection();
+        slot_clearConnectionSelection();
+        slot_clearInfoMarkSelection();
     }
 
-    void dataLoaded();
-    void moveMarker(const Coordinate &);
+    void slot_dataLoaded();
+    void slot_moveMarker(const Coordinate &coord);
 
     void slot_onMessageLoggedDirect(const QOpenGLDebugMessage &message);
+    void slot_infomarksChanged() { infomarksChanged(); }
 
 signals:
     void sig_onCenter(const glm::vec2 &worldCoord);
@@ -150,13 +152,13 @@ signals:
     void sig_setScrollBars(const Coordinate &min, const Coordinate &max);
     void sig_continuousScroll(int, int);
 
-    void log(const QString &, const QString &);
+    void sig_log(const QString &, const QString &);
 
-    void newRoomSelection(const SigRoomSelection &);
-    void newConnectionSelection(ConnectionSelection *);
-    void newInfoMarkSelection(InfoMarkSelection *);
+    void sig_newRoomSelection(const SigRoomSelection &);
+    void sig_newConnectionSelection(ConnectionSelection *);
+    void sig_newInfoMarkSelection(InfoMarkSelection *);
 
-    void setCurrentRoom(RoomId id, bool update);
+    void sig_setCurrentRoom(RoomId id, bool update);
     void sig_zoomChanged(float);
 
 private:
@@ -228,7 +230,7 @@ public:
     void infomarksChanged();
     void layerChanged();
     void mapChanged();
-    void requestUpdate();
+    void slot_requestUpdate();
     void screenChanged();
     void selectionChanged();
     void graphicsSettingsChanged();
@@ -236,4 +238,7 @@ public:
 
 public:
     void userPressedEscape(bool);
+
+private:
+    void log(const QString &msg) { emit sig_log("MapCanvas", msg); }
 };

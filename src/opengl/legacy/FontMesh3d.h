@@ -103,8 +103,9 @@ public:
 public:
     ~FontMesh3d() override;
 
-public:
-    void render(const GLRenderState &renderState) override;
+private:
+    NODISCARD bool virt_modifiesRenderState() const final { return true; }
+    NODISCARD GLRenderState virt_modifyRenderState(const GLRenderState &renderState) const final;
 };
 
 } // namespace Legacy

@@ -303,21 +303,21 @@ void AbstractParser::doConfig(const StringView &cmd)
             syn("play",
                 Accept(
                     [this](User &user, auto) {
-                        doSetPlayMode();
+                        setMode(MapModeEnum::PLAY);
                         send_ok(user.getOstream());
                     },
                     "play mode")),
             syn("mapping",
                 Accept(
                     [this](User &user, auto) {
-                        doSetMapMode();
+                        setMode(MapModeEnum::MAP);
                         send_ok(user.getOstream());
                     },
                     "mapping mode")),
             syn("emulation",
                 Accept(
                     [this](User &user, auto) {
-                        doSetEmulationMode();
+                        setMode(MapModeEnum::OFFLINE);
                         send_ok(user.getOstream());
                     },
                     "offline emulation mode"))),
@@ -388,18 +388,7 @@ void AbstractParser::doConfig(const StringView &cmd)
     eval("config", configSyntax, cmd);
 }
 
-// these signals are connected to the mainwindow
-void AbstractParser::doSetEmulationMode()
+void AbstractParser::setMode(MapModeEnum mode)
 {
-    emit setEmulationMode();
-}
-
-void AbstractParser::doSetPlayMode()
-{
-    emit setPlayMode();
-}
-
-void AbstractParser::doSetMapMode()
-{
-    emit setMapMode();
+    emit sig_setMode(mode);
 }

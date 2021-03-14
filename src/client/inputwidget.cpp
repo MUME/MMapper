@@ -127,34 +127,34 @@ void InputWidget::keypadMovement(const int key)
 {
     switch (key) {
     case Qt::Key_Up:
-        emit sendUserInput("north");
+        sendUserInput("north");
         break;
     case Qt::Key_Down:
-        emit sendUserInput("south");
+        sendUserInput("south");
         break;
     case Qt::Key_Left:
-        emit sendUserInput("west");
+        sendUserInput("west");
         break;
     case Qt::Key_Right:
-        emit sendUserInput("east");
+        sendUserInput("east");
         break;
     case Qt::Key_PageUp:
-        emit sendUserInput("up");
+        sendUserInput("up");
         break;
     case Qt::Key_PageDown:
-        emit sendUserInput("down");
+        sendUserInput("down");
         break;
     case Qt::Key_Clear: // Numpad 5
-        emit sendUserInput("exits");
+        sendUserInput("exits");
         break;
     case Qt::Key_Home:
-        emit sendUserInput("open exit");
+        sendUserInput("open exit");
         break;
     case Qt::Key_End:
-        emit sendUserInput("close exit");
+        sendUserInput("close exit");
         break;
     case Qt::Key_Insert:
-        emit sendUserInput("flee");
+        sendUserInput("flee");
         break;
     case Qt::Key_Delete:
     case Qt::Key_Plus:
@@ -199,7 +199,7 @@ void InputWidget::gotInput()
     } else {
         selectAll();
     }
-    emit sendUserInput(input);
+    sendUserInput(input);
     m_inputHistory.addInputLine(input);
     m_tabHistory.addInputLine(input);
 }
@@ -244,7 +244,7 @@ void InputWidget::forwardHistory()
 {
     clear();
     if (m_inputHistory.atFront()) {
-        emit showMessage("Reached beginning of input history", 1000);
+        emit sig_showMessage("Reached beginning of input history", 1000);
         return;
     }
 
@@ -260,7 +260,7 @@ void InputWidget::forwardHistory()
 void InputWidget::backwardHistory()
 {
     if (m_inputHistory.atEnd()) {
-        emit showMessage("Reached end of input history", 1000);
+        emit sig_showMessage("Reached end of input history", 1000);
         return;
     }
 

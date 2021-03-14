@@ -15,19 +15,18 @@ class AutoLogger final : public QObject
     Q_OBJECT
 public:
     explicit AutoLogger(QObject *parent);
-    ~AutoLogger() override;
+    ~AutoLogger() final;
 
 public slots:
-    void writeToLog(const QByteArray &ba);
-    void shouldLog(bool echo);
-    void onConnected();
+    void slot_writeToLog(const QByteArray &ba);
+    void slot_shouldLog(bool echo);
+    void slot_onConnected();
 
 private:
     NODISCARD bool writeLine(const QByteArray &ba);
     void deleteOldLogs();
     void deleteLogs(const QFileInfoList &files);
     NODISCARD bool showDeleteDialog(QString message);
-
     NODISCARD bool createFile();
 
 private:

@@ -356,7 +356,7 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
         try {
             m_group->getGroupManagerApi().kickCharacter(selectedCharacter);
         } catch (const std::exception &ex) {
-            messageBox("Group Manager", QString::fromLatin1(ex.what()));
+            slot_messageBox("Group Manager", QString::fromLatin1(ex.what()));
         }
     });
 
@@ -400,14 +400,14 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
     });
 
     connect(m_group,
-            &Mmapper2Group::updateWidget,
+            &Mmapper2Group::sig_updateWidget,
             this,
-            &GroupWidget::updateLabels,
+            &GroupWidget::slot_updateLabels,
             Qt::QueuedConnection);
     connect(m_group,
-            &Mmapper2Group::messageBox,
+            &Mmapper2Group::sig_messageBox,
             this,
-            &GroupWidget::messageBox,
+            &GroupWidget::slot_messageBox,
             Qt::QueuedConnection);
 
     readSettings();
@@ -420,7 +420,7 @@ GroupWidget::~GroupWidget()
     writeSettings();
 }
 
-void GroupWidget::updateLabels()
+void GroupWidget::slot_updateLabels()
 {
     m_model.resetModel();
 
@@ -439,7 +439,7 @@ void GroupWidget::updateLabels()
     m_table->setColumnHidden(static_cast<int>(GroupModel::ColumnTypeEnum::MANA_PERCENT), hide_mana);
 }
 
-void GroupWidget::messageBox(const QString &title, const QString &message)
+void GroupWidget::slot_messageBox(const QString &title, const QString &message)
 {
     QMessageBox::critical(this, title, message);
 }

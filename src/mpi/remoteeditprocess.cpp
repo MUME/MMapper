@@ -46,11 +46,10 @@ RemoteEditProcess::RemoteEditProcess(const bool editSession,
 
     // Signals/Slots
     connect(&m_process,
-            SIGNAL(finished(int, QProcess::ExitStatus)),
-            SLOT(onFinished(int, QProcess::ExitStatus)));
-    connect(&m_process,
-            SIGNAL(error(QProcess::ProcessError)),
-            SLOT(onError(QProcess::ProcessError)));
+            QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this,
+            &RemoteEditProcess::slot_onFinished);
+    connect(&m_process, &QProcess::errorOccurred, this, &RemoteEditProcess::slot_onError);
 
     // Set the file template
     QString fileTemplate = QString("%1MMapper.%2.pid%3.%4")
@@ -103,25 +102,25 @@ RemoteEditProcess::~RemoteEditProcess()
     file.remove();
 }
 
-void RemoteEditProcess::onFinished(int exitCode, QProcess::ExitStatus status)
+void RemoteEditProcess::virt_onFinished(int exitCode, QProcess::ExitStatus status)
 {
     qDebug() << "Edit session process finished with code" << exitCode;
     if (status != QProcess::NormalExit) {
         qWarning() << "File process did not end normally";
         qWarning() << "Output:" << m_process.readAll();
-        emit cancel();
+        emit sig_cancel();
         return;
     }
 
     if (!m_editSession) {
-        emit cancel();
+        emit sig_cancel();
         return;
     }
 
     QFile file(m_fileName);
     if (!file.open(QFile::ReadOnly)) {
         qWarning() << "Edit session unable to read file!";
-        emit cancel();
+        emit sig_cancel();
         return;
     }
 
@@ -129,7 +128,7 @@ void RemoteEditProcess::onFinished(int exitCode, QProcess::ExitStatus status)
     QDateTime currentTime = QFileInfo{file}.lastModified();
     if (m_previousTime == currentTime) {
         qDebug() << "Edit session canceled (no changes)";
-        emit cancel();
+        emit sig_cancel();
         return;
     }
 
@@ -139,14 +138,14 @@ void RemoteEditProcess::onFinished(int exitCode, QProcess::ExitStatus status)
 
     // Submit it to MUME
     qDebug() << "Edit session had changes" << content;
-    emit save(content);
+    emit sig_save(content);
 }
 
-void RemoteEditProcess::onError(QProcess::ProcessError /*error*/)
+void RemoteEditProcess::virt_onError(QProcess::ProcessError /*error*/)
 {
     qWarning() << "View session encountered an error:" << m_process.errorString();
     qWarning() << "Output:" << m_process.readAll();
-    emit cancel();
+    emit sig_cancel();
 }
 
 enum class NODISCARD StateEnum { Idle, Arg, QuotedArg };

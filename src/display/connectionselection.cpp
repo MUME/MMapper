@@ -146,7 +146,7 @@ ConnectionSelection::ConnectionDescriptor ConnectionSelection::getSecond() const
     return m_connectionDescriptor[1];
 }
 
-void ConnectionSelection::receiveRoom(RoomAdmin *const admin, const Room *const aRoom)
+void ConnectionSelection::virt_receiveRoom(RoomAdmin *const admin, const Room *const aRoom)
 {
     m_admin = admin;
     // addroom to internal map

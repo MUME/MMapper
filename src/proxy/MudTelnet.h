@@ -13,26 +13,26 @@ class MudTelnet final : public AbstractTelnet
     Q_OBJECT
 public:
     explicit MudTelnet(QObject *parent);
-    ~MudTelnet() override = default;
+    ~MudTelnet() final = default;
 
 public slots:
-    void onAnalyzeMudStream(const QByteArray &);
-    void onSendToMud(const QByteArray &);
-    void onConnected();
-    void onRelayNaws(int, int);
-    void onRelayTermType(const QByteArray &);
-    void onGmcpToMud(const GmcpMessage &);
+    void slot_onAnalyzeMudStream(const QByteArray &);
+    void slot_onSendToMud(const QByteArray &);
+    void slot_onConnected();
+    void slot_onRelayNaws(int, int);
+    void slot_onRelayTermType(const QByteArray &);
+    void slot_onGmcpToMud(const GmcpMessage &);
 
 signals:
-    void analyzeMudStream(const QByteArray &, bool goAhead);
-    void sendToSocket(const QByteArray &);
-    void relayEchoMode(bool);
-    void relayGmcp(const GmcpMessage &);
+    void sig_analyzeMudStream(const QByteArray &, bool goAhead);
+    void sig_sendToSocket(const QByteArray &);
+    void sig_relayEchoMode(bool);
+    void sig_relayGmcp(const GmcpMessage &);
 
 private:
-    void sendToMapper(const QByteArray &data, bool goAhead) override;
-    void receiveEchoMode(bool toggle) override;
-    void receiveGmcpMessage(const GmcpMessage &) override;
-    void onGmcpEnabled() override;
-    void sendRawData(const QByteArray &data) override;
+    void virt_sendToMapper(const QByteArray &data, bool goAhead) final;
+    void virt_receiveEchoMode(bool toggle) final;
+    void virt_receiveGmcpMessage(const GmcpMessage &) final;
+    void virt_onGmcpEnabled() final;
+    void virt_sendRawData(const QByteArray &data) final;
 };

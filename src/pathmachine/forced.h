@@ -23,10 +23,14 @@ private:
 public:
     explicit Forced(const SigParseEvent &sigParseEvent, bool update = false);
     ~Forced() override;
-    void receiveRoom(RoomAdmin *, const Room *) override;
-    NODISCARD const Room *oneMatch() const { return matchedRoom; }
 
 public:
     Forced() = delete;
     DELETE_CTORS_AND_ASSIGN_OPS(Forced);
+
+private:
+    void virt_receiveRoom(RoomAdmin *, const Room *) final;
+
+public:
+    NODISCARD const Room *oneMatch() const { return matchedRoom; }
 };

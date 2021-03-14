@@ -74,7 +74,7 @@ void AbstractParser::initActionMap()
     auto dead = [this](StringView /*view*/) {
         m_queue.clear();
         pathChanged();
-        emit releaseAllPaths();
+        emit sig_releaseAllPaths();
         markCurrentCommand();
         m_group.sendEvent(CharacterPositionEnum::DEAD);
     };
@@ -275,7 +275,7 @@ void AbstractParser::initActionMap()
 
     /// Score
     addRegex(R"(^(You have )?\d+/\d+ hits?(, \d+/\d+ mana,)? and \d+/\d+ move(ment point)?s.$)",
-             [this](StringView view) { emit sendScoreLineEvent(view.toQByteArray()); });
+             [this](StringView view) { sendScoreLineEvent(view.toQByteArray()); });
 
     /// Search, reveal, and flush
     addStartsWith("You begin to search...", [this](StringView /*view*/) {

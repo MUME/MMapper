@@ -758,19 +758,22 @@ void entities::foreachEntity(const QStringRef &input, EntityCallback &callback)
 auto entities::decode(const EncodedLatin1 &input) -> DecodedUnicode
 {
     static constexpr const char unprintable = '?';
-    struct NODISCARD MyEntityCallback final : EntityCallback
+    struct NODISCARD MyEntityCallback final : public EntityCallback
     {
+    public:
         const EncodedLatin1 &input;
         DecodedUnicode out;
         int pos = 0;
 
+    public:
         explicit MyEntityCallback(const EncodedLatin1 &_input)
             : input{_input}
         {
             out.reserve(input.size());
         }
 
-        virtual void decodedEntity(int start, int len, OptQChar decoded) override
+    private:
+        void virt_decodedEntity(int start, int len, OptQChar decoded) final
         {
             skipto(start);
             if (decoded)
@@ -780,6 +783,7 @@ auto entities::decode(const EncodedLatin1 &input) -> DecodedUnicode
             pos = start + len;
         }
 
+    public:
         void skipto(int start)
         {
             assert(start >= this->pos);

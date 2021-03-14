@@ -21,31 +21,37 @@ ClientPage::ClientPage(QWidget *parent)
 {
     ui->setupUi(this);
 
-    connect(ui->fontPushButton, &QAbstractButton::pressed, this, &ClientPage::onChangeFont);
+    connect(ui->fontPushButton, &QAbstractButton::pressed, this, &ClientPage::slot_onChangeFont);
     connect(ui->bgColorPushButton,
             &QAbstractButton::pressed,
             this,
-            &ClientPage::onChangeBackgroundColor);
+            &ClientPage::slot_onChangeBackgroundColor);
     connect(ui->fgColorPushButton,
             &QAbstractButton::pressed,
             this,
-            &ClientPage::onChangeForegroundColor);
+            &ClientPage::slot_onChangeForegroundColor);
 
-    connect(ui->columnsSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onChangeColumns(int)));
-    connect(ui->rowsSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onChangeRows(int)));
-    connect(ui->scrollbackSpinBox,
-            SIGNAL(valueChanged(int)),
+    connect(ui->columnsSpinBox,
+            QOverload<int>::of(&QSpinBox::valueChanged),
             this,
-            SLOT(onChangeLinesOfScrollback(int)));
+            &ClientPage::slot_onChangeColumns);
+    connect(ui->rowsSpinBox,
+            QOverload<int>::of(&QSpinBox::valueChanged),
+            this,
+            &ClientPage::slot_onChangeRows);
+    connect(ui->scrollbackSpinBox,
+            QOverload<int>::of(&QSpinBox::valueChanged),
+            this,
+            &ClientPage::slot_onChangeLinesOfScrollback);
 
     connect(ui->inputHistorySpinBox,
-            SIGNAL(valueChanged(int)),
+            QOverload<int>::of(&QSpinBox::valueChanged),
             this,
-            SLOT(onChangeLinesOfInputHistory(int)));
+            &ClientPage::slot_onChangeLinesOfInputHistory);
     connect(ui->tabDictionarySpinBox,
-            SIGNAL(valueChanged(int)),
+            QOverload<int>::of(&QSpinBox::valueChanged),
             this,
-            SLOT(onChangeTabCompletionDictionarySize(int)));
+            &ClientPage::slot_onChangeTabCompletionDictionarySize);
 
     connect(ui->clearInputCheckBox, &QCheckBox::toggled, [](bool isChecked) {
         /* NOTE: This directly modifies the global setting. */
@@ -63,7 +69,7 @@ ClientPage::~ClientPage()
     delete ui;
 }
 
-void ClientPage::loadConfig()
+void ClientPage::slot_loadConfig()
 {
     updateFontAndColors();
 
@@ -104,7 +110,7 @@ void ClientPage::updateFontAndColors()
     ui->exampleLabel->setBackgroundRole(QPalette::Window);
 }
 
-void ClientPage::onChangeFont()
+void ClientPage::slot_onChangeFont()
 {
     auto &fontDescription = setConfig().integratedClient.font;
     QFont oldFont;
@@ -122,7 +128,7 @@ void ClientPage::onChangeFont()
     }
 }
 
-void ClientPage::onChangeBackgroundColor()
+void ClientPage::slot_onChangeBackgroundColor()
 {
     auto &backgroundColor = setConfig().integratedClient.backgroundColor;
     const QColor newColor = QColorDialog::getColor(backgroundColor, this);
@@ -132,7 +138,7 @@ void ClientPage::onChangeBackgroundColor()
     }
 }
 
-void ClientPage::onChangeForegroundColor()
+void ClientPage::slot_onChangeForegroundColor()
 {
     auto &foregroundColor = setConfig().integratedClient.foregroundColor;
     const QColor newColor = QColorDialog::getColor(foregroundColor, this);
@@ -142,27 +148,27 @@ void ClientPage::onChangeForegroundColor()
     }
 }
 
-void ClientPage::onChangeColumns(const int value)
+void ClientPage::slot_onChangeColumns(const int value)
 {
     setConfig().integratedClient.columns = value;
 }
 
-void ClientPage::onChangeRows(const int value)
+void ClientPage::slot_onChangeRows(const int value)
 {
     setConfig().integratedClient.rows = value;
 }
 
-void ClientPage::onChangeLinesOfScrollback(const int value)
+void ClientPage::slot_onChangeLinesOfScrollback(const int value)
 {
     setConfig().integratedClient.linesOfScrollback = value;
 }
 
-void ClientPage::onChangeLinesOfInputHistory(const int value)
+void ClientPage::slot_onChangeLinesOfInputHistory(const int value)
 {
     setConfig().integratedClient.linesOfInputHistory = value;
 }
 
-void ClientPage::onChangeTabCompletionDictionarySize(const int value)
+void ClientPage::slot_onChangeTabCompletionDictionarySize(const int value)
 {
     setConfig().integratedClient.tabCompletionDictionarySize = value;
 }

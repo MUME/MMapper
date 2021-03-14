@@ -29,7 +29,7 @@ private:
 
 public:
     explicit AdvancedGraphicsGroupBox(QGroupBox &groupBox);
-    ~AdvancedGraphicsGroupBox() override;
+    ~AdvancedGraphicsGroupBox() final;
 
 public:
     explicit operator QGroupBox &() { return deref(m_groupBox); }

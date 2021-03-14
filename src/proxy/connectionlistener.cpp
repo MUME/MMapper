@@ -67,12 +67,12 @@ void ConnectionListener::listen()
         QPointer<ConnectionListenerTcpServer> server(new ConnectionListenerTcpServer(this));
         server->setMaxPendingConnections(1);
         connect(server, &ConnectionListenerTcpServer::acceptError, this, [this, server]() {
-            emit log("Listener", QString("Encountered an error: %1").arg(server->errorString()));
+            log(QString("Encountered an error: %1").arg(server->errorString()));
         });
         connect(server,
                 &ConnectionListenerTcpServer::signal_incomingConnection,
                 this,
-                &ConnectionListener::onIncomingConnection);
+                &ConnectionListener::slot_onIncomingConnection);
         return server;
     };
 
@@ -91,12 +91,12 @@ void ConnectionListener::listen()
     }
 }
 
-void ConnectionListener::onIncomingConnection(qintptr socketDescriptor)
+void ConnectionListener::slot_onIncomingConnection(qintptr socketDescriptor)
 {
     if (m_accept) {
-        emit log("Listener", "New connection: accepted.");
+        log("New connection: accepted.");
         m_accept = false;
-        emit clientSuccessfullyConnected();
+        emit sig_clientSuccessfullyConnected();
 
         m_proxy = std::make_unique<Proxy>(m_mapData,
                                           m_pathMachine,
@@ -125,7 +125,7 @@ void ConnectionListener::onIncomingConnection(qintptr socketDescriptor)
             connect(m_thread.get(), &QThread::finished, m_proxy.get(), &QObject::deleteLater);
 
             // Start the proxy when the thread starts
-            connect(m_thread.get(), &QThread::started, m_proxy.get(), &Proxy::start);
+            connect(m_thread.get(), &QThread::started, m_proxy.get(), &Proxy::slot_start);
             m_thread->start();
 
         } else {
@@ -133,11 +133,11 @@ void ConnectionListener::onIncomingConnection(qintptr socketDescriptor)
                 m_accept = true;
                 m_proxy.release();
             });
-            m_proxy->start();
+            m_proxy->slot_start();
         }
 
     } else {
-        emit log("Listener", "New connection: rejected.");
+        log("New connection: rejected.");
         QTcpSocket tcpSocket;
         if (tcpSocket.setSocketDescriptor(socketDescriptor)) {
             QByteArray ba("\033[1;37;41mYou can't connect to MMapper more than once!\033[0m\r\n"

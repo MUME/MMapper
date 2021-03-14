@@ -77,7 +77,7 @@ private:
 
 public:
     explicit InputWidget(QWidget *parent = nullptr);
-    ~InputWidget() override;
+    ~InputWidget() final;
 
     NODISCARD QSize sizeHint() const override;
 
@@ -100,8 +100,11 @@ private:
     void backwardHistory();
     InputHistory m_inputHistory;
 
+private:
+    void sendUserInput(const QString &msg) { emit sig_sendUserInput(msg); }
+
 signals:
-    void sendUserInput(const QString &);
-    void displayMessage(const QString &);
-    void showMessage(const QString &, int);
+    void sig_sendUserInput(const QString &);
+    void sig_displayMessage(const QString &);
+    void sig_showMessage(const QString &, int);
 };

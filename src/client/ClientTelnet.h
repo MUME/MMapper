@@ -17,42 +17,40 @@ class ClientTelnet final : public AbstractTelnet
 
 public:
     explicit ClientTelnet(QObject *parent = nullptr);
-    ~ClientTelnet() override;
+    ~ClientTelnet() final;
 
     void connectToHost();
-
     void disconnectFromHost();
 
 public slots:
     /** Window size has changed - informs the server about it */
-    void onWindowSizeChanged(int x, int y);
+    void slot_onWindowSizeChanged(int x, int y);
 
     /** Prepares data, doubles IACs, sends it using sendRawData. */
-    void sendToMud(const QString &data);
+    void slot_sendToMud(const QString &data);
 
 protected slots:
-    void onConnected();
-    void onDisconnected();
-    void onError(QAbstractSocket::SocketError);
+    void slot_onConnected();
+    void slot_onDisconnected();
+    void slot_onError(QAbstractSocket::SocketError);
 
     /** Reads, parses telnet, and so forth */
-    void onReadyRead();
+    void slot_onReadyRead();
 
 signals:
     /** Submits Telnet/text data back to the client */
-    void sendToUser(const QString &data);
+    void sig_sendToUser(const QString &data);
 
     /** toggles echo mode for passwords */
-    void echoModeChanged(bool);
-
-    void disconnected();
-    void connected();
-    void socketError(const QString &);
+    void sig_echoModeChanged(bool);
+    void sig_disconnected();
+    void sig_connected();
+    void sig_socketError(const QString &);
 
 private:
-    void sendToMapper(const QByteArray &, bool goAhead) override;
-    void receiveEchoMode(bool) override;
-    void sendRawData(const QByteArray &data) override;
+    void virt_sendToMapper(const QByteArray &, bool goAhead) final;
+    void virt_receiveEchoMode(bool) final;
+    void virt_sendRawData(const QByteArray &data) final;
 
     io::buffer<(1 << 15)> buffer;
     QTcpSocket socket;

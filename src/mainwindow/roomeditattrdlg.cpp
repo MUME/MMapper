@@ -539,7 +539,7 @@ void RoomEditAttrDlg::setRoomSelection(const SharedRoomSelection &rs,
         updateDialog(nullptr);
     }
 
-    connect(this, &RoomEditAttrDlg::requestUpdate, m_mapCanvas, &MapCanvas::requestUpdate);
+    connect(this, &RoomEditAttrDlg::sig_requestUpdate, m_mapCanvas, &MapCanvas::slot_requestUpdate);
 }
 
 template<typename T, typename Flags>
@@ -818,7 +818,7 @@ void RoomEditAttrDlg::updateCommon(std::unique_ptr<AbstractAction> moved_action,
 
     if (!onlyExecuteAction) {
         updateDialog(getSelectedRoom());
-        emit requestUpdate();
+        emit sig_requestUpdate();
     }
 }
 
@@ -1053,7 +1053,7 @@ void RoomEditAttrDlg::doorNameLineEditTextChanged()
                                                              FlagModifyModeEnum::SET),
                            r->getId()),
                        m_roomSelection);
-    emit requestUpdate();
+    emit sig_requestUpdate();
 }
 
 void RoomEditAttrDlg::doorFlagsListItemChanged(QListWidgetItem *const item)
@@ -1075,7 +1075,7 @@ void RoomEditAttrDlg::doorFlagsListItemChanged(QListWidgetItem *const item)
             std::make_unique<SingleRoomAction>(std::make_unique<ModifyExitFlags>(flags, dir, mode),
                                                deref(getSelectedRoom()).getId()),
             m_roomSelection);
-        emit requestUpdate();
+        emit sig_requestUpdate();
     };
 
     switch (item->checkState()) {

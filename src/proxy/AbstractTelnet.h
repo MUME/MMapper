@@ -107,62 +107,57 @@ public:
 
 protected:
     void sendCharsetRequest(const QStringList &myCharacterSet);
-
     void sendTerminalType(const QByteArray &terminalType);
-
     void sendCharsetRejected();
-
     void sendCharsetAccepted(const QByteArray &characterSet);
-
     void sendOptionStatus();
-
     void sendAreYouThere();
-
     void sendWindowSizeChanged(int, int);
-
     void sendTerminalTypeRequest();
-
     void sendGmcpMessage(const GmcpMessage &msg);
-
     void sendLineModeEdit();
-
     void requestTelnetOption(unsigned char type, unsigned char subnegBuffer);
 
     /** Prepares data, doubles IACs, sends it using sendRawData. */
     void submitOverTelnet(const QByteArray &data, bool goAhead);
 
-    virtual void sendToMapper(const QByteArray &, bool goAhead) = 0;
+private:
+    virtual void virt_onGmcpEnabled() {}
+    virtual void virt_receiveEchoMode(bool) {}
+    virtual void virt_receiveGmcpMessage(const GmcpMessage &) {}
+    virtual void virt_receiveTerminalType(const QByteArray &) {}
+    virtual void virt_receiveWindowSize(int, int) {}
+    /// Send out the data. Does not double IACs, this must be done
+    /// by caller if needed. This function is suitable for sending
+    /// telnet sequences.
+    virtual void virt_sendRawData(const QByteArray &data) = 0;
+    virtual void virt_sendToMapper(const QByteArray &, bool goAhead) = 0;
 
-    virtual void receiveEchoMode(bool) {}
+protected:
+    void onGmcpEnabled() { virt_onGmcpEnabled(); }
+    void receiveEchoMode(bool b) { virt_receiveEchoMode(b); }
+    void receiveGmcpMessage(const GmcpMessage &msg) { virt_receiveGmcpMessage(msg); }
+    void receiveTerminalType(const QByteArray &ba) { virt_receiveTerminalType(ba); }
+    void receiveWindowSize(int x, int y) { virt_receiveWindowSize(x, y); }
 
-    virtual void receiveGmcpMessage(const GmcpMessage &) {}
+    /// Send out the data. Does not double IACs, this must be done
+    /// by caller if needed. This function is suitable for sending
+    /// telnet sequences.
+    void sendRawData(const QByteArray &ba) { virt_sendRawData(ba); }
+    void sendToMapper(const QByteArray &ba, bool goAhead) { virt_sendToMapper(ba, goAhead); }
 
-    virtual void receiveTerminalType(const QByteArray &) {}
-
-    virtual void receiveWindowSize(int, int) {}
-
-    virtual void onGmcpEnabled() {}
-
-    /** Send out the data. Does not double IACs, this must be done
-            by caller if needed. This function is suitable for sending
-            telnet sequences. */
-    virtual void sendRawData(const QByteArray &data) = 0;
-
+protected:
     /** send a telnet option */
     void sendTelnetOption(unsigned char type, unsigned char subnegBuffer);
-
     void reset();
-
     void resetGmcpModules();
-
     void receiveGmcpModule(const GmcpModule &, bool);
-
     void onReadInternal(const QByteArray &);
-
     void setTerminalType(const QByteArray &terminalType) { termType = terminalType; }
 
     NODISCARD TextCodec &getTextCodec();
 
+protected:
     static constexpr const size_t NUM_OPTS = 256;
     using OptionArray = MMapper::Array<bool, NUM_OPTS>;
 
@@ -207,6 +202,7 @@ private:
     /** processes a telnet subcommand payload */
     void processTelnetSubnegotiation(const AppendBuffer &payload);
 
+private:
     TextCodec textCodec;
 
     AppendBuffer commandBuffer;

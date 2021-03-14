@@ -59,8 +59,17 @@ NODISCARD extern DecodedUnicode decode(const EncodedLatin1 &input);
 
 struct NODISCARD EntityCallback
 {
+public:
     virtual ~EntityCallback();
-    virtual void decodedEntity(int start, int len, OptQChar decoded) = 0;
+
+private:
+    virtual void virt_decodedEntity(int start, int len, OptQChar decoded) = 0;
+
+public:
+    void decodedEntity(const int start, const int len, const OptQChar decoded)
+    {
+        virt_decodedEntity(start, len, decoded);
+    }
 };
 void foreachEntity(const QStringRef &line, EntityCallback &callback);
 

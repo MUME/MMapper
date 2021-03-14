@@ -10,7 +10,7 @@
 #include "../expandoracommon/room.h"
 #include "../mapfrontend/mapaction.h"
 
-void Forced::receiveRoom(RoomAdmin *sender, const Room *perhaps)
+void Forced::virt_receiveRoom(RoomAdmin *const sender, const Room *const perhaps)
 {
     if (matchedRoom == nullptr) {
         matchedRoom = perhaps;

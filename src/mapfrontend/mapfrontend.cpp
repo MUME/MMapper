@@ -141,6 +141,9 @@ void MapFrontend::clear()
     greatestUsedId = INVALID_ROOMID;
     m_bounds.reset();
     checkSize(); // called for side effect of sending signal
+
+    // REVISIT: should this occur inside of the lock?
+    virt_clear();
 }
 
 void MapFrontend::lookingForRooms(RoomRecipient &recipient, const RoomId id)
@@ -259,7 +262,8 @@ void MapFrontend::checkSize(const Coordinate &c)
 #undef MINMAX
 }
 
-void MapFrontend::createRoom(const SigParseEvent &sigParseEvent, const Coordinate &expectedPosition)
+void MapFrontend::slot_createRoom(const SigParseEvent &sigParseEvent,
+                                  const Coordinate &expectedPosition)
 {
     const ParseEvent &event = sigParseEvent.deref();
 
@@ -279,7 +283,7 @@ void MapFrontend::lookingForRooms(RoomRecipient &recipient, const SigParseEvent 
     QMutexLocker locker(&mapLock);
     if (greatestUsedId == INVALID_ROOMID) {
         Coordinate c(0, 0, 0);
-        createRoom(sigParseEvent, c);
+        slot_createRoom(sigParseEvent, c);
         if (greatestUsedId != INVALID_ROOMID) {
             roomIndex[DEFAULT_ROOMID]->setPermanent();
         }

@@ -27,7 +27,7 @@ class JsonMapStorage final : public AbstractMapStorage
 
 public:
     explicit JsonMapStorage(MapData &, const QString &, QObject *parent = nullptr);
-    ~JsonMapStorage() override;
+    ~JsonMapStorage() final;
 
 public:
     JsonMapStorage() = delete;
@@ -40,6 +40,6 @@ private:
     NODISCARD virtual bool loadData() override;
     NODISCARD virtual bool saveData(bool baseMapOnly) override;
     NODISCARD virtual bool mergeData() override;
-
+    void log(const QString &msg) { emit sig_log("JsonMapStorage", msg); }
     // void saveMark(InfoMark * mark, QJsonObject &jRoom, const JsonRoomIdsCache &jRoomIds);
 };

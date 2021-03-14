@@ -58,13 +58,13 @@ private:
 public:
     explicit MumeXmlParser(
         MapData *, MumeClock *, ProxyParserApi, GroupManagerApi, QObject *parent = nullptr);
-    ~MumeXmlParser() override;
+    ~MumeXmlParser() final;
 
 private:
     void parse(const TelnetData &);
 
 public:
-    void parseNewMudInput(const TelnetData &data) override;
+    void slot_parseNewMudInput(const TelnetData &data);
 
 private:
     void parseMudCommands(const QString &str);

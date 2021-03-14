@@ -47,7 +47,7 @@ class GroupDelegate final : public QStyledItemDelegate
 
 public:
     explicit GroupDelegate(QObject *parent = nullptr);
-    ~GroupDelegate() override;
+    ~GroupDelegate() final;
 
     void paint(QPainter *painter,
                const QStyleOptionViewItem &option,
@@ -101,16 +101,16 @@ class GroupWidget final : public QWidget
 
 public:
     explicit GroupWidget(Mmapper2Group *group, MapData *md, QWidget *parent = nullptr);
-    virtual ~GroupWidget() override;
+    ~GroupWidget() final;
 
 public slots:
-    void updateLabels();
-    void messageBox(const QString &title, const QString &message);
-    void mapUnloaded() { m_model.setMapLoaded(false); }
-    void mapLoaded() { m_model.setMapLoaded(true); }
+    void slot_updateLabels();
+    void slot_messageBox(const QString &title, const QString &message);
+    void slot_mapUnloaded() { m_model.setMapLoaded(false); }
+    void slot_mapLoaded() { m_model.setMapLoaded(true); }
 
 signals:
-    void kickCharacter(const QByteArray &);
+    void sig_kickCharacter(const QByteArray &);
     void sig_center(glm::vec2);
 
 private:

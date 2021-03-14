@@ -29,7 +29,7 @@ class ConnectionListenerTcpServer final : public QTcpServer
 {
 public:
     explicit ConnectionListenerTcpServer(ConnectionListener *parent);
-    virtual ~ConnectionListenerTcpServer() override;
+    ~ConnectionListenerTcpServer() final;
 
 private:
     Q_OBJECT
@@ -52,7 +52,7 @@ public:
                                 AutoLogger *,
                                 MapCanvas *,
                                 QObject *parent);
-    virtual ~ConnectionListener() override;
+    ~ConnectionListener() final;
 
 private:
     Q_OBJECT
@@ -60,12 +60,15 @@ private:
 public:
     void listen();
 
+private:
+    void log(const QString &msg) { emit sig_log("Listener", msg); }
+
 signals:
-    void log(const QString &, const QString &);
-    void clientSuccessfullyConnected();
+    void sig_log(const QString &, const QString &);
+    void sig_clientSuccessfullyConnected();
 
 protected slots:
-    void onIncomingConnection(qintptr socketDescriptor);
+    void slot_onIncomingConnection(qintptr socketDescriptor);
 
 private:
     MapData *m_mapData = nullptr;

@@ -211,11 +211,10 @@ bool MapData::execute(std::unique_ptr<MapAction> action, const SharedRoomSelecti
     return executable;
 }
 
-void MapData::clear()
+void MapData::virt_clear()
 {
-    MapFrontend::clear();
     m_markers.clear();
-    emit log("MapData", "cleared MapData");
+    log("cleared MapData");
 }
 
 void MapData::removeDoorNames()

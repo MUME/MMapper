@@ -135,7 +135,7 @@ void MapStorage::newData()
 
     // clear previous map
     m_mapData.clear();
-    emit onNewData();
+    emit sig_onNewData();
 }
 
 class NODISCARD LoadRoomHelper final
@@ -337,7 +337,7 @@ bool MapStorage::loadData()
         return mergeData();
     } catch (const std::exception &ex) {
         const auto msg = QString::asprintf("Exception: %s", ex.what());
-        emit log("MapStorage", msg);
+        log(msg);
         qWarning().noquote() << msg;
         m_mapData.clear();
         return false;
@@ -351,8 +351,6 @@ bool MapStorage::mergeData()
                               tr("MapStorage Error"),
                               msg);
     };
-
-    const auto emit_log = [this](const QString &msg) { emit log("MapStorage", msg); };
 
     {
         MapFrontendBlocker blocker(m_mapData);
@@ -371,7 +369,7 @@ bool MapStorage::mergeData()
             basePosition.z = -1;
         }
 
-        emit_log("Loading data ...");
+        log("Loading data ...");
 
         auto &progressCounter = getProgressCounter();
         progressCounter.reset();
@@ -433,16 +431,16 @@ bool MapStorage::mergeData()
             buffer.setData(uncompressedData);
             buffer.open(QIODevice::ReadOnly);
             stream.setDevice(&buffer);
-            emit_log(QString("Uncompressed map using %1").arg(qCompressed ? "qUncompress" : "zlib"));
+            log(QString("Uncompressed map using %1").arg(qCompressed ? "qUncompress" : "zlib"));
 
         } else if (NO_ZLIB && zlibCompressed) {
             critical("MMapper could not load this map because it is too old.\r\n\r\n"
                      "Please recompile MMapper with USE_ZLIB.");
             return false;
         } else {
-            emit_log("Map was not compressed");
+            log("Map was not compressed");
         }
-        emit_log(QString("Schema version: %1").arg(version));
+        log(QString("Schema version: %1").arg(version));
 
         const uint32_t roomsCount = helper.read_u32();
         const uint32_t marksCount = helper.read_u32();
@@ -450,7 +448,7 @@ bool MapStorage::mergeData()
 
         m_mapData.setPosition(transformRoomOnLoad(version, helper.readCoord3d() + basePosition));
 
-        emit_log(QString("Number of rooms: %1").arg(roomsCount));
+        log(QString("Number of rooms: %1").arg(roomsCount));
 
         for (uint32_t i = 0; i < roomsCount; ++i) {
             SharedRoom room = loadRoom(stream, version);
@@ -459,7 +457,7 @@ bool MapStorage::mergeData()
             m_mapData.insertPredefinedRoom(room);
         }
 
-        emit_log(QString("Number of info items: %1").arg(marksCount));
+        log(QString("Number of info items: %1").arg(marksCount));
 
         // TODO: reserve the markerList with marksCount
 
@@ -472,7 +470,7 @@ bool MapStorage::mergeData()
             progressCounter.step();
         }
 
-        emit_log("Finished loading.");
+        log("Finished loading.");
 
         // REVISIT: Closing is probably not necessary, since you don't do it in the failure cases.
         buffer.close();
@@ -489,7 +487,7 @@ bool MapStorage::mergeData()
     }
 
     m_mapData.checkSize();
-    emit onDataLoaded();
+    emit sig_onDataLoaded();
     return true;
 }
 
@@ -597,7 +595,7 @@ void MapStorage::saveExits(const Room &room, QDataStream &stream)
 
 bool MapStorage::saveData(bool baseMapOnly)
 {
-    emit log("MapStorage", "Writing data to file ...");
+    log("Writing data to file ...");
 
     QDataStream fileStream(m_file);
     fileStream.setVersion(QDataStream::Qt_4_8);
@@ -671,15 +669,14 @@ bool MapStorage::saveData(bool baseMapOnly)
                                   ? 1.0
                                   : (static_cast<double>(uncompressedData.size())
                                      / static_cast<double>(compressedData.size()));
-    emit log("MapStorage",
-             QString("Map compressed (compression ratio of %1:1)")
-                 .arg(QString::number(compressionRatio, 'f', 1)));
+    log(QString("Map compressed (compression ratio of %1:1)")
+            .arg(QString::number(compressionRatio, 'f', 1)));
 
     fileStream.writeRawData(compressedData.data(), compressedData.size());
-    emit log("MapStorage", "Writing data finished.");
+    log("Writing data finished.");
 
     m_mapData.unsetDataChanged();
-    emit onDataSaved();
+    emit sig_onDataSaved();
 
     return true;
 }

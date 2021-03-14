@@ -17,12 +17,12 @@
 
 static const QRegularExpression s_lineFeedNewlineRx(R"((?!\r)\n)");
 
-void RemoteEdit::remoteView(const QString &title, const QString &body)
+void RemoteEdit::slot_remoteView(const QString &title, const QString &body)
 {
     addSession(REMOTE_EDIT_VIEW_KEY, title, body);
 }
 
-void RemoteEdit::remoteEdit(const int key, const QString &title, const QString &body)
+void RemoteEdit::slot_remoteEdit(const int key, const QString &title, const QString &body)
 {
     addSession(key, title, body);
 }
@@ -66,7 +66,7 @@ void RemoteEdit::cancel(const RemoteEditSession *session)
             = QString("%1E%2\n%3").arg("~$#E").arg(keystr.length()).arg(keystr).toLatin1();
 
         qDebug() << "Cancelling session" << session->getKey();
-        emit sendToSocket(buffer);
+        emit sig_sendToSocket(buffer);
     }
 
     auto sessionId = session->getId();
@@ -95,7 +95,7 @@ void RemoteEdit::save(const RemoteEditSession *session)
 
         // MPI is always Latin1
         qDebug() << "Saving session" << session->getKey();
-        emit sendToSocket(buffer);
+        emit sig_sendToSocket(buffer);
     } else {
         qWarning() << "Session" << session->getId()
                    << "was not an edit session and could not be saved";

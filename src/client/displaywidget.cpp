@@ -101,7 +101,7 @@ void DisplayWidget::resizeEvent(QResizeEvent *const event)
 
     const auto &settings = getConfig().integratedClient;
     if (settings.autoResizeTerminal) {
-        emit windowSizeChanged(x, y);
+        emit sig_windowSizeChanged(x, y);
     }
 
     QTextEdit::resizeEvent(event);
@@ -118,7 +118,7 @@ void DisplayWidget::setDefaultFormat(QTextCharFormat &format)
     format.setFontStrikeOut(false);
 }
 
-void DisplayWidget::displayText(const QString &str)
+void DisplayWidget::slot_displayText(const QString &str)
 {
     // Split ansi from this text
     QStringList textList, ansiList;

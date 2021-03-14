@@ -21,13 +21,13 @@
 ClientTelnet::ClientTelnet(QObject *const parent)
     : AbstractTelnet(TextCodecStrategyEnum::AUTO_SELECT_CODEC, false, parent, "MMapper")
 {
-    connect(&socket, &QAbstractSocket::connected, this, &ClientTelnet::onConnected);
-    connect(&socket, &QAbstractSocket::disconnected, this, &ClientTelnet::onDisconnected);
-    connect(&socket, &QIODevice::readyRead, this, &ClientTelnet::onReadyRead);
+    connect(&socket, &QAbstractSocket::connected, this, &ClientTelnet::slot_onConnected);
+    connect(&socket, &QAbstractSocket::disconnected, this, &ClientTelnet::slot_onDisconnected);
+    connect(&socket, &QIODevice::readyRead, this, &ClientTelnet::slot_onReadyRead);
     connect(&socket,
-            SIGNAL(error(QAbstractSocket::SocketError)),
+            QOverload<QAbstractSocket::SocketError>::of(&QTcpSocket::error),
             this,
-            SLOT(onError(QAbstractSocket::SocketError)));
+            &ClientTelnet::slot_onError);
 }
 
 ClientTelnet::~ClientTelnet()
@@ -47,12 +47,12 @@ void ClientTelnet::connectToHost()
     socket.waitForConnected(3000);
 }
 
-void ClientTelnet::onConnected()
+void ClientTelnet::slot_onConnected()
 {
     reset();
     socket.setSocketOption(QAbstractSocket::LowDelayOption, true);
     socket.setSocketOption(QAbstractSocket::KeepAliveOption, true);
-    emit connected();
+    emit sig_connected();
 }
 
 void ClientTelnet::disconnectFromHost()
@@ -60,14 +60,14 @@ void ClientTelnet::disconnectFromHost()
     socket.disconnectFromHost();
 }
 
-void ClientTelnet::onDisconnected()
+void ClientTelnet::slot_onDisconnected()
 {
     reset();
-    emit echoModeChanged(true);
-    emit disconnected();
+    emit sig_echoModeChanged(true);
+    emit sig_disconnected();
 }
 
-void ClientTelnet::onError(QAbstractSocket::SocketError error)
+void ClientTelnet::slot_onError(QAbstractSocket::SocketError error)
 {
     if (error == QAbstractSocket::RemoteHostClosedError) {
         // The connection closing isn't an error
@@ -75,23 +75,23 @@ void ClientTelnet::onError(QAbstractSocket::SocketError error)
     }
     QString err = socket.errorString();
     socket.abort();
-    emit socketError(err);
+    emit sig_socketError(err);
 }
 
-void ClientTelnet::sendToMud(const QString &data)
+void ClientTelnet::slot_sendToMud(const QString &data)
 {
     // MMapper will later convert to Latin-1 within UserTelnet
     const QByteArray ba = getTextCodec().fromUnicode(data);
     submitOverTelnet(ba, false);
 }
 
-void ClientTelnet::sendRawData(const QByteArray &data)
+void ClientTelnet::virt_sendRawData(const QByteArray &data)
 {
     sentBytes += data.length();
     socket.write(data);
 }
 
-void ClientTelnet::onWindowSizeChanged(int x, int y)
+void ClientTelnet::slot_onWindowSizeChanged(int x, int y)
 {
     // remember the size - we'll need it if NAWS is currently disabled but will
     // be enabled. Also remember it if no connection exists at the moment;
@@ -105,7 +105,7 @@ void ClientTelnet::onWindowSizeChanged(int x, int y)
     }
 }
 
-void ClientTelnet::onReadyRead()
+void ClientTelnet::slot_onReadyRead()
 {
     // REVISIT: check return value?
     MAYBE_UNUSED const auto ignored = //
@@ -114,7 +114,7 @@ void ClientTelnet::onReadyRead()
         });
 }
 
-void ClientTelnet::sendToMapper(const QByteArray &data, bool /*goAhead*/)
+void ClientTelnet::virt_sendToMapper(const QByteArray &data, bool /*goAhead*/)
 {
     QString out = getTextCodec().toUnicode(data);
 
@@ -125,10 +125,10 @@ void ClientTelnet::sendToMapper(const QByteArray &data, bool /*goAhead*/)
         QApplication::beep();
     }
 
-    emit sendToUser(out);
+    emit sig_sendToUser(out);
 }
 
-void ClientTelnet::receiveEchoMode(const bool mode)
+void ClientTelnet::virt_receiveEchoMode(const bool mode)
 {
-    emit echoModeChanged(mode);
+    emit sig_echoModeChanged(mode);
 }

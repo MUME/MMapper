@@ -18,6 +18,7 @@
 #include <QtCore>
 #include <QtGlobal>
 
+#include "../configuration/configuration.h"
 #include "../display/CanvasMouseModeEnum.h"
 #include "../mapdata/roomselection.h"
 #include "../pandoragroup/mmapper2group.h"
@@ -59,7 +60,7 @@ class MainWindow final : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags{});
-    ~MainWindow() override;
+    ~MainWindow() final;
 
     enum class NODISCARD SaveModeEnum { FULL, BASEMAP };
     enum class NODISCARD SaveFormatEnum { MM2, WEB, MMP };
@@ -68,74 +69,75 @@ public:
     void setCurrentFile(const QString &fileName);
 
 signals:
-    void setGroupMode(GroupManagerStateEnum);
-    void startGroupNetwork();
-    void stopGroupNetwork();
+    void sig_setGroupMode(GroupManagerStateEnum);
+    void sig_startGroupNetwork();
+    void sig_stopGroupNetwork();
 
 public slots:
-    void newFile();
-    void open();
-    void reload();
-    void merge();
-    bool save();
-    bool saveAs();
-    bool exportBaseMap();
-    bool exportWebMap();
-    bool exportMmpMap();
-    void about();
+    void slot_newFile();
+    void slot_open();
+    void slot_reload();
+    void slot_merge();
+    bool slot_save();
+    bool slot_saveAs();
+    bool slot_exportBaseMap();
+    bool slot_exportWebMap();
+    bool slot_exportMmpMap();
+    void slot_about();
 
-    void percentageChanged(quint32);
+    void slot_percentageChanged(quint32);
 
-    void log(const QString &, const QString &);
+    void slot_log(const QString &, const QString &);
 
-    void onModeConnectionSelect();
-    void onModeRoomRaypick();
-    void onModeRoomSelect();
-    void onModeMoveSelect();
-    void onModeInfoMarkSelect();
-    void onModeCreateInfoMarkSelect();
-    void onModeCreateRoomSelect();
-    void onModeCreateConnectionSelect();
-    void onModeCreateOnewayConnectionSelect();
-    void onLayerUp();
-    void onLayerDown();
-    void onLayerReset();
-    void onCreateRoom();
-    void onEditRoomSelection();
-    void onEditInfoMarkSelection();
-    void onDeleteInfoMarkSelection();
-    void onDeleteRoomSelection();
-    void onDeleteConnectionSelection();
-    void onMoveUpRoomSelection();
-    void onMoveDownRoomSelection();
-    void onMergeUpRoomSelection();
-    void onMergeDownRoomSelection();
-    void onConnectToNeighboursRoomSelection();
-    void onFindRoom();
-    void onLaunchClient();
-    void onPreferences();
-    void onPlayMode();
-    void onMapMode();
-    void onOfflineMode();
-    void alwaysOnTop();
+    void slot_onModeConnectionSelect();
+    void slot_onModeRoomRaypick();
+    void slot_onModeRoomSelect();
+    void slot_onModeMoveSelect();
+    void slot_onModeInfoMarkSelect();
+    void slot_onModeCreateInfoMarkSelect();
+    void slot_onModeCreateRoomSelect();
+    void slot_onModeCreateConnectionSelect();
+    void slot_onModeCreateOnewayConnectionSelect();
+    void slot_onLayerUp();
+    void slot_onLayerDown();
+    void slot_onLayerReset();
+    void slot_onCreateRoom();
+    void slot_onEditRoomSelection();
+    void slot_onEditInfoMarkSelection();
+    void slot_onDeleteInfoMarkSelection();
+    void slot_onDeleteRoomSelection();
+    void slot_onDeleteConnectionSelection();
+    void slot_onMoveUpRoomSelection();
+    void slot_onMoveDownRoomSelection();
+    void slot_onMergeUpRoomSelection();
+    void slot_onMergeDownRoomSelection();
+    void slot_onConnectToNeighboursRoomSelection();
+    void slot_onFindRoom();
+    void slot_onLaunchClient();
+    void slot_onPreferences();
+    void slot_onPlayMode();
+    void slot_onMapMode();
+    void slot_onOfflineMode();
+    void slot_setMode(MapModeEnum mode);
+    void slot_alwaysOnTop();
 
-    void newRoomSelection(const SigRoomSelection &);
-    void newConnectionSelection(ConnectionSelection *);
-    void newInfoMarkSelection(InfoMarkSelection *);
-    void showContextMenu(const QPoint &);
+    void slot_newRoomSelection(const SigRoomSelection &);
+    void slot_newConnectionSelection(ConnectionSelection *);
+    void slot_newInfoMarkSelection(InfoMarkSelection *);
+    void slot_showContextMenu(const QPoint &);
 
-    void onModeGroupOff();
-    void onModeGroupClient();
-    void onModeGroupServer();
-    void groupNetworkStatus(bool toggle);
+    void slot_onModeGroupOff();
+    void slot_onModeGroupClient();
+    void slot_onModeGroupServer();
+    void slot_groupNetworkStatus(bool toggle);
 
-    void onCheckForUpdate();
-    void voteForMUME();
-    void openMumeWebsite();
-    void openMumeForum();
-    void openMumeWiki();
-    void openSettingUpMmapper();
-    void openNewbieHelp();
+    void slot_onCheckForUpdate();
+    void slot_voteForMUME();
+    void slot_openMumeWebsite();
+    void slot_openMumeForum();
+    void slot_openMumeWiki();
+    void slot_openSettingUpMmapper();
+    void slot_openNewbieHelp();
 
 protected:
     void closeEvent(QCloseEvent *event) override;

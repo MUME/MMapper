@@ -47,6 +47,7 @@ private:
     void saveMark(InfoMark *mark, QDataStream &stream);
     void saveRoom(const Room &room, QDataStream &stream);
     void saveExits(const Room &room, QDataStream &stream);
+    void log(const QString &msg) { emit sig_log("MapStorage", msg); }
 
     uint32_t baseId = 0u;
     Coordinate basePosition;

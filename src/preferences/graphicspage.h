@@ -19,25 +19,27 @@ namespace Ui {
 class GraphicsPage;
 }
 
-class GraphicsPage : public QWidget
+class GraphicsPage final : public QWidget
 {
     Q_OBJECT
 
 public:
     explicit GraphicsPage(QWidget *parent = nullptr);
-    ~GraphicsPage() override;
+    ~GraphicsPage() final;
 
 signals:
     void sig_graphicsSettingsChanged();
 
 public slots:
-    void loadConfig();
-    void antialiasingSamplesTextChanged(const QString &);
-    void trilinearFilteringStateChanged(int);
-    void updatedStateChanged(int);
-    void drawNotMappedExitsStateChanged(int);
-    void drawDoorNamesStateChanged(int);
-    void drawUpperLayersTexturedStateChanged(int);
+    void slot_loadConfig();
+    void slot_antialiasingSamplesTextChanged(const QString &);
+    void slot_trilinearFilteringStateChanged(int);
+    void slot_updatedStateChanged(int);
+    void slot_drawNotMappedExitsStateChanged(int);
+    void slot_drawDoorNamesStateChanged(int);
+    void slot_drawUpperLayersTexturedStateChanged(int);
+    // this slot just calls the signal... not useful
+    void slot_graphicsSettingsChanged() { graphicsSettingsChanged(); }
 
 private:
     void changeColorClicked(XNamedColor &color, QPushButton *pushButton);

@@ -16,15 +16,31 @@ class GroupRecipient;
 class NODISCARD GroupAdmin
 {
 public:
-    virtual void releaseCharacters(GroupRecipient *) = 0;
     virtual ~GroupAdmin();
+
+private:
+    virtual void virt_releaseCharacters(GroupRecipient *) = 0;
+
+public:
+    void releaseCharacters(GroupRecipient *const groupRecipient)
+    {
+        virt_releaseCharacters(groupRecipient);
+    }
 };
 
 class NODISCARD GroupRecipient
 {
 public:
-    virtual void receiveCharacters(GroupAdmin *, GroupVector) = 0;
     virtual ~GroupRecipient();
+
+private:
+    virtual void virt_receiveCharacters(GroupAdmin *, GroupVector v) = 0;
+
+public:
+    void receiveCharacters(GroupAdmin *const admin, GroupVector v)
+    {
+        virt_receiveCharacters(admin, std::move(v));
+    }
 };
 
 class NODISCARD GroupSelection final : public GroupRecipient
@@ -35,9 +51,10 @@ public:
 
 public:
     explicit GroupSelection(GroupAdmin *admin);
-    virtual ~GroupSelection() override;
+    ~GroupSelection() final;
 
-    void receiveCharacters(GroupAdmin *, GroupVector) override;
+private:
+    void virt_receiveCharacters(GroupAdmin *, GroupVector v) final;
 
 public:
     NODISCARD auto at(int i) const

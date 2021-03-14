@@ -78,7 +78,7 @@ class LineHighlighter final : public QSyntaxHighlighter
 {
 public:
     explicit LineHighlighter(int maxLength, QTextDocument *parent);
-    virtual ~LineHighlighter() override;
+    ~LineHighlighter() final;
 
     void highlightBlock(const QString &line) override
     {
@@ -160,31 +160,34 @@ public:
 
         struct NODISCARD MyEntityCallback final : entities::EntityCallback
         {
-            LineHighlighter &self;
-            const QTextCharFormat &red;
-            const QTextCharFormat &darkOrange;
-            const QTextCharFormat &yellow;
+        private:
+            LineHighlighter &m_self;
+            const QTextCharFormat &m_red;
+            const QTextCharFormat &m_darkOrange;
+            const QTextCharFormat &m_yellow;
 
+        public:
             explicit MyEntityCallback(LineHighlighter &self,
                                       const QTextCharFormat &red,
                                       const QTextCharFormat &darkOrange,
                                       const QTextCharFormat &yellow)
-                : self{self}
-                , red{red}
-                , darkOrange{darkOrange}
-                , yellow{yellow}
+                : m_self{self}
+                , m_red{red}
+                , m_darkOrange{darkOrange}
+                , m_yellow{yellow}
             {}
 
-            void decodedEntity(int start, int len, OptQChar decoded) override
+        private:
+            void virt_decodedEntity(int start, int len, OptQChar decoded) final
             {
                 const auto get_fmt = [this, &decoded]() -> const QTextCharFormat & {
                     if (!decoded)
-                        return red;
+                        return m_red;
                     const auto val = decoded->unicode();
-                    return (val < 256) ? yellow : darkOrange;
+                    return (val < 256) ? m_yellow : m_darkOrange;
                 };
 
-                self.setFormat(start, len, get_fmt());
+                m_self.setFormat(start, len, get_fmt());
             }
         } callback{*this, red, darkOrange, yellow};
         entities::foreachEntity(line.midRef(0), callback);
@@ -847,7 +850,7 @@ void RemoteEditWidget::addEditAndViewMenus(QMenuBar *const menuBar, const Editor
     };
 #define X(a, b, c, d, e) \
     if (auto menu = getMenu(b)) { \
-        addToMenu(menu, EditViewCommand{&RemoteEditWidget::a, (b), (c), (d), (e)}); \
+        addToMenu(menu, EditViewCommand{&RemoteEditWidget::slot_##a, (b), (c), (d), (e)}); \
     }
     XFOREACH_REMOTE_EDIT_MENU_ITEM(X)
 #undef X
@@ -864,7 +867,7 @@ void RemoteEditWidget::addSave(QMenu *const fileMenu)
     saveAction->setShortcut(tr("Ctrl+S"));
     saveAction->setStatusTip(tr("Submit changes to MUME"));
     fileMenu->addAction(saveAction);
-    connect(saveAction, &QAction::triggered, this, &RemoteEditWidget::finishEdit);
+    connect(saveAction, &QAction::triggered, this, &RemoteEditWidget::slot_finishEdit);
 }
 
 void RemoteEditWidget::addExit(QMenu *const fileMenu)
@@ -883,7 +886,7 @@ void RemoteEditWidget::addExit(QMenu *const fileMenu)
     quitAction->setShortcut(tr("Ctrl+Q"));
     quitAction->setStatusTip(tr("Cancel and do not submit changes to MUME"));
     fileMenu->addAction(quitAction);
-    connect(quitAction, &QAction::triggered, this, &RemoteEditWidget::cancelEdit);
+    connect(quitAction, &QAction::triggered, this, &RemoteEditWidget::slot_cancelEdit);
 }
 
 void RemoteEditWidget::addToMenu(QMenu *const menu, const EditViewCommand &cmd)
@@ -926,9 +929,15 @@ void RemoteEditWidget::addStatusBar(const Editor *const pTextEdit)
     QStatusBar *const status = statusBar();
     status->showMessage(tr("Ready"));
 
-    connect(pTextEdit, &Editor::cursorPositionChanged, this, &RemoteEditWidget::updateStatusBar);
-    connect(pTextEdit, &Editor::selectionChanged, this, &RemoteEditWidget::updateStatusBar);
-    connect(pTextEdit, &Editor::textChanged, this, &RemoteEditWidget::updateStatusBar);
+    connect(pTextEdit,
+            &QPlainTextEdit::cursorPositionChanged,
+            this,
+            &RemoteEditWidget::slot_updateStatusBar);
+    connect(pTextEdit,
+            &QPlainTextEdit::selectionChanged,
+            this,
+            &RemoteEditWidget::slot_updateStatusBar);
+    connect(pTextEdit, &QPlainTextEdit::textChanged, this, &RemoteEditWidget::slot_updateStatusBar);
 }
 
 struct NODISCARD CursorColumnInfo final
@@ -1014,7 +1023,7 @@ NODISCARD static bool hasLongLines(const QTextCursor &cur)
     });
 }
 
-void RemoteEditWidget::updateStatusBar()
+void RemoteEditWidget::slot_updateStatusBar()
 {
     auto cur = m_textEdit->textCursor();
 
@@ -1074,7 +1083,7 @@ void RemoteEditWidget::updateStatusBar()
     statusBar()->showMessage(status);
 }
 
-void RemoteEditWidget::justifyText()
+void RemoteEditWidget::slot_justifyText()
 {
     const QString &old = m_textEdit->toPlainText();
     TextBuffer text;
@@ -1087,7 +1096,7 @@ void RemoteEditWidget::justifyText()
 }
 
 // TODO: Set the tabstops for the edit control to 8 spaces, so the text won't jump when you expand tabs.
-void RemoteEditWidget::expandTabs()
+void RemoteEditWidget::slot_expandTabs()
 {
     const QTextCursor &cur = m_textEdit->textCursor();
     RaiiGroupUndoActions raii{cur};
@@ -1098,7 +1107,7 @@ void RemoteEditWidget::expandTabs()
     });
 }
 
-void RemoteEditWidget::removeTrailingWhitespace()
+void RemoteEditWidget::slot_removeTrailingWhitespace()
 {
     const QTextCursor &cur = m_textEdit->textCursor();
     RaiiGroupUndoActions raii{cur};
@@ -1117,7 +1126,7 @@ void RemoteEditWidget::removeTrailingWhitespace()
     });
 }
 
-void RemoteEditWidget::removeDuplicateSpaces()
+void RemoteEditWidget::slot_removeDuplicateSpaces()
 {
     const QTextCursor &cur = m_textEdit->textCursor();
     RaiiGroupUndoActions raii{cur};
@@ -1136,7 +1145,7 @@ void RemoteEditWidget::removeDuplicateSpaces()
     });
 }
 
-void RemoteEditWidget::normalizeAnsi()
+void RemoteEditWidget::slot_normalizeAnsi()
 {
     const QString &old = m_textEdit->toPlainText();
     if (!containsAnsi(old))
@@ -1149,27 +1158,27 @@ void RemoteEditWidget::normalizeAnsi()
     m_textEdit->replaceAll(output.getQString());
 }
 
-void RemoteEditWidget::insertAnsiReset()
+void RemoteEditWidget::slot_insertAnsiReset()
 {
     m_textEdit->insertPlainText(AnsiString::get_reset_string().c_str());
 }
 
-void RemoteEditWidget::joinLines()
+void RemoteEditWidget::slot_joinLines()
 {
     m_textEdit->joinLines();
 }
 
-void RemoteEditWidget::quoteLines()
+void RemoteEditWidget::slot_quoteLines()
 {
     m_textEdit->quoteLines();
 }
 
-void RemoteEditWidget::toggleWhitespace()
+void RemoteEditWidget::slot_toggleWhitespace()
 {
     m_textEdit->toggleWhitespace();
 }
 
-void RemoteEditWidget::justifyLines()
+void RemoteEditWidget::slot_justifyLines()
 {
     m_textEdit->justifyLines(MAX_LENGTH);
 }
@@ -1192,20 +1201,20 @@ QSize RemoteEditWidget::sizeHint() const
 void RemoteEditWidget::closeEvent(QCloseEvent *event)
 {
     if (m_editSession) {
-        if (m_submitted || maybeCancel()) {
+        if (m_submitted || slot_maybeCancel()) {
             event->accept();
         } else {
             event->ignore();
         }
     } else {
-        cancelEdit();
+        slot_cancelEdit();
         event->accept();
     }
 }
 
-bool RemoteEditWidget::maybeCancel()
+bool RemoteEditWidget::slot_maybeCancel()
 {
-    if (contentsChanged()) {
+    if (slot_contentsChanged()) {
         const int ret = QMessageBox::warning(this,
                                              m_title,
                                              tr("You have edited the document.\n"
@@ -1218,27 +1227,27 @@ bool RemoteEditWidget::maybeCancel()
         }
     }
 
-    cancelEdit();
+    slot_cancelEdit();
     return true;
 }
 
-bool RemoteEditWidget::contentsChanged() const
+bool RemoteEditWidget::slot_contentsChanged() const
 {
     const QString text = m_textEdit->toPlainText();
     return QString::compare(text, m_body, Qt::CaseSensitive) != 0;
 }
 
-void RemoteEditWidget::cancelEdit()
+void RemoteEditWidget::slot_cancelEdit()
 {
     m_submitted = true;
-    emit cancel();
+    emit sig_cancel();
     close();
 }
 
-void RemoteEditWidget::finishEdit()
+void RemoteEditWidget::slot_finishEdit()
 {
     m_submitted = true;
-    emit save(m_textEdit->toPlainText());
+    emit sig_save(m_textEdit->toPlainText());
     close();
 }
 
@@ -1246,5 +1255,5 @@ void RemoteEditWidget::setVisible(bool visible)
 {
     QWidget::setVisible(visible);
     if (visible)
-        updateStatusBar();
+        slot_updateStatusBar();
 }

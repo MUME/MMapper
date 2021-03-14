@@ -110,7 +110,7 @@ void BaseMapSaveFilter::prepare(ProgressCounter &counter)
     }
 }
 
-void BaseMapSaveFilter::receiveRoom(RoomAdmin * /*admin*/, const Room *room)
+void BaseMapSaveFilter::virt_receiveRoom(RoomAdmin * /*admin*/, const Room *room)
 {
     for (const auto &exit : room->getExitsList()) {
         for (auto to : exit.outRange()) {

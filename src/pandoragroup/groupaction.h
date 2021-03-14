@@ -16,7 +16,12 @@ class NODISCARD GroupAction
 public:
     GroupAction();
     virtual ~GroupAction();
-    virtual void exec() = 0;
+
+private:
+    virtual void virt_exec() = 0;
+
+public:
+    void exec() { virt_exec(); }
     void setGroup(CGroup *in) { this->group = in; }
     void schedule(CGroup *in) { setGroup(in); }
 
@@ -29,8 +34,8 @@ class NODISCARD AddCharacter final : public GroupAction
 public:
     explicit AddCharacter(const QVariantMap &map);
 
-protected:
-    void exec() override;
+private:
+    void virt_exec() final;
 
 private:
     QVariantMap map;
@@ -42,8 +47,8 @@ public:
     explicit RemoveCharacter(const QVariantMap &variant);
     explicit RemoveCharacter(QByteArray);
 
-protected:
-    void exec() override;
+private:
+    void virt_exec() final;
 
 private:
     QByteArray name;
@@ -54,8 +59,8 @@ class NODISCARD UpdateCharacter final : public GroupAction
 public:
     explicit UpdateCharacter(const QVariantMap &variant);
 
-protected:
-    void exec() override;
+private:
+    void virt_exec() final;
 
 private:
     QVariantMap map;
@@ -66,8 +71,8 @@ class NODISCARD RenameCharacter final : public GroupAction
 public:
     explicit RenameCharacter(const QVariantMap &variant);
 
-protected:
-    void exec() override;
+private:
+    void virt_exec() final;
 
 private:
     QVariantMap map;
@@ -78,6 +83,6 @@ class NODISCARD ResetCharacters final : public GroupAction
 public:
     ResetCharacters();
 
-protected:
-    void exec() override;
+private:
+    void virt_exec() final;
 };

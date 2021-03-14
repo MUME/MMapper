@@ -37,39 +37,45 @@ ClientWidget::ClientWidget(QWidget *const parent)
     ui->input->installEventFilter(this);
 
     // Connect the signals/slots
-    connect(m_telnet, &ClientTelnet::disconnected, this, [this]() {
-        ui->display->displayText("\n\n\n");
-        emit relayMessage("Disconnected using the integrated client");
+    connect(m_telnet, &ClientTelnet::sig_disconnected, this, [this]() {
+        ui->display->slot_displayText("\n\n\n");
+        emit sig_relayMessage("Disconnected using the integrated client");
     });
-    connect(m_telnet, &ClientTelnet::connected, this, [this]() {
-        emit relayMessage("Connected using the integrated client");
+    connect(m_telnet, &ClientTelnet::sig_connected, this, [this]() {
+        emit sig_relayMessage("Connected using the integrated client");
 
         // Focus should be on the input
         ui->input->setFocus();
     });
-    connect(m_telnet, &ClientTelnet::socketError, this, [this](const QString &errorStr) {
-        ui->display->displayText(QString("\nInternal error! %1\n").arg(errorStr));
+    connect(m_telnet, &ClientTelnet::sig_socketError, this, [this](const QString &errorStr) {
+        ui->display->slot_displayText(QString("\nInternal error! %1\n").arg(errorStr));
     });
 
     // Input
-    connect(ui->input, &StackedInputWidget::sendUserInput, m_telnet, &ClientTelnet::sendToMud);
+    connect(ui->input,
+            &StackedInputWidget::sig_sendUserInput,
+            m_telnet,
+            &ClientTelnet::slot_sendToMud);
     connect(m_telnet,
-            &ClientTelnet::echoModeChanged,
+            &ClientTelnet::sig_echoModeChanged,
             ui->input,
-            &StackedInputWidget::toggleEchoMode);
-    connect(ui->input, &StackedInputWidget::showMessage, this, &ClientWidget::onShowMessage);
+            &StackedInputWidget::slot_toggleEchoMode);
+    connect(ui->input,
+            &StackedInputWidget::sig_showMessage,
+            this,
+            &ClientWidget::slot_onShowMessage);
 
     // Display
     connect(ui->input,
-            &StackedInputWidget::displayMessage,
+            &StackedInputWidget::sig_displayMessage,
             ui->display,
-            &DisplayWidget::displayText);
-    connect(m_telnet, &ClientTelnet::sendToUser, ui->display, &DisplayWidget::displayText);
-    connect(ui->display, &DisplayWidget::showMessage, this, &ClientWidget::onShowMessage);
+            &DisplayWidget::slot_displayText);
+    connect(m_telnet, &ClientTelnet::sig_sendToUser, ui->display, &DisplayWidget::slot_displayText);
+    connect(ui->display, &DisplayWidget::sig_showMessage, this, &ClientWidget::slot_onShowMessage);
     connect(ui->display,
-            &DisplayWidget::windowSizeChanged,
+            &DisplayWidget::sig_windowSizeChanged,
             m_telnet,
-            &ClientTelnet::onWindowSizeChanged);
+            &ClientTelnet::slot_onWindowSizeChanged);
 }
 
 ClientWidget::~ClientWidget()
@@ -77,7 +83,7 @@ ClientWidget::~ClientWidget()
     delete ui;
 }
 
-void ClientWidget::onVisibilityChanged(const bool /*visible*/)
+void ClientWidget::slot_onVisibilityChanged(const bool /*visible*/)
 {
     if (!isUsingClient())
         return;
@@ -100,12 +106,12 @@ bool ClientWidget::isUsingClient() const
     return ui->parent->currentIndex() != 0;
 }
 
-void ClientWidget::onShowMessage(const QString &message)
+void ClientWidget::slot_onShowMessage(const QString &message)
 {
-    emit relayMessage(message);
+    emit sig_relayMessage(message);
 }
 
-void ClientWidget::saveLog()
+void ClientWidget::slot_saveLog()
 {
     struct NODISCARD Result
     {
@@ -134,13 +140,13 @@ void ClientWidget::saveLog()
     const auto &fileNames = result.filenames;
 
     if (fileNames.isEmpty()) {
-        emit relayMessage(tr("No filename provided"));
+        emit sig_relayMessage(tr("No filename provided"));
         return;
     }
 
     QFile document(fileNames[0]);
     if (!document.open(QFile::WriteOnly | QFile::Text)) {
-        emit relayMessage(QString("Error occurred while opening %1").arg(document.fileName()));
+        emit sig_relayMessage(QString("Error occurred while opening %1").arg(document.fileName()));
         return;
     }
 
@@ -162,15 +168,15 @@ bool ClientWidget::eventFilter(QObject *const obj, QEvent *const event)
                 if (ui->display->canCopy())
                     ui->display->copy();
                 else
-                    ui->input->copy();
+                    ui->input->slot_copy();
                 keyEvent->accept();
                 return true;
             } else if (keyEvent->matches(QKeySequence::Cut)) {
-                ui->input->cut();
+                ui->input->slot_cut();
                 keyEvent->accept();
                 return true;
             } else if (keyEvent->matches(QKeySequence::Paste)) {
-                ui->input->paste();
+                ui->input->slot_paste();
                 keyEvent->accept();
                 return true;
             }

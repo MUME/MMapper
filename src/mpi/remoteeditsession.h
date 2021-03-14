@@ -28,22 +28,18 @@ class RemoteEditSession : public QObject
 public:
     explicit RemoteEditSession(uint sessionId, int key, RemoteEdit *remoteEdit);
 
+public:
     NODISCARD auto getId() const { return m_sessionId; }
-
     NODISCARD auto getKey() const { return m_key; }
-
     NODISCARD bool isEditSession() const { return m_key != REMOTE_EDIT_VIEW_KEY; }
-
     NODISCARD const QString &getContent() const { return m_content; }
-
     void setContent(QString content) { m_content = std::move(content); }
-
     void cancel();
     void save();
 
 protected slots:
-    void onCancel() { cancel(); }
-    void onSave(const QString &content)
+    void slot_onCancel() { cancel(); }
+    void slot_onSave(const QString &content)
     {
         setContent(content);
         save();
@@ -56,25 +52,25 @@ private:
     QString m_content;
 };
 
-class RemoteEditInternalSession : public RemoteEditSession
+class RemoteEditInternalSession final : public RemoteEditSession
 {
     Q_OBJECT
 public:
     explicit RemoteEditInternalSession(
         uint sessionId, int key, const QString &title, const QString &body, RemoteEdit *remoteEdit);
-    ~RemoteEditInternalSession() override;
+    ~RemoteEditInternalSession() final;
 
 private:
     QScopedPointer<RemoteEditWidget> m_widget;
 };
 
-class RemoteEditExternalSession : public RemoteEditSession
+class RemoteEditExternalSession final : public RemoteEditSession
 {
     Q_OBJECT
 public:
     explicit RemoteEditExternalSession(
         uint sessionId, int key, const QString &title, const QString &body, RemoteEdit *remoteEdit);
-    ~RemoteEditExternalSession() override;
+    ~RemoteEditExternalSession() final;
 
 private:
     QScopedPointer<RemoteEditProcess> m_process;

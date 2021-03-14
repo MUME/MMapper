@@ -151,7 +151,7 @@ void CGroupCommunicator::sendMessage(GroupSocket *const socket,
 }
 
 // the core of the protocol
-void CGroupCommunicator::incomingData(GroupSocket *const socket, const QByteArray &buff)
+void CGroupCommunicator::slot_incomingData(GroupSocket *const socket, const QByteArray &buff)
 {
     if (LOG_MESSAGE_INFO)
         qInfo() << "Incoming message:" << buff;
@@ -251,11 +251,11 @@ void CGroupCommunicator::incomingData(GroupSocket *const socket, const QByteArra
     }
 
     // converting a given node to the text form.
-    retrieveData(socket, message, data);
+    slot_retrieveData(socket, message, data);
 }
 
 // this function is for sending gtell from a local user
-void CGroupCommunicator::sendGroupTell(const QByteArray &tell)
+void CGroupCommunicator::slot_sendGroupTell(const QByteArray &tell)
 {
     // form the gtell QVariantMap first.
     QVariantMap root;
@@ -263,7 +263,7 @@ void CGroupCommunicator::sendGroupTell(const QByteArray &tell)
     root["from"] = QString::fromLatin1(getConfig().groupManager.charName);
     // depending on the type of this communicator either send to
     // server or send to everyone
-    sendGroupTellMessage(root);
+    slot_sendGroupTellMessage(root);
 }
 
 void CGroupCommunicator::sendCharUpdate(GroupSocket *const socket, const QVariantMap &map)
@@ -271,17 +271,17 @@ void CGroupCommunicator::sendCharUpdate(GroupSocket *const socket, const QVarian
     sendMessage(socket, MessagesEnum::UPDATE_CHAR, map);
 }
 
-void CGroupCommunicator::sendSelfRename(const QByteArray &oldName, const QByteArray &newName)
+void CGroupCommunicator::slot_sendSelfRename(const QByteArray &oldName, const QByteArray &newName)
 {
     QVariantMap root;
     root["oldname"] = QString::fromLatin1(oldName);
     root["newname"] = QString::fromLatin1(newName);
-    sendCharRename(root);
+    slot_sendCharRename(root);
 }
 
-void CGroupCommunicator::relayLog(const QString &str)
+void CGroupCommunicator::slot_relayLog(const QString &str)
 {
-    emit sendLog(str);
+    emit sig_sendLog(str);
 }
 
 CGroup *CGroupCommunicator::getGroup()

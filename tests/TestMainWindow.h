@@ -9,7 +9,7 @@ class TestMainWindow final : public QObject
     Q_OBJECT
 public:
     TestMainWindow();
-    ~TestMainWindow() override;
+    ~TestMainWindow() final;
 
 private:
 private Q_SLOTS:

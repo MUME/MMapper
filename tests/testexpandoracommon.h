@@ -17,7 +17,7 @@ class TestExpandoraCommon final : public QObject
     Q_OBJECT
 public:
     TestExpandoraCommon();
-    ~TestExpandoraCommon() override;
+    ~TestExpandoraCommon() final;
 
 private:
 private Q_SLOTS:

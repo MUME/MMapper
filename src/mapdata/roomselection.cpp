@@ -42,7 +42,7 @@ RoomSelection::RoomSelection(MapData &admin, const Coordinate &a, const Coordina
     m_mapData.lookingForRooms(*this, min(a, b), max(a, b));
 }
 
-void RoomSelection::receiveRoom(RoomAdmin *const admin, const Room *const aRoom)
+void RoomSelection::virt_receiveRoom(RoomAdmin *const admin, const Room *const aRoom)
 {
     assert(admin == &m_mapData);
     emplace(aRoom->getId(), aRoom);

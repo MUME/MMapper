@@ -24,19 +24,25 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
 {
     ui->setupUi(this);
     auto authority = m_groupManager->getAuthority();
-    connect(this, &GroupManagerPage::refresh, authority, &GroupAuthority::refresh);
-    connect(authority, &GroupAuthority::secretRefreshed, this, [this](const GroupSecret &secret) {
+    connect(this, &GroupManagerPage::sig_refresh, authority, &GroupAuthority::slot_refresh);
+    connect(authority, &GroupAuthority::sig_secretRefreshed, this, [this](const GroupSecret &secret) {
         ui->secretLineEdit->setText(secret);
         ui->refreshButton->setEnabled(true);
     });
 
     // Character Section
-    connect(ui->charName, &QLineEdit::editingFinished, this, &GroupManagerPage::charNameTextChanged);
-    connect(ui->changeColor, &QAbstractButton::clicked, this, &GroupManagerPage::changeColorClicked);
+    connect(ui->charName,
+            &QLineEdit::editingFinished,
+            this,
+            &GroupManagerPage::slot_charNameTextChanged);
+    connect(ui->changeColor,
+            &QAbstractButton::clicked,
+            this,
+            &GroupManagerPage::slot_changeColorClicked);
     connect(ui->refreshButton, &QAbstractButton::clicked, this, [this]() {
         ui->refreshButton->setEnabled(false);
         // Refreshing the SSL certificate asynchronously
-        emit refresh();
+        emit sig_refresh();
     });
 
     // Authorized Secrets Section
@@ -46,14 +52,14 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
             ui->allowedComboBox->setCurrentText("");
         }
         setConfig().groupManager.requireAuth = checked;
-        allowedSecretsChanged();
+        slot_allowedSecretsChanged();
     });
     connect(ui->allowedComboBox,
             &QComboBox::editTextChanged,
             this,
-            &GroupManagerPage::allowedSecretsChanged);
+            &GroupManagerPage::slot_allowedSecretsChanged);
     connect(authority->getItemModel(), &QAbstractItemModel::dataChanged, this, [this]() {
-        allowedSecretsChanged();
+        slot_allowedSecretsChanged();
     });
     connect(ui->allowSecret, &QPushButton::pressed, this, [this]() {
         auto authority = m_groupManager->getAuthority();
@@ -73,19 +79,19 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
     connect(ui->localPort,
             QOverload<int>::of(&QSpinBox::valueChanged),
             this,
-            &GroupManagerPage::localPortValueChanged);
+            &GroupManagerPage::slot_localPortValueChanged);
     connect(ui->shareSelfCheckBox,
             &QCheckBox::stateChanged,
             this,
-            &GroupManagerPage::shareSelfChanged);
+            &GroupManagerPage::slot_shareSelfChanged);
     connect(ui->localPort,
             QOverload<int>::of(&QSpinBox::valueChanged),
             this,
-            &GroupManagerPage::localPortValueChanged);
+            &GroupManagerPage::slot_localPortValueChanged);
     connect(ui->shareSelfCheckBox,
             &QCheckBox::stateChanged,
             this,
-            &GroupManagerPage::shareSelfChanged);
+            &GroupManagerPage::slot_shareSelfChanged);
     connect(ui->lockGroupCheckBox, &QCheckBox::stateChanged, this, [this]() {
         setConfig().groupManager.lockGroup = ui->lockGroupCheckBox->isChecked();
     });
@@ -93,7 +99,7 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
     connect(ui->remoteHost,
             &QComboBox::editTextChanged,
             this,
-            &GroupManagerPage::remoteHostTextChanged);
+            &GroupManagerPage::slot_remoteHostTextChanged);
 
     // Group Tells Section
     connect(ui->groupTellColorPushButton, &QPushButton::pressed, this, [this]() {
@@ -111,10 +117,13 @@ GroupManagerPage::GroupManagerPage(Mmapper2Group *gm, QWidget *parent)
     connect(ui->rulesWarning,
             &QCheckBox::stateChanged,
             this,
-            &GroupManagerPage::rulesWarningChanged);
+            &GroupManagerPage::slot_rulesWarningChanged);
 
     // Inform Group Manager of changes
-    connect(this, &GroupManagerPage::updatedSelf, m_groupManager, &Mmapper2Group::updateSelf);
+    connect(this,
+            &GroupManagerPage::sig_updatedSelf,
+            m_groupManager,
+            &Mmapper2Group::slot_updateSelf);
 }
 
 GroupManagerPage::~GroupManagerPage()
@@ -122,7 +131,7 @@ GroupManagerPage::~GroupManagerPage()
     delete ui;
 }
 
-void GroupManagerPage::loadConfig()
+void GroupManagerPage::slot_loadConfig()
 {
     const Configuration::GroupManagerSettings &settings = getConfig().groupManager;
     const auto authority = m_groupManager->getAuthority();
@@ -141,7 +150,7 @@ void GroupManagerPage::loadConfig()
     ui->allowedComboBox->setEnabled(settings.requireAuth);
     ui->allowedComboBox->setModel(itemModel);
     ui->allowedComboBox->setEditText("");
-    allowedSecretsChanged();
+    slot_allowedSecretsChanged();
 
     ui->localPort->setValue(settings.localPort);
     ui->shareSelfCheckBox->setChecked(settings.shareSelf);
@@ -217,7 +226,7 @@ void GroupManagerPage::loadRemoteHostConfig()
     ui->remoteHost->setCurrentIndex(find_remote_host_index());
 }
 
-void GroupManagerPage::charNameTextChanged()
+void GroupManagerPage::slot_charNameTextChanged()
 {
     // REVISIT: Remove non-valid characters (numbers, punctuation, etc)
     const QByteArray newName = ui->charName->text().toLatin1().simplified();
@@ -235,10 +244,10 @@ void GroupManagerPage::charNameTextChanged()
     }
 
     setConfig().groupManager.charName = newNameStr.toLatin1();
-    emit updatedSelf();
+    emit sig_updatedSelf();
 }
 
-void GroupManagerPage::changeColorClicked()
+void GroupManagerPage::slot_changeColorClicked()
 {
     QColor &savedColor = setConfig().groupManager.color;
     const QColor newColor = QColorDialog::getColor(savedColor, this);
@@ -248,11 +257,11 @@ void GroupManagerPage::changeColorClicked()
         ui->changeColor->setIcon(QIcon(charColorPixmap));
         savedColor = newColor;
 
-        emit updatedSelf();
+        emit sig_updatedSelf();
     }
 }
 
-void GroupManagerPage::allowedSecretsChanged()
+void GroupManagerPage::slot_allowedSecretsChanged()
 {
     static constexpr const int SHA1_LENGTH = 40;
     const auto authority = m_groupManager->getAuthority();
@@ -296,7 +305,7 @@ void GroupManagerPage::allowedSecretsChanged()
                                       .arg(ui->allowedComboBox->count() == 1 ? "" : "s"));
 }
 
-void GroupManagerPage::remoteHostTextChanged()
+void GroupManagerPage::slot_remoteHostTextChanged()
 {
     const auto currentText = ui->remoteHost->currentText().simplified().toLatin1();
     const auto parts = currentText.split(':');
@@ -314,7 +323,7 @@ void GroupManagerPage::remoteHostTextChanged()
     }
 }
 
-void GroupManagerPage::localPortValueChanged(int /*unused*/)
+void GroupManagerPage::slot_localPortValueChanged(int /*unused*/)
 {
     auto &savedLocalPort = setConfig().groupManager.localPort;
     const auto currentLocalPort = static_cast<quint16>(ui->localPort->value());
@@ -323,12 +332,12 @@ void GroupManagerPage::localPortValueChanged(int /*unused*/)
     }
 }
 
-void GroupManagerPage::rulesWarningChanged(int /*unused*/)
+void GroupManagerPage::slot_rulesWarningChanged(int /*unused*/)
 {
     setConfig().groupManager.rulesWarning = ui->rulesWarning->isChecked();
 }
 
-void GroupManagerPage::shareSelfChanged(int /*unused*/)
+void GroupManagerPage::slot_shareSelfChanged(int /*unused*/)
 {
     setConfig().groupManager.shareSelf = ui->shareSelfCheckBox->isChecked();
 }

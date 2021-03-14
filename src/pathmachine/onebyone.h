@@ -18,14 +18,18 @@ struct PathParameters;
 
 class NODISCARD OneByOne final : public Experimenting
 {
+private:
+    SharedParseEvent event;
+    RoomSignalHandler *handler = nullptr;
+
 public:
     explicit OneByOne(const SigParseEvent &sigParseEvent,
                       PathParameters &in_params,
                       RoomSignalHandler *handler);
-    void receiveRoom(RoomAdmin *admin, const Room *room) override;
-    void addPath(std::shared_ptr<Path> path);
 
 private:
-    SharedParseEvent event;
-    RoomSignalHandler *handler = nullptr;
+    void virt_receiveRoom(RoomAdmin *admin, const Room *room) final;
+
+public:
+    void addPath(std::shared_ptr<Path> path);
 };

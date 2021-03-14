@@ -25,7 +25,7 @@ Approved::~Approved()
     }
 }
 
-void Approved::receiveRoom(RoomAdmin *const sender, const Room *const perhaps)
+void Approved::virt_receiveRoom(RoomAdmin *const sender, const Room *const perhaps)
 {
     auto &event = myEvent.deref();
 

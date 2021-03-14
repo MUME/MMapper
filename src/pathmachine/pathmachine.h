@@ -40,23 +40,24 @@ class PathMachine : public QObject
 {
     Q_OBJECT
 public slots:
-    // CAUTION: This hides virtual bool QObject::event(QEvent*).
-    virtual void event(const SigParseEvent &);
-    virtual void releaseAllPaths();
-    virtual void setCurrentRoom(RoomId id, bool update);
+    void slot_releaseAllPaths();
+    void slot_setCurrentRoom(RoomId id, bool update);
     void slot_scheduleAction(const std::shared_ptr<MapAction> &action) { scheduleAction(action); }
 
 signals:
-    void lookingForRooms(RoomRecipient &, const SigParseEvent &);
-    void lookingForRooms(RoomRecipient &, RoomId);
-    void lookingForRooms(RoomRecipient &, const Coordinate &);
-    void playerMoved(const Coordinate &);
-    void createRoom(const SigParseEvent &, const Coordinate &);
+    void sig_lookingForRooms(RoomRecipient &, const SigParseEvent &);
+    void sig_lookingForRooms(RoomRecipient &, RoomId);
+    void sig_lookingForRooms(RoomRecipient &, const Coordinate &);
+    void sig_playerMoved(const Coordinate &);
+    void sig_createRoom(const SigParseEvent &, const Coordinate &);
     void sig_scheduleAction(std::shared_ptr<MapAction>);
-    void setCharPosition(RoomId id);
+    void sig_setCharPosition(RoomId id);
 
 public:
     explicit PathMachine(MapData *mapData, QObject *parent);
+
+protected:
+    void handleParseEvent(const SigParseEvent &);
 
 private:
     void scheduleAction(const std::shared_ptr<MapAction> &action);
@@ -93,8 +94,4 @@ protected:
     NODISCARD const Room *getMostLikelyRoom() const;
     NODISCARD RoomId getMostLikelyRoomId() const;
     NODISCARD const Coordinate &getMostLikelyRoomPosition() const;
-
-private:
-    // avoid warning about signal hiding this function
-    virtual bool event(QEvent *e) final override { return QObject::event(e); }
 };

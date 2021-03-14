@@ -28,16 +28,25 @@
 // (presumably not in the "root" src/ directory?)
 struct NODISCARD ISplash
 {
+public:
     virtual ~ISplash();
-    virtual void finish(QWidget *) = 0;
+
+private:
+    virtual void virt_finish(QWidget *) = 0;
+
+public:
+    void finish(QWidget *const w) { virt_finish(w); }
 };
 
 ISplash::~ISplash() = default;
 
 struct NODISCARD FakeSplash final : public ISplash
 {
-    virtual ~FakeSplash() override;
-    virtual void finish(QWidget *) final override {}
+public:
+    ~FakeSplash() final;
+
+private:
+    void virt_finish(QWidget *) final {}
 };
 
 FakeSplash::~FakeSplash() = default;
@@ -57,9 +66,10 @@ public:
         splash.showMessage(message, Qt::AlignBottom | Qt::AlignRight, Qt::yellow);
         splash.show();
     }
-    virtual ~Splash() override;
+    ~Splash() final;
 
-    void finish(QWidget *w) override { splash.finish(w); }
+private:
+    void virt_finish(QWidget *const w) override { splash.finish(w); }
 };
 
 Splash::~Splash() = default;

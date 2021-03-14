@@ -24,7 +24,7 @@ class MmpMapStorage final : public AbstractMapStorage
 
 public:
     explicit MmpMapStorage(MapData &, const QString &, QFile *, QObject *parent = nullptr);
-    ~MmpMapStorage() override;
+    ~MmpMapStorage() final;
 
 public:
     MmpMapStorage() = delete;
@@ -40,4 +40,5 @@ private:
 
 private:
     static void saveRoom(const Room &room, QXmlStreamWriter &stream);
+    void log(const QString &msg) { emit sig_log("MmpMapStorage", msg); }
 };

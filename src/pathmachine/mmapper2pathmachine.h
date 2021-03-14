@@ -22,15 +22,16 @@ class QElapsedTimer;
 class Mmapper2PathMachine final : public PathMachine
 {
     Q_OBJECT
-public slots:
-    void event(const SigParseEvent &) override;
+
+private:
+    QElapsedTimer time;
 
 public:
     explicit Mmapper2PathMachine(MapData *mapData, QObject *parent);
 
-signals:
-    void log(const QString &, const QString &);
+public slots:
+    void slot_handleParseEvent(const SigParseEvent &);
 
-private:
-    QElapsedTimer time;
+signals:
+    void sig_log(const QString &, const QString &);
 };

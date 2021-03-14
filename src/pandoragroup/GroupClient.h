@@ -15,22 +15,24 @@ class GroupClient final : public CGroupCommunicator
 
 public:
     explicit GroupClient(Mmapper2Group *parent);
-    ~GroupClient() override;
+    ~GroupClient() final;
 
 public slots:
-    void errorInConnection(GroupSocket *socket, const QString &);
-    void retrieveData(GroupSocket *socket, MessagesEnum message, const QVariantMap &data) override;
-    void connectionClosed(GroupSocket *socket) override;
-    void connectionEncrypted();
-    void connectionEstablished();
+    void slot_errorInConnection(GroupSocket *socket, const QString &);
+    void slot_connectionEncrypted();
+    void slot_connectionEstablished();
 
-protected:
-    void sendGroupTellMessage(const QVariantMap &map) override;
-    NODISCARD bool start() override;
-    void stop() override;
-    void sendCharUpdate(const QVariantMap &map) override;
-    void sendCharRename(const QVariantMap &map) override;
-    void kickCharacter(const QByteArray &) override;
+private:
+    NODISCARD bool virt_start() final;
+    void virt_stop() final;
+
+private:
+    void virt_connectionClosed(GroupSocket *socket) final;
+    void virt_kickCharacter(const QByteArray &) final;
+    void virt_retrieveData(GroupSocket *socket, MessagesEnum message, const QVariantMap &data) final;
+    void virt_sendCharRename(const QVariantMap &map) final;
+    void virt_sendCharUpdate(const QVariantMap &map) final;
+    void virt_sendGroupTellMessage(const QVariantMap &map) final;
 
 private:
     void sendHandshake(const QVariantMap &data);

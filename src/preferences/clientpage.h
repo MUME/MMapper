@@ -13,26 +13,26 @@ namespace Ui {
 class ClientPage;
 }
 
-class ClientPage : public QWidget
+class ClientPage final : public QWidget
 {
     Q_OBJECT
 
 public:
     explicit ClientPage(QWidget *parent = nullptr);
-    ~ClientPage() override;
+    ~ClientPage() final;
 
     void updateFontAndColors();
 
 public slots:
-    void loadConfig();
-    void onChangeFont();
-    void onChangeBackgroundColor();
-    void onChangeForegroundColor();
-    void onChangeColumns(int);
-    void onChangeRows(int);
-    void onChangeLinesOfScrollback(int);
-    void onChangeLinesOfInputHistory(int);
-    void onChangeTabCompletionDictionarySize(int);
+    void slot_loadConfig();
+    void slot_onChangeFont();
+    void slot_onChangeBackgroundColor();
+    void slot_onChangeForegroundColor();
+    void slot_onChangeColumns(int);
+    void slot_onChangeRows(int);
+    void slot_onChangeLinesOfScrollback(int);
+    void slot_onChangeLinesOfInputHistory(int);
+    void slot_onChangeTabCompletionDictionarySize(int);
 
 signals:
 

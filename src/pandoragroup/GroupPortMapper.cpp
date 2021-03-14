@@ -16,9 +16,16 @@ struct NODISCARD GroupPortMapper::Pimpl
 {
     Pimpl() = default;
     virtual ~Pimpl();
-    virtual QByteArray tryGetExternalIp() = 0;
-    virtual bool tryAddPortMapping(quint16 port) = 0;
-    virtual bool tryDeletePortMapping(quint16 port) = 0;
+
+private:
+    NODISCARD virtual QByteArray virt_tryGetExternalIp() = 0;
+    NODISCARD virtual bool virt_tryAddPortMapping(quint16 port) = 0;
+    NODISCARD virtual bool virt_tryDeletePortMapping(quint16 port) = 0;
+
+public:
+    NODISCARD QByteArray tryGetExternalIp() { return virt_tryGetExternalIp(); }
+    NODISCARD bool tryAddPortMapping(quint16 port) { return virt_tryAddPortMapping(port); }
+    NODISCARD bool tryDeletePortMapping(quint16 port) { return virt_tryDeletePortMapping(port); }
 };
 
 GroupPortMapper::Pimpl::~Pimpl() = default;
@@ -27,15 +34,16 @@ class NoopPortMapper final : public GroupPortMapper::Pimpl
 {
 public:
     NoopPortMapper() = default;
-    virtual ~NoopPortMapper() override;
+    ~NoopPortMapper() final;
 
-    QByteArray tryGetExternalIp() override
+private:
+    NODISCARD QByteArray virt_tryGetExternalIp() final
     {
         // TODO: Use a 3rd party service like checkip.dyndns.org
         return "";
     }
-    bool tryAddPortMapping(const quint16) override { return false; }
-    bool tryDeletePortMapping(const quint16) override { return false; }
+    NODISCARD bool virt_tryAddPortMapping(const quint16) final { return false; }
+    NODISCARD bool virt_tryDeletePortMapping(const quint16) final { return false; }
 };
 
 NoopPortMapper::~NoopPortMapper() = default;
@@ -87,13 +95,14 @@ public:
         default:
             qWarning() << "UPNP_GetValidIGD returned an unknown result code" << validIGDState;
             break;
-        };
+        }
     }
-    virtual ~MiniUPnPcPortMapper() override;
+    ~MiniUPnPcPortMapper() final;
 
-    bool validIGD() const { return validIGDState == 1; }
+    NODISCARD bool validIGD() const { return validIGDState == 1; }
 
-    QByteArray tryGetExternalIp() override
+private:
+    NODISCARD QByteArray virt_tryGetExternalIp() final
     {
         if (!validIGD())
             return "";
@@ -118,7 +127,7 @@ public:
         return QByteArray(externalAddress, EXTERNAL_IP_ADDRESS_BYTES);
     }
 
-    bool tryAddPortMapping(const quint16 port) override
+    NODISCARD bool virt_tryAddPortMapping(const quint16 port) final
     {
         if (!validIGD()) {
             qDebug() << "No IGD found to add a port mapping to";
@@ -144,7 +153,7 @@ public:
         return true;
     }
 
-    bool tryDeletePortMapping(const quint16 port) override
+    NODISCARD bool virt_tryDeletePortMapping(const quint16 port) final
     {
         if (!validIGD()) {
             qDebug() << "No IGD found to remove a port mapping from";

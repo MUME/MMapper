@@ -138,7 +138,7 @@ public:
     // TODO: change this to DELETE_MOVE_CTOR (compiler bug: g++ 7.4 uses move ctor in NRVO).
     DEFAULT_MOVE_CTOR(HelpFrame);
     DELETE_ASSIGN_OPS(HelpFrame);
-    ~HelpFrame() override;
+    ~HelpFrame() final;
 
 public:
     NODISCARD bool getFailed() const { return m_failed; }

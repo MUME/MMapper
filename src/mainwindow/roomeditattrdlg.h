@@ -43,8 +43,11 @@ class RoomEditAttrDlg final : public QDialog, private Ui::RoomEditAttrDlg
 {
     Q_OBJECT
 
+private:
+    void requestUpdate() { emit sig_requestUpdate(); }
+
 signals:
-    void requestUpdate();
+    void sig_requestUpdate();
 
 public slots:
     void setRoomSelection(const SharedRoomSelection &, MapData *, MapCanvas *);
@@ -97,7 +100,7 @@ public slots:
 
 public:
     explicit RoomEditAttrDlg(QWidget *parent = nullptr);
-    ~RoomEditAttrDlg() override;
+    ~RoomEditAttrDlg() final;
 
     void readSettings();
     void writeSettings();

@@ -48,11 +48,11 @@ GraphicsPage::GraphicsPage(QWidget *parent)
     connect(ui->antialiasingSamplesComboBox,
             &QComboBox::currentTextChanged,
             this,
-            &GraphicsPage::antialiasingSamplesTextChanged);
+            &GraphicsPage::slot_antialiasingSamplesTextChanged);
     connect(ui->trilinearFilteringCheckBox,
             &QCheckBox::stateChanged,
             this,
-            &GraphicsPage::trilinearFilteringStateChanged);
+            &GraphicsPage::slot_trilinearFilteringStateChanged);
     connect(ui->softwareOpenGLCheckBox, &QCheckBox::clicked, this, [this]() {
         QMessageBox::information(this,
                                  "Restart Required",
@@ -60,24 +60,24 @@ GraphicsPage::GraphicsPage(QWidget *parent)
         setConfig().canvas.softwareOpenGL = ui->softwareOpenGLCheckBox->isChecked();
     });
 
-    connect(ui->updated, &QCheckBox::stateChanged, this, &GraphicsPage::updatedStateChanged);
+    connect(ui->updated, &QCheckBox::stateChanged, this, &GraphicsPage::slot_updatedStateChanged);
     connect(ui->drawNotMappedExits,
             &QCheckBox::stateChanged,
             this,
-            &GraphicsPage::drawNotMappedExitsStateChanged);
+            &GraphicsPage::slot_drawNotMappedExitsStateChanged);
     connect(ui->drawDoorNames,
             &QCheckBox::stateChanged,
             this,
-            &GraphicsPage::drawDoorNamesStateChanged);
+            &GraphicsPage::slot_drawDoorNamesStateChanged);
     connect(ui->drawUpperLayersTextured,
             &QCheckBox::stateChanged,
             this,
-            &GraphicsPage::drawUpperLayersTexturedStateChanged);
+            &GraphicsPage::slot_drawUpperLayersTexturedStateChanged);
 
     connect(m_advanced.get(),
             &AdvancedGraphicsGroupBox::sig_graphicsSettingsChanged,
             this,
-            &GraphicsPage::graphicsSettingsChanged);
+            &GraphicsPage::slot_graphicsSettingsChanged);
 }
 
 GraphicsPage::~GraphicsPage()
@@ -85,7 +85,7 @@ GraphicsPage::~GraphicsPage()
     delete ui;
 }
 
-void GraphicsPage::loadConfig()
+void GraphicsPage::slot_loadConfig()
 {
     const auto &settings = getConfig().canvas;
     setIconColor(ui->bgChangeColor, settings.backgroundColor);
@@ -121,35 +121,35 @@ void GraphicsPage::changeColorClicked(XNamedColor &namedColor, QPushButton *cons
     }
 }
 
-void GraphicsPage::antialiasingSamplesTextChanged(const QString & /*unused*/)
+void GraphicsPage::slot_antialiasingSamplesTextChanged(const QString & /*unused*/)
 {
     setConfig().canvas.antialiasingSamples = ui->antialiasingSamplesComboBox->currentText().toInt();
     graphicsSettingsChanged();
 }
 
-void GraphicsPage::trilinearFilteringStateChanged(int /*unused*/)
+void GraphicsPage::slot_trilinearFilteringStateChanged(int /*unused*/)
 {
     setConfig().canvas.trilinearFiltering = ui->trilinearFilteringCheckBox->isChecked();
     graphicsSettingsChanged();
 }
 
-void GraphicsPage::updatedStateChanged(int /*unused*/)
+void GraphicsPage::slot_updatedStateChanged(int /*unused*/)
 {
     setConfig().canvas.showUpdated = ui->updated->isChecked();
 }
 
-void GraphicsPage::drawNotMappedExitsStateChanged(int /*unused*/)
+void GraphicsPage::slot_drawNotMappedExitsStateChanged(int /*unused*/)
 {
     setConfig().canvas.drawNotMappedExits = ui->drawNotMappedExits->isChecked();
 }
 
-void GraphicsPage::drawDoorNamesStateChanged(int /*unused*/)
+void GraphicsPage::slot_drawDoorNamesStateChanged(int /*unused*/)
 {
     setConfig().canvas.drawDoorNames = ui->drawDoorNames->isChecked();
     graphicsSettingsChanged();
 }
 
-void GraphicsPage::drawUpperLayersTexturedStateChanged(int /*unused*/)
+void GraphicsPage::slot_drawUpperLayersTexturedStateChanged(int /*unused*/)
 {
     setConfig().canvas.drawUpperLayersTextured = ui->drawUpperLayersTextured->isChecked();
     graphicsSettingsChanged();

@@ -20,13 +20,13 @@ namespace Ui {
 class ConfigDialog;
 }
 
-class ConfigDialog : public QDialog
+class ConfigDialog final : public QDialog
 {
     Q_OBJECT
 
 public:
     explicit ConfigDialog(Mmapper2Group *, QWidget *parent = nullptr);
-    ~ConfigDialog() override;
+    ~ConfigDialog() final;
 
 protected:
     void showEvent(QShowEvent *event) override;
@@ -36,14 +36,11 @@ signals:
     void sig_loadConfig();
 
 public slots:
-    void changePage(QListWidgetItem *current, QListWidgetItem *previous);
+    void slot_changePage(QListWidgetItem *current, QListWidgetItem *previous);
 
 private:
     Ui::ConfigDialog *ui = nullptr;
-
     void createIcons();
-
     QStackedWidget *pagesWidget = nullptr;
-
     Mmapper2Group *m_groupManager = nullptr;
 };

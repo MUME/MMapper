@@ -15,30 +15,30 @@ class GeneralPage;
 
 class QObject;
 
-class GeneralPage : public QWidget
+class GeneralPage final : public QWidget
 {
     Q_OBJECT
 
 public:
     explicit GeneralPage(QWidget *parent = nullptr);
-    ~GeneralPage() override;
+    ~GeneralPage() final;
 
 public slots:
-    void loadConfig();
-    void remoteNameTextChanged(const QString &);
-    void remotePortValueChanged(int);
-    void localPortValueChanged(int);
-    void tlsEncryptionCheckBoxStateChanged(int);
+    void slot_loadConfig();
+    void slot_remoteNameTextChanged(const QString &);
+    void slot_remotePortValueChanged(int);
+    void slot_localPortValueChanged(int);
+    void slot_tlsEncryptionCheckBoxStateChanged(int);
 
-    void emulatedExitsStateChanged(int);
-    void showHiddenExitFlagsStateChanged(int);
-    void showNotesStateChanged(int);
+    void slot_emulatedExitsStateChanged(int);
+    void slot_showHiddenExitFlagsStateChanged(int);
+    void slot_showNotesStateChanged(int);
 
-    void autoLoadFileNameTextChanged(const QString &);
-    void autoLoadCheckStateChanged(int);
-    void selectWorldFileButtonClicked(bool);
+    void slot_autoLoadFileNameTextChanged(const QString &);
+    void slot_autoLoadCheckStateChanged(int);
+    void slot_selectWorldFileButtonClicked(bool);
 
-    void displayMumeClockStateChanged(int);
+    void slot_displayMumeClockStateChanged(int);
 
 signals:
     void sig_factoryReset();

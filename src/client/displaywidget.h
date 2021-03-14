@@ -20,7 +20,7 @@ class QResizeEvent;
 class QTextDocument;
 class QWidget;
 
-class DisplayWidget : public QTextEdit
+class DisplayWidget final : public QTextEdit
 {
 private:
     using base = QTextEdit;
@@ -30,7 +30,7 @@ private:
 
 public:
     explicit DisplayWidget(QWidget *parent = nullptr);
-    ~DisplayWidget() override;
+    ~DisplayWidget() final;
 
     NODISCARD bool canCopy() const { return m_canCopy; }
     NODISCARD QSize sizeHint() const override;
@@ -39,7 +39,7 @@ private:
     bool m_canCopy = false;
 
 public slots:
-    void displayText(const QString &str);
+    void slot_displayText(const QString &str);
 
 protected:
     QTextCursor m_cursor;
@@ -61,6 +61,6 @@ private:
     void updateFormatBoldColor(QTextCharFormat &format);
 
 signals:
-    void showMessage(const QString &, int);
-    void windowSizeChanged(int, int);
+    void sig_showMessage(const QString &, int);
+    void sig_windowSizeChanged(int, int);
 };

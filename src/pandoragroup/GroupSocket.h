@@ -26,7 +26,7 @@ class GroupSocket final : public QObject
     Q_OBJECT
 public:
     explicit GroupSocket(GroupAuthority *authority, QObject *parent);
-    virtual ~GroupSocket() override;
+    ~GroupSocket() final;
 
     void setSocket(qintptr socketDescriptor);
     void connectToHost();
@@ -53,22 +53,24 @@ public:
     void sendData(const QByteArray &data);
 
 protected slots:
-    void onError(QAbstractSocket::SocketError socketError);
-    void onPeerVerifyError(const QSslError &error);
-    void onReadyRead();
-    void onTimeout();
+    void slot_onError(QAbstractSocket::SocketError socketError);
+    void slot_onPeerVerifyError(const QSslError &error);
+    void slot_onReadyRead();
+    void slot_onTimeout();
 
 signals:
-    void sendLog(const QString &);
-    void connectionClosed(GroupSocket *);
-    void errorInConnection(GroupSocket *, const QString &);
-    void incomingData(GroupSocket *, QByteArray);
-    void connectionEstablished(GroupSocket *);
-    void connectionEncrypted(GroupSocket *);
+    void sig_sendLog(const QString &);
+    void sig_connectionClosed(GroupSocket *);
+    void sig_errorInConnection(GroupSocket *, const QString &);
+    void sig_incomingData(GroupSocket *, QByteArray);
+    void sig_connectionEstablished(GroupSocket *);
+    void sig_connectionEncrypted(GroupSocket *);
 
 private:
     void reset();
+    void sendLog(const QString &msg) { emit sig_sendLog(msg); }
 
+private:
     QSslSocket socket;
     QTimer timer;
     GroupAuthority *const authority;

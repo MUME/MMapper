@@ -27,13 +27,23 @@ GroupClient::GroupClient(Mmapper2Group *parent)
     : CGroupCommunicator(GroupManagerStateEnum::Client, parent)
     , socket(parent->getAuthority(), this)
 {
-    emit sendLog("Client mode has been selected");
-    connect(&socket, &GroupSocket::incomingData, this, &GroupClient::incomingData);
-    connect(&socket, &GroupSocket::sendLog, this, &GroupClient::relayLog);
-    connect(&socket, &GroupSocket::errorInConnection, this, &GroupClient::errorInConnection);
-    connect(&socket, &GroupSocket::connectionEstablished, this, &GroupClient::connectionEstablished);
-    connect(&socket, &GroupSocket::connectionClosed, this, &GroupClient::connectionClosed);
-    connect(&socket, &GroupSocket::connectionEncrypted, this, &GroupClient::connectionEncrypted);
+    connect(&socket, &GroupSocket::sig_incomingData, this, &GroupClient::slot_incomingData);
+    connect(&socket, &GroupSocket::sig_sendLog, this, &GroupClient::slot_relayLog);
+    connect(&socket,
+            &GroupSocket::sig_errorInConnection,
+            this,
+            &GroupClient::slot_errorInConnection);
+    connect(&socket,
+            &GroupSocket::sig_connectionEstablished,
+            this,
+            &GroupClient::slot_connectionEstablished);
+    connect(&socket, &GroupSocket::sig_connectionClosed, this, &GroupClient::slot_connectionClosed);
+    connect(&socket,
+            &GroupSocket::sig_connectionEncrypted,
+            this,
+            &GroupClient::slot_connectionEncrypted);
+
+    emit sig_sendLog("Client mode has been selected");
 }
 
 GroupClient::~GroupClient()
@@ -42,40 +52,49 @@ GroupClient::~GroupClient()
     // Destroying an object is supposed to remove its connections.
     // (If removing the disconnects causes segfaults, then you may
     // have a race condition that needs to be fixed elsewhere.)
-    disconnect(&socket, &GroupSocket::incomingData, this, &GroupClient::incomingData);
-    disconnect(&socket, &GroupSocket::sendLog, this, &GroupClient::relayLog);
-    disconnect(&socket, &GroupSocket::errorInConnection, this, &GroupClient::errorInConnection);
+    disconnect(&socket, &GroupSocket::sig_incomingData, this, &GroupClient::slot_incomingData);
+    disconnect(&socket, &GroupSocket::sig_sendLog, this, &GroupClient::slot_relayLog);
     disconnect(&socket,
-               &GroupSocket::connectionEstablished,
+               &GroupSocket::sig_errorInConnection,
                this,
-               &GroupClient::connectionEstablished);
-    disconnect(&socket, &GroupSocket::connectionClosed, this, &GroupClient::connectionClosed);
-    disconnect(&socket, &GroupSocket::connectionEncrypted, this, &GroupClient::connectionEncrypted);
+               &GroupClient::slot_errorInConnection);
+    disconnect(&socket,
+               &GroupSocket::sig_connectionEstablished,
+               this,
+               &GroupClient::slot_connectionEstablished);
+    disconnect(&socket,
+               &GroupSocket::sig_connectionClosed,
+               this,
+               &GroupClient::slot_connectionClosed);
+    disconnect(&socket,
+               &GroupSocket::sig_connectionEncrypted,
+               this,
+               &GroupClient::slot_connectionEncrypted);
 }
 
-void GroupClient::connectionEstablished()
+void GroupClient::slot_connectionEstablished()
 {
     clientConnected = true;
 }
 
-void GroupClient::connectionClosed(GroupSocket * /*socket*/)
+void GroupClient::virt_connectionClosed(GroupSocket * /*socket*/)
 {
     if (!clientConnected)
         return;
 
-    emit sendLog("Server closed the connection");
+    emit sig_sendLog("Server closed the connection");
     tryReconnecting();
 }
 
-void GroupClient::errorInConnection(GroupSocket *const /* socket */, const QString &errorString)
+void GroupClient::slot_errorInConnection(GroupSocket *const /* socket */, const QString &errorString)
 {
     QString str;
 
     const auto log_message = [this](const QString &message) {
         if (reconnectAttempts <= 0)
-            emit messageBox(message);
+            emit sig_messageBox(message);
         else
-            emit sendLog(message);
+            emit sig_sendLog(message);
     };
 
     switch (socket.getSocketError()) {
@@ -122,12 +141,12 @@ void GroupClient::errorInConnection(GroupSocket *const /* socket */, const QStri
     tryReconnecting();
 }
 
-void GroupClient::retrieveData(GroupSocket *const /* socket */,
-                               const MessagesEnum message,
-                               const QVariantMap &data)
+void GroupClient::virt_retrieveData(GroupSocket *const /* socket */,
+                                    const MessagesEnum message,
+                                    const QVariantMap &data)
 {
     if (message == MessagesEnum::STATE_KICKED) {
-        emit messageBox(QString("You got kicked! Reason: %1").arg(data["text"].toString()));
+        emit sig_messageBox(QString("You got kicked! Reason: %1").arg(data["text"].toString()));
         stop();
         return;
     }
@@ -173,7 +192,7 @@ void GroupClient::retrieveData(GroupSocket *const /* socket */,
         } else if (message == MessagesEnum::RENAME_CHAR) {
             emit sig_scheduleAction(std::make_shared<RenameCharacter>(data));
         } else if (message == MessagesEnum::GTELL) {
-            emit gTellArrived(data);
+            emit sig_gTellArrived(data);
         } else if (message == MessagesEnum::REQ_ACK) {
             sendMessage(&socket, MessagesEnum::ACK);
         } else {
@@ -197,7 +216,7 @@ void GroupClient::sendHandshake(const QVariantMap &data)
         return data["protocolVersion"].toUInt();
     };
     const auto serverProtocolVersion = get_server_protocol_version(data);
-    emit sendLog(QString("Host's protocol version: %1").arg(serverProtocolVersion));
+    emit sig_sendLog(QString("Host's protocol version: %1").arg(serverProtocolVersion));
     const auto get_proposed_protocol_version = [](const auto serverProtocolVersion) {
         // Ensure we only pick a protocol within the bounds we understand
         if (NO_OPEN_SSL) {
@@ -214,7 +233,7 @@ void GroupClient::sendHandshake(const QVariantMap &data)
     if (serverProtocolVersion == PROTOCOL_VERSION_102
         || proposedProtocolVersion == PROTOCOL_VERSION_102) {
         if (!NO_OPEN_SSL && getConfig().groupManager.requireAuth) {
-            emit messageBox(
+            emit sig_messageBox(
                 "Host does not support encryption.\n"
                 "Consider disabling \"Require authorization\" under the Group Manager settings "
                 "or ask the host to upgrade MMapper.");
@@ -224,8 +243,9 @@ void GroupClient::sendHandshake(const QVariantMap &data)
             // MMapper 2.0.3 through MMapper 2.6 Protocol 102 does not do a version handshake
             // and goes directly to login
             if (!NO_OPEN_SSL)
-                emit sendLog("<b>WARNING:</b> "
-                             "Host does not support encryption and your connection is insecure.");
+                emit sig_sendLog(
+                    "<b>WARNING:</b> "
+                    "Host does not support encryption and your connection is insecure.");
 
             sendLoginInformation();
         }
@@ -246,7 +266,7 @@ void GroupClient::receiveGroupInformation(const QVariantMap &data)
         const auto &secret = socket.getSecret();
         const auto &nameStr = QString::fromLatin1(CGroupChar::getNameFromUpdateChar(data));
         getAuthority()->setMetadata(secret, GroupMetadataEnum::NAME, nameStr);
-        emit sendLog("Host's name is most likely '" + nameStr + "'");
+        emit sig_sendLog("Host's name is most likely '" + nameStr + "'");
     }
     emit sig_scheduleAction(std::make_shared<AddCharacter>(data));
 }
@@ -265,22 +285,22 @@ void GroupClient::sendLoginInformation()
     sendMessage(&socket, MessagesEnum::UPDATE_CHAR, root);
 }
 
-void GroupClient::connectionEncrypted()
+void GroupClient::slot_connectionEncrypted()
 {
     const auto secret = socket.getSecret();
-    emit sendLog(QString("Host's secret: %1").arg(secret.constData()));
+    emit sig_sendLog(QString("Host's secret: %1").arg(secret.constData()));
 
     const bool requireAuth = getConfig().groupManager.requireAuth;
     const bool validSecret = getAuthority()->validSecret(secret);
     const bool validCert = getAuthority()->validCertificate(&socket);
     if (requireAuth && !validSecret) {
-        emit messageBox(
+        emit sig_messageBox(
             QString("Host's secret is not in your contacts:\n%1").arg(secret.constData()));
         stop();
         return;
     }
     if (requireAuth && !validCert) {
-        emit messageBox(
+        emit sig_messageBox(
             "WARNING: Host's secret has been compromised making the connection insecure.");
         stop();
         return;
@@ -311,11 +331,11 @@ void GroupClient::tryReconnecting()
     clientConnected = false;
 
     if (reconnectAttempts <= 0) {
-        emit sendLog("Exhausted reconnect attempts.");
+        emit sig_sendLog("Exhausted reconnect attempts.");
         stop();
         return;
     }
-    emit sendLog(QString("Attempting to reconnect... (%1 left)").arg(reconnectAttempts));
+    emit sig_sendLog(QString("Attempting to reconnect... (%1 left)").arg(reconnectAttempts));
 
     // Retry
     reconnectAttempts--;
@@ -323,22 +343,22 @@ void GroupClient::tryReconnecting()
     socket.connectToHost();
 }
 
-void GroupClient::sendGroupTellMessage(const QVariantMap &root)
+void GroupClient::virt_sendGroupTellMessage(const QVariantMap &root)
 {
     sendMessage(&socket, MessagesEnum::GTELL, root);
 }
 
-void GroupClient::sendCharUpdate(const QVariantMap &map)
+void GroupClient::virt_sendCharUpdate(const QVariantMap &map)
 {
     CGroupCommunicator::sendCharUpdate(&socket, map);
 }
 
-void GroupClient::sendCharRename(const QVariantMap &map)
+void GroupClient::virt_sendCharRename(const QVariantMap &map)
 {
     sendMessage(&socket, MessagesEnum::RENAME_CHAR, map);
 }
 
-void GroupClient::stop()
+void GroupClient::virt_stop()
 {
     clientConnected = false;
     socket.disconnectFromHost();
@@ -346,13 +366,13 @@ void GroupClient::stop()
     deleteLater();
 }
 
-bool GroupClient::start()
+bool GroupClient::virt_start()
 {
     socket.connectToHost();
     return true;
 }
 
-void GroupClient::kickCharacter(const QByteArray &)
+void GroupClient::virt_kickCharacter(const QByteArray &)
 {
     throw std::runtime_error("impossible");
 }

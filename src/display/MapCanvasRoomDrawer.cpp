@@ -167,16 +167,49 @@ struct NODISCARD IRoomVisitorCallbacks
 
     virtual bool acceptRoom(const Room *) const = 0;
 
+private:
     // Rooms
-    virtual void visitTerrainTexture(const Room *, MMTexture *) = 0;
-    virtual void visitOverlayTexture(const Room *, MMTexture *) = 0;
-    virtual void visitNamedColorTint(const Room *, RoomTintEnum) = 0;
+    virtual void virt_visitTerrainTexture(const Room *, MMTexture *) = 0;
+    virtual void virt_visitOverlayTexture(const Room *, MMTexture *) = 0;
+    virtual void virt_visitNamedColorTint(const Room *, RoomTintEnum) = 0;
 
     // Walls
-    virtual void visitWall(const Room *, ExitDirEnum, XNamedColor, WallTypeEnum, bool isClimb) = 0;
+    virtual void virt_visitWall(const Room *, ExitDirEnum, XNamedColor, WallTypeEnum, bool isClimb)
+        = 0;
 
     // Streams
-    virtual void visitStream(const Room *, ExitDirEnum, StreamTypeEnum) = 0;
+    virtual void virt_visitStream(const Room *, ExitDirEnum, StreamTypeEnum) = 0;
+
+public:
+    // Rooms
+    void visitTerrainTexture(const Room *const room, MMTexture *const tex)
+    {
+        virt_visitTerrainTexture(room, tex);
+    }
+    void visitOverlayTexture(const Room *const room, MMTexture *const tex)
+    {
+        virt_visitOverlayTexture(room, tex);
+    }
+    void visitNamedColorTint(const Room *const room, const RoomTintEnum tint)
+    {
+        virt_visitNamedColorTint(room, tint);
+    }
+
+    // Walls
+    void visitWall(const Room *const room,
+                   const ExitDirEnum dir,
+                   const XNamedColor color,
+                   const WallTypeEnum wallType,
+                   const bool isClimb)
+    {
+        virt_visitWall(room, dir, color, wallType, isClimb);
+    }
+
+    // Streams
+    void visitStream(const Room *const room, const ExitDirEnum dir, const StreamTypeEnum streamType)
+    {
+        virt_visitStream(room, dir, streamType);
+    }
 };
 
 IRoomVisitorCallbacks::~IRoomVisitorCallbacks() = default;
@@ -619,29 +652,30 @@ struct NODISCARD LayerBatchMeasurer final : public IRoomVisitorCallbacks
         return bounds.contains(room->getPosition());
     }
 
-    void visitTerrainTexture(const Room *, MMTexture *terrain) override
+private:
+    void virt_visitTerrainTexture(const Room *, MMTexture *const terrain) final
     {
         if (terrain != nullptr)
             ++measurements.numTerrains;
         else
             assert(false);
     }
-    void visitOverlayTexture(const Room *, MMTexture *overlay) override
+    void virt_visitOverlayTexture(const Room *, MMTexture *const overlay) final
     {
         if (overlay != nullptr)
             ++measurements.numOverlays;
     }
 
-    void visitNamedColorTint(const Room *, RoomTintEnum tint) override
+    void virt_visitNamedColorTint(const Room *, const RoomTintEnum tint) final
     {
         ++measurements.numTints[tint];
     }
 
-    void visitWall(const Room *,
-                   const ExitDirEnum dir,
-                   const XNamedColor color,
-                   const WallTypeEnum wallType,
-                   bool /*isClimb*/) override
+    void virt_visitWall(const Room *,
+                        const ExitDirEnum dir,
+                        const XNamedColor color,
+                        const WallTypeEnum wallType,
+                        bool /*isClimb*/) final
     {
         if (isTransparent(color))
             return;
@@ -666,7 +700,7 @@ struct NODISCARD LayerBatchMeasurer final : public IRoomVisitorCallbacks
         }
     }
 
-    void visitStream(const Room *, ExitDirEnum, StreamTypeEnum type) override
+    void virt_visitStream(const Room *, ExitDirEnum, const StreamTypeEnum type) final
     {
         switch (type) {
         case StreamTypeEnum::OutFlow:
@@ -801,7 +835,8 @@ public:
         return bounds.contains(room->getPosition());
     }
 
-    void visitTerrainTexture(const Room *const room, MMTexture *terrain) override
+private:
+    void virt_visitTerrainTexture(const Room *const room, MMTexture *const terrain) final
     {
         if (terrain == nullptr)
             return;
@@ -817,13 +852,13 @@ public:
 #undef EMIT
     }
 
-    void visitOverlayTexture(const Room *const room, MMTexture *const overlay) override
+    void virt_visitOverlayTexture(const Room *const room, MMTexture *const overlay) final
     {
         if (overlay != nullptr)
             data.roomOverlays.emplace_back(room, overlay);
     }
 
-    void visitNamedColorTint(const Room *const room, const RoomTintEnum tint) override
+    void virt_visitNamedColorTint(const Room *const room, const RoomTintEnum tint) final
     {
         const auto v0 = room->getPosition().to_vec3();
 #define EMIT(x, y) data.roomTints[tint].emplace_back(v0 + glm::vec3((x), (y), 0))
@@ -834,11 +869,11 @@ public:
 #undef EMIT
     }
 
-    void visitWall(const Room *const room,
-                   const ExitDirEnum dir,
-                   const XNamedColor color,
-                   const WallTypeEnum wallType,
-                   const bool isClimb) override
+    void virt_visitWall(const Room *const room,
+                        const ExitDirEnum dir,
+                        const XNamedColor color,
+                        const WallTypeEnum wallType,
+                        const bool isClimb) final
     {
         if (isTransparent(color))
             return;
@@ -880,9 +915,9 @@ public:
         }
     }
 
-    void visitStream(const Room *const room,
-                     const ExitDirEnum dir,
-                     const StreamTypeEnum type) override
+    void virt_visitStream(const Room *const room,
+                          const ExitDirEnum dir,
+                          const StreamTypeEnum type) final
     {
         const Color color = LOOKUP_COLOR(STREAM).getColor();
         switch (type) {

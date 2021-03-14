@@ -29,21 +29,27 @@ class Mmapper2Group final : public QObject
 public:
     Q_OBJECT
 
+private:
+    void log(const QString &msg) { emit sig_log("GroupManager", msg); }
+    void messageBox(const QString &msg) { emit sig_messageBox("GroupManager", msg); }
+
 signals:
     // MainWindow::log (via MainWindow)
-    void log(const QString &, const QString &);
+    void sig_log(const QString &, const QString &);
     // MainWindow::groupNetworkStatus (via MainWindow)
-    void networkStatus(bool);
+    void sig_networkStatus(bool);
     // MapCanvas::requestUpdate (via MainWindow)
-    void updateMapCanvas(); // redraw the opengl screen
+    void sig_updateMapCanvas(); // redraw the opengl screen
 
     // sent to ParserXML::sendGTellToUser (via Proxy)
-    void displayGroupTellEvent(const QString &color, const QString &name, const QString &message);
+    void sig_displayGroupTellEvent(const QString &color,
+                                   const QString &name,
+                                   const QString &message);
 
     // GroupWidget::messageBox (via GroupWidget)
-    void messageBox(QString title, QString message);
+    void sig_messageBox(QString title, QString message);
     // GroupWidget::updateLabels (via GroupWidget)
-    void updateWidget(); // update group widget
+    void sig_updateWidget(); // update group widget
 
     // Mmapper2Group::slot_stopInternal
     void sig_invokeStopInternal();
@@ -59,7 +65,7 @@ signals:
 
 public:
     explicit Mmapper2Group(QObject *parent = nullptr);
-    ~Mmapper2Group() override;
+    ~Mmapper2Group() final;
 
     void start();
     void stop();
@@ -86,22 +92,22 @@ protected:
     void updateCharacterAffect(CharacterAffectEnum, bool);
 
 public slots:
-    void setCharacterRoomId(RoomId pos);
-    void setMode(GroupManagerStateEnum newState);
-    void startNetwork();
-    void stopNetwork();
-    void updateSelf(); // changing settings
+    void slot_setCharacterRoomId(RoomId pos);
+    void slot_setMode(GroupManagerStateEnum newState);
+    void slot_startNetwork();
+    void slot_stopNetwork();
+    void slot_updateSelf(); // changing settings
 
-    void setPath(CommandQueue);
-    void reset();
+    void slot_setPath(CommandQueue);
+    void slot_reset();
 
 protected slots:
     // Communicator
-    void gTellArrived(const QVariantMap &node);
-    void relayMessageBox(const QString &message);
-    void sendLog(const QString &);
-    void characterChanged(bool updateCanvas);
-    void onAffectTimeout();
+    void slot_gTellArrived(const QVariantMap &node);
+    void slot_relayMessageBox(const QString &message);
+    void slot_sendLog(const QString &);
+    void slot_characterChanged(bool updateCanvas);
+    void slot_onAffectTimeout();
     void slot_stopInternal();
 
 private:

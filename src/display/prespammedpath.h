@@ -13,7 +13,7 @@
 class MapCanvas;
 class MapData;
 
-class PrespammedPath : public QObject
+class PrespammedPath final : public QObject
 {
     Q_OBJECT
 
@@ -22,14 +22,14 @@ private:
 
 public:
     explicit PrespammedPath(QObject *parent = nullptr);
-    ~PrespammedPath();
+    ~PrespammedPath() final;
 
 public:
     NODISCARD auto &getQueue() const { return m_queue; }
 
 signals:
-    void update();
+    void sig_update();
 
 public slots:
-    void setPath(CommandQueue);
+    void slot_setPath(CommandQueue);
 };

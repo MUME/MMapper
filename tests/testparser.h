@@ -4,12 +4,12 @@
 
 #include <QObject>
 
-class TestParser : public QObject
+class TestParser final : public QObject
 {
     Q_OBJECT
 public:
     TestParser();
-    ~TestParser() override;
+    ~TestParser() final;
 
 private:
 private Q_SLOTS:

@@ -9,7 +9,7 @@ class TestGlobal final : public QObject
     Q_OBJECT
 public:
     TestGlobal();
-    ~TestGlobal() override;
+    ~TestGlobal() final;
 
 private Q_SLOTS:
     void ansi256ColorTest();

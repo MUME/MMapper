@@ -34,16 +34,15 @@ protected:
     double numPaths = 0.0;
 
 protected:
+    Experimenting() = delete;
     explicit Experimenting(std::shared_ptr<PathList> paths,
                            ExitDirEnum dirCode,
                            PathParameters &params);
+
 public:
     virtual ~Experimenting() override;
-
-    std::shared_ptr<PathList> evaluate();
-    virtual void receiveRoom(RoomAdmin *, const Room *) override = 0;
+    DELETE_CTORS_AND_ASSIGN_OPS(Experimenting);
 
 public:
-    Experimenting() = delete;
-    DELETE_CTORS_AND_ASSIGN_OPS(Experimenting);
+    NODISCARD std::shared_ptr<PathList> evaluate();
 };

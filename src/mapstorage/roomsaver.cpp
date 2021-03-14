@@ -14,7 +14,7 @@ RoomSaver::RoomSaver(RoomAdmin &admin, ConstRoomList &list)
     , m_admin(admin)
 {}
 
-void RoomSaver::receiveRoom(RoomAdmin *admin, const Room *room)
+void RoomSaver::virt_receiveRoom(RoomAdmin *const admin, const Room *const room)
 {
     assert(admin == &m_admin);
     if (room->isTemporary()) {

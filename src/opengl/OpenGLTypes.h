@@ -224,18 +224,42 @@ public:
 public:
     DELETE_CTORS_AND_ASSIGN_OPS(IRenderable);
 
+private:
+    // Clears the contents of the mesh, but does not give up its GL resources.
+    virtual void virt_clear() = 0;
+    // Clears the mesh and destroys the GL resources.
+    virtual void virt_reset() = 0;
+    NODISCARD virtual bool virt_isEmpty() const = 0;
+
+private:
+    NODISCARD virtual bool virt_modifiesRenderState() const { return false; }
+    NODISCARD virtual GLRenderState virt_modifyRenderState(const GLRenderState &input) const
+    {
+        assert(false);
+        return input;
+    }
+    virtual void virt_render(const GLRenderState &renderState) = 0;
+
 public:
     // Clears the contents of the mesh, but does not give up its GL resources.
-    virtual void clear() = 0;
+    virtual void clear() { virt_clear(); }
     // Clears the mesh and destroys the GL resources.
-    virtual void reset() = 0;
-    NODISCARD virtual bool isEmpty() const = 0;
+    virtual void reset() { virt_reset(); }
+    NODISCARD virtual bool isEmpty() const { return virt_isEmpty(); }
 
 public:
-    virtual void render(const GLRenderState &renderState) = 0;
+    void render(const GLRenderState &renderState)
+    {
+        if (!virt_modifiesRenderState()) {
+            virt_render(renderState);
+            return;
+        }
+        const GLRenderState modifiedState = virt_modifyRenderState(renderState);
+        virt_render(modifiedState);
+    }
 };
 
-struct NODISCARD TexturedRenderable final : IRenderable
+struct NODISCARD TexturedRenderable final : public IRenderable
 {
 private:
     SharedMMTexture m_texture;
@@ -248,13 +272,13 @@ public:
 public:
     DELETE_CTORS_AND_ASSIGN_OPS(TexturedRenderable);
 
-public:
-    void clear() override;
-    void reset() override;
-    NODISCARD bool isEmpty() const override;
+private:
+    void virt_clear() final;
+    void virt_reset() final;
+    NODISCARD bool virt_isEmpty() const final;
 
 public:
-    void render(const GLRenderState &renderState) override;
+    void virt_render(const GLRenderState &renderState) final;
 
 public:
     NODISCARD SharedMMTexture replaceTexture(const SharedMMTexture &tex)

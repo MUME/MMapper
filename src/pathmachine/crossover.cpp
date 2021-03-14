@@ -20,7 +20,7 @@ Crossover::Crossover(std::shared_ptr<PathList> _paths,
     : Experimenting(std::move(_paths), _dirCode, _params)
 {}
 
-void Crossover::receiveRoom(RoomAdmin *const admin, const Room *const room)
+void Crossover::virt_receiveRoom(RoomAdmin *const admin, const Room *const room)
 {
     if (shortPaths->empty())
         admin->releaseRoom(*this, room->getId());

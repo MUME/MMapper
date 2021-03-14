@@ -24,7 +24,7 @@ class PandoraMapStorage final : public AbstractMapStorage
 
 public:
     explicit PandoraMapStorage(MapData &, const QString &, QFile *, QObject *parent = nullptr);
-    ~PandoraMapStorage() override;
+    ~PandoraMapStorage() final;
 
 public:
     PandoraMapStorage() = delete;
@@ -41,6 +41,7 @@ private:
 private:
     std::shared_ptr<Room> loadRoom(QXmlStreamReader &);
     void loadExits(Room &, QXmlStreamReader &);
+    void log(const QString &msg) { emit sig_log("PandoraMapStorage", msg); }
 
 private:
     Coordinate basePosition;

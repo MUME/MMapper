@@ -27,7 +27,7 @@ class NODISCARD RoomSelection final : public std::unordered_map<RoomId, const Ro
                                       public RoomRecipient
 {
 public:
-    void receiveRoom(RoomAdmin *admin, const Room *aRoom) override;
+    void virt_receiveRoom(RoomAdmin *admin, const Room *aRoom) final;
 
 private:
     MapData &m_mapData;

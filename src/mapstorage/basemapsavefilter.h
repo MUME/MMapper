@@ -29,14 +29,14 @@ private:
     std::unique_ptr<Impl> m_impl;
 
 private:
-    virtual void receiveRoom(RoomAdmin *, const Room *room) override;
+    virtual void virt_receiveRoom(RoomAdmin *, const Room *room) final;
 
 public:
     DELETE_CTORS_AND_ASSIGN_OPS(BaseMapSaveFilter);
 
 public:
     BaseMapSaveFilter();
-    virtual ~BaseMapSaveFilter() override;
+    ~BaseMapSaveFilter() final;
 
 public:
     //! The map data to work on

@@ -141,7 +141,7 @@ void MapCanvas::reportGLVersion()
 
     auto logMsg = [this](const QByteArray &prefix, const QByteArray &msg) -> void {
         qInfo() << prefix << msg;
-        emit log("MapCanvas", prefix + " " + msg);
+        emit sig_log("MapCanvas", prefix + " " + msg);
     };
 
     auto getString = [&gl](const GLenum name) -> QByteArray {

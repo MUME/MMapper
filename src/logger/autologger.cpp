@@ -187,18 +187,18 @@ bool AutoLogger::showDeleteDialog(QString message)
     return result == QMessageBox::Yes;
 }
 
-void AutoLogger::writeToLog(const QByteArray &ba)
+void AutoLogger::slot_writeToLog(const QByteArray &ba)
 {
     MAYBE_UNUSED const auto igored = //
         writeLine(ba);
 }
 
-void AutoLogger::shouldLog(bool echo)
+void AutoLogger::slot_shouldLog(bool echo)
 {
     m_shouldLog = echo;
 }
 
-void AutoLogger::onConnected()
+void AutoLogger::slot_onConnected()
 {
     if (getConfig().autoLog.cleanupStrategy != AutoLoggerEnum::KeepForever)
         deleteOldLogs();

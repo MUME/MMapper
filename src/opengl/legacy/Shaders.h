@@ -11,9 +11,9 @@ struct NODISCARD AColorPlainShader final : public AbstractShaderProgram
 public:
     using AbstractShaderProgram::AbstractShaderProgram;
 
-    ~AColorPlainShader() override;
+    ~AColorPlainShader() final;
 
-protected:
+private:
     void virt_setUniforms(const glm::mat4 &mvp, const GLRenderState::Uniforms &uniforms) final
     {
         setColor("uColor", uniforms.color);
@@ -26,9 +26,9 @@ struct NODISCARD UColorPlainShader final : public AbstractShaderProgram
 public:
     using AbstractShaderProgram::AbstractShaderProgram;
 
-    ~UColorPlainShader() override;
+    ~UColorPlainShader() final;
 
-protected:
+private:
     void virt_setUniforms(const glm::mat4 &mvp, const GLRenderState::Uniforms &uniforms) final
     {
         setColor("uColor", uniforms.color);
@@ -41,9 +41,9 @@ struct NODISCARD AColorTexturedShader final : public AbstractShaderProgram
 public:
     using AbstractShaderProgram::AbstractShaderProgram;
 
-    ~AColorTexturedShader() override;
+    ~AColorTexturedShader() final;
 
-protected:
+private:
     void virt_setUniforms(const glm::mat4 &mvp, const GLRenderState::Uniforms &uniforms) final
     {
         assert(uniforms.textures[0]);
@@ -59,9 +59,9 @@ struct NODISCARD UColorTexturedShader final : public AbstractShaderProgram
 public:
     using AbstractShaderProgram::AbstractShaderProgram;
 
-    ~UColorTexturedShader() override;
+    ~UColorTexturedShader() final;
 
-protected:
+private:
     void virt_setUniforms(const glm::mat4 &mvp, const GLRenderState::Uniforms &uniforms) final
     {
         assert(uniforms.textures[0]);
@@ -80,9 +80,9 @@ private:
 public:
     using Base::AbstractShaderProgram;
 
-    ~FontShader() override;
+    ~FontShader() final;
 
-protected:
+private:
     void virt_setUniforms(const glm::mat4 &mvp, const GLRenderState::Uniforms &uniforms) final
     {
         assert(uniforms.textures[0]);
@@ -99,9 +99,9 @@ struct NODISCARD PointShader final : public AbstractShaderProgram
 public:
     using AbstractShaderProgram::AbstractShaderProgram;
 
-    ~PointShader() override;
+    ~PointShader() final;
 
-protected:
+private:
     void virt_setUniforms(const glm::mat4 &mvp, const GLRenderState::Uniforms &uniforms) final
     {
         setColor("uColor", uniforms.color);

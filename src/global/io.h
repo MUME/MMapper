@@ -83,7 +83,7 @@ public:
     explicit IOException(const std::string &s)
         : std::runtime_error(s)
     {}
-    virtual ~IOException() override;
+    ~IOException() override;
 
     IOException() = delete; // must give a reason!
     DEFAULT_CTORS_AND_ASSIGN_OPS(IOException);
