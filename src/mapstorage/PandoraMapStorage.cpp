@@ -70,7 +70,7 @@ static RoomTerrainEnum toTerrainType(const QString &str)
     CASE2(TUNNEL, "tunnel");
     CASE2(CAVERN, "cavern");
     CASE2(DEATHTRAP, "deathtrap"); // Not supported by Pandora
-#undef CASE3
+#undef CASE2
     return RoomTerrainEnum::UNDEFINED;
 }
 

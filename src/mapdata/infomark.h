@@ -39,7 +39,7 @@ public:
     virtual ~InfoMarkModificationTracker();
 
 public:
-    void notifyModified(InfoMark &room, InfoMarkUpdateFlags updateFlags);
+    void notifyModified(InfoMark &mark, InfoMarkUpdateFlags updateFlags);
     virtual void virt_onNotifyModified(InfoMark & /*mark*/, InfoMarkUpdateFlags /*updateFlags*/) {}
 };
 
