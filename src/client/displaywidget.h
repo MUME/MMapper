@@ -29,7 +29,7 @@ private:
     Q_OBJECT
 
 public:
-    explicit DisplayWidget(QWidget *parent = nullptr);
+    explicit DisplayWidget(QWidget *parent);
     ~DisplayWidget() final;
 
     NODISCARD bool canCopy() const { return m_canCopy; }

@@ -126,11 +126,8 @@ NODISCARD static char getLightSymbol(const RoomLightEnum lightType)
     return '?';
 }
 
-AbstractParser::AbstractParser(MapData *const md,
-                               MumeClock *const mc,
-                               ProxyParserApi proxy,
-                               GroupManagerApi group,
-                               QObject *const parent)
+AbstractParser::AbstractParser(
+    MapData &md, MumeClock &mc, ProxyParserApi proxy, GroupManagerApi group, QObject *const parent)
     : QObject(parent)
     , m_mumeClock(mc)
     , m_mapData(md)
@@ -465,7 +462,7 @@ void AbstractParser::parseExits(std::ostream &os)
         }
     }
 
-    RoomSelection rs(*m_mapData);
+    RoomSelection rs(m_mapData);
     if (const Room *const room = rs.getRoom(getNextPosition())) {
         const QByteArray cn = enhanceExits(room);
         const auto right_trim = [](const QString &str) -> QString {
@@ -507,15 +504,15 @@ Coordinate AbstractParser::getNextPosition() const
         tmpqueue.enqueue(m_queue.head());
     }
 
-    QList<Coordinate> cl = m_mapData->getPath(m_mapData->getPosition(), tmpqueue);
-    return cl.isEmpty() ? m_mapData->getPosition() : cl.back();
+    QList<Coordinate> cl = m_mapData.getPath(m_mapData.getPosition(), tmpqueue);
+    return cl.isEmpty() ? m_mapData.getPosition() : cl.back();
 }
 
 Coordinate AbstractParser::getTailPosition() const
 {
     // Position at the end of the prespammed path
-    QList<Coordinate> cl = m_mapData->getPath(m_mapData->getPosition(), m_queue);
-    return cl.isEmpty() ? m_mapData->getPosition() : cl.back();
+    QList<Coordinate> cl = m_mapData.getPath(m_mapData.getPosition(), m_queue);
+    return cl.isEmpty() ? m_mapData.getPosition() : cl.back();
 }
 
 void AbstractParser::emulateExits(std::ostream &os, const CommandEnum move)
@@ -523,8 +520,8 @@ void AbstractParser::emulateExits(std::ostream &os, const CommandEnum move)
     const auto nextCoordinate = [this, &move]() {
         // Use movement direction to find the next coordinate
         if (isDirectionNESWUD(move)) {
-            auto rs = RoomSelection(*m_mapData);
-            if (const Room *const sourceRoom = rs.getRoom(m_mapData->getPosition())) {
+            auto rs = RoomSelection(m_mapData);
+            if (const Room *const sourceRoom = rs.getRoom(m_mapData.getPosition())) {
                 const auto &exit = sourceRoom->exit(getDirection(move));
                 if (exit.isExit() && !exit.outIsEmpty())
                     if (const Room *const targetRoom = rs.getRoom(exit.outFirst()))
@@ -534,7 +531,7 @@ void AbstractParser::emulateExits(std::ostream &os, const CommandEnum move)
         // Fallback to next position in prespammed path
         return getNextPosition();
     }();
-    auto rs = RoomSelection(*m_mapData);
+    auto rs = RoomSelection(m_mapData);
     if (const Room *const r = rs.getRoom(nextCoordinate))
         sendRoomExitsInfoToUser(os, r);
 }
@@ -592,7 +589,7 @@ QByteArray AbstractParser::enhanceExits(const Room *sourceRoom)
                 uint exitCount = 0;
                 bool oneWay = false;
                 bool hasNoFlee = false;
-                auto rs = RoomSelection(*m_mapData);
+                auto rs = RoomSelection(m_mapData);
                 if (const Room *const targetRoom = rs.getRoom(targetId)) {
                     if (!targetRoom->exit(opposite(i)).containsOut(sourceId)) {
                         oneWay = true;
@@ -790,7 +787,7 @@ void AbstractParser::searchCommand(const RoomFilter &f)
         sendToUser("Rooms unselected.\r\n");
         return;
     }
-    const auto tmpSel = RoomSelection::createSelection(*m_mapData);
+    const auto tmpSel = RoomSelection::createSelection(m_mapData);
     tmpSel->genericSearch(f);
     sendToUser(
         QString("%1 room%2 found.\r\n").arg(tmpSel->size()).arg((tmpSel->size() == 1) ? "" : "s"));
@@ -801,15 +798,15 @@ void AbstractParser::dirsCommand(const RoomFilter &f)
 {
     ShortestPathEmitter sp_emitter(*this);
 
-    auto rs = RoomSelection(*m_mapData);
+    auto rs = RoomSelection(m_mapData);
     if (const Room *const r = rs.getRoom(getTailPosition())) {
-        m_mapData->shortestPathSearch(r, &sp_emitter, f, 10, 0);
+        m_mapData.shortestPathSearch(r, &sp_emitter, f, 10, 0);
     }
 }
 
 void AbstractParser::markCurrentCommand()
 {
-    const auto tmpSel = RoomSelection::createSelection(*m_mapData, getTailPosition());
+    const auto tmpSel = RoomSelection::createSelection(m_mapData, getTailPosition());
     emit sig_newRoomSelection(SigRoomSelection{tmpSel});
 }
 
@@ -889,7 +886,7 @@ void AbstractParser::doMarkCurrentCommand()
 
 void AbstractParser::doRemoveDoorNamesCommand()
 {
-    m_mapData->removeDoorNames();
+    m_mapData.removeDoorNames();
     sendToUser("Secret exits purged.\r\n");
 }
 
@@ -1013,9 +1010,9 @@ void AbstractParser::showHelp()
 
 void AbstractParser::showMumeTime()
 {
-    const MumeMoment moment = m_mumeClock->getMumeMoment();
-    QByteArray data = m_mumeClock->toMumeTime(moment).toLatin1() + "\r\n";
-    const MumeClockPrecisionEnum precision = m_mumeClock->getPrecision();
+    const MumeMoment moment = m_mumeClock.getMumeMoment();
+    QByteArray data = m_mumeClock.toMumeTime(moment).toLatin1() + "\r\n";
+    const MumeClockPrecisionEnum precision = m_mumeClock.getPrecision();
     if (precision > MumeClockPrecisionEnum::DAY) {
         const MumeTimeEnum time = moment.toTimeOfDay();
         data += "It is currently ";
@@ -1028,7 +1025,7 @@ void AbstractParser::showMumeTime()
         } else {
             data += "\033[33mday\033[0m";
         }
-        data += " for " + m_mumeClock->toCountdown(moment).toLatin1() + " more ticks.\r\n";
+        data += " for " + m_mumeClock.toCountdown(moment).toLatin1() + " more ticks.\r\n";
 
         // Moon data
         data += moment.toMumeMoonTime().toLatin1() + "\r\n";
@@ -1141,7 +1138,7 @@ void AbstractParser::slot_doOfflineCharacterMove()
     const RAIICallback timerRaii{[this]() { this->m_offlineCommandTimer.start(); }};
 
     CommandEnum direction = m_queue.dequeue();
-    if (m_mapData->isEmpty()) {
+    if (m_mapData.isEmpty()) {
         sendToUser("Alas, you cannot go that way...\r\n");
         sendPromptToUser();
         return;
@@ -1159,7 +1156,7 @@ void AbstractParser::slot_doOfflineCharacterMove()
         direction = m_queue.dequeue();
     }
 
-    const auto rs1 = RoomSelection(*m_mapData, m_mapData->getPosition());
+    const auto rs1 = RoomSelection(m_mapData, m_mapData.getPosition());
     if (rs1.empty()) {
         sendToUser("Alas, you cannot go that way...\r\n");
         return;
@@ -1242,7 +1239,7 @@ void AbstractParser::slot_doOfflineCharacterMove()
 
     const Exit &e = getExit(); /* NOTE: getExit() can modify direction */
     if (e.isExit() && !e.outIsEmpty()) {
-        auto rs2 = RoomSelection(*m_mapData);
+        auto rs2 = RoomSelection(m_mapData);
         if (const Room *const otherRoom = rs2.getRoom(e.outFirst())) {
             showMovement(direction, otherRoom);
             return;
@@ -1314,7 +1311,7 @@ void AbstractParser::sendRoomExitsInfoToUser(std::ostream &os, const Room *const
     if (r == nullptr) {
         return;
     }
-    const char sunCharacter = (m_mumeClock->getMumeMoment().toTimeOfDay() <= MumeTimeEnum::DAY)
+    const char sunCharacter = (m_mumeClock.getMumeMoment().toTimeOfDay() <= MumeTimeEnum::DAY)
                                   ? '*'
                                   : '^';
     uint exitCount = 0;
@@ -1337,7 +1334,7 @@ void AbstractParser::sendRoomExitsInfoToUser(std::ostream &os, const Room *const
             RoomTerrainEnum sourceTerrain = r->getTerrainType();
             if (!e.outIsEmpty()) {
                 const auto targetId = e.outFirst();
-                auto rs = RoomSelection(*m_mapData);
+                auto rs = RoomSelection(m_mapData);
                 if (const Room *const targetRoom = rs.getRoom(targetId)) {
                     const RoomTerrainEnum targetTerrain = targetRoom->getTerrainType();
 
@@ -1436,7 +1433,7 @@ void AbstractParser::sendPromptToUser()
     }
 
     // Emulate prompt mode
-    auto rs = RoomSelection(*m_mapData);
+    auto rs = RoomSelection(m_mapData);
     if (const Room *const r = rs.getRoom(
             getNextPosition())) // REVISIT: Should this be the current position?
         sendPromptToUser(*r);
@@ -1455,7 +1452,7 @@ void AbstractParser::sendPromptToUser(const RoomLightEnum lightType,
                                       const RoomTerrainEnum terrainType)
 {
     char light = getLightSymbol(lightType);
-    MumeMoment moment = m_mumeClock->getMumeMoment();
+    MumeMoment moment = m_mumeClock.getMumeMoment();
     if (light == 'o' && moment.isMoonBright() && moment.isMoonVisible()) {
         // Moon is out
         light = ')';
@@ -1481,7 +1478,7 @@ void AbstractParser::performDoorCommand(const ExitDirEnum direction, const DoorA
     Coordinate c = getTailPosition();
 
     auto cn = getCommandName(action) + " ";
-    auto dn = m_mapData->getDoorName(c, direction).toQByteArray();
+    auto dn = m_mapData.getDoorName(c, direction).toQByteArray();
 
     bool needdir = false;
 
@@ -1489,8 +1486,8 @@ void AbstractParser::performDoorCommand(const ExitDirEnum direction, const DoorA
         // If there is only one secret assume that is what needs opening
         auto secretCount = 0;
         for (const ExitDirEnum i : ALL_EXITS_NESWUD) {
-            if (m_mapData->getExitFlag(c, i, ExitFieldVariant{DoorFlags{DoorFlagEnum::HIDDEN}})) {
-                dn = m_mapData->getDoorName(c, i).toQByteArray();
+            if (m_mapData.getExitFlag(c, i, ExitFieldVariant{DoorFlags{DoorFlagEnum::HIDDEN}})) {
+                dn = m_mapData.getDoorName(c, i).toQByteArray();
                 secretCount++;
             }
         }
@@ -1507,7 +1504,7 @@ void AbstractParser::performDoorCommand(const ExitDirEnum direction, const DoorA
     } else {
         // Check if we need to add a direction to the door name
         for (const ExitDirEnum i : ALL_EXITS_NESWUD) {
-            if ((i != direction) && (m_mapData->getDoorName(c, i).toQByteArray() == dn)) {
+            if ((i != direction) && (m_mapData.getDoorName(c, i).toQByteArray() == dn)) {
                 needdir = true;
             }
         }
@@ -1535,7 +1532,7 @@ void AbstractParser::genericDoorCommand(QString command, const ExitDirEnum direc
     QByteArray cn = emptyByteArray;
     Coordinate c = getTailPosition();
 
-    auto dn = m_mapData->getDoorName(c, direction).toQByteArray();
+    auto dn = m_mapData.getDoorName(c, direction).toQByteArray();
 
     bool needdir = false;
     if (dn.isEmpty()) {
@@ -1543,7 +1540,7 @@ void AbstractParser::genericDoorCommand(QString command, const ExitDirEnum direc
         needdir = true;
     } else {
         for (const ExitDirEnum i : ALL_EXITS_NESWUD) {
-            if ((i != direction) && (m_mapData->getDoorName(c, i).toQByteArray() == dn)) {
+            if ((i != direction) && (m_mapData.getDoorName(c, i).toQByteArray() == dn)) {
                 needdir = true;
             }
         }
@@ -1584,10 +1581,10 @@ void AbstractParser::setConnectedRoomFlag(const DirectSunlightEnum light, const 
 
 void AbstractParser::printRoomInfo(const RoomFieldFlags fieldset)
 {
-    if (m_mapData->isEmpty())
+    if (m_mapData.isEmpty())
         return;
 
-    auto rs = RoomSelection(*m_mapData);
+    auto rs = RoomSelection(m_mapData);
     if (const Room *const r = rs.getRoom(getNextPosition())) {
         // TODO: use QStringBuilder (or std::ostringstream)?
         QString result;

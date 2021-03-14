@@ -51,9 +51,9 @@ NODISCARD static NonOwningPointer &primaryMapCanvas()
     return primary;
 }
 
-MapCanvas::MapCanvas(MapData *const mapData,
-                     PrespammedPath *const prespammedPath,
-                     Mmapper2Group *const groupManager,
+MapCanvas::MapCanvas(MapData &mapData,
+                     PrespammedPath &prespammedPath,
+                     Mmapper2Group &groupManager,
                      QWidget *const parent)
     : QOpenGLWidget{parent}
     , MapCanvasViewport{static_cast<QWidget &>(*this)}
@@ -61,7 +61,7 @@ MapCanvas::MapCanvas(MapData *const mapData,
     , m_mapScreen{static_cast<MapCanvasViewport &>(*this)}
     , m_opengl{}
     , m_glFont{m_opengl}
-    , m_data{deref(mapData)}
+    , m_data{mapData}
     , m_groupManager{groupManager}
 {
     NonOwningPointer &pmc = primaryMapCanvas();

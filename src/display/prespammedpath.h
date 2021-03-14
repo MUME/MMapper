@@ -21,7 +21,7 @@ private:
     CommandQueue m_queue;
 
 public:
-    explicit PrespammedPath(QObject *parent = nullptr);
+    explicit PrespammedPath(QObject *parent);
     ~PrespammedPath() final;
 
 public:

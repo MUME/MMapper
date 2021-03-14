@@ -33,9 +33,10 @@ public:
     NODISCARD static DawnDusk getDawnDusk(int month);
 
 public:
-    explicit MumeClock(int64_t mumeEpoch, QObject *parent = nullptr);
+    explicit MumeClock(int64_t mumeEpoch, QObject *parent);
 
-    explicit MumeClock(QObject *parent = nullptr);
+    // For use only in test cases.
+    explicit MumeClock();
 
     NODISCARD MumeMoment getMumeMoment() const;
 

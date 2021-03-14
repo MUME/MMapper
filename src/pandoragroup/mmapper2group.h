@@ -64,7 +64,7 @@ signals:
     void sig_sendSelfRename(const QByteArray &, const QByteArray &);
 
 public:
-    explicit Mmapper2Group(QObject *parent = nullptr);
+    explicit Mmapper2Group(QObject *parent);
     ~Mmapper2Group() final;
 
     void start();

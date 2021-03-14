@@ -63,7 +63,7 @@ private:
     MapCanvasTextures m_textures;
     MapData &m_data;
 
-    Mmapper2Group *m_groupManager = nullptr;
+    Mmapper2Group &m_groupManager;
     struct NODISCARD OptionStatus final
     {
         std::optional<int> multisampling;
@@ -73,9 +73,9 @@ private:
     std::unique_ptr<QOpenGLDebugLogger> m_logger;
 
 public:
-    explicit MapCanvas(MapData *mapData,
-                       PrespammedPath *prespammedPath,
-                       Mmapper2Group *groupManager,
+    explicit MapCanvas(MapData &mapData,
+                       PrespammedPath &prespammedPath,
+                       Mmapper2Group &groupManager,
                        QWidget *parent);
     ~MapCanvas() final;
 

@@ -23,7 +23,7 @@ class PandoraMapStorage final : public AbstractMapStorage
     Q_OBJECT
 
 public:
-    explicit PandoraMapStorage(MapData &, const QString &, QFile *, QObject *parent = nullptr);
+    explicit PandoraMapStorage(MapData &, const QString &, QFile *, QObject *parent);
     ~PandoraMapStorage() final;
 
 public:

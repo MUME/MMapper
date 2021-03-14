@@ -18,7 +18,7 @@ class ClientPage final : public QWidget
     Q_OBJECT
 
 public:
-    explicit ClientPage(QWidget *parent = nullptr);
+    explicit ClientPage(QWidget *parent);
     ~ClientPage() final;
 
     void updateFontAndColors();

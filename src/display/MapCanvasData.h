@@ -224,10 +224,10 @@ struct NODISCARD MapCanvasInputState
 
     std::shared_ptr<ConnectionSelection> m_connectionSelection;
 
-    PrespammedPath *m_prespammedPath = nullptr;
+    PrespammedPath &m_prespammedPath;
 
 public:
-    explicit MapCanvasInputState(PrespammedPath *prespammedPath);
+    explicit MapCanvasInputState(PrespammedPath &prespammedPath);
     ~MapCanvasInputState();
 
 public:

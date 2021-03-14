@@ -43,15 +43,15 @@ class Proxy final : public QObject
 {
     Q_OBJECT
 public:
-    explicit Proxy(MapData *,
-                   Mmapper2PathMachine *,
-                   PrespammedPath *,
-                   Mmapper2Group *,
-                   MumeClock *,
-                   AutoLogger *,
-                   MapCanvas *,
+    explicit Proxy(MapData &,
+                   Mmapper2PathMachine &,
+                   PrespammedPath &,
+                   Mmapper2Group &,
+                   MumeClock &,
+                   AutoLogger &,
+                   MapCanvas &,
                    qintptr &,
-                   ConnectionListener *);
+                   ConnectionListener &);
     ~Proxy() final;
 
 public slots:
@@ -96,14 +96,14 @@ private:
     WeakHandleLifetime<Proxy> m_weakHandleLifetime{*this};
     ProxyParserApi m_proxyParserApi{m_weakHandleLifetime.getWeakHandle()};
 
-    MapData *const m_mapData;
-    Mmapper2PathMachine *const m_pathMachine;
-    PrespammedPath *const m_prespammedPath;
-    Mmapper2Group *const m_groupManager;
-    MumeClock *const m_mumeClock;
-    AutoLogger *const m_logger;
-    MapCanvas *const m_mapCanvas;
-    ConnectionListener *const m_listener;
+    MapData &m_mapData;
+    Mmapper2PathMachine &m_pathMachine;
+    PrespammedPath &m_prespammedPath;
+    Mmapper2Group &m_groupManager;
+    MumeClock &m_mumeClock;
+    AutoLogger &m_logger;
+    MapCanvas &m_mapCanvas;
+    ConnectionListener &m_listener;
     const qintptr m_socketDescriptor;
 
     // initialized in ctor

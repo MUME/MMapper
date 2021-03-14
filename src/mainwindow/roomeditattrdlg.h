@@ -99,7 +99,7 @@ public slots:
     void closeClicked();
 
 public:
-    explicit RoomEditAttrDlg(QWidget *parent = nullptr);
+    explicit RoomEditAttrDlg(QWidget *parent);
     ~RoomEditAttrDlg() final;
 
     void readSettings();

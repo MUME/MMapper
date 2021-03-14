@@ -21,7 +21,7 @@ public:
     explicit RemoteEditProcess(bool editSession,
                                const QString &title,
                                const QString &body,
-                               QObject *parent = nullptr);
+                               QObject *parent);
     ~RemoteEditProcess() final;
 
 private:

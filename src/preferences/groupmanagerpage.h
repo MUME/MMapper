@@ -21,7 +21,7 @@ class GroupManagerPage final : public QWidget
 {
     Q_OBJECT
 public:
-    explicit GroupManagerPage(Mmapper2Group *, QWidget *parent = nullptr);
+    explicit GroupManagerPage(Mmapper2Group *, QWidget *parent);
     ~GroupManagerPage() final;
 
 public slots:

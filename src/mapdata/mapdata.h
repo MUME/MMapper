@@ -60,7 +60,7 @@ protected:
     const Room *getRoom(RoomId id, RoomSelection &in);
 
 public:
-    explicit MapData(QObject *parent = nullptr);
+    explicit MapData(QObject *parent);
     virtual ~MapData() override;
 
     void generateBatches(MapCanvasRoomDrawer &screen, const OptBounds &bounds);

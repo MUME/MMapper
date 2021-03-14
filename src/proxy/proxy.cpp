@@ -47,15 +47,15 @@ NODISCARD static inline auto makeQPointer(Args &&... args)
     return QPointer<T>{tmp.release()};
 }
 
-Proxy::Proxy(MapData *const md,
-             Mmapper2PathMachine *const pm,
-             PrespammedPath *const pp,
-             Mmapper2Group *const gm,
-             MumeClock *const mc,
-             AutoLogger *const al,
-             MapCanvas *const mca,
+Proxy::Proxy(MapData &md,
+             Mmapper2PathMachine &pm,
+             PrespammedPath &pp,
+             Mmapper2Group &gm,
+             MumeClock &mc,
+             AutoLogger &al,
+             MapCanvas &mca,
              qintptr &socketDescriptor,
-             ConnectionListener *const listener)
+             ConnectionListener &listener)
     : QObject(nullptr)
     , m_mapData(md)
     , m_pathMachine(pm)
@@ -67,7 +67,7 @@ Proxy::Proxy(MapData *const md,
     , m_listener(listener)
     , m_socketDescriptor(socketDescriptor)
     // TODO: pass this in as a non-owning pointer.
-    , m_remoteEdit{makeQPointer<RemoteEdit>(m_listener->parent())}
+    , m_remoteEdit{makeQPointer<RemoteEdit>(m_listener.parent())}
 {
     //
 }
@@ -90,7 +90,7 @@ Proxy::~Proxy()
 
 void Proxy::slot_start()
 {
-    auto *const mw = dynamic_cast<MainWindow *>(m_listener->parent());
+    auto *const mw = dynamic_cast<MainWindow *>(m_listener.parent());
     if (mw == nullptr) {
         // dynamic cast can fail
         assert(false);
@@ -121,7 +121,7 @@ void Proxy::slot_start()
     m_parserXml = makeQPointer<MumeXmlParser>(m_mapData,
                                               m_mumeClock,
                                               m_proxyParserApi,
-                                              m_groupManager->getGroupManagerApi(),
+                                              m_groupManager.getGroupManagerApi(),
                                               this);
 
     m_mudSocket = (NO_OPEN_SSL || !getConfig().connection.tlsEncryption)
@@ -185,40 +185,40 @@ void Proxy::slot_start()
     connect(parserXml, &MumeXmlParser::sig_sendToMud, mudTelnet, &MudTelnet::slot_onSendToMud);
     connect(parserXml, &MumeXmlParser::sig_sendToUser, userTelnet, &UserTelnet::slot_onSendToUser);
 
-    connect(parserXml, &MumeXmlParser::sig_sendToUser, m_logger, &AutoLogger::slot_writeToLog);
-    connect(parserXml, &MumeXmlParser::sig_sendToMud, m_logger, &AutoLogger::slot_writeToLog);
-    connect(mudTelnet, &MudTelnet::sig_relayEchoMode, m_logger, &AutoLogger::slot_shouldLog);
-    connect(mudSocket, &MumeSocket::sig_connected, m_logger, &AutoLogger::slot_onConnected);
+    connect(parserXml, &MumeXmlParser::sig_sendToUser, &m_logger, &AutoLogger::slot_writeToLog);
+    connect(parserXml, &MumeXmlParser::sig_sendToMud, &m_logger, &AutoLogger::slot_writeToLog);
+    connect(mudTelnet, &MudTelnet::sig_relayEchoMode, &m_logger, &AutoLogger::slot_shouldLog);
+    connect(mudSocket, &MumeSocket::sig_connected, &m_logger, &AutoLogger::slot_onConnected);
 
     connect(parserXml,
             &MumeXmlParser::sig_handleParseEvent,
-            m_pathMachine,
+            &m_pathMachine,
             &Mmapper2PathMachine::slot_handleParseEvent);
     connect(parserXml,
             &AbstractParser::sig_releaseAllPaths,
-            m_pathMachine,
+            &m_pathMachine,
             &PathMachine::slot_releaseAllPaths);
     connect(parserXml,
             &AbstractParser::sig_showPath,
-            m_prespammedPath,
+            &m_prespammedPath,
             &PrespammedPath::slot_setPath);
-    connect(parserXml, &AbstractParser::sig_mapChanged, m_mapCanvas, &MapCanvas::mapChanged);
+    connect(parserXml, &AbstractParser::sig_mapChanged, &m_mapCanvas, &MapCanvas::mapChanged);
     connect(parserXml,
             &AbstractParser::sig_graphicsSettingsChanged,
-            m_mapCanvas,
+            &m_mapCanvas,
             &MapCanvas::graphicsSettingsChanged);
     connect(parserXml, &AbstractParser::sig_log, mw, &MainWindow::slot_log);
     connect(parserXml,
             &AbstractParser::sig_newRoomSelection,
-            m_mapCanvas,
+            &m_mapCanvas,
             &MapCanvas::slot_setRoomSelection);
 
     connect(userSocket, &QAbstractSocket::disconnected, parserXml, &AbstractParser::slot_reset);
 
     // Group Manager Support
-    connect(parserXml, &AbstractParser::sig_showPath, m_groupManager, &Mmapper2Group::slot_setPath);
+    connect(parserXml, &AbstractParser::sig_showPath, &m_groupManager, &Mmapper2Group::slot_setPath);
     // Group Tell
-    connect(m_groupManager,
+    connect(&m_groupManager,
             &Mmapper2Group::sig_displayGroupTellEvent,
             parserXml,
             &AbstractParser::slot_sendGTellToUser);
@@ -235,10 +235,10 @@ void Proxy::slot_start()
     connect(mudSocket, &MumeSocket::sig_connected, mudTelnet, &MudTelnet::slot_onConnected);
     connect(mudSocket, &MumeSocket::sig_connected, this, &Proxy::slot_onMudConnected);
     connect(mudSocket, &MumeSocket::sig_socketError, parserXml, &AbstractParser::slot_reset);
-    connect(mudSocket, &MumeSocket::sig_socketError, m_groupManager, &Mmapper2Group::slot_reset);
+    connect(mudSocket, &MumeSocket::sig_socketError, &m_groupManager, &Mmapper2Group::slot_reset);
     connect(mudSocket, &MumeSocket::sig_socketError, this, &Proxy::slot_onMudError);
     connect(mudSocket, &MumeSocket::sig_disconnected, parserXml, &AbstractParser::slot_reset);
-    connect(mudSocket, &MumeSocket::sig_disconnected, m_groupManager, &Mmapper2Group::slot_reset);
+    connect(mudSocket, &MumeSocket::sig_disconnected, &m_groupManager, &Mmapper2Group::slot_reset);
     connect(mudSocket, &MumeSocket::sig_disconnected, this, &Proxy::slot_mudTerminatedConnection);
     connect(mudSocket,
             &MumeSocket::sig_processMudStream,

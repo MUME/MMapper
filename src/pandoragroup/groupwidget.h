@@ -46,7 +46,7 @@ class GroupDelegate final : public QStyledItemDelegate
     Q_OBJECT
 
 public:
-    explicit GroupDelegate(QObject *parent = nullptr);
+    explicit GroupDelegate(QObject *parent);
     ~GroupDelegate() final;
 
     void paint(QPainter *painter,
@@ -73,7 +73,7 @@ public:
         ROOM_NAME
     };
 
-    explicit GroupModel(MapData *md, Mmapper2Group *group, QObject *parent = nullptr);
+    explicit GroupModel(MapData *md, Mmapper2Group *group, QObject *parent);
 
     void resetModel();
     NODISCARD QVariant dataForCharacter(const SharedGroupChar &character,
@@ -100,7 +100,7 @@ class GroupWidget final : public QWidget
     Q_OBJECT
 
 public:
-    explicit GroupWidget(Mmapper2Group *group, MapData *md, QWidget *parent = nullptr);
+    explicit GroupWidget(Mmapper2Group *group, MapData *md, QWidget *parent);
     ~GroupWidget() final;
 
 public slots:

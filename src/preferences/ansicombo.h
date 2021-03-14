@@ -28,8 +28,8 @@ public:
                                    const QString &ansiColor,
                                    const bool changeText = true);
 
-    explicit AnsiCombo(AnsiModeEnum mode, QWidget *parent = nullptr);
-    explicit AnsiCombo(QWidget *parent = nullptr);
+    explicit AnsiCombo(AnsiModeEnum mode, QWidget *parent);
+    explicit AnsiCombo(QWidget *parent);
 
     void initColours(AnsiModeEnum mode);
 

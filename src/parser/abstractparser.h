@@ -61,10 +61,10 @@ private:
     Q_OBJECT
 
 protected:
-    MumeClock *m_mumeClock = nullptr;
+    MumeClock &m_mumeClock;
 
 private:
-    MapData *m_mapData = nullptr;
+    MapData &m_mapData;
     const ProxyParserApi m_proxy;
     const GroupManagerApi m_group;
 
@@ -105,8 +105,7 @@ private:
     QTimer m_offlineCommandTimer;
 
 public:
-    explicit AbstractParser(
-        MapData *, MumeClock *, ProxyParserApi, GroupManagerApi, QObject *parent = nullptr);
+    explicit AbstractParser(MapData &, MumeClock &, ProxyParserApi, GroupManagerApi, QObject *parent);
     ~AbstractParser() override;
 
     void doMove(CommandEnum cmd);
@@ -149,7 +148,8 @@ protected slots:
     void slot_doOfflineCharacterMove();
 
 protected:
-    void offlineCharacterMove(CommandEnum direction = CommandEnum::UNKNOWN);
+    void offlineCharacterMove(CommandEnum direction);
+    void offlineCharacterMove() { offlineCharacterMove(CommandEnum::UNKNOWN); }
     void sendRoomInfoToUser(const Room *);
     void sendPromptToUser(const Room &r);
     void sendPromptToUser(char light, char terrain);

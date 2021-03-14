@@ -76,7 +76,7 @@ private:
     Q_OBJECT
 
 public:
-    explicit InputWidget(QWidget *parent = nullptr);
+    explicit InputWidget(QWidget *parent);
     ~InputWidget() final;
 
     NODISCARD QSize sizeHint() const override;

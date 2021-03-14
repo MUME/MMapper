@@ -170,8 +170,8 @@ private:
 
 MapZoomSlider::~MapZoomSlider() = default;
 
-MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
-    : QMainWindow(parent, flags)
+MainWindow::MainWindow()
+    : QMainWindow(nullptr, Qt::WindowFlags{})
 {
     setObjectName("MainWindow");
     setWindowIcon(QIcon(":/icons/m.png"));
@@ -187,6 +187,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     qRegisterMetaType<SigRoomSelection>("SigRoomSelection");
 
     m_mapData = new MapData(this);
+    auto &mapData = *m_mapData;
+
     m_mapData->setObjectName("MapData");
     setCurrentFile("");
 
@@ -195,7 +197,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     m_groupManager = new Mmapper2Group(this);
     m_groupManager->setObjectName("GroupManager");
 
-    m_mapWindow = new MapWindow(m_mapData, m_prespammedPath, m_groupManager, this);
+    m_mapWindow = new MapWindow(mapData, deref(m_prespammedPath), deref(m_groupManager), this);
     setCentralWidget(m_mapWindow);
 
     m_pathMachine = new Mmapper2PathMachine(m_mapData, this);
@@ -237,7 +239,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
     m_dockDialogGroup->hide();
     connect(m_groupWidget, &GroupWidget::sig_center, m_mapWindow, &MapWindow::slot_centerOnWorldPos);
 
-    m_findRoomsDlg = new FindRoomsDlg(m_mapData, this);
+    m_findRoomsDlg = new FindRoomsDlg(mapData, this);
     m_findRoomsDlg->setObjectName("FindRoomsDlg");
 
     m_mumeClock = new MumeClock(getConfig().mumeClock.startEpoch, this);
@@ -256,13 +258,13 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags)
 
     m_logger = new AutoLogger(this);
 
-    m_listener = new ConnectionListener(m_mapData,
-                                        m_pathMachine,
-                                        m_prespammedPath,
-                                        m_groupManager,
-                                        m_mumeClock,
-                                        m_logger,
-                                        getCanvas(),
+    m_listener = new ConnectionListener(mapData,
+                                        deref(m_pathMachine),
+                                        deref(m_prespammedPath),
+                                        deref(m_groupManager),
+                                        deref(m_mumeClock),
+                                        deref(m_logger),
+                                        deref(getCanvas()),
                                         this);
 
     // update connections

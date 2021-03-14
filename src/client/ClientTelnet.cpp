@@ -19,7 +19,7 @@
 #include "../proxy/TextCodec.h"
 
 ClientTelnet::ClientTelnet(QObject *const parent)
-    : AbstractTelnet(TextCodecStrategyEnum::AUTO_SELECT_CODEC, false, parent, "MMapper")
+    : AbstractTelnet(TextCodecStrategyEnum::AUTO_SELECT_CODEC, parent, "MMapper")
 {
     connect(&socket, &QAbstractSocket::connected, this, &ClientTelnet::slot_onConnected);
     connect(&socket, &QAbstractSocket::disconnected, this, &ClientTelnet::slot_onDisconnected);

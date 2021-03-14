@@ -28,7 +28,7 @@ class CGroup final : public QObject, public GroupAdmin
     Q_OBJECT
 
 public:
-    explicit CGroup(QObject *parent = nullptr);
+    explicit CGroup(QObject *parent);
     ~CGroup() final = default;
     DELETE_CTORS_AND_ASSIGN_OPS(CGroup);
 

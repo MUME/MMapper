@@ -149,13 +149,11 @@ struct NODISCARD TelnetFormatter final : public AppendBuffer
 };
 
 AbstractTelnet::AbstractTelnet(TextCodecStrategyEnum strategy,
-                               const bool debug,
                                QObject *const parent,
                                const QByteArray &defaultTermType)
     : QObject(parent)
     , m_defaultTermType(defaultTermType)
     , textCodec{strategy}
-    , debug{debug}
 {
     reset();
 }

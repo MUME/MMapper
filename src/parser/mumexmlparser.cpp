@@ -40,7 +40,7 @@ static const QByteArray ampersand("&");
 static const QByteArray ampersandTemplate("&amp;");
 
 MumeXmlParser::MumeXmlParser(
-    MapData *md, MumeClock *mc, ProxyParserApi proxy, GroupManagerApi group, QObject *parent)
+    MapData &md, MumeClock &mc, ProxyParserApi proxy, GroupManagerApi group, QObject *parent)
     : AbstractParser(md, mc, proxy, group, parent)
 {
     if (XPS_DEBUG_TO_FILE) {
@@ -213,7 +213,7 @@ bool MumeXmlParser::element(const QByteArray &line)
                 } else if (line.startsWith("/weather")) {
                     m_lineFlags.remove(LineFlagEnum::WEATHER);
                     // Certain weather events happen on ticks
-                    m_mumeClock->parseWeather(m_stringBuffer);
+                    m_mumeClock.parseWeather(m_stringBuffer);
 
                 } else if (line.startsWith("/xml")) {
                     sendToUser("[MMapper] Mapper cannot function without XML mode\n");

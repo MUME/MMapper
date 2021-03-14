@@ -85,8 +85,8 @@ MumeClock::MumeClock(int64_t mumeEpoch, QObject *parent)
     , m_clockTolerance(DEFAULT_TOLERANCE_LIMIT)
 {}
 
-MumeClock::MumeClock(QObject *parent)
-    : MumeClock(DEFAULT_MUME_START_EPOCH, parent)
+MumeClock::MumeClock()
+    : MumeClock(DEFAULT_MUME_START_EPOCH, nullptr)
 {}
 
 MumeMoment MumeClock::getMumeMoment() const

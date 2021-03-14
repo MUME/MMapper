@@ -464,8 +464,8 @@ bool MapStorage::mergeData()
         // create all pointers to items
         for (uint32_t index = 0; index < marksCount; ++index) {
             auto mark = InfoMark::alloc(m_mapData);
-            loadMark(mark.get(), stream, version);
-            m_mapData.addMarker(mark);
+            loadMark(deref(mark), stream, version);
+            m_mapData.addMarker(std::move(mark));
 
             progressCounter.step();
         }
@@ -491,7 +491,7 @@ bool MapStorage::mergeData()
     return true;
 }
 
-void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, uint32_t version)
+void MapStorage::loadMark(InfoMark &mark, QDataStream &stream, uint32_t version)
 {
     auto helper = LoadRoomHelper{stream};
 
@@ -500,7 +500,7 @@ void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, uint32_t version)
             helper.read_string();         /* value ignored; called for side effect */
     }
 
-    mark->setText(InfoMarkText(helper.read_string()));
+    mark.setText(InfoMarkText(helper.read_string()));
 
     if (version <= MMAPPER_2_5_1_SCHEMA) {
         MAYBE_UNUSED const auto ignored = //
@@ -515,7 +515,7 @@ void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, uint32_t version)
         }
         return static_cast<InfoMarkTypeEnum>(value);
     }(helper.read_u8());
-    mark->setType(type);
+    mark.setType(type);
 
     if (version >= MMAPPER_2_3_7_SCHEMA) {
         const auto clazz = [](const uint8_t value) {
@@ -527,11 +527,11 @@ void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, uint32_t version)
             }
             return static_cast<InfoMarkClassEnum>(value);
         }(helper.read_u8());
-        mark->setClass(clazz);
+        mark.setClass(clazz);
         if (version < MMAPPER_19_10_0_SCHEMA) {
-            mark->setRotationAngle(helper.read_i32() / INFOMARK_SCALE);
+            mark.setRotationAngle(helper.read_i32() / INFOMARK_SCALE);
         } else {
-            mark->setRotationAngle(helper.read_i32());
+            mark.setRotationAngle(helper.read_i32());
         }
     }
 
@@ -540,16 +540,16 @@ void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, uint32_t version)
                + Coordinate{basePos.x * INFOMARK_SCALE, basePos.y * INFOMARK_SCALE, basePos.z};
     };
 
-    mark->setPosition1(read_coord(helper, basePosition));
-    mark->setPosition2(read_coord(helper, basePosition));
+    mark.setPosition1(read_coord(helper, basePosition));
+    mark.setPosition2(read_coord(helper, basePosition));
 
-    transformInfomarkOnLoad(version, *mark);
+    transformInfomarkOnLoad(version, mark);
 
-    if (mark->getType() != InfoMarkTypeEnum::TEXT && !mark->getText().isEmpty())
-        mark->setText(InfoMarkText{});
+    if (mark.getType() != InfoMarkTypeEnum::TEXT && !mark.getText().isEmpty())
+        mark.setText(InfoMarkText{});
     // REVISIT: Just discard empty text markers?
-    else if (mark->getType() == InfoMarkTypeEnum::TEXT && mark->getText().isEmpty())
-        mark->setText(InfoMarkText{"New Marker"});
+    else if (mark.getType() == InfoMarkTypeEnum::TEXT && mark.getText().isEmpty())
+        mark.setText(InfoMarkText{"New Marker"});
 }
 
 void MapStorage::saveRoom(const Room &room, QDataStream &stream)
@@ -655,8 +655,8 @@ bool MapStorage::saveData(bool baseMapOnly)
     }
 
     // save items
-    for (auto &mark : markerList) {
-        saveMark(mark.get(), stream);
+    for (const auto &mark : markerList) {
+        saveMark(deref(mark), stream);
         progressCounter.step();
     }
 
@@ -681,15 +681,15 @@ bool MapStorage::saveData(bool baseMapOnly)
     return true;
 }
 
-void MapStorage::saveMark(InfoMark *mark, QDataStream &stream)
+void MapStorage::saveMark(const InfoMark &mark, QDataStream &stream)
 {
     // REVISIT: save type first, and then avoid saving fields that aren't necessary?
-    const InfoMarkTypeEnum type = mark->getType();
-    stream << QString((type == InfoMarkTypeEnum::TEXT) ? mark->getText().toQString() : "");
+    const InfoMarkTypeEnum type = mark.getType();
+    stream << QString((type == InfoMarkTypeEnum::TEXT) ? mark.getText().toQString() : "");
     stream << static_cast<quint8>(type);
-    stream << static_cast<quint8>(mark->getClass());
+    stream << static_cast<quint8>(mark.getClass());
     // REVISIT: round to 45 degrees?
-    stream << static_cast<qint32>(std::lround(mark->getRotationAngle()));
-    writeCoordinate(stream, mark->getPosition1());
-    writeCoordinate(stream, mark->getPosition2());
+    stream << static_cast<qint32>(std::lround(mark.getRotationAngle()));
+    writeCoordinate(stream, mark.getPosition1());
+    writeCoordinate(stream, mark.getPosition2());
 }

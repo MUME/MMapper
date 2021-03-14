@@ -38,10 +38,7 @@ NODISCARD static QByteArray addTerminalTypeSuffix(const std::string_view &prefix
 }
 
 MudTelnet::MudTelnet(QObject *const parent)
-    : AbstractTelnet(TextCodecStrategyEnum::FORCE_LATIN_1,
-                     false,
-                     parent,
-                     addTerminalTypeSuffix("unknown"))
+    : AbstractTelnet(TextCodecStrategyEnum::FORCE_LATIN_1, parent, addTerminalTypeSuffix("unknown"))
 {
     // RFC 2066 states we can provide many character sets but we force Latin-1 when
     // communicating with MUME

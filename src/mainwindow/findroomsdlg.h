@@ -44,14 +44,14 @@ private:
     void closeEvent(QCloseEvent *event) final;
 
 public:
-    explicit FindRoomsDlg(MapData *, QWidget *parent = nullptr);
+    explicit FindRoomsDlg(MapData &, QWidget *parent);
     ~FindRoomsDlg() final;
 
     void readSettings();
     void writeSettings();
 
 private:
-    MapData *m_mapData = nullptr;
+    MapData &m_mapData;
     QTreeWidgetItem *item = nullptr;
     QShortcut *m_showSelectedRoom = nullptr;
 

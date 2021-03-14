@@ -43,7 +43,7 @@ private:
     QDialogButtonBox *buttonBox = nullptr;
 
 public:
-    explicit UpdateDialog(QWidget *parent = nullptr);
+    explicit UpdateDialog(QWidget *parent);
 
     void open() override;
 

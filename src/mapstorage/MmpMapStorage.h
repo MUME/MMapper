@@ -23,7 +23,7 @@ class MmpMapStorage final : public AbstractMapStorage
     Q_OBJECT
 
 public:
-    explicit MmpMapStorage(MapData &, const QString &, QFile *, QObject *parent = nullptr);
+    explicit MmpMapStorage(MapData &, const QString &, QFile *, QObject *parent);
     ~MmpMapStorage() final;
 
 public:

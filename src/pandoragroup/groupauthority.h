@@ -24,7 +24,7 @@ class GroupAuthority : public QObject
 {
     Q_OBJECT
 public:
-    explicit GroupAuthority(QObject *parent = nullptr);
+    explicit GroupAuthority(QObject *parent);
 
 private:
     void refresh();

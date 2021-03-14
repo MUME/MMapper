@@ -95,9 +95,8 @@ class AbstractTelnet : public QObject
 
 public:
     explicit AbstractTelnet(TextCodecStrategyEnum strategy,
-                            bool debug = false,
-                            QObject *parent = nullptr,
-                            const QByteArray &defaultTermType = "unknown");
+                            QObject *parent,
+                            const QByteArray &defaultTermType);
 
     NODISCARD QByteArray getTerminalType() const { return termType; }
     /* unused */

@@ -392,7 +392,7 @@ void MapCanvas::paintCharacters()
     characterBatch.drawCharacter(pos, color);
 
     // paint prespam
-    const auto prespam = m_data.getPath(pos, m_prespammedPath->getQueue());
+    const auto prespam = m_data.getPath(pos, m_prespammedPath.getQueue());
     characterBatch.drawPreSpammedPath(pos, prespam, color);
 
     characterBatch.reallyDraw(getOpenGL(), m_textures);
@@ -400,7 +400,7 @@ void MapCanvas::paintCharacters()
 
 void MapCanvas::drawGroupCharacters(CharacterBatch &batch)
 {
-    CGroup *const group = m_groupManager->getGroup();
+    CGroup *const group = m_groupManager.getGroup();
     if ((group == nullptr) || getConfig().groupManager.state == GroupManagerStateEnum::Off
         || m_data.isEmpty()) {
         return;

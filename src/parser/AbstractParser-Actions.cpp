@@ -249,7 +249,7 @@ void AbstractParser::initActionMap()
             return;
 
         // Predict our movement given what we know about flow flags
-        auto rs = RoomSelection(*m_mapData);
+        auto rs = RoomSelection(m_mapData);
         if (const Room *const r = rs.getRoom(getNextPosition())) {
             for (const ExitDirEnum i : ALL_EXITS_NESWUD) {
                 const Exit &e = r->exit(i);
@@ -269,9 +269,9 @@ void AbstractParser::initActionMap()
 
     /// Time
     addStartsWith("The current time is",
-                  [this](StringView view) { m_mumeClock->parseClockTime(view.toQString()); });
+                  [this](StringView view) { m_mumeClock.parseClockTime(view.toQString()); });
     addEndsWith("of the Third Age.",
-                [this](StringView view) { m_mumeClock->parseMumeTime(view.toQString()); });
+                [this](StringView view) { m_mumeClock.parseMumeTime(view.toQString()); });
 
     /// Score
     addRegex(R"(^(You have )?\d+/\d+ hits?(, \d+/\d+ mana,)? and \d+/\d+ move(ment point)?s.$)",

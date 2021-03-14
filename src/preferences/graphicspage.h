@@ -24,7 +24,7 @@ class GraphicsPage final : public QWidget
     Q_OBJECT
 
 public:
-    explicit GraphicsPage(QWidget *parent = nullptr);
+    explicit GraphicsPage(QWidget *parent);
     ~GraphicsPage() final;
 
 signals:

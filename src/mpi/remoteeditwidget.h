@@ -92,7 +92,7 @@ private:
     Q_OBJECT
 
 public:
-    explicit RemoteTextEdit(const QString &initialText, QWidget *parent = nullptr);
+    explicit RemoteTextEdit(const QString &initialText, QWidget *parent);
     ~RemoteTextEdit() final;
 
 protected:
@@ -134,7 +134,7 @@ public:
     explicit RemoteEditWidget(bool editSession,
                               const QString &title,
                               const QString &body,
-                              QWidget *parent = nullptr);
+                              QWidget *parent);
     ~RemoteEditWidget() override;
 
 public:

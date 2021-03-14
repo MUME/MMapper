@@ -25,24 +25,23 @@ void ConnectionListenerTcpServer::incomingConnection(qintptr socketDescriptor)
     emit signal_incomingConnection(socketDescriptor);
 }
 
-ConnectionListener::ConnectionListener(MapData *const md,
-                                       Mmapper2PathMachine *const pm,
-                                       PrespammedPath *const pp,
-                                       Mmapper2Group *const gm,
-                                       MumeClock *const mc,
-                                       AutoLogger *const al,
-                                       MapCanvas *const mca,
+ConnectionListener::ConnectionListener(MapData &md,
+                                       Mmapper2PathMachine &pm,
+                                       PrespammedPath &pp,
+                                       Mmapper2Group &gm,
+                                       MumeClock &mc,
+                                       AutoLogger &al,
+                                       MapCanvas &mca,
                                        QObject *const parent)
     : QObject(parent)
-{
-    m_mapData = md;
-    m_pathMachine = pm;
-    m_prespammedPath = pp;
-    m_groupManager = gm;
-    m_mumeClock = mc;
-    m_autoLogger = al;
-    m_mapCanvas = mca;
-}
+    , m_mapData{md}
+    , m_pathMachine{pm}
+    , m_prespammedPath{pp}
+    , m_groupManager{gm}
+    , m_mumeClock{mc}
+    , m_autoLogger{al}
+    , m_mapCanvas{mca}
+{}
 
 ConnectionListener::~ConnectionListener()
 {
@@ -106,7 +105,7 @@ void ConnectionListener::slot_onIncomingConnection(qintptr socketDescriptor)
                                           m_autoLogger,
                                           m_mapCanvas,
                                           socketDescriptor,
-                                          this);
+                                          *this);
 
         if (getConfig().connection.proxyThreaded) {
             m_thread = std::make_unique<QThread>();

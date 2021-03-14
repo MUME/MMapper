@@ -18,6 +18,7 @@ static constexpr const bool USE_TEST = false;
 #endif
 
 PrespammedPath::PrespammedPath(QObject * /*unused*/)
+// REVISIT: why isn't the parent passed to the base class?
 {
     if (USE_TEST) {
         m_queue.append(CommandEnum::DOWN);

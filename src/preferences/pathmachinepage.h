@@ -17,7 +17,7 @@ class PathmachinePage : public QWidget, private Ui::PathmachinePage
     Q_OBJECT
 
 public:
-    explicit PathmachinePage(QWidget *parent = nullptr);
+    explicit PathmachinePage(QWidget *parent);
 
 public slots:
     void slot_loadConfig();

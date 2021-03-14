@@ -20,7 +20,7 @@ class ParserPage : public QWidget, private Ui::ParserPage
     Q_OBJECT
 
 public:
-    explicit ParserPage(QWidget *parent = nullptr);
+    explicit ParserPage(QWidget *parent);
 
 public slots:
     void slot_loadConfig();

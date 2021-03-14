@@ -19,7 +19,7 @@ private:
     Q_OBJECT
 
 public:
-    explicit StackedInputWidget(QWidget *parent = nullptr);
+    explicit StackedInputWidget(QWidget *parent);
     ~StackedInputWidget() final;
 
 private:

@@ -59,7 +59,7 @@ class MainWindow final : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags{});
+    explicit MainWindow();
     ~MainWindow() final;
 
     enum class NODISCARD SaveModeEnum { FULL, BASEMAP };

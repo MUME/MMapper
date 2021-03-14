@@ -26,7 +26,7 @@ class InfoMarksEditDlg final : public QDialog, private Ui::InfoMarksEditDlg
     Q_OBJECT
 
 public:
-    explicit InfoMarksEditDlg(QWidget *parent = nullptr);
+    explicit InfoMarksEditDlg(QWidget *parent);
     ~InfoMarksEditDlg() final;
 
     void setInfoMarkSelection(const std::shared_ptr<InfoMarkSelection> &is,

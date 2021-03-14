@@ -25,7 +25,7 @@ class ConfigDialog final : public QDialog
     Q_OBJECT
 
 public:
-    explicit ConfigDialog(Mmapper2Group *, QWidget *parent = nullptr);
+    explicit ConfigDialog(Mmapper2Group *, QWidget *parent);
     ~ConfigDialog() final;
 
 protected:

@@ -15,10 +15,7 @@
 
 class QResizeEvent;
 
-MapWindow::MapWindow(MapData *const mapData,
-                     PrespammedPath *const pp,
-                     Mmapper2Group *const gm,
-                     QWidget *const parent)
+MapWindow::MapWindow(MapData &mapData, PrespammedPath &pp, Mmapper2Group &gm, QWidget *const parent)
     : QWidget(parent)
 {
     m_gridLayout = std::make_unique<QGridLayout>(this);

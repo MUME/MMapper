@@ -44,13 +44,13 @@ signals:
 class ConnectionListener final : public QObject
 {
 public:
-    explicit ConnectionListener(MapData *,
-                                Mmapper2PathMachine *,
-                                PrespammedPath *,
-                                Mmapper2Group *,
-                                MumeClock *,
-                                AutoLogger *,
-                                MapCanvas *,
+    explicit ConnectionListener(MapData &,
+                                Mmapper2PathMachine &,
+                                PrespammedPath &,
+                                Mmapper2Group &,
+                                MumeClock &,
+                                AutoLogger &,
+                                MapCanvas &,
                                 QObject *parent);
     ~ConnectionListener() final;
 
@@ -71,13 +71,13 @@ protected slots:
     void slot_onIncomingConnection(qintptr socketDescriptor);
 
 private:
-    MapData *m_mapData = nullptr;
-    Mmapper2PathMachine *m_pathMachine = nullptr;
-    PrespammedPath *m_prespammedPath = nullptr;
-    Mmapper2Group *m_groupManager = nullptr;
-    MumeClock *m_mumeClock = nullptr;
-    AutoLogger *m_autoLogger = nullptr;
-    MapCanvas *m_mapCanvas = nullptr;
+    MapData &m_mapData;
+    Mmapper2PathMachine &m_pathMachine;
+    PrespammedPath &m_prespammedPath;
+    Mmapper2Group &m_groupManager;
+    MumeClock &m_mumeClock;
+    AutoLogger &m_autoLogger;
+    MapCanvas &m_mapCanvas;
     using ServerList = std::vector<QPointer<ConnectionListenerTcpServer>>;
     ServerList m_servers;
     std::unique_ptr<Proxy> m_proxy;

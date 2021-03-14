@@ -21,7 +21,7 @@ class MumeSocket : public QObject
 {
     Q_OBJECT
 public:
-    explicit MumeSocket(QObject *parent = nullptr)
+    explicit MumeSocket(QObject *parent)
         : QObject(parent)
     {}
 

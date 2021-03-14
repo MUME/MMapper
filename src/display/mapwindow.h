@@ -33,10 +33,7 @@ class MapWindow final : public QWidget
     Q_OBJECT
 
 public:
-    explicit MapWindow(MapData *mapData,
-                       PrespammedPath *pp,
-                       Mmapper2Group *gm,
-                       QWidget *parent = nullptr);
+    explicit MapWindow(MapData &mapData, PrespammedPath &pp, Mmapper2Group &gm, QWidget *parent);
     ~MapWindow() final;
 
 public:

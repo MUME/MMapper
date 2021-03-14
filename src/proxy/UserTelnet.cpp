@@ -10,7 +10,7 @@
 #include <QJsonDocument>
 
 UserTelnet::UserTelnet(QObject *const parent)
-    : AbstractTelnet(TextCodecStrategyEnum::AUTO_SELECT_CODEC, false, parent)
+    : AbstractTelnet(TextCodecStrategyEnum::AUTO_SELECT_CODEC, parent, "unknown")
 {}
 
 void UserTelnet::slot_onConnected()

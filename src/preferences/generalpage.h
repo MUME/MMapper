@@ -20,7 +20,7 @@ class GeneralPage final : public QWidget
     Q_OBJECT
 
 public:
-    explicit GeneralPage(QWidget *parent = nullptr);
+    explicit GeneralPage(QWidget *parent);
     ~GeneralPage() final;
 
 public slots:

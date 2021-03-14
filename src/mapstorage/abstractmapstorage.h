@@ -23,8 +23,8 @@ class AbstractMapStorage : public QObject
     Q_OBJECT
 
 public:
-    explicit AbstractMapStorage(MapData &, QString, QFile *, QObject *parent = nullptr);
-    explicit AbstractMapStorage(MapData &, QString, QObject *parent = nullptr);
+    explicit AbstractMapStorage(MapData &, QString, QFile *, QObject *parent);
+    explicit AbstractMapStorage(MapData &, QString, QObject *parent);
     ~AbstractMapStorage() override;
 
     virtual bool canLoad() const = 0;

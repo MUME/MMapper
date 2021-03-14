@@ -65,7 +65,7 @@ protected:
     void checkSize(const Coordinate &);
 
 public:
-    explicit MapFrontend(QObject *parent = nullptr);
+    explicit MapFrontend(QObject *parent);
     virtual ~MapFrontend() override;
 
 private:

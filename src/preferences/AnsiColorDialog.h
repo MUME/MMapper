@@ -18,12 +18,12 @@ class AnsiColorDialog final : public QDialog
     Q_OBJECT
 
 public:
-    explicit AnsiColorDialog(const QString &ansiString, QWidget *parent = nullptr);
-    explicit AnsiColorDialog(QWidget *parent = nullptr);
+    explicit AnsiColorDialog(const QString &ansiString, QWidget *parent);
+    explicit AnsiColorDialog(QWidget *parent);
     ~AnsiColorDialog() final;
 
     NODISCARD QString getAnsiString() const { return ansiString; }
-    NODISCARD static QString getColor(const QString &ansiString, QWidget *parent = nullptr);
+    NODISCARD static QString getColor(const QString &ansiString, QWidget *parent);
 
 public slots:
     void slot_ansiComboChange();

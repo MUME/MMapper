@@ -349,7 +349,7 @@ void AbstractParser::parseRoom(StringView input)
 
     auto hasDoor = [this](const ExitDirEnum dir) {
         const Coordinate c = getTailPosition();
-        RoomSelection rs(*m_mapData);
+        RoomSelection rs(m_mapData);
         if (const auto &r = rs.getRoom(c)) {
             return r->exit(dir).isDoor();
         }
@@ -375,17 +375,17 @@ void AbstractParser::parseRoom(StringView input)
                 const DoorFlagEnum flag = vector[1].getDoorFlag();
                 ExitFieldVariant variant = ExitFieldVariant{DoorFlags{flag}};
 
-                const auto rs = RoomSelection::createSelection(*m_mapData, getTailPosition());
+                const auto rs = RoomSelection::createSelection(m_mapData, getTailPosition());
                 const RoomId roomId = [&rs]() {
                     if (rs->size() != 1)
                         throw std::runtime_error("unable to select current room");
                     return rs->getFirstRoomId();
                 }();
 
-                if (!m_mapData->execute(std::make_unique<SingleRoomAction>(
-                                            std::make_unique<ModifyExitFlags>(variant, dir, mode),
-                                            roomId),
-                                        rs))
+                if (!m_mapData.execute(std::make_unique<SingleRoomAction>(
+                                           std::make_unique<ModifyExitFlags>(variant, dir, mode),
+                                           roomId),
+                                       rs))
                     throw std::runtime_error("execute failed");
                 const auto toggle = enabledString(mode == FlagModifyModeEnum::SET);
                 os << "--->" << getFlagName(flag) << " door " << toggle << std::endl;
@@ -405,19 +405,19 @@ void AbstractParser::parseRoom(StringView input)
 
             const DoorName name(v[4].getString());
 
-            const auto rs = RoomSelection::createSelection(*m_mapData, getTailPosition());
+            const auto rs = RoomSelection::createSelection(m_mapData, getTailPosition());
             const RoomId roomId = [&rs]() {
                 if (rs->size() != 1)
                     throw std::runtime_error("unable to select current room");
                 return rs->getFirstRoomId();
             }();
 
-            if (!m_mapData->execute(std::make_unique<SingleRoomAction>(
-                                        std::make_unique<ModifyExitFlags>(ExitFieldVariant{name},
-                                                                          dir,
-                                                                          FlagModifyModeEnum::SET),
-                                        roomId),
-                                    rs))
+            if (!m_mapData.execute(std::make_unique<SingleRoomAction>(
+                                       std::make_unique<ModifyExitFlags>(ExitFieldVariant{name},
+                                                                         dir,
+                                                                         FlagModifyModeEnum::SET),
+                                       roomId),
+                                   rs))
                 throw std::runtime_error("execute failed");
             send_ok(os);
         },
@@ -432,20 +432,19 @@ void AbstractParser::parseRoom(StringView input)
             if (!hasDoor(dir))
                 throw std::runtime_error("exit is missing exitflag 'door'");
 
-            const auto rs = RoomSelection::createSelection(*m_mapData, getTailPosition());
+            const auto rs = RoomSelection::createSelection(m_mapData, getTailPosition());
             const RoomId roomId = [&rs]() {
                 if (rs->size() != 1)
                     throw std::runtime_error("unable to select current room");
                 return rs->getFirstRoomId();
             }();
 
-            if (!m_mapData
-                     ->execute(std::make_unique<SingleRoomAction>(
-                                   std::make_unique<ModifyExitFlags>(ExitFieldVariant{DoorName{}},
-                                                                     dir,
-                                                                     FlagModifyModeEnum::SET),
-                                   roomId),
-                               rs))
+            if (!m_mapData.execute(std::make_unique<SingleRoomAction>(
+                                       std::make_unique<ModifyExitFlags>(ExitFieldVariant{DoorName{}},
+                                                                         dir,
+                                                                         FlagModifyModeEnum::SET),
+                                       roomId),
+                                   rs))
                 throw std::runtime_error("execute failed");
             send_ok(os);
         },
@@ -464,7 +463,7 @@ void AbstractParser::parseRoom(StringView input)
 
     auto hasExit = [this](const ExitDirEnum dir) {
         const Coordinate c = getTailPosition();
-        RoomSelection rs(*m_mapData);
+        RoomSelection rs(m_mapData);
         if (const auto r = rs.getRoom(c)) {
             return r->exit(dir).isExit();
         }
@@ -490,17 +489,17 @@ void AbstractParser::parseRoom(StringView input)
                 if (!hasExit(dir) && flag != ExitFlagEnum::EXIT)
                     throw std::runtime_error("exit is missing");
 
-                const auto rs = RoomSelection::createSelection(*m_mapData, getTailPosition());
+                const auto rs = RoomSelection::createSelection(m_mapData, getTailPosition());
                 const RoomId roomId = [&rs]() {
                     if (rs->size() != 1)
                         throw std::runtime_error("unable to select current room");
                     return rs->getFirstRoomId();
                 }();
 
-                if (!m_mapData->execute(std::make_unique<SingleRoomAction>(
-                                            std::make_unique<ModifyExitFlags>(variant, dir, mode),
-                                            roomId),
-                                        rs))
+                if (!m_mapData.execute(std::make_unique<SingleRoomAction>(
+                                           std::make_unique<ModifyExitFlags>(variant, dir, mode),
+                                           roomId),
+                                       rs))
                     throw std::runtime_error("execute failed");
                 const auto toggle = enabledString(mode == FlagModifyModeEnum::SET);
                 os << "--->" << getFlagName(flag) << " exit " << toggle << std::endl;
@@ -531,17 +530,17 @@ void AbstractParser::parseRoom(StringView input)
                 if (!opt)
                     throw std::runtime_error("unable to select current room");
 
-                const auto rs = RoomSelection::createSelection(*m_mapData, getTailPosition());
+                const auto rs = RoomSelection::createSelection(m_mapData, getTailPosition());
                 const RoomId roomId = [&rs]() {
                     if (rs->size() != 1)
                         throw std::runtime_error("unable to select current room");
                     return rs->getFirstRoomId();
                 }();
 
-                if (!m_mapData->execute(std::make_unique<SingleRoomAction>(
-                                            std::make_unique<ModifyRoomFlags>(opt.value(), mode),
-                                            roomId),
-                                        rs))
+                if (!m_mapData.execute(std::make_unique<SingleRoomAction>(
+                                           std::make_unique<ModifyRoomFlags>(opt.value(), mode),
+                                           roomId),
+                                       rs))
                     throw std::runtime_error("execute failed");
                 const auto toggle = enabledString(mode == FlagModifyModeEnum::SET);
                 os << "--->Room flag " << toggle << std::endl;
@@ -571,7 +570,7 @@ void AbstractParser::parseRoom(StringView input)
                 return;
             }
 
-            const auto rs = RoomSelection::createSelection(*m_mapData, getTailPosition());
+            const auto rs = RoomSelection::createSelection(m_mapData, getTailPosition());
             const RoomId roomId = [&rs]() {
                 if (rs->size() != 1)
                     throw std::runtime_error("unable to select current room");
@@ -580,11 +579,11 @@ void AbstractParser::parseRoom(StringView input)
 
             const auto &old = rs->getFirstRoom()->getNote();
             const RoomNote roomNote = RoomNote{old.getStdString() + "\n" + note};
-            if (!m_mapData->execute(std::make_unique<SingleRoomAction>(
-                                        std::make_unique<ModifyRoomFlags>(RoomFieldVariant{roomNote},
-                                                                          FlagModifyModeEnum::SET),
-                                        roomId),
-                                    rs))
+            if (!m_mapData.execute(std::make_unique<SingleRoomAction>(
+                                       std::make_unique<ModifyRoomFlags>(RoomFieldVariant{roomNote},
+                                                                         FlagModifyModeEnum::SET),
+                                       roomId),
+                                   rs))
                 throw std::runtime_error("execute failed");
             os << "--->Note: " << roomNote.getStdString() << std::endl;
             send_ok(os);
@@ -595,19 +594,18 @@ void AbstractParser::parseRoom(StringView input)
         [this](User &user, const Pair * /*args*/) {
             auto &os = user.getOstream();
 
-            const auto rs = RoomSelection::createSelection(*m_mapData, getTailPosition());
+            const auto rs = RoomSelection::createSelection(m_mapData, getTailPosition());
             const RoomId roomId = [&rs]() {
                 if (rs->size() != 1)
                     throw std::runtime_error("unable to select current room");
                 return rs->getFirstRoomId();
             }();
 
-            if (!m_mapData
-                     ->execute(std::make_unique<SingleRoomAction>(
-                                   std::make_unique<ModifyRoomFlags>(RoomFieldVariant{RoomNote{}},
-                                                                     FlagModifyModeEnum::SET),
-                                   roomId),
-                               rs))
+            if (!m_mapData.execute(std::make_unique<SingleRoomAction>(
+                                       std::make_unique<ModifyRoomFlags>(RoomFieldVariant{RoomNote{}},
+                                                                         FlagModifyModeEnum::SET),
+                                       roomId),
+                                   rs))
                 throw std::runtime_error("execute failed");
             send_ok(os);
         },
@@ -629,19 +627,19 @@ void AbstractParser::parseRoom(StringView input)
                 return;
             }
 
-            const auto rs = RoomSelection::createSelection(*m_mapData, getTailPosition());
+            const auto rs = RoomSelection::createSelection(m_mapData, getTailPosition());
             const RoomId roomId = [&rs]() {
                 if (rs->size() != 1)
                     throw std::runtime_error("unable to select current room");
                 return rs->getFirstRoomId();
             }();
 
-            if (!m_mapData->execute(std::make_unique<SingleRoomAction>(
-                                        std::make_unique<ModifyRoomFlags>(RoomFieldVariant{RoomNote{
-                                                                              note}},
-                                                                          FlagModifyModeEnum::SET),
-                                        roomId),
-                                    rs))
+            if (!m_mapData.execute(std::make_unique<SingleRoomAction>(
+                                       std::make_unique<ModifyRoomFlags>(RoomFieldVariant{RoomNote{
+                                                                             note}},
+                                                                         FlagModifyModeEnum::SET),
+                                       roomId),
+                                   rs))
                 throw std::runtime_error("execute failed");
             os << "--->Note: " << note << std::endl;
             send_ok(os);

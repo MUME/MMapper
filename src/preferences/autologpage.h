@@ -15,7 +15,7 @@ class AutoLogPage final : public QWidget
     Q_OBJECT
 
 public:
-    explicit AutoLogPage(QWidget *parent = nullptr);
+    explicit AutoLogPage(QWidget *parent);
     ~AutoLogPage() final;
 
 public slots:

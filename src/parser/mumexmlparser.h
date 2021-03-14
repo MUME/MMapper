@@ -56,8 +56,7 @@ private:
     std::optional<RoomDynamicDesc> m_dynamicRoomDesc;
 
 public:
-    explicit MumeXmlParser(
-        MapData *, MumeClock *, ProxyParserApi, GroupManagerApi, QObject *parent = nullptr);
+    explicit MumeXmlParser(MapData &, MumeClock &, ProxyParserApi, GroupManagerApi, QObject *parent);
     ~MumeXmlParser() final;
 
 private:

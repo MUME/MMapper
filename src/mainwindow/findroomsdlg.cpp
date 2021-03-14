@@ -21,12 +21,12 @@
 #include "../mapdata/roomselection.h"
 #include "../parser/parserutils.h"
 
-FindRoomsDlg::FindRoomsDlg(MapData *const md, QWidget *const parent)
+FindRoomsDlg::FindRoomsDlg(MapData &md, QWidget *const parent)
     : QDialog(parent)
+    , m_mapData{md}
 {
     setupUi(this);
 
-    m_mapData = md;
     adjustResultTable();
 
     m_showSelectedRoom = new QShortcut(QKeySequence(tr("Space", "Select result item")), resultTable);
@@ -49,7 +49,7 @@ FindRoomsDlg::FindRoomsDlg(MapData *const md, QWidget *const parent)
         editButton->setEnabled(enabled);
     });
     connect(selectButton, &QAbstractButton::clicked, this, [this]() {
-        const auto tmpSel = RoomSelection::createSelection(*m_mapData);
+        const auto tmpSel = RoomSelection::createSelection(m_mapData);
         for (const auto &selectedItem : resultTable->selectedItems()) {
             const auto id = RoomId{selectedItem->text(0).toUInt()};
             tmpSel->getRoom(id);
@@ -69,7 +69,7 @@ FindRoomsDlg::FindRoomsDlg(MapData *const md, QWidget *const parent)
         emit sig_newRoomSelection(SigRoomSelection{tmpSel});
     });
     connect(editButton, &QAbstractButton::clicked, this, [this]() {
-        const auto tmpSel = RoomSelection::createSelection(*m_mapData);
+        const auto tmpSel = RoomSelection::createSelection(m_mapData);
         for (const auto &selectedItem : resultTable->selectedItems()) {
             const auto id = RoomId{selectedItem->text(0).toUInt()};
             tmpSel->getRoom(id);
@@ -127,7 +127,7 @@ void FindRoomsDlg::slot_findClicked()
     }
 
     try {
-        auto tmpSel = RoomSelection(*m_mapData);
+        auto tmpSel = RoomSelection(m_mapData);
         tmpSel.genericSearch(RoomFilter(text, cs, kind));
 
         for (const auto &[rid, room] : tmpSel) {
@@ -170,7 +170,7 @@ void FindRoomsDlg::slot_itemDoubleClicked(QTreeWidgetItem *const inputItem)
         return;
     }
 
-    auto tmpSel = RoomSelection(*m_mapData);
+    auto tmpSel = RoomSelection(m_mapData);
     const auto id = RoomId{inputItem->text(0).toUInt()};
     if (const Room *const r = tmpSel.getRoom(id)) {
         if (r->getId() == id) {
