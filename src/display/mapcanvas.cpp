@@ -39,8 +39,10 @@
 #include "MapCanvasRoomDrawer.h"
 #include "connectionselection.h"
 
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #undef near // Bad dog, Microsoft; bad dog!!!
 #undef far  // Bad dog, Microsoft; bad dog!!!
+#endif
 
 using NonOwningPointer = MapCanvas *;
 static NonOwningPointer &primaryMapCanvas()
