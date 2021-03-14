@@ -34,4 +34,37 @@ QString escapeGmcpStringData(const QString &str)
     }
     return result;
 }
+
+namespace test {
+static int testing()
+{
+    QString s;
+    s.append('\"');
+    s.append('\\');
+    s.append('\b');
+    s.append('\f');
+    s.append(QChar(char16_t(0xff)));
+    s.append(QChar(char16_t(0x100)));
+    s.append(C_CARRIAGE_RETURN);
+    s.append(C_NEWLINE);
+    assert(s.size() == 8);
+
+    const auto result = escapeGmcpStringData(s);
+    assert(result.size() == 14);
+
+    const auto str = ::toStdStringUtf8(result);
+    assert(str
+           == "\\\""
+              "\\\\"
+              "\\b"
+              "\\f"
+              "\xc3\xbf"
+              "\xc4\x80"
+              "\\r"
+              "\\n");
+    return 42;
+}
+MAYBE_UNUSED static int test = testing();
+} // namespace test
+
 } // namespace GmcpUtils
