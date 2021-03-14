@@ -103,12 +103,12 @@ public:
     X(RoomNote, Note, ) \
     X(RoomMobFlags, MobFlags, ) \
     X(RoomLoadFlags, LoadFlags, ) \
-    X(RoomTerrainEnum, TerrainType, = RoomTerrainEnum::UNDEFINED) \
-    X(RoomPortableEnum, PortableType, = RoomPortableEnum::UNDEFINED) \
-    X(RoomLightEnum, LightType, = RoomLightEnum::UNDEFINED) \
-    X(RoomAlignEnum, AlignType, = RoomAlignEnum::UNDEFINED) \
-    X(RoomRidableEnum, RidableType, = RoomRidableEnum::UNDEFINED) \
-    X(RoomSundeathEnum, SundeathType, = RoomSundeathEnum::UNDEFINED)
+    X(RoomTerrainEnum, TerrainType, RoomTerrainEnum::UNDEFINED) \
+    X(RoomPortableEnum, PortableType, RoomPortableEnum::UNDEFINED) \
+    X(RoomLightEnum, LightType, RoomLightEnum::UNDEFINED) \
+    X(RoomAlignEnum, AlignType, RoomAlignEnum::UNDEFINED) \
+    X(RoomRidableEnum, RidableType, RoomRidableEnum::UNDEFINED) \
+    X(RoomSundeathEnum, SundeathType, RoomSundeathEnum::UNDEFINED)
 
 class Room;
 using SharedRoom = std::shared_ptr<Room>;
@@ -125,7 +125,7 @@ private:
 
     struct RoomFields final
     {
-#define DECL_FIELD(_Type, _Prop, _OptInit) _Type _Prop _OptInit;
+#define DECL_FIELD(_Type, _Prop, _OptInit) _Type _Prop{_OptInit};
         XFOREACH_ROOM_PROPERTY(DECL_FIELD)
 #undef DECL_FIELD
     };
