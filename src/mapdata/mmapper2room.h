@@ -127,7 +127,7 @@ class RoomLoadFlags final : public enums::Flags<RoomLoadFlags, RoomLoadFlagEnum,
 
 enum class RoomFieldEnum {
     NAME,
-    /** STATIC_DESC */
+    /* Note: DESC could also be called STATIC_DESC */
     DESC,
     TERRAIN_TYPE,
     DYNAMIC_DESC,
