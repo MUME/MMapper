@@ -160,8 +160,8 @@ protected:
 
     void sendRoomExitsInfoToUser(std::ostream &, const Room *r);
     void sendRoomExitsInfoToUser(const Room *r);
-    const Coordinate getNextPosition();
-    const Coordinate getTailPosition();
+    Coordinate getNextPosition() const;
+    Coordinate getTailPosition() const;
 
     // command handling
     void performDoorCommand(ExitDirEnum direction, DoorActionEnum action);

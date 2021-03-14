@@ -36,17 +36,18 @@ public:
 
     explicit MumeClock(QObject *parent = nullptr);
 
-    MumeMoment getMumeMoment();
+    MumeMoment getMumeMoment() const;
 
-    MumeMoment getMumeMoment(int64_t secsSinceUnixEpoch);
+    MumeMoment getMumeMoment(int64_t secsSinceUnixEpoch) const;
 
+    // REVISIT: This can't be const because it logs.
     MumeClockPrecisionEnum getPrecision();
 
-    const QString toMumeTime(const MumeMoment &moment);
+    QString toMumeTime(const MumeMoment &moment) const;
 
-    const QString toCountdown(const MumeMoment &moment);
+    QString toCountdown(const MumeMoment &moment) const;
 
-    int64_t getMumeStartEpoch() { return m_mumeStartEpoch; }
+    int64_t getMumeStartEpoch() const { return m_mumeStartEpoch; }
 
     enum class WestronMonthNamesEnum {
         UnknownWestronMonth = -1,

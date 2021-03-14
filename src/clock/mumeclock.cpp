@@ -89,13 +89,13 @@ MumeClock::MumeClock(QObject *parent)
     : MumeClock(DEFAULT_MUME_START_EPOCH, parent)
 {}
 
-MumeMoment MumeClock::getMumeMoment()
+MumeMoment MumeClock::getMumeMoment() const
 {
     const int64_t t = QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
     return MumeMoment::sinceMumeEpoch(t - m_mumeStartEpoch);
 }
 
-MumeMoment MumeClock::getMumeMoment(const int64_t secsSinceUnixEpoch)
+MumeMoment MumeClock::getMumeMoment(const int64_t secsSinceUnixEpoch) const
 {
     /* This will break on 2038-01-19 if you use 32-bit. */
     if (secsSinceUnixEpoch < 0) {
@@ -351,7 +351,7 @@ MumeClockPrecisionEnum MumeClock::getPrecision()
     return m_precision;
 }
 
-const QString MumeClock::toMumeTime(const MumeMoment &moment)
+QString MumeClock::toMumeTime(const MumeMoment &moment) const
 {
     int hour = moment.hour;
     QString period;
@@ -398,7 +398,7 @@ const QString MumeClock::toMumeTime(const MumeMoment &moment)
         .arg(moment.year);
 }
 
-const QString MumeClock::toCountdown(const MumeMoment &moment)
+QString MumeClock::toCountdown(const MumeMoment &moment) const
 {
     auto dawnDusk = getDawnDusk(moment.month);
     const int dawn = dawnDusk.dawnHour;

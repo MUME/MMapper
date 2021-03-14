@@ -496,7 +496,7 @@ QString AbstractParser::normalizeStringCopy(QString string)
     return string;
 }
 
-const Coordinate AbstractParser::getNextPosition()
+Coordinate AbstractParser::getNextPosition() const
 {
     CommandQueue tmpqueue;
     if (!m_queue.isEmpty()) {
@@ -508,7 +508,7 @@ const Coordinate AbstractParser::getNextPosition()
     return cl.isEmpty() ? m_mapData->getPosition() : cl.back();
 }
 
-const Coordinate AbstractParser::getTailPosition()
+Coordinate AbstractParser::getTailPosition() const
 {
     // Position at the end of the prespammed path
     QList<Coordinate> cl = m_mapData->getPath(m_mapData->getPosition(), m_queue);
