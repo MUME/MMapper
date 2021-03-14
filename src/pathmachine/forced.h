@@ -12,7 +12,7 @@ class ParseEvent;
 class Room;
 class RoomAdmin;
 
-class NODISCARD Forced : public RoomRecipient
+class NODISCARD Forced final : public RoomRecipient
 {
 private:
     RoomAdmin *owner = nullptr;

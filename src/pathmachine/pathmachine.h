@@ -33,6 +33,8 @@ enum class NODISCARD PathStateEnum { APPROVED = 0, EXPERIMENTING = 1, SYNCING = 
  * the parser determines the relations between incoming move- and room-events
  * and decides if rooms have to be added (and where) and where the player is
  * the results are published via signals
+ *
+ * PathMachine is the base class for Mmapper2PathMachine
  */
 class PathMachine : public QObject
 {

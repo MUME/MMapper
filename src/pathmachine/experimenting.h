@@ -19,6 +19,7 @@ class Room;
 class RoomAdmin;
 struct PathParameters;
 
+// Base class for Crossover and OneByOne
 class NODISCARD Experimenting : public RoomRecipient
 {
 protected:
@@ -32,10 +33,11 @@ protected:
     std::shared_ptr<Path> second;
     double numPaths = 0.0;
 
-public:
+protected:
     explicit Experimenting(std::shared_ptr<PathList> paths,
                            ExitDirEnum dirCode,
                            PathParameters &params);
+public:
     virtual ~Experimenting() override;
 
     std::shared_ptr<PathList> evaluate();

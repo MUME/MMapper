@@ -15,7 +15,7 @@ class Room;
 class RoomAdmin;
 struct PathParameters;
 
-class NODISCARD Crossover : public Experimenting
+class NODISCARD Crossover final : public Experimenting
 {
 public:
     Crossover(std::shared_ptr<PathList> paths, ExitDirEnum dirCode, PathParameters &params);

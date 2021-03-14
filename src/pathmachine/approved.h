@@ -16,7 +16,7 @@ class ParseEvent;
 class Room;
 class RoomAdmin;
 
-class NODISCARD Approved : public RoomRecipient
+class NODISCARD Approved final : public RoomRecipient
 {
 private:
     SigParseEvent myEvent;
