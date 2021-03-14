@@ -787,7 +787,6 @@ void ConnectionDrawer::ConnectionFakeGL::drawLineStrip(const std::vector<glm::ve
     const auto &color = isNormal() ? getConfig().canvas.connectionNormalColor.getColor()
                                    : Colors::red;
 
-    assert(points.size() >= 2);
     const auto transform = [this](const glm::vec3 &vert) { return vert + m_offset; };
     auto &verts = deref(m_currentBuffer).lineVerts;
     auto drawLine = [&verts](const Color &color, const glm::vec3 &a, const glm::vec3 &b) {
@@ -796,14 +795,12 @@ void ConnectionDrawer::ConnectionFakeGL::drawLineStrip(const std::vector<glm::ve
     };
 
     const auto size = points.size();
+    assert(size >= 2);
     for (size_t i = 1; i < size; ++i) {
-        const auto &a = points[i - 1u];
-        const auto &b = points[i];
+        const auto start = transform(points[i - 1u]);
+        const auto end = transform(points[i]);
 
-        const auto start = transform(a);
-        const auto end = transform(b);
-
-        if (!isLongLine(a, b)) {
+        if (!isLongLine(start, end)) {
             drawLine(color, start, end);
             continue;
         }
