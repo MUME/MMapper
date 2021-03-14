@@ -54,8 +54,10 @@ void AbstractParser::parseGroup(StringView input)
             [this](User &user, const Pair *const args) -> void {
                 auto &os = user.getOstream();
                 const auto v = getAnyVectorReversed(args);
-                [[maybe_unused]] const auto &kick = v[0].getString();
-                assert(kick == "kick");
+                if constexpr ((IS_DEBUG_BUILD)) {
+                    const auto &kick = v[0].getString();
+                    assert(kick == "kick");
+                }
                 const auto name = simplify(v[1].getString());
 
                 if (name.isEmpty()) {
@@ -97,8 +99,11 @@ void AbstractParser::parseGroup(StringView input)
             [this](User &user, const Pair *const args) -> void {
                 auto &os = user.getOstream();
                 const auto v = getAnyVectorReversed(args);
-                [[maybe_unused]] const auto &tell = v[0].getString();
-                assert(tell == "tell");
+
+                if constexpr ((IS_DEBUG_BUILD)) {
+                    const auto &tell = v[0].getString();
+                    assert(tell == "tell");
+                }
 
                 const auto message = simplify(concatenate_unquoted(v[1].getVector()));
                 if (message.isEmpty()) {

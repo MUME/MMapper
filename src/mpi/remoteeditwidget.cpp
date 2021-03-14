@@ -870,8 +870,8 @@ void RemoteEditWidget::addExit(QMenu *const fileMenu)
     // and possibly even if ANY change has been made (even an undone change).
     if ((false)) {
         auto *const doc = m_textEdit->document();
-        bool isModified = doc->isModified();
-        bool canUndo = doc->isUndoAvailable();
+        MAYBE_UNUSED const bool isModified = doc->isModified();
+        MAYBE_UNUSED const bool canUndo = doc->isUndoAvailable();
     }
     QAction *const quitAction = new QAction(QIcon::fromTheme("window-close",
                                                              QIcon(":/icons/exit.png")),

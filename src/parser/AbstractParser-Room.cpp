@@ -559,8 +559,10 @@ void AbstractParser::parseRoom(StringView input)
             auto &os = user.getOstream();
             const auto v = getAnyVectorReversed(args);
 
-            [[maybe_unused]] const auto &append = v[1].getString();
-            assert(append == "append");
+            if constexpr ((IS_DEBUG_BUILD)) {
+                const auto &append = v[1].getString();
+                assert(append == "append");
+            }
 
             const std::string note = concatenate_unquoted(v[2].getVector());
             if (note.empty()) {
@@ -615,8 +617,10 @@ void AbstractParser::parseRoom(StringView input)
             auto &os = user.getOstream();
             const auto v = getAnyVectorReversed(args);
 
-            [[maybe_unused]] const auto &set = v[1].getString();
-            assert(set == "set");
+            if constexpr (IS_DEBUG_BUILD) {
+                const auto &set = v[1].getString();
+                assert(set == "set");
+            }
 
             const std::string note = concatenate_unquoted(v[2].getVector());
             if (note.empty()) {

@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+#include "macros.h"
+
 #ifdef __MINGW32__
 #include <winsock2.h>
 #elif defined(_MSC_VER)
@@ -37,9 +39,9 @@ WinSock::WinSock() = default;
 WinSock::~WinSock() = default;
 #endif
 
-bool WinSock::tuneKeepAlive(unsigned int socket,
-                            unsigned long maxIdleInMillis,
-                            unsigned long intervalInMillis)
+bool WinSock::tuneKeepAlive(MAYBE_UNUSED unsigned int socket,
+                            MAYBE_UNUSED unsigned long maxIdleInMillis,
+                            MAYBE_UNUSED unsigned long intervalInMillis)
 {
 #ifndef WIN32
     return false;

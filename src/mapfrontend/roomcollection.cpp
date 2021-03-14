@@ -18,7 +18,7 @@
 #define DEBUG_ONLY(x) static_cast<void>(42)
 #endif
 
-#define DEBUG_LOCK() DEBUG_ONLY(assert(!m_inUse); const RAIIBool useLock{m_inUse})
+#define DEBUG_LOCK() DEBUG_ONLY(assert(!m_inUse); MAYBE_UNUSED const RAIIBool useLock{m_inUse})
 
 void RoomCollection::addRoom(Room *const room)
 {
