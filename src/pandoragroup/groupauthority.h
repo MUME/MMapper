@@ -41,7 +41,7 @@ public:
 
 public:
     QString getMetadata(const GroupSecret &, GroupMetadataEnum) const;
-    void setMetadata(const GroupSecret &, GroupMetadataEnum, const QString &value);
+    static void setMetadata(const GroupSecret &, GroupMetadataEnum, const QString &value);
 
 signals:
     void secretRevoked(const GroupSecret &);

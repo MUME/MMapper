@@ -74,5 +74,5 @@ private:
     std::string snoopToUser(const std::string_view &str);
 
 private:
-    void stripXmlEntities(QByteArray &ch);
+    static void stripXmlEntities(QByteArray &ch);
 };

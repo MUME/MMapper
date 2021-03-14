@@ -158,7 +158,7 @@ bool MmpMapStorage::saveData(bool baseMapOnly)
 
     // save rooms
     stream.writeStartElement("rooms");
-    auto saveOne = [this, &stream](const Room &room) { saveRoom(room, stream); };
+    auto saveOne = [&stream](const Room &room) { saveRoom(room, stream); };
 
     for (const auto &pRoom : roomList) {
         filter.visitRoom(deref(pRoom), baseMapOnly, saveOne);

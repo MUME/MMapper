@@ -38,5 +38,5 @@ private:
     virtual bool mergeData() override;
 
 private:
-    void saveRoom(const Room &room, QXmlStreamWriter &stream);
+    static void saveRoom(const Room &room, QXmlStreamWriter &stream);
 };

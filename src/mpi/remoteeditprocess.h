@@ -32,7 +32,7 @@ signals:
     void save(const QString &);
 
 private:
-    QStringList splitCommandLine(const QString &cmdLine);
+    static QStringList splitCommandLine(const QString &cmdLine);
 
     const QString m_title;
     const QString m_body;
