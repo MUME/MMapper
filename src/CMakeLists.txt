@@ -89,6 +89,7 @@ set(mmapper_SRCS
     global/SignalBlocker.h
     global/StringView.cpp
     global/StringView.h
+    global/TaggedInt.h
     global/TaggedString.h
     global/TextUtils.cpp
     global/TextUtils.h
