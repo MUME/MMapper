@@ -40,7 +40,7 @@ const Abbrev cmdGroup{"group", 5};
 const Abbrev cmdGroupTell{"gtell", 2};
 const Abbrev cmdHelp{"help", 2};
 const Abbrev cmdMarkCurrent{"markcurrent", 4};
-const Abbrev cmdRemoveDoorNames{"removedoornames"};
+const Abbrev cmdRemoveDoorNames{"remove-secret-door-names"};
 const Abbrev cmdRoom{"room", 2};
 const Abbrev cmdSearch{"search", 3};
 const Abbrev cmdSet{"set", 2};
