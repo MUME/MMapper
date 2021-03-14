@@ -27,22 +27,22 @@ enum class AnsiColorTableEnum {
 
 static inline QColor ansiColor(const AnsiColorTableEnum i)
 {
-    static QColor black("#2e3436");
-    static QColor BLACK("#555753");
-    static QColor red("#cc0000");
-    static QColor RED("#ef2929");
-    static QColor green("#4e9a06");
-    static QColor GREEN("#8ae234");
-    static QColor yellow("#c4a000");
-    static QColor YELLOW("#fce94f");
-    static QColor blue("#3465a4");
-    static QColor BLUE("#729fcf");
-    static QColor magenta("#75507b");
-    static QColor MAGENTA("#ad7fa8");
-    static QColor cyan("#06989a");
-    static QColor CYAN("#34e2e2");
-    static QColor white("#d3d7cf");
-    static QColor WHITE("#eeeeec");
+    static const QColor black("#2e3436");
+    static const QColor BLACK("#555753");
+    static const QColor red("#cc0000");
+    static const QColor RED("#ef2929");
+    static const QColor green("#4e9a06");
+    static const QColor GREEN("#8ae234");
+    static const QColor yellow("#c4a000");
+    static const QColor YELLOW("#fce94f");
+    static const QColor blue("#3465a4");
+    static const QColor BLUE("#729fcf");
+    static const QColor magenta("#75507b");
+    static const QColor MAGENTA("#ad7fa8");
+    static const QColor cyan("#06989a");
+    static const QColor CYAN("#34e2e2");
+    static const QColor white("#d3d7cf");
+    static const QColor WHITE("#eeeeec");
 
     switch (i) {
     case AnsiColorTableEnum::black:

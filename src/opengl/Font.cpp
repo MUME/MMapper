@@ -28,7 +28,7 @@
 #include "FontFormatFlags.h"
 #include "OpenGL.h"
 
-static bool VERBOSE_FONT_DEBUG = []() -> bool {
+static const bool VERBOSE_FONT_DEBUG = []() -> bool {
     if (auto opt = utils::getEnvBool("MMAPPER_VERBOSE_FONT_DEBUG")) {
         return opt.value();
     }

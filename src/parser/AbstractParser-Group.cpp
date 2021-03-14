@@ -46,7 +46,7 @@ std::ostream &ArgPlayer::virt_to_stream(std::ostream &os) const
 void AbstractParser::parseGroup(StringView input)
 {
     using namespace ::syntax;
-    static auto abb = syntax::abbrevToken;
+    static const auto abb = syntax::abbrevToken;
 
     auto groupKickSyntax = [this]() -> SharedConstSublist {
         const auto argPlayer = TokenMatcher::alloc<ArgPlayer>();

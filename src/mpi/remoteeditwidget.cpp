@@ -1101,7 +1101,7 @@ void RemoteEditWidget::removeTrailingWhitespace()
     RaiiGroupUndoActions raii{cur};
 
     foreach_partly_selected_block(cur, [](QTextCursor line) -> void {
-        static QRegularExpression trailingWhitespace(R"([[:space:]]+$)");
+        static const QRegularExpression trailingWhitespace(R"([[:space:]]+$)");
         assert(trailingWhitespace.isValid());
         QString text = line.block().text();
         if (!text.contains(trailingWhitespace))
@@ -1120,7 +1120,7 @@ void RemoteEditWidget::removeDuplicateSpaces()
     RaiiGroupUndoActions raii{cur};
 
     foreach_partly_selected_block(cur, [](QTextCursor line) -> void {
-        static QRegularExpression spaces(R"((\t|[[:space:]]{2,}))");
+        static const QRegularExpression spaces(R"((\t|[[:space:]]{2,}))");
         assert(spaces.isValid());
         QString text = line.block().text();
         if (!text.contains(spaces))

@@ -87,7 +87,7 @@ static void test()
     }
 }
 
-static int test_weak_handle = []() -> int {
+static const int test_weak_handle = []() -> int {
     if constexpr (!IS_DEBUG_BUILD) {
         return 0;
     }

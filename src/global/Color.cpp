@@ -170,7 +170,7 @@ XFOREACH_COLOR(DECL)
 
 } // namespace Colors
 
-static int color_self_test = []() -> int {
+static const int color_self_test = []() -> int {
     const Color redf{1.f, 0.f, 0.f};
     const Color greenf{0.f, 1.f, 0.f};
     const Color bluef{0.f, 0.f, 1.f};

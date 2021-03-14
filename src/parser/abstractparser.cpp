@@ -366,9 +366,9 @@ void AbstractParser::parseExits(std::ostream &os)
 
     if (str.length() > 5 && str.at(5).toLatin1() != ':') {
         // Ainur exits
-        static QRegularExpression rx(
+        static const QRegularExpression rx(
             R"(^\s*([\^\*~\-={#\[\(\\\/]+)?([A-za-z]+)([\^\*~\-=}#\]\)\\\/]+)?\s+\- (.*)$)");
-        static QRegularExpression newline(R"(\r?\n)");
+        static const QRegularExpression newline(R"(\r?\n)");
         for (const auto &part : str.split(newline)) {
             const auto match = rx.match(part);
             if (match.hasMatch()) {

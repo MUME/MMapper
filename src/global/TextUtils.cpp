@@ -300,7 +300,7 @@ uint16_t raw_ansi::get_bits_normalized() const
     return tmp.get_bits_raw();
 }
 
-static bool self_test = []() -> bool {
+static const bool self_test = []() -> bool {
     assert(raw_ansi().get_bits_raw() == 0);
     return true;
 }();

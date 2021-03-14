@@ -824,7 +824,7 @@ static void testDecode(const char *_in, const char *_expect)
         throw std::runtime_error("test failed");
 }
 
-static bool self_test = []() -> bool {
+static const bool self_test = []() -> bool {
     //
     testDecode("", "");
     testDecode("&amp;", "&");

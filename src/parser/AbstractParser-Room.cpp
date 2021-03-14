@@ -331,7 +331,7 @@ std::ostream &ArgRoomFlag::virt_to_stream(std::ostream &os) const
 void AbstractParser::parseRoom(StringView input)
 {
     using namespace ::syntax;
-    static auto abb = syntax::abbrevToken;
+    static const auto abb = syntax::abbrevToken;
 
     auto printDynamic = Accept([this](User &,
                                       const Pair *) -> void { printRoomInfo(dynamicRoomFields); },

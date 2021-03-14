@@ -17,7 +17,7 @@
 
 namespace ShaderUtils {
 
-static bool VERBOSE_SHADER_DEBUG = []() -> bool {
+static const bool VERBOSE_SHADER_DEBUG = []() -> bool {
     if (auto opt = utils::getEnvBool("MMAPPER_VERBOSE_SHADER_DEBUG")) {
         return opt.value();
     }
