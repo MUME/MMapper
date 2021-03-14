@@ -46,7 +46,7 @@ using RoomNote = TaggedString<tags::RoomNoteTag>;
     X(DEATHTRAP)
 
 #define DECL(X) X,
-enum class NODISCARD RoomTerrainEnum { X_FOREACH_RoomTerrainEnum(DECL) };
+enum class NODISCARD RoomTerrainEnum : uint8_t { X_FOREACH_RoomTerrainEnum(DECL) };
 #undef DECL
 static_assert(RoomTerrainEnum::UNDEFINED == RoomTerrainEnum{0});
 #define ADD(X) +1
@@ -62,7 +62,7 @@ DEFINE_ENUM_COUNT(RoomTerrainEnum, NUM_ROOM_TERRAIN_TYPES)
     X(NEUTRAL) \
     X(EVIL)
 #define DECL(X) X,
-enum class NODISCARD RoomAlignEnum { X_FOREACH_RoomAlignEnum(DECL) };
+enum class NODISCARD RoomAlignEnum : uint8_t { X_FOREACH_RoomAlignEnum(DECL) };
 #undef DECL
 #define ADD(X) +1
 static constexpr const int NUM_ALIGN_TYPES = (X_FOREACH_RoomAlignEnum(ADD));
@@ -89,10 +89,10 @@ static_assert(NUM_ALIGN_TYPES == 4);
 
 // REVISIT: Consider just using a single tri-state bool enums for these?
 #define DECL(X) X,
-enum class NODISCARD RoomLightEnum { X_FOREACH_RoomLightEnum(DECL) };
-enum class NODISCARD RoomPortableEnum { X_FOREACH_RoomPortableEnum(DECL) };
-enum class NODISCARD RoomRidableEnum { X_FOREACH_RoomRidableEnum(DECL) };
-enum class NODISCARD RoomSundeathEnum { X_FOREACH_RoomSundeathEnum(DECL) };
+enum class NODISCARD RoomLightEnum : uint8_t { X_FOREACH_RoomLightEnum(DECL) };
+enum class NODISCARD RoomPortableEnum : uint8_t { X_FOREACH_RoomPortableEnum(DECL) };
+enum class NODISCARD RoomRidableEnum : uint8_t { X_FOREACH_RoomRidableEnum(DECL) };
+enum class NODISCARD RoomSundeathEnum : uint8_t { X_FOREACH_RoomSundeathEnum(DECL) };
 #undef DECL
 
 #define ADD(X) +1
