@@ -790,27 +790,30 @@ void ConnectionDrawer::ConnectionFakeGL::drawLineStrip(const std::vector<glm::ve
     assert(points.size() >= 2);
     const auto transform = [this](const glm::vec3 &vert) { return vert + m_offset; };
     auto &verts = deref(m_currentBuffer).lineVerts;
-    for (size_t i = 1, size = points.size(); i < size; ++i) {
+    auto drawLine = [&verts](const Color &color, const glm::vec3 &a, const glm::vec3 &b) {
+        verts.emplace_back(color, a);
+        verts.emplace_back(color, b);
+    };
+
+    const auto size = points.size();
+    for (size_t i = 1; i < size; ++i) {
         const auto &a = points[i - 1u];
         const auto &b = points[i];
 
+        const auto start = transform(a);
+        const auto end = transform(b);
+
         if (!isLongLine(a, b)) {
-            verts.emplace_back(color, transform(a));
-            verts.emplace_back(color, transform(b));
+            drawLine(color, start, end);
             continue;
         }
 
-        const auto start = transform(a);
-        const auto end = transform(b);
         const auto len = glm::length(start - end);
         const auto faintCutoff = LONG_LINE_HALFLEN / len;
         const auto mid1 = glm::mix(start, end, faintCutoff);
         const auto mid2 = glm::mix(start, end, 1.f - faintCutoff);
         const auto faint = color.withAlpha(FAINT_CONNECTION_ALPHA);
-        auto drawLine = [&verts](const Color &color, const glm::vec3 &a, const glm::vec3 &b) {
-            verts.emplace_back(color, a);
-            verts.emplace_back(color, b);
-        };
+
         drawLine(color, start, mid1);
         drawLine(faint, mid1, mid2);
         drawLine(color, mid2, end);
