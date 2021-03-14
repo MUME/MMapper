@@ -275,6 +275,7 @@ RemoteTextEdit::RemoteTextEdit(const QString &initialText, QWidget *const parent
 }
 RemoteTextEdit::~RemoteTextEdit() = default;
 
+/* Qt virtual */
 void RemoteTextEdit::keyPressEvent(QKeyEvent *const event)
 {
     switch (event->key()) {
@@ -283,10 +284,12 @@ void RemoteTextEdit::keyPressEvent(QKeyEvent *const event)
     case Qt::Key_Backtab:
         return handleEventBacktab(event);
     default:
+        /* calls parent */
         return base::keyPressEvent(event);
     }
 }
 
+/* Qt virtual */
 bool RemoteTextEdit::event(QEvent *const event)
 {
     if ((USE_TOOLTIPS))
@@ -294,6 +297,8 @@ bool RemoteTextEdit::event(QEvent *const event)
             handle_toolTip(event);
             return true;
         }
+
+    /* calls parent */
     return base::event(event);
 }
 
