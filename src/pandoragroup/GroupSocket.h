@@ -18,7 +18,7 @@
 
 class GroupAuthority;
 
-enum class ProtocolStateEnum { Unconnected, AwaitingLogin, AwaitingInfo, Logged };
+enum class NODISCARD ProtocolStateEnum { Unconnected, AwaitingLogin, AwaitingInfo, Logged };
 using ProtocolVersion = uint32_t;
 
 class GroupSocket final : public QObject
@@ -34,21 +34,21 @@ public:
     void startServerEncrypted() { socket.startServerEncryption(); }
     void startClientEncrypted() { socket.startClientEncryption(); }
 
-    QByteArray getSecret() const { return secret; }
-    QString getPeerName() const;
-    quint16 getPeerPort() const { return socket.peerPort(); }
+    NODISCARD QByteArray getSecret() const { return secret; }
+    NODISCARD QString getPeerName() const;
+    NODISCARD quint16 getPeerPort() const { return socket.peerPort(); }
 
-    QAbstractSocket::SocketError getSocketError() const { return socket.error(); }
-    QSslCertificate getPeerCertificate() const { return socket.peerCertificate(); }
+    NODISCARD QAbstractSocket::SocketError getSocketError() const { return socket.error(); }
+    NODISCARD QSslCertificate getPeerCertificate() const { return socket.peerCertificate(); }
 
     void setProtocolState(ProtocolStateEnum val);
-    ProtocolStateEnum getProtocolState() const { return protocolState; }
+    NODISCARD ProtocolStateEnum getProtocolState() const { return protocolState; }
 
     void setProtocolVersion(const ProtocolVersion val) { protocolVersion = val; }
-    ProtocolVersion getProtocolVersion() { return protocolVersion; }
+    NODISCARD ProtocolVersion getProtocolVersion() { return protocolVersion; }
 
     void setName(const QByteArray val) { name = val; }
-    const QByteArray &getName() { return name; }
+    NODISCARD const QByteArray &getName() { return name; }
 
     void sendData(const QByteArray &data);
 
@@ -77,7 +77,7 @@ private:
     ProtocolStateEnum protocolState = ProtocolStateEnum::Unconnected;
     ProtocolVersion protocolVersion = 102;
 
-    enum class GroupMessageStateEnum {
+    enum class NODISCARD GroupMessageStateEnum {
         /// integer string representing the messge length
         LENGTH,
         /// message payload

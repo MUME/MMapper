@@ -16,7 +16,7 @@
 namespace utils {
 namespace details {
 template<typename T>
-constexpr bool isBitMask()
+NODISCARD constexpr bool isBitMask()
 {
     if constexpr (std::is_integral_v<T> && std::is_unsigned_v<T>)
         return true;
@@ -28,7 +28,7 @@ constexpr bool isBitMask()
 } // namespace details
 
 template<typename T>
-constexpr bool isPowerOfTwo(const T x) noexcept
+NODISCARD constexpr bool isPowerOfTwo(const T x) noexcept
 {
     static_assert(details::isBitMask<T>());
     if constexpr (std::is_enum_v<T>) {
@@ -42,7 +42,7 @@ constexpr bool isPowerOfTwo(const T x) noexcept
 }
 
 template<typename T>
-constexpr bool isAtLeastTwoBits(const T x) noexcept
+NODISCARD constexpr bool isAtLeastTwoBits(const T x) noexcept
 {
     static_assert(details::isBitMask<T>());
     if constexpr (std::is_enum_v<T>) {
@@ -56,7 +56,7 @@ constexpr bool isAtLeastTwoBits(const T x) noexcept
 }
 
 template<typename T>
-bool anySet(const T src, const T mask)
+NODISCARD bool anySet(const T src, const T mask)
 {
     static_assert(details::isBitMask<T>());
     assert(isAtLeastTwoBits(mask));
@@ -64,7 +64,7 @@ bool anySet(const T src, const T mask)
 }
 
 template<typename T>
-bool allSet(const T src, const T mask)
+NODISCARD bool allSet(const T src, const T mask)
 {
     static_assert(details::isBitMask<T>());
     assert(isAtLeastTwoBits(mask));
@@ -72,7 +72,7 @@ bool allSet(const T src, const T mask)
 }
 
 template<typename T>
-bool isSet(const T src, const T bit)
+NODISCARD bool isSet(const T src, const T bit)
 {
     static_assert(details::isBitMask<T>());
     assert(isPowerOfTwo(bit));
@@ -83,17 +83,17 @@ bool isSet(const T src, const T bit)
 } // namespace utils
 
 template<typename T>
-constexpr bool isClamped(T x, T lo, T hi)
+NODISCARD constexpr bool isClamped(T x, T lo, T hi)
 {
     return x >= lo && x <= hi;
 }
 
 namespace utils {
-int round_ftoi(float f);
+NODISCARD int round_ftoi(float f);
 } // namespace utils
 
 template<typename Base, typename Derived>
-std::unique_ptr<Base> static_upcast(std::unique_ptr<Derived> &&ptr)
+NODISCARD std::unique_ptr<Base> static_upcast(std::unique_ptr<Derived> &&ptr)
 {
     static_assert(std::is_base_of_v<Base, Derived>);
     return std::unique_ptr<Base>(ptr.release());
@@ -150,7 +150,7 @@ inline T &deref(const std::unique_ptr<T> &ptr)
 
 ///  Can throw NullPointerException or std::bad_cast
 template<typename /* must be specified */ Derived, typename /* deduced */ Base>
-Derived checked_dynamic_downcast(Base ptr) noexcept(false)
+NODISCARD Derived checked_dynamic_downcast(Base ptr) noexcept(false)
 {
     static_assert(std::is_same_v<Base, std::remove_reference_t<Base>>);
     static_assert(std::is_same_v<Derived, std::remove_reference_t<Derived>>);
@@ -171,7 +171,7 @@ Derived checked_dynamic_downcast(Base ptr) noexcept(false)
 
 ///  Can throw NullPointerException
 template<typename /* must be specified */ Base, typename /* deduced */ Derived>
-Base checked_static_upcast(Derived ptr) noexcept(false)
+NODISCARD Base checked_static_upcast(Derived ptr) noexcept(false)
 {
     static_assert(std::is_same_v<Derived, std::remove_reference_t<Derived>>);
     static_assert(std::is_same_v<Base, std::remove_reference_t<Base>>);
@@ -194,7 +194,7 @@ template<typename T>
 inline auto as_unsigned_cstring(T s) = delete;
 
 template<>
-inline auto as_unsigned_cstring(const char *const s)
+NODISCARD inline auto as_unsigned_cstring(const char *const s)
 {
     return reinterpret_cast<const unsigned char *>(s);
 }
@@ -203,7 +203,7 @@ template<typename T>
 inline auto as_cstring(T s) = delete;
 
 template<>
-inline auto as_cstring(const unsigned char *const s)
+NODISCARD inline auto as_cstring(const unsigned char *const s)
 {
     return reinterpret_cast<const char *>(s);
 }

@@ -12,6 +12,7 @@
 #include <QtCore>
 #include <QtGlobal>
 
+#include "../global/macros.h"
 #include "remoteeditsession.h"
 
 class RemoteEditSession;
@@ -39,7 +40,7 @@ protected:
     void save(const RemoteEditSession *);
 
 private:
-    uint getSessionCount() { return greatestUsedId == UINT_MAX ? 0 : greatestUsedId + 1; }
+    NODISCARD uint getSessionCount() { return greatestUsedId == UINT_MAX ? 0 : greatestUsedId + 1; }
     void addSession(int, const QString &, QString);
     void removeSession(uint);
 

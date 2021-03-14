@@ -24,10 +24,10 @@ class RoomRecipient;
 class RoomSignalHandler;
 struct PathParameters;
 
-class Path final : public std::enable_shared_from_this<Path>
+class NODISCARD Path final : public std::enable_shared_from_this<Path>
 {
 private:
-    struct this_is_private final
+    struct NODISCARD this_is_private final
     {
         explicit this_is_private(int) {}
     };
@@ -51,25 +51,25 @@ public:
     void insertChild(const std::shared_ptr<Path> &p);
     void removeChild(const std::shared_ptr<Path> &p);
     void setParent(const std::shared_ptr<Path> &p);
-    bool hasChildren() const
+    NODISCARD bool hasChildren() const
     {
         assert(!m_zombie);
         return !m_children.empty();
     }
-    const Room *getRoom() const
+    NODISCARD const Room *getRoom() const
     {
         assert(!m_zombie);
         return m_room;
     }
 
     // new Path is created, distance between rooms is calculated and probability is set accordingly
-    std::shared_ptr<Path> fork(const Room *room,
-                               const Coordinate &expectedCoordinate,
-                               RoomAdmin *owner,
-                               const PathParameters &params,
-                               RoomRecipient *locker,
-                               ExitDirEnum dir);
-    double getProb() const
+    NODISCARD std::shared_ptr<Path> fork(const Room *room,
+                                         const Coordinate &expectedCoordinate,
+                                         RoomAdmin *owner,
+                                         const PathParameters &params,
+                                         RoomRecipient *locker,
+                                         ExitDirEnum dir);
+    NODISCARD double getProb() const
     {
         assert(!m_zombie);
         return m_probability;
@@ -84,7 +84,7 @@ public:
         m_probability = p;
     }
 
-    const std::shared_ptr<Path> &getParent() const
+    NODISCARD const std::shared_ptr<Path> &getParent() const
     {
         assert(!m_zombie);
         return m_parent;
@@ -101,17 +101,17 @@ private:
     bool m_zombie = false;
 };
 
-struct PathList : public std::list<std::shared_ptr<Path>>,
-                  public std::enable_shared_from_this<PathList>
+struct NODISCARD PathList : public std::list<std::shared_ptr<Path>>,
+                            public std::enable_shared_from_this<PathList>
 {
 private:
-    struct this_is_private final
+    struct NODISCARD this_is_private final
     {
         explicit this_is_private(int) {}
     };
 
 public:
-    static std::shared_ptr<PathList> alloc()
+    NODISCARD static std::shared_ptr<PathList> alloc()
     {
         return std::make_shared<PathList>(this_is_private{0});
     }

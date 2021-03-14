@@ -82,10 +82,10 @@ private:
         glm::ivec3 min{0};
         glm::ivec3 max{0};
 
-        glm::ivec2 size() const { return glm::ivec2{max - min}; }
+        NODISCARD glm::ivec2 size() const { return glm::ivec2{max - min}; }
 
-        glm::vec2 scrollToWorld(const glm::ivec2 &scrollPos) const;
-        glm::ivec2 worldToScroll(const glm::vec2 &worldPos) const;
+        NODISCARD glm::vec2 scrollToWorld(const glm::ivec2 &scrollPos) const;
+        NODISCARD glm::ivec2 worldToScroll(const glm::vec2 &worldPos) const;
 
     } m_knownMapSize;
 

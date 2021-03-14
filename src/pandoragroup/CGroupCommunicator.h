@@ -30,7 +30,7 @@ public:
     static constexpr const ProtocolVersion PROTOCOL_VERSION_102 = 102;
 
     // TODO: password and encryption options
-    enum class MessagesEnum {
+    enum class NODISCARD MessagesEnum {
         NONE, // Unused
         ACK,
         REQ_LOGIN,
@@ -47,10 +47,10 @@ public:
         RENAME_CHAR
     };
 
-    GroupManagerStateEnum getMode() const { return mode; }
+    NODISCARD GroupManagerStateEnum getMode() const { return mode; }
 
     virtual void stop() = 0;
-    virtual bool start() = 0;
+    NODISCARD virtual bool start() = 0;
 
 protected:
     void sendCharUpdate(GroupSocket *, const QVariantMap &);
@@ -60,9 +60,9 @@ protected:
     virtual void sendGroupTellMessage(const QVariantMap &map) = 0;
     virtual void sendCharRename(const QVariantMap &map) = 0;
 
-    QByteArray formMessageBlock(MessagesEnum message, const QVariantMap &data);
-    CGroup *getGroup();
-    GroupAuthority *getAuthority();
+    NODISCARD QByteArray formMessageBlock(MessagesEnum message, const QVariantMap &data);
+    NODISCARD CGroup *getGroup();
+    NODISCARD GroupAuthority *getAuthority();
 
 public slots:
     void incomingData(GroupSocket *, const QByteArray &);

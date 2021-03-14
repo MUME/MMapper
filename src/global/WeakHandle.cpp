@@ -28,7 +28,7 @@ public:
 };
 
 template<typename T>
-static inline WeakHandle<T> getWeakHandle(T &x) = delete;
+NODISCARD static inline WeakHandle<T> getWeakHandle(T &x) = delete;
 
 template<>
 inline WeakHandle<Foo> getWeakHandle(Foo &foo)
@@ -52,7 +52,7 @@ inline WeakHandle<const Bar> getWeakHandle(const Bar &bar)
 }
 
 template<typename T>
-static inline bool tryVisit(const WeakHandle<T> &handle)
+NODISCARD static inline bool tryVisit(const WeakHandle<T> &handle)
 {
     return handle.acceptVisitor([](const T &) -> void {
         // could print here
@@ -60,7 +60,7 @@ static inline bool tryVisit(const WeakHandle<T> &handle)
 };
 
 template<typename T>
-static inline constexpr bool has_expected_properties()
+NODISCARD static inline constexpr bool has_expected_properties()
 {
     return std::is_default_constructible_v<T>  //
            && !std::is_copy_constructible_v<T> //

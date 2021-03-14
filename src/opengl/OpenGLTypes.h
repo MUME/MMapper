@@ -17,7 +17,7 @@
 #include "../global/utils.h"
 #include "FontFormatFlags.h"
 
-struct TexVert final
+struct NODISCARD TexVert final
 {
     glm::vec2 tex;
     glm::vec3 vert;
@@ -28,7 +28,7 @@ struct TexVert final
     {}
 };
 
-struct ColoredTexVert final
+struct NODISCARD ColoredTexVert final
 {
     Color color;
     glm::vec2 tex;
@@ -41,7 +41,7 @@ struct ColoredTexVert final
     {}
 };
 
-struct ColorVert final
+struct NODISCARD ColorVert final
 {
     Color color;
     glm::vec3 vert;
@@ -58,7 +58,7 @@ struct ColorVert final
 //
 // Rendering with the font shader requires passing uniforms for the world space
 // model-view-projection matrix and the output viewport.
-struct FontVert3d final
+struct NODISCARD FontVert3d final
 {
     glm::vec3 base; // world space
     Color color;
@@ -76,9 +76,9 @@ struct FontVert3d final
     {}
 };
 
-enum class DrawModeEnum { INVALID = 0, POINTS = 1, LINES = 2, TRIANGLES = 3, QUADS = 4 };
+enum class NODISCARD DrawModeEnum { INVALID = 0, POINTS = 1, LINES = 2, TRIANGLES = 3, QUADS = 4 };
 
-struct LineParams final
+struct NODISCARD LineParams final
 {
     float width = 1.f;
     LineParams() = default;
@@ -99,10 +99,10 @@ struct LineParams final
     X(ALWAYS)
 
 #define DECL(X) X = GL_##X,
-enum class DepthFunctionEnum { XFOREACH_DEPTHFUNC(DECL) DEFAULT = LESS };
+enum class NODISCARD DepthFunctionEnum { XFOREACH_DEPTHFUNC(DECL) DEFAULT = LESS };
 #undef DECL
 
-enum class BlendModeEnum {
+enum class NODISCARD BlendModeEnum {
     /* glDisable(GL_BLEND); */
     NONE,
     /* This is the MMapper2 default setting, but not OpenGL default setting
@@ -113,7 +113,7 @@ enum class BlendModeEnum {
     MODULATE,
 };
 
-enum class CullingEnum {
+enum class NODISCARD CullingEnum {
 
     // Culling is disabled: glDisable(GL_CULL_FACE)
     DISABLED,
@@ -133,7 +133,7 @@ enum class CullingEnum {
 class MMTexture;
 using SharedMMTexture = std::shared_ptr<MMTexture>;
 
-struct GLRenderState final
+struct NODISCARD GLRenderState final
 {
     // glEnable(GL_BLEND)
     BlendModeEnum blend = BlendModeEnum::NONE;
@@ -148,7 +148,7 @@ struct GLRenderState final
     LineParams lineParams;
 
     using Textures = MMapper::Array<SharedMMTexture, 2>;
-    struct Uniforms final
+    struct NODISCARD Uniforms final
     {
         Color color;
         // glEnable(TEXTURE_2D), or glEnable(TEXTURE_3D)
@@ -158,56 +158,56 @@ struct GLRenderState final
 
     Uniforms uniforms;
 
-    GLRenderState withBlend(const BlendModeEnum new_blend) const
+    NODISCARD GLRenderState withBlend(const BlendModeEnum new_blend) const
     {
         GLRenderState copy = *this;
         copy.blend = new_blend;
         return copy;
     }
 
-    GLRenderState withColor(const Color &new_color) const
+    NODISCARD GLRenderState withColor(const Color &new_color) const
     {
         GLRenderState copy = *this;
         copy.uniforms.color = new_color;
         return copy;
     }
 
-    GLRenderState withCulling(const CullingEnum new_culling) const
+    NODISCARD GLRenderState withCulling(const CullingEnum new_culling) const
     {
         GLRenderState copy = *this;
         copy.culling = new_culling;
         return copy;
     }
 
-    GLRenderState withDepthFunction(const DepthFunctionEnum new_depth) const
+    NODISCARD GLRenderState withDepthFunction(const DepthFunctionEnum new_depth) const
     {
         GLRenderState copy = *this;
         copy.depth = new_depth;
         return copy;
     }
 
-    GLRenderState withDepthFunction(std::nullopt_t) const
+    NODISCARD GLRenderState withDepthFunction(std::nullopt_t) const
     {
         GLRenderState copy = *this;
         copy.depth.reset();
         return copy;
     }
 
-    GLRenderState withLineParams(const LineParams &new_lineParams) const
+    NODISCARD GLRenderState withLineParams(const LineParams &new_lineParams) const
     {
         GLRenderState copy = *this;
         copy.lineParams = new_lineParams;
         return copy;
     }
 
-    GLRenderState withPointSize(const GLfloat size) const
+    NODISCARD GLRenderState withPointSize(const GLfloat size) const
     {
         GLRenderState copy = *this;
         copy.uniforms.pointSize = size;
         return copy;
     }
 
-    GLRenderState withTexture0(const SharedMMTexture &new_texture) const
+    NODISCARD GLRenderState withTexture0(const SharedMMTexture &new_texture) const
     {
         GLRenderState copy = *this;
         copy.uniforms.textures = Textures{new_texture, nullptr};
@@ -229,7 +229,7 @@ public:
     virtual void clear() = 0;
     // Clears the mesh and destroys the GL resources.
     virtual void reset() = 0;
-    virtual bool isEmpty() const = 0;
+    NODISCARD virtual bool isEmpty() const = 0;
 
 public:
     virtual void render(const GLRenderState &renderState) = 0;
@@ -251,19 +251,19 @@ public:
 public:
     void clear() override;
     void reset() override;
-    bool isEmpty() const override;
+    NODISCARD bool isEmpty() const override;
 
 public:
     void render(const GLRenderState &renderState) override;
 
 public:
-    SharedMMTexture replaceTexture(const SharedMMTexture &tex)
+    NODISCARD SharedMMTexture replaceTexture(const SharedMMTexture &tex)
     {
         return std::exchange(m_texture, tex);
     }
 };
 
-enum class BufferUsageEnum { STATIC_DRAW, DYNAMIC_DRAW };
+enum class NODISCARD BufferUsageEnum { STATIC_DRAW, DYNAMIC_DRAW };
 
 class NODISCARD UniqueMesh final
 {
@@ -302,7 +302,7 @@ public:
     }
 };
 
-struct Viewport
+struct NODISCARD Viewport
 {
     glm::ivec2 offset;
     glm::ivec2 size;

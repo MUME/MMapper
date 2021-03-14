@@ -23,7 +23,7 @@ public:
     using Signal = ::Signal<Args...>;
 
 private:
-    struct this_is_private final
+    struct NODISCARD this_is_private final
     {
         explicit this_is_private(int) {}
     };
@@ -34,13 +34,13 @@ private:
 
 private:
     friend Signal;
-    static std::shared_ptr<Connection> alloc(Signal &signal, Function function)
+    NODISCARD static std::shared_ptr<Connection> alloc(Signal &signal, Function function)
     {
         return std::make_shared<Connection>(this_is_private{0}, signal, std::move(function));
     }
 
 public:
-    static constexpr bool inline hasValidArgTypes()
+    NODISCARD static constexpr bool inline hasValidArgTypes()
     {
         constexpr bool noReferences = !std::disjunction_v<std::is_reference<Args>...>;
         constexpr bool allCopyConstructible = std::conjunction_v<std::is_copy_constructible<Args>...>;
@@ -79,13 +79,13 @@ private:
     }
 
 public:
-    bool isValid() const { return m_signal != nullptr && m_function != nullptr; }
+    NODISCARD bool isValid() const { return m_signal != nullptr && m_function != nullptr; }
     explicit operator bool() const { return isValid(); }
 };
 
 // NOTE: This is not related to SignalBlocker, which is for QObject.
 template<typename... Args>
-struct Signal
+struct NODISCARD Signal
 {
 public:
     using Connection = ::Connection<Args...>;

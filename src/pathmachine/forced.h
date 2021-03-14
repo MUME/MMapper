@@ -12,7 +12,7 @@ class ParseEvent;
 class Room;
 class RoomAdmin;
 
-class Forced : public RoomRecipient
+class NODISCARD Forced : public RoomRecipient
 {
 private:
     RoomAdmin *owner = nullptr;
@@ -24,7 +24,7 @@ public:
     explicit Forced(const SigParseEvent &sigParseEvent, bool update = false);
     ~Forced() override;
     void receiveRoom(RoomAdmin *, const Room *) override;
-    const Room *oneMatch() const { return matchedRoom; }
+    NODISCARD const Room *oneMatch() const { return matchedRoom; }
 
 public:
     Forced() = delete;

@@ -7,10 +7,10 @@
 
 #include "../syntax/Value.h"
 
-bool isOffline();
-bool isOnline();
-const char *enabledString(bool isEnabled);
-bool isValidPrefix(char c);
+NODISCARD bool isOffline();
+NODISCARD bool isOnline();
+NODISCARD const char *enabledString(bool isEnabled);
+NODISCARD bool isValidPrefix(char c);
 
 template<typename T>
 void send_ok(T &os)
@@ -20,4 +20,4 @@ void send_ok(T &os)
     os << "OK.\r\n";
 }
 
-std::string concatenate_unquoted(const Vector &input);
+NODISCARD std::string concatenate_unquoted(const Vector &input);

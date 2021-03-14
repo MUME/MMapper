@@ -12,7 +12,7 @@
 
 #include "hash.h"
 
-struct RoomId final
+struct NODISCARD RoomId final
 {
 private:
     uint32_t value = 0;
@@ -47,7 +47,7 @@ struct std::hash<RoomId>
 };
 
 template<typename T>
-class roomid_vector : private std::vector<T>
+class NODISCARD roomid_vector : private std::vector<T>
 {
 private:
     using base = std::vector<T>;
@@ -56,8 +56,8 @@ public:
     using std::vector<T>::vector;
 
 public:
-    decltype(auto) operator[](RoomId roomId) { return base::at(roomId.asUint32()); }
-    decltype(auto) operator[](RoomId roomId) const { return base::at(roomId.asUint32()); }
+    NODISCARD decltype(auto) operator[](RoomId roomId) { return base::at(roomId.asUint32()); }
+    NODISCARD decltype(auto) operator[](RoomId roomId) const { return base::at(roomId.asUint32()); }
 
 public:
     using base::begin;

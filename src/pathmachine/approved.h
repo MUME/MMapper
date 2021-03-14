@@ -16,7 +16,7 @@ class ParseEvent;
 class Room;
 class RoomAdmin;
 
-class Approved : public RoomRecipient
+class NODISCARD Approved : public RoomRecipient
 {
 private:
     SigParseEvent myEvent;
@@ -33,8 +33,8 @@ public:
 
 public:
     void receiveRoom(RoomAdmin *, const Room *) override;
-    const Room *oneMatch() const;
-    bool needsUpdate() const { return update; }
+    NODISCARD const Room *oneMatch() const;
+    NODISCARD bool needsUpdate() const { return update; }
     void releaseMatch();
 
 public:

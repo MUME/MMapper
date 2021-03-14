@@ -72,7 +72,7 @@ static void print(std::ostream &os, const Source &source)
     }
 }
 
-static const char *shaderTypeName(const GLenum type)
+NODISCARD static const char *shaderTypeName(const GLenum type)
 {
 #define CASE(x) \
     do { \
@@ -156,7 +156,7 @@ static void checkShaderInfo(Functions &gl, const GLuint shaderId)
     assert(result == GL_TRUE && infoLogLength == 0);
 }
 
-static GLuint compileShader(Functions &gl, const GLenum type, const Source &source)
+NODISCARD static GLuint compileShader(Functions &gl, const GLenum type, const Source &source)
 {
     if (!source)
         return 0;

@@ -11,7 +11,7 @@ namespace syntax {
 struct IMatchErrorLogger;
 class ParserInput;
 
-struct IArgument
+struct NODISCARD IArgument
 {
 public:
     virtual ~IArgument();
@@ -19,11 +19,12 @@ public:
     DEFAULT_CTORS_AND_ASSIGN_OPS(IArgument);
 
 private:
-    virtual MatchResult virt_match(const ParserInput &input, IMatchErrorLogger *logger) const = 0;
+    NODISCARD virtual MatchResult virt_match(const ParserInput &input,
+                                             IMatchErrorLogger *logger) const = 0;
     virtual std::ostream &virt_to_stream(std::ostream &) const = 0;
 
 public:
-    MatchResult match(const ParserInput &input, IMatchErrorLogger *logger) const;
+    NODISCARD MatchResult match(const ParserInput &input, IMatchErrorLogger *logger) const;
     std::ostream &to_stream(std::ostream &os) const;
 
 public:

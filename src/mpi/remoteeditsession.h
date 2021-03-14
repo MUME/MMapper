@@ -10,6 +10,8 @@
 #include <QtCore>
 #include <QtGlobal>
 
+#include "../global/macros.h"
+
 class RemoteEdit;
 class RemoteEditProcess;
 class RemoteEditWidget;
@@ -26,13 +28,13 @@ class RemoteEditSession : public QObject
 public:
     explicit RemoteEditSession(uint sessionId, int key, RemoteEdit *remoteEdit);
 
-    auto getId() const { return m_sessionId; }
+    NODISCARD auto getId() const { return m_sessionId; }
 
-    auto getKey() const { return m_key; }
+    NODISCARD auto getKey() const { return m_key; }
 
-    bool isEditSession() const { return m_key != REMOTE_EDIT_VIEW_KEY; }
+    NODISCARD bool isEditSession() const { return m_key != REMOTE_EDIT_VIEW_KEY; }
 
-    const QString &getContent() const { return m_content; }
+    NODISCARD const QString &getContent() const { return m_content; }
 
     void setContent(QString content) { m_content = std::move(content); }
 

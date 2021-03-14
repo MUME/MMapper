@@ -107,12 +107,12 @@ void ClientWidget::onShowMessage(const QString &message)
 
 void ClientWidget::saveLog()
 {
-    struct Result
+    struct NODISCARD Result
     {
         QStringList filenames;
         bool isHtml = false;
     };
-    const auto getFileNames = [this]() {
+    const auto getFileNames = [this]() -> Result {
         auto save = std::make_unique<QFileDialog>(this, "Choose log file name ...");
         save->setFileMode(QFileDialog::AnyFile);
         save->setDirectory(QDir::current());

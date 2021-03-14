@@ -12,7 +12,7 @@
 #include "../configuration/configuration.h"
 #include "../proxy/telnetfilter.h"
 
-static bool endsInLinefeed(const TelnetDataEnum type)
+NODISCARD static bool endsInLinefeed(const TelnetDataEnum type)
 {
     switch (type) {
     case TelnetDataEnum::LF:

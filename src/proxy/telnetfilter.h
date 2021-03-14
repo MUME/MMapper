@@ -11,9 +11,20 @@
 #include <QString>
 #include <QtCore>
 
-enum class TelnetDataEnum { UNKNOWN, PROMPT, MENU_PROMPT, LOGIN, LOGIN_PASSWORD, CRLF, LF, DELAY };
+#include "../global/macros.h"
 
-struct TelnetData final
+enum class NODISCARD TelnetDataEnum {
+    UNKNOWN,
+    PROMPT,
+    MENU_PROMPT,
+    LOGIN,
+    LOGIN_PASSWORD,
+    CRLF,
+    LF,
+    DELAY
+};
+
+struct NODISCARD TelnetData final
 {
     TelnetData() = default;
     QByteArray line;

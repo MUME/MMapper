@@ -16,7 +16,7 @@ class RoomAdmin;
 class RoomSignalHandler;
 struct PathParameters;
 
-class OneByOne final : public Experimenting
+class NODISCARD OneByOne final : public Experimenting
 {
 public:
     explicit OneByOne(const SigParseEvent &sigParseEvent,

@@ -7,7 +7,7 @@
 
 #include "ShaderUtils.h"
 
-static std::string readWholeResourceFile(const std::string &fullPath)
+NODISCARD static std::string readWholeResourceFile(const std::string &fullPath)
 {
     QFile f{QString(fullPath.c_str())};
     if (!f.exists() || !f.open(QIODevice::OpenModeFlag::ReadOnly | QIODevice::OpenModeFlag::Text)) {
@@ -17,7 +17,7 @@ static std::string readWholeResourceFile(const std::string &fullPath)
     return in.readAll().toUtf8().toStdString();
 }
 
-static ShaderUtils::Source readWholeShader(const std::string &dir, const std::string &name)
+NODISCARD static ShaderUtils::Source readWholeShader(const std::string &dir, const std::string &name)
 {
     const auto fullPathName = ":/shaders/legacy/" + dir + "/" + name;
     return ShaderUtils::Source{fullPathName, readWholeResourceFile(fullPathName)};
@@ -34,7 +34,8 @@ PointShader::~PointShader() = default;
 
 // essentially a private member of ShaderPrograms
 template<typename T>
-static std::shared_ptr<T> loadSimpleShaderProgram(Functions &functions, const std::string &dir)
+NODISCARD static std::shared_ptr<T> loadSimpleShaderProgram(Functions &functions,
+                                                            const std::string &dir)
 {
     static_assert(std::is_base_of_v<AbstractShaderProgram, T>);
 
@@ -50,9 +51,9 @@ static std::shared_ptr<T> loadSimpleShaderProgram(Functions &functions, const st
 
 // essentially a private member of ShaderPrograms
 template<typename T>
-static const std::shared_ptr<T> &getInitialized(std::shared_ptr<T> &shader,
-                                                Functions &functions,
-                                                const std::string &dir)
+NODISCARD static const std::shared_ptr<T> &getInitialized(std::shared_ptr<T> &shader,
+                                                          Functions &functions,
+                                                          const std::string &dir)
 {
     if (!shader) {
         shader = Legacy::loadSimpleShaderProgram<T>(functions, dir);

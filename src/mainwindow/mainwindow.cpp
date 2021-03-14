@@ -1500,7 +1500,7 @@ std::unique_ptr<QFileDialog> MainWindow::createDefaultSaveDialog()
     return save;
 }
 
-static QStringList getSaveFileNames(std::unique_ptr<QFileDialog> &&ptr)
+NODISCARD static QStringList getSaveFileNames(std::unique_ptr<QFileDialog> &&ptr)
 {
     if (const auto pSaveDialog = ptr.get()) {
         if (pSaveDialog->exec() == QDialog::Accepted)

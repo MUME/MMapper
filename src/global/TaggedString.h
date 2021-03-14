@@ -12,7 +12,7 @@
 
 // Latin1
 template<typename T>
-class TaggedString
+class NODISCARD TaggedString
 {
 private:
     std::string m_str;
@@ -44,28 +44,30 @@ public:
     bool operator!=(const TaggedString &rhs) const { return !(rhs == *this); }
 
 public:
+    NODISCARD
     friend auto operator+(const TaggedString &taggedString, const QString &qs)
     {
         return taggedString.toQString() + qs;
     }
+    NODISCARD
     friend auto operator+(const QString &qs, const TaggedString &taggedString)
     {
         return qs + taggedString.toQString();
     }
 
 public:
-    const std::string &getStdString() const { return m_str; }
-    QByteArray toQByteArray() const { return ::toQByteArrayLatin1(m_str); }
-    QString toQString() const { return ::toQStringLatin1(m_str); }
+    NODISCARD const std::string &getStdString() const { return m_str; }
+    NODISCARD QByteArray toQByteArray() const { return ::toQByteArrayLatin1(m_str); }
+    NODISCARD QString toQString() const { return ::toQStringLatin1(m_str); }
 
 public:
-    bool empty() const { return m_str.empty(); }
-    bool isEmpty() const { return empty(); }
+    NODISCARD bool empty() const { return m_str.empty(); }
+    NODISCARD bool isEmpty() const { return empty(); }
 };
 
 // UTF-8
 template<typename T>
-class TaggedStringUtf8 : private TaggedString<T>
+class NODISCARD TaggedStringUtf8 : private TaggedString<T>
 {
 private:
     using base = TaggedString<T>;
@@ -83,10 +85,12 @@ public:
     using base::operator!=;
 
 public:
+    NODISCARD
     friend auto operator+(const TaggedStringUtf8 &taggedString, const QString &qs)
     {
         return taggedString.toQString() + qs;
     }
+    NODISCARD
     friend auto operator+(const QString &qs, const TaggedStringUtf8 &taggedString)
     {
         return qs + taggedString.toQString();
@@ -94,8 +98,8 @@ public:
 
 public:
     using base::getStdString;
-    QByteArray toQByteArray() const { return ::toQByteArrayUtf8(getStdString()); }
-    QString toQString() const { return ::toQStringUtf8(getStdString()); }
+    NODISCARD QByteArray toQByteArray() const { return ::toQByteArrayUtf8(getStdString()); }
+    NODISCARD QString toQString() const { return ::toQStringUtf8(getStdString()); }
 
 public:
     using base::empty;

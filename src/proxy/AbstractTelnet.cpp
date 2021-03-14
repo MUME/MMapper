@@ -16,7 +16,7 @@
 #include "../global/utils.h"
 #include "TextCodec.h"
 
-static QString telnetCommandName(uint8_t cmd)
+NODISCARD static QString telnetCommandName(uint8_t cmd)
 {
 #define CASE(x) \
     case TN_##x: \
@@ -44,7 +44,7 @@ static QString telnetCommandName(uint8_t cmd)
 #undef CASE
 }
 
-static QString telnetOptionName(uint8_t opt)
+NODISCARD static QString telnetOptionName(uint8_t opt)
 {
 #define CASE(x) \
     case OPT_##x: \
@@ -66,7 +66,7 @@ static QString telnetOptionName(uint8_t opt)
     return QString::asprintf("%u", opt);
 #undef CASE
 }
-static QString telnetSubnegName(uint8_t opt)
+NODISCARD static QString telnetSubnegName(uint8_t opt)
 {
 #define CASE(x) \
     case TNSB_##x: \
@@ -85,7 +85,7 @@ static QString telnetSubnegName(uint8_t opt)
 #undef CASE
 }
 
-static bool containsIAC(const QByteArray &arr)
+NODISCARD static bool containsIAC(const QByteArray &arr)
 {
     for (const auto &c : arr) {
         if (static_cast<uint8_t>(c) == TN_IAC)
@@ -94,7 +94,7 @@ static bool containsIAC(const QByteArray &arr)
     return false;
 }
 
-struct TelnetFormatter final : public AppendBuffer
+struct NODISCARD TelnetFormatter final : public AppendBuffer
 {
     void addRaw(const uint8_t byte)
     {

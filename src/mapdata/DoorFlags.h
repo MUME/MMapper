@@ -22,7 +22,7 @@
     X(NO_BASH, no_bash, NoBash, "No bash") \
     /* define door flags above */
 
-enum class DoorFlagEnum {
+enum class NODISCARD DoorFlagEnum {
 #define X_DECL_DOOR_FLAG(UPPER_CASE, lower_case, CamelCase, friendly) UPPER_CASE,
     X_FOREACH_DOOR_FLAG(X_DECL_DOOR_FLAG)
 #undef X_DECL_DOOR_FLAG

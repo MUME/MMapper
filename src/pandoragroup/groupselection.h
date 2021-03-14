@@ -13,21 +13,21 @@
 class CGroupChar;
 class GroupRecipient;
 
-class GroupAdmin
+class NODISCARD GroupAdmin
 {
 public:
     virtual void releaseCharacters(GroupRecipient *) = 0;
     virtual ~GroupAdmin();
 };
 
-class GroupRecipient
+class NODISCARD GroupRecipient
 {
 public:
     virtual void receiveCharacters(GroupAdmin *, GroupVector) = 0;
     virtual ~GroupRecipient();
 };
 
-class GroupSelection final : public GroupRecipient
+class NODISCARD GroupSelection final : public GroupRecipient
 {
     // NOTE: deleted members must be public.
 public:
@@ -40,17 +40,17 @@ public:
     void receiveCharacters(GroupAdmin *, GroupVector) override;
 
 public:
-    auto at(int i) const
+    NODISCARD auto at(int i) const
     {
         assert(i >= 0);
         return chars.at(static_cast<uint32_t>(i));
     }
-    auto begin() const { return chars.begin(); }
-    auto cbegin() const { return chars.cbegin(); }
-    auto cend() const { return chars.cend(); }
-    auto end() const { return chars.end(); }
-    auto size() const { return chars.size(); }
-    auto empty() const { return chars.empty(); }
+    NODISCARD auto begin() const { return chars.begin(); }
+    NODISCARD auto cbegin() const { return chars.cbegin(); }
+    NODISCARD auto cend() const { return chars.cend(); }
+    NODISCARD auto end() const { return chars.end(); }
+    NODISCARD auto size() const { return chars.size(); }
+    NODISCARD auto empty() const { return chars.empty(); }
 
 private:
     GroupAdmin *m_admin = nullptr;

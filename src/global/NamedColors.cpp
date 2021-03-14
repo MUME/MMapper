@@ -15,7 +15,7 @@ using Map = std::map<std::string, Index>;
 using ColorVector = std::vector<Color>;
 using ReverseLookup = std::vector<std::optional<Map::iterator>>;
 
-struct GlobalData final
+struct NODISCARD GlobalData final
 {
 private:
     ColorVector colors;
@@ -23,14 +23,14 @@ private:
     ReverseLookup reverseLookup;
 
 public:
-    Color &getColor(const Index index)
+    NODISCARD Color &getColor(const Index index)
     {
         if (index == XNamedColor::UNINITIALIZED) {
             throw std::invalid_argument("index");
         }
         return colors.at(index - 1);
     }
-    std::string getName(const Index index) const
+    NODISCARD std::string getName(const Index index) const
     {
         if (index == XNamedColor::UNINITIALIZED) {
             throw std::invalid_argument("index");
@@ -41,14 +41,15 @@ public:
     }
 
 private:
-    Index verifyIndex(Index index) const;
-    Index allocNewIndex(std::string_view name);
+    NODISCARD Index verifyIndex(Index index) const;
+    NODISCARD Index allocNewIndex(std::string_view name);
 
 public:
-    Index lookupOrCreateIndex(std::string_view name);
+    NODISCARD Index lookupOrCreateIndex(std::string_view name);
 
 public:
-    std::vector<std::string> getAllNames() const
+    // NOTE: This allocates memory.
+    NODISCARD std::vector<std::string> getAllNames() const
     {
         std::vector<std::string> result;
         result.reserve(map.size());
@@ -97,7 +98,7 @@ Index GlobalData::lookupOrCreateIndex(std::string_view name)
     return allocNewIndex(name);
 }
 
-static GlobalData &getGlobalData()
+NODISCARD static GlobalData &getGlobalData()
 {
     static GlobalData globalData;
     return globalData;

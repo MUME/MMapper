@@ -13,6 +13,7 @@
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QVBoxLayout>
 
+#include "../global/macros.h"
 #include "remoteeditsession.h"
 
 struct EditViewCommand;
@@ -26,8 +27,8 @@ class QPlainTextEdit;
 class QWidget;
 class QStatusBar;
 
-enum class EditViewCmdEnum { VIEW_OPTION, EDIT_ALIGNMENT, EDIT_COLORS, EDIT_WHITESPACE };
-enum class EditCmd2Enum { EDIT_ONLY, EDIT_OR_VIEW, SPACER };
+enum class NODISCARD EditViewCmdEnum { VIEW_OPTION, EDIT_ALIGNMENT, EDIT_COLORS, EDIT_WHITESPACE };
+enum class NODISCARD EditCmd2Enum { EDIT_ONLY, EDIT_OR_VIEW, SPACER };
 
 // NOTE: Ctrl+A is "Select All" by default.
 #define XFOREACH_REMOTE_EDIT_MENU_ITEM(X) \
@@ -106,7 +107,7 @@ private:
 public:
     void replaceAll(const QString &str);
     void showWhitespace(bool enabled);
-    bool isShowingWhitespace() const;
+    NODISCARD bool isShowingWhitespace() const;
     void toggleWhitespace();
 
     void joinLines();
@@ -160,7 +161,7 @@ signals:
     void save(const QString &);
 
 private:
-    Editor *createTextEdit();
+    NODISCARD Editor *createTextEdit();
 
     void addToMenu(QMenu *menu, const EditViewCommand &cmd);
     void addToMenu(QMenu *menu, const EditCommand2 &cmd, const Editor *pTextEdit);

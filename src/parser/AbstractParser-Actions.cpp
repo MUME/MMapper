@@ -199,8 +199,10 @@ void AbstractParser::initActionMap()
 
     /// Path Machine: Prespam
     auto failedMovement = [this](StringView /*view*/) {
-        if (!m_queue.isEmpty())
-            m_queue.dequeue();
+        if (!m_queue.isEmpty()) {
+            MAYBE_UNUSED const auto ignored = //
+                m_queue.dequeue();
+        }
         pathChanged();
     };
     addStartsWith("You failed to climb", failedMovement);
@@ -226,8 +228,10 @@ void AbstractParser::initActionMap()
     // A pack horse
     addEndsWith("is too exhausted.", failedMovement);
     auto zblam = [this](StringView /*view*/) {
-        if (!m_queue.isEmpty())
-            m_queue.dequeue();
+        if (!m_queue.isEmpty()) {
+            MAYBE_UNUSED const auto ignored = //
+                m_queue.dequeue();
+        }
         pathChanged();
         m_group.sendEvent(CharacterPositionEnum::RESTING);
     };

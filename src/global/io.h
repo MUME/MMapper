@@ -15,13 +15,14 @@
 #include <QtGlobal>
 
 #include "RuleOf5.h"
+#include "macros.h"
 
 class QFile;
 
 namespace io {
 
 template<size_t N>
-class buffer final
+class NODISCARD buffer final
 {
 private:
     static constexpr const size_t SIZE = N;
@@ -29,7 +30,7 @@ private:
     static_assert(N >= ALIGNMENT);
     static_assert((N & (N - 1)) == 0, "N must be a power of two");
     static_assert(N <= static_cast<size_t>(std::numeric_limits<int>::max()));
-    struct alignas(ALIGNMENT) internal final
+    struct NODISCARD alignas(ALIGNMENT) internal final
     {
         // uninitialized
         alignas(ALIGNMENT) char data[N];
@@ -46,10 +47,10 @@ public:
     char *data() { return m_internal->data; }
 };
 
-enum class IOResultEnum { SUCCESS, FAILURE, EXCEPTION };
+enum class NODISCARD IOResultEnum { SUCCESS, FAILURE, EXCEPTION };
 
 template<size_t N, typename Callback>
-IOResultEnum readAllAvailable(QIODevice &dev, buffer<N> &buffer, Callback &&callback)
+NODISCARD IOResultEnum readAllAvailable(QIODevice &dev, buffer<N> &buffer, Callback &&callback)
 {
     static constexpr const auto MAX_SIZE = static_cast<qint64>(N);
     char *const data = buffer.data();
@@ -72,7 +73,7 @@ IOResultEnum readAllAvailable(QIODevice &dev, buffer<N> &buffer, Callback &&call
     return IOResultEnum::SUCCESS;
 }
 
-class IOException : public std::runtime_error
+class NODISCARD IOException : public std::runtime_error
 {
 public:
     explicit IOException(std::nullptr_t) = delete;
@@ -92,7 +93,7 @@ public:
     static IOException withErrorNumber(int error_number);
 };
 
-class ErrorNumberMessage final
+class NODISCARD ErrorNumberMessage final
 {
 private:
     char buf[1024 - sizeof(const char *) - sizeof(int)]{};
@@ -108,15 +109,18 @@ public:
     explicit operator const char *() const { return str; }
 
 public:
-    const char *getErrorMessage() const { return str; }
-    int getErrorNumber() const { return error_number; }
+    NODISCARD const char *getErrorMessage() const { return str; }
+    NODISCARD int getErrorNumber() const { return error_number; }
 };
 static_assert(sizeof(ErrorNumberMessage) == 1024);
 
-bool fsync(QFile &) noexcept(false);
+NODISCARD extern bool fsync(QFile &) noexcept(false);
 
-IOResultEnum fsyncNoexcept(QFile &) noexcept;
+NODISCARD extern IOResultEnum fsyncNoexcept(QFile &) noexcept;
 
-bool tuneKeepAlive(qintptr socketDescriptor, int maxIdle = 60, int count = 4, int interval = 60);
+NODISCARD extern bool tuneKeepAlive(qintptr socketDescriptor,
+                                    int maxIdle = 60,
+                                    int count = 4,
+                                    int interval = 60);
 
 } // namespace io

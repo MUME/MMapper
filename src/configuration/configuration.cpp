@@ -21,7 +21,7 @@
 
 static std::atomic_bool config_enteredMain{false};
 
-static const char *getPlatformEditor()
+NODISCARD static const char *getPlatformEditor()
 {
     switch (CURRENT_PLATFORM) {
     case PlatformEnum::Windows:
@@ -61,7 +61,7 @@ ConstString OLD_SETTINGS_ORGANIZATION = "Caligor soft";
 ConstString SETTINGS_APPLICATION = "MMapper2";
 ConstString SETTINGS_FIRST_TIME_KEY = "General/Run first time";
 
-class Settings final
+class NODISCARD Settings final
 {
 private:
     static constexpr const char *const MMAPPER_PROFILE_PATH = "MMAPPER_PROFILE_PATH";
@@ -70,13 +70,13 @@ private:
     std::optional<QSettings> m_settings;
 
 private:
-    static bool isValid(const QFile &file)
+    NODISCARD static bool isValid(const QFile &file)
     {
         const QFileInfo info{file};
         return !info.isDir() && info.exists() && info.isReadable() && info.isWritable();
     }
 
-    static bool isValid(const QString &fileName)
+    NODISCARD static bool isValid(const QString &fileName)
     {
         const QFile file{fileName};
         return isValid(file);
@@ -301,7 +301,7 @@ void Settings::tryCopyOldSettings()
     sNew.endGroup();
 }
 
-static bool isValidAnsi(const QString &input)
+NODISCARD static bool isValidAnsi(const QString &input)
 {
     static constexpr const auto MAX = static_cast<uint32_t>(std::numeric_limits<uint8_t>::max());
 
@@ -322,7 +322,7 @@ static bool isValidAnsi(const QString &input)
     return true;
 }
 
-static bool isValidGroupManagerState(const GroupManagerStateEnum state)
+NODISCARD static bool isValidGroupManagerState(const GroupManagerStateEnum state)
 {
     switch (state) {
     case GroupManagerStateEnum::Off:
@@ -333,7 +333,7 @@ static bool isValidGroupManagerState(const GroupManagerStateEnum state)
     return false;
 }
 
-static bool isValidMapMode(const MapModeEnum mode)
+NODISCARD static bool isValidMapMode(const MapModeEnum mode)
 {
     switch (mode) {
     case MapModeEnum::PLAY:
@@ -344,7 +344,7 @@ static bool isValidMapMode(const MapModeEnum mode)
     return false;
 }
 
-static bool isValidCharacterEncoding(const CharacterEncodingEnum encoding)
+NODISCARD static bool isValidCharacterEncoding(const CharacterEncodingEnum encoding)
 {
     switch (encoding) {
     case CharacterEncodingEnum::ASCII:
@@ -355,7 +355,7 @@ static bool isValidCharacterEncoding(const CharacterEncodingEnum encoding)
     return false;
 }
 
-static bool isValidAutoLoggerState(const AutoLoggerEnum strategy)
+NODISCARD static bool isValidAutoLoggerState(const AutoLoggerEnum strategy)
 {
     switch (strategy) {
     case AutoLoggerEnum::DeleteDays:
@@ -366,7 +366,7 @@ static bool isValidAutoLoggerState(const AutoLoggerEnum strategy)
     return false;
 }
 
-static QString sanitizeAnsi(const QString &input, const QString &defaultValue)
+NODISCARD static QString sanitizeAnsi(const QString &input, const QString &defaultValue)
 {
     assert(isValidAnsi(defaultValue));
     if (isValidAnsi(input))
@@ -378,7 +378,7 @@ static QString sanitizeAnsi(const QString &input, const QString &defaultValue)
     return defaultValue;
 }
 
-static GroupManagerStateEnum sanitizeGroupManagerState(const int input)
+NODISCARD static GroupManagerStateEnum sanitizeGroupManagerState(const int input)
 {
     const auto state = static_cast<GroupManagerStateEnum>(input);
     if (isValidGroupManagerState(state))
@@ -388,7 +388,7 @@ static GroupManagerStateEnum sanitizeGroupManagerState(const int input)
     return GroupManagerStateEnum::Off;
 }
 
-static MapModeEnum sanitizeMapMode(const uint32_t input)
+NODISCARD static MapModeEnum sanitizeMapMode(const uint32_t input)
 {
     const auto mode = static_cast<MapModeEnum>(input);
     if (isValidMapMode(mode))
@@ -398,7 +398,7 @@ static MapModeEnum sanitizeMapMode(const uint32_t input)
     return MapModeEnum::PLAY;
 }
 
-static CharacterEncodingEnum sanitizeCharacterEncoding(const uint32_t input)
+NODISCARD static CharacterEncodingEnum sanitizeCharacterEncoding(const uint32_t input)
 {
     const auto encoding = static_cast<CharacterEncodingEnum>(input);
     if (isValidCharacterEncoding(encoding))
@@ -408,7 +408,7 @@ static CharacterEncodingEnum sanitizeCharacterEncoding(const uint32_t input)
     return CharacterEncodingEnum::LATIN1;
 }
 
-static AutoLoggerEnum sanitizeAutoLoggerState(const int input)
+NODISCARD static AutoLoggerEnum sanitizeAutoLoggerState(const int input)
 {
     const auto state = static_cast<AutoLoggerEnum>(input);
     if (isValidAutoLoggerState(state))
@@ -418,7 +418,7 @@ static AutoLoggerEnum sanitizeAutoLoggerState(const int input)
     return AutoLoggerEnum::DeleteDays;
 }
 
-static uint16_t sanitizeUint16(const int input, const uint16_t defaultValue)
+NODISCARD static uint16_t sanitizeUint16(const int input, const uint16_t defaultValue)
 {
     static constexpr const auto MIN = static_cast<int>(std::numeric_limits<uint16_t>::min());
     static constexpr const auto MAX = static_cast<int>(std::numeric_limits<uint16_t>::max());
@@ -593,7 +593,7 @@ void Configuration::CanvasSettings::read(QSettings &conf)
 ConstString DEFAULT_MMAPPER_SUBDIR = "/MMapper";
 ConstString DEFAULT_LOGS_SUBDIR = "/Logs";
 
-static QString getDefaultDirectory()
+NODISCARD static QString getDefaultDirectory()
 {
     return QDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).absolutePath();
 }
@@ -758,7 +758,7 @@ void Configuration::ConnectionSettings::write(QSettings &conf) const
     conf.setValue(KEY_PROXY_LISTENS_ON_ANY_INTERFACE, proxyListensOnAnyInterface);
 }
 
-static auto getQColorName(const XNamedColor &color)
+NODISCARD static auto getQColorName(const XNamedColor &color)
 {
     return color.getColor().getQColor().name();
 }

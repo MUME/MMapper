@@ -7,8 +7,9 @@
 #include <stdexcept>
 
 #include "RuleOf5.h"
+#include "macros.h"
 
-class RandomEngine final : public std::mt19937
+class NODISCARD RandomEngine final : public std::mt19937
 {
 private:
     RandomEngine();
@@ -22,10 +23,10 @@ public:
 };
 
 // returns a uniformly-distributed random number in [0..max], inclusive
-size_t getRandom(size_t max);
+NODISCARD extern size_t getRandom(size_t max);
 
 template<typename T>
-decltype(auto) chooseRandomElement(T &container)
+NODISCARD decltype(auto) chooseRandomElement(T &container)
 {
     if (container.empty())
         throw std::invalid_argument("container");

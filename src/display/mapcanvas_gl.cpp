@@ -283,7 +283,7 @@ glm::mat4 MapCanvas::getViewProj_old(const glm::vec2 &scrollPos,
     return glm::make_mat4(proj.constData());
 }
 
-static float getPitchDegrees(const float zoomScale)
+NODISCARD static float getPitchDegrees(const float zoomScale)
 {
     const float degrees = getConfig().canvas.advanced.verticalAngle.getFloat();
     if (!MapCanvasConfig::isAutoTilt())
@@ -685,7 +685,8 @@ void MapCanvas::updateMultisampling()
     if (activeStatus == wantMultisampling)
         return;
 
-    getOpenGL().tryEnableMultisampling(wantMultisampling);
+    // REVISIT: check return value?
+    MAYBE_UNUSED const bool enabled = getOpenGL().tryEnableMultisampling(wantMultisampling);
     activeStatus = wantMultisampling;
 }
 

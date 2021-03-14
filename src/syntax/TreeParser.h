@@ -15,9 +15,9 @@
 
 namespace syntax {
 
-enum class MatchTypeEnum { Fail, Partial, Pass };
+enum class NODISCARD MatchTypeEnum { Fail, Partial, Pass };
 
-class TreeParser final
+class NODISCARD TreeParser final
 {
 private:
     const SharedConstSublist m_syntaxRoot;
@@ -26,26 +26,26 @@ private:
 public:
     explicit TreeParser(SharedConstSublist syntaxRoot, User &user);
 
-    bool parse(const ParserInput &input);
+    NODISCARD bool parse(const ParserInput &input);
 
 private:
-    bool syntaxOnly(const ParserInput &input);
+    NODISCARD bool syntaxOnly(const ParserInput &input);
 
-    ParseResult syntaxRecurseFirst(const Sublist &node,
-                                   const ParserInput &input,
-                                   const Pair *matchedArgs);
-    ParseResult recurseNewSublist(const Sublist &node,
-                                  const ParserInput &input,
-                                  const Pair *matchedArgs);
-    ParseResult recurseTokenMatcher(const Sublist &node,
-                                    const ParserInput &input,
-                                    const Pair *matchedArgs);
-    ParseResult syntaxRecurseNext(const Sublist &node,
-                                  const ParserInput &input,
-                                  const Pair *matchedArgs);
-    ParseResult recurseAccept(const Sublist &node,
-                              const ParserInput &input,
-                              const Pair *matchedArgs);
+    NODISCARD ParseResult syntaxRecurseFirst(const Sublist &node,
+                                             const ParserInput &input,
+                                             const Pair *matchedArgs);
+    NODISCARD ParseResult recurseNewSublist(const Sublist &node,
+                                            const ParserInput &input,
+                                            const Pair *matchedArgs);
+    NODISCARD ParseResult recurseTokenMatcher(const Sublist &node,
+                                              const ParserInput &input,
+                                              const Pair *matchedArgs);
+    NODISCARD ParseResult syntaxRecurseNext(const Sublist &node,
+                                            const ParserInput &input,
+                                            const Pair *matchedArgs);
+    NODISCARD ParseResult recurseAccept(const Sublist &node,
+                                        const ParserInput &input,
+                                        const Pair *matchedArgs);
 
 private:
     class HelpCommon;

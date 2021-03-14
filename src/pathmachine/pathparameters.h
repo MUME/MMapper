@@ -6,9 +6,11 @@
 
 #include <cstdint>
 
+#include "../global/macros.h"
+
 using uint = uint32_t;
 
-struct PathParameters final
+struct NODISCARD PathParameters final
 {
     double acceptBestRelative = 10.0;
     double acceptBestAbsolute = 3.0;

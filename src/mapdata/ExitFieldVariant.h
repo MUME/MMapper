@@ -13,10 +13,12 @@
 #include "DoorFlags.h"
 #include "ExitFlags.h"
 
-struct DoorNameTag final
+namespace tags {
+struct NODISCARD DoorNameTag final
 {};
+} // namespace tags
 
-using DoorName = TaggedString<DoorNameTag>;
+using DoorName = TaggedString<tags::DoorNameTag>;
 
 //
 // X(UPPER_CASE, CamelCase)
@@ -35,11 +37,11 @@ using DoorName = TaggedString<DoorNameTag>;
 
 #define DECL_ENUM(UPPER_CASE, CamelCase) UPPER_CASE
 #define COMMA() ,
-enum class ExitFieldEnum { X_FOREACH_EXIT_FIELD(DECL_ENUM, COMMA) };
+enum class NODISCARD ExitFieldEnum { X_FOREACH_EXIT_FIELD(DECL_ENUM, COMMA) };
 #undef COMMA
 #undef DECL_ENUM
 
-class ExitFieldVariant final
+class NODISCARD ExitFieldVariant final
 {
 private:
 #define COMMA() ,
@@ -64,7 +66,7 @@ public:
 #undef NOP
 
 public:
-    ExitFieldEnum getType() const noexcept
+    NODISCARD ExitFieldEnum getType() const noexcept
     {
 #define NOP()
 #define CASE(UPPER_CASE, CamelCase) \

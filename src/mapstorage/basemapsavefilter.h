@@ -19,10 +19,10 @@ class ProgressCounter;
 /*! \brief Filters
  *
  */
-class BaseMapSaveFilter final : public RoomRecipient
+class NODISCARD BaseMapSaveFilter final : public RoomRecipient
 {
 public:
-    enum class ActionEnum { PASS, ALTER, REJECT };
+    enum class NODISCARD ActionEnum { PASS, ALTER, REJECT };
 
 private:
     struct Impl;
@@ -42,9 +42,9 @@ public:
     //! The map data to work on
     void setMapData(MapData *mapData);
     //! How much steps (rooms) to go through in prepare() (requires mapData)
-    uint32_t prepareCount();
+    NODISCARD uint32_t prepareCount();
     //! How much rooms will be accepted (PASS or ALTER)
-    uint32_t acceptedRoomsCount();
+    NODISCARD uint32_t acceptedRoomsCount();
     //! First pass over the world's room (requires mapData)
     void prepare(ProgressCounter &counter);
     //! Determines the fate of this room (requires prepare())

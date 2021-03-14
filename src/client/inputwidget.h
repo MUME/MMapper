@@ -13,11 +13,13 @@
 #include <QWidget>
 #include <QtCore>
 
+#include "../global/macros.h"
+
 class QKeyEvent;
 class QObject;
 class QWidget;
 
-class InputHistory final : private std::list<QString>
+class NODISCARD InputHistory final : private std::list<QString>
 {
 public:
     InputHistory() { m_iterator = begin(); }
@@ -30,18 +32,20 @@ public:
     void backward() { std::advance(m_iterator, -1); }
 
 public:
-    const QString &value() const { return *m_iterator; }
+    NODISCARD const QString &value() const { return *m_iterator; }
 
 public:
-    bool atFront() const { return m_iterator == begin(); }
-    bool atEnd() const { return m_iterator == end(); }
+    NODISCARD bool atFront() const { return m_iterator == begin(); }
+    NODISCARD bool atEnd() const { return m_iterator == end(); }
 
 private:
     std::list<QString>::iterator m_iterator;
 };
 
-class TabHistory final : private std::list<QString>
+class NODISCARD TabHistory final : private std::list<QString>
 {
+    using base = std::list<QString>;
+
 public:
     TabHistory() { m_iterator = begin(); }
 
@@ -53,11 +57,11 @@ public:
     void reset() { m_iterator = begin(); }
 
 public:
-    const QString &value() const { return *m_iterator; }
+    NODISCARD const QString &value() const { return *m_iterator; }
 
 public:
-    using std::list<QString>::empty;
-    bool atEnd() const { return m_iterator == end(); }
+    NODISCARD bool empty() { return base::empty(); }
+    NODISCARD bool atEnd() const { return m_iterator == end(); }
 
 private:
     std::list<QString>::iterator m_iterator;
@@ -75,14 +79,14 @@ public:
     explicit InputWidget(QWidget *parent = nullptr);
     ~InputWidget() override;
 
-    QSize sizeHint() const override;
+    NODISCARD QSize sizeHint() const override;
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
 
 private:
     void gotInput();
-    bool tryHistory(int);
+    NODISCARD bool tryHistory(int);
     void keypadMovement(int);
 
 private:

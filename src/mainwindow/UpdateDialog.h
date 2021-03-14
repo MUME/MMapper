@@ -12,7 +12,7 @@
 
 #include "../global/Array.h"
 
-class CompareVersion final
+class NODISCARD CompareVersion final
 {
 private:
     MMapper::Array<int, 3> parts;
@@ -25,7 +25,7 @@ public:
     bool operator==(const CompareVersion &other) const;
 
 public:
-    QString toQString() const;
+    NODISCARD QString toQString() const;
     explicit operator QString() const { return toQString(); }
     friend QDebug operator<<(QDebug os, const CompareVersion &compareVersion)
     {

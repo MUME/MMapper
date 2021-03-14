@@ -43,11 +43,11 @@ private:
     Coordinate getNearestFree(const Coordinate &c);
 };
 
-class CoordinateIterator final
+class NODISCARD CoordinateIterator final
 {
 public:
     CoordinateIterator() = default;
-    Coordinate &next();
+    NODISCARD Coordinate &next();
 
 private:
     Coordinate c;

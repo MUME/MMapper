@@ -36,18 +36,24 @@ public:
 
 private:
     // It has either a nested sublist, or a TokenMatcher.
-    bool holdsNestedSublist() const { return std::holds_alternative<SharedConstSublist>(m_car); }
+    NODISCARD bool holdsNestedSublist() const
+    {
+        return std::holds_alternative<SharedConstSublist>(m_car);
+    }
     // It has either a next node, or an Accept function.
-    bool hasNextNode() const { return std::holds_alternative<SharedConstSublist>(m_cdr); }
+    NODISCARD bool hasNextNode() const { return std::holds_alternative<SharedConstSublist>(m_cdr); }
 
-    const SharedConstSublist &getNestedSublist() const
+    NODISCARD const SharedConstSublist &getNestedSublist() const
     {
         return std::get<SharedConstSublist>(m_car);
     }
-    const SharedConstSublist &getNext() const { return std::get<SharedConstSublist>(m_cdr); }
+    NODISCARD const SharedConstSublist &getNext() const
+    {
+        return std::get<SharedConstSublist>(m_cdr);
+    }
 
-    const TokenMatcher &getTokenMatcher() const { return std::get<TokenMatcher>(m_car); }
-    const Accept &getAcceptFn() const { return std::get<Accept>(m_cdr); }
+    NODISCARD const TokenMatcher &getTokenMatcher() const { return std::get<TokenMatcher>(m_car); }
+    NODISCARD const Accept &getAcceptFn() const { return std::get<Accept>(m_cdr); }
 
     // This is probably redundant.
     void checkCompleteness();
@@ -63,13 +69,13 @@ public:
 };
 
 template<typename First>
-SharedConstSublist buildSyntax(First &&first, Accept second)
+NODISCARD SharedConstSublist buildSyntax(First &&first, Accept second)
 {
     return std::make_shared<const Sublist>(std::forward<First>(first), std::move(second));
 }
 
 template<typename First>
-SharedConstSublist buildSyntax(First &&first, SharedConstSublist second)
+NODISCARD SharedConstSublist buildSyntax(First &&first, SharedConstSublist second)
 {
     assert(second != nullptr);
     return std::make_shared<const Sublist>(std::forward<First>(first),
@@ -78,14 +84,14 @@ SharedConstSublist buildSyntax(First &&first, SharedConstSublist second)
 }
 
 template<typename First, typename Second, typename... Rest>
-SharedConstSublist buildSyntax(First &&first, Second &&second, Rest &&... rest)
+NODISCARD SharedConstSublist buildSyntax(First &&first, Second &&second, Rest &&... rest)
 {
     SharedConstSublist cdr = buildSyntax(std::forward<Second>(second), std::forward<Rest>(rest)...);
     return std::make_shared<const Sublist>(std::forward<First>(first), std::move(cdr));
 }
 
-std::string processSyntax(const syntax::SharedConstSublist &syntax,
-                          const std::string &name,
-                          const StringView &args);
+NODISCARD std::string processSyntax(const syntax::SharedConstSublist &syntax,
+                                    const std::string &name,
+                                    const StringView &args);
 
 } // namespace syntax

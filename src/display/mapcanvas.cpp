@@ -45,7 +45,7 @@
 #endif
 
 using NonOwningPointer = MapCanvas *;
-static NonOwningPointer &primaryMapCanvas()
+NODISCARD static NonOwningPointer &primaryMapCanvas()
 {
     static NonOwningPointer primary = nullptr;
     return primary;
@@ -195,7 +195,7 @@ void MapCanvas::setInfoMarkSelection(const std::shared_ptr<InfoMarkSelection> &s
     selectionChanged();
 }
 
-static uint32_t operator&(const Qt::KeyboardModifiers left, const Qt::Modifier right)
+NODISCARD static uint32_t operator&(const Qt::KeyboardModifiers left, const Qt::Modifier right)
 {
     return static_cast<uint32_t>(left) & static_cast<uint32_t>(right);
 }
@@ -345,7 +345,8 @@ void MapCanvas::createRoom()
     const Coordinate c = getSel1().getCoordinate();
     RoomSelection tmpSel = RoomSelection(m_data, c);
     if (tmpSel.empty()) {
-        m_data.createEmptyRoom(Coordinate{c.x, c.y, m_currentLayer});
+        MAYBE_UNUSED const auto ignored = //
+            m_data.createEmptyRoom(Coordinate{c.x, c.y, m_currentLayer});
     }
     mapChanged();
 }

@@ -6,7 +6,7 @@
 
 namespace Legacy {
 
-struct AColorPlainShader final : public AbstractShaderProgram
+struct NODISCARD AColorPlainShader final : public AbstractShaderProgram
 {
 public:
     using AbstractShaderProgram::AbstractShaderProgram;
@@ -21,7 +21,7 @@ protected:
     }
 };
 
-struct UColorPlainShader final : public AbstractShaderProgram
+struct NODISCARD UColorPlainShader final : public AbstractShaderProgram
 {
 public:
     using AbstractShaderProgram::AbstractShaderProgram;
@@ -36,7 +36,7 @@ protected:
     }
 };
 
-struct AColorTexturedShader final : public AbstractShaderProgram
+struct NODISCARD AColorTexturedShader final : public AbstractShaderProgram
 {
 public:
     using AbstractShaderProgram::AbstractShaderProgram;
@@ -54,7 +54,7 @@ protected:
     }
 };
 
-struct UColorTexturedShader final : public AbstractShaderProgram
+struct NODISCARD UColorTexturedShader final : public AbstractShaderProgram
 {
 public:
     using AbstractShaderProgram::AbstractShaderProgram;
@@ -72,7 +72,7 @@ protected:
     }
 };
 
-struct FontShader final : public AbstractShaderProgram
+struct NODISCARD FontShader final : public AbstractShaderProgram
 {
 private:
     using Base = AbstractShaderProgram;
@@ -94,7 +94,7 @@ protected:
     }
 };
 
-struct PointShader final : public AbstractShaderProgram
+struct NODISCARD PointShader final : public AbstractShaderProgram
 {
 public:
     using AbstractShaderProgram::AbstractShaderProgram;
@@ -110,7 +110,7 @@ protected:
 };
 
 /* owned by Functions */
-struct ShaderPrograms final
+struct NODISCARD ShaderPrograms final
 {
 private:
     Functions &m_functions;
@@ -129,7 +129,7 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(ShaderPrograms);
 
 private:
-    Functions &getFunctions() { return m_functions; }
+    NODISCARD Functions &getFunctions() { return m_functions; }
 
 public:
     void resetAll()
@@ -144,15 +144,15 @@ public:
 
 public:
     // attribute color (aka "Colored")
-    const std::shared_ptr<AColorPlainShader> &getPlainAColorShader();
+    NODISCARD const std::shared_ptr<AColorPlainShader> &getPlainAColorShader();
     // uniform color (aka "Plain")
-    const std::shared_ptr<UColorPlainShader> &getPlainUColorShader();
+    NODISCARD const std::shared_ptr<UColorPlainShader> &getPlainUColorShader();
     // attribute color + textured (aka "ColoredTextured")
-    const std::shared_ptr<AColorTexturedShader> &getTexturedAColorShader();
+    NODISCARD const std::shared_ptr<AColorTexturedShader> &getTexturedAColorShader();
     // uniform color + textured (aka "Textured")
-    const std::shared_ptr<UColorTexturedShader> &getTexturedUColorShader();
-    const std::shared_ptr<FontShader> &getFontShader();
-    const std::shared_ptr<PointShader> &getPointShader();
+    NODISCARD const std::shared_ptr<UColorTexturedShader> &getTexturedUColorShader();
+    NODISCARD const std::shared_ptr<FontShader> &getFontShader();
+    NODISCARD const std::shared_ptr<PointShader> &getPointShader();
 };
 
 } // namespace Legacy

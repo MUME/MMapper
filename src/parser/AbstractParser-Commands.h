@@ -25,16 +25,16 @@ extern const Abbrev cmdTime;
 extern const Abbrev cmdTrollExit;
 extern const Abbrev cmdVote;
 
-QByteArray getCommandName(DoorActionEnum action);
+NODISCARD QByteArray getCommandName(DoorActionEnum action);
 
-Abbrev getParserCommandName(DoorActionEnum action);
-Abbrev getParserCommandName(DoorFlagEnum x);
-Abbrev getParserCommandName(ExitFlagEnum x);
-Abbrev getParserCommandName(RoomAlignEnum x);
-Abbrev getParserCommandName(RoomLightEnum x);
-Abbrev getParserCommandName(RoomLoadFlagEnum x);
-Abbrev getParserCommandName(RoomMobFlagEnum x);
-Abbrev getParserCommandName(RoomPortableEnum x);
-Abbrev getParserCommandName(RoomRidableEnum x);
-Abbrev getParserCommandName(RoomSundeathEnum x);
-Abbrev getParserCommandName(RoomTerrainEnum x);
+NODISCARD Abbrev getParserCommandName(DoorActionEnum action);
+NODISCARD Abbrev getParserCommandName(DoorFlagEnum x);
+NODISCARD Abbrev getParserCommandName(ExitFlagEnum x);
+NODISCARD Abbrev getParserCommandName(RoomAlignEnum x);
+NODISCARD Abbrev getParserCommandName(RoomLightEnum x);
+NODISCARD Abbrev getParserCommandName(RoomLoadFlagEnum x);
+NODISCARD Abbrev getParserCommandName(RoomMobFlagEnum x);
+NODISCARD Abbrev getParserCommandName(RoomPortableEnum x);
+NODISCARD Abbrev getParserCommandName(RoomRidableEnum x);
+NODISCARD Abbrev getParserCommandName(RoomSundeathEnum x);
+NODISCARD Abbrev getParserCommandName(RoomTerrainEnum x);

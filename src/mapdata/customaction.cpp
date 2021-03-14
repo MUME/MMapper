@@ -24,9 +24,9 @@
 #include "roomselection.h"
 
 template<typename T>
-static inline TaggedString<T> modifyField(const TaggedString<T> &prev,
-                                          const TaggedString<T> &next,
-                                          const FlagModifyModeEnum mode)
+NODISCARD static inline TaggedString<T> modifyField(const TaggedString<T> &prev,
+                                                    const TaggedString<T> &next,
+                                                    const FlagModifyModeEnum mode)
 {
     switch (mode) {
     case FlagModifyModeEnum::SET:
@@ -45,7 +45,9 @@ static inline TaggedString<T> modifyField(const TaggedString<T> &prev,
 }
 
 template<typename Flags, typename Flag>
-static inline Flags modifyField(const Flags flags, const Flag x, const FlagModifyModeEnum mode)
+NODISCARD static inline Flags modifyField(const Flags flags,
+                                          const Flag x,
+                                          const FlagModifyModeEnum mode)
 {
     static_assert(std::is_same_v<Flags, Flag>);
     switch (mode) {

@@ -22,7 +22,7 @@
 class NODISCARD RoomSelFakeGL final
 {
 public:
-    enum class SelTypeEnum { Near, Distant, MoveBad, MoveGood };
+    enum class NODISCARD SelTypeEnum { Near, Distant, MoveBad, MoveGood };
     static constexpr size_t NUM_SEL_TYPES = 4;
 
 private:

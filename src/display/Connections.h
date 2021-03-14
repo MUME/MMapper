@@ -37,12 +37,12 @@ public:
 
 public:
     void reserve(const size_t elements) { m_names.reserve(elements); }
-    size_t size() const { return m_names.size(); }
+    NODISCARD size_t size() const { return m_names.size(); }
     void clear() { m_names.clear(); }
-    bool empty() const { return m_names.empty(); }
+    NODISCARD bool empty() const { return m_names.empty(); }
 
 public:
-    UniqueMesh getMesh(GLFont &font);
+    NODISCARD UniqueMesh getMesh(GLFont &font);
 };
 
 using BatchedRoomNames = std::unordered_map<int, UniqueMesh>;
@@ -92,9 +92,9 @@ struct NODISCARD ConnectionDrawerBuffers final
         normal.clear();
         red.clear();
     }
-    NODISCARD bool empty() const { return red.empty() && normal.empty(); }
 
-    ConnectionMeshes getMeshes(OpenGL &gl);
+    NODISCARD bool empty() const { return red.empty() && normal.empty(); }
+    NODISCARD ConnectionMeshes getMeshes(OpenGL &gl);
 };
 
 struct NODISCARD ConnectionDrawer final
@@ -192,7 +192,7 @@ public:
         assert(m_roomNameBatch.size() == m_expectedRoomNames);
     }
 
-    ConnectionFakeGL &getFakeGL() { return m_fake; }
+    NODISCARD ConnectionFakeGL &getFakeGL() { return m_fake; }
 
     void drawRoomConnectionsAndDoors(const Room *room, const RoomIndex &rooms);
 

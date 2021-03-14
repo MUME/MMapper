@@ -26,7 +26,7 @@
 
 // REVISIT: move splash files somewhere else?
 // (presumably not in the "root" src/ directory?)
-struct ISplash
+struct NODISCARD ISplash
 {
     virtual ~ISplash();
     virtual void finish(QWidget *) = 0;
@@ -34,7 +34,7 @@ struct ISplash
 
 ISplash::~ISplash() = default;
 
-struct FakeSplash final : public ISplash
+struct NODISCARD FakeSplash final : public ISplash
 {
     virtual ~FakeSplash() override;
     virtual void finish(QWidget *) final override {}
@@ -90,7 +90,7 @@ static void tryInitDrMingw()
 #endif
 }
 
-static bool tryLoad(MainWindow &mw, const QDir &dir, const QString &input_filename)
+NODISCARD static bool tryLoad(MainWindow &mw, const QDir &dir, const QString &input_filename)
 {
     const auto getAbsoluteFileName = [](const QDir &dir,
                                         const QString &input_filename) -> std::optional<QString> {

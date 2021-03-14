@@ -26,9 +26,9 @@ struct NODISCARD CoordinateMinMax final
         assert(isValid());
     }
 
-    bool isValid() { return glm::all(glm::lessThanEqual(min.to_vec3(), max.to_vec3())); }
+    NODISCARD bool isValid() { return glm::all(glm::lessThanEqual(min.to_vec3(), max.to_vec3())); }
 
-    CoordinateMinMax expandCopy(const Coordinate &radius) const
+    NODISCARD CoordinateMinMax expandCopy(const Coordinate &radius) const
     {
         auto copy = *this;
         copy.min -= radius;

@@ -142,7 +142,7 @@ public:
     }
 
 public:
-    bool isEmpty() const override
+    NODISCARD bool isEmpty() const override
     {
         return !m_vbo || m_numVerts == 0 || m_drawMode == DrawModeEnum::INVALID;
     }

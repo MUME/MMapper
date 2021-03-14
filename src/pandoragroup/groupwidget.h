@@ -20,7 +20,7 @@ class Mmapper2Group;
 class QObject;
 class QTableView;
 
-class GroupStateData final
+class NODISCARD GroupStateData final
 {
 public:
     GroupStateData() = default;
@@ -30,7 +30,7 @@ public:
 
 public:
     void paint(QPainter *painter, const QRect &rect);
-    int getWidth() const { return count * height; }
+    NODISCARD int getWidth() const { return count * height; }
 
 private:
     QColor color;
@@ -52,7 +52,8 @@ public:
     void paint(QPainter *painter,
                const QStyleOptionViewItem &option,
                const QModelIndex &index) const override;
-    QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override;
+    NODISCARD QSize sizeHint(const QStyleOptionViewItem &option,
+                             const QModelIndex &index) const override;
 };
 
 class GroupModel final : public QAbstractTableModel
@@ -60,7 +61,7 @@ class GroupModel final : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    enum class ColumnTypeEnum {
+    enum class NODISCARD ColumnTypeEnum {
         NAME = 0,
         HP_PERCENT,
         MANA_PERCENT,
@@ -75,16 +76,16 @@ public:
     explicit GroupModel(MapData *md, Mmapper2Group *group, QObject *parent = nullptr);
 
     void resetModel();
-    QVariant dataForCharacter(const SharedGroupChar &character,
-                              ColumnTypeEnum column,
-                              int role) const;
+    NODISCARD QVariant dataForCharacter(const SharedGroupChar &character,
+                                        ColumnTypeEnum column,
+                                        int role) const;
 
-    int rowCount(const QModelIndex &parent) const override;
-    int columnCount(const QModelIndex &parent) const override;
+    NODISCARD int rowCount(const QModelIndex &parent) const override;
+    NODISCARD int columnCount(const QModelIndex &parent) const override;
 
-    QVariant data(const QModelIndex &index, int role) const override;
-    QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
-    Qt::ItemFlags flags(const QModelIndex &parent) const override;
+    NODISCARD QVariant data(const QModelIndex &index, int role) const override;
+    NODISCARD QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+    NODISCARD Qt::ItemFlags flags(const QModelIndex &parent) const override;
 
     void setMapLoaded(const bool val) { m_mapLoaded = val; }
 

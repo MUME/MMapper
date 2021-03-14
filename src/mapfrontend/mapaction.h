@@ -57,7 +57,7 @@ public:
     virtual void insertAffected(RoomId id, std::set<RoomId> &affected) { affected.insert(id); }
 };
 
-class MapAction
+class NODISCARD MapAction
 {
     friend class MapFrontend;
 

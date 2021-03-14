@@ -34,7 +34,7 @@ static constexpr const float NEW_CONNECTION_POINT_SIZE = 8.f;
 
 static constexpr const float FAINT_CONNECTION_ALPHA = 0.1f;
 
-static bool isConnectionMode(const CanvasMouseModeEnum mode)
+NODISCARD static bool isConnectionMode(const CanvasMouseModeEnum mode)
 {
     switch (mode) {
     case CanvasMouseModeEnum::CREATE_CONNECTIONS:
@@ -53,7 +53,7 @@ static bool isConnectionMode(const CanvasMouseModeEnum mode)
     return false;
 }
 
-static glm::vec2 getConnectionOffsetRelative(const ExitDirEnum dir)
+NODISCARD static glm::vec2 getConnectionOffsetRelative(const ExitDirEnum dir)
 {
     switch (dir) {
     // NOTE: These are flipped north/south.
@@ -85,17 +85,17 @@ static glm::vec2 getConnectionOffsetRelative(const ExitDirEnum dir)
     return {};
 };
 
-static glm::vec3 getConnectionOffset(const ExitDirEnum dir)
+NODISCARD static glm::vec3 getConnectionOffset(const ExitDirEnum dir)
 {
     return glm::vec3{getConnectionOffsetRelative(dir), 0.f} + glm::vec3{0.5f, 0.5f, 0.f};
 }
 
-static glm::vec3 getPosition(const ConnectionSelection::ConnectionDescriptor &cd)
+NODISCARD static glm::vec3 getPosition(const ConnectionSelection::ConnectionDescriptor &cd)
 {
     return deref(cd.room).getPosition().to_vec3() + getConnectionOffset(cd.direction);
 }
 
-static QString getDoorPostFix(const Room *const room, const ExitDirEnum dir)
+NODISCARD static QString getDoorPostFix(const Room *const room, const ExitDirEnum dir)
 {
     static constexpr const auto SHOWN_FLAGS = DoorFlagEnum::NEED_KEY | DoorFlagEnum::NO_PICK
                                               | DoorFlagEnum::DELAYED;
@@ -110,7 +110,7 @@ static QString getDoorPostFix(const Room *const room, const ExitDirEnum dir)
                              flags.isDelayed() ? "d" : "");
 }
 
-static QString getPostfixedDoorName(const Room *const room, const ExitDirEnum dir)
+NODISCARD static QString getPostfixedDoorName(const Room *const room, const ExitDirEnum dir)
 {
     const auto postFix = getDoorPostFix(room, dir);
     return room->exit(dir).getDoorName() + postFix;
@@ -747,7 +747,7 @@ void MapCanvas::paintSelectedConnection()
 
 static constexpr float LONG_LINE_HALFLEN = 1.5f;
 static constexpr float LONG_LINE_LEN = 2.f * LONG_LINE_HALFLEN;
-static bool isLongLine(const glm::vec3 &a, const glm::vec3 &b)
+NODISCARD static bool isLongLine(const glm::vec3 &a, const glm::vec3 &b)
 {
     return glm::length(a - b) >= LONG_LINE_LEN;
 }

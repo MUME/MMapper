@@ -14,7 +14,7 @@
 #include "pathmachine.h"
 #include "pathparameters.h"
 
-static const char *stateName(const PathStateEnum state)
+NODISCARD static const char *stateName(const PathStateEnum state)
 {
 #define CASE(x) \
     do { \

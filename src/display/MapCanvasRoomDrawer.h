@@ -63,7 +63,7 @@ struct NODISCARD Batches final
     }
 };
 
-class MapCanvasRoomDrawer final
+class NODISCARD MapCanvasRoomDrawer final
 {
 private:
     OpenGL &m_opengl;
@@ -83,7 +83,7 @@ public:
     {}
 
 private:
-    auto &getOpenGL() const { return m_opengl; }
+    NODISCARD auto &getOpenGL() const { return m_opengl; }
 
 public:
     void generateBatches(const LayerToRooms &layerToRooms,
@@ -91,5 +91,5 @@ public:
                          const OptBounds &bounds);
 
 public:
-    inline GLFont &getFont() { return m_font; }
+    NODISCARD inline GLFont &getFont() { return m_font; }
 };

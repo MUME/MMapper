@@ -65,7 +65,8 @@ static constexpr const uint8_t TNSB_TTABLE_IS = 4;
 static constexpr const uint8_t TNSB_TTABLE_REJECTED = 5;
 static constexpr const uint8_t TNSB_TTABLE_ACK = 6;
 static constexpr const uint8_t TNSB_TTABLE_NAK = 7;
-struct AppendBuffer : public QByteArray
+
+struct NODISCARD AppendBuffer : public QByteArray
 {
     AppendBuffer(QByteArray &&rhs)
         : QByteArray{std::move(rhs)}
@@ -81,7 +82,7 @@ struct AppendBuffer : public QByteArray
     void append(const uint8_t c) { QByteArray::append(static_cast<char>(c)); }
     void operator+=(const uint8_t c) { QByteArray::operator+=(static_cast<char>(c)); }
 
-    unsigned char unsigned_at(int pos) const
+    NODISCARD unsigned char unsigned_at(int pos) const
     {
         assert(size() > pos);
         return static_cast<unsigned char>(QByteArray::at(pos));
@@ -98,11 +99,11 @@ public:
                             QObject *parent = nullptr,
                             const QByteArray &defaultTermType = "unknown");
 
-    QByteArray getTerminalType() const { return termType; }
+    NODISCARD QByteArray getTerminalType() const { return termType; }
     /* unused */
-    int64_t getSentBytes() const { return sentBytes; }
+    NODISCARD int64_t getSentBytes() const { return sentBytes; }
 
-    bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &name);
+    NODISCARD bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &name);
 
 protected:
     void sendCharsetRequest(const QStringList &myCharacterSet);
@@ -160,7 +161,7 @@ protected:
 
     void setTerminalType(const QByteArray &terminalType) { termType = terminalType; }
 
-    TextCodec &getTextCodec();
+    NODISCARD TextCodec &getTextCodec();
 
     static constexpr const size_t NUM_OPTS = 256;
     using OptionArray = MMapper::Array<bool, NUM_OPTS>;
@@ -210,7 +211,7 @@ private:
 
     AppendBuffer commandBuffer;
     AppendBuffer subnegBuffer;
-    enum class TelnetStateEnum {
+    enum class NODISCARD TelnetStateEnum {
         /// normal input
         NORMAL,
         /// received IAC
@@ -231,7 +232,7 @@ private:
     bool debug = false;
 
 private:
-    int onReadInternalInflate(const char *, const int, AppendBuffer &);
+    NODISCARD int onReadInternalInflate(const char *, const int, AppendBuffer &);
     void resetCompress();
     void initCompress();
 

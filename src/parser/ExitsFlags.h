@@ -11,13 +11,13 @@
 #include "../mapdata/ExitDirection.h"
 #include "../mapdata/ExitFlags.h"
 
-enum class ExitFlagExtEnum : uint32_t { EXITS_FLAGS_VALID = (1u << 30) };
+enum class NODISCARD ExitFlagExtEnum : uint32_t { EXITS_FLAGS_VALID = (1u << 30) };
 // 2nd declaration to avoid having to type "ExitFlagExt::" to use this
 static constexpr const ExitFlagExtEnum EXITS_FLAGS_VALID = ExitFlagExtEnum::EXITS_FLAGS_VALID;
 
 /* FIXME: This name creates a lot of confusion with ExitFlags.
  * Maybe just make it an array of ExitFlags? */
-class ExitsFlagsType final
+class NODISCARD ExitsFlagsType final
 {
 public:
     static constexpr const uint32_t MASK = (ExitFlagEnum::EXIT | ExitFlagEnum::DOOR
@@ -30,7 +30,7 @@ public:
 private:
     uint32_t value = 0u;
 
-    static int getShift(const ExitDirEnum dir)
+    NODISCARD static int getShift(const ExitDirEnum dir)
     {
         assert(static_cast<int>(dir) < NUM_DIRS);
         return static_cast<int>(dir) * SHIFT;
@@ -39,7 +39,7 @@ private:
 public:
     ExitsFlagsType() = default;
     explicit operator uint32_t() const { return value; }
-    static ExitsFlagsType create_unsafe(const uint32_t value)
+    NODISCARD static ExitsFlagsType create_unsafe(const uint32_t value)
     {
         if (false) {
             ExitsFlagsType tmp;
@@ -70,11 +70,11 @@ public:
     }
 
 public:
-    bool operator==(ExitsFlagsType rhs) const { return value == rhs.value; }
-    bool operator!=(ExitsFlagsType rhs) const { return value != rhs.value; }
+    NODISCARD bool operator==(ExitsFlagsType rhs) const { return value == rhs.value; }
+    NODISCARD bool operator!=(ExitsFlagsType rhs) const { return value != rhs.value; }
 
 public:
-    ExitFlags get(const ExitDirEnum dir) const
+    NODISCARD ExitFlags get(const ExitDirEnum dir) const
     {
         return static_cast<ExitFlags>((value >> getShift(dir)) & MASK);
     }
@@ -92,7 +92,10 @@ public:
     }
 
 public:
-    bool isValid() const { return (value & static_cast<uint32_t>(EXITS_FLAGS_VALID)) != 0u; }
+    NODISCARD bool isValid() const
+    {
+        return (value & static_cast<uint32_t>(EXITS_FLAGS_VALID)) != 0u;
+    }
     void setValid() { value |= static_cast<uint32_t>(EXITS_FLAGS_VALID); }
     void removeValid() { value &= ~static_cast<uint32_t>(EXITS_FLAGS_VALID); }
 

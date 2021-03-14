@@ -19,7 +19,7 @@ class Room;
 class RoomAdmin;
 struct PathParameters;
 
-class Experimenting : public RoomRecipient
+class NODISCARD Experimenting : public RoomRecipient
 {
 protected:
     void augmentPath(const std::shared_ptr<Path> &path, RoomAdmin *map, const Room *room);

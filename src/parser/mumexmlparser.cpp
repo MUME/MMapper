@@ -115,7 +115,8 @@ void MumeXmlParser::parse(const TelnetData &data)
             if (c == '>') {
                 // send tag
                 if (!m_tempTag.isEmpty()) {
-                    element(m_tempTag);
+                    MAYBE_UNUSED const auto ignored = //
+                        element(m_tempTag);
                 }
 
                 m_tempTag.clear();
@@ -197,7 +198,10 @@ bool MumeXmlParser::element(const QByteArray &line)
                         }
                         m_promptFlags.reset(); // Don't trust god prompts
                         if (!m_queue.isEmpty() && m_move != CommandEnum::LOOK) // Remove follows
-                            m_queue.dequeue();
+                        {
+                            MAYBE_UNUSED const auto ignored = //
+                                m_queue.dequeue();
+                        }
                         if (m_move != CommandEnum::LOOK)
                             m_queue.enqueue(m_move);
                         move();

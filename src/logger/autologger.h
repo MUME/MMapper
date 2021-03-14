@@ -8,8 +8,9 @@
 #include <QFileInfoList>
 #include <QObject>
 
+#include "../global/macros.h"
 
-class AutoLogger : public QObject
+class AutoLogger final : public QObject
 {
     Q_OBJECT
 public:
@@ -22,12 +23,12 @@ public slots:
     void onConnected();
 
 private:
-    bool writeLine(const QByteArray &ba);
+    NODISCARD bool writeLine(const QByteArray &ba);
     void deleteOldLogs();
     void deleteLogs(const QFileInfoList &files);
-    bool showDeleteDialog(QString message);
+    NODISCARD bool showDeleteDialog(QString message);
 
-    bool createFile();
+    NODISCARD bool createFile();
 
 private:
     const std::string m_runId;

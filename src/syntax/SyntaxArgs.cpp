@@ -15,7 +15,7 @@
 
 namespace syntax {
 
-static Vector toVector(const ParserInput &input)
+NODISCARD static Vector toVector(const ParserInput &input)
 {
     std::vector<Value> values;
     values.reserve(input.size());
@@ -460,7 +460,7 @@ std::ostream &ArgString::virt_to_stream(std::ostream &os) const
     return os << "<string>";
 }
 
-static bool compareIgnoreCase(const std::string &a, const std::string &b)
+NODISCARD static bool compareIgnoreCase(const std::string &a, const std::string &b)
 {
     const auto size = a.size();
     if (size != b.size())

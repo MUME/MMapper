@@ -33,7 +33,7 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(CGroup);
 
 public:
-    bool isNamePresent(const QByteArray &name) const;
+    NODISCARD bool isNamePresent(const QByteArray &name) const;
 
     // Interactions with group characters should occur through CGroupSelection due to threading
     void releaseCharacters(GroupRecipient *sender) override;
@@ -56,7 +56,7 @@ protected:
     void executeActions();
 
 public:
-    const SharedGroupChar &getSelf() { return self; }
+    NODISCARD const SharedGroupChar &getSelf() { return self; }
     void renameChar(const QVariantMap &map);
     void resetChars();
     void updateChar(const QVariantMap &map); // updates given char from the map
@@ -64,7 +64,7 @@ public:
     bool addChar(const QVariantMap &node);
 
 public:
-    SharedGroupChar getCharByName(const QByteArray &name) const;
+    NODISCARD SharedGroupChar getCharByName(const QByteArray &name) const;
 
 private:
     mutable QMutex characterLock{QMutex::Recursive};

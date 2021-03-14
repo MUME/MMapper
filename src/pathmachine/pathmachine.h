@@ -27,7 +27,7 @@ class QObject;
 class RoomRecipient;
 struct RoomId;
 
-enum class PathStateEnum { APPROVED = 0, EXPERIMENTING = 1, SYNCING = 2 };
+enum class NODISCARD PathStateEnum { APPROVED = 0, EXPERIMENTING = 1, SYNCING = 2 };
 
 /**
  * the parser determines the relations between incoming move- and room-events
@@ -86,11 +86,11 @@ private:
     void setMostLikelyRoom(const Room &room) { m_mostLikelyRoomPos = room.getPosition(); }
 
 protected:
-    bool hasMostLikelyRoom() const { return m_mostLikelyRoomPos.has_value(); }
-    const Room *getPathRoot() const;
-    const Room *getMostLikelyRoom() const;
-    RoomId getMostLikelyRoomId() const;
-    const Coordinate &getMostLikelyRoomPosition() const;
+    NODISCARD bool hasMostLikelyRoom() const { return m_mostLikelyRoomPos.has_value(); }
+    NODISCARD const Room *getPathRoot() const;
+    NODISCARD const Room *getMostLikelyRoom() const;
+    NODISCARD RoomId getMostLikelyRoomId() const;
+    NODISCARD const Coordinate &getMostLikelyRoomPosition() const;
 
 private:
     // avoid warning about signal hiding this function

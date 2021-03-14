@@ -4,7 +4,9 @@
 
 #include <iosfwd>
 
-struct User
+#include "../global/macros.h"
+
+struct NODISCARD User
 {
 private:
     std::ostream &os;
@@ -14,5 +16,5 @@ public:
         : os(os)
     {}
 
-    std::ostream &getOstream() const { return os; }
+    NODISCARD std::ostream &getOstream() const { return os; }
 };

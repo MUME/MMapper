@@ -48,7 +48,8 @@ const QVariantMap CGroupChar::toVariantMap() const
     return root;
 }
 
-struct QuotedQString final
+// TODO: move this somewhere more appropriate
+struct NODISCARD QuotedQString final
 {
 private:
     QString str;

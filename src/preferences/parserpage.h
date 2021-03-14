@@ -8,11 +8,12 @@
 #include <QWidget>
 #include <QtCore>
 
+#include "../global/macros.h"
 #include "ui_parserpage.h"
 
 class QObject;
 
-enum class UiCharsetEnum { AsciiOrLatin1, UTF8 };
+enum class NODISCARD UiCharsetEnum { AsciiOrLatin1, UTF8 };
 
 class ParserPage : public QWidget, private Ui::ParserPage
 {

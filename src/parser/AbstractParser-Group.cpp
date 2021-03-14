@@ -12,12 +12,12 @@
 #include "../syntax/TreeParser.h"
 #include "AbstractParser-Utils.h"
 
-static QByteArray simplify(const std::string &s)
+NODISCARD static QByteArray simplify(const std::string &s)
 {
     return QByteArray::fromStdString(s).simplified();
 }
 
-class ArgPlayer final : public syntax::IArgument
+class NODISCARD ArgPlayer final : public syntax::IArgument
 {
 private:
     syntax::MatchResult virt_match(const syntax::ParserInput &input,

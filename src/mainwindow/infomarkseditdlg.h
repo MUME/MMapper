@@ -55,9 +55,9 @@ private:
     void readSettings();
     void writeSettings();
 
-    InfoMarkTypeEnum getType();
-    InfoMarkClassEnum getClass();
-    InfoMark *getCurrentInfoMark();
+    NODISCARD InfoMarkTypeEnum getType();
+    NODISCARD InfoMarkClassEnum getClass();
+    NODISCARD InfoMark *getCurrentInfoMark();
     void setCurrentInfoMark(InfoMark *m);
 
     void updateMarkers();

@@ -10,7 +10,7 @@
 #include "../display/MapCanvasConfig.h"
 
 class SliderSpinboxButton;
-struct SSBDeleter final
+struct NODISCARD SSBDeleter final
 {
     void operator()(SliderSpinboxButton *ssb);
 };
@@ -33,7 +33,7 @@ public:
 
 public:
     explicit operator QGroupBox &() { return deref(m_groupBox); }
-    QGroupBox *getGroupBox() { return m_groupBox; }
+    NODISCARD QGroupBox *getGroupBox() { return m_groupBox; }
 
 signals:
     void sig_graphicsSettingsChanged();

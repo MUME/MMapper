@@ -9,7 +9,7 @@
 
 namespace syntax {
 
-struct Success final
+struct NODISCARD Success final
 {
     ParserInput matched;
     ParserInput unmatched;
@@ -20,13 +20,13 @@ struct Success final
     {}
 };
 
-struct ParseResult : public std::variant<Success, MatchResult>
+struct NODISCARD ParseResult final : public std::variant<Success, MatchResult>
 {
     using Base = std::variant<Success, MatchResult>;
 
 public:
-    bool isSuccess() const { return std::holds_alternative<Success>(*this); }
-    bool isFailure() const
+    NODISCARD bool isSuccess() const { return std::holds_alternative<Success>(*this); }
+    NODISCARD bool isFailure() const
     {
         if (isSuccess())
             return false;
@@ -42,12 +42,12 @@ public:
         : Base{std::move(result)}
     {}
 
-    static ParseResult success(ParserInput matched)
+    NODISCARD static ParseResult success(ParserInput matched)
     {
         return ParseResult{Success(std::move(matched))};
     }
 
-    static ParseResult failure(ParserInput unmatched)
+    NODISCARD static ParseResult failure(ParserInput unmatched)
     {
         return ParseResult{MatchResult::failure(std::move(unmatched))};
     }

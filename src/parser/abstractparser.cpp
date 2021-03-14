@@ -73,7 +73,7 @@ class RoomAdmin;
 const QString AbstractParser::nullString{};
 const QByteArray AbstractParser::emptyByteArray("");
 
-static char getTerrainSymbol(const RoomTerrainEnum type)
+NODISCARD static char getTerrainSymbol(const RoomTerrainEnum type)
 {
     switch (type) {
     case RoomTerrainEnum::UNDEFINED:
@@ -113,7 +113,7 @@ static char getTerrainSymbol(const RoomTerrainEnum type)
     return ' ';
 }
 
-static char getLightSymbol(const RoomLightEnum lightType)
+NODISCARD static char getLightSymbol(const RoomLightEnum lightType)
 {
     switch (lightType) {
     case RoomLightEnum::DARK:
@@ -689,7 +689,7 @@ void AbstractParser::parseNewUserInput(const TelnetData &data)
     }
 }
 
-static QString compressDirections(QString original)
+NODISCARD static QString compressDirections(QString original)
 {
     QString ans;
     int curnum = 0;
@@ -916,7 +916,7 @@ void AbstractParser::showHelpCommands(const bool showAbbreviations)
 {
     auto &map = this->m_specialCommandMap;
 
-    struct record
+    struct NODISCARD record final
     {
         std::string from;
         std::string to;
@@ -1106,14 +1106,14 @@ bool AbstractParser::tryParseGenericDoorCommand(const QString &str)
     return false;
 }
 
-static ExitDirEnum convert_to_ExitDirection(const CommandEnum dir)
+NODISCARD static ExitDirEnum convert_to_ExitDirection(const CommandEnum dir)
 {
     if (!isDirectionNESWUD(dir))
         throw std::invalid_argument("dir");
     return getDirection(dir);
 }
 
-static CommandEnum convert_to_CommandIdType(const ExitDirEnum dir)
+NODISCARD static CommandEnum convert_to_CommandIdType(const ExitDirEnum dir)
 {
     const auto result = static_cast<CommandEnum>(dir);
     if (!isDirectionNESWUD(result))
@@ -1121,7 +1121,7 @@ static CommandEnum convert_to_CommandIdType(const ExitDirEnum dir)
     return result;
 }
 
-static CommandEnum getRandomDirection()
+NODISCARD static CommandEnum getRandomDirection()
 {
     return convert_to_CommandIdType(chooseRandomElement(ALL_EXITS_NESWUD));
 }

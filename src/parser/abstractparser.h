@@ -71,7 +71,7 @@ public:
     using HelpCallback = std::function<void(const std::string &name)>;
     using ParserCallback
         = std::function<bool(const std::vector<StringView> &matched, StringView args)>;
-    struct ParserRecord final
+    struct NODISCARD ParserRecord final
     {
         std::string fullCommand;
         ParserCallback callback;
@@ -160,8 +160,8 @@ protected:
 
     void sendRoomExitsInfoToUser(std::ostream &, const Room *r);
     void sendRoomExitsInfoToUser(const Room *r);
-    Coordinate getNextPosition() const;
-    Coordinate getTailPosition() const;
+    NODISCARD Coordinate getNextPosition() const;
+    NODISCARD Coordinate getTailPosition() const;
 
     // command handling
     void performDoorCommand(ExitDirEnum direction, DoorActionEnum action);
@@ -175,18 +175,18 @@ public:
     void printRoomInfo(RoomFieldEnum field);
 
     void emulateExits(std::ostream &, CommandEnum move);
-    QByteArray enhanceExits(const Room *);
+    NODISCARD QByteArray enhanceExits(const Room *);
 
     void parseExits(std::ostream &);
     void parsePrompt(const QString &prompt);
-    virtual bool parseUserCommands(const QString &command);
-    static QString normalizeStringCopy(QString str);
+    NODISCARD virtual bool parseUserCommands(const QString &command);
+    NODISCARD static QString normalizeStringCopy(QString str);
 
     void searchCommand(const RoomFilter &f);
     void dirsCommand(const RoomFilter &f);
     void markCurrentCommand();
 
-    bool evalActionMap(StringView line);
+    NODISCARD bool evalActionMap(StringView line);
 
     // these need to be public.  could implement them inline here.
     void doSetEmulationMode();

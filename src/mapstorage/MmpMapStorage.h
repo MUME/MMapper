@@ -6,6 +6,7 @@
 #include <QString>
 #include <QtCore>
 
+#include "../global/macros.h"
 #include "abstractmapstorage.h"
 
 class MapData;
@@ -29,13 +30,13 @@ public:
     MmpMapStorage() = delete;
 
 private:
-    virtual bool canLoad() const override { return false; }
-    virtual bool canSave() const override { return true; }
+    NODISCARD virtual bool canLoad() const override { return false; }
+    NODISCARD virtual bool canSave() const override { return true; }
 
     virtual void newData() override;
-    virtual bool loadData() override;
-    virtual bool saveData(bool baseMapOnly) override;
-    virtual bool mergeData() override;
+    NODISCARD virtual bool loadData() override;
+    NODISCARD virtual bool saveData(bool baseMapOnly) override;
+    NODISCARD virtual bool mergeData() override;
 
 private:
     static void saveRoom(const Room &room, QXmlStreamWriter &stream);

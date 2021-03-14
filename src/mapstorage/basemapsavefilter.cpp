@@ -20,7 +20,7 @@ class RoomAdmin;
 
 namespace {
 
-struct RoomLink
+struct NODISCARD RoomLink
 {
     RoomId from = INVALID_ROOMID, to = INVALID_ROOMID;
     explicit RoomLink(RoomId f, RoomId t)
@@ -30,18 +30,19 @@ struct RoomLink
 
 public:
     RoomLink() = delete;
+    NODISCARD
+    friend bool operator<(const RoomLink &a, const RoomLink &b)
+    {
+        if (a.from != b.from) {
+            return a.from < b.from;
+        }
+        return a.to < b.to;
+    }
 };
 
-bool operator<(const RoomLink &a, const RoomLink &b)
-{
-    if (a.from != b.from) {
-        return a.from < b.from;
-    }
-    return a.to < b.to;
-}
 } // namespace
 
-struct BaseMapSaveFilter::Impl
+struct NODISCARD BaseMapSaveFilter::Impl
 {
     //! Owned by caller
     MapData *mapData = nullptr;

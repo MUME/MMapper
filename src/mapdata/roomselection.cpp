@@ -21,17 +21,17 @@ RoomSelection::RoomSelection(MapData &admin, const Coordinate &c)
     m_mapData.lookingForRooms(*this, c);
 }
 
-static Coordinate toCoordinate(const glm::ivec3 &c)
+NODISCARD static Coordinate toCoordinate(const glm::ivec3 &c)
 {
     return Coordinate(c.x, c.y, c.z);
 }
 
-static Coordinate min(const Coordinate &a, const Coordinate &b)
+NODISCARD static Coordinate min(const Coordinate &a, const Coordinate &b)
 {
     return toCoordinate(glm::min(a.to_ivec3(), b.to_ivec3()));
 }
 
-static Coordinate max(const Coordinate &a, const Coordinate &b)
+NODISCARD static Coordinate max(const Coordinate &a, const Coordinate &b)
 {
     return toCoordinate(glm::max(a.to_ivec3(), b.to_ivec3()));
 }

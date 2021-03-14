@@ -17,7 +17,7 @@
 // If we were going to use it for parsing, then we'd probably want to
 // return special ArgRoadIndex that could match the direction combinations
 // in any order (e.g. sort the word's letters using compass-ordering).
-static const char *getFilenameSuffix(const RoadIndexMaskEnum x)
+NODISCARD static const char *getFilenameSuffix(const RoadIndexMaskEnum x)
 {
     assert(RoadIndexMaskEnum::NONE <= x && x <= RoadIndexMaskEnum::ALL);
 
@@ -55,7 +55,7 @@ static const char *getFilenameSuffix(const RoadIndexMaskEnum x)
 }
 
 template<RoadTagEnum Tag>
-static inline const char *getFilenameSuffix(const TaggedRoadIndex<Tag> &x)
+NODISCARD static inline const char *getFilenameSuffix(const TaggedRoadIndex<Tag> &x)
 {
     return getFilenameSuffix(x.index);
 }
@@ -67,7 +67,7 @@ static inline const char *getFilenameSuffix(const TaggedRoadIndex<Tag> &x)
 // template<>
 // const char *getFilenameSuffix(RoomMobFlagEnum);
 template<typename E>
-static const char *getFilenameSuffix(const E x)
+NODISCARD static const char *getFilenameSuffix(const E x)
 {
     return getParserCommandName(x).getCommand();
 }
@@ -86,7 +86,7 @@ QString getPixmapFilenameRaw(const QString &name)
 }
 
 template<typename E>
-static QString getPixmapFilename(const char *const prefix, const E x)
+NODISCARD static QString getPixmapFilename(const char *const prefix, const E x)
 {
     if (prefix == nullptr)
         throw NullPointerException();
@@ -119,12 +119,12 @@ QString getPixmapFilename(const TaggedTrail x)
     return getPixmapFilename("trail", x);
 }
 
-static QString getIconFilenameRaw(const QString &name)
+NODISCARD static QString getIconFilenameRaw(const QString &name)
 {
     return getResourceFilenameRaw("icons", name);
 }
 
-static const char *getFilenameSuffix(const CharacterPositionEnum position)
+NODISCARD static const char *getFilenameSuffix(const CharacterPositionEnum position)
 {
 #define X_CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
     do { \
@@ -137,7 +137,7 @@ static const char *getFilenameSuffix(const CharacterPositionEnum position)
     return "";
 #undef X_CASE
 }
-static const char *getFilenameSuffix(const CharacterAffectEnum affect)
+NODISCARD static const char *getFilenameSuffix(const CharacterAffectEnum affect)
 {
 #define X_CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
     do { \
@@ -152,7 +152,7 @@ static const char *getFilenameSuffix(const CharacterAffectEnum affect)
 }
 
 template<typename E>
-static QString getIconFilename(const char *const prefix, const E x)
+NODISCARD static QString getIconFilename(const char *const prefix, const E x)
 {
     if (prefix == nullptr)
         throw NullPointerException();

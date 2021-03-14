@@ -3,8 +3,10 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include "../global/macros.h"
+
 class QByteArray;
 
 namespace StorageUtils {
-QByteArray inflate(QByteArray &);
+NODISCARD QByteArray inflate(QByteArray &);
 } // namespace StorageUtils

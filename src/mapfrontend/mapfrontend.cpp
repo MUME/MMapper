@@ -210,7 +210,7 @@ void MapFrontend::insertPredefinedRoom(const SharedRoom &sharedRoom)
     map.setNearest(c, room);
     checkSize(room.getPosition());
     unusedIds.push(id);
-    assignId(sharedRoom, roomHome);
+    MAYBE_UNUSED const auto ignored = assignId(sharedRoom, roomHome);
     if (roomHome != nullptr) {
         roomHome->addRoom(sharedRoom);
     }
@@ -269,7 +269,7 @@ void MapFrontend::createRoom(const SigParseEvent &sigParseEvent, const Coordinat
         SharedRoom room = Room::createTemporaryRoom(*this, event);
         roomHome->addRoom(room);
         map.setNearest(expectedPosition, *room);
-        assignId(room, roomHome);
+        MAYBE_UNUSED const auto ignored = assignId(room, roomHome);
     }
 }
 

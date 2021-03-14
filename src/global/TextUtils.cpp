@@ -32,6 +32,7 @@ static const QRegularExpression leadingNonSpaceRegex(R"(^[^[:space:]]+)");
 /// only matches actual space characters
 static const QRegularExpression twoOrMoreSpaceCharsRegex(R"(  +)");
 
+/* visible */
 const QRegularExpression weakAnsiRegex(R"(\x1b\[?[[:digit:];]*[[:alpha:]]?)");
 
 static constexpr const char C_ANSI_ESCAPE = C_ESC;
@@ -68,7 +69,7 @@ bool isAnsiColor(const QString &ansi)
     return isAnsiColor(ansi.midRef(0));
 }
 
-static int parsePositiveInt(const QStringRef &number)
+NODISCARD static int parsePositiveInt(const QStringRef &number)
 {
     static constexpr int MAX = std::numeric_limits<int>::max();
     static_assert(MAX == 2147483647);
@@ -454,13 +455,13 @@ REPORT(bg, BG)
 
 #undef REPORT
 
-static uint16_t ansi_encode_color(const int n)
+NODISCARD static uint16_t ansi_encode_color(const int n)
 {
     assert((n & ~7) == 0);
     return static_cast<uint16_t>(n & 7);
 }
 
-static uint16_t ansi_encode_bit(const bool b)
+NODISCARD static uint16_t ansi_encode_bit(const bool b)
 {
     return static_cast<uint16_t>(b ? 1 : 0);
 }
@@ -540,7 +541,7 @@ void Ansi::process_code(const int code)
 }
 
 // https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters
-static bool isValidAnsiCode(const int n)
+NODISCARD static bool isValidAnsiCode(const int n)
 {
     switch (n) {
     case ANSI_RESET:
@@ -598,7 +599,7 @@ bool isValidAnsiColor(const QString &ansi)
     return isValidAnsiColor(ansi.midRef(0));
 }
 
-struct Prefix final
+struct NODISCARD Prefix final
 {
 private:
     int prefixLen = 0;
@@ -609,8 +610,8 @@ private:
     bool valid_ = false;
 
 public:
-    int length() const { return prefixLen; }
-    bool isValid() const { return valid_; }
+    NODISCARD int length() const { return prefixLen; }
+    NODISCARD bool isValid() const { return valid_; }
 
     template<typename Appender>
     void write(Appender &&append) const

@@ -13,7 +13,7 @@ class Room;
 static constexpr const int NUM_COMPASS_DIRS = 4;
 static constexpr const int NUM_ROAD_INDICES = 1 << NUM_COMPASS_DIRS;
 
-enum class RoadIndexMaskEnum : uint32_t {
+enum class NODISCARD RoadIndexMaskEnum : uint32_t {
 #define BIT_FROM_EXDIR(x) x = (1 << static_cast<int>(ExitDirEnum::x))
     NONE = 0,
     BIT_FROM_EXDIR(NORTH),
@@ -26,8 +26,8 @@ enum class RoadIndexMaskEnum : uint32_t {
 static_assert(static_cast<int>(RoadIndexMaskEnum::ALL) == 15);
 DEFINE_ENUM_COUNT(RoadIndexMaskEnum, NUM_ROAD_INDICES)
 
-inline constexpr RoadIndexMaskEnum operator|(const RoadIndexMaskEnum lhs,
-                                             const RoadIndexMaskEnum rhs) noexcept
+NODISCARD inline constexpr RoadIndexMaskEnum operator|(const RoadIndexMaskEnum lhs,
+                                                       const RoadIndexMaskEnum rhs) noexcept
 {
     return static_cast<RoadIndexMaskEnum>(static_cast<uint32_t>(lhs) | static_cast<uint32_t>(rhs));
 }
@@ -36,12 +36,12 @@ inline constexpr RoadIndexMaskEnum &operator|=(RoadIndexMaskEnum &lhs,
 {
     return lhs = (lhs | rhs);
 }
-inline constexpr RoadIndexMaskEnum operator&(const RoadIndexMaskEnum lhs,
-                                             const RoadIndexMaskEnum rhs)
+NODISCARD inline constexpr RoadIndexMaskEnum operator&(const RoadIndexMaskEnum lhs,
+                                                       const RoadIndexMaskEnum rhs)
 {
     return static_cast<RoadIndexMaskEnum>(static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs));
 }
-inline constexpr RoadIndexMaskEnum operator~(const RoadIndexMaskEnum x)
+NODISCARD inline constexpr RoadIndexMaskEnum operator~(const RoadIndexMaskEnum x)
 {
     return static_cast<RoadIndexMaskEnum>(static_cast<uint32_t>(x)
                                           ^ static_cast<uint32_t>(RoadIndexMaskEnum::ALL));
@@ -49,12 +49,12 @@ inline constexpr RoadIndexMaskEnum operator~(const RoadIndexMaskEnum x)
 static_assert(~RoadIndexMaskEnum::ALL == RoadIndexMaskEnum::NONE);
 static_assert(~RoadIndexMaskEnum::NONE == RoadIndexMaskEnum::ALL);
 
-RoadIndexMaskEnum getRoadIndex(ExitDirEnum dir);
-RoadIndexMaskEnum getRoadIndex(const Room &room);
+NODISCARD RoadIndexMaskEnum getRoadIndex(ExitDirEnum dir);
+NODISCARD RoadIndexMaskEnum getRoadIndex(const Room &room);
 
-enum class RoadTagEnum { ROAD, TRAIL };
+enum class NODISCARD RoadTagEnum { ROAD, TRAIL };
 template<RoadTagEnum Tag>
-struct TaggedRoadIndex final
+struct NODISCARD TaggedRoadIndex final
 {
     static constexpr const RoadTagEnum tag_type = Tag;
     const RoadIndexMaskEnum index;

@@ -10,7 +10,7 @@
 #include "GmcpModule.h"
 #include "GmcpUtils.h"
 
-static GmcpMessageName toGmcpMessageName(const GmcpMessageTypeEnum type)
+NODISCARD static GmcpMessageName toGmcpMessageName(const GmcpMessageTypeEnum type)
 {
 #define X_CASE(UPPER_CASE, CamelCase, normalized, friendly) \
     do { \
@@ -31,7 +31,7 @@ GmcpMessage::GmcpMessage(const GmcpMessageTypeEnum type)
     , type(type)
 {}
 
-static GmcpMessageTypeEnum toGmcpMessageType(const std::string &str)
+NODISCARD static GmcpMessageTypeEnum toGmcpMessageType(const std::string &str)
 {
     const auto lower = ::toLowerLatin1(str);
 #define X_CASE(UPPER_CASE, CamelCase, normalized, friendly) \

@@ -21,7 +21,7 @@
     X(DEAD, dead, Dead, "Dead") \
     /* define character positions above */
 
-enum class CharacterPositionEnum {
+enum class NODISCARD CharacterPositionEnum {
 #define X_DECL_CHARACTER_POSITION(UPPER_CASE, lower_case, CamelCase, friendly) UPPER_CASE,
     X_FOREACH_CHARACTER_POSITION(X_DECL_CHARACTER_POSITION)
 #undef X_DECL_CHARACTER_POSITION
@@ -48,7 +48,7 @@ Q_DECLARE_METATYPE(CharacterPositionEnum)
     /* define character affects above */
 
 // TODO: States for CASTING DISEASED
-enum class CharacterAffectEnum {
+enum class NODISCARD CharacterAffectEnum {
 #define X_DECL_CHARACTER_AFFECT(UPPER_CASE, lower_case, CamelCase, friendly) UPPER_CASE,
     X_FOREACH_CHARACTER_AFFECT(X_DECL_CHARACTER_AFFECT)
 #undef X_DECL_CHARACTER_AFFECT
@@ -60,19 +60,20 @@ static constexpr const int NUM_CHARACTER_AFFECTS = X_FOREACH_CHARACTER_AFFECT(X_
 DEFINE_ENUM_COUNT(CharacterAffectEnum, NUM_CHARACTER_AFFECTS)
 Q_DECLARE_METATYPE(CharacterAffectEnum)
 
-class CharacterAffects final : public enums::Flags<CharacterAffects, CharacterAffectEnum, uint32_t>
+class NODISCARD CharacterAffects final
+    : public enums::Flags<CharacterAffects, CharacterAffectEnum, uint32_t>
 {
     using Flags::Flags;
 
 public:
 #define X_DEFINE_ACCESSORS(UPPER_CASE, lower_case, CamelCase, friendly) \
-    bool is##CamelCase() const { return contains(CharacterAffectEnum::UPPER_CASE); }
+    NODISCARD bool is##CamelCase() const { return contains(CharacterAffectEnum::UPPER_CASE); }
     X_FOREACH_CHARACTER_AFFECT(X_DEFINE_ACCESSORS)
 #undef X_DEFINE_ACCESSORS
 };
 
-inline constexpr const CharacterAffects operator|(CharacterAffectEnum lhs,
-                                                  CharacterAffectEnum rhs) noexcept
+NODISCARD inline constexpr const CharacterAffects operator|(CharacterAffectEnum lhs,
+                                                            CharacterAffectEnum rhs) noexcept
 {
     return CharacterAffects{lhs} | CharacterAffects{rhs};
 }

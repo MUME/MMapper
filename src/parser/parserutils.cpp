@@ -31,17 +31,17 @@ static_assert(
     std::is_same_v<char, std::remove_const_t<std::remove_reference_t<decltype(g_latin1ToAscii[0])>>>);
 static_assert(std::size(g_latin1ToAscii) == NUM_LATIN1_CODEPOINTS - IDX_NBSP);
 
-static inline constexpr size_t getIndex(const char c) noexcept
+NODISCARD static inline constexpr size_t getIndex(const char c) noexcept
 {
     return static_cast<size_t>(static_cast<uint8_t>(c));
 }
 
-static inline constexpr bool isAscii(const char c) noexcept
+NODISCARD static inline constexpr bool isAscii(const char c) noexcept
 {
     return getIndex(c) < NUM_ASCII_CODEPOINTS;
 }
 
-static inline constexpr char latin1ToAscii(char c) noexcept
+NODISCARD static inline constexpr char latin1ToAscii(char c) noexcept
 {
     if (isAscii(c))
         return c;

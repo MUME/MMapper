@@ -24,7 +24,7 @@ static constexpr const std::string_view VALID
     = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 static constexpr const auto VALID_LEN = VALID.length();
 
-static std::string randomString(int length)
+NODISCARD static std::string randomString(int length)
 {
     std::ostringstream os;
     for (int i = 0; i < length; i++) {
@@ -70,7 +70,10 @@ RemoteEditProcess::RemoteEditProcess(const bool editSession,
     qDebug() << "View session file template" << m_fileName;
     file.write(m_body.toLatin1()); // note: MUME expects all remote edit data to be Latin-1.
     file.flush();
-    io::fsyncNoexcept(file);
+    {
+        // REVISIT: check return value?
+        MAYBE_UNUSED const auto ignored = io::fsyncNoexcept(file);
+    }
     file.close();
     m_previousTime = QFileInfo{m_fileName}.lastModified();
     qDebug() << "File written with last modified timestamp" << m_previousTime;
@@ -146,7 +149,7 @@ void RemoteEditProcess::onError(QProcess::ProcessError /*error*/)
     emit cancel();
 }
 
-enum class StateEnum { Idle, Arg, QuotedArg };
+enum class NODISCARD StateEnum { Idle, Arg, QuotedArg };
 
 QStringList RemoteEditProcess::splitCommandLine(const QString &cmdLine)
 {

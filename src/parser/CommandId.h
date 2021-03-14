@@ -7,7 +7,7 @@
 
 #include "../mapdata/ExitDirection.h"
 
-enum class CommandEnum {
+enum class NODISCARD CommandEnum {
     NORTH = 0,
     SOUTH,
     EAST,
@@ -32,14 +32,14 @@ static constexpr const int NUM_COMMANDS = 10;
 namespace enums {
 
 #define ALL_COMMANDS ::enums::getAllCommands()
-const MMapper::Array<CommandEnum, NUM_COMMANDS> &getAllCommands();
+NODISCARD const MMapper::Array<CommandEnum, NUM_COMMANDS> &getAllCommands();
 
 } // namespace enums
 
-bool isDirectionNESWUD(CommandEnum cmd);
-bool isDirection7(CommandEnum cmd);
-ExitDirEnum getDirection(CommandEnum cmd);
-CommandEnum getCommand(ExitDirEnum dir);
+NODISCARD bool isDirectionNESWUD(CommandEnum cmd);
+NODISCARD bool isDirection7(CommandEnum cmd);
+NODISCARD ExitDirEnum getDirection(CommandEnum cmd);
+NODISCARD CommandEnum getCommand(ExitDirEnum dir);
 
-const char *getUppercase(CommandEnum cmd);
-const char *getLowercase(CommandEnum cmd);
+NODISCARD const char *getUppercase(CommandEnum cmd);
+NODISCARD const char *getLowercase(CommandEnum cmd);

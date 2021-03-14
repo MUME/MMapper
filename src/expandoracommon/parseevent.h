@@ -30,7 +30,7 @@ using SigParseEvent = MmQtHandle<ParseEvent>;
 /**
  * the ParseEvents will walk around in the SearchTree
  */
-class ParseEvent final
+class NODISCARD ParseEvent final
 {
 public:
     static constexpr const size_t NUM_PROPS = 3;
@@ -76,10 +76,10 @@ public:
 public:
     // REVISIT: Cloning the event should no longer be necessary since all public methods are const;
     // instead, we we should make ParseEvent use `shared_from_this` and just copy the shared_ptr.
-    ParseEvent clone() const { return ParseEvent{*this}; }
+    NODISCARD ParseEvent clone() const { return ParseEvent{*this}; }
 
 public:
-    QString toQString() const;
+    NODISCARD QString toQString() const;
     explicit operator QString() const { return toQString(); }
     friend QDebug operator<<(QDebug os, const ParseEvent &ev) { return os << ev.toQString(); }
 
@@ -96,14 +96,14 @@ private:
     void countSkipped();
 
 public:
-    const RoomName &getRoomName() const { return m_roomName; }
-    const RoomDynamicDesc &getDynamicDesc() const { return m_dynamicDesc; }
-    const RoomStaticDesc &getStaticDesc() const { return m_staticDesc; }
-    ExitsFlagsType getExitsFlags() const { return m_exitsFlags; }
-    PromptFlagsType getPromptFlags() const { return m_promptFlags; }
-    ConnectedRoomFlagsType getConnectedRoomFlags() const { return m_connectedRoomFlags; }
-    CommandEnum getMoveType() const { return m_moveType; }
-    uint getNumSkipped() const { return m_numSkipped; }
+    NODISCARD const RoomName &getRoomName() const { return m_roomName; }
+    NODISCARD const RoomDynamicDesc &getDynamicDesc() const { return m_dynamicDesc; }
+    NODISCARD const RoomStaticDesc &getStaticDesc() const { return m_staticDesc; }
+    NODISCARD ExitsFlagsType getExitsFlags() const { return m_exitsFlags; }
+    NODISCARD PromptFlagsType getPromptFlags() const { return m_promptFlags; }
+    NODISCARD ConnectedRoomFlagsType getConnectedRoomFlags() const { return m_connectedRoomFlags; }
+    NODISCARD CommandEnum getMoveType() const { return m_moveType; }
+    NODISCARD uint getNumSkipped() const { return m_numSkipped; }
     const Property &operator[](const size_t pos) const { return m_properties.at(pos); }
 
 public:

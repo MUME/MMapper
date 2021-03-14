@@ -117,7 +117,7 @@ inline decltype(auto) remap(T &&x)
 
 // REVISIT: Can we (ab)use tuple to remap std::string to syntax::abbrevToken?
 template<typename... Args>
-static auto syn(Args &&... args)
+NODISCARD static auto syn(Args &&... args)
 {
     return syntax::buildSyntax(remap(std::forward<Args>(args))...);
 }

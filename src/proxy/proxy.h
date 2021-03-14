@@ -117,7 +117,7 @@ private:
     QPointer<MumeXmlParser> m_parserXml;
     QPointer<MumeSocket> m_mudSocket;
 
-    enum class ServerStateEnum {
+    enum class NODISCARD ServerStateEnum {
         INITIALIZED,
         OFFLINE,
         CONNECTING,

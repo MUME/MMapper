@@ -6,7 +6,9 @@
 #include <cmath>
 #include <QColor>
 
-enum class AnsiColorTableEnum {
+#include "macros.h"
+
+enum class NODISCARD AnsiColorTableEnum {
     black = 0,
     red,
     green,
@@ -25,7 +27,7 @@ enum class AnsiColorTableEnum {
     WHITE
 };
 
-static inline QColor ansiColor(const AnsiColorTableEnum i)
+NODISCARD static inline QColor ansiColor(const AnsiColorTableEnum i)
 {
     static const QColor black("#2e3436");
     static const QColor BLACK("#555753");
@@ -82,7 +84,7 @@ static inline QColor ansiColor(const AnsiColorTableEnum i)
     }
 }
 
-static inline QColor textColor(const QColor color)
+NODISCARD static inline QColor textColor(const QColor color)
 {
     // Dynamically select text color according to the background color
     // http://www.nbdtech.com/Blog/archive/2008/04/27/Calculating-the-Perceived-Brightness-of-a-Color.aspx
@@ -100,7 +102,7 @@ static inline QColor textColor(const QColor color)
     return percentage < 50 ? QColor(Qt::white) : QColor(Qt::black);
 }
 
-static inline QColor ansi256toRgb(const int ansi)
+NODISCARD static inline QColor ansi256toRgb(const int ansi)
 {
     // 232-255: grayscale from black to white in 24 steps
     if (ansi >= 232) {
@@ -127,7 +129,7 @@ static inline QColor ansi256toRgb(const int ansi)
     return ansiColor(static_cast<AnsiColorTableEnum>(ansi));
 }
 
-static inline int rgbToAnsi256(const int r, const int g, const int b)
+NODISCARD static inline int rgbToAnsi256(const int r, const int g, const int b)
 {
     // https://stackoverflow.com/questions/15682537/ansi-color-specific-rgb-sequence-bash
     // we use the extended greyscale palette here, with the exception of
@@ -149,7 +151,7 @@ static inline int rgbToAnsi256(const int r, const int g, const int b)
     return 16 + red + green + blue;
 }
 
-static inline QString rgbToAnsi256String(const QColor rgb, bool foreground = true)
+NODISCARD static inline QString rgbToAnsi256String(const QColor rgb, bool foreground = true)
 {
     return QString("[%1;5;%2m")
         .arg(foreground ? "38" : QString("%1;48").arg(textColor(rgb) == Qt::white ? "37" : "30"))

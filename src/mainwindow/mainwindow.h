@@ -61,8 +61,8 @@ public:
     explicit MainWindow(QWidget *parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags{});
     ~MainWindow() override;
 
-    enum class SaveModeEnum { FULL, BASEMAP };
-    enum class SaveFormatEnum { MM2, WEB, MMP };
+    enum class NODISCARD SaveModeEnum { FULL, BASEMAP };
+    enum class NODISCARD SaveFormatEnum { MM2, WEB, MMP };
     bool saveFile(const QString &fileName, SaveModeEnum mode, SaveFormatEnum format);
     void loadFile(const QString &fileName);
     void setCurrentFile(const QString &fileName);
@@ -229,7 +229,7 @@ private:
     QAction *layerDownAct = nullptr;
     QAction *layerResetAct = nullptr;
 
-    struct MouseModeActions
+    struct NODISCARD MouseModeActions final
     {
         QActionGroup *mouseModeActGroup = nullptr;
         QAction *modeConnectionSelectAct = nullptr;
@@ -243,7 +243,7 @@ private:
         QAction *modeCreateOnewayConnectionAct = nullptr;
     } mouseMode{};
 
-    struct MapperModeActions
+    struct NODISCARD MapperModeActions final
     {
         QActionGroup *mapModeActGroup = nullptr;
         QAction *playModeAct = nullptr;
@@ -254,14 +254,14 @@ private:
     QActionGroup *selectedRoomActGroup = nullptr;
     QActionGroup *selectedConnectionActGroup = nullptr;
 
-    struct InfoMarkActions
+    struct NODISCARD InfoMarkActions final
     {
         QActionGroup *infoMarkGroup = nullptr;
         QAction *deleteInfoMarkAct = nullptr;
         QAction *editInfoMarkAct = nullptr;
     } infoMarkActions{};
 
-    struct GroupModeActions
+    struct NODISCARD GroupModeActions final
     {
         QActionGroup *groupModeGroup = nullptr;
         QAction *groupOffAct = nullptr;
@@ -269,7 +269,7 @@ private:
         QAction *groupServerAct = nullptr;
     } groupMode{};
 
-    struct GroupNetworkActions
+    struct NODISCARD GroupNetworkActions final
     {
         QActionGroup *groupNetworkGroup = nullptr;
         QAction *networkStartAct = nullptr;
@@ -308,8 +308,8 @@ private:
     void readSettings();
     void writeSettings();
 
-    bool maybeSave();
-    std::unique_ptr<QFileDialog> createDefaultSaveDialog();
+    NODISCARD bool maybeSave();
+    NODISCARD std::unique_ptr<QFileDialog> createDefaultSaveDialog();
 
     struct NODISCARD ActionDisabler final
     {
@@ -364,9 +364,9 @@ private:
     public:
         void reset() { self.endProgressDialog(); }
     };
-    ProgressDialogLifetime createNewProgressDialog(const QString &text);
+    NODISCARD ProgressDialogLifetime createNewProgressDialog(const QString &text);
     void endProgressDialog();
-    MapCanvas *getCanvas() const;
+    NODISCARD MapCanvas *getCanvas() const;
     void mapChanged() const;
     void setCanvasMouseMode(CanvasMouseModeEnum mode);
     void execSelectionGroupMapAction(std::unique_ptr<AbstractAction> action);

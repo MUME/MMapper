@@ -10,6 +10,7 @@
 #include <QStringList>
 #include <QtCore>
 
+#include "../global/macros.h"
 #include "remoteeditsession.h"
 
 class RemoteEditProcess : public QObject
@@ -32,7 +33,7 @@ signals:
     void save(const QString &);
 
 private:
-    static QStringList splitCommandLine(const QString &cmdLine);
+    NODISCARD static QStringList splitCommandLine(const QString &cmdLine);
 
     const QString m_title;
     const QString m_body;

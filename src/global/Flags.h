@@ -18,12 +18,12 @@ namespace enums {
 
 // REVISIT: add CountOf_v ?
 template<typename E>
-struct CountOf
+struct NODISCARD CountOf
 {};
 #define DEFINE_ENUM_COUNT(E, N) \
     namespace enums { \
     template<> \
-    struct CountOf<E> \
+    struct NODISCARD CountOf<E> \
     { \
         static_assert(std::is_enum_v<E>); \
         static constexpr const size_t value = N; \
@@ -34,7 +34,7 @@ template<typename CRTP,
          typename _Flag,
          typename _UnderlyingType,
          size_t _NUM_FLAGS = CountOf<_Flag>::value>
-class Flags
+class NODISCARD Flags
 {
 public:
     using Flag = _Flag;
@@ -251,7 +251,7 @@ public:
     /// Think of it as
     ///  using Predicate = std::function<bool(Flag)>;
     template<typename Predicate>
-    std::optional<Flag> find_first_matching(Predicate &&predicate) const
+    NODISCARD std::optional<Flag> find_first_matching(Predicate &&predicate) const
     {
         static constexpr underlying_type ONE = 1;
         for (auto tmp = m_flags; tmp != 0;) {

@@ -11,7 +11,7 @@
 
 #include "../global/Version.h"
 
-static QString getBuildInformation()
+NODISCARD static QString getBuildInformation()
 {
     const auto get_compiler = []() -> QString {
 #ifdef __clang__

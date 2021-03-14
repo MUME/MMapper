@@ -24,15 +24,15 @@
 
 #undef TRANSPARENT // Bad dog, Microsoft; bad dog!!!
 
-enum class MapModeEnum { PLAY, MAP, OFFLINE };
-enum class PlatformEnum { Unknown, Windows, Mac, Linux };
-enum class CharacterEncodingEnum { LATIN1, UTF8, ASCII };
-enum class EnvironmentEnum { Unknown, Env32Bit, Env64Bit };
-enum class RestrictMapEnum { Never, OnlyInMapMode, Always };
-enum class AutoLoggerEnum { KeepForever, DeleteDays, DeleteSize };
+enum class NODISCARD MapModeEnum { PLAY, MAP, OFFLINE };
+enum class NODISCARD PlatformEnum { Unknown, Windows, Mac, Linux };
+enum class NODISCARD CharacterEncodingEnum { LATIN1, UTF8, ASCII };
+enum class NODISCARD EnvironmentEnum { Unknown, Env32Bit, Env64Bit };
+enum class NODISCARD RestrictMapEnum { Never, OnlyInMapMode, Always };
+enum class NODISCARD AutoLoggerEnum { KeepForever, DeleteDays, DeleteSize };
 
 // Do not call this directly; use CURRENT_PLATFORM.
-static inline constexpr PlatformEnum getCurrentPlatform()
+NODISCARD static inline constexpr PlatformEnum getCurrentPlatform()
 {
 #if defined(Q_OS_WIN)
     return PlatformEnum::Windows;
@@ -47,7 +47,7 @@ static inline constexpr PlatformEnum getCurrentPlatform()
 static constexpr const PlatformEnum CURRENT_PLATFORM = getCurrentPlatform();
 
 // Do not call this directly; use CURRENT_ENVIRONMENT.
-static inline constexpr EnvironmentEnum getCurrentEnvironment()
+NODISCARD static inline constexpr EnvironmentEnum getCurrentEnvironment()
 {
 #if Q_PROCESSOR_WORDSIZE == 4
     return EnvironmentEnum::Env32Bit;
@@ -88,7 +88,7 @@ static constexpr const bool NO_ZLIB = false;
     void read(QSettings &conf); \
     void write(QSettings &conf) const
 
-class Configuration final
+class NODISCARD Configuration final
 {
 public:
     void read();
@@ -96,7 +96,7 @@ public:
     void reset();
 
 public:
-    struct GeneralSettings final
+    struct NODISCARD GeneralSettings final
     {
         bool firstRun = false;
         QByteArray windowGeometry;
@@ -112,7 +112,7 @@ public:
         SUBGROUP();
     } general{};
 
-    struct ConnectionSettings final
+    struct NODISCARD ConnectionSettings final
     {
         QString remoteServerName; /// Remote host and port settings
         quint16 remotePort = 0u;
@@ -126,7 +126,7 @@ public:
         SUBGROUP();
     } connection;
 
-    struct ParserSettings final
+    struct NODISCARD ParserSettings final
     {
         QString roomNameColor; // ANSI room name color
         QString roomDescColor; // ANSI room descriptions color
@@ -138,7 +138,7 @@ public:
         SUBGROUP();
     } parser;
 
-    struct MumeClientProtocolSettings final
+    struct NODISCARD MumeClientProtocolSettings final
     {
         bool remoteEditing = false;
         bool internalRemoteEditor = false;
@@ -148,7 +148,7 @@ public:
         SUBGROUP();
     } mumeClientProtocol;
 
-    struct MumeNativeSettings final
+    struct NODISCARD MumeNativeSettings final
     {
         /* serialized */
         bool emulatedExits = false;
@@ -164,7 +164,7 @@ public:
     static constexpr const std::string_view ROOM_DARK_NAME = "room-dark";
     static constexpr const std::string_view ROOM_NO_SUNDEATH_NAME = "room-no-sundeath";
 
-    struct CanvasSettings final
+    struct NODISCARD CanvasSettings final
     {
         bool showUpdated = false;
         bool drawNotMappedExits = false;
@@ -188,7 +188,7 @@ public:
         MMapper::Array<int, 3> mapRadius{100, 100, 100};
         RestrictMapEnum useRestrictedMap = RestrictMapEnum::OnlyInMapMode;
 
-        struct Advanced final
+        struct NODISCARD Advanced final
         {
             NamedConfig<bool> use3D{"MMAPPER_3D", true};
             NamedConfig<bool> autoTilt{"MMAPPER_AUTO_TILT", true};
@@ -204,7 +204,7 @@ public:
             FixedPoint<1> layerHeight{10, 100, 15};
 
         public:
-            ConnectionSet registerChangeCallback(ChangeMonitor::Function callback);
+            NODISCARD ConnectionSet registerChangeCallback(ChangeMonitor::Function callback);
 
             Advanced();
         } advanced;
@@ -213,7 +213,7 @@ public:
         SUBGROUP();
     } canvas;
 
-    struct ColorSettings final
+    struct NODISCARD ColorSettings final
     {
         // TODO: save color settings
         // TODO: record which named colors require a full map update.
@@ -255,7 +255,7 @@ public:
         SUBGROUP();
     } colorSettings;
 
-    struct AutoLoadSettings final
+    struct NODISCARD AutoLoadSettings final
     {
         bool autoLoadMap = false;
         QString fileName;
@@ -265,7 +265,7 @@ public:
         SUBGROUP();
     } autoLoad;
 
-    struct AutoLogSettings final
+    struct NODISCARD AutoLogSettings final
     {
         QString autoLogDirectory;
         bool autoLog = false;
@@ -279,7 +279,7 @@ public:
         SUBGROUP();
     } autoLog;
 
-    struct PathMachineSettings final
+    struct NODISCARD PathMachineSettings final
     {
         double acceptBestRelative = 0.0;
         double acceptBestAbsolute = 0.0;
@@ -293,7 +293,7 @@ public:
         SUBGROUP();
     } pathMachine;
 
-    struct GroupManagerSettings final
+    struct NODISCARD GroupManagerSettings final
     {
         GroupManagerStateEnum state = GroupManagerStateEnum::Off;
         quint16 localPort = 0u;
@@ -318,7 +318,7 @@ public:
         SUBGROUP();
     } groupManager;
 
-    struct MumeClockSettings final
+    struct NODISCARD MumeClockSettings final
     {
         int64_t startEpoch = 0;
         bool display = false;
@@ -327,7 +327,7 @@ public:
         SUBGROUP();
     } mumeClock;
 
-    struct IntegratedMudClientSettings final
+    struct NODISCARD IntegratedMudClientSettings final
     {
         QString font;
         QColor foregroundColor;
@@ -344,7 +344,7 @@ public:
         SUBGROUP();
     } integratedClient;
 
-    struct InfoMarksDialog final
+    struct NODISCARD InfoMarksDialog final
     {
         QByteArray geometry;
 
@@ -352,7 +352,7 @@ public:
         SUBGROUP();
     } infoMarksDialog;
 
-    struct RoomEditDialog final
+    struct NODISCARD RoomEditDialog final
     {
         QByteArray geometry;
 
@@ -360,7 +360,7 @@ public:
         SUBGROUP();
     } roomEditDialog;
 
-    struct FindRoomsDialog final
+    struct NODISCARD FindRoomsDialog final
     {
         QByteArray geometry;
 
@@ -380,7 +380,7 @@ private:
 /// Please don't try to cheat it. Only call this function from main().
 void setEnteredMain();
 /// Returns a reference to the application configuration object.
-Configuration &setConfig();
-const Configuration &getConfig();
+NODISCARD Configuration &setConfig();
+NODISCARD const Configuration &getConfig();
 
 #undef SUBGROUP

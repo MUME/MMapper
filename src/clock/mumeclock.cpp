@@ -18,11 +18,11 @@ static constexpr const int DEFAULT_MUME_START_EPOCH = 1517443173;
 static constexpr const int DEFAULT_TOLERANCE_LIMIT = 10;
 static constexpr const int ONE_RL_DAY_IN_SECONDS = 86400;
 
-static inline int am(int h)
+NODISCARD static inline int am(int h)
 {
     return h;
 }
-static inline int pm(int h)
+NODISCARD static inline int pm(int h)
 {
     return h + 12;
 }
@@ -318,7 +318,7 @@ void MumeClock::parseClockTime(const QString &clockTime, const int64_t secsSince
 }
 
 // TODO: move this somewhere useful?
-static const char *getOrdinalSuffix(const int day)
+NODISCARD static const char *getOrdinalSuffix(const int day)
 {
     switch (day % 100) {
     case 11:

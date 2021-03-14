@@ -4,7 +4,7 @@
 
 #include "random.h"
 
-static auto expensiveSeed()
+NODISCARD static auto expensiveSeed()
 {
     return std::random_device{}();
 }

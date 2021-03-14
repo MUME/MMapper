@@ -175,10 +175,12 @@ void MumeSslSocket::onPeerVerifyError(const QSslError &error)
 
 void MumeSslSocket::onReadyRead()
 {
-    io::readAllAvailable(m_socket, m_buffer, [this](const QByteArray &byteArray) {
-        if (!byteArray.isEmpty())
-            emit processMudStream(byteArray);
-    });
+    // REVISIT: check return value?
+    MAYBE_UNUSED const auto ignored = //
+        io::readAllAvailable(m_socket, m_buffer, [this](const QByteArray &byteArray) {
+            if (!byteArray.isEmpty())
+                emit processMudStream(byteArray);
+        });
 }
 
 void MumeSslSocket::checkTimeout()

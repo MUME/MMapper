@@ -15,7 +15,7 @@
 
 using ActionCallback = std::function<void(StringView)>;
 
-struct IAction
+struct NODISCARD IAction
 {
 public:
     virtual ~IAction();
@@ -29,7 +29,7 @@ public:
     void match(const StringView &input) const;
 };
 
-class StartsWithAction : public IAction
+class NODISCARD StartsWithAction : public IAction
 {
 private:
     const std::string match;
@@ -45,7 +45,7 @@ private:
     void virt_match(const StringView &input) const override;
 };
 
-class EndsWithAction : public IAction
+class NODISCARD EndsWithAction : public IAction
 {
 private:
     const std::string match;
@@ -61,7 +61,7 @@ private:
     void virt_match(const StringView &input) const override;
 };
 
-class RegexAction : public IAction
+class NODISCARD RegexAction : public IAction
 {
 private:
     const std::regex regex;

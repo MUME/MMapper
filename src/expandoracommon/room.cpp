@@ -312,7 +312,7 @@ SharedParseEvent Room::getEvent(const Room *const room)
                                    ConnectedRoomFlagsType{});
 }
 
-static int wordDifference(StringView a, StringView b)
+NODISCARD static int wordDifference(StringView a, StringView b)
 {
     size_t diff = 0;
     while (!a.isEmpty() && !b.isEmpty())
@@ -759,7 +759,7 @@ std::string Room::toStdString() const
 }
 
 using ExitCoordinates = EnumIndexedArray<Coordinate, ExitDirEnum, NUM_EXITS_INCLUDING_NONE>;
-static ExitCoordinates initExitCoordinates()
+NODISCARD static ExitCoordinates initExitCoordinates()
 {
     ExitCoordinates exitDirs;
     exitDirs[ExitDirEnum::NORTH] = Coordinate(0, 1, 0);

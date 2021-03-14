@@ -60,7 +60,7 @@ private:
     MapData &m_data;
 
     Mmapper2Group *m_groupManager = nullptr;
-    struct OptionStatus final
+    struct NODISCARD OptionStatus final
     {
         std::optional<int> multisampling;
         std::optional<bool> trilinear;
@@ -74,19 +74,19 @@ public:
     ~MapCanvas() override;
 
 public:
-    static MapCanvas *getPrimary();
+    NODISCARD static MapCanvas *getPrimary();
 
 private:
-    inline auto &getOpenGL() { return m_opengl; }
-    inline auto &getGLFont() { return m_glFont; }
+    NODISCARD inline auto &getOpenGL() { return m_opengl; }
+    NODISCARD inline auto &getGLFont() { return m_glFont; }
     void cleanupOpenGL();
 
     void initSurface();
 
 public:
     static constexpr int BASESIZE = 528; // REVISIT: Why this size? 16*33 isn't special.
-    QSize minimumSizeHint() const override;
-    QSize sizeHint() const override;
+    NODISCARD QSize minimumSizeHint() const override;
+    NODISCARD QSize sizeHint() const override;
 
     static constexpr const int SCROLL_SCALE = 64;
     using MapCanvasViewport::getTotalScaleFactor;
@@ -95,12 +95,12 @@ public:
         m_scaleFactor.set(zoom);
         zoomChanged();
     }
-    float getRawZoom() const { return m_scaleFactor.getRaw(); }
+    NODISCARD float getRawZoom() const { return m_scaleFactor.getRaw(); }
 
 public:
-    auto width() const { return QOpenGLWidget::width(); }
-    auto height() const { return QOpenGLWidget::height(); }
-    auto rect() const { return QOpenGLWidget::rect(); }
+    NODISCARD auto width() const { return QOpenGLWidget::width(); }
+    NODISCARD auto height() const { return QOpenGLWidget::height(); }
+    NODISCARD auto rect() const { return QOpenGLWidget::rect(); }
 
 public slots:
     void forceMapperToRoom();
@@ -157,7 +157,7 @@ signals:
 
 private:
     void reportGLVersion();
-    bool isBlacklistedDriver();
+    NODISCARD bool isBlacklistedDriver();
 
 protected:
     void initializeGL() override;
@@ -181,11 +181,14 @@ private:
     void updateTextures();
     void updateMultisampling();
 
+    NODISCARD
     std::shared_ptr<InfoMarkSelection> getInfoMarkSelection(const MouseSel &sel);
+    NODISCARD
     static glm::mat4 getViewProj_old(const glm::vec2 &scrollPos,
                                      const glm::ivec2 &size,
                                      float zoomScale,
                                      int currentLayer);
+    NODISCARD
     static glm::mat4 getViewProj(const glm::vec2 &scrollPos,
                                  const glm::ivec2 &size,
                                  float zoomScale,
@@ -193,7 +196,7 @@ private:
     void setMvp(const glm::mat4 &viewProj);
     void setViewportAndMvp(int width, int height);
 
-    BatchedInfomarksMeshes getInfoMarksMeshes();
+    NODISCARD BatchedInfomarksMeshes getInfoMarksMeshes();
     void drawInfoMark(InfomarksBatch &batch,
                       InfoMark *marker,
                       int currentLayer,

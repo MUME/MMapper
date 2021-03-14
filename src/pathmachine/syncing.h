@@ -17,7 +17,7 @@ class RoomAdmin;
 class RoomSignalHandler;
 struct PathParameters;
 
-class Syncing : public RoomRecipient
+class NODISCARD Syncing : public RoomRecipient
 {
 private:
     RoomSignalHandler *signaler = nullptr;

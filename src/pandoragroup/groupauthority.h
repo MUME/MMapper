@@ -8,7 +8,9 @@
 #include <QSslKey>
 #include <QStringListModel>
 
-enum class GroupMetadataEnum { LAST_LOGIN, NAME, IP_ADDRESS, CERTIFICATE, PORT };
+#include "../global/macros.h"
+
+enum class NODISCARD GroupMetadataEnum { LAST_LOGIN, NAME, IP_ADDRESS, CERTIFICATE, PORT };
 static constexpr const auto NUM_GROUP_METADATA = 4u;
 
 using GroupSecret = QByteArray;
@@ -28,19 +30,19 @@ public slots:
     void refresh();
 
 public:
-    GroupSecret getSecret() const;
-    QSslCertificate getLocalCertificate() const { return certificate; }
-    QSslKey getPrivateKey() const { return key; }
+    NODISCARD GroupSecret getSecret() const;
+    NODISCARD QSslCertificate getLocalCertificate() const { return certificate; }
+    NODISCARD QSslKey getPrivateKey() const { return key; }
 
 public:
-    QAbstractItemModel *getItemModel() { return &model; }
+    NODISCARD QAbstractItemModel *getItemModel() { return &model; }
     bool add(const GroupSecret &);
     bool remove(const GroupSecret &);
-    bool validSecret(const GroupSecret &) const;
-    bool validCertificate(const GroupSocket *) const;
+    NODISCARD bool validSecret(const GroupSecret &) const;
+    NODISCARD bool validCertificate(const GroupSocket *) const;
 
 public:
-    QString getMetadata(const GroupSecret &, GroupMetadataEnum) const;
+    NODISCARD QString getMetadata(const GroupSecret &, GroupMetadataEnum) const;
     static void setMetadata(const GroupSecret &, GroupMetadataEnum, const QString &value);
 
 signals:

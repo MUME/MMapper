@@ -28,7 +28,7 @@ struct TelnetData;
 
 // #define XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
 
-enum class XmlModeEnum { NONE, ROOM, NAME, DESCRIPTION, EXITS, PROMPT, TERRAIN, HEADER };
+enum class NODISCARD XmlModeEnum { NONE, ROOM, NAME, DESCRIPTION, EXITS, PROMPT, TERRAIN, HEADER };
 
 class MumeXmlParser final : public AbstractParser
 {
@@ -68,10 +68,10 @@ public:
 
 private:
     void parseMudCommands(const QString &str);
-    QByteArray characters(QByteArray &ch);
-    bool element(const QByteArray &);
+    NODISCARD QByteArray characters(QByteArray &ch);
+    NODISCARD bool element(const QByteArray &);
     void move();
-    std::string snoopToUser(const std::string_view &str);
+    NODISCARD std::string snoopToUser(const std::string_view &str);
 
 private:
     static void stripXmlEntities(QByteArray &ch);

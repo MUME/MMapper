@@ -19,7 +19,7 @@
 #include "enums.h"
 #include "mmapper2room.h"
 
-static std::regex createRegex(const std::string &input, const Qt::CaseSensitivity cs)
+NODISCARD static std::regex createRegex(const std::string &input, const Qt::CaseSensitivity cs)
 {
     // TODO: Switch from std::regex::exteneded to std::regex::multiline once GCC supports it
     auto options = std::regex::nosubs | std::regex::optimize | std::regex::extended;

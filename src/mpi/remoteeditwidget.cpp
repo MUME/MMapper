@@ -35,7 +35,7 @@ static constexpr const char S_TWO_SPACES[3]{C_SPACE, C_SPACE, C_NUL};
 // REVISIT: Figure out how to tweak logic to accept actual maximum length of 80
 static constexpr const int MAX_LENGTH = 79;
 
-static int measureTabAndAnsiAware(const QString &s)
+NODISCARD static int measureTabAndAnsiAware(const QString &s)
 {
     int col = 0;
     for (auto token : AnsiTokenizer{s}) {
@@ -158,7 +158,7 @@ public:
         const auto darkOrange = getBackgroundFormat(QColor{0xff, 0x8c, 0x00});
         const auto yellow = getBackgroundFormat(Qt::yellow);
 
-        struct MyEntityCallback : entities::EntityCallback
+        struct NODISCARD MyEntityCallback final : entities::EntityCallback
         {
             LineHighlighter &self;
             const QTextCharFormat &red;
@@ -332,7 +332,7 @@ void RemoteTextEdit::handle_toolTip(QEvent *const event) const
     QToolTip::showText(helpEvent->globalPos(), QString("%1 (%2)").arg(tooltip).arg(unicode_buf));
 }
 
-static bool lineHasTabs(const QTextCursor &line)
+NODISCARD static bool lineHasTabs(const QTextCursor &line)
 {
     if (line.isNull())
         return false;
@@ -381,16 +381,16 @@ static void tryRemoveLeadingSpaces(QTextCursor line, const int max_spaces)
     line.removeSelectedText();
 }
 
-struct LineRange
+struct NODISCARD LineRange final
 {
-    static auto beg(QTextCursor cur)
+    NODISCARD static auto beg(QTextCursor cur)
     {
         auto from = cur.document()->findBlock(cur.selectionStart());
         auto begCursor = QTextCursor(from);
         return begCursor;
     }
 
-    static auto end(QTextCursor cur)
+    NODISCARD static auto end(QTextCursor cur)
     {
         const auto &to = cur.document()->findBlock(cur.selectionEnd());
         auto endCursor = QTextCursor(to);
@@ -421,7 +421,7 @@ static void foreach_partly_selected_block(QTextCursor cur, Callback &&callback)
     }
 }
 
-enum class CallbackResultEnum { KEEP_GOING, STOP };
+enum class NODISCARD CallbackResultEnum { KEEP_GOING, STOP };
 
 // Caller is responsible for not invalidating the end cursor.
 ///
@@ -697,7 +697,7 @@ void RemoteEditWidget::addFileMenu(QMenuBar *const menuBar, const Editor *const 
     addEditAndViewMenus(menuBar, pTextEdit);
 }
 
-struct EditViewCommand final
+struct NODISCARD EditViewCommand final
 {
     using mem_fn_ptr_type = void (RemoteEditWidget::*)();
     const mem_fn_ptr_type mem_fn_ptr;
@@ -719,7 +719,7 @@ struct EditViewCommand final
     {}
 };
 
-struct EditCommand2 final
+struct NODISCARD EditCommand2 final
 {
     using mem_fn_ptr_type = void (RemoteTextEdit::*)();
     mem_fn_ptr_type mem_fn_ptr = nullptr;
@@ -926,14 +926,14 @@ void RemoteEditWidget::addStatusBar(const Editor *const pTextEdit)
     connect(pTextEdit, &Editor::textChanged, this, &RemoteEditWidget::updateStatusBar);
 }
 
-struct CursorColumnInfo final
+struct NODISCARD CursorColumnInfo final
 {
     int actual = 0;
     int tab_aware = 0;
     int tab_and_ansi_aware = 0;
 };
 
-static CursorColumnInfo getCursorColumn(QTextCursor &cursor)
+NODISCARD static CursorColumnInfo getCursorColumn(QTextCursor &cursor)
 {
     const int pos = cursor.positionInBlock();
     const auto &block = cursor.block();
@@ -946,7 +946,7 @@ static CursorColumnInfo getCursorColumn(QTextCursor &cursor)
     return cci;
 }
 
-struct CursorAnsiInfo final
+struct NODISCARD CursorAnsiInfo final
 {
     TextBuffer buffer;
     raw_ansi ansi;
@@ -954,7 +954,7 @@ struct CursorAnsiInfo final
     explicit operator bool() const { return !buffer.isEmpty(); }
 };
 
-static CursorAnsiInfo getCursorAnsi(QTextCursor cursor)
+NODISCARD static CursorAnsiInfo getCursorAnsi(QTextCursor cursor)
 {
     const int pos = cursor.positionInBlock();
 
@@ -984,14 +984,14 @@ static CursorAnsiInfo getCursorAnsi(QTextCursor cursor)
     return result;
 }
 
-static bool linesHaveTabs(const QTextCursor &cur)
+NODISCARD static bool linesHaveTabs(const QTextCursor &cur)
 {
     return exists_partly_selected_block(cur, [](const QTextCursor &it) -> bool {
         return lineHasTabs(it);
     });
 }
 
-static bool linesHaveTrailingSpace(const QTextCursor &cur)
+NODISCARD static bool linesHaveTrailingSpace(const QTextCursor &cur)
 {
     return exists_partly_selected_block(cur, [](const QTextCursor &it) -> bool {
         const auto &block = it.block();
@@ -1000,7 +1000,7 @@ static bool linesHaveTrailingSpace(const QTextCursor &cur)
     });
 }
 
-static bool hasLongLines(const QTextCursor &cur)
+NODISCARD static bool hasLongLines(const QTextCursor &cur)
 {
     return exists_partly_selected_block(cur, [](const QTextCursor &line) -> bool {
         const auto &block = line.block();

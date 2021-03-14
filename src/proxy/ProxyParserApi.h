@@ -13,7 +13,7 @@ class Proxy;
 
 // This is effectively a weak pointer to a virtual interface without the virtual;
 // it basically only exists to avoid giving the parser private access to Parser.
-class ProxyParserApi final
+class NODISCARD ProxyParserApi final
 {
 private:
     WeakHandle<Proxy> m_proxy;
@@ -24,7 +24,7 @@ public:
     {}
 
 public:
-    bool isConnected() const;
+    NODISCARD bool isConnected() const;
 
 public:
     void connectToMud() const;
@@ -41,5 +41,5 @@ public:
 public:
     void gmcpToMud(const GmcpMessage &msg) const;
     void gmcpToUser(const GmcpMessage &msg) const;
-    bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &module) const;
+    NODISCARD bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &module) const;
 };

@@ -55,13 +55,13 @@ static_assert(040 == 32, "MMapper 2.3.7 Schema");
 static_assert(041 == 33, "MMapper 2.4.0 Schema");
 static_assert(042 == 34, "MMapper 2.4.3 Schema");
 
-static const Coordinate convertESUtoENU(Coordinate c)
+NODISCARD static const Coordinate convertESUtoENU(Coordinate c)
 {
     c.y *= -1;
     return c;
 }
 
-static Coordinate transformRoomOnLoad(const uint32_t version, Coordinate c)
+NODISCARD static Coordinate transformRoomOnLoad(const uint32_t version, Coordinate c)
 {
     if (version <= MMAPPER_2_5_1_SCHEMA) {
         return convertESUtoENU(c);
@@ -138,7 +138,7 @@ void MapStorage::newData()
     emit onNewData();
 }
 
-class LoadRoomHelper final
+class NODISCARD LoadRoomHelper final
 {
 private:
     QDataStream &stream;
@@ -168,7 +168,7 @@ public:
     }
 
 public:
-    auto read_u8()
+    NODISCARD auto read_u8()
     {
         uint8_t result;
         stream >> result;
@@ -176,7 +176,7 @@ public:
         return result;
     }
 
-    auto read_u16()
+    NODISCARD auto read_u16()
     {
         uint16_t result;
         stream >> result;
@@ -184,14 +184,14 @@ public:
         return result;
     }
 
-    auto read_u32()
+    NODISCARD auto read_u32()
     {
         uint32_t result;
         stream >> result;
         check_status();
         return result;
     }
-    auto read_i32()
+    NODISCARD auto read_i32()
     {
         int32_t result;
         stream >> result;
@@ -199,7 +199,7 @@ public:
         return result;
     }
 
-    auto read_string()
+    NODISCARD auto read_string()
     {
         QString result;
         stream >> result;
@@ -207,7 +207,7 @@ public:
         return result;
     }
 
-    auto read_datetime()
+    NODISCARD auto read_datetime()
     {
         QDateTime result;
         stream >> result;
@@ -215,7 +215,7 @@ public:
         return result;
     }
 
-    Coordinate readCoord3d()
+    NODISCARD Coordinate readCoord3d()
     {
         const auto x = read_i32();
         const auto y = read_i32();
@@ -244,7 +244,7 @@ E serialize(const uint32_t value)
     return static_cast<E>(value);
 }
 
-static RoomTerrainEnum serialize(const uint32_t value)
+NODISCARD static RoomTerrainEnum serialize(const uint32_t value)
 {
     if (value >= NUM_ROOM_TERRAIN_TYPES) {
         static std::once_flag flag;
@@ -498,13 +498,15 @@ void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, uint32_t version)
     auto helper = LoadRoomHelper{stream};
 
     if (version <= MMAPPER_2_5_1_SCHEMA) {
-        helper.read_string(); /* value ignored; called for side effect */
+        MAYBE_UNUSED const auto ignored = //
+            helper.read_string();         /* value ignored; called for side effect */
     }
 
     mark->setText(InfoMarkText(helper.read_string()));
 
     if (version <= MMAPPER_2_5_1_SCHEMA) {
-        helper.read_datetime(); /* value ignored; called for side effect */
+        MAYBE_UNUSED const auto ignored = //
+            helper.read_datetime();       /* value ignored; called for side effect */
     }
 
     const auto type = [](const uint8_t value) {

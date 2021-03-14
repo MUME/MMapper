@@ -329,7 +329,7 @@ Abbrev getParserCommandName(const ExitFlagEnum x)
 #undef CASE3
 }
 
-static bool isCommand(const std::string &str, Abbrev abbrev)
+NODISCARD static bool isCommand(const std::string &str, Abbrev abbrev)
 {
     if (!abbrev)
         return false;
@@ -342,7 +342,7 @@ static bool isCommand(const std::string &str, Abbrev abbrev)
     return abbrev.matches(word);
 }
 
-static bool isCommand(const std::string &str, const CommandEnum cmd)
+NODISCARD static bool isCommand(const std::string &str, const CommandEnum cmd)
 {
     switch (cmd) {
     case CommandEnum::NORTH:

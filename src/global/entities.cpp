@@ -17,22 +17,22 @@
 
 #include "RuleOf5.h"
 
-static bool isLatin1(const QChar &qc)
+NODISCARD static bool isLatin1(const QChar &qc)
 {
     return qc.unicode() < 256;
 }
 
-static bool isLatin1Digit(const QChar &qc)
+NODISCARD static bool isLatin1Digit(const QChar &qc)
 {
     return isLatin1(qc) && isdigit(qc.toLatin1());
 }
 
-static bool isLatin1HexDigit(const QChar &qc)
+NODISCARD static bool isLatin1HexDigit(const QChar &qc)
 {
     return isLatin1(qc) && isxdigit(qc.toLatin1());
 }
 
-static bool isLatin1Alpha(const QChar &qc)
+NODISCARD static bool isLatin1Alpha(const QChar &qc)
 {
     return isLatin1(qc) && isalpha(qc.toLatin1());
 }
@@ -316,7 +316,7 @@ namespace entities {
  */
 
 // only bother with the latin1 subset
-static bool isNameStartChar(const QChar c)
+NODISCARD static bool isNameStartChar(const QChar c)
 {
     if (c == ':' || c == '_' || isLatin1Alpha(c))
         return true;
@@ -325,7 +325,7 @@ static bool isNameStartChar(const QChar c)
 }
 
 // only bother with the latin1 subset
-static bool isNameChar(const QChar c)
+NODISCARD static bool isNameChar(const QChar c)
 {
     return isNameStartChar(c) || c == '-' || c == '.' || isLatin1Digit(c) || c.unicode() == 0xb7;
 }
@@ -335,12 +335,12 @@ static bool isNameChar(const QChar c)
 #define X(name, value) XID_##name = value
 #define SEP_COMMA() ,
 
-enum class XmlEntityEnum : uint16_t { INVALID = 0, X_FOREACH_ENTITY(X, SEP_COMMA) };
+enum class NODISCARD XmlEntityEnum : uint16_t { INVALID = 0, X_FOREACH_ENTITY(X, SEP_COMMA) };
 
 #undef X
 #undef SEP_COMMA
 
-struct XmlEntity final
+struct NODISCARD XmlEntity final
 {
     QByteArray short_name;
     QByteArray full_name;
@@ -359,9 +359,9 @@ struct XmlEntity final
 
 using OptQByteArray = std::optional<QByteArray>;
 
-struct EntityTable final
+struct NODISCARD EntityTable final
 {
-    struct MyHash final
+    struct NODISCARD MyHash final
     {
         uint32_t operator()(const QString &qs) const { return qHash(qs); }
     };
@@ -376,7 +376,7 @@ struct EntityTable final
     OptQByteArray lookup_entity_full_name_by_id(XmlEntityEnum id) const;
 };
 
-static EntityTable initEntityTable()
+NODISCARD static EntityTable initEntityTable()
 {
     // prefixed enum class is an antipattern, but we may not be able to avoid it in this case.
 #define X(name, value) \
@@ -399,7 +399,7 @@ static EntityTable initEntityTable()
     return entityTable;
 }
 
-static const EntityTable &getEntityTable()
+NODISCARD static const EntityTable &getEntityTable()
 {
     static const auto g_entityTable = initEntityTable();
     return g_entityTable;
@@ -441,7 +441,7 @@ OptQByteArray EntityTable::lookup_entity_full_name_by_id(const XmlEntityEnum id)
     return std::nullopt;
 }
 
-static const char *translit(const QChar qc)
+NODISCARD static const char *translit(const QChar qc)
 {
     // not fully implemented
     // note: some of these might be better off just giving the entity
@@ -618,7 +618,7 @@ auto entities::encode(const DecodedUnicode &name, const EncodingEnum encodingTyp
     return out;
 }
 
-static OptQChar tryParseDec(const QChar *const beg, const QChar *const end)
+NODISCARD static OptQChar tryParseDec(const QChar *const beg, const QChar *const end)
 {
     if (beg >= end || !isLatin1Digit(*beg))
         return OptQChar{};
@@ -646,7 +646,7 @@ static OptQChar tryParseDec(const QChar *const beg, const QChar *const end)
     return OptQChar{val};
 }
 
-static OptQChar tryParseHex(const QChar *const beg, const QChar *const end)
+NODISCARD static OptQChar tryParseHex(const QChar *const beg, const QChar *const end)
 {
     if (beg >= end || !isLatin1HexDigit(*beg))
         return OptQChar{};
@@ -758,7 +758,7 @@ void entities::foreachEntity(const QStringRef &input, EntityCallback &callback)
 auto entities::decode(const EncodedLatin1 &input) -> DecodedUnicode
 {
     static constexpr const char unprintable = '?';
-    struct MyEntityCallback final : EntityCallback
+    struct NODISCARD MyEntityCallback final : EntityCallback
     {
         const EncodedLatin1 &input;
         DecodedUnicode out;

@@ -11,19 +11,21 @@
 
 class Room;
 
-struct RoomNameTag final
+namespace tags {
+struct NODISCARD RoomNameTag final
 {};
-struct RoomDynamicDescTag final
+struct NODISCARD RoomDynamicDescTag final
 {};
-struct RoomStaticDescTag final
+struct NODISCARD RoomStaticDescTag final
 {};
-struct RoomNoteTag final
+struct NODISCARD RoomNoteTag final
 {};
+} // namespace tags
 
-using RoomName = TaggedString<RoomNameTag>;
-using RoomDynamicDesc = TaggedString<RoomDynamicDescTag>;
-using RoomStaticDesc = TaggedString<RoomStaticDescTag>;
-using RoomNote = TaggedString<RoomNoteTag>;
+using RoomName = TaggedString<tags::RoomNameTag>;
+using RoomDynamicDesc = TaggedString<tags::RoomDynamicDescTag>;
+using RoomStaticDesc = TaggedString<tags::RoomStaticDescTag>;
+using RoomNote = TaggedString<tags::RoomNoteTag>;
 
 #define X_FOREACH_RoomTerrainEnum(X) \
     X(UNDEFINED) \
@@ -44,7 +46,7 @@ using RoomNote = TaggedString<RoomNoteTag>;
     X(DEATHTRAP)
 
 #define DECL(X) X,
-enum class RoomTerrainEnum { X_FOREACH_RoomTerrainEnum(DECL) };
+enum class NODISCARD RoomTerrainEnum { X_FOREACH_RoomTerrainEnum(DECL) };
 #undef DECL
 static_assert(RoomTerrainEnum::UNDEFINED == RoomTerrainEnum{0});
 #define ADD(X) +1
@@ -60,7 +62,7 @@ DEFINE_ENUM_COUNT(RoomTerrainEnum, NUM_ROOM_TERRAIN_TYPES)
     X(NEUTRAL) \
     X(EVIL)
 #define DECL(X) X,
-enum class RoomAlignEnum { X_FOREACH_RoomAlignEnum(DECL) };
+enum class NODISCARD RoomAlignEnum { X_FOREACH_RoomAlignEnum(DECL) };
 #undef DECL
 #define ADD(X) +1
 static constexpr const int NUM_ALIGN_TYPES = (X_FOREACH_RoomAlignEnum(ADD));
@@ -87,10 +89,10 @@ static_assert(NUM_ALIGN_TYPES == 4);
 
 // REVISIT: Consider just using a single tri-state bool enums for these?
 #define DECL(X) X,
-enum class RoomLightEnum { X_FOREACH_RoomLightEnum(DECL) };
-enum class RoomPortableEnum { X_FOREACH_RoomPortableEnum(DECL) };
-enum class RoomRidableEnum { X_FOREACH_RoomRidableEnum(DECL) };
-enum class RoomSundeathEnum { X_FOREACH_RoomSundeathEnum(DECL) };
+enum class NODISCARD RoomLightEnum { X_FOREACH_RoomLightEnum(DECL) };
+enum class NODISCARD RoomPortableEnum { X_FOREACH_RoomPortableEnum(DECL) };
+enum class NODISCARD RoomRidableEnum { X_FOREACH_RoomRidableEnum(DECL) };
+enum class NODISCARD RoomSundeathEnum { X_FOREACH_RoomSundeathEnum(DECL) };
 #undef DECL
 
 #define ADD(X) +1
@@ -128,7 +130,7 @@ CHECK3(SUNDEATH, Sundeath)
     X(ELITE_MOB) \
     X(SUPER_MOB)
 
-enum class RoomMobFlagEnum {
+enum class NODISCARD RoomMobFlagEnum {
 #define DECL(X) X,
     X_FOREACH_ROOM_MOB_FLAG(DECL)
 #undef DECL
@@ -139,7 +141,7 @@ static constexpr const int NUM_ROOM_MOB_FLAGS = (X_FOREACH_ROOM_MOB_FLAG(ADD));
 static_assert(NUM_ROOM_MOB_FLAGS == 17);
 DEFINE_ENUM_COUNT(RoomMobFlagEnum, NUM_ROOM_MOB_FLAGS)
 
-class RoomMobFlags final : public enums::Flags<RoomMobFlags, RoomMobFlagEnum, uint32_t>
+class NODISCARD RoomMobFlags final : public enums::Flags<RoomMobFlags, RoomMobFlagEnum, uint32_t>
 {
     using Flags::Flags;
 };
@@ -170,7 +172,7 @@ class RoomMobFlags final : public enums::Flags<RoomMobFlags, RoomMobFlagEnum, ui
     X(COACH) \
     X(FERRY)
 
-enum class RoomLoadFlagEnum {
+enum class NODISCARD RoomLoadFlagEnum {
 #define DECL(X) X,
     X_FOREACH_ROOM_LOAD_FLAG(DECL)
 #undef DECL
@@ -179,7 +181,7 @@ static constexpr const int NUM_ROOM_LOAD_FLAGS = static_cast<int>(RoomLoadFlagEn
 static_assert(NUM_ROOM_LOAD_FLAGS == 24);
 DEFINE_ENUM_COUNT(RoomLoadFlagEnum, NUM_ROOM_LOAD_FLAGS)
 
-class RoomLoadFlags final : public enums::Flags<RoomLoadFlags, RoomLoadFlagEnum, uint32_t>
+class NODISCARD RoomLoadFlags final : public enums::Flags<RoomLoadFlags, RoomLoadFlagEnum, uint32_t>
 {
     using Flags::Flags;
 };
@@ -201,7 +203,7 @@ class RoomLoadFlags final : public enums::Flags<RoomLoadFlags, RoomLoadFlagEnum,
     X(RESERVED)
 
 #define DECL(X) X,
-enum class RoomFieldEnum { X_FOREACH_ROOM_FIELD_ENUM(DECL) };
+enum class NODISCARD RoomFieldEnum { X_FOREACH_ROOM_FIELD_ENUM(DECL) };
 #undef DECL
 
 #define ADD(X) +1
@@ -211,12 +213,13 @@ static constexpr const int NUM_ROOM_FIELDS = (X_FOREACH_ROOM_FIELD_ENUM(ADD));
 static_assert(NUM_ROOM_FIELDS == static_cast<int>(RoomFieldEnum::RESERVED) + 1);
 static_assert(NUM_ROOM_FIELDS == 13);
 DEFINE_ENUM_COUNT(RoomFieldEnum, NUM_ROOM_FIELDS)
-class RoomFields final : public enums::Flags<RoomFields, RoomFieldEnum, uint16_t>
+class NODISCARD RoomFields final : public enums::Flags<RoomFields, RoomFieldEnum, uint16_t>
 {
     using Flags::Flags;
 };
 
-inline constexpr RoomFields operator|(const RoomFieldEnum lhs, const RoomFieldEnum rhs) noexcept
+NODISCARD inline constexpr RoomFields operator|(const RoomFieldEnum lhs,
+                                                const RoomFieldEnum rhs) noexcept
 {
     return RoomFields{lhs} | RoomFields{rhs};
 }

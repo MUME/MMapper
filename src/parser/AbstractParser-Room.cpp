@@ -28,7 +28,7 @@
 static constexpr const auto staticRoomFields = RoomFieldEnum::NAME | RoomFieldEnum::DESC;
 static constexpr const auto dynamicRoomFields = staticRoomFields | RoomFieldEnum::DYNAMIC_DESC;
 
-static const char *getFlagName(const ExitFlagEnum flag)
+NODISCARD static const char *getFlagName(const ExitFlagEnum flag)
 {
 #define CASE(UPPER, s) \
     do { \
@@ -53,7 +53,7 @@ static const char *getFlagName(const ExitFlagEnum flag)
 #undef CASE
 }
 
-static const char *getFlagName(const DoorFlagEnum flag)
+NODISCARD static const char *getFlagName(const DoorFlagEnum flag)
 {
 #define CASE(UPPER, s) \
     do { \
@@ -77,7 +77,7 @@ static const char *getFlagName(const DoorFlagEnum flag)
 #undef CASE
 }
 
-static std::optional<ExitDirEnum> findLowercaseDirAbbrev(const std::string_view &input)
+NODISCARD static std::optional<ExitDirEnum> findLowercaseDirAbbrev(const std::string_view &input)
 {
     if (input.empty()) {
         return std::nullopt;
@@ -92,7 +92,7 @@ static std::optional<ExitDirEnum> findLowercaseDirAbbrev(const std::string_view 
     return std::nullopt;
 }
 
-static std::optional<RoomFieldVariant> evalRoomField(const std::string_view &args)
+NODISCARD static std::optional<RoomFieldVariant> evalRoomField(const std::string_view &args)
 {
     using ParserRoomFieldMap = std::map<std::string, RoomFieldVariant>;
     static const auto map = []() -> ParserRoomFieldMap {
@@ -134,7 +134,7 @@ static std::optional<RoomFieldVariant> evalRoomField(const std::string_view &arg
     return it->second;
 }
 
-class ArgDirection final : public syntax::IArgument
+class NODISCARD ArgDirection final : public syntax::IArgument
 {
 private:
     syntax::MatchResult virt_match(const syntax::ParserInput &input,
@@ -169,7 +169,7 @@ std::ostream &ArgDirection::virt_to_stream(std::ostream &os) const
     return os << "<direction>";
 }
 
-static bool isAddFlag(StringView &sv)
+NODISCARD static bool isAddFlag(StringView &sv)
 {
     switch (sv.firstChar()) {
     case '-':
@@ -183,7 +183,7 @@ static bool isAddFlag(StringView &sv)
     }
 }
 
-class ArgDoorFlag final : public syntax::IArgument
+class NODISCARD ArgDoorFlag final : public syntax::IArgument
 {
 private:
     syntax::MatchResult virt_match(const syntax::ParserInput &input,
@@ -226,7 +226,7 @@ std::ostream &ArgDoorFlag::virt_to_stream(std::ostream &os) const
     return os << "(+|-)<doorflag>";
 }
 
-class ArgExitFlag final : public syntax::IArgument
+class NODISCARD ArgExitFlag final : public syntax::IArgument
 {
 private:
     syntax::MatchResult virt_match(const syntax::ParserInput &input,
@@ -269,7 +269,7 @@ std::ostream &ArgExitFlag::virt_to_stream(std::ostream &os) const
     return os << "(+|-)<exitflag>";
 }
 
-class ArgRoomFlag final : public syntax::IArgument
+class NODISCARD ArgRoomFlag final : public syntax::IArgument
 {
 private:
     syntax::MatchResult virt_match(const syntax::ParserInput &input,

@@ -22,7 +22,7 @@ class CGroupCommunicator;
 class CGroup;
 class Mmapper2Group;
 class CommandQueue;
-enum class GroupManagerStateEnum { Off = 0, Client = 1, Server = 2 };
+enum class NODISCARD GroupManagerStateEnum { Off = 0, Client = 1, Server = 2 };
 
 class Mmapper2Group final : public QObject
 {
@@ -64,13 +64,13 @@ public:
     void start();
     void stop();
 
-    GroupManagerStateEnum getMode();
+    NODISCARD GroupManagerStateEnum getMode();
 
-    GroupAuthority *getAuthority() { return authority.get(); }
-    CGroup *getGroup() { return group.get(); }
+    NODISCARD GroupAuthority *getAuthority() { return authority.get(); }
+    NODISCARD CGroup *getGroup() { return group.get(); }
 
 public:
-    GroupManagerApi &getGroupManagerApi() { return m_groupManagerApi; }
+    NODISCARD GroupManagerApi &getGroupManagerApi() { return m_groupManagerApi; }
 
 private:
     WeakHandleLifetime<Mmapper2Group> m_weakHandleLifetime{*this};

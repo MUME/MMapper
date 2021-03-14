@@ -7,7 +7,9 @@
 #include <variant>
 #include <vector>
 
-struct UnquoteFailureReason final : public std::string
+#include "macros.h"
+
+struct NODISCARD UnquoteFailureReason final : public std::string
 {
     explicit UnquoteFailureReason(std::string s)
         : basic_string(std::move(s))
@@ -15,7 +17,7 @@ struct UnquoteFailureReason final : public std::string
 };
 
 using VectorOfStrings = std::vector<std::string>;
-struct UnquoteResult final
+struct NODISCARD UnquoteResult final
 {
 private:
     std::variant<VectorOfStrings, UnquoteFailureReason> m_var;
@@ -28,16 +30,19 @@ public:
         : m_var(std::move(var))
     {}
 
-    bool has_value() const { return m_var.index() == 0; }
+    NODISCARD bool has_value() const { return m_var.index() == 0; }
     explicit operator bool() const { return has_value(); }
 
-    const VectorOfStrings &getVectorOfStrings() const { return std::get<0>(m_var); }
-    const UnquoteFailureReason &getUnquoteFailureReason() const { return std::get<1>(m_var); }
+    NODISCARD const VectorOfStrings &getVectorOfStrings() const { return std::get<0>(m_var); }
+    NODISCARD const UnquoteFailureReason &getUnquoteFailureReason() const
+    {
+        return std::get<1>(m_var);
+    }
 };
 
-UnquoteResult unquote(const std::string_view &input,
-                      bool allowUnbalancedQuotes,
-                      bool allowEmbeddedNull);
+NODISCARD extern UnquoteResult unquote(const std::string_view &input,
+                                       bool allowUnbalancedQuotes,
+                                       bool allowEmbeddedNull);
 
 namespace test {
 void test_unquote() noexcept;

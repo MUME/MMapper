@@ -16,7 +16,7 @@ class Room;
 class RoomAdmin;
 struct RoomId;
 
-struct MouseSel final
+struct NODISCARD MouseSel final
 {
     Coordinate2f pos;
     int layer = 0;
@@ -27,44 +27,49 @@ struct MouseSel final
         , layer{layer}
     {}
 
-    Coordinate getCoordinate() const { return Coordinate{pos.truncate(), layer}; }
-    Coordinate getScaledCoordinate(const float xy_scale) const
+    NODISCARD Coordinate getCoordinate() const { return Coordinate{pos.truncate(), layer}; }
+    NODISCARD Coordinate getScaledCoordinate(const float xy_scale) const
     {
         return Coordinate{(pos * xy_scale).truncate(), layer};
     }
 
-    glm::vec3 to_vec3() const { return glm::vec3{pos.to_vec2(), static_cast<float>(layer)}; }
+    NODISCARD glm::vec3 to_vec3() const
+    {
+        return glm::vec3{pos.to_vec2(), static_cast<float>(layer)};
+    }
 };
 
-class ConnectionSelection final : public RoomRecipient,
-                                  public std::enable_shared_from_this<ConnectionSelection>
+class NODISCARD ConnectionSelection final : public RoomRecipient,
+                                            public std::enable_shared_from_this<ConnectionSelection>
 {
 public:
-    struct ConnectionDescriptor final
+    struct NODISCARD ConnectionDescriptor final
     {
         const Room *room = nullptr;
         ExitDirEnum direction = ExitDirEnum::NONE;
 
-        static bool isTwoWay(const ConnectionDescriptor &first, const ConnectionDescriptor &second);
-        static bool isOneWay(const ConnectionDescriptor &first, const ConnectionDescriptor &second);
-        static bool isCompleteExisting(const ConnectionDescriptor &first,
+        NODISCARD static bool isTwoWay(const ConnectionDescriptor &first,
                                        const ConnectionDescriptor &second);
-        static bool isCompleteNew(const ConnectionDescriptor &first,
-                                  const ConnectionDescriptor &second);
+        NODISCARD static bool isOneWay(const ConnectionDescriptor &first,
+                                       const ConnectionDescriptor &second);
+        NODISCARD static bool isCompleteExisting(const ConnectionDescriptor &first,
+                                                 const ConnectionDescriptor &second);
+        NODISCARD static bool isCompleteNew(const ConnectionDescriptor &first,
+                                            const ConnectionDescriptor &second);
     };
 
 private:
-    struct this_is_private final
+    struct NODISCARD this_is_private final
     {
         explicit this_is_private(int) {}
     };
 
 public:
-    static std::shared_ptr<ConnectionSelection> alloc(MapFrontend *mf, const MouseSel &sel)
+    NODISCARD static std::shared_ptr<ConnectionSelection> alloc(MapFrontend *mf, const MouseSel &sel)
     {
         return std::make_shared<ConnectionSelection>(this_is_private{0}, mf, sel);
     }
-    static std::shared_ptr<ConnectionSelection> alloc()
+    NODISCARD static std::shared_ptr<ConnectionSelection> alloc()
     {
         return std::make_shared<ConnectionSelection>(this_is_private{0});
     }
@@ -79,8 +84,8 @@ public:
     void setSecond(MapFrontend *mf, const MouseSel &sel);
     void removeSecond();
 
-    ConnectionDescriptor getFirst() const;
-    ConnectionDescriptor getSecond() const;
+    NODISCARD ConnectionDescriptor getFirst() const;
+    NODISCARD ConnectionDescriptor getSecond() const;
 
     // Valid just means the pointers aren't null.
     bool isValid() const;
@@ -90,17 +95,17 @@ public:
     void receiveRoom(RoomAdmin *admin, const Room *aRoom) override;
 
     // Complete means it actually describes a useful oneway or twoway exit.
-    bool isCompleteExisting() const
+    NODISCARD bool isCompleteExisting() const
     {
         return isValid() && ConnectionDescriptor::isCompleteExisting(getFirst(), getSecond());
     }
-    bool isCompleteNew() const
+    NODISCARD bool isCompleteNew() const
     {
         return isValid() && ConnectionDescriptor::isCompleteNew(getFirst(), getSecond());
     }
 
 private:
-    static ExitDirEnum computeDirection(const Coordinate2f &mouse_f);
+    NODISCARD static ExitDirEnum computeDirection(const Coordinate2f &mouse_f);
 
     // REVISIT: give these enum names?
     MMapper::Array<ConnectionDescriptor, 2> m_connectionDescriptor;

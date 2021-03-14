@@ -50,7 +50,7 @@ bool MmpMapStorage::mergeData()
     return false;
 }
 
-static QString getTerrainTypeName(const RoomTerrainEnum x)
+NODISCARD static QString getTerrainTypeName(const RoomTerrainEnum x)
 {
 #define CASE2(UPPER, PrettyName) \
     do { \
@@ -79,7 +79,7 @@ static QString getTerrainTypeName(const RoomTerrainEnum x)
 #undef CASE2
 }
 
-static QString getTerrainTypeColor(const RoomTerrainEnum x)
+NODISCARD static QString getTerrainTypeColor(const RoomTerrainEnum x)
 {
 #define CASE2(UPPER, Color) \
     do { \
@@ -108,7 +108,7 @@ static QString getTerrainTypeColor(const RoomTerrainEnum x)
 #undef CASE2
 }
 
-static QString toMmpRoomId(const RoomId &roomId)
+NODISCARD static QString toMmpRoomId(const RoomId &roomId)
 {
     return QString("%1").arg(roomId.asUint32() + 1);
 }

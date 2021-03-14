@@ -107,9 +107,11 @@ void ClientTelnet::onWindowSizeChanged(int x, int y)
 
 void ClientTelnet::onReadyRead()
 {
-    io::readAllAvailable(socket, buffer, [this](const QByteArray &byteArray) {
-        onReadInternal(byteArray);
-    });
+    // REVISIT: check return value?
+    MAYBE_UNUSED const auto ignored = //
+        io::readAllAvailable(socket, buffer, [this](const QByteArray &byteArray) {
+            onReadInternal(byteArray);
+        });
 }
 
 void ClientTelnet::sendToMapper(const QByteArray &data, bool /*goAhead*/)

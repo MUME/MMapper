@@ -7,6 +7,8 @@
 
 #include <QDialog>
 
+#include "../global/macros.h"
+
 namespace Ui {
 class AnsiColorDialog;
 }
@@ -20,9 +22,9 @@ public:
     explicit AnsiColorDialog(QWidget *parent = nullptr);
     ~AnsiColorDialog() override;
 
-    QString getAnsiString() const { return ansiString; }
+    NODISCARD QString getAnsiString() const { return ansiString; }
 
-    static QString getColor(const QString &ansiString, QWidget *parent = nullptr);
+    NODISCARD static QString getColor(const QString &ansiString, QWidget *parent = nullptr);
 
 public slots:
     void ansiComboChange();

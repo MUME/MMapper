@@ -16,8 +16,8 @@
 
 #include "utils.h"
 
-bool containsAnsi(const QStringRef &str);
-bool containsAnsi(const QString &str);
+NODISCARD bool containsAnsi(const QStringRef &str);
+NODISCARD bool containsAnsi(const QString &str);
 
 // Callback is void(int pos)
 template<typename Callback>
@@ -100,10 +100,10 @@ void foreachAnsi(const QString &line, Callback &&callback)
     foreachAnsi(line.midRef(0), std::forward<Callback>(callback));
 }
 
-bool isAnsiColor(QStringRef ansi);
-bool isAnsiColor(const QString &ansi);
+NODISCARD extern bool isAnsiColor(QStringRef ansi);
+NODISCARD extern bool isAnsiColor(const QString &ansi);
 
-class AnsiColorParser final
+class NODISCARD AnsiColorParser final
 {
 private:
     void *const data_;
@@ -157,29 +157,29 @@ void ansiForeachColorCode(const QString &ansi, Callback &&callback)
     ansiForeachColorCode(ansi.midRef(0), std::forward<Callback>(callback));
 }
 
-bool isValidAnsiColor(const QStringRef &ansi);
-bool isValidAnsiColor(const QString &ansi);
+NODISCARD extern bool isValidAnsiColor(const QStringRef &ansi);
+NODISCARD extern bool isValidAnsiColor(const QString &ansi);
 
-int countLines(const QString &input);
-int countLines(const QStringRef &input);
+NODISCARD extern int countLines(const QString &input);
+NODISCARD extern int countLines(const QStringRef &input);
 
-int measureExpandedTabsOneLine(const QStringRef &line, int starting_at);
-int measureExpandedTabsOneLine(const QString &line, int starting_at);
-int measureExpandedTabsMultiline(const QStringRef &old);
-int measureExpandedTabsMultiline(const QString &old);
+NODISCARD extern int measureExpandedTabsOneLine(const QStringRef &line, int starting_at);
+NODISCARD extern int measureExpandedTabsOneLine(const QString &line, int starting_at);
+NODISCARD extern int measureExpandedTabsMultiline(const QStringRef &old);
+NODISCARD extern int measureExpandedTabsMultiline(const QString &old);
 
-int findTrailingWhitespace(const QStringRef &line);
-int findTrailingWhitespace(const QString &line);
+NODISCARD extern int findTrailingWhitespace(const QStringRef &line);
+NODISCARD extern int findTrailingWhitespace(const QString &line);
 
-class TextBuffer final
+class NODISCARD TextBuffer final
 {
 private:
     QString text_;
 
 public:
     void reserve(int len) { text_.reserve(len); }
-    const QString &getQString() const { return text_; }
-    auto length() const { return text_.length(); }
+    NODISCARD const QString &getQString() const { return text_; }
+    NODISCARD auto length() const { return text_.length(); }
 
 public:
     void append(char c) { text_.append(c); }
@@ -194,11 +194,11 @@ public:
     void appendWithoutDuplicateSpaces(QStringRef line);
 
 public:
-    bool isEmpty() const;
-    bool hasTrailingNewline() const;
+    NODISCARD bool isEmpty() const;
+    NODISCARD bool hasTrailingNewline() const;
 };
 
-class AnsiString final
+class NODISCARD AnsiString final
 {
 private:
     std::string buffer_;
@@ -206,15 +206,15 @@ private:
 public:
     AnsiString();
     void add_code(int code);
-    AnsiString copy_as_reset() const;
+    NODISCARD AnsiString copy_as_reset() const;
 
 public:
-    inline bool isEmpty() const { return buffer_.empty(); }
-    inline int size() const { return static_cast<int>(buffer_.size()); }
-    const char *c_str() const { return buffer_.c_str(); }
+    NODISCARD inline bool isEmpty() const { return buffer_.empty(); }
+    NODISCARD inline int size() const { return static_cast<int>(buffer_.size()); }
+    NODISCARD const char *c_str() const { return buffer_.c_str(); }
 
 public:
-    static AnsiString get_reset_string();
+    NODISCARD static AnsiString get_reset_string();
 };
 
 #define XFOREACH_ANSI_BIT(X) \
@@ -225,7 +225,7 @@ public:
     X(BLINK, blink, 5) \
     X(REVERSE, reverse, 7)
 
-struct raw_ansi final
+struct NODISCARD raw_ansi final
 {
 #define X(UPPER, lower, n) uint16_t lower : 1;
     XFOREACH_ANSI_BIT(X)
@@ -257,32 +257,32 @@ struct raw_ansi final
 
     void normalize();
 
-    uint16_t get_bits_raw() const;
-    uint16_t get_bits_normalized() const;
+    NODISCARD uint16_t get_bits_raw() const;
+    NODISCARD uint16_t get_bits_normalized() const;
 
     bool operator==(const raw_ansi &other) const;
     bool operator!=(const raw_ansi &other) const { return !operator==(other); }
-    static raw_ansi difference(const raw_ansi &a, const raw_ansi &b);
+    NODISCARD static raw_ansi difference(const raw_ansi &a, const raw_ansi &b);
 
-    AnsiString asAnsiString() const { return getAnsiString(*this); }
-    static AnsiString getAnsiString(raw_ansi value);
-    static AnsiString transition(const raw_ansi &from, const raw_ansi &to);
+    NODISCARD AnsiString asAnsiString() const { return getAnsiString(*this); }
+    NODISCARD static AnsiString getAnsiString(raw_ansi value);
+    NODISCARD static AnsiString transition(const raw_ansi &from, const raw_ansi &to);
 
-    static const char *describe(int code);
+    NODISCARD static const char *describe(int code);
 
 private:
     void report_fg(AnsiString &output) const;
     void report_bg(AnsiString &output) const;
 };
 
-class Ansi final
+class NODISCARD Ansi final
 {
 private:
     raw_ansi ansi_;
 
 public:
     void process_code(int code);
-    inline raw_ansi get_raw() const { return ansi_; }
+    NODISCARD inline raw_ansi get_raw() const { return ansi_; }
     bool operator==(const Ansi &other) const { return ansi_ == other.ansi_; }
     bool operator!=(const Ansi &other) const { return ansi_ != other.ansi_; }
 };
@@ -299,8 +299,8 @@ public:
  *    the function doesn't return a "current" ansi color.
  * 6. Assumes UNIX-style newlines (LF only, not CRLF).
  */
-TextBuffer normalizeAnsi(const QStringRef &);
-TextBuffer normalizeAnsi(const QString &str);
+NODISCARD TextBuffer normalizeAnsi(const QStringRef &);
+NODISCARD TextBuffer normalizeAnsi(const QString &str);
 
 #define DEFINE_CHAR_CONST(NAME, val) \
     static constexpr const char C_##NAME{(val)}; \
@@ -323,12 +323,12 @@ static_assert(C_SPACE == 0x20);
 
 #undef DEFINE_CHAR_CONST
 
-class AnsiStringToken final
+class NODISCARD AnsiStringToken final
 {
 public:
     using size_type = decltype(std::declval<QString>().size());
 
-    enum class TokenTypeEnum { ANSI, CONTROL, NEWLINE, SPACE, WORD };
+    enum class NODISCARD TokenTypeEnum { ANSI, CONTROL, NEWLINE, SPACE, WORD };
     TokenTypeEnum type = TokenTypeEnum::ANSI; // There is no good default value.
 
 private:
@@ -342,30 +342,30 @@ public:
                              const QString &_text,
                              size_type _offset,
                              size_type _length);
-    size_type length() const { return length_; }
-    size_type start_offset() const { return offset_; }
-    size_type end_offset() const { return offset_ + length_; }
+    NODISCARD size_type length() const { return length_; }
+    NODISCARD size_type start_offset() const { return offset_; }
+    NODISCARD size_type end_offset() const { return offset_ + length_; }
 
 public:
-    QChar at(const size_type pos) const
+    NODISCARD QChar at(const size_type pos) const
     {
         assert(isClamped(pos, 0, length_));
         return text_->at(offset_ + pos);
     }
-    QChar operator[](const size_type pos) const { return at(pos); }
+    NODISCARD QChar operator[](const size_type pos) const { return at(pos); }
 
 public:
-    auto begin() const { return text_->begin() + offset_; }
-    auto end() const { return begin() + length_; }
+    NODISCARD auto begin() const { return text_->begin() + offset_; }
+    NODISCARD auto end() const { return begin() + length_; }
 
 public:
-    QStringRef getQStringRef() const;
-    bool isAnsiCsi() const;
+    NODISCARD QStringRef getQStringRef() const;
+    NODISCARD bool isAnsiCsi() const;
 };
 
-struct AnsiTokenizer final
+struct NODISCARD AnsiTokenizer final
 {
-    class Iterator final
+    class NODISCARD Iterator final
     {
     public:
         using size_type = AnsiStringToken::size_type;
@@ -411,16 +411,16 @@ struct AnsiTokenizer final
         AnsiStringToken operator*() { return getCurrent(); }
         Iterator &operator++()
         {
-            next();
+            MAYBE_UNUSED const auto ignored = next();
             return *this;
         }
 
-        bool hasNext() const { return pos_ < str_.size(); }
-        AnsiStringToken next();
-        AnsiStringToken getCurrent();
+        NODISCARD bool hasNext() const { return pos_ < str_.size(); }
+        NODISCARD AnsiStringToken next();
+        NODISCARD AnsiStringToken getCurrent();
 
     private:
-        enum class ResultEnum { KEEPGOING, STOP };
+        enum class NODISCARD ResultEnum { KEEPGOING, STOP };
 
         template<typename Callback>
         size_type skip(Callback &&check)
@@ -436,7 +436,10 @@ struct AnsiTokenizer final
             return it - start;
         }
         size_type skip_ansi();
-        static bool isControl(const QChar &c) { return std::iscntrl(c.toLatin1()) && c != QC_NBSP; }
+        NODISCARD static bool isControl(const QChar &c)
+        {
+            return std::iscntrl(c.toLatin1()) && c != QC_NBSP;
+        }
         size_type skip_control();
         size_type skip_space();
         size_type skip_word();
@@ -448,16 +451,16 @@ struct AnsiTokenizer final
         : str_{_str}
     {}
 
-    Iterator begin() { return Iterator{str_, 0}; }
-    auto end() { return nullptr; }
+    NODISCARD Iterator begin() { return Iterator{str_, 0}; }
+    NODISCARD auto end() { return nullptr; }
 };
 
-static constexpr int tab_advance(int col)
+NODISCARD static inline constexpr int tab_advance(int col)
 {
     return 8 - (col % 8);
 }
 
-static constexpr int next_tab_stop(int col)
+NODISCARD static inline constexpr int next_tab_stop(int col)
 {
     return col + tab_advance(col);
 }
@@ -468,17 +471,17 @@ static_assert(next_tab_stop(8) == 16);
 static_assert(next_tab_stop(9) == 16);
 static_assert(next_tab_stop(15) == 16);
 
-char toLowerLatin1(char c);
-std::string toLowerLatin1(const std::string_view &str);
-bool isAbbrev(const std::string_view &abbr, const std::string_view &fullText);
-bool isPrintLatin1(char c);
-bool requiresQuote(const std::string_view &str);
+NODISCARD extern char toLowerLatin1(char c);
+NODISCARD extern std::string toLowerLatin1(const std::string_view &str);
+NODISCARD extern bool isAbbrev(const std::string_view &abbr, const std::string_view &fullText);
+NODISCARD extern bool isPrintLatin1(char c);
+NODISCARD extern bool requiresQuote(const std::string_view &str);
 std::ostream &print_char(std::ostream &os, char c, bool doubleQuote);
 std::ostream &print_char_quoted(std::ostream &os, char c);
 std::ostream &print_string_quoted(std::ostream &os, const std::string_view &sv);
 std::ostream &print_string_smartquote(std::ostream &os, const std::string_view &sv);
 
-struct QuotedChar final
+struct NODISCARD QuotedChar final
 {
 private:
     char m_c = '\0';
@@ -496,7 +499,7 @@ public:
 
 // Use this instead of std::quoted()
 // NOTE: The reason there's no QuotedStringView is because it's not possible to guard against xvalues.
-struct QuotedString final
+struct NODISCARD QuotedString final
 {
 private:
     std::string m_str;
@@ -512,7 +515,7 @@ public:
     }
 };
 
-struct SmartQuotedString final
+struct NODISCARD SmartQuotedString final
 {
 private:
     std::string m_str;
@@ -528,9 +531,9 @@ public:
     }
 };
 
-QString toQStringLatin1(const std::string_view &sv);
-QString toQStringUtf8(const std::string_view &sv);
-QByteArray toQByteArrayLatin1(const std::string_view &sv);
-QByteArray toQByteArrayUtf8(const std::string_view &sv);
-std::string toStdStringLatin1(const QString &qs);
-std::string toStdStringUtf8(const QString &qs);
+NODISCARD extern QString toQStringLatin1(const std::string_view &sv);
+NODISCARD extern QString toQStringUtf8(const std::string_view &sv);
+NODISCARD extern QByteArray toQByteArrayLatin1(const std::string_view &sv);
+NODISCARD extern QByteArray toQByteArrayUtf8(const std::string_view &sv);
+NODISCARD extern std::string toStdStringLatin1(const QString &qs);
+NODISCARD extern std::string toStdStringUtf8(const QString &qs);

@@ -10,11 +10,12 @@
 #include <QString>
 #include <QtCore>
 
+#include "../global/macros.h"
 #include "mumemoment.h"
 
 class QMetaEnum;
 
-enum class MumeClockPrecisionEnum { UNSET = -1, DAY, HOUR, MINUTE };
+enum class NODISCARD MumeClockPrecisionEnum { UNSET = -1, DAY, HOUR, MINUTE };
 
 class MumeClock final : public QObject
 {
@@ -24,30 +25,30 @@ class MumeClock final : public QObject
 
 public:
     static constexpr const int NUM_MONTHS = 12;
-    struct DawnDusk
+    struct NODISCARD DawnDusk
     {
         int dawnHour = 6;
         int duskHour = 18;
     };
-    static DawnDusk getDawnDusk(int month);
+    NODISCARD static DawnDusk getDawnDusk(int month);
 
 public:
     explicit MumeClock(int64_t mumeEpoch, QObject *parent = nullptr);
 
     explicit MumeClock(QObject *parent = nullptr);
 
-    MumeMoment getMumeMoment() const;
+    NODISCARD MumeMoment getMumeMoment() const;
 
-    MumeMoment getMumeMoment(int64_t secsSinceUnixEpoch) const;
+    NODISCARD MumeMoment getMumeMoment(int64_t secsSinceUnixEpoch) const;
 
     // REVISIT: This can't be const because it logs.
-    MumeClockPrecisionEnum getPrecision();
+    NODISCARD MumeClockPrecisionEnum getPrecision();
 
-    QString toMumeTime(const MumeMoment &moment) const;
+    NODISCARD QString toMumeTime(const MumeMoment &moment) const;
 
-    QString toCountdown(const MumeMoment &moment) const;
+    NODISCARD QString toCountdown(const MumeMoment &moment) const;
 
-    int64_t getMumeStartEpoch() const { return m_mumeStartEpoch; }
+    NODISCARD int64_t getMumeStartEpoch() const { return m_mumeStartEpoch; }
 
     enum class WestronMonthNamesEnum {
         UnknownWestronMonth = -1,

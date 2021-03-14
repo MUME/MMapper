@@ -10,9 +10,10 @@
 
 #include "Array.h"
 #include "Flags.h"
+#include "macros.h"
 
 template<typename T, typename E, size_t _SIZE = enums::CountOf<E>::value>
-class EnumIndexedArray : private MMapper::Array<T, _SIZE>
+class NODISCARD EnumIndexedArray : private MMapper::Array<T, _SIZE>
 {
 public:
     using index_type = E;
@@ -40,7 +41,7 @@ public:
     using base::end;
 
 public:
-    std::optional<E> findIndexOf(const T element) const
+    NODISCARD std::optional<E> findIndexOf(const T element) const
     {
         const auto beg = this->begin();
         const auto end = this->end();

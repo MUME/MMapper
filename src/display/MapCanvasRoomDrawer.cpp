@@ -44,28 +44,28 @@
 #include "RoadIndex.h"
 #include "mapcanvas.h" // hack, since we're now definining some of its symbols
 
-enum class StreamTypeEnum { OutFlow, InFlow };
-enum class WallTypeEnum { SOLID, DOTTED, DOOR };
+enum class NODISCARD StreamTypeEnum { OutFlow, InFlow };
+enum class NODISCARD WallTypeEnum { SOLID, DOTTED, DOOR };
 static constexpr const size_t NUM_WALL_TYPES = 3;
 DEFINE_ENUM_COUNT(WallTypeEnum, NUM_WALL_TYPES)
 
 #define LOOKUP_COLOR(X) (getConfig().colorSettings.X)
 
-static bool isTransparent(const XNamedColor &namedColor)
+NODISCARD static bool isTransparent(const XNamedColor &namedColor)
 {
     return !namedColor.isInitialized() || namedColor == LOOKUP_COLOR(TRANSPARENT);
 }
 
-static std::optional<Color> getColor(const XNamedColor &namedColor)
+NODISCARD static std::optional<Color> getColor(const XNamedColor &namedColor)
 {
     if (isTransparent(namedColor))
         return std::nullopt;
     return namedColor.getColor();
 }
 
-enum class WallOrientationEnum { HORIZONTAL, VERTICAL };
-static XNamedColor getWallNamedColorCommon(const ExitFlags &flags,
-                                           const WallOrientationEnum wallOrientation)
+enum class NODISCARD WallOrientationEnum { HORIZONTAL, VERTICAL };
+NODISCARD static XNamedColor getWallNamedColorCommon(const ExitFlags &flags,
+                                                     const WallOrientationEnum wallOrientation)
 {
     const bool isVertical = wallOrientation == WallOrientationEnum::VERTICAL;
 
@@ -103,12 +103,12 @@ static XNamedColor getWallNamedColorCommon(const ExitFlags &flags,
     }
 }
 
-static XNamedColor getWallNamedColor(const ExitFlags &flags)
+NODISCARD static XNamedColor getWallNamedColor(const ExitFlags &flags)
 {
     return getWallNamedColorCommon(flags, WallOrientationEnum::HORIZONTAL);
 }
 
-static XNamedColor getVerticalNamedColor(const ExitFlags &flags)
+NODISCARD static XNamedColor getVerticalNamedColor(const ExitFlags &flags)
 {
     return getWallNamedColorCommon(flags, WallOrientationEnum::VERTICAL);
 }
@@ -138,14 +138,14 @@ void MapCanvasRoomDrawer::generateBatches(const LayerToRooms &layerToRooms,
                            bounds);
 }
 
-struct TerrainAndTrail
+struct NODISCARD TerrainAndTrail
 {
     MMTexture *terrain = nullptr;
     MMTexture *trail = nullptr;
 };
 
-static TerrainAndTrail getRoomTerrainAndTrail(const MapCanvasTextures &textures,
-                                              const Room *const room)
+NODISCARD static TerrainAndTrail getRoomTerrainAndTrail(const MapCanvasTextures &textures,
+                                                        const Room *const room)
 {
     const auto roomTerrainType = room->getTerrainType();
     const RoadIndexMaskEnum roadIndex = getRoadIndex(*room);
@@ -161,7 +161,7 @@ static TerrainAndTrail getRoomTerrainAndTrail(const MapCanvasTextures &textures,
     return result;
 }
 
-struct IRoomVisitorCallbacks
+struct NODISCARD IRoomVisitorCallbacks
 {
     virtual ~IRoomVisitorCallbacks();
 
@@ -367,7 +367,7 @@ static void visitRooms(const RoomVector &rooms,
     }
 }
 
-struct RoomTex
+struct NODISCARD RoomTex
 {
     const Room *room = nullptr;
     MMTexture *tex = nullptr;
@@ -379,8 +379,8 @@ struct RoomTex
         deref(_tex);
     }
 
-    int priority() const { return deref(tex).getPriority(); }
-    GLuint textureId() const { return deref(tex).textureId(); }
+    NODISCARD int priority() const { return deref(tex).getPriority(); }
+    NODISCARD GLuint textureId() const { return deref(tex).textureId(); }
 
     friend bool operator<(const RoomTex &lhs, const RoomTex &rhs)
     {
@@ -389,7 +389,7 @@ struct RoomTex
     }
 };
 
-struct ColoredRoomTex : public RoomTex
+struct NODISCARD ColoredRoomTex : public RoomTex
 {
     Color color;
     ColoredRoomTex(const Room *const room, MMTexture *const tex) = delete;
@@ -412,7 +412,7 @@ struct ColoredRoomTex : public RoomTex
 //
 // Conclusion: Look elsewhere for optimization opportunities -- at least until profiling says
 // that sorting is at significant fraction of the total runtime.
-struct RoomTexVector final : public std::vector<RoomTex>
+struct NODISCARD RoomTexVector final : public std::vector<RoomTex>
 {
     // sorting stl iterators is slower than christmas with GLIBCXX_DEBUG,
     // so we'll use pointers instead. std::stable_sort isn't
@@ -430,7 +430,7 @@ struct RoomTexVector final : public std::vector<RoomTex>
         std::sort(beg, end);
     }
 
-    bool isSorted() const
+    NODISCARD bool isSorted() const
     {
         if (size() < 2)
             return true;
@@ -441,7 +441,7 @@ struct RoomTexVector final : public std::vector<RoomTex>
     }
 };
 
-struct ColoredRoomTexVector final : public std::vector<ColoredRoomTex>
+struct NODISCARD ColoredRoomTexVector final : public std::vector<ColoredRoomTex>
 {
     // sorting stl iterators is slower than christmas with GLIBCXX_DEBUG,
     // so we'll use pointers instead. std::stable_sort isn't
@@ -459,7 +459,7 @@ struct ColoredRoomTexVector final : public std::vector<ColoredRoomTex>
         std::sort(beg, end);
     }
 
-    bool isSorted() const
+    NODISCARD bool isSorted() const
     {
         if (size() < 2)
             return true;
@@ -491,7 +491,8 @@ static void foreach_texture(const T &textures, Callback &&callback)
     }
 }
 
-static UniqueMeshVector createSortedTexturedMeshes(OpenGL &gl, const RoomTexVector &textures)
+NODISCARD static UniqueMeshVector createSortedTexturedMeshes(OpenGL &gl,
+                                                             const RoomTexVector &textures)
 {
     if (textures.empty())
         return UniqueMeshVector{};
@@ -535,8 +536,8 @@ static UniqueMeshVector createSortedTexturedMeshes(OpenGL &gl, const RoomTexVect
     return UniqueMeshVector{std::move(result_meshes)};
 }
 
-static UniqueMeshVector createSortedColoredTexturedMeshes(OpenGL &gl,
-                                                          const ColoredRoomTexVector &textures)
+NODISCARD static UniqueMeshVector createSortedColoredTexturedMeshes(
+    OpenGL &gl, const ColoredRoomTexVector &textures)
 {
     if (textures.empty())
         return UniqueMeshVector{};
@@ -584,7 +585,7 @@ static UniqueMeshVector createSortedColoredTexturedMeshes(OpenGL &gl,
     return UniqueMeshVector{std::move(result_meshes)};
 }
 
-struct LayerBatchMeasurements final
+struct NODISCARD LayerBatchMeasurements final
 {
     size_t numTerrains = 0;
     size_t numOverlays = 0;
@@ -600,7 +601,7 @@ struct LayerBatchMeasurements final
     size_t numStreamIns = 0;
 };
 
-struct LayerBatchMeasurer final : public IRoomVisitorCallbacks
+struct NODISCARD LayerBatchMeasurer final : public IRoomVisitorCallbacks
 {
     LayerBatchMeasurements &measurements;
     const OptBounds &bounds;
@@ -613,7 +614,7 @@ struct LayerBatchMeasurer final : public IRoomVisitorCallbacks
 
     DELETE_CTORS_AND_ASSIGN_OPS(LayerBatchMeasurer);
 
-    bool acceptRoom(const Room *const room) const override
+    NODISCARD bool acceptRoom(const Room *const room) const override
     {
         return bounds.contains(room->getPosition());
     }
@@ -686,7 +687,7 @@ LayerBatchMeasurer::~LayerBatchMeasurer() = default;
 
 using PlainQuadBatch = std::vector<glm::vec3>;
 
-struct LayerBatchData final
+struct NODISCARD LayerBatchData final
 {
     RoomTexVector roomTerrains;
     RoomTexVector roomOverlays;
@@ -755,7 +756,7 @@ struct LayerBatchData final
         streamOuts.sortByTexture();
     }
 
-    LayerMeshes getMeshes(OpenGL &gl)
+    NODISCARD LayerMeshes getMeshes(OpenGL &gl)
     {
         LayerMeshes meshes;
         meshes.terrain = ::createSortedTexturedMeshes(gl, roomTerrains);
@@ -775,7 +776,7 @@ struct LayerBatchData final
     }
 };
 
-class LayerBatchBuilder final : public IRoomVisitorCallbacks
+class NODISCARD LayerBatchBuilder final : public IRoomVisitorCallbacks
 {
 private:
     LayerBatchData &data;
@@ -901,11 +902,11 @@ public:
 
 LayerBatchBuilder::~LayerBatchBuilder() = default;
 
-static LayerMeshes generateLayerMeshes(OpenGL &gl,
-                                       const RoomVector &rooms,
-                                       const RoomIndex &roomIndex,
-                                       const MapCanvasTextures &textures,
-                                       const OptBounds &bounds)
+NODISCARD static LayerMeshes generateLayerMeshes(OpenGL &gl,
+                                                 const RoomVector &rooms,
+                                                 const RoomIndex &roomIndex,
+                                                 const MapCanvasTextures &textures,
+                                                 const OptBounds &bounds)
 {
     const LayerBatchMeasurements measurements =
         [&bounds, &rooms, &roomIndex, &textures]() -> LayerBatchMeasurements {

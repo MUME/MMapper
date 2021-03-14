@@ -18,13 +18,14 @@
 class CGroupChar;
 using SharedGroupChar = std::shared_ptr<CGroupChar>;
 
-class GroupVector : public std::vector<SharedGroupChar>
+// TODO: make std::vector private
+class NODISCARD GroupVector : public std::vector<SharedGroupChar>
 {};
 
-class CGroupChar final : public std::enable_shared_from_this<CGroupChar>
+class NODISCARD CGroupChar final : public std::enable_shared_from_this<CGroupChar>
 {
 private:
-    struct this_is_private final
+    struct NODISCARD this_is_private final
     {
         explicit this_is_private(int) {}
     };
@@ -48,15 +49,15 @@ public:
     static SharedGroupChar alloc() { return std::make_shared<CGroupChar>(this_is_private{0}); }
 
 public:
-    const QByteArray &getName() const { return name; }
+    NODISCARD const QByteArray &getName() const { return name; }
     void setName(QByteArray _name) { name = _name; }
     void setColor(QColor col) { color = col; }
-    const QColor &getColor() const { return color; }
-    const QVariantMap toVariantMap() const;
+    NODISCARD const QColor &getColor() const { return color; }
+    NODISCARD const QVariantMap toVariantMap() const;
     bool updateFromVariantMap(const QVariantMap &);
     void setRoomId(RoomId id) { roomId = id; }
-    RoomId getRoomId() const { return roomId; }
-    static QByteArray getNameFromUpdateChar(const QVariantMap &);
+    NODISCARD RoomId getRoomId() const { return roomId; }
+    NODISCARD static QByteArray getNameFromUpdateChar(const QVariantMap &);
 
     void setScore(int _hp, int _maxhp, int _mana, int _maxmana, int _moves, int _maxmoves)
     {

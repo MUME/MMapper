@@ -7,9 +7,11 @@
 #include <QString>
 #include <QVariantMap>
 
+#include "../global/macros.h"
+
 class CGroup;
 
-class GroupAction
+class NODISCARD GroupAction
 {
 public:
     GroupAction();
@@ -22,7 +24,7 @@ protected:
     CGroup *group = nullptr;
 };
 
-class AddCharacter final : public GroupAction
+class NODISCARD AddCharacter final : public GroupAction
 {
 public:
     explicit AddCharacter(const QVariantMap &map);
@@ -34,7 +36,7 @@ private:
     QVariantMap map;
 };
 
-class RemoveCharacter final : public GroupAction
+class NODISCARD RemoveCharacter final : public GroupAction
 {
 public:
     explicit RemoveCharacter(const QVariantMap &variant);
@@ -47,7 +49,7 @@ private:
     QByteArray name;
 };
 
-class UpdateCharacter final : public GroupAction
+class NODISCARD UpdateCharacter final : public GroupAction
 {
 public:
     explicit UpdateCharacter(const QVariantMap &variant);
@@ -59,7 +61,7 @@ private:
     QVariantMap map;
 };
 
-class RenameCharacter final : public GroupAction
+class NODISCARD RenameCharacter final : public GroupAction
 {
 public:
     explicit RenameCharacter(const QVariantMap &variant);
@@ -71,7 +73,7 @@ private:
     QVariantMap map;
 };
 
-class ResetCharacters final : public GroupAction
+class NODISCARD ResetCharacters final : public GroupAction
 {
 public:
     ResetCharacters();

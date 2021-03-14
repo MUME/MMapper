@@ -32,7 +32,7 @@ void MapCanvasTextures::destroyAll()
     for_each([](SharedMMTexture &tex) -> void { tex.reset(); });
 }
 
-static SharedMMTexture loadTexture(const QString &name)
+NODISCARD static SharedMMTexture loadTexture(const QString &name)
 {
     auto mmtex = MMTexture::alloc(name);
     auto *texture = mmtex->get();
@@ -94,7 +94,7 @@ static void setTrilinear(const SharedMMTexture &mmtex, const bool trilinear)
     }
 }
 
-static SharedMMTexture createDottedWall(const ExitDirEnum dir)
+NODISCARD static SharedMMTexture createDottedWall(const ExitDirEnum dir)
 {
     static constexpr const uint32_t MAX_BITS = 7;
     static constexpr const int SIZE = 1 << MAX_BITS;

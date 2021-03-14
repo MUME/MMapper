@@ -38,7 +38,7 @@
 #undef ERROR // Bad dog, Microsoft; bad dog!!!
 
 template<typename T, typename... Args>
-static inline auto makeQPointer(Args &&...args)
+NODISCARD static inline auto makeQPointer(Args &&... args)
 {
     static_assert(std::is_base_of_v<QObject, T>);
     auto tmp = std::make_unique<T>(std::forward<Args>(args)...);
@@ -338,12 +338,15 @@ void Proxy::mudTerminatedConnection()
 
 void Proxy::processUserStream()
 {
-    if (m_userSocket != nullptr) {
+    if (m_userSocket == nullptr)
+        return;
+
+    // REVISIT: check return value?
+    MAYBE_UNUSED const auto ignored = //
         io::readAllAvailable(*m_userSocket, m_buffer, [this](const QByteArray &byteArray) {
             if (!byteArray.isEmpty())
                 emit analyzeUserStream(byteArray);
         });
-    }
 }
 
 void Proxy::onSendToMudSocket(const QByteArray &ba)

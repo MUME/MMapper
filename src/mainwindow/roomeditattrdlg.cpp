@@ -59,7 +59,7 @@ void installWidgets(T &array,
 }
 
 /* TODO: merge this with human-readable names used in parser output */
-static QString getName(const RoomMobFlagEnum flag)
+NODISCARD static QString getName(const RoomMobFlagEnum flag)
 {
 #define CASE2(UPPER, desc) \
     do { \
@@ -90,7 +90,7 @@ static QString getName(const RoomMobFlagEnum flag)
 }
 
 /* TODO: merge this with human-readable names used in parser output */
-static QString getName(const RoomLoadFlagEnum flag)
+NODISCARD static QString getName(const RoomLoadFlagEnum flag)
 {
 #define CASE2(UPPER, desc) \
     do { \
@@ -128,7 +128,7 @@ static QString getName(const RoomLoadFlagEnum flag)
 }
 
 /* TODO: merge this with human-readable names used in parser output */
-static QString getName(const ExitFlagEnum flag)
+NODISCARD static QString getName(const ExitFlagEnum flag)
 {
 #define X_CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
     do { \
@@ -143,7 +143,7 @@ static QString getName(const ExitFlagEnum flag)
 }
 
 /* TODO: merge this with human-readable names used in parser output */
-static QString getName(const DoorFlagEnum flag)
+NODISCARD static QString getName(const DoorFlagEnum flag)
 {
 #define X_CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
     do { \
@@ -158,7 +158,7 @@ static QString getName(const DoorFlagEnum flag)
 }
 
 template<typename T>
-static QIcon getIcon(T flag)
+NODISCARD static QIcon getIcon(T flag)
 {
     const QString filename = getPixmapFilename(flag);
     try {
@@ -173,7 +173,7 @@ static QIcon getIcon(T flag)
     }
 }
 
-static int getPriority(const RoomMobFlagEnum flag)
+NODISCARD static int getPriority(const RoomMobFlagEnum flag)
 {
 #define X_POS(UPPER, pos) \
     do { \
@@ -189,7 +189,7 @@ static int getPriority(const RoomMobFlagEnum flag)
     return static_cast<int>(flag);
 }
 
-static int getPriority(const RoomLoadFlagEnum flag)
+NODISCARD static int getPriority(const RoomLoadFlagEnum flag)
 {
 #define X_POS(UPPER, pos) \
     do { \

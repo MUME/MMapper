@@ -140,7 +140,7 @@ int GroupModel::columnCount(const QModelIndex & /* parent */) const
     return GROUP_COLUMN_COUNT;
 }
 
-static QString calculatePercentage(const int numerator, const int denomenator)
+NODISCARD static QString calculatePercentage(const int numerator, const int denomenator)
 {
     if (denomenator == 0)
         return "";
@@ -150,14 +150,14 @@ static QString calculatePercentage(const int numerator, const int denomenator)
     return QString("%1").arg(percentage).append("%");
 }
 
-static QString calculateRatio(const int numerator, const int denomenator)
+NODISCARD static QString calculateRatio(const int numerator, const int denomenator)
 {
     if (numerator == 0 && denomenator == 0)
         return "";
     return QString("%1/%2").arg(numerator).arg(denomenator);
 }
 
-static QString getPrettyName(const CharacterPositionEnum position)
+NODISCARD static QString getPrettyName(const CharacterPositionEnum position)
 {
 #define X_CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
     do { \
@@ -170,7 +170,7 @@ static QString getPrettyName(const CharacterPositionEnum position)
     return QString::asprintf("(CharacterPositionEnum)%d", static_cast<int>(position));
 #undef X_CASE
 }
-static QString getPrettyName(const CharacterAffectEnum affect)
+NODISCARD static QString getPrettyName(const CharacterAffectEnum affect)
 {
 #define X_CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
     do { \

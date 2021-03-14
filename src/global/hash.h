@@ -6,8 +6,11 @@
 #include <string_view>
 #include <type_traits>
 
+#include "macros.h"
+
 template<typename T>
-static auto numeric_hash(const T val) noexcept -> std::enable_if_t<std::is_arithmetic_v<T>, size_t>
+NODISCARD static auto numeric_hash(const T val) noexcept
+    -> std::enable_if_t<std::is_arithmetic_v<T>, size_t>
 {
     static constexpr const size_t size = sizeof(val);
     char buf[size];

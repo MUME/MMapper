@@ -17,7 +17,7 @@
 struct Pair;
 struct Value;
 
-struct Vector final
+struct NODISCARD Vector final
 {
     using Base = std::vector<Value>;
 
@@ -32,12 +32,12 @@ public:
     DEFAULT_RULE_OF_5(Vector);
 
 public:
-    Base::const_iterator begin() const;
-    Base::const_iterator end() const;
+    NODISCARD Base::const_iterator begin() const;
+    NODISCARD Base::const_iterator end() const;
 
 public:
-    bool empty() const { return m_vector->empty(); }
-    size_t size() const { return m_vector->size(); }
+    NODISCARD bool empty() const { return m_vector->empty(); }
+    NODISCARD size_t size() const { return m_vector->size(); }
     // NOTE: at() throws if out of range.
     const Value &at(size_t pos) const { return m_vector->at(pos); }
     const Value &operator[](size_t pos) const { return at(pos); }
@@ -46,7 +46,7 @@ public:
     friend std::ostream &operator<<(std::ostream &os, const Vector &v);
 };
 
-struct Value final
+struct NODISCARD Value final
 {
 public:
     // X(Type, RefType, CamelCase)
@@ -63,7 +63,7 @@ public:
     X(ExitFlagEnum, ExitFlagEnum, ExitFlag)
 
 #define DECL_ENUM(ValueType, RefType, CamelCase) CamelCase,
-    enum class IndexEnum : uint8_t { Null, X_FOREACH_VALUE_TYPE(DECL_ENUM) };
+    enum class NODISCARD IndexEnum : uint8_t { Null, X_FOREACH_VALUE_TYPE(DECL_ENUM) };
 #undef DECL_ENUM
 
 private:
@@ -83,21 +83,21 @@ public:
     explicit Value(T) = delete;
 
 public:
-    bool isNull() const { return std::holds_alternative<std::nullptr_t>(m_value); }
+    NODISCARD bool isNull() const { return std::holds_alternative<std::nullptr_t>(m_value); }
 
 #define DEFINE_CTOR_IS_GET(ValueType, RefType, CamelCase) \
     explicit Value(ValueType x) \
         : m_value(std::move(x)) \
     {} \
-    bool is##CamelCase() const { return std::holds_alternative<ValueType>(m_value); } \
-    RefType get##CamelCase() const { return std::get<ValueType>(m_value); }
+    NODISCARD bool is##CamelCase() const { return std::holds_alternative<ValueType>(m_value); } \
+    NODISCARD RefType get##CamelCase() const { return std::get<ValueType>(m_value); }
 
     X_FOREACH_VALUE_TYPE(DEFINE_CTOR_IS_GET)
 
 #undef DEFINE_CTOR_IS_GET
 
 public:
-    IndexEnum getType() const { return static_cast<IndexEnum>(m_value.index()); }
+    NODISCARD IndexEnum getType() const { return static_cast<IndexEnum>(m_value.index()); }
 
 public:
     friend std::ostream &operator<<(std::ostream &os, const Value &value);
@@ -105,7 +105,7 @@ public:
 
 using OptValue = std::optional<Value>;
 
-struct Pair final
+struct NODISCARD Pair final
 {
 public:
     Value car;
@@ -122,4 +122,4 @@ public:
     DEFAULT_RULE_OF_5(Pair);
 };
 
-Vector getAnyVectorReversed(const Pair *matched);
+NODISCARD extern Vector getAnyVectorReversed(const Pair *matched);

@@ -33,10 +33,10 @@
 namespace Legacy {
 
 template<template<typename> typename _Mesh, typename _VertType, typename _ProgType>
-static auto createMesh(const SharedFunctions &functions,
-                       const DrawModeEnum mode,
-                       const std::vector<_VertType> &batch,
-                       const std::shared_ptr<_ProgType> &prog)
+NODISCARD static auto createMesh(const SharedFunctions &functions,
+                                 const DrawModeEnum mode,
+                                 const std::vector<_VertType> &batch,
+                                 const std::shared_ptr<_ProgType> &prog)
 {
     using Mesh = _Mesh<_VertType>;
     static_assert(std::is_same_v<typename Mesh::ProgramType, _ProgType>);
@@ -44,21 +44,21 @@ static auto createMesh(const SharedFunctions &functions,
 }
 
 template<template<typename> typename _Mesh, typename _VertType, typename _ProgType>
-static UniqueMesh createUniqueMesh(const SharedFunctions &functions,
-                                   const DrawModeEnum mode,
-                                   const std::vector<_VertType> &batch,
-                                   const std::shared_ptr<_ProgType> &prog)
+NODISCARD static UniqueMesh createUniqueMesh(const SharedFunctions &functions,
+                                             const DrawModeEnum mode,
+                                             const std::vector<_VertType> &batch,
+                                             const std::shared_ptr<_ProgType> &prog)
 {
     assert(mode != DrawModeEnum::INVALID);
     return UniqueMesh(createMesh<_Mesh, _VertType, _ProgType>(functions, mode, batch, prog));
 }
 
 template<template<typename> typename _Mesh, typename _VertType, typename _ProgType>
-static UniqueMesh createTexturedMesh(const SharedFunctions &functions,
-                                     const DrawModeEnum mode,
-                                     const std::vector<_VertType> &batch,
-                                     const std::shared_ptr<_ProgType> &prog,
-                                     const SharedMMTexture &texture)
+NODISCARD static UniqueMesh createTexturedMesh(const SharedFunctions &functions,
+                                               const DrawModeEnum mode,
+                                               const std::vector<_VertType> &batch,
+                                               const std::shared_ptr<_ProgType> &prog,
+                                               const SharedMMTexture &texture)
 {
     assert(static_cast<size_t>(mode) >= VERTS_PER_TRI);
     return UniqueMesh{std::make_unique<TexturedRenderable>(

@@ -7,7 +7,7 @@
 
 namespace syntax {
 
-struct MatchResult final
+struct NODISCARD MatchResult final
 {
 public:
     ParserInput matched;
@@ -17,18 +17,20 @@ public:
 
 public:
     MatchResult() = delete;
-    static MatchResult failure(ParserInput unmatched);
+    NODISCARD static MatchResult failure(ParserInput unmatched);
     // partial match
-    static MatchResult failure(ParserInput matched, ParserInput unmatched);
+    NODISCARD static MatchResult failure(ParserInput matched, ParserInput unmatched);
 
 public:
-    static MatchResult success(size_t numMatched, ParserInput input, Value result);
-    static MatchResult success(size_t numMatched, ParserInput input);
+    NODISCARD static MatchResult success(size_t numMatched, ParserInput input, Value result);
+    NODISCARD static MatchResult success(size_t numMatched, ParserInput input);
     // matched everything
-    static MatchResult success(ParserInput input, OptValue optResult);
+    NODISCARD static MatchResult success(ParserInput input, OptValue optResult);
 
 private:
-    static MatchResult success(ParserInput matched, ParserInput unmatched, OptValue optResult);
+    NODISCARD static MatchResult success(ParserInput matched,
+                                         ParserInput unmatched,
+                                         OptValue optResult);
 
 private:
     MatchResult(ParserInput matched, ParserInput unmatched, OptValue optResult);

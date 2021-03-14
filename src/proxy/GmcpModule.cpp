@@ -14,7 +14,7 @@ GmcpModule::GmcpModule(const QString &moduleVersion)
     : GmcpModule(::toStdStringLatin1(moduleVersion))
 {}
 
-static GmcpModuleTypeEnum toGmcpModuleType(const std::string &str)
+NODISCARD static GmcpModuleTypeEnum toGmcpModuleType(const std::string &str)
 {
 #define X_CASE(UPPER_CASE, CamelCase, normalized, friendly) \
     do { \

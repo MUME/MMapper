@@ -27,7 +27,7 @@ void ParseEvent::ArrayOfProperties::setProperty(const size_t pos, std::string s)
     ArrayOfProperties::at(pos) = Property{std::move(s)};
 }
 
-static std::string getPromptBytes(const PromptFlagsType &promptFlags)
+NODISCARD static std::string getPromptBytes(const PromptFlagsType &promptFlags)
 {
     const auto promptBytes = promptFlags.isValid()
                                  ? std::string(1, static_cast<int8_t>(promptFlags.getTerrainType()))

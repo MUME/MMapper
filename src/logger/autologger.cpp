@@ -17,7 +17,7 @@
 #include <QMessageBox>
 #include <QStringList>
 
-static std::string generateRunId()
+NODISCARD static std::string generateRunId()
 {
     // Generate 6 random characters
     std::ostringstream os;
@@ -189,7 +189,8 @@ bool AutoLogger::showDeleteDialog(QString message)
 
 void AutoLogger::writeToLog(const QByteArray &ba)
 {
-    writeLine(ba);
+    MAYBE_UNUSED const auto igored = //
+        writeLine(ba);
 }
 
 void AutoLogger::shouldLog(bool echo)
@@ -202,6 +203,8 @@ void AutoLogger::onConnected()
     if (getConfig().autoLog.cleanupStrategy != AutoLoggerEnum::KeepForever)
         deleteOldLogs();
 
-    if (getConfig().autoLog.autoLog)
-        createFile();
+    if (getConfig().autoLog.autoLog) {
+        MAYBE_UNUSED const auto igored = //
+            createFile();
+    }
 }

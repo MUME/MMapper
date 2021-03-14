@@ -8,6 +8,8 @@
 #include <QWidget>
 #include <QtCore>
 
+#include "../global/macros.h"
+
 class QObject;
 class QEvent;
 class ClientTelnet;
@@ -25,7 +27,7 @@ public:
     ~ClientWidget() override;
 
 public:
-    bool isUsingClient() const;
+    NODISCARD bool isUsingClient() const;
 
 signals:
     void relayMessage(const QString &);

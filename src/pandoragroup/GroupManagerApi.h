@@ -11,7 +11,7 @@ class Mmapper2Group;
 
 // This is effectively a weak pointer to a virtual interface without the virtual;
 // it basically only exists to avoid giving the parser private access to Parser.
-class GroupManagerApi final
+class NODISCARD GroupManagerApi final
 {
 private:
     WeakHandle<Mmapper2Group> m_group;

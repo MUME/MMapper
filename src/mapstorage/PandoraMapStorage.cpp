@@ -47,7 +47,7 @@ bool PandoraMapStorage::loadData()
     }
 }
 
-static RoomTerrainEnum toTerrainType(const QString &str)
+NODISCARD static RoomTerrainEnum toTerrainType(const QString &str)
 {
 #define CASE2(UPPER, s) \
     do { \

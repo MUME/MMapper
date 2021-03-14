@@ -74,6 +74,6 @@ public:
 
     void endMeasure();
     void verify();
-    InfomarksMeshes getMeshes();
+    NODISCARD InfomarksMeshes getMeshes();
     void renderImmediate(const GLRenderState &state);
 };

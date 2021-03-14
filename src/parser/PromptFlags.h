@@ -20,8 +20,8 @@
     X(HEAVY_FOG)
 
 #define DECL(X) X,
-enum class PromptWeatherEnum { X_FOREACH_PROMT_WEATHER_ENUM(DECL) };
-enum class PromptFogEnum { X_FOREACH_PROMT_FOG_ENUM(DECL) };
+enum class NODISCARD PromptWeatherEnum { X_FOREACH_PROMT_WEATHER_ENUM(DECL) };
+enum class NODISCARD PromptFogEnum { X_FOREACH_PROMT_FOG_ENUM(DECL) };
 #undef DECL
 
 #define ADD(X) +1
@@ -32,7 +32,7 @@ static constexpr const size_t NUM_PROMPT_FOG_TYPES = (X_FOREACH_PROMT_FOG_ENUM(A
 static_assert(NUM_PROMPT_WEATHER_TYPES == 5);
 static_assert(NUM_PROMPT_FOG_TYPES == 3);
 
-class PromptFlagsType final
+class NODISCARD PromptFlagsType final
 {
 public:
     // bit0-3 -> RoomTerrainEnum
@@ -50,15 +50,15 @@ private:
     uint32_t flags = 0u;
 
 private:
-    static uint32_t encodeFogType(const PromptFogEnum pf)
+    NODISCARD static uint32_t encodeFogType(const PromptFogEnum pf)
     {
         return std::clamp<uint32_t>(static_cast<uint32_t>(pf), 0, 2);
     }
-    static uint32_t encodeTerrainType(const RoomTerrainEnum rtt)
+    NODISCARD static uint32_t encodeTerrainType(const RoomTerrainEnum rtt)
     {
         return std::clamp<uint32_t>(static_cast<uint32_t>(rtt), 0, 15);
     }
-    static uint32_t encodeWeatherType(const PromptWeatherEnum pw)
+    NODISCARD static uint32_t encodeWeatherType(const PromptWeatherEnum pw)
     {
         return std::clamp<uint32_t>(static_cast<uint32_t>(pw), 0, 4);
     }
@@ -68,7 +68,7 @@ public:
 
 public:
     /// NOTE: This sets the valid flag on the result.
-    static PromptFlagsType fromRoomTerrainType(const RoomTerrainEnum rtt)
+    NODISCARD static PromptFlagsType fromRoomTerrainType(const RoomTerrainEnum rtt)
     {
         PromptFlagsType result;
         result.setTerrainType(rtt);
@@ -77,16 +77,19 @@ public:
     }
 
 public:
-    explicit operator uint32_t() const { return flags; }
-    bool operator==(const PromptFlagsType rhs) const { return flags == rhs.flags; }
-    bool operator!=(const PromptFlagsType rhs) const { return flags != rhs.flags; }
+    NODISCARD explicit operator uint32_t() const { return flags; }
+    NODISCARD bool operator==(const PromptFlagsType rhs) const { return flags == rhs.flags; }
+    NODISCARD bool operator!=(const PromptFlagsType rhs) const { return flags != rhs.flags; }
 
 public:
-    bool isValid() const { return flags & PROMPT_FLAGS_VALID; }
+    NODISCARD bool isValid() const { return flags & PROMPT_FLAGS_VALID; }
     void setValid() { flags |= PROMPT_FLAGS_VALID; }
 
 public:
-    auto getTerrainType() const { return static_cast<RoomTerrainEnum>(flags & TERRAIN_TYPE); }
+    NODISCARD RoomTerrainEnum getTerrainType() const
+    {
+        return static_cast<RoomTerrainEnum>(flags & TERRAIN_TYPE);
+    }
     void setTerrainType(const RoomTerrainEnum type)
     {
         using flags_type = decltype(flags);
@@ -95,7 +98,7 @@ public:
     }
 
 public:
-    auto getFogType() const
+    NODISCARD PromptFogEnum getFogType() const
     {
         return static_cast<PromptFogEnum>(flags & static_cast<uint32_t>(FOG_TYPE));
     }
@@ -107,7 +110,10 @@ public:
     }
 
 public:
-    auto getWeatherType() const { return static_cast<PromptWeatherEnum>(flags & WEATHER_TYPE); }
+    NODISCARD PromptWeatherEnum getWeatherType() const
+    {
+        return static_cast<PromptWeatherEnum>(flags & WEATHER_TYPE);
+    }
     void setWeatherType(const PromptWeatherEnum type)
     {
         using flags_type = decltype(flags);
@@ -116,21 +122,21 @@ public:
     }
 
 public:
-    bool isNiceWeather() const
+    NODISCARD bool isNiceWeather() const
     {
         return getWeatherType() == PromptWeatherEnum::UNDEFINED
                && getFogType() == PromptFogEnum::UNDEFINED;
     }
 
 public:
-    bool isLit() const { return (flags & LIT_ROOM) != 0; }
+    NODISCARD bool isLit() const { return (flags & LIT_ROOM) != 0; }
     void setLit()
     {
         using flags_type = decltype(flags);
         flags = static_cast<flags_type>(flags & ~LIGHT_MASK);
         flags = static_cast<flags_type>(flags | (LIT_ROOM & LIGHT_MASK));
     }
-    bool isDark() const { return (flags & DARK_ROOM) != 0; }
+    NODISCARD bool isDark() const { return (flags & DARK_ROOM) != 0; }
     void setDark()
     {
         using flags_type = decltype(flags);

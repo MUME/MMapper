@@ -30,7 +30,7 @@ class QShortcut;
 class QWidget;
 class Room;
 
-class RoomListWidgetItem final : public QListWidgetItem
+class NODISCARD RoomListWidgetItem final : public QListWidgetItem
 {
 public:
     explicit RoomListWidgetItem(const QString &text, int priority = 0);
@@ -103,7 +103,7 @@ public:
     void writeSettings();
 
 private:
-    struct Connections final
+    struct NODISCARD Connections final
     {
     private:
         std::vector<QMetaObject::Connection> m_connections;

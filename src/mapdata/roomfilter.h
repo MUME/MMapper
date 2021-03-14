@@ -16,15 +16,15 @@
 
 class Room;
 
-enum class PatternKindsEnum { NONE, DESC, DYN_DESC, NAME, NOTE, EXITS, FLAGS, ALL };
+enum class NODISCARD PatternKindsEnum { NONE, DESC, DYN_DESC, NAME, NOTE, EXITS, FLAGS, ALL };
 static constexpr const auto PATTERN_KINDS_LENGTH = static_cast<size_t>(PatternKindsEnum::ALL) + 1u;
 static_assert(PATTERN_KINDS_LENGTH == 8);
 
-class RoomFilter final
+class NODISCARD RoomFilter final
 {
 public:
     static const char *const parse_help;
-    static std::optional<RoomFilter> parseRoomFilter(const std::string_view &line);
+    NODISCARD static std::optional<RoomFilter> parseRoomFilter(const std::string_view &line);
 
 public:
     RoomFilter() = delete;
@@ -42,14 +42,14 @@ private:
 
 private:
     template<typename T>
-    bool matches(const TaggedString<T> &s) const
+    NODISCARD bool matches(const TaggedString<T> &s) const
     {
         return this->matches(s.getStdString());
     }
 
 private:
     template<typename E>
-    bool matchesParserCommand(const E type) const
+    NODISCARD bool matchesParserCommand(const E type) const
     {
         static_assert(std::is_enum_v<E>);
         const auto s = getParserCommandName(type).getCommand();
@@ -59,7 +59,7 @@ private:
 
 private:
     template<typename F> // enum::Flags<...>
-    bool matchesAny(const F &flags) const
+    NODISCARD bool matchesAny(const F &flags) const
     {
         auto pred = [this](auto flag) -> bool { return this->matchesParserCommand(flag); };
         return flags.find_first_matching(pred).has_value();
@@ -68,7 +68,7 @@ private:
 private:
     /// Note: Assumes enum E has value E::UNDEFINED.
     template<typename E>
-    bool matchesDefined(const E type) const
+    NODISCARD bool matchesDefined(const E type) const
     {
         return (type != E::UNDEFINED) && this->matchesParserCommand(type);
     }

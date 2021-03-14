@@ -6,6 +6,7 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include "../global/RuleOf5.h"
+#include "../global/macros.h"
 
 class Room;
 class RoomAdmin;
@@ -14,7 +15,7 @@ class RoomAdmin;
  *
  * See MapFrontend::lookingForRooms().
  */
-class RoomRecipient
+class NODISCARD RoomRecipient
 {
 public:
     RoomRecipient();

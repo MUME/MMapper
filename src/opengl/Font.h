@@ -44,7 +44,7 @@ struct NODISCARD GLText final
 
 struct FontMetrics;
 
-class GLFont final
+class NODISCARD GLFont final
 {
 private:
     OpenGL &m_gl;
@@ -64,11 +64,11 @@ public:
     void cleanup();
 
 public:
-    int getFontHeight() const;
-    std::optional<int> getGlyphAdvance(char c) const;
+    NODISCARD int getFontHeight() const;
+    NODISCARD std::optional<int> getGlyphAdvance(char c) const;
 
 private:
-    glm::ivec2 getScreenCenter() const;
+    NODISCARD glm::ivec2 getScreenCenter() const;
 
 public:
     void renderTextCentered(const QString &text,
@@ -78,8 +78,8 @@ public:
     void render3dTextImmediate(const std::vector<GLText> &text);
 
 public:
-    UniqueMesh getFontMesh(const std::vector<GLText> &text);
+    NODISCARD UniqueMesh getFontMesh(const std::vector<GLText> &text);
 
 private:
-    std::vector<FontVert3d> getFontBatchRawData(const GLText *text, size_t count);
+    NODISCARD std::vector<FontVert3d> getFontBatchRawData(const GLText *text, size_t count);
 };

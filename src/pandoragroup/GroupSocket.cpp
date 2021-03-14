@@ -222,11 +222,13 @@ void GroupSocket::onTimeout()
 
 void GroupSocket::onReadyRead()
 {
-    io::readAllAvailable(socket, ioBuffer, [this](const QByteArray &byteArray) {
-        for (const auto &c : byteArray) {
-            onReadInternal(c);
-        }
-    });
+    // REVISIT: check return value?
+    MAYBE_UNUSED const auto ignored = //
+        io::readAllAvailable(socket, ioBuffer, [this](const QByteArray &byteArray) {
+            for (const auto &c : byteArray) {
+                onReadInternal(c);
+            }
+        });
 }
 
 void GroupSocket::onReadInternal(const char c)

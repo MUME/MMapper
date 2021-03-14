@@ -54,7 +54,7 @@ public:
     void disconnectFromHost() override;
     void connectToHost() override;
     void sendToMud(const QByteArray &ba) override;
-    QAbstractSocket::SocketState state() override { return m_socket.state(); }
+    NODISCARD QAbstractSocket::SocketState state() override { return m_socket.state(); }
 
 protected slots:
     void onConnect() override;

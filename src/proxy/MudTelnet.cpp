@@ -15,7 +15,7 @@
 #include "../global/Version.h"
 #include "GmcpUtils.h"
 
-static QByteArray addTerminalTypeSuffix(const std::string_view &prefix)
+NODISCARD static QByteArray addTerminalTypeSuffix(const std::string_view &prefix)
 {
     const auto get_os_string = []() {
         if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux)

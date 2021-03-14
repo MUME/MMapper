@@ -13,6 +13,8 @@
 #include <QtCore>
 #include <QtGui>
 
+#include "../global/macros.h"
+
 class QObject;
 class QResizeEvent;
 class QTextDocument;
@@ -30,8 +32,8 @@ public:
     explicit DisplayWidget(QWidget *parent = nullptr);
     ~DisplayWidget() override;
 
-    bool canCopy() const { return m_canCopy; }
-    QSize sizeHint() const override;
+    NODISCARD bool canCopy() const { return m_canCopy; }
+    NODISCARD QSize sizeHint() const override;
 
 private:
     bool m_canCopy = false;

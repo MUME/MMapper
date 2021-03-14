@@ -12,7 +12,7 @@
 #include <miniupnpc/upnpcommands.h>
 #endif
 
-struct GroupPortMapper::Pimpl
+struct NODISCARD GroupPortMapper::Pimpl
 {
     Pimpl() = default;
     virtual ~Pimpl();

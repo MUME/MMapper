@@ -8,12 +8,14 @@
 #include <string>
 #include <string_view>
 
+#include "../global/macros.h"
+
 class QString;
 
 namespace ParserUtils {
 QString &removeAnsiMarksInPlace(QString &str);
 QString &toAsciiInPlace(QString &str);
 std::string &latin1ToAsciiInPlace(std::string &str);
-std::string latin1ToAscii(const std::string_view &sv);
+NODISCARD std::string latin1ToAscii(const std::string_view &sv);
 
 } // namespace ParserUtils

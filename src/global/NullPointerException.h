@@ -7,8 +7,9 @@
 #include <stdexcept>
 
 #include "RuleOf5.h"
+#include "macros.h"
 
-struct NullPointerException final : public std::runtime_error
+struct NODISCARD NullPointerException final : public std::runtime_error
 {
     NullPointerException();
     virtual ~NullPointerException() override;
