@@ -241,4 +241,12 @@ NODISCARD constexpr bool equals(const T a, const T b)
         return a == b;
     }
 }
+
+template<size_t N>
+NODISCARD inline constexpr auto rotate_bits64(const uint64_t x) noexcept
+{
+    static_assert(1 <= N && N < 64);
+    return (x << N) | (x >> (64 - N));
+}
+
 } // namespace utils
