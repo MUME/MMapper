@@ -2,6 +2,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
+#include <memory>
+#include <optional>
+#include <vector>
+
 #include "Shaders.h"
 #include "SimpleMesh.h"
 
@@ -101,7 +105,7 @@ public:
                         const std::vector<FontVert3d> &verts);
 
 public:
-    ~FontMesh3d() override;
+    ~FontMesh3d() final;
 
 private:
     NODISCARD bool virt_modifiesRenderState() const final { return true; }

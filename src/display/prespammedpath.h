@@ -25,7 +25,7 @@ public:
     ~PrespammedPath() final;
 
 public:
-    NODISCARD auto &getQueue() const { return m_queue; }
+    NODISCARD const CommandQueue &getQueue() const { return m_queue; }
 
 signals:
     void sig_update();
