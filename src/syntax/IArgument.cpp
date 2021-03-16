@@ -19,7 +19,7 @@ std::ostream &IArgument::to_stream(std::ostream &os) const
 
 std::ostream &operator<<(std::ostream &os, const IArgument &arg)
 {
-    return arg.virt_to_stream(os);
+    return arg.to_stream(os);
 }
 
 } // namespace syntax
