@@ -231,7 +231,7 @@ void Proxy::slot_start()
                             "   Type "
                             "\033[1m"
                             "%1help"
-                            "\033[0m;37;46m"
+                            "\033[0;37;46m"
                             " for help."
                             "\033[0m"
                             "\n")
