@@ -94,6 +94,9 @@ matrix:
       ARCH: arm64
     - image: Ubuntu1804
       ARCH: x86
+    # Disable 32-bit builds
+    - ARCH: x86
+    - ARCH: arm
 
 for:
   # Ubuntu (AppImage)
