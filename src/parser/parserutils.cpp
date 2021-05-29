@@ -8,6 +8,7 @@
 
 #include <array>
 #include <cassert>
+#include <iostream>
 #include <stdexcept>
 #include <QRegularExpression>
 #include <QtCore>
