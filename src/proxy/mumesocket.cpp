@@ -16,7 +16,7 @@
 #include "../configuration/configuration.h"
 #include "../global/io.h"
 
-static constexpr int TIMEOUT_MILLIS = 10000;
+static constexpr int TIMEOUT_MILLIS = 30000;
 
 void MumeSocket::virt_onConnect()
 {
