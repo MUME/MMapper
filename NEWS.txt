@@ -1,4 +1,24 @@
 ================================
+MMapper 21.06.0 (June 1, 2021)
+================================
+
+Note:
+ - Windows users should manually uninstall MMapper from "Add or remove
+   programs" before installing the new MMapper.
+ - MMapper has dropped support for 32-bit binaries.
+
+Changes:
+ - Default map now includes Dol Guldur environments
+ - Fixed <header> XML support parsing
+ - Improved Windows installer High DPI support
+ - Supported macOS 10.11 networking better
+ - Increased telnet socket timeout to 30 seconds
+ - Fixed an ANSI color encoding typo on the welcome message
+ - Renamed _removedoornames to _remove-secret-door-names
+ - Fixed RoomEditDialog multiselection rendering error
+ - Squished various minor bugs
+
+================================
 MMapper 21.01.0 (January 17, 2021)
 ================================
 
