@@ -302,16 +302,6 @@ bool MumeXmlParser::element(const QByteArray &line)
                     }
                 }
                 break;
-            case 'h':
-                if (line.startsWith("header")) {
-                    m_xmlMode = XmlModeEnum::HEADER;
-                    m_lineFlags.insert(LineFlagEnum::HEADER);
-                    if (m_descriptionReady) {
-                        // Prevent emulated exits from firing due to god exits
-                        m_exitsReady = true;
-                    }
-                }
-                break;
             }
         }
         break;
@@ -351,7 +341,12 @@ bool MumeXmlParser::element(const QByteArray &line)
                     m_lineFlags.insert(LineFlagEnum::TERRAIN);
                 }
                 break;
-
+            case 'h': // Gods have an "Obvious exits" header
+                if (line.startsWith("header")) {
+                    m_xmlMode = XmlModeEnum::HEADER;
+                    m_lineFlags.insert(LineFlagEnum::HEADER);
+                }
+                break;
             case '/':
                 if (line.startsWith("/room")) {
                     m_xmlMode = XmlModeEnum::NONE;
@@ -431,7 +426,7 @@ bool MumeXmlParser::element(const QByteArray &line)
             switch (line.at(0)) {
             case '/':
                 if (line.startsWith("/header")) {
-                    m_xmlMode = XmlModeEnum::NONE;
+                    m_xmlMode = XmlModeEnum::ROOM;
                     m_lineFlags.remove(LineFlagEnum::HEADER);
                 }
                 break;
