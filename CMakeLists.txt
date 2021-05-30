@@ -133,12 +133,6 @@ if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
           OUTPUT_STRIP_TRAILING_WHITESPACE
         )
 
-        # Fetch the latest tags
-        execute_process(
-          COMMAND ${GIT_EXECUTABLE} fetch --tags
-          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        )
-
         # Describe the most recent tag, number of commits since, and abbreviated commit hash
         execute_process(
           COMMAND ${GIT_EXECUTABLE} describe --tags --always --long
