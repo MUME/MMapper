@@ -128,7 +128,8 @@ CHECK3(SUNDEATH, Sundeath)
     X(QUEST_MOB) \
     X(PASSIVE_MOB) \
     X(ELITE_MOB) \
-    X(SUPER_MOB)
+    X(SUPER_MOB) \
+    X(MILKABLE)
 
 enum class NODISCARD RoomMobFlagEnum {
 #define DECL(X) X,
@@ -138,7 +139,7 @@ enum class NODISCARD RoomMobFlagEnum {
 #define ADD(X) +1
 static constexpr const int NUM_ROOM_MOB_FLAGS = (X_FOREACH_ROOM_MOB_FLAG(ADD));
 #undef ADD
-static_assert(NUM_ROOM_MOB_FLAGS == 17);
+static_assert(NUM_ROOM_MOB_FLAGS == 18);
 DEFINE_ENUM_COUNT(RoomMobFlagEnum, NUM_ROOM_MOB_FLAGS)
 
 class NODISCARD RoomMobFlags final : public enums::Flags<RoomMobFlags, RoomMobFlagEnum, uint32_t>

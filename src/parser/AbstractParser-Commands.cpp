@@ -178,6 +178,7 @@ Abbrev getParserCommandName(const RoomMobFlagEnum x)
         CASE3(PASSIVE_MOB, "passivemob", -1);
         CASE3(ELITE_MOB, "elitemob", -1);
         CASE3(SUPER_MOB, "smob", -1);
+        CASE3(MILKABLE, "milkable", -1);
     }
     return Abbrev{};
 #undef CASE3
