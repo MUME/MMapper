@@ -84,6 +84,7 @@ NODISCARD static QString getName(const RoomMobFlagEnum flag)
         CASE2(PASSIVE_MOB, "Passive mob");
         CASE2(ELITE_MOB, "Elite mob");
         CASE2(SUPER_MOB, "Super mob");
+        CASE2(MILKABLE, "Milkable mob");
     }
     return QString::asprintf("(RoomMobFlagEnum)%d", static_cast<int>(flag));
 #undef CASE2
