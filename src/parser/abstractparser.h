@@ -138,6 +138,9 @@ signals:
     // these are connected to MainWindow
     void sig_setMode(MapModeEnum);
 
+    // emitted when new infomark added by comand
+    void sig_infoMarksChanged();
+
 public slots:
     void slot_parseNewUserInput(const TelnetData &);
 
@@ -184,6 +187,8 @@ public:
     void markCurrentCommand();
 
     NODISCARD bool evalActionMap(StringView line);
+
+    void doCreateInfoMark(const StringView &cmd);
 
 private:
     void setMode(MapModeEnum mode);

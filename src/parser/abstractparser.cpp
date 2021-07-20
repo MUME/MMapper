@@ -1006,6 +1006,7 @@ void AbstractParser::showHelp()
                      "\n"
                      "Other commands:\n"
                      "  %1dirs [-options] pattern   - directions to matching rooms\n"
+                     "  %1infomark text             - set first text infomark in current room\r\n"
                      "  %1search [-options] pattern - select matching rooms\n"
                      "  %1set [prefix [punct-char]] - change command prefix\n"
                      "  %1connect                   - connect to the MUD\n"

@@ -16,11 +16,14 @@
 #include <QMessageLogContext>
 #include <QtCore>
 
+#include "../display/InfoMarkSelection.h"
 #include "../global/StringView.h"
 #include "../global/TextUtils.h"
 #include "../mapdata/DoorFlags.h"
 #include "../mapdata/ExitFlags.h"
 #include "../mapdata/enums.h"
+#include "../mapdata/infomark.h"
+#include "../mapdata/mapdata.h"
 #include "../mapdata/mmapper2room.h"
 #include "../syntax/SyntaxArgs.h"
 #include "../syntax/TreeParser.h"
@@ -47,6 +50,7 @@ const Abbrev cmdSet{"set", 2};
 const Abbrev cmdTime{"time", 2};
 const Abbrev cmdTrollExit{"trollexit", 2};
 const Abbrev cmdVote{"vote", 2};
+const Abbrev cmdInfomark("infomark", 3);
 
 Abbrev getParserCommandName(const DoorFlagEnum x)
 {
@@ -721,6 +725,14 @@ void AbstractParser::initSpecialCommandMap()
         },
         makeSimpleHelp("Send a grouptell with the [message]."));
     add(
+        cmdInfomark,
+        [this](const std::vector<StringView> & /*s*/, StringView rest) {
+            this->doCreateInfoMark(rest);
+            return true;
+        },
+        makeSimpleHelp(
+            "Set the text of the first text infomark in the current room, or delete it if argument is empty."));
+    add(
         cmdMarkCurrent,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             if (!rest.isEmpty())
@@ -875,4 +887,71 @@ bool AbstractParser::evalSpecialCommandMap(StringView args)
     const auto &s = rec.fullCommand;
     const auto matched = std::vector<StringView>{StringView{s}};
     return rec.callback(matched, args);
+}
+
+void AbstractParser::doCreateInfoMark(const StringView &cmd)
+{
+    // get scaled coordinates of room center.
+    static_assert(INFOMARK_SCALE % 2 == 0);
+    const Coordinate halfRoomOffset{INFOMARK_SCALE / 2, INFOMARK_SCALE / 2, 0};
+
+    // do not scale the z-coordinate!  only x,y should get scaled.
+    const Coordinate pos = m_mapData.getPosition();
+    Coordinate c{pos.x * INFOMARK_SCALE, pos.y * INFOMARK_SCALE, pos.z};
+    c += halfRoomOffset;
+
+    // the scaling + offset operation looks like `A*x + b` where A is a 3x3
+    // transformation matrix and b,x are 3-vectors
+
+    // A = [[INFOMARK_SCALE/2, 0                 0]
+    //      [0,                INFOMARK_SCALE/2, 0]
+    //      [0,                0,                1]]
+    // b = halfRoomOffset
+    // x = m_mapData->getPosition()
+    //
+    // c = A*x + b
+
+    QString text = cmd.toQString();
+
+    // does there already exist an infomark somewhere in current room's tile?
+    // if so, modify it instead of adding a new one to the map.
+    static_assert(INFOMARK_SCALE % 5 == 0);
+    static constexpr auto INFOMARK_CLICK_RADIUS = INFOMARK_SCALE / 2;
+    const auto lo = c + Coordinate{-INFOMARK_CLICK_RADIUS, -INFOMARK_CLICK_RADIUS, 0};
+    const auto hi = c + Coordinate{+INFOMARK_CLICK_RADIUS, +INFOMARK_CLICK_RADIUS, 0};
+    std::shared_ptr<InfoMarkSelection> is = InfoMarkSelection::alloc(&m_mapData, lo, hi);
+    // no infomark exists above this room
+    if (is->empty()) {
+        // case of no argument
+        if (text.isEmpty()) {
+            return;
+        }
+
+        auto im = InfoMark::alloc(m_mapData);
+
+        im->setType(InfoMarkTypeEnum::TEXT);
+        im->setText(InfoMarkText{text});
+        im->setClass(InfoMarkClassEnum::COMMENT);
+        im->setPosition1(c);
+        //im->setRotationAngle(0);
+
+        m_mapData.addMarker(im);
+
+    } else {
+        // at least one existing infomark
+        // update text of the first existing text infomark in this room
+        // delete it instead if command received no argument
+        for (auto im : *is) {
+            if (im->getType() == InfoMarkTypeEnum::TEXT) {
+                if (text.isEmpty()) {
+                    m_mapData.removeMarker(im);
+                } else {
+                    im->setText(InfoMarkText{text});
+                }
+                break;
+            }
+        }
+    }
+
+    emit sig_infoMarksChanged();
 }
