@@ -46,11 +46,15 @@ MudTelnet::MudTelnet(QObject *const parent)
 
 void MudTelnet::slot_onConnected()
 {
-    reset();
     // MUME opts to not send DO CHARSET due to older, broken clients
     requestTelnetOption(TN_WILL, OPT_CHARSET);
     // Assume MUME will also opt to not send DO GMCP similar to CHARSET
     requestTelnetOption(TN_WILL, OPT_GMCP);
+}
+
+void MudTelnet::slot_onDisconnected()
+{
+    reset();
 }
 
 void MudTelnet::slot_onAnalyzeMudStream(const QByteArray &data)

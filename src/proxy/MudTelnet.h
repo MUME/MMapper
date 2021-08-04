@@ -19,6 +19,7 @@ public slots:
     void slot_onAnalyzeMudStream(const QByteArray &);
     void slot_onSendToMud(const QByteArray &);
     void slot_onConnected();
+    void slot_onDisconnected();
     void slot_onRelayNaws(int, int);
     void slot_onRelayTermType(const QByteArray &);
     void slot_onGmcpToMud(const GmcpMessage &);

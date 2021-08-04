@@ -101,6 +101,7 @@ public:
     explicit AbstractTelnet(TextCodecStrategyEnum strategy,
                             QObject *parent,
                             const QByteArray &defaultTermType);
+    ~AbstractTelnet() override;
 
     NODISCARD QByteArray getTerminalType() const { return termType; }
     /* unused */
@@ -235,7 +236,6 @@ private:
 private:
     NODISCARD int onReadInternalInflate(const char *, const int, AppendBuffer &);
     void resetCompress();
-    void initCompress();
 
 #ifndef MMAPPER_NO_ZLIB
     // REVIST: Refactor this to use PImpl

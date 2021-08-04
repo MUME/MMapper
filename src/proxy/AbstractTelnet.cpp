@@ -172,11 +172,33 @@ AbstractTelnet::AbstractTelnet(TextCodecStrategyEnum strategy,
     , m_defaultTermType(defaultTermType)
     , textCodec{strategy}
 {
+#ifndef MMAPPER_NO_ZLIB
+    /* allocate inflate state */
+    stream.zalloc = Z_NULL;
+    stream.zfree = Z_NULL;
+    stream.opaque = Z_NULL;
+    stream.avail_in = 0;
+    stream.next_in = Z_NULL;
+    int ret = inflateInit(&stream);
+    if (ret != Z_OK) {
+        throw std::runtime_error("Unable to initialize zlib");
+    }
+#endif
+
     reset();
+}
+
+AbstractTelnet::~AbstractTelnet()
+{
+#ifndef MMAPPER_NO_ZLIB
+    inflateEnd(&stream);
+#endif
 }
 
 void AbstractTelnet::reset()
 {
+    if (debug)
+        qDebug() << "Reset telnet";
     myOptionState.fill(false);
     hisOptionState.fill(false);
     announcedState.fill(false);
@@ -778,8 +800,14 @@ void AbstractTelnet::onReadInternal(const QByteArray &data)
         pos++;
 
         if (recvdCompress) {
-            initCompress();
+            inflateTelnet = true;
             recvdCompress = false;
+#ifndef MMAPPER_NO_ZLIB
+            int ret = inflateReset(&stream);
+            if (ret != Z_OK)
+                throw std::runtime_error("Could not reset zlib");
+#endif
+
             // Start inflating at the next position
             continue;
         }
@@ -962,18 +990,20 @@ int AbstractTelnet::onReadInternalInflate(const char *data,
         stream.next_out = reinterpret_cast<Bytef *>(out);
         int ret = inflate(&stream, Z_SYNC_FLUSH);
         assert(ret != Z_STREAM_ERROR); /* state not clobbered */
+        if (ret == Z_DATA_ERROR)
+            ret = inflateSync(&stream);
         switch (ret) {
         case Z_NEED_DICT:
         case Z_DATA_ERROR:
         case Z_MEM_ERROR:
+            throw std::runtime_error(stream.msg);
         case Z_STREAM_END:
             /* clean up and return */
-            inflateEnd(&stream);
-            resetCompress();
+            inflateTelnet = false;
             if (debug)
                 qDebug() << "Ending compression";
-            throw std::runtime_error(stream.msg);
-        default:
+            break;
+       default:
             break;
         }
 
@@ -1007,24 +1037,4 @@ void AbstractTelnet::resetCompress()
     inflateTelnet = false;
     recvdCompress = false;
     hisOptionState[OPT_COMPRESS2] = false;
-}
-
-void AbstractTelnet::initCompress()
-{
-#ifdef MMAPPER_NO_ZLIB
-    abort();
-#else
-    inflateTelnet = true;
-
-    /* allocate inflate state */
-    stream.zalloc = Z_NULL;
-    stream.zfree = Z_NULL;
-    stream.opaque = Z_NULL;
-    stream.avail_in = 0;
-    stream.next_in = Z_NULL;
-    int ret = inflateInit(&stream);
-    if (ret != Z_OK) {
-        throw std::runtime_error("Unable to initialize zlib");
-    }
-#endif
 }
