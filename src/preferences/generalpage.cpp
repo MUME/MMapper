@@ -154,7 +154,7 @@ void GeneralPage::slot_loadConfig()
 void GeneralPage::slot_selectWorldFileButtonClicked(bool /*unused*/)
 {
     // FIXME: code duplication
-    const auto &savedLastMapDir = setConfig().autoLoad.lastMapDirectory;
+    const auto &savedLastMapDir = getConfig().autoLoad.lastMapDirectory;
     QString fileName = QFileDialog::getOpenFileName(this,
                                                     "Choose map file ...",
                                                     savedLastMapDir,

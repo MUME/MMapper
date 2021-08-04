@@ -9,6 +9,7 @@
 #include <QtCore/QDebug>
 #include <QtCore/QFile>
 
+#include "../configuration/configuration.h"
 #include "../global/EnumIndexedArray.h"
 #include "../global/NullPointerException.h"
 #include "../parser/AbstractParser-Commands.h"
@@ -74,10 +75,18 @@ NODISCARD static const char *getFilenameSuffix(const E x)
 
 QString getResourceFilenameRaw(const QString &dir, const QString &name)
 {
-    const auto filename = QString(":/%1/%2").arg(dir).arg(name);
-    if (!QFile{filename}.exists())
+    const auto filename = QString("/%1/%2").arg(dir).arg(name);
+
+    // Check if the user provided a custom resource
+    const auto custom = getConfig().canvas.resourcesDirectory + filename;
+    if (QFile{custom}.exists())
+        return custom;
+
+    // Fallback to the qrc resource
+    const auto qrc = ":" + filename;
+    if (!QFile{qrc}.exists())
         qWarning() << "WARNING:" << dir << filename << "does not exist.";
-    return filename;
+    return qrc;
 }
 
 QString getPixmapFilenameRaw(const QString &name)

@@ -253,6 +253,7 @@ ConstString KEY_PROXY_CONNECTION_STATUS = "Proxy connection status";
 ConstString KEY_PROXY_LISTENS_ON_ANY_INTERFACE = "Proxy listens on any interface";
 ConstString KEY_RELATIVE_PATH_ACCEPTANCE = "relative path acceptance";
 ConstString KEY_REMOTE_EDITING_AND_VIEWING = "Remote editing and viewing";
+ConstString KEY_RESOURCES_DIRECTORY = "canvas.resourcesDir";
 ConstString KEY_MUME_REMOTE_PORT = "Remote port number";
 ConstString KEY_GROUP_REMOTE_PORT = "remote port";
 ConstString KEY_REMOVE_XML_TAGS = "Remove XML tags";
@@ -510,6 +511,15 @@ void Configuration::reset()
 #undef FOREACH_CONFIG_GROUP
 #undef GROUP_CALLBACK
 
+ConstString DEFAULT_MMAPPER_SUBDIR = "/MMapper";
+ConstString DEFAULT_LOGS_SUBDIR = "/Logs";
+ConstString DEFAULT_RESOURCES_SUBDIR = "/Resources";
+
+NODISCARD static QString getDefaultDirectory()
+{
+    return QDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).absolutePath();
+}
+
 void Configuration::GeneralSettings::read(QSettings &conf)
 {
     firstRun = conf.value(KEY_RUN_FIRST_TIME, true).toBool();
@@ -570,6 +580,11 @@ void Configuration::CanvasSettings::read(QSettings &conf)
         return Color(QColor(conf.value(key, qdef).toString()));
     };
 
+    resourcesDirectory = conf.value(KEY_RESOURCES_DIRECTORY,
+                                    getDefaultDirectory()
+                                        .append(DEFAULT_MMAPPER_SUBDIR)
+                                        .append(DEFAULT_RESOURCES_SUBDIR))
+                             .toString();
     showUpdated = conf.value(KEY_SHOW_UPDATED_ROOMS, false).toBool();
     drawNotMappedExits = conf.value(KEY_DRAW_NOT_MAPPED_EXITS, true).toBool();
     drawUpperLayersTextured = conf.value(KEY_DRAW_UPPER_LAYERS_TEXTURED, false).toBool();
@@ -588,14 +603,6 @@ void Configuration::CanvasSettings::read(QSettings &conf)
     advanced.verticalAngle.set(conf.value(KEY_3D_VERTICAL_ANGLE, 450).toInt());
     advanced.horizontalAngle.set(conf.value(KEY_3D_HORIZONTAL_ANGLE, 0).toInt());
     advanced.layerHeight.set(conf.value(KEY_3D_LAYER_HEIGHT, 15).toInt());
-}
-
-ConstString DEFAULT_MMAPPER_SUBDIR = "/MMapper";
-ConstString DEFAULT_LOGS_SUBDIR = "/Logs";
-
-NODISCARD static QString getDefaultDirectory()
-{
-    return QDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).absolutePath();
 }
 
 void Configuration::AutoLoadSettings::read(QSettings &conf)
@@ -765,6 +772,7 @@ NODISCARD static auto getQColorName(const XNamedColor &color)
 
 void Configuration::CanvasSettings::write(QSettings &conf) const
 {
+    conf.setValue(KEY_RESOURCES_DIRECTORY, resourcesDirectory);
     conf.setValue(KEY_SHOW_UPDATED_ROOMS, showUpdated);
     conf.setValue(KEY_DRAW_NOT_MAPPED_EXITS, drawNotMappedExits);
     conf.setValue(KEY_DRAW_UPPER_LAYERS_TEXTURED, drawUpperLayersTextured);

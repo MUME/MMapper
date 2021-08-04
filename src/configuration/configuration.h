@@ -177,6 +177,7 @@ public:
         int antialiasingSamples = 0;
         bool trilinearFiltering = false;
         bool softwareOpenGL = false;
+        QString resourcesDirectory;
 
         // not saved yet:
         bool drawCharBeacons = true;

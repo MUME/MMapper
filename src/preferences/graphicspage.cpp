@@ -74,6 +74,20 @@ GraphicsPage::GraphicsPage(QWidget *parent)
             this,
             &GraphicsPage::slot_drawUpperLayersTexturedStateChanged);
 
+    connect(ui->resourceLineEdit, &QLineEdit::textChanged, this, [](const QString &text) {
+        setConfig().canvas.resourcesDirectory = text;
+    });
+    connect(ui->resourcePushButton, &QAbstractButton::clicked, this, [this](bool /*unused*/) {
+        const auto &resourceDir = getConfig().canvas.resourcesDirectory;
+        QString directory = QFileDialog::getExistingDirectory(ui->resourcePushButton,
+                                                              "Choose resource location ...",
+                                                              resourceDir);
+        if (!directory.isEmpty()) {
+            ui->resourceLineEdit->setText(directory);
+            setConfig().canvas.resourcesDirectory = directory;
+        }
+    });
+
     connect(m_advanced.get(),
             &AdvancedGraphicsGroupBox::sig_graphicsSettingsChanged,
             this,
@@ -109,6 +123,8 @@ void GraphicsPage::slot_loadConfig()
     ui->drawNotMappedExits->setChecked(settings.drawNotMappedExits);
     ui->drawUpperLayersTextured->setChecked(settings.drawUpperLayersTextured);
     ui->drawDoorNames->setChecked(settings.drawDoorNames);
+
+    ui->resourceLineEdit->setText(settings.resourcesDirectory);
 }
 
 void GraphicsPage::changeColorClicked(XNamedColor &namedColor, QPushButton *const pushButton)
