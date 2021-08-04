@@ -1003,7 +1003,7 @@ int AbstractTelnet::onReadInternalInflate(const char *data,
             if (debug)
                 qDebug() << "Ending compression";
             break;
-       default:
+        default:
             break;
         }
 
