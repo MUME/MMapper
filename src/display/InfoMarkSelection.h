@@ -22,7 +22,7 @@ private:
     };
 
 public:
-    NODISCARD static std::shared_ptr<InfoMarkSelection> alloc(MapData *mapData,
+    NODISCARD static std::shared_ptr<InfoMarkSelection> alloc(MapData &mapData,
                                                               const Coordinate &c1,
                                                               const Coordinate &c2)
     {
@@ -30,7 +30,7 @@ public:
     }
 
 public:
-    InfoMarkSelection(this_is_private, MapData *, const Coordinate &c1, const Coordinate &c2);
+    InfoMarkSelection(this_is_private, MapData &, const Coordinate &c1, const Coordinate &c2);
     DELETE_CTORS_AND_ASSIGN_OPS(InfoMarkSelection);
 
     NODISCARD const Coordinate &getPosition1() const { return m_sel1; }

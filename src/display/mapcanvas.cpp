@@ -365,7 +365,7 @@ std::shared_ptr<InfoMarkSelection> MapCanvas::getInfoMarkSelection(const MouseSe
         const auto pos = sel.getScaledCoordinate(INFOMARK_SCALE);
         const auto lo = pos + Coordinate{-INFOMARK_CLICK_RADIUS, -INFOMARK_CLICK_RADIUS, 0};
         const auto hi = pos + Coordinate{+INFOMARK_CLICK_RADIUS, +INFOMARK_CLICK_RADIUS, 0};
-        return InfoMarkSelection::alloc(&m_data, lo, hi);
+        return InfoMarkSelection::alloc(m_data, lo, hi);
     }
 
     const glm::vec2 clickPoint = glm::vec2{optClickPoint.value()};
@@ -396,7 +396,7 @@ std::shared_ptr<InfoMarkSelection> MapCanvas::getInfoMarkSelection(const MouseSe
     const auto hi = getScaled(maxCoord);
     const auto lo = getScaled(minCoord);
 
-    return InfoMarkSelection::alloc(&m_data, lo, hi);
+    return InfoMarkSelection::alloc(m_data, lo, hi);
 }
 
 void MapCanvas::mousePressEvent(QMouseEvent *const event)
@@ -739,7 +739,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
                 // Add infomarks to selection
                 const auto c1 = getSel1().getScaledCoordinate(INFOMARK_SCALE);
                 const auto c2 = getSel2().getScaledCoordinate(INFOMARK_SCALE);
-                auto tmpSel = InfoMarkSelection::alloc(&m_data, c1, c2);
+                auto tmpSel = InfoMarkSelection::alloc(m_data, c1, c2);
                 if (tmpSel && tmpSel->size() == 1) {
                     const std::shared_ptr<InfoMark> &firstMark = tmpSel->front();
                     const Coordinate &pos = firstMark->getPosition1();
@@ -763,7 +763,7 @@ void MapCanvas::mouseReleaseEvent(QMouseEvent *const event)
             // Add infomarks to selection
             const auto c1 = getSel1().getScaledCoordinate(INFOMARK_SCALE);
             const auto c2 = getSel2().getScaledCoordinate(INFOMARK_SCALE);
-            auto tmpSel = InfoMarkSelection::alloc(&m_data, c1, c2);
+            auto tmpSel = InfoMarkSelection::alloc(m_data, c1, c2);
             tmpSel->clear(); // REVISIT: Should creation workflow require the selection to be empty?
             slot_setInfoMarkSelection(tmpSel);
         }
