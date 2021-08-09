@@ -15,6 +15,7 @@
 #include <limits>
 #include <list>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <stdexcept>
 #include <type_traits>
@@ -49,6 +50,21 @@
 #include "connectionselection.h"
 
 namespace MapCanvasConfig {
+
+static std::mutex g_version_lock;
+static std::string g_current_gl_version = "UN0.0";
+
+static void setCurrentOpenGLVersion(std::string version)
+{
+    std::unique_lock<std::mutex> lock{g_version_lock};
+    g_current_gl_version = std::move(version);
+}
+
+std::string getCurrentOpenGLVersion()
+{
+    std::unique_lock<std::mutex> lock{g_version_lock};
+    return g_current_gl_version;
+}
 
 ConnectionSet registerChangeCallback(ChangeMonitor::Function callback)
 {
@@ -156,10 +172,34 @@ void MapCanvas::reportGLVersion()
     logString("OpenGL Renderer:", GL_RENDERER);
     logString("OpenGL Vendor:", GL_VENDOR);
     logString("OpenGL GLSL:", GL_SHADING_LANGUAGE_VERSION);
+
+    const auto version = [this]() -> std::string {
+        const QSurfaceFormat &format = context()->format();
+        std::ostringstream oss;
+        switch (format.renderableType()) {
+        case QSurfaceFormat::OpenGL:
+            oss << "GL";
+            break;
+        case QSurfaceFormat::OpenGLES:
+            oss << "ES";
+            break;
+        case QSurfaceFormat::OpenVG:
+            oss << "VG";
+            break;
+        case QSurfaceFormat::DefaultRenderableType:
+        default:
+            oss << "UN";
+            break;
+        }
+        oss << format.majorVersion() << "." << format.minorVersion();
+        return std::move(oss).str();
+    }();
+
+    MapCanvasConfig::setCurrentOpenGLVersion(version);
+
     logMsg("Current OpenGL Context:",
-           QString("%1.%2 (%3)")
-               .arg(context()->format().majorVersion())
-               .arg(context()->format().minorVersion())
+           QString("%1 (%2)")
+               .arg(version.c_str())
                // FIXME: This is a bit late to report an invalid context.
                .arg(context()->isValid() ? "valid" : "invalid")
                .toUtf8());

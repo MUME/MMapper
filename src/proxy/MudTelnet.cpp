@@ -11,6 +11,7 @@
 #include <QSysInfo>
 
 #include "../configuration/configuration.h"
+#include "../display/MapCanvasConfig.h"
 #include "../global/TextUtils.h"
 #include "../global/Version.h"
 #include "GmcpUtils.h"
@@ -32,7 +33,8 @@ NODISCARD static QByteArray addTerminalTypeSuffix(const std::string_view &prefix
     const auto arch = QSysInfo::currentCpuArchitecture().toLatin1();
 
     std::stringstream ss;
-    ss << prefix << "/MMapper-" << getMMapperVersion() << "/" << get_os_string() << "/"
+    ss << prefix << "/MMapper-" << getMMapperVersion() << "/"
+       << MapCanvasConfig::getCurrentOpenGLVersion() << "/" << get_os_string() << "/"
        << arch.constData();
     return ::toQByteArrayLatin1(ss.str());
 }
