@@ -67,7 +67,6 @@ bool Functions::tryEnableMultisampling(const int requestedSamples)
     } else {
         // NOTE: Currently we can use OpenGL 2.1 to fake multisampling with point/line/polygon smoothing.
         // TODO: We can use OpenGL 3.x FBOs to do multisampling even if the default framebuffer doesn't support it.
-        Base::glDisable(GL_MULTISAMPLE);
         if (requestedSamples > 0) {
             Base::glEnable(GL_POINT_SMOOTH);
             Base::glEnable(GL_LINE_SMOOTH);
