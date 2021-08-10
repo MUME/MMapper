@@ -1,4 +1,22 @@
 ================================
+MMapper 21.08.0 (August 9, 2021)
+================================
+
+New features:
+ - Added a new milkable mob flag and updated the default map to support it
+ - Room textures can now by modded by players: https://github.com/MUME/MMapper/wiki/Modding
+ - Added the _mark command to add, update, or remove text marks without using a mouse
+ - Distant selected rooms are now scaled based upon distance
+
+Changes:
+ - Renamed _markcurrent to _room select
+ - Anonymously exposed OpenGL version in the terminal type
+
+Bug fixes:
+ - Fixed MCCP2 compression crash when reconnecting
+ - Prevent colors from looking washed out on Mesa 21.0.3 by not disabling multisampling
+
+================================
 MMapper 21.06.0 (June 1, 2021)
 ================================
 
