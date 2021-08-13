@@ -57,6 +57,49 @@ if(Qt6Core_FOUND)
     add_definitions(/DQT_DISABLE_DEPRECATED_UP_TO=0x060200)
 endif()
 
+if(Qt6OpenGL_FOUND)
+    file(WRITE ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckQtGLES30.cpp
+        "#include <QOpenGLExtraFunctions>
+        #ifndef GL_TRIANGLES
+        # error
+        #endif
+        #ifdef Q_OS_MAC
+        # error
+        #endif
+        int main(int argc, char** argv) { return 0; }")
+    try_compile(QT_HAS_GLES
+                    ${CMAKE_BINARY_DIR}
+                    ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckQtGLES30.cpp
+                    LINK_LIBRARIES Qt6::OpenGL
+                    OUTPUT_VARIABLE OUTPUT)
+    file(WRITE ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckQtOpenGL33.cpp
+        "#include <QOpenGLFunctions_3_3_Core>
+        #ifndef GL_QUADS
+        # error
+        #endif
+        int main(int argc, char** argv) { return 0; }")
+    try_compile(QT_HAS_OPENGL
+                    ${CMAKE_BINARY_DIR}
+                    ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckQtOpenGL33.cpp
+                    LINK_LIBRARIES Qt6::OpenGL
+                    OUTPUT_VARIABLE OUTPUT)
+    if (NOT QT_HAS_GLES)
+        add_definitions(/DMMAPPER_NO_GLES)
+    endif()
+    if (NOT QT_HAS_OPENGL)
+        add_definitions(/DMMAPPER_NO_OPENGL)
+    endif()
+    if(QT_HAS_GLES AND QT_HAS_OPENGL)
+        message(STATUS "QOpenGLExtraFunctions supports both GLES 3.0 and OpenGL 3.3")
+    elseif(QT_HAS_GLES)
+        message(STATUS "QOpenGLExtraFunctions supports GLES 3.0")
+    elseif(QT_HAS_OPENGL)
+        message(STATUS "QOpenGLExtraFunctions supports OpenGL 3.3")
+    else()
+        message(FATAL_ERROR "QOpenGLExtraFunctions does not support GLES 3.0 or OpenGL 3.3")
+    endif()
+endif()
+
 if(WITH_WEBSOCKET)
     if(NOT Qt6WebSockets_FOUND)
         message(FATAL_ERROR "Qt6 WebSockets module not found: use `-DWITH_WEBSOCKET=OFF` to build without WebSocket support")

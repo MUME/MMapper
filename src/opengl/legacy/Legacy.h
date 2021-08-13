@@ -5,6 +5,7 @@
 #include "../../global/Badge.h"
 #include "../../global/RuleOf5.h"
 #include "../../global/utils.h"
+#include "../OpenGLConfig.h"
 #include "../OpenGLTypes.h"
 
 #include <cmath>
@@ -17,7 +18,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <QOpenGLFunctions>
+#include <QOpenGLExtraFunctions>
 
 class OpenGL;
 
@@ -71,17 +72,28 @@ NODISCARD static inline std::vector<VertexType_> convertQuadsToTris(
 }
 
 class Functions;
+class FunctionsGL33;
+class FunctionsES30;
 using SharedFunctions = std::shared_ptr<Functions>;
 using WeakFunctions = std::weak_ptr<Functions>;
 
-/// \c Legacy::Functions implements both GL 2.0 and ES 2.0 (based on a subset of
-/// GL 2.0); this is accomplished by using separate implementation files for the
-/// differences between GL 2.0 and ES 2.0.
-class NODISCARD Functions final : private QOpenGLFunctions,
-                                  public std::enable_shared_from_this<Functions>
+/// \c Legacy::Functions implements both GL 3.X and ES 3.X (based on a subset of
+/// ES 3.X)
+class NODISCARD Functions : protected QOpenGLExtraFunctions,
+                            public std::enable_shared_from_this<Functions>
 {
+    friend class FunctionsGL33;
+    friend class FunctionsES30;
+
+public:
+    template<typename T>
+    NODISCARD static std::shared_ptr<Functions> alloc()
+    {
+        return std::make_shared<T>(Badge<Functions>{});
+    }
+
 private:
-    using Base = QOpenGLFunctions;
+    using Base = QOpenGLExtraFunctions;
     glm::mat4 m_viewProj = glm::mat4(1);
     Viewport m_viewport;
     float m_devicePixelRatio = 1.f;
@@ -90,13 +102,11 @@ private:
     std::unique_ptr<TexLookup> m_texLookup;
     std::vector<std::shared_ptr<IRenderable>> m_staticMeshes;
 
-public:
-    NODISCARD static std::shared_ptr<Functions> alloc();
-
-public:
+protected:
     explicit Functions(Badge<Functions>);
 
-    ~Functions();
+public:
+    virtual ~Functions();
     DELETE_CTORS_AND_ASSIGN_OPS(Functions);
 
 public:
@@ -170,9 +180,19 @@ public:
     using Base::glUseProgram;
     using Base::glVertexAttribPointer;
 
+    // VAO functions
+    using Base::glBindVertexArray;
+    using Base::glDeleteVertexArrays;
+    using Base::glGenVertexArrays;
+
 public:
-    // OpenGL man page says "Only width 1 is guaranteed to be supported."
-    void glLineWidth(const GLfloat lineWidth) { Base::glLineWidth(scalef(lineWidth)); }
+    void glLineWidth(const GLfloat lineWidth)
+    {
+        // REVISIT: Only width 1 is guaranteed to be supported for core profiles
+        if (OpenGLConfig::getIsCompat()) {
+            Base::glLineWidth(lineWidth);
+        }
+    }
 
 public:
     void glViewport(const GLint x, const GLint y, const GLsizei width, const GLsizei height)
@@ -222,16 +242,26 @@ public:
 private:
     friend PointSizeBinder;
     /// platform-specific (ES vs GL)
-    void enableProgramPointSize(bool enable);
+    void enableProgramPointSize(bool enable) { virt_enableProgramPointSize(enable); }
 
 private:
     friend OpenGL;
     /// platform-specific (ES vs GL)
-    NODISCARD bool tryEnableMultisampling(int requestedSamples);
+    NODISCARD bool tryEnableMultisampling(int requestedSamples)
+    {
+        return virt_tryEnableMultisampling(requestedSamples);
+    }
 
 public:
     /// platform-specific (ES vs GL)
-    NODISCARD static const char *getShaderVersion();
+    NODISCARD const char *getShaderVersion() const { return virt_getShaderVersion(); }
+
+protected:
+    NODISCARD virtual bool virt_canRenderQuads() = 0;
+    NODISCARD virtual std::optional<GLenum> virt_toGLenum(DrawModeEnum mode) = 0;
+    virtual void virt_enableProgramPointSize(bool enable) = 0;
+    NODISCARD virtual bool virt_tryEnableMultisampling(int requestedSamples) = 0;
+    NODISCARD virtual const char *virt_getShaderVersion() const = 0;
 
 private:
     template<typename VertexType_>
@@ -250,10 +280,10 @@ private:
 
 public:
     /// platform-specific (ES vs GL)
-    NODISCARD static bool canRenderQuads();
+    NODISCARD bool canRenderQuads() { return virt_canRenderQuads(); }
 
     /// platform-specific (ES vs GL)
-    NODISCARD static std::optional<GLenum> toGLenum(DrawModeEnum mode);
+    NODISCARD std::optional<GLenum> toGLenum(DrawModeEnum mode) { return virt_toGLenum(mode); }
 
 public:
     void enableAttrib(const GLuint index,

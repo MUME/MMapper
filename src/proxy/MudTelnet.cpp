@@ -11,7 +11,7 @@
 #include "../global/TextUtils.h"
 #include "../global/Version.h"
 #include "../global/emojis.h"
-#include "../opengl/OpenGL.h"
+#include "../opengl/OpenGLConfig.h"
 #include "GmcpUtils.h"
 
 #include <charconv>
@@ -76,7 +76,7 @@ NODISCARD TelnetTermTypeBytes addTerminalTypeSuffix(const std::string_view prefi
 
     std::ostringstream ss;
     ss << prefix << "/MMapper-" << getMMapperVersion() << "/"
-       << OpenGL::getHighestReportableVersionString() << "/" << getOs() << "/" << arch;
+       << OpenGLConfig::getHighestReportableVersionString() << "/" << getOs() << "/" << arch;
     auto str = std::move(ss).str();
 
     return TelnetTermTypeBytes{mmqt::toQByteArrayUtf8(str)};

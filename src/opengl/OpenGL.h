@@ -8,7 +8,6 @@
 #include "OpenGLTypes.h"
 
 #include <memory>
-#include <string>
 #include <vector>
 
 #include <glm/glm.hpp>
@@ -24,7 +23,6 @@ class Functions;
 class NODISCARD OpenGL final
 {
 private:
-    static std::string g_highest_reportable_version_string;
     std::shared_ptr<Legacy::Functions> m_opengl;
     bool m_rendererInitialized = false;
 
@@ -34,14 +32,10 @@ private:
     NODISCARD const auto &getSharedFunctions() { return m_opengl; }
 
 public:
-    OpenGL();
+    explicit OpenGL();
     ~OpenGL();
     OpenGL(const OpenGL &) = delete;
     OpenGL &operator=(const OpenGL &) = delete;
-
-public:
-    NODISCARD static QSurfaceFormat createDefaultSurfaceFormat();
-    NODISCARD static std::string getHighestReportableVersionString();
 
 public:
     NODISCARD const auto &getSharedFunctions(Badge<MapCanvas>) { return getSharedFunctions(); }

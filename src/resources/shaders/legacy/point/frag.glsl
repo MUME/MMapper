@@ -3,9 +3,14 @@
 
 uniform vec4 uColor;
 
-varying vec4 vColor;
+in vec4 vColor;
+
+out vec4 vFragmentColor;
 
 void main()
 {
-    gl_FragColor = vColor * uColor;
+    if (dot(gl_PointCoord-0.5, gl_PointCoord-0.5) > 0.25) {
+        discard;
+    }
+    vFragmentColor = vColor * uColor;
 }
