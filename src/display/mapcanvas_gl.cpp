@@ -15,6 +15,7 @@
 #include "../opengl/Font.h"
 #include "../opengl/FontFormatFlags.h"
 #include "../opengl/OpenGL.h"
+#include "../opengl/OpenGLConfig.h"
 #include "../opengl/OpenGLTypes.h"
 #include "../opengl/legacy/Meshes.h"
 #include "../src/global/SendToUser.h"
@@ -175,7 +176,7 @@ void MapCanvas::reportGLVersion()
                .toUtf8());
 
     logMsg("Highest Reportable OpenGL:",
-           mmqt::toQByteArrayUtf8(OpenGL::getHighestReportableVersionString()));
+           mmqt::toQByteArrayUtf8(OpenGLConfig::getHighestReportableVersionString()));
 
     logMsg("Display:", QString("%1 DPI").arg(QPaintDevice::devicePixelRatioF()).toUtf8());
 }

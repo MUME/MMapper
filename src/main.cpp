@@ -11,7 +11,8 @@
 #include "./global/emojis.h"
 #include "./mainwindow/WinDarkMode.h"
 #include "./mainwindow/mainwindow.h"
-#include "./opengl/OpenGL.h"
+#include "./opengl/OpenGLConfig.h"
+#include "./opengl/OpenGLProber.h"
 
 #include <memory>
 #include <optional>
@@ -88,14 +89,33 @@ static void tryAutoLoadMap(MainWindow &mw)
     }
 }
 
-static void setSurfaceFormat()
+static bool setSurfaceFormat()
 {
-    // Probe for supported OpenGL versions
-    QSurfaceFormat fmt = OpenGL::createDefaultSurfaceFormat();
+    OpenGLProber prober;
+    auto probeResult = prober.probe();
+    if (probeResult.backendType == OpenGLProber::BackendType::None) {
+        QString msg = "No compatible rendering backend found.\n\nThe applications requires ";
+        if constexpr (!NO_OPENGL) {
+            msg += "OpenGL 3.3";
+        }
+        if constexpr (!NO_OPENGL && !NO_GLES) {
+            msg += " or ";
+        }
+        if constexpr (!NO_GLES) {
+            msg += "OpenGL ES 3.0";
+        }
+        msg += " support to run.";
+        QMessageBox::critical(nullptr, "Fatal Error", msg);
+        return false;
+    }
 
-    const auto &config = getConfig().canvas;
-    fmt.setSamples(config.antialiasingSamples);
+    QSurfaceFormat fmt = probeResult.format;
+    OpenGLConfig::setHighestReportableVersionString(probeResult.highestVersionString);
+    OpenGLConfig::setBackendType(probeResult.backendType);
+    OpenGLConfig::setIsCompat(probeResult.isCompat);
+    fmt.setSamples(getConfig().canvas.antialiasingSamples);
     QSurfaceFormat::setDefaultFormat(fmt);
+    return true;
 }
 
 int main(int argc, char **argv)
@@ -113,7 +133,9 @@ int main(int argc, char **argv)
     tryInitDrMingw();
     auto tryLoadingWinSock = std::make_unique<WinSock>();
     auto tryLoadingWinDarkMode = std::make_unique<WinDarkMode>(&app);
-    setSurfaceFormat();
+    if (!setSurfaceFormat()) {
+        return 1;
+    }
 
     tryLoadEmojis(getResourceFilenameRaw("emojis", "short-codes.json"));
     auto mw = std::make_unique<MainWindow>();

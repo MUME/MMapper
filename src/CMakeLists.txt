@@ -386,11 +386,15 @@ set(mmapper_SRCS
     observer/gameobserver.h
     opengl/Font.cpp
     opengl/Font.h
+    opengl/OpenGLProber.cpp
+    opengl/OpenGLProber.h
     opengl/FontFormatFlags.h
     opengl/LineRendering.cpp
     opengl/LineRendering.h
     opengl/OpenGL.cpp
     opengl/OpenGL.h
+    opengl/OpenGLConfig.cpp
+    opengl/OpenGLConfig.h
     opengl/OpenGLTypes.cpp
     opengl/OpenGLTypes.h
     opengl/legacy/AbstractShaderProgram.cpp
@@ -401,6 +405,10 @@ set(mmapper_SRCS
     opengl/legacy/FontMesh3d.h
     opengl/legacy/Legacy.cpp
     opengl/legacy/Legacy.h
+    opengl/legacy/FunctionsGL33.cpp
+    opengl/legacy/FunctionsGL33.h
+    opengl/legacy/FunctionsES30.cpp
+    opengl/legacy/FunctionsES30.h
     opengl/legacy/Meshes.cpp
     opengl/legacy/Meshes.h
     opengl/legacy/ShaderUtils.cpp
@@ -409,9 +417,10 @@ set(mmapper_SRCS
     opengl/legacy/Shaders.h
     opengl/legacy/SimpleMesh.cpp
     opengl/legacy/SimpleMesh.h
+    opengl/legacy/VAO.cpp
+    opengl/legacy/VAO.h
     opengl/legacy/VBO.cpp
     opengl/legacy/VBO.h
-    opengl/legacy/impl_gl20.cpp
     parser/Abbrev.cpp
     parser/Abbrev.h
     parser/AbstractParser-Actions.cpp

@@ -211,9 +211,7 @@ NODISCARD static GLuint compileShader(Functions &gl, const GLenum type, const So
     // NOTE: GLES 2.0 required `const char**` instead of `const char*const*`,
     // so Qt uses the least common denominator without the middle const;
     // that's the reason the `ptrs` array below is not `const`.
-    std::array<const char *, 3> ptrs = {Functions::getShaderVersion(),
-                                        "#line 1\n",
-                                        source.source.c_str()};
+    std::array<const char *, 3> ptrs = {gl.getShaderVersion(), "#line 1\n", source.source.c_str()};
     gl.glShaderSource(shaderId, static_cast<GLsizei>(ptrs.size()), ptrs.data(), nullptr);
     gl.glCompileShader(shaderId);
     checkShaderInfo(gl, shaderId);

@@ -4,13 +4,13 @@
 uniform mat4 uMVP3D;
 uniform ivec4 uPhysViewport;
 
-attribute vec3 aBase; // address in world space
-attribute vec4 aColor;
-attribute vec2 aTexCoord;
-attribute vec2 aVert; // offset in raw pixels
+layout(location = 0) in vec3 aBase; // address in world space
+layout(location = 1) in vec4 aColor;
+layout(location = 2) in vec2 aTexCoord;
+layout(location = 3) in vec2 aVert; // offset in raw pixels
 
-varying vec4 vColor;
-varying vec2 vTexCoord;
+out vec4 vColor;
+out vec2 vTexCoord;
 
 // [0, 1]^2 to pixels
 vec2 convertScreen01toPhysPixels(vec2 pos)
