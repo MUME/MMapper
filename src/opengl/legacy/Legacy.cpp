@@ -31,6 +31,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QMessageLogContext>
+#include <QOpenGLExtraFunctions>
 #include <QOpenGLTexture>
 
 namespace Legacy {
@@ -321,6 +322,21 @@ void Functions::checkError()
     }
 
 #undef CASE
+}
+
+void Functions::glGenVertexArrays(GLsizei n, GLuint *arrays)
+{
+    QOpenGLContext::currentContext()->extraFunctions()->glGenVertexArrays(n, arrays);
+}
+
+void Functions::glBindVertexArray(GLuint array)
+{
+    QOpenGLContext::currentContext()->extraFunctions()->glBindVertexArray(array);
+}
+
+void Functions::glDeleteVertexArrays(GLsizei n, const GLuint *arrays)
+{
+    QOpenGLContext::currentContext()->extraFunctions()->glDeleteVertexArrays(n, arrays);
 }
 
 } // namespace Legacy

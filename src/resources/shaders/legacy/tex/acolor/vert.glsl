@@ -3,12 +3,12 @@
 
 uniform mat4 uMVP;
 
-attribute vec4 aColor;
-attribute vec2 aTexCoord;
-attribute vec3 aVert;
+layout(location = 0) in vec4 aColor;
+layout(location = 1) in vec2 aTexCoord;
+layout(location = 2) in vec3 aVert;
 
-varying vec4 vColor;
-varying vec2 vTexCoord;
+out vec4 vColor;
+out vec2 vTexCoord;
 
 void main()
 {

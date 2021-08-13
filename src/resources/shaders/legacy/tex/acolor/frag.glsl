@@ -4,10 +4,12 @@
 uniform sampler2D uTexture;
 uniform vec4 uColor;
 
-varying vec4 vColor;
-varying vec2 vTexCoord;
+in vec4 vColor;
+in vec2 vTexCoord;
+
+out vec4 vFragmentColor;
 
 void main()
 {
-    gl_FragColor = vColor * uColor * texture2D(uTexture, vTexCoord);
+    vFragmentColor = vColor * uColor * texture(uTexture, vTexCoord);
 }

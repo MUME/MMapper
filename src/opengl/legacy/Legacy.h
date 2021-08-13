@@ -170,9 +170,17 @@ public:
     using Base::glUseProgram;
     using Base::glVertexAttribPointer;
 
+    // VAO functions
+    void glGenVertexArrays(GLsizei n, GLuint *arrays);
+    void glBindVertexArray(GLuint array);
+    void glDeleteVertexArrays(GLsizei n, const GLuint *arrays);
+
 public:
-    // OpenGL man page says "Only width 1 is guaranteed to be supported."
-    void glLineWidth(const GLfloat lineWidth) { Base::glLineWidth(scalef(lineWidth)); }
+    void glLineWidth(const GLfloat /*lineWidth*/)
+    {
+        // OpenGL man page says "Only width 1 is guaranteed to be supported."
+        Base::glLineWidth(1.f);
+    }
 
 public:
     void glViewport(const GLint x, const GLint y, const GLsizei width, const GLsizei height)

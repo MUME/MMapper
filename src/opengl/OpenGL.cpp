@@ -230,7 +230,7 @@ NODISCARD QSurfaceFormat getOptimalFormat(std::optional<GLContextCheckResult> re
             // REVISIT: GL_INVALID_ENUM in glEnable(GL_POINT_SMOOTH) on Mesa if we use this
             format.setVersion(result->version.major, result->version.minor);
         } else {
-            format.setVersion(2, 1);
+            format.setVersion(3, 3);
         }
         format.setProfile(result->isCore ? QSurfaceFormat::CoreProfile
                                          : QSurfaceFormat::CompatibilityProfile);
@@ -247,9 +247,9 @@ NODISCARD QSurfaceFormat getOptimalFormat(std::optional<GLContextCheckResult> re
                      << (result->isDebug ? " (Debug)" : " (NO Debug)");
     } else {
         // Fallback for optimal running format if no context was found at all
-        format.setVersion(2, 1);
-        format.setProfile(QSurfaceFormat::CompatibilityProfile);
-        format.setOptions(QSurfaceFormat::DebugContext | QSurfaceFormat::DeprecatedFunctions);
+        format.setVersion(3, 3);
+        format.setProfile(QSurfaceFormat::CoreProfile);
+        format.setOptions(QSurfaceFormat::DebugContext);
         MMLOG_ERROR() << "[GL Probe] No suitable GL context found for running format.";
     }
     return format;
@@ -268,12 +268,10 @@ NODISCARD OpenGLProbeResult probeOpenGLFormats()
     // Define lists of versions to try.
     std::vector<GLVersion> coreVersions
         = {{4, 6}, {4, 5}, {4, 4}, {4, 3}, {4, 2}, {4, 1}, {4, 0}, {3, 3}, {3, 2}};
-    std::vector<GLVersion> compatVersions = coreVersions;
-    compatVersions.insert(compatVersions.end(), {{3, 1}, {3, 0}, {2, 1}}); // Add versions < 3.2
 
     std::optional<GLContextCheckResult> coreResult = probeCore(format, coreVersions, optionsCore);
     std::optional<GLContextCheckResult> compatResult = probeCompat(format,
-                                                                   compatVersions,
+                                                                   coreVersions,
                                                                    optionsCompat,
                                                                    coreResult);
 
