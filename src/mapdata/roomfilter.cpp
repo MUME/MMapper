@@ -6,6 +6,7 @@
 
 #include <optional>
 #include <regex>
+#include <QString>
 
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/room.h"
@@ -40,7 +41,25 @@ NODISCARD static std::regex createRegex(const std::string &input, const Qt::Case
         };
         static const std::regex escape(escape_pattern(), std::regex::optimize);
         const std::string sanitized = std::regex_replace(input, escape, R"(\$&)");
-        return ".*" + sanitized + ".*";
+
+        QString qStrInput = QString::fromStdString(sanitized);
+        const auto inputArr = qStrInput.split(' ', Qt::KeepEmptyParts);
+
+        QString newString(""); //= QString::fromStdString();
+
+        for (const auto &part : inputArr) {
+            if (part == "\\*") {
+                newString.append("([a-zA-Z0-9_]+)");
+            } else {
+                newString.append(part);
+            }
+            newString.append(" ");
+        }
+        newString = newString.trimmed();
+
+        const std::string retString = newString.toStdString();
+
+        return ".*"+ retString + ".*";
     }();
     return std::regex(pattern, options);
 }
