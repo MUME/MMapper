@@ -10,20 +10,18 @@ namespace Ui {
 class AutoLogPage;
 }
 
-class AutoLogPage : public QWidget
+class AutoLogPage final : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit AutoLogPage(QWidget *parent = nullptr);
-    ~AutoLogPage() override;
+    explicit AutoLogPage(QWidget *parent);
+    ~AutoLogPage() final;
 
 public slots:
-    void loadConfig();
-
-    void logStrategyChanged(int);
-
-    void selectLogLocationButtonClicked(int);
+    void slot_loadConfig();
+    void slot_logStrategyChanged(int);
+    void slot_selectLogLocationButtonClicked(int);
 
 signals:
 

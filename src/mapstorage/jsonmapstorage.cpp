@@ -40,7 +40,7 @@ static constexpr const int ZONE_WIDTH = 20;
  * MD5 is for convenience (easily available in all languages), the rest makes
  * the hash resilient to trivial typo fixes by the builders.
  */
-class WebHasher final
+class NODISCARD WebHasher final
 {
     QCryptographicHash m_hash;
 
@@ -73,7 +73,7 @@ public:
 
 // Lets the webclient locate and load the useful zones only, not the whole
 // world at once.
-class RoomHashIndex final
+class NODISCARD RoomHashIndex final
 {
 public:
     using Index = QMultiMap<QByteArray, Coordinate>;
@@ -86,15 +86,15 @@ public:
     void addRoom(const Room &room)
     {
         m_hasher.add(room.getName().toQString() + "\n");
-        m_hasher.add(room.getStaticDescription().toQString());
+        m_hasher.add(room.getDescription().toQString());
         m_index.insert(m_hasher.result().toHex(), room.getPosition());
         m_hasher.reset();
     }
 
-    const Index &index() const { return m_index; }
+    NODISCARD const Index &index() const { return m_index; }
 };
 
-static std::string getZoneKey(const Coordinate &c)
+NODISCARD static std::string getZoneKey(const Coordinate &c)
 {
     static constexpr const auto calcZoneCoord = [](const int n) -> int {
         auto f = [](const int x) -> int { return (x / ZONE_WIDTH) * ZONE_WIDTH; };
@@ -112,7 +112,7 @@ static std::string getZoneKey(const Coordinate &c)
 }
 
 // Splits the world in zones easier to download and load
-class ZoneIndex final
+class NODISCARD ZoneIndex final
 {
 public:
     using Index = std::unordered_map<std::string, ConstRoomList>;
@@ -134,7 +134,7 @@ public:
         }
     }
 
-    const Index &index() const { return m_index; }
+    NODISCARD const Index &index() const { return m_index; }
 };
 
 template<typename JsonT>
@@ -159,7 +159,7 @@ static void writeJson(const QString &filePath, JsonT &json, const QString &what)
     }
 }
 
-class RoomIndexStore final
+class NODISCARD RoomIndexStore final
 {
     const QDir m_dir;
     QJsonObject m_hashes;
@@ -293,7 +293,7 @@ void JsonWorld::addRooms(const ConstRoomList &roomList,
     }
 }
 
-static constexpr const char *getNameUpper(const ExitDirEnum dir)
+NODISCARD static constexpr const char *getNameUpper(const ExitDirEnum dir)
 {
 #define CASE(x) \
     case ExitDirEnum::x: \
@@ -376,7 +376,7 @@ void JsonWorld::addRoom(QJsonArray &jRooms, const Room &room) const
     uint jsonId = m_jRoomIds[room.getId()];
     jr["id"] = QString::number(jsonId);
     jr["name"] = room.getName().toQString();
-    jr["desc"] = room.getStaticDescription().toQString();
+    jr["desc"] = room.getDescription().toQString();
     jr["sector"] = static_cast<quint8>(room.getTerrainType());
     jr["light"] = static_cast<quint8>(room.getLightType());
     jr["portable"] = static_cast<quint8>(room.getPortableType());
@@ -425,7 +425,7 @@ void JsonWorld::writeZones(const QDir &dir,
 {
     const ZoneIndex::Index &index = m_zoneIndex.index();
 
-    for (auto &kv : index) {
+    for (const auto &kv : index) {
         const ConstRoomList &rooms = kv.second;
         QJsonArray jRooms;
         auto saveOne = [this, &jRooms](const Room &room) { addRoom(jRooms, room); };
@@ -464,7 +464,7 @@ bool JsonMapStorage::mergeData()
 
 bool JsonMapStorage::saveData(bool baseMapOnly)
 {
-    emit log("JsonMapStorage", "Writing data to files ...");
+    log("Writing data to files ...");
 
     // Collect the room and marker lists. The room list can't be acquired
     // directly apparently and we have to go through a RoomSaver which receives
@@ -515,15 +515,15 @@ bool JsonMapStorage::saveData(bool baseMapOnly)
         world.writeMetadata(QFileInfo(destDir, "arda.json"), m_mapData);
         world.writeRoomIndex(roomIndexDir);
         world.writeZones(zoneDir, filter, progressCounter, baseMapOnly);
-    } catch (std::exception &e) {
-        emit log("JsonMapStorage", e.what());
+    } catch (const std::exception &e) {
+        log(e.what());
         return false;
     }
 
-    emit log("JsonMapStorage", "Writing data finished.");
+    log("Writing data finished.");
 
     m_mapData.unsetDataChanged();
-    emit onDataSaved();
+    emit sig_onDataSaved();
 
     return true;
 }

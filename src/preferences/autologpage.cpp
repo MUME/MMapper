@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 // Author: Mattias 'Mew_' Viklund <devmew@exedump.com> (Mirnir)
 
@@ -27,23 +27,23 @@ AutoLogPage::AutoLogPage(QWidget *const parent)
     connect(ui->selectAutoLogLocationButton,
             &QAbstractButton::clicked,
             this,
-            &AutoLogPage::selectLogLocationButtonClicked);
+            &AutoLogPage::slot_selectLogLocationButtonClicked);
 
     connect(ui->radioButtonKeepForever,
             QOverload<bool>::of(&QRadioButton::toggled),
             this,
-            &AutoLogPage::logStrategyChanged);
+            &AutoLogPage::slot_logStrategyChanged);
     connect(ui->radioButtonDeleteDays,
             QOverload<bool>::of(&QRadioButton::toggled),
             this,
-            &AutoLogPage::logStrategyChanged);
+            &AutoLogPage::slot_logStrategyChanged);
     connect(ui->spinBoxDays, QOverload<int>::of(&QSpinBox::valueChanged), this, [](const int size) {
         setConfig().autoLog.deleteWhenLogsReachDays = size;
     });
     connect(ui->radioButtonDeleteSize,
             QOverload<bool>::of(&QRadioButton::toggled),
             this,
-            &AutoLogPage::logStrategyChanged);
+            &AutoLogPage::slot_logStrategyChanged);
     connect(ui->spinBoxSize, QOverload<int>::of(&QSpinBox::valueChanged), this, [](const int size) {
         setConfig().autoLog.deleteWhenLogsReachBytes = size * MEGABYTE_IN_BYTES;
     });
@@ -65,7 +65,7 @@ AutoLogPage::~AutoLogPage()
     delete ui;
 }
 
-void AutoLogPage::loadConfig()
+void AutoLogPage::slot_loadConfig()
 {
     const auto &config = getConfig().autoLog;
     ui->autoLogCheckBox->setChecked(config.autoLog);
@@ -89,7 +89,7 @@ void AutoLogPage::loadConfig()
     ui->askDeleteCheckBox->setChecked(config.askDelete);
 }
 
-void AutoLogPage::selectLogLocationButtonClicked(int /*unused*/)
+void AutoLogPage::slot_selectLogLocationButtonClicked(int /*unused*/)
 {
     auto &config = setConfig().autoLog;
     QString logDirectory = QFileDialog::getExistingDirectory(this,
@@ -102,7 +102,7 @@ void AutoLogPage::selectLogLocationButtonClicked(int /*unused*/)
     }
 }
 
-void AutoLogPage::logStrategyChanged(int /*unused*/)
+void AutoLogPage::slot_logStrategyChanged(int /*unused*/)
 {
     auto &strategy = setConfig().autoLog.cleanupStrategy;
     if (ui->radioButtonKeepForever->isChecked())

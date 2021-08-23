@@ -50,7 +50,7 @@ bool MmpMapStorage::mergeData()
     return false;
 }
 
-static QString getTerrainTypeName(const RoomTerrainEnum x)
+NODISCARD static QString getTerrainTypeName(const RoomTerrainEnum x)
 {
 #define CASE2(UPPER, PrettyName) \
     do { \
@@ -79,7 +79,7 @@ static QString getTerrainTypeName(const RoomTerrainEnum x)
 #undef CASE2
 }
 
-static QString getTerrainTypeColor(const RoomTerrainEnum x)
+NODISCARD static QString getTerrainTypeColor(const RoomTerrainEnum x)
 {
 #define CASE2(UPPER, Color) \
     do { \
@@ -108,14 +108,14 @@ static QString getTerrainTypeColor(const RoomTerrainEnum x)
 #undef CASE2
 }
 
-static QString toMmpRoomId(const RoomId &roomId)
+NODISCARD static QString toMmpRoomId(const RoomId &roomId)
 {
     return QString("%1").arg(roomId.asUint32() + 1);
 }
 
 bool MmpMapStorage::saveData(bool baseMapOnly)
 {
-    emit log("MmpMapStorage", "Writing data to file ...");
+    log("Writing data to file ...");
 
     // Collect the room and marker lists. The room list can't be acquired
     // directly apparently and we have to go through a RoomSaver which receives
@@ -158,7 +158,7 @@ bool MmpMapStorage::saveData(bool baseMapOnly)
 
     // save rooms
     stream.writeStartElement("rooms");
-    auto saveOne = [this, &stream](const Room &room) { saveRoom(room, stream); };
+    auto saveOne = [&stream](const Room &room) { saveRoom(room, stream); };
 
     for (const auto &pRoom : roomList) {
         filter.visitRoom(deref(pRoom), baseMapOnly, saveOne);
@@ -181,10 +181,10 @@ bool MmpMapStorage::saveData(bool baseMapOnly)
     stream.writeEndElement(); // end map
     progressCounter.step();
 
-    emit log("MmpMapStorage", "Writing data finished.");
+    log("Writing data finished.");
 
     m_mapData.unsetDataChanged();
-    emit onDataSaved();
+    emit sig_onDataSaved();
 
     return true;
 }
@@ -206,7 +206,7 @@ void MmpMapStorage::saveRoom(const Room &room, QXmlStreamWriter &stream)
     stream.writeAttribute("z", QString("%1").arg(pos.z));
     stream.writeEndElement(); // end coord
 
-    for (auto dir : ALL_EXITS_NESWUD) {
+    for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
         const Exit &e = room.exit(dir);
         if (e.isExit() && !e.outIsEmpty()) {
             stream.writeStartElement("exit");

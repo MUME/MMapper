@@ -30,7 +30,7 @@ class QShortcut;
 class QWidget;
 class Room;
 
-class RoomListWidgetItem final : public QListWidgetItem
+class NODISCARD RoomListWidgetItem final : public QListWidgetItem
 {
 public:
     explicit RoomListWidgetItem(const QString &text, int priority = 0);
@@ -43,8 +43,11 @@ class RoomEditAttrDlg final : public QDialog, private Ui::RoomEditAttrDlg
 {
     Q_OBJECT
 
+private:
+    void requestUpdate() { emit sig_requestUpdate(); }
+
 signals:
-    void requestUpdate();
+    void sig_requestUpdate();
 
 public slots:
     void setRoomSelection(const SharedRoomSelection &, MapData *, MapCanvas *);
@@ -96,14 +99,14 @@ public slots:
     void closeClicked();
 
 public:
-    explicit RoomEditAttrDlg(QWidget *parent = nullptr);
-    ~RoomEditAttrDlg() override;
+    explicit RoomEditAttrDlg(QWidget *parent);
+    ~RoomEditAttrDlg() final;
 
     void readSettings();
     void writeSettings();
 
 private:
-    struct Connections final
+    struct NODISCARD Connections final
     {
     private:
         std::vector<QMetaObject::Connection> m_connections;
@@ -116,7 +119,7 @@ private:
         }
         void disconnectAll(QObject &o)
         {
-            for (auto &c : m_connections)
+            for (const auto &c : m_connections)
                 o.disconnect(c);
             m_connections.clear();
         }

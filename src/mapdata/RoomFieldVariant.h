@@ -37,11 +37,11 @@
 
 #define DECL_ENUM(UPPER_CASE, CamelCase, Type) UPPER_CASE
 #define COMMA() ,
-enum class RoomFieldVariantOrderEnum { X_FOREACH_ROOM_FIELD(DECL_ENUM, COMMA) };
+enum class NODISCARD RoomFieldVariantOrderEnum { X_FOREACH_ROOM_FIELD(DECL_ENUM, COMMA) };
 #undef COMMA
 #undef DECL_ENUM
 
-class RoomFieldVariant final
+class NODISCARD RoomFieldVariant final
 {
 private:
 #define COMMA() ,
@@ -60,13 +60,13 @@ public:
     explicit RoomFieldVariant(Type val) \
         : m_data{std::move(val)} \
     {} \
-    const Type &get##CamelCase() const { return std::get<Type>(m_data); }
+    NODISCARD const Type &get##CamelCase() const { return std::get<Type>(m_data); }
     X_FOREACH_ROOM_FIELD(DEFINE_CTOR_AND_GETTER, NOP)
 #undef DEFINE_CTOR_AND_GETTER
 #undef NOP
 
 public:
-    RoomFieldEnum getType() const noexcept
+    NODISCARD RoomFieldEnum getType() const noexcept
     {
 #define NOP()
 #define CASE(UPPER_CASE, CamelCase, Type) \
@@ -79,11 +79,25 @@ public:
         return RoomFieldEnum::UPPER_CASE; \
     }
         switch (const auto index = m_data.index()) {
-            X_FOREACH_ROOM_FIELD(CASE, NOP);
+            X_FOREACH_ROOM_FIELD(CASE, NOP)
         }
 #undef CASE
 #undef NOP
 
         std::abort(); /* crash */
     }
+
+public:
+    template<typename Visitor>
+    void acceptVisitor(Visitor &&visitor) const
+    {
+        std::visit(std::forward<Visitor>(visitor), m_data);
+    }
+
+public:
+    NODISCARD bool operator==(const RoomFieldVariant &other) const
+    {
+        return m_data == other.m_data;
+    }
+    NODISCARD bool operator!=(const RoomFieldVariant &other) const { return !operator==(other); }
 };

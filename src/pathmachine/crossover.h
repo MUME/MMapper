@@ -15,9 +15,11 @@ class Room;
 class RoomAdmin;
 struct PathParameters;
 
-class Crossover : public Experimenting
+class NODISCARD Crossover final : public Experimenting
 {
 public:
     Crossover(std::shared_ptr<PathList> paths, ExitDirEnum dirCode, PathParameters &params);
-    void receiveRoom(RoomAdmin *, const Room *) override;
+
+private:
+    void virt_receiveRoom(RoomAdmin *, const Room *) final;
 };

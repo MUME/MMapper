@@ -10,11 +10,12 @@
 #include <QString>
 #include <QtCore>
 
+#include "../global/macros.h"
 #include "mumemoment.h"
 
 class QMetaEnum;
 
-enum class MumeClockPrecisionEnum { UNSET = -1, DAY, HOUR, MINUTE };
+enum class NODISCARD MumeClockPrecisionEnum { UNSET = -1, DAY, HOUR, MINUTE };
 
 class MumeClock final : public QObject
 {
@@ -24,29 +25,31 @@ class MumeClock final : public QObject
 
 public:
     static constexpr const int NUM_MONTHS = 12;
-    struct DawnDusk
+    struct NODISCARD DawnDusk
     {
         int dawnHour = 6;
         int duskHour = 18;
     };
-    static DawnDusk getDawnDusk(int month);
+    NODISCARD static DawnDusk getDawnDusk(int month);
 
 public:
-    explicit MumeClock(int64_t mumeEpoch, QObject *parent = nullptr);
+    explicit MumeClock(int64_t mumeEpoch, QObject *parent);
 
-    explicit MumeClock(QObject *parent = nullptr);
+    // For use only in test cases.
+    explicit MumeClock();
 
-    MumeMoment getMumeMoment();
+    NODISCARD MumeMoment getMumeMoment() const;
 
-    MumeMoment getMumeMoment(int64_t secsSinceUnixEpoch);
+    NODISCARD MumeMoment getMumeMoment(int64_t secsSinceUnixEpoch) const;
 
-    MumeClockPrecisionEnum getPrecision();
+    // REVISIT: This can't be const because it logs.
+    NODISCARD MumeClockPrecisionEnum getPrecision();
 
-    const QString toMumeTime(const MumeMoment &moment);
+    NODISCARD QString toMumeTime(const MumeMoment &moment) const;
 
-    const QString toCountdown(const MumeMoment &moment);
+    NODISCARD QString toCountdown(const MumeMoment &moment) const;
 
-    int64_t getMumeStartEpoch() { return m_mumeStartEpoch; }
+    NODISCARD int64_t getMumeStartEpoch() const { return m_mumeStartEpoch; }
 
     enum class WestronMonthNamesEnum {
         UnknownWestronMonth = -1,
@@ -117,9 +120,11 @@ public:
     static const QMetaEnum s_sindarinWeekDayNames;
     static const QHash<QString, MumeTimeEnum> m_stringTimeHash;
 
-signals:
+private:
+    void log(const QString &msg) { emit sig_log("MumeClock", msg); }
 
-    void log(const QString &, const QString &);
+signals:
+    void sig_log(const QString &, const QString &);
 
 public slots:
 

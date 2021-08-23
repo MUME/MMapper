@@ -15,10 +15,10 @@
 
 // currently forward declared in OpenGLTypes.h
 // so it can define SharedMMTexture
-class MMTexture : public std::enable_shared_from_this<MMTexture>
+class NODISCARD MMTexture final : public std::enable_shared_from_this<MMTexture>
 {
 private:
-    struct this_is_private final
+    struct NODISCARD this_is_private final
     {
         explicit this_is_private(int) {}
     };
@@ -30,13 +30,14 @@ private:
     bool m_forbidUpdates = false;
 
 public:
-    static std::shared_ptr<MMTexture> alloc(const QString &name)
+    NODISCARD static std::shared_ptr<MMTexture> alloc(const QString &name)
     {
         return std::make_shared<MMTexture>(this_is_private{0}, name);
     }
-    static std::shared_ptr<MMTexture> alloc(const QOpenGLTexture::Target target,
-                                            const std::function<void(QOpenGLTexture &)> &init,
-                                            const bool forbidUpdates)
+    NODISCARD static std::shared_ptr<MMTexture> alloc(
+        const QOpenGLTexture::Target target,
+        const std::function<void(QOpenGLTexture &)> &init,
+        const bool forbidUpdates)
     {
         return std::make_shared<MMTexture>(this_is_private{0}, target, init, forbidUpdates);
     }
@@ -56,21 +57,21 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(MMTexture);
 
 public:
-    QOpenGLTexture *get() { return &m_qt_texture; }
-    const QOpenGLTexture *get() const { return &m_qt_texture; }
+    NODISCARD QOpenGLTexture *get() { return &m_qt_texture; }
+    NODISCARD const QOpenGLTexture *get() const { return &m_qt_texture; }
     QOpenGLTexture *operator->() { return get(); }
 
     void bind() { get()->bind(); }
     void bind(GLuint x) { get()->bind(x); }
     void release(GLuint x) { get()->release(x); }
-    GLuint textureId() const { return get()->textureId(); }
-    auto target() const { return get()->target(); }
-    bool canBeUpdated() const { return !m_forbidUpdates; }
+    NODISCARD GLuint textureId() const { return get()->textureId(); }
+    NODISCARD auto target() const { return get()->target(); }
+    NODISCARD bool canBeUpdated() const { return !m_forbidUpdates; }
 
-    SharedMMTexture getShared() { return shared_from_this(); }
-    MMTexture *getRaw() { return this; }
+    NODISCARD SharedMMTexture getShared() { return shared_from_this(); }
+    NODISCARD MMTexture *getRaw() { return this; }
 
-    int getPriority() const { return m_priority; }
+    NODISCARD int getPriority() const { return m_priority; }
     void setPriority(const int priority) { m_priority = priority; }
 };
 
@@ -78,7 +79,7 @@ template<typename E>
 using texture_array = EnumIndexedArray<SharedMMTexture, E>;
 
 template<RoadTagEnum Tag>
-struct road_texture_array : private texture_array<RoadIndexMaskEnum>
+struct NODISCARD road_texture_array : private texture_array<RoadIndexMaskEnum>
 {
     using base = texture_array<RoadIndexMaskEnum>;
     decltype(auto) operator[](TaggedRoadIndex<Tag> x) { return base::operator[](x.index); }
@@ -89,7 +90,7 @@ struct road_texture_array : private texture_array<RoadIndexMaskEnum>
     using base::size;
 };
 
-struct MapCanvasTextures final
+struct NODISCARD MapCanvasTextures final
 {
     texture_array<RoomTerrainEnum> terrain;
     road_texture_array<RoadTagEnum::ROAD> road;

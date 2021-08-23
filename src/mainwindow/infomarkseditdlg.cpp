@@ -60,30 +60,33 @@ void InfoMarksEditDlg::writeSettings()
 
 void InfoMarksEditDlg::connectAll()
 {
-    connect(this, &InfoMarksEditDlg::infomarksChanged, m_mapCanvas, &MapCanvas::infomarksChanged);
+    connect(this,
+            &InfoMarksEditDlg::sig_infomarksChanged,
+            m_mapCanvas,
+            &MapCanvas::slot_infomarksChanged);
     connect(objectsList,
-            QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
+            QOverload<int>::of(&QComboBox::currentIndexChanged),
             this,
-            &InfoMarksEditDlg::objectListCurrentIndexChanged);
+            &InfoMarksEditDlg::slot_objectListCurrentIndexChanged);
     connect(objectType,
-            QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
+            QOverload<int>::of(&QComboBox::currentIndexChanged),
             this,
-            &InfoMarksEditDlg::objectTypeCurrentIndexChanged);
-    connect(objectCreate, &QAbstractButton::clicked, this, &InfoMarksEditDlg::createClicked);
-    connect(objectModify, &QAbstractButton::clicked, this, &InfoMarksEditDlg::modifyClicked);
+            &InfoMarksEditDlg::slot_objectTypeCurrentIndexChanged);
+    connect(objectCreate, &QAbstractButton::clicked, this, &InfoMarksEditDlg::slot_createClicked);
+    connect(objectModify, &QAbstractButton::clicked, this, &InfoMarksEditDlg::slot_modifyClicked);
 }
 
-void InfoMarksEditDlg::objectListCurrentIndexChanged(const QString & /*unused*/)
+void InfoMarksEditDlg::slot_objectListCurrentIndexChanged(int /*unused*/)
 {
     updateDialog();
 }
 
-void InfoMarksEditDlg::objectTypeCurrentIndexChanged(const QString & /*unused*/)
+void InfoMarksEditDlg::slot_objectTypeCurrentIndexChanged(int /*unused*/)
 {
     updateDialog();
 }
 
-void InfoMarksEditDlg::createClicked()
+void InfoMarksEditDlg::slot_createClicked()
 {
     auto &mapData = deref(m_mapData);
     auto im = InfoMark::alloc(mapData);
@@ -95,7 +98,7 @@ void InfoMarksEditDlg::createClicked()
     setCurrentInfoMark(im.get());
     updateDialog();
 
-    emit infomarksChanged();
+    emit sig_infomarksChanged();
 }
 
 void InfoMarksEditDlg::updateMark(InfoMark &im)
@@ -127,29 +130,32 @@ void InfoMarksEditDlg::updateMark(InfoMark &im)
     im.setRotationAngle(angle);
 }
 
-void InfoMarksEditDlg::modifyClicked()
+void InfoMarksEditDlg::slot_modifyClicked()
 {
     InfoMark *const im = getCurrentInfoMark();
     if (im == nullptr)
         return;
 
     updateMark(*im);
-    emit infomarksChanged();
+    emit sig_infomarksChanged();
 }
 
 void InfoMarksEditDlg::disconnectAll()
 {
-    disconnect(this, &InfoMarksEditDlg::infomarksChanged, m_mapCanvas, &MapCanvas::infomarksChanged);
+    disconnect(this,
+               &InfoMarksEditDlg::sig_infomarksChanged,
+               m_mapCanvas,
+               &MapCanvas::slot_infomarksChanged);
     disconnect(objectsList,
-               QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
+               QOverload<int>::of(&QComboBox::currentIndexChanged),
                this,
-               &InfoMarksEditDlg::objectListCurrentIndexChanged);
+               &InfoMarksEditDlg::slot_objectListCurrentIndexChanged);
     disconnect(objectType,
-               QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
+               QOverload<int>::of(&QComboBox::currentIndexChanged),
                this,
-               &InfoMarksEditDlg::objectTypeCurrentIndexChanged);
-    disconnect(objectCreate, &QAbstractButton::clicked, this, &InfoMarksEditDlg::createClicked);
-    disconnect(objectModify, &QAbstractButton::clicked, this, &InfoMarksEditDlg::modifyClicked);
+               &InfoMarksEditDlg::slot_objectTypeCurrentIndexChanged);
+    disconnect(objectCreate, &QAbstractButton::clicked, this, &InfoMarksEditDlg::slot_createClicked);
+    disconnect(objectModify, &QAbstractButton::clicked, this, &InfoMarksEditDlg::slot_modifyClicked);
 }
 
 void InfoMarksEditDlg::updateMarkers()

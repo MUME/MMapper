@@ -21,27 +21,26 @@ class QObject;
 class QWidget;
 class InfoMarkSelection;
 
-class InfoMarksEditDlg : public QDialog, private Ui::InfoMarksEditDlg
+class InfoMarksEditDlg final : public QDialog, private Ui::InfoMarksEditDlg
 {
     Q_OBJECT
 
 public:
-    explicit InfoMarksEditDlg(QWidget *parent = nullptr);
-    ~InfoMarksEditDlg() override;
+    explicit InfoMarksEditDlg(QWidget *parent);
+    ~InfoMarksEditDlg() final;
 
     void setInfoMarkSelection(const std::shared_ptr<InfoMarkSelection> &is,
                               MapData *md,
                               MapCanvas *mc);
 
 signals:
-    void infomarksChanged();
+    void sig_infomarksChanged();
 
 public slots:
-    void objectListCurrentIndexChanged(const QString &);
-    void objectTypeCurrentIndexChanged(const QString &);
-
-    void createClicked();
-    void modifyClicked();
+    void slot_objectListCurrentIndexChanged(int);
+    void slot_objectTypeCurrentIndexChanged(int);
+    void slot_createClicked();
+    void slot_modifyClicked();
 
 private:
     std::shared_ptr<InfoMarkSelection> m_selection;
@@ -55,9 +54,9 @@ private:
     void readSettings();
     void writeSettings();
 
-    InfoMarkTypeEnum getType();
-    InfoMarkClassEnum getClass();
-    InfoMark *getCurrentInfoMark();
+    NODISCARD InfoMarkTypeEnum getType();
+    NODISCARD InfoMarkClassEnum getClass();
+    NODISCARD InfoMark *getCurrentInfoMark();
     void setCurrentInfoMark(InfoMark *m);
 
     void updateMarkers();

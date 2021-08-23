@@ -32,8 +32,7 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(Map);
 
 public:
-    bool defined(const Coordinate &c) const;
-    Coordinate setNearest(const Coordinate &c, Room &room);
+    void setNearest(const Coordinate &c, Room &room);
     Room *get(const Coordinate &c) const;
     void remove(const Coordinate &c);
     void clear();
@@ -44,14 +43,14 @@ private:
     Coordinate getNearestFree(const Coordinate &c);
 };
 
-class CoordinateIterator final
+class NODISCARD CoordinateIterator final
 {
-public:
-    CoordinateIterator() = default;
-    Coordinate &next();
-
 private:
     Coordinate c;
     int threshold = 1;
     int state = 7;
+
+public:
+    CoordinateIterator() = default;
+    NODISCARD Coordinate &next();
 };

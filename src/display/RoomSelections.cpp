@@ -22,7 +22,7 @@
 class NODISCARD RoomSelFakeGL final
 {
 public:
-    enum class SelTypeEnum { Near, Distant, MoveBad, MoveGood };
+    enum class NODISCARD SelTypeEnum { Near, Distant, MoveBad, MoveGood };
     static constexpr size_t NUM_SEL_TYPES = 4;
 
 private:
@@ -35,6 +35,11 @@ public:
     {
         auto &m = m_modelView;
         m = glm::rotate(m, glm::radians(degrees), glm::vec3(x, y, z));
+    }
+    void glScalef(float x, float y, float z)
+    {
+        auto &m = m_modelView;
+        m = glm::scale(m, glm::vec3(x, y, z));
     }
     void glTranslatef(int x, int y, int z)
     {
@@ -124,6 +129,18 @@ void MapCanvas::paintSelectedRoom(RoomSelFakeGL &gl, const Room &room)
         gl.glRotatef(dot.rotationDegrees, 0.f, 0.f, 1.f);
         const glm::vec2 iconCenter{0.5f, 0.5f};
         gl.glTranslatef(-iconCenter.x, -iconCenter.y, 0.f);
+
+        // Scale based upon distance
+        const auto scaleFactor = [this, roomCenter]() {
+            const auto delta = roomCenter - m_mapScreen.getCenter();
+            const auto distance = std::sqrt((delta.y * delta.y) + (delta.x * delta.x));
+            // If we're too far away just scale down to 50% at most
+            if (distance >= static_cast<float>(BASESIZE))
+                return 0.5f;
+            return 1.f - (distance / static_cast<float>(BASESIZE));
+        }();
+        gl.glScalef(scaleFactor, scaleFactor, 1.f);
+
         gl.drawColoredQuad(RoomSelFakeGL::SelTypeEnum::Distant);
     } else {
         // Room is close
@@ -143,12 +160,12 @@ void MapCanvas::paintSelectedRoom(RoomSelFakeGL &gl, const Room &room)
 
 void MapCanvas::paintSelectedRooms()
 {
-    if (!m_roomSelection || m_roomSelection->isEmpty())
+    if (!m_roomSelection || m_roomSelection->empty())
         return;
 
     RoomSelFakeGL gl;
 
-    for (const Room *const room : *m_roomSelection) {
+    for (const auto &[rid, room] : *m_roomSelection) {
         if (room != nullptr) {
             gl.resetMatrix();
             paintSelectedRoom(gl, *room);

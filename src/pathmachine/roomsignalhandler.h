@@ -21,7 +21,7 @@ class RoomAdmin;
 class RoomRecipient;
 struct RoomId;
 
-class RoomSignalHandler : public QObject
+class RoomSignalHandler final : public QObject
 {
     Q_OBJECT
 private:

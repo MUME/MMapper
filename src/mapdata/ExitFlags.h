@@ -23,7 +23,7 @@
     X(GUARDED, guarded, Guarded, "Guarded") \
     /* define exit flags above */
 
-enum class ExitFlagEnum {
+enum class NODISCARD ExitFlagEnum {
 #define X_DECL_EXIT_FLAG(UPPER_CASE, lower_case, CamelCase, friendly) UPPER_CASE,
     X_FOREACH_EXIT_FLAG(X_DECL_EXIT_FLAG)
 #undef X_DECL_EXIT_FLAG
@@ -34,7 +34,7 @@ static constexpr const int NUM_EXIT_FLAGS = X_FOREACH_EXIT_FLAG(X_COUNT);
 #undef X_COUNT
 DEFINE_ENUM_COUNT(ExitFlagEnum, NUM_EXIT_FLAGS)
 
-class ExitFlags final : public enums::Flags<ExitFlags, ExitFlagEnum, uint16_t>
+class NODISCARD ExitFlags final : public enums::Flags<ExitFlags, ExitFlagEnum, uint16_t>
 {
 public:
     using Flags::Flags;
@@ -46,7 +46,7 @@ public:
 #undef X_DEFINE_ACCESSORS
 };
 
-inline constexpr const ExitFlags operator|(ExitFlagEnum lhs, ExitFlagEnum rhs) noexcept
+NODISCARD inline constexpr const ExitFlags operator|(ExitFlagEnum lhs, ExitFlagEnum rhs) noexcept
 {
     return ExitFlags{lhs} | ExitFlags{rhs};
 }

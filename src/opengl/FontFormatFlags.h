@@ -7,7 +7,7 @@
 
 #include "../global/Flags.h"
 
-enum class FontFormatFlagEnum {
+enum class NODISCARD FontFormatFlagEnum {
     NONE,
     ITALICS,
     UNDERLINE,
@@ -23,7 +23,8 @@ enum class FontFormatFlagEnum {
 
 DEFINE_ENUM_COUNT(FontFormatFlagEnum, 5);
 
-struct FontFormatFlags final : public enums::Flags<FontFormatFlags, FontFormatFlagEnum, uint8_t>
+struct NODISCARD FontFormatFlags final
+    : public enums::Flags<FontFormatFlags, FontFormatFlagEnum, uint8_t>
 {
 public:
     using Flags::Flags;

@@ -8,6 +8,7 @@
 #include <memory>
 #include <set>
 
+#include "../global/macros.h"
 #include "AbstractRoomVisitor.h"
 
 class AbstractRoomVisitor;
@@ -29,7 +30,7 @@ public:
 
 public:
     void clear();
-    size_t size() const { return m_rooms.size(); }
+    NODISCARD size_t size() const { return m_rooms.size(); }
 
 public:
     /* NOTE: It's not safe for the stream to modify this

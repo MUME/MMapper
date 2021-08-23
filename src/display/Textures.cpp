@@ -32,7 +32,7 @@ void MapCanvasTextures::destroyAll()
     for_each([](SharedMMTexture &tex) -> void { tex.reset(); });
 }
 
-static SharedMMTexture loadTexture(const QString &name)
+NODISCARD static SharedMMTexture loadTexture(const QString &name)
 {
     auto mmtex = MMTexture::alloc(name);
     auto *texture = mmtex->get();
@@ -94,7 +94,7 @@ static void setTrilinear(const SharedMMTexture &mmtex, const bool trilinear)
     }
 }
 
-static SharedMMTexture createDottedWall(const ExitDirEnum dir)
+NODISCARD static SharedMMTexture createDottedWall(const ExitDirEnum dir)
 {
     static constexpr const uint32_t MAX_BITS = 7;
     static constexpr const int SIZE = 1 << MAX_BITS;
@@ -161,11 +161,11 @@ static SharedMMTexture createDottedWall(const ExitDirEnum dir)
 
             if (dir == ExitDirEnum::EAST || dir == ExitDirEnum::WEST) {
                 const auto halfSize = static_cast<double>(size) * 0.5;
-                QMatrix matrix;
+                QTransform matrix;
                 matrix.translate(halfSize, halfSize);
                 matrix.rotate(90);
                 matrix.translate(-halfSize, -halfSize);
-                images[i] = image.transformed(matrix);
+                images[i] = image.transformed(matrix, Qt::FastTransformation);
             } else {
                 images[i] = image;
             }
@@ -209,12 +209,12 @@ void MapCanvas::initTextures()
     loadPixmapArray(textures.trail);
     loadPixmapArray(textures.mob);
     loadPixmapArray(textures.load);
-    for (auto &dir : ALL_EXITS_NESW) {
+    for (const ExitDirEnum dir : ALL_EXITS_NESW) {
         textures.dotted_wall[dir] = createDottedWall(dir);
         textures.wall[dir] = loadTexture(
             getPixmapFilenameRaw(QString::asprintf("wall-%s.png", lowercaseDirection(dir))));
     }
-    for (auto &dir : ALL_EXITS_NESWUD) {
+    for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
         textures.door[dir] = loadTexture(
             getPixmapFilenameRaw(QString::asprintf("door-%s.png", lowercaseDirection(dir))));
         textures.stream_in[dir] = loadTexture(

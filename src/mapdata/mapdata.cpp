@@ -53,12 +53,12 @@ const DoorName &MapData::getDoorName(const Coordinate &pos, const ExitDirEnum di
     return tmp;
 }
 
-ExitDirections MapData::getExitDirections(const Coordinate &pos)
+ExitDirFlags MapData::getExitDirections(const Coordinate &pos)
 {
-    ExitDirections result;
+    ExitDirFlags result;
     QMutexLocker locker(&mapLock);
     if (const Room *const room = map.get(pos)) {
-        for (auto dir : ALL_EXITS7) {
+        for (const ExitDirEnum dir : ALL_EXITS7) {
             if (room->exit(dir).isExit())
                 result |= dir;
         }
@@ -106,9 +106,9 @@ QList<Coordinate> MapData::getPath(const Coordinate &start, const CommandQueue &
     QMutexLocker locker(&mapLock);
     QList<Coordinate> ret;
 
-    //* NOTE: room is used and then reassigned inside the loop.
+    // NOTE: room is used and then reassigned inside the loop.
     if (const Room *room = map.get(start)) {
-        for (const auto cmd : dirs) {
+        for (const CommandEnum cmd : dirs) {
             if (cmd == CommandEnum::LOOK)
                 continue;
 
@@ -127,12 +127,13 @@ QList<Coordinate> MapData::getPath(const Coordinate &start, const CommandQueue &
             }
 
             const SharedConstRoom &tmp = roomIndex[e.outFirst()];
-            if (room == nullptr) {
-                break;
-            }
 
             // WARNING: room is reassigned here!
             room = tmp.get();
+
+            if (room == nullptr) {
+                break;
+            }
             ret.append(room->getPosition());
         }
     }
@@ -146,7 +147,7 @@ const Room *MapData::getRoom(const Coordinate &pos, RoomSelection &selection)
     if (Room *const room = map.get(pos)) {
         auto id = room->getId();
         lockRoom(&selection, id);
-        selection.insert(id, room);
+        selection.emplace(id, room);
         return room;
     }
     return nullptr;
@@ -161,7 +162,7 @@ const Room *MapData::getRoom(const RoomId id, RoomSelection &selection)
 
         lockRoom(&selection, roomId);
         Room *const pRoom = room.get();
-        selection.insert(roomId, pRoom);
+        selection.emplace(roomId, pRoom);
         return pRoom;
     }
     return nullptr;
@@ -185,8 +186,8 @@ bool MapData::execute(std::unique_ptr<MapAction> action, const SharedRoomSelecti
     action->schedule(this);
     std::list<RoomId> selectedIds;
 
-    for (auto i = selection->begin(); i != selection->end();) {
-        const Room *room = *i++;
+    for (auto i = selection->begin(); i != selection->end(); i++) {
+        const Room *room = i->second;
         const auto id = room->getId();
         locks[id].erase(selection.get());
         selectedIds.push_back(id);
@@ -204,17 +205,16 @@ bool MapData::execute(std::unique_ptr<MapAction> action, const SharedRoomSelecti
     for (auto id : selectedIds) {
         if (const SharedRoom &room = roomIndex[id]) {
             locks[id].insert(selection.get());
-            selection->insert(id, room.get());
+            selection->emplace(id, room.get());
         }
     }
     return executable;
 }
 
-void MapData::clear()
+void MapData::virt_clear()
 {
-    MapFrontend::clear();
     m_markers.clear();
-    emit log("MapData", "cleared MapData");
+    log("cleared MapData");
 }
 
 void MapData::removeDoorNames()
@@ -224,7 +224,7 @@ void MapData::removeDoorNames()
     const auto noName = DoorName{};
     for (auto &room : roomIndex) {
         if (room != nullptr) {
-            for (const auto dir : ALL_EXITS_NESWUD) {
+            for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
                 scheduleAction(std::make_unique<SingleRoomAction>(
                     std::make_unique<ModifyExitFlags>(noName, dir, FlagModifyModeEnum::UNSET),
                     room->getId()));

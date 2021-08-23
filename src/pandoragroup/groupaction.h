@@ -4,18 +4,24 @@
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
 #include <QByteArray>
-#include <QByteArrayDataPtr>
 #include <QString>
 #include <QVariantMap>
 
+#include "../global/macros.h"
+
 class CGroup;
 
-class GroupAction
+class NODISCARD GroupAction
 {
 public:
     GroupAction();
     virtual ~GroupAction();
-    virtual void exec() = 0;
+
+private:
+    virtual void virt_exec() = 0;
+
+public:
+    void exec() { virt_exec(); }
     void setGroup(CGroup *in) { this->group = in; }
     void schedule(CGroup *in) { setGroup(in); }
 
@@ -23,60 +29,60 @@ protected:
     CGroup *group = nullptr;
 };
 
-class AddCharacter final : public GroupAction
+class NODISCARD AddCharacter final : public GroupAction
 {
 public:
     explicit AddCharacter(const QVariantMap &map);
 
-protected:
-    void exec() override;
+private:
+    void virt_exec() final;
 
 private:
     QVariantMap map;
 };
 
-class RemoveCharacter final : public GroupAction
+class NODISCARD RemoveCharacter final : public GroupAction
 {
 public:
     explicit RemoveCharacter(const QVariantMap &variant);
     explicit RemoveCharacter(QByteArray);
 
-protected:
-    void exec() override;
+private:
+    void virt_exec() final;
 
 private:
     QByteArray name;
 };
 
-class UpdateCharacter final : public GroupAction
+class NODISCARD UpdateCharacter final : public GroupAction
 {
 public:
     explicit UpdateCharacter(const QVariantMap &variant);
 
-protected:
-    void exec() override;
+private:
+    void virt_exec() final;
 
 private:
     QVariantMap map;
 };
 
-class RenameCharacter final : public GroupAction
+class NODISCARD RenameCharacter final : public GroupAction
 {
 public:
     explicit RenameCharacter(const QVariantMap &variant);
 
-protected:
-    void exec() override;
+private:
+    void virt_exec() final;
 
 private:
     QVariantMap map;
 };
 
-class ResetCharacters final : public GroupAction
+class NODISCARD ResetCharacters final : public GroupAction
 {
 public:
     ResetCharacters();
 
-protected:
-    void exec() override;
+private:
+    void virt_exec() final;
 };

@@ -11,7 +11,7 @@
 #include "../global/ChangeMonitor.h"
 
 template<typename T>
-class NamedConfig final
+class NODISCARD NamedConfig final
 {
 private:
     std::string m_name;
@@ -28,8 +28,8 @@ public:
     {}
 
 public:
-    const std::string &getName() { return m_name; }
-    inline T get() const { return m_value; }
+    NODISCARD const std::string &getName() { return m_name; }
+    NODISCARD inline T get() const { return m_value; }
     void set(const T newValue)
     {
         if (m_notifying)

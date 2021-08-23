@@ -7,7 +7,7 @@
 
 #include "../global/Array.h"
 
-enum class DoorActionEnum {
+enum class NODISCARD DoorActionEnum {
     OPEN,
     CLOSE,
     LOCK,
@@ -26,6 +26,6 @@ static constexpr const size_t NUM_DOOR_ACTION_TYPES = 10;
 
 namespace enums {
 #define ALL_DOOR_ACTION_TYPES ::enums::getAllDoorActionTypes()
-const MMapper::Array<DoorActionEnum, NUM_DOOR_ACTION_TYPES> &getAllDoorActionTypes();
+NODISCARD const MMapper::Array<DoorActionEnum, NUM_DOOR_ACTION_TYPES> &getAllDoorActionTypes();
 
 } // namespace enums

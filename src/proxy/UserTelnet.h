@@ -13,27 +13,26 @@ class UserTelnet final : public AbstractTelnet
     Q_OBJECT
 public:
     explicit UserTelnet(QObject *parent);
-    ~UserTelnet() override = default;
+    ~UserTelnet() final = default;
 
 public slots:
-    void onSendToUser(const QByteArray &data, bool goAhead);
-    void onAnalyzeUserStream(const QByteArray &);
-    void onConnected();
-    void onRelayEchoMode(bool);
-    void onGmcpToUser(const GmcpMessage &);
+    void slot_onSendToUser(const QByteArray &data, bool goAhead);
+    void slot_onAnalyzeUserStream(const QByteArray &);
+    void slot_onConnected();
+    void slot_onRelayEchoMode(bool);
+    void slot_onGmcpToUser(const GmcpMessage &);
 
 signals:
-    void analyzeUserStream(const QByteArray &, bool goAhead);
-    void sendToSocket(const QByteArray &);
-
-    void relayGmcp(const GmcpMessage &);
-    void relayNaws(int, int);
-    void relayTermType(QByteArray);
+    void sig_analyzeUserStream(const QByteArray &, bool goAhead);
+    void sig_sendToSocket(const QByteArray &);
+    void sig_relayGmcp(const GmcpMessage &);
+    void sig_relayNaws(int, int);
+    void sig_relayTermType(QByteArray);
 
 private:
-    void sendToMapper(const QByteArray &data, bool goAhead) override;
-    void receiveGmcpMessage(const GmcpMessage &) override;
-    void receiveTerminalType(const QByteArray &) override;
-    void receiveWindowSize(int, int) override;
-    void sendRawData(const QByteArray &data) override;
+    void virt_sendToMapper(const QByteArray &data, bool goAhead) final;
+    void virt_receiveGmcpMessage(const GmcpMessage &) final;
+    void virt_receiveTerminalType(const QByteArray &) final;
+    void virt_receiveWindowSize(int, int) final;
+    void virt_sendRawData(const std::string_view &data) final;
 };

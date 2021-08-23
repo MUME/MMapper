@@ -15,7 +15,7 @@
 // TODO: add a new type to avoid accidental conversion
 // from "world scale" Coordinate to "infomark scale" Coordinate.
 InfoMarkSelection::InfoMarkSelection(this_is_private,
-                                     MapData *const mapData,
+                                     MapData &mapData,
                                      const Coordinate &c1,
                                      const Coordinate &c2)
 {
@@ -56,8 +56,7 @@ InfoMarkSelection::InfoMarkSelection(this_is_private,
         return isCoordInSelection(pos2);
     };
 
-    assert(mapData);
-    for (const auto &marker : mapData->getMarkersList()) {
+    for (const auto &marker : mapData.getMarkersList()) {
         if (isMarkerInSelection(marker)) {
             emplace_back(marker);
         }

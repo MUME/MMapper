@@ -24,7 +24,7 @@ class StaticVbos;
 struct ShaderPrograms;
 struct PointSizeBinder;
 
-static inline GLenum toGLenum(const BufferUsageEnum usage)
+NODISCARD static inline GLenum toGLenum(const BufferUsageEnum usage)
 {
     switch (usage) {
     case BufferUsageEnum::DYNAMIC_DRAW:
@@ -39,7 +39,8 @@ static inline GLenum toGLenum(const BufferUsageEnum usage)
 // Note: This version is only suitable for drawArrays(). You'll need another function
 // to transform indices if you want to use it with drawElements().
 template<typename _VertexType>
-static inline std::vector<_VertexType> convertQuadsToTris(const std::vector<_VertexType> &quads)
+NODISCARD static inline std::vector<_VertexType> convertQuadsToTris(
+    const std::vector<_VertexType> &quads)
 {
     // d-c
     // |/|
@@ -85,13 +86,13 @@ private:
     std::unique_ptr<StaticVbos> m_staticVbos;
 
 private:
-    struct this_is_private final
+    struct NODISCARD this_is_private final
     {
         explicit this_is_private(int) {}
     };
 
 public:
-    static std::shared_ptr<Functions> alloc();
+    NODISCARD static std::shared_ptr<Functions> alloc();
 
 public:
     explicit Functions(this_is_private);
@@ -100,7 +101,7 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(Functions);
 
 public:
-    float getDevicePixelRatio() const { return m_devicePixelRatio; }
+    NODISCARD float getDevicePixelRatio() const { return m_devicePixelRatio; }
 
     void setDevicePixelRatio(const float devicePixelRatio)
     {
@@ -168,13 +169,13 @@ public:
     }
 
 private:
-    float scalef(const float f) const
+    NODISCARD float scalef(const float f) const
     {
         static_assert(std::is_same_v<float, GLfloat>);
         return f * m_devicePixelRatio;
     }
 
-    int scalei(const int n) const
+    NODISCARD int scalei(const int n) const
     {
         static_assert(std::is_same_v<int, GLint>);
         static_assert(std::is_same_v<int, GLsizei>);
@@ -182,9 +183,9 @@ private:
     }
 
 public:
-    Viewport getViewport() const { return m_viewport; }
+    NODISCARD Viewport getViewport() const { return m_viewport; }
 
-    Viewport getPhysicalViewport() const
+    NODISCARD Viewport getPhysicalViewport() const
     {
         const glm::ivec2 &offset = m_viewport.offset;
         const glm::ivec2 &size = m_viewport.size;
@@ -192,16 +193,16 @@ public:
     }
 
 public:
-    glm::mat4 getProjectionMatrix() const { return m_viewProj; }
+    NODISCARD glm::mat4 getProjectionMatrix() const { return m_viewProj; }
 
     void setProjectionMatrix(const glm::mat4 &viewProj) { m_viewProj = viewProj; }
 
 public:
     void cleanup();
 
-    ShaderPrograms &getShaderPrograms();
+    NODISCARD ShaderPrograms &getShaderPrograms();
 
-    StaticVbos &getStaticVbos();
+    NODISCARD StaticVbos &getStaticVbos();
 
 private:
     friend PointSizeBinder;
@@ -211,17 +212,17 @@ private:
 private:
     friend OpenGL;
     /// platform-specific (ES vs GL)
-    bool tryEnableMultisampling(int requestedSamples);
+    NODISCARD bool tryEnableMultisampling(int requestedSamples);
 
 public:
     /// platform-specific (ES vs GL)
-    static const char *getShaderVersion();
+    NODISCARD static const char *getShaderVersion();
 
 private:
     template<typename _VertexType>
-    GLsizei setVbo_internal(const GLuint vbo,
-                            const std::vector<_VertexType> &batch,
-                            const BufferUsageEnum usage)
+    NODISCARD GLsizei setVbo_internal(const GLuint vbo,
+                                      const std::vector<_VertexType> &batch,
+                                      const BufferUsageEnum usage)
     {
         const auto numVerts = static_cast<GLsizei>(batch.size());
         const auto vertSize = static_cast<GLsizei>(sizeof(_VertexType));
@@ -234,10 +235,10 @@ private:
 
 public:
     /// platform-specific (ES vs GL)
-    static bool canRenderQuads();
+    NODISCARD static bool canRenderQuads();
 
     /// platform-specific (ES vs GL)
-    static std::optional<GLenum> toGLenum(DrawModeEnum mode);
+    NODISCARD static std::optional<GLenum> toGLenum(DrawModeEnum mode);
 
 public:
     void enableAttrib(const GLuint index,
@@ -252,7 +253,7 @@ public:
     }
 
     template<typename T>
-    std::pair<DrawModeEnum, GLsizei> setVbo(
+    NODISCARD std::pair<DrawModeEnum, GLsizei> setVbo(
         const DrawModeEnum mode,
         const GLuint vbo,
         const std::vector<T> &batch,
@@ -273,22 +274,22 @@ public:
     }
 
 public:
-    UniqueMesh createPointBatch(const std::vector<ColorVert> &batch);
+    NODISCARD UniqueMesh createPointBatch(const std::vector<ColorVert> &batch);
 
 public:
-    UniqueMesh createPlainBatch(DrawModeEnum mode, const std::vector<glm::vec3> &batch);
-    UniqueMesh createColoredBatch(DrawModeEnum mode, const std::vector<ColorVert> &batch);
-    UniqueMesh createTexturedBatch(DrawModeEnum mode,
-                                   const std::vector<TexVert> &batch,
-                                   const SharedMMTexture &texture);
-    UniqueMesh createColoredTexturedBatch(DrawModeEnum mode,
-                                          const std::vector<ColoredTexVert> &batch,
-                                          const SharedMMTexture &texture);
+    NODISCARD UniqueMesh createPlainBatch(DrawModeEnum mode, const std::vector<glm::vec3> &batch);
+    NODISCARD UniqueMesh createColoredBatch(DrawModeEnum mode, const std::vector<ColorVert> &batch);
+    NODISCARD UniqueMesh createTexturedBatch(DrawModeEnum mode,
+                                             const std::vector<TexVert> &batch,
+                                             const SharedMMTexture &texture);
+    NODISCARD UniqueMesh createColoredTexturedBatch(DrawModeEnum mode,
+                                                    const std::vector<ColoredTexVert> &batch,
+                                                    const SharedMMTexture &texture);
 
 public:
-    UniqueMesh createFontMesh(const SharedMMTexture &texture,
-                              DrawModeEnum mode,
-                              const std::vector<FontVert3d> &batch);
+    NODISCARD UniqueMesh createFontMesh(const SharedMMTexture &texture,
+                                        DrawModeEnum mode,
+                                        const std::vector<FontVert3d> &batch);
 
 public:
     void renderPoints(const std::vector<ColorVert> &verts, const GLRenderState &state);

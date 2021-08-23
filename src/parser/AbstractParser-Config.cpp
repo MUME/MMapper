@@ -68,7 +68,7 @@ syntax::MatchResult ArgHexColor::virt_match(const syntax::ParserInput &input,
         return syntax::MatchResult::failure(input);
     ++arg;
 
-    for (auto &c : arg) {
+    for (const char c : arg) {
         if (!std::isxdigit(c))
             return syntax::MatchResult::failure(input);
     }
@@ -117,7 +117,7 @@ inline decltype(auto) remap(T &&x)
 
 // REVISIT: Can we (ab)use tuple to remap std::string to syntax::abbrevToken?
 template<typename... Args>
-static auto syn(Args &&... args)
+NODISCARD static auto syn(Args &&... args)
 {
     return syntax::buildSyntax(remap(std::forward<Args>(args))...);
 }
@@ -299,6 +299,28 @@ void AbstractParser::doConfig(const StringView &cmd)
     };
 
     const auto configSyntax = syn(
+        syn("mode",
+            syn("play",
+                Accept(
+                    [this](User &user, auto) {
+                        setMode(MapModeEnum::PLAY);
+                        send_ok(user.getOstream());
+                    },
+                    "play mode")),
+            syn("mapping",
+                Accept(
+                    [this](User &user, auto) {
+                        setMode(MapModeEnum::MAP);
+                        send_ok(user.getOstream());
+                    },
+                    "mapping mode")),
+            syn("emulation",
+                Accept(
+                    [this](User &user, auto) {
+                        setMode(MapModeEnum::OFFLINE);
+                        send_ok(user.getOstream());
+                    },
+                    "offline emulation mode"))),
         syn("file",
             // TODO: add a command to show what's different from the factory default values,
             // and another command to show what's different from the current save file,
@@ -364,4 +386,9 @@ void AbstractParser::doConfig(const StringView &cmd)
                     makeFixedPointArg(advanced.layerHeight, "layer-height")))));
 
     eval("config", configSyntax, cmd);
+}
+
+void AbstractParser::setMode(MapModeEnum mode)
+{
+    emit sig_setMode(mode);
 }

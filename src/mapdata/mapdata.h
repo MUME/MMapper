@@ -10,7 +10,6 @@
 #include <vector>
 #include <QList>
 #include <QString>
-#include <QVariant>
 #include <QtCore>
 #include <QtGlobal>
 
@@ -48,12 +47,20 @@ class MapData final : public MapFrontend
     friend class RoomSelection;
 
 protected:
+    MarkerList m_markers;
+    // changed data?
+    bool m_dataChanged = false;
+    bool m_fileReadOnly = false;
+    QString m_fileName;
+    Coordinate m_position;
+
+protected:
     // the room will be inserted in the given selection. the selection must have been created by mapdata
     const Room *getRoom(const Coordinate &pos, RoomSelection &in);
     const Room *getRoom(RoomId id, RoomSelection &in);
 
 public:
-    explicit MapData(QObject *parent = nullptr);
+    explicit MapData(QObject *parent);
     virtual ~MapData() override;
 
     void generateBatches(MapCanvasRoomDrawer &screen, const OptBounds &bounds);
@@ -74,8 +81,11 @@ public:
     bool isEmpty() const { return (greatestUsedId == INVALID_ROOMID) && m_markers.empty(); }
     bool dataChanged() const { return m_dataChanged; }
     QList<Coordinate> getPath(const Coordinate &start, const CommandQueue &dirs);
-    virtual void clear() override;
 
+private:
+    void virt_clear() final;
+
+public:
     // search for matches
     void genericSearch(RoomRecipient *recipient, const RoomFilter &f);
 
@@ -100,7 +110,7 @@ public:
 
 public:
     bool getExitFlag(const Coordinate &pos, ExitDirEnum dir, ExitFieldVariant var);
-    ExitDirections getExitDirections(const Coordinate &pos);
+    ExitDirFlags getExitDirections(const Coordinate &pos);
 
 public:
     const Room *getRoom(const Coordinate &pos);
@@ -123,28 +133,25 @@ private:
         }
     }
 
-signals:
-    void log(const QString &, const QString &);
-    void onDataChanged();
+    void log(const QString &msg) { emit sig_log("MapData", msg); }
 
-public slots:
+public:
     void unsetDataChanged() { m_dataChanged = false; }
     void setDataChanged()
     {
         m_dataChanged = true;
-        emit onDataChanged();
+        emit sig_onDataChanged();
     }
     void setPosition(const Coordinate &pos) { m_position = pos; }
+
+public:
+signals:
+    void sig_log(const QString &, const QString &);
+    void sig_onDataChanged();
+
+public slots:
     void slot_scheduleAction(std::shared_ptr<MapAction> action)
     {
         MapFrontend::scheduleAction(action);
     }
-
-protected:
-    MarkerList m_markers;
-    // changed data?
-    bool m_dataChanged = false;
-    bool m_fileReadOnly = false;
-    QString m_fileName;
-    Coordinate m_position;
 };

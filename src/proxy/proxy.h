@@ -32,8 +32,6 @@ class MumeClock;
 class MumeSocket;
 class MumeXmlParser;
 class PrespammedPath;
-class QDataStream;
-class QFile;
 class QTcpSocket;
 class RemoteEdit;
 class TelnetFilter;
@@ -45,35 +43,35 @@ class Proxy final : public QObject
 {
     Q_OBJECT
 public:
-    explicit Proxy(MapData *,
-                   Mmapper2PathMachine *,
-                   PrespammedPath *,
-                   Mmapper2Group *,
-                   MumeClock *,
-                   AutoLogger *,
-                   MapCanvas *,
+    explicit Proxy(MapData &,
+                   Mmapper2PathMachine &,
+                   PrespammedPath &,
+                   Mmapper2Group &,
+                   MumeClock &,
+                   AutoLogger &,
+                   MapCanvas &,
                    qintptr &,
-                   ConnectionListener *);
-    ~Proxy() override;
+                   ConnectionListener &);
+    ~Proxy() final;
 
 public slots:
-    void start();
+    void slot_start();
 
-    void processUserStream();
-    void userTerminatedConnection();
-    void mudTerminatedConnection();
+    void slot_processUserStream();
+    void slot_userTerminatedConnection();
+    void slot_mudTerminatedConnection();
 
-    void onSendToMudSocket(const QByteArray &);
-    void onSendToUserSocket(const QByteArray &);
+    void slot_onSendToMudSocket(const QByteArray &);
+    void slot_onSendToUserSocket(const QByteArray &);
 
-    void onMudError(const QString &);
-    void onMudConnected();
+    void slot_onMudError(const QString &);
+    void slot_onMudConnected();
 
 signals:
-    void log(const QString &, const QString &);
+    void sig_log(const QString &, const QString &);
 
-    void analyzeUserStream(const QByteArray &);
-    void analyzeMudStream(const QByteArray &);
+    void sig_analyzeUserStream(const QByteArray &);
+    void sig_analyzeMudStream(const QByteArray &);
 
     void sig_sendToMud(const QByteArray &);
     void sig_sendToUser(const QByteArray &, bool);
@@ -91,20 +89,21 @@ private:
     void gmcpToUser(const GmcpMessage &msg) { emit sig_gmcpToUser(msg); }
     void gmcpToMud(const GmcpMessage &msg) { emit sig_gmcpToMud(msg); }
     bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &module) const;
+    void log(const QString &msg) { emit sig_log("Proxy", msg); }
 
 private:
     io::buffer<(1 << 13)> m_buffer;
     WeakHandleLifetime<Proxy> m_weakHandleLifetime{*this};
     ProxyParserApi m_proxyParserApi{m_weakHandleLifetime.getWeakHandle()};
 
-    MapData *const m_mapData;
-    Mmapper2PathMachine *const m_pathMachine;
-    PrespammedPath *const m_prespammedPath;
-    Mmapper2Group *const m_groupManager;
-    MumeClock *const m_mumeClock;
-    AutoLogger *const m_logger;
-    MapCanvas *const m_mapCanvas;
-    ConnectionListener *const m_listener;
+    MapData &m_mapData;
+    Mmapper2PathMachine &m_pathMachine;
+    PrespammedPath &m_prespammedPath;
+    Mmapper2Group &m_groupManager;
+    MumeClock &m_mumeClock;
+    AutoLogger &m_logger;
+    MapCanvas &m_mapCanvas;
+    ConnectionListener &m_listener;
     const qintptr m_socketDescriptor;
 
     // initialized in ctor
@@ -119,7 +118,7 @@ private:
     QPointer<MumeXmlParser> m_parserXml;
     QPointer<MumeSocket> m_mudSocket;
 
-    enum class ServerStateEnum {
+    enum class NODISCARD ServerStateEnum {
         INITIALIZED,
         OFFLINE,
         CONNECTING,

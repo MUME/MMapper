@@ -27,7 +27,7 @@ class GroupTcpServer final : public QTcpServer
 
 public:
     explicit GroupTcpServer(GroupServer *parent);
-    virtual ~GroupTcpServer() override;
+    ~GroupTcpServer() final;
 
 protected:
     void incomingConnection(qintptr socketDescriptor) override;
@@ -42,33 +42,35 @@ class GroupServer final : public CGroupCommunicator
 
 public:
     explicit GroupServer(Mmapper2Group *parent);
-    ~GroupServer() override;
+    ~GroupServer() final;
 
 protected slots:
-    void relayMessage(GroupSocket *socket, MessagesEnum message, const QVariantMap &data);
-    void connectionEstablished(GroupSocket *socket);
-    void onRevokeWhitelist(const QByteArray &secret);
-    void retrieveData(GroupSocket *socket, MessagesEnum message, const QVariantMap &data) override;
-    void connectionClosed(GroupSocket *socket) override;
+    void slot_relayMessage(GroupSocket *socket, MessagesEnum message, const QVariantMap &data);
+    void slot_connectionEstablished(GroupSocket *socket);
+    void slot_onRevokeWhitelist(const QByteArray &secret);
+    void slot_onIncomingConnection(qintptr socketDescriptor);
+    void slot_errorInConnection(GroupSocket *, const QString &);
 
 protected:
     void sendRemoveUserNotification(GroupSocket *socket, const QByteArray &name);
-    void sendGroupTellMessage(const QVariantMap &root) override;
-    bool start() override;
-    void stop() override;
-    void sendCharUpdate(const QVariantMap &map) override;
-    void sendCharRename(const QVariantMap &map) override;
-    void kickCharacter(const QByteArray &) override;
+
+private:
+    NODISCARD bool virt_start() final;
+    void virt_stop() final;
+
+private:
+    void virt_connectionClosed(GroupSocket *socket) final;
+    void virt_kickCharacter(const QByteArray &) final;
+    void virt_retrieveData(GroupSocket *socket, MessagesEnum message, const QVariantMap &data) final;
+    void virt_sendCharRename(const QVariantMap &map) final;
+    void virt_sendCharUpdate(const QVariantMap &map) final;
+    void virt_sendGroupTellMessage(const QVariantMap &root) final;
 
 private:
     void parseHandshake(GroupSocket *socket, const QVariantMap &data);
     void parseLoginInformation(GroupSocket *socket, const QVariantMap &data);
     void sendGroupInformation(GroupSocket *socket);
     void kickConnection(GroupSocket *socket, const QString &message);
-
-protected slots:
-    void onIncomingConnection(qintptr socketDescriptor);
-    void errorInConnection(GroupSocket *, const QString &);
 
 private:
     void sendToAll(const QByteArray &);

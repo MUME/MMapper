@@ -3,8 +3,9 @@
 // Copyright (C) 2019 The MMapper Authors
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
+#include <iterator>
+#include <list>
 #include <QEvent>
-#include <QLinkedList>
 #include <QObject>
 #include <QPlainTextEdit>
 #include <QSize>
@@ -12,14 +13,59 @@
 #include <QWidget>
 #include <QtCore>
 
+#include "../global/macros.h"
+
 class QKeyEvent;
 class QObject;
 class QWidget;
 
-using InputHistoryEntry = QString;
-using InputHistoryIterator = QMutableLinkedListIterator<InputHistoryEntry>;
-using WordHistoryEntry = QString;
-using TabCompletionIterator = QMutableLinkedListIterator<WordHistoryEntry>;
+class NODISCARD InputHistory final : private std::list<QString>
+{
+public:
+    InputHistory() { m_iterator = begin(); }
+
+public:
+    void addInputLine(const QString &);
+
+public:
+    void forward() { std::advance(m_iterator, 1); }
+    void backward() { std::advance(m_iterator, -1); }
+
+public:
+    NODISCARD const QString &value() const { return *m_iterator; }
+
+public:
+    NODISCARD bool atFront() const { return m_iterator == begin(); }
+    NODISCARD bool atEnd() const { return m_iterator == end(); }
+
+private:
+    std::list<QString>::iterator m_iterator;
+};
+
+class NODISCARD TabHistory final : private std::list<QString>
+{
+    using base = std::list<QString>;
+
+public:
+    TabHistory() { m_iterator = begin(); }
+
+public:
+    void addInputLine(const QString &);
+
+public:
+    void forward() { std::advance(m_iterator, 1); }
+    void reset() { m_iterator = begin(); }
+
+public:
+    NODISCARD const QString &value() const { return *m_iterator; }
+
+public:
+    NODISCARD bool empty() { return base::empty(); }
+    NODISCARD bool atEnd() const { return m_iterator == end(); }
+
+private:
+    std::list<QString>::iterator m_iterator;
+};
 
 class InputWidget final : public QPlainTextEdit
 {
@@ -30,37 +76,35 @@ private:
     Q_OBJECT
 
 public:
-    explicit InputWidget(QWidget *parent = nullptr);
-    ~InputWidget() override;
+    explicit InputWidget(QWidget *parent);
+    ~InputWidget() final;
 
-    QSize sizeHint() const override;
+    NODISCARD QSize sizeHint() const override;
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
 
 private:
     void gotInput();
-    bool wordHistory(int);
+    NODISCARD bool tryHistory(int);
     void keypadMovement(int);
 
-    InputHistoryIterator *m_lineIterator = nullptr;
-    bool m_newInput = false;
-    QLinkedList<QString> m_lineHistory;
-    QLinkedList<QString> m_tabCompletionDictionary;
-
-    void addLineHistory(const InputHistoryEntry &);
-    void forwardHistory();
-    void backwardHistory();
-
+private:
     void tabComplete();
-
     bool m_tabbing = false;
     QString m_tabFragment;
-    TabCompletionIterator *m_tabIterator = nullptr;
-    void addTabHistory(const WordHistoryEntry &);
+    TabHistory m_tabHistory;
+
+private:
+    void forwardHistory();
+    void backwardHistory();
+    InputHistory m_inputHistory;
+
+private:
+    void sendUserInput(const QString &msg) { emit sig_sendUserInput(msg); }
 
 signals:
-    void sendUserInput(const QString &);
-    void displayMessage(const QString &);
-    void showMessage(const QString &, int);
+    void sig_sendUserInput(const QString &);
+    void sig_displayMessage(const QString &);
+    void sig_showMessage(const QString &, int);
 };

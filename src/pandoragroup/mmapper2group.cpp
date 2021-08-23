@@ -42,7 +42,6 @@ const Mmapper2Group::AffectTimeout Mmapper2Group::s_affectTimeout
 Mmapper2Group::Mmapper2Group(QObject *const /* parent */)
     : QObject(nullptr)
     , affectTimer{this}
-    , networkLock(QMutex::Recursive)
     , thread(THREADED ? new QThread : nullptr)
 {
     qRegisterMetaType<CharacterPositionEnum>("CharacterPositionEnum");
@@ -57,11 +56,11 @@ Mmapper2Group::Mmapper2Group(QObject *const /* parent */)
     affectTimer.setInterval(1000);
     affectTimer.setSingleShot(false);
     affectTimer.start();
-    connect(&affectTimer, &QTimer::timeout, this, &Mmapper2Group::onAffectTimeout);
+    connect(&affectTimer, &QTimer::timeout, this, &Mmapper2Group::slot_onAffectTimeout);
 
     if (thread) {
         connect(thread.get(), &QThread::started, this, [this]() {
-            emit log("GroupManager", "Initialized Group Manager service");
+            log("Initialized Group Manager service");
         });
         connect(thread.get(), &QThread::finished, this, [this]() {
             thread.get()->deleteLater();
@@ -105,14 +104,14 @@ bool Mmapper2Group::init()
     group = std::make_unique<CGroup>(this);
     authority = std::make_unique<GroupAuthority>(this);
 
-    connect(group.get(), &CGroup::log, this, &Mmapper2Group::sendLog);
+    connect(group.get(), &CGroup::sig_log, this, &Mmapper2Group::slot_sendLog);
     connect(group.get(),
-            &CGroup::characterChanged,
+            &CGroup::sig_characterChanged,
             this,
-            &Mmapper2Group::characterChanged,
+            &Mmapper2Group::slot_characterChanged,
             Qt::QueuedConnection);
 
-    emit updateWidget();
+    emit sig_updateWidget();
     return true;
 }
 
@@ -121,7 +120,7 @@ void Mmapper2Group::slot_stopInternal()
     assert(QThread::currentThread() == QObject::thread());
     assert(QThread::currentThread() == Mmapper2Group::thread.get() || !Mmapper2Group::thread);
     affectTimer.stop();
-    stopNetwork();
+    slot_stopNetwork();
     ++m_calledStopInternal;
 }
 
@@ -138,14 +137,14 @@ void Mmapper2Group::stop()
     }
 }
 
-void Mmapper2Group::characterChanged(bool updateCanvas)
+void Mmapper2Group::slot_characterChanged(bool updateCanvas)
 {
-    emit updateWidget();
+    emit sig_updateWidget();
     if (updateCanvas)
-        emit updateMapCanvas();
+        emit sig_updateMapCanvas();
 }
 
-void Mmapper2Group::updateSelf()
+void Mmapper2Group::slot_updateSelf()
 {
     QMutexLocker locker(&networkLock);
     if (!group) {
@@ -158,7 +157,7 @@ void Mmapper2Group::updateSelf()
         QByteArray newname = groupManagerSettings.charName;
 
         if (getGroup()->isNamePresent(newname)) {
-            emit messageBox("Group Manager", "You cannot take a name that is already present.");
+            messageBox("You cannot take a name that is already present.");
             setConfig().groupManager.charName = oldname;
             return;
         }
@@ -178,7 +177,7 @@ void Mmapper2Group::updateSelf()
     issueLocalCharUpdate();
 }
 
-void Mmapper2Group::setCharacterRoomId(RoomId roomId)
+void Mmapper2Group::slot_setCharacterRoomId(RoomId roomId)
 {
     QMutexLocker locker(&networkLock);
     if (!group)
@@ -189,9 +188,9 @@ void Mmapper2Group::setCharacterRoomId(RoomId roomId)
 
     // Check if we are still snared
     static const constexpr auto SNARED_MESSAGE_WINDOW = 1;
-    CharacterAffects &affects = getGroup()->getSelf()->affects;
+    CharacterAffectFlags &affects = getGroup()->getSelf()->affects;
     if (affects.contains(CharacterAffectEnum::SNARED)) {
-        const int64_t now = QDateTime::QDateTime::currentDateTimeUtc().toTime_t();
+        const int64_t now = QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
         const auto lastSeen = affectLastSeen.value(CharacterAffectEnum::SNARED, 0);
         const bool noRecentSnareMessage = (now - lastSeen) > SNARED_MESSAGE_WINDOW;
         if (noRecentSnareMessage) {
@@ -208,7 +207,7 @@ void Mmapper2Group::setCharacterRoomId(RoomId roomId)
 
 void Mmapper2Group::issueLocalCharUpdate()
 {
-    emit updateWidget();
+    emit sig_updateWidget();
 
     QMutexLocker locker(&networkLock);
     if (!group || getMode() == GroupManagerStateEnum::Off) {
@@ -221,13 +220,13 @@ void Mmapper2Group::issueLocalCharUpdate()
     }
 }
 
-void Mmapper2Group::relayMessageBox(const QString &message)
+void Mmapper2Group::slot_relayMessageBox(const QString &message)
 {
-    emit log("GroupManager", message.toLatin1());
-    emit messageBox("Group Manager", message);
+    log(message.toLatin1());
+    messageBox(message);
 }
 
-void Mmapper2Group::gTellArrived(const QVariantMap &node)
+void Mmapper2Group::slot_gTellArrived(const QVariantMap &node)
 {
     if (!node.contains("from") && node["from"].canConvert(QMetaType::QString)) {
         qWarning() << "From not found" << node;
@@ -247,9 +246,9 @@ void Mmapper2Group::gTellArrived(const QVariantMap &node)
         auto character = selection->at(0);
         color = rgbToAnsi256String(character->getColor(), false);
     }
-    emit log("GroupManager", QString("GTell from %1 arrived: %2").arg(from).arg(text));
+    log(QString("GTell from %1 arrived: %2").arg(from).arg(text));
 
-    emit displayGroupTellEvent(color, from, text);
+    emit sig_displayGroupTellEvent(color, from, text);
 }
 
 void Mmapper2Group::kickCharacter(const QByteArray &character)
@@ -305,14 +304,13 @@ void Mmapper2Group::parseScoreInformation(const QByteArray &score)
         && self->moves == moves && self->maxmoves == maxmoves)
         return; // No update needed
 
-    emit log("GroupManager",
-             QString("Updated score: %1/%2 hits, %3/%4 mana, and %5/%6 moves.")
-                 .arg(hp)
-                 .arg(maxhp)
-                 .arg(mana)
-                 .arg(maxmana)
-                 .arg(moves)
-                 .arg(maxmoves));
+    log(QString("Updated score: %1/%2 hits, %3/%4 mana, and %5/%6 moves.")
+            .arg(hp)
+            .arg(maxhp)
+            .arg(mana)
+            .arg(maxmana)
+            .arg(moves)
+            .arg(maxmoves));
 
     self->setScore(hp, maxhp, mana, maxmana, moves, maxmoves);
 
@@ -328,7 +326,7 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
     QByteArray textHP;
     QByteArray textMana;
     QByteArray textMoves;
-    CharacterAffects &affects = self->affects;
+    CharacterAffectFlags &affects = self->affects;
 
     static const QRegularExpression pRx(R"(^(?:\+ )?)"              //          Valar mudlle
                                         R"(([\*@\!\)o])"            // Group 1: light
@@ -354,7 +352,7 @@ void Mmapper2Group::parsePromptInformation(const QByteArray &prompt)
     if (!wasRiding && isRiding) {
         affects.insert(CharacterAffectEnum::RIDING);
         affectLastSeen.insert(CharacterAffectEnum::RIDING,
-                              QDateTime::QDateTime::currentDateTimeUtc().toTime_t());
+                              QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch());
 
     } else if (wasRiding && !isRiding) {
         affects.remove(CharacterAffectEnum::RIDING);
@@ -473,7 +471,7 @@ void Mmapper2Group::updateCharacterPosition(const CharacterPositionEnum position
 
     // Reset affects on death
     if (position == CharacterPositionEnum::DEAD)
-        group->getSelf()->affects = CharacterAffects{};
+        group->getSelf()->affects = CharacterAffectFlags{};
 
     if (oldPosition == CharacterPositionEnum::DEAD && position != CharacterPositionEnum::STANDING)
         return; // Prefer dead state until we finish recovering some hp (i.e. stand)
@@ -488,9 +486,9 @@ void Mmapper2Group::updateCharacterAffect(const CharacterAffectEnum affect, cons
         return;
 
     if (enable)
-        affectLastSeen.insert(affect, QDateTime::QDateTime::currentDateTimeUtc().toTime_t());
+        affectLastSeen.insert(affect, QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch());
 
-    CharacterAffects &affects = getGroup()->getSelf()->affects;
+    CharacterAffectFlags &affects = getGroup()->getSelf()->affects;
     if (enable == affects.contains(affect))
         return; // No update needed
 
@@ -504,14 +502,14 @@ void Mmapper2Group::updateCharacterAffect(const CharacterAffectEnum affect, cons
     issueLocalCharUpdate();
 }
 
-void Mmapper2Group::onAffectTimeout()
+void Mmapper2Group::slot_onAffectTimeout()
 {
     if (affectLastSeen.isEmpty())
         return;
 
     bool removedAtLeastOneAffect = false;
-    CharacterAffects &affects = getGroup()->getSelf()->affects;
-    const int64_t now = QDateTime::QDateTime::currentDateTimeUtc().toTime_t();
+    CharacterAffectFlags &affects = getGroup()->getSelf()->affects;
+    const int64_t now = QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
     for (const CharacterAffectEnum affect : affectLastSeen.keys()) {
         const bool expired = [this, &affect, &now]() {
             const auto lastSeen = affectLastSeen.value(affect, 0);
@@ -529,38 +527,27 @@ void Mmapper2Group::onAffectTimeout()
         issueLocalCharUpdate();
 }
 
-void Mmapper2Group::setPath(CommandQueue dirs)
+void Mmapper2Group::slot_setPath(CommandQueue dirs)
 {
     group->getSelf()->prespam = std::move(dirs);
 }
 
-void Mmapper2Group::reset()
+void Mmapper2Group::slot_reset()
 {
     QMutexLocker locker(&networkLock);
 
     // Reset prompt
-    lastPrompt.textHP = {};
-    lastPrompt.textMana = {};
-    lastPrompt.textMoves = {};
-    lastPrompt.inCombat = false;
+    lastPrompt.reset();
 
     // Reset character
-    const SharedGroupChar &self = getGroup()->getSelf();
-    self->hp = 0;
-    self->maxhp = 0;
-    self->mana = 0;
-    self->maxmana = 0;
-    self->moves = 0;
-    self->maxmoves = 0;
-    self->roomId = DEFAULT_ROOMID;
-    self->position = CharacterPositionEnum::UNDEFINED;
-    self->affects = CharacterAffects{};
+    deref(getGroup()->getSelf()).reset();
+
     issueLocalCharUpdate();
 }
 
-void Mmapper2Group::sendLog(const QString &text)
+void Mmapper2Group::slot_sendLog(const QString &text)
 {
-    emit log("GroupManager", text);
+    log(text);
 }
 
 GroupManagerStateEnum Mmapper2Group::getMode()
@@ -569,7 +556,7 @@ GroupManagerStateEnum Mmapper2Group::getMode()
     return network ? network->getMode() : GroupManagerStateEnum::Off;
 }
 
-void Mmapper2Group::startNetwork()
+void Mmapper2Group::slot_startNetwork()
 {
     QMutexLocker locker(&networkLock);
 
@@ -586,18 +573,18 @@ void Mmapper2Group::startNetwork()
             return;
         }
 
-        connect(network.get(), &CGroupCommunicator::sendLog, this, &Mmapper2Group::sendLog);
+        connect(network.get(), &CGroupCommunicator::sig_sendLog, this, &Mmapper2Group::slot_sendLog);
         connect(network.get(),
-                &CGroupCommunicator::messageBox,
+                &CGroupCommunicator::sig_messageBox,
                 this,
-                &Mmapper2Group::relayMessageBox);
+                &Mmapper2Group::slot_relayMessageBox);
         connect(network.get(),
-                &CGroupCommunicator::gTellArrived,
+                &CGroupCommunicator::sig_gTellArrived,
                 this,
-                &Mmapper2Group::gTellArrived);
+                &Mmapper2Group::slot_gTellArrived);
         connect(network.get(), &CGroupCommunicator::destroyed, this, [this]() {
             network.release();
-            emit networkStatus(false);
+            emit sig_networkStatus(false);
         });
         connect(network.get(),
                 &CGroupCommunicator::sig_scheduleAction,
@@ -606,31 +593,31 @@ void Mmapper2Group::startNetwork()
         connect(this,
                 &Mmapper2Group::sig_kickCharacter,
                 network.get(),
-                &CGroupCommunicator::kickCharacter);
+                &CGroupCommunicator::slot_kickCharacter);
         connect(this,
                 &Mmapper2Group::sig_sendGroupTell,
                 network.get(),
-                &CGroupCommunicator::sendGroupTell);
+                &CGroupCommunicator::slot_sendGroupTell);
         connect(this,
                 &Mmapper2Group::sig_sendCharUpdate,
                 network.get(),
-                QOverload<const QVariantMap &>::of(&CGroupCommunicator::sendCharUpdate));
+                QOverload<const QVariantMap &>::of(&CGroupCommunicator::slot_sendCharUpdate));
         connect(this,
                 &Mmapper2Group::sig_sendSelfRename,
                 network.get(),
-                &CGroupCommunicator::sendSelfRename);
+                &CGroupCommunicator::slot_sendSelfRename);
     }
 
     // REVISIT: What about if the network is already started?
     if (network->start()) {
-        emit networkStatus(true);
-        emit updateWidget();
+        emit sig_networkStatus(true);
+        emit sig_updateWidget();
 
         if (getConfig().groupManager.rulesWarning) {
-            emit messageBox("Warning: MUME Rules",
-                            "Using the GroupManager in PK situations is ILLEGAL "
-                            "according to RULES ACTIONS.\n\nBe sure to disable the "
-                            "GroupManager under such conditions.");
+            emit sig_messageBox("Warning: MUME Rules",
+                                "Using the GroupManager in PK situations is ILLEGAL "
+                                "according to RULES ACTIONS.\n\nBe sure to disable the "
+                                "GroupManager under such conditions.");
         }
         qDebug() << "Network up";
     } else {
@@ -639,7 +626,7 @@ void Mmapper2Group::startNetwork()
     }
 }
 
-void Mmapper2Group::stopNetwork()
+void Mmapper2Group::slot_stopNetwork()
 {
     QMutexLocker locker(&networkLock);
     if (network) {
@@ -648,7 +635,7 @@ void Mmapper2Group::stopNetwork()
     }
 }
 
-void Mmapper2Group::setMode(const GroupManagerStateEnum newMode)
+void Mmapper2Group::slot_setMode(const GroupManagerStateEnum newMode)
 {
     QMutexLocker locker(&networkLock);
 
@@ -659,7 +646,7 @@ void Mmapper2Group::setMode(const GroupManagerStateEnum newMode)
         return; // Do not bother changing states if we're already in it
 
     // Stop previous network if it changed
-    stopNetwork();
+    slot_stopNetwork();
 
     qDebug() << "Network type set to" << static_cast<int>(newMode);
 }

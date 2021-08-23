@@ -18,7 +18,7 @@
     X(MMAPPER_GROUPTELL, MmapperGroupTell, "mmapper.grouptell", "MMapper.GroupTell") \
     /* define gmcp module types above */
 
-enum class GmcpModuleTypeEnum {
+enum class NODISCARD GmcpModuleTypeEnum {
     UNKNOWN = -1,
 #define X_DECL_GMCP_MODULE_TYPE(UPPER_CASE, CamelCase, normalized, friendly) UPPER_CASE,
     X_FOREACH_GMCP_MODULE_TYPE(X_DECL_GMCP_MODULE_TYPE)
@@ -29,7 +29,7 @@ static constexpr const size_t NUM_GMCP_MODULES = 1u;
 static_assert(NUM_GMCP_MODULES == static_cast<int>(GmcpModuleTypeEnum::MMAPPER_GROUPTELL) + 1);
 DEFINE_ENUM_COUNT(GmcpModuleTypeEnum, NUM_GMCP_MODULES)
 
-struct GmcpModuleVersion final
+struct NODISCARD GmcpModuleVersion final
 {
 private:
     uint32_t value = 0;
@@ -55,7 +55,7 @@ using GmcpModuleVersionList
 
 class QString;
 
-class GmcpModule final
+class NODISCARD GmcpModule final
 {
 private:
     std::string normalizedName;
@@ -68,19 +68,19 @@ public:
     DEFAULT_RULE_OF_5(GmcpModule);
 
 public:
-    bool isSupported() const { return type != GmcpModuleTypeEnum::UNKNOWN; }
-    bool hasVersion() const { return version > DEFAULT_GMCP_MODULE_VERSION; }
+    NODISCARD bool isSupported() const { return type != GmcpModuleTypeEnum::UNKNOWN; }
+    NODISCARD bool hasVersion() const { return version > DEFAULT_GMCP_MODULE_VERSION; }
 
 public:
-    GmcpModuleTypeEnum getType() const { return type; }
-    GmcpModuleVersion getVersion() const { return version; }
-    std::string getNormalizedName() const { return normalizedName; }
+    NODISCARD GmcpModuleTypeEnum getType() const { return type; }
+    NODISCARD GmcpModuleVersion getVersion() const { return version; }
+    NODISCARD std::string getNormalizedName() const { return normalizedName; }
 
 public:
-    std::string toStdString() const;
+    NODISCARD std::string toStdString() const;
 };
 
-struct GmcpModuleHashFunction
+struct NODISCARD GmcpModuleHashFunction final
 {
     std::size_t operator()(const GmcpModule &gmcp) const
     {
@@ -88,11 +88,11 @@ struct GmcpModuleHashFunction
     }
 };
 
-struct GmcpModuleEqualTo
+struct NODISCARD GmcpModuleEqualTo final
 {
     bool operator()(const GmcpModule &lhs, const GmcpModule &rhs) const
     {
-        return lhs.getNormalizedName().compare(rhs.getNormalizedName()) == 0;
+        return lhs.getNormalizedName() == rhs.getNormalizedName();
     }
 };
 

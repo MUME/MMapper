@@ -56,7 +56,7 @@ DisplayWidget::DisplayWidget(QWidget *const parent)
     setLineWrapColumnOrWidth(settings.columns);
     setWordWrapMode(QTextOption::WordWrap);
     setSizeIncrement(fm.averageCharWidth(), fm.lineSpacing());
-    setTabStopWidth(fm.width(" ") * TAB_WIDTH_SPACES);
+    setTabStopDistance(fm.horizontalAdvance(" ") * TAB_WIDTH_SPACES);
 
     QScrollBar *const scrollbar = verticalScrollBar();
     scrollbar->setSingleStep(fm.lineSpacing());
@@ -96,12 +96,12 @@ void DisplayWidget::resizeEvent(QResizeEvent *const event)
     // Inform user of new dimensions
     QString message = QString("Dimensions: %1x%2").arg(x).arg(y);
     QFontMetrics fmToolTip(QToolTip::font());
-    QPoint messageDiff(fmToolTip.width(message) / 2, fmToolTip.lineSpacing() / 2);
+    QPoint messageDiff(fmToolTip.horizontalAdvance(message) / 2, fmToolTip.lineSpacing() / 2);
     QToolTip::showText(mapToGlobal(rect().center() - messageDiff), message, this, rect(), 1000);
 
     const auto &settings = getConfig().integratedClient;
     if (settings.autoResizeTerminal) {
-        emit windowSizeChanged(x, y);
+        emit sig_windowSizeChanged(x, y);
     }
 
     QTextEdit::resizeEvent(event);
@@ -118,7 +118,7 @@ void DisplayWidget::setDefaultFormat(QTextCharFormat &format)
     format.setFontStrikeOut(false);
 }
 
-void DisplayWidget::displayText(const QString &str)
+void DisplayWidget::slot_displayText(const QString &str)
 {
     // Split ansi from this text
     QStringList textList, ansiList;

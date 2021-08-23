@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 
-enum class CanvasMouseModeEnum {
+#include "../global/macros.h"
+
+enum class NODISCARD CanvasMouseModeEnum {
     NONE,
     MOVE,
     RAYPICK_ROOMS,
@@ -13,5 +15,4 @@ enum class CanvasMouseModeEnum {
     CREATE_ONEWAY_CONNECTIONS,
     SELECT_INFOMARKS,
     CREATE_INFOMARKS
-
 };

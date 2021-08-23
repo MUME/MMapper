@@ -5,7 +5,6 @@
 
 #include "CGroupChar.h"
 
-#include <QCharRef>
 #include <QDebug>
 #include <QMessageLogContext>
 
@@ -31,8 +30,8 @@ const QVariantMap CGroupChar::toVariantMap() const
 {
     QVariantMap playerData;
 
-    playerData[nameKey] = name;
-    playerData[colorKey] = color.name();
+    playerData[nameKey] = m_internal.name;
+    playerData[colorKey] = m_internal.color.name();
     playerData["hp"] = hp;
     playerData["maxhp"] = maxhp;
     playerData["mana"] = mana;
@@ -49,7 +48,8 @@ const QVariantMap CGroupChar::toVariantMap() const
     return root;
 }
 
-struct QuotedQString final
+// TODO: move this somewhere more appropriate
+struct NODISCARD QuotedQString final
 {
 private:
     QString str;
@@ -111,9 +111,9 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
         }
     };
 
-#define TRY_UPDATE_STRING(s) tryUpdateString(#s, (s))
-
+#define TRY_UPDATE_STRING(s) tryUpdateString(#s, (m_internal.s))
     TRY_UPDATE_STRING(name);
+#undef TRY_UPDATE_STRING
 
     if (playerData.contains(prespamKey) && playerData[prespamKey].canConvert(QMetaType::QString)) {
         const QByteArray &ba = playerData[prespamKey].toString().toLatin1();
@@ -125,6 +125,7 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
 
     if (playerData.contains(colorKey) && playerData[colorKey].canConvert(QMetaType::QString)) {
         const QString &str = playerData[colorKey].toString();
+        auto &color = m_internal.color;
         if (str != color.name()) {
             updated = true;
             color = QColor(str);
@@ -179,6 +180,8 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
     UPDATE_AND_BOUNDS_CHECK(mana);
     UPDATE_AND_BOUNDS_CHECK(moves);
 
+#undef UPDATE_AND_BOUNDS_CHECK
+
     const auto setPosition = [&position = this->position,
                               &updated](const CharacterPositionEnum newPosition) {
         if (newPosition != position) {
@@ -198,7 +201,8 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
         }
     }
 
-    const auto setAffects = [&affects = this->affects, &updated](const CharacterAffects newAffects) {
+    const auto setAffects = [&affects = this->affects,
+                             &updated](const CharacterAffectFlags newAffects) {
         if (newAffects != affects) {
             updated = true;
             affects = newAffects;
@@ -207,13 +211,10 @@ bool CGroupChar::updateFromVariantMap(const QVariantMap &data)
 
     if (playerData.contains(affectsKey) && playerData[affectsKey].canConvert(QMetaType::UInt)) {
         const uint32_t i = playerData[affectsKey].toUInt();
-        setAffects(static_cast<CharacterAffects>(i));
+        setAffects(static_cast<CharacterAffectFlags>(i));
     }
 
     return updated;
-
-#undef UPDATE_AND_BOUNDS_CHECK
-#undef TRY_UPDATE_STRING
 }
 
 QByteArray CGroupChar::getNameFromUpdateChar(const QVariantMap &data)

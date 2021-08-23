@@ -48,7 +48,7 @@ bool Patterns::matchPattern(const QString &pattern, const QString &str)
 
 bool Patterns::matchNoDescriptionPatterns(const QString &str)
 {
-    for (auto &pattern : getConfig().parser.noDescriptionPatternsList) {
+    for (const QString &pattern : getConfig().parser.noDescriptionPatternsList) {
         if (matchPattern(pattern, str)) {
             return true;
         }

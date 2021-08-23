@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+#include "macros.h"
+
 #ifdef __MINGW32__
 #include <winsock2.h>
 #elif defined(_MSC_VER)
@@ -37,13 +39,15 @@ WinSock::WinSock() = default;
 WinSock::~WinSock() = default;
 #endif
 
-bool WinSock::tuneKeepAlive(unsigned int socket,
-                            unsigned long maxIdleInMillis,
-                            unsigned long intervalInMillis)
+bool WinSock::tuneKeepAlive(MAYBE_UNUSED unsigned int socket,
+                            MAYBE_UNUSED unsigned long maxIdleInMillis,
+                            MAYBE_UNUSED unsigned long intervalInMillis)
 {
 #ifndef WIN32
     return false;
 #else
+    // NOTE: C++ does not require the use of "struct tcp_keepalive" here like C does;
+    // TODO: fix this if you have access to a microsoft compiler.
     struct tcp_keepalive keepAliveVals = {
         true,            // TCP keep-alive on.
         maxIdleInMillis, // Delay in millis after no activity before sending first TCP keep-alive packet

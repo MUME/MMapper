@@ -12,7 +12,7 @@
 
 namespace syntax {
 
-class Accept final
+class NODISCARD Accept final
 {
 public:
     using Function = std::function<void(User &user, const Pair *)>;
@@ -28,7 +28,7 @@ public:
     explicit Accept(Function fn, std::string help);
     void operator()(User &user, const Pair *const matched) const { call(user, matched); }
     void call(User &user, const Pair *matched) const;
-    const std::string &getHelp() const { return m_help; }
+    NODISCARD const std::string &getHelp() const { return m_help; }
 
 public:
     friend std::ostream &operator<<(std::ostream &os, const Accept &accept);

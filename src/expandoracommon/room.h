@@ -23,12 +23,18 @@
 class ExitFieldVariant;
 class ParseEvent;
 
-enum class FlagModifyModeEnum { SET, UNSET, TOGGLE };
-enum class ComparisonResultEnum { DIFFERENT = 0, EQUAL, TOLERANCE };
+#define X_FOREACH_FlagModifyModeEnum(X) \
+    X(SET) \
+    X(UNSET) \
+    X(TOGGLE)
+#define DECL(X) X,
+enum class NODISCARD FlagModifyModeEnum { X_FOREACH_FlagModifyModeEnum(DECL) };
+#undef DECL
+enum class NODISCARD ComparisonResultEnum { DIFFERENT = 0, EQUAL, TOLERANCE };
 
 using ExitsList = EnumIndexedArray<Exit, ExitDirEnum, NUM_EXITS>;
 
-struct ExitDirConstRef final
+struct NODISCARD ExitDirConstRef final
 {
     const ExitDirEnum dir;
     const Exit &exit;
@@ -39,7 +45,7 @@ using OptionalExitDirConstRef = std::optional<ExitDirConstRef>;
 
 class Room;
 
-enum class RoomUpdateEnum {
+enum class NODISCARD RoomUpdateEnum {
     Id,
     Coord,
     NodeLookupKey,
@@ -49,8 +55,8 @@ enum class RoomUpdateEnum {
     ConnectionsOut,
 
     Name,
-    StaticDesc,
-    DynamicDesc,
+    Desc,
+    Contents,
     Note,
     Terrain,
 
@@ -67,12 +73,12 @@ static constexpr const size_t NUM_ROOM_UPDATE_TYPES = 17;
 static_assert(NUM_ROOM_UPDATE_TYPES == static_cast<int>(RoomUpdateEnum::Borked) + 1);
 DEFINE_ENUM_COUNT(RoomUpdateEnum, NUM_ROOM_UPDATE_TYPES)
 
-struct RoomUpdateFlags final : enums::Flags<RoomUpdateFlags, RoomUpdateEnum, uint32_t>
+struct NODISCARD RoomUpdateFlags final : enums::Flags<RoomUpdateFlags, RoomUpdateEnum, uint32_t>
 {
     using Flags::Flags;
 };
 
-class RoomModificationTracker
+class NODISCARD RoomModificationTracker
 {
 private:
     bool m_isModified = false;
@@ -86,46 +92,46 @@ public:
     virtual void virt_onNotifyModified(Room & /*room*/, RoomUpdateFlags /*updateFlags*/) {}
 
 public:
-    bool isModified() const { return m_isModified; }
+    NODISCARD bool isModified() const { return m_isModified; }
     void clearModified() { m_isModified = false; }
 
 public:
-    bool getNeedsMapUpdate() const { return m_needsMapUpdate; }
+    NODISCARD bool getNeedsMapUpdate() const { return m_needsMapUpdate; }
     void clearNeedsMapUpdate() { m_needsMapUpdate = false; }
 };
 
 // NOTE: Names are capitalized for use with getRoomName() and setRoomName(),
-// which means they'll be capitalized as RoomFields::RoomName.
+// which means they'll be capitalized as RoomFieldFlags::RoomName.
 #define XFOREACH_ROOM_PROPERTY(X) \
     X(RoomName, Name, ) \
-    X(RoomStaticDesc, StaticDescription, ) \
-    X(RoomDynamicDesc, DynamicDescription, ) \
+    X(RoomDesc, Description, ) \
+    X(RoomContents, Contents, ) \
     X(RoomNote, Note, ) \
     X(RoomMobFlags, MobFlags, ) \
     X(RoomLoadFlags, LoadFlags, ) \
-    X(RoomTerrainEnum, TerrainType, = RoomTerrainEnum::UNDEFINED) \
-    X(RoomPortableEnum, PortableType, = RoomPortableEnum::UNDEFINED) \
-    X(RoomLightEnum, LightType, = RoomLightEnum::UNDEFINED) \
-    X(RoomAlignEnum, AlignType, = RoomAlignEnum::UNDEFINED) \
-    X(RoomRidableEnum, RidableType, = RoomRidableEnum::UNDEFINED) \
-    X(RoomSundeathEnum, SundeathType, = RoomSundeathEnum::UNDEFINED)
+    X(RoomTerrainEnum, TerrainType, RoomTerrainEnum::UNDEFINED) \
+    X(RoomPortableEnum, PortableType, RoomPortableEnum::UNDEFINED) \
+    X(RoomLightEnum, LightType, RoomLightEnum::UNDEFINED) \
+    X(RoomAlignEnum, AlignType, RoomAlignEnum::UNDEFINED) \
+    X(RoomRidableEnum, RidableType, RoomRidableEnum::UNDEFINED) \
+    X(RoomSundeathEnum, SundeathType, RoomSundeathEnum::UNDEFINED)
 
 class Room;
 using SharedRoom = std::shared_ptr<Room>;
 using SharedConstRoom = std::shared_ptr<const Room>;
 enum class RoomStatusEnum : uint8_t { Zombie, Temporary, Permanent };
 
-class Room final : public std::enable_shared_from_this<Room>
+class NODISCARD Room final : public std::enable_shared_from_this<Room>
 {
 private:
-    struct this_is_private final
+    struct NODISCARD this_is_private final
     {
         explicit this_is_private(int) {}
     };
 
-    struct RoomFields final
+    struct NODISCARD RoomFields final
     {
-#define DECL_FIELD(_Type, _Prop, _OptInit) _Type _Prop _OptInit;
+#define DECL_FIELD(_Type, _Prop, _OptInit) _Type _Prop{_OptInit};
         XFOREACH_ROOM_PROPERTY(DECL_FIELD)
 #undef DECL_FIELD
     };
@@ -141,11 +147,11 @@ private:
     bool m_borked = true;
 
 private:
-    Exit &exit(ExitDirEnum dir) { return m_exits[dir]; }
+    NODISCARD Exit &exit(ExitDirEnum dir) { return m_exits[dir]; }
 
 public:
-    const Exit &exit(ExitDirEnum dir) const { return m_exits[dir]; }
-    const ExitsList &getExitsList() const { return m_exits; }
+    NODISCARD const Exit &exit(ExitDirEnum dir) const { return m_exits[dir]; }
+    NODISCARD const ExitsList &getExitsList() const { return m_exits; }
 
 public:
     void setExitsList(const ExitsList &newExits);
@@ -164,13 +170,16 @@ public:
     void removeOutExit(ExitDirEnum dir, RoomId id);
 
 public:
-    ExitDirections getOutExits() const;
-    OptionalExitDirConstRef getRandomExit() const;
-    ExitDirConstRef getExitMaybeRandom(ExitDirEnum dir) const;
+    NODISCARD ExitDirFlags getOutExits() const;
+    NODISCARD OptionalExitDirConstRef getRandomExit() const;
+    NODISCARD ExitDirConstRef getExitMaybeRandom(ExitDirEnum dir) const;
 
 public:
 #define DECL_GETTERS_AND_SETTERS(_Type, _Prop, _OptInit) \
-    inline const _Type &get##_Type(ExitDirEnum dir) const { return exit(dir).get##_Type(); } \
+    NODISCARD inline const _Type &get##_Type(ExitDirEnum dir) const \
+    { \
+        return exit(dir).get##_Type(); \
+    } \
     void set##_Type(ExitDirEnum dir, _Type value);
     XFOREACH_EXIT_PROPERTY(DECL_GETTERS_AND_SETTERS)
 #undef DECL_GETTERS_AND_SETTERS
@@ -178,17 +187,17 @@ public:
 public:
     void setId(RoomId id);
     void setPosition(const Coordinate &c);
-    RoomId getId() const { return m_id; }
-    const Coordinate &getPosition() const { return m_position; }
+    NODISCARD RoomId getId() const { return m_id; }
+    NODISCARD const Coordinate &getPosition() const { return m_position; }
     // Temporary rooms are created by the path machine during experimentation.
     // It's not clear why it can't track their "temporary" status itself.
-    bool isTemporary() const { return m_status == RoomStatusEnum::Temporary; }
+    NODISCARD bool isTemporary() const { return m_status == RoomStatusEnum::Temporary; }
     void setPermanent();
 
     void setAboutToDie();
 
     // "isn't suspected of being borked?"
-    bool isUpToDate() const { return !m_borked; }
+    NODISCARD bool isUpToDate() const { return !m_borked; }
     // "setNotProbablyBorked"
     void setUpToDate();
     // "setProbablyBorked"
@@ -198,7 +207,7 @@ public:
 
 public:
 #define DECL_GETTERS_AND_SETTERS(_Type, _Prop, _OptInit) \
-    inline const _Type &get##_Prop() const { return m_fields._Prop; } \
+    NODISCARD inline const _Type &get##_Prop() const { return m_fields._Prop; } \
     void set##_Prop(_Type value);
     XFOREACH_ROOM_PROPERTY(DECL_GETTERS_AND_SETTERS)
 #undef DECL_GETTERS_AND_SETTERS
@@ -215,30 +224,32 @@ public:
     static void update(Room *target, const Room *source);
 
 public:
-    std::string toStdString() const;
-    QString toQString() const { return ::toQStringLatin1(toStdString()); }
+    NODISCARD std::string toStdString() const;
+    NODISCARD QString toQString() const { return ::toQStringLatin1(toStdString()); }
     explicit operator QString() const { return toQString(); }
     friend QDebug operator<<(QDebug os, const Room &r) { return os << r.toQString(); }
 
 public:
-    static std::shared_ptr<Room> createPermanentRoom(RoomModificationTracker &tracker);
-    static std::shared_ptr<Room> createTemporaryRoom(RoomModificationTracker &tracker,
-                                                     const ParseEvent &);
+    NODISCARD static std::shared_ptr<Room> createPermanentRoom(RoomModificationTracker &tracker);
+    NODISCARD static std::shared_ptr<Room> createTemporaryRoom(RoomModificationTracker &tracker,
+                                                               const ParseEvent &);
 
 public:
-    static ComparisonResultEnum compare(const Room *, const ParseEvent &event, int tolerance);
-    static ComparisonResultEnum compareWeakProps(const Room *, const ParseEvent &event);
-    static std::shared_ptr<ParseEvent> getEvent(const Room *);
+    NODISCARD static ComparisonResultEnum compare(const Room *,
+                                                  const ParseEvent &event,
+                                                  int tolerance);
+    NODISCARD static ComparisonResultEnum compareWeakProps(const Room *, const ParseEvent &event);
+    NODISCARD static std::shared_ptr<ParseEvent> getEvent(const Room *);
 
 public:
-    static const Coordinate &exitDir(ExitDirEnum dir);
+    NODISCARD static const Coordinate &exitDir(ExitDirEnum dir);
 
 private:
-    static ComparisonResultEnum compareStrings(const std::string &room,
-                                               const std::string &event,
-                                               int prevTolerance,
-                                               bool updated = true);
+    NODISCARD static ComparisonResultEnum compareStrings(const std::string &room,
+                                                         const std::string &event,
+                                                         int prevTolerance,
+                                                         bool updated = true);
 
 public:
-    std::shared_ptr<Room> clone(RoomModificationTracker &tracker) const;
+    NODISCARD std::shared_ptr<Room> clone(RoomModificationTracker &tracker) const;
 };

@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <glm/glm.hpp>
 
+#include "macros.h"
+
 namespace bits {
 template<typename T>
 int bitCount(T x) noexcept = delete;
@@ -13,46 +15,46 @@ template<typename T>
 int leastSignificantBit(T x) noexcept = delete;
 
 template<>
-inline int bitCount(uint8_t x) noexcept
+NODISCARD inline int bitCount(uint8_t x) noexcept
 {
     return glm::bitCount(x);
 }
 template<>
-inline int bitCount(uint16_t x) noexcept
+NODISCARD inline int bitCount(uint16_t x) noexcept
 {
     return glm::bitCount(x);
 }
 template<>
-inline int bitCount(uint32_t x) noexcept
+NODISCARD inline int bitCount(uint32_t x) noexcept
 {
     return glm::bitCount(x);
 }
 template<>
-inline int bitCount(uint64_t x) noexcept
+NODISCARD inline int bitCount(uint64_t x) noexcept
 {
     return glm::bitCount(x);
 }
 
 template<>
-inline int leastSignificantBit(uint8_t x) noexcept
+NODISCARD inline int leastSignificantBit(uint8_t x) noexcept
 {
     return glm::findLSB(x);
 }
 
 template<>
-inline int leastSignificantBit(uint16_t x) noexcept
+NODISCARD inline int leastSignificantBit(uint16_t x) noexcept
 {
     return glm::findLSB(x);
 }
 
 template<>
-inline int leastSignificantBit(uint32_t x) noexcept
+NODISCARD inline int leastSignificantBit(uint32_t x) noexcept
 {
     return glm::findLSB(x);
 }
 
 template<>
-inline int leastSignificantBit(uint64_t x) noexcept
+NODISCARD inline int leastSignificantBit(uint64_t x) noexcept
 {
     return glm::findLSB(x);
 }

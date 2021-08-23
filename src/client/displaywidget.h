@@ -13,12 +13,14 @@
 #include <QtCore>
 #include <QtGui>
 
+#include "../global/macros.h"
+
 class QObject;
 class QResizeEvent;
 class QTextDocument;
 class QWidget;
 
-class DisplayWidget : public QTextEdit
+class DisplayWidget final : public QTextEdit
 {
 private:
     using base = QTextEdit;
@@ -27,17 +29,17 @@ private:
     Q_OBJECT
 
 public:
-    explicit DisplayWidget(QWidget *parent = nullptr);
-    ~DisplayWidget() override;
+    explicit DisplayWidget(QWidget *parent);
+    ~DisplayWidget() final;
 
-    bool canCopy() const { return m_canCopy; }
-    QSize sizeHint() const override;
+    NODISCARD bool canCopy() const { return m_canCopy; }
+    NODISCARD QSize sizeHint() const override;
 
 private:
     bool m_canCopy = false;
 
 public slots:
-    void displayText(const QString &str);
+    void slot_displayText(const QString &str);
 
 protected:
     QTextCursor m_cursor;
@@ -59,6 +61,6 @@ private:
     void updateFormatBoldColor(QTextCharFormat &format);
 
 signals:
-    void showMessage(const QString &, int);
-    void windowSizeChanged(int, int);
+    void sig_showMessage(const QString &, int);
+    void sig_windowSizeChanged(int, int);
 };

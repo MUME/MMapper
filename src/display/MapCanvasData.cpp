@@ -14,7 +14,7 @@ const MMapper::Array<RoomTintEnum, NUM_ROOM_TINTS> &getAllRoomTints()
     return all_room_tints;
 }
 
-MapCanvasInputState::MapCanvasInputState(PrespammedPath *const prespammedPath)
+MapCanvasInputState::MapCanvasInputState(PrespammedPath &prespammedPath)
     : m_prespammedPath{prespammedPath}
 {}
 

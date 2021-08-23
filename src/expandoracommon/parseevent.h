@@ -11,11 +11,8 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <QByteArrayDataPtr>
-#include <QCharRef>
 #include <QDebug>
 #include <QString>
-#include <QVariant>
 #include <QtGlobal>
 
 #include "../mapdata/mmapper2exit.h"
@@ -33,7 +30,7 @@ using SigParseEvent = MmQtHandle<ParseEvent>;
 /**
  * the ParseEvents will walk around in the SearchTree
  */
-class ParseEvent final
+class NODISCARD ParseEvent final
 {
 public:
     static constexpr const size_t NUM_PROPS = 3;
@@ -59,8 +56,8 @@ private:
 private:
     ArrayOfProperties m_properties;
     RoomName m_roomName;
-    RoomDynamicDesc m_dynamicDesc;
-    RoomStaticDesc m_staticDesc;
+    RoomDesc m_roomDesc;
+    RoomContents m_roomContents;
     ExitsFlagsType m_exitsFlags;
     PromptFlagsType m_promptFlags;
     ConnectedRoomFlagsType m_connectedRoomFlags;
@@ -79,10 +76,10 @@ public:
 public:
     // REVISIT: Cloning the event should no longer be necessary since all public methods are const;
     // instead, we we should make ParseEvent use `shared_from_this` and just copy the shared_ptr.
-    ParseEvent clone() const { return ParseEvent{*this}; }
+    NODISCARD ParseEvent clone() const { return ParseEvent{*this}; }
 
 public:
-    QString toQString() const;
+    NODISCARD QString toQString() const;
     explicit operator QString() const { return toQString(); }
     friend QDebug operator<<(QDebug os, const ParseEvent &ev) { return os << ev.toQString(); }
 
@@ -91,29 +88,26 @@ public:
 
 private:
     void setProperty(const RoomName &name) { m_properties.setProperty(0, name.getStdString()); }
-    void setProperty(const RoomStaticDesc &desc)
-    {
-        m_properties.setProperty(1, desc.getStdString());
-    }
+    void setProperty(const RoomDesc &desc) { m_properties.setProperty(1, desc.getStdString()); }
     void setProperty(const PromptFlagsType &prompt);
     void countSkipped();
 
 public:
-    const RoomName &getRoomName() const { return m_roomName; }
-    const RoomDynamicDesc &getDynamicDesc() const { return m_dynamicDesc; }
-    const RoomStaticDesc &getStaticDesc() const { return m_staticDesc; }
-    ExitsFlagsType getExitsFlags() const { return m_exitsFlags; }
-    PromptFlagsType getPromptFlags() const { return m_promptFlags; }
-    ConnectedRoomFlagsType getConnectedRoomFlags() const { return m_connectedRoomFlags; }
-    CommandEnum getMoveType() const { return m_moveType; }
-    uint getNumSkipped() const { return m_numSkipped; }
+    NODISCARD const RoomName &getRoomName() const { return m_roomName; }
+    NODISCARD const RoomDesc &getRoomDesc() const { return m_roomDesc; }
+    NODISCARD const RoomContents &getRoomContents() const { return m_roomContents; }
+    NODISCARD ExitsFlagsType getExitsFlags() const { return m_exitsFlags; }
+    NODISCARD PromptFlagsType getPromptFlags() const { return m_promptFlags; }
+    NODISCARD ConnectedRoomFlagsType getConnectedRoomFlags() const { return m_connectedRoomFlags; }
+    NODISCARD CommandEnum getMoveType() const { return m_moveType; }
+    NODISCARD uint getNumSkipped() const { return m_numSkipped; }
     const Property &operator[](const size_t pos) const { return m_properties.at(pos); }
 
 public:
     static SharedParseEvent createEvent(CommandEnum c,
                                         RoomName roomName,
-                                        RoomDynamicDesc dynamicDesc,
-                                        RoomStaticDesc staticDesc,
+                                        RoomDesc roomDesc,
+                                        RoomContents roomContents,
                                         const ExitsFlagsType &exitsFlags,
                                         const PromptFlagsType &promptFlags,
                                         const ConnectedRoomFlagsType &connectedRoomFlags);

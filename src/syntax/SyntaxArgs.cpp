@@ -15,7 +15,7 @@
 
 namespace syntax {
 
-static Vector toVector(const ParserInput &input)
+NODISCARD static Vector toVector(const ParserInput &input)
 {
     std::vector<Value> values;
     values.reserve(input.size());
@@ -40,9 +40,12 @@ MatchResult ArgAbbrev::virt_match(const ParserInput &input, IMatchErrorLogger * 
         return MatchResult::failure(input);
 
     const auto input_sv = StringView{input.front()};
+    const size_t inputLen = input_sv.size();
     const size_t strlen = m_str.length();
-    const size_t minLen = std::min(strlen, input_sv.length());
-    for (size_t i = 0; i < minLen; ++i) {
+    if (inputLen > strlen)
+        return MatchResult::failure(input);
+
+    for (size_t i = 0; i < inputLen; ++i) {
         if (toLowerLatin1(m_str[i]) != toLowerLatin1(input_sv[i]))
             return MatchResult::failure(input);
     }
@@ -168,7 +171,7 @@ MatchResult ArgInt::virt_match(const ParserInput &input, IMatchErrorLogger *logg
         if (!std::isdigit(firstChar) && firstChar != '-' && firstChar != '+')
             return MatchResult::failure(input);
 
-        stringView++;
+        ++stringView;
         for (char c : stringView)
             if (!std::isdigit(c))
                 return MatchResult::failure(input);
@@ -185,10 +188,10 @@ MatchResult ArgInt::virt_match(const ParserInput &input, IMatchErrorLogger *logg
     bool negative = false;
     switch (sv.firstChar()) {
     case '+':
-        sv++;
+        ++sv;
         break;
     case '-':
-        sv++;
+        ++sv;
         negative = true;
         break;
     default:
@@ -228,6 +231,10 @@ MatchResult ArgInt::virt_match(const ParserInput &input, IMatchErrorLogger *logg
                 break;
             }
         }
+    }
+
+    if (negative) {
+        result = -result;
     }
 
     if (fail) {
@@ -453,7 +460,7 @@ std::ostream &ArgString::virt_to_stream(std::ostream &os) const
     return os << "<string>";
 }
 
-static bool compareIgnoreCase(const std::string &a, const std::string &b)
+NODISCARD static bool compareIgnoreCase(const std::string &a, const std::string &b)
 {
     const auto size = a.size();
     if (size != b.size())

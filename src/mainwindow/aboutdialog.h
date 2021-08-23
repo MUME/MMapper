@@ -18,7 +18,7 @@ class AboutDialog : public QDialog, private Ui::AboutDialog
     Q_OBJECT
 
 public:
-    explicit AboutDialog(QWidget *parent = nullptr);
+    explicit AboutDialog(QWidget *parent);
 
 private:
     void setFixedFont(QTextBrowser *browser);

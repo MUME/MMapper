@@ -122,9 +122,9 @@ private:
         }
     }
 
-public:
+private:
     // Clears the contents of the mesh, but does not give up its GL resources.
-    void clear() override
+    void virt_clear() final
     {
         if (m_drawMode != DrawModeEnum::INVALID) {
             setStatic(m_drawMode, {});
@@ -133,7 +133,7 @@ public:
     }
 
     // Clears the mesh and destroys the GL resources.
-    void reset() override
+    void virt_reset() final
     {
         m_drawMode = DrawModeEnum::INVALID;
         m_numVerts = 0;
@@ -141,14 +141,14 @@ public:
         assert(isEmpty() && !m_vbo);
     }
 
-public:
-    bool isEmpty() const override
+private:
+    NODISCARD bool virt_isEmpty() const final
     {
         return !m_vbo || m_numVerts == 0 || m_drawMode == DrawModeEnum::INVALID;
     }
 
-public:
-    void render(const GLRenderState &renderState) override
+private:
+    void virt_render(const GLRenderState &renderState) final
     {
         if (isEmpty())
             return;
@@ -163,7 +163,7 @@ public:
 
         m_functions.checkError();
 
-        if (const auto optMode = Functions::toGLenum(m_drawMode)) {
+        if (const std::optional<GLenum> &optMode = Functions::toGLenum(m_drawMode)) {
             m_functions.glDrawArrays(optMode.value(), 0, m_numVerts);
         } else {
             assert(false);

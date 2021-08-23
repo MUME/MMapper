@@ -32,6 +32,7 @@ static const QRegularExpression leadingNonSpaceRegex(R"(^[^[:space:]]+)");
 /// only matches actual space characters
 static const QRegularExpression twoOrMoreSpaceCharsRegex(R"(  +)");
 
+/* visible */
 const QRegularExpression weakAnsiRegex(R"(\x1b\[?[[:digit:];]*[[:alpha:]]?)");
 
 static constexpr const char C_ANSI_ESCAPE = C_ESC;
@@ -54,7 +55,7 @@ bool isAnsiColor(QStringRef ansi)
     }
 
     ansi = ansi.mid(2, ansi.length() - 3);
-    for (auto &c : ansi)
+    for (const QChar c : ansi)
         // REVISIT: This may be incorrect if it allows Unicode digits
         // that are not part of the LATIN1 subset.
         if (c != C_SEMICOLON && !c.isDigit())
@@ -68,7 +69,7 @@ bool isAnsiColor(const QString &ansi)
     return isAnsiColor(ansi.midRef(0));
 }
 
-static int parsePositiveInt(const QStringRef &number)
+NODISCARD static int parsePositiveInt(const QStringRef &number)
 {
     static constexpr int MAX = std::numeric_limits<int>::max();
     static_assert(MAX == 2147483647);
@@ -76,7 +77,7 @@ static int parsePositiveInt(const QStringRef &number)
     static_assert(LIMIT == 214748364);
 
     int n = 0;
-    for (const QChar &qc : number) {
+    for (const QChar qc : number) {
         // bounds check for sanity
         if (qc.unicode() > 0xff)
             return -1;
@@ -300,7 +301,7 @@ uint16_t raw_ansi::get_bits_normalized() const
     return tmp.get_bits_raw();
 }
 
-static bool self_test = []() -> bool {
+static const bool self_test = []() -> bool {
     assert(raw_ansi().get_bits_raw() == 0);
     return true;
 }();
@@ -454,13 +455,13 @@ REPORT(bg, BG)
 
 #undef REPORT
 
-static uint16_t ansi_encode_color(const int n)
+NODISCARD static uint16_t ansi_encode_color(const int n)
 {
     assert((n & ~7) == 0);
     return static_cast<uint16_t>(n & 7);
 }
 
-static uint16_t ansi_encode_bit(const bool b)
+NODISCARD static uint16_t ansi_encode_bit(const bool b)
 {
     return static_cast<uint16_t>(b ? 1 : 0);
 }
@@ -540,7 +541,7 @@ void Ansi::process_code(const int code)
 }
 
 // https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters
-static bool isValidAnsiCode(const int n)
+NODISCARD static bool isValidAnsiCode(const int n)
 {
     switch (n) {
     case ANSI_RESET:
@@ -598,7 +599,7 @@ bool isValidAnsiColor(const QString &ansi)
     return isValidAnsiColor(ansi.midRef(0));
 }
 
-struct Prefix final
+struct NODISCARD Prefix final
 {
 private:
     int prefixLen = 0;
@@ -609,8 +610,8 @@ private:
     bool valid_ = false;
 
 public:
-    int length() const { return prefixLen; }
-    bool isValid() const { return valid_; }
+    NODISCARD int length() const { return prefixLen; }
+    NODISCARD bool isValid() const { return valid_; }
 
     template<typename Appender>
     void write(Appender &&append) const
@@ -751,7 +752,7 @@ void TextBuffer::appendJustified(QStringRef line, const int maxLen)
 void TextBuffer::appendExpandedTabs(const QStringRef &line, const int start_at)
 {
     int col = start_at;
-    for (auto &c : line) {
+    for (const QChar c : line) {
         if (c == '\t') {
             const int spaces = 8 - (col % 8);
             col += spaces;
@@ -762,7 +763,7 @@ void TextBuffer::appendExpandedTabs(const QStringRef &line, const int start_at)
             col += 1;
             append(c);
         }
-    };
+    }
 }
 
 void TextBuffer::appendWithoutTrailingWhitespace(QStringRef line)
@@ -929,14 +930,14 @@ AnsiStringToken AnsiTokenizer::Iterator::next()
 AnsiStringToken AnsiTokenizer::Iterator::getCurrent()
 {
     const auto here = pos_;
-    const QChar &c = str_[here];
+    const QChar c = str_[here];
     if (c == QC_ESC) {
         return AnsiStringToken{AnsiStringToken::TokenTypeEnum::ANSI, str_, here, skip_ansi()};
     } else if (c == QC_NEWLINE) {
         return AnsiStringToken{AnsiStringToken::TokenTypeEnum::NEWLINE, str_, here, 1};
     }
     // Special case to match "\r\n" as just "\n"
-    else if (c == QC_CARRIAGE_RETURN && here < str_.size() && str_[here + 1] == QC_NEWLINE) {
+    else if (c == QC_CARRIAGE_RETURN && here + 1 < str_.size() && str_[here + 1] == QC_NEWLINE) {
         return AnsiStringToken{AnsiStringToken::TokenTypeEnum::NEWLINE, str_, here + 1, 1};
     } else if (c == QC_CARRIAGE_RETURN || isControl(c)) {
         return AnsiStringToken{AnsiStringToken::TokenTypeEnum::CONTROL, str_, here, skip_control()};
@@ -953,7 +954,7 @@ AnsiTokenizer::Iterator::size_type AnsiTokenizer::Iterator::skip_ansi()
     // hack to avoid having to have two separate stop return values
     // (one to stop before current value, and one to include it)
     bool sawLetter = false;
-    return skip([&sawLetter](const QChar &c) -> ResultEnum {
+    return skip([&sawLetter](const QChar c) -> ResultEnum {
         if (sawLetter || c == QC_ESC || c == QC_NBSP || c.isSpace())
             return ResultEnum::STOP;
 
@@ -973,14 +974,14 @@ AnsiTokenizer::Iterator::size_type AnsiTokenizer::Iterator::skip_ansi()
 
 AnsiTokenizer::Iterator::size_type AnsiTokenizer::Iterator::skip_control()
 {
-    return skip([](const QChar &c) -> ResultEnum {
+    return skip([](const QChar c) -> ResultEnum {
         return isControl(c) ? ResultEnum::KEEPGOING : ResultEnum::STOP;
     });
 }
 
 AnsiTokenizer::Iterator::size_type AnsiTokenizer::Iterator::skip_space()
 {
-    return skip([](const QChar &c) -> ResultEnum {
+    return skip([](const QChar c) -> ResultEnum {
         switch (c.toLatin1()) {
         case C_ESC:
         case C_NBSP:
@@ -995,7 +996,7 @@ AnsiTokenizer::Iterator::size_type AnsiTokenizer::Iterator::skip_space()
 
 AnsiTokenizer::Iterator::size_type AnsiTokenizer::Iterator::skip_word()
 {
-    return skip([](const QChar &c) -> ResultEnum {
+    return skip([](const QChar c) -> ResultEnum {
         switch (c.toLatin1()) {
         case C_ESC:
         case C_NBSP:
@@ -1043,7 +1044,7 @@ bool isPrintLatin1(char c)
 
 bool requiresQuote(const std::string_view &str)
 {
-    for (auto &c : str) {
+    for (const char c : str) {
         if (std::isspace(c) || !isPrintLatin1(c))
             return true;
     }
@@ -1154,4 +1155,9 @@ std::string toStdStringLatin1(const QString &qs)
 std::string toStdStringUtf8(const QString &qs)
 {
     return qs.toUtf8().toStdString();
+}
+
+std::string_view toStdStringViewLatin1(const QByteArray &arr)
+{
+    return std::string_view{arr.data(), static_cast<size_t>(arr.size())};
 }

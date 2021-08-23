@@ -13,7 +13,7 @@
 
 #include "TextUtils.h"
 
-static bool is_space(char c)
+NODISCARD static bool is_space(char c)
 {
     return std::isspace(static_cast<uint8_t>(c) & 0xff);
 }
@@ -260,13 +260,6 @@ StringView &StringView::operator++()
     return *this;
 }
 
-StringView StringView::operator++(int)
-{
-    auto result = *this;
-    m_sv.remove_prefix(1);
-    return result;
-}
-
 char StringView::operator[](size_t pos) const
 {
     return m_sv[pos];
@@ -276,15 +269,15 @@ namespace detail {
 
 namespace intersection {
 
-static constexpr bool intersects(const uintptr_t x, const uintptr_t lo, const uintptr_t hi)
+NODISCARD static constexpr bool intersects(const uintptr_t x, const uintptr_t lo, const uintptr_t hi)
 {
     return lo <= hi && lo <= x && x <= hi;
 }
 
-static constexpr bool intersects(const uintptr_t abeg,
-                                 const uintptr_t aend,
-                                 const uintptr_t bbeg,
-                                 const uintptr_t bend)
+NODISCARD static constexpr bool intersects(const uintptr_t abeg,
+                                           const uintptr_t aend,
+                                           const uintptr_t bbeg,
+                                           const uintptr_t bend)
 {
     if (abeg == aend) { // empty
         if (bbeg == bend) {
@@ -298,19 +291,19 @@ static constexpr bool intersects(const uintptr_t abeg,
     return abeg <= aend && bbeg <= bend && abeg < bend && bbeg < aend;
 }
 
-static constexpr bool test_intersects(const uintptr_t abeg,
-                                      const uintptr_t aend,
-                                      const uintptr_t bbeg,
-                                      const uintptr_t bend)
+NODISCARD static constexpr bool test_intersects(const uintptr_t abeg,
+                                                const uintptr_t aend,
+                                                const uintptr_t bbeg,
+                                                const uintptr_t bend)
 {
     return ::detail::intersection::intersects(abeg, aend, bbeg, bend)
            && ::detail::intersection::intersects(bbeg, bend, abeg, aend);
 }
 
-static constexpr bool test_does_not_intersect(const uintptr_t abeg,
-                                              const uintptr_t aend,
-                                              const uintptr_t bbeg,
-                                              const uintptr_t bend)
+NODISCARD static constexpr bool test_does_not_intersect(const uintptr_t abeg,
+                                                        const uintptr_t aend,
+                                                        const uintptr_t bbeg,
+                                                        const uintptr_t bend)
 {
     return !::detail::intersection::intersects(abeg, aend, bbeg, bend)
            && !::detail::intersection::intersects(bbeg, bend, abeg, aend);
@@ -345,10 +338,10 @@ static_assert(::detail::intersection::test_does_not_intersect(
     0, 1, 1, 2)); // overlapping at non-included boundary
 static_assert(::detail::intersection::test_does_not_intersect(1, 0, 0, 1)); // backwards range
 
-static bool intersects(const char *const abeg,
-                       const char *const aend,
-                       const char *const bbeg,
-                       const char *const bend)
+NODISCARD static bool intersects(const char *const abeg,
+                                 const char *const aend,
+                                 const char *const bbeg,
+                                 const char *const bend)
 {
     return ::detail::intersection::intersects(reinterpret_cast<uintptr_t>(abeg),
                                               reinterpret_cast<uintptr_t>(aend),
@@ -356,10 +349,10 @@ static bool intersects(const char *const abeg,
                                               reinterpret_cast<uintptr_t>(bend));
 }
 
-static bool intersects(const char *const a,
-                       const size_t alen,
-                       const char *const b,
-                       const size_t blen)
+NODISCARD static bool intersects(const char *const a,
+                                 const size_t alen,
+                                 const char *const b,
+                                 const size_t blen)
 {
     return ::detail::intersection::intersects(a, a + alen, b, b + blen);
 }
@@ -369,19 +362,19 @@ static bool intersects(const char *const a,
 namespace substring {
 
 // a is a substring of b
-static constexpr bool isSubstringOf(const uintptr_t abeg,
-                                    const uintptr_t aend,
-                                    const uintptr_t bbeg,
-                                    const uintptr_t bend)
+NODISCARD static constexpr bool isSubstringOf(const uintptr_t abeg,
+                                              const uintptr_t aend,
+                                              const uintptr_t bbeg,
+                                              const uintptr_t bend)
 {
     return abeg <= aend && bbeg <= bend && bbeg <= abeg && aend <= bend;
 }
 
 // a is a substring of b
-static bool isSubstringOf(const char *const abeg,
-                          const char *const aend,
-                          const char *const bbeg,
-                          const char *const bend)
+NODISCARD static bool isSubstringOf(const char *const abeg,
+                                    const char *const aend,
+                                    const char *const bbeg,
+                                    const char *const bend)
 {
     return ::detail::substring::isSubstringOf(reinterpret_cast<uintptr_t>(abeg),
                                               reinterpret_cast<uintptr_t>(aend),
@@ -390,10 +383,10 @@ static bool isSubstringOf(const char *const abeg,
 }
 
 // a is a substring of b
-static bool isSubstringOf(const char *const a,
-                          const size_t alen,
-                          const char *const b,
-                          const size_t blen)
+NODISCARD static bool isSubstringOf(const char *const a,
+                                    const size_t alen,
+                                    const char *const b,
+                                    const size_t blen)
 {
     return ::detail::substring::isSubstringOf(a, a + alen, b, b + blen);
 }
@@ -466,7 +459,7 @@ static void testEmpty()
     StringView tmp;
     TEST_ASSERT(tmp.empty());
     int count = 0;
-    for (auto c : tmp) {
+    for (const char c : tmp) {
         ++count;
         static_cast<void>(c); /* unused */
     }

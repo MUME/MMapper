@@ -16,12 +16,11 @@ FontMesh3d::FontMesh3d(const SharedFunctions &functions,
 
 FontMesh3d::~FontMesh3d() = default;
 
-void FontMesh3d::render(const GLRenderState &renderState)
+GLRenderState FontMesh3d::virt_modifyRenderState(const GLRenderState &renderState) const
 {
-    const auto state = renderState.withBlend(BlendModeEnum::TRANSPARENCY)
-                           .withDepthFunction(std::nullopt)
-                           .withTexture0(m_texture);
-    Base::render(state);
+    return renderState.withBlend(BlendModeEnum::TRANSPARENCY)
+        .withDepthFunction(std::nullopt)
+        .withTexture0(m_texture);
 }
 
 } // namespace Legacy

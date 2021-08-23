@@ -23,7 +23,7 @@ class ParseEvent;
     X(MMAPPER_GROUPTELL, MmapperGroupTell, "mmapper.grouptell", "MMapper.GroupTell") \
     /* define gmcp message types above */
 
-enum class GmcpMessageTypeEnum {
+enum class NODISCARD GmcpMessageTypeEnum {
     UNKNOWN = -1,
 #define X_DECL_GMCP_MESSAGE_TYPE(UPPER_CASE, CamelCase, normalized, friendly) UPPER_CASE,
     X_FOREACH_GMCP_MESSAGE_TYPE(X_DECL_GMCP_MESSAGE_TYPE)
@@ -34,15 +34,19 @@ static constexpr const size_t NUM_GMCP_MESSAGES = 6u;
 static_assert(NUM_GMCP_MESSAGES == static_cast<int>(GmcpMessageTypeEnum::MMAPPER_GROUPTELL) + 1);
 DEFINE_ENUM_COUNT(GmcpMessageTypeEnum, NUM_GMCP_MESSAGES)
 
-struct GmcpMessageNameTag final
+namespace tags {
+struct NODISCARD GmcpMessageNameTag final
 {};
+} // namespace tags
 
-using GmcpMessageName = TaggedString<GmcpMessageNameTag>;
+using GmcpMessageName = TaggedString<tags::GmcpMessageNameTag>;
 
-struct GmcpJsonTag final
+namespace tags {
+struct NODISCARD GmcpJsonTag final
 {};
+} // namespace tags
 
-using GmcpJson = TaggedStringUtf8<GmcpJsonTag>;
+using GmcpJson = TaggedStringUtf8<tags::GmcpJsonTag>;
 
 class GmcpMessage final
 {
@@ -65,10 +69,10 @@ public:
 #undef DECL_GETTERS_AND_SETTERS
 
 public:
-    GmcpMessageName getName() const { return name; }
-    std::optional<GmcpJson> getJson() const { return json; }
+    NODISCARD GmcpMessageName getName() const { return name; }
+    NODISCARD std::optional<GmcpJson> getJson() const { return json; }
 
 public:
-    QByteArray toRawBytes() const;
-    static GmcpMessage fromRawBytes(const QByteArray &ba);
+    NODISCARD QByteArray toRawBytes() const;
+    NODISCARD static GmcpMessage fromRawBytes(const QByteArray &ba);
 };

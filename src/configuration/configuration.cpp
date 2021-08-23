@@ -21,7 +21,7 @@
 
 static std::atomic_bool config_enteredMain{false};
 
-static const char *getPlatformEditor()
+NODISCARD static const char *getPlatformEditor()
 {
     switch (CURRENT_PLATFORM) {
     case PlatformEnum::Windows:
@@ -61,7 +61,7 @@ ConstString OLD_SETTINGS_ORGANIZATION = "Caligor soft";
 ConstString SETTINGS_APPLICATION = "MMapper2";
 ConstString SETTINGS_FIRST_TIME_KEY = "General/Run first time";
 
-class Settings final
+class NODISCARD Settings final
 {
 private:
     static constexpr const char *const MMAPPER_PROFILE_PATH = "MMAPPER_PROFILE_PATH";
@@ -70,13 +70,13 @@ private:
     std::optional<QSettings> m_settings;
 
 private:
-    static bool isValid(const QFile &file)
+    NODISCARD static bool isValid(const QFile &file)
     {
         const QFileInfo info{file};
         return !info.isDir() && info.exists() && info.isReadable() && info.isWritable();
     }
 
-    static bool isValid(const QString &fileName)
+    NODISCARD static bool isValid(const QString &fileName)
     {
         const QFile file{fileName};
         return isValid(file);
@@ -144,7 +144,7 @@ void Settings::initSettings()
 
     static std::once_flag success_flag;
     std::call_once(success_flag, [this] {
-        decltype(auto) info = qInfo();
+        auto &&info = qInfo();
         info << "Using settings from" << QString{static_cast<QSettings &>(*this).fileName()};
         if (g_path == nullptr)
             info << "(Hint: Environment variable" << QString{MMAPPER_PROFILE_PATH}
@@ -172,7 +172,7 @@ void Settings::initSettings()
 
 #define SETTINGS(conf) \
     Settings settings; \
-    QSettings &conf = static_cast<QSettings &>(settings);
+    QSettings &conf = static_cast<QSettings &>(settings)
 
 ConstString GRP_AUTO_LOAD_WORLD = "Auto load world";
 ConstString GRP_AUTO_LOG = "Auto log";
@@ -253,6 +253,7 @@ ConstString KEY_PROXY_CONNECTION_STATUS = "Proxy connection status";
 ConstString KEY_PROXY_LISTENS_ON_ANY_INTERFACE = "Proxy listens on any interface";
 ConstString KEY_RELATIVE_PATH_ACCEPTANCE = "relative path acceptance";
 ConstString KEY_REMOTE_EDITING_AND_VIEWING = "Remote editing and viewing";
+ConstString KEY_RESOURCES_DIRECTORY = "canvas.resourcesDir";
 ConstString KEY_MUME_REMOTE_PORT = "Remote port number";
 ConstString KEY_GROUP_REMOTE_PORT = "remote port";
 ConstString KEY_REMOVE_XML_TAGS = "Remove XML tags";
@@ -301,7 +302,7 @@ void Settings::tryCopyOldSettings()
     sNew.endGroup();
 }
 
-static bool isValidAnsi(const QString &input)
+NODISCARD static bool isValidAnsi(const QString &input)
 {
     static constexpr const auto MAX = static_cast<uint32_t>(std::numeric_limits<uint8_t>::max());
 
@@ -310,7 +311,7 @@ static bool isValidAnsi(const QString &input)
     }
 
     for (const auto &part : input.mid(1, input.length() - 2).split(";")) {
-        for (const QChar &c : part)
+        for (const QChar c : part)
             if (!c.isDigit())
                 return false;
         bool ok = false;
@@ -322,7 +323,7 @@ static bool isValidAnsi(const QString &input)
     return true;
 }
 
-static bool isValidGroupManagerState(const GroupManagerStateEnum state)
+NODISCARD static bool isValidGroupManagerState(const GroupManagerStateEnum state)
 {
     switch (state) {
     case GroupManagerStateEnum::Off:
@@ -333,7 +334,7 @@ static bool isValidGroupManagerState(const GroupManagerStateEnum state)
     return false;
 }
 
-static bool isValidMapMode(const MapModeEnum mode)
+NODISCARD static bool isValidMapMode(const MapModeEnum mode)
 {
     switch (mode) {
     case MapModeEnum::PLAY:
@@ -344,7 +345,7 @@ static bool isValidMapMode(const MapModeEnum mode)
     return false;
 }
 
-static bool isValidCharacterEncoding(const CharacterEncodingEnum encoding)
+NODISCARD static bool isValidCharacterEncoding(const CharacterEncodingEnum encoding)
 {
     switch (encoding) {
     case CharacterEncodingEnum::ASCII:
@@ -355,7 +356,7 @@ static bool isValidCharacterEncoding(const CharacterEncodingEnum encoding)
     return false;
 }
 
-static bool isValidAutoLoggerState(const AutoLoggerEnum strategy)
+NODISCARD static bool isValidAutoLoggerState(const AutoLoggerEnum strategy)
 {
     switch (strategy) {
     case AutoLoggerEnum::DeleteDays:
@@ -366,7 +367,7 @@ static bool isValidAutoLoggerState(const AutoLoggerEnum strategy)
     return false;
 }
 
-static QString sanitizeAnsi(const QString &input, const QString &defaultValue)
+NODISCARD static QString sanitizeAnsi(const QString &input, const QString &defaultValue)
 {
     assert(isValidAnsi(defaultValue));
     if (isValidAnsi(input))
@@ -378,7 +379,7 @@ static QString sanitizeAnsi(const QString &input, const QString &defaultValue)
     return defaultValue;
 }
 
-static GroupManagerStateEnum sanitizeGroupManagerState(const int input)
+NODISCARD static GroupManagerStateEnum sanitizeGroupManagerState(const int input)
 {
     const auto state = static_cast<GroupManagerStateEnum>(input);
     if (isValidGroupManagerState(state))
@@ -388,7 +389,7 @@ static GroupManagerStateEnum sanitizeGroupManagerState(const int input)
     return GroupManagerStateEnum::Off;
 }
 
-static MapModeEnum sanitizeMapMode(const uint32_t input)
+NODISCARD static MapModeEnum sanitizeMapMode(const uint32_t input)
 {
     const auto mode = static_cast<MapModeEnum>(input);
     if (isValidMapMode(mode))
@@ -398,7 +399,7 @@ static MapModeEnum sanitizeMapMode(const uint32_t input)
     return MapModeEnum::PLAY;
 }
 
-static CharacterEncodingEnum sanitizeCharacterEncoding(const uint32_t input)
+NODISCARD static CharacterEncodingEnum sanitizeCharacterEncoding(const uint32_t input)
 {
     const auto encoding = static_cast<CharacterEncodingEnum>(input);
     if (isValidCharacterEncoding(encoding))
@@ -408,7 +409,7 @@ static CharacterEncodingEnum sanitizeCharacterEncoding(const uint32_t input)
     return CharacterEncodingEnum::LATIN1;
 }
 
-static AutoLoggerEnum sanitizeAutoLoggerState(const int input)
+NODISCARD static AutoLoggerEnum sanitizeAutoLoggerState(const int input)
 {
     const auto state = static_cast<AutoLoggerEnum>(input);
     if (isValidAutoLoggerState(state))
@@ -418,7 +419,7 @@ static AutoLoggerEnum sanitizeAutoLoggerState(const int input)
     return AutoLoggerEnum::DeleteDays;
 }
 
-static uint16_t sanitizeUint16(const int input, const uint16_t defaultValue)
+NODISCARD static uint16_t sanitizeUint16(const int input, const uint16_t defaultValue)
 {
     static constexpr const auto MIN = static_cast<int>(std::numeric_limits<uint16_t>::min());
     static constexpr const auto MAX = static_cast<int>(std::numeric_limits<uint16_t>::max());
@@ -510,6 +511,15 @@ void Configuration::reset()
 #undef FOREACH_CONFIG_GROUP
 #undef GROUP_CALLBACK
 
+ConstString DEFAULT_MMAPPER_SUBDIR = "/MMapper";
+ConstString DEFAULT_LOGS_SUBDIR = "/Logs";
+ConstString DEFAULT_RESOURCES_SUBDIR = "/Resources";
+
+NODISCARD static QString getDefaultDirectory()
+{
+    return QDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).absolutePath();
+}
+
 void Configuration::GeneralSettings::read(QSettings &conf)
 {
     firstRun = conf.value(KEY_RUN_FIRST_TIME, true).toBool();
@@ -570,6 +580,11 @@ void Configuration::CanvasSettings::read(QSettings &conf)
         return Color(QColor(conf.value(key, qdef).toString()));
     };
 
+    resourcesDirectory = conf.value(KEY_RESOURCES_DIRECTORY,
+                                    getDefaultDirectory()
+                                        .append(DEFAULT_MMAPPER_SUBDIR)
+                                        .append(DEFAULT_RESOURCES_SUBDIR))
+                             .toString();
     showUpdated = conf.value(KEY_SHOW_UPDATED_ROOMS, false).toBool();
     drawNotMappedExits = conf.value(KEY_DRAW_NOT_MAPPED_EXITS, true).toBool();
     drawUpperLayersTextured = conf.value(KEY_DRAW_UPPER_LAYERS_TEXTURED, false).toBool();
@@ -588,14 +603,6 @@ void Configuration::CanvasSettings::read(QSettings &conf)
     advanced.verticalAngle.set(conf.value(KEY_3D_VERTICAL_ANGLE, 450).toInt());
     advanced.horizontalAngle.set(conf.value(KEY_3D_HORIZONTAL_ANGLE, 0).toInt());
     advanced.layerHeight.set(conf.value(KEY_3D_LAYER_HEIGHT, 15).toInt());
-}
-
-ConstString DEFAULT_MMAPPER_SUBDIR = "/MMapper";
-ConstString DEFAULT_LOGS_SUBDIR = "/Logs";
-
-static QString getDefaultDirectory()
-{
-    return QDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).absolutePath();
 }
 
 void Configuration::AutoLoadSettings::read(QSettings &conf)
@@ -667,8 +674,8 @@ void Configuration::PathMachineSettings::read(QSettings &conf)
     newRoomPenalty = conf.value(KEY_ROOM_CREATION_PENALTY, 5).toDouble();
     correctPositionBonus = conf.value(KEY_CORRECT_POSITION_BONUS, 5).toDouble();
     multipleConnectionsPenalty = conf.value(KEY_MULTIPLE_CONNECTIONS_PENALTY, 2.0).toDouble();
-    maxPaths = std::max(0, conf.value(KEY_MAXIMUM_NUMBER_OF_PATHS, 1000).toInt());
-    matchingTolerance = std::max(0, conf.value(KEY_ROOM_MATCHING_TOLERANCE, 8).toInt());
+    maxPaths = utils::clampNonNegative(conf.value(KEY_MAXIMUM_NUMBER_OF_PATHS, 1000).toInt());
+    matchingTolerance = utils::clampNonNegative(conf.value(KEY_ROOM_MATCHING_TOLERANCE, 8).toInt());
 }
 
 void Configuration::GroupManagerSettings::read(QSettings &conf)
@@ -758,13 +765,14 @@ void Configuration::ConnectionSettings::write(QSettings &conf) const
     conf.setValue(KEY_PROXY_LISTENS_ON_ANY_INTERFACE, proxyListensOnAnyInterface);
 }
 
-static auto getQColorName(const XNamedColor &color)
+NODISCARD static auto getQColorName(const XNamedColor &color)
 {
     return color.getColor().getQColor().name();
 }
 
 void Configuration::CanvasSettings::write(QSettings &conf) const
 {
+    conf.setValue(KEY_RESOURCES_DIRECTORY, resourcesDirectory);
     conf.setValue(KEY_SHOW_UPDATED_ROOMS, showUpdated);
     conf.setValue(KEY_DRAW_NOT_MAPPED_EXITS, drawNotMappedExits);
     conf.setValue(KEY_DRAW_UPPER_LAYERS_TEXTURED, drawUpperLayersTextured);
@@ -832,8 +840,8 @@ void Configuration::PathMachineSettings::write(QSettings &conf) const
     conf.setValue(KEY_ABSOLUTE_PATH_ACCEPTANCE, acceptBestAbsolute);
     conf.setValue(KEY_ROOM_CREATION_PENALTY, newRoomPenalty);
     conf.setValue(KEY_CORRECT_POSITION_BONUS, correctPositionBonus);
-    conf.setValue(KEY_MAXIMUM_NUMBER_OF_PATHS, maxPaths);
-    conf.setValue(KEY_ROOM_MATCHING_TOLERANCE, matchingTolerance);
+    conf.setValue(KEY_MAXIMUM_NUMBER_OF_PATHS, utils::clampNonNegative(maxPaths));
+    conf.setValue(KEY_ROOM_MATCHING_TOLERANCE, utils::clampNonNegative(matchingTolerance));
     conf.setValue(KEY_MULTIPLE_CONNECTIONS_PENALTY, multipleConnectionsPenalty);
 }
 
@@ -963,7 +971,7 @@ Configuration::CanvasSettings::Advanced::Advanced()
     }
 
     if ((false)) {
-        for (auto *it : {&fov, &verticalAngle, &horizontalAngle, &layerHeight}) {
+        for (const auto *it : {&fov, &verticalAngle, &horizontalAngle, &layerHeight}) {
             static_cast<void>(it);
         }
     }

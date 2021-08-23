@@ -16,7 +16,7 @@
 static constexpr const bool USE_TMP_SUFFIX = CURRENT_PLATFORM != PlatformEnum::Windows;
 
 static const char *const TMP_FILE_SUFFIX = ".tmp";
-static auto maybe_add_suffix(const QString &filename)
+NODISCARD static auto maybe_add_suffix(const QString &filename)
 {
     return USE_TMP_SUFFIX ? (filename + TMP_FILE_SUFFIX) : filename;
 }
@@ -60,7 +60,8 @@ void FileSaver::close() noexcept(false)
     }
 
     m_file.flush();
-    ::io::fsync(m_file);
+    // REVISIT: check return value?
+    MAYBE_UNUSED const auto ignored = ::io::fsync(m_file);
     remove_tmp_suffix(m_filename);
     m_file.close();
 }

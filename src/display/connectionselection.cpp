@@ -17,13 +17,13 @@
 
 ConnectionSelection::ConnectionSelection(this_is_private)
 {
-    for (auto &x : m_connectionDescriptor)
+    for (const auto &x : m_connectionDescriptor)
         assert(x.room == nullptr);
 }
 
 ConnectionSelection::ConnectionSelection(this_is_private, MapFrontend *mf, const MouseSel &sel)
 {
-    for (auto &x : m_connectionDescriptor)
+    for (const auto &x : m_connectionDescriptor)
         assert(x.room == nullptr);
 
     const Coordinate c = sel.getCoordinate();
@@ -146,7 +146,7 @@ ConnectionSelection::ConnectionDescriptor ConnectionSelection::getSecond() const
     return m_connectionDescriptor[1];
 }
 
-void ConnectionSelection::receiveRoom(RoomAdmin *const admin, const Room *const aRoom)
+void ConnectionSelection::virt_receiveRoom(RoomAdmin *const admin, const Room *const aRoom)
 {
     m_admin = admin;
     // addroom to internal map

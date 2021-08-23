@@ -35,7 +35,7 @@ static constexpr const char S_TWO_SPACES[3]{C_SPACE, C_SPACE, C_NUL};
 // REVISIT: Figure out how to tweak logic to accept actual maximum length of 80
 static constexpr const int MAX_LENGTH = 79;
 
-static int measureTabAndAnsiAware(const QString &s)
+NODISCARD static int measureTabAndAnsiAware(const QString &s)
 {
     int col = 0;
     for (auto token : AnsiTokenizer{s}) {
@@ -78,7 +78,7 @@ class LineHighlighter final : public QSyntaxHighlighter
 {
 public:
     explicit LineHighlighter(int maxLength, QTextDocument *parent);
-    virtual ~LineHighlighter() override;
+    ~LineHighlighter() final;
 
     void highlightBlock(const QString &line) override
     {
@@ -158,33 +158,36 @@ public:
         const auto darkOrange = getBackgroundFormat(QColor{0xff, 0x8c, 0x00});
         const auto yellow = getBackgroundFormat(Qt::yellow);
 
-        struct MyEntityCallback : entities::EntityCallback
+        struct NODISCARD MyEntityCallback final : entities::EntityCallback
         {
-            LineHighlighter &self;
-            const QTextCharFormat &red;
-            const QTextCharFormat &darkOrange;
-            const QTextCharFormat &yellow;
+        private:
+            LineHighlighter &m_self;
+            const QTextCharFormat &m_red;
+            const QTextCharFormat &m_darkOrange;
+            const QTextCharFormat &m_yellow;
 
+        public:
             explicit MyEntityCallback(LineHighlighter &self,
                                       const QTextCharFormat &red,
                                       const QTextCharFormat &darkOrange,
                                       const QTextCharFormat &yellow)
-                : self{self}
-                , red{red}
-                , darkOrange{darkOrange}
-                , yellow{yellow}
+                : m_self{self}
+                , m_red{red}
+                , m_darkOrange{darkOrange}
+                , m_yellow{yellow}
             {}
 
-            void decodedEntity(int start, int len, OptQChar decoded) override
+        private:
+            void virt_decodedEntity(int start, int len, OptQChar decoded) final
             {
                 const auto get_fmt = [this, &decoded]() -> const QTextCharFormat & {
                     if (!decoded)
-                        return red;
+                        return m_red;
                     const auto val = decoded->unicode();
-                    return (val < 256) ? yellow : darkOrange;
+                    return (val < 256) ? m_yellow : m_darkOrange;
                 };
 
-                self.setFormat(start, len, get_fmt());
+                m_self.setFormat(start, len, get_fmt());
             }
         } callback{*this, red, darkOrange, yellow};
         entities::foreachEntity(line.midRef(0), callback);
@@ -197,24 +200,22 @@ public:
         const auto yellow = getBackgroundFormat(Qt::yellow);
         const auto cyan = getBackgroundFormat(Qt::cyan);
 
-        using OptFmt = std::pair<QTextCharFormat, bool>; // poor-man's std::optional
+        using OptFmt = std::optional<QTextCharFormat>;
 #define DECL_FMT(name, color, tooltip) \
     OptFmt opt_##name{}; \
     const auto get_##name##_fmt = [&opt_##name, &color]() -> const QTextCharFormat & { \
-        auto &first = opt_##name.first; \
-        auto &second = opt_##name.second; \
-        if (!second) { \
-            second = true; \
-            first = color; \
+        auto &opt = opt_##name; \
+        if (!opt) { \
+            opt = color; \
             if (USE_TOOLTIPS) \
-                first.setToolTip(tooltip); \
+                opt.value().setToolTip(tooltip); \
         } \
-        return first; \
-    };
+        return opt.value(); \
+    }
         DECL_FMT(unicode, red, "Unicode");
         DECL_FMT(nbsp, cyan, "NBSP");
         DECL_FMT(utf8, yellow, "UTF-8");
-        DECL_FMT(unprintable, darkOrange, "(unprintable)")
+        DECL_FMT(unprintable, darkOrange, "(unprintable)");
 
 #undef DECL_FMT
 
@@ -277,6 +278,7 @@ RemoteTextEdit::RemoteTextEdit(const QString &initialText, QWidget *const parent
 }
 RemoteTextEdit::~RemoteTextEdit() = default;
 
+/* Qt virtual */
 void RemoteTextEdit::keyPressEvent(QKeyEvent *const event)
 {
     switch (event->key()) {
@@ -285,10 +287,12 @@ void RemoteTextEdit::keyPressEvent(QKeyEvent *const event)
     case Qt::Key_Backtab:
         return handleEventBacktab(event);
     default:
+        /* calls parent */
         return base::keyPressEvent(event);
     }
 }
 
+/* Qt virtual */
 bool RemoteTextEdit::event(QEvent *const event)
 {
     if ((USE_TOOLTIPS))
@@ -296,6 +300,8 @@ bool RemoteTextEdit::event(QEvent *const event)
             handle_toolTip(event);
             return true;
         }
+
+    /* calls parent */
     return base::event(event);
 }
 
@@ -334,7 +340,7 @@ void RemoteTextEdit::handle_toolTip(QEvent *const event) const
     QToolTip::showText(helpEvent->globalPos(), QString("%1 (%2)").arg(tooltip).arg(unicode_buf));
 }
 
-static bool lineHasTabs(const QTextCursor &line)
+NODISCARD static bool lineHasTabs(const QTextCursor &line)
 {
     if (line.isNull())
         return false;
@@ -383,16 +389,16 @@ static void tryRemoveLeadingSpaces(QTextCursor line, const int max_spaces)
     line.removeSelectedText();
 }
 
-struct LineRange
+struct NODISCARD LineRange final
 {
-    static auto beg(QTextCursor cur)
+    NODISCARD static auto beg(QTextCursor cur)
     {
         auto from = cur.document()->findBlock(cur.selectionStart());
         auto begCursor = QTextCursor(from);
         return begCursor;
     }
 
-    static auto end(QTextCursor cur)
+    NODISCARD static auto end(QTextCursor cur)
     {
         const auto &to = cur.document()->findBlock(cur.selectionEnd());
         auto endCursor = QTextCursor(to);
@@ -423,7 +429,7 @@ static void foreach_partly_selected_block(QTextCursor cur, Callback &&callback)
     }
 }
 
-enum class CallbackResultEnum { KEEP_GOING, STOP };
+enum class NODISCARD CallbackResultEnum { KEEP_GOING, STOP };
 
 // Caller is responsible for not invalidating the end cursor.
 ///
@@ -677,7 +683,7 @@ auto RemoteEditWidget::createTextEdit() -> Editor *
                                     y + contentsMargins().top() + contentsMargins().bottom()));
     pTextEdit->setLineWrapMode(Editor::LineWrapMode::NoWrap);
     pTextEdit->setSizeIncrement(fm.averageCharWidth(), fm.lineSpacing());
-    pTextEdit->setTabStopWidth(fm.width(" ") * 8); // A tab is 8 spaces wide
+    pTextEdit->setTabStopDistance(fm.horizontalAdvance(" ") * 8); // A tab is 8 spaces wide
     pTextEdit->showWhitespace(false);
 
     auto *const doc = pTextEdit->document();
@@ -699,7 +705,7 @@ void RemoteEditWidget::addFileMenu(QMenuBar *const menuBar, const Editor *const 
     addEditAndViewMenus(menuBar, pTextEdit);
 }
 
-struct EditViewCommand final
+struct NODISCARD EditViewCommand final
 {
     using mem_fn_ptr_type = void (RemoteEditWidget::*)();
     const mem_fn_ptr_type mem_fn_ptr;
@@ -721,7 +727,7 @@ struct EditViewCommand final
     {}
 };
 
-struct EditCommand2 final
+struct NODISCARD EditCommand2 final
 {
     using mem_fn_ptr_type = void (RemoteTextEdit::*)();
     mem_fn_ptr_type mem_fn_ptr = nullptr;
@@ -807,7 +813,7 @@ void RemoteEditWidget::addEditAndViewMenus(QMenuBar *const menuBar, const Editor
 
         EditCommand2{}};
 
-    for (auto &cmd : cmds) {
+    for (const EditCommand2 &cmd : cmds) {
         switch (cmd.cmd_type) {
         case EditCmd2Enum::SPACER:
             editMenu->addSeparator();
@@ -844,7 +850,7 @@ void RemoteEditWidget::addEditAndViewMenus(QMenuBar *const menuBar, const Editor
     };
 #define X(a, b, c, d, e) \
     if (auto menu = getMenu(b)) { \
-        addToMenu(menu, EditViewCommand{&RemoteEditWidget::a, (b), (c), (d), (e)}); \
+        addToMenu(menu, EditViewCommand{&RemoteEditWidget::slot_##a, (b), (c), (d), (e)}); \
     }
     XFOREACH_REMOTE_EDIT_MENU_ITEM(X)
 #undef X
@@ -861,7 +867,7 @@ void RemoteEditWidget::addSave(QMenu *const fileMenu)
     saveAction->setShortcut(tr("Ctrl+S"));
     saveAction->setStatusTip(tr("Submit changes to MUME"));
     fileMenu->addAction(saveAction);
-    connect(saveAction, &QAction::triggered, this, &RemoteEditWidget::finishEdit);
+    connect(saveAction, &QAction::triggered, this, &RemoteEditWidget::slot_finishEdit);
 }
 
 void RemoteEditWidget::addExit(QMenu *const fileMenu)
@@ -870,8 +876,8 @@ void RemoteEditWidget::addExit(QMenu *const fileMenu)
     // and possibly even if ANY change has been made (even an undone change).
     if ((false)) {
         auto *const doc = m_textEdit->document();
-        bool isModified = doc->isModified();
-        bool canUndo = doc->isUndoAvailable();
+        MAYBE_UNUSED const bool isModified = doc->isModified();
+        MAYBE_UNUSED const bool canUndo = doc->isUndoAvailable();
     }
     QAction *const quitAction = new QAction(QIcon::fromTheme("window-close",
                                                              QIcon(":/icons/exit.png")),
@@ -880,7 +886,7 @@ void RemoteEditWidget::addExit(QMenu *const fileMenu)
     quitAction->setShortcut(tr("Ctrl+Q"));
     quitAction->setStatusTip(tr("Cancel and do not submit changes to MUME"));
     fileMenu->addAction(quitAction);
-    connect(quitAction, &QAction::triggered, this, &RemoteEditWidget::cancelEdit);
+    connect(quitAction, &QAction::triggered, this, &RemoteEditWidget::slot_cancelEdit);
 }
 
 void RemoteEditWidget::addToMenu(QMenu *const menu, const EditViewCommand &cmd)
@@ -923,19 +929,25 @@ void RemoteEditWidget::addStatusBar(const Editor *const pTextEdit)
     QStatusBar *const status = statusBar();
     status->showMessage(tr("Ready"));
 
-    connect(pTextEdit, &Editor::cursorPositionChanged, this, &RemoteEditWidget::updateStatusBar);
-    connect(pTextEdit, &Editor::selectionChanged, this, &RemoteEditWidget::updateStatusBar);
-    connect(pTextEdit, &Editor::textChanged, this, &RemoteEditWidget::updateStatusBar);
+    connect(pTextEdit,
+            &QPlainTextEdit::cursorPositionChanged,
+            this,
+            &RemoteEditWidget::slot_updateStatusBar);
+    connect(pTextEdit,
+            &QPlainTextEdit::selectionChanged,
+            this,
+            &RemoteEditWidget::slot_updateStatusBar);
+    connect(pTextEdit, &QPlainTextEdit::textChanged, this, &RemoteEditWidget::slot_updateStatusBar);
 }
 
-struct CursorColumnInfo final
+struct NODISCARD CursorColumnInfo final
 {
     int actual = 0;
     int tab_aware = 0;
     int tab_and_ansi_aware = 0;
 };
 
-static CursorColumnInfo getCursorColumn(QTextCursor &cursor)
+NODISCARD static CursorColumnInfo getCursorColumn(QTextCursor &cursor)
 {
     const int pos = cursor.positionInBlock();
     const auto &block = cursor.block();
@@ -948,7 +960,7 @@ static CursorColumnInfo getCursorColumn(QTextCursor &cursor)
     return cci;
 }
 
-struct CursorAnsiInfo final
+struct NODISCARD CursorAnsiInfo final
 {
     TextBuffer buffer;
     raw_ansi ansi;
@@ -956,7 +968,7 @@ struct CursorAnsiInfo final
     explicit operator bool() const { return !buffer.isEmpty(); }
 };
 
-static CursorAnsiInfo getCursorAnsi(QTextCursor cursor)
+NODISCARD static CursorAnsiInfo getCursorAnsi(QTextCursor cursor)
 {
     const int pos = cursor.positionInBlock();
 
@@ -986,14 +998,14 @@ static CursorAnsiInfo getCursorAnsi(QTextCursor cursor)
     return result;
 }
 
-static bool linesHaveTabs(const QTextCursor &cur)
+NODISCARD static bool linesHaveTabs(const QTextCursor &cur)
 {
     return exists_partly_selected_block(cur, [](const QTextCursor &it) -> bool {
         return lineHasTabs(it);
     });
 }
 
-static bool linesHaveTrailingSpace(const QTextCursor &cur)
+NODISCARD static bool linesHaveTrailingSpace(const QTextCursor &cur)
 {
     return exists_partly_selected_block(cur, [](const QTextCursor &it) -> bool {
         const auto &block = it.block();
@@ -1002,7 +1014,7 @@ static bool linesHaveTrailingSpace(const QTextCursor &cur)
     });
 }
 
-static bool hasLongLines(const QTextCursor &cur)
+NODISCARD static bool hasLongLines(const QTextCursor &cur)
 {
     return exists_partly_selected_block(cur, [](const QTextCursor &line) -> bool {
         const auto &block = line.block();
@@ -1011,7 +1023,7 @@ static bool hasLongLines(const QTextCursor &cur)
     });
 }
 
-void RemoteEditWidget::updateStatusBar()
+void RemoteEditWidget::slot_updateStatusBar()
 {
     auto cur = m_textEdit->textCursor();
 
@@ -1071,7 +1083,7 @@ void RemoteEditWidget::updateStatusBar()
     statusBar()->showMessage(status);
 }
 
-void RemoteEditWidget::justifyText()
+void RemoteEditWidget::slot_justifyText()
 {
     const QString &old = m_textEdit->toPlainText();
     TextBuffer text;
@@ -1084,7 +1096,7 @@ void RemoteEditWidget::justifyText()
 }
 
 // TODO: Set the tabstops for the edit control to 8 spaces, so the text won't jump when you expand tabs.
-void RemoteEditWidget::expandTabs()
+void RemoteEditWidget::slot_expandTabs()
 {
     const QTextCursor &cur = m_textEdit->textCursor();
     RaiiGroupUndoActions raii{cur};
@@ -1095,13 +1107,13 @@ void RemoteEditWidget::expandTabs()
     });
 }
 
-void RemoteEditWidget::removeTrailingWhitespace()
+void RemoteEditWidget::slot_removeTrailingWhitespace()
 {
     const QTextCursor &cur = m_textEdit->textCursor();
     RaiiGroupUndoActions raii{cur};
 
     foreach_partly_selected_block(cur, [](QTextCursor line) -> void {
-        static QRegularExpression trailingWhitespace(R"([[:space:]]+$)");
+        static const QRegularExpression trailingWhitespace(R"([[:space:]]+$)");
         assert(trailingWhitespace.isValid());
         QString text = line.block().text();
         if (!text.contains(trailingWhitespace))
@@ -1114,13 +1126,13 @@ void RemoteEditWidget::removeTrailingWhitespace()
     });
 }
 
-void RemoteEditWidget::removeDuplicateSpaces()
+void RemoteEditWidget::slot_removeDuplicateSpaces()
 {
     const QTextCursor &cur = m_textEdit->textCursor();
     RaiiGroupUndoActions raii{cur};
 
     foreach_partly_selected_block(cur, [](QTextCursor line) -> void {
-        static QRegularExpression spaces(R"((\t|[[:space:]]{2,}))");
+        static const QRegularExpression spaces(R"((\t|[[:space:]]{2,}))");
         assert(spaces.isValid());
         QString text = line.block().text();
         if (!text.contains(spaces))
@@ -1133,7 +1145,7 @@ void RemoteEditWidget::removeDuplicateSpaces()
     });
 }
 
-void RemoteEditWidget::normalizeAnsi()
+void RemoteEditWidget::slot_normalizeAnsi()
 {
     const QString &old = m_textEdit->toPlainText();
     if (!containsAnsi(old))
@@ -1146,27 +1158,27 @@ void RemoteEditWidget::normalizeAnsi()
     m_textEdit->replaceAll(output.getQString());
 }
 
-void RemoteEditWidget::insertAnsiReset()
+void RemoteEditWidget::slot_insertAnsiReset()
 {
     m_textEdit->insertPlainText(AnsiString::get_reset_string().c_str());
 }
 
-void RemoteEditWidget::joinLines()
+void RemoteEditWidget::slot_joinLines()
 {
     m_textEdit->joinLines();
 }
 
-void RemoteEditWidget::quoteLines()
+void RemoteEditWidget::slot_quoteLines()
 {
     m_textEdit->quoteLines();
 }
 
-void RemoteEditWidget::toggleWhitespace()
+void RemoteEditWidget::slot_toggleWhitespace()
 {
     m_textEdit->toggleWhitespace();
 }
 
-void RemoteEditWidget::justifyLines()
+void RemoteEditWidget::slot_justifyLines()
 {
     m_textEdit->justifyLines(MAX_LENGTH);
 }
@@ -1189,20 +1201,20 @@ QSize RemoteEditWidget::sizeHint() const
 void RemoteEditWidget::closeEvent(QCloseEvent *event)
 {
     if (m_editSession) {
-        if (m_submitted || maybeCancel()) {
+        if (m_submitted || slot_maybeCancel()) {
             event->accept();
         } else {
             event->ignore();
         }
     } else {
-        cancelEdit();
+        slot_cancelEdit();
         event->accept();
     }
 }
 
-bool RemoteEditWidget::maybeCancel()
+bool RemoteEditWidget::slot_maybeCancel()
 {
-    if (contentsChanged()) {
+    if (slot_contentsChanged()) {
         const int ret = QMessageBox::warning(this,
                                              m_title,
                                              tr("You have edited the document.\n"
@@ -1215,27 +1227,27 @@ bool RemoteEditWidget::maybeCancel()
         }
     }
 
-    cancelEdit();
+    slot_cancelEdit();
     return true;
 }
 
-bool RemoteEditWidget::contentsChanged() const
+bool RemoteEditWidget::slot_contentsChanged() const
 {
     const QString text = m_textEdit->toPlainText();
     return QString::compare(text, m_body, Qt::CaseSensitive) != 0;
 }
 
-void RemoteEditWidget::cancelEdit()
+void RemoteEditWidget::slot_cancelEdit()
 {
     m_submitted = true;
-    emit cancel();
+    emit sig_cancel();
     close();
 }
 
-void RemoteEditWidget::finishEdit()
+void RemoteEditWidget::slot_finishEdit()
 {
     m_submitted = true;
-    emit save(m_textEdit->toPlainText());
+    emit sig_save(m_textEdit->toPlainText());
     close();
 }
 
@@ -1243,5 +1255,5 @@ void RemoteEditWidget::setVisible(bool visible)
 {
     QWidget::setVisible(visible);
     if (visible)
-        updateStatusBar();
+        slot_updateStatusBar();
 }

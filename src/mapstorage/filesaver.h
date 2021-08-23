@@ -7,6 +7,7 @@
 #include <QString>
 
 #include "../global/RuleOf5.h"
+#include "../global/macros.h"
 
 /*! \brief Save to a file in an atomic way.
  *
@@ -27,7 +28,7 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(FileSaver);
 
 public:
-    QFile &file() { return m_file; }
+    NODISCARD QFile &file() { return m_file; }
 
     /*! \exception std::runtime_error if the file can't be opened or a currently
      * open file can't be closed.

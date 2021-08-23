@@ -22,9 +22,9 @@ private:
     bool m_rendererInitialized = false;
 
 private:
-    auto &getFunctions() { return deref(m_opengl); }
-    const auto &getFunctions() const { return deref(m_opengl); }
-    const auto &getSharedFunctions() { return m_opengl; }
+    NODISCARD auto &getFunctions() { return deref(m_opengl); }
+    NODISCARD const auto &getFunctions() const { return deref(m_opengl); }
+    NODISCARD const auto &getSharedFunctions() { return m_opengl; }
 
 public:
     OpenGL();
@@ -34,48 +34,48 @@ public:
     /* must be called before any other functions */
     void initializeOpenGLFunctions();
     void initializeRenderer(float devicePixelRatio);
-    const char *glGetString(GLenum name);
+    NODISCARD const char *glGetString(GLenum name);
     void setDevicePixelRatio(float devicePixelRatio);
-    float getDevicePixelRatio() const;
-    bool isRendererInitialized() const { return m_rendererInitialized; }
+    NODISCARD float getDevicePixelRatio() const;
+    NODISCARD bool isRendererInitialized() const { return m_rendererInitialized; }
 
 public:
-    glm::mat4 getProjectionMatrix() const;
-    Viewport getViewport() const;
-    Viewport getPhysicalViewport() const;
+    NODISCARD glm::mat4 getProjectionMatrix() const;
+    NODISCARD Viewport getViewport() const;
+    NODISCARD Viewport getPhysicalViewport() const;
     void setProjectionMatrix(const glm::mat4 &m);
     void glViewport(GLint x, GLint y, GLsizei w, GLsizei h);
 
 public:
-    bool tryEnableMultisampling(int samples);
+    NODISCARD bool tryEnableMultisampling(int samples);
 
 public:
-    UniqueMesh createPointBatch(const std::vector<ColorVert> &verts);
+    NODISCARD UniqueMesh createPointBatch(const std::vector<ColorVert> &verts);
 
 public:
     // plain means the color is defined by uniform
-    UniqueMesh createPlainLineBatch(const std::vector<glm::vec3> &verts);
+    NODISCARD UniqueMesh createPlainLineBatch(const std::vector<glm::vec3> &verts);
     // colored means the color is defined by attribute
-    UniqueMesh createColoredLineBatch(const std::vector<ColorVert> &verts);
+    NODISCARD UniqueMesh createColoredLineBatch(const std::vector<ColorVert> &verts);
 
 public:
     // plain means the color is defined by uniform
-    UniqueMesh createPlainTriBatch(const std::vector<glm::vec3> &verts);
-    UniqueMesh createColoredTriBatch(const std::vector<ColorVert> &verts);
+    NODISCARD UniqueMesh createPlainTriBatch(const std::vector<glm::vec3> &verts);
+    NODISCARD UniqueMesh createColoredTriBatch(const std::vector<ColorVert> &verts);
 
 public:
     // plain means the color is defined by uniform
-    UniqueMesh createPlainQuadBatch(const std::vector<glm::vec3> &verts);
+    NODISCARD UniqueMesh createPlainQuadBatch(const std::vector<glm::vec3> &verts);
     // colored means the color is defined by attribute
-    UniqueMesh createColoredQuadBatch(const std::vector<ColorVert> &verts);
-    UniqueMesh createTexturedQuadBatch(const std::vector<TexVert> &verts,
-                                       const SharedMMTexture &texture);
-    UniqueMesh createColoredTexturedQuadBatch(const std::vector<ColoredTexVert> &verts,
-                                              const SharedMMTexture &texture);
+    NODISCARD UniqueMesh createColoredQuadBatch(const std::vector<ColorVert> &verts);
+    NODISCARD UniqueMesh createTexturedQuadBatch(const std::vector<TexVert> &verts,
+                                                 const SharedMMTexture &texture);
+    NODISCARD UniqueMesh createColoredTexturedQuadBatch(const std::vector<ColoredTexVert> &verts,
+                                                        const SharedMMTexture &texture);
 
-    UniqueMesh createFontMesh(const SharedMMTexture &texture,
-                              DrawModeEnum mode,
-                              const std::vector<FontVert3d> &batch);
+    NODISCARD UniqueMesh createFontMesh(const SharedMMTexture &texture,
+                                        DrawModeEnum mode,
+                                        const std::vector<FontVert3d> &batch);
 
 protected:
     void renderPlain(DrawModeEnum type,

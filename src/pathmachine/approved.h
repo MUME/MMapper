@@ -16,7 +16,7 @@ class ParseEvent;
 class Room;
 class RoomAdmin;
 
-class Approved : public RoomRecipient
+class NODISCARD Approved final : public RoomRecipient
 {
 private:
     SigParseEvent myEvent;
@@ -32,12 +32,14 @@ public:
     ~Approved() override;
 
 public:
-    void receiveRoom(RoomAdmin *, const Room *) override;
-    const Room *oneMatch() const;
-    bool needsUpdate() const { return update; }
-    void releaseMatch();
-
-public:
     Approved() = delete;
     DELETE_CTORS_AND_ASSIGN_OPS(Approved);
+
+private:
+    void virt_receiveRoom(RoomAdmin *, const Room *) final;
+
+public:
+    NODISCARD const Room *oneMatch() const;
+    NODISCARD bool needsUpdate() const { return update; }
+    void releaseMatch();
 };

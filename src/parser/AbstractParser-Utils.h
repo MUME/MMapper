@@ -7,17 +7,16 @@
 
 #include "../syntax/Value.h"
 
-bool isOffline();
-bool isOnline();
-const char *enabledString(bool isEnabled);
-bool isValidPrefix(char c);
+NODISCARD bool isOffline();
+NODISCARD bool isOnline();
+NODISCARD const char *enabledString(bool isEnabled);
+NODISCARD bool isValidPrefix(char c);
 
 template<typename T>
 void send_ok(T &os)
 {
-    // Consider changing this from "OK." to "Ok.", since that's what MUME uses.
-    // Consider fixing the output to not require '\r'.
-    os << "OK.\r\n";
+    // Note: MUME uses "Ok." rahter than "OK."
+    os << "Ok.\n";
 }
 
-std::string concatenate_unquoted(const Vector &input);
+NODISCARD std::string concatenate_unquoted(const Vector &input);

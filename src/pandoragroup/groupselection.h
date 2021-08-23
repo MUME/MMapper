@@ -13,21 +13,37 @@
 class CGroupChar;
 class GroupRecipient;
 
-class GroupAdmin
+class NODISCARD GroupAdmin
 {
 public:
-    virtual void releaseCharacters(GroupRecipient *) = 0;
     virtual ~GroupAdmin();
+
+private:
+    virtual void virt_releaseCharacters(GroupRecipient *) = 0;
+
+public:
+    void releaseCharacters(GroupRecipient *const groupRecipient)
+    {
+        virt_releaseCharacters(groupRecipient);
+    }
 };
 
-class GroupRecipient
+class NODISCARD GroupRecipient
 {
 public:
-    virtual void receiveCharacters(GroupAdmin *, GroupVector) = 0;
     virtual ~GroupRecipient();
+
+private:
+    virtual void virt_receiveCharacters(GroupAdmin *, GroupVector v) = 0;
+
+public:
+    void receiveCharacters(GroupAdmin *const admin, GroupVector v)
+    {
+        virt_receiveCharacters(admin, std::move(v));
+    }
 };
 
-class GroupSelection final : public GroupRecipient
+class NODISCARD GroupSelection final : public GroupRecipient
 {
     // NOTE: deleted members must be public.
 public:
@@ -35,22 +51,23 @@ public:
 
 public:
     explicit GroupSelection(GroupAdmin *admin);
-    virtual ~GroupSelection() override;
+    ~GroupSelection() final;
 
-    void receiveCharacters(GroupAdmin *, GroupVector) override;
+private:
+    void virt_receiveCharacters(GroupAdmin *, GroupVector v) final;
 
 public:
-    auto at(int i) const
+    NODISCARD auto at(int i) const
     {
         assert(i >= 0);
         return chars.at(static_cast<uint32_t>(i));
     }
-    auto begin() const { return chars.begin(); }
-    auto cbegin() const { return chars.cbegin(); }
-    auto cend() const { return chars.cend(); }
-    auto end() const { return chars.end(); }
-    auto size() const { return chars.size(); }
-    auto empty() const { return chars.empty(); }
+    NODISCARD auto begin() const { return chars.begin(); }
+    NODISCARD auto cbegin() const { return chars.cbegin(); }
+    NODISCARD auto cend() const { return chars.cend(); }
+    NODISCARD auto end() const { return chars.end(); }
+    NODISCARD auto size() const { return chars.size(); }
+    NODISCARD auto empty() const { return chars.empty(); }
 
 private:
     GroupAdmin *m_admin = nullptr;

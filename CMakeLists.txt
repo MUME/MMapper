@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.0)
+cmake_minimum_required(VERSION 3.10.0)
 project(mmapper CXX)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
@@ -39,8 +39,8 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
 if(Qt5Core_FOUND)
-    if(Qt5Core_VERSION VERSION_LESS 5.9.0)
-        message(FATAL_ERROR "Minimum supported Qt version is 5.9")
+    if(Qt5Core_VERSION VERSION_LESS 5.11.0)
+        message(FATAL_ERROR "Minimum supported Qt version is 5.11")
     endif()
     file(WRITE ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckQtGLES20.cpp
         "#include <QOpenGLFunctions_ES2>
@@ -133,12 +133,6 @@ if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
           OUTPUT_STRIP_TRAILING_WHITESPACE
         )
 
-        # Fetch the latest tags
-        execute_process(
-          COMMAND ${GIT_EXECUTABLE} fetch --tags
-          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        )
-
         # Describe the most recent tag, number of commits since, and abbreviated commit hash
         execute_process(
           COMMAND ${GIT_EXECUTABLE} describe --tags --always --long
@@ -220,6 +214,9 @@ endif()
 
 if(MMAPPER_IS_DEBUG)
     set(CMAKE_VERBOSE_MAKEFILE true)
+
+    # disable all the deprecated APIs in Qt <= 5.11
+    add_compile_options(-DQT_DISABLE_DEPRECATED_BEFORE=0x050b00)
 
     if(NOT MSVC)
         # common options for gcc and clang
@@ -418,7 +415,7 @@ add_feature_info("WITH_UPDATER" WITH_UPDATER "check GitHub for new releases")
 add_feature_info("WITH_OPENSSL" WITH_OPENSSL "encrypt connection to MUME with TLS")
 add_feature_info("WITH_MINIUPNPC" WITH_MINIUPNPC "port forwarding for group manager with UPnP IGD")
 add_feature_info("WITH_MAP" WITH_MAP "include default map as a resource")
-add_feature_info("WITH_TESTS" WITH_MAP "compile unit tests")
+add_feature_info("WITH_TESTS" WITH_TESTS "compile unit tests")
 add_feature_info("USE_TIDY" USE_TIDY "")
 add_feature_info("USE_IWYU" USE_IWYU "")
 add_feature_info("USE_DISTCC" USE_DISTCC "")

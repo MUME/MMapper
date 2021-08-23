@@ -13,6 +13,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <QLatin1String>
 #include <QtCore>
 #include <QtGui>
 
@@ -27,7 +28,7 @@
 #include "FontFormatFlags.h"
 #include "OpenGL.h"
 
-static bool VERBOSE_FONT_DEBUG = []() -> bool {
+static const bool VERBOSE_FONT_DEBUG = []() -> bool {
     if (auto opt = utils::getEnvBool("MMAPPER_VERBOSE_FONT_DEBUG")) {
         return opt.value();
     }
@@ -35,17 +36,17 @@ static bool VERBOSE_FONT_DEBUG = []() -> bool {
 }();
 
 // NOTE: Rect doesn't actually include the hi value.
-struct Rect final
+struct NODISCARD Rect final
 {
     glm::ivec2 lo = glm::ivec2{0};
     glm::ivec2 hi = glm::ivec2{0};
 
-    int width() const { return hi.x - lo.x; }
-    int height() const { return hi.y - lo.y; }
-    glm::ivec2 size() const { return {width(), height()}; }
+    NODISCARD int width() const { return hi.x - lo.x; }
+    NODISCARD int height() const { return hi.y - lo.y; }
+    NODISCARD glm::ivec2 size() const { return {width(), height()}; }
 };
 
-static bool intersects(const Rect &a, const Rect &b)
+NODISCARD static bool intersects(const Rect &a, const Rect &b)
 {
 #define OVERLAPS(_xy) ((a.lo._xy) < (b.hi._xy) && (b.lo._xy) < (a.hi._xy))
     return OVERLAPS(x) && OVERLAPS(y);
@@ -60,17 +61,17 @@ struct std::hash<IntPair>
     std::size_t operator()(const IntPair &ip) const noexcept
     {
 #define CAST(i) static_cast<uint64_t>(static_cast<uint32_t>(i))
-        return numeric_hash(CAST(ip.first) | (CAST(ip.second) << 32));
+        return numeric_hash(CAST(ip.first) | (CAST(ip.second) << 32u));
 #undef CAST
     }
 };
 
-struct FontMetrics
+struct NODISCARD FontMetrics
 {
     static constexpr int UNDERLINE_ID = -257;
     static constexpr int BACKGROUND_ID = -258;
 
-    struct Glyph final
+    struct NODISCARD Glyph final
     {
         int id = 0;
         int x = 0;
@@ -130,11 +131,11 @@ struct FontMetrics
             , height(height)
         {}
 
-        glm::ivec2 getPosition() const { return glm::ivec2{x, y}; }
-        glm::ivec2 getSize() const { return glm::ivec2{width, height}; }
-        glm::ivec2 getOffset() const { return glm::ivec2{xoffset, yoffset}; }
+        NODISCARD glm::ivec2 getPosition() const { return glm::ivec2{x, y}; }
+        NODISCARD glm::ivec2 getSize() const { return glm::ivec2{width, height}; }
+        NODISCARD glm::ivec2 getOffset() const { return glm::ivec2{xoffset, yoffset}; }
 
-        Rect getRect() const
+        NODISCARD Rect getRect() const
         {
             const auto lo = getPosition();
             return Rect{lo, lo + getSize()};
@@ -148,7 +149,7 @@ struct FontMetrics
     ///
     /// We know that that BMFont generates `Kerning 65 (aka "A") 84 (aka "T") -1` for `:/fonts/DejaVuSans16.fnt`,
     /// so the amount must be added to the advance / xoffset.
-    struct Kerning final
+    struct NODISCARD Kerning final
     {
         int first = 0;
         int second = 0;
@@ -165,7 +166,7 @@ struct FontMetrics
         {}
     };
 
-    struct Common final
+    struct NODISCARD Common final
     {
         int lineHeight = 0;
         int base = 0;
@@ -188,23 +189,26 @@ struct FontMetrics
     std::unordered_map<int, const Glyph *> glyphs;
     std::unordered_map<IntPair, const Kerning *> kernings;
 
-    QString init(const QString &);
+    NODISCARD QString init(const QString &);
 
-    const Glyph *lookupGlyph(const int i) const
+    NODISCARD const Glyph *lookupGlyph(const int i) const
     {
         const auto it = glyphs.find(i);
         return (it == glyphs.end()) ? nullptr : it->second;
     }
 
-    const Glyph *lookupGlyph(const char c) const
+    NODISCARD const Glyph *lookupGlyph(const char c) const
     {
         return lookupGlyph(static_cast<int>(static_cast<unsigned char>(c)));
     }
 
-    const Glyph *getBackground() const { return background ? &background.value() : nullptr; }
-    const Glyph *getUnderline() const { return underline ? &underline.value() : nullptr; }
+    NODISCARD const Glyph *getBackground() const
+    {
+        return background ? &background.value() : nullptr;
+    }
+    NODISCARD const Glyph *getUnderline() const { return underline ? &underline.value() : nullptr; }
 
-    bool tryAddBackgroundGlyph(QImage &img)
+    NODISCARD bool tryAddBackgroundGlyph(QImage &img)
     {
         const int w = common.scaleW;
         const int h = common.scaleH;
@@ -235,7 +239,7 @@ struct FontMetrics
         return true;
     }
 
-    bool tryAddUnderlineGlyph(QImage &img)
+    NODISCARD bool tryAddUnderlineGlyph(QImage &img)
     {
         const int w = common.scaleW;
         const int h = common.scaleH;
@@ -273,11 +277,11 @@ struct FontMetrics
             return;
         }
 
-        tryAddBackgroundGlyph(img);
-        tryAddUnderlineGlyph(img);
+        MAYBE_UNUSED const bool addedBackground = tryAddBackgroundGlyph(img);
+        MAYBE_UNUSED const bool addedUnderline = tryAddUnderlineGlyph(img);
     }
 
-    const Kerning *lookupKerning(const Glyph *const prev, const Glyph *const current) const
+    NODISCARD const Kerning *lookupKerning(const Glyph *const prev, const Glyph *const current) const
     {
         if (prev == nullptr || current == nullptr)
             return nullptr;
@@ -305,7 +309,7 @@ struct FontMetrics
         }
     }
 
-    int measureWidth(const std::string_view &msg) const
+    NODISCARD int measureWidth(const std::string_view &msg) const
     {
         int width = 0;
         foreach_glyph(msg, [&width](const Glyph *const g, const Kerning *const k) {
@@ -318,7 +322,7 @@ struct FontMetrics
     }
 };
 
-struct PrintedChar final
+struct NODISCARD PrintedChar final
 {
     int id = 0;
 };
@@ -354,7 +358,7 @@ QString FontMetrics::init(const QString &fontFilename)
     while (!xml.atEnd() && !xml.hasError()) {
         if (xml.readNextStartElement()) {
             const auto &attr = xml.attributes();
-            if (xml.name() == "common") {
+            if (xml.name() == QLatin1String("common")) {
                 if (hasCommon) {
                     assert(false);
                     continue;
@@ -373,7 +377,7 @@ QString FontMetrics::init(const QString &fontFilename)
                 }
                 common = Common{lineHeight, base, scaleW, scaleH, marginX, marginY};
 
-            } else if (xml.name() == "char") {
+            } else if (xml.name() == QLatin1String("char")) {
                 if (!hasCommon) {
                     assert(false);
                     continue;
@@ -406,7 +410,7 @@ QString FontMetrics::init(const QString &fontFilename)
 
                 raw_glyphs.emplace_back(id, x, y2, width, height, xoffset, yoffset2, xadvance);
 
-            } else if (xml.name() == "kerning") {
+            } else if (xml.name() == QLatin1String("kerning")) {
                 if (!hasCommon) {
                     assert(false);
                     continue;
@@ -420,7 +424,7 @@ QString FontMetrics::init(const QString &fontFilename)
                     qDebug() << "Kerning" << PrintedChar{first} << PrintedChar{second} << amount;
                 }
                 raw_kernings.emplace_back(first, second, amount);
-            } else if (xml.name() == "page") {
+            } else if (xml.name() == QLatin1String("page")) {
                 const int id = attr.value("id").toInt();
                 if (id != 0) {
                     continue;
@@ -459,11 +463,11 @@ QString FontMetrics::init(const QString &fontFilename)
     return imageFilename;
 }
 
-class FontBatchBuilder final
+class NODISCARD FontBatchBuilder final
 {
 private:
     // only valid as long as GLText it refers to is valid.
-    struct Opts final
+    struct NODISCARD Opts final
     {
         std::string_view msg;
         glm::vec3 pos{0.f};
@@ -499,7 +503,7 @@ private:
         {}
     };
 
-    struct Bounds final
+    struct NODISCARD Bounds final
     {
         glm::ivec2 maxVertPos{};
         glm::ivec2 minVertPos{};
@@ -533,14 +537,14 @@ public:
         , verts3d{output}
     {}
 
-    glm::vec2 getTexCoord(const glm::ivec2 &iTexCoord) const
+    NODISCARD glm::vec2 getTexCoord(const glm::ivec2 &iTexCoord) const
     {
         return glm::vec2(iTexCoord) / glm::vec2(iTexSize);
     }
 
     // REVISIT: This could be done in the shader,
     // at the cost of transmitting italics bit and rotation angle.
-    glm::vec2 transformVert(const glm::ivec2 &ipos) const
+    NODISCARD glm::vec2 transformVert(const glm::ivec2 &ipos) const
     {
         glm::vec2 pos(ipos);
 
@@ -629,8 +633,9 @@ public:
                 verts3d.emplace_back(opts.pos, c, tc, vert);
             };
 
-            const auto quad = [&add](const Color &c, const Rect &vert, const Rect tc) {
-#define ADD(a, b) add(c, glm::ivec2{vert.a.x, vert.b.y}, glm::ivec2{tc.a.x, tc.b.y});
+            const auto quad = [&add](const Color &c, const Rect &vert, const Rect &tc) {
+#define ADD(a, b) add(c, glm::ivec2{vert.a.x, vert.b.y}, glm::ivec2{tc.a.x, tc.b.y})
+                // note: lo and hi refer to members of vert and tc.
                 ADD(lo, lo);
                 ADD(hi, lo);
                 ADD(hi, hi);
@@ -684,7 +689,7 @@ GLFont::GLFont(OpenGL &gl)
 
 GLFont::~GLFont() = default;
 
-static QString getFontFilename(const float devicePixelRatio)
+NODISCARD static QString getFontFilename(const float devicePixelRatio)
 {
     const char *const FONT_KEY = "MMAPPER_FONT";
     const char *const font = "Cantarell";
@@ -780,10 +785,10 @@ std::vector<FontVert3d> GLFont::getFontBatchRawData(const GLText *const text, co
     const size_t expectedVerts = [text, end]() -> size_t {
         int numGlyphs = 0;
         for (const GLText *it = text; it != end; ++it) {
-            numGlyphs += it->text.size() + (it->bgcolor.has_value() ? 1 : 0)
+            numGlyphs += static_cast<int>(it->text.size()) + (it->bgcolor.has_value() ? 1 : 0)
                          + (it->fontFormatFlag.contains(FontFormatFlagEnum::UNDERLINE) ? 1 : 0);
         }
-        return static_cast<size_t>(4 * numGlyphs);
+        return 4 * static_cast<size_t>(numGlyphs);
     }();
 
     result.reserve(expectedVerts);

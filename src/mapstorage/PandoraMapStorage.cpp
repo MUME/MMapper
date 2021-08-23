@@ -5,6 +5,7 @@
 #include "PandoraMapStorage.h"
 
 #include <cassert>
+#include <QLatin1String>
 #include <QRegularExpression>
 #include <QXmlStreamReader>
 
@@ -39,14 +40,14 @@ bool PandoraMapStorage::loadData()
         return mergeData();
     } catch (const std::exception &ex) {
         const auto msg = QString::asprintf("Exception: %s", ex.what());
-        emit log("PandoraMapStorage", msg);
+        log(msg);
         qWarning().noquote() << msg;
         m_mapData.clear();
         return false;
     }
 }
 
-static RoomTerrainEnum toTerrainType(const QString &str)
+NODISCARD static RoomTerrainEnum toTerrainType(const QString &str)
 {
 #define CASE2(UPPER, s) \
     do { \
@@ -69,18 +70,19 @@ static RoomTerrainEnum toTerrainType(const QString &str)
     CASE2(TUNNEL, "tunnel");
     CASE2(CAVERN, "cavern");
     CASE2(DEATHTRAP, "deathtrap"); // Not supported by Pandora
-#undef CASE3
+#undef CASE2
     return RoomTerrainEnum::UNDEFINED;
 }
 
 SharedRoom PandoraMapStorage::loadRoom(QXmlStreamReader &xml)
 {
     SharedRoom room = Room::createPermanentRoom(m_mapData);
-    room->setDynamicDescription(RoomDynamicDesc{});
+    room->setContents(RoomContents{});
     room->setUpToDate();
-    while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "room")) {
+    while (
+        !(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == QLatin1String("room"))) {
         if (xml.tokenType() == QXmlStreamReader::StartElement) {
-            if (xml.name() == "room") {
+            if (xml.name() == QLatin1String("room")) {
                 room->setId(RoomId{static_cast<uint32_t>(xml.attributes().value("id").toInt())});
 
                 // Terrain
@@ -93,13 +95,13 @@ SharedRoom PandoraMapStorage::loadRoom(QXmlStreamReader &xml)
                 const auto z = xml.attributes().value("z").toInt();
                 room->setPosition(Coordinate{x, y, z} + basePosition);
 
-            } else if (xml.name() == "roomname") {
+            } else if (xml.name() == QLatin1String("roomname")) {
                 room->setName(RoomName{xml.readElementText()});
-            } else if (xml.name() == "desc") {
-                room->setStaticDescription(RoomStaticDesc{xml.readElementText().replace("|", "\n")});
-            } else if (xml.name() == "note") {
+            } else if (xml.name() == QLatin1String("desc")) {
+                room->setDescription(RoomDesc{xml.readElementText().replace("|", "\n")});
+            } else if (xml.name() == QLatin1String("note")) {
                 room->setNote(RoomNote{xml.readElementText()});
-            } else if (xml.name() == "exits") {
+            } else if (xml.name() == QLatin1String("exits")) {
                 loadExits(*room, xml);
             }
         }
@@ -111,16 +113,17 @@ SharedRoom PandoraMapStorage::loadRoom(QXmlStreamReader &xml)
 void PandoraMapStorage::loadExits(Room &room, QXmlStreamReader &xml)
 {
     ExitsList copiedExits = room.getExitsList();
-    while (!(xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == "exits")) {
+    while (!(xml.tokenType() == QXmlStreamReader::EndElement
+             && xml.name() == QLatin1String("exits"))) {
         if (xml.tokenType() == QXmlStreamReader::StartElement) {
-            if (xml.name() == "exit") {
+            if (xml.name() == QLatin1String("exit")) {
                 const auto attr = xml.attributes();
                 if (attr.hasAttribute("dir") && attr.hasAttribute("to")
                     && attr.hasAttribute("door")) {
                     const auto dirStr = xml.attributes().value("dir").toString();
                     const auto dir = Mmapper2Exit::dirForChar(dirStr.at(0).toLatin1());
                     Exit &exit = copiedExits[dir];
-                    exit.updateExit(ExitFlags{ExitFlagEnum::EXIT});
+                    exit.setExitFlags(exit.getExitFlags() | ExitFlagEnum::EXIT);
 
                     const auto to = xml.attributes().value("to").toString();
                     if (to == "DEATH") {
@@ -131,7 +134,7 @@ void PandoraMapStorage::loadExits(Room &room, QXmlStreamReader &xml)
 
                     const auto doorName = xml.attributes().value("door").toString();
                     if (doorName != nullptr && !doorName.isEmpty()) {
-                        exit.updateExit(ExitFlags{ExitFlagEnum::DOOR});
+                        exit.setExitFlags(exit.getExitFlags() | ExitFlagEnum::DOOR);
                         if (doorName != "exit") {
                             exit.setDoorFlags(DoorFlags{DoorFlagEnum::HIDDEN});
                             exit.setDoorName(DoorName{doorName});
@@ -159,7 +162,7 @@ bool PandoraMapStorage::mergeData()
             basePosition.z = -1;
         }
 
-        emit log("PandoraMapStorage", "Loading data ...");
+        log("Loading data ...");
 
         auto &progressCounter = getProgressCounter();
         progressCounter.reset();
@@ -180,11 +183,11 @@ bool PandoraMapStorage::mergeData()
         }
         const uint32_t roomsCount = static_cast<uint32_t>(xml.attributes().value("rooms").toInt());
         progressCounter.increaseTotalStepsBy(roomsCount);
-        emit log("PandoraMapStorage", QString("Number of rooms: %1").arg(roomsCount));
+        log(QString("Number of rooms: %1").arg(roomsCount));
 
         for (uint32_t i = 0; i < roomsCount; i++) {
             while (xml.readNextStartElement() && !xml.hasError()) {
-                if (xml.name() == "room") {
+                if (xml.name() == QLatin1String("room")) {
                     SharedRoom room = loadRoom(xml);
                     progressCounter.step();
                     m_mapData.insertPredefinedRoom(room);
@@ -195,7 +198,7 @@ bool PandoraMapStorage::mergeData()
         // Set base position
         m_mapData.setPosition(Coordinate{});
 
-        emit log("PandoraMapStorage", "Finished loading.");
+        log("Finished loading.");
         m_file->close();
 
         if (m_mapData.getRoomsCount() == 0u) {
@@ -207,7 +210,7 @@ bool PandoraMapStorage::mergeData()
     }
 
     m_mapData.checkSize();
-    emit onDataLoaded();
+    emit sig_onDataLoaded();
     return true;
 }
 

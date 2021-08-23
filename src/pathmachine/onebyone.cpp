@@ -26,7 +26,7 @@ OneByOne::OneByOne(const SigParseEvent &sigParseEvent,
     , handler{in_handler}
 {}
 
-void OneByOne::receiveRoom(RoomAdmin *const admin, const Room *const room)
+void OneByOne::virt_receiveRoom(RoomAdmin *const admin, const Room *const room)
 {
     if (Room::compare(room, deref(event), params.matchingTolerance) == ComparisonResultEnum::EQUAL) {
         augmentPath(shortPaths->back(), admin, room);

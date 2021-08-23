@@ -11,7 +11,7 @@
 
 #include "../global/Version.h"
 
-static QString getBuildInformation()
+NODISCARD static QString getBuildInformation()
 {
     const auto get_compiler = []() -> QString {
 #ifdef __clang__
@@ -67,7 +67,7 @@ AboutDialog::AboutDialog(QWidget *parent)
         "Caligor for starting the mmapper project<br>"
         "Azazello for creating the group manager</p>"
         "<p><u>Contributors:</u><br>"
-        "Arfang, Elval, Kalev, Korir, Kovis, Krush, Mirnir, Teoli, and Waba"
+        "Arfang, Cuantar, Elval, Kalev, Korir, Kovis, Krush, Mirnir, Teoli, and Waba"
         "</p>"));
 
     /* Licenses tab */

@@ -23,19 +23,19 @@ GeneralPage::GeneralPage(QWidget *parent)
 {
     ui->setupUi(this);
 
-    connect(ui->remoteName, &QLineEdit::textChanged, this, &GeneralPage::remoteNameTextChanged);
+    connect(ui->remoteName, &QLineEdit::textChanged, this, &GeneralPage::slot_remoteNameTextChanged);
     connect(ui->remotePort,
             QOverload<int>::of(&QSpinBox::valueChanged),
             this,
-            &GeneralPage::remotePortValueChanged);
+            &GeneralPage::slot_remotePortValueChanged);
     connect(ui->localPort,
             QOverload<int>::of(&QSpinBox::valueChanged),
             this,
-            &GeneralPage::localPortValueChanged);
+            &GeneralPage::slot_localPortValueChanged);
     connect(ui->tlsEncryptionCheckBox,
             &QCheckBox::stateChanged,
             this,
-            &GeneralPage::tlsEncryptionCheckBoxStateChanged);
+            &GeneralPage::slot_tlsEncryptionCheckBoxStateChanged);
     connect(ui->proxyListensOnAnyInterfaceCheckBox, &QCheckBox::stateChanged, this, [this]() {
         setConfig().connection.proxyListensOnAnyInterface = ui->proxyListensOnAnyInterfaceCheckBox
                                                                 ->isChecked();
@@ -50,15 +50,15 @@ GeneralPage::GeneralPage(QWidget *parent)
     connect(ui->emulatedExitsCheckBox,
             &QCheckBox::stateChanged,
             this,
-            &GeneralPage::emulatedExitsStateChanged);
+            &GeneralPage::slot_emulatedExitsStateChanged);
     connect(ui->showHiddenExitFlagsCheckBox,
             &QCheckBox::stateChanged,
             this,
-            &GeneralPage::showHiddenExitFlagsStateChanged);
+            &GeneralPage::slot_showHiddenExitFlagsStateChanged);
     connect(ui->showNotesCheckBox,
             &QCheckBox::stateChanged,
             this,
-            &GeneralPage::showNotesStateChanged);
+            &GeneralPage::slot_showNotesStateChanged);
 
     connect(ui->showClientPanelCheckBox, &QCheckBox::stateChanged, this, [this]() {
         setConfig().general.noClientPanel = !ui->showClientPanelCheckBox->isChecked();
@@ -72,20 +72,20 @@ GeneralPage::GeneralPage(QWidget *parent)
     connect(ui->autoLoadFileName,
             &QLineEdit::textChanged,
             this,
-            &GeneralPage::autoLoadFileNameTextChanged);
+            &GeneralPage::slot_autoLoadFileNameTextChanged);
     connect(ui->autoLoadCheck,
             &QCheckBox::stateChanged,
             this,
-            &GeneralPage::autoLoadCheckStateChanged);
+            &GeneralPage::slot_autoLoadCheckStateChanged);
     connect(ui->selectWorldFileButton,
             &QAbstractButton::clicked,
             this,
-            &GeneralPage::selectWorldFileButtonClicked);
+            &GeneralPage::slot_selectWorldFileButtonClicked);
 
     connect(ui->displayMumeClockCheckBox,
             &QCheckBox::stateChanged,
             this,
-            &GeneralPage::displayMumeClockStateChanged);
+            &GeneralPage::slot_displayMumeClockStateChanged);
 
     connect(ui->proxyThreadedCheckBox, &QCheckBox::stateChanged, this, [this]() {
         setConfig().connection.proxyThreaded = ui->proxyThreadedCheckBox->isChecked();
@@ -112,7 +112,7 @@ GeneralPage::~GeneralPage()
     delete ui;
 }
 
-void GeneralPage::loadConfig()
+void GeneralPage::slot_loadConfig()
 {
     const auto &config = getConfig();
     const auto &connection = config.connection;
@@ -151,11 +151,13 @@ void GeneralPage::loadConfig()
     ui->proxyConnectionStatusCheckBox->setChecked(connection.proxyConnectionStatus);
 }
 
-void GeneralPage::selectWorldFileButtonClicked(bool /*unused*/)
+void GeneralPage::slot_selectWorldFileButtonClicked(bool /*unused*/)
 {
+    // FIXME: code duplication
+    const auto &savedLastMapDir = getConfig().autoLoad.lastMapDirectory;
     QString fileName = QFileDialog::getOpenFileName(this,
                                                     "Choose map file ...",
-                                                    "",
+                                                    savedLastMapDir,
                                                     "MMapper2 (*.mm2);;MMapper (*.map)");
     if (!fileName.isEmpty()) {
         ui->autoLoadFileName->setText(fileName);
@@ -166,54 +168,54 @@ void GeneralPage::selectWorldFileButtonClicked(bool /*unused*/)
     }
 }
 
-void GeneralPage::remoteNameTextChanged(const QString & /*unused*/)
+void GeneralPage::slot_remoteNameTextChanged(const QString & /*unused*/)
 {
     setConfig().connection.remoteServerName = ui->remoteName->text();
 }
 
-void GeneralPage::remotePortValueChanged(int /*unused*/)
+void GeneralPage::slot_remotePortValueChanged(int /*unused*/)
 {
     setConfig().connection.remotePort = static_cast<quint16>(ui->remotePort->value());
 }
 
-void GeneralPage::localPortValueChanged(int /*unused*/)
+void GeneralPage::slot_localPortValueChanged(int /*unused*/)
 {
     setConfig().connection.localPort = static_cast<quint16>(ui->localPort->value());
 }
 
-void GeneralPage::tlsEncryptionCheckBoxStateChanged(int /*unused*/)
+void GeneralPage::slot_tlsEncryptionCheckBoxStateChanged(int /*unused*/)
 {
     setConfig().connection.tlsEncryption = ui->tlsEncryptionCheckBox->isChecked();
 }
 
-void GeneralPage::emulatedExitsStateChanged(int /*unused*/)
+void GeneralPage::slot_emulatedExitsStateChanged(int /*unused*/)
 {
     setConfig().mumeNative.emulatedExits = ui->emulatedExitsCheckBox->isChecked();
 }
 
-void GeneralPage::showHiddenExitFlagsStateChanged(int /*unused*/)
+void GeneralPage::slot_showHiddenExitFlagsStateChanged(int /*unused*/)
 {
     setConfig().mumeNative.showHiddenExitFlags = ui->showHiddenExitFlagsCheckBox->isChecked();
 }
 
-void GeneralPage::showNotesStateChanged(int /*unused*/)
+void GeneralPage::slot_showNotesStateChanged(int /*unused*/)
 {
     setConfig().mumeNative.showNotes = ui->showNotesCheckBox->isChecked();
 }
 
-void GeneralPage::autoLoadFileNameTextChanged(const QString & /*unused*/)
+void GeneralPage::slot_autoLoadFileNameTextChanged(const QString & /*unused*/)
 {
     setConfig().autoLoad.fileName = ui->autoLoadFileName->text();
 }
 
-void GeneralPage::autoLoadCheckStateChanged(int /*unused*/)
+void GeneralPage::slot_autoLoadCheckStateChanged(int /*unused*/)
 {
     setConfig().autoLoad.autoLoadMap = ui->autoLoadCheck->isChecked();
     ui->autoLoadFileName->setEnabled(ui->autoLoadCheck->isChecked());
     ui->selectWorldFileButton->setEnabled(ui->autoLoadCheck->isChecked());
 }
 
-void GeneralPage::displayMumeClockStateChanged(int /*unused*/)
+void GeneralPage::slot_displayMumeClockStateChanged(int /*unused*/)
 {
     setConfig().mumeClock.display = ui->displayMumeClockCheckBox->isChecked();
 }

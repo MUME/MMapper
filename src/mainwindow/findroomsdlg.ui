@@ -88,9 +88,9 @@
              </widget>
             </item>
             <item row="4" column="0">
-             <widget class="QRadioButton" name="dynDescRadioButton">
+             <widget class="QRadioButton" name="contentsRadioButton">
               <property name="text">
-               <string>D&amp;ynamic description</string>
+               <string>Con&amp;tents</string>
               </property>
              </widget>
             </item>
@@ -256,7 +256,7 @@
   <tabstop>exitsRadioButton</tabstop>
   <tabstop>descRadioButton</tabstop>
   <tabstop>notesRadioButton</tabstop>
-  <tabstop>dynDescRadioButton</tabstop>
+  <tabstop>contentsRadioButton</tabstop>
   <tabstop>caseCheckBox</tabstop>
   <tabstop>resultTable</tabstop>
   <tabstop>selectButton</tabstop>

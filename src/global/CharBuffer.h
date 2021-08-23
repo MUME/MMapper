@@ -6,8 +6,10 @@
 #include <cstddef>
 #include <cstring>
 
+#include "macros.h"
+
 template<size_t N>
-struct CharBuffer
+struct NODISCARD CharBuffer
 {
 protected:
     char buffer[N + 1];
@@ -23,15 +25,15 @@ public:
     }
 
 public:
-    const char *getBuffer() noexcept { return buffer; }
-    explicit operator const char *() noexcept { return getBuffer(); }
+    NODISCARD const char *getBuffer() noexcept { return buffer; }
+    NODISCARD explicit operator const char *() noexcept { return getBuffer(); }
 
 public:
-    int size() const noexcept { return N; }
-    char *begin() noexcept { return buffer; }
-    char *end() noexcept { return begin() + size(); }
-    const char *begin() const noexcept { return buffer; }
-    const char *end() const noexcept { return begin() + size(); }
+    NODISCARD int size() const noexcept { return N; }
+    NODISCARD char *begin() noexcept { return buffer; }
+    NODISCARD char *end() noexcept { return begin() + size(); }
+    NODISCARD const char *begin() const noexcept { return buffer; }
+    NODISCARD const char *end() const noexcept { return begin() + size(); }
 
 public:
     void replaceAll(char from, char to)
@@ -43,7 +45,7 @@ public:
 };
 
 template<size_t N>
-CharBuffer<N> makeCharBuffer(const char (&data)[N])
+NODISCARD static inline CharBuffer<N> makeCharBuffer(const char (&data)[N])
 {
     return CharBuffer<N>{data};
 }

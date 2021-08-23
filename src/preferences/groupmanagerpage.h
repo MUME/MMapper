@@ -17,30 +17,26 @@ namespace Ui {
 class GroupManagerPage;
 }
 
-class GroupManagerPage : public QWidget
+class GroupManagerPage final : public QWidget
 {
     Q_OBJECT
 public:
-    explicit GroupManagerPage(Mmapper2Group *, QWidget *parent = nullptr);
-    ~GroupManagerPage() override;
+    explicit GroupManagerPage(Mmapper2Group *, QWidget *parent);
+    ~GroupManagerPage() final;
 
 public slots:
-    void loadConfig();
-
-    void changeColorClicked();
-    void charNameTextChanged();
-
-    void allowedSecretsChanged();
-
-    void remoteHostTextChanged();
-    void localPortValueChanged(int);
-
-    void rulesWarningChanged(int);
-    void shareSelfChanged(int);
+    void slot_loadConfig();
+    void slot_changeColorClicked();
+    void slot_charNameTextChanged();
+    void slot_allowedSecretsChanged();
+    void slot_remoteHostTextChanged();
+    void slot_localPortValueChanged(int);
+    void slot_rulesWarningChanged(int);
+    void slot_shareSelfChanged(int);
 
 signals:
-    void updatedSelf();
-    void refresh();
+    void sig_updatedSelf();
+    void sig_refresh();
 
 private:
     void loadRemoteHostConfig();

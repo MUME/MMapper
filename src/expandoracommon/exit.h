@@ -7,8 +7,6 @@
 #include <cassert>
 #include <set>
 #include <stdexcept>
-#include <QVariant>
-#include <QVector>
 
 #include "../global/range.h"
 #include "../global/roomid.h"
@@ -40,7 +38,7 @@ private:
     RoomIdSet outgoing;
 
 public:
-    // This has to exist as long as ExitsList uses QVector<Exit>.
+    // This has to exist as long as ExitsList uses EnumIndexedArray<Exit>.
     Exit() = default;
     ~Exit() = default;
 
@@ -95,13 +93,9 @@ public:
 public:
 #define DECL_GETTERS_AND_SETTERS(_Type, _Prop, _OptInit) \
     inline const _Type &get##_Type() const { return m_fields._Prop; } \
-    void set##_Type(_Type value);
+    void set##_Type(_Type value); // REVISIT: Does not update mesh
     XFOREACH_EXIT_PROPERTY(DECL_GETTERS_AND_SETTERS)
 #undef DECL_GETTERS_AND_SETTERS
-
-public:
-    void updateExit(ExitFlags flags);
-    inline void clearDoorName() { setDoorName(DoorName{}); }
 
 public:
     /* older aliases */
@@ -121,8 +115,6 @@ public:
     X_FOREACH_DOOR_FLAG(X_DECLARE_ACCESSORS)
 #undef X_DECLARE_ACCESSORS
 
-    DEPRECATED
-    bool doorNeedsKey() const; // REVISIT: This name is not like the others
     inline bool hasDoorName() const { return exitIsDoor() && !getDoorName().isEmpty(); }
 
 public:

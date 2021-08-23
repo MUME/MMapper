@@ -12,12 +12,12 @@
 #include "../syntax/TreeParser.h"
 #include "AbstractParser-Utils.h"
 
-static QByteArray simplify(const std::string &s)
+NODISCARD static QByteArray simplify(const std::string &s)
 {
     return QByteArray::fromStdString(s).simplified();
 }
 
-class ArgPlayer final : public syntax::IArgument
+class NODISCARD ArgPlayer final : public syntax::IArgument
 {
 private:
     syntax::MatchResult virt_match(const syntax::ParserInput &input,
@@ -46,7 +46,7 @@ std::ostream &ArgPlayer::virt_to_stream(std::ostream &os) const
 void AbstractParser::parseGroup(StringView input)
 {
     using namespace ::syntax;
-    static auto abb = syntax::abbrevToken;
+    static const auto abb = syntax::abbrevToken;
 
     auto groupKickSyntax = [this]() -> SharedConstSublist {
         const auto argPlayer = TokenMatcher::alloc<ArgPlayer>();
@@ -54,8 +54,10 @@ void AbstractParser::parseGroup(StringView input)
             [this](User &user, const Pair *const args) -> void {
                 auto &os = user.getOstream();
                 const auto v = getAnyVectorReversed(args);
-                [[maybe_unused]] const auto &kick = v[0].getString();
-                assert(kick == "kick");
+                if constexpr ((IS_DEBUG_BUILD)) {
+                    const auto &kick = v[0].getString();
+                    assert(kick == "kick");
+                }
                 const auto name = simplify(v[1].getString());
 
                 if (name.isEmpty()) {
@@ -97,8 +99,11 @@ void AbstractParser::parseGroup(StringView input)
             [this](User &user, const Pair *const args) -> void {
                 auto &os = user.getOstream();
                 const auto v = getAnyVectorReversed(args);
-                [[maybe_unused]] const auto &tell = v[0].getString();
-                assert(tell == "tell");
+
+                if constexpr ((IS_DEBUG_BUILD)) {
+                    const auto &tell = v[0].getString();
+                    assert(tell == "tell");
+                }
 
                 const auto message = simplify(concatenate_unquoted(v[1].getVector()));
                 if (message.isEmpty()) {
@@ -126,14 +131,4 @@ void AbstractParser::sendScoreLineEvent(const QByteArray &arr)
 void AbstractParser::sendPromptLineEvent(const QByteArray &arr)
 {
     m_group.sendPromptLineEvent(arr);
-}
-
-void AbstractParser::sendCharacterAffectEvent(const CharacterAffectEnum affect, const bool enable)
-{
-    m_group.sendCharacterAffectEvent(affect, enable);
-}
-
-void AbstractParser::sendCharacterPositionEvent(CharacterPositionEnum position)
-{
-    m_group.sendCharacterPositionEvent(position);
 }

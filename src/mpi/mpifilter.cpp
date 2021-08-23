@@ -12,7 +12,7 @@
 #include "../configuration/configuration.h"
 #include "../proxy/telnetfilter.h"
 
-static bool endsInLinefeed(const TelnetDataEnum type)
+NODISCARD static bool endsInLinefeed(const TelnetDataEnum type)
 {
     switch (type) {
     case TelnetDataEnum::LF:
@@ -29,7 +29,7 @@ static bool endsInLinefeed(const TelnetDataEnum type)
     }
 }
 
-void MpiFilter::analyzeNewMudInput(const TelnetData &data)
+void MpiFilter::slot_analyzeNewMudInput(const TelnetData &data)
 {
     if (m_receivingMpi) {
         if (data.line.length() <= m_remaining) {
@@ -43,7 +43,7 @@ void MpiFilter::analyzeNewMudInput(const TelnetData &data)
             TelnetData remainingData;
             remainingData.type = data.type;
             remainingData.line = data.line.right(m_remaining);
-            emit parseNewMudInput(remainingData);
+            emit sig_parseNewMudInput(remainingData);
         }
         if (m_remaining == 0) {
             m_receivingMpi = false;
@@ -64,7 +64,7 @@ void MpiFilter::analyzeNewMudInput(const TelnetData &data)
             }
         }
         if (!m_receivingMpi) {
-            emit parseNewMudInput(data);
+            emit sig_parseNewMudInput(data);
         }
     }
 
@@ -112,7 +112,7 @@ void MpiFilter::parseEditMessage(const QByteArray &buffer)
     QString body = QString::fromLatin1(payload);
 
     qDebug() << "Edit" << sessionId << title << "body.length=" << body.length();
-    emit editMessage(sessionId, title, body);
+    emit sig_editMessage(sessionId, title, body);
 }
 
 void MpiFilter::parseViewMessage(const QByteArray &buffer)
@@ -130,5 +130,5 @@ void MpiFilter::parseViewMessage(const QByteArray &buffer)
     QString body = QString::fromLatin1(payload);
 
     qDebug() << "Message" << title << "body.length=" << body.length();
-    emit viewMessage(title, body);
+    emit sig_viewMessage(title, body);
 }

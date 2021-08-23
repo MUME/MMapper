@@ -21,7 +21,7 @@ class CommandPrefixValidator final : public QValidator
 {
 public:
     explicit CommandPrefixValidator(QObject *const parent);
-    virtual ~CommandPrefixValidator() override;
+    ~CommandPrefixValidator() final;
 
     void fixup(QString &input) const override { input = input.toLatin1(); }
 
@@ -49,11 +49,11 @@ ParserPage::ParserPage(QWidget *const parent)
     connect(roomNameColorPushButton,
             &QAbstractButton::clicked,
             this,
-            &ParserPage::roomNameColorClicked);
+            &ParserPage::slot_roomNameColorClicked);
     connect(roomDescColorPushButton,
             &QAbstractButton::clicked,
             this,
-            &ParserPage::roomDescColorClicked);
+            &ParserPage::slot_roomDescColorClicked);
 
     connect(charPrefixLineEdit, &QLineEdit::editingFinished, this, [this]() {
         setConfig().parser.prefixChar = charPrefixLineEdit->text().at(0).toLatin1();
@@ -62,28 +62,28 @@ ParserPage::ParserPage(QWidget *const parent)
     connect(removeEndDescPattern,
             &QAbstractButton::clicked,
             this,
-            &ParserPage::removeEndDescPatternClicked);
+            &ParserPage::slot_removeEndDescPatternClicked);
 
     connect(addEndDescPattern,
             &QAbstractButton::clicked,
             this,
-            &ParserPage::addEndDescPatternClicked);
+            &ParserPage::slot_addEndDescPatternClicked);
 
-    connect(testPattern, &QAbstractButton::clicked, this, &ParserPage::testPatternClicked);
-    connect(validPattern, &QAbstractButton::clicked, this, &ParserPage::validPatternClicked);
+    connect(testPattern, &QAbstractButton::clicked, this, &ParserPage::slot_testPatternClicked);
+    connect(validPattern, &QAbstractButton::clicked, this, &ParserPage::slot_validPatternClicked);
 
     connect(endDescPatternsList,
             QOverload<const QString &>::of(&QComboBox::activated),
             this,
-            &ParserPage::endDescPatternsListActivated);
+            &ParserPage::slot_endDescPatternsListActivated);
 
     connect(suppressXmlTagsCheckBox,
             &QCheckBox::stateChanged,
             this,
-            &ParserPage::suppressXmlTagsCheckBoxStateChanged);
+            &ParserPage::slot_suppressXmlTagsCheckBoxStateChanged);
 }
 
-void ParserPage::loadConfig()
+void ParserPage::slot_loadConfig()
 {
     const auto &settings = getConfig().parser;
 
@@ -100,21 +100,21 @@ void ParserPage::loadConfig()
     endDescPatternsList->addItems(settings.noDescriptionPatternsList);
 }
 
-void ParserPage::roomNameColorClicked()
+void ParserPage::slot_roomNameColorClicked()
 {
     QString ansiString = AnsiColorDialog::getColor(getConfig().parser.roomNameColor, this);
     AnsiCombo::makeWidgetColoured(roomNameColorLabel, ansiString);
     setConfig().parser.roomNameColor = ansiString;
 }
 
-void ParserPage::roomDescColorClicked()
+void ParserPage::slot_roomDescColorClicked()
 {
     QString ansiString = AnsiColorDialog::getColor(getConfig().parser.roomDescColor, this);
     AnsiCombo::makeWidgetColoured(roomDescColorLabel, ansiString);
     setConfig().parser.roomDescColor = ansiString;
 }
 
-void ParserPage::suppressXmlTagsCheckBoxStateChanged(int /*unused*/)
+void ParserPage::slot_suppressXmlTagsCheckBoxStateChanged(int /*unused*/)
 {
     setConfig().parser.removeXmlTags = suppressXmlTagsCheckBox->isChecked();
 }
@@ -135,13 +135,13 @@ void ParserPage::savePatterns()
     settings.noDescriptionPatternsList = save(endDescPatternsList);
 }
 
-void ParserPage::removeEndDescPatternClicked()
+void ParserPage::slot_removeEndDescPatternClicked()
 {
     endDescPatternsList->removeItem(endDescPatternsList->currentIndex());
     savePatterns();
 }
 
-void ParserPage::testPatternClicked()
+void ParserPage::slot_testPatternClicked()
 {
     QString pattern = newPattern->text();
     QString str = testString->text();
@@ -184,7 +184,7 @@ void ParserPage::testPatternClicked()
     QMessageBox::information(this, tr("Pattern match test"), str);
 }
 
-void ParserPage::validPatternClicked()
+void ParserPage::slot_validPatternClicked()
 {
     QString pattern = newPattern->text();
     QString str = "Pattern '" + pattern + "' is valid!!!";
@@ -208,12 +208,12 @@ void ParserPage::validPatternClicked()
                              nullptr);
 }
 
-void ParserPage::endDescPatternsListActivated(const QString &str)
+void ParserPage::slot_endDescPatternsListActivated(const QString &str)
 {
     newPattern->setText(str);
 }
 
-void ParserPage::addEndDescPatternClicked()
+void ParserPage::slot_addEndDescPatternClicked()
 {
     QString str;
     if ((str = newPattern->text()) != "") {

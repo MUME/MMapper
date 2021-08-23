@@ -15,7 +15,7 @@
 
 #include "../global/AnsiColor.h"
 
-struct AnsiItem
+struct NODISCARD AnsiItem final
 {
     int ansiCode = 0;
     QString description;
@@ -50,7 +50,7 @@ void AnsiCombo::setAnsiCode(const int ansiCode)
     }
 }
 
-static AnsiItem initAnsiItem(int ansiCode)
+NODISCARD static AnsiItem initAnsiItem(int ansiCode)
 {
     QColor col;
     AnsiItem retVal;
@@ -305,8 +305,9 @@ bool AnsiCombo::colorFromNumber(int numColor, QColor &col, QString &intelligible
     return retVal;
 }
 
+// TODO: move this some place more appropriate.
 template<typename Derived, typename Base>
-static inline Derived *qdynamic_downcast(Base *ptr)
+NODISCARD static inline Derived *qdynamic_downcast(Base *ptr)
 {
     static_assert(std::is_base_of_v<Base, Derived>);
     return qobject_cast<Derived *>(ptr);

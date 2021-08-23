@@ -118,7 +118,7 @@ ParseResult TreeParser::recurseAccept(const Sublist &node,
     return ParseResult::success(input);
 }
 
-struct HelpFrame final : IMatchErrorLogger
+struct NODISCARD HelpFrame final : IMatchErrorLogger
 {
 public:
     std::ostream &os; // prevents move ctor and operator=
@@ -138,12 +138,12 @@ public:
     // TODO: change this to DELETE_MOVE_CTOR (compiler bug: g++ 7.4 uses move ctor in NRVO).
     DEFAULT_MOVE_CTOR(HelpFrame);
     DELETE_ASSIGN_OPS(HelpFrame);
-    ~HelpFrame() override;
+    ~HelpFrame() final;
 
 public:
     NODISCARD bool getFailed() const { return m_failed; }
     void setFailed() { m_failed = true; }
-    bool empty() { return m_helps.empty() && !m_accept && m_errors.empty(); }
+    NODISCARD bool empty() { return m_helps.empty() && !m_accept && m_errors.empty(); }
     void addAccept(std::string acc)
     {
         // REVISIT: this should probably be colored,
@@ -155,7 +155,7 @@ public:
     void addHelp(std::string help) { m_helps.emplace_back(help); }
     void addHelp(const TokenMatcher &tokenMatcher, std::optional<MatchTypeEnum> type);
     void flush();
-    HelpFrame makeChild();
+    NODISCARD HelpFrame makeChild();
 
 private:
     void virt_logError(std::string s) override { m_errors.emplace_back(s); }
@@ -389,11 +389,12 @@ ParseResult TreeParser::HelpCommon::recurseAccept(const Sublist &node,
     return ParseResult::failure(input);
 }
 
-void TreeParser::help(const ParserInput &input, bool isFull)
+void TreeParser::help(const ParserInput &input, const bool isFull)
 {
     const Sublist &node = deref(m_syntaxRoot);
     HelpFrame frame{m_user.getOstream()};
-    HelpCommon{isFull}.syntaxRecurseFirst(node, input, frame).isSuccess();
+    MAYBE_UNUSED const ParseResult ignored = //
+        HelpCommon{isFull}.syntaxRecurseFirst(node, input, frame);
 }
 
 std::string processSyntax(const syntax::SharedConstSublist &syntax,
@@ -416,7 +417,12 @@ std::string processSyntax(const syntax::SharedConstSublist &syntax,
     User u{ss};
     TreeParser parser{syntax, u};
 
-    parser.parse(input);
+    {
+        // REVISIT: check return value?
+        MAYBE_UNUSED const auto ignored = //
+            parser.parse(input);
+    }
+
     return ss.str();
 }
 

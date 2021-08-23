@@ -27,7 +27,7 @@ using X509_ptr = std::unique_ptr<X509, decltype(&::X509_free)>;
 using BIO_MEM_ptr = std::unique_ptr<BIO, decltype(&::BIO_free)>;
 
 /* Generates a 2048-bit RSA key. */
-static EVP_PKEY_ptr generatePrivateKey()
+NODISCARD static EVP_PKEY_ptr generatePrivateKey()
 {
     /* Allocate memory for the EVP_PKEY and BIGNUM structures. */
     EVP_PKEY_ptr pkey(EVP_PKEY_new(), ::EVP_PKEY_free);
@@ -60,7 +60,7 @@ static EVP_PKEY_ptr generatePrivateKey()
 }
 
 /* Generates a self-signed x509 certificate. */
-static X509_ptr generateX509(const EVP_PKEY_ptr &pkey)
+NODISCARD static X509_ptr generateX509(const EVP_PKEY_ptr &pkey)
 {
     /* Allocate memory for the X509 structure. */
     X509_ptr x509(X509_new(), ::X509_free);
@@ -117,7 +117,7 @@ static X509_ptr generateX509(const EVP_PKEY_ptr &pkey)
     return x509;
 }
 
-static QSslCertificate toSslCertificate(const X509_ptr &x509)
+NODISCARD static QSslCertificate toSslCertificate(const X509_ptr &x509)
 {
     BIO_MEM_ptr bio(BIO_new(BIO_s_mem()), ::BIO_free);
 
@@ -145,7 +145,7 @@ static QSslCertificate toSslCertificate(const X509_ptr &x509)
     return QSslCertificate(ba);
 }
 
-static QSslKey toSslKey(const EVP_PKEY_ptr &pkey)
+NODISCARD static QSslKey toSslKey(const EVP_PKEY_ptr &pkey)
 {
     BIO_MEM_ptr bio(BIO_new(BIO_s_mem()), ::BIO_free);
 
@@ -188,7 +188,7 @@ void GroupAuthority::refresh()
     if (key.isNull()) {
         qWarning() << "Unable to generate a valid private key" << key;
     }
-    emit secretRefreshed(getSecret());
+    emit sig_secretRefreshed(getSecret());
 }
 #else
 void GroupAuthority::refresh()
@@ -200,7 +200,8 @@ void GroupAuthority::refresh()
 }
 #endif
 
-static inline QString getMetadataKey(const GroupSecret &secret, const GroupMetadataEnum meta)
+NODISCARD static inline QString getMetadataKey(const GroupSecret &secret,
+                                               const GroupMetadataEnum meta)
 {
     const auto get_prefix = [](auto meta) {
         switch (meta) {
@@ -287,7 +288,7 @@ bool GroupAuthority::remove(const GroupSecret &secret)
     if (!validSecret(secret))
         return false;
 
-    emit secretRevoked(secret);
+    emit sig_secretRevoked(secret);
 
     // Remove from model
     for (int i = 0; i <= model.rowCount(); i++) {
@@ -300,7 +301,7 @@ bool GroupAuthority::remove(const GroupSecret &secret)
             auto &conf = setConfig().groupManager;
             conf.authorizedSecrets = model.stringList();
 
-            for (auto type : ALL_GROUP_METADATA) {
+            for (const GroupMetadataEnum type : ALL_GROUP_METADATA) {
                 conf.secretMetadata.remove(getMetadataKey(secret, type));
             }
             return true;

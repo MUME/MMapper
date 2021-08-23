@@ -21,17 +21,17 @@ RoomSelection::RoomSelection(MapData &admin, const Coordinate &c)
     m_mapData.lookingForRooms(*this, c);
 }
 
-static Coordinate toCoordinate(const glm::ivec3 &c)
+NODISCARD static Coordinate toCoordinate(const glm::ivec3 &c)
 {
     return Coordinate(c.x, c.y, c.z);
 }
 
-static Coordinate min(const Coordinate &a, const Coordinate &b)
+NODISCARD static Coordinate min(const Coordinate &a, const Coordinate &b)
 {
     return toCoordinate(glm::min(a.to_ivec3(), b.to_ivec3()));
 }
 
-static Coordinate max(const Coordinate &a, const Coordinate &b)
+NODISCARD static Coordinate max(const Coordinate &a, const Coordinate &b)
 {
     return toCoordinate(glm::max(a.to_ivec3(), b.to_ivec3()));
 }
@@ -42,30 +42,35 @@ RoomSelection::RoomSelection(MapData &admin, const Coordinate &a, const Coordina
     m_mapData.lookingForRooms(*this, min(a, b), max(a, b));
 }
 
-void RoomSelection::receiveRoom(RoomAdmin *const admin, const Room *const aRoom)
+void RoomSelection::virt_receiveRoom(RoomAdmin *const admin, const Room *const aRoom)
 {
     assert(admin == &m_mapData);
-    insert(aRoom->getId(), aRoom);
+    emplace(aRoom->getId(), aRoom);
 }
 
 RoomSelection::~RoomSelection()
 {
     // Remove the lock within the map
     for (auto i = cbegin(); i != cend(); i++) {
-        m_mapData.releaseRoom(*this, i.key());
+        m_mapData.releaseRoom(*this, i->first);
     }
 }
 
 const Room *RoomSelection::getFirstRoom() const noexcept(false)
 {
-    if (isEmpty())
+    if (empty())
         throw std::runtime_error("empty");
-    return first();
+    return cbegin()->second;
 }
 
 RoomId RoomSelection::getFirstRoomId() const noexcept(false)
 {
     return getFirstRoom()->getId();
+}
+
+bool RoomSelection::contains(RoomId targetId) const
+{
+    return find(targetId) != end();
 }
 
 const Room *RoomSelection::getRoom(const RoomId targetId)
@@ -81,13 +86,13 @@ const Room *RoomSelection::getRoom(const Coordinate &coord)
 void RoomSelection::unselect(const RoomId targetId)
 {
     m_mapData.releaseRoom(*this, targetId);
-    remove(targetId);
+    erase(find(targetId));
 }
 
 bool RoomSelection::isMovable(const Coordinate &offset) const
 {
     for (auto i = cbegin(); i != cend(); i++) {
-        const Coordinate target = i.value()->getPosition() + offset;
+        const Coordinate target = i->second->getPosition() + offset;
         RoomSelection tmpSel = RoomSelection(m_mapData);
         if (const Room *const other = tmpSel.getRoom(target)) {
             if (!contains(other->getId())) {

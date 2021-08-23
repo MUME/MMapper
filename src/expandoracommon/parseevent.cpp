@@ -27,7 +27,7 @@ void ParseEvent::ArrayOfProperties::setProperty(const size_t pos, std::string s)
     ArrayOfProperties::at(pos) = Property{std::move(s)};
 }
 
-static std::string getPromptBytes(const PromptFlagsType &promptFlags)
+NODISCARD static std::string getPromptBytes(const PromptFlagsType &promptFlags)
 {
     const auto promptBytes = promptFlags.isValid()
                                  ? std::string(1, static_cast<int8_t>(promptFlags.getTerrainType()))
@@ -61,7 +61,7 @@ QString ParseEvent::toQString() const
     QString exitsStr;
     // REVISIT: Duplicate code with AbstractParser
     if (m_exitsFlags.isValid() && m_connectedRoomFlags.isValid()) {
-        for (const auto &dir : enums::getAllExitsNESWUD()) {
+        for (const ExitDirEnum dir : enums::getAllExitsNESWUD()) {
             const ExitFlags exitFlags = m_exitsFlags.get(dir);
             if (exitFlags.isExit()) {
                 exitsStr.append("[");
@@ -89,8 +89,8 @@ QString ParseEvent::toQString() const
 
     return QString("[%1,%2,%3,%4,%5,%6,%7]")
         .arg(m_roomName.toQString())
-        .arg(m_dynamicDesc.toQString())
-        .arg(m_staticDesc.toQString())
+        .arg(m_roomDesc.toQString())
+        .arg(m_roomContents.toQString())
         .arg(exitsStr)
         .arg(promptStr)
         .arg(getUppercase(m_moveType))
@@ -100,8 +100,8 @@ QString ParseEvent::toQString() const
 
 SharedParseEvent ParseEvent::createEvent(const CommandEnum c,
                                          RoomName moved_roomName,
-                                         RoomDynamicDesc moved_dynamicDesc,
-                                         RoomStaticDesc moved_staticDesc,
+                                         RoomDesc moved_roomDesc,
+                                         RoomContents moved_roomContents,
                                          const ExitsFlagsType &exitsFlags,
                                          const PromptFlagsType &promptFlags,
                                          const ConnectedRoomFlagsType &connectedRoomFlags)
@@ -111,13 +111,13 @@ SharedParseEvent ParseEvent::createEvent(const CommandEnum c,
 
     // the moved strings are used by const ref here before they're moved.
     event->setProperty(moved_roomName);
-    event->setProperty(moved_staticDesc);
+    event->setProperty(moved_roomDesc);
     event->setProperty(promptFlags);
 
     // After this block, the moved values are gone.
     event->m_roomName = std::exchange(moved_roomName, {});
-    event->m_dynamicDesc = std::exchange(moved_dynamicDesc, {});
-    event->m_staticDesc = std::exchange(moved_staticDesc, {});
+    event->m_roomDesc = std::exchange(moved_roomDesc, {});
+    event->m_roomContents = std::exchange(moved_roomContents, {});
     event->m_exitsFlags = exitsFlags;
     event->m_promptFlags = promptFlags;
     event->m_connectedRoomFlags = connectedRoomFlags;
@@ -130,8 +130,8 @@ SharedParseEvent ParseEvent::createDummyEvent()
 {
     return createEvent(CommandEnum::UNKNOWN,
                        RoomName{},
-                       RoomDynamicDesc{},
-                       RoomStaticDesc{},
+                       RoomDesc{},
+                       RoomContents{},
                        ExitsFlagsType{},
                        PromptFlagsType{},
                        ConnectedRoomFlagsType{});

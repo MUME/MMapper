@@ -23,7 +23,7 @@
 #include "../global/utils.h"
 #include "roomcollection.h"
 
-enum class MaskFlagsEnum : uint32_t {
+enum class NODISCARD MaskFlagsEnum : uint32_t {
     NONE = 0u,
     NAME = 0b001u,
     DESC = 0b010u,
@@ -45,7 +45,7 @@ static_assert(static_cast<uint32_t>(MaskFlagsEnum::NAME_TERRAIN) == 5u);
 static_assert(static_cast<uint32_t>(MaskFlagsEnum::DESC_TERRAIN) == 6u);
 static_assert(static_cast<uint32_t>(MaskFlagsEnum::NAME_DESC_TERRAIN) == 7u);
 
-static MaskFlagsEnum getKeyMask(const ParseEvent &event)
+NODISCARD static MaskFlagsEnum getKeyMask(const ParseEvent &event)
 {
     uint32_t mask = 0;
     for (size_t i = 0; i < ParseEvent::NUM_PROPS; ++i) {
@@ -70,7 +70,7 @@ static MaskFlagsEnum getKeyMask(const ParseEvent &event)
     return flags;
 }
 
-static bool isMatchedByTree(const MaskFlagsEnum mask)
+NODISCARD static bool isMatchedByTree(const MaskFlagsEnum mask)
 {
     switch (mask) {
     case MaskFlagsEnum::NAME:      // Not observed in the wild?
@@ -88,7 +88,7 @@ static bool isMatchedByTree(const MaskFlagsEnum mask)
     }
 }
 
-static MaskFlagsEnum reduceMask(const MaskFlagsEnum mask)
+NODISCARD static MaskFlagsEnum reduceMask(const MaskFlagsEnum mask)
 {
     switch (mask) {
     case MaskFlagsEnum::NONE:
@@ -109,7 +109,7 @@ static MaskFlagsEnum reduceMask(const MaskFlagsEnum mask)
     throw std::invalid_argument("mask");
 }
 
-static auto makeKey(const ParseEvent &event, const MaskFlagsEnum maskFlags)
+NODISCARD static auto makeKey(const ParseEvent &event, const MaskFlagsEnum maskFlags)
 {
     char buf[64];
 
@@ -135,7 +135,7 @@ static auto makeKey(const ParseEvent &event, const MaskFlagsEnum maskFlags)
     return key;
 }
 
-class ParseTree::ParseHashMap final
+class NODISCARD ParseTree::ParseHashMap final
 {
 private:
     using Key = std::string;
@@ -150,7 +150,7 @@ public:
     ParseHashMap() = default;
     virtual ~ParseHashMap();
 
-    SharedRoomCollection insertRoom(const ParseEvent &event)
+    NODISCARD SharedRoomCollection insertRoom(const ParseEvent &event)
     {
         const MaskFlagsEnum mask = getKeyMask(event);
 

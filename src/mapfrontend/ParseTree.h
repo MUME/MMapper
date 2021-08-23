@@ -32,6 +32,6 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(ParseTree);
 
 public:
-    SharedRoomCollection insertRoom(const ParseEvent &event);
+    NODISCARD SharedRoomCollection insertRoom(const ParseEvent &event);
     void getRooms(AbstractRoomVisitor &stream, const ParseEvent &event);
 };

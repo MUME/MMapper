@@ -11,7 +11,6 @@
 #include <stack>
 #include <vector>
 #include <QColor>
-#include <QListData>
 
 #include "../expandoracommon/coordinate.h"
 #include "../global/RuleOf5.h"
@@ -39,6 +38,7 @@ public:
 
 public:
     // Caller must apply the correct translation and rotation.
+    NODISCARD
     static DistantObjectTransform construct(const glm::vec3 &pos,
                                             const MapScreen &mapScreen,
                                             float marginPixels);
@@ -52,7 +52,7 @@ private:
     static constexpr const float LINE_ALPHA = 0.9f;
 
 private:
-    struct Matrices final
+    struct NODISCARD Matrices final
     {
         // glm::mat4 proj = glm::mat4(1);
         glm::mat4 modelView = glm::mat4(1);
@@ -74,7 +74,7 @@ private:
     class NODISCARD CharFakeGL final
     {
     private:
-        struct CoordCompare final
+        struct NODISCARD CoordCompare final
         {
             // REVISIT: just make this the global operator<(),
             // so it can be picked up by std::less<Coordinate>.
@@ -143,7 +143,6 @@ private:
             auto &m = m_stack.top().modelView;
             m = glm::translate(m, v);
         }
-        void glTranslatef(float x, float y, float z) { glTranslatef(glm::vec3{x, y, z}); }
         void drawArrow(bool fill, bool beacon);
         void drawBox(const Coordinate &coord, bool fill, bool beacon, bool isFar);
         void addScreenSpaceArrow(const glm::vec3 &pos, float degrees, const Color &color, bool fill);
@@ -164,12 +163,19 @@ private:
         }
 
     private:
-        enum class QuadOptsEnum : uint32_t { NONE = 0, OUTLINE = 1, FILL = 2, BEACON = 4 };
+        enum class NODISCARD QuadOptsEnum : uint32_t {
+            NONE = 0,
+            OUTLINE = 1,
+            FILL = 2,
+            BEACON = 4
+        };
+        NODISCARD
         friend QuadOptsEnum operator|(const QuadOptsEnum lhs, const QuadOptsEnum rhs)
         {
             return static_cast<QuadOptsEnum>(static_cast<uint32_t>(lhs)
                                              | static_cast<uint32_t>(rhs));
         }
+        NODISCARD
         friend QuadOptsEnum operator&(const QuadOptsEnum lhs, const QuadOptsEnum rhs)
         {
             return static_cast<QuadOptsEnum>(static_cast<uint32_t>(lhs)
@@ -196,14 +202,14 @@ public:
     {}
 
 protected:
-    CharFakeGL &getOpenGL() { return m_fakeGL; }
+    NODISCARD CharFakeGL &getOpenGL() { return m_fakeGL; }
 
 public:
     void incrementCount(const Coordinate &c) { getOpenGL().reserve(c); }
 
     void resetCount(const Coordinate &c) { getOpenGL().clear(c); }
 
-    bool isVisible(const Coordinate &c, float margin) const;
+    NODISCARD bool isVisible(const Coordinate &c, float margin) const;
 
 public:
     void drawCharacter(const Coordinate &coordinate, const Color &color, bool fill = true);

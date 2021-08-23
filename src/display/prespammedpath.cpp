@@ -18,6 +18,7 @@ static constexpr const bool USE_TEST = false;
 #endif
 
 PrespammedPath::PrespammedPath(QObject * /*unused*/)
+// REVISIT: why isn't the parent passed to the base class?
 {
     if (USE_TEST) {
         m_queue.append(CommandEnum::DOWN);
@@ -32,8 +33,8 @@ PrespammedPath::PrespammedPath(QObject * /*unused*/)
 
 PrespammedPath::~PrespammedPath() = default;
 
-void PrespammedPath::setPath(CommandQueue queue)
+void PrespammedPath::slot_setPath(CommandQueue queue)
 {
     m_queue = std::move(queue);
-    emit update();
+    emit sig_update();
 }

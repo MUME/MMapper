@@ -8,7 +8,6 @@
 #include <memory>
 #include <stack>
 #include <utility>
-#include <QMutableVectorIterator>
 
 #include "../expandoracommon/exit.h"
 #include "../expandoracommon/parseevent.h"
@@ -60,6 +59,10 @@ Room *AddExit::tryExec()
     if (rto == nullptr) {
         return nullptr;
     }
+
+    auto &ef = rfrom->getExitFlags(dir);
+    if (!ef.isExit())
+        rfrom->setExitFlags(dir, ef | ExitFlagEnum::EXIT);
 
     rfrom->addOutExit(dir, to);
     rto->addInExit(opposite(dir), from);
@@ -166,7 +169,7 @@ void Remove::exec(const RoomId id)
     // don't return previously used ids for now
     // unusedIds().push(id);
     const ExitsList &exits = room->getExitsList();
-    for (const auto dir : enums::makeCountingIterator<ExitDirEnum>(exits)) {
+    for (const ExitDirEnum dir : enums::makeCountingIterator<ExitDirEnum>(exits)) {
         const Exit &e = exits[dir];
         for (const auto &idx : e.inRange()) {
             if (const SharedRoom &other = rooms[idx]) {

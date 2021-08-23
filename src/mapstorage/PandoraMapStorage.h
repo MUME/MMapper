@@ -23,24 +23,25 @@ class PandoraMapStorage final : public AbstractMapStorage
     Q_OBJECT
 
 public:
-    explicit PandoraMapStorage(MapData &, const QString &, QFile *, QObject *parent = nullptr);
-    ~PandoraMapStorage() override;
+    explicit PandoraMapStorage(MapData &, const QString &, QFile *, QObject *parent);
+    ~PandoraMapStorage() final;
 
 public:
     PandoraMapStorage() = delete;
 
 private:
-    virtual bool canLoad() const override { return true; }
-    virtual bool canSave() const override { return false; }
+    NODISCARD virtual bool canLoad() const override { return true; }
+    NODISCARD virtual bool canSave() const override { return false; }
 
     virtual void newData() override;
-    virtual bool loadData() override;
-    virtual bool saveData(bool baseMapOnly) override;
-    virtual bool mergeData() override;
+    NODISCARD virtual bool loadData() override;
+    NODISCARD virtual bool saveData(bool baseMapOnly) override;
+    NODISCARD virtual bool mergeData() override;
 
 private:
     std::shared_ptr<Room> loadRoom(QXmlStreamReader &);
     void loadExits(Room &, QXmlStreamReader &);
+    void log(const QString &msg) { emit sig_log("PandoraMapStorage", msg); }
 
 private:
     Coordinate basePosition;

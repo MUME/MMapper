@@ -33,11 +33,8 @@ class MapWindow final : public QWidget
     Q_OBJECT
 
 public:
-    explicit MapWindow(MapData *mapData,
-                       PrespammedPath *pp,
-                       Mmapper2Group *gm,
-                       QWidget *parent = nullptr);
-    ~MapWindow() override;
+    explicit MapWindow(MapData &mapData, PrespammedPath &pp, Mmapper2Group &gm, QWidget *parent);
+    ~MapWindow() final;
 
 public:
     void keyPressEvent(QKeyEvent *event) override;
@@ -51,13 +48,12 @@ signals:
     void sig_zoomChanged(float zoom);
 
 public slots:
-    void setScrollBars(const Coordinate &, const Coordinate &);
-    void centerOnWorldPos(const glm::vec2 &worldPos);
-    void mapMove(int dx, int dy);
-    void continuousScroll(int dx, int dy);
-
-    void scrollTimerTimeout();
-    void graphicsSettingsChanged();
+    void slot_setScrollBars(const Coordinate &, const Coordinate &);
+    void slot_centerOnWorldPos(const glm::vec2 &worldPos);
+    void slot_mapMove(int dx, int dy);
+    void slot_continuousScroll(int dx, int dy);
+    void slot_scrollTimerTimeout();
+    void slot_graphicsSettingsChanged();
 
 public:
     void updateScrollBars();
@@ -82,10 +78,10 @@ private:
         glm::ivec3 min{0};
         glm::ivec3 max{0};
 
-        glm::ivec2 size() const { return glm::ivec2{max - min}; }
+        NODISCARD glm::ivec2 size() const { return glm::ivec2{max - min}; }
 
-        glm::vec2 scrollToWorld(const glm::ivec2 &scrollPos) const;
-        glm::ivec2 worldToScroll(const glm::vec2 &worldPos) const;
+        NODISCARD glm::vec2 scrollToWorld(const glm::ivec2 &scrollPos) const;
+        NODISCARD glm::ivec2 worldToScroll(const glm::vec2 &worldPos) const;
 
     } m_knownMapSize;
 

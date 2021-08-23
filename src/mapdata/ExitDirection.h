@@ -8,7 +8,7 @@
 #include "../global/Array.h"
 #include "ExitFlags.h"
 
-enum class ExitDirEnum { NORTH = 0, SOUTH, EAST, WEST, UP, DOWN, UNKNOWN, NONE };
+enum class NODISCARD ExitDirEnum { NORTH = 0, SOUTH, EAST, WEST, UP, DOWN, UNKNOWN, NONE };
 
 static constexpr const uint32_t NUM_EXITS_NESW = 4u;
 static constexpr const uint32_t NUM_EXITS_NESWUD = 6u;
@@ -16,9 +16,9 @@ static constexpr const uint32_t NUM_EXITS = 7u;
 static constexpr const uint32_t NUM_EXITS_INCLUDING_NONE = 8u;
 
 namespace enums {
-const MMapper::Array<ExitDirEnum, NUM_EXITS_NESW> &getAllExitsNESW();
-const MMapper::Array<ExitDirEnum, NUM_EXITS_NESWUD> &getAllExitsNESWUD();
-const MMapper::Array<ExitDirEnum, NUM_EXITS> &getAllExits7();
+NODISCARD const MMapper::Array<ExitDirEnum, NUM_EXITS_NESW> &getAllExitsNESW();
+NODISCARD const MMapper::Array<ExitDirEnum, NUM_EXITS_NESWUD> &getAllExitsNESWUD();
+NODISCARD const MMapper::Array<ExitDirEnum, NUM_EXITS> &getAllExits7();
 
 #define ALL_EXITS_NESW enums::getAllExitsNESW()
 #define ALL_EXITS_NESWUD enums::getAllExitsNESWUD()
@@ -28,14 +28,14 @@ const MMapper::Array<ExitDirEnum, NUM_EXITS> &getAllExits7();
 
 // TODO: move these to another namespace once all of the exit types are merged
 
-bool isNESW(ExitDirEnum dir);
-bool isUpDown(ExitDirEnum dir);
-bool isNESWUD(ExitDirEnum dir);
-ExitDirEnum opposite(ExitDirEnum in);
-const char *lowercaseDirection(ExitDirEnum dir);
+NODISCARD extern bool isNESW(ExitDirEnum dir);
+NODISCARD extern bool isUpDown(ExitDirEnum dir);
+NODISCARD extern bool isNESWUD(ExitDirEnum dir);
+NODISCARD extern ExitDirEnum opposite(ExitDirEnum in);
+NODISCARD extern const char *lowercaseDirection(ExitDirEnum dir);
 
-struct ExitDirections final
-    : enums::Flags<ExitDirections, ExitDirEnum, uint8_t, NUM_EXITS_INCLUDING_NONE>
+struct NODISCARD ExitDirFlags final
+    : enums::Flags<ExitDirFlags, ExitDirEnum, uint8_t, NUM_EXITS_INCLUDING_NONE>
 {
 public:
     using Flags::Flags;
@@ -43,7 +43,7 @@ public:
 
 namespace Mmapper2Exit {
 
-ExitDirEnum dirForChar(char dir);
+NODISCARD ExitDirEnum dirForChar(char dir);
 
-char charForDir(ExitDirEnum dir);
+NODISCARD char charForDir(ExitDirEnum dir);
 } // namespace Mmapper2Exit

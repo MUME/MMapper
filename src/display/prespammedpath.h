@@ -13,22 +13,23 @@
 class MapCanvas;
 class MapData;
 
-class PrespammedPath : public QObject
+class PrespammedPath final : public QObject
 {
     Q_OBJECT
-public:
-    explicit PrespammedPath(QObject *parent = nullptr);
-    ~PrespammedPath();
-
-public:
-    auto &getQueue() const { return m_queue; }
-
-signals:
-    void update();
-
-public slots:
-    void setPath(CommandQueue);
 
 private:
     CommandQueue m_queue;
+
+public:
+    explicit PrespammedPath(QObject *parent);
+    ~PrespammedPath() final;
+
+public:
+    NODISCARD const CommandQueue &getQueue() const { return m_queue; }
+
+signals:
+    void sig_update();
+
+public slots:
+    void slot_setPath(CommandQueue);
 };

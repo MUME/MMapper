@@ -18,15 +18,16 @@ StackedInputWidget::StackedInputWidget(QWidget *const parent)
     m_inputWidget = new InputWidget(this);
     addWidget(m_inputWidget);
     connect(m_inputWidget,
-            &InputWidget::sendUserInput,
+            &InputWidget::sig_sendUserInput,
             this,
-            &StackedInputWidget::gotMultiLineInput);
-    connect(m_inputWidget, &InputWidget::displayMessage, this, [this](QString message) {
-        emit displayMessage(message);
+            &StackedInputWidget::slot_gotMultiLineInput);
+    connect(m_inputWidget, &InputWidget::sig_displayMessage, this, [this](QString message) {
+        emit sig_displayMessage(message);
     });
-    connect(m_inputWidget, &InputWidget::showMessage, this, [this](QString message, int timeout) {
-        emit showMessage(message, timeout);
-    });
+    connect(m_inputWidget,
+            &InputWidget::sig_showMessage,
+            this,
+            [this](QString message, int timeout) { emit sig_showMessage(message, timeout); });
 
     // Password Widget
     m_passwordWidget = new QLineEdit(this);
@@ -36,7 +37,7 @@ StackedInputWidget::StackedInputWidget(QWidget *const parent)
     connect(m_passwordWidget,
             &QLineEdit::returnPressed,
             this,
-            &StackedInputWidget::gotPasswordInput);
+            &StackedInputWidget::slot_gotPasswordInput);
 
     // Grab focus
     setCurrentWidget(m_inputWidget);
@@ -72,7 +73,7 @@ bool StackedInputWidget::eventFilter(QObject *const obj, QEvent *const event)
     return QObject::eventFilter(obj, event);
 }
 
-void StackedInputWidget::toggleEchoMode(const bool localEcho)
+void StackedInputWidget::slot_toggleEchoMode(const bool localEcho)
 {
     m_localEcho = localEcho;
     m_passwordWidget->clear();
@@ -85,24 +86,24 @@ void StackedInputWidget::toggleEchoMode(const bool localEcho)
     }
 }
 
-void StackedInputWidget::gotPasswordInput()
+void StackedInputWidget::slot_gotPasswordInput()
 {
     m_passwordWidget->selectAll();
     QString input = m_passwordWidget->text() + "\n";
     m_passwordWidget->clear();
-    emit sendUserInput(input);
+    emit sig_sendUserInput(input);
 }
 
-void StackedInputWidget::gotMultiLineInput(const QString &input)
+void StackedInputWidget::slot_gotMultiLineInput(const QString &input)
 {
     QString str = QString(input).append("\n");
-    emit sendUserInput(str);
+    emit sig_sendUserInput(str);
     // REVISIT: Make color configurable
     QString displayStr = QString("\033[0;33m").append(input).append("\033[0m\n");
-    emit displayMessage(displayStr);
+    emit sig_displayMessage(displayStr);
 }
 
-void StackedInputWidget::cut()
+void StackedInputWidget::slot_cut()
 {
     if (m_localEcho) {
         m_inputWidget->cut();
@@ -111,7 +112,7 @@ void StackedInputWidget::cut()
     }
 }
 
-void StackedInputWidget::copy()
+void StackedInputWidget::slot_copy()
 {
     if (m_localEcho) {
         m_inputWidget->copy();
@@ -120,7 +121,7 @@ void StackedInputWidget::copy()
     }
 }
 
-void StackedInputWidget::paste()
+void StackedInputWidget::slot_paste()
 {
     if (m_localEcho) {
         m_inputWidget->paste();

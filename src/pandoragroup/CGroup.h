@@ -28,15 +28,18 @@ class CGroup final : public QObject, public GroupAdmin
     Q_OBJECT
 
 public:
-    explicit CGroup(QObject *parent = nullptr);
-    ~CGroup() override = default;
+    explicit CGroup(QObject *parent);
+    ~CGroup() final = default;
     DELETE_CTORS_AND_ASSIGN_OPS(CGroup);
 
 public:
-    bool isNamePresent(const QByteArray &name) const;
+    NODISCARD bool isNamePresent(const QByteArray &name) const;
 
+private:
     // Interactions with group characters should occur through CGroupSelection due to threading
-    void releaseCharacters(GroupRecipient *sender) override;
+    void virt_releaseCharacters(GroupRecipient *sender) final;
+
+public:
     void unselect(GroupSelection *s)
     {
         releaseCharacters(s);
@@ -45,18 +48,22 @@ public:
     std::unique_ptr<GroupSelection> selectAll();
     std::unique_ptr<GroupSelection> selectByName(const QByteArray &);
 
+private:
+    void log(const QString &msg) { emit sig_log(msg); }
+    void characterChanged(bool updateCanvas) { emit sig_characterChanged(updateCanvas); }
+
 public slots:
     void slot_scheduleAction(std::shared_ptr<GroupAction> action);
 
 signals:
-    void log(const QString &);
-    void characterChanged(bool updateCanvas);
+    void sig_log(const QString &);
+    void sig_characterChanged(bool updateCanvas);
 
 protected:
     void executeActions();
 
 public:
-    const SharedGroupChar &getSelf() { return self; }
+    NODISCARD const SharedGroupChar &getSelf() { return self; }
     void renameChar(const QVariantMap &map);
     void resetChars();
     void updateChar(const QVariantMap &map); // updates given char from the map
@@ -64,10 +71,10 @@ public:
     bool addChar(const QVariantMap &node);
 
 public:
-    SharedGroupChar getCharByName(const QByteArray &name) const;
+    NODISCARD SharedGroupChar getCharByName(const QByteArray &name) const;
 
 private:
-    mutable QMutex characterLock;
+    mutable QMutex characterLock{QMutex::Recursive};
     std::set<GroupRecipient *> locks;
     std::queue<std::shared_ptr<GroupAction>> actionSchedule;
     GroupVector charIndex;

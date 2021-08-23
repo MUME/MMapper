@@ -19,7 +19,7 @@ AddCharacter::AddCharacter(const QVariantMap &map)
     : map(map)
 {}
 
-void AddCharacter::exec()
+void AddCharacter::virt_exec()
 {
     assert(group);
     group->addChar(map);
@@ -41,7 +41,7 @@ RemoveCharacter::RemoveCharacter(QByteArray name)
     : name(std::move(name))
 {}
 
-void RemoveCharacter::exec()
+void RemoveCharacter::virt_exec()
 {
     assert(group);
     group->removeChar(name);
@@ -55,7 +55,7 @@ UpdateCharacter::UpdateCharacter(const QVariantMap &map)
     : map(map)
 {}
 
-void UpdateCharacter::exec()
+void UpdateCharacter::virt_exec()
 {
     assert(group);
     group->updateChar(map);
@@ -69,7 +69,7 @@ RenameCharacter::RenameCharacter(const QVariantMap &map)
     : map(map)
 {}
 
-void RenameCharacter::exec()
+void RenameCharacter::virt_exec()
 {
     assert(group);
     group->renameChar(map);
@@ -80,7 +80,7 @@ void RenameCharacter::exec()
  */
 ResetCharacters::ResetCharacters() = default;
 
-void ResetCharacters::exec()
+void ResetCharacters::virt_exec()
 {
     assert(group);
     group->resetChars();

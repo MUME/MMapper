@@ -7,16 +7,18 @@
 
 #include <cassert>
 #include <limits>
+#include <sstream>
 #include <QByteArray>
 #include <QMessageLogContext>
 #include <QObject>
 #include <QString>
 
 #include "../configuration/configuration.h"
+#include "../global/TextUtils.h"
 #include "../global/utils.h"
 #include "TextCodec.h"
 
-static QString telnetCommandName(uint8_t cmd)
+NODISCARD static QString telnetCommandName(uint8_t cmd)
 {
 #define CASE(x) \
     case TN_##x: \
@@ -44,7 +46,7 @@ static QString telnetCommandName(uint8_t cmd)
 #undef CASE
 }
 
-static QString telnetOptionName(uint8_t opt)
+NODISCARD static QString telnetOptionName(uint8_t opt)
 {
 #define CASE(x) \
     case OPT_##x: \
@@ -66,7 +68,7 @@ static QString telnetOptionName(uint8_t opt)
     return QString::asprintf("%u", opt);
 #undef CASE
 }
-static QString telnetSubnegName(uint8_t opt)
+NODISCARD static QString telnetSubnegName(uint8_t opt)
 {
 #define CASE(x) \
     case TNSB_##x: \
@@ -85,22 +87,37 @@ static QString telnetSubnegName(uint8_t opt)
 #undef CASE
 }
 
-static bool containsIAC(const QByteArray &arr)
+NODISCARD static bool containsIAC(const std::string_view &arr)
 {
-    for (const auto &c : arr) {
-        if (static_cast<uint8_t>(c) == TN_IAC)
-            return true;
-    }
-    return false;
+    return arr.find(char(TN_IAC)) != std::string_view::npos;
 }
 
-struct TelnetFormatter final : public AppendBuffer
+// Emits output via AbstractTelnet::sendRawData() as RAII callback in dtor.
+struct NODISCARD TelnetFormatter final
 {
-    void addRaw(const uint8_t byte)
+private:
+    AbstractTelnet &m_telnet;
+    std::ostringstream m_os;
+
+public:
+    explicit TelnetFormatter(AbstractTelnet &telnet)
+        : m_telnet{telnet}
+    {}
+    ~TelnetFormatter() noexcept(false)
     {
-        auto &s = static_cast<AppendBuffer &>(*this);
-        s += byte;
+        try {
+            m_telnet.sendRawData(m_os.str());
+        } catch (const std::exception &ex) {
+            qWarning() << "Exception while sending raw data:" << ex.what();
+        } catch (...) {
+            qWarning() << "Unknown exception while sending raw data.";
+        }
     }
+
+    DELETE_CTORS_AND_ASSIGN_OPS(TelnetFormatter);
+
+public:
+    void addRaw(const uint8_t byte) { m_os << static_cast<char>(byte); }
 
     void addEscaped(const uint8_t byte)
     {
@@ -149,19 +166,39 @@ struct TelnetFormatter final : public AppendBuffer
 };
 
 AbstractTelnet::AbstractTelnet(TextCodecStrategyEnum strategy,
-                               const bool debug,
                                QObject *const parent,
                                const QByteArray &defaultTermType)
     : QObject(parent)
     , m_defaultTermType(defaultTermType)
     , textCodec{strategy}
-    , debug{debug}
 {
+#ifndef MMAPPER_NO_ZLIB
+    /* allocate inflate state */
+    stream.zalloc = Z_NULL;
+    stream.zfree = Z_NULL;
+    stream.opaque = Z_NULL;
+    stream.avail_in = 0;
+    stream.next_in = Z_NULL;
+    int ret = inflateInit(&stream);
+    if (ret != Z_OK) {
+        throw std::runtime_error("Unable to initialize zlib");
+    }
+#endif
+
     reset();
+}
+
+AbstractTelnet::~AbstractTelnet()
+{
+#ifndef MMAPPER_NO_ZLIB
+    inflateEnd(&stream);
+#endif
 }
 
 void AbstractTelnet::reset()
 {
+    if (debug)
+        qDebug() << "Reset telnet";
     myOptionState.fill(false);
     hisOptionState.fill(false);
     announcedState.fill(false);
@@ -209,42 +246,68 @@ void AbstractTelnet::receiveGmcpModule(const GmcpModule &module, const bool enab
     }
 }
 
-void AbstractTelnet::submitOverTelnet(const QByteArray &data, const bool goAhead)
+static void doubleIacs(std::ostream &os, const std::string_view &input)
 {
-    AppendBuffer outdata = data; /* copy */
-
     // IAC byte must be doubled
-    if (containsIAC(outdata)) {
-        TelnetFormatter d;
-        d.addEscapedBytes(outdata);
-        outdata = d;
+    static constexpr const auto IAC = static_cast<char>(TN_IAC);
+    foreachChar(input, IAC, [&os](std::string_view sv) {
+        if (sv.empty())
+            return;
+
+        if (sv.front() != IAC) {
+            os << sv;
+            return;
+        }
+
+        for (auto c : sv) {
+            assert(c == IAC);
+            os << IAC << c;
+        }
+    });
+}
+
+void AbstractTelnet::submitOverTelnet(const std::string_view &data, const bool goAhead)
+{
+    auto getGoAhead = [this, goAhead]() -> std::optional<std::array<char, 2>> {
+        if (goAhead && (!myOptionState[OPT_SUPPRESS_GA] || myOptionState[OPT_EOR])) {
+            return std::array<char, 2>{char(TN_IAC), char(myOptionState[OPT_EOR] ? TN_EOR : TN_GA)};
+        }
+
+        return std::nullopt;
+    };
+
+    if (!containsIAC(data)) {
+        sendRawData(data);
+        if (auto ga = getGoAhead()) {
+            sendRawData(std::string_view{ga->data(), ga->size()});
+        }
+        return;
     }
 
+    std::ostringstream os;
+    doubleIacs(os, data);
+
     // Add IAC GA unless they are suppressed
-    if (goAhead && (!myOptionState[OPT_SUPPRESS_GA] || myOptionState[OPT_EOR])) {
-        outdata += TN_IAC;
-        if (myOptionState[OPT_EOR])
-            outdata += TN_EOR;
-        else
-            outdata += TN_GA;
+    if (auto ga = getGoAhead()) {
+        os.write(ga->data(), static_cast<std::streamsize>(ga->size()));
     }
 
     // data ready, send it
-    sendRawData(outdata);
+    sendRawData(os.str());
 }
 
 void AbstractTelnet::sendWindowSizeChanged(const int x, const int y)
 {
     if (debug)
         qDebug() << "Sending NAWS" << x << y;
+
     // RFC 1073 specifies IAC SB NAWS WIDTH[1] WIDTH[0] HEIGHT[1] HEIGHT[0] IAC SE
-    TelnetFormatter s;
+    TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_NAWS);
     // RFC855 specifies that option parameters with a byte value of 255 must be doubled
     s.addClampedTwoByteEscaped(x);
     s.addClampedTwoByteEscaped(y);
     s.addSubnegEnd();
-    sendRawData(s);
 }
 
 void AbstractTelnet::sendTelnetOption(unsigned char type, unsigned char option)
@@ -252,11 +315,11 @@ void AbstractTelnet::sendTelnetOption(unsigned char type, unsigned char option)
     if (debug)
         qDebug() << "* Sending Telnet Command: " << telnetCommandName(type)
                  << telnetOptionName(option);
-    AppendBuffer s;
-    s += TN_IAC;
-    s += type;
-    s += option;
-    sendRawData(s);
+
+    TelnetFormatter s{*this};
+    s.addRaw(TN_IAC);
+    s.addRaw(type);
+    s.addRaw(option);
 }
 
 void AbstractTelnet::requestTelnetOption(unsigned char type, unsigned char option)
@@ -285,8 +348,10 @@ void AbstractTelnet::sendCharsetRequest(const QStringList &myCharacterSets)
 {
     if (debug)
         qDebug() << "Requesting charsets" << myCharacterSets;
-    static const auto delimeter = ";";
-    TelnetFormatter s;
+
+    static constexpr const auto delimeter = ";";
+
+    TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_CHARSET);
     s.addRaw(TNSB_REQUEST);
     for (QString characterSet : myCharacterSets) {
@@ -294,7 +359,6 @@ void AbstractTelnet::sendCharsetRequest(const QStringList &myCharacterSets)
         s.addEscapedBytes(characterSet.toLocal8Bit());
     }
     s.addSubnegEnd();
-    sendRawData(s);
 }
 
 bool AbstractTelnet::isGmcpModuleEnabled(const GmcpModuleTypeEnum &name)
@@ -310,84 +374,82 @@ void AbstractTelnet::sendGmcpMessage(const GmcpMessage &msg)
     auto payload = msg.toRawBytes();
     if (debug)
         qDebug() << "Sending GMCP:" << payload;
-    TelnetFormatter s;
+
+    TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_GMCP);
     s.addEscapedBytes(payload);
     s.addSubnegEnd();
-    sendRawData(s);
 }
 
 void AbstractTelnet::sendLineModeEdit()
 {
     if (debug)
         qDebug() << "Sending Linemode EDIT";
-    TelnetFormatter s;
+
+    TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_LINEMODE);
     s.addRaw(TNSB_MODE);
     s.addRaw(TNSB_EDIT);
     s.addSubnegEnd();
-    sendRawData(s);
 }
 
 void AbstractTelnet::sendTerminalType(const QByteArray &terminalType)
 {
     if (debug)
         qDebug() << "Sending Terminal Type:" << terminalType;
-    TelnetFormatter s;
+
+    TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_TERMINAL_TYPE);
     // RFC855 specifies that option parameters with a byte value of 255 must be doubled
     s.addEscaped(TNSB_IS); /* NOTE: "IS" will never actually be escaped */
     s.addEscapedBytes(terminalType);
     s.addSubnegEnd();
-    sendRawData(s);
 }
 
 void AbstractTelnet::sendCharsetRejected()
 {
-    TelnetFormatter s;
+    TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_CHARSET);
     s.addRaw(TNSB_REJECTED);
     s.addSubnegEnd();
-    sendRawData(s);
 }
 
 void AbstractTelnet::sendCharsetAccepted(const QByteArray &characterSet)
 {
     if (debug)
         qDebug() << "Accepted Charset" << characterSet;
-    TelnetFormatter s;
+
+    TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_CHARSET);
     s.addRaw(TNSB_ACCEPTED);
     s.addEscapedBytes(characterSet);
     s.addSubnegEnd();
-    sendRawData(s);
 }
 
 void AbstractTelnet::sendOptionStatus()
 {
-    AppendBuffer s;
-    s += TN_IAC;
-    s += TN_SB;
-    s += OPT_STATUS;
-    s += TNSB_IS;
+    TelnetFormatter s{*this};
+    s.addRaw(TN_IAC);
+    s.addRaw(TN_SB);
+    s.addRaw(OPT_STATUS);
+    s.addRaw(TNSB_IS);
     for (size_t i = 0; i < NUM_OPTS; ++i) {
         if (myOptionState[i]) {
-            s += TN_WILL;
-            s += static_cast<unsigned char>(i);
+            s.addRaw(TN_WILL);
+            s.addRaw(static_cast<unsigned char>(i));
         }
         if (hisOptionState[i]) {
-            s += TN_DO;
-            s += static_cast<unsigned char>(i);
+            s.addRaw(TN_DO);
+            s.addRaw(static_cast<unsigned char>(i));
         }
     }
-    s += TN_IAC;
-    s += TN_SE;
-    sendRawData(s);
+    s.addRaw(TN_IAC);
+    s.addRaw(TN_SE);
 }
 
 void AbstractTelnet::sendAreYouThere()
 {
-    sendRawData("I'm here! Please be more patient!\r\n");
+    sendRawData("I'm here! Please be more patient!\n");
     // well, this should never be executed, as the response would probably
     // be treated as a command. But that's server's problem, not ours...
     // If the server wasn't capable of handling this, it wouldn't have
@@ -397,11 +459,10 @@ void AbstractTelnet::sendAreYouThere()
 
 void AbstractTelnet::sendTerminalTypeRequest()
 {
-    TelnetFormatter s;
+    TelnetFormatter s{*this};
     s.addSubnegBegin(OPT_TERMINAL_TYPE);
     s.addEscaped(TNSB_SEND);
     s.addSubnegEnd();
-    sendRawData(s);
 }
 
 void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
@@ -739,8 +800,14 @@ void AbstractTelnet::onReadInternal(const QByteArray &data)
         pos++;
 
         if (recvdCompress) {
-            initCompress();
+            inflateTelnet = true;
             recvdCompress = false;
+#ifndef MMAPPER_NO_ZLIB
+            int ret = inflateReset(&stream);
+            if (ret != Z_OK)
+                throw std::runtime_error("Could not reset zlib");
+#endif
+
             // Start inflating at the next position
             continue;
         }
@@ -923,17 +990,19 @@ int AbstractTelnet::onReadInternalInflate(const char *data,
         stream.next_out = reinterpret_cast<Bytef *>(out);
         int ret = inflate(&stream, Z_SYNC_FLUSH);
         assert(ret != Z_STREAM_ERROR); /* state not clobbered */
+        if (ret == Z_DATA_ERROR)
+            ret = inflateSync(&stream);
         switch (ret) {
         case Z_NEED_DICT:
         case Z_DATA_ERROR:
         case Z_MEM_ERROR:
+            throw std::runtime_error(stream.msg);
         case Z_STREAM_END:
             /* clean up and return */
-            inflateEnd(&stream);
-            resetCompress();
+            inflateTelnet = false;
             if (debug)
                 qDebug() << "Ending compression";
-            throw std::runtime_error(stream.msg);
+            break;
         default:
             break;
         }
@@ -968,24 +1037,4 @@ void AbstractTelnet::resetCompress()
     inflateTelnet = false;
     recvdCompress = false;
     hisOptionState[OPT_COMPRESS2] = false;
-}
-
-void AbstractTelnet::initCompress()
-{
-#ifdef MMAPPER_NO_ZLIB
-    abort();
-#else
-    inflateTelnet = true;
-
-    /* allocate inflate state */
-    stream.zalloc = Z_NULL;
-    stream.zfree = Z_NULL;
-    stream.opaque = Z_NULL;
-    stream.avail_in = 0;
-    stream.next_in = Z_NULL;
-    int ret = inflateInit(&stream);
-    if (ret != Z_OK) {
-        throw std::runtime_error("Unable to initialize zlib");
-    }
-#endif
 }

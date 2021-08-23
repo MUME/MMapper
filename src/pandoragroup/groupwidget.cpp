@@ -30,7 +30,7 @@ static_assert(GROUP_COLUMN_COUNT == static_cast<int>(GroupModel::ColumnTypeEnum:
 
 GroupStateData::GroupStateData(const QColor &color,
                                const CharacterPositionEnum position,
-                               const CharacterAffects affects)
+                               const CharacterAffectFlags affects)
     : color(std::move(color))
     , position(position)
     , affects(affects)
@@ -38,7 +38,7 @@ GroupStateData::GroupStateData(const QColor &color,
     if (position != CharacterPositionEnum::UNDEFINED)
         count++;
     // Increment imageCount for each active affect
-    for (const auto affect : ALL_CHARACTER_AFFECTS) {
+    for (const CharacterAffectEnum affect : ALL_CHARACTER_AFFECTS) {
         if (affects.contains(affect))
             count++;
     }
@@ -74,7 +74,7 @@ void GroupStateData::paint(QPainter *const painter, const QRect &rect)
 
     if (position != CharacterPositionEnum::UNDEFINED)
         drawOne(getIconFilename(position));
-    for (const auto affect : ALL_CHARACTER_AFFECTS) {
+    for (const CharacterAffectEnum affect : ALL_CHARACTER_AFFECTS) {
         if (affects.contains(affect)) {
             drawOne(getIconFilename(affect));
         }
@@ -140,7 +140,7 @@ int GroupModel::columnCount(const QModelIndex & /* parent */) const
     return GROUP_COLUMN_COUNT;
 }
 
-static QString calculatePercentage(const int numerator, const int denomenator)
+NODISCARD static QString calculatePercentage(const int numerator, const int denomenator)
 {
     if (denomenator == 0)
         return "";
@@ -150,14 +150,14 @@ static QString calculatePercentage(const int numerator, const int denomenator)
     return QString("%1").arg(percentage).append("%");
 }
 
-static QString calculateRatio(const int numerator, const int denomenator)
+NODISCARD static QString calculateRatio(const int numerator, const int denomenator)
 {
     if (numerator == 0 && denomenator == 0)
         return "";
     return QString("%1/%2").arg(numerator).arg(denomenator);
 }
 
-static QString getPrettyName(const CharacterPositionEnum position)
+NODISCARD static QString getPrettyName(const CharacterPositionEnum position)
 {
 #define X_CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
     do { \
@@ -170,7 +170,7 @@ static QString getPrettyName(const CharacterPositionEnum position)
     return QString::asprintf("(CharacterPositionEnum)%d", static_cast<int>(position));
 #undef X_CASE
 }
-static QString getPrettyName(const CharacterAffectEnum affect)
+NODISCARD static QString getPrettyName(const CharacterAffectEnum affect)
 {
 #define X_CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
     do { \
@@ -210,8 +210,8 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &character,
             return QVariant::fromValue(
                 GroupStateData(character->getColor(), character->position, character->affects));
         case ColumnTypeEnum::ROOM_NAME:
-            if (character->roomId != DEFAULT_ROOMID && character->roomId != INVALID_ROOMID
-                && !m_map->isEmpty() && m_mapLoaded && character->roomId <= m_map->getMaxId()) {
+            if (character->roomId != INVALID_ROOMID && !m_map->isEmpty() && m_mapLoaded
+                && character->roomId <= m_map->getMaxId()) {
                 auto roomSelection = RoomSelection(*m_map);
                 if (const Room *const r = roomSelection.getRoom(character->roomId)) {
                     return r->getName().toQString();
@@ -248,7 +248,7 @@ QVariant GroupModel::dataForCharacter(const SharedGroupChar &character,
             return calculateRatio(character->moves, character->maxmoves);
         case ColumnTypeEnum::STATE: {
             QString prettyName = getPrettyName(character->position);
-            for (const auto affect : ALL_CHARACTER_AFFECTS) {
+            for (const CharacterAffectEnum affect : ALL_CHARACTER_AFFECTS) {
                 if (character->affects.contains(affect)) {
                     prettyName.append(", ").append(getPrettyName(affect));
                 }
@@ -356,7 +356,7 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
         try {
             m_group->getGroupManagerApi().kickCharacter(selectedCharacter);
         } catch (const std::exception &ex) {
-            messageBox("Group Manager", QString::fromLatin1(ex.what()));
+            slot_messageBox("Group Manager", QString::fromLatin1(ex.what()));
         }
     });
 
@@ -374,8 +374,8 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
                 selectedCharacter = character->getName();
 
                 // Center map on the clicked character
-                if (character->roomId != DEFAULT_ROOMID && character->roomId != INVALID_ROOMID
-                    && !m_map->isEmpty() && character->roomId <= m_map->getMaxId()) {
+                if (character->roomId != INVALID_ROOMID && !m_map->isEmpty()
+                    && character->roomId <= m_map->getMaxId()) {
                     auto roomSelection = RoomSelection(*m_map);
                     if (const Room *const r = roomSelection.getRoom(character->roomId)) {
                         const Coordinate &c = r->getPosition();
@@ -400,14 +400,14 @@ GroupWidget::GroupWidget(Mmapper2Group *const group, MapData *const md, QWidget 
     });
 
     connect(m_group,
-            &Mmapper2Group::updateWidget,
+            &Mmapper2Group::sig_updateWidget,
             this,
-            &GroupWidget::updateLabels,
+            &GroupWidget::slot_updateLabels,
             Qt::QueuedConnection);
     connect(m_group,
-            &Mmapper2Group::messageBox,
+            &Mmapper2Group::sig_messageBox,
             this,
-            &GroupWidget::messageBox,
+            &GroupWidget::slot_messageBox,
             Qt::QueuedConnection);
 
     readSettings();
@@ -420,7 +420,7 @@ GroupWidget::~GroupWidget()
     writeSettings();
 }
 
-void GroupWidget::updateLabels()
+void GroupWidget::slot_updateLabels()
 {
     m_model.resetModel();
 
@@ -439,7 +439,7 @@ void GroupWidget::updateLabels()
     m_table->setColumnHidden(static_cast<int>(GroupModel::ColumnTypeEnum::MANA_PERCENT), hide_mana);
 }
 
-void GroupWidget::messageBox(const QString &title, const QString &message)
+void GroupWidget::slot_messageBox(const QString &title, const QString &message)
 {
     QMessageBox::critical(this, title, message);
 }

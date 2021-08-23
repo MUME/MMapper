@@ -25,7 +25,7 @@ void EndsWithAction::virt_match(const StringView &input) const
         callback(input);
 }
 
-static std::regex createRegex(const std::string &pattern)
+NODISCARD static std::regex createRegex(const std::string &pattern)
 {
     return std::regex(pattern, std::regex::nosubs | std::regex::optimize);
 }

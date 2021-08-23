@@ -6,7 +6,7 @@
 
 #include <vector>
 
-class ChangeMonitor final : private ::Signal<>
+class NODISCARD ChangeMonitor final : private ::Signal<>
 {
 public:
     using Base = ::Signal<>;

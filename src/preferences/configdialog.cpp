@@ -54,21 +54,30 @@ ConfigDialog::ConfigDialog(Mmapper2Group *gm, QWidget *parent)
     ui->pagesScrollArea->setWidget(pagesWidget);
 
     ui->contentsWidget->setCurrentItem(ui->contentsWidget->item(0));
-    connect(ui->contentsWidget, &QListWidget::currentItemChanged, this, &ConfigDialog::changePage);
+    connect(ui->contentsWidget,
+            &QListWidget::currentItemChanged,
+            this,
+            &ConfigDialog::slot_changePage);
     connect(ui->closeButton, &QAbstractButton::clicked, this, &QWidget::close);
 
     connect(generalPage, &GeneralPage::sig_factoryReset, this, [this]() {
         qDebug() << "Reloading config due to factory reset";
         emit sig_loadConfig();
     });
-    connect(this, &ConfigDialog::sig_loadConfig, generalPage, &GeneralPage::loadConfig);
-    connect(this, &ConfigDialog::sig_loadConfig, graphicsPage, &GraphicsPage::loadConfig);
-    connect(this, &ConfigDialog::sig_loadConfig, parserPage, &ParserPage::loadConfig);
-    connect(this, &ConfigDialog::sig_loadConfig, clientPage, &ClientPage::loadConfig);
-    connect(this, &ConfigDialog::sig_loadConfig, groupManagerPage, &GroupManagerPage::loadConfig);
-    connect(this, &ConfigDialog::sig_loadConfig, autoLogPage, &AutoLogPage::loadConfig);
-    connect(this, &ConfigDialog::sig_loadConfig, mumeProtocolPage, &MumeProtocolPage::loadConfig);
-    connect(this, &ConfigDialog::sig_loadConfig, pathmachinePage, &PathmachinePage::loadConfig);
+    connect(this, &ConfigDialog::sig_loadConfig, generalPage, &GeneralPage::slot_loadConfig);
+    connect(this, &ConfigDialog::sig_loadConfig, graphicsPage, &GraphicsPage::slot_loadConfig);
+    connect(this, &ConfigDialog::sig_loadConfig, parserPage, &ParserPage::slot_loadConfig);
+    connect(this, &ConfigDialog::sig_loadConfig, clientPage, &ClientPage::slot_loadConfig);
+    connect(this,
+            &ConfigDialog::sig_loadConfig,
+            groupManagerPage,
+            &GroupManagerPage::slot_loadConfig);
+    connect(this, &ConfigDialog::sig_loadConfig, autoLogPage, &AutoLogPage::slot_loadConfig);
+    connect(this,
+            &ConfigDialog::sig_loadConfig,
+            mumeProtocolPage,
+            &MumeProtocolPage::slot_loadConfig);
+    connect(this, &ConfigDialog::sig_loadConfig, pathmachinePage, &PathmachinePage::slot_loadConfig);
 
     connect(graphicsPage,
             &GraphicsPage::sig_graphicsSettingsChanged,
@@ -145,7 +154,7 @@ void ConfigDialog::createIcons()
     pathButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 }
 
-void ConfigDialog::changePage(QListWidgetItem *current, QListWidgetItem *previous)
+void ConfigDialog::slot_changePage(QListWidgetItem *current, QListWidgetItem *previous)
 {
     if (current == nullptr) {
         current = previous;

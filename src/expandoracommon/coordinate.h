@@ -10,10 +10,13 @@
 
 #include "../global/utils.h"
 
-struct Coordinate2i final
+struct NODISCARD Coordinate2i final
 {
+public:
     int x = 0;
     int y = 0;
+
+public:
     Coordinate2i() = default;
     explicit Coordinate2i(const int x, const int y)
         : x{x}
@@ -24,11 +27,11 @@ struct Coordinate2i final
         , y{rhs.y}
     {}
 
-    Coordinate2i operator+(const Coordinate2i &rhs) const
+    NODISCARD Coordinate2i operator+(const Coordinate2i &rhs) const
     {
         return Coordinate2i{x + rhs.x, y + rhs.y};
     }
-    Coordinate2i operator-(const Coordinate2i &rhs) const
+    NODISCARD Coordinate2i operator-(const Coordinate2i &rhs) const
     {
         return Coordinate2i{x - rhs.x, y - rhs.y};
     }
@@ -45,46 +48,41 @@ struct Coordinate2i final
         return *this;
     }
 
-    glm::ivec2 to_ivec2() const { return glm::ivec2{x, y}; }
+    NODISCARD glm::ivec2 to_ivec2() const { return glm::ivec2{x, y}; }
 };
 
-struct Coordinate2f final
+struct NODISCARD Coordinate2f final
 {
+public:
     float x = 0.f;
     float y = 0.f;
+
+public:
     Coordinate2f() = default;
     explicit Coordinate2f(const float x, const float y)
         : x{x}
         , y{y}
     {}
 
-    Coordinate2i truncate() const;
+    NODISCARD Coordinate2i truncate() const;
 
-    Coordinate2f operator-(const Coordinate2f &rhs) const
+    NODISCARD Coordinate2f operator-(const Coordinate2f &rhs) const
     {
         return Coordinate2f{this->x - rhs.x, this->y - rhs.y};
     }
-    Coordinate2f operator*(const float f) const { return Coordinate2f{f * x, f * y}; }
-    Coordinate2f operator/(float f) const;
-    glm::vec2 to_vec2() const { return glm::vec2{x, y}; }
+    NODISCARD Coordinate2f operator*(const float f) const { return Coordinate2f{f * x, f * y}; }
+    NODISCARD Coordinate2f operator/(float f) const;
+    NODISCARD glm::vec2 to_vec2() const { return glm::vec2{x, y}; }
 };
 
 // Basis vectors: ENU (x=east, y=north, z=up).
 // This is the standard RIGHT-HANDED coordinate system.
-class Coordinate final
+class NODISCARD Coordinate final
 {
 public:
-    bool operator==(const Coordinate &other) const;
-    bool operator!=(const Coordinate &other) const;
-    void operator+=(const Coordinate &other);
-    void operator-=(const Coordinate &other);
-    Coordinate operator+(const Coordinate &other) const;
-    Coordinate operator-(const Coordinate &other) const;
-    Coordinate operator*(int scalar) const;
-    Coordinate operator/(int scalar) const;
-
-    int distance(const Coordinate &other) const;
-    void clear();
+    int x = 0;
+    int y = 0;
+    int z = 0;
 
 public:
     Coordinate() = default;
@@ -100,23 +98,31 @@ public:
     {}
 
 public:
-    bool isNull() const { return (x == 0 && y == 0 && z == 0); }
+    NODISCARD bool isNull() const { return (x == 0 && y == 0 && z == 0); }
 
 public:
-    glm::ivec2 to_ivec2() const { return glm::ivec2{x, y}; }
-    glm::ivec3 to_ivec3() const { return glm::ivec3{x, y, z}; }
+    NODISCARD glm::ivec2 to_ivec2() const { return glm::ivec2{x, y}; }
+    NODISCARD glm::ivec3 to_ivec3() const { return glm::ivec3{x, y, z}; }
 
 public:
-    glm::vec2 to_vec2() const { return glm::vec2{x, y}; }
-    glm::vec3 to_vec3() const { return glm::vec3{x, y, z}; }
+    NODISCARD glm::vec2 to_vec2() const { return glm::vec2{x, y}; }
+    NODISCARD glm::vec3 to_vec3() const { return glm::vec3{x, y, z}; }
 
 public:
-    int x = 0;
-    int y = 0;
-    int z = 0;
+    NODISCARD bool operator==(const Coordinate &other) const;
+    NODISCARD bool operator!=(const Coordinate &other) const;
+    void operator+=(const Coordinate &other);
+    void operator-=(const Coordinate &other);
+    NODISCARD Coordinate operator+(const Coordinate &other) const;
+    NODISCARD Coordinate operator-(const Coordinate &other) const;
+    NODISCARD Coordinate operator*(int scalar) const;
+    NODISCARD Coordinate operator/(int scalar) const;
+
+    NODISCARD int distance(const Coordinate &other) const;
+    void clear();
 };
 
-struct Bounds final
+struct NODISCARD Bounds final
 {
     Coordinate min;
     Coordinate max;
@@ -134,7 +140,7 @@ private:
     }
 
 public:
-    bool contains(const Coordinate &coord) const
+    NODISCARD bool contains(const Coordinate &coord) const
     {
         return isBounded(coord.x, min.x, max.x)     //
                && isBounded(coord.y, min.y, max.y)  //
@@ -142,7 +148,7 @@ public:
     }
 };
 
-struct OptBounds final
+struct NODISCARD OptBounds final
 {
 private:
     std::optional<Bounds> m_bounds;
@@ -158,7 +164,7 @@ public:
     }
 
 public:
-    static OptBounds fromCenterRadius(const Coordinate &center, const Coordinate &radius)
+    NODISCARD static OptBounds fromCenterRadius(const Coordinate &center, const Coordinate &radius)
     {
         assert(radius.x >= 0);
         assert(radius.y >= 0);
@@ -167,12 +173,12 @@ public:
     }
 
 public:
-    bool isRestricted() const { return m_bounds.has_value(); }
-    const Bounds &getBounds() const { return m_bounds.value(); }
+    NODISCARD bool isRestricted() const { return m_bounds.has_value(); }
+    NODISCARD const Bounds &getBounds() const { return m_bounds.value(); }
     void reset() { m_bounds.reset(); }
 
 public:
-    bool contains(const Coordinate &coord) const
+    NODISCARD bool contains(const Coordinate &coord) const
     {
         return !isRestricted() || getBounds().contains(coord);
     }

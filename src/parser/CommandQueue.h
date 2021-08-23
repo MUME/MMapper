@@ -7,7 +7,7 @@
 
 #include "CommandId.h"
 
-class CommandQueue : private QQueue<CommandEnum>
+class NODISCARD CommandQueue : private QQueue<CommandEnum>
 {
 private:
     using base = QQueue<CommandEnum>;
@@ -16,7 +16,7 @@ public:
     using QQueue<CommandEnum>::QQueue;
 
 public:
-    QByteArray toByteArray() const;
+    NODISCARD QByteArray toByteArray() const;
     CommandQueue &operator=(const QByteArray &dirs);
 
 public:

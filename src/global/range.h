@@ -5,24 +5,26 @@
 
 #include <iterator> // IWYU pragma: keep (std::rbegin)
 
+#include "macros.h"
+
 template<typename It>
-struct range
+struct NODISCARD range
 {
     It begin_;
     It end_;
 
-    It begin() const { return begin_; }
-    It end() const { return end_; }
+    NODISCARD It begin() const { return begin_; }
+    NODISCARD It end() const { return end_; }
 };
 
 template<typename It>
-range<It> make_range(It begin, It end)
+NODISCARD range<It> make_range(It begin, It end)
 {
     return range<It>{begin, end};
 }
 
 template<typename T>
-auto make_reverse_range(T &&container)
+NODISCARD auto make_reverse_range(T &&container)
 {
     return make_range(std::rbegin(container), std::rend(container));
 }

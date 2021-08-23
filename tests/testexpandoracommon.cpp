@@ -52,22 +52,22 @@ void TestExpandoraCommon::roomCompareTest_data()
     QTest::addColumn<ComparisonResultEnum>("comparison");
 
     static TestRoomAdmin admin;
-    const RoomName name = RoomName("Riverside");
-    const RoomStaticDesc staticDesc = RoomStaticDesc(
+    const RoomName name{"Riverside"};
+    const RoomDesc desc{
         "The high plateau to the north shelters this place from the cold northern winds"
         " during the winter. It would be difficult to climb up there from here, as the"
         " plateau above extends over this area, making a sheltered hollow underneath it"
         " with a depression in the dirt wall at the back. To the east a deep river flows"
-        " quickly, while a shallower section lies to the south.");
-    const RoomDynamicDesc dynDesc = RoomDynamicDesc("The corpse of a burly orc is lying here.");
+        " quickly, while a shallower section lies to the south."};
+    const RoomContents contents{"The corpse of a burly orc is lying here."};
     static constexpr const auto terrain = RoomTerrainEnum::FIELD;
     static constexpr const auto lit = RoomLightEnum::LIT;
 
-    const auto create_perfect_room = [&name, &staticDesc, &dynDesc]() -> SharedRoom {
+    const auto create_perfect_room = [&name, &desc, &contents]() -> SharedRoom {
         auto room = Room::createPermanentRoom(admin);
         room->setName(name);
-        room->setStaticDescription(staticDesc);
-        room->setDynamicDescription(dynDesc);
+        room->setDescription(desc);
+        room->setContents(contents);
         room->setTerrainType(terrain);
         room->setLightType(lit);
         room->setUpToDate();
@@ -87,7 +87,7 @@ void TestExpandoraCommon::roomCompareTest_data()
     const auto get_exit_flags = [](const SharedRoom &room) -> ExitsFlagsType {
         ExitsFlagsType flags;
         const ExitsList &list = room->getExitsList();
-        for (auto dir : ALL_EXITS_NESWUD)
+        for (const ExitDirEnum dir : ALL_EXITS_NESWUD)
             flags.set(dir, list[dir].getExitFlags());
         flags.setValid();
         return flags;
@@ -113,8 +113,8 @@ void TestExpandoraCommon::roomCompareTest_data()
         SharedRoom room = create_perfect_room();
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::UNKNOWN,
                                                          RoomName(""),
-                                                         RoomDynamicDesc(""),
-                                                         RoomStaticDesc(""),
+                                                         RoomDesc(""),
+                                                         RoomContents(""),
                                                          ExitsFlagsType{},
                                                          PromptFlagsType::fromRoomTerrainType(
                                                              room->getTerrainType()),
@@ -127,8 +127,8 @@ void TestExpandoraCommon::roomCompareTest_data()
         SharedRoom room = create_perfect_room();
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::UNKNOWN,
                                                          name,
-                                                         dynDesc,
-                                                         RoomStaticDesc(""),
+                                                         RoomDesc(""),
+                                                         contents,
                                                          ExitsFlagsType{},
                                                          PromptFlagsType::fromRoomTerrainType(
                                                              room->getTerrainType()),
@@ -139,14 +139,14 @@ void TestExpandoraCommon::roomCompareTest_data()
     // Whitespace change to static desc
     {
         SharedRoom room = create_perfect_room();
-        SharedParseEvent event
-            = ParseEvent::createEvent(CommandEnum::UNKNOWN,
-                                      name,
-                                      dynDesc,
-                                      RoomStaticDesc(staticDesc.toQString().simplified()),
-                                      ExitsFlagsType{},
-                                      PromptFlagsType::fromRoomTerrainType(room->getTerrainType()),
-                                      ConnectedRoomFlagsType{});
+        SharedParseEvent event = ParseEvent::createEvent(CommandEnum::UNKNOWN,
+                                                         name,
+                                                         RoomDesc(desc.toQString().simplified()),
+                                                         contents,
+                                                         ExitsFlagsType{},
+                                                         PromptFlagsType::fromRoomTerrainType(
+                                                             room->getTerrainType()),
+                                                         ConnectedRoomFlagsType{});
         QTest::newRow("whitespace") << room << event << ComparisonResultEnum::EQUAL;
     }
 
@@ -156,9 +156,8 @@ void TestExpandoraCommon::roomCompareTest_data()
         SharedParseEvent event
             = ParseEvent::createEvent(CommandEnum::UNKNOWN,
                                       name,
-                                      dynDesc,
-                                      RoomStaticDesc(
-                                          staticDesc.toQString().replace("difficult", "easy")),
+                                      RoomDesc(desc.toQString().replace("difficult", "easy")),
+                                      contents,
                                       ExitsFlagsType{},
                                       PromptFlagsType::fromRoomTerrainType(room->getTerrainType()),
                                       ConnectedRoomFlagsType{});
@@ -170,8 +169,8 @@ void TestExpandoraCommon::roomCompareTest_data()
         SharedRoom room = create_perfect_room();
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::UNKNOWN,
                                                          RoomName("Riverbank"),
-                                                         dynDesc,
-                                                         staticDesc,
+                                                         desc,
+                                                         contents,
                                                          ExitsFlagsType{},
                                                          PromptFlagsType::fromRoomTerrainType(
                                                              room->getTerrainType()),
@@ -184,8 +183,8 @@ void TestExpandoraCommon::roomCompareTest_data()
         SharedRoom room = create_perfect_room();
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::UNKNOWN,
                                                          name,
-                                                         dynDesc,
-                                                         staticDesc,
+                                                         desc,
+                                                         contents,
                                                          ExitsFlagsType{},
                                                          PromptFlagsType::fromRoomTerrainType(
                                                              RoomTerrainEnum::UNDEFINED),
@@ -200,8 +199,8 @@ void TestExpandoraCommon::roomCompareTest_data()
         exitFlags.set(ExitDirEnum::WEST, ExitFlags{}); // Remove door and exit flag to the west
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
                                                          name,
-                                                         dynDesc,
-                                                         staticDesc,
+                                                         desc,
+                                                         contents,
                                                          exitFlags,
                                                          PromptFlagsType::fromRoomTerrainType(
                                                              room->getTerrainType()),
@@ -217,8 +216,8 @@ void TestExpandoraCommon::roomCompareTest_data()
                       ExitFlags{ExitFlagEnum::DOOR | ExitFlagEnum::EXIT}); // Remove climb down
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
                                                          name,
-                                                         dynDesc,
-                                                         staticDesc,
+                                                         desc,
+                                                         contents,
                                                          exitFlags,
                                                          PromptFlagsType::fromRoomTerrainType(
                                                              room->getTerrainType()),
@@ -240,8 +239,8 @@ void TestExpandoraCommon::roomCompareTest_data()
         connectedFlags.setValid();
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
                                                          name,
-                                                         dynDesc,
-                                                         staticDesc,
+                                                         desc,
+                                                         contents,
                                                          exitFlags,
                                                          PromptFlagsType::fromRoomTerrainType(
                                                              room->getTerrainType()),
@@ -259,8 +258,8 @@ void TestExpandoraCommon::roomCompareTest_data()
         QVERIFY(!room->getDoorFlags(ExitDirEnum::SOUTH).isHidden());
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
                                                          name,
-                                                         dynDesc,
-                                                         staticDesc,
+                                                         desc,
+                                                         contents,
                                                          exitFlags,
                                                          PromptFlagsType::fromRoomTerrainType(
                                                              room->getTerrainType()),
@@ -278,8 +277,8 @@ void TestExpandoraCommon::roomCompareTest_data()
         QVERIFY(!room->getDoorFlags(ExitDirEnum::DOWN).isHidden());
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
                                                          name,
-                                                         dynDesc,
-                                                         staticDesc,
+                                                         desc,
+                                                         contents,
                                                          exitFlags,
                                                          PromptFlagsType::fromRoomTerrainType(
                                                              room->getTerrainType()),
@@ -297,8 +296,8 @@ void TestExpandoraCommon::roomCompareTest_data()
         QVERIFY(room->getExitFlags(ExitDirEnum::EAST).isClimb()); // Room has climb e
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
                                                          name,
-                                                         dynDesc,
-                                                         staticDesc,
+                                                         desc,
+                                                         contents,
                                                          exitFlags,
                                                          PromptFlagsType::fromRoomTerrainType(
                                                              room->getTerrainType()),
@@ -317,8 +316,8 @@ void TestExpandoraCommon::roomCompareTest_data()
         QVERIFY(!room->getExitFlags(ExitDirEnum::EAST).isRoad()); // Room has no road e
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
                                                          name,
-                                                         dynDesc,
-                                                         staticDesc,
+                                                         desc,
+                                                         contents,
                                                          exitFlags,
                                                          PromptFlagsType::fromRoomTerrainType(
                                                              room->getTerrainType()),
@@ -338,8 +337,8 @@ void TestExpandoraCommon::roomCompareTest_data()
         QVERIFY(!room->getDoorFlags(ExitDirEnum::WEST).isHidden());
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
                                                          name,
-                                                         dynDesc,
-                                                         staticDesc,
+                                                         desc,
+                                                         contents,
                                                          exitFlags,
                                                          PromptFlagsType::fromRoomTerrainType(
                                                              room->getTerrainType()),
@@ -356,8 +355,8 @@ void TestExpandoraCommon::roomCompareTest_data()
         QVERIFY(!room->getExitFlags(ExitDirEnum::SOUTH).isExit());
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
                                                          name,
-                                                         dynDesc,
-                                                         staticDesc,
+                                                         desc,
+                                                         contents,
                                                          exitFlags,
                                                          PromptFlagsType::fromRoomTerrainType(
                                                              room->getTerrainType()),
@@ -374,8 +373,8 @@ void TestExpandoraCommon::roomCompareTest_data()
         room->setSundeathType(RoomSundeathEnum::NO_SUNDEATH);
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
                                                          name,
-                                                         dynDesc,
-                                                         staticDesc,
+                                                         desc,
+                                                         contents,
                                                          get_exit_flags(room),
                                                          promptFlags,
                                                          ConnectedRoomFlagsType{});
@@ -394,8 +393,8 @@ void TestExpandoraCommon::roomCompareTest_data()
         room->setSundeathType(RoomSundeathEnum::NO_SUNDEATH);
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
                                                          name,
-                                                         dynDesc,
-                                                         staticDesc,
+                                                         desc,
+                                                         contents,
                                                          get_exit_flags(room),
                                                          promptFlags,
                                                          connectedFlags);

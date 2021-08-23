@@ -18,16 +18,15 @@ class MumeProtocolPage final : public QWidget
     Q_OBJECT
 
 public:
-    explicit MumeProtocolPage(QWidget *parent = nullptr);
-    ~MumeProtocolPage() override;
+    explicit MumeProtocolPage(QWidget *parent);
+    ~MumeProtocolPage() final;
 
 public slots:
-    void loadConfig();
-
-    void remoteEditCheckBoxStateChanged(int);
-    void internalEditorRadioButtonChanged(bool);
-    void externalEditorCommandTextChanged(QString);
-    void externalEditorBrowseButtonClicked(bool);
+    void slot_loadConfig();
+    void slot_remoteEditCheckBoxStateChanged(int);
+    void slot_internalEditorRadioButtonChanged(bool);
+    void slot_externalEditorCommandTextChanged(QString);
+    void slot_externalEditorBrowseButtonClicked(bool);
 
 private:
     Ui::MumeProtocolPage *ui = nullptr;

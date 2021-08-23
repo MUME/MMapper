@@ -17,13 +17,14 @@
 static constexpr const auto default_updateFlags = RoomUpdateFlags{}; /* none */
 static constexpr const auto mesh_updateFlags = RoomUpdateFlags{RoomUpdateEnum::Mesh};
 static constexpr const auto key_updateFlags = RoomUpdateFlags{RoomUpdateEnum::NodeLookupKey};
-static constexpr const auto borked_updateFlags = RoomUpdateFlags{RoomUpdateEnum::Borked};
+static constexpr const auto borked_updateFlags = RoomUpdateFlags{RoomUpdateEnum::Borked}
+                                                 | RoomUpdateEnum::Mesh;
 
 static constexpr auto RoomName_updateFlags = key_updateFlags | RoomUpdateEnum::Name;
-static constexpr auto RoomStaticDesc_updateFlags = RoomUpdateFlags{RoomUpdateEnum::NodeLookupKey}
-                                                   | RoomUpdateEnum::StaticDesc;
-static constexpr auto RoomDynamicDesc_updateFlags = RoomUpdateFlags{RoomUpdateEnum::NodeLookupKey}
-                                                    | RoomUpdateEnum::DynamicDesc;
+static constexpr auto RoomDesc_updateFlags = RoomUpdateFlags{RoomUpdateEnum::NodeLookupKey}
+                                             | RoomUpdateEnum::Desc;
+static constexpr auto RoomContents_updateFlags = RoomUpdateFlags{RoomUpdateEnum::NodeLookupKey}
+                                                 | RoomUpdateEnum::Contents;
 static constexpr auto RoomNote_updateFlags = RoomUpdateFlags{RoomUpdateEnum::Note};
 static constexpr auto RoomMobFlags_updateFlags = mesh_updateFlags | RoomUpdateEnum::MobFlags;
 static constexpr auto RoomLoadFlags_updateFlags = mesh_updateFlags | RoomUpdateEnum::LoadFlags;
@@ -74,10 +75,10 @@ Room::~Room()
         assert(m_status == RoomStatusEnum::Zombie);
 }
 
-ExitDirections Room::getOutExits() const
+ExitDirFlags Room::getOutExits() const
 {
-    ExitDirections result;
-    for (auto dir : ALL_EXITS_NESWUD) {
+    ExitDirFlags result;
+    for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
         const Exit &e = this->exit(dir);
         if (e.isExit() && !e.outIsEmpty())
             result |= dir;
@@ -168,7 +169,7 @@ void Room::setExitsList(const ExitsList &newExits)
 
     RoomUpdateFlags flags;
 
-    for (const auto dir : ALL_EXITS7) {
+    for (const ExitDirEnum dir : ALL_EXITS7) {
         Exit &ex = m_exits[dir];
         const Exit &newValue = newExits[dir];
         if (ex == newValue)
@@ -295,7 +296,7 @@ SharedRoom Room::createTemporaryRoom(RoomModificationTracker &tracker, const Par
 SharedParseEvent Room::getEvent(const Room *const room)
 {
     ExitsFlagsType exitFlags;
-    for (auto dir : ALL_EXITS_NESWUD) {
+    for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
         const Exit &e = room->exit(dir);
         const ExitFlags eFlags = e.getExitFlags();
         exitFlags.set(dir, eFlags);
@@ -304,14 +305,14 @@ SharedParseEvent Room::getEvent(const Room *const room)
 
     return ParseEvent::createEvent(CommandEnum::UNKNOWN,
                                    room->getName(),
-                                   room->getDynamicDescription(),
-                                   room->getStaticDescription(),
+                                   room->getDescription(),
+                                   room->getContents(),
                                    exitFlags,
                                    PromptFlagsType::fromRoomTerrainType(room->getTerrainType()),
                                    ConnectedRoomFlagsType{});
 }
 
-static int wordDifference(StringView a, StringView b)
+NODISCARD static int wordDifference(StringView a, StringView b)
 {
     size_t diff = 0;
     while (!a.isEmpty() && !b.isEmpty())
@@ -325,9 +326,8 @@ ComparisonResultEnum Room::compareStrings(const std::string &room,
                                           int prevTolerance,
                                           const bool updated)
 {
-    assert(prevTolerance >= 0);
-    prevTolerance = std::max(0, prevTolerance);
-    prevTolerance *= room.size();
+    prevTolerance = utils::clampNonNegative(prevTolerance);
+    prevTolerance *= static_cast<int>(room.size());
     prevTolerance /= 100;
     int tolerance = prevTolerance;
 
@@ -366,7 +366,7 @@ ComparisonResultEnum Room::compare(const Room *const room,
                                    const int tolerance)
 {
     const auto &name = room->getName();
-    const auto &staticDesc = room->getStaticDescription();
+    const auto &desc = room->getDescription();
     const RoomTerrainEnum terrainType = room->getTerrainType();
     bool updated = room->isUpToDate();
 
@@ -374,7 +374,7 @@ ComparisonResultEnum Room::compare(const Room *const room,
     //        return ComparisonResultEnum::EQUAL;
     //    }
 
-    if (name.isEmpty() && staticDesc.isEmpty() && (!updated)) {
+    if (name.isEmpty() && desc.isEmpty() && (!updated)) {
         // user-created
         return ComparisonResultEnum::TOLERANCE;
     }
@@ -398,10 +398,8 @@ ComparisonResultEnum Room::compare(const Room *const room,
         break;
     }
 
-    switch (compareStrings(staticDesc.getStdString(),
-                           event.getStaticDesc().getStdString(),
-                           tolerance,
-                           updated)) {
+    switch (
+        compareStrings(desc.getStdString(), event.getRoomDesc().getStdString(), tolerance, updated)) {
     case ComparisonResultEnum::TOLERANCE:
         updated = false;
         break;
@@ -459,7 +457,7 @@ ComparisonResultEnum Room::compareWeakProps(const Room *const room, const ParseE
     const ExitsFlagsType eventExitsFlags = event.getExitsFlags();
     if (eventExitsFlags.isValid()) {
         bool previousDifference = false;
-        for (auto dir : ALL_EXITS_NESWUD) {
+        for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
             const Exit &roomExit = room->exit(dir);
             const ExitFlags roomExitFlags = roomExit.getExitFlags();
             if (roomExitFlags) {
@@ -562,7 +560,7 @@ ComparisonResultEnum Room::compareWeakProps(const Room *const room, const ParseE
 
 void Room::update(Room &room, const ParseEvent &event)
 {
-    room.setDynamicDescription(event.getDynamicDesc());
+    room.setContents(event.getRoomContents());
     bool isUpToDate = room.isUpToDate();
 
     const ConnectedRoomFlagsType connectedRoomFlags = event.getConnectedRoomFlags();
@@ -571,11 +569,24 @@ void Room::update(Room &room, const ParseEvent &event)
         isUpToDate = false;
     } else {
         eventExitsFlags.removeValid();
-        for (const auto dir : ALL_EXITS_NESWUD) {
-            ExitFlags eventExitFlags = eventExitsFlags.get(dir);
-            Exit &roomExit = room.exit(dir);
+        ExitsList copiedExits = room.getExitsList();
+        if (room.isUpToDate()) {
+            // Append exit flags if target room is up to date
+            for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
+                Exit &roomExit = copiedExits[dir];
+                const ExitFlags &roomExitFlags = roomExit.getExitFlags();
+                const ExitFlags &eventExitFlags = eventExitsFlags.get(dir);
+                if (eventExitFlags ^ roomExitFlags) {
+                    roomExit.setExitFlags(roomExitFlags | eventExitFlags);
+                }
+            }
 
-            if (!room.isUpToDate()) {
+        } else {
+            // Replace exit flags if target room is not up to date
+            for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
+                Exit &roomExit = copiedExits[dir];
+                ExitFlags eventExitFlags = eventExitsFlags.get(dir);
+                // ... but take care of the following exceptions
                 if (roomExit.isDoor() && !eventExitFlags.isDoor()) {
                     // Prevent room hidden exits from being overridden
                     eventExitFlags |= ExitFlagEnum::DOOR | ExitFlagEnum::EXIT;
@@ -585,14 +596,10 @@ void Room::update(Room &room, const ParseEvent &event)
                     // Prevent orcs/trolls from removing roads/trails if they're sunlit
                     eventExitFlags |= ExitFlagEnum::ROAD;
                 }
-                // Replace exits if target room is not up to date
                 roomExit.setExitFlags(eventExitFlags);
-
-            } else {
-                // Update exits if target room is up to date
-                roomExit.updateExit(eventExitFlags);
             }
         }
+        room.setExitsList(copiedExits);
         isUpToDate = true;
     }
 
@@ -610,11 +617,11 @@ void Room::update(Room &room, const ParseEvent &event)
         }
     }
 
-    const auto &desc = event.getStaticDesc();
+    const auto &desc = event.getRoomDesc();
     if (desc.isEmpty()) {
         isUpToDate = false;
     } else {
-        room.setStaticDescription(desc);
+        room.setDescription(desc);
     }
 
     const auto &name = event.getRoomName();
@@ -636,13 +643,13 @@ void Room::update(Room *const target, const Room *const source)
     if (!name.isEmpty()) {
         target->setName(name);
     }
-    const auto &desc = source->getStaticDescription();
+    const auto &desc = source->getDescription();
     if (!desc.isEmpty()) {
-        target->setStaticDescription(desc);
+        target->setDescription(desc);
     }
-    const auto &dynamic = source->getDynamicDescription();
-    if (!dynamic.isEmpty()) {
-        target->setDynamicDescription(dynamic);
+    const auto &contents = source->getContents();
+    if (!contents.isEmpty()) {
+        target->setContents(contents);
     }
 
     if (target->getAlignType() == RoomAlignEnum::UNDEFINED) {
@@ -672,7 +679,7 @@ void Room::update(Room *const target, const Room *const source)
 
     if (!target->isUpToDate()) {
         // Replace data if target room is not up to date
-        for (const auto dir : ALL_EXITS_NESWUD) {
+        for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
             const Exit &sourceExit = source->exit(dir);
             Exit &targetExit = target->exit(dir);
             ExitFlags sourceExitFlags = sourceExit.getExitFlags();
@@ -689,7 +696,7 @@ void Room::update(Room *const target, const Room *const source)
         }
     } else {
         // Combine data if target room is up to date
-        for (const auto dir : ALL_EXITS_NESWUD) {
+        for (const ExitDirEnum dir : ALL_EXITS_NESWUD) {
             const Exit &soureExit = source->exit(dir);
             Exit &targetExit = target->exit(dir);
             const ExitFlags sourceExitFlags = soureExit.getExitFlags();
@@ -714,10 +721,10 @@ std::string Room::toStdString() const
 {
     std::stringstream ss;
     ss << getName().getStdString() << "\n"
-       << getStaticDescription().getStdString() << getDynamicDescription().getStdString();
+       << getDescription().getStdString() << getContents().getStdString();
 
     ss << "Exits:";
-    for (const auto j : ALL_EXITS7) {
+    for (const ExitDirEnum j : ALL_EXITS7) {
         const ExitFlags &exitFlags = exit(j).getExitFlags();
         if (!exitFlags.isExit())
             continue;
@@ -749,7 +756,7 @@ std::string Room::toStdString() const
 }
 
 using ExitCoordinates = EnumIndexedArray<Coordinate, ExitDirEnum, NUM_EXITS_INCLUDING_NONE>;
-static ExitCoordinates initExitCoordinates()
+NODISCARD static ExitCoordinates initExitCoordinates()
 {
     ExitCoordinates exitDirs;
     exitDirs[ExitDirEnum::NORTH] = Coordinate(0, 1, 0);

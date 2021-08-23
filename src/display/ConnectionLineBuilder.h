@@ -8,7 +8,7 @@
 #include "../mapdata/ExitDirection.h"
 #include "../opengl/OpenGL.h"
 
-class ConnectionLineBuilder
+class NODISCARD ConnectionLineBuilder final
 {
 private:
     std::vector<glm::vec3> &points;

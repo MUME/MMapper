@@ -34,7 +34,7 @@ static constexpr const float NEW_CONNECTION_POINT_SIZE = 8.f;
 
 static constexpr const float FAINT_CONNECTION_ALPHA = 0.1f;
 
-static bool isConnectionMode(const CanvasMouseModeEnum mode)
+NODISCARD static bool isConnectionMode(const CanvasMouseModeEnum mode)
 {
     switch (mode) {
     case CanvasMouseModeEnum::CREATE_CONNECTIONS:
@@ -53,7 +53,7 @@ static bool isConnectionMode(const CanvasMouseModeEnum mode)
     return false;
 }
 
-static glm::vec2 getConnectionOffsetRelative(const ExitDirEnum dir)
+NODISCARD static glm::vec2 getConnectionOffsetRelative(const ExitDirEnum dir)
 {
     switch (dir) {
     // NOTE: These are flipped north/south.
@@ -85,17 +85,17 @@ static glm::vec2 getConnectionOffsetRelative(const ExitDirEnum dir)
     return {};
 };
 
-static glm::vec3 getConnectionOffset(const ExitDirEnum dir)
+NODISCARD static glm::vec3 getConnectionOffset(const ExitDirEnum dir)
 {
     return glm::vec3{getConnectionOffsetRelative(dir), 0.f} + glm::vec3{0.5f, 0.5f, 0.f};
 }
 
-static glm::vec3 getPosition(const ConnectionSelection::ConnectionDescriptor &cd)
+NODISCARD static glm::vec3 getPosition(const ConnectionSelection::ConnectionDescriptor &cd)
 {
     return deref(cd.room).getPosition().to_vec3() + getConnectionOffset(cd.direction);
 }
 
-static QString getDoorPostFix(const Room *const room, const ExitDirEnum dir)
+NODISCARD static QString getDoorPostFix(const Room *const room, const ExitDirEnum dir)
 {
     static constexpr const auto SHOWN_FLAGS = DoorFlagEnum::NEED_KEY | DoorFlagEnum::NO_PICK
                                               | DoorFlagEnum::DELAYED;
@@ -110,7 +110,7 @@ static QString getDoorPostFix(const Room *const room, const ExitDirEnum dir)
                              flags.isDelayed() ? "d" : "");
 }
 
-static QString getPostfixedDoorName(const Room *const room, const ExitDirEnum dir)
+NODISCARD static QString getPostfixedDoorName(const Room *const room, const ExitDirEnum dir)
 {
     const auto postFix = getDoorPostFix(room, dir);
     return room->exit(dir).getDoorName() + postFix;
@@ -199,7 +199,7 @@ void ConnectionDrawer::drawRoomDoorName(const Room *const sourceRoom,
         case ExitDirEnum::UNKNOWN:
         case ExitDirEnum::NONE:
             break;
-        };
+        }
 
         assert(false);
         return 0.f;
@@ -234,7 +234,7 @@ void ConnectionDrawer::drawRoomConnectionsAndDoors(const Room *const room, const
     const auto sourceId = room->getId();
     const ExitsList &exitslist = room->getExitsList();
 
-    for (const auto sourceDir : ALL_EXITS7) {
+    for (const ExitDirEnum sourceDir : ALL_EXITS7) {
         const Exit &sourceExit = exitslist[sourceDir];
         // outgoing connections
         if (sourceWithinBounds) {
@@ -305,7 +305,7 @@ void ConnectionDrawer::drawRoomConnectionsAndDoors(const Room *const room, const
 
             // Detect if this is a oneway
             bool oneway = true;
-            for (const auto tempSourceDir : ALL_EXITS7) {
+            for (const ExitDirEnum tempSourceDir : ALL_EXITS7) {
                 const Exit &tempSourceExit = exitslist[tempSourceDir];
                 if (tempSourceExit.containsOut(inTargetId)) {
                     oneway = false;
@@ -313,7 +313,7 @@ void ConnectionDrawer::drawRoomConnectionsAndDoors(const Room *const room, const
             }
             if (oneway) {
                 // Always draw one way connections for each target exit to the source room
-                for (const auto targetDir : ALL_EXITS7) {
+                for (const ExitDirEnum targetDir : ALL_EXITS7) {
                     const Exit &targetExit = targetRoom->exit(targetDir);
                     if (targetExit.containsOut(sourceId)) {
                         drawConnection(targetRoom,
@@ -632,9 +632,9 @@ void MapCanvas::paintNearbyConnectionPoints()
     const bool isSelection = m_canvasMouseMode == CanvasMouseModeEnum::SELECT_CONNECTIONS;
     using CD = ConnectionSelection::ConnectionDescriptor;
 
-    static const ExitDirections allExits = []() {
-        ExitDirections tmp;
-        for (auto dir : ALL_EXITS7) {
+    static const ExitDirFlags allExits = []() {
+        ExitDirFlags tmp;
+        for (const ExitDirEnum dir : ALL_EXITS7) {
             tmp |= dir;
         }
         return tmp;
@@ -672,7 +672,7 @@ void MapCanvas::paintNearbyConnectionPoints()
                 if (room == nullptr)
                     continue;
 
-                ExitDirections dirs = isSelection ? m_data.getExitDirections(roomCoord) : allExits;
+                ExitDirFlags dirs = isSelection ? m_data.getExitDirections(roomCoord) : allExits;
                 if (optFirst)
                     dirs |= ExitDirEnum::UNKNOWN;
 
@@ -684,15 +684,17 @@ void MapCanvas::paintNearbyConnectionPoints()
     };
 
     // FIXME: This doesn't show dots for red connections.
-    if (m_connectionSelection != nullptr && m_connectionSelection->isFirstValid()) {
-        const CD first = m_connectionSelection->getFirst();
-        const Coordinate &c = deref(first.room).getPosition();
+    if (m_connectionSelection != nullptr
+        && (m_connectionSelection->isFirstValid() || m_connectionSelection->isSecondValid())) {
+        const CD valid = m_connectionSelection->isFirstValid() ? m_connectionSelection->getFirst()
+                                                               : m_connectionSelection->getSecond();
+        const Coordinate &c = deref(valid.room).getPosition();
         const glm::vec3 &pos = c.to_vec3();
-        points.emplace_back(Colors::cyan, pos + getConnectionOffset(first.direction));
+        points.emplace_back(Colors::cyan, pos + getConnectionOffset(valid.direction));
 
-        addPoints(MouseSel{Coordinate2f{pos.x, pos.y}, c.z}, first);
-        addPoints(m_sel1, first);
-        addPoints(m_sel2, first);
+        addPoints(MouseSel{Coordinate2f{pos.x, pos.y}, c.z}, valid);
+        addPoints(m_sel1, valid);
+        addPoints(m_sel2, valid);
     } else {
         addPoints(m_sel1, std::nullopt);
         addPoints(m_sel2, std::nullopt);
@@ -745,7 +747,7 @@ void MapCanvas::paintSelectedConnection()
 
 static constexpr float LONG_LINE_HALFLEN = 1.5f;
 static constexpr float LONG_LINE_LEN = 2.f * LONG_LINE_HALFLEN;
-static bool isLongLine(const glm::vec3 &a, const glm::vec3 &b)
+NODISCARD static bool isLongLine(const glm::vec3 &a, const glm::vec3 &b)
 {
     return glm::length(a - b) >= LONG_LINE_LEN;
 }
@@ -785,32 +787,32 @@ void ConnectionDrawer::ConnectionFakeGL::drawLineStrip(const std::vector<glm::ve
     const auto &color = isNormal() ? getConfig().canvas.connectionNormalColor.getColor()
                                    : Colors::red;
 
-    assert(points.size() >= 2);
     const auto transform = [this](const glm::vec3 &vert) { return vert + m_offset; };
     auto &verts = deref(m_currentBuffer).lineVerts;
-    for (size_t i = 1, size = points.size(); i < size; ++i) {
-        const auto &a = points[i - 1u];
-        const auto &b = points[i];
+    auto drawLine = [&verts](const Color &color, const glm::vec3 &a, const glm::vec3 &b) {
+        verts.emplace_back(color, a);
+        verts.emplace_back(color, b);
+    };
 
-        if (!isLongLine(a, b)) {
-            verts.emplace_back(color, transform(a));
-            verts.emplace_back(color, transform(b));
+    const auto size = points.size();
+    assert(size >= 2);
+    for (size_t i = 1; i < size; ++i) {
+        const auto start = transform(points[i - 1u]);
+        const auto end = transform(points[i]);
+
+        if (!isLongLine(start, end)) {
+            drawLine(color, start, end);
             continue;
         }
 
-        const auto start = transform(a);
-        const auto end = transform(b);
         const auto len = glm::length(start - end);
         const auto faintCutoff = LONG_LINE_HALFLEN / len;
         const auto mid1 = glm::mix(start, end, faintCutoff);
         const auto mid2 = glm::mix(start, end, 1.f - faintCutoff);
         const auto faint = color.withAlpha(FAINT_CONNECTION_ALPHA);
-#define LINE(color, a, b) \
-    verts.emplace_back((color), (a)); \
-    verts.emplace_back((color), (b));
-        LINE(color, start, mid1);
-        LINE(faint, mid1, mid2);
-        LINE(color, mid2, end);
-#undef LINE
+
+        drawLine(color, start, mid1);
+        drawLine(faint, mid1, mid2);
+        drawLine(color, mid2, end);
     }
 }

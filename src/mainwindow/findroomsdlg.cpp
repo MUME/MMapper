@@ -21,12 +21,12 @@
 #include "../mapdata/roomselection.h"
 #include "../parser/parserutils.h"
 
-FindRoomsDlg::FindRoomsDlg(MapData *const md, QWidget *const parent)
+FindRoomsDlg::FindRoomsDlg(MapData &md, QWidget *const parent)
     : QDialog(parent)
+    , m_mapData{md}
 {
     setupUi(this);
 
-    m_mapData = md;
     adjustResultTable();
 
     m_showSelectedRoom = new QShortcut(QKeySequence(tr("Space", "Select result item")), resultTable);
@@ -35,44 +35,47 @@ FindRoomsDlg::FindRoomsDlg(MapData *const md, QWidget *const parent)
     selectButton->setEnabled(false);
     editButton->setEnabled(false);
 
-    connect(lineEdit, &QLineEdit::textChanged, this, &FindRoomsDlg::enableFindButton);
-    connect(findButton, &QAbstractButton::clicked, this, &FindRoomsDlg::findClicked);
+    connect(lineEdit, &QLineEdit::textChanged, this, &FindRoomsDlg::slot_enableFindButton);
+    connect(findButton, &QAbstractButton::clicked, this, &FindRoomsDlg::slot_findClicked);
     connect(closeButton, &QAbstractButton::clicked, this, &QWidget::close);
-    connect(resultTable, &QTreeWidget::itemDoubleClicked, this, &FindRoomsDlg::itemDoubleClicked);
-    connect(m_showSelectedRoom, &QShortcut::activated, this, &FindRoomsDlg::showSelectedRoom);
+    connect(resultTable,
+            &QTreeWidget::itemDoubleClicked,
+            this,
+            &FindRoomsDlg::slot_itemDoubleClicked);
+    connect(m_showSelectedRoom, &QShortcut::activated, this, &FindRoomsDlg::slot_showSelectedRoom);
     connect(resultTable, &QTreeWidget::itemSelectionChanged, this, [this]() {
         const bool enabled = !resultTable->selectedItems().isEmpty();
         selectButton->setEnabled(enabled);
         editButton->setEnabled(enabled);
     });
     connect(selectButton, &QAbstractButton::clicked, this, [this]() {
-        const auto tmpSel = RoomSelection::createSelection(*m_mapData);
+        const auto tmpSel = RoomSelection::createSelection(m_mapData);
         for (const auto &selectedItem : resultTable->selectedItems()) {
             const auto id = RoomId{selectedItem->text(0).toUInt()};
             tmpSel->getRoom(id);
         }
-        if (!tmpSel->isEmpty()) {
+        if (!tmpSel->empty()) {
             glm::vec2 sum{0.f, 0.f};
             // FIXME: This is actually an anti-feature if the rooms are far apart,
             // because it drops you off in the middle of nowhere.
-            for (const Room *const r : *tmpSel) {
-                sum += r->getPosition().to_vec2();
+            for (const auto &[rid, room] : *tmpSel) {
+                sum += room->getPosition().to_vec2();
             }
             // note: half-room offset to the room center is applied to the average,
             // rather than to each individual room.
             const auto worldPos = sum / static_cast<float>(tmpSel->size()) + glm::vec2{0.5f, 0.5f};
             emit sig_center(worldPos);
         }
-        emit newRoomSelection(SigRoomSelection{tmpSel});
+        emit sig_newRoomSelection(SigRoomSelection{tmpSel});
     });
     connect(editButton, &QAbstractButton::clicked, this, [this]() {
-        const auto tmpSel = RoomSelection::createSelection(*m_mapData);
+        const auto tmpSel = RoomSelection::createSelection(m_mapData);
         for (const auto &selectedItem : resultTable->selectedItems()) {
             const auto id = RoomId{selectedItem->text(0).toUInt()};
             tmpSel->getRoom(id);
         }
-        emit newRoomSelection(SigRoomSelection{tmpSel});
-        emit editSelection();
+        emit sig_newRoomSelection(SigRoomSelection{tmpSel});
+        emit sig_editSelection();
     });
 
     setFocus();
@@ -98,7 +101,7 @@ void FindRoomsDlg::writeSettings()
     setConfig().findRoomsDialog.geometry = saveGeometry();
 }
 
-void FindRoomsDlg::findClicked()
+void FindRoomsDlg::slot_findClicked()
 {
     const Qt::CaseSensitivity cs = caseCheckBox->isChecked() ? Qt::CaseSensitive
                                                              : Qt::CaseInsensitive;
@@ -108,17 +111,13 @@ void FindRoomsDlg::findClicked()
     resultTable->clear();
     roomsFoundLabel->clear();
 
-    /*  for an absolute match do the below:
-    m_mapData->lookingForRooms(this, createEvent(CommandEnum::UNKNOWN, text, nullString, nullString, 0, 0));
-    */
-
     auto kind = PatternKindsEnum::ALL;
     if (nameRadioButton->isChecked()) {
         kind = PatternKindsEnum::NAME;
     } else if (descRadioButton->isChecked()) {
         kind = PatternKindsEnum::DESC;
-    } else if (dynDescRadioButton->isChecked()) {
-        kind = PatternKindsEnum::DYN_DESC;
+    } else if (contentsRadioButton->isChecked()) {
+        kind = PatternKindsEnum::CONTENTS;
     } else if (exitsRadioButton->isChecked()) {
         kind = PatternKindsEnum::EXITS;
     } else if (notesRadioButton->isChecked()) {
@@ -128,14 +127,14 @@ void FindRoomsDlg::findClicked()
     }
 
     try {
-        auto tmpSel = RoomSelection(*m_mapData);
+        auto tmpSel = RoomSelection(m_mapData);
         tmpSel.genericSearch(RoomFilter(text, cs, kind));
 
-        for (const Room *const room : tmpSel) {
+        for (const auto &[rid, room] : tmpSel) {
             QString id;
-            id.setNum(room->getId().asUint32());
+            id.setNum(rid.asUint32());
             QString roomName = room->getName().toQString();
-            QString toolTip = constructToolTip(room);
+            QString toolTip = slot_constructToolTip(room);
 
             item = new QTreeWidgetItem(resultTable);
             item->setText(0, id);
@@ -147,7 +146,7 @@ void FindRoomsDlg::findClicked()
         qWarning() << "Exception: " << ex.what();
         QMessageBox::critical(this,
                               "Internal Error",
-                              QString::asprintf("An exception occurred: %s\r\n", ex.what()));
+                              QString::asprintf("An exception occurred: %s\n", ex.what()));
     }
     roomsFoundLabel->setText(tr("%1 room%2 found")
                                  .arg(resultTable->topLevelItemCount())
@@ -155,23 +154,23 @@ void FindRoomsDlg::findClicked()
 }
 
 // FIXME: This code is almost identical to the code in MapCanvas::mouseReleaseEvent. Refactor!
-QString FindRoomsDlg::constructToolTip(const Room *const r)
+QString FindRoomsDlg::slot_constructToolTip(const Room *const r)
 {
     return QString("Selected Room ID: %1\n%2").arg(r->getId().asUint32()).arg(r->toQString());
 }
 
-void FindRoomsDlg::showSelectedRoom()
+void FindRoomsDlg::slot_showSelectedRoom()
 {
-    itemDoubleClicked(resultTable->currentItem());
+    slot_itemDoubleClicked(resultTable->currentItem());
 }
 
-void FindRoomsDlg::itemDoubleClicked(QTreeWidgetItem *const inputItem)
+void FindRoomsDlg::slot_itemDoubleClicked(QTreeWidgetItem *const inputItem)
 {
     if (inputItem == nullptr) {
         return;
     }
 
-    auto tmpSel = RoomSelection(*m_mapData);
+    auto tmpSel = RoomSelection(m_mapData);
     const auto id = RoomId{inputItem->text(0).toUInt()};
     if (const Room *const r = tmpSel.getRoom(id)) {
         if (r->getId() == id) {
@@ -179,7 +178,7 @@ void FindRoomsDlg::itemDoubleClicked(QTreeWidgetItem *const inputItem)
             const auto worldPos = c.to_vec2() + glm::vec2{0.5f, 0.5f};
             emit sig_center(worldPos); // connects to MapWindow
         }
-        emit log("FindRooms", inputItem->toolTip(0));
+        emit sig_log("FindRooms", inputItem->toolTip(0));
     }
 }
 
@@ -194,7 +193,7 @@ void FindRoomsDlg::adjustResultTable()
     resultTable->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
 }
 
-void FindRoomsDlg::enableFindButton(const QString &text)
+void FindRoomsDlg::slot_enableFindButton(const QString &text)
 {
     findButton->setEnabled(!text.isEmpty());
 }
@@ -210,7 +209,7 @@ void FindRoomsDlg::closeEvent(QCloseEvent *event)
     event->accept();
 }
 
-void FindRoomsDlg::on_lineEdit_textChanged()
+void FindRoomsDlg::slot_on_lineEdit_textChanged()
 {
     findButton->setEnabled(lineEdit->hasAcceptableInput());
 }

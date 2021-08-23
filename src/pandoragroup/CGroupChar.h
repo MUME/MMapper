@@ -18,45 +18,71 @@
 class CGroupChar;
 using SharedGroupChar = std::shared_ptr<CGroupChar>;
 
-class GroupVector : public std::vector<SharedGroupChar>
+// TODO: make std::vector private
+class NODISCARD GroupVector : public std::vector<SharedGroupChar>
 {};
 
-class CGroupChar final : public std::enable_shared_from_this<CGroupChar>
+class NODISCARD CGroupChar final : public std::enable_shared_from_this<CGroupChar>
 {
 private:
-    struct this_is_private final
+    struct NODISCARD this_is_private final
     {
         explicit this_is_private(int) {}
     };
 
 public:
-    RoomId roomId = DEFAULT_ROOMID;
-    int hp = 0, maxhp = 0;
-    int mana = 0, maxmana = 0;
-    int moves = 0, maxmoves = 0;
+    RoomId roomId = INVALID_ROOMID;
+    int hp = 0;
+    int maxhp = 0;
+    int mana = 0;
+    int maxmana = 0;
+    int moves = 0;
+    int maxmoves = 0;
     CharacterPositionEnum position = CharacterPositionEnum::UNDEFINED;
-    CharacterAffects affects;
+    CharacterAffectFlags affects;
     CommandQueue prespam;
+
+private:
+    struct NODISCARD Internal final
+    {
+        QByteArray name;
+        QColor color;
+    };
+    Internal m_internal;
 
 public:
     CGroupChar() = delete;
     explicit CGroupChar(this_is_private);
     virtual ~CGroupChar();
-    DELETE_CTORS_AND_ASSIGN_OPS(CGroupChar);
+    DELETE_CTORS(CGroupChar);
+    DELETE_COPY_ASSIGN_OP(CGroupChar);
+
+private:
+    DEFAULT_MOVE_ASSIGN_OP(CGroupChar);
+
+public:
+    // uses private move assignment operator
+    // TODO: encapsulate the public members in a struct so they can be reset separately.
+    void reset()
+    {
+        const Internal saved = m_internal;
+        *this = CGroupChar{this_is_private{0}};
+        m_internal = saved;
+    }
 
 public:
     static SharedGroupChar alloc() { return std::make_shared<CGroupChar>(this_is_private{0}); }
 
 public:
-    const QByteArray &getName() const { return name; }
-    void setName(QByteArray _name) { name = _name; }
-    void setColor(QColor col) { color = col; }
-    const QColor &getColor() const { return color; }
-    const QVariantMap toVariantMap() const;
+    NODISCARD const QByteArray &getName() const { return m_internal.name; }
+    void setName(QByteArray name) { m_internal.name = name; }
+    void setColor(QColor col) { m_internal.color = col; }
+    NODISCARD const QColor &getColor() const { return m_internal.color; }
+    NODISCARD const QVariantMap toVariantMap() const;
     bool updateFromVariantMap(const QVariantMap &);
     void setRoomId(RoomId id) { roomId = id; }
-    RoomId getRoomId() const { return roomId; }
-    static QByteArray getNameFromUpdateChar(const QVariantMap &);
+    NODISCARD RoomId getRoomId() const { return roomId; }
+    NODISCARD static QByteArray getNameFromUpdateChar(const QVariantMap &);
 
     void setScore(int _hp, int _maxhp, int _mana, int _maxmana, int _moves, int _maxmoves)
     {
@@ -67,8 +93,4 @@ public:
         moves = _moves;
         maxmoves = _maxmoves;
     }
-
-private:
-    QByteArray name;
-    QColor color;
 };

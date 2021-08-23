@@ -21,7 +21,7 @@
 ///     member function.</li>
 /// </ul>
 template<typename T>
-class WeakHandle final
+class NODISCARD WeakHandle final
 {
 private:
     std::weak_ptr<T> m_weakPtr;
@@ -35,7 +35,7 @@ public:
     }
 
 public:
-    WeakHandle<const T> asConst() const
+    NODISCARD WeakHandle<const T> asConst() const
     {
         if constexpr (std::is_const_v<T>)
             return *this;
@@ -58,7 +58,7 @@ public:
 
 /// \see WeakHandle
 template<typename T>
-class EnableGetWeakHandleFromThis
+class NODISCARD EnableGetWeakHandleFromThis
 {
 private:
     const std::shared_ptr<char> m_dummy;
@@ -71,11 +71,11 @@ public:
     }
 
 public:
-    WeakHandle<T> getWeakHandleFromThis()
+    NODISCARD WeakHandle<T> getWeakHandleFromThis()
     {
         return WeakHandle<T>{std::shared_ptr<T>(m_dummy, static_cast<T *>(this))};
     }
-    WeakHandle<const T> getWeakHandleFromThis() const
+    NODISCARD WeakHandle<const T> getWeakHandleFromThis() const
     {
         return WeakHandle<const T>{std::shared_ptr<const T>(m_dummy, static_cast<const T *>(this))};
     }
@@ -87,7 +87,7 @@ public:
 
 /// \see WeakHandle
 template<typename T>
-class WeakHandleLifetime final
+class NODISCARD WeakHandleLifetime final
 {
 private:
     std::shared_ptr<char> m_dummy;
@@ -108,9 +108,12 @@ public:
     }
 
 public:
-    WeakHandle<T> getWeakHandle() { return WeakHandle<T>{std::shared_ptr<T>(m_dummy, &m_parent)}; }
+    NODISCARD WeakHandle<T> getWeakHandle()
+    {
+        return WeakHandle<T>{std::shared_ptr<T>(m_dummy, &m_parent)};
+    }
 
-    WeakHandle<const T> getWeakHandle() const
+    NODISCARD WeakHandle<const T> getWeakHandle() const
     {
         return WeakHandle<const T>{std::shared_ptr<const T>(m_dummy, &m_parent)};
     }

@@ -5,7 +5,7 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 
 #include <memory>
-#include <QMap>
+#include <unordered_map>
 
 #include "../expandoracommon/MmQtHandle.h"
 #include "../expandoracommon/RoomRecipient.h"
@@ -23,10 +23,11 @@ class Room;
 class RoomAdmin;
 class Coordinate;
 class MapData;
-class NODISCARD RoomSelection final : public QMap<RoomId, const Room *>, public RoomRecipient
+class NODISCARD RoomSelection final : public std::unordered_map<RoomId, const Room *>,
+                                      public RoomRecipient
 {
 public:
-    void receiveRoom(RoomAdmin *admin, const Room *aRoom) override;
+    void virt_receiveRoom(RoomAdmin *admin, const Room *aRoom) final;
 
 private:
     MapData &m_mapData;
@@ -40,6 +41,9 @@ public:
 public:
     const Room *getFirstRoom() const noexcept(false);
     RoomId getFirstRoomId() const noexcept(false);
+
+public:
+    bool contains(RoomId targetId) const;
 
 public:
     const Room *getRoom(RoomId targetId);

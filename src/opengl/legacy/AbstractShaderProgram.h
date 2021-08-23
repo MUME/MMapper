@@ -47,7 +47,7 @@ public:
         }
     };
 
-    ProgramUnbinder bind();
+    NODISCARD ProgramUnbinder bind();
 
 private:
     friend ProgramUnbinder;
@@ -58,13 +58,13 @@ public:
     // set program uniforms...
     void setUniforms(const glm::mat4 &mvp, const GLRenderState::Uniforms &uniforms);
 
-protected:
+private:
     virtual void virt_setUniforms(const glm::mat4 &mvp, const GLRenderState::Uniforms &uniforms) = 0;
 
 public:
-    GLuint getAttribLocation(const char *name) const;
-    GLint getUniformLocation(const char *name) const;
-    bool hasUniform(const char *name) const;
+    NODISCARD GLuint getAttribLocation(const char *name) const;
+    NODISCARD GLint getUniformLocation(const char *name) const;
+    NODISCARD bool hasUniform(const char *name) const;
 
 public:
     void setUniform1iv(GLint location, GLsizei count, const GLint *value);
@@ -77,7 +77,7 @@ public:
                              const GLfloat *value);
 
 private:
-    float getDevicePixelRatio() const;
+    NODISCARD float getDevicePixelRatio() const;
 
 public:
     void setPointSize(float in_pointSize);

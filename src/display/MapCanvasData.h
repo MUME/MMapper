@@ -7,10 +7,10 @@
 #include <memory>
 #include <optional>
 #include <unordered_map>
+#include <QOpenGLTexture>
 #include <QWidget>
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QMouseEvent>
-#include <QtGui/QOpenGLTexture>
 #include <QtGui/qopengl.h>
 #include <QtGui>
 
@@ -30,9 +30,9 @@ class MapData;
 class PrespammedPath;
 class InfoMarkSelection;
 
-enum class RoomTintEnum { DARK, NO_SUNDEATH };
+enum class NODISCARD RoomTintEnum { DARK, NO_SUNDEATH };
 static const size_t NUM_ROOM_TINTS = 2;
-const MMapper::Array<RoomTintEnum, NUM_ROOM_TINTS> &getAllRoomTints();
+NODISCARD extern const MMapper::Array<RoomTintEnum, NUM_ROOM_TINTS> &getAllRoomTints();
 #define ALL_ROOM_TINTS getAllRoomTints()
 
 template<typename T>
@@ -63,7 +63,7 @@ struct NODISCARD LayerMeshes final
 // This must be ordered so we can iterate over the layers from lowest to highest.
 using BatchedMeshes = std::map<int, LayerMeshes>;
 
-struct ScaleFactor final
+struct NODISCARD ScaleFactor final
 {
 public:
     // value chosen so the inverse hits 1/25th after 20 steps, just as before.
@@ -79,18 +79,18 @@ private:
     float m_pinchFactor = 1.f;
 
 private:
-    static float clamp(float x)
+    NODISCARD static float clamp(float x)
     {
         assert(std::isfinite(x)); // note: also checks for NaN
         return std::clamp(x, MIN_VALUE, MAX_VALUE);
     }
 
 public:
-    static bool isClamped(float x) { return ::isClamped(x, MIN_VALUE, MAX_VALUE); }
+    NODISCARD static bool isClamped(float x) { return ::isClamped(x, MIN_VALUE, MAX_VALUE); }
 
 public:
-    float getRaw() const { return clamp(m_scaleFactor); }
-    float getTotal() const { return clamp(m_scaleFactor * m_pinchFactor); }
+    NODISCARD float getRaw() const { return clamp(m_scaleFactor); }
+    NODISCARD float getTotal() const { return clamp(m_scaleFactor * m_pinchFactor); }
 
 public:
     void set(const float scale) { m_scaleFactor = clamp(scale); }
@@ -123,7 +123,7 @@ public:
     }
 };
 
-struct MapCanvasViewport
+struct NODISCARD MapCanvasViewport
 {
 private:
     QWidget &m_sizeWidget;
@@ -140,32 +140,37 @@ public:
     {}
 
 public:
-    auto width() const { return m_sizeWidget.width(); }
-    auto height() const { return m_sizeWidget.height(); }
-    Viewport getViewport() const
+    NODISCARD auto width() const { return m_sizeWidget.width(); }
+    NODISCARD auto height() const { return m_sizeWidget.height(); }
+    NODISCARD Viewport getViewport() const
     {
         const auto &r = m_sizeWidget.rect();
         return Viewport{glm::ivec2{r.x(), r.y()}, glm::ivec2{r.width(), r.height()}};
     }
-    float getTotalScaleFactor() const { return m_scaleFactor.getTotal(); }
+    NODISCARD float getTotalScaleFactor() const { return m_scaleFactor.getTotal(); }
 
 public:
-    std::optional<glm::vec3> project(const glm::vec3 &) const;
-    glm::vec3 unproject_raw(const glm::vec3 &) const;
-    glm::vec3 unproject_clamped(const glm::vec2 &) const;
-    std::optional<glm::vec3> unproject(const QInputEvent *event) const;
-    std::optional<MouseSel> getUnprojectedMouseSel(const QInputEvent *event) const;
-    glm::vec2 getMouseCoords(const QInputEvent *event) const;
+    NODISCARD std::optional<glm::vec3> project(const glm::vec3 &) const;
+    NODISCARD glm::vec3 unproject_raw(const glm::vec3 &) const;
+    NODISCARD glm::vec3 unproject_clamped(const glm::vec2 &) const;
+    NODISCARD std::optional<glm::vec3> unproject(const QInputEvent *event) const;
+    NODISCARD std::optional<MouseSel> getUnprojectedMouseSel(const QInputEvent *event) const;
+    NODISCARD glm::vec2 getMouseCoords(const QInputEvent *event) const;
 };
 
-class MapScreen final
+class NODISCARD MapScreen final
 {
 public:
     static constexpr const float DEFAULT_MARGIN_PIXELS = 24.f;
 
 private:
     const MapCanvasViewport &m_viewport;
-    enum class VisiblityResultEnum { INSIDE_MARGIN, ON_MARGIN, OUTSIDE_MARGIN, OFF_SCREEN };
+    enum class NODISCARD VisiblityResultEnum {
+        INSIDE_MARGIN,
+        ON_MARGIN,
+        OUTSIDE_MARGIN,
+        OFF_SCREEN
+    };
 
 public:
     explicit MapScreen(const MapCanvasViewport &);
@@ -173,15 +178,15 @@ public:
     DELETE_CTORS_AND_ASSIGN_OPS(MapScreen);
 
 public:
-    glm::vec3 getCenter() const;
-    bool isRoomVisible(const Coordinate &c, float margin) const;
-    glm::vec3 getProxyLocation(const glm::vec3 &pos, float margin) const;
+    NODISCARD glm::vec3 getCenter() const;
+    NODISCARD bool isRoomVisible(const Coordinate &c, float margin) const;
+    NODISCARD glm::vec3 getProxyLocation(const glm::vec3 &pos, float margin) const;
 
 private:
-    VisiblityResultEnum testVisibility(const glm::vec3 &input_pos, float margin) const;
+    NODISCARD VisiblityResultEnum testVisibility(const glm::vec3 &input_pos, float margin) const;
 };
 
-struct MapCanvasInputState
+struct NODISCARD MapCanvasInputState
 {
     CanvasMouseModeEnum m_canvasMouseMode = CanvasMouseModeEnum::MOVE;
 
@@ -199,34 +204,34 @@ struct MapCanvasInputState
     bool m_selectedArea = false; // no area selected at start time
     SharedRoomSelection m_roomSelection;
 
-    struct RoomSelMove final
+    struct NODISCARD RoomSelMove final
     {
         Coordinate2i pos;
         bool wrongPlace = false;
     };
 
     std::optional<RoomSelMove> m_roomSelectionMove;
-    bool hasRoomSelectionMove() { return m_roomSelectionMove.has_value(); }
+    NODISCARD bool hasRoomSelectionMove() { return m_roomSelectionMove.has_value(); }
 
     std::shared_ptr<InfoMarkSelection> m_infoMarkSelection;
 
-    struct InfoMarkSelectionMove final
+    struct NODISCARD InfoMarkSelectionMove final
     {
         Coordinate2f pos;
     };
     std::optional<InfoMarkSelectionMove> m_infoMarkSelectionMove;
-    bool hasInfoMarkSelectionMove() const { return m_infoMarkSelectionMove.has_value(); }
+    NODISCARD bool hasInfoMarkSelectionMove() const { return m_infoMarkSelectionMove.has_value(); }
 
     std::shared_ptr<ConnectionSelection> m_connectionSelection;
 
-    PrespammedPath *m_prespammedPath = nullptr;
+    PrespammedPath &m_prespammedPath;
 
 public:
-    explicit MapCanvasInputState(PrespammedPath *prespammedPath);
+    explicit MapCanvasInputState(PrespammedPath &prespammedPath);
     ~MapCanvasInputState();
 
 public:
-    static MouseSel getMouseSel(const std::optional<MouseSel> &x)
+    NODISCARD static MouseSel getMouseSel(const std::optional<MouseSel> &x)
     {
         if (x.has_value())
             return x.value();
@@ -236,14 +241,14 @@ public:
     }
 
 public:
-    bool hasSel1() const { return m_sel1.has_value(); }
-    bool hasSel2() const { return m_sel2.has_value(); }
-    bool hasBackup() const { return m_moveBackup.has_value(); }
+    NODISCARD bool hasSel1() const { return m_sel1.has_value(); }
+    NODISCARD bool hasSel2() const { return m_sel2.has_value(); }
+    NODISCARD bool hasBackup() const { return m_moveBackup.has_value(); }
 
 public:
-    MouseSel getSel1() const { return getMouseSel(m_sel1); }
-    MouseSel getSel2() const { return getMouseSel(m_sel2); }
-    MouseSel getBackup() const { return getMouseSel(m_moveBackup); }
+    NODISCARD MouseSel getSel1() const { return getMouseSel(m_sel1); }
+    NODISCARD MouseSel getSel2() const { return getMouseSel(m_sel2); }
+    NODISCARD MouseSel getBackup() const { return getMouseSel(m_moveBackup); }
 
 public:
     void startMoving(const MouseSel &startPos) { m_moveBackup = startPos; }

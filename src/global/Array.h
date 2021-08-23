@@ -6,16 +6,17 @@
 #include <cstddef>
 
 #include "RuleOf5.h"
+#include "macros.h"
 
 namespace MMapper {
 
-constexpr struct Uninitialized
+constexpr struct NODISCARD Uninitialized
 {
 } uninitialized;
 
 /// Like std::array, except it has a sane default initializer.
 template<typename T, size_t N>
-class Array : public std::array<T, N>
+class NODISCARD Array : public std::array<T, N>
 {
 public:
     /// Uses std::array's implicitly-defined default constructor

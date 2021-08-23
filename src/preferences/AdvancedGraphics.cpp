@@ -35,7 +35,7 @@ public:
         setRange(m_fp.min, m_fp.max);
         setValue(m_fp.get());
     }
-    ~FpSlider() override;
+    ~FpSlider() final;
 };
 
 FpSlider::~FpSlider() = default;
@@ -57,7 +57,7 @@ public:
         setDecimals(FP::digits);
         setSingleStep(fraction);
     }
-    ~FpSpinBox() override;
+    ~FpSpinBox() final;
 
 public:
     int getIntValue() const

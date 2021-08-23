@@ -37,8 +37,8 @@ void TestParser::latinToAsciiTest()
 void TestParser::createParseEventTest()
 {
     RoomName roomName{"Room"};
-    RoomDynamicDesc roomDescription{"Dynamic Description"};
-    RoomStaticDesc parsedRoomDescription{"Static Description"};
+    RoomDesc parsedRoomDescription{"Description"};
+    RoomContents roomContents{"Contents"};
     auto terrain = RoomTerrainEnum::INDOORS;
     ExitsFlagsType eFlags;
     eFlags.setValid();
@@ -47,8 +47,8 @@ void TestParser::createParseEventTest()
     cFlags.setValid();
     auto event = ParseEvent::createEvent(CommandEnum::NORTH,
                                          roomName,
-                                         roomDescription,
                                          parsedRoomDescription,
+                                         roomContents,
                                          eFlags,
                                          pFlags,
                                          cFlags);
@@ -56,8 +56,8 @@ void TestParser::createParseEventTest()
     const ParseEvent &e = *event;
     qDebug() << e;
     QCOMPARE(e.getRoomName(), roomName);
-    QCOMPARE(e.getDynamicDesc(), roomDescription);
-    QCOMPARE(e.getStaticDesc(), parsedRoomDescription);
+    QCOMPARE(e.getRoomDesc(), parsedRoomDescription);
+    QCOMPARE(e.getRoomContents(), roomContents);
     QCOMPARE(e.getExitsFlags(), eFlags);
     QCOMPARE(e.getPromptFlags(), pFlags);
     QCOMPARE(e.getConnectedRoomFlags(), cFlags);
@@ -65,7 +65,7 @@ void TestParser::createParseEventTest()
     QCOMPARE(e.getMoveType(), CommandEnum::NORTH);
     QCOMPARE(e.getNumSkipped(), 0u);
     QCOMPARE(RoomName(e[0].getStdString()), roomName);
-    QCOMPARE(RoomStaticDesc(e[1].getStdString()), parsedRoomDescription);
+    QCOMPARE(RoomDesc(e[1].getStdString()), parsedRoomDescription);
     QCOMPARE(::toQStringLatin1(e[2].getStdString()),
              ::toQStringLatin1(std::string(1, static_cast<char>(terrain))));
 }

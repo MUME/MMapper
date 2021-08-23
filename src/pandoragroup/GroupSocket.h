@@ -18,7 +18,7 @@
 
 class GroupAuthority;
 
-enum class ProtocolStateEnum { Unconnected, AwaitingLogin, AwaitingInfo, Logged };
+enum class NODISCARD ProtocolStateEnum { Unconnected, AwaitingLogin, AwaitingInfo, Logged };
 using ProtocolVersion = uint32_t;
 
 class GroupSocket final : public QObject
@@ -26,7 +26,7 @@ class GroupSocket final : public QObject
     Q_OBJECT
 public:
     explicit GroupSocket(GroupAuthority *authority, QObject *parent);
-    virtual ~GroupSocket() override;
+    ~GroupSocket() final;
 
     void setSocket(qintptr socketDescriptor);
     void connectToHost();
@@ -34,41 +34,43 @@ public:
     void startServerEncrypted() { socket.startServerEncryption(); }
     void startClientEncrypted() { socket.startClientEncryption(); }
 
-    QByteArray getSecret() const { return secret; }
-    QString getPeerName() const;
-    quint16 getPeerPort() const { return socket.peerPort(); }
+    NODISCARD QByteArray getSecret() const { return secret; }
+    NODISCARD QString getPeerName() const;
+    NODISCARD quint16 getPeerPort() const { return socket.peerPort(); }
 
-    QAbstractSocket::SocketError getSocketError() const { return socket.error(); }
-    QSslCertificate getPeerCertificate() const { return socket.peerCertificate(); }
+    NODISCARD QAbstractSocket::SocketError getSocketError() const { return socket.error(); }
+    NODISCARD QSslCertificate getPeerCertificate() const { return socket.peerCertificate(); }
 
     void setProtocolState(ProtocolStateEnum val);
-    ProtocolStateEnum getProtocolState() const { return protocolState; }
+    NODISCARD ProtocolStateEnum getProtocolState() const { return protocolState; }
 
     void setProtocolVersion(const ProtocolVersion val) { protocolVersion = val; }
-    ProtocolVersion getProtocolVersion() { return protocolVersion; }
+    NODISCARD ProtocolVersion getProtocolVersion() { return protocolVersion; }
 
     void setName(const QByteArray val) { name = val; }
-    const QByteArray &getName() { return name; }
+    NODISCARD const QByteArray &getName() { return name; }
 
     void sendData(const QByteArray &data);
 
 protected slots:
-    void onError(QAbstractSocket::SocketError socketError);
-    void onPeerVerifyError(const QSslError &error);
-    void onReadyRead();
-    void onTimeout();
+    void slot_onError(QAbstractSocket::SocketError socketError);
+    void slot_onPeerVerifyError(const QSslError &error);
+    void slot_onReadyRead();
+    void slot_onTimeout();
 
 signals:
-    void sendLog(const QString &);
-    void connectionClosed(GroupSocket *);
-    void errorInConnection(GroupSocket *, const QString &);
-    void incomingData(GroupSocket *, QByteArray);
-    void connectionEstablished(GroupSocket *);
-    void connectionEncrypted(GroupSocket *);
+    void sig_sendLog(const QString &);
+    void sig_connectionClosed(GroupSocket *);
+    void sig_errorInConnection(GroupSocket *, const QString &);
+    void sig_incomingData(GroupSocket *, QByteArray);
+    void sig_connectionEstablished(GroupSocket *);
+    void sig_connectionEncrypted(GroupSocket *);
 
 private:
     void reset();
+    void sendLog(const QString &msg) { emit sig_sendLog(msg); }
 
+private:
     QSslSocket socket;
     QTimer timer;
     GroupAuthority *const authority;
@@ -77,7 +79,7 @@ private:
     ProtocolStateEnum protocolState = ProtocolStateEnum::Unconnected;
     ProtocolVersion protocolVersion = 102;
 
-    enum class GroupMessageStateEnum {
+    enum class NODISCARD GroupMessageStateEnum {
         /// integer string representing the messge length
         LENGTH,
         /// message payload

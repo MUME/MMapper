@@ -12,12 +12,12 @@ Q_DECLARE_METATYPE(SharedRoom)
 Q_DECLARE_METATYPE(SharedParseEvent)
 Q_DECLARE_METATYPE(ComparisonResultEnum)
 
-class TestExpandoraCommon : public QObject
+class TestExpandoraCommon final : public QObject
 {
     Q_OBJECT
 public:
     TestExpandoraCommon();
-    ~TestExpandoraCommon() override;
+    ~TestExpandoraCommon() final;
 
 private:
 private Q_SLOTS:

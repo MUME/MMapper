@@ -18,12 +18,12 @@ namespace enums {
 
 // REVISIT: add CountOf_v ?
 template<typename E>
-struct CountOf
+struct NODISCARD CountOf
 {};
 #define DEFINE_ENUM_COUNT(E, N) \
     namespace enums { \
     template<> \
-    struct CountOf<E> \
+    struct NODISCARD CountOf<E> \
     { \
         static_assert(std::is_enum_v<E>); \
         static constexpr const size_t value = N; \
@@ -34,7 +34,7 @@ template<typename CRTP,
          typename _Flag,
          typename _UnderlyingType,
          size_t _NUM_FLAGS = CountOf<_Flag>::value>
-class Flags
+class NODISCARD Flags
 {
 public:
     using Flag = _Flag;
@@ -77,14 +77,20 @@ private:
 
 public:
     NODISCARD explicit constexpr operator underlying_type() const noexcept { return m_flags; }
-    NODISCARD constexpr uint32_t asUint32() const noexcept { return m_flags; }
+    NODISCARD constexpr uint32_t asUint32() const noexcept
+    {
+        // Note: static_assert here isn't checked unless you call this function.
+        static_assert(sizeof(underlying_type) <= sizeof(uint32_t),
+                      "asUint32() is disabled because the underlying type is larger than 32-bits");
+        return m_flags;
+    }
 
 public:
-    NODISCARD friend inline bool operator==(const CRTP lhs, const CRTP rhs) noexcept
+    NODISCARD friend inline constexpr bool operator==(const CRTP lhs, const CRTP rhs) noexcept
     {
         return lhs.m_flags == rhs.m_flags;
     }
-    NODISCARD friend inline bool operator!=(const CRTP lhs, const CRTP rhs) noexcept
+    NODISCARD friend inline constexpr bool operator!=(const CRTP lhs, const CRTP rhs) noexcept
     {
         return lhs.m_flags != rhs.m_flags;
     }
@@ -220,7 +226,9 @@ public:
     //    assert(letters[2] == Letter::F);
     //    assert(letters[3] == Letter::Z);
     //
-    Flag operator[](const size_t n_) const noexcept
+    NODISCARD Flag operator[](const size_t n) const noexcept { return at(n); }
+    // Note: both [] and at() perform bounds checking in debug mode.
+    NODISCARD Flag at(const size_t n_) const noexcept
     {
         auto n = n_;
         assert(n < count());
@@ -243,7 +251,7 @@ public:
     /// Think of it as
     ///  using Predicate = std::function<bool(Flag)>;
     template<typename Predicate>
-    std::optional<Flag> find_first_matching(Predicate &&predicate) const
+    NODISCARD std::optional<Flag> find_first_matching(Predicate &&predicate) const
     {
         static constexpr underlying_type ONE = 1;
         for (auto tmp = m_flags; tmp != 0;) {
@@ -276,5 +284,39 @@ public:
             callback(x);
         }
     }
+
+public:
+    struct NODISCARD Iterator final
+    {
+    private:
+        Flags::underlying_type m_bits = 0;
+        size_t m_pos = 0;
+
+    public:
+        Iterator(const Flags &flags, const size_t pos)
+            : m_bits{flags.m_flags}
+            , m_pos{pos}
+        {}
+
+    public:
+        NODISCARD Flag operator*() const { return Flags{m_bits}.at(m_pos); }
+        Iterator operator++()
+        {
+            assert(m_pos < Flags{m_bits}.size());
+            ++m_pos;
+            return *this;
+        }
+        void operator++(int) = delete;
+        NODISCARD bool operator==(const Iterator &rhs) const
+        {
+            return m_bits == rhs.m_bits && m_pos == rhs.m_pos;
+        }
+        NODISCARD bool operator!=(const Iterator &rhs) const { return !(rhs == *this); }
+    };
+
+public:
+    NODISCARD Iterator begin() const { return Iterator{*this, 0}; }
+    NODISCARD Iterator end() const { return Iterator{*this, size()}; }
 };
+
 } // namespace enums

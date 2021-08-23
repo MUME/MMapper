@@ -6,9 +6,6 @@
 
 #include <list>
 #include <memory>
-#include <QVariant>
-#include <QtCore>
-#include <QtGlobal>
 
 #include "../expandoracommon/coordinate.h"
 #include "../global/roomid.h"
@@ -35,7 +32,7 @@ public:
     explicit AddTwoWayExit(RoomId room1Id,
                            RoomId room2Id,
                            ExitDirEnum room1Dir,
-                           ExitDirEnum in_room2Dir = ExitDirEnum::UNKNOWN)
+                           ExitDirEnum in_room2Dir)
         : AddOneWayExit(room1Id, room2Id, room1Dir)
         , room2Dir(in_room2Dir)
     {}
@@ -54,7 +51,7 @@ public:
     explicit RemoveTwoWayExit(RoomId room1Id,
                               RoomId room2Id,
                               ExitDirEnum room1Dir,
-                              ExitDirEnum in_room2Dir = ExitDirEnum::UNKNOWN)
+                              ExitDirEnum in_room2Dir)
         : RemoveOneWayExit(room1Id, room2Id, room1Dir)
         , room2Dir(in_room2Dir)
     {}

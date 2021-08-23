@@ -15,15 +15,15 @@
 class QObject;
 class QTimer;
 
-class MumeClockWidget : public QWidget, private Ui::MumeClockWidget
+class MumeClockWidget final : public QWidget, private Ui::MumeClockWidget
 {
     Q_OBJECT
 public:
-    explicit MumeClockWidget(MumeClock *clock = nullptr, QWidget *parent = nullptr);
-    ~MumeClockWidget() override;
+    explicit MumeClockWidget(MumeClock *clock, QWidget *parent);
+    ~MumeClockWidget() final;
 
 public slots:
-    void updateLabel();
+    void slot_updateLabel();
 
 private:
     MumeClock *m_clock = nullptr;

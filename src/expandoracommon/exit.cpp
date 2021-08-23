@@ -9,13 +9,6 @@
 #include "../mapdata/ExitFieldVariant.h"
 #include "../mapdata/ExitFlags.h"
 
-void Exit::updateExit(ExitFlags flags)
-{
-    if (flags ^ getExitFlags()) {
-        setExitFlags(getExitFlags() | flags);
-    }
-}
-
 #define DEFINE_SETTERS(_Type, _Prop, _OptInit) \
     void Exit::set##_Type(_Type value) { m_fields._Prop = std::move(value); }
 XFOREACH_EXIT_PROPERTY(DEFINE_SETTERS)
@@ -32,11 +25,6 @@ X_FOREACH_EXIT_FLAG(X_DEFINE_ACCESSORS)
     bool Exit::doorIs##CamelCase() const { return exitIsDoor() && getDoorFlags().is##CamelCase(); }
 X_FOREACH_DOOR_FLAG(X_DEFINE_ACCESSORS)
 #undef X_DEFINE_ACCESSORS
-
-bool Exit::doorNeedsKey() const
-{
-    return isDoor() && getDoorFlags().needsKey();
-}
 
 bool Exit::operator==(const Exit &rhs) const
 {

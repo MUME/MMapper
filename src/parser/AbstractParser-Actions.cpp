@@ -40,12 +40,12 @@ void AbstractParser::initActionMap()
 
     /// Positions
     auto sleeping = [this](StringView /*view*/) {
-        emit sendCharacterPositionEvent(CharacterPositionEnum::SLEEPING);
+        m_group.sendEvent(CharacterPositionEnum::SLEEPING);
     };
     addStartsWith("You go to sleep.", sleeping);
     addStartsWith("You are already sound asleep.", sleeping);
     auto sitting = [this](StringView /*view*/) {
-        emit sendCharacterPositionEvent(CharacterPositionEnum::SITTING);
+        m_group.sendEvent(CharacterPositionEnum::SITTING);
     };
     addStartsWith("You wake, and sit up.", sitting);
     addStartsWith("You sit down.", sitting);
@@ -53,19 +53,19 @@ void AbstractParser::initActionMap()
     addStartsWith("You're sitting already.", sitting);
     addStartsWith("You feel better and sit up.", sitting); // incap -> sitting
     auto resting = [this](StringView /*view*/) {
-        emit sendCharacterPositionEvent(CharacterPositionEnum::RESTING);
+        m_group.sendEvent(CharacterPositionEnum::RESTING);
     };
     addStartsWith("You rest your tired bones.", resting);
     addStartsWith("You sit down and rest your tired bones.", resting);
     addStartsWith("You are already resting.", resting);
     auto standing = [this](StringView /*view*/) {
-        emit sendCharacterPositionEvent(CharacterPositionEnum::STANDING);
+        m_group.sendEvent(CharacterPositionEnum::STANDING);
     };
     addStartsWith("You stop resting and stand up.", standing);
     addStartsWith("You stand up.", standing);
     addStartsWith("You are already standing.", standing);
     auto incap = [this](StringView /*view*/) {
-        emit sendCharacterPositionEvent(CharacterPositionEnum::INCAPACITATED);
+        m_group.sendEvent(CharacterPositionEnum::INCAPACITATED);
     };
     addStartsWith("You are incapacitated and will slowly die, if not aided.", incap);
     addStartsWith("You are in a pretty bad shape, unable to do anything!", incap);
@@ -74,18 +74,22 @@ void AbstractParser::initActionMap()
     auto dead = [this](StringView /*view*/) {
         m_queue.clear();
         pathChanged();
-        emit releaseAllPaths();
-        markCurrentCommand();
-        emit sendCharacterPositionEvent(CharacterPositionEnum::DEAD);
+        emit sig_releaseAllPaths();
+
+        // Highlight the current room
+        const auto tmpSel = RoomSelection::createSelection(m_mapData, getTailPosition());
+        emit sig_newRoomSelection(SigRoomSelection{tmpSel});
+
+        m_group.sendEvent(CharacterPositionEnum::DEAD);
     };
     addStartsWith("You are dead!", dead);
 
     /// Bash
     auto bashOff = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::BASHED, false);
+        m_group.sendEvent(CharacterAffectEnum::BASHED, false);
     };
     auto bashOn = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::BASHED, true);
+        m_group.sendEvent(CharacterAffectEnum::BASHED, true);
     };
     addStartsWith("Your head stops stinging.", bashOff);
     // No-bash mob
@@ -101,10 +105,10 @@ void AbstractParser::initActionMap()
 
     /// Blind
     auto blindOff = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::BLIND, false);
+        m_group.sendEvent(CharacterAffectEnum::BLIND, false);
     };
     auto blindOn = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::BLIND, true);
+        m_group.sendEvent(CharacterAffectEnum::BLIND, true);
     };
     // blind spell
     addStartsWith("You have been blinded!", blindOn);
@@ -115,10 +119,10 @@ void AbstractParser::initActionMap()
 
     /// Bleeding
     auto bleedOff = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::BLEEDING, false);
+        m_group.sendEvent(CharacterAffectEnum::BLEEDING, false);
     };
     auto bleedOn = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::BLEEDING, true);
+        m_group.sendEvent(CharacterAffectEnum::BLEEDING, true);
     };
     addStartsWith("You bleed from open wounds.", bleedOn);
     addRegex(
@@ -129,21 +133,21 @@ void AbstractParser::initActionMap()
 
     /// Slept
     auto sleptOff = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::SLEPT, false);
+        m_group.sendEvent(CharacterAffectEnum::SLEPT, false);
     };
     auto sleptOn = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::SLEPT, true);
-        emit sendCharacterPositionEvent(CharacterPositionEnum::SLEEPING);
+        m_group.sendEvent(CharacterAffectEnum::SLEPT, true);
+        m_group.sendEvent(CharacterPositionEnum::SLEEPING);
     };
     addStartsWith("You feel very sleepy... zzzzzz", sleptOn);
     addStartsWith("You feel less tired.", sleptOff);
 
     /// Poisoned
     auto poisonOff = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::POISONED, false);
+        m_group.sendEvent(CharacterAffectEnum::POISONED, false);
     };
     auto poisonOn = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::POISONED, true);
+        m_group.sendEvent(CharacterAffectEnum::POISONED, true);
     };
     // REVISIT: Is this a disease message?
     addStartsWith("You feel very sick.", poisonOn);
@@ -172,10 +176,10 @@ void AbstractParser::initActionMap()
 
     /// Hungry
     auto hungerOff = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::HUNGRY, false);
+        m_group.sendEvent(CharacterAffectEnum::HUNGRY, false);
     };
     auto hungerOn = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::HUNGRY, true);
+        m_group.sendEvent(CharacterAffectEnum::HUNGRY, true);
     };
     addStartsWith("You begin to feel hungry.", hungerOn);
     addStartsWith("You are hungry.", hungerOn);
@@ -184,10 +188,10 @@ void AbstractParser::initActionMap()
 
     /// Thirsty
     auto thirstOff = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::THIRSTY, false);
+        m_group.sendEvent(CharacterAffectEnum::THIRSTY, false);
     };
     auto thirstOn = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::THIRSTY, true);
+        m_group.sendEvent(CharacterAffectEnum::THIRSTY, true);
     };
     addStartsWith("You begin to feel thirsty.", thirstOn);
     addStartsWith("You are thirsty.", thirstOn);
@@ -199,8 +203,10 @@ void AbstractParser::initActionMap()
 
     /// Path Machine: Prespam
     auto failedMovement = [this](StringView /*view*/) {
-        if (!m_queue.isEmpty())
-            m_queue.dequeue();
+        if (!m_queue.isEmpty()) {
+            MAYBE_UNUSED const auto ignored = //
+                m_queue.dequeue();
+        }
         pathChanged();
     };
     addStartsWith("You failed to climb", failedMovement);
@@ -226,10 +232,12 @@ void AbstractParser::initActionMap()
     // A pack horse
     addEndsWith("is too exhausted.", failedMovement);
     auto zblam = [this](StringView /*view*/) {
-        if (!m_queue.isEmpty())
-            m_queue.dequeue();
+        if (!m_queue.isEmpty()) {
+            MAYBE_UNUSED const auto ignored = //
+                m_queue.dequeue();
+        }
         pathChanged();
-        emit sendCharacterPositionEvent(CharacterPositionEnum::RESTING);
+        m_group.sendEvent(CharacterPositionEnum::RESTING);
     };
     addRegex(R"(^ZBLAM! .+ doesn't want you riding (him|her|it) anymore.$)", zblam);
 
@@ -245,9 +253,9 @@ void AbstractParser::initActionMap()
             return;
 
         // Predict our movement given what we know about flow flags
-        auto rs = RoomSelection(*m_mapData);
+        auto rs = RoomSelection(m_mapData);
         if (const Room *const r = rs.getRoom(getNextPosition())) {
-            for (auto i : ALL_EXITS_NESWUD) {
+            for (const ExitDirEnum i : ALL_EXITS_NESWUD) {
                 const Exit &e = r->exit(i);
                 const ExitFlags ef = e.getExitFlags();
                 if (!ef.isExit())
@@ -265,25 +273,25 @@ void AbstractParser::initActionMap()
 
     /// Time
     addStartsWith("The current time is",
-                  [this](StringView view) { m_mumeClock->parseClockTime(view.toQString()); });
+                  [this](StringView view) { m_mumeClock.parseClockTime(view.toQString()); });
     addEndsWith("of the Third Age.",
-                [this](StringView view) { m_mumeClock->parseMumeTime(view.toQString()); });
+                [this](StringView view) { m_mumeClock.parseMumeTime(view.toQString()); });
 
     /// Score
     addRegex(R"(^(You have )?\d+/\d+ hits?(, \d+/\d+ mana,)? and \d+/\d+ move(ment point)?s.$)",
-             [this](StringView view) { emit sendScoreLineEvent(view.toQByteArray()); });
+             [this](StringView view) { sendScoreLineEvent(view.toQByteArray()); });
 
     /// Search, reveal, and flush
     addStartsWith("You begin to search...", [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::SEARCH, true);
+        m_group.sendEvent(CharacterAffectEnum::SEARCH, true);
     });
 
     /// Snared
     auto snaredOff = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::SNARED, false);
+        m_group.sendEvent(CharacterAffectEnum::SNARED, false);
     };
     auto snaredOn = [this](StringView /*view*/) {
-        emit sendCharacterAffectEvent(CharacterAffectEnum::SNARED, true);
+        m_group.sendEvent(CharacterAffectEnum::SNARED, true);
     };
     // water serpent
     addEndsWith("wraps itself tightly around you and begins squeezing.", snaredOn);

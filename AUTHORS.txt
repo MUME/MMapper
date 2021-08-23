@@ -1,4 +1,5 @@
 Dmitrijs Barbarins <lachupe@gmail.com> (Azazello)
+Kevin Wilson <kpwilson@pm.me> (Cuantar)
 'Elval' <ethorondil@gmail.com> (Elval)
 Jan 'Kovis' Struhar <kovis@sourceforge.net> (Kovis)
 Jean-Yves Perrier <jypenator@gmail.com> (Teoli)

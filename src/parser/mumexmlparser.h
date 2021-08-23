@@ -28,7 +28,7 @@ struct TelnetData;
 
 // #define XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
 
-enum class XmlModeEnum { NONE, ROOM, NAME, DESCRIPTION, EXITS, PROMPT, TERRAIN, HEADER };
+enum class NODISCARD XmlModeEnum { NONE, ROOM, NAME, DESCRIPTION, EXITS, PROMPT, TERRAIN, HEADER };
 
 class MumeXmlParser final : public AbstractParser
 {
@@ -52,27 +52,26 @@ private:
 
     // REVISIT: Is there any point to having a distinction between null and empty?
     std::optional<RoomName> m_roomName;
-    std::optional<RoomStaticDesc> m_staticRoomDesc;
-    std::optional<RoomDynamicDesc> m_dynamicRoomDesc;
+    std::optional<RoomDesc> m_roomDesc;
+    std::optional<RoomContents> m_roomContents;
 
 public:
-    explicit MumeXmlParser(
-        MapData *, MumeClock *, ProxyParserApi, GroupManagerApi, QObject *parent = nullptr);
-    ~MumeXmlParser() override;
+    explicit MumeXmlParser(MapData &, MumeClock &, ProxyParserApi, GroupManagerApi, QObject *parent);
+    ~MumeXmlParser() final;
 
 private:
     void parse(const TelnetData &);
 
 public:
-    void parseNewMudInput(const TelnetData &data) override;
+    void slot_parseNewMudInput(const TelnetData &data);
 
 private:
     void parseMudCommands(const QString &str);
-    QByteArray characters(QByteArray &ch);
-    bool element(const QByteArray &);
+    NODISCARD QByteArray characters(QByteArray &ch);
+    NODISCARD bool element(const QByteArray &);
     void move();
-    std::string snoopToUser(const std::string_view &str);
+    NODISCARD std::string snoopToUser(const std::string_view &str);
 
 private:
-    void stripXmlEntities(QByteArray &ch);
+    static void stripXmlEntities(QByteArray &ch);
 };

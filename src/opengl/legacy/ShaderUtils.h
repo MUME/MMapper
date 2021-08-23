@@ -10,7 +10,7 @@
 namespace ShaderUtils {
 using Functions = Legacy::Functions;
 
-struct Source final
+struct NODISCARD Source final
 {
     const std::string filename;
     const std::string source;
@@ -25,6 +25,6 @@ struct Source final
     explicit operator bool() const { return !filename.empty() || !source.empty(); }
 };
 
-GLuint loadShaders(Functions &gl, const Source &vert, const Source &frag);
+NODISCARD GLuint loadShaders(Functions &gl, const Source &vert, const Source &frag);
 
 } // namespace ShaderUtils

@@ -55,13 +55,13 @@ static_assert(040 == 32, "MMapper 2.3.7 Schema");
 static_assert(041 == 33, "MMapper 2.4.0 Schema");
 static_assert(042 == 34, "MMapper 2.4.3 Schema");
 
-static const Coordinate convertESUtoENU(Coordinate c)
+NODISCARD static const Coordinate convertESUtoENU(Coordinate c)
 {
     c.y *= -1;
     return c;
 }
 
-static Coordinate transformRoomOnLoad(const uint32_t version, Coordinate c)
+NODISCARD static Coordinate transformRoomOnLoad(const uint32_t version, Coordinate c)
 {
     if (version <= MMAPPER_2_5_1_SCHEMA) {
         return convertESUtoENU(c);
@@ -135,10 +135,10 @@ void MapStorage::newData()
 
     // clear previous map
     m_mapData.clear();
-    emit onNewData();
+    emit sig_onNewData();
 }
 
-class LoadRoomHelper final
+class NODISCARD LoadRoomHelper final
 {
 private:
     QDataStream &stream;
@@ -168,7 +168,7 @@ public:
     }
 
 public:
-    auto read_u8()
+    NODISCARD auto read_u8()
     {
         uint8_t result;
         stream >> result;
@@ -176,7 +176,7 @@ public:
         return result;
     }
 
-    auto read_u16()
+    NODISCARD auto read_u16()
     {
         uint16_t result;
         stream >> result;
@@ -184,14 +184,14 @@ public:
         return result;
     }
 
-    auto read_u32()
+    NODISCARD auto read_u32()
     {
         uint32_t result;
         stream >> result;
         check_status();
         return result;
     }
-    auto read_i32()
+    NODISCARD auto read_i32()
     {
         int32_t result;
         stream >> result;
@@ -199,7 +199,7 @@ public:
         return result;
     }
 
-    auto read_string()
+    NODISCARD auto read_string()
     {
         QString result;
         stream >> result;
@@ -207,7 +207,7 @@ public:
         return result;
     }
 
-    auto read_datetime()
+    NODISCARD auto read_datetime()
     {
         QDateTime result;
         stream >> result;
@@ -215,7 +215,7 @@ public:
         return result;
     }
 
-    Coordinate readCoord3d()
+    NODISCARD Coordinate readCoord3d()
     {
         const auto x = read_i32();
         const auto y = read_i32();
@@ -244,7 +244,7 @@ E serialize(const uint32_t value)
     return static_cast<E>(value);
 }
 
-static RoomTerrainEnum serialize(const uint32_t value)
+NODISCARD static RoomTerrainEnum serialize(const uint32_t value)
 {
     if (value >= NUM_ROOM_TERRAIN_TYPES) {
         static std::once_flag flag;
@@ -260,8 +260,8 @@ SharedRoom MapStorage::loadRoom(QDataStream &stream, const uint32_t version)
     LoadRoomHelper helper{stream};
     const SharedRoom room = Room::createPermanentRoom(m_mapData);
     room->setName(RoomName{helper.read_string()});
-    room->setStaticDescription(RoomStaticDesc{helper.read_string()});
-    room->setDynamicDescription(RoomDynamicDesc{helper.read_string()});
+    room->setDescription(RoomDesc{helper.read_string()});
+    room->setContents(RoomContents{helper.read_string()});
     room->setId(RoomId{helper.read_u32() + baseId});
     room->setNote(RoomNote{helper.read_string()});
     room->setTerrainType(serialize(helper.read_u8()));
@@ -290,7 +290,7 @@ void MapStorage::loadExits(Room &room, QDataStream &stream, const uint32_t versi
     LoadRoomHelper helper{stream};
 
     ExitsList eList;
-    for (const auto i : ALL_EXITS7) {
+    for (const ExitDirEnum i : ALL_EXITS7) {
         Exit &e = eList[i];
 
         // Read the exit flags
@@ -337,7 +337,7 @@ bool MapStorage::loadData()
         return mergeData();
     } catch (const std::exception &ex) {
         const auto msg = QString::asprintf("Exception: %s", ex.what());
-        emit log("MapStorage", msg);
+        log(msg);
         qWarning().noquote() << msg;
         m_mapData.clear();
         return false;
@@ -351,8 +351,6 @@ bool MapStorage::mergeData()
                               tr("MapStorage Error"),
                               msg);
     };
-
-    const auto emit_log = [this](const QString &msg) { emit log("MapStorage", msg); };
 
     {
         MapFrontendBlocker blocker(m_mapData);
@@ -371,7 +369,7 @@ bool MapStorage::mergeData()
             basePosition.z = -1;
         }
 
-        emit_log("Loading data ...");
+        log("Loading data ...");
 
         auto &progressCounter = getProgressCounter();
         progressCounter.reset();
@@ -406,7 +404,8 @@ bool MapStorage::mergeData()
 
         if (!supported) {
             const bool isNewer = version >= CURRENT_SCHEMA;
-            critical(QString("This map has schema version %1 which is too %2.\r\n\r\n"
+            critical(QString("This map has schema version %1 which is too %2.\n"
+                             "\n"
                              "Please %3 MMapper.")
                          .arg(version)
                          .arg(isNewer ? "new" : "old")
@@ -433,16 +432,17 @@ bool MapStorage::mergeData()
             buffer.setData(uncompressedData);
             buffer.open(QIODevice::ReadOnly);
             stream.setDevice(&buffer);
-            emit_log(QString("Uncompressed map using %1").arg(qCompressed ? "qUncompress" : "zlib"));
+            log(QString("Uncompressed map using %1").arg(qCompressed ? "qUncompress" : "zlib"));
 
         } else if (NO_ZLIB && zlibCompressed) {
-            critical("MMapper could not load this map because it is too old.\r\n\r\n"
+            critical("MMapper could not load this map because it is too old.\n"
+                     "\n"
                      "Please recompile MMapper with USE_ZLIB.");
             return false;
         } else {
-            emit_log("Map was not compressed");
+            log("Map was not compressed");
         }
-        emit_log(QString("Schema version: %1").arg(version));
+        log(QString("Schema version: %1").arg(version));
 
         const uint32_t roomsCount = helper.read_u32();
         const uint32_t marksCount = helper.read_u32();
@@ -450,7 +450,7 @@ bool MapStorage::mergeData()
 
         m_mapData.setPosition(transformRoomOnLoad(version, helper.readCoord3d() + basePosition));
 
-        emit_log(QString("Number of rooms: %1").arg(roomsCount));
+        log(QString("Number of rooms: %1").arg(roomsCount));
 
         for (uint32_t i = 0; i < roomsCount; ++i) {
             SharedRoom room = loadRoom(stream, version);
@@ -459,20 +459,20 @@ bool MapStorage::mergeData()
             m_mapData.insertPredefinedRoom(room);
         }
 
-        emit_log(QString("Number of info items: %1").arg(marksCount));
+        log(QString("Number of info items: %1").arg(marksCount));
 
         // TODO: reserve the markerList with marksCount
 
         // create all pointers to items
         for (uint32_t index = 0; index < marksCount; ++index) {
             auto mark = InfoMark::alloc(m_mapData);
-            loadMark(mark.get(), stream, version);
-            m_mapData.addMarker(mark);
+            loadMark(deref(mark), stream, version);
+            m_mapData.addMarker(std::move(mark));
 
             progressCounter.step();
         }
 
-        emit_log("Finished loading.");
+        log("Finished loading.");
 
         // REVISIT: Closing is probably not necessary, since you don't do it in the failure cases.
         buffer.close();
@@ -489,22 +489,24 @@ bool MapStorage::mergeData()
     }
 
     m_mapData.checkSize();
-    emit onDataLoaded();
+    emit sig_onDataLoaded();
     return true;
 }
 
-void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, uint32_t version)
+void MapStorage::loadMark(InfoMark &mark, QDataStream &stream, uint32_t version)
 {
     auto helper = LoadRoomHelper{stream};
 
     if (version <= MMAPPER_2_5_1_SCHEMA) {
-        helper.read_string(); /* value ignored; called for side effect */
+        MAYBE_UNUSED const auto ignored = //
+            helper.read_string();         /* value ignored; called for side effect */
     }
 
-    mark->setText(InfoMarkText(helper.read_string()));
+    mark.setText(InfoMarkText(helper.read_string()));
 
     if (version <= MMAPPER_2_5_1_SCHEMA) {
-        helper.read_datetime(); /* value ignored; called for side effect */
+        MAYBE_UNUSED const auto ignored = //
+            helper.read_datetime();       /* value ignored; called for side effect */
     }
 
     const auto type = [](const uint8_t value) {
@@ -515,7 +517,7 @@ void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, uint32_t version)
         }
         return static_cast<InfoMarkTypeEnum>(value);
     }(helper.read_u8());
-    mark->setType(type);
+    mark.setType(type);
 
     if (version >= MMAPPER_2_3_7_SCHEMA) {
         const auto clazz = [](const uint8_t value) {
@@ -527,11 +529,11 @@ void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, uint32_t version)
             }
             return static_cast<InfoMarkClassEnum>(value);
         }(helper.read_u8());
-        mark->setClass(clazz);
+        mark.setClass(clazz);
         if (version < MMAPPER_19_10_0_SCHEMA) {
-            mark->setRotationAngle(helper.read_i32() / INFOMARK_SCALE);
+            mark.setRotationAngle(helper.read_i32() / INFOMARK_SCALE);
         } else {
-            mark->setRotationAngle(helper.read_i32());
+            mark.setRotationAngle(helper.read_i32());
         }
     }
 
@@ -540,23 +542,23 @@ void MapStorage::loadMark(InfoMark *mark, QDataStream &stream, uint32_t version)
                + Coordinate{basePos.x * INFOMARK_SCALE, basePos.y * INFOMARK_SCALE, basePos.z};
     };
 
-    mark->setPosition1(read_coord(helper, basePosition));
-    mark->setPosition2(read_coord(helper, basePosition));
+    mark.setPosition1(read_coord(helper, basePosition));
+    mark.setPosition2(read_coord(helper, basePosition));
 
-    transformInfomarkOnLoad(version, *mark);
+    transformInfomarkOnLoad(version, mark);
 
-    if (mark->getType() != InfoMarkTypeEnum::TEXT && !mark->getText().isEmpty())
-        mark->setText(InfoMarkText{});
+    if (mark.getType() != InfoMarkTypeEnum::TEXT && !mark.getText().isEmpty())
+        mark.setText(InfoMarkText{});
     // REVISIT: Just discard empty text markers?
-    else if (mark->getType() == InfoMarkTypeEnum::TEXT && mark->getText().isEmpty())
-        mark->setText(InfoMarkText{"New Marker"});
+    else if (mark.getType() == InfoMarkTypeEnum::TEXT && mark.getText().isEmpty())
+        mark.setText(InfoMarkText{"New Marker"});
 }
 
 void MapStorage::saveRoom(const Room &room, QDataStream &stream)
 {
     stream << room.getName().toQString();
-    stream << room.getStaticDescription().toQString();
-    stream << room.getDynamicDescription().toQString();
+    stream << room.getDescription().toQString();
+    stream << room.getContents().toQString();
     stream << static_cast<quint32>(room.getId());
     stream << room.getNote().toQString();
     stream << static_cast<quint8>(room.getTerrainType());
@@ -595,7 +597,7 @@ void MapStorage::saveExits(const Room &room, QDataStream &stream)
 
 bool MapStorage::saveData(bool baseMapOnly)
 {
-    emit log("MapStorage", "Writing data to file ...");
+    log("Writing data to file ...");
 
     QDataStream fileStream(m_file);
     fileStream.setVersion(QDataStream::Qt_4_8);
@@ -655,8 +657,8 @@ bool MapStorage::saveData(bool baseMapOnly)
     }
 
     // save items
-    for (auto &mark : markerList) {
-        saveMark(mark.get(), stream);
+    for (const auto &mark : markerList) {
+        saveMark(deref(mark), stream);
         progressCounter.step();
     }
 
@@ -669,28 +671,27 @@ bool MapStorage::saveData(bool baseMapOnly)
                                   ? 1.0
                                   : (static_cast<double>(uncompressedData.size())
                                      / static_cast<double>(compressedData.size()));
-    emit log("MapStorage",
-             QString("Map compressed (compression ratio of %1:1)")
-                 .arg(QString::number(compressionRatio, 'f', 1)));
+    log(QString("Map compressed (compression ratio of %1:1)")
+            .arg(QString::number(compressionRatio, 'f', 1)));
 
     fileStream.writeRawData(compressedData.data(), compressedData.size());
-    emit log("MapStorage", "Writing data finished.");
+    log("Writing data finished.");
 
     m_mapData.unsetDataChanged();
-    emit onDataSaved();
+    emit sig_onDataSaved();
 
     return true;
 }
 
-void MapStorage::saveMark(InfoMark *mark, QDataStream &stream)
+void MapStorage::saveMark(const InfoMark &mark, QDataStream &stream)
 {
     // REVISIT: save type first, and then avoid saving fields that aren't necessary?
-    const InfoMarkTypeEnum type = mark->getType();
-    stream << QString((type == InfoMarkTypeEnum::TEXT) ? mark->getText().toQString() : "");
+    const InfoMarkTypeEnum type = mark.getType();
+    stream << QString((type == InfoMarkTypeEnum::TEXT) ? mark.getText().toQString() : "");
     stream << static_cast<quint8>(type);
-    stream << static_cast<quint8>(mark->getClass());
+    stream << static_cast<quint8>(mark.getClass());
     // REVISIT: round to 45 degrees?
-    stream << static_cast<qint32>(std::lround(mark->getRotationAngle()));
-    writeCoordinate(stream, mark->getPosition1());
-    writeCoordinate(stream, mark->getPosition2());
+    stream << static_cast<qint32>(std::lround(mark.getRotationAngle()));
+    writeCoordinate(stream, mark.getPosition1());
+    writeCoordinate(stream, mark.getPosition2());
 }

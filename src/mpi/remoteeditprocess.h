@@ -10,9 +10,10 @@
 #include <QStringList>
 #include <QtCore>
 
+#include "../global/macros.h"
 #include "remoteeditsession.h"
 
-class RemoteEditProcess : public QObject
+class RemoteEditProcess final : public QObject
 {
     Q_OBJECT
 
@@ -20,19 +21,26 @@ public:
     explicit RemoteEditProcess(bool editSession,
                                const QString &title,
                                const QString &body,
-                               QObject *parent = nullptr);
-    ~RemoteEditProcess() override;
-
-protected slots:
-    virtual void onError(QProcess::ProcessError);
-    virtual void onFinished(int, QProcess::ExitStatus);
-
-signals:
-    void cancel();
-    void save(const QString &);
+                               QObject *parent);
+    ~RemoteEditProcess() final;
 
 private:
-    QStringList splitCommandLine(const QString &cmdLine);
+    virtual void virt_onError(QProcess::ProcessError);
+    virtual void virt_onFinished(int, QProcess::ExitStatus);
+
+protected slots:
+    void slot_onError(QProcess::ProcessError err) { virt_onError(err); }
+    void slot_onFinished(int exitCode, QProcess::ExitStatus status)
+    {
+        virt_onFinished(exitCode, status);
+    }
+
+signals:
+    void sig_cancel();
+    void sig_save(const QString &);
+
+private:
+    NODISCARD static QStringList splitCommandLine(const QString &cmdLine);
 
     const QString m_title;
     const QString m_body;

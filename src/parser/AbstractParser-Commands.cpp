@@ -21,6 +21,7 @@
 #include "../mapdata/DoorFlags.h"
 #include "../mapdata/ExitFlags.h"
 #include "../mapdata/enums.h"
+#include "../mapdata/infomark.h"
 #include "../mapdata/mmapper2room.h"
 #include "../syntax/SyntaxArgs.h"
 #include "../syntax/TreeParser.h"
@@ -39,8 +40,8 @@ const Abbrev cmdDoorHelp{"doorhelp", 5};
 const Abbrev cmdGroup{"group", 5};
 const Abbrev cmdGroupTell{"gtell", 2};
 const Abbrev cmdHelp{"help", 2};
-const Abbrev cmdMarkCurrent{"markcurrent", 4};
-const Abbrev cmdRemoveDoorNames{"removedoornames"};
+const Abbrev cmdMark{"mark", 2};
+const Abbrev cmdRemoveDoorNames{"remove-secret-door-names"};
 const Abbrev cmdRoom{"room", 2};
 const Abbrev cmdSearch{"search", 3};
 const Abbrev cmdSet{"set", 2};
@@ -178,6 +179,7 @@ Abbrev getParserCommandName(const RoomMobFlagEnum x)
         CASE3(PASSIVE_MOB, "passivemob", -1);
         CASE3(ELITE_MOB, "elitemob", -1);
         CASE3(SUPER_MOB, "smob", -1);
+        CASE3(MILKABLE, "milkable", -1);
     }
     return Abbrev{};
 #undef CASE3
@@ -329,7 +331,30 @@ Abbrev getParserCommandName(const ExitFlagEnum x)
 #undef CASE3
 }
 
-static bool isCommand(const std::string &str, Abbrev abbrev)
+Abbrev getParserCommandName(const InfoMarkClassEnum x)
+{
+#define CASE3(UPPER, s, n) \
+    do { \
+    case InfoMarkClassEnum::UPPER: \
+        return Abbrev{s, n}; \
+    } while (false)
+    switch (x) {
+        CASE3(GENERIC, "generic", -1);
+        CASE3(HERB, "herb", -1);
+        CASE3(RIVER, "river", 2);
+        CASE3(PLACE, "place", -1);
+        CASE3(MOB, "mob", -1);
+        CASE3(COMMENT, "comment", -1);
+        CASE3(ROAD, "road", 2);
+        CASE3(OBJECT, "object", -1);
+        CASE3(ACTION, "action", -1);
+        CASE3(LOCALITY, "locality", -1);
+    }
+    return Abbrev{};
+#undef CASE3
+}
+
+NODISCARD static bool isCommand(const std::string &str, Abbrev abbrev)
 {
     if (!abbrev)
         return false;
@@ -342,7 +367,7 @@ static bool isCommand(const std::string &str, Abbrev abbrev)
     return abbrev.matches(word);
 }
 
-static bool isCommand(const std::string &str, const CommandEnum cmd)
+NODISCARD static bool isCommand(const std::string &str, const CommandEnum cmd)
 {
     switch (cmd) {
     case CommandEnum::NORTH:
@@ -375,7 +400,7 @@ bool AbstractParser::parseUserCommands(const QString &input)
         std::string s = ::toStdStringLatin1(input);
         auto view = StringView{s}.trim();
         if (view.isEmpty() || view.takeFirstLetter() != prefixChar)
-            sendToUser("Internal error. Sorry.\r\n");
+            sendToUser("Internal error. Sorry.\n");
         else
             parseSpecialCommand(view);
         sendPromptToUser();
@@ -432,7 +457,7 @@ bool AbstractParser::parseSimpleCommand(const QString &qstr)
                 if (!view.isEmpty() && !view.takeFirstWord().isEmpty()) {
                     const auto dir = static_cast<CommandEnum>(tryGetDir(view));
                     if (dir >= CommandEnum::UNKNOWN) {
-                        sendToUser("In which direction do you want to scout?\r\n");
+                        sendToUser("In which direction do you want to scout?\n");
                         sendPromptToUser();
 
                     } else {
@@ -454,25 +479,11 @@ bool AbstractParser::parseSimpleCommand(const QString &qstr)
     }
 
     if (!isOnline) {
-        sendToUser("Arglebargle, glop-glyf!?!\r\n");
+        sendToUser("Arglebargle, glop-glyf!?!\n");
         sendPromptToUser();
     }
 
     return isOnline; // only forward command to mud server if online
-}
-
-bool AbstractParser::parseDoorAction(StringView words)
-{
-    if (words.isEmpty())
-        return false;
-
-    const auto firstWord = words.takeFirstWord();
-    for (const DoorActionEnum dat : ALL_DOOR_ACTION_TYPES) {
-        if (getParserCommandName(dat).matches(firstWord)) {
-            return parseDoorAction(dat, words);
-        }
-    }
-    return false;
 }
 
 bool AbstractParser::parseDoorAction(const DoorActionEnum dat, StringView words)
@@ -487,7 +498,7 @@ bool AbstractParser::parseDoorAction(const DoorActionEnum dat, StringView words)
 void AbstractParser::parseSetCommand(StringView view)
 {
     if (view.isEmpty()) {
-        sendToUser(QString("Syntax: %1set prefix [punct-char]\r\n").arg(prefixChar));
+        sendToUser(QString("Syntax: %1set prefix [punct-char]\n").arg(prefixChar));
         return;
     }
 
@@ -515,7 +526,7 @@ void AbstractParser::parseSetCommand(StringView view)
             }
         }
 
-        sendToUser("Invalid prefix.\r\n");
+        sendToUser("Invalid prefix.\n");
         return;
     }
 
@@ -524,9 +535,8 @@ void AbstractParser::parseSetCommand(StringView view)
 
 void AbstractParser::parseSpecialCommand(StringView wholeCommand)
 {
-    // TODO: Just use '\n' and transform to "\r\n" elsewhere if necessary.
     if (wholeCommand.isEmpty()) {
-        sendToUser("Error: special command input is empty.\r\n");
+        sendToUser("Error: special command input is empty.\n");
         return;
     }
 
@@ -534,13 +544,13 @@ void AbstractParser::parseSpecialCommand(StringView wholeCommand)
         return;
 
     const auto word = wholeCommand.takeFirstWord();
-    sendToUser(QString("Unrecognized command: %1\r\n").arg(word.toQString()));
+    sendToUser(QString("Unrecognized command: %1\n").arg(word.toQString()));
 }
 
 void AbstractParser::parseSearch(StringView view)
 {
     if (view.isEmpty())
-        showSyntax("search [-(name|desc|dyncdesc|note|exits|flags|all|clear)] pattern");
+        showSyntax("search [-(name|desc|contents|note|exits|flags|all|clear)] pattern");
     else
         doSearchCommand(view);
 }
@@ -548,7 +558,7 @@ void AbstractParser::parseSearch(StringView view)
 void AbstractParser::parseDirections(StringView view)
 {
     if (view.isEmpty())
-        showSyntax("dirs [-(name|desc|dyncdesc|note|exits|flags|all)] pattern");
+        showSyntax("dirs [-(name|desc|contents|note|exits|flags|all)] pattern");
     else
         doGetDirectionsCommand(view);
 }
@@ -594,7 +604,7 @@ std::ostream &ArgHelpCommand::virt_to_stream(std::ostream &os) const
 void AbstractParser::parseHelp(StringView words)
 {
     using namespace syntax;
-    static auto abb = syntax::abbrevToken;
+    static const auto abb = syntax::abbrevToken;
     auto simpleSyntax = [](const std::string_view &name, auto &&fn) -> SharedConstSublist {
         auto abbrev = abb(std::string(name));
         auto helpstr = std::string("help for ") + std::string(name);
@@ -646,7 +656,9 @@ void AbstractParser::initSpecialCommandMap()
 
     const auto makeSimpleHelp = [this](const std::string &help) {
         return [this, help](const std::string &name) {
-            sendToUser(QString("Help for %1%2:\r\n  %3\r\n\r\n")
+            sendToUser(QString("Help for %1%2:\n"
+                               "  %3\n"
+                               "\n")
                            .arg(prefixChar)
                            .arg(::toQStringLatin1(name))
                            .arg(::toQStringLatin1(help)));
@@ -734,15 +746,6 @@ void AbstractParser::initSpecialCommandMap()
         },
         makeSimpleHelp("Send a grouptell with the [message]."));
     add(
-        cmdMarkCurrent,
-        [this](const std::vector<StringView> & /*s*/, StringView rest) {
-            if (!rest.isEmpty())
-                return false;
-            this->doMarkCurrentCommand();
-            return true;
-        },
-        makeSimpleHelp("Highlight the room you are currently in."));
-    add(
         cmdRemoveDoorNames,
         [this](const std::vector<StringView> & /*s*/, StringView rest) {
             if (!rest.isEmpty())
@@ -767,26 +770,29 @@ void AbstractParser::initSpecialCommandMap()
         },
         [this](const std::string &name) {
             const char help[]
-                = "Subcommands:\r\n"
-                  "\tprefix              # Displays the current prefix.\r\n"
-                  "\tprefix <punct-char> # Changes the current prefix.\r\n"
-                  "\r\n"
+                = "Subcommands:\n"
+                  "\tprefix              # Displays the current prefix.\n"
+                  "\tprefix <punct-char> # Changes the current prefix.\n"
+                  "\n"
                   // REVISIT: Does it actually support LATIN-1 punctuation like the degree symbol?
-                  "Note: <punct-char> may be any ASCII punctuation character,\r\n"
-                  "      which can be optionally single- or double-quoted.\r\n"
-                  "\r\n"
-                  "Examples to set prefix:\r\n"
-                  "\tprefix /   # slash character\r\n"
-                  "\tprefix '/' # single-quoted slash character\r\n"
-                  "\tprefix \"/\" # double-quoted slash character\r\n"
-                  "\tprefix '   # bare single-quote character\r\n"
-                  "\tprefix \"'\" # double-quoted single-quote character\r\n"
-                  "\tprefix \"   # bare double-quote character\r\n"
-                  "\tprefix '\"' # single-quoted double-quote character\r\n"
-                  "\r\n"
-                  "Note: Quoted versions do not allow escape codes,\r\n"
+                  "Note: <punct-char> may be any ASCII punctuation character,\n"
+                  "      which can be optionally single- or double-quoted.\n"
+                  "\n"
+                  "Examples to set prefix:\n"
+                  "\tprefix /   # slash character\n"
+                  "\tprefix '/' # single-quoted slash character\n"
+                  "\tprefix \"/\" # double-quoted slash character\n"
+                  "\tprefix '   # bare single-quote character\n"
+                  "\tprefix \"'\" # double-quoted single-quote character\n"
+                  "\tprefix \"   # bare double-quote character\n"
+                  "\tprefix '\"' # single-quoted double-quote character\n"
+                  "\n"
+                  "Note: Quoted versions do not allow escape codes,\n"
                   "so you cannot do ''', '\\'', \"\"\", or \"\\\"\".";
-            sendToUser(QString("Help for %1%2:\r\n%3\r\n\r\n")
+
+            sendToUser(QString("Help for %1%2:\n"
+                               "%3\n"
+                               "\n")
                            .arg(prefixChar)
                            .arg(::toQStringLatin1(name))
                            .arg(::toQStringLatin1(help)));
@@ -818,6 +824,15 @@ void AbstractParser::initSpecialCommandMap()
             return true;
         },
         makeSimpleHelp("Launches a web browser so you can vote for MUME on TMC!"));
+
+    /* mark commands */
+    add(
+        cmdMark,
+        [this](const std::vector<StringView> & /*s*/, StringView rest) {
+            parseMark(rest);
+            return true;
+        },
+        makeSimpleHelp("Perform actions on the current marks."));
 
     /* room commands */
     add(

@@ -8,29 +8,30 @@
 #include <QWidget>
 #include <QtCore>
 
+#include "../global/macros.h"
 #include "ui_parserpage.h"
 
 class QObject;
 
-enum class UiCharsetEnum { AsciiOrLatin1, UTF8 };
+enum class NODISCARD UiCharsetEnum { AsciiOrLatin1, UTF8 };
 
 class ParserPage : public QWidget, private Ui::ParserPage
 {
     Q_OBJECT
 
 public:
-    explicit ParserPage(QWidget *parent = nullptr);
+    explicit ParserPage(QWidget *parent);
 
 public slots:
-    void loadConfig();
-    void roomNameColorClicked();
-    void roomDescColorClicked();
-    void removeEndDescPatternClicked();
-    void addEndDescPatternClicked();
-    void testPatternClicked();
-    void validPatternClicked();
-    void endDescPatternsListActivated(const QString &);
-    void suppressXmlTagsCheckBoxStateChanged(int);
+    void slot_loadConfig();
+    void slot_roomNameColorClicked();
+    void slot_roomDescColorClicked();
+    void slot_removeEndDescPatternClicked();
+    void slot_addEndDescPatternClicked();
+    void slot_testPatternClicked();
+    void slot_validPatternClicked();
+    void slot_endDescPatternsListActivated(const QString &);
+    void slot_suppressXmlTagsCheckBoxStateChanged(int);
 
 private:
     void savePatterns();

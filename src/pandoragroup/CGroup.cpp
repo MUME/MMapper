@@ -21,12 +21,11 @@
 
 CGroup::CGroup(QObject *const parent)
     : QObject(parent)
-    , characterLock(QMutex::Recursive)
     , self{CGroupChar::alloc()}
 {
     const Configuration::GroupManagerSettings &groupManager = getConfig().groupManager;
     self->setName(groupManager.charName);
-    self->setRoomId(DEFAULT_ROOMID);
+    self->setRoomId(INVALID_ROOMID);
     self->setColor(groupManager.color);
     charIndex.push_back(self);
 }
@@ -54,7 +53,7 @@ void CGroup::executeActions()
     }
 }
 
-void CGroup::releaseCharacters(GroupRecipient *sender)
+void CGroup::virt_releaseCharacters(GroupRecipient *sender)
 {
     QMutexLocker lock(&characterLock);
     assert(sender);
@@ -93,9 +92,9 @@ void CGroup::resetChars()
 {
     QMutexLocker locker(&characterLock);
 
-    emit log("You have left the group.");
+    log("You have left the group.");
 
-    for (auto &character : charIndex) {
+    for (const auto &character : charIndex) {
         if (character != self) {
             // TODO: mark character as Zombie ?
         }
@@ -103,7 +102,7 @@ void CGroup::resetChars()
     charIndex.clear();
     charIndex.push_back(self);
 
-    emit characterChanged(true);
+    characterChanged(true);
 }
 
 bool CGroup::addChar(const QVariantMap &map)
@@ -112,13 +111,13 @@ bool CGroup::addChar(const QVariantMap &map)
     auto newChar = CGroupChar::alloc();
     newChar->updateFromVariantMap(map);
     if (isNamePresent(newChar->getName()) || newChar->getName() == "") {
-        emit log(QString("'%1' could not join the group because the name already existed.")
-                     .arg(newChar->getName().constData()));
+        log(QString("'%1' could not join the group because the name already existed.")
+                .arg(newChar->getName().constData()));
         return false;
     }
-    emit log(QString("'%1' joined the group.").arg(newChar->getName().constData()));
+    log(QString("'%1' joined the group.").arg(newChar->getName().constData()));
     charIndex.push_back(newChar);
-    emit characterChanged(true);
+    characterChanged(true);
     return true;
 }
 
@@ -126,16 +125,16 @@ void CGroup::removeChar(const QByteArray &name)
 {
     QMutexLocker locker(&characterLock);
     if (name == getConfig().groupManager.charName) {
-        emit log("You cannot delete yourself from the group.");
+        log("You cannot delete yourself from the group.");
         return;
     }
 
     for (auto it = charIndex.begin(); it != charIndex.end(); ++it) {
         SharedGroupChar character = *it;
         if (character->getName() == name) {
-            emit log(QString("Removing '%1' from the group.").arg(character->getName().constData()));
+            log(QString("Removing '%1' from the group.").arg(character->getName().constData()));
             charIndex.erase(it);
-            emit characterChanged(true);
+            characterChanged(true);
             return;
         }
     }
@@ -146,7 +145,7 @@ bool CGroup::isNamePresent(const QByteArray &name) const
     QMutexLocker locker(&characterLock);
 
     const QString nameStr = name.simplified();
-    for (auto &character : charIndex) {
+    for (const auto &character : charIndex) {
         if (nameStr.compare(character->getName(), Qt::CaseInsensitive) == 0) {
             return true;
         }
@@ -158,7 +157,7 @@ bool CGroup::isNamePresent(const QByteArray &name) const
 SharedGroupChar CGroup::getCharByName(const QByteArray &name) const
 {
     QMutexLocker locker(&characterLock);
-    for (auto &character : charIndex) {
+    for (const auto &character : charIndex) {
         if (character->getName() == name) {
             return character;
         }
@@ -182,7 +181,7 @@ void CGroup::updateChar(const QVariantMap &map)
 
     // Update canvas only if the character moved
     const bool updateCanvas = ch.getRoomId() != oldRoomId;
-    emit characterChanged(updateCanvas);
+    characterChanged(updateCanvas);
 }
 
 void CGroup::renameChar(const QVariantMap &map)
@@ -200,7 +199,7 @@ void CGroup::renameChar(const QVariantMap &map)
     const QString oldname = map["oldname"].toString();
     const QString newname = map["newname"].toString();
 
-    emit log(QString("Renaming '%1' to '%2'").arg(oldname).arg(newname));
+    log(QString("Renaming '%1' to '%2'").arg(oldname).arg(newname));
 
     const auto ch = getCharByName(oldname.toLatin1());
     if (ch == nullptr) {
@@ -209,5 +208,5 @@ void CGroup::renameChar(const QVariantMap &map)
     }
 
     ch->setName(newname.toLatin1());
-    emit characterChanged(false);
+    characterChanged(false);
 }

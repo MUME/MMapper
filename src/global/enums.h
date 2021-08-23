@@ -10,7 +10,7 @@
 namespace enums {
 
 template<typename T, const size_t N>
-inline MMapper::Array<T, N> genEnumValues()
+NODISCARD inline MMapper::Array<T, N> genEnumValues()
 {
     MMapper::Array<T, N> result;
     for (size_t i = 0u; i < N; ++i) {
@@ -20,7 +20,7 @@ inline MMapper::Array<T, N> genEnumValues()
 }
 
 template<typename E, typename It>
-struct counting_iterator
+struct NODISCARD counting_iterator
 {
     It begin_;
     It it_;
@@ -43,7 +43,7 @@ struct counting_iterator
     }
     bool operator!=(const counting_iterator &rhs) const { return !operator==(rhs); }
 
-    E operator*()
+    NODISCARD E operator*()
     {
         if (it_ >= end_)
             throw std::runtime_error("overflow");
@@ -53,17 +53,17 @@ struct counting_iterator
 };
 
 template<typename E, typename It>
-struct counting_range
+struct NODISCARD counting_range
 {
     using iterator = counting_iterator<E, It>;
     It beg_;
     It end_;
-    auto begin() { return iterator{beg_, beg_, end_}; }
-    auto end() { return iterator{beg_, end_, end_}; }
+    NODISCARD auto begin() { return iterator{beg_, beg_, end_}; }
+    NODISCARD auto end() { return iterator{beg_, end_, end_}; }
 };
 
 template<typename E, typename T>
-auto makeCountingIterator(T &&container)
+NODISCARD static inline auto makeCountingIterator(T &&container)
 {
     auto beg = std::begin(container);
     return counting_range<E, decltype(beg)>{beg, std::end(container)};

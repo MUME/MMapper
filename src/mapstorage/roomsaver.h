@@ -15,17 +15,21 @@ class RoomAdmin;
 
 class RoomSaver final : public RoomRecipient
 {
+private:
+    ConstRoomList &m_roomList;
+    RoomAdmin &m_admin;
+
 public:
     explicit RoomSaver(RoomAdmin &admin, ConstRoomList &list);
     ~RoomSaver() override;
-    void receiveRoom(RoomAdmin *admin, const Room *room) override;
-    quint32 getRoomsCount();
 
 public:
     RoomSaver() = delete;
     DELETE_CTORS_AND_ASSIGN_OPS(RoomSaver);
 
 private:
-    ConstRoomList &m_roomList;
-    RoomAdmin &m_admin;
+    void virt_receiveRoom(RoomAdmin *admin, const Room *room) final;
+
+public:
+    NODISCARD quint32 getRoomsCount();
 };

@@ -56,5 +56,6 @@ public:
     NODISCARD bool operator!=(const XNamedColor &rhs) const { return !(rhs == *this); }
 
 public:
+    // NOTE: This allocates memory.
     static std::vector<std::string> getAllNames();
 };

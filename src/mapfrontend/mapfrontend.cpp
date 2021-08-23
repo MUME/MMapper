@@ -25,7 +25,6 @@
 
 MapFrontend::MapFrontend(QObject *const parent)
     : QObject(parent)
-    , mapLock(QMutex::Recursive)
 {}
 
 MapFrontend::~MapFrontend()
@@ -142,6 +141,9 @@ void MapFrontend::clear()
     greatestUsedId = INVALID_ROOMID;
     m_bounds.reset();
     checkSize(); // called for side effect of sending signal
+
+    // REVISIT: should this occur inside of the lock?
+    virt_clear();
 }
 
 void MapFrontend::lookingForRooms(RoomRecipient &recipient, const RoomId id)
@@ -211,7 +213,7 @@ void MapFrontend::insertPredefinedRoom(const SharedRoom &sharedRoom)
     map.setNearest(c, room);
     checkSize(room.getPosition());
     unusedIds.push(id);
-    assignId(sharedRoom, roomHome);
+    MAYBE_UNUSED const auto ignored = assignId(sharedRoom, roomHome);
     if (roomHome != nullptr) {
         roomHome->addRoom(sharedRoom);
     }
@@ -260,7 +262,8 @@ void MapFrontend::checkSize(const Coordinate &c)
 #undef MINMAX
 }
 
-void MapFrontend::createRoom(const SigParseEvent &sigParseEvent, const Coordinate &expectedPosition)
+void MapFrontend::slot_createRoom(const SigParseEvent &sigParseEvent,
+                                  const Coordinate &expectedPosition)
 {
     const ParseEvent &event = sigParseEvent.deref();
 
@@ -270,7 +273,7 @@ void MapFrontend::createRoom(const SigParseEvent &sigParseEvent, const Coordinat
         SharedRoom room = Room::createTemporaryRoom(*this, event);
         roomHome->addRoom(room);
         map.setNearest(expectedPosition, *room);
-        assignId(room, roomHome);
+        MAYBE_UNUSED const auto ignored = assignId(room, roomHome);
     }
 }
 
@@ -280,7 +283,7 @@ void MapFrontend::lookingForRooms(RoomRecipient &recipient, const SigParseEvent 
     QMutexLocker locker(&mapLock);
     if (greatestUsedId == INVALID_ROOMID) {
         Coordinate c(0, 0, 0);
-        createRoom(sigParseEvent, c);
+        slot_createRoom(sigParseEvent, c);
         if (greatestUsedId != INVALID_ROOMID) {
             roomIndex[DEFAULT_ROOMID]->setPermanent();
         }

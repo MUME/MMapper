@@ -8,13 +8,12 @@
 #include <cstring>
 #include <stdexcept>
 #include <string_view>
-#include <QCharRef>
 
 #include "../global/StringView.h"
 
-bool isAbbrev(StringView input, const std::string_view &command, int minAbbrev);
+NODISCARD bool isAbbrev(StringView input, const std::string_view &command, int minAbbrev);
 
-struct Abbrev
+struct NODISCARD Abbrev final
 {
 private:
     const char *command = nullptr;
@@ -27,10 +26,10 @@ public:
     explicit Abbrev(std::nullptr_t, int) = delete;
     explicit Abbrev(const char *arg_command, int arg_minAbbrev = -1);
 
-    bool matches(StringView input) const { return ::isAbbrev(input, command, minAbbrev); }
+    NODISCARD bool matches(StringView input) const { return ::isAbbrev(input, command, minAbbrev); }
     explicit operator bool() const;
-    const char *getCommand() const { return command; }
-    int getMinAbbrev() const { return minAbbrev; }
-    int getLength() const { return len; }
-    QString describe() const;
+    NODISCARD const char *getCommand() const { return command; }
+    NODISCARD int getMinAbbrev() const { return minAbbrev; }
+    NODISCARD int getLength() const { return len; }
+    NODISCARD QString describe() const;
 };

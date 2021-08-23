@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 // Author: Mattias 'Mew_' Viklund <devmew@exedump.com> (Mirnir)
@@ -8,27 +8,26 @@
 #include <QFileInfoList>
 #include <QObject>
 
-class MainWindow;
+#include "../global/macros.h"
 
-class AutoLogger : public QObject
+class AutoLogger final : public QObject
 {
     Q_OBJECT
 public:
     explicit AutoLogger(QObject *parent);
-    ~AutoLogger() override;
+    ~AutoLogger() final;
 
 public slots:
-    void writeToLog(const QByteArray &ba);
-    void shouldLog(bool echo);
-    void onConnected();
+    void slot_writeToLog(const QByteArray &ba);
+    void slot_shouldLog(bool echo);
+    void slot_onConnected();
 
 private:
-    bool writeLine(const QByteArray &ba);
+    NODISCARD bool writeLine(const QByteArray &ba);
     void deleteOldLogs();
     void deleteLogs(const QFileInfoList &files);
-    bool showDeleteDialog(QString message);
-
-    bool createFile();
+    NODISCARD bool showDeleteDialog(QString message);
+    NODISCARD bool createFile();
 
 private:
     const std::string m_runId;

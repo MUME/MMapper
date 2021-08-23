@@ -8,11 +8,10 @@
 #include <QString>
 #include <QtCore>
 
+#include "../global/macros.h"
 #include "abstractmapstorage.h"
 
 class MapData;
-class QJsonArray;
-class QJsonObject;
 class QObject;
 
 /*! \brief JSON export for web clients.
@@ -27,20 +26,20 @@ class JsonMapStorage final : public AbstractMapStorage
     Q_OBJECT
 
 public:
-    explicit JsonMapStorage(MapData &, const QString &, QObject *parent = nullptr);
-    ~JsonMapStorage() override;
+    explicit JsonMapStorage(MapData &, const QString &, QObject *parent);
+    ~JsonMapStorage() final;
 
 public:
     JsonMapStorage() = delete;
 
 private:
-    virtual bool canLoad() const override { return false; }
-    virtual bool canSave() const override { return true; }
+    NODISCARD virtual bool canLoad() const override { return false; }
+    NODISCARD virtual bool canSave() const override { return true; }
 
     virtual void newData() override;
-    virtual bool loadData() override;
-    virtual bool saveData(bool baseMapOnly) override;
-    virtual bool mergeData() override;
-
+    NODISCARD virtual bool loadData() override;
+    NODISCARD virtual bool saveData(bool baseMapOnly) override;
+    NODISCARD virtual bool mergeData() override;
+    void log(const QString &msg) { emit sig_log("JsonMapStorage", msg); }
     // void saveMark(InfoMark * mark, QJsonObject &jRoom, const JsonRoomIdsCache &jRoomIds);
 };

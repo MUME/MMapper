@@ -8,6 +8,8 @@
 #include <QByteArray>
 #include <QString>
 
+#include "macros.h"
+
 static constexpr const uint32_t MAX_UNICODE_CODEPOINT = 0x10FFFFu;
 
 using OptQChar = std::optional<const QChar>;
@@ -15,7 +17,7 @@ using OptQChar = std::optional<const QChar>;
 namespace entities {
 struct EncodedLatin1;
 /// Without entities
-struct DecodedUnicode : QString
+struct NODISCARD DecodedUnicode : QString
 {
     using QString::QString;
     explicit DecodedUnicode(const char *s)
@@ -33,7 +35,7 @@ struct DecodedUnicode : QString
     DecodedUnicode(const EncodedLatin1 &) = delete;
 };
 /// With entities
-struct EncodedLatin1 : QByteArray
+struct NODISCARD EncodedLatin1 : QByteArray
 {
     using QByteArray::QByteArray;
     explicit EncodedLatin1(const char *s)
@@ -50,14 +52,24 @@ struct EncodedLatin1 : QByteArray
     EncodedLatin1(const DecodedUnicode &) = delete;
 };
 
-enum class EncodingEnum { Translit, Lossless };
-EncodedLatin1 encode(const DecodedUnicode &name, EncodingEnum encodingType = EncodingEnum::Translit);
-DecodedUnicode decode(const EncodedLatin1 &input);
+enum class NODISCARD EncodingEnum { Translit, Lossless };
+NODISCARD extern EncodedLatin1 encode(const DecodedUnicode &name,
+                                      EncodingEnum encodingType = EncodingEnum::Translit);
+NODISCARD extern DecodedUnicode decode(const EncodedLatin1 &input);
 
-struct EntityCallback
+struct NODISCARD EntityCallback
 {
+public:
     virtual ~EntityCallback();
-    virtual void decodedEntity(int start, int len, OptQChar decoded) = 0;
+
+private:
+    virtual void virt_decodedEntity(int start, int len, OptQChar decoded) = 0;
+
+public:
+    void decodedEntity(const int start, const int len, const OptQChar decoded)
+    {
+        virt_decodedEntity(start, len, decoded);
+    }
 };
 void foreachEntity(const QStringRef &line, EntityCallback &callback);
 

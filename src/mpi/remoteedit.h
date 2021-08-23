@@ -12,6 +12,7 @@
 #include <QtCore>
 #include <QtGlobal>
 
+#include "../global/macros.h"
 #include "remoteeditsession.h"
 
 class RemoteEditSession;
@@ -25,21 +26,21 @@ public:
     explicit RemoteEdit(QObject *const parent)
         : QObject(parent)
     {}
-    ~RemoteEdit() override = default;
+    ~RemoteEdit() final = default;
 
 public slots:
-    void remoteView(const QString &, const QString &);
-    void remoteEdit(int, const QString &, const QString &);
+    void slot_remoteView(const QString &, const QString &);
+    void slot_remoteEdit(int, const QString &, const QString &);
 
 signals:
-    void sendToSocket(const QByteArray &);
+    void sig_sendToSocket(const QByteArray &);
 
 protected:
     void cancel(const RemoteEditSession *);
     void save(const RemoteEditSession *);
 
 private:
-    uint getSessionCount() { return greatestUsedId == UINT_MAX ? 0 : greatestUsedId + 1; }
+    NODISCARD uint getSessionCount() { return greatestUsedId == UINT_MAX ? 0 : greatestUsedId + 1; }
     void addSession(int, const QString &, QString);
     void removeSession(uint);
 

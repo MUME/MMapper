@@ -9,6 +9,7 @@
 #include <QtCore/QDebug>
 #include <QtCore/QFile>
 
+#include "../configuration/configuration.h"
 #include "../global/EnumIndexedArray.h"
 #include "../global/NullPointerException.h"
 #include "../parser/AbstractParser-Commands.h"
@@ -17,7 +18,7 @@
 // If we were going to use it for parsing, then we'd probably want to
 // return special ArgRoadIndex that could match the direction combinations
 // in any order (e.g. sort the word's letters using compass-ordering).
-static const char *getFilenameSuffix(const RoadIndexMaskEnum x)
+NODISCARD static const char *getFilenameSuffix(const RoadIndexMaskEnum x)
 {
     assert(RoadIndexMaskEnum::NONE <= x && x <= RoadIndexMaskEnum::ALL);
 
@@ -26,49 +27,36 @@ static const char *getFilenameSuffix(const RoadIndexMaskEnum x)
     else if (x == RoadIndexMaskEnum::ALL)
         return "all";
 
-    struct CustomDeleter final
-    {
-        void operator()(char *ptr) const { std::free(ptr); }
-    };
-    using UniqueCString = std::unique_ptr<char, CustomDeleter>;
-
-    static EnumIndexedArray<UniqueCString, RoadIndexMaskEnum> names;
-
-    // Make the write thread safe to avoid accidentally freeing pointers
-    // we've already given away. (Probably overkill, but it won't hurt.)
-    static std::mutex mutex;
-    std::lock_guard<std::mutex> lock{mutex};
-
-    if (names[x] == nullptr) {
-        char buf[8] = "";
-        char *ptr = buf;
-
-        if ((x & RoadIndexMaskEnum::NORTH) != RoadIndexMaskEnum::NONE) {
-            *ptr++ = 'n';
+    // note: static variable initialized by IIFE guarantees thread safety.
+    static const auto names = []() {
+        using CharArray = char[8];
+        static_assert(sizeof(CharArray) >= NUM_COMPASS_DIRS + 1);
+        EnumIndexedArray<CharArray, RoadIndexMaskEnum> arr{};
+        for (size_t i = 0; i < NUM_ROAD_INDICES; ++i) {
+            const auto e = static_cast<RoadIndexMaskEnum>(i);
+            char *ptr = arr[e];
+            if ((e & RoadIndexMaskEnum::NORTH) != RoadIndexMaskEnum::NONE) {
+                *ptr++ = 'n';
+            }
+            if ((e & RoadIndexMaskEnum::EAST) != RoadIndexMaskEnum::NONE) {
+                *ptr++ = 'e';
+            }
+            if ((e & RoadIndexMaskEnum::SOUTH) != RoadIndexMaskEnum::NONE) {
+                *ptr++ = 's';
+            }
+            if ((e & RoadIndexMaskEnum::WEST) != RoadIndexMaskEnum::NONE) {
+                *ptr++ = 'w';
+            }
+            *ptr = '\0';
         }
-        if ((x & RoadIndexMaskEnum::EAST) != RoadIndexMaskEnum::NONE) {
-            *ptr++ = 'e';
-        }
-        if ((x & RoadIndexMaskEnum::SOUTH) != RoadIndexMaskEnum::NONE) {
-            *ptr++ = 's';
-        }
-        if ((x & RoadIndexMaskEnum::WEST) != RoadIndexMaskEnum::NONE) {
-            *ptr++ = 'w';
-        }
+        return arr;
+    }();
 
-        assert(ptr > buf);
-        assert(ptr <= buf + 4);
-        *ptr = '\0';
-
-        names[x] = UniqueCString{strdup(buf)};
-    }
-
-    assert(names[x] != nullptr);
-    return names[x].get();
+    return names[x];
 }
 
 template<RoadTagEnum Tag>
-static inline const char *getFilenameSuffix(const TaggedRoadIndex<Tag> &x)
+NODISCARD static inline const char *getFilenameSuffix(const TaggedRoadIndex<Tag> &x)
 {
     return getFilenameSuffix(x.index);
 }
@@ -80,17 +68,25 @@ static inline const char *getFilenameSuffix(const TaggedRoadIndex<Tag> &x)
 // template<>
 // const char *getFilenameSuffix(RoomMobFlagEnum);
 template<typename E>
-static const char *getFilenameSuffix(const E x)
+NODISCARD static const char *getFilenameSuffix(const E x)
 {
     return getParserCommandName(x).getCommand();
 }
 
 QString getResourceFilenameRaw(const QString &dir, const QString &name)
 {
-    const auto filename = QString(":/%1/%2").arg(dir).arg(name);
-    if (!QFile{filename}.exists())
+    const auto filename = QString("/%1/%2").arg(dir).arg(name);
+
+    // Check if the user provided a custom resource
+    const auto custom = getConfig().canvas.resourcesDirectory + filename;
+    if (QFile{custom}.exists())
+        return custom;
+
+    // Fallback to the qrc resource
+    const auto qrc = ":" + filename;
+    if (!QFile{qrc}.exists())
         qWarning() << "WARNING:" << dir << filename << "does not exist.";
-    return filename;
+    return qrc;
 }
 
 QString getPixmapFilenameRaw(const QString &name)
@@ -99,7 +95,7 @@ QString getPixmapFilenameRaw(const QString &name)
 }
 
 template<typename E>
-static QString getPixmapFilename(const char *const prefix, const E x)
+NODISCARD static QString getPixmapFilename(const char *const prefix, const E x)
 {
     if (prefix == nullptr)
         throw NullPointerException();
@@ -132,12 +128,12 @@ QString getPixmapFilename(const TaggedTrail x)
     return getPixmapFilename("trail", x);
 }
 
-static QString getIconFilenameRaw(const QString &name)
+NODISCARD static QString getIconFilenameRaw(const QString &name)
 {
     return getResourceFilenameRaw("icons", name);
 }
 
-static const char *getFilenameSuffix(const CharacterPositionEnum position)
+NODISCARD static const char *getFilenameSuffix(const CharacterPositionEnum position)
 {
 #define X_CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
     do { \
@@ -150,7 +146,7 @@ static const char *getFilenameSuffix(const CharacterPositionEnum position)
     return "";
 #undef X_CASE
 }
-static const char *getFilenameSuffix(const CharacterAffectEnum affect)
+NODISCARD static const char *getFilenameSuffix(const CharacterAffectEnum affect)
 {
 #define X_CASE(UPPER_CASE, lower_case, CamelCase, friendly) \
     do { \
@@ -165,7 +161,7 @@ static const char *getFilenameSuffix(const CharacterAffectEnum affect)
 }
 
 template<typename E>
-static QString getIconFilename(const char *const prefix, const E x)
+NODISCARD static QString getIconFilename(const char *const prefix, const E x)
 {
     if (prefix == nullptr)
         throw NullPointerException();

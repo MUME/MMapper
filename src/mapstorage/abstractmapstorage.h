@@ -17,15 +17,14 @@ class MapData;
 class ProgressCounter;
 class QFile;
 class Room;
-class RoomSaveFilter;
 
 class AbstractMapStorage : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit AbstractMapStorage(MapData &, QString, QFile *, QObject *parent = nullptr);
-    explicit AbstractMapStorage(MapData &, QString, QObject *parent = nullptr);
+    explicit AbstractMapStorage(MapData &, QString, QFile *, QObject *parent);
+    explicit AbstractMapStorage(MapData &, QString, QObject *parent);
     ~AbstractMapStorage() override;
 
     virtual bool canLoad() const = 0;
@@ -38,10 +37,10 @@ public:
     ProgressCounter &getProgressCounter() const;
 
 signals:
-    void log(const QString &, const QString &);
-    void onDataLoaded();
-    void onDataSaved();
-    void onNewData();
+    void sig_log(const QString &, const QString &);
+    void sig_onDataLoaded();
+    void sig_onDataSaved();
+    void sig_onNewData();
 
 protected:
     QFile *m_file = nullptr;

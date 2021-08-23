@@ -30,7 +30,7 @@ public:
     static constexpr const ProtocolVersion PROTOCOL_VERSION_102 = 102;
 
     // TODO: password and encryption options
-    enum class MessagesEnum {
+    enum class NODISCARD MessagesEnum {
         NONE, // Unused
         ACK,
         REQ_LOGIN,
@@ -47,38 +47,61 @@ public:
         RENAME_CHAR
     };
 
-    GroupManagerStateEnum getMode() const { return mode; }
+    NODISCARD GroupManagerStateEnum getMode() const { return mode; }
 
-    virtual void stop() = 0;
-    virtual bool start() = 0;
+private:
+    virtual void virt_stop() = 0;
+    NODISCARD virtual bool virt_start() = 0;
+
+public:
+    void stop() { virt_stop(); }
+    NODISCARD bool start() { return virt_start(); }
 
 protected:
     void sendCharUpdate(GroupSocket *, const QVariantMap &);
     void sendMessage(GroupSocket *, MessagesEnum, const QByteArray & = "");
     void sendMessage(GroupSocket *, MessagesEnum, const QVariantMap &);
 
-    virtual void sendGroupTellMessage(const QVariantMap &map) = 0;
-    virtual void sendCharRename(const QVariantMap &map) = 0;
+    NODISCARD QByteArray formMessageBlock(MessagesEnum message, const QVariantMap &data);
+    NODISCARD CGroup *getGroup();
+    NODISCARD GroupAuthority *getAuthority();
 
-    QByteArray formMessageBlock(MessagesEnum message, const QVariantMap &data);
-    CGroup *getGroup();
-    GroupAuthority *getAuthority();
+private:
+    virtual void virt_connectionClosed(GroupSocket *) = 0;
+    virtual void virt_kickCharacter(const QByteArray &) = 0;
+    virtual void virt_retrieveData(GroupSocket *, MessagesEnum, const QVariantMap &) = 0;
+    virtual void virt_sendCharRename(const QVariantMap &map) = 0;
+    virtual void virt_sendCharUpdate(const QVariantMap &map) = 0;
+    virtual void virt_sendGroupTellMessage(const QVariantMap &map) = 0;
 
 public slots:
-    void incomingData(GroupSocket *, const QByteArray &);
-    void sendGroupTell(const QByteArray &);
-    void relayLog(const QString &);
-    virtual void retrieveData(GroupSocket *, MessagesEnum, const QVariantMap &) = 0;
-    virtual void connectionClosed(GroupSocket *) = 0;
-    virtual void kickCharacter(const QByteArray &) = 0;
-    virtual void sendCharUpdate(const QVariantMap &map) = 0;
-    void sendSelfRename(const QByteArray &, const QByteArray &);
+    void slot_connectionClosed(GroupSocket *sock) { virt_connectionClosed(sock); }
+    void slot_kickCharacter(const QByteArray &msg) { virt_kickCharacter(msg); }
+    void slot_retrieveData(GroupSocket *sock, MessagesEnum msg, const QVariantMap &var)
+    {
+        virt_retrieveData(sock, msg, var);
+    }
+    void slot_sendCharRename(const QVariantMap &map) { virt_sendCharRename(map); }
+    void slot_sendCharUpdate(const QVariantMap &map) { virt_sendCharUpdate(map); }
+    void slot_sendGroupTellMessage(const QVariantMap &map) { virt_sendGroupTellMessage(map); }
+
+protected:
+    void messageBox(const QString &message) { emit sig_messageBox(message); }
+    void scheduleAction(std::shared_ptr<GroupAction> action) { emit sig_scheduleAction(action); }
+    void gTellArrived(QVariantMap node) { emit sig_gTellArrived(node); }
+    void sendLog(const QString &msg) { emit sig_sendLog(msg); }
+
+public slots:
+    void slot_incomingData(GroupSocket *, const QByteArray &);
+    void slot_sendGroupTell(const QByteArray &);
+    void slot_relayLog(const QString &);
+    void slot_sendSelfRename(const QByteArray &, const QByteArray &);
 
 signals:
-    void messageBox(QString message);
+    void sig_messageBox(QString message);
     void sig_scheduleAction(std::shared_ptr<GroupAction> action);
-    void gTellArrived(QVariantMap node);
-    void sendLog(const QString &);
+    void sig_gTellArrived(QVariantMap node);
+    void sig_sendLog(const QString &);
 
 private:
     GroupManagerStateEnum mode = GroupManagerStateEnum::Off;

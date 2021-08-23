@@ -8,7 +8,9 @@
 #include <memory>
 #include <QByteArray>
 
-class GroupPortMapper final
+#include "../global/macros.h"
+
+class NODISCARD GroupPortMapper final
 {
 public:
     struct Pimpl;
@@ -21,7 +23,7 @@ public:
     ~GroupPortMapper();
     DELETE_CTORS_AND_ASSIGN_OPS(GroupPortMapper);
 
-    QByteArray tryGetExternalIp();
-    bool tryAddPortMapping(quint16 port);
-    bool tryDeletePortMapping(quint16 port);
+    NODISCARD QByteArray tryGetExternalIp();
+    NODISCARD bool tryAddPortMapping(quint16 port);
+    NODISCARD bool tryDeletePortMapping(quint16 port);
 };

@@ -16,7 +16,7 @@
 class QObject;
 class QWidget;
 
-enum class AnsiModeEnum { ANSI_FG, ANSI_BG };
+enum class NODISCARD AnsiModeEnum { ANSI_FG, ANSI_BG };
 
 class AnsiCombo : public QComboBox
 {
@@ -28,15 +28,15 @@ public:
                                    const QString &ansiColor,
                                    const bool changeText = true);
 
-    explicit AnsiCombo(AnsiModeEnum mode, QWidget *parent = nullptr);
-    explicit AnsiCombo(QWidget *parent = nullptr);
+    explicit AnsiCombo(AnsiModeEnum mode, QWidget *parent);
+    explicit AnsiCombo(QWidget *parent);
 
     void initColours(AnsiModeEnum mode);
 
-    AnsiModeEnum getMode() const { return mode; }
+    NODISCARD AnsiModeEnum getMode() const { return mode; }
 
     /// get currently selected ANSI code like 32 for green colour
-    int getAnsiCode() const;
+    NODISCARD int getAnsiCode() const;
 
     void setAnsiCode(int);
 
@@ -44,7 +44,7 @@ public:
     static constexpr const int DEFAULT_FG = 254;
     static constexpr const int DEFAULT_BG = 255;
 
-    struct AnsiColor final
+    struct NODISCARD AnsiColor final
     {
         QColor colFg = ansiColor(AnsiColorTableEnum::white);
         QColor colBg = ansiColor(AnsiColorTableEnum::black);
@@ -57,11 +57,11 @@ public:
         bool underline = false;
     };
 
-    ///\return true if string is valid ANSI color code
-    static AnsiColor colorFromString(const QString &ansiString);
+    /// \return true if string is valid ANSI color code
+    NODISCARD static AnsiColor colorFromString(const QString &ansiString);
 
     ///\return true, if index is valid color code
-    static bool colorFromNumber(int numColor, QColor &col, QString &intelligibleName);
+    NODISCARD static bool colorFromNumber(int numColor, QColor &col, QString &intelligibleName);
 
 private:
     // There's not really a good default value for this.

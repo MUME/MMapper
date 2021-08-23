@@ -43,9 +43,7 @@ CullingBinder::CullingBinder(Functions &in_functions, const CullingEnum &in_cull
 {
     switch (in_culling) {
     case CullingEnum::DISABLED:
-
         disable();
-
         break;
     case CullingEnum::BACK:
         enable(GL_BACK);

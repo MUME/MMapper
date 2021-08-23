@@ -18,11 +18,11 @@ static constexpr const int DEFAULT_MUME_START_EPOCH = 1517443173;
 static constexpr const int DEFAULT_TOLERANCE_LIMIT = 10;
 static constexpr const int ONE_RL_DAY_IN_SECONDS = 86400;
 
-static inline int am(int h)
+NODISCARD static inline int am(int h)
 {
     return h;
 }
-static inline int pm(int h)
+NODISCARD static inline int pm(int h)
 {
     return h + 12;
 }
@@ -85,17 +85,17 @@ MumeClock::MumeClock(int64_t mumeEpoch, QObject *parent)
     , m_clockTolerance(DEFAULT_TOLERANCE_LIMIT)
 {}
 
-MumeClock::MumeClock(QObject *parent)
-    : MumeClock(DEFAULT_MUME_START_EPOCH, parent)
+MumeClock::MumeClock()
+    : MumeClock(DEFAULT_MUME_START_EPOCH, nullptr)
 {}
 
-MumeMoment MumeClock::getMumeMoment()
+MumeMoment MumeClock::getMumeMoment() const
 {
-    const int64_t t = QDateTime::currentDateTimeUtc().toTime_t();
+    const int64_t t = QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
     return MumeMoment::sinceMumeEpoch(t - m_mumeStartEpoch);
 }
 
-MumeMoment MumeClock::getMumeMoment(const int64_t secsSinceUnixEpoch)
+MumeMoment MumeClock::getMumeMoment(const int64_t secsSinceUnixEpoch) const
 {
     /* This will break on 2038-01-19 if you use 32-bit. */
     if (secsSinceUnixEpoch < 0) {
@@ -107,7 +107,7 @@ MumeMoment MumeClock::getMumeMoment(const int64_t secsSinceUnixEpoch)
 
 void MumeClock::parseMumeTime(const QString &mumeTime)
 {
-    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toTime_t();
+    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
     parseMumeTime(mumeTime, secsSinceEpoch);
 }
 
@@ -122,9 +122,9 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
     int weekDay = -1;
 
     if (mumeTime.at(0).isDigit()) {
-        // 3pm on Highday, the 18th of Halimath, year 3030 of the Third Age.
+        // 3 pm on Highday, the 18th of Halimath, year 3030 of the Third Age.
         static const QRegularExpression rx(
-            R"(^(\d+)\W*(am|pm) on (\w+), the (\d+).{2} of (\w+), year (\d+) of the Third Age.$)");
+            R"(^(\d+)(?::\d{2})?\W*(am|pm) on (\w+), the (\d+).{2} of (\w+), year (\d+) of the Third Age.$)");
         auto match = rx.match(mumeTime);
         if (!match.hasMatch())
             return;
@@ -183,12 +183,10 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
     const int mumeSecsSinceEpoch = capturedMoment.toSeconds();
     const int64_t newStartEpoch = secsSinceEpoch - mumeSecsSinceEpoch;
     if (newStartEpoch != m_mumeStartEpoch) {
-        emit log("MumeClock",
-                 "Detected new Mume start epoch " + QString::number(newStartEpoch) + " ("
-                     + QString::number(newStartEpoch - m_mumeStartEpoch)
-                     + " seconds from previous)");
+        log("Detected new Mume start epoch " + QString::number(newStartEpoch) + " ("
+            + QString::number(newStartEpoch - m_mumeStartEpoch) + " seconds from previous)");
     } else {
-        emit log("MumeClock", "Synchronized clock using 'time' output.");
+        log("Synchronized clock using 'time' output.");
     }
     if (weekDay != capturedMoment.weekDay()) {
         qWarning() << "Calculated week day does not match MUME";
@@ -198,7 +196,7 @@ void MumeClock::parseMumeTime(const QString &mumeTime, const int64_t secsSinceEp
 
 void MumeClock::parseWeather(const QString &str)
 {
-    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toTime_t();
+    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
     parseWeather(str, secsSinceEpoch);
 }
 
@@ -243,7 +241,7 @@ void MumeClock::parseWeather(const QString &str, int64_t secsSinceEpoch)
     // Update epoch
     m_precision = MumeClockPrecisionEnum::MINUTE;
     m_mumeStartEpoch = secsSinceEpoch - moment.toSeconds();
-    emit log("MumeClock", "Synchronized tick using weather");
+    log("Synchronized tick using weather");
 }
 
 MumeMoment &MumeClock::unknownTimeTick(MumeMoment &moment)
@@ -253,26 +251,23 @@ MumeMoment &MumeClock::unknownTimeTick(MumeMoment &moment)
         // Assume we are moving forward in time
         moment.hour = moment.hour + 1;
         m_precision = MumeClockPrecisionEnum::MINUTE;
-        emit log("MumeClock", "Synchronized tick and raised precision");
+        log("Synchronized tick and raised precision");
     } else {
         if (moment.minute == 0) {
             m_precision = MumeClockPrecisionEnum::MINUTE;
-            emit log("MumeClock", "Tick detected");
+            log("Tick detected");
         } else {
             if (moment.minute > 0 && moment.minute <= m_clockTolerance) {
-                emit log("MumeClock",
-                         "Synchronized tick but Mume seems to be running slow by "
-                             + QString::number(moment.minute) + " seconds");
+                log("Synchronized tick but Mume seems to be running slow by "
+                    + QString::number(moment.minute) + " seconds");
             } else if (moment.minute >= (60 - m_clockTolerance) && moment.minute < 60) {
-                emit log("MumeClock",
-                         "Synchronized tick but Mume seems to be running fast by "
-                             + QString::number(moment.minute) + " seconds");
+                log("Synchronized tick but Mume seems to be running fast by "
+                    + QString::number(moment.minute) + " seconds");
                 moment.hour = moment.hour + 1;
             } else {
                 m_precision = MumeClockPrecisionEnum::DAY;
-                emit log("MumeClock",
-                         "Precision lowered because tick was off by "
-                             + QString::number(moment.minute) + " seconds)");
+                log("Precision lowered because tick was off by " + QString::number(moment.minute)
+                    + " seconds)");
             }
         }
     }
@@ -281,7 +276,7 @@ MumeMoment &MumeClock::unknownTimeTick(MumeMoment &moment)
 
 void MumeClock::parseClockTime(const QString &clockTime)
 {
-    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toTime_t();
+    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
     parseClockTime(clockTime, secsSinceEpoch);
 }
 
@@ -311,14 +306,13 @@ void MumeClock::parseClockTime(const QString &clockTime, const int64_t secsSince
     moment.minute = minute;
     moment.hour = hour;
     const int64_t newStartEpoch = secsSinceEpoch - moment.toSeconds();
-    emit log("MumeClock",
-             "Synchronized with clock in room (" + QString::number(newStartEpoch - m_mumeStartEpoch)
-                 + " seconds from previous)");
+    log("Synchronized with clock in room (" + QString::number(newStartEpoch - m_mumeStartEpoch)
+        + " seconds from previous)");
     m_mumeStartEpoch = newStartEpoch;
 }
 
 // TODO: move this somewhere useful?
-static const char *getOrdinalSuffix(const int day)
+NODISCARD static const char *getOrdinalSuffix(const int day)
 {
     switch (day % 100) {
     case 11:
@@ -342,16 +336,16 @@ static const char *getOrdinalSuffix(const int day)
 
 MumeClockPrecisionEnum MumeClock::getPrecision()
 {
-    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toTime_t();
+    const int64_t secsSinceEpoch = QDateTime::QDateTime::currentDateTimeUtc().toSecsSinceEpoch();
     if (m_precision >= MumeClockPrecisionEnum::HOUR
         && secsSinceEpoch - m_lastSyncEpoch > ONE_RL_DAY_IN_SECONDS) {
         m_precision = MumeClockPrecisionEnum::DAY;
-        emit log("MumeClock", "Precision lowered because clock has not been synced recently.");
+        log("Precision lowered because clock has not been synced recently.");
     }
     return m_precision;
 }
 
-const QString MumeClock::toMumeTime(const MumeMoment &moment)
+QString MumeClock::toMumeTime(const MumeMoment &moment) const
 {
     int hour = moment.hour;
     QString period;
@@ -398,7 +392,7 @@ const QString MumeClock::toMumeTime(const MumeMoment &moment)
         .arg(moment.year);
 }
 
-const QString MumeClock::toCountdown(const MumeMoment &moment)
+QString MumeClock::toCountdown(const MumeMoment &moment) const
 {
     auto dawnDusk = getDawnDusk(moment.month);
     const int dawn = dawnDusk.dawnHour;

@@ -4,9 +4,9 @@ list of ideas and problems for mmapper3:
 
 2. The path machine doesn't perform well in certain areas. I have plenty of ideas on how to improve that situation, but all of them require a rather high level of interaction between the path machine and other components. Among the ideas are:
 
-a, use dynamic descriptions as additional hints. A tree won't change it's position and if we have two identical rooms one with a tree in it and one without, we can easily distinguish it. Of course there's a high error ratio in this approach because there are plenty of mobs which do move around. Info about dynamic descriptions should thus decay quickly and count little.
+a, use room contents as additional hints. A tree won't change it's position and if we have two identical rooms one with a tree in it and one without, we can easily distinguish it. Of course there's a high error ratio in this approach because there are plenty of mobs which do move around. Info about room contents should thus decay quickly and count little.
 
-b, let the user give manual hints. The paths and their associated probabilities should be displayed in the map and deletion of paths should only occure when processing the next event or on user input. The user can then press some keyboard shortcut to hint the mapper to a certain path. 
+b, let the user give manual hints. The paths and their associated probabilities should be displayed in the map and deletion of paths should only occur when processing the next event or on user input. The user can then press some keyboard shortcut to hint the mapper to a certain path.
 
 c, Additionally we could remember how much influence which mapping parameter had on the probability of each path. If a user hints the mapper to one path, then the parameters which would have increased this paths probability are increased and the ones which did increase the probability of other paths which were better than the hinted one are decreased. Like that the mapper could dynamically adapt to certain terrain features like randomness and repetitivity.
 

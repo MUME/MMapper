@@ -9,12 +9,12 @@
 #include "../pandoragroup/mmapper2character.h"
 #include "RoadIndex.h"
 
-QString getResourceFilenameRaw(const QString &dir, const QString &name);
-QString getPixmapFilenameRaw(const QString &name);
-QString getPixmapFilename(RoomTerrainEnum);
-QString getPixmapFilename(RoomLoadFlagEnum);
-QString getPixmapFilename(RoomMobFlagEnum);
-QString getPixmapFilename(TaggedRoad);
-QString getPixmapFilename(TaggedTrail);
-QString getIconFilename(CharacterPositionEnum);
-QString getIconFilename(CharacterAffectEnum);
+NODISCARD extern QString getResourceFilenameRaw(const QString &dir, const QString &name);
+NODISCARD extern QString getPixmapFilenameRaw(const QString &name);
+NODISCARD extern QString getPixmapFilename(RoomTerrainEnum);
+NODISCARD extern QString getPixmapFilename(RoomLoadFlagEnum);
+NODISCARD extern QString getPixmapFilename(RoomMobFlagEnum);
+NODISCARD extern QString getPixmapFilename(TaggedRoad);
+NODISCARD extern QString getPixmapFilename(TaggedTrail);
+NODISCARD extern QString getIconFilename(CharacterPositionEnum);
+NODISCARD extern QString getIconFilename(CharacterAffectEnum);

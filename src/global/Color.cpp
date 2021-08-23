@@ -24,7 +24,7 @@ Color::Color(const int r, const int g, const int b)
     static_assert(SHIFT_a == Color::SHIFT_ALPHA);
 }
 
-static constexpr uint32_t clamp_0_255(int n)
+NODISCARD static constexpr uint32_t clamp_0_255(int n)
 {
     return static_cast<uint32_t>(std::clamp(n, 0, 255));
 }
@@ -99,7 +99,7 @@ Color Color::withAlpha(const float alpha) const
     return copy;
 }
 
-static int hexval(const char c)
+NODISCARD static int hexval(const char c)
 {
     if (isClamped(c, '0', '9'))
         return c - '0';
@@ -112,7 +112,7 @@ static int hexval(const char c)
     return 0;
 }
 
-static int decode(const std::string_view sv)
+NODISCARD static int decode(const std::string_view sv)
 {
     assert(sv.size() == 2);
     return (hexval(sv[0]) << 4) | hexval(sv[1]);
@@ -170,7 +170,7 @@ XFOREACH_COLOR(DECL)
 
 } // namespace Colors
 
-static int color_self_test = []() -> int {
+static const int color_self_test = []() -> int {
     const Color redf{1.f, 0.f, 0.f};
     const Color greenf{0.f, 1.f, 0.f};
     const Color bluef{0.f, 0.f, 1.f};

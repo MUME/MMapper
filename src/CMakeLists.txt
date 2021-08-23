@@ -70,6 +70,8 @@ set(mmapper_SRCS
     global/Array.h
     global/ChangeMonitor.h
     global/CharBuffer.h
+    global/Charset.cpp
+    global/Charset.h
     global/Color.cpp
     global/Color.h
     global/Debug.h
@@ -87,6 +89,7 @@ set(mmapper_SRCS
     global/SignalBlocker.h
     global/StringView.cpp
     global/StringView.h
+    global/TaggedInt.h
     global/TaggedString.h
     global/TextUtils.cpp
     global/TextUtils.h
@@ -254,6 +257,7 @@ set(mmapper_SRCS
     parser/AbstractParser-Commands.h
     parser/AbstractParser-Config.cpp
     parser/AbstractParser-Group.cpp
+    parser/AbstractParser-Mark.cpp
     parser/AbstractParser-Room.cpp
     parser/AbstractParser-Utils.cpp
     parser/AbstractParser-Utils.h
@@ -653,7 +657,7 @@ if(UNIX AND NOT APPLE)
     # Debian
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "nschimme@gmail.com")
     set(CPACK_DEBIAN_PACKAGE_NAME "mmapper")
-    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt5core5a (>= 5.9.0), libqt5gui5 (>= 5.9.0), libqt5opengl5 (>= 5.9.0), libqt5network5 (>= 5.9.0)")
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt5core5a (>= 5.11.0), libqt5gui5 (>= 5.11.0), libqt5opengl5 (>= 5.11.0), libqt5network5 (>= 5.11.0)")
     if(WITH_ZLIB)
         set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, zlib1g")
     endif()
@@ -690,7 +694,7 @@ if(WIN32)
         endif()
     endif()
     set(WINDEPLOYQT_ARGS ${WINDEPLOYQT_ARGS} --dir ${CMAKE_CURRENT_BINARY_DIR}/bin --compiler-runtime --no-angle)
-    find_program(WINDEPLOYQT_APP windeployqt)
+    find_program(WINDEPLOYQT_APP windeployqt HINTS ${QTDIR} ENV QTDIR PATH_SUFFIXES bin)
     message(" - windeployqt path: ${WINDEPLOYQT_APP}")
     message(" - windeployqt args: ${WINDEPLOYQT_ARGS}")
     add_custom_command(
@@ -727,9 +731,9 @@ if(WIN32)
     set(CPACK_NSIS_COMPRESSOR "/SOLID lzma")
     set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL "ON")
     set(CPACK_NSIS_MUI_FINISHPAGE_RUN "mmapper.exe")
-    set(CPACK_NSIS_DEFINES "ManifestDPIAware true")
+    set(CPACK_NSIS_MANIFEST_DPI_AWARE "ON")
     if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
-        set(CPACK_NSIS_DISPLAY_NAME "MUME Mapper")
+        set(CPACK_NSIS_DISPLAY_NAME "MUME Mapper (x64)")
     else()
         set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "Caligor soft")
         set(CPACK_NSIS_DISPLAY_NAME "MUME Mapper (x86)")
@@ -829,6 +833,7 @@ set(CPACK_COMPONENT_APPLICATIONS_REQUIRED TRUE)
 # Libraries Component
 set(CPACK_COMPONENT_LIBRARIES_DISPLAY_NAME "Runtime Libraries")
 set(CPACK_COMPONENT_LIBRARIES_DESCRIPTION "Runtime libraries for running MMapper")
+set(CPACK_COMPONENT_LIBRARIES_REQUIRED TRUE)
 
 set(CPACK_INSTALL_CMAKE_PROJECTS "${CMAKE_CURRENT_BINARY_DIR};applications;ALL;/")
 

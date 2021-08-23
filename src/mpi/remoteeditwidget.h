@@ -13,6 +13,7 @@
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QVBoxLayout>
 
+#include "../global/macros.h"
 #include "remoteeditsession.h"
 
 struct EditViewCommand;
@@ -26,8 +27,8 @@ class QPlainTextEdit;
 class QWidget;
 class QStatusBar;
 
-enum class EditViewCmdEnum { VIEW_OPTION, EDIT_ALIGNMENT, EDIT_COLORS, EDIT_WHITESPACE };
-enum class EditCmd2Enum { EDIT_ONLY, EDIT_OR_VIEW, SPACER };
+enum class NODISCARD EditViewCmdEnum { VIEW_OPTION, EDIT_ALIGNMENT, EDIT_COLORS, EDIT_WHITESPACE };
+enum class NODISCARD EditCmd2Enum { EDIT_ONLY, EDIT_OR_VIEW, SPACER };
 
 // NOTE: Ctrl+A is "Select All" by default.
 #define XFOREACH_REMOTE_EDIT_MENU_ITEM(X) \
@@ -91,8 +92,8 @@ private:
     Q_OBJECT
 
 public:
-    explicit RemoteTextEdit(const QString &initialText, QWidget *parent = nullptr);
-    ~RemoteTextEdit() override;
+    explicit RemoteTextEdit(const QString &initialText, QWidget *parent);
+    ~RemoteTextEdit() final;
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
@@ -106,7 +107,7 @@ private:
 public:
     void replaceAll(const QString &str);
     void showWhitespace(bool enabled);
-    bool isShowingWhitespace() const;
+    NODISCARD bool isShowingWhitespace() const;
     void toggleWhitespace();
 
     void joinLines();
@@ -133,7 +134,7 @@ public:
     explicit RemoteEditWidget(bool editSession,
                               const QString &title,
                               const QString &body,
-                              QWidget *parent = nullptr);
+                              QWidget *parent);
     ~RemoteEditWidget() override;
 
 public:
@@ -145,22 +146,22 @@ public:
     void setVisible(bool visible) override;
 
 protected slots:
-    void cancelEdit();
-    void finishEdit();
-    bool maybeCancel();
-    bool contentsChanged() const;
-    void updateStatusBar();
+    void slot_cancelEdit();
+    void slot_finishEdit();
+    bool slot_maybeCancel();
+    bool slot_contentsChanged() const;
+    void slot_updateStatusBar();
 
-#define X(a, b, c, d, e) void a();
+#define X(a, b, c, d, e) void slot_##a();
     XFOREACH_REMOTE_EDIT_MENU_ITEM(X)
 #undef X
 
 signals:
-    void cancel();
-    void save(const QString &);
+    void sig_cancel();
+    void sig_save(const QString &);
 
 private:
-    Editor *createTextEdit();
+    NODISCARD Editor *createTextEdit();
 
     void addToMenu(QMenu *menu, const EditViewCommand &cmd);
     void addToMenu(QMenu *menu, const EditCommand2 &cmd, const Editor *pTextEdit);

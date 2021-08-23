@@ -21,23 +21,23 @@ TexturedRenderable::TexturedRenderable(const SharedMMTexture &tex,
 
 TexturedRenderable::~TexturedRenderable() = default;
 
-void TexturedRenderable::clear()
+void TexturedRenderable::virt_clear()
 {
     m_mesh->clear();
 }
 
-void TexturedRenderable::reset()
+void TexturedRenderable::virt_reset()
 {
     m_texture.reset();
     m_mesh->reset();
 }
 
-bool TexturedRenderable::isEmpty() const
+bool TexturedRenderable::virt_isEmpty() const
 {
     return m_mesh->isEmpty();
 }
 
-void TexturedRenderable::render(const GLRenderState &renderState)
+void TexturedRenderable::virt_render(const GLRenderState &renderState)
 {
     /* overrides the texture of the provided state */
     m_mesh->render(renderState.withTexture0(m_texture));

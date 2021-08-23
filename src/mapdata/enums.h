@@ -8,6 +8,7 @@
 #include "../global/Array.h"
 #include "DoorFlags.h"
 #include "ExitFlags.h"
+#include "infomark.h"
 #include "mmapper2room.h"
 
 #define DECL_GETTER(E, N, name) const MMapper::Array<E, N> &name();
@@ -24,6 +25,8 @@ DECL_GETTER(RoomMobFlagEnum, NUM_ROOM_MOB_FLAGS, getAllMobFlags)
 DECL_GETTER(RoomLoadFlagEnum, NUM_ROOM_LOAD_FLAGS, getAllLoadFlags)
 DECL_GETTER(DoorFlagEnum, NUM_DOOR_FLAGS, getAllDoorFlags)
 DECL_GETTER(ExitFlagEnum, NUM_EXIT_FLAGS, getAllExitFlags)
+DECL_GETTER(InfoMarkClassEnum, NUM_INFOMARK_CLASSES, getAllInfoMarkClasses)
+DECL_GETTER(InfoMarkTypeEnum, NUM_INFOMARK_TYPES, getAllInfoMarkTypes)
 } // namespace enums
 
 #undef DECL_GETTER
@@ -32,6 +35,8 @@ DECL_GETTER(ExitFlagEnum, NUM_EXIT_FLAGS, getAllExitFlags)
 #define ALL_TERRAIN_TYPES ::enums::getAllTerrainTypes()
 #define ALL_DOOR_FLAGS ::enums::getAllDoorFlags()
 #define ALL_EXIT_FLAGS ::enums::getAllExitFlags()
+#define ALL_INFOMARK_CLASSES ::enums::getAllInfoMarkClasses()
+#define ALL_INFOMARK_TYPES ::enums::getAllInfoMarkTypes()
 #define ALL_MOB_FLAGS ::enums::getAllMobFlags()
 #define ALL_LOAD_FLAGS ::enums::getAllLoadFlags()
 

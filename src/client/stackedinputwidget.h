@@ -19,22 +19,24 @@ private:
     Q_OBJECT
 
 public:
-    explicit StackedInputWidget(QWidget *parent = nullptr);
-    ~StackedInputWidget() override;
-    bool eventFilter(QObject *obj, QEvent *event) override;
+    explicit StackedInputWidget(QWidget *parent);
+    ~StackedInputWidget() final;
+
+private:
+    bool eventFilter(QObject *obj, QEvent *event) final;
 
 public slots:
-    void toggleEchoMode(bool);
-    void gotPasswordInput();
-    void gotMultiLineInput(const QString &);
-    void cut();
-    void copy();
-    void paste();
+    void slot_toggleEchoMode(bool);
+    void slot_gotPasswordInput();
+    void slot_gotMultiLineInput(const QString &);
+    void slot_cut();
+    void slot_copy();
+    void slot_paste();
 
 signals:
-    void sendUserInput(const QString &);
-    void displayMessage(const QString &);
-    void showMessage(const QString &, int);
+    void sig_sendUserInput(const QString &);
+    void sig_displayMessage(const QString &);
+    void sig_showMessage(const QString &, int);
 
 private:
     bool m_localEcho = false;

@@ -14,11 +14,13 @@
 
 struct PathParameters;
 
-Crossover::Crossover(std::shared_ptr<PathList> paths, ExitDirEnum dirCode, PathParameters &params)
-    : Experimenting(std::move(paths), dirCode, params)
+Crossover::Crossover(std::shared_ptr<PathList> _paths,
+                     const ExitDirEnum _dirCode,
+                     PathParameters &_params)
+    : Experimenting(std::move(_paths), _dirCode, _params)
 {}
 
-void Crossover::receiveRoom(RoomAdmin *const admin, const Room *const room)
+void Crossover::virt_receiveRoom(RoomAdmin *const admin, const Room *const room)
 {
     if (shortPaths->empty())
         admin->releaseRoom(*this, room->getId());

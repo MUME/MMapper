@@ -34,18 +34,18 @@ public:
     explicit StringView(const QString &) = delete;
 
 public:
-    inline const_iterator begin() const noexcept { return m_sv.begin(); }
-    inline const_iterator end() const noexcept { return m_sv.end(); }
-    inline size_t size() const noexcept { return m_sv.size(); }
-    inline size_t length() const noexcept { return m_sv.length(); }
-    inline bool isEmpty() const noexcept { return empty(); }
-    inline bool empty() const noexcept { return m_sv.empty(); }
+    NODISCARD inline const_iterator begin() const noexcept { return m_sv.begin(); }
+    NODISCARD inline const_iterator end() const noexcept { return m_sv.end(); }
+    NODISCARD inline size_t size() const noexcept { return m_sv.size(); }
+    NODISCARD inline size_t length() const noexcept { return m_sv.length(); }
+    NODISCARD inline bool isEmpty() const noexcept { return empty(); }
+    NODISCARD inline bool empty() const noexcept { return m_sv.empty(); }
 
 public:
-    std::string toStdString() const noexcept(false);
-    QString toQString() const noexcept(false);
-    QByteArray toQByteArray() const noexcept(false);
-    std::string_view getStdStringView() const { return m_sv; }
+    NODISCARD std::string toStdString() const noexcept(false);
+    NODISCARD QString toQString() const noexcept(false);
+    NODISCARD QByteArray toQByteArray() const noexcept(false);
+    NODISCARD std::string_view getStdStringView() const { return m_sv; }
 
 public:
     StringView &trimLeft() noexcept;
@@ -58,8 +58,8 @@ private:
     void eatLast();
 
 public:
-    char firstChar() const noexcept(false);
-    char lastChar() const noexcept(false);
+    NODISCARD char firstChar() const noexcept(false);
+    NODISCARD char lastChar() const noexcept(false);
 
 public:
     char takeFirstLetter() noexcept(false);
@@ -69,11 +69,11 @@ public:
     StringView takeFirstWordNoPostTrim() noexcept(false);
 
 public:
-    int countNonSpaceChars() const noexcept;
-    int countWords() const noexcept(false);
-    std::vector<StringView> getWords() const noexcept(false);
-    std::vector<std::string> getWordsAsStdStrings() const noexcept(false);
-    std::vector<QString> getWordsAsQStrings() const noexcept(false);
+    NODISCARD int countNonSpaceChars() const noexcept;
+    NODISCARD int countWords() const noexcept(false);
+    NODISCARD std::vector<StringView> getWords() const noexcept(false);
+    NODISCARD std::vector<std::string> getWordsAsStdStrings() const noexcept(false);
+    NODISCARD std::vector<QString> getWordsAsQStrings() const noexcept(false);
 
 public:
     bool operator==(const char *s) const noexcept = delete;
@@ -85,28 +85,28 @@ public:
     bool operator!=(const StringView &rhs) const noexcept { return !(*this == rhs); }
 
 public:
-    StringView substr(size_t pos, size_t len = std::string_view::npos) const;
+    NODISCARD StringView substr(size_t pos, size_t len = std::string_view::npos) const;
     // std::string s = "LeftIgnored";
     // StringView sv{s};
     // assert(sv.left(4).toStdString() == "Left");
-    StringView left(size_t len) const;
+    NODISCARD StringView left(size_t len) const;
     // std::string s = "IgnoredMid";
     // StringView sv{s};
     // assert(sv.mid(7).toStdString() == "Mid");
-    StringView mid(size_t pos) const;
+    NODISCARD StringView mid(size_t pos) const;
     // std::string s = "RmidIgnored";
     // StringView sv{s};
     // assert(sv.rmid(7).toStdString() == "Rmid");
-    StringView rmid(size_t pos) const;
+    NODISCARD StringView rmid(size_t pos) const;
     // std::string s = "IgnoredRight";
     // StringView sv{s};
     // assert(sv.right(5).toStdString() == "Right");
-    StringView right(size_t len) const;
+    NODISCARD StringView right(size_t len) const;
     StringView &operator++();
-    StringView operator++(int);
+    void operator++(int) = delete;
     char operator[](size_t pos) const;
-    bool startsWith(const std::string_view &other) const;
-    bool endsWith(const std::string_view &other) const;
+    NODISCARD bool startsWith(const std::string_view &other) const;
+    NODISCARD bool endsWith(const std::string_view &other) const;
     void remove_suffix(size_t n);
 
 public:
@@ -133,12 +133,12 @@ public:
     //     assert(sv.left(4).intersects(sv.mid(4)));  // same as sv.intersects(sv.right(0));
     // }
     // </ecode>
-    bool intersects(const StringView &other) const;
+    NODISCARD bool intersects(const StringView &other) const;
 
     // This O(1) function returns if this string points to an actual substring of the other string.
     // NOTE: This function uses comparison of pointers, so it is not to be confused with the O(M+N)
     // test of whether or not `other.find(*this) != npos`.
-    bool isSubstringOf(const StringView &other) const;
+    NODISCARD bool isSubstringOf(const StringView &other) const;
 
 public:
     // std::string s = "ResultOtherIgnored";
@@ -146,28 +146,28 @@ public:
     // assert(sv.beforeSubstring(sv.mid(6, 5)/* "Other" */) == sv.left(6) /* "Result" */);
     //
     // NOTE: requires `other.isSubstringOf(*this)`; result is undefined (in the UB sense) if that isn't true.
-    StringView beforeSubstring(const StringView &other) const;
+    NODISCARD StringView beforeSubstring(const StringView &other) const;
 
     // std::string s ="IgnoredOtherResult";
     // StringView sv{};
     // assert(sv.startingWithSubstring(sv.mid(7, 5) /* "Other" */) == sv.mid(7) /* "OtherResult" */);
     //
     // NOTE: requires `other.isSubstringOf(*this)`; result is undefined (in the UB sense) if that isn't true.
-    StringView startingWithSubstring(const StringView &other) const;
+    NODISCARD StringView startingWithSubstring(const StringView &other) const;
 
     // std::string s = "ResultOtherIgnored";
     // StringView sv{s};
     // assert(sv.beforeSubstring(sv.mid(6, 5) /* "Other" */) == sv.left(11) /* "ResultOther" */);
     //
     // NOTE: requires `other.isSubstringOf(*this)`; result is undefined (in the UB sense) if that isn't true.
-    StringView upToAndIncludingSubstring(const StringView &other) const;
+    NODISCARD StringView upToAndIncludingSubstring(const StringView &other) const;
 
     // std::string s = "IgnoredOtherResult";
     // StringView sv{s};
     // assert(sv.afterSubstring(sv.substr(7, 5) /* "Other */) == sv.right(6) /* Result */);
     //
     // NOTE: requires `other.isSubstringOf(*this)`; result is undefined (in the UB sense) if that isn't true.
-    StringView afterSubstring(const StringView &other) const;
+    NODISCARD StringView afterSubstring(const StringView &other) const;
 };
 
 namespace test {

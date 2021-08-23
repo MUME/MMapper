@@ -8,6 +8,8 @@
 #include <QWidget>
 #include <QtCore>
 
+#include "../global/macros.h"
+
 class QObject;
 class QEvent;
 class ClientTelnet;
@@ -21,19 +23,19 @@ class ClientWidget final : public QWidget
     Q_OBJECT
 
 public:
-    explicit ClientWidget(QWidget *parent = nullptr);
-    ~ClientWidget() override;
+    explicit ClientWidget(QWidget *parent);
+    ~ClientWidget() final;
 
 public:
-    bool isUsingClient() const;
+    NODISCARD bool isUsingClient() const;
 
 signals:
-    void relayMessage(const QString &);
+    void sig_relayMessage(const QString &);
 
 public slots:
-    void onVisibilityChanged(bool);
-    void onShowMessage(const QString &);
-    void saveLog();
+    void slot_onVisibilityChanged(bool);
+    void slot_onShowMessage(const QString &);
+    void slot_saveLog();
 
 protected:
     bool eventFilter(QObject *obj, QEvent *event) override;

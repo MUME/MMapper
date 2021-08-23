@@ -22,15 +22,15 @@ MumeClockWidget::MumeClockWidget(MumeClock *clock, QWidget *parent)
     assert(testAttribute(Qt::WA_DeleteOnClose));
 
     m_timer = std::make_unique<QTimer>(this);
-    connect(m_timer.get(), &QTimer::timeout, this, &MumeClockWidget::updateLabel);
+    connect(m_timer.get(), &QTimer::timeout, this, &MumeClockWidget::slot_updateLabel);
     m_timer->start(1000);
 
-    updateLabel();
+    slot_updateLabel();
 }
 
 MumeClockWidget::~MumeClockWidget() = default;
 
-void MumeClockWidget::updateLabel()
+void MumeClockWidget::slot_updateLabel()
 {
     // Ensure we have updated the epoch
     setConfig().mumeClock.startEpoch = m_clock->getMumeStartEpoch();

@@ -93,22 +93,25 @@ public:
         return set(static_cast<int>(std::lround(f * std::pow(10.f, static_cast<float>(digits)))));
     }
 
-    int get() const { return m_value; }
-    float getFloat() const
+    NODISCARD int get() const { return m_value; }
+    NODISCARD float getFloat() const
     {
         return static_cast<float>(get()) * std::pow(10.f, -static_cast<float>(digits));
     }
-    double getDouble() const
+    NODISCARD double getDouble() const
     {
         return static_cast<double>(get()) * std::pow(10.0, -static_cast<double>(digits));
     }
 
 public:
     // NOTE: The clone does not inherit our change monitor!
-    FixedPoint clone(int value) const { return FixedPoint<_Digits>{min, max, defaultValue, value}; }
+    NODISCARD FixedPoint clone(int value) const
+    {
+        return FixedPoint<_Digits>{min, max, defaultValue, value};
+    }
 
 public:
-    ChangeMonitor::CallbackLifetime registerChangeCallback(ChangeMonitor::Function callback)
+    NODISCARD ChangeMonitor::CallbackLifetime registerChangeCallback(ChangeMonitor::Function callback)
     {
         return m_changeMonitor.registerChangeCallback(std::move(callback));
     }

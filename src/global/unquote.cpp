@@ -10,14 +10,14 @@
 
 #include "TextUtils.h"
 
-enum class ReasonEnum {
+enum class NODISCARD ReasonEnum {
     INVALID_ESCAPE,
     INVALID_OCTAL,
     INVALID_HEX,
     UNBALANCED_QUOTES,
 };
 
-struct UnquoteException final : public std::runtime_error
+struct NODISCARD UnquoteException final : public std::runtime_error
 {
     const ReasonEnum reason;
     explicit UnquoteException(const ReasonEnum reason) noexcept(
@@ -25,13 +25,13 @@ struct UnquoteException final : public std::runtime_error
         : std::runtime_error("UnquoteException")
         , reason{reason}
     {}
-    ~UnquoteException() override;
+    ~UnquoteException() final;
 };
 UnquoteException::~UnquoteException() = default;
 
-enum class TokenEnum { BeginString, EndString };
+enum class NODISCARD TokenEnum { BeginString, EndString };
 
-static std::optional<uint32_t> try_decode_oct(char c) noexcept
+NODISCARD static std::optional<uint32_t> try_decode_oct(char c) noexcept
 {
     if ('0' <= c && c <= '7')
         return c - '0';
@@ -39,7 +39,7 @@ static std::optional<uint32_t> try_decode_oct(char c) noexcept
         return std::nullopt;
 }
 
-static std::optional<uint32_t> try_decode_hex(char c) noexcept
+NODISCARD static std::optional<uint32_t> try_decode_hex(char c) noexcept
 {
     if ('0' <= c && c <= '9')
         return c - '0';
@@ -51,8 +51,8 @@ static std::optional<uint32_t> try_decode_hex(char c) noexcept
         return std::nullopt;
 }
 
-static std::vector<std::string> unquote_unsafe(const std::string_view &input,
-                                               const bool allowUnbalancedQuotes)
+NODISCARD static std::vector<std::string> unquote_unsafe(const std::string_view &input,
+                                                         const bool allowUnbalancedQuotes)
 {
     const auto foreach_char = [allowUnbalancedQuotes, &input](auto &&visit) -> void {
         const auto visit_oct = [&visit](auto &it, const auto end) -> void {
@@ -109,7 +109,7 @@ static std::vector<std::string> unquote_unsafe(const std::string_view &input,
             visit(static_cast<char>(static_cast<unsigned char>(result)));
         };
 
-        enum class ModeEnum { Space, Other, DoubleQuote };
+        enum class NODISCARD ModeEnum { Space, Other, DoubleQuote };
 
         ModeEnum mode = ModeEnum::Space;
 
@@ -283,9 +283,9 @@ static std::vector<std::string> unquote_unsafe(const std::string_view &input,
     return result;
 }
 
-UnquoteResult unquote(const std::string_view &input,
-                      const bool allowUnbalancedQuotes,
-                      const bool allowEmbeddedNull)
+NODISCARD UnquoteResult unquote(const std::string_view &input,
+                                const bool allowUnbalancedQuotes,
+                                const bool allowEmbeddedNull)
 {
     try {
         auto result = unquote_unsafe(input, allowUnbalancedQuotes);
@@ -311,7 +311,7 @@ UnquoteResult unquote(const std::string_view &input,
         case ReasonEnum::UNBALANCED_QUOTES:
             return UnquoteResult{UnquoteFailureReason{"unquote: unbalanced quotes"}};
         }
-    } catch (std::exception &ex) {
+    } catch (const std::exception &ex) {
         return UnquoteResult{UnquoteFailureReason{std::string("exception: ") + ex.what()}};
     } catch (...) {
     }
@@ -374,7 +374,8 @@ void test_unquote() noexcept /* will crash the program if it throws */
         static const auto expectUnquoteException = [](const std::string_view &input,
                                                       const ReasonEnum expectedReason) {
             try {
-                unquote_unsafe(input, false);
+                MAYBE_UNUSED const auto ignored = //
+                    unquote_unsafe(input, false);
                 assert(false);
             } catch (const UnquoteException &ex) {
                 const auto &reason = ex.reason;

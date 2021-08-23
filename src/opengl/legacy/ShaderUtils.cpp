@@ -17,7 +17,7 @@
 
 namespace ShaderUtils {
 
-static bool VERBOSE_SHADER_DEBUG = []() -> bool {
+static const bool VERBOSE_SHADER_DEBUG = []() -> bool {
     if (auto opt = utils::getEnvBool("MMAPPER_VERBOSE_SHADER_DEBUG")) {
         return opt.value();
     }
@@ -72,7 +72,7 @@ static void print(std::ostream &os, const Source &source)
     }
 }
 
-static const char *shaderTypeName(const GLenum type)
+NODISCARD static const char *shaderTypeName(const GLenum type)
 {
 #define CASE(x) \
     do { \
@@ -113,7 +113,7 @@ static void checkProgramInfo(Functions &gl, const GLuint programID)
                 os << &programErrorMessage[0] << std::endl;
                 qWarning() << os.str().c_str();
             }
-            return ba.size();
+            return static_cast<int>(ba.size());
         }
         return 0;
     }();
@@ -148,7 +148,7 @@ static void checkShaderInfo(Functions &gl, const GLuint shaderId)
                 os << &shaderErrorMessage[0] << std::endl;
                 qWarning() << os.str().c_str();
             }
-            return ba.size();
+            return static_cast<int>(ba.size());
         }
         return 0;
     }();
@@ -156,7 +156,7 @@ static void checkShaderInfo(Functions &gl, const GLuint shaderId)
     assert(result == GL_TRUE && infoLogLength == 0);
 }
 
-static GLuint compileShader(Functions &gl, const GLenum type, const Source &source)
+NODISCARD static GLuint compileShader(Functions &gl, const GLenum type, const Source &source)
 {
     if (!source)
         return 0;
@@ -181,7 +181,7 @@ static GLuint compileShader(Functions &gl, const GLenum type, const Source &sour
     std::array<const char *, 3> ptrs = {Functions::getShaderVersion(),
                                         "#line 1\n",
                                         source.source.c_str()};
-    gl.glShaderSource(shaderId, ptrs.size(), ptrs.data(), nullptr);
+    gl.glShaderSource(shaderId, static_cast<GLsizei>(ptrs.size()), ptrs.data(), nullptr);
     gl.glCompileShader(shaderId);
     checkShaderInfo(gl, shaderId);
 
@@ -205,7 +205,7 @@ GLuint loadShaders(Functions &gl, const Source &vert, const Source &frag)
     }
 
     const GLuint prog = gl.glCreateProgram();
-    for (auto s : shaders) {
+    for (const GLuint s : shaders) {
         if (is_valid(s)) {
             gl.glAttachShader(prog, s);
         }
@@ -214,7 +214,7 @@ GLuint loadShaders(Functions &gl, const Source &vert, const Source &frag)
     gl.glLinkProgram(prog);
     checkProgramInfo(gl, prog);
 
-    for (auto s : shaders) {
+    for (const GLuint s : shaders) {
         if (is_valid(s)) {
             gl.glDetachShader(prog, s);
             gl.glDeleteShader(s);

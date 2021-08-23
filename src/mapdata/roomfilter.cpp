@@ -19,7 +19,7 @@
 #include "enums.h"
 #include "mmapper2room.h"
 
-static std::regex createRegex(const std::string &input, const Qt::CaseSensitivity cs)
+NODISCARD static std::regex createRegex(const std::string &input, const Qt::CaseSensitivity cs)
 {
     // TODO: Switch from std::regex::exteneded to std::regex::multiline once GCC supports it
     auto options = std::regex::nosubs | std::regex::optimize | std::regex::extended;
@@ -53,7 +53,7 @@ RoomFilter::RoomFilter(const std::string_view &sv,
 {}
 
 const char *const RoomFilter::parse_help
-    = "Parse error; format is: [-(name|desc|dyndesc|note|exits|all|clear)] pattern\r\n";
+    = "Parse error; format is: [-(name|desc|contents|note|exits|all|clear)] pattern\n";
 
 std::optional<RoomFilter> RoomFilter::parseRoomFilter(const std::string_view &line)
 {
@@ -68,8 +68,8 @@ std::optional<RoomFilter> RoomFilter::parseRoomFilter(const std::string_view &li
     const auto opt = [&first]() -> std::optional<PatternKindsEnum> {
         if (Abbrev("desc", 1).matches(first)) {
             return PatternKindsEnum::DESC;
-        } else if (Abbrev("dyndesc", 2).matches(first)) {
-            return PatternKindsEnum::DYN_DESC;
+        } else if (Abbrev("contents", 2).matches(first)) {
+            return PatternKindsEnum::CONTENTS;
         } else if (Abbrev("name", 2).matches(first)) {
             return PatternKindsEnum::NAME;
         } else if (Abbrev("exits", 1).matches(first)) {
@@ -108,10 +108,10 @@ bool RoomFilter::filter(const Room *const pr) const
             break;
 
         case PatternKindsEnum::DESC:
-            return matches(r.getStaticDescription());
+            return matches(r.getDescription());
 
-        case PatternKindsEnum::DYN_DESC:
-            return matches(r.getDynamicDescription());
+        case PatternKindsEnum::CONTENTS:
+            return matches(r.getContents());
 
         case PatternKindsEnum::NAME:
             return matches(r.getName());
@@ -159,7 +159,7 @@ bool RoomFilter::filter(const Room *const pr) const
     // in this case because the compiler will report excess elements but not too few elements.
     // Alternate: make this a std::vector and then either do a regular assert, or remove the assert.
     static constexpr const PatternKindsEnum ALL_KINDS[]{PatternKindsEnum::DESC,
-                                                        PatternKindsEnum::DYN_DESC,
+                                                        PatternKindsEnum::CONTENTS,
                                                         PatternKindsEnum::NAME,
                                                         PatternKindsEnum::NOTE,
                                                         PatternKindsEnum::EXITS,

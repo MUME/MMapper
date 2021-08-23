@@ -7,10 +7,11 @@
 #include <string_view>
 
 #include "RuleOf5.h"
+#include "macros.h"
 
 class QColor;
 
-struct Color final
+struct NODISCARD Color final
 {
 private:
     static constexpr const uint32_t TRANSPARENT_BLACK = 0u;
@@ -53,20 +54,20 @@ public:
     explicit Color(const QColor &qcolor);
     explicit Color(const QColor &rgb, float alpha);
 
-    static Color fromRGB(uint32_t rgb);
+    NODISCARD static Color fromRGB(uint32_t rgb);
 
 public:
-    QColor getQColor() const;
-    uint32_t getRGB() const { return m_color & MASK_RGB; }
-    uint32_t getAlpha() const { return (m_color & MASK_ALPHA) >> SHIFT_ALPHA; }
-    uint32_t getRGBA() const { return m_color; }
-    uint32_t getUint32() const { return m_color; }
-    glm::vec4 getVec4() const { return glm::unpackUnorm4x8(m_color); }
+    NODISCARD QColor getQColor() const;
+    NODISCARD uint32_t getRGB() const { return m_color & MASK_RGB; }
+    NODISCARD uint32_t getAlpha() const { return (m_color & MASK_ALPHA) >> SHIFT_ALPHA; }
+    NODISCARD uint32_t getRGBA() const { return m_color; }
+    NODISCARD uint32_t getUint32() const { return m_color; }
+    NODISCARD glm::vec4 getVec4() const { return glm::unpackUnorm4x8(m_color); }
 
 public:
-    uint32_t getRed() const;   // 0..255
-    uint32_t getGreen() const; // 0..255
-    uint32_t getBlue() const;  // 0..255
+    NODISCARD uint32_t getRed() const;   // 0..255
+    NODISCARD uint32_t getGreen() const; // 0..255
+    NODISCARD uint32_t getBlue() const;  // 0..255
 
 public:
     bool operator==(const Color &rhs) const { return m_color == rhs.m_color; }
@@ -75,12 +76,12 @@ public:
     explicit operator QColor() const;
 
 public:
-    Color withAlpha(float alpha) const;
-    bool isTransparent() const { return (m_color & MASK_ALPHA) == 0; }
+    NODISCARD Color withAlpha(float alpha) const;
+    NODISCARD bool isTransparent() const { return (m_color & MASK_ALPHA) == 0; }
 
 public:
-    static Color fromHex(std::string_view sv);
-    std::string toHex() const;
+    NODISCARD static Color fromHex(std::string_view sv);
+    NODISCARD std::string toHex() const;
     std::ostream &toHex(std::ostream &os) const;
     friend std::ostream &operator<<(std::ostream &os, const Color &c) { return c.toHex(os); }
 };

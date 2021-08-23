@@ -4,8 +4,6 @@
 // Author: Marek Krejza <krejza@gmail.com> (Caligor)
 // Author: Nils Schimmelmann <nschimme@gmail.com> (Jahara)
 
-#include <cstdlib>
-#include <ctime>
 #include <memory>
 #include <optional>
 #include <set>
@@ -28,18 +26,27 @@
 
 // REVISIT: move splash files somewhere else?
 // (presumably not in the "root" src/ directory?)
-struct ISplash
+struct NODISCARD ISplash
 {
+public:
     virtual ~ISplash();
-    virtual void finish(QWidget *) = 0;
+
+private:
+    virtual void virt_finish(QWidget *) = 0;
+
+public:
+    void finish(QWidget *const w) { virt_finish(w); }
 };
 
 ISplash::~ISplash() = default;
 
-struct FakeSplash final : public ISplash
+struct NODISCARD FakeSplash final : public ISplash
 {
-    virtual ~FakeSplash() override;
-    virtual void finish(QWidget *) final override {}
+public:
+    ~FakeSplash() final;
+
+private:
+    void virt_finish(QWidget *) final {}
 };
 
 FakeSplash::~FakeSplash() = default;
@@ -59,18 +66,13 @@ public:
         splash.showMessage(message, Qt::AlignBottom | Qt::AlignRight, Qt::yellow);
         splash.show();
     }
-    virtual ~Splash() override;
+    ~Splash() final;
 
-    void finish(QWidget *w) override { splash.finish(w); }
+private:
+    void virt_finish(QWidget *const w) override { splash.finish(w); }
 };
 
 Splash::~Splash() = default;
-
-static void seedRandomNumberGenerator()
-{
-    // Seed random number generator with current time
-    std::srand(static_cast<unsigned int>(std::time(nullptr)));
-}
 
 static void useHighDpi()
 {
@@ -98,7 +100,7 @@ static void tryInitDrMingw()
 #endif
 }
 
-static bool tryLoad(MainWindow &mw, const QDir &dir, const QString &input_filename)
+NODISCARD static bool tryLoad(MainWindow &mw, const QDir &dir, const QString &input_filename)
 {
     const auto getAbsoluteFileName = [](const QDir &dir,
                                         const QString &input_filename) -> std::optional<QString> {
@@ -142,7 +144,6 @@ static void tryAutoLoad(MainWindow &mw)
 
 int main(int argc, char **argv)
 {
-    seedRandomNumberGenerator();
     useHighDpi();
     trySetHighDpiScaleFactorRoundingPolicy();
     setEnteredMain();

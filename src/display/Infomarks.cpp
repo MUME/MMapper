@@ -34,8 +34,8 @@ static constexpr float INFOMARK_POINT_SIZE = 6.f;
 #define LOOKUP_COLOR(X) (getConfig().colorSettings.X.getColor())
 
 // NOTE: This currently requires rebuilding the infomark meshes if a color changes.
-static Color getInfoMarkColor(const InfoMarkTypeEnum infoMarkType,
-                              const InfoMarkClassEnum infoMarkClass)
+NODISCARD static Color getInfoMarkColor(const InfoMarkTypeEnum infoMarkType,
+                                        const InfoMarkClassEnum infoMarkClass)
 {
     const Color defaultColor = (infoMarkType == InfoMarkTypeEnum::TEXT) ? Colors::black
                                                                         : Colors::white;
@@ -64,7 +64,7 @@ static Color getInfoMarkColor(const InfoMarkTypeEnum infoMarkType,
     return defaultColor;
 }
 
-static FontFormatFlags getFontFormatFlags(const InfoMarkClassEnum infoMarkClass)
+NODISCARD static FontFormatFlags getFontFormatFlags(const InfoMarkClassEnum infoMarkClass)
 {
     switch (infoMarkClass) {
     case InfoMarkClassEnum::GENERIC:

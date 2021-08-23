@@ -12,7 +12,7 @@
 
 #include "hash.h"
 
-struct RoomId final
+struct NODISCARD RoomId final
 {
 private:
     uint32_t value = 0;
@@ -32,6 +32,7 @@ public:
     inline constexpr bool operator!=(RoomId rhs) const { return value != rhs.value; }
 
 public:
+    // TODO: Is this still needed?
     friend inline uint32_t qHash(RoomId id) { return id.asUint32(); }
 };
 static constexpr const RoomId INVALID_ROOMID{UINT_MAX};
@@ -46,7 +47,7 @@ struct std::hash<RoomId>
 };
 
 template<typename T>
-class roomid_vector : private std::vector<T>
+class NODISCARD roomid_vector : private std::vector<T>
 {
 private:
     using base = std::vector<T>;
@@ -55,8 +56,8 @@ public:
     using std::vector<T>::vector;
 
 public:
-    auto operator[](RoomId roomId) -> decltype(auto) { return base::at(roomId.asUint32()); }
-    auto operator[](RoomId roomId) const -> decltype(auto) { return base::at(roomId.asUint32()); }
+    NODISCARD decltype(auto) operator[](RoomId roomId) { return base::at(roomId.asUint32()); }
+    NODISCARD decltype(auto) operator[](RoomId roomId) const { return base::at(roomId.asUint32()); }
 
 public:
     using base::begin;

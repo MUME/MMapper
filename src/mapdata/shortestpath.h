@@ -14,13 +14,15 @@
 class Room;
 class RoomAdmin;
 
-class SPNode
+class NODISCARD SPNode final
 {
 public:
     const Room *r = nullptr;
     int parent = 0;
     double dist = 0.0;
     ExitDirEnum lastdir = ExitDirEnum::NONE;
+
+public:
     SPNode() = default;
     explicit SPNode(const Room *r, const int parent, double dist, ExitDirEnum lastdir)
         : r(r)
@@ -30,9 +32,18 @@ public:
     {}
 };
 
-class ShortestPathRecipient
+class NODISCARD ShortestPathRecipient
 {
 public:
-    virtual void receiveShortestPath(RoomAdmin *admin, QVector<SPNode> spnodes, int endpoint) = 0;
     virtual ~ShortestPathRecipient();
+
+private:
+    virtual void virt_receiveShortestPath(RoomAdmin *admin, QVector<SPNode> spnodes, int endpoint)
+        = 0;
+
+public:
+    void receiveShortestPath(RoomAdmin *const admin, QVector<SPNode> spnodes, const int endpoint)
+    {
+        virt_receiveShortestPath(admin, std::move(spnodes), endpoint);
+    }
 };

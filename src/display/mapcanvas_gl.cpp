@@ -15,7 +15,9 @@
 #include <limits>
 #include <list>
 #include <memory>
+#include <mutex>
 #include <optional>
+#include <sstream>
 #include <stdexcept>
 #include <type_traits>
 #include <unordered_map>
@@ -49,6 +51,21 @@
 #include "connectionselection.h"
 
 namespace MapCanvasConfig {
+
+static std::mutex g_version_lock;
+static std::string g_current_gl_version = "UN0.0";
+
+static void setCurrentOpenGLVersion(std::string version)
+{
+    std::unique_lock<std::mutex> lock{g_version_lock};
+    g_current_gl_version = std::move(version);
+}
+
+std::string getCurrentOpenGLVersion()
+{
+    std::unique_lock<std::mutex> lock{g_version_lock};
+    return g_current_gl_version;
+}
 
 ConnectionSet registerChangeCallback(ChangeMonitor::Function callback)
 {
@@ -141,7 +158,7 @@ void MapCanvas::reportGLVersion()
 
     auto logMsg = [this](const QByteArray &prefix, const QByteArray &msg) -> void {
         qInfo() << prefix << msg;
-        emit log("MapCanvas", prefix + " " + msg);
+        emit sig_log("MapCanvas", prefix + " " + msg);
     };
 
     auto getString = [&gl](const GLenum name) -> QByteArray {
@@ -156,10 +173,34 @@ void MapCanvas::reportGLVersion()
     logString("OpenGL Renderer:", GL_RENDERER);
     logString("OpenGL Vendor:", GL_VENDOR);
     logString("OpenGL GLSL:", GL_SHADING_LANGUAGE_VERSION);
+
+    const auto version = [this]() -> std::string {
+        const QSurfaceFormat &format = context()->format();
+        std::ostringstream oss;
+        switch (format.renderableType()) {
+        case QSurfaceFormat::OpenGL:
+            oss << "GL";
+            break;
+        case QSurfaceFormat::OpenGLES:
+            oss << "ES";
+            break;
+        case QSurfaceFormat::OpenVG:
+            oss << "VG";
+            break;
+        case QSurfaceFormat::DefaultRenderableType:
+        default:
+            oss << "UN";
+            break;
+        }
+        oss << format.majorVersion() << "." << format.minorVersion();
+        return std::move(oss).str();
+    }();
+
+    MapCanvasConfig::setCurrentOpenGLVersion(version);
+
     logMsg("Current OpenGL Context:",
-           QString("%1.%2 (%3)")
-               .arg(context()->format().majorVersion())
-               .arg(context()->format().minorVersion())
+           QString("%1 (%2)")
+               .arg(version.c_str())
                // FIXME: This is a bit late to report an invalid context.
                .arg(context()->isValid() ? "valid" : "invalid")
                .toUtf8());
@@ -283,7 +324,7 @@ glm::mat4 MapCanvas::getViewProj_old(const glm::vec2 &scrollPos,
     return glm::make_mat4(proj.constData());
 }
 
-static float getPitchDegrees(const float zoomScale)
+NODISCARD static float getPitchDegrees(const float zoomScale)
 {
     const float degrees = getConfig().canvas.advanced.verticalAngle.getFloat();
     if (!MapCanvasConfig::isAutoTilt())
@@ -465,11 +506,7 @@ void MapCanvas::updateMapBatches()
                    : OptBounds{};                                //
     }();
 
-    MapCanvasRoomDrawer drawer{static_cast<MapCanvasViewport &>(*this),
-                               m_textures,
-                               getOpenGL(),
-                               getGLFont(),
-                               opt_mapBatches};
+    MapCanvasRoomDrawer drawer{m_textures, getOpenGL(), getGLFont(), opt_mapBatches};
 
     /// The following ends up calling MapCanvasRoomDrawer::generateBatches()
     m_data.generateBatches(drawer, bounds);
@@ -518,7 +555,7 @@ void MapCanvas::paintSelections()
 
 void MapCanvas::paintGL()
 {
-    static double longestBatchMs = 0.0;
+    static thread_local double longestBatchMs = 0.0;
 
     const bool showPerfStats = MapCanvasConfig::getShowPerfStats();
 
@@ -689,7 +726,8 @@ void MapCanvas::updateMultisampling()
     if (activeStatus == wantMultisampling)
         return;
 
-    getOpenGL().tryEnableMultisampling(wantMultisampling);
+    // REVISIT: check return value?
+    MAYBE_UNUSED const bool enabled = getOpenGL().tryEnableMultisampling(wantMultisampling);
     activeStatus = wantMultisampling;
 }
 
@@ -760,24 +798,5 @@ void MapCanvas::renderMapBatches()
             fadeBackground();
         }
         drawLayer(thisLayer, m_currentLayer);
-    }
-
-    // Draw the bounds that will cause a mesh rebuild
-    if (batches.redrawMargin.isRestricted()) {
-        const auto &bounds = batches.redrawMargin.getBounds();
-        const auto &pos1 = bounds.min.to_vec2();
-        const auto &pos2 = bounds.max.to_vec2();
-        const glm::vec3 A{pos1, m_currentLayer};
-        const glm::vec3 B{pos2.x, pos1.y, m_currentLayer};
-        const glm::vec3 C{pos2, m_currentLayer};
-        const glm::vec3 D{pos1.x, pos2.y, m_currentLayer};
-
-        const auto rs
-            = GLRenderState().withBlend(BlendModeEnum::TRANSPARENCY).withDepthFunction(std::nullopt);
-        const auto innerBoundsColor = Colors::darkOrange1;
-        static constexpr float BOUNDS_LINE_WIDTH = 2.f;
-        const auto lineStyle = rs.withLineParams(LineParams{BOUNDS_LINE_WIDTH});
-        const std::vector<glm::vec3> verts{A, B, B, C, C, D, D, A};
-        gl.renderPlainLines(verts, lineStyle.withColor(innerBoundsColor));
     }
 }

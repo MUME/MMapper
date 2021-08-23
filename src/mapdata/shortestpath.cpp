@@ -28,7 +28,7 @@
 
 ShortestPathRecipient::~ShortestPathRecipient() = default;
 
-static double terrain_cost(const RoomTerrainEnum type)
+NODISCARD static double terrain_cost(const RoomTerrainEnum type)
 {
     switch (type) {
     case RoomTerrainEnum::UNDEFINED:
@@ -68,7 +68,7 @@ static double terrain_cost(const RoomTerrainEnum type)
     return 1.0;
 }
 
-static double getLength(const Exit &e, const Room *curr, const Room *nextr)
+NODISCARD static double getLength(const Exit &e, const Room *curr, const Room *nextr)
 {
     double cost = terrain_cost(nextr->getTerrainType());
     auto flags = e.getExitFlags();

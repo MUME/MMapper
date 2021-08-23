@@ -6,6 +6,8 @@
 
 #include <QObject>
 
+ProgressCounter::~ProgressCounter() = default;
+
 ProgressCounter::ProgressCounter(QObject *parent)
     : QObject(parent)
 {}
@@ -22,7 +24,7 @@ void ProgressCounter::step(const quint32 steps)
     const quint32 percentage = (m_totalSteps == 0u) ? 0u : (100u * m_steps / m_totalSteps);
     if (percentage != m_percentage) {
         m_percentage = percentage;
-        emit onPercentageChanged(percentage);
+        emit sig_onPercentageChanged(percentage);
     }
 }
 

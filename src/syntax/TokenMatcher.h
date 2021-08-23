@@ -33,7 +33,7 @@ namespace syntax {
 // Runtime Polymorphism talk, but it has been converted to a wrapper of IArgument
 // to make it easier to find and modify arguments. Some parts of the original
 // design still remain.
-class TokenMatcher final
+class NODISCARD TokenMatcher final
 {
 private:
     std::shared_ptr<const IArgument> m_self;
@@ -47,24 +47,24 @@ public:
 
 public:
     template<typename T>
-    static TokenMatcher alloc(T &&x) = delete;
+    NODISCARD static TokenMatcher alloc(T &&x) = delete;
 
     template<typename T, typename... Args>
-    static TokenMatcher alloc(Args &&... args)
+    NODISCARD static TokenMatcher alloc(Args &&... args)
     {
         auto ptr = std::make_shared<const T>(std::forward<Args>(args)...);
         return TokenMatcher{std::move(ptr)};
     }
 
     template<typename T>
-    static TokenMatcher alloc_copy(T &&val)
+    NODISCARD static TokenMatcher alloc_copy(T &&val)
     {
         auto ptr = std::make_shared<const T>(std::forward<T>(val));
         return TokenMatcher{std::move(ptr)};
     }
 
 public:
-    MatchResult tryMatch(const ParserInput &sv, IMatchErrorLogger *logger) const;
+    NODISCARD MatchResult tryMatch(const ParserInput &sv, IMatchErrorLogger *logger) const;
 
 public:
     friend std::ostream &operator<<(std::ostream &os, const TokenMatcher &token);

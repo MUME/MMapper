@@ -71,6 +71,11 @@ static void print(std::ostream &os, ExitFlagEnum value)
     os << "ExitFlagEnum(" << static_cast<int>(value) << ")";
 }
 
+static void print(std::ostream &os, InfoMarkClassEnum value)
+{
+    os << "InfoMarkClassEnum(" << static_cast<int>(value) << ")";
+}
+
 } // namespace value_helper
 
 std::ostream &operator<<(std::ostream &os, const Value &value)
@@ -126,14 +131,14 @@ Vector::Base::const_iterator Vector::end() const
 Vector getAnyVectorReversed(const Pair *const matched)
 {
     size_t len = 0;
-    for (auto it = matched; it != nullptr; it = it->cdr)
+    for (const Pair *it = matched; it != nullptr; it = it->cdr)
         ++len;
 
     std::vector<Value> result;
     result.resize(len);
 
     auto out = result.rbegin();
-    for (auto it = matched; it != nullptr; it = it->cdr) {
+    for (const Pair *it = matched; it != nullptr; it = it->cdr) {
         *out++ = it->car;
     }
     assert(out == result.rend());

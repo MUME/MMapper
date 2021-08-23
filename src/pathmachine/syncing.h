@@ -17,7 +17,7 @@ class RoomAdmin;
 class RoomSignalHandler;
 struct PathParameters;
 
-class Syncing : public RoomRecipient
+class NODISCARD Syncing final : public RoomRecipient
 {
 private:
     RoomSignalHandler *signaler = nullptr;
@@ -31,11 +31,15 @@ public:
     explicit Syncing(PathParameters &p,
                      std::shared_ptr<PathList> paths,
                      RoomSignalHandler *signaler);
-    void receiveRoom(RoomAdmin *, const Room *) override;
-    std::shared_ptr<PathList> evaluate();
-    ~Syncing() override;
 
 public:
     Syncing() = delete;
     DELETE_CTORS_AND_ASSIGN_OPS(Syncing);
+
+private:
+    void virt_receiveRoom(RoomAdmin *, const Room *) final;
+
+public:
+    NODISCARD std::shared_ptr<PathList> evaluate();
+    ~Syncing() override;
 };

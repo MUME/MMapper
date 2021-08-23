@@ -17,15 +17,15 @@ class PathmachinePage : public QWidget, private Ui::PathmachinePage
     Q_OBJECT
 
 public:
-    explicit PathmachinePage(QWidget *parent = nullptr);
+    explicit PathmachinePage(QWidget *parent);
 
 public slots:
-    void loadConfig();
-    void acceptBestRelativeDoubleSpinBoxValueChanged(double);
-    void acceptBestAbsoluteDoubleSpinBoxValueChanged(double);
-    void newRoomPenaltyDoubleSpinBoxValueChanged(double);
-    void correctPositionBonusDoubleSpinBoxValueChanged(double);
-    void multipleConnectionsPenaltyDoubleSpinBoxValueChanged(double);
-    void maxPathsValueChanged(int);
-    void matchingToleranceSpinBoxValueChanged(int);
+    void slot_loadConfig();
+    void slot_acceptBestRelativeDoubleSpinBoxValueChanged(double);
+    void slot_acceptBestAbsoluteDoubleSpinBoxValueChanged(double);
+    void slot_newRoomPenaltyDoubleSpinBoxValueChanged(double);
+    void slot_correctPositionBonusDoubleSpinBoxValueChanged(double);
+    void slot_multipleConnectionsPenaltyDoubleSpinBoxValueChanged(double);
+    void slot_maxPathsValueChanged(int);
+    void slot_matchingToleranceSpinBoxValueChanged(int);
 };

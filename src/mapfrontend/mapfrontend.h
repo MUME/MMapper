@@ -47,7 +47,8 @@ protected:
     RoomLocks locks;
 
     RoomId greatestUsedId = INVALID_ROOMID;
-    QMutex mapLock;
+    QMutex mapLock{QMutex::Recursive};
+
     struct Bounds final
     {
         Coordinate min;
@@ -64,11 +65,14 @@ protected:
     void checkSize(const Coordinate &);
 
 public:
-    explicit MapFrontend(QObject *parent = nullptr);
+    explicit MapFrontend(QObject *parent);
     virtual ~MapFrontend() override;
 
+private:
+    virtual void virt_clear() = 0;
+
 public:
-    virtual void clear();
+    void clear();
     void block();
     void unblock();
     void checkSize();
@@ -102,7 +106,7 @@ public slots:
 
     // createRoom creates a room without a lock
     // it will get deleted if no one looks for it for a certain time
-    void createRoom(const SigParseEvent &, const Coordinate &);
+    void slot_createRoom(const SigParseEvent &, const Coordinate &);
 
     void slot_scheduleAction(std::shared_ptr<MapAction> action) { scheduleAction(action); }
 

@@ -40,7 +40,7 @@ static const QByteArray ampersand("&");
 static const QByteArray ampersandTemplate("&amp;");
 
 MumeXmlParser::MumeXmlParser(
-    MapData *md, MumeClock *mc, ProxyParserApi proxy, GroupManagerApi group, QObject *parent)
+    MapData &md, MumeClock &mc, ProxyParserApi proxy, GroupManagerApi group, QObject *parent)
     : AbstractParser(md, mc, proxy, group, parent)
 {
     if (XPS_DEBUG_TO_FILE) {
@@ -62,7 +62,7 @@ MumeXmlParser::~MumeXmlParser()
     }
 }
 
-void MumeXmlParser::parseNewMudInput(const TelnetData &data)
+void MumeXmlParser::slot_parseNewMudInput(const TelnetData &data)
 {
     switch (data.type) {
     case TelnetDataEnum::DELAY: // Twiddlers
@@ -115,7 +115,8 @@ void MumeXmlParser::parse(const TelnetData &data)
             if (c == '>') {
                 // send tag
                 if (!m_tempTag.isEmpty()) {
-                    element(m_tempTag);
+                    MAYBE_UNUSED const auto ignored = //
+                        element(m_tempTag);
                 }
 
                 m_tempTag.clear();
@@ -197,7 +198,10 @@ bool MumeXmlParser::element(const QByteArray &line)
                         }
                         m_promptFlags.reset(); // Don't trust god prompts
                         if (!m_queue.isEmpty() && m_move != CommandEnum::LOOK) // Remove follows
-                            m_queue.dequeue();
+                        {
+                            MAYBE_UNUSED const auto ignored = //
+                                m_queue.dequeue();
+                        }
                         if (m_move != CommandEnum::LOOK)
                             m_queue.enqueue(m_move);
                         move();
@@ -209,7 +213,7 @@ bool MumeXmlParser::element(const QByteArray &line)
                 } else if (line.startsWith("/weather")) {
                     m_lineFlags.remove(LineFlagEnum::WEATHER);
                     // Certain weather events happen on ticks
-                    m_mumeClock->parseWeather(m_stringBuffer);
+                    m_mumeClock.parseWeather(m_stringBuffer);
 
                 } else if (line.startsWith("/xml")) {
                     sendToUser("[MMapper] Mapper cannot function without XML mode\n");
@@ -236,8 +240,8 @@ bool MumeXmlParser::element(const QByteArray &line)
                     m_roomName = RoomName{}; // 'name' tag will not show up when blinded
                     m_descriptionReady = false;
                     m_exitsReady = false;
-                    m_dynamicRoomDesc.reset();
-                    m_staticRoomDesc.reset();
+                    m_roomDesc.reset();
+                    m_roomContents.reset();
                     m_exits = nullString;
                     m_promptFlags.reset();
                     m_exitsFlags.reset();
@@ -298,16 +302,6 @@ bool MumeXmlParser::element(const QByteArray &line)
                     }
                 }
                 break;
-            case 'h':
-                if (line.startsWith("header")) {
-                    m_xmlMode = XmlModeEnum::HEADER;
-                    m_lineFlags.insert(LineFlagEnum::HEADER);
-                    if (m_descriptionReady) {
-                        // Prevent emulated exits from firing due to god exits
-                        m_exitsReady = true;
-                    }
-                }
-                break;
             }
         }
         break;
@@ -320,6 +314,13 @@ bool MumeXmlParser::element(const QByteArray &line)
                     m_gratuitous = true;
                 }
                 break;
+            case 'e':
+                if (line.startsWith("exits")) {
+                    m_exits = nullString; // Reset string since payload can be from the 'exit' command
+                    m_xmlMode = XmlModeEnum::EXITS;
+                    m_lineFlags.insert(LineFlagEnum::EXITS);
+                }
+                break;
             case 'n':
                 if (line.startsWith("name")) {
                     m_xmlMode = XmlModeEnum::NAME;
@@ -330,7 +331,7 @@ bool MumeXmlParser::element(const QByteArray &line)
                 if (line.startsWith("description")) {
                     m_xmlMode = XmlModeEnum::DESCRIPTION;
                     // might be empty but valid description
-                    m_staticRoomDesc = RoomStaticDesc{""};
+                    m_roomDesc = RoomDesc{""};
                     m_lineFlags.insert(LineFlagEnum::DESCRIPTION);
                 }
                 break;
@@ -340,7 +341,12 @@ bool MumeXmlParser::element(const QByteArray &line)
                     m_lineFlags.insert(LineFlagEnum::TERRAIN);
                 }
                 break;
-
+            case 'h': // Gods have an "Obvious exits" header
+                if (line.startsWith("header")) {
+                    m_xmlMode = XmlModeEnum::HEADER;
+                    m_lineFlags.insert(LineFlagEnum::HEADER);
+                }
+                break;
             case '/':
                 if (line.startsWith("/room")) {
                     m_xmlMode = XmlModeEnum::NONE;
@@ -381,7 +387,10 @@ bool MumeXmlParser::element(const QByteArray &line)
                     m_lineToUser.append(::toQByteArrayLatin1(snoopToUser(os.str())));
                     m_exitsReady = true;
                     m_lineFlags.remove(LineFlagEnum::EXITS);
-                    m_xmlMode = XmlModeEnum::NONE;
+                    if (m_lineFlags.contains(LineFlagEnum::ROOM))
+                        m_xmlMode = XmlModeEnum::ROOM;
+                    else
+                        m_xmlMode = XmlModeEnum::NONE;
                 }
                 break;
             }
@@ -417,7 +426,7 @@ bool MumeXmlParser::element(const QByteArray &line)
             switch (line.at(0)) {
             case '/':
                 if (line.startsWith("/header")) {
-                    m_xmlMode = XmlModeEnum::NONE;
+                    m_xmlMode = XmlModeEnum::ROOM;
                     m_lineFlags.remove(LineFlagEnum::HEADER);
                 }
                 break;
@@ -477,8 +486,8 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         break;
 
     case XmlModeEnum::ROOM: // dynamic line
-        m_dynamicRoomDesc = RoomDynamicDesc{
-            m_dynamicRoomDesc.value_or(RoomDynamicDesc{}).toQString()
+        m_roomContents = RoomContents{
+            m_roomContents.value_or(RoomContents{}).toQString()
             + normalizeStringCopy(m_stringBuffer.simplified().append("\n"))};
         toUser.append(ch);
         break;
@@ -489,9 +498,8 @@ QByteArray MumeXmlParser::characters(QByteArray &ch)
         break;
 
     case XmlModeEnum::DESCRIPTION: // static line
-        m_staticRoomDesc = RoomStaticDesc{
-            m_staticRoomDesc.value_or(RoomStaticDesc{}).toQString()
-            + normalizeStringCopy(m_stringBuffer.simplified().append("\n"))};
+        m_roomDesc = RoomDesc{m_roomDesc.value_or(RoomDesc{}).toQString()
+                              + normalizeStringCopy(m_stringBuffer.simplified().append("\n"))};
         if (!m_gratuitous) {
             toUser.append(ch);
         }
@@ -548,19 +556,19 @@ void MumeXmlParser::move()
             m_roomName.value()
                 .toQString())) { // non standard end of description parsed (fog, dark or so ...)
         m_roomName.reset();
-        m_dynamicRoomDesc.reset();
-        m_staticRoomDesc.reset();
+        m_roomDesc.reset();
+        m_roomContents.reset();
     }
 
     const auto emitEvent = [this]() {
         auto ev = ParseEvent::createEvent(m_move,
                                           m_roomName.value_or(RoomName{}),
-                                          m_dynamicRoomDesc.value_or(RoomDynamicDesc{}),
-                                          m_staticRoomDesc.value_or(RoomStaticDesc{}),
+                                          m_roomDesc.value_or(RoomDesc{}),
+                                          m_roomContents.value_or(RoomContents{}),
                                           m_exitsFlags,
                                           m_promptFlags,
                                           m_connectedRoomFlags);
-        emit event(SigParseEvent{ev});
+        emit sig_handleParseEvent(SigParseEvent{ev});
     };
 
     if (m_queue.isEmpty()) {
@@ -568,7 +576,7 @@ void MumeXmlParser::move()
     } else {
         const CommandEnum c = m_queue.dequeue();
         // Ignore scouting unless it forced movement via a one-way
-        if (c != CommandEnum::SCOUT || (c == CommandEnum::SCOUT && m_move != CommandEnum::LOOK)) {
+        if (c != CommandEnum::SCOUT || m_move != CommandEnum::LOOK) {
             pathChanged();
             emitEvent();
             if (c != m_move) {
@@ -591,7 +599,7 @@ std::string MumeXmlParser::snoopToUser(const std::string_view &str)
 {
     std::ostringstream os;
     bool snoopPrefix = m_snoopChar.has_value();
-    for (const auto c : str) {
+    for (const char c : str) {
         if (snoopPrefix) {
             os << '&' << m_snoopChar.value() << ' ';
             snoopPrefix = false;

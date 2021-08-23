@@ -15,15 +15,12 @@
 
 class QResizeEvent;
 
-MapWindow::MapWindow(MapData *const mapData,
-                     PrespammedPath *const pp,
-                     Mmapper2Group *const gm,
-                     QWidget *const parent)
+MapWindow::MapWindow(MapData &mapData, PrespammedPath &pp, Mmapper2Group &gm, QWidget *const parent)
     : QWidget(parent)
 {
     m_gridLayout = std::make_unique<QGridLayout>(this);
     m_gridLayout->setSpacing(0);
-    m_gridLayout->setMargin(0);
+    m_gridLayout->setContentsMargins(0, 0, 0, 0);
 
     m_verticalScrollBar = std::make_unique<QScrollBar>(this);
     m_verticalScrollBar->setOrientation(Qt::Vertical);
@@ -53,7 +50,7 @@ MapWindow::MapWindow(MapData *const mapData,
                 canvas,
                 [this](const int x) -> void {
                     const float val = m_knownMapSize.scrollToWorld(glm::ivec2{x, 0}).x;
-                    m_canvas->setHorizontalScroll(val);
+                    m_canvas->slot_setHorizontalScroll(val);
                 });
 
         connect(m_verticalScrollBar.get(),
@@ -61,18 +58,20 @@ MapWindow::MapWindow(MapData *const mapData,
                 canvas,
                 [this](const int y) -> void {
                     const float value = m_knownMapSize.scrollToWorld(glm::ivec2{0, y}).y;
-                    m_canvas->setVerticalScroll(value);
+                    m_canvas->slot_setVerticalScroll(value);
                 });
 
-        connect(this, &MapWindow::sig_setScroll, canvas, &MapCanvas::setScroll);
+        connect(this, &MapWindow::sig_setScroll, canvas, &MapCanvas::slot_setScroll);
     }
 
     // from canvas to map window
     {
-        connect(canvas, &MapCanvas::sig_onCenter, this, &MapWindow::centerOnWorldPos);
-        connect(canvas, &MapCanvas::sig_setScrollBars, this, &MapWindow::setScrollBars);
-        connect(canvas, &MapCanvas::sig_continuousScroll, this, &MapWindow::continuousScroll);
-        connect(canvas, &MapCanvas::sig_mapMove, this, &MapWindow::mapMove);
+        connect(canvas, &MapCanvas::sig_onCenter, this, &MapWindow::slot_centerOnWorldPos);
+        connect(canvas, &MapCanvas::sig_setScrollBars, this, &MapWindow::slot_setScrollBars);
+        connect(canvas, &MapCanvas::sig_continuousScroll, this, &MapWindow::slot_continuousScroll);
+        connect(canvas, &MapCanvas::sig_mapMove, this, &MapWindow::slot_mapMove);
+
+        // REVISIT: why are we directly connecting signals to signals?
         connect(canvas, &MapCanvas::sig_zoomChanged, this, &MapWindow::sig_zoomChanged);
     }
 }
@@ -97,7 +96,7 @@ void MapWindow::keyReleaseEvent(QKeyEvent *const event)
 
 MapWindow::~MapWindow() = default;
 
-void MapWindow::mapMove(const int dx, const int input_dy)
+void MapWindow::slot_mapMove(const int dx, const int input_dy)
 {
     // Y is negated because delta is in world space
     const int dy = -input_dy;
@@ -113,7 +112,7 @@ void MapWindow::mapMove(const int dx, const int input_dy)
 }
 
 // REVISIT: This looks more like "delayed jump" than "continuous scroll."
-void MapWindow::continuousScroll(const int hStep, const int input_vStep)
+void MapWindow::slot_continuousScroll(const int hStep, const int input_vStep)
 {
     const auto fitsInInt8 = [](int n) -> bool {
         // alternate: test against std::numeric_limits<int8_t>::min and max.
@@ -141,12 +140,12 @@ void MapWindow::continuousScroll(const int hStep, const int input_vStep)
     // start
     if ((scrollTimer == nullptr) && (hStep != 0 || vStep != 0)) {
         scrollTimer = std::make_unique<QTimer>(this);
-        connect(scrollTimer.get(), &QTimer::timeout, this, &MapWindow::scrollTimerTimeout);
+        connect(scrollTimer.get(), &QTimer::timeout, this, &MapWindow::slot_scrollTimerTimeout);
         scrollTimer->start(100);
     }
 }
 
-void MapWindow::scrollTimerTimeout()
+void MapWindow::slot_scrollTimerTimeout()
 {
     const SignalBlocker block_horz{*m_horizontalScrollBar};
     const SignalBlocker block_vert{*m_verticalScrollBar};
@@ -158,14 +157,13 @@ void MapWindow::scrollTimerTimeout()
     centerOnScrollPos(scrollPos);
 }
 
-void MapWindow::graphicsSettingsChanged()
+void MapWindow::slot_graphicsSettingsChanged()
 {
     this->m_canvas->graphicsSettingsChanged();
 }
 
-void MapWindow::centerOnWorldPos(const glm::vec2 &worldPos)
+void MapWindow::slot_centerOnWorldPos(const glm::vec2 &worldPos)
 {
-    // CHANGE: previously this function didn't emit a signal.
     const auto scrollPos = m_knownMapSize.worldToScroll(worldPos);
     centerOnScrollPos(scrollPos);
 }
@@ -184,7 +182,7 @@ void MapWindow::resizeEvent(QResizeEvent * /*event*/)
     updateScrollBars();
 }
 
-void MapWindow::setScrollBars(const Coordinate &min, const Coordinate &max)
+void MapWindow::slot_setScrollBars(const Coordinate &min, const Coordinate &max)
 {
     m_knownMapSize.min = min.to_ivec3();
     m_knownMapSize.max = max.to_ivec3();

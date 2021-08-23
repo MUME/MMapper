@@ -17,6 +17,7 @@
 #include <QTimer>
 #include <QVariant>
 
+#include "../configuration/configuration.h"
 #include "../expandoracommon/parseevent.h"
 #include "../global/StringView.h"
 #include "../global/TextUtils.h"
@@ -60,10 +61,10 @@ private:
     Q_OBJECT
 
 protected:
-    MumeClock *m_mumeClock = nullptr;
+    MumeClock &m_mumeClock;
 
 private:
-    MapData *m_mapData = nullptr;
+    MapData &m_mapData;
     const ProxyParserApi m_proxy;
     const GroupManagerApi m_group;
 
@@ -71,7 +72,7 @@ public:
     using HelpCallback = std::function<void(const std::string &name)>;
     using ParserCallback
         = std::function<bool(const std::vector<StringView> &matched, StringView args)>;
-    struct ParserRecord final
+    struct NODISCARD ParserRecord final
     {
         std::string fullCommand;
         ParserCallback callback;
@@ -104,51 +105,54 @@ private:
     QTimer m_offlineCommandTimer;
 
 public:
-    explicit AbstractParser(
-        MapData *, MumeClock *, ProxyParserApi, GroupManagerApi, QObject *parent = nullptr);
+    explicit AbstractParser(MapData &, MumeClock &, ProxyParserApi, GroupManagerApi, QObject *parent);
     ~AbstractParser() override;
 
     void doMove(CommandEnum cmd);
     void sendPromptToUser();
     void sendScoreLineEvent(const QByteArray &arr);
     void sendPromptLineEvent(const QByteArray &arr);
-    void sendCharacterPositionEvent(CharacterPositionEnum position);
-    void sendCharacterAffectEvent(CharacterAffectEnum affect, bool enable);
 
 signals:
     // telnet
-    void sendToMud(const QByteArray &);
+    void sig_sendToMud(const QByteArray &);
     void sig_sendToUser(const QByteArray &, bool goAhead);
     void sig_mapChanged();
     void sig_graphicsSettingsChanged();
-    void releaseAllPaths();
+    void sig_releaseAllPaths();
 
     // used to log
-    void log(const QString &, const QString &);
+    void sig_log(const QString &, const QString &);
 
     // for main move/search algorithm
-    // CAUTION: This hides virtual bool QObject::event(QEvent*).
-    void event(const SigParseEvent &);
+    void sig_handleParseEvent(const SigParseEvent &);
 
     // for map
-    void showPath(CommandQueue);
-    void newRoomSelection(const SigRoomSelection &rs);
+    void sig_showPath(CommandQueue);
+    void sig_newRoomSelection(const SigRoomSelection &rs);
 
     // for user commands
-    void command(const QByteArray &, const Coordinate &);
+    void sig_command(const QByteArray &, const Coordinate &);
+
+    // for commands that set the mode (emulation, play, map)
+    // these are connected to MainWindow
+    void sig_setMode(MapModeEnum);
+
+    // emitted when new infomark added by comand
+    void sig_infoMarksChanged();
 
 public slots:
-    virtual void parseNewMudInput(const TelnetData &) = 0;
-    void parseNewUserInput(const TelnetData &);
+    void slot_parseNewUserInput(const TelnetData &);
 
-    void reset();
-    void sendGTellToUser(const QString &, const QString &, const QString &);
+    void slot_reset();
+    void slot_sendGTellToUser(const QString &, const QString &, const QString &);
 
 protected slots:
-    void doOfflineCharacterMove();
+    void slot_doOfflineCharacterMove();
 
 protected:
-    void offlineCharacterMove(CommandEnum direction = CommandEnum::UNKNOWN);
+    void offlineCharacterMove(CommandEnum direction);
+    void offlineCharacterMove() { offlineCharacterMove(CommandEnum::UNKNOWN); }
     void sendRoomInfoToUser(const Room *);
     void sendPromptToUser(const Room &r);
     void sendPromptToUser(char light, char terrain);
@@ -156,8 +160,8 @@ protected:
 
     void sendRoomExitsInfoToUser(std::ostream &, const Room *r);
     void sendRoomExitsInfoToUser(const Room *r);
-    const Coordinate getNextPosition();
-    const Coordinate getTailPosition();
+    NODISCARD Coordinate getNextPosition() const;
+    NODISCARD Coordinate getTailPosition() const;
 
     // command handling
     void performDoorCommand(ExitDirEnum direction, DoorActionEnum action);
@@ -167,36 +171,31 @@ public:
     void setExitFlags(ExitFlags flag, ExitDirEnum dir);
     void setConnectedRoomFlag(DirectSunlightEnum light, ExitDirEnum dir);
 
-    void printRoomInfo(RoomFields fieldset);
+    void printRoomInfo(RoomFieldFlags fieldset);
     void printRoomInfo(RoomFieldEnum field);
 
     void emulateExits(std::ostream &, CommandEnum move);
-    QByteArray enhanceExits(const Room *);
+    NODISCARD QByteArray enhanceExits(const Room *);
 
     void parseExits(std::ostream &);
     void parsePrompt(const QString &prompt);
-    virtual bool parseUserCommands(const QString &command);
-    static QString normalizeStringCopy(QString str);
+    NODISCARD bool parseUserCommands(const QString &command);
+    NODISCARD static QString normalizeStringCopy(QString str);
 
     void searchCommand(const RoomFilter &f);
     void dirsCommand(const RoomFilter &f);
-    void markCurrentCommand();
 
-    bool evalActionMap(StringView line);
+    NODISCARD bool evalActionMap(StringView line);
 
 private:
-    // NOTE: This declaration only exists to avoid the warning
-    // about the "event" signal hiding this function function.
-    virtual bool event(QEvent *e) final override { return QObject::event(e); }
-
-    bool tryParseGenericDoorCommand(const QString &str);
+    void setMode(MapModeEnum mode);
+    NODISCARD bool tryParseGenericDoorCommand(const QString &str);
     void parseSpecialCommand(StringView);
-    bool parseSimpleCommand(const QString &str);
+    NODISCARD bool parseSimpleCommand(const QString &str);
 
     void showDoorCommandHelp();
     void showMumeTime();
     void showHelp();
-    void showGroupHelp();
     void showMiscHelp();
     void showDoorVariableHelp();
     void showCommandPrefix();
@@ -206,13 +205,13 @@ private:
 
     void showHeader(const QString &s);
 
-    ExitDirEnum tryGetDir(StringView &words);
-    bool parseDoorAction(StringView words);
+    NODISCARD ExitDirEnum tryGetDir(StringView &words);
+
     void parseSetCommand(StringView view);
     void parseDirections(StringView view);
     void parseSearch(StringView view);
 
-    bool setCommandPrefix(char prefix);
+    NODISCARD bool setCommandPrefix(char prefix);
 
     void openVoteURL();
     void doBackCommand();
@@ -220,7 +219,6 @@ private:
     void doConnectToHost();
     void doDisconnectFromHost();
     void doRemoveDoorNamesCommand();
-    void doMarkCurrentCommand();
     void doSearchCommand(StringView view);
     void doGetDirectionsCommand(StringView view);
     void toggleTrollMapping();
@@ -232,40 +230,41 @@ private:
                            int minLen,
                            const ParserCallback &callback,
                            const HelpCallback &help);
-    bool evalSpecialCommandMap(StringView args);
+    NODISCARD bool evalSpecialCommandMap(StringView args);
 
     void parseHelp(StringView words);
+    void parseMark(StringView input);
     void parseRoom(StringView input);
     void parseGroup(StringView input);
 
-    bool parseDoorAction(DoorActionEnum dat, StringView words);
+    NODISCARD bool parseDoorAction(DoorActionEnum dat, StringView words);
 
 public:
-    inline void sendToUser(const QByteArray &arr, bool goAhead = false)
-    {
-        emit sig_sendToUser(arr, goAhead);
-    }
-    inline void sendToUser(const std::string_view &s, bool goAhead = false)
-    {
-        sendToUser(::toQByteArrayLatin1(s), goAhead);
-    }
-    inline void sendToUser(const char *const s, bool goAhead = false)
-    {
-        sendToUser(std::string_view{s}, goAhead);
-    }
-    inline void sendToUser(const QString &s, bool goAhead = false)
-    {
-        sendToUser(s.toLatin1(), goAhead);
-    }
+    inline void sendToUser(const QByteArray &arr) { sendToUser(arr, false); }
+    inline void sendToUser(const std::string_view &s) { sendToUser(::toQByteArrayLatin1(s)); }
+    inline void sendToUser(const char *const s) { sendToUser(std::string_view{s}); }
+    inline void sendToUser(const QString &s) { sendToUser(s.toLatin1()); }
     friend AbstractParser &operator<<(AbstractParser &self, const std::string_view &s)
     {
         self.sendToUser(s);
         return self;
     }
     inline void sendOkToUser() { send_ok(*this); }
-    void pathChanged() { emit showPath(m_queue); }
+
+protected:
+    inline void sendToUser(const QByteArray &arr, const bool goAhead)
+    {
+        emit sig_sendToUser(arr, goAhead);
+    }
+    void pathChanged() { emit sig_showPath(m_queue); }
     void mapChanged() { emit sig_mapChanged(); }
+
+protected:
+    void log(const QString &a, const QString &b) { emit sig_log(a, b); }
+
+private:
     void graphicsSettingsChanged() { emit sig_graphicsSettingsChanged(); }
+    void sendToMud(const QByteArray &msg) { emit sig_sendToMud(msg); }
 
 private:
     void eval(const std::string &name,

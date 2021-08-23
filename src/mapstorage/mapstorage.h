@@ -28,25 +28,26 @@ class MapStorage final : public AbstractMapStorage
     Q_OBJECT
 
 public:
-    explicit MapStorage(MapData &, const QString &, QFile *, QObject *parent = nullptr);
-    explicit MapStorage(MapData &, const QString &, QObject *parent = nullptr);
+    explicit MapStorage(MapData &, const QString &, QFile *, QObject *parent);
+    explicit MapStorage(MapData &, const QString &, QObject *parent);
     bool mergeData() override;
 
 public:
-    virtual bool canLoad() const override { return true; }
-    virtual bool canSave() const override { return true; }
+    NODISCARD virtual bool canLoad() const override { return true; }
+    NODISCARD virtual bool canSave() const override { return true; }
 
 private:
     virtual void newData() override;
-    virtual bool loadData() override;
-    virtual bool saveData(bool baseMapOnly) override;
+    NODISCARD virtual bool loadData() override;
+    NODISCARD virtual bool saveData(bool baseMapOnly) override;
 
     SharedRoom loadRoom(QDataStream &stream, uint32_t version);
     void loadExits(Room &room, QDataStream &stream, uint32_t version);
-    void loadMark(InfoMark *mark, QDataStream &stream, uint32_t version);
-    void saveMark(InfoMark *mark, QDataStream &stream);
+    void loadMark(InfoMark &mark, QDataStream &stream, uint32_t version);
+    void saveMark(const InfoMark &mark, QDataStream &stream);
     void saveRoom(const Room &room, QDataStream &stream);
     void saveExits(const Room &room, QDataStream &stream);
+    void log(const QString &msg) { emit sig_log("MapStorage", msg); }
 
     uint32_t baseId = 0u;
     Coordinate basePosition;

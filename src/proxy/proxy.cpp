@@ -38,7 +38,7 @@
 #undef ERROR // Bad dog, Microsoft; bad dog!!!
 
 template<typename T, typename... Args>
-static inline auto makeQPointer(Args &&... args)
+NODISCARD static inline auto makeQPointer(Args &&... args)
 {
     static_assert(std::is_base_of_v<QObject, T>);
     auto tmp = std::make_unique<T>(std::forward<Args>(args)...);
@@ -47,15 +47,15 @@ static inline auto makeQPointer(Args &&... args)
     return QPointer<T>{tmp.release()};
 }
 
-Proxy::Proxy(MapData *const md,
-             Mmapper2PathMachine *const pm,
-             PrespammedPath *const pp,
-             Mmapper2Group *const gm,
-             MumeClock *const mc,
-             AutoLogger *const al,
-             MapCanvas *const mca,
+Proxy::Proxy(MapData &md,
+             Mmapper2PathMachine &pm,
+             PrespammedPath &pp,
+             Mmapper2Group &gm,
+             MumeClock &mc,
+             AutoLogger &al,
+             MapCanvas &mca,
              qintptr &socketDescriptor,
-             ConnectionListener *const listener)
+             ConnectionListener &listener)
     : QObject(nullptr)
     , m_mapData(md)
     , m_pathMachine(pm)
@@ -67,7 +67,7 @@ Proxy::Proxy(MapData *const md,
     , m_listener(listener)
     , m_socketDescriptor(socketDescriptor)
     // TODO: pass this in as a non-owning pointer.
-    , m_remoteEdit{makeQPointer<RemoteEdit>(m_listener->parent())}
+    , m_remoteEdit{makeQPointer<RemoteEdit>(m_listener.parent())}
 {
     //
 }
@@ -88,9 +88,9 @@ Proxy::~Proxy()
     }
 }
 
-void Proxy::start()
+void Proxy::slot_start()
 {
-    auto *const mw = dynamic_cast<MainWindow *>(m_listener->parent());
+    auto *const mw = dynamic_cast<MainWindow *>(m_listener.parent());
     if (mw == nullptr) {
         // dynamic cast can fail
         assert(false);
@@ -121,7 +121,7 @@ void Proxy::start()
     m_parserXml = makeQPointer<MumeXmlParser>(m_mapData,
                                               m_mumeClock,
                                               m_proxyParserApi,
-                                              m_groupManager->getGroupManagerApi(),
+                                              m_groupManager.getGroupManagerApi(),
                                               this);
 
     m_mudSocket = (NO_OPEN_SSL || !getConfig().connection.tlsEncryption)
@@ -137,150 +137,194 @@ void Proxy::start()
     auto *const mudSocket = m_mudSocket.data();
     auto *const remoteEdit = m_remoteEdit.data();
 
-    connect(this, &Proxy::log, mw, &MainWindow::log);
-    connect(this, &Proxy::sig_sendToMud, mudTelnet, &MudTelnet::onSendToMud);
-    connect(this, &Proxy::sig_sendToUser, userTelnet, &UserTelnet::onSendToUser);
-    connect(this, &Proxy::sig_gmcpToMud, mudTelnet, &MudTelnet::onGmcpToMud);
-    connect(this, &Proxy::sig_gmcpToUser, userTelnet, &UserTelnet::onGmcpToUser);
-    connect(userSocket, &QAbstractSocket::disconnected, this, &Proxy::userTerminatedConnection);
-    connect(userSocket, &QIODevice::readyRead, this, &Proxy::processUserStream);
+    connect(this, &Proxy::sig_log, mw, &MainWindow::slot_log);
+    connect(this, &Proxy::sig_sendToMud, mudTelnet, &MudTelnet::slot_onSendToMud);
+    connect(this, &Proxy::sig_sendToUser, userTelnet, &UserTelnet::slot_onSendToUser);
+    connect(this, &Proxy::sig_gmcpToMud, mudTelnet, &MudTelnet::slot_onGmcpToMud);
+    connect(this, &Proxy::sig_gmcpToUser, userTelnet, &UserTelnet::slot_onGmcpToUser);
+    connect(userSocket, &QAbstractSocket::disconnected, this, &Proxy::slot_userTerminatedConnection);
+    connect(userSocket, &QIODevice::readyRead, this, &Proxy::slot_processUserStream);
 
     connect(userTelnet,
-            &UserTelnet::analyzeUserStream,
+            &UserTelnet::sig_analyzeUserStream,
             telnetFilter,
-            &TelnetFilter::onAnalyzeUserStream);
-    connect(userTelnet, &UserTelnet::sendToSocket, this, &Proxy::onSendToUserSocket);
-    connect(userTelnet, &UserTelnet::relayGmcp, mudTelnet, &MudTelnet::onGmcpToMud);
-    connect(userTelnet, &UserTelnet::relayNaws, mudTelnet, &MudTelnet::onRelayNaws);
-    connect(userTelnet, &UserTelnet::relayTermType, mudTelnet, &MudTelnet::onRelayTermType);
+            &TelnetFilter::slot_onAnalyzeUserStream);
+    connect(userTelnet, &UserTelnet::sig_sendToSocket, this, &Proxy::slot_onSendToUserSocket);
+    connect(userTelnet, &UserTelnet::sig_relayGmcp, mudTelnet, &MudTelnet::slot_onGmcpToMud);
+    connect(userTelnet, &UserTelnet::sig_relayNaws, mudTelnet, &MudTelnet::slot_onRelayNaws);
+    connect(userTelnet, &UserTelnet::sig_relayTermType, mudTelnet, &MudTelnet::slot_onRelayTermType);
 
     connect(mudTelnet,
-            &MudTelnet::analyzeMudStream,
+            &MudTelnet::sig_analyzeMudStream,
             telnetFilter,
-            &TelnetFilter::onAnalyzeMudStream);
-    connect(mudTelnet, &MudTelnet::sendToSocket, this, &Proxy::onSendToMudSocket);
-    connect(mudTelnet, &MudTelnet::relayEchoMode, userTelnet, &UserTelnet::onRelayEchoMode);
-    connect(mudTelnet, &MudTelnet::relayGmcp, userTelnet, &UserTelnet::onGmcpToUser);
+            &TelnetFilter::slot_onAnalyzeMudStream);
+    connect(mudTelnet, &MudTelnet::sig_sendToSocket, this, &Proxy::slot_onSendToMudSocket);
+    connect(mudTelnet, &MudTelnet::sig_relayEchoMode, userTelnet, &UserTelnet::slot_onRelayEchoMode);
+    connect(mudTelnet, &MudTelnet::sig_relayGmcp, userTelnet, &UserTelnet::slot_onGmcpToUser);
 
-    connect(this, &Proxy::analyzeUserStream, userTelnet, &UserTelnet::onAnalyzeUserStream);
+    connect(this, &Proxy::sig_analyzeUserStream, userTelnet, &UserTelnet::slot_onAnalyzeUserStream);
 
     connect(telnetFilter,
-            &TelnetFilter::parseNewMudInput,
+            &TelnetFilter::sig_parseNewMudInput,
             mpiFilter,
-            &MpiFilter::analyzeNewMudInput);
-    connect(mpiFilter, &MpiFilter::sendToMud, mudTelnet, &MudTelnet::onSendToMud);
-    connect(mpiFilter, &MpiFilter::editMessage, remoteEdit, &RemoteEdit::remoteEdit);
-    connect(mpiFilter, &MpiFilter::viewMessage, remoteEdit, &RemoteEdit::remoteView);
-    connect(remoteEdit, &RemoteEdit::sendToSocket, mudTelnet, &MudTelnet::onSendToMud);
+            &MpiFilter::slot_analyzeNewMudInput);
+    connect(mpiFilter, &MpiFilter::sig_sendToMud, mudTelnet, &MudTelnet::slot_onSendToMud);
+    connect(mpiFilter, &MpiFilter::sig_editMessage, remoteEdit, &RemoteEdit::slot_remoteEdit);
+    connect(mpiFilter, &MpiFilter::sig_viewMessage, remoteEdit, &RemoteEdit::slot_remoteView);
+    connect(remoteEdit, &RemoteEdit::sig_sendToSocket, mudTelnet, &MudTelnet::slot_onSendToMud);
 
-    connect(mpiFilter, &MpiFilter::parseNewMudInput, parserXml, &MumeXmlParser::parseNewMudInput);
-    connect(telnetFilter,
-            &TelnetFilter::parseNewUserInput,
+    connect(mpiFilter,
+            &MpiFilter::sig_parseNewMudInput,
             parserXml,
-            &MumeXmlParser::parseNewUserInput);
+            &MumeXmlParser::slot_parseNewMudInput);
+    connect(telnetFilter,
+            &TelnetFilter::sig_parseNewUserInput,
+            parserXml,
+            &MumeXmlParser::slot_parseNewUserInput);
 
-    connect(parserXml, &MumeXmlParser::sendToMud, mudTelnet, &MudTelnet::onSendToMud);
-    connect(parserXml, &MumeXmlParser::sig_sendToUser, userTelnet, &UserTelnet::onSendToUser);
+    connect(parserXml, &MumeXmlParser::sig_sendToMud, mudTelnet, &MudTelnet::slot_onSendToMud);
+    connect(parserXml, &MumeXmlParser::sig_sendToUser, userTelnet, &UserTelnet::slot_onSendToUser);
 
-    connect(parserXml, &MumeXmlParser::sig_sendToUser, m_logger, &AutoLogger::writeToLog);
-    connect(parserXml, &MumeXmlParser::sendToMud, m_logger, &AutoLogger::writeToLog);
-    connect(mudTelnet, &MudTelnet::relayEchoMode, m_logger, &AutoLogger::shouldLog);
-    connect(mudSocket, &MumeSocket::connected, m_logger, &AutoLogger::onConnected);
+    connect(parserXml, &MumeXmlParser::sig_sendToUser, &m_logger, &AutoLogger::slot_writeToLog);
+    connect(parserXml, &MumeXmlParser::sig_sendToMud, &m_logger, &AutoLogger::slot_writeToLog);
+    connect(mudTelnet, &MudTelnet::sig_relayEchoMode, &m_logger, &AutoLogger::slot_shouldLog);
+    connect(mudSocket, &MumeSocket::sig_connected, &m_logger, &AutoLogger::slot_onConnected);
 
     connect(parserXml,
-            QOverload<const SigParseEvent &>::of(&MumeXmlParser::event),
-            m_pathMachine,
-            &Mmapper2PathMachine::event);
+            &MumeXmlParser::sig_handleParseEvent,
+            &m_pathMachine,
+            &Mmapper2PathMachine::slot_handleParseEvent);
     connect(parserXml,
-            &AbstractParser::releaseAllPaths,
-            m_pathMachine,
-            &PathMachine::releaseAllPaths);
-    connect(parserXml, &AbstractParser::showPath, m_prespammedPath, &PrespammedPath::setPath);
-    connect(parserXml, &AbstractParser::sig_mapChanged, m_mapCanvas, &MapCanvas::mapChanged);
+            &AbstractParser::sig_releaseAllPaths,
+            &m_pathMachine,
+            &PathMachine::slot_releaseAllPaths);
+    connect(parserXml,
+            &AbstractParser::sig_showPath,
+            &m_prespammedPath,
+            &PrespammedPath::slot_setPath);
+    connect(parserXml, &AbstractParser::sig_mapChanged, &m_mapCanvas, &MapCanvas::mapChanged);
     connect(parserXml,
             &AbstractParser::sig_graphicsSettingsChanged,
-            m_mapCanvas,
+            &m_mapCanvas,
             &MapCanvas::graphicsSettingsChanged);
-    connect(parserXml, &AbstractParser::log, mw, &MainWindow::log);
-    connect(parserXml, &AbstractParser::newRoomSelection, m_mapCanvas, &MapCanvas::setRoomSelection);
+    connect(parserXml, &AbstractParser::sig_log, mw, &MainWindow::slot_log);
+    connect(parserXml,
+            &AbstractParser::sig_newRoomSelection,
+            &m_mapCanvas,
+            &MapCanvas::slot_setRoomSelection);
 
-    connect(userSocket, &QAbstractSocket::disconnected, parserXml, &AbstractParser::reset);
+    connect(userSocket, &QAbstractSocket::disconnected, parserXml, &AbstractParser::slot_reset);
 
     // Group Manager Support
-    connect(parserXml, &AbstractParser::showPath, m_groupManager, &Mmapper2Group::setPath);
+    connect(parserXml, &AbstractParser::sig_showPath, &m_groupManager, &Mmapper2Group::slot_setPath);
     // Group Tell
-    connect(m_groupManager,
-            &Mmapper2Group::displayGroupTellEvent,
+    connect(&m_groupManager,
+            &Mmapper2Group::sig_displayGroupTellEvent,
             parserXml,
-            &AbstractParser::sendGTellToUser);
+            &AbstractParser::slot_sendGTellToUser);
 
-    emit log("Proxy", "Connection to client established ...");
+    log("Connection to client established ...");
 
-    QByteArray ba = QString("\033[1;37;46mWelcome to MMapper!\033[0;37;46m"
-                            "   Type \033[1m%1help\033[0m\033[37;46m for help.\033[0m\r\n")
+    QByteArray ba = QString("\033[0;1;37;46m"
+                            "Welcome to MMapper!"
+                            "\033[0;37;46m"
+                            "   Type "
+                            "\033[1m"
+                            "%1help"
+                            "\033[0;37;46m"
+                            " for help."
+                            "\033[0m"
+                            "\n")
                         .arg(getConfig().parser.prefixChar)
                         .toLatin1();
     sendToUser(ba);
 
-    connect(mudSocket, &MumeSocket::connected, userTelnet, &UserTelnet::onConnected);
-    connect(mudSocket, &MumeSocket::connected, mudTelnet, &MudTelnet::onConnected);
-    connect(mudSocket, &MumeSocket::connected, this, &Proxy::onMudConnected);
-    connect(mudSocket, &MumeSocket::socketError, parserXml, &AbstractParser::reset);
-    connect(mudSocket, &MumeSocket::socketError, m_groupManager, &Mmapper2Group::reset);
-    connect(mudSocket, &MumeSocket::socketError, this, &Proxy::onMudError);
-    connect(mudSocket, &MumeSocket::disconnected, parserXml, &AbstractParser::reset);
-    connect(mudSocket, &MumeSocket::disconnected, m_groupManager, &Mmapper2Group::reset);
-    connect(mudSocket, &MumeSocket::disconnected, this, &Proxy::mudTerminatedConnection);
-    connect(mudSocket, &MumeSocket::processMudStream, mudTelnet, &MudTelnet::onAnalyzeMudStream);
-    connect(mudSocket, &MumeSocket::log, mw, &MainWindow::log);
+    connect(mudSocket, &MumeSocket::sig_connected, userTelnet, &UserTelnet::slot_onConnected);
+    connect(mudSocket, &MumeSocket::sig_connected, mudTelnet, &MudTelnet::slot_onConnected);
+    connect(mudSocket, &MumeSocket::sig_connected, this, &Proxy::slot_onMudConnected);
+    connect(mudSocket, &MumeSocket::sig_socketError, parserXml, &AbstractParser::slot_reset);
+    connect(mudSocket, &MumeSocket::sig_socketError, &m_groupManager, &Mmapper2Group::slot_reset);
+    connect(mudSocket, &MumeSocket::sig_socketError, this, &Proxy::slot_onMudError);
+    connect(mudSocket, &MumeSocket::sig_disconnected, mudTelnet, &MudTelnet::slot_onDisconnected);
+    connect(mudSocket, &MumeSocket::sig_disconnected, parserXml, &AbstractParser::slot_reset);
+    connect(mudSocket, &MumeSocket::sig_disconnected, &m_groupManager, &Mmapper2Group::slot_reset);
+    connect(mudSocket, &MumeSocket::sig_disconnected, this, &Proxy::slot_mudTerminatedConnection);
+    connect(mudSocket,
+            &MumeSocket::sig_processMudStream,
+            mudTelnet,
+            &MudTelnet::slot_onAnalyzeMudStream);
+    connect(mudSocket, &MumeSocket::sig_log, mw, &MainWindow::slot_log);
+
+    // connect signals emitted from user commands to change mode;
+    // they are connected here because proxy knows about both the parser
+    // (within which commands are handled) and the mainwindow, where the mode
+    // state is stored.
+    connect(parserXml, &AbstractParser::sig_setMode, mw, &MainWindow::slot_setMode);
+
+    // emitted after modifying infomarks for _infomark command
+    connect(parserXml,
+            &AbstractParser::sig_infoMarksChanged,
+            &m_mapCanvas,
+            &MapCanvas::infomarksChanged);
 
     connectToMud();
 }
 
-void Proxy::onMudConnected()
+void Proxy::slot_onMudConnected()
 {
     const auto &settings = getConfig().mumeClientProtocol;
 
     m_serverState = ServerStateEnum::CONNECTED;
 
-    emit log("Proxy", "Connection to server established ...");
+    log("Connection to server established ...");
 
     // send IAC-GA prompt request
     QByteArray idPrompt("~$#EP2\nG\n");
-    emit log("Proxy", "Sent MUME Protocol Initiator IAC-GA prompt request");
+    log("Sent MUME Protocol Initiator IAC-GA prompt request");
     sendToMud(idPrompt);
 
     if (settings.remoteEditing) {
         QByteArray idRemoteEditing("~$#EI\n");
-        emit log("Proxy", "Sent MUME Protocol Initiator remote editing request");
+        log("Sent MUME Protocol Initiator remote editing request");
         sendToMud(idRemoteEditing);
     }
-
     sendToMud(QByteArray("~$#EX2\n3G\n"));
-    emit log("Proxy", "Sent MUME Protocol Initiator XML request");
+    log("Sent MUME Protocol Initiator XML request");
 }
 
-void Proxy::onMudError(const QString &errorStr)
+void Proxy::slot_onMudError(const QString &errorStr)
 {
     m_serverState = ServerStateEnum::ERROR;
 
     qWarning() << "Mud socket error" << errorStr;
-    emit log("Proxy", errorStr);
+    log(errorStr);
 
-    sendToUser("\r\n\033[37;46m" + errorStr.toLocal8Bit() + "\033[0m\r\n");
+    sendToUser("\n"
+               "\033[0;37;46m"
+               + errorStr.toLocal8Bit()
+               + "\033[0m"
+                 "\n");
 
     if (!getConfig().connection.proxyConnectionStatus) {
-        sendToUser(
-            QString(
-                "\r\n"
-                "\033[37;46mYou can type \033[1m%1connect\033[0m\033[37;46m to reconnect again.\033[0m\r\n")
-                .arg(getConfig().parser.prefixChar)
-                .toLatin1());
+        sendToUser(QString("\n"
+                           "\033[0;37;46m"
+                           "You can type "
+                           "\033[1m"
+                           "%1connect"
+                           "\033[0m\033[37;46m"
+                           " to reconnect again."
+                           "\033[0m"
+                           "\n")
+                       .arg(getConfig().parser.prefixChar)
+                       .toLatin1());
         m_parserXml->sendPromptToUser();
         m_serverState = ServerStateEnum::OFFLINE;
     } else if (getConfig().general.mapMode == MapModeEnum::OFFLINE) {
-        sendToUser("\r\n"
-                   "\033[37;46mYou are now exploring the map offline.\033[0m\r\n");
+        sendToUser("\n"
+                   "\033[0;37;46m"
+                   "You are now exploring the map offline."
+                   "\033[0m"
+                   "\n");
         m_parserXml->sendPromptToUser();
         m_serverState = ServerStateEnum::OFFLINE;
     } else {
@@ -289,13 +333,13 @@ void Proxy::onMudError(const QString &errorStr)
     }
 }
 
-void Proxy::userTerminatedConnection()
+void Proxy::slot_userTerminatedConnection()
 {
-    emit log("Proxy", "User terminated connection ...");
+    log("User terminated connection ...");
     deleteLater();
 }
 
-void Proxy::mudTerminatedConnection()
+void Proxy::slot_mudTerminatedConnection()
 {
     if (!isConnected()) {
         return;
@@ -303,51 +347,71 @@ void Proxy::mudTerminatedConnection()
 
     m_serverState = ServerStateEnum::DISCONNECTED;
 
-    m_userTelnet->onRelayEchoMode(true);
+    m_userTelnet->slot_onRelayEchoMode(true);
 
-    emit log("Proxy", "Mud terminated connection ...");
+    log("Mud terminated connection ...");
 
-    sendToUser("\r\n\033[37;46mMUME closed the connection.\033[0m\r\n");
+    sendToUser("\n"
+               "\033[0;37;46m"
+               "MUME closed the connection."
+               "\033[0m"
+               "\n");
 
     if (getConfig().connection.proxyConnectionStatus) {
         if (getConfig().general.mapMode == MapModeEnum::OFFLINE) {
-            sendToUser("\r\n"
-                       "\033[37;46mYou are now exploring the map offline.\033[0m\r\n");
+            sendToUser("\n"
+                       "\033[0;37;46m"
+                       "You are now exploring the map offline."
+                       "\033[0m"
+                       "\n");
             m_parserXml->sendPromptToUser();
         } else {
             // Terminate connection
             deleteLater();
         }
     } else {
-        sendToUser(
-            QString(
-                "\r\n"
-                "\033[37;46mYou can type \033[1m%1connect\033[0m\033[37;46m to reconnect again.\033[0m\r\n")
-                .arg(getConfig().parser.prefixChar)
-                .toLatin1());
+        sendToUser(QString("\n"
+                           "\033[0;37;46m"
+                           "You can type "
+                           "\033[1m"
+                           "%1connect"
+                           "\033[0;37;46m"
+                           " to reconnect again."
+                           "\033[0m"
+                           "\n")
+                       .arg(getConfig().parser.prefixChar)
+                       .toLatin1());
         m_parserXml->sendPromptToUser();
     }
 }
 
-void Proxy::processUserStream()
+void Proxy::slot_processUserStream()
 {
-    if (m_userSocket != nullptr) {
+    if (m_userSocket == nullptr)
+        return;
+
+    // REVISIT: check return value?
+    MAYBE_UNUSED const auto ignored = //
         io::readAllAvailable(*m_userSocket, m_buffer, [this](const QByteArray &byteArray) {
             if (!byteArray.isEmpty())
-                emit analyzeUserStream(byteArray);
+                emit sig_analyzeUserStream(byteArray);
         });
-    }
 }
 
-void Proxy::onSendToMudSocket(const QByteArray &ba)
+void Proxy::slot_onSendToMudSocket(const QByteArray &ba)
 {
     if (m_mudSocket != nullptr) {
         if (m_mudSocket->state() != QAbstractSocket::ConnectedState) {
-            sendToUser(
-                QString(
-                    "\033[37;46mMMapper is not connected to MUME. Please type \033[1m%1connect\033[0m\033[37;46m to play.\033[0m\r\n")
-                    .arg(getConfig().parser.prefixChar)
-                    .toLatin1());
+            sendToUser(QString("\033[0;37;46m"
+                               "MMapper is not connected to MUME. Please type "
+                               "\033[1m"
+                               "%1connect"
+                               "\033[0;37;46m"
+                               " to play."
+                               "\033[0m"
+                               "\n")
+                           .arg(getConfig().parser.prefixChar)
+                           .toLatin1());
 
             m_parserXml->sendPromptToUser();
         } else {
@@ -358,7 +422,7 @@ void Proxy::onSendToMudSocket(const QByteArray &ba)
     }
 }
 
-void Proxy::onSendToUserSocket(const QByteArray &ba)
+void Proxy::slot_onSendToUserSocket(const QByteArray &ba)
 {
     if (m_userSocket != nullptr) {
         m_userSocket->write(ba);
@@ -376,15 +440,15 @@ void Proxy::connectToMud()
 {
     switch (m_serverState) {
     case ServerStateEnum::CONNECTING:
-        sendToUser("Error: You're still connecting.\r\n");
+        sendToUser("Error: You're still connecting.\n");
         break;
 
     case ServerStateEnum::CONNECTED:
-        sendToUser("Error: You're already connected.\r\n");
+        sendToUser("Error: You're already connected.\n");
         break;
 
     case ServerStateEnum::DISCONNECTING:
-        sendToUser("Error: You're still disconnecting.\r\n");
+        sendToUser("Error: You're still disconnecting.\n");
         break;
 
     case ServerStateEnum::INITIALIZED:
@@ -393,22 +457,25 @@ void Proxy::connectToMud()
     case ServerStateEnum::ERROR: {
         if (getConfig().general.mapMode == MapModeEnum::OFFLINE) {
             sendToUser(
-                "\r\n"
-                "\033[37;46mMMapper is running in offline mode. Switch modes and reconnect to play MUME.\033[0m\r\n"
-                "\r\n"
-                "Welcome to the land of Middle-earth. May your visit here be... interesting.\r\n"
-                "Never forget! Try to role-play...\r\n");
+                "\n"
+                "\033[37;46m"
+                "MMapper is running in offline mode. Switch modes and reconnect to play MUME."
+                "\033[0m"
+                "\n"
+                "\n"
+                "Welcome to the land of Middle-earth. May your visit here be... interesting.\n"
+                "Never forget! Try to role-play...\n");
             m_parserXml->doMove(CommandEnum::LOOK);
             m_serverState = ServerStateEnum::OFFLINE;
             break;
         }
 
         if (auto sock = m_mudSocket.data()) {
-            sendToUser("Connecting...\r\n");
+            sendToUser("Connecting...\n");
             m_serverState = ServerStateEnum::CONNECTING;
             sock->connectToHost();
         } else {
-            sendToUser("Internal error while trying to connect.\r\n");
+            sendToUser("Internal error while trying to connect.\n");
         }
         break;
     }
@@ -417,39 +484,39 @@ void Proxy::connectToMud()
 
 void Proxy::disconnectFromMud()
 {
-    m_userTelnet->onRelayEchoMode(true);
+    m_userTelnet->slot_onRelayEchoMode(true);
 
     switch (m_serverState) {
     case ServerStateEnum::CONNECTING:
-        sendToUser("Error: You're still connecting.\r\n");
+        sendToUser("Error: You're still connecting.\n");
         break;
 
     case ServerStateEnum::OFFLINE:
         m_serverState = ServerStateEnum::INITIALIZED;
-        sendToUser("You disconnect your simulated link.\r\n");
+        sendToUser("You disconnect your simulated link.\n");
         break;
 
     case ServerStateEnum::CONNECTED: {
         if (auto sock = m_mudSocket.data()) {
-            sendToUser("Disconnecting...\r\n");
+            sendToUser("Disconnecting...\n");
             m_serverState = ServerStateEnum::DISCONNECTING;
             sock->disconnectFromHost();
-            sendToUser("Disconnected.\r\n");
+            sendToUser("Disconnected.\n");
             m_serverState = ServerStateEnum::DISCONNECTED;
         } else {
-            sendToUser("Internal error while trying to disconnect.\r\n");
+            sendToUser("Internal error while trying to disconnect.\n");
         }
         break;
     }
 
     case ServerStateEnum::DISCONNECTING:
-        sendToUser("Error: You're still disconnecting.\r\n");
+        sendToUser("Error: You're still disconnecting.\n");
         break;
 
     case ServerStateEnum::INITIALIZED:
     case ServerStateEnum::DISCONNECTED:
     case ServerStateEnum::ERROR:
-        sendToUser("Error: You're not connected.\r\n");
+        sendToUser("Error: You're not connected.\n");
         break;
     }
 }

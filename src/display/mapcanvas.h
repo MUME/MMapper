@@ -51,6 +51,10 @@ class MapCanvas final : public QOpenGLWidget, private MapCanvasViewport, private
 {
     Q_OBJECT
 
+public:
+    static constexpr const int BASESIZE = 528; // REVISIT: Why this size? 16*33 isn't special.
+    static constexpr const int SCROLL_SCALE = 64;
+
 private:
     MapScreen m_mapScreen;
     OpenGL m_opengl;
@@ -59,86 +63,88 @@ private:
     MapCanvasTextures m_textures;
     MapData &m_data;
 
-    Mmapper2Group *m_groupManager = nullptr;
-    struct OptionStatus final
+    Mmapper2Group &m_groupManager;
+    struct NODISCARD OptionStatus final
     {
         std::optional<int> multisampling;
         std::optional<bool> trilinear;
     } graphicsOptionsStatus;
 
-public:
-    explicit MapCanvas(MapData *mapData,
-                       PrespammedPath *prespammedPath,
-                       Mmapper2Group *groupManager,
-                       QWidget *parent);
-    ~MapCanvas() override;
+    std::unique_ptr<QOpenGLDebugLogger> m_logger;
 
 public:
-    static MapCanvas *getPrimary();
+    explicit MapCanvas(MapData &mapData,
+                       PrespammedPath &prespammedPath,
+                       Mmapper2Group &groupManager,
+                       QWidget *parent);
+    ~MapCanvas() final;
+
+public:
+    NODISCARD static MapCanvas *getPrimary();
 
 private:
-    inline auto &getOpenGL() { return m_opengl; }
-    inline auto &getGLFont() { return m_glFont; }
+    NODISCARD inline auto &getOpenGL() { return m_opengl; }
+    NODISCARD inline auto &getGLFont() { return m_glFont; }
     void cleanupOpenGL();
 
     void initSurface();
 
 public:
-    static constexpr int BASESIZE = 528; // REVISIT: Why this size? 16*33 isn't special.
-    QSize minimumSizeHint() const override;
-    QSize sizeHint() const override;
+    NODISCARD QSize minimumSizeHint() const override;
+    NODISCARD QSize sizeHint() const override;
 
-    static constexpr const int SCROLL_SCALE = 64;
     using MapCanvasViewport::getTotalScaleFactor;
     void setZoom(float zoom)
     {
         m_scaleFactor.set(zoom);
         zoomChanged();
     }
-    float getRawZoom() const { return m_scaleFactor.getRaw(); }
+    NODISCARD float getRawZoom() const { return m_scaleFactor.getRaw(); }
 
 public:
-    auto width() const { return QOpenGLWidget::width(); }
-    auto height() const { return QOpenGLWidget::height(); }
-    auto rect() const { return QOpenGLWidget::rect(); }
+    NODISCARD auto width() const { return QOpenGLWidget::width(); }
+    NODISCARD auto height() const { return QOpenGLWidget::height(); }
+    NODISCARD auto rect() const { return QOpenGLWidget::rect(); }
 
 public slots:
-    void forceMapperToRoom();
-    void createRoom();
+    void slot_forceMapperToRoom();
+    void slot_createRoom();
 
-    void setCanvasMouseMode(CanvasMouseModeEnum);
+    void slot_setCanvasMouseMode(CanvasMouseModeEnum mode);
 
-    void setScroll(const glm::vec2 &worldPos);
+    void slot_setScroll(const glm::vec2 &worldPos);
     // void setScroll(const glm::ivec2 &) = delete; // moc tries to call the wrong one if you define this
-    void setHorizontalScroll(float worldX);
-    void setVerticalScroll(float worldY);
+    void slot_setHorizontalScroll(float worldX);
+    void slot_setVerticalScroll(float worldY);
 
-    void zoomIn();
-    void zoomOut();
-    void zoomReset();
+    void slot_zoomIn();
+    void slot_zoomOut();
+    void slot_zoomReset();
 
-    void layerUp();
-    void layerDown();
-    void layerReset();
+    void slot_layerUp();
+    void slot_layerDown();
+    void slot_layerReset();
 
-    void setRoomSelection(const SigRoomSelection &);
-    void clearRoomSelection() { setRoomSelection(SigRoomSelection{}); }
-    void setConnectionSelection(const std::shared_ptr<ConnectionSelection> &);
-    void clearConnectionSelection() { setConnectionSelection(nullptr); }
-    void setInfoMarkSelection(const std::shared_ptr<InfoMarkSelection> &);
-    void clearInfoMarkSelection() { setInfoMarkSelection(nullptr); }
+    void slot_setRoomSelection(const SigRoomSelection &);
+    void slot_setConnectionSelection(const std::shared_ptr<ConnectionSelection> &);
+    void slot_setInfoMarkSelection(const std::shared_ptr<InfoMarkSelection> &);
 
-    void clearAllSelections()
+    void slot_clearRoomSelection() { slot_setRoomSelection(SigRoomSelection{}); }
+    void slot_clearConnectionSelection() { slot_setConnectionSelection(nullptr); }
+    void slot_clearInfoMarkSelection() { slot_setInfoMarkSelection(nullptr); }
+
+    void slot_clearAllSelections()
     {
-        clearRoomSelection();
-        clearConnectionSelection();
-        clearInfoMarkSelection();
+        slot_clearRoomSelection();
+        slot_clearConnectionSelection();
+        slot_clearInfoMarkSelection();
     }
 
-    void dataLoaded();
-    void moveMarker(const Coordinate &);
+    void slot_dataLoaded();
+    void slot_moveMarker(const Coordinate &coord);
 
     void slot_onMessageLoggedDirect(const QOpenGLDebugMessage &message);
+    void slot_infomarksChanged() { infomarksChanged(); }
 
 signals:
     void sig_onCenter(const glm::vec2 &worldCoord);
@@ -146,18 +152,18 @@ signals:
     void sig_setScrollBars(const Coordinate &min, const Coordinate &max);
     void sig_continuousScroll(int, int);
 
-    void log(const QString &, const QString &);
+    void sig_log(const QString &, const QString &);
 
-    void newRoomSelection(const SigRoomSelection &);
-    void newConnectionSelection(ConnectionSelection *);
-    void newInfoMarkSelection(InfoMarkSelection *);
+    void sig_newRoomSelection(const SigRoomSelection &);
+    void sig_newConnectionSelection(ConnectionSelection *);
+    void sig_newInfoMarkSelection(InfoMarkSelection *);
 
-    void setCurrentRoom(RoomId id, bool update);
+    void sig_setCurrentRoom(RoomId id, bool update);
     void sig_zoomChanged(float);
 
 private:
     void reportGLVersion();
-    bool isBlacklistedDriver();
+    NODISCARD bool isBlacklistedDriver();
 
 protected:
     void initializeGL() override;
@@ -173,7 +179,6 @@ protected:
     bool event(QEvent *e) override;
 
 private:
-    std::unique_ptr<QOpenGLDebugLogger> m_logger;
     void initLogger();
 
     void resizeGL() { resizeGL(width(), height()); }
@@ -181,11 +186,14 @@ private:
     void updateTextures();
     void updateMultisampling();
 
+    NODISCARD
     std::shared_ptr<InfoMarkSelection> getInfoMarkSelection(const MouseSel &sel);
+    NODISCARD
     static glm::mat4 getViewProj_old(const glm::vec2 &scrollPos,
                                      const glm::ivec2 &size,
                                      float zoomScale,
                                      int currentLayer);
+    NODISCARD
     static glm::mat4 getViewProj(const glm::vec2 &scrollPos,
                                  const glm::ivec2 &size,
                                  float zoomScale,
@@ -193,7 +201,7 @@ private:
     void setMvp(const glm::mat4 &viewProj);
     void setViewportAndMvp(int width, int height);
 
-    BatchedInfomarksMeshes getInfoMarksMeshes();
+    NODISCARD BatchedInfomarksMeshes getInfoMarksMeshes();
     void drawInfoMark(InfomarksBatch &batch,
                       InfoMark *marker,
                       int currentLayer,
@@ -222,7 +230,7 @@ public:
     void infomarksChanged();
     void layerChanged();
     void mapChanged();
-    void requestUpdate();
+    void slot_requestUpdate();
     void screenChanged();
     void selectionChanged();
     void graphicsSettingsChanged();
@@ -230,4 +238,7 @@ public:
 
 public:
     void userPressedEscape(bool);
+
+private:
+    void log(const QString &msg) { emit sig_log("MapCanvas", msg); }
 };

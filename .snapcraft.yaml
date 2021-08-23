@@ -11,26 +11,31 @@ description: |
 
 grade: stable
 confinement: strict
-base: core18
+base: core20
+
+architectures:
+  - build-on: armhf
+  - build-on: arm64
+  - build-on: amd64
 
 plugs:
   icon-themes:
     interface: content
     target: $SNAP/data-dir/icons
-    default-provider: gtk-common-themes:icon-themes
+    default-provider: gtk-common-themes
   gtk-3-themes:
     interface: content
     target: $SNAP/data-dir/themes
-    default-provider: gtk-common-themes:gtk-3-themes
+    default-provider: gtk-common-themes
   sound-themes:
     interface: content
     target: $SNAP/data-dir/sounds
-    default-provider: gtk-common-themes:sounds-themes
+    default-provider: gtk-common-themes
 
 apps:
   mmapper-desktop:
-    command: desktop-launch mmapper
-    desktop: usr/share/applications/org.mume.MMapper.desktop
+    command: bin/desktop-launch $SNAP/usr/local/bin/mmapper
+    desktop: usr/local/share/applications/org.mume.MMapper.desktop
     plugs:
       - home
       - gsettings
@@ -42,6 +47,7 @@ apps:
       - desktop-legacy
       - unity7
     environment:
+      HOME: "$SNAP_USER_COMMON"
       DISABLE_WAYLAND: 1
       __EGL_VENDOR_LIBRARY_DIRS: $SNAP/usr/share/glvnd/egl_vendor.d
 
@@ -49,8 +55,8 @@ parts:
   mmapper:
     plugin: cmake
     source: .
-    configflags:
-      - -DCMAKE_INSTALL_PREFIX=/usr
+    cmake-parameters:
+      - -DCMAKE_INSTALL_PREFIX=/usr/local
       - -DWITH_UPDATER=false
       - -DUSE_COTIRE=true
     build-packages:
@@ -62,7 +68,7 @@ parts:
       - qttools5-dev-tools
       - zlib1g-dev
     stage-packages:
-      - libminiupnpc10
+      - libminiupnpc17
       - libssl1.1
       - zlib1g
     override-pull: |
@@ -70,7 +76,7 @@ parts:
       snapcraftctl set-version "$(git describe --tags --always --long)"
     override-build: |
       snapcraftctl build
-      sed -i 's|Icon=org.mume.MMapper|Icon=${SNAP}/usr/share/icons/hicolor/256x256/apps/org.mume.MMapper.png|g' $SNAPCRAFT_PART_INSTALL/usr/share/applications/org.mume.MMapper.desktop
+      sed -i 's|Icon=org.mume.MMapper|Icon=${SNAP}/usr/local/share/icons/hicolor/256x256/apps/org.mume.MMapper.png|g' $SNAPCRAFT_PART_INSTALL/usr/local/share/applications/org.mume.MMapper.desktop
     after: [desktop-qt5]
   desktop-qt5:
     source: https://github.com/ubuntu/snapcraft-desktop-helpers.git
@@ -94,5 +100,40 @@ parts:
       - locales-all
       - shared-mime-info
       - ttf-ubuntu-font-family
+      - qt5-gtk-platformtheme
       - qtwayland5
       - xdg-user-dirs
+    override-prime: |
+      snapcraftctl prime
+      sed -i 's|XDG_DATA_HOME=$SNAP_USER_DATA|XDG_DATA_HOME=$SNAP_USER_COMMON|' $SNAPCRAFT_PRIME/bin/desktop-launch
+      sed -i 's|XDG_CONFIG_HOME=$SNAP_USER_DATA|XDG_CONFIG_HOME=$SNAP_USER_COMMON|' $SNAPCRAFT_PRIME/bin/desktop-launch
+  desktop-settings-packages:
+    plugin: nil
+    build-packages:
+      - libglib2.0-bin
+    stage-packages:
+      - gsettings-desktop-schemas
+      - ubuntu-settings
+    prime:
+      - usr/share/glib-2.0/schemas/*
+    after: [desktop-qt5]
+  desktop-settings-build:
+    plugin: nil
+    after: [desktop-settings-packages]
+    override-prime: |
+      set -eux
+      glib-compile-schemas usr/share/glib-2.0/schemas
+  cleanup:
+    after: # Make this part run last; list all your other parts here
+      - mmapper
+      - desktop-qt5
+      - desktop-settings-build
+    plugin: nil
+    build-snaps: # List all content-snaps and base snaps you're using here
+      - core20
+    override-prime: |
+      set -eux
+      for snap in "core20"; do  # List all content-snaps and base snaps you're using here
+        cd "/snap/$snap/current" && find . -type f,l -exec rm -f "$SNAPCRAFT_PRIME/{}" \;
+      done
+

@@ -24,9 +24,9 @@
 #include "roomselection.h"
 
 template<typename T>
-static inline TaggedString<T> modifyField(const TaggedString<T> &prev,
-                                          const TaggedString<T> &next,
-                                          const FlagModifyModeEnum mode)
+NODISCARD static inline TaggedString<T> modifyField(const TaggedString<T> &prev,
+                                                    const TaggedString<T> &next,
+                                                    const FlagModifyModeEnum mode)
 {
     switch (mode) {
     case FlagModifyModeEnum::SET:
@@ -45,7 +45,9 @@ static inline TaggedString<T> modifyField(const TaggedString<T> &prev,
 }
 
 template<typename Flags, typename Flag>
-static inline Flags modifyField(const Flags flags, const Flag x, const FlagModifyModeEnum mode)
+NODISCARD static inline Flags modifyField(const Flags flags,
+                                          const Flag x,
+                                          const FlagModifyModeEnum mode)
 {
     static_assert(std::is_same_v<Flags, Flag>);
     switch (mode) {
@@ -63,9 +65,7 @@ GroupMapAction::GroupMapAction(std::unique_ptr<AbstractAction> action,
                                const SharedRoomSelection &selection)
     : executor(std::move(action))
 {
-    QMapIterator<RoomId, const Room *> roomIter(*selection);
-    while (roomIter.hasNext()) {
-        RoomId rid = roomIter.next().key();
+    for (const auto &[rid, room] : *selection) {
         affectedRooms.insert(rid);
         selectedRooms.push_back(rid);
     }
@@ -185,7 +185,7 @@ void MergeRelative::exec(const RoomId id)
             newHome->addRoom(target);
         }
         const ExitsList &exits = source->getExitsList();
-        for (const auto dir : enums::makeCountingIterator<ExitDirEnum>(exits)) {
+        for (const ExitDirEnum dir : enums::makeCountingIterator<ExitDirEnum>(exits)) {
             const Exit &e = exits[dir];
             for (const auto &oeid : e.inRange()) {
                 if (Room *const oe = roomIndex(oeid)) {
@@ -240,14 +240,19 @@ void ConnectToNeighbours::exec(const RoomId cid)
     if (Room *const center = roomIndex(cid)) {
         Coordinate other(0, -1, 0);
         other += center->getPosition();
-        connectRooms(center, other, ExitDirEnum::NORTH, cid);
-        other.y += 2;
         connectRooms(center, other, ExitDirEnum::SOUTH, cid);
+        other.y += 2;
+        connectRooms(center, other, ExitDirEnum::NORTH, cid);
         other.y--;
         other.x--;
         connectRooms(center, other, ExitDirEnum::WEST, cid);
         other.x += 2;
         connectRooms(center, other, ExitDirEnum::EAST, cid);
+        other.x--;
+        other.z--;
+        connectRooms(center, other, ExitDirEnum::DOWN, cid);
+        other.z += 2;
+        connectRooms(center, other, ExitDirEnum::UP, cid);
     }
 }
 
@@ -257,14 +262,18 @@ void ConnectToNeighbours::connectRooms(Room *const center,
                                        const RoomId cid)
 {
     if (Room *const room = map().get(otherPos)) {
+        const auto &cExit = center->getExitsList()[dir];
+        const auto cFirstOut = cExit.isExit() && cExit.outIsEmpty();
         const ExitDirEnum oDir = opposite(dir);
         const auto &oExit = room->getExitsList()[oDir];
-        // REVISIT: Should this logic happen within addInOutExit() ?
-        if (oExit.isExit())
-            room->addInOutExit(oDir, cid);
-        const auto &cExit = center->getExitsList()[dir];
-        if (cExit.isExit())
+        const auto oFirstOut = oExit.isExit() && oExit.outIsEmpty();
+        if (cFirstOut && oFirstOut) { // Add a two way exit
             center->addInOutExit(dir, room->getId());
+            room->addInOutExit(oDir, cid);
+        } else if (cFirstOut && !oFirstOut) { // Add a one way exit
+            center->addOutExit(dir, room->getId());
+            room->addInExit(oDir, cid);
+        }
     }
 }
 
@@ -326,8 +335,7 @@ void ModifyRoomFlags::exec(const RoomId id)
             // REVISIT: RoomName requires that we enhance RoomFieldVariant
         case RoomFieldEnum::NAME:
         case RoomFieldEnum::DESC:
-        case RoomFieldEnum::DYNAMIC_DESC:
-        case RoomFieldEnum::LAST:
+        case RoomFieldEnum::CONTENTS:
         case RoomFieldEnum::RESERVED:
         default:
             /* this can't happen */

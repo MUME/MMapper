@@ -8,8 +8,9 @@
 #include <string>
 
 #include "../global/RuleOf5.h"
+#include "../global/macros.h"
 
-class Property final
+class NODISCARD Property final
 {
 private:
     std::string m_data;

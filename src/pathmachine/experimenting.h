@@ -19,7 +19,8 @@ class Room;
 class RoomAdmin;
 struct PathParameters;
 
-class Experimenting : public RoomRecipient
+// Base class for Crossover and OneByOne
+class NODISCARD Experimenting : public RoomRecipient
 {
 protected:
     void augmentPath(const std::shared_ptr<Path> &path, RoomAdmin *map, const Room *room);
@@ -32,16 +33,16 @@ protected:
     std::shared_ptr<Path> second;
     double numPaths = 0.0;
 
-public:
+protected:
+    Experimenting() = delete;
     explicit Experimenting(std::shared_ptr<PathList> paths,
                            ExitDirEnum dirCode,
                            PathParameters &params);
-    virtual ~Experimenting() override;
-
-    std::shared_ptr<PathList> evaluate();
-    virtual void receiveRoom(RoomAdmin *, const Room *) override = 0;
 
 public:
-    Experimenting() = delete;
+    virtual ~Experimenting() override;
     DELETE_CTORS_AND_ASSIGN_OPS(Experimenting);
+
+public:
+    NODISCARD std::shared_ptr<PathList> evaluate();
 };

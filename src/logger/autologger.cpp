@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2019 The MMapper Authors
 // Author: Mattias 'Mew_' Viklund <devmew@exedump.com> (Mirnir)
 
@@ -16,9 +16,8 @@
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QStringList>
-#include <QStringListIterator>
 
-static std::string generateRunId()
+NODISCARD static std::string generateRunId()
 {
     // Generate 6 random characters
     std::ostringstream os;
@@ -95,7 +94,7 @@ bool AutoLogger::writeLine(const QByteArray &ba)
 
     m_logFile << line;
     m_logFile.flush();
-    m_curBytes += line.length();
+    m_curBytes += static_cast<int>(line.length());
 
     return true;
 }
@@ -114,7 +113,7 @@ void AutoLogger::deleteOldLogs()
 
     // Sort files so we can delete the oldest
     std::sort(fileInfoList.begin(), fileInfoList.end(), [](const auto &a, const auto &b) {
-        return a.created() < b.created();
+        return a.birthTime() < b.birthTime();
     });
 
     qint64 totalFileSize = 0, deleteFileSize = 0;
@@ -125,7 +124,7 @@ void AutoLogger::deleteOldLogs()
         bool deleteFile = false;
         switch (conf.cleanupStrategy) {
         case AutoLoggerEnum::DeleteDays:
-            if (fileInfo.created().date().daysTo(today) >= conf.deleteWhenLogsReachDays)
+            if (fileInfo.birthTime().date().daysTo(today) >= conf.deleteWhenLogsReachDays)
                 deleteFile = true;
             break;
         case AutoLoggerEnum::DeleteSize:
@@ -167,7 +166,7 @@ void AutoLogger::deleteOldLogs()
 
 void AutoLogger::deleteLogs(const QFileInfoList &files)
 {
-    for (auto fileInfo : files) {
+    for (const auto &fileInfo : files) {
         QString filepath = fileInfo.absoluteFilePath();
         QDir deletefile;
         deletefile.setPath(filepath);
@@ -188,21 +187,24 @@ bool AutoLogger::showDeleteDialog(QString message)
     return result == QMessageBox::Yes;
 }
 
-void AutoLogger::writeToLog(const QByteArray &ba)
+void AutoLogger::slot_writeToLog(const QByteArray &ba)
 {
-    writeLine(ba);
+    MAYBE_UNUSED const auto igored = //
+        writeLine(ba);
 }
 
-void AutoLogger::shouldLog(bool echo)
+void AutoLogger::slot_shouldLog(bool echo)
 {
     m_shouldLog = echo;
 }
 
-void AutoLogger::onConnected()
+void AutoLogger::slot_onConnected()
 {
     if (getConfig().autoLog.cleanupStrategy != AutoLoggerEnum::KeepForever)
         deleteOldLogs();
 
-    if (getConfig().autoLog.autoLog)
-        createFile();
+    if (getConfig().autoLog.autoLog) {
+        MAYBE_UNUSED const auto igored = //
+            createFile();
+    }
 }

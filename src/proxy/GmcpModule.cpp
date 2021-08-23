@@ -14,7 +14,7 @@ GmcpModule::GmcpModule(const QString &moduleVersion)
     : GmcpModule(::toStdStringLatin1(moduleVersion))
 {}
 
-static GmcpModuleTypeEnum toGmcpModuleType(const std::string &str)
+NODISCARD static GmcpModuleTypeEnum toGmcpModuleType(const std::string &str)
 {
 #define X_CASE(UPPER_CASE, CamelCase, normalized, friendly) \
     do { \
@@ -34,7 +34,7 @@ GmcpModule::GmcpModule(const std::string &moduleVersion)
     } else {
         normalizedName = ::toLowerLatin1(moduleVersion.substr(0, found));
         const auto stoi = std::stoi(moduleVersion.substr(found + 1));
-        version = GmcpModuleVersion(static_cast<uint32_t>(std::max(0, stoi)));
+        version = GmcpModuleVersion(static_cast<uint32_t>(utils::clampNonNegative(stoi)));
     }
     type = toGmcpModuleType(normalizedName);
 }
