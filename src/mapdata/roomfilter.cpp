@@ -45,7 +45,7 @@ NODISCARD static std::regex createRegex(const std::string &input, const Qt::Case
         std::string::size_type index = sanitized.find("\\*", 0);
         if (index != std::string::npos) {
             QString qStrInput{sanitized.c_str()};
-            const auto splitLine = qStrInput.split(' ', Qt::KeepEmptyParts);
+            const auto splitLine = qStrInput.split(' ');
 
             QString wildcardRegex("");
 
