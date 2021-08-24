@@ -42,24 +42,26 @@ NODISCARD static std::regex createRegex(const std::string &input, const Qt::Case
         static const std::regex escape(escape_pattern(), std::regex::optimize);
         const std::string sanitized = std::regex_replace(input, escape, R"(\$&)");
 
-        QString qStrInput = QString::fromStdString(sanitized);
-        const auto inputArr = qStrInput.split(' ', Qt::KeepEmptyParts);
+        std::string::size_type index = sanitized.find("\\*", 0);
+        if (index != std::string::npos) {
+            QString qStrInput{sanitized.c_str()};
+            const auto splitLine = qStrInput.split(' ', Qt::KeepEmptyParts);
 
-        QString newString(""); //= QString::fromStdString();
+            QString wildcardRegex("");
 
-        for (const auto &part : inputArr) {
-            if (part == "\\*") {
-                newString.append("([a-zA-Z0-9_]+)");
-            } else {
-                newString.append(part);
+            for (const auto &part : splitLine) {
+                if (part == "\\*") {
+                    wildcardRegex.append("([a-zA-Z0-9_]+)");
+                } else {
+                    wildcardRegex.append(part);
+                }
+                wildcardRegex.append(" ");
             }
-            newString.append(" ");
+            wildcardRegex = wildcardRegex.trimmed();
+
+            return ".*" + wildcardRegex.toStdString() + ".*";
         }
-        newString = newString.trimmed();
-
-        const std::string retString = newString.toStdString();
-
-        return ".*"+ retString + ".*";
+        return ".*" + sanitized + ".*";
     }();
     return std::regex(pattern, options);
 }
