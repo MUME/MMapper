@@ -12,6 +12,7 @@
 #include "../expandoracommon/room.h"
 #include "../global/StringView.h"
 #include "../global/TaggedString.h"
+#include "../global/TextUtils.h"
 #include "../global/utils.h"
 #include "../parser/Abbrev.h"
 #include "../parser/AbstractParser-Commands.h"
@@ -42,24 +43,31 @@ NODISCARD static std::regex createRegex(const std::string &input, const Qt::Case
         static const std::regex escape(escape_pattern(), std::regex::optimize);
         const std::string sanitized = std::regex_replace(input, escape, R"(\$&)");
 
+        // Check if sanitized word contains any wildcard
         std::string::size_type index = sanitized.find("\\*", 0);
         if (index != std::string::npos) {
-            QString qStrInput{sanitized.c_str()};
-            const auto splitLine = qStrInput.split(' ');
+            QString inputStr = toQStringLatin1(sanitized);
+            const auto inputWords = inputStr.split(' ');
 
-            QString wildcardRegex("");
+            std::string wildcardRegex("");
 
-            for (const auto &part : splitLine) {
+            for (int i = 0; i < inputWords.length(); i++) {
+                QString part = inputWords[i];
+
+                // Is the current word a wildcard?
                 if (part == "\\*") {
+                    // Check for any word with alphanumerical characters.
                     wildcardRegex.append("([a-zA-Z0-9_]+)");
                 } else {
-                    wildcardRegex.append(part);
+                    // Otherwise just append the word.
+                    wildcardRegex.append(toStdStringLatin1(part));
                 }
-                wildcardRegex.append(" ");
-            }
-            wildcardRegex = wildcardRegex.trimmed();
 
-            return ".*" + wildcardRegex.toStdString() + ".*";
+                // Don't add any trailing whitespaces.
+                if (i != inputWords.length() - 1)
+                    wildcardRegex.append(" ");
+            }
+            return ".*" + wildcardRegex + ".*";
         }
         return ".*" + sanitized + ".*";
     }();
