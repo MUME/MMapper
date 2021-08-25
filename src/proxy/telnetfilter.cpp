@@ -12,9 +12,13 @@
 
 #include "../parser/patterns.h"
 
-static constexpr const uint8_t ASCII_DEL = 8;
-static constexpr const uint8_t ASCII_CR = 13;
-static constexpr const uint8_t ASCII_LF = 10;
+static constexpr const char ASCII_DEL = '\x08';
+static constexpr const char ASCII_CR = '\r';
+static constexpr const char ASCII_LF = '\n';
+
+static_assert(ASCII_DEL == 8);
+static_assert(ASCII_LF == 10);
+static_assert(ASCII_CR == 13);
 
 void TelnetFilter::slot_onAnalyzeMudStream(const QByteArray &ba, bool goAhead)
 {
@@ -45,60 +49,50 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
                                         TelnetIncomingDataQueue &que,
                                         const bool &goAhead)
 {
-    quint16 index = 0;
-
-    while (index < stream.size()) {
-        const auto val1 = static_cast<uint8_t>(stream.at(index));
-        switch (val1) {
+    for (const char c : stream) {
+        switch (c) {
         case ASCII_DEL:
-            buffer.line.append(static_cast<char>(ASCII_DEL));
+            buffer.line.append(ASCII_DEL);
             buffer.type = TelnetDataEnum::DELAY;
             que.enqueue(buffer);
             buffer.line.clear();
             buffer.type = TelnetDataEnum::UNKNOWN;
-            index++;
             break;
 
         case ASCII_CR:
-            buffer.line.append(static_cast<char>(ASCII_CR));
-            index++;
+            buffer.line.append(ASCII_CR);
             break;
 
         case ASCII_LF:
             if (!buffer.line.isEmpty()) {
-                const auto val2 = static_cast<uint8_t>(buffer.line.right(1).at(0)); // get last char
-                switch (val2) {
+                switch (buffer.line.back()) {
                 case ASCII_CR:
-                    buffer.line.append(static_cast<char>(ASCII_LF));
+                    buffer.line.append(ASCII_LF);
                     buffer.type = TelnetDataEnum::CRLF;
                     que.enqueue(buffer);
                     buffer.line.clear();
                     buffer.type = TelnetDataEnum::UNKNOWN;
-                    index++;
                     break;
 
                 default:
-                    buffer.line.append(static_cast<char>(ASCII_LF));
-                    index++;
+                    buffer.line.append(ASCII_LF);
                     break;
                 }
             } else {
-                buffer.line.append(static_cast<char>(ASCII_LF));
-                index++;
+                buffer.line.append(ASCII_LF);
                 break;
             }
             break;
 
         default:
-            if (!buffer.line.isEmpty() && buffer.line.right(1).at(0) == ASCII_LF) {
+            if (!buffer.line.isEmpty() && buffer.line.back() == ASCII_LF) {
                 buffer.type = TelnetDataEnum::LF;
                 que.enqueue(buffer);
                 buffer.line.clear();
                 buffer.type = TelnetDataEnum::UNKNOWN;
             }
 
-            buffer.line.append(static_cast<char>(val1));
-            index++;
+            buffer.line.append(c);
             break;
         }
     }
@@ -117,7 +111,7 @@ void TelnetFilter::dispatchTelnetStream(const QByteArray &stream,
                 que.enqueue(buffer);
                 buffer.line.clear();
                 buffer.type = TelnetDataEnum::UNKNOWN;
-            } else if (buffer.line.endsWith(char(ASCII_LF))) {
+            } else if (buffer.line.endsWith(ASCII_LF)) {
                 buffer.type = TelnetDataEnum::LF;
                 que.enqueue(buffer);
                 buffer.line.clear();
