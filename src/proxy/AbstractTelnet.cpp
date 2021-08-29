@@ -746,7 +746,8 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
 
     case OPT_MSSP:
         if (hisOptionState[OPT_MSSP]) {
-            qDebug() << "Received MSSP message" << payload;
+            if (debug)
+                qDebug() << "Received MSSP message" << payload;
         }
         break;
 
@@ -1018,13 +1019,6 @@ int AbstractTelnet::onReadInternalInflate(const char *data,
                 cleanData.clear();
                 recvdGA = false;
             }
-        }
-
-        if (debug && outLen > 0) {
-            const double compressionRatio = static_cast<double>(outLen)
-                                            / static_cast<double>(length);
-            qDebug() << QString("zlib compression ratio of %1:1")
-                            .arg(QString::number(compressionRatio, 'f', 1));
         }
 
     } while (stream.avail_out == 0);
