@@ -522,6 +522,8 @@ void AbstractTelnet::processTelnetCommand(const AppendBuffer &command)
                             receiveEchoMode(false);
                         } else if (option == OPT_LINEMODE) {
                             sendLineModeEdit();
+                        } else if (option == OPT_GMCP) {
+                            onGmcpEnabled();
                         }
                     } else {
                         sendTelnetOption(TN_DONT, option);
@@ -670,6 +672,8 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
                     // CHARSET REQUEST <sep> <charsets>
                     const auto sep = payload[2];
                     const auto characterSets = payload.mid(3).split(sep);
+                    if (debug)
+                        qDebug() << "Received encoding options" << characterSets;
                     for (const auto &characterSet : characterSets) {
                         if (textCodec.supports(characterSet)) {
                             accepted = true;
@@ -683,7 +687,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
                     if (accepted) {
                         break;
                     } else if (debug) {
-                        qDebug() << "Rejected encoding" << characterSets;
+                        qDebug() << "Rejected all encodings";
                     }
                 }
                 // Reject invalid requests or if we did not find any supported codecs
@@ -724,7 +728,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
         break;
 
     case OPT_GMCP:
-        if (myOptionState[OPT_GMCP]) {
+        if (hisOptionState[OPT_GMCP]) {
             // Package[.SubPackages].Message <data>
             if (payload.length() <= 1) {
                 qWarning() << "Invalid GMCP received" << payload;
