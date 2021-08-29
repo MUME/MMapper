@@ -61,8 +61,8 @@ void TestProxy::gmcpModuleTest()
     QCOMPARE(module3.getVersion().asUint32(), 0u);
     QVERIFY(!module3.isSupported());
 
-    GmcpModule module4(QString("MMapper.GroupTell 1"));
-    QCOMPARE(::toQByteArrayLatin1(module4.getNormalizedName()), QByteArray("mmapper.grouptell"));
+    GmcpModule module4(QString("MMapper.Comm 1"));
+    QCOMPARE(::toQByteArrayLatin1(module4.getNormalizedName()), QByteArray("mmapper.comm"));
     QCOMPARE(module4.getVersion().asUint32(), 1u);
     QVERIFY(module4.isSupported());
 }

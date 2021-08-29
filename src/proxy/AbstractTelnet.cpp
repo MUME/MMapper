@@ -728,7 +728,7 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
         break;
 
     case OPT_GMCP:
-        if (hisOptionState[OPT_GMCP]) {
+        if (hisOptionState[OPT_GMCP] || myOptionState[OPT_GMCP]) {
             // Package[.SubPackages].Message <data>
             if (payload.length() <= 1) {
                 qWarning() << "Invalid GMCP received" << payload;

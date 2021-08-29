@@ -20,7 +20,10 @@ class ParseEvent;
     X(CORE_SUPPORTS_ADD, CoreSupportsAdd, "core.supports.add", "Core.Supports.Add") \
     X(CORE_SUPPORTS_REMOVE, CoreSupportsRemove, "core.supports.remove", "Core.Supports.Remove") \
     X(CORE_SUPPORTS_SET, CoreSupportsSet, "core.supports.set", "Core.Supports.Set") \
-    X(MMAPPER_GROUPTELL, MmapperGroupTell, "mmapper.grouptell", "MMapper.GroupTell") \
+    X(MMAPPER_COMM_GROUPTELL, \
+      MmapperCommGroupTell, \
+      "mmapper.comm.grouptell", \
+      "MMapper.Comm.GroupTell") \
     /* define gmcp message types above */
 
 enum class NODISCARD GmcpMessageTypeEnum {
@@ -31,7 +34,8 @@ enum class NODISCARD GmcpMessageTypeEnum {
 };
 
 static constexpr const size_t NUM_GMCP_MESSAGES = 6u;
-static_assert(NUM_GMCP_MESSAGES == static_cast<int>(GmcpMessageTypeEnum::MMAPPER_GROUPTELL) + 1);
+static_assert(NUM_GMCP_MESSAGES
+              == static_cast<int>(GmcpMessageTypeEnum::MMAPPER_COMM_GROUPTELL) + 1);
 DEFINE_ENUM_COUNT(GmcpMessageTypeEnum, NUM_GMCP_MESSAGES)
 
 namespace tags {
