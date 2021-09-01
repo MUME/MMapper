@@ -19,17 +19,20 @@
 #include "enums.h"
 #include "mmapper2room.h"
 
-NODISCARD static std::regex createRegex(const std::string &input, const Qt::CaseSensitivity cs)
+NODISCARD static std::regex createRegex(const std::string &input,
+                                        const Qt::CaseSensitivity cs,
+                                        const bool regex)
 {
-    // TODO: Switch from std::regex::exteneded to std::regex::multiline once GCC supports it
+    // TODO: Switch from std::regex::extended to std::regex::multiline once GCC supports it
     auto options = std::regex::nosubs | std::regex::optimize | std::regex::extended;
     if (cs == Qt::CaseInsensitive)
         options |= std::regex_constants::icase;
-    const std::string pattern = [&input, &options]() -> std::string {
+    const std::string pattern = [&input, &options, &regex]() -> std::string {
         if (input.empty())
             return R"(^$)";
 
-        // REVISIT: Add another option to support regex where we do not santize the input
+        if (regex)
+            return input;
 
         const auto escape_pattern = [&options]() {
             // Prevent user input from being interpreted as a POSIX extended regex
@@ -47,8 +50,9 @@ NODISCARD static std::regex createRegex(const std::string &input, const Qt::Case
 
 RoomFilter::RoomFilter(const std::string_view &sv,
                        const Qt::CaseSensitivity cs,
+                       const bool regex,
                        const PatternKindsEnum kind)
-    : m_regex(createRegex(ParserUtils::latin1ToAscii(sv), cs))
+    : m_regex(createRegex(ParserUtils::latin1ToAscii(sv), cs, regex))
     , m_kind(kind)
 {}
 
@@ -62,7 +66,7 @@ std::optional<RoomFilter> RoomFilter::parseRoomFilter(const std::string_view &li
     if (view.isEmpty())
         return std::nullopt;
     else if (view.takeFirstLetter() != '-')
-        return RoomFilter{line, Qt::CaseInsensitive, PatternKindsEnum::NAME};
+        return RoomFilter{line, Qt::CaseInsensitive, false, PatternKindsEnum::NAME};
 
     const auto first = view.takeFirstWord();
     const auto opt = [&first]() -> std::optional<PatternKindsEnum> {
@@ -96,7 +100,7 @@ std::optional<RoomFilter> RoomFilter::parseRoomFilter(const std::string_view &li
             return std::nullopt;
         }
     }
-    return RoomFilter{view.toStdString(), Qt::CaseInsensitive, kind};
+    return RoomFilter{view.toStdString(), Qt::CaseInsensitive, false, kind};
 }
 
 bool RoomFilter::filter(const Room *const pr) const

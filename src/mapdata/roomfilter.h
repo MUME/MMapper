@@ -28,7 +28,10 @@ public:
 
 public:
     RoomFilter() = delete;
-    explicit RoomFilter(const std::string_view &str, Qt::CaseSensitivity cs, PatternKindsEnum kind);
+    explicit RoomFilter(const std::string_view &str,
+                        Qt::CaseSensitivity cs,
+                        bool regex,
+                        PatternKindsEnum kind);
 
 public:
     bool filter(const Room *r) const;

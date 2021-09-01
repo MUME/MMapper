@@ -89,6 +89,7 @@ void BaseMapSaveFilter::prepare(ProgressCounter &counter)
     m_impl->mapData->genericSearch(this,
                                    RoomFilter("The Fountain Square",
                                               Qt::CaseSensitive,
+                                              false,
                                               PatternKindsEnum::NAME));
 
     // Walk the whole map through non-hidden exits without recursing

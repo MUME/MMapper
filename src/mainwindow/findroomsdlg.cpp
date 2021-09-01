@@ -105,6 +105,7 @@ void FindRoomsDlg::slot_findClicked()
 {
     const Qt::CaseSensitivity cs = caseCheckBox->isChecked() ? Qt::CaseSensitive
                                                              : Qt::CaseInsensitive;
+    const bool regex = regexCheckBox->isChecked();
     std::string text = lineEdit->text().toLatin1().toStdString();
     // remove latin1
     text = ParserUtils::latin1ToAsciiInPlace(text);
@@ -128,7 +129,7 @@ void FindRoomsDlg::slot_findClicked()
 
     try {
         auto tmpSel = RoomSelection(m_mapData);
-        tmpSel.genericSearch(RoomFilter(text, cs, kind));
+        tmpSel.genericSearch(RoomFilter(text, cs, regex, kind));
 
         for (const auto &[rid, room] : tmpSel) {
             QString id;
