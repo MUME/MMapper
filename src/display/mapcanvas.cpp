@@ -71,8 +71,6 @@ MapCanvas::MapCanvas(MapData &mapData,
     setCursor(Qt::OpenHandCursor);
     grabGesture(Qt::PinchGesture);
     setContextMenuPolicy(Qt::CustomContextMenu);
-
-    initSurface();
 }
 
 MapCanvas::~MapCanvas()

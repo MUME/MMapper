@@ -87,8 +87,6 @@ private:
     NODISCARD inline auto &getGLFont() { return m_glFont; }
     void cleanupOpenGL();
 
-    void initSurface();
-
 public:
     NODISCARD QSize minimumSizeHint() const override;
     NODISCARD QSize sizeHint() const override;

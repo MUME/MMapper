@@ -135,23 +135,6 @@ void MapCanvas::cleanupOpenGL()
     m_logger.reset();
 }
 
-/// Must be called from constructor;
-/// initializeGL() will fail if you forget to call this.
-void MapCanvas::initSurface()
-{
-    const auto getAaSamples = []() {
-        int samples = getConfig().canvas.antialiasingSamples;
-        if (samples <= 0) {
-            samples = 2; // Default to 2 samples to prevent restart
-        }
-        return samples;
-    };
-    const int samples = getAaSamples();
-    QSurfaceFormat format;
-    format.setSamples(samples);
-    setFormat(format);
-}
-
 void MapCanvas::reportGLVersion()
 {
     auto &gl = getOpenGL();

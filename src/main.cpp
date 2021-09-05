@@ -142,6 +142,28 @@ static void tryAutoLoad(MainWindow &mw)
     }
 }
 
+static void setSurfaceFormat()
+{
+    const auto &config = getConfig().canvas;
+    if (config.softwareOpenGL) {
+        QApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
+        if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux) {
+            qputenv("LIBGL_ALWAYS_SOFTWARE", "1");
+        }
+    } else if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
+        // Windows Intel drivers cause black screens if we don't specify OpenGL
+        QApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
+    }
+
+    QSurfaceFormat fmt;
+    QSurfaceFormat::FormatOptions options = QSurfaceFormat::DebugContext
+                                            | QSurfaceFormat::DeprecatedFunctions;
+    fmt.setOptions(options);
+    fmt.setSamples(config.antialiasingSamples);
+    fmt.setDepthBufferSize(24);
+    QSurfaceFormat::setDefaultFormat(fmt);
+}
+
 int main(int argc, char **argv)
 {
     useHighDpi();
@@ -157,18 +179,9 @@ int main(int argc, char **argv)
     QApplication app(argc, argv);
     tryInitDrMingw();
     auto tryLoadingWinSock = std::make_unique<WinSock>();
+    setSurfaceFormat();
 
     const auto &config = getConfig();
-    if (config.canvas.softwareOpenGL) {
-        QApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
-        if constexpr (CURRENT_PLATFORM == PlatformEnum::Linux) {
-            qputenv("LIBGL_ALWAYS_SOFTWARE", "1");
-        }
-    } else if constexpr (CURRENT_PLATFORM == PlatformEnum::Windows) {
-        // Windows Intel drivers cause black screens if we don't specify OpenGL
-        QApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
-    }
-
     std::unique_ptr<ISplash> splash = !config.general.noSplash
                                           ? static_upcast<ISplash>(std::make_unique<Splash>())
                                           : static_upcast<ISplash>(std::make_unique<FakeSplash>());
