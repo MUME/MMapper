@@ -62,8 +62,10 @@ private:
     PromptFlagsType m_promptFlags;
     ConnectedRoomFlagsType m_connectedRoomFlags;
 
-    CommandEnum m_moveType = CommandEnum::NONE;
     uint m_numSkipped = 0u;
+
+    RoomTerrainEnum m_terrain = RoomTerrainEnum::UNDEFINED;
+    CommandEnum m_moveType = CommandEnum::NONE;
 
 public:
     explicit ParseEvent(const CommandEnum command)
@@ -89,7 +91,7 @@ public:
 private:
     void setProperty(const RoomName &name) { m_properties.setProperty(0, name.getStdString()); }
     void setProperty(const RoomDesc &desc) { m_properties.setProperty(1, desc.getStdString()); }
-    void setProperty(const PromptFlagsType &prompt);
+    void setProperty(const RoomTerrainEnum &terrain);
     void countSkipped();
 
 public:
@@ -100,6 +102,7 @@ public:
     NODISCARD PromptFlagsType getPromptFlags() const { return m_promptFlags; }
     NODISCARD ConnectedRoomFlagsType getConnectedRoomFlags() const { return m_connectedRoomFlags; }
     NODISCARD CommandEnum getMoveType() const { return m_moveType; }
+    NODISCARD RoomTerrainEnum getTerrainType() const { return m_terrain; }
     NODISCARD uint getNumSkipped() const { return m_numSkipped; }
     const Property &operator[](const size_t pos) const { return m_properties.at(pos); }
 
@@ -108,6 +111,7 @@ public:
                                         RoomName roomName,
                                         RoomDesc roomDesc,
                                         RoomContents roomContents,
+                                        const RoomTerrainEnum &terrain,
                                         const ExitsFlagsType &exitsFlags,
                                         const PromptFlagsType &promptFlags,
                                         const ConnectedRoomFlagsType &connectedRoomFlags);

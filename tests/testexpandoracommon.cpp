@@ -115,9 +115,9 @@ void TestExpandoraCommon::roomCompareTest_data()
                                                          RoomName(""),
                                                          RoomDesc(""),
                                                          RoomContents(""),
+                                                         room->getTerrainType(),
                                                          ExitsFlagsType{},
-                                                         PromptFlagsType::fromRoomTerrainType(
-                                                             room->getTerrainType()),
+                                                         PromptFlagsType{},
                                                          ConnectedRoomFlagsType{});
         QTest::newRow("blinded") << room << event << ComparisonResultEnum::TOLERANCE;
     }
@@ -129,9 +129,9 @@ void TestExpandoraCommon::roomCompareTest_data()
                                                          name,
                                                          RoomDesc(""),
                                                          contents,
+                                                         room->getTerrainType(),
                                                          ExitsFlagsType{},
-                                                         PromptFlagsType::fromRoomTerrainType(
-                                                             room->getTerrainType()),
+                                                         PromptFlagsType{},
                                                          ConnectedRoomFlagsType{});
         QTest::newRow("awareness") << room << event << ComparisonResultEnum::TOLERANCE;
     }
@@ -143,9 +143,9 @@ void TestExpandoraCommon::roomCompareTest_data()
                                                          name,
                                                          RoomDesc(desc.toQString().simplified()),
                                                          contents,
+                                                         room->getTerrainType(),
                                                          ExitsFlagsType{},
-                                                         PromptFlagsType::fromRoomTerrainType(
-                                                             room->getTerrainType()),
+                                                         PromptFlagsType{},
                                                          ConnectedRoomFlagsType{});
         QTest::newRow("whitespace") << room << event << ComparisonResultEnum::EQUAL;
     }
@@ -158,8 +158,9 @@ void TestExpandoraCommon::roomCompareTest_data()
                                       name,
                                       RoomDesc(desc.toQString().replace("difficult", "easy")),
                                       contents,
+                                      room->getTerrainType(),
                                       ExitsFlagsType{},
-                                      PromptFlagsType::fromRoomTerrainType(room->getTerrainType()),
+                                      PromptFlagsType{},
                                       ConnectedRoomFlagsType{});
         QTest::newRow("single word") << room << event << ComparisonResultEnum::TOLERANCE;
     }
@@ -171,9 +172,9 @@ void TestExpandoraCommon::roomCompareTest_data()
                                                          RoomName("Riverbank"),
                                                          desc,
                                                          contents,
+                                                         room->getTerrainType(),
                                                          ExitsFlagsType{},
-                                                         PromptFlagsType::fromRoomTerrainType(
-                                                             room->getTerrainType()),
+                                                         PromptFlagsType{},
                                                          ConnectedRoomFlagsType{});
         QTest::newRow("different room name") << room << event << ComparisonResultEnum::DIFFERENT;
     }
@@ -185,9 +186,9 @@ void TestExpandoraCommon::roomCompareTest_data()
                                                          name,
                                                          desc,
                                                          contents,
+                                                         RoomTerrainEnum::UNDEFINED,
                                                          ExitsFlagsType{},
-                                                         PromptFlagsType::fromRoomTerrainType(
-                                                             RoomTerrainEnum::UNDEFINED),
+                                                         PromptFlagsType{},
                                                          ConnectedRoomFlagsType{});
         QTest::newRow("different terrain") << room << event << ComparisonResultEnum::DIFFERENT;
     }
@@ -201,9 +202,9 @@ void TestExpandoraCommon::roomCompareTest_data()
                                                          name,
                                                          desc,
                                                          contents,
+                                                         room->getTerrainType(),
                                                          exitFlags,
-                                                         PromptFlagsType::fromRoomTerrainType(
-                                                             room->getTerrainType()),
+                                                         PromptFlagsType{},
                                                          ConnectedRoomFlagsType{});
         QTest::newRow("doors closed") << room << event << ComparisonResultEnum::EQUAL;
     }
@@ -218,9 +219,9 @@ void TestExpandoraCommon::roomCompareTest_data()
                                                          name,
                                                          desc,
                                                          contents,
+                                                         room->getTerrainType(),
                                                          exitFlags,
-                                                         PromptFlagsType::fromRoomTerrainType(
-                                                             room->getTerrainType()),
+                                                         PromptFlagsType{},
                                                          ConnectedRoomFlagsType{});
         QTest::newRow("doors opens") << room << event << ComparisonResultEnum::EQUAL;
     }
@@ -241,9 +242,9 @@ void TestExpandoraCommon::roomCompareTest_data()
                                                          name,
                                                          desc,
                                                          contents,
+                                                         room->getTerrainType(),
                                                          exitFlags,
-                                                         PromptFlagsType::fromRoomTerrainType(
-                                                             room->getTerrainType()),
+                                                         PromptFlagsType{},
                                                          connectedFlags);
         QTest::newRow("sunlight hiding road") << room << event << ComparisonResultEnum::EQUAL;
     }
@@ -260,9 +261,9 @@ void TestExpandoraCommon::roomCompareTest_data()
                                                          name,
                                                          desc,
                                                          contents,
+                                                         room->getTerrainType(),
                                                          exitFlags,
-                                                         PromptFlagsType::fromRoomTerrainType(
-                                                             room->getTerrainType()),
+                                                         PromptFlagsType{},
                                                          ConnectedRoomFlagsType{});
         QTest::newRow("missing exit south") << room << event << ComparisonResultEnum::DIFFERENT;
     }
@@ -279,9 +280,9 @@ void TestExpandoraCommon::roomCompareTest_data()
                                                          name,
                                                          desc,
                                                          contents,
+                                                         room->getTerrainType(),
                                                          exitFlags,
-                                                         PromptFlagsType::fromRoomTerrainType(
-                                                             room->getTerrainType()),
+                                                         PromptFlagsType{},
                                                          ConnectedRoomFlagsType{});
         QTest::newRow("missing door and exit down")
             << room << event << ComparisonResultEnum::TOLERANCE;
@@ -298,9 +299,9 @@ void TestExpandoraCommon::roomCompareTest_data()
                                                          name,
                                                          desc,
                                                          contents,
+                                                         room->getTerrainType(),
                                                          exitFlags,
-                                                         PromptFlagsType::fromRoomTerrainType(
-                                                             room->getTerrainType()),
+                                                         PromptFlagsType{},
                                                          ConnectedRoomFlagsType{});
         QTest::newRow("missing climb e") << room << event << ComparisonResultEnum::TOLERANCE;
     }
@@ -318,9 +319,9 @@ void TestExpandoraCommon::roomCompareTest_data()
                                                          name,
                                                          desc,
                                                          contents,
+                                                         room->getTerrainType(),
                                                          exitFlags,
-                                                         PromptFlagsType::fromRoomTerrainType(
-                                                             room->getTerrainType()),
+                                                         PromptFlagsType{},
                                                          ConnectedRoomFlagsType{});
         QTest::newRow("missing road n") << room << event << ComparisonResultEnum::TOLERANCE;
     }
@@ -339,9 +340,9 @@ void TestExpandoraCommon::roomCompareTest_data()
                                                          name,
                                                          desc,
                                                          contents,
+                                                         room->getTerrainType(),
                                                          exitFlags,
-                                                         PromptFlagsType::fromRoomTerrainType(
-                                                             room->getTerrainType()),
+                                                         PromptFlagsType{},
                                                          ConnectedRoomFlagsType{});
         QTest::newRow("door west not hidden") << room << event << ComparisonResultEnum::TOLERANCE;
     }
@@ -357,9 +358,9 @@ void TestExpandoraCommon::roomCompareTest_data()
                                                          name,
                                                          desc,
                                                          contents,
+                                                         room->getTerrainType(),
                                                          exitFlags,
-                                                         PromptFlagsType::fromRoomTerrainType(
-                                                             room->getTerrainType()),
+                                                         PromptFlagsType{},
                                                          ConnectedRoomFlagsType{});
         QTest::newRow("outdated and no exits") << room << event << ComparisonResultEnum::TOLERANCE;
     }
@@ -367,14 +368,16 @@ void TestExpandoraCommon::roomCompareTest_data()
     // Lit
     {
         SharedRoom room = create_perfect_room();
-        PromptFlagsType promptFlags = PromptFlagsType::fromRoomTerrainType(room->getTerrainType());
+        PromptFlagsType promptFlags;
         promptFlags.setLit();
+        promptFlags.setValid();
         room->setLightType(RoomLightEnum::UNDEFINED);
         room->setSundeathType(RoomSundeathEnum::NO_SUNDEATH);
         SharedParseEvent event = ParseEvent::createEvent(CommandEnum::NORTH,
                                                          name,
                                                          desc,
                                                          contents,
+                                                         room->getTerrainType(),
                                                          get_exit_flags(room),
                                                          promptFlags,
                                                          ConnectedRoomFlagsType{});
@@ -384,8 +387,9 @@ void TestExpandoraCommon::roomCompareTest_data()
     // Dark
     {
         SharedRoom room = create_perfect_room();
-        PromptFlagsType promptFlags = PromptFlagsType::fromRoomTerrainType(room->getTerrainType());
+        PromptFlagsType promptFlags;
         promptFlags.setDark();
+        promptFlags.setValid();
         ConnectedRoomFlagsType connectedFlags;
         connectedFlags.setDirectSunlight(ExitDirEnum::NORTH, DirectSunlightEnum::SAW_DIRECT_SUN);
         connectedFlags.setValid();
@@ -395,6 +399,7 @@ void TestExpandoraCommon::roomCompareTest_data()
                                                          name,
                                                          desc,
                                                          contents,
+                                                         room->getTerrainType(),
                                                          get_exit_flags(room),
                                                          promptFlags,
                                                          connectedFlags);

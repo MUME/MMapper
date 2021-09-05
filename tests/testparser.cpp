@@ -42,13 +42,15 @@ void TestParser::createParseEventTest()
     auto terrain = RoomTerrainEnum::INDOORS;
     ExitsFlagsType eFlags;
     eFlags.setValid();
-    auto pFlags = PromptFlagsType::fromRoomTerrainType(terrain);
+    PromptFlagsType pFlags;
+    pFlags.setValid();
     ConnectedRoomFlagsType cFlags;
     cFlags.setValid();
     auto event = ParseEvent::createEvent(CommandEnum::NORTH,
                                          roomName,
                                          parsedRoomDescription,
                                          roomContents,
+                                         terrain,
                                          eFlags,
                                          pFlags,
                                          cFlags);

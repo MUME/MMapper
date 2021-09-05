@@ -92,6 +92,7 @@ protected:
     ExitsFlagsType m_exitsFlags;
     PromptFlagsType m_promptFlags;
     ConnectedRoomFlagsType m_connectedRoomFlags;
+    RoomTerrainEnum m_terrain;
 
 protected:
     CommandEnum m_move = CommandEnum::LOOK;

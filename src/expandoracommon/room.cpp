@@ -307,8 +307,9 @@ SharedParseEvent Room::getEvent(const Room *const room)
                                    room->getName(),
                                    room->getDescription(),
                                    room->getContents(),
+                                   room->getTerrainType(),
                                    exitFlags,
-                                   PromptFlagsType::fromRoomTerrainType(room->getTerrainType()),
+                                   PromptFlagsType{},
                                    ConnectedRoomFlagsType{});
 }
 
@@ -379,13 +380,8 @@ ComparisonResultEnum Room::compare(const Room *const room,
         return ComparisonResultEnum::TOLERANCE;
     }
 
-    const PromptFlagsType pf = event.getPromptFlags();
-    if (pf.isValid()) {
-        if (pf.getTerrainType() != terrainType) {
-            if (room->isUpToDate()) {
-                return ComparisonResultEnum::DIFFERENT;
-            }
-        }
+    if (event.getTerrainType() != terrainType && room->isUpToDate()) {
+        return ComparisonResultEnum::DIFFERENT;
     }
 
     switch (compareStrings(name.getStdString(), event.getRoomName().getStdString(), tolerance)) {
@@ -604,10 +600,7 @@ void Room::update(Room &room, const ParseEvent &event)
     }
 
     const PromptFlagsType pFlags = event.getPromptFlags();
-    if (!pFlags.isValid()) {
-        isUpToDate = false;
-    } else {
-        room.setTerrainType(pFlags.getTerrainType());
+    if (pFlags.isValid()) {
         const RoomSundeathEnum sunType = room.getSundeathType();
         if (pFlags.isLit() && sunType == RoomSundeathEnum::NO_SUNDEATH) {
             room.setLightType(RoomLightEnum::LIT);
@@ -615,6 +608,13 @@ void Room::update(Room &room, const ParseEvent &event)
                    && connectedRoomFlags.isValid() && connectedRoomFlags.hasAnyDirectSunlight()) {
             room.setLightType(RoomLightEnum::DARK);
         }
+    }
+
+    const auto &terrain = event.getTerrainType();
+    if (terrain == RoomTerrainEnum::UNDEFINED) {
+        isUpToDate = false;
+    } else {
+        room.setTerrainType(terrain);
     }
 
     const auto &desc = event.getRoomDesc();

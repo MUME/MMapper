@@ -7,7 +7,7 @@
 
 #include "../mapdata/ExitDirection.h"
 
-enum class NODISCARD CommandEnum {
+enum class NODISCARD CommandEnum : uint8_t {
     NORTH = 0,
     SOUTH,
     EAST,

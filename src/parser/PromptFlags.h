@@ -8,25 +8,25 @@
 #include "../global/utils.h"
 #include "../mapdata/mmapper2room.h"
 
-#define X_FOREACH_PROMT_WEATHER_ENUM(X) \
+#define X_FOREACH_PROMPT_WEATHER_ENUM(X) \
     X(UNDEFINED) \
     X(CLOUDS) \
     X(RAIN) \
     X(HEAVY_RAIN) \
     X(SNOW)
-#define X_FOREACH_PROMT_FOG_ENUM(X) \
+#define X_FOREACH_PROMPT_FOG_ENUM(X) \
     X(UNDEFINED) \
     X(LIGHT_FOG) \
     X(HEAVY_FOG)
 
 #define DECL(X) X,
-enum class NODISCARD PromptWeatherEnum { X_FOREACH_PROMT_WEATHER_ENUM(DECL) };
-enum class NODISCARD PromptFogEnum { X_FOREACH_PROMT_FOG_ENUM(DECL) };
+enum class NODISCARD PromptWeatherEnum { X_FOREACH_PROMPT_WEATHER_ENUM(DECL) };
+enum class NODISCARD PromptFogEnum { X_FOREACH_PROMPT_FOG_ENUM(DECL) };
 #undef DECL
 
 #define ADD(X) +1
-static constexpr const size_t NUM_PROMPT_WEATHER_TYPES = (X_FOREACH_PROMT_WEATHER_ENUM(ADD));
-static constexpr const size_t NUM_PROMPT_FOG_TYPES = (X_FOREACH_PROMT_FOG_ENUM(ADD));
+static constexpr const size_t NUM_PROMPT_WEATHER_TYPES = (X_FOREACH_PROMPT_WEATHER_ENUM(ADD));
+static constexpr const size_t NUM_PROMPT_FOG_TYPES = (X_FOREACH_PROMPT_FOG_ENUM(ADD));
 #undef ADD
 
 static_assert(NUM_PROMPT_WEATHER_TYPES == 5);
@@ -35,16 +35,14 @@ static_assert(NUM_PROMPT_FOG_TYPES == 3);
 class NODISCARD PromptFlagsType final
 {
 public:
-    // bit0-3 -> RoomTerrainEnum
-    static constexpr const auto TERRAIN_TYPE = 0b1111u;
-    static constexpr const auto LIT_ROOM = 1u << 4;
-    static constexpr const auto DARK_ROOM = 1u << 5;
+    static constexpr const auto LIT_ROOM = 1u;
+    static constexpr const auto DARK_ROOM = 1u << 1;
     static constexpr const auto LIGHT_MASK = LIT_ROOM | DARK_ROOM;
-    static constexpr const auto PROMPT_FLAGS_VALID = 1u << 6;
-    // bit7-8 -> PromptFogEnum
-    static constexpr const auto FOG_TYPE = 0b11u << 7;
-    // bit9-11 -> PromptWeatherEnum
-    static constexpr const auto WEATHER_TYPE = 0b111u << 9;
+    static constexpr const auto PROMPT_FLAGS_VALID = 1u << 2;
+    // bit3-4 -> PromptFogEnum
+    static constexpr const auto FOG_TYPE = 0b11u << 3;
+    // bit5-9 -> PromptWeatherEnum
+    static constexpr const auto WEATHER_TYPE = 0b111u << 5;
 
 private:
     uint32_t flags = 0u;
@@ -53,10 +51,6 @@ private:
     NODISCARD static uint32_t encodeFogType(const PromptFogEnum pf)
     {
         return std::clamp<uint32_t>(static_cast<uint32_t>(pf), 0, 2);
-    }
-    NODISCARD static uint32_t encodeTerrainType(const RoomTerrainEnum rtt)
-    {
-        return std::clamp<uint32_t>(static_cast<uint32_t>(rtt), 0, 15);
     }
     NODISCARD static uint32_t encodeWeatherType(const PromptWeatherEnum pw)
     {
@@ -67,16 +61,6 @@ public:
     PromptFlagsType() = default;
 
 public:
-    /// NOTE: This sets the valid flag on the result.
-    NODISCARD static PromptFlagsType fromRoomTerrainType(const RoomTerrainEnum rtt)
-    {
-        PromptFlagsType result;
-        result.setTerrainType(rtt);
-        result.setValid();
-        return result;
-    }
-
-public:
     NODISCARD explicit operator uint32_t() const { return flags; }
     NODISCARD bool operator==(const PromptFlagsType rhs) const { return flags == rhs.flags; }
     NODISCARD bool operator!=(const PromptFlagsType rhs) const { return flags != rhs.flags; }
@@ -84,18 +68,6 @@ public:
 public:
     NODISCARD bool isValid() const { return flags & PROMPT_FLAGS_VALID; }
     void setValid() { flags |= PROMPT_FLAGS_VALID; }
-
-public:
-    NODISCARD RoomTerrainEnum getTerrainType() const
-    {
-        return static_cast<RoomTerrainEnum>(flags & TERRAIN_TYPE);
-    }
-    void setTerrainType(const RoomTerrainEnum type)
-    {
-        using flags_type = decltype(flags);
-        flags = static_cast<flags_type>(flags & ~TERRAIN_TYPE);
-        flags = static_cast<flags_type>(flags | (encodeTerrainType(type) & TERRAIN_TYPE));
-    }
 
 public:
     NODISCARD PromptFogEnum getFogType() const

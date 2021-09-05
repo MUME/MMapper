@@ -27,18 +27,18 @@ void ParseEvent::ArrayOfProperties::setProperty(const size_t pos, std::string s)
     ArrayOfProperties::at(pos) = Property{std::move(s)};
 }
 
-NODISCARD static std::string getPromptBytes(const PromptFlagsType &promptFlags)
+NODISCARD static std::string getTerrainBytes(const RoomTerrainEnum &terrain)
 {
-    const auto promptBytes = promptFlags.isValid()
-                                 ? std::string(1, static_cast<int8_t>(promptFlags.getTerrainType()))
-                                 : std::string{};
-    assert(promptBytes.size() == (promptFlags.isValid() ? 1 : 0));
-    return promptBytes;
+    const bool terrainValid = (terrain != RoomTerrainEnum::UNDEFINED);
+    const auto terrainBytes = terrainValid ? std::string(1, static_cast<int8_t>(terrain))
+                                           : std::string{};
+    assert(terrainBytes.size() == (terrainValid ? 1 : 0));
+    return terrainBytes;
 }
 
-void ParseEvent::setProperty(const PromptFlagsType &prompt)
+void ParseEvent::setProperty(const RoomTerrainEnum &terrain)
 {
-    m_properties.setProperty(2, getPromptBytes(prompt));
+    m_properties.setProperty(2, getTerrainBytes(terrain));
 }
 
 ParseEvent::~ParseEvent() = default;
@@ -79,8 +79,8 @@ QString ParseEvent::toQString() const
         }
     }
     QString promptStr;
+    promptStr.append(::toQStringLatin1(getTerrainBytes(m_terrain)));
     if (m_promptFlags.isValid()) {
-        promptStr.append(::toQStringLatin1(getPromptBytes(m_promptFlags)));
         if (m_promptFlags.isLit())
             promptStr.append("*");
         else if (m_promptFlags.isDark())
@@ -102,6 +102,7 @@ SharedParseEvent ParseEvent::createEvent(const CommandEnum c,
                                          RoomName moved_roomName,
                                          RoomDesc moved_roomDesc,
                                          RoomContents moved_roomContents,
+                                         const RoomTerrainEnum &terrain,
                                          const ExitsFlagsType &exitsFlags,
                                          const PromptFlagsType &promptFlags,
                                          const ConnectedRoomFlagsType &connectedRoomFlags)
@@ -112,12 +113,13 @@ SharedParseEvent ParseEvent::createEvent(const CommandEnum c,
     // the moved strings are used by const ref here before they're moved.
     event->setProperty(moved_roomName);
     event->setProperty(moved_roomDesc);
-    event->setProperty(promptFlags);
+    event->setProperty(terrain);
 
     // After this block, the moved values are gone.
     event->m_roomName = std::exchange(moved_roomName, {});
     event->m_roomDesc = std::exchange(moved_roomDesc, {});
     event->m_roomContents = std::exchange(moved_roomContents, {});
+    event->m_terrain = terrain;
     event->m_exitsFlags = exitsFlags;
     event->m_promptFlags = promptFlags;
     event->m_connectedRoomFlags = connectedRoomFlags;
@@ -132,6 +134,7 @@ SharedParseEvent ParseEvent::createDummyEvent()
                        RoomName{},
                        RoomDesc{},
                        RoomContents{},
+                       RoomTerrainEnum::UNDEFINED,
                        ExitsFlagsType{},
                        PromptFlagsType{},
                        ConnectedRoomFlagsType{});

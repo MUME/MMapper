@@ -188,48 +188,22 @@ void AbstractParser::parsePrompt(const QString &prompt)
         index--;
     }
 
+    // Terrain type
     switch (prompt[index++].toLatin1()) {
     case '[':
-        m_promptFlags.setTerrainType(RoomTerrainEnum::INDOORS);
-        break;
     case '#':
-        m_promptFlags.setTerrainType(RoomTerrainEnum::CITY);
-        break;
     case '.':
-        m_promptFlags.setTerrainType(RoomTerrainEnum::FIELD);
-        break;
     case 'f':
-        m_promptFlags.setTerrainType(RoomTerrainEnum::FOREST);
-        break;
     case '(':
-        m_promptFlags.setTerrainType(RoomTerrainEnum::HILLS);
-        break;
     case '<':
-        m_promptFlags.setTerrainType(RoomTerrainEnum::MOUNTAINS);
-        break;
     case '%':
-        m_promptFlags.setTerrainType(RoomTerrainEnum::SHALLOW);
-        break;
     case '~':
-        m_promptFlags.setTerrainType(RoomTerrainEnum::WATER);
-        break;
     case 'W':
-        m_promptFlags.setTerrainType(RoomTerrainEnum::RAPIDS);
-        break;
     case 'U':
-        m_promptFlags.setTerrainType(RoomTerrainEnum::UNDERWATER);
-        break;
     case '+':
-        m_promptFlags.setTerrainType(RoomTerrainEnum::ROAD);
-        break;
     case '=':
-        m_promptFlags.setTerrainType(RoomTerrainEnum::TUNNEL);
-        break;
     case 'O':
-        m_promptFlags.setTerrainType(RoomTerrainEnum::CAVERN);
-        break;
     case ':':
-        m_promptFlags.setTerrainType(RoomTerrainEnum::BRUSH);
         break;
     default:
         index--;
@@ -1224,9 +1198,9 @@ void AbstractParser::slot_doOfflineCharacterMove()
                                           otherRoom->getName(),
                                           otherRoom->getDescription(),
                                           otherRoom->getContents(),
+                                          otherRoom->getTerrainType(),
                                           ExitsFlagsType{},
-                                          PromptFlagsType::fromRoomTerrainType(
-                                              otherRoom->getTerrainType()),
+                                          PromptFlagsType{},
                                           ConnectedRoomFlagsType{});
         emit sig_handleParseEvent(SigParseEvent{ev});
         pathChanged();

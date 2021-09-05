@@ -13,6 +13,7 @@
 #include "../configuration/configuration.h"
 #include "../expandoracommon/parseevent.h"
 #include "../global/TextUtils.h"
+#include "../global/entities.h"
 #include "../pandoragroup/mmapper2group.h"
 #include "../proxy/telnetfilter.h"
 #include "ExitsFlags.h"
@@ -242,11 +243,78 @@ bool MumeXmlParser::element(const QByteArray &line)
                     m_exitsReady = false;
                     m_roomDesc.reset();
                     m_roomContents.reset();
+                    m_terrain = RoomTerrainEnum::UNDEFINED;
                     m_exits = nullString;
                     m_promptFlags.reset();
                     m_exitsFlags.reset();
                     m_connectedRoomFlags.reset();
                     m_lineFlags.insert(LineFlagEnum::ROOM);
+                    if (length <= 5)
+                        break;
+
+                    // REVISIT: XML attributes might include quoted strings with spaces
+                    const auto &parts = line.mid(5).split(' ');
+                    for (const auto &part : parts) {
+                        if (part.length() <= 2)
+                            continue;
+                        switch (part.at(0)) {
+                        case 't':
+                            if (part.at(1) == '=') {
+                                // Decode terrain type attribute
+                                const auto in = entities::EncodedLatin1{part.mid(2)};
+                                const auto out = entities::decode(in).toLatin1();
+                                switch (out.at(0)) {
+                                case '[':
+                                    m_terrain = RoomTerrainEnum::INDOORS;
+                                    break;
+                                case '#':
+                                    m_terrain = RoomTerrainEnum::CITY;
+                                    break;
+                                case '.':
+                                    m_terrain = RoomTerrainEnum::FIELD;
+                                    break;
+                                case 'f':
+                                    m_terrain = RoomTerrainEnum::FOREST;
+                                    break;
+                                case '(':
+                                    m_terrain = RoomTerrainEnum::HILLS;
+                                    break;
+                                case '<':
+                                    m_terrain = RoomTerrainEnum::MOUNTAINS;
+                                    break;
+                                case '%':
+                                    m_terrain = RoomTerrainEnum::SHALLOW;
+                                    break;
+                                case '~':
+                                    m_terrain = RoomTerrainEnum::WATER;
+                                    break;
+                                case 'W':
+                                    m_terrain = RoomTerrainEnum::RAPIDS;
+                                    break;
+                                case 'U':
+                                    m_terrain = RoomTerrainEnum::UNDERWATER;
+                                    break;
+                                case '+':
+                                    m_terrain = RoomTerrainEnum::ROAD;
+                                    break;
+                                case '=':
+                                    m_terrain = RoomTerrainEnum::TUNNEL;
+                                    break;
+                                case 'O':
+                                    m_terrain = RoomTerrainEnum::CAVERN;
+                                    break;
+                                case ':':
+                                    m_terrain = RoomTerrainEnum::BRUSH;
+                                    break;
+                                default:
+                                    break;
+                                }
+                            }
+                            break;
+                        default:
+                            break;
+                        }
+                    }
                 }
                 break;
             case 'm':
@@ -565,6 +633,7 @@ void MumeXmlParser::move()
                                           m_roomName.value_or(RoomName{}),
                                           m_roomDesc.value_or(RoomDesc{}),
                                           m_roomContents.value_or(RoomContents{}),
+                                          m_terrain,
                                           m_exitsFlags,
                                           m_promptFlags,
                                           m_connectedRoomFlags);
