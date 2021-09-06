@@ -165,7 +165,11 @@ struct NODISCARD IRoomVisitorCallbacks
 {
     virtual ~IRoomVisitorCallbacks();
 
-    virtual bool acceptRoom(const Room *) const = 0;
+private:
+    NODISCARD virtual bool virt_acceptRoom(const Room *) const = 0;
+
+public:
+    NODISCARD bool acceptRoom(const Room *const pRoom) const { return virt_acceptRoom(pRoom); }
 
 private:
     // Rooms
@@ -647,7 +651,7 @@ struct NODISCARD LayerBatchMeasurer final : public IRoomVisitorCallbacks
 
     DELETE_CTORS_AND_ASSIGN_OPS(LayerBatchMeasurer);
 
-    NODISCARD bool acceptRoom(const Room *const room) const override
+    NODISCARD bool virt_acceptRoom(const Room *const room) const override
     {
         return bounds.contains(room->getPosition());
     }
@@ -830,7 +834,7 @@ public:
 
     DELETE_CTORS_AND_ASSIGN_OPS(LayerBatchBuilder);
 
-    bool acceptRoom(const Room *const room) const override
+    NODISCARD bool virt_acceptRoom(const Room *const room) const override
     {
         return bounds.contains(room->getPosition());
     }
