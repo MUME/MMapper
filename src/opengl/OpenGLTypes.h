@@ -242,10 +242,10 @@ private:
 
 public:
     // Clears the contents of the mesh, but does not give up its GL resources.
-    virtual void clear() { virt_clear(); }
+    void clear() { virt_clear(); }
     // Clears the mesh and destroys the GL resources.
-    virtual void reset() { virt_reset(); }
-    NODISCARD virtual bool isEmpty() const { return virt_isEmpty(); }
+    void reset() { virt_reset(); }
+    NODISCARD bool isEmpty() const { return virt_isEmpty(); }
 
 public:
     void render(const GLRenderState &renderState)
