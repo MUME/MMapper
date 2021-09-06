@@ -41,17 +41,6 @@ if(Qt5Core_FOUND)
     if(Qt5Core_VERSION VERSION_LESS 5.12.4)
         message(FATAL_ERROR "Minimum supported Qt version is 5.12")
     endif()
-    file(WRITE ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckQtGLES20.cpp
-        "#include <QOpenGLFunctions_ES2>
-        #ifndef QT_OPENGL_ES_2
-        # error
-        #endif
-        int main(int argc, char** argv) { return 0; }")
-    try_compile(QT_HAS_GLES_20
-                    ${CMAKE_BINARY_DIR}
-                    ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckQtGLES20.cpp
-                    LINK_LIBRARIES Qt5::OpenGL
-                    OUTPUT_VARIABLE OUTPUT)
     file(WRITE ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckQtOpenGL20.cpp
         "#include <QOpenGLFunctions_2_0>
         #ifndef GL_QUADS
@@ -63,14 +52,10 @@ if(Qt5Core_FOUND)
                     ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/CheckQtOpenGL20.cpp
                     LINK_LIBRARIES Qt5::OpenGL
                     OUTPUT_VARIABLE OUTPUT)
-     if(QT_HAS_GLES_20 AND QT_HAS_OPENGL)
-         message(STATUS "QOpenGLFunctions supports both GLES 2.0 and OpenGL 2.0")
-     elseif(QT_HAS_GLES_20)
-         message(STATUS "QOpenGLFunctions supports GLES 2.0")
-     elseif(QT_HAS_OPENGL)
+     if(QT_HAS_OPENGL)
          message(STATUS "QOpenGLFunctions supports OpenGL 2.0")
      else()
-         message(FATAL_ERROR "QOpenGLFunctions does not support GLES 2.0 or OpenGL 2.0")
+         message(FATAL_ERROR "QOpenGLFunctions does not support OpenGL 2.0")
      endif()
 endif()
 

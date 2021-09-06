@@ -413,8 +413,8 @@ set(mmapper_UIS
 
 if(QT_HAS_OPENGL)
     list(APPEND mmapper_SRCS "opengl/legacy/impl_gl20.cpp")
-elseif(QT_HAS_GLES_20)
-    list(APPEND mmapper_SRCS "opengl/legacy/impl_es20.cpp")
+else()
+    message(FATAL_ERROR "MMapper requires OpenGL")
 endif()
 
 if(MMAPPER_IS_DEBUG)
