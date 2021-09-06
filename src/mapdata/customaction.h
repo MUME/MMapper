@@ -62,7 +62,7 @@ protected:
     ExitDirEnum room2Dir = ExitDirEnum::UNKNOWN;
 };
 
-class GroupMapAction final : virtual public MapAction
+class GroupMapAction final : public MapAction
 {
 public:
     explicit GroupMapAction(std::unique_ptr<AbstractAction> ex,
