@@ -49,15 +49,15 @@ void AddExit::exec()
     tryExec();
 }
 
-Room *AddExit::tryExec()
+void AddExit::tryExec()
 {
     Room *const rfrom = roomIndex(from);
     if (rfrom == nullptr) {
-        return nullptr;
+        return;
     }
     Room *const rto = roomIndex(to);
     if (rto == nullptr) {
-        return nullptr;
+        return;
     }
 
     auto &ef = rfrom->getExitFlags(dir);
@@ -66,7 +66,6 @@ Room *AddExit::tryExec()
 
     rfrom->addOutExit(dir, to);
     rto->addInExit(opposite(dir), from);
-    return rfrom;
 }
 
 RemoveExit::RemoveExit(const RoomId in_from, const RoomId in_to, const ExitDirEnum in_dir)
@@ -83,7 +82,7 @@ void RemoveExit::exec()
     tryExec();
 }
 
-Room *RemoveExit::tryExec()
+void RemoveExit::tryExec()
 {
     Room *const rfrom = roomIndex(from);
     if (rfrom != nullptr) {
@@ -92,7 +91,6 @@ Room *RemoveExit::tryExec()
     if (Room *const rto = roomIndex(to)) {
         rto->removeInExit(opposite(dir), from);
     }
-    return rfrom;
 }
 
 void MakePermanent::exec(const RoomId id)

@@ -105,7 +105,7 @@ public:
 protected:
     virtual void exec() override;
 
-    Room *tryExec();
+    void tryExec();
 
     RoomId from;
     RoomId to;
@@ -122,7 +122,7 @@ public:
 protected:
     virtual void exec() override;
 
-    Room *tryExec();
+    void tryExec();
 
     RoomId from = DEFAULT_ROOMID;
     RoomId to = DEFAULT_ROOMID;
