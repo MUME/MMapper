@@ -25,7 +25,7 @@ class ParseTree;
 class Room;
 class RoomCollection;
 
-class FrontendAccessor
+class NODISCARD FrontendAccessor
 {
 public:
     virtual ~FrontendAccessor() = default;
@@ -35,18 +35,18 @@ public:
 protected:
     MapFrontend *m_frontend = nullptr;
 
-    Map &map();
+    NODISCARD Map &map();
 
-    ParseTree &getParseTree();
+    NODISCARD ParseTree &getParseTree();
 
-    RoomIndex &roomIndex();
-    Room *roomIndex(RoomId) const;
+    NODISCARD RoomIndex &roomIndex();
+    NODISCARD Room *roomIndex(RoomId) const;
 
-    RoomHomes &roomHomes();
-    const SharedRoomCollection &roomHomes(RoomId) const;
+    NODISCARD RoomHomes &roomHomes();
+    NODISCARD const SharedRoomCollection &roomHomes(RoomId) const;
 };
 
-class AbstractAction : public virtual FrontendAccessor
+class NODISCARD AbstractAction : public virtual FrontendAccessor
 {
 public:
     ~AbstractAction() override;
@@ -69,12 +69,12 @@ public:
 protected:
     virtual void exec() = 0;
 
-    virtual const std::set<RoomId> &getAffectedRooms() { return affectedRooms; }
+    NODISCARD virtual const std::set<RoomId> &getAffectedRooms() { return affectedRooms; }
 
     std::set<RoomId> affectedRooms{};
 };
 
-class SingleRoomAction final : public MapAction
+class NODISCARD SingleRoomAction final : public MapAction
 {
 public:
     explicit SingleRoomAction(std::unique_ptr<AbstractAction> ex, RoomId id);
@@ -88,14 +88,14 @@ protected:
         executor->exec(id);
     }
 
-    const RoomIdSet &getAffectedRooms() override;
+    NODISCARD const RoomIdSet &getAffectedRooms() override;
 
 private:
     RoomId id = INVALID_ROOMID;
     std::unique_ptr<AbstractAction> executor;
 };
 
-class AddExit : public MapAction, public FrontendAccessor
+class NODISCARD AddExit : public MapAction, public FrontendAccessor
 {
 public:
     void schedule(MapFrontend *in) override { setFrontend(in); }
@@ -112,7 +112,7 @@ protected:
     ExitDirEnum dir = ExitDirEnum::UNKNOWN;
 };
 
-class RemoveExit : public MapAction, public FrontendAccessor
+class NODISCARD RemoveExit : public MapAction, public FrontendAccessor
 {
 public:
     explicit RemoveExit(RoomId from, RoomId to, ExitDirEnum dir);
@@ -129,13 +129,13 @@ protected:
     ExitDirEnum dir = ExitDirEnum::UNKNOWN;
 };
 
-class MakePermanent final : public AbstractAction
+class NODISCARD MakePermanent final : public AbstractAction
 {
 public:
     void exec(RoomId RoomId) override;
 };
 
-class Update final : public virtual AbstractAction
+class NODISCARD Update final : public virtual AbstractAction
 {
 public:
     Update();
@@ -148,13 +148,13 @@ protected:
     ParseEvent props;
 };
 
-class ExitsAffecter : public AbstractAction
+class NODISCARD ExitsAffecter : public AbstractAction
 {
 public:
     void insertAffected(RoomId id, std::set<RoomId> &affected) override;
 };
 
-class Remove : public ExitsAffecter
+class NODISCARD Remove : public ExitsAffecter
 {
 protected:
     void exec(RoomId id) override;

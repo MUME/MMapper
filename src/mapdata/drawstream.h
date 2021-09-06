@@ -9,7 +9,7 @@
 
 class Room;
 
-class DrawStream final : public AbstractRoomVisitor
+class NODISCARD DrawStream final : public AbstractRoomVisitor
 {
 public:
     explicit DrawStream(LayerToRooms &layerToRooms);

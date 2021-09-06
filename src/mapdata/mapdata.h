@@ -56,8 +56,8 @@ protected:
 
 protected:
     // the room will be inserted in the given selection. the selection must have been created by mapdata
-    const Room *getRoom(const Coordinate &pos, RoomSelection &in);
-    const Room *getRoom(RoomId id, RoomSelection &in);
+    NODISCARD const Room *getRoom(const Coordinate &pos, RoomSelection &in);
+    NODISCARD const Room *getRoom(RoomId id, RoomSelection &in);
 
 public:
     explicit MapData(QObject *parent);
@@ -65,11 +65,12 @@ public:
 
     void generateBatches(MapCanvasRoomDrawer &screen, const OptBounds &bounds);
 
+    /* REVISIT: some callers ignore this */
     bool execute(std::unique_ptr<MapAction> action, const SharedRoomSelection &unlock);
 
-    const Coordinate &getPosition() const { return m_position; }
-    const MarkerList &getMarkersList() const { return m_markers; }
-    uint getRoomsCount() const
+    NODISCARD const Coordinate &getPosition() const { return m_position; }
+    NODISCARD const MarkerList &getMarkersList() const { return m_markers; }
+    NODISCARD uint getRoomsCount() const
     {
         return (greatestUsedId == INVALID_ROOMID) ? 0u : (greatestUsedId.asUint32() + 1u);
     }
@@ -78,9 +79,12 @@ public:
     void removeMarker(const std::shared_ptr<InfoMark> &im);
     void removeMarkers(const MarkerList &toRemove);
 
-    bool isEmpty() const { return (greatestUsedId == INVALID_ROOMID) && m_markers.empty(); }
-    bool dataChanged() const { return m_dataChanged; }
-    QList<Coordinate> getPath(const Coordinate &start, const CommandQueue &dirs);
+    NODISCARD bool isEmpty() const
+    {
+        return (greatestUsedId == INVALID_ROOMID) && m_markers.empty();
+    }
+    NODISCARD bool dataChanged() const { return m_dataChanged; }
+    NODISCARD QList<Coordinate> getPath(const Coordinate &start, const CommandQueue &dirs);
 
 private:
     void virt_clear() final;
@@ -97,7 +101,7 @@ public:
 
     // Used in Console Commands
     void removeDoorNames();
-    const DoorName &getDoorName(const Coordinate &pos, ExitDirEnum dir);
+    NODISCARD const DoorName &getDoorName(const Coordinate &pos, ExitDirEnum dir);
 
 public:
     void setFileName(QString filename, bool readOnly)
@@ -105,15 +109,15 @@ public:
         m_fileName = filename;
         m_fileReadOnly = readOnly;
     }
-    const QString &getFileName() const { return m_fileName; }
-    bool isFileReadOnly() const { return m_fileReadOnly; }
+    NODISCARD const QString &getFileName() const { return m_fileName; }
+    NODISCARD bool isFileReadOnly() const { return m_fileReadOnly; }
 
 public:
-    bool getExitFlag(const Coordinate &pos, ExitDirEnum dir, ExitFieldVariant var);
-    ExitDirFlags getExitDirections(const Coordinate &pos);
+    NODISCARD bool getExitFlag(const Coordinate &pos, ExitDirEnum dir, ExitFieldVariant var);
+    NODISCARD ExitDirFlags getExitDirections(const Coordinate &pos);
 
 public:
-    const Room *getRoom(const Coordinate &pos);
+    NODISCARD const Room *getRoom(const Coordinate &pos);
 
 private:
     // REVISIT: This might be the equivalent of blocking Qt signals.

@@ -26,7 +26,7 @@ class Room;
 
 using AddOneWayExit = AddExit;
 
-class AddTwoWayExit final : public AddOneWayExit
+class NODISCARD AddTwoWayExit final : public AddOneWayExit
 {
 public:
     explicit AddTwoWayExit(RoomId room1Id,
@@ -45,7 +45,7 @@ protected:
 
 using RemoveOneWayExit = RemoveExit;
 
-class RemoveTwoWayExit final : public RemoveOneWayExit
+class NODISCARD RemoveTwoWayExit final : public RemoveOneWayExit
 {
 public:
     explicit RemoveTwoWayExit(RoomId room1Id,
@@ -62,7 +62,7 @@ protected:
     ExitDirEnum room2Dir = ExitDirEnum::UNKNOWN;
 };
 
-class GroupMapAction final : public MapAction
+class NODISCARD GroupMapAction final : public MapAction
 {
 public:
     explicit GroupMapAction(std::unique_ptr<AbstractAction> ex,
@@ -73,14 +73,14 @@ public:
 protected:
     void exec() override;
 
-    const RoomIdSet &getAffectedRooms() override;
+    NODISCARD const RoomIdSet &getAffectedRooms() override;
 
 private:
     std::list<RoomId> selectedRooms{};
     std::unique_ptr<AbstractAction> executor;
 };
 
-class MoveRelative final : public AbstractAction
+class NODISCARD MoveRelative final : public AbstractAction
 {
 public:
     explicit MoveRelative(const Coordinate &move);
@@ -93,7 +93,7 @@ protected:
     Coordinate move;
 };
 
-class MergeRelative final : public Remove
+class NODISCARD MergeRelative final : public Remove
 {
 public:
     explicit MergeRelative(const Coordinate &move);
@@ -108,7 +108,7 @@ protected:
     Coordinate move;
 };
 
-class ConnectToNeighbours final : public AbstractAction
+class NODISCARD ConnectToNeighbours final : public AbstractAction
 {
 public:
     void insertAffected(RoomId id, RoomIdSet &affected) override;
@@ -119,7 +119,7 @@ private:
     void connectRooms(Room *center, Coordinate &otherPos, ExitDirEnum dir, RoomId cid);
 };
 
-class ModifyRoomFlags final : public AbstractAction
+class NODISCARD ModifyRoomFlags final : public AbstractAction
 {
 public:
     explicit ModifyRoomFlags(RoomFieldVariant, FlagModifyModeEnum);
@@ -140,7 +140,7 @@ protected:
     const FlagModifyModeEnum mode;
 };
 
-class ModifyRoomUpToDate final : public AbstractAction
+class NODISCARD ModifyRoomUpToDate final : public AbstractAction
 {
 public:
     explicit ModifyRoomUpToDate(bool checked);
@@ -152,7 +152,7 @@ protected:
 };
 
 // Despite its name, this is also used to modify an exit's DoorFlags and door names
-class ModifyExitFlags final : public AbstractAction
+class NODISCARD ModifyExitFlags final : public AbstractAction
 {
 public:
     explicit ModifyExitFlags(ExitFieldVariant, ExitDirEnum, FlagModifyModeEnum);

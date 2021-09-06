@@ -34,11 +34,11 @@ public:
                         PatternKindsEnum kind);
 
 public:
-    bool filter(const Room *r) const;
-    PatternKindsEnum patternKind() const { return m_kind; }
+    NODISCARD bool filter(const Room *r) const;
+    NODISCARD PatternKindsEnum patternKind() const { return m_kind; }
 
 private:
-    bool matches(const std::string_view &s) const
+    NODISCARD bool matches(const std::string_view &s) const
     {
         return std::regex_match(s.begin(), s.end(), m_regex);
     }

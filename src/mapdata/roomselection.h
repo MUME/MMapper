@@ -39,29 +39,30 @@ public:
     ~RoomSelection() override;
 
 public:
-    const Room *getFirstRoom() const noexcept(false);
-    RoomId getFirstRoomId() const noexcept(false);
+    NODISCARD const Room *getFirstRoom() const noexcept(false);
+    NODISCARD RoomId getFirstRoomId() const noexcept(false);
 
 public:
-    bool contains(RoomId targetId) const;
+    NODISCARD bool contains(RoomId targetId) const;
 
 public:
+    /* REVISIT: some callers ignore this */
     const Room *getRoom(RoomId targetId);
-    const Room *getRoom(const Coordinate &coord);
+    NODISCARD const Room *getRoom(const Coordinate &coord);
     void unselect(RoomId targetId);
 
 public:
-    bool isMovable(const Coordinate &offset) const;
+    NODISCARD bool isMovable(const Coordinate &offset) const;
 
 public:
     void genericSearch(const RoomFilter &f);
 
 public:
-    static SharedRoomSelection createSelection(MapData &mapData);
-    static SharedRoomSelection createSelection(MapData &mapData, const Coordinate &c);
-    static SharedRoomSelection createSelection(MapData &mapData,
-                                               const Coordinate &min,
-                                               const Coordinate &max);
+    NODISCARD static SharedRoomSelection createSelection(MapData &mapData);
+    NODISCARD static SharedRoomSelection createSelection(MapData &mapData, const Coordinate &c);
+    NODISCARD static SharedRoomSelection createSelection(MapData &mapData,
+                                                         const Coordinate &min,
+                                                         const Coordinate &max);
 
 public:
     DELETE_CTORS_AND_ASSIGN_OPS(RoomSelection);

@@ -25,7 +25,7 @@ private:
     {
         GLuint vertPos = INVALID_ATTRIB_LOCATION;
 
-        static Attribs getLocations(AbstractShaderProgram &fontShader)
+        NODISCARD static Attribs getLocations(AbstractShaderProgram &fontShader)
         {
             Attribs result;
             result.vertPos = fontShader.getAttribLocation("aVert");
@@ -76,7 +76,7 @@ private:
         GLuint colorPos = INVALID_ATTRIB_LOCATION;
         GLuint vertPos = INVALID_ATTRIB_LOCATION;
 
-        static Attribs getLocations(AbstractShaderProgram &fontShader)
+        NODISCARD static Attribs getLocations(AbstractShaderProgram &fontShader)
         {
             Attribs result;
             result.colorPos = fontShader.getAttribLocation("aColor");
@@ -131,7 +131,7 @@ private:
         GLuint texPos = INVALID_ATTRIB_LOCATION;
         GLuint vertPos = INVALID_ATTRIB_LOCATION;
 
-        static Attribs getLocations(AbstractShaderProgram &fontShader)
+        NODISCARD static Attribs getLocations(AbstractShaderProgram &fontShader)
         {
             Attribs result;
             result.texPos = fontShader.getAttribLocation("aTexCoord");
@@ -188,7 +188,7 @@ private:
         GLuint texPos = INVALID_ATTRIB_LOCATION;
         GLuint vertPos = INVALID_ATTRIB_LOCATION;
 
-        static Attribs getLocations(AColorTexturedShader &fontShader)
+        NODISCARD static Attribs getLocations(AColorTexturedShader &fontShader)
         {
             Attribs result;
             result.colorPos = fontShader.getAttribLocation("aColor");
@@ -249,7 +249,7 @@ private:
         GLuint colorPos = INVALID_ATTRIB_LOCATION;
         GLuint vertPos = INVALID_ATTRIB_LOCATION;
 
-        static Attribs getLocations(AbstractShaderProgram &fontShader)
+        NODISCARD static Attribs getLocations(AbstractShaderProgram &fontShader)
         {
             Attribs result;
             result.colorPos = fontShader.getAttribLocation("aColor");
