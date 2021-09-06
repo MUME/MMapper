@@ -40,7 +40,7 @@ protected:
                            PathParameters &params);
 
 public:
-    virtual ~Experimenting() override;
+    ~Experimenting() override;
     DELETE_CTORS_AND_ASSIGN_OPS(Experimenting);
 
 public:

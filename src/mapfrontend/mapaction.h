@@ -49,7 +49,7 @@ protected:
 class AbstractAction : public virtual FrontendAccessor
 {
 public:
-    virtual ~AbstractAction() override;
+    ~AbstractAction() override;
     virtual void preExec(RoomId) {}
 
     virtual void exec(RoomId id) = 0;
@@ -82,13 +82,13 @@ public:
     void schedule(MapFrontend *in) override { executor->setFrontend(in); }
 
 protected:
-    virtual void exec() override
+    void exec() override
     {
         executor->preExec(id);
         executor->exec(id);
     }
 
-    virtual const RoomIdSet &getAffectedRooms() override;
+    const RoomIdSet &getAffectedRooms() override;
 
 private:
     RoomId id = INVALID_ROOMID;
@@ -103,7 +103,7 @@ public:
     explicit AddExit(RoomId in_from, RoomId in_to, ExitDirEnum in_dir);
 
 protected:
-    virtual void exec() override;
+    void exec() override;
 
     void tryExec();
 
@@ -120,7 +120,7 @@ public:
     void schedule(MapFrontend *in) override { setFrontend(in); }
 
 protected:
-    virtual void exec() override;
+    void exec() override;
 
     void tryExec();
 
@@ -132,7 +132,7 @@ protected:
 class MakePermanent final : public AbstractAction
 {
 public:
-    virtual void exec(RoomId RoomId) override;
+    void exec(RoomId RoomId) override;
 };
 
 class Update final : public virtual AbstractAction
@@ -142,7 +142,7 @@ public:
 
     explicit Update(const SigParseEvent &sigParseEvent);
 
-    virtual void exec(RoomId id) override;
+    void exec(RoomId id) override;
 
 protected:
     ParseEvent props;
@@ -151,11 +151,11 @@ protected:
 class ExitsAffecter : public AbstractAction
 {
 public:
-    virtual void insertAffected(RoomId id, std::set<RoomId> &affected) override;
+    void insertAffected(RoomId id, std::set<RoomId> &affected) override;
 };
 
 class Remove : public ExitsAffecter
 {
 protected:
-    virtual void exec(RoomId id) override;
+    void exec(RoomId id) override;
 };

@@ -66,7 +66,7 @@ protected:
 
 public:
     explicit MapFrontend(QObject *parent);
-    virtual ~MapFrontend() override;
+    ~MapFrontend() override;
 
 private:
     virtual void virt_clear() = 0;

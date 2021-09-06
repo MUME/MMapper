@@ -30,13 +30,13 @@ public:
     PandoraMapStorage() = delete;
 
 private:
-    NODISCARD virtual bool canLoad() const override { return true; }
-    NODISCARD virtual bool canSave() const override { return false; }
+    NODISCARD bool canLoad() const override { return true; }
+    NODISCARD bool canSave() const override { return false; }
 
-    virtual void newData() override;
-    NODISCARD virtual bool loadData() override;
-    NODISCARD virtual bool saveData(bool baseMapOnly) override;
-    NODISCARD virtual bool mergeData() override;
+    void newData() override;
+    NODISCARD bool loadData() override;
+    NODISCARD bool saveData(bool baseMapOnly) override;
+    NODISCARD bool mergeData() override;
 
 private:
     std::shared_ptr<Room> loadRoom(QXmlStreamReader &);

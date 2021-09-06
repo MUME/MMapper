@@ -17,8 +17,8 @@ public:
     explicit RoomLocker(RoomRecipient &forward,
                         MapFrontend &frontend,
                         const ParseEvent *compare = nullptr);
-    virtual void visit(const Room *room) override;
-    virtual ~RoomLocker() override;
+    void visit(const Room *room) override;
+    ~RoomLocker() override;
 
 private:
     RoomRecipient &recipient;

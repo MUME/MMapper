@@ -13,8 +13,8 @@ class DrawStream final : public AbstractRoomVisitor
 {
 public:
     explicit DrawStream(LayerToRooms &layerToRooms);
-    virtual ~DrawStream() override;
-    virtual void visit(const Room *room) override;
+    ~DrawStream() override;
+    void visit(const Room *room) override;
 
 private:
     LayerToRooms &layerToRooms;

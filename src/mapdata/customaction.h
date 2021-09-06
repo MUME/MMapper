@@ -38,7 +38,7 @@ public:
     {}
 
 protected:
-    virtual void exec() override;
+    void exec() override;
 
     ExitDirEnum room2Dir = ExitDirEnum::UNKNOWN;
 };
@@ -57,7 +57,7 @@ public:
     {}
 
 protected:
-    virtual void exec() override;
+    void exec() override;
 
     ExitDirEnum room2Dir = ExitDirEnum::UNKNOWN;
 };
@@ -71,9 +71,9 @@ public:
     void schedule(MapFrontend *in) override { executor->setFrontend(in); }
 
 protected:
-    virtual void exec() override;
+    void exec() override;
 
-    virtual const RoomIdSet &getAffectedRooms() override;
+    const RoomIdSet &getAffectedRooms() override;
 
 private:
     std::list<RoomId> selectedRooms{};
@@ -85,9 +85,9 @@ class MoveRelative final : public AbstractAction
 public:
     explicit MoveRelative(const Coordinate &move);
 
-    virtual void preExec(RoomId id) override;
+    void preExec(RoomId id) override;
 
-    virtual void exec(RoomId id) override;
+    void exec(RoomId id) override;
 
 protected:
     Coordinate move;
@@ -98,11 +98,11 @@ class MergeRelative final : public Remove
 public:
     explicit MergeRelative(const Coordinate &move);
 
-    virtual void preExec(RoomId id) override;
+    void preExec(RoomId id) override;
 
-    virtual void exec(RoomId id) override;
+    void exec(RoomId id) override;
 
-    virtual void insertAffected(RoomId id, RoomIdSet &affected) override;
+    void insertAffected(RoomId id, RoomIdSet &affected) override;
 
 protected:
     Coordinate move;
@@ -111,9 +111,9 @@ protected:
 class ConnectToNeighbours final : public AbstractAction
 {
 public:
-    virtual void insertAffected(RoomId id, RoomIdSet &affected) override;
+    void insertAffected(RoomId id, RoomIdSet &affected) override;
 
-    virtual void exec(RoomId id) override;
+    void exec(RoomId id) override;
 
 private:
     void connectRooms(Room *center, Coordinate &otherPos, ExitDirEnum dir, RoomId cid);
@@ -133,7 +133,7 @@ public:
 #undef X_DECLARE_CONSTRUCTORS
 #undef NOP
 
-    virtual void exec(RoomId id) override;
+    void exec(RoomId id) override;
 
 protected:
     const RoomFieldVariant var;
@@ -145,7 +145,7 @@ class ModifyRoomUpToDate final : public AbstractAction
 public:
     explicit ModifyRoomUpToDate(bool checked);
 
-    virtual void exec(RoomId id) override;
+    void exec(RoomId id) override;
 
 protected:
     const bool checked = false;
@@ -166,7 +166,7 @@ public:
 #undef X_DECLARE_CONSTRUCTORS
 #undef NOP
 
-    virtual void exec(RoomId id) override;
+    void exec(RoomId id) override;
 
 protected:
     const ExitFieldVariant var;

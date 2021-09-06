@@ -723,7 +723,7 @@ public:
     explicit ShortestPathEmitter(AbstractParser &parser)
         : parser(parser)
     {}
-    virtual ~ShortestPathEmitter() override;
+    ~ShortestPathEmitter() override;
 
 private:
     void virt_receiveShortestPath(RoomAdmin * /*admin*/,

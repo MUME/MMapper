@@ -33,13 +33,13 @@ public:
     bool mergeData() override;
 
 public:
-    NODISCARD virtual bool canLoad() const override { return true; }
-    NODISCARD virtual bool canSave() const override { return true; }
+    NODISCARD bool canLoad() const override { return true; }
+    NODISCARD bool canSave() const override { return true; }
 
 private:
-    virtual void newData() override;
-    NODISCARD virtual bool loadData() override;
-    NODISCARD virtual bool saveData(bool baseMapOnly) override;
+    void newData() override;
+    NODISCARD bool loadData() override;
+    NODISCARD bool saveData(bool baseMapOnly) override;
 
     SharedRoom loadRoom(QDataStream &stream, uint32_t version);
     void loadExits(Room &room, QDataStream &stream, uint32_t version);

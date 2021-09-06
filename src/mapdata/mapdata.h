@@ -61,7 +61,7 @@ protected:
 
 public:
     explicit MapData(QObject *parent);
-    virtual ~MapData() override;
+    ~MapData() override;
 
     void generateBatches(MapCanvasRoomDrawer &screen, const OptBounds &bounds);
 

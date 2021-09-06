@@ -33,13 +33,13 @@ public:
     JsonMapStorage() = delete;
 
 private:
-    NODISCARD virtual bool canLoad() const override { return false; }
-    NODISCARD virtual bool canSave() const override { return true; }
+    NODISCARD bool canLoad() const override { return false; }
+    NODISCARD bool canSave() const override { return true; }
 
-    virtual void newData() override;
-    NODISCARD virtual bool loadData() override;
-    NODISCARD virtual bool saveData(bool baseMapOnly) override;
-    NODISCARD virtual bool mergeData() override;
+    void newData() override;
+    NODISCARD bool loadData() override;
+    NODISCARD bool saveData(bool baseMapOnly) override;
+    NODISCARD bool mergeData() override;
     void log(const QString &msg) { emit sig_log("JsonMapStorage", msg); }
     // void saveMark(InfoMark * mark, QJsonObject &jRoom, const JsonRoomIdsCache &jRoomIds);
 };
