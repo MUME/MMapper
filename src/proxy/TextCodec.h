@@ -37,6 +37,8 @@ public:
     NODISCARD bool supports(const QByteArray &encodingName) const;
     NODISCARD QStringList supportedEncodings() const;
 
+    NODISCARD QByteArray getName() const { return textCodec->name(); }
+
 private:
     // This might not be a good default value. Make this optional?
     CharacterEncodingEnum currentEncoding = CharacterEncodingEnum::LATIN1;

@@ -971,6 +971,8 @@ TextCodec &AbstractTelnet::getTextCodec()
         const CharacterEncodingEnum configEncoding = getConfig().general.characterEncoding;
         if (configEncoding != textCodec.getEncoding()) {
             textCodec.setEncoding(configEncoding);
+            if (debug)
+                qDebug() << "Switching to" << textCodec.getName() << "character encoding";
         }
     }
     return textCodec;

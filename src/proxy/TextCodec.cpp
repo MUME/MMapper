@@ -85,7 +85,6 @@ void TextCodec::setEncoding(const CharacterEncodingEnum encoding)
     }
     assert(textCodec);
     currentEncoding = encoding;
-    qDebug() << "Switching to" << textCodec->name() << "character encoding";
 }
 
 void TextCodec::setEncodingForName(const QByteArray &encoding)
