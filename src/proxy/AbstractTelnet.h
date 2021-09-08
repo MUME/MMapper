@@ -110,7 +110,7 @@ public:
     NODISCARD bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &name)
     {
         return virt_isGmcpModuleEnabled(name);
-    };
+    }
 
 protected:
     void sendCharsetRequest(const QStringList &myCharacterSet);
@@ -129,7 +129,7 @@ protected:
     void submitOverTelnet(const std::string_view &data, bool goAhead);
 
 private:
-    virtual NODISCARD bool virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &) { return false; }
+    NODISCARD virtual bool virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &) { return false; }
     virtual void virt_onGmcpEnabled() {}
     virtual void virt_receiveEchoMode(bool) {}
     virtual void virt_receiveGmcpMessage(const GmcpMessage &) {}
