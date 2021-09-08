@@ -107,7 +107,10 @@ public:
     /* unused */
     NODISCARD int64_t getSentBytes() const { return sentBytes; }
 
-    NODISCARD bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &name);
+    NODISCARD bool isGmcpModuleEnabled(const GmcpModuleTypeEnum &name)
+    {
+        return virt_isGmcpModuleEnabled(name);
+    };
 
 protected:
     void sendCharsetRequest(const QStringList &myCharacterSet);
@@ -126,6 +129,7 @@ protected:
     void submitOverTelnet(const std::string_view &data, bool goAhead);
 
 private:
+    virtual NODISCARD bool virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &) { return false; }
     virtual void virt_onGmcpEnabled() {}
     virtual void virt_receiveEchoMode(bool) {}
     virtual void virt_receiveGmcpMessage(const GmcpMessage &) {}
@@ -156,8 +160,6 @@ protected:
     /** send a telnet option */
     void sendTelnetOption(unsigned char type, unsigned char subnegBuffer);
     void reset();
-    void resetGmcpModules();
-    void receiveGmcpModule(const GmcpModule &, bool);
     void onReadInternal(const QByteArray &);
     void setTerminalType(const QByteArray &terminalType) { termType = terminalType; }
 
@@ -182,15 +184,6 @@ protected:
     {
         int x = 80, y = 24;
     } current{};
-
-    /** modules for GMCP */
-    struct
-    {
-        /** MMapper relevant modules and their version */
-        GmcpModuleVersionList supported;
-        /** All GMCP modules */
-        GmcpModuleSet modules;
-    } gmcp{};
 
     /* Terminal Type */
     const QByteArray m_defaultTermType;
@@ -231,6 +224,7 @@ private:
     /** have we received the GA signal? */
     bool recvdGA = false;
 
+protected:
     bool debug = false;
 
 private:

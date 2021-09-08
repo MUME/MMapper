@@ -59,6 +59,7 @@ UserTelnet::UserTelnet(QObject *const parent)
 void UserTelnet::slot_onConnected()
 {
     reset();
+    resetGmcpModules();
     // Negotiate options
     requestTelnetOption(TN_DO, OPT_TERMINAL_TYPE);
     requestTelnetOption(TN_DO, OPT_NAWS);
@@ -83,8 +84,19 @@ void UserTelnet::slot_onSendToUser(const QByteArray &ba, const bool goAhead)
 
 void UserTelnet::slot_onGmcpToUser(const GmcpMessage &msg)
 {
-    if (myOptionState[OPT_GMCP])
-        sendGmcpMessage(msg);
+    if (!myOptionState[OPT_GMCP])
+        return;
+
+    const auto name = msg.getName().getStdString();
+    const std::size_t found = name.find_last_of('.');
+    try {
+        const GmcpModule module(name.substr(0, found));
+        if (gmcp.modules.find(module) != gmcp.modules.end())
+            sendGmcpMessage(msg);
+
+    } catch (const std::exception &e) {
+        qWarning() << "Message" << msg.toRawBytes() << "error because:" << e.what();
+    }
 }
 
 void UserTelnet::virt_sendToMapper(const QByteArray &data, const bool goAhead)
@@ -174,4 +186,39 @@ void UserTelnet::virt_sendRawData(const std::string_view &data)
 {
     sentBytes += data.length();
     emit sig_sendToSocket(::toQByteArrayLatin1(data));
+}
+
+bool UserTelnet::virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &name)
+{
+    if (!myOptionState[OPT_GMCP])
+        return false;
+
+    return gmcp.supported[name] != DEFAULT_GMCP_MODULE_VERSION;
+}
+
+void UserTelnet::receiveGmcpModule(const GmcpModule &module, const bool enabled)
+{
+    if (enabled) {
+        if (!module.hasVersion())
+            throw std::runtime_error("missing version");
+        gmcp.modules.insert(module);
+        if (module.isSupported())
+            gmcp.supported[module.getType()] = module.getVersion();
+
+    } else {
+        gmcp.modules.erase(module);
+        if (module.isSupported())
+            gmcp.supported[module.getType()] = DEFAULT_GMCP_MODULE_VERSION;
+    }
+}
+
+void UserTelnet::resetGmcpModules()
+{
+    if (debug)
+        qDebug() << "Clearing GMCP modules";
+#define X_CASE(UPPER_CASE, CamelCase, normalized, friendly) \
+    gmcp.supported[GmcpModuleTypeEnum::UPPER_CASE] = DEFAULT_GMCP_MODULE_VERSION;
+    X_FOREACH_GMCP_MODULE_TYPE(X_CASE)
+#undef X_CASE
+    gmcp.modules.clear();
 }

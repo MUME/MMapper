@@ -39,6 +39,29 @@ GmcpModule::GmcpModule(const std::string &moduleVersion)
     type = toGmcpModuleType(normalizedName);
 }
 
+GmcpModule::GmcpModule(const std::string &module, const GmcpModuleVersion version)
+{
+    normalizedName = ::toLowerLatin1(module);
+    this->version = version;
+    type = toGmcpModuleType(normalizedName);
+}
+
+GmcpModule::GmcpModule(const GmcpModuleTypeEnum type, const GmcpModuleVersion version)
+{
+    this->type = type;
+    this->version = version;
+#define X_CASE(UPPER_CASE, CamelCase, normalized, friendly) \
+    case GmcpModuleTypeEnum::UPPER_CASE: \
+        normalizedName = normalized; \
+        break;
+    switch (type) {
+        X_FOREACH_GMCP_MODULE_TYPE(X_CASE)
+    case GmcpModuleTypeEnum::UNKNOWN:
+        abort();
+    }
+#undef X_CASE
+}
+
 std::string GmcpModule::toStdString() const
 {
     std::ostringstream oss;

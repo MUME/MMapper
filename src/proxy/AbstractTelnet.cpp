@@ -208,42 +208,10 @@ void AbstractTelnet::reset()
     termType = m_defaultTermType;
     state = TelnetStateEnum::NORMAL;
     commandBuffer.clear();
-    resetGmcpModules();
     subnegBuffer.clear();
     sentBytes = 0;
     recvdGA = false;
     resetCompress();
-}
-
-void AbstractTelnet::resetGmcpModules()
-{
-    if (debug)
-        qDebug() << "Clearing GMCP modules";
-#define X_CASE(UPPER_CASE, CamelCase, normalized, friendly) \
-    gmcp.supported[GmcpModuleTypeEnum::UPPER_CASE] = DEFAULT_GMCP_MODULE_VERSION;
-    X_FOREACH_GMCP_MODULE_TYPE(X_CASE)
-#undef X_CASE
-    gmcp.modules.clear();
-}
-
-void AbstractTelnet::receiveGmcpModule(const GmcpModule &module, const bool enabled)
-{
-    if (enabled) {
-        if (!module.hasVersion())
-            throw std::runtime_error("missing version");
-        if (debug)
-            qDebug() << "Adding GMCP module" << ::toQByteArrayLatin1(module.toStdString());
-        gmcp.modules.insert(module);
-        if (module.isSupported())
-            gmcp.supported[module.getType()] = module.getVersion();
-
-    } else {
-        if (debug)
-            qDebug() << "Removing GMCP module" << ::toQByteArrayLatin1(module.toStdString());
-        gmcp.modules.erase(module);
-        if (module.isSupported())
-            gmcp.supported[module.getType()] = DEFAULT_GMCP_MODULE_VERSION;
-    }
 }
 
 static void doubleIacs(std::ostream &os, const std::string_view &input)
@@ -359,14 +327,6 @@ void AbstractTelnet::sendCharsetRequest(const QStringList &myCharacterSets)
         s.addEscapedBytes(characterSet.toLocal8Bit());
     }
     s.addSubnegEnd();
-}
-
-bool AbstractTelnet::isGmcpModuleEnabled(const GmcpModuleTypeEnum &name)
-{
-    if (!myOptionState[OPT_GMCP])
-        return false;
-
-    return gmcp.supported[name] != DEFAULT_GMCP_MODULE_VERSION;
 }
 
 void AbstractTelnet::sendGmcpMessage(const GmcpMessage &msg)
@@ -745,6 +705,8 @@ void AbstractTelnet::processTelnetSubnegotiation(const AppendBuffer &payload)
             } catch (const std::exception &e) {
                 qWarning() << "Corrupted GMCP received" << payload << e.what();
             }
+        } else {
+            qWarning() << "His GMCP is not enabled yet!";
         }
         break;
 

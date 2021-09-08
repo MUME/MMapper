@@ -11,6 +11,16 @@
 class UserTelnet final : public AbstractTelnet
 {
     Q_OBJECT
+private:
+    /** modules for GMCP */
+    struct
+    {
+        /** MMapper relevant modules and their version */
+        GmcpModuleVersionList supported;
+        /** All GMCP modules */
+        GmcpModuleSet modules;
+    } gmcp{};
+
 public:
     explicit UserTelnet(QObject *parent);
     ~UserTelnet() final = default;
@@ -30,9 +40,14 @@ signals:
     void sig_relayTermType(QByteArray);
 
 private:
+    NODISCARD bool virt_isGmcpModuleEnabled(const GmcpModuleTypeEnum &name) final;
     void virt_sendToMapper(const QByteArray &data, bool goAhead) final;
     void virt_receiveGmcpMessage(const GmcpMessage &) final;
     void virt_receiveTerminalType(const QByteArray &) final;
     void virt_receiveWindowSize(int, int) final;
     void virt_sendRawData(const std::string_view &data) final;
+
+private:
+    void receiveGmcpModule(const GmcpModule &, bool);
+    void resetGmcpModules();
 };

@@ -48,7 +48,7 @@ MudTelnet::MudTelnet(QObject *const parent)
 
 void MudTelnet::slot_onConnected()
 {
-    // nop
+    resetGmcpModules();
 }
 
 void MudTelnet::slot_onDisconnected()
@@ -69,8 +69,45 @@ void MudTelnet::slot_onSendToMud(const QByteArray &ba)
 
 void MudTelnet::slot_onGmcpToMud(const GmcpMessage &msg)
 {
-    if (myOptionState[OPT_GMCP])
-        sendGmcpMessage(msg);
+    // Remember Core.Supports.[Add|Set|Remove] modules
+    if (msg.getJson()
+        && (msg.isCoreSupportsAdd() || msg.isCoreSupportsSet() || msg.isCoreSupportsRemove())) {
+        // Deserialize the payload
+        QJsonDocument doc = QJsonDocument::fromJson(msg.getJson()->toQByteArray());
+        if (!doc.isArray())
+            return;
+        const auto &array = doc.array();
+
+        // Handle the various messages
+        if (msg.isCoreSupportsSet())
+            resetGmcpModules();
+        for (const auto &e : array) {
+            if (!e.isString())
+                continue;
+            const auto &moduleStr = e.toString();
+            try {
+                const GmcpModule module(moduleStr);
+                receiveGmcpModule(module, !msg.isCoreSupportsRemove());
+
+            } catch (const std::exception &e) {
+                qWarning() << "Module" << moduleStr
+                           << (msg.isCoreSupportsRemove() ? "remove" : "add")
+                           << "error because:" << e.what();
+            }
+        }
+
+        // Send it now if GMCP has been negotiated
+        if (hisOptionState[OPT_GMCP])
+            sendCoreSupports();
+        return;
+    }
+
+    if (!hisOptionState[OPT_GMCP]) {
+        qDebug() << "MUME did not request GMCP yet";
+        return;
+    }
+
+    sendGmcpMessage(msg);
 }
 
 void MudTelnet::slot_onRelayNaws(const int x, const int y)
@@ -108,14 +145,23 @@ void MudTelnet::virt_receiveEchoMode(bool toggle)
 
 void MudTelnet::virt_receiveGmcpMessage(const GmcpMessage &msg)
 {
+    if (debug)
+        qDebug() << "Receiving GMCP from MUME" << msg.toRawBytes();
+
     emit sig_relayGmcp(msg);
 }
 
 void MudTelnet::virt_onGmcpEnabled()
 {
+    if (debug)
+        qDebug() << "Requesting GMCP from MUME";
+
     sendGmcpMessage(GmcpMessage(GmcpMessageTypeEnum::CORE_HELLO,
                                 QString(R"({ "client": "MMapper", "version": "%1" })")
                                     .arg(GmcpUtils::escapeGmcpStringData(getMMapperVersion()))));
+
+    // Request GMCP modules that might have already been sent by the local client
+    sendCoreSupports();
 }
 
 /** Send out the data. Does not double IACs, this must be done
@@ -125,4 +171,42 @@ void MudTelnet::virt_sendRawData(const std::string_view &data)
 {
     sentBytes += data.length();
     emit sig_sendToSocket(::toQByteArrayLatin1(data));
+}
+
+void MudTelnet::receiveGmcpModule(const GmcpModule &module, const bool enabled)
+{
+    if (enabled)
+        gmcp.insert(module);
+    else
+        gmcp.erase(module);
+}
+
+void MudTelnet::resetGmcpModules()
+{
+    gmcp.clear();
+}
+
+void MudTelnet::sendCoreSupports()
+{
+    if (gmcp.empty()) {
+        qWarning() << "No GMCP modules can be requested";
+        return;
+    }
+
+    std::ostringstream oss;
+    oss << "[ ";
+    bool comma = false;
+    for (const GmcpModule &module : gmcp) {
+        if (comma)
+            oss << ", ";
+        oss << '"' << module.toStdString() << '"';
+        comma = true;
+    }
+    oss << " ]";
+    const std::string set = oss.str();
+
+    if (debug)
+        qDebug() << "Sending GMCP Core.Supports to MUME" << ::toQByteArrayLatin1(set);
+
+    sendGmcpMessage(GmcpMessage(GmcpMessageTypeEnum::CORE_SUPPORTS_SET, set));
 }

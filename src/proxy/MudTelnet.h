@@ -11,6 +11,10 @@
 class MudTelnet final : public AbstractTelnet
 {
     Q_OBJECT
+private:
+    /** modules for GMCP */
+    GmcpModuleSet gmcp;
+
 public:
     explicit MudTelnet(QObject *parent);
     ~MudTelnet() final = default;
@@ -36,4 +40,11 @@ private:
     void virt_receiveGmcpMessage(const GmcpMessage &) final;
     void virt_onGmcpEnabled() final;
     void virt_sendRawData(const std::string_view &data) final;
+
+private:
+    void receiveGmcpModule(const GmcpModule &, bool);
+    void resetGmcpModules();
+
+private:
+    void sendCoreSupports();
 };
