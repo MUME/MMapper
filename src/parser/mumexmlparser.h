@@ -28,7 +28,16 @@ struct TelnetData;
 
 // #define XMLPARSER_STREAM_DEBUG_INPUT_TO_FILE
 
-enum class NODISCARD XmlModeEnum { NONE, ROOM, NAME, DESCRIPTION, EXITS, PROMPT, TERRAIN, HEADER };
+enum class NODISCARD XmlModeEnum : uint8_t {
+    NONE,
+    ROOM,
+    NAME,
+    DESCRIPTION,
+    EXITS,
+    PROMPT,
+    TERRAIN,
+    HEADER
+};
 
 class MumeXmlParser final : public AbstractParser
 {
@@ -54,6 +63,22 @@ private:
     std::optional<RoomName> m_roomName;
     std::optional<RoomDesc> m_roomDesc;
     std::optional<RoomContents> m_roomContents;
+
+private:
+    enum class NODISCARD XmlAttributeStateEnum : uint8_t {
+        /// received <room/>
+        ELEMENT,
+        /// received <room terrain/>
+        ATTRIBUTE,
+        /// received <room terrain=/>
+        EQUALS,
+        /// received <room terrain=field/>
+        UNQUOTED_VALUE,
+        /// received <room terrain='field'/>
+        SINGLE_QUOTED_VALUE,
+        /// received <room terrain="field"/>
+        DOUBLE_QUOTED_VALUE
+    };
 
 public:
     explicit MumeXmlParser(MapData &, MumeClock &, ProxyParserApi, GroupManagerApi, QObject *parent);

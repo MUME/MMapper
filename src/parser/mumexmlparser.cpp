@@ -5,7 +5,9 @@
 
 #include "mumexmlparser.h"
 
+#include <cctype>
 #include <sstream>
+#include <utility>
 #include <QByteArray>
 #include <QString>
 
@@ -164,6 +166,78 @@ bool MumeXmlParser::element(const QByteArray &line)
 {
     const int length = line.length();
 
+    // REVISIT: Merge this logic with the state machine in parse()
+    const auto attributes = [&line]() {
+        std::list<std::pair<std::string, std::string>> attributes;
+
+        std::ostringstream os;
+        std::optional<std::string> key;
+
+        XmlAttributeStateEnum state = XmlAttributeStateEnum::ELEMENT;
+        const auto makeAttribute = [&key, &os, &attributes, &state]() {
+            assert(key.has_value());
+            // REVISIT: Translate XML entities into text
+            attributes.emplace_back(make_pair(key.value(), os.str()));
+            key.reset();
+            os.str(std::string());
+            state = XmlAttributeStateEnum::ATTRIBUTE;
+        };
+        for (const auto &c : line) {
+            switch (state) {
+            case XmlAttributeStateEnum::ELEMENT:
+                if (std::isspace(c))
+                    state = XmlAttributeStateEnum::ATTRIBUTE;
+                else
+                    continue;
+                break;
+            case XmlAttributeStateEnum::ATTRIBUTE:
+                if (std::isspace(c))
+                    continue;
+                else if (c == '=') {
+                    key = os.str();
+                    os.str(std::string());
+                    state = XmlAttributeStateEnum::EQUALS;
+                } else
+                    os << c;
+                break;
+            case XmlAttributeStateEnum::EQUALS:
+                if (std::isspace(c))
+                    continue;
+                else if (c == '\'')
+                    state = XmlAttributeStateEnum::SINGLE_QUOTED_VALUE;
+                else if (c == '"')
+                    state = XmlAttributeStateEnum::DOUBLE_QUOTED_VALUE;
+                else {
+                    os << c;
+                    state = XmlAttributeStateEnum::UNQUOTED_VALUE;
+                }
+                break;
+            case XmlAttributeStateEnum::UNQUOTED_VALUE:
+                // Note: This format is not valid according to the W3C XML standard
+                if (std::isspace(c) || c == '/')
+                    makeAttribute();
+                else
+                    os << c;
+                break;
+            case XmlAttributeStateEnum::SINGLE_QUOTED_VALUE:
+                if (c == '\'')
+                    makeAttribute();
+                else
+                    os << c;
+                break;
+            case XmlAttributeStateEnum::DOUBLE_QUOTED_VALUE:
+                if (c == '"')
+                    makeAttribute();
+                else
+                    os << c;
+                break;
+            }
+        }
+        if (key.has_value())
+            makeAttribute();
+        return attributes;
+    }();
+
     switch (m_xmlMode) {
     case XmlModeEnum::NONE:
         if (length > 0) {
@@ -230,19 +304,16 @@ bool MumeXmlParser::element(const QByteArray &line)
                     m_exitsFlags.reset();
                     m_connectedRoomFlags.reset();
                     m_lineFlags.insert(LineFlagEnum::ROOM);
-                    if (length <= 5)
-                        break;
 
-                    // REVISIT: XML attributes might include quoted strings with spaces
-                    const auto &parts = line.mid(5).split(' ');
-                    for (const auto &part : parts) {
-                        if (part.length() <= 2)
+                    for (const auto &pair : attributes) {
+                        if (pair.first.empty() || pair.second.empty())
                             continue;
-                        switch (part.at(0)) {
+                        switch (pair.first.at(0)) {
                         case 't':
-                            if (part.at(1) == '=') {
+                            if (pair.first == "t") {
                                 // Decode terrain type attribute
-                                const auto in = entities::EncodedLatin1{part.mid(2)};
+                                const auto in = entities::EncodedLatin1{
+                                    ::toQByteArrayLatin1(pair.second)};
                                 const auto out = entities::decode(in).toLatin1();
                                 switch (out.at(0)) {
                                 case '[':
@@ -303,11 +374,18 @@ bool MumeXmlParser::element(const QByteArray &line)
                     // We are most likely in a fall room where the prompt is not shown
                     move();
                 }
-                if (length > 8) {
-                    switch (line.at(8)) {
-                    case ' ':
-                        if (length > 13) {
-                            switch (line.at(13)) {
+                if (attributes.empty()) {
+                    // movement/
+                    m_move = CommandEnum::NONE;
+                    break;
+                }
+                for (const auto &pair : attributes) {
+                    if (pair.first.empty() || pair.second.empty())
+                        continue;
+                    switch (pair.first.at(0)) {
+                    case 'd':
+                        if (pair.first == "dir") {
+                            switch (pair.second.at(0)) {
                             case 'n':
                                 m_move = CommandEnum::NORTH;
                                 break;
@@ -326,11 +404,12 @@ bool MumeXmlParser::element(const QByteArray &line)
                             case 'd':
                                 m_move = CommandEnum::DOWN;
                                 break;
+                            default:
+                                qWarning()
+                                    << "Unknown movement dir" << ::toQByteArrayLatin1(pair.second);
+                                break;
                             }
                         }
-                        break;
-                    case '/':
-                        m_move = CommandEnum::NONE;
                         break;
                     }
                 }
